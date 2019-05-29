@@ -1,0 +1,238 @@
+@font-face { font-family: Roboto; src: url(Roboto-Light.ttf) } 
+
+body {
+    font-weight: 400;
+    font-size: 16px;
+    font-family: Arial, Helvetica, "sans serif";
+    text-align: left;
+    line-height: 170%;
+}
+
+
+/* reset heading/link fonts to that of body */
+.md a,
+.md div.title, contents, .md .tocHeader,
+.md h1, .md h2, .md h3, .md h4, .md h5, .md h6,
+.md .nonumberh1, .md .nonumberh2, .md .nonumberh3, .md .nonumberh4, .md .nonumberh5, .md .nonumberh6,
+.md .shortTOC, .md .mediumTOC, .md .longTOC {
+    font-family: inherit;
+}
+
+.md .tocHeader {
+    border: none;
+    margin-top: 25px;
+    font-size: 100%;
+    font-family: inherit;
+    font-weight: 300;
+}
+
+.md .longTOC .level1 {
+    font-weight: 300;
+    margin-bottom: -30px;
+}
+
+.md div.title, .md div.subtitle, .md h1, .md h2, .md h3, .md h4, .md h5, .md h6 {
+    font-family: 'Roboto', Arial, Helvetica, "sans serif";
+    font-weight: 300;
+}
+
+.md div.title {
+    font-size: 43px;
+    text-align: left;
+    margin-bottom: 0px;
+}
+
+.md div.subtitle {
+    text-align: left;
+    font-size: 115%;
+}
+
+.md div.afterTitles {
+    margin-top: 20px;
+    margin-left: -20px;
+    margin-right: -20px;
+    height: 0px;
+    border-bottom: 1px solid #000;
+    box-shadow: 0px 1px 2px rgba(0,0,0,0.5);
+}
+
+.md div.afterTitles + p {
+    margin-top: 30px;
+}
+
+.md h1 {
+    font-size: 175%;
+    margin-bottom: 25px;
+    margin-left:-20px;
+    margin-right:-20px;
+    padding-left:20px;
+    padding-top:25px;
+    border-bottom: none;
+    border-top:6px solid #5a5a5a;
+}
+
+.md h2 {
+    font-size: 150%;
+    border: none;
+}
+
+.md h3, .md h4, .md h5, .md h6 {
+    font-size: 120%;
+}
+
+.md code {
+    font-size: 90%;
+    background: #eee;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.md .longTOC {
+    font-family: 'Roboto', Arial, Helvetica, "sans serif";
+    font-weight: 300;
+}
+
+
+.md pre.listing {
+    font-size: 100%;
+}
+
+.md pre.listing code {
+    font-weight: unset;
+    background: none;
+    color: unset;
+}
+
+/* Dark mode on screen */
+@media screen {
+    .md .longTOC {
+        display: block;
+        white-space: nowrap;    
+        width: 170px;
+        border-right: 1px solid #777;
+        overflow-y:scroll;
+        font-size: 15px;
+        font-family: inherit;
+        background: #202020;
+        position: fixed;
+        left: 0px;
+        top: 0px;
+        bottom:0px;
+        margin: 0px;
+        padding: 0px;
+        padding-left:10px;
+    }
+    
+    .md svg.diagram {
+        stroke: #ccc;
+        fill: #ccc;
+    }
+    
+    .md svg.diagram .opendot {
+        fill: #000;
+    }
+    
+    .md table.table {
+        box-shadow: 0px 1px 2px rgba(0,0,0,0.5);
+        background-color: #2a2a2a;
+    }
+    
+    .md table.table tr:nth-child(even) {
+        background-color: #202020;
+    }
+    
+    .md table.table td, .md table.table th {
+        border: 1px solid #202020;
+    }
+    
+    .md table.table th {
+        color: #000;
+    }
+    
+    .md pre.listing {
+        background: #202020;
+        border: 1px solid #777;
+        box-shadow: 0px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .md .longTOC a, .md .longTOC code, .md a:link, .md a:visited {
+        color: #80bfff;
+    }
+    
+    .md code {
+        color: #fff;
+        background: unset;
+    }
+
+    .md .tocTop {
+        display: inline;
+    }
+
+    .md div.afterTitles {
+        border-bottom: 1px solid #fff;
+    }
+    
+    .md div.title, .md div.subtitle, .md h1, .md h2, .md h3, .md h4, .md h5, .md h6 {
+        color: #fff;
+    }
+
+    .hljs-comment,.hljs-quote{color:#a0f0aa}.hljs-variable,.hljs-template-variable,.hljs-tag,.hljs-name,.hljs-selector-id,.hljs-selector-class,.hljs-regexp,.hljs-deletion{color:#cc6666}.hljs-number,.hljs-built_in,.hljs-builtin-name,.hljs-literal,.hljs-type,.hljs-params,.hljs-meta,.hljs-link{color:#de935f}.hljs-attribute{color:#f0c674}.hljs-string,.hljs-symbol,.hljs-bullet,.hljs-addition{color:#b5bd68}.hljs-title,.hljs-section{color:#81a2be}.hljs-keyword,.hljs-selector-tag{color:#b294bb}.hljs{display:block;overflow-x:auto;background:#1d1f21;color:#c5c8c6;padding:.5em}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}
+    .hljs-function .hljs-title { color:#81a2be}
+
+    body {
+        color: #ccc;
+        background: #3a3a3a;
+        position: absolute;
+        left: 200px;
+        right:0px;
+        margin: 0px;
+        padding: 0px;
+        max-width: unset;
+        padding-right: 15px;
+    }
+
+    .md div.title, .md h1, .md h2, .md h3, .md h4, .md h5, .md h6, .md .longTOC a, .md .longTOC code, .md a:link, .md a:visited {
+        text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
+    }
+
+.md .admonition {
+    position: unset;
+    box-shadow: 0px 1px 2px rgba(0,0,0,0.5);
+    background: #202020;
+    border: 1px solid rgba(68,138,255,1);
+    border-left: 2.5rem solid rgba(68,138,255,1);
+}
+
+.md .admonition-title {
+    border-bottom: 1px solid rgba(68,138,255,1);
+}
+
+.md .admonition.warn, .md .admonition.warning {
+    border: 1px solid rgba(255,170,0,1);
+    border-left: 2.5rem solid rgba(255,170,0,1);
+    background: #202020;
+}
+
+.md .admonition.warn .admonition-title, .md .admonition.warning .admonition-title {
+    border-bottom: 1px solid rgba(68,138,255,1);
+}
+
+.md .admonition.tip {
+    border: 1px solid rgba(68,138,255,1);
+    border-left: 2.5rem solid rgba(68,138,255,1);
+    background: #202020;
+}
+.md .admonition.tip .admonition-title {
+    border-bottom: 1px solid rgba(68,138,255,1);
+}
+
+.md .admonition.error {
+    border: 1px solid rgba(255,23,68,1);
+    border-left: 2.5rem solid rgba(255,23,68,1);
+    background: #202020;
+}
+.md .admonition.error .admonition-title {
+    border-bottom: 1px solid rgba(255,23,68,1);
+}
+}
+

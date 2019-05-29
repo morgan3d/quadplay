@@ -1,2 +1,3 @@
-# quadplay
-The quadplay✜ fantasy console
+The quadplay✜ fantasy console is coming to this repo in June 2019.
+
+

@@ -1,0 +1,4204 @@
+     <meta charset="utf-8"><style class="fallback">@media screen{body{background:#3a3a3a;color:#ccc}}</style>
+                          
+                      **quadplay✜**
+    Fantasy Console by [Casual Effects](https://casual-effects.com)
+
+<center>[*Quick Start*](#quickstart) ∙ [*Controls*](#controls) ∙ [*API*](#standardlibrary) ∙ [*Sprites*](#sprites) ∙ [*Fonts*](#fonts) ∙ [*Sounds*](#sounds) ∙ [*Symbols*](#symbols)
+
+<img src="ide.png" style="width:75%; border-radius: 0 0 4px 4px; box-shadow: 1px 5px 7px rgba(0,0,0,.20); margin-bottom: 28px; margin-top:20px"></center>
+
+The [**<span style="font-size: 95%; font-family: quadplay">quadplay✜</span>**](../index.html) is a 
+fantasy console for sprite-based 2D games. It is perfect for hobby coding, a game programming 
+course, and game jams.
+
+Virtual Hardware Features:
+
+- 384 x 224 pixel screen = 12:7 aspect ≈ 16:9.3
+- 60 fps
+- 4096 sRGB (4:4:4) colors 
+- Native 2.5D graphics
+- 9.4 MB of total sprite memory
+- Up to 64 sprite and font sheets of up to 1024x1024
+- Order-independent 4-bit (16-level) transparency
+- Four 10-button gamepads (D-pad + ⓐⓑⓒⓓ + ⓟⓠ)
+
+Software Features:
+
+- Runs in all modern browsers
+- Desktop, tablet, phone, Jetson Nano, and Raspberry Pi
+- Open source: use online, fork, or run locally
+- Host on your own static site or remotely from GitHub
+- Run locally and offline using Python + web browser
+- Hundreds of built-in Creative Commons assets
+- Scripts and external editor support for power users
+
+
+
+Quickstart
+====================================================================================
+
+The 1.0 version will support fully-online editing of games from a
+browser. To develop for this beta version of quadplay✜, you need:
+
+- A code editor (_[Visual Studio Code](https://code.visualstudio.com/), [Atom](https://atom.io/), Vim, Emacs, Sublime, etc._)
+- [Python 3](https://www.python.org/)
+- A modern web browser ([_Chrome_](https://www.google.com/chrome/), [_Firefox_](https://www.mozilla.org/en-US/firefox/new/), _Safari_, _Edge_, etc. Chrome is fastest.)
+
+Copy the starter project from `examples/starter` to your own directory
+such as `games/mygame` and start changing it. Look at the Sample Games
+section for more examples.
+
+Read the PICO-8 section, Python section, or JavaScript section of this
+document for some starting tips on the PyxScript language.
+
+Launch your program in the emulator and debugger from the command line
+on Windows, MacOS, or Linux with the `quadplay` command:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
+# Load the games/quadpaddle/quadpaddle.game.json sample program
+quadplay quad://games/quadpaddle
+
+# Load a mygames/space/space.game.json game that you've made
+quadplay mygames/space
+
+# Equivalent to the previous example
+quadplay quad://mygames/space
+
+# Load from the internet (server must support CORS)
+quadplay https://morgan3d.github.io/somegame/foo.game.json
+
+# Just run the emulator. You can modify the URL in your browser
+# to add "?game=" and the game's URL or relative path
+quadplay
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+!!! WARNING
+    Safari does not give proper file and line information on errors. Run in
+    Chrome or Firefox on MacOS if you're having trouble figuring out which
+    line is causing an error on Safari.
+
+These examples assume that your directory structure is:
+
+**********************************************************
+*
+*   📂 quadplay
+*   |
+*   +-- 📄 quadplay
+*   |
+*   +-- 📂 fonts
+*   |   |
+*   |   ⋮
+*   |   
+*   +-- 📂 games
+*   |   |
+*   |   +-- 📂 quadpaddle
+*   |   |   |
+*   |   |   +-- 📄 quadpaddle.game.json
+*   |   |   |
+*   |   ⋮   ⋮
+*   |
+*   +-- 📂 mygames
+*   |   |
+*   |   '-- 📂 space
+*   |       |
+*   |       +- 📄 space.game.json
+*   |       |
+*   |       ⋮
+*   |
+*   +-- 📂 sprites
+*   |   |
+*   ⋮   ⋮
+**********************************************************
+[Directory structure with the `quadplay` script in the root.]
+
+The directory and `.game.json` file do not have to have the same
+name. You can list the full path to the actual game file instead.
+
+Every time you push the play button (F5) or reload button (Ctrl+R) in
+the emulator, it will reload your code and assets from disk.
+
+You can use the built-in assets from the developer kit, existing ones
+from sites like http://opengameart.org and http://freesound.org, or 
+create your own using:
+
+- PNG pixel art editor for sprites and fonts (_[Gimp](https://www.gimp.org/), AseSprite, Photoshop, GraphicsGale, etc._)
+- MP3 sound tools (_[BFXR](https://www.bfxr.net/), [Audacity](https://www.audacityteam.org/), etc._)
+- TMX map tool ([Tiled](https://www.mapeditor.org/))
+
+_People playing your game don't need Python. You can deploy to static
+websites or GitHub for others to play your game online from any major
+desktop or mobile browser._
+
+
+Workflow
+------------------------------------------------------------------------------------
+
+You should create your programs however works best for you. Here's how
+I like to work in quadplay✜.
+
+1. I start with a project file to load standard assets from `quad://`
+   and single *mode* called `Play.ns` that has no sections. I write a
+   little code to draw the game.
+
+2. Pretty soon, I need some state that persists between frames, so I separate
+   `Play.ns` into top level initialization code a `frame` *section*. I then declare variables
+   in in the top level of the mode, and as my main loop grows too long, I start to define helper
+   functions there as well.
+   
+3. At some point, I'm ready for *another mode*. This is usually for 
+   gameplay reasons, not polish because it is still early in the project.
+   This might be a map or inventory screen, for example. As soon as there
+   is a new mode, I need to have variables that can be seen by both modes.
+   So, I also create a `common.ns` or other *script* to store the global
+   variables. I continue this process as more modes are required, periodically
+   checking the mode system diagram in the IDE to ensure that the game
+   flow is what I expected.
+   
+4. As code starts to become duplicated in the modes, I move generally
+   useful helper functions out to scripts. When the scripts themselves
+   get long, I start grouping them by functionality. For example, `particle.pyx`,
+   `animation.pyx`, and `gui.pyx`.
+   
+This is a workflow that is good for prototyping, especially in game
+jam and hobby projects. I feel like keeping everything as simple as
+possible and then refactoring at growth points is best for
+productivity.
+
+Otherwise, it is hard to iterate in the beginning because you're stuck
+with big program abstractions in what is still a small program. Many
+prototypes don't go the distance to become big programs,
+anyway. There's no reason to overdesign early on.
+ 
+
+Built-In Games
+------------------------------------------------------------------------------------
+
+Two complete games and a few demos are included to show how to use the APIs.
+
+
+### Playable
+
+  <center><img src="../games/quadpaddle/logo.png" width="300px" style="border:0"></center>
+   
+[Quadpaddle](../console?game=quad://games/quadpaddle&IDE=1) is a four-player cooperative game inspired by [_Breakout_]("https://en.wikipedia.org/wiki/Breakout_(video_game)"): 
+
+- Powerups
+- Level-end animations
+- Particle system
+- Screenshake
+- Menus and pause screen
+- Frame hooks
+- Y = down coordinates
+
+
+  <center><img src="../games/speedstreet/logo.png" width=320px style="border:0"></center>
+ 
+[Speed Street](../console?game=quad://games/speedstreet&IDE=1) is a four-player competitive racing game inspired by [_Excitebike_](https://en.wikipedia.org/wiki/Excitebike):
+
+- Entity hierarchy
+- Simple physics
+- Character selection screen
+- Orthographic 2.5D graphics
+- Y = up coordinates
+- `spriteOverrideColor`
+
+
+### Examples
+
+[Hello, World](../console?game=quad://examples/helloworld&IDE=1) is a minimal example of a program with
+one mode, one asset, and no sections or optional elements that puts text on the screen.
+
+[RPG Demo](../console?game=quad://examples/rpg&IDE=1) is a simple example of a single-player RPG game design:
+
+- Pause, Inventory, and Shop modes
+- Multi-layer map
+- Player movement with obstructions
+- NPC interaction
+
+
+[Dual-Stick](../console?game=quad://examples/dual-stick&IDE=1) shows how to use dual-stick controls.
+The base of the tank is controlled by player 1 and the gun is controlled by player 2. When
+using a dual-stick game controller or keyboard, a single player can also use the right stick 
+or right side of the keyboard to control the gun. 
+
+- Dual-stick controls
+- Working with angles
+- Entity parenting
+
+
+[Robot](../console?game=quad://examples/robot&IDE=1) shows how to create an animate a deep
+entity hierarchy
+
+- Entity parenting
+- Pivots that are not at the center of sprites
+- Using scale and rotation together
+- Graphics tricks for reflections
+
+[Starter](../console?game=quad://examples/starter&IDE=1) Is a project with a basic setup
+from which you can build your own.
+
+
+Programming Model
+------------------------------------------------------------------------------------
+
+The **PyxScript** programming language is designed to make compact,
+readable games. It blends Python, Lua, and JavaScript
+syntax. Indentation and newlines signify blocks and ends of
+statements. The syntax is based on math notation and looks like
+pseudocode. Variables are explicitly declared and dynamically
+typed. There's lexical scope, first class functions, and literal
+expressions for objects and (zero-based) arrays. It is decidedly
+function-based instead of object-oriented.
+
+Most of PyxScript programming is typical of any imperative,
+high-level language. It is similar to Python, Lua, JavaScript, C#,
+and Java.
+
+There are three special parts of the PyxScript programming model that
+are designed to simplify programming arcade games. These special
+features are [*modes*](#modes), [*2.5D graphics*](#2.5dgraphics), and [*frame hooks*](#framehooks).
+
+
+### Modes
+
+Your program consists of one or more *modes*. Common modes are
+"Play", "Pause", "Title", "Inventory", "CutScene", and
+"GameOver". Use `setMode()` to change which mode the program is in. 
+Clicking on the "Modes" label on the left side of the IDE draws
+the modes and transitions for your program.
+
+![Mode diagram for the Quadpaddle sample game, as shown in the IDE.](modes.png width=50%)
+
+For each mode, you specify what code runs every *frame*. This is the
+body of the inner loop. Modes have capitalized names and are defined
+in a script file with the same name. The simplest implementation of a
+mode is just this per-frame code.
+
+The `modeFrames` variable tracks the number of frames since this mode started.
+`setMode()` changes the mode and leaves a note in the debugging output explaining
+why the mode changed. It is also used by the IDE to visualize the state machine
+of your program and label the transitions. `getMode()` returns the current mode,
+which acts like a special constant.
+
+You can also separate the mode file into different sections for code that runs
+once:
+
+- Top level: when the game is first started. Usually just variable and function declarations.
+- `enter`: when this mode becomes active
+- `frame`: every frame while this mode is active. Put your drawing and simulation code here.
+- `leave`: when the game changes to another mode
+
+You can think of these as callbacks, although they are not regular
+functions and can only be invoked directly by the console. 
+You may be familiar with the concept of a state machine, also called a
+finite automata or flow chart. Your program is a state machine with
+the modes as the states.
+
+!!! Note: Transition Hints 
+    The IDE automatically constructs the mode diagram from your program. It is
+    [impossible](https://en.wikipedia.org/wiki/Undecidable_problem) to
+    do this for all programs, but it can usually do a good job. When
+    the automatic algorithm misses a link, you can give it a hint
+    using a commented out `setMode` call in your mode file.  For
+    example, <code style="white-space: nowrap">// setMode(GameOver, "0 lives")</code>
+    will add a link from the current mode to the `GameOver` mode.
+
+The syntax of a mode with multiple sections is similar to markdown format: 
+
+1. the name of the mode on the first line
+2. a line of `=`, `═`, or `⚌` characters to underline the mode name
+3. the top-level code
+4. the sections, each with a name underlined by `-`, `-`, `─`, `—`, `━`, or `⎯` characters
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+
+Pause
+═══════════════════════════════════════════════════════════
+// A good place to declare state only used by this mode
+let selection
+const choices = ["Continue", "Show Map", "Quit"]
+
+
+enter
+───────────────────────────────────────────────────────────
+// Reset any state
+selection = 0
+playAudioClip(menuOpen)
+
+
+frame
+───────────────────────────────────────────────────────────
+setBackground(rgb(1, 1, 0))
+
+// Up and down to change the choice
+selection = (selection + 3 + pad[0].y) mod 3
+
+// Draw the menu
+let pos = screenSize / 2 - xy(0, 50)
+drawText(menuFont, "→", pos + xy(-50, 16 selection), #00F)
+for c in choices:
+   drawText(menuFont, c, pos, #000)
+   pos.y += 16
+
+// Button press to choose
+if pad[0].aa:
+   if selection == 0:      setMode(Play,  "Chose play")
+   else if selection == 1: setMode(Map,   "Chose map")
+   else:                   setMode(Title, "Chose title")
+
+
+leave
+───────────────────────────────────────────────────────────
+playAudioClip(menuClose)
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[A sample in-game pause menu mode using all of the optional mode sections.]
+
+
+If you're accustomed to object-oriented languages, then you might
+think of the whole program as:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Java
+public class Pause extends Mode {
+   // These variables are the top-level code
+   protected int selection;
+   
+   public void enter() {
+      selection = 0;
+      playAudioClip(menuOpen);
+   }
+   
+   public void frame() {
+      selection = (selection + gamePad.y + 3) % 3; }
+      drawChoices(selection);
+      if (gamePad.a) { 
+         if (selection == 0) { setMode(play); } ...
+      }
+   }
+   
+   public void leave() {
+      playAudioClip(menuClose);
+   }
+}
+
+Mode menu = new Pause();
+
+...
+menu.enter();
+while (getMode() == menu) { menu.frame(); }
+menu.leave();
+...
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[This is the equivalent of your PyxScript program in an object-oriented language. You don't write all of this boilerplate in PyxScript!]
+
+
+
+### 2.5D Graphics
+
+Graphics in PyxScript are similar to other 2D rendering APIs. You can
+set the background color, draw basic shapes and text, and render
+sprites with some features such as flipping and rotation.  There's
+special support for drawing whole tile maps as well.  All drawing
+commands support an _alpha_ channel for transparency.
+
+What is special about the 2.5D graphics in PyxScript is that each
+drawing command has an associated _z-order_. 
+
+If two commands are at the same z-order, then whichever comes second
+will draw on top of the other one. Commands that have explicit,
+different z-order values will render from low to high values. 
+
+This means that you can issue drawing commands in whatever order is
+convenient and let the rendering system organize them as you wish.
+It also makes it easy to render orthographic games such as [_Double Dragon_]("https://en.wikipedia.org/wiki/Double_Dragon_(video_game)"),
+isometric games such as [_Populous_]("https://en.wikipedia.org/wiki/Populous_(video_game)"), and other
+games with semi-3D effects.
+
+Although the screen is cleared to the background color every frame,
+all of the drawing commands are stored for one previous frame. 
+this allows dialogue and pause screens to re-render the previous
+mode's last frame using `drawPreviousMode()` so that they can
+render on top of them. This rendering retains z-order, so you can
+even inject new graphics in between objects from a previous mode's
+frozen image.
+
+
+### Frame Hooks
+
+In addition to the mode's frame code, you can dynamically register
+hook functions to run at the beginning of every frame using `addFrameHook()`. These are
+useful for timers and animations. For example, to draw an explosion
+every frame until it dissipates or to shake the screen for three
+frames.
+
+Frame hooks can be tied to only run in a specific mode or to run in
+all modes. You can also specify a separate hook to run each frame
+from the one to run when it expires.
+
+The closest relative to frame hooks is JavaScript's `setTimeout()`
+utility, although it is much more limited.
+
+
+
+Coming from...
+------------------------------------------------------------------------------------
+
+Here are some tips to get you started quickly when you're coming to 
+PyxScript from other popular programming languages.
+
+### PICO-8
+
+If you're used to programming in PICO-8 Lua, make these changes for the
+quadplay✜:
+
+- Create a *mode* for your project.
+  - Put your top-level and `_init` code into the top level
+  - Put your `_update` and `_draw` combined into the `frame` section
+- Declare variables with `let` and `const` instead of `local`
+- Can't begin a variable name with an underscore
+- Arrays start at 0
+- `size(x)` instead of `#x`
+- Use `:` between the beginning of a block and its body
+- Blocks have no `end` statements and indentation is significant
+- Use `:` within object literals instead of `=`
+- It is safe to mutate containers inside iterator loops
+- You have to load a font before you can use `drawText`. Several are provided!
+- Enjoy the overloaded operators, array functions, z-order, and alpha blending
+
+
+### Python
+
+The PyxScript language feels a lot like Python, with these changes:
+
+- Comments begin with `//` instead of `#`
+- Explicitly declare variables with `let` and `const`
+- `size(x)` instead of `len(x)`
+- `debugPrint` instead of `print`
+- `for low <= i < high` instead of `for i in range(low, high)`
+- Can't begin a variable name with an underscore
+- The `==` operator is pointer equality (Python `is`). Use `equivalent` for object structural equality tests. 
+- Variables have block scope instead of function scope
+- Function variables have lexical scope (no `global` statement required)
+- No integer division (use `floor`)
+- It is safe to mutate containers inside iterator loops
+- No comparison operator chaining, except on `for` loop definition
+- `keys(obj)` and `values(obj)` instead of `obj.keys()` and `obj.values()` (although you almost never need either)
+- Use `extend(a, b)` for Python `objA.update(objB)` and `listA.extend(listB)`
+- Use `concatenate(a, b)` for Python `listA + listB` and `{**objA, **objB}`
+- Use `x = if t then a else b` for Python `x = a if t else b`
+
+### JavaScript
+
+The PyxScript language feels a lot like JavaScript strict mode, with these changes:
+
+- Use PyxScript `==` in place of JavaScript `===`
+- Use `:` and indentation instead of `{}` for defining blocks
+- Use `def` instead of `function`
+- Can't begin a variable name with an underscore
+- No `;` required, except for multiple statements on the same line
+- `size(x)` instead of `x.length`
+- `for k in object:` instead of `for (k in object)`
+- `for v in array:` instead of `for (v of array)`
+- It is safe to mutate containers inside iterator loops
+- There are no anonymous functions
+- Function names are not lifted to the containing function's scope
+- Use `x = if t then a else b` for JavaScript `x = t ? a : b`
+- `debugPrint` instead of `console.log`
+- Enjoy the overloaded operators for vectors
+
+
+
+Tools
+====================================================================================
+
+Emulator
+------------------------------------------------------------------------------------
+
+The main tool is the console emulator, which you can launch with the
+`quadplay` command at the command line.
+
+!!! WARNING
+    The `quadplay` script is only mentioned here during the beta test phase.
+    After general release this will become an advanced tool, and the IDE will
+    be directly hosted on GitHub.
+
+The emulator accepts keyboard and game controller input, as well as
+directly pressing its buttons on screen for mobile. On a gamepad, you
+must press a button before directional input will register in a web
+browser.
+
+Pressing the "run" button on the editor automatically transfers keyboard focus to the emulator.
+
+The emulator has special keyboard keys for:
+
+- F5: run
+- F6: screenshot
+- F8: start/stop recording GIF [^safariGIF]
+- F10: step one frame
+- Ctrl+Break or Ctrl+C (or Cmd on MacOS)
+- Ctrl+R or Ctrl+F5: reload
+
+[^safariGIF]: On Safari, you have to explicitly allow popups for the website for this to work.
+ Go to Preferences --> Websites --> Pop-up Windows and check "allow" for `localhost` (or whatever
+ address you access quadplay from).
+
+### Controls
+
+Quadplay✜ supports up to four simultaneous physical game
+controllers. Most PC and console controllers (e.g., XboxOne, PS4)
+work, as well as retro game pads by [8bitdo](http://www.8bitdo.com/)
+and
+[Logitech](https://www.logitechg.com/en-ca/products/gamepads/f310-gamepad.html).
+
+There is also keyboard mapping for emulating controller input for up
+to two players. You can use two USB or Bluetooth keyboards or put both
+player's hands on a single one.
+
+ <center> 
+  ![](../console/xbox_controller.png style="border:none; image-rendering:auto" width=50%)
+ 
+  ![](../console/gamepad.png style="border:none; image-rendering:auto" width=50%)
+
+  ![](../console/keyboard.png style="border:none; image-rendering:auto" width=75%)
+ </center>
+
+Note that when using a dual-stick console controller, the player 1
+controller right stick is also mapped to the player 2 D-pad. This
+allows games with dual-stick controls using keyboard or controller.
+
+
+Input     | Player 1 Key| Player 2 Key| Xbox One   | PS4        | SNES
+:--------:|:-----------:|:-----------:|:----------:|:----------:|:------:
+▲         | W or ↑      | I           | ▲          | ▲          | ▲
+◀         | A or ←      | J           | ◀          | ◀          | ◀
+▼         | S or ↓      | K           | ▼          | ▼          | ▼
+▶         | D or →      | L           | ▶          | ▶          | ▶
+ⓐ         | V or space  | / (?)       | Ⓐ          | ╳          | Ⓑ
+ⓑ         | G or enter  | ' (")       | Ⓑ          | ◯          | Ⓐ
+ⓒ         | C           | . (&gt;)    | Ⓧ          | ▢          | Ⓨ
+ⓓ         | F           | ; (:)       | Ⓨ          | △          | Ⓧ
+ⓠ         | 1 or Q      | 7           | ⧉          | Share      | Select
+ⓟ         | 4 or P      | 0           | ☰          | Options    | Start
+
+
+### Resolution
+
+The emulator screen tries to maintain an integer multiple of the
+native pixel resolution to prevent distortion of pixel art. When
+running on a very high resolution screen it relaxes this constraint to
+use the full screen effectively.
+
+Some exact ratios are:
+
+- 640x360: 1x (384x224)
+- 800x480, 1024x768: 2x (768x448)
+- 1280x720: 3x (1152x672)
+- 1600x900, 1920x1080: 4x (1536x896)
+- 1920x1200: 5x (1920x1120)
+
+
+Quantize
+---------------------------------------------------------------------------------------------
+
+[Quantize](../tools/quantize.html) is a standalone browser tool for
+converting any image format that your browser can load into a sRGB8 PNG
+for quadplay✜. While the console emulator can load any PNG file, if you convert
+them using Quantize you will have control over the color reduction process
+and be able to produce much smaller files for distribution.
+
+
+Fontgen
+---------------------------------------------------------------------------------------------
+
+[Fontgen](../tools/fontgen.html) is a standalone browser tool for
+producing rough quadplay✜ font images from fonts installed on your local
+computer. You can then screen capture these and edit them in your
+favorite pixel editor to clean them up.
+
+
+Fontpack
+---------------------------------------------------------------------------------------------
+
+[Fontpack](../tools/fontpack.html) is a standalone browser tool for
+taking a font PNG file with regular tiles (such as the one produced by
+fontgen) and packing it tightly. It will generate the output PNG
+and the `.font.json` file for you.
+
+
+
+Standard Library
+=========================================================
+
+Standard library functions are first-class values. They can be stored
+in data structures and variables.
+
+A parameter shown with parentheses and an equal sign after it, for
+example: `i (= 0)` indicates that this is an optional parameter and
+the value in parentheses will be used if none is supplied. Explicitly
+specifying `nil` for any parameter forces its default value.
+
+Input
+-----------------------------------------------------------
+
+The gamepad objects in the four-element `pad` array have
+the following fields:
+
+Field             | Values   | Meaning
+------------------|----------|----------------------------------
+`index`           | 0,1,2,3  | Index of this gamepad in `pad` array
+`x`               | -1,0,+1  | Current D-pad value on the $x$-axis (+1 = right)
+`xx`              | -1,0,+1  | Direction that was just pressed this frame on the $x$-axis
+`dx`              | -2 to +2 | Change in direction this frame on the $x$-axis
+`y`               | -1,0,+1  | Current D-pad value on the $y$-axis (+1 = backward)
+`yy`              | -1,0,+1  | Direction that was just pressed this frame on the $y$-axis
+`dy`              | -2 to +2 | Change in direction this frame on the $y$-axis
+`angle`           | -π to +π | `getRotationSign() * atan(y, x)` if both are not zero, otherwise the last angle
+`dangle`          | -π to +π | Change in `angle` this frame
+`a`               | 0 or 1   | 1 if the ⓐ button is currently pressed
+`aa` or `pressedA`| 0 or 1   | 1 if the ⓐ button was just pressed this frame
+`releasedA`       | 0 or 1   | 1 if the ⓐ button was just released this frame
+`b`               | 0 or 1   | 1 if the ⓑ button is currently pressed
+`bb` or `pressedB`| 0 or 1   | 1 if the ⓑ button was just pressed this frame
+`releasedB`       | 0 or 1   | 1 if the ⓑ button was just released this frame
+`c`               | 0 or 1   | 1 if the ⓒ button is currently pressed
+`cc` or `pressedC`| 0 or 1   | 1 if the ⓒ button was just pressed this frame
+`releasedC`       | 0 or 1   | 1 if the ⓒ button was just released this frame
+`d`               | 0 or 1   | 1 if the ⓓ button is currently pressed
+`dd` or `pressedD`| 0 or 1   | 1 if the ⓓ button was just pressed this frame
+`releasedD`       | 0 or 1   | 1 if the ⓓ button was just released this frame
+`q`               | 0 or 1   | 1 if the ⓠ button is currently pressed
+`qq` or `pressedQ`| 0 or 1   | 1 if the ⓠ button was just pressed this frame
+`releasedQ`       | 0 or 1   | 1 if the ⓠ button was just released this frame
+`p`               | 0 or 1   | 1 if the ⓟ button is currently pressed
+`pp` or `pressedP`| 0 or 1   | 1 if the ⓟ button was just pressed this frame
+`releasedP`       | 0 or 1   | 1 if the ⓟ button was just released this frame
+
+The axes are affected by the current transformation _at the end of the frame_, 
+as set by `setTransform()`. The angles are always clockwise in screen space.
+
+The `joy` variable is equal to `pad[0]` as shorthand for single-person games.
+
+The `anyButtonPress()` function returns true if any gamepad's button was just
+pressed.
+
+
+Modes
+------------------------------------------------------------------------
+
+
+`getPreviousMode()`
+: Return the previous mode, or `nil` if there was no previous
+  mode. When returning to a mode via `popMode()`, the previous mode
+  is the mode from which _that_ one was entered; they are on a stack.
+
+`getMode()`
+: Return the current mode. This can be passed to hook functions or
+  compared against mode names, but not to `setMode`, which requires an
+  explicit mode name. during mode initialization, `getMode()` returns `nil`.
+
+`launchGame(url, note (= ""))`
+: Load a different game. This is primarily used by the built-in
+  quadplay launcher, but is available to all programs.
+
+`popMode(note (= ""))`
+: Go back to the previous mode that invoked `pushMode`, restoring the
+  draw calls and `modeFrames` as of that point. It is a runtime error
+  to invoke `popMode()` when the mode was not entered from
+  `pushMode()`. Invokes the `leave` section of the current mode but
+  not the `enter` section of the mode being returned to.
+
+`pushMode(Mode, note (= ""))`
+: Enter a new mode but remember the current mode. Combines their draw calls
+  for `drawPreviousMode()`. Useful for modal dialogs, such as pause screens, 
+  inventory screens, and dialogue. Does not invoke the `leave` section of
+  the current mode. Does invoke the `enter` section of the mode being entered.
+
+`quitGame(note (= ""))`
+: Quit the game and exit to the IDE or the launcher. Note that games do not
+  form a stack. Quitting a game returns to the built-in quadplay launcher or
+  IDE, and not the game that launched it.
+
+`resetGame(note (= ""))`
+: Reset the game, restoring all assets and starting again from the
+  initial mode.
+
+`setMode(Mode, note (= ""))`
+: Immediately switch to the new mode. The current mode stops executing and the new
+  mode begins.
+  
+  The mode name must be the literal name of the mode, not a variable,
+  a value from a data structure, or the return value of the function.
+
+  If the note is present, it must likewise be a string literal and not
+  an expression.  The note is a comment that is used by the IDE for
+  creating state machine diagrams and in the IDE for debugging. It has
+  no effect on the executing program.
+  
+  Erases the `pushMode` stack but remembers its draw calls.
+ 
+When changing modes via `setMode()`, the order of operations is:
+
+1. `getPreviousMode()` switches to the current mode,
+   `getMode()` switches to the _new_ mode.
+2. The _previous_ mode's graphics commands are captured for future
+   `drawPreviousMode()` calls.
+3. Any `leave` code executes on the _previous_ mode.
+4. `modeFrames = 0`, 
+5. Any `enter` code executes on the _new_ mode.
+ 
+
+Types
+---------------------------------------------------------
+
+`isArray(value)`
+: Returns true for arrays and false for all other types.
+
+`isBoolean(value)`
+: Returns true for booleans and false for all other types.
+
+`isFunction(value)`
+: Returns true for functions and false for all other types.
+
+`isNil(value)`
+: Returns true for `nil` and false for all other types.
+
+`isNaN(value)`
+: Returns true for the floating point not-a-number value 
+  `NaN` and false for all other values.
+  Note that you cannot test for `NaN` using `==` due to
+  floating point NaN rules.
+
+`isNumber(value)`
+: Returns true for numbers and false for all other types.
+
+`isObject(value)`
+: Returns true for objects and false for all other types.
+
+`isString(value)`
+: Returns true for strings and false for all other types.
+
+`type(value)`
+: Returns the type of the value as a string: `array`, `boolean`,
+  `function`, `nil`, `number`, `object`, or `string`.
+
+
+Array
+---------------------------------------------------------
+`concatenate(array1, array2)`
+: Create a new array that contains all elements of `array1` followed by all elements of `array2`.
+
+`equivalent(a, b)`
+: Returns true if these arrays have the same length and the elements are
+  `==` (does not recursively test if the elements are equivalent).
+
+`extend(array1, array2)`
+: Mutate `array1` by pushing all elements of `array2` onto it.
+
+`fastRemoveKey(array, i)`
+: Delete element `i` from the array, swapping it with the last element. O(1) expected amortized time.
+
+`find(array, x, i (= 0))`
+: Find the index of the element whose value is `x`, starting at optional index `i` (default 0).
+  Returns `∅` if not found. O(n)
+
+`join(array, separator (=""))`
+: Joins the elements of the array into a string. Each element converted to a string with `unparse()` if it is not already a string.
+
+`pop(array)`
+: Remove the last element from the array and return it, or `∅` if the array is empty. O(1) expected amortized time.
+
+`popFront(array)`
+: Remove the first element from the array and return it, or `∅` if the array is empty. O(n) expected amortized time.
+
+`push(array, x, ...)`
+: Append `x` and any other arguments to the array. O(1) expected
+  amortized time for a single argument and O(n) for n arguments.
+
+`pushFront(array, x, ...)`
+: Insert `x` and any other arguments to the array. O(n) expected
+  amortized time for a single argument and O(m) for m arguments and
+  array of length n.
+
+`removeKey(array, i)`
+: Delete element `i` from the array, preserving order. O(n) expected time.
+
+`removeValues(array, x)`
+: Delete every instance of `x` in the array, maintaining order. O(n) time in the original
+  length of the array.  Does nothing if `x` is not in the array.
+
+`resize(array, n)`
+: Change the length of the array. O(size(array) + n) time if growing, O(1) if shrinking.
+
+`reverse(array)`
+: Reverses the array in place, O(size(array)). Returns nothing to avoid confusion with `reversed()`.
+
+`reversed(array)`
+: Returns a shallow, reversed clone of the array, O(size(array))
+
+`rndValue(array)`
+: Return a random element of the array.
+
+`shuffle(array)`
+: Randomizes the array in place using using Knuth-Fisher-Yates in O(n) time. Returns nothing to avoid confusion with `shuffled()`.
+
+`shuffled(array)`
+: Returns a shallow, shuffled clone of the array, O(size(array))
+
+`size(array)`
+: Get the length of the array. O(1) time.
+
+`slice(array, s, e (= size(array)))`
+: Return the subarray of `array` between `s` (inclusive) and
+  optional `e` (exclusive, defaults to length).
+
+`sort(array, k)`
+: Sort the array from least to greatest. If `k` is a string, then
+  elements of the array are assumed to be objects and are sorted by
+  that key. If `k` is a number, then elements of the array are assumed
+  to be other arrays or strings and are sorted by that index. If `k`
+  is not specified and the array contains objects, then elements are
+  sorted by their alphabetically-first key.
+  
+  If `k` is a function, then it must be a function of the form
+  `compare(a, b)` that returns a positive number if `a` is greater
+  than `b`, a negative number if `b` is greater than `a`, and zero if
+  they are equal.
+  
+  If `k` is not specified and the array contains numbers or strings,
+  then they are sorted by natural order.
+
+
+String
+---------------------------------------------------------
+`concatenate(a, b)`
+: Returns a new string that is `a + b`.
+
+`find(string, x, i (= 0))`
+: Find the index of the substring whose value is `x`, starting at
+  optional index `i` (default 0).  Returns `∅` if not found. O(n)
+  time.
+  
+`formatNumber(n, fmt)`
+: Produces a string from number `n` in one of the following formats. Input times are in seconds.
+  Each is followed by an example output.
+
+   - `"percent"`: 30%
+   - `"commas"` (comma thousand separators): 1,000,000
+   - `"spaces"` (space thousand separators): 1 000 000
+   - `"binary"`: 0b10100001
+   - `"degrees"`: 57°
+   - `"hex"`: 0xa1
+   - `"scientific"`: 6.022×10²³
+   - `"clock12"`: 5:35pm
+   - `"clock24"`: 17:35
+   - `"stopwatch"`: 1:38.71
+   - `"oldstopwatch"`: 1"38'71
+   - `".00"` (or any other trailing zero sequence): 4.91 
+   - `"00"` (or any other leading zero sequence): 07
+   - `" 0"` (or any other leading space sequence followed by a zero sequence): " 7"
+
+`lowerCase(s)`
+: Returns the lower case version of the string.
+
+`parse(s)`
+: Parse a string that was encoded using `unparse()` and convert it back into the original
+  data structure. Functions, built-ins, and recursive arrays cannot be converted.
+
+`reversed(string)`
+: Returns a ranomized version of the string in O(size) time.
+
+`shuffled(string)`
+: Returns a shuffled version of the string in O(size) time.
+
+`size(s)`
+: Get the length of the string. O(1) time.
+
+`slice(string, s, e (= size(str)))`
+: Return the substring of `string` between `s` (inclusive) and
+  optional `e` (exclusive, defaults to length).
+
+`split(string, separator (=""))`
+: Returns an array of strings separated by `separator`. If the separator is the empty string, then all characters are separated.
+
+`unparse(x)`
+: Returns code that is equivalent to producing data object `x`, if it is not a
+  recursive object or array or a function. Note that strings will have quotes
+  around them in the resulting string.
+
+`upperCase(s)`
+: Returns the upper case version of the string.
+
+
+Object
+---------------------------------------------------------
+`concatenate(object1, object2)`
+: Create a new object that is the union of `object1` and `object2`,
+  where `object2` keys override in the case of collisions.
+
+`extend(object1, object2)`
+: Mutate `object1` by assigning all elements of `object2` into it,
+  overriding any existing keys in the case of collisions.
+
+`fastRemoveKey(object, k)`
+: Same as `removeKey` for a object.
+
+`find(object, x)`
+: Find a key for which the value is `x`.
+  Returns `∅` if not found. O(n) time in the number of key-value pairs.
+
+`keys(object)`
+: An array of the keys in the object. You almost never need this because
+  `for k in object` iterates over the keys directly.
+
+`removeKey(object, k)`
+: Remove a key-value pair by key. Does nothing if `k` is not in the object.
+  Use `object[k] ≠ ∅` to test for containment explicitly.
+
+`removeValues(object, v)`
+: Remove every instance of `v` from the object.
+
+`size(object)`
+: The number of entries in the object.
+
+`values(object)`
+: An array of the values in the object.
+
+
+Vector
+---------------------------------------------------------
+
+Most of the math functions and operators defined for numbers also 
+operate component-wise on vectors represented as structures or arrays.
+
+The following vector operations can be applied to any array or object,
+including `xy` and `rgb` values, except where specific key names are mentioned:
+
+`cross(a, b)`
+: Return the vector cross product of two arrays of length three each or two vectors with
+  `x`, `y`, and `z` fields. For arguments of length two or without a `z` component,
+  returns `a.x * b.y - a.y * b.x`.
+
+`direction(v)`
+: `v / magnitude(v)` if the magnitude is nonzero, otherwise the zero vector. That is,
+  returns a normalized or unit vector unless the input is zero.
+
+`dot(a, b)`
+: Return the dot (inner) product of any two structures or arrays with parallel
+  elements.
+
+`equivalent(a, b)`
+: Returns true if these vectors have the same size and the elements are
+  `==` (does not recursively test if the elements are equivalent).
+
+`magnitude(v)`
+: The square root of the sum of the elements (L2 norm).
+
+`maxComponent(v)`
+: Largest element.
+
+`minComponent(v)`
+: Smallest element.
+
+`perp(v)`
+: Returns a vector perpendicular to `v` by rotating it 90 degrees: 
+  `xy(-v.y, v.x)`, for `xy()` and 2-element array vectors only.
+
+`rndCircle()`
+: Returns a uniformly distributed `xy()` on the perimeter of the circle with center `(0, 0)` with radius 1.
+  Useful for random directions.
+
+`rndDisk()`
+: Returns a uniformly distributed `xy()` on the disk with center `(0, 0)` with radius 1. Useful for
+  random offsets within a circle.
+
+`rndSquare()`
+: Returns a uniformly distributed `xy()` on the square with center `(0, 0)` with side length 2.
+  Useful for random offsets within a square.
+
+`xy(x, y)`
+: Create the object with `x` and `y` fields. 
+
+`xy(v)`
+: Returns `{x:v.x, y:v.y}`. Useful for removing the `z` component.
+
+`xyz(x, y, z)`
+: Create the object with `x`, `y`, and `z` fields.
+
+
+
+Function
+---------------------------------------------------------
+
+`call(f,a,b,...)`
+: Invoke function `f` with arguments `a`, `b`, etc.
+
+
+
+Math
+---------------------------------------------------------
+`abs(x)`
+: Absolute value
+
+`acos(x)`
+: Inverse cosine in radians
+
+`atan(y, x)`
+: Arctangent of y/x, in radians
+
+`asin(x)`
+: Inverse sine in radians
+
+`cbrt(x)`
+: Cube root of `x`. Has the same sign as the argument.
+
+`clone(v)`
+: Return a shallow clone of `v`
+
+`copy(s, d)`
+: Copy the properties of `s` onto `d`. Both must be arrays or objects.
+
+`cos(x)`
+: Cosine, `x` in radians 
+
+`hash(x, y)`
+: A hash value of string or number `x`, returning a value on [0, 1].
+  If `y` is specified, the hash considers the union of the values.
+
+`lerp(a, b, t)`
+: Returns `a * (1 - t) + b * t`. See also `smoothstep()` and `smootherstep()`.
+
+`loop(x, hi)`
+: Real-number floored modulus. Wraps `x` to the range [0, `hi`). `hi` defaults to `1.0` if not specified.
+
+`magnitude(x, y, ...)`
+: The square root of the sum of the arguments, which must all be numbers.
+  Same as `magnitude([x, y, ...])`.
+
+`makeSpline(timeArray, valueArray, order = 3, extrapolate = "stall")`
+: Returns a function mapping numbers to values by piecewise polynomial
+  interpolation. The value array must have types for which `*` and `+`
+  operate (which includes numbers, `xy()`, `xyz()`, `rgb()`, and
+  `rgba()` values, and arrays of numbers), and all elements must have
+  the same type. The spline is always interpolating. The `timeArray`
+  and `valueArray` must have the same length.
+  
+  `order`:
+  - 0 = nearest neighbor
+  - 1 = linear (polyline)
+  - 3 = cubic (Catmull-Rom) spline
+  
+  `extrapolate`:
+  - "loop" = cyclic. The `timeArray` must have one more element than the `valueArray`.
+     That final value is the looped time that matches the start time.
+  - "clamp" = hold the final value
+  - "stall" = interpolate to additional control points that match the final value
+  - "continue" = continue the curve with the trend of the final control points
+
+`max(a, b, ...)`
+: Largest of the arguments
+
+`min(a, b, ...)`
+: Smallest of the arguments
+
+`mid(a, b, c)`
+: Middle argument once sorted. Can be used for clamping.
+
+`noise(octaves, x, y (=0), z (=0))`
+: Value noise on the range [-1, 1], bicubically interpolated between integer locations at
+  octave 0. Unused dimensions default to zero.
+
+`oscillate(x, m)`
+: Like `loop` but alternately counts up and down on the interval
+  [`0`, `m`]. Works with negative and fractional values.
+  Let $ k = 2 m - 2, w = \mathrm{loop}(x, k) $.
+  $\mathrm{oscillate}(x, m)$ is $w$ if $ w < m $, otherwise it is $k - w$.
+
+`pow(a, b)`
+: Exponent. See also the `^` operator.
+
+`rnd()`
+: Random number between 0 and 1, excluding 1. See also the `ξ` operator.
+
+`rndInt(n)`
+: Random integer between 0 and n, inclusive.
+
+`sign(x)`
+: Sign of `x`. Returns -1 if `x` is less than zero, -0 if `x` is -0, 
+  +0 if `x` is +0, and +1 if `x` is greater than zero.
+
+`signNotZero(x)`
+: Returns -1 if `x` is less than zero, otherwise returns +1.
+
+`smoothstep(t_start, t_end, t)`
+: Transition from 0 at `t = t_start` to 1 at `t = t_end`. All arguments must be numbers.
+  Typically used as `lerp(A, B, smoothstep(lo, hi, t))` where `A` and `B` are colors or points.
+  This is a common graphics function for cubic Hermite interpolation. See also 
+  the [GLSL documentation](https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/smoothstep.xhtml)
+
+`smootherstep(t_start, t_end, t)`
+: Transition from 0 at `t = t_start` to 1 at `t = t_end` with more
+  gradual acceleration than `smoothstep`. All arguments must be
+  numbers.  Typically used as `lerp(A, B, smootherstep(lo, hi, t))`
+  where `A` and `B` are colors or points.  This is a common graphics
+  function for fifth-order interpolation.
+
+`sqrt(x)`
+: Square root.
+
+`sin(x)`
+: Sine of `x` radians.
+
+`srand(seed)`
+: Reset the random number generator, using an optional seed.
+
+`tan(x)`
+: Tangent of `x` radians.
+
+
+`x`               |  -5  |  -4  |  -3  |  -2  |  -1  |  0  |  1  |  2  |  3  |  4  |  5  |  6  
+------------------|-----:|-----:|-----:|-----:|-----:|----:|----:|----:|----:|----:|----:|-----:
+`mid(x, 0, 4-1)`  |  0   |  0   |   0  |   0  |   0  |  0  |  1  |  2  |  3  |  3  |  3  |  3  
+`x mod 4`         |  -1  |  0   |  -3  |  -2  |  -1  |  0  |  1  |  2  |  3  |  0  |  1  |  2  
+`loop(x, 4)`      |  3   |  0   |   1  |   2  |   3  |  0  |  1  |  2  |  3  |  0  |  1  |  2  
+`oscillate(x, 4)` |  1   |  2   |   3  |   2  |   1  |  0  |  1  |  2  |  3  |  2  |  1  |  0  
+[Table [tblCompare]: Comparison of range restriction functions useful for animation.]
+
+
+Sound
+---------------------------------------------------------
+
+`playAudioClip(object)`
+: Object version of `playAudioClip()`, allowing keyword argument style call.
+
+`playAudioClip(audioClip, loop (=false), volume (=100%), pan (=0%), pitch (=100%), time (=0))`
+: Play audio clip `audioClip`, which must have been loaded as an asset. The time
+  is in seconds. Full pan left is `-100%` and full pan right is `100%`.
+  Returns a handle that can be used with `stopSound`.
+
+`resumeSound(sound)`
+: Resume a sound previously stopped with `stopSound()`.
+
+`setSoundPan(sound, pan)`
+: Set the pan of a sound that is currently playing. 0% is centered.
+  -100% is full left, 100% is full right.
+
+`setSoundPitch(sound, pitch)`
+: Set the pitch of a sound that is currently playing. 100% is the default pitch from the file.
+  200% is one octave higher, 50% is one octave lower.
+
+`setSoundVolume(sound, volume)`
+: Set the volume of a sound that is currently playing. 100% is the default volume from the file.
+
+`stopSound(sound)`
+: Stop playing `sound`, which was created with `playAudioClip`.
+
+
+
+Coordinates
+-----------------------------------------------------------
+
+The major coordinate systems for the standard library are *screen*
+space, *draw* space, *entity* space, *sprite* space, *sprite sheet*
+space (sprite indices), and *map* space (map cell indices).
+
+The helper routines to convert between these each take an `xy()` value
+and return a new `xy()` value (or `z`):
+
+- `transformScreenToDraw(c)`, `transformDrawToScreen(c, z (=0))`, `transformScreenZToDrawZ(z)`, `transformDrawZToScreenZ(z)`
+- `transformDrawToEntity(e, c)`, `transformEntityToDraw(e, c)`
+- `transformEntityToSprite(e, c)`, `transformSpriteToEntity(e, c)`
+- `transformParentToChild(e_child, c)`, `transformChildToParent(e_child, c)` (unlike all other transform methods, does not assume `updateEntityChildren` has been called)
+- `transformEntityToEntity(e_from, e_to, c)`
+- `transformDrawToSprite(e, c)`, `transformSpriteToDraw(e, c)`
+- `transformDrawToMap(m, c)`, `transformMapToDraw(m, c)`, `transformMapLayerToDrawZ(m, L)`, `transformDrawZToMapLayer(m, z)`
+
+Where `m` is a map, `e` is an entity, and `c` is an `xy()` coordinate. 
+The `z` value only affects `transformDrawToScreen` if a skew has been set by `setTransform()`.
+In this case, there is no way to invert the draw-to-screen transformation, so `transformScreenToDraw` is
+misleading.
+
+There are no transformation functions between entity and draw space
+z-axes. Just add or subtract the `entity.z` value.
+
+
+### Screen Space
+
+The clipping region is the only object interacted with in *screen
+space*, via `setClip()`, `getClip()`, and `intersectClip()`.
+
+The screen space graphics coordinate system is:
+
+- x increasing from 0 at the left edge of the screen to `screenSize.x` at the right edge
+- y increasing from 0 at the top edge of the screen to `screenSize.y` at the bottom edge
+- z increasing from -2047 at the back to 2048 at the front
+
+Integer coordinates correspond to the top-left corner of a pixel.
+Pixel centers are therefore at integers plus 0.5.
+
+Drawing commands sample at pixel centers. For example, the rectangle from (0, 0) to
+(2, 1) covers two pixel centers: (0.5, 0.5) and (1.5, 0.5). Setting this as the
+clipping region makes two pixels visible.
+
+************************************************************
+*  2048 (out of the screen)
+*    ^
+*     \  z
+*      \ 
+*       \0            x           
+*        *----------------------->* screenSize.x
+*        |\                       |
+*        | \                      |
+*        |  \                     |
+*     y  |   v                    |
+*        |     -2047              |
+*        v                        |
+*        *------------------------* 
+*   screenSize.y
+***********************************************************
+[Figure [coords]: Screen space and default draw space coordinate system.]
+
+I recommend treating the z-axis as scaled identically to x and y to
+support potential future voxel-based rendering schemes.
+
+
+### Draw Space
+
+Most graphics commands operate in *draw space*. By default, it is
+identical to screen space, but can be changed with with
+`setTransform()`. See also `getTransform()`, `extendTransform()`, and
+the `preservingTransform` block.
+
+**The transform affects both rendering and simulation**. The direction
+of the x- and y-axes affects the rotation angle of entity space as
+well as draw space. I recommend that for each game you choose a single
+y-axis convention. Set the scale part of the transform only once at
+the beginning, and then use `preservingTransform` for any localized
+needs such as inventory scrolling.
+
+As with screen space, integer coordinates correspond to the top-left
+corner of a pixel and pixel centers are therefore at integers plus ½.
+(½, ½) is the center of the top-left pixel and `screenSize - ½`
+is the center of the lower-left pixel.
+
+Drawing commands sample at pixel centers. The pixel ownership rules
+are bottom and right, so a primitive that has a top or left boundary
+exactly on a pixel center will not color that pixel. This is important
+for adjacent primitives to keep them from double-covering a pixel on
+the boundary. When thinking of the screen as a 2D array of discrete
+pixel elements, the snapping rule is essentially that a 1-pixel rectangle
+centered at `pos` colors pixel `⌊pos⌋`.
+
+For example, the rectangle from (0, 0) to
+(2, 1) covers two pixel centers: (0.5, 0.5) and (1.5, 0.5). The coordinates
+for a `drawRect()` command on integer boundaries are therefore usually 
+`drawRect(topLeft, widthHeight, ...)` or 
+`drawRect(topLeft, bottomRight - topLeft + 1, ...)` where `bottomRight` is the 
+lowest and rightmost pixel that will be visible.
+
+This coordinate system favors intuition for centered, even-sized
+objects such as sprites. It also gives the result that you might
+intuitively expect for odd-sized objects at integer or half-integer coordinates
+such as odd-width text,
+1-pixel points at integers, and 1-pixel horizontal and vertical lines. Diagonal
+1-pixel lines and points at non-integer, non-half locations will round in ways
+that are less intuitive.
+
+`drawPoint(pos)` draws a one-pixel rectangle from `pos - ½` to `pos + ½`.
+So, when passed integer arguments, `pos` = (0, 0) will color the top-left pixel and `screenSize - 1` is the
+lower-right. Any value from 0 to (1 - `ε`) will write to the
+the first pixel. When seeking to draw individual pixels aligned with the grid,
+I recommend that you use integer plus 1/2 coordinates
+for `drawPoint()` for robustness. However, if you use integer coordinates, it will
+"do what you expect".
+
+`drawLine()` draws a one-pixel line centered on its endpoints that
+extends ½ pixel beyond its endpoints. When seeking to draw horizontal and vertical lines
+aligned with the grid, I recommend that you use integer plus ½ coordinates
+for `drawPoint()` for robustness. However, if you use integer coordinates, it will
+"do what you expect". For other lines, you may be surprised by the result if they
+aren't at half-pixel offsets.
+
+A 4x4 sprite (or circle or text character) with its top and left
+edge aligned with the screen edges is centered on coordinate (2, 2),
+that is, half its width and height. A 3x3 object aligned as such
+is centered at (1.5, 1.5) but will draw in the same way if centered
+at (1, 1), which would be consistent with integer pixel centers.
+The center of the entire screen is `½ screenSize`.
+
+
+
+`extendTransform(addX, addY, addZ, scaleX (= 1), scaleY (= 1), scaleZ (= 1))`
+: Specification to be determined. (TODO)
+
+`getRotationSign()`
+: Returns -1 if `(scaleX * scaleY > 0)` for the current transformation
+  and and +1 if `(scaleX * scaleY < 0)`. Useful for computing the
+  coordinate transform of an entity angle. Angles always
+  counter-clockwise on *screen*.  In the *coordinate system*, they
+  rotate counter-clockwise if `getRotationSign() = 1` and clockwise if
+  `getRotationSign() = -1` (which is the default). This is used by `drawSprite()`
+  to determine the rotation direction. See also `getYUp()`.
+
+`getTransform()`
+: Returns the current net transformation as an array of eight numbers in the order of
+  `getTransform` arguments.
+  
+`getYUp()`
+: Returns `-sign(getTransform()[4])`, which is -1 if Y increases downwards (the default)
+  and +1 if Y increases upwards (`"flipY": true` in the .game.json file). 
+
+`preservingTransform`
+: The special `preservingTransform` block saves the current transform and
+  clipping region, executes the code in the body, and then restores the
+  previous transform and clipping region. It is useful for making modular
+  functions for handling UI scrolling, minimaps, and screenshake.
+
+`resetTransform()`
+: Reset to the default transformation, `setTransform(0, 0, 0, 1, 1, 1, 0, 0)`.
+  This overrides the `flipY` flag from the .game.json file.
+  
+`setTransform(addX (=), addY (=), addZ (=), dirX (=), dirY (=), dirZ (=), skewX (=), skewY (=))`
+: Set the transformation applied to all draw coordinates to compute screen coordinates. Nil values
+  default to their previous value. The equation 
+  mapping draw to screen coordinates is:
+  `x_s = (x + skewX * z) * dirX + addX`;
+  `y_s = (y + skewX * z) * dirY + addY`;
+  `z_s = z * dirZ + addZ`. 
+
+  The `dir` parameters must be +1 or -1, for flipping axes. This
+  affects the location of sprites and text but not their own axes;
+  text will always render right side up and sprites must be
+  independently flipped.
+  
+  By default, increasing z is towards the viewer, a negative direction can
+  be used to make increasing values farther back.
+  
+  The skew transform applies after direction flipping and can be used for isometric 3D.
+
+
+The most common changes are:
+
+- flip the y-axis using `setTransform(0, screenSize.y - 1, 0, 1, -1, 1)`. You can also do this by setting `"flipY": true` in the .game.json file.
+- flip y and center using `setTransform(½ screenSize.x, ½ screenSize.y, 0, 1, -1, 1)`
+- screenshake using `setTransform(2 ξ - 1, 2 ξ - 1)`
+
+The default coordinate system is convenient for games that line up
+objects with background images, use a lot of text, or sample values
+from sprites. The inverted coordinate system is preferable for games
+with a lot of rotation or physics simulation.
+
+Unlike 3D rendering systems with arbitrary transformations, the
+quadplay✜ transformations are designed specifically for switching
+between axis conventions in arcade games. They do not allow rotation
+or even non-unit scaling between draw space and screen space. They
+also _do not affect the orientation of sprites_.  A sprite rotated 45
+degrees counter-clockwise and at the top of the screen will draw at
+the bottom of the screen after `setTransform(0, screenSize.y - 1, 0,
+1, -1, 1)`, but it will not be upside down and will still be rotated
+45 degrees counter-clockwise.
+
+
+#### Entity Space
+
+Each entity has its own coordinate system defined by `entity.pos`,
+`entity.scale`, and `entity.angle`. The `entity.scale` is often used to
+flip sprites from left to right, which also flips the entity's local
+coordinate system.
+
+The direction of `entity.angle` is always counter-clockwise in screen
+coordinates. The direction in draw coordinates is given by
+`getRotationSign()`.
+
+******************************************************************
+*  Default Entity Space         With flipped y-axis
+*
+*                                       ^ y
+*                                       | 
+*     .---------.                  .----|----.
+*     |    ↶    |                  |    |↶   |
+*     |    *-------> x             |    *--------> x
+*     |    |    |                  |         |
+*     '----|----'                  '---------'
+*          |
+*          v y
+******************************************************************
+
+The axes of the entity space in draw space are given by:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+const θ = getRotationSign() * entity.angle
+const X = xy( cos θ, sin θ) * entity.scale
+const Y = xy(-sin θ, cos θ) * entity.scale
+
+// or
+
+const X = transformEntityToDraw(entity, xy(1, 0)) - entity.pos
+const Y = transformEntityToDraw(entity, xy(0, 1)) - entity.pos
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are currently no graphics commands that themselves take
+entity-space coordinates, but the concept can be important for writing
+your own routines that operate on entities, such as resolving
+attachment points. 
+
+A planned future physics package extension will use entity
+coordinates, for example, for a space ship to apply thrust at the
+current location of its engine.
+
+
+### Sprite Space
+
+Sprite coordinates are used by `getSpritePixelColor()`. These are integers
+with (0,0) on the top-left of the sprite and (`sprite.size.x` - 1, `sprite.size.y` - 1)
+on the lower left.
+
+
+### Sprite Sheet Space
+
+*Sprite sheets* use integer coordinates with (0, 0) at the upper-left
+corner and (`size(sheet)` - 1, `size(sheet[0])` - 1) at the
+lower-right corner. Instead of functions for operating on these, sprite
+sheets are directly accessed as 2D arrays: `sheet[x][y]`.
+
+### Map Space
+
+*Map space* integer coordinates used by maps have (0, 0) as upper-left
+tile and `map.size` - 1 at the lower-right tile.
+Maps are typically accessed as 2D arrays: `map.layer[L][x][y]`. For
+convenience, `map[x][y]` is a shorthand for `map.layer[0][x][y]`.
+
+The top-left corners of map cells are at integers when converting
+between map and draw coordinates. When rendered, a map therefore
+covers the same region as the drawing command
+`drawRect(xy(0,0), map.size * tileSize, #f)`.
+
+The map is aligned by default so that `drawMap()` renders the top-left
+corner of the map to the top-left corner of the screen. Use 
+`offset` in the `.map.json` file or `setTransform()` to alter
+the location of the map when rendered.
+
+
+Sprite
+------------------------------------------------------------
+
+Each element of a spritesheet has the following immutable properties:
+
+`sprite.id`
+: Unique integer identifying this sprite. This may change every time
+  the program is run.
+  
+`sprite.flippedX`
+: The corresponding derived sprite that is this sprite flipped horizontally.
+  Flipped sprites are created on spritesheet load but can only be accessed
+  through the non-flipped sprites. Note that `s.flippedX.flippedX == s`.
+
+`sprite.flippedY`
+: The corresponding derived sprite that is this sprite flipped vertically.
+  Flipped sprites are created on spritesheet load but can only be accessed
+  through the non-flipped sprites. Note that `s.flippedY.flippedY == s`.
+
+`sprite.scale`
+: An `xy()` value that is `xy(1,1)` for sprites extracted directly from 
+  the spritesheet and may be +1 or -1 in each axis for flipped sprites.
+
+`sprite.size`
+: `xy()` dimensions of the sprite in pixels.
+
+`sprite.spritesheet`
+: From which this sprite is taken.
+
+`sprite.tileIndex`
+: Integer `xy()` index of the sprite in its spritesheet.
+
+
+Entity
+------------------------------------------------------------
+
+The entity system is optional. It is convenient for providing fast,
+reliable implementations of common game-like simulation operations for
+prototyping. There are three categories of entity abstraction: basic,
+physics, and hierarchy. Use whichever level of complexity is useful to
+you, or simply build your own system if you wish. Note that due to "duck
+typing", you can apply entity functions to any object that has the
+right subset of fields for that function.
+
+In addition to the built-in entity properties, you can add whatever
+properties you wish. Beware that the following properties are
+available as user properties today, but are likely to be added as
+built-in properties in the future: `density` and `friction`.
+
+
+### Basic
+
+`drawEntity(e, recurse (= true))` 
+: Draw the entity, if its sprite is defined. If `recurse` is true,
+  also draws all of the elements of `e.childArray` recursively (see
+  the Hierarchy section).
+
+`makeEntity(obj (= {}), childTable (= {}))`
+: Returns a new entity object that is `obj` with defaults applied for
+  any properties not specified. This is forward compatible to any
+  extended properties that might be added in future versions, however,
+  those properties might conflict with any that you add on your
+  own. The built-in entity properties are all cloned if specified. All 
+  other properties of `obj` are copied over but not cloned.
+  
+  If the `childTable` second argument is provided (note that this is not
+  a property of `obj`), then all of the keys become fields of the new
+  entity and the values are added to the entity's `childArray`. This is
+  a convenient way to build entity hierarchies.
+
+  If a `childArray` property is specified on `obj`, then
+  `addEntityChild()` is called for each element of this array and
+  `updateEntityChildren()` is automatically invoked after the new entity
+  is constructed.
+
+
+The basic entity properties and defaults are:
+
+`entity.angle`
+: The draw-space angle from the x-axis to y-axis in radians. See
+  `drawSprite()`. Defaults to 0.
+
+`entity.name`
+: A string useful for debugging and error messages. Defaults to `"Anonymous"`.
+
+`entity.offset`
+: A draw-space value added to `entity.pos` by `drawEntity()`. Useful
+  for causing the drawn position to temporarily drift from the
+  simulated position for effects like shake or blowback after a hit.
+  Defaults to `xy(0,0)`. _Does not affect bounds for `overlaps()`._
+
+`entity.opacity`
+: Visibility on the interval 0 to 1. Defaults to 1.
+
+`entity.pos`
+: The draw-space `xy` position of the center of the entity. Defaults to (0,0).
+
+`entity.scale`
+: The draw-space `xy` scaling applied before translation and rotation. See `drawSprite()`.
+  Defaults to (1, 1). This can be used to grow, stretch, or flip the entity.
+  If `entity.shape == "disk"`, then the scale must have the same magnitude
+  in both x and y.
+
+`entity.shape`
+: A string that is `disk` or `rect`. Defaults to `rect`. A `disk` entity
+  must have scale that is the same in x and y.
+
+`entity.size`
+: The draw-space `xy()` size of the width and height of the bounding
+  box of the entire object in its own reference frame.  If
+  `entity.shape == "disk"`, then the `x` and `y` fields must have the
+  same value. If not specified, defaults to the sprite's size.
+  
+`entity.sprite`
+: A sprite from a sprite sheet. Can be `nil`.
+
+`entity.spriteOverrideColor`
+: Replaces the color of the sprite with this solid color (only works
+  if there is a sprite), keeping its alpha channel. Defaults to `nil`.
+
+`entity.z`
+: z-order position (a number). Defaults to zero.
+
+
+Examples of creating an entity with different shapes:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+// Disk
+e = makeEntity({pos:P, shape:"disk", size: xy(diameter, diameter)})
+
+// Square
+e = makeEntity({pos:P, shape:"rect", size: xy(edge, edge)})
+
+// Rectangle
+e = makeEntity({pos:P, shape:"rect", size: xy(w, h)})
+
+// Line
+e = makeEntity({pos:(A + B) / 2, shape:"rect", 
+                size: xy(magnitude(B - A), 0), 
+                angle:atan(B.y - A.y, B.x - A.x)})
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The entity system is designed to be extensible. You can add your own
+properties to it, and aren't required to use it at all...make direct
+`drawSprite()` calls if you don't like this. You can also use the
+entity system but replace the rendering if you prefer. For example,
+if you'd like to register your own draw function callbacks instead
+of using the sprite rendering, you can do this:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+def draw(e):
+   if e.draw: e.draw(e)
+   for c in e.childArray: draw(c)
+   
+def drawInBox(e):
+   drawRect(e.pos - e.size / 2, e.size, #FFF)
+   drawSprite(e.sprite, e.pos)
+
+let e = makeEntity({..., draw:drawInBox})
+
+draw(e)
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Example of replacing `drawEntity` with a version that uses arbitrary callbacks.]
+
+
+### Labels
+
+A text label is drawn for the entity if `entity.text and
+entity.font` is not `nil`. This is useful for showing player
+names, map labels, RPG stats, scores, and character dialogue. The full
+set of label properties is:
+
+- `entity.text`
+- `entity.font`
+- `entity.textXAlign`
+- `entity.textYAlign`
+- `entity.textOffset` (this is not affected by entity rotation but is affected by scale)
+- `entity.textColor`
+- `entity.textShadow`
+- `entity.textOutline`
+
+
+### Physics 
+
+A key relating textbook symbols and definitions to the quadplay✜ entity property names is:
+
+  Property       | Symbol                           | Definition
+  ---------------|----------------------------------|------------------
+  `mass`         | $m$                              | Mass
+  `pos`          | $x(t)$                           | Position
+  `vel`          | $v(t) = \dot{x}(t)$              | Linear velocity
+  `acc`          | $a(t) = \ddot{x}(t)$             | Linear acceleration
+  `force`        | $F(t) = m \cdot a(t)$            | Force
+  `angle`        | $\theta(t)$                      | Angle
+  `spin`         | $\omega(t) = \dot{\theta}(t)$    | Angular velocity
+  `twist`        | $\alpha(t) = \ddot{\theta}(t)$   | Angular acceleration
+  `torque`       | $\tau(t) = I \cdot \alpha(t)$    | Torque
+  `inertia`      | $I$                              | Inertia
+
+Functions:
+
+`physicsStepEntity(entity, t)`
+: Overwrites `acc = force/mass` and `twist = torque/inertia`.  Then,
+  integrates `acc` into `vel` into `pos` and `twist` into `spin` into
+  `angle`. Finally, sets `force` and `torque` to zero. Uses a forward
+  Euler (1st order Runge-Kutta) integrator over duration `t`.  This
+  tends to be a more stable method for small, discrete time steps
+  than the analytic quadratic solution and avoids the need for
+  additional data of higher-order integrators.
+
+`entityInertia(entity)`
+: Scalar inertia tensor about the center of mass. Equal to
+  `entityMass(entity) * magnitude(entity.scale * entity.size)² / 12`
+  when `shape` is `"rect"` and `⅛ entityMass(entity) *
+  (entity.scale.x * entity.size.x)²` when `entity.shape == "disk"`.
+
+`entityMass(entity)`
+: Scalar mass equal to the bounds area in pixels specified by the
+  `entity.shape` and `entity.size` times the `entity.density`.
+
+
+Properties:
+
+`entity.acc`
+: `xy()` linear acceleration. Defaults to (0, 0). 
+
+`entity.force`
+: `xy()` linear force. Defaults to (0, 0).
+
+`entity.density`
+: In mass units per square pixel. Defaults to 1.
+
+`entity.spin`
+: Scalar counter-clockwise rotational velocity. Defaults to 0.
+
+`entity.torque`
+: Scalar counter-clockwise rotational torque. Defaults to 0.
+
+`entity.twist`
+: Scalar counter-clockwise rotational acceleration. Defaults to 0.
+
+`entity.vel`
+: `xy()` linear velocity. Defaults to (0, 0).
+
+
+### Hierarchy
+
+The hierarchy is not a traditional scene graph. Children can opt to
+either compose their properties with their ancestors recursively or
+have absolute properties in draw space.
+
+Hierarchy functions:
+
+`addEntityChild(parent, child)`
+: Adds the `child` entity to the `parent.childArray` and sets `child.parent = parent`. 
+  Removes the child from any previous parent's child array if there was one.
+
+`removeEntityChild(parent, child)`
+: Removes the `child` from `parent.childArray`, if it is a child. Does nothing if
+  `child` is not in `parent`. Causes an error if `child` and `parent.childArray`
+  are inconsistent.  If the child was added by the `makeEntity` `childTable` as a 
+  field on parent, that field is not modified. You can remove the field explicitly
+  using `removeKey(parent, "childName")`.
+
+`transformChildToParent(child, childPos)`
+: Takes a coordinate `childPos` in the `child` entity reference frame and transforms it to
+  the `child.parent` entity reference frame.
+
+`transformParentToChild(child, parentPos)`
+: Takes a coordinate `parentPos` in the `child.parent` entity reference frame and transforms it to
+  the `child` entity reference frame.
+
+`updateEntityChildren(entity)`
+: Recursively update the `pos`, `scale`, `angle`, and `offset` fields of all children and
+  descendants from their `posInParent`, `scaleInParent`, `angleInParent`, and `offsetInparent`
+  fields. Usually called after simulation or animation processing.
+  
+
+
+The hierarchy properties are:
+
+`entity.childArray`
+: Array of other entities that position themselves relative to
+  this one. Defaults to `[]`.
+
+`entity.parent`
+: Another entity that has this one as a child. Defaults to `nil`.
+
+`entity.angleInParent`
+: Scalar counter-clockwise angle in radians relative to the parent if
+  `orientWithParent` is true, otherwise ignored.
+
+`entity.offsetInParent`
+: `xy()` `offset` relative to the parent in entity space if `offsetWithParent` is true,
+  otherwise ignored.
+
+`entity.offsetWithParent`
+: Boolean. If true, then `updateEntityChildren()` recomputes `entity.offset` from `entity.offsetInParent`
+  and `parent.offset`.
+
+`entity.posInParent`
+: `xy()` position value relative to the parent, in parent space. There is no way to opt out of this property being
+  applied recursively. Defaults to (0, 0).
+
+`entity.orientWithParent`
+: If true, `updateEntityChildren()` will override this entity's angle and scale with
+  `entity.angle = entity.angleInParent + parent.angle` and `entity.scale = entity.parent.scale * entity.scaleInParent`. 
+
+`entity.scaleInParent`
+: `xy()` scale relative to the parent axes for flipping
+  the child if `scaleWithParent` is true, otherwise ignored.
+
+`entity.zInParent`
+: Scalar z value relative to the parent. There is no way to opt out of this property being
+  applied recursively. Defaults to 0.
+
+
+
+
+
+Graphics
+---------------------------------------------------------
+
+
+### Colors
+
+`gray(n)`
+: Returns `rgb(n, n, n)`, with `n` clamped to [0, 1].
+
+`gray(color)`
+: Returns `rgb(n, n, n)`, with `n` equal to a perceptually-weighted average of the rgb values from color.
+  The RGB --> gray conversion algorithm weights will likely change in a future release.
+
+`hsv(h, s, v, a (= 1))`
+: Returns an object with field `h` wrapped to [0, 1], fields `s`, `v`, and `a` clamped to [0, 1].
+
+`rgb(hsvValue)`
+: Convert the hsv result to rgba.
+
+`rgba(r, g, b, a (= 1))`
+: Create a structure with fields `r`, `g`, `b`, and `a` clamped to [0, 1].
+
+`rgba(hsvaValue)`
+: Convert the hsv result to rgba.
+
+
+Colors can also be constructed using the syntax of HTML hexadecimal colors (which are also 
+shown in Photoshop and other drawing programs) using the syntax:
+
+- #RRGGBBAA
+- #RRGGBB
+- #RGBA
+- #RGB
+- #LL (gray)
+- #L (gray)
+
+For example, `#F08` is equivalent to `rgb(1, 0, 0.5333)` and `#CC` is
+equivalent to `gray(0.8039)`.
+
+     --------------------------------------------------
+
+The quadplay✜ uses 4:4:4:4 RGBA color, for a total of 4096 different colors and
+16 levels of transparency including fully-transparent.
+
+It can draw perfect 16-shade gradients of red, green, blue, yellow, magenta, cyan, and gray,
+where the darkest shade of each of those is black.
+
+Blending is based on z-order, not draw order, and is always the Porter-Duff
+over-compositing rule:
+
+ `result.r = back.r * (1 - front.a) + front.r * front.a`
+ 
+and so on for `g` and `b`. The runtime is free to implement this
+blending exactly using sorted draw calls or an A-buffer, or to
+approximate it with alpha-to-coverage and multisampling or
+fixed-memory order-independent pixel shading techniques. Blending
+guarantees at least five bits per channel of intermediate precision
+and four bits per channel of framebuffer storage, but implementations
+may use more.
+
+Colors are specified as objects that have either `r`, `g`, and `b`;
+or `h`, `s`, and `v` fields, and an optional `a` field. All color
+channels are on the range 0-1 and snapped to discrete
+values. Additional fields in color objects are ignored.
+
+Many routines accept both a "fill" color for the interior and a "border" color for the
+perimeter.  Set either to transparent (`nil`) to efficiently disable that portion of rendering.
+
+The `nil` value is transparent.
+           
+
+Borders are drawn inside shape coordinate boundaries and on top of fills, so a transparent 
+border is identical to a border that is the same color as the fill. Shapes include their
+endpoints and borders.
+
+
+### Drawing
+
+`drawDisk(center, r, fill, border, z (= 0))`
+: Draw a circle or filled disk centered at (`center.x`, `center.y`)
+  with radius `r` and z-order `z`.
+
+`drawLine(A, B, color, z (= 0))`
+: Draw a 1-pixel line from (`A.x`, `A.y`) to (`B.x`, `B.y`) using z-order `z`.
+  When using the default transformation, put the endpoints at half-pixel
+  positions for the best alignment with the pixel grid.
+
+`drawPoint(P, c, z (= 0))`
+: Set the color of pixel (`P.x`, `P.y`) to color `c` with z-order `z`.
+  A series of `drawPoint` calls with the same `z` value are about twice as
+  fast as ones with mixed `z` values or intermixed with other draw calls.
+  For the best alignment under the default transformation, put the endpoints
+  at half-pixel positions.
+
+`drawPreviousMode()`
+: Re-issue all of the drawing commands from the previous mode's frame
+  that completed before the `setMode()` call. These are not
+  affected by the current `clip` or `transform`. The calls are in full
+  2.5D, so calls from this mode may insert graphics between them in
+  the z-order.  Useful for drawing the main game background during
+  inventory, pause, menu, and dialogue modes.
+
+`drawRect(corner, size, fill, border (= nil), z (= 0))`
+: Draw a rectangle covering all of the pixel centers between `corner`
+  and `corner + size`. `size` may be negative.  If the top or right
+  sides exactly touch a pixel center (at a half-integer), then they do
+  not cover it.
+
+`drawSprite(args)`
+: Keyword version of `drawSprite()`. Pass an object that has properties
+  whose names match the arguments of the positional version. For example,
+  `drawSprite({sprite: wizard, pos: xy(100, 100), z: 2})`.
+
+`drawSprite(sprite, pos, angle (= 0), scale (= nil), opacity (= 1), z (= 0), overrideColor (= nil))`
+: Draw sprite `spr` with its center at `pos`. `pos` must have at
+  least `x` and `y` fields. The sprite appears at `z` in the z-order
+  (defaults to 0). The `scale` parameter must be nil (which is treated
+  as 1), a number that is not zero, or a vector with `x` and `y`
+  fields that are not zero.  It is applied before the sprite is
+  rotated.  Sprites are not flipped or scaled by `setTransform`
+  values, but the rotation and center are affected by the
+  `setTransform` scaling.
+  
+  If it is not `nil`, the `overrideColor` replaces the red, green, and blue
+  values of the
+
+`drawSpriteRect(spr, corner, size, z ( = 0))`
+: Draw a rectangle enclosing points `corner` and `corner+size`
+  filled with `spr` tiled as needed (and aligned to the
+  center), and surrounded by the neighbors of `spr`
+  in its spritesheet. The edges surround the specified coordinates.
+  Used for drawing user interface elements of various sizes such as
+  windows and health bars.  Keep in mind that some artwork is designed
+  to only be stretched in one dimension, or to tile only at integer
+  multiples.
+
+`drawText(args)`
+: Keyword version of `drawText()`. Pass an object that has properties
+  whose names match the arguments of the positional version. For example,
+  `drawText({text: "Fire!", pos: xy(100, 100), xAlign:-1, z: 2})`.
+
+`drawText(font, text, pos, color (= nil), shadow (= nil), outline (= nil), xAlign (= -1), yAlign (= 1), z (= 0), wrapWidth (= nil))`
+: Print string `text` relative to `pos` and return an `xy()` of the bounding box. 
+  
+  x-alignment of `-1` or `"left"` = left, 
+  `0` or `"center"` = center, `+1` or `"right"` = right, 
+  y-alignment of `-1` or `"top"` = top, `0` or `"center"` = center, 
+  `1` or `"baseline"` = baseline, `2` or `"bottom"` = bottom. 
+  For multiline strings, alignment only applies to the first line.
+  
+  `font` must be loaded from the assets.  Color,
+  shadow, and outline default to transparent. Any non-transparent
+  shadow causes the outline to enclose both the shadow and main color.
+  Returns the line height (including spacing) for the next line.  If
+  `wrapWidth` is specified, breaks the text at the maximum width and
+  renders multiple lines. Each line is offset by the font's vertical
+  spacing and aligned as specified. See also `textWidth()`.
+  
+`drawTri(A, B, C, fill, border (= nil), z (= 0))`
+: Draw the triangle.
+
+`getClip()`
+: Returns the current net clipping region as an array of six numbers in the order of
+  `getClip` arguments.
+
+`getSpritePixelColor(sprite, pos)`
+: Returns the color of pixel `pos` in the sprite as an `rgba`
+  value. If the pixel is out of bounds for that sprite, returns nil.
+  
+`intersectClip(x (= nil), y (= nil), z (= nil), w (= nil), h (= nil), d (= nil))`
+: Intersect the current clipping region with this new one. Ignores the
+  current transformation.
+
+`resetClip()`
+: Reset to the default clipping region, `setClip(0, 0, -2047, screenSize.x - 1, screenSize.y - 1, 2048)`.
+
+`setBackground(color (= #0))`
+: Replace the background with this color. The background is automatically
+  drawn each frame with the last value set.
+
+`setBackground(sprite)`
+: Replace the background with this sprite, which must be the exact size of
+  the screen and in a spritesheet that is the exact size of the screen.
+
+`setClip(x, y, z, w, h, d)`
+: Set the clipping region to this region. Unspecified and `nil` values
+  retain their current value.  Coordinates are clamped to the physical
+  screen and z to the range [-2047, 2048]. `w`, `h`, and `d` may be
+  negative. It is impossible to set a clipping region smaller than
+  1x1x1 pixels.
+
+`textWidth(font, s)`
+: Returns the pixel width of string `s` in this font, including border padding.
+  Note that leading and trailing numbers may incur additional empty space for
+  column alignment.
+  
+`xy(x, y)`
+: Create a structure with values `x` and `y`, which can be used with most drawing routines.
+
+`xyz(x, y, z)`
+: Create a structure with values `x`, `y`, and `z`, which can be used with most drawing routines.
+
+           --------------------------------------------
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+setBackground(gray(100%))
+drawText("Normal", xy(32,68), rgb(1,0,0), nil, nil, 0)
+drawText("Outline", xy(32,77), rgb(1,0,0), rgb(50%, 50%, 0), nil, 0)
+drawText("Shadow", xy(32,86), rgb(1,0,0), nil, rgb(0,0,0, 50%), 0)
+drawText("Shadow+Outline", xy(32,95), rgb(1,0,0), rgb(50%, 50%, 0), rgb(0,0,0, 50%), 0)
+
+def test(pos, xalign, yalign)
+  drawRect(pos - xy(2, 3), xy(4, 6), gray(85%))
+  drawPoint(pos, gray(0))
+  drawText("X", pos, rgb(1, 0, 0), nil, nil, xalign, yalign)
+
+for u < 3
+  for v < 3
+    test(xy(10 (u - 1) + 32, 37 + 9 v), u - 1, v - 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Text styling options]
+
+![Text styling and alignment options](text-style.png)
+
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+setBackground(#FFF)
+
+// Make the text color clear to draw outlines.
+drawText(goodNeighbors, "Transparent", xy(83, 155), rgba(0,0,0,0), nil, #0)
+
+// Make the bottom outline look thick by making the shadow and outline
+// the same color.
+drawText(goodNeighbors, "Thick Bottom", xy(83, 170), #2AF, #0, #0)
+
+// Draw an explicit shadow wherever you want it
+drawText(goodNeighbors, "Offset Shadow", xy(85, 184), rgba(0,0,0,25%))
+drawText(goodNeighbors, "Offset Shadow", xy(83, 182), #0A0)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[Tricks with text styling]
+
+![Tricks with text styling](text-tricks.png)
+
+
+### Post Effects
+
+The final image drawn can be transformed in limited ways during scan
+out to the display, as if it were a sprite being drawn to the screen.
+Setting any post effects may slow down rendering slightly.
+
+This is an advanced feature.
+
+`resetPostEffects()`
+: Restore the defaults, which directly composite each frame.
+
+`setPostEffects(args)`
+: The arguments have the following fields, all optional:
+  - `background` is an `rgba()` to draw in the background behind the new frame. The `a` component
+    controls how opaque the background is. Setting it to 0 allows new frames to be blended on
+    top of old ones for a motion blur effect.
+  - `color` is an `rgba()` to combine with the the new frame before it is composited. Setting the `a`
+    to 0 disables the color.
+  - `blendMode` is one of the following strings: `"source-over"`, `"difference"`, `"hue"`, `"multiply"`
+    describing how the `color` affects the frame.
+  - `scale` is an `xy` for how to stretch the new frame
+  - `angle` is a counter-clockwise angle in radians to rotate the image about its center by
+  - `pos` is an `xy` translation from the center, with +y = down
+  - `opacity` is the amount of opacity to use for the new frame. If `background.a` and `opacity` are
+    both less than 1 then the new and previous frames blend together
+
+
+Map
+---------------------------------------------------------------------------
+
+A map asset has the following fields. Its sprite elements are mutable at runtime:
+
+`map[x][y]`
+: The sprite at `x, y` in integer map coordinates in layer 0, or `nil` if empty.
+
+`map.layer[L]`
+: A 2D array of the contents of layer `L`.
+
+`map.layer[L][x][y]`
+: The sprite at `x`, `y` in layer `L`, or `nil` if empty.
+  See `unpackSpriteIndex`. The elements *can* be changed at runtime.
+
+`map.size`
+: `xy()` size in map coordinates (not pixels).
+
+`map.spritesheetTable`
+: A table mapping TMX tile set names to spritesheets for this map.
+
+`map.spriteSize`
+: The `xy()` size of source sprites in pixels.
+
+`map.wrapX`
+: If true, the map wraps horizontally. Array access does not automatically
+  wrap, but function such as `drawMap()`, `findMapPath()`, and `getMapPixelColor()`
+  will implement wrapping.
+
+`map.wrapY`
+: If true, the map wraps vertically. Array access does not automatically
+  wrap, but function such as `drawMap()`, `findMapPath()`, and `getMapPixelColor()`
+  will implement wrapping.
+
+`map.zOffset`
+: Amount to add to each layer index when computing a z value for rendering.
+  `layer = (z - map.zOffset) / map.zScale`; `z = layer * map.zScale + map.zOffset`.
+  See also `transformDrawToMap()` and `transformMapToDraw()`.
+  
+`map.zScale`
+: Amount to multiply each layer index to compute a z value for rendering.
+  `layer = (z - map.zOffset) / map.zScale`; `z = layer * map.zScale + map.zOffset`.
+  See also `transformDrawToMap()` and `transformMapToDraw()`.
+
+
+The following functions relate maps, pixels, and sprites. In them, a
+"pixel coordinate" is in the _pre-transformed_ space in which graphics
+commands operate and a "map coordinate" is in the space of the map
+indices. The map's z-axis corresponds to layers.
+
+`drawMap(map, minLayer (= 0), maxLayer (= length(map.layer)), replacementArray (= nil))`
+: Draws the map with the current transform.  If there is no transform,
+  the map is drawn with the first tile's center at (0, 0), which means
+  that the tile will be half off the screen.  If specified, `minLayer`
+  and `maxLayer` determine the inclusive range of layers to draw.  Map
+  rendering ignores skew transformations...typically the skew will be
+  implicit in the map's layout and rendering. 
+  
+  If `replacementArray` is specified, it must be an even length array
+  of the form `[from0, to0, from1, to1, ...]`.  Each `from` value is a
+  sprite in the map. It will be replaced during drawing with the
+  corresponding `to` value. The `to` values may also be `nil`.
+  
+  The if specified in the source `.json` file, the map will wrap
+  appropriately horizontally or vertically when drawn, if it is large
+  enough to covers at least 1/3 of the current clipping area.
+
+`findMapPath(map, startXY, goalXY, edgeCost, costLayer = 0)`
+: Specialized version of `findPath` for maps. The start and end positions 
+  are rounded down to the nearest integer map coordinates. The `edgeCost`
+  is either a function or an array. The function returns an array of
+  map coordinates to visit or `nil` if no traversable path exists.
+  
+  The function version is `def edgeCost(A, B, map)`. It returns
+  the cost of traversing from `A` to `B` in the map, where 
+  each is an `xy()`. That cost should always be nonnegative. It
+  should be 1 for a typical edge,
+  `infinity` for an edge that is not traversable, and higher or lower
+  than 1 for edges of varying difficulty such as walking through 
+  rough terrain or downhill. 
+  
+  The array version of `edgeCost` is an array of pairs of the form
+  `[sprite0, cost0,   sprite1, cost1, ...]`. Each cost corresponds
+  to entering that sprite on `map.layer[costLayer]`. These are the
+  `B` values from `edgeCost`. Sprites that are not specified in the array
+  cost 1 to traverse, and it costs `infinity` to leave the map bounds.
+
+`getMapPixelColor(map, mapCoord, layer (= 0), replacementArray (= nil))`
+: Returns the color of the pixel in `map` at the corresponding
+  `mapCoord` and `round(layer)`. Returns `nil` for out of
+  bounds values and empty sprites. See also
+  `getMapPixelColorByDrawCoord`.
+
+`getMapPixelColorByDrawCoord(map, drawCoord, drawZ (= 0), replacementArray (= nil))`
+: Returns the pixel color in `map` at the corresponding `drawCoord`
+  and `drawZ` using `transformDrawToMap()`. The result is guaranteed
+  to match what was drawn by `drawMap()`. Returns `nil` for out of
+  bounds values and empty sprites. See also `getMapPixelColor()`.
+
+`getMapSprite(map, mapCoord, layer (= 0), replacementArray (= nil))`
+: Returns the sprite in `map` at the corresponding `mapCoord` and
+  `layer` using rounding. Returns `nil` for out of bounds values. See
+  also `getMapSpriteByDrawCoord`.
+
+`getMapSpriteByDrawCoord(map, drawCoord, drawZ (= 0), replacementArray (= nil))`
+: Returns the sprite in `map` at the corresponding `drawCoord` and
+  `drawZ` using `transformDrawToMap` and rounding to compute the
+  coordinates. Returns `nil` for out of bounds values. See also
+  `getMapSprite`.
+
+`setMapSprite(map, mapCoord, sprite, layer (= 0))`
+: Sets the corresponding map sprite. Does nothing if `mapCoord` is out of bounds.
+
+`setMapSpriteByDrawCoord(map, drawCoord, sprite, drawZ (= 0))`
+: Sets the corresponding map sprite. Does nothing if `drawCoord` is out of bounds.
+
+`transformDrawToMap(map, drawCoord)`
+: Returns the _fractional_ map coordinates of `drawCoord`.  See also
+  `transformMapToDraw` and `mget`.
+
+`transformDrawZToMapLayer(map, z)`
+: Using the current transformation, returns the _fractional_ map layer
+  of `z`.
+
+`transformMapLayerToDrawZ(map, L)`
+: Returns the `z` value that will be used for `map` under the current
+  transformation.
+
+`transformMapToDraw(map, mapCoord)`
+: Returns the draw coordinates of `mapCoord`. Integer mapCoords correspond to the centers of tiles,
+  which will be fractional pixels for even map tile sizes. See also `transformDrawToMap` and `mgetPixel`.
+
+
+Collisions
+----------------------------------------------------------
+
+`entityArea(e)`
+: Returns the world space area of `e`, which must have `shape`
+  and `size` properties and may have a `scale` property.
+
+`axisAlignedDrawBox(e)`
+: Returns a box specified by `{pos:xy(), size:xy(), shape:"rect"}` that encloses
+  the object `e`, and all of its children if it is an entity, in draw space.
+
+`overlaps(A, B, recurse (= true))`
+: Returns true if the bounds of `A` and `B` overlap each other, taking
+  shape and orientation into account and incuding the borders. Ignores
+  `offset` and `z` for entities. Each of `A` and `B` can be any of:
+  
+   - an entity from `makeEntity()`
+   - any object with `pos` and optional `shape`, `angle`, and `size` properties
+   - an `xy()` point
+
+  If `recurse` is true (the default), compares `A` and all of its children
+  against `B` and all of its children. This is quadratic in the number of
+  elements of each and can be slow for very deep entity hierarchies.
+
+`rayIntersect(ray, obj)`
+: The `ray` object must have `xy()` fields for `origin`, `direction`,
+  and an optional number field for `length (= inf)`. 
+  The `ray.direction` will automatically be normalized.
+
+  The `obj` has `shape`, `pos`, `size`, and optional `angle`
+  properties (an entity satisfies this, but it doesn't have to be a full
+  entity). If there is a `obj.childArray`, then that is recursively
+  processed and the first intersection encountered is returned.
+  
+  Returns the object hit or `nil` if there was no intersection.
+  The `ray.length` is shortened to the hit distance. 
+  
+`rayIntersect(ray, array)`
+: Returns the first object intersected when calling `rayIntersect(ray, array[i])`
+  on each element of the array.
+
+<!--
+`rayIntersectMap(ray, map, tileCanBeSolid, pixelIsSolid (= nil))`
+: The `direction` will  automatically be normalized.
+
+  `def tileCanBeSolid(P, map)` returns true if the tile at `P` _in map coords_ 
+  can trigger a collision.  The callback `pixelIsSolid` is then
+  invoked to find the collision within the tile.
+   
+  `def pixelIsSolid(P, map)` returns true if the pixel at `P` _in map coords_
+  triggers a collision.  If `nil`, returns true for all pixels,
+  so any `tileCanBeSolid` tile immediately stops the ray. See `getMapPixel()`
+-->
+
+
+Frame Hooks
+----------------------------------------------------------
+
+Frame hooks are useful for registering animation callbacks that happen
+at the beginning of every frame or after a set number of frames. The
+order of execution between frame hooks is undefined and can change as
+hooks expire. The transform for a frame hook is whatever was set at
+the end of the previous frame.
+
+`addFrameHook(callback, endCallback, lifetime, runInMode (= getMode()))`
+: Register a `callback` function to run every frame for `lifetime`
+  frames.  The return value of `addFrameHook` is a hook that can be passed to
+  `removeFrameHook()`.
+  
+  - `callback`: `def callback(framesleft, lifetime)`, runs every frame. `framesleft`
+    will be `lifetime - 1` on the first frame and `0` on the lastone.
+    This argument may be `nil`. If the callback returns `true`, the hook
+    is removed without running the `endCallback`, otherwise it keeps running.
+  - `endCallback`: `def endCallback()`, runs on the last frame. Can be `nil`.
+  - `lifetime`: Number of frames to run for. May be `inf`.
+  - `runInMode`: Only execute while the game is in this mode. Use `nil` to
+    run in every mode.
+
+`removeFrameHook(hook)`
+: Remove this frame hook immediately, without executing its `endCallback`.
+  If the hook has already ended or is not present, nothing happens.
+
+`removeFrameHooksByMode(mode)`
+: Remove all frame hooks that are locked to the `mode`. Use `nil` to
+  remove all hooks with no mode at all. Do not invoke the
+  `endCallback`s on these hooks.
+
+
+Time
+----------------------------------------------------------
+
+`gameFrames`
+: Number of elapsed 1/60 frames since the program started. The program may
+  mutate this global variable.
+
+`modeFrames`
+: Number of elapsed 1/60 frames since the current mode was most recently entered.
+  The program may mutate this global variable.
+
+`now()`
+: Returns a time in seconds that is accurate to at least one millisecond.
+  The origin for the time is arbitrary but constant per program run.
+
+
+Path Finding
+----------------------------------------------------------
+
+*`findPath(startNode, goalNode, estimatePathCost, edgeCost, getNeighbors, nodeToID, graphObj (= nil))`*
+
+_See also `findMapPath` for a simpler map-specific versio.n_
+
+`findPath()` is a general-purpose path-finding routine for any kind of
+world representation. It uses the "A*" (A-star) algorithm. The return value is an
+array of nodes to traverse, including the `startNode` and `goalNode`,
+to follow the shortest path discovered, or `nil` if no path
+exists. 
+
+To recover the cost of the path, use the idiom:
+
+````````````` PyxScript
+let cost = 0
+for i < size(path) - 1: cost += edgeCost(path[i], path[i + 1])
+`````````````
+
+The arguments are below. See the example of using these on a map for a
+better understanding of how they are typically computed.
+
+`startNode`
+: The starting location, in your chosen node representation.
+
+`goalNode`
+: The ending location, in your chosen node representation.
+
+`def estimatePathCost(nodeA, nodeB, graphObj)`
+: Returns a numerical estimate of the cost for the path between
+  `nodeA` and `nodeB`. For example, the straight line distance.
+  The more accurate this estimate is, the faster that the algorithm
+  will run. If it returns 0 for all inputs, then the algorithm
+  will run in the worst case quadratic time but is guaranteed to find
+  the exact shortest path instead of an approximation.
+
+`def edgeCost(nodeA, nodeB, graphObj)`
+: The actual cost of going from A to B, which are guaranteed to be
+  neighbors.
+
+`def getNeighbors(node, graphObj)`
+: Returns an array of all neighbor nodes reachable from node. It is not required that
+  neighbors are bidirectional. For example, a ledge may create an edge traversable
+  in only one direction
+
+`def nodeToID(node, graphObj)`
+: Returns a compact integer or string representation of the node, which is 
+  required internally by the algorithm for maintaining a table of nodes.
+
+`graphObj`
+: Any object that represents your world graph. This can be `nil` if the other
+  function arguments use global state.
+  
+### Map Example
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+const sprite = map.spritesheetTable["mapTiles"]
+const wall = sprite[0][0]
+const swamp = sprite[0][1]
+const dir = [xy(-1, 0), xy(0, -1), xy(0, 1), xy(1, 0)]
+
+// Assume all edges cost 1
+def estimatePathCost(A, B, map): return |B.x - A.x| + |B.y - A.y|
+
+// Moving through swamps is slow
+def edgeCost(A, B, map): return 1 + (getMapSprite(map, A) == swamp)
+
+// Block traversal at map edges and walls
+def getNeighbors(A, map):
+   const neighbors = []
+   for d in dir:
+      const B = A + d; const s = getMapSprite(map, B)
+      if s and s != wall: push(neighbors, B)
+   return neighbors
+
+// Map to integer indices
+def nodeToID(A, map): return A.x + map.width * A.y
+
+// In map coordinates
+let start = xy(1, 1)
+let goal = xy(20, 20)
+let path = findPath(startNode, goalNode, estimatePathCost, edgeCost, getNeighbors, nodeToID, map)
+
+// Print the path
+for P in path: debugPrint(P)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Debugging
+------------------------------------------------------------------------------------
+
+The following are provided for debugging and development support
+only. They may do nothing on some platforms and may crash on others.
+These APIs are subject to change.
+
+`assert(x, msg (= "Assertion Failed"))`
+: If `x` is true, does nothing. If `x` is false, creates the
+  error `msg`. Assertions can be completely disabled
+  from the Tools menu to make them have zero cost. In the current
+  implementation, the `msg` is always evaluated when assertions 
+  are enabled even if the assertion test passes.
+
+`debugPause()`
+: Pause program execution.
+
+`debugPrint(x, ...)`
+: If `x` is a string, directly prints it to the Output window, otherwise
+  prints `unparse(x)` to the Output window. When multiple arguments
+  are provided they are processed individually with spaces between them.
+  Debug print statements can be completely disabled from the Output 
+  window, which causes them to consume no processing time.
+
+`debugStartGIFRecording()`
+: Begin GIF recording.
+
+`debugStopGIFRecording()`
+: End GIF recording. When the compression completes, the GIF will appear in a
+  new tab when using the browser version.
+
+`debugTakeScreenshot()`
+: Take a screenshot and download it to the local disk.
+
+`debugWatch(expr)`
+: Make the expression appear along with its value at the time that
+  `debugWatch` executs in the Watch pane of the debugger. If there are
+  multiple expressions that are syntactically identical, they will be
+  collapsed and only the last to execute each frame will be
+  shown. This is *not* a function. It is a special syntax. You may not
+  pass the `debugWatch` command as if it were a function.
+
+`drawBounds(e, color (= gray(60%)), recurse (= true))`
+: Render a debugging view of the bounds of an entity or other object
+  with `pos` and optional `angle`, `size`, `scale`, and `shape`
+  properties. If `recurse` is true, descend into 
+  any `e.childArray` field.
+  
+  
+
+Persistence
+-----------------------------------------------------------
+
+The local persistence API stores values in the browser's local
+storage.  It is tied to a specific web browser and the URL from which
+quadplay is hosted, as well as the URL of the game. Some browsers will
+automatically synchronize local storage across computers, however.
+
+The storage API performs string manipulation and can be slow relative
+to other commands. Avoid using it every frame. 
+
+This API is useful for save games, GUI state defaults, high scores,
+and persistent worlds.
+
+
+`loadLocal(key)`
+: The key is loaded and deserialized with `parse()` to return an object
+  that was previously saved with `saveLocal()`. If the `key` is not bound,
+  then `∅` is returned.
+
+`saveLocal(key, value)`
+: The value will be serialized to a string with `unparse()` and then
+  stored associated with `key` and the URL of the game. Save a value
+  of `∅` to delete the key. There is a maximum size of 2048
+  characters for the unparsed value for each key and a maximum size of
+  128 keys per application. There is no way for two different games to
+  read each other's values.
+
+
+
+Built-in Assets
+====================================================================================
+
+The quadplay✜ provides thousands of built-in assets so that you
+can start creating games immediately and make games that have a small
+size.
+
+All assets are Creative Commons licensed and automatically include
+their license and copyright information in the `assetCredits` constant
+when loaded.
+
+
+Sprites
+------------------------------------------------------------------------------------
+
+### Kenney
+![`quad://sprites/kenney-blocks-16x16.sprite.json`](../sprites/kenney-blocks-16x16.png)
+
+![`quad://sprites/kenney-ui-16x16.sprite.json`](../sprites/kenney-ui-16x16.png)
+
+![`quad://sprites/kenney-alien-red-16x32.sprite.json`](../sprites/kenney-alien-red-16x32.png) ![`quad://sprites/kenney-alien-yellow-16x32.sprite.json`](../sprites/kenney-alien-yellow-16x32.png) ![`quad://sprites/kenney-alien-green-16x32.sprite.json`](../sprites/kenney-alien-green-16x32.png)
+![`quad://sprites/kenney-alien-blue-16x32.sprite.json`](../sprites/kenney-alien-blue-16x32.png) ![`quad://sprites/kenney-alien-purple-16x32.sprite.json`](../sprites/kenney-alien-purple-16x32.png)
+
+
+### Dawnlike
+
+![`quad://sprites/dawnlike-level-16x16.sprite.json`](../sprites/dawnlike-level-16x16.png)
+
+![`quad://sprites/dawnlike-npcs-16x16.sprite.json`](../sprites/dawnlike-npcs-16x16.png)
+
+![`quad://sprites/dawnlike-engineer-16x16.sprite.json`](../sprites/dawnlike-engineer-16x16.png) ![`quad://sprites/dawnlike-generic-16x16.sprite.json`](../sprites/dawnlike-generic-16x16.png)
+![`quad://sprites/dawnlike-mage-16x16.sprite.json`](../sprites/dawnlike-mage-16x16.png) ![`quad://sprites/dawnlike-paladin-16x16.sprite.json`](../sprites/dawnlike-paladin-16x16.png)
+![`quad://sprites/dawnlike-rogue-16x16.sprite.json`](../sprites/dawnlike-rogue-16x16.png) ![`quad://sprites/dawnlike-warrior-16x16.sprite.json`](../sprites/dawnlike-warrior-16x16.png)
+
+![`quad://sprites/dawnlike-ui-16x16.sprite.json`](../sprites/dawnlike-ui-16x16.png)
+
+
+### Other
+![`quad://sprites/ortho-city-32x16.sprite.json`](../sprites/ortho-city-32x16.png)
+
+
+
+Fonts
+------------------------------------------------------------------------------------
+
+![`quad://fonts/deja-15.font.json`](../fonts/deja-15.png)
+
+![`quad://fonts/blackletter-14.font.json`](../fonts/blackletter-14.png)
+
+![`quad://fonts/cpc-14.font.json`](../fonts/cpc-14.png)
+
+![`quad://fonts/ivanhoe-12.font.json`](../fonts/ivanhoe-12.png)
+
+![`quad://fonts/federation-11.font.json`](../fonts/federation-11.png)
+
+![`quad://fonts/good-neighbors-9.font.json`](../fonts/good-neighbors-9.png)
+
+![`quad://fonts/stencil-9.font.json`](../fonts/stencil-9.png)
+
+![`quad://fonts/robot-9.font.json`](../fonts/robot-9.png)
+
+![`quad://fonts/deja-9.font.json`](../fonts/deja-9.png)
+
+![`quad://fonts/bogart-9.font.json`](../fonts/bogart-9.png)
+
+![`quad://fonts/runes-9.font.json`](../fonts/runes-9.png)
+
+![`quad://fonts/roman-8.font.json`](../fonts/roman-8.png)
+
+![`quad://fonts/deja-8.font.json`](../fonts/deja-8.png)
+
+![`quad://fonts/pryce-7.font.json`](../fonts/pryce-7.png)
+
+![`quad://fonts/broderick-7.font.json`](../fonts/broderick-7.png)
+
+![`quad://fonts/cga-7.font.json`](../fonts/cga-7.png)
+
+![`quad://fonts/scoreboard-7.font.json`](../fonts/scoreboard-7.png)
+
+![`quad://fonts/nano-5.font.json`](../fonts/nano-5.png)
+
+
+Sounds
+------------------------------------------------------------------------------------
+### Music
+
+![`quad://sounds/music-opening.sound.json`](../sounds/music-opening.mp3) ![`quad://sounds/music-race.sound.json`](../sounds/music-race.mp3)
+![`quad://sounds/music-moon.sound.json`](../sounds/music-moon.mp3)  ![`quad://sounds/music-boss.sound.json`](../sounds/music-boss.mp3)
+![`quad://sounds/music-vice.sound.json`](../sounds/music-vice.mp3)  ![`quad://sounds/music-saturday.sound.json`](../sounds/music-saturday.mp3) 
+![`quad://sounds/music-brawl.sound.json`](../sounds/music-brawl.mp3) ![`quad://sounds/music-credits.sound.json`](../sounds/music-credits.mp3) 
+![`quad://sounds/music-days.sound.json`](../sounds/music-days.mp3)
+
+### Loops
+
+![`quad://sounds/loop-arcade.sound.json`](../sounds/loop-arcade.mp3) ![`quad://sounds/loop-mega.sound.json`](../sounds/loop-mega.mp3)
+![`quad://sounds/loop-edm.sound.json`](../sounds/loop-edm.mp3) ![`quad://sounds/loop-munster.sound.json`](../sounds/loop-munster.mp3)
+![`quad://sounds/loop-tastic.sound.json`](../sounds/loop-tastic.mp3) ![`quad://sounds/loop-frantic.sound.json`](../sounds/loop-frantic.mp3)
+![`quad://sounds/loop-soar.sound.json`](../sounds/loop-soar.mp3)  ![`quad://sounds/loop-agent.sound.json`](../sounds/loop-agent.mp3) 
+![`quad://sounds/loop-castle.sound.json`](../sounds/loop-castle.mp3)  ![`quad://sounds/loop-space.sound.json`](../sounds/loop-space.mp3) 
+![`quad://sounds/loop-splash.sound.json`](../sounds/loop-splash.mp3) ![`quad://sounds/loop-sanctuary.sound.json`](../sounds/loop-sanctuary.mp3) 
+![`quad://sounds/loop-town.sound.json`](../sounds/loop-town.mp3)  ![`quad://sounds/loop-overworld.sound.json`](../sounds/loop-overworld.mp3) 
+![`quad://sounds/loop-victory.sound.json`](../sounds/loop-victory.mp3)  ![`quad://sounds/loop-joy.sound.json`](../sounds/loop-joy.mp3) 
+![`quad://sounds/loop-built-this.sound.json`](../sounds/loop-built-this.mp3) ![`quad://sounds/loop-fight.sound.json`](../sounds/loop-fight.mp3) 
+![`quad://sounds/loop-select.sound.json`](../sounds/loop-select.mp3)  ![`quad://sounds/loop-metal.sound.json`](../sounds/loop-metal.mp3) 
+![`quad://sounds/loop-puzzle.sound.json`](../sounds/loop-puzzle.mp3) ![`quad://sounds/loop-triumphant.sound.json`](../sounds/loop-triumphant.mp3) 
+
+
+### Coin
+
+![`quad://sounds/00-Coin.sound.json`](../sounds/00-Coin.mp3) ![`quad://sounds/01-Coin.sound.json`](../sounds/01-Coin.mp3)
+![`quad://sounds/02-Coin.sound.json`](../sounds/02-Coin.mp3) ![`quad://sounds/03-Coin.sound.json`](../sounds/03-Coin.mp3)
+![`quad://sounds/04-Coin.sound.json`](../sounds/04-Coin.mp3) ![`quad://sounds/05-Coin.sound.json`](../sounds/05-Coin.mp3)
+![`quad://sounds/06-Coin.sound.json`](../sounds/06-Coin.mp3) ![`quad://sounds/07-Coin.sound.json`](../sounds/07-Coin.mp3)
+![`quad://sounds/08-Coin.sound.json`](../sounds/08-Coin.mp3) ![`quad://sounds/09-Coin.sound.json`](../sounds/09-Coin.mp3)
+
+
+### Shoot
+
+![`quad://sounds/10-Shoot.sound.json`](../sounds/10-Shoot.mp3) ![`quad://sounds/11-Shoot.sound.json`](../sounds/11-Shoot.mp3)
+![`quad://sounds/12-Shoot.sound.json`](../sounds/12-Shoot.mp3) ![`quad://sounds/13-Shoot.sound.json`](../sounds/13-Shoot.mp3)
+![`quad://sounds/14-Shoot.sound.json`](../sounds/14-Shoot.mp3) ![`quad://sounds/15-Shoot.sound.json`](../sounds/15-Shoot.mp3)
+![`quad://sounds/16-Shoot.sound.json`](../sounds/16-Shoot.mp3) ![`quad://sounds/17-Shoot.sound.json`](../sounds/17-Shoot.mp3)
+![`quad://sounds/18-Shoot.sound.json`](../sounds/18-Shoot.mp3) ![`quad://sounds/19-Shoot.sound.json`](../sounds/19-Shoot.mp3)
+
+### Explode
+
+![`quad://sounds/20-Explode.sound.json`](../sounds/20-Explode.mp3) ![`quad://sounds/21-Explode.sound.json`](../sounds/21-Explode.mp3)
+![`quad://sounds/22-Explode.sound.json`](../sounds/22-Explode.mp3) ![`quad://sounds/23-Explode.sound.json`](../sounds/23-Explode.mp3)
+![`quad://sounds/24-Explode.sound.json`](../sounds/24-Explode.mp3) ![`quad://sounds/25-Explode.sound.json`](../sounds/25-Explode.mp3)
+![`quad://sounds/26-Explode.sound.json`](../sounds/26-Explode.mp3) ![`quad://sounds/27-Explode.sound.json`](../sounds/27-Explode.mp3)
+![`quad://sounds/28-Explode.sound.json`](../sounds/28-Explode.mp3) ![`quad://sounds/29-Explode.sound.json`](../sounds/29-Explode.mp3)
+
+### Powerup
+
+![`quad://sounds/30-Powerup.sound.json`](../sounds/30-Powerup.mp3) ![`quad://sounds/31-Powerup.sound.json`](../sounds/31-Powerup.mp3)
+![`quad://sounds/32-Powerup.sound.json`](../sounds/32-Powerup.mp3) ![`quad://sounds/33-Powerup.sound.json`](../sounds/33-Powerup.mp3)
+![`quad://sounds/34-Powerup.sound.json`](../sounds/34-Powerup.mp3) ![`quad://sounds/35-Powerup.sound.json`](../sounds/35-Powerup.mp3)
+![`quad://sounds/36-Powerup.sound.json`](../sounds/36-Powerup.mp3) ![`quad://sounds/37-Powerup.sound.json`](../sounds/37-Powerup.mp3)
+![`quad://sounds/38-Powerup.sound.json`](../sounds/38-Powerup.mp3) ![`quad://sounds/39-Powerup.sound.json`](../sounds/39-Powerup.mp3)
+
+### Hit
+
+![`quad://sounds/40-Hit.sound.json`](../sounds/40-Hit.mp3) ![`quad://sounds/41-Hit.sound.json`](../sounds/41-Hit.mp3)
+![`quad://sounds/42-Hit.sound.json`](../sounds/42-Hit.mp3) ![`quad://sounds/43-Hit.sound.json`](../sounds/43-Hit.mp3)
+![`quad://sounds/44-Hit.sound.json`](../sounds/44-Hit.mp3) ![`quad://sounds/45-Hit.sound.json`](../sounds/45-Hit.mp3)
+![`quad://sounds/46-Hit.sound.json`](../sounds/46-Hit.mp3) ![`quad://sounds/47-Hit.sound.json`](../sounds/47-Hit.mp3)
+![`quad://sounds/48-Hit.sound.json`](../sounds/48-Hit.mp3) ![`quad://sounds/49-Hit.sound.json`](../sounds/49-Hit.mp3)
+
+### Jump
+
+![`quad://sounds/50-Jump.sound.json`](../sounds/50-Jump.mp3) ![`quad://sounds/51-Jump.sound.json`](../sounds/51-Jump.mp3)
+![`quad://sounds/52-Jump.sound.json`](../sounds/52-Jump.mp3) ![`quad://sounds/53-Jump.sound.json`](../sounds/53-Jump.mp3)
+![`quad://sounds/54-Jump.sound.json`](../sounds/54-Jump.mp3) ![`quad://sounds/55-Jump.sound.json`](../sounds/55-Jump.mp3)
+![`quad://sounds/56-Jump.sound.json`](../sounds/56-Jump.mp3) ![`quad://sounds/57-Jump.sound.json`](../sounds/57-Jump.mp3)
+![`quad://sounds/58-Jump.sound.json`](../sounds/58-Jump.mp3) ![`quad://sounds/59-Jump.sound.json`](../sounds/59-Jump.mp3)
+
+### Blip
+
+![`quad://sounds/60-Blip.sound.json`](../sounds/60-Blip.mp3) ![`quad://sounds/61-Blip.sound.json`](../sounds/61-Blip.mp3)
+![`quad://sounds/62-Blip.sound.json`](../sounds/62-Blip.mp3) ![`quad://sounds/63-Blip.sound.json`](../sounds/63-Blip.mp3)
+![`quad://sounds/64-Blip.sound.json`](../sounds/64-Blip.mp3) ![`quad://sounds/65-Blip.sound.json`](../sounds/65-Blip.mp3)
+![`quad://sounds/66-Blip.sound.json`](../sounds/66-Blip.mp3) ![`quad://sounds/67-Blip.sound.json`](../sounds/67-Blip.mp3)
+![`quad://sounds/68-Blip.sound.json`](../sounds/68-Blip.mp3) ![`quad://sounds/69-Blip.sound.json`](../sounds/69-Blip.mp3)
+
+### Wild
+
+![`quad://sounds/70-Wild.sound.json`](../sounds/70-Wild.mp3) ![`quad://sounds/71-Wild.sound.json`](../sounds/71-Wild.mp3)
+![`quad://sounds/72-Wild.sound.json`](../sounds/72-Wild.mp3) ![`quad://sounds/73-Wild.sound.json`](../sounds/73-Wild.mp3)
+![`quad://sounds/74-Wild.sound.json`](../sounds/74-Wild.mp3) ![`quad://sounds/75-Wild.sound.json`](../sounds/75-Wild.mp3)
+![`quad://sounds/76-Wild.sound.json`](../sounds/76-Wild.mp3) ![`quad://sounds/77-Wild.sound.json`](../sounds/77-Wild.mp3)
+![`quad://sounds/78-Wild.sound.json`](../sounds/78-Wild.mp3) ![`quad://sounds/79-Wild.sound.json`](../sounds/79-Wild.mp3)
+
+Project File
+=============================================================================================
+
+Format
+---------------------------------------------------------------------------------------------
+
+The project file is a JSON file describing all of the parts of the
+program. The project file and all of its dependencies are reloaded
+every time that you press play or reload in the IDE.
+
+The format is less friendly than you might expect because it is
+designed to be created and maintained by tools instead of seen by the
+programmer. However, I've released the interpreter and debugger ahead
+of the editing tools, so for the moment you have to create it
+manually. I recommend copying the starter project provided and then
+reading about options in this section that may not be used by the
+starter.
+
+An example project is below, annotated with comments explaining the
+options. *Comments are not legal in JSON* and you must delete them if
+you try to use this as a real project template. Project files should
+have the double extension `.game.json`.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ JavaScript
+{
+  "title":          "Your Game",
+  "developer":      "Your Name or Company",
+  "copyright":      "© Year Whomever",
+  "license":        "Distribution and source code license",
+  
+  // Not yet supported. These files will be loaded and inserted at the top
+  // of your code, before the constant and asset definitions.
+  "packages":       ["https://someaccount.github.io/someproject/somefile.package.json",
+                     "somefileinyourproject.package.json"],
+  
+  // Files that form the global scope. Put most of your code in these. They are
+  // loaded in order.
+  "scripts":        ["utils.ns", 
+                     "juice.ns",
+                     "https://someaccount.github.io/someproject/inventory.ns"],
+
+  // These are the names of modes, which must start with a capital letter and
+  // be legal identifiers in PyxScript. These correspond to files that must
+  // be stored in the same path as the project file. So, "Init" is in "Init.ns".
+  // One mode must have an asterisk * after its name, marking it as the start
+  // mode. This is not part of the filename.
+  //
+  // Modes become global constants in your program.
+  "modes": ["Init*",
+            "Play"
+            "Credits"],
+     
+  // Assets are loaded as global constants in your program.
+  "assets": {
+     // Asset names must be legal PyxScript identifiers
+     "mysprite": "mysprite.sprite.json",
+     "myfont": "arial.font.json",
+     "boom": "boom.sound.json",
+     "overworld": "overworld.map.json"
+  },
+  
+  // Other global constants. You could define these in a global source code file
+  // as well. The constants specified here have immutable *values*, not just immutable
+  // bindings, and are available to editing tools.
+  "constants": {
+      // If the number value is in quotes it will be parsed.
+      // This allows degrees, percents, infinity, and nan.
+      // Raw numbers are permitted but restricted to JSON limitations.
+      "playerSpeed": {"type": "number", "value": "3"},
+      "background": {"type": "rgb", "value": 
+          {"r": {"type": "number", "value":  0.8},
+           "g": {"type": "number", "value":  0.8},
+           "b": {"type": "number", "value":  0.8}},
+      "data": {"type": "object", "value": {
+          "height": {"type": "number", "value": 1},
+          "foo": {"type": "object", "value": {"a": {"type": "boolean", "value": true}},
+      "starmap": {"type": "raw", "url": "stars.yml"},
+      "knight": {"type": "raw", "value": {"upgrades": [10, 7, 3, 1], "hp": 50}}
+      }}},
+
+   // The default Y axis increases down the screen, like old arcade games.
+   // Set this to true for a modern vertical axis good for physics games.
+   // You can also invoke setTransform() in code.
+   "flipY": false,
+   
+   // Supported sizes:
+   //
+   //   384 x 224 (maximum, native, default)
+   //   192 x 112 (half resolution),
+   //   128 x 128 (PICO-8),
+   //   64 x 64 (lowrezjam and nano JAMMER)
+   //
+   // The non-native screen sizes may render with substantial black
+   // borders on some implementations to ensure integer pixel scaling.
+   "screenSize": {"x": 384, "y": 224},
+   
+   // Description used on the game browser screen
+   "description": {
+       "players": {"min": 1, "max": 4},
+       "competitive": false,
+       "cooperative": false
+   }
+  }
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Constants
+---------------------------------------------------------------------------------------------
+
+Unlike constants declared in code, the constants in the `.game.json` file appear in the IDE
+in the project list and have GUI editors. 
+
+Each constant has the format `"..name..": {"type": "..type..", "value": ..., "comment": "..."}`.
+The `comment` field is optional and the `raw` type permits a `url` instead of a `value`.
+
+Explicit types allow support for the full PyxScript literal syntax
+beyond that permitted natively in JSON, appropriate GUI editors, and
+annotations.
+
+The available constants types are:
+
+- `number`
+  - Decimal number, with optional double quotes
+  - Unicode fraction in double quotes
+  - `"NaN"`
+  - `"infinity"`, `"-infinity"`, `"∞"`, `"-∞"`
+  - Number ending in `deg`, `°`, or `%`, all in double quotes
+  - `"π"`
+- `string`
+- `boolean`
+- `nil` (no `value` needed)
+- `xy`
+- `xyz`
+- `rgb`
+- `rgba`
+- `raw`
+- `object` [tbd]
+- `array` [tbd]
+- `table` [tbd]
+
+### `raw` Format
+
+The `raw` format allows embedding a JSON-expressible value directly. `raw` format also
+supports the format `{"type":"raw", "url": "<your url>"}` instead of an inline value.
+The URL must be for a [JSON](https://www.json.org/) or [YAML](https://yaml.org/) file.
+Note that the `raw` format is restricted to values that are expressible in those interchange
+formats and does not support the full GUI editors and other format features.
+
+`raw` type constants with URLs must be top-level constants. They
+cannot be embedded within other constants.
+
+<!-- xy, xyz, rgb, rgba, arrays, grids, and objects have elements that are themselves values. -->
+
+
+Sprite JSON
+---------------------------------------------------------------------------------------------
+
+The sprite sheet JSON descriptor looks like:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ JavaScript
+{
+    "url":          "hero.png",
+    "spriteSize":   {"x": 8, "y": 8},
+
+    // Optional blank pixels between sprites. Default is zero.
+    "gutter":       0,
+    
+    // Optional. Default is false. If true, indexing is transposed
+    // in game.
+    "transpose":    false,
+    
+    // Optional. Names of columns, or rows if transpose = true. Allows
+    // indexing by name instead of number. Must be legal identifiers.
+    // Cannot be 'spriteSize'.
+    "names": ["idle", "run", "jump"],
+    
+    // Optional. Lengths to resize the second indexed array by
+    // (row, or column if transpose = true).
+    "lengths": [1, 3, 2],
+    
+    // Optional license and copyright information.
+    "license":      "GPL 3.0 (c) 2018 Morgan McGuire"
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This will appear as the global variable `heroSpriteSheet` in memory,
+which is a 2D array of individual sprites.
+
+For a sprite sheet named `S`, individual sprites are accessed as
+`S[x][y]` in game. If the sprite sheet contains a single row, then
+`S[x]` is sufficient. If there's a single image, just use `S`.
+
+Setting `transpose` to true flips the indexing to `S[y][x]`, which
+is more convenient for some sprites.
+
+A game may use a total of **4,718,592 pixels** of sprite memory
+(9.4 MB) across **64 sprite sheets**, each no larger than
+**1024x1024**.  You can allocate this however you wish within those
+restrictions.  That's equivalent to 4,608 sprites at 32x32, 18,432
+sprites at 16x16, or 54 full-screen images. These are of course soft
+limits because you can modify the open source emulator to remove
+them. The intent of the limits is to guarantee that your programs will
+work on all future implementations of the runtime: web software,
+Raspberry Pi, WebGL, GLES, and desktop OpenGL and Vulkan.
+
+If the same sprite sheet is loaded by multiple `.sprite.json` files
+using the same URL then it only counts once towards the resource
+limits. This allows you to pack sprites with different sizes into the
+same physical sheet at no penalty and treat them as different logical
+sprite sheets.
+
+There is no performance advantage or requirement for making sprites or
+sprite sheets sizes even sizes or power of two sizes, although many
+traditional sprites have sides of 8, 16, or 32 pixels. The quadplay
+screen resolution is designed to allow an integer number of such
+tiles.
+
+You can use the Python script `tools/sprite_json_generator.py` to generate 
+these json blobs for you. Use the `--help` argument for more details.
+
+
+Font JSON
+---------------------------------------------------------------------------------------------
+
+Fonts have a JSON descriptor file that looks like:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ JavaScript
+{
+    "url": "sundown-7x13.png",
+
+    // Optional copyright and license information
+    "license": "Public Domain 2018 by Danika Farheed",
+
+    // Include any gutters in the charSize
+    "charSize": {"x": 8, "y": 14},
+    
+    // Spacing between letters and lines
+    "letterSpacing": {"x": 2, "y": 3},
+    
+    // Defaults to 1 pixel
+    "shadowSize": 1,
+    
+    // Zero-based Y value of the baseline relative to charSize.
+    // This is one less than the "height" of the baseline because
+    // of the zero based value.
+    "baseline": 11
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By convention, the image filename contains the maximum size of the
+individual glyphs, which is usually smaller than the charSize due to
+gutters. The file can have any name, however.
+
+The image must be grayscale, where white is the font character and
+black will become transparent. The current implementation does not
+allow shades of gray for antialiasing. The image tiles must follow
+this exact character format:
+
+![Figure [figFont]: The font character layout](../fonts/deja-15.png)
+
+The six dots on the final row are reserved for future characters.
+
+Because only the specified grid of tiles is read, you can include
+non-character information off the bounds of the tiles, for example,
+putting a copyright statement directly on the font itself.
+
+Fonts count towards the sprite sheet resource limits. Because a font is 
+32x26 glyphs, this means that the largest `charSize` can be
+is 24x29 pixels if the `shadowSize` is one pixel.
+
+Fonts enforce uniform width on all full-size digits 0..9 so that
+numbers print in aligned columns. Avoid drawing fonts with one digit
+that is larger than most of the others (usually the "4") 
+because they result in extra padding around all digits.
+
+When loaded into memory, the font object exposes a `font.lineHeight`
+property that is the spacing used between lines. This is chosen to
+make typical letters well spaced. It may leave some symbols
+overlapping on adjacent lines, especially for decorative fonts.
+
+
+Sound JSON
+---------------------------------------------------------------------------------------------
+
+The sound JSON descriptor looks like:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ JavaScript
+{
+    "url": "boom.mp3",
+         
+    // Optional license and copyright
+    "license": "Released into the public domain by Edouard Gauthier"
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sounds must be in MP3 format.
+
+
+Map JSON
+---------------------------------------------------------------------------------------------
+
+The map JSON descriptor looks like:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ JavaScript
+{
+    "url": "overworld.tmx",
+  
+    // Optional. Shift the map by this amount in pixels for all coordinate
+    // transformations and rendering. Default = 0, 0.
+    "offset": {"x": 7.5, "y": 7.5},
+    
+    // z value of the first layer. Optional, default = 0
+    "zOffset": 0,
+  
+    // Optional. Default = false. If true, flip the map
+    // vertically during load so that (0,0) is the bottom
+    // of the TMX map instead of the top.
+    "flipY": false,
+    
+    // Optional. Default = false.
+    "wrapX": false,
+
+    // Optional. Default = false.
+    "wrapY": false,
+
+    // Optional. Default is 1.0. This is the z difference
+    // between layers when rendering. Can be negative to 
+    // reverse layering direction.
+    "zScale": 2,
+         
+    // Optional license and copyright
+    "license": "Released into the public domain by Edouard Gauthier",
+   
+    spriteUrlTable
+   
+    // Alternative for maps with a single spritesheet. If the sprite sheet doesn't match 
+    // the one described in the map file, an error occurs.
+    "spriteUrl": "tiles.sprite.json"
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The url must reference a map file in [TMX format](https://doc.mapeditor.org/en/stable/reference/tmx-map-format/) and
+in files ending with `.tmx`. Only the following properties are currently supported:
+
+- Orthogonal
+- CSV format
+- Tile layers (other layers are ignored)
+- Embedded tile set
+
+![Tiled program options for creating a new map.](tiled-new-map.png width=50%) 
+
+The tile render order from the map is ignored.
+
+The easiest way to create these is using the open source [Tiled](https://www.mapeditor.org/)
+editor, which has pay-what-you-want precompiled binaries for Windows, MacOS, and Linux. The
+sprite sheet from the map file will be used for visualization if it is available in the IDE,
+but map rendering is performed using a nano sprite sheet at runtime.
+
+
+PyxScript Language
+=========================================================================
+
+Numbers
+-------------------------------------------------------------------------
+
+Numbers are stored internally as double-precision (64-bit) IEEE floating point
+values. Integer operators truncate the decimal places of their arguments. 
+
+The first 2^53=9007199254740992 contiguous positive integers are
+exactly representable. The largest finite representable number is
+about 1.7977x10^308. There are about seventeen decimal digits of
+precision on arbitrary numbers. `NaN` and positive and negative infinity
+are also exactly representable.
+
+Finite numeric literals contain an optional single plus or minus sign and one of:
+
+- a series of digits, followed by an optional decimal point and a series of digits
+- a decimal point followed by a series of digits
+- one of the following single-character fractions: `½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒`
+
+Two optional suffixes are permitted:
+
+- Percent `%` divides the number by 100
+- Degrees `deg` or `°` multiplies the number by `π/180`
+
+Examples of legal numeric literals:
+
+~~~~~~~~~~~~~~ PyxScript
+1
+-21.4
+0
+-0
+.0
+0.5
+-½
++72.41
+15% // 0.15
+90° // ½π
+45deg // ¼π
+~~~~~~~~~~~~~~
+
+No hexadecimal, octal, binary, or exponential notation are
+supported. Trailing decimal points are not allowed. For example, `0.`
+is illegal.
+
+
+Booleans
+--------------------------------------------------------------------
+
+The boolean literals are `true` and `false`. 
+
+Logical operators work with any values. For logical operators and flow
+control, `0`, `∅`, and empty string `""` act as `false`.
+
+
+Strings
+--------------------------------------------------------------------
+
+String literals are enclosed in double quotes (`"..."`). They may not contain newlines or
+double quotes. 
+
+To enter a double quotation mark or slash, escape it with a slash: `"\\"` is the `\` character
+and `"\""` is the `"` character.
+
+The `+` operator performs string concatenation, coercing the right-hand argument if it is not a
+string. String characters are read-only substrings accessed using zero-based array syntax.
+
+
+Arrays
+--------------------------------------------------------------------
+
+Arrays are ordered sets of values. They are zero-based and have
+dynamically typed elements.  Array literals are surrounded in square
+brackets and separated by commas. Square brackets are also used for
+l-value and r-value dereference. Arrays also support the special
+indexing syntax described in the Subscripts section.
+
+Array examples:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+a = [8, 4, 1]
+a[0] = "hello"
+debugPrint(a[0])
+debugPrint(size(a))
+a₁ += 2
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Negative indices are permitted on arrays but will not be reported in the length. Reading an
+out-of-bounds value from an Array returns `∅`.
+
+
+Objects
+---------------------------------------------------------------------------
+
+Objects are unordered sets of keys. Objects (also known as
+dictionaries and tables in other languages) map these keys to values.
+Literals are created using key-value pairs separated by a colon,
+surrounded by curly braces, and delimited by commas. Object elements
+can be accessed using the string name of a property in square brackets
+or by a period. This allows them to act as objects/structs.
+
+Object examples:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+t = {x:3, y:10}
+t.x += 1
+debugPrint(t["x"])
+debugPrint(size(t))
+debugPrint(keyArray(t))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Functions
+---------------------------------------------------------------------------
+
+Functions are first-class values. They can be passed to and returned from other functions,
+stored in data structures, and bound to variables. Declare functions with `def` and
+return values from them with `return`. Separate the argument list from the body with `:`.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+// Multi-line function block
+def solve(a, b, c):
+   return ½(sqrt(b² - 4 a * c) - b) / a
+
+// Inline function
+def foo(x): x += 1; return 2 x
+
+// Call a user function
+text(foo(3))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There is no way to declare an anonymous function or use a function
+definition as an expression.
+
+If a function body takes too long to execute then the nano interpreter
+may terminate the program to prevent the game from becoming
+unresponsive.
+
+To call a function returned from an expression that ends in
+parentheses, use the `call` function.
+
+
+Variables
+---------------------------------------------------------------------------
+
+Variable name identifiers consist of an optional upper case delta plus a series of Roman
+letters, or the unambiguous-looking Greek letters `αβγδζηθιλμρσϕχτψωΩ` by themselves, and
+optionally trailing a series of digits. The identifier also must not be a reserved word. No
+underscores or other unicode characters are allowed in identifiers.
+
+Examples of legal identifiers:
+
+~~~~~~~~~~~~~~~~~~~ none
+col
+screen
+L
+i
+damage
+Δx
+θ
+~~~~~~~~~~~~~~~~~~~
+
+Variables are declared to the scope of the containing block or
+mode. Scope blocks are denoted by a statement ending in a colon and zero or
+more indented lines.
+
+Use `let` to declare variable names that can later be re-bound. Use
+`const` to declare constants that cannot be rebound. Note that `const`
+marks the *binding* as constant, but the bound value itself may be
+mutated if it is an object or array.
+
+Note that only a single variable is permitted per `let` or `const`
+statement.  Multiple statements may be chained using semi-colons on a
+single line, however.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+const x = 7 // x may not be rebound
+let y       // Declare y
+let z = 9   // Declare and initialize z
+
+// Declare and initialize two variables on the same line:
+let a = [1, 2]; let b = "hello"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The variables captured by `for` and `with` and the arguments to a
+`def` are bound to the scope of the body.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+const scale = 2
+let y = 100
+
+for i < 3:
+   y += 1
+   sprite(hero[anim][0], xy(scale * i, y))
+
+def applyScale(x):
+   return x * scale
+
+// i is out of scope here
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Variables declared within a mode are local to that mode and
+reinitialized every frame. Variables declared in a global file are
+global to the entire program.
+
+It is an error to assign to a variable before it is declared.
+
+
+### Reserved Words
+
+
+These are reserved tokens that cannot be used as variable names. Some
+of them are keywords, and some of them do nothing now but are reserved
+for future use.
+
+`and`, `arguments`, `args`, `as`, `async`, `auto`, `await`,
+`begin`, `bitand`, `bitnot`, `bitor`, `bitashl`, `bitshl`, `bitshr`, `break`, 
+`catch`, `class`, `const`, `cont`, `coroutine`, `continue`, `constructor`,
+`deg`, `do`, `delete`, `def`, 
+`elif`, `end`, `extern`, `enum`,
+`final`, `finally`, `for`, `from`, `freeze`, `function`, 
+`get`, `global`, `go`, `goto`, 
+`has`,
+`if`, `in`, `implements`, `inherits`, `include`, `import`, `interface`,
+`let`, `local`,
+`NaN`, `new`, `nil`, `nonlocal`, `not`, `null`, 
+`main`, `mod`, `module`, `mode`,
+`or`, 
+`public`, `private`, `protected`, `prototype`, `package`, `preserve`, `preservingTransform`,
+`ret`, `return`, `reset`,
+`seal`, `set`, `show`, `static`, `strict`,
+`to`, `toString`, `then`, `try`, `throw`, `template`, 
+`until`, `use`, `using`, `unless`,
+`var`,
+`while`, `with`, `when`,
+`xor`,
+`yield`. 
+
+
+Built-in functions such as `drawTri` that are legal identifiers can be
+rebound. They are not reserved. `cos`, `sin`, and `tan` by themselves
+are bound to first-class functions, but the special syntax that allows
+them to be invoked without parentheses on single variables is tied to
+their exact names. If you rebind them, then the new functions that you
+have bound will be invoked.
+
+
+
+### `with` Statement
+
+The `with` statement creates a local scope in which explicitly named
+keys from an object are variables aliased to the properties on the
+object.
+
+This allows compact syntax for repeated use of those keys. It fills
+the role that methods and member variables do within object-oriented
+languages. The local variables shadow any global (or enclosing `with`
+statement) variables.
+
+Example:
+
+~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+G = {x:1, y:2, z:0}
+with x,y in G:
+   x = 100
+   y = 0
+   z = 4
+
+// G.x is now 100, G.y is now 0, G.z is still 0,
+// and global z is now 4
+~~~~~~~~~~~~~~~~~~~~~~
+
+Within the body, the local variables and the properties are true
+aliases. So, `G.x` and `x` may be used interchangably within the body
+in the above example.
+
+The single-line version of the `with` statement is comparable to other
+single-line nano flow control:
+
+~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+G = {x:1, y:2, z:0}
+with x,y ∈ G: x = 100; y = 0; z = 4
+~~~~~~~~~~~~~~~~~~~~~~
+
+`with` statements can make code clean but are expensive relative to
+the overhead of other statements, so avoid them for performance-sensitive
+inner loops.
+
+
+### `local` Statement
+
+
+The `local` statement allows you to create a block without any other
+bindings or flow control.  It is occasionally useful for creating
+variables with a tight scope inside a long function or mode.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+let x = 4
+
+local:
+   // This is a local scope and variables
+   // can shadow those in the outer scopes
+   let x = 7
+   
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Comments
+-------------------------------------------------------------------
+
+Comments follow C/C++/Java/JavaScript syntax of `//` for single line comments and `/*`...`*/`
+for multi-line comments. 
+
+
+Operators
+-------------------------------------------------------------------
+
+Arithmetic operators and functions are overloaded to operate on
+numbers, objects, and arrays, and mixtures of objects/arrays and
+numbers where that makes sense.
+
+Some operators support a compact Unicode version and an ASCII version
+that is easier to type on a conventional keyboard.
+
+ASCII    | Unicode | Meaning
+---------|---------|--
+`++`     |         | increment
+`--`     |         | decrement
+`=`      |         | assignment
+`==`     |`≟`      | equality test
+`!=`     |`≠`      | inequality test
+`+`      |         | addition and string concatenation
+`-`      |         | negation
+`+=`     |         | mutating addition, string concatenation
+`-=`     |         | mutating subtraction
+`<`      |         | less-than
+`<=`     |`≤`      | less-than or equal to
+`>`      |         | greater-than
+`>=`     |`≥`      | greater-than or equal to
+`in`     |`∈`      | `for` loop container element-of and `with` statement object
+`^`      |         | exponentiation (see also unicode exponents)
+`*`      |         | multiplication (see also implicit multiplication)
+`*=`     |         | mutating multiplication
+`/`      |         | floating-point division
+`/=`     |         | mutating division
+`mod`    |         | remainder (modulo)
+         |`⌊⌋`     | floor function
+         |`⌈⌉`     | ceiling function
+`||`     |         | absolute value
+         |`‖‖`     | magnitude (of a vector or array)
+`[]`     |         | object/array element or array constructor
+`{}`     |         | object constructor (follow JavaScript syntax)
+`.`      |         | object property
+`()`     |         | grouping or function call
+`bitand` |`∩`      | bitwise AND (bit set intersection)
+         |`∩=`     | mutating bitwise AND
+`bitor`  |`∪`      | bitwise OR (bit set union)
+         |`∪=`     | mutating bitwise OR
+`or`     |         | logical OR
+`not`    |         | logical NOT
+`and`    |         | logical AND
+`bitxor` |`⊕`      | bitwise XOR
+         |`⊕=`     | mutating bitwise XOR
+`~`      |         | bitwise NOT
+`~=`     |         | mutating bitwise NOT
+`<<`     |`◅`      | bit shift left
+`<<=`    |`◅=`     | mutating bit shift left
+`>>`     |`▻`      | bit shift right
+`>>=`    |`▻=`     | mutating bit shift right
+`if...then...else`| | conditional 
+
+There is no logical XOR in PyxScript.
+
+The conditional operator (distinct from the `if` block statement) has
+the form: `if testexpr then truevalue else falsevalue`.  Note that
+there are no colons (:), because it does not create blocks. The
+conditional operator is convenient when initializing constants, or
+data structures. For example:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+const y = if x > 3 then "cat" else "dog"
+
+spawnMonster(if pos then pos else xy(0,0))
+
+let data = {name: if i > 2 then "Peter" else "Amit",
+            height: 7}
+            
+setTarget(if ‖pos - P.pos‖ > 10 then ∅ else P)
+
+// Because "and" and "or" operate on non-booleans, the examples 
+// above could have been written less clearly with alternative
+// logic:
+
+const y = (x > 3) and "cat" or "dog"
+
+spawnMonster(pos or xy(0,0))
+
+let data = {name: (i > 2) and "Peter" or "Amit",
+            height: 7}
+
+// Note that this one had to be restructured
+// because ∅ acts as false for "and"
+setTarget(‖pos - P.pos‖ ≤ 10 and P or ∅)
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To nest conditionals, you must put parentheses around at least the
+`falsevalue`, for example `y = if x > 3 then "cat" else (if x > 2 then
+"dog" else "llama")`.
+
+Spaces are not required around operators in most cases, so long as the text parses
+unambiguously. For example, `1or3` is equivalent to `1 or 3`. There is no ASCII operator for
+floor or ceiling; use the `floor` and `ceil` functions. There is no way to express mutating bitwise
+operators using ASCII.
+
+Behavior of these operators is consistent with the JavaScript definition of the operation
+(even though JavaScript uses different operators). For example, the <b>logical</b>-AND expression 
+`4 and 1` evaluates to `1` because `4` is non-false and the result of non-false AND another
+value is the other value.
+
+The trigonometric functions `cos`, `sin`, and `tan` may be invoked as if they were operators
+when the order of operations is unambiguous. For example, `cos a` ==> `cos(a)`, `cosβ` ==>
+`cos(β)`, and `cosθ*sinφ` ==> `cos(θ) * sin(φ)`.  To avoid confusion and reserve future syntax,
+they may not be invoked in this form when a high-precedence operator follows the argument. Those
+operators are `.`, `[`, subscript, or exponentiation.
+
+Because back-to-back parentheses are interpreted as implicit multiplication, functions that
+are returned from other functions, determined by parenthesized expressions, or stored in 
+objects cannot be invoked using the `()` syntax. Instead, use the `call` function:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+// Illegal:
+x = (a and abs or cos)(θ)
+y = tbl["myfunc"](3, 4)
+z = f(a)(b)
+
+// Legal:
+x = call(a and abs or cos, θ)
+y = call(tbl["myfunc"], 3, 4)
+z = call(f(a), b)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+!!! Warning Mutating Operators
+    Mutating operators (`=`, `++`, `+=`, etc.) currently return a value, 
+    like their C++ and JavaScript equivalents. In the future, these will
+    return `nil`. Do not depend on the return value of a mutating operator.
+
+
+### Exponents
+
+The characters `⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣᵏᵘⁿ⁽⁾` can form exponent expressions that operate as if
+the `^` operator or `pow` function was invoked using those expressions as a second argument.
+The entire exponent expression is implicitly surrounded in parentheses.
+
+The variables `a`, `β`, `i`, `j`, `x`, `n`, `k`, and `u` may appear only as single-character
+variable names in exponents.
+
+Exponentiation, including via exponent characters, may not be performed on a negative number
+without parentheses. This follows the rules from JavaScript's `**` operator. For example,
+`x=y-1²` is legal, but `x=y+-1²` is illegal and must be rewritten as `x=y+(-1)²` or (the
+confusing and redundant expression, if that's really what was intended) `x=y+-(1²)`.
+
+
+### Subscripts
+
+The characters `₊₋₀₁₂₃₄₅₆₇₈₉ₐᵦᵢⱼₓₖᵤₙ₍₎` can form subscript expressions that operate as if
+the array/object element accessor was invoked using those expressions as the second
+argument.  For example, `aᵢ₊₂` is equivalent to `a[i+2]`. The entire subscript expression
+is implicitly surrounded in parentheses.
+
+The variables `a`, `β`, `i`, `j`, `x`, `n`, `k`, and `u` may appear only as single-character
+variable names in subscripts.
+
+
+### Implicit Multiplication
+
+Multiplication is implicit wherever a number is immediately followed by a parenthesized
+expression or variable (including a function call). This also ocurs when any exponent
+appears immediately preceeding a parenthesized expression or variable, and where two
+parenthesized expressions are back to back. For example,
+`2x`, `x²y`, `3(x+y)`, `(y+2)(x+1)`.
+
+Implicit multiplication can be used within subscripts or exponents.
+
+
+### Built-in Objects
+
+
+The following are built-in constants and special zero-argument operators. They are
+not variable names and thus cannot be redefined. Several have both unicode and ASCII names.
+
+Symbol         | ASCII         | Value
+---------------|---------------|----------------------------------------
+`ε`            | `epsilon`     | `0.0000001`
+`π`            | `pi`          | `3.141592653589793115997963468544185161590576171875`
+`∞`            | `infinity`    | infinity
+`nan`          | `nan`         | floating-point "not-a-number" value
+`assetCredits` | `assetCredits`| object of credit and license statements from assets and code
+`∅`            | `nil`         | ("undefined")
+`pad`          | `pad`         | array gamepad of objects 
+`joy`          | `joy`         | shorthand for `pad₀`
+`ξ`            | `rnd()`       | random number on [0, 1), resampled every time the expression is used
+`screenSize`   | `screenSize`  | the size of the screen in pixels, defaults to `xy(384, 224)`
+
+
+<!--
+Typing
+----------------------------------------------------------------------------------------------
+
+Because many of the characters used in nano operators and built-in objects do not appear on
+standard keyboards, there are two special text entry methods available in the development
+environment. (You can also copy and paste characters from other programs or documentation.)
+
+The Symbols panel marked with "ξ½≤" at the top of the editor brings up a virtual keyboard
+for entering these symbols. The tool tips on those buttons also explain the use of each.
+
+The editor automatically replaces certain typed sequences with their corresponding character
+as well ("autocorrect"). The list of replacements is:
+
+    Sequence    | Replacement
+   -------------|--------------
+    `\Delta`    |`Δ` 
+    `\alpha`    |`α` 
+    `\beta`     |`β` 
+    `\gamma`    |`γ` 
+    `\delta`    |`δ` 
+    `\epsilon`  |`ε` 
+    `\zeta`     |`ζ` 
+    `\eta`      |`η` 
+    `\theta`    |`θ` 
+    `\iota`     |`ι` 
+    `\lambda`   |`λ` 
+    `\mu`       |`μ` 
+    `\rho`      |`ρ` 
+    `\sigma`    |`σ` 
+    `\phi`      |`ϕ` 
+    `\chi`      |`χ` 
+    `\psi`      |`ψ` 
+    `\omega`    |`ω` 
+    `\Omega`    |`Ω` 
+    `\tau`      |`τ` 
+    `\time`     |`τ` 
+    `\xi`       |`ξ` 
+    `\rnd`      |`ξ` 
+    `==`        |`≟` 
+    `?=`        |`≟` 
+    `!=`        |`≠` 
+    `\neq`      |`≠` 
+    `\eq`       |`≟` 
+    `\not`      |`¬` 
+    `\leq`      |`≤` 
+    `<=`        |`≤`
+    `\geq`      |`≥` 
+    `>=`        |`≥`
+    `>>`        |`▻` 
+    `<<`        |`◅` 
+    `\bitand`   |`∩`
+    `\bitor`    |`∪`
+    `\bitxor`   |`⊕`
+    `\pi`       |`π` 
+    `\infty`    |`∞` 
+    `\nil`      |`∅` 
+    `\half`     |`½` 
+    `\third`    |`⅓` 
+    `\quarter`  |`¼` 
+    `\fifth`    |`⅕`
+    `sixth`     |`⅙`
+    `seventh`   |`⅐`
+    `eighth`    |`⅛`
+    `ninth`     |`⅑`
+    `tenth`     |`⅒'`
+    `\lfloor`   |`⌊`
+    `\rfloor`   |`⌋`
+    `\lceil`    |`⌈`
+    `\rceil`    |`⌉`
+-->
+
+
+Flow Control
+--------------------------------------------------------------------------
+
+The flow control statements are:
+
+- `if` conditional with optional `else` and `else if` clauses
+- `while` loop
+- `until` loop
+- `for` loop, with optional `with` expansion
+- `break` and `continue` within loops
+- `setMode(ModeName, "note")` to switch game modes. The note is optional.
+- `pushMode(ModeName, "note")` and `popMode("note")` to temporarily 
+   enter a mode game mode. The notes are optional.
+- `resetGame("note")` to reset all state and restart the game.
+
+There is no switch, do loop, goto, or try/catch.
+
+Whitespace is significant, as in Python. Indentation must be exactly a 
+single space per nested block.
+
+For flow control purposes, the empty string, 0, and `∅` are false.  All other objects (including empty data structures) are true.
+
+Within any loop, `continue` skips to the next iteration of the loop and `break` exits the loop.
+
+Multi-line `if` statements may be followed by `else:` and `else if ...:` clauses. These must always be
+multi-line.
+
+Numeric `for` loops increment by 1 each iteration and always count up. The loop variable must
+be on the left-side of a single comparison loop expression or the center of a multi-comparison
+expression. 
+
+The loop variable in any `for` loop is freshly bound for each iteration. This means that
+if it is captured by a function as in:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+let array = []
+for i < 3
+   def capture(): return i
+   push(array, capture)
+
+for f in array: debugPrint(f())
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+that the value will reflect the time of the capture. This avoids many common bugs when using
+first class functions with loops.
+
+
+Container iteration `for` loops iterate over the keys of a object, the characters of a string,
+or the elements of an array _as of the beginning of the loop_. If the container is modified
+during iteration, the original is still used. That means that you can delete elements from the array
+without affecting the iteration. The Java/C++ equivalents of nano `for`-loop conditions
+are:
+
+nano                  | Java/C++
+----------------------|------------------------
+`for i ≤ k`           | `for (i = 0; i <= k; ++i)`
+`for i &lt; k`        | `for (i = 0; i &lt; k; ++i)`
+`for 4 ≤ i &lt; k`    | `for (i = 4; i &lt; k; ++i)`
+`for 4 &lt; i &lt; k` | `for (i = 5; i &lt; k; ++i)`
+`for x ∈ S`           | `for (x : S)`
+
+The upper bound is evaluated for each loop iteration.
+
+You can pack a `for` and `with` statement together by chaining `∈` expressions, in what
+is called a `for`-`with` loop:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+for x,y ∈ point ∈ set:
+   ...
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+is the same as:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+for point ∈ set:
+   with x,y ∈ point:
+      ...
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `for`-loop variable (in this case, `point`) cannot be the same as any of the `with`
+variables (in this case, `x` and `y`).
+
+The comparison operators in a `for` loop declaration are an overloaded syntax for comparison
+operators (just as many languages overload the `=` operator for `for` loops).  They have
+the lowest precedence. For example, `for i&lt;a||b` is equivalent to `for i&lt;(a||b)`.
+To use regular comparison operators within `for` loop preamble, you *must* use parentheses to
+make the parsing unambiguous, for example, `for i &lt; (a &lt; b)`.
+
+Single-line `for`, `if`, `while`, and `until` are permitted. There can be multiple
+single-line expressions on the same line. No `else` is permitted with single-line `if`.
+
+
+### Examples
+
+#### Array Iteration
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+let names = ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
+
+// Iterate over array elements
+let pos = xy(screenSize.x / 2, 10)
+for planet in names:
+   pos.y += drawText(font, planet, pos, #f)
+   
+// Iterate over values and modify (this is safe, no elements will be
+// skipped. You can even remove elements ahead of the iterator and
+// they will still be processed)
+for planet in names:
+   // Remove any name with an "a" in it
+   if find(planet, "a") != nil: removeValues(names, planet)
+   
+   // Add some random moons...the current loop will not 
+   // iterate over these, but they are immediately visible
+   // in the array.
+   if rnd() > 50%: add(names, planet + " moon")
+   
+// Iterate over array keys
+pos = xy(screenSize.x / 2, 10)
+for i < size(names):
+   pos.y += drawText(font, names[i], pos, #f)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#### Object Iteration
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+let poemBy = {
+   Angelou: "Still I Rise",
+   Frost: "Stopping by Woods on a Snowy Evening",
+   Dickenson: "Because I could not stop for Death",
+   Whitman: "Leaves of Grass",
+   Hughes: "Montage of a Dream Deferred",
+   Williams: "In the American Grain",
+   Yeats: "Sailing to Byzantium",
+   Browning: "How Do I Love Thee?"
+}
+
+// Iterate over array elements
+let pos = xy(screenSize.x / 2, 10)
+for author in poemBy:
+   pos.y += drawText(font, poemBy[author] + " by " + author, pos, #f)
+   
+// Iterate over values and modify (this is safe, no elements will be skipped)
+for author in poemBy:
+   // Remove this entry if it contains an "a" in the value
+   if find(poemBy[authpr], "a") != nil: removeKey(poemBy, author)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#### Array of Objects
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+let spots = [xy(1,1), xy(100, 2), xy(10, 20), xy(50, 20)]
+
+for x,y in S in spots:
+   // Remove any element that is higher than 15
+   if y > 15: removeValues(spots, S)
+   
+for i < size(spots):
+   // More efficient O(1) removal without preserving order
+   // if spots is *really* long
+   if spots[i].x > 15:
+      fastRemoveKey(spots, i)
+      // Be sure not to skip the next element
+      --i
+   
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Debugging
+---------------------------------------------------------
+
+There are two special forms for debugging that can be enabled or
+disabled at runtime for efficiency on the Output pane. These are not
+functions and cannot be passed as values like functions or stored in
+data structures.
+
+`debugPrint(msg)` sends text output to the IDE Output pane. It runs
+`unparse()` on `msg` if it is not already a string. These statements
+are automatically removed from the program when debug printing is
+disabled.
+
+`assert(condition)` or `assert(condition, msg)` halts program
+execution if `condition` is false. The `msg` is evaluated regardless
+of the value of condition. These statements are automatically removed
+from the program when assertions are disabled.
+
+
+
+Multiline Expressions
+---------------------------------------------------------------
+
+Newlines end PyxScript expressions, unless there are unbalanced
+brackets (), [], {}. This allows you to spread function calls, array
+literals, and object literals over multiple lines.  For example:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+let player = {
+   center: xy(100, 40),
+   angle: 45deg,
+   inventory: ["hat", "sword",
+      "money", "watch", "apple"]
+}
+
+let x = (43 + 
+   17)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If an error occurs in a multiline expression, the line number reported
+will be that of the beginning of the expression. If a line contains
+the end of a multiline expression, it may not also contain multiple statements.
+
+
+
+Symbols
+---------------------------------------------------------------
+
+The quadplay IDE supports autocorrect for typing the optional special
+symbols such as ∅ and ∈. For convenience when using an external editor
+or typing the full set of characters supported by nano fonts into
+strings on a US-EN keyboard, you can also copy and paste from here:
+
+````````````````````````````````````````````````````` none big
+Mode
+══════════════════════════════════════════
+
+frame
+──────────────────────────────────────────
+
+
+Most Common:
+
+∅ ° ½ ² ³ ξ ∞ ε ≠ ≤ ≥ π ∊ ⌊ ⌋ ⌈ ⌉ ‖ ≟
+
+
+All:
+
+⊲ ⊳ ¥ € £ ¬ ∩ ∪ ≟ ≠ ≤ ≥ ≈ ∊ ∈ ⌊ ⌋ ⌈ ⌉ ⊗ ⊕ …
+⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁺ ⁻ ⁽ ⁾ 
+₀ ₁ ₂ ₃ ₄ ₅ ₆ ₇ ₈ ₉ ₊ ₋ ₍ ₎ ₐ ᵦ ᵢ ⱼ ₓ ₖ ᵤ ₙ 
+∅ ∞ ° ½ ⅓ ⅔ ¼ ¾ ⅕ ⅖ ⅗ ⅘ ⅙ ⅐ ⅛ ⅑ ⅒ ∫ ± м н к
+« » ¿ ★ × ⊢ ∙ ○ ● ◻ ◼ △ ▲ ✓ ♠ ♥ ♣ ♦ §
+↑ ↓ ← → ↖ ↗ ↙ ↘ ⓐ ⓑ ⓒ ⓓ ⓟ ⓠ ⍐ ⍇ ⍗ ⍈ ❖ ✜ ♆ © ℵ 
+A B Γ Δ E Z H Θ I K Λ M N Ξ O Π P Σ T Φ X Ψ Ω
+α β γ δ ε ζ η θ ι κ λ μ ν ξ o π ρ σ τ ϕ χ ψ ω ¡
+ς ş ğ İ Ş Ğ υ г ᵃ ᵈ ᵉ ʰ ⁱ ʲ ᵏ ᵐ ⁿ ᵒ ʳ ˢ ᵗ ᵘ ˣ ᵝ
+Æ À Á Â Ã Ä Å Ç È É Ê Ë Ì Í Î Ï Ø Ò Ó Ô Õ Ö Œ Ñ 
+æ à á â ã ä å ç è é ê ë ì í î ï ø ò ó ô õ ö œ ñ 
+Д Ж З И Й Л П Ц Ч Ш Щ Э Ю Я Ъ Ы Ь ẞ Ù Ú Û Ü Б
+д ж з и й л п ц ч ш щ э ю я ъ ы ь ß ù ú û ü б 
+`````````````````````````````````````````````````````
+
+Note that the superscripts `ᵈᵉʰᵐᵒʳˢᵗ` are legal in text strings but
+not as code. These are present specfically to support ordinals such as
+"1ˢᵗ, 2ⁿᵈ, 3ʳᵈ, 4ᵗʰ, 1ᵉʳ, 1ʳᵉ, 2ᵉ, 2ᵈ, 2ᵈᵉ, 1ᵒ, 1ᵃ, …" in
+various language possible. Not all letters are available for subscripts 
+and superscripts in Unicode, so quadplay restricts those available
+as variables to an overlapping set.
+
+
+Advanced Tools
+====================================================================================
+
+In addition to the friendlier browser-based tools from the Tools
+section, the distribution includes command-line tools for experienced
+programmers. These support external editors, running the server
+locally, and performing some IDE tasks at the command line. Unlike the
+IDE, some of these have additional dependencies and assume that you
+know how to install those on your own.
+
+
+Local Emulator
+-----------------------------------------------------------------------------
+
+You can launch the IDE on your local machine. This allows you to run
+without a network connection and to work with local files instead of
+Google Drive ones for the GitHub-hosted IDE.
+
+Launch your program in the emulator and debugger from the command line
+on Windows, MacOS, or Linux with the `quadplay` command:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
+# Load the games/quadpaddle/quadpaddle.game.json sample program
+quadplay quad://games/quadpaddle
+
+# Load a mygames/space/space.game.json game that you've made
+quadplay mygames/space
+
+# Equivalent to the previous example
+quadplay quad://mygames/space
+
+# Load from the internet (server must support CORS)
+quadplay https://morgan3d.github.io/somegame/foo.game.json
+
+# Just run the emulator. You can modify the URL in your browser
+# to add "?game=" and the game's URL or relative path
+quadplay
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+These examples assume that your directory structure is:
+
+**********************************************************
+*
+*   📂 quadplay
+*   |
+*   +-- 📄 quadplay
+*   |
+*   +-- 📂 fonts
+*   |   |
+*   |   ⋮
+*   |   
+*   +-- 📂 games
+*   |   |
+*   |   +-- 📂 quadpaddle
+*   |   |   |
+*   |   |   +-- 📄 quadpaddle.game.json
+*   |   |   |
+*   |   ⋮   ⋮
+*   |
+*   +-- 📂 mygames
+*   |   |
+*   |   '-- 📂 space
+*   |       |
+*   |       +- 📄 space.game.json
+*   |       |
+*   |       ⋮
+*   |         
+*   +-- 📂 sprites
+*   |   |
+*   ⋮   ⋮
+**********************************************************
+[Directory structure with the `quadplay` script in the root.]
+
+The directory and `.game.json` file do not have to have the same
+name. You can list the full path to the actual game file instead.
+
+Every time you push the play button (F5) or reload button (Ctrl+R) in
+the emulator, it will reload your code and assets from disk.
+
+
+Emacs Mode
+------------------------------------------------------------------------------------
+
+To install the PyxScript mode for Emacs, copy the
+[`pyxscript-mode.el`](../tools/pyxscript-mode.el) to your elisp
+directory (mine is `~/.emacs.d/lisp`) and add the following lines to
+your `~/.emacs` file:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Lisp
+(autoload 'pyxscript-mode "pyxscript-mode")
+(add-to-list 'auto-mode-alist '("\\.ns\\'" . pyxscript-mode))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Vim Plugin
+------------------------------------------------------------------------------------
+
+TODO: Stephan.
+
+[`pyxscript.vim`](../tools/pyxscript.vim)
+
+
+Other Editors
+------------------------------------------------------------------------------------
+
+Fortunately, PyxScript syntax is very close to Python syntax. If you
+tell your editor to treat `.ns` files as Python files, then it will
+probably handle indenting and most keywords correctly. Comments are
+the one element that will probably confuse your syntax highlighter.
+
+I welcome submissions of open source plugins for Visual Studio Code and other
+editors to support PyxScript.
+
+
+Command-Line Tools
+------------------------------------------------------------------------------------
+
+[`quadplay`](../quadplay)`
+: Launches the emulator from the command line on any operating system. 
+  Requires Python.
+
+[`sprite_json_generator.py`](../tools/sprite_json_generator.py)
+: Generator for `.sprite.json` files. Requires Python and PIL.
+
+
+Performance
+====================================================================================
+
+✜quadplay is designed to make it easy to write small games that have
+very readable source code. I recommend designing your code primarily
+for readability instead of performance. However, at some point you'll
+probably hit the performance limits and want to optimize at least some
+of the program. Here's where to focus your efforts.
+
+Chrome, Edge, and Safari give far better performance on graphics
+calls than Firefox. Just switching browsers will give you a boost if
+you're on Firefox.
+
+In the "Performance" tab of the IDE, you can see the amount of time spent
+per frame. If it is less than 16 ms, then your program is running at 60 fps.
+If it is higher, then you may need to optimize.
+
+`drawMap()` is substantially faster than making the same `drawSprite()` calls
+by yourself.
+
+A sequence of `drawPoint()` commands that all have the same `z` value is
+much faster than ones with mixed `z` values or broken up by other rendering
+calls.
+
+Built-in math functions are faster than math functions that you write
+to do equivalent operations because they are designed to minimize
+memory allocation internally.
+
+There is generally no need to cull objects that are off screen. The
+rendering code is very good at removing those for you.
+
+`drawSprite()` is fastest for `opacity=1` sprites that are not rotated
+or scaled and do not have alpha. It can directly copy the memory in
+this case.
+
+If you have fully opaque map tiles in one layer, remove the tiles behind 
+them in other layers. It can be substantially faster (but use more memory)
+to use pre-drawn transitions between map terrain tiles instead of layering
+an alpha-masked tile on top of another one to blend them.
+
+If you can tell that an object is covered by another object in `z`,
+remove it (this is called occlusion culling). The renderer must
+process both otherwise even though the object that is behind is
+unseen.
+
+`drawRect` and `drawDisk` are much faster for opaque colors than ones with
+fractional alpha values.
+
+Perfectly horizontal lines are much faster to draw than vertical lines. 
+Vertical lines are slightly faster than diagonal lines.
+
+Numeric for loops, such as `for i < N` are slightly faster than iterator for loops
+such as `for x in A`. 
+
+`with` statements are relatively slow, as are `for`-`with` loops on
+large arrays.  Use them for readability on individual or small sets of
+objects but not on large arrays or in loops that repeat many times.
+
+It is slightly faster to perform math on individual elements than
+vectors.  For example, `pos.x += vel.x; pos.y += vel.y` is slightly
+faster than `pos += vel`. The tradeoff of expanding out math is
+generally not worth the readability cost unless processing hundreds of
+vectors. The performance advantage diminishes as the objects grow
+larger. For example, `rgba` vectors or adding whole arrays to each
+other have relatively less overhead than `xy` vectors.
+
+
+Limitations/Road Map
+====================================================================================
+
+There's a long feature list and a short bug list that I'm working
+through. The big missing features I'm aware of and hope to address
+are:
+
+- Export your game to standalone static HTML
+- Editing the game in the IDE and saving to Google Drive
+- Multiple spritesheets per map
+- Post-render FX
+- Visual Studio Code and Atom PyxScript plugins
+- Load tables of data from CSV files
+- Physics simulation
+- Filled disks with blending that don't overdraw themselves
+- Watertight rasterization of triangle meshes
+- Watertight rasterization of polylines
+
+
+Credits
+====================================================================================
+
+The quadplay✜'s influences include Atari 2600, Commodore VIC-20, PICO-8, APL, Python, Shadertoy,
+Arduboy, and its predecessor, the nano JAMMER.
+
+The ✜quadplay IDE and compiler are copyright 2019 Morgan McGuire, including:
+
+- [`index.html`](../console/index.html)
+- [`quadplay.css`](../console/quadplay.css)
+- [`quadplay-compiler.js`](../console/quadplay-compiler.js)
+- [`quadplay-runtime.js`](../console/quadplay-runtime.js)
+- [`quadplay-host-websw.js`](../console/quadplay-runtime.js)
+- [`quadplay-ide.js`](../console/quadplay-ide.js)
+- [`quadplay-font.js`](../console/quadplay-font.js)
+- [`quadplay-load.js`](../console/quadplay-load.js)
+
+and excluding the content described below. The IDE and compiler are licensed under the
+[LGPL 3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html), but may be relicensed in the future.
+
+The Vim mode is by [Stephan Steinbach](https://twitter.com/stephan_gfx).
+
+GIF support via [gif.js](https://github.com/jnordberg/gif.js) (c) 2013 Johan Nordberg,
+used under the [MIT license](https://github.com/jnordberg/gif.js/blob/master/LICENSE). It includes code by Kevin Weiner, Thibault Imbert, and Anthony
+Dekker.
+
+The random number generator is derived from
+[an implementation](https://github.com/AndreasMadsen/xorshift/blob/master/xorshift.js)
+of xorshift (c) 2014 Andreas Madsen and Emil Bay used under the 
+[MIT license](https://github.com/AndreasMadsen/xorshift/blob/master/LICENSE.md).
+
+The code editor for the quadplay✜ IDE is [ace.js](https://ace.c9.io/) used under the [BSD license](https://github.com/ajaxorg/ace/blob/master/LICENSE).
+
+The compiler uses
+[vectorify.js](https://github.com/morgan3d/misc/tree/master/jsvectorify)
+(c) 2018 Morgan McGuire under the MIT license, [recast](https://github.com/benjamn/recast)
+(c) 2012 Ben Newman under the [MIT license](https://github.com/benjamn/recast/blob/master/LICENSE),
+and [estraverse](https://github.com/estools/estraverse)
+(c) 2012-2016 Yusuke Suzuki under the [BSD 2-clause license](https://github.com/estools/estraverse/blob/master/LICENSE.BSD).
+
+[`LoadManager.js`](https://github.com/morgan3d/misc/tree/master/jsloadmanager) is (c) 2018 Morgan McGuire,
+[BSD-2-Clause](https://opensource.org/licenses/BSD-2-Clause) license.
+
+[`js-yaml`](https://github.com/morgan3d/misc/tree/master/jsloadmanager) is (C) 2011-2015 by Vitaly Puzrin,
+[MIT](https://raw.githubusercontent.com/nodeca/js-yaml/master/LICENSE)
+license.
+
+[`dagre.js`](https://github.com/dagrejs/dagre) is (C) 2012-2014 Chris Pettitt, [MIT](https://github.com/dagrejs/dagre/blob/master/LICENSE) license.
+
+
+Beta Tester Notes
+=====================================================================================
+
+The API is feature-complete at this point. I'm focusing on bug fixes
+and minor tweaks to improve convenience. Only some minor helpers,
+primarily for AI tasks, will be added before release.
+
+Expect rasterization rules for disks and triangles to change slightly
+in order to better align for subpixel cases. The current sprite, map,
+line, and rectangle rendering alignment is final. I will add separate
+functions for watertight triangle and line rasterization, which 
+give different results than what is typically useful for individual
+primitives.
+
+The `makeSpline()` function in `"continue"` mode will change to be a
+third-order curve outside of the bounds instead of a line.
+
+IDE will receive major new features throughout and after the beta
+phase. This includes editors for code, sprites, and maps.
+
+The package manager is not implemented and may actually be removed
+instead of being implemented, depending on the needs that arise in the
+beta. You can load relative URLs for scripts and assets right now, so
+the need for packages isn't urgent as you can reuse across projects
+already. What packages will provide are namespaces as well as assets
+bundled together with a script.
+
+The IDE is designed to collapse gracefully so that you can use an
+*external editor*. Here's one useful layout:
+
+![](external-editor.png width=300px)
+
+The editor on the left is emacs running in a terminal. On the right is
+the browser reduced to the quadplay✜ debugging output and emulator.
+
+Be careful to always end your *filenames* with _two_ extensions:
+`.game.json`, `.sprite.json`, `.map.json`, etc. This is how the IDE
+and compiler know what they are loading.
+
+Take note of the 4-bit sprite
+[quantizing tool](../tools/quantize.html). I find it better than the
+quality produced by Photoshop for quadplay color reduction. However,
+the resulting sprites often compress worse due to the way the alpha
+channel is handled. So, I often have to load them into Photoshop after
+quantization to clean up the alpha channel and then use a separate
+compression program on the output.
+
+Note that the *entity system* is an optional high-level feature. You
+can us it as is, extend it, or replace it with your own. It isn't intended
+to be the ultimate high-level scene graph, just a convenience for quick
+prototypes.
+
+Chrome and Safari give the best *performance*. Firefox is the slowest,
+mostly due to rendering. Performance on Chrome is unlikely to
+increase due to my own optimizations, and may slightly decrease as I
+add new features to the compiler. I recommend targeting 12 ms instead
+of 16 ms for your frame budget to account for this. As JavaScript
+compilers improve, you may see slight improvements from the browser
+itself.
+
+
+
+Change Log
+=====================================================================================
+
+Changes for both the specification and implementation:
+
+<!-- 2018 Nov 10: -->
+
+<link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../console/favicon-32x32.png">
+<link rel="shortcut icon" href="../console/favicon.ico">
+
+
+<script>markdeepOptions = {tocStyle:'long', definitionStyle:'long'};</script>
+<link rel="stylesheet" href="slate.css">
+<style>
+@font-face { font-family: quadplay; src: url(Audiowide-Regular.ttf) }
+.big {font-size: 150%; font-family: "Lucida Console", Monaco, monospace; line-height: 150%}
+em.asterisk { font-style: normal; font-weight: bold; }
+.md div.title { font-family: quadplay; font-size: 40px}
+.md div.title, .md div.subtitle {text-align: center}
+img { image-rendering: -moz-crisp-edges; image-rendering: pixelated; border: 1px solid #666}
+.md .hljs-built_in {font-weight: bold; color: inherit}
+.md .longToc {
+font-size: 80%;
+}
+</style>
+<title>manual✜</title>
+<script>setTimeout(function(){document.title='manual✜';},1000)</script>
+<link rel="shortcut icon" href="../console/favicon.ico">
+<link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../console/favicon-32x32.png">
+<!-- Markdeep: --><script src="markdeep.min.js"></script>
+

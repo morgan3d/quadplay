@@ -1,0 +1,9 @@
+{
+    "url":          "kenney-alien-yellow-16x32.png",
+    "spriteSize":   {"x": 16, "y": 32},
+    "gutter":       0,
+    "transpose":    true,
+    "names":        ["idle", "use", "crawl", "climb", "jump", "hurt", "run", "attack"],
+    "lengths":      [1,      2,     2,       2,       1,      1,      2,     2],
+    "license" :     "By Kenney.nl and surt 2013, and Morgan McGuire 2018 https://opengameart.org/content/kenney-16x16, in the Public Domain/CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/"
+}
