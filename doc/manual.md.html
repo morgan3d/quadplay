@@ -5,13 +5,11 @@
 
 <center>[*Quick Start*](#quickstart) ∙ [*Controls*](#controls) ∙ [*API*](#standardlibrary) ∙ [*Sprites*](#sprites) ∙ [*Fonts*](#fonts) ∙ [*Sounds*](#sounds) ∙ [*Symbols*](#symbols)
 
-<img src="ide.png" style="width:75%; border-radius: 0 0 4px 4px; box-shadow: 1px 5px 7px rgba(0,0,0,.20); margin-bottom: 28px; margin-top:20px"></center>
+<img src="ide.png" style="image-rendering: auto; width:75%; border-radius: 0 0 4px 4px; box-shadow: 1px 5px 7px rgba(0,0,0,.20); margin-bottom: 28px; margin-top:20px"></center>
 
-_quadplay✜ is currently in private alpha testing. The public beta will be available in June 2019_
-
-The [**<span style="font-size: 95%; font-family: quadplay">quadplay✜</span>**](../index.html) is a 
+The [**<span style="font-size: 95%; font-family: quadplay">quadplay✜</span>**](../index.html?IDE=1) is a 
 fantasy console for sprite-based 2D games. It is perfect for hobby coding, a game programming 
-course, and game jams.
+course, teaching yourself game development, and game jams.
 
 Virtual Hardware Features:
 
@@ -35,13 +33,27 @@ Software Features:
 - Hundreds of built-in Creative Commons assets
 - Scripts and external editor support for power users
 
+API:
+
+- Sprite, tilemap, circle, line, triangle, rectangle, and font drawing
+- Optional entity parenting hierarchy
+- Ray casting and collision detection
+- A* pathfinding
+- Postprocessing effects
+- Persistence (saving)
+- Nestable state-machine "modes"
+- Per-mode callback "hooks"
+
 
 
 Quickstart
 ====================================================================================
 
+Welcome to the quadplay✜ public beta!
+
 The 1.0 version will support fully-online editing of games from a
-browser. To develop for this beta version of quadplay✜, you need:
+browser as well as "pro" development using an external editor and local
+hosting. This beta version only supports "pro" mode, for which you need:
 
 - A code editor (_[Visual Studio Code](https://code.visualstudio.com/), [Atom](https://atom.io/), Vim, Emacs, Sublime, etc._)
 - [Python 3](https://www.python.org/)
@@ -52,7 +64,7 @@ such as `games/mygame` and start changing it. Look at the Built-In Games
 section for more examples.
 
 Read the PICO-8 section, Python section, or JavaScript section of this
-document for some starting tips on the PyxScript language.
+document for some starting tips on the PyxlScript language.
 
 Launch your program in the emulator and debugger from the command line
 on Windows, MacOS, or Linux with the `quadplay` command:
@@ -75,10 +87,12 @@ quadplay https://morgan3d.github.io/somegame/foo.game.json
 quadplay
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+<!--
 !!! WARNING
     Safari does not give proper file and line information on errors. Run in
     Chrome or Firefox on MacOS if you're having trouble figuring out which
     line is causing an error on Safari.
+-->
 
 These examples assume that your directory structure is:
 
@@ -104,7 +118,7 @@ These examples assume that your directory structure is:
 *   |   |
 *   |   '-- 📂 space
 *   |       |
-*   |       +- 📄 space.game.json
+*   |       +-- 📄 space.game.json
 *   |       |
 *   |       ⋮
 *   |
@@ -140,11 +154,11 @@ You should create your programs however works best for you. Here's how
 I like to work in quadplay✜.
 
 1. I start with a project file to load standard assets from `quad://`
-   and single *mode* called `Play.ns` that has no sections. I write a
+   and single *mode* called `Play.pyxl` that has no sections. I write a
    little code to draw the game.
 
 2. Pretty soon, I need some state that persists between frames, so I separate
-   `Play.ns` into top level initialization code a `frame` *section*. I then declare variables
+   `Play.pyxl` into top level initialization code a `frame` *section*. I then declare variables
    in in the top level of the mode, and as my main loop grows too long, I start to define helper
    functions there as well.
    
@@ -152,15 +166,15 @@ I like to work in quadplay✜.
    gameplay reasons, not polish because it is still early in the project.
    This might be a map or inventory screen, for example. As soon as there
    is a new mode, I need to have variables that can be seen by both modes.
-   So, I also create a `common.ns` or other *script* to store the global
+   So, I also create a `common.pyxl` or other *script* to store the global
    variables. I continue this process as more modes are required, periodically
    checking the mode system diagram in the IDE to ensure that the game
    flow is what I expected.
    
 4. As code starts to become duplicated in the modes, I move generally
    useful helper functions out to scripts. When the scripts themselves
-   get long, I start grouping them by functionality. For example, `particle.pyx`,
-   `animation.pyx`, and `gui.pyx`.
+   get long, I start grouping them by functionality. For example, `particle.pyxl`,
+   `animation.pyxl`, and `hud.pyxl`.
    
 This is a workflow that is good for prototyping, especially in game
 jam and hobby projects. I feel like keeping everything as simple as
@@ -181,7 +195,9 @@ Two complete games and a few demos are included to show how to use the APIs.
 
 ### Playable
 
-*Quadpaddle* is a four-player cooperative game inspired by [_Breakout_]("https://en.wikipedia.org/wiki/Breakout_(video_game)"): 
+  <center><img src="../games/quadpaddle/logo.png" width="300px" style="border:0"></center>
+   
+[Quadpaddle](../console?game=quad://games/quadpaddle&IDE=1) is a four-player cooperative game inspired by [_Breakout_]("https://en.wikipedia.org/wiki/Breakout_(video_game)"): 
 
 - Powerups
 - Level-end animations
@@ -192,7 +208,9 @@ Two complete games and a few demos are included to show how to use the APIs.
 - Y = down coordinates
 
 
-*Speed Street* is a four-player competitive racing game inspired by [_Excitebike_](https://en.wikipedia.org/wiki/Excitebike):
+  <center><img src="../games/speedstreet/logo.png" width=320px style="border:0"></center>
+ 
+[Speed Street](../console?game=quad://games/speedstreet&IDE=1) is a four-player competitive racing game inspired by [_Excitebike_](https://en.wikipedia.org/wiki/Excitebike):
 
 - Entity hierarchy
 - Simple physics
@@ -204,10 +222,10 @@ Two complete games and a few demos are included to show how to use the APIs.
 
 ### Examples
 
-*Hello, World* is a minimal example of a program with
+[Hello, World](../console?game=quad://examples/helloworld&IDE=1) is a minimal example of a program with
 one mode, one asset, and no sections or optional elements that puts text on the screen.
 
-*RPG Demo* is a simple example of a single-player RPG game design:
+[RPG Demo](../console?game=quad://examples/rpg&IDE=1) is a simple example of a single-player RPG game design:
 
 - Pause, Inventory, and Shop modes
 - Multi-layer map
@@ -215,7 +233,7 @@ one mode, one asset, and no sections or optional elements that puts text on the 
 - NPC interaction
 
 
-*Dual-Stick* shows how to use dual-stick controls.
+[Dual-Stick](../console?game=quad://examples/dual-stick&IDE=1) shows how to use dual-stick controls.
 The base of the tank is controlled by player 1 and the gun is controlled by player 2. When
 using a dual-stick game controller or keyboard, a single player can also use the right stick 
 or right side of the keyboard to control the gun. 
@@ -225,7 +243,7 @@ or right side of the keyboard to control the gun.
 - Entity parenting
 
 
-*Robot* shows how to create an animate a deep
+[Robot](../console?game=quad://examples/robot&IDE=1) shows how to create and animate a deep
 entity hierarchy.
 
 - Entity parenting
@@ -233,14 +251,22 @@ entity hierarchy.
 - Using scale and rotation together
 - Graphics tricks for reflections
 
-*Starter* is a project with a basic setup
+[Animation](../console?game=quad://examples/animation&IDE=1) shows how to handle complicated
+sprite animations.
+
+- Sprite animations
+- Basic jumping physics
+- Changing direction
+- Modular items
+
+[Starter](../console?game=quad://examples/starter&IDE=1) is a project with a basic setup
 from which you can build your own.
 
 
 Programming Model
 ------------------------------------------------------------------------------------
 
-The **PyxScript** programming language is designed to make compact,
+The **PyxlScript** programming language is designed to make compact,
 readable games. It blends Python, Lua, and JavaScript
 syntax. Indentation and newlines signify blocks and ends of
 statements. The syntax is based on math notation and looks like
@@ -249,11 +275,11 @@ typed. There's lexical scope, first class functions, and literal
 expressions for objects and (zero-based) arrays. It is decidedly
 function-based instead of object-oriented.
 
-Most of PyxScript programming is typical of any imperative,
+Most of PyxlScript programming is typical of any imperative,
 high-level language. It is similar to Python, Lua, JavaScript, C#,
 and Java.
 
-There are three special parts of the PyxScript programming model that
+There are three special parts of the PyxlScript programming model that
 are designed to simplify programming arcade games. These special
 features are [*modes*](#modes), [*2.5D graphics*](#2.5dgraphics), and [*frame hooks*](#framehooks).
 
@@ -266,7 +292,7 @@ Your program consists of one or more *modes*. Common modes are
 Clicking on the "Modes" label on the left side of the IDE draws
 the modes and transitions for your program.
 
-![Mode diagram for the Quadpaddle sample game, as shown in the IDE.](modes.png width=50%)
+![Mode diagram for the Quadpaddle sample game, as shown in the IDE.](modes.png width=50% style="image-rendering:auto")
 
 For each mode, you specify what code runs every *frame*. This is the
 body of the inner loop. Modes have capitalized names and are defined
@@ -309,7 +335,7 @@ The syntax of a mode with multiple sections is similar to markdown format:
 3. the top-level code
 4. the sections, each with a name underlined by `-`, `-`, `─`, `—`, `━`, or `⎯` characters
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 
 Pause
 ═══════════════════════════════════════════════════════════
@@ -389,19 +415,19 @@ menu.leave();
 ...
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[This is the equivalent of your PyxScript program in an object-oriented language. You don't write all of this boilerplate in PyxScript!]
+[This is the equivalent of your PyxlScript program in an object-oriented language. You don't write all of this boilerplate in PyxlScript!]
 
 
 
 ### 2.5D Graphics
 
-Graphics in PyxScript are similar to other 2D rendering APIs. You can
+Graphics in PyxlScript are similar to other 2D rendering APIs. You can
 set the background color, draw basic shapes and text, and render
 sprites with some features such as flipping and rotation.  There's
 special support for drawing whole tile maps as well.  All drawing
 commands support an _alpha_ channel for transparency.
 
-What is special about the 2.5D graphics in PyxScript is that each
+What is special about the 2.5D graphics in PyxlScript is that each
 drawing command has an associated _z-order_. 
 
 If two commands are at the same z-order, then whichever comes second
@@ -444,7 +470,7 @@ Coming from...
 ------------------------------------------------------------------------------------
 
 Here are some tips to get you started quickly when you're coming to 
-PyxScript from other popular programming languages.
+PyxlScript from other popular programming languages.
 
 ### PICO-8
 
@@ -468,7 +494,7 @@ quadplay✜:
 
 ### Python
 
-The PyxScript language feels a lot like Python, with these changes:
+The PyxlScript language feels a lot like Python, with these changes:
 
 - Comments begin with `//` instead of `#`
 - Explicitly declare variables with `let` and `const`
@@ -486,12 +512,13 @@ The PyxScript language feels a lot like Python, with these changes:
 - Use `extend(a, b)` for Python `objA.update(objB)` and `listA.extend(listB)`
 - Use `concatenate(a, b)` for Python `listA + listB` and `{**objA, **objB}`
 - Use `x = if t then a else b` for Python `x = a if t else b`
+- `true`, `false`, `nil` instead of `True`, `False`, `None`
 
 ### JavaScript
 
-The PyxScript language feels a lot like JavaScript strict mode, with these changes:
+The PyxlScript language feels a lot like JavaScript strict mode, with these changes:
 
-- Use PyxScript `==` in place of JavaScript `===`
+- Use PyxlScript `==` in place of JavaScript `===`
 - Use `:` and indentation instead of `{}` for defining blocks
 - Use `def` instead of `function`
 - Can't begin a variable name with an underscore
@@ -540,11 +567,12 @@ The emulator has special keyboard keys for:
 
 [^safariGIF]: On Safari, you have to explicitly allow popups for the website for this to work.
  Go to Preferences --> Websites --> Pop-up Windows and check "allow" for `localhost` (or whatever
- address you access quadplay from).
+ address you access quadplay✜ from).
+
 
 ### Controls
 
-Quadplay✜ supports up to four simultaneous physical game
+quadplay✜ supports up to four simultaneous physical game
 controllers. Most PC and console controllers (e.g., XboxOne, PS4)
 work, as well as retro game pads by [8bitdo](http://www.8bitdo.com/)
 and
@@ -562,9 +590,11 @@ player's hands on a single one.
   ![](../console/keyboard.png style="border:none; image-rendering:auto" width=75%)
  </center>
 
-Note that when using a dual-stick console controller, the player 1
-controller right stick is also mapped to the player 2 D-pad. This
-allows games with dual-stick controls using keyboard or controller.
+Note that when using a dual-stick console controller, the unused parts of player 1's
+_physical_ controller are mapped as alternate controls for the player 2 (`pad[1]`) _virtual_
+controller. This makes it easy to test two-player games using a single controller.
+It also allows for single-player games with dual-stick controls
+using either both halves of the keyboard or controller 1.
 
 
 Input     | Player 1 Key| Player 2 Key| Xbox One   | PS4        | SNES
@@ -600,7 +630,7 @@ Some exact ratios are:
 Quantize
 ---------------------------------------------------------------------------------------------
 
-*Quantize* is a standalone browser tool for
+[Quantize✜](../tools/quantize.html) is a standalone browser tool for
 converting any image format that your browser can load into a sRGB8 PNG
 for quadplay✜. While the console emulator can load any PNG file, if you convert
 them using Quantize you will have control over the color reduction process
@@ -610,7 +640,7 @@ and be able to produce much smaller files for distribution.
 Fontgen
 ---------------------------------------------------------------------------------------------
 
-*Fontgen* is a standalone browser tool for
+[Fontgen✜](../tools/fontgen.html) is a standalone browser tool for
 producing rough quadplay✜ font images from fonts installed on your local
 computer. You can then screen capture these and edit them in your
 favorite pixel editor to clean them up.
@@ -619,7 +649,7 @@ favorite pixel editor to clean them up.
 Fontpack
 ---------------------------------------------------------------------------------------------
 
-*Fontpack* is a standalone browser tool for
+[Fontpack✜](../tools/fontpack.html) is a standalone browser tool for
 taking a font PNG file with regular tiles (such as the one produced by
 fontgen) and packing it tightly. It will generate the output PNG
 and the `.font.json` file for you.
@@ -698,7 +728,7 @@ Modes
 
 `launchGame(url, note (= ""))`
 : Load a different game. This is primarily used by the built-in
-  quadplay launcher, but is available to all programs.
+  quadplay✜ launcher, but is available to all programs.
 
 `popMode(note (= ""))`
 : Go back to the previous mode that invoked `pushMode`, restoring the
@@ -715,7 +745,7 @@ Modes
 
 `quitGame(note (= ""))`
 : Quit the game and exit to the IDE or the launcher. Note that games do not
-  form a stack. Quitting a game returns to the built-in quadplay launcher or
+  form a stack. Quitting a game returns to the built-in quadplay✜ launcher or
   IDE, and not the game that launched it.
 
 `resetGame(note (= ""))`
@@ -784,6 +814,19 @@ Types
 
 Array
 ---------------------------------------------------------
+
+`arrayValue(array, i, extrapolate (= array.extrapolate or "clamp"))`
+: Applies `floor()` to `i` and then applies the extrapolation mode, which defaults
+  to the extrapolation mode of the array itself if specified.
+  Intended primarily for animation of values, including 
+  the named arrays of spritesheets, for example, 
+  `sprite = arrayValue(spritesheet[animName], frame)`.
+  See also `makeSpline()`. The `extrapolate` values accepted are:
+  
+  - `"oscillate"`
+  - `"loop"`
+  - `"clamp"` (default, other unsupported values are silentely treated as clamp instead of failing)
+
 `concatenate(array1, array2)`
 : Create a new array that contains all elements of `array1` followed by all elements of `array2`.
 
@@ -969,6 +1012,7 @@ Vector
 
 Most of the math functions and operators defined for numbers also 
 operate component-wise on vectors represented as structures or arrays.
+For example, `clamp`, `min`, `+`, `/`, etc.
 
 The following vector operations can be applied to any array or object,
 including `xy` and `rgb` values, except where specific key names are mentioned:
@@ -1051,6 +1095,9 @@ Math
 `cbrt(x)`
 : Cube root of `x`. Has the same sign as the argument.
 
+`clamp(x, lo, hi)`
+: Clamp `x` to the range [`lo`, `hi`] inclusive.
+
 `clone(v)`
 : Return a shallow clone of `v`
 
@@ -1083,16 +1130,21 @@ Math
   and `valueArray` must have the same length.
   
   `order`:
-  - 0 = nearest neighbor
-  - 1 = linear (polyline)
-  - 3 = cubic (Catmull-Rom) spline
+  - `0` = nearest neighbor
+  - `1` = linear (polyline)
+  - `3` = cubic (Catmull-Rom) spline
   
   `extrapolate`:
-  - "loop" = cyclic. The `timeArray` must have one more element than the `valueArray`.
-     That final value is the looped time that matches the start time.
-  - "clamp" = hold the final value
-  - "stall" = interpolate to additional control points that match the final value
-  - "continue" = continue the curve with the trend of the final control points
+  - `"loop"` = cyclic. The `timeArray` must have one more element than the `valueArray`.
+     That final value is the looped time that matches the start time. Similar to OpenGL
+     REPEAT mode for textures.
+  - `"clamp"` = hold the final value. Similar to OpenGL CLAMP texture mode.
+  - `"stall"` = interpolate to additional control points that match the final value.
+     Unlike clamping, for a cubic curve this will ensure that the velocity smoothly
+     guides into zero rather than creating a sharp corner.
+  - `"oscillate"` = treat like looping with twice the period, reversing direction.
+    This is similar to OpenGL MIRROR texture mode.
+  - `"continue"` = continue the curve with the trend of the final control points
 
 `max(a, b, ...)`
 : Largest of the arguments
@@ -1167,8 +1219,9 @@ Math
 Sound
 ---------------------------------------------------------
 
-`playAudioClip(object)`
+`playAudioClip(args)`
 : Object version of `playAudioClip()`, allowing keyword argument style call.
+  Values default according to the positional argument version.
 
 `playAudioClip(audioClip, loop (=false), volume (=100%), pan (=0%), pitch (=100%), time (=0))`
 : Play audio clip `audioClip`, which must have been loaded as an asset. The time
@@ -1326,9 +1379,10 @@ at (1, 1), which would be consistent with integer pixel centers.
 The center of the entire screen is `½ screenSize`.
 
 
-
+<!--
 `extendTransform(addX, addY, addZ, scaleX (= 1), scaleY (= 1), scaleZ (= 1))`
 : Specification to be determined. (TODO)
+-->
 
 `getRotationSign()`
 : Returns -1 if `(scaleX * scaleY > 0)` for the current transformation
@@ -1339,9 +1393,10 @@ The center of the entire screen is `½ screenSize`.
   `getRotationSign() = -1` (which is the default). This is used by `drawSprite()`
   to determine the rotation direction. See also `getYUp()`.
 
+<!--
 `getTransform()`
 : Returns the current net transformation as an array of eight numbers in the order of
-  `getTransform` arguments.
+  `getTransform` arguments. -->
   
 `getYUp()`
 : Returns `-sign(getTransform()[4])`, which is -1 if Y increases downwards (the default)
@@ -1354,16 +1409,21 @@ The center of the entire screen is `½ screenSize`.
   functions for handling UI scrolling, minimaps, and screenshake.
 
 `resetTransform()`
-: Reset to the default transformation, `setTransform(0, 0, 0, 1, 1, 1, 0, 0)`.
+: Reset to the default transformation, `setTransform(xy(0, 0), xy(1, 1), 0, 1, xy(0, 0))`.
   This overrides the `flipY` flag from the .game.json file.
+ 
+`setTransform(args)`
+: Named argument version of `setTransform()`.
+
+`setTransform(pos (= nil), dir (= nil), z (= nil), zDir (= nil), skew (= nil))`
   
 `setTransform(addX (=), addY (=), addZ (=), dirX (=), dirY (=), dirZ (=), skewX (=), skewY (=))`
 : Set the transformation applied to all draw coordinates to compute screen coordinates. Nil values
   default to their previous value. The equation 
   mapping draw to screen coordinates is:
-  `x_s = (x + skewX * z) * dirX + addX`;
-  `y_s = (y + skewX * z) * dirY + addY`;
-  `z_s = z * dirZ + addZ`. 
+  `x_s = (drawx + skew.x * drawz) * dir.x + pos.x`;
+  `y_s = (drawy + skew.y * drawz) * dir.y + pos.y`;
+  `z_s = drawz * zDir + z`. 
 
   The `dir` parameters must be +1 or -1, for flipping axes. This
   affects the location of sprites and text but not their own axes;
@@ -1378,9 +1438,9 @@ The center of the entire screen is `½ screenSize`.
 
 The most common changes are:
 
-- flip the y-axis using `setTransform(0, screenSize.y - 1, 0, 1, -1, 1)`. You can also do this by setting `"flipY": true` in the .game.json file.
-- flip y and center using `setTransform(½ screenSize.x, ½ screenSize.y, 0, 1, -1, 1)`
-- screenshake using `setTransform(2 ξ - 1, 2 ξ - 1)`
+- flip the y-axis using `setTransform(xy(0, screenSize.y - 1), xy(1, -1))`. You can also accomplish this by setting `"flipY": true` in the .game.json file.
+- flip y and center using `setTransform(½ screenSize, xy(1, -1))`
+- screenshake using `setTransform(rndSquare())`
 
 The default coordinate system is convenient for games that line up
 objects with background images, use a lot of text, or sample values
@@ -1393,8 +1453,8 @@ between axis conventions in arcade games. They do not allow rotation
 or even non-unit scaling between draw space and screen space. They
 also _do not affect the orientation of sprites_.  A sprite rotated 45
 degrees counter-clockwise and at the top of the screen will draw at
-the bottom of the screen after `setTransform(0, screenSize.y - 1, 0,
-1, -1, 1)`, but it will not be upside down and will still be rotated
+the bottom of the screen after `setTransform(xy(0, screenSize.y - 1), xh(1, -1))`, 
+but it will not be upside down and will still be rotated
 45 degrees counter-clockwise.
 
 
@@ -1425,7 +1485,7 @@ coordinates. The direction in draw coordinates is given by
 
 The axes of the entity space in draw space are given by:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 const θ = getRotationSign() * entity.angle
 const X = xy( cos θ, sin θ) * entity.scale
 const Y = xy(-sin θ, cos θ) * entity.scale
@@ -1449,8 +1509,8 @@ current location of its engine.
 ### Sprite Space
 
 Sprite coordinates are used by `getSpritePixelColor()`. These are integers
-with (0,0) on the top-left of the sprite and (`sprite.size.x` - 1, `sprite.size.y` - 1)
-on the lower left.
+with (0,0) on the top left of the sprite and (`sprite.size.x` - 1, `sprite.size.y` - 1)
+on the lower right.
 
 
 ### Sprite Sheet Space
@@ -1604,7 +1664,7 @@ The basic entity properties and defaults are:
 
 Examples of creating an entity with different shapes:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 // Disk
 e = makeEntity({pos:P, shape:"disk", size: xy(diameter, diameter)})
 
@@ -1627,7 +1687,7 @@ entity system but replace the rendering if you prefer. For example,
 if you'd like to register your own draw function callbacks instead
 of using the sprite rendering, you can do this:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 def draw(e):
    if e.draw: e.draw(e)
    for c in e.childArray: draw(c)
@@ -1667,7 +1727,6 @@ A key relating textbook symbols and definitions to the quadplay✜ entity proper
 
   Property       | Symbol                           | Definition
   ---------------|----------------------------------|------------------
-  `mass`         | $m$                              | Mass
   `pos`          | $x(t)$                           | Position
   `vel`          | $v(t) = \dot{x}(t)$              | Linear velocity
   `acc`          | $a(t) = \ddot{x}(t)$             | Linear acceleration
@@ -1677,10 +1736,14 @@ A key relating textbook symbols and definitions to the quadplay✜ entity proper
   `twist`        | $\alpha(t) = \ddot{\theta}(t)$   | Angular acceleration
   `torque`       | $\tau(t) = I \cdot \alpha(t)$    | Torque
   `inertia`      | $I$                              | Inertia
+  `density`      | $\rho$                           | Density
+
+You can choose the units and coordinate system. Pixels and frames are
+the most common choice of units in order to simplify conversion factors.
 
 Functions:
 
-`physicsStepEntity(entity, t)`
+`physicsStepEntity(entity, t (= 1))`
 : Overwrites `acc = force/mass` and `twist = torque/inertia`.  Then,
   integrates `acc` into `vel` into `pos` and `twist` into `spin` into
   `angle`. Finally, sets `force` and `torque` to zero. Uses a forward
@@ -1911,6 +1974,7 @@ endpoints and borders.
 : Keyword version of `drawSprite()`. Pass an object that has properties
   whose names match the arguments of the positional version. For example,
   `drawSprite({sprite: wizard, pos: xy(100, 100), z: 2})`.
+  Values default according to the positional argument version.
 
 `drawSprite(sprite, pos, angle (= 0), scale (= nil), opacity (= 1), z (= 0), overrideColor (= nil))`
 : Draw sprite `spr` with its center at `pos`. `pos` must have at
@@ -1939,6 +2003,7 @@ endpoints and borders.
 : Keyword version of `drawText()`. Pass an object that has properties
   whose names match the arguments of the positional version. For example,
   `drawText({text: "Fire!", pos: xy(100, 100), xAlign:-1, z: 2})`.
+  Values default according to the positional argument version.
 
 `drawText(font, text, pos, color (= nil), shadow (= nil), outline (= nil), xAlign (= -1), yAlign (= 1), z (= 0), wrapWidth (= nil))`
 : Print string `text` relative to `pos` and return an `xy()` of the bounding box. 
@@ -1960,9 +2025,10 @@ endpoints and borders.
 `drawTri(A, B, C, fill, border (= nil), z (= 0))`
 : Draw the triangle.
 
+<!--
 `getClip()`
 : Returns the current net clipping region as an array of six numbers in the order of
-  `getClip` arguments.
+  `getClip` arguments.-->
 
 `getSpritePixelColor(sprite, pos)`
 : Returns the color of pixel `pos` in the sprite as an `rgba`
@@ -1973,7 +2039,7 @@ endpoints and borders.
   current transformation.
 
 `resetClip()`
-: Reset to the default clipping region, `setClip(0, 0, -2047, screenSize.x - 1, screenSize.y - 1, 2048)`.
+: Reset to the default clipping region, `setClip(xy(0, 0), screenSize, -2047, 4096)`.
 
 `setBackground(color (= #0))`
 : Replace the background with this color. The background is automatically
@@ -1983,10 +2049,14 @@ endpoints and borders.
 : Replace the background with this sprite, which must be the exact size of
   the screen and in a spritesheet that is the exact size of the screen.
 
-`setClip(x, y, z, w, h, d)`
+`setClip(args)`
+: Object version of `setClip()`.
+
+`setClip(pos (= nil), size (= nil), z (= nil), zSize (= nil))`
 : Set the clipping region to this region. Unspecified and `nil` values
-  retain their current value.  Coordinates are clamped to the physical
-  screen and z to the range [-2047, 2048]. `w`, `h`, and `d` may be
+  retain their current value. `pos` and `size` must be `nil` or `xy()` values.
+  Coordinates are clamped to the physical
+  screen and z to the range [-2047, 2048]. `size` and `zSize` may be
   negative. It is impossible to set a clipping region smaller than
   1x1x1 pixels.
 
@@ -2003,7 +2073,7 @@ endpoints and borders.
 
            --------------------------------------------
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 setBackground(gray(100%))
 drawText("Normal", xy(32,68), rgb(1,0,0), nil, nil, 0)
 drawText("Outline", xy(32,77), rgb(1,0,0), rgb(50%, 50%, 0), nil, 0)
@@ -2025,7 +2095,7 @@ for u < 3
 
 
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 setBackground(#FFF)
 
 // Make the text color clear to draw outlines.
@@ -2270,11 +2340,11 @@ the end of the previous frame.
 
 `addFrameHook(callback, endCallback, lifetime, runInMode (= getMode()))`
 : Register a `callback` function to run every frame for `lifetime`
-  frames.  The return value of `addFrameHook` is a hook that can be passed to
-  `removeFrameHook()`.
+  frames.  The return value of `addFrameHook()` is a hook that can be
+  passed to `removeFrameHook()`.
   
   - `callback`: `def callback(framesleft, lifetime)`, runs every frame. `framesleft`
-    will be `lifetime - 1` on the first frame and `0` on the lastone.
+    will be `lifetime - 1` on the first frame and `0` on the last one.
     This argument may be `nil`. If the callback returns `true`, the hook
     is removed without running the `endCallback`, otherwise it keeps running.
   - `endCallback`: `def endCallback()`, runs on the last frame. Can be `nil`.
@@ -2306,14 +2376,32 @@ Time
 `now()`
 : Returns a time in seconds that is accurate to at least one millisecond.
   The origin for the time is arbitrary but constant per program run.
+  Do not use this time for simulation because it will have inconsistent 
+  jumps between frames dues to frame rate scaling.
 
+`localDate()`
+: Returns an object with the following properties, set in the current time zone:
+
+  - `year`, e.g., 2019
+  - `month` 0-11
+  - `day` 1-31
+  - `hours` 0-23
+  - `minute` 0-59
+  - `second` 0-59
+  - `millisecond` 0-999
+  - `weekday` 0-6, where 0 = Sunday
+  - `daySecond` seconds since midnight, including a fractional part
+  - `timezone` minutes from UTC
+
+  See `formatNumber()` for the various clock formatting options for numbers in seconds,
+  and `now()` for a high-precision timer.
 
 Path Finding
 ----------------------------------------------------------
 
 *`findPath(startNode, goalNode, estimatePathCost, edgeCost, getNeighbors, nodeToID, graphObj (= nil))`*
 
-_See also `findMapPath` for a simpler map-specific versio.n_
+_See also `findMapPath` for a simpler map-specific version._
 
 `findPath()` is a general-purpose path-finding routine for any kind of
 world representation. It uses the "A*" (A-star) algorithm. The return value is an
@@ -2323,7 +2411,7 @@ exists.
 
 To recover the cost of the path, use the idiom:
 
-````````````` PyxScript
+````````````` PyxlScript
 let cost = 0
 for i < size(path) - 1: cost += edgeCost(path[i], path[i + 1])
 `````````````
@@ -2364,7 +2452,7 @@ better understanding of how they are typically computed.
   
 ### Map Example
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 const sprite = map.spritesheetTable["mapTiles"]
 const wall = sprite[0][0]
 const swamp = sprite[0][1]
@@ -2388,8 +2476,8 @@ def getNeighbors(A, map):
 def nodeToID(A, map): return A.x + map.width * A.y
 
 // In map coordinates
-let start = xy(1, 1)
-let goal = xy(20, 20)
+let startNode = xy(1, 1)
+let goalNode = xy(20, 20)
 let path = findPath(startNode, goalNode, estimatePathCost, edgeCost, getNeighbors, nodeToID, map)
 
 // Print the path
@@ -2421,16 +2509,6 @@ These APIs are subject to change.
   Debug print statements can be completely disabled from the Output 
   window, which causes them to consume no processing time.
 
-`debugStartGIFRecording()`
-: Begin GIF recording.
-
-`debugStopGIFRecording()`
-: End GIF recording. When the compression completes, the GIF will appear in a
-  new tab when using the browser version.
-
-`debugTakeScreenshot()`
-: Take a screenshot and download it to the local disk.
-
 `debugWatch(expr)`
 : Make the expression appear along with its value at the time that
   `debugWatch` executs in the Watch pane of the debugger. If there are
@@ -2438,6 +2516,21 @@ These APIs are subject to change.
   collapsed and only the last to execute each frame will be
   shown. This is *not* a function. It is a special syntax. You may not
   pass the `debugWatch` command as if it were a function.
+
+`deviceControl(command, ...)`
+: Reserved function for executing device-specific features such as the
+  game launcher, GPIO, and alternative input devices. `command` is a
+  string telling the host which control feature to execute, and the
+  remaining arguments are passed to it. All `deviceControl` commands
+  may change in future releases and may not work on any given platform.
+
+  - `"StartGIFRecording"` Begin GIF recording.
+  - `"StopGIFRecording"`  End GIF recording. When the compression completes, the GIF will appear in a
+     new tab.
+  - `"StartPreviewRecording"` Begin preview video recording. There is no "stop" command because this
+     terminates automatically after a set time.
+  - `"TakeScreenshot"`    Take a screenshot and download it to the local disk.
+
 
 `drawBounds(e, color (= gray(60%)), recurse (= true))`
 : Render a debugging view of the bounds of an entity or other object
@@ -2452,7 +2545,7 @@ Persistence
 
 The local persistence API stores values in the browser's local
 storage.  It is tied to a specific web browser and the URL from which
-quadplay is hosted, as well as the URL of the game. Some browsers will
+quadplay✜ is hosted, as well as the URL of the game. Some browsers will
 automatically synchronize local storage across computers, however.
 
 The storage API performs string manipulation and can be slow relative
@@ -2500,6 +2593,12 @@ Sprites
 ![`quad://sprites/kenney-alien-red-16x32.sprite.json`](../sprites/kenney-alien-red-16x32.png) ![`quad://sprites/kenney-alien-yellow-16x32.sprite.json`](../sprites/kenney-alien-yellow-16x32.png) ![`quad://sprites/kenney-alien-green-16x32.sprite.json`](../sprites/kenney-alien-green-16x32.png)
 ![`quad://sprites/kenney-alien-blue-16x32.sprite.json`](../sprites/kenney-alien-blue-16x32.png) ![`quad://sprites/kenney-alien-purple-16x32.sprite.json`](../sprites/kenney-alien-purple-16x32.png)
 
+### Ninja
+
+![`quad://sprites/ninja-black-32x32.sprite.json`](../sprites/ninja-black-32x32.png) ![`quad://sprites/ninja-red-32x32.sprite.json`](../sprites/ninja-red-32x32.png)
+![`quad://sprites/ninja-yellow-32x32.sprite.json`](../sprites/ninja-yellow-32x32.png) ![`quad://sprites/ninja-blue-32x32.sprite.json`](../sprites/ninja-blue-32x32.png)
+![`quad://sprites/ninja-purple-32x32.sprite.json`](../sprites/ninja-purple-32x32.png) ![`quad://sprites/ninja-white-32x32.sprite.json`](../sprites/ninja-white-32x32.png)
+![`quad://sprites/ninja-bow-32x32.sprite.json`](../sprites/ninja-bow-32x32.png) ![`quad://sprites/ninja-sword-32x32.sprite.json`](../sprites/ninja-sword-32x32.png)
 
 ### Dawnlike
 
@@ -2652,7 +2751,7 @@ Sounds
 Project File
 =============================================================================================
 
-Format
+Game JSON
 ---------------------------------------------------------------------------------------------
 
 The project file is a JSON file describing all of the parts of the
@@ -2667,10 +2766,13 @@ manually. I recommend copying the starter project provided and then
 reading about options in this section that may not be used by the
 starter.
 
+!!! 
+    quadplay✜ permits C++ style comments and trailing commas within
+    JSON files for convenience when editing and debugging. This is
+    not legal in strict JSON and may be incompatible with other tools.
+
 An example project is below, annotated with comments explaining the
-options. *Comments are not legal in JSON* and you must delete them if
-you try to use this as a real project template. Project files should
-have the double extension `.game.json`.
+options. Project files should have the double extension `.game.json`.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ JavaScript
 {
@@ -2686,13 +2788,13 @@ have the double extension `.game.json`.
   
   // Files that form the global scope. Put most of your code in these. They are
   // loaded in order.
-  "scripts":        ["utils.ns", 
-                     "juice.ns",
-                     "https://someaccount.github.io/someproject/inventory.ns"],
+  "scripts":        ["utils.pyxl", 
+                     "juice.pyxl",
+                     "https://someaccount.github.io/someproject/inventory.pyxl"],
 
   // These are the names of modes, which must start with a capital letter and
-  // be legal identifiers in PyxScript. These correspond to files that must
-  // be stored in the same path as the project file. So, "Init" is in "Init.ns".
+  // be legal identifiers in PyxlScript. These correspond to files that must
+  // be stored in the same path as the project file. So, "Init" is in "Init.pyxl".
   // One mode must have an asterisk * after its name, marking it as the start
   // mode. This is not part of the filename.
   //
@@ -2703,12 +2805,26 @@ have the double extension `.game.json`.
      
   // Assets are loaded as global constants in your program.
   "assets": {
-     // Asset names must be legal PyxScript identifiers
+     // Asset names must be legal PyxlScript identifiers
      "mysprite": "mysprite.sprite.json",
      "myfont": "arial.font.json",
      "boom": "boom.sound.json",
      "overworld": "overworld.map.json"
   },
+  
+    
+  // The version number is used to create the "Updated" badge in the 
+  // launcher program
+  "version":      0.0,
+  
+  // Properties affecting your game description in the launcher program:
+  "minPlayers":   1,
+  "maxPlayers":   1,
+  "cooperative":  false,
+  "competitive":  false,
+  "achievements": false,
+  "highscores":   false,
+  "description": "Description of your game in about 22 words.",
   
   // Other global constants. You could define these in a global source code file
   // as well. The constants specified here have immutable *values*, not just immutable
@@ -2755,6 +2871,22 @@ have the double extension `.game.json`.
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Each game must also contain:
+
+- 64x64 `label64.png` box art image in the same folder as the `.game.json` file. This is
+  used for display in the launcher.
+- 128x128 `label128.png` box art image in the same folder as the `.game.json` file. This is
+  not currently used.
+- 1152x1120 `preview.png` image in the same folder as the `.game.json` file that contains
+  6x10 frames of 192x112 video at 20 fps (3 seconds) used for the preview video in the launcher.
+  
+You can create the `preview.png` image by pressing Shift+F8 while your game is playing. It will
+record 3s of video, process it to the correct resolution, and open it in a new browser tab. 
+Download this image, compress it as you would a sprite, and save it as your preview. The total
+side should be around 100 kB. If it is much larger, then there will be delay for players browsing
+your game in the discover tab.
+
+
 
 Constants
 ---------------------------------------------------------------------------------------------
@@ -2765,7 +2897,7 @@ in the project list and have GUI editors.
 Each constant has the format `"..name..": {"type": "..type..", "value": ..., "comment": "..."}`.
 The `comment` field is optional and the `raw` type permits a `url` instead of a `value`.
 
-Explicit types allow support for the full PyxScript literal syntax
+Explicit types allow support for the full PyxlScript literal syntax
 beyond that permitted natively in JSON, appropriate GUI editors, and
 annotations.
 
@@ -2821,14 +2953,21 @@ The sprite sheet JSON descriptor looks like:
     // in game.
     "transpose":    false,
     
-    // Optional. Names of columns, or rows if transpose = true. Allows
-    // indexing by name instead of number. Must be legal identifiers.
-    // Cannot be 'spriteSize'.
-    "names": ["idle", "run", "jump"],
-    
-    // Optional. Lengths to resize the second indexed array by
-    // (row, or column if transpose = true).
-    "lengths": [1, 3, 2],
+    // Optional. Applies to pre-transpose coordinates. Each becomes
+    // an array on the spritesheet with the extrapolate field set.
+    // A name cannot be 'spriteSize' or any other spritesheet field.
+    //
+    // If an xy() is specified, creates a clamped animation for a single frame.
+    // If extrapolate is unspecified, defaults to looping.
+    // extrapolate options are "loop", "oscillate", and "clamp"
+    //
+    // end defaults to start, and each field of end defaults to the corresponding part of start.
+    "names":        {
+        "idle":     {"start": {"x": 0, "y": 0}, "end": {"x": 0, "y": 3}, "extrapolate": "oscillate"},
+        "run":      {"start": {"x": 1, "y": 0}, "end": {"y": 3}},
+        "jumpUp":   {"x": 2, "y": 0},
+        "jumpDown": {"x": 2, "y": 1}
+    },
     
     // Optional license and copyright information.
     "license":      "GPL 3.0 (c) 2018 Morgan McGuire"
@@ -2837,6 +2976,11 @@ The sprite sheet JSON descriptor looks like:
 
 This will appear as the global variable `heroSpriteSheet` in memory,
 which is a 2D array of individual sprites.
+
+!!!
+   I recommend compressing sprites with the provided [Quantize✜](../tools/quantize.html)
+   tool and then [ImageOptim](https://imageoptim.com/mac) (MacOS) or 
+   [PNGGauntlet](https://pnggauntlet.com/) (Windows).
 
 For a sprite sheet named `S`, individual sprites are accessed as
 `S[x][y]` in game. If the sprite sheet contains a single row, then
@@ -2863,7 +3007,7 @@ sprite sheets.
 
 There is no performance advantage or requirement for making sprites or
 sprite sheets sizes even sizes or power of two sizes, although many
-traditional sprites have sides of 8, 16, or 32 pixels. The quadplay
+traditional sprites have sides of 8, 16, or 32 pixels. The quadplay✜
 screen resolution is designed to allow an integer number of such
 tiles.
 
@@ -2983,8 +3127,6 @@ The map JSON descriptor looks like:
     // Optional license and copyright
     "license": "Released into the public domain by Edouard Gauthier",
    
-    spriteUrlTable
-   
     // Alternative for maps with a single spritesheet. If the sprite sheet doesn't match 
     // the one described in the map file, an error occurs.
     "spriteUrl": "tiles.sprite.json"
@@ -2999,17 +3141,17 @@ in files ending with `.tmx`. Only the following properties are currently support
 - Tile layers (other layers are ignored)
 - Embedded tile set
 
-![Tiled program options for creating a new map.](tiled-new-map.png width=50%) 
+![Tiled program options for creating a new map.](tiled-new-map.png width=50% style="image-rendering:auto") 
 
 The tile render order from the map is ignored.
 
 The easiest way to create these is using the open source [Tiled](https://www.mapeditor.org/)
 editor, which has pay-what-you-want precompiled binaries for Windows, MacOS, and Linux. The
 sprite sheet from the map file will be used for visualization if it is available in the IDE,
-but map rendering is performed using a nano sprite sheet at runtime.
+but map rendering is performed using a sprite sheet at runtime.
 
 
-PyxScript Language
+PyxlScript Language
 =========================================================================
 
 Numbers
@@ -3028,7 +3170,7 @@ Finite numeric literals contain an optional single plus or minus sign and one of
 
 - a series of digits, followed by an optional decimal point and a series of digits
 - a decimal point followed by a series of digits
-- one of the following single-character fractions: `½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒`
+- one of the following single-character fractions, representing one-half to one-tenth: `½ ⅓ ⅔ ¼ ¾ ⅕ ⅖ ⅗ ⅘ ⅙ ⅐ ⅛ ⅑ ⅒`
 
 Two optional suffixes are permitted:
 
@@ -3037,7 +3179,7 @@ Two optional suffixes are permitted:
 
 Examples of legal numeric literals:
 
-~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~ PyxlScript
 1
 -21.4
 0
@@ -3089,7 +3231,7 @@ indexing syntax described in the Subscripts section.
 
 Array examples:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 a = [8, 4, 1]
 a[0] = "hello"
 debugPrint(a[0])
@@ -3113,7 +3255,7 @@ or by a period. This allows them to act as objects/structs.
 
 Object examples:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 t = {x:3, y:10}
 t.x += 1
 debugPrint(t["x"])
@@ -3129,7 +3271,7 @@ Functions are first-class values. They can be passed to and returned from other 
 stored in data structures, and bound to variables. Declare functions with `def` and
 return values from them with `return`. Separate the argument list from the body with `:`.
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 // Multi-line function block
 def solve(a, b, c):
    return ½(sqrt(b² - 4 a * c) - b) / a
@@ -3144,7 +3286,7 @@ text(foo(3))
 There is no way to declare an anonymous function or use a function
 definition as an expression.
 
-If a function body takes too long to execute then the nano interpreter
+If a function body takes too long to execute, then the interpreter
 may terminate the program to prevent the game from becoming
 unresponsive.
 
@@ -3185,7 +3327,7 @@ Note that only a single variable is permitted per `let` or `const`
 statement.  Multiple statements may be chained using semi-colons on a
 single line, however.
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 const x = 7 // x may not be rebound
 let y       // Declare y
 let z = 9   // Declare and initialize z
@@ -3197,7 +3339,7 @@ let a = [1, 2]; let b = "hello"
 The variables captured by `for` and `with` and the arguments to a
 `def` are bound to the scope of the body.
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 const scale = 2
 let y = 100
 
@@ -3271,7 +3413,7 @@ statement) variables.
 
 Example:
 
-~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 G = {x:1, y:2, z:0}
 with x,y in G:
    x = 100
@@ -3287,9 +3429,9 @@ aliases. So, `G.x` and `x` may be used interchangably within the body
 in the above example.
 
 The single-line version of the `with` statement is comparable to other
-single-line nano flow control:
+single-line flow control:
 
-~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 G = {x:1, y:2, z:0}
 with x,y ∈ G: x = 100; y = 0; z = 4
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -3306,7 +3448,7 @@ The `local` statement allows you to create a block without any other
 bindings or flow control.  It is occasionally useful for creating
 variables with a tight scope inside a long function or mode.
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 let x = 4
 
 local:
@@ -3381,7 +3523,10 @@ ASCII    | Unicode | Meaning
 `>>=`    |`▻=`     | mutating bit shift right
 `if...then...else`| | conditional 
 
-There is no logical XOR in PyxScript.
+Assignment and mutating operators all return `nil`; they cannot be
+chained or used in expressions.
+
+There is no logical XOR in PyxlScript.
 
 The conditional operator (distinct from the `if` block statement) has
 the form: `if testexpr then truevalue else falsevalue`.  Note that
@@ -3389,7 +3534,7 @@ there are no colons (:), because it does not create blocks. The
 conditional operator is convenient when initializing constants, or
 data structures. For example:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 const y = if x > 3 then "cat" else "dog"
 
 spawnMonster(if pos then pos else xy(0,0))
@@ -3440,7 +3585,7 @@ Because back-to-back parentheses are interpreted as implicit multiplication, fun
 are returned from other functions, determined by parenthesized expressions, or stored in 
 objects cannot be invoked using the `()` syntax. Instead, use the `call` function:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 // Illegal:
 x = (a and abs or cos)(θ)
 y = tbl["myfunc"](3, 4)
@@ -3451,11 +3596,6 @@ x = call(a and abs or cos, θ)
 y = call(tbl["myfunc"], 3, 4)
 z = call(f(a), b)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-!!! Warning Mutating Operators
-    Mutating operators (`=`, `++`, `+=`, etc.) currently return a value, 
-    like their C++ and JavaScript equivalents. In the future, these will
-    return `nil`. Do not depend on the return value of a mutating operator.
 
 
 ### Exponents
@@ -3506,13 +3646,13 @@ Symbol         | ASCII         | Value
 `ε`            | `epsilon`     | `0.0000001`
 `π`            | `pi`          | `3.141592653589793115997963468544185161590576171875`
 `∞`            | `infinity`    | infinity
-`nan`          | `nan`         | floating-point "not-a-number" value
-`assetCredits` | `assetCredits`| object of credit and license statements from assets and code
+               | `nan`         | floating-point "not-a-number" value
+               | `assetCredits`| object of credit and license statements from assets and code
 `∅`            | `nil`         | ("undefined")
-`pad`          | `pad`         | array gamepad of objects 
-`joy`          | `joy`         | shorthand for `pad₀`
+               | `pad`         | array gamepad of objects 
+               | `joy`         | shorthand for `pad₀`
 `ξ`            | `rnd()`       | random number on [0, 1), resampled every time the expression is used
-`screenSize`   | `screenSize`  | the size of the screen in pixels, defaults to `xy(384, 224)`
+               | `screenSize`  | the size of the screen in pixels, defaults to `xy(384, 224)`
 
 
 <!--
@@ -3622,7 +3762,7 @@ expression.
 The loop variable in any `for` loop is freshly bound for each iteration. This means that
 if it is captured by a function as in:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 let array = []
 for i < 3
    def capture(): return i
@@ -3638,10 +3778,10 @@ first class functions with loops.
 Container iteration `for` loops iterate over the keys of a object, the characters of a string,
 or the elements of an array _as of the beginning of the loop_. If the container is modified
 during iteration, the original is still used. That means that you can delete elements from the array
-without affecting the iteration. The Java/C++ equivalents of nano `for`-loop conditions
+without affecting the iteration. The Java/C++ equivalents of `for`-loop conditions
 are:
 
-nano                  | Java/C++
+quadplay✜             | Java/C++
 ----------------------|------------------------
 `for i ≤ k`           | `for (i = 0; i <= k; ++i)`
 `for i &lt; k`        | `for (i = 0; i &lt; k; ++i)`
@@ -3654,14 +3794,14 @@ The upper bound is evaluated for each loop iteration.
 You can pack a `for` and `with` statement together by chaining `∈` expressions, in what
 is called a `for`-`with` loop:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 for x,y ∈ point ∈ set:
    ...
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 is the same as:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 for point ∈ set:
    with x,y ∈ point:
       ...
@@ -3684,7 +3824,7 @@ single-line expressions on the same line. No `else` is permitted with single-lin
 
 #### Array Iteration
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 let names = ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
 
 // Iterate over array elements
@@ -3712,7 +3852,7 @@ for i < size(names):
 
 #### Object Iteration
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 let poemBy = {
    Angelou: "Still I Rise",
    Frost: "Stopping by Woods on a Snowy Evening",
@@ -3737,7 +3877,7 @@ for author in poemBy:
 
 #### Array of Objects
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 let spots = [xy(1,1), xy(100, 2), xy(10, 20), xy(50, 20)]
 
 for x,y in S in spots:
@@ -3777,11 +3917,11 @@ from the program when assertions are disabled.
 Multiline Expressions
 ---------------------------------------------------------------
 
-Newlines end PyxScript expressions, unless there are unbalanced
+Newlines end PyxlScript expressions, unless there are unbalanced
 brackets (), [], {}. This allows you to spread function calls, array
 literals, and object literals over multiple lines.  For example:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 let player = {
    center: xy(100, 40),
    angle: 45deg,
@@ -3802,9 +3942,9 @@ the end of a multiline expression, it may not also contain multiple statements.
 Symbols
 ---------------------------------------------------------------
 
-The quadplay IDE supports autocorrect for typing the optional special
+The quadplay✜ IDE supports autocorrect for typing the optional special
 symbols such as ∅ and ∈. For convenience when using an external editor
-or typing the full set of characters supported by nano fonts into
+or typing the full set of characters supported by fonts into
 strings on a US-EN keyboard, you can also copy and paste from here:
 
 ````````````````````````````````````````````````````` none big
@@ -3841,7 +3981,7 @@ Note that the superscripts `ᵈᵉʰᵐᵒʳˢᵗ` are legal in text strings but
 not as code. These are present specfically to support ordinals such as
 "1ˢᵗ, 2ⁿᵈ, 3ʳᵈ, 4ᵗʰ, 1ᵉʳ, 1ʳᵉ, 2ᵉ, 2ᵈ, 2ᵈᵉ, 1ᵒ, 1ᵃ, …" in
 various language possible. Not all letters are available for subscripts 
-and superscripts in Unicode, so quadplay restricts those available
+and superscripts in Unicode, so quadplay✜ restricts those available
 as variables to an overlapping set.
 
 
@@ -3924,39 +4064,69 @@ name. You can list the full path to the actual game file instead.
 Every time you push the play button (F5) or reload button (Ctrl+R) in
 the emulator, it will reload your code and assets from disk.
 
-
-Emacs Mode
+Visual Studio Code
 ------------------------------------------------------------------------------------
 
-To install the PyxScript mode for Emacs, copy the
-[`pyxscript-mode.el`](../tools/pyxscript-mode.el) to your elisp
+Visual Studio Code natively supports the `.json` files. To configure it to support
+Pyxscript files as well:
+
+TODO: Josef
+
+<!--
+1. Run Visual Studio Code. 
+2. Press Ctrl+Shift+P (Cmd+Shift+P on MacOS) to open the command
+   palette and then type `Open Settings (JSON)` and press enter.
+   This opens the `settings.json` file.
+3. Add the following to the `settings.json` file (you may need a comma
+   on the end of the previous line as well):
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ json
+"files.associations": {
+   "*.pyxl": "python"
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+Emacs
+------------------------------------------------------------------------------------
+
+To install the PyxlScript mode for Emacs, copy the
+[`pyxlscript-mode.el`](../tools/pyxlscript-mode.el) to your elisp
 directory (mine is `~/.emacs.d/lisp`) and add the following lines to
 your `~/.emacs` file:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Lisp
-(autoload 'pyxscript-mode "pyxscript-mode")
-(add-to-list 'auto-mode-alist '("\\.ns\\'" . pyxscript-mode))
+(autoload 'pyxlscript-mode "pyxscript-mode")
+(add-to-list 'auto-mode-alist '("\\.pyxl\\'" . pyxlscript-mode))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you don't want to copy the `pyxlscript-mode.el` file, you can instead
+edit and add the following before the `autoload` line:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Lisp
+(add-to-list 'load-path (expand-file-name "path/to/quadplay/tools"))
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Vim Plugin
+
+Vim
 ------------------------------------------------------------------------------------
 
 TODO: Stephan.
 
-[`pyxscript.vim`](../tools/pyxscript.vim)
+[`pyxlscript.vim`](../tools/pyxlscript.vim)
 
 
 Other Editors
 ------------------------------------------------------------------------------------
 
-Fortunately, PyxScript syntax is very close to Python syntax. If you
-tell your editor to treat `.ns` files as Python files, then it will
+Fortunately, PyxlScript syntax is very close to Python syntax. If you
+tell your editor to treat `.pyxl` files as Python files, then it will
 probably handle indenting and most keywords correctly. Comments are
 the one element that will probably confuse your syntax highlighter.
 
 I welcome submissions of open source plugins for Visual Studio Code and other
-editors to support PyxScript.
+editors to support PyxlScript.
 
 
 Command-Line Tools
@@ -3973,7 +4143,7 @@ Command-Line Tools
 Performance
 ====================================================================================
 
-✜quadplay is designed to make it easy to write small games that have
+quadplay✜ is designed to make it easy to write small games that have
 very readable source code. I recommend designing your code primarily
 for readability instead of performance. However, at some point you'll
 probably hit the performance limits and want to optimize at least some
@@ -4037,36 +4207,47 @@ larger. For example, `rgba` vectors or adding whole arrays to each
 other have relatively less overhead than `xy` vectors.
 
 
-Limitations/Road Map
+Road Map
 ====================================================================================
 
 There's a long feature list and a short bug list that I'm working
-through. The big missing features I'm aware of and hope to address
-are:
+through. The highlights are, in priority order:
 
+For 1.0:
+- Edit your game and save to local disk or Google Drive using the `quadplay` script
+  - Sprite editor
+  - Map editor
+  - Constant editor
+  - Code editor
+  - Font editor
+- Five full sample games
+- More AI support
+- Perfect disk, outlined-disk, and outlined-triangle blending
+- Watertight triangle mesh rendering
+- Polyline rendering without double-blending endpoints
+
+Post 1.0:
 - Export your game to standalone static HTML
-- Editing the game in the IDE and saving to Google Drive
-- Multiple spritesheets per map
-- Post-render FX
-- Visual Studio Code and Atom PyxScript plugins
 - Load tables of data from CSV files
-- Physics simulation
 - Filled disks with blending that don't overdraw themselves
 - Watertight rasterization of triangle meshes
 - Watertight rasterization of polylines
+- Edit your game in the IDE and saving to Google Drive
+- Visual Studio Code and Atom PyxlScript plugins
+- Physics simulation
 
 
 Credits
 ====================================================================================
 
-The quadplay✜'s influences include Atari 2600, Commodore VIC-20, PICO-8, APL, Python, Shadertoy,
-Arduboy, and its predecessor, the nano JAMMER.
+The quadplay✜'s influences include Atari 2600, Commodore VIC-20, APL, Python, [PICO-8](https://www.lexaloffle.com/pico-8.php), [Shadertoy](https://www.shadertoy.com),
+[Arduboy](https://arduboy.com), and its predecessor, [the nano JAMMER](https://morgan3d.github.io/nano).
 
-The ✜quadplay IDE and compiler are copyright 2019 Morgan McGuire, including:
+The quadplay✜ IDE and compiler are copyright 2019 Morgan McGuire, including:
 
 - [`index.html`](../console/index.html)
 - [`quadplay.css`](../console/quadplay.css)
-- [`quadplay-compiler.js`](../console/quadplay-compiler.js)
+- [`pyxscript-compiler.js`](../console/pyxscript-compiler.js)
 - [`quadplay-runtime.js`](../console/quadplay-runtime.js)
 - [`quadplay-host-websw.js`](../console/quadplay-runtime.js)
 - [`quadplay-ide.js`](../console/quadplay-ide.js)
@@ -4078,9 +4259,14 @@ and excluding the content described below. The IDE and compiler are licensed und
 
 The Vim mode is by [Stephan Steinbach](https://twitter.com/stephan_gfx).
 
+The VS Code extension is by [Josef Spjut](http://josef.spjut.me/).
+
 GIF support via [gif.js](https://github.com/jnordberg/gif.js) (c) 2013 Johan Nordberg,
 used under the [MIT license](https://github.com/jnordberg/gif.js/blob/master/LICENSE). It includes code by Kevin Weiner, Thibault Imbert, and Anthony
 Dekker.
+
+QR code support via [qrcodejs](https://github.com/davidshimjs/qrcodejs) (c) 2012 [@davidshimjs](https://twitter.com/davidshimjs) used under
+the [MIT license](https://raw.githubusercontent.com/davidshimjs/qrcodejs/master/LICENSE).
 
 The random number generator is derived from
 [an implementation](https://github.com/AndreasMadsen/xorshift/blob/master/xorshift.js)
@@ -4105,11 +4291,18 @@ license.
 
 [`dagre.js`](https://github.com/dagrejs/dagre) is (C) 2012-2014 Chris Pettitt, [MIT](https://github.com/dagrejs/dagre/blob/master/LICENSE) license.
 
+The boot screen font used in the emulator is
+[https://int10h.org/oldschool-pc-fonts](PxPlus_AmstradPC1512-2y) copyright 2016
+[Int10h](https://int10h.org/), used under the [CC-BY 4.0](http://creativecommons.org/licenses/by-sa/4.0/) license.
+It is based on the Amstrad PC1512 BIOS font.
+
+All built-in assets are Creative Commons licensed have complete license and copyright information in the "license" property of the corresponding JSON file.
+
 
 Beta Tester Notes
 =====================================================================================
 
-The API is feature-complete at this point. I'm focusing on bug fixes
+The API is mostly complete at this point. I'm focusing on bug fixes
 and minor tweaks to improve convenience. Only some minor helpers,
 primarily for AI tasks, will be added before release.
 
@@ -4120,11 +4313,28 @@ functions for watertight triangle and line rasterization, which
 give different results than what is typically useful for individual
 primitives.
 
-The `makeSpline()` function in `"continue"` mode will change to be a
+The `makeSpline()` function using `"continue"` mode will change to be a
 third-order curve outside of the bounds instead of a line.
 
 IDE will receive major new features throughout and after the beta
 phase. This includes editors for code, sprites, and maps.
+
+The Library tab of the launcher program is currently hard-coded to the
+three built-in games. During the beta period this will change to show
+any game that has been loaded by URL until the user explicitly "forgets"
+it.
+
+The Discover tab of the launcher program does not currently work. 
+It will be manually populated
+later in the beta period and then during 1.0 launch. I will fill it
+with games that I see announced on the
+[Completed Games Forum](http://quadplay.freeforums.net/board/6/completed-games)
+which are hosted online (typically using github Pages). Be sure to
+provide all of the metadata in your `.game.json` file and the
+`label64.png` and `preview.png` images so that your game appears
+correctly. Version numbers will be used to track updated games so that
+they automatically return to the front of the queue after being
+updated.
 
 The package manager is not implemented and may actually be removed
 instead of being implemented, depending on the needs that arise in the
@@ -4134,9 +4344,9 @@ already. What packages will provide are namespaces as well as assets
 bundled together with a script.
 
 The IDE is designed to collapse gracefully so that you can use an
-*external editor*. Here's one useful layout:
+external editor. Here's one useful layout:
 
-![](external-editor.png width=300px)
+![](external-editor.png width=50% style="image-rendering:auto")
 
 The editor on the left is emacs running in a terminal. On the right is
 the browser reduced to the quadplay✜ debugging output and emulator.
@@ -4153,27 +4363,58 @@ channel is handled. So, I often have to load them into Photoshop after
 quantization to clean up the alpha channel and then use a separate
 compression program on the output.
 
-Note that the *entity system* is an optional high-level feature. You
+The *entity system* is an optional high-level feature. You
 can us it as is, extend it, or replace it with your own. It isn't intended
 to be the ultimate high-level scene graph, just a convenience for quick
 prototypes.
 
-Chrome and Safari give the best *performance*. Firefox is the slowest,
-mostly due to rendering. Performance on Chrome is unlikely to
-increase due to my own optimizations, and may slightly decrease as I
-add new features to the compiler. I recommend targeting 12 ms instead
+Recent Chrome and Safari give the best *performance*. Firefox is the
+slowest, mostly due to rendering. I recommend targeting 12 ms instead
 of 16 ms for your frame budget to account for this. As JavaScript
 compilers improve, you may see slight improvements from the browser
 itself.
+
+Performance and the overall experience on mobile and embedded
+(RaspberryPi, Jetson Nano) will improve throughout the beta period.
 
 
 
 Change Log
 =====================================================================================
 
-Changes for both the specification and implementation:
+Changes for both the specification and implementation in each release.
 
-<!-- 2018 Nov 10: -->
+2019 July 4: Public Beta
+
+- Removed `extendTransform()`, `getClip()`, and `getTransform()` from the beta release
+- Specified metadata for launcher
+- Moved programmatic GIF and screenshot recording go `deviceControl`.
+- Allowed trailing commas and comments in JSON
+- Increased size of `deja-9` font button characters
+- Changed `pyx` to `pyxl`
+- Added graphics frame scaling for slower devices
+- Added QR codes for easily launching on mobile devices
+- Added `localDate()`
+- Added support for inserting padding with `fontpack.html`
+- Added named-argument versions of `setTransform()` and `setClip()`
+- Changed the arguments of `setTransform()` to more closely match other graphics commands
+- Changed the arguments of `setClip()` to more closely match `drawRect()`
+- Rerendered emulator case
+- Improved touch regions for mobile emulator
+- Added `games/icetime` complete sample game
+- Changed assignment and mutating operators to no longer return a value
+- Added `examples/animation`
+- Added `arrayValue()` animation support
+- Added mapping for 8bitdo SNES30 controller
+- Added animated ninja sprites
+- Mapped trigger and shoulder buttons from player 1's modern game controller to
+  `pad[1]` ABCD buttons. It is now possible to create twin-stick games with all
+  10 buttons
+
+
+2019 May 1: Public API Preview
+
+2018 July 1: Private Alpha
 
 <link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../console/favicon-32x32.png">
@@ -4192,10 +4433,14 @@ img { image-rendering: -moz-crisp-edges; image-rendering: pixelated; border: 1px
 .md .hljs-built_in {font-weight: bold; color: inherit}
 .md .longToc {
 font-size: 80%;
+width: 200px;
+}
+body {
+left: 230px;
 }
 </style>
 <title>manual✜</title>
-<script>setTimeout(function(){document.title='manual✜';},1000)</script>
+<script>setTimeout(function(){document.title='quadplay✜ manual';},1000)</script>
 <link rel="shortcut icon" href="../console/favicon.ico">
 <link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../console/favicon-32x32.png">
