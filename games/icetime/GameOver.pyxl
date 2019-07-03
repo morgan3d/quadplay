@@ -1,0 +1,44 @@
+GameOver
+═══════════════════════════════════════════════════════════════════════════════
+
+let msg
+let color
+
+enter
+───────────────────────────────────────────────────────────────────────────────
+
+// Save the stats
+saveLocal("playerStats", playerStats)
+
+// Initialize team stats
+const teamStats = loadLocal("teamStats") or {}
+for team in teamArray: if not teamStats[team.name]: teamStats[team.name] = {win:0, draw:0, lose:0}
+
+const s0 = teamArray[0].score
+const s1 = teamArray[1].score
+
+msg = "TIE GAME " + s0 + ":" + s1
+color = #0
+if s0 > s1:
+   msg = teamArray[0].name + " WINS " + s0 + ":" + s1
+   color = teamArray[0].labelColor
+   ++teamStats[teamArray[0].name].win
+   ++teamStats[teamArray[1].name].lose
+else if s1 > s0:
+   msg = teamArray[1].name + " WINS " + s1 + ":" + s0
+   color = teamArray[1].labelColor
+   ++teamStats[teamArray[1].name].win
+   ++teamStats[teamArray[0].name].lose
+else:
+   ++teamStats[teamArray[0].name].draw
+   ++teamStats[teamArray[1].name].draw
+
+saveLocal("teamStats", {})
+
+frame
+───────────────────────────────────────────────────────────────────────────────
+
+drawText({font: scoreFont, text: "GAME OVER", pos: xy(0, 7), color:#f00, outline:#f, xAlign:"center"})
+drawText({font: scoreFont, text: msg, pos: xy(0, -7), color:color, outline:#f, shadow:#a, xAlign:"center"})
+  
+if anyButtonPress(): setMode(Title, "anyButtonPress()")

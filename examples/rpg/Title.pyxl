@@ -1,0 +1,31 @@
+Title
+============================================================================
+
+let creditsString = ""
+for section ∈ assetCredits:
+   for line ∈ assetCredits[section]:
+      creditsString += line + "  |  "
+
+const creditsWidth = textWidth(smallFont, creditsString) + screenSize.x
+
+playAudioClip(music, true)
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────────
+
+setBackground(#9)
+
+preservingTransform:
+   setTransform(xy(0, modeFrames mod (worldMap.size.y * worldMap.spriteSize.y)), ∅, -3)
+   drawMap(worldMap)
+
+drawText(smallFont, "quadplay✜", xy(½ screenSize.x, 8), #f049ad, ∅, #444, "center", "middle")
+drawText(font, assetCredits.title, ½ screenSize, #f049ad, #9c1d69, #222, "center", "middle")
+drawText(smallFont, "by " + assetCredits.developer, ½ screenSize + xy(0, 30), #ddd, ∅, #222, "center", "bottom")
+
+if ⌊⅕ modeFrames⌋ mod 10 < 6: drawText(smallFont, "Press Any Button", ½ screenSize + xy(0, 60), #ff8, #444, ∅, "center", "middle")
+drawText(smallFont, creditsString, xy(screenSize.x - loop(2 modeFrames, creditsWidth), 216), #ddd, ∅, #222)
+
+if anyButtonPress(): setMode(Play, "anyButtonPress()")

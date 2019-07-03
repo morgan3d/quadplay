@@ -1,0 +1,86 @@
+let particleArray = []
+
+def createParticle(pos, vel, color, z, life):
+   push(particleArray, {pos:clone(pos), vel:vel, color:clone(color), z:z, life:life})
+
+   
+// Explode an entity away from the impact point
+def entityToParticlesHit(entity, impactPoint, impactVel, minSpeed, maxSpeed, maxLife):
+   entityToParticles(entity, impactPoint, impactVel, xy(0, 0), 0, 0, minSpeed, maxSpeed, maxLife)
+
+   
+def entityToParticlesMelt(entity, dir, minSpeed, maxSpeed, maxLife):
+   const ignore = xy(0, 0)
+   debugPrint(minSpeed)
+   entityToParticles(entity, ignore, ignore, dir, minSpeed, maxSpeed, 0, 0, maxLife)
+
+
+def entityToParticles(entity,
+                           impactPoint, impactVel,
+                           uniformVelDir, minUniformSpeed, maxUniformSpeed,
+                           minAwaySpeed, maxAwaySpeed,
+                           maxLife):
+
+   const sprite = entity.sprite
+   const pos = entity.pos
+   const z = entity.z + ½
+   const center = ½ (sprite.size - 1)
+   const U = xy(cos(entity.angle), -sin(entity.angle) * getRotationSign())
+   const V = xy(-U.y, U.x)
+   
+   for y < sprite.size.y:
+      for x < sprite.size.x:
+         const spritePos = xy(x, y)
+         const color = getSpritePixelColor(sprite, spritePos)
+         
+         // Entity space position
+         const ePos = (spritePos - center) * entity.scale
+
+         // Draw space position
+         const particlePos = pos + U * ePos.x + V * ePos.y
+         
+         const awayVel = direction(particlePos - impactPoint) * ((maxAwaySpeed - minAwaySpeed) * ξ + minAwaySpeed)
+         const uniformVel = uniformVelDir * ((maxUniformSpeed - minUniformSpeed) * ξ + minUniformSpeed)
+         const partVel = (entity.vel + impactVel) * (½ ξ + ¼) + awayVel + uniformVel
+         createParticle(particlePos, partVel, color, z, lerp(30%, 100%, ξ²) * maxLife)
+
+            
+// Could register this with a frame hook, but some modes pause particles
+// and some don't, so keep it as an explicit def
+def processParticles():
+
+   // There are a LOT of particles, so avoid the cost of a WITH statement
+   // here.
+   //
+   // Also, particles will render fastest if they are kept grouped by z
+   // value, so we preserve the order of the array when removing elements
+   // by always copying elements during iteration to close gaps, amortizing
+   // the cost of in-order removal.
+   
+   const N = size(particleArray)
+
+   // Place to copy the next element to
+   let dst = 0
+
+   // Iterate over all particles. src == dst and no actual copy happens
+   // until they start being removed and these separate
+   for src < N:
+      const particle = particleArray[src]
+      if src > dst: particleArray[dst] = particle
+      
+      --particle.life
+      if particle.life ≥ 0:
+         // Fade out near end of life
+         if particle.life < 10: particle.color.a *= 95%
+
+         // Integrate
+         const pos = particle.pos
+         pos.x += particle.vel.x
+         pos.y += particle.vel.y
+         drawPoint(pos, particle.color, particle.z)
+
+         // Preserve this element
+         ++dst
+
+   // Remove extra elements
+   if dst < N: resize(particleArray, dst)

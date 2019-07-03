@@ -1,0 +1,199 @@
+// Play area width and height
+const areaSize = screenSize.y
+
+const backgroundColor = rgb(28%, 36%, 55%)
+const wordExplodeSound = destroyBlockSound
+
+const unbreakable = levelTemplate.spritesheetTable["sprites"][3][4]
+const darkUnbreakable = levelTemplate.spritesheetTable["sprites"][3][2]
+
+// Aliased sound
+const selectSound = hitPaddleSound
+
+const otherAxis = {"x":"y", "y":"x"}
+
+// wall and spare are intentionally doubled to double
+// their occurrance
+const powerupData = [{name:"spare", color:#C5F},
+                     {name:"spare", color:#C5F},
+                     {name:"2500",  color:#4D4},
+                     {name:"1000",  color:#000},
+                     {name:"split", color:#FD5},
+                     {name:"catch", color:#5DF},
+                     {name:"wall",  color:#CCC},
+                     {name:"wall",  color:#CCC}]
+
+let paddleArray, ballArray, boxArray, powerupArray
+let finishLevelFrames
+
+// True when the first ball for a level has been launched, and so
+// the countdown timer should start running
+let firstBallLaunched
+
+let spareBalls
+let level
+let score
+
+// Seconds left for bonus
+let timeLeft
+
+// Used to make the score shake
+let scoreOffset
+let scoreColor
+
+// Start the background music. If we wanted to
+// change music between title, pause, and play modes
+// then we'd have to save the handle this returns
+// to be able to stop the looping sound.
+playAudioClip(music, true)
+
+let titleBall = makeEntity({
+         name: "titleBall",
+         pos: xy(200, 210),
+         vel: xy(2, -1.2),
+         sprite: ballSprite[0][0],
+         z: -2,
+         shape:"disk"
+      })
+
+
+def createTitleParticles():
+   playAudioClip(unbreakableSound)
+   const particleColors = [#ffd700, #ff6948, #82e923, #00c1f5, #fff]
+   for i < 250:
+      const a = rnd() * 360deg
+      createParticle(titleBall.pos, xy(cos a, sin a) * (0.5 + 1.5 rnd()), rndValue(particleColors), 40, rnd() * 110 + 60)
+
+      
+// Increase the score and animate it shaking
+def increaseScore(v):
+   v = floor(v)
+   const step = 25
+
+   // Don't take *too* many steps if the increase is huge
+   const frames = min(2 * floor(v / step), 140)
+   let remainder = v
+   
+   def inc(f):
+      // For big increases, play a coin sound
+      if (v > 100) and (f mod 7) == 1: playAudioClip(scoreSound)
+      
+      if f mod 2:
+         score += step
+         remainder -= step
+         if rnd() < 75%:
+            scoreColor = rgb(1,1,25%)
+         else:
+            scoreColor = rgb(25%, 25%, 0)
+
+         scoreOffset = 2 * xy(rnd() - 1/2, rnd() - 1/2)
+      
+   def done():
+      // Add the remaining points
+      score += remainder
+      scoreOffset = xy(0, 0)
+      scoreColor = defaultTextColor
+   
+   addFrameHook(inc, done, frames, ∅)
+
+
+def shakeScreen(frames, mag):
+   // Support both scalar and vector
+   if mag.x == nil: mag = xy(mag, mag)
+   def shake(f): setTransform(round(rndSquare() * mag))
+   def done():   setTransform(xy(0, 0))
+   addFrameHook(shake, done, frames)
+
+
+def shakeEntity(entity, frames, mag):
+   // Support both scalar and vector
+   if mag.x == nil: mag = xy(mag, mag)
+   def shake(f): if f mod 2: entity.offset = xy(round((2ξ - 1) mag.x), round((2ξ - 1) mag.y))
+   def done():   entity.offset = xy(0, 0)
+
+   shake(1)
+   addFrameHook(shake, done, frames)
+  
+
+def createLevel(L):
+   level = L
+
+   finishLevelFrames = 0
+   particleArray = []
+   powerupArray = []
+   
+   // Seconds
+   timeLeft = levelTime
+
+   firstBallLaunched = false
+   
+   ballArray = [
+      makeEntity({
+         name: "ball",
+         pos: xy(80, 200),
+         vel: xy(1, -1) * initialBallSpeed,
+         sprite: ballSprite[0][0],
+         paddle: paddleArray[0],
+         shape:"disk"
+      })
+   ]
+
+   // Reset powerups
+   for paddle in paddleArray: paddle.powerup = ∅
+
+   boxArray = []
+   const center = (areaSize - 16 * 5) / 2
+   for y < 6:
+      for x < 6:
+         const sprite = levelTemplate[x + 7 (level - 1)][y]
+         if sprite:
+            push(boxArray, makeEntity({
+               name:       "point box",
+               pos:        xy(16 x + center, 16 y + center),
+               sprite:     sprite,
+               breakable:  (sprite ≠ unbreakable),
+               offset:     xy(0,0),
+               paddle:     ∅
+            }))
+      
+   // Unbreakable corner blocks
+   for y < 2:
+      for x < 2:
+         push(boxArray, makeEntity({
+            name:        "unbreakable box",
+            pos:         xy(areaSize * (x * 92% + 4%), areaSize * (y * 92% + 4%)) + 0.1,
+            sprite:      cornerSprite[1][0],
+            shakeFrames: 0,
+            breakable:   false,
+            offset:      xy(0,0)
+         }))
+         
+
+def drawScoreboard():
+   const z = 1
+   resetTransform()
+   resetClip()
+   const centerX = (areaSize + screenSize.x) / 2
+   drawRect(xy(areaSize, 0), xy(screenSize.x - areaSize, screenSize.y), gray(20%), gray(60%), z)
+   drawText(font, "quadpaddle", xy(centerX, 0), gray(100%), gray(60%), gray(60%), 0, -1, z)
+   drawText(font, "LEVEL " + level, xy(centerX, 20), gray(60%), gray(10%), ∅, 0, -1, z)
+
+   for b < spareBalls:
+      drawSprite(ballSprite[0][0], xy(centerX + 12 (b - maxSpareBalls / 2 + 0.5), 52.5), ∅, ∅, ∅, z)
+
+   for spareBalls <= b < maxSpareBalls:
+      drawDisk(xy(centerX + 12 (b - maxSpareBalls / 2 + 0.5), 52.5), 4.4, gray(0%), gray(10%), z)
+
+   let timeColor = defaultTextColor
+   if timeLeft == 0:
+      timeColor = gray(50%)
+   else if timeLeft < 20:
+      timeColor = rgb(1,0,0)
+   else if timeLeft < 40:
+      timeColor = rgb(1,1,0)
+   else if timeLeft < 60:
+      timeColor = rgb(0,1,0)
+
+   drawText(font, formatNumber(timeLeft, "stopwatch"), xy(360, 80), timeColor, gray(10%), ∅, 1, -1, z)
+   drawText(font, formatNumber(score, "commas") + " pts", xy(360, 100) + scoreOffset, scoreColor, gray(10%), ∅, 1, -1, z)
+

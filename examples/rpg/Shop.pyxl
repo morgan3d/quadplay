@@ -1,0 +1,9 @@
+drawPreviousMode()
+drawInventory()
+
+drawSpriteRect(uiSprite[10][15], xy(64, 22), xy(256, 78), 10)
+drawText(smallFont, "Shop", xy(½ screenSize.x, 13), #626e77, ∅, ∅, 0, 0, 10)
+drawText(font, "Yer money is no good here! This isn't a real game where you can buy stuff.", xy(68, 24), #626e77, ∅, ∅, -1, -1, 10, 256)
+
+if joy.cc or joy.bb or joy.pp: popMode("Press ⓑ, ⓒ, or ⓟ")
+for P in pad: if P.qq: pushMode(Pause, "Press ⓠ");

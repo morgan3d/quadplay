@@ -1,0 +1,18 @@
+Pause
+============================================================================
+
+enter
+────────────────────────────────────────────────────────────────────────────
+playAudioClip(pauseAudioClip)
+
+
+leave
+────────────────────────────────────────────────────────────────────────────
+playAudioClip(resumeAudioClip)
+
+
+frame
+────────────────────────────────────────────────────────────────────────────
+drawPreviousMode()
+drawText(font, "PAUSED", ½ screenSize + xy(0, oscillate(⌊modeFrames / 20⌋, 3)), #f, rgba(0,0,0,50%), nil, 0, 0, 12)
+if anyButtonPress(): popMode()

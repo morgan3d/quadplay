@@ -1,0 +1,15 @@
+let player
+
+def drawInventory():
+   drawPreviousMode()
+   drawRect(xy(0,0), screenSize, rgba(1, 1, 1, 60%), ∅, 9)
+   drawSpriteRect(uiSprite[4][15], xy(64, 128), xy(256, 80), 10)
+   drawText(smallFont, "Inventory", xy(½ screenSize.x, 119), #442233, ∅, ∅, 0, 0, 10)
+
+   let itemPos = xy(0, 0)
+   for item in player.inventory:
+      drawSprite(item, 16 itemPos + xy(72, 136), ∅, ∅, ∅, 10)
+      ++itemPos.x
+      if itemPos.x > 8: itemPos.x = 0; ++itemPos.y
+
+

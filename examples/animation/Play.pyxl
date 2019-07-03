@@ -1,0 +1,136 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+const ninja = makeEntity({
+   pos:            xy(½ screenSize.x, groundY),
+   spritesheet:    ninjaSprite,
+   sprite:         ninjaSprite.idle[0],
+   animation:      "idle",
+   frame:          0,
+   z:              1,
+   weaponIndex:    0,
+   weaponArray:    [
+      makeEntity({spritesheet: swordSprite}),
+      makeEntity({spritesheet: bowSprite}),
+      ∅
+   ]
+})
+
+ninja.weapon = addEntityChild(ninja, ninja.weaponArray[ninja.weaponIndex])
+
+const arrowArray = []
+
+const instructions = [
+   "⍇⍈", "RUN",
+   "ⓐ ", "JUMP",
+   "ⓑ ", "ATTACK",
+   "ⓒ ", "DUCK",
+   "⍐⍗", "SWITCH"
+]
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+with pos, vel, acc, force, scale, frame, animation, spritesheet, sprite, weaponIndex, weapon in ninja:
+   // Advance animation at 12 fps. It is looped per-animation below.
+   if modeFrames mod 5 == 0:
+      ++frame
+      if weaponIndex == 1 and animation =="attack" and frame == 3:
+         // Fire the arrow
+         push(arrowArray, { pos: pos + xy(scale.x * arrowLength, 2),
+                            vel: xy(3 scale.x, 0) })
+
+
+   let nextAnimation = animation;
+   if animation == "attack" and frame < size(spritesheet.attack):
+      // Playing attack animation, do not interrupt
+   else if joy.x and animation ≠ "land":
+      // Running
+      scale.x = joy.x
+      vel.x = joy.x * runSpeed
+      nextAnimation = if joy.c then "crawl" else "run"
+   else: // Not running
+      vel.x *= 70%
+      nextAnimation = if joy.c then "duck" else "idle"
+      
+
+   // Clamp to ground and set landing pose
+   if find(animation, "jump") ≠ ∅ and pos.y ≥ groundY: nextAnimation = "land"
+   if pos.y > groundY: pos.y = groundY; vel.y = 0
+   
+   if pos.y == groundY:
+      if animation ≠ "land" and nextAnimation ≠ "land" and animation ≠ "attack":
+         // On ground, we can jump and attack
+         if joy.aa: vel.y = -jumpSpeed
+         if joy.bb: nextAnimation = "attack"
+   else:
+      // Above ground
+      force.y = gravity * entityMass(ninja)
+      
+   // Jumping animation
+   if pos.y < groundY:
+      nextAnimation = if vel.y < ½ then "jumpUp" else "jumpDown"
+
+   // Hold the landing for two animation frames
+   if animation == "land" and frame < 4: nextAnimation = "land"
+      
+   // Change animation
+   if nextAnimation ≠ animation:
+      animation = nextAnimation
+      frame = 0
+
+   sprite = arrayValue(spritesheet[animation], frame)
+
+   // Change weapons (only when idle or jumping)
+   if animation == "idle" or animation == "duck" or find(animation, "jump") ≠ ∅: weaponIndex = loop(weaponIndex + joy.yy, size(ninja.weaponArray))
+   const newWeapon = ninja.weaponArray[weaponIndex]
+   if weapon != newWeapon:
+      removeEntityChild(ninja, weapon)
+      weapon = addEntityChild(ninja, newWeapon)
+   
+   // Update the weapon to match the main sprite animation
+   if weapon: weapon.sprite = arrayValue(weapon.spritesheet[animation], frame)
+
+   
+   // Physics
+   physicsStepEntity(ninja)
+      
+   // Wrap around the screen edges
+   pos.x = loop(pos.x, screenSize.x)
+
+updateEntityChildren(ninja)
+
+
+for arrow in arrowArray:
+   if arrow.pos.x < -arrowLength or arrow.pos.x > screenSize.x + arrowLength:
+      removeValues(arrow, arrowArray)
+   else:
+      arrow.pos.x += arrow.vel.x
+      drawLine(arrow.pos, arrow.pos + xy(arrowLength * sign(arrow.vel.x), 0), #0)
+
+// Sky
+setBackground(rgb(20%, 50%, 80%))
+drawText(font, assetCredits.title, xy(½ screenSize.x, 20), #FFF, ∅, ∅, 0, 0)
+
+// Ground
+drawRect(xy(0, groundY + 9), xy(screenSize.x, screenSize.y - (groundY + 8)), #DDD)
+
+// Instructions
+local:
+   let pos = xy(12, groundY + 19)
+   for i < size(instructions) / 2:
+      drawText(instructionFont, instructions[2i], pos, #7)
+      pos.y += drawText(instructionFont, instructions[2i + 1], pos + xy(30, 0), #7).y
+      if pos.y > screenSize.y - 10:
+         pos.x += 97
+         pos.y = groundY + 19
+
+// Ninja
+drawEntity(ninja)
+
+// Shadow
+with x in ninja.pos:
+   drawLine(xy(x - 7, groundY + 9),  xy(x + 7, groundY + 9),  rgba(0, 0, 0, 20%), ninja.z - 0.1)
+   drawLine(xy(x - 5, groundY + 10), xy(x + 5, groundY + 10), rgba(0, 0, 0, 15%), ninja.z - 0.1)
+

@@ -1,0 +1,264 @@
+let music = playAudioClip(titleSound, true)
+
+// Latest camera offset. Used for respawning
+let camera = {pos: xy(0, 0)}
+
+setTransform(xy(0, screenSize.y - 1), xy(1, -1), 0, 1, xy(0, skewY))
+
+// Recursively set the spriteOverrideColor. Used for blink
+def setOverrideColor(entity, color):
+   entity.spriteOverrideColor = color
+   for child in entity.childArray: setOverrideColor(child, color)
+   
+
+def makeBike(name, colorIndex, pos, z, playerIndex):
+   // Sprite space anchor positions
+   const frontWheelSSPos = xy(23, 19)
+   const rearWheelSSPos = xy(4, 19)
+
+   const color = getSpritePixelColor(bikePart.engine[colorIndex], xy(16, 13))
+   const darkColor = gray(80%) * color
+   
+   // The bike *is* the suspension as the root frame.
+   // Everything else rides on it.
+   const bike = makeEntity({
+      name: name,
+      pos: pos,
+      sprite: bikePart.suspension[0],
+      z: z,
+      scoreModifier: 1.0,
+      score: 0,
+      zVel: 0,
+
+      airFrames: 0,
+      rearWheelieFrames: 0,
+      frontWheelieFrames: 0,
+
+      combo: [],
+
+      // Blink to make obvious where the bike has respawned
+      // when this is greater than zero
+      blinkFrames:0,
+      playerIndex:playerIndex,
+      color: color,
+      darkColor: darkColor,
+
+      // Points on the surface under the bike
+      surfacePos: [],
+
+      // Set if there was any contact with the ground
+      // during the previous frame
+      recentRearWheelContact: true,
+      recentFrontWheelContact: true,
+      rearWheelContactFrame: 0,
+      frontWheelContactFrame: 0,
+      overRoughGround: false,
+
+      // Points scored for the current trick, and minimum points needed to lock it in
+      currentTrick: {description: "", points: 0, minimumPoints: infinity},
+      
+      // Each pos is in entity space. The normal is in draw space and
+      // is computed as the contact penalty normal in simulateBody.
+      atomArray: [{pos:xy(-15, -3), normal:xy(0,0)}, // 0
+                  {pos:xy(-12, -8), normal:xy(0,0)}, // 1
+                  {pos:xy(  0, -5), normal:xy(0,0)}, // 2
+                  {pos:xy( 11, -8), normal:xy(0,0)}, // 3
+                  {pos:xy( 13, -2), normal:xy(0,0)}] // 4
+   })
+
+   bike.mass = entityMass(bike)
+
+   for i <= 10:
+      push(bike.surfacePos, xy(pos.x - 5 + 2i, pos.y - 10))
+   
+   bike.frontWheel = makeEntity({
+      name: name + " frontWheel",
+      pos: xy(0, 0),
+      sprite: wheelSprite[0][0],
+      
+      posInParent: transformSpriteToEntity(bike, frontWheelSSPos),
+      orientWithParent: false,
+      zInParent: -0.1
+   })
+
+   bike.rearWheel = makeEntity({
+      name: name + " rearWheel",
+      pos: xy(0, 0),
+      sprite: wheelSprite[0][1],
+      
+      posInParent: transformSpriteToEntity(bike, rearWheelSSPos),
+      orientWithParent: false,
+      zInParent: -0.1
+   })
+
+   bike.engine = makeEntity({
+      name: name + " engine",
+      pos: xy(0, 0),
+      sprite: bikePart.engine[colorIndex],
+      zInParent: +0.1
+   })
+
+   bike.driver = makeEntity({
+      name: name + " driver",
+      pos: xy(0, 0),
+      sprite: bikePart.driver[0],
+      zInParent: +0.1
+   })
+
+   addEntityChild(bike, bike.frontWheel)
+   addEntityChild(bike, bike.rearWheel)
+   addEntityChild(bike, bike.engine)
+
+   addEntityChild(bike.engine, bike.driver)
+   
+   updateEntityChildren(bike)
+   return bike
+      
+
+
+def crashBike(bike):
+   // Temporarily remove from the bikeArray
+   // to disable simulation
+   removeValues(bikeArray, bike)
+   
+   const explosionCenter = clone(bike.pos)
+   const explosionZ = bike.z + 0.25
+   
+   def drawExplosion():
+      drawDisk(explosionCenter, 30, #f, nil, explosionZ)
+      
+   def respawn():
+      // Re-insert
+      bike.z = 0
+      bike.angle = 0
+      bike.spin = 0
+      bike.blinkFrames = 100
+      bike.vel = xy(2, 0)
+      bike.currentTrick.description = ""
+      bike.currentTrick.points = 0
+      bike.currentTrick.minimumPoints = infinity
+      bike.combo = []
+      
+      // Drop the bike to the ground near the others
+      bike.pos.x = 60 + camera.pos.x
+      bike.pos.y = -infinity
+      for -5 < i < 5:
+         bike.pos.y = max(bike.pos.y, surfacePointUnder(xy(bike.pos.x + 3i, 200), bike.z).y + 13)
+      updateEntityChildren(bike)
+      push(bikeArray, bike)
+
+   addFrameHook(drawExplosion, respawn, respawnFrames)
+
+
+let bikeArray
+local:
+   const initialBikeY = 20
+   bikeArray = [
+      makeBike("purple", 0, xy(0,  initialBikeY), -15, 0),
+      makeBike("green",  1, xy(10, initialBikeY),   0, 1),
+      makeBike("red",    2, xy(20, initialBikeY),  32, 2),
+      makeBike("blue",   3, xy(0,  initialBikeY),  60, 3),
+   ]
+   
+   if debugZOrder:
+      // Only one bike
+      bikeArray = slice(bikeArray, 0, 1)
+
+      
+
+/* To reset and lock in the previous current trick, call with ("", 0, infinity).
+   Terminates the previous combo if a trick was aborted. */
+def setCurrentTrick(bike, newDescription, newPoints, newMinimumPoints):
+   with description, points, minimumPoints in bike.currentTrick:
+      if description != newDescription:
+         // Start a new trick
+         if points >= minimumPoints:
+            // Lock in the old trick first
+            if debugTricks and (bike.playerIndex == 0): debugPrint("Completed '" + description + "'")
+            push(bike.combo, clone(bike.currentTrick))
+         else if (bike.playerIndex == 0) and (description != ""):
+            if debugTricks: debugPrint("Cancelling '" + description + "' at " + points + "/" + minimumPoints)
+            landCombo(bike, true)
+
+         if debugTricks and (bike.playerIndex == 0) and (newDescription != ""): debugPrint("Starting '" + newDescription + "'")
+            
+         description = newDescription
+         minimumPoints = newMinimumPoints
+      else:
+         // Extend the current trick
+         assert(newPoints >= points)
+   
+      points = newPoints
+   
+
+      
+/** Called each frame */
+def measureTricks(bike):
+   let comboInProgress = false
+   let endPreviousCombo = false
+
+   // No tricks allowed during the respawn/drop in period
+   if (bike.blinkFrames > 0) or (modeFrames < 100): return
+
+   if bike.recentFrontWheelContact and not bike.recentRearWheelContact:
+      bike.frontWheelieFrames += 1
+      comboInProgress = true
+      const pointRate = 10
+      setCurrentTrick(bike, "Front Wheelie", bike.frontWheelieFrames * pointRate, minimumWheelieFrames * pointRate)
+   else:
+      bike.frontWheelieFrames = 0
+
+      
+   if bike.recentRearWheelContact and not bike.recentFrontWheelContact:
+      bike.rearWheelieFrames += 1
+      comboInProgress = true
+      const pointRate = 3
+      setCurrentTrick(bike, "Rear Wheelie", bike.rearWheelieFrames * pointRate, minimumWheelieFrames * pointRate)
+   else:
+      bike.rearWheelieFrames = 0
+
+   // Air time
+   if not bike.recentRearWheelContact and not bike.recentFrontWheelContact:
+      bike.airFrames += 1
+      comboInProgress = true
+      const pointRate = 5
+      setCurrentTrick(bike, "Air", bike.airFrames * pointRate, minimumAirFrames * pointRate)
+   else:
+      bike.airFrames = 0
+
+
+   if not comboInProgress:
+      // The combo (which may be a single trick or nothing at all) has ended without a crash
+      landCombo(bike)
+
+      
+      
+/* Call when the trick ends without a crash */
+def landCombo(bike, doNotScoreLast):
+   if debugTricks: debugPrint("------------------")
+   
+   if not doNotScoreLast:
+      // Score the last trick performed
+      setCurrentTrick(bike, "", 0, infinity)
+
+   // Add the combo bonus
+   if size(bike.combo) > 1:
+      push(bike.combo, {description: "Combo", points: size(bike.combo)² * 200})
+
+   let total = 0
+   for points in trick in bike.combo:
+      total += points
+
+   // Were there any points?
+   if total == 0: return
+   
+   // Animate
+   const rate = 10
+   def incScore():
+      bike.points += min(total, rate)
+      total -= rate
+
+   addFrameHook(incScore, nil, ceil(total / rate))
+   
+   // TODO: Display the final combo for a while
+   bike.combo = []

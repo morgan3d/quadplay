@@ -1,0 +1,5 @@
+drawPreviousMode()
+drawText(font, "You Drowned!", xy(½ screenSize.x, min(½ screenSize.y, ¼ modeFrames)),
+         #f55, #aaa, #fff, 0, 0, 12)
+
+if (modeFrames > 7 * 60) or anyButtonPress(): setMode(Credits, "7 seconds")

@@ -1,0 +1,125 @@
+// Bounds on the board
+const yMin = -53
+const yMax = 41
+const xMin = -86
+const xMax = 86
+
+
+
+/* Return distance to an intersection considering only one
+   dimension and making edges one-sided. Used for the flat
+   sides of the rink. pos and vel are numbers. */
+def intersectAxisLine(pos, vel, normal, line, hit):
+   const t = (line - pos) / vel
+   if (t < hit.time) and (vel * line > 0):
+      // Collide with the half plane even if integration previously
+      // stepped through the line due to precision.
+      hit.time = max(t, 0)
+      hit.normal = normal
+
+
+      
+/* The quadrant is determined by the signs of center */
+def intersectQuarterCircle(pos, vel, center, radius, hit):
+   //drawPoint(project(center, 0), #0F0, 2000); drawDisk(project(center, 0), radius, nil, #0F0, 2000)
+   
+   // Move to the circle's reference frame
+   const P = pos - center
+   
+   // Compute the intersection of the ray and the circle
+
+   // |P + vel * t| = radius
+   // dot(P + v * t, P + v * t) = r^2
+   // dot(P, P) + 2 t dot(P, v) + t^2 dot(v, v) = r^2
+   // t^2 dot(v, v) + 2 t dot(P, v) + (dot(P, P) - r^2) = 0
+   //
+   // a = dot(v,v), b = 2 dot(P, v), c = (dot(P, P) - r^2)
+   // t = [+/- sqrt(b^2 - 4ac) - b] / 2a
+
+   const PP = dot(P, P)
+   const rr = radius²
+   const a = dot(vel, vel)
+
+   // Exit early if nowhere near the circle
+   if PP > 1.5 rr + a: return
+   
+   const b = 2 dot(P, vel)
+   const c = PP - rr
+   const discrim = b² - 4 a * c
+
+   if discrim < 0: return
+   for t in [(-b - sqrt(discrim)) / (2 a), (-b + sqrt(discrim)) / (2 a)]:
+      // Relative to the circle center
+      const hitPoint = t * vel + P
+      if t < hit.time:
+         // Ignore intersections outside of the quadrant
+         // described by the signs of original circle center
+         //
+         // Ignore intersections unless trying to leave the rink.
+         if (hitPoint.x * center.x > 0) and (hitPoint.y * center.y > 0) and dot(vel, hitPoint) > 0:
+            hit.time = max(t, 0)
+            hit.normal = -direction(hitPoint)
+
+            
+const cornerArray = [xy(xMin + cornerRadius, yMin + cornerRadius),
+                     xy(xMax - cornerRadius, yMin + cornerRadius),
+                     xy(xMin + cornerRadius, yMax - cornerRadius),
+                     xy(xMax - cornerRadius, yMax - cornerRadius)]
+
+
+/* Processes the collision with the rounded rectangle of the
+   rink (but not the nets). If there is no collision, simply
+   moves the position by the velocity. */
+def simulate(obj):
+   with pos, vel, restitution in obj:
+      vel *= 1 - iceFriction
+      if ‖vel‖ > obj.maxSpeed: vel = obj.maxSpeed * direction(vel)
+
+      // Find the first intersection
+      const hit = {time: 1, normal: ∅}
+
+      // These tests could be skipped when far from the edges, but there is no need
+      // because simulation is very fast
+      intersectAxisLine(pos.x, vel.x, xy(-1,  0), xMax, hit)
+      intersectAxisLine(pos.x, vel.x, xy( 1,  0), xMin, hit)
+      intersectAxisLine(pos.y, vel.y, xy( 0, -1), yMax, hit)
+      intersectAxisLine(pos.y, vel.y, xy( 0,  1), yMin, hit)
+
+      for corner in cornerArray:
+         intersectQuarterCircle(pos, vel, corner, cornerRadius, hit)
+
+      if hit.time < 1:
+         with time, normal in hit:
+            // Advance to the hit location
+            pos += time * vel
+            
+            // Reflect velocity about normal at the hit
+            vel -= 2 normal * dot(vel, normal)
+            vel *= restitution
+
+            // Assume this was the only collision and
+            // advance after the hit
+            pos += (1 - time) * vel
+      else:
+         // Check for collisions with the net. Step in x first
+         // so that the puck can detect goals. Do not score if owned
+         pos.x += vel.x
+         for net in netArray:
+            if overlaps(obj, net):
+               if obj.isPuck and (net.pos.x * vel.x ≥ 0) and not obj.owner:
+                  // Entered the goal
+                  ++teamArray[1 - net.index].score
+                  playAudioClip(whistleAudioClip)
+                  playAudioClip({audioClip: goalAudioClip, pan: 40% sign(net.pos.x)})
+
+                  // Remove the puck
+                  puck = ∅
+                  def goToFaceoff(): setMode(Faceoff, "goal")
+                  addFrameHook(∅, goToFaceoff, framesAfterGoal)
+               else:
+                  // Stop movement on collision with goal
+                  pos.x -= vel.x; vel.x = 0.1 sign(pos.x - net.pos.x)
+         
+         pos.y += vel.y
+         for net in netArray: if overlaps(obj, net): pos.y -= vel.y; vel.y = 0.1 sign(pos.y - net.pos.y)
+   

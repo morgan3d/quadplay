@@ -1,0 +1,15 @@
+setTransform(xy(0, -½ modeFrames))
+
+let y = screenSize.y + 15
+for type in ["Game", "Sprite", "Font", "Sound", "Code"]:
+   y += drawText(scoreFont, type, xy(½ screenSize.x, y), #ec0, #0, #0, 0, 2).y
+   
+   for line in assetCredits[lowerCase(type)]:
+      y += drawText(tinyFont, line, xy(½ screenSize.x, y), #f, ∅, #0, 0, 2, 0, screenSize.x).y + 10
+      
+   y += 20
+
+   
+if anyButtonPress() or modeFrames > 1264:
+   setTransform(xy(0, 0))
+   setMode(Title, "anyButtonPress() or end of credits")

@@ -1,0 +1,72 @@
+// Set by Title for passing information to Play for creating players
+let controlPadArray = []
+
+def makePlayer(description, control, team):
+   return {
+      pos: xy(team.sideX * (30 ξ + 15), 50 ξ - 25),
+      vel: xy(0, 0),
+      z: 0,
+      pad: control,
+      shape: "disk",
+      size: xy(6, 4),
+      faceX: team.sideX,
+      team: team,
+      
+      spriteIndex: description.spriteIndex,
+
+      // names are unique across all players
+      name: description.name,
+      mass: description.mass,
+      restitution: 50%,
+      acceleration: description.acceleration,
+      maxSpeed: description.maxSpeed
+   }
+
+
+// Stats are saved in GameOver
+const playerStats = loadLocal("playerStats") or {}
+
+def setPlayerStat(player, statName, value):
+   if not playerStats[player.name]: playerStats[player.name] = {}
+   playerStats[player.name][statName] = value
+
+
+def getPlayerStat(player, statName):
+   if not playerStats[player.name]: playerStats[player.name] = {}
+   return playerStats[player.name][statName] or 0
+   
+
+def drawReferee(referee):
+   const proj = project(referee.pos, 0)
+   // Reflection
+   drawSprite({sprite: refereeSprite[referee.animation][1], pos: proj - xyz(0, 5, 0), z: proj.z - 100})
+   
+   // Character
+   drawSprite({sprite: refereeSprite[referee.animation][0], pos: proj + xyz(0, 5, 0), z: proj.z})
+
+   
+   
+def drawPlayer(player):
+   const proj = project(player.pos, player.z)
+   const scale = xy(-player.faceX, 1)
+
+   // Change sprite column if pressing d
+   const col = player.pad.d + player.spriteIndex
+
+   // Reflection
+   drawSprite({sprite: player.team.spriteSheet[col][1], pos: proj - xyz(0, 6, 0), z: proj.z - 100, scale: scale})
+   
+   // Character
+   drawSprite({sprite: player.team.spriteSheet[col][0], pos: proj + xyz(0, 6, 0), z: proj.z, scale: scale})
+
+   let color = player.team.labelColor
+   if puck and (puck.owner == player) and (modeFrames mod 25 > 15):
+      // Flash label
+      color = puckColor
+      // Flash arrow on ice if not behind goal
+      if | player.pos.x | < netArray[1].pos.x:
+         const dir = [">>", "<<"][player.team.index]
+         drawText({text: dir, font: tinyFont, pos: proj + xyz(-10 player.team.sideX, -2, 0), z: proj.z - 100, xAlign: "center", color:#9})
+      
+   if not player.pad.isAI or (puck and puck.owner == player):
+      drawText({text: "¹²³⁴°"[player.pad.index], font: tinyFont, pos: proj + xyz(0.5 player.faceX, 11, 0), z: proj.z, color: color, outline: #fff9, xAlign: "center"})

@@ -1,0 +1,227 @@
+
+/* Snap to nearest ODD layer, which is where collision data are stored. */
+def transformDrawZToMapSolidLayer(z):
+   const layer = floor(transformDrawZToMapLayer(cityMap, z))
+   return layer + 1 - (layer bitand 1)
+
+
+/* Returns true if this position is clear for a bike to move into */
+def roomForBike(bike, z):
+   const xClearance = max(12 |cos(bike.angle)| + 3, 5)
+
+   // The tire atoms are at -8 relative to bike.pos,
+   // so this gives plenty of clearance
+   const yClearance = 6
+   
+   // Start from well above the bike
+   const testPoint = xy(bike.pos.x, bike.pos.y + 20)
+
+   const numPointsToTest = 5
+
+   const yThreshold = bike.pos.y - yClearance
+   
+   for i < numPointsToTest:
+      const α = i / (numPointsToTest - 1)
+      
+      testPoint.x = bike.pos.x + lerp(-xClearance, +xClearance, α)
+      const S = surfacePointUnder(testPoint, z)
+      //debugPrint("" + unparse(S) + ", " + yThreshold)
+      if S.y > yThreshold:
+         // Hit something
+         return false
+
+   // Didn't hit anything
+   return true
+   
+
+
+/** Returns the draw space point on the surface
+    under pos, up to a maximum step count. */
+def surfacePointUnder(pos, z):
+   // Pixel step in map coords
+   const pixelMapStepY = 1 / cityMap.spriteSize.y;
+
+   // Make large steps at first, since the map is guaranteed
+   // to have objects that are at least this thick in pixels
+   const coarseScale = 4;
+   const coarseMapStepY = coarseScale / cityMap.spriteSize.y;
+
+   // Worst case, span maxSteps * coarseScale pixels
+   const maxSteps = 64
+
+   const layer = transformDrawZToMapSolidLayer(z)
+   let mapPos = transformDrawToMap(cityMap, pos)
+   
+   // Offset the y by z
+   mapPos.y += (cityMap.zScale * (layer - 9) * skewY) * pixelMapStepY
+
+   // Reuse the mapPos for the final result to avoid allocation
+   let pixelPos = mapPos
+
+   // Coarse search
+   for coarseSteps < maxSteps:
+      const color = getMapPixelColor(cityMap, mapPos, layer)
+      if color and (color.a > 0.5):
+         // Hit a solid pixel.
+         //
+         // Fine search. Begin by backing up one pixel and then
+         // looking for an empty pixel.
+         mapPos.y += pixelMapStepY
+         for fineSteps <= coarseScale:
+            const color = getMapPixelColor(cityMap, mapPos, layer)
+            if not color or (color.a <= 0.5):
+               // Hit an empty pixel
+               pixelPos.x = pos.x; pixelPos.y = pos.y - coarseSteps * coarseScale + fineSteps
+               return pixelPos
+            else:
+               mapPos.y += pixelMapStepY
+      else:
+         mapPos.y -= coarseMapStepY
+
+   // Didn't find an intersection. Return the last point checked.
+   pixelPos.x = pos.x; pixelPos.y = pos.y - maxSteps * coarseScale
+   return pixelPos
+
+
+
+/* True if this map position is solid, determined by
+    testing the collision layers of the map. */
+def isSolid(pos, z):
+   const layer = transformDrawZToMapSolidLayer(z)
+   let mapPos = transformDrawToMap(cityMap, pos)
+   // Offset the y by z
+   mapPos.y += (cityMap.zScale * (layer - 9) * skewY) / cityMap.spriteSize.y
+   const color = getMapPixelColor(cityMap, mapPos, layer)
+   return color and (color.a > 0.5)
+
+
+
+def simulateBike(bike):
+   // Has the bike touched down in the past few frames
+   // (have to use full frames instead of simulation microframes
+   // to smooth out boucing effects)
+   const recent = modeFrames - 5
+   bike.recentRearWheelContact = bike.rearWheelContactFrame > recent
+   bike.recentFrontWheelContact = bike.frontWheelContactFrame > recent
+   
+   // Estimate the ground derivative from the previous frame.
+   // When the derivative is positive there is
+   // less acceleration because the bike is going uphill.
+   let groundDerivative = (bike.surfacePos[10].y - bike.surfacePos[0].y) / (bike.surfacePos[10].x - bike.surfacePos[0].x)
+
+   // Compute the deviation from the line prediction
+   let numAbove = 0
+   let numBelow = 0
+   const allowedDeviation = 0.5
+   for 1 <= i < 10:
+      const predicted = bike.surfacePos[0].y + groundDerivative * 2i
+      const actual = bike.surfacePos[i].y
+      numAbove += (actual > predicted + allowedDeviation)
+      numBelow += (actual < predicted - allowedDeviation)
+
+   // Detects non-monontonic ground with some robustness; a variance
+   // test would misinterpret curves as rough
+   bike.overRoughGround = (numAbove > 0) and (numBelow > 0)
+
+   const mass = bike.mass
+   
+   let wheelForce = 0
+   if bike.recentRearWheelContact and bike.vel.x < bikeMaxSpeed:
+      // Take slope into account
+      wheelForce = bikeAcceleration * mass * lerp(1, 1 - groundDerivative, 50%)
+
+   if debugZOrder:
+      wheelForce = pad[bike.playerIndex].x * mass * 0.1
+
+   // On rough ground, apply more friction. Default to air resistance only
+   let xEnergyPreservation = 99.98%
+   if bike.overRoughGround:
+      // Rough
+      if bike.recentFrontWheelContact: xEnergyPreservation *= 1 - roughGroundFriction
+      if bike.recentRearWheelContact: xEnergyPreservation *= 1 - roughGroundFriction
+   else:
+      // Smooth...are we touching the ground?
+      if bike.recentFrontWheelContact or bike.recentRearWheelContact: xEnergyPreservation *= 99.9%
+
+   let yEnergyPreservation = 99.8%
+   if (bike.surfacePos[10].y > bike.pos.y - 20) and (bike.recentFrontWheelContact or bike.recentRearWheelContact):
+      // If close to the ground, dampen vertical velocity much
+      // more when touching the ground, to prevent microbouncing.
+      // If the front wheel is not close to the ground don't apply
+      // this because the bike is probably going off a jump and
+      // needs a vertical boost.
+      yEnergyPreservation = 98.5%
+
+   let spinEnergyPreservation = 99.5% * yEnergyPreservation
+   
+   // Reset contact flags
+   let rearWheelContact = false
+   let frontWheelContact = false
+
+   for i < physicsSteps:
+      // Energy loss, for stability and to model friction.
+      bike.vel.x *= xEnergyPreservation
+      bike.vel.y *= yEnergyPreservation
+      bike.spin *= spinEnergyPreservation
+
+      computeContactForces(bike)
+
+      bike.force.y += gravity * mass
+      bike.force.x += wheelForce
+
+      // Update the contact flags
+      rearWheelContact = rearWheelContact or (max(bike.atomArray[0].normal.y, bike.atomArray[1].normal.y) > epsilon)
+      frontWheelContact = frontWheelContact or (max(bike.atomArray[3].normal.y, bike.atomArray[4].normal.y) > epsilon)
+      
+      physicsStepEntity(bike, 1 / physicsSteps)
+
+   if rearWheelContact: bike.rearWheelContactFrame = modeFrames
+   if frontWheelContact: bike.frontWheelContactFrame = modeFrames
+
+   // Find the surface under the bike. We update this *after*
+   // the simulation so that it can be used for the shadow during
+   // rendering.
+   for -5 <= i <= 5:
+      bike.surfacePos[i + 5] = surfacePointUnder(bike.pos + xy(2i, 0), bike.z)
+   
+
+      
+def computeContactForces(body):
+   // Compute acceleration terms due to all penalty forces at each atom
+   const repulsionScale = body.mass * 0.25
+
+   for atom in body.atomArray:
+      // Reset accumulated properties
+      atom.normal.x = atom.normal.y = 0
+      atom.minDist2 = infinity
+      let drawPos = transformEntityToDraw(body, atom.pos)
+
+      // Derivation for general case:
+      //   atom.normal = getMapNormalByDrawCoord(map, drawPos, atom.z)
+      //   const repulsionForce = atom.normal * repulsionScale
+      //   body.force += repulsionForce
+      //   body.torque += cross(drawPos - body.pos, repulsionForce)
+
+      // Speedstreet-tweaked case that reduces memory allocation
+      // and improves stability for bikes
+      if isSolid(drawPos, body.z):
+         atom.normal.y = 1
+
+         // Optimized to avoid zeros and memory allocation:
+         body.force.y += repulsionScale
+         
+         // Angular
+         body.torque += (drawPos.x - body.pos.x) * repulsionScale
+
+      
+
+      
+def drawBody(b, color):
+   // Draw the atoms
+   for atom in b.atomArray:
+      const drawPos = transformEntityToDraw(b, atom.pos)
+      drawLine(b.pos, drawPos, #FFF, b.z)
+      drawDisk(drawPos, 2, color, nil, b.z)
+
+   // Draw the center of the object
+   drawDisk(b.pos, 4, color, nil, b.z)

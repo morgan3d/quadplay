@@ -1,0 +1,46 @@
+// Create a pad-like structure for an AI player
+def makeAI():
+   let aiPad = {x:0, y:0, xx:0, yy:0, aa:0, bb:0, d:0, target:nil, isAI: true, index: 4}
+   return aiPad
+
+
+def processAI(player):
+   const aiPad = player.pad;
+   assert(aiPad.isAI)
+
+   // No target, random chance, or not moving much
+   if puck and (not aiPad.target or ξ < 0.6% or ‖player.vel‖ < 0.2):
+      if puck.owner == player:
+         // Choose a random place to shoot from. Tend towards the center
+         aiPad.target = xy(-(15 + 40 ξ) player.team.sideX, ½ (ξ + ξ) * (yMax - yMin) + yMin)
+      else if rnd() < 30% and modeFrames > 120:
+         // Choose a random target (never do this during the faceoff)
+         aiPad.target = xy((xMax - xMin) ξ + xMin, (yMax - yMin) ξ + yMin)
+      else if puck.owner and (puck.owner.team == player.team):
+         // Get in position to receive a pass from the opposite side of the rink and shoot
+         aiPad.target = xy(-(20 + 40 ξ) * player.team.sideX, -puck.owner.pos.y)
+      else:
+         // Target the puck
+         aiPad.target = puck.pos + 10 puck.vel
+
+   const delta = aiPad.target - player.pos
+   if |delta.x| > 10: aiPad.x = sign(delta.x)
+   else: aiPad.x = 0
+
+   if |delta.y| > 10: aiPad.y = sign(delta.y)
+   else: aiPad.y = 0
+
+   aiPad.aa = aiPad.a = aiPad.bb = aiPad.b = 0
+   
+   if puck and (puck.owner == player):
+      // I have the puck
+      if ((player.pos.x * player.team.sideX ≤ 0 or ξ < 0.1%) and // on the correct side of the rink
+          player.faceX == -player.team.sideX and // facing the correct way in X
+          player.pos.y * player.vel.y ≤ 0 and // moving the correct way in Y
+          ξ < 6%):
+         // Shoot
+         aiPad.aa = aiPad.a = 1
+      else if ξ < 1.4%: 
+         // Pass
+         aiPad.bb = aiPad.b = 1
+          

@@ -1,0 +1,88 @@
+Title
+============================================================================
+const activeColor  = rgb(1,1,0)
+const defaultColor = gray(60%)
+const shadowColor  = rgba(0,0,0,50%)
+
+let menuItem = 0
+
+def startGame(numPlayers):
+   score = 0
+   firstBallLaunched = false
+   level = 1
+   timeLeft = 0
+   scoreOffset = xy(0, 0)
+   scoreColor  = defaultTextColor
+   spareBalls = startingSpareBalls
+
+   paddleArray = [
+      makeEntity({name: "P1 paddle", pos: xy(112, 213), angle:  0deg, sprite: paddleSprite[0][1], pad: pad[0], axis: "x"}),
+      makeEntity({name: "P2 paddle", pos: xy(213, 112), angle: 90deg, sprite: paddleSprite[0][2], pad: pad[0], axis: "y"}),
+      makeEntity({name: "P3 paddle", pos: xy(112,  11), angle:  0deg, sprite: paddleSprite[0][3], pad: pad[0], axis: "x"}),
+      makeEntity({name: "P4 paddle", pos: xy( 11, 112), angle: 90deg, sprite: paddleSprite[0][4], pad: pad[0], axis: "y"})
+   ]
+
+   createLevel(1)
+   for P in paddleArray: P.pad = pad[0]
+   if numPlayers >= 1: paddleArray[1].pad = paddleArray[3].pad = pad[1]
+   if numPlayers >= 2: paddleArray[2].pad = pad[2]
+   if numPlayers >= 3: paddleArray[3].pad = pad[3]
+   
+   setMode(Play, "# players selected")
+
+
+frame
+────────────────────────────────────────────────────────────────────────────
+setBackground(backgroundColor)
+
+processParticles()
+drawSprite(logo[0][0], xy(screenSize.x / 2, screenSize.y / 4))
+
+// Player options
+let color
+for p < 4:
+   color = defaultColor
+   if (menuItem == p): color = activeColor
+   drawText(font, (p + 1) + " player", xy(screenSize.x / 2 + 5, screenSize.y / 2 + p * 16), color, shadowColor, nil, 0, 0)
+
+   // If any controller presses up or down, change the number of players
+   if pad[p].yy:
+      playAudioClip(menuSound)
+      menuItem = (menuItem + 6 + pad[p].yy) mod 6
+
+// Credits option
+color = defaultColor
+if menuItem == 4: color = activeColor
+drawText(font, "Credits", xy(screenSize.x / 2 + 3, screenSize.y / 2 + 4 * 16), color, shadowColor, nil, "center", "middle")
+
+color = defaultColor
+if menuItem == 5: color = activeColor
+drawText(font, "Quit", xy(screenSize.x / 2 + 3, screenSize.y / 2 + 5 * 16), color, shadowColor, nil, "center", "middle")
+
+drawText(font, "✜", xy(screenSize.x / 2 - 29, screenSize.y / 2 + menuItem * 16), activeColor, shadowColor, nil, "center", "middle")
+
+drawText({font:tinyFont,
+          text:"(C) 2019 Morgan McGuire | @CasualEffects | https://casual-effects.com",
+          pos: xy(screenSize.x / 2, screenSize.y - 5),
+          color: gray(60%),
+          xAlign:"center",
+          yAlign:"bottom",
+          z:-2})
+
+const radius = titleBall.size.x / 2
+with pos, vel in titleBall:
+   for i < 2: createParticle(pos + 5 xy(rnd() - 0.5, rnd() - 0.5), vel * rnd(), #ddd, 0, rnd() * 30 + 10)
+   pos += vel
+   // Bounce off walls
+   if pos.x <= radius:               pos.x = radius;                    vel.x =  abs(vel.x); createTitleParticles()
+   if pos.x > screenSize.x - radius: pos.x = screenSize.x - radius - 1; vel.x = -abs(vel.x); createTitleParticles()
+   if pos.y <= radius:               pos.y = radius;                    vel.y =  abs(vel.y); createTitleParticles()
+   if pos.y > screenSize.y - radius: pos.y = screenSize.y - radius - 1; vel.y = -abs(vel.y); createTitleParticles()
+
+drawEntity(titleBall)
+
+if anyButtonPress():
+   playAudioClip(selectSound)
+   if menuItem < 4:         startGame(menuItem)
+   else if menuItem == 4:   pushMode(Credits, "Show credits selected")
+   else:                    quitGame()

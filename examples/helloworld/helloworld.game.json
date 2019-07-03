@@ -1,0 +1,7 @@
+{
+    "title":      "Hello World",
+    "modes":      ["Hello*"],
+    "assets": {
+        "font": "quad://fonts/good-neighbors-9.font.json"
+    }
+}

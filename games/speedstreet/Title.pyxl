@@ -1,0 +1,67 @@
+Title
+═══════════════════════════════════════════════════════════════════════════════
+
+const sky = #058
+let choice
+
+
+enter
+───────────────────────────────────────────────────────────────────────────────
+
+choice = 0
+
+
+
+frame
+───────────────────────────────────────────────────────────────────────────────
+resetTransform()
+setBackground(sky)
+
+// Stars
+srand(0)
+const starShift = floor(modeFrames / 20)
+const bright = #fff
+drawRect(xy(0,0), xy(screenSize.x, 30), 65% sky, nil, -2)
+drawRect(xy(0,30), xy(screenSize.x, 30), 85% sky, nil, -2)
+for i < 50:
+   const y = rnd()
+   drawPoint(xy(384 - loop(rndInt(384) + starShift, 384), 100 y), lerp(bright, sky, 40% y + 60% rnd()), -1)
+
+// Sidewalk
+drawRect(xy(0, 195), xy(screenSize.x, 16), #999, nil, -10)
+
+// Blue
+preservingTransform:
+   setTransform(xy(-loop(modeFrames, 17 * 32), 76))
+   drawMap(titleBackgroundMap, 0, 0);
+
+// Text
+drawSprite(logoSprite[0][0], xy(screenSize.x / 2, 80 + 3 cos(modeFrames * 0.09) - 10), nil, nil, nil, 0.5)
+   
+// Red
+preservingTransform:
+   setTransform(xy(-loop(3 modeFrames, 16 * 32), 82))
+   drawMap(titleBackgroundMap, 1, 2);
+
+// Road
+preservingTransform:
+   setTransform(xy(-loop(5 modeFrames, 18 * 32), 82))
+   drawMap(titleBackgroundMap, 3, 3);
+
+// Yellow
+preservingTransform:
+   setTransform(xy(-loop(6 modeFrames, 17 * 32), 82))
+   drawMap(titleBackgroundMap, 4, 5);
+
+   
+drawText(hudFont, "RACE", xy(screenSize.x / 2 + 5, screenSize.y * 3/4), #6CE, #333, #0004, 0, 2, 8)
+drawText(hudFont, "QUIT", xy(screenSize.x / 2 + 4, screenSize.y * 3/4 + 20), #6CE, #333, #0004, 0, 2, 8)
+drawText(hudFont, "✜", xy(screenSize.x / 2 - 18, screenSize.y * 3/4 + 20 choice), #FFF, #333, #0004, 0, 2, 8)
+   
+drawText(font, "©2019 Morgan McGuire | @CasualEffects | https://casual-effects.com", xy(screenSize.x / 2, screenSize.y - 2), gray(20%), nil, nil, 0, 2, 8)
+
+for p in pad: if p.yy: choice = 1 - choice
+if anyButtonPress() or debugPhysics:
+   stopSound(music)
+   if choice == 0: setMode(Play, "any button press")
+   else: quitGame("choose quit")

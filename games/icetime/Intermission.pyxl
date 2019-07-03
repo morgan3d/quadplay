@@ -1,0 +1,69 @@
+Intermission
+═══════════════════════════════════════════════════════════════════════════════
+
+let Δx, x, y
+
+def moveUp(): ++y
+def moveDown(): --y
+
+def processZamboni():
+   x += Δx
+   // Nothing else is on screen with the zamboni, so we can draw the reflection
+   // in the main draw call.
+   drawSprite({sprite: zamboniSprite, pos: project(xy(x, y)), scale: xy(Δx, 1)})
+
+   if |x| <= 72: return
+   
+   if Δx > 0: addFrameHook(moveUp, nil, 21)
+   else:      addFrameHook(moveDown, nil, 7)
+   
+   Δx = -Δx
+   x += 4 Δx
+
+
+
+enter
+───────────────────────────────────────────────────────────────────────────────
+
+Δx = +1
+x = -72
+y = -30
+
+
+leave
+───────────────────────────────────────────────────────────────────────────────
+
+// Randomly rearrange the players off the bottom so that they appear
+// to skate back on screen
+for player in playerArray:
+   player.pos = xy(20 ξ - 10, 10 ξ - 60)
+
+   
+frame
+───────────────────────────────────────────────────────────────────────────────
+
+setTransform(xy(½ screenSize.x, ½ screenSize.y + 10), xy(1, -1), 0, 1)
+setClip({pos:xy(0, 20), z:-2048, size:xy(192, 90), zSize:4096})
+
+drawScoreboard()
+
+if modeFrames < 120:
+   // Skate off
+   drawNets()
+   
+   // Skate to targets
+   for player in playerArray:
+      const target = xy(6 player.team.sideX, -80)
+   
+      if |target.x - player.pos.x| > 1:
+         player.faceX = sign(target.x - player.pos.x)
+         player.pos.x += ½ player.faceX
+      
+      if |target.y - player.pos.y| > 1: player.pos.y += ½ sign(target.y - player.pos.y)
+      
+      drawPlayer(player)
+      
+else if modeFrames < 966:
+   processZamboni()
+else:
+   setMode(Faceoff, "Time")

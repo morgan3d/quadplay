@@ -1,0 +1,19 @@
+{
+    "title":      "Robot Example",
+    "developer":  "CasualEffects",
+    "copyright":  "©2019 Morgan McGuire",
+    "license":    "Available under the BSD License https://opensource.org/licenses/BSD-2-Clause",
+
+    "packages":   [],
+    "scripts":    [],
+    "modes":      ["Play*"],
+    "assets":     {
+        "robotSprite": "robot.sprite.json",
+        "gradient":    "gradient.sprite.json"
+    },
+
+    "constants":  {
+    },
+    
+    "flipY": false
+}

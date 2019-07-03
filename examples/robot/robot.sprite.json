@@ -1,0 +1,12 @@
+{
+    "url": "robot-28x28.png",
+    "license": "©2011 Stephen Challener and ©2019 Morgan McGuire, CC-BY 3.0 https://opengameart.org/content/fighting-robot-for-ultimate-smash-friends",
+    "spriteSize": {"x":28, "y":28},
+    "transpose": true,
+    "names": {"center": {"start": {"x": 0, "y": 0}, "end": {"x": 1}},
+              "arm": {"start": {"x": 0, "y": 1}, "end": {"x": 1}},
+              "hand": {"start": {"x": 0, "y": 2}, "end": {"x": 1}},
+              "leg": {"start": {"x": 0, "y": 3}, "end": {"x": 1}},
+              "foot": {"start": {"x": 0, "y": 4}, "end": {"x": 1}},
+             } 
+}

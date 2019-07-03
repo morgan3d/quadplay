@@ -1,0 +1,1 @@
+drawText({font: font, text: "Hello, World!", pos: ½ screenSize, color: #f, xAlign: "center"})

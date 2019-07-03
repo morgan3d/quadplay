@@ -1,0 +1,5 @@
+{
+    "url": "world.tmx",
+    "spriteUrlTable": {"dawnlike-level-16x16": "nano://sprites/dawnlike-level-16x16.sprite.json"},
+    "wrapY": true
+}

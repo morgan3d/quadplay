@@ -1,0 +1,61 @@
+Play
+===========================================================
+
+let trackArray = []
+
+let tank = makeEntity({
+   pos: ½ screenSize,
+   angle: 0,
+   sprite: tankSprite[0][0],
+   turret: makeEntity({
+      pos: xy(0,0),
+      sprite: tankSprite[0][1],
+      orientWithParent: false,
+      zInParent: 1
+   })
+})
+
+addEntityChild(tank, tank.turret)
+
+def wrap(x, lo, hi):
+   return loop(x - lo, hi - lo) + lo
+
+
+def wrapAngle(a):
+   return wrap(a, -180°, +180°)
+
+
+def rotateToTarget(entity, target, rate):
+   const delta = wrapAngle(target * getRotationSign() - entity.angle)
+   if |delta| > rate / 2: entity.angle = wrapAngle(entity.angle + sign(delta) * rate)
+
+   
+frame
+───────────────────────────────────────────────────────────
+
+// Turn the tank
+rotateToTarget(tank, pad[0].angle, 1°)
+rotateToTarget(tank.turret, pad[1].angle, 5°)
+with pos, angle in tank:
+   const dir = xy(cos angle, getRotationSign() * sin angle)
+   pos.x = wrap(pos.x + speed * dir.x, -32, screenSize.x + 32)
+   pos.y = wrap(pos.y + speed * dir.y, -32, screenSize.y + 32)
+
+   const normal = xy(-dir.y, dir.x)
+   if modeFrames mod 8 == 0:
+      push(trackArray, pos + 10 normal)
+      push(trackArray, pos - 10 normal)
+      push(trackArray, pos + 11 normal - 9 dir)
+      push(trackArray, pos - 11 normal - 9 dir)
+updateEntityChildren(tank)
+
+setBackground(rgb(55%, 65%, 30%))
+
+drawText(font, "Tank: "   + formatNumber(tank.angle, "degrees"), xy(20% screenSize.x, 0), #f, nil, #3, "left", "top")
+drawText(font, "Turret: " + formatNumber(tank.turret.angle, "degrees"), xy(55% screenSize.x, 0), #f, nil, #3, "left", "top")
+
+drawEntity(tank)
+
+// Tracks
+for pos in trackArray: drawPoint(pos, #5, -1)
+if size(trackArray) > 1024: removeKey(trackArray, 0)

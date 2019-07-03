@@ -1,0 +1,6 @@
+drawPreviousMode()
+drawSpriteRect(uiSprite[13][9], xy(96,96), screenSize - 2 xy(96,96), 10)
+drawText(font, "You Found All Items!", screenSize / 2, #fff, nil, nil, 0, 0, 10)
+
+if (modeFrames > 15 * 60) or anyButtonPress(): setMode(Credits, "15 seconds")
+

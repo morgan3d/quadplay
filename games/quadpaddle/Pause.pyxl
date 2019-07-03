@@ -1,0 +1,51 @@
+Pause
+============================================================================
+
+let choice
+
+
+enter
+────────────────────────────────────────────────────────────────────────────
+choice = 0
+playAudioClip(pauseSound)
+
+
+frame
+────────────────────────────────────────────────────────────────────────────
+    
+drawPreviousMode()
+resetTransform()
+resetClip()
+
+let offset = xy(102, 64) + max(0, 45 - 5 modeFrames)
+drawSpriteRect(borderSprite[10][13], offset, screenSize - 2 offset, 4)
+
+if modeFrames > 8:
+   drawText(font, "Paused", xy(screenSize.x / 2, 80), gray(100%), #c549db, #c549db, 0, nil, 4)
+
+   const activeColor = rgb(1,1,0)
+   const defaultColor = #c549db
+   const options = ["Resume", "Quit"]
+
+   for i < 4:
+      if pad[i].yy:
+         choice = (choice + pad[i].yy + 2) mod 2
+         playAudioClip(menuSound)
+
+   for i < size(options):
+      let color = defaultColor
+
+      const x = screenSize.x / 2 - 16
+      const y = screenSize.y / 2 - 16 + 16 i
+      if i == choice:
+         color = activeColor
+         drawText(font, "✜", xy(x - 5, y), activeColor, nil, nil, 1, 0, 4)
+      drawText(font, options[i], xy(x, y), color, nil, nil, -1, 0, 4)
+
+
+if anyButtonPress():
+   playAudioClip(selectSound)
+   if choice == 0:
+      popMode("Chose resume")
+   else:
+      setMode(Title, "Chose quit")

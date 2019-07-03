@@ -1,0 +1,180 @@
+Play
+═══════════════════════════════════════════════════════════════════════════════
+
+// Prevent sound effects from repeating too frequently
+let lastChop
+let lastBump
+let lastPuckMoveTime
+let skateLoopSound
+
+def processPuck(puck):
+   with vel, pos, owner in puck:
+      // If the puck is moving slow, allow it to be picked up
+      if ‖vel‖ < 2:
+
+         // Find the closest player
+         let closestPlayer = ∅
+         let closestDistance = ∞
+         for player in playerArray:
+            const d = ‖player.pos + xy(2 player.faceX, 0) - pos‖
+            if d < closestDistance and player ≠ owner:
+               closestDistance = d
+               closestPlayer = player
+
+         // Is the closest player within a few pixels? (more generous if unowned,
+         // less generous if in the crease, less generous if in the first two
+         // seconds after a faceoff.
+         let threshold = 6
+         if owner or modeFrames < 120: threshold = 3
+         if insideCrease(pos): threshold = 2
+         if closestDistance ≤ threshold:
+            // Pick up
+            owner = closestPlayer
+            if modeFrames - lastChop > 20:
+               lastChop = modeFrames
+               playAudioClip({audioClip: chopAudioClip, pan: puck.pos.x / 100, volume: 50% + 50% rnd(), pitch: 70% + 20% rnd()})
+
+      // Celebrating loses puck ownership
+      if owner and owner.pad.d: owner = ∅
+      
+      if owner:
+         // Stay on the owner's stick, but Pull in the puck when behind the goal
+         const distance = if |pos.x| > netArray[1].pos.x - 2 then 4 else 7.5
+         
+         pos = owner.pos + xy(distance * owner.faceX, 0)
+         vel = clone(owner.vel)
+
+         // Controls
+         if owner.pad.aa:
+            // Shoot
+            if owner.pad.isAI and ξ < 25%:
+               // Cheat aiming for AI
+               vel = 4 direction(netArray[1 - owner.team.index].pos - pos + xy(0, 10 ξ - 5))
+            else:
+               vel = (if ‖vel‖ > 0.2
+                      then 2.5 direction(vel) + xy(2 owner.faceX, 0)
+                      else xy(4 owner.faceX, 0))
+            playAudioClip({audioClip: shootAudioClip, pan: pos.x / 100, volume: 60% + ‖vel‖ / 200})
+            owner = ∅
+
+         else if owner.pad.bb:
+            // Pass to teammate, leading the target. Keep the velocity much lower than
+            // for shooting so that this doesn't get used as an aimbot cheat
+            const delta = owner.teammate.pos - pos
+            vel = 1.7 direction(½ ‖delta‖ * owner.teammate.vel + delta)
+            playAudioClip({audioClip: passAudioClip, pan: pos.x / 100, volume: 50% + ‖delta‖ / 150})
+            owner = ∅
+
+         // Passed or shot...get away from the previous owner
+         if not owner:
+            // Not allowed to release the puck towards the crease, so destroy
+            // any velocity in that direction when inside
+            if insideCrease(pos) and pos.x * vel.x > 0: vel.x = 0
+            pos += 2 vel
+   
+   simulate(puck)
+   const proj = project(puck.pos, puck.z)
+   // Keep slightly in front of the player
+   drawSprite({sprite: puckSprite, pos: proj, z: proj.z + 1})
+
+
+
+
+enter
+───────────────────────────────────────────────────────────────────────────────
+
+lastPuckMoveTime = lastBump = lastChop = 0
+skateLoopSound = playAudioClip(skateAudioClip, true, 120%)
+
+
+
+leave
+───────────────────────────────────────────────────────────────────────────────
+
+stopSound(skateLoopSound)
+skateLoopSound = nil
+
+
+
+frame
+───────────────────────────────────────────────────────────────────────────────
+
+setTransform(xy(½ screenSize.x, ½ screenSize.y + 10), xy(1, -1), 0, 1)
+setClip({pos:xy(0, 20), z:-2048, size:xy(192, 90), zSize:4096})
+
+drawScoreboard()
+
+// Freeze the clock when the puck is not in play.
+// Otherwise advance time, but cheat the clock and run 1.5x faster
+// in the middle of periods.
+if puck:
+   if |time - 10*60| < 8*60: time -= timeRate * 0.5
+   time -= timeRate
+
+if time < 0:
+   ++period
+   playAudioClip(whistleAudioClip)
+   time = secondsPerPeriod
+   if period == 3: setMode(GameOver, "'60' min")
+   else: setMode(Intermission, "'20' min")
+
+
+drawNets()
+
+   
+for p in pad: if p.pp or p.qq: pushMode(Pause, "ⓟ or ⓠ")
+
+// Move referee away from the puck
+if puck and puck.pos.y > 34 and |puck.pos.x - referee.pos.x| < 14: if referee.pos.y > 30: referee.pos.y -= 0.5
+else if referee.pos.y < 40: referee.pos.y += 0.5
+
+if ξ < 0.5% and puck and |referee.pos.x| < 15: referee.vel.x = 0.3 sign(puck.pos.x - referee.vel.x)
+referee.vel *= 1 - iceFriction
+referee.pos += referee.vel
+
+if not puck or (‖puck.vel‖ > 0.01): lastPuckMoveTime = modeFrames
+
+if puck and modeFrames - lastPuckMoveTime > 60 * 15:
+   // The puck hasn't moved for 15 seconds. Something is
+   // clearly wrong. Reset by moving the puck with random velocity
+   puck.vel = 0.5 rndCircle()
+
+drawReferee(referee)
+
+for player in playerArray:
+   
+   // Apply controls
+   with vel, pad in player:
+      if pad.isAI: processAI(player)
+      if pad.x: player.faceX = pad.x
+      player.vel += xy(pad.x, pad.y) * player.acceleration
+
+   // Collide with other players
+   for other in playerArray:
+      if other == player: continue
+      const axis = other.pos - player.pos
+      if ‖axis * xy(85%, 1)‖ <= 4 and dot(other.vel - player.vel, axis) < 0:
+         if modeFrames - lastBump > 20:
+            lastBump = modeFrames
+            playAudioClip({audioClip: bumpAudioClip, pan: player.pos.x / 100, pitch: 50% + 50% ξ})
+         // Nearby and approaching: collide by swapping momentum
+         const restitution = 1
+         const ρ1 = player.vel * player.mass * restitution
+         const ρ2 = other.vel * other.mass * restitution
+         player.vel = ρ2 / player.mass
+         other.vel  = ρ1 / other.mass
+         if puck and (puck.owner == player or puck.owner == other):
+            // Dislodge the puck from the current owner
+            puck.owner = ∅
+            puck.vel += ½ rndCircle()
+            puck.pos += puck.vel
+         
+
+   simulate(player)
+   drawPlayer(player)
+
+   
+if puck: processPuck(puck)
+
+// Hint for compiler:
+// setMode(Faceoff, "Goal")

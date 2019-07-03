@@ -1,0 +1,785 @@
+/* By Morgan McGuire @CasualEffects http://casual-effects.com GPL 3.0 License*/
+
+@font-face {
+    font-family: "Boot";
+    src: url("PxPlus_AmstradPC1512-2y.ttf");
+}
+
+@font-face {
+    font-family: "quadplay";
+    src: url("../doc/Audiowide-Regular.ttf");
+}
+
+canvas {
+    -ms-interpolation-mode: nearest-neighbor;
+    image-rendering: optimizeSpeed;
+    image-rendering: -o-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    -ms-interpolation-mode: nearest-neighbor;
+    image-rendering: pixelated !important;
+
+    /* Attempt to trick canvas into using hardware acceleration for the blit */
+    transform: translate3d(0,0,0);
+}
+
+body {
+    font-family: Helvetica, Arial;
+    font-size: 13px;
+    margin: 0;
+    background: #331c2a;
+    color:      #999;
+    height:     100%;
+    width:      100%;
+    -webkit-touch-callout:none;
+
+    /* Prevent scrolling on desktop */
+    overflow: hidden;
+    
+    /* Prevent scrolling on mobile */
+    position: fixed;
+
+    /* Hide scrollbars everywhere */
+    scrollbar-width: none; /* Firefox  hide scrollbar */
+
+    min-height: 340px;
+}
+
+::-webkit-scrollbar { /* WebKit hide scrollbars */
+    width: 0px;
+}
+
+div, pane {
+    scrollbar-width: none; /* Firefox  hide scrollbars */
+}
+
+body.fullscreenEmulator {
+    overflow: hidden;
+}
+
+input[type="radio"], input[type="checkbox"] {
+    margin-right: 7px;
+}
+
+div#header {
+    position: absolute;
+    top:0;
+    right:0;
+    left:0;
+    height: 20px;
+    font-size: 11px;
+    background: #000;
+    color:#ccc;
+    text-align: center;
+    padding-top: 3px;
+    border-bottom: 1px solid #888;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/** Do not change this selector without changing quadplay-ide.js setColorScheme() */
+#header a, #toolsMenu a {
+    color: #e61b9d !important;
+    text-decoration: none;
+}
+
+.MaximalUI .idePart, .EmulatorUI .idePart, .TestUI .idePart {
+    /* Using hidden alone leaves a border on screen. */
+    display: none;
+    visibility: hidden;
+}
+
+a {
+    color:#e61b9d !important;
+}
+
+#adblockWarning {
+    color:#000;
+    font-size:11px;
+    z-index: 40;
+}
+
+#adblockDetector {
+    width: 1px !important; height: 1px !important; position: absolute !important; left: -10000px !important; top: -1000px !important;
+}
+
+.ide {
+    border: 1px solid #888;
+    background:    #302b2b;
+    color:         #eee;
+}
+
+.emulator, .emulatorButton {
+    touch-action: none;
+    /* Disable text selection */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+
+    /* Stop iOS from making the entire canvas gray when tapped */
+    -webkit-tap-highlight-color: transparent;
+
+    /* Prevent magnifying glass */
+    -webkit-touch-callout: none;
+}
+
+.emulatorButton {
+    cursor: pointer;
+    position: absolute;
+    /* show bounds for debugging */
+    /* border: 1px solid #ff0;*/
+}
+
+
+.blink {
+    animation: blink 1s linear infinite;
+    -webkit-animation: blink 1s linear infinite;
+}
+
+@-webkit-keyframes blinker {
+    from {opacity: 1.0;}
+    to {opacity: 0.0;}
+}
+
+.blink {
+    text-decoration: blink;
+    -webkit-animation-name: blinker;
+    -webkit-animation-duration: 0.6s;
+    -webkit-animation-iteration-count:infinite;
+    -webkit-animation-timing-function:ease-in-out;
+    -webkit-animation-direction: alternate;
+}
+
+/*****************************************************/
+
+#mobileWelcome {
+    z-index: 101;
+    visibility: visible;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    background: rgba(0,0,0,0.5);
+}
+
+/*****************************************************/
+
+#uiModeMenuButton {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 21;
+    width: 30px;
+    height: 25px;
+    text-shadow:      rgba(0,0,0,0.7) 0 0 4px;
+
+    background-image: url('gear.png');
+    background-size: 50%;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#uiModeMenu {
+    position: absolute;
+    z-index: 41;
+    top: 23px;
+    left: 0px;
+    background: #FFF;
+    padding-top: 5px;
+    color: #000;
+    visibility: hidden;
+    border: 1px solid #000;
+    box-shadow:       0px 4px 15px 0px rgba(0, 0, 0, 0.4);
+}
+
+#toolsMenu {
+    position: absolute;
+    z-index: 41;
+    top: 23px;
+    left: 0px;
+    background: #000;
+    border: solid 1px #ccc;
+    padding: 5px;
+    /* color: #000; */
+    visibility: hidden;
+    box-shadow:       0px 4px 15px 0px rgba(0, 0, 0, 0.4);
+}
+
+.dropdown > *, .dropdown .IDEOnly > * {
+    margin-top:3px;
+    margin-bottom:3px;
+    margin-left:19px;
+    margin-right:4px;
+}
+
+.dropdown div.IDEOnly {
+    margin: 0px;
+}
+
+
+.dropdown label, .dropdown .IDEOnly label {
+    margin-left: -2px;
+}
+
+.dropdown hr, .dropdown .IDEOnly hr {
+    margin-left: -4px;
+    margin-right: -4px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+#toolsMenu div {
+    font-size: 100%;
+}
+
+/*****************************************************/
+
+.modal {
+    display: block; /* none */
+    position: fixed;
+    z-index: 70;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(255,255,255,0.4); /* Black w/ opacity */
+}
+
+.modalDialog {
+    font-size: 120%;
+    color: #000;
+    background-color: #fff;
+    margin: 20% auto;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-left: 30px;
+    padding-right: 30px;
+    border: 1px solid #888;
+    width: 500px;
+    border-radius: 13px;
+    box-shadow:       0px 4px 15px 0px rgba(0, 0, 0, 0.4);
+}
+/*****************************************************/
+
+/* Hide the actual input control */
+.button input {
+    display:          none;
+}
+
+.button {
+    display:          inline-block;
+    margin-right:     1px;
+    margin-left:      3px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select:  none;
+    user-select:      none;
+    width:            35px;
+    font-size:        90%;
+    cursor:           pointer;
+}
+
+
+.unselectable {
+    touch-action: none;
+    /* Disable text selection */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+
+    /* Stop iOS from making the entire canvas gray when tapped */
+    -webkit-tap-highlight-color: transparent;
+
+    /* Prevent magnifying glass */
+    -webkit-touch-callout: none;
+}
+
+.button label span.label {
+    margin:           0px;
+    background-color: #FFF;
+    background:       linear-gradient(to bottom, rgba(255,255,255,1) 0%,rgba(242,242,242,1) 36%,rgba(242,242,242,1) 90%,rgba(224,224,224,1) 100%);
+    color:            #000;
+    border:           1px solid #BBB;
+    border-radius:    4px;
+    overflow:         hidden;
+    width:            100%;
+    height:           16px;
+    box-shadow:       1px 2px 2px 0px rgba(0, 0, 0, 0.15);
+    padding-top:      2px;
+    padding-bottom:   0px;
+
+    text-align:       center;
+    display:          block;
+    height:           16px;
+    padding-top:      4px;
+    margin-top:      -3px;
+}
+
+.button:active span.label, .button input:checked + span.label {
+    background: rgb(64,150,238);
+    background: linear-gradient(to bottom, rgba(64,150,238,1) 0%,rgba(96,171,248,1) 56%,rgba(122,188,255,1) 100%);
+    
+    color:            #fff;
+    box-shadow:       0px 1px 2px 0px rgba(0, 0, 0, 0.25);
+    border:           1px solid #666;
+    boder-bottom:     none;
+}
+
+.button:active img, .button input:checked + span.label img {
+    filter: invert(100%);
+}
+
+div.disabled span.label, div.disabled:active span.label {
+    background:       #DDD;
+    color:            #AAA;
+    transform:        none;
+    box-shadow:       1px 2px 2px 0px rgba(0, 0, 0, 0.15);
+}
+
+/*****************************************************/
+
+#editorPane {
+    overflow:         scroll;
+    position:         absolute;
+    left:             176px;
+    top:              23px;
+    right:            412px;
+    bottom:           0px;
+}
+
+#error {
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    font-size: 90%;
+    color: #F30;
+    height: 17px;
+    padding-left: 4px;
+    padding-top: 1px;
+    box-sizing: border-box;
+    z-index: 12;
+    width: 100%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
+.MaximalUI #error, .EmulatorUI #error {
+    visibility: hidden;
+}
+
+code, .code {
+    font-size: 90%;
+    font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace
+}
+   
+
+
+#codeEditor {
+    position: absolute;
+    top: 0px;
+    width: 100%;
+    left: 0px;
+    bottom: 16px;
+    font-size:        14px;
+    box-sizing:       border-box;
+    -moz-box-sizing:  border-box;
+    -webkit-box-sizing: border-box;
+}
+
+/* Detect Chrome & Safari */
+@media screen and (-webkit-min-device-pixel-ratio:0) and (min-resolution:.001dpcm) {
+    #editorStatusBar {
+        padding-top: 3px;
+    }
+}
+
+.hidden {
+    visibility:       hidden;
+}
+
+/**************************************************/
+
+#debugger {
+    position: absolute;
+    top:      288px;
+    right:    0px;
+    width:    412px;
+    bottom:   0px;
+    background: #331c2a;
+    border-left: 1px solid #888;
+    z-index:  10;
+}
+
+/* Hide the debugger in emulator modes */
+.MaximalUI #debugger, .EmulatorUI #debugger {
+    visibility: hidden;
+}
+
+.TestUI #debugger {
+    left: 0px;
+    right: 0px;
+    width: unset;
+    border-left: none;
+}
+
+/**************************************************/
+
+.project {
+    position: absolute;
+    top: 23px;
+    left: 0px;
+    width: 175px;
+    bottom: 0px;
+    padding: 5px;
+    font-size: 14px;
+    overflow: scroll;
+    /* Prevent breaking between bullet and text */
+    white-space: nowrap;
+}
+
+
+/** Used for selecting objects */
+.project .selectedProjectElement {
+    background: rgb(50,120,200);
+}
+
+.project ul {
+    margin-top: 2px;
+    padding-left: 13px;
+    list-style: none;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.project li {
+    padding-left: 7px;
+}
+
+.project li:before {
+    content: '';
+    background-size: contain;
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.project .clickable:hover {
+  color: #789;
+}
+
+.project .scripts li:before {
+    background-image: url('project-icon-ns.png');
+}
+
+.project .modes li:before {
+    background-image: url('project-icon-mode.png');
+}
+
+.project li.sprite:before {
+    background-image: url('project-icon-sprite.png');
+}
+
+.project li.map:before {
+    background-image: url('project-icon-map.png');
+}
+
+.project li.font:before {
+    background-image: url('project-icon-font.png');
+}
+
+.project li.sound:before {
+    background-image: url('project-icon-sound.png');
+}
+
+.project .constants li:before {
+    background-image: url('project-icon-number.png');
+}
+
+/**************************************************/
+
+.emulator, div#emulatorFrame {
+    position:         absolute;
+    right:            0px;
+    top:              25px;
+    width:            410px;
+    height:           260px;
+    margin-top: -1px;
+    padding: 1px 1px 3px 1px;
+}
+
+#emulatorFrame {
+    background: #331c2a;
+    border-left: 1px solid #888;
+    border-right: none;
+    border-top: none;
+}
+
+.emulator {
+    z-index:          5;
+}
+
+/* Gloss line */
+.EmulatorUI .emulator .emulatorBackground:before {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 5px;
+  bottom: 8px;
+  border-radius: 32px 32px 32px 32px;
+  background: linear-gradient(
+      hsla(0, 0%, 100%, 0.05), hsla(0, 0%, 100%, 0) ); 
+  box-shadow:  0px -2px 2px 0px rgba(255,255,255,0.2),
+               inset  0px 2px 2px 0px rgba(255,255,255,0.2);
+
+}
+
+.emulator .emulatorBackground {
+    position:         absolute;
+    top:              0px;
+    left:             0px;
+    bottom:           0px;
+    right:            0px;
+    border-radius:    12px;
+    box-shadow:
+    /* Drop */
+    0px 4px 13px 0px rgba(0, 0, 0, 0.35),
+    /* Highlight */
+    inset 1px 4px 8px 1px rgba(255,255,255,0.2),
+    /* Shadow */
+                  inset -1px -6px 6px 2px rgba(0,0,0,0.6);
+    
+    border:           0.5px outset #888;
+    /* This rule must exactly match setColorScheme() in quadplay-ide.js */
+/*    background:       #e22ba1 !important; */
+}
+
+
+hr {
+    height: 1px;
+    color: #888;
+    background: #888;
+    border: none;
+}
+
+.EmulatorUI .emulator, .MaximalUI .emulator, .TestUI .emulator {
+    left: 1px;
+    width: unset;
+    right: 1px;
+    bottom: 1px;
+    height: unset;
+}
+
+.EmulatorUI .emulatorBackground, .MaximalUI .emulatorBackground, .TestUI .emulatorBackground {
+    border-radius:    40px;
+}
+
+
+.TestUI .emulatorBackground, .MaximalUI .emulatorBackground {
+    background: none !important;
+    border: none;
+    box-shadow: none;
+}
+
+
+.TestUI .emulatorBackground {
+    border: none;
+    border-radius: 0px !important;
+    box-shadow: none;
+}
+
+.virtualController {
+    visibility: hidden;
+    z-index:29;
+}
+
+
+body.EmulatorUI .virtualController {
+    visibility: visible;
+}
+
+#bootScreen {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    bottom: 0px;
+    right: 0px;
+    z-index: -100;
+    color: #ccc;
+    background: #000;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    font-family: "Boot";
+    white-space: pre-line;
+    font-size: 10px;
+}
+
+canvas#screen {
+    top: 0px;
+    left: 0px;
+    position: absolute;
+    background: #000;
+    z-index: 30;
+}
+
+#screenBorder {
+    top: 20px;
+    left: 8px;
+    position: absolute;
+    display: block;
+    background: #000;
+    
+    /* Can't put a border-radius on the canvas itself or it causes Chrome
+       and Safari to ignore pixelated image rendering */
+    border-radius: 6px;
+    border: 5px solid #111;
+    box-shadow: -0.5px -0.8px 0.8px 0.15px rgba(0,0,0,0.30),
+                0.2px 1px 0.8px 0.5px rgba(255,255,255,0.3);
+}
+
+.TestUI #screenBorder, .MaximalUI #screenBorder {
+    border: none;
+    box-shadow: none;
+}
+
+
+.right {
+    text-align: right;
+}
+
+#controlPane table td + td, #controlPane table th + th {
+    border-left: 1px solid #888;
+    padding: 1px 4px;
+}
+
+
+/*******************************************************************/
+
+.controllerPresent, .controllerAbsent {
+    width: 24px;
+    height: 12px;
+    background-position: center;
+    background-size: contain;
+    display: inline-block;
+    background-repeat: no-repeat;
+}
+
+.controllerAbsent {
+    background-image: url('icon-controller-absent.png');
+}
+
+.controllerPresent {
+    background-image: url('icon-controller-present.png');
+}
+
+/*******************************************************************/
+/* Tabs */
+
+tabbox {
+    display:block;
+}
+
+tabbox pane {
+    position: absolute;
+    display: none;
+    overflow: scroll;
+    padding: 20px 10px 0px;
+    bottom: 0px;
+    top: 26px;
+    right: 0px;
+    left: -1px;
+}
+
+tabbox > input {
+    display: none;
+}
+
+tabbox > label.ide {
+    position: relative;
+    display: inline-block;
+    margin-right: -2px;
+    padding: 5px 7px 4px;
+    min-width: 60px;
+    height: 15px;
+    font-weight: 600;
+    text-align: center;
+    border-radius: 3px 3px 0 0;
+    background: #333;
+    color: #999;
+    z-index: 1;
+}
+
+tabbox > label.ide:hover {
+    color: #789;
+    cursor: pointer;
+}
+
+tabbox > input:checked + label.ide {
+    color: #0af;
+    border: 1px solid #888;
+    border-top: 2px solid #0af;
+    border-bottom: 1px solid #302b2b;
+    background:    #302b2b;
+}
+
+tabbox #performanceTab:checked ~ #performancePane,
+tabbox #controlTab:checked ~ #controlPane,
+tabbox #outputTab:checked ~ #outputPane,
+tabbox #watchTab:checked ~ #watchPane,
+tabbox #hostTab:checked ~ #hostPane {
+    display: block;
+}
+
+/********************************************************/
+
+svg.modeGraph .node {
+    filter: url(#shadow);
+}
+
+svg.modeGraph text.nodeLabel {
+    font-size: 12px;
+    text-anchor: middle;
+    font-weight: bold;
+    dominant-baseline: central;
+    fill: #000;
+}
+
+svg.modeGraph .edge {
+    stroke-width: 2;
+    fill: none;
+    filter: url(#outerglow);
+}
+
+svg.modeGraph text.edgeLabel {
+    text-anchor: middle;
+    dominant-baseline: central;
+    font-style: italic;
+    font-size: 10px;
+    filter: url(#outerglow);
+}
+
+
+#debugWatchDisplayPane td {
+    border: solid 1px #888;
+    padding-left: 5px;
+}

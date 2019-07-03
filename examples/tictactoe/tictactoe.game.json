@@ -1,0 +1,20 @@
+{
+    "title":      "Tic Tac Toe",
+    "developer":  "Casual Effectos",
+    "copyright":  "©2019 Morgan McGuire",
+    "license":    "CC0/Public Domain(Replace with your own license)",
+
+    "packages":   [],
+    "scripts":    [],
+    "modes":      ["Play*"],
+    "assets":     {
+        "font": "quad://fonts/deja-8.font.json"
+    },
+
+    "constants":  {
+        "textColor":   {"type": "rgb", "value": {
+            "r": {"type": "number", "value":  1},
+            "g": {"type": "number", "value":  1},
+            "b": {"type": "number", "value":  1}}}
+    }
+}

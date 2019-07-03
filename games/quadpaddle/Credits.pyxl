@@ -1,0 +1,24 @@
+const creditOrder = ["Game", "Sprite", "Font", "Sound", "Code"]
+
+let creditsScroll = max(modeFrames - 70, 0)
+  
+setTransform(xy(0, -creditsScroll))
+
+drawText(font, assetCredits.title, xy(screenSize.x / 2, screenSize.y / 3), gray(100%), gray(60%), gray(60%), 0, 0)
+drawText(mediumFont, "by " + assetCredits.developer, xy(screenSize.x / 2, screenSize.y / 3 + 25), gray(100%), gray(60%), nil, 0, 0)
+
+let y = screenSize.y + 15
+for type in creditOrder:
+   let s = type
+   y += drawText(font, s, xy(screenSize.x / 2, y), gray(100%), gray(60%), nil, 0, 2).y
+   
+   for line in assetCredits[lowerCase(type)]:
+      y += drawText(mediumFont, line, xy(screenSize.x / 2, y), gray(60%), nil, nil, 0, 2, 0, screenSize.x).y + 10
+      
+   y += 20
+
+   
+      
+if anyButtonPress() or y < -100:
+   setTransform(xy(0, 0))
+   popMode("anyButtonPress() or end of credits")

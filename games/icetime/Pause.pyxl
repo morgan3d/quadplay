@@ -1,0 +1,40 @@
+Pause
+═══════════════════════════════════════════════════════════════════════════════
+
+const guiZ = 1000
+const choiceArray = ["Resume Play", "Exit to Title"]
+let selection = 0
+
+
+
+enter
+───────────────────────────────────────────────────────────────────────────────
+resetTransform()
+resetClip()
+
+
+
+frame
+───────────────────────────────────────────────────────────────────────────────
+
+drawPreviousMode()
+drawRect(xy(32, 32), screenSize - 2 xy(32, 32), #f, #0, guiZ)
+
+drawText({font:scoreFont, text:"TIME OUT!", color:#f00, outline:#0, xAlign:"center", pos:xy(screenSize.x/2, 42), z:guiZ})
+
+let y = 56
+for c in choiceArray:
+   const args = {font: scoreFont, text: c, color: #0, xAlign: "center", pos: xy(screenSize.x/2, y), z: guiZ}
+   if c == choiceArray[selection]: args.color = #ec0; args.outline = #000; args.text = "[" + args.text + "]"
+   y += drawText(args).y
+
+for p in pad:
+   // Do not allow pressing a button for the first fraction of a second
+   // in case other players' input is still coming in
+   if modeFrames > 45:
+      if p.aa:
+         if selection == 0: popMode("Press A")
+         else: setMode(Title, "Choose Quit")
+      else if p.pp or p.qq or p.bb: popMode("Press P, Q, or B")
+   else if p.xx or p.yy:
+      selection = (selection + 1) mod size(choiceArray)

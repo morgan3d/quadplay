@@ -1,0 +1,20 @@
+{
+    "title":      "Dual Stick Example",
+    "developer":  "CasualEffects",
+    "copyright":  "©2019 Morgan McGuire",
+    "license":    "Available under the BSD License https://opensource.org/licenses/BSD-2-Clause",
+
+    "packages":   [],
+    "scripts":    [],
+    "modes":      ["Play*"],
+    "assets":     {
+        "font": "quad://fonts/stencil-9.font.json",
+        "tankSprite": "tank.sprite.json"
+    },
+
+    "constants":  {
+        "speed": {"type": "number", "value": 0.5}
+    },
+    
+    "flipY": false
+}

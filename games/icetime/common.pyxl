@@ -1,0 +1,168 @@
+// Game objects are in the coordinate frame
+// where XY = ice plane and Z = vertical. Z is not
+// currently used.
+
+const periodName = ["1ST", "2ND", "3RD"]
+
+const netArray = [
+   {pos: xy(-74, 0), size: xy(6, 14), shape: "rect", index: 0},
+   {pos: xy(+74, 0), size: xy(6, 14), shape: "rect", index: 1}
+]
+
+let period = 0
+// This is game-world time in seconds. It advances
+// at a variable rate versus the real world, but MUCH
+// faster in general.
+let time = secondsPerPeriod
+
+// Team on the left side is always 0
+let teamArray
+
+// Players. 0 and 1 are always on the left, 2 and 3 are on the right.
+let playerArray
+
+let puck
+
+let referee = {pos: xy(0, 40), vel: xy(0, 0), animation: 1}
+
+// All available teams
+const league = [
+   {
+      // Yellow
+      spriteSheet: BTNSprite,
+      name:        "BTN",
+      labelColor:  #860,
+      roster:      [{name:"Jugenheimer", spriteIndex:0, mass: 95, acceleration: 0.06, maxSpeed: 1.0},
+                    {name:"Marcisz", spriteIndex:2, mass: 106, acceleration: 0.067, maxSpeed: 0.93}]
+   },
+   {
+      // Blue
+      spriteSheet: TUXSprite,
+      name:        "TUX",
+      labelColor:  #08f,
+      roster:      [{name:"LeFlamme", spriteIndex:0, mass: 103, acceleration: 0.063, maxSpeed: 1.0},
+                    {name:"McGuire", spriteIndex:2, mass: 97, acceleration: 0.059, maxSpeed: 1.07}]
+   },
+   {
+      // Green
+      spriteSheet: CALSprite,
+      name:        "CAL",
+      labelColor:  #071,
+      roster:      [{name:"Rodney", spriteIndex:0, mass: 90, acceleration: 0.058, maxSpeed: 1.1},
+                    {name:"Scheuring", spriteIndex:2, mass: 100, acceleration: 0.059, maxSpeed: 1.1}]
+
+   },
+   {
+      // Red
+      spriteSheet: SANSprite,
+      name:        "SAN",
+      labelColor:  #800,
+      roster:      [{name:"Olick", spriteIndex:0, mass: 99, acceleration: 0.07, maxSpeed: 0.98},
+                    {name:"Lopes", spriteIndex:2, mass: 105, acceleration: 0.068, maxSpeed: 0.99}]
+   },
+   {
+      // Purple
+      spriteSheet: HEWSprite,
+      name:        "HEW",
+      labelColor:  #90b,
+      roster:      [{name:"Gauthier", spriteIndex:0, mass: 90, acceleration: 0.055, maxSpeed: 1.25},
+                    {name:"Poulin", spriteIndex:2, mass: 96, acceleration: 0.059, maxSpeed: 1.2}]
+   },
+   {
+      // Black
+      spriteSheet: MOSSprite,
+      name:        "MOS",
+      labelColor:  #0,
+      roster:      [{name:"Shevchenko", spriteIndex:0, mass: 101, acceleration: 0.06, maxSpeed: 1.0},
+                    {name:"Kaminsky", spriteIndex:2, mass: 108, acceleration: 0.055, maxSpeed: 1.1}]
+   }/*,
+   {
+      // Brown
+      spriteSheet: BTNSprite,
+      name:        "QUE",
+      labelColor:  #3,
+      roster:      ["Degnan", "Lidstrom"]
+   },
+   {
+      // Turquoise
+      spriteSheet: BTNSprite,
+      name:        "GRI",
+      labelColor:  #3,
+      roster:      ["Clarke", "Patel"]
+   }*/]
+
+/** Choose a random team with a different league index */
+def createRandomDifferentTeam(team):
+   let t = rndValue(league)
+   while t.leagueIndex == team.leagueIndex:
+      t = rndValue(league)
+   return clone(t)
+   
+
+for i < size(league): league[i].leagueIndex = i
+
+
+def drawScoreboard():
+   preservingTransform:
+      setTransform(xy(0, screenSize.y), xy(1, -1))
+      resetClip()
+
+      // Logos
+      for team in teamArray:
+         const logoX = 28 + 22 team.sideX
+         drawSprite(team.spriteSheet[4][0], xy(logoX, 106))
+         drawText({text: team.name + formatNumber(team.score, "  0"), font: scoreFont, color:#f, pos:xy(logoX + 7, 111), xAlign: "left", yAlign: "top"})
+
+      drawText({text: periodName[period] + " " + formatNumber(floor(time / 60), " 0") + ":" + formatNumber(time mod 60, "00"), font: scoreFont, color:#2, pos: xy(91,111), xAlign: "left", yAlign: "top"})
+
+      // Stats data:
+      //drawText({text: "BUKOWSKI: 12 SAVES", font: tinyFont, color:#a, pos: xy(2, 97), xAlign: "left"})
+
+
+      
+def drawNets():
+   for net in netArray:
+      const pos = project(net.pos, 0)
+      const scale = xy(-sign(pos.x), 1)
+      drawSprite({sprite: netSprite[0][0], pos: pos + xyz(0, 3, 0), z: pos.z, scale: scale})
+      drawSprite({sprite: netSprite[0][1], pos: pos - xyz(0, 4, 0), z: pos.z - 100, scale: scale})
+      
+
+      
+// Convert ice coordinates to draw coordinates
+def project(pos, z):
+   const s = (500 - pos.y) / 500
+   return {x: pos.x * s, y: 80% * pos.y + (z or 0), z: 200 - pos.y}
+
+
+
+def insideCrease(pos):
+   const side = sign(pos.x)
+   let net = netArray[0]
+   if side > 0: net = netArray[1]
+   return ‖(pos - net.pos) * xy(1, 125%)‖ < creaseRadius and pos.x * side < net.pos.x * side
+   
+
+def createGame():
+   setBackground(rinkSprite)
+
+   period = 0
+   time = secondsPerPeriod
+   
+   playerArray = []
+   for t < 2:
+      const team = teamArray[t]
+      team.score = 0
+      team.sideX = 2 t - 1
+      team.index = t
+      for p < 2:
+         push(playerArray, makePlayer(team.roster[p], controlPadArray[2 t + p], team))
+
+
+   playerArray[0].teammate = playerArray[1]
+   playerArray[1].teammate = playerArray[0]
+   
+   playerArray[2].teammate = playerArray[3]
+   playerArray[3].teammate = playerArray[2]
+   
+   

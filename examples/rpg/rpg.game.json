@@ -1,0 +1,32 @@
+{
+    "title":      "RPG Demo",
+    "developer":  "CasualEffects",
+    "copyright":  "©2019 Morgan McGuire",
+    "license":    "Public Domain",
+
+    "packages":   [],
+    "scripts":    ["rpg.pyxl"],
+    "modes":      ["Title*", "Play", "Credits", "Win", "Inventory", "Shop", "GameOver", "Pause"],
+    "assets":     {
+        "castleMap": "castle.map.json",
+        "smallFont": "quad://fonts/deja-8.font.json",
+        "font": "quad://fonts/ivanhoe-12.font.json",
+        "dialogueSprite": "quad://sprites/dawnlike-ui-8x8.sprite.json",
+        "uiSprite": "quad://sprites/dawnlike-ui-16x16.sprite.json",   
+        "playerSprite": "quad://sprites/dawnlike-mage-16x16.sprite.json",
+        "npcSprite": "quad://sprites/dawnlike-npcs-16x16.sprite.json",
+        "worldMap": "world.map.json",
+        "music": "quad://sounds/loop-sanctuary.sound.json",
+        "pickupSound": "quad://sounds/33-Powerup.sound.json",
+        "pauseAudioClip": "quad://sounds/70-Wild.sound.json",
+        "resumeAudioClip": "quad://sounds/73-Wild.sound.json",
+        "bumpSound": "quad://sounds/48-Hit.sound.json"
+    },
+
+    "constants":  {
+        "textColor":   {"type": "rgb", "value": {
+            "r": {"type": "number", "value":  1},
+            "g": {"type": "number", "value":  1},
+            "b": {"type": "number", "value":  1}}}
+    }
+}
