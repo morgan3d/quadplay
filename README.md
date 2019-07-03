@@ -47,7 +47,7 @@ Optional:
 - A TMX map editor such as [Tiled](https://www.mapeditor.org/)
 - A pixel editor such as [aseprite](https://www.aseprite.org/) or [Piskel](https://www.piskelapp.com/) for drawing sprites and fonts (or use the included ones)
 - A [SFX generator](https://www.bfxr.net/) and audio editor such as [Audacity](https://www.audacityteam.org/) (or use the included ones)
-- Follow [@CasualEffects](https://twitter.com/CasualEffects) for announcments
+- Follow development online at [@CasualEffects](https://twitter.com/CasualEffects)
 
 See the manual for a getting started guide, the change log, road map, and beta notes.
 
