@@ -20,7 +20,7 @@ Features
 - 9.4 MB of total sprite memory
 - Up to 64 sprite and font sheets of up to 1024x1024
 - Four 10-button gamepads (D-pad + ⓐⓑⓒⓓ + ⓟⓠ)
-- Optional 192 x 112, 128 x 128, and 64 x 64 screen modes
+- Optional 192 x 112, 128 x 128, and [64 x 64](https://itch.io/jam/lowrezjam-2019) screen modes
 - Free and open source
 
 Join the Beta
@@ -57,10 +57,10 @@ License
 
 The quadplay✜ runtime, compiler, and emulator are licensed as
 [LGPL3](https://www.gnu.org/licenses/lgpl-3.0.en.html). You can create
-closed-source games with it and do whatever you want with your own
-games. If you modify the runtime, compiler, or emulator, then you
-must redistribute your changes to those under the LGPL3 with your game
-as open source.
+closed-source games with it and distribute your games however you
+want, including commercially. If you modify the runtime, compiler, or
+emulator, then you must redistribute your changes to those under the
+LGPL3 with your game as open source.
 
 Portions of the IDE are under different open source licenses (BSD,
 MIT, and public domain).
