@@ -1,0 +1,104 @@
+<!doctype html><meta charset="UTF-8">
+<title>fontgen✜</title>
+<link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../console/favicon-32x32.png">
+<link rel="shortcut icon" href="../console/favicon.ico">
+<script src="../console/quadplay-font.js" charset="UTF-8"></script>
+<style>
+  @font-face { font-family: quadplay; src: url(../doc/Audiowide-Regular.ttf) }
+
+  body {
+    background: #ddd;
+    color: #666;
+    font-family: Arial;
+    padding: 25px;
+    text-align: justify;
+    line-height: 140%;
+  }
+  
+  input {
+    width:240px
+  }
+
+  table#font {
+     border-collapse: collapse;
+     table-layout: fixed;
+     border: 1px solid #080;
+     background: #000;
+     color: #fff;
+     font-smooth: never;
+     -webkit-font-smoothing: none;
+  }
+  table#font td {
+     border: none;
+     margin: 0;
+     padding: 0;
+     overflow: hidden
+     width: 3.125%;
+  }
+
+  h1 {
+  font-family: quadplay;
+  text-align: center;
+  margin-bottom: 30px;
+  color: #000;
+  }
+</style>
+<body>
+  <h1>fontgen✜</h1>
+
+  Use this tool to generate bitmap font templates. Screen-capture the result and draw
+  over them in your pixel art program to create new quadplay fonts.
+
+  <br/>
+  <br/>
+  
+  <table style="width: 500px; border-collapse: collapse">
+    <tr><td>Font Name:</td><td align=right><input type="text" id="fontname" onchange="onChange()" onclick="onChange()" onkeyup="onChange()" value="Arial"></td><td></td></tr>
+    <tr><td>Font Size:</td><td align=right><input type="number" id="fontsize" onchange="onChange()" onclick="onChange()" onkeyup="onChange()" value="10"></td><td>px</td></tr>
+    <tr><td>Tile Width:</td><td align=right><input type="number" id="charwidth" onchange="onChange()" onclick="onChange()" onkeyup="onChange()" value="9"></td><td>px</td></tr>
+    <tr><td>Tile Height:</td><td align=right><input type="number" id="charheight" onchange="onChange()" onclick="onChange()" onkeyup="onChange()" value="12"></td><td>px</td></tr>
+  </table>
+  <br/>
+
+
+  <script>
+let s = fontChars;
+
+document.write('<table id="font">');
+while (s.length > 0) {
+  // Vertical alignment to control baseline:
+  document.write('<tr>');
+  for (let x = 0; x < 32; ++x) {
+      // Print enclosed alphanumerics smaller
+      if ((s.charCodeAt(0) >= 0x2460) && (s.charCodeAt(0) <= 0x24FF)) {
+          document.write('<td style="font-size: 75%">');
+      } else {
+          document.write('<td>');
+      }                      
+      document.write(s[0] + '</td>');
+                      
+      s = s.substring(1);
+  }
+  s = s.substring(1);
+  document.write('</tr>');
+}
+document.write('</table>');
+
+function onChange() {
+    const n = document.getElementById("fontname").value;
+    const f = document.getElementById("fontsize").value;
+    const w = parseInt(document.getElementById("charwidth").value || 0);
+    const h = parseInt(document.getElementById("charheight").value || 0);
+    const table = document.getElementById("font");
+    table.style.fontFamily = n;
+    table.style.fontSize = f + 'px';
+    table.style.width =  (w * 32) + 'px';
+    table.style.height = (h * 11) + 'px';
+    table.style.lineHeight = h + 'px';
+}
+
+onChange();
+</script>
+
+</body>

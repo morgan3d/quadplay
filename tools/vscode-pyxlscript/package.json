@@ -1,0 +1,40 @@
+{
+    "name": "pyxlscript",
+    "displayName": "pyxlscript",
+    "description": "Language Support for pyxlscript",
+    "version": "0.0.1",
+    "publisher": "CasualEffects",
+    "repository": "https://github.com/morgan3d/quadplay-dev.git",
+    "engines": {
+        "vscode": "^1.35.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+		"snippets": [
+			{
+				"language": "pyxlscript",
+				"path": "./snippets/pyxlscript.json"
+			}
+		],
+        "languages": [{
+            "id": "pyxlscript",
+            "aliases": ["pyxlscript", "pyxl"],
+            "extensions": [".pyxl"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "pyxlscript",
+            "scopeName": "source.pyxl",
+            "path": "./syntaxes/pyxlscript.tmLanguage.json"
+        }],
+        "configurationDefaults": {
+            "[pyxlscript]": {
+                "editor.detectIndentation": false,
+                "editor.tabSize": 3,
+                "editor.insertSpaces": true
+            }
+        }
+    }
+}

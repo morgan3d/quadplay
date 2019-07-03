@@ -1,0 +1,230 @@
+<!doctype html><meta charset="UTF-8"><!-- -*- javascript -*- -->
+<head>
+  <title>quantize✜</title>
+<link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../console/favicon-32x32.png">
+<link rel="shortcut icon" href="../console/favicon.ico">
+  <style>
+    @font-face { font-family: quadplay; src: url(../doc/Audiowide-Regular.ttf) }
+
+    body {
+    background: #ddd;
+    color: #666;
+    font-family: Arial;
+    padding: 25px;
+    text-align: justify;
+    line-height: 140%;
+    }
+
+    h1 {
+    font-family: quadplay;
+    text-align: center;
+    margin-bottom: 30px;
+    color: #000;
+    }
+  </style>
+  <script>
+    function onDrop(event) {
+        // Prevent the browser from opening the file
+        event.preventDefault();
+        if (event.dataTransfer.items) {
+            // Use DataTransferItemList interface to access the file(s)
+            for (var i = 0; i < event.dataTransfer.items.length; i++) {
+                // If dropped items aren't files, reject them
+                if (event.dataTransfer.items[i].kind === 'file') {
+                    processDrop(event.dataTransfer.items[i].getAsFile());
+                }
+            }
+        } else {
+            // Use DataTransfer interface to access the file(s)
+            for (var i = 0; i < ev.dataTransfer.files.length; i++) {
+                processDrop(event.dataTransfer.files[i]);
+            }
+        } 
+    
+        // Pass event to removeDragData for cleanup
+        removeDragData(event)
+    }
+
+    function removeDragData(event) {
+        if (event.dataTransfer.items) {
+            // Use DataTransferItemList interface to remove the drag data
+            event.dataTransfer.items.clear();
+        } else {
+            // Use DataTransfer interface to remove the drag data
+            event.dataTransfer.clearData();
+        }
+    }
+
+    function floydSteinbergDither(sourceImageData, destImageData) {
+        const w = sourceImageData.width, h = sourceImageData.height; 
+        // Need more than 8 bit precision for intermediate results, so copy to int32
+        const temp = new Int32Array(w * h * 4);
+        temp.set(sourceImageData.data, 0);
+
+        for (let y = 0; y < h; ++y) {
+            for (let x = 0; x < w; ++x) {
+                // Color channel
+                for (let c = 0; c < 4; ++c) {
+                    // current buffer index
+                    const i = (y * w + x) * 4 + c;
+
+                    // current value
+                    const v = temp[i];
+
+                    // quantized value
+                    let q = Math.min(255, Math.max(0, Math.round(v * (15 / 255))));
+                    q = q | (q << 4);
+                        
+                    const err = v - q;
+
+                    // Store the quantized color back
+                    temp[i] = q;
+
+                    // If not in the last column, spread error horizontally
+                    if (x < w - 1) { temp[i + 4] += (err * 7) >> 4; }
+                    
+                    // If not the last row, spread error to the row below
+                    if (y < h - 1) {
+                        // bottom left
+                        if (x > 0) { temp[i + (w - 1) * 4] += (err * 3) >> 4; }
+
+                        // bottom center
+                        temp[i + w * 4] += (err * 5) >> 4;
+
+                        // bottom right
+                        if (x < w - 1) { temp[i + (w + 1) * 4] += (err * 1) >> 4; }
+                    }
+                } // c
+            } // x
+        } // y
+
+        // Copy back
+        destImageData.data.set(temp);
+    }
+
+
+    function nearestNeighborQuantize(sourceImageData, destImageData) {
+        // Quantize all channels
+        for (let i = 0; i < sourceImageData.data.length; ++i) {
+            let c = sourceImageData.data[i];
+            // Nearest-neighbor quantization to 4 bits.  Could
+            // optionally dither here.
+            c = Math.round(c * (15 / 255));
+            
+            // Extend back to 8 bits by duplication
+            c = c | (c << 4);
+            
+            destImageData.data[i] = c;
+        }
+    }
+
+
+    function processDrop(file) {
+        // Do not use a regex here; it will not give the
+        // correct result
+        if (! file.type.match('^image\/.*')) return;
+        
+        var reader = new FileReader();
+        reader.addEventListener('loadend', function() {
+            var sourceImage = new Image();
+            sourceImage.crossOrigin = 'anonymous';
+            sourceImage.src = reader.result;
+            sourceImage.onload = function () {
+                console.log("loaded " + file.name);
+
+                // Get the image data
+                var canvas = document.createElement('canvas');
+                canvas.width = sourceImage.width;
+                canvas.height = sourceImage.height;
+
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(sourceImage, 0, 0);
+                var sourceImageData = ctx.getImageData(0, 0, sourceImage.width, sourceImage.height);
+                var destImageData = ctx.createImageData(sourceImage.width, sourceImage.height);
+
+                var dither = document.getElementById('dither').checked;
+                    
+                if (dither) {
+                    floydSteinbergDither(sourceImageData, destImageData);
+                } else {
+                    nearestNeighborQuantize(sourceImageData, destImageData);
+                }
+                
+                // Put the data back to create a data URL
+                ctx.putImageData(destImageData, 0, 0);
+                var destImage = new Image();
+                destImage.src = canvas.toDataURL();
+                destImage.setAttribute('data-downloadurl', 'image/png:' + file.name);
+                destImage.onload = function () {
+                    // Show the input
+                    var sourceDisplay = document.getElementById('source');
+                    sourceDisplay.innerHTML = '';
+                    sourceImage.style.width = '256px';
+                    sourceImage.style.height = '' + Math.round(sourceImage.height * 256 / sourceImage.width) + 'px';
+                    sourceDisplay.appendChild(sourceImage);
+                    
+                    // Show the output
+                    var destDisplay = document.getElementById('dest');
+                    destDisplay.innerHTML = '';
+                    destDisplay.appendChild(destImage);
+                    destImage.style.width = '256px';
+                    destImage.style.height = '' + Math.round(destImage.height * 256 / destImage.width) + 'px';
+                };
+                
+            };
+            sourceImage.onerror = function () {
+                console.log("failed to load image " + file.name);
+            };
+        });
+    
+        reader.readAsDataURL(file);
+    }
+
+
+    function onDragOver(event) { event.preventDefault(); }
+  </script>
+</head>
+<body>
+  <h1>quantize✜</h1>
+  <div style="margin: auto; max-width: 600px">
+    <p>
+      Drop an image on the target below to quantize it to sRGBA4 PNG, which will match
+      quadplay's input requirements and compress better than sRGBA8.
+    </p>
+    <p>
+      I recommend the free
+      tools <a href="https://imageoptim.com/mac">ImageOptim</a> for
+      MacOS, <a href="https://pnggauntlet.com/">PNGGauntlet</a> for
+      Windows, and <a href="https://trimage.org/">TriImage</a> for
+      Linux for further compressing the resulting PNG files by up to
+      90%.
+    </p>
+  </div>
+
+  <center>
+    <input type="checkbox" id="dither" checked><label for="dither">Dither</label>
+
+    <table style="text-align: center; margin-top: 34px">
+      <tr>
+        <td>Input sRGBA8 Image</td>
+        <td></td>
+        <td>Output sRGBA4 Image</td>
+      </tr>
+      <tr valign="center">
+        <td>
+          <div id="source" ondrop="onDrop(event)" ondragover="onDragOver(event)" style="position: relative; background: #666; border: 2px solid #000; width: 256px; min-height: 128px; text-align: center">
+            <span style="color: #fff; position: absolute;  top: 50%;  left: 50%;  transform: translate(-50%, -50%);">Drop image here</span>
+          </div>
+        </td>
+        <td style="font-size: 100px">
+          ➡
+        </td>
+        <td>
+          <div id="dest" style="position: relative; background: #666; border: 2px solid #000; width: 256px; min-height: 128px; text-align: center">
+          </div>
+        </td>
+      </tr>
+    </table>
+  </center>
+</body>

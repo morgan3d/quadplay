@@ -1,0 +1,99 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "pyxlscript",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#literals"
+		},
+		{
+			"include": "#headers"
+		},
+		{
+			"include": "#builtins"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.pyxlscript",
+				"match": "\\b(if|else|pass|while|for|return|continue|break|let|in|const|def|true|false)\\b"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.pyxlscript",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.pyxlscript",
+					"match": "\\\\."
+				}
+			]
+		},
+		"comments": {
+			"patterns": [
+				{
+					"name": "comment.block.pyxlscript",
+					"begin": "/\\*",
+					"end": "\\*/",
+					"patterns": [
+						{
+							"name": "constant.character.escape.pyxlscript",
+							"match": "\\\\."
+						}
+					]
+				},
+				{
+					"name": "comment.line.double-slash.pyxlscript",
+					"match": "//.*$"
+				}
+			]
+		},
+		"literals": {
+			"patterns": [{
+				"name": "constant.numeric.pyxlscript",
+				"match": "\\b[\\d]+\\b"
+			}]
+		},
+		"headers": {
+			"patterns": [{
+				"name": "markup.heading.pyxlscript",
+				"match": "\\b(enter|frame|leave)\\b|\\─+|\\═+|\\A[a-zA-Z][a-zA-Z0-9]*\\b"
+			}]
+		},
+		"builtins": {
+			"patterns": [
+				{
+					"name": "keyword.operator.new.pyxlscript",
+					"match": "\\b(saveLocal|drawText|anyButtonPress)\\b"
+				},
+				{
+					"name": "keyword.operator.new.pyxlscript.mode",
+					"match": "\\b(getPreviousMode|getMode|launchGame|popMode|pushMode|quitGame|resetGame|setMode)\\b"
+				},
+				{
+					"name": "keyword.operator.new.pyxlscript.type",
+					"match": "\\b(isArray|isBoolean|isFunction|isNil|isNaN|isNumber|isObject|isString|type)\\b"
+				},
+				{
+					"name": "keyword.operator.new.pyxlscript.array",
+					"match": "\\b(arrayValue|concatenate|equivalent|extend|fastRemoveKey|find|join|pop|popFront|push|pushFront|removeKey|removeValues|resize|reverse|reversed|rndValue|shuffle|shuffled|size|slice|sort)\\b"
+				},
+				{
+					"name": "keyword.operator.new.pyxlscript.string",
+					"match": "\\b(concatenate|find|formatNumber|lowerCase|parse|reversed|shuffled|size|slice|split|unparse|upperCase)\\b"
+				}
+			]
+		}
+	},
+	"scopeName": "source.pyxl"
+}
