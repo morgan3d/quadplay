@@ -36,7 +36,7 @@ the following freely-available software:
 Required:
 
 - [**This repository**](https://github.com/morgan3d/quadplay/archive/master.zip)
-- A [**code editor**](https://code.visualstudio.com/) such as VS Code, Emacs, or VIM. Use its Python mode or install our provided editor extensions
+- A **code editor** such as [VS Code](https://code.visualstudio.com/), Emacs, or VIM. Use Python mode for PyxlScript or install our provided editor extensions
 - [**Python**](https://www.python.org/downloads/) (any version)
 - A **modern web browser** such as Chrome, Edge, Safari, or Firefox
 - [**The manual**](https://morgan3d.github.io/quadplay/doc/manual.md.html)
