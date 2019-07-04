@@ -32,6 +32,7 @@ Software Features:
 - Run locally and offline using Python + web browser
 - Hundreds of built-in Creative Commons assets
 - Scripts and external editor support for power users
+- A programming language called PyxlScript for easy game coding
 
 API:
 
@@ -64,7 +65,7 @@ such as `games/mygame` and start changing it. Look at the Built-In Games
 section for more examples.
 
 Read the PICO-8 section, Python section, or JavaScript section of this
-document for some starting tips on the PyxlScript language.
+document for some starting tips on the PyxlScript language used in quadplay✜.
 
 Launch your program in the emulator and debugger from the command line
 on Windows, MacOS, or Linux with the `quadplay` command:
@@ -135,10 +136,10 @@ Every time you push the play button (F5) or reload button (Ctrl+R) in
 the emulator, it will reload your code and assets from disk.
 
 You can use the built-in assets from the developer kit, existing ones
-from sites like http://opengameart.org and http://freesound.org, or 
-create your own using:
+from sites like [OpenGameArt.org](http://opengameart.org) and
+[FreeSound](http://freesound.org), or create your own using:
 
-- PNG pixel art editor for sprites and fonts (_[Gimp](https://www.gimp.org/), AseSprite, Photoshop, GraphicsGale, etc._)
+- PNG pixel art editor for sprites and fonts (_[Gimp](https://www.gimp.org/), [AseSprite](https://www.aseprite.org/), Photoshop, GraphicsGale, etc._)
 - MP3 sound tools (_[BFXR](https://www.bfxr.net/), [Audacity](https://www.audacityteam.org/), etc._)
 - TMX map tool ([Tiled](https://www.mapeditor.org/))
 
@@ -151,19 +152,19 @@ Workflow
 ------------------------------------------------------------------------------------
 
 You should create your programs however works best for you. Here's how
-I like to work in quadplay✜.
+I like to work in quadplay✜:
 
 1. I start with a project file to load standard assets from `quad://`
    and single *mode* called `Play.pyxl` that has no sections. I write a
    little code to draw the game.
 
 2. Pretty soon, I need some state that persists between frames, so I separate
-   `Play.pyxl` into top level initialization code a `frame` *section*. I then declare variables
+   `Play.pyxl` into top level initialization code and `frame` *section*. I then declare variables
    in in the top level of the mode, and as my main loop grows too long, I start to define helper
    functions there as well.
    
 3. At some point, I'm ready for *another mode*. This is usually for 
-   gameplay reasons, not polish because it is still early in the project.
+   gameplay reasons, and not polish, because it is still early in the project.
    This might be a map or inventory screen, for example. As soon as there
    is a new mode, I need to have variables that can be seen by both modes.
    So, I also create a `common.pyxl` or other *script* to store the global
@@ -191,6 +192,8 @@ Built-In Games
 ------------------------------------------------------------------------------------
 
 Two complete games and a few demos are included to show how to use the APIs.
+The links here will launch the game in your browser if you are accessing this manual
+from a web site or your local machine running the quadplay✜ emulator.
 
 
 ### Playable
@@ -205,7 +208,7 @@ Two complete games and a few demos are included to show how to use the APIs.
 - Screenshake
 - Menus and pause screen
 - Frame hooks
-- Y = down coordinates
+- Coordinates with +Y pointing down
 
 
   <center><img src="../games/speedstreet/logo.png" width=320px style="border:0"></center>
@@ -216,14 +219,15 @@ Two complete games and a few demos are included to show how to use the APIs.
 - Simple physics
 - Character selection screen
 - Orthographic 2.5D graphics
-- Y = up coordinates
+- Coordinates with +Y pointing up
 - `spriteOverrideColor`
 
 
 ### Examples
 
 [Hello, World](../console?game=quad://examples/helloworld&IDE=1) is a minimal example of a program with
-one mode, one asset, and no sections or optional elements that puts text on the screen.
+one mode, one asset, and no sections or optional elements, and that simply puts text
+on the screen.
 
 [RPG Demo](../console?game=quad://examples/rpg&IDE=1) is a simple example of a single-player RPG game design:
 
@@ -286,11 +290,10 @@ features are [*modes*](#modes), [*2.5D graphics*](#2.5dgraphics), and [*frame ho
 
 ### Modes
 
-Your program consists of one or more *modes*. Common modes are
-"Play", "Pause", "Title", "Inventory", "CutScene", and
-"GameOver". Use `setMode()` to change which mode the program is in. 
+Your program consists of one or more *modes* which are game states that the
+player will experience. Common modes are "Play", "Pause", "Title", "Inventory", "CutScene", and "GameOver". Use `setMode()` to change which mode the program is in. 
 Clicking on the "Modes" label on the left side of the IDE draws
-the modes and transitions for your program.
+a diagram showing the modes and transitions for your program.
 
 ![Mode diagram for the Quadpaddle sample game, as shown in the IDE.](modes.png width=50% style="image-rendering:auto")
 
@@ -328,7 +331,7 @@ the modes as the states.
     example, <code style="white-space: nowrap">// setMode(GameOver, "0 lives")</code>
     will add a link from the current mode to the `GameOver` mode.
 
-The syntax of a mode with multiple sections is similar to markdown format: 
+The syntax of a mode with multiple sections is similar to [Markdown](https://en.wikipedia.org/wiki/Markdown) format: 
 
 1. the name of the mode on the first line
 2. a line of `=`, `═`, or `⚌` characters to underline the mode name
@@ -425,7 +428,7 @@ Graphics in PyxlScript are similar to other 2D rendering APIs. You can
 set the background color, draw basic shapes and text, and render
 sprites with some features such as flipping and rotation.  There's
 special support for drawing whole tile maps as well.  All drawing
-commands support an _alpha_ channel for transparency.
+commands support an [_alpha_ channel](https://en.wikipedia.org/wiki/Alpha_compositing) for transparency.
 
 What is special about the 2.5D graphics in PyxlScript is that each
 drawing command has an associated _z-order_. 
@@ -437,12 +440,12 @@ different z-order values will render from low to high values.
 This means that you can issue drawing commands in whatever order is
 convenient and let the rendering system organize them as you wish.
 It also makes it easy to render orthographic games such as [_Double Dragon_]("https://en.wikipedia.org/wiki/Double_Dragon_(video_game)"),
-isometric games such as [_Populous_]("https://en.wikipedia.org/wiki/Populous_(video_game)"), and other
-games with semi-3D effects.
+isometric games such as [_Populous_]("https://en.wikipedia.org/wiki/Populous_(video_game)"), and other games with semi-3D effects. The included
+[_Speed Street_](../console?game=quad://games/speedstreet&IDE=1) game demonstrates this.
 
 Although the screen is cleared to the background color every frame,
 all of the drawing commands are stored for one previous frame. 
-this allows dialogue and pause screens to re-render the previous
+This allows dialogue and pause screens to re-render the previous
 mode's last frame using `drawPreviousMode()` so that they can
 render on top of them. This rendering retains z-order, so you can
 even inject new graphics in between objects from a previous mode's
@@ -453,8 +456,8 @@ frozen image.
 
 In addition to the mode's frame code, you can dynamically register
 hook functions to run at the beginning of every frame using `addFrameHook()`. These are
-useful for timers and animations. For example, to draw an explosion
-every frame until it dissipates or to shake the screen for three
+useful for timers and animations. For example, you can use this to draw an
+explosion every frame until it dissipates or to shake the screen for three
 frames.
 
 Frame hooks can be tied to only run in a specific mode or to run in
@@ -481,14 +484,15 @@ quadplay✜:
   - Put your top-level and `_init` code into the top level
   - Put your `_update` and `_draw` combined into the `frame` section
 - Declare variables with `let` and `const` instead of `local`
-- Can't begin a variable name with an underscore
+- Variable names can't begin with an underscore
 - Arrays start at 0
-- `size(x)` instead of `#x`
+- Use `size(x)` instead of `#x`
 - Use `:` between the beginning of a block and its body
 - Blocks have no `end` statements and indentation is significant
 - Use `:` within object literals instead of `=`
 - It is safe to mutate containers inside iterator loops
-- You have to load a font before you can use `drawText`. Several are provided!
+- You have to load a font before you can use `drawText`.
+Several are provided; see the Fonts section.
 - Enjoy the overloaded operators, array functions, z-order, and alpha blending
 
 
@@ -498,21 +502,21 @@ The PyxlScript language feels a lot like Python, with these changes:
 
 - Comments begin with `//` instead of `#`
 - Explicitly declare variables with `let` and `const`
-- `size(x)` instead of `len(x)`
-- `debugPrint` instead of `print`
-- `for low <= i < high` instead of `for i in range(low, high)`
-- Can't begin a variable name with an underscore
+- Use `size(x)` instead of `len(x)`
+- Use `debugPrint` instead of `print`
+- Use `for low <= i < high` instead of `for i in range(low, high)`
+- Variable names can't begin with an underscore
 - The `==` operator is pointer equality (Python `is`). Use `equivalent` for object structural equality tests. 
 - Variables have block scope instead of function scope
 - Function variables have lexical scope (no `global` statement required)
 - No integer division (use `floor`)
 - It is safe to mutate containers inside iterator loops
 - No comparison operator chaining, except on `for` loop definition
-- `keys(obj)` and `values(obj)` instead of `obj.keys()` and `obj.values()` (although you almost never need either)
+- Use `keys(obj)` and `values(obj)` instead of `obj.keys()` and `obj.values()` (although you almost never need either)
 - Use `extend(a, b)` for Python `objA.update(objB)` and `listA.extend(listB)`
 - Use `concatenate(a, b)` for Python `listA + listB` and `{**objA, **objB}`
 - Use `x = if t then a else b` for Python `x = a if t else b`
-- `true`, `false`, `nil` instead of `True`, `False`, `None`
+- Use `true`, `false`, `nil` instead of `True`, `False`, `None`
 
 ### JavaScript
 
@@ -521,16 +525,16 @@ The PyxlScript language feels a lot like JavaScript strict mode, with these chan
 - Use PyxlScript `==` in place of JavaScript `===`
 - Use `:` and indentation instead of `{}` for defining blocks
 - Use `def` instead of `function`
-- Can't begin a variable name with an underscore
+- Variable names can't begin with an underscore
 - No `;` required, except for multiple statements on the same line
-- `size(x)` instead of `x.length`
-- `for k in object:` instead of `for (k in object)`
-- `for v in array:` instead of `for (v of array)`
+- Use `size(x)` instead of `x.length`
+- Use `for k in object:` instead of `for (k in object)`
+- Use `for v in array:` instead of `for (v of array)`
 - It is safe to mutate containers inside iterator loops
 - There are no anonymous functions
 - Function names are not lifted to the containing function's scope
 - Use `x = if t then a else b` for JavaScript `x = t ? a : b`
-- `debugPrint` instead of `console.log`
+- Use `debugPrint` instead of `console.log`
 - Enjoy the overloaded operators for vectors
 
 
@@ -948,7 +952,7 @@ String
   data structure. Functions, built-ins, and recursive arrays cannot be converted.
 
 `reversed(string)`
-: Returns a ranomized version of the string in O(size) time.
+: Returns a reversed version of the string in O(size) time.
 
 `shuffled(string)`
 : Returns a shuffled version of the string in O(size) time.
@@ -1012,10 +1016,10 @@ Vector
 
 Most of the math functions and operators defined for numbers also 
 operate component-wise on vectors represented as structures or arrays.
-For example, `clamp`, `min`, `+`, `/`, etc.
+For example, `clamp()`, `min()`, `+`, `/`, etc.
 
 The following vector operations can be applied to any array or object,
-including `xy` and `rgb` values, except where specific key names are mentioned:
+including `xy()` and `rgb()` values, except where specific key names are mentioned:
 
 `cross(a, b)`
 : Return the vector cross product of two arrays of length three each or two vectors with
@@ -1073,7 +1077,7 @@ including `xy` and `rgb` values, except where specific key names are mentioned:
 Function
 ---------------------------------------------------------
 
-`call(f,a,b,...)`
+`call(f, a, b, ...)`
 : Invoke function `f` with arguments `a`, `b`, etc.
 
 
@@ -1185,7 +1189,7 @@ Math
 : Transition from 0 at `t = t_start` to 1 at `t = t_end`. All arguments must be numbers.
   Typically used as `lerp(A, B, smoothstep(lo, hi, t))` where `A` and `B` are colors or points.
   This is a common graphics function for cubic Hermite interpolation. See also 
-  the [GLSL documentation](https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/smoothstep.xhtml)
+  the [GLSL documentation](https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/smoothstep.xhtml).
 
 `smootherstep(t_start, t_end, t)`
 : Transition from 0 at `t = t_start` to 1 at `t = t_end` with more
@@ -1209,7 +1213,7 @@ Math
 
 `x`               |  -5  |  -4  |  -3  |  -2  |  -1  |  0  |  1  |  2  |  3  |  4  |  5  |  6  
 ------------------|-----:|-----:|-----:|-----:|-----:|----:|----:|----:|----:|----:|----:|-----:
-`mid(x, 0, 4-1)`  |  0   |  0   |   0  |   0  |   0  |  0  |  1  |  2  |  3  |  3  |  3  |  3  
+`clamp(x, 0, 4-1)`|  0   |  0   |   0  |   0  |   0  |  0  |  1  |  2  |  3  |  3  |  3  |  3  
 `x mod 4`         |  -1  |  0   |  -3  |  -2  |  -1  |  0  |  1  |  2  |  3  |  0  |  1  |  2  
 `loop(x, 4)`      |  3   |  0   |   1  |   2  |   3  |  0  |  1  |  2  |  3  |  0  |  1  |  2  
 `oscillate(x, 4)` |  1   |  2   |   3  |   2  |   1  |  0  |  1  |  2  |  3  |  2  |  1  |  0  
@@ -4067,10 +4071,11 @@ the emulator, it will reload your code and assets from disk.
 Visual Studio Code
 ------------------------------------------------------------------------------------
 
-Visual Studio Code natively supports the `.json` files. To configure it to support
-Pyxscript files as well:
+Visual Studio Code natively supports the `.json` files. To configure it with beta 
+PyxlScript file support as well, run the following command line from the 
+`quadplay/tools` directory:
 
-TODO: Josef
+```code --install-extension vscode-pyxlscript.vsix```
 
 <!--
 1. Run Visual Studio Code. 
@@ -4096,7 +4101,7 @@ directory (mine is `~/.emacs.d/lisp`) and add the following lines to
 your `~/.emacs` file:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Lisp
-(autoload 'pyxlscript-mode "pyxscript-mode")
+(autoload 'pyxlscript-mode "pyxlscript-mode")
 (add-to-list 'auto-mode-alist '("\\.pyxl\\'" . pyxlscript-mode))
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -4251,9 +4256,9 @@ The quadplay✜ IDE and compiler are copyright 2019 Morgan McGuire, including:
 
 - [`index.html`](../console/index.html)
 - [`quadplay.css`](../console/quadplay.css)
-- [`pyxscript-compiler.js`](../console/pyxscript-compiler.js)
+- [`pyxlscript-compiler.js`](../console/pyxlscript-compiler.js)
 - [`quadplay-runtime.js`](../console/quadplay-runtime.js)
-- [`quadplay-host-websw.js`](../console/quadplay-runtime.js)
+- [`quadplay-host.js`](../console/quadplay-host.js)
 - [`quadplay-ide.js`](../console/quadplay-ide.js)
 - [`quadplay-font.js`](../console/quadplay-font.js)
 - [`quadplay-load.js`](../console/quadplay-load.js)
@@ -4388,6 +4393,12 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
+Next:
+
+- Linked API references in the manual to their detailed documentation
+- Fixed links in code font to still be colored blue
+- Corrected definition of `reversed(string)`
+
 2019 July 4: Public Beta
 
 - Removed `extendTransform()`, `getClip()`, and `getTransform()` from the beta release
@@ -4425,7 +4436,7 @@ Changes for both the specification and implementation in each release.
 <link rel="shortcut icon" href="../console/favicon.ico">
 
 
-<script>markdeepOptions = {tocStyle:'long', definitionStyle:'long'};</script>
+<script>markdeepOptions = {tocStyle:'long', definitionStyle:'long', linkAPIDefinitions: true};</script>
 <link rel="stylesheet" href="slate.css">
 <style>
 @font-face { font-family: quadplay; src: url(Audiowide-Regular.ttf) }
@@ -4441,6 +4452,9 @@ width: 200px;
 }
 body {
 left: 230px;
+}
+.md .longTOC a, .md .longTOC code, .md a:link, .md a:visited, .md a:link code, .md a:visited code {
+color: #80bfff !important;
 }
 </style>
 <title>manual✜</title>
