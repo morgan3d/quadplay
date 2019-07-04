@@ -1,0 +1,131 @@
+#!/bin/sh
+# -*- python -*-
+# Shell commands follow
+# Next line is bilingual: it starts a comment in Python, and is a no-op in shell
+""":"
+# Find a suitable Python interpreter
+for cmd in python3 python python2 ; do
+   command -v > /dev/null $cmd && exec $cmd $0 "$@"
+done
+
+echo "The quadplay local script requires Python (2.x or 3.x) to be installed on your system." >2
+
+exit 2
+
+":"""
+# Previous line is bilingual: it ends a comment in Python, and is a no-op in shell
+# Shell commands end here
+# Python script follows
+
+import os, time, platform, sys, threading, socket
+
+port = 8000
+
+try:
+   import msvcrt
+except ImportError:
+   import termios, atexit, select
+   stdinFd = sys.stdin.fileno()
+   new_term = termios.tcgetattr(stdinFd)
+   old_term = termios.tcgetattr(stdinFd)
+   def set_normal_term():
+       termios.tcsetattr(stdinFd, termios.TCSAFLUSH, old_term)
+   
+   # New terminal setting unbuffered
+   new_term[3] = (new_term[3] & ~termios.ICANON & ~termios.ECHO)
+   termios.tcsetattr(stdinFd, termios.TCSAFLUSH, new_term)
+   
+   # Support normal-terminal reset at exit
+   atexit.register(set_normal_term)
+   
+   
+onWindows = (platform.system() == 'Windows')
+onMac = (platform.system() == 'Darwin')
+
+myip = ''
+try:
+   print('Getting IP address...')
+   myip = socket.gethostbyname(socket.gethostname())
+except:
+   if onMac:
+      # The above can fail apparently randomly on MacOS (https://bugs.python.org/issue35164)
+      # and has happened to us. This is a workaround:
+      print('gethostbyname failed due to a known on MacOS configuration error. Falling back to\nipconfig...')
+   
+      myip = os.popen('ipconfig getifaddr en0').read().strip()
+      if not myip:
+         myip = os.popen('ipconfig getifaddr en1').read().strip()
+         if not myip:
+            print('WARNING: ipconfig could not find a valid en0 or en1 adapter. Server IP address is unknown.')
+            myip = '127.0.0.1'
+   else:
+      print('WARNING: gethostbyname unexpectedly failed. Server IP address is unknown.')
+      myip = '127.0.0.1'
+         
+url = 'http://' + myip + ':' + str(port) + '/console/?IDE=1'
+print('_________________________________________________________________________\n')
+
+if len(sys.argv) > 1:
+    url += '&game=' + sys.argv[1]
+else:
+    print('Loading default launcher game. You can supply the URL or local relative path to your game on\nthe command line, for example "quadplay foo/mygame", to load it directly.\n')
+
+print('\nServing from:\n\n   ' + url + '\n\nNote that your firewall may need to be configured to load on other devices.\n')
+
+try:
+   # Python 3
+   from http.server import HTTPServer, SimpleHTTPRequestHandler
+   print('Initializing quadplay server using Python3')
+except ImportError:
+   # Python 2
+   from SimpleHTTPServer import SimpleHTTPRequestHandler
+   import SocketServer
+   HTTPServer = SocketServer.TCPServer
+   print('Initializing quadplay server using Python2')
+
+   
+# Platform independent keyboard key press detection
+def kbhit():
+   if onWindows:
+      return msvcrt.kbhit()
+   else:
+      dr, dw, de = select.select([sys.stdin], [], [], 0)
+      return dr != []
+
+httpd = 0
+def launchServer():
+    global httpd
+    try:
+        # '' = 0.0.0.0 = all local IP addresses, needed for
+        # supporting devices other than just localhost
+        server_address = ('', port)
+        httpd = HTTPServer(server_address, SimpleHTTPRequestHandler)
+        print(httpd.socket.getsockname())
+        httpd.serve_forever()
+    except OSError:
+        print('Not starting a local server, since one is already running.');
+
+serverThread = threading.Thread(target=launchServer)
+print('Starting local server thread...')
+serverThread.start()
+print('\n**Press any key to terminate the server when done**\n')
+time.sleep(2)
+
+if onWindows:
+    # Require NO surrounding quotes on Windows for it to interpret the URL
+    os.system('start ' + url)
+elif onMac:
+    # Require quotes on Unix systems so that bash does not interpret &
+    # as a shell option to run in another thread
+    os.system('open "' + url + '"')
+else:
+    os.system('xdg-open "' + url + '"')
+
+while not kbhit():
+    time.sleep(0.25)
+
+print('\nShutting down...')
+
+if httpd: httpd.shutdown()
+time.sleep(1)
+sys.exit(0)
