@@ -31,9 +31,9 @@ The 1.0 release will also provide a complete web-based IDE that
 requires no local installation.
 
 To get started in Pro mode, you'll need Windows, MacOS, or Linux and 
-the following freely-available software:
+the following freely-available software.
 
-Required:
+_Required_:
 
 - [**This repository**](https://github.com/morgan3d/quadplay/archive/master.zip)
 - A **code editor** such as [VS Code](https://code.visualstudio.com/), Emacs, or VIM. Use Python mode for PyxlScript or install our provided editor extensions
@@ -41,7 +41,7 @@ Required:
 - A **modern web browser** such as Chrome, Edge, Safari, or Firefox
 - [**The manual**](https://morgan3d.github.io/quadplay/doc/manual.md.html)
 
-Optional:
+_Optional_:
 
 - An account on the [forums](http://quadplay.freeforums.net)
 - A TMX map editor such as [Tiled](https://www.mapeditor.org/)
