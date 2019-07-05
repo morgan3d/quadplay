@@ -1,7 +1,7 @@
-vim-nanoscript-syntax
+vim-pyxlscript-syntax
 ---------------------
 
-Add indent, syntax and ftdetect support for quadplay's nanoscript language.
+Add indent, syntax and ftdetect support for quadplay's pyxlscript language.
 
 Installation
 ------------
