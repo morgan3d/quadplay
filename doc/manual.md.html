@@ -4117,7 +4117,15 @@ edit and add the following before the `autoload` line:
 Vim
 ------------------------------------------------------------------------------------
 
-TODO: Stephan.
+To install the PyxlScript mode for Vim, you'll need to modify your .vimrc.
+
+If you're using a plugin manager like dein (https://github.com/Shougo/dein.vim) :
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+call dein#add("path/to/quadplay/tools/vim-pyxlscript-syntax", {'frozen':1})
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+
+If you want to directly copy the files into your ~/.vim directory, make sure you copy (or symlink) all the files into the corresponding directories like they structured in the plugin.
 
 [`pyxlscript.vim`](../tools/pyxlscript.vim)
 
