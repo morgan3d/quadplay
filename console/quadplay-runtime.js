@@ -981,6 +981,7 @@ var sign = Math.sign;
 var exp = Math.exp;
 var sqrt = Math.sqrt;
 var cbrt = Math.cbrt;
+var tan = Math.tan;
 
 function signNonZero(x) { return (x < 0) ? -1 : 1; }
 
