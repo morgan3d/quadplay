@@ -706,6 +706,7 @@ Field             | Values   | Meaning
 `p`               | 0 or 1   | 1 if the ⓟ button is currently pressed
 `pp` or `pressedP`| 0 or 1   | 1 if the ⓟ button was just pressed this frame
 `releasedP`       | 0 or 1   | 1 if the ⓟ button was just released this frame
+`prompt`          | `{...}`  | An object mapping button names to text prompts (see below)
 
 The axes are affected by the current transformation _at the end of the frame_, 
 as set by `setTransform()`. The angles are always clockwise in screen space.
@@ -714,6 +715,16 @@ The `joy` variable is equal to `pad[0]` as shorthand for single-person games.
 
 The `anyButtonPress()` function returns true if any gamepad's button was just
 pressed.
+
+The `prompt` property maps `a`, `b`, ... `p`, `q`, `up`, `lt`, `dn`, `rt` to
+strings of text that can be used to describe controls to players in a way
+mapped to the physical controller they are currently using instead of the quadplay
+native controls. For example, `"Press " + pad[0].prompt.a + " to jump"`. In this example,
+`prompt.a` returns the name of the button on the player's current controller that maps
+to `pad[0].a`. These may be more than a single character, for example `"SPC"` for spacebar. 
+In the current implementation, `prompt` _always_ maps the buttons to the characters 
+`ⓐ ⓑ ⓒ ⓓ ⓟ ⓠ ⍐ ⍇ ⍗ ⍈`, but this is likely to change in future implementations.
+
 
 
 Modes
@@ -867,11 +878,14 @@ Array
   array of length n.
 
 `removeKey(array, i)`
-: Delete element `i` from the array, preserving order. O(n) expected time.
+: Remove element `i` from the array, preserving order. O(n) expected time.
 
 `removeValues(array, x)`
-: Delete every instance of `x` in the array, maintaining order. O(n) time in the original
+: Remove every instance of `x` in the array, maintaining order. O(n) time in the original
   length of the array.  Does nothing if `x` is not in the array.
+
+`removeAll(array)`
+: Remove everything from the array. Same as `resize(array, 0)`.
 
 `resize(array, n)`
 : Change the length of the array. O(size(array) + n) time if growing, O(1) if shrinking.
@@ -1004,6 +1018,11 @@ Object
 `removeValues(object, v)`
 : Remove every instance of `v` from the object.
 
+`removeAll(object)`
+: Remove everything from the object. It is faster to assign to a new, empty object than to
+  use this function. `removeAll()` is for when it is important to retain a pointer
+  to the original object because it is shared.
+
 `size(object)`
 : The number of entries in the object.
 
@@ -1024,7 +1043,7 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 `cross(a, b)`
 : Return the vector cross product of two arrays of length three each or two vectors with
   `x`, `y`, and `z` fields. For arguments of length two or without a `z` component,
-  returns `a.x * b.y - a.y * b.x`.
+  returns `a.x * b.y - a.y * b.x`, which is the 2D wedge product.
 
 `direction(v)`
 : `v / magnitude(v)` if the magnitude is nonzero, otherwise the zero vector. That is,
@@ -1981,11 +2000,10 @@ endpoints and borders.
   Values default according to the positional argument version.
 
 `drawSprite(sprite, pos, angle (= 0), scale (= nil), opacity (= 1), z (= 0), overrideColor (= nil))`
-: Draw sprite `spr` with its center at `pos`. `pos` must have at
+: Draw sprite `sprite` with its center at `pos`. `pos` must have at
   least `x` and `y` fields. The sprite appears at `z` in the z-order
   (defaults to 0). The `scale` parameter must be nil (which is treated
-  as 1), a number that is not zero, or a vector with `x` and `y`
-  fields that are not zero.  It is applied before the sprite is
+  as `xy(1,1)`), a number that is not zero, or an `xy()` with nonzero fields.  Scale is applied before the sprite is
   rotated.  Sprites are not flipped or scaled by `setTransform`
   values, but the rotation and center are affected by the
   `setTransform` scaling.
@@ -2236,7 +2254,7 @@ indices. The map's z-axis corresponds to layers.
 : Returns the color of the pixel in `map` at the corresponding
   `mapCoord` and `round(layer)`. Returns `nil` for out of
   bounds values and empty sprites. See also
-  `getMapPixelColorByDrawCoord`.
+  `getMapPixelColorByDrawCoord()`.
 
 `getMapPixelColorByDrawCoord(map, drawCoord, drawZ (= 0), replacementArray (= nil))`
 : Returns the pixel color in `map` at the corresponding `drawCoord`
@@ -2247,13 +2265,13 @@ indices. The map's z-axis corresponds to layers.
 `getMapSprite(map, mapCoord, layer (= 0), replacementArray (= nil))`
 : Returns the sprite in `map` at the corresponding `mapCoord` and
   `layer` using rounding. Returns `nil` for out of bounds values. See
-  also `getMapSpriteByDrawCoord`.
+  also `getMapSpriteByDrawCoord()`.
 
 `getMapSpriteByDrawCoord(map, drawCoord, drawZ (= 0), replacementArray (= nil))`
 : Returns the sprite in `map` at the corresponding `drawCoord` and
   `drawZ` using `transformDrawToMap` and rounding to compute the
   coordinates. Returns `nil` for out of bounds values. See also
-  `getMapSprite`.
+  `getMapSprite()`.
 
 `setMapSprite(map, mapCoord, sprite, layer (= 0))`
 : Sets the corresponding map sprite. Does nothing if `mapCoord` is out of bounds.
@@ -2263,7 +2281,7 @@ indices. The map's z-axis corresponds to layers.
 
 `transformDrawToMap(map, drawCoord)`
 : Returns the _fractional_ map coordinates of `drawCoord`.  See also
-  `transformMapToDraw` and `mget`.
+  `transformMapToDraw()` and `mget()`.
 
 `transformDrawZToMapLayer(map, z)`
 : Using the current transformation, returns the _fractional_ map layer
@@ -2275,7 +2293,8 @@ indices. The map's z-axis corresponds to layers.
 
 `transformMapToDraw(map, mapCoord)`
 : Returns the draw coordinates of `mapCoord`. Integer mapCoords correspond to the centers of tiles,
-  which will be fractional pixels for even map tile sizes. See also `transformDrawToMap` and `mgetPixel`.
+  which will be fractional pixels for even map tile sizes. See also `transformDrawToMap()` 
+  and `getMapPixelColor()`.
 
 
 Collisions
@@ -2619,6 +2638,7 @@ Sprites
 
 ### Other
 ![`quad://sprites/ortho-city-32x16.sprite.json`](../sprites/ortho-city-32x16.png)
+![`quad://sprites/controllers-32x22.sprite.json`](../sprites/controllers-32x22.png)
 
 
 
@@ -2685,6 +2705,7 @@ Sounds
 ![`quad://sounds/loop-built-this.sound.json`](../sounds/loop-built-this.mp3) ![`quad://sounds/loop-fight.sound.json`](../sounds/loop-fight.mp3) 
 ![`quad://sounds/loop-select.sound.json`](../sounds/loop-select.mp3)  ![`quad://sounds/loop-metal.sound.json`](../sounds/loop-metal.mp3) 
 ![`quad://sounds/loop-puzzle.sound.json`](../sounds/loop-puzzle.mp3) ![`quad://sounds/loop-triumphant.sound.json`](../sounds/loop-triumphant.mp3) 
+![`quad://sounds/loop-dark-thriller.sound.json`](../sounds/loop-dark-thriller.mp3)
 
 
 ### Coin
@@ -3961,7 +3982,7 @@ frame
 
 Most Common:
 
-∅ ° ½ ² ³ ξ ∞ ε ≠ ≤ ≥ π ∊ ⌊ ⌋ ⌈ ⌉ ‖ ≟
+∅ ° ½ ² ³ ξ ∞ ε ≠ ≤ ≥ π ∊ ⌊ ⌋ ⌈ ⌉ ‖ ≟ θ
 
 
 All:
@@ -3971,7 +3992,8 @@ All:
 ₀ ₁ ₂ ₃ ₄ ₅ ₆ ₇ ₈ ₉ ₊ ₋ ₍ ₎ ₐ ᵦ ᵢ ⱼ ₓ ₖ ᵤ ₙ 
 ∅ ∞ ° ½ ⅓ ⅔ ¼ ¾ ⅕ ⅖ ⅗ ⅘ ⅙ ⅐ ⅛ ⅑ ⅒ ∫ ± м н к
 « » ¿ ★ × ⊢ ∙ ○ ● ◻ ◼ △ ▲ ✓ ♠ ♥ ♣ ♦ §
-↑ ↓ ← → ↖ ↗ ↙ ↘ ⓐ ⓑ ⓒ ⓓ ⓟ ⓠ ⍐ ⍇ ⍗ ⍈ ❖ ✜ ♆ © ℵ 
+↑ ↓ ← → ↖ ↗ ↙ ↘ ⓐ ⓑ ⓒ ⓓ ⓕ ⓟ ⓠ ⓧ ⓨ Ⓞ ⍍ ▣ ⧉ ☰ 
+⍐ ⍇ ⍗ ⍈ ❖ ✜ ♆ © ℵ 
 A B Γ Δ E Z H Θ I K Λ M N Ξ O Π P Σ T Φ X Ψ Ω
 α β γ δ ε ζ η θ ι κ λ μ ν ξ o π ρ σ τ ϕ χ ψ ω ¡
 ς ş ğ İ Ş Ğ υ г ᵃ ᵈ ᵉ ʰ ⁱ ʲ ᵏ ᵐ ⁿ ᵒ ʳ ˢ ᵗ ᵘ ˣ ᵝ
@@ -3988,6 +4010,11 @@ various language possible. Not all letters are available for subscripts
 and superscripts in Unicode, so quadplay✜ restricts those available
 as variables to an overlapping set.
 
+The encircled characters and arrows are intended for use as button prompts.
+The characters `Ⓞ ⍍ ▣ ⧉ ☰` are drawn in quadplay✜ fonts
+to represent the buttons with approximately those symbols on PlayStation and
+Xbox controllers. The `ⓧ` character is drawn to ambiguously represent the "X"
+buttons on PlayStation, Xbox, and Nintendo controllers. 
 
 Advanced Tools
 ====================================================================================
@@ -4401,11 +4428,28 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-Next:
+2019 July 12: Beta update 2
 
+- Added `loop-dark-thriller.mp3` audio clip
+- Fixed `mget` --> `getMapSprite()` in manual
+- Fixed Unicode characters not appearing correctly on the ad blocker warning page
+- Added `removeAll()`
+- Made IDE mode not automatically full-screen the emulator
+- Added specifically-stylized versions of `ⓧ`, `ⓨ`, `Ⓞ`, `⍍`, `▣`,`⧉`, `☰`, `ⓕ` to fonts for use as button prompts for specific controllers
+- Fixed `overrideColor` in `drawSprite()`
+- Added `controllers-32x22.sprite.json`
+- Added `prompt` field to `pad` instances/`joy` variable for button prompts
+- Fixed missing `tan()` function in implementation
+
+
+2019 July 5: Beta update 1
+
+- Vim editor plugin (Stephan)
+- Visual Studio Code plugin (Josef)
 - Linked API references in the manual to their detailed documentation
 - Fixed links in code font to still be colored blue
 - Corrected definition of `reversed(string)`
+
 
 2019 July 4: Public Beta
 
@@ -4436,6 +4480,7 @@ Next:
 
 
 2019 May 1: Public API Preview
+
 
 2018 July 1: Private Alpha
 

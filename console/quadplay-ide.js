@@ -122,6 +122,7 @@ function onMobileWelcomeTouch() {
     requestFullScreen();
 }
 
+
 function requestFullScreen() {
     // Full-screen the UI. This can fail if not triggered by a user interaction.
     try { 
@@ -166,11 +167,8 @@ function setUIMode(d, noAutoPlay) {
     // Check the appropriate radio button
     document.getElementById({'IDE':'IDEUIButton', 'Emulator':'emulatorUIButton', 'Test':'testUIButton', 'Maximal':'maximalUIButton'}[uiMode]).checked = 1;
 
-    if ((uiMode === 'Maximal') || (uiMode === 'Emulator')) {
-
-        if (deployed || ! useIDE) {
-            requestFullScreen();
-        }
+    if (((uiMode === 'Maximal') || (uiMode === 'Emulator')) && ! useIDE) {
+        requestFullScreen();
     }
 
     onResize();
@@ -1680,17 +1678,21 @@ function mainLoopStep() {
         // Time to update the graphics period
         lastGraphicsPeriodCheckTime = frameEnd;
 
+        // "periods" are integer multiples of 1000 ms / 60 frames = 16.7 ms
         const oldPeriod = Runtime._graphicsPeriod;
+        
+        // (f [ms / frame]) / (1000/60 [ms/frame]) = f * 60 / 1000
         let nextPeriod = frameTime * (60 / 1000);
 
         // If we're almost making frame rate, do not increase the graphics period
         if (nextPeriod * 0.96 > Runtime._graphicsPeriod) {
-            // Program is running too slowly, increase the period
+            // Increase the period because the program is running too slowly 
             nextPeriod = clamp(Math.round(nextPeriod), periodCapThisRun, 6);
         } else if (Math.ceil(nextPeriod) <= Runtime._graphicsPeriod) {
-            // The program can afford to run faster
+            // The program is running fast. Drop down to the new period
             nextPeriod = clamp(Math.ceil(nextPeriod), periodCapThisRun, 6);
         } else {
+            // Do not change frame rate
             nextPeriod = oldPeriod;
         }
 

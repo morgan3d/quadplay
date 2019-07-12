@@ -38,10 +38,7 @@ var _modeFramesStack = [];
 
 var _postFX;
 
-
-function isNaN(a) {
-    return Number.isNaN(a);
-}
+var isNaN = Number.isNaN;
 
 function resetPostEffects() {
     _postFX = {
@@ -266,6 +263,19 @@ function rndValue(t) {
         return t[k[rndInt(k.length - 1)]];
     } else {
         return undefined;
+    }
+}
+
+
+function removeAll(t) {
+    if (Array.isArray(t)) {
+        t.length = 0;
+    } else {
+        for (var key in t){
+            if (t.hasOwnProperty(key)){
+                delete t[key];
+            }
+        }
     }
 }
 
@@ -973,6 +983,7 @@ function abs(x) {
 
 var sin = Math.sin;
 var cos = Math.cos;
+var tan = Math.tan;
 var acos = Math.acos;
 var asin = Math.asin;
 var atan = Math.atan2;
@@ -991,14 +1002,35 @@ var _screen;
 var _previousGraphicsCommandList = [];
 var _graphicsCommandList = [];
 var _background = Object.seal({r:0,g:0,b:0,a:1});
-var joy = Object.seal({x:0, dx:0, y:0, dy:0, xx:0, yy:0, angle:0, dangle:0, a:0, b:0, c:0, d:0, p:0, q:0, aa:0, bb:0, cc:0, dd:0, pp:0, qq:0, pressedA:0, pressedB:0, pressedC:0, pressedD:0, pressedP:0, pressedQ:0, releasedA:0, releasedB:0, releasedC:0, releasedD:0, releasedP:0, releasedQ:0, index: 0});
-var pad = [joy,
-           Object.seal({x:0, dx:0, y:0, dy:0, xx:0, yy:0, angle:0, dangle:0, a:0, b:0, c:0, d:0, p:0, q:0, aa:0, bb:0, cc:0, dd:0, pp:0, qq:0, pressedA:0, pressedB:0, pressedC:0, pressedD:0, pressedP:0, pressedQ:0, releasedA:0, releasedB:0, releasedC:0, releasedD:0, releasedP:0, releasedQ:0, index: 1}),
-           Object.seal({x:0, dx:0, y:0, dy:0, xx:0, yy:0, angle:0, dangle:0, a:0, b:0, c:0, d:0, p:0, q:0, aa:0, bb:0, cc:0, dd:0, pp:0, qq:0, pressedA:0, pressedB:0, pressedC:0, pressedD:0, pressedP:0, pressedQ:0, releasedA:0, releasedB:0, releasedC:0, releasedD:0, releasedP:0, releasedQ:0, index: 2}),
-           Object.seal({x:0, dx:0, y:0, dy:0, xx:0, yy:0, angle:0, dangle:0, a:0, b:0, c:0, d:0, p:0, q:0, aa:0, bb:0, cc:0, dd:0, pp:0, qq:0, pressedA:0, pressedB:0, pressedC:0, pressedD:0, pressedP:0, pressedQ:0, releasedA:0, releasedB:0, releasedC:0, releasedD:0, releasedP:0, releasedQ:0, index: 3})
-          ];
 
-var hashview = new DataView(new ArrayBuffer(8));
+function _makePad(index) {
+    return Object.seal({
+        x:0, dx:0, y:0, dy:0, xx:0, yy:0,
+        angle:0, dangle:0,
+        a:0, b:0, c:0, d:0, p:0, q:0,
+        aa:0, bb:0, cc:0, dd:0, pp:0, qq:0,
+        pressedA:0, pressedB:0, pressedC:0, pressedD:0, pressedP:0, pressedQ:0,
+        releasedA:0, releasedB:0, releasedC:0, releasedD:0, releasedP:0, releasedQ:0,
+        index: index,
+        prompt: Object.seal({
+            a: 'ⓐ',
+            b: 'ⓑ',
+            c: 'ⓒ',
+            d: 'ⓓ',
+            p: 'ⓟ',
+            q: 'ⓠ',
+            up: '⍐',
+            lt: '⍇',
+            dn: '⍗',
+            rt: '⍈'
+        })
+    });
+}
+
+var joy = _makePad(0);
+var pad = [joy, _makePad(1), _makePad(2), _makePad(3)];
+
+var _hashview = new DataView(new ArrayBuffer(8));
 
 function _hash(d) {
     // 32-bit FNV-1a
@@ -1012,9 +1044,9 @@ function _hash(d) {
         }
     } else {
         // Number
-        hashview.setFloat64(0, d);
+        _hashview.setFloat64(0, d);
         for (var i = 7; i >= 0; --i) {
-            hval ^= hashview.getUint8(i);
+            hval ^= _hashview.getUint8(i);
             hval += (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24);
         }
 
@@ -2382,8 +2414,8 @@ function drawSprite(spr, center, angle, scale, opacity, z, overrideColor) {
         scale = spr.scale;
         angle = spr.angle;
         center = spr.pos;
-        spr = spr.sprite;
         overrideColor = spr.overrideColor;
+        spr = spr.sprite;
     }
 
     if (Array.isArray(spr) && spr.spriteSize && Array.isArray(spr[0])) {
