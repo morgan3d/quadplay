@@ -359,6 +359,7 @@ function onOpenButton() {
 function onHomeButton() {
     onStopButton();
     loadGameIntoIDE(launcherURL, function () {
+        onResize();
         onPlayButton();
     });
 }
@@ -1404,7 +1405,7 @@ function setFramebufferSize(w, h) {
     updateImageData = ctx.createImageData(w, h);
     
     // The layout may need updating as well
-    onResize();
+    setTimeout(onResize, 0);
 }
 
 
@@ -1655,6 +1656,7 @@ function mainLoopStep() {
             }
         } else if (e.launchGame !== undefined) {
             loadGameIntoIDE(e.launchGame, function () {
+                onResize();
                 onPlayButton();
             });
         } else {
