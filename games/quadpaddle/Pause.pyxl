@@ -46,6 +46,6 @@ if modeFrames > 8:
 if anyButtonPress():
    playAudioClip(selectSound)
    if choice == 0:
-      popMode("Chose resume")
+      popMode() because "Chose resume"
    else:
-      setMode(Title, "Chose quit")
+      setMode(Title) because "Chose quit"

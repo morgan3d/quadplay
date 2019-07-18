@@ -72,10 +72,10 @@ else if joy.aa or joy.bb:
 
       if choice == "Demo":
          createGame()
-         setMode(Faceoff, "Demo Mode")
+         setMode(Faceoff) because "Demo Mode"
       else:
          saveLocal("choice", choice)
-         setMode(TeamSelect, "1-4P")
+         setMode(TeamSelect) because "1-4P"
 
 selection = loop(selection - 4% joy.x, N)
 

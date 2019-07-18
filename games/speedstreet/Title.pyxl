@@ -63,5 +63,5 @@ drawText(font, "©2019 Morgan McGuire | @CasualEffects | https://casual-effects.
 for p in pad: if p.yy: choice = 1 - choice
 if anyButtonPress() or debugPhysics:
    stopSound(music)
-   if choice == 0: setMode(Play, "any button press")
-   else: quitGame("choose quit")
+   if choice == 0: setMode(Play) because "any button press"
+   else: quitGame() because "choose quit"

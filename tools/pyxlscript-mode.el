@@ -38,7 +38,7 @@
   (setq-local comment-end "*/")
   (setq-local comment-end-skip "[ \t]*\\*+/")
 
-  (let ((keyword-exp (regexp-opt '("assert" "debugPrint" "debugWatch" "let" "const" "mod" "local" "preservingTransform" "for" "in" "while" "until" "if" "then" "else" "pushMode" "popMode" "resetGame" "setMode" "return" "def" "break" "continue") 'words))
+  (let ((keyword-exp (regexp-opt '("assert" "debugPrint" "debugWatch" "let" "const" "mod" "local" "preservingTransform" "for" "in" "while" "until" "if" "then" "else" "pushMode" "popMode" "resetGame" "setMode" "return" "def" "break" "continue" "bitand" "bitor" "bitxor" "because" "quitGame" "launchGame") 'words))
         (literal-exp (regexp-opt '("deg" "true" "false" "nan" "screenSize" "pi" "epsilon" "infinity" "nil") 'words))
         (builtin-exp (regexp-opt '("rayIntersect" "drawBounds" "drawDisk" "resetClip" "resetTransform" "setClip" "drawLine" "drawSpriteRect" "intersectClip" "drawPoint" "drawRect" "setBackground" "textWidth" "getSpritePixelColor" "drawSprite" "drawText" "drawTri" "getTransform" "getClip" "getRotationSign" "setTransform" "xy" "xyz"
                                    "anyButtonPress" "drawMap" "getMode" "getPreviousMode" "getMapPixelColor" "getMapPixelColorByDrawCoord" "getMapSprite" "setMapSprite" "getMapSpriteByDrawCoord" "setMapSpriteByDrawCoord" "unparse" "formatNumber" "upperCase" "lowerCase"

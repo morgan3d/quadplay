@@ -54,4 +54,4 @@ else if modeFrames < 240:
 else:
    referee.animation = 1
    playAudioClip(dropAudioClip)
-   setMode(Play, "Drop puck")
+   setMode(Play) because "Drop puck"

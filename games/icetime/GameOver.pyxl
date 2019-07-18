@@ -41,4 +41,4 @@ frame
 drawText({font: scoreFont, text: "GAME OVER", pos: xy(0, 7), color:#f00, outline:#f, xAlign:"center"})
 drawText({font: scoreFont, text: msg, pos: xy(0, -7), color:color, outline:#f, shadow:#a, xAlign:"center"})
   
-if anyButtonPress(): setMode(Title, "anyButtonPress()")
+if anyButtonPress(): setMode(Title) because "anyButtonPress()"

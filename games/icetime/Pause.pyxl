@@ -33,8 +33,8 @@ for p in pad:
    // in case other players' input is still coming in
    if modeFrames > 45:
       if p.aa:
-         if selection == 0: popMode("Press A")
-         else: setMode(Title, "Choose Quit")
-      else if p.pp or p.qq or p.bb: popMode("Press P, Q, or B")
+         if selection == 0: popMode() because "Press A"
+         else: setMode(Title) because "Choose Quit"
+      else if p.pp or p.qq or p.bb: popMode() because "Press P, Q, or B"
    else if p.xx or p.yy:
       selection = (selection + 1) mod size(choiceArray)

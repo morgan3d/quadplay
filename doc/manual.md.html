@@ -308,13 +308,13 @@ why the mode changed. It is also used by the IDE to visualize the state machine
 of your program and label the transitions. `getMode()` returns the current mode,
 which acts like a special constant.
 
-You can also separate the mode file into different sections for code that runs
-once:
+You can also separate the mode file into different sections:
 
-- Top level: when the game is first started. Usually just variable and function declarations.
-- `enter`: when this mode becomes active
-- `frame`: every frame while this mode is active. Put your drawing and simulation code here.
-- `leave`: when the game changes to another mode
+- Top level: runs once when the game is first started. Usually just variable and function declarations.
+- `enter`: event when this mode becomes active via `pushMode()` or `setMode()`. `enter` may be followed by an argument list
+   that will be filled with the values passed to `setMode()` or `pushMode()`.
+- `frame`: event that runs every frame while this mode is active. Put your drawing and simulation code here.
+- `leave`: even that runs when the game changes to another mode via `popMode()` or `setMode()`
 
 You can think of these as callbacks, although they are not regular
 functions and can only be invoked directly by the console. 
@@ -327,8 +327,8 @@ the modes as the states.
     [impossible](https://en.wikipedia.org/wiki/Undecidable_problem) to
     do this for all programs, but it can usually do a good job. When
     the automatic algorithm misses a link, you can give it a hint
-    using a commented out `setMode` call in your mode file.  For
-    example, <code style="white-space: nowrap">// setMode(GameOver, "0 lives")</code>
+    using a commented out `setMode()` call in your mode file.  For
+    example, <code style="white-space: nowrap">// setMode(GameOver) because "0 lives"</code>
     will add a link from the current mode to the `GameOver` mode.
 
 The syntax of a mode with multiple sections is similar to [Markdown](https://en.wikipedia.org/wiki/Markdown) format: 
@@ -370,9 +370,9 @@ for c in choices:
 
 // Button press to choose
 if pad[0].aa:
-   if selection == 0:      setMode(Play,  "Chose play")
-   else if selection == 1: setMode(Map,   "Chose map")
-   else:                   setMode(Title, "Chose title")
+   if selection == 0:      setMode(Play)  because "Chose play"
+   else if selection == 1: setMode(Map)   because "Chose map"
+   else:                   setMode(Title) because "Chose title"
 
 
 leave
@@ -619,16 +619,31 @@ Input     | Player 1 Key| Player 2 Key| Xbox One   | PS4        | SNES
 
 The emulator screen tries to maintain an integer multiple of the
 native pixel resolution to prevent distortion of pixel art. When
-running on a very high resolution screen it relaxes this constraint to
-use the full screen effectively.
+running on a very high resolution screen (greater than 2.5x), it
+relaxes this constraint to use the full screen effectively. 
 
-Some exact ratios are:
+As a result, the emulator is pixel-perfect on small displays and fills
+the screen onlarge ones.
 
-- 640x360: 1x (384x224)
-- 800x480, 1024x768: 2x (768x448)
-- 1280x720: 3x (1152x672)
-- 1600x900, 1920x1080: 4x (1536x896)
-- 1920x1200: 5x (1920x1120)
+Some exact ratios when using quadplay's maximum 384x224 resolution are:
+
+Screen     | Factor      | Used      | Efficiency
+----------:|------------:|----------:|---------:
+640x360    |  1x         | 384x224   | 37%
+640x480    |  1x         | 384x224   | 28%
+800x480    |  2x         | 768x448   | 72%
+1024x768   |  2x         | 768x448   | 44%
+*1280x720* |  *3x*       | 1152x672  | *84%*
+1366x768   |  3x         | 1152x672  | 74%
+1440x900   |  3x         | 1152x672  | 60%
+*1600x900* |  *4x*       | 1536x896  | *96%*
+1680x1050  |  4x         | 1536x896  | 78%
+1920x1080  |  4x         | 1536x896  | 66%
+*1920x1200*|  *5x*       | 1920x1120 | *93%*
+
+If building a physical quadplay✜ device _without_ on-screen controls,
+I therefore recommend using a 1280x720, 1600x900, or 1920x1200 display
+to maximally fill the screen.
 
 
 Quantize
@@ -741,33 +756,34 @@ Modes
   compared against mode names, but not to `setMode`, which requires an
   explicit mode name. during mode initialization, `getMode()` returns `nil`.
 
-`launchGame(url, note (= ""))`
+`launchGame(url)`
 : Load a different game. This is primarily used by the built-in
   quadplay✜ launcher, but is available to all programs.
 
-`popMode(note (= ""))`
+`popMode()`
 : Go back to the previous mode that invoked `pushMode`, restoring the
   draw calls and `modeFrames` as of that point. It is a runtime error
   to invoke `popMode()` when the mode was not entered from
   `pushMode()`. Invokes the `leave` section of the current mode but
   not the `enter` section of the mode being returned to.
 
-`pushMode(Mode, note (= ""))`
+`pushMode(Mode, ...)`
 : Enter a new mode but remember the current mode. Combines their draw calls
   for `drawPreviousMode()`. Useful for modal dialogs, such as pause screens, 
   inventory screens, and dialogue. Does not invoke the `leave` section of
   the current mode. Does invoke the `enter` section of the mode being entered.
+  Any arguments after the `Mode` are passed to the `enter` section.
 
-`quitGame(note (= ""))`
+`quitGame()`
 : Quit the game and exit to the IDE or the launcher. Note that games do not
   form a stack. Quitting a game returns to the built-in quadplay✜ launcher or
   IDE, and not the game that launched it.
 
-`resetGame(note (= ""))`
+`resetGame()`
 : Reset the game, restoring all assets and starting again from the
   initial mode.
 
-`setMode(Mode, note (= ""))`
+`setMode(Mode, ...)`
 : Immediately switch to the new mode. The current mode stops executing and the new
   mode begins.
   
@@ -780,6 +796,7 @@ Modes
   no effect on the executing program.
   
   Erases the `pushMode` stack but remembers its draw calls.
+  Any arguments after the `Mode` are passed to the `enter` section.
  
 When changing modes via `setMode()`, the order of operations is:
 
@@ -789,7 +806,7 @@ When changing modes via `setMode()`, the order of operations is:
    `drawPreviousMode()` calls.
 3. Any `leave` code executes on the _previous_ mode.
 4. `modeFrames = 0`, 
-5. Any `enter` code executes on the _new_ mode.
+5. Any `enter` code executes on the _new_ mode and arguments supplied.
  
 
 Types
@@ -841,6 +858,14 @@ Array
   - `"oscillate"`
   - `"loop"`
   - `"clamp"` (default, other unsupported values are silentely treated as clamp instead of failing)
+
+`clone(array)`
+: Return a shallow clone of `array`. Pointer structures are preserved and loops
+  are OK. Built-in objects such as spritesheets and functions are not cloned.
+
+`deepClone(array)`
+: Return a deep clone of `array`. Pointer structures are preserved and loops
+  are OK. Built-in objects such as spritesheets and functions are not cloned.
 
 `concatenate(array1, array2)`
 : Create a new array that contains all elements of `array1` followed by all elements of `array2`.
@@ -992,6 +1017,14 @@ String
 
 Object
 ---------------------------------------------------------
+`clone(object)`
+: Return a shallow clone of `object`. Pointer structures are preserved and loops
+  are OK. Built-in objects such as spritesheets and functions are not cloned.
+
+`deepClone(object)`
+: Return a deep clone of `object`. Pointer structures are preserved and loops
+  are OK. Built-in objects such as spritesheets and functions are not cloned.
+
 `concatenate(object1, object2)`
 : Create a new object that is the union of `object1` and `object2`,
   where `object2` keys override in the case of collisions.
@@ -1130,12 +1163,25 @@ Math
 `cos(x)`
 : Cosine, `x` in radians 
 
+`deepClone(v)`
+: Return a deep clone of `v`. Pointer structures are preserved and loops
+  are OK. Built-in objects such as spritesheets and functions are not cloned.
+
 `hash(x, y)`
 : A hash value of string or number `x`, returning a value on [0, 1].
   If `y` is specified, the hash considers the union of the values.
 
 `lerp(a, b, t)`
 : Returns `a * (1 - t) + b * t`. See also `smoothstep()` and `smootherstep()`.
+
+`log(x)`
+: Natural logarithm (base _e_) of `x`, _ln x_ in math notation.
+
+`log2(x)`
+: Logarithm base 2 `x`, _lg x_ in math notation.
+
+`log10(x)`
+: Logarithm base 10 `x`, _log x_ in math notation.
 
 `loop(x, hi)`
 : Real-number floored modulus. Wraps `x` to the range [0, `hi`). `hi` defaults to `1.0` if not specified.
@@ -2052,9 +2098,12 @@ endpoints and borders.
 : Returns the current net clipping region as an array of six numbers in the order of
   `getClip` arguments.-->
 
-`getSpritePixelColor(sprite, pos)`
+`getSpritePixelColor(sprite, pos, result (= nil))`
 : Returns the color of pixel `pos` in the sprite as an `rgba`
-  value. If the pixel is out of bounds for that sprite, returns nil.
+  value. When `result` is not `nil`, it is used to store the result
+  to avoid memory allocation. If the pixel is out of bounds for that sprite, 
+  returns `nil` if there is no `result` specified and `rgba(0,0,0,0)`
+  in `result` otherwise.
   
 `intersectClip(x (= nil), y (= nil), z (= nil), w (= nil), h (= nil), d (= nil))`
 : Intersect the current clipping region with this new one. Ignores the
@@ -2590,6 +2639,130 @@ and persistent worlds.
   characters for the unparsed value for each key and a maximum size of
   128 keys per application. There is no way for two different games to
   read each other's values.
+
+
+Intrinsics
+-----------------------------------------------------------
+
+quadplay✜ can execute about 10,000 vector operations per frame even
+on embedded platforms. This is sufficient to program most mathematical
+routines in a readable way and intrinsics are is not required.
+
+For some _very_ math intensive routines, such as those with thousands
+of particles, it is necessary to run slightly faster at the expense of
+code that is harder to maintain. In these cases, use the function
+calls below, which produce inline assembly instructions for the
+quadplay✜ platform.
+
+These calls have no argument checking. The vector functions execute
+about twice as fast as regular overloaded operator arithmetic. The scalar
+versions may be substantially faster than overloaded operators.
+
+`ADD(s1, s2)`
+: Returns the scalar sum.
+
+`DIV(s1, s2)`
+: Returns the scalar quotient.
+
+`MAD(s1, s2, s3)`
+: Returns `s1 * s2 + s3`.
+
+`MUL(s1, s2)`
+: Returns the scalar product.
+
+`SUB(s1, s2)`
+: Returns the scalar difference.
+
+`RGB_ADD_RGB(srcrgb, srcrgb, dstrgb)`
+: Element addition.
+
+`RGB_SUB_RGB(srcrgb1, srcrgb2, dstrgb)`
+: Element subtraction.
+
+`RGB_MUL_RGB(srcrgb1, srcrgb2, dstrgb)`
+: Element multiplication.
+
+`RGB_DIV_RGB(srcrgb1, srcrgb2, dstrgb)`
+: Element division.
+
+`RGB_MUL(srcrgb, srcs, dstrgb)`
+: Vector-scalar product.
+
+`RGB_DIV(srcrgb, srcs, dstrgb)`
+: Vector-scalar quotient.
+
+`RGB_DOT_RGB(srcrgb1, srcrgb2)`
+: Returns the scalar result.
+
+`RGBA_ADD_RGBA(srcrgba1, srcrgba2, dstrgba)`
+: Element addition.
+
+`RGBA_SUB_RGBA(srcrgba1, srcrgba2, dstrgba)`
+: Element subtraction.
+
+`RGBA_MUL_RGBA(srcrgba1, srcrgba2, dstrgba)`
+: Element multiplication.
+
+`RGBA_DIV_RGBA(srcrgba1, srcrgba2, dstrgba)`
+: Element division.
+
+`RGBA_MUL(srcrgba, srcs, dstrgba)`
+: Vector-scalar product.
+
+`RGBA_DIV(srcrgba, srcs, dstrgba)`
+: Vector-scalar quotient.
+
+`RGBA_DOT_RGBA(srcrgba1, srcrgba2)`
+: Returns the scalar result.
+
+`XY_ADD_XY(srcxy1, srcxy2, dstxy)`
+: Element addition.
+
+`XY_SUB_XY(srcxy1, srcxy2, dstxy)`
+: Element subtraction.
+
+`XY_MUL_XY(srcxy1, srcxy2, dstxy)`
+: Element multiplication.
+
+`XY_DIV_XY(srcxy1, srcxy2, dstxy)`
+: Element division.
+
+`XY_MUL(srcxy1, srcs2, dstxy)`
+: Vector-scalar product.
+
+`XY_DIV(srcxy1, srcs2, dstxy)`
+: Vector-scalar quotient.
+
+`XY_DOT_XY(srcxy1, srcxy2)`
+: Returns the scalar result.
+
+`XY_CRS_XY(srcx1, srcx2)`
+: 2D cross product (z component of treating as a 3D cross product). Returns the scalar result.
+
+`XYZ_ADD_XYZ(srcxyz1, srcxyz2, dstxyz)`
+: Element addition.
+
+`XYZ_SUB_XYZ(srcxyz1, srcxyz2, dstxyz)`
+: Element subtraction.
+
+`XYZ_MUL_XYZ(srcxyz1, srcxyz2, dstxyz)`
+: Element multiplication.
+
+`XYZ_DIV_XYZ(srcxyz1, srcxyz2, dstxyz)`
+: Element division.
+
+`XYZ_MUL(srcxyz1, srcs2, dstxyz)`
+: Vector-scalar product.
+
+`XYZ_DIV(srcxyz1, srcs2, dstxyz)`
+: Vector-scalar quotient.
+
+`XYZ_DOT_XYZ(srcxyz1, srcxyz2)`
+: Returns the scalar result.
+
+`XYZ_CRS_XYZ(srcxyz1, srcxyz2, dstxyz)`
+: Cross product. `dstxyz` can be the same object as one of the input arguments.
+
 
 
 
@@ -3392,22 +3565,23 @@ These are reserved tokens that cannot be used as variable names. Some
 of them are keywords, and some of them do nothing now but are reserved
 for future use.
 
-`and`, `arguments`, `args`, `as`, `async`, `auto`, `await`,
-`begin`, `bitand`, `bitnot`, `bitor`, `bitashl`, `bitshl`, `bitshr`, `break`, 
+`ADD`, `and`, `arguments`, `args`, `as`, `async`, `at`, `auto`, `await`,
+`because`, `begin`, `bitand`, `bitnot`, `bitor`, `bitashl`, `bitshl`, `bitshr`, `break`, 
 `catch`, `class`, `const`, `cont`, `coroutine`, `continue`, `constructor`,
-`deg`, `do`, `delete`, `def`, 
+`deg`, `do`, `delete`, `def`, `DIV`,
 `elif`, `end`, `extern`, `enum`,
 `final`, `finally`, `for`, `from`, `freeze`, `function`, 
 `get`, `global`, `go`, `goto`, 
 `has`,
 `if`, `in`, `implements`, `inherits`, `include`, `import`, `interface`,
-`let`, `local`,
+`launchGame`, `let`, `local`,
 `NaN`, `new`, `nil`, `nonlocal`, `not`, `null`, 
-`main`, `mod`, `module`, `mode`,
+`main`, `MAD`, `mod`, `module`, `mode`, `MUL`,
 `or`, 
 `public`, `private`, `protected`, `prototype`, `package`, `preserve`, `preservingTransform`,
-`ret`, `return`, `reset`,
-`seal`, `set`, `show`, `static`, `strict`,
+`quitGame`,
+`ret`, `return`, `resetGame`,
+`seal`, `set`, `show`, `static`, `strict`, `SUB`,
 `to`, `toString`, `then`, `try`, `throw`, `template`, 
 `until`, `use`, `using`, `unless`,
 `var`,
@@ -3489,6 +3663,13 @@ Comments
 
 Comments follow C/C++/Java/JavaScript syntax of `//` for single line comments and `/*`...`*/`
 for multi-line comments. 
+
+`because "reason"`
+: The special `because` statement allows a compile-time string comment to follow 
+  a mode or game change control flow statement such as `setMode()`. It acts as
+  a machine-readable comment that the IDE will use to automatically annotate the program
+  in the debug output and the mode diagram.
+
 
 
 Operators
@@ -3758,15 +3939,24 @@ Flow Control
 
 The flow control statements are:
 
-- `if` conditional with optional `else` and `else if` clauses
-- `while` loop
-- `until` loop
-- `for` loop, with optional `with` expansion
-- `break` and `continue` within loops
-- `setMode(ModeName, "note")` to switch game modes. The note is optional.
-- `pushMode(ModeName, "note")` and `popMode("note")` to temporarily 
+- Blocks:
+  - `if` conditional with optional `else` and `else if` clauses
+  - `while` loop
+  - `until` loop
+  - `for` loop, with optional `with` expansion
+  - `break` and `continue` within loops
+- Modes:
+  - `setMode(ModeName)` to switch game modes. The note is optional.
+  - `pushMode(ModeName)` and `popMode()` to temporarily 
    enter a mode game mode. The notes are optional.
-- `resetGame("note")` to reset all state and restart the game.
+- Game:
+  - `resetGame()` to reset all state and restart the game.
+  - `quitGame()` to end the current game and return to the launcher.
+  - `launchGame(url)` to launch a different game.
+
+`setMode()`, `pushMode()`, `popMode()`, `resetGame()`, `quitGame()`, and `launchGame()` may be 
+followed by the keyword `because` and a reason that is a compile-time string. For example, `quitGame() because "lives = 0"`.
+The reason allows the IDE to label the transitions on the mode diagram for the game.
 
 There is no switch, do loop, goto, or try/catch.
 
@@ -4346,15 +4536,15 @@ All built-in assets are Creative Commons licensed have complete license and copy
 Beta Tester Notes
 =====================================================================================
 
-The API is mostly complete at this point. I'm focusing on bug fixes
-and minor tweaks to improve convenience. Only some minor helpers,
-primarily for AI tasks, will be added before release.
+The API is mostly complete. I'm focusing on bug fixes and minor tweaks
+to improve convenience. Only some minor helpers, primarily for AI
+tasks, will be added before release.
 
 Expect rasterization rules for disks and triangles to change slightly
 in order to better align for subpixel cases. The current sprite, map,
 line, and rectangle rendering alignment is final. I will add separate
-functions for watertight triangle and line rasterization, which 
-give different results than what is typically useful for individual
+functions for watertight triangle and line rasterization, which give
+different results than what is typically useful for individual
 primitives.
 
 The `makeSpline()` function using `"continue"` mode will change to be a
@@ -4362,6 +4552,10 @@ third-order curve outside of the bounds instead of a line.
 
 IDE will receive major new features throughout and after the beta
 phase. This includes editors for code, sprites, and maps.
+
+`launchGame()` will probably accept additional arguments to pass to the 
+launched game at some point. The syntax for that game accepting the
+arguments has not yet been determined.
 
 The Library tab of the launcher program is currently hard-coded to the
 three built-in games. During the beta period this will change to show
@@ -4427,6 +4621,20 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2019 July 17: Beta update 3
+
+- Added syntax highlighting in emacs for `bitand`, `bitor`, and `bitxor`
+- Documented `log()`, `log2()`, and `log10()` 
+- Added optional `result` argument for `getSpritePixelColor()` to reduce memory allocation
+- Made `at`, `because`, `resetGame`, `launchGame`, and `quitGame` into reserved words
+- *Incompatible change*: Changed how the note/reason works for `pushMode`, `popMode`, `setMode`, `launchGame`, `quitGame`, and `resetGame`.
+  The syntax now uses the `because` keyword after the complete expression instead of including the note as an argument.
+- `enter` can now take optional arguments, which are provided by `setMode()` or `pushMode()`
+- Added `deepClone()`
+- 10% performance optimization for adjacent `drawPoint()` calls
+- Added the Intrinsics section
+
 
 2019 July 13: Beta update 2
 

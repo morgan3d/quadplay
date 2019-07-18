@@ -24,11 +24,11 @@ def startGame(numPlayers):
 
    createLevel(1)
    for P in paddleArray: P.pad = pad[0]
-   if numPlayers >= 1: paddleArray[1].pad = paddleArray[3].pad = pad[1]
-   if numPlayers >= 2: paddleArray[2].pad = pad[2]
-   if numPlayers >= 3: paddleArray[3].pad = pad[3]
+   if numPlayers ≥ 1: paddleArray[1].pad = pad[1]; paddleArray[3].pad = pad[1]
+   if numPlayers ≥ 2: paddleArray[2].pad = pad[2]
+   if numPlayers ≥ 3: paddleArray[3].pad = pad[3]
    
-   setMode(Play, "# players selected")
+   setMode(Play) because "# players selected"
 
 
 frame
@@ -84,5 +84,5 @@ drawEntity(titleBall)
 if anyButtonPress():
    playAudioClip(selectSound)
    if menuItem < 4:         startGame(menuItem)
-   else if menuItem == 4:   pushMode(Credits, "Show credits selected")
+   else if menuItem == 4:   pushMode(Credits) because "Show credits selected"
    else:                    quitGame()

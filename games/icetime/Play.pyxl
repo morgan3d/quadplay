@@ -115,14 +115,14 @@ if time < 0:
    ++period
    playAudioClip(whistleAudioClip)
    time = secondsPerPeriod
-   if period == 3: setMode(GameOver, "'60' min")
-   else: setMode(Intermission, "'20' min")
+   if period == 3: setMode(GameOver) because "'60' min"
+   else: setMode(Intermission) because "'20' min"
 
 
 drawNets()
 
    
-for p in pad: if p.pp or p.qq: pushMode(Pause, "ⓟ or ⓠ")
+for p in pad: if p.pp or p.qq: pushMode(Pause) because "ⓟ or ⓠ"
 
 // Move referee away from the puck
 if puck and puck.pos.y > 34 and |puck.pos.x - referee.pos.x| < 14: if referee.pos.y > 30: referee.pos.y -= 0.5
@@ -177,4 +177,4 @@ for player in playerArray:
 if puck: processPuck(puck)
 
 // Hint for compiler:
-// setMode(Faceoff, "Goal")
+// setMode(Faceoff) because "Goal"

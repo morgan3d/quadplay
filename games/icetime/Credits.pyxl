@@ -12,4 +12,4 @@ for type in ["Game", "Sprite", "Font", "Sound", "Code"]:
    
 if anyButtonPress() or modeFrames > 1264:
    setTransform(xy(0, 0))
-   setMode(Title, "anyButtonPress() or end of credits")
+   setMode(Title) because "anyButtonPress() or end of credits"

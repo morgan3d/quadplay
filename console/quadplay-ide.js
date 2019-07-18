@@ -912,12 +912,13 @@ function visualizeModes(modeEditor) {
         return;
     }
 
-    const setModeRegexp = /\b(setMode|pushMode)\s*\(([^,)]+)\s*(?:,\s*"([^"]*)"\s*)?\)/g;
+    const setModeRegexp = /\b(setMode|pushMode)\s*\(([^,)]+)(?:.*)\)(?:\s*because\s*"([^"]*)")?/g;
     const resetGameRegexp = /\bresetGame\s*\(\s*(?:"([^"]*)")?\s*\)/g;
     //const popModeRegexp = /\bpopMode\s*\((?:\s*"([^"]*)"\s*)?\)/g;
 
-    // Modes that have links back to however they are entered. These
-    // have to be processed after all other links are discovered.
+    // Modes that have links back to their parent mode, whether
+    // entered by setMode or pushMode. These have to be processed
+    // after all other links are discovered.
     let backLinks = [];
     
     // Get edges for each node
@@ -1790,6 +1791,7 @@ function reloadRuntime(oncomplete) {
         Runtime._submitFrame   = submitFrame;
         Runtime._updateInput   = updateInput;
         Runtime._systemPrint   = _systemPrint;
+        Runtime._outputAppend  = _outputAppend;
 
         Runtime.debugPrint     = debugPrint;
         Runtime.assert         = assert;
@@ -1849,7 +1851,7 @@ function deepClone(src, alreadySeen) {
 
 
 /** Called by makeConstants as part of loading a game. Maps null to undefined
-    for consistency with the rest of nanoscript. */
+    for consistency with the rest of pyxlscript. */
 function frozenDeepClone(src, alreadySeen) {
     if (src === null || src === undefined) {
         return undefined;
@@ -1928,13 +1930,13 @@ function makeAssets(environment, assets) {
 // Hide the UI mode menu if anyone clicks off of it while it is open
 window.addEventListener('click',
                         function () {
-                            let menu = document.getElementById('uiModeMenu');
+                            const menu = document.getElementById('uiModeMenu');
                             if (menu && (menu.style.visibility !== 'hidden')) {
                                 menu.style.visibility = 'hidden';
                             }
                         });
 
-// Pause when losing focus if currently playing...prevents nano from
+// Pause when losing focus if currently playing...prevents quadplay from
 // eating resources in the background during development.
 window.addEventListener("blur", function () {
     if (backgroundPauseEnabled && useIDE) {

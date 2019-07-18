@@ -21,4 +21,4 @@ for type in creditOrder:
       
 if anyButtonPress() or y < -100:
    setTransform(xy(0, 0))
-   popMode("anyButtonPress() or end of credits")
+   popMode() because "anyButtonPress() or end of credits"

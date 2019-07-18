@@ -988,6 +988,8 @@ var acos = Math.acos;
 var asin = Math.asin;
 var atan = Math.atan2;
 var log = Math.log;
+var log2 = Math.log2;
+var log10 = Math.log10;
 var sign = Math.sign;
 var exp = Math.exp;
 var sqrt = Math.sqrt;
@@ -2061,7 +2063,7 @@ function drawLine(A, B, color, z) {
 
 function drawPoint(P, color, z) {
     z = z || 0;
-    const skx = (z * _skewXZ), sky = (z * _skewYZ);
+    const skx = z * _skewXZ, sky = z * _skewYZ;
     let x = (P.x + skx) * _scaleX + _offsetX, y = (P.y + sky) * _scaleY + _offsetY;
     z = z * _scaleZ + _offsetZ;
 
@@ -2078,13 +2080,14 @@ function drawPoint(P, color, z) {
         // Many points with the same z value are often drawn right
         // after each other.  Aggregate these (preserving their
         // ordering) for faster sorting and rendering.
-        prevCommand.data.push(x >>> 0, y >>> 0, _colorToUint32(color));        
+        prevCommand.data.push((x + y * _SCREEN_WIDTH) >>> 0, _colorToUint32(color)); 
     } else {
         _addGraphicsCommand({
             z: z,
             baseZ: z,
             opcode: 'PIX',
-            data: [x >>> 0, y >>> 0, _colorToUint32(color)]});
+            data: [(x + y * _SCREEN_WIDTH) >>> 0, _colorToUint32(color)]
+        });
     }
 }
 
@@ -2265,7 +2268,7 @@ function _clamp(x, L, H) {
 }
 
 
-function getSpritePixelColor(spr, pos) {
+function getSpritePixelColor(spr, pos, result) {
     if (! (spr && spr.spritesheet)) {
         throw new Error('Called getSpritePixelColor() on an object that was not a sprite asset. (' + unparse(spr) + ')');
     }
@@ -2274,15 +2277,23 @@ function getSpritePixelColor(spr, pos) {
     const y = Math.floor((spr.scale.y > 0) ? pos.y : (spr.size.y - 1 - pos.y));
     
     if ((x < 0) || (x >= spr.size.x) || (y < 0) || (y >= spr.size.y)) {
-        return undefined;
+        if (result) {
+            result.a = result.r = result.g = result.b = 0;
+        } else {
+            return undefined;
+        }
     } else {
         const sheet = spr.spritesheet;
         const pixel = sheet._uint32Data[(spr._x + x) + (spr._y + y) * sheet._uint32Data.width];
-        const a = ((pixel >>> 28) & 0xf) * (1 / 15);
-        const b = ((pixel >>> 20) & 0xf) * (1 / 15);
-        const g = ((pixel >>> 12) & 0xf) * (1 / 15);
-        const r = ((pixel >>>  4) & 0xf) * (1 / 15);
-        return {r:r, g:g, b:b, a:a};
+
+        result = result || {r:0, g:0, b:0, a:0};
+        
+        result.a = ((pixel >>> 28) & 0xf) * (1 / 15);
+        result.b = ((pixel >>> 20) & 0xf) * (1 / 15);
+        result.g = ((pixel >>> 12) & 0xf) * (1 / 15);
+        result.r = ((pixel >>>  4) & 0xf) * (1 / 15);
+        
+        return result;
     }
 }
 
@@ -3324,6 +3335,49 @@ function clone(a) {
     }
 }
 
+function _deepClone(a, map) {
+    if (Object.isFrozen(a) || Object.isSealed(a)) {
+        // Built-in
+        return a;
+    } else {
+        if (Array.isArray(a)) {
+            let x = map.get(a);
+            if (x !== undefined) {
+                // Already cloned
+                return x;
+            } else {
+                map.set(a, x = a.slice(0));
+                for (let i = 0; i < x.length; ++i) {
+                    x[i] = _deepClone(x[i], map);
+                }
+                return x;
+            }
+        } else if (typeof a === 'object') {
+            let x = map.get(a);
+            if (x !== undefined) {
+                // Already cloned
+                return x;
+            } else {
+                map.set(a, x = a.constructor ? a.constructor() : Object.create(null));
+                const k = Object.keys(a);
+                for (let i = 0; i < k.length; ++i) {
+                    const key = k[i];
+                    x[key] = _deepClone(a[key], map);
+                }
+                return x;
+            }
+        } else {
+            // Primitive
+            return a;
+        }
+    }
+}
+
+
+function deepClone(a) {
+    return _deepClone(a, new Map());    
+}
+
 
 function copy(s, d) {
     if (Array.isArray(s)) {
@@ -3362,7 +3416,7 @@ function cross(a, b) {
             c[0] = a[1] * b[2] - a[2] * b[1];
             c[1] = a[2] * b[0] - a[0] * b[2];
             c[2] = a[0] * b[1] - a[1] * b[0];
-            return Object.isFrozen(a) ? Object.freeze(c) : c;
+            return c;
         }
     } else if (a.z === undefined) {
         // 2D
@@ -3372,7 +3426,7 @@ function cross(a, b) {
         c.x = a.y * b.z - a.z * b.y;
         c.y = a.z * b.x - a.x * b.z;
         c.z = a.x * b.y - a.y * b.x;
-        return Object.isFrozen(a) ? Object.freeze(c) : c;
+        return c;
     }
 }
 
@@ -3715,6 +3769,203 @@ function minComponent(a) {
     for (let key in a) s = Math.min(s, a[key]);
     return s;
 }
+
+function ADD(a, b) {
+    return a + b;
+}
+
+function SUB(a, b) {
+    return a - b;
+}
+
+function MUL(a, b) {
+    return a * b;
+}
+
+function MAD(a, b, c) {
+    return a * b + c;
+}
+
+function DIV(a, b) {
+    return a / b;
+}
+
+function XYZ_ADD_XYZ(v1, v2, r) {
+    r.x = v1.x + v2.x;
+    r.y = v1.y + v2.y;
+    r.z = v1.z + v2.z;
+}
+
+function XYZ_SUB_XYZ(v1, v2, r) {
+    r.x = v1.x - v2.x;
+    r.y = v1.y - v2.y;
+    r.z = v1.z - v2.z;
+}
+
+function XYZ_MUL_XYZ(v1, v2, r) {
+    r.x = v1.x * v2.x;
+    r.y = v1.y * v2.y;
+    r.z = v1.z * v2.z;
+}
+
+function XYZ_MUL(v1, s, r) {
+    r.x = v1.x * s;
+    r.y = v1.y * s;
+    r.z = v1.z * s;
+}
+
+function XYZ_DIV(v1, s, r) {
+    s = 1 / s;
+    r.x = v1.x * s;
+    r.y = v1.y * s;
+    r.z = v1.z * s;
+}
+
+function XYZ_DIV_XYZ(v1, v2, r) {
+    r.x = v1.x / v2.x;
+    r.y = v1.y / v2.y;
+    r.z = v1.z / v2.z;
+}
+
+function XYZ_CRS_XYZ(v1, v2, r) {
+    const x = v1.y * v2.z - v1.z * v2.y;
+    const y = v1.z * v2.x - v1.x * v2.z;
+    const z = v1.x * v2.y - v1.y * v2.x;
+    r.x = x; r.y = y; r.z = z;
+}
+
+function XYZ_DOT_XYZ(v1, v2) {
+    return v1.x * v2.x + v1.y * v2.y;
+}
+
+function XY_MUL(v1, s) {
+    r.x = v1.x * s;
+    r.y = v1.y * s;
+}
+
+function XY_DIV(v1, s, r) {
+    s = 1 / s;
+    r.x = v1.x * s;
+    r.y = v1.y * s;
+}
+
+function XY_ADD_XY(v1, v2, r) {
+    r.x = v1.x + v2.x;
+    r.y = v1.y + v2.y;
+}
+
+function XY_SUB_XY(v1, v2, r) {
+    r.x = v1.x - v2.x;
+    r.y = v1.y - v2.y;
+}
+
+function XY_MUL_XY(v1, v2, r) {
+    r.x = v1.x * v2.x;
+    r.y = v1.y * v2.y;
+}
+
+function XY_DIV_XY(v1, v2, r) {
+    r.x = v1.x / v2.x;
+    r.y = v1.y / v2.y;
+}
+
+function XY_DOT_XY(v1, v2) {
+    return v1.x * v2.x + v1.y * v2.y;
+}
+
+function XY_CRS_XY(v1, v2) {
+    return v1.x * v2.y - v1.y * v2.x;
+}
+
+function RGBA_ADD_RGBA(c1, c2, r) {
+    r.r = c1.r + c2.r;
+    r.g = c1.g + c2.g;
+    r.b = c1.b + c2.b;
+    r.a = c1.a + c2.a;
+}
+
+function RGBA_SUB_RGBA(c1, c2, r) {
+    r.r = c1.r - c2.r;
+    r.g = c1.g - c2.g;
+    r.b = c1.b - c2.b;
+    r.a = c1.a - c2.a;
+}
+
+function RGBA_MUL_RGBA(c1, c2, r) {
+    r.r = c1.r * c2.r;
+    r.g = c1.g * c2.g;
+    r.b = c1.b * c2.b;
+    r.a = c1.a * c2.a;
+}
+
+function RGBA_DIV_RGBA(c1, c2, r) {
+    r.r = c1.r / c2.r;
+    r.g = c1.g / c2.g;
+    r.b = c1.b / c2.b;
+    r.a = c1.a / c2.a;
+}
+
+function RGBA_MUL(c, s, r) {
+    r.r = c.r * s;
+    r.g = c.g * s;
+    r.b = c.b * s;
+    r.a = c.a * s;
+}
+
+function RGBA_DIV(c, s, r) {
+    s = 1 / s;
+    r.r = c.r * s;
+    r.g = c.g * s;
+    r.b = c.b * s;
+    r.a = c.a * s;
+}
+
+function RGBA_DOT_RGBA(c1, c2) {
+    return c1.r * c2.r + c1.g * c2.g + c1.b * c2.b + c1.a * c2.a;
+}
+
+function RGB_ADD_RGB(c1, c2, r) {
+    r.r = c1.r + c2.r;
+    r.g = c1.g + c2.g;
+    r.b = c1.b + c2.b;
+}
+
+function RGB_SUB_RGB(c1, c2, r) {
+    r.r = c1.r - c2.r;
+    r.g = c1.g - c2.g;
+    r.b = c1.b - c2.b;
+}
+
+function RGB_MUL_RGB(c1, c2, r) {
+    r.r = c1.r * c2.r;
+    r.g = c1.g * c2.g;
+    r.b = c1.b * c2.b;
+}
+
+function RGB_DIV_RGB(c1, c2, r) {
+    r.r = c1.r / c2.r;
+    r.g = c1.g / c2.g;
+    r.b = c1.b / c2.b;
+}
+
+function RGB_MUL(c, s, r) {
+    r.r = c.r * s;
+    r.g = c.g * s;
+    r.b = c.b * s;
+}
+
+function RGB_DIV(c, s, r) {
+    s = 1 / s;
+    r.r = c.r * s;
+    r.g = c.g * s;
+    r.b = c.b * s;
+}
+
+function RGB_DOT_RGB(c1, c2) {
+    return c1.r * c2.r + c1.g * c2.g + c1.b * c2.b;
+}
+
+
 
 function lerp(a, b, t) {
     const ta = typeof a, tb = typeof b;
@@ -4077,7 +4328,12 @@ function getPreviousMode() {
 }
 
 
-function pushMode(mode, note) {
+var _lastBecause = ''
+function because(reason) {
+    _lastBecause = reason;
+}
+
+function pushMode(mode) {
     _verifyLegalMode(mode);
 
     // Push the stacks
@@ -4096,35 +4352,39 @@ function pushMode(mode, note) {
     _graphicsCommandList = [];
     _previousGraphicsCommandList = [];
 
-    _systemPrint('Pushing into mode ' + mode.name + (note ? ' because "' + note + '"' : ''));
+    _systemPrint('Pushing into mode ' + mode.name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
 
     // Run the enter callback on the new mode
-    _gameMode._enter();
+    _gameMode._enter.apply(null, arguments);
 
     throw {nextMode: mode};
 
 }
 
 
-function quitGame(note) {
-    _systemPrint('Quitting the game' + (note ? ' because "' + note + '"' : ''));
+function quitGame() {
+    if (arguments.length > 0) { _systemPrint('Deprecation warning: quitGame() no longer takes arguments. Use `because`.', 'color:#f88'); }
+    _systemPrint('Quitting the game' + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
     throw {quitGame:1};
 }
 
 
-function launchGame(url, note) {
-    _systemPrint('Launching ' + url + (note ? ' because "' + note + '"' : ''));
+function launchGame(url) {
+    if (arguments.length > 1) { _systemPrint('Deprecation warning: launchGame() no longer takes a reason argument. Use `because`.', 'color:#f88'); }
+    _systemPrint('Launching ' + url + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
     throw {launchGame:url};
 }
 
 
-function resetGame(note) {
-    _systemPrint('Resetting the game' + (note ? ' because "' + note + '"' : ''));
+function resetGame() {
+    if (arguments.length > 0) { _systemPrint('Deprecation warning: resetGame() no longer takes arguments. Use `because`.', 'color:#f88'); }
+    _systemPrint('Resetting the game' + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
     throw {resetGame:1};
 }
 
 
-function popMode(note) {
+function popMode() {
+    if (arguments.length > 0) { _systemPrint('Deprecation warning: popMode() no longer takes arguments. Use `because`.', 'color:#f88'); }
     if (_modeStack.length === 0) { throw new Error('Cannot popMode() from a mode entered by setMode()'); }
 
     // Run the leave callback on the current mode
@@ -4142,13 +4402,13 @@ function popMode(note) {
     _graphicsCommandList = [];
     _previousGraphicsCommandList = [];
     
-    _systemPrint('Popping back to mode ' + _gameMode.name + (note ? ' because "' + note + '"' : ''));
+    _systemPrint('Popping back to mode ' + _gameMode.name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
 
     throw {nextMode: _gameMode};
 }
 
 
-function setMode(mode, note) {
+function setMode(mode) {
     _verifyLegalMode(mode);
     
     // Erase the stacks
@@ -4173,10 +4433,10 @@ function setMode(mode, note) {
     _graphicsCommandList = [];
     _previousGraphicsCommandList = [];
     
-    _systemPrint('Entering mode ' + mode.name + (note ? ' because "' + note + '"' : ''));
+    _systemPrint('Entering mode ' + mode.name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
     
     // Run the enter callback on the new mode
-    _gameMode._enter();
+    _gameMode._enter.apply(null, arguments);
 
     throw {nextMode: mode};
 }
@@ -4552,10 +4812,9 @@ function _executePIX(cmd) {
     
     const data = cmd.data;
     const N = data.length;
-    for (let p = 0; p < N; p += 3) {
-        
-        const offset = data[p] + data[p + 1] * _SCREEN_WIDTH;
-        const color = data[p + 2];
+    for (let p = 0; p < N; p += 2) {
+        const offset = data[p];
+        const color = data[p + 1];
 
         // Must be unsigned shift to avoid sign extension
         const a255 = color >>> 24;
@@ -4577,8 +4836,6 @@ function _executePIX(cmd) {
             _screen[offset] = result;
         }
     }
-
-    //_pset(data[0], data[1], data[2], cmd.clipX1, cmd.clipY1, cmd.clipX2, cmd.clipY2);
 }
 
 

@@ -495,8 +495,8 @@ function assert(x, m) {
 }
 
 // Allows HTML, forces the system style
-function _systemPrint(m) {
-    _outputAppend('<i>' + escapeHTMLEntities(m) + '</i>\n');
+function _systemPrint(m, style) {
+    _outputAppend('<i' + (style ? 'style="' + style + '">' : '>') + escapeHTMLEntities(m) + '</i>\n');
 }
 
 

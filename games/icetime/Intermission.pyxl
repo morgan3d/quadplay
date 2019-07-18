@@ -66,4 +66,4 @@ if modeFrames < 120:
 else if modeFrames < 966:
    processZamboni()
 else:
-   setMode(Faceoff, "Time")
+   setMode(Faceoff) because "Time"

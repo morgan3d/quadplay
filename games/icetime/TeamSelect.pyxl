@@ -61,7 +61,7 @@ def drawSide(teamIndex):
             const control = controlPadArray[2 teamIndex + p]
             // Swap
             if control.yy: const temp = team.roster[0]; team.roster[0] = team.roster[1]; team.roster[1] = temp
-            if control.bb: setMode(Title, "Press ⓑ")
+            if control.bb: setMode(Title) because "Press ⓑ"
             if control.aa: team.ready = true
             if control.xx:
                const otherIndex = 1 - teamIndex;
@@ -97,4 +97,4 @@ for i < 2: drawSide(i)
 
 if teamArray[0].ready and teamArray[1].ready:
    createGame()
-   setMode(Faceoff, "Both Ready")
+   setMode(Faceoff) because "Both Ready"

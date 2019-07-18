@@ -167,7 +167,7 @@ local:
       y += drawText({font:mediumFont, text:"Score", pos:xy(wordX, y), color:selectedColor, xAlign:"left"}).y
 
 if joy.aa or joy.pp or joy.qq:
-   launchGame(gameArray[gameIndex].url, "Player selected it")
+   launchGame(gameArray[gameIndex].url) because "Player selected game"
       
 // Animate scrolling
 if joy.yy:

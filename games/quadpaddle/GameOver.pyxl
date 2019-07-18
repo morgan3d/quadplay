@@ -15,5 +15,5 @@ drawText(font, "GAME OVER", center, #ff0, #000, #000, 0, -1, 4)
 
 if anyButtonPress():
    playAudioClip(selectSound)
-   setMode(Title, "anyButtonPress()")
+   setMode(Title) because "anyButtonPress()"
 

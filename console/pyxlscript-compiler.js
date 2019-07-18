@@ -16,19 +16,21 @@ let doubleQuoteProtection = String.fromCharCode(protectionBlockStart - 1);
     matching close ')', assuming that parens are balanced
     and there are no quoted strings or incorrectly
     nested other grouping characters. */
-function findClosingParen(str, i) {
-    ++i;
-    for (let stack = 1; stack > 0; ++i) {
+function findMatchingParen(str, i, direction) {
+    i += direction;
+    for (let stack = 1; stack > 0; i += direction) {
         switch (str[i]) {
-        case '(': ++stack; break;
-        case ')': --stack; break;
+        case '(': stack += direction; break;
+        case ')': stack -= direction; break;
         }
-        if (i === str.length) {
-            throw 'Missing close parenthesis';
+        if (i === str.length || i === -1) {
+            throw 'Missing matching parenthesis';
         }
     } // for
+    
     return i;
 }
+
 
 /** Returns the index of c or d within str on or after j, or -1 if none.
     Skips over balanced ()[]{}. */
@@ -71,7 +73,7 @@ function nextInstance(str, c, j, d) {
 }
 
 
-/** Given a nano WITH preamble not surrounded in extra (), returns an
+/** Given a pyxl WITH preamble not surrounded in extra (), returns an
     array of two elements: [0] is the code that goes at the front of
     the block, and [1] is the code that goes at the end.  */
 function processWithHeader(test) {
@@ -138,7 +140,7 @@ function processWithHeader(test) {
 }
 
 
-/** Given a nano FOR-loop test that is not surrounded in extra () or
+/** Given a pyxl FOR-loop test that is not surrounded in extra () or
     containing the colon, returns the parts before and after the loop. */
 function processForTest(test) {
     let before = '', after = '}';
@@ -323,7 +325,7 @@ function processLine(line, inFunction) {
     } else if (match = line.match(/^(\s*)(debugWatch)\s*(\(.+)/)) {
         let before = match[1];
         let rest = match[3];
-        let closeIndex = findClosingParen(rest, 0);
+        let closeIndex = findMatchingParen(rest, 0, +1);
 
         let watchExpr = rest.substring(1, closeIndex - 1);
         return before + '(_debugWatchEnabled && _debugWatch("' + watchExpr.replace(/"/g, '\"') + '", ' + watchExpr + ')); ' + processLine(rest.substring(closeIndex + 1), inFunction);
@@ -617,8 +619,6 @@ function unprotectQuotedStrings(s, protectionMap) {
 function compactMultilineLiterals(lineArray) {
     let i = 0;
 
-    let match = Object.freeze({'(':')', '[':']', '{':'}'});
-
     // Count across the current multi-line expression
     let count = Object.seal([0, 0, 0]);
 
@@ -720,13 +720,13 @@ function countRegexOccurences(string, regex) {
     return (string.match(regex) || []).length;
 }
 
-/** Compiles nanoscript -> JavaScript */
-function nanoToJS(src, noYield) {
+/** Compiles pyxlscript -> JavaScript */
+function pyxlToJS(src, noYield) {
     if (noYield === undefined) { noYield = false; }
 
     // Replace confusingly-similar double bars (we use exclusively Double Vertical Line 0x2016)
-    src = src.replace(/∥𝄁║Ⅱǁ/g, '‖')
-    
+    src = src.replace(/∥𝄁║Ⅱǁ/g, '‖');
+
     // Switch to small element-of everywhere before blocks or strings can be processed
     src = src.replace(/∈/g, '∊');
 
@@ -742,7 +742,10 @@ function nanoToJS(src, noYield) {
 
     // Remove single-line comments
     src = src.replace(/\/\/.*$/gm, '');
-    
+
+    // Pull 'because' on a new line up to the previous line
+    src = src.replace(/\)[\t ]*((?:\n[\t ]*)+)[ \t]*because[ \t]+("[^\n"]")/g, ') because $2$1');
+
     // Numbers ending in percent. This regex is dangerous because it
     // does not distinguish variables ending with a number from standalone
     // number tokens.
@@ -758,10 +761,48 @@ function nanoToJS(src, noYield) {
 
     {
         const lineArray = compactMultilineLiterals(src.split('\n'))
-
-        // Look for mismatched if/then/else (conservative test, misses some)
+        const becauseRegExp = RegExp('(' + identifierPattern + '\\([^\\n]*\\))[ \\t]+because[ \\t]+("[^"]+")', 'g');
         for (let i = 0; i < lineArray.length; ++i) {
-            const line = lineArray[i];
+            let line = lineArray[i];
+
+            // Process BECAUSE: `foo(...) because "string"` --> `(because("string"),foo(...))`
+            // There must be no space between the comma and the identifier in order for the next regexp
+            // to fake a negative lookbehind
+            if (/\)[ \t]*because[ \t]+"/.test(line)) {
+                // We can't process this with a regular expression
+                // because we have to parse recursive matching
+                // parentheses to find the complete expression before
+                // the `because`
+                let becausePos = line.indexOf('because ');
+                console.assert(becausePos !== -1)
+
+                // Extract the reason
+                let reasonBeginPos = becausePos + 'because '.length;
+                while (line[reasonBeginPos] !== '"') { ++reasonBeginPos; }
+                let reasonEndPos = reasonBeginPos + 1;
+                while (line[reasonEndPos] !== '"') { ++reasonEndPos; }
+                
+                
+                // Look backwards for the paren
+                let callEndPos = becausePos - 1;
+                while (line[callEndPos] !== ')') { --callEndPos; }
+
+                // Look farther backwards for the matching paren
+                let callBeginPos = findMatchingParen(line, callEndPos, -1);
+
+                // Move backwards over the identifier
+                --callBeginPos;
+                while (/[ΔA-Za-z_0-9αβγΔδζηθιλμρσϕφχψτωΩ]/.test(line[callBeginPos])) { --callBeginPos; }
+                ++callBeginPos;
+
+                lineArray[i] = line = line.substring(0, callBeginPos) + '(because(' + line.substring(reasonBeginPos, reasonEndPos + 1) + '),' +
+                    line.substring(callBeginPos, callEndPos + 1) + ')' + line.substring(reasonEndPos + 1);
+            }
+
+            // Insert BECAUSE for state changes that do not use them already
+            line = lineArray[i] = line.replace(/(^|[^,])((?:setMode|pushMode|popMode|launchGame|resetGame|quitGame)[ \t]*\()/g, '$1because("");$2');
+
+            // Look for mismatched if/then/else (conservative test, misses some)
             const ifCount = countRegexOccurences(line, /\bif\b/g);
             const thenCount = countRegexOccurences(line, /\bthen\b/g);
             const elseCount = countRegexOccurences(line, /\belse\b/g);
@@ -774,7 +815,7 @@ function nanoToJS(src, noYield) {
         
         src = lineArray.join('\n');
     }
-    
+
     // Conditional operator. Replace "if TEST then CONSEQUENT else
     // ALTERNATE" --> "TEST ? CONSEQUENT : ALTERNATE" before "if"
     // statements are parsed.
@@ -848,7 +889,7 @@ function nanoToJS(src, noYield) {
         // Fix any instances of text operators that got accentially
         // turned into implicit multiplication. If there are other
         // text operators in the future, they can be added to this
-        // pattern.  This also fixes the one case where the nano
+        // pattern.  This also fixes the one case where the pyxl
         // compiler does not inject {} around a loop body: the
         // for-with statement, where it needs to output a single
         // expression to compile those as if they were FOR statements.
@@ -932,7 +973,7 @@ function nanoToJS(src, noYield) {
     src = src.replace(/\b(assert|debugPrint)\b/g, '_$1Enabled && $1');
 
     try {
-        src = vectorify(src, {assignmentReturnsUndefined:true});
+        src = vectorify(src, {assignmentReturnsUndefined:true, scalarEscapes:true});
     } catch (e) {
         console.log(src);
         throw e;
@@ -945,7 +986,7 @@ function nanoToJS(src, noYield) {
     src = src.replace(/(\S)[ \t]{2,}/g, '$1 ');
     src = src.replace(/_add\(__yieldCounter, 1\)/g, '__yieldCounter + 1');
     src = unprotectQuotedStrings(src, protectionMap);
-   
+
     return src;
 }
 
@@ -969,10 +1010,10 @@ function compile(gameSource) {
     if (gameSource.scripts) {
         for (let i = 0; i < gameSource.scripts.length; ++i) {
             const url = gameSource.scripts[i];
-            const pyxCode = fileContents[url];
+            const pyxlCode = fileContents[url];
             let jsCode;
             try {
-                jsCode = nanoToJS(pyxCode, true);
+                jsCode = pyxlToJS(pyxlCode, true);
             } catch (e) {
                 throw {url:url, lineNumber:e.lineNumber, message:e.message};
             }
@@ -981,7 +1022,7 @@ function compile(gameSource) {
     }
     
     const doubleLineChars = '=═⚌';
-    const splitRegex = RegExp(String.raw`(?:^|\n)[ \t]*(init|enter|frame|leave|[A-Z]${identifierPattern})[ \t]*\n((?:-|─|—|━|⎯|=|═|⚌){5,})[ \t]*\n`);
+    const splitRegex = RegExp(String.raw`(?:^|\n)[ \t]*(init|enter|frame|leave|[A-Z]${identifierPattern})[ \t]*(\([^\n\)]*\))?[\t ]*\n((?:-|─|—|━|⎯|=|═|⚌){5,})[ \t]*\n`);
     
     // Compile each mode
     for (let i = 0; i < gameSource.modes.length; ++i) {
@@ -999,7 +1040,7 @@ function compile(gameSource) {
         // the "init" section, which cannot be explicitly declared.
         const sectionTable = {init:null, enter:null, leave:null, frame:null};
         for (let name in sectionTable) {
-            sectionTable[name] = {pyxCode: '', jsCode: '', offset: 0};
+            sectionTable[name] = {pyxlCode: '', args: '()', jsCode: '', offset: 0};
         }
 
         if (! noSections) {
@@ -1011,33 +1052,36 @@ function compile(gameSource) {
             // Disregard any blank space before the first section, but count the lines
             let line = countLines(sectionArray[0]) - 1;
 
-            if (sectionArray.length % 3 === 0) { throw {url:mode.url, lineNumber:undefined, message: 'There must be at least one line between sections.'}; }
+            if (sectionArray.length % 4 === 0) { throw {url:mode.url, lineNumber:undefined, message: 'There must be at least one line between sections.'}; }
 
             // The separator names should be interleaved with the bodies. Extract
             // them and count lines.
-            for (let s = 1; s < sectionArray.length; s += 3) { 
+            for (let s = 1; s < sectionArray.length; s += 4) { 
                 const name = sectionArray[s];
-                const type = sectionArray[s + 1][0];
-                const body = sectionArray[s + 2];
+                const args = sectionArray[s + 1];
+                const type = sectionArray[s + 2][0];
+                const body = sectionArray[s + 3];
                 // If this is the mode, replace the name with 'init' for the purpose of
                 // defining variables.
                 const section = sectionTable[(doubleLineChars.indexOf(type) !== -1) ? 'init' : name];
                 line += 1;
+                if (name !== 'enter' && args !== undefined) { throw {url:mode.url, lineNumber:line, message:'Only the enter section of a mode may take arguments'}; }
                 if (section === undefined) { throw {url:mode.url, lineNumber:line, message:'Illegal section name: "' + name + '"'}; }
-                section.pyxCode = body;
+                section.pyxlCode = body;
                 section.offset = line;
+                section.args = args || '()';
                 line += countLines(body);
             }
             
         } else {
-            sectionTable.frame.pyxCode = file;
+            sectionTable.frame.pyxlCode = file;
         }
         
         for (let name in sectionTable) {
             const section = sectionTable[name];
-            if (section.pyxCode.trim() !== '') {
+            if (section.pyxlCode.trim() !== '') {
                 try {
-                    section.jsCode = nanoToJS(section.pyxCode);
+                    section.jsCode = pyxlToJS(section.pyxlCode);
                 } catch (e) {
                     throw {url:mode.url, lineNumber:e.lineNumber + section.offset, message:e.message};
                 }
@@ -1049,7 +1093,7 @@ function compile(gameSource) {
         // a field 'nextMode' equal to the next mode object.
 
         const wrappedJSCode =
-`// ${modeName}.pyx
+`// ${modeName}.pyxl
 //========================================================================
 const ${modeName} = (function() {
 
@@ -1059,7 +1103,7 @@ ${sectionTable.init.jsCode}
 
 // enter
 ${sectionSeparator}
-function _enter() {
+function _enter${sectionTable.enter.args} {
 ${sectionTable.enter.jsCode}
 }
 
@@ -1115,7 +1159,8 @@ return _Object.freeze({_enter:_enter, _frame:_frame, _leave:_leave, name:'${mode
         }
         compiledProgram = lines.join('\n');
     }
-    
+
+    //console.log(compiledProgram);
     return compiledProgram;
 }
 

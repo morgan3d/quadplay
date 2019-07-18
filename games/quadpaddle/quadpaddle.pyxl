@@ -71,7 +71,7 @@ def increaseScore(v):
    const step = 25
 
    // Don't take *too* many steps if the increase is huge
-   const frames = min(2 * floor(v / step), 140)
+   const frames = min(2 ⌊v / step⌋, 140)
    let remainder = v
    
    def inc(f):
@@ -81,12 +81,12 @@ def increaseScore(v):
       if f mod 2:
          score += step
          remainder -= step
-         if rnd() < 75%:
-            scoreColor = rgb(1,1,25%)
+         if ξ < 75%:
+            scoreColor = rgb(1, 1, 25%)
          else:
             scoreColor = rgb(25%, 25%, 0)
 
-         scoreOffset = 2 * xy(rnd() - 1/2, rnd() - 1/2)
+         scoreOffset = 2 xy(ξ - ½, ξ - ½)
       
    def done():
       // Add the remaining points
@@ -99,7 +99,7 @@ def increaseScore(v):
 
 def shakeScreen(frames, mag):
    // Support both scalar and vector
-   if mag.x == nil: mag = xy(mag, mag)
+   if mag.x == ∅: mag = xy(mag, mag)
    def shake(f): setTransform(round(rndSquare() * mag))
    def done():   setTransform(xy(0, 0))
    addFrameHook(shake, done, frames)
@@ -107,7 +107,7 @@ def shakeScreen(frames, mag):
 
 def shakeEntity(entity, frames, mag):
    // Support both scalar and vector
-   if mag.x == nil: mag = xy(mag, mag)
+   if mag.x == ∅: mag = xy(mag, mag)
    def shake(f): if f mod 2: entity.offset = xy(round((2ξ - 1) mag.x), round((2ξ - 1) mag.y))
    def done():   entity.offset = xy(0, 0)
 

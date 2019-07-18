@@ -39,7 +39,7 @@ def loseBall(ball):
             let dir = xy(0,0)
             dir[v] = sign(P.pos[v] - areaSize / 2);
             entityToParticlesMelt(P, dir, 0.05, 0.08, 150)
-         setMode(GameOver, "Lost last ball")
+         setMode(GameOver) because "Lost last ball"
          
       // Put the ball back on a paddle, chosen at random
       --spareBalls
@@ -67,7 +67,7 @@ setClip(xy(0, 0), xy(areaSize, screenSize.y))
 // Handle pause
 for P in pad:
    if P.pp or P.qq:
-      pushMode(Pause, "ⓟ or ⓠ pressed")
+      pushMode(Pause) because "ⓟ or ⓠ pressed"
 
 
 // Paddles
@@ -78,8 +78,8 @@ for pad, pos, vel, axis in paddle in paddleArray:
    // Sparkle when this paddle has the catch powerup
    if paddle.powerup == "catch":
       drawSprite(paddleSprite[0][5], paddle.pos, paddle.angle)
-      drawSprite(sparkleSprite[0][floor(modeFrames / 6) mod 5], paddle.pos, paddle.angle)
-      drawSprite(sparkleSprite[0][floor(modeFrames / 5) mod 5], paddle.pos + xy(1, 1), paddle.angle + 180°)
+      drawSprite(sparkleSprite[0][⌊modeFrames / 6⌋ mod 5], paddle.pos, paddle.angle)
+      drawSprite(sparkleSprite[0][⌊modeFrames / 5⌋ mod 5], paddle.pos + xy(1, 1), paddle.angle + 180°)
 
    
 // Boxes
@@ -89,18 +89,18 @@ for B in boxArray:
 
 
 // Powerups
-for pos, vel, data in P in powerupArray:
+for pos, vel, data ∊ P ∊ powerupArray:
    drawText(font, data.name, pos + xy(0, 3), data.color, nil, #FFF, 0)
-   drawSprite(sparkleSprite[0][floor(modeFrames / 6) mod 5], pos)
-   drawSprite(sparkleSprite[0][floor(modeFrames / 5) mod 5], pos + xy(1, 1), 180°)
-   createParticle(pos + xy(32 rnd() - 16, 16 rnd() - 8), xy(0, 0), data.color, 0, 30)
-   createParticle(pos + xy(32 rnd() - 16, 16 rnd() - 8), xy(0, 0), #fff, 0, 20)
+   drawSprite(sparkleSprite[0][⌊modeFrames / 6⌋ mod 5], pos)
+   drawSprite(sparkleSprite[0][⌊modeFrames / 5⌋ mod 5], pos + xy(1, 1), 180°)
+   createParticle(pos + xy(32 ξ - 16, 16 ξ - 8), xy(0, 0), data.color, 0, 30)
+   createParticle(pos + xy(32 ξ - 16, 16 ξ - 8), xy(0, 0), #fff, 0, 20)
    pos += vel
-   if ((pos.x < -sparkleSprite[0][0].size.x / 2) or (pos.x > screenSize.x + sparkleSprite[0][0].size.x / 2) or
-       (pos.y < -sparkleSprite[0][0].size.y / 2) or (pos.y > screenSize.y + sparkleSprite[0][0].size.y / 2)):
+   if ((pos.x < -½ sparkleSprite[0][0].size.x) or (pos.x > screenSize.x + ½ sparkleSprite[0][0].size.x) or
+       (pos.y < -½ sparkleSprite[0][0].size.y) or (pos.y > screenSize.y + ½ sparkleSprite[0][0].size.y)):
       removeValues(powerupArray, P)
 
-   for paddle in paddleArray:
+   for paddle ∊ paddleArray:
       // Receive a powerup
       if overlaps(paddle, P):
          removeValues(powerupArray, P)
@@ -111,7 +111,7 @@ for pos, vel, data in P in powerupArray:
             for box in paddle.powerup.boxArray:
                removeValues(boxArray, box)
             
-         paddle.powerup = nil
+         paddle.powerup = ∅
          if data.name == "spare":
             spareBalls = min(spareBalls + 1, maxSpareBalls)
          else if data.name == "2500":
@@ -164,7 +164,7 @@ for pos, vel, paddle in ball in ballArray:
          firstBallLaunched = true
          
          // Release the ball away from the paddle
-         if abs(paddle.vel[u]) > 0.1:
+         if |paddle.vel[u]| > 0.1:
             // Throw in direction of movement
             vel[u] = sign(paddle.vel[u])
          else:
@@ -173,7 +173,7 @@ for pos, vel, paddle in ball in ballArray:
             
          vel[v] = away
          vel *= initialBallSpeed
-         paddle = nil
+         paddle = ∅
    else: // Normal ball movement. Look for collisions.
 
       let speed = ‖ball.vel‖
@@ -191,7 +191,7 @@ for pos, vel, paddle in ball in ballArray:
    
       // Back up and reverse direction on box collision, which
       // must be due to ball movement.
-      for box in boxArray:
+      for box ∊ boxArray:
          if overlaps(ball, box):
             hitBox(box, ball, xy(1, 0))
             pos.x -= vel.x; vel.x = -vel.x
@@ -199,13 +199,13 @@ for pos, vel, paddle in ball in ballArray:
       // Now, move second in Y
       pos.y += vel.y
    
-      for box in boxArray:
+      for box ∊ boxArray:
          if overlaps(ball, box):
             hitBox(box, ball, xy(0, 1))
             pos.y -= vel.y; vel.y = -vel.y
    
       // Bounce off paddles by moving away from the intersection
-      for paddle in paddleArray:
+      for paddle ∊ paddleArray:
          if overlaps(ball, paddle):
             if paddle.powerup == "catch":
                ball.paddle = paddle
@@ -254,9 +254,9 @@ drawScoreboard()
 if levelComplete:
    ++finishLevelFrames
    if finishLevelFrames > 40:
-      if level >= (levelTemplate.width + 1) / 6:
-         setMode(Win, "Beat final level")
+      if level ≥ (levelTemplate.width + 1) / 6:
+         setMode(Win) because "Beat final level"
       else:
          increaseScore(100 timeLeft)
          // Show the reward screen
-         pushMode(BeatLevel, "Level completed")
+         pushMode(BeatLevel) because "Level completed"

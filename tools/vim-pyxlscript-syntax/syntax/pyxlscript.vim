@@ -2,18 +2,19 @@
 " Language:	Quadplay (pyxlscript)
 " Maintainer:	Stephan Steinbach 
 " Last Change:	2019 Jul 04
-" Credits:	Based on python.vim by Neil Schemenauer <nas@python.ca> + the
+" Credits:	Based on python.vim by Neil Schemenauer <nas@pyxlscript.ca> + the
 "           emacs file by Morgan McGuire.
 "
 " For version 5.x: Clear all syntax items.
 " For version 6.x: Quit when a syntax file was already loaded.
-echom "foo"
 if version < 600
   syntax clear
 elseif exists("b:current_syntax")
   finish
 endif
-"
+
+" @TODO: the comment after a comment should be colored like a comment
+
 " We need nocompatible mode in order to continue lines with backslashes.
 " Original setting will be restored.
 let s:cpo_save = &cpo
@@ -29,34 +30,24 @@ syn keyword pyxlscriptBuiltIn addFrameHook removeFrameHook drawSprite drawText d
 
 syn match pyxlscriptColor "#[0-9A-Fa-f]+"
 
-" syn keyword pythonStatement	False, None, True
-" syn keyword pythonStatement	as assert break continue del exec global
-" syn keyword pythonStatement	lambda nonlocal pass print return with yield
-syn keyword pyxlscriptStatement	function nextgroup=pyxlscriptFunction skipwhite
 syn keyword pyxlscriptStatement	def nextgroup=pyxlscriptDef skipwhite
-syn keyword pyxlscriptStatement return local preservingTransform with setMode resetGame
-syn keyword pyxlscriptConditional if else
+syn keyword pyxlscriptStatement return local preservingTransform with setMode resetGame launchGame quitGame pushMode popMode make_player because
+syn keyword pyxlscriptConditional if else then
 syn keyword pyxlscriptRepeat	for while until
 syn keyword pyxlscriptOperator	and in is not or
-" syn keyword pythonException	except finally raise try
-" syn keyword pythonInclude	from import
 
-" Decorators (new in Python 2.4)
-" syn match   pythonDecorator	"@" display nextgroup=pythonFunction skipwhite
+" Decorators (new in pyxlscript 2.4)
 " The zero-length non-grouping match before the function name is
-" extremely important in pythonFunction.  Without it, everything is
+" extremely important in pyxlscriptDef.  Without it, everything is
 " interpreted as a function inside the contained environment of
 " doctests.
 " A dot must be allowed because of @MyClass.myfunc decorators.
-syn match   pyxlscriptFunction
-      \ "\%(\%(function\s\)\s*\)\@<=\h\%(\w\|\.\)*" contained
 syn match   pyxlscriptDef
       \ "\%(\%(def\s\)\s*\)\@<=\h\%(\w\|\.\)*" contained
 
 syn match   pyxlscriptComment	"//.*$" contains=pyxlscriptTodo,@Spell
 syn keyword pyxlscriptTodo		FIXME NOTE NOTES TODO XXX contained
 
-" Triple-quoted strings can contain doctests.
 syn region  pyxlscriptString
       \ start=+[uU]\=\z(['"]\)+ end="\z1" skip="\\\\\|\\\z1"
       \ contains=pyxlscriptEscape,@Spell
@@ -74,28 +65,9 @@ syn match   pyxlscriptEscape	+\\[abfnrtv'"\\]+ contained
 syn match   pyxlscriptEscape	"\\\o\{1,3}" contained
 syn match   pyxlscriptEscape	"\\x\x\{2}" contained
 syn match   pyxlscriptEscape	"\%(\\u\x\{4}\|\\U\x\{8}\)" contained
-" Python allows case-insensitive Unicode IDs: http://www.unicode.org/charts/
+" pyxlscript allows case-insensitive Unicode IDs: http://www.unicode.org/charts/
 syn match   pyxlscriptEscape	"\\N{.\{-}}" contained
 syn match   pyxlscriptEscape	"\\$"
-
-if exists("pyxlscript_highlight_all")
-  if exists("pyxlscript_no_builtin_highlight")
-    unlet pyxlscript_no_builtin_highlight
-  endif
-  if exists("pyxlscript_no_doctest_code_highlight")
-    unlet pyxlscript_no_doctest_code_highlight
-  endif
-  if exists("pyxlscript_no_doctest_highlight")
-    unlet pyxlscript_no_doctest_highlight
-  endif
-  if exists("pyxlscript_no_exception_highlight")
-    unlet pyxlscript_no_exception_highlight
-  endif
-  if exists("pyxlscript_no_number_highlight")
-    unlet pyxlscript_no_number_highlight
-  endif
-  let pyxlscript_space_error_highlight = 1
-endif
 
 " It is very important to understand all details before changing the
 " regular expressions below or their order.
@@ -109,9 +81,9 @@ endif
 " - 08 is not highlighted,
 " - 08e0 or 08j are highlighted,
 "
-" and so on, as specified in the 'Python Language Reference'.
-" http://docs.python.org/reference/lexical_analysis.html#numeric-literals
-if !exists("python_no_number_highlight")
+" and so on, as specified in the 'pyxlscript Language Reference'.
+" http://docs.pyxlscript.org/reference/lexical_analysis.html#numeric-literals
+if !exists("pyxlscript_no_number_highlight")
   " numbers (including longs and complex)
   syn match   pyxlscriptNumber	"\<0[oO]\=\o\+[Ll]\=\>"
   syn match   pyxlscriptNumber	"\<0[xX]\x\+[Ll]\=\>"
@@ -126,7 +98,7 @@ if !exists("python_no_number_highlight")
 endif
 
 
-if exists("python_space_error_highlight")
+if exists("pyxlscript_space_error_highlight")
   " trailing whitespace
   syn match   pyxlscriptSpaceError	display excludenl "\s\+$"
   " mixed tabs and spaces
@@ -136,11 +108,11 @@ endif
 
 
 " Sync at the beginning of class, function, or method definition.
-syn sync match pythonSync grouphere NONE "^\s*\%(function\)\s\+\h\w*\s*("
+syn sync match pyxlscriptSync grouphere NONE "^\s*\%(function\)\s\+\h\w*\s*("
 
-if version >= 508 || !exists("did_python_syn_inits")
+if version >= 508 || !exists("did_pyxlscript_syn_inits")
   if version <= 508
-    let did_python_syn_inits = 1
+    let did_pyxlscript_syn_inits = 1
     command -nargs=+ HiLink hi link <args>
   else
     command -nargs=+ HiLink hi def link <args>
@@ -161,13 +133,13 @@ if version >= 508 || !exists("did_python_syn_inits")
   HiLink pyxlscriptEscape		Special
   HiLink pyxlscriptModeLine		Special
   HiLink pyxlscriptBuiltIn	Function
-  if !exists("python_no_number_highlight")
+  if !exists("pyxlscript_no_number_highlight")
     HiLink pyxlscriptNumber		Number
   endif
-  if !exists("python_no_builtin_highlight")
+  if !exists("pyxlscript_no_builtin_highlight")
     HiLink pyxlscriptBuiltIn	Function
   endif
-  if exists("python_space_error_highlight")
+  if exists("pyxlscript_space_error_highlight")
     HiLink pyxlscriptSpaceError	Error
   endif
 

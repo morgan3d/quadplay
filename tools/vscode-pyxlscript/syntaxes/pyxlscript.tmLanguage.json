@@ -25,7 +25,7 @@
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.control.pyxlscript",
-				"match": "\\b(if|else|pass|while|for|return|continue|break|let|in|const|def|true|false)\\b"
+				"match": "\\b(if|else|pass|while|for|return|continue|break|let|in|because|const|def|true|false)\\b"
 			}]
 		},
 		"strings": {
@@ -74,7 +74,7 @@
 			"patterns": [
 				{
 					"name": "keyword.operator.new.pyxlscript",
-					"match": "\\b(saveLocal|drawText|anyButtonPress)\\b"
+					"match": "\\b(loadLocal|saveLocal|drawText|anyButtonPress)\\b"
 				},
 				{
 					"name": "keyword.operator.new.pyxlscript.mode",
