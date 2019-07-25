@@ -225,6 +225,9 @@ from a web site or your local machine running the quadplay✜ emulator.
 
 ### Examples
 
+[Starter](../console?game=quad://examples/starter&IDE=1) is a project with a basic setup
+from which you can build your own.
+
 [Hello, World](../console?game=quad://examples/helloworld&IDE=1) is a minimal example of a program with
 one mode, one asset, and no sections or optional elements, and that simply puts text
 on the screen.
@@ -263,8 +266,10 @@ sprite animations.
 - Changing direction
 - Modular items
 
-[Starter](../console?game=quad://examples/starter&IDE=1) is a project with a basic setup
-from which you can build your own.
+
+[Fluid](../console?game=quad://examples/fluid&IDE=1) is a cellular automata fluid flow simulation
+with gravity and pressure.
+
 
 
 Programming Model
@@ -1079,8 +1084,8 @@ including `xy()` and `rgb()` values, except where specific key names are mention
   returns `a.x * b.y - a.y * b.x`, which is the 2D wedge product.
 
 `direction(v)`
-: `v / magnitude(v)` if the magnitude is nonzero, otherwise the zero vector. That is,
-  returns a normalized or unit vector unless the input is zero.
+: `v / magnitude(v)` if the magnitude is greater than 10<sup>-10</sup>, otherwise returns the original (nearly zero) vector. That is,
+  returns a normalized or unit vector unless the input is close to zero.
 
 `dot(a, b)`
 : Return the dot (inner) product of any two structures or arrays with parallel
@@ -2673,6 +2678,9 @@ versions may be substantially faster than overloaded operators.
 `SUB(s1, s2)`
 : Returns the scalar difference.
 
+`CLAMP(s, slo, shi)`
+: Clamps `s` to [`slo`, `shi`] where all are scalar and returns the result.
+
 `RGB_ADD_RGB(srcrgb, srcrgb, dstrgb)`
 : Element addition.
 
@@ -2694,6 +2702,10 @@ versions may be substantially faster than overloaded operators.
 `RGB_DOT_RGB(srcrgb1, srcrgb2)`
 : Returns the scalar result.
 
+`RGB_LERP(srcrgb1, srcrgb2, s1, dstrgb)`
+: Interpolates between the two source values and returns the result in `dstrgb`.
+  The destination may be the same as one of the sources.
+
 `RGBA_ADD_RGBA(srcrgba1, srcrgba2, dstrgba)`
 : Element addition.
 
@@ -2714,6 +2726,10 @@ versions may be substantially faster than overloaded operators.
 
 `RGBA_DOT_RGBA(srcrgba1, srcrgba2)`
 : Returns the scalar result.
+
+`RGBA_LERP(srcrgba1, srcrgba2, s1, dstrgba)`
+: Interpolates between the two source values and returns the result in `dstrgba`.
+  The destination may be the same as one of the sources.
 
 `XY_ADD_XY(srcxy1, srcxy2, dstxy)`
 : Element addition.
@@ -2817,6 +2833,8 @@ Sprites
 
 Fonts
 ------------------------------------------------------------------------------------
+
+![`quad://fonts/octant-17.font.json`](../fonts/octant-17.png)
 
 ![`quad://fonts/deja-15.font.json`](../fonts/deja-15.png)
 
@@ -3497,7 +3515,9 @@ Variables
 
 Variable name identifiers consist of an optional upper case delta plus a series of Roman
 letters, or the unambiguous-looking Greek letters `αβγδζηθιλμρσϕχτψωΩ` by themselves, and
-optionally trailing a series of digits. The identifier also must not be a reserved word. No
+optionally trailing a series of digits. Greek letters may also be trailed by
+an underscore and a series of letters and digits.
+The identifier also must not be a reserved word. No
 underscores or other unicode characters are allowed in identifiers.
 
 Examples of legal identifiers:
@@ -3505,11 +3525,15 @@ Examples of legal identifiers:
 ~~~~~~~~~~~~~~~~~~~ none
 col
 screen
+long_variable
+longVariable
 L
 i
 damage
+Y2
 Δx
 θ
+θ_in
 ~~~~~~~~~~~~~~~~~~~
 
 Variables are declared to the scope of the containing block or
@@ -4540,9 +4564,9 @@ The API is mostly complete. I'm focusing on bug fixes and minor tweaks
 to improve convenience. Only some minor helpers, primarily for AI
 tasks, will be added before release.
 
-Expect rasterization rules for disks and triangles to change slightly
+Expect rasterization rules for triangles to change slightly
 in order to better align for subpixel cases. The current sprite, map,
-line, and rectangle rendering alignment is final. I will add separate
+disk, line, and rectangle rendering alignment is final. I will add separate
 functions for watertight triangle and line rasterization, which give
 different results than what is typically useful for individual
 primitives.
@@ -4621,6 +4645,18 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2019 July 25: Beta update 4
+
+- Fixed self-overdraw in disk and circle rendering
+- `direction()` now returns a non-unit vector if the input is less than 10<sup>-10</sup>
+- Added [Fluid simulation](../console?game=quad://examples/fluid&IDE=1) example program
+- Added `octant-17.font.json`
+- Added `CLAMP()`, `RGBA_LERP()` and `RGB_LERP()`
+- Fixed compilation bug with Greek letter identifiers
+- Made underscore-"subscripted" Greek letters legal identifiers. For example: <code>θ_interior</code>, <code>μ_p</code>
+
+
 
 2019 July 17: Beta update 3
 

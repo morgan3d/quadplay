@@ -1,0 +1,27 @@
+{
+    "title":      "Fluid Example",
+    "developer":  "Casual Effects",
+    "copyright":  "©2019 Morgan McGuire",
+    "license":    "MIT License, derived from MIT code ©2017 Jon Gallant https://github.com/jongallant/LiquidSimulator",
+
+    "packages":   [],
+    "scripts":    ["util.pyxl", "grid.pyxl"],
+    "modes":      ["Play*"],
+    "assets":     {
+        "font":       "quad://fonts/good-neighbors-9.font.json",
+        "arrowFont":  "quad://fonts/deja-8.font.json",
+        "background": "background.sprite.json"
+    },
+
+    "version":      0.0,
+    "minPlayers":   1,
+    "maxPlayers":   1,
+    "cooperative":  false,
+    "competitive":  false,
+    "achievements": false,
+    "highscores":   false,
+    "description": "Cellular automata fluid simulation.",
+
+    "constants":  {
+    }
+}

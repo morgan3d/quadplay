@@ -1,0 +1,295 @@
+// Derived from http://www.jgallant.com/2d-liquid-simulator-with-cellular-automaton-in-unity/
+
+const SHOW_GRID = false
+const SHOW_FLOW = false
+
+const CELL_SIZE = 4
+
+const NUM_ITERATIONS = 10
+
+// Not actually the maximum value, sorry
+const MAX_VALUE = 1
+
+// Below this is forced to zero
+const MIN_VALUE = 0.005
+
+const SETTLE_ITERATIONS = 10
+
+// Amount more than the cell above that can be stored
+const MAX_COMPRESSION = 0.25
+
+// Maximum value to flow per iteration
+const MIN_FLOW = 0.005
+const MAX_FLOW = 4
+
+// On [0, 1]
+const FLOW_SPEED = 1
+
+def drawGrid(grid):
+   // Values
+   const pos = xy(0, 0)
+   const dim = xy(grid.cellSize.x, 0)
+   const fluidColor = #0af8
+   const darkFluidColor = #00dc
+   const solidColor = #0
+   const temp = #0000
+   for x < grid.size.x:
+      for y < grid.size.y:
+         const cell = grid[x][y]
+         let fraction = if cell.solid then 1 else min(1, DIV(cell.value, MAX_VALUE))
+         
+         const down = grid[x][ADD(y, 1)]
+         if cell.falling:
+            // Fill in falling liquid
+            fraction = 1
+         else if not cell.falling and not cell.solid and down and not down.solid and down.value <= 0:
+            // Hide floating liquid
+            fraction = 0
+
+         if fraction > 0:
+            dim.y = MUL(fraction, grid.cellSize.y)
+            pos.x = MUL(x, grid.cellSize.x)
+            pos.y = SUB(MUL(ADD(y, 1), grid.cellSize.y), dim.y)
+            if cell.solid:
+               drawRect(pos, dim, solidColor)
+            else:
+               RGBA_LERP(fluidColor, darkFluidColor, CLAMP(MUL(cell.value, 25%), 0, 1), temp)
+               drawRect(pos, dim, temp)
+               
+               
+   // Draw gridlines
+   if SHOW_GRID:
+      const gridColor = #dc
+   
+      for x < grid.size.x:
+         drawLine(xy(x * grid.cellSize.x, 0), xy(x * grid.cellSize.x, grid.size.y * grid.cellSize.y), gridColor)
+      
+      for y < grid.size.y:
+         drawLine(xy(0, y * grid.cellSize.y), xy(grid.size.x * grid.cellSize.x, y * grid.cellSize.y), gridColor)
+
+         
+   // Draw flow directions
+   if SHOW_FLOW:
+      for x < grid.size.x:
+         for y < grid.size.y:
+            const cell = grid[x][y]
+            const pos = grid.cellSize * (xy(x, y) + 0.5)
+            if cell.flowUp:    drawText({font:arrowFont, text:"↑", pos:pos + xy( 1, -1), color:#2, xAlign: "center", yAlign: "center"})
+            if cell.flowDown:  drawText({font:arrowFont, text:"↓", pos:pos + xy( 1,  2), color:#2, xAlign: "center", yAlign: "center"})
+            if cell.flowLeft:  drawText({font:arrowFont, text:"←", pos:pos + xy(-1, -1), color:#2, xAlign: "center", yAlign: "center"})
+            if cell.flowRight: drawText({font:arrowFont, text:"→", pos:pos + xy( 3, -1), color:#2, xAlign: "center", yAlign: "center"})
+            if cell.settled:   drawText({font:arrowFont, text:"×", pos:pos + xy( 1, 0), color:#2, xAlign: "center", yAlign: "center"})
+
+      
+      
+def makeGrid():
+   const grid = makeArray2D(screenSize.x / CELL_SIZE, screenSize.y / CELL_SIZE)
+   grid.cellSize = xy(CELL_SIZE, CELL_SIZE)
+   
+   for x < grid.size.x:
+      for y < grid.size.y:
+         grid[x][y] = {
+            // Amount of fluid
+            value: 0,
+            
+            // If true, this stops flow
+            solid: false,
+
+            // If true, fluid was falling down through
+            // the cell at some point in the simulation
+            falling: false,
+            
+            settled: true,
+            settleCount: 0,
+
+            // Net flow this frame
+            delta: 0,
+            
+            // For tracking flow
+            flowDown: false,
+            flowUp: false,
+            flowLeft: false,
+            flowRight: false
+      }
+         
+   return grid
+
+
+
+// How much flows in vertically
+def verticalFlow(cell, remaining):
+   const sum = remaining + cell.value
+   let value = 0
+
+   if sum < MAX_VALUE:
+      value = MAX_VALUE
+   else if sum < 2 MAX_VALUE * MAX_COMPRESSION:
+      value = (MAX_VALUE^2 + sum * MAX_COMPRESSION) / (MAX_VALUE + MAX_COMPRESSION)
+   else:
+      value = (sum + MAX_COMPRESSION) / 2
+
+   return value
+
+
+
+def resetFlowDirections(cell):
+   cell.flowUp = false
+   cell.flowDown = false
+   cell.flowRight = false
+   cell.flowLeft = false
+
+   
+
+def settleCell(cell):
+   resetFlowDirections(cell)
+   cell.settled = true
+
+   
+
+def simulateGrid(grid):
+   // Reset falling
+   for x < grid.size.x:
+      for y < grid.size.y:
+         grid[x][y].falling = false
+         
+   for i < NUM_ITERATIONS:
+      simulateGridOneIteration(grid)
+
+      
+      
+def simulateGridOneIteration(grid):
+   // Reset deltas
+   for x < grid.size.x:
+      for y < grid.size.y:
+         grid[x][y].delta = 0
+         
+
+   // Compute flow for this cell
+   for x < grid.size.x:
+      for y < grid.size.y:
+         const cell = grid[x][y]
+
+         resetFlowDirections(cell)
+         
+         // Trivial cases
+         if cell.solid:
+            cell.value = 0
+            continue
+
+         if cell.value < MIN_VALUE: cell.value = 0
+
+         // TODO: re-enable
+         if cell.value == 0 /* or cell.settled */: continue
+
+         // Flow case
+         const startValue = cell.value
+         let remaining = startValue
+
+         // Flow down
+         const down = grid[x][y + 1]
+         if down and not down.solid:
+            // Compute rate
+            let flow = max(verticalFlow(down, cell.value) - down.value, 0)
+            if down.value > 0 and flow > MIN_FLOW: flow *= FLOW_SPEED
+
+            // Constrain
+            flow = min(flow, MAX_FLOW, cell.value)
+
+            // Update
+            if flow > 0:
+               remaining -= flow
+               cell.delta -= flow
+               down.delta += flow
+               cell.flowDown = true
+               down.settled = false
+
+               if remaining < MIN_VALUE:
+                  // Nothing left in this cell
+                  cell.delta -= remaining
+                  continue
+
+         // Left
+         const left = if (x > 0) then grid[x - 1][y] else nil
+         if left and not left.solid:
+            let flow = max((remaining - left.value) / 3, 0)
+            if flow > MIN_FLOW: flow *= FLOW_SPEED
+            flow = min(flow, MAX_FLOW, remaining)
+            
+            if flow != 0:
+               remaining -= flow
+               cell.delta -= flow
+               left.delta += flow
+               cell.flowLeft = true
+               left.settled = false
+               
+               if remaining < MIN_VALUE:
+                  // Nothing left in this cell
+                  cell.delta -= remaining
+                  continue
+               
+         // Right
+         const right = if (x < grid.size.x - 1) then grid[x + 1][y] else nil
+         if right and not right.solid:
+            let flow = max((remaining - right.value) / 3, 0)
+            if flow > MIN_FLOW: flow *= FLOW_SPEED
+            flow = min(flow, MAX_FLOW, remaining)
+            
+            if flow != 0:
+               remaining -= flow
+               cell.delta -= flow
+               right.delta += flow
+               cell.flowRight = true
+               right.settled = false
+               
+               if remaining < MIN_VALUE:
+                  // Nothing left in this cell
+                  cell.delta -= remaining
+                  continue
+
+         // Up
+         const up = grid[x][y - 1]
+         if up and not up.solid:
+            let flow = max(remaining - verticalFlow(up, remaining), 0)
+            if flow > MIN_FLOW: flow *= FLOW_SPEED
+            flow = min(flow, remaining, MAX_FLOW)
+
+            if flow != 0:
+               remaining -= flow
+               cell.delta -= flow
+               up.delta += flow
+               cell.flowUp = true
+               up.settled = false
+
+               if remaining < MIN_VALUE:
+                  // Nothing left in this cell
+                  cell.delta -= remaining
+                  continue
+               
+         // Check for settled cell
+         if startValue == remaining:
+            ++cell.settleCount
+            if cell.settleCount >= SETTLE_ITERATIONS:
+               settleCell(cell)
+            else:
+               // Unsettle neighbors
+               if up: up.settled = false
+               if down: down.settled = false
+               if left: left.settled = false
+               if right: right.settled = false
+
+   // Apply flow
+   for x < grid.size.x:
+      for y < grid.size.y:
+
+         const cell = grid[x][y]
+         cell.value += cell.delta
+         
+         if cell.value < MIN_VALUE:
+            cell.value = 0
+            cell.settled = false
+         else if not cell.falling:
+            // Maybe update falling
+            const up = grid[x][y - 1]
+            cell.falling = up and (up.value >= MIN_VALUE or up.flowDown)
+
+

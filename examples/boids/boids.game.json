@@ -1,0 +1,17 @@
+{
+    "assets": {
+        "font": "nano://fonts/deja-9.font.json"
+    },
+    "constants": {
+    },
+    "copyright": "\u00a92019 Stephan Steinbach",
+    "developer": "Stephan Steinbach",
+    "license": "CC0/Public Domain(Replace with your own license)",
+    "modes": [
+        "Boids*"
+    ],
+    "packages": [],
+    "scripts": [
+    ],
+    "title": "BOIDS BOIDS BOIDS"
+}

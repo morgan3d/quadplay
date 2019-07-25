@@ -1,0 +1,11 @@
+
+def makeArray2D(w, h):
+   let a = [];
+   a.size = floor(xy(w, h))
+   
+   for x < a.size.x:
+      push(a, []);
+      for y < a.size.y:
+         push(a[x], nil)
+         
+   return a

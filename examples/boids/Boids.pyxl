@@ -1,0 +1,116 @@
+init
+───────────────────────────────────────────────────────────
+// functions
+def make_boid(position):
+    return makeEntity(
+        {
+            pos: position,
+            angle: 0deg,
+            size: xy(3,3)
+        }
+    )
+
+def draw_boid(boid):
+    let tri = []
+    for ind < 3:
+        let p = triangle[ind]
+        push(
+            tri, 
+            xy(
+                p.x*cos(boid.angle) - p.y * sin(boid.angle),
+                p.y*cos(boid.angle) + p.x * sin(boid.angle)
+            ) + boid.pos
+        )
+    drawTri(tri[0], tri[1], tri[2], rgb(0,0,1))
+
+def update_boid(each_boid):
+    // let dir = direction(each_boid.pos - attractors[0])
+    each_boid.angle = atan(each_boid.vel.y, each_boid.vel.x)
+
+    //// compute acceleration
+    
+    // initially just apply drag
+    let vel_mag = magnitude(each_boid.vel)
+    let drag_acceleration = -2% * vel_mag^2 * direction(each_boid.vel)
+
+    // acceleration towards goal
+    let goal_dir = xy(0, 0)
+    let shortest_distance = magnitude(screenSize*screenSize)
+    for attractor in attractors:
+        let goal_vec = attractor - each_boid.pos
+        if magnitude(goal_vec) < shortest_distance:
+            if magnitude(goal_vec) > 20:
+                goal_dir = direction(goal_vec)
+                shortest_distance = magnitude(goal_vec)
+
+    // acceleration away from flockmates 
+    let avoid_accel = xy(0, 0)
+    let overlap_obj = {pos:each_boid.pos, shape:"disk", size: xy(IDEAL_DISTANCE,IDEAL_DISTANCE)}
+    let num_influence = 1
+    for other_boid in boids:
+
+        if other_boid == each_boid:
+            continue
+
+        let offset = each_boid.pos - other_boid.pos
+        let mag = magnitude(offset)
+        if mag > 0.01 and mag <= 2 IDEAL_DISTANCE:
+            let amount = 2 sign(20 - mag)
+            avoid_accel += offset * (amount / mag)
+            ++num_influence
+    avoid_accel /= num_influence
+    
+    // apply acceleration
+    let acceleration = avoid_accel
+    let accumulated_accel = magnitude(acceleration)
+    let accel_left = clamp(1 - accumulated_accel, 0, 1)
+
+    acceleration += accel_left * goal_dir
+    acceleration += drag_acceleration
+
+    each_boid.force = acceleration / NUM_ITERATIONS
+
+    // apply acceleration to velocity
+    physicsStepEntity(each_boid)
+
+
+
+// Entities
+const boids = []
+const NUM_BOIDS =  30
+const NUM_ITERATIONS = 1
+for i < NUM_BOIDS:
+    push(boids, make_boid(rndSquare()*screenSize/2))
+
+// draw shape for each boid
+const triangle = [ 
+    xy(0, -3),
+    xy(0,  3),
+    xy(6,  0),
+]
+
+// attractors
+const attractors = [
+    xy(30, 30),
+    xy(-30, -30),
+]
+
+// Constants
+const IDEAL_DISTANCE = 30
+
+// default camera
+setTransform(screenSize/2)
+
+frame
+───────────────────────────────────────────────────────────
+
+
+for it<NUM_ITERATIONS:
+    for each_boid in boids:
+        update_boid(each_boid)
+    
+for each_boid in boids:
+    draw_boid(each_boid)
+
+for at in attractors:
+    drawDisk(at, 5, rgb(0,1,0))

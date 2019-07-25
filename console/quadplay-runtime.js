@@ -3716,7 +3716,7 @@ function magnitude(a) {
 
 function direction(a) {
     const m = magnitude(a);
-    return (m > 0) ? _mul(a, 1.0 / m) : clone(a);
+    return (m > 1e-10) ? _mul(a, 1.0 / m) : clone(a);
 }
 
 // Used by min and max (and mid). Assumes 'this' is bound to the corresponding Math function.
@@ -3788,6 +3788,10 @@ function MAD(a, b, c) {
 
 function DIV(a, b) {
     return a / b;
+}
+
+function CLAMP(a, lo, hi) {
+    return Math.min(Math.max(a, lo), hi);
 }
 
 function XYZ_ADD_XYZ(v1, v2, r) {
@@ -3877,6 +3881,17 @@ function XY_CRS_XY(v1, v2) {
     return v1.x * v2.y - v1.y * v2.x;
 }
 
+function RGBA_LERP(c1, c2, A, dst) {
+    const r = (c2.r - c1.r) * A + c1.r;
+    const g = (c2.g - c1.g) * A + c1.g;
+    const b = (c2.b - c1.b) * A + c1.b;
+    const a = (c2.a - c1.a) * A + c1.a;
+    dst.r = r;
+    dst.g = g;
+    dst.b = b;
+    dst.a = a;    
+}
+
 function RGBA_ADD_RGBA(c1, c2, r) {
     r.r = c1.r + c2.r;
     r.g = c1.g + c2.g;
@@ -3940,6 +3955,15 @@ function RGB_MUL_RGB(c1, c2, r) {
     r.r = c1.r * c2.r;
     r.g = c1.g * c2.g;
     r.b = c1.b * c2.b;
+}
+
+function RGB_LERP(c1, c2, A, dst) {
+    const r = (c2.r - c1.r) * A + c1.r;
+    const g = (c2.g - c1.g) * A + c1.g;
+    const b = (c2.b - c1.b) * A + c1.b;
+    dst.r = r;
+    dst.g = g;
+    dst.b = b;
 }
 
 function RGB_DIV_RGB(c1, c2, r) {
@@ -4660,12 +4684,16 @@ function _executeCIR(cmd) {
         // Midpoint circle algorithm. Iterate over 1/8 of the circle,
         // reflect to all sides
         while (ox >= oy) {
-            _hline(x - ox, y + oy, x + ox, color, clipX1, clipY1, clipX2, clipY2);
-            _hline(x - ox, y - oy, x + ox, color, clipX1, clipY1, clipX2, clipY2);
-            
-            _hline(x - oy, y + ox, x + oy, color, clipX1, clipY1, clipX2, clipY2);
-            _hline(x - oy, y - ox, x + oy, color, clipX1, clipY1, clipX2, clipY2);
-
+            // Center
+            if (ox !== oy) {
+                // Bottom
+                _hline(x - ox, y + oy, x + ox, color, clipX1, clipY1, clipX2, clipY2);
+                
+                // Top
+                if (oy > 0) { _hline(x - ox, y - oy, x + ox, color, clipX1, clipY1, clipX2, clipY2); }
+            }
+                
+            let old = oy;
             // -4 gives better shape for small circles
             if (err <= -4) {
                 ++oy;
@@ -4673,9 +4701,12 @@ function _executeCIR(cmd) {
                 dy += 2;
             }
 
-            // intentionally no "else" to allow diagonal jumps
+            // ...intentionally no "else" to allow diagonal changes in both x and y position...
             
             if (err > -4) {
+                // Caps
+                _hline(x - old, y + ox, x + old, color, clipX1, clipY1, clipX2, clipY2);
+                _hline(x - old, y - ox, x + old, color, clipX1, clipY1, clipX2, clipY2);
                 --ox;
                 dx += 2;
                 err += dx - radius * 2;
@@ -4693,17 +4724,32 @@ function _executeCIR(cmd) {
         let err = dx - radius * 2;
 
         while (ox >= oy) {
-            _pset(x - ox, y + oy, outline, clipX1, clipY1, clipX2, clipY2);
-            _pset(x + ox, y + oy, outline, clipX1, clipY1, clipX2, clipY2);
-            
+            if (ox !== oy) {
+                // Bottom center
+                _pset(x - ox, y + oy, outline, clipX1, clipY1, clipX2, clipY2);
+                _pset(x + ox, y + oy, outline, clipX1, clipY1, clipX2, clipY2);
+
+                if (oy > 0) {
+                    // Top center
+                    _pset(x - ox, y - oy, outline, clipX1, clipY1, clipX2, clipY2);
+                    _pset(x + ox, y - oy, outline, clipX1, clipY1, clipX2, clipY2);
+                }
+            }
+
+            // Bottom cap
             _pset(x - oy, y + ox, outline, clipX1, clipY1, clipX2, clipY2);
-            _pset(x + oy, y + ox, outline, clipX1, clipY1, clipX2, clipY2);
-            
-            _pset(x - ox, y - oy, outline, clipX1, clipY1, clipX2, clipY2);
-            _pset(x + ox, y - oy, outline, clipX1, clipY1, clipX2, clipY2);
-            
+
+            // Top cap
             _pset(x - oy, y - ox, outline, clipX1, clipY1, clipX2, clipY2);
-            _pset(x + oy, y - ox, outline, clipX1, clipY1, clipX2, clipY2);
+            
+            if (oy > 0) {
+                // Bottom cap
+                _pset(x + oy, y + ox, outline, clipX1, clipY1, clipX2, clipY2);
+                
+                // Top cap
+                _pset(x + oy, y - ox, outline, clipX1, clipY1, clipX2, clipY2);
+            }
+            
 
             if (err <= -4) {
                 ++oy;

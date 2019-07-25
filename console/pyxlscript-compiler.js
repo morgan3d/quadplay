@@ -543,7 +543,7 @@ function processBlock(lineArray, startLineIndex, inFunction) {
 }
 
 
-const identifierPattern = '[Δ]?(?:[A-Za-z][A-Za-z_0-9]*|[αβγΔδζηθιλμρσϕφχψτωΩ][_0-9]*)';
+const identifierPattern = '[Δ]?(?:[A-Za-z][A-Za-z_0-9]*|[αβγΔδζηθιλμρσϕφχψτωΩ][_0-9]*(?:_[A-Za-z_0-9]*)?)';
 const identifierRegex = RegExp(identifierPattern);
 
 // for WITH statements
@@ -884,7 +884,7 @@ function pyxlToJS(src, noYield) {
         src = src.replace(/([επξ∞½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣᵏᵘⁿ⁾₀₁₂₃₄₅₆₇₈₉ₐᵦᵢⱼₓₖᵤₙ₎]|\))[ \t]*([\(A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞])/g, '$1 * $2');
 
         // Number case (has to rule out a variable name that ends in a number or has a number inside of it)
-        src = src.replace(/([^A-Za-z0-9αβγδζηθιλμρσϕφχτψωΩ_]|^)([0-9\.]*?[0-9])[ \t]*([\(A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞])/g, '$1$2 * $3');
+        src = src.replace(/([^A-Za-z0-9αβγδζηθιλμρσϕφχτψωΩ_]|^)([0-9\.]*?[0-9])[ \t]*([\(A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞_])/g, '$1$2 * $3');
         
         // Fix any instances of text operators that got accentially
         // turned into implicit multiplication. If there are other
@@ -911,9 +911,11 @@ function pyxlToJS(src, noYield) {
         src = src.replace(/\)[ \t]*\(/, ') * (');
     }
 
-    // sin, cos, tan with a single argument and no parentheses. Must come after implicit
+    // sin, cos, tan with a single argument and no parentheses. Must be processed after implicit
     // multiplication so that, e.g., 2cosθ parses correctly with regard to the \\b
-    src = src.replace(RegExp('\\b(cos|sin|tan)[ \\t]*([επξ]|\\b' + identifierPattern + ')(?=\\s|\\b|[^επξΔA-Za-z0-9]|$)', 'g'), '$1($2)');
+    //
+    // This used to be at the end of the regex and I don't know why: (?=\\s|\\b|[^επξΔA-Za-z0-9]|$)
+    src = src.replace(RegExp('\\b(cos|sin|tan)[ \\t]*([επξ]|' + identifierPattern + ')', 'g'), '$1($2)');
     
     // Process after FOR-loops so that they are easier to parse
     src = src.replace(/≤/g, ' <= ');

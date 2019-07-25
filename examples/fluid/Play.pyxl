@@ -1,0 +1,65 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+/*
+TODO:
+- Settled gets water stuck in the air
+*/
+
+const grid = makeGrid()
+
+// Create walls
+for x < grid.size.x:
+   grid[x][grid.size.y - 1].solid = true
+   
+for y < grid.size.y:
+   grid[0][y].solid = true
+   grid[grid.size.x - 1][y].solid = true
+
+
+let cursor = floor(½ screenSize / grid.cellSize)
+
+// Frames for which a direction must be held before it repeats
+const MAX_REPEAT_DELAY = 20
+let repeatDelay = MAX_REPEAT_DELAY
+
+const REPEAT_RATE = 2
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+setBackground(background)
+
+simulateGrid(grid)
+drawGrid(grid)
+
+drawRect(cursor * grid.cellSize, grid.cellSize, #f00b)
+
+
+if joy.x or joy.y: --repeatDelay
+else:              repeatDelay = MAX_REPEAT_DELAY
+
+let dir = xy(joy.xx, joy.yy)
+if repeatDelay <= 0 and (modeFrames mod REPEAT_RATE == 0): dir = xy(joy.x, joy.y)
+cursor = clamp(cursor + dir, xy(0, 0), grid.size - 1)
+
+const cell = grid[cursor.x][cursor.y]
+
+if joy.a:
+   cell.value += 0.75
+   cell.settled = false
+   
+if joy.b:
+   cell.solid = true
+   cell.value = 0
+   cell.settled = true
+
+if joy.c:
+   cell.solid = false
+   cell.value = 0
+   cell.settled = false
+
+drawText({font: font, pos: xy(½ screenSize.x, 2),
+          text: joy.prompt.a + " Water  " + joy.prompt.b + " Draw  " + joy.prompt.c + " Clear  " + joy.prompt.up + joy.prompt.lt + joy.prompt.dn + joy.prompt.rt + " Move",
+          color: #f00, shadow: #c, outline: #f, xAlign: "center", yAlign: "top"})
