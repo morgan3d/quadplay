@@ -911,11 +911,9 @@ function pyxlToJS(src, noYield) {
         src = src.replace(/\)[ \t]*\(/, ') * (');
     }
 
-    // sin, cos, tan with a single argument and no parentheses. Must be processed after implicit
-    // multiplication so that, e.g., 2cosθ parses correctly with regard to the \\b
-    //
-    // This used to be at the end of the regex and I don't know why: (?=\\s|\\b|[^επξΔA-Za-z0-9]|$)
-    src = src.replace(RegExp('\\b(cos|sin|tan)[ \\t]*([επξ]|' + identifierPattern + ')', 'g'), '$1($2)');
+    // SIN, COS, TAN with a single argument and no parentheses. Must be processed after implicit
+    // multiplication so that, e.g., 2 cos θ parses correctly with regard to the \\b
+    src = src.replace(RegExp('\\b(cos|sin|tan)[ \\t]*([επΔξ]|[ \\t]+' + identifierPattern + ')', 'g'), '$1($2)');
     
     // Process after FOR-loops so that they are easier to parse
     src = src.replace(/≤/g, ' <= ');

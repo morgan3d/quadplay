@@ -4,14 +4,14 @@ Play
 let trackArray = []
 
 let tank = makeEntity({
-   pos: ½ screenSize,
-   angle: 0,
+   pos:    ½ screenSize,
+   angle:  0,
    sprite: tankSprite[0][0],
    turret: makeEntity({
-      pos: xy(0,0),
-      sprite: tankSprite[0][1],
+      pos:              xy(0, 0),
+      sprite:           tankSprite[0][1],
       orientWithParent: false,
-      zInParent: 1
+      zInParent:        1
    })
 })
 
@@ -27,8 +27,9 @@ def wrapAngle(a):
 
 def rotateToTarget(entity, target, rate):
    const delta = wrapAngle(target * getRotationSign() - entity.angle)
-   if |delta| > rate / 2: entity.angle = wrapAngle(entity.angle + sign(delta) * rate)
+   if |delta| > ½ rate: entity.angle = wrapAngle(entity.angle + sign(delta) * rate)
 
+   
    
 frame
 ───────────────────────────────────────────────────────────
