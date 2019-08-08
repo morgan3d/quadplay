@@ -746,14 +746,38 @@ The `joy` variable is equal to `pad[0]` as shorthand for single-person games.
 The `anyButtonPress()` function returns true if any gamepad's button was just
 pressed.
 
-The `prompt` property maps `a`, `b`, ... `p`, `q`, `up`, `lt`, `dn`, `rt` to
-strings of text that can be used to describe controls to players in a way
+### Prompts
+
+The `prompt` property of `pad[]` maps `a`, `b`, `c`, `d`, `p`, `q`, `up`, `lt`, `dn`, `rt` to
+strings of text. These can be used to describe controls to players in a way
 mapped to the physical controller they are currently using instead of the quadplay
-native controls. For example, `"Press " + pad[0].prompt.a + " to jump"`. In this example,
+native controls. 
+
+For example, `"Press " + pad[0].prompt.a + " to jump"`. In this example,
 `prompt.a` returns the name of the button on the player's current controller that maps
-to `pad[0].a`. These may be more than a single character, for example `"SPC"` for spacebar. 
-In the current implementation, `prompt` _always_ maps the buttons to the characters 
-`ⓐ ⓑ ⓒ ⓓ ⓟ ⓠ ⍐ ⍇ ⍗ ⍈`, but this is likely to change in future implementations.
+to `pad[0].a`.
+
+The `pad[i].type` property describes the control scheme used for
+prompts. The possible values are:
+
+`type`          | `a` | `b` | `c` | `d` | `p` | `q` | `up` | `lt` | `dn` | `rt`
+----------------|-----|-----|-----|-----|-----|-----|------|------|------|-----
+`"Quadplay"`    | `ⓐ` | `ⓑ` | `ⓒ` | `ⓓ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
+`"Zero"`        | `ⓐ` | `ⓑ` | `ⓒ` | `ⓓ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
+`"PlayStation"` | `ⓧ` | `Ⓞ` | `▣` | `⍍` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
+`"Xbox"`        | `ⓐ` | `ⓑ` | `ⓧ` | `ⓨ` | `☰` | `⧉` | `⍐`  | `⍇`  | `⍗`  | `⍈`
+`"Nintendo"`    | `ⓑ` | `ⓐ` | `ⓨ` | `ⓧ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
+`"Keyboard"`    | `␣` | `⏎` | `ⓒ` | `ⓕ` | `ⓟ` | `ⓠ` | `W`  | `A`  | `S`  | `D`
+`"KeyboardAlt"` | `␣` | `⏎` | `ⓒ` | `ⓕ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
+`"KeyboardP1"`  | `V` | `G` | `ⓒ` | `ⓕ` | `4` | `1` | `W`  | `A`  | `S`  | `D`
+`"KeyboardP2"`  | `/` | `'` | `.` | `;` | `0` | `7` | `I`  | `J`  | `K`  | `L`
+
+Note that the `▣⍍☰⧉␣⏎` Unicode characters are rendered similarly to
+other button prompts in quadplay✜ fonts.
+
+The current implementation has `pad[i].type = "Quadplay"` for all pads by default.
+This can be changed from within a program using `deviceControl()`. See also the
+`controllers-32x22.sprite.json` for help in making your controller selection menu.
 
 
 
@@ -1198,8 +1222,11 @@ Math
 `log10(x)`
 : Logarithm base 10 `x`, _log x_ in math notation.
 
+`loop(x, lo, hi)`
+: Handy for making values wrap around. Real-number relative floored modulus. Wraps `x` to the range [`lo`, `hi`). See also `oscillate()`
+
 `loop(x, hi)`
-: Real-number floored modulus. Wraps `x` to the range [0, `hi`). `hi` defaults to `1.0` if not specified.
+: Handy for making values wrap around. Real-number floored modulus. Wraps `x` to the range [0, `hi`). `hi` defaults to `1.0` if not specified. See also `oscillate()`
 
 `magnitude(x, y, ...)`
 : The square root of the sum of the arguments, which must all be numbers.
@@ -1500,14 +1527,12 @@ The center of the entire screen is `½ screenSize`.
 : Named argument version of `setTransform()`.
 
 `setTransform(pos (= nil), dir (= nil), z (= nil), zDir (= nil), skew (= nil))`
-  
-`setTransform(addX (=), addY (=), addZ (=), dirX (=), dirY (=), dirZ (=), skewX (=), skewY (=))`
 : Set the transformation applied to all draw coordinates to compute screen coordinates. Nil values
   default to their previous value. The equation 
   mapping draw to screen coordinates is:
-  `x_s = (drawx + skew.x * drawz) * dir.x + pos.x`;
-  `y_s = (drawy + skew.y * drawz) * dir.y + pos.y`;
-  `z_s = drawz * zDir + z`. 
+  `screen.x = (draw.x + skew.x * draw.z) * dir.x + pos.x`;
+  `screen.y = (draw.y + skew.y * draw.z) * dir.y + pos.y`;
+  `screen.z = draw.z * zDir + z`.
 
   The `dir` parameters must be +1 or -1, for flipping axes. This
   affects the location of sprites and text but not their own axes;
@@ -1834,7 +1859,9 @@ Functions:
   Euler (1st order Runge-Kutta) integrator over duration `t`.  This
   tends to be a more stable method for small, discrete time steps
   than the analytic quadratic solution and avoids the need for
-  additional data of higher-order integrators.
+  additional data of higher-order integrators. Using the default
+  `t=1`, velocity has units of pixels/frame. If you pass `t=1/60`,
+  then velocity has units of pixels/second.
 
 `entityInertia(entity)`
 : Scalar inertia tensor about the center of mass. Equal to
@@ -1851,24 +1878,30 @@ Properties:
 
 `entity.acc`
 : `xy()` linear acceleration. Defaults to (0, 0). 
+  Has units of radians/frame^2 by default.
 
 `entity.force`
 : `xy()` linear force. Defaults to (0, 0).
-
+  Has units of mass * pixel/frame^2 by default.
+  
 `entity.density`
 : In mass units per square pixel. Defaults to 1.
 
 `entity.spin`
 : Scalar counter-clockwise rotational velocity. Defaults to 0.
+  Has units of radians/frame by default.
 
 `entity.torque`
 : Scalar counter-clockwise rotational torque. Defaults to 0.
+  Has units of mass * radians/frame^2 by default.
 
 `entity.twist`
 : Scalar counter-clockwise rotational acceleration. Defaults to 0.
+  Has units of radians/frame^2 by default.
 
 `entity.vel`
 : `xy()` linear velocity. Defaults to (0, 0).
+  Has units of pixels/frame by default.
 
 
 ### Hierarchy
@@ -2088,7 +2121,7 @@ endpoints and borders.
   `drawText({text: "Fire!", pos: xy(100, 100), xAlign:-1, z: 2})`.
   Values default according to the positional argument version.
 
-`drawText(font, text, pos, color (= nil), shadow (= nil), outline (= nil), xAlign (= -1), yAlign (= 1), z (= 0), wrapWidth (= nil))`
+`drawText(font, text, pos, color (= nil), shadow (= nil), outline (= nil), xAlign (= -1), yAlign (= 1), z (= 0), wrapWidth (= nil), textSize (= size(text)))`
 : Print string `text` relative to `pos` and return an `xy()` of the bounding box. 
   
   x-alignment of `-1` or `"left"` = left, 
@@ -2104,6 +2137,10 @@ endpoints and borders.
   `wrapWidth` is specified, breaks the text at the maximum width and
   renders multiple lines. Each line is offset by the font's vertical
   spacing and aligned as specified. See also `textWidth()`.
+  
+  `textSize` restricts drawText to only printing that many characters,
+  *after* word-wrapping. This allows gradually revealing text in a stable
+  way under word wrap.
   
 `drawTri(A, B, C, fill, border (= nil), z (= 0))`
 : Draw the triangle.
@@ -2387,7 +2424,7 @@ Collisions
 
 `rayIntersect(ray, obj)`
 : The `ray` object must have `xy()` fields for `origin`, `direction`,
-  and an optional number field for `length (= inf)`. 
+  and an optional number field for `length (= inf)`.
   The `ray.direction` will automatically be normalized.
 
   The `obj` has `shape`, `pos`, `size`, and optional `angle`
@@ -2403,16 +2440,27 @@ Collisions
   on each element of the array.
 
 <!--
-`rayIntersectMap(ray, map, tileCanBeSolid, pixelIsSolid (= nil))`
-: The `direction` will  automatically be normalized.
+`rayIntersectMap(args)`
+: Calls `rayIntersectMap()` with the named arguments.
 
-  `def tileCanBeSolid(P, map)` returns true if the tile at `P` _in map coords_ 
-  can trigger a collision.  The callback `pixelIsSolid` is then
-  invoked to find the collision within the tile.
+`rayIntersectMap(ray, map, tileCanBeSolid (= getMapSprite), pixelIsSolid (= nil), layer (= 0), replacementArray (= []))`
+: The `ray` object must have `xy()` fields for `origin`, `direction`,
+  and an optional number field for `length (= inf)`. 
+  The `ray.direction` will automatically be normalized. The ray is in _draw coordinates_.
+
+  Returns the sprite hit or `nil` if there was no intersection.
+  The `ray.length` is shortened to the hit distance. 
+
+  `def tileCanBeSolid(map, P, layer, replacementArray)` returns true
+  if the tile at `P` _in map coords_ can trigger a collision. The
+  callback `pixelIsSolid` is then invoked to find the collision within
+  the tile. The default value returns true for any non-`nil` tile.
    
-  `def pixelIsSolid(P, map)` returns true if the pixel at `P` _in map coords_
-  triggers a collision.  If `nil`, returns true for all pixels,
-  so any `tileCanBeSolid` tile immediately stops the ray. See `getMapPixel()`
+  `def pixelIsSolid(map, P, layer, replacementArray)` returns true if the pixel at `P` _in map coords_
+  triggers a collision.  The default value, returns true for all pixels,
+  so that any `tileCanBeSolid() == true` tile immediately stops the ray. See `getMapPixelColor()`.
+  As an example of a common alternative, `def pixelIsSolid(map, P, L, R): return getMapPixelColor(map, P, L, R).a > 50%`
+  causes collisions with any 50% opaque pixels.
 -->
 
 
@@ -2611,12 +2659,13 @@ These APIs are subject to change.
   remaining arguments are passed to it. All `deviceControl` commands
   may change in future releases and may not work on any given platform.
 
-  - `"StartGIFRecording"` Begin GIF recording.
-  - `"StopGIFRecording"`  End GIF recording. When the compression completes, the GIF will appear in a
+  - `"startGIFRecording"` Begin GIF recording.
+  - `"stopGIFRecording"`  End GIF recording. When the compression completes, the GIF will appear in a
      new tab.
-  - `"StartPreviewRecording"` Begin preview video recording. There is no "stop" command because this
+  - `"startPreviewRecording"` Begin preview video recording. There is no "stop" command because this
      terminates automatically after a set time.
-  - `"TakeScreenshot"`    Take a screenshot and download it to the local disk.
+  - `"takeScreenshot"`    Take a screenshot and download it to the local disk.
+  - `"setPadType", index, "type"` Set `pad[index].type` and the corresponding prompts.
 
 
 `drawBounds(e, color (= gray(60%)), recurse (= true))`
@@ -2880,7 +2929,11 @@ Fonts
 
 ![`quad://fonts/scoreboard-7.font.json`](../fonts/scoreboard-7.png)
 
+![`quad://fonts/scoreboard-6.font.json`](../fonts/scoreboard-6.png)
+
 ![`quad://fonts/nano-5.font.json`](../fonts/nano-5.png)
+
+![`quad://fonts/nano-4.font.json`](../fonts/nano-4.png)
 
 
 Sounds
@@ -4077,7 +4130,7 @@ single-line expressions on the same line. No `else` is permitted with single-lin
 let names = ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
 
 // Iterate over array elements
-let pos = xy(screenSize.x / 2, 10)
+let pos = xy(½ screenSize.x, 10)
 for planet in names:
    pos.y += drawText(font, planet, pos, #f)
    
@@ -4086,18 +4139,19 @@ for planet in names:
 // they will still be processed)
 for planet in names:
    // Remove any name with an "a" in it
-   if find(planet, "a") != nil: removeValues(names, planet)
+   if find(planet, "a") ≠ ∅: removeValues(names, planet)
    
    // Add some random moons...the current loop will not 
    // iterate over these, but they are immediately visible
    // in the array.
-   if rnd() > 50%: add(names, planet + " moon")
+   if rnd() > 50%: push(names, planet + " moon")
    
 // Iterate over array keys
-pos = xy(screenSize.x / 2, 10)
+pos = xy(½ screenSize.x, 10)
 for i < size(names):
    pos.y += drawText(font, names[i], pos, #f)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 #### Object Iteration
 
@@ -4114,22 +4168,23 @@ let poemBy = {
 }
 
 // Iterate over array elements
-let pos = xy(screenSize.x / 2, 10)
+let pos = xy(½ screenSize.x, 10)
 for author in poemBy:
    pos.y += drawText(font, poemBy[author] + " by " + author, pos, #f)
    
 // Iterate over values and modify (this is safe, no elements will be skipped)
 for author in poemBy:
    // Remove this entry if it contains an "a" in the value
-   if find(poemBy[authpr], "a") != nil: removeKey(poemBy, author)
+   if find(poemBy[authpr], "a") ≠ ∅: removeKey(poemBy, author)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 #### Array of Objects
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
-let spots = [xy(1,1), xy(100, 2), xy(10, 20), xy(50, 20)]
+let spots = [xy(1, 1), xy(100, 2), xy(10, 20), xy(50, 20)]
 
-for x,y in S in spots:
+for x, y in S in spots:
    // Remove any element that is higher than 15
    if y > 15: removeValues(spots, S)
    
@@ -4142,6 +4197,7 @@ for i < size(spots):
       --i
    
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 Debugging
 ---------------------------------------------------------
@@ -4655,6 +4711,24 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2019 August 8: Beta update 6
+
+- Added `scoreboard-6.font.json`
+- Added `nano-4.font.json`
+- Fixed `XY_MUL()` intrinsic
+- Fixed `setTransform()` documentation to match current API
+- Added three argument version of `loop()`
+- Allowed `drawText()` word-wrapping to search further back for a good break point
+- Reduced boot loader font size for smaller screens
+- Added `textSize` argument to `drawText()`
+- Added units documentation to `entity` physics properties
+- Added space (`␣`) and return (`⏎`) button characters to fonts
+- Added alternative keyboard and 8Bitdo Zero controller to `controllers-32x22.png`
+- Added `pad[i].prompt.type`
+- Fixed compilation of `if...then...else` on lines with other control flow
+- Fixed asset credits leading "by" lacking a trailing space
+
 
 2019 August 2: Beta update 5
 

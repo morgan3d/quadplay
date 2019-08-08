@@ -1,5 +1,16 @@
 {
     "url": "controllers-32x22.png",
     "license": "©2019 Morgan McGuire, licensed as CC BY 4.0",
-    "spriteSize": {"x":32, "y":22}
+    "spriteSize": {"x":32, "y":22},
+    "names": {
+        "PlayStation": {"x": 0, "y": 0},
+        "Xbox":        {"x": 1, "y": 0},
+        "Nintendo":    {"x": 2, "y": 0},
+        "Zero":        {"x": 3, "y": 0},
+        "Quadplay":    {"x": 4, "y": 0},
+        "Keyboard":    {"x": 5, "y": 0},
+        "KeyboardAlt": {"x": 6, "y": 0},
+        "KeyboardP1":  {"x": 7, "y": 0},
+        "KeyboardP2":  {"x": 8, "y": 0},
+    }
 }

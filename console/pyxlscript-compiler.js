@@ -820,10 +820,11 @@ function pyxlToJS(src, noYield) {
     // ALTERNATE" --> "TEST ? CONSEQUENT : ALTERNATE" before "if"
     // statements are parsed.
 
-    // IF that is not at the start of a line or a block (preceeded by newline or :)
-    // is replaced with nothing. There are no negative lookbehinds in JavaScript, so
-    // we have to structure an explicit test.
-    src = src.replace(/^([ \t]*[^ \t\n].*[^ \t:\n\.A-Za-z0-9_αβγΔδζηθιλμρσϕφχψτωΩ\]\)}])[ \t]*if\b/gm,
+    // IF that is not at the start of a line or a block (preceeded by
+    // "\n" or ":") is replaced with an open paren. There are no
+    // negative lookbehinds in JavaScript, so we have to structure an
+    // explicit test.
+    src = src.replace(/^([ \t]*\S[^\n]*(?:[A-Za-z0-9_αβγΔδζηθιλμρσϕφχψτωΩ][ \t]|[\^=\-\+\*/><,\[{\(][ \t]*))if\b/gm,
                       function (match, prefix) {
                           if (/else[ \t]*$/.test(prefix)) {
                               // This was an ELSE IF, leave alone

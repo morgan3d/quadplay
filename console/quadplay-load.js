@@ -304,7 +304,7 @@ function computeAssetCredits(gameSource) {
         license = license.replace(/(?:\(c\)|copyright|©)\s*(?=\d)/gi, '©');
         
         // Lower-case any leading "by"
-        license = license.replace(/^By /, 'by');
+        license = license.replace(/^By /, 'by ');
         return license;
     }
 

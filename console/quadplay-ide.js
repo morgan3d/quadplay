@@ -171,8 +171,6 @@ function setUIMode(d, noAutoPlay) {
         requestFullScreen();
     }
 
-    onResize();
-    
     // Need to wait for layout to update before the onResize handler
     // has correct layout sizes.
     setTimeout(onResize, 100);
@@ -473,13 +471,141 @@ function onPlayButton() {
 
 }
 
+const controlSchemeTable = {
+    Quadplay: Object.seal({
+            a: 'ⓐ',
+            b: 'ⓑ',
+            c: 'ⓒ',
+            d: 'ⓓ',
+            p: 'ⓟ',
+            q: 'ⓠ',
+            up: '⍐',
+            lt: '⍇',
+            dn: '⍗',
+            rt: '⍈'
+    }),
+                          
+    Zero: Object.seal({
+            a: 'ⓐ',
+            b: 'ⓑ',
+            c: 'ⓒ',
+            d: 'ⓓ',
+            p: 'ⓟ',
+            q: 'ⓠ',
+            up: '⍐',
+            lt: '⍇',
+            dn: '⍗',
+            rt: '⍈'
+    }),
+
+    PlayStation: Object.seal({
+            a: 'ⓧ',
+            b: 'Ⓞ',
+            c: '▣',
+            d: '⍍',
+            p: 'ⓟ',
+            q: 'ⓠ',
+            up: '⍐',
+            lt: '⍇',
+            dn: '⍗',
+            rt: '⍈'
+    }),
+                             
+    Xbox: Object.seal({
+            a: 'ⓐ',
+            b: 'ⓑ',
+            c: 'ⓧ',
+            d: 'ⓨ',
+            p: '☰',
+            q: '⧉',
+            up: '⍐',
+            lt: '⍇',
+            dn: '⍗',
+            rt: '⍈'
+    }),
+
+    Nintendo: Object.seal({
+            a: 'ⓑ',
+            b: 'ⓐ',
+            c: 'ⓓ',
+            d: 'ⓒ',
+            p: 'ⓟ',
+            q: 'ⓠ',
+            up: '⍐',
+            lt: '⍇',
+            dn: '⍗',
+            rt: '⍈'
+    }),
+
+    Keyboard: Object.seal({
+            a: '␣',
+            b: '⏎',
+            c: 'ⓒ',
+            d: 'ⓕ',
+            p: 'ⓟ',
+            q: 'ⓠ',
+            up: 'W',
+            lt: 'A',
+            dn: 'S',
+            rt: 'D'
+    }),
+
+    KeyboardAlt: Object.seal({
+            a: '␣',
+            b: '⏎',
+            c: 'ⓒ',
+            d: 'ⓕ',
+            p: 'ⓟ',
+            q: 'ⓠ',
+            up: '⍐',
+            lt: '⍇',
+            dn: '⍗',
+            rt: '⍈'
+    }),
+
+    KeyboardP1: Object.seal({
+            a: 'V',
+            b: 'G',
+            c: 'C',
+            d: 'F',
+            p: '4',
+            q: '1',
+            up: 'W',
+            lt: 'A',
+            dn: 'S',
+            rt: 'D'
+    }),
+
+    KeyboardP2: Object.seal({
+            a: '/',
+            b: "'",
+            c: '.',
+            d: ';',
+            p: '0',
+            q: '7',
+            up: 'I',
+            lt: 'J',
+            dn: 'K',
+            rt: 'L'
+    })
+};
 
 function deviceControl(cmd) {
     switch (cmd) {
-    case "StartGIFRecording":     startGIFRecording(); break;
-    case "StopGIFRecording":      stopGIFRecording(); break;
-    case "TakeScreenshot":        downloadScreenshot(); break;
-    case "StartPreviewRecording": startPreviewRecording(); break;
+    case "startGIFRecording":     startGIFRecording(); break;
+    case "stopGIFRecording":      stopGIFRecording(); break;
+    case "takeScreenshot":        downloadScreenshot(); break;
+    case "startPreviewRecording": startPreviewRecording(); break;
+    case "setPadType":
+        
+        const i = arguments[1];
+        const type = arguments[2];
+        const prompt = controlSchemeTable[type];
+        if (i === undefined || i < 0 || i > 3) { throw new Error('"setPadType" must be used with an index from 0 to 3'); }
+        if (! prompt) { throw new Error('"setPadType" must be used with one of the legal types, such as "Quadplay" or "PlayStation"'); }
+        Runtime.pad[i].type = type;
+        Runtime.pad[i].prompt = prompt;
+        break;
     }
 }
 
@@ -1404,6 +1530,8 @@ function setFramebufferSize(w, h) {
     updateImage.width  = w;
     updateImage.height = h;
     updateImageData = ctx.createImageData(w, h);
+
+    bootScreen.style.fontSize = '' + Math.max(10 * SCREEN_WIDTH / 384, 4) + 'px';
     
     // The layout may need updating as well
     setTimeout(onResize, 0);
@@ -1993,6 +2121,8 @@ function showBootScreen() {
 `;
     bootScreen.style.zIndex = 100;
     bootScreen.style.visibility = 'visible';
+    
+    bootScreen.style.fontSize = '' + Math.max(10 * SCREEN_WIDTH / 384, 4) + 'px';
 }
 
 function hideBootScreen() {
@@ -2001,10 +2131,12 @@ function hideBootScreen() {
     bootScreen.style.visibility = 'hidden';
 }
 
+
 function appendToBootScreen(msg) {
     bootScreen.innerHTML += msg + '\n';
     bootScreen.scrollTop = bootScreen.scrollHeight;
 }
+
 
 function loadGameIntoIDE(url, callback) {
     if (emulatorMode !== 'stop') { onStopButton(); }
@@ -2074,12 +2206,12 @@ AudioClip units:   128 slots
 Code memory:       8192 lines
 
 Boot loader initialized
-Checking ROM...OK
-Checking kernel...OK
-Checking RAM...OK
-Checking game pad input...OK
+Checking ROM…OK
+Checking kernel…OK
+Checking RAM…OK
+Checking game pad input…OK
 
-Starting...
+Starting…
 `);        
         if (callback) { callback(); }
     }, function (e) {

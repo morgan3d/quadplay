@@ -1014,6 +1014,7 @@ function _makePad(index) {
         pressedA:0, pressedB:0, pressedC:0, pressedD:0, pressedP:0, pressedQ:0,
         releasedA:0, releasedB:0, releasedC:0, releasedD:0, releasedP:0, releasedQ:0,
         index: index,
+        type: 'Quadplay',
         prompt: Object.seal({
             a: 'ⓐ',
             b: 'ⓑ',
@@ -1028,6 +1029,7 @@ function _makePad(index) {
         })
     });
 }
+
 
 var joy = _makePad(0);
 var pad = [joy, _makePad(1), _makePad(2), _makePad(3)];
@@ -2110,9 +2112,10 @@ function textWidth(font, str) {
 }
 
 
-function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapWidth) {
+function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapWidth, textSize) {
     if (font && font.font) {
         // Keyword version
+        textSize = font.textSize;
         wrapWidth = font.wrapWidth;
         z = font.z;
         yAlign = font.yAlign;
@@ -2125,11 +2128,19 @@ function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapW
         font = font.font;
     }
 
+    if (P === undefined) {
+        throw new Error('drawText() requires a pos');
+    }
+
     if (typeof str !== 'string') {
         str = unparse(str);
     }
     
     if (str === '') { return {x:0, y:0}; }
+
+    if (textSize === undefined) {
+        textSize = str.length;
+    }
 
     // Add the variable widths of the letters to compute the
     // width. Don't count the border against the letter width.
@@ -2139,8 +2150,9 @@ function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapW
 
         if (str[c] === '\n') {
             // Newline, process by breaking and recursively continuing
-            const firstLineBounds = drawText(font, str.substring(0, c).trimEnd(), P, color, shadow, outline, xAlign, yAlign, z);
-            const restBounds = drawText(font, str.substring(c + 1), xy(P.x, P.y + font.lineHeight / _scaleY), color, shadow, outline, xAlign, yAlign, z, wrapWidth);
+            const cur = str.substring(0, c).trimEnd();
+            const firstLineBounds = drawText(font, cur, P, color, shadow, outline, xAlign, yAlign, z, wrapWidth, textSize);
+            const restBounds = drawText(font, str.substring(c + 1), xy(P.x, P.y + font.lineHeight / _scaleY), color, shadow, outline, xAlign, yAlign, z, wrapWidth, textSize - cur.length);
             firstLineBounds.x = Math.max(firstLineBounds.x, restBounds.x);
             firstLineBounds.y += restBounds.y + font.lineHeight + font._spacing.y;
             return firstLineBounds;
@@ -2156,8 +2168,8 @@ function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapW
             // Search backwards for a place to break.
             const breakChars = ' \n\t,.!:/\\)]}\'"|`-+=*';
 
-            // Avoid breaking more than halfway back along the string
-            const maxBreakSearch = Math.max(1, (c * 0.5) | 0);
+            // Avoid breaking more than 25% back along the string
+            const maxBreakSearch = Math.max(1, (c * 0.25) | 0);
             let breakIndex = -1;
             for (let i = 0; (breakIndex < maxBreakSearch) && (i < breakChars.length); ++i) {
                 breakIndex = Math.max(breakIndex, str.lastIndexOf(breakChars[i], c));
@@ -2167,11 +2179,14 @@ function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapW
                 // Give up and break at c
                 breakIndex = c;
             }
-            
-            const firstLineBounds = drawText(font, str.substring(0, breakIndex).trimEnd(), P, color, shadow, outline, xAlign, yAlign, z);
+
+            const cur = str.substring(0, breakIndex);
+            const firstLineBounds = drawText(font, cur.trimEnd(), P, color, shadow, outline, xAlign, yAlign, z, undefined, textSize);
             
             // Now draw the rest
-            const restBounds = drawText(font, str.substring(breakIndex).trimStart(), xy(P.x, P.y + font.lineHeight / _scaleY), color, shadow, outline, xAlign, yAlign, z, wrapWidth);
+            const next = str.substring(breakIndex);
+            const nnext = next.trimStart();
+            const restBounds = drawText(font, nnext, xy(P.x, P.y + font.lineHeight / _scaleY), color, shadow, outline, xAlign, yAlign, z, wrapWidth, textSize - cur.length - (next.length - nnext.length));
             firstLineBounds.x = Math.max(firstLineBounds.x, restBounds.x);
             firstLineBounds.y += restBounds.y + font.lineHeight + font._spacing.y;
             return firstLineBounds;
@@ -2234,7 +2249,7 @@ function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapW
     } else {
         _addGraphicsCommand({
             opcode: 'TXT',
-            str: str,
+            str: str.substring(0, textSize),
             font: font,
             x: x,
             y: y,
@@ -2503,9 +2518,17 @@ function clamp(x, lo, hi) {
     return min(max(x, lo), hi);
 }
 
-function loop(x, hi) {
-    hi = Math.abs(hi || 1);
-    return x - Math.floor(x / hi) * hi;
+
+function loop(x, lo, hi) {
+    if (hi === undefined) {
+        hi = lo;
+        lo = 0;
+    }
+
+    if (hi === undefined) { hi = 1; }
+    x -= lo;
+    hi -= lo;
+    return (x - Math.floor(x / hi) * hi) + lo;
 }
 
 
@@ -2636,6 +2659,196 @@ function axisAlignedDrawBox(e) {
                      aabb.max.y - aabb.min.y)};            
 }
 
+
+/** All arguments except the ray are xy(). Clones only the ray. Assumes that (0, 0) is the grid origin*/
+function _makeRayGridIterator(ray, numCells, cellSize) {
+
+    const it = {
+        numCells:          numCells,
+        enterDistance:     0,
+        enterAxis:         'x',
+        ray:               deepClone(ray),
+        cellSize:          cellSize,
+        insideGrid:        true,
+        containsRayOrigin: true,
+        index:             xy(0, 0),
+        tDelta:            xy(0, 0),
+        step:              xy(0, 0),
+        exitDistance:      xy(0, 0),
+        boundaryIndex:     xy(0, 0)
+    };
+
+    /*
+    if (gridOriginIndex.x !== 0 || gridOriginIndex.y !== 0) {
+        // Change to the grid's reference frame
+        ray.origin.x -= gridOrigin.x;
+        ray.origin.y -= gridOrigin.y;
+    }
+*/
+
+    //////////////////////////////////////////////////////////////////////
+    // See if the ray begins inside the box
+
+    let startsOutside = false;
+    let inside = false;
+    let startLocation = xy(ray.origin);
+    
+    ///////////////////////////////
+
+    if (! inside) {
+        // The ray is starting outside of the grid. See if it ever
+        // intersects the grid.
+        
+        // From Listing 1 of "A Ray-Box Intersection Algorithm and Efficient Dynamic Voxel Rendering", jcgt 2018
+        const t0 = xy(-ray.origin.x / ray.direction.x, -ray.origin.y / ray.direction.y);
+        const t1 = xy((numCells.x * cellSize.x - ray.origin.x) / ray.direction.x,
+                      (numCells.y * cellSize.y - ray.origin.y) / ray.direction.y);
+        const tmin = min(t0, t1), tmax = max(t0, t1);
+        const passesThroughGrid = Math.max(tmin.x, tmin.y) <= Math.min(tmax.x, tmax.y);
+        
+        if (passesThroughGrid) {
+            // Back up slightly so that we immediately hit the start location.
+            it.enterDistance = Math.hypot(it.ray.origin.x - startLocation.x,
+                                          it.ray.origin.y - startLocation.y) - 0.0001;
+            startLocation = xy(it.ray.origin.x + it.ray.direction.x * it.enterDistance,
+                               it.ray.origin.y + it.ray.direction.y * it.enterDistance);
+            startsOutside = true;
+        } else {
+            // The ray never hits the grid
+            it.insideGrid = false;
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////
+    // Find the per-iteration variables
+    const axisArray = 'xy';
+        
+    for (let i = 0; i < 2; ++i) {
+        const a = axisArray[i];
+        
+        it.index[a]  = Math.floor(startLocation[a] / cellSize[a]);
+        it.tDelta[a] = Math.abs(cellSize[a] / it.ray.direction[a]);
+        it.step[a]   = Math.sign(it.ray.direction[a]);
+
+        // Distance to the edge fo the cell along the ray direction
+        let d = startLocation[a] - it.index[a] * cellSize[a];
+        if (it.step[a] > 0) {
+            // Measure from the other edge
+            d = cellSize[a] - d;
+
+            // Exit on the high side
+            it.boundaryIndex[a] = it.numCells[a];
+        } else {
+            // Exit on the low side (or never)
+            it.boundaryIndex[a] = -1;
+        }
+        console.assert(d >= 0 && d <= cellSize[a]);
+
+        if (it.ray.direction[a] !== 0) {
+            it.exitDistance[a] = d / Math.abs(it.ray.direction[a]) + it.enterDistance;
+        } else {
+            // Ray is parallel to this partition axis.
+            // Avoid dividing by zero, which could be NaN if d == 0
+            it.exitDistance[a] = Infinity;
+        }
+    }
+
+    /*
+    if (gridOriginIndex.x !== 0 || gridOriginIndex.y !== 0) {
+        // Offset the grid coordinates
+        it.boundaryIndex.x += gridOriginIndex.x;
+        it.boundaryIndex.y += gridOriginIndex.y;
+        it.index.x         += gridOriginIndex.x;
+        it.index.y         += gridOriginIndex.y;
+        }
+    */
+
+    if (startsOutside) {
+        // Let the increment operator bring us into the first cell
+        // so that the starting axis is initialized correctly.
+        _advanceRayGridIterator(it);
+    }
+}
+
+
+function _advanceRayGridIterator(it) {
+    // Find the axis of the closest partition along the ray
+    it.enterAxis = (it.exitDistance.x < it.exitDistance.y) ? 'x' : 'y';
+    
+    it.enterDistance              = it.exitDistance[it.enterAxis];
+    it.index[it.enterAxis]        += it.step[it.enterAxis];
+    it.exitDistance[it.enterAxis] += it.tDelta[it.enterAxis];
+    
+    // If the index just hit the boundary exit, we have
+    // permanently exited the grid.
+    it.insideGrid = it.insideGrid && (it.index[it.enterAxis] !== it.boundaryIndex[it.enterAxis]);
+    
+    it.containsRayOrigin = false;
+}
+
+
+/*
+function rayIntersectMap(ray, map, tileCanBeSolid, pixelIsSolid, layer, replacementArray) {
+    if (arguments.length === 1 && ray && ray.ray) {
+        pixelIsSolid = ray.pixelIsSolid;
+        tileCanBeSolid = ray.tileCanBeSolid;
+        layer = ray.layer;
+        replacementArray = ray.replacementArray;
+        map = ray.map;
+        ray = ray.ray;
+    }
+
+    layer = layer || 0;
+    tileCanBeSolid = tileCanBeSolid || getMapSprite;
+
+    // Default to an infinite ray
+    if (ray.length === undefined) {
+        ray.length = Infinity;
+    }
+
+    // Normalize the direction
+    {
+        const inv = 1 / Math.hypot(ray.direction.x, ray.direction.y);
+        ray.direction.x *= inv; ray.direction.y *= inv;
+    }
+
+
+    const normal = xy(0, 0);
+    const point = xy(0, 0);
+    const P = xy(0, 0);
+    for (const it = _makeRayGridIterator(ray, map.size, map.spriteSize);
+         it.insideGrid && (it.enterDistance < it.ray.length);
+         _advanceRayGridIterator(it)) {
+        
+        // Draw coord normal along which we entered this cell
+        normal.x = normal.y = 0;
+        normal[it.enterAxis] = -it.step[it.enterAxis];
+
+        // Draw coord point at which we entered the cell
+        point.x = it.ray.origin.x + it.enterDistance * it.ray.direction.x;
+        point.y = it.ray.origin.y + it.enterDistance * it.ray.direction.y;
+
+        // Bump into the cell and then round
+        P.x = Math.floor((point.x - normal.x) / map.spriteSize.x);
+        P.y = Math.floor((point.y - normal.y) / map.spriteSize.y);
+        
+        if (tileCanBeSolid(map, P, layer, replacementArray)) {
+
+            // Return the sprite and modify the ray
+            ray.length = it.enterDistance;
+            return map.layer[layer][P.x][P.y];
+            
+            // TODO: March the pixels with a second iterator
+            // if (! pixelIsSolid || pixelIsSolid(map, P, layer, replacementArray)) {
+                // This is a hit
+            // }
+        }
+        
+    }  // while
+
+    return undefined;
+}
+*/
 
 function rayIntersect(ray, obj) {
     let hitObj = undefined;
@@ -3842,7 +4055,7 @@ function XYZ_DOT_XYZ(v1, v2) {
     return v1.x * v2.x + v1.y * v2.y;
 }
 
-function XY_MUL(v1, s) {
+function XY_MUL(v1, s, r) {
     r.x = v1.x * s;
     r.y = v1.y * s;
 }

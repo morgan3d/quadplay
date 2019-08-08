@@ -632,6 +632,7 @@ body.EmulatorUI .virtualController {
     font-family: "Boot";
     white-space: pre-line;
     font-size: 10px;
+    transform-origin: top left;
 }
 
 canvas#screen {
