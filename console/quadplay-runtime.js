@@ -241,12 +241,14 @@ function resize(a, n) {
 function size(x) {
     if (Array.isArray(x)) {
         return x.length;
+    } else if (x === null || x === undefined) {
+        return 0;
     } else {
         let tx = typeof x;
         if (tx === 'string') {
             return x.length;
         } else if (tx === 'object') {
-            return Object.keys(this).length;
+            return Object.keys(x).length;
         } else {
             return 0;
         }
@@ -1145,15 +1147,16 @@ function _error(msg) {
 
 
 function xy(x, y) {
-    if (x.x !== undefined) {
-        return {x:x.x, y:x.y};
-    }
+    if (x.x !== undefined) { return {x:x.x, y:x.y}; }
+    if (Array.isArray(x)) { return {x:x[0], y:x[1]}; }
     if (arguments.length !== 2) { _error('xy() requires exactly two arguments'); }
     return {x:x, y:y};
 }
 
 
 function xyz(x, y, z) {
+    if (x.x !== undefined) { return {x:x.x, y:x.y, z:x.z}; }
+    if (Array.isArray(x)) { return {x:x[0], y:x[1], z:x[2]}; }
     if (arguments.length !== 3) { throw new Error('xyz() requires exactly three arguments'); }
     return {x:x, y:y, z:z};
 }
@@ -2166,7 +2169,7 @@ function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapW
         if ((wrapWidth > 0) && (width > wrapWidth - font._spacing.x)) {
             // Perform word wrap, we've exceeded the available width
             // Search backwards for a place to break.
-            const breakChars = ' \n\t,.!:/\\)]}\'"|`-+=*';
+            const breakChars = ' \n\t,.!:/\\)]}\'"|`-+=*…\?¿¡';
 
             // Avoid breaking more than 25% back along the string
             const maxBreakSearch = Math.max(1, (c * 0.25) | 0);
@@ -3471,12 +3474,17 @@ function ceil(a) {
     }
 }
 
-function round(a) {
+
+function round(a, unit) {
     if (typeof a === 'object') {
-        let c = a.constructor ? a.constructor() : Object.create(null);
-        for (let key in a) c[key] = Math.round(a[key]);
+        unit = unit || 1;
+        const invUnit = 1 / unit;
+        const c = a.constructor ? a.constructor() : Object.create(null);
+        for (let key in a) c[key] = Math.round(a[key] * invUnit) * unit;
         return c;
-    } else {
+    } else if (unit) {
+        return Math.round(a / unit) * unit;
+    } else  {
         return Math.round(a);
     }
 }
@@ -4203,6 +4211,30 @@ function RGB_DOT_RGB(c1, c2) {
 }
 
 
+function MAT3x4_MATMUL_XYZW(A, v, c) {
+    const x = v.x, y = v.y, z = v.z, w = v.w;
+    c.x = A[0][0] * x + A[0][1] * y + A[0][2] * z + A[0][3] * w;
+    c.y = A[1][0] * x + A[1][1] * y + A[1][2] * z + A[1][3] * w;
+    c.z = A[2][0] * x + A[2][1] * y + A[2][2] * z + A[2][3] * w;
+    c.w = w;
+}
+
+
+function MAT3x4_MATMUL_XYZ(A, v, c) {
+    const x = v.x, y = v.y, z = v.z;
+    c.x = A[0][0] * x + A[0][1] * y + A[0][2] * z + A[0][3];
+    c.y = A[1][0] * x + A[1][1] * y + A[1][2] * z + A[1][3];
+    c.z = A[2][0] * x + A[2][1] * y + A[2][2] * z + A[2][3];
+}
+
+
+function MAT3x3_MATMUL_XYZ(A, v, c) {
+    const x = v.x, y = v.y, z = v.z;
+    c.x = A[0][0] * x + A[0][1] * y + A[0][2] * z;
+    c.y = A[1][0] * x + A[1][1] * y + A[1][2] * z;
+    c.z = A[2][0] * x + A[2][1] * y + A[2][2] * z;
+}
+
 
 function lerp(a, b, t) {
     const ta = typeof a, tb = typeof b;
@@ -4570,7 +4602,7 @@ function because(reason) {
     _lastBecause = reason;
 }
 
-function pushMode(mode) {
+function pushMode(mode, ...args) {
     _verifyLegalMode(mode);
 
     // Push the stacks
@@ -4592,7 +4624,7 @@ function pushMode(mode) {
     _systemPrint('Pushing into mode ' + mode.name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
 
     // Run the enter callback on the new mode
-    _gameMode._enter.apply(null, arguments);
+    _gameMode._enter.apply(null, ...args);
 
     throw {nextMode: mode};
 
@@ -4645,7 +4677,7 @@ function popMode() {
 }
 
 
-function setMode(mode) {
+function setMode(mode, ...args) {
     _verifyLegalMode(mode);
     
     // Erase the stacks
@@ -4673,7 +4705,7 @@ function setMode(mode) {
     _systemPrint('Entering mode ' + mode.name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
     
     // Run the enter callback on the new mode
-    _gameMode._enter.apply(null, arguments);
+    _gameMode._enter.apply(null, args);
 
     throw {nextMode: mode};
 }

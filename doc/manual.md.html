@@ -18,7 +18,7 @@ Virtual Hardware Features:
 - 4096 sRGB (4:4:4) colors 
 - Native 2.5D graphics
 - 9.4 MB of total sprite memory
-- Up to 64 sprite and font sheets of up to 1024x1024
+- Max 128 sprite and font sheets, max size 1024x1024
 - Order-independent 4-bit (16-level) transparency
 - Four 10-button gamepads (D-pad + ⓐⓑⓒⓓ + ⓟⓠ)
 - Optional 192 x 112, 128 x 128, and 64 x 64 screen modes
@@ -532,6 +532,9 @@ The PyxlScript language feels a lot like Python, with these changes:
 - Use `concatenate(a, b)` for Python `listA + listB` and `{**objA, **objB}`
 - Use `x = if t then a else b` for Python `x = a if t else b`
 - Use `true`, `false`, `nil` instead of `True`, `False`, `None`
+- Use `def foo(a, b, ...rest)` instead of `def foo(a, b, *rest)`
+- Use `foo(a, b, ...rest)` instead of `foo(a, b, *rest)`
+
 
 ### JavaScript
 
@@ -1160,8 +1163,17 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 `xy(v)`
 : Returns `{x:v.x, y:v.y}`. Useful for removing the `z` component.
 
+`xy(a)`
+: Returns `{x:a[0], y:a[1]}`. Useful for converting from a matrix column.
+
 `xyz(x, y, z)`
 : Create the object with `x`, `y`, and `z` fields.
+
+`xyz(v)`
+: Returns `{x:v.x, y:v.y, z:v.z}`. Useful for removing a `w` component.
+
+`xyz(a)`
+: Returns `{x:a[0], y:a[1], z:a[2]}`. Useful for converting from a matrix column.
 
 
 
@@ -1190,6 +1202,9 @@ Math
 `cbrt(x)`
 : Cube root of `x`. Has the same sign as the argument.
 
+`ceil(x)`
+: Return the nearest integer value of `x` towards positive infinity.
+
 `clamp(x, lo, hi)`
 : Clamp `x` to the range [`lo`, `hi`] inclusive.
 
@@ -1205,6 +1220,9 @@ Math
 `deepClone(v)`
 : Return a deep clone of `v`. Pointer structures are preserved and loops
   are OK. Built-in objects such as spritesheets and functions are not cloned.
+
+`floor(x)`
+: Return the nearest integer value of `x` towards negative infinity.
 
 `hash(x, y)`
 : A hash value of string or number `x`, returning a value on [0, 1].
@@ -1278,6 +1296,12 @@ Math
 
 `pow(a, b)`
 : Exponent. See also the `^` operator.
+
+`round(x)`
+: Return the nearest integer value of `x`. Half-integers round towards positive infinity.
+
+`round(x, u)`
+: Return the nearest value of `x` quantized to `u`: `round(x, u) == round(x * u) / u`.
 
 `rnd()`
 : Random number between 0 and 1, excluding 1. See also the `ξ` operator.
@@ -2838,6 +2862,22 @@ versions may be substantially faster than overloaded operators.
 `XYZ_CRS_XYZ(srcxyz1, srcxyz2, dstxyz)`
 : Cross product. `dstxyz` can be the same object as one of the input arguments.
 
+`MAT3x3_MATMUL_XYZ(src3x3, srcxyz, dstxyz)`
+: Multiply matrix `src3x3` represented as an array of length three row arrays of length 
+  three by vector `(srcxyz.x, srcxyz.y, srcxyz.z)` and put the result in `dstxyz`, 
+  which can be the same object as `srczxyz`.
+
+`MAT3x4_MATMUL_XYZ(src3x4, srcxyz, dstxyz)`
+: Multiply matrix `src3x4` represented as an array of length three row arrays of length 
+  four by vector `(srcxyz.x, srcxyz.y, srcxyz.z, 1)` and put the result in `dstxyz`, 
+  which can be the same object as `srcxyz`. You can use `MAT3x3_MATMUL_XYZ()` on the
+  same `src3x4` to effectively multiply by `(srcxyz.x, srcxyz.y, srcxyz.z, 1)`.
+
+`MAT3x4_MATMUL_XYZW(src3x4, srcxyzw, dstxyzw)`
+: Multiply matrix `src3x4` represented as an array of length three row arrays of length 
+  four by vector `(srcxyzw.x, srcxyzw.y, srcxyzw.z, srcxyzw.w)` and put the result in `dstxyzw`, 
+  which can be the same object as `srcxyzw`. The `dstxyzw.w = srcxyzw.w`.
+
 
 
 
@@ -2887,6 +2927,7 @@ Sprites
 ### Other
 ![`quad://sprites/ortho-city-32x16.sprite.json`](../sprites/ortho-city-32x16.png)
 ![`quad://sprites/controllers-32x22.sprite.json`](../sprites/controllers-32x22.png)
+![`quad://sprites/explosion-realistic-128x128.sprite.json`](../sprites/explosion-realistic-128x128.png)
 
 
 
@@ -3269,7 +3310,7 @@ Setting `transpose` to true flips the indexing to `S[y][x]`, which
 is more convenient for some sprites.
 
 A game may use a total of **4,718,592 pixels** of sprite memory
-(9.4 MB) across **64 sprite sheets**, each no larger than
+(9.4 MB) across **128 sprite sheets** (including fonts), each no larger than
 **1024x1024**.  You can allocate this however you wish within those
 restrictions.  That's equivalent to 4,608 sprites at 32x32, 18,432
 sprites at 16x16, or 54 full-screen images. These are of course soft
@@ -3799,6 +3840,7 @@ ASCII    | Unicode | Meaning
 `{}`     |         | object constructor (follow JavaScript syntax)
 `.`      |         | object property
 `()`     |         | grouping or function call
+`...`    | `…`     | spread operator
 `bitand` |`∩`      | bitwise AND (bit set intersection)
          |`∩=`     | mutating bitwise AND
 `bitor`  |`∪`      | bitwise OR (bit set union)
@@ -3814,7 +3856,7 @@ ASCII    | Unicode | Meaning
 `<<=`    |`◅=`     | mutating bit shift left
 `>>`     |`▻`      | bit shift right
 `>>=`    |`▻=`     | mutating bit shift right
-`if...then...else`| | conditional 
+`if`...`then`...`else`| | conditional 
 
 Assignment and mutating operators all return `nil`; they cannot be
 chained or used in expressions.
@@ -3926,6 +3968,25 @@ parenthesized expressions are back to back. For example,
 `2x`, `x²y`, `3(x+y)`, `(y+2)(x+1)`.
 
 Implicit multiplication can be used within subscripts or exponents.
+
+
+### Spread Operator
+
+The spread operator (`…` or `...`) allows defining and calling
+functions with a variable number of arguments. It is the same as
+`*rest` in Python and `...rest` in JavaScript.
+
+In a function declaration it designates the final argument as an array of all further arguments.
+For example, `def foo(a, b, …rest):` takes any number of arguments and maps them to `a`, `b`,
+and then an array `rest` of the remainder.
+For example, `def bar(…args):` takes any number of arguments and maps them all into 
+array `args`.
+
+In a function call or array literal, the spread operator expands an array as if its elements had
+been entered inline. So, `bar(…a)` calls a function with all of the arguments from array `a`.
+`[1, 2, …a, 10]` creates an array that begins with 1 and 2, then has all of the elements of `a`,
+followed by the number 10.
+
 
 
 ### Built-in Objects
@@ -4188,14 +4249,12 @@ for x, y in S in spots:
    // Remove any element that is higher than 15
    if y > 15: removeValues(spots, S)
    
-for i < size(spots):
+let i = 0
+while i < size(spots):
    // More efficient O(1) removal without preserving order
    // if spots is *really* long
-   if spots[i].x > 15:
-      fastRemoveKey(spots, i)
-      // Be sure not to skip the next element
-      --i
-   
+   if spots[i].x > 15: fastRemoveKey(spots, i)
+   else: ++i
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -4404,10 +4463,12 @@ Emacs
 
 To install the PyxlScript mode for Emacs, copy the
 [`pyxlscript-mode.el`](../tools/pyxlscript-mode.el) to your elisp
-directory (mine is `~/.emacs.d/lisp`) and add the following lines to
+directory (mine is `~/.emacs.d/lisp`, where `~/` is `AppData/Roaming/` on Windows) and add the following lines to
 your `~/.emacs` file:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Lisp
+; Optional if you don't want to copy the files:
+;   (add-to-list 'load-path (expand-file-name "path/to/quadplay/tools"))
 (autoload 'pyxlscript-mode "pyxlscript-mode")
 (add-to-list 'auto-mode-alist '("\\.pyxl\\'" . pyxlscript-mode))
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4711,6 +4772,23 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2019 August 12: Beta update 7
+
+- Added two-argument version of `round()`
+- Added Linux button mapping for the 8bitdo SNES30 controller
+- Added the spread operator for variable number of arguments
+- Fixed arguments to `enter`
+- Added `…¿¡?` to the characters at which `drawText()` can word wrap
+- Increased GIF recording pixel size for 64x64 games
+- Fixed compilation of repeated `if`...`then` on a single line
+- Added support for Thrustmaster Flight Hotas X
+- Added new intrinsics `MAT3x4_MATMUL_XYZW()`, `MAT3x4_MATMUL_XYZ()`, `MAT3x3_MATMUL_XYZ()`
+- Added `explosion-realistic-128x128.sprite.json`
+- Fixed `quadplay` script not launching the correct game on Windows
+- Added overloaded `xy()` and `xyz()` for arrays
+- Increased sprite sheet limit from 64 to 128 (no increase in total memory, however)
+
 
 2019 August 8: Beta update 6
 

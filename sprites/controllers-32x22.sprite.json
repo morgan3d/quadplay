@@ -12,5 +12,6 @@
         "KeyboardAlt": {"x": 6, "y": 0},
         "KeyboardP1":  {"x": 7, "y": 0},
         "KeyboardP2":  {"x": 8, "y": 0},
+        "HOTAS":       {"x": 9, "y": 0},
     }
 }

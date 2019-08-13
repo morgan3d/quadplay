@@ -743,6 +743,9 @@ function pyxlToJS(src, noYield) {
     // Remove single-line comments
     src = src.replace(/\/\/.*$/gm, '');
 
+    // Replace spread operator
+    src = src.replace(/…/g, '...');
+
     // Pull 'because' on a new line up to the previous line
     src = src.replace(/\)[\t ]*((?:\n[\t ]*)+)[ \t]*because[ \t]+("[^\n"]")/g, ') because $2$1');
 
@@ -824,16 +827,23 @@ function pyxlToJS(src, noYield) {
     // "\n" or ":") is replaced with an open paren. There are no
     // negative lookbehinds in JavaScript, so we have to structure an
     // explicit test.
-    src = src.replace(/^([ \t]*\S[^\n]*(?:[A-Za-z0-9_αβγΔδζηθιλμρσϕφχψτωΩ][ \t]|[\^=\-\+\*/><,\[{\(][ \t]*))if\b/gm,
-                      function (match, prefix) {
+    { // Allow multiple IF...THEN on a single line by processing repeatedly
+        let found = true
+        while (found) {
+            found = false;
+            src = src.replace(/^([ \t]*\S[^\n]*?(?:[A-Za-z0-9_αβγΔδζηθιλμρσϕφχψτωΩ][ \t]|[\^=\-\+\*/><,\[{\(][ \t]*))if\b/gm,
+                              function (match, prefix) {
                           if (/else[ \t]*$/.test(prefix)) {
                               // This was an ELSE IF, leave alone
                               return match;
                           } else {
+                              found = true;
                               // Functional IF, replace
                               return prefix + '(';
                           }
-                      });
+                              });
+        }
+    }
     
     // THEN
     src = src.replace(/\bthen\b/g, ') ? (');

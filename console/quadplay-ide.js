@@ -587,7 +587,21 @@ const controlSchemeTable = {
             lt: 'J',
             dn: 'K',
             rt: 'L'
-    })
+    }),
+
+    HOTAS: Object.seal({
+            a: '1',
+            b: '2',
+            c: '4',
+            d: '3',
+            p: 'ST',
+            q: 'SE',
+            up: '⍐',
+            lt: '⍇',
+            dn: '⍗',
+            rt: '⍈'
+    }),
+
 };
 
 function deviceControl(cmd) {
@@ -602,7 +616,7 @@ function deviceControl(cmd) {
         const type = arguments[2];
         const prompt = controlSchemeTable[type];
         if (i === undefined || i < 0 || i > 3) { throw new Error('"setPadType" must be used with an index from 0 to 3'); }
-        if (! prompt) { throw new Error('"setPadType" must be used with one of the legal types, such as "Quadplay" or "PlayStation"'); }
+        if (! prompt) { throw new Error('"setPadType" must be used with one of the legal types, such as "Quadplay" or "PlayStation" (received "' + type + '")'); }
         Runtime.pad[i].type = type;
         Runtime.pad[i].prompt = prompt;
         break;
@@ -849,17 +863,6 @@ function onProjectSelect(target, type, object) {
         target.classList.add('selectedProjectElement');
     }
 
-    /*
-    // Show in the editor
-    let c;
-    if (typeof index === 'string') {
-        const part = index.split('.');
-        c = gameSource[category][part[0]];
-        if (part.length > 1) { c = c[part[1]]; }
-    } else {
-        c = gameSource[category][index];
-    }*/
-
     switch (type) {
     case 'constant':
         const index = object;
@@ -1072,7 +1075,7 @@ function visualizeModes(modeEditor) {
     //////////////////////////////////////////////////////////////////////////////////////
     // Convert to the layout API
     const graph = new dagre.graphlib.Graph({directed:true, multigraph:true});
-    const nodeWidth = 76, nodeHeight = 28;
+    const nodeWidth = 96, nodeHeight = 28;
     graph.setGraph({rankdir: 'LR'});
     graph.setDefaultEdgeLabel(function() { return {}; });
 
@@ -2178,7 +2181,7 @@ function loadGameIntoIDE(url, callback) {
 <br/>
 <table style="margin-left: -2px; width: 100%">
 <tr><td width=180>Sprite Pixels</td><td class="right">${Math.round(resourceStats.spritePixels / 1000)}k</td><td>/</td><td class="right" width=40>4719k</td><td class="right" width=45>(${Math.round(resourceStats.spritePixels*100/4718592)}%)</td></tr>
-<tr><td>Spritesheets</td><td class="right">${resourceStats.spritesheets}</td><td>/</td><td class="right">64</td><td class="right">(${Math.round(resourceStats.spritesheets*100/64)}%)</td></tr>
+<tr><td>Spritesheets</td><td class="right">${resourceStats.spritesheets}</td><td>/</td><td class="right">128</td><td class="right">(${Math.round(resourceStats.spritesheets*100/128)}%)</td></tr>
 <tr><td>Max Spritesheet Width</td><td class="right">${resourceStats.maxSpritesheetWidth}</td><td>/</td><td class="right">1024</td><td class="right">(${Math.round(resourceStats.maxSpritesheetWidth*100/1024)}%)</td></tr>
 <tr><td>Max Spritesheet Height</td><td class="right">${resourceStats.maxSpritesheetHeight}</td><td>/</td><td class="right">1024</td><td class="right">(${Math.round(resourceStats.maxSpritesheetHeight*100/1024)}%)</td></tr>
 <tr><td>Source Statements</td><td class="right">${resourceStats.sourceStatements}</td><td>/</td><td class="right">8192</td><td class="right">(${Math.round(resourceStats.sourceStatements*100/8192)}%)</td></tr>

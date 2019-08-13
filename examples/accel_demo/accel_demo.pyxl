@@ -1,0 +1,245 @@
+init
+───────────────────────────────────────────────────────────
+
+// test object
+let box = makeEntity(
+    {
+        pos:screenSize/2,
+        size:xy(10, 10),
+        shape:"rect",
+        density:1,
+    }
+)
+
+const ModeXYMovement = "XY Movement"
+const ModeProfileTest = "Profile Test"
+const MODE = ModeProfileTest
+
+// from GMTK: https://www.patreon.com/posts/why-does-celeste-28582857
+// vel is in 1080p pixels / s
+const PROFILES = {
+    celeste: {
+        max_vel: 5,
+        num_frames_attack: 6,
+        num_frames_release: 3,
+        col: rgb(0.557, 0.835, 0.894),
+    },
+    new_super_mario_brothers: {
+        max_vel: 8,
+        num_frames_attack: 28,  
+        num_frames_release: 28,
+        col: rgb(0.859, 0.145, 0.004),
+    },
+    megaman11: {
+        max_vel:4,
+        num_frames_attack:1,
+        num_frames_release:1,
+        col: rgb(0.086, 0.322, 0.847),
+    },
+    super_meat_boy: {
+        max_vel:13.0,
+        num_frames_attack:27,
+        num_frames_release:2,
+        col: rgb(0.729, 0, 0.004),
+    },
+    sonic_mania: {
+        max_vel: 30,
+        num_frames_attack:115,
+        num_frames_release: 120,
+        col: rgb(0.012, 0.145, 0.667), 
+    }
+}
+
+let profile_index = 0
+const labels = keys(PROFILES)
+
+// ADSR parameters
+let max_velocity = 10.6
+let num_frames_attack = 6
+let num_frames_release = 3
+
+// compute real constants
+let accel_attack = max_velocity/num_frames_attack
+let accel_release = max_velocity/num_frames_release
+let accel_opp_attack = accel_release + accel_attack
+
+def set_profile(profname):
+    max_velocity = (PROFILES[profname].max_vel * screenSize.x) / 1080.0
+    num_frames_attack = PROFILES[profname].num_frames_attack
+    num_frames_release = PROFILES[profname].num_frames_release
+    accel_attack = max_velocity/num_frames_attack
+    accel_release = max_velocity/num_frames_release
+    accel_opp_attack = accel_release + accel_attack
+
+set_profile(labels[profile_index])
+
+// Attack parameters
+let interp="linear"
+
+def accel_const():
+    return max_velocity*xy(joy.x, joy.y) 
+
+def accel_linear(t, num_frames, dir):
+    return (t / num_frames_attack) * max_velocity * dir
+
+def accel_smoothstep(t, num_frames, dir):
+    return smootherstep(0, num_frames, t) * dir
+
+let interp_func = {
+    "constant":accel_const,
+    "linear":accel_linear,
+}
+let last_joy = xy(0,0)
+let frames_joy = xy(0,0)
+let x_zone = "still"
+
+frame
+───────────────────────────────────────────────────────────
+let y_zone = "sustain"
+
+// detect which part of the curve we're in
+if sign(joy.x) != 0:
+    x_zone = "attack"
+    if sign(joy.x) > 0:
+        x_zone += "+"
+    else:
+        x_zone += "-"
+else if(x_zone) != "still":
+    x_zone = "release"
+
+
+// push into still or sustain if we've gone off either end of the curve
+if find(x_zone, "attack") == 0 and frames_joy.x > num_frames_attack:
+    x_zone = "sustain"
+if x_zone == "release" and frames_joy.x > num_frames_release:
+    x_zone = "still"
+
+
+def accel(vel, joy_comp):
+    let vel_sign = sign(vel)
+    let joy_sign = sign(joy_comp)
+
+    if joy_sign != 0:
+        let should_accel = abs(vel) < max_velocity
+        if (
+                (
+                    vel_sign == 0 
+                    or vel_sign == joy_sign
+                ) 
+                and should_accel
+        ):
+            vel += joy_sign * accel_attack
+        else if should_accel:
+            vel += joy_sign * accel_opp_attack
+        else:
+            vel = joy_sign * max_velocity
+
+    else:
+        vel += -1*vel_sign*accel_release
+
+        if abs(vel) < accel_release/2:
+            vel = 0
+
+    return vel
+
+let last_vel = clone(box.vel)
+box.vel.x = accel(box.vel.x, joy.x)
+
+if MODE == ModeXYMovement:
+    box.vel.y = accel(box.vel.y, joy.y)
+else if MODE == ModeProfileTest:
+    profile_index = loop(profile_index + joy.yy, size(labels))
+    set_profile(labels[profile_index])
+
+
+if magnitude(box.vel) > max_velocity:
+    box.vel = direction(box.vel) * max_velocity
+
+// track how long we've been in that part of the curve
+if sign(joy.x) == last_joy.x:
+    if last_vel.x != box.vel.x:
+        frames_joy.x += 1
+else:
+    frames_joy.x = 0
+last_joy.x = sign(joy.x)
+if sign(joy.y) == last_joy.y:
+    if last_vel.y != box.vel.y:
+        frames_joy.y += 1
+else:
+    frames_joy.y = 0
+last_joy.y = sign(joy.y)
+
+
+if sign(joy.y) != 0:
+    y_zone = "attack"
+    if sign(joy.y) > 0:
+        y_zone += "+"
+    else:
+        y_zone += "-"
+
+
+// if (last_joy.x == joy.x and sign(joy.x) != 0):
+//     box.vel.x = interp_func[interp](frames_joy, box.vel.x, joy.x)
+// if (last_joy.x == joy.x):
+//     box.vel.y = interp_func[interp](0, xy(0, joy.y))
+
+physicsStepEntity(box)
+box.pos.x = loop(box.pos.x, screenSize.x)
+box.pos.y = loop(box.pos.y, screenSize.y)
+
+
+drawRect(box.pos, box.size, PROFILES[labels[profile_index]].col)
+
+// debug text
+let text_color = rgb(1,1,1)
+
+let text = [
+]
+
+if MODE == ModeProfileTest:
+    push(
+        text,
+        "Profile: " + labels[profile_index]
+    )
+
+push(
+    text,
+    (
+        "X Sign (joy): " + unparse(sign(joy.x)) 
+        + " zone: " + x_zone 
+        + " frames:" + unparse(frames_joy.x)
+    )
+)
+
+if MODE == ModeXYMovement:
+    push(
+        text,
+        "Y Sign (joy): " + unparse(sign(joy.y)) 
+        + " zone: " + y_zone 
+        + " frames:" + unparse(frames_joy.y)
+    )
+
+push(
+    text,
+    (
+        "num_frames_attack: " + unparse(num_frames_attack) 
+        + " num_frames_release: " + unparse(num_frames_release)
+    ),
+    "x velocity: " + unparse(box.vel.x) + " / " + unparse(max_velocity),
+)
+
+if MODE == ModeXYMovement:
+    push(
+        text,
+        "y velocity: " + unparse(box.vel.y) + " / " + unparse(max_velocity),
+    )
+
+let current = xy(0, 12)
+for line in text:
+    drawText(
+        font,
+        line,
+        current,
+        rgb(1,1,1)
+    )
+    current += xy(0, 12)

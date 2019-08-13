@@ -156,7 +156,7 @@ function startGIFRecording() {
         document.getElementById('recording').innerHTML = 'RECORDING';
         document.getElementById('recording').classList.remove('hidden');
         const baseScale = 1;
-        const scale = ((updateImage.width <= 384/2) ? 2 : 1) * baseScale;
+        const scale = ((updateImage.width <= 384/2) ? (updateImage.width <= 64 ? 4 : 2) : 1) * baseScale;
         gifRecording = new GIF({workers:4, quality:3, dither:false, width: scale * updateImage.width, height: scale * updateImage.height});
         gifRecording.frameNum = 0;
 
@@ -220,10 +220,21 @@ const keyMap = [{'-x':[ascii('A'), 37],         '+x':[ascii('D'), 39],          
 let prevRealGamepadState = [];
 
 // Maps names of gamepads to arrays for mapping standard buttons
-// to that gamepad's buttons
-const gamepadRemap = {
+// to that gamepad's buttons. gamepadButtonRemap[canonicalButton] = actualButton
+const gamepadButtonRemap = {
     'identity':                                    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
-    'SNES30 Joy     (Vendor: 2dc8 Product: ab20)': [1, 0, 4, 3, 6, 7, 5, 2,10,11, 8, 9,   12, 13, 14, 15, 16]
+    // Windows SNES30
+    'SNES30 Joy     (Vendor: 2dc8 Product: ab20)': [1, 0, 4, 3, 6, 7, 5, 2,10,11, 8, 9,   12, 13, 14, 15, 16],
+    
+    // Linux SNES30
+    '8Bitdo SNES30 GamePad (Vendor: 2dc8 Product: 2840)': [1, 0, 4, 3, 6, 7, 5, 2,10,11, 8, 9,   12, 13, 14, 15, 16],
+
+    'T.Flight Hotas X (Vendor: 044f Product: b108)':[0, 1, 3, 2, 4, 5, 6, 7, 10, 11, 8, 9, 12, 13, 14, 15, 16]
+};
+
+const gamepadAxisRemap = {
+    'identity':                                      [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+    'T.Flight Hotas X (Vendor: 044f Product: b108)': [0, 1, 6, 2, 4, 5, 3, 7, 8, 9]
 };
 
 function getIdealGamepads() {
@@ -237,15 +248,17 @@ function getIdealGamepads() {
         let pad = gamepads[i];
         if (pad && pad.connected) {
             // Construct a simplified web gamepad API
-	    const remap = gamepadRemap[pad.id] || gamepadRemap.identity;
             let mypad = {axes:[0, 0, 0, 0], buttons:[]};
+	    const axisRemap = gamepadAxisRemap[pad.id] || gamepadAxisRemap.identity;
             for (let a = 0; a < Math.min(4, pad.axes.length); ++a) {
-                mypad.axes[a] = (Math.abs(pad.axes[a]) > deadZone) ? Math.sign(pad.axes[a]) : 0;
+                const axis = pad.axes[axisRemap[a]];
+                mypad.axes[a] = (Math.abs(axis) > deadZone) ? Math.sign(axis) : 0;
             }
             
             // Process all 17 buttons/axes as digital buttons first 
+	    const buttonRemap = gamepadButtonRemap[pad.id] || gamepadButtonRemap.identity;
             for (let b = 0; b < 17; ++b) {
-                const button = pad.buttons[remap[b]];
+                const button = pad.buttons[buttonRemap[b]];
                 // Different browsers follow different APIs for the value of buttons
                 mypad.buttons[b] = (typeof button === 'object') ? button.pressed : (button >= 0.5);
             }
@@ -298,6 +311,8 @@ function soundSourceOnEnded() {
 
 
 function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volume, pitch, pan) {
+    pan = Math.min(1, Math.max(-1, pan))
+    
     // A new source must be created every time that the sound is played
     const source = _ch_audioContext.createBufferSource();
     source.buffer = audioClip.buffer;
@@ -362,6 +377,8 @@ function setSoundPan(handle, pan) {
     if (! (handle && handle._)) {
         throw new Error("Must call setSoundPan() on a sound returned from playAudioClip()");
     }
+    pan = Math.min(1, Math.max(-1, pan))
+
     handle._.pan = pan;
     if (handle._.panNode.pan) {
         handle._.panNode.pan.linearRampToValueAtTime(pan, _ch_audioContext.currentTime + audioRampTime);
@@ -571,7 +588,7 @@ function submitFrame() {
         // Only record alternating frames to reduce file size
         if (gifRecording.frameNum & 1) {
             if (gifRecording.scale > 1) {
-                // Double pixels
+                // Repeat pixels
                 gifCtx.imageSmoothingEnabled = false;
                 gifCtx.drawImage(emulatorScreen,
                                  0, 0, emulatorScreen.width, emulatorScreen.height,
