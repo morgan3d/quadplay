@@ -280,6 +280,9 @@ sprite animations.
 [Fluid](../console?game=quad://examples/fluid&IDE=1) is a cellular automata fluid flow simulation
 with gravity and pressure.
 
+[Acceleration Demo](../console?game=quad://examples/accel_demo&IDE=1) is a simple demonstration of how various acceleration curves feel, changing only three constants: top speed, acceleration time and deceleration time. Up and down change the constants to fit different games. 
+
+[Boids](../console?game=quad://examples/boids&IDE=1) An implementation of the famous "boids" paper.
 
 
 Programming Model
@@ -2169,10 +2172,9 @@ endpoints and borders.
 `drawTri(A, B, C, fill, border (= nil), z (= 0))`
 : Draw the triangle.
 
-<!--
 `getClip()`
-: Returns the current net clipping region as an array of six numbers in the order of
-  `getClip` arguments.-->
+: Returns the current net clipping region as an object that
+  can be passed to `setClip()`.
 
 `getSpritePixelColor(sprite, pos, result (= nil))`
 : Returns the color of pixel `pos` in the sprite as an `rgba`
@@ -2924,6 +2926,13 @@ Sprites
 ![`quad://sprites/dawnlike-ui-16x16.sprite.json`](../sprites/dawnlike-ui-16x16.png)
 
 
+### Space
+![`quad://sprites/space-atmosphere.sprite.json`](../sprites/space-atmosphere.png)
+![`quad://sprites/space-planet.sprite.json`](../sprites/space-planet.png)
+![`quad://sprites/space-moon.sprite.json`](../sprites/space-moon.png)
+![`quad://sprites/space-ring.sprite.json`](../sprites/space-ring.png)
+
+
 ### Other
 ![`quad://sprites/ortho-city-32x16.sprite.json`](../sprites/ortho-city-32x16.png)
 ![`quad://sprites/controllers-32x22.sprite.json`](../sprites/controllers-32x22.png)
@@ -2975,6 +2984,8 @@ Fonts
 ![`quad://fonts/nano-5.font.json`](../fonts/nano-5.png)
 
 ![`quad://fonts/nano-4.font.json`](../fonts/nano-4.png)
+
+![`quad://fonts/nano-3.font.json`](../fonts/nano-3.png)
 
 
 Sounds
@@ -4182,6 +4193,15 @@ make the parsing unambiguous, for example, `for i &lt; (a &lt; b)`.
 Single-line `for`, `if`, `while`, and `until` are permitted. There can be multiple
 single-line expressions on the same line. No `else` is permitted with single-line `if`.
 
+The variable list in a `for`-`with` or `with` expression can be split across multiple
+lines by breaking after commas:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+for health, power,
+    stamina in character:
+   health += stamina * power
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 ### Examples
 
@@ -4773,6 +4793,16 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
+2019 August 16: Beta update 8
+
+- Allowed `for` and `with` variable lists to be split across multiple lines
+- Added `nano-3.font.json`
+- Added `space-planet.sprite.json`, `space-atmosphere.sprite.json`, `space-moon.sprite.json`, and `space-ring.sprite.json` 
+- Made the JSON parser report line numbers instead of character positions for errors
+- Added `getClip()` for returning the current clipping region
+- Added `deviceControl()` support for setting the prompt characters for controllers
+
+
 2019 August 12: Beta update 7
 
 - Added two-argument version of `round()`
@@ -4868,7 +4898,7 @@ Changes for both the specification and implementation in each release.
 
 - Removed `extendTransform()`, `getClip()`, and `getTransform()` from the beta release
 - Specified metadata for launcher
-- Moved programmatic GIF and screenshot recording go `deviceControl`.
+- Moved programmatic GIF and screenshot recording to `deviceControl()`.
 - Allowed trailing commas and comments in JSON
 - Increased size of `deja-9` font button characters
 - Changed `pyx` to `pyxl`

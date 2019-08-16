@@ -932,6 +932,16 @@ function resetClip() {
 }
 
 
+function getClip() {
+    return {
+        pos:    {x:_clipX1, y:_clipY1},
+        size:   {x:_clipX2 - _clipX1 - 1, y:_clipY2 - _clipY1 - 1},
+        z:      _clipZ1,
+        zSize:  _clipZ2 - _clipZ1
+    };
+}
+
+
 function setClip(pos, size, z1, dz) {
     if (pos.pos || pos.size || pos.z || pos.zSize) {
         return setClip(pos.pos, pos.size, pos.z, pos.zSize);

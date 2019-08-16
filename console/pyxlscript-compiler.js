@@ -615,7 +615,12 @@ function unprotectQuotedStrings(s, protectionMap) {
     start line and leave the intervening lines empty. This undesirably
     gives incorrect line numbers for errors within those expressions,
     but it allows the rest of the parser to operate strictly on single-line
-    expressions and control flow. */
+    expressions and control flow. 
+
+
+    Also compact lines that terminate in a ",", which can result from a multiline
+    FOR or WITH statement
+*/
 function compactMultilineLiterals(lineArray) {
     let i = 0;
 
@@ -681,7 +686,19 @@ function compactMultilineLiterals(lineArray) {
                 
             ++i;
         } while (multiLine);
-    }
+    } // while not at end
+
+    i = lineArray.length - 1;
+    while (i > 0) {
+        const prev = lineArray[i - 1];
+        if (prev.match(/,\s*$/)) {
+            // Pull up onto previous line
+            lineArray[i - 1] = prev.trimEnd() + ' ' + lineArray[i].trimStart();
+            lineArray[i] = '';
+        }
+        --i;
+    }  // while not at end
+
 
     return lineArray;
 }

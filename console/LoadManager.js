@@ -253,6 +253,11 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
                                 onLoadSuccess();
                             } catch (e) {
                                 rawEntry.failureMessage = '' + e;
+                                rawEntry.failureMessage = rawEntry.failureMessage.replace(/position (\d*)/, function (match, pos) {
+                                    const chr = parseInt(pos);
+                                    const line = (xhr.response.substring(0, chr).match(/\n/g)||[]).length + 1;
+                                    return 'line ' + line;
+                                });
                                 onLoadFailure();
                             }
                         } else {
