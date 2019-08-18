@@ -610,8 +610,16 @@ function deviceControl(cmd) {
     case "stopGIFRecording":      stopGIFRecording(); break;
     case "takeScreenshot":        downloadScreenshot(); break;
     case "startPreviewRecording": startPreviewRecording(); break;
+    case "getAnalogAxes":
+        {
+        const i = clamp(parseInt(arguments[1]), 0, 3);
+        const pad = Runtime.pad[i];
+        return {x: pad._analogX, y: pad._analogY};
+        break;
+        }
+
     case "setPadType":
-        
+        {
         const i = arguments[1];
         const type = arguments[2];
         const prompt = controlSchemeTable[type];
@@ -620,6 +628,7 @@ function deviceControl(cmd) {
         Runtime.pad[i].type = type;
         Runtime.pad[i].prompt = prompt;
         break;
+        }
     }
 }
 
@@ -1538,6 +1547,8 @@ function setFramebufferSize(w, h) {
     
     // The layout may need updating as well
     setTimeout(onResize, 0);
+    setTimeout(onResize, 250);
+    setTimeout(onResize, 1250);
 }
 
 
@@ -2149,33 +2160,33 @@ function loadGameIntoIDE(url, callback) {
     // Let the boot screen show before we add to it
     setTimeout(function() {            
         {
-        let serverURL = location.origin + location.pathname;
-        // Remove common subexpression for shorter URLs
-        if (url.substring(0, serverURL.length) === serverURL) {
-            url = url.substring(serverURL.length);
+            let serverURL = location.origin + location.pathname;
+            // Remove common subexpression for shorter URLs
+            if (url.substring(0, serverURL.length) === serverURL) {
+                url = url.substring(serverURL.length);
+            }
+            
+            // Remove redundant filename for shorterURLs
+            url = url.replace(/([^\/:=&]+)\/([^\/:=&]+?)\.game\.json$/, function (match, path, filename) {
+                return (path === filename) ? path + '/' : match;
+            });
+            
+            serverURL += '?game=' + url;
+            qrcode.makeCode(serverURL);
+            document.getElementById('serverURL').innerHTML =
+                `<a href="${serverURL}" target="_blank">${serverURL}</a>`;
         }
-
-        // Remove redundant filename for shorterURLs
-        url = url.replace(/([^\/:=&]+)\/([^\/:=&]+?)\.game\.json$/, function (match, path, filename) {
-            return (path === filename) ? path + '/' : match;
-        });
-        
-        serverURL += '?game=' + url;
-        qrcode.makeCode(serverURL);
-        document.getElementById('serverURL').innerHTML =
-            `<a href="${serverURL}" target="_blank">${serverURL}</a>`;
-    }
     
-    document.getElementById('playButton').enabled = false;
-    onLoadFileStart(url);
-    afterLoadGame(url, function () {
-        onLoadFileComplete(url);
-        hideBootScreen();
-        console.log('Loading complete.');
-        setFramebufferSize(gameSource.json.screenSize.x, gameSource.json.screenSize.y);
-        createProjectWindow(gameSource);
-        let resourcePane = document.getElementById('resourcePane');
-        resourcePane.innerHTML = `
+        document.getElementById('playButton').enabled = false;
+        onLoadFileStart(url);
+        afterLoadGame(url, function () {
+            onLoadFileComplete(url);
+            hideBootScreen();
+            console.log('Loading complete.');
+            setFramebufferSize(gameSource.json.screenSize.x, gameSource.json.screenSize.y);
+            createProjectWindow(gameSource);
+            let resourcePane = document.getElementById('resourcePane');
+            resourcePane.innerHTML = `
 <br/><center><b style="color:#888">Resource Limits</b></center>
 <hr>
 <br/>
@@ -2187,19 +2198,19 @@ function loadGameIntoIDE(url, callback) {
 <tr><td>Source Statements</td><td class="right">${resourceStats.sourceStatements}</td><td>/</td><td class="right">8192</td><td class="right">(${Math.round(resourceStats.sourceStatements*100/8192)}%)</td></tr>
 <tr><td>Sounds</td><td class="right">${resourceStats.sounds}</td><td>/</td><td class="right">128</td><td class="right">(${Math.round(resourceStats.sounds*100/128)}%)</td></tr>
 </table>`;
-        document.getElementById('playButton').enabled = true;
-
-        const modeEditor = document.getElementById('modeEditor');
-        if (modeEditor.style.visibility === 'visible') {
-            // Update the editor
-            visualizeModes(modeEditor);
-        }
-
-        aceEditor.gotoLine(0, 0, false);
-        aceEditor.scrollToLine(0, false, false, undefined);
-        hideWaitDialog();
-
-appendToBootScreen(`
+            document.getElementById('playButton').enabled = true;
+            
+            const modeEditor = document.getElementById('modeEditor');
+            if (modeEditor.style.visibility === 'visible') {
+                // Update the editor
+                visualizeModes(modeEditor);
+            }
+            
+            aceEditor.gotoLine(0, 0, false);
+            aceEditor.scrollToLine(0, false, false, undefined);
+            hideWaitDialog();
+            
+            appendToBootScreen(`
 
 QuadOS ROM:        256269 bytes    
 Runtime ROM:       159754 bytes
@@ -2216,13 +2227,13 @@ Checking game pad input…OK
 
 Starting…
 `);        
-        if (callback) { callback(); }
-    }, function (e) {
-        hideBootScreen();
-        setErrorStatus('Loading ' + url + ' failed: ' + e);
-        onStopButton();
-        hideWaitDialog();
-    });
+            if (callback) { callback(); }
+        }, function (e) {
+            hideBootScreen();
+            setErrorStatus('Loading ' + url + ' failed: ' + e);
+            onStopButton();
+            hideWaitDialog();
+        });
     }, 15);
 }
 

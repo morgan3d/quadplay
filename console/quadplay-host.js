@@ -248,15 +248,16 @@ function getIdealGamepads() {
         let pad = gamepads[i];
         if (pad && pad.connected) {
             // Construct a simplified web gamepad API
-            let mypad = {axes:[0, 0, 0, 0], buttons:[]};
-	    const axisRemap = gamepadAxisRemap[pad.id] || gamepadAxisRemap.identity;
+            let mypad = {axes:[0, 0, 0, 0], buttons:[], analogAxes:[0,0,0,0]};
+	        const axisRemap = gamepadAxisRemap[pad.id] || gamepadAxisRemap.identity;
             for (let a = 0; a < Math.min(4, pad.axes.length); ++a) {
                 const axis = pad.axes[axisRemap[a]];
                 mypad.axes[a] = (Math.abs(axis) > deadZone) ? Math.sign(axis) : 0;
+                mypad.analogAxes[a] = axis;
             }
             
             // Process all 17 buttons/axes as digital buttons first 
-	    const buttonRemap = gamepadButtonRemap[pad.id] || gamepadButtonRemap.identity;
+	        const buttonRemap = gamepadButtonRemap[pad.id] || gamepadButtonRemap.identity;
             for (let b = 0; b < 17; ++b) {
                 const button = pad.buttons[buttonRemap[b]];
                 // Different browsers follow different APIs for the value of buttons
@@ -612,7 +613,7 @@ function submitFrame() {
 
 
 function updateInput() {
-    const axes = 'xy', buttons = 'abcdpq', BUTTONS = 'ABCDPQ';
+    const axes = 'xy', AXES = 'XY', buttons = 'abcdpq', BUTTONS = 'ABCDPQ';
 
     // HTML gamepad indices of corresponding elements of the buttons array
     // A, B, C, D, P, Q
@@ -639,15 +640,16 @@ function updateInput() {
 	altPrevRealGamepad = (player === 2) ? prevRealGamepadState[0] : (player === 3) ? prevRealGamepadState[0] : undefined; */
 
         // Have player 0 physical alt controls set player 1 virtual buttons
-	const altRealGamepad = (player === 1) ? gamepadArray[0] : undefined,
+	    const altRealGamepad = (player === 1) ? gamepadArray[0] : undefined,
 	      altPrevRealGamepad = (player === 1) ? prevRealGamepadState[0] : undefined;
 
         // Axes
         for (let a = 0; a < axes.length; ++a) {
             const axis = axes[a];
+            const AXIS = '_analog' + AXES[a];
             const pos = '+' + axis, neg = '-' + axis;
             const old = pad[axis];
-            const scale = (axis == 'x') ? Runtime._scaleX : Runtime._scaleY;
+            const scale = (axis === 'x') ? Runtime._scaleX : Runtime._scaleY;
 
             if (map) {
                 // Keyboard controls
@@ -664,7 +666,13 @@ function updateInput() {
                 pad[axis] = pad[axis + axis] = 0;
             }
 
-            if (realGamepad && (realGamepad.axes[a] !== 0)) { pad[axis] = realGamepad.axes[a] * scale; }
+            pad[AXIS] = pad[axis];
+
+            if (realGamepad && (realGamepad.axes[a] !== 0)) {
+                pad[axis] = realGamepad.axes[a] * scale;
+                pad[AXIS] = realGamepad.analogAxes[a] * scale;
+            }
+
             if (realGamepad && (prevRealGamepad.axes[a] !== realGamepad.axes[a])) {
                 pad[axis + axis] = realGamepad.axes[a] * scale;
             }
@@ -675,12 +683,12 @@ function updateInput() {
                 // to controller[1] d-pad (axes 0 + 1) for "dual stick" controls                
                 if (otherPad.axes[a + 2] !== 0) {
                     pad[axis] = otherPad.axes[a + 2] * scale;
+                    pad[AXIS] = otherPad.analogAxes[a + 2] * scale;
                 }
                 if (otherPad.axes[a + 2] !== otherPad.axes[a + 2]) {
                     pad[axis + axis] = otherPad.axes[a + 2] * scale;
                 }
             } // dual-stick
-
 
             pad['d' + axis] = pad[axis] - old;
         }
@@ -701,7 +709,7 @@ function updateInput() {
             const i = buttonIndex[b], j = altButtonIndex[b];
             const isPressed  = (realGamepad && realGamepad.buttons[i]) || (altRealGamepad && altRealGamepad.buttons[j]);
 	    
-	    const wasPressed = (prevRealGamepad && prevRealGamepad.buttons[i]) ||
+	        const wasPressed = (prevRealGamepad && prevRealGamepad.buttons[i]) ||
 		               (altPrevRealGamepad && altPrevRealGamepad.buttons[j]);
 	    
             if (isPressed) { pad[button] = 1; }
@@ -733,9 +741,9 @@ function updateInput() {
     // loop so that the alternative buttons for player 2 are not
     // immediately overrident during player 1's processing.
     for (let player = 0; player < 4; ++player) {
-	if (gamepadArray[player]) {
+        if (gamepadArray[player]) {
             prevRealGamepadState[player] = gamepadArray[player];
-	}
+        }
     }
 
     // Reset the just-pressed state

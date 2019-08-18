@@ -1038,7 +1038,9 @@ function _makePad(index) {
             lt: '⍇',
             dn: '⍗',
             rt: '⍈'
-        })
+        }),
+        _analogX: 0,
+        _analogY: 0
     });
 }
 

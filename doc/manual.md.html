@@ -2682,7 +2682,7 @@ These APIs are subject to change.
 : Reserved function for executing device-specific features such as the
   game launcher, GPIO, and alternative input devices. `command` is a
   string telling the host which control feature to execute, and the
-  remaining arguments are passed to it. All `deviceControl` commands
+  remaining arguments are passed to it. All `deviceControl()` commands
   may change in future releases and may not work on any given platform.
 
   - `"startGIFRecording"` Begin GIF recording.
@@ -2692,7 +2692,8 @@ These APIs are subject to change.
      terminates automatically after a set time.
   - `"takeScreenshot"`    Take a screenshot and download it to the local disk.
   - `"setPadType", index, "type"` Set `pad[index].type` and the corresponding prompts.
-
+  - `"getAnalogAxes", index` Return an `xy()` of the analog axis values for `pad[index]`, without D-pad snapping.
+    Needed for accessing Atari paddles, car pedals, steering wheels, and flight stick throttles in a meaningful way.
 
 `drawBounds(e, color (= gray(60%)), recurse (= true))`
 : Render a debugging view of the bounds of an entity or other object
@@ -2986,6 +2987,8 @@ Fonts
 ![`quad://fonts/nano-4.font.json`](../fonts/nano-4.png)
 
 ![`quad://fonts/nano-3.font.json`](../fonts/nano-3.png)
+
+![`quad://fonts/nanob-3.font.json`](../fonts/nanob-3.png)
 
 
 Sounds
@@ -4792,6 +4795,14 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2019 August 17: Beta update 9
+
+- Added `nanob-3.font.json` (like nano-3, but with thinner L and I characters)
+- Patch for emulator view resizing for new dimensions on slower browsers
+- Added `deviceControl()` `"getAnalogAxes" command
+- Renamed `index.html` to `quadplay.html` for improved itch.io compatibility
+
 
 2019 August 16: Beta update 8
 

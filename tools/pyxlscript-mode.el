@@ -46,7 +46,7 @@
                                    "makeEntity" "drawEntity" "overlaps" "updateEntityChildren" "physicsStepEntity"
                                    "now" "gameFrames" "modeFrames" "findMapPath" "findPath"
                                    "gray" "rgb" "rgba" "hsv" "hsva"
-                                   "call"
+                                   "call" "setPostEffects" "resetPostEffects"
                                    "abs" "acos" "atan" "asin" "sign" "signNonZero" "cos" "clamp" "hash" "lerp" "log" "log2" "log10" "loop" "min" "max" "mid" "noise" "oscillate" "overlap" "pow" "rndInt" "rndDisk" "rndSquare" "rndValue" "rnd" "ξ" "sgn" "sqrt" "sin" "srand" "tan"
                                    "clone" "copy" "drawPreviousMode" "cross" "direction" "dot" "equivalent" "magnitude" "maxComponent" "minComponent" "xy" "xyz"
                                    "fastRemoveKey" "find" "keys" "removeKey" "size" "substring" "sort" "resize" "push" "pop" "removeValues" "pad" "joy" "round" "floor" "ceil"
