@@ -62,7 +62,7 @@ except:
       print('WARNING: gethostbyname unexpectedly failed. Server IP address is unknown.')
       myip = '127.0.0.1'
          
-url = 'http://' + myip + ':' + str(port) + '/console/?IDE=1'
+url = 'http://' + myip + ':' + str(port) + '/console/quadplay.html?IDE=1'
 print('_________________________________________________________________________\n')
 
 if len(sys.argv) > 1:
