@@ -585,10 +585,12 @@ The emulator has special keyboard keys for:
 
 - F5: run
 - F6: screenshot
-- F8: start/stop recording GIF [^safariGIF]
+- F8 or Ctrl+G: start/stop recording GIF [^safariGIF]
 - F10: step one frame
-- Ctrl+Break or Ctrl+C (or Cmd on MacOS)
+- Ctrl+Break or Ctrl+C
 - Ctrl+R or Ctrl+F5: reload
+
+On MacOS, either Control or Command can be used for "Ctrl".
 
 [^safariGIF]: On Safari, you have to explicitly allow popups for the website for this to work.
  Go to Preferences --> Websites --> Pop-up Windows and check "allow" for `localhost` (or whatever
@@ -1148,16 +1150,24 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 : Returns a vector perpendicular to `v` by rotating it 90 degrees: 
   `xy(-v.y, v.x)`, for `xy()` and 2-element array vectors only.
 
+`rndBall()`
+: Returns a uniformly distributed `xyz()` in the [solid] ball with center `(0, 0, 0)` with radius 1. Useful for
+  random offsets within a sphere.
+
 `rndCircle()`
 : Returns a uniformly distributed `xy()` on the perimeter of the circle with center `(0, 0)` with radius 1.
   Useful for random directions.
 
 `rndDisk()`
-: Returns a uniformly distributed `xy()` on the disk with center `(0, 0)` with radius 1. Useful for
+: Returns a uniformly distributed `xy()` in the disk with center `(0, 0)` with radius 1. Useful for
   random offsets within a circle.
 
+`rndSphere()`
+: Returns a uniformly distributed `xyz()` on the [hollow] sphere with center `(0, 0, 0)` with radius 1. Useful for
+  random directions in 3D.
+
 `rndSquare()`
-: Returns a uniformly distributed `xy()` on the square with center `(0, 0)` with side length 2.
+: Returns a uniformly distributed `xy()` in the square with center `(0, 0)` with side length 2.
   Useful for random offsets within a square.
 
 `xy(x, y)`
@@ -2019,11 +2029,19 @@ Graphics
 : Returns `rgb(n, n, n)`, with `n` equal to a perceptually-weighted average of the rgb values from color.
   The RGB --> gray conversion algorithm weights will likely change in a future release.
 
-`hsv(h, s, v, a (= 1))`
-: Returns an object with field `h` wrapped to [0, 1], fields `s`, `v`, and `a` clamped to [0, 1].
+`hsva(h, s, v, a (= 1))`
+: Returns an object with field `h` _wrapped_ to [0, 1], and fields `s`, `v`, and `a` clamped to [0, 1].
+
+`hsv(h, s, v)`
+: Returns an object with field `h` _wrapped_ to [0, 1], and fields `s` and `v` clamped to [0, 1].
+  `h=0` and `h=1` are red, `h=1/3` is green, and `h=2/3` is blue, with values inbetween
+  interpolated.
 
 `rgb(hsvValue)`
 : Convert the hsv result to rgba.
+
+`rgb(r, g, b)`
+: Create a structure with fields `r`, `g`, and `b` clamped to [0, 1].
 
 `rgba(r, g, b, a (= 1))`
 : Create a structure with fields `r`, `g`, `b`, and `a` clamped to [0, 1].
@@ -2764,6 +2782,12 @@ versions may be substantially faster than overloaded operators.
 `SUB(s1, s2)`
 : Returns the scalar difference.
 
+`MAX(s1, s2)`
+: Returns the larger scalar.
+
+`MIN(s1, s2)`
+: Returns the smaller scalar.
+
 `CLAMP(s, slo, shi)`
 : Clamps `s` to [`slo`, `shi`] where all are scalar and returns the result.
 
@@ -3082,6 +3106,7 @@ Sounds
 ![`quad://sounds/76-Wild.sound.json`](../sounds/76-Wild.mp3) ![`quad://sounds/77-Wild.sound.json`](../sounds/77-Wild.mp3)
 ![`quad://sounds/78-Wild.sound.json`](../sounds/78-Wild.mp3) ![`quad://sounds/79-Wild.sound.json`](../sounds/79-Wild.mp3)
 
+
 Project File
 =============================================================================================
 
@@ -3119,6 +3144,17 @@ options. Project files should have the double extension `.game.json`.
   // of your code, before the constant and asset definitions.
   "packages":       ["https://someaccount.github.io/someproject/somefile.package.json",
                      "somefileinyourproject.package.json"],
+  
+  // Documents for players or for yourself as a game developer, such 
+  // as a TODO list, game design doc, manual, or library specification.
+  // These can be HTML, Markdeep (md.html), Markdown (.md), or text (.txt) format 
+  "docs":           [
+       {"name": "Design",
+        "url":  "gdd.md.html"},
+
+       // Raw URLs are supported as well
+       "todo.md"
+  ],
   
   // Files that form the global scope. Put most of your code in these. They are
   // loaded in order.
@@ -3291,7 +3327,7 @@ The sprite sheet JSON descriptor looks like:
     // an array on the spritesheet with the extrapolate field set.
     // A name cannot be 'spriteSize' or any other spritesheet field.
     //
-    // If an xy() is specified, creates a clamped animation for a single frame.
+    // If an xy() is specified, creates a single sprite..
     // If extrapolate is unspecified, defaults to looping.
     // extrapolate options are "loop", "oscillate", and "clamp"
     //
@@ -3299,8 +3335,9 @@ The sprite sheet JSON descriptor looks like:
     "names":        {
         "idle":     {"start": {"x": 0, "y": 0}, "end": {"x": 0, "y": 3}, "extrapolate": "oscillate"},
         "run":      {"start": {"x": 1, "y": 0}, "end": {"y": 3}},
-        "jumpUp":   {"x": 2, "y": 0},
-        "jumpDown": {"x": 2, "y": 1}
+        "jumpUp":   {"start": {"x": 2, "y": 0}},
+        "jumpDown": {"start": {"x": 2, "y": 1}},
+        "dead":     {"x": 3, "y": 0},
     },
     
     // Optional license and copyright information.
@@ -4795,6 +4832,18 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2019 August 25: Beta update 10
+
+- Added support for `docs` in the `game.json` file using Markdeep, Markdown,
+  HTML, and text format. Good for game design docs, TODO lists, and game manuals
+- Added support for Ctrl+G as an alternative GIF recording keystroke
+- Renamed `signNonZero()` to `signNotZero()` to match the manual
+- Added `MIN()` and `MAX()` intrinsics
+- Fixed `opacity == 0` on `drawSprite()` to draw nothing instead of full opacity
+- Added `rndBall()` and `rndSphere()`
+- Changed sprite.json name for a single `xy()` to be a sprite instead of an animation
+
 
 2019 August 17: Beta update 9
 

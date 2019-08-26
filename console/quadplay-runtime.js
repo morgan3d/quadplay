@@ -1007,7 +1007,7 @@ var exp = Math.exp;
 var sqrt = Math.sqrt;
 var cbrt = Math.cbrt;
 
-function signNonZero(x) { return (x < 0) ? -1 : 1; }
+function signNotZero(x) { return (x < 0) ? -1 : 1; }
 
 var _screen;
 
@@ -1982,13 +1982,13 @@ function _colorToUint32(color) {
     let c = 0x0F000000 >>> 0;
     if (a !== undefined) {
         // >>> 0 ensures uint32
-        c = (((a * 15 + 0.5) & 0xf) << 24) >>> 0;
+        c = (((_clamp(a, 0, 1) * 15 + 0.5) & 0xf) << 24) >>> 0;
     }
 
     let r = color.r, g = color.g, b = color.b, h = color.h;
 
     if (h !== undefined) {
-        let s = _clamp(color.s, 0, 1), v = _clamp(color.v, 0, 1);
+        const s = _clamp(color.s, 0, 1), v = _clamp(color.v, 0, 1);
 
         // Convert to RGB
         r = v * (1 - s + s * _clamp(Math.abs(_fract(h + 1.0) * 6 - 3) - 1, 0, 1));
@@ -2459,6 +2459,8 @@ function drawSprite(spr, center, angle, scale, opacity, z, overrideColor) {
         spr = spr.sprite;
     }
 
+    if (opacity <= 0) { return; }
+
     if (Array.isArray(spr) && spr.spriteSize && Array.isArray(spr[0])) {
         // The sprite was a spritesheet. Grab the first element
         spr = spr[0][0];
@@ -2486,7 +2488,7 @@ function drawSprite(spr, center, angle, scale, opacity, z, overrideColor) {
     // Apply the sprite's own flipping
     scaleX *= spr.scale.x; scaleY *= spr.scale.y;
     
-    opacity = Math.max(0, Math.min(1, opacity || 1));
+    opacity = Math.max(0, Math.min(1, (opacity === undefined) ? 1 : opacity));
     const radius = spr._boundingRadius * Math.max(Math.abs(scaleX), Math.abs(scaleY));
 
     if ((opacity <= 0) || (x + radius < _clipX1 - 0.5) || (y + radius < _clipY1 - 0.5) ||
@@ -3200,9 +3202,17 @@ function rndSquare() {
 }
 
 
+function rndSphere() {
+    const a = Math.acos(rnd() * 2 - 1) - Math.PI / 2;
+    const b = rnd() * Math.PI * 2;
+    const c = Math.cos(a);
+    return {x: c * Math.cos(b), y: c * Math.sin(b), z: Math.sin(a)};
+}
+
+
 function rndCircle() {
     const t = rnd() * 2 * Math.PI;
-    return {x: Math.cos(t), y: Math.sin(t)}
+    return {x: Math.cos(t), y: Math.sin(t)};
 }
 
 
@@ -3216,6 +3226,20 @@ function rndDisk() {
     } while (m > 1);
     m = 1 / m;
     P.x *= m; P.y *= m;
+    return P;
+}
+
+function rndBall() {
+    const P = {x:0, y:0, z:0}
+    let m = 0;
+    do {
+        P.x = rnd() * 2 - 1;
+        P.y = rnd() * 2 - 1;
+        P.z = rnd() * 2 - 1;
+        m = P.x * P.x + P.y * P.y + P.z * P.z;
+    } while (m > 1);
+    m = 1 / m;
+    P.x *= m; P.y *= m; P.z *= m;
     return P;
 }
 
@@ -3692,6 +3716,7 @@ function _padZero(n) {
 
 function formatNumber(n, fmt) {
     if (fmt !== undefined && ! isString(fmt)) { throw new Error('The format argument to formatNumber must be a string'); }
+    if (! isNumber(n)) { throw new Error('The number argument to formatNumber must be a number'); }
     switch (fmt) {
     case 'percent':
     case '%':
@@ -4001,6 +4026,14 @@ function minComponent(a) {
     let s = Infinity;
     for (let key in a) s = Math.min(s, a[key]);
     return s;
+}
+
+function MAX(a, b) {
+    return (a > b) ? a : b;
+}
+
+function MIN(a, b) {
+    return (a < b) ? a : b;
 }
 
 function ADD(a, b) {

@@ -97,30 +97,32 @@ def make_sprite(filepath, size, license, game, force=False):
 
     print("wrote: '{}' for sprite '{}'".format(outpath, filepath))
 
-    if game:
-        if not game.endswith(".json"):
-            game += ".game.json"
+    if not game:
+        return
 
-        try:
-            with open(game, 'r') as fi:
-                game_data = json.loads(fi.read())
-        except IOError:
-            raise RuntimeError(
-                "ERROR: no json file for game '{}' found.  Use the -g flag to "
-                "pass the the game in.\n"
+    if not game.endswith(".json"):
+        game += ".game.json"
+
+    try:
+        with open(game, 'r') as fi:
+            game_data = json.loads(fi.read())
+    except IOError:
+        raise RuntimeError(
+            "ERROR: no json file for game '{}' found.  Use the -g flag to "
+            "pass the the game in.\n".format(game)
+        )
+
+    game_data.setdefault('assets',{})[basename + "Sprite"] = outpath
+
+    with open(game, 'w') as fo:
+        fo.write(
+            json.dumps(
+                game_data,
+                sort_keys=True,
+                indent=4, separators=(",",": ")
             )
-
-        game_data.setdefault('assets',{})[basename + "Sprite"] = outpath
-
-        with open(game, 'w') as fo:
-            fo.write(
-                json.dumps(
-                    game_data,
-                    sort_keys=True,
-                    indent=4, separators=(",",": ")
-                )
-            )
-        print("Added '{}' to '{}'".format(basename + "Sprite", game))
+        )
+    print("Added '{}' to '{}'".format(basename + "Sprite", game))
 
 def main():
     """main function for module"""

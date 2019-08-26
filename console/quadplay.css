@@ -490,6 +490,10 @@ code, .code {
     background-image: url('project-icon-mode.png');
 }
 
+.project .docs li:before {
+    background-image: url('project-icon-doc.png');
+}
+
 .project li.sprite:before {
     background-image: url('project-icon-sprite.png');
 }

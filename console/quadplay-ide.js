@@ -732,6 +732,9 @@ function onDocumentKeyDown(event) {
         downloadScreenshot();
         break;
 
+    case 71: // G
+        if (! (event.ctrlKey || event.metaKey)) { break; }
+        // Otherwise, Ctrl+G was pressed, so fall through
     case gifCaptureKey: // F8
         if (event.shiftKey) {
             if (! previewRecording) {
@@ -765,8 +768,7 @@ function onDocumentKeyDown(event) {
         
         
     case 82: // R
-    case 71: // G
-        if (event.ctrlKey || event.metaKey) { // Ctrl+R / Ctrl+G
+        if (event.ctrlKey || event.metaKey) { // Ctrl+R
             // Intercept from browser
             event.preventDefault();
             if (! inModal()) { onRestartButton(); }
@@ -842,6 +844,7 @@ function onProjectSelect(target, type, object) {
     const soundEditor    = document.getElementById('soundEditor');
     const constantEditor = document.getElementById('constantEditor');
     const mapEditor      = document.getElementById('mapEditor');
+    const docEditor      = document.getElementById('docEditor');
     
     let list = document.getElementsByClassName('selectedProjectElement');
     for (let i = 0; i < list.length; ++i) {
@@ -853,6 +856,14 @@ function onProjectSelect(target, type, object) {
         target.classList.add('selectedProjectElement');
         visualizeModes(modeEditor);
         modeEditor.style.visibility = 'visible';
+        return;
+    }
+
+    if (type === 'doc') {
+        // Documents
+        target.classList.add('selectedProjectElement');
+        showGameDoc(docEditor, object.name, object.url);
+        docEditor.style.visibility = 'visible';
         return;
     }
 
@@ -930,6 +941,39 @@ function onProjectSelect(target, type, object) {
         }
         break;
     }
+}
+
+
+function showGameDoc(docEditor, name, url) {
+    // TODO: show loading spinner GIF
+
+    // Strip anything sketchy that looks like an HTML attack from the URL
+    url = url.replace(/" ></g, '');
+    if (url.endsWith('.html')) {
+        docEditor.innerHTML = `<embed width="100%" height="100%" src="${url}"></embed>`;
+    } else if (url.endsWith('.md')) {
+        // TODO: trick out .md files
+        loadManager = new LoadManager({
+            errorCallback: function () {
+            },
+            forceReload: true});
+        loadManager.fetch(url, 'text', null,  function (text) {
+            // Set base URL and add Markdeep processing
+            const base = urlDir(url);
+            const markdeepURL = makeURLAbsolute('', 'quad://doc/markdeep.min.js');
+
+            // Escape quotes to avoid ending the srcdoc prematurely
+            text = `<base href='${base}'>\n` + text.replace(/"/g, '&quot;') +
+                `<!-- Markdeep: --><script src='${markdeepURL}'></script>\n`;
+            console.log(text);
+            docEditor.innerHTML = `<iframe srcdoc="${text}" border=0 width=100% height=100%></iframe>`;
+        }),
+        loadManager.end();
+    } else {
+        // Treat as text file
+        docEditor.innerHTML = `<object width="100%" height="100%" type="text/plain" data="${url}" border="0"> </object>`;
+    }
+
 }
 
 
@@ -1380,6 +1424,14 @@ function createProjectWindow(gameSource) {
     }
     s += '</ul>';
 
+    s += '— <i>Docs</i>\n';
+    s += '<ul class="docs">';
+    for (let i = 0; i < gameSource.docs.length; ++i) {
+        const doc = gameSource.docs[i];
+        s += `<li class="clickable" onclick="onProjectSelect(event.target, 'doc', gameSource.docs[${i}])" title="${doc.url}"><code>${doc.name}</code></li>\n`;
+    }
+    s += '</ul>';
+    
     s += '— <i>Constants</i>\n';
     s += '<ul class="constants">';
     {

@@ -239,6 +239,21 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 }
             }
         }
+
+        // Docs:
+        gameSource.docs = [];
+        if (gameJSON.docs) {
+            // Just clone the array
+            gameSource.docs = gameJSON.docs.slice(0);
+            for (let d = 0; d < gameSource.docs.length; ++d) {
+                const doc = gameSource.docs[d];
+                if (typeof doc === 'string') {
+                    gameSource.docs[d] = {name: doc, url: makeURLAbsolute(gameURL, doc)};
+                } else {
+                    gameSource.docs[d] = {name: doc.name, url: makeURLAbsolute(gameURL, doc.url)};
+                }               
+            }
+        } // if docs
         
         // Assets:
         if (gameJSON.assets) {
@@ -583,33 +598,43 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                 }
                 
                 // Apply defaults
-                if (data.x !== undefined) { data = {start: data, extrapolate: 'clamp'}; }
-                
-                if (data.end === undefined) { data.end = Object.assign({}, data.start); }
-
-                if (data.end.x === undefined) { data.end.x = data.start.x; }
-                
-                if (data.end.y === undefined) { data.end.y = data.start.y; }
-
-                if (data.start.x !== data.end.x && data.start.y !== data.end.y) {
-                    throw new Error('Animation frames must be in a horizontal or vertical line for animation "' + anim + '"');
-                }
-
-                spritesheet[anim] = [];
-                spritesheet[anim].extrapolate = data.extrapolate || 'loop';
-
-                for (let y = data.start.y; y <= data.end.y; ++y) {
-                    for (let x = data.start.x; x <= data.end.x; ++x) {
-                        const u = json.transpose ? y : x, v = json.transpose ? x : y;
-                        if (u < 0 || u >= spritesheet.length || v < 0 || v >= spritesheet[0].length) {
-                            throw new Error('Index xy(' + u + ', ' + v + ') in animation "' + anim + '" is out of bounds.');
-                        }
-                        
-                        spritesheet[anim].push(spritesheet[u][v]);
+                if (data.x !== undefined) {
+                    const u = json.transpose ? data.y : data.x, v = json.transpose ? data.x : data.y;
+                    if (u < 0 || u >= spritesheet.length || v < 0 || v >= spritesheet[0].length) {
+                        throw new Error('Index xy(' + u + ', ' + v + ') in animation "' + anim + '" is out of bounds.');
                     }
-                }
+                        
+                    spritesheet[anim] = spritesheet[u][v];
 
-                Object.freeze(spritesheet[anim]);
+                    //data = {start: data, extrapolate: 'clamp'};
+                } else {
+                
+                    if (data.end === undefined) { data.end = Object.assign({}, data.start); }
+                    
+                    if (data.end.x === undefined) { data.end.x = data.start.x; }
+                
+                    if (data.end.y === undefined) { data.end.y = data.start.y; }
+
+                    if (data.start.x !== data.end.x && data.start.y !== data.end.y) {
+                        throw new Error('Animation frames must be in a horizontal or vertical line for animation "' + anim + '"');
+                    }
+                    
+                    spritesheet[anim] = [];
+                    spritesheet[anim].extrapolate = data.extrapolate || 'loop';
+                    
+                    for (let y = data.start.y; y <= data.end.y; ++y) {
+                        for (let x = data.start.x; x <= data.end.x; ++x) {
+                            const u = json.transpose ? y : x, v = json.transpose ? x : y;
+                            if (u < 0 || u >= spritesheet.length || v < 0 || v >= spritesheet[0].length) {
+                                throw new Error('Index xy(' + u + ', ' + v + ') in animation "' + anim + '" is out of bounds.');
+                            }
+                        
+                            spritesheet[anim].push(spritesheet[u][v]);
+                        }
+                    }
+
+                    Object.freeze(spritesheet[anim]);
+                } // if single sprite
             }
         }
 

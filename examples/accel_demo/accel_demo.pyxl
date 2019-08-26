@@ -73,22 +73,6 @@ def set_profile(profname):
 
 set_profile(labels[profile_index])
 
-// Attack parameters
-let interp="linear"
-
-def accel_const():
-    return max_velocity*xy(joy.x, joy.y) 
-
-def accel_linear(t, num_frames, dir):
-    return (t / num_frames_attack) * max_velocity * dir
-
-def accel_smoothstep(t, num_frames, dir):
-    return smootherstep(0, num_frames, t) * dir
-
-let interp_func = {
-    "constant":accel_const,
-    "linear":accel_linear,
-}
 let last_joy = xy(0,0)
 let frames_joy = xy(0,0)
 let x_zone = "still"
@@ -176,12 +160,6 @@ if sign(joy.y) != 0:
         y_zone += "+"
     else:
         y_zone += "-"
-
-
-// if (last_joy.x == joy.x and sign(joy.x) != 0):
-//     box.vel.x = interp_func[interp](frames_joy, box.vel.x, joy.x)
-// if (last_joy.x == joy.x):
-//     box.vel.y = interp_func[interp](0, xy(0, joy.y))
 
 physicsStepEntity(box)
 box.pos.x = loop(box.pos.x, screenSize.x)
