@@ -2,7 +2,7 @@
 "use strict";
 
 const deployed = true;
-const version  = '2019.07.04b'
+const version  = '2019.08.26.10'
 const launcherURL = 'quad://console/launcher';
 
 {
@@ -32,6 +32,8 @@ function getQueryString(field) {
     return string ? string[1] : null;
 }
 
+const fastReload = getQueryString('fastReload') === '1';
+
 const useIDE = getQueryString('IDE') || false;
 {
     const c = document.getElementsByClassName(useIDE ? 'noIDE' : 'IDEOnly');
@@ -48,7 +50,7 @@ function debugOptionClick(event) {
         const outputDisplayPane = document.getElementById('outputDisplayPane');
         outputDisplayPane.style.whiteSpace = element.checked ? 'pre-wrap' : 'pre';
     } else {
-        Runtime['_' + element.id] = element.checked;
+        QRuntime['_' + element.id] = element.checked;
     }
     saveIDEState();
 }
@@ -377,7 +379,7 @@ function onStopButton() {
     coroutine = null;
     emulatorMode = 'stop';
 
-    if (Runtime._graphicsPeriod === 1) {
+    if (QRuntime._graphicsPeriod === 1) {
         cancelAnimationFrame(lastAnimationRequest);
     } else {
         clearTimeout(lastAnimationRequest);
@@ -419,7 +421,7 @@ function onPlayButton() {
                 
                 setErrorStatus('Error: ' + e.url + ', line ' + e.lineNumber + ': ' + e.message);
                 if (isSafari) {
-                    console.log('_currentLineNumber = ' + Runtime._currentLineNumber);
+                    console.log('_currentLineNumber = ' + QRuntime._currentLineNumber);
                 }
                 console.log(e);
             }
@@ -613,7 +615,7 @@ function deviceControl(cmd) {
     case "getAnalogAxes":
         {
         const i = clamp(parseInt(arguments[1]), 0, 3);
-        const pad = Runtime.pad[i];
+        const pad = QRuntime.pad[i];
         return {x: pad._analogX, y: pad._analogY};
         break;
         }
@@ -625,8 +627,8 @@ function deviceControl(cmd) {
         const prompt = controlSchemeTable[type];
         if (i === undefined || i < 0 || i > 3) { throw new Error('"setPadType" must be used with an index from 0 to 3'); }
         if (! prompt) { throw new Error('"setPadType" must be used with one of the legal types, such as "Quadplay" or "PlayStation" (received "' + type + '")'); }
-        Runtime.pad[i].type = type;
-        Runtime.pad[i].prompt = prompt;
+        QRuntime.pad[i].type = type;
+        QRuntime.pad[i].prompt = prompt;
         break;
         }
     }
@@ -639,19 +641,19 @@ function restartProgram(showBootAnimation) {
     reloadRuntime(function () {
         try {
             // Inject the constants into the runtime space
-            makeConstants(Runtime, gameSource.constants);
-            makeAssets(Runtime, gameSource.assets);
+            makeConstants(QRuntime, gameSource.constants);
+            makeAssets(QRuntime, gameSource.assets);
         } catch (e) {
             // Compile-time error
             onStopButton();
             setErrorStatus(e);
         }
         
-        // Create the main loop function in the Runtime environment so
+        // Create the main loop function in the QRuntime environment so
         // that it sees those variables.
         try {
-            coroutine = Runtime._makeCoroutine(compiledProgram);
-            Runtime._showBootAnimation = showBootAnimation;
+            coroutine = QRuntime._makeCoroutine(compiledProgram);
+            QRuntime._showBootAnimation = showBootAnimation;
             lastAnimationRequest = requestAnimationFrame(mainLoopStep);
             emulatorKeyboardInput.focus();
         } catch (e) {
@@ -899,9 +901,9 @@ function onProjectSelect(target, type, object) {
             // Object or array
             const L = Object.keys(c).length;
             if ((L <= 4) && (c.r !== undefined) && (c.g !== undefined) && (c.b !== undefined) && ((c.a !== undefined) || (L === 3))) {
-                constantEditor.innerHTML = index + ` <div style="background: rgb(${255 * c.r}, ${255 * c.g}, ${255 * c.b}); width: 50px; height: 16px; display: inline-block"> </div><br/>(${Runtime.unparse(c)})`;
+                constantEditor.innerHTML = index + ` <div style="background: rgb(${255 * c.r}, ${255 * c.g}, ${255 * c.b}); width: 50px; height: 16px; display: inline-block"> </div><br/>(${QRuntime.unparse(c)})`;
             } else {
-                let s = Runtime.unparse(c);
+                let s = QRuntime.unparse(c);
                 if (s.length > 16) {
                     constantEditor.innerHTML = index + ' = <table>' + visualizeConstant(c, '') + '</table>';
                 } else {
@@ -965,7 +967,6 @@ function showGameDoc(docEditor, name, url) {
             // Escape quotes to avoid ending the srcdoc prematurely
             text = `<base href='${base}'>\n` + text.replace(/"/g, '&quot;') +
                 `<!-- Markdeep: --><script src='${markdeepURL}'></script>\n`;
-            console.log(text);
             docEditor.innerHTML = `<iframe srcdoc="${text}" border=0 width=100% height=100%></iframe>`;
         }),
         loadManager.end();
@@ -1017,12 +1018,12 @@ function linesIntersect(A, C, B, D) {
     // Simplified from https://github.com/pgkelley4/line-segments-intersect/blob/master/js/line-segments-intersect.js
     // by ignoring the parallel cases
     
-    const dA = Runtime._sub(C, A);
-    const dB = Runtime._sub(D, B);
-    const diff = Runtime._sub(B, A);
+    const dA = QRuntime._sub(C, A);
+    const dB = QRuntime._sub(D, B);
+    const diff = QRuntime._sub(B, A);
 
-    const numerator = Runtime.cross(diff, dA);
-    const denominator = Runtime.cross(dA, dB);
+    const numerator = QRuntime.cross(diff, dA);
+    const denominator = QRuntime.cross(dA, dB);
 
     if (Math.max(Math.abs(denominator), Math.abs(numerator)) < 1e-10) {
         // Parallel cases
@@ -1030,7 +1031,7 @@ function linesIntersect(A, C, B, D) {
     }
 
     const u = numerator / denominator;
-    const t = Runtime.cross(diff, dB) / denominator;
+    const t = QRuntime.cross(diff, dB) / denominator;
 
     // Intersect within the segments
     return (t >= 0) && (t <= 1) && (u >= 0) && (u <= 1);
@@ -1313,7 +1314,7 @@ function visualizeConstant(value, indent) {
         if (Array.isArray(v) || typeof v === 'object') {
             s += `<tr valign=top><td>${indent}${k}:</td><td></td><td><i>${Array.isArray(v) ? 'array' : 'object'}</i></td></tr>\n` + visualizeConstant(v, indent + '&nbsp;&nbsp;&nbsp;&nbsp;');
         } else {
-            v = escapeHTMLEntities(Runtime.unparse(v));
+            v = escapeHTMLEntities(QRuntime.unparse(v));
             s += `<tr valign=top><td>${indent}${k}:</td><td></td><td><code>${v}</code></td></tr>\n`;
         }
     }
@@ -1697,7 +1698,7 @@ const outputDisplayPane = document.getElementById('outputDisplayPane');
 let debugWatchTable = {};
 
 function debugWatch(expr, value) {
-    debugWatchTable[expr] = Runtime.unparse(value);
+    debugWatchTable[expr] = QRuntime.unparse(value);
 }
 
 
@@ -1721,7 +1722,7 @@ function jsToNSError(error) {
                 // the name of the offending function.
                 for (let i = 1; i < stack.length; ++i) {
                     if (stack[i].indexOf('quadplay-runtime.js') === -1) {
-                        lineNumber = Runtime._currentLineNumber + 2;
+                        lineNumber = QRuntime._currentLineNumber + 2;
                         //return {url:'(unknown)', lineNumber:'(unknown)', message: stack[i] + ': ' + error};
                     }
                 }
@@ -1804,12 +1805,12 @@ const graphicsPeriodCheckInterval = 1000;// milliseconds
 function mainLoopStep() {
     // Keep the callback chain going
     if (emulatorMode === 'play') {
-        if (Runtime._graphicsPeriod === 1) {
+        if (QRuntime._graphicsPeriod === 1) {
             // Line up with Vsync and browser repaint at 60 Hz
             lastAnimationRequest = requestAnimationFrame(mainLoopStep);
         } else {
             // Use manual scheduling when running below 60 Hz
-            lastAnimationRequest = setTimeout(mainLoopStep, (1000 / 60) * Runtime._graphicsPeriod);
+            lastAnimationRequest = setTimeout(mainLoopStep, (1000 / 60) * QRuntime._graphicsPeriod);
         }
     }
 
@@ -1863,7 +1864,7 @@ function mainLoopStep() {
     }
 
     const frameEnd = performance.now();
-    const frameTime = (frameEnd - frameStart - Runtime._graphicsTime) / Runtime._graphicsPeriod + Runtime._graphicsTime;
+    const frameTime = (frameEnd - frameStart - QRuntime._graphicsTime) / QRuntime._graphicsPeriod + QRuntime._graphicsTime;
     if (emwaFrameTime === 0) {
         // First frame
         emwaFrameTime = frameTime;
@@ -1876,16 +1877,16 @@ function mainLoopStep() {
         lastGraphicsPeriodCheckTime = frameEnd;
 
         // "periods" are integer multiples of 1000 ms / 60 frames = 16.7 ms
-        const oldPeriod = Runtime._graphicsPeriod;
+        const oldPeriod = QRuntime._graphicsPeriod;
         
         // (f [ms / frame]) / (1000/60 [ms/frame]) = f * 60 / 1000
         let nextPeriod = frameTime * (60 / 1000);
 
         // If we're almost making frame rate, do not increase the graphics period
-        if (nextPeriod * 0.96 > Runtime._graphicsPeriod) {
+        if (nextPeriod * 0.96 > QRuntime._graphicsPeriod) {
             // Increase the period because the program is running too slowly 
             nextPeriod = clamp(Math.round(nextPeriod), periodCapThisRun, 6);
-        } else if (Math.ceil(nextPeriod) <= Runtime._graphicsPeriod) {
+        } else if (Math.ceil(nextPeriod) <= QRuntime._graphicsPeriod) {
             // The program is running fast. Drop down to the new period
             nextPeriod = clamp(Math.ceil(nextPeriod), periodCapThisRun, 6);
         } else {
@@ -1907,15 +1908,15 @@ function mainLoopStep() {
             emwaFrameInterval = emwaFrameInterval * 0.7 + 0.3 * nextPeriod * 1000/60;
         }
 
-        Runtime._graphicsPeriod = nextPeriod;
+        QRuntime._graphicsPeriod = nextPeriod;
     }
     
     debugFrameTimeDisplay.innerHTML = '' + emwaFrameTime.toFixed(1) + ' ms';
     debugFramePercentDisplay.innerHTML = '(' + Math.round(emwaFrameTime * 6) + '%)';
-    debugFrameRateDisplay.innerHTML = '' + Math.round(60 / Runtime._graphicsPeriod) + ' Hz';
+    debugFrameRateDisplay.innerHTML = '' + Math.round(60 / QRuntime._graphicsPeriod) + ' Hz';
     debugActualFrameRateDisplay.innerHTML = '' + Math.round(1000 / emwaFrameInterval) + ' Hz';
-    debugFramePeriodDisplay.innerHTML = '(' + ('1½⅓¼⅕⅙'[Runtime._graphicsPeriod - 1]) + ' ×)';
-    debugDrawCallsDisplay.innerHTML = '' + Runtime._previousGraphicsCommandList.length;
+    debugFramePeriodDisplay.innerHTML = '(' + ('1½⅓¼⅕⅙'[QRuntime._graphicsPeriod - 1]) + ' ×)';
+    debugDrawCallsDisplay.innerHTML = '' + QRuntime._previousGraphicsCommandList.length;
 
     if (debugWatchEnabled && emulatorMode === 'play') {
         const pane = document.getElementById('debugWatchDisplayPane');
@@ -1926,28 +1927,28 @@ function mainLoopStep() {
         pane.innerHTML = s + '</table>';
     }
 
-    if (Runtime._gameMode) {
-        if (Runtime._modeStack.length) {
+    if (QRuntime._gameMode) {
+        if (QRuntime._modeStack.length) {
             let s = '';
-            for (let i = 0; i < Runtime._modeStack.length; ++i) {
-                s += Runtime._modeStack[i].name + ' → ';
+            for (let i = 0; i < QRuntime._modeStack.length; ++i) {
+                s += QRuntime._modeStack[i].name + ' → ';
             }
-            debugModeDisplay.innerHTML = s + Runtime._gameMode.name;
+            debugModeDisplay.innerHTML = s + QRuntime._gameMode.name;
         } else {
-            debugModeDisplay.innerHTML = Runtime._gameMode.name;
+            debugModeDisplay.innerHTML = QRuntime._gameMode.name;
         }
     } else {
         debugModeDisplay.innerHTML = '∅';
     }
 
-    if (Runtime._prevMode) {
-        debugPreviousModeDisplay.innerHTML = Runtime._prevMode.name;
+    if (QRuntime._prevMode) {
+        debugPreviousModeDisplay.innerHTML = QRuntime._prevMode.name;
     } else {
         debugPreviousModeDisplay.innerHTML = '∅';
     }
     
-    debugModeFramesDisplay.innerHTML = '' + Runtime.modeFrames;
-    debugGameFramesDisplay.innerHTML = '' + Runtime.gameFrames;
+    debugModeFramesDisplay.innerHTML = '' + QRuntime.modeFrames;
+    debugGameFramesDisplay.innerHTML = '' + QRuntime.gameFrames;
 
     if (emulatorMode === 'step') {
         onPauseButton();
@@ -1960,48 +1961,48 @@ function mainLoopStep() {
 let refreshPending = false;
 
 function reloadRuntime(oncomplete) {
-    Runtime.document.open();
-    Runtime.document.write("<script src='quadplay-runtime.js' charset='utf-8'> </script>");
-    Runtime.onload = function () {
-        Runtime._SCREEN_WIDTH  = SCREEN_WIDTH;
-        Runtime._SCREEN_HEIGHT = SCREEN_HEIGHT;
-        Runtime.resetClip();
+    QRuntime.document.open();
+    QRuntime.document.write("<script src='quadplay-runtime.js' charset='utf-8'> </script>");
+    QRuntime.onload = function () {
+        QRuntime._SCREEN_WIDTH  = SCREEN_WIDTH;
+        QRuntime._SCREEN_HEIGHT = SCREEN_HEIGHT;
+        QRuntime.resetClip();
 
         // updateImageData.data is a Uint8Clamped RGBA buffer
-        Runtime._screen = new Uint32Array(updateImageData.data.buffer);
+        QRuntime._screen = new Uint32Array(updateImageData.data.buffer);
 
         // Remove any base URL that appears to include the quadplay URL
-        const _gameURL = (gameSource.jsonURL || '').replace(location.href.replace(/\?.*/, ''), '');
-        Runtime._window = window;
-        Runtime._gameURL = _gameURL;
-        Runtime._quadplayLogoSprite = quadplayLogoSprite;
-        Runtime._debugPrintEnabled = document.getElementById('debugPrintEnabled').checked;
-        Runtime._assertEnabled = document.getElementById('assertEnabled').checked;
-        Runtime._debugWatchEnabled = document.getElementById('debugWatchEnabled').checked;
-        Runtime._showEntityBoundsEnabled = document.getElementById('showEntityBoundsEnabled').checked;
-        Runtime._debugWatch    = debugWatch;
-        Runtime._fontMap       = fontMap;
-        Runtime._parse         = _parse;
-        Runtime._submitFrame   = submitFrame;
-        Runtime._updateInput   = updateInput;
-        Runtime._systemPrint   = _systemPrint;
-        Runtime._outputAppend  = _outputAppend;
+        const _gameURL = gameSource ? (gameSource.jsonURL || '').replace(location.href.replace(/\?.*/, ''), '') : '';
+        QRuntime._window = window;
+        QRuntime._gameURL = _gameURL;
+        QRuntime._quadplayLogoSprite = quadplayLogoSprite;
+        QRuntime._debugPrintEnabled = document.getElementById('debugPrintEnabled').checked;
+        QRuntime._assertEnabled = document.getElementById('assertEnabled').checked;
+        QRuntime._debugWatchEnabled = document.getElementById('debugWatchEnabled').checked;
+        QRuntime._showEntityBoundsEnabled = document.getElementById('showEntityBoundsEnabled').checked;
+        QRuntime._debugWatch    = debugWatch;
+        QRuntime._fontMap       = fontMap;
+        QRuntime._parse         = _parse;
+        QRuntime._submitFrame   = submitFrame;
+        QRuntime._updateInput   = updateInput;
+        QRuntime._systemPrint   = _systemPrint;
+        QRuntime._outputAppend  = _outputAppend;
 
-        Runtime.debugPrint     = debugPrint;
-        Runtime.assert         = assert;
-        Runtime.deviceControl  = deviceControl;
-        Runtime.playAudioClip  = playAudioClip;
-        Runtime.stopSound      = stopSound;
-        Runtime.resumeSound    = resumeSound;
-        Runtime.setSoundVolume = setSoundVolume;
-        Runtime.setSoundPitch  = setSoundPitch;
-        Runtime.setSoundPan    = setSoundPan;
-        Runtime.debugPause     = onPauseButton;
+        QRuntime.debugPrint     = debugPrint;
+        QRuntime.assert         = assert;
+        QRuntime.deviceControl  = deviceControl;
+        QRuntime.playAudioClip  = playAudioClip;
+        QRuntime.stopSound      = stopSound;
+        QRuntime.resumeSound    = resumeSound;
+        QRuntime.setSoundVolume = setSoundVolume;
+        QRuntime.setSoundPitch  = setSoundPitch;
+        QRuntime.setSoundPan    = setSoundPan;
+        QRuntime.debugPause     = onPauseButton;
         
         if (oncomplete) { oncomplete(); }
     };
 
-    Runtime.document.close();
+    QRuntime.document.close();
 }
 
 
@@ -2082,7 +2083,7 @@ function frozenDeepClone(src, alreadySeen) {
 }
 
 
-/** Environment is the object to create the constants on (the Runtime
+/** Environment is the object to create the constants on (the QRuntime
     iFrame, or the object at that is a package), constants is the
     constants field of a package. */
 function makeConstants(environment, constants) {
@@ -2099,7 +2100,7 @@ function makeConstants(environment, constants) {
 }
 
 
-/** Called by constants and assets to extend the Runtime environment */
+/** Called by constants and assets to extend the QRuntime environment */
 function defineImmutableProperty(object, key, value) {
     Object.defineProperty(object, key,
                           {configurable: true,

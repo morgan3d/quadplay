@@ -69,6 +69,7 @@ let gameIndex = 0
 let modeFrameShift = 0
 
 def drawIcon(icon, pos):
+   assert(icon != nil)
    drawSprite({sprite: icon, pos: pos + xy(3 + icon.size.x / 2, 3 - icon.size.y / 2)})
    return xy(icon.size.x + 2, icon.size.y + 2)
 
@@ -151,19 +152,19 @@ local:
       y += 15
 
    if game.cooperative:
-      drawIcon(icons.cooperative[0], xy(sideX, y)).y
+      drawIcon(icons.cooperative, xy(sideX, y)).y
       y += drawText({font:mediumFont, text:"Cooperate", pos:xy(wordX, y), color:selectedColor, xAlign:"left"}).y
 
    if game.competitive:
-      drawIcon(icons.competitive[0], xy(sideX, y)).y
+      drawIcon(icons.competitive, xy(sideX, y)).y
       y += drawText({font:mediumFont, text:"Compete", pos:xy(wordX, y), color:selectedColor, xAlign:"left"}).y
       
    if game.achievements:
-      drawIcon(icons.achievements[0], xy(sideX, y)).y
+      drawIcon(icons.achievements, xy(sideX, y)).y
       y += drawText({font:mediumFont, text:"Achieve", pos:xy(wordX, y), color:selectedColor, xAlign:"left"}).y
 
    if game.highscores:
-      drawIcon(icons.highscores[0], xy(sideX, y)).y
+      drawIcon(icons.highscores, xy(sideX, y)).y
       y += drawText({font:mediumFont, text:"Score", pos:xy(wordX, y), color:selectedColor, xAlign:"left"}).y
 
 if joy.aa or joy.pp or joy.qq:

@@ -900,7 +900,7 @@ Array
   Intended primarily for animation of values, including 
   the named arrays of spritesheets, for example, 
   `sprite = arrayValue(spritesheet[animName], frame)`.
-  See also `makeSpline()`. The `extrapolate` values accepted are:
+  See also `makeSpline()` and the Sprite JSON section. The `extrapolate` values accepted are:
   
   - `"oscillate"`
   - `"loop"`
@@ -1026,6 +1026,8 @@ String
    - `"clock24"`: 17:35
    - `"stopwatch"`: 1:38.71
    - `"oldstopwatch"`: 1"38'71
+   - `"ordinal"`: second
+   - `"ordinalabbrev"`: 2ⁿᵈ
    - `".00"` (or any other trailing zero sequence): 4.91 
    - `"00"` (or any other leading zero sequence): 07
    - `" 0"` (or any other leading space sequence followed by a zero sequence): " 7"
@@ -1467,13 +1469,13 @@ support potential future voxel-based rendering schemes.
 Most graphics commands operate in *draw space*. By default, it is
 identical to screen space, but can be changed with with
 `setTransform()`. See also `getTransform()`, `extendTransform()`, and
-the `preservingTransform` block.
+the `preservingTransform:` block.
 
 **The transform affects both rendering and simulation**. The direction
 of the x- and y-axes affects the rotation angle of entity space as
 well as draw space. I recommend that for each game you choose a single
 y-axis convention. Set the scale part of the transform only once at
-the beginning, and then use `preservingTransform` for any localized
+the beginning, and then use `preservingTransform:` for any localized
 needs such as inventory scrolling.
 
 As with screen space, integer coordinates correspond to the top-left
@@ -1541,17 +1543,16 @@ The center of the entire screen is `½ screenSize`.
   `getRotationSign() = -1` (which is the default). This is used by `drawSprite()`
   to determine the rotation direction. See also `getYUp()`.
 
-<!--
 `getTransform()`
-: Returns the current net transformation as an array of eight numbers in the order of
-  `getTransform` arguments. -->
+: Returns the current net transformation as an `args` object that could be passed to
+  `setTransform(args)`.
   
 `getYUp()`
-: Returns `-sign(getTransform()[4])`, which is -1 if Y increases downwards (the default)
+: Returns `-sign(getTransform().dir.y)`, which is -1 if Y increases downwards (the default)
   and +1 if Y increases upwards (`"flipY": true` in the .game.json file). 
 
-`preservingTransform`
-: The special `preservingTransform` block saves the current transform and
+`preservingTransform:`
+: The special `preservingTransform:` block saves the current transform and
   clipping region, executes the code in the body, and then restores the
   previous transform and clipping region. It is useful for making modular
   functions for handling UI scrolling, minimaps, and screenshake.
@@ -4415,6 +4416,7 @@ to represent the buttons with approximately those symbols on PlayStation and
 Xbox controllers. The `ⓧ` character is drawn to ambiguously represent the "X"
 buttons on PlayStation, Xbox, and Nintendo controllers. 
 
+
 Advanced Tools
 ====================================================================================
 
@@ -4442,9 +4444,6 @@ quadplay quad://games/quadpaddle
 
 # Load a mygames/space/space.game.json game that you've made
 quadplay mygames/space
-
-# Equivalent to the previous example
-quadplay quad://mygames/space
 
 # Load from the internet (server must support CORS)
 quadplay https://morgan3d.github.io/somegame/foo.game.json
@@ -4493,6 +4492,11 @@ name. You can list the full path to the actual game file instead.
 
 Every time you push the play button (F5) or reload button (Ctrl+R) in
 the emulator, it will reload your code and assets from disk.
+
+By default, `quad://` assets are cached for fast reload peformance. To
+disable this behavior, force a reload of the entire page with
+shift+browser reload button, or remove `&fastreload=1` from the URL.
+
 
 Visual Studio Code
 ------------------------------------------------------------------------------------
@@ -4566,9 +4570,6 @@ tell your editor to treat `.pyxl` files as Python files, then it will
 probably handle indenting and most keywords correctly. Comments are
 the one element that will probably confuse your syntax highlighter.
 
-I welcome submissions of open source plugins for Visual Studio Code and other
-editors to support PyxlScript.
-
 
 Command-Line Tools
 ------------------------------------------------------------------------------------
@@ -4579,6 +4580,25 @@ Command-Line Tools
 
 [`sprite_json_generator.py`](../tools/sprite_json_generator.py)
 : Generator for `.sprite.json` files. Requires Python and PIL.
+
+
+`quadplay.html`
+------------------------------------------------------------------------------------
+
+The `quadplay.html` application launched by the `quadplay` script accepts the following
+HTML query arguments:
+
+`IDE`
+: If set, load in development mode with access to the full IDE and stop and pause 
+  buttons.
+
+`fastReload`
+: If `1`, do not force reloading of `quad://` files from disk but instead allow
+  browser caching. Those resources are unlikely to change (unless you are modifying
+  quadplay itself!), so this speeds up game reloading, especially for music.
+  
+`game`
+: URL of a game to load, which can be relative to the `quadplay` script.
 
 
 Performance
@@ -4607,7 +4627,8 @@ calls.
 
 Built-in math functions are faster than math functions that you write
 to do equivalent operations because they are designed to minimize
-memory allocation internally.
+memory allocation internally. The intrinsics are maximum speed
+but can make code hard to read.
 
 There is generally no need to cull objects that are off screen. The
 rendering code is very good at removing those for you.
@@ -4655,27 +4676,32 @@ There's a long feature list and a short bug list that I'm working
 through. The highlights are, in priority order:
 
 For 1.0:
-- Edit your game and save to local disk or Google Drive using the `quadplay` script
+- ASESprite native import
+- More AI support
+- Five full sample games
+- Improved Visual Studio Code PyxlScript plugin
+- Export your game to standalone static HTML
+  - itch.io
+  - github.io (github pages)
+  - self-hosted
+- Edit your game and save to local disk using the `quadplay` script
   - Sprite editor
   - Map editor
   - Constant editor
   - Code editor
   - Font editor
-- Five full sample games
-- More AI support
-- Perfect disk, outlined-disk, and outlined-triangle blending
-- Watertight triangle mesh rendering
+- Perfect outlined-disk and outlined-triangle blending
 - Polyline rendering without double-blending endpoints
 
 Post 1.0:
-- Export your game to standalone static HTML
-- Load tables of data from CSV files
-- Filled disks with blending that don't overdraw themselves
 - Watertight rasterization of triangle meshes
 - Watertight rasterization of polylines
-- Edit your game in the IDE and saving to Google Drive
-- Visual Studio Code and Atom PyxlScript plugins
 - Physics simulation
+- Edit your game in the IDE and saving to Google Drive
+- Binary game export
+  - Electron
+  - Cordova
+- Load tables of data from CSV files
 
 
 Credits
@@ -4824,7 +4850,7 @@ compilers improve, you may see slight improvements from the browser
 itself.
 
 Performance and the overall experience on mobile and embedded
-(RaspberryPi, Jetson Nano) will improve throughout the beta period.
+(Raspberry Pi, Jetson Nano) will improve throughout the beta period.
 
 
 
@@ -4832,6 +4858,16 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2019 August 30: Beta update 11
+
+- Added `ordinal` and `ordinalabbrev` to `formatNumber()`
+- Fixed implementation errors with `Runtime` naming clash on Firefox
+- Faster reload (no longer force reloading of `quad://` assets when locally hosting)
+- Documented `quadplay.html` arguments
+- Restored `getTransform()` to the API
+- Fixed `"oscillate"` extrapolate mode crash for `arrayValue()`
+
 
 2019 August 25: Beta update 10
 

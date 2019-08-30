@@ -70,7 +70,7 @@ const PREVIEW_FRAMES_Y = 10;
 function startPreviewRecording() {
     if (! previewRecording) {
         // Force 20 fps
-        Runtime._graphicsPeriod = 3;
+        QRuntime._graphicsPeriod = 3;
         previewRecording = new Uint32Array(192 * 112 * PREVIEW_FRAMES_X * PREVIEW_FRAMES_Y);
         previewRecordingFrame = 0;
     }
@@ -92,7 +92,7 @@ function processPreviewRecording() {
 
                 for (let dy = 0; dy <= 1; ++dy) {
                     for (let dx = 0; dx <= 1; ++dx) {
-                        const src = Runtime._screen[(x*2 + dx) + (y*2 + dy) * 384];
+                        const src = QRuntime._screen[(x*2 + dx) + (y*2 + dy) * 384];
                         r += (src >>> 16) & 0xff;
                         g += (src >>> 8) & 0xff;
                         b += src & 0xff;
@@ -105,17 +105,17 @@ function processPreviewRecording() {
     } else if (SCREEN_WIDTH === 192 && SCREEN_HEIGHT === 112) {
         // Half-resolution. Copy lines directly
         for (let y = 0; y < 112; ++y) {
-            previewRecording.set(Runtime._screen.slice(y * 192, (y + 1) * 192), targetX + (targetY + y) * 192 * PREVIEW_FRAMES_X);
+            previewRecording.set(QRuntime._screen.slice(y * 192, (y + 1) * 192), targetX + (targetY + y) * 192 * PREVIEW_FRAMES_X);
         }
     } else if (SCREEN_WIDTH === 128 && SCREEN_HEIGHT === 128) {
         // 128x128. Crop
         for (let y = 0; y < 112; ++y) {
-            previewRecording.set(Runtime._screen.slice((y + 8) * 128, (y + 9) * 128), (targetX + 32) + (targetY + y) * 192 * PREVIEW_FRAMES_X);
+            previewRecording.set(QRuntime._screen.slice((y + 8) * 128, (y + 9) * 128), (targetX + 32) + (targetY + y) * 192 * PREVIEW_FRAMES_X);
         }
     } else if (SCREEN_WIDTH === 128 && SCREEN_HEIGHT === 128) {
         // 64x64. Copy
         for (let y = 0; y < 64; ++y) {
-            previewRecording.set(Runtime._screen.slice(y * 64, (y + 1) * 64), (targetX + 64) + (targetY + y + 64) * 192 * PREVIEW_FRAMES_X);
+            previewRecording.set(QRuntime._screen.slice(y * 64, (y + 1) * 64), (targetX + 64) + (targetY + y + 64) * 192 * PREVIEW_FRAMES_X);
         }
     } else {
         alert('Preview recording not supported at this resolution');
@@ -402,7 +402,7 @@ function setSoundPitch(handle, pitch) {
 }
 
 
-// Exported to Runtime
+// Exported to QRuntime
 function playAudioClip(audioClip, loop, volume, pan, pitch, time) {
     if (audioClip.audioClip && (arguments.length === 1)) {
         // Object version
@@ -433,7 +433,7 @@ function playAudioClip(audioClip, loop, volume, pan, pitch, time) {
 }
 
 
-// Exported to Runtime
+// Exported to QRuntime
 function resumeSound(handle) {
     if (! (handle && handle._ && handle._.stop)) {
         throw new Error("stopSound() takes one argument that is the handle returned from playAudioClip()");
@@ -445,7 +445,7 @@ function resumeSound(handle) {
 }
 
 
-// Exported to Runtime
+// Exported to QRuntime
 function stopSound(handle) {
     if (! (handle && handle._ && handle._.stop)) {
         throw new Error("stopSound() takes one argument that is the handle returned from playAudioClip()");
@@ -489,12 +489,12 @@ function resumeAllSounds() {
 ////////////////////////////////////////////////////////////////////////////////////
 
 // Escapes HTML
-// Injected as debugPrint in Runtime
+// Injected as debugPrint in QRuntime
 function debugPrint(...args) {
     let s = '';
     for (let i = 0; i < args.length; ++i) {
         let m = args[i]
-        if (typeof m !== 'string') { m = Runtime.unparse(m); }
+        if (typeof m !== 'string') { m = QRuntime.unparse(m); }
         s += m;
         if (i < args.length - 1) {
             s += ' ';
@@ -505,7 +505,7 @@ function debugPrint(...args) {
 }
 
 
-// Injected as assert in Runtime
+// Injected as assert in QRuntime
 function assert(x, m) {
     if (! x) {
         throw new Error(m || "Assertion failed");
@@ -539,7 +539,7 @@ function submitFrame() {
     // Update the image
     ctx.msImageSmoothingEnabled = ctx.webkitImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
 
-    const _postFX = Runtime._postFX;
+    const _postFX = QRuntime._postFX;
     const hasPostFX = (_postFX.opacity < 1) || (_postFX.color.a > 0) || (_postFX.angle !== 0) ||
           (_postFX.pos.x !== 0) || (_postFX.pos.y !== 0) ||
           (_postFX.scale.x !== 1) || (_postFX.scale.y !== 1) ||
@@ -628,7 +628,7 @@ function updateInput() {
     
     // Sample the keys
     for (let player = 0; player < 4; ++player) {
-        const map = keyMap[player], pad = Runtime.pad[player],
+        const map = keyMap[player], pad = QRuntime.pad[player],
             realGamepad = gamepadArray[player], prevRealGamepad = prevRealGamepadState[player];
 
         /*
@@ -649,7 +649,7 @@ function updateInput() {
             const AXIS = '_analog' + AXES[a];
             const pos = '+' + axis, neg = '-' + axis;
             const old = pad[axis];
-            const scale = (axis === 'x') ? Runtime._scaleX : Runtime._scaleY;
+            const scale = (axis === 'x') ? QRuntime._scaleX : QRuntime._scaleY;
 
             if (map) {
                 // Keyboard controls
@@ -733,7 +733,7 @@ function updateInput() {
         } else {
             const newAngle = Math.atan2(pad.y + pad.dy, pad.x + pad.dx);
             // JavaScript operator % is a floating-point operation
-            pad.dangle = ((3 * Math.PI + Runtime.pad.angle - newAngle) % (2 * Math.PI)) - Math.PI;
+            pad.dangle = ((3 * Math.PI + QRuntime.pad.angle - newAngle) % (2 * Math.PI)) - Math.PI;
         }
     }
     

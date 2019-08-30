@@ -347,9 +347,10 @@ function extend(a, b) {
 
 
 function arrayValue(animation, frame, extrapolate) {
+    frame = floor(frame);
     switch (extrapolate || animation.extrapolate || 'clamp') {
     case 'oscillate':
-        frame = oscillate(frame, animation.length) - 1;
+        frame = oscillate(frame, animation.length - 1);
         break;
     
     case 'loop':
@@ -360,7 +361,7 @@ function arrayValue(animation, frame, extrapolate) {
         frame = _clamp(frame, 0, animation.length - 1)
     }
       
-    return animation[Math.floor(frame)];
+    return animation[frame];
 }
 
 
@@ -809,7 +810,12 @@ function _popGraphicsState() {
 
 
 function getTransform() {
-    return [_offsetX, _offsetY, _offsetZ, _scaleX, _scaleY, _scaleZ, _skewXZ, _skewYZ];
+    return {pos: xy(_offsetX, _offsetY),
+            dir: xy(_scaleX, _scaleY),
+            z: _offsetZ,
+            zDir:_scaleZ,
+            skew: xy(_skewXZ, _skewYZ)
+           };
 }
 
 
@@ -3714,6 +3720,11 @@ function _padZero(n) {
 }
 
 
+var _ordinal = Object.freeze(['zeroth', 'first', 'second', 'third', 'fourth', 'fifth',
+                              'sixth', 'seventh', 'eighth', 'ninth', 'tenth', 'eleventh',
+                              'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteenth',
+                              'seventeenth', 'eighteenth', 'ninteenth', 'twentieth']);
+                  
 function formatNumber(n, fmt) {
     if (fmt !== undefined && ! isString(fmt)) { throw new Error('The format argument to formatNumber must be a string'); }
     if (! isNumber(n)) { throw new Error('The number argument to formatNumber must be a number'); }
@@ -3780,6 +3791,23 @@ function formatNumber(n, fmt) {
             const s = _padZero(n % 60);
             const f = _padZero((n - Math.floor(n)) * 100);
             return m + '"' + s + "'" + f;
+        }
+
+    case 'ordinalabbrev':
+        n = Math.round(n);
+        switch (n) {
+        case 1: return '1ˢᵗ';
+        case 2: return '2ⁿᵈ';
+        case 3: return '3ʳᵈ';
+        default: return '' + n + 'ᵗʰ';
+        }
+
+    case 'ordinal':
+        n = Math.round(n);
+        if (n >= 0 && n < _ordinal.length) {
+            return _ordinal[n];
+        } else {
+            return '' + n + 'ᵗʰ';
         }
 
     case '':

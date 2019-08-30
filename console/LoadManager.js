@@ -144,17 +144,19 @@ LoadManager.prototype.markRequestCompleted = function (url, message, success) {
    \param postProcess(rawData, url) function
    \param callback(data, rawData, url, postProcess)
    \param errorCallback(reason, url) optional. Invoked on failure if some other load has not already failed.
+   \param warningCallback() optional.
+   \param forceReload Boolean, optional. Defaults to LoadManage.forceReload
 
    You will receive a failure if the post process fails.
  */
-LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorCallback, warningCallback) {
+LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorCallback, warningCallback, forceReload) {
     console.assert(typeof type === 'string', 'type must be a string');
     console.assert((typeof postProcess === 'function') || !postProcess,
                    'postProcess must be a function, null, or undefined');
-    
+    if (forceReload === undefined) { forceReload = this.forceReload; }
     if (this.status === 'failure') { return; }
     const LM = this;
-    
+
     console.assert(this.status !== 'complete',
                    'Cannot call LoadManager.fetch() after LoadManager.end()');
 
@@ -217,12 +219,12 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
             }
             image.onload = onLoadSuccess;
             image.onerror = onLoadFailure;
-            image.src = url + (LM.forceReload ? ('?refresh=' + Date.now()) : '');
+            image.src = url + (forceReload ? ('?refresh=' + Date.now()) : '');
         } else {
             const xhr = new XMLHttpRequest();
 
             // Force a check for the latest file using a query string
-            xhr.open('GET', url + (LM.forceReload ? ('?refresh=' + Date.now()) : ''), true);
+            xhr.open('GET', url + (forceReload ? ('?refresh=' + Date.now()) : ''), true);
 
             if (LM.forceReload) {
                 // Set headers attempting to force a real refresh;

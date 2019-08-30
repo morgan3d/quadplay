@@ -106,7 +106,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
     quadplayLogoSprite = loadSpritesheet(
         '_quadplayLogoSprite',
         {url:'startup-logo.png', spriteSize:{x:63, y:36}},
-        '', null, false);
+        '', null, true);
 
 
     // If given a directory, assume that the file has the same name
@@ -169,6 +169,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 
                 const scriptURL = makeURLAbsolute(gameURL, gameJSON.scripts[i]);
                 gameSource.scripts.push(scriptURL);
+                
                 
                 loadManager.fetch(scriptURL, 'text', null, function (scriptText) {
                     scriptText = scriptText.replace(/\r/g, '');
@@ -410,7 +411,9 @@ function loadFont(name, json, jsonURL) {
         _json:     json,
         _jsonURL:  jsonURL
     };
-    
+
+    const forceReload = computeForceReloadFlag(json.url);
+
     onLoadFileStart(json.url);
     loadManager.fetch(json.url, 'image', getBinaryImageData, function (srcMask, image, url) {
         onLoadFileComplete(json.url);
@@ -429,7 +432,7 @@ function loadFont(name, json, jsonURL) {
         resourceStats.maxSpritesheetHeight = Math.max(resourceStats.maxSpritesheetHeight, font._data.height);
         
         Object.freeze(font);
-    }, loadFailureCallback, loadWarningCallback);
+    }, loadFailureCallback, loadWarningCallback, forceReload);
     
     return font;
 }
@@ -477,10 +480,30 @@ function getImageData4Bit(image) {
 }
 
 
-/** url must be an absolute URL */
+const spritesheetCache = {};
+
 function loadSpritesheet(name, json, jsonURL, callback, noForce) {
-    // These fields have underscores so that they can't be accessed from nanoscript.
-    const spritesheet = Object.assign([], {
+    let forceReload = undefined;
+    if (noForce) { forceReload = false; }
+    if (fastReload && isBuiltinURL(json.url)) { forceReload = false; }
+
+    let spritesheet;
+
+    if (forceReload === false) {
+        // Use the explicit cache for sounds, which are typically
+        // the largest assets in a quadplay game.
+        spritesheet = spritesheetCache[json.url];
+        if (spritesheet) {
+            fileContents[json.url] = spritesheet;
+            onLoadFileStart(json.url);
+            onLoadFileComplete(json.url);
+            return spritesheet;
+        }
+    }
+
+    
+    // These fields have underscores so that they can't be accessed from pyxlscript.
+    spritesheet = Object.assign([], {
         _name: name,
         _uint32data: null,
         _uint32dataFlippedX : null,
@@ -498,8 +521,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
     const NN = Object.freeze({x:-1, y:-1});
           
     // Actually load the image
-    const oldForce = loadManager.forceReload;
-    if (noForce) { loadManager.forceReload = false; }
+    
     onLoadFileStart(json.url);
     loadManager.fetch(json.url, 'image', getImageData4BitAndFlip, function (dataPair, image, url) {
         onLoadFileComplete(json.url);
@@ -641,27 +663,47 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
         // Prevent the game from modifying this asset
         Object.freeze(spritesheet);
 
+        if (forceReload === false) {
+            // Store into the cache
+            spritesheetCache[json.url] = spritesheet;
+        }
+        
         if (callback) { callback(spritesheet); }
-    }, loadFailureCallback, loadWarningCallback);
-    
-    if (noForce) { loadManager.forceReload = oldForce; }
+    }, loadFailureCallback, loadWarningCallback, forceReload);
     
     return spritesheet;
 }
     
 
-// Use only MP3s
+const soundCache = {};
+
 function loadSound(name, json, jsonURL) {
     ++resourceStats.sounds;
-    let sound = Object.seal({ src: json.url,
-                              name: name,
-                              loaded: false, 
-                              source: null,
-                              buffer: null,
-                              playing: false,
-                              _json: json,
-                              _jsonURL: jsonURL});
+    const forceReload = computeForceReloadFlag(json.url);
+
+    let sound;
+
+    if (forceReload === false) {
+        // Use the explicit cache for sounds, which are typically
+        // the largest assets in a quadplay game.
+        sound = soundCache[json.url];
+        if (sound) {
+            fileContents[json.url] = sound;
+            onLoadFileStart(json.url);
+            onLoadFileComplete(json.url);
+            return sound;
+        }
+    }
     
+    sound = Object.seal({ src: json.url,
+                          name: name,
+                          loaded: false, 
+                          source: null,
+                          buffer: null,
+                          playing: false,
+                          _json: json,
+                          _jsonURL: jsonURL});
+
     fileContents[json.url] = sound;
     onLoadFileStart(json.url);
     loadManager.fetch(json.url, 'arraybuffer', null, function (arraybuffer) {
@@ -681,18 +723,21 @@ function loadSound(name, json, jsonURL) {
                     // without delay later.
                     sound.source = _ch_audioContext.createBufferSource();
                     sound.source.buffer = sound.buffer;
-                    //sound.source.connect(_ch_audioContext.gainNode);
                     onLoadFileComplete(json.url);
                     loadManager.markRequestCompleted(json.url, '', true);
-                }, 
+                    
+                    if (forceReload === false) {
+                        // Store into the cache
+                        soundCache[json.url] = sound;
+                    }
+                },
                 function onFailure() {
                     loadManager.markRequestCompleted(json.url, 'unknown error', false);
                 });
         } catch (e) {
             loadManager.markRequestCompleted(json.url, e, false);
         }
-    }, loadFailureCallback, loadWarningCallback);
-    
+    }, loadFailureCallback, loadWarningCallback, forceReload);
     return sound;
 }
 
@@ -814,9 +859,10 @@ function loadMap(name, json, mapJSONUrl) {
                 
                 // Don't allow the array of arrays to be changed (just the individual elements)
                 Object.seal(map.layer);
-            }, loadFailureCallback, loadWarningCallback);
+            }, loadFailureCallback, loadWarningCallback, computeForceReloadFlag(spritesheetJson.url));
         });
-    });
+    },
+                      loadFailureCallback, loadWarningCallback, computeForceReloadFlag(json.spriteUrlTable[key]));
     
     return map;
 }
@@ -900,11 +946,33 @@ function urlFile(url) {
     return url.substring(url.lastIndexOf('/') + 1);
 }
 
+const quadURLPrefixArray = ['quad://'];
+{
+    const base = location.href.replace(/console\/quadplay.html.*/, 'console/../');
+    const prefix = ['sprites', 'fonts', 'sounds'];
+    for (let p = 0; p < prefix.length; ++p) {
+        quadURLPrefixArray.push(base + prefix[p] + '/');
+        quadURLPrefixArray.push('/' + prefix[p] + '/');
+    }
+}
+
+/** Returns true if url begins with `quad://` or is inside the quadplay default directories */
+function isBuiltinURL(url) {
+    for (let p = 0; p < quadURLPrefixArray.length; ++p) {
+        if (url.startsWith(quadURLPrefixArray[p])) { return true; }
+    }
+    return false;
+}
+
+function computeForceReloadFlag(url) {
+    return (fastReload && isBuiltinURL(url)) ? false : undefined;
+}
+
 /** Returns the childURL made absolute relative to the parent */
 function makeURLAbsolute(parentURL, childURL) {
-    if (/^(?:nano|quad):\/\//.test(childURL)) {
+    if (childURL.startsWith('quad://')) {
         // quad URL. Make relative to the quadplay installation
-        return childURL.replace(/^(?:nano|quad):\/\//, urlDir(location.href) + '../');
+        return childURL.replace(/^quad:\/\//, urlDir(location.href) + '../');
     } else if (/^.{3,6}:\/\//.test(childURL)) {
         // Already absolute, some other protocol
         return childURL;
