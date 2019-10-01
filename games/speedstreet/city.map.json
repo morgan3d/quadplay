@@ -1,6 +1,6 @@
 {
     "url":       "city.tmx",
-    "spriteUrl": "nano://sprites/ortho-city-32x16.sprite.json",
+    "spriteUrl": "quad://sprites/ortho-city-32x16.sprite.json",
     "flipY":     true,
     "offset":    {"x":0, "y":-144},
     "zOffset":   -138,

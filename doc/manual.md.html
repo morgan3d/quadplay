@@ -17,7 +17,7 @@ Virtual Hardware Features:
 - 60 fps
 - 4096 sRGB (4:4:4) colors 
 - Native 2.5D graphics
-- 9.4 MB of total sprite memory
+- 10.5 MB of total sprite memory
 - Max 128 sprite and font sheets, max size 1024x1024
 - Order-independent 4-bit (16-level) transparency
 - Four 10-button gamepads (D-pad + ⓐⓑⓒⓓ + ⓟⓠ)
@@ -2149,14 +2149,14 @@ endpoints and borders.
   `setTransform` scaling.
   
   If it is not `nil`, the `overrideColor` replaces the red, green, and blue
-  values of the
+  values read from each pixel of the sprite. It uses the existing alpha value.
 
 `drawSpriteRect(spr, corner, size, z ( = 0))`
 : Draw a rectangle enclosing points `corner` and `corner+size`
   filled with `spr` tiled as needed (and aligned to the
   center), and surrounded by the neighbors of `spr`
   in its spritesheet. The edges surround the specified coordinates.
-  Used for drawing user interface elements of various sizes such as
+  Used for drawing user interface elements (GUI) of dynamic size such as
   windows and health bars.  Keep in mind that some artwork is designed
   to only be stretched in one dimension, or to tile only at integer
   multiples.
@@ -2789,6 +2789,9 @@ versions may be substantially faster than overloaded operators.
 `MIN(s1, s2)`
 : Returns the smaller scalar.
 
+`SIGN(s1)`
+: Returns +1, -1, or 0 as the sign of the scalar.
+
 `CLAMP(s, slo, shi)`
 : Clamps `s` to [`slo`, `shi`] where all are scalar and returns the result.
 
@@ -3341,6 +3344,14 @@ The sprite sheet JSON descriptor looks like:
         "dead":     {"x": 3, "y": 0},
     },
     
+    // Optional offset and extent. Using this to have multiple .sprite.json files
+    // for the same PNG makes spritesheets with different size sprites much
+    // more memory efficient.
+    "region":       {
+        "pos":      {"x": 0, "y": 0}, // Optional, defaults to (0, 0)
+        "size":     {"x": 128, "y": 32} // Optional, defaults to the remainder of the sheet
+    },
+    
     // Optional license and copyright information.
     "license":      "GPL 3.0 (c) 2018 Morgan McGuire"
 }
@@ -3361,11 +3372,11 @@ For a sprite sheet named `S`, individual sprites are accessed as
 Setting `transpose` to true flips the indexing to `S[y][x]`, which
 is more convenient for some sprites.
 
-A game may use a total of **4,718,592 pixels** of sprite memory
-(9.4 MB) across **128 sprite sheets** (including fonts), each no larger than
+A game may use a total of **5,505,024 pixels** of sprite memory
+(10.5 MB) across **128 sprite sheets** (including fonts), each no larger than
 **1024x1024**.  You can allocate this however you wish within those
-restrictions.  That's equivalent to 4,608 sprites at 32x32, 18,432
-sprites at 16x16, or 54 full-screen images. These are of course soft
+restrictions.  That's equivalent to 5,376 sprites at 32x32, 21,504
+sprites at 16x16, or 64 full-screen images. These are of course soft
 limits because you can modify the open source emulator to remove
 them. The intent of the limits is to guarantee that your programs will
 work on all future implementations of the runtime: web software,
@@ -4858,6 +4869,20 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2019 Oct 1: Beta update 12
+
+- Added optional `region` to Sprite JSON files
+- Increased video RAM by 1 MB, for a total of 10.5 MB
+- Increased error checking for Sprite JSON files to detect typos
+- Increased robustness to load-time errors
+- Added `SIGN()` intrinsic
+- Made `sign()` work on vectors
+- Caught CORS errors on sprite loading and reported to GUI
+- Internal objects now `debugPrint()` and `unparse()` as `«type objname»` instead of just `objname`
+- Fixed `forceReload=1` breaking map loading
+- Implemented pivots for sprites and entities (currently not exposed in the API)
+
 
 2019 August 30: Beta update 11
 

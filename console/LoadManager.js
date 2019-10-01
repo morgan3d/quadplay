@@ -178,18 +178,24 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
 
         function onLoadSuccess() {
             if (LM.status === 'failure') { return; }
-            rawEntry.status = 'success';
-            // Run all post processing and callbacks
-            for (let [p, v] of rawEntry.post) {
-                v.value = p ? p(rawEntry.raw, rawEntry.url) : rawEntry.raw;
-                
-                for (let c of v.callbackArray) {
-                    // Note that callbacks may increase LM.pendingRequests
-                    if (c) { c(v.value, rawEntry.raw, rawEntry.url, p); }
+
+            try {
+                // Run all post processing and callbacks
+                for (let [p, v] of rawEntry.post) {
+                    v.value = p ? p(rawEntry.raw, rawEntry.url) : rawEntry.raw;
+                    
+                    for (let c of v.callbackArray) {
+                        // Note that callbacks may increase LM.pendingRequests
+                        if (c) { c(v.value, rawEntry.raw, rawEntry.url, p); }
+                    }
                 }
+                rawEntry.status = 'success';
+                LM.markRequestCompleted(rawEntry.url, '', true);
+            } catch (e) {
+                rawEntry.failureMessage = '' + e;
+                onLoadFailure();
             }
             
-            LM.markRequestCompleted(rawEntry.url, '', true);
         }
 
         function onLoadFailure() {
@@ -275,7 +281,18 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
                     onLoadFailure();
                 }
             };
-            xhr.send();
+
+            xhr.onerror = function (e) {
+                rawEntry.failureMessage = xhr.statusText;
+                onLoadFailure();
+            };
+            
+            try {
+                xhr.send();
+            } catch (e) {
+                rawEntry.failureMessage = '' + e;
+                onLoadFailure();
+            }
         } // if XMLHttp
     }
 

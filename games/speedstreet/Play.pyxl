@@ -1,6 +1,5 @@
 Play
 ═══════════════════════════════════════════════════════════════════════════════
-
 const mapWidthPixels = cityMap.size.x * cityMap.spriteSize.x
 
 // Bike shadow as a function of relative x

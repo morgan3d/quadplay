@@ -1334,8 +1334,8 @@ function visualizeGame(gameEditor, url, game) {
     s += '<tr valign="top"><td>Path</td><td>' + url + '</td></tr>\n';
 
     const baseURL = url.replace(/\/[^\/]*$/, '');
-    s += '<tr valign="top"><td>Label&nbsp;64</td><td><img alt="label64.png" src="' + baseURL + '/label64.png" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:64px; height:64px"></td></tr>\n';
-    s += '<tr valign="top"><td>Label&nbsp;128</td><td><img alt="label128.png" src="' + baseURL + '/label128.png" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:128px; height:128px"></td></tr>\n';
+    s += '<tr valign="top"><td>64px&nbsp;Label</td><td><img alt="label64.png" src="' + baseURL + '/label64.png" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:64px; height:64px"></td></tr>\n';
+    s += '<tr valign="top"><td>128px&nbsp;Label</td><td><img alt="label128.png" src="' + baseURL + '/label128.png" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:128px; height:128px"></td></tr>\n';
     s += '</table>';
     gameEditor.innerHTML = s;
 }
@@ -2244,7 +2244,7 @@ function loadGameIntoIDE(url, callback) {
 <hr>
 <br/>
 <table style="margin-left: -2px; width: 100%">
-<tr><td width=180>Sprite Pixels</td><td class="right">${Math.round(resourceStats.spritePixels / 1000)}k</td><td>/</td><td class="right" width=40>4719k</td><td class="right" width=45>(${Math.round(resourceStats.spritePixels*100/4718592)}%)</td></tr>
+<tr><td width=180>Sprite Pixels</td><td class="right">${Math.round(resourceStats.spritePixels / 1000)}k</td><td>/</td><td class="right" width=40>5505k</td><td class="right" width=45>(${Math.round(resourceStats.spritePixels*100/5505024)}%)</td></tr>
 <tr><td>Spritesheets</td><td class="right">${resourceStats.spritesheets}</td><td>/</td><td class="right">128</td><td class="right">(${Math.round(resourceStats.spritesheets*100/128)}%)</td></tr>
 <tr><td>Max Spritesheet Width</td><td class="right">${resourceStats.maxSpritesheetWidth}</td><td>/</td><td class="right">1024</td><td class="right">(${Math.round(resourceStats.maxSpritesheetWidth*100/1024)}%)</td></tr>
 <tr><td>Max Spritesheet Height</td><td class="right">${resourceStats.maxSpritesheetHeight}</td><td>/</td><td class="right">1024</td><td class="right">(${Math.round(resourceStats.maxSpritesheetHeight*100/1024)}%)</td></tr>

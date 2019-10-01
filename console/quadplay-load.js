@@ -24,6 +24,8 @@
 // Allocated by afterLoadGame
 let loadManager = null;
 
+let alreadyCountedSpritePixels = {};
+
 let lastSpriteID = 0;
 
 function onLoadFileStart(url) {
@@ -119,8 +121,9 @@ function afterLoadGame(gameURL, callback, errorCallback) {
     window.gameURL = gameURL;
     console.log('Loading ' + gameURL);
     
-    // Wipe the cache
+    // Wipe the caches
     fileContents = {};
+    alreadyCountedSpritePixels = {};
     gameSource = {};
     
     resourceStats = {
@@ -406,7 +409,7 @@ function computeAssetCredits(gameSource) {
 
 function loadFont(name, json, jsonURL) {
     const font = {
-        _name:     name,
+        _name:     'font ' + name,
         _url:      json.url,
         _json:     json,
         _jsonURL:  jsonURL
@@ -437,10 +440,11 @@ function loadFont(name, json, jsonURL) {
     return font;
 }
 
+
 /** Extracts the image data and returns two RGBA4 arrays as [Uint32Array, Uint32Array],
-    where the second is flipped horizontally */
-function getImageData4BitAndFlip(image) {
-    const data = getImageData4Bit(image);
+    where the second is flipped horizontally. Region is an optional crop region. */
+function getImageData4BitAndFlip(image, region) {
+    const data = getImageData4Bit(image, region);
     const flipped = new Uint32Array(data.length);
     flipped.width = data.width;
     flipped.height = data.height;
@@ -458,12 +462,25 @@ function getImageData4BitAndFlip(image) {
 
 
 /** Extracts the image data from an Image and quantizes it to RGBA4
- * format, returning a Uint32Array */
-function getImageData4Bit(image) {
+    format, returning a Uint32Array. region is an optional crop region. */
+function getImageData4Bit(image, region) {
     // Make a uint32 aliased version
-    const data = new Uint32Array(getImageData(image).data.buffer);
-    data.width = image.width;
-    data.height = image.height;
+    const dataRaw = new Uint32Array(getImageData(image).data.buffer);
+    dataRaw.width = image.width;
+    dataRaw.height = image.height;
+
+    let data = dataRaw;
+    if (region && ((region.pos.x !== 0) || (region.pos.y !== 0) || (region.size.x !== image.width) || (region.size.y !== image.height))) {
+        // Crop
+        data = new Uint32Array(region.size.x * region.size.y);
+        data.width = region.size.x;
+        data.height = region.size.y;
+
+        for (let y = 0; y < data.height; ++y) {
+            const srcOffset = (y + region.pos.y) * dataRaw.width + region.pos.x;
+            data.set(dataRaw.slice(srcOffset, srcOffset + data.width), y * data.width);
+        }
+    }
     
     // Quantize (more efficient to process four bytes at once!)
     // Converts R8G8B8A8 to R4G4B4A4-equivalent by copying high bits to low bits.
@@ -490,21 +507,20 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
     let spritesheet;
 
     if (forceReload === false) {
-        // Use the explicit cache for sounds, which are typically
-        // the largest assets in a quadplay game.
         spritesheet = spritesheetCache[json.url];
         if (spritesheet) {
             fileContents[json.url] = spritesheet;
             onLoadFileStart(json.url);
             onLoadFileComplete(json.url);
+            if (callback) { callback(spritesheet); }
             return spritesheet;
         }
     }
 
-    
+   
     // These fields have underscores so that they can't be accessed from pyxlscript.
     spritesheet = Object.assign([], {
-        _name: name,
+        _name: 'spritesheet ' + name,
         _uint32data: null,
         _uint32dataFlippedX : null,
         _url: json.url,
@@ -514,6 +530,9 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
         spriteSize: Object.freeze({x: json.spriteSize.x, y: json.spriteSize.y})
     });
 
+    // Pivots
+    const pivot = json.pivot ? Object.freeze({x: json.pivot.x - json.spriteSize.x / 2, y: json.pivot.y - json.spriteSize.y / 2}) : Object.freeze({x: 0, y: 0});
+    
     // Offsets used for scale flipping
     const PP = Object.freeze({x: 1, y: 1});
     const NP = Object.freeze({x:-1, y: 1});
@@ -521,20 +540,39 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
     const NN = Object.freeze({x:-1, y:-1});
           
     // Actually load the image
-    
     onLoadFileStart(json.url);
-    loadManager.fetch(json.url, 'image', getImageData4BitAndFlip, function (dataPair, image, url) {
+
+    const preprocessor = function(image) {
+        if (! (json.url in fileContents)) {
+            // This image has not been previously loaded by this project
+            fileContents[json.url] = image;
+        }
+
+        let region = json.region || {};
+        if (region.pos === undefined) { region.pos = {x: 0, y: 0}; }
+        region.pos.x = Math.min(Math.max(0, region.pos.x), image.width);
+        region.pos.y = Math.min(Math.max(0, region.pos.y), image.height);
+        
+        if (region.size === undefined) { region.size = {x: Infinity, y: Infinity}; }
+        region.size.x = Math.min(image.width - region.pos.x, region.size.x);
+        region.size.y = Math.min(image.height - region.pos.y, region.size.y);
+
+        const cacheName = json.url + JSON.stringify(region);
+        if (! alreadyCountedSpritePixels[cacheName]) {
+            alreadyCountedSpritePixels[cacheName] = true;
+            resourceStats.spritePixels += region.size.x * region.size.y;
+            ++resourceStats.spritesheets;
+            resourceStats.maxSpritesheetWidth = Math.max(resourceStats.maxSpritesheetWidth, region.size.x);
+            resourceStats.maxSpritesheetHeight = Math.max(resourceStats.maxSpritesheetHeight, region.size.y);
+        }
+
+        return getImageData4BitAndFlip(image, region);
+    };
+    
+    
+    loadManager.fetch(json.url, 'image', preprocessor, function (dataPair, image, url) {
         onLoadFileComplete(json.url);
         const data = dataPair[0];
-
-        if (! (url in fileContents)) {
-            // This image has not been previously loaded by this project
-            fileContents[url] = image;
-            resourceStats.spritePixels += data.width * data.height;
-            ++resourceStats.spritesheets;
-            resourceStats.maxSpritesheetWidth = Math.max(resourceStats.maxSpritesheetWidth, data.width);
-            resourceStats.maxSpritesheetHeight = Math.max(resourceStats.maxSpritesheetHeight, data.height);
-        }
         
         spritesheet._uint32Data = data;
         spritesheet._uint32DataFlippedX = dataPair[1];
@@ -547,6 +585,10 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
         let cols = Math.floor((data.width  + spritesheet._gutter) / (spritesheet.spriteSize.x + spritesheet._gutter));
         
         if (json.transpose) { let temp = rows; rows = cols; cols = temp; }
+
+        if (rows === 0 || cols === 0) {
+            throw new Error('Spritesheet ' + json.url + ' has a spriteSize that is larger than the entire spritesheet.');
+        }
         
         for (let x = 0; x < cols; ++x) {
             spritesheet[x] = [];           
@@ -579,7 +621,8 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     tileIndex: Object.freeze({x:u, y:v}),
                     id:++lastSpriteID,
                     size: spritesheet.spriteSize,
-                    scale: PP
+                    scale: PP,
+                    pivot: pivot
                 };
 
                 // Construct the flipped versions
@@ -605,6 +648,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
             Object.freeze(spritesheet[x]);
         }
 
+
         // Process the name table
         if (json.names) {
             if (Array.isArray(json.names) || (typeof json.names !== 'object')) {
@@ -623,7 +667,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                 if (data.x !== undefined) {
                     const u = json.transpose ? data.y : data.x, v = json.transpose ? data.x : data.y;
                     if (u < 0 || u >= spritesheet.length || v < 0 || v >= spritesheet[0].length) {
-                        throw new Error('Index xy(' + u + ', ' + v + ') in animation "' + anim + '" is out of bounds.');
+                        throw new Error('Named sprite "' + anim + '" index xy(' + u + ', ' + v + ') ' + (json.transpose ? 'after transpose ' : '') + 'is out of bounds for the ' + spritesheet.length + 'x' + spritesheet[0].length + ' spritesheet "' + url + '".');
                     }
                         
                     spritesheet[anim] = spritesheet[u][v];
@@ -648,7 +692,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                         for (let x = data.start.x; x <= data.end.x; ++x) {
                             const u = json.transpose ? y : x, v = json.transpose ? x : y;
                             if (u < 0 || u >= spritesheet.length || v < 0 || v >= spritesheet[0].length) {
-                                throw new Error('Index xy(' + u + ', ' + v + ') in animation "' + anim + '" is out of bounds.');
+                                throw new Error('Index xy(' + u + ', ' + v + ') in animation "' + anim + '" is out of bounds for the ' + spritesheet.length + 'x' + spritesheet[0].length + ' spritesheet.');
                             }
                         
                             spritesheet[anim].push(spritesheet[u][v]);
@@ -744,19 +788,20 @@ function loadSound(name, json, jsonURL) {
 
 function loadMap(name, json, mapJSONUrl) {
     const map = Object.assign([], {
-        _name:   name,
-        _url: json.url,
-        _offset: json.offset ? {x:json.offset.x, y:json.offset.y} : {x:0, y:0},
+        _name:   'map ' + name,
+        _url:    json.url,
+        _offset: Object.freeze(json.offset ? {x:json.offset.x, y:json.offset.y} : {x:0, y:0}),
         _flipYOnLoad: json.flipY || false,
-        _json: json,
+        _json:   json,
         _jsonURL: mapJSONUrl,
         zOffset: json.zOffset || 0,
         zScale: (json.zScale || 1),
         layer:  [],
         spritesheetTable:Object.create(null),
         spriteSize: Object.freeze({x:0, y:0}),
-        wrapX: json.wrapX || false,
-        wrapY: json.wrapY || false,
+        size:   Object.freeze({x: 0, y: 0}),
+        wrapX:  json.wrapX || false,
+        wrapY:  json.wrapY || false,
     });
 
     if (json.spriteUrl) {
@@ -773,7 +818,8 @@ function loadMap(name, json, mapJSONUrl) {
         onLoadFileComplete(spritesheetUrl);
         spritesheetJson.url = makeURLAbsolute(spritesheetUrl, spritesheetJson.url);
 
-        const spritesheet = loadSpritesheet(null, spritesheetJson, spritesheetUrl, function (spritesheet) {
+        const spritesheet = loadSpritesheet(name + ' sprites', spritesheetJson, spritesheetUrl, function (spritesheet) {
+            // Now go back and fetch the map as a continuation, given that we have the spritesheet
             loadManager.fetch(makeURLAbsolute(mapJSONUrl, json.url), 'text', null, function (xml) {
                 onLoadFileComplete(json.url);
                 xml = new DOMParser().parseFromString(xml, "application/xml");
@@ -805,7 +851,7 @@ function loadMap(name, json, mapJSONUrl) {
                     throw `Sprite sheet size (${spritesheet.size.x}, ${spritesheet.size.y}) does not match what the map expected, (${size.x}, ${size.y}).`;
                 }
                 
-                let layerList = Array.from(xml.getElementsByTagName('layer'));
+                const layerList = Array.from(xml.getElementsByTagName('layer'));
                 const layerData = layerList.map(function (layer) {
                     map.size = Object.freeze({x: parseInt(layer.getAttribute('width')),
                                               y: parseInt(layer.getAttribute('height'))});

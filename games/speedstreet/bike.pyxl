@@ -24,7 +24,7 @@ def makeBike(name, colorIndex, pos, z, playerIndex):
    const bike = makeEntity({
       name: name,
       pos: pos,
-      sprite: bikePart.suspension[0],
+      sprite: bikePart.suspension,
       z: z,
       scoreModifier: 1.0,
       score: 0,
@@ -70,7 +70,7 @@ def makeBike(name, colorIndex, pos, z, playerIndex):
 
    for i <= 10:
       push(bike.surfacePos, xy(pos.x - 5 + 2i, pos.y - 10))
-   
+
    bike.frontWheel = makeEntity({
       name: name + " frontWheel",
       pos: xy(0, 0),
@@ -101,7 +101,7 @@ def makeBike(name, colorIndex, pos, z, playerIndex):
    bike.driver = makeEntity({
       name: name + " driver",
       pos: xy(0, 0),
-      sprite: bikePart.driver[0],
+      sprite: bikePart.driver,
       zInParent: +0.1
    })
 

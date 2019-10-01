@@ -810,10 +810,10 @@ function _popGraphicsState() {
 
 
 function getTransform() {
-    return {pos: xy(_offsetX, _offsetY),
-            dir: xy(_scaleX, _scaleY),
-            z: _offsetZ,
-            zDir:_scaleZ,
+    return {pos:  xy(_offsetX, _offsetY),
+            dir:  xy(_scaleX, _scaleY),
+            z:    _offsetZ,
+            zDir: _scaleZ,
             skew: xy(_skewXZ, _skewYZ)
            };
 }
@@ -1008,7 +1008,6 @@ var atan = Math.atan2;
 var log = Math.log;
 var log2 = Math.log2;
 var log10 = Math.log10;
-var sign = Math.sign;
 var exp = Math.exp;
 var sqrt = Math.sqrt;
 var cbrt = Math.cbrt;
@@ -1361,6 +1360,7 @@ function transformEntityToSprite(entity, coord) {
 
 function transformSpriteToEntity(entity, coord) {
     if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { throw new Error("Requires both an entity and a coordinate"); }
+    if (! entity.sprite) { throw new Error('Called transformSpriteToEntity() on an entity with no sprite property.'); }
     return xy((coord.x - entity.sprite.size.x * 0.5) / _scaleX,
               (coord.y - entity.sprite.size.y * 0.5) / _scaleY);
 }
@@ -1495,6 +1495,16 @@ function makeEntity(e, childTable) {
         }
     } else {
         r.size = clone(r.size);
+    }
+
+    if (r.pivot === undefined) {
+        if (r.sprite) {
+            r.pivot = clone(r.sprite.pivot);
+        } else {
+            r.pivot = xy(0, 0);
+        }
+    } else {
+        r.pivot = clone(r.pivot);
     }
 
     const childArray = r.childArray ? clone(r.childArray) : [];
@@ -2453,6 +2463,38 @@ function drawSpriteRect(CC, corner, size, z) {
 }
 
 
+// Returns the original pos, or a new object that is transformed by
+// angle, scale, and the current drawing options if pivot is nonzero.
+function _maybeApplyPivot(pos, pivot, angle, scale) {
+    if (! pivot || (pivot.x === 0 && pivot.y === 0)) {
+        return pos;
+    }
+
+    let scaleX = 1, scaleY = 1;
+    if (scale) {
+        if (isNumber(scale)) {
+            scaleX = scaleY = scale;
+        } else {
+            scaleX = scale.x;
+            scaleY = scale.y;
+        }
+    }
+
+    if (angle === undefined) { angle = 0; }
+    
+    // Raw sprite offset
+    // Scale into sprite space
+    let deltaX = pivot.x * Math.sign(_scaleX) * scaleX;
+    let deltaY = pivot.y * Math.sign(_scaleY) * scaleY;
+    
+    // Rotate into sprite space
+    const C = Math.cos(angle);
+    const S = Math.sin(angle) * -getRotationSign();
+    return {x: pos.x - (deltaX * C + S * deltaY),
+            y: pos.y - (deltaY * C - S * deltaX)};
+}
+
+
 function drawSprite(spr, center, angle, scale, opacity, z, overrideColor) {
     if (spr && spr.sprite) {
         // This is the "keyword" version of the function
@@ -2478,6 +2520,8 @@ function drawSprite(spr, center, angle, scale, opacity, z, overrideColor) {
     
     z = z || 0;
 
+    center = _maybeApplyPivot(center, spr.pivot, angle, scale);
+    
     const skx = (z * _skewXZ), sky = (z * _skewYZ);
     const x = (center.x + skx) * _scaleX + _offsetX;
     const y = (center.y + sky) * _scaleY + _offsetY;
@@ -2599,26 +2643,28 @@ function drawBounds(entity, color, recurse) {
     const angle = (entity.angle || 0) * getRotationSign();
     const scale = entity.scale || {x:1, y:1};
 
+    const pos = _maybeApplyPivot(entity.pos, entity.pivot, entity.angle, scale);
+    
     // Bounds:
     const z = entity.z + 0.01;
     if ((entity.shape === 'disk') && entity.size) {
-        drawDisk(entity.pos, entity.size.x * 0.5 * Math.hypot(scale.x, scale.y), undefined, color, z)
+        drawDisk(pos, entity.size.x * 0.5 * Math.hypot(scale.x, scale.y), undefined, color, z)
     } else if (entity.size) {
         const u = {x: Math.cos(angle) * 0.5, y: Math.sin(angle) * 0.5};
         const v = {x: -u.y, y: u.x};
         u.x *= entity.size.x * scale.x; u.y *= entity.size.x * scale.x;
         v.x *= entity.size.y * scale.y; v.y *= entity.size.y * scale.y;
 
-        const A = {x: entity.pos.x - u.x - v.x, y: entity.pos.y - u.y - v.y};
-        const B = {x: entity.pos.x + u.x - v.x, y: entity.pos.y + u.y - v.y};
-        const C = {x: entity.pos.x + u.x + v.x, y: entity.pos.y + u.y + v.y};
-        const D = {x: entity.pos.x - u.x + v.x, y: entity.pos.y - u.y + v.y};
+        const A = {x: pos.x - u.x - v.x, y: pos.y - u.y - v.y};
+        const B = {x: pos.x + u.x - v.x, y: pos.y + u.y - v.y};
+        const C = {x: pos.x + u.x + v.x, y: pos.y + u.y + v.y};
+        const D = {x: pos.x - u.x + v.x, y: pos.y - u.y + v.y};
         drawLine(A, B, color, z);
         drawLine(B, C, color, z);
         drawLine(C, D, color, z);
         drawLine(D, A, color, z);
     } else {
-        drawPoint(entity.pos, color, z);
+        drawPoint(pos, color, z);
     }
 
     // Axes
@@ -2627,7 +2673,8 @@ function drawBounds(entity, color, recurse) {
         const v = {x: -u.y, y: u.x};
         u.x *= scale.x; u.y *= scale.x;
         v.x *= scale.y; v.y *= scale.y;
-        
+
+        // Do not apply the pivot to the axes
         const B = {x: entity.pos.x + u.x, y: entity.pos.y + u.y};
         const C = {x: entity.pos.x + v.x, y: entity.pos.y + v.y};
         
@@ -2641,6 +2688,7 @@ function drawBounds(entity, color, recurse) {
         }
     }
 }
+
 
 function _getAABB(e, aabb) {
     // Take the bounds to draw space
@@ -2887,8 +2935,10 @@ function rayIntersect(ray, obj) {
         ray.length = Infinity;
     }
 
-    let scaleX = obj.scale ? obj.scale.x : 1;
-    let scaleY = obj.scale ? obj.scale.y : 1;
+    const scaleX = obj.scale ? obj.scale.x : 1;
+    const scaleY = obj.scale ? obj.scale.y : 1;
+
+    const pos = _maybeApplyPivot(obj.pos, obj.pivot, obj.angle, obj.scale);
     
     if (obj.size) {
         // Normalize the direction
@@ -2897,7 +2947,7 @@ function rayIntersect(ray, obj) {
         
         if (obj.shape === 'disk') {
             // ray-disk (https://www.geometrictools.com/Documentation/IntersectionLine2Circle2.pdf)
-            let dx = ray.origin.x - obj.pos.x, dy = ray.origin.y - obj.pos.y;
+            let dx = ray.origin.x - pos.x, dy = ray.origin.y - pos.y;
             if (dx * dx + dy * dy * 4 <= Math.abs(obj.size.x * obj.size.y * scaleX * scaleY)) {
                 // Origin is inside the disk, so instant hit and no need
                 // to look at children
@@ -2925,8 +2975,8 @@ function rayIntersect(ray, obj) {
             }
         } else {
             // Move to the box's translational frame
-            let toriginX = ray.origin.x - obj.pos.x;
-            let toriginY = ray.origin.y - obj.pos.y;
+            let toriginX = ray.origin.x - pos.x;
+            let toriginY = ray.origin.y - pos.y;
             
             // Take the ray into the box's rotational frame
             const angle = (obj.angle || 0) * getRotationSign();
@@ -3094,6 +3144,13 @@ var overlaps = (function() {
             
             // Make a new object with default properties
             A = Object.assign({scale: xy(1, 1), size: xy(0, 0), angle: 0, shape: 'rect'}, A);
+        }
+
+        if (A.pivot && (A.pivot.x !== 0 || A.pivot.y !== 0)) {
+            // Apply the pivot, cloning the entire object for simplicity
+            A = Object.assign({}, A);
+            A.pos = _maybeApplyPivot(A.pos, A.pivot, A.angle, A.scale);
+            A.pivot = undefined;
         }
 
         // All required properties are present
@@ -3541,6 +3598,16 @@ function trunc(a) {
     }
 }
 
+function sign(a) {
+    if (typeof a === 'object') {
+        let c = a.constructor ? a.constructor() : Object.create(null);
+        for (let key in a) c[key] = Math.sign(a[key]);
+        return c;
+    } else {
+        return Math.sign(a);
+    }
+}
+
 
 function isArray(a) {
     return Array.isArray(a);
@@ -3910,7 +3977,7 @@ function _unparse(x, alreadySeen) {
     if (Array.isArray(x)) {
         if (x._name !== undefined) {
             // Internal object
-            return x._name;
+            return '«' + x._name + '»';
         } else if (alreadySeen.has(x)) {
             return '[…]';
         }
@@ -3931,7 +3998,7 @@ function _unparse(x, alreadySeen) {
             return '∅';
         } else if (x._name !== undefined) {
             // Internal object
-            return x._name;
+            return '«' + x._name + '»';
         } else if (alreadySeen.has(x)) {
             return '{…}';
         } else {
@@ -3986,7 +4053,7 @@ function _unparse(x, alreadySeen) {
         }
 
     default:
-        return 'builtin';
+        return '{builtin}';
     }
 }
 
@@ -4074,6 +4141,10 @@ function SUB(a, b) {
 
 function MUL(a, b) {
     return a * b;
+}
+
+function SIGN(a) {
+    return Math.sign(a);
 }
 
 function MAD(a, b, c) {
