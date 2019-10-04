@@ -1,6 +1,5 @@
 {
     "assets": {
-        "font": "nano://fonts/deja-9.font.json"
     },
     "constants": {
     },
@@ -13,5 +12,5 @@
     "packages": [],
     "scripts": [
     ],
-    "title": "BOIDS BOIDS BOIDS"
+    "title": "Boids"
 }
