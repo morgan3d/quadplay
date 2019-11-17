@@ -100,7 +100,7 @@ def increaseScore(v):
 def shakeScreen(frames, mag):
    // Support both scalar and vector
    if mag.x == ∅: mag = xy(mag, mag)
-   def shake(f): setTransform(round(rndSquare() * mag))
+   def shake(f): setTransform(round(rndWithinSquare() * mag))
    def done():   setTransform(xy(0, 0))
    addFrameHook(shake, done, frames)
 

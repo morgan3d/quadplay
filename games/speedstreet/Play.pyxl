@@ -4,7 +4,7 @@ const mapWidthPixels = cityMap.size.x * cityMap.spriteSize.x
 
 // Bike shadow as a function of relative x
 const shadowColor = []
-for -5 <= dx <= 5:
+for -5 ≤ dx ≤ 5:
    push(shadowColor, rgba(0, 0, 0, sqrt(0.65 - |⅛ dx|)))
 
    
@@ -48,14 +48,14 @@ const wheelFrame = ⌊½ modeFrames⌋ mod 4
 let spreadThreshold = {min: -∞, max: ∞}
 let bounds = getBounds(bikeArray)
 with min, max in bounds:
-   if max.x - min.x > ½ screenSize.x:
+   if max.x - min.x ≥ ½ screenSize.x:
       spreadThreshold = {min: lerp(min.x, max.x, 25%),
                          max: lerp(min.x, max.x, 95%)}
 
-let minBikeVel = infinity
+let minBikeVel = ∞
 for bike in bikeArray:
 
-   bike.scoreModifier = 1 + 15% * ⌊4 * (bike.pos.x - bounds.min.x) / (bounds.max.x - bounds.min.x + 1)⌋
+   bike.scoreModifier = 1 + 15% ⌊4 (bike.pos.x - bounds.min.x) / (bounds.max.x - bounds.min.x + 1)⌋
    bike.score += bike.scoreModifier
    
    bike.frontWheel.sprite = wheelSprite[0][wheelFrame]

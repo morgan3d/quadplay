@@ -137,7 +137,7 @@ if not puck or (‖puck.vel‖ > 0.01): lastPuckMoveTime = modeFrames
 if puck and modeFrames - lastPuckMoveTime > 60 * 15:
    // The puck hasn't moved for 15 seconds. Something is
    // clearly wrong. Reset by moving the puck with random velocity
-   puck.vel = 0.5 rndCircle()
+   puck.vel = 0.5 rndDir2D()
 
 drawReferee(referee)
 
@@ -166,7 +166,7 @@ for player in playerArray:
          if puck and (puck.owner == player or puck.owner == other):
             // Dislodge the puck from the current owner
             puck.owner = ∅
-            puck.vel += ½ rndCircle()
+            puck.vel += ½ rndDir2D()
             puck.pos += puck.vel
          
 

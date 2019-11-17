@@ -1112,6 +1112,127 @@ Object
 : An array of the values in the object.
 
 
+Random Values
+---------------------------------------------------------
+
+### 1D
+
+`makeRnd(seed = nil)`
+: Returns a new _function_ that acts like `rnd()` but has its own private
+  seed and internal state. If the seed is not specified then it is chosen
+  differently for every run. See also `srand()`.
+
+`rnd()`
+: `rnd(0, 1)`
+
+`rnd(lo, hi)`
+: Random real number between `lo` and `hi`, excluding `hi`. See also the `ξ` operator, the no-argument version
+  of `rnd()`.
+
+`rndGaussian()`
+: Same as `rndGaussian(0, 1, rnd)`
+  
+`rndGaussian(mean, stddev, rnd = rnd)`
+: Returns a Gaussian distributed random number on the distribution
+  with the given mean and standard deviation. See also `rndTruncatedGaussian()`.
+
+`rndInt(hi)`
+: Uniformly distributed random integer between 0 and hi, inclusive. 
+  This version is deprecated. Use `rndInt(0, hi)` instead.
+
+`rndInt(lo, hi, rnd = rnd)`
+: Random integer between `lo` and `hi`, including both ends.
+  The `rnd` argument defaults to common random number generator `rnd()`, but
+  an alternative function previously created by `makeRnd()` can be
+  passed instead.
+  
+`rndSign(rnd = rnd)`
+: Returns +1 or -1 with equal probability.
+
+`rndTruncatedGaussian(mean, stddev, radius, rnd = rnd)`
+: Returns a Gaussian distributed random number within `radius` of
+  the mean. See also `rndGaussian()`.
+
+`srand(seed = nil)`
+: Reset the default random number generator, `rnd()`, using an optional seed.
+  See also `makeRnd()`.
+
+
+### 2D
+
+`rndDir2D(rnd = rnd)`
+: Same as `rndOnCircle()`
+
+`rndGaussian2D()`
+: Same as `rndGaussian2D(xy(0, 0), xy(1, 1), rnd)`.
+
+`rndGaussian2D(mean, stddev, rnd = rnd)`
+: Returns a Gaussian distributed random point on the distribution
+  with the given mean and standard deviation. The mean and standard
+  deviation may each be scalar or `xy()` values.
+  See also `rndGaussian()`, `rndTruncatedGaussian2D()`.
+
+`rndOnCircle(rnd = rnd)`
+: Returns a uniformly distributed `xy()` on the perimeter of the circle with center `(0, 0)` with radius 1.
+  Useful for random directions.
+
+`rndOnSquare(rnd = rnd)`
+: Uniformly distributed `xy()` on the _perimeter_ of a square from `(-1, -1)` to `(1, 1)`.
+
+`rndWithinCircle(rnd = rnd)`
+: Returns a uniformly distributed `xy()` in the disk with center `(0, 0)` with radius 1. Useful for
+  random offsets within a circle. See also `rndOnCircle()`
+
+`rndWithinSquare(rnd = rnd)`
+: Returns a uniformly distributed `xy()` in the square from `(-1, -1)` to `(1, 1)`, that is, 
+  the square that has a "radius" of 1 or sides of length two, and is centered at the origin `(0, 0)`.
+  Analogous to `rndDisk()`.
+
+`rndTruncatedGaussian2D(mean, stddev, radius, rnd = rnd)`
+: Returns a Gaussian distributed random point within `radius`
+  of `mean`. The `mean` and `stddev` may be scalars or `xy()`s.
+  If `radius` is a number, the truncation region is a disk. If
+  `radius` is an `xy()`, then the truncation region is an ellipse
+  that has those radii along each axis.
+  See also `rndGaussian2D()`.
+
+
+### 3D
+`rndDir3D(rnd = rnd)`
+: Same as `rndOnSphere()`.
+
+`rndGaussian3D()`
+: Same as `rndGaussian3D(xy(0, 0), xy(1, 1), rnd)`.
+
+`rndGaussian3D(mean, stddev, rnd = rnd)`
+: Returns a Gaussian distributed random point on the distribution
+  with the given mean and standard deviation. The mean and standard
+  deviation may each be scalar or `xyz()` values.
+  See also `rndGaussian()`, `rndTruncatedGaussian3D()`.
+  
+`rndOnCube(rnd = rnd)`
+: A random point on the _surface_ of the cube from `(-1, -1, -1)` to `(1, 1, 1)`.
+
+`rndOnSphere(rnd = rnd)`
+: Returns a uniformly distributed `xyz()` on the [hollow] sphere with center `(0, 0, 0)` with radius 1. Useful for
+  random directions in 3D. See also `rndWithinSphere()` and `rndOnCircle()`.
+  
+`rndWithinCube(rnd = rnd)`
+: A random point inside the cube from `(-1, -1, -1)` to `(1, 1, 1)`.
+
+`rndWithinSphere(rnd = rnd)`
+: Returns a uniformly distributed `xyz()` within the unit sphere, that is, the ball with center `(0, 0, 0)` and radius 1. 
+  Useful for random offsets within a sphere. See also `rndOnSphere()`.
+
+`rndTruncatedGaussian3D(mean, stddev, radius, rnd = rnd)`
+: Returns a Gaussian distributed random point within `radius`
+  of `mean`. The `mean` and `stddev` may be scalars or `xyz()`s.
+  If `radius` is a number, the truncation region is a disk. If
+  `radius` is an `xyz()`, then the truncation region is an ellipsoid
+  that has those radii along each axis.
+  See also `rndGaussian3D()`.
+
+
 Vector
 ---------------------------------------------------------
 
@@ -1128,8 +1249,8 @@ including `xy()` and `rgb()` values, except where specific key names are mention
   returns `a.x * b.y - a.y * b.x`, which is the 2D wedge product.
 
 `direction(v)`
-: `v / magnitude(v)` if the magnitude is greater than 10<sup>-10</sup>, otherwise returns the original (nearly zero) vector. That is,
-  returns a normalized or unit vector unless the input is close to zero.
+: `v / magnitude(v)` if the magnitude is greater than 10<sup>-10</sup>, otherwise returns the original 
+  (nearly zero) vector. That is, returns a normalized or unit vector unless the input is close to zero.
 
 `dot(a, b)`
 : Return the dot (inner) product of any two structures or arrays with parallel
@@ -1151,26 +1272,6 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 `perp(v)`
 : Returns a vector perpendicular to `v` by rotating it 90 degrees: 
   `xy(-v.y, v.x)`, for `xy()` and 2-element array vectors only.
-
-`rndBall()`
-: Returns a uniformly distributed `xyz()` in the [solid] ball with center `(0, 0, 0)` with radius 1. Useful for
-  random offsets within a sphere.
-
-`rndCircle()`
-: Returns a uniformly distributed `xy()` on the perimeter of the circle with center `(0, 0)` with radius 1.
-  Useful for random directions.
-
-`rndDisk()`
-: Returns a uniformly distributed `xy()` in the disk with center `(0, 0)` with radius 1. Useful for
-  random offsets within a circle.
-
-`rndSphere()`
-: Returns a uniformly distributed `xyz()` on the [hollow] sphere with center `(0, 0, 0)` with radius 1. Useful for
-  random directions in 3D.
-
-`rndSquare()`
-: Returns a uniformly distributed `xy()` in the square with center `(0, 0)` with side length 2.
-  Useful for random offsets within a square.
 
 `xy(x, y)`
 : Create the object with `x` and `y` fields. 
@@ -1318,12 +1419,6 @@ Math
 `round(x, u)`
 : Return the nearest value of `x` quantized to `u`: `round(x, u) == round(x * u) / u`.
 
-`rnd()`
-: Random number between 0 and 1, excluding 1. See also the `ξ` operator.
-
-`rndInt(n)`
-: Random integer between 0 and n, inclusive.
-
 `sign(x)`
 : Sign of `x`. Returns -1 if `x` is less than zero, -0 if `x` is -0, 
   +0 if `x` is +0, and +1 if `x` is greater than zero.
@@ -1349,9 +1444,6 @@ Math
 
 `sin(x)`
 : Sine of `x` radians.
-
-`srand(seed)`
-: Reset the random number generator, using an optional seed.
 
 `tan(x)`
 : Tangent of `x` radians.
@@ -2992,6 +3084,8 @@ Fonts
 
 ![`quad://fonts/deja-9.font.json`](../fonts/deja-9.png)
 
+![`quad://fonts/fool-9.font.json`](../fonts/fool-9.png)
+
 ![`quad://fonts/bogart-9.font.json`](../fonts/bogart-9.png)
 
 ![`quad://fonts/runes-9.font.json`](../fonts/runes-9.png)
@@ -4592,6 +4686,21 @@ Command-Line Tools
 [`sprite_json_generator.py`](../tools/sprite_json_generator.py)
 : Generator for `.sprite.json` files. Requires Python and PIL.
 
+*NOTE* If you are exporting from aseprite, use the following settings:
+- "horizontal strip" (quadplay doesn't support animations wrapping around image rows
+- "padding", "trim", and "extrude" should all be off
+- "Layers" should be visible layers (quadplay doesn't support layers")
+- "frames" should be "all frames" (unless you only want some frames)
+- "export json": yes and under "meta" for this:
+    - "layers" should be off
+    - "frame tags" should be checked
+    - "slices" should be off
+- "open generated sprite sheet" is up to you, if you want it to show you the sprite sheet when its done.
+
+If you export with these settings, you can pass the generated json file to the  sprite_json_generator program and it will convert the tags and sprite size
+automatically from the file.
+
+Note that while aseprite supports sprites of varying size, quadplay does not.
 
 `quadplay.html`
 ------------------------------------------------------------------------------------
@@ -4869,6 +4978,21 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2019 Nov 17: Beta update 14
+
+- Added `fool-9.font.json`
+- Added `makeRnd()`
+- Added `rndInt(lo, hi)` and deprecated `rndInt(n)`
+- Added `rnd(lo, hi)` overload
+- Added optional `rnd()` function argument to `rndBall()`, `rndSquare()`, etc.
+- Renamed `rndBall()` --> `rndWithinSphere()`, 
+  `rndSquare()` --> `rndWithinSquare()`, 
+  `rndDisk()` --> `rndWithinCircle()`,
+  `rndSphere()` --> `rndOnSphere()`
+- Added `rndGaussian()`, `rndGaussian2D()`, `rndGaussian3D()`, 
+  `rndTruncatedGaussian()`, `rndTruncatedGaussian2D()`, rndTruncatedGaussian3D()`,
+  `rndOnCube()`, `rndWithinCube()`, `rndInt(lo, hi, rnd)`, `rndSign()`, `rndOnSquare()`
 
 2019 Oct 4: Beta update 13
 

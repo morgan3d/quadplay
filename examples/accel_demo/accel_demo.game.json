@@ -1,6 +1,6 @@
 {
     "assets": {
-        "font": "nano://fonts/deja-9.font.json"
+        "font": "quad://fonts/deja-9.font.json"
     },
     "constants": {
     },

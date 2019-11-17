@@ -3260,31 +3260,180 @@ function anyButtonPress() {
 }
 
 
-function rndSquare() {
-    return {x: rnd() * 2 - 1, y: rnd() * 2 - 1};
+function rndTruncatedGaussian(mean, std, radius, rng) {
+    rng = rng || rnd;
+    var g = 0;
+    do {
+        g = rndGaussian(mean, std, rng);
+    } while (g < mean - radius || g > mean + radius);
+    return g;
+}
+
+function rndTruncatedGaussian2D(mean, std, radius, rng) {
+    rng = rng || rnd;
+    if (radius === undefined) {
+        throw Error("rndTruncatedGaussian2D(mean, stddev, radius, rnd) requires 3 or 4 arguments.");
+    }
+
+    if (isNumber(std)) { std = {x: std, y: std}; }
+    if (isNumber(mean)) { mean = {x: mean, y: mean}; }
+    if (isNumber(radius)) { radius = {x: radius, y: radius}; }
+
+    var X = std.x / radius.x;
+    var Y = std.y / radius.y;
+    var r;
+    do {
+        r = rng();
+        if (r > 0) {
+            r = Math.sqrt(-2 * Math.log(r));
+        }
+    } while (square(r * X) + square(r * Y) > 1);
+    var q = rng(0, 2 * Math.PI);
+    var g1 = r * Math.cos(q);
+    var g2 = r * Math.sin(q);
+    return {x: g1 * std.x + mean.x, y: g2 * std.y + mean.y};
 }
 
 
-function rndSphere() {
-    const a = Math.acos(rnd() * 2 - 1) - Math.PI / 2;
-    const b = rnd() * Math.PI * 2;
+function rndGaussian(mean, std, rng) {
+    rng = rng || rnd;
+    if (std === undefined) {
+        if (mean !== undefined) {
+            throw Error("rndGaussian(mean, stddev, rnd) requires 0, 2, or 3 arguments.");
+        }
+        std = 1;
+        mean = 0;
+    }
+    var r = rng();
+    if (r > 0) {
+        r = Math.sqrt(-2 * Math.log(r));
+    }
+    var q = rng(0, 2 * Math.PI);
+    var g1 = r * Math.cos(q);
+    return g1 * std + mean;    
+}
+
+function rndGaussian3D(mean, std, rng) {
+    rng = rng || rnd;
+    if (std === undefined) {
+        if (mean !== undefined) {
+            throw Error("rndGaussian3D(mean, stddev, rnd) requires 0, 2, or 3 arguments.");
+        }
+        std = {x: 1, y: 1, z: 1};
+        mean = {x: 0, y: 0, z: 0};
+    }
+    if (isNumber(std)) { std = {x: std, y: std, z: std}; }
+    if (isNumber(mean)) { mean = {x: mean, y: mean, z: mean}; }
+    var g = rndGaussian2D(mean, std, rng);
+    g.z = rndGaussian(mean.z, std.z, rng);
+    return g;
+}
+
+function rndTruncatedGaussian3D(mean, std, radius, rng) {
+    rng = rng || rnd;
+    if (radius === undefined) {
+        throw Error("rndTruncatedGaussian3D(mean, stddev, radius, rnd) requires 3 or 4 arguments.");
+    }
+    if (isNumber(std)) { std = {x: std, y: std, z: std}; }
+    if (isNumber(mean)) { mean = {x: mean, y: mean, z: mean}; }
+    if (isNumber(radius)) { mean = {x: radius, y: radius, z: radius}; }
+
+    var center = {x: 0, y: 0, z: 0};
+    var g;
+
+    do {
+        g = {x: rndGaussian(0, std.x, rng),
+             y: rndGaussian(0, std.y, rng),
+             z: rndGaussian(0, std.z, rng)};
+    } while (square(g.x / radius.x) + square(g.y / radius.y) + square(g.z / radius.z) > 1);
+    
+    return {x: g.x + mean.x, y: g.y + mean.y, z: g.z + mean.z};
+}
+
+
+function rndGaussian2D(mean, std, rng) {
+    rng = rng || rnd;
+    if (std === undefined) {
+        if (mean !== undefined) {
+            throw Error("rndGaussian2D(mean, stddev, rnd) requires 0, 2, or 3 arguments.");
+        }
+        std = {x: 1, y: 1};
+        mean = {x: 0, y: 0};
+    }
+
+    if (isNumber(std)) { std = {x: std, y: std}; }
+    if (isNumber(mean)) { mean = {x: mean, y: mean}; }
+    
+    var r = rng();
+    if (r > 0) {
+        r = Math.sqrt(-2 * Math.log(r));
+    }
+    var q = rng(0, 2 * Math.PI);
+    var g1 = r * Math.cos(q);
+    var g2 = r * Math.sin(q);
+    return {x: g1 * std.x + mean.x, y: g2 * std.y + mean.y};
+}
+
+function rndWithinSquare(rng) {
+    rng = rng || rnd;
+    return {x: rng(-1, 1), y: rng(-1, 1)};
+}
+
+function rndWithinCube(rng) {
+    rng = rng || rnd;
+    return {x: rng(-1, 1), y: rng(-1, 1), z: rng(-1, 1)};
+}
+
+function rndSign(rng) {
+    rng = rng || rnd;
+    return (rng() < 0.5) ? -1 : +1;
+}
+
+function rndOnSquare(rng) {
+    rng = rng || rnd;
+    if (rng() < 0.5) {
+        return {x: rndSign(), y: rng(-1, 1)};
+    } else {
+        return {x: rng(-1, 1), y: rndSign()};
+    }
+}
+
+function rndOnCube(rng) {
+    rng = rng || rnd;
+    var r = rng() < 1/3;
+    if (r < 1/3) {
+        return {x: rndSign(), y: rng(-1, 1), z: rng(-1, 1)};
+    } else if (r < 2/3) {
+        return {x: rng(-1, 1), y: rndSign(), z: rng(-1, 1)};
+    } else {
+        return {x: rng(-1, 1), y: rng(-1, 1), z: rndSign()};
+    }
+}
+
+function rndOnSphere(rng) {
+    rng = rng || rnd;
+    const a = Math.acos(rng(-1, 1)) - Math.PI / 2;
+    const b = rng(0, Math.PI * 2);
     const c = Math.cos(a);
     return {x: c * Math.cos(b), y: c * Math.sin(b), z: Math.sin(a)};
 }
 
+var rndDir3D = rndOnSphere;
 
-function rndCircle() {
+function rndOnCircle() {
     const t = rnd() * 2 * Math.PI;
     return {x: Math.cos(t), y: Math.sin(t)};
 }
 
+var rndDir2D = rndOnCircle;
 
-function rndDisk() {
+function rndWithinCircle(rng) {
+    rng = rng || rnd;
     const P = {x:0, y:0}
     let m = 0;
     do {
-        P.x = rnd() * 2 - 1;
-        P.y = rnd() * 2 - 1;
+        P.x = rng(-1, 1);
+        P.y = rng(-1, 1);
         m = P.x * P.x + P.y * P.y;
     } while (m > 1);
     m = 1 / m;
@@ -3292,13 +3441,14 @@ function rndDisk() {
     return P;
 }
 
-function rndBall() {
+function rndWithinSphere(rng = rng) {
+    rng = rng || rnd;
     const P = {x:0, y:0, z:0}
     let m = 0;
     do {
-        P.x = rnd() * 2 - 1;
-        P.y = rnd() * 2 - 1;
-        P.z = rnd() * 2 - 1;
+        P.x = rng(-1, 1);
+        P.y = rng(-1, 1);
+        P.z = rng(-1, 1);
         m = P.x * P.x + P.y * P.y + P.z * P.z;
     } while (m > 1);
     m = 1 / m;
@@ -3306,8 +3456,8 @@ function rndBall() {
     return P;
 }
 
-        
-var [rnd, srand] = (function() {
+
+function _makeRng(seed) {
     /* Based on https://github.com/AndreasMadsen/xorshift/blob/master/xorshift.js
 
        Copyright (c) 2014 Andreas Madsen & Emil Bay
@@ -3346,7 +3496,11 @@ var [rnd, srand] = (function() {
         //console.log(seed, state0U, state0L, state1U, state1L)
     }
 
-    function rnd() {
+    if (seed !== undefined) {
+        srand(seed);
+    }
+
+    function rnd(lo, hi) {
         // uint64_t s1 = s[0]
         var s1U = state0U, s1L = state0L;
         // uint64_t s0 = s[1]
@@ -3401,15 +3555,40 @@ var [rnd, srand] = (function() {
         state1U = t1U;
         state1L = t1L;
         
-        return resU * 2.3283064365386963e-10 + (resL >>> 12) * 2.220446049250313e-16;
+        var r = resU * 2.3283064365386963e-10 + (resL >>> 12) * 2.220446049250313e-16;
+        if (hi === undefined) {
+            if (lo === undefined) {
+                return r;
+            } else {
+                throw new Error("Use rnd() or rnd(lo, hi). A single argument is not supported.");
+            }
+        } else {
+            return r * (hi - lo) + lo;
+        }
     }
 
     return [rnd, srand];
-})();
+}
+        
+var [rnd, srand] = _makeRng();
 
+function makeRnd(seed) {
+    var [rnd, srand] = _makeRng(seed || (localTime.millisecond() * 1e6));
+    return rnd;
+}
 
-function rndInt(n) {
-    return Math.min(n, floor(rnd() * (n + 1)));
+function rndInt(lo, hi, rng) {
+    if (hi === undefined) {
+        if (lo === undefined) {
+            throw new Error("rndInt(lo, hi, rnd = rnd) requires at least two arguments.");
+        }
+        // Backwards compatibility
+        hi = lo;
+        lo = 0;        
+    }
+    rng = rng || rnd;
+    var n = hi - lo + 1;
+    return Math.min(hi, floor(rng(lo, hi + 1)));
 }
 
 

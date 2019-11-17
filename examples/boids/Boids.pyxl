@@ -80,7 +80,7 @@ const boids = []
 const NUM_BOIDS =  30
 const NUM_ITERATIONS = 1
 for i < NUM_BOIDS:
-    push(boids, make_boid(rndSquare()*screenSize/2))
+    push(boids, make_boid(rndWithinSquare() * screenSize / 2))
 
 // draw shape for each boid
 const triangle = [ 
