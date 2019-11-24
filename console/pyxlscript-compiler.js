@@ -542,7 +542,7 @@ function processBlock(lineArray, startLineIndex, inFunction) {
     return i;
 }
 
-
+// The identifier pattern is also used in quadplay-runtime.js _removeMarkup() and must be kept in sync
 const identifierPattern = '[Δ]?(?:[A-Za-z][A-Za-z_0-9]*|[αβγΔδζηθιλμρσϕφχψτωΩ][_0-9]*(?:_[A-Za-z_0-9]*)?)';
 const identifierRegex = RegExp(identifierPattern);
 
@@ -850,14 +850,14 @@ function pyxlToJS(src, noYield) {
             found = false;
             src = src.replace(/^([ \t]*\S[^\n]*?(?:[A-Za-z0-9_αβγΔδζηθιλμρσϕφχψτωΩ][ \t]|[\^=\-\+\*/><,\[{\(][ \t]*))if\b/gm,
                               function (match, prefix) {
-                          if (/else[ \t]*$/.test(prefix)) {
-                              // This was an ELSE IF, leave alone
-                              return match;
-                          } else {
-                              found = true;
-                              // Functional IF, replace
-                              return prefix + '(';
-                          }
+                                  if (/else[ \t]*$/.test(prefix)) {
+                                      // This was an ELSE IF, leave alone
+                                      return match;
+                                  } else {
+                                      found = true;
+                                      // Functional IF, replace
+                                      return prefix + '(';
+                                  }
                               });
         }
     }
@@ -1015,6 +1015,7 @@ function pyxlToJS(src, noYield) {
     src = src.replace(/_add\(__yieldCounter, 1\)/g, '__yieldCounter + 1');
     src = unprotectQuotedStrings(src, protectionMap);
 
+    // console.log(src);
     return src;
 }
 

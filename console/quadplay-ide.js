@@ -388,9 +388,20 @@ function onStopButton() {
     saveIDEState();
 }
 
+function onSlowButton() {
+    onPlayButton(true);
+}
 
-function onPlayButton() {
+// Allows a framerate to be specified so that the slow button can re-use the logic
+function onPlayButton(slow) {
+    targetFramerate = slow ? SLOW_FRAMERATE : PLAY_FRAMERATE;
+    
     function doPlay() {
+        if (slow) {
+            document.getElementById('slowButton').checked = 1;
+        } else {
+            document.getElementById('playButton').checked = 1;
+        }
         document.getElementById('playButton').checked = 1;
         setControlEnable('pause', true);
         _ch_audioContext.resume();
@@ -405,7 +416,6 @@ function onPlayButton() {
         prevFrameStart = performance.now();
         previewRecordingFrame = 0;
         previewRecording = null;
-
         
         if (! coroutine) {
             outputDisplayPane.innerHTML = '';
@@ -448,6 +458,7 @@ function onPlayButton() {
     }
 
     if (emulatorMode === 'play') {
+        emulatorKeyboardInput.focus();
         return;
     } else if (emulatorMode === 'stop') {
         // Reload the program
@@ -469,6 +480,7 @@ function onPlayButton() {
         // Was just paused
         resumeAllSounds();
         doPlay();
+        emulatorKeyboardInput.focus();
     }
 
 }
@@ -934,6 +946,66 @@ function onProjectSelect(target, type, object) {
             // Sprite or font
             spriteEditor.style.visibility = 'visible';
             spriteEditor.style.backgroundImage = `url("${url}")`;
+            const spriteEditorHighlight = document.getElementById('spriteEditorHighlight');
+            const spriteEditorInfo = document.getElementById('spriteEditorInfo');
+
+            if (object._type === 'spritesheet') {
+                const spritesheetName = object._name.replace(/.* /, '');
+                spriteEditor.onmousemove = spriteEditor.onmousedown = function (e) {
+                    const editorBounds = spriteEditor.getBoundingClientRect();
+
+                    // The spritesheet is always fit along the horizontal axis
+                    const scale = editorBounds.width / object.size.x;
+                    
+                    const mouseX = e.clientX - editorBounds.left;
+                    const mouseY = e.clientY - editorBounds.top;
+                    
+                    const scaledSpriteWidth = object.spriteSize.x * scale;
+                    const scaledSpriteHeight = object.spriteSize.y * scale;
+
+                    const X = Math.floor(mouseX / scaledSpriteWidth);
+                    const Y = Math.floor(mouseY / scaledSpriteHeight);
+
+                    spriteEditorHighlight.style.left   = Math.floor(X * scaledSpriteWidth) + 'px';
+                    spriteEditorHighlight.style.top    = Math.floor(Y * scaledSpriteHeight) + 'px';
+                    spriteEditorHighlight.style.width  = Math.floor(scaledSpriteWidth) + 'px';
+                    spriteEditorHighlight.style.height = Math.floor(scaledSpriteHeight) + 'px';
+                    const sprite = object[X] && object[X][Y];
+                    if (sprite) {
+                        let str = `${spritesheetName}[${X}][${Y}]`;
+                        if (sprite._animationName) {
+                            str += `<br>${spritesheetName}.${sprite._animationName}`
+                            if (sprite._animationIndex !== undefined) {
+                                const animation = object[sprite._animationName];
+                                str += `[${sprite._animationIndex}]<br>extrapolate: "${animation.extrapolate || 'clamp'}"`;
+                            }
+                        }
+
+                        str += `<br>duration: ${sprite.duration}`;
+                        spriteEditorInfo.innerHTML = str;
+                        
+                        if (X > object.length / 2) {
+                            //spriteEditorInfo.style.textAlign = 'right';
+                            spriteEditorInfo.style.float = 'right';
+                            spriteEditorHighlight.style.textAlign = 'right';
+                        } else {
+                            spriteEditorInfo.style.float = 'none';
+                            spriteEditorHighlight.style.textAlign = 'left';
+                        }
+                        spriteEditorInfo.style.marginTop = Math.floor(scaledSpriteHeight + 5) + 'px';
+                        spriteEditorHighlight.style.visibility = 'inherit';
+                    } else {
+                        // Out of bounds
+                        spriteEditorHighlight.style.visibility = 'hidden';
+                    }
+                };
+                
+                // Initial position
+                const editorBounds = spriteEditor.getBoundingClientRect();
+                spriteEditor.onmousemove({clientX: editorBounds.left, clientY: editorBounds.top});
+            } else {
+                spriteEditorHighlight.style.visibility = 'hidden';
+            }
         } else if (/\.mp3$/i.test(url)) {
             soundEditor.style.visibility = 'visible';
             soundEditorCurrentSound = fileContents[url];
@@ -1609,8 +1681,12 @@ function setFramebufferSize(w, h) {
 let programNumLines = 0;
 let compiledProgram = '';
 
-// 'stop', 'step', 'pause', 'play'
+// 'stop', 'step', 'pause', 'play'. Slow mode = 'play' with targetFramerate slow
 let emulatorMode = 'stop';
+
+const PLAY_FRAMERATE = 60;
+const SLOW_FRAMERATE = 8;
+let targetFramerate = PLAY_FRAMERATE;
 
 /** Returns non-false if the button whose name starts with ctrl is currently down. */
 function pressed(ctrl) {
@@ -1642,8 +1718,10 @@ function onToggle(button) {
 
 /** Called by the IDE radio buttons */
 function onRadio() {
-    if (pressed('play') && (emulatorMode !== 'play')) {
+    if (pressed('play') && ((emulatorMode !== 'play') || (targetFramerate !== PLAY_FRAMERATE))) {
         onPlayButton();
+    } else if (pressed('slow') && ((emulatorMode !== 'play') || (targetFramerate !== SLOW_FRAMERATE))) {
+        onSlowButton();
     } else if (pressed('pause') && (emulatorMode === 'play')) {
         onPauseButton();
     } else if (pressed('stop') && (emulatorMode !== 'stop')) {
@@ -1805,12 +1883,17 @@ const graphicsPeriodCheckInterval = 1000;// milliseconds
 function mainLoopStep() {
     // Keep the callback chain going
     if (emulatorMode === 'play') {
-        if (QRuntime._graphicsPeriod === 1) {
+        if ((QRuntime._graphicsPeriod === 1) && (targetFramerate === 60)) {
             // Line up with Vsync and browser repaint at 60 Hz
             lastAnimationRequest = requestAnimationFrame(mainLoopStep);
+        } else if (targetFramerate < 60) {
+            // Use manual scheduling when running below 60 Hz due to
+            // the game running too slowly or slow mode intentionally being used.
+            lastAnimationRequest = setTimeout(mainLoopStep, 1000 / targetFramerate);
         } else {
-            // Use manual scheduling when running below 60 Hz
-            lastAnimationRequest = setTimeout(mainLoopStep, (1000 / 60) * QRuntime._graphicsPeriod);
+            // Use manual scheduling when running below 60 Hz due to
+            // the game running too slowly or slow mode intentionally being used.
+            lastAnimationRequest = setTimeout(mainLoopStep, (1000 / targetFramerate) * QRuntime._graphicsPeriod);
         }
     }
 

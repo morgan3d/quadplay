@@ -1,0 +1,41 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+let inventory = ["three coins", "a spoon", "a dagger", "two matches", "a flask", "the map"];
+let choiceArray = ["WALK", "SEARCH", "USE", "SPEAK", "FIGHT", "HIDE"]
+let choiceIndex = 0
+
+frame
+────────────────────────────────────────────────────────────────────────
+setBackground(rgb(0.4, 0.25, 0.3))
+
+// Quest: Markup example
+drawSpriteRect(uiSpritesheet[10][15], xy(8, 18), xy(screenSize.x - 18, 68))
+drawText({font: font, text: "Quest", pos: xy(½ screenSize.x, 12), xAlign: "center", color: #000})
+drawText({font: font, text: quest, pos: xy(8, 18), yAlign: "top", wrapWidth: screenSize.x - 18, color: #000, shadow: #1102, markup: true})
+
+// Description: replace example
+let description = "You are in a flat field nestled between foothills. A castle rises out of fog the distance."
+
+description += replace("\n\nIt is TIME. The sky is SKY and the temperature is TEMP°C.",
+                       {TIME: formatNumber(60 * 60 * 10.2, "clock12"),
+                        SKY:  "cloudy",
+                        TEMP: 20})
+
+// Inventory: Join example
+description += " You have " + join(inventory, ", ", ", and ", " and ", "nothing") + ".";
+
+drawSpriteRect(uiSpritesheet[7][9], xy(8, 102), xy(screenSize.x - 18, 82))
+drawText({font: font, text: description, pos: xy(8, 100), yAlign: "top", wrapWidth: screenSize.x - 18, color: #ddd, shadow: #1025})
+
+for c < size(choiceArray):
+   const args = {font: buttonFont, text: choiceArray[c], color: #FFF, outline: #0005, shadow: #400,
+                 xAlign: "center", pos: xy((c + ½) * screenSize.x / size(choiceArray), 210)}
+   if c == choiceIndex:
+      // Highlight the active choice
+      args.color = #ff0
+      args.outline = #000
+      args.text = "«" + args.text + "»"
+   drawText(args)
+
+choiceIndex = loop(joy.xx + choiceIndex, size(choiceArray))

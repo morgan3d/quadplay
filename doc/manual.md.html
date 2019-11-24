@@ -88,13 +88,6 @@ quadplay https://morgan3d.github.io/somegame/foo.game.json
 quadplay
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-<!--
-!!! WARNING
-    Safari does not give proper file and line information on errors. Run in
-    Chrome or Firefox on MacOS if you're having trouble figuring out which
-    line is causing an error on Safari.
--->
-
 These examples assume that your directory structure is:
 
 **********************************************************
@@ -283,6 +276,9 @@ with gravity and pressure.
 [Acceleration Demo](../console?game=quad://examples/accel_demo&IDE=1) is a simple demonstration of how various acceleration curves feel, changing only three constants: top speed, acceleration time and deceleration time. Up and down change the constants to fit different games. 
 
 [Boids](../console?game=quad://examples/boids&IDE=1) An implementation of the famous "boids" paper.
+
+[Text](../console?game=quad://examples/text&IDE=1) shows how to use `replace()`, `drawText()`, `join()`, 
+`formatNumber()`, and `drawSpriteRect()` to build text-heavy interfaces.
 
 
 Programming Model
@@ -931,8 +927,12 @@ Array
 : Find the index of the element whose value is `x`, starting at optional index `i` (default 0).
   Returns `∅` if not found. O(n)
 
-`join(array, separator (=""))`
+`join(array, separator (= ""), lastSeparator (= separator), pairSeparator (= lastSeparator), empty (= ""))`
 : Joins the elements of the array into a string. Each element converted to a string with `unparse()` if it is not already a string.
+  The optional `lastSeparator` allows the final join to use a special case.
+  The optional `pairSeparator` is a special separator used for arrays of length two. 
+  For example `join(inventory, ", ", ", and ", " and ", "nothing")`.
+  The optional `empty` value is used if the array has length 0.
 
 `pop(array)`
 : Remove the last element from the array and return it, or `∅` if the array is empty. O(1) expected amortized time.
@@ -1038,6 +1038,14 @@ String
 `parse(s)`
 : Parse a string that was encoded using `unparse()` and convert it back into the original
   data structure. Functions, built-ins, and recursive arrays cannot be converted.
+
+`replace(string, src, dst)`
+: Replace all occurances of `src` in `string` with `dst`.
+
+`replace(string, object)`
+: Replace all occurances of each key of `object` with each `value` of object in `string`,
+  applying longer substitutions first. For example, 
+  `replace("Use the ADJ NOUN, PROPER_NOUN!", {ADJ: "big", NOUN: "stick", PROPER_NOUN: "Runi")`.
 
 `reversed(string)`
 : Returns a reversed version of the string in O(size) time.
@@ -1785,7 +1793,12 @@ Each element of a spritesheet has the following immutable properties:
 `sprite.id`
 : Unique integer identifying this sprite. This may change every time
   the program is run.
-  
+
+`sprite.duration`
+: Number of 1/60-second (≈ 16.7 ms) game frames to hold this sprite during animation.
+  Set by the spritesheet's `defaultDuration`, the animation's `defaultDuration`,
+  or the animation's per-sprite `duration` array.
+
 `sprite.flippedX`
 : The corresponding derived sprite that is this sprite flipped horizontally.
   Flipped sprites are created on spritesheet load but can only be accessed
@@ -2259,7 +2272,7 @@ endpoints and borders.
   `drawText({text: "Fire!", pos: xy(100, 100), xAlign:-1, z: 2})`.
   Values default according to the positional argument version.
 
-`drawText(font, text, pos, color (= nil), shadow (= nil), outline (= nil), xAlign (= -1), yAlign (= 1), z (= 0), wrapWidth (= nil), textSize (= size(text)))`
+`drawText(font, text, pos, color (= nil), shadow (= nil), outline (= nil), xAlign (= -1), yAlign (= 1), z (= 0), wrapWidth (= nil), textSize (= size(text)), markup (= false))`
 : Print string `text` relative to `pos` and return an `xy()` of the bounding box. 
   
   x-alignment of `-1` or `"left"` = left, 
@@ -2279,6 +2292,22 @@ endpoints and borders.
   `textSize` restricts drawText to only printing that many characters,
   *after* word-wrapping. This allows gradually revealing text in a stable
   way under word wrap.
+  
+  `markup = true` enables special syntax for changing the style within 
+  a single string and removes single linebreaks. The markup syntax is `"...{property:value text...}..."`.
+  The valid property names are `color`, `font`, `shadow`, and `outline`.
+  That property is valid from the beginning brace to the end one. Only
+  one property can be changed per brace, and braces can be nested.
+  For strings that word wrap, the vertical spacing of lines is based 
+  on the original font specified as an argument to `drawText()`, so
+  using very different fonts can result in poorly formatted output. 
+  The legal values are colors specified using `rgba()`, `rgb()`, `hsva()`, 
+  `hsv()`, or `gray()` with numbers, the `#` color syntax, or the
+  names of constants specified in the `game.json` file. Variables
+  and expressions are not permitted in the values. To insert a regular
+  brace within markup, use a slash escape, which must be typed in a string
+  using a double slash: `\\{` or `\\}`. _The current implementation
+  simply strips markup instead of applying it._
   
 `drawTri(A, B, C, fill, border (= nil), z (= 0))`
 : Draw the triangle.
@@ -3007,7 +3036,7 @@ versions may be substantially faster than overloaded operators.
 Built-in Assets
 ====================================================================================
 
-The quadplay✜ provides thousands of built-in assets so that you
+The quadplay✜ console provides thousands of built-in assets so that you
 can start creating games immediately and make games that have a small
 size.
 
@@ -3224,9 +3253,10 @@ reading about options in this section that may not be used by the
 starter.
 
 !!! 
-    quadplay✜ permits C++ style comments and trailing commas within
-    JSON files for convenience when editing and debugging. This is
-    not legal in strict JSON and may be incompatible with other tools.
+    quadplay✜ permits C++ style comments, trailing commas, and multiline
+    backquote JavaScript strings within JSON files for convenience when
+    editing and debugging. This is not legal in strict JSON and may be 
+    incompatible with other tools.
 
 An example project is below, annotated with comments explaining the
 options. Project files should have the double extension `.game.json`.
@@ -3421,26 +3451,38 @@ The sprite sheet JSON descriptor looks like:
     // in game.
     "transpose":    false,
     
+    // Default value for sprite.frames, the number of 1/60-second frames
+    // to play a sprite during animation.
+    "defaultDuration": 1,
+    
     // Optional. Applies to pre-transpose coordinates. Each becomes
     // an array on the spritesheet with the extrapolate field set.
     // A name cannot be 'spriteSize' or any other spritesheet field.
     //
-    // If an xy() is specified, creates a single sprite..
-    // If extrapolate is unspecified, defaults to looping.
-    // extrapolate options are "loop", "oscillate", and "clamp"
+    // If an xy() is specified, creates a single sprite.
     //
-    // end defaults to start, and each field of end defaults to the corresponding part of start.
+    // If an object is specified, creates an array of sprites.
+    //
+    // If `extrapolate` is unspecified, defaults to looping.
+    // `extrapolate` options are "loop", "oscillate", and "clamp"
+    //
+    // Each object may have its own `defaultFrames` that overrides the
+    // spritesheet's defaultFrames, as well as a `frames` array with
+    // one element per sprite in the animation.
+    //
+    // `end` defaults to `start`, and each field of `end` defaults
+    // to the corresponding part of `start`.
     "names":        {
-        "idle":     {"start": {"x": 0, "y": 0}, "end": {"x": 0, "y": 3}, "extrapolate": "oscillate"},
-        "run":      {"start": {"x": 1, "y": 0}, "end": {"y": 3}},
+        "idle":     {"start": {"x": 0, "y": 0}, "end": {"x": 0, "y": 3}, "extrapolate": "oscillate",
+                     "frames": [1, 2, 2, 1]},
+        "run":      {"start": {"x": 1, "y": 0}, "end": {"y": 3}, "defaultFrames": 2},
         "jumpUp":   {"start": {"x": 2, "y": 0}},
         "jumpDown": {"start": {"x": 2, "y": 1}},
         "dead":     {"x": 3, "y": 0},
     },
     
-    // Optional offset and extent. Using this to have multiple .sprite.json files
-    // for the same PNG makes spritesheets with different size sprites much
-    // more memory efficient.
+    // Optional offset and extent. Using this conserves memory if the sprites
+    // do not fill the entire PNG.
     "region":       {
         "pos":      {"x": 0, "y": 0}, // Optional, defaults to (0, 0)
         "size":     {"x": 128, "y": 32} // Optional, defaults to the remainder of the sheet
@@ -4866,6 +4908,9 @@ of xorshift (c) 2014 Andreas Madsen and Emil Bay used under the
 
 The code editor for the quadplay✜ IDE is [ace.js](https://ace.c9.io/) used under the [BSD license](https://github.com/ajaxorg/ace/blob/master/LICENSE).
 
+The physics engine is [matter.js](https://brm.io/matter-js/) used under the
+[MIT license](https://raw.githubusercontent.com/liabru/matter-js/master/LICENSE).
+
 The compiler uses
 [vectorify.js](https://github.com/morgan3d/misc/tree/master/jsvectorify)
 (c) 2018 Morgan McGuire under the MIT license, [recast](https://github.com/benjamn/recast)
@@ -4978,6 +5023,22 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2019 Nov 24: Beta update 15
+
+- JSON files may now contain multiline strings using backquote: <code>`...`</code>
+- `sprite.json` files now support per-sprite animation frame timing
+- Updated the ninja sprites with
+  animation durations and the `examples/animation` code demonstrating how to use it at runtime
+- Made the `quadplay` command line script shut down more gracefully on key press
+- Added per-sprite info viewer in the IDE
+- Added slow play button for debugging animations and interaction
+- Added the specification for `markup` on `drawText()` (but not the implementation)
+- Improved the shape and line spacing for the `roman-8` font
+- Added `replace()` for strings
+- Added optional last, pair, and empty separators for `join()`
+- Added [Text](../console?game=quad://examples/text&IDE=1) example
+
 
 2019 Nov 17: Beta update 14
 

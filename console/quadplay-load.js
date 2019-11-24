@@ -521,6 +521,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
     // These fields have underscores so that they can't be accessed from pyxlscript.
     spritesheet = Object.assign([], {
         _name: 'spritesheet ' + name,
+        _type: 'spritesheet',
         _uint32data: null,
         _uint32dataFlippedX : null,
         _url: json.url,
@@ -579,6 +580,8 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
         
         const boundingRadius = Math.hypot(spritesheet.spriteSize.x, spritesheet.spriteSize.y);
         spritesheet.size = {x: data.width, y: data.height};
+
+        const sheetDefaultDuration = Math.max(json.defaultDuration || 1, 0.25);
         
         // Create the default grid mapping
         let rows = Math.floor((data.height + spritesheet._gutter) / (spritesheet.spriteSize.y + spritesheet._gutter));
@@ -591,7 +594,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
         }
         
         for (let x = 0; x < cols; ++x) {
-            spritesheet[x] = [];           
+            spritesheet[x] = [];
             
             for (let y = 0; y < rows; ++y) {
                 const u = json.transpose ? y : x, v = json.transpose ? x : y;
@@ -611,6 +614,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
 
                 // Create the actual sprite
                 const sprite = {
+                    _type: 'sprite',
                     _tileX: u,
                     _tileY: v,
                     _boundingRadius: boundingRadius,
@@ -622,7 +626,8 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     id:++lastSpriteID,
                     size: spritesheet.spriteSize,
                     scale: PP,
-                    pivot: pivot
+                    pivot: pivot,
+                    frames: sheetDefaultDuration
                 };
 
                 // Construct the flipped versions
@@ -638,16 +643,11 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                 sprite.flippedY.flippedX.scale = NN;
                 sprite.flippedY.flippedX.lastSpriteID = ++lastSpriteID;
 
-                // Fresze all versions
-                Object.freeze(sprite.flippedX);
-                Object.freeze(sprite.flippedY);
-                Object.freeze(sprite.flippedY.flippedX);
-                spritesheet[x][y] = Object.freeze(sprite);
+                spritesheet[x][y] = sprite;
             }
             
             Object.freeze(spritesheet[x]);
         }
-
 
         // Process the name table
         if (json.names) {
@@ -663,16 +663,21 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     throw new Error('Animation data for "' + anim + '" must have either "x" and "y" fields or a "start" field, but not both');
                 }
                 
+                const animDefaultDuration = Math.max(0.25, data.defaultDuration || sheetDefaultDuration);
+                
                 // Apply defaults
                 if (data.x !== undefined) {
+                    // Named sprite, no animation
                     const u = json.transpose ? data.y : data.x, v = json.transpose ? data.x : data.y;
                     if (u < 0 || u >= spritesheet.length || v < 0 || v >= spritesheet[0].length) {
                         throw new Error('Named sprite "' + anim + '" index xy(' + u + ', ' + v + ') ' + (json.transpose ? 'after transpose ' : '') + 'is out of bounds for the ' + spritesheet.length + 'x' + spritesheet[0].length + ' spritesheet "' + url + '".');
                     }
-                        
-                    spritesheet[anim] = spritesheet[u][v];
 
-                    //data = {start: data, extrapolate: 'clamp'};
+                    const sprite = spritesheet[anim] = spritesheet[u][v];
+                    sprite.duration = animDefaultDuration;
+                    sprite._animationName = anim;
+                    sprite._animationIndex = undefined;
+
                 } else {
                 
                     if (data.end === undefined) { data.end = Object.assign({}, data.start); }
@@ -687,15 +692,24 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     
                     spritesheet[anim] = [];
                     spritesheet[anim].extrapolate = data.extrapolate || 'loop';
-                    
-                    for (let y = data.start.y; y <= data.end.y; ++y) {
-                        for (let x = data.start.x; x <= data.end.x; ++x) {
+
+                    for (let y = data.start.y, i = 0; y <= data.end.y; ++y) {
+                        for (let x = data.start.x; x <= data.end.x; ++x, ++i) {
                             const u = json.transpose ? y : x, v = json.transpose ? x : y;
                             if (u < 0 || u >= spritesheet.length || v < 0 || v >= spritesheet[0].length) {
                                 throw new Error('Index xy(' + u + ', ' + v + ') in animation "' + anim + '" is out of bounds for the ' + spritesheet.length + 'x' + spritesheet[0].length + ' spritesheet.');
                             }
-                        
-                            spritesheet[anim].push(spritesheet[u][v]);
+
+                            const sprite = spritesheet[u][v];
+                            sprite._animationName = anim;
+                            sprite._animationIndex = i;
+                            if (data.duration && (data.duration.length < i)) {
+                                sprite.duration = Math.max(0.25, data.duration[i]);
+                            } else {
+                                sprite.duration = animDefaultDuration;
+                            }
+                            
+                            spritesheet[anim].push(sprite);
                         }
                     }
 
@@ -706,6 +720,20 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
 
         // Prevent the game from modifying this asset
         Object.freeze(spritesheet);
+        for (let x = 0; x < spritesheet.length; ++x) {
+            for (let y = 0; y < spritesheet[x].length; ++y) {
+                const sprite = spritesheet[x][y];
+                // Freeze all versions
+                if (sprite.duration === undefined) {
+                    sprite.duration = sheetDefaultDuration;
+                }
+                sprite.flippedX.duration = sprite.flippedY.duration = sprite.flippedY.flippedX.duration = sprite.duration;
+                Object.freeze(sprite.flippedX);
+                Object.freeze(sprite.flippedY);
+                Object.freeze(sprite.flippedY.flippedX);
+                Object.freeze(sprite);
+            }
+        }
 
         if (forceReload === false) {
             // Store into the cache

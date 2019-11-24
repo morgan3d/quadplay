@@ -67,7 +67,7 @@
       // Options are 'remote', 'local', and 'permissive'
       //  'remote' parses on the server
       //  'local' gives better error messages
-      //  'permissive' allows comments and trailing commas
+      //  'permissive' allows comments, trailing commas, and `backquote multiline strings`
       jsonParser: 'local',
 
       // If true, append '?' to each URL when fetching to force 
@@ -334,15 +334,27 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
 LoadManager.prototype.parseJSON = function (text, url, warningCallback) {
     if (this.jsonParser === 'permissive') {
         // Protect strings
-        const protect = protectQuotedStrings(text);
+        let protect = protectQuotedStrings(text);
         text = protect[0];
 
-        // Remove multi-line comments, preserving newlines
+        // Non-escaped empty backquote strings
+        text = text.replace(/(^|[^\\])``/g, "");
+
+        // Convert multiline backquote strings to singleline
+        text = text.replace(/`((?:\s|\S)*?[^\\])`/g, function (match, inside) {
+            return '"' + inside.replace(/\n/g, '\\n').replace(/\\`/g, '`').replace(/"/g, '\\"') + '"';
+        });
+
+        // Re-protect, hiding the newly converted strings
+        protect = protectQuotedStrings(unprotectQuotedStrings(text, protect[1]));
+        text = protect[0];
+
+        // Remove multiline comments, preserving newlines
         text = text.replace(/\/\*(.|\n)*\*\//g, function (match) {
             return match.replace(/[^\n]/g, '');
         });
 
-        // Remove single-line comments
+        // Remove singleline comments
         text = text.replace(/\/\/.*\n/g, '\n');
 
         // Remove trailing commas
@@ -351,7 +363,7 @@ LoadManager.prototype.parseJSON = function (text, url, warningCallback) {
         // Restore strings
         text = unprotectQuotedStrings(text, protect[1]);
     }
-    
+
     return JSON.parse(text);
 }
 

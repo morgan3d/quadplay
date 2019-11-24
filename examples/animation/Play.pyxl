@@ -6,7 +6,10 @@ const ninja = makeEntity({
    spritesheet:    ninjaSprite,
    sprite:         ninjaSprite.idle[0],
    animation:      "idle",
-   frame:          0,
+   // Current animation frame
+   spriteIndex: 0,
+   // How long we've been on this sprite in the animation
+   spriteFrame:    0,
    z:              1,
    weaponIndex:    0,
    weaponArray:    [
@@ -32,19 +35,22 @@ const instructions = [
 frame
 ────────────────────────────────────────────────────────────────────────
 
-with pos, vel, acc, force, scale, frame, animation, spritesheet, sprite, weaponIndex, weapon in ninja:
-   // Advance animation at 12 fps. It is looped per-animation below.
-   if modeFrames mod 5 == 0:
-      ++frame
-      if weaponIndex == 1 and animation =="attack" and frame == 3:
-         // Fire the arrow
+with pos, vel, acc, force, scale, spriteIndex, spriteFrame, animation, spritesheet, sprite, weaponIndex, weapon in ninja:
+   // Advance animation. It is looped per-animation below.
+   if spriteFrame < sprite.duration:
+      ++spriteFrame
+   else:
+      ++spriteIndex
+      spriteFrame = 0
+      // Fire the arrow on the third frame of the bow attack animation
+      if weaponIndex == 1 and animation == "attack" and spriteIndex == 2:
          push(arrowArray, { pos: pos + xy(scale.x * arrowLength, 2),
                             vel: xy(3 scale.x, 0) })
 
 
    let nextAnimation = animation;
-   if animation == "attack" and frame < size(spritesheet.attack):
-      // Playing attack animation, do not interrupt
+   if animation == "attack" and spriteIndex < size(spritesheet[animation]):
+      // Playing attack animation, do not interrupt for any new animation
    else if joy.x and animation ≠ "land":
       // Running
       scale.x = joy.x
@@ -56,7 +62,10 @@ with pos, vel, acc, force, scale, frame, animation, spritesheet, sprite, weaponI
       
 
    // Clamp to ground and set landing pose
-   if find(animation, "jump") ≠ ∅ and pos.y ≥ groundY: nextAnimation = "land"
+   if ((find(animation, "jump") ≠ ∅ and pos.y ≥ groundY) or
+       (animation == "land" and spriteIndex < size(spritesheet[animation]))):
+      nextAnimation = "land"
+      
    if pos.y > groundY: pos.y = groundY; vel.y = 0
    
    if pos.y == groundY:
@@ -71,16 +80,14 @@ with pos, vel, acc, force, scale, frame, animation, spritesheet, sprite, weaponI
    // Jumping animation
    if pos.y < groundY:
       nextAnimation = if vel.y < ½ then "jumpUp" else "jumpDown"
-
-   // Hold the landing for two animation frames
-   if animation == "land" and frame < 4: nextAnimation = "land"
       
    // Change animation
    if nextAnimation ≠ animation:
       animation = nextAnimation
-      frame = 0
+      spriteFrame = 0
+      spriteIndex = 0
 
-   sprite = arrayValue(spritesheet[animation], frame)
+   sprite = arrayValue(spritesheet[animation], spriteIndex)
 
    // Change weapons (only when idle or jumping)
    if animation == "idle" or animation == "duck" or find(animation, "jump") ≠ ∅: weaponIndex = loop(weaponIndex + joy.yy, size(ninja.weaponArray))
@@ -90,8 +97,7 @@ with pos, vel, acc, force, scale, frame, animation, spritesheet, sprite, weaponI
       weapon = addEntityChild(ninja, newWeapon)
    
    // Update the weapon to match the main sprite animation
-   if weapon: weapon.sprite = arrayValue(weapon.spritesheet[animation], frame)
-
+   if weapon: weapon.sprite = arrayValue(weapon.spritesheet[animation], spriteIndex)
    
    // Physics
    physicsStepEntity(ninja)
@@ -133,4 +139,3 @@ drawEntity(ninja)
 with x in ninja.pos:
    drawLine(xy(x - 7, groundY + 9),  xy(x + 7, groundY + 9),  rgba(0, 0, 0, 20%), ninja.z - 0.1)
    drawLine(xy(x - 5, groundY + 10), xy(x + 5, groundY + 10), rgba(0, 0, 0, 15%), ninja.z - 0.1)
-

@@ -347,6 +347,14 @@ function extend(a, b) {
 
 
 function arrayValue(animation, frame, extrapolate) {
+    if (! Array.isArray(animation)) {
+        if (animation === undefined || animation === null) {
+            throw new Error('Passed nil to arrayValue()');
+        } else {
+            throw new Error('The first argument to arrayValue() must be an array (was ' + unparse(animation)+ ')');
+        }
+    }
+    
     frame = floor(frame);
     switch (extrapolate || animation.extrapolate || 'clamp') {
     case 'oscillate':
@@ -413,6 +421,41 @@ function values(t) {
 /////////////////////////////////////////////////////////////////////
 //
 // String
+
+// Helper for replace()
+function _entryKeyLengthCompare(a, b) {
+    return b[0].length - a[0].length;
+}
+
+function replace(s, src, dst) {
+    if (s === '' || src === '') { return s; }
+
+    if (typeof src === 'object') {
+        if (dst !== undefined) {
+            throw new Error("replace(string, object) requires exactly two arguments");
+        }
+        
+        // Sort the keys by length so that substrings are processed last
+        let entries = Object.entries(src);
+        entries.sort(_entryKeyLengthCompare);
+
+        for (let i = 0; i < entries.length; ++i) {
+            const e = entries[i];
+            s = replace(s, e[0], e[1]);
+        }
+        
+        return s;
+
+    } else {
+        // String replace
+        if (dst === undefined || src === undefined) {
+            throw new Error("replace(string, string, string) requires three arguments");
+        }
+        if (typeof src !== 'string') { src = unparse(src); }
+        if (typeof dst !== 'string') { dst = unparse(dst); }
+        return s.replace(new RegExp(src.replace(/([\/\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, '\\$&'), 'g'), dst);
+    }
+}
 
 function slice(a, s, e) {
     if (Array.isArray(a)) {
@@ -2142,8 +2185,115 @@ function textWidth(font, str) {
     return width;    
 }
 
+// Helper for _removeMarkup. Converts a nested markup array or
+// a simple string to a string.
+function _flattenMarkupList(list) {
+    // Simple case where there is no array
+    if (typeof list === 'string') { return list; }
+    
+    // Strip the raw text out (in the future, this will instead be
+    // where we produce a flattened list).
+    let str = '';
+    for (let i = 0; i < list.length; ++i) {
+        const s = list[i];
+        if (typeof s === 'string') {
+            str += s;
+        } else {
+            // Must be an object. Recursively process its body eagerly
+            str += _flattenMarkupList(s.body);
+        }
+    }
+    
+    return str;
+}
 
-function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapWidth, textSize) {
+function _removeMarkup(str) {
+    return _flattenMarkupList(_parseMarkup(str));
+}
+
+// Returns an array of strings. Each element is a string if there is no markup, or an object with
+// optional fields {color:..., outline:..., shadow:..., font:..., body:...}
+function _parseMarkup(str) {
+    // Find the first unescaped {, or return if there is none
+    let start = -1;
+    do {
+        start = str.indexOf('{', start + 1);
+        if (start === -1) { return str; }
+    } while ((start !== 0) && (str[start - 1] === '\\'));
+
+    // Find the *matching* close brace
+    let end = start;
+    let stack = 1;
+    while (stack > 0) {
+        // TODO: search for {} instead of iterating one character
+        // at a time
+        ++end;
+        if (end >= str.length) {
+            throw new Error('Unbalanced {} in drawText() with markup');
+        }
+        
+        if (str[end - 1] !== '\\') {
+            const c = str[end];
+            if (c === '{') {
+                ++stack;
+            } else if (c === '}') {
+                --stack;
+            }
+        }
+    }
+
+    const before = str.substring(0, start);
+    const after = str.substring(end + 1);
+    const markup = str.substring(start + 1, end);
+
+    let wasColor = false;
+    let obj = {};
+    
+    // Parse the markup
+    let text = markup.replace(/^ *(color|shadow|outline) *: *(#[A-Fa-f0-9]+|(rgb|rgba|gray|hsv|hsva)\([0-9., ]+\)) +/, function (match, prop, value) {
+        wasColor = true;
+        obj[prop] = value;
+        return '';
+    });
+
+    if (! wasColor) {
+        // The identifier regexp here is copied from
+        // pyxlscript-compiler.js identifierPattern and must be kept
+        // in sync.
+        text = markup.replace(/^ *(font|color|shadow|outline) *: *([Δ]?(?:[A-Za-z][A-Za-z_0-9]*|[αβγΔδζηθιλμρσϕφχψτωΩ][_0-9]*(?:_[A-Za-z_0-9]*)?)) +/, function (match, prop, value) {
+            obj[prop] = value;
+            return '';
+        });
+    }
+
+    // The body text is whatever is left after removing the
+    // formatting. It must be recursively processed for nested markup.
+    obj.body = _parseMarkup(text);
+
+    // Recursively parse each piece
+    let ret = [];
+
+    // The before part cannot have markup
+    if (before !== '') { ret.push(before); }
+    
+    ret.push(obj);
+    
+    if (after !== '') {
+        let recurse = _parseMarkup(after);
+        if (Array.isArray(recurse)) {
+            // Array of elements
+            extend(ret, recurse);
+        } else {
+            // Single element
+            ret.push(recurse);
+        }
+    }
+    
+    return ret;
+}
+
+
+function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapWidth, textSize, markup) {
     if (font && font.font) {
         // Keyword version
         textSize = font.textSize;
@@ -2156,6 +2306,7 @@ function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapW
         color = font.color;
         P = font.pos;
         str = font.text;
+        markup = font.markup;
         font = font.font;
     }
 
@@ -2168,6 +2319,16 @@ function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapW
     }
     
     if (str === '') { return {x:0, y:0}; }
+
+    if (markup) {
+        // Remove single newlines, temporarily protecting paragraph breaks
+        str = str.replace(/ *\n{2,}/g, '¶');
+        str = str.replace(/ *\n/g, ' ');
+        str = str.replace(/¶/g, '\n\n');
+        
+        // Remove markup
+        str = _removeMarkup(str);
+    }
 
     if (textSize === undefined) {
         textSize = str.length;
@@ -4101,13 +4262,25 @@ function shuffle(array) {
 }
 
 
-function join(array, separator) {
+function join(array, separator, lastSeparator, lastIfTwoSeparator, empty) {
     if (array.length === 0) {
-        return '';
+        return empty || '';
+    } else if (lastIfTwoSeparator !== undefined && array.length === 2) {
+        return (typeof array[0] === 'string' ? array[0] : unparse(array[0])) + lastIfTwoSeparator +
+            (typeof array[1] === 'string' ? array[1] : unparse(array[1]));
     } else {
         let s = typeof array[0] === 'string' ? array[0] : unparse(array[0]);
         for (let i = 1; i < array.length; ++i) {
-            s += separator + (typeof array[0] === 'string' ? array[i] : unparse(array[i]));
+            let a = array[i];
+            if (typeof a !== 'string') {
+                a = unparse(a);
+            }
+
+            if ((i === array.length - 1) && (lastSeparator !== undefined)) {
+                s += lastSeparator + a;
+            } else {
+                s += separator + a;
+            }
         }
         return s;
     }

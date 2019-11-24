@@ -109,10 +109,11 @@
         <span class="IDEOnly">
         <script>
           makeButton('<img src="button-reload.png" width=32 style="position:relative; top:-2px">', 'Reload and Restart (Ctrl+Shift+F5, Ctrl+R, or Ctrl+G)', 'onRestartButton');
-          makeRadio('<img src="button-play.png" width=32 style="position:relative; top:-2px">', 'playButton', false, 'title="Run (F5)"', 'controls');
-          makeRadio('<img src="button-step.png" width=32 style="position:relative; top:-2px">', 'stepButton', false, 'title="Step (F10)"', 'controls');
-          makeRadio('<img src="button-pause.png" width=32 style="position:relative; top:-2px">', 'pauseButton', false, 'title="Pause (Ctrl+Break or Ctrl+C)"', 'controls');
           makeRadio('<img src="button-stop.png" width=32 style="position:relative; top:-2px">', 'stopButton', true, 'title="Stop (Shift+F5)"', 'controls');
+          makeRadio('<img src="button-pause.png" width=32 style="position:relative; top:-2px">', 'pauseButton', false, 'title="Pause (Ctrl+Break or Ctrl+C)"', 'controls');
+          makeRadio('<img src="button-step.png" width=32 style="position:relative; top:-2px">', 'stepButton', false, 'title="Step (F10)"', 'controls');
+          makeRadio('<img src="button-slow.png" width=32 style="position:relative; top:-2px">', 'slowButton', false, 'title="Play Slow"', 'controls');
+          makeRadio('<img src="button-play.png" width=32 style="position:relative; top:-2px">', 'playButton', false, 'title="Run (F5)"', 'controls');
         </script>
         </span>
         
@@ -143,7 +144,11 @@
       <div id="gameEditor" style="position:absolute; top:0; left:0; padding: 10px; overflow: scroll; visibility:hidden"> </div>
       <div id="constantEditor" style="position:absolute; top:0; left:0; padding: 10px; visibility:hidden"></div>
       <div id="mapEditor" style="position:absolute; top:0; left:0; padding: 10px; overflow: scroll; visibility:hidden"><canvas id="mapDisplayCanvas" style="border:1px solid #ccc"></canvas></div>
-      <div id="spriteEditor" style="position:absolute; top:0; left:0; visibility:hidden; width: 100%; height: 100%; background-size: contain; background-repeat: no-repeat; background-position: center; image-rendering: -moz-crisp-edges; -ms-interpolation-mode: nearest-neighbor; image-rendering: -ms-interpolation-mode: nearest-neighbor; image-rendering: pixelated;"></div>
+      <div id="spriteEditor" style="position:absolute; top:0; left:0; visibility:hidden; width: 100%; height: 100%; background-size: 100% auto; background-repeat: no-repeat; background-position: left top; image-rendering: -moz-crisp-edges; -ms-interpolation-mode: nearest-neighbor; image-rendering: -ms-interpolation-mode: nearest-neighbor; image-rendering: pixelated;">
+        <div id="spriteEditorHighlight" style="position:absolute; width: 100px; height: 50px; border: 1px solid #0f0; color: #0f0; overflow: visible; box-shadow: 0px 1px 4px #000">
+          <div id="spriteEditorInfo" style="white-space: nowrap; text-shadow: 0px 1px 4px #000"></div>
+        </div>
+      </div>
       <div id="soundEditor" style="position:absolute; top:0; left:0; visibility:hidden; width: 100%; height: 100%">
         <div style="position: absolute; top:50%; left: 50%; margin-top: -10px; margin-left: -40px; width:80px; height: 50px" onmousedown="event.stopPropagation()" class="button" onclick="playAudioClip(soundEditorCurrentSound)" title="Play Sound">
           <label>
