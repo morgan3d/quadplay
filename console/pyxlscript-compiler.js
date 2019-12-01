@@ -62,7 +62,10 @@ function nextInstance(str, c, j, d) {
             ++stack;
         } else if (x in match) {
             --stack;
-            if (--count[match[x]] < 0) { throw "Unbalanced parens while looking for '" + c + "'"; }
+            if (--count[match[x]] < 0) {
+                console.log(str);
+                throw "Unbalanced parens while looking for '" + c + "'";
+            }
         } else if ((x === c) && (stack === 0)) {
             return j;
         }
@@ -140,10 +143,15 @@ function processWithHeader(test) {
 }
 
 
-/** Given a pyxl FOR-loop test that is not surrounded in extra () or
-    containing the colon, returns the parts before and after the loop. */
+/** Given a pyxl FOR-loop test that does not contain the colon,
+ * returns the parts before and after the loop. */
 function processForTest(test) {
     let before = '', after = '}';
+
+    if ((test[0] === '(') && (test[test.length - 1] === ')') && (nextInstance(test, ')', 1) === test.length - 1)) {
+        // There are extra parens surrounding the entire test
+        test = test.substring(1, test.length - 1);
+    }
 
     // The case of a FOR-WITH loop of the form 'for x,y,... ∊ a ∊ array ...'
     let match = test.match(RegExp('^\\s*(\\S.*)∊\\s*(' + identifierPattern + ')\\s*∊(.*)$'));
@@ -490,9 +498,8 @@ function processBlock(lineArray, startLineIndex, inFunction) {
             i = processBlock(lineArray, i + 1, inFunction) - 1;
             lineArray[i] += '} finally { _popGraphicsState(); }';
 
-        } else if (match = lineArray[i].match(/^(\s*)for\s*\(?(\b.*)\)?[ \t]*:[ \t]*$/)) {
+        } else if (match = lineArray[i].match(/^(\s*)for\s*(\b[^:]+)[ \t]*:[ \t]*$/)) {
             // FOR
-            
             let prefix = match[1];
             let test = match[2];
             let forPart;

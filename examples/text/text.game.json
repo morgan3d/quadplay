@@ -16,10 +16,10 @@
 
     "constants":  {
         "quest": {"type": "string", "value":
-`At the top of the hill, seek the {color:#f00 giant tree} 
-with \`\`{color:#0f0 {font:runeFont FATE}}'' carved in its bark.
+`At the top of the hill, seek the {color:rgb(80%, 0, 50%) giant tree} 
+with \`\`{color:#094 {font:runeFont FATE}}'' carved in its bark.
 
-Walk five paces due {color:#f00 East} from the tree.
+Walk five paces due {color:rgb(80%, 0, 50%) East} from the tree.
 Dig until you find the treasure.`}
                   
     }

@@ -10,6 +10,11 @@
     src: url("../doc/Audiowide-Regular.ttf");
 }
 
+#docEditor #doc {
+    transform-origin: 0 0;
+    transform: scale(0.8, 0.8)
+}
+
 canvas {
     -ms-interpolation-mode: nearest-neighbor;
     image-rendering: optimizeSpeed;

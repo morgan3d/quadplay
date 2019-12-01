@@ -178,15 +178,25 @@ function find(a, x, s) {
 }
 
 
+function insert(array, i, ...args) {
+    if (! Array.isArray(array)) { throw new Error('insert(array, index, value) requires an array argument'); }
+    if (typeof i !== 'number') { throw new Error('insert(array, index, value) requires a numeric index'); }
+    array.splice(i, 0, ...args)
+    return array[i];
+}
+
+
 function push(array, ...args) {
     if (! Array.isArray(array)) { throw new Error('push() requires an array argument'); }
     array.push(...args);
+    return array[array.length - 1];
 }
 
 
 function pushFront(array, ...args) {
     if (! Array.isArray(array)) { throw new Error('pushFront() requires an array argument'); }
     array.unshift(...args);
+    return array[0];
 }
 
 
@@ -1047,7 +1057,6 @@ var cos = Math.cos;
 var tan = Math.tan;
 var acos = Math.acos;
 var asin = Math.asin;
-var atan = Math.atan2;
 var log = Math.log;
 var log2 = Math.log2;
 var log10 = Math.log10;
@@ -1056,6 +1065,11 @@ var sqrt = Math.sqrt;
 var cbrt = Math.cbrt;
 
 function signNotZero(x) { return (x < 0) ? -1 : 1; }
+
+function atan(y, x) {
+    if (typeof y === 'number') { return Math.atan2(y, x); }
+    return Math.atan2(y.y, y.x);
+}
 
 var _screen;
 
@@ -1262,7 +1276,7 @@ function rgb(r, g, b) {
         r = v * (1 - s + s * _clamp(Math.abs(_fract(h + 1.0) * 6 - 3) - 1, 0, 1));
         g = v * (1 - s + s * _clamp(Math.abs(_fract(h + 2/3) * 6 - 3) - 1, 0, 1));
         b = v * (1 - s + s * _clamp(Math.abs(_fract(h + 1/3) * 6 - 3) - 1, 0, 1));
-    } else if (r.r) {
+    } else if (r.r !== undefined) {
         // Clone
         g = r.g;
         b = r.b;
@@ -1289,7 +1303,7 @@ function rgba(r, g, b, a) {
             c.a = 1;
         }
         return c;
-    } else if (r.r) {
+    } else if (r.r !== undefined) {
         // Clone
         a = (r.a === undefined) ? 1 : r.a;
         g = r.g;
@@ -2168,91 +2182,114 @@ function drawPoint(P, color, z) {
 }
 
 
-function textWidth(font, str) {
+function textWidth(font, str, markup) {
     if (str === '') { return 0; }
+
+    let formatArray = [{font: font, color: 0, shadow: 0, outline: 0, startIndex: 0}];
+    if (markup) {
+        str = _parseMarkup(str, formatArray);
+    }
 
     // Don't add space after the last letter
     let width = -font._spacing.x;
     
     // Add the variable widths of the letters. Don't count the border
     // against the letter width.
+    
+    let formatIndex = 0;
+    while ((offsetIndex < formatArray[formatIndex].startIndex) || (offsetIndex > formatArray[formatIndex].endIndex)) { ++formatIndex; }
+    let format = formatArray[formatIndex];
+
     for (let c = 0; c < str.length; ++c) {
         const chr = _fontMap[str[c]] || ' ';
         const bounds = font._bounds[chr];
         width += (bounds.x2 - bounds.x1 + 1) + font._spacing.x - font._borderSize * 2 + bounds.pre + bounds.post;
+        
+        if (offsetIndex === formatArray[formatIndex].endIndex) {
+            // Advance to the next format
+            ++formatIndex;
+            if (formatIndex < formatArray.length) {
+                // Hold the final format when going off the end of the array
+                format = formatArray[formatIndex];
+            }
+        }
     }
+
+    width -= format.font._spacing.x;
 
     return width;    
 }
 
-// Helper for _removeMarkup. Converts a nested markup array or
-// a simple string to a string.
-function _flattenMarkupList(list) {
-    // Simple case where there is no array
-    if (typeof list === 'string') { return list; }
-    
-    // Strip the raw text out (in the future, this will instead be
-    // where we produce a flattened list).
-    let str = '';
-    for (let i = 0; i < list.length; ++i) {
-        const s = list[i];
-        if (typeof s === 'string') {
-            str += s;
-        } else {
-            // Must be an object. Recursively process its body eagerly
-            str += _flattenMarkupList(s.body);
-        }
-    }
-    
-    return str;
-}
 
-function _removeMarkup(str) {
-    return _flattenMarkupList(_parseMarkup(str));
-}
-
-// Returns an array of strings. Each element is a string if there is no markup, or an object with
-// optional fields {color:..., outline:..., shadow:..., font:..., body:...}
-function _parseMarkup(str) {
+// Returns a string and appends to the array of state changes.
+// Each has the form {color:..., outline:..., shadow:..., font:..., startIndex:...}
+function _parseMarkupHelper(str, startIndex, stateChanges) {
+    
     // Find the first unescaped {, or return if there is none
     let start = -1;
     do {
         start = str.indexOf('{', start + 1);
-        if (start === -1) { return str; }
+        if (start === -1) {
+            // No markup found
+            return str;
+        }
     } while ((start !== 0) && (str[start - 1] === '\\'));
 
     // Find the *matching* close brace
     let end = start;
     let stack = 1;
     while (stack > 0) {
-        // TODO: search for {} instead of iterating one character
-        // at a time
-        ++end;
+        let op = str.indexOf('{', end + 1); if (op === -1) { op = Infinity; }
+        let cl = str.indexOf('}', end + 1); if (cl === -1) { cl = Infinity; }
+        end = Math.min(op, cl);
+        
         if (end >= str.length) {
             throw new Error('Unbalanced {} in drawText() with markup');
         }
         
         if (str[end - 1] !== '\\') {
-            const c = str[end];
-            if (c === '{') {
-                ++stack;
-            } else if (c === '}') {
-                --stack;
+            // Not escaped
+            switch (str[end]) {
+            case '{': ++stack; break;
+            case '}': --stack; break;
             }
         }
     }
 
     const before = str.substring(0, start);
-    const after = str.substring(end + 1);
+    const after  = str.substring(end + 1);
     const markup = str.substring(start + 1, end);
 
     let wasColor = false;
-    let obj = {};
+    const oldState = stateChanges[stateChanges.length - 1];
+    const newState = Object.assign({}, oldState);
+    newState.startIndex = startIndex + start;
     
     // Parse the markup
-    let text = markup.replace(/^ *(color|shadow|outline) *: *(#[A-Fa-f0-9]+|(rgb|rgba|gray|hsv|hsva)\([0-9., ]+\)) +/, function (match, prop, value) {
+    let text = markup.replace(/^\s*(color|shadow|outline)\s*:\s*(#[A-Fa-f0-9]+|(rgb|rgba|gray|hsv|hsva)\([0-9%., ]+\))\s*/, function (match, prop, value) {
         wasColor = true;
-        obj[prop] = value;
+        if (value[0] === '#') {
+            value = _parseHexColor(value.substring(1));
+        } else {
+            // Parse the color specification
+            let i = value.indexOf('(');
+
+            // (Could also use _parse's indexing arguments to avoid all of this string work)
+            const type = value.substring(0, i).trim();
+            const param = value.substring(i + 1, value.length - 1).split(',');
+            // Parse all parameters
+            for (let i = 0; i < param.length; ++i) { param[i] = _parse(param[i].trim()).result; }
+
+            // Convert to a structure
+            switch (type) {
+            case 'rgb':  value = {r:param[0], g:param[1], b:param[2]}; break;
+            case 'rgba': value = {r:param[0], g:param[1], b:param[2], a:param[3]}; break;
+            case 'hsv':  value = {h:param[0], s:param[1], v:param[2]}; break;
+            case 'hsva': value = {h:param[0], s:param[1], v:param[2], a:param[3]}; break;
+            case 'gray': value = {h:param[0]}; break;
+            }
+        }
+        newState[prop] = _colorToUint32(value);
         return '';
     });
 
@@ -2260,39 +2297,281 @@ function _parseMarkup(str) {
         // The identifier regexp here is copied from
         // pyxlscript-compiler.js identifierPattern and must be kept
         // in sync.
-        text = markup.replace(/^ *(font|color|shadow|outline) *: *([Δ]?(?:[A-Za-z][A-Za-z_0-9]*|[αβγΔδζηθιλμρσϕφχψτωΩ][_0-9]*(?:_[A-Za-z_0-9]*)?)) +/, function (match, prop, value) {
-            obj[prop] = value;
+        text = markup.replace(/^\s*(font|color|shadow|outline)\s*:\s*([Δ]?(?:[A-Za-z][A-Za-z_0-9]*|[αβγΔδζηθιλμρσϕφχψτωΩ][_0-9]*(?:_[A-Za-z_0-9]*)?))\s+/, function (match, prop, value) {
+            const v = window[value];
+            if (v === undefined) {
+                throw new Error('Global constant ' + value + ' used in drawText markup is undefined.');
+            } else if (prop === 'font' && v._type !== 'font') {
+                throw new Error('Global constant ' + value + ' is not a font'); 
+            } else if (prop !== 'font' && value.r === undefined && value.h === undefined) {
+                throw new Error('Global constant ' + value + ' is not a color');
+            }
+
+            if (prop !== 'font') {
+                v = _colorToUint32(v);
+            }
+            
+            newState[prop] = v;
             return '';
         });
     }
 
-    // The body text is whatever is left after removing the
-    // formatting. It must be recursively processed for nested markup.
-    obj.body = _parseMarkup(text);
-
-    // Recursively parse each piece
-    let ret = [];
-
-    // The before part cannot have markup
-    if (before !== '') { ret.push(before); }
+    // Construct the new result string
     
-    ret.push(obj);
+    // The before part cannot contain markup, so copy it directly
+    str = before;
+
+    // Recursively process the main body
+    stateChanges.push(newState);
+    text = _parseMarkupHelper(text, before.length + startIndex, stateChanges);
+    str += text;
+    // Restore the old state after the body
+    const restoreState = Object.assign({}, oldState);
+    restoreState.startIndex = before.length + text.length + startIndex;
+    stateChanges.push(restoreState);
     
     if (after !== '') {
-        let recurse = _parseMarkup(after);
-        if (Array.isArray(recurse)) {
-            // Array of elements
-            extend(ret, recurse);
-        } else {
-            // Single element
-            ret.push(recurse);
-        }
+        str += _parseMarkupHelper(after, restoreState.startIndex, stateChanges);
     }
     
-    return ret;
+    return str;
 }
 
 
+function _parseMarkup(str, stateChanges) {
+    // First instance.
+    // Remove single newlines, temporarily protecting paragraph breaks
+    str = str.replace(/ *\n{2,}/g, '¶');
+    str = str.replace(/ *\n/g, ' ');
+    str = str.replace(/¶/g, '\n\n');
+
+    str = _parseMarkupHelper(str, 0, stateChanges);
+
+    // Efficiently remove degenerate state changes and compact
+    {
+        let src, dst;
+        for (src = 0, dst = 0; src < stateChanges.length - 1; ++src) {
+            if (src !== dst) { stateChanges[dst] = stateChanges[src]; }
+            
+            // Do not overwrite if this and the next element differ
+            if (stateChanges[src].startIndex !== stateChanges[src + 1].startIndex) { ++dst; }
+        }
+
+        // Remove the remaining elements
+        stateChanges.splice(dst, src - dst);
+    }
+    
+    // Update the end indices (which are inclusive)
+    for (let i = 0; i < stateChanges.length - 1; ++i) {
+        stateChanges[i].endIndex = stateChanges[i + 1].startIndex - 1;
+        // Width of this section, to be computed later
+        stateChanges[i].width = 0;
+    }
+    // Force the last element to end at the string end
+    stateChanges[stateChanges.length - 1].endIndex = str.length - 1;
+    stateChanges[stateChanges.length - 1].width = 0;
+    
+    return str;
+}
+
+
+/** Helper for drawText() that operates after markup formatting has been processed. 
+    offsetIndex is the amount to add to the indices in formatArray to account for
+    the str having been shortened already. */
+function _drawText(offsetIndex, formatIndex, str, formatArray, pos, xAlign, yAlign, z, wrapWidth, textSize, referenceFont) {
+    console.assert(typeof str === 'string');
+    console.assert(Array.isArray(formatArray));
+    console.assert(typeof pos === 'object' && pos.x !== undefined);
+
+    let format;
+
+    console.assert(offsetIndex >= formatArray[formatIndex].startIndex && offsetIndex <= formatArray[formatIndex].endIndex);
+    // Identify the starting format. This snippet is repeated throughout the function.
+    while ((offsetIndex < formatArray[formatIndex].startIndex) || (offsetIndex > formatArray[formatIndex].endIndex)) { ++formatIndex; }
+    format = formatArray[formatIndex];
+
+    // Store this starting formatIndex
+    const startingOffsetIndex = offsetIndex;
+    const startingFormatIndex = formatIndex;
+
+    // Compute the width of the string for alignment purposes,
+    // terminating abruptly in a recursive call if word wrapping is
+    // required.
+    let width = 0, currentWidth = 0;
+    for (let c = 0; c < str.length; ++c, ++offsetIndex) {
+        if (str[c] === '\n') {
+            // Newline, process by breaking and recursively continuing
+            const cur = str.substring(0, c).trimEnd();
+            const firstLineBounds = _drawText(startingOffsetIndex, startingFormatIndex, cur, formatArray, pos, xAlign, yAlign, z, wrapWidth, textSize, referenceFont);
+
+            // Update formatIndex
+            while ((offsetIndex < formatArray[formatIndex].startIndex) || (offsetIndex > formatArray[formatIndex].endIndex)) { ++formatIndex; }
+            format = undefined;
+            
+            const restBounds = _drawText(offsetIndex + 1, formatIndex, str.substring(c + 1), formatArray, xy(pos.x, pos.y + referenceFont.lineHeight / _scaleY), xAlign, yAlign, z, wrapWidth, textSize - cur.length, referenceFont);
+            firstLineBounds.x = Math.max(firstLineBounds.x, restBounds.x);
+            firstLineBounds.y += restBounds.y + referenceFont.lineHeight + referenceFont._spacing.y;
+            return firstLineBounds;
+        }
+        
+        const chr = _fontMap[str[c]] || ' ';
+        const bounds = format.font._bounds[chr];
+
+        const delta = (bounds.x2 - bounds.x1 + 1) + format.font._spacing.x - format.font._borderSize * 2 + bounds.pre + bounds.post;
+        currentWidth += delta;
+        width += delta;
+
+        // Word wrapping
+        if ((wrapWidth !== undefined) && (wrapWidth > 0) && (width > wrapWidth - format.font._spacing.x)) {
+            // Perform word wrap, we've exceeded the available width
+            // Search backwards for a place to break.
+            const breakChars = ' \n\t,.!:/\\)]}\'"|`-+=*…\?¿¡';
+
+            // Avoid breaking more than 25% back along the string
+            const maxBreakSearch = Math.max(1, (c * 0.25) | 0);
+            let breakIndex = -1;
+            for (let i = 0; (breakIndex < maxBreakSearch) && (i < breakChars.length); ++i) {
+                breakIndex = Math.max(breakIndex, str.lastIndexOf(breakChars[i], c));
+            }
+            
+            if ((breakIndex > c) || (breakIndex < maxBreakSearch)) {
+                // Give up and break at c
+                breakIndex = c;
+            }
+
+            const cur = str.substring(0, breakIndex);          
+            const firstLineBounds = _drawText(startingOffsetIndex, startingFormatIndex, cur.trimEnd(), formatArray, pos, xAlign, yAlign, z, undefined, textSize, referenceFont);
+            
+            // Now draw the rest
+            const next = str.substring(breakIndex);
+            const nnext = next.trimStart();
+
+            // Update the offset and formatIndex for the recursive call. Note that
+            // we have to account for the extra whitespace trimmed from nnext
+            offsetIndex = startingOffsetIndex + breakIndex + (next.length - nnext.length);
+
+            // Search for the appropriate formatIndex
+            formatIndex = startingFormatIndex;
+            while ((offsetIndex < formatArray[formatIndex].startIndex) || (offsetIndex > formatArray[formatIndex].endIndex)) { ++formatIndex; }
+            format = undefined;
+
+            console.assert(offsetIndex >= formatArray[formatIndex].startIndex && offsetIndex <= formatArray[formatIndex].endIndex);
+            const restBounds = _drawText(offsetIndex, formatIndex, nnext, formatArray, xy(pos.x, pos.y + referenceFont.lineHeight / _scaleY), xAlign, yAlign, z, wrapWidth, textSize - cur.length - (next.length - nnext.length), referenceFont);
+            firstLineBounds.x = Math.max(firstLineBounds.x, restBounds.x);
+            firstLineBounds.y += restBounds.y + referenceFont.lineHeight + referenceFont._spacing.y;
+            return firstLineBounds;
+        }
+        
+        if (offsetIndex === formatArray[formatIndex].endIndex) {
+            // Advance to the next format
+            format.width = currentWidth;
+            currentWidth = 0;
+            ++formatIndex;
+            if (formatIndex < formatArray.length) {
+                // Hold the final format when going off the end of the array
+                format = formatArray[formatIndex];
+            }
+        }
+    }
+
+    // Don't add space after the very last letter
+    width -= format.font._spacing.x;
+    format.width -= format.font._spacing.x;
+
+    z = z || 0;
+    const skx = (z * _skewXZ), sky = (z * _skewYZ);
+    let x = (pos.x + skx) * _scaleX + _offsetX, y = (pos.y + sky) * _scaleY + _offsetY;
+    z = z * _scaleZ + _offsetZ;
+
+    let height = referenceFont._charHeight;
+
+    switch (xAlign) {
+    case undefined: case 'left': xAlign = -1; break;
+    case 'middle': case 'center': xAlign = 0; break;
+    case 'right':  xAlign = +1; break;
+    }
+
+    switch (yAlign) {
+    case 'top': yAlign = -1; break;
+    case 'center': case 'middle': yAlign = 0; break;
+    case undefined: case 'baseline': yAlign = +1; break;
+    case 'bottom': yAlign = +2; break;
+    }
+
+    // Force alignment to retain relative integer pixel alignment
+    x -= Math.round(width * (1 + xAlign) * 0.5);
+
+    // Move back to account for the border and shadow padding
+    if (xAlign !== +1) { --x; }
+
+    switch (yAlign) {
+    case -1: y -= referenceFont._borderSize; break; // Align to the top of the bounds
+    case  0:
+        // Middle. Center on a '2', which tends to have a typical height 
+        const bounds = referenceFont._bounds['2'];
+        const tileY = Math.floor(bounds.y1 / referenceFont._charHeight) * referenceFont._charHeight;
+        y -= Math.round((bounds.y1 + bounds.y2) / 2) - tileY;
+        break;
+    case  1: y -= referenceFont._baseline; break; // baseline
+    case  2: y -= (referenceFont._charHeight - referenceFont._borderSize * 2 - referenceFont._shadowSize); break; // bottom of bounds
+    }
+
+    // Center and round. Have to call round() because values may
+    // be negative
+    x = Math.round(x) | 0;
+    y = Math.round(y) | 0;
+
+    if ((x > _clipX2) || (y > _clipY2) || (y + height < _clipY1) || (x + width < _clipX1) ||
+        (z > _clipZ2 + 0.5) || (z < _clipZ1 - 0.5)) {
+        // Cull when off-screen
+    } else {
+        // Break by formatting, re-traversing the formatting array.
+        // Reset to the original formatIndex, since it was previously
+        // incremented while traversing the string to compute width.
+        offsetIndex = startingOffsetIndex;
+        formatIndex = startingFormatIndex;
+        format = formatArray[formatIndex];
+        str = str.substring(0, textSize);
+
+        while ((str.length > 0) && (formatIndex < formatArray.length)) {
+            // offsetIndex increases and the string itself is
+            // shortened throughout this loop.
+
+            const endIndex = format.endIndex - offsetIndex;
+            _addGraphicsCommand({
+                opcode:  'TXT',
+                str:     str.substring(0, endIndex + 1),
+                font:    format.font,
+                x:       x,
+                y:       y,
+                z:       z,
+                color:   format.color,
+                outline: format.outline,
+                shadow:  format.shadow,
+                height:  height,
+                width:   format.width,
+            });
+
+            x += format.width;
+
+            // TODO: adjust for the relative y baselines of the fonts,
+            // changing the returned bounds accordingly
+
+            offsetIndex = format.endIndex + 1;
+
+            // Process the characters immediately after the end index.
+            str = str.substring(endIndex + 1);
+            
+            ++formatIndex;
+            format = formatArray[formatIndex];
+        }
+    }
+
+    return {x: width, y: referenceFont.lineHeight + referenceFont._spacing.y};
+}
+
+
+/** Processes formatting and invokes _drawText() */
 function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapWidth, textSize, markup) {
     if (font && font.font) {
         // Keyword version
@@ -2320,141 +2599,24 @@ function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapW
     
     if (str === '') { return {x:0, y:0}; }
 
+    let stateChanges = [{font:       font,
+                         color:      _colorToUint32(color),
+                         shadow:     _colorToUint32(shadow),
+                         outline:    _colorToUint32(outline),
+                         startIndex: 0,
+                         endIndex:   str.length - 1}];
     if (markup) {
-        // Remove single newlines, temporarily protecting paragraph breaks
-        str = str.replace(/ *\n{2,}/g, '¶');
-        str = str.replace(/ *\n/g, ' ');
-        str = str.replace(/¶/g, '\n\n');
-        
-        // Remove markup
-        str = _removeMarkup(str);
+        str = _parseMarkup(str, stateChanges);
     }
 
     if (textSize === undefined) {
         textSize = str.length;
     }
 
-    // Add the variable widths of the letters to compute the
-    // width. Don't count the border against the letter width.
-    let width = 0;
-    for (let c = 0; c < str.length; ++c) {
-        const chr = _fontMap[str[c]] || ' ';
-
-        if (str[c] === '\n') {
-            // Newline, process by breaking and recursively continuing
-            const cur = str.substring(0, c).trimEnd();
-            const firstLineBounds = drawText(font, cur, P, color, shadow, outline, xAlign, yAlign, z, wrapWidth, textSize);
-            const restBounds = drawText(font, str.substring(c + 1), xy(P.x, P.y + font.lineHeight / _scaleY), color, shadow, outline, xAlign, yAlign, z, wrapWidth, textSize - cur.length);
-            firstLineBounds.x = Math.max(firstLineBounds.x, restBounds.x);
-            firstLineBounds.y += restBounds.y + font.lineHeight + font._spacing.y;
-            return firstLineBounds;
-        }
-        
-        const bounds = font._bounds[chr];
-        
-        width += (bounds.x2 - bounds.x1 + 1) + font._spacing.x - font._borderSize * 2 + bounds.pre + bounds.post;
-
-        // Word wrapping
-        if ((wrapWidth > 0) && (width > wrapWidth - font._spacing.x)) {
-            // Perform word wrap, we've exceeded the available width
-            // Search backwards for a place to break.
-            const breakChars = ' \n\t,.!:/\\)]}\'"|`-+=*…\?¿¡';
-
-            // Avoid breaking more than 25% back along the string
-            const maxBreakSearch = Math.max(1, (c * 0.25) | 0);
-            let breakIndex = -1;
-            for (let i = 0; (breakIndex < maxBreakSearch) && (i < breakChars.length); ++i) {
-                breakIndex = Math.max(breakIndex, str.lastIndexOf(breakChars[i], c));
-            }
-            
-            if ((breakIndex > c) || (breakIndex < maxBreakSearch)) {
-                // Give up and break at c
-                breakIndex = c;
-            }
-
-            const cur = str.substring(0, breakIndex);
-            const firstLineBounds = drawText(font, cur.trimEnd(), P, color, shadow, outline, xAlign, yAlign, z, undefined, textSize);
-            
-            // Now draw the rest
-            const next = str.substring(breakIndex);
-            const nnext = next.trimStart();
-            const restBounds = drawText(font, nnext, xy(P.x, P.y + font.lineHeight / _scaleY), color, shadow, outline, xAlign, yAlign, z, wrapWidth, textSize - cur.length - (next.length - nnext.length));
-            firstLineBounds.x = Math.max(firstLineBounds.x, restBounds.x);
-            firstLineBounds.y += restBounds.y + font.lineHeight + font._spacing.y;
-            return firstLineBounds;
-        }
-    }
-
-    // Don't add space after the last letter
-    width -= font._spacing.x;
+    // Debug visualize the markup:
+    // for (let i = 0; i < stateChanges.length; ++i) { console.log(str.substring(stateChanges[i].startIndex, stateChanges[i].endIndex + 1)); }
     
-    z = z || 0;
-    const skx = (z * _skewXZ), sky = (z * _skewYZ);
-    let x = (P.x + skx) * _scaleX + _offsetX, y = (P.y + sky) * _scaleY + _offsetY;
-    z = z * _scaleZ + _offsetZ;
-    
-    color   = _colorToUint32(color);
-    shadow  = _colorToUint32(shadow);
-    outline = _colorToUint32(outline);
-
-    let height = font._charHeight;
-
-    switch (xAlign) {
-    case undefined: case 'left': xAlign = -1; break;
-    case 'middle': case 'center': xAlign = 0; break;
-    case 'right':  xAlign = +1; break;
-    }
-
-    switch (yAlign) {
-    case 'top': yAlign = -1; break;
-    case 'center': case 'middle': yAlign = 0; break;
-    case undefined: case 'baseline': yAlign = +1; break;
-    case 'bottom': yAlign = +2; break;
-    }
-
-    // Force alignment to retain relative integer pixel alignment
-    x -= Math.round(width * (1 + xAlign) * 0.5);
-
-    // Move back to account for the border and shadow padding
-    if (xAlign !== +1) { --x; }
-
-    switch (yAlign) {
-    case -1: y -= font._borderSize; break; // Align to the top of the bounds
-    case  0:
-        // Middle. Center on a '2', which tends to have a typical height 
-        const bounds = font._bounds['2'];
-        const tileY = Math.floor(bounds.y1 / font._charHeight) * font._charHeight;
-        y -= Math.round((bounds.y1 + bounds.y2) / 2) - tileY;
-        break;
-    case  1: y -= font._baseline; break; // baseline
-    case  2: y -= (font._charHeight - font._borderSize * 2 - font._shadowSize); break; // bottom of bounds
-    }
-
-    // Center and round. Have to call round() because values may
-    // be negative
-    x = Math.round(x) | 0;
-    y = Math.round(y) | 0;
-
-    if ((x > _clipX2) || (y > _clipY2) || (y + height < _clipY1) || (x + width < _clipX1) ||
-        (z > _clipZ2 + 0.5) || (z < _clipZ1 - 0.5)) {
-        // Cull when off-screen
-    } else {
-        _addGraphicsCommand({
-            opcode: 'TXT',
-            str: str.substring(0, textSize),
-            font: font,
-            x: x,
-            y: y,
-            z: z,
-            color:   color,
-            outline: outline,
-            shadow:  shadow,
-            height:  height,
-            width:   width,
-        });
-    }
-
-    return {x:width, y:font.lineHeight + font._spacing.y};
+    return _drawText(0, 0, str, stateChanges, P, xAlign, yAlign, z, wrapWidth, textSize, font);
 }
 
 
@@ -2539,7 +2701,7 @@ function drawSpriteRect(CC, corner, size, z) {
     const spriteCenter = xy(0,0);
     _pushGraphicsState(); {
         intersectClip(x1, y1, undefined,
-                      x2 - x1 + 1.5, y2 - y1 + 1.5, undefined);
+                      x2 - x1 + 1, y2 - y1 + 1, undefined);
         
         for (let y = 0; y < numTilesY; ++y) {
             // Transform individual pixel coordinates *back* to game
@@ -2574,7 +2736,7 @@ function drawSpriteRect(CC, corner, size, z) {
     // Top and bottom
     _pushGraphicsState(); {
         intersectClip(x1, undefined, undefined,
-                      x2 - x1 + 1.5, undefined, undefined);
+                      x2 - x1 + 1, undefined, undefined);
         
         for (let x = 0; x < numTilesX; ++x) {
             spriteCenter.x = ((centerX + (x - (numTilesX - 1) * 0.5) * CC.size.x) - _offsetX) / _scaleX;
@@ -2590,7 +2752,7 @@ function drawSpriteRect(CC, corner, size, z) {
     // Sides
     _pushGraphicsState(); {
         intersectClip(undefined, y1, undefined,
-                      undefined, y2 - y1 + 1.5, undefined);
+                      undefined, y2 - y1 + 1, undefined);
         
         for (let y = 0; y < numTilesY; ++y) {
             spriteCenter.y = ((centerY + (y - (numTilesY - 1) * 0.5) * CC.size.y) - _offsetY) / _scaleY;
@@ -5120,7 +5282,7 @@ function pushMode(mode, ...args) {
     _systemPrint('Pushing into mode ' + mode.name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
 
     // Run the enter callback on the new mode
-    _gameMode._enter.apply(null, ...args);
+    _gameMode._enter.apply(null, args);
 
     throw {nextMode: mode};
 
@@ -5909,7 +6071,8 @@ function _executeTXT(cmd) {
                                 v = outline;
                             }
 
-                            // TODO: inline _pset code for performance, use dstIndex
+                            // Could inline _pset code for performance, use dstIndex. There
+                            // is not any apparent performance difference on Chrome, however
                             if (v) { _pset(dstX, dstY, v, clipX1, clipY1, clipX2, clipY2); }
                         }
                     } // for i

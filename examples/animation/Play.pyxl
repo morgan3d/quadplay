@@ -6,10 +6,13 @@ const ninja = makeEntity({
    spritesheet:    ninjaSprite,
    sprite:         ninjaSprite.idle[0],
    animation:      "idle",
+   
    // Current animation frame
-   spriteIndex: 0,
+   spriteIndex:    0,
+   
    // How long we've been on this sprite in the animation
    spriteFrame:    0,
+   
    z:              1,
    weaponIndex:    0,
    weaponArray:    [
@@ -89,7 +92,7 @@ with pos, vel, acc, force, scale, spriteIndex, spriteFrame, animation, spriteshe
 
    sprite = arrayValue(spritesheet[animation], spriteIndex)
 
-   // Change weapons (only when idle or jumping)
+   // Change weapons (not allowed during the landing or attack animation)
    if animation == "idle" or animation == "duck" or find(animation, "jump") ≠ ∅: weaponIndex = loop(weaponIndex + joy.yy, size(ninja.weaponArray))
    const newWeapon = ninja.weaponArray[weaponIndex]
    if weapon != newWeapon:

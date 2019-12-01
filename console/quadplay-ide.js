@@ -364,7 +364,38 @@ function onHomeButton() {
     });
 }
 
+/** True if the game is running on the same server as the quadplay console */
+function locallyHosted() {
+    return location.href.replace(/(^http.?:\/\/[^/]+\/).*/, '$1') === window.gameURL.replace(/(^http.?:\/\/[^/]+\/).*/, '$1');
+}
 
+function testPost() {
+    // TODO: Editor
+    return; // This function is not currently needed, so it is disabled in the main build
+    
+    if (! locallyHosted()) {
+        // This server can't modify the game files
+        return;
+    }
+    
+    const serverAddress = location.href.replace(/(^http.?:\/\/[^/]+\/).*/, '$1');
+                          
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", serverAddress, true);
+
+    // Send the proper header information along with the request
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    
+    xhr.onreadystatechange = function() {
+        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+            // Request finished. Do processing here.
+        }
+    }
+    
+    xhr.send(JSON.stringify("test post data"));
+}
+
+    
 function onRestartButton() {
     onStopButton();
     onPlayButton();
@@ -394,6 +425,7 @@ function onSlowButton() {
 
 // Allows a framerate to be specified so that the slow button can re-use the logic
 function onPlayButton(slow) {
+    testPost();
     targetFramerate = slow ? SLOW_FRAMERATE : PLAY_FRAMERATE;
     
     function doPlay() {
@@ -809,8 +841,6 @@ var aceEditor = ace.edit('codeEditor');
 
 aceEditor.setTheme('ace/theme/tomorrow_night_bright');
 
-aceEditor.setReadOnly(true);
-
 // Stop auto-completion of parentheses
 aceEditor.setBehavioursEnabled(false);
 
@@ -1019,14 +1049,12 @@ function onProjectSelect(target, type, object) {
 
 
 function showGameDoc(docEditor, name, url) {
-    // TODO: show loading spinner GIF
-
     // Strip anything sketchy that looks like an HTML attack from the URL
     url = url.replace(/" ></g, '');
     if (url.endsWith('.html')) {
-        docEditor.innerHTML = `<embed width="100%" height="100%" src="${url}"></embed>`;
+        docEditor.innerHTML = `<embed id="doc" width="125%" height="125%" src="${url}"></embed>`;
     } else if (url.endsWith('.md')) {
-        // TODO: trick out .md files
+        // Trick out .md files using Markdeep
         loadManager = new LoadManager({
             errorCallback: function () {
             },
@@ -1037,14 +1065,32 @@ function showGameDoc(docEditor, name, url) {
             const markdeepURL = makeURLAbsolute('', 'quad://doc/markdeep.min.js');
 
             // Escape quotes to avoid ending the srcdoc prematurely
-            text = `<base href='${base}'>\n` + text.replace(/"/g, '&quot;') +
-                `<!-- Markdeep: --><script src='${markdeepURL}'></script>\n`;
-            docEditor.innerHTML = `<iframe srcdoc="${text}" border=0 width=100% height=100%></iframe>`;
+            text = `<base href='${base}'>\n${text.replace(/"/g, '&quot;')}
+                <style>
+body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #444 }
+
+.md a, .md div.title, contents, .md .tocHeader, 
+.md h1, .md h2, .md h3, .md h4, .md h5, .md h6, .md .nonumberh1, .md .nonumberh2, .md .nonumberh3, .md .nonumberh4, .md .nonumberh5, .md .nonumberh6, 
+.md .shortTOC, .md .mediumTOC, .md .longTOC {
+    color: inherit;
+    font-family: inherit;
+}
+.md .title, .md h1, .md h2, .md h3, .md h4, .md h5, .md h6, .md .nonumberh1, .md .nonumberh2, .md .nonumberh3, .md .nonumberh4, .md .nonumberh5, .md .nonumberh6 {
+margin-top: 0; padding-top: 0
+}
+.md h2 { border-bottom: 2px solid }
+.md div.title { font-size: 40px }
+.md .afterTitles { height: 0; padding-top: 0; padding-bottom: 0 }
+
+</style>\n
+
+<!-- Markdeep: --><script src='${markdeepURL}'></script>\n`;
+            docEditor.innerHTML = `<iframe id="doc" srcdoc="${text}" border=0 width=125% height=125%></iframe>`;
         }),
         loadManager.end();
     } else {
         // Treat as text file
-        docEditor.innerHTML = `<object width="100%" height="100%" type="text/plain" data="${url}" border="0"> </object>`;
+        docEditor.innerHTML = `<object id="doc" width="125%" height="125%" type="text/plain" data="${url}" border="0"> </object>`;
     }
 
 }
@@ -2070,7 +2116,8 @@ function reloadRuntime(oncomplete) {
         QRuntime._updateInput   = updateInput;
         QRuntime._systemPrint   = _systemPrint;
         QRuntime._outputAppend  = _outputAppend;
-
+        QRuntime._parseHexColor = parseHexColor;
+        
         QRuntime.debugPrint     = debugPrint;
         QRuntime.assert         = assert;
         QRuntime.deviceControl  = deviceControl;
@@ -2292,9 +2339,10 @@ function loadGameIntoIDE(url, callback) {
     if (emulatorMode !== 'stop') { onStopButton(); }
 
     showBootScreen();
+    window.gameURL = url;
 
-    // Let the boot screen show before we add to it
-    setTimeout(function() {            
+    // Let the boot screen show before appending in the following code
+    setTimeout(function() {
         {
             let serverURL = location.origin + location.pathname;
             // Remove common subexpression for shorter URLs
@@ -2308,10 +2356,22 @@ function loadGameIntoIDE(url, callback) {
             });
             
             serverURL += '?game=' + url;
-            qrcode.makeCode(serverURL);
-            document.getElementById('serverURL').innerHTML =
-                `<a href="${serverURL}" target="_blank">${serverURL}</a>`;
+
+            if (/^http:\/\/127\.0\.0\.1:/.test(serverURL)) {
+                document.getElementById('serverURL').innerHTML =
+                    '<p>This server is in secure mode and has disabled hosting.</p><p>Exit and run the quadplay script without the <code style="white-space:nowrap">--secure</code> option to allow hosting games for mobile devices.</p>';
+                document.getElementById('serverQRCode').style.visibility = 'hidden';
+            } else {
+                qrcode.makeCode(serverURL);
+                document.getElementById('serverURL').innerHTML =
+                    `<a href="${serverURL}" target="_blank">${serverURL}</a>`;
+                document.getElementById('serverQRCode').style.visibility = 'visible';
+            }
         }
+
+        // TODO: Editor
+        //aceEditor.setReadOnly(! locallyHosted());
+        aceEditor.setReadOnly(true);
     
         document.getElementById('playButton').enabled = false;
         onLoadFileStart(url);

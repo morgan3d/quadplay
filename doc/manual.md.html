@@ -59,6 +59,7 @@ hosting. This beta version only supports "pro" mode, for which you need:
 - A code editor (_[Visual Studio Code](https://code.visualstudio.com/), [Atom](https://atom.io/), Vim, Emacs, Sublime, etc._)
 - [Python 3](https://www.python.org/)
 - A modern web browser ([_Chrome_](https://www.google.com/chrome/), [_Firefox_](https://www.mozilla.org/en-US/firefox/new/), _Safari_, _Edge_, etc. Chrome is fastest.)
+- Optionally install the PyxlScript extension for your editor: _[Visual Studio Code](#advancedtools/visualstudiocode))_, _[Vim](#advancedTools/vim)_, _[Emacs](#advancedtools/emacs) 
 
 Copy the starter project from `examples/starter` to your own directory
 such as `games/mygame` and start changing it. Look at the Built-In Games
@@ -927,6 +928,10 @@ Array
 : Find the index of the element whose value is `x`, starting at optional index `i` (default 0).
   Returns `∅` if not found. O(n)
 
+`insert(array, i, x,...)` 
+: Inserts the values into the array, starting at index `i` (as in, `array[i] = x` on return)
+  and returns the first value inserted. Similar to Python insert and JavaScript splice functions.
+
 `join(array, separator (= ""), lastSeparator (= separator), pairSeparator (= lastSeparator), empty (= ""))`
 : Joins the elements of the array into a string. Each element converted to a string with `unparse()` if it is not already a string.
   The optional `lastSeparator` allows the final join to use a special case.
@@ -941,11 +946,12 @@ Array
 : Remove the first element from the array and return it, or `∅` if the array is empty. O(n) expected amortized time.
 
 `push(array, x, ...)`
-: Append `x` and any other arguments to the array. O(1) expected
+: Append `x` and any other arguments to the array and then return the last. O(1) expected
   amortized time for a single argument and O(n) for n arguments.
 
 `pushFront(array, x, ...)`
-: Insert `x` and any other arguments to the array. O(n) expected
+: Insert `x` and any other arguments onto the array, preserving the order
+  that they appear in the arguments and then return the first. O(n) expected
   amortized time for a single argument and O(m) for m arguments and
   array of length n.
 
@@ -1251,6 +1257,9 @@ For example, `clamp()`, `min()`, `+`, `/`, etc.
 The following vector operations can be applied to any array or object,
 including `xy()` and `rgb()` values, except where specific key names are mentioned:
 
+`atan(vec2)`
+: Returns `atan(vec2.y, vec2.x)`.
+
 `cross(a, b)`
 : Return the vector cross product of two arrays of length three each or two vectors with
   `x`, `y`, and `z` fields. For arguments of length two or without a `z` component,
@@ -1318,7 +1327,7 @@ Math
 : Inverse cosine in radians
 
 `atan(y, x)`
-: Arctangent of y/x, in radians
+: Arctangent of y/x, in radians. See also the version that operates on an `xy()`.
 
 `asin(x)`
 : Inverse sine in radians
@@ -2349,10 +2358,11 @@ endpoints and borders.
   negative. It is impossible to set a clipping region smaller than
   1x1x1 pixels.
 
-`textWidth(font, s)`
+`textWidth(font, s, markup (= false))`
 : Returns the pixel width of string `s` in this font, including border padding.
   Note that leading and trailing numbers may incur additional empty space for
-  column alignment.
+  column alignment. If `markup` is true, then `s` is processed using the
+  markup rules from `drawText()`.
   
 `xy(x, y)`
 : Create a structure with values `x` and `y`, which can be used with most drawing routines.
@@ -3330,7 +3340,9 @@ options. Project files should have the double extension `.game.json`.
   "constants": {
       // If the number value is in quotes it will be parsed.
       // This allows degrees, percents, infinity, and nan.
-      // Raw numbers are permitted but restricted to JSON limitations.
+      // Raw numbers, strings, and booleans are permitted but 
+      // restricted to JSON limitations.
+      
       "playerSpeed": {"type": "number", "value": "3"},
       "background": {"type": "rgb", "value": 
           {"r": {"type": "number", "value":  0.8},
@@ -3340,7 +3352,11 @@ options. Project files should have the double extension `.game.json`.
           "height": {"type": "number", "value": 1},
           "foo": {"type": "object", "value": {"a": {"type": "boolean", "value": true}},
       "starmap": {"type": "raw", "url": "stars.yml"},
+      "name": "Destrier",
       "knight": {"type": "raw", "value": {"upgrades": [10, 7, 3, 1], "hp": 50}}
+      "numbers": {"type": "array", "value": [
+        {"type": "number", "value": "10"},
+        {"type": "number", "value": "infinity"}]}
       }}},
 
    // The default Y axis increases down the screen, like old arcade games.
@@ -3507,6 +3523,20 @@ For a sprite sheet named `S`, individual sprites are accessed as
 
 Setting `transpose` to true flips the indexing to `S[y][x]`, which
 is more convenient for some sprites.
+
+Animations appear to game code as arrays of sprites that have the
+following additional fields:
+
+`extrapolate`
+: Equal to `"clamp"`, `"loop"`, or `"oscillate"` as specified in the spritesheet.
+
+`duration`
+: Equal to `infinity` for `"loop"` and `"oscillate"` animations and the total
+  number of 60 Hz game frames of animation for finite `"clamp"` animations.
+  
+`period`
+: Equal to `nan` for `"clamp"` animations and the number of 60 Hz game frames
+  for one repeat of a `"loop"` or `"oscillate"` animation.
 
 A game may use a total of **5,505,024 pixels** of sprite memory
 (10.5 MB) across **128 sprite sheets** (including fonts), each no larger than
@@ -4600,6 +4630,8 @@ quadplay https://morgan3d.github.io/somegame/foo.game.json
 quadplay
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Run `quadplay --help` to see more options for the script.
+
 These examples assume that your directory structure is:
 
 **********************************************************
@@ -5023,6 +5055,28 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+
+2019 Dec 1: Beta update 16
+
+- Added support for `"array"` constant types in `.game.json` files
+- Added `--secure` option to the quadplay script to prevent other machines from connecting
+  to the local webserver
+- `drawText()` markup is now implemented
+- `textWidth()` now supports markup
+- Added `duration` and `period` to spritesheet animation arrays
+- Upgraded the `quadplay` script to use a multithreaded server when Python 3.7 or later
+  is available
+- Fixed a 1-pixel overdraw in `drawSpriteRect()`
+- Made `pushFront()` and `push()` return a pushed value
+- Overloaded `atan(xy)`
+- Added `insert()`
+- Fixed a parser error on `for` loops that have extra parentheses surrounding the test
+- Made documents appear at 80% scale when viewed in the IDE
+- Upgraded to Markdeep 1.07 for markdown processing
+- Changed the default markdown style sheet to have less vertical spacing and use a sans serif font
+- Fixed a bug in `pushMode()` when arguments are provided
+
 
 2019 Nov 24: Beta update 15
 

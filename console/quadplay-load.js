@@ -223,7 +223,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 const c = keys[i];
                 const definition = gameJSON.constants[c];
                 if ((definition.type === 'raw') && (definition.url !== undefined)) {
-                    // Async
+                    // Raw value loaded from a URL
                     const constantURL = makeURLAbsolute(gameURL, definition.url);
                     if (/\.json$/.test(constantURL)) {
                         loadManager.fetch(constantURL, 'json', nullToUndefined, function (data) {
@@ -403,6 +403,7 @@ function computeAssetCredits(gameSource) {
     assetCredits.code.push('xorshift implementation ©2014 Andreas Madsen and Emil Bay, used under the MIT license');
     assetCredits.code.push('LoadManager.js ©2019 Morgan McGuire, used under the BSD license');
     assetCredits.code.push('js-yaml ©2011-2015 Vitaly Puzrin, used under the MIT license');
+    assetCredits.code.push('matter.js © Liam Brummitt and others, used under the MIT license');
     assetCredits.code.push('quadplay✜ ©2019 Morgan McGuire, used under the LGPL 3.0 license');
 }
 
@@ -410,6 +411,7 @@ function computeAssetCredits(gameSource) {
 function loadFont(name, json, jsonURL) {
     const font = {
         _name:     'font ' + name,
+        _type:     'font',
         _url:      json.url,
         _json:     json,
         _jsonURL:  jsonURL
@@ -590,7 +592,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
         if (json.transpose) { let temp = rows; rows = cols; cols = temp; }
 
         if (rows === 0 || cols === 0) {
-            throw new Error('Spritesheet ' + json.url + ' has a spriteSize that is larger than the entire spritesheet.');
+            throw new Error('Spritesheet ' + jsonURL + ' has a spriteSize that is larger than the entire spritesheet.');
         }
         
         for (let x = 0; x < cols; ++x) {
@@ -690,8 +692,9 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                         throw new Error('Animation frames must be in a horizontal or vertical line for animation "' + anim + '"');
                     }
                     
-                    spritesheet[anim] = [];
-                    spritesheet[anim].extrapolate = data.extrapolate || 'loop';
+                    const animation = spritesheet[anim] = [];
+                    const extrapolate = data.extrapolate || 'loop';
+                    animation.extrapolate = extrapolate;
 
                     for (let y = data.start.y, i = 0; y <= data.end.y; ++y) {
                         for (let x = data.start.x; x <= data.end.x; ++x, ++i) {
@@ -703,17 +706,41 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                             const sprite = spritesheet[u][v];
                             sprite._animationName = anim;
                             sprite._animationIndex = i;
-                            if (data.duration && (data.duration.length < i)) {
+                            if (data.duration && (i < data.duration.length)) {
                                 sprite.duration = Math.max(0.25, data.duration[i]);
                             } else {
                                 sprite.duration = animDefaultDuration;
                             }
-                            
-                            spritesheet[anim].push(sprite);
+
+                            animation.push(sprite);
                         }
                     }
 
-                    Object.freeze(spritesheet[anim]);
+                    
+                    animation.period = (extrapolate === 'clamp' ? NaN : 0);
+                    animation.duration = (extrapolate === 'clamp' ? 0 : Infinity);
+                    for (let i = 0; i < animation.length; ++i) {
+                        const duration = animation[i].duration;
+                        switch (extrapolate) {
+                        case 'oscillate':
+                            if (i === 0 || i === animation.length - 1) {
+                                animation.period += duration;
+                            } else {
+                                animation.period += duration * 2;
+                            }
+                            break;
+                            
+                        case 'loop':
+                            animation.period += duration;
+                            break;
+
+                        default: // clamp
+                            animation.duration += duration;
+                            break;
+                        }
+                    }
+
+                    Object.freeze(animation);
                 } // if single sprite
             }
         }
@@ -1240,6 +1267,11 @@ function _parse(source, i) {
 
 /** Evaluate a constant value from JSON. Used only while loading. */
 function evalJSONGameConstant(json) {
+    if (typeof json === 'number' || typeof json === 'string' || typeof json === 'boolean') {
+        // Raw values
+        return json;
+    }
+    
     switch (json.type) {
     case 'nil':
         return undefined;
@@ -1308,8 +1340,14 @@ function evalJSONGameConstant(json) {
         console.error('Not implemented');
 
     case 'array':
-        // TODO
-        console.error('Not implemented');
+        if (! Array.isArray(json.value)) {
+            throw 'Array constant must have an array [] value field';
+        }
+        let result = [];
+        for (let i = 0; i < json.value.length; ++i) {
+            result.push(evalJSONGameConstant(json.value[i]));
+        }
+        return result;
 
     default:
         throw 'Unrecognized data type: "' + json.type + '"';

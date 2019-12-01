@@ -9,27 +9,29 @@ frame
 ────────────────────────────────────────────────────────────────────────
 setBackground(rgb(0.4, 0.25, 0.3))
 
-// Quest: Markup example
+// Quest: Markup example. See the text.game.json setting for the "quest" constant
+// to see how to add colors and fonts within text strings.
 drawSpriteRect(uiSpritesheet[10][15], xy(8, 18), xy(screenSize.x - 18, 68))
-drawText({font: font, text: "Quest", pos: xy(½ screenSize.x, 12), xAlign: "center", color: #000})
+drawText({font: font, text: "Active Quest", pos: xy(½ screenSize.x, 12), xAlign: "center", color: #000})
 drawText({font: font, text: quest, pos: xy(8, 18), yAlign: "top", wrapWidth: screenSize.x - 18, color: #000, shadow: #1102, markup: true})
 
-// Description: replace example
-let description = "You are in a flat field nestled between foothills. A castle rises out of fog the distance."
-
+// Description: This example uses replace() to show how to conveniently
+// insert variables into a string.
+let description = "You are in a flat field nestled between foothills. In the distance, a castle rises out of fog."
 description += replace("\n\nIt is TIME. The sky is SKY and the temperature is TEMP°C.",
                        {TIME: formatNumber(60 * 60 * 10.2, "clock12"),
                         SKY:  "cloudy",
                         TEMP: 20})
 
-// Inventory: Join example
+// Inventory: An example using join() to convert arrays of strings into
+// one long string with proper separators.
 description += " You have " + join(inventory, ", ", ", and ", " and ", "nothing") + ".";
 
 drawSpriteRect(uiSpritesheet[7][9], xy(8, 102), xy(screenSize.x - 18, 82))
 drawText({font: font, text: description, pos: xy(8, 100), yAlign: "top", wrapWidth: screenSize.x - 18, color: #ddd, shadow: #1025})
 
 for c < size(choiceArray):
-   const args = {font: buttonFont, text: choiceArray[c], color: #FFF, outline: #0005, shadow: #400,
+   const args = {font: buttonFont, text: choiceArray[c], color: #FFF, outline: #0003, shadow: #400,
                  xAlign: "center", pos: xy((c + ½) * screenSize.x / size(choiceArray), 210)}
    if c == choiceIndex:
       // Highlight the active choice
