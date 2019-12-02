@@ -1049,9 +1049,9 @@ String
 : Replace all occurances of `src` in `string` with `dst`.
 
 `replace(string, object)`
-: Replace all occurances of each key of `object` with each `value` of object in `string`,
+: Replace all occurances of each key of `object` with each `value` of object, in `string`,
   applying longer substitutions first. For example, 
-  `replace("Use the ADJ NOUN, PROPER_NOUN!", {ADJ: "big", NOUN: "stick", PROPER_NOUN: "Runi")`.
+  `replace("Hey, PROPER_NOUN, use the ADJ NOUN!", {ADJ: "big", NOUN: "stick", PROPER_NOUN: "Runi"})`.
 
 `reversed(string)`
 : Returns a reversed version of the string in O(size) time.
@@ -5056,7 +5056,6 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-
 2019 Dec 1: Beta update 16
 
 - Added support for `"array"` constant types in `.game.json` files
@@ -5076,6 +5075,7 @@ Changes for both the specification and implementation in each release.
 - Upgraded to Markdeep 1.07 for markdown processing
 - Changed the default markdown style sheet to have less vertical spacing and use a sans serif font
 - Fixed a bug in `pushMode()` when arguments are provided
+- Fixed handling newlines in JSON multiline strings across various OS conventions
 
 
 2019 Nov 24: Beta update 15

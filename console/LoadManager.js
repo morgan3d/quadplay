@@ -21,8 +21,8 @@
   that uses Promises; it is more elegant in some ways but also more
   complicated because it relies on more language features. Since the
   current implementation is working fine, I don't intend to port to
-  the Fetch API until some critical feature of (such as the explicit
-  headers or credentialing) it is required.
+  the Fetch API until some critical feature of it (such as the explicit
+  headers or credentialing) is required.
 
   ----------------------------------------------------
 
@@ -337,6 +337,9 @@ LoadManager.prototype.parseJSON = function (text, url, warningCallback) {
         let protect = protectQuotedStrings(text);
         text = protect[0];
 
+        // Convert to strict Unix newlines
+        text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        
         // Non-escaped empty backquote strings
         text = text.replace(/(^|[^\\])``/g, "");
 
