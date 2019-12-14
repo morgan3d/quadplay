@@ -877,7 +877,7 @@ function loadMap(name, json, mapJSONUrl) {
             // Now go back and fetch the map as a continuation, given that we have the spritesheet
             loadManager.fetch(makeURLAbsolute(mapJSONUrl, json.url), 'text', null, function (xml) {
                 onLoadFileComplete(json.url);
-                xml = new DOMParser().parseFromString(xml, "application/xml");
+                xml = new DOMParser().parseFromString(xml, 'application/xml');
         
                 let tileSet = xml.getElementsByTagName('tileset');
                 tileSet = tileSet[0];
@@ -1334,20 +1334,33 @@ function evalJSONGameConstant(json) {
     case 'grid':
         // TODO
         console.error('Not implemented');
+        break;
 
     case 'object':
-        // TODO
-        console.error('Not implemented');
+        {
+        if (typeof json.value !== 'object') {
+            throw 'Object constant must have an object {} value field';
+        }
+        const keys = Object.keys(json.value);
+        const result = {};
+        for (let i = 0; i < keys.length; ++i) {
+            const key = keys[i];
+            result[key] = evalJSONGameConstant(json.value[key]);
+        }
+        return result;
+        }
 
     case 'array':
+        {
         if (! Array.isArray(json.value)) {
             throw 'Array constant must have an array [] value field';
         }
-        let result = [];
+        const result = [];
         for (let i = 0; i < json.value.length; ++i) {
             result.push(evalJSONGameConstant(json.value[i]));
         }
         return result;
+        }
 
     default:
         throw 'Unrecognized data type: "' + json.type + '"';

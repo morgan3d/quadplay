@@ -2,7 +2,7 @@
 "use strict";
 
 const deployed = true;
-const version  = '2019.08.26.10'
+const version  = '2019.12.07.23'
 const launcherURL = 'quad://console/launcher';
 
 {
@@ -1213,7 +1213,7 @@ function visualizeModes(modeEditor) {
         return;
     }
 
-    const setModeRegexp = /\b(setMode|pushMode)\s*\(([^,)]+)(?:.*)\)(?:\s*because\s*"([^"]*)")?/g;
+    const setModeRegexp = /\b(setMode|pushMode)\s*\(([^,)]+)\)(?:\s*because\s*"([^"\n]*)")?/g;
     const resetGameRegexp = /\bresetGame\s*\(\s*(?:"([^"]*)")?\s*\)/g;
     //const popModeRegexp = /\bpopMode\s*\((?:\s*"([^"]*)"\s*)?\)/g;
 
@@ -1247,7 +1247,7 @@ function visualizeModes(modeEditor) {
     //////////////////////////////////////////////////////////////////////////////////////
     // Convert to the layout API
     const graph = new dagre.graphlib.Graph({directed:true, multigraph:true});
-    const nodeWidth = 96, nodeHeight = 28;
+    const nodeWidth = 112, nodeHeight = 28;
     graph.setGraph({rankdir: 'LR'});
     graph.setDefaultEdgeLabel(function() { return {}; });
 

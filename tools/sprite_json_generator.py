@@ -11,10 +11,12 @@ from PIL import Image
 
 # @TODO: Add a requirements.txt or such to make setting up the virtualenv easy.
 
+
 def detect_default_game():
     """try and detect based on the current directory"""
 
     return os.path.basename(os.getcwd())
+
 
 def parse_args():
     """ parse arguments out of sys.argv """
@@ -24,8 +26,8 @@ def parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
-        "-f",
-        "--force",
+        "-F",
+        "--Force",
         action="store_true",
         default=False,
         help="Overwrite any existing files."
@@ -47,17 +49,12 @@ def parse_args():
         help="Pick a standard license."
     )
     parser.add_argument(
-        'filepath',
-        type=str,
-        help='URLs to sprite images'
-    )
-    parser.add_argument(
         '-g',
         '--game',
         default=detect_default_game(),
         type=str,
-        help='Name of the game to add the sprite to.  It not provided, will not'
-        ' add to game json.'
+        help='Name of the game to add the sprite to.  It not provided, will'
+        ' not add to game json.'
     )
     parser.add_argument(
         "-a",
@@ -71,25 +68,76 @@ def parse_args():
         )
     )
 
+    grp = parser.add_mutually_exclusive_group(required=True)
+    grp.add_argument(
+        '-n',
+        '--new',
+        action="store_true",
+        default=False,
+        help='URLs to sprite images'
+    )
+    grp.add_argument(
+        "-u",
+        "--update",
+        action="store_true",
+        default=False,
+        help=(
+            "Look in the game's json file and update sprites in this"
+            " directory.  Implies --force."
+        )
+    )
+
+    parser.add_argument(
+        "filepath",
+        type=str,
+        default=None,
+        nargs="?",
+        help="If specified, only update this file."
+    )
+
     return parser.parse_args()
 
 
 # @{ utilities for reading from aseprite data
-def _frame(fnum, top_data, size):
+def _frame(fnum, top_data, size, name):
     """Convert Aseprite pixel coordinate frame to quadplay sprite coord"""
 
-    pixel_coordinate = top_data["frames"][fnum]["frame"]
+    try:
+        print("  {}".format(top_data["frames"][fnum]["filename"]))
+        pixel_coordinate = top_data["frames"][fnum]["frame"]
+        if name not in top_data["frames"][fnum]["filename"]:
+            raise NotImplementedError
+    except (IndexError, NotImplementedError):
+        import ipdb
+        ipdb.set_trace()
 
     return {
         "x": pixel_coordinate["x"]/size[0],
         "y": pixel_coordinate["y"]/size[1]
     }
 
+
 # map "direction" field to "extrapolate" field in quadplay
 extrp_map = {
-    "forward" : "clamp",
+    "forward": "clamp",
     "pingpong": "oscillate",
 }
+
+
+def _frames(ms):
+    """convert aseprites frame times in ms to # of 60hz frames"""
+    return (ms / 1000.0)*60.0
+
+
+def _extract_durations(startf, endf, top_data):
+    # endf is the last frame inclusive.
+    until = endf + 1
+    return [
+        # durations in aseprite are listed in ms, quadplay wants frames
+        _frames(top_data["frames"][i]["duration"])
+        for i in range(startf, until)
+    ]
+
 
 def _extract_from_aseprite_json(aseprite_json):
     """Extract aseprite metadata (tags!) from aseprite JSON"""
@@ -139,23 +187,34 @@ def _extract_from_aseprite_json(aseprite_json):
     name_map = {}
     tag_map = aseprite_data["meta"].get("frameTags", {})
     for tag_data in tag_map:
-        name_map[tag_data["name"]] = {
-            "start" : _frame(tag_data["from"], aseprite_data, size),
-            "end" : _frame(tag_data["to"], aseprite_data, size),
-            "extrapolate": extrp_map[tag_data["direction"]]
+        name = tag_data["name"]
+        print(
+            "TAG: {} from {} to {}".format(
+                name, tag_data["from"], tag_data["to"]
+            )
+        )
+        name_map[name] = {
+            "start": _frame(tag_data["from"], aseprite_data, size, name),
+            "end": _frame(tag_data["to"], aseprite_data, size, name),
+            "extrapolate": extrp_map.get(tag_data["direction"], "clamp"),
+            "duration": _extract_durations(
+                tag_data["from"],
+                tag_data["to"],
+                aseprite_data
+            ),
         }
 
-    return size, {"names": name_map}
+    return size, {"names": name_map, "aseprite_json": aseprite_json}
 # @}
 
 
 def make_sprite(
-        filepath,
-        size,
-        license,
-        game,
-        aseprite_json=None,
-        force=False
+    filepath,
+    size,
+    license,
+    game,
+    aseprite_json=None,
+    force=False
 ):
     """take a file and build a quadplay sprite JSON"""
 
@@ -187,9 +246,9 @@ def make_sprite(
         size = (size[0], size[1])
 
     blob = {
-        "url" : filepath,
-        "spriteSize" : {'x':size[0],'y':size[1]},
-        "license" : license
+        "url": filepath,
+        "spriteSize": {'x': size[0], 'y': size[1]},
+        "license": license
     }
 
     # layer in the data from aseprite
@@ -200,7 +259,7 @@ def make_sprite(
             json.dumps(
                 blob,
                 sort_keys=True,
-                indent=4, separators=(",",": ")
+                indent=4, separators=(",", ": ")
             )
         )
 
@@ -221,30 +280,62 @@ def make_sprite(
             "pass the the game in.\n".format(game)
         )
 
-    game_data.setdefault('assets',{})[basename + "Sprite"] = outpath
+    game_data.setdefault('assets', {})[basename + "Sprite"] = outpath
 
     with open(game, 'w') as fo:
         fo.write(
             json.dumps(
                 game_data,
                 sort_keys=True,
-                indent=4, separators=(",",": ")
+                indent=4, separators=(",", ": ")
             )
         )
     print("Added '{}' to '{}'".format(basename + "Sprite", game))
+
+
+def _extract_sprites(from_game):
+    with open("{}.game.json".format(from_game)) as fi:
+        game_data = json.loads(fi.read())
+
+    for asset_url in game_data["assets"].values():
+        if not os.path.exists(asset_url):
+            continue
+
+        with open(asset_url) as fi:
+            asset_data = json.loads(fi.read())
+
+        aseprite_data = asset_data.get("aseprite_json")
+        if asset_data["url"].endswith(".png"):
+            yield (asset_data["url"], aseprite_data)
+
 
 def main():
     """main function for module"""
     args = parse_args()
 
-    make_sprite(
-        args.filepath,
-        args.size,
-        args.license,
-        args.game,
-        args.aseprite,
-        args.force
-    )
+    if args.update:
+        sprites_to_process = _extract_sprites(args.game)
+        args.Force = True
+
+        if args.filepath:
+            sprites_to_process = [
+                (fp, asp) for (fp, asp) in sprites_to_process
+                if fp == args.filepath
+            ]
+    else:
+        sprites_to_process = [(args.filepath, args.aseprite)]
+
+    for fp, asp_path in sprites_to_process:
+        print("processing: {}".format(fp))
+        make_sprite(
+            fp,
+            args.size,
+            args.license,
+            args.game,
+            asp_path,
+            args.Force
+        )
+
 
 if __name__ == '__main__':
     main()

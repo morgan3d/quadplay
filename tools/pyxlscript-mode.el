@@ -43,13 +43,13 @@
         (builtin-exp (regexp-opt '("rayIntersect" "drawBounds" "drawDisk" "resetClip" "resetTransform" "setClip" "drawLine" "drawSpriteRect" "intersectClip" "drawPoint" "drawRect" "setBackground" "textWidth" "getSpritePixelColor" "drawSprite" "drawText" "drawTri" "getTransform" "getClip" "getRotationSign" "setTransform" "xy" "xyz"
                                    "anyButtonPress" "drawMap" "getMode" "getPreviousMode" "getMapPixelColor" "getMapPixelColorByDrawCoord" "getMapSprite" "setMapSprite" "getMapSpriteByDrawCoord" "setMapSpriteByDrawCoord" "unparse" "formatNumber" "upperCase" "lowerCase"
                                    "playAudioClip" "resumeSound" "stopSound" "gameFrames" "modeFrames" "setMode" "addFrameHook" "removeFrameHook"
-                                   "makeEntity" "drawEntity" "overlaps" "updateEntityChildren" "physicsStepEntity"
-                                   "now" "gameFrames" "modeFrames" "findMapPath" "findPath"
-                                   "gray" "rgb" "rgba" "hsv" "hsva"
-                                   "call" "setPostEffects" "resetPostEffects"
-                                   "abs" "acos" "atan" "asin" "sign" "signNonZero" "cos" "clamp" "hash" "lerp" "log" "log2" "log10" "loop" "min" "max" "mid" "noise" "oscillate" "overlap" "pow" "makeRnd" "rndInt" "rndWithinSphere" "rndOnSphere" "rndWithinCircle" "rndWithinSquare" "rndOnSquare" "rndOnCircle" "rndDir2D" "rndDir3D" "rndValue" "rndGaussian" "rndGaussian2D" "rndTruncatedGaussian" "rndTruncatedGaussian2D" "rnd" "ξ" "sgn" "sqrt" "sin" "srand" "tan"
+                                   "makeEntity" "drawEntity" "overlaps" "updateEntityChildren" "physicsStepEntity" "split"
+                                   "now" "gameFrames" "modeFrames" "findMapPath" "findPath" "join"
+                                   "gray" "rgb" "rgba" "hsv" "hsva" "lastValue" "lastKey" "insert" "reverse" "reversed"
+                                   "call" "setPostEffects" "extendPostEffects" "resetPostEffects" "pushFront" "localTime"
+                                   "abs" "acos" "atan" "asin" "sign" "signNonZero" "cos" "clamp" "hash" "lerp" "log" "log2" "log10" "loop" "min" "max" "mid" "noise" "oscillate" "overlap" "pow" "makeRnd" "rndSign" "rndInt" "rndWithinSphere" "rndOnSphere" "rndWithinCircle" "rndWithinSquare" "rndOnSquare" "rndOnCircle" "rndDir2D" "rndDir3D" "rndValue" "rndGaussian" "rndGaussian2D" "rndTruncatedGaussian" "rndTruncatedGaussian2D" "rnd" "ξ" "sgn" "sqrt" "sin" "srand" "tan"
                                    "clone" "copy" "drawPreviousMode" "cross" "direction" "dot" "equivalent" "magnitude" "maxComponent" "minComponent" "xy" "xyz"
-                                   "fastRemoveKey" "find" "keys" "removeKey" "size" "substring" "sort" "resize" "push" "pop" "removeValues" "pad" "joy" "round" "floor" "ceil"
+                                   "fastRemoveKey" "find" "keys" "removeKey" "size" "substring" "sort" "resize" "push" "pop" "fastRemoveValue" "removeValues" "pad" "joy" "round" "floor" "ceil"
                                    "debugPrint") 'words))
         (color-exp   "#[0-9A-Fa-f]+"))
 

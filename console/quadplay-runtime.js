@@ -55,8 +55,16 @@ function resetPostEffects() {
 
 resetPostEffects();
 
+function getPostEffects() {
+    return clone(_postFX);
+}
 
 function setPostEffects(args) {
+    resetPostEffects();
+    extendPostEffects(args);
+}
+
+function extendPostEffects(args) {
     if (args.background !== undefined) {
         _postFX.background.r = (args.background.r !== undefined) ? args.background.r : 0;
         _postFX.background.g = (args.background.g !== undefined) ? args.background.g : 0;
@@ -83,8 +91,12 @@ function setPostEffects(args) {
     }
 
     if (args.scale !== undefined) {
-        _postFX.scale.x = (args.scale.x !== undefined) ? args.scale.x : 1;
-        _postFX.scale.y = (args.scale.y !== undefined) ? args.scale.y : 1;
+        if (typeof args.scale === 'number') {
+            _postFX.scale.x = _postFX.scale.y = args.scale;
+        } else {
+            _postFX.scale.x = (args.scale.x !== undefined) ? args.scale.x : 1;
+            _postFX.scale.y = (args.scale.y !== undefined) ? args.scale.y : 1;
+        }
     }
 
     if (args.angle !== undefined) {
@@ -100,6 +112,44 @@ function setPostEffects(args) {
         _postFX.opacity = args.opacity;
     }
 }
+
+
+function delay(callback, frames) {
+    return addFrameHook(undefined, callback, frames || 0);
+}
+
+
+function addFrameSequence(...seq) {
+    let currentStep = 0;
+    let currentFrame = 0;
+
+    let totalLifetime = 0;
+    let sequence = [];
+    for (let i = 0; i < seq.length; ++i) {
+        if (typeof seq[i] === 'function') {
+            ++totalLifetime;
+            sequence.push({callback: seq[i], frames: 1})
+        } else {
+            const frames = Math.max(1, Math.round(seq[i].frames));
+            totalLifetime += frames;
+            sequence.push({callback: seq[i].callback, frames: frames})
+        }
+    }
+    
+    function update(framesleft, lifetime) {
+        let step = sequence[currentStep];
+        
+        if (step.callback) { step.callback(step.frames - currentFrames - 1, step.frames); }
+        ++currentFrame;
+
+        if (currentFrame >= step.frames) { ++currentStep; }
+    }
+
+    const hook = addFrameHook(update, undefined, totalLifetime);
+
+    return hook;
+}
+
 
 
 function addFrameHook(callback, endCallback, lifetime, mode) {
@@ -157,6 +207,17 @@ function drawPreviousMode() {
 
 ////////////////////////////////////////////////////////////////////
 // Array
+
+function lastValue(s) {
+    return s[s.length - 1];
+}
+
+function lastKey(s) {
+    if (! Array.isArray(s) || typeof s === 'string') {
+        throw new Error('Argument to lastKey() must be a string or array');
+    }
+    return size(s) - 1;
+}
 
 function find(a, x, s) {
     s = s || 0;
@@ -216,24 +277,41 @@ function _defaultComparator(a, b) {
     return (a < b) ? -1 : (a > b) ? 1 : 0;
 }
 
+function _defaultReverseComparator(b, a) {
+    return (a < b) ? -1 : (a > b) ? 1 : 0;
+}
 
-function sort(array, k) {
-    let compare;
+
+function sort(array, k, reverse) {
+    let compare = k;
     
-    if (k === undefined) {
+    if (compare === undefined) {
         if (typeof array[0] === 'object') {
             // Find the first property, alphabetically
             const keys = Object.keys();
             keys.sort();
             k = keys[0];
-            compare = function (a, b) { return _defaultComparator(a[k], b[k]); };
+            if (reverse) {
+                compare = function (a, b) { return _defaultComparator(a[k], b[k]); };
+            } else {
+                compare = function (a, b) { return _defaultComparator(b[k], a[k]); };
+            }
+        } else if (reverse) {
+            // Just use the default reverse comparator
+            compare = _defaultReverseComparator;
         } else {
             // Just use the default comparator
             compare = _defaultComparator;
         }
     } else if (typeof compare !== 'function') {
         // sort by index or key k
-        compare = function (a, b) { return _defaultComparator(a[k], b[k]); };
+        if (reverse) {
+            compare = function (a, b) { return _defaultComparator(b[k], a[k]); };
+        } else {
+            compare = function (a, b) { return _defaultComparator(a[k], b[k]); };
+        }
+    } else if (reverse) {
+        compare = function (a, b) { return k(b, a); };
     }
 
     array.sort(compare);
@@ -307,6 +385,26 @@ function removeValues(t, value) {
         for (let k in t) {
             if (t[k] === value) {
                 delete t[k];
+            }
+        }
+    }
+}
+
+
+function fastRemoveValue(t, value) {
+    if (Array.isArray(t)) {
+        for (let i = 0; i < t.length; ++i) {
+            if (t[i] === value) {
+                t[i] = t[t.length - 1];                
+                t.pop();
+                return;
+            }
+        }
+    } else if (typeof t === 'object') {
+        for (let k in t) {
+            if (t[k] === value) {
+                delete t[k];
+                return;
             }
         }
     }
@@ -949,64 +1047,11 @@ function transformScreenZToDrawZ(z) {
     return (z - _offsetZ) / _scaleZ;
 }
 
-
-function intersectClip(x1, y1, z1, dx, dy, dz) {
-    if (x1 === undefined) { x1 = _clipX1; }
-    if (y1 === undefined) { y1 = _clipY1; }
-    if (z1 === undefined) { z1 = _clipZ1 }
-    if (dx === undefined) { dx = _clipX2 - _clipX1 + 1; }
-    if (dy === undefined) { dy = _clipY2 - _clipY1 + 1; }
-    if (dz === undefined) { dz = _clipZ2 - _clipZ1 + 1; }
-
-    let x2 = x1 + dx, y2 = y1 + dy, z2 = z1 + dz;
-    
-    // Order appropriately
-    if (x2 < x1) { let temp = x1; x1 = x2; x2 = temp; }
-    if (y2 < y1) { let temp = y1; y1 = y2; y2 = temp; }
-    if (z2 < z1) { let temp = z1; z1 = z2; z2 = temp; }
-    
-    x1 = Math.round(x1);
-    y1 = Math.round(y1);
-    z1 = Math.round(z1);
-
-    x2 = Math.floor(x2 - 0.5);
-    y2 = Math.floor(y2 - 0.5);
-    z2 = Math.floor(z2 - 0.5);
-
-    _clipX1 = _clamp(Math.max(x1, _clipX1), 0, _SCREEN_WIDTH - 1);
-    _clipY1 = _clamp(Math.max(y1, _clipY1), 0, _SCREEN_HEIGHT - 1);
-    _clipZ1 = _clamp(Math.max(z1, _clipZ1), -2047, 2048);
-    
-    _clipX2 = _clamp(Math.min(x2, _clipX2), 0, _SCREEN_WIDTH - 1);
-    _clipY2 = _clamp(Math.min(y2, _clipY2), 0, _SCREEN_HEIGHT - 1);
-    _clipZ2 = _clamp(Math.min(z2, _clipZ2), -2047, 2048);
-}
-
-
-function resetClip() {
-    _clipX1 = _clipY1 = 0;
-    _clipZ1 = -2047;
-    _clipX2 = _SCREEN_WIDTH - 1;
-    _clipY2 = _SCREEN_HEIGHT - 1;
-    _clipZ2 = 2048;
-}
-
-
-function getClip() {
-    return {
-        pos:    {x:_clipX1, y:_clipY1},
-        size:   {x:_clipX2 - _clipX1 - 1, y:_clipY2 - _clipY1 - 1},
-        z:      _clipZ1,
-        zSize:  _clipZ2 - _clipZ1
-    };
-}
-
-
-function setClip(pos, size, z1, dz) {
-    if (pos.pos || pos.size || pos.z || pos.zSize) {
-        return setClip(pos.pos, pos.size, pos.z, pos.zSize);
+function intersectClip(pos, size, z1, zSize) {
+    if (pos.pos || pos.size || (pos.z !== undefined) || (pos.zSize !== undefined)) {
+        return intersectClip(pos.pos, pos.size, pos.z, pos.zSize);
     }
-    
+
     let x1, y1, dx, dy;
     if (pos !== undefined) {
         if (isNumber(pos)) { throw new Error('pos argument to setClip() must be an xy() or nil'); }
@@ -1046,6 +1091,72 @@ function setClip(pos, size, z1, dz) {
     _clipX2 = _clamp(Math.min(x2, _clipX2), 0, _SCREEN_WIDTH - 1);
     _clipY2 = _clamp(Math.min(y2, _clipY2), 0, _SCREEN_HEIGHT - 1);
     _clipZ2 = _clamp(Math.min(z2, _clipZ2), -2047, 2048);
+}
+
+
+function resetClip() {
+    _clipX1 = _clipY1 = 0;
+    _clipZ1 = -2047;
+    _clipX2 = _SCREEN_WIDTH - 1;
+    _clipY2 = _SCREEN_HEIGHT - 1;
+    _clipZ2 = 2048;
+}
+
+
+function getClip() {
+    return {
+        pos:    {x:_clipX1, y:_clipY1},
+        size:   {x:_clipX2 - _clipX1 + 1, y:_clipY2 - _clipY1 + 1},
+        z:      _clipZ1,
+        zSize:  _clipZ2 - _clipZ1 + 1
+    };
+}
+
+
+function setClip(pos, size, z1, dz) {
+    if (pos.pos || pos.size || (pos.z !== undefined) || (pos.zSize !== undefined)) {
+        return setClip(pos.pos, pos.size, pos.z, pos.zSize);
+    }
+    
+    let x1, y1, dx, dy;
+    if (pos !== undefined) {
+        if (isNumber(pos)) { throw new Error('pos argument to setClip() must be an xy() or nil'); }
+        x1 = pos.x; y1 = pos.y;
+    }
+    if (size !== undefined) {
+        if (isNumber(size)) { throw new Error('size argument to setClip() must be an xy() or nil'); }
+        dx = size.x; dy = size.y;
+    }
+    
+    if (x1 === undefined) { x1 = _clipX1; }
+    if (y1 === undefined) { y1 = _clipY1; }
+    if (z1 === undefined) { z1 = _clipZ1; }
+    if (dx === undefined) { dx = _clipX2 - _clipX1 + 1; }
+    if (dy === undefined) { dy = _clipY2 - _clipY1 + 1; }
+    if (dz === undefined) { dz = _clipZ2 - _clipZ1 + 1; }
+
+    let x2 = x1 + dx, y2 = y1 + dy, z2 = z1 + dz;
+
+    // Order appropriately
+    if (x2 < x1) { let temp = x1; x1 = x2; x2 = temp; }
+    if (y2 < y1) { let temp = y1; y1 = y2; y2 = temp; }
+    if (z2 < z1) { let temp = z1; z1 = z2; z2 = temp; }
+    
+    x1 = Math.round(x1);
+    y1 = Math.round(y1);
+    z1 = Math.round(z1);
+
+    x2 = Math.floor(x2 - 0.5);
+    y2 = Math.floor(y2 - 0.5);
+    z2 = Math.floor(z2 - 0.5);
+
+    _clipX1 = _clamp(x1, 0, _SCREEN_WIDTH - 1);
+    _clipY1 = _clamp(y1, 0, _SCREEN_HEIGHT - 1);
+    _clipZ1 = _clamp(z1, -2047, 2048);
+    
+    _clipX2 = _clamp(x2, 0, _SCREEN_WIDTH - 1);
+    _clipY2 = _clamp(y2, 0, _SCREEN_HEIGHT - 1);
+    _clipZ2 = _clamp(z2, -2047, 2048);
 }
 
 
@@ -1160,15 +1271,36 @@ function _nhash1(n) { n = Math.sin(n) * 1e4; return n - Math.floor(n); }
 // bicubic fbm value noise
 // from https://www.shadertoy.com/view/4dS3Wd
 function noise(octaves, x, y, z) {
+    if (Array.isArray(x)) {
+        z = x[2];
+        y = x[1];
+        x = x[0];
+    } else if (x.x !== undefined) {
+        z = x.z;
+        y = x.y;
+        x = x.x;
+    }
+    
     // Set any missing axis to zero
     x = x || 0;
     y = y || 0;
     z = z || 0;
 
+    let temp = Math.round(octaves);
+    if (octaves - k > 1e-10) {
+        // Catch the common case where the order of arguments was swapped
+        // by recognizing fractions in the octave value
+        throw new Error("noise(octaves, x, y, z) must take an integer number of octaves");
+    } else {
+        octaves = temp | 0;
+    }
+
     // Maximum value is 1/2 + 1/4 + 1/8 ... from the straight summation
     // The max is always pow(2,-octaves) less than 1.
     // So, divide by (1-pow(2,-octaves))
-    octaves = Math.max(1, (octaves || 1) | 0);
+    octaves = Math.max(1, octaves);
+
+    
     var v = 0, k = 1 / (1 - Math.pow(2, -octaves));
 
     var stepx = 110, stepy = 241, stepz = 171;
@@ -2124,7 +2256,9 @@ function drawRect(corner, size, fill, outline, z) {
 }
 
 
-function drawLine(A, B, color, z) {
+function drawLine(A, B, color, z, openA, openB) {
+    openA = openA || false;
+    openB = openB || false;
     z = z || 0;
     const skx = (z * _skewXZ), sky = (z * _skewYZ);
     let x1 = (A.x + skx) * _scaleX + _offsetX, y1 = (A.y + sky) * _scaleY + _offsetY;
@@ -2147,7 +2281,9 @@ function drawLine(A, B, color, z) {
         y1: y1,
         y2: y2,
         z: z,
-        color: color        
+        color: color,
+        open1: openA,
+        open2: openB
     });
 }
 
@@ -2517,6 +2653,7 @@ function _drawText(offsetIndex, formatIndex, str, formatArray, pos, xAlign, yAli
     case  2: y -= (referenceFont._charHeight - referenceFont._borderSize * 2 - referenceFont._shadowSize); break; // bottom of bounds
     }
 
+
     // Center and round. Have to call round() because values may
     // be negative
     x = Math.round(x) | 0;
@@ -2537,6 +2674,9 @@ function _drawText(offsetIndex, formatIndex, str, formatArray, pos, xAlign, yAli
         while ((str.length > 0) && (formatIndex < formatArray.length)) {
             // offsetIndex increases and the string itself is
             // shortened throughout this loop.
+    
+            // Adjust for the baseline relative to the reference font
+            const dy = format.font._baseline - referenceFont._baseline;
 
             const endIndex = format.endIndex - offsetIndex;
             _addGraphicsCommand({
@@ -2544,7 +2684,7 @@ function _drawText(offsetIndex, formatIndex, str, formatArray, pos, xAlign, yAli
                 str:     str.substring(0, endIndex + 1),
                 font:    format.font,
                 x:       x,
-                y:       y,
+                y:       y - dy,
                 z:       z,
                 color:   format.color,
                 outline: format.outline,
@@ -2701,8 +2841,7 @@ function drawSpriteRect(CC, corner, size, z) {
     // Iterate over center box, clipping at its edges
     const spriteCenter = xy(0,0);
     _pushGraphicsState(); {
-        intersectClip(x1, y1, undefined,
-                      x2 - x1 + 1, y2 - y1 + 1, undefined);
+        intersectClip(xy(x1, y1), xy(x2 - x1 + 1, y2 - y1 + 1));
         
         for (let y = 0; y < numTilesY; ++y) {
             // Transform individual pixel coordinates *back* to game
@@ -2736,8 +2875,7 @@ function drawSpriteRect(CC, corner, size, z) {
     
     // Top and bottom
     _pushGraphicsState(); {
-        intersectClip(x1, undefined, undefined,
-                      x2 - x1 + 1, undefined, undefined);
+        intersectClip(xy(x1, _clipY1), xy(x2 - x1 + 1, _clipY2 - _clipY1 + 1));
         
         for (let x = 0; x < numTilesX; ++x) {
             spriteCenter.x = ((centerX + (x - (numTilesX - 1) * 0.5) * CC.size.x) - _offsetX) / _scaleX;
@@ -2752,8 +2890,7 @@ function drawSpriteRect(CC, corner, size, z) {
 
     // Sides
     _pushGraphicsState(); {
-        intersectClip(undefined, y1, undefined,
-                      undefined, y2 - y1 + 1, undefined);
+        intersectClip(xy(_clipX1, y1), xy(_clipX2 - _clipX1 + 1, y2 - y1 + 1));
         
         for (let y = 0; y < numTilesY; ++y) {
             spriteCenter.y = ((centerY + (y - (numTilesY - 1) * 0.5) * CC.size.y) - _offsetY) / _scaleY;
@@ -2911,6 +3048,26 @@ function clamp(x, lo, hi) {
 
 
 function loop(x, lo, hi) {
+    if (typeof x === 'object') {
+        // Vector version
+        const c = x.constructor ? x.constructor() : Object.create(null);
+
+        if (typeof lo === 'object') {
+            if (typeof hi === 'object') {
+                for (let key in x) { c[key] = loop(x[key], lo[key], hi[key]); }
+            } else {
+                for (let key in x) { c[key] = loop(x[key], lo[key], hi); }
+            }
+        } else if (typeof hi === 'object') {
+            for (let key in x) { c[key] = loop(x[key], lo, hi[key]); }
+        } else {
+            for (let key in x) { c[key] = loop(x[key], lo, hi); }
+        }
+        
+        return c;
+    }
+
+    
     if (hi === undefined) {
         hi = lo;
         lo = 0;
@@ -3897,7 +4054,7 @@ function _makeRng(seed) {
 var [rnd, srand] = _makeRng();
 
 function makeRnd(seed) {
-    var [rnd, srand] = _makeRng(seed || (localTime.millisecond() * 1e6));
+    var [rnd, srand] = _makeRng(seed || (localTime().millisecond() * 1e6));
     return rnd;
 }
 
@@ -4056,23 +4213,37 @@ function abs(a) {
     }
 }
 
-function floor(a) {
+function floor(a, u) {
     if (typeof a === 'object') {
-        let c = a.constructor ? a.constructor() : Object.create(null);
-        for (let key in a) c[key] = Math.floor(a[key]);
+        const c = a.constructor ? a.constructor() : Object.create(null);
+
+        if (u === undefined) {
+            for (let key in a) c[key] = Math.floor(a[key]);
+        } else {
+            for (let key in a) c[key] = Math.floor(a[key] / u) * u;
+        }
         return c;
-    } else {
+    } else if (u === undefined) {
         return Math.floor(a);
+    } else {
+        return Math.floor(a / u) * u;
     }
 }
 
-function ceil(a) {
+
+function ceil(a, u) {
     if (typeof a === 'object') {
-        let c = a.constructor ? a.constructor() : Object.create(null);
-        for (let key in a) c[key] = Math.ceil(a[key]);
+        const c = a.constructor ? a.constructor() : Object.create(null);
+        if (u === undefined) {
+            for (let key in a) c[key] = Math.ceil(a[key]);
+        } else {
+            for (let key in a) c[key] = Math.ceil(a[key] / u) * u;
+        }
         return c;
-    } else {
+    } else if (u === undefined) {
         return Math.ceil(a);
+    } else {
+        return Math.ceil(a / u) * u;
     }
 }
 
@@ -5704,16 +5875,22 @@ function _executeREC(cmd) {
 
 
 function _executeLIN(cmd) {
-    _line(cmd.x1, cmd.y1, cmd.x2, cmd.y2, cmd.color, cmd.clipX1, cmd.clipY1, cmd.clipX2, cmd.clipY2);
+    _line(cmd.x1, cmd.y1, cmd.x2, cmd.y2, cmd.color, cmd.clipX1, cmd.clipY1, cmd.clipX2, cmd.clipY2, cmd.open1, cmd.open2);
 }
 
 
-function _line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2) {
+function _line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2, open1, open2) {
     if (y1 === y2) {
         // Horizontal perf optimization/avoid divide by zero
+        const dx = _Math.sign(x2 - x1)
+        if (open1) { x1 += dx; }
+        if (open2) { x2 -= dx; }
         _hline(Math.min(x1, x2), y1, Math.max(x1, x2), color, clipX1, clipY1, clipX2, clipY2);
     } else if (x1 === x2) {
         // Vertical perf optimization
+        const dy = _Math.sign(y2 - y1)
+        if (open1) { y1 += dy; }
+        if (open2) { y2 -= dy; }
         _vline(x1, Math.min(y1, y2), Math.max(y1, y2), color, clipX1, clipY1, clipX2, clipY2);
     } else {
         // General case via DDA
@@ -5729,11 +5906,16 @@ function _line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2) {
             let temp;
             temp = y1; y1 = y2; y2 = temp;
             temp = x1; x1 = x2; x2 = temp;
+            temp = open1; open1 = open2; open2 = temp;
         }
 
         if (moreHorizontal) {
             // Crop horizontally:
             const m = dy / dx;
+
+            if (open1) { ++x1; y1 += m; }            
+            if (open2) { --x2; y2 -= m; } 
+            
             const step = Math.max(clipX1, x1) - x1;
             x1 += step; y1 += m * step;
             x2 = Math.min(x2, clipX2);
@@ -5743,6 +5925,10 @@ function _line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2) {
         } else { // Vertical
             // Compute the inverted slope
             const m = dx / dy;
+
+            if (open1) { ++y1; x1 += m; } 
+            if (open2) { --y2; x2 -= m; } 
+            
             // Crop vertically:
             const step = Math.max(clipY1, y1) - y1;
             x1 += step * m; y1 += step;
@@ -6046,7 +6232,7 @@ function _executeTXT(cmd) {
             // Shift the destination down by the offset of this character relative to the tile
             for (let j = 0, dstY = y + bounds.y1 - tileY + bounds.yOffset; j < charHeight; ++j, ++dstY) {
                 // On screen in Y?
-                if (((dstY >>> 0) <= _clipY2) && (dstY >= clipY1)) {
+                if (((dstY >>> 0) <= clipY2) && (dstY >= clipY1)) {
                     for (let i = 0, dstX = x, dstIndex = x + (dstY * _SCREEN_WIDTH), srcIndex = bounds.x1 + (bounds.y1 + j) * fontWidth;
                          i < charWidth;
                          ++i, ++dstX, ++dstIndex, ++srcIndex) {
@@ -6072,7 +6258,7 @@ function _executeTXT(cmd) {
                                 v = outline;
                             }
 
-                            // Could inline _pset code for performance, use dstIndex. There
+                            // Could inline _pset code for performance and insert dstIndex. There
                             // is not any apparent performance difference on Chrome, however
                             if (v) { _pset(dstX, dstY, v, clipX1, clipY1, clipX2, clipY2); }
                         }
@@ -6154,9 +6340,9 @@ function _executeTRI(cmd) {
     }
 
     if ((outline & 0xff000000) && (outline !== color)) {
-        _line(Ax, Ay, Bx, By, outline, clipX1, clipY1, clipX2, clipY2);
-        _line(Bx, By, Cx, Cy, outline, clipX1, clipY1, clipX2, clipY2);
-        _line(Cx, Cy, Ax, Ay, outline, clipX1, clipY1, clipX2, clipY2);
+        _line(Ax, Ay, Bx, By, outline, clipX1, clipY1, clipX2, clipY2, false, true);
+        _line(Bx, By, Cx, Cy, outline, clipX1, clipY1, clipX2, clipY2, false, true);
+        _line(Cx, Cy, Ax, Ay, outline, clipX1, clipY1, clipX2, clipY2, false, true);
     }
 }
 

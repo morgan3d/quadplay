@@ -506,7 +506,7 @@ quadplay✜:
 - Blocks have no `end` statements and indentation is significant
 - Use `:` within object literals instead of `=`
 - It is safe to mutate containers inside iterator loops
-- You have to load a font before you can use `drawText`.
+- You must specify a font for `drawText()`.
 Several are provided; see the Fonts section.
 - Enjoy the overloaded operators, array functions, z-order, and alpha blending
 
@@ -924,6 +924,10 @@ Array
 `fastRemoveKey(array, i)`
 : Delete element `i` from the array, swapping it with the last element. O(1) expected amortized time.
 
+`fastRemoveValue(array, v)`
+: Delete one element that is `== v`, or do nothing if there is no such element. May reorder the
+  array and may choose any such element, not necessarily the first. See also `removeValues()`.
+
 `find(array, x, i (= 0))`
 : Find the index of the element whose value is `x`, starting at optional index `i` (default 0).
   Returns `∅` if not found. O(n)
@@ -938,6 +942,12 @@ Array
   The optional `pairSeparator` is a special separator used for arrays of length two. 
   For example `join(inventory, ", ", ", and ", " and ", "nothing")`.
   The optional `empty` value is used if the array has length 0.
+
+`lastKey(array)`
+: Returns `size(array) - 1`, the last key (that is, index).
+
+`lastValue(array)`
+: Returns `array[lastKey(array)]`.
 
 `pop(array)`
 : Remove the last element from the array and return it, or `∅` if the array is empty. O(1) expected amortized time.
@@ -960,7 +970,7 @@ Array
 
 `removeValues(array, x)`
 : Remove every instance of `x` in the array, maintaining order. O(n) time in the original
-  length of the array.  Does nothing if `x` is not in the array.
+  length of the array.  Does nothing if `x` is not in the array. See also `fastRemoveValue()`
 
 `removeAll(array)`
 : Remove everything from the array. Same as `resize(array, 0)`.
@@ -990,7 +1000,7 @@ Array
 : Return the subarray of `array` between `s` (inclusive) and
   optional `e` (exclusive, defaults to length).
 
-`sort(array, k)`
+`sort(array, k, reverse (= false))`
 : Sort the array from least to greatest. If `k` is a string, then
   elements of the array are assumed to be objects and are sorted by
   that key. If `k` is a number, then elements of the array are assumed
@@ -1005,6 +1015,9 @@ Array
   
   If `k` is not specified and the array contains numbers or strings,
   then they are sorted by natural order.
+  
+  If `reverse` is true, then the array is sorted in reverse order
+  from greatest to least.
 
 
 String
@@ -1037,6 +1050,12 @@ String
    - `".00"` (or any other trailing zero sequence): 4.91 
    - `"00"` (or any other leading zero sequence): 07
    - `" 0"` (or any other leading space sequence followed by a zero sequence): " 7"
+
+`lastKey(string)`
+: Returns `size(string) - 1`.
+
+`lastValue(string)`
+: Returns `string[lastKey(string)]`.
 
 `lowerCase(s)`
 : Returns the lower case version of the string.
@@ -1099,6 +1118,10 @@ Object
 `fastRemoveKey(object, k)`
 : Same as `removeKey` for a object.
 
+`fastRemoveValue(object, value)`
+: Delete one element that is `== v`, or do nothing if there is no such element. 
+  See also `removeValues()`.
+
 `find(object, x)`
 : Find a key for which the value is `x`.
   Returns `∅` if not found. O(n) time in the number of key-value pairs.
@@ -1112,7 +1135,7 @@ Object
   Use `object[k] ≠ ∅` to test for containment explicitly.
 
 `removeValues(object, v)`
-: Remove every instance of `v` from the object.
+: Remove every instance of `v` from the object. See also `fastRemoveValue()`.
 
 `removeAll(object)`
 : Remove everything from the object. It is faster to assign to a new, empty object than to
@@ -1131,10 +1154,9 @@ Random Values
 
 ### 1D
 
-`makeRnd(seed = nil)`
+`makeRnd(seed (= localTime().millisecond))`
 : Returns a new _function_ that acts like `rnd()` but has its own private
-  seed and internal state. If the seed is not specified then it is chosen
-  differently for every run. See also `srand()`.
+  seed and internal state. See also `srand()`.
 
 `rnd()`
 : `rnd(0, 1)`
@@ -1146,7 +1168,7 @@ Random Values
 `rndGaussian()`
 : Same as `rndGaussian(0, 1, rnd)`
   
-`rndGaussian(mean, stddev, rnd = rnd)`
+`rndGaussian(mean, stddev, rnd (= rnd))`
 : Returns a Gaussian distributed random number on the distribution
   with the given mean and standard deviation. See also `rndTruncatedGaussian()`.
 
@@ -1160,14 +1182,14 @@ Random Values
   an alternative function previously created by `makeRnd()` can be
   passed instead.
   
-`rndSign(rnd = rnd)`
+`rndSign(rnd (= rnd))`
 : Returns +1 or -1 with equal probability.
 
-`rndTruncatedGaussian(mean, stddev, radius, rnd = rnd)`
+`rndTruncatedGaussian(mean, stddev, radius, rnd (= rnd))`
 : Returns a Gaussian distributed random number within `radius` of
   the mean. See also `rndGaussian()`.
 
-`srand(seed = nil)`
+`srand(seed (= localTime().millisecond))`
 : Reset the default random number generator, `rnd()`, using an optional seed.
   See also `makeRnd()`.
 
@@ -1252,7 +1274,7 @@ Vector
 
 Most of the math functions and operators defined for numbers also 
 operate component-wise on vectors represented as structures or arrays.
-For example, `clamp()`, `min()`, `+`, `/`, etc.
+For example, `clamp()`, `min()`, `loop()`, `+`, `/`, etc.
 
 The following vector operations can be applied to any array or object,
 including `xy()` and `rgb()` values, except where specific key names are mentioned:
@@ -1338,6 +1360,9 @@ Math
 `ceil(x)`
 : Return the nearest integer value of `x` towards positive infinity.
 
+`ceil(x, u)`
+: Ceil to the nearest multiple of `u` using `ceil(x / u) * u`.
+
 `clamp(x, lo, hi)`
 : Clamp `x` to the range [`lo`, `hi`] inclusive.
 
@@ -1356,6 +1381,9 @@ Math
 
 `floor(x)`
 : Return the nearest integer value of `x` towards negative infinity.
+
+`floor(x, u)`
+: Floor to the nearest multiple of `u` using `floor(x / u) * u`.
 
 `hash(x, y)`
 : A hash value of string or number `x`, returning a value on [0, 1].
@@ -1416,6 +1444,9 @@ Math
 
 `mid(a, b, c)`
 : Middle argument once sorted. Can be used for clamping.
+
+`noise(octaves, v)`
+: Applies `noise()` to an `xy()`, `xyz()`, or array position.
 
 `noise(octaves, x, y (=0), z (=0))`
 : Value noise on the range [-1, 1], bicubically interpolated between integer locations at
@@ -2221,10 +2252,15 @@ endpoints and borders.
 : Draw a circle or filled disk centered at (`center.x`, `center.y`)
   with radius `r` and z-order `z`.
 
-`drawLine(A, B, color, z (= 0))`
+`drawLine(A, B, color, z (= 0), openA (= false), openB (= false))`
 : Draw a 1-pixel line from (`A.x`, `A.y`) to (`B.x`, `B.y`) using z-order `z`.
   When using the default transformation, put the endpoints at half-pixel
   positions for the best alignment with the pixel grid.
+  
+  If `openA` is true, then the first pixel is not drawn in the line.
+  If `openB` is true, then the last pixel is not drawn in the line.
+  These are useful when drawing polylines and curves with transparency, 
+  to avoid double-coloring the joints between individual line segments.
 
 `drawPoint(P, c, z (= 0))`
 : Set the color of pixel (`P.x`, `P.y`) to color `c` with z-order `z`.
@@ -2278,10 +2314,10 @@ endpoints and borders.
 `drawText(args)`
 : Keyword version of `drawText()`. Pass an object that has properties
   whose names match the arguments of the positional version. For example,
-  `drawText({text: "Fire!", pos: xy(100, 100), xAlign:-1, z: 2})`.
+  `drawText({text: "Fire!", pos: xy(100, 100), xAlign:"left", z: 2})`.
   Values default according to the positional argument version.
 
-`drawText(font, text, pos, color (= nil), shadow (= nil), outline (= nil), xAlign (= -1), yAlign (= 1), z (= 0), wrapWidth (= nil), textSize (= size(text)), markup (= false))`
+`drawText(font, text, pos, color (= nil), shadow (= nil), outline (= nil), xAlign (= "left"), yAlign (= "baseline"), z (= 0), wrapWidth (= nil), textSize (= size(text)), markup (= false))`
 : Print string `text` relative to `pos` and return an `xy()` of the bounding box. 
   
   x-alignment of `-1` or `"left"` = left, 
@@ -2331,8 +2367,11 @@ endpoints and borders.
   to avoid memory allocation. If the pixel is out of bounds for that sprite, 
   returns `nil` if there is no `result` specified and `rgba(0,0,0,0)`
   in `result` otherwise.
-  
-`intersectClip(x (= nil), y (= nil), z (= nil), w (= nil), h (= nil), d (= nil))`
+
+`intersectClip(args)`
+: Object version of `intersectClip()`.
+
+`intersectClip(pos (= nil), size (= nil), z (= nil), zSize (= nil))`
 : Intersect the current clipping region with this new one. Ignores the
   current transformation.
 
@@ -2419,15 +2458,16 @@ The final image drawn can be transformed in limited ways during scan
 out to the display, as if it were a sprite being drawn to the screen.
 Setting any post effects may slow down rendering slightly.
 
-This is an advanced feature.
+`extendPostEffects(args)`
+: Like `setPostEffects()` but overrides any fields specified while preserving unspecified ones.
 
-`resetPostEffects()`
-: Restore the defaults, which directly composite each frame.
+`getPostEffects()`
+: Return the current post effects in a form that can be passed to `setPostEffects()`.
 
 `setPostEffects(args)`
 : The arguments have the following fields, all optional:
   - `background` is an `rgba()` to draw in the background behind the new frame. The `a` component
-    controls how opaque the background is. Setting it to 0 allows new frames to be blended on
+    controls how opaque the background is. Setting `background.a = 0` allows new frames to be blended on
     top of old ones for a motion blur effect.
   - `color` is an `rgba()` to combine with the the new frame before it is composited. Setting the `a`
     to 0 disables the color.
@@ -2438,6 +2478,9 @@ This is an advanced feature.
   - `pos` is an `xy` translation from the center, with +y = down
   - `opacity` is the amount of opacity to use for the new frame. If `background.a` and `opacity` are
     both less than 1 then the new and previous frames blend together
+
+`resetPostEffects()`
+: Restore the defaults, which directly composite each frame.
 
 
 Map
@@ -2644,10 +2687,14 @@ Frame Hooks
 ----------------------------------------------------------
 
 Frame hooks are useful for registering animation callbacks that happen
-at the beginning of every frame or after a set number of frames. The
-order of execution between frame hooks is undefined and can change as
-hooks expire. The transform for a frame hook is whatever was set at
+at the beginning of every frame or after a set number of frames. 
+
+The order of execution between frame hooks is undefined and can change
+as hooks expire. The transform for a frame hook is whatever was set at
 the end of the previous frame.
+
+When drawing, use `z` arguments to ensure that drawn objects overlap 
+in the desired order regardless of the order in which drawing executes.
 
 `addFrameHook(callback, endCallback, lifetime, runInMode (= getMode()))`
 : Register a `callback` function to run every frame for `lifetime`
@@ -2662,6 +2709,19 @@ the end of the previous frame.
   - `lifetime`: Number of frames to run for. May be `inf`.
   - `runInMode`: Only execute while the game is in this mode. Use `nil` to
     run in every mode.
+
+`addFrameSequence(...)`
+: Add a series of frame hooks that run in the current mode. Returns a master
+  hook that can be used with `removeFrameHook()` to cancel the entire sequence.
+  Each argument may be either a function, `nil`, or `{callback: function, frames: number}`.
+  The callbacks run for the specified number of frames. If not `nil`, the callback
+  signature is `def callback(framesleft, lifetime)`.
+  Example: `addFrameSequence(drawExplosion, {callback: drawFire, frames: 20}, {callback: drawSmoke, frames: 4}, cleanup)`.
+  Note that for convenience, `addFrameSequence(...array)` will take the arguments from an array instead of as separate
+  parameters.
+
+`delay(callback, delayFrames)`
+: Same as `addFrameHook(nil, callback, delayFrames or 0)`.
 
 `removeFrameHook(hook)`
 : Remove this frame hook immediately, without executing its `endCallback`.
@@ -2690,7 +2750,7 @@ Time
   Do not use this time for simulation because it will have inconsistent 
   jumps between frames dues to frame rate scaling.
 
-`localDate()`
+`localTime()`
 : Returns an object with the following properties, set in the current time zone:
 
   - `year`, e.g., 2019
@@ -3109,6 +3169,8 @@ Fonts
 
 ![`quad://fonts/blackletter-14.font.json`](../fonts/blackletter-14.png)
 
+![`quad://fonts/broderick-14.font.json`](../fonts/broderick-14.png)
+
 ![`quad://fonts/cpc-14.font.json`](../fonts/cpc-14.png)
 
 ![`quad://fonts/ivanhoe-12.font.json`](../fonts/ivanhoe-12.png)
@@ -3210,6 +3272,7 @@ Sounds
 ![`quad://sounds/34-Powerup.sound.json`](../sounds/34-Powerup.mp3) ![`quad://sounds/35-Powerup.sound.json`](../sounds/35-Powerup.mp3)
 ![`quad://sounds/36-Powerup.sound.json`](../sounds/36-Powerup.mp3) ![`quad://sounds/37-Powerup.sound.json`](../sounds/37-Powerup.mp3)
 ![`quad://sounds/38-Powerup.sound.json`](../sounds/38-Powerup.mp3) ![`quad://sounds/39-Powerup.sound.json`](../sounds/39-Powerup.mp3)
+![`quad://sounds/29-Powerup.sound.json`](../sounds/29-Powerup.mp3)
 
 ### Hit
 
@@ -3353,7 +3416,10 @@ options. Project files should have the double extension `.game.json`.
           "foo": {"type": "object", "value": {"a": {"type": "boolean", "value": true}},
       "starmap": {"type": "raw", "url": "stars.yml"},
       "name": "Destrier",
-      "knight": {"type": "raw", "value": {"upgrades": [10, 7, 3, 1], "hp": 50}}
+      "knight": {"type": "object", "value": {
+          "upgrades": {"type": "array", "value": [10, 7, 3, 1]},
+          "hp": 50, 
+          "inventory": {"type": "object", "value": {"food": 4, "sword": "a sword"}}}},
       "numbers": {"type": "array", "value": [
         {"type": "number", "value": "10"},
         {"type": "number", "value": "infinity"}]}
@@ -3396,8 +3462,9 @@ Each game must also contain:
   
 You can create the `preview.png` image by pressing Shift+F8 while your game is playing. It will
 record 3s of video, process it to the correct resolution, and open it in a new browser tab. 
-Download this image, compress it as you would a sprite, and save it as your preview. The total
-side should be around 100 kB. If it is much larger, then there will be delay for players browsing
+Download this image, compress it as you would a sprite, and save it as your preview. Seek to keep
+the total size around 100 kB for the image by choosing content that compresses well and using a good
+compression tool. If the image is much larger, then there will be delay for players browsing
 your game in the discover tab.
 
 
@@ -3576,10 +3643,13 @@ Fonts have a JSON descriptor file that looks like:
     // Optional copyright and license information
     "license": "Public Domain 2018 by Danika Farheed",
 
-    // Include any gutters in the charSize
+    // Size of the glyph bounding boxes. Include gutter pixels in the 
+    // charSize. The loader repacks glyphs tightly, so extra padding 
+    // or horizontal alignment is irrelevant at runtime (but affects
+    // distribution size and loading time).
     "charSize": {"x": 8, "y": 14},
     
-    // Spacing between letters and lines
+    // Spacing between letters and lines during rendering
     "letterSpacing": {"x": 2, "y": 3},
     
     // Defaults to 1 pixel
@@ -3591,6 +3661,11 @@ Fonts have a JSON descriptor file that looks like:
     "baseline": 11
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can generate a default version of this JSON with the
+[Fontpack✜](../tools/fontpack.html) tool from a PNG image.
+You can generate a PNG template for the glyphs by taking a 
+screenshot from the [Fontgen✜](../tools/fontgen.html) tool.
 
 By convention, the image filename contains the maximum size of the
 individual glyphs, which is usually smaller than the charSize due to
@@ -5056,6 +5131,31 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
+2019 Dec 14: Beta update 17
+
+- Fixed `getClip()` off-by-one error
+- Changed `intersectClip()` to follow the argument conventions of `setClip()`
+- Fixed `drawText()` using the incorrect vertical clipping region
+- Added `lastValue()` and `lastKey()` for arrays and strings
+- Made `floor()` and `ceil()` variants that take a rounding precision
+- Added `fastRemoveValue()`
+- Fixed misalignment of `-` character and enlarged the `+` character in the broderick-7 font
+- Added `delay()` and `addFrameSequence()`
+- Added options for open-ended line segments in `drawLine()` to support
+  drawing polylines and curves with transparency 
+- Fixed `setPostEffects()` background color crashing the emulator
+- Made Modes slightly wider in the visualization graph to accomodate longer mode names
+- Fixed a bug in the parsing of `because` statements that contained parentheses
+- Added support for type `"object"` in game JSON constants
+- Added `broderick-14` font
+- Made `loop()` work on vectors
+- Made `noise()` work on vectors
+- Added `extendPostEffects()` and `getPostEffects()`
+- Fixed `setPostEffects()` not resetting to defaults first
+- Added optional `reverse` argument to `sort()`
+- Increased analog stick dead zone to 40% to avoid accidental cross-axis input
+
+
 2019 Dec 1: Beta update 16
 
 - Added support for `"array"` constant types in `.game.json` files
@@ -5269,7 +5369,7 @@ Changes for both the specification and implementation in each release.
 - Changed `pyx` to `pyxl`
 - Added graphics frame scaling for slower devices
 - Added QR codes for easily launching on mobile devices
-- Added `localDate()`
+- Added `localTime()`
 - Added support for inserting padding with `fontpack.html`
 - Added named-argument versions of `setTransform()` and `setClip()`
 - Changed the arguments of `setTransform()` to more closely match other graphics commands

@@ -241,7 +241,7 @@ function getIdealGamepads() {
     const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
     let gamepadArray = [];
     // Center of gamepad
-    const deadZone = 0.2;
+    const deadZone = 0.35;
     
     // Compact gamepads array and perform thresholding
     for (let i = 0; i < gamepads.length; ++i) {
@@ -356,6 +356,7 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
 
     activeSoundHandleMap.set(handle, true);
     handle._ = source;
+    handle.audioClip = audioClip;
 
     source.start(0, (startPositionMs % (source.buffer.duration * 1000)) / 1000);
 
@@ -417,13 +418,25 @@ function playAudioClip(audioClip, loop, volume, pan, pitch, time) {
     if (! audioClip || ! audioClip.source) {
         throw new Error('playAudioClip() requires an audioClip');
     }
-    
+
     // Ensure that the value is a boolean
     loop = loop ? true : false;
     time = time || 0;
     if (pan === undefined) { pan = 0; }
     if (pitch === undefined) { pitch = 1; }
     if (volume === undefined) { volume = 1; }
+
+    if (isNaN(pitch)) {
+        throw new Error('pitch cannot be NaN for playAudioClip()');
+    }
+
+    if (isNaN(volume)) {
+        throw new Error('volume cannot be NaN for playAudioClip()');
+    }
+
+    if (isNaN(pan)) {
+        throw new Error('pan cannot be NaN for playAudioClip()');
+    }
 
     if (audioClip.loaded) {
         return internalSoundSourcePlay({_:null}, audioClip, time * 1000, loop, volume, pitch, pan);
@@ -566,11 +579,11 @@ function submitFrame() {
 
         ctx.save();
         if (_postFX.background.a > 0) {
-            if (_postFX.background.r === 0 && _postFX.background.g === 0 && _postFX.background.b === 0 && _postFX.background.a === 0) {
+            if ((_postFX.background.r === 0) && (_postFX.background.g === 0) && (_postFX.background.b === 0) && (_postFX.background.a === 0)) {
                 ctx.clearRect(0, 0, emulatorScreen.width, emulatorScreen.height);
             } else {
                 ctx.fillStyle = rgbaToCSSFillStyle(_postFX.background);
-                ctx.fillRect();
+                ctx.fillRect(0, 0, emulatorScreen.width, emulatorScreen.height);
             }
         }
         ctx.globalAlpha = _postFX.opacity;
