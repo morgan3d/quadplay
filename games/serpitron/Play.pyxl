@@ -1,0 +1,444 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+def setNextDirection(snake, x, y):
+   const θ = atan(y, x)
+   // Prevent moving backwards into itself, including cases where
+   // the neck piece would be hit because the snake previously turned
+   // within the grace period
+   if (|loop(snake.body[0].angle + 180°, 360°) - loop(θ, 360°)| > ε and
+       |loop(snake.body[1].angle + 180°, 360°) - loop(θ, 360°)| > ε):
+      snake.nextAngle = θ
+
+
+      
+// Amount is the visible amount, which is 1/3 of the number of elements to remove
+def shrinkSnake(snake, amount):
+   snake.ghostFrames = max(snake.ghostFrames, max(hitGhostFrames, ceil(amount / 2 + 6)))
+   
+   def update():
+      // Chop off elements at both ends
+      if size(snake.body) - 6 ≥ 3 minSnakeBody + 1:
+         snake.body = slice(snake.body, 3, size(snake.body) - 3)
+         snake.nextAngle = snake.body[0].angle
+
+   if amount > 0: addFrameHook(update, ∅, amount / 2)
+
+   
+   
+def recoilSnake(snake, nextHeadPos):
+   playPositionalAudioClip(hitAudioClip, nextHeadPos)
+   
+   if size(snake.body) > 3 minSnakeBody + 1:
+      // Shrink
+      const oldLen = (size(snake.body) - 1) / 3
+      const newLen = max(⌊oldLen * (100% - hitPenaltyFactor)⌋, minSnakeBody)
+      const change = round(oldLen - newLen)
+      shrinkSnake(snake, change)
+   else:
+      // Snake is already tiny. Contract the whole body into the tail, snapping
+      // to the grid
+      nextHeadPos = round(lastValue(snake.body).pos, cellSide)
+      snake.ghostFrames = hitGhostFrames
+      for piece in snake.body:
+         piece.pos = nextHeadPos
+         
+   return nextHeadPos
+   
+
+def moveSnake(snake):
+   if snake.growIndex:
+      snake.growIndex += 2; snake.growScale *= 99%
+      if snake.growIndex > size(snake.body) or snake.growScale < 100%:
+         snake.growIndex = ∅; snake.growScale = 100%
+         
+   // Copy positions:
+   let i = lastKey(snake.body);
+   while i > 0:
+      // Hand off the objects to avoid allocation
+      snake.body[i] = snake.body[i - 1]
+      --i
+
+   // Move the head. Don't mutate: create a new object, since
+   // the old object is shared with element 1 now.
+
+   const neck = snake.body[1]
+   // The round below is to account for error in sin and cos, but
+   // wrapping the entire expression eliminates any accumulated
+   // precision error
+   let nextHeadPos = loop(neck.pos + snake.speed * xy(round(cos(neck.angle)), round(sin(neck.angle))), playSize)
+
+   // Position will be overriden momentarily; leave it as at the neck
+   // until after collision detection
+   const head = {angle: neck.angle, pos: neck.pos}
+   snake.body[0] = head
+
+   // Allow turning late by one pixel
+   if head.angle ≠ snake.nextAngle:
+       // Direction the snake was going already
+       const dir = xy(round(cos(head.angle)), round(sin(head.angle)))
+       if dir.x and ((nextHeadPos.x mod cellSide <= 1) or (nextHeadPos.x mod cellSide >= cellSide - 1)):
+          // Just missed turning up or down
+          nextHeadPos.x = round(nextHeadPos.x, cellSide)
+       else if dir.y and ((nextHeadPos.y mod cellSide <= 1) or (nextHeadPos.y mod cellSide >= cellSide - 1)):
+          // Just missed turning left or right
+          // Snap to the grid
+          nextHeadPos.y = round(nextHeadPos.y, cellSide)
+       
+   // Check for collisions before moving, so that the head doesn't collide with
+   // itself
+   snake.ghostFrames = max(0, snake.ghostFrames - 1)
+   if (nextHeadPos.x mod cellSide == 0) and (nextHeadPos.y mod cellSide == 0):
+      // Moving onto a grid line. Check for collision and update angle
+      head.angle = snake.nextAngle
+      const obstruction = samplePosition(nextHeadPos, 3, false, false, snake)
+      if obstruction:
+         if obstruction.snake and snake.ghostFrames ≤ 0:
+            
+            // Reward the other player, but show the animation
+            // at the hit point if this is not a self hit
+            if snake ≠ obstruction.snake:
+               awardBonus(obstruction.snake, hitBodyPointBonus + 300 size(snake.body), snake.body[0].pos)
+
+            nextHeadPos = recoilSnake(snake, nextHeadPos)
+                  
+         else if obstruction.powerup:
+            playPositionalAudioClip(obstruction.powerup.audioClip, nextHeadPos)
+            if obstruction.powerup.type == "speed":
+               snake.speed = obstruction.powerup.value;
+               // Grow the snake by duplicating the tail
+               for i < 12: push(snake.body, lastValue(snake.body))
+               
+            else if obstruction.powerup.type == "grow":
+               snake.growIndex = 1;
+               snake.growScale = if obstruction.powerup.value == growAmount then 250% else 150%;
+               // Grow the snake by duplicating the tail
+               for i < 3 obstruction.powerup.value: push(snake.body, lastValue(snake.body))
+            else:
+               // Add points
+               awardBonus(snake, obstruction.powerup.value)
+            
+            // Remove the powerup
+            fastRemoveValue(powerupArray, obstruction.powerup)
+            if waveType ≠ "Coffee Break" and size(powerupArray) == 2:
+               // Triple the value of the last powerups remaining to incentivize them
+               for p in powerupArray: p.value *= 3
+               
+         else if obstruction.building:
+            // Can hit buildings even in ghost mode
+            nextHeadPos = recoilSnake(snake, nextHeadPos)
+            
+   head.pos = nextHeadPos
+
+
+   
+// pos defaults to the snake's head
+def awardBonus(snake, amount, pos):
+   snake.score += amount
+
+   if not pos:
+      pos = snake.body[0].pos + 10 xy(cos(snake.nextAngle), sin(snake.nextAngle))
+      
+   pos = pos + xy(0, 3)
+   const color = rgba(snake.textColor)
+   const outline = rgba(snake.color)
+   const text = "+" + amount
+
+   def update(left, total):
+      // Fade out at end of life
+      const α = min(100%, ¼ (total - left))
+      color.a = α
+      outline.a = α
+      pos.y += ½
+      
+      drawText(font, text, pos, color, ∅, outline, "center", "bottom", 10)
+   
+   addFrameHook(update, ∅, 70)
+
+      
+                  
+def drawSnake(snake):
+   // Blink when shrinking
+   if (snake.ghostFrames > 0) and (modeFrames mod 2): return
+   
+   assert(snake.body.length mod 3 == 1)
+   
+   // Used to avoid allocation and vector math overhead in the inner loop, and because
+   // we need the final position to draw the crown on the leader
+   let pos = xy(0, 0)
+   let offset = xy(0, 0)
+   let shadowPos = xy(0, 0)
+   
+   // Draw backwards, so that the head is on top
+   const N = lastKey(snake.body)
+   let i = N
+
+   while i ≥ 0:
+      const piece = snake.body[i]
+
+      // Draw the head with the next angle, so that it seems
+      // more responsive when turning and gives feedback
+      // even while the player is waiting for the next turn.
+      const θ = if i == 0 then snake.nextAngle else piece.angle
+
+      let sprite
+      if i == 0:      sprite = snake.headSprite
+      else if i == N: sprite = snake.tailSprite
+      else:           sprite = snake.bodySprite
+
+      offset.x = cos(12% piece.pos.y) * 1.25 sin θ
+      offset.y = cos(12% piece.pos.x) * 1.25 cos θ
+
+      let scale = 1
+      if i > 0 and snake.growIndex:
+         scale = lerp(1, snake.growScale, max(0, 1 - (i - snake.growIndex)² / 91))
+      
+      XY_ADD_XY(piece.pos, offset, pos)
+      XY_ADD_XY(pos, shadowOffset, shadowPos)
+      
+      drawSprite(sprite, pos, θ, scale)
+      drawSprite(sprite, shadowPos, θ, scale, shadowOpacity, shadowZ, shadowColor)
+
+      // Draw the wraparound versions
+      if pos.x > playSize.x - cellSide: drawSprite(sprite, pos - xy(playSize.x, 0), θ, scale)
+      if pos.y > playSize.y - cellSide: drawSprite(sprite, pos - xy(0, playSize.y), θ, scale)
+
+      // Draw only every third element
+      i -= 3
+
+   if size(snakeArray) > 1:
+      // Draw hats (and guns) in multiplayer
+      if snake.hasGun:
+         let θ = snake.body[0].angle
+         const forward = 8 xy(cos θ, sin θ)
+         let axis = 2 xy(sin θ, -cos θ)
+         let scale = xy(1, 1)
+         if |θ - 180°| < ε: scale = xy(-1, 1); θ = 0°; axis *= -1
+         
+         drawSprite(shotgunSprite, pos + forward + axis, θ, scale)
+         drawSprite(shotgunSprite, pos + forward + axis + shadowOffset, θ, scale, shadowOpacity, shadowZ, shadowColor)
+         drawSprite(hatSpritesheet.cowboy, pos + xy(0, 5))
+         
+      else if snake == snakeArray[0]:
+         // Leader
+         drawSprite(hatSpritesheet.crown, pos + xy(0, 4))
+
+      else if size(snakeArray) > 2 and snake == snakeArray[1]:
+         // Challenger
+         drawSprite(hatSpritesheet.tiara, pos + xy(0, 4))
+         
+      else if snake == lastValue(snakeArray):
+         // Loser
+         drawSprite(hatSpritesheet.beanie, pos + xy(0, 5))
+         const s = 4 |cos modeFrames|
+         drawLine(pos + xy(-s, 6), pos + xy(s, 6), #0)
+
+
+
+def drawPowerups():
+   // Animate the last powerups changing size
+   const scale = if size(powerupArray) > 2 then 100% else (100% + 50% cos(⅕ modeFrames))
+   
+   for f ∊ powerupArray:
+      const angle = if f.angle == ∅ then 0° else (f.angle + 20° noise(0, 15% f.pos.x, 15% f.pos.y))
+      drawSprite(f.sprite, f.pos, angle, scale)
+      drawSprite(f.sprite, f.pos + shadowOffset, angle, scale, shadowOpacity, shadowZ, shadowColor)
+
+      
+      
+def drawBuildings():
+   for sprite, pos, shadowShape ∊ ob ∊ buildingArray:
+      drawSprite({sprite: sprite, pos: pos, z: 4})
+
+      // Shadow points shared by both shapes
+      const LL = xy(pos.x - ½ sprite.size.x + ½, pos.y - ½ sprite.size.y + ½)
+      const LR = xy(pos.x + ½ sprite.size.x, LL.y)
+      const UR = xy(LR.x, pos.y + ½ sprite.size.y - 2)
+      
+      if shadowShape == "tri":
+         // Far corner
+         const D = LR + ¼ xy(1, -2) * sprite.size
+         drawTri(LL, D, LR, shadowColor, ∅, shadowZ)
+         drawTri(UR, LR, D, shadowColor, ∅, shadowZ)
+      else if shadowShape == "rect":
+         drawTri(LL, LL + xy(10, -20), LL + xy(10, 0), shadowColor, ∅, shadowZ)
+         drawTri(UR, UR + xy(0, -20), UR + xy(10, -20), shadowColor, ∅, shadowZ)
+         drawRect(LL + xy(10, -20), xy(sprite.size.x, sprite.size.y), shadowColor, ∅, shadowZ)
+      
+
+      
+def spawnShot(snake):
+   const ϕ = snake.body[0].angle
+   const θ = ϕ + rnd(-½ shotgunSpreadAngle, ½ shotgunSpreadAngle)
+   const dir = xy(cos θ, sin θ)
+   const color = if rnd() < 25% then #fa5 else gray(rnd(20%, 100%))
+   
+   push(shotArray, {
+      pos:    xy(snake.body[0].pos) + dir * rnd(5, 10) + 6 xy(cos ϕ, sin ϕ),
+      vel:    dir * rnd(3, 6),
+      color:  color,
+      snake:  snake,
+      frames: rndInt(15, 30)
+   })
+
+
+   
+def processShotArray():
+   const nextPos = xy(0, 0)
+   for shot ∊ shotArray:
+      // Draw the shot
+      XY_ADD_XY(shot.pos, shot.vel, nextPos)
+      drawLine(shot.pos, nextPos, shot.color)
+
+      // Move the shot
+      shot.pos.x = loop(nextPos.x, playSize.x)
+      shot.pos.y = loop(nextPos.y, playSize.y)
+
+      // Check for collisions
+      const hit = samplePosition(shot.pos, 6, false, true)
+      if hit:
+         fastRemoveValue(shotArray, shot)
+         if hit.snake and hit.snake ≠ shot.snake:
+            // Hit another player
+            playPositionalAudioClip(hitAudioClip, shot.pos)
+            if hit.bodyIndex == 0:
+               // Hit the head! Massive shrink.
+               awardBonus(shot.snake, round(max(6 hitBodyPointBonus, 10% hit.snake.score)))
+               shrinkSnake(hit.snake, round(50% size(hit.snake.body)))
+            else:
+               // Hit the body. Small shrink.
+               awardBonus(shot.snake, round(max(2 hitBodyPointBonus, 4% hit.snake.score)))
+               shrinkSnake(hit.snake, 3)
+               
+            // Prevent that player from being hit by more shot from the same blast
+            hit.snake.ghostFrames = max(hit.snake.ghostFrames, 35)
+            
+
+      // Check for expiration
+      --shot.frames
+      if shot.frames ≤ 0: fastRemoveValue(shotArray, shot)
+
+      
+def processWeatherArray():
+   if weatherType == "": return
+
+   // Simulate weather elements
+   for w ∊ weatherArray:
+      w.angle += w.spin
+      w.pos.x = loop(w.pos.x + w.vel.x, -50, playSize.x + 50)
+      w.pos.y = loop(w.pos.y + w.vel.y, -75, playSize.y + 25)
+      drawEntity(w)
+      
+      if weatherType == "Cloudy":
+         drawSprite({sprite: w.sprite, pos: w.pos + xy(15, -30), scale: w.scale, overrideColor: shadowColor, z: shadowZ})
+   
+   
+
+enter
+────────────────────────────────────────────────────────────────────────
+screenShakeFrames = 0
+
+resetPostEffects()
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+if backgroundSound: stopSound(backgroundSound)
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+if size(powerupArray) == 0:
+   setMode(NewLevel) because "powerupArray == []"
+
+setBackground(locationTable[locationName].background)
+
+
+////////////////////////////////////////////////////////////////////////////////
+// UI
+resetTransform()
+resetClip()
+
+drawScores()
+
+drawText(font, levelDescription, xy(½ screenSize.x, screenSize.y - 6), #b, ∅, ∅, "center", "center")
+
+if size(snakeArray) > 1:
+   // Multiplayer: show level number
+   drawText(font, "Level " + (level + 1) + "/" + numLevels, xy(½ screenSize.x, 6), #b, ∅, ∅, "center", "center")
+else:
+   // Single player: show time left
+   drawText(font, formatNumber(singlePlayerTimeLeft, "stopwatch"), xy(½ screenSize.x, 6), #b, ∅, ∅, "center", "center")
+
+////////////////////////////////////////////////////////////////////////////////   
+// Make the screen size a multiple of 6, the grid size, and then
+// shift over so that the center of the first cell is at (0, 0)
+// in pixel coordinates so that sprites appear on the grid.
+local:
+   let shakeOffset = xy(0, 0)
+   if screenShakeFrames > 0:
+      --screenShakeFrames
+      shakeOffset = xy(rnd(-3, 3), rnd(-3, 3))
+      
+   setClip(xy(0, INFO_HEIGHT), xy(screenSize.x, screenSize.y - 2 INFO_HEIGHT))
+   setTransform(xy(½ cellSide, screenSize.y - INFO_HEIGHT - ½ cellSide) + shakeOffset, xy(1, -1))
+
+if waveType == "Rats":
+   for angle, speed, pos ∊ rat ∊ powerupArray:
+      pos = loop(speed * round(xy(cos angle, sin angle)) + pos, playSize)
+      if (pos.x mod cellSide < ¼) and (pos.y mod cellSide < ¼) and ξ < 3%:
+         angle += 90° rndSign()
+
+drawPowerups()
+drawBuildings()
+processShotArray()
+processWeatherArray()
+
+// Keep the list in sorted order
+sort(snakeArray, "score", true)
+
+for score, control ∊ snake ∊ snakeArray:
+   if control.x: setNextDirection(snake, control.x, 0)
+   else if control.y: setNextDirection(snake, 0, control.y)
+
+   score += 1 + max(0, ⌊(size(snake.body) - 20) / 30⌋)
+
+   moveSnake(snake)
+   
+   // Fire gun
+   if (modeFrames > 60 and
+       snake.hasGun and
+       (((modeFrames + 35 snake.playerIndex) mod shotgunPeriodFrames == 0) or ξ < 2%)):
+      screenShakeFrames = max(screenShakeFrames, 8)
+      playPositionalAudioClip(shotgunAudioClip, snake.body[0].pos)
+      for i < 55: spawnShot(snake)
+      
+   drawSnake(snake)
+
+
+if modeFrames mod growPeriod == 0:
+   for snake ∊ snakeArray:
+      if size(snake.body) < 3 adultSize + 1:
+         for i < 3:
+            push(snake.body, lastValue(snake.body))
+
+            
+if modeFrames < fadeInFrames:
+   // Fade in
+   setPostEffects({opacity: modeFrames / fadeInFrames})
+else if modeFrames == fadeInFrames:
+   resetPostEffects()
+else:
+   // Check for pause
+   for control ∊ snake ∊ snakeArray:
+      if control.pp or control.qq: pushMode(Pause) because "Pressed ⓟ"
+
+   if weatherType == "Blizzard":
+      const a = clamp(noise(0, modeFrames / 60) * 20% + 35%, 20%, 55%)
+      debugWatch(a)
+      setPostEffects({background: #f, opacity: lerp(1, a, min(1, (modeFrames - fadeInFrames) / fadeInFrames))})
+   
+
+singlePlayerTimeLeft -= 1 / 60
+if singlePlayerTimeLeft <= 0: setMode(EndTransition) because "Singleplayer time limit"

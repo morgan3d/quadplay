@@ -60,11 +60,6 @@ function getPostEffects() {
 }
 
 function setPostEffects(args) {
-    resetPostEffects();
-    extendPostEffects(args);
-}
-
-function extendPostEffects(args) {
     if (args.background !== undefined) {
         _postFX.background.r = (args.background.r !== undefined) ? args.background.r : 0;
         _postFX.background.g = (args.background.g !== undefined) ? args.background.g : 0;
@@ -119,7 +114,7 @@ function delay(callback, frames) {
 }
 
 
-function addFrameSequence(...seq) {
+function sequence(...seq) {
     let currentStep = 0;
     let currentFrame = 0;
 
@@ -987,6 +982,64 @@ function resetTransform() {
 }
 
 
+function composeTransform(pos, dir, addZ, scaleZ, skew) {
+    if (isObject(pos) && (('pos' in pos) || ('dir' in pos) || ('z' in pos) || ('skew' in pos))) {
+        // Argument version
+        return composeTransform(pos.pos, pos.dir, pos.z, pos.skew);
+    }
+    let addX, addY, scaleX, scaleY, skewXZ, skewYZ;
+    if (pos !== undefined) {
+        if (isNumber(pos)) { throw new Error("pos argument to composeTransform() must be an xy() or nil"); }
+        addX = pos.x; addY = pos.y;
+    }
+    if (dir !== undefined) { scaleX = dir.x; scaleY = dir.y; }
+    if (skew !== undefined) { skewXZ = skew.x; skewYZ = skew.y; }
+
+    // Any undefined fields will default to the reset values
+    if (addX === undefined) { addX = 0; }
+    if (addY === undefined) { addY = 0; }
+    if (addZ === undefined) { addZ = 0; }
+    if (scaleX === undefined) { scaleX = 1; }
+    if (scaleY === undefined) { scaleY = 1; }
+    if (scaleZ === undefined) { scaleZ = 1; }
+    if (skewXZ === undefined) { skewXZ = 0; }
+    if (skewYZ === undefined) { skewYZ = 0; }
+
+    // Composition derivation under the "new transformation happens first" model:
+    //
+    // Basic transforms:
+    // screen.x = (draw.x + skew.x * draw.z) * dir.x + pos.x
+    // screen.y = (draw.y + skew.y * draw.z) * dir.y + pos.y
+    // screen.z = draw.z * zDir + z
+    //
+    // screen.z = (draw.z * zDirNew + addZNew) * zDirOld + addZOld
+    //          = draw.z * zDirNew * zDirOld + addZNew * zDirOld + addZOld
+    //          = draw.z * (zDirNew * zDirOld) + (addZNew * zDirOld + addZOld)
+    //   zAddNet = addZNew * zDirOld + addZOld
+    //   zDirNet = zDirNew * zDirOld
+    //
+    // screen.x = (((draw.x + skewNew.x * draw.z) * dirNew.x + posNew.x) + skew.x * draw.z) * dir.x + pos.x
+    //          = (draw.x * dirNew.x + skewNew.x * draw.z * dirNew.x + skew.x * draw.z) * dir.x + posNew.x * dir.x + pos.x
+    //          = (draw.x + draw.z * [skewNew.x + skew.x/dirNew.x]) * [dir.x * dirNew.x] + posNew.x * dir.x + pos.x
+    //     netAdd.x = posNew.x * dir.x + pos.x
+    //     netSkew.x = skewNew.x + skew.x / dirNew.x
+    //     netDir.x = dir.x * dirNew.x
+    
+
+    // Order matters because these calls mutate the parameters.
+    _offsetX = addX * _scaleX + _offsetX;
+    _skewXZ  = skewXZ + _skewXZ / _scaleX;
+    _scaleX  = scaleX * _scaleX;
+
+    _offsetY = addY * _scaleY + _offsetY;
+    _skewYZ  = skewYZ + _skewYZ / _scaleY;
+    _scaleY  = scaleY * _scaleY;
+    
+    _offsetZ = addZ * _scaleZ + _offsetZ;
+    _scaleZ  = scaleZ * _scaleZ;    
+}
+
+
 function setTransform(pos, dir, addZ, scaleZ, skew) {
     if (arguments.length === 0) { throw new Error("setTransform() called with no arguments"); }
     if (isObject(pos) && (('pos' in pos) || ('dir' in pos) || ('z' in pos) || ('skew' in pos))) {
@@ -996,14 +1049,13 @@ function setTransform(pos, dir, addZ, scaleZ, skew) {
 
     let addX, addY, scaleX, scaleY, skewXZ, skewYZ;
     if (pos !== undefined) {
-        if (isNumber(pos)) {
-            throw new Error("pos argument to setTransform() must be an xy() or nil");
-        }
+        if (isNumber(pos)) { throw new Error("pos argument to setTransform() must be an xy() or nil"); }
         addX = pos.x; addY = pos.y;
     }
     if (dir !== undefined) { scaleX = dir.x; scaleY = dir.y; }
     if (skew !== undefined) { skewXZ = skew.x; skewYZ = skew.y; }
 
+    // Any undefined fields will default to their previous values
     if (addX === undefined) { addX = _offsetX; }
     if (addY === undefined) { addY = _offsetY; }
     if (addZ === undefined) { addZ = _offsetZ; }
@@ -1012,7 +1064,7 @@ function setTransform(pos, dir, addZ, scaleZ, skew) {
     if (scaleZ === undefined) { scaleZ = _scaleZ; }
     if (skewXZ === undefined) { skewXZ = _skewXZ; }
     if (skewYZ === undefined) { skewYZ = _skewYZ; }
-        
+    
     _offsetX = addX;
     _offsetY = addY;
     _offsetZ = addZ;
@@ -5914,11 +5966,15 @@ function _line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2, open1, ope
             const m = dy / dx;
 
             if (open1) { ++x1; y1 += m; }            
-            if (open2) { --x2; y2 -= m; } 
-            
+            if (open2) { --x2; /* y2 is unused */ } 
+
+            // Adjust for x1 being clipped
             const step = Math.max(clipX1, x1) - x1;
             x1 += step; y1 += m * step;
+
+            // Adjust for x2 being clipped (y2 is unused, so ignore it)
             x2 = Math.min(x2, clipX2);
+            
             for (let x = x1, y = y1; x <= x2; ++x, y += m) {
                 _pset(x, y, color, clipX1, clipY1, clipX2, clipY2);
             } // for x

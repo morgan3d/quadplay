@@ -19,6 +19,23 @@ const gameArray = [{
 },
 
 {
+   title: "Serpitron",
+   developer: "CasualEffects",
+   url: "quad://games/serpitron",
+   description: "Grow your hungry serpent without crashing into obstacles or yourself. With rats, shotguns, blizzards, cities, pyramids...",
+   version: 0.5,
+   cooperative: false,
+   competitive: true,
+   minPlayers: 1,
+   maxPlayers: 4,
+   achievements: false,
+   builtin:      true,
+   highscores:   false,
+   label: splabel[0][0],
+   preview: sppreview
+},
+
+{
    title: "Ice Time",
    developer: "CasualEffects",
    url: "quad://games/icetime",

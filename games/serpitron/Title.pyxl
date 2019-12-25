@@ -1,0 +1,165 @@
+Title
+════════════════════════════════════════════════════════════════════════
+
+// Choices are "out", "choosing", "ready"
+let state
+let colorIndex
+let countdownTimer = ∅
+
+// Changes colorIndex[p] by inc and ensures that it is unique, moving it in direction
+// dir if it is not.
+def ensureUniqueColor(p, inc, dir):
+   colorIndex[p] = loop(colorIndex[p] + inc, size(colorNameArray))
+
+   let needCheck = true
+   let iteration = 0
+   while needCheck:
+      needCheck = false
+
+      // Catch a weird bug where this can lock up
+      ++iteration
+      if iteration > 100: return
+
+      // Check the other players
+      for j < 4:
+         if (j != p) and (colorIndex[j] == colorIndex[p]) and (state[j] != "out"):
+            colorIndex[p] = loop(colorIndex[p] + dir, size(colorNameArray))
+            needCheck = true
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+resetTransform()
+resetClip()
+setBackground(#a)
+srand(localTime().millisecond)
+
+countdownTimer = ∅
+// Restore player's preferences
+colorIndex = loadLocal("colorIndex") or [0, 1, 2, 3]
+state = ["out", "out", "out", "out"]
+
+if not backgroundSound or backgroundSound.audioClip ≠ titleMusic:
+   if backgroundSound: stopSound(backgroundSound)
+   backgroundSound = playAudioClip(titleMusic, true)
+
+   
+frame
+────────────────────────────────────────────────────────────────────────
+
+drawText(font, "Casual Effects presents", xy(screenSize.x / 2, 10), #d, #8, nil, "center")
+
+drawSprite(titleSprite, screenSize / 2)
+
+drawSprite(controllerSprite.player[0], xy(29, 29))
+drawSprite(controllerSprite.gamepad, xy(29, 47))
+drawSprite(controllerSprite.gamepad, xy(29, 170))
+
+drawSprite(controllerSprite.player[1], xy(screenSize.x - 30, 29))
+drawSprite(controllerSprite.gamepad, xy(screenSize.x - 30, 47))
+drawSprite(controllerSprite.gamepad, xy(screenSize.x - 30, 170))
+
+drawText(instructionsFont, replace("UD to change, R when ready | L to drop player, Q to quit",
+                       {U: joy.prompt.up,
+                        D: joy.prompt.dn,
+                        R: joy.prompt.rt,
+                        L: joy.prompt.lt,
+                        Q: joy.prompt.q}), xy(screenSize.x / 2, screenSize.y - 10),
+         #d, #8, ∅, "center", "bottom")
+
+let anyQuit = false
+let noneChoosing = true
+let anyReady = false
+
+// Loop over players, processing input and rendering
+for p < 4:
+   const control = pad[p]
+   
+   // Force out [some players accidentally hit diagonal; let Y override in that case]
+   if control.bb or (control.xx < 0 and not control.y):
+      if state[p] == "ready":
+         playAudioClip(blipAudioClip)
+         state[p] = "choosing"
+      else if state[p] == "choosing":
+         state[p] = "out"
+         playAudioClip(hitAudioClip)
+   
+   if (control.aa or (control.xx > 0 and not control.y)) and state[p] == "choosing":
+      playAudioClip(smallGrowAudioClip)
+      state[p] = "ready"
+
+   if (control.yy and state[p] != "choosing") or ((control.aa or (control.xx > 0 and not control.y)) and state[p] == "out"):
+      // A or Y
+      // Enter choosing mode with the current color, making sure it isn't already taken
+      state[p] = "choosing"
+      ensureUniqueColor(p, 0, control.yy)
+      playAudioClip(blipAudioClip)
+   else if control.yy and state[p] == "choosing":
+      // Y
+      ensureUniqueColor(p, control.yy, control.yy)
+      playAudioClip(blipAudioClip)
+
+
+   const pos = ¼ screenSize * xy(1 + 2 (p mod 2), 90% + 220% ⌊½ p⌋)
+   let color = #8
+   let outline = ∅
+   
+   if state[p] != "out":
+      // Draw the snake
+      const colorName = colorNameArray[colorIndex[p]]
+      outline = getSpritePixelColor(snakeHeadSpritesheet[colorName], xy(9, 6))
+      color = 160% outline
+      
+      let θ = modeFrames / 40 + 90° p
+      drawSprite(snakeSpritesheet[colorName + "Tail"], pos + 30 xy(cos θ, sin θ), 270° - θ)
+      θ += 8°
+      const N = if state[p] == "ready" then 55 else 20
+      for i < N:
+         const bodyPos = pos + 30 xy(cos θ, sin θ)
+         drawSprite(snakeSpritesheet[colorName + "Body"], bodyPos)
+         // Shadow
+         drawRect(bodyPos + xy(-2, 3), xy(4, 2), #9, ∅, -1)
+         θ += 6°
+         
+      drawSprite(snakeHeadSpritesheet[colorName], pos + 30 xy(cos θ, sin θ), 270° - θ)
+
+   // Show the player number
+   let indicator = "P" + (1 + p);
+
+   if state[p] == "ready":
+      indicator += " Ready"
+   else if state[p] == "out":
+      indicator = "⍈ to join"
+      
+   drawText(font, indicator, pos, color, ∅, outline, "center", "center")
+
+   // Update collective states
+   if state[p] == "ready": anyReady = true
+   if state[p] == "choosing": noneChoosing = false
+   anyQuit = anyQuit or control.qq
+
+
+// Don't allow quit or ready right after the mode was entered in
+// case this is lingering input from the previous game
+if modeFrames > 30:
+   if anyQuit: quitGame()
+   if anyReady and noneChoosing:
+      if countdownTimer == ∅: countdownTimer = 45 * 3
+   else:
+      countdownTimer = ∅
+
+      
+if countdownTimer ≠ ∅:
+   --countdownTimer
+   if countdownTimer <= 0:
+      saveLocal("colorIndex")
+      // Will immediately increment to 0
+      level = -1
+      snakeArray = []
+      for p < 4:
+         if state[p] == "ready":
+            push(snakeArray, makeSnake(p, pad[p], colorNameArray[colorIndex[p]]))
+      if size(snakeArray) == 1: singlePlayerTimeLeft = singlePlayerGameTime
+      setMode(NewLevel) because "All ready"
+   else:
+      drawText(instructionsFont, "Starting in " + ceil(countdownTimer / 45) + "…", xy(screenSize.x / 2 + 5, 180), #ee4, ∅, #8, "center")

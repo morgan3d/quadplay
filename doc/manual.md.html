@@ -137,9 +137,7 @@ from sites like [OpenGameArt.org](http://opengameart.org) and
 - MP3 sound tools (_[BFXR](https://www.bfxr.net/), [Audacity](https://www.audacityteam.org/), etc._)
 - TMX map tool ([Tiled](https://www.mapeditor.org/))
 
-_People playing your game don't need Python. You can deploy to static
-websites or GitHub for others to play your game online from any major
-desktop or mobile browser._
+_People playing your game don't need Python, just a web browser. See the Deploying Games section for more information._
 
 
 Workflow
@@ -205,6 +203,8 @@ from a web site or your local machine running the quadplay✜ emulator.
 - Coordinates with +Y pointing down
 
 
+----------------------------
+ 
   <center><img src="../games/speedstreet/logo.png" width=320px style="border:0"></center>
  
 [Speed Street](../console?game=quad://games/speedstreet&IDE=1) is a four-player competitive racing game inspired by [_Excitebike_](https://en.wikipedia.org/wiki/Excitebike):
@@ -215,7 +215,20 @@ from a web site or your local machine running the quadplay✜ emulator.
 - Coordinates with +Y pointing up
 - `spriteOverrideColor`
 
+----------------------------
 
+  <center><img src="../games/serpitron/title.png" width="300px" style="border:0"></center>
+   
+[Serpitron](../console?game=quad://games/quadpaddle&IDE=1) is a four-player 
+competive game derived from Snake-like games, including TRON: 
+
+- Level transitions using post effects
+- Drop shadows
+- Player selection
+- Sorting
+- Collisions
+
+----------------------------
   <center><img src="../games/icetime/title.png" width=200px style="border:0"></center>
  
 [Ice Time](../console?game=quad://games/icetime&IDE=1) is a four-player competitive or cooperative 2 vs. 2 ice hockey game:
@@ -1669,11 +1682,6 @@ at (1, 1), which would be consistent with integer pixel centers.
 The center of the entire screen is `½ screenSize`.
 
 
-<!--
-`extendTransform(addX, addY, addZ, scaleX (= 1), scaleY (= 1), scaleZ (= 1))`
-: Specification to be determined. (TODO)
--->
-
 `getRotationSign()`
 : Returns -1 if `(scaleX * scaleY > 0)` for the current transformation
   and and +1 if `(scaleX * scaleY < 0)`. Useful for computing the
@@ -1700,13 +1708,22 @@ The center of the entire screen is `½ screenSize`.
 `resetTransform()`
 : Reset to the default transformation, `setTransform(xy(0, 0), xy(1, 1), 0, 1, xy(0, 0))`.
   This overrides the `flipY` flag from the .game.json file.
- 
+
+`composeTransform(args)`
+: Named argument version of `composeTransform()`.
+
+`composeTransform(pos (= nil), dir (= nil), z (= nil), zDir (= nil), skew (= nil))`
+: Apply this local transformation _before_ the current one. Used for entering a child
+  coordinate system. Nil arguments or properties default to `(xy(0, 0), xy(1, 1), 0, 1, xy(0, 0))`.
+  Use `preservingTransform` or `getTransform()` plus `setTransform()` to save and restore
+  nested coordinate systems.
+
 `setTransform(args)`
 : Named argument version of `setTransform()`.
 
 `setTransform(pos (= nil), dir (= nil), z (= nil), zDir (= nil), skew (= nil))`
 : Set the transformation applied to all draw coordinates to compute screen coordinates. Nil values
-  default to their previous value. The equation 
+  or nil properties default to their previous value. The equation 
   mapping draw to screen coordinates is:
   `screen.x = (draw.x + skew.x * draw.z) * dir.x + pos.x`;
   `screen.y = (draw.y + skew.y * draw.z) * dir.y + pos.y`;
@@ -1919,10 +1936,19 @@ The basic entity properties and defaults are:
 : A draw-space value added to `entity.pos` by `drawEntity()`. Useful
   for causing the drawn position to temporarily drift from the
   simulated position for effects like shake or blowback after a hit.
-  Defaults to `xy(0,0)`. _Does not affect bounds for `overlaps()`._
+  Defaults to `xy(0, 0)`. _Does not affect bounds for `overlaps()`._
+  See also `entity.pivot`.
 
 `entity.opacity`
 : Visibility on the interval 0 to 1. Defaults to 1.
+
+`entity.pivot`
+: Point on the sprite that is mapped to the center of the entity for 
+  collision detection bounds and child reference frames. _Does not affect rendering_. 
+  Defaults to the pivot form the intial 
+  sprite, or `xy(0, 0)` if there was no sprite. If you change the 
+  `entity.sprite`, then you may want to also change the `entity.pivot`
+  at the same time. See also `entity.offset` for transient effects.
 
 `entity.pos`
 : The draw-space `xy` position of the center of the entity. Defaults to (0,0).
@@ -2458,14 +2484,12 @@ The final image drawn can be transformed in limited ways during scan
 out to the display, as if it were a sprite being drawn to the screen.
 Setting any post effects may slow down rendering slightly.
 
-`extendPostEffects(args)`
-: Like `setPostEffects()` but overrides any fields specified while preserving unspecified ones.
-
 `getPostEffects()`
 : Return the current post effects in a form that can be passed to `setPostEffects()`.
 
 `setPostEffects(args)`
-: The arguments have the following fields, all optional:
+: The arguments have the following fields, all optional. nil values default to their previous value.
+  Invoke `resetPostEffects()` first for a clean set.
   - `background` is an `rgba()` to draw in the background behind the new frame. The `a` component
     controls how opaque the background is. Setting `background.a = 0` allows new frames to be blended on
     top of old ones for a motion blur effect.
@@ -2634,12 +2658,15 @@ Collisions
   `offset` and `z` for entities. Each of `A` and `B` can be any of:
   
    - an entity from `makeEntity()`
-   - any object with `pos` and optional `shape`, `angle`, and `size` properties
+   - any object with `pos` and optional `shape`, `angle`, `pivot`, and `size` properties
    - an `xy()` point
 
   If `recurse` is true (the default), compares `A` and all of its children
   against `B` and all of its children. This is quadratic in the number of
   elements of each and can be slow for very deep entity hierarchies.
+  
+  See `entity.pivot`, `entity.shape`, etc. for discussion of how those properties
+  affect the collision detection.
 
 `rayIntersect(ray, obj)`
 : The `ray` object must have `xy()` fields for `origin`, `direction`,
@@ -2709,16 +2736,8 @@ in the desired order regardless of the order in which drawing executes.
   - `lifetime`: Number of frames to run for. May be `inf`.
   - `runInMode`: Only execute while the game is in this mode. Use `nil` to
     run in every mode.
-
-`addFrameSequence(...)`
-: Add a series of frame hooks that run in the current mode. Returns a master
-  hook that can be used with `removeFrameHook()` to cancel the entire sequence.
-  Each argument may be either a function, `nil`, or `{callback: function, frames: number}`.
-  The callbacks run for the specified number of frames. If not `nil`, the callback
-  signature is `def callback(framesleft, lifetime)`.
-  Example: `addFrameSequence(drawExplosion, {callback: drawFire, frames: 20}, {callback: drawSmoke, frames: 4}, cleanup)`.
-  Note that for convenience, `addFrameSequence(...array)` will take the arguments from an array instead of as separate
-  parameters.
+    
+  See also `sequence()` and `delay()` for common cases.
 
 `delay(callback, delayFrames)`
 : Same as `addFrameHook(nil, callback, delayFrames or 0)`.
@@ -2731,6 +2750,17 @@ in the desired order regardless of the order in which drawing executes.
 : Remove all frame hooks that are locked to the `mode`. Use `nil` to
   remove all hooks with no mode at all. Do not invoke the
   `endCallback`s on these hooks.
+
+`sequence(...)`
+: Add a series of frame hooks that run in the current mode. Returns a master
+  hook that can be used with `removeFrameHook()` to cancel the entire sequence.
+  Each argument may be either a function, `nil`, or `{callback: function, frames: number}`.
+  The callbacks run for the specified number of frames. If not `nil`, the callback
+  signature is `def callback(framesleft, lifetime)`.
+  Example: `addFrameSequence(drawExplosion, {callback: drawFire, frames: 20}, {callback: drawSmoke, frames: 4}, cleanup)`.
+  Note that for convenience, `sequence(...array)` will take the arguments from an array instead of as separate
+  parameters.
+
 
 
 Time
@@ -3571,8 +3601,12 @@ The sprite sheet JSON descriptor looks like:
         "size":     {"x": 128, "y": 32} // Optional, defaults to the remainder of the sheet
     },
     
+    // Optional location on the sprites that aligns with (0, 0) in an entity's reference
+    // frame. Defaults to the sprite size / 2.
+    "pivot":        {"x": 4, "y": 7},
+    
     // Optional license and copyright information.
-    "license":      "GPL 3.0 (c) 2018 Morgan McGuire"
+    "license":      "GPL 3.0 (c) 2020 Morgan McGuire"
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -4870,6 +4904,150 @@ HTML query arguments:
 : URL of a game to load, which can be relative to the `quadplay` script.
 
 
+Deploying Games
+====================================================================================
+
+Your games can be played on any major web browser on desktop/laptop,
+phone, tablet, or embedded processor such as Jetson Nano or Raspberry
+Pi. You can also distribute them as phone or desktop apps. You may
+charge money for your games and may distribute them as closed
+source. 
+
+It is your responsibility to satisfy copyright law and any licensing
+fees or royalties for content that you use when you distribute your
+game. The content provided with quadplay✜ is all royalty-free Creative Commons
+and contains its own licensing data. Content that you find elsewhere
+will have its own rules and restrictions. The code provided with
+quadplay✜ is all Open Source (even though it permits you to use it with your
+own closed-source came). See the Credits section for more information.
+
+
+github
+------------------------------------------------------------------------------------
+
+This is the easiest method to deploy your game. It also allows you to
+continuously update the game as well as gain the benefit of
+improvements to quadplay✜ itself continuously.
+
+Store your game in a git repository on [github.com](https://github.com), or in 
+a subdirectory of a github repository.  Do not fork quadplay into the repo 
+because that will make it large and disrupt the user's saved per-console state.
+Just keep your game there in the repo by itself as you create it. 
+
+To deploy, go to the settings page for your repo on github. For example,
+https://github.com/morgan3d/misc/settings . In the section titled "GitHub Pages"
+on the settings page, select "Master Branch" from the Source dropdown.
+
+Assume that your github account is named `USER` and your repo is named `REPO`.
+The URL to play your game is:
+
+https://morgan3d.github.io/quadplay/console/quadplay.html?game=https://USER.github.io/REPO
+
+If you'd like to make a friendlier URL, then you can also create an `index.html` file
+in the root of your repo with the contents:
+
+<script>
+document.write(`<pre class="listing tilde"><code>&amp;lt;meta http-equiv="refresh" content="0;URL='https://morgan3d.github.io/quadplay/console/quadplay.html?game=https://USER.github.io/REPO'"/&gt;</code></pre>`);
+</script>
+
+People visiting the URL https://USER.github.io/REPO will then be redirected to the correct page.
+
+
+
+itch.io Browser
+------------------------------------------------------------------------------------
+
+Deploying to [itch.io](https://itch.io/) as a Browser Game allows you to create a self
+contained online game that others can buy from you, or play for free if you choose. 
+It is slightly more complicated to update than on github because you must make a release
+file and upload it explicitly.
+
+To deploy on itch.io you must make a copy of the files from the quadplay✜ distribution
+that your game requires. I will provide a tool to help with this in the future. In the
+current release, the files that you need are the contents of the `console` directory
+and any files _that your `game.json` references_ from `fonts/`, `sprites/`, etc.
+Do not make a full copy of all of the quadplay✜ distribution. It contains too many files
+and itch.io will block your upload. Only include the files that you actually use.
+
+The steps are:
+
+1. Create a new directory, such as `release`
+2. Copy your game into a _subdirectory_ named `release/GAMENAME` (where GAMENAME is replaced 
+   with the actual name of your game, and there is a correspondingly-named 
+   `release/GAMENAME/GAMENAME.game.json` file).
+3. Recursively copy the `quadplay/console` files into `release/console`
+4. Copy any resources that you used for the quadplay✜ distribution into the corresponding
+   directories. For example, if your game loads `quad://sprites/ninja-bluew-32x32.sprite.json`,
+   then copy `quadplay/sprites/ninja-blue-32x32.*` into `release/sprites`.
+5. Create `release/index.html` as described below.
+6. Zip the _contents_ of the `release` directory into a zipfile.
+7. Log into the itch.io website and create a new game entry with the following settings:
+  - Classification: Games
+  - Kind of project: HTML
+  - Mobile friendly: Yes
+  - Automatically start on page load: Yes
+  - How should your project be run in your page?: Click to launch fullscreen
+  - Orientation: Landscape
+  - Visibility: Public
+8. In the Uploads section on the itch.io game page, upload your zipfile.
+
+
+The contents of the `release/index.html` file described above are:
+
+<script>
+document.write(`<pre class="listing tilde"><code>&amp;lt;meta http-equiv="refresh" content="0;URL='console/quadplay.html?game=GAMENAME'"/&gt;</code></pre>`);
+</script>
+
+To update your game or upgrade the underlying quadplay✜ distribution,
+you must repeat the process of creating the zipfile and then upload it
+as a replacement for the original file.
+
+
+Web Server
+------------------------------------------------------------------------------------
+
+You can host your game using only your own files on any web server that supports 
+[CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), or as a copy 
+of all of quadplay✜ on _any_ web server, regardless of whether it supports CORS.
+
+To deploy your game on a web server with CORS named `myserver.com` in the `mygame`
+directory, just upload your own game files to the server. The URL for your game is:
+
+https://morgan3d.github.io/quadplay/console/quadplay.html?game=https://myserver.com/mygame
+
+To deploy a complete package that is independent of the current
+version of quadplay✜, follow the process for building the zipfile and
+`index.html` from the itch.io section, and then upload your files to the server.
+Your URL will be just https://myserver.com/mygame.
+
+
+Phones
+------------------------------------------------------------------------------------
+
+Any quadplay✜ game hosted on a web page using the methods from the previous sections
+can be played on a mobile phone. The emulator automatically creates on-screen buttons
+when it detects a phone, and it also supports gamepads connected to a phone.
+
+You can also deploy your game through a phone app store in order to sell it. This is 
+an advanced process. You must wrap your game with a binary program.
+[Cordova](https://cordova.apache.org/) is a free tool that you can use to automate
+this process. It requires familiarity with [npm](https://www.npmjs.com/), web apps,
+the app store that you are deploying on, and the tools needed (such as Xcode for iOS)
+to compile on the platform.
+
+The basic idea is to use the method described in the itch.io section to create a
+standalone web app, and then use Cordova to create the phone app. 
+
+
+Desktop
+------------------------------------------------------------------------------------
+[Electron](https://electronjs.org/) is a tool that turns web apps into desktop binary
+projects which can be distributed through the Windows or Mac App stores, Steam, the 
+Epic Store, etc. It works by bundling an entire web browser with your application, wrapped
+so that it looks like a native app. The process is similar to that of using Cordova.
+
+
+
 Performance
 ====================================================================================
 
@@ -4883,9 +5061,20 @@ Chrome, Edge, and Safari give far better performance on graphics
 calls than Firefox. Just switching browsers will give you a boost if
 you're on Firefox.
 
-In the "Performance" tab of the IDE, you can see the amount of time spent
-per frame. If it is less than 16 ms, then your program is running at 60 fps.
-If it is higher, then you may need to optimize.
+To avoid input lag, process game pad input _before_ rendering and
+simulation each frame. This allows the players' input to affect the
+current frame instead of being delayed one frame. Game pads (and browsers)
+have 1-2 frames of input lag in them. To conceal this, allow critical input
+such as a jump, block, or dodge to happen up to one or two frames _after_
+the period in which it should have. For example, do not damage the player
+character until one frame after they are attacked and allow a late dodge
+or block to save them retroactively.
+
+
+In the "Performance" tab of the IDE, you can see the amount of time
+spent per frame. If time spent is less than 16 ms, then your program
+is running at 60 fps. If time spent is higher than 16 ms, then you may
+need to optimize.
 
 `drawMap()` is substantially faster than making the same `drawSprite()` calls
 by yourself.
@@ -5130,6 +5319,19 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2019 Dec 25: Beta update 18
+
+- Added Deploying Games section
+- Added [Serpitron](../console?game=quad://games/quadpaddle&IDE=1) sample game
+- Removed `extendPostEffects()` and reverted definition of `setPostEffects()` to match beta 16
+- Added `composeTransform()`
+- Renamed `addFrameSequence()` to `sequence()`
+- Added `entity.pivot` and spritesheet pivots
+- Fixed Chrome and Safari blank region on the bottom of the IDE
+- Made deja-9 font glyph widths more consistent
+- Raised mid-glyph bar for capitals 1px on deja-8 font
+
 
 2019 Dec 14: Beta update 17
 

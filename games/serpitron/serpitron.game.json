@@ -1,0 +1,90 @@
+{
+    "title":      "Serpitron",
+    "developer":  "Casual Effects",
+    "copyright":  "©2019 Morgan McGuire",
+    "license":    "Source code \u00a92019 Morgan McGuire, available under the BSD License https://opensource.org/licenses/BSD-2-Clause",
+
+    "packages":   [],
+    "scripts":    ["globals.pyxl"],
+    "modes":      ["Title*", "NewLevel", "LevelTitle", "Play", "Credits", "Pause", "EndTransition", "SingleGameOver", "GameOver"],
+    "docs":       [{"name": "Design", "url": "design.md"}],
+    "assets":     {
+        "font":                "quad://fonts/broderick-7.font.json",
+        "largeFont":           "quad://fonts/broderick-14.font.json",
+        "instructionsFont":    "quad://fonts/good-neighbors-9.font.json",
+        "powerupSpritesheet":  "powerup.sprite.json",
+        "snakeSpritesheet":    "snake.sprite.json",
+        "snakeHeadSpritesheet":"snakeHead.sprite.json",
+        "hatSpritesheet":      "hats.sprite.json",
+        "titleSprite":         "title.sprite.json",
+        "shotgunSprite":       "shotgun.sprite.json",
+        "controllerSprite":    "controller.sprite.json",
+        "pyramidSprite":       "pyramid.sprite.json",
+        "skyscraperSprite":    "skyscraper.sprite.json",
+        "snowflakeSprite":     "snowflake.sprite.json",
+        "cloudSprite":         "cloud.sprite.json",
+        "ratSpritesheet":      "rat.sprite.json",
+        
+        "urbanMusic":          "quad://sounds/loop-edm.sound.json",
+        "countryMusic":        "quad://sounds/music-moon.sound.json",
+        "desertMusic":         "quad://sounds/loop-metal.sound.json",
+        "titleMusic":          "quad://sounds/loop-tastic.sound.json",
+        "shotgunAudioClip":    "quad://sounds/28-Explode.sound.json",
+        "bigGrowAudioClip":    "quad://sounds/29-Powerup.sound.json",
+        "smallGrowAudioClip":  "quad://sounds/32-Powerup.sound.json",
+        "speedUpAudioClip":    "quad://sounds/35-Powerup.sound.json",
+        "slowDownAudioClip":   "quad://sounds/36-Powerup.sound.json",
+        "bigPointsAudioClip":  "quad://sounds/09-Coin.sound.json",
+        "smallPointsAudioClip":"quad://sounds/64-Blip.sound.json",
+        "hitAudioClip":        "quad://sounds/70-Wild.sound.json",
+        "blipAudioClip":       "quad://sounds/67-Blip.sound.json"
+    },
+
+    "flipY":                 false,
+    "version":               0.1,
+    "minPlayers":            1,
+    "maxPlayers":            4,
+    "cooperative":           false,
+    "competitive":           true,
+    "achievements":          false,
+    "highscores":            false,
+    "description":           "Grow your hungry serpent without crashing into obstacles or yourself. With rats, shotguns, blizzards, cities, pyramids...",
+
+    "constants":  {
+        "cellSide":          6,
+        "growAmount":        36,
+        "numLevels":         8,
+        "pointBonus":        15000,
+        "hitBodyPointBonus": 2000,
+        "playSize":          {"type": "xy", "value": {"x": 384, "y": 198}},
+        "minSnakeBody":      18,
+        "startSnakeBody":    30,
+        "hitGhostFrames":    45,
+        "growPeriod":        95,
+        "adultSize":         200,
+        "singlePlayerGameTime": 220,
+        "shotgunPeriodFrames": 100,
+        "shotgunSpreadAngle":{"type": "number", "value": "20deg"},
+        "hitPenaltyFactor":  {"type": "number", "value": "30%"},
+        "shadowOpacity":     {"type": "number", "value": "100%"},
+        "shadowZ":           {"type": "number", "value": -10},
+        "shadowOffset":      {"type": "xy", "value": {"x": 1, "y": -2}},
+
+
+        "fadeInFrames":      30,
+
+        "levelTitle":        {"type": "object", "value": {
+            "flyInFrames":   35,
+            "holdFrames":    140,
+            "flyOutFrames":  35
+        }},
+                              
+        "colorNameArray":    {"type": "array", "value": ["violet", "pink", "orange", "yellow", "green", "blue", "white", "black"]},
+
+        "locationNameArray": {"type": "array", "value": ["Desert", "Desert", "Urban", "Country", "Country"]},
+        "weatherNameArray":  {"type": "array", "value": ["Blizzard", "Cloudy"]},
+        "waveTypeArray":     {"type": "array", "value": ["Apples", "Cherries", "Gold", "Diamonds",
+                                                         "Apples", "Cherries", "Gold", "Diamonds",
+                                                         "Rats", "Coffee Break", "Showdown"]}
+    }
+}

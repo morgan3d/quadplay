@@ -1,0 +1,46 @@
+Pause
+════════════════════════════════════════════════════════════════════════
+
+const choiceArray = ["Play", "Credits", "Restart"]
+let choiceIndex
+
+enter
+────────────────────────────────────────────────────────────────────────
+resetTransform()
+resetClip()
+
+choiceIndex = 0
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+setBackground(locationTable[locationName].background)
+drawPreviousMode()
+
+drawRect(xy(-1, 80), xy(screenSize.x + 2, 60), rgba(0, 0, 0, 50%), #0, 100)
+drawText(font, "Paused", xy(screenSize.x / 2, 90), #f, nil, #0, "center", "center", 101)
+
+for i < size(choiceArray):
+   const pos = xy(screenSize.x / 2 - 6, 110 + 12i)
+   let color = #f
+   if choiceIndex == i:
+      drawSprite({sprite: hatSpritesheet.crown, pos: pos - xy(10, 2), z: 101})
+      color = #ffda2c
+   drawText(font, choiceArray[i], pos, color, nil, nil, "left", "center", 101)
+   
+
+if modeFrames > 30:
+   for control in pad:
+      choiceIndex = loop(choiceIndex + control.yy, size(choiceArray))
+   
+      if (control.pp or control.qq) and (modeFrames > 15):
+         popMode() because "Cancelled with ⓟ"
+      else if control.aa:
+         if choiceIndex == 0:
+            popMode() because "Chose Play"
+         else if choiceIndex == 1:
+            pushMode(Credits) because "Chose Credits"
+         else:
+            setMode(Title) because "Chose Restart"
+         
+      

@@ -1,0 +1,27 @@
+{
+    "url": "snake.png",
+    "spriteSize":   {"x": 6, "y": 6},
+    "region":       {
+        "pos":      {"x": 0, "y": 0},
+        "size":     {"x": 6, "y": 96}
+    },
+    "names":        {
+        "violetBody":   {"x": 0, "y": 0},
+        "violetTail":   {"x": 0, "y": 1},
+        "pinkBody":     {"x": 0, "y": 2},
+        "pinkTail":     {"x": 0, "y": 3},
+        "orangeBody":   {"x": 0, "y": 4},
+        "orangeTail":   {"x": 0, "y": 5},
+        "yellowBody":   {"x": 0, "y": 6},
+        "yellowTail":   {"x": 0, "y": 7},
+        "greenBody":    {"x": 0, "y": 8},
+        "greenTail":    {"x": 0, "y": 9},
+        "blueBody":     {"x": 0, "y": 10},
+        "blueTail":     {"x": 0, "y": 11},
+        "whiteBody":    {"x": 0, "y": 12},
+        "whiteTail":    {"x": 0, "y": 13},
+        "blackBody":    {"x": 0, "y": 14},
+        "blackTail":    {"x": 0, "y": 15}
+    },
+    "license":      "(c) 2018 Morgan McGuire used under CC-BY 3"
+}

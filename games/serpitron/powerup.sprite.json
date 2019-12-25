@@ -1,0 +1,18 @@
+{
+    "url": "powerup.png",
+    "spriteSize":   {"x": 8, "y": 8},
+    "names":        {
+        "apple":    {"x": 0, "y": 0},
+        "cherry":   {"x": 1, "y": 0},
+        "coin":     {"x": 0, "y": 1},
+        "diamond":  {"x": 1, "y": 1},
+        "coffee":   {"x": 0, "y": 2},
+        "donut":    {"x": 1, "y": 2},
+        "star":     {"x": 1, "y": 3},
+    },
+    "region": {
+        "pos":      {"x": 0, "y": 0},
+        "size":     {"x": 16, "y": 32},
+    },
+    "license":      "(c) 2018 Morgan McGuire used under CC-BY 3"
+}

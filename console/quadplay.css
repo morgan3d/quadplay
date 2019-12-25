@@ -51,9 +51,7 @@ body {
     min-height: 340px;
 }
 
-::-webkit-scrollbar { /* WebKit hide scrollbars */
-    width: 0px;
-}
+/* Do not set properties on ::-webkit-scrollbar because it will blank out that region on the bottom of the page */
 
 div, pane {
     scrollbar-width: none; /* Firefox  hide scrollbars */

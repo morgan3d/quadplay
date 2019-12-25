@@ -1,0 +1,11 @@
+{
+    "url": "hats.png",
+    "spriteSize":   {"x": 8, "y": 8},
+    "license":      "(c) 2018 Morgan McGuire used under CC-BY 3",
+    "names": {
+        "crown":    {"x": 0, "y": 0},
+        "cowboy":   {"x": 1, "y": 0},
+        "beanie":   {"x": 0, "y": 1},
+        "tiara":    {"x": 1, "y": 1}
+    }
+}

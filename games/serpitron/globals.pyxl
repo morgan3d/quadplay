@@ -1,0 +1,178 @@
+// Pixel width of the info screens on the left and right
+const INFO_HEIGHT = ½ (screenSize.y - playSize.y)
+
+// Game world state
+let snakeArray
+let shotArray
+let powerupArray
+let buildingArray
+let weatherArray
+
+// Other state
+let screenShakeFrames
+
+// Level data
+let level
+let shadowColor
+let backgroundSound
+let waveType
+let levelDescription
+let locationName
+let weatherType
+let singlePlayerTimeLeft
+
+
+const locationTable = {
+   "Desert":  {background: #eda, music: desertMusic},
+   "Country": {background: #ceb, music: countryMusic},
+   "Urban":   {background: #ddd, music: urbanMusic}
+}
+
+
+def moveToStartingPosition(snake):
+   const p = snake.playerIndex
+   
+   // 1/4 of the screen width, shifted to one of the four corners
+   const pos = (round(¼ playSize, cellSide) *
+                xy(1 + 2 (p mod 2), 3 - 2 ⌊½ p⌋) +
+           
+                // Shift vertically to not immediately collide
+                xy(0, (p mod 2) * cellSide))
+
+   snake.speed = 1
+   snake.nextAngle = 180° p
+
+   // Shrink each long snake halfway towards the starting size,
+   // and grow each short snake to the starting size
+   if size(snake.body) > 3 startSnakeBody + 1:
+      snake.body = slice(snake.body, 0, max(3 startSnakeBody + 1, round(size(snake.body) / 2, 3) + 1))
+   else:
+      while size(snake.body) < 3 startSnakeBody + 1: push(snake.body, {})
+
+   for b in snake.body:
+      b.pos = pos
+      b.angle = snake.nextAngle
+
+
+/* The snake data structure stores an array of one xy() per element
+   separate by at most one pixel, but only every third one is drawn
+   in order to make the snake appear to move instead of having the
+   body sit still.
+
+   The length of snake.body is always 3n + 1 */
+def makeSnake(playerIndex, control, colorName):
+   const snake = {
+      playerIndex:   playerIndex,
+      control:       control,
+      bodySprite:    snakeSpritesheet[colorName + "Body"],
+      tailSprite:    snakeSpritesheet[colorName + "Tail"],
+      headSprite:    snakeHeadSpritesheet[colorName],
+      nextAngle:     0,
+      body:          [],
+      numFoodEaten:  0,
+      score:         0,
+      ghostFrames:   0,
+      hasGun:        false,
+
+      // This index in the body is shown enlarged by growScale
+      // to animate swallowing food.
+      growIndex:     ∅,
+      growScale:     100%,
+      infoPos:       xy(260 (playerIndex mod 2) + 85,
+                        ⌊½ playerIndex⌋ * (screenSize.y - INFO_HEIGHT))
+   }
+
+   snake.color = getSpritePixelColor(snake.headSprite, xy(9, 6))
+   snake.textColor = 160% snake.color
+   for i < 3 startSnakeBody + 1:
+      push(snake.body, {angle: 0, pos: xy(0, 0)})
+
+   return snake
+
+
+      
+// Joins strings with a space, handling the cases where
+// one or both are empty
+def concat(...args):
+   const array = [...args]
+   removeValues(array, "")
+   return join(array, " ")
+
+
+def playPositionalAudioClip(audioClip, pos):
+   return playAudioClip({audioClip: audioClip, pan: 80% (2 pos.x / playSize.x - 1)})
+
+
+def randomEmptyPosition():
+   let pos = ∅
+   while not pos or samplePosition(pos, ½ cellSide, true):
+      pos = xy(rndInt(1, ⌊playSize.x / cellSide - 2⌋),
+               rndInt(1, ⌊playSize.y / cellSide - 2⌋)) * cellSide
+
+   return pos
+
+      
+/* Returns undefined if nothing is present, or
+   {
+    powerup: powerup,
+    snake: snake,
+    bodyIndex: number
+   }
+
+   if allowGhosts is true then ghost snakes can be hit
+   (this is needed for placing new powerups)
+
+   safeSnakeHead is the snake whose head can't be hit (used to prevent self-collisions
+   on late moves)
+ */
+def samplePosition(pos, radius, allowGhosts, ignorePowerups, safeSnakeHead):
+   radius = radius or epsilon
+
+   if (radius ≤ epsilon) and ((pos.x mod cellSide ≠ 0) or (pos.y mod cellSide ≠ 0)):
+      // Can't hit anything...pos is not on the grid
+      return ∅
+
+   for building in buildingArray:
+      if overlaps(building, pos):
+         return {building: building}
+   
+   for snake in snakeArray:
+      if allowGhosts or (snake.ghostFrames ≤ 0):
+         for b < size(snake.body):
+            const piece = snake.body[b]
+            if (|piece.pos.x - pos.x| ≤ radius and |piece.pos.y - pos.y| ≤ radius
+                and (snake ≠ safeSnakeHead or b > 6)):
+               return {snake: snake, bodyIndex: b}
+
+   if not ignorePowerups:
+      for powerup in powerupArray:
+         if |powerup.pos.x - pos.x| ≤ radius and |powerup.pos.y - pos.y| ≤ radius:
+            return {powerup: powerup}
+
+   // Nothing was hit
+   return ∅
+
+
+
+def drawScores():
+   // Draw the top and bottom reserved areas
+   drawRect(xy(0, 0), xy(screenSize.x, INFO_HEIGHT), #000)
+   drawRect(xy(0, screenSize.y - INFO_HEIGHT), xy(screenSize.x, INFO_HEIGHT), #000)
+
+   for textColor, score, playerIndex, infoPos in snake in snakeArray:
+      drawText({font:   font,
+                text:   formatNumber(score, "commas") + "/P" + (1 + playerIndex),
+                color:  textColor,
+                pos:    infoPos,
+                xAlign: "right",
+                yAlign: "top",
+                z:      1})
+   
+      if snake.hasGun: drawSprite(hatSpritesheet.cowboy, infoPos + xy(6, 6))
+
+   
+   if size(snakeArray) > 1:
+      // Show hats in multiplayer mode
+      if not snakeArray[0].hasGun: drawSprite(hatSpritesheet.crown, snakeArray[0].infoPos + xy(6, 6))
+      if size(snakeArray) > 2 and not snakeArray[1].hasGun: drawSprite(hatSpritesheet.tiara, snakeArray[1].infoPos + xy(6, 6))
+      if not lastValue(snakeArray).hasGun: drawSprite(hatSpritesheet.beanie, lastValue(snakeArray).infoPos + xy(6, 6))

@@ -1,0 +1,47 @@
+      else if i == snakeArray.length - 1:
+         // Tail
+         angle = atan(snakeArray[i - 1] - s) - 90°
+         sprite = snakeSpritesheet.greenBody
+      else:
+         // Body. There must be pieces before and after. There are
+         // two cases: the three pieces form a line, and the three
+         // pieces form an L "curve". The question is what angle is
+         // formed by the three (0, -PI/2, or +PI/2), and how that
+         // angle relates to the direction between the first two
+         
+         // Previous piece
+         let r = snakeArray[i - 1].pos
+
+         // Next piece
+         let t = snakeArray[i + 1].pos
+
+         let rs = s - r
+         let st = t - s
+
+         let shapeAngle = asin(cross(rs, st))
+
+         if |shapeAngle| > 0.01:
+            // Curve. There should be a simple pattern for this
+            // based on the angles, but I'm short on time and just
+            // hard-coding all of the cases instead of deriving it.
+            sprite = snakeSpritesheet.greenCorner
+            if rs.x == -1:
+               if st.y == +1:
+                  angle = 0°
+               else:
+                  angle = -90°
+            else if rs.x == +1:
+               if st.y == +1:
+                  angle = 90°
+               else:
+                  angle = 180°
+            else if rs.y == -1:
+               if st.x == +1:
+                  angle = 0°
+               else:
+                  angle = 90°
+            else: // rs.y == +1
+               if st.x == +1:
+                  angle = -90°
+               else:
+                  angle = 180°

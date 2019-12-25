@@ -1,0 +1,7 @@
+{
+    "url": "buildings.png",
+    "spriteSize":   {"x": 16, "y": 48},
+    "region":       {"pos": {"x": 48, "y": 0},
+                     "size": {"x": 16, "y": 48}},
+    "license":      "(c) 2019 Morgan McGuire used under CC-BY 3"
+}

@@ -1,0 +1,9 @@
+{
+    "url": "powerup.png",
+    "spriteSize":   {"x": 16, "y": 8},
+    "region": {
+        "pos":      {"x": 0, "y": 32},
+        "size":     {"x": 16, "y": 8},
+    },
+    "license":      "(c) 2019 Morgan McGuire used under CC-BY 3"
+}

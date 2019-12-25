@@ -19,7 +19,9 @@
         "itlabel":    "itlabel.sprite.json",
         "itpreview":  "itpreview.sprite.json",
         "qplabel":    "qplabel.sprite.json",
-        "qppreview":  "qppreview.sprite.json"
+        "qppreview":  "qppreview.sprite.json",
+        "splabel":    "splabel.sprite.json",
+        "sppreview":  "sppreview.sprite.json"
     },
 
     "constants":  {
