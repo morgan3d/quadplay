@@ -340,6 +340,19 @@
   <script src="vectorify.js" charset="utf-8"></script>
   <script src="dagre.min.js"></script>
 
+  <script>
+    // Polyfill for mobile browsers and IE
+    if (String.prototype.trimEnd === undefined) {
+        if (String.prototype.trimRight) {
+            String.prototype.trimEnd = String.prototype.trimRight;
+        } else {
+            var trimmed = this.trim();
+            var indexOfWord = this.indexOf(trimmed);
+            return this.slice(indexOfWord, this.length);
+        }
+    }
+  </script>
+
   <!-- quadplay implementation -->
   <script src="pyxlscript-compiler.js" charset="utf-8"></script>
   <script src="quadplay-host.js" charset="utf-8"> </script>
