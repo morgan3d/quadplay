@@ -74,7 +74,10 @@ def parse_args():
         '--new',
         action="store_true",
         default=False,
-        help='URLs to sprite images'
+        help=(
+            'Indicates this is a new sprite to add, rather than an existing '
+            'sprite to update.'
+        )
     )
     grp.add_argument(
         "-u",
@@ -245,11 +248,21 @@ def make_sprite(
     else:
         size = (size[0], size[1])
 
-    blob = {
-        "url": filepath,
-        "spriteSize": {'x': size[0], 'y': size[1]},
-        "license": license
-    }
+    # read in the base data to preserve attributes that aseprite doesn't
+    # preserve, like "pivot".  Hopefully over time Aseprite will allow adding
+    # more custom metadata.
+    blob = {}
+    if os.path.exists(outpath):
+        with open(outpath) as fi:
+            blob = json.loads(fi.read())
+
+    blob.update(
+        {
+            "url": filepath,
+            "spriteSize": {'x': size[0], 'y': size[1]},
+            "license": license
+        }
+    )
 
     # layer in the data from aseprite
     blob.update(extra_data)

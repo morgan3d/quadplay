@@ -121,7 +121,35 @@ function onMobileWelcomeTouch() {
     welcome.style.zIndex = -100;
     welcome.style.visibility = 'hidden';
     welcome.style.display = 'none';
-    requestFullScreen();
+
+    unlockAudio();
+    
+    if (isMobile) {
+        requestFullScreen();
+    }
+}
+
+
+function unlockAudio() {
+    // Play a silent sound in order to unlock audio on platforms
+    // that require audio to first initiate on a click.
+    //
+    // https://paulbakaus.com/tutorials/html5/web-audio-on-ios/
+    
+    // create empty buffer
+    var buffer = _ch_audioContext.createBuffer(1, 1, 22050);
+    var source = _ch_audioContext.createBufferSource();
+    source.buffer = buffer;
+    
+    // connect to output (your speakers)
+    source.connect(_ch_audioContext.destination);
+    
+    // play the file
+    if (source.noteOn) {
+        source.noteOn(0);
+    } else {
+        source.start(0);
+    }
 }
 
 
@@ -425,6 +453,8 @@ function onSlowButton() {
 
 // Allows a framerate to be specified so that the slow button can re-use the logic
 function onPlayButton(slow) {
+    if (isSafari && ! isMobile) { unlockAudio(); }
+    
     testPost();
     targetFramerate = slow ? SLOW_FRAMERATE : PLAY_FRAMERATE;
     
@@ -656,6 +686,49 @@ function deviceControl(cmd) {
     case "stopGIFRecording":      stopGIFRecording(); break;
     case "takeScreenshot":        downloadScreenshot(); break;
     case "startPreviewRecording": startPreviewRecording(); break;
+    case "setDebugFlag":
+        {
+            let value = (arguments[2] ? true : false);
+            switch (arguments[1]) {
+            case "entityBounds":
+                QRuntime._showEntityBoundsEnabled = document.getElementById('showEntityBoundsEnabled').checked = value;
+                break;
+            case "debugPrint":
+                QRuntime._debugPrintEnabled = document.getElementById('debugPrintEnabled').checked = value;
+                break;
+            case "assert":
+                QRuntime._assertEnabled = document.getElementById('assertEnabled').checked = value;
+                break;
+            case "debugWatch":
+                QRuntime._debugWatchEnabled = document.getElementById('debugWatchEnabled').checked = value;
+                break;
+            default:
+                throw new Error('Unsupported flagname passed to deviceControl("setDebugFlag", flagname, value): "' + arguments[1] + '"');
+            }
+        }
+        break;
+        
+    case "getDebugFlag":
+        {
+            switch (arguments[1]) {
+            case "entityBounds":
+                return QRuntime._showEntityBoundsEnabled;
+                break;
+            case "debugPrint":
+                return QRuntime._debugPrintEnabled;
+                break;
+            case "assert":
+                return QRuntime._assertEnabled;
+                break;
+            case "debugWatch":
+                return QRuntime._debugWatchEnabled;
+                break;
+            default:
+                throw new Error('Unsupported flagname passed to deviceControl("getDebugFlag", flagname): "' + arguments[1] + '"');
+            }
+        }
+        break;
+        
     case "getAnalogAxes":
         {
         const i = clamp(parseInt(arguments[1]), 0, 3);
@@ -2128,6 +2201,10 @@ function reloadRuntime(oncomplete) {
         QRuntime.setSoundPitch  = setSoundPitch;
         QRuntime.setSoundPan    = setSoundPan;
         QRuntime.debugPause     = onPauseButton;
+
+        QRuntime._Physics       = Matter;
+        QRuntime.Physics = Matter;
+        
         
         if (oncomplete) { oncomplete(); }
     };

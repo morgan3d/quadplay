@@ -29,7 +29,7 @@
   </head>
  
   <body>
-    <div id="mobileWelcome" class="mobileOnly" ontouchstart="onMobileWelcomeTouch()">
+    <div id="mobileWelcome" class="mobileOnly" onmousedown="onMobileWelcomeTouch()" ontouchstart="onMobileWelcomeTouch()">
       <div style="border: 2px solid #fff; background:#ff4488; color: #fff; width: 50%; height: 50%; left: 25%; position: absolute; top: 25%; border-radius: 20px; box-shadow:  2px 5px 4px 0px rgba(0, 0, 0, 0.5);">
         <div style="margin: 20px; text-align: center; font-size: 20px">
           <br/>
@@ -325,6 +325,8 @@
     const isMobile = window.matchMedia("only screen and (max-width: 480px)").matches || window.orientation || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     if (! isMobile) {
+        // Hide the mobile welcome screen, which is not needed
+        // on platforms where audio can be used without a touch
         const welcome = document.getElementById('mobileWelcome');
         welcome.style.zIndex = -100;
         welcome.style.visibility = 'hidden';
@@ -339,6 +341,9 @@
   <script src="js-yaml.min.js"></script>
   <script src="vectorify.js" charset="utf-8"></script>
   <script src="dagre.min.js"></script>
+  <script src="decomp.min.js"></script>
+  <script src="matter.min.js"></script>
+  <script src="matter-extensions.js"></script>
 
   <script>
     // Polyfill for mobile browsers and IE
@@ -346,9 +351,9 @@
         if (String.prototype.trimRight) {
             String.prototype.trimEnd = String.prototype.trimRight;
         } else {
-            var trimmed = this.trim();
-            var indexOfWord = this.indexOf(trimmed);
-            return this.slice(indexOfWord, this.length);
+            String.prototype.trimEnd = function () {
+                return this.slice(this.indexOf(this.trim()), this.length);
+            };
         }
     }
   </script>

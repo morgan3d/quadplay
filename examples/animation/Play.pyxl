@@ -38,7 +38,7 @@ const instructions = [
 frame
 ────────────────────────────────────────────────────────────────────────
 
-with pos, vel, acc, force, scale, spriteIndex, spriteFrame, animation, spritesheet, sprite, weaponIndex, weapon in ninja:
+with pos, vel, force, scale, spriteIndex, spriteFrame, animation, spritesheet, sprite, weaponIndex, weapon in ninja:
    // Advance animation. It is looped per-animation below.
    if spriteFrame < sprite.duration:
       ++spriteFrame

@@ -404,6 +404,7 @@ function computeAssetCredits(gameSource) {
     assetCredits.code.push('LoadManager.js ©2019 Morgan McGuire, used under the BSD license');
     assetCredits.code.push('js-yaml ©2011-2015 Vitaly Puzrin, used under the MIT license');
     assetCredits.code.push('matter.js © Liam Brummitt and others, used under the MIT license');
+    assetCredits.code.push('poly-decomp.js ©2013 Stefan Hedman, used under the MIT license');
     assetCredits.code.push('quadplay✜ ©2019 Morgan McGuire, used under the LGPL 3.0 license');
 }
 
@@ -534,7 +535,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
     });
 
     // Pivots
-    const pivot = json.pivot ? Object.freeze({x: json.pivot.x - json.spriteSize.x / 2, y: json.pivot.y - json.spriteSize.y / 2}) : Object.freeze({x: 0, y: 0});
+    const sspivot = json.pivot ? Object.freeze({x: json.pivot.x - json.spriteSize.x / 2, y: json.pivot.y - json.spriteSize.y / 2}) : Object.freeze({x: 0, y: 0});
     
     // Offsets used for scale flipping
     const PP = Object.freeze({x: 1, y: 1});
@@ -628,7 +629,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     id:++lastSpriteID,
                     size: spritesheet.spriteSize,
                     scale: PP,
-                    pivot: pivot,
+                    pivot: sspivot,
                     frames: sheetDefaultDuration
                 };
 
@@ -691,7 +692,12 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     if (data.start.x !== data.end.x && data.start.y !== data.end.y) {
                         throw new Error('Animation frames must be in a horizontal or vertical line for animation "' + anim + '"');
                     }
+
                     
+                    let pivot = sspivot;
+                    if (data.pivot !== undefined) {
+                        pivot = Object.freeze({x: data.pivot.x - json.spriteSize.x / 2, y: data.pivot.y - json.spriteSize.y / 2});
+                    }
                     const animation = spritesheet[anim] = [];
                     const extrapolate = data.extrapolate || 'loop';
                     animation.extrapolate = extrapolate;
@@ -706,6 +712,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                             const sprite = spritesheet[u][v];
                             sprite._animationName = anim;
                             sprite._animationIndex = i;
+                            sprite.pivot = pivot;
                             if (data.duration && (i < data.duration.length)) {
                                 sprite.duration = Math.max(0.25, data.duration[i]);
                             } else {

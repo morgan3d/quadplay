@@ -1690,6 +1690,11 @@ function makeEntity(e, childTable) {
     r.acc = r.acc ? clone(r.acc) : xy(0, 0);
     r.force = r.force ? clone(r.force) : xy(0, 0);
 
+    r.restitution = (r.restitution === undefined) ? 0.1 : r.restitution;
+    r.friction    = (r.friction === undefined) ? 0.5 : r.friction;
+    r.drag        = (r.drag === undefined) ? 0.01 : r.drag;
+    r.stictionFactor = (r.stictionFactor === undefined) ? 0.5 : r.stictionFactor;
+
     r.angle = r.angle || 0;
     r.spin = r.spin || 0;
     r.twist = r.twist || 0;
@@ -1705,6 +1710,10 @@ function makeEntity(e, childTable) {
     r.shape = r.shape || 'rect';
     r.sprite = r.sprite || undefined;
     r.z = r.z || 0;
+
+    r.collisionGroup = r.collisionGroup || 0;
+    r.collisionCategoryMask = r.collisionCategoryMask || 1;
+    r.collisionHitMask = r.collisionHitMask || 0xffffffff;
 
     if (r.density === undefined) { r.density = 1; }
 
@@ -1914,6 +1923,28 @@ function physicsStepEntity(entity, dt) {
     // Zero for next step
     entity.torque = 0;
     entity.force.x = entity.force.y = 0;
+}
+
+
+function entityApplyForce(entity, worldForce, worldPos) {
+    worldPos = worldPos || entity.pos;
+    entity.force.x += worldForce.x;
+    entity.force.y += worldForce.y;
+    const offsetX = worldPos.x - entity.pos.x;
+    const offsetY = worldPos.y - entity.pos.y;
+    entity.torque += offsetX * worldForce.y - offset.y * worldForce.x;
+}
+
+
+function entityApplyImpulse(entity, worldImpulse, worldPos) {
+    worldPos = worldPos || entity.pos;
+    const invMass = 1 / entityMass(entity);
+    entity.velocity.x += worldImpulse.x * invMass;
+    entity.velocity.y += worldImpulse.y * invMass;
+
+    const inertia = entityInertia(entity);
+    const offset = _sub(worldPos, entity.pos);
+    entity.spin += cross(offset, worldImpulse) / inertia;
 }
 
 /*************************************************************************************/
@@ -3181,7 +3212,7 @@ function drawBounds(entity, color, recurse) {
     // Bounds:
     const z = entity.z + 0.01;
     if ((entity.shape === 'disk') && entity.size) {
-        drawDisk(pos, entity.size.x * 0.5 * Math.hypot(scale.x, scale.y), undefined, color, z)
+        drawDisk(pos, entity.size.x * 0.5 * scale.x, undefined, color, z)
     } else if (entity.size) {
         const u = {x: Math.cos(angle) * 0.5, y: Math.sin(angle) * 0.5};
         const v = {x: -u.y, y: u.x};
@@ -4801,6 +4832,19 @@ function magnitude(a) {
         return Math.hypot.apply(null, arguments);
     } else {
         return Math.sqrt(dot(a, a));
+    }
+}
+
+
+function magnitudeSquared(a) {
+    if (typeof a === 'number') {
+        let s = a * a;
+        for (let i = 1; i < arguments.length; ++i) {
+            s += arguments[i] * arguments[i];
+        }
+        return s;
+    } else {
+        return dot(a, a);
     }
 }
 
