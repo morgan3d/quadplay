@@ -1,5 +1,5 @@
 /*
-  BetterJSON.js
+  BetterJSON.js (2kB minified)
 
   JSON extended with:
 
@@ -13,8 +13,16 @@
   - Strict Unix newlines within strings
   - Optional unquoted object keys using [A-Za-z_]+ characters only
 
-  Just use BetterJSON.parse and BetterJSON.stringify in place of the
-  JSON versions.
+  Just use BetterJSON.parse and BetterJSON.stringify in place of
+  JSON.parse and JSON.stringify. They have the same API. 
+
+  BetterJSON.parse is 100% backwards compatible to JSON.parse 
+  as long as your input has no characters in the Unicode private
+  use area \uE000 through \uF8FF.
+
+  The output of BetterJSON.stringify is backwards compatible to 
+  JSON as long as you don't use NaN or Infinity values, which 
+  JSON.stringify would error out on anyway.
 
   The implementation is designed to use only regexps and a vanilla
   JSON parser to simplify porting to other languages.
