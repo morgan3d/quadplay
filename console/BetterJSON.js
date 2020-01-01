@@ -10,7 +10,8 @@
   - Numbers with bare leading or trailing decimal
   - NaN, Infinity, -Infinity
   - Hexadecimal numbers
-  - Strict Unix newlines
+  - Strict Unix newlines within strings
+  - Optional unquoted object keys using [A-Za-z_]+ characters only
 
   Just use BetterJSON.parse and BetterJSON.stringify in place of the
   JSON versions.
@@ -19,8 +20,8 @@
   JSON parser to simplify porting to other languages.
 
   This is similar to JSON5 (https://json5.org/) but is about 10x
-  smaller. The primary difference is that BetterJSON does not support
-  unquoted keys.
+  smaller. The primary difference is that BetterJSON intentionally 
+  does not support unicode in unquoted keys.
 
   By @CasualEffects
 
@@ -174,6 +175,9 @@ return {
         text = text.replace(/\bNaN\b/g, '"' + NaNSymbol + '"').
             replace(/\b-\s*Infinity\b/g, '"' + NegInfinitySymbol + '"').
             replace(/\bInfinity\b/g, '"' + InfinitySymbol + '"');
+
+        // Quote unquoted keys
+        text = text.replace(/([A-Za-z_]+)(?=\s*:)/g, '"$1"');
 
         // Restore strings
         text = unprotectQuotedStrings(text, protect[1]);
