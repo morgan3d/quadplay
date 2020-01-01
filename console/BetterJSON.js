@@ -20,7 +20,7 @@
 
   This is similar to JSON5 (https://json5.org/) but is about 10x
   smaller. The primary difference is that BetterJSON does not support
-  unquoted strings.
+  unquoted keys.
 
   By @CasualEffects
 
