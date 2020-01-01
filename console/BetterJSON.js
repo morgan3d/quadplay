@@ -11,7 +11,7 @@
   - NaN, Infinity, -Infinity
   - Hexadecimal numbers
   - Strict Unix newlines within strings
-  - Optional unquoted object keys using [A-Za-z_]+ characters only
+  - Optional unquoted object keys using [A-Za-z_0-9]+ characters only
 
   Just use BetterJSON.parse and BetterJSON.stringify in place of
   JSON.parse and JSON.stringify. They have the same API. 
@@ -185,7 +185,7 @@ return {
             replace(/\bInfinity\b/g, '"' + InfinitySymbol + '"');
 
         // Quote unquoted keys
-        text = text.replace(/([A-Za-z_]+)(?=\s*:)/g, '"$1"');
+        text = text.replace(/([A-Za-z_][A-Za-z_0-9]*)(?=\s*:)/g, '"$1"');
 
         // Restore strings
         text = unprotectQuotedStrings(text, protect[1]);
