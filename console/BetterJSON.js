@@ -18,7 +18,7 @@
   The implementation is designed to use only regexps and a vanilla
   JSON parser to simplify porting to other languages.
 
-  This is similar to JSON5 (https://json5.org/) but is about 20x
+  This is similar to JSON5 (https://json5.org/) but is about 10x
   smaller. The primary difference is that BetterJSON does not support
   unquoted strings.
 
