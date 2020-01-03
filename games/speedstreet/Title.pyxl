@@ -21,14 +21,14 @@ setBackground(sky)
 srand(0)
 const starShift = floor(modeFrames / 20)
 const bright = #fff
-drawRect(xy(0,0), xy(screenSize.x, 30), 65% sky, nil, -2)
-drawRect(xy(0,30), xy(screenSize.x, 30), 85% sky, nil, -2)
+drawCornerRect(xy(0,0), xy(screenSize.x, 30), 65% sky, nil, -2)
+drawCornerRect(xy(0,30), xy(screenSize.x, 30), 85% sky, nil, -2)
 for i < 50:
    const y = rnd()
    drawPoint(xy(384 - loop(rndInt(384) + starShift, 384), 100 y), lerp(bright, sky, 40% y + 60% rnd()), -1)
 
 // Sidewalk
-drawRect(xy(0, 195), xy(screenSize.x, 16), #999, nil, -10)
+drawCornerRect(xy(0, 195), xy(screenSize.x, 16), #999, nil, -10)
 
 // Blue
 preservingTransform:

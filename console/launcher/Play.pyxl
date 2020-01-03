@@ -95,8 +95,8 @@ frame
 
 setBackground(backgroundColor)
 
-drawRect(xy(0,0), xy(90, 15), #2)
-drawRect(xy(155,0), xy(230, 15), #2)
+drawCornerRect(xy(0,0), xy(90, 15), #2)
+drawCornerRect(xy(155,0), xy(230, 15), #2)
 drawText({font: mediumFont, text:"⍇", pos: xy(70,12), color: promptColor, shadow: shadowColor})
 drawText({font: mediumFont, text:"LIBRARY", pos: xy(99,12), color: selectedColor, shadow: shadowColor})
 drawText({font: mediumFont, text:"DISCOVER", pos: xy(180,12), color: unselectedColor, shadow: shadowColor})
@@ -123,8 +123,8 @@ for gameIndex - 2 <= g <= gameIndex + 2:
 resetClip()
 
 // Highlight selected game
-drawRect(xy(11, 93), xy(66, 66), nil, #f)
-drawRect(xy(10, 92), xy(68, 68), nil, #d)
+drawCornerRect(xy(11, 93), xy(66, 66), nil, #f)
+drawCornerRect(xy(10, 92), xy(68, 68), nil, #d)
    
 local:
    const game = gameArray[gameIndex]

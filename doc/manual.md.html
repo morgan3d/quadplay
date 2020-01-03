@@ -3,7 +3,8 @@
                       **quadplay✜**
     Fantasy Console by [Casual Effects](https://casual-effects.com)
 
-<center>[*Quick Start*](#quickstart) ∙ [*Controls*](#controls) ∙ [*API*](#standardlibrary) ∙ [*Sprites*](#sprites) ∙ [*Fonts*](#fonts) ∙ [*Sounds*](#sounds) ∙ [*Symbols*](#symbols)
+<center>[*Quick Start*](#quickstart) ∙ [*Controls*](#controls) ∙ [*Sprites*](#sprites) ∙ [*Fonts*](#fonts) ∙ [*Sounds*](#sounds) ∙ [*Symbols*](#symbols)
+<br/>[*API*](#standardlibrary) ([Input](#standardlibrary/input) ∙ [Physics](#standardlibrary/physics) ∙ [Graphics](#standardlibrary/graphics) ∙ [Sound](#standardlibrary/sound) ∙ [AI](#standardlibrary/pathfinding)) ∙ [*Changes*](#changelog) 
 
 <img src="ide.png" style="image-rendering: auto; width:75%; border-radius: 0 0 4px 4px; box-shadow: 1px 5px 7px rgba(0,0,0,.20); margin-bottom: 28px; margin-top:20px"></center>
 
@@ -293,10 +294,13 @@ with gravity and pressure.
 
 [Acceleration Demo](../console?game=quad://examples/accel_demo&IDE=1) is a simple demonstration of how various acceleration curves feel, changing only three constants: top speed, acceleration time and deceleration time. Up and down change the constants to fit different games. 
 
-[Boids](../console?game=quad://examples/boids&IDE=1) An implementation of the famous "boids" paper.
+[Boids](../console?game=quad://examples/boids&IDE=1) implements of the famous "boids" flocking algorithm.
 
 [Text](../console?game=quad://examples/text&IDE=1) shows how to use `replace()`, `drawText()`, `join()`, 
-`formatNumber()`, and `drawSpriteRect()` to build text-heavy interfaces.
+`formatNumber()`, and `drawSpriteCornerRect()` to build text-heavy interfaces.
+
+[Physics](../console?game=quad://examples/physics&IDE=1) shows all of the features of the 
+physics engine, including the debugging visualization.
 
 
 ### Inspiration
@@ -1541,8 +1545,14 @@ Math
   octave 0. Unused dimensions default to zero.
 
 `oscillate(x, m)`
+: Deprecated. `oscillate(x, 0, m)`.
+
+`oscillate(x)`
+: `oscillate(x, 0, 1)`
+
+`oscillate(x, lo, hi)`
 : Like `loop` but alternately counts up and down on the interval
-  [`0`, `m`]. Works with negative and fractional values.
+  [`lo`, `hi`], including both ends. Works with negative and fractional values.
   Let $ k = 2 m - 2, w = \mathrm{loop}(x, k) $.
   $\mathrm{oscillate}(x, m)$ is $w$ if $ w < m $, otherwise it is $k - w$.
 
@@ -1638,7 +1648,7 @@ and return a new `xy()` value (or `z`):
 - `transformScreenToDraw(c)`, `transformDrawToScreen(c, z (=0))`, `transformScreenZToDrawZ(z)`, `transformDrawZToScreenZ(z)`
 - `transformDrawToEntity(e, c)`, `transformEntityToDraw(e, c)`
 - `transformEntityToSprite(e, c)`, `transformSpriteToEntity(e, c)`
-- `transformParentToChild(e_child, c)`, `transformChildToParent(e_child, c)` (unlike all other transform methods, does not assume `updateEntityChildren` has been called)
+- `transformParentToChild(e_child, c)`, `transformChildToParent(e_child, c)` (unlike all other transform methods, does not assume `entityUpdateChildren` has been called)
 - `transformEntityToEntity(e_from, e_to, c)`
 - `transformDrawToSprite(e, c)`, `transformSpriteToDraw(e, c)`
 - `transformDrawToMap(m, c)`, `transformMapToDraw(m, c)`, `transformMapLayerToDrawZ(m, L)`, `transformDrawZToMapLayer(m, z)`
@@ -1721,9 +1731,9 @@ centered at `pos` colors pixel `⌊pos⌋`.
 
 For example, the rectangle from (0, 0) to
 (2, 1) covers two pixel centers: (0.5, 0.5) and (1.5, 0.5). The coordinates
-for a `drawRect()` command on integer boundaries are therefore usually 
-`drawRect(topLeft, widthHeight, ...)` or 
-`drawRect(topLeft, bottomRight - topLeft + 1, ...)` where `bottomRight` is the 
+for a `drawCornerRect()` command on integer boundaries are therefore usually 
+`drawCornerRect(topLeft, widthHeight, ...)` or 
+`drawCornerRect(topLeft, bottomRight - topLeft + 1, ...)` where `bottomRight` is the 
 lowest and rightmost pixel that will be visible.
 
 This coordinate system favors intuition for centered, even-sized
@@ -1909,7 +1919,7 @@ convenience, `map[x][y]` is a shorthand for `map.layer[0][x][y]`.
 The top-left corners of map cells are at integers when converting
 between map and draw coordinates. When rendered, a map therefore
 covers the same region as the drawing command
-`drawRect(xy(0,0), map.size * tileSize, #f)`.
+`drawCornerRect(xy(0,0), map.size * tileSize, #f)`.
 
 The map is aligned by default so that `drawMap()` renders the top-left
 corner of the map to the top-left corner of the screen. Use 
@@ -1993,8 +2003,8 @@ built-in properties in the future: `density` and `friction`.
   a convenient way to build entity hierarchies.
 
   If a `childArray` property is specified on `obj`, then
-  `addEntityChild()` is called for each element of this array and
-  `updateEntityChildren()` is automatically invoked after the new entity
+  `entityAddChild()` is called for each element of this array and
+  `entityUpdateChildren()` is automatically invoked after the new entity
   is constructed.
 
 
@@ -2005,7 +2015,8 @@ The basic entity properties and defaults are:
   `drawSprite()`. Defaults to 0.
 
 `entity.name`
-: A string useful for debugging and error messages. Defaults to `"Anonymous"`.
+: A string useful for debugging and error messages. Defaults to `"entity"` +
+  a unique number.
 
 `entity.offset`
 : A draw-space value added to `entity.pos` by `drawEntity()`. Useful
@@ -2086,7 +2097,7 @@ def draw(e):
    for c in e.childArray: draw(c)
    
 def drawInBox(e):
-   drawRect(e.pos - e.size / 2, e.size, #FFF)
+   drawCornerRect(e.pos, e.size, #FFF)
    drawSprite(e.sprite, e.pos)
 
 let e = makeEntity({..., draw:drawInBox})
@@ -2097,7 +2108,7 @@ draw(e)
 [Example of replacing `drawEntity` with a version that uses arbitrary callbacks.]
 
 
-### Labels
+### Label Properties
 
 A text label is drawn for the entity if `entity.text and
 entity.font` is not `nil`. This is useful for showing player
@@ -2114,74 +2125,33 @@ set of label properties is:
 - `entity.textOutline`
 
 
-### Physics 
+### Physics Properties
 
 A key relating textbook symbols and definitions to the quadplay✜ entity property names is:
 
-  Property       | Symbol                           | Definition
-  ---------------|----------------------------------|------------------
-  `pos`          | $x(t)$                           | Position
-  `vel`          | $v(t) = \dot{x}(t)$              | Linear velocity
-  `acc`          | $a(t) = \ddot{x}(t)$             | Linear acceleration
-  `force`        | $F(t) = m \cdot a(t)$            | Force
-  `angle`        | $\theta(t)$                      | Angle
-  `spin`         | $\omega(t) = \dot{\theta}(t)$    | Angular velocity
-  `twist`        | $\alpha(t) = \ddot{\theta}(t)$   | Angular acceleration
-  `torque`       | $\tau(t) = I \cdot \alpha(t)$    | Torque
-  `inertia`      | $I$                              | Inertia
-  `density`      | $\rho$                           | Density
-  `friction`     | $\mu_\mathrm{k}$                 | Coefficient of kinetic friction
-  `restitution`  | $e$                              | Coefficient of restitution
+  Property        | Symbol                           | Definition
+  ----------------|----------------------------------|------------------
+  `pos`           | $x(t)$                           | Position
+  `vel`           | $v(t) = \dot{x}(t)$              | Linear velocity
+  `force`         | $F(t) = m \cdot a(t)$            | Force
+  `angle`         | $\theta(t)$                      | Angle
+  `spin`          | $\omega(t) = \dot{\theta}(t)$    | Angular velocity
+  `torque`        | $\tau(t) = I \cdot \alpha(t)$    | Torque
+  `inertia`       | $I$                              | Inertia
+  `density`       | $\rho$                           | Density
+  `friction`      | $\mu_\mathrm{k}$                 | Coefficient of kinetic friction
+  `stictionFactor`| $\mu_\mathrm{s}/\mu_\mathrm{k}$  | Static friction multiplier
+  `restitution`   | $e$                              | Coefficient of restitution
 
-You can choose the units and coordinate system. Pixels and frames are
-the most common choice of units in order to simplify conversion factors.
+You can choose the units and coordinate system. Pixels (of distance),
+pixel mass, and game frames are the most common choice of units in 
+order to simplify conversion factors.
 
-Functions:
-
-`physicsStepEntity(entity, t (= 1))`
-: Overwrites `acc = force/mass` and `twist = torque/inertia`.  Then,
-  integrates `acc` into `vel` into `pos` and `twist` into `spin` into
-  `angle`. Finally, sets `force` and `torque` to zero. Uses a forward
-  Euler (1st order Runge-Kutta) integrator over duration `t`.  This
-  tends to be a more stable method for small, discrete time steps
-  than the analytic quadratic solution and avoids the need for
-  additional data of higher-order integrators. Using the default
-  `t=1`, velocity has units of pixels/frame. If you pass `t=1/60`,
-  then velocity has units of pixels/second.
-
-
-`entityApplyForce(entity, worldForce, worldPos (= entity.pos))`
-: Apply world-space `worldForce` to `entity` at world-space position `worldPos`,
-  updating both `entity.force` and `entity.torque`. To apply
-  a force at the center of mass, you can also directly add to `entity.force`.
-  To apply a torque without a net force at the center of mass, directly
-  add to `entity.torque`.
-
-`entityApplyImpulse(entity, worldImpulse, worldPos (= entity.pos))`
-: Apply world-space `worldImpulse` (mass * velocity) to `entity` at world-space position `worldPos`,
-  updating both `entity.vel` and `entity.spin`. To apply
-  a velocity change at the center of mass, you can also directly add to `entity.vel`.
-  To apply angular velicty without a net linear velocity impulse at the center of mass, directly
-  add to `entity.spin`.
-
-`entityInertia(entity)`
-: Scalar inertia tensor about the center of mass. Equal to
-  `entityMass(entity) * magnitude(entity.scale * entity.size)² / 12`
-  when `shape` is `"rect"` and `⅛ entityMass(entity) *
-  (entity.scale.x * entity.size.x)²` when `entity.shape == "disk"`.
-  Has units of pixelMass * pixelsSquared.
-
-`entityMass(entity)`
-: Scalar mass equal to the bounds area in pixels specified by the
-  `entity.shape` and `entity.size` times the `entity.density`.
-  Returns units of pixelMass.
-
-
-Properties:
+See also the Physics section for relevant functions.
 
 `entity.force`
 : `xy()` linear force. Defaults to (0, 0).
-  Has units of pixelMass * pixelDistance / frame^2 by default.
+  Has units of mass * pixels / frame^2 by default.
   Typical forces are on the scale 1-10.
   
 `entity.density`
@@ -2203,17 +2173,23 @@ Properties:
 : `xy()` linear velocity. Defaults to (0, 0).
   Has units of pixels/frame by default.
 
+`entity.physicsSleepState`
+: Current sleeping state of the entity in a physics engine. Default is `"awake"`. Legal values are
+  are `"sleeping"`, `"awake"`, and `"vigilant"` (awake and can never go to sleep). Because
+  objects that are sleeping do not maintain contacts with other sleeping objects or parts of
+  the environment, if you want to check for contacts (such as with the ground) on a player controlled
+  entity then it should be `"vigilant"`.
+
 `entity.restitution`
 : Amount of energy preserved in a collision. Useful range is 0%-100%. The default is 10%. 
-  The net restitution applied between two entities at a collision is the _maximum_ of each of their
-  restitution values.
+  The net restitution applied between two entities is the geometric mean of their restitution values.
 
 `entity.collisionGroup`
 : An integer index of a group of other entities that this one should not collide with, regardless
   of the `collisionHitMask` or `collisionCategoryMask`. Zero means no group at all. Defaults to 0. Does not affect `overlaps()`.
 
 `entity.collisionHitMask`
-: TBD. Defaults to `0xffffffff`. Does not affect `overlaps()`.
+: See `entity.collisionCategoryMask`. Defaults to `0xffffffff`. Does not affect `overlaps()`.
   
 `entity.collisionCategoryMask`
 : Collision categories for this object, as 32 bit flags. 
@@ -2223,20 +2199,21 @@ Properties:
 
 `entity.stictionFactor`
 : Multiplier applied to `entity.friction` in the static dry friction case
-  (on top of the kinetic dry friction) when an object is at rest. Useful range is 0-10. Defaults to 0.5.
+  when an object is at rest. Useful range is 0-10. Defaults to 1.
 
-  The value 0 disables static friction, so that only dynamic friction is applied.
+  The value 0 disables static friction (since it allows the object to immediately
+  start moving, and thus have kinetic friction engage), so that only dynamic friction is applied.
   The net stictionFactor between two entities is the _maximum_ of each of their
   stictionFactor values. Set moving platforms and conveyor belts to have high stiction to help characters
   move with the surface that they are on.
 
 `entity.friction`
-: Kinetic dry friction applied when an object is in motion. Useful range is 0%-100%. Defaults to 50%.
-  The net friction applied between two entities is the _minimum_ of each of their
-  friction values.
+: Kinetic dry friction applied when an object is in motion, damping the velocity. 
+  Useful range is 0%-100%. Defaults to 15%. The net friction applied between two 
+  entities is the geometric mean of their friction values.
 
 `entity.drag`
-: Drag friction applied when an object is moving freely. Useful range is 0-10. Defaults to 0.01.
+: Drag friction applied when an object is moving freely. Useful range is 0-10. Defaults to 0.005.
   There is a single drag constant for the body independent of the orientation or direction of
   motion. This is not a drag _coefficient_ because it is independent of cross-sectional area.
 
@@ -2249,16 +2226,20 @@ have absolute properties in draw space.
 
 Hierarchy functions:
 
-`addEntityChild(parent, child)`
+`entityAddChild(parent, child)`
 : Adds the `child` entity to the `parent.childArray` and sets `child.parent = parent`. 
   Removes the child from any previous parent's child array if there was one.
+  Returns the `child`.
 
-`removeEntityChild(parent, child)`
+`entityRemoveChild(parent, child)`
 : Removes the `child` from `parent.childArray`, if it is a child. Does nothing if
   `child` is not in `parent`. Causes an error if `child` and `parent.childArray`
   are inconsistent.  If the child was added by the `makeEntity` `childTable` as a 
   field on parent, that field is not modified. You can remove the field explicitly
   using `removeKey(parent, "childName")`.
+  
+`entityRemoveAll(parent)`
+: Removes all children.
 
 `transformChildToParent(child, childPos)`
 : Takes a coordinate `childPos` in the `child` entity reference frame and transforms it to
@@ -2268,7 +2249,7 @@ Hierarchy functions:
 : Takes a coordinate `parentPos` in the `child.parent` entity reference frame and transforms it to
   the `child` entity reference frame.
 
-`updateEntityChildren(entity)`
+`entityUpdateChildren(entity)`
 : Recursively update the `pos`, `scale`, `angle`, and `offset` fields of all children and
   descendants from their `posInParent`, `scaleInParent`, `angleInParent`, and `offsetInparent`
   fields. Usually called after simulation or animation processing.
@@ -2293,7 +2274,7 @@ The hierarchy properties are:
   otherwise ignored.
 
 `entity.offsetWithParent`
-: Boolean. If true, then `updateEntityChildren()` recomputes `entity.offset` from `entity.offsetInParent`
+: Boolean. If true, then `entityUpdateChildren()` recomputes `entity.offset` from `entity.offsetInParent`
   and `parent.offset`.
 
 `entity.posInParent`
@@ -2301,7 +2282,7 @@ The hierarchy properties are:
   applied recursively. Defaults to (0, 0).
 
 `entity.orientWithParent`
-: If true, `updateEntityChildren()` will override this entity's angle and scale with
+: If true, `entityUpdateChildren()` will override this entity's angle and scale with
   `entity.angle = entity.angleInParent + parent.angle` and `entity.scale = entity.parent.scale * entity.scaleInParent`. 
 
 `entity.scaleInParent`
@@ -2313,8 +2294,300 @@ The hierarchy properties are:
   applied recursively. Defaults to 0.
 
 
+Physics
+---------------------------------------------------------
+
+You can implement your own physics simulation, use entity and the
+entity helpers, enable the full entity physics engine, or mix these
+techniques.
+
+### Entity Helpers
+
+Also see the Intersections section for computing your own collisions and
+intersections.
+
+`entityApplyForce(entity, worldForce, worldPos (= entity.pos))`
+: Apply world-space `worldForce` to `entity` at world-space position `worldPos`,
+  updating both `entity.force` and `entity.torque`. To apply
+  a force at the center of mass, you can also directly add to `entity.force`.
+  To apply a torque without a net force at the center of mass, directly
+  add to `entity.torque`.
+  
+  Does not support entities with children or pivots.
+
+`entityApplyImpulse(entity, worldImpulse, worldPos (= entity.pos))`
+: Apply world-space `worldImpulse` (mass * velocity) to `entity` at world-space position `worldPos`,
+  updating both `entity.vel` and `entity.spin`. To apply
+  a velocity change at the center of mass, you can also directly add to `entity.vel`.
+  To apply angular velicty without a net linear velocity impulse at the center of mass, directly
+  add to `entity.spin`.
+  
+  Does not support entities with children or pivots.
+
+`entityArea(e)`
+: Returns the world space area of `e`, which must have `shape`
+  and `size` properties and may have a `scale` property.
+  
+`entityInertia(entity)`
+: Scalar inertia tensor about the center of mass. Equal to
+  `entityMass(entity) * magnitude(entity.scale * entity.size)² / 12`
+  when `shape` is `"rect"` and `⅛ entityMass(entity) *
+  (entity.scale.x * entity.size.x)²` when `entity.shape == "disk"`.
+  Has units of mass * pixels^2.
+
+`entityMass(entity)`
+: Scalar mass equal to the bounds area in pixels specified by the
+  `entity.shape` and `entity.size` times the `entity.density`.
+  Returns generic mass units.
+  
+`entityMove(entity, pos (= entity.pos), angle (= entity.angle))`
+: Instantaneously moves an entity to this position and angle _as if it had
+  naturally reached that location in the previous frame_, setting the appropriate 
+  `entity.vel` and `entity.spin`. This is useful for moving
+  entities with infinite density in a way that causes them to interact
+  naturally with other entities that they come into contact with.
+  For example, use this function for implementing moving platforms,
+  scripted set-piece animations, and elevators.
+
+`entitySimulate(entity, t (= 1))`
+: Computes `acc = force/mass; twist = torque/inertia` and
+  `vel *= 1 - drag; spin *= 1 - drag`.  Then,
+  integrates `acc` into `vel` into `pos` and `twist` into `spin` into
+  `angle`. Finally, resets `force` and `torque` to zero and
+  invokes `entityUpdateChilren()`.
+  
+  Uses a forward Euler (1st order Runge-Kutta) integrator over
+  duration `t` measured in frames. This tends to be a more stable
+  method for small, discrete time steps than the analytic quadratic
+  solution and avoids the need for additional data of higher-order
+  integrators.
+  
+  Does not perform collision detection or response, or enforce attachment 
+  constraints. You do not need to call `entitySimulate()` if you are 
+  already using `physicsSimulate()`.
+
+`makeCollisionGroup()`
+: Creates a unique value for an `entity.collisionGroup`.
 
 
+### Intersections
+
+These are methods for determining intersections and collisions explicitly, without
+using the full physics engine.
+
+`axisAlignedDrawBox(e)`
+: Returns a box specified by `{pos:xy(), size:xy(), shape:"rect"}` that encloses
+  the object `e` (and all of its children if it is an entity) in draw space.
+
+`overlaps(A, B, recurse (= true))`
+: Returns true if the bounds of `A` and `B` overlap each other, taking
+  shape and orientation into account and incuding the borders. Ignores
+  `offset` and `z` for entities. Each of `A` and `B` can be any of:
+  
+   - an entity from `makeEntity()`
+   - any object with `pos` and optional `shape`, `angle`, `pivot`, and `size` properties
+   - an `xy()` point
+
+  If `recurse` is true (the default), compares `A` and all of its children
+  against `B` and all of its children. This is quadratic in the number of
+  elements of each and can be slow for very deep entity hierarchies.
+  
+  See `entity.pivot`, `entity.shape`, etc. for discussion of how those properties
+  affect the collision detection.
+
+`rayIntersect(ray, obj)`
+: The `ray` object must have `xy()` fields for `origin`, `direction`,
+  and an optional number field for `length (= inf)`.
+  The `ray.direction` will automatically be normalized.
+
+  The `obj` has `shape`, `pos`, `size`, and optional `angle`
+  properties (an entity satisfies this, but it doesn't have to be a full
+  entity). If there is a `obj.childArray`, then that is recursively
+  processed and the first intersection encountered is returned.
+  
+  Returns the object hit or `nil` if there was no intersection.
+  The `ray.length` is shortened to the hit distance. 
+  
+`rayIntersect(ray, array)`
+: Returns the first object intersected when calling `rayIntersect(ray, array[i])`
+  on each element of the array.
+
+<!--
+`rayIntersectMap(args)`
+: Calls `rayIntersectMap()` with the named arguments.
+
+`rayIntersectMap(ray, map, tileCanBeSolid (= getMapSprite), pixelIsSolid (= nil), layer (= 0), replacementArray (= []))`
+: The `ray` object must have `xy()` fields for `origin`, `direction`,
+  and an optional number field for `length (= inf)`. 
+  The `ray.direction` will automatically be normalized. The ray is in _draw coordinates_.
+
+  Returns the sprite hit or `nil` if there was no intersection.
+  The `ray.length` is shortened to the hit distance. 
+
+  `def tileCanBeSolid(map, P, layer, replacementArray)` returns true
+  if the tile at `P` _in map coords_ can trigger a collision. The
+  callback `pixelIsSolid` is then invoked to find the collision within
+  the tile. The default value returns true for any non-`nil` tile.
+   
+  `def pixelIsSolid(map, P, layer, replacementArray)` returns true if the pixel at `P` _in map coords_
+  triggers a collision.  The default value, returns true for all pixels,
+  so that any `tileCanBeSolid() == true` tile immediately stops the ray. See `getMapPixelColor()`.
+  As an example of a common alternative, `def pixelIsSolid(map, P, L, R): return getMapPixelColor(map, P, L, R).a > 50%`
+  causes collisions with any 50% opaque pixels.
+-->
+
+
+### Engine
+
+The full physics engine provides collision detection, response, and
+constraints. 
+
+Children of entities in the physics system have no effect on physics. In future
+releases they will affect the collision shape, moment of inertia, and mass.
+
+While an entity is in a physics context, the following properties may 
+not be changed on it:
+
+- `shape`
+- `size`
+- `pivot`, which must always be `xy(0,0)`
+- `scale`, except for sign changes
+
+Attachments not moved for scale changes because it is ambiguous how
+the attached object should be changed. If you need attachments on
+entities that change scale signs, then detach the two entities, move
+them, and create a new attachment in the new position.  For example,
+when a character flips direction and a rope tied to their hand should
+now be on the other side.
+
+Changing the `collisionGroup`, `collisionHitMask`, or
+`collisionCategoryMask` on the bodies in an attachment with `collide = false`
+after the attachment been created may cause the attached bodies
+to start colliding with each other.
+
+`makePhysics(options (= {}))`
+: Create and return a new physics context. There can be multiple, independent physics contexts 
+  in the game. Each entity may only be in one physics context at a time.
+  The options are:
+  
+  - `gravity (= xy(0, -getYUp()))`: Default gravitational acceleration on all objects.
+    Set to `xy(0,0)` and explicitly apply gravity if your game is not set on a planetary
+    surface or requires excluding most objects from gravity.
+  - `allowSleeping (= true)`: Allow simple rigid bodies to fall "asleep" and stop simulating
+    until touched. This dramatically increases simulation performance, however some entities
+    will fail to properly waken when the object supporting them is removed and can remain
+    floating in the air.
+
+`physicsAddContactCallback(physics, callback, minDepth (= 0), maxDepth (= ∞), collisionMask (= 0xffffffff))`
+: Adds a callback that processes collisions at the end of `physicsSimulate()`.
+  If either entity in the collision has a `entity.categoryMask` that intersects the `collisionMask`
+  and the collision has `depth &gt;= minDepth`, then invoke
+  `callback({entityA, entityB, depth, age, point0, point1, normal})`. 
+  `point1` may be `nil`. `normal` is in draw coordinates and
+  always points out of `entityA`. 
+  
+  `depth` is a coarse measure of how hard the objects hit each other. It has 
+  a useful scale from 0-4.
+  
+  This is good for triggering particle effects or sound on collisions,
+  or causing damage to objects. When doing so, use the parameters to filter: 
+  for example, `minDepth` = 1 will only trigger on significant,
+  new contacts. There is no way to remove a contact callback.
+
+`physicsEntityContacts(physics, entity, childRegion (= nil), worldNormal (= nil), mask (= 0xffffffff))`
+: Returns an array of all current contacts, where each contact has the form 
+  `{entityA, entityB, depth, point0, point1, normal}`. The contact points are
+  in draw coordinates.
+  
+  The region, mask, and nromal are used to filter the contacts
+  returned. A contact must have nonzero `collisionMask bitand
+  otherEntity.collisionCategoryMask` for the _other_ entity
+  involved. The average position of point0 and point1 must also lie
+  within the `childRegion`, which is in the entity's reference frame.
+  `childRegion` is either `nil` (all contacts) or an argument suitable
+  for passing to `overlaps()`. If `normal` is specified, then the
+  contact normal for the other entity must point within 60 degrees of
+  this vector. This is a draw-space vector.
+
+  In the returned contacts, the `entity` may be either `entityA` or `entityB`.
+
+  This function is ueseful for determining if entities are currently
+  in resting contact, such as whether a character is standing on the
+  ground and can jump. In that case, make the `childRegion` a box around the
+  character's feet and set the `worldNormal` to the up vector for the world.
+  
+  Note that sleeping entities have no contacts.
+  See also `physicsAddContactCallback()`.
+
+`physicsAddEntity(physics, entity)`
+: Add `entity` to this physics context. An entity may only be in
+  one physics context at a time. Returns the `entity`.
+  
+  Once an entity is added to the physics system, it will be retained
+  in the physics system until `physicsRemoveEntity()` is called.
+  Use the `drawPhysics()` command or IDE button to debug physics objects
+  that correspond to entities which are no longer being drawn.
+
+`physicsAttach(physics, type, {entityA, entityB, pointA, pointB, collide (= nil), ...})` 
+: Attaches two entities to each other, `entityB` to the
+  world. `entityA` may be `nil` (the world) or have infinite
+  density. `entityB` must be non-`nil` and have finite density. The
+  points are optional attachment points in the reference frame of each
+  entity.  The attachment points do not have to be within the bounds
+  of the entities. The entities are immediately moved to satisfy the constraint
+  of the attachment.
+  
+  Two entities may not have multiple attachments directly between them. Doing
+  so will cause unstable and undefined behavior.
+  
+  _There is no relationship to the entity parent/child hierarchy_. Entity children
+  are used for explicit positioning. Attachments are for letting simulation position
+  objects.
+  
+  Returns an attachment object, which can be passed to `physicsDetach()`.
+  
+  All attachment types are massless, except for weld, which adds a slight amount of
+  mass at the weld point and thus affects net mass and moment of inertia.
+  
+  If `collide` is false, then the entities cannot collide with each other while
+  the attachment is maintained. The default for `collide` is `true` for spring, rope, and rod
+  attachments and `false` for all other types.  You can also disable collisions by putting 
+  the objects in the same `entity.collisionGroup`, which is more efficient.
+  
+  Attached entities cannot sleep.
+  
+  The supported values of `type` and the additional named parameters supported for each are:
+  
+   - `"pin"`:    This kind of attachment is referred to in other APIs as a revolute joint.
+   - `"spring"`: `length (= ‖pointB - pointA‖)`, `stiffness (= 0.5%)`, `damping (= 0.2%)`
+   - `"rod"`:    `length (= ‖pointB - pointA‖)`
+   - `"weld"`:   `angle (= entityB.angle - entityA.angle)`. Rigid attachment with
+                 the specified relative angle. <!-- It is more stable and efficient to 
+                 call `physicsRemoveEntity(physics, entityB)` and `entityAddChild(entityA, entityB)`
+                 than to weld within the physics system. --> Requires `entityA` to be non-`nil`.
+   - `"gyro"`:   `angle (= 0)` Free translation, but frozen rotation relative to each other. 
+     Useful for keeping characters upright. `entityA` must be `nil`. This kind of 
+     attachment is referred to in other APIs as a Cartesian joint or generalized 2D prismatic joint.
+   <!--
+   - `"hinge"`:  `minAngle`, `maxAngle`. If the hinge is unconstrained, use a pin.
+   - `"rope"`:   `length`. If the rope will always be under tension, use a rod.
+   - `"joint"`:  `minAngle`, `maxAngle`, `angle`, `stiffness (= 100%)` -->
+
+`physicsDetach(physics, attachment)`
+: Remove this attachment, which was previously created by `physicsAttach()`.
+
+`physicsRemoveAll(physics)`
+: Remove all entities and attachments from this physics context.
+
+`physicsRemoveEntity(physics, entity)`
+: Remove `entity` and all attachments for it from the physics context.
+  See also `physicsAddEntity()`.
+
+`physicsSimulate(physics, frames (= 1))`
+: Simulate physics for this many frames, treating all forces and torques
+  as constant over that period. Automatically calls `entityUpdateChildren()`
+  on all entities in the context. See also `entitySimulate()`.
+  
 
 Graphics
 ---------------------------------------------------------
@@ -2402,6 +2675,25 @@ endpoints and borders.
 
 ### Drawing
 
+`drawPoly(vertexArray, fill, border = (nil), pos (= xy(0, 0)), angle (= 0), scale (= xy(1, 1)), z (= 0))`
+: Draws the _convex_ polygon defined by the `vertexArray`, first scaling by `scale`, rotating by `angle`,
+  and then translating by `pos`. The polygon may have any winding direction. The outcome of the drawn result
+  is undefined and may change across platforms if the polygon is not convex (but there will never be an error).
+
+`drawCornerRect(corner, size, fill, border (= nil), z (= 0))`
+: Draw a rectangle covering all of the pixel centers between `corner`
+  and `corner + size`. This is primarily for UI window drawing.
+  `size` may be negative.
+  
+  If the top or right
+  sides exactly touch a pixel center (at a half-integer), then they do
+  not cover it. The direction in which the `size` applies is determined
+  by the current transform. Note that if `getYUp()` is positive, then
+  the rectangle will extend _upward_ from the corner.
+  
+  See also `drawRect()`.
+  
+
 `drawDisk(center, r, fill, border, z (= 0))`
 : Draw a circle or filled disk centered at (`center.x`, `center.y`)
   with radius `r` and z-order `z`.
@@ -2431,11 +2723,11 @@ endpoints and borders.
   the z-order.  Useful for drawing the main game background during
   inventory, pause, menu, and dialogue modes.
 
-`drawRect(corner, size, fill, border (= nil), z (= 0))`
-: Draw a rectangle covering all of the pixel centers between `corner`
-  and `corner + size`. `size` may be negative.  If the top or right
-  sides exactly touch a pixel center (at a half-integer), then they do
-  not cover it.
+`drawRect(pos, size, fill, border (= nil), angle (= 0), z (= 0))`
+: Draws the rectangle _centered_ at `pos` with the given `size` and `angle`. 
+  No `scale` argument is provided because it is easy for the caller to 
+  explicitly multiply `size` by `scale`.
+  See also `drawCornerRect()` and `drawSpriteCornerRect()`.
 
 `drawSprite(args)`
 : Keyword version of `drawSprite()`. Pass an object that has properties
@@ -2455,7 +2747,7 @@ endpoints and borders.
   If it is not `nil`, the `overrideColor` replaces the red, green, and blue
   values read from each pixel of the sprite. It uses the existing alpha value.
 
-`drawSpriteRect(spr, corner, size, z ( = 0))`
+`drawSpriteCornerRect(spr, corner, size, z ( = 0))`
 : Draw a rectangle enclosing points `corner` and `corner+size`
   filled with `spr` tiled as needed (and aligned to the
   center), and surrounded by the neighbors of `spr`
@@ -2464,6 +2756,8 @@ endpoints and borders.
   windows and health bars.  Keep in mind that some artwork is designed
   to only be stretched in one dimension, or to tile only at integer
   multiples.
+  
+  See also `drawCornerRect()` and `drawRect()`.
 
 `drawText(args)`
 : Keyword version of `drawText()`. Pass an object that has properties
@@ -2508,9 +2802,11 @@ endpoints and borders.
   using a double slash: `\\{` or `\\}`. _The current implementation
   simply strips markup instead of applying it._
   
-`drawTri(A, B, C, fill, border (= nil), z (= 0))`
-: Draw the triangle.
-
+`drawTri(A, B, C, fill, border (= nil), pos (= xy(0, 0)), scale (= xy(1, 1)), angle (= 0), z (= 0))`
+: Scale `A`, `B`, and `C` by `scale`, rotate them around the origin by `angle`, translate
+  by `pos`, and then draw the triangle. The `pos` argument is not first because in many
+  cases this is called with draw-space vertices and no translation. The triangle may have
+  any winding direction.
 `getClip()`
 : Returns the current net clipping region as an object that
   can be passed to `setClip()`.
@@ -2573,7 +2869,7 @@ drawText("Shadow", xy(32,86), rgb(1,0,0), nil, rgb(0,0,0, 50%), 0)
 drawText("Shadow+Outline", xy(32,95), rgb(1,0,0), rgb(50%, 50%, 0), rgb(0,0,0, 50%), 0)
 
 def test(pos, xalign, yalign)
-  drawRect(pos - xy(2, 3), xy(4, 6), gray(85%))
+  drawCornerRect(po, xy(4, 6), gray(85%))
   drawPoint(pos, gray(0))
   drawText("X", pos, rgb(1, 0, 0), nil, nil, xalign, yalign)
 
@@ -2767,75 +3063,6 @@ indices. The map's z-axis corresponds to layers.
 : Returns the draw coordinates of `mapCoord`. Integer mapCoords correspond to the centers of tiles,
   which will be fractional pixels for even map tile sizes. See also `transformDrawToMap()` 
   and `getMapPixelColor()`.
-
-
-Collisions
-----------------------------------------------------------
-
-`entityArea(e)`
-: Returns the world space area of `e`, which must have `shape`
-  and `size` properties and may have a `scale` property.
-
-`axisAlignedDrawBox(e)`
-: Returns a box specified by `{pos:xy(), size:xy(), shape:"rect"}` that encloses
-  the object `e`, and all of its children if it is an entity, in draw space.
-
-`overlaps(A, B, recurse (= true))`
-: Returns true if the bounds of `A` and `B` overlap each other, taking
-  shape and orientation into account and incuding the borders. Ignores
-  `offset` and `z` for entities. Each of `A` and `B` can be any of:
-  
-   - an entity from `makeEntity()`
-   - any object with `pos` and optional `shape`, `angle`, `pivot`, and `size` properties
-   - an `xy()` point
-
-  If `recurse` is true (the default), compares `A` and all of its children
-  against `B` and all of its children. This is quadratic in the number of
-  elements of each and can be slow for very deep entity hierarchies.
-  
-  See `entity.pivot`, `entity.shape`, etc. for discussion of how those properties
-  affect the collision detection.
-
-`rayIntersect(ray, obj)`
-: The `ray` object must have `xy()` fields for `origin`, `direction`,
-  and an optional number field for `length (= inf)`.
-  The `ray.direction` will automatically be normalized.
-
-  The `obj` has `shape`, `pos`, `size`, and optional `angle`
-  properties (an entity satisfies this, but it doesn't have to be a full
-  entity). If there is a `obj.childArray`, then that is recursively
-  processed and the first intersection encountered is returned.
-  
-  Returns the object hit or `nil` if there was no intersection.
-  The `ray.length` is shortened to the hit distance. 
-  
-`rayIntersect(ray, array)`
-: Returns the first object intersected when calling `rayIntersect(ray, array[i])`
-  on each element of the array.
-
-<!--
-`rayIntersectMap(args)`
-: Calls `rayIntersectMap()` with the named arguments.
-
-`rayIntersectMap(ray, map, tileCanBeSolid (= getMapSprite), pixelIsSolid (= nil), layer (= 0), replacementArray (= []))`
-: The `ray` object must have `xy()` fields for `origin`, `direction`,
-  and an optional number field for `length (= inf)`. 
-  The `ray.direction` will automatically be normalized. The ray is in _draw coordinates_.
-
-  Returns the sprite hit or `nil` if there was no intersection.
-  The `ray.length` is shortened to the hit distance. 
-
-  `def tileCanBeSolid(map, P, layer, replacementArray)` returns true
-  if the tile at `P` _in map coords_ can trigger a collision. The
-  callback `pixelIsSolid` is then invoked to find the collision within
-  the tile. The default value returns true for any non-`nil` tile.
-   
-  `def pixelIsSolid(map, P, layer, replacementArray)` returns true if the pixel at `P` _in map coords_
-  triggers a collision.  The default value, returns true for all pixels,
-  so that any `tileCanBeSolid() == true` tile immediately stops the ray. See `getMapPixelColor()`.
-  As an example of a common alternative, `def pixelIsSolid(map, P, L, R): return getMapPixelColor(map, P, L, R).a > 50%`
-  causes collisions with any 50% opaque pixels.
--->
 
 
 Frame Hooks
@@ -3063,15 +3290,17 @@ These APIs are subject to change.
   - `"getAnalogAxes", index` Return an `xy()` of the analog axis values for `pad[index]`, without D-pad snapping.
     Needed for accessing Atari paddles, car pedals, steering wheels, and flight stick throttles in a meaningful way.
   - `"setDebugFlag", flagname, bool` Set the enabled state of an IDE debugging flag. The flagnames are 
-    `"entityBounds"`, `"assert"`, `"debugPrint"`, `"debugWatch"`.
+    `"entityBounds"`, `"assert"`, `"debugPrint"`, `"debugWatch"`, `"physics"`.
   - `"getDebugFlag", flagname` Return the state of an IDE debugging flag.
 
 `drawBounds(e, color (= gray(60%)), recurse (= true))`
-: Render a debugging view of the bounds of an entity or other object
+: Render a debugging view of the bounds of an entity or other object `e`
   with `pos` and optional `angle`, `size`, `scale`, and `shape`
   properties. If `recurse` is true, descend into 
   any `e.childArray` field.
-  
+
+`drawPhysics(physics)`
+: Render a debugging view of the physics system
   
 
 Persistence
@@ -3487,10 +3716,11 @@ reading about options in this section that may not be used by the
 starter.
 
 !!! 
-    quadplay✜ permits C++ style comments, trailing commas, and multiline
-    backquote JavaScript strings within JSON files for convenience when
-    editing and debugging. This is not legal in strict JSON and may be 
-    incompatible with other tools.
+    quadplay✜ permits C++ style comments, hexadecimal numbers,
+    IEEE 754 constants, raw decimals, leading plus signs, trailing commas, 
+    and multiline backquote JavaScript strings within JSON files for convenience when
+    editing and debugging. This is not legal in strict JSON and
+    may be incompatible with other tools.
 
 An example project is below, annotated with comments explaining the
 options. Project files should have the double extension `.game.json`.
@@ -5238,14 +5468,17 @@ remove it (this is called occlusion culling). The renderer must
 process both otherwise even though the object that is behind is
 unseen.
 
-`drawRect` and `drawDisk` are much faster for opaque colors than ones with
+All of the drawing calls are much faster for opaque colors than ones with
 fractional alpha values.
 
 Perfectly horizontal lines are much faster to draw than vertical lines. 
 Vertical lines are slightly faster than diagonal lines.
 
-Numeric for loops, such as `for i < N` are slightly faster than iterator for loops
-such as `for x in A`. 
+Sequential `drawPoint()` calls that have the same `z` value are
+significantly optimized in order to enable per-pixel graphics.
+
+Numeric for loops, such as `for i < N` are slightly faster than
+iterator for loops such as `for x in A`.
 
 `with` statements are relatively slow, as are `for`-`with` loops on
 large arrays.  Use them for readability on individual or small sets of
@@ -5352,6 +5585,9 @@ and [estraverse](https://github.com/estools/estraverse)
 [`LoadManager.js`](https://github.com/morgan3d/misc/tree/master/jsloadmanager) is (c) 2018 Morgan McGuire,
 [BSD-2-Clause](https://opensource.org/licenses/BSD-2-Clause) license.
 
+[`BetterJSON.js`](https://github.com/morgan3d/misc/tree/master/jsloadmanager) is (c) 2020 Morgan McGuire,
+[BSD-2-Clause](https://opensource.org/licenses/BSD-2-Clause) license.
+
 [`js-yaml`](https://github.com/morgan3d/misc/tree/master/jsloadmanager) is (C) 2011-2015 by Vitaly Puzrin,
 [MIT](https://raw.githubusercontent.com/nodeca/js-yaml/master/LICENSE)
 license.
@@ -5371,7 +5607,10 @@ Beta Tester Notes
 
 The API is mostly complete. I'm focusing on bug fixes and minor tweaks
 to improve convenience. Only some minor helpers, primarily for AI
-tasks, will be added before release.
+and physics tasks, will be added before the 1.0 release.
+
+The physics API is the newest, and thus the least stable (in both API and
+implementation) part of quadplay.
 
 Expect rasterization rules for triangles to change slightly
 in order to better align for subpixel cases. The current sprite, map,
@@ -5455,12 +5694,39 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
+2020 Jan 3: Beta update 20
+
+- Renamed `addEntityChild()` to `entityAddChild()`
+- Renamed `removeEntityChild()` to `entityRemoveChild()`
+- Renamed `updateEntityChildren()` to `entityUpdateChildren()`
+- Renamed `physicsStepEntity()` to `entitySimulate()`
+- Renamed `drawRect()` to `drawCornerRect()`
+- Renamed `drawSpriteRect()` to `drawSpriteCornerRect()`
+- Made `entitySimulate()` use `entity.drag` and invoke `entityUpdateChildren()`
+- Added hardware physics support. See the Physics section for the API
+- Added physics debugging to the IDE
+- Added [physics example](../console?game=quad://examples/physics&IDE=1)
+- Added `oscillate(x, lo, hi)` and deprecated `oscillate(x, m)`
+- Added `entityRemoveAll()`
+- Allowed more flexible JSON syntax for data files
+- Added BetterJSON.js to credits
+- Added optional `pos`, `scale`, and `angle` arguments to `drawTri()`
+- Added `drawRect()` that is centered and takes an optional `angle` argument
+- Added `drawPoly()` for drawing convex polygons
+- Documented that `drawTri()` ignores winding order
+- Updated `tools/pyxlscript-mode.el` emacs syntax highlighting for new APIs
+- Fixed `tools/pyxlscript-mode.el` emacs syntax highlighting of color literals, negative numbers, and `size` properties
+- Optimized `overlaps(region, point)` test
+- Changed default entity name from `"Anonymous"` to `"entity"` + unique ID
+- [fontpack✜](../tools/fontpack.html) now allows dropping the source PNG anywhere on screen
+
+
 2019 Dec 30: Beta update 19
 
 - Added the Inspiration section
 - Added support for per-name (i.e., per-animation) pivots on spritesheets
 - Added `"setDebugFlag"` and `"getDebugFlag"` commands for controlling the IDE
-  to `deviceControl()`
+  via `deviceControl()`
 - Added preview images in the Built-In Games section of the manual
 - Added [poly-decomp.js](https://github.com/schteppe/poly-decomp.js) to dependencies
 - Made `require`, `requires`, `default`, `otherwise`, and `swap` into reserved words

@@ -173,7 +173,7 @@ def simulateBike(bike):
       rearWheelContact = rearWheelContact or (max(bike.atomArray[0].normal.y, bike.atomArray[1].normal.y) > epsilon)
       frontWheelContact = frontWheelContact or (max(bike.atomArray[3].normal.y, bike.atomArray[4].normal.y) > epsilon)
       
-      physicsStepEntity(bike, 1 / physicsSteps)
+      entitySimulate(bike, 1 / physicsSteps)
 
    if rearWheelContact: bike.rearWheelContactFrame = modeFrames
    if frontWheelContact: bike.frontWheelContactFrame = modeFrames

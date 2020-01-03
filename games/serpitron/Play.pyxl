@@ -258,12 +258,12 @@ def drawBuildings():
       if shadowShape == "tri":
          // Far corner
          const D = LR + ¼ xy(1, -2) * sprite.size
-         drawTri(LL, D, LR, shadowColor, ∅, shadowZ)
-         drawTri(UR, LR, D, shadowColor, ∅, shadowZ)
+         drawTri(LL, D, LR, shadowColor, ∅, ∅, ∅, ∅, shadowZ)
+         drawTri(UR, LR, D, shadowColor, ∅, ∅, ∅, ∅, shadowZ)
       else if shadowShape == "rect":
-         drawTri(LL, LL + xy(10, -20), LL + xy(10, 0), shadowColor, ∅, shadowZ)
-         drawTri(UR, UR + xy(0, -20), UR + xy(10, -20), shadowColor, ∅, shadowZ)
-         drawRect(LL + xy(10, -20), xy(sprite.size.x, sprite.size.y), shadowColor, ∅, shadowZ)
+         drawTri(LL, LL + xy(10, -20), LL + xy(10, 0), shadowColor, ∅, ∅, ∅, ∅, shadowZ)
+         drawTri(UR, UR + xy(0, -20), UR + xy(10, -20), shadowColor, ∅, ∅, ∅, ∅, shadowZ)
+         drawCornerRect(LL + xy(10, -20), xy(sprite.size.x, sprite.size.y), shadowColor, ∅, shadowZ)
       
 
       

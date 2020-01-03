@@ -9,9 +9,6 @@ String.prototype.rtrim = function() {
     return this.replace(/\s+$/, '');
 }
 
-let protectionBlockStart = 0xE001;
-let doubleQuoteProtection = String.fromCharCode(protectionBlockStart - 1);
-
 /** Assumes that str[i]=='('. Returns the index of the
     matching close ')', assuming that parens are balanced
     and there are no quoted strings or incorrectly
@@ -590,33 +587,8 @@ var maybeYieldGlobal = ' {if (!(__yieldCounter = (__yieldCounter + 1) & 8191)) {
 /** Expression for 'yield' inside a function, where regular yield is not allowed */
 var maybeYieldFunction = '';
 
-/** Returns the new string and a map */
-function protectQuotedStrings(src) {
-    let numProtected = 0, protectionMap = [];
-
-    // Hide escaped quotes that would confuse the following regexp
-    src = src.replace('\\"', doubleQuoteProtection);
-                      
-    // Protect strings
-    src = src.replace(/"((?:[^"\\]|\\.)*)"/g, function (match, str) {
-        protectionMap.push(str);
-        return '"' +  String.fromCharCode(numProtected++ + protectionBlockStart) + '"';
-    });
-
-    return [src, protectionMap];
-}
-
-
-function unprotectQuotedStrings(s, protectionMap) {
-    // Unprotect strings
-    for (var i = 0; i < protectionMap.length; ++i) {
-        s = s.replace(String.fromCharCode(protectionBlockStart + i), protectionMap[i]);
-    }
-
-    // Unprotect escaped quotes
-    return s.replace(doubleQuoteProtection, '\\"');
-}
-
+const unprotectQuotedStrings = BetterJSON.unprotectQuotedStrings;
+const protectQuotedStrings = BetterJSON.protectQuotedStrings;
 
 /** Pull up multi-line expressions enclosed in (), [], {} onto their
     start line and leave the intervening lines empty. This undesirably
@@ -998,11 +970,12 @@ function pyxlToJS(src, noYield) {
 
     src = src.replace(/(\b|\d)and(\b|\d)/g, '$1 && $2');
     src = src.replace(/(\b|\d)mod(\b|\d)/g, '$1 % $2');
-    src = src.replace(/(\b|\d)bitand(\b|\d)/g, '$1 & $2');
-    src = src.replace(/(\b|\d)bitor(\b|\d)/g, '$1 | $2');
-    src = src.replace(/(\b|\d)bitxor(\b|\d)/g, '$1 ^ $2');
-    src = src.replace(/(\b|\d)bitnot(\b|\d)/g, '$1 ~ $2');
     src = src.replace(/(\b|\d)not(\b|\d)/g, '$1 ! $2');
+    // Bitwise operations
+    const bitopMap = {shl:'<<', shr:'>>', not:'~', and:'&', or:'|', xor:'^'};
+    src = src.replace(/(\b|\d)bit(shl|shr|not|and|or|xor)(\b|\d)/g, function (match, a, op, b) {
+        return a + bitopMap[op] + b;
+    });
 
     // Debug statements
     src = src.replace(/\b(assert|debugPrint)\b/g, '_$1Enabled && $1');

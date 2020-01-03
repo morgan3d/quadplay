@@ -161,12 +161,12 @@ if sign(joy.y) != 0:
     else:
         y_zone += "-"
 
-physicsStepEntity(box)
+entitySimulate(box)
 box.pos.x = loop(box.pos.x, screenSize.x)
 box.pos.y = loop(box.pos.y, screenSize.y)
 
 
-drawRect(box.pos, box.size, PROFILES[labels[profile_index]].col)
+drawCornerRect(box.pos, box.size, PROFILES[labels[profile_index]].col)
 
 // debug text
 let text_color = rgb(1,1,1)

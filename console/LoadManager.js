@@ -333,41 +333,10 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
 /** The URL is used only for reporting warnings (not errors) */
 LoadManager.prototype.parseJSON = function (text, url, warningCallback) {
     if (this.jsonParser === 'permissive') {
-        // Protect strings
-        let protect = protectQuotedStrings(text);
-        text = protect[0];
-
-        // Convert to strict Unix newlines
-        text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-        
-        // Non-escaped empty backquote strings
-        text = text.replace(/(^|[^\\])``/g, "");
-
-        // Convert multiline backquote strings to singleline
-        text = text.replace(/`((?:\s|\S)*?[^\\])`/g, function (match, inside) {
-            return '"' + inside.replace(/\n/g, '\\n').replace(/\\`/g, '`').replace(/"/g, '\\"') + '"';
-        });
-
-        // Re-protect, hiding the newly converted strings
-        protect = protectQuotedStrings(unprotectQuotedStrings(text, protect[1]));
-        text = protect[0];
-
-        // Remove multiline comments, preserving newlines
-        text = text.replace(/\/\*(.|\n)*\*\//g, function (match) {
-            return match.replace(/[^\n]/g, '');
-        });
-
-        // Remove singleline comments
-        text = text.replace(/\/\/.*\n/g, '\n');
-
-        // Remove trailing commas
-        text = text.replace(/,(\s*[\]}\)])/g, '$1');
-
-        // Restore strings
-        text = unprotectQuotedStrings(text, protect[1]);
+        return BetterJSON.parse(text);
+    } else {
+        return JSON.parse(text);
     }
-
-    return JSON.parse(text);
 }
 
 

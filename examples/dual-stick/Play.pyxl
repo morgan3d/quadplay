@@ -15,7 +15,7 @@ let tank = makeEntity({
    })
 })
 
-addEntityChild(tank, tank.turret)
+entityAddChild(tank, tank.turret)
 
 def wrap(x, lo, hi):
    return loop(x - lo, hi - lo) + lo
@@ -48,7 +48,7 @@ with pos, angle in tank:
       push(trackArray, pos - 10 normal)
       push(trackArray, pos + 11 normal - 9 dir)
       push(trackArray, pos - 11 normal - 9 dir)
-updateEntityChildren(tank)
+entityUpdateChildren(tank)
 
 setBackground(rgb(55%, 65%, 30%))
 

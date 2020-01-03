@@ -27,7 +27,7 @@ def drawSide(teamIndex):
       // Player portrait
       const player = team.roster[i]
       drawText({font: scoreFont, text: player.name, pos: xy(x + 15, y), color:infoColor, yAlign: "baseline"})
-      drawRect(xy(x + 15, y + 3), xy(30, 28), #cde, infoColor)
+      drawCornerRect(xy(x + 15, y + 3), xy(30, 28), #cde, infoColor)
       setClip(xy(x + 16, y + 4), xy(28, 26))
       for h < 2:
          for k < 2:

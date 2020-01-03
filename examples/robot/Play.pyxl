@@ -126,7 +126,7 @@ robot.rearHip.leg.knee.angleInParent =  -35° (t + 1)
 if joy.x: robot.scale.x = joy.x
 
 // Normal rendering example
-updateEntityChildren(robot)
+entityUpdateChildren(robot)
 drawEntity(robot)
 
 
@@ -139,12 +139,12 @@ preservingTransform:
    robot.scale.y *= -1
    robot.angle *= -1
    robot.z = -3
-   updateEntityChildren(robot)
+   entityUpdateChildren(robot)
    drawEntity(robot)
    robot.z = 0
    robot.scale.y *= -1
    robot.angle *= -1
-   updateEntityChildren(robot)
+   entityUpdateChildren(robot)
 
    // The fading out reflection on top of the robot reflection
    drawSprite({
@@ -158,7 +158,7 @@ preservingTransform:
    drawLine(xy(0, 15% screenSize.y), xy(screenSize.x, 15% screenSize.y), #5, -1.5)
    drawLine(xy(0, 30% screenSize.y), xy(screenSize.x, 30% screenSize.y), #5, -1.5)
 
-   drawRect(xy(0, 10% screenSize.y), xy(screenSize.x, 50% screenSize.y), #bdf, nil, -5)
+   drawCornerRect(xy(0, 10% screenSize.y), xy(screenSize.x, 50% screenSize.y), #bdf, nil, -5)
    setTransform(xy(50% screenSize.x, nil))
    for -4 < i < 4:
       drawLine(xy((i + 0.5) * 15% screenSize.x, 10% screenSize.y),

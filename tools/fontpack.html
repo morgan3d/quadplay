@@ -256,11 +256,11 @@ span.height${maxHeight} { background: #ff4; padding: 0 1px}
 
     function onDragOver(event) { event.preventDefault(); }
 </script>
-<body>
+<body ondrop="onDrop(event)" ondragover="onDragOver(event)">
   <h1>fontpack✜</h1>
     <div style="margin: auto; max-width: 600px">
       <p>
-        Drag quadplay font PNG files with regular tiles onto this tool. It will
+        Drag quadplay✜ font PNG files with regular tiles onto this tool. It will
         re-pack them tightly and produce the <code>.font.json</code> file.
       </p>
       <p>

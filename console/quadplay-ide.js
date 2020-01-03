@@ -693,6 +693,9 @@ function deviceControl(cmd) {
             case "entityBounds":
                 QRuntime._showEntityBoundsEnabled = document.getElementById('showEntityBoundsEnabled').checked = value;
                 break;
+            case "physics":
+                QRuntime._showPhysicsEnabled = document.getElementById('showPhysicsEnabled').checked = value;
+                break;
             case "debugPrint":
                 QRuntime._debugPrintEnabled = document.getElementById('debugPrintEnabled').checked = value;
                 break;
@@ -713,6 +716,9 @@ function deviceControl(cmd) {
             switch (arguments[1]) {
             case "entityBounds":
                 return QRuntime._showEntityBoundsEnabled;
+                break;
+            case "physics":
+                return QRuntime._showPhysicsEnabled;
                 break;
             case "debugPrint":
                 return QRuntime._debugPrintEnabled;
@@ -933,6 +939,7 @@ function saveIDEState() {
         'uiMode': uiMode,
         'backgroundPauseEnabled': backgroundPauseEnabled,
         'colorScheme': colorScheme,
+        'showPhysicsEnabled': document.getElementById('showPhysicsEnabled').checked,
         'showEntityBoundsEnabled': document.getElementById('showEntityBoundsEnabled').checked,
         'assertEnabled': document.getElementById('assertEnabled').checked,
         'debugWatchEnabled': document.getElementById('debugWatchEnabled').checked,
@@ -2182,6 +2189,7 @@ function reloadRuntime(oncomplete) {
         QRuntime._assertEnabled = document.getElementById('assertEnabled').checked;
         QRuntime._debugWatchEnabled = document.getElementById('debugWatchEnabled').checked;
         QRuntime._showEntityBoundsEnabled = document.getElementById('showEntityBoundsEnabled').checked;
+        QRuntime._showPhysicsEnabled = document.getElementById('showPhysicsEnabled').checked;
         QRuntime._debugWatch    = debugWatch;
         QRuntime._fontMap       = fontMap;
         QRuntime._parse         = _parse;
@@ -2201,10 +2209,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.setSoundPitch  = setSoundPitch;
         QRuntime.setSoundPan    = setSoundPan;
         QRuntime.debugPause     = onPauseButton;
-
         QRuntime._Physics       = Matter;
-        QRuntime.Physics = Matter;
-        
         
         if (oncomplete) { oncomplete(); }
     };
@@ -2533,7 +2538,7 @@ if (! localStorage.getItem('debugWatchEnabled')) {
 }
 
 {
-    const optionNames = ['showEntityBoundsEnabled', 'assertEnabled', 'debugPrintEnabled', 'debugWatchEnabled'];
+    const optionNames = ['showPhysicsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'debugPrintEnabled', 'debugWatchEnabled'];
     for (let i = 0; i < optionNames.length; ++i) {
         const name = optionNames[i];
         const value = JSON.parse(localStorage.getItem(name) || "false");

@@ -11,17 +11,7 @@ def make_boid(position):
     )
 
 def draw_boid(boid):
-    let tri = []
-    for ind < 3:
-        let p = triangle[ind]
-        push(
-            tri, 
-            xy(
-                p.x*cos(boid.angle) - p.y * sin(boid.angle),
-                p.y*cos(boid.angle) + p.x * sin(boid.angle)
-            ) + boid.pos
-        )
-    drawTri(tri[0], tri[1], tri[2], rgb(0,0,1))
+    drawTri(triangle[0], triangle[1], triangle[2], #00f, nil, boid.pos, nil, boid.angle)
 
 def update_boid(each_boid):
     // let dir = direction(each_boid.pos - attractors[0])
@@ -71,7 +61,7 @@ def update_boid(each_boid):
     each_boid.force = acceleration / NUM_ITERATIONS
 
     // apply acceleration to velocity
-    physicsStepEntity(each_boid)
+    entitySimulate(each_boid)
 
 
 

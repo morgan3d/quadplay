@@ -1,7 +1,11 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License */
 
-// Variables named with a leading underscore are illegal in nano and
-// will therefore not be visible to the program.
+// quadplay runtime and hardware layer.
+//
+// Variables named with a leading underscore are illegal in quadplay/pyxlscript, and
+// will therefore such variables and functions in this file will not be visible to
+// the program.
+
 'use strict';
 
 var _gameMode = undefined, _prevMode = undefined;
@@ -427,15 +431,12 @@ function extend(a, b) {
         if (! Array.isArray(b)) {
             throw new Error('Both arguments to extend(a, b) must have the same type. Invoked with one array and one non-array.');
         }
-        
-        if (b.length < 1000) {
-            Array.prototype.push.apply(a, b);
-        } else {
-            // JavaScript doesn't like arguments that have too many
-            // elements, so we use a loop
-            for (let i = 0; i < b.length; ++i) {
-                a.push(b[i]);
-            }
+
+        const oldLen = a.length;
+        a.length += b.length;
+        const newLen = a.length;
+        for (let i = oldLen, j = 0; i < newLen; ++i, ++j) {
+            a[i] = b[j];
         }
     } else {
         if (Array.isArray(b)) {
@@ -1104,7 +1105,7 @@ function intersectClip(pos, size, z1, zSize) {
         return intersectClip(pos.pos, pos.size, pos.z, pos.zSize);
     }
 
-    let x1, y1, dx, dy;
+    let x1, y1, dx, dy, dz;
     if (pos !== undefined) {
         if (isNumber(pos)) { throw new Error('pos argument to setClip() must be an xy() or nil'); }
         x1 = pos.x; y1 = pos.y;
@@ -1677,6 +1678,7 @@ function _isEntity(e) {
 }
 
 
+var _entityID = 0;
 function makeEntity(e, childTable) {
     const r = Object.assign({}, e || {});    
 
@@ -1691,9 +1693,9 @@ function makeEntity(e, childTable) {
     r.force = r.force ? clone(r.force) : xy(0, 0);
 
     r.restitution = (r.restitution === undefined) ? 0.1 : r.restitution;
-    r.friction    = (r.friction === undefined) ? 0.5 : r.friction;
-    r.drag        = (r.drag === undefined) ? 0.01 : r.drag;
-    r.stictionFactor = (r.stictionFactor === undefined) ? 0.5 : r.stictionFactor;
+    r.friction    = (r.friction === undefined) ? 0.15 : r.friction;
+    r.drag        = (r.drag === undefined) ? 0.005 : r.drag;
+    r.stictionFactor = (r.stictionFactor === undefined) ? 1 : r.stictionFactor;
 
     r.angle = r.angle || 0;
     r.spin = r.spin || 0;
@@ -1706,14 +1708,16 @@ function makeEntity(e, childTable) {
     r.offset = r.offset ? clone(r.offset) : xy(0, 0);
     
     // Assign empty fields with reasonable defaults
-    r.name = r.name || 'Anonymous';
+    r.name = r.name || ('entity' + (_entityID++));
     r.shape = r.shape || 'rect';
     r.sprite = r.sprite || undefined;
     r.z = r.z || 0;
 
+    r.physicsSleepState = r.physicsSleepState || 'awake';
+
     r.collisionGroup = r.collisionGroup || 0;
-    r.collisionCategoryMask = r.collisionCategoryMask || 1;
-    r.collisionHitMask = r.collisionHitMask || 0xffffffff;
+    r.collisionCategoryMask = (r.collisionCategoryMask === undefined) ? 1 : r.collisionCategoryMask;
+    r.collisionHitMask = (r.collisionHitMask === undefined) ? 0xffffffff : r.collisionHitMask;
 
     if (r.density === undefined) { r.density = 1; }
 
@@ -1791,43 +1795,51 @@ function makeEntity(e, childTable) {
 
     // Add and update all children
     for (let i = 0; i < childArray.length; ++i) {
-        addEntityChild(r, childArray[i]);
+        entityAddChild(r, childArray[i]);
     }
-    updateEntityChildren(r);
+    entityUpdateChildren(r);
     
     return r;
 }
 
 
-function addEntityChild(parent, child) {
+function entityAddChild(parent, child) {
     if (! child) { return child; }
     
-    removeEntityChild(parent, child);
+    entityRemoveChild(parent, child);
     
     child.parent = parent;
     // Avoid accidental duplicates
     if (parent.childArray.indexOf(child) === -1) {
         parent.childArray.push(child);
     }
+    
     return child;
 }
 
 
-function removeEntityChild(parent, child) {
-    if (! child) { return child; }
-    
-    if (child.parent) {
+function entityRemoveAll(parent) {
+    for (let i = 0; i < parent.childArray.length; ++i) {
+        const child = parent.childArray[i];
         if (parent !== child.parent) {
             throw new Error('Tried to remove a child from the wrong parent')
         }
-        // remove from previous parent
         removeValues(child.parent.childArray, child);
-    } else {
-        for (let i = 0; i < parent.childArray.length; ++i) {
-            if (parent.childArray[i] === child) {
-                throw new Error('Tried to remove a child that did not have a pointer back to its parent');
-            }
+        if (parent.childArray[i] === child) {
+            throw new Error('Tried to remove a child that did not have a pointer back to its parent');
         }
+    }
+}
+
+
+function entityRemoveChild(parent, child) {
+    if (! child) { return child; }
+    
+    if (child.parent) {
+        if (parent !== child.parent) { throw new Error('Tried to remove a child from the wrong parent'); }
+        removeValues(parent.childArray, child);
+    } else if (parent.childArray.indexOf(child) !== -1) {
+        throw new Error('Tried to remove a child that did not have a pointer back to its parent');
     }
     
     child.parent = undefined;
@@ -1862,9 +1874,9 @@ function transformChildToParent(child, pos) {
 
 
 // Recursively update all properties of the children
-function updateEntityChildren(parent) {
+function entityUpdateChildren(parent) {
     if (parent === undefined || parent.pos === undefined) {
-        throw new Error('updateEntityChildren requires an entity argument')
+        throw new Error('entityUpdateChildren requires an entity argument')
     }
     
     const N = parent.childArray.length;
@@ -1890,39 +1902,49 @@ function updateEntityChildren(parent) {
             child.offset.y = (s * child.offsetInParent.x + c * child.offsetInParent.y) * parent.scale.y + parent.offset.y;
         }
       
-        updateEntityChildren(child);
+        entityUpdateChildren(child);
     }
 }
 
 
-function physicsStepEntity(entity, dt) {
+function entitySimulate(entity, dt) {
     if (dt === undefined) { dt = 1; }
+    if (entity.density === Infinity) { return; }
+    
     const mass = entityMass(entity);
     const imass = 1 / mass;
     const iinertia = 1 / entityInertia(entity, mass);
     const acc = entity.acc, vel = entity.vel, pos = entity.pos;
 
     // Overwrite
-    acc.x  = entity.force.x * imass;
-    acc.y  = entity.force.y * imass;
+    const accX = entity.force.x * imass;
+    const accY = entity.force.y * imass;
 
+    // Drag should fall off with the time step to remain constant
+    // as the time step varies (in the absence of acceleration)
+    const k = Math.pow(1 - entity.drag, dt);
+    
     // Integrate
-    vel.x += acc.x * dt;
-    vel.y += acc.y * dt;
+    vel.x *= k;
+    vel.y *= k;
+    vel.x += accX * dt;
+    vel.y += accY * dt;
 
     pos.x += vel.x * dt;
     pos.y += vel.y * dt;
 
-    // Overwrite
-    entity.twist  = entity.torque * iinertia;
+    const twist = entity.torque * iinertia;
 
     // Integrate
-    entity.spin  += entity.twist * dt;
+    entity.spin  *= k;
+    entity.spin  += twist * dt;
     entity.angle += entity.spin * dt
 
     // Zero for next step
     entity.torque = 0;
     entity.force.x = entity.force.y = 0;
+
+    entityUpdateChildren(entity);
 }
 
 
@@ -1932,20 +1954,1021 @@ function entityApplyForce(entity, worldForce, worldPos) {
     entity.force.y += worldForce.y;
     const offsetX = worldPos.x - entity.pos.x;
     const offsetY = worldPos.y - entity.pos.y;
-    entity.torque += offsetX * worldForce.y - offset.y * worldForce.x;
+    entity.torque += -getRotationSign() * (offsetX * worldForce.y - offsetY * worldForce.x);
 }
 
 
 function entityApplyImpulse(entity, worldImpulse, worldPos) {
     worldPos = worldPos || entity.pos;
     const invMass = 1 / entityMass(entity);
-    entity.velocity.x += worldImpulse.x * invMass;
-    entity.velocity.y += worldImpulse.y * invMass;
+    entity.vel.x += worldImpulse.x * invMass;
+    entity.vel.y += worldImpulse.y * invMass;
 
     const inertia = entityInertia(entity);
-    const offset = _sub(worldPos, entity.pos);
-    entity.spin += cross(offset, worldImpulse) / inertia;
+    const offsetX = worldPos.x - entity.pos.x;
+    const offsetY = worldPos.y - entity.pos.y;
+
+    entity.spin += -getRotationSign() * (offsetX * worldImpulse.y - offsetY * worldImpulse.x) / inertia;
 }
+
+
+         
+function entityMove(entity, pos, angle) {
+    if (pos !== undefined) {
+        entity.vel.x = pos.x - entity.pos.x;
+        entity.vel.y = pos.y - entity.pos.y;
+        entity.pos.x = pos.x;
+        entity.pos.y = pos.y;
+    }
+      
+    if (angle !== undefined) {
+        // Rotate the short way
+        entity.spin = loop(angle - entity.angle, -PI, Math.PI);
+        entity.angle = angle;
+    }
+}
+
+
+/*************************************************************************************/
+//
+// Physics functions
+
+function makeCollisionGroup() {
+    // Matter.js uses negative numbers for non-colliding
+    // groups, so we negate them everywhere to make it more
+    // intuitive for the user.
+    return -_Physics.Body.nextGroup(true);
+}
+
+
+// Density scale multiplier used to map to the range where
+// matter.js constants are tuned for. Using a power of 2 makes
+// the round trip between matter and quadplay more stable.
+// This is about 0.001, which is the default density in matter.js.
+var _PHYSICS_MASS_SCALE     = Math.pow(2,-10);
+var _PHYSICS_MASS_INV_SCALE = Math.pow(2,10);
+var _physicsContextIndex = 0;
+
+function makePhysics(options) {
+    const engine = _Physics.Engine.create();
+    const physics = Object.seal({
+        _name:                 "physics" + (_physicsContextIndex++),
+        _engine:               engine,
+        _contactCallbackArray: [],
+        _newContactArray:      [], // for firing callbacks and visualization. wiped every frame
+
+        _frame:                0,
+        
+        // _brokenContactQueue[0] is an array of contacts that broke _brokenContactQueue.length - 1
+        // frames ago (but may have been reestablished). 
+        _brokenContactQueue:   [[], [], []],
+        
+        // Maps bodies to maps of bodies to contacts.
+        _entityContactMap:     new Map(), 
+
+        // All entities in this physics context
+        _entityArray:          []})
+    
+    options = options || {}
+   
+    if (options.gravity) {
+        engine.world.gravity.x = options.gravity.x;
+        engine.world.gravity.y = options.gravity.y;
+    } else {
+        engine.world.gravity.y = -1;
+    }
+      
+    engine.world.gravity.scale = 0.001; // default 0.001
+    engine.enableSleeping = (options.allowSleeping !== false);
+
+    // Higher improves compression under large stacks or
+    // small objects.  Too high causes instability.
+    engine.positionIterations   = 10; // default 6
+
+    // Higher improves processing of fast objects and thin walls.
+    // Too high causes instability.
+    engine.velocityIterations   = 12; // default 4
+    engine.constraintIterations = 4;  // default 2. Higher lets more chained constraints propagate.
+
+    // Extra constraints enforced by quadplay
+    engine.customAttachments = [];
+        
+    // Allows slowmo, etc.
+    // engine.timing.timeScale = 1
+
+    _Physics.Events.on(engine, 'collisionStart', function (event) {
+        const pairs = event.pairs;
+        for (let i = 0; i < pairs.length; ++i) {
+            const pair = pairs[i];
+            const activeContacts = pair.activeContacts;
+
+            // Create the map entries if they do not already exist
+            let mapA = physics._entityContactMap.get(pair.bodyA);
+            if (mapA === undefined) { physics._entityContactMap.set(pair.bodyA, mapA = new Map()); }
+
+            let contact = mapA.get(pair.bodyB);
+            
+            if (! contact) {
+                // This new contact will not appear in the
+                // collisionActive event for one frame, so update
+                // the properties right now
+                contact = {
+                    entityA: pair.bodyA.entity,
+                    entityB: pair.bodyB.entity,
+                    normal:  {x: pair.collision.normal.x, y: pair.collision.normal.y},
+                    point0:  {x: activeContacts[0].vertex.x, y: activeContacts[0].vertex.y},
+                    point1:  (activeContacts.length === 1) ? {} : {x: activeContacts[1].vertex.x, y: activeContacts[1].vertex.y},
+                    depth: pair.collision.depth
+                }
+
+                let mapB = physics._entityContactMap.get(pair.bodyB);
+                if (mapB === undefined) { physics._entityContactMap.set(pair.bodyB, mapB = new Map()); }
+                
+                // For use in collision callbacks
+                physics._newContactArray.push(contact);
+
+                // For use in queries
+                mapA.set(pair.bodyB, contact);
+                mapB.set(pair.bodyA, contact);
+
+                // for debugging collisions
+                // console.log(physics._frame + ' begin ' + contact.entityA.name + "+" + contact.entityB.name);
+            } else {
+                // ...else: this contact already exists and is in the maps because it was recently active.
+                // it is currently scheduled in the broken contact queue.
+
+                // for debugging collisions
+                // console.log(physics._frame + ' resume ' + contact.entityA.name + "+" + contact.entityB.name);
+            }
+            
+            contact._lastRealContactFrame = physics._frame;
+                
+        }
+    });
+
+    _Physics.Events.on(engine, 'collisionActive', function (event) {
+        const pairs = event.pairs;
+        for (let i = 0; i < pairs.length; ++i) {
+            const pair = pairs[i];
+
+            // We could fetch from A and then B or B and then A. Both give the same
+            // result.
+            const contact = physics._entityContactMap.get(pair.bodyA).get(pair.bodyB);
+
+            if (! contact) {
+                // Something went wrong and matter.js has just updated us about a
+                // contact that is no longer active. Ignore it.
+                continue;
+            }
+            
+            const activeContacts = pair.activeContacts;
+            
+            // Update:
+            contact.normal.x = pair.collision.normal.x;
+            contact.normal.y = pair.collision.normal.y;
+            contact.point0.x = activeContacts[0].vertex.x;
+            contact.point0.y = activeContacts[0].vertex.y;
+            if (activeContacts.length > 1) {
+                if (! contact.point1) { contact.point1 = {}; }
+                contact.point1.x = activeContacts[1].vertex.x;
+                contact.point1.y = activeContacts[1].vertex.y;
+            } else {
+                contact.point1 = undefined;
+            }
+            contact.depth = pair.collision.depth;
+            contact._lastRealContactFrame = physics._frame;
+        }
+    });
+
+    _Physics.Events.on(engine, 'collisionEnd', function (event) {
+        // Schedule collisions for removal
+        const pairs = event.pairs;
+        const removeArray = lastValue(physics._brokenContactQueue);
+        for (let i = 0; i < pairs.length; ++i) {
+            const pair = pairs[i];
+
+            if (pair.isActive) {
+                // Active contacts should never end
+                continue;
+            }
+            
+            // Find the contact (it may have already been removed)
+            const contact = physics._entityContactMap.get(pair.bodyA).get(pair.bodyB);
+
+            // If not already removed
+            if (contact) {
+                // TODO: if moving with high velocity away from the contact, then
+                // end the contact immediately
+
+                // for debugging collisions
+                // console.log(physics._frame + ' end ' + contact.entityA.name + "+" + contact.entityB.name);
+                
+                // Schedule the contact for removal. It can gain a reprieve if is updated
+                // before it hits the front of the queue.
+                removeArray.push(contact);
+            }
+        }
+    });
+        
+    return physics;
+}
+
+
+function physicsAddEntity(physics, entity) {
+    if (! physics) { throw new Error("physics context cannot be nil"); }
+    if (! physics._engine) { throw new Error("First argument to physicsAddEntity() must be a physics context."); }
+    if (entity._body) { throw new Error("This entity is already in a physics context"); }
+
+    push(physics._entityArray, entity);
+    const engine = physics._engine;
+   
+    const params = {isStatic: entity.density === Infinity};
+
+    switch (entity.shape) {
+    case "rect":
+        entity._body = _Physics.Bodies.rectangle(entity.pos.x, entity.pos.y, entity.size.x * entity.scale.x, entity.size.y * entity.scale.y, params);
+        break;
+        
+    case "disk":
+        entity._body = _Physics.Bodies.circle(entity.pos.x, entity.pos.y, 0.5 * entity.size.x * entity.scale.x, params);
+        break;
+
+    default:
+        throw new Error('Unsupported entity shape for physicsAddEntity(): "' + entity.shape + '"');
+    }
+
+    entity._body.collisionFilter.group = -entity.collisionGroup;
+    entity._body.entity = entity;
+    entity._body.slop = 0.075; // 0.05 is the default. Increase to make large object stacks more stable.
+    entity._attachmentArray = [];
+    _Physics.World.add(engine.world, entity._body);
+
+    _bodyUpdateFromEntity(entity._body);
+
+    return entity;
+}
+
+
+function physicsRemoveAll(physics) {
+    // Remove all (removing mutates the
+    // array, so we have to clone it first!)
+    const originalArray = clone(physics._entityArray);
+    for (let a = 0; a < originalArray.length; ++a) {
+        physicsRemoveEntity(physics, originalArray[a]);
+    }
+    
+    // Shouldn't be needed, but make sure everything is really gone
+    _Physics.Composite.clear(physics._engine);    
+}
+
+
+function physicsRemoveEntity(physics, entity) {
+    // Remove all attachments (removing mutates the
+    // array, so we have to clone it first!)
+    const originalArray = clone(entity._attachmentArray);
+    for (let a = 0; a < originalArray.length; ++a) {
+        physicsDetach(physics, originalArray[a]);
+    }
+
+    // Remove all contacts that we are maintaining.  It is OK to have
+    // contacts in the broken removal queue because that ignores the
+    // case where the bodies are no longer present
+
+    // New contacts:
+    const newContactArray = physics._newContactArray;
+    for (let c = 0; c < newContactArray.length; ++c) {
+        const contact = newContactArray[c];
+        if (contact.entityA === entity || contact.entityB === entity) {
+            // Fast remove and shrink
+            newContactArray[c] = lastValue(newContactArray);
+            --newContactArray.length;
+            --c;
+        }
+    }
+
+    // Maintained contacts:
+    const body = entity._body;
+    const map = physics._entityContactMap.get(body);
+    if (map) {
+        for (const otherBody of map.keys()) {
+            // Remove the reverse pointers
+            const otherMap = physics._entityContactMap.get(otherBody);
+            physics.otherMap.delete(body);
+        }
+        // Remove the entire map from body
+        physics._entityContactMap.delete(body);
+    }
+    
+    _Physics.World.remove(physics._engine, entity._body, true);
+    fastRemoveValue(physics._entityArray, entity);
+    entity._body = undefined;
+    entity._attachmentArray = undefined;
+}
+
+   
+// internal   
+function _entityUpdateFromBody(entity) {
+    const S = getRotationSign();
+    
+    const body     = entity._body;
+    entity.pos.x   = body.position.x;
+    entity.pos.y   = body.position.y;
+    entity.vel.x   = body.velocity.x;
+    entity.vel.y   = body.velocity.y;
+    entity.force.x = body.force.x * _PHYSICS_MASS_INV_SCALE;
+    entity.force.y = body.force.y * _PHYSICS_MASS_INV_SCALE;
+    entity.spin    = body.angularVelocity * S;
+    entity.angle   = body.angle * S;
+    entity.torque  = body.torque * _PHYSICS_MASS_INV_SCALE * S;
+
+    if (entity.physicsSleepState === 'vigilant') {
+        if (body.isSleeping) { _Physics.Sleeping.set(body, false); }
+    } else {
+        entity.physicsSleepState = body.isSleeping ? 'sleeping' : 'awake';
+    }
+    /*
+    // The physics update would never change these:
+    entity.density = body.density
+    entity.restitution    = body.restitution
+    entity.friction       = body.friction
+    entity.drag           = body.frictionAir
+    entity.stictionFactor = body.frictionStatic
+    */
+}
+
+
+// internal   
+function _bodyUpdateFromEntity(body) {
+    const entity  = body.entity;
+
+    // For numerical stability, do not set properties unless they appear to have changed
+    // on the quadplay side
+
+    const changeThreshold = 0.00001;
+    let awake = entity.physicsSleepState === 'vigilant' || entity.physicsSleepState === 'awake';
+    const S = getRotationSign();
+
+    // Wake up on changes
+    if (Math.abs(body.position.x - entity.pos.x) > changeThreshold ||
+        Math.abs(body.position.y - entity.pos.y) > changeThreshold) {
+        _Physics.Body.setPosition(body, entity.pos)
+        awake = true;
+    }
+    
+    // Must set velocity after position, because matter.js is a vertlet integrator
+    if (Math.abs(body.velocity.x - entity.vel.x) > changeThreshold ||
+        Math.abs(body.velocity.y - entity.vel.y) > changeThreshold) {
+        // Note: a future Matter.js API will change body.velocity and require using body.getVelocity
+        _Physics.Body.setVelocity(body, entity.vel);
+        awake = true;
+    }
+
+    if (Math.abs(body.angularVelocity - entity.spin * S) > changeThreshold) {
+        _Physics.Body.setAngularVelocity(body, entity.spin * S);
+        awake = true;
+    }
+
+    if (Math.abs(body.angle - entity.angle * S) > changeThreshold) {
+        _Physics.Body.setAngle(body, entity.angle * S);
+        awake = true;
+    }
+
+    if (! body.isStatic) {
+        const d = entity.density * _PHYSICS_MASS_SCALE;
+        if (Math.abs(body.density - d) > changeThreshold) {
+            _Physics.Body.setDensity(body, d);
+            awake = true;
+        }
+    }
+
+    body.collisionFilter.group = -entity.collisionGroup;
+    body.collisionFilter.mask  = entity.collisionHitMask;
+    body.collisionFilter.category = entity.collisionCategoryMask;
+         
+    body.force.x = entity.force.x * _PHYSICS_MASS_SCALE;
+    body.force.y = entity.force.y * _PHYSICS_MASS_SCALE;
+    body.torque  = entity.torque * S * _PHYSICS_MASS_SCALE;
+
+    body.friction       = entity.friction;
+    body.frictionStatic = entity.stictionFactor;
+    body.frictionAir    = entity.drag;
+    body.restitution    = entity.restitution;
+    
+    // The Matter.js API does not notice if an object woke up due to velocity, only
+    // due to forces.
+    awake = awake || Math.max(Math.abs(body.angularVelocity), Math.abs(body.velocity.x), Math.abs(body.velocity.y)) > 0.01;
+    // Math.max(Math.abs(body.torque), Math.abs(body.force.x), Math.abs(body.force.y)) > 1e-9 ||
+    
+    // Change wake state if needed
+    if (body.isSleeping === awake) {
+        _Physics.Sleeping.set(body, ! awake);
+    }
+}
+
+      
+function physicsSimulate(physics, stepFrames) {
+    if (stepFrames === undefined) { stepFrames = 1; }
+    const engine = physics._engine;
+
+    // console.log('--------------- timestamp: ' + physics.timing.timestamp);
+    
+    physics._newContactArray = [];
+
+    const bodies = _Physics.Composite.allBodies(engine.world);
+    for (let b = 0; b < bodies.length; ++b) {
+        const body = bodies[b];
+        // Not all bodies have entities; some are created
+        // internally by the physics system.
+        if (body.entity) { _bodyUpdateFromEntity(body); }
+    }
+      
+    _Physics.Engine.update(engine, stepFrames * 1000 / 60);
+
+    // Enforce the quadplay special constraints. This would be better
+    // implemented by injecting the new constraint solver directly
+    // into _Physics.Constraint.solveAll, so that it happens within
+    // the solver during the main iterations.
+    if (engine.customAttachments.length > 0) {
+        for (let it = 0; it < 2; ++it) {
+            for (let a = 0; a < engine.customAttachments.length; ++a) {
+                const attachment = engine.customAttachments[a];
+                if (attachment.type === 'gyro') {
+                    const body = attachment.entityB._body;
+                    const angle = attachment.angle;
+                    _Physics.Body.setAngularVelocity(body, 0);
+                    _Physics.Body.setAngle(body, angle);
+                }
+            }
+            
+            // Force one extra iteration of constraint solving to reconcile
+            // what we just did above, so that attached parts are not lagged
+            if (it === 0) {
+                let allConstraints = _Physics.Composite.allConstraints(engine.world);
+                
+                _Physics.Constraint.preSolveAll(bodies);
+                for (let i = 0; i < engine.constraintIterations; ++i) {
+                    _Physics.Constraint.solveAll(allConstraints, engine.timing.timeScale);
+                }
+                _Physics.Constraint.postSolveAll(bodies);
+            }
+        }
+    }
+   
+    for (let b = 0; b < bodies.length; ++b) {
+        const body = bodies[b];
+        // Some bodies are created internally within the physics system
+        // and have no corresponding entity.
+        if (body.entity) { _entityUpdateFromBody(body.entity); }
+    }
+
+    // Remove old contacts that were never reestablished
+
+    // advance the queue
+    const maybeBrokenContactList = physics._brokenContactQueue.shift(1);
+    physics._brokenContactQueue.push([]);
+    
+    for (let c = 0; c < maybeBrokenContactList.length; ++c) {
+        const contact = maybeBrokenContactList[c];
+        // See if contact was reestablished within the lifetime of the queue:
+        if (contact._lastRealContactFrame <= physics._frame - physics._brokenContactQueue.length) {
+            // Contact was not reestablished in time, so remove it
+            const bodyA = contact.entityA._body, bodyB = contact.entityB._body;
+
+            // For debugging collisions:
+            // console.log(physics._frame + ' end ' + contact.entityA.name + "+" + contact.entityB.name);
+
+            physics._entityContactMap.get(bodyA).delete(bodyB);
+            physics._entityContactMap.get(bodyB).delete(bodyA);
+        }
+    }
+
+    if (_showPhysicsEnabled) {
+        drawPhysics(physics);
+    }
+
+    // Fire event handlers for new contacts
+    for (const event of physics._contactCallbackArray.values()) {
+        for (const contact of physics._newContactArray.values()) {
+            if ((((contact.entityA.collisionCategoryMask & event.collisionMask) |
+                  (contact.entityB.collisionCategoryMask & event.collisionMask)) !== 0) &&
+                (contact.depth >= event.minDepth) && (contact.depth <= event.maxDepth)) {
+                event.callback(deepClone(contact));
+            }
+        } // event
+    } // contact
+
+    ++physics._frame;
+}
+
+
+function physicsAddContactCallback(physics, callback, minDepth, maxDepth, collisionMask) {
+    if (collisionMask === 0) { throw new Error('A contact callback with collisionMask = 0 will never run.'); }
+
+    physics._contactCallbackArray.push({
+        callback:      callback,
+        minDepth:      minDepth || 0,
+        maxDepth:      (maxDepth !== undefined) ? maxDepth : Infinity,
+        collisionMask: (collisionMask !== undefined) ? collisionMask : 0xffffffff
+    });
+}
+
+
+function physicsEntityContacts(physics, entity, region, normal, mask) {
+    if (mask === undefined) { mask = 0xffffffff; }
+    if (mask === 0) { throw new Error('physicsEntityContacts() with mask = 0 will never return anything.'); }
+    if (! entity) { throw new Error('physicsEntityContacts() must have a non-nil entity'); }
+
+    const engine = physics._engine;
+
+    // Look at all contacts for this entity
+    const body = entity._body;
+    const map = physics._entityContactMap.get(body);
+    const result = [];
+
+    // Used to avoid allocation by the repeated overlaps() calls
+    const testPointShape = {shape: 'disk', angle: 0, size: xy(0, 0), scale: xy(1, 1), pos: xy(0, 0)};
+    const testPoint = testPointShape.pos;
+
+    const Rx = Math.cos(entity.angle) / entity.scale.x, Ry = Math.sin(entity.angle) * getRotationSign() / entity.scale.y;
+    const Tx = entity.pos.x, Ty = entity.pos.y;
+
+    // Avoid having overlaps() perform the cleanup test many times
+    if (region) { region = _cleanupRegion(region); }
+    if (normal) { normal = direction(normal); }
+    
+    // cosine of 60 degrees
+    const angleThreshold = Math.cos(Math.PI / 3);
+    
+    for (const contact of map.values()) {
+        const isA = contact.entityA === entity;
+        const isB = contact.entityB === entity;
+
+        // Are we in the right category?
+        if (! ((isA && (contact.entityB.collisionCategoryMask & mask)) ||
+               (isB && (contact.entityA.collisionCategoryMask & mask)))) {
+            //console.log("Mask rejection");
+            continue;
+        }
+    
+        if (region) {
+            let x, y;
+            if (contact.point1) {
+                x = (contact.point0.x + contact.point1.x) * 0.5;
+                y = (contact.point0.y + contact.point1.y) * 0.5;
+            } else {
+                x = contact.point0.x; y = contact.point0.y;
+            }
+
+            x -= Tx; y -= Ty;
+            
+            // Transform the average point to the reference frame of
+            // the region.  This will make testing faster for the
+            // common case of an axis-aligned box.
+            testPoint.x = Rx * x + Ry * y;
+            testPoint.y = Rx * y - Ry * x;
+            
+            // Is the average contact point within the region?
+            if (! overlaps(region, testPointShape, false)) {
+                // console.log("Region rejection");
+                continue;
+            }
+        }
+
+        if (normal) {
+            // Collision normal
+            let Cx = contact.normal.x, Cy = contact.normal.y;
+            if (isB) { Cx = -Cx; Cy = -Cy; }
+            if (Cx * normal.x + Cy * normal.y < angleThreshold) {
+                // console.log("Angle rejection");
+                continue;
+            }
+        }
+
+        result.push(deepClone(contact));
+    }
+
+    return result;
+}
+
+
+function physicsDetach(physics, attachment) {
+    // Remove from the entitys
+    attachment.entityB._attachmentArray.removeValue(attachment);
+    if (attachment.entityA) { attachment.entityA._attachmentArray.removeValue(attachment); }
+
+    // TODO: decrement and remove reference-counted no-collision elements
+
+    // Remove the composite, which will destroy all of the Matter.js elements
+    // that comprise this constraint
+    _Physics.Composite.remove(physics._engine.world, attachment._composite, true);
+}
+
+
+function physicsAttach(physics, type, param) {
+    if (param.entityA && ! param.entityA._body) { throw new Error("entityA has not been added to the physics context"); }
+    if (! param.entityB) { throw new Error("entityB must not be nil"); }
+    if (! param.entityB._body) { throw new Error("entityB has not been added to the physics context"); }
+    if (param.entityB.density === Infinity) { throw new Error("entityB must have finite density"); }
+
+    physics = physics._engine;
+
+    // Object that will be returned
+    const attachment = {
+        type:    type,
+        entityA: param.entityA,
+        entityB: param.entityB
+    };
+
+    if (type === 'weld') {
+        // Satisfy the initial angle constraint. Do this before computing
+        // positions
+        if (param.length !== undefined) { throw new Error('Weld attachments do not accept a length parameter'); }
+        if (param.angle !== undefined) {
+            param.entityB.angle = param.angle + (param.entityA ? param.entityA.angle : 0);
+            _bodyUpdateFromEntity(attachment.entityB._body);
+        }        
+    }
+    
+    // Create options for constructing a matter.js constraint.
+    // matter.js wants the points relative to the centers of the
+    // bodies, but not rotated by the bodies
+    const options = {
+        bodyB:  param.entityB._body,
+        pointB: _objectSub(transformEntityToDraw(param.entityB, param.pointB || xy(0, 0)), param.entityB.pos)
+    };
+
+    if (type === 'weld') {
+        // Use this hack to stiffen; setting angularStiffness very high
+        // is likely to affect torque in strange ways, so don't go too high
+        options.angularStiffness = 0.1;
+    }
+    
+    /////////////////////////////////////////////////////////////////////
+    // Are collisions allowed between these objects?
+    
+    let collide = find(["rope", "string", "rod"], type) !== undefined;
+    if (param.collide !== undefined) { collide = param.collide; }
+    
+    // Always enable collisions with the world, since they won't happen
+    // and it is free to do so
+    if (! param.entityA) { collide = true; }
+
+    if (param.entityA &&
+        (param.entityA._body.collisionFilter.group < 0) &&
+        (param.entityA._body.collisionFilter.group === param.entityB._body.collisionFilter.group)) {
+        // These are in the same collision group; they couldn't collide anyway, so there is no
+        // need to explicitly prevent collisions
+        collide = true;
+    }
+
+    if (param.entityA &&
+        ((param.entityB._body.collisionFilter.mask & param.entityA._body.collisionFilter.category) === 0) &&
+        ((param.entityA._body.collisionFilter.mask & param.entityB._body.collisionFilter.category) === 0)) {
+        // These could not collide with each other because they have no overlap in their masks
+        collide = true;
+    }
+    
+    // Update the entity's collision filters. See console/matter-extensions.js
+    if (! collide) {
+        // TODO: Reference counting on the excludedBodies arrays
+        param.entityA._body.collisionFilter.body = param.entityA._body;
+        if (! param.entityA._body.collisionFilter.excludedBodies) { param.entityA._body.collisionFilter.excludedBodies = []; }
+        push(param.entityA._body.collisionFilter.excludedBodies, param.entityB._body);
+
+        param.entityB._body.collisionFilter.body = param.entityB._body;
+        if (! param.entityB._body.collisionFilter.excludedBodies) { param.entityB._body.collisionFilter.excludedBodies = []; }
+        push(param.entityB._body.collisionFilter.excludedBodies, param.entityA._body);
+    }
+
+    /////////////////////////////////////////////////////////////////////
+
+    // World-space point
+    const B = _objectAdd(attachment.entityB.pos, options.pointB);
+    let A;
+    if (param.entityA) {
+        options.bodyA = param.entityA._body;
+        if (param.pointA) {
+            A = transformEntityToDraw(param.entityA, param.pointA);
+            options.pointA = _objectSub(A, param.entityA.pos);
+        } else {
+            A = param.entityA.pos;
+        }
+    } else if (! param.pointA) {
+        // Default to the same point on the world
+        options.pointA = B;
+        A = B;
+    } else {
+        // no entityA but there is a pointA
+        A = options.pointA = param.pointA;
+    }
+
+    const delta = _objectSub(B, A);
+    const len = magnitude(delta);
+   
+    switch (type) {
+    case 'gyro':
+        {
+            attachment.angle = param.angle || 0;
+            // We *could* make this work against an arbitrary entity, but for now
+            // constrain to the world for simplicity
+            if (param.entityA) { throw new Error('A "gyro" attachment requires that entityA = nil'); }
+            push(physics.customAttachments, attachment);
+        }
+        break;
+        
+    case 'spring':
+    case 'rod':
+    case 'weld':
+        {
+            if (type === 'spring') {
+                options.damping = (param.damping !== undefined) ? param.damping : 0.002;
+                options.stiffness = (param.stiffness !== undefined) ? param.stiffness : 0.005;
+            } else {
+                // For stability, don't make the joints too stiff
+                options.damping   = 0.2;
+                options.stiffness = 0.95;
+            }
+            
+            attachment.damping = options.damping;
+            attachment.stiffness = options.stiffness;
+            if ((param.length === undefined) && (type !== 'weld')) {
+                // Default to the current positions for springs and rods
+                attachment.length = len;
+            } else {
+                attachment.length = (type === 'weld') ? 0 : param.length;
+
+                // Amount positions need to change by to satisfy the
+                // rest length initially. matter.js uses the current
+                // positions of the bodies to determine the rest length
+                const change = attachment.length - len;
+                
+                if (Math.abs(change) > 1e-9) {
+                    // Teleport entityB to satisfy the rest length
+                    if (magnitude(delta) <= 1e-9) {
+                        // If A and B are on top of each other and there's
+                        // a nonzero rest length, arbitrarily choose to
+                        // move along the x-axis
+                        attachment.entityB.pos.x += change;
+                    } else{
+                        attachment.entityB.pos.x += delta.x * change / len;
+                        attachment.entityB.pos.y += delta.y * change / len;
+                    }
+                    _bodyUpdateFromEntity(attachment.entityB._body);
+                }
+            }
+
+            attachment._composite = _Physics.Composite.create();
+            const constraint = _Physics.Constraint.create(options);
+            constraint.attachment = attachment;
+            _Physics.Composite.add(attachment._composite, constraint);
+            
+            if (attachment.type === 'weld') {
+                if (! param.entityA) { throw new Error('Entities may not be welded to the world.'); }
+
+                // Connect back with double-constraints to go through
+                // an intermediate "weld body" object.  The weld body
+                // must be centered at the constraint point so that
+                // its rotation is ignored.  Make the weld body a disk
+                // so that rotation has no net effect on shape (and
+                // thus moment of inertia) as well as it spins.
+                //
+                // Only one weld body is required to prevent roation,
+                // but that body must be away from the weld center and
+                // thus will create asymmetry. A full circle of pins
+                // would be the most symmetric, but is expensive, so
+                // we add a small number of weld bodies.
+                //
+                // Each fake body must have some mass to it or the
+                // constraints won't have much effect. Unfortunately,
+                // this changes the net mass and moment of inertia of
+                // the compound shape, which is why parenting is a
+                // better solution than welding.
+
+                // Higher gives more rigidity but also affects moment
+                // of inertia more
+                const offsetRadius = 16;
+                const numPins = 4;
+                const weldPinRadius = 3;
+
+                // Higher gives more rigidity but also affects mass
+                // and moment of inertia more;
+                const weldDensity = _PHYSICS_MASS_SCALE * (entityMass(param.entityA) + entityMass(param.entityB)) / 3500;
+
+                // In world space
+                const weldPos = _objectAdd(options.pointB, param.entityB._body.position);
+                const weldDamping = 0.2;
+                
+                // Iterate around the circle
+                for (let p = 0; p < numPins; ++p) {
+                    const offsetAngle = 2 * Math.PI * p / numPins;
+                    const offset = xy(offsetRadius * Math.cos(offsetAngle), offsetRadius * Math.sin(offsetAngle));
+
+                    const weldBody = _Physics.Bodies.circle(weldPos.x + offset.x, weldPos.y + offset.y, weldPinRadius, {density: weldDensity});
+                    // Prevent collisions with everything
+                    weldBody.collisionFilter.mask = weldBody.collisionFilter.category = 0;
+                    // Add the invisible weldBody
+                    _Physics.Composite.add(attachment._composite, weldBody);
+
+                    // B -> Weld
+                    _Physics.Composite.add(attachment._composite, _Physics.Constraint.create({
+                        bodyA:     param.entityB._body,
+                        pointA:    _objectSub(weldBody.position, param.entityB._body.position),
+                        bodyB:     weldBody,
+                        damping:   weldDamping,
+                        stiffness: 0.9
+                    }));
+                    
+                    // Weld -> A
+                    _Physics.Composite.add(attachment._composite, _Physics.Constraint.create({
+                        bodyA:     weldBody,
+                        bodyB:     param.entityA._body, 
+                        pointB:    _objectSub(weldBody.position, param.entityA._body.position),
+                        damping:   weldDamping,
+                        stiffness: 0.9
+                    }));
+
+                } // for each weld pin
+            }
+            
+        }
+        break;
+      
+    case "pin":
+        {
+            if (Math.abs(len) > 1e-9) {
+                attachment.entityB.pos.x -= delta.x;
+                attachment.entityB.pos.y -= delta.y;
+                _bodyUpdateFromEntity(attachment.entityB._body);
+            }
+
+            // matter.js uses the current positions of the bodies to determine the rest length
+            attachment._composite = _Physics.Composite.create();
+            const constraint = _Physics.Constraint.create(options);
+            constraint.attachment = attachment;
+            _Physics.Composite.add(attachment._composite, constraint);
+        }
+        break;
+        
+    default:
+        throw new Error('Attachment type "' + type + '" not supported');
+    }
+
+    
+    if (attachment._composite) {
+        // Push the attachment's composite into the world
+        _Physics.Composite.add(physics.world, attachment._composite);
+    }
+
+    if (attachment.entityA) { push(attachment.entityA._attachmentArray, attachment); }
+    push(attachment.entityB._attachmentArray, attachment);
+    
+    return Object.freeze(attachment);
+}
+      
+      
+function drawPhysics(physics) {
+    const showSecrets = false;
+    const awakeColor   = rgb(0.10, 1.0, 0.5);
+    const sleepColor   = rgb(0.05, 0.6, 0.3);
+    const staticColor  = gray(0.8);
+    const contactColor = rgb(1, 0.93, 0);
+    const newContactColor = rgb(1, 0, 0);
+    const constraintColor = rgb(0.7, 0.5, 1);
+    const secretColor  = rgb(1, 0, 0);
+    const zOffset = 0.01;
+
+    const engine       = physics._engine;
+    
+    const bodies = _Physics.Composite.allBodies(engine.world);
+    for (let b = 0; b < bodies.length; ++b) {
+        const body = bodies[b];
+        if (! body.entity && ! showSecrets) { continue; }
+
+        const color = ! body.entity ? secretColor : (body.isStatic ? staticColor : (body.isSleeping ? sleepColor : awakeColor));
+        const z = body.entity ? body.entity.z + zOffset : 100;
+        for (let p = 0; p < body.parts.length; ++p) {
+            const part = body.parts[p];
+            const C = Math.cos(part.angle);
+            const S = Math.sin(part.angle);
+
+            let r = 4;
+            if (body.circleRadius) {
+                drawDisk(part.position, part.circleRadius, undefined, color, z);
+                r = Math.min(r, part.circleRadius - 2);
+            } else {
+                const V = part.vertices[0];
+                drawLine(lastValue(part.vertices), V, color, z);
+                let maxR2 = magnitudeSquared(V.x - part.position.x, V.y - part.position.y);
+                for (let i = 1; i < part.vertices.length; ++i) {
+                    const V = part.vertices[i];
+                    maxR2 = Math.max(magnitudeSquared(V.x - part.position.x, V.y - part.position.y), maxR2);
+                    drawLine(part.vertices[i - 1], V, color, z);
+                }
+                r = Math.min(Math.sqrt(maxR2) - 2, r);
+            }
+            
+            // Axes
+            const axis = xy(r * C, r * S);
+            drawLine(_objectSub(part.position, axis), _objectAdd(part.position, axis), color, z);
+            let temp = axis.x; axis.x = -axis.y; axis.y = temp;
+            drawLine(_objectSub(part.position, axis), _objectAdd(part.position, axis), color, z);
+        }
+    } // bodies
+
+    const weldTri = [xy(0, 5), xy(4.330127018922194, -2.5), xy(-4.330127018922194, -2.5)];
+    const constraints = _Physics.Composite.allConstraints(engine.world);
+    for (let c = 0; c < constraints.length; ++c) {
+        const constraint = constraints[c];
+        const attachment = constraint.attachment;
+
+        // Not a renderable constraint
+        if (! attachment && ! showSecrets) { continue; }
+        
+        const type = attachment ? attachment.type : '';
+
+        let pointA = constraint.pointA;
+        let pointB = constraint.pointB;
+        let zA = -Infinity, zB = -Infinity;
+        
+        if (constraint.bodyA) {
+            pointA = _objectAdd(pointA, constraint.bodyA.position);
+            zA = attachment ? constraint.bodyA.entity.z : 100;
+        }
+        
+        if (constraint.bodyB) {
+            pointB = _objectAdd(pointB, constraint.bodyB.position);
+            zB = attachment ? constraint.bodyB.entity.z : 100;
+        }
+        const z = Math.max(zA, zB) + zOffset;
+
+        const color = attachment ? constraintColor : secretColor;
+        
+        if (type === 'spring') {
+            // Choose the number of bends based on the rest length,
+            // and then stretch
+            const longAxis = _objectSub(pointB, pointA);
+            const crossAxis = _objectMul(xy(-longAxis.y, longAxis.x),
+                                         _clamp(8 - Math.pow(constraint.stiffness, 0.1) * 8, 1, 7) / magnitude(longAxis));
+            const numBends = Math.ceil(attachment.length / 2.5);
+            let prev = pointA;
+            for (let i = 1; i < numBends; ++i) {
+                const end = (i === 1 || i === numBends - 1);
+                const u = (end ? i + 0.5 : i) / numBends;
+                const v = end ? 0 : (2 * (i & 1) - 1);
+                const curr = _objectAdd(pointA,
+                                        _objectAdd(_objectMul(longAxis, u),
+                                                   _objectMul(crossAxis, v))); 
+                drawLine(prev, curr, color, z);
+                prev = curr;
+            }
+            drawLine(prev, pointB, color, z);
+        } else {
+            // rod
+            drawLine(pointA, pointB, color, z);
+        }
+
+        if (type === 'weld') {
+            // Show a triangle to indicate that this attachment is rigid
+            drawPoly(weldTri, color, undefined, pointB, constraint.bodyB.angle, undefined, z);
+        } else if (type === 'pin') {
+            // Show one disk
+            drawDisk(pointA, 3, color, undefined, z);
+        } else {
+            // Show the two disks
+            drawDisk(pointA, 3, undefined, color, z);
+            drawDisk(pointB, 2.5, color, undefined, z);
+        }
+    }
+
+    // For contacts, do not iterate over physics.pairs.list, as that
+    // is the potentially O(n^2) cache of all pairs ever created and
+    // most of them may not be active.
+
+    const contactBox = xy(3, 3);
+    for (const [body0, map] of physics._entityContactMap) {
+        for (const [body1, contact] of map) {
+            // Draw each only once, for the body with the lower ID
+            if (body0.id < body1.id) {
+                const z = Math.max(contact.entityA.z, contact.entityB.z) + zOffset;
+                drawRect(contact.point0, contactBox, contactColor, undefined, 0, z);
+                if (contact.point1) { drawRect(contact.point1, contactBox, contactColor, undefined, 0, z); }
+            }
+        }
+    }
+
+    const newContactBox = xy(7, 7);
+    for (let c = 0; c < physics._newContactArray.length; ++c) {
+        const contact = physics._newContactArray[c];
+        const z = Math.max(contact.entityA.z, contact.entityB.z) + zOffset;
+
+        // Size based on penetration
+        newContactBox.x = newContactBox.y = _clamp(1 + contact.depth * 2, 1, 10);
+        
+        drawRect(contact.point0, newContactBox, newContactColor, undefined, 0, z);
+        if (contact.point1) { drawRect(contact.point1, newContactBox, newContactColor, undefined, 0, z); }
+    }
+}
+
 
 /*************************************************************************************/
 //
@@ -2198,39 +3221,8 @@ function drawMap(map, minLayer, maxLayer, replacements) {
 }
 
 
-function drawTri(A, B, C, color, outline, z) {
-    z = z || 0
-    const skx = z * _skewXZ, sky = z * _skewYZ;
-    
-    let Ax = (A.x + skx) * _scaleX + _offsetX, Ay = (A.y + sky) * _scaleY + _offsetY;
-    let Bx = (B.x + skx) * _scaleX + _offsetX, By = (B.y + sky) * _scaleY + _offsetY;
-    let Cx = (C.x + skx) * _scaleX + _offsetX, Cy = (C.y + sky) * _scaleY + _offsetY;
-
-    z = z * _scaleZ + _offsetZ;
-    
-    // Extract the fill color, which is not yet used in this implementation
-    color   = _colorToUint32(color);
-    outline = _colorToUint32(outline);
-
-    // Culling/all transparent optimization
-    if ((Math.min(Ax, Bx, Cx) > _clipX2 + 0.5) || (Math.min(Ay, By, Cy) > _clipY2 + 0.5) || (z < _clipZ1 - 0.5) ||
-        (Math.max(Ax, Bx, Cx) < _clipX1 - 0.5) || (Math.max(Ay, By, Cy) < _clipY1 - 0.5) || (z > _clipZ2 + 0.5) ||
-        !((color | outline) & 0xff000000)) {
-        return;
-    }
-
-    _addGraphicsCommand({
-        opcode: 'TRI',
-        Ax: Ax,
-        Ay: Ay,
-        Bx: Bx,
-        By: By,
-        Cx: Cx,
-        Cy: Cy,
-        z: z,
-        color: color,
-        outline: outline
-    });
+function drawTri(A, B, C, color, outline, pos, scale, angle, z) {
+    drawPoly([A, B, C], color, outline, pos, angle, scale, z);
 }
 
 
@@ -2296,7 +3288,114 @@ function _colorToUint32(color) {
 }
 
 
-function drawRect(corner, size, fill, outline, z) {
+function drawRect(pos, size, fill, border, angle, z) {
+    angle = loop(angle || 0, -Math.PI, Math.PI);
+    const rx = size.x * 0.5, ry = size.y * 0.5;
+    if (Math.min(Math.abs(angle), Math.abs(angle - Math.PI), Math.abs(angle + Math.PI)) < 1e-10) {
+        // Use the corner rect case for speed
+        drawCornerRect(xy(pos.x - rx, pos.y - ry), size, fill, border, z);
+    } else if (Math.min(Math.abs(angle - Math.PI * 0.5), Math.abs(angle + Math.PI * 0.5)) < 1e-10) {
+        // Use the corner rect case for speed, rotated 90 degrees
+        drawCornerRect(xy(pos.x - ry, pos.y - rx), xy(size.y, size.x), fill, border, z);
+    } else {
+        const vertexArray = [xy(-rx, -ry), xy(rx, -ry), xy(rx, ry), xy(-rx, ry)];
+        drawPoly(vertexArray, fill, border, pos, angle, undefined, z);
+    }
+}
+
+
+function drawPoly(vertexArray, fill, border, pos, angle, scale, z) {
+    switch (vertexArray.length) {
+    case 0: return;
+        
+    case 1:
+        if (border) {
+            drawPoint(vertexArray[0], border, z);
+        } else if (fill) {
+            drawPoint(vertexArray[0], fill, z);
+        }
+        return;
+        
+    case 2:
+        if (border) {
+            drawLine(vertexArray[0], vertexArray[1], border, z);
+        } else if (fill) {
+            drawPoint(vertexArray[0], vertexArray[1], fill, z);
+        }
+        return;
+    }
+
+
+    z = z || 0
+    const skx = z * _skewXZ, sky = z * _skewYZ;
+
+    // Preallocate the output array
+    const N = vertexArray.length;
+    const points = []; points.length = N * 2;
+
+    // Clean up transformation arguments
+    let Sx = 1, Sy = 1;
+
+    if (scale !== undefined) {
+        if (typeof scale === 'object') { Sx = scale.x; Sy = scale.y;
+        } else { Sx = Sy = scale; }
+    }
+
+    angle = -(angle || 0) * getRotationSign();
+    const Rx = Math.cos(angle), Ry = Math.sin(angle);
+
+    let Tx = 0, Ty = 0;
+    if (pos) { Tx = pos.x; Ty = pos.y; }
+    
+    // Compute the net transformation
+    let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+    for (let v = 0, p = 0; v < N; ++v, p += 2) {
+        const vertex = vertexArray[v];
+
+        // The object-to-draw and draw-to-screen transformations
+        // could be concatenated to slightly reduce the amount of
+        // math here, although it is maybe clearer and easier to debug
+        // this way.
+        
+        // Object scale
+        const Ax = vertex.x * Sx,          Ay = vertex.y * Sy;
+
+        // Object rotate
+        const Bx = Ax * Rx + Ay * Ry,      By = Ay * Rx - Ax * Ry;
+
+        const Px = (Bx + Tx + skx) * _scaleX + _offsetX;
+        const Py = (By + Ty + sky) * _scaleY + _offsetY;
+
+        // Update bounding box
+        minx = (Px < minx) ? Px : minx;    miny = (Py < miny) ? Py : miny;
+        maxx = (Px > maxx) ? Px : maxx;    maxy = (Py > maxy) ? Py : maxy;
+        
+        points[p]     = Px;                points[p + 1] = Py;
+    }
+    
+    z = z * _scaleZ + _offsetZ;
+    
+    fill   = _colorToUint32(fill);
+    border = _colorToUint32(border);
+
+    // Culling/all transparent optimization
+    if ((minx > _clipX2 + 0.5) || (miny > _clipY2 + 0.5) || (z < _clipZ1 - 0.5) ||
+        (maxx < _clipX1 - 0.5) || (maxy < _clipY1 - 0.5) || (z > _clipZ2 + 0.5) ||
+        !((fill | border) & 0xff000000)) {
+        return;
+    }
+
+    _addGraphicsCommand({
+        opcode: 'PLY',
+        points: points,
+        z: z,
+        color: fill,
+        outline: border
+    });
+}
+
+
+function drawCornerRect(corner, size, fill, outline, z) {
     z = z || 0;
     const skx = (z * _skewXZ), sky = (z * _skewYZ);
     let x1 = (corner.x + skx) * _scaleX + _offsetX, y1 = (corner.y + sky) * _scaleY + _offsetY;
@@ -2891,9 +3990,9 @@ function getSpritePixelColor(spr, pos, result) {
 }
 
 
-function drawSpriteRect(CC, corner, size, z) {
+function drawSpriteCornerRect(CC, corner, size, z) {
     if (! (CC && CC.spritesheet)) {
-        throw new Error('Called drawSpriteRect() on an object that was not a sprite asset. (' + unparse(CC) + ')');
+        throw new Error('Called drawSpriteCornerRect() on an object that was not a sprite asset. (' + unparse(CC) + ')');
     }
     z = z || 0;
     const skx = (z * _skewXZ), sky = (z * _skewYZ);
@@ -3117,11 +4216,22 @@ function drawSprite(spr, center, angle, scale, opacity, z, overrideColor) {
 
 // Can't be implemented as min(loop(x,k), k - loop(x,k)) because
 // that doesn't handle fractional values in the desired way.
-function oscillate(x, hi) {
-    hi = hi || 1;
+function oscillate(x, lo, hi) {
+    if (lo === undefined) {
+        lo = 0; hi = 1;
+    } else if (hi === undefined) {
+        // Legacy version
+        hi = lo;
+        lo = 0;
+    }
+
+    if (hi <= lo) { throw new Error("oscillate(x, lo, hi) must have hi > lo"); }
+    x -= lo;
+    hi -= lo;
+    
     const k = 2 * hi;
     x = loop(x, k);
-    return (x < hi) ? x : k - x;
+    return ((x < hi) ? x : k - x) + lo;
 }
 
 
@@ -3627,6 +4737,32 @@ function entityArea(entity) {
     }
 }
 
+
+// Add any default fields needed for an overlaps() test and return the cleaned up object.
+function _cleanupRegion(A) {
+    if ((A.scale === undefined) || (A.pos === undefined) || (A.shape === undefined) || (A.size === undefined)) {
+        if ((A.x !== undefined) && (A.y !== undefined)) {
+            // This is a point. Default to disk because it makes
+            // collision tests simpler.
+            A = {pos:A, shape: 'disk'};
+        }
+        
+        // Make a new object with default properties
+        A = Object.assign({scale: xy(1, 1), size: xy(0, 0), angle: 0, shape: 'rect'}, A);
+    }
+    
+    if (A.pivot && (A.pivot.x !== 0 || A.pivot.y !== 0)) {
+        // Apply the pivot, cloning the entire object for simplicity
+        A = Object.assign({}, A);
+        A.pos = _maybeApplyPivot(A.pos, A.pivot, A.angle, A.scale);
+        A.pivot = undefined;
+    }
+    
+    // All required properties are present
+    return A;
+}
+
+
 /** True if the objects overlap. Positions are centers. Sizes are
     width, height vectors.  Angles are counter-clockwise radians from
     +x to +y. Shapes are 'rect' or 'disk'. If 'disk', the size x
@@ -3697,30 +4833,6 @@ var overlaps = (function() {
                 (loY * 2 <= A.size.y * Math.abs(A.scale.y)) && (hiY * 2 >= -A.size.y * Math.abs(A.scale.y)));
     }
 
-    // Add any default fields needed and return the cleaned up object.
-    function cleanup(A) {
-        if ((A.scale === undefined) || (A.pos === undefined) || (A.shape === undefined) || (A.size === undefined)) {
-            if ((A.x !== undefined) && (A.y !== undefined)) {
-                // This is a point. Default to disk because it makes
-                // collision tests simpler.
-                A = {pos:A, shape: 'disk'};
-            }
-            
-            // Make a new object with default properties
-            A = Object.assign({scale: xy(1, 1), size: xy(0, 0), angle: 0, shape: 'rect'}, A);
-        }
-
-        if (A.pivot && (A.pivot.x !== 0 || A.pivot.y !== 0)) {
-            // Apply the pivot, cloning the entire object for simplicity
-            A = Object.assign({}, A);
-            A.pos = _maybeApplyPivot(A.pos, A.pivot, A.angle, A.scale);
-            A.pivot = undefined;
-        }
-
-        // All required properties are present
-        return A;
-    }
-
     return function(A, B, recurse) {
         if (A === undefined) { throw new Error('First argument to overlaps() must not be nil'); }
         if (B === undefined) { throw new Error('Second argument to overlaps() must not be nil'); }
@@ -3742,7 +4854,7 @@ var overlaps = (function() {
             return false;
         }
 
-        A = cleanup(A); B = cleanup(B);
+        A = _cleanupRegion(A); B = _cleanupRegion(B);
 
         // For future use offsetting object B, which is convenient for speculative
         // collision detection but not supported in the current implementation.
@@ -3758,14 +4870,21 @@ var overlaps = (function() {
         // The position of object 2
         temp2.x = B.pos.x - offsetX;
         temp2.y = B.pos.y - offsetY;
-        
+
         // If there is any rect, it is now entity A
+
         if (A.shape === 'disk') {
             
             // Disk-Disk. Multiply the right-hand side by 4 because
             // we're computing diameter^2 instead of radius^2
-            return distanceSquared2D(A.pos, temp2) * 4 < _square(A.size.x * Math.abs(A.scale.x) + B.size.x * Math.abs(B.scale.x));
-            
+            return distanceSquared2D(A.pos, temp2) * 4 <= _square(A.size.x * Math.abs(A.scale.x) + B.size.x * Math.abs(B.scale.x));
+
+        } else if ((B.size.x === 0) && (B.size.y === 0) && (A.angle === 0)) {
+
+            // Trivial axis-aligned test against a rectangle
+            return (Math.abs(B.pos.x - A.pos.x) * 2 <= Math.abs(A.size.x * A.scale.x) &&
+                    Math.abs(B.pos.y - A.pos.y) * 2 <= Math.abs(A.size.y * A.scale.y));
+    
         } else if (B.shape === 'disk') {
             // Box A vs. Disk B 
             
@@ -6374,11 +7493,13 @@ function _executeTXT(cmd) {
 }
 
 
-function _executeTRI(cmd) {
+// Convex polygon rendering
+function _executePLY(cmd) {
     const clipX1 = cmd.clipX1, clipY1 = cmd.clipY1,
           clipX2 = cmd.clipX2, clipY2 = cmd.clipY2;
-    const color = cmd.color, outline = cmd.outline, Ax = cmd.Ax, Ay = cmd.Ay,
-          Bx = cmd.Bx, By = cmd.By, Cx = cmd.Cx, Cy = cmd.Cy;
+    const points = cmd.points;
+    const numPoints = points.length >> 1;
+    const color = cmd.color, outline = cmd.outline;
     
     // Fill
     if (color & 0xff000000) {
@@ -6404,10 +7525,16 @@ function _executeTRI(cmd) {
                 addEdge(Ex, Ey, Sx, Sy);
             }
         }
-        
-        addEdge(Ax, Ay, Bx, By);
-        addEdge(Bx, By, Cx, Cy);
-        addEdge(Cx, Cy, Ax, Ay);
+
+        // Add all edges
+        for (let p = 0; p < points.length - 3; p += 2) {
+            addEdge(points[p], points[p + 1], points[p + 2], points[p + 3]);
+        }
+        {
+            // Wraparound to close the polygon
+            const p = points.length - 2;
+            addEdge(points[p], points[p + 1], points[0], points[1]);
+        }
 
         // Intentionally left as a float to avoid int->float
         // conversion within the inner loop
@@ -6440,9 +7567,14 @@ function _executeTRI(cmd) {
     }
 
     if ((outline & 0xff000000) && (outline !== color)) {
-        _line(Ax, Ay, Bx, By, outline, clipX1, clipY1, clipX2, clipY2, false, true);
-        _line(Bx, By, Cx, Cy, outline, clipX1, clipY1, clipX2, clipY2, false, true);
-        _line(Cx, Cy, Ax, Ay, outline, clipX1, clipY1, clipX2, clipY2, false, true);
+        for (let p = 0; p < points.length - 3; p += 2) {
+            _line(points[p], points[p + 1], points[p + 2], points[p + 3], outline, clipX1, clipY1, clipX2, clipY2, false, true);
+        }
+        {
+            // Wraparound to close the polygon
+            const p = points.length - 3;
+            _line(points[p], points[p + 1], points[p + 2], points[p + 3], outline, clipX1, clipY1, clipX2, clipY2, false, true);
+        }
     }
 }
 
@@ -6454,6 +7586,6 @@ var _executeTable = Object.freeze({
     PIX : _executePIX,
     TXT : _executeTXT,
     LIN : _executeLIN,
-    TRI : _executeTRI,
+    PLY : _executePLY,
     MAP : _executeMAP
 });

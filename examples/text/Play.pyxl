@@ -290,8 +290,8 @@ resetTransform()
 resetClip()
 
 // Draw the top and bottom reserved areas
-drawRect(xy(0, 0), xy(screenSize.x, INFO_HEIGHT), #000)
-drawRect(xy(0, screenSize.y - INFO_HEIGHT), xy(screenSize.x, INFO_HEIGHT), #000)
+drawCornerRect(xy(0, 0), xy(screenSize.x, INFO_HEIGHT), #000)
+drawCornerRect(xy(0, screenSize.y - INFO_HEIGHT), xy(screenSize.x, INFO_HEIGHT), #000)
 
 for textColor, score, playerIndex, infoPos in snake in snakeArray:
    drawText({font:   font,

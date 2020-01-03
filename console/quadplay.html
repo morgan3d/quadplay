@@ -53,6 +53,7 @@
         <label><input id="lockConstantsCheckbox" type="checkbox" checked onclick="" disabled autocomplete="off">Lock constants</label>
         <br/><label><input id="assertEnabled" type="checkbox" onclick="debugOptionClick(event)" checked autocomplete="off">Enable <code>assert</code></label>
         <br/><label><input id="showEntityBoundsEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Show entity bounds</label>
+        <br/><label><input id="showPhysicsEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Show physics</label>
         <hr>
       </div>
       <div><a onclick="window.open('../doc/controls.html', '', 'width=400,height=500')">Controls</a></div>
@@ -255,11 +256,11 @@
             <tr><td>◀         </td><td> A or ←      </td><td> J           </td><td> ◀          </td><td> ◀       </td><td> ◀</td></tr>
             <tr><td>▼         </td><td> S or ↓      </td><td> K           </td><td> ▼          </td><td> ▼       </td><td> ▼</td></tr>
             <tr><td>▶         </td><td> D or →      </td><td> L           </td><td> ▶          </td><td> ▶       </td><td> ▶</td></tr>
-            <tr><td>ⓐ         </td><td> V or space  </td><td> / ?         </td><td> Ⓐ          </td><td style="font-size:150%; line-height:50%">╳</td><td> Ⓑ</td></tr>
-            <tr><td>ⓑ         </td><td> G or enter  </td><td> ' "         </td><td> Ⓑ          </td><td> ◯       </td><td> Ⓐ</td></tr>
-            <tr><td>ⓒ         </td><td> C           </td><td> . &gt;      </td><td> Ⓧ          </td><td> ▢       </td><td> Ⓨ</td></tr>
-            <tr><td>ⓓ         </td><td> F           </td><td> : ;         </td><td> Ⓨ          </td><td> △       </td><td> Ⓧ</td></tr>
-            <tr><td>ⓠ         </td><td> 1 or Q      </td><td> 7           </td><td> ⧉          </td><td> Share   </td><td> Select</td></tr>
+            <tr><td>ⓐ         </td><td> V or space  </td><td> / or ?      </td><td> Ⓐ          </td><td style="font-size:90%">╳</td><td> Ⓑ</td></tr>
+            <tr><td>ⓑ         </td><td> G or enter  </td><td> ' or "      </td><td> Ⓑ          </td><td> ◯       </td><td> Ⓐ</td></tr>
+            <tr><td>ⓒ         </td><td> C           </td><td> . or &gt;   </td><td> Ⓧ          </td><td> ▢       </td><td> Ⓨ</td></tr>
+            <tr><td>ⓓ         </td><td> F           </td><td> : or ;      </td><td> Ⓨ          </td><td style="font-size:120%"> △</td><td> Ⓧ</td></tr>
+            <tr><td>ⓠ         </td><td> 1 or Q      </td><td> 7           </td><td style="font-size:120%"> ⧉</td><td> Share   </td><td> Select</td></tr>
             <tr><td>ⓟ         </td><td> 4 or P      </td><td> 0           </td><td> ☰          </td><td> Options </td><td> Start</td></tr>
           </table>
           <br>
@@ -337,6 +338,7 @@
   <script src="gif.js" async="async"></script>
   <script src="qrcode.min.js"></script>
   <script src="ace/ace.js"></script>
+  <script src="BetterJSON.js"></script>
   <script src="LoadManager.js"></script>
   <script src="js-yaml.min.js"></script>
   <script src="vectorify.js" charset="utf-8"></script>

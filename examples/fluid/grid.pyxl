@@ -51,10 +51,10 @@ def drawGrid(grid):
             pos.x = MUL(x, grid.cellSize.x)
             pos.y = SUB(MUL(ADD(y, 1), grid.cellSize.y), dim.y)
             if cell.solid:
-               drawRect(pos, dim, solidColor)
+               drawCornerRect(pos, dim, solidColor)
             else:
                RGBA_LERP(fluidColor, darkFluidColor, CLAMP(MUL(cell.value, 25%), 0, 1), temp)
-               drawRect(pos, dim, temp)
+               drawCornerRect(pos, dim, temp)
                
                
    // Draw gridlines

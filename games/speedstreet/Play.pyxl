@@ -22,7 +22,7 @@ def loopBikes():
    camera.pos.x -= mapWidthPixels
    for bike in bikeArray:
       bike.pos.x -= mapWidthPixels
-      updateEntityChildren(bike)
+      entityUpdateChildren(bike)
       for pos in bike.surfacePos:
          pos.x -= mapWidthPixels
 
@@ -86,7 +86,7 @@ for bike in bikeArray:
 
    minBikeVel = min(minBikeVel, bike.vel.x)
    
-   updateEntityChildren(bike)
+   entityUpdateChildren(bike)
 
    // Detect crashes by testing an arc around the top and slightly above the center.
    // The first and last points are not used  
@@ -136,12 +136,12 @@ for bike in bikeArray:
    // Shadow
    const shadowZ = bike.z - ε
    let prev = bike.surfacePos[0]
-   if prev: drawRect(prev, xy(2, 2), shadowColor[0], nil, shadowZ)
+   if prev: drawCornerRect(prev, xy(2, 2), shadowColor[0], nil, shadowZ)
    for 1 ≤ i < bike.surfacePos.length:
       const curr = bike.surfacePos[i]
       if prev and curr:
          //drawLine(lerp(prev, curr, 50%), lerp(prev, curr, 50%) + xy(0, 1), shadowColor[i], shadowZ)
-         drawRect(curr, xy(2, 2), shadowColor[i], nil, shadowZ)
+         drawCornerRect(curr, xy(2, 2), shadowColor[i], nil, shadowZ)
       prev = curr
 
    if debugPhysics: // visualize sensor points
@@ -205,7 +205,7 @@ preservingTransform:
 if debugZOrder:
    preservingTransform:
       resetTransform()
-      for -4 <= z <= 4: drawRect(xy(0,0), screenSize, rgba(1,1,1,8%), ∅, z + 0.5)
+      for -4 <= z <= 4: drawCornerRect(xy(0,0), screenSize, rgba(1,1,1,8%), ∅, z + 0.5)
 
 // Alternating layers of the map in the center are the collision data, which
 // should be invisible. Draw only the even layers with graphics on

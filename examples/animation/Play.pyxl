@@ -22,7 +22,7 @@ const ninja = makeEntity({
    ]
 })
 
-ninja.weapon = addEntityChild(ninja, ninja.weaponArray[ninja.weaponIndex])
+ninja.weapon = entityAddChild(ninja, ninja.weaponArray[ninja.weaponIndex])
 
 const arrowArray = []
 
@@ -96,19 +96,19 @@ with pos, vel, force, scale, spriteIndex, spriteFrame, animation, spritesheet, s
    if animation == "idle" or animation == "duck" or find(animation, "jump") ≠ ∅: weaponIndex = loop(weaponIndex + joy.yy, size(ninja.weaponArray))
    const newWeapon = ninja.weaponArray[weaponIndex]
    if weapon != newWeapon:
-      removeEntityChild(ninja, weapon)
-      weapon = addEntityChild(ninja, newWeapon)
+      entityRemoveChild(ninja, weapon)
+      weapon = entityAddChild(ninja, newWeapon)
    
    // Update the weapon to match the main sprite animation
    if weapon: weapon.sprite = arrayValue(weapon.spritesheet[animation], spriteIndex)
    
    // Physics
-   physicsStepEntity(ninja)
+   entitySimulate(ninja)
       
    // Wrap around the screen edges
    pos.x = loop(pos.x, screenSize.x)
 
-updateEntityChildren(ninja)
+entityUpdateChildren(ninja)
 
 
 for arrow in arrowArray:
@@ -123,7 +123,7 @@ setBackground(rgb(20%, 50%, 80%))
 drawText(font, assetCredits.title, xy(½ screenSize.x, 20), #FFF, ∅, ∅, 0, 0)
 
 // Ground
-drawRect(xy(0, groundY + 9), xy(screenSize.x, screenSize.y - (groundY + 8)), #DDD)
+drawCornerRect(xy(0, groundY + 9), xy(screenSize.x, screenSize.y - (groundY + 8)), #DDD)
 
 // Instructions
 local:

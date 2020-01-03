@@ -1,6 +1,6 @@
 ;; pyxlscript-mode.el --- Major mode for editing Quadplay PyxLScript. -*- coding: utf-8 -*-
 
-;; Copyright © 2019, by Morgan McGuire
+;; Copyright © 2020, by Morgan McGuire
 
 ;; Author: Morgan McGuire, https://casual-effects.com
 ;; URL: TBD
@@ -30,43 +30,69 @@
 
   ;; 3-space indenting
   (setq-local tab-width 3)
+
+  (setq indent-tabs-mode nil)
   (setq python-indent 3)
+  (setq python-indent-offset 3)
   (setq python-guess-indent nil)
-  
+
+  ;; For hotkeys
   (setq-local comment-start "/*")
   (setq-local comment-start-skip "/\\*+[ \t]*")
   (setq-local comment-end "*/")
   (setq-local comment-end-skip "[ \t]*\\*+/")
 
-  (let ((keyword-exp (regexp-opt '("assert" "debugPrint" "debugWatch" "let" "const" "mod" "local" "preservingTransform" "for" "in" "while" "until" "if" "then" "else" "pushMode" "popMode" "resetGame" "setMode" "return" "def" "break" "continue" "bitand" "bitor" "bitxor" "because" "quitGame" "launchGame") 'words))
+  ;; Syntax highlighting
+  (let ((keyword-exp (regexp-opt '("assert" "debugPrint" "debugWatch" "let" "const" "mod" "local" "preservingTransform" "for" "in" "while" "until" "if" "then" "else" "pushMode" "popMode" "resetGame" "setMode" "return" "def" "break" "continue" "bitand" "bitor" "bitxor" "bitnot" "bitshl" "bitshr" "because" "quitGame" "launchGame") 'words))
         (literal-exp (regexp-opt '("deg" "true" "false" "nan" "screenSize" "pi" "epsilon" "infinity" "nil") 'words))
-        (builtin-exp (regexp-opt '("rayIntersect" "drawBounds" "drawDisk" "resetClip" "resetTransform" "setClip" "drawLine" "drawSpriteRect" "intersectClip" "drawPoint" "drawRect" "setBackground" "textWidth" "getSpritePixelColor" "drawSprite" "drawText" "drawTri" "getTransform" "getClip" "getRotationSign" "signNotZero" "setTransform" "xy" "xyz"
+        (builtin-exp (regexp-opt '("rayIntersect" "drawBounds" "drawDisk" "resetClip" "resetTransform" "setClip" "drawLine" "drawSpriteCornerRect" "intersectClip" "drawPoint" "drawCornerRect" "drawRect" "setBackground" "textWidth" "getSpritePixelColor" "drawSprite" "drawText" "drawTri" "drawConvex" "getTransform" "getClip" "getRotationSign" "signNotZero" "setTransform" "xy" "xyz"
                                    "anyButtonPress" "drawMap" "getMode" "getPreviousMode" "getMapPixelColor" "getMapPixelColorByDrawCoord" "getMapSprite" "setMapSprite" "getMapSpriteByDrawCoord" "setMapSpriteByDrawCoord" "unparse" "formatNumber" "upperCase" "lowerCase"
                                    "playAudioClip" "resumeSound" "stopSound" "gameFrames" "modeFrames" "setMode" "delay" "sequence" "addFrameHook" "removeFrameHook"
-                                   "makeEntity" "drawEntity" "overlaps" "updateEntityChildren" "physicsStepEntity" "split"
-                                   "now" "gameFrames" "modeFrames" "findMapPath" "findPath" "join"
+                                   "makeEntity" "drawEntity" "overlaps" "entityUpdateChildren" "entitySimulate" "split"
+                                   "now" "gameFrames" "modeFrames" "findMapPath" "findPath" "join" "entityApplyForce" "entityApplyImpulse"
                                    "gray" "rgb" "rgba" "hsv" "hsva" "lastValue" "lastKey" "insert" "reverse" "reversed"
-                                   "call" "setPostEffects" "extendPostEffects" "resetPostEffects" "pushFront" "localTime"
+                                   "call" "setPostEffects" "extendPostEffects" "resetPostEffects" "pushFront" "localTime" "deviceControl" "physicsAddContactCallback" "physicsAddEntity" "physicsRemoveEntity" "physicsAttach" "physicsDetach" "makePhysics" "makeCollisionGroup" "drawPhysics" "physicsSimulate"
                                    "abs" "acos" "atan" "asin" "sign" "signNonZero" "cos" "clamp" "hash" "lerp" "log" "log2" "log10" "loop" "min" "max" "mid" "noise" "oscillate" "overlap" "pow" "makeRnd" "rndSign" "rndInt" "rndWithinSphere" "rndOnSphere" "rndWithinCircle" "rndWithinSquare" "rndOnSquare" "rndOnCircle" "rndDir2D" "rndDir3D" "rndValue" "rndGaussian" "rndGaussian2D" "rndTruncatedGaussian" "rndTruncatedGaussian2D" "rnd" "ξ" "sgn" "sqrt" "sin" "srand" "tan"
-                                   "clone" "copy" "drawPreviousMode" "cross" "direction" "dot" "equivalent" "magnitude" "maxComponent" "minComponent" "xy" "xyz"
-                                   "fastRemoveKey" "find" "keys" "removeKey" "size" "substring" "sort" "resize" "push" "pop" "fastRemoveValue" "removeValues" "pad" "joy" "round" "floor" "ceil"
+                                   "clone" "copy" "drawPreviousMode" "cross" "direction" "dot" "equivalent" "magnitude" "magnitudeSquared" "maxComponent" "minComponent" "xy" "xyz"
+                                   "fastRemoveKey" "find" "keys" "removeKey" "substring" "sort" "resize" "push" "pop" "fastRemoveValue" "removeValues" "pad" "joy" "round" "floor" "ceil"
                                    "debugPrint") 'words))
-        (color-exp   "#[0-9A-Fa-f]+"))
+        )
 
-    ; Regexps don't understand unicode
     (font-lock-add-keywords
      'pyxlscript-mode
-     `((,keyword-exp (0 font-lock-keyword-face))
-       (,builtin-exp (0 font-lock-type-face))
-       (,color-exp (0 font-lock-constant-face))
-       (,literal-exp (0 font-lock-constant-face))
+
+     ;; see:
+     ;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Search_002dbased-Fontification.html
+     `((,keyword-exp 0 font-lock-keyword-face)
+       (,builtin-exp 0 font-lock-type-face)
+
+
+       ;; Only treat "size" as a built-in when
+       ;; followed by a paren (otherwise it is probably a property)
+       ("\\(size\\)(" . (1 font-lock-type-face))
+        
+       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+       ;; Colors:
+       ("#[0-9A-Fa-f]+" . font-lock-constant-face)
+       ;; The previous command for color expressions does not catch the # at the start
+       ;; of a color if the color begins with a number, so explicitly add it:
+       ("#" . font-lock-constant-face)
+
+       ;; Positive and negative numbers, which are broken by the syntax table
+       ("[+-]\\([0-9]+\\)"  . (1 font-lock-constant-face))
+
+       (,literal-exp 0 font-lock-constant-face)
+       
+       ;; elisp regexps don't understand unicode, so we have to explicitly add them here
        ("‖" . font-lock-type-face)
        ("⌊" . font-lock-type-face)
        ("⌋" . font-lock-type-face)
        ("⌈" . font-lock-type-face)
-       ("⌉" . font-lock-type-face)        
+       ("⌉" . font-lock-type-face)
+       
        ("∊" . font-lock-keyword-face)
        ("∈" . font-lock-keyword-face)
+       
        ("∞" . font-lock-constant-face)
        ("½" . font-lock-constant-face)
        ("⅓" . font-lock-constant-face)

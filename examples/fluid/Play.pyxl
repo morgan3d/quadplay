@@ -34,7 +34,7 @@ setBackground(background)
 simulateGrid(grid)
 drawGrid(grid)
 
-drawRect(cursor * grid.cellSize, grid.cellSize, #f00b)
+drawCornerRect(cursor * grid.cellSize, grid.cellSize, #f00b)
 
 
 if joy.x or joy.y: --repeatDelay

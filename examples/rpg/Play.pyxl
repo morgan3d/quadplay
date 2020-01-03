@@ -95,7 +95,7 @@ if loop(modeFrames, 30) < 15: extend(animate, ANIMATE_LIGHTS)
 // Shopkeeper
 drawSprite(npcSprite[16][10 + loop(floor(modeFrames / 20), 2)], shopKeeperPos, nil, nil, nil, 0.5)
 if magnitude(shopKeeperPos - player.pos) < 32:
-   drawSpriteRect(dialogueSprite[4][1], shopKeeperPos - xy(27, 19), xy(31, 7), 8)
+   drawSpriteCornerRect(dialogueSprite[4][1], shopKeeperPos - xy(27, 19), xy(31, 7), 8)
    drawText(smallFont, "Press ⓒ", shopKeeperPos - xy(12, 16), #000, nil, nil, 0, 0, 8)
    if joy.cc: pushMode(Shop, "Press ⓒ")
 

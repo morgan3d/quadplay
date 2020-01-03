@@ -56,6 +56,9 @@ def makeBike(name, colorIndex, pos, z, playerIndex):
 
       // Points scored for the current trick, and minimum points needed to lock it in
       currentTrick: {description: "", points: 0, minimumPoints: infinity},
+
+      // Disable the default drag, we'll apply our own
+      drag: 0,
       
       // Each pos is in entity space. The normal is in draw space and
       // is computed as the contact penalty normal in simulateBody.
@@ -105,13 +108,13 @@ def makeBike(name, colorIndex, pos, z, playerIndex):
       zInParent: +0.1
    })
 
-   addEntityChild(bike, bike.frontWheel)
-   addEntityChild(bike, bike.rearWheel)
-   addEntityChild(bike, bike.engine)
+   entityAddChild(bike, bike.frontWheel)
+   entityAddChild(bike, bike.rearWheel)
+   entityAddChild(bike, bike.engine)
 
-   addEntityChild(bike.engine, bike.driver)
+   entityAddChild(bike.engine, bike.driver)
    
-   updateEntityChildren(bike)
+   entityUpdateChildren(bike)
    return bike
       
 
@@ -144,7 +147,7 @@ def crashBike(bike):
       bike.pos.y = -infinity
       for -5 < i < 5:
          bike.pos.y = max(bike.pos.y, surfacePointUnder(xy(bike.pos.x + 3i, 200), bike.z).y + 13)
-      updateEntityChildren(bike)
+      entityUpdateChildren(bike)
       push(bikeArray, bike)
 
    addFrameHook(drawExplosion, respawn, respawnFrames)

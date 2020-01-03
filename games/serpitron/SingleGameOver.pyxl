@@ -34,7 +34,7 @@ for i < N:
    const bodyPos = pos + r * xy(cos θ, sin θ)
    drawSprite(snake.bodySprite, bodyPos)
    // Shadow
-   drawRect(bodyPos + xy(-2, 3), xy(4, 2), #9, ∅, -1)
+   drawCornerRect(bodyPos + xy(-2, 3), xy(4, 2), #9, ∅, -1)
    θ += 2.5°
          
 drawSprite(snake.headSprite, pos + r * xy(cos θ, sin θ), 270° - θ)

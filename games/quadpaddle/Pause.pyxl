@@ -18,7 +18,7 @@ resetTransform()
 resetClip()
 
 let offset = xy(102, 64) + max(0, 45 - 5 modeFrames)
-drawSpriteRect(borderSprite[10][13], offset, screenSize - 2 offset, 4)
+drawSpriteCornerRect(borderSprite[10][13], offset, screenSize - 2 offset, 4)
 
 if modeFrames > 8:
    drawText(font, "Paused", xy(screenSize.x / 2, 80), gray(100%), #c549db, #c549db, 0, nil, 4)

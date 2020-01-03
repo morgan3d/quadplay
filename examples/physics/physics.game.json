@@ -1,0 +1,16 @@
+{
+    "title":      "Physics",
+    "developer":  "Casual Effects",
+    "copyright":  "©2020 Morgan McGuire",
+    "license":    "CC0/Public Domain",
+
+    "packages":   [],
+    "scripts":    [],
+    "modes":      ["Play*"],
+    "docs":       ["todo.md"],
+    "flipY":      true,
+    "assets":     {
+        "font": "quad://fonts/scoreboard-7.font.json"
+    }
+
+}

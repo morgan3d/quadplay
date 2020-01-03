@@ -17,7 +17,7 @@ frame
 setBackground(locationTable[locationName].background)
 drawPreviousMode()
 
-drawRect(xy(-1, 80), xy(screenSize.x + 2, 60), rgba(0, 0, 0, 50%), #0, 100)
+drawCornerRect(xy(-1, 80), xy(screenSize.x + 2, 60), rgba(0, 0, 0, 50%), #0, 100)
 drawText(font, "Paused", xy(screenSize.x / 2, 90), #f, nil, #0, "center", "center", 101)
 
 for i < size(choiceArray):

@@ -18,7 +18,7 @@ frame
 ───────────────────────────────────────────────────────────────────────────────
 
 drawPreviousMode()
-drawRect(xy(32, 32), screenSize - 2 xy(32, 32), #f, #0, guiZ)
+drawCornerRect(xy(32, 32), screenSize - 2 xy(32, 32), #f, #0, guiZ)
 
 drawText({font:scoreFont, text:"TIME OUT!", color:#f00, outline:#0, xAlign:"center", pos:xy(screenSize.x/2, 42), z:guiZ})
 

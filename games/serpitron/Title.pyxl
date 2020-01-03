@@ -118,7 +118,7 @@ for p < 4:
          const bodyPos = pos + 30 xy(cos θ, sin θ)
          drawSprite(snakeSpritesheet[colorName + "Body"], bodyPos)
          // Shadow
-         drawRect(bodyPos + xy(-2, 3), xy(4, 2), #9, ∅, -1)
+         drawCornerRect(bodyPos + xy(-2, 3), xy(4, 2), #9, ∅, -1)
          θ += 6°
          
       drawSprite(snakeHeadSpritesheet[colorName], pos + 30 xy(cos θ, sin θ), 270° - θ)
