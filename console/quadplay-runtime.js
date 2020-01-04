@@ -3516,6 +3516,7 @@ function textWidth(font, str, markup) {
     // against the letter width.
     
     let formatIndex = 0;
+    let offsetIndex = 0;
     while ((offsetIndex < formatArray[formatIndex].startIndex) || (offsetIndex > formatArray[formatIndex].endIndex)) { ++formatIndex; }
     let format = formatArray[formatIndex];
 
