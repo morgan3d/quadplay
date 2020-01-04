@@ -7,7 +7,7 @@
     "packages":   [],
     "scripts":    [],
     "modes":      ["Play*"],
-    "docs":       ["todo.md"],
+    "docs":       [],
     "flipY":      true,
     "assets":     {
         "font": "quad://fonts/scoreboard-7.font.json"
