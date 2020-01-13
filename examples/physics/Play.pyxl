@@ -46,8 +46,8 @@ let head = physicsAddEntity(physics, makeEntity({shape: "disk", size: xy(9, 9), 
 physicsAttach(physics, "pin", {entityA: person, pointA: xy(0, 14.5), entityB: head})
 physicsAttach(physics, "gyro", {entityB: person, angle: 0°})
 
-const ballCategory = 1 ◅ 1
-const wallCategory = 1 ◅ 2
+const ballCategory = 1 bitshl 1
+const wallCategory = 1 bitshl 2
 
 // Objects that move (not all are simulated)
 let entityArray = [
