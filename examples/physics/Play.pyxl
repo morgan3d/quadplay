@@ -34,6 +34,12 @@ let newton1  = makeEntity({shape: "disk", size: xy(19.5, 19.5), pos: xy(65, 170)
 let newton2  = makeEntity({shape: "disk", size: xy(19.5, 19.5), pos: xy(85, 170), density: 10, drag: 0.001, restitution: 110%, friction: 0})
 let newton3  = makeEntity({shape: "disk", size: xy(19.5, 19.5), pos: xy(155, 220), density: 10, drag: 0.001, restitution: 110%, friction: 0})
 
+// Trigger
+let trigger  = makeEntity({name: "trigger", shape: "rect", size: xy(20, 5), pos:xy(110, 103), density: infinity, collisionSensor: true});
+let spinner  = physicsAddEntity(physics, makeEntity({shape: "rect", size: xy(28, 6), pos: xy(312, 142), density: 12, stiction: 10, friction: 1}))
+physicsAttach(physics, "pin", {entityB: spinner});
+
+
 // Character with gyroscope
 let person  = physicsAddEntity(physics, makeEntity({shape: "rect", size: xy(10, 20), pos: xy(40, 15)}))
 let head = physicsAddEntity(physics, makeEntity({shape: "disk", size: xy(9, 9), pos: xy(40, 30)}))
@@ -42,7 +48,6 @@ physicsAttach(physics, "gyro", {entityB: person, angle: 0°})
 
 const ballCategory = 1 ◅ 1
 const wallCategory = 1 ◅ 2
-
 
 // Objects that move (not all are simulated)
 let entityArray = [
@@ -74,7 +79,10 @@ let worldArray = [
 
    // Landing platforms
    makeEntity({shape: "rect", size: xy(40, 5), pos: xy(45, 100), friction: 1, stictionFactor: 10, density: infinity}),
-   makeEntity({shape: "rect", size: xy(40, 5), pos: xy(110, 100), friction: 1, stictionFactor: 10, density: infinity})
+   makeEntity({shape: "rect", size: xy(40, 5), pos: xy(110, 100), friction: 1, stictionFactor: 10, density: infinity}),
+
+   // Spinner triggered by jumping
+   trigger
 ]
 
 // Fluid-like balls
@@ -143,7 +151,7 @@ setBackground(#234)
 if joy.bb: control = (control + 1) mod size(objectArray)
 const object = objectArray[control]
 
-let scheme = joy.prompt.lt + joy.prompt.rt + joy.prompt.up
+let scheme = "⍇⍈⍐"
 if object == "car":
    wheel1.torque = -4 joy.x
    wheel2.torque = -4 joy.x
@@ -156,7 +164,7 @@ if object == "car":
 else if object == "box":
    // Box
    accelerate(box, 4 xy(joy.x, joy.y), xy(4, 4))
-   scheme += joy.prompt.dn
+   scheme += "⍗"
    
 else if object == "person":
    // Horizontal movement (with air control)
@@ -170,12 +178,18 @@ else if object == "person":
       if size(groundContacts) > 0: person.vel.y += 6
 
 // Instructions
-drawText({font: font, text: "Move " + object + ": " + scheme, pos: xy(10, 200), color: #f96, shadow: #0008, z: 100})
-drawText({font: font, text: "Next object: " + joy.prompt.b, pos: xy(10, 190), color: #f96, shadow: #0008, z: 100})
+drawText({font: font, text: "Move " + object + ": " + replace(scheme, joy.prompt), pos: xy(10, 200), color: #f96, shadow: #0008, z: 100})
+drawText({font: font, text: replace("Next object: ⓑ", joy.prompt), pos: xy(10, 190), color: #f96, shadow: #0008, z: 100})
 
 // Move the animated platforms
 entityMove(platform, xy(40 sin(0.05 modeFrames) + 200, 120))
 entityMove(elevator, xy(elevator.pos.x, clamp(oscillate(modeFrames, -45, 148), 3, 100)))
+
+// If something is on the trigger, run the spinner
+if size(physicsEntityContacts(physics, trigger)) > 0:
+   if spinner.spin < 2°:
+      spinner.spin += 1°
+      spinner.torque = 15
 
 physicsSimulate(physics)
 

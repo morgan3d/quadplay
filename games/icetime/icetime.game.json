@@ -7,7 +7,7 @@
     "flipY":      true,
     "packages":   [],
     "scripts":    ["common.pyxl", "ai.pyxl", "physics.pyxl", "player.pyxl"],
-    "modes":      ["Title*", "Pause", "Play", "TeamSelect", "Intermission", "Faceoff", "Credits", "Rules", "GameOver"],
+    "modes":      ["Title*", "Play", "TeamSelect", "Intermission", "Faceoff", "Credits", "Rules", "GameOver"],
     "assets":     {
         "rinkSprite":   "rink-192x112.sprite.json",
         "titleSprite":  "title-182x93.sprite.json",
@@ -44,7 +44,7 @@
         "creaseRadius":       {"type": "number",   "value": "25"},
         "puckColor":          {"type": "rgb",      "value": "#e70"},
         "framesAfterGoal":    {"type": "number",   "value": "240"},
-        "ruleText":           {"type": "string",   "value": "Three periods\nTwo players per team\n\nⓐ: shoot, ⓑ: pass, ⓓ: celebrate\nⓠ/ⓟ: call time out (unlimited)\n\nNo shots inside the crease\nBlocking is harder in the crease"}
+        "ruleText":           {"type": "string",   "value": "Three periods\nTwo players per team\n\nⓐ: shoot, ⓑ: pass, ⓓ: celebrate\nⓟ: pause\n\nNo shots inside the crease\nBlocking is harder in the crease"}
     },
     
     "version":      0.5,

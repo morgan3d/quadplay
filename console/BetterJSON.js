@@ -10,8 +10,9 @@
   - Numbers with bare leading or trailing decimal
   - NaN, Infinity, -Infinity
   - Hexadecimal numbers
-  - Strict Unix newlines within strings
   - Optional unquoted object keys using [A-Za-z_0-9]+ characters only
+
+  See also ../tools/betterjson.py for the Python version
 
   Just use BetterJSON.parse and BetterJSON.stringify in place of
   JSON.parse and JSON.stringify. They have the same API. 
@@ -74,15 +75,15 @@ const NaNSymbol = '\uE001', InfinitySymbol = '\uE002', NegInfinitySymbol = '\uE0
 return {
     /** Returns the new string and a map */
     protectQuotedStrings: function protectQuotedStrings(src) {
-        let numProtected = 0, protectionMap = [];
+        const protectionMap = [];
 
         // Hide escaped quotes that would confuse the following regexp
-        src = src.replace('\\"', doubleQuoteProtection);
+        src = src.replace(/\\\\"/g, doubleQuoteProtection);
                       
         // Protect strings
         src = src.replace(/"((?:[^"\\]|\\.)*)"/g, function (match, str) {
             protectionMap.push(str);
-            return '"' +  String.fromCharCode(numProtected++ + protectionBlockStart) + '"';
+            return '"' +  String.fromCharCode(protectionMap.length - 1 + protectionBlockStart) + '"';
         });
 
         return [src, protectionMap];

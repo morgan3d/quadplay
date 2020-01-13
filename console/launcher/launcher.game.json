@@ -1,25 +1,29 @@
 {
     "title":      "Launcher",
     "developer":  "Casual Effects",
-    "copyright":  "©2019 Morgan McGuire",
+    "copyright":  "©2020 Morgan McGuire",
     "license":    "LGPL 3.0",
 
     "packages":   [],
     "scripts":    [],
-    "modes":      ["Play*"],
+    "modes":      ["_Play*", "_SlideOut", "_Message"],
     "assets":     {
         "largeFont":  "quad://fonts/deja-15.font.json",
         "mediumFont": "quad://fonts/deja-9.font.json",
         "smallFont":  "quad://fonts/scoreboard-7.font.json",
         "icons":      "icons.sprite.json",
         "boop":       "boop.sound.json",
+        "pauseMessageSprite": "quad://console/os/pause-message.sprite.json",
         
         "sslabel":    "sslabel.sprite.json",
         "sspreview":  "sspreview.sprite.json",
+
         "itlabel":    "itlabel.sprite.json",
         "itpreview":  "itpreview.sprite.json",
+
         "qplabel":    "qplabel.sprite.json",
         "qppreview":  "qppreview.sprite.json",
+        
         "splabel":    "splabel.sprite.json",
         "sppreview":  "sppreview.sprite.json"
     },

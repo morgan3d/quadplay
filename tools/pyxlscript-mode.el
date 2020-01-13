@@ -43,15 +43,16 @@
   (setq-local comment-end-skip "[ \t]*\\*+/")
 
   ;; Syntax highlighting
-  (let ((keyword-exp (regexp-opt '("assert" "debugPrint" "debugWatch" "let" "const" "mod" "local" "preservingTransform" "for" "in" "while" "until" "if" "then" "else" "pushMode" "popMode" "resetGame" "setMode" "return" "def" "break" "continue" "bitand" "bitor" "bitxor" "bitnot" "bitshl" "bitshr" "because" "quitGame" "launchGame") 'words))
+  (let ((keyword-exp (regexp-opt '("assert" "debugPrint" "debugWatch" "let" "const" "mod" "local" "preservingTransform" "for" "in" "while" "until" "if" "then" "else" "pushMode" "resetGame" "setMode" "return" "def" "break" "continue" "bitand" "bitor" "bitxor" "bitnot" "bitshl" "bitshr" "because" "quitGame" "launchGame") 'words))
         (literal-exp (regexp-opt '("deg" "true" "false" "nan" "screenSize" "pi" "epsilon" "infinity" "nil") 'words))
+        (event-exp   (regexp-opt '("enter" "leave" "frame") 'words))
         (builtin-exp (regexp-opt '("rayIntersect" "drawBounds" "drawDisk" "resetClip" "resetTransform" "setClip" "drawLine" "drawSpriteCornerRect" "intersectClip" "drawPoint" "drawCornerRect" "drawRect" "setBackground" "textWidth" "getSpritePixelColor" "drawSprite" "drawText" "drawTri" "drawConvex" "getTransform" "getClip" "getRotationSign" "signNotZero" "setTransform" "xy" "xyz"
                                    "anyButtonPress" "drawMap" "getMode" "getPreviousMode" "getMapPixelColor" "getMapPixelColorByDrawCoord" "getMapSprite" "setMapSprite" "getMapSpriteByDrawCoord" "setMapSpriteByDrawCoord" "unparse" "formatNumber" "upperCase" "lowerCase"
                                    "playAudioClip" "resumeSound" "stopSound" "gameFrames" "modeFrames" "setMode" "delay" "sequence" "addFrameHook" "removeFrameHook"
                                    "makeEntity" "drawEntity" "overlaps" "entityUpdateChildren" "entitySimulate" "split"
                                    "now" "gameFrames" "modeFrames" "findMapPath" "findPath" "join" "entityApplyForce" "entityApplyImpulse"
                                    "gray" "rgb" "rgba" "hsv" "hsva" "lastValue" "lastKey" "insert" "reverse" "reversed"
-                                   "call" "setPostEffects" "extendPostEffects" "resetPostEffects" "pushFront" "localTime" "deviceControl" "physicsAddContactCallback" "physicsAddEntity" "physicsRemoveEntity" "physicsAttach" "physicsDetach" "makePhysics" "makeCollisionGroup" "drawPhysics" "physicsSimulate"
+                                   "call" "setPostEffects" "getPostEffects" "resetPostEffects" "pushFront" "localTime" "deviceControl" "physicsAddContactCallback" "physicsEntityContacts" "physicsAddEntity" "physicsRemoveEntity" "physicsAttach" "physicsDetach" "makePhysics" "makeCollisionGroup" "drawPhysics" "physicsSimulate"
                                    "abs" "acos" "atan" "asin" "sign" "signNonZero" "cos" "clamp" "hash" "lerp" "log" "log2" "log10" "loop" "min" "max" "mid" "noise" "oscillate" "overlap" "pow" "makeRnd" "rndSign" "rndInt" "rndWithinSphere" "rndOnSphere" "rndWithinCircle" "rndWithinSquare" "rndOnSquare" "rndOnCircle" "rndDir2D" "rndDir3D" "rndValue" "rndGaussian" "rndGaussian2D" "rndTruncatedGaussian" "rndTruncatedGaussian2D" "rnd" "ξ" "sgn" "sqrt" "sin" "srand" "tan"
                                    "clone" "copy" "drawPreviousMode" "cross" "direction" "dot" "equivalent" "magnitude" "magnitudeSquared" "maxComponent" "minComponent" "xy" "xyz"
                                    "fastRemoveKey" "find" "keys" "removeKey" "substring" "sort" "resize" "push" "pop" "fastRemoveValue" "removeValues" "pad" "joy" "round" "floor" "ceil"
@@ -65,8 +66,13 @@
      ;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Search_002dbased-Fontification.html
      `((,keyword-exp 0 font-lock-keyword-face)
        (,builtin-exp 0 font-lock-type-face)
+       (,event-exp 0 font-lock-function-name-face)
 
+       ;; Do not treat "popMode" or "from" as keywords when on the same line; they are
+       ("\\(popMode\\).+\\(from\\) " (1 font-lock-function-name-face) (2 font-lock-function-name-face))
+       ("popMode" . font-lock-keyword-face)
 
+       
        ;; Only treat "size" as a built-in when
        ;; followed by a paren (otherwise it is probably a property)
        ("\\(size\\)(" . (1 font-lock-type-face))

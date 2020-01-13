@@ -61,5 +61,5 @@ if joy.c:
    cell.settled = false
 
 drawText({font: font, pos: xy(½ screenSize.x, 2),
-          text: joy.prompt.a + " Water  " + joy.prompt.b + " Draw  " + joy.prompt.c + " Clear  " + joy.prompt.up + joy.prompt.lt + joy.prompt.dn + joy.prompt.rt + " Move",
+          text: replace("(a) Water  (b) Draw  (c) Clear  [^][<][v][>] Move", joy.prompt),
           color: #f00, shadow: #c, outline: #f, xAlign: "center", yAlign: "top"})

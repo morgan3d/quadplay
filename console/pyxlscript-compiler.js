@@ -350,7 +350,7 @@ function processLine(line, inFunction) {
  1. Iteratively process lines in the current block, using processLine on each
  2. Recursively process sub-blocks
 */
-function processBlock(lineArray, startLineIndex, inFunction) {
+function processBlock(lineArray, startLineIndex, inFunction, internalMode) {
     // Indentation of the previous block. Only used for indentation error checking
     let prevBlockIndent = 0;
     
@@ -414,8 +414,9 @@ function processBlock(lineArray, startLineIndex, inFunction) {
             throw makeError('% may only appear at the end of a number (did you intend to use the "mod" operator?)', i);
         }
         
-        const illegal = lineArray[i].match(/\b(_.*?\b|===|!==|toString|try|switch|this|delete|null|arguments|undefined|use|using|yield|prototype|var|new|auto|as|instanceof|typeof|\$|class)\b/) ||
-            lineArray[i].match(/('|!(?!=))/);
+        const illegal = lineArray[i].match(/\b(===|!==|toString|try|switch|this|delete|null|arguments|undefined|use|using|yield|prototype|var|new|auto|as|instanceof|typeof|\$|class)\b/) ||
+              lineArray[i].match(/('|!(?!=))/) ||
+              (! internalMode && lineArray[i].match(/\b_.*?\b/));
         
         if (illegal) {
             const alternative = {"'":'"', '!==':'!=', '!':'not', 'var':'let', 'null':'nil', '===':'=='};
@@ -460,7 +461,7 @@ function processBlock(lineArray, startLineIndex, inFunction) {
             // DEF
             
             let prefix = match[1], name = match[2], args = match[3] || '';
-            let end = processBlock(lineArray, i + 1, true) - 1;
+            let end = processBlock(lineArray, i + 1, true, internalMode) - 1;
             lineArray[i] = prefix + 'const ' + name + ' = (function(' + args + ') { ' + maybeYieldFunction;
             i = end;
             lineArray[i] += '});';
@@ -476,7 +477,7 @@ function processBlock(lineArray, startLineIndex, inFunction) {
                 throw makeError(e, i);
             }
             lineArray[i] = prefix + result[0];
-            i = processBlock(lineArray, i + 1, inFunction) - 1;
+            i = processBlock(lineArray, i + 1, inFunction, internalMode) - 1;
             lineArray[i] += result[1];
 
         } else if (match = lineArray[i].match(/^(\s*)local[ \t]*:[ \t]*$/)) {
@@ -484,7 +485,7 @@ function processBlock(lineArray, startLineIndex, inFunction) {
             
             let prefix = match[1];
             lineArray[i] = prefix + '{';
-            i = processBlock(lineArray, i + 1, inFunction) - 1;
+            i = processBlock(lineArray, i + 1, inFunction, internalMode) - 1;
             lineArray[i] += '}';
 
         } else if (match = lineArray[i].match(/^(\s*)preservingTransform[ \t]*:[ \t]*$/)) {
@@ -492,7 +493,7 @@ function processBlock(lineArray, startLineIndex, inFunction) {
             
             let prefix = match[1];
             lineArray[i] = prefix + 'try { _pushGraphicsState()';
-            i = processBlock(lineArray, i + 1, inFunction) - 1;
+            i = processBlock(lineArray, i + 1, inFunction, internalMode) - 1;
             lineArray[i] += '} finally { _popGraphicsState(); }';
 
         } else if (match = lineArray[i].match(/^(\s*)for\s*(\b[^:]+)[ \t]*:[ \t]*$/)) {
@@ -506,7 +507,7 @@ function processBlock(lineArray, startLineIndex, inFunction) {
                 throw makeError(e, i);
             }
             lineArray[i] = prefix + forPart[0] + (inFunction ? maybeYieldFunction : maybeYieldGlobal);
-            i = processBlock(lineArray, i + 1, inFunction) - 1;
+            i = processBlock(lineArray, i + 1, inFunction, internalMode) - 1;
             lineArray[i] += forPart[1];
             
         } else if (match = lineArray[i].match(/^(\s*)(if|else[\t ]+if)(\b.*):\s*$/)) {
@@ -514,14 +515,14 @@ function processBlock(lineArray, startLineIndex, inFunction) {
 
             let old = i;
             lineArray[i] = match[1] + (/^\s*else[\t ]+if/.test(match[2]) ? 'else ' : '') + 'if (' + match[3].trim() + ') {';
-            i = processBlock(lineArray, i + 1, inFunction) - 1;
+            i = processBlock(lineArray, i + 1, inFunction, internalMode) - 1;
             lineArray[i] += '}';
             
         } else if (match = lineArray[i].match(/^(\s*else)\s*:\s*$/)) {
             // ELSE
             
             lineArray[i] = match[1] + ' {';
-            i = processBlock(lineArray, i + 1, inFunction) - 1;
+            i = processBlock(lineArray, i + 1, inFunction, internalMode) - 1;
             lineArray[i] += '}';
             
         } else if (match = lineArray[i].match(/^(\s*)(while|until)(\b.*)\s*:\s*$/)) {
@@ -533,7 +534,7 @@ function processBlock(lineArray, startLineIndex, inFunction) {
             }
 
             lineArray[i] = match[1] + 'while (' + test + ') { ' + (inFunction ? maybeYieldFunction : maybeYieldGlobal);
-            i = processBlock(lineArray, i + 1, inFunction) - 1;
+            i = processBlock(lineArray, i + 1, inFunction, internalMode) - 1;
             lineArray[i] += '}';
 
         } else {
@@ -716,8 +717,10 @@ function countRegexOccurences(string, regex) {
     return (string.match(regex) || []).length;
 }
 
-/** Compiles pyxlscript -> JavaScript */
-function pyxlToJS(src, noYield) {
+
+/** Compiles pyxlscript -> JavaScript. Processes the body of a section. Use compile() to compile
+    an entire project. There is no standalone mode compiler. */
+function pyxlToJS(src, noYield, internalMode) {
     if (noYield === undefined) { noYield = false; }
 
     // Replace confusingly-similar double bars (we use exclusively Double Vertical Line 0x2016)
@@ -853,7 +856,7 @@ function pyxlToJS(src, noYield) {
     // Handle scopes and block statement translations
     {
         let lineArray = src.split('\n');
-        processBlock(lineArray, 0, {}, {}, noYield);
+        processBlock(lineArray, 0, {}, {}, noYield, internalMode);
         src = lineArray.join('\n');
     }
 
@@ -928,8 +931,8 @@ function pyxlToJS(src, noYield) {
     
     // Expand shifts after blocks so that they aren't misparsed inside
     // FOR loops
-    src = src.replace(/◅(=?)/g, ' <<$1 ');
-    src = src.replace(/▻(=?)/g, ' >>$1 ');
+    src = src.replace(/[◀◁](=?)/g, ' <<$1 ');
+    src = src.replace(/[▶▷](=?)/g, ' >>$1 ');
 
     // Exponentiation
     src = src.replace(/\^/g, '**');
@@ -1000,8 +1003,12 @@ function pyxlToJS(src, noYield) {
 }
 
 
-/** Constructs JavaScript source code for the body of a generator function */
-function compile(gameSource) {
+/** Constructs JavaScript source code for the body of a generator function 
+
+fileContents[url] maps URLs to their text source
+isOS = "this is the OS itself, do not create a pause menu"
+*/
+function compile(gameSource, fileContents, isOS) {
     const separator = '\n\n////////////////////////////////////////////////////////////////////////////////////\n\n';
     const sectionSeparator = '//--------------------------------------------------------------------------------';
     
@@ -1031,12 +1038,19 @@ function compile(gameSource) {
     }
     
     const doubleLineChars = '=═⚌';
-    const splitRegex = RegExp(String.raw`(?:^|\n)[ \t]*(init|enter|frame|leave|[A-Z]${identifierPattern})[ \t]*(\([^\n\)]*\))?[\t ]*\n((?:-|─|—|━|⎯|=|═|⚌){5,})[ \t]*\n`);
-    
+    const splitRegex = RegExp(String.raw`(?:^|\n)[ \t]*(init|enter|frame|leave|popMode|[_A-Z]${identifierPattern})[ \t]*(\([^\n\)]*\))?[\t ]*(\bfrom[ \t]+[_A-Za-z][A-Za-z_0-9]*)?\n((?:-|─|—|━|⎯|=|═|⚌){5,})[ \t]*\n`);
+
     // Compile each mode
     for (let i = 0; i < gameSource.modes.length; ++i) {
+
+        // Trust the mode to have the correct name in the gameSource
+        // data structure, and just extract if from the filename.
         const mode = gameSource.modes[i];
-        const modeName = mode.name.replace('*', '');
+        const modeName = mode.name.replace('*', '').replace(/^.*\//, '');
+        
+        // If true, this is an internal mode that is allowed to access
+        // "_" private variables.
+        const internalMode = modeName[0] === '_';
 
         // Is this the start mode?
         if ((mode.name.indexOf('*') !== -1) || (gameSource.modes.length === 1)) { startModeName = modeName; }
@@ -1046,7 +1060,8 @@ function compile(gameSource) {
         const noSections = ! splitRegex.test(file);
 
         // Initalize the table. Note that the top-level mode code will be moved into
-        // the "init" section, which cannot be explicitly declared.
+        // the "init" section, which cannot be explicitly declared. Each popMode is mangled
+        // to include the "from" mode's name, and then added as encountered.
         const sectionTable = {init:null, enter:null, leave:null, frame:null};
         for (let name in sectionTable) {
             sectionTable[name] = {pyxlCode: '', args: '()', jsCode: '', offset: 0};
@@ -1061,20 +1076,31 @@ function compile(gameSource) {
             // Disregard any blank space before the first section, but count the lines
             let line = countLines(sectionArray[0]) - 1;
 
-            if (sectionArray.length % 4 === 0) { throw {url:mode.url, lineNumber:undefined, message: 'There must be at least one line between sections.'}; }
+            if (sectionArray.length % 5 === 0) { throw {url:mode.url, lineNumber:undefined, message: 'There must be at least one line between sections.'}; }
 
             // The separator names should be interleaved with the bodies. Extract
             // them and count lines.
-            for (let s = 1; s < sectionArray.length; s += 4) { 
-                const name = sectionArray[s];
+            for (let s = 1; s < sectionArray.length; s += 5) {
+                let name = sectionArray[s];
                 const args = sectionArray[s + 1];
-                const type = sectionArray[s + 2][0];
-                const body = sectionArray[s + 3];
+                const from = sectionArray[s + 2];
+                const type = sectionArray[s + 3][0];
+                const body = sectionArray[s + 4];
                 // If this is the mode, replace the name with 'init' for the purpose of
                 // defining variables.
-                const section = sectionTable[(doubleLineChars.indexOf(type) !== -1) ? 'init' : name];
+
                 line += 1;
-                if (name !== 'enter' && args !== undefined) { throw {url:mode.url, lineNumber:line, message:'Only the enter section of a mode may take arguments'}; }
+                if ((name !== 'enter') && (name !== 'popMode') && (args !== undefined)) { throw {url:mode.url, lineNumber:line, message:'Only the enter() and popMode() sections in a mode may take arguments'}; }
+
+                if (name === 'popMode') {
+                    // Generate the section
+                    const otherMode = from.replace(/^from[\t ]*/,'');
+                    if (otherMode[0] === '_' && ! (internalMode || isOS)) { throw {url:mode.url, lineNumber:line, message:'Illegal mode name in popMode() from section: "' + otherMode + '"'}; }
+                    name = name + 'From' + otherMode;
+                    sectionTable[name] = {pyxlCode: '', args: '()', jsCode: '', offset: 0};
+                }
+                
+                const section = sectionTable[(doubleLineChars.indexOf(type) !== -1) ? 'init' : name];
                 if (section === undefined) { throw {url:mode.url, lineNumber:line, message:'Illegal section name: "' + name + '"'}; }
                 section.pyxlCode = body;
                 section.offset = line;
@@ -1085,16 +1111,32 @@ function compile(gameSource) {
         } else {
             sectionTable.frame.pyxlCode = file;
         }
+
+        let wrappedPopModeFromCode = '', popModeBindings = '';
         
         for (let name in sectionTable) {
             const section = sectionTable[name];
             if (section.pyxlCode.trim() !== '') {
                 try {
-                    section.jsCode = pyxlToJS(section.pyxlCode);
+                    section.jsCode = pyxlToJS(section.pyxlCode, false, internalMode);
                 } catch (e) {
                     throw {url:mode.url, lineNumber:e.lineNumber + section.offset, message:e.message};
                 }
-                section.jsCode = `/*@"${mode.url}":${section.offset}*/\n` + section.jsCode; 
+                section.jsCode = `/*@"${mode.url}":${section.offset}*/\n` + section.jsCode;
+
+                const match = name.match(/^popModeFrom(.*)$/);
+                if (match) {
+                    popModeBindings += `, _${name}:_${name}`;
+                    wrappedPopModeFromCode += `
+
+// popMode from ${match[1]}
+${sectionSeparator}
+function _${name}${section.args} {
+${section.jsCode}
+}
+
+`;
+                }
             }
         }
 
@@ -1121,17 +1163,25 @@ ${sectionSeparator}
 function _leave() {
 ${sectionTable.leave.jsCode}
 }
+${wrappedPopModeFromCode}
+
+// system menu
+${sectionSeparator}
+function _popModeFrom_SystemMenu(callback) {
+   if (callback) { callback(); }
+}
 
 // frame
 ${sectionSeparator}
 const _frame = (function*() { 
-let __yieldCounter = 0; while (true) { try { 
+let __yieldCounter = 0; while (true) { try {
+if ((_gameMode._name[0] !== '_') && (pad[0]._pp || pad[1]._pp || pad[2]._pp || pad[3]._pp)) { pushMode(_SystemMenu); }
 _processFrameHooks();
 ${sectionTable.frame.jsCode}
 _show(); } catch (ex) { if (! ex.nextMode) throw ex; else _updateInput(); } yield; }
 })();
 
-return _Object.freeze({_enter:_enter, _frame:_frame, _leave:_leave, name:'${modeName}'});
+return _Object.freeze({_enter:_enter, _frame:_frame, _popModeFrom_SystemMenu:_popModeFrom_SystemMenu, _leave:_leave${popModeBindings}, _name:'${modeName}'});
 })();
 
 `;
@@ -1169,7 +1219,7 @@ return _Object.freeze({_enter:_enter, _frame:_frame, _leave:_leave, name:'${mode
         compiledProgram = lines.join('\n');
     }
 
-    //console.log(compiledProgram);
+    // console.log(compiledProgram);
     return compiledProgram;
 }
 
@@ -1182,36 +1232,51 @@ const resetAnimationSource = `
 ///////////////////////////////////////////////////////////////////////////////////
 // Reset animation
 
-if (_showBootAnimation) {
-// flash at start
-for (let i = 0; i < 13; ++i) {
-   setBackground(gray(max(0, 0.75 - i/12))); 
-   _show(); yield;
-}
-
-for (let t = 0; t < 32; ++t) {
-   setBackground(gray(0));
-   const gradient = [rgb(1, 0.7333333333333333, 0.8666666666666667), rgb(1, 0.6666666666666666, 0.8), rgb(1, 0.26666666666666666, 0.5333333333333333), rgb(1, 0.26666666666666666, 0.5333333333333333), rgb(1, 0.26666666666666666, 0.5333333333333333), rgb(0.9333333333333333, 0.3333333333333333, 0.6), rgb(0.8666666666666667, 0.3333333333333333, 0.6), rgb(0.8, 0.4, 0.6666666666666666), rgb(0.6666666666666666, 0.4666666666666667, 0.7333333333333333), rgb(0.6, 0.4666666666666667, 0.7333333333333333), rgb(0.4666666666666667, 0.5333333333333333, 0.7333333333333333), rgb(0.4, 0.6, 0.8), rgb(0.3333333333333333, 0.6, 0.8), rgb(0.26666666666666666, 0.6666666666666666, 0.8666666666666667), rgb(0.6, 0.7333333333333333, 0.8666666666666667), rgb(0.8, 0.8666666666666667, 0.9333333333333333)];
-   const N = size(gradient);
-
-   // fade
-   const v = (1 - abs(0.25*0.25 * t - 1))**0.5;
-
-   // dots
-   const w = _SCREEN_WIDTH >> 1, h = _SCREEN_HEIGHT >> 1;
-   for (let i = 0; i < 16000; ++i) {
-      const x = rnd(), y = rnd();
-      const c = gradient[_Math.min((y * (N - 1) + 3 * rnd()) >> 0, N - 1)];
-      drawPoint(xy((w * x) << 1, (h * y) << 1), {r: c.r * v, g: c.g * v, b: c.b * v});
+if (_numBootAnimationFrames > 0) {
+   // flash at start
+   for (let i = 0; i < 13; ++i) {
+     setBackground(gray(max(0, 0.75 - i / 12))); 
+     _show(); yield;
    }
 
-   drawSprite({sprite: _quadplayLogoSprite[0][0], pos: xy(screenSize.x * 0.5 + 0.5, screenSize.y * 0.5 + 0.5), opacity: v})
+   const fade = min(96, _numBootAnimationFrames / 2);
+   for (let k = 0; k < _numBootAnimationFrames; ++k) {
+      setBackground(gray(0));
+      const gradient = [rgb(1, 0.7333333333333333, 0.8666666666666667), rgb(1, 0.6666666666666666, 0.8), rgb(1, 0.26666666666666666, 0.5333333333333333), rgb(1, 0.26666666666666666, 0.5333333333333333), rgb(1, 0.26666666666666666, 0.5333333333333333), rgb(0.9333333333333333, 0.3333333333333333, 0.6), rgb(0.8666666666666667, 0.3333333333333333, 0.6), rgb(0.8, 0.4, 0.6666666666666666), rgb(0.6666666666666666, 0.4666666666666667, 0.7333333333333333), rgb(0.6, 0.4666666666666667, 0.7333333333333333), rgb(0.4666666666666667, 0.5333333333333333, 0.7333333333333333), rgb(0.4, 0.6, 0.8), rgb(0.3333333333333333, 0.6, 0.8), rgb(0.26666666666666666, 0.6666666666666666, 0.8666666666666667), rgb(0.6, 0.7333333333333333, 0.8666666666666667), rgb(0.8, 0.8666666666666667, 0.9333333333333333)];
+      const N = size(gradient);
 
-   _show(); yield;
-}
+      // fade
+      let v = 0;
+      if (k < fade) { 
+         v = k / fade;
+      } else if (k < _numBootAnimationFrames - fade) {
+         v = 1;
+      } else {
+         v = (_numBootAnimationFrames - k) / fade;
+      }
 
-// Black frame
-_show(); yield;
+      const vDot = _Math.max(0, v - 0.2) / (1.0 - 0.2);
+
+      // dots
+      const w = _SCREEN_WIDTH >> 1, h = _SCREEN_HEIGHT >> 1;
+      const tmp = {r: 0, g: 0, b: 0};
+      for (let i = 0; i < 16000; ++i) {
+         const x = rnd(), y = rnd();
+         const c = gradient[_Math.min((y * (N - 1) + 3 * rnd()) >> 0, N - 1)];
+         RGB_MUL(c, vDot, tmp);
+         drawPoint(xy(_Math.floor(w * x) * 2, _Math.floor(h * y) * 2), tmp);
+      }
+
+      drawSprite({sprite: _quadplayLogoSprite[0][0], pos: xy(screenSize.x * 0.5 + 0.5, screenSize.y * 0.5 + 0.5), opacity: _Math.min(1, 2 * v)})
+
+      _show(); yield;
+   }
+
+   // Black frames
+   for (let i = 0; i < fade / 2; ++i) {
+      _show(); yield;
+   }
+   modeFrames = gameFrames = 0;
 }
 `;
 

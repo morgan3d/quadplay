@@ -1,0 +1,23 @@
+{
+    "url": "controllers-64x44.png",
+    "license": "©2020 Morgan McGuire, licensed as CC BY 4.0",
+    "spriteSize": {"x":64, "y":44},
+    "names": {
+        "PS3":         {"x": 0, "y": 0},
+        "PS4":         {"x": 0, "y": 0},
+        "XboxOne":     {"x": 1, "y": 0},
+        "Xbox360":     {"x": 1, "y": 0},
+        "SNES":        {"x": 2, "y": 0},        
+        "Zero":        {"x": 3, "y": 0},
+        "Quadplay":    {"x": 4, "y": 0},
+        "Keyboard":    {"x": 5, "y": 0},
+        "Kbd_Alt":     {"x": 6, "y": 0},
+        "Kbd_P1":      {"x": 7, "y": 0},
+        "Kbd_P2":      {"x": 8, "y": 0},
+        "HOTAS":       {"x": 9, "y": 0},
+        "SwitchPro":   {"x":10, "y": 0},
+        "JoyCon_R":    {"x":11, "y": 0},
+        "JoyCon_L":    {"x":12, "y": 0},
+        "Stadia":      {"x":13, "y": 0}
+    }
+}

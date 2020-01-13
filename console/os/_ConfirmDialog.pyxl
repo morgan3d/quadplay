@@ -1,0 +1,74 @@
+_ConfirmDialog
+════════════════════════════════════════════════════════════════════════
+
+const windowBackgroundColor = #135
+const windowBorderColor     = #fff
+const textColor             = #fff
+const textShadowColor       = #0006
+const promptColor           = #4DF
+const selectedColor         = #f
+const unselectedColor       = #b
+
+const openFrames            = 8
+
+let title
+
+const choiceArray = ["No", "Yes"]
+let choiceIndex
+
+let font = _font9
+if screenSize.y <= 64: font = _font5
+else if screenSize.y <= 112: font = _font8
+
+
+enter(prevChoice)
+────────────────────────────────────────────────────────────────────────
+title = prevChoice
+choiceIndex = 0
+playAudioClip(_openUISound)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+drawPreviousMode()
+setTransform(xy(0, 0), xy(1, 1), 2048.6, 1)
+
+const windowSize = round(xy(min(screenSize.x - 2, 150% * textWidth(font, title.text)),
+                            5 font.lineHeight) * clamp((modeFrames + 1) / openFrames, 0%, 100%))
+drawRect(½ screenSize, windowSize, windowBackgroundColor, windowBorderColor)
+
+// Window ambient occlusion
+drawRect(½ screenSize, windowSize + 2, ∅, #0007)
+drawRect(½ screenSize, windowSize + 4, ∅, #0003)
+if screenSize.y >= 112: drawRect(½ screenSize, windowSize + 6, ∅, #0001)
+
+if modeFrames > max(15, openFrames):
+   for control in pad:
+      if control.qq or control._pp or (control.aa and choiceIndex == 0):
+         // Cancel
+         playAudioClip(_cancelUISound)
+         popMode(∅)
+      else if control.aa:
+         // Accept option
+         playAudioClip(_acceptUISound)
+         popMode(title.callback)
+      else if control.xx:
+         const prev = choiceIndex
+         choiceIndex = clamp(choiceIndex + control.xx, 0, 1)
+         playAudioClip(if prev == choiceIndex then _denyUISound else _moveUISound)
+
+         
+if modeFrames > openFrames:
+   drawText({font: font, text: title.text + "?", pos: ½ screenSize - xy(0, ½ font.lineHeight), color: textColor, shadow:textShadowColor, xAlign: "center"})
+
+   for i < 2:
+      const active      = choiceIndex == i
+      const bright      = ½ (1 + cos(modeFrames / 9))
+      const color       = if active then lerp(promptColor, #fff, 50% bright) else unselectedColor
+      const outline     = if active then rgba(1,1,1, 25% bright) else ∅
+      const offset      = xy(0, if active then -1 else 0)
+      const shadow      = if active then textShadowColor * 50% else textShadowColor
+      const pos         = ½ screenSize + xy((2i - 1) * ⅕ windowSize.x, 150% font.lineHeight)
+      
+      drawText({font: font, text: choiceArray[i], pos: pos + xy(0, 1), color: shadow, xAlign: "center"})
+      drawText({font: font, text: choiceArray[i], pos: pos + offset, color: color, outline: outline, xAlign: "center"})

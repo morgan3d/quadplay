@@ -429,15 +429,9 @@ if modeFrames < fadeInFrames:
    setPostEffects({opacity: modeFrames / fadeInFrames})
 else if modeFrames == fadeInFrames:
    resetPostEffects()
-else:
-   // Check for pause
-   for control ∊ snake ∊ snakeArray:
-      if control.pp or control.qq: pushMode(Pause) because "Pressed ⓟ"
-
-   if weatherType == "Blizzard":
-      const a = clamp(noise(0, modeFrames / 60) * 20% + 35%, 20%, 55%)
-      debugWatch(a)
-      setPostEffects({background: #f, opacity: lerp(1, a, min(1, (modeFrames - fadeInFrames) / fadeInFrames))})
+else if weatherType == "Blizzard":
+   const a = clamp(noise(0, modeFrames / 60) * 20% + 35%, 20%, 55%)
+   setPostEffects({background: #f, opacity: lerp(1, a, min(1, (modeFrames - fadeInFrames) / fadeInFrames))})
    
 
 singlePlayerTimeLeft -= 1 / 60

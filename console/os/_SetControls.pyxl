@@ -1,0 +1,145 @@
+_SetControls
+════════════════════════════════════════════════════════════════════════
+
+// This code handles all screen sizes. Most use the same layout
+// with slight alignment tweaks and font changes in order to
+// fit well.
+//
+// The user interface at 64x64 has a different layout,
+// which shows only one player's controls and is preceeded
+// by a menu for selecting which player is active.
+
+const windowBackgroundColor = #135
+const windowBorderColor     = #fff
+const textColor             = #fff
+const textShadowColor       = #0006
+const promptColor           = #4DF
+const selectedColor         = #f
+const unselectedColor       = #b
+
+const controllerSpritesheet = if screenSize.y >= 224 then _controllerSpritesheet44 else _controllerSpritesheet22
+const controllerTypeArray = ["Quadplay", "XboxOne", "Xbox360", "Keyboard", "Kbd_Alt", "Kbd_P1", "Kbd_P2", "PS4", "PS3", "SNES", "SwitchPro", "JoyCon_R", "JoyCon_L", "Zero", "HOTAS", "Stadia"];
+
+// Tweak layout for square aspect ratios. shiftY is ignored at 64x64
+const shiftY = if screenSize.x == screenSize.y then -10 else 0
+let shiftSpriteY = if screenSize.x == screenSize.y then -36 else 0
+if screenSize.x == 64: shiftSpriteY = -34
+
+// Position of the scroll arrows
+const arrowX = if screenSize.x == screenSize.y then 54 else 76
+const arrowY = if screenSize.x == 128 then 0 else -2
+
+
+let font = _font9
+if screenSize.y <= 64: font = _font5
+else if screenSize.y <= 128: font = _font8
+
+
+let choiceFont = _font9
+if screenSize.y <= 64 or screenSize.x <= 128: choiceFont = _font5
+else if screenSize.y <= 112: choiceFont = _font8
+
+// For layout
+const scale = if screenSize.y > 128 then 100% else 50%
+
+const playerName = []
+for p < 4: push(playerName, "P" + (p + 1) + ": ")
+
+
+// The player to show controls for. Only used at 64x64
+let activeIndex = nil
+
+let oldBackground
+
+
+enter(p)
+────────────────────────────────────────────────────────────────────────
+activeIndex = p
+oldBackground = getBackground()
+
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+setBackground(oldBackground)
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+setBackground(windowBackgroundColor)
+
+if screenSize.x == 64:
+   drawSprite(_controlDoneSprite, xy(70, 53))
+   drawSprite(_controlDoneSprite, xy(-6, 60))
+else:
+   drawLine(xy(screenSize.x / 2 - 1, 0), xy(screenSize.x / 2 - 1, screenSize.y), #023)
+   if screenSize.x == 384:
+      drawLine(xy(0, screenSize.y / 2), xy(120, screenSize.y / 2), #023)
+      drawLine(xy(screenSize.x - 121, screenSize.y / 2), xy(screenSize.x, screenSize.y / 2), #023)
+
+   // "Press P when done"
+   // Shift over at 128x128 to crop the word "Press"
+   drawSprite(_controlDoneSprite, screenSize / 2 - (if screenSize.x == 128 then xy(10, 0) else xy(0, 0)))
+   if screenSize.x == 128: drawRect(xy(3, screenSize.y / 2), xy(4, 5), windowBackgroundColor)
+
+   
+for p < 4:
+   // In 64x64 mode, skip the non-active players
+   if activeIndex != nil and p != activeIndex: continue
+   
+   preservingTransform:
+      const control = pad[p]
+
+      if control._pp or control.qq:
+         popMode() because "Pressed P or Q"
+
+      if control.xx:
+         let i = find(controllerTypeArray, control.type)
+         let tryAgain = true
+         let type
+         while tryAgain:
+            i = loop(i + control.xx, size(controllerTypeArray))
+            type = controllerTypeArray[i]
+
+            // Force to continue cycling if an illegal value was chosen for
+            // this player
+            tryAgain = ((p == 0 and type == "Kbd_P2") or
+                        ((find(type, "Kbd_") != nil or find(type, "Keyboard") != nil) and
+                         ((p > 1) or
+                          (p == 1 and (type != "Kbd_P2")))))
+         // Switch the device to the selected controller
+         deviceControl("setPadType", p, type)
+
+      if screenSize.x == 64:
+         setTransform(xy(32, 6))
+      else:
+         setTransform(xy((0.5 + (p bitand 1)) * screenSize.x / 2,
+                         (p bitshr 1) * screenSize.y / 2 + (32 + shiftY) * scale))
+
+      drawText({font: font, text: "⊲", pos: xy(-arrowX, arrowY) * scale + xy(0, 2), color: textShadowColor, xAlign: "center"})
+      drawText({font: font, text: "⊳", pos: xy(+arrowX, arrowY) * scale + xy(0, 2), color: textShadowColor, xAlign: "center"})
+      drawText({font: font, text: "⊲", pos: xy(-arrowX, arrowY) * scale, color: promptColor, xAlign: "center"})
+      drawText({font: font, text: "⊳", pos: xy(+arrowX, arrowY) * scale, color: promptColor, xAlign: "center"})
+
+      drawText({font: choiceFont,
+                text: playerName[p] + control.type, shadow: textShadowColor,
+                pos: xy(0, -2) * scale, color: textColor, xAlign: "center"})
+
+      drawSprite({sprite: controllerSpritesheet[control.type], pos: xy(0, 40 - shiftSpriteY) * scale})
+
+      const shiftX = if screenSize.x == screenSize.y then 16 else 0
+      drawText({font: font, text: control.prompt["ⓠ"], pos: xy(-56 + shiftX, 24) * scale, color: #f, xAlign: "center"})
+      drawText({font: font, text: control.prompt["⍐"], pos: xy(-56 + shiftX, 42) * scale, color: #f, xAlign: "center"})
+      drawText({font: font, text: control.prompt["⍇"], pos: xy(-68 + shiftX, 54) * scale, color: #f, xAlign: "center"})
+      drawText({font: font, text: control.prompt["⍈"], pos: xy(-44 + shiftX, 54) * scale, color: #f, xAlign: "center"})
+      drawText({font: font, text: control.prompt["⍗"], pos: xy(-56 + shiftX, 66) * scale, color: #f, xAlign: "center"})
+
+      drawText({font: font, text: control.prompt["ⓟ"], pos: xy(+56 - shiftX, 24) * scale, color: #f, xAlign: "center"})
+      drawText({font: font, text: control.prompt["ⓓ"], pos: xy(+56 - shiftX, 42) * scale, color: #f, xAlign: "center"})
+      drawText({font: font, text: control.prompt["ⓒ"], pos: xy(+44 - shiftX, 54) * scale, color: #f, xAlign: "center"})
+      drawText({font: font, text: control.prompt["ⓑ"], pos: xy(+68 - shiftX, 54) * scale, color: #f, xAlign: "center"})
+      drawText({font: font, text: control.prompt["ⓐ"], pos: xy(+56 - shiftX, 66) * scale, color: #f, xAlign: "center"})
+
+

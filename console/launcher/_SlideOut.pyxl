@@ -1,0 +1,26 @@
+_SlideOut
+════════════════════════════════════════════════════════════════════════
+
+let onDone
+
+enter(callback)
+────────────────────────────────────────────────────────────────────────
+onDone = callback
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+const introFrames = 20
+if modeFrames < introFrames:
+   // Fade and slide in
+   const α = clamp((modeFrames + 1) / (introFrames + 1), 0, 1)
+   drawPreviousMode()
+   setPostEffects({background:#0,
+                   pos: xy(α * screenSize.x, 0),
+                   color: rgba(0, 0, 0, α²)})
+else:
+   // Animation complete
+   resetPostEffects()
+   setMode(_Message, onDone)
+

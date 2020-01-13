@@ -9,7 +9,7 @@
 'use strict';
 
 var _gameMode = undefined, _prevMode = undefined;
-var _showBootAnimation = true;
+var _numBootAnimationFrames = 120;
 
 // Modes from popMode. Does not contain _gameMode
 var _modeStack = [], _prevModeStack = [];
@@ -532,6 +532,10 @@ function _entryKeyLengthCompare(a, b) {
 }
 
 function replace(s, src, dst) {
+    if (typeof s !== 'string') {
+        throw new Error('The first argument to replace() must be a string');
+    }
+    
     if (s === '' || src === '') { return s; }
 
     if (typeof src === 'object') {
@@ -540,7 +544,7 @@ function replace(s, src, dst) {
         }
         
         // Sort the keys by length so that substrings are processed last
-        let entries = Object.entries(src);
+        const entries = Object.entries(src);
         entries.sort(_entryKeyLengthCompare);
 
         for (let i = 0; i < entries.length; ++i) {
@@ -557,7 +561,12 @@ function replace(s, src, dst) {
         }
         if (typeof src !== 'string') { src = unparse(src); }
         if (typeof dst !== 'string') { dst = unparse(dst); }
-        return s.replace(new RegExp(src.replace(/([\/\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, '\\$&'), 'g'), dst);
+
+        // Escape any special characters, build a global replacement regexp, and then
+        // run it on dst.
+        src = src.replace(/([\/\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, '\\$&');
+        dst = dst.replace(/\$/g, '$$');
+        return s.replace(new RegExp(src, 'g'), dst);
     }
 }
 
@@ -1244,38 +1253,12 @@ var _previousGraphicsCommandList = [];
 var _graphicsCommandList = [];
 var _background = Object.seal({r:0,g:0,b:0,a:1});
 
-function _makePad(index) {
-    return Object.seal({
-        x:0, dx:0, y:0, dy:0, xx:0, yy:0,
-        angle:0, dangle:0,
-        a:0, b:0, c:0, d:0, p:0, q:0,
-        aa:0, bb:0, cc:0, dd:0, pp:0, qq:0,
-        pressedA:0, pressedB:0, pressedC:0, pressedD:0, pressedP:0, pressedQ:0,
-        releasedA:0, releasedB:0, releasedC:0, releasedD:0, releasedP:0, releasedQ:0,
-        index: index,
-        type: 'Quadplay',
-        prompt: Object.seal({
-            a: 'ⓐ',
-            b: 'ⓑ',
-            c: 'ⓒ',
-            d: 'ⓓ',
-            p: 'ⓟ',
-            q: 'ⓠ',
-            up: '⍐',
-            lt: '⍇',
-            dn: '⍗',
-            rt: '⍈'
-        }),
-        _analogX: 0,
-        _analogY: 0
-    });
-}
-
-
-var joy = _makePad(0);
-var pad = [joy, _makePad(1), _makePad(2), _makePad(3)];
+var joy = null; // initialized by reloadRuntime()
+var pad = null; // initialized by reloadRuntime()
 
 var _hashview = new DataView(new ArrayBuffer(8));
+
+var _customPauseMenuOptions = [];
 
 function _hash(d) {
     // 32-bit FNV-1a
@@ -1407,9 +1390,13 @@ function _error(msg) {
 
 
 function xy(x, y) {
-    if (x.x !== undefined) { return {x:x.x, y:x.y}; }
+    if (x.x !== undefined) {
+        if (y !== undefined) { _error('xy(number, number), xy(xy), or xy(array) are the only legal options'); }
+        return {x:x.x, y:x.y};
+    }
     if (Array.isArray(x)) { return {x:x[0], y:x[1]}; }
-    if (arguments.length !== 2) { _error('xy() requires exactly two arguments'); }
+    if (arguments.length !== 2) { _error('xy() cannot take ' + arguments.length + ' arguments.'); }
+    if (typeof y !== 'number') { _error('The second argument to xy(x, y) must be a number'); }
     return {x:x, y:y};
 }
 
@@ -1718,6 +1705,7 @@ function makeEntity(e, childTable) {
     r.collisionGroup = r.collisionGroup || 0;
     r.collisionCategoryMask = (r.collisionCategoryMask === undefined) ? 1 : r.collisionCategoryMask;
     r.collisionHitMask = (r.collisionHitMask === undefined) ? 0xffffffff : r.collisionHitMask;
+    r.collisionSensor = (r.collisionSensor === undefined) ? false : r.collisionSensor;
 
     if (r.density === undefined) { r.density = 1; }
 
@@ -2353,6 +2341,8 @@ function _bodyUpdateFromEntity(body) {
     body.frictionStatic = entity.stictionFactor;
     body.frictionAir    = entity.drag;
     body.restitution    = entity.restitution;
+
+    body.isSensor       = entity.collisionSensor;
     
     // The Matter.js API does not notice if an object woke up due to velocity, only
     // due to forces.
@@ -2449,9 +2439,14 @@ function physicsSimulate(physics, stepFrames) {
     // Fire event handlers for new contacts
     for (const event of physics._contactCallbackArray.values()) {
         for (const contact of physics._newContactArray.values()) {
+
             if ((((contact.entityA.collisionCategoryMask & event.collisionMask) |
                   (contact.entityB.collisionCategoryMask & event.collisionMask)) !== 0) &&
-                (contact.depth >= event.minDepth) && (contact.depth <= event.maxDepth)) {
+                (contact.depth >= event.minDepth) && (contact.depth <= event.maxDepth) &&
+                ((event.sensors === 'include') ||
+                 ((event.sensors === 'only') && (contact.entityA.collisionSensor || contact.entityB.collisionSensor)) ||
+                 ((event.sensors === 'exclude') && ! (contact.entityA.collisionSensor || contact.entityB.collisionSensor)))) {
+                
                 event.callback(deepClone(contact));
             }
         } // event
@@ -2461,30 +2456,37 @@ function physicsSimulate(physics, stepFrames) {
 }
 
 
-function physicsAddContactCallback(physics, callback, minDepth, maxDepth, collisionMask) {
+function physicsAddContactCallback(physics, callback, minDepth, maxDepth, collisionMask, sensors) {
     if (collisionMask === 0) { throw new Error('A contact callback with collisionMask = 0 will never run.'); }
 
     physics._contactCallbackArray.push({
         callback:      callback,
         minDepth:      minDepth || 0,
         maxDepth:      (maxDepth !== undefined) ? maxDepth : Infinity,
-        collisionMask: (collisionMask !== undefined) ? collisionMask : 0xffffffff
+        collisionMask: (collisionMask !== undefined) ? collisionMask : 0xffffffff,
+        sensors:        sensors || 'exclude'
     });
 }
 
 
-function physicsEntityContacts(physics, entity, region, normal, mask) {
+function physicsEntityContacts(physics, entity, region, normal, mask, sensors) {
     if (mask === undefined) { mask = 0xffffffff; }
     if (mask === 0) { throw new Error('physicsEntityContacts() with mask = 0 will never return anything.'); }
     if (! entity) { throw new Error('physicsEntityContacts() must have a non-nil entity'); }
 
     const engine = physics._engine;
+    sensors = sensors || 'exclude';
 
     // Look at all contacts for this entity
     const body = entity._body;
     const map = physics._entityContactMap.get(body);
     const result = [];
 
+    if (map === undefined) {
+        // No contacts
+        return result;
+    }
+    
     // Used to avoid allocation by the repeated overlaps() calls
     const testPointShape = {shape: 'disk', angle: 0, size: xy(0, 0), scale: xy(1, 1), pos: xy(0, 0)};
     const testPoint = testPointShape.pos;
@@ -2503,13 +2505,21 @@ function physicsEntityContacts(physics, entity, region, normal, mask) {
         const isA = contact.entityA === entity;
         const isB = contact.entityB === entity;
 
+        const other = isA ? contact.entityB : contact.entityA; 
+
         // Are we in the right category?
-        if (! ((isA && (contact.entityB.collisionCategoryMask & mask)) ||
-               (isB && (contact.entityA.collisionCategoryMask & mask)))) {
+        if ((other.collisionCategoryMask & mask) === 0) {
             //console.log("Mask rejection");
             continue;
         }
-    
+
+        if (((sensors === 'exclude') && other.collisionSensor) ||
+            ((sensors === 'only') && ! other.collisionSensor)) {
+            //console.log("Sensor rejection");
+            continue;
+        }
+                
+
         if (region) {
             let x, y;
             if (contact.point1) {
@@ -2832,6 +2842,7 @@ function drawPhysics(physics) {
     const sleepColor   = rgb(0.05, 0.6, 0.3);
     const staticColor  = gray(0.8);
     const contactColor = rgb(1, 0.93, 0);
+    const sensorColor      = rgb(0.3, 0.7, 1);
     const newContactColor = rgb(1, 0, 0);
     const constraintColor = rgb(0.7, 0.5, 1);
     const secretColor  = rgb(1, 0, 0);
@@ -2844,7 +2855,13 @@ function drawPhysics(physics) {
         const body = bodies[b];
         if (! body.entity && ! showSecrets) { continue; }
 
-        const color = ! body.entity ? secretColor : (body.isStatic ? staticColor : (body.isSleeping ? sleepColor : awakeColor));
+        const color =
+              (! body.entity ? secretColor :
+               (body.isSensor ? sensorColor:
+                (body.isStatic ? staticColor :
+                 (body.isSleeping ? sleepColor :
+                  awakeColor))));
+        
         const z = body.entity ? body.entity.z + zOffset : 100;
         for (let p = 0; p < body.parts.length; ++p) {
             const part = body.parts[p];
@@ -3544,7 +3561,7 @@ function textWidth(font, str, markup) {
 // Returns a string and appends to the array of state changes.
 // Each has the form {color:..., outline:..., shadow:..., font:..., startIndex:...}
 function _parseMarkupHelper(str, startIndex, stateChanges) {
-    
+
     // Find the first unescaped {, or return if there is none
     let start = -1;
     do {
@@ -3584,7 +3601,7 @@ function _parseMarkupHelper(str, startIndex, stateChanges) {
     const oldState = stateChanges[stateChanges.length - 1];
     const newState = Object.assign({}, oldState);
     newState.startIndex = startIndex + start;
-    
+
     // Parse the markup
     let text = markup.replace(/^\s*(color|shadow|outline)\s*:\s*(#[A-Fa-f0-9]+|(rgb|rgba|gray|hsv|hsva)\([0-9%., ]+\))\s*/, function (match, prop, value) {
         wasColor = true;
@@ -3617,7 +3634,7 @@ function _parseMarkupHelper(str, startIndex, stateChanges) {
         // The identifier regexp here is copied from
         // pyxlscript-compiler.js identifierPattern and must be kept
         // in sync.
-        text = markup.replace(/^\s*(font|color|shadow|outline)\s*:\s*([Δ]?(?:[A-Za-z][A-Za-z_0-9]*|[αβγΔδζηθιλμρσϕφχψτωΩ][_0-9]*(?:_[A-Za-z_0-9]*)?))\s+/, function (match, prop, value) {
+        text = markup.replace(/^\s*(font|color|shadow|outline)\s*:\s*([Δ]?(?:[_A-Za-z][A-Za-z_0-9]*|[αβγΔδζηθιλμρσϕφχψτωΩ][_0-9]*(?:_[A-Za-z_0-9]*)?))\s+/, function (match, prop, value) {
             const v = window[value];
             if (v === undefined) {
                 throw new Error('Global constant ' + value + ' used in drawText markup is undefined.');
@@ -4271,6 +4288,11 @@ function loop(x, lo, hi) {
     x -= lo;
     hi -= lo;
     return (x - Math.floor(x / hi) * hi) + lo;
+}
+
+
+function getBackground() {
+    return _background;
 }
 
 
@@ -4936,11 +4958,17 @@ var overlaps = (function() {
 })();
 
 
+function setPauseMenu(...options) {
+    if (options.length > 3) { _error("At most three custom menu options are supported."); }
+    _customPauseMenuOptions = clone(options);
+}
+
+
 function anyButtonPress() {
-    return pad[0].aa || pad[0].bb || pad[0].cc || pad[0].dd || pad[0].pp || pad[0].qq ||
-        pad[1].aa || pad[1].bb || pad[1].cc || pad[1].dd || pad[1].pp || pad[1].qq ||
-        pad[2].aa || pad[2].bb || pad[2].cc || pad[2].dd || pad[2].pp || pad[2].qq ||
-        pad[3].aa || pad[3].bb || pad[3].cc || pad[3].dd || pad[3].pp || pad[3].qq;
+    return pad[0].aa || pad[0].bb || pad[0].cc || pad[0].dd || pad[0].qq ||
+        pad[1].aa || pad[1].bb || pad[1].cc || pad[1].dd || pad[1].qq ||
+        pad[2].aa || pad[2].bb || pad[2].cc || pad[2].dd || pad[2].qq ||
+        pad[3].aa || pad[3].bb || pad[3].cc || pad[3].dd || pad[3].qq;
 }
 
 
@@ -6472,7 +6500,7 @@ function split(str, c) {
 
 
 function loadLocal(key) {
-    let table = _window.localStorage.getItem(_gameURL);
+    let table = _window.localStorage.getItem('GAME_STATE_' + _gameURL);
     if (! table) { return undefined; }
     
     table = JSON.parse(table);
@@ -6506,7 +6534,7 @@ function saveLocal(key, value) {
         }
     }
 
-    _window.localStorage.setItem(_gameURL, JSON.stringify(table));
+    _window.localStorage.setItem('GAME_STATE_' + _gameURL, JSON.stringify(table));
 }
 
 
@@ -6667,7 +6695,7 @@ function pushMode(mode, ...args) {
     _graphicsCommandList = [];
     _previousGraphicsCommandList = [];
 
-    _systemPrint('Pushing into mode ' + mode.name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
+    _systemPrint('Pushing into mode ' + mode._name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
 
     // Run the enter callback on the new mode
     _gameMode._enter.apply(null, args);
@@ -6678,28 +6706,24 @@ function pushMode(mode, ...args) {
 
 
 function quitGame() {
-    if (arguments.length > 0) { _systemPrint('Deprecation warning: quitGame() no longer takes arguments. Use `because`.', 'color:#f88'); }
     _systemPrint('Quitting the game' + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
     throw {quitGame:1};
 }
 
 
 function launchGame(url) {
-    if (arguments.length > 1) { _systemPrint('Deprecation warning: launchGame() no longer takes a reason argument. Use `because`.', 'color:#f88'); }
     _systemPrint('Launching ' + url + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
     throw {launchGame:url};
 }
 
 
 function resetGame() {
-    if (arguments.length > 0) { _systemPrint('Deprecation warning: resetGame() no longer takes arguments. Use `because`.', 'color:#f88'); }
     _systemPrint('Resetting the game' + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
     throw {resetGame:1};
 }
 
 
-function popMode() {
-    if (arguments.length > 0) { _systemPrint('Deprecation warning: popMode() no longer takes arguments. Use `because`.', 'color:#f88'); }
+function popMode(...args) {
     if (_modeStack.length === 0) { throw new Error('Cannot popMode() from a mode entered by setMode()'); }
 
     // Run the leave callback on the current mode
@@ -6717,7 +6741,14 @@ function popMode() {
     _graphicsCommandList = [];
     _previousGraphicsCommandList = [];
     
-    _systemPrint('Popping back to mode ' + _gameMode.name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
+    _systemPrint('Popping back to mode ' + _gameMode._name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
+
+    // Run the popMode event on _gameMode if it exists
+    var eventName = '_popModeFrom' + old._name;
+    if (_gameMode[eventName] !== undefined) {
+        // repeat here so that the "this" is set correctly to _gameMode
+        _gameMode[eventName](...args);
+    }
 
     throw {nextMode: _gameMode};
 }
@@ -6748,7 +6779,7 @@ function setMode(mode, ...args) {
     _graphicsCommandList = [];
     _previousGraphicsCommandList = [];
     
-    _systemPrint('Entering mode ' + mode.name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
+    _systemPrint('Entering mode ' + mode._name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
     
     // Run the enter callback on the new mode
     _gameMode._enter.apply(null, args);

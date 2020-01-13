@@ -1,333 +1,43 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-// Pixel width of the info screens on the left and right
-const INFO_HEIGHT = (screenSize.y - playSize.y) / 2
-
-let snakeArray
-let powerupArray
-let waveType
-let waveIndex
-
-/* The snake data structure stores an array of one xy() per element
-   separate by at most one pixel, but only every third one is drawn
-   in order to make the snake appear to move instead of having the
-   body sit still.
-
-   The length of snake.body is always 3n + 1 */
-def makeSnake(playerIndex, control, colorName):
-   // Randomized starting places
-   let start = floor(playSize / (4 * cellSide)) * cellSide
-   start.x *= 1 + 2 (playerIndex mod 2)
-   start.y *= 1 + 2 floor(playerIndex / 2)
-   start.y += cellSide * (playerIndex mod 2)
-
-   let startAngle = 180deg * playerIndex
-   
-   const snake = {
-      playerIndex:   playerIndex,
-      control:       control,
-      bodySprite:    snakeSpritesheet[colorName + "Body"],
-      tailSprite:    snakeSpritesheet[colorName + "Tail"],
-      headSprite:    snakeHeadSpritesheet[colorName],
-      nextAngle:     startAngle,
-      body:          [],
-      numFoodEaten:  0,
-      score:         0,
-      ghostFrames:   hitGhostFrames,
-      infoPos:       xy((playerIndex mod 2) * 260 + 85,
-                        floor(playerIndex / 2) * (screenSize.y - INFO_HEIGHT))
-   }
-
-   snake.color = getSpritePixelColor(snake.headSprite, xy(9, 6))
-   snake.textColor = snake.color * 150%
-
-   for i < startSnakeBody * 3 + 1:
-      push(snake.body, {angle:startAngle, pos:start});
-
-   return snake
-
-
-
-def randomEmptyPosition():
-   let pos = nil
-   while not pos or sampleLocation(pos, true):
-      pos = xy(cellSide * rndInt(0, floor(playSize.x / cellSide) - 1),
-               cellSide * rndInt(0, floor(playSize.y / cellSide) - 1))
-
-   return pos
-
-
-/* if start is undefined, starts at element 0. */
-def findVec2InArray(v, array, start):
-   for (start or 0) <= i < size(array):
-      if equivalent(v, array[i].pos): return i
-   return nil
-   
-
-def setNextDirection(snake, x, y):
-   const angle = atan(y, x)
-   // Prevent moving backwards into itself
-   if |loop(snake.body[0].angle + 180deg, 360deg) - loop(angle, 360deg)| > epsilon:
-      snake.nextAngle = angle
-
-/* Returns undefined if nothing is present, or
-   {
-    powerup: powerup,
-    snake: snake,
-    bodyIndex: number
-   }
- */
-def sampleLocation(pos, allowGhosts):
-   if (pos.x mod cellSide != 0) or (pos.y mod cellSide != 0):
-      // Can't hit anything...pos is not on the grid
-      return nil
-   
-   for snake in snakeArray:
-      if snake.ghostFrames <= 0 or allowGhosts:
-         for b < size(snake.body):
-            const piece = snake.body[b]
-            if piece.pos.x == pos.x and piece.pos.y == pos.y: return {snake: snake, bodyIndex: b}
-
-   for powerup in powerupArray:
-      if powerup.pos.x == pos.x and powerup.pos.y == pos.y: return {powerup: powerup}
-
-   // Nothing was hit
-   return nil
-
-
-
-def moveSnake(snake):
-   if snake.targetLen != nil:
-      // Actively shrinking. Chop off the head end.
-      snake.body = slice(snake.body, 3)
-      
-      if size(snake.body) <= snake.targetLen:
-         // Done shrinking
-         snake.targetLen = nil
-         
-      return
-   
-   // Copy positions:
-   let i = snake.body.length - 1;
-   while i > 0:
-      // Hand off the objects to avoid allocation
-      snake.body[i] = snake.body[i - 1]
-      --i
-
-   // Move the head. Don't mutate: create a new object, since
-   // the old object is shared with element 1 now.
-
-   const neck = snake.body[1]
-   // The round below is to account for error in sin and cos, but
-   // wrapping the entire expression eliminates any accumulated
-   // precision error
-   let nextHeadPos = xy(round(loop(neck.pos.x + cos(neck.angle), playSize.x)),
-                        round(loop(neck.pos.y + sin(neck.angle), playSize.y)))
-
-   // Position will be overriden momentarily; leave it as at the neck
-   // until after collision detection
-   let head = {angle: neck.angle, pos: neck.pos}
-   snake.body[0] = head
-
-   // Check for collisions before moving, so that the head doesn't collide with
-   // itself
-   snake.ghostFrames = max(0, snake.ghostFrames - 1)
-   if (nextHeadPos.x mod cellSide == 0) and (nextHeadPos.y mod cellSide == 0):
-      // Moving onto a grid line. Check for collision and update angle
-      head.angle = snake.nextAngle
-      const obstruction = sampleLocation(nextHeadPos)
-      if obstruction:
-         if obstruction.snake and snake.ghostFrames <= 0:
-            // Hit a snake while not in ghost mode
-            playAudioClip({audioClip: hitAudioClip, pan: 2 nextHeadPos.x / playSize.x - 1})
-            
-            // Reward the other player
-            if obstruction.snake != snake:
-               awardBonus(obstruction.snake, hitBodyPointBonus + size(obstruction.snake.body) * 100)
-
-            // Turn ghost
-            snake.ghostFrames = hitGhostFrames
-            
-            // Recoil
-            if size(snake.body) > minSnakeBody * 3 + 1:
-               // Cut the snake in half. Remove the head first, since
-               // it is always retained.
-               const oldLen = size(snake.body)
-               snake.targetLen = max(floor(((oldLen - 1) * (1 - hitPenaltyFactor)) / 3) * 3 + 1, minSnakeBody * 3 + 1)
-            else:
-               // Snake is already tiny. Contract the whole body into the tail, snapping
-               // to the grid
-               nextHeadPos = snake.body[size(snake.body) - 1].pos
-               nextHeadPos.x = round(nextHeadPos.x / cellSide) * cellSide
-               nextHeadPos.y = round(nextHeadPos.y / cellSide) * cellSide
-               for piece in snake.body:
-                  piece.pos = nextHeadPos
-         else if obstruction.powerup:
-            playAudioClip({audioClip: obstruction.powerup.audioClip, pan: 2 nextHeadPos.x / playSize.x - 1})
-            if obstruction.powerup.type == "grow":
-               // Grow the snake by duplicating the tail
-               for i < 3 obstruction.powerup.value:
-                  push(snake.body, lastValue(snake.body))
-            else:
-               // Add points
-               awardBonus(snake, obstruction.powerup.value)
-               // Grow a little
-               for i < 3 * 2:
-                  push(snake.body, lastValue(snake.body))
-            
-            // Remove the powerup
-            removeValues(powerupArray, obstruction.powerup)
-            
-   head.pos = nextHeadPos
-
-   
-
-def awardBonus(snake, amount):
-   snake.score += amount
-
-   
-                  
-def drawSnake(snake):
-   // Blink when shrinking
-   if (snake.ghostFrames > 0) and (modeFrames mod 2): return
-   
-   assert(snake.body.length mod 3 == 1)
-   
-   // Draw backwards, so that the head is on top
-   const N = lastIndex(snake.body)
-   let i = N
-   while i >= 0:
-      const piece = snake.body[i]
-      const angle = piece.angle
-
-      let sprite
-      
-      if (i == 0):      sprite = snake.headSprite
-      else if (i == N): sprite = snake.tailSprite
-      else:             sprite = snake.bodySprite
-
-      const offset = xy(sin(angle) * cos(12% piece.pos.y) * 1.25,
-                        cos(angle) * cos(12% piece.pos.x) * 1.25)
-
-      const pos = piece.pos + offset
-      
-      drawSprite({sprite: sprite, pos: pos, angle: angle})
-
-      drawSprite({sprite: sprite, pos: pos + shadowOffset, angle: angle, opacity: shadowOpacity, overrideColor: shadowColor, z: shadowZ})
-
-      // Draw the wraparound versions
-      if pos.x > playSize.x - cellSide:
-         drawSprite({sprite: sprite, pos: pos - xy(playSize.x, 0), angle: angle})
-         
-      if pos.y > playSize.y - cellSide:
-         drawSprite({sprite: sprite, pos: pos - xy(0, playSize.y), angle: angle})
-
-      // Draw only every third element
-      i -= 3
-
-
-      
-def drawPowerups():
-   for f in powerupArray:
-      drawSprite({sprite: f.sprite, pos: f.pos})
-      drawSprite({sprite: f.sprite, pos: f.pos + shadowOffset, opacity: shadowOpacity, overrideColor: shadowColor, z: shadowZ})
-
-
-def spawnWave():
-   // Spawn new powerups
-   const lastWaveType = waveType
-   waveType = nil
-   while waveType == nil or waveType == lastWaveType:
-      waveType = if waveIndex == -1 then 0 else rndInt(0, 3)
-      
-   ++waveIndex
-
-   if waveType == 0:
-      // Apples
-      for i < 8:
-         push(powerupArray, {pos: randomEmptyPosition(), sprite: powerupSpritesheet.apple, type: "grow",
-                             value: growAmount, audioClip: bigGrowAudioClip})
-   else if waveType == 1:
-      // Diamonds
-      for i < size(snakeArray) * 2:
-         push(powerupArray, {pos: randomEmptyPosition(), sprite: powerupSpritesheet.diamond, type: "points",
-                             value: pointBonus, audioClip: bigPointsAudioClip})
-   else if waveType == 2:
-      // Cherries
-      for i < 16 * sqrt(size(snakeArray)):
-         push(powerupArray, {pos: randomEmptyPosition(), sprite: powerupSpritesheet.cherry, type: "grow",
-                             value: floor(growAmount / 3), audioClip: smallGrowAudioClip})
-   else if waveType == 3:
-      // Coins
-      for i < 8 * sqrt(size(snakeArray)):
-         push(powerupArray, {pos: randomEmptyPosition(), sprite: powerupSpritesheet.coin, type: "points",
-                             value: floor(pointBonus / 4), audioClip: smallPointsAudioClip})
-
-         
-enter
--------------------------------------------------------------------
-snakeArray = [makeSnake(0, pad[0], "pink"),
-              makeSnake(1, pad[1], "green"),
-              makeSnake(2, pad[2], "violet"),
-              makeSnake(3, pad[3], "blue")]
-
-// Will immediately increment to 0
-waveIndex = -1
-powerupArray = []
-waveType = -1
-
-playAudioClip(backgroundAudioClip, true)
-setBackground(#e5e2d1)
-
+let inventory = ["three coins", "a spoon", "a dagger", "two matches", "a flask", "the map"];
+let choiceArray = ["WALK", "SEARCH", "USE", "SPEAK", "FIGHT", "HIDE"]
+let choiceIndex = 0
 
 frame
 ────────────────────────────────────────────────────────────────────────
+setBackground(rgb(0.4, 0.25, 0.3))
 
-if size(powerupArray) == 0: spawnWave()
-   
-resetTransform()
-resetClip()
+// Quest: Markup example. See the text.game.json setting for the "quest" constant
+// to see how to add colors and fonts within text strings.
+drawSpriteCornerRect(uiSpritesheet[10][15], xy(8, 18), xy(screenSize.x - 18, 68))
+drawText({font: font, text: "Active Quest", pos: xy(½ screenSize.x, 12), xAlign: "center", color: #000})
+drawText({font: font, text: quest, pos: xy(8, 18), yAlign: "top", wrapWidth: screenSize.x - 18, color: #000, shadow: #1102, markup: true})
 
-// Draw the top and bottom reserved areas
-drawCornerRect(xy(0, 0), xy(screenSize.x, INFO_HEIGHT), #000)
-drawCornerRect(xy(0, screenSize.y - INFO_HEIGHT), xy(screenSize.x, INFO_HEIGHT), #000)
+// Description: This example uses replace() to show how to conveniently
+// insert variables into a string.
+let description = "You are in a flat field nestled between foothills. In the distance, a castle rises out of fog."
+description += replace("\n\nIt is TIME. The sky is SKY and the temperature is TEMP°C.",
+                       {TIME: formatNumber(60 * 60 * 10.2, "clock12"),
+                        SKY:  "cloudy",
+                        TEMP: 20})
 
-for textColor, score, playerIndex, infoPos in snake in snakeArray:
-   drawText({font:   font,
-             text:   formatNumber(score, "commas") + "/P" + (1 + playerIndex),
-             color:  textColor,
-             pos:    infoPos,
-             xAlign: "right",
-             yAlign: "top",
-             z:      1})
+// Inventory: An example using join() to convert arrays of strings into
+// one long string with proper separators.
+description += " You have " + join(inventory, ", ", ", and ", " and ", "nothing") + ".";
 
-   
-// Make the screen size a multiple of 6, the grid size, and then
-// shift over so that the center of the first cell is at (0, 0)
-// in pixel coordinates so that sprites appear on the grid.
-setClip(xy(0, INFO_HEIGHT), xy(screenSize.x, screenSize.y - 2 INFO_HEIGHT))
-setTransform(xy(cellSide / 2, screenSize.y - INFO_HEIGHT - cellSide / 2), xy(1, -1))
+drawSpriteCornerRect(uiSpritesheet[7][9], xy(8, 102), xy(screenSize.x - 18, 82))
+drawText({font: font, text: description, pos: xy(8, 100), yAlign: "top", wrapWidth: screenSize.x - 18, color: #ddd, shadow: #1025})
 
-/*
-for i < playSize.x / cellSide:
-   const j = i * cellSide + 3
-   drawLine(xy(j, -3), xy(j, playSize.y), #cdd, -20)
-   drawLine(xy(j + 1, -3), xy(j + 1, playSize.y), #ccd, -20)
-   
-for i < playSize.y / cellSide:
-   const j = i * cellSide + 3
-   drawLine(xy(-3, j), xy(playSize.x, j), #cdd, -20)
-   drawLine(xy(-3, j + 1), xy(playSize.x, j + 1), #ccd, -20)
-*/
+for c < size(choiceArray):
+   const args = {font: buttonFont, text: choiceArray[c], color: #FFF, outline: #0003, shadow: #400,
+                 xAlign: "center", pos: xy((c + ½) * screenSize.x / size(choiceArray), 210)}
+   if c == choiceIndex:
+      // Highlight the active choice
+      args.color = #ff0
+      args.outline = #000
+      args.text = "«" + args.text + "»"
+   drawText(args)
 
-drawPowerups()
-
-for snake in snakeArray:
-   if snake.control.x: setNextDirection(snake, snake.control.x, 0)
-   else if snake.control.y: setNextDirection(snake, 0, snake.control.y)
-
-   snake.score += 1 + max(0, floor((size(snake.body) - 20) / 30))
-   moveSnake(snake)
-   drawSnake(snake)
-   
+choiceIndex = loop(joy.xx + choiceIndex, size(choiceArray))

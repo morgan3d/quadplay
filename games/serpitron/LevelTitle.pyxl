@@ -44,8 +44,7 @@ if level > 0:
 else:
    // Show controls
    drawText(instructionsFont,
-            replace("UDLR to move, P to pause",
-                    {U: joy.prompt.up, D: joy.prompt.dn, R: joy.prompt.rt, L: joy.prompt.lt, P: joy.prompt.p}),
+            replace("[^][v][<][>] to move, (p) to pause", joy.prompt),
             xy(½ screenSize.x, screenSize.y - 10),
             #4, #0002, ∅, "center", "bottom")
 

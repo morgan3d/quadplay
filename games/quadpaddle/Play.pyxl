@@ -64,12 +64,6 @@ processParticles()
 
 setClip(xy(0, 0), xy(areaSize, screenSize.y))
 
-// Handle pause
-for P in pad:
-   if P.pp or P.qq:
-      pushMode(Pause) because "ⓟ or ⓠ pressed"
-
-
 // Paddles
 for pad, pos, vel, axis in paddle in paddleArray:
    vel[axis] = paddleSpeed * pad[axis]

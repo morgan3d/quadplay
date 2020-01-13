@@ -105,12 +105,6 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         jsonParser: 'permissive',
         forceReload: useIDE});
 
-    quadplayLogoSprite = loadSpritesheet(
-        '_quadplayLogoSprite',
-        {url:'startup-logo.png', spriteSize:{x:63, y:36}},
-        '', null, true);
-
-
     // If given a directory, assume that the file has the same name
     if (! /\.game\.json$/i.test(gameURL)) {
         // Remove trailing slash
@@ -136,6 +130,41 @@ function afterLoadGame(gameURL, callback, errorCallback) {
     };
 
     loadManager.fetch(gameURL, 'json', null, function (gameJSON) {
+        if (! Array.isArray(gameJSON.modes)) { throw new Error('The modes parameter is not an array'); }
+        if (gameJSON.assets === undefined) { gameJSON.assets = {}; }
+        if (typeof gameJSON.assets !== 'object') { throw 'The assets parameter is not an object in ' + gameURL; }
+
+        for (const assetName in gameJSON.assets) {
+            if (assetName[0] === '_') { throw 'Illegal asset name: "' + assetName + '"'; }
+        }
+
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        // Inject OS dependencies
+        gameJSON.modes.push(
+            'quad://console/os/_SystemMenu',
+            'quad://console/os/_ConfirmDialog',
+            'quad://console/os/_SetControls',
+            'quad://console/os/_SetControls64'
+        );
+        
+        gameJSON.assets = Object.assign(gameJSON.assets, {
+            "_font5":              "quad://fonts/nano-5.font.json",
+            "_font6":              "quad://fonts/scoreboard-6.font.json",
+            "_font8":              "quad://fonts/deja-8.font.json",
+            "_font9":              "quad://fonts/deja-9.font.json",
+            "_moveUISound":        "quad://sounds/Blip-04.sound.json",
+            "_acceptUISound":      "quad://sounds/58-Jump.sound.json",
+            "_openUISound":        "quad://sounds/33-Powerup.sound.json",
+            "_cancelUISound":      "quad://sounds/18-Shoot.sound.json",
+            "_denyUISound":        "quad://sounds/46-Hit.sound.json",
+            "_quadplayLogoSprite": "quad://console/os/logo.sprite.json",
+            "_controlDoneSprite":  "quad://console/os/control-done.sprite.json",
+            "_controllerSpritesheet22": "quad://sprites/controllers-32x22.sprite.json",
+            "_controllerSpritesheet44": "quad://sprites/controllers-64x44.sprite.json"
+        });
+
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        
         gameSource.jsonURL = gameURL;
         if (gameJSON.screenSize === undefined) {
             gameJSON.screenSize = {x: 384, y:224};
@@ -156,7 +185,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 throw new Error(`${gameJSON.screenSize.x} x ${gameJSON.screenSize.y} is not a supported screen size.`);
             }
         }
-        
+
         // Scripts:
         gameSource.scripts = [];
         if (gameJSON.scripts) {
@@ -173,7 +202,6 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 const scriptURL = makeURLAbsolute(gameURL, gameJSON.scripts[i]);
                 gameSource.scripts.push(scriptURL);
                 
-                
                 loadManager.fetch(scriptURL, 'text', null, function (scriptText) {
                     scriptText = scriptText.replace(/\r/g, '');
                     addCodeToSourceStats(scriptText, scriptURL);
@@ -185,10 +213,6 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         // Modes:
         {
             gameSource.modes = [];
-            if (! Array.isArray(gameJSON.modes)) {
-                throw new Error('The modes parameter is not an array');
-            }
-
             let numStartModes = 0;
             for (let i = 0; i < gameJSON.modes.length; ++i) {
                 const modeURL = makeURLAbsolute(gameURL, gameJSON.modes[i].replace('*', '') + '.pyxl');
@@ -197,19 +221,23 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                     ++numStartModes;
                 }
                 
-                gameSource.modes.push({name: gameJSON.modes[i], url:modeURL});
-                
-                loadManager.fetch(modeURL, 'text', null, function (modeCode) {
-                    modeCode = modeCode.replace(/\r/g, '');
-                    addCodeToSourceStats(modeCode, modeURL);
-                    fileContents[modeURL] = modeCode;
-                });
+                gameSource.modes.push({name: gameJSON.modes[i], url:modeURL});                
             }
 
             if (numStartModes === 0) {
                 throw new Error('No starting mode (noted with *)');
             } else if (numStartModes > 1) {
                 throw new Error('Too many starting modes (noted with *)');
+            }
+
+            // Load all modes
+            for (let i = 0; i < gameSource.modes.length; ++i) {
+                const mode = gameSource.modes[i];
+                loadManager.fetch(mode.url, 'text', null, function (modeCode) {
+                    modeCode = modeCode.replace(/\r/g, '');
+                    addCodeToSourceStats(modeCode, mode.url);
+                    fileContents[mode.url] = modeCode;
+                });
             }
         }
 
@@ -261,10 +289,6 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         
         // Assets:
         if (gameJSON.assets) {
-            if (typeof gameJSON.assets !== 'object') {
-                throw 'The assets parameter is not an object in ' + gameURL;
-            }
-
             gameSource.assets = {};
             
             // Sort assets alphabetically
@@ -1339,7 +1363,6 @@ function evalJSONGameConstant(json) {
         }
 
     case 'grid':
-        // TODO
         console.error('Not implemented');
         break;
 

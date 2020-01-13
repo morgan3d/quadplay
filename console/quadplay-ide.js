@@ -2,7 +2,7 @@
 "use strict";
 
 const deployed = true;
-const version  = '2019.12.07.23'
+const version  = '2020.01.13.00'
 const launcherURL = 'quad://console/launcher';
 
 {
@@ -16,6 +16,11 @@ const launcherURL = 'quad://console/launcher';
 // 'IDE', 'Test', 'Emulator', 'Maximal'. See also setUIMode().
 let uiMode = 'IDE';
 
+const BOOT_ANIMATION = Object.freeze({
+    NONE:      0,
+    SHORT:    32,
+    REGULAR: 220
+});
 
 let SCREEN_WIDTH = 384, SCREEN_HEIGHT = 224;
 let gameSource;
@@ -55,8 +60,6 @@ function debugOptionClick(event) {
     saveIDEState();
 }
 
-
-let quadplayLogoSprite;
 
 let colorScheme = 'pink';
 function setColorScheme(scheme) {
@@ -100,14 +103,14 @@ function setColorScheme(scheme) {
     // Find the relevant rules and remove them
     for (let i = 0; i < stylesheet.cssRules.length; ++i) {
         const rule = stylesheet.cssRules[i];
-        if ((rule.selectorText === '#header a, #toolsMenu a') ||
+        if ((rule.selectorText === '#header a, .menu a') ||
             (rule.selectorText === '.emulator .emulatorBackground' && rule.style.background !== '')) {
             stylesheet.deleteRule(i);
             --i;
         }
     }
     // Replacement rules
-    stylesheet.insertRule(`#header a, #toolsMenu a { color: ${hrefColor} !important; text-decoration: none; }`, 0);
+    stylesheet.insertRule(`#header a, .menu a { color: ${hrefColor} !important; text-decoration: none; }`, 0);
     stylesheet.insertRule(`.emulator .emulatorBackground { background: ${emulatorColor}; ! important}`, 0);
     saveIDEState();
 }
@@ -311,20 +314,10 @@ function onResize() {
 
 window.addEventListener("resize", onResize, false);
 
-
-function onUIModeMenuButton(event) {
-    let menu = document.getElementById('uiModeMenu');
-    if (menu.style.visibility === 'visible') {
-        menu.style.visibility = 'hidden';
-    } else {
-        menu.style.visibility = 'visible';
-    }
-    event.stopPropagation();
-}
-
-function onToolsMenuButton(event) {
-    const button = document.getElementById('toolsMenuButton');
-    const menu = document.getElementById('toolsMenu');
+function onMenuButton(event) {
+    closeDropdowns();
+    const button = document.getElementById(event.target.id);
+    const menu = document.getElementById(event.target.id.replace(/Button$/, ''));
 
     if (menu.style.visibility === 'visible') {
         menu.style.visibility = 'hidden';
@@ -333,9 +326,8 @@ function onToolsMenuButton(event) {
         menu.style.left = button.getBoundingClientRect().left + 'px';
     }
 
-    if (event) { event.stopPropagation(); }
+    event.stopPropagation();
 }
-
 
 const bootScreen = document.getElementById('bootScreen');
 let emulatorScreen = document.getElementById("screen");
@@ -388,7 +380,8 @@ function onHomeButton() {
     onStopButton();
     loadGameIntoIDE(launcherURL, function () {
         onResize();
-        onPlayButton();
+        // Preven the boot animation
+        onPlayButton(false, true);
     });
 }
 
@@ -431,28 +424,31 @@ function onRestartButton() {
 
 
 let lastAnimationRequest = 0;
-function onStopButton() {
-    stopAllSounds();
-    document.getElementById('stopButton').checked = 1;
-    setControlEnable('pause', false);
-    coroutine = null;
-    emulatorMode = 'stop';
+function onStopButton(inReset) {
+    if (! inReset) {
+        document.getElementById('stopButton').checked = 1;
+        setControlEnable('pause', false);
+        emulatorMode = 'stop';
+        saveIDEState();
+    }
 
+    stopAllSounds();
+    coroutine = null;
     if (QRuntime._graphicsPeriod === 1) {
         cancelAnimationFrame(lastAnimationRequest);
     } else {
         clearTimeout(lastAnimationRequest);
     }
     ctx.clearRect(0, 0, emulatorScreen.width, emulatorScreen.height);
-    saveIDEState();
 }
 
 function onSlowButton() {
     onPlayButton(true);
 }
 
-// Allows a framerate to be specified so that the slow button can re-use the logic
-function onPlayButton(slow) {
+// Allows a framerate to be specified so that the slow button can re-use the logic.
+// isLaunchGame = "has this been triggered by QRuntime.launchGame()"
+function onPlayButton(slow, isLaunchGame) {
     if (isSafari && ! isMobile) { unlockAudio(); }
     
     testPost();
@@ -483,7 +479,7 @@ function onPlayButton(slow) {
             outputDisplayPane.innerHTML = '';
             compiledProgram = '';
             try {
-                compiledProgram = compile(gameSource);
+                compiledProgram = compile(gameSource, fileContents, false);
                 setErrorStatus('');
             } catch (e) {
                 e.message = e.message.replace(/^line \d+: /i, '');
@@ -505,7 +501,7 @@ function onPlayButton(slow) {
                 // this code within it.
                 programNumLines = compiledProgram.split('\n').length;
 
-                restartProgram(true);
+                restartProgram(isLaunchGame ? BOOT_ANIMATION.NONE : useIDE ? BOOT_ANIMATION.SHORT : BOOT_ANIMATION.REGULAR);
             } else {
                 programNumLines = 0;
                 onStopButton();
@@ -528,7 +524,7 @@ function onPlayButton(slow) {
             console.log('Load already in progress...');
         } else {
             console.log('\n');
-            if (useIDE) {
+            if (useIDE && ! isLaunchGame) {
                 // Force a reload of the game
                 loadGameIntoIDE(window.gameURL, doPlay);
             } else {
@@ -548,219 +544,235 @@ function onPlayButton(slow) {
 }
 
 const controlSchemeTable = {
-    Quadplay: Object.seal({
-            a: 'ⓐ',
-            b: 'ⓑ',
-            c: 'ⓒ',
-            d: 'ⓓ',
-            p: 'ⓟ',
-            q: 'ⓠ',
-            up: '⍐',
-            lt: '⍇',
-            dn: '⍗',
-            rt: '⍈'
-    }),
+    Quadplay: {
+        '(a)': 'ⓐ',
+        '(b)': 'ⓑ',
+        '(c)': 'ⓒ',
+        '(d)': 'ⓓ',
+        '(p)': 'ⓟ',
+        '(q)': 'ⓠ',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
                           
-    Zero: Object.seal({
-            a: 'ⓐ',
-            b: 'ⓑ',
-            c: 'ⓒ',
-            d: 'ⓓ',
-            p: 'ⓟ',
-            q: 'ⓠ',
-            up: '⍐',
-            lt: '⍇',
-            dn: '⍗',
-            rt: '⍈'
-    }),
+    Zero: {
+        '(a)': 'ⓑ',
+        '(b)': 'ⓐ',
+        '(c)': 'ⓨ',
+        '(d)': 'ⓧ',
+        '(p)': 'STR',
+        '(q)': 'SEL',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
 
-    PlayStation: Object.seal({
-            a: 'ⓧ',
-            b: 'Ⓞ',
-            c: '▣',
-            d: '⍍',
-            p: 'ⓟ',
-            q: 'ⓠ',
-            up: '⍐',
-            lt: '⍇',
-            dn: '⍗',
-            rt: '⍈'
-    }),
-                             
-    Xbox: Object.seal({
-            a: 'ⓐ',
-            b: 'ⓑ',
-            c: 'ⓧ',
-            d: 'ⓨ',
-            p: '☰',
-            q: '⧉',
-            up: '⍐',
-            lt: '⍇',
-            dn: '⍗',
-            rt: '⍈'
-    }),
+    PS3: {
+        '(a)': 'ⓧ',
+        '(b)': 'Ⓞ',
+        '(c)': '▣',
+        '(d)': '⍍',
+        '(q)': 'SEL',
+        '(p)': 'STR',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
 
-    Nintendo: Object.seal({
-            a: 'ⓑ',
-            b: 'ⓐ',
-            c: 'ⓓ',
-            d: 'ⓒ',
-            p: 'ⓟ',
-            q: 'ⓠ',
-            up: '⍐',
-            lt: '⍇',
-            dn: '⍗',
-            rt: '⍈'
-    }),
+    PS4: {
+        '(a)': 'ⓧ',
+        '(b)': 'Ⓞ',
+        '(c)': '▣',
+        '(d)': '⍍',
+        '(p)': 'OPT',
+        '(q)': 'SHR',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
 
-    Keyboard: Object.seal({
-            a: '␣',
-            b: '⏎',
-            c: 'ⓒ',
-            d: 'ⓕ',
-            p: 'ⓟ',
-            q: 'ⓠ',
-            up: 'W',
-            lt: 'A',
-            dn: 'S',
-            rt: 'D'
-    }),
+    XboxOne: {
+        '(a)': 'ⓐ',
+        '(b)': 'ⓑ',
+        '(c)': 'ⓧ',
+        '(d)': 'ⓨ',
+        '(p)': '☰',
+        '(q)': '⧉',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
 
-    KeyboardAlt: Object.seal({
-            a: '␣',
-            b: '⏎',
-            c: 'ⓒ',
-            d: 'ⓕ',
-            p: 'ⓟ',
-            q: 'ⓠ',
-            up: '⍐',
-            lt: '⍇',
-            dn: '⍗',
-            rt: '⍈'
-    }),
+    Xbox360: {
+        '(a)': 'ⓐ',
+        '(b)': 'ⓑ',
+        '(c)': 'ⓧ',
+        '(d)': 'ⓨ',
+        '(q)': '⊲',
+        '(p)': '⊳',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
 
-    KeyboardP1: Object.seal({
-            a: 'V',
-            b: 'G',
-            c: 'C',
-            d: 'F',
-            p: '4',
-            q: '1',
-            up: 'W',
-            lt: 'A',
-            dn: 'S',
-            rt: 'D'
-    }),
+    Stadia: {
+        '(a)': 'ⓐ',
+        '(b)': 'ⓑ',
+        '(c)': 'ⓧ',
+        '(d)': 'ⓨ',
+        '(q)': '…',
+        '(p)': '☰',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
 
-    KeyboardP2: Object.seal({
-            a: '/',
-            b: "'",
-            c: '.',
-            d: ';',
-            p: '0',
-            q: '7',
-            up: 'I',
-            lt: 'J',
-            dn: 'K',
-            rt: 'L'
-    }),
+    SNES: {
+        '(a)': 'ⓑ',
+        '(b)': 'ⓐ',
+        '(c)': 'ⓨ',
+        '(d)': 'ⓧ',
+        '(p)': 'STR',
+        '(q)': 'SEL',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
 
-    HOTAS: Object.seal({
-            a: '1',
-            b: '2',
-            c: '4',
-            d: '3',
-            p: 'ST',
-            q: 'SE',
-            up: '⍐',
-            lt: '⍇',
-            dn: '⍗',
-            rt: '⍈'
-    }),
+    SwitchPro: {
+        '(a)': 'ⓑ',
+        '(b)': 'ⓐ',
+        '(c)': 'ⓨ',
+        '(d)': 'ⓧ',
+        '(q)': '⊖',
+        '(p)': '⊕',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
 
+    JoyCon_R: {
+        '(a)': 'ⓐ',
+        '(b)': 'ⓧ',
+        '(c)': 'ⓑ',
+        '(d)': 'ⓨ',
+        '(q)': 'R',
+        '(p)': '⊕',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
+
+    JoyCon_L: {
+        '(a)': '▼',
+        '(b)': '▶',
+        '(c)': '◀',
+        '(d)': '▲',
+        '(q)': 'L',
+        '(p)': '⊖',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
+
+    Keyboard: {
+        '(a)': '␣',
+        '(b)': '⏎',
+        '(c)': 'ⓒ',
+        '(d)': 'ⓕ',
+        '(p)': 'ⓟ',
+        '(q)': 'ⓠ',
+        '[^]': 'W',
+        '[<]': 'A',
+        '[v]': 'S',
+        '[>]': 'D'
+    },
+
+    Kbd_Alt: {
+        '(a)': '␣',
+        '(b)': '⏎',
+        '(c)': 'ⓒ',
+        '(d)': 'ⓕ',
+        '(p)': 'ⓟ',
+        '(q)': 'ⓠ',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
+
+    Kbd_P1: {
+        '(a)': 'V',
+        '(b)': 'G',
+        '(c)': 'C',
+        '(d)': 'F',
+        '(p)': '4',
+        '(q)': '1',
+        '[^]': 'W',
+        '[<]': 'A',
+        '[v]': 'S',
+        '[>]': 'D'
+    },
+
+    Kbd_P2: {
+        '(a)': '/',
+        '(b)': "'",
+        '(c)': '.',
+        '(d)': ';',
+        '(p)': '0',
+        '(q)': '7',
+        '[^]': 'I',
+        '[<]': 'J',
+        '[v]': 'K',
+        '[>]': 'L'
+    },
+
+    HOTAS: {
+        '(a)': '1',
+        '(b)': '2',
+        '(c)': '4',
+        '(d)': '3',
+        "(p)": 'ST',
+        '(q)': 'SE',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
 };
 
-function deviceControl(cmd) {
-    switch (cmd) {
-    case "startGIFRecording":     startGIFRecording(); break;
-    case "stopGIFRecording":      stopGIFRecording(); break;
-    case "takeScreenshot":        downloadScreenshot(); break;
-    case "startPreviewRecording": startPreviewRecording(); break;
-    case "setDebugFlag":
-        {
-            let value = (arguments[2] ? true : false);
-            switch (arguments[1]) {
-            case "entityBounds":
-                QRuntime._showEntityBoundsEnabled = document.getElementById('showEntityBoundsEnabled').checked = value;
-                break;
-            case "physics":
-                QRuntime._showPhysicsEnabled = document.getElementById('showPhysicsEnabled').checked = value;
-                break;
-            case "debugPrint":
-                QRuntime._debugPrintEnabled = document.getElementById('debugPrintEnabled').checked = value;
-                break;
-            case "assert":
-                QRuntime._assertEnabled = document.getElementById('assertEnabled').checked = value;
-                break;
-            case "debugWatch":
-                QRuntime._debugWatchEnabled = document.getElementById('debugWatchEnabled').checked = value;
-                break;
-            default:
-                throw new Error('Unsupported flagname passed to deviceControl("setDebugFlag", flagname, value): "' + arguments[1] + '"');
-            }
-        }
-        break;
-        
-    case "getDebugFlag":
-        {
-            switch (arguments[1]) {
-            case "entityBounds":
-                return QRuntime._showEntityBoundsEnabled;
-                break;
-            case "physics":
-                return QRuntime._showPhysicsEnabled;
-                break;
-            case "debugPrint":
-                return QRuntime._debugPrintEnabled;
-                break;
-            case "assert":
-                return QRuntime._assertEnabled;
-                break;
-            case "debugWatch":
-                return QRuntime._debugWatchEnabled;
-                break;
-            default:
-                throw new Error('Unsupported flagname passed to deviceControl("getDebugFlag", flagname): "' + arguments[1] + '"');
-            }
-        }
-        break;
-        
-    case "getAnalogAxes":
-        {
-        const i = clamp(parseInt(arguments[1]), 0, 3);
-        const pad = QRuntime.pad[i];
-        return {x: pad._analogX, y: pad._analogY};
-        break;
-        }
-
-    case "setPadType":
-        {
-        const i = arguments[1];
-        const type = arguments[2];
-        const prompt = controlSchemeTable[type];
-        if (i === undefined || i < 0 || i > 3) { throw new Error('"setPadType" must be used with an index from 0 to 3'); }
-        if (! prompt) { throw new Error('"setPadType" must be used with one of the legal types, such as "Quadplay" or "PlayStation" (received "' + type + '")'); }
-        QRuntime.pad[i].type = type;
-        QRuntime.pad[i].prompt = prompt;
-        break;
-        }
-    }
+// Create aliases
+for (const name in controlSchemeTable) {
+    const scheme = controlSchemeTable[name];
+    scheme['ⓐ'] = scheme['(a)'];
+    scheme['ⓑ'] = scheme['(b)'];
+    scheme['ⓒ'] = scheme['(c)'];
+    scheme['ⓓ'] = scheme['(d)'];
+    scheme['ⓟ'] = scheme['(p)'];
+    scheme['ⓠ'] = scheme['(q)'];
+    scheme['⍐'] = scheme['[^]'];
+    scheme['⍗'] = scheme['[v]'];
+    scheme['⍇'] = scheme['[<]'];
+    scheme['⍈'] = scheme['[>]'];
+    Object.freeze(scheme);
 }
 
 
 /** Called by resetGame() as well as the play and reload buttons to
     reset all game state and load the game.  */
-function restartProgram(showBootAnimation) {
+function restartProgram(numBootAnimationFrames) {
     reloadRuntime(function () {
         try {
             // Inject the constants into the runtime space
@@ -776,7 +788,7 @@ function restartProgram(showBootAnimation) {
         // that it sees those variables.
         try {
             coroutine = QRuntime._makeCoroutine(compiledProgram);
-            QRuntime._showBootAnimation = showBootAnimation;
+            QRuntime._numBootAnimationFrames = numBootAnimationFrames;
             lastAnimationRequest = requestAnimationFrame(mainLoopStep);
             emulatorKeyboardInput.focus();
         } catch (e) {
@@ -799,6 +811,12 @@ function hideWaitDialog() {
     document.getElementById('waitDialog').classList.add('hidden');
 }
 
+function closeDropdowns() {
+    const list = document.getElementsByClassName('dropdown');
+    for (let i = 0; i < list.length; ++i) {
+        list[i].style.visibility = 'hidden';
+    }
+}
 
 window.onclick = function(event) {
     /*
@@ -809,11 +827,9 @@ window.onclick = function(event) {
     */
     
     // Hide dropdown menus
-    const list = document.getElementsByClassName('dropdown');
-    for (let i = 0; i < list.length; ++i) {
-        list[i].style.visibility = 'hidden';
-    }
+    closeDropdowns();
 } 
+
 
 
 function onStepButton() {
@@ -1057,6 +1073,7 @@ function onProjectSelect(target, type, object) {
             spriteEditor.style.visibility = 'visible';
             spriteEditor.style.backgroundImage = `url("${url}")`;
             const spriteEditorHighlight = document.getElementById('spriteEditorHighlight');
+            const spriteEditorPivot = document.getElementById('spriteEditorPivot');
             const spriteEditorInfo = document.getElementById('spriteEditorInfo');
 
             if (object._type === 'spritesheet') {
@@ -1073,6 +1090,8 @@ function onProjectSelect(target, type, object) {
                     const scaledSpriteWidth = object.spriteSize.x * scale;
                     const scaledSpriteHeight = object.spriteSize.y * scale;
 
+                    spriteEditorPivot.style.fontSize = Math.round(clamp(Math.min(scaledSpriteWidth, scaledSpriteHeight) * 0.18, 5, 25)) + 'px';
+
                     const X = Math.floor(mouseX / scaledSpriteWidth);
                     const Y = Math.floor(mouseY / scaledSpriteHeight);
 
@@ -1080,8 +1099,14 @@ function onProjectSelect(target, type, object) {
                     spriteEditorHighlight.style.top    = Math.floor(Y * scaledSpriteHeight) + 'px';
                     spriteEditorHighlight.style.width  = Math.floor(scaledSpriteWidth) + 'px';
                     spriteEditorHighlight.style.height = Math.floor(scaledSpriteHeight) + 'px';
+                    
                     const sprite = object[X] && object[X][Y];
                     if (sprite) {
+                        const pivot = sprite.pivot || {x: 0, y: 0};
+                        spriteEditorPivot.style.visibility = 'visible';
+                        spriteEditorPivot.style.left = Math.floor(scale * (sprite.pivot.x + sprite.size.x / 2) - spriteEditorPivot.offsetWidth / 2) + 'px';
+                        spriteEditorPivot.style.top = Math.floor(scale * (sprite.pivot.y + sprite.size.y / 2) - spriteEditorPivot.offsetHeight / 2) + 'px';
+                            
                         let str = `${spritesheetName}[${X}][${Y}]`;
                         if (sprite._animationName) {
                             str += `<br>${spritesheetName}.${sprite._animationName}`
@@ -1107,6 +1132,7 @@ function onProjectSelect(target, type, object) {
                     } else {
                         // Out of bounds
                         spriteEditorHighlight.style.visibility = 'hidden';
+                        spriteEditorPivot.style.visibility = 'hidden';
                     }
                 };
                 
@@ -1115,6 +1141,7 @@ function onProjectSelect(target, type, object) {
                 spriteEditor.onmousemove({clientX: editorBounds.left, clientY: editorBounds.top});
             } else {
                 spriteEditorHighlight.style.visibility = 'hidden';
+                spriteEditorPivot.style.visibility = 'hidden';
             }
         } else if (/\.mp3$/i.test(url)) {
             soundEditor.style.visibility = 'visible';
@@ -1280,7 +1307,9 @@ function visualizeModes(modeEditor) {
     let startNode = null;
     for (let m = 0; m < gameSource.modes.length; ++m) {
         const mode = gameSource.modes[m];
-        const name = mode.name.replace('*', '');
+        const name = mode.name.replace(/^.*\/|\*/g, '');
+        // Skip system modes
+        if (name[0] === '_') { continue; }
         const isStart = (mode.name.indexOf('*') !== -1);
         const node = {name:name, label:name, edgeArray:[], isStart:isStart};
         if (isStart) { startNode = node; }
@@ -1293,9 +1322,8 @@ function visualizeModes(modeEditor) {
         return;
     }
 
-    const setModeRegexp = /\b(setMode|pushMode)\s*\(([^,)]+)\)(?:\s*because\s*"([^"\n]*)")?/g;
+    const setModeRegexp = /\b(setMode|pushMode)\s*\(([^,_)]+)\)(?:\s*because\s*"([^"\n]*)")?/g;
     const resetGameRegexp = /\bresetGame\s*\(\s*(?:"([^"]*)")?\s*\)/g;
-    //const popModeRegexp = /\bpopMode\s*\((?:\s*"([^"]*)"\s*)?\)/g;
 
     // Modes that have links back to their parent mode, whether
     // entered by setMode or pushMode. These have to be processed
@@ -1305,7 +1333,9 @@ function visualizeModes(modeEditor) {
     // Get edges for each node
     for (let m = 0; m < gameSource.modes.length; ++m) {
         const mode = gameSource.modes[m];
-        const name = mode.name.replace('*', '');
+        const name = mode.name.replace(/^.*\/|\*/g, '');
+        // Skip system modes
+        if (name[0] === '_') { continue; }
         const code = fileContents[mode.url];
 
         const edgeArray = nodeTable[name].edgeArray;
@@ -1619,6 +1649,8 @@ function createProjectWindow(gameSource) {
     s += '<ul class="modes">';
     for (let i = 0; i < gameSource.modes.length; ++i) {
         const mode = gameSource.modes[i];
+        // Hide system modes
+        if (/^.*\/_|^_/.test(mode.name)) { continue; }
         s += `<li class="clickable" onclick="onProjectSelect(event.target, 'mode', gameSource.modes[${i}])" title="${mode.url}"><code>${mode.name}</code></li>\n`;
     }
     s += '</ul>';
@@ -1650,6 +1682,9 @@ function createProjectWindow(gameSource) {
         const keys = Object.keys(gameSource.assets);
         for (let i = 0; i < keys.length; ++i) {
             const assetName = keys[i];
+
+            // Hide system assets
+            if (assetName[0] === '_') { continue; }
 
             const asset = gameSource.assets[assetName];
             let type = asset._jsonURL.match(/\.([^.]+)\.json$/i);
@@ -2051,7 +2086,9 @@ function mainLoopStep() {
         }
     } catch (e) {
         if (e.resetGame === 1) {
-            restartProgram(false);
+            // Automatic
+            onStopButton(true);
+            restartProgram(BOOT_ANIMATION.NONE);
             return;
         } else if (e.quitGame === 1) {
             if (useIDE) {
@@ -2062,7 +2099,7 @@ function mainLoopStep() {
         } else if (e.launchGame !== undefined) {
             loadGameIntoIDE(e.launchGame, function () {
                 onResize();
-                onPlayButton();
+                onPlayButton(false, true);
             });
         } else {
             // Runtime error
@@ -2140,18 +2177,18 @@ function mainLoopStep() {
         if (QRuntime._modeStack.length) {
             let s = '';
             for (let i = 0; i < QRuntime._modeStack.length; ++i) {
-                s += QRuntime._modeStack[i].name + ' → ';
+                s += QRuntime._modeStack[i]._name + ' → ';
             }
-            debugModeDisplay.innerHTML = s + QRuntime._gameMode.name;
+            debugModeDisplay.innerHTML = s + QRuntime._gameMode._name;
         } else {
-            debugModeDisplay.innerHTML = QRuntime._gameMode.name;
+            debugModeDisplay.innerHTML = QRuntime._gameMode._name;
         }
     } else {
         debugModeDisplay.innerHTML = '∅';
     }
 
     if (QRuntime._prevMode) {
-        debugPreviousModeDisplay.innerHTML = QRuntime._prevMode.name;
+        debugPreviousModeDisplay.innerHTML = QRuntime._prevMode._name;
     } else {
         debugPreviousModeDisplay.innerHTML = '∅';
     }
@@ -2184,7 +2221,6 @@ function reloadRuntime(oncomplete) {
         const _gameURL = gameSource ? (gameSource.jsonURL || '').replace(location.href.replace(/\?.*/, ''), '') : '';
         QRuntime._window = window;
         QRuntime._gameURL = _gameURL;
-        QRuntime._quadplayLogoSprite = quadplayLogoSprite;
         QRuntime._debugPrintEnabled = document.getElementById('debugPrintEnabled').checked;
         QRuntime._assertEnabled = document.getElementById('assertEnabled').checked;
         QRuntime._debugWatchEnabled = document.getElementById('debugWatchEnabled').checked;
@@ -2198,6 +2234,35 @@ function reloadRuntime(oncomplete) {
         QRuntime._systemPrint   = _systemPrint;
         QRuntime._outputAppend  = _outputAppend;
         QRuntime._parseHexColor = parseHexColor;
+        QRuntime._Physics       = Matter;
+
+        QRuntime.pad = Object.seal([0,0,0,0]);
+        for (let p = 0; p < 4; ++p) {
+            const type = 'Quadplay';
+
+            // These will be overridden immediately on the first call to updateInput()
+            // if the id of the underlying device has changed.
+            let controlBindings = JSON.parse(localStorage.getItem('pad0' + p) || 'null');
+            if (! controlBindings) {
+                controlBindings = {id: isMobile ? 'mobile' : '', type: defaultControlType(p)};
+            }
+            
+            QRuntime.pad[p] = Object.seal({
+                x:0, dx:0, y:0, dy:0, xx:0, yy:0,
+                angle:0, dangle:0,
+                a:0, b:0, c:0, d:0, _p:0, q:0,
+                aa:0, bb:0, cc:0, dd:0, _pp:0, qq:0,
+                pressedA:0, pressedB:0, pressedC:0, pressedD:0, _pressedP:0, pressedQ:0,
+                releasedA:0, releasedB:0, releasedC:0, releasedD:0, _releasedP:0, releasedQ:0,
+                index: p,
+                type: controlBindings.type,
+                prompt: controlSchemeTable[controlBindings.type],
+                _id: controlBindings.id, 
+                _analogX: 0,
+                _analogY: 0
+            });
+        }
+        QRuntime.joy = QRuntime.pad[0];
         
         QRuntime.debugPrint     = debugPrint;
         QRuntime.assert         = assert;
@@ -2209,7 +2274,6 @@ function reloadRuntime(oncomplete) {
         QRuntime.setSoundPitch  = setSoundPitch;
         QRuntime.setSoundPan    = setSoundPan;
         QRuntime.debugPause     = onPauseButton;
-        QRuntime._Physics       = Matter;
         
         if (oncomplete) { oncomplete(); }
     };
@@ -2328,20 +2392,9 @@ function makeAssets(environment, assets) {
     const alreadySeen = new Map();
     
     for (let assetName in assets) {
-        if (assetName[0] === '_') { throw 'Illegal asset name: "' + assetName + '"'; }
         defineImmutableProperty(environment, assetName, deepClone(assets[assetName], alreadySeen));
     }
 }
-
-
-// Hide the UI mode menu if anyone clicks off of it while it is open
-window.addEventListener('click',
-                        function () {
-                            const menu = document.getElementById('uiModeMenu');
-                            if (menu && (menu.style.visibility !== 'hidden')) {
-                                menu.style.visibility = 'hidden';
-                            }
-                        });
 
 // Pause when losing focus if currently playing...prevents quadplay from
 // eating resources in the background during development.
@@ -2393,7 +2446,7 @@ const qrcode = new QRCode('serverQRCode',
 
 function showBootScreen() {
     bootScreen.innerHTML = `<span style="color:#ec5588">quadplay✜ ${version}</span>
-<span style="color:#937ab7">© 2019 Morgan McGuire</span>
+<span style="color:#937ab7">© 2020 Morgan McGuire</span>
 <span style="color:#5ea9d8">Licensed under LGPL 3.0</span>
 <span style="color:#859ca6">https://casual-effects.com</span>
 
@@ -2403,6 +2456,7 @@ function showBootScreen() {
     
     bootScreen.style.fontSize = '' + Math.max(10 * SCREEN_WIDTH / 384, 4) + 'px';
 }
+
 
 function hideBootScreen() {
     bootScreen.innerHTML = '';
@@ -2420,7 +2474,10 @@ function appendToBootScreen(msg) {
 function loadGameIntoIDE(url, callback) {
     if (emulatorMode !== 'stop') { onStopButton(); }
 
-    showBootScreen();
+    const isLauncher = /(^quad:\/\/console\/|\/launcher\.game\.json$)/.test(url);
+    if (! isLauncher) {
+        showBootScreen();
+    }
     window.gameURL = url;
 
     // Let the boot screen show before appending in the following code
@@ -2439,10 +2496,11 @@ function loadGameIntoIDE(url, callback) {
             
             serverURL += '?game=' + url;
 
-            if (/^http:\/\/127\.0\.0\.1:/.test(serverURL)) {
+            if (/^http:\/\/(127\.0\.0\.1|localhost):/.test(serverURL)) {
                 document.getElementById('serverURL').innerHTML =
-                    '<p>This server is in secure mode and has disabled hosting.</p><p>Exit and run the quadplay script without the <code style="white-space:nowrap">--secure</code> option to allow hosting games for mobile devices.</p>';
+                    '<p>Your local server is in secure mode and has disabled hosting.</p><p>Exit the quadplay script and run it with <code style="white-space:nowrap">quadplay --host</code> to allow hosting games for mobile devices from this machine.</p>';
                 document.getElementById('serverQRCode').style.visibility = 'hidden';
+                document.getElementById('serverQRMessage').style.visibility = 'hidden';
             } else {
                 qrcode.makeCode(serverURL);
                 document.getElementById('serverURL').innerHTML =
@@ -2555,13 +2613,33 @@ if (! localStorage.getItem('debugWatchEnabled')) {
     if (! (/^.{3,}:\/\//).test(url)) {
         url = '../' + url;
     }
-        
-    loadGameIntoIDE(url , function () {
-        onProjectSelect(null, 'game', gameSource.url);
-        if (! useIDE) { onPlayButton(); }
-    });
-}
 
+    function go() {
+        loadGameIntoIDE(url, function () {
+            onProjectSelect(null, 'game', gameSource.url);
+            if (! useIDE) { onPlayButton(); }
+        });
+    }
+
+    if (! useIDE && (url !== 'quad://console/launcher')) {
+        // Show the pause message before loading when running a
+        // standalone game (not in IDE, not loading the launcher)
+        const pauseMessage = document.getElementById('pauseMessage');
+        pauseMessage.style.zIndex = 120;
+        pauseMessage.style.visibility = 'visible';
+        pauseMessage.style.opacity = 1;
+        setTimeout(function () {
+            pauseMessage.style.opacity = 0;
+            setTimeout(function() {
+                pauseMessage.style.visibility = 'hidden';
+                pauseMessage.style.zIndex = 0;
+                go();
+            }, 800);
+        }, 3000);
+    } else {
+        go();
+    }
+}
 
 document.getElementById('backgroundPauseCheckbox').checked = backgroundPauseEnabled || false;
 

@@ -73,7 +73,6 @@
         "Title*",
         "Credits",
         "Play",
-        "Pause",
         "BeatLevel",
         "GameOver",
         "Win"

@@ -60,7 +60,7 @@ hosting. This beta version only supports "pro" mode, for which you need:
 - A code editor (_[Visual Studio Code](https://code.visualstudio.com/), [Atom](https://atom.io/), Vim, Emacs, Sublime, etc._)
 - [Python 3](https://www.python.org/)
 - A modern web browser ([_Chrome_](https://www.google.com/chrome/), [_Firefox_](https://www.mozilla.org/en-US/firefox/new/), _Safari_, _Edge_, etc. Chrome is fastest.)
-- Optionally install the PyxlScript extension for your editor: _[Visual Studio Code](#advancedtools/visualstudiocode))_, _[Vim](#advancedTools/vim)_, _[Emacs](#advancedtools/emacs) 
+- Optionally install the PyxlScript extension for your editor: _[Visual Studio Code](#advancedtools/visualstudiocode))_, _[Vim](#advancedTools/vim)_, _[Emacs](#advancedtools/emacs)_ 
 
 Copy the starter project from `examples/starter` to your own directory
 such as `games/mygame` and start changing it. Look at the Built-In Games
@@ -367,6 +367,50 @@ Games that are also great and whose style and gameplay would fit but who exceed 
 - [Into the Breach](https://subsetgames.com/itb.html)
 
 
+Controllers
+------------------------------------------------------------------------------------
+
+quadplay works with a keyboard, the on-screen controls on mobile, or a physical
+controller. Nearly every USB and Bluetooth physical controller is supported.
+
+After launching a quadplay game, you must press a button on the
+controller for the web browser to allow access to it. quadplay will
+automatically detect the controller and change to appropriate button
+prompts for most standard devices, including Xbox, PlayStation,
+Switch, Stadia, and Thrustmaster controllers. If your device is not
+mapped correctly, just enter the pause menu on any game and select
+"Set Controls".
+
+
+### Windows and Linux
+
+Most USB controllers automatically connet on Windows and Linux.
+For Bluetooth controllers, follow the instructions for your device
+and operating systems.
+
+
+### MacOS
+
+I've found that the easiest Bluetooth controller to pair on MacOS is a
+Switch JoyCon.  Turn on Bluetooth on your Mac and open the Bluetooth
+preferences. Hold the controller horizontally and hold the tiny sync
+button [you have to take off the black wrist strap holder temporarily to access this button].
+You'll see the controller appear on your Mac. Click on its name and select
+"connect". When you want to re-pair the controller with your Switch, just
+slide it back onto the Switch and it will sync.
+
+To use a USB Xbox 360 or Xbox One controller on MacOS,
+first install the [open source driver](https://github.com/d235j/360Controller-n).
+It will then plug-and-play.
+
+
+### Mobile
+
+Many mobile devices support physical game controllers. I've never tried it
+myself, so let me know how it works for you!
+
+
+
 Programming Model
 ------------------------------------------------------------------------------------
 
@@ -411,10 +455,15 @@ which acts like a special constant.
 You can also separate the mode file into different sections:
 
 - Top level: runs once when the game is first started. Usually just variable and function declarations.
-- `enter`: event when this mode becomes active via `pushMode()` or `setMode()`. `enter` may be followed by an argument list
+- `enter`: event that runs when this mode becomes active by another executing `pushMode()` or `setMode()`. `enter` may be followed by an argument list
    that will be filled with the values passed to `setMode()` or `pushMode()`.
 - `frame`: event that runs every frame while this mode is active. Put your drawing and simulation code here.
-- `leave`: even that runs when the game changes to another mode via `popMode()` or `setMode()`
+- `leave`: event that runs when the game changes to another mode by executing `popMode()` or `setMode()` itself.
+     Does not run on `resetGame()` or `quitGame()`, or if another mode that was pushed into
+     directly invokes `setMode()` instead of `popMode()`.
+- `popMode`: event that runs when the game returns to this mode from another by `popMode()`
+     Does not run on `resetGame()` or `quitGame()`, or if another mode that was pushed into
+     directly invokes `setMode()` instead of `popMode()`.
 
 You can think of these as callbacks, although they are not regular
 functions and can only be invoked directly by the console. 
@@ -440,15 +489,17 @@ The syntax of a mode with multiple sections is similar to [Markdown](https://en.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 
-Pause
+Menu
 ═══════════════════════════════════════════════════════════
 // A good place to declare state only used by this mode
 let selection
-const choices = ["Continue", "Show Map", "Quit"]
+const choices = ["Continue", "Show Map", "Abandon Mission"]
 
 
-enter
+enter(value)
 ───────────────────────────────────────────────────────────
+// Can also be enter without any arguments or parentheses
+
 // Reset any state
 selection = 0
 playAudioClip(menuOpen)
@@ -472,7 +523,12 @@ for c in choices:
 if pad[0].aa:
    if selection == 0:      setMode(Play)  because "Chose play"
    else if selection == 1: setMode(Map)   because "Chose map"
-   else:                   setMode(Title) because "Chose title"
+   else:                   pushMode(ConfirmDialog) because "Chose abandon"
+
+
+popMode(confirmed) from ConfirmDialog
+───────────────────────────────────────────────────────────
+if confirmed: setMode(Title) because "Confirmed abandon"
 
 
 leave
@@ -480,18 +536,18 @@ leave
 playAudioClip(menuClose)
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[A sample in-game pause menu mode using all of the optional mode sections.]
+[A sample in-game menu mode using all of the optional mode sections.]
 
 
 If you're accustomed to object-oriented languages, then you might
 think of the whole program as:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Java
-public class Pause extends Mode {
+public class Menu extends Mode {
    // These variables are the top-level code
    protected int selection;
    
-   public void enter() {
+   public void enter(int value) {
       selection = 0;
       playAudioClip(menuOpen);
    }
@@ -504,12 +560,16 @@ public class Pause extends Mode {
       }
    }
    
+   public void popMode(boolean confirmed, Mode from) {
+      if (from == confirmDialog) { ... }
+   }
+   
    public void leave() {
       playAudioClip(menuClose);
    }
 }
 
-Mode menu = new Pause();
+Mode menu = new Menu();
 
 ...
 menu.enter();
@@ -518,7 +578,7 @@ menu.leave();
 ...
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[This is the equivalent of your PyxlScript program in an object-oriented language. You don't write all of this boilerplate in PyxlScript!]
+[This is the rough equivalent of your PyxlScript program in an object-oriented language. You don't write all of this boilerplate in PyxlScript!]
 
 
 
@@ -682,14 +742,14 @@ On MacOS, either Control or Command can be used for "Ctrl".
 ### Controls
 
 quadplay✜ supports up to four simultaneous physical game
-controllers. Most PC and console controllers (e.g., XboxOne, PS4)
+controllers. Most PC and console controllers (e.g., Xbox, PlayStation)
 work, as well as retro game pads by [8bitdo](http://www.8bitdo.com/)
 and
 [Logitech](https://www.logitechg.com/en-ca/products/gamepads/f310-gamepad.html).
 
 There is also keyboard mapping for emulating controller input for up
-to two players. You can use two USB or Bluetooth keyboards or put both
-player's hands on a single one.
+to two players. _You can use two USB or Bluetooth keyboards_ on the same computer,
+or have both players share a single keyboard.
 
  <center> 
   ![](../console/xbox_controller.png style="border:none; image-rendering:auto" width=50%)
@@ -706,18 +766,18 @@ It also allows for single-player games with dual-stick controls
 using either both halves of the keyboard or controller 1.
 
 
-Input     | Player 1 Key| Player 2 Key| Xbox One   | PS4        | SNES
-:--------:|:-----------:|:-----------:|:----------:|:----------:|:------:
-⍐         | W or ↑      | I           | ▲          | ▲          | ▲
-⍇         | A or ←      | J           | ◀          | ◀          | ◀
-⍗         | S or ↓      | K           | ▼          | ▼          | ▼
-⍈         | D or →      | L           | ▶          | ▶          | ▶
-ⓐ         | V or space  | / (?)       | Ⓐ          | ╳          | Ⓑ
-ⓑ         | G or enter  | ' (")       | Ⓑ          | ◯          | Ⓐ
-ⓒ         | C           | . (&gt;)    | Ⓧ          | ▢          | Ⓨ
-ⓓ         | F           | ; (:)       | Ⓨ          | △          | Ⓧ
-ⓠ         | 1 or Q      | 7           | ⧉          | Share      | Select
-ⓟ         | 4 or P      | 0           | ☰          | Options    | Start
+Input       | Player 1 Key| Player 2 Key| XboxOne   | Playstation4| SNES   | Switch_Pro
+:----------:|:-----------:|:-----------:|:----------:|:----------:|:------:|:-----------:
+<big>⍐</big>| W or ↑      | I           | ▲          | ▲          | ▲      | ▲
+<big>⍇</big>| A or ←      | J           | ◀          | ◀          | ◀      | ◀
+<big>⍗</big>| S or ↓      | K           | ▼          | ▼          | ▼      | ▼
+<big>⍈</big>| D or →      | L           | ▶          | ▶          | ▶      | ▶
+ⓐ           | V or space  | / (?)       | Ⓐ          | ╳          | Ⓑ      | Ⓑ
+ⓑ           | G or enter  | ' (")       | Ⓑ          | ◯          | Ⓐ      | Ⓐ
+ⓒ           | C           | . (&gt;)    | Ⓧ          | ▢          | Ⓨ      | Ⓨ
+ⓓ           | F           | ; (:)       | Ⓨ          | △          | Ⓧ      | Ⓧ
+ⓠ           | 1 or Q      | 7           |<big>⧉</big>| Share      | Select | <big>⊖</big>
+ⓟ           | 4 or P      | 0           | ☰          | Options    | Start  | <big>⊕</big>
 
 
 ### Resolution
@@ -734,6 +794,7 @@ Some exact ratios when using quadplay's maximum 384x224 resolution are:
 
 Screen     | Factor      | Used      | Efficiency
 ----------:|------------:|----------:|---------:
+480x320    |  1x         | 384x224   | 56%
 640x360    |  1x         | 384x224   | 37%
 640x480    |  1x         | 384x224   | 28%
 800x480    |  2x         | 768x448   | 72%
@@ -746,9 +807,35 @@ Screen     | Factor      | Used      | Efficiency
 1920x1080  |  4x         | 1536x896  | 66%
 *1920x1200*|  *5x*       | 1920x1120 | *93%*
 
-If building a physical quadplay✜ device _without_ on-screen controls,
-I therefore recommend using a 1280x720, 1600x900, or 1920x1200 display
-to maximally fill the screen.
+If building a physical quadplay✜ cabinet or handheld _without_ 
+on-screen mobile controls, I therefore recommend using a 1280x720,
+1600x900, or 1920x1200 display 
+to maximally fill the screen with integer pixel scaling.
+
+Some physical handhelds that may be capable of running quadplay✜
+games include:
+
+ - 1280 x 720 [GPD Win 2](http://gpd.hk/gdpwin2) = full-res quadplay✜ 3X scaling
+ - 480 x 320 [Odroid-Go Advance](https://www.hardkernel.com/shop/odroid-go-advance/) = full-res quadplay✜ 1X scaling; bad fit
+ - 320 x 240 [PocketGo V2](https://www.bittboy.com/collections/pocketgo/products/new-pocketgo-v2) = 1/2-res quadplay✜ 1X scaling; bad fit
+
+For reference when importing assets or designing games inspired by
+previous work, here are the resolutions of classic and retro machines:
+
+ - 480 × 272 PlayStation Portable
+ - 400 x 240 Playdate
+ - 320 x 200 VGA, including Amiga 500 and Commodore 64
+ - 280 x 192 Apple II
+ - 256 x 240 NES and TurboGrafx-16
+ - 256 x 192 Nintendo DS and Sega Master System
+ - 256 x 224 SNES
+ - 240 x 160 Gameboy Advance
+ - 240 x 136 TIC-80
+ - 160 x 192 Atari 2600
+ - 160 x 144 Gameboy Color and Sega Game Gear
+ - 160 x 102 Atari Lynx
+ - 128 x 128 Pico 8
+
 
 
 Quantize
@@ -777,6 +864,15 @@ Fontpack
 taking a font PNG file with regular tiles (such as the one produced by
 fontgen) and packing it tightly. It will generate the output PNG
 and the `.font.json` file for you.
+
+
+Scalepix
+---------------------------------------------------------------------------------------------
+
+[Scalepix✜](../tools/scalepix.html) is a standalone browser tool for
+upscaling a font or sprit PNG file to twice the resolution in each 
+dimension, for upscaling existing assets or importing
+NES, PICO8, and GameBoy assets.
 
 
 
@@ -823,9 +919,6 @@ Field             | Values   | Meaning
 `q`               | 0 or 1   | 1 if the ⓠ button is currently pressed
 `qq` or `pressedQ`| 0 or 1   | 1 if the ⓠ button was just pressed this frame
 `releasedQ`       | 0 or 1   | 1 if the ⓠ button was just released this frame
-`p`               | 0 or 1   | 1 if the ⓟ button is currently pressed
-`pp` or `pressedP`| 0 or 1   | 1 if the ⓟ button was just pressed this frame
-`releasedP`       | 0 or 1   | 1 if the ⓟ button was just released this frame
 `prompt`          | `{...}`  | An object mapping button names to text prompts (see below)
 
 The axes are affected by the current transformation _at the end of the frame_, 
@@ -836,31 +929,48 @@ The `joy` variable is equal to `pad[0]` as shorthand for single-person games.
 The `anyButtonPress()` function returns true if any gamepad's button was just
 pressed.
 
-### Prompts
 
-The `prompt` property of `pad[]` maps `a`, `b`, `c`, `d`, `p`, `q`, `up`, `lt`, `dn`, `rt` to
-strings of text. These can be used to describe controls to players in a way
-mapped to the physical controller they are currently using instead of the quadplay
-native controls. 
+### Button Prompts
 
-For example, `"Press " + pad[0].prompt.a + " to jump"`. In this example,
-`prompt.a` returns the name of the button on the player's current controller that maps
-to `pad[0].a`.
+The `prompt` property of `pad[]` is to be used with `replace()` to
+create strings for showing controls and button prompts to players with
+`drawText()`.  It maps `"ⓐ"`, `"ⓑ"`, `"ⓒ"`, `"ⓓ"`, `"ⓟ"`, `"ⓠ"`,
+`"⍐"`, `"⍗"`, `"⍇"`, and `"⍈"` as well as ASCII aliases `"(a)"`,
+`"(b)"`, `"(c)"`, `"(d)"`, `"(p)"`, `"(q")`, `"[^]"`, `"[v]"`,
+`'[&lt;]"`, and `"[&gt;]"` to strings of text. These can be used to describe
+controls to players in a way mapped to the physical controller they
+are currently using instead of the quadplay✜ native controls
+
+For example, `replace("Press (a) to jump", pad[0].prompt)` creates a
+string with the proper physical button label for the first player's
+primary button substituted for the string `"(a)"`. On a PlayStation
+controller, this string will be `"Press ⓧ to jump"`. On an Xbox
+controller, it will be `"Press ⓐ to jump"`.  For a player using the
+keyboard, it will be `"Press ␣ to jump"`. The value of `pad[].prompt`
+can change during the game if the player uses the system menu to change
+the control scheme, so you should always generate the string right
+before drawing it instead of at program start.
 
 The `pad[i].type` property describes the control scheme used for
 prompts. The possible values are:
 
-`type`          | `a` | `b` | `c` | `d` | `p` | `q` | `up` | `lt` | `dn` | `rt`
+`type`          |`(a)`|`(b)`|`(c)`|`(d)`|`(p)`|`(q)`|`[^]` |`[&lt;]`|`[v]`|`[&gt;]`
 ----------------|-----|-----|-----|-----|-----|-----|------|------|------|-----
 `"Quadplay"`    | `ⓐ` | `ⓑ` | `ⓒ` | `ⓓ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
 `"Zero"`        | `ⓐ` | `ⓑ` | `ⓒ` | `ⓓ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
-`"PlayStation"` | `ⓧ` | `Ⓞ` | `▣` | `⍍` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
-`"Xbox"`        | `ⓐ` | `ⓑ` | `ⓧ` | `ⓨ` | `☰` | `⧉` | `⍐`  | `⍇`  | `⍗`  | `⍈`
-`"Nintendo"`    | `ⓑ` | `ⓐ` | `ⓨ` | `ⓧ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
+`"PS3"`         | `ⓧ` | `Ⓞ` | `▣` | `⍍` |`STR`|`SEL`| `⍐`  | `⍇`  | `⍗`  | `⍈`
+`"PS4"`         | `ⓧ` | `Ⓞ` | `▣` | `⍍` |`OPT`|`SHR`| `⍐`  | `⍇`  | `⍗`  | `⍈`
+`"XboxOne"`     | `ⓐ` | `ⓑ` | `ⓧ` | `ⓨ` | `☰` | `⧉` | `⍐`  | `⍇`  | `⍗`  | `⍈`
+`"Xbox360"`     | `ⓐ` | `ⓑ` | `ⓧ` | `ⓨ` | `⊳` | `⊲` | `⍐`  | `⍇`  | `⍗`  | `⍈`
+`"SNES"`        | `ⓑ` | `ⓐ` | `ⓨ` | `ⓧ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
+`"JoyCon_R"`    | `ⓐ` | `ⓧ` | `ⓑ` | `ⓨ` | `⊕` | `R` | `⍐`  | `⍇`  | `⍗`  | `⍈`
+`"JoyCon_L"`    | `▼` | `▶` | `◀` | `▲` | `⊖` | `L` | `⍐`  | `⍇`  | `⍗`  | `⍈`
+`"SwitchPro"`   | `ⓑ` | `ⓐ` | `ⓨ` | `ⓧ` | `⊕` | `⊖` | `⍐`  | `⍇`  | `⍗`  | `⍈`
 `"Keyboard"`    | `␣` | `⏎` | `ⓒ` | `ⓕ` | `ⓟ` | `ⓠ` | `W`  | `A`  | `S`  | `D`
-`"KeyboardAlt"` | `␣` | `⏎` | `ⓒ` | `ⓕ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
-`"KeyboardP1"`  | `V` | `G` | `ⓒ` | `ⓕ` | `4` | `1` | `W`  | `A`  | `S`  | `D`
-`"KeyboardP2"`  | `/` | `'` | `.` | `;` | `0` | `7` | `I`  | `J`  | `K`  | `L`
+`"Kbd_Alt"`     | `␣` | `⏎` | `ⓒ` | `ⓕ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
+`"Kbd_P1"`      | `V` | `G` | `ⓒ` | `ⓕ` | `4` | `1` | `W`  | `A`  | `S`  | `D`
+`"Kbd_P2"`      | `/` | `'` | `.` | `;` | `0` | `7` | `I`  | `J`  | `K`  | `L`
+`"HOTAS"`       | `1` | `2` | `4` | `3` |`ST` |`SE` | `⍐`  | `⍇`  | `⍗`  | `⍈`
 
 Note that the `▣⍍☰⧉␣⏎` Unicode characters are rendered similarly to
 other button prompts in quadplay✜ fonts.
@@ -869,6 +979,21 @@ The current implementation has `pad[i].type = "Quadplay"` for all pads by defaul
 This can be changed from within a program using `deviceControl()`. See also the
 `controllers-32x22.sprite.json` for help in making your controller selection menu.
 
+
+### Main Menu
+ 
+The system pause menu is bound to the ⓟ button, which is not visible to games.
+Games can add up to three custom elements on the pause menu, and can change these
+at any point.
+
+`setPauseMenu(opt1 (= nil), opt2 (= nil), opt3 (= nil))`
+: Pverride the custom elements on the pause menu. Each argument
+  is an object of the form `{text:string, callback:function, confirm:boolean}`.
+  
+  - `text` is the menu item text it will be clipped if too long
+  - `callback` is a function of no arguments to execute when this option is selected
+  - `confirm` (defaults to `false`) if true, an additional confirmation dialog
+    appears when this option is selected
 
 
 Modes
@@ -2184,18 +2309,27 @@ See also the Physics section for relevant functions.
 : Amount of energy preserved in a collision. Useful range is 0%-100%. The default is 10%. 
   The net restitution applied between two entities is the geometric mean of their restitution values.
 
-`entity.collisionGroup`
-: An integer index of a group of other entities that this one should not collide with, regardless
-  of the `collisionHitMask` or `collisionCategoryMask`. Zero means no group at all. Defaults to 0. Does not affect `overlaps()`.
-
-`entity.collisionHitMask`
-: See `entity.collisionCategoryMask`. Defaults to `0xffffffff`. Does not affect `overlaps()`.
-  
 `entity.collisionCategoryMask`
 : Collision categories for this object, as 32 bit flags. 
   Two objects can only collide if
   `(A.collisionCategoryMask bitand B.collisionHitMask) and (B.collisionCategoryMask bitand A.collisionHitMask)`.
   Defaults to 1. Does not affect `overlaps()`.
+
+`entity.collisionSensor`
+: If `true`, collisions will occur with this entity as usual but will not cause motion to change
+  as a result, like a ghost. Default is `false`. This is useful for detecting triggers such as a character 
+  walking through a doorway or touching acid via the physics engine without causing that to affect
+  the object. Note that a sensor must have infinite density or be attached to another object or it will
+  fall out of the world by gravity. If you want to never register collisions, instead set `entity.collisionCategoryMask = 0`
+  to prevent all collisions and preclude them being reported.
+
+`entity.collisionGroup`
+: An integer index of a group of other entities that this one should not collide with, regardless
+  of the `collisionHitMask` or `collisionCategoryMask`. Zero means no group at all. Defaults to 0.
+  Does not affect `overlaps()`.
+
+`entity.collisionHitMask`
+: See `entity.collisionCategoryMask`. Defaults to `0xffffffff`. Does not affect `overlaps()`.
 
 `entity.stictionFactor`
 : Multiplier applied to `entity.friction` in the static dry friction case
@@ -2446,7 +2580,7 @@ Children of entities in the physics system have no effect on physics. In future
 releases they will affect the collision shape, moment of inertia, and mass.
 
 While an entity is in a physics context, the following properties may 
-not be changed on it:
+not be changed on that entity:
 
 - `shape`
 - `size`
@@ -2478,8 +2612,8 @@ to start colliding with each other.
     will fail to properly waken when the object supporting them is removed and can remain
     floating in the air.
 
-`physicsAddContactCallback(physics, callback, minDepth (= 0), maxDepth (= ∞), collisionMask (= 0xffffffff))`
-: Adds a callback that processes collisions at the end of `physicsSimulate()`.
+`physicsAddContactCallback(physics, callback, minDepth (= 0), maxDepth (= ∞), collisionMask (= 0xffffffff), sensors (= "exclude"))`
+: Adds a callback that processes collisions (new contacts) at the end of `physicsSimulate()`.
   If either entity in the collision has a `entity.categoryMask` that intersects the `collisionMask`
   and the collision has `depth &gt;= minDepth`, then invoke
   `callback({entityA, entityB, depth, age, point0, point1, normal})`. 
@@ -2494,12 +2628,12 @@ to start colliding with each other.
   for example, `minDepth` = 1 will only trigger on significant,
   new contacts. There is no way to remove a contact callback.
 
-`physicsEntityContacts(physics, entity, childRegion (= nil), worldNormal (= nil), mask (= 0xffffffff))`
+`physicsEntityContacts(physics, entity, childRegion (= nil), worldNormal (= nil), mask (= 0xffffffff), sensors (= "exclude"))`
 : Returns an array of all current contacts, where each contact has the form 
   `{entityA, entityB, depth, point0, point1, normal}`. The contact points are
   in draw coordinates.
   
-  The region, mask, and nromal are used to filter the contacts
+  The region, mask, normal, and sensors setting are used to filter the contacts
   returned. A contact must have nonzero `collisionMask bitand
   otherEntity.collisionCategoryMask` for the _other_ entity
   involved. The average position of point0 and point1 must also lie
@@ -2507,7 +2641,8 @@ to start colliding with each other.
   `childRegion` is either `nil` (all contacts) or an argument suitable
   for passing to `overlaps()`. If `normal` is specified, then the
   contact normal for the other entity must point within 60 degrees of
-  this vector. This is a draw-space vector.
+  this vector. This is a draw-space vector. `sensors` may be `"include"`,
+  `"exclude"`, or `"only"` (exclusively return contacts with sensors).
 
   In the returned contacts, the `entity` may be either `entityA` or `entityB`.
 
@@ -2747,10 +2882,10 @@ endpoints and borders.
   If it is not `nil`, the `overrideColor` replaces the red, green, and blue
   values read from each pixel of the sprite. It uses the existing alpha value.
 
-`drawSpriteCornerRect(spr, corner, size, z ( = 0))`
+`drawSpriteCornerRect(sprite, corner, size, z ( = 0))`
 : Draw a rectangle enclosing points `corner` and `corner+size`
-  filled with `spr` tiled as needed (and aligned to the
-  center), and surrounded by the neighbors of `spr`
+  filled with `sprite` tiled as needed (and aligned to the
+  center), and surrounded by the neighbors of `sprite`
   in its spritesheet. The edges surround the specified coordinates.
   Used for drawing user interface elements (GUI) of dynamic size such as
   windows and health bars.  Keep in mind that some artwork is designed
@@ -2807,6 +2942,10 @@ endpoints and borders.
   by `pos`, and then draw the triangle. The `pos` argument is not first because in many
   cases this is called with draw-space vertices and no translation. The triangle may have
   any winding direction.
+
+`getBackground()`
+: Returns the value previously set with `setBackground()`. 
+
 `getClip()`
 : Returns the current net clipping region as an object that
   can be passed to `setClip()`.
@@ -2914,6 +3053,7 @@ Setting any post effects may slow down rendering slightly.
 `setPostEffects(args)`
 : The arguments have the following fields, all optional. nil values default to their previous value.
   Invoke `resetPostEffects()` first for a clean set.
+  
   - `background` is an `rgba()` to draw in the background behind the new frame. The `a` component
     controls how opaque the background is. Setting `background.a = 0` allows new frames to be blended on
     top of old ones for a motion blur effect.
@@ -3545,6 +3685,7 @@ Sprites
 
 ### Other
 ![`quad://sprites/ortho-city-32x16.sprite.json`](../sprites/ortho-city-32x16.png)
+![`quad://sprites/controllers-64x44.sprite.json`](../sprites/controllers-64x44.png)
 ![`quad://sprites/controllers-32x22.sprite.json`](../sprites/controllers-32x22.png)
 ![`quad://sprites/explosion-realistic-128x128.sprite.json`](../sprites/explosion-realistic-128x128.png)
 
@@ -3687,6 +3828,10 @@ Sounds
 ![`quad://sounds/64-Blip.sound.json`](../sounds/64-Blip.mp3) ![`quad://sounds/65-Blip.sound.json`](../sounds/65-Blip.mp3)
 ![`quad://sounds/66-Blip.sound.json`](../sounds/66-Blip.mp3) ![`quad://sounds/67-Blip.sound.json`](../sounds/67-Blip.mp3)
 ![`quad://sounds/68-Blip.sound.json`](../sounds/68-Blip.mp3) ![`quad://sounds/69-Blip.sound.json`](../sounds/69-Blip.mp3)
+![`quad://sounds/Blip-00.sound.json`](../sounds/Blip-00.mp3) ![`quad://sounds/Blip-01.sound.json`](../sounds/Blip-01.mp3)
+![`quad://sounds/Blip-02.sound.json`](../sounds/Blip-02.mp3) ![`quad://sounds/Blip-03.sound.json`](../sounds/Blip-03.mp3)
+![`quad://sounds/Blip-04.sound.json`](../sounds/Blip-04.mp3) ![`quad://sounds/Blip-05.sound.json`](../sounds/Blip-05.mp3)
+![`quad://sounds/Blip-06.sound.json`](../sounds/Blip-06.mp3) ![`quad://sounds/Blip-07.sound.json`](../sounds/Blip-07.mp3)
 
 ### Wild
 
@@ -4148,9 +4293,14 @@ The map JSON descriptor looks like:
     // Optional license and copyright
     "license": "Released into the public domain by Edouard Gauthier",
    
-    // Alternative for maps with a single spritesheet. If the sprite sheet doesn't match 
-    // the one described in the map file, an error occurs.
+    // Optional if the map only uses one spritesheet
     "spriteUrl": "tiles.sprite.json"
+ 
+    // If no spriteUrl is specified, then an entire table
+    // mapping each spritesheet referenced in the map to a sprite file
+    "spriteUrlTable": {
+      "tiles":   "tiles.sprite.json"
+    }
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -4553,10 +4703,10 @@ ASCII    | Unicode | Meaning
          |`⊕=`     | mutating bitwise XOR
 `~`      |         | bitwise NOT
 `~=`     |         | mutating bitwise NOT
-`<<`     |`◅`      | bit shift left
-`<<=`    |`◅=`     | mutating bit shift left
-`>>`     |`▻`      | bit shift right
-`>>=`    |`▻=`     | mutating bit shift right
+`<<`     |`◀`      | bit shift left
+`<<=`    |`◀=`     | mutating bit shift left
+`>>`     |`▶`      | bit shift right
+`>>=`    |`▶=`     | mutating bit shift right
 `if`...`then`...`else`| | conditional 
 
 Assignment and mutating operators all return `nil`; they cannot be
@@ -5036,8 +5186,8 @@ Most Common:
 
 All:
 
-⊲ ⊳ ¥ € £ ¬ ∩ ∪ ≟ ≠ ≤ ≥ ≈ ∊ ∈ ⌊ ⌋ ⌈ ⌉ ⊗ ⊕ …
-⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁺ ⁻ ⁽ ⁾ 
+⊲ ⊳ ¥ € £ ¬ ∩ ∪ ≟ ≠ ≤ ≥ ≈ ∊ ∈ ⌊ ⌋ ⌈ ⌉ ⊗ ⊕ ⊖
+⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁺ ⁻ ⁽ ⁾ …
 ₀ ₁ ₂ ₃ ₄ ₅ ₆ ₇ ₈ ₉ ₊ ₋ ₍ ₎ ₐ ᵦ ᵢ ⱼ ₓ ₖ ᵤ ₙ 
 ∅ ∞ ° ½ ⅓ ⅔ ¼ ¾ ⅕ ⅖ ⅗ ⅘ ⅙ ⅐ ⅛ ⅑ ⅒ ∫ ± м н к
 « » ¿ ★ × ⊢ ∙ ○ ● ◻ ◼ △ ▲ ✓ ♠ ♥ ♣ ♦ §
@@ -5055,15 +5205,16 @@ A B Γ Δ E Z H Θ I K Λ M N Ξ O Π P Σ T Φ X Ψ Ω
 Note that the superscripts `ᵈᵉʰᵐᵒʳˢᵗ` are legal in text strings but
 not as code. These are present specfically to support ordinals such as
 "1ˢᵗ, 2ⁿᵈ, 3ʳᵈ, 4ᵗʰ, 1ᵉʳ, 1ʳᵉ, 2ᵉ, 2ᵈ, 2ᵈᵉ, 1ᵒ, 1ᵃ, …" in
-various language possible. Not all letters are available for subscripts 
+various languages. Not all letters are available for subscripts 
 and superscripts in Unicode, so quadplay✜ restricts those available
-as variables to an overlapping set.
+as variables to a specific commonly used mathematical and natural language set.
 
-The encircled characters and arrows are intended for use as button prompts.
-The characters `Ⓞ ⍍ ▣ ⧉ ☰` are drawn in quadplay✜ fonts
-to represent the buttons with approximately those symbols on PlayStation and
-Xbox controllers. The `ⓧ` character is drawn to ambiguously represent the "X"
-buttons on PlayStation, Xbox, and Nintendo controllers. 
+The encircled characters and arrows are intended for use as button
+prompts.  The characters `Ⓞ ⍍ ▣ ⧉ ☰` are drawn in quadplay✜ fonts to
+represent the buttons with approximately those symbols on PlayStation
+and Xbox controllers. The `ⓧ` character is drawn to ambiguously
+represent the "X"/cross buttons on PlayStation, Xbox, and Nintendo
+controllers.
 
 
 Advanced Tools
@@ -5228,6 +5379,10 @@ Command-Line Tools
 [`quadplay`](../quadplay)`
 : Launches the emulator from the command line on any operating system. 
   Requires Python.
+
+[`quaddepend.py`](../tools/quaddepend.py)
+: Prints dependencies of a `.game.json` file, recursively. Run the script to
+  see the arguments.
 
 [`sprite_json_generator.py`](../tools/sprite_json_generator.py)
 : Generator for `.sprite.json` files. Requires Python and PIL.
@@ -5520,8 +5675,7 @@ For 1.0:
 Post 1.0:
 - Watertight rasterization of triangle meshes
 - Watertight rasterization of polylines
-- Physics simulation
-- Edit your game in the IDE and saving to Google Drive
+- Edit your game in the IDE and save to Google Drive
 - Binary game export
   - Electron
   - Cordova
@@ -5531,7 +5685,11 @@ Post 1.0:
 Credits
 ====================================================================================
 
-The quadplay✜'s influences include Atari 2600, Commodore VIC-20, APL,
+quadplay✜ was created by Morgan McGuire. Stephan Steinbach provided
+extensive testing and design feedback, and Mauricio Vives proofread
+the manual.
+
+The quadplay✜ console's influences include Atari 2600, Commodore VIC-20, APL,
 Python, [PICO-8](https://www.lexaloffle.com/pico-8.php),
 [Shadertoy](https://www.shadertoy.com),
 [Arduboy](https://arduboy.com), and its predecessors,
@@ -5693,6 +5851,38 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 Jan 13: Beta update 21
+
+- Added support for Switch Pro, JoyCon, PlayStation 3, Xbox360, and Stadia controllers
+- Replaced with `◅ ▻` with `◀ ▶` in fonts
+- Added `▼` to fonts (all four cardinal solid arrows are now represented)
+- Added a system pause and configuration menu bound to the ⓟ/Start button
+- Added a startup message for standalone games notifying players of the system 
+  menu button
+- Added the <big>⊖</big> symbol to all fonts
+- Removed the ⓟ gamepad button from game access space
+- Added an event section for `popMode`, which can be overloaded for the mode
+  being returned from
+- Added `quaddepend.py` script for printing dependencies of a game file
+- Changed quadplay script default to rejecting external connections and made the
+  argument to enable mobile support `--host`, replacing the previous `--secure` mode
+- Showed sprite pivots in the sprite viewer
+- Added `entity.collisionSensor` property
+- Added 64x44 controller spritesheet
+- Separated emulator settings out of the Tools menu into a new Console menu
+- Added [scalepix✜](../tools/scalepix.html) tool for upscaling sprites and fonts
+- Changed the `pad[].prompt` to be a mapping for use with `replace()` instead
+  of raw constants and updated example programs to use it
+- Documented the HOTAS `pad[].type`
+- Added more error checking for `xy()` to catch common typos
+- Added eight new blip UI sound effects
+- Fixed `resetGame()` running the game at double speed
+- Fixed `gameFrames` and `modeFrames` starting at 60
+- Redesigned boot and startup animations
+- Restored `examples/text` program that was broken by the previous update
+- Added `getBackground()`
+  
 
 2020 Jan 3: Beta update 20
 

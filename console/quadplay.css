@@ -29,6 +29,33 @@ canvas {
     transform: translate3d(0,0,0);
 }
 
+#pauseMessage {
+    position: absolute;
+    left: 20%;
+    top: 20%;
+    width: 60%;
+    height: 60%;
+    text-align: center;
+    overflow: visible;
+    background-position: center;
+    -ms-interpolation-mode: nearest-neighbor;
+    image-rendering: optimizeSpeed;
+    image-rendering: -o-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    -ms-interpolation-mode: nearest-neighbor;
+    image-rendering: pixelated !important;
+    background-image: url("os/pause-message.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.8s ease-in-out;
+}
+
+ 
+
 body {
     font-family: Helvetica, Arial;
     font-size: 13px;
@@ -82,7 +109,7 @@ div#header {
 }
 
 /** Do not change this selector without changing quadplay-ide.js setColorScheme() */
-#header a, #toolsMenu a {
+#header a, .menu a {
     color: #e61b9d !important;
     text-decoration: none;
 }
@@ -199,7 +226,7 @@ a {
     box-shadow:       0px 4px 15px 0px rgba(0, 0, 0, 0.4);
 }
 
-#toolsMenu {
+.dropdown {
     position: absolute;
     z-index: 41;
     top: 23px;
@@ -207,9 +234,9 @@ a {
     background: #000;
     border: solid 1px #ccc;
     padding: 5px;
-    /* color: #000; */
     visibility: hidden;
     box-shadow:       0px 4px 15px 0px rgba(0, 0, 0, 0.4);
+    font-size: 100%;
 }
 
 .dropdown > *, .dropdown .IDEOnly > * {
@@ -235,8 +262,8 @@ a {
     margin-bottom: 5px;
 }
 
-#toolsMenu div {
-    font-size: 100%;
+.dropdown a {
+    text-decoration: none;
 }
 
 /*****************************************************/

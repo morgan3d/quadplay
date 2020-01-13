@@ -1,0 +1,1367 @@
+<!doctype html><meta charset="UTF-8"><!-- -*- JavaScript -*- -->
+<!--
+TODO:
+
+- Why is the diagonal processed well by Scale2X and poorly by McScaly2X? Did I overconstrain "thin"?
+
+
+Scale2X/EPX designed by Eric Johnston and Andrea Mazzoleni.
+Scale3X designed by Andrea Mazzoleni.
+McScaly2X designed by Morgan McGuire.
+Nearest Neighbor and Bilinear scaling are well known trivial
+mathematical sampling methods.
+
+The generalized JavaScript implementations here of all of these
+algorithms are Copyright 2020 Morgan McGuire and available under
+the MIT license.
+
+The hq2x implementation is Copyright 2003 Maxim Stepin ( maxst@hiend3d.com ),
+Copyright 2010 Cameron Zemek ( grom@zeminvaders.net ), and
+Copyright 2010 Dominic Szablewski ( mail@phoboslab.org ).
+It is available under the LGPL: https://opensource.org/licenses/LGPL-3.0
+
+xBR design by Hyllian. The implementation here is from https://github.com/joseprio/xBRjs is
+Copyright 2020 Josep del Rio. It is available under the MIT license.
+https://github.com/joseprio/xBRjs/blob/master/LICENSE
+    
+See also:
+https://github.com/libretro/common-shaders/blob/master/scalenx/shaders/scale3x.cg
+https://github.com/phoboslab/js-hqx/blob/master/hqx.js
+-->
+<title>scalepix✜</title>
+<link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../console/favicon-32x32.png">
+<link rel="shortcut icon" href="../console/favicon.ico">
+<style>
+  @font-face { font-family: quadplay; src: url("../doc/Audiowide-Regular.ttf") }
+
+  h1 {
+    font-family:   quadplay;
+    text-align:    center;
+    margin-bottom: 30px;
+    color:         #000;
+  }
+
+  body {
+     background: #ccc;
+     color: #666;
+     font-family: Arial;
+     padding: 25px;
+     text-align: justify;
+     line-height: 140%;
+  }
+
+  div.image {
+      position: relative;
+      background: #909088;
+      border: 2px solid #000;
+      width: 256px;
+      height: 128px;
+  }
+
+  img {
+     image-rendering: -moz-crisp-edges;
+     image-rendering: pixelated;
+  }
+
+  table {
+     border-collapse: separate;
+     border-spacing: 25px 15px;
+  }
+
+  code {
+    font-size: 120%;
+  }
+</style>
+<script src="../console/quadplay-load.js"></script>
+<script>
+///////////////////////////////////////////////////////////////////
+function makeSrcGet(srcBuffer, srcWidth, srcHeight) {
+    return function src(x, y) {
+        // Clamp to border
+        return srcBuffer[Math.max(0, Math.min(x, srcWidth - 1)) +
+                         Math.max(0, Math.min(y, srcHeight - 1)) * srcWidth];
+    };
+}
+
+
+function makeSpecialSrcGet(srcBuffer, srcWidth, srcHeight) {
+    // Any color on black
+    let isBinary = true;
+    let hasAlpha = false;
+    let color = undefined;
+    for (let i = 0; i < srcBuffer.length; ++i) {
+        const c = srcBuffer[i];
+        const a = (c >>> 24) & 0xff;
+
+        if (a < 0xff) {
+            hasAlpha = true;
+        } else if (c & 0xffffff) {
+            // Not black
+            if (color) {
+                if (c !== color) {
+                    isBinary = false;
+                }
+            } else {
+                color = c;
+            }
+        }
+    }
+
+    isBinary = isBinary && ! hasAlpha;
+
+    if (isBinary) {
+        // Special case for fonts
+        return [true, function src(x, y) {
+            if (x >= 0 && y >= 0 && x < srcWidth && y < srcHeight) {
+                // In bounds
+                const c = srcBuffer[x + y * srcWidth];
+                if (c === 0xff000000) {
+                    // Treat as transparent
+                    return 0;
+                } else {
+                    return c;
+                }
+            } else {
+                // Surround with an alpha border
+                return 0;
+            } 
+        }];
+    } else if (hasAlpha) {
+        return [false, function src(x, y) {
+            if (x >= 0 && y >= 0 && x < srcWidth && y < srcHeight) {
+                return srcBuffer[x + y * srcWidth];
+            } else {
+                // Surround with an alpha border
+                return 0;
+            }
+        }];
+    } else {
+        return [false, function src(x, y) {
+            // Clamp to border
+            return srcBuffer[Math.max(0, Math.min(x, srcWidth - 1)) +
+                             Math.max(0, Math.min(y, srcHeight - 1)) * srcWidth];
+        }];
+    }
+}
+
+// The 2X algorithms all read the 3x3 neighborhood around E and
+// replace P with 2x2 pixels J, K, L, M:
+//
+//     src             dst
+//
+//    A B C           J   K
+//    D E F  ----->          
+//    G H I           L   M
+
+// Implementation of Eric Johnston and Andrea Mazzoleni's
+// Scale2X aka EPX algorithm based on https://www.scale2x.it/algorithm
+function runScale2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
+    const src = makeSrcGet(srcBuffer, srcWidth, srcHeight);
+    
+    for (let srcY = 0; srcY < srcHeight; ++srcY) {
+        for (let srcX = 0; srcX < srcWidth; ++srcX) {
+            const B = src(srcX    , srcY - 1);
+            const D = src(srcX - 1, srcY    );
+            const E = src(srcX    , srcY    );
+            const F = src(srcX + 1, srcY    );
+            const H = src(srcX    , srcY + 1);
+
+            // Default to nearest neighbor, with all four outputs
+            // equal to the input.
+            let J = E, K = E, L = E, M = E;
+
+            // Round some corners
+            if (D === B && H !== B && F !== B) J = B;
+            if (B === F && D !== F && H !== F) K = F;
+            if (H === D && F !== D && B !== D) L = D;
+            if (F === H && B !== H && D !== H) M = H;
+            
+            // Write output
+            const dstIndex = srcX * 2 + srcY * 4 * srcWidth;
+            dstBuffer[dstIndex] = J;
+            dstBuffer[dstIndex + 1] = K;
+            dstBuffer[dstIndex + srcWidth * 2] = L;
+            dstBuffer[dstIndex + srcWidth * 2 + 1] = M;
+        } // X
+    } // Y
+}
+
+// Returns a PREMULTIPLIED-alpha luminance value
+function luma(C) {
+    return (((C & 0x00FF0000) >> 16) + ((C & 0x0000FF00) >> 8) + (C & 0x000000FF)) * ((C & 0xFF000000) >>> 24);
+}
+
+function all_eq(first, ...args) {
+    let s = true;
+    for (const a of args) s = s && (first === a);
+    return s;
+}
+
+function any_eq(first, ...args) {
+    let s = false;
+    for (const a of args) s = s || (first === a);
+    return s;
+}
+
+function none_eq(first, ...args) {
+    let s = true;
+    for (const a of args) s = s && (first !== a);
+    return s;
+}
+
+// Morgan McGuire's McScaly2X algorithm, derived from Scale2X/EPX
+// and designed to avoid rounding square corners, especially on text.
+function runMcScaly2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
+    const [isBinary, src] = makeSpecialSrcGet(srcBuffer, srcWidth, srcHeight);
+
+    // If it was important to run this faster (e.g., as a full screen
+    // filter) then it would make sense to remove the alpha cases and
+    // to precompute horizontal and vertical binary gradients
+    // (inequalities), since most of the tests are redundantly looking
+    // at whether adjacent elements are the same are different.
+
+    // Debugging constants
+    const BLUE  = 0xFFFF0000;
+    const GREEN = 0xFF00FF00;
+    const RED   = 0xFF0000FF;
+    const BLACK = 0xFF000000;
+
+    for (let srcY = 0; srcY < srcHeight; ++srcY) {
+        for (let srcX = 0; srcX < srcWidth; ++srcX) {
+            // Reads a *rotated* 3x3 window, plus one extra element on each axis during 2:1 processing
+            //
+            //    .
+            //    P
+            //   ABC
+            // .QDEFR.
+            //   GHI
+            //    S
+            //    .
+            const A = src(srcX - 1, srcY - 1),  B = src(srcX    , srcY - 1),  C = src(srcX + 1, srcY - 1);
+            const D = src(srcX - 1, srcY    ),  E = src(srcX    , srcY    ),  F = src(srcX + 1, srcY    );
+            const G = src(srcX - 1, srcY + 1),  H = src(srcX    , srcY + 1),  I = src(srcX + 1, srcY + 1);
+
+            const P = src(srcX, srcY - 2),  Q = src(srcX - 2, srcY),
+                  R = src(srcX + 2, srcY),  S = src(srcX, srcY + 2);
+
+            // Default to nearest neighbor, with all four outputs
+            // equal to the input.
+            let J = E, K = E,
+                L = E, M = E;
+
+            // (Note that we don't need this many, since in the cases where they are applied,
+            // we can substitute via equality tests)            
+            const Al = luma(A), Bl = luma(B), Cl = luma(C), Dl = luma(D), El = luma(E),
+                  Fl = luma(F), Gl = luma(G), Hl = luma(H), Il = luma(I);
+
+            // Compute alpha channels
+            const Aa = (A >>> 24) & 0xff, Ba = (B >>> 24) & 0xff, Ca = (C >>> 24) & 0xff;
+            const Da = (D >>> 24) & 0xff, Ea = (E >>> 24) & 0xff, Fa = (F >>> 24) & 0xff;
+            const Ga = (G >>> 24) & 0xff, Ha = (H >>> 24) & 0xff, Ia = (I >>> 24) & 0xff;
+            
+            // Round some corners and fill in 1:1 slopes, but preserve
+            // sharp right angles.
+            //
+            // In each expression, the left clause is from Scale2X and
+            // the others are new. Scale2X recognizes 1:1 single-pixel
+            // lines because it applies the rounding only to the LINE,
+            // and not to the background (it looks at the mirrored side).
+            // It thus fails on thick 1:1 edges because it rounds *both*
+            // sides and produces an aliased edge shifted by 1 dst pixel.
+            // (This also yields the mushroom-shaped arrow heads, where that
+            // 1-pixel offset runs up against the 2-pixel aligned end; this
+            // is an inherent problem with 2X in-palette scaling.)
+            //
+            // The 2nd clause clauses avoid *double* diagonal filling
+            // on 1:1 slopes to prevent them becoming aliased
+            // again. It does this by breaking symmetry ties using
+            // luminance when working with thick features (it allows
+            // thin and transparent features to pass always).
+            //
+            // The 3rd clause seeks to preserve square corners by considering
+            // the center value before rounding.
+            //
+            // (The fourth clause just disables the rule in cases
+            // where it would do nothing, in order to make it easier
+            // to see which pixels are really affected when debugging
+            // and visualizing--it can be removed for performance).
+            /* ◤ */ if ((D === B && D !== H && D !== F)  &&  (Ea < Da || Il >= Dl || E !== I)  &&  any_eq(E, A,B,C,G)) J = D;
+            /* ◥ */ if ((B === F && B !== D && B !== H)  &&  (Ea < Ba || Gl >= Bl || E !== G)  &&  any_eq(E, A,C,F,I)) K = B;
+            /* ◣ */ if ((H === D && H !== F && H !== B)  &&  (Ea < Ha || Cl >= Hl || E !== C)  &&  any_eq(E, A,D,G,I)) L = H;
+            /* ◢ */ if ((F === H && F !== B && F !== D)  &&  (Ea < Fa || Al >= Fl || E !== A)  &&  any_eq(E, C,G,H,I)) M = F;
+            
+            // Clean up disconnected line intersections. First clause recognizes being on the inside of a
+            // diagonal corner. Second clause ensures that the pattern is not a notch at the edge of a
+            // checkerboard dithering pattern. Third clause ensures that the "foreground" has been
+            // correctly identified to avoid ambiguous cases such as this:
+            //
+            //  o#o#
+            //  oo##
+            //  o#o#
+            //
+            // where trying to fix the center intersection of either the "o" or the "#" will leave the
+            // other one disconnected. 
+            
+            /* > */ if ((all_eq(E, C,I,D) && E !== F && B === F && H === F)  &&  (F !== src(srcX + 3, srcY))  &&  (Ea === 0 || E === Q)) K = M = F;
+            /* < */ if ((all_eq(E, A,G,F) && E !== D && B === D && H === D)  &&  (D !== src(srcX - 3, srcY))  &&  (Ea === 0 || E === R)) J = L = D;
+            /* v */ if ((all_eq(E, G,I,B) && E !== H && D === H && F === H)  &&  (H !== src(srcX, srcY + 3))  &&  (Ea === 0 || E === P)) L = M = H;
+            /* ∧ */ if ((all_eq(E, A,C,H) && E !== B && D === B && F === B)  &&  (B !== src(srcX, srcY - 3))  &&  (Ea === 0 || E === S)) J = K = B;
+            
+            ///////////////////////////////////////////////////////////////////////////////////
+            // Special transparent cases to undo some of the cases above. This is not needed when
+            // running on full-screen opaque images, so is factored out separately here.
+            // This improves rounding on curved and 45-degree silhouettes against transparency.
+
+            if (none_eq(0, Ca,Ga) && all_eq(0, Aa,Ba,Da)) J = E;
+            if (none_eq(0, Aa,Ia) && all_eq(0, Ba,Ca,Fa)) K = E;
+            if (none_eq(0, Aa,Ia) && all_eq(0, Da,Ga,Ha)) L = E;
+            if (none_eq(0, Ca,Ga) && all_eq(0, Ha,Ia,Fa)) M = E;
+            
+            //////////////////////////////////////////////////////////////////////////////////
+            // If the center is not an isolated, non-transparent pixel
+            // color, then do further neighborhood peaking to identify
+            // 2:1 and 1:2 slopes of constant color.
+            if (Ea === 0 || any_eq(E, A,B,C,D,F,G,H,I)) {
+                // In each test, the first clause disables the test on
+                // pixels where it won't matter because the center
+                // already has the surrounding color, or the
+                // surrounding color is transparent.
+                //
+                // The second clause verfies that the line is
+                // thin. The third clause looks for a positive slope
+                // on the line (either 2:1 or 1:2)
+                //
+                // The 4th and 5th clauses are reflections of the
+                // pattern from the previous two in order to handle
+                // negative slopes.
+
+                // TODO: Exclude cases where corner filtering has
+                // already happened, or maybe apply the tie breaker
+                // rules so that we don't need to run on just thin
+                // lines.
+
+                // Above a 2:1 slope or -2:1 slope   ◢ ◣
+                if ((Ha !== 0) &&
+                    ((none_eq(H, D,B,A,E,I)  &&  all_eq(H, G,F,R)) ||
+                     (none_eq(H, F,B,C,E,G)  &&  all_eq(H, I,D,Q)))) L = M = H;
+
+                // Below a 2:1 (◤) or -2:1 (◥) slope (reflect the above 2:1 patterns vertically)  
+                if ((Ba !== 0) &&
+                    ((none_eq(B, D,H,G,E,C)  &&  all_eq(B, A,F,R)) ||
+                     (none_eq(B, F,H,I,E,A)  &&  all_eq(B, C,D,Q)))) J = K = B;
+
+                // Left of a 1:2 (/) slope or -1:2 (\) slope (transpose the above 2:1 patterns)
+                if ((Fa !== 0) &&
+                    ((none_eq(F, B,D,A,E,I)  &&  all_eq(F, C,H,S)) ||
+                     (none_eq(F, H,D,G,E,C)  &&  all_eq(F, I,B,P)))) K = M = F;
+
+                // Right of a 1:2 (/) or -1:2 (\) slope (reflect the left 1:2 patterns horizontally)
+                if ((Da !== 0) &&
+                    ((none_eq(D, B,F,C,E,G)  &&  all_eq(D, A,H,S)) ||
+                     (none_eq(D, H,F,I,E,A)  &&  all_eq(D, G,B,P)))) J = L = D;
+            } // not a single pixel
+            
+            // Write output (force transparent back to black for binary images)
+            if (isBinary) {
+                J = J ? J : BLACK; K = K ? K : BLACK;
+                L = L ? L : BLACK; M = M ? M : BLACK;
+            }
+            const dstIndex = srcX * 2 + srcY * 4 * srcWidth;
+            dstBuffer[dstIndex] = J;
+            dstBuffer[dstIndex + 1] = K;
+            dstBuffer[dstIndex + srcWidth * 2] = L;
+            dstBuffer[dstIndex + srcWidth * 2 + 1] = M;
+        } // X
+    } // Y
+}
+
+function runNearest2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
+    const src = makeSrcGet(srcBuffer, srcWidth, srcHeight);
+    
+    for (let srcY = 0; srcY < srcHeight; ++srcY) {
+        for (let srcX = 0; srcX < srcWidth; ++srcX) {
+            const E = src(srcX    , srcY    );
+
+            let J = E, K = E, L = E, M = E;
+            
+            // Write output
+            const dstIndex = srcX * 2 + srcY * 4 * srcWidth;
+            dstBuffer[dstIndex] = J;
+            dstBuffer[dstIndex + 1] = K;
+            dstBuffer[dstIndex + srcWidth * 2] = L;
+            dstBuffer[dstIndex + srcWidth * 2 + 1] = M;
+        } // X
+    } // Y
+}
+
+
+function runUnbiasedBilinear2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
+    const src = makeSrcGet(srcBuffer, srcWidth, srcHeight);
+    
+    for (let srcY = 0; srcY < srcHeight; ++srcY) {
+        for (let srcX = 0; srcX < srcWidth; ++srcX) {
+            const A = src(srcX - 1, srcY - 1);
+            const B = src(srcX    , srcY - 1);
+            const C = src(srcX + 1, srcY - 1);
+            
+            const D = src(srcX - 1, srcY    );
+            const E = src(srcX   ,  srcY    );
+            const F = src(srcX + 1, srcY    );
+            
+            const G = src(srcX - 1, srcY + 1);
+            const H = src(srcX    , srcY + 1);
+            const I = src(srcX + 1, srcY + 1);
+
+            // Unbiased bilinear:
+            const J = average2(E, average4(A, B, D, E));
+            const K = average2(E, average4(B, C, E, F));
+            const L = average2(E, average4(D, E, G, H));
+            const M = average2(E, average4(E, F, H, I));
+
+            // Write output
+            const dstIndex = srcX * 2 + srcY * 4 * srcWidth;
+            dstBuffer[dstIndex] = J;
+            dstBuffer[dstIndex + 1] = K;
+            dstBuffer[dstIndex + srcWidth * 2] = L;
+            dstBuffer[dstIndex + srcWidth * 2 + 1] = M;
+        } // X
+    } // Y
+}
+
+
+function runBilinear2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
+    const src = makeSrcGet(srcBuffer, srcWidth, srcHeight);
+    
+    for (let srcY = 0; srcY < srcHeight; ++srcY) {
+        for (let srcX = 0; srcX < srcWidth; ++srcX) {
+            const E = src(srcX   ,  srcY    );
+            const F = src(srcX + 1, srcY    );
+            const H = src(srcX    , srcY + 1);
+            const I = src(srcX + 1, srcY + 1);
+
+            // Biased bilinear:
+            const J = E;
+            const K = average2(E, F);
+            const L = average2(E, H);
+            const M = average4(E, F, H, I);
+
+            // Write output
+            const dstIndex = srcX * 2 + srcY * 4 * srcWidth;
+            dstBuffer[dstIndex] = J;
+            dstBuffer[dstIndex + 1] = K;
+            dstBuffer[dstIndex + srcWidth * 2] = L;
+            dstBuffer[dstIndex + srcWidth * 2 + 1] = M;
+        } // X
+    } // Y
+}
+
+
+function runXBR2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
+    const out = xbr2x(srcBuffer, srcWidth, srcHeight, {blendColors: false, scaleAlpha: true});
+    // Copy to the output
+    dstBuffer.set(out);
+}
+    
+// Returns the average of two uint32 colors in the format 0xAABBGGRR,
+// using premultiplied alpha blending to avoid darkening colors when
+// interpolating to transparent.
+function average2(C,  D) {
+    // Early out on common case
+    if ((C | D) === 0) { return 0; }
+    
+    let Ca = ((C & 0xFF000000) >>> 24) | 0, Cb = (C & 0x00FF0000) >> 16, Cg = (C & 0x0000FF00) >> 8, Cr = (C & 0x000000FF);
+    let Da = ((D & 0xFF000000) >>> 24) | 0, Db = (D & 0x00FF0000) >> 16, Dg = (D & 0x0000FF00) >> 8, Dr = (D & 0x000000FF);
+
+    let Ea = Ca + Da;
+    let Er, Eg, Eb;
+    
+    if ((Ca < 255) || (Da < 255)) {
+        // Premultiplied alpha. The missing 2 from the average cancels the
+        // missing 2 in Ea from 9-bit to 8-bit conversion.
+        const scale = 1 / Math.max(Ea, 1);
+        Er = Math.min(Math.round((Cr * Ca + Dr * Da) * scale) | 0, 255);
+        Eg = Math.min(Math.round((Cg * Ca + Dg * Da) * scale) | 0, 255);
+        Eb = Math.min(Math.round((Cb * Ca + Db * Da) * scale) | 0, 255);
+    } else {
+        // No point in rounding, each is always at a 0.0 or 0.5
+        Er = (Cr + Dr) >> 1;
+        Eg = (Cg + Dg) >> 1;
+        Eb = (Cb + Db) >> 1;
+    }
+    
+    // Back to 8-bit. No point in rounding Ea, it is always at a 0.0 or 0.5
+    Ea >>= 1;
+
+    return (Ea << 24) | (Eb << 16) | (Eg << 8) | Er;
+}
+
+function average4(A, B, C, D) {
+    // This would be slightly higher precision if
+    // implemented as a direct 4-way average.
+    return average2(average2(A, B), average2(C, D));
+}
+
+
+    function onDrop(event) {
+        // Prevent the browser from opening the file
+        event.preventDefault();
+        if (event.dataTransfer.items) {
+            // Use DataTransferItemList interface to access the file(s)
+            for (var i = 0; i < event.dataTransfer.items.length; i++) {
+                // If dropped items aren't files, reject them
+                if (event.dataTransfer.items[i].kind === 'file') {
+                    processDrop(event.dataTransfer.items[i].getAsFile());
+                }
+            }
+        } else {
+            // Use DataTransfer interface to access the file(s)
+            for (var i = 0; i < ev.dataTransfer.files.length; i++) {
+                processDrop(event.dataTransfer.files[i]);
+            }
+        } 
+    
+        // Pass event to removeDragData for cleanup
+        removeDragData(event)
+    }
+
+    function removeDragData(event) {
+        if (event.dataTransfer.items) {
+            // Use DataTransferItemList interface to remove the drag data
+            event.dataTransfer.items.clear();
+        } else {
+            // Use DataTransfer interface to remove the drag data
+            event.dataTransfer.clearData();
+        }
+    }
+
+    function processDrop(file) {
+        // Do not use a regex here; it will not give the
+        // correct result
+        if (! file.type.match('^image\/.*')) return;
+        const filename = file.name.replace(/\.[^.]+$/, '').replace(/-\d+$/, '');
+        
+        var reader = new FileReader();
+        reader.addEventListener('loadend', function() {
+            var sourceImage = new Image();
+            sourceImage.crossOrigin = 'anonymous';
+            sourceImage.src = reader.result;
+            sourceImage.onload = function () {
+                console.log("loaded " + file.name);
+                const srcWidth = sourceImage.width, srcHeight = sourceImage.height;
+                const dstWidth = srcWidth * 2, dstHeight = srcHeight * 2;
+
+                /*
+                const bilinearDisplay = document.getElementById('bilinearDisplay');
+                bilinearDisplay.innerHTML = '';
+                bilinearDisplay.style.width = dstWidth + 'px';
+                bilinearDisplay.style.height = dstHeight + 'px';
+                bilinearDisplay.appendChild(sourceImage);
+                */
+
+                const srcBuffer = getImageData4Bit(sourceImage);
+
+                const canvas = document.createElement('canvas');
+                canvas.width = sourceImage.width * 2;
+                canvas.height = sourceImage.height * 2;
+
+                const ctx = canvas.getContext('2d');
+                const dstImageData = ctx.createImageData(canvas.width, canvas.height);
+                // Make a uint32 aliased version
+                const dstBuffer = new Uint32Array(dstImageData.data.buffer);
+
+                // Process hq2X, which has a different format than the other functions
+                // because it expects an ImageData directly.
+                {
+                    const srcImageData = {
+                        width: sourceImage.width,
+                        height: sourceImage.height,
+                        data: { buffer: srcBuffer }
+                    };
+                    
+                    const dstImageData = hq2x(srcImageData);
+
+                    // Restrict output to 4-bit palette
+                    if (false) {
+                        for (let i = 0; i < dstImageData.data.buffer.length; ++i) {
+                            dstImageData[i] = (dstImageData[i] >> 4) | (dstImageData[i] & 0xf0);
+                        }
+                    }
+
+                    // Put the data back to create a data URL
+                    ctx.putImageData(dstImageData, 0, 0);
+                    const dstImage = new Image();
+                    dstImage.src = canvas.toDataURL();
+                    dstImage.onload = function () {
+                        const dstDisplay = document.getElementById('hq2XDisplay');
+                        dstDisplay.innerHTML = '';
+                        dstDisplay.style.width = dstImage.width + 'px';
+                        dstDisplay.style.height = dstImage.height + 'px';
+                        dstDisplay.appendChild(dstImage);
+                    };
+                }                
+
+                function process2X(scaler, elementName) {
+                    scaler(srcBuffer, srcWidth, srcHeight, dstBuffer);
+                
+                    // Put the data back to create a data URL
+                    ctx.putImageData(dstImageData, 0, 0);
+                    const dstImage = new Image();
+                    dstImage.src = canvas.toDataURL();
+                    dstImage.onload = function () {
+                        const dstDisplay = document.getElementById(elementName);
+                        dstDisplay.innerHTML = '';
+                        dstDisplay.style.width = dstImage.width + 'px';
+                        dstDisplay.style.height = dstImage.height + 'px';
+                        dstDisplay.appendChild(dstImage);
+                    };
+                }
+
+                process2X(runScale2X,    'scale2XDisplay');
+                process2X(runMcScaly2X,  'mcscaly2XDisplay');
+                process2X(runNearest2X,  'nearest2XDisplay');
+                if (document.getElementById('xbr2XDisplay')) {
+                    // The XBR2 has been enabled
+                    process2X(runXBR2X,      'xbr2XDisplay');
+                } else {
+                    process2X(runUnbiasedBilinear2X, 'unbiasedBilinear2XDisplay');
+                }
+                process2X(runBilinear2X, 'bilinear2XDisplay');
+            };
+            
+            sourceImage.onerror = function () {
+                console.log("failed to load image " + file.name);
+            };
+        });
+    
+        reader.readAsDataURL(file);
+    }
+
+
+    function onDragOver(event) { event.preventDefault(); }
+</script>
+<body ondrop="onDrop(event)" ondragover="onDragOver(event)">
+  <h1>scalepix✜</h1>
+    <div style="margin: auto; max-width: 600px">
+    <p>
+    Drag a quadplay✜ font or sprite PNG file onto this page to rescale it 2X using
+    multiple methods. Then, save one of the resulting images and improve small details
+    by hand. For fonts, ensure that characters are separated by at least three pixels.
+    For sprite sheets, ensure that sprites are three pixels from the edge and each other.
+    </p>
+    </div>
+    <hr>
+    <center>
+    <table>
+    <tr>
+    <td>
+    <b>McScaly2X</b>
+    <div id="mcscaly2XDisplay" class="image"></div>
+    </td>
+    <td>
+    <b>Scale2X/EPX</b>
+    <div id="scale2XDisplay" class="image"></div>
+    </td>
+    <td>
+    <b>xBR2X</b>
+    <div id="xbr2XDisplay" class="image"></div>
+    <!--
+    <b>Unbiased2X</b>
+    <div id="unbiasedBilinear2XDisplay" class="image"></div>
+    -->
+    </td>
+    </tr>
+    <tr>
+    <td>
+    <b>Nearest2X</b>
+    <div id="nearest2XDisplay" class="image"></div>
+    </td>
+    <td>
+    <b>hq2X</b>
+    <div id="hq2XDisplay" class="image"></div>
+    </td>
+    <td>
+    <b>Bilinear2X</b>
+    <div id="bilinear2XDisplay" class="image"></div>
+    </td>
+    </tr>
+    </table>
+    </center>
+    <hr>
+    <p>
+    The <a href="https://www.scale2x.it/scale2xandepx">"Scale2X/EPX"</a> was created by both Eric Johnston and Andrea Mazzoleni implemented independently.
+    It works with transparency and does a good job of retaining sharpness by only using colors from the original palette.
+    The drawbacks are that it rounds all 90 degree corners, rounds the sharp points of triangles, is inconsistent on both 1:1 and 2:1 slope edges,
+    creates disconnected line intersections, and doesn't work well at
+    the tips of arrows.
+    </p>
+    <p>
+    The "McScaly2X" algorithm is by Morgan McGuire, and is usually the best choice for upscaling small sprites
+    and fonts. It maintains the good properties of Scale2X and also maintains square corners, handles 2:1 and 
+    1:2 as well as 1:1 slopes, and has special handling of sprite silhouettes against transparency.
+    </p>
+    <p>
+    The "hq2x" algorithm is by Maxim Stepin. 
+    It gives beautiful full-screen results, but alters the style of pixel art assets by introducing
+    new shades and blurring pixel text and icon shapes, especially against transparency, where it 
+    darkens instead of blending.
+    </p>
+    <p>
+    The "Bilinear2X" implementation is shifted by half a pixel down and to the right.
+    The "Unbiased2X" algorithm performs bilinear without the shift and then averages with the original
+    image to retain some sharpness (the result is similar to a Lancosz filter without sharpening lobes).
+    </p>
+    <p>
+    The "xBR2X" algorithm is by Hyllian, configured here to not introduce new colors and to process
+    transparency. The implementation here is by Josep del Rio and provided under the MIT license.
+    </p>
+    <p>
+    There are many other <a href="https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms">pixel-art scaling
+    algorithms</a> with varying properties.
+    </p>
+  <br/>
+  <br/>
+</body>
+v
+<script>
+/*
+* Copyright © 2003 Maxim Stepin (maxst@hiend3d.com)
+* Copyright © 2010 Cameron Zemek (grom@zeminvaders.net)
+* Copyright © 2011 Tamme Schichler (tamme.schichler@googlemail.com)
+* Copyright © 2012 A. Eduardo García (arcnorj@gmail.com)
+* Copyright © 2013 Kevin Kwok (antimatter15@gmail.com)
+*
+* hqx-java is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Lesser General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* hqx-java is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License
+* along with hqx-java. If not, see <http://www.gnu.org/licenses/>.
+*/
+var hq2x=function(){function Mix3To1(c1,c2){return c1==c2?c1:3*(65280&c1)+(65280&c2)>>2&65280|3*(16711935&c1)+(16711935&c2)>>2&16711935|3*((4278190080&c1)>>2)+((4278190080&c2)>>2)&4278190080}function Mix2To1To1(c1,c2,c3){return 2*(65280&c1)+(65280&c2)+(65280&c3)>>2&65280|2*(16711935&c1)+(16711935&c2)+(16711935&c3)>>2&16711935|2*((4278190080&c1)>>2)+((4278190080&c2)>>2)+((4278190080&c3)>>2)&4278190080}function Mix4To2To1(c1,c2,c3){return 5*(65280&c1)+2*(65280&c2)+(65280&c3)>>3&65280|5*(16711935&c1)+2*(16711935&c2)+(16711935&c3)>>3&16711935|5*((4278190080&c1)>>3)+2*((4278190080&c2)>>3)+((4278190080&c3)>>3)&4278190080}function Mix6To1To1(c1,c2,c3){return 6*(65280&c1)+(65280&c2)+(65280&c3)>>3&65280|6*(16711935&c1)+(16711935&c2)+(16711935&c3)>>3&16711935|6*((4278190080&c1)>>3)+((4278190080&c2)>>3)+((4278190080&c3)>>3)&4278190080}function Mix2To3To3(c1,c2,c3){return 2*(65280&c1)+3*(65280&c2)+3*(65280&c3)>>3&65280|2*(16711935&c1)+3*(16711935&c2)+3*(16711935&c3)>>3&16711935|2*((4278190080&c1)>>3)+3*((4278190080&c2)>>3)+3*((4278190080&c3)>>3)&4278190080}function Mix14To1To1(c1,c2,c3){return 14*(65280&c1)+(65280&c2)+(65280&c3)>>4&65280|14*(16711935&c1)+(16711935&c2)+(16711935&c3)>>4&16711935|14*((4278190080&c1)>>4)+((4278190080&c2)>>4)+((4278190080&c3)>>4)&4278190080}function getYUV(c){var r,g,b,y,u,v;return r=(16711680&c)>>16,g=(65280&c)>>8,b=255&c,y=Math.floor(.299*r+.587*g+.114*b),u=Math.floor(-.169*r-.331*g+.5*b+128),v=Math.floor(.5*r-.419*g-.081*b+128),y<<16|u<<8|v}function diff(c1,c2,trY,trU,trV,trA){var YUV1=getYUV(16777215&c1),YUV2=getYUV(16777215&c2);return Math.abs((16711680&YUV1)-(16711680&YUV2))>trY||Math.abs((65280&YUV1)-(65280&YUV2))>trU||Math.abs((255&YUV1)-(255&YUV2))>trV||Math.abs((c1>>24)-(c2>>24))>trA}function hq2x(src,options){options=options||{};var trY=options.trY||48,trU=options.trU||7,trV=options.trV||6,trA=options.trA||0,wrapX=options.wrapX||!1,wrapY=options.wrapY||!1,Xres=src.width,Yres=src.height,dest=ctx.createImageData(2*Xres,2*Yres),sp=new Uint32Array(src.data.buffer),dp=new Uint32Array(dest.data.buffer),spIdx=0,dpIdx=0;trY<<=16,trU<<=8;for(var prevline,nextline,dpL=2*Xres,w=new Uint32Array(9),j=0;j<Yres;j++){prevline=j>0?-Xres:wrapY?Xres*(Yres-1):0,nextline=j<Yres-1?Xres:wrapY?-(Xres*(Yres-1)):0;for(var i=0;i<Xres;i++){w[1]=sp[spIdx+prevline],w[4]=sp[spIdx],w[7]=sp[spIdx+nextline],i>0?(w[0]=sp[spIdx+prevline-1],w[3]=sp[spIdx-1],w[6]=sp[spIdx+nextline-1]):wrapX?(w[0]=sp[spIdx+prevline+Xres-1],w[3]=sp[spIdx+Xres-1],w[6]=sp[spIdx+nextline+Xres-1]):(w[0]=w[1],w[3]=w[4],w[6]=w[7]),i<Xres-1?(w[2]=sp[spIdx+prevline+1],w[5]=sp[spIdx+1],w[8]=sp[spIdx+nextline+1]):wrapX?(w[2]=sp[spIdx+prevline-Xres+1],w[5]=sp[spIdx-Xres+1],w[8]=sp[spIdx+nextline-Xres+1]):(w[2]=w[1],w[5]=w[4],w[8]=w[7]);for(var pattern=0,flag=1,k=0;k<9;k++)4!=k&&(w[k]!=w[4]&&diff(w[4],w[k],trY,trU,trV,trA)&&(pattern|=flag),flag<<=1);switch(pattern){case 0:case 1:case 4:case 32:case 128:case 5:case 132:case 160:case 33:case 129:case 36:case 133:case 164:case 161:case 37:case 165:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 2:case 34:case 130:case 162:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 16:case 17:case 48:case 49:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 64:case 65:case 68:case 69:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 8:case 12:case 136:case 140:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 3:case 35:case 131:case 163:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 6:case 38:case 134:case 166:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 20:case 21:case 52:case 53:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 144:case 145:case 176:case 177:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 192:case 193:case 196:case 197:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 96:case 97:case 100:case 101:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 40:case 44:case 168:case 172:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 9:case 13:case 137:case 141:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 18:case 50:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?Mix3To1(w[4],w[2]):Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 80:case 81:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?Mix3To1(w[4],w[8]):Mix2To1To1(w[4],w[5],w[7]);break;case 72:case 76:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?Mix3To1(w[4],w[6]):Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 10:case 138:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?Mix3To1(w[4],w[0]):Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 66:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 24:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 7:case 39:case 135:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 148:case 149:case 180:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 224:case 228:case 225:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 41:case 169:case 45:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 22:case 54:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 208:case 209:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[5],w[7]);break;case 104:case 108:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 11:case 139:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 19:case 51:diff(w[1],w[5],trY,trU,trV,trA)?(dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=Mix3To1(w[4],w[2])):(dp[dpIdx]=Mix4To2To1(w[4],w[1],w[3]),dp[dpIdx+1]=Mix2To3To3(w[4],w[1],w[5])),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 146:case 178:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),diff(w[1],w[5],trY,trU,trV,trA)?(dp[dpIdx+1]=Mix3To1(w[4],w[2]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7])):(dp[dpIdx+1]=Mix2To3To3(w[4],w[1],w[5]),dp[dpIdx+dpL+1]=Mix4To2To1(w[4],w[5],w[7])),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]);break;case 84:case 85:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),diff(w[5],w[7],trY,trU,trV,trA)?(dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[8])):(dp[dpIdx+1]=Mix4To2To1(w[4],w[5],w[1]),dp[dpIdx+dpL+1]=Mix2To3To3(w[4],w[5],w[7])),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]);break;case 112:case 113:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),diff(w[5],w[7],trY,trU,trV,trA)?(dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[8])):(dp[dpIdx+dpL]=Mix4To2To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To3To3(w[4],w[5],w[7]));break;case 200:case 204:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),diff(w[7],w[3],trY,trU,trV,trA)?(dp[dpIdx+dpL]=Mix3To1(w[4],w[6]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5])):(dp[dpIdx+dpL]=Mix2To3To3(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix4To2To1(w[4],w[7],w[5]));break;case 73:case 77:diff(w[7],w[3],trY,trU,trV,trA)?(dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=Mix3To1(w[4],w[6])):(dp[dpIdx]=Mix4To2To1(w[4],w[3],w[1]),dp[dpIdx+dpL]=Mix2To3To3(w[4],w[7],w[3])),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 42:case 170:diff(w[3],w[1],trY,trU,trV,trA)?(dp[dpIdx]=Mix3To1(w[4],w[0]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7])):(dp[dpIdx]=Mix2To3To3(w[4],w[3],w[1]),dp[dpIdx+dpL]=Mix4To2To1(w[4],w[3],w[7])),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 14:case 142:diff(w[3],w[1],trY,trU,trV,trA)?(dp[dpIdx]=Mix3To1(w[4],w[0]),dp[dpIdx+1]=Mix3To1(w[4],w[5])):(dp[dpIdx]=Mix2To3To3(w[4],w[3],w[1]),dp[dpIdx+1]=Mix4To2To1(w[4],w[1],w[5])),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 67:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 70:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 28:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 152:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 194:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 98:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 56:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 25:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 26:case 31:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 82:case 214:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[5],w[7]);break;case 88:case 248:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[5],w[7]);break;case 74:case 107:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 27:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[2]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 86:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[8]);break;case 216:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=Mix3To1(w[4],w[6]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[5],w[7]);break;case 106:dp[dpIdx]=Mix3To1(w[4],w[0]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 30:dp[dpIdx]=Mix3To1(w[4],w[0]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 210:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=Mix3To1(w[4],w[2]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[5],w[7]);break;case 120:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[8]);break;case 75:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[6]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 29:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 198:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 184:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 99:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 57:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 71:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 156:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 226:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 60:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 195:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 102:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 153:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 58:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?Mix3To1(w[4],w[0]):Mix6To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?Mix3To1(w[4],w[2]):Mix6To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 83:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?Mix3To1(w[4],w[2]):Mix6To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?Mix3To1(w[4],w[8]):Mix6To1To1(w[4],w[5],w[7]);break;case 92:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?Mix3To1(w[4],w[6]):Mix6To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?Mix3To1(w[4],w[8]):Mix6To1To1(w[4],w[5],w[7]);break;case 202:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?Mix3To1(w[4],w[0]):Mix6To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?Mix3To1(w[4],w[6]):Mix6To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 78:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?Mix3To1(w[4],w[0]):Mix6To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?Mix3To1(w[4],w[6]):Mix6To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 154:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?Mix3To1(w[4],w[0]):Mix6To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?Mix3To1(w[4],w[2]):Mix6To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 114:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?Mix3To1(w[4],w[2]):Mix6To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?Mix3To1(w[4],w[8]):Mix6To1To1(w[4],w[5],w[7]);break;case 89:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?Mix3To1(w[4],w[6]):Mix6To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?Mix3To1(w[4],w[8]):Mix6To1To1(w[4],w[5],w[7]);break;case 90:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?Mix3To1(w[4],w[0]):Mix6To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?Mix3To1(w[4],w[2]):Mix6To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?Mix3To1(w[4],w[6]):Mix6To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?Mix3To1(w[4],w[8]):Mix6To1To1(w[4],w[5],w[7]);break;case 55:case 23:diff(w[1],w[5],trY,trU,trV,trA)?(dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=w[4]):(dp[dpIdx]=Mix4To2To1(w[4],w[1],w[3]),dp[dpIdx+1]=Mix2To3To3(w[4],w[1],w[5])),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 182:case 150:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),diff(w[1],w[5],trY,trU,trV,trA)?(dp[dpIdx+1]=w[4],dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7])):(dp[dpIdx+1]=Mix2To3To3(w[4],w[1],w[5]),dp[dpIdx+dpL+1]=Mix4To2To1(w[4],w[5],w[7])),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]);break;case 213:case 212:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),diff(w[5],w[7],trY,trU,trV,trA)?(dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL+1]=w[4]):(dp[dpIdx+1]=Mix4To2To1(w[4],w[5],w[1]),dp[dpIdx+dpL+1]=Mix2To3To3(w[4],w[5],w[7])),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]);break;case 241:case 240:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),diff(w[5],w[7],trY,trU,trV,trA)?(dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=w[4]):(dp[dpIdx+dpL]=Mix4To2To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To3To3(w[4],w[5],w[7]));break;case 236:case 232:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),diff(w[7],w[3],trY,trU,trV,trA)?(dp[dpIdx+dpL]=w[4],dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5])):(dp[dpIdx+dpL]=Mix2To3To3(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix4To2To1(w[4],w[7],w[5]));break;case 109:case 105:diff(w[7],w[3],trY,trU,trV,trA)?(dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=w[4]):(dp[dpIdx]=Mix4To2To1(w[4],w[3],w[1]),dp[dpIdx+dpL]=Mix2To3To3(w[4],w[7],w[3])),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 171:case 43:diff(w[3],w[1],trY,trU,trV,trA)?(dp[dpIdx]=w[4],dp[dpIdx+dpL]=Mix3To1(w[4],w[7])):(dp[dpIdx]=Mix2To3To3(w[4],w[3],w[1]),dp[dpIdx+dpL]=Mix4To2To1(w[4],w[3],w[7])),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 143:case 15:diff(w[3],w[1],trY,trU,trV,trA)?(dp[dpIdx]=w[4],dp[dpIdx+1]=Mix3To1(w[4],w[5])):(dp[dpIdx]=Mix2To3To3(w[4],w[3],w[1]),dp[dpIdx+1]=Mix4To2To1(w[4],w[1],w[5])),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 124:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[8]);break;case 203:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[6]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 62:dp[dpIdx]=Mix3To1(w[4],w[0]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 211:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=Mix3To1(w[4],w[2]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[5],w[7]);break;case 118:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[8]);break;case 217:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=Mix3To1(w[4],w[6]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[5],w[7]);break;case 110:dp[dpIdx]=Mix3To1(w[4],w[0]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 155:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[2]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 188:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 185:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 61:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 157:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 103:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 227:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 230:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 199:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 220:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?Mix3To1(w[4],w[6]):Mix6To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[5],w[7]);break;case 158:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?Mix3To1(w[4],w[0]):Mix6To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 234:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?Mix3To1(w[4],w[0]):Mix6To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 242:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?Mix3To1(w[4],w[2]):Mix6To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[5],w[7]);break;case 59:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?Mix3To1(w[4],w[2]):Mix6To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 121:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?Mix3To1(w[4],w[8]):Mix6To1To1(w[4],w[5],w[7]);break;case 87:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?Mix3To1(w[4],w[8]):Mix6To1To1(w[4],w[5],w[7]);break;case 79:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?Mix3To1(w[4],w[6]):Mix6To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 122:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?Mix3To1(w[4],w[0]):Mix6To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?Mix3To1(w[4],w[2]):Mix6To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?Mix3To1(w[4],w[8]):Mix6To1To1(w[4],w[5],w[7]);break;case 94:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?Mix3To1(w[4],w[0]):Mix6To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?Mix3To1(w[4],w[6]):Mix6To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?Mix3To1(w[4],w[8]):Mix6To1To1(w[4],w[5],w[7]);break;case 218:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?Mix3To1(w[4],w[0]):Mix6To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?Mix3To1(w[4],w[2]):Mix6To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?Mix3To1(w[4],w[6]):Mix6To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[5],w[7]);break;case 91:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?Mix3To1(w[4],w[2]):Mix6To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?Mix3To1(w[4],w[6]):Mix6To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?Mix3To1(w[4],w[8]):Mix6To1To1(w[4],w[5],w[7]);break;case 229:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 167:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 173:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 181:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 186:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?Mix3To1(w[4],w[0]):Mix6To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?Mix3To1(w[4],w[2]):Mix6To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 115:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?Mix3To1(w[4],w[2]):Mix6To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?Mix3To1(w[4],w[8]):Mix6To1To1(w[4],w[5],w[7]);break;case 93:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?Mix3To1(w[4],w[6]):Mix6To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?Mix3To1(w[4],w[8]):Mix6To1To1(w[4],w[5],w[7]);break;case 206:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?Mix3To1(w[4],w[0]):Mix6To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?Mix3To1(w[4],w[6]):Mix6To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 205:case 201:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?Mix3To1(w[4],w[6]):Mix6To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 174:case 46:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?Mix3To1(w[4],w[0]):Mix6To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 179:case 147:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?Mix3To1(w[4],w[2]):Mix6To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 117:case 116:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?Mix3To1(w[4],w[8]):Mix6To1To1(w[4],w[5],w[7]);break;case 189:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 231:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 126:dp[dpIdx]=Mix3To1(w[4],w[0]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[8]);break;case 219:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[2]),dp[dpIdx+dpL]=Mix3To1(w[4],w[6]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[5],w[7]);break;case 125:diff(w[7],w[3],trY,trU,trV,trA)?(dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=w[4]):(dp[dpIdx]=Mix4To2To1(w[4],w[3],w[1]),dp[dpIdx+dpL]=Mix2To3To3(w[4],w[7],w[3])),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[8]);break;case 221:dp[dpIdx]=Mix3To1(w[4],w[1]),diff(w[5],w[7],trY,trU,trV,trA)?(dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL+1]=w[4]):(dp[dpIdx+1]=Mix4To2To1(w[4],w[5],w[1]),dp[dpIdx+dpL+1]=Mix2To3To3(w[4],w[5],w[7])),dp[dpIdx+dpL]=Mix3To1(w[4],w[6]);break;case 207:diff(w[3],w[1],trY,trU,trV,trA)?(dp[dpIdx]=w[4],dp[dpIdx+1]=Mix3To1(w[4],w[5])):(dp[dpIdx]=Mix2To3To3(w[4],w[3],w[1]),dp[dpIdx+1]=Mix4To2To1(w[4],w[1],w[5])),dp[dpIdx+dpL]=Mix3To1(w[4],w[6]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 238:dp[dpIdx]=Mix3To1(w[4],w[0]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),diff(w[7],w[3],trY,trU,trV,trA)?(dp[dpIdx+dpL]=w[4],dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5])):(dp[dpIdx+dpL]=Mix2To3To3(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix4To2To1(w[4],w[7],w[5]));break;case 190:dp[dpIdx]=Mix3To1(w[4],w[0]),diff(w[1],w[5],trY,trU,trV,trA)?(dp[dpIdx+1]=w[4],dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7])):(dp[dpIdx+1]=Mix2To3To3(w[4],w[1],w[5]),dp[dpIdx+dpL+1]=Mix4To2To1(w[4],w[5],w[7])),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]);break;
+case 187:diff(w[3],w[1],trY,trU,trV,trA)?(dp[dpIdx]=w[4],dp[dpIdx+dpL]=Mix3To1(w[4],w[7])):(dp[dpIdx]=Mix2To3To3(w[4],w[3],w[1]),dp[dpIdx+dpL]=Mix4To2To1(w[4],w[3],w[7])),dp[dpIdx+1]=Mix3To1(w[4],w[2]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 243:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=Mix3To1(w[4],w[2]),diff(w[5],w[7],trY,trU,trV,trA)?(dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=w[4]):(dp[dpIdx+dpL]=Mix4To2To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To3To3(w[4],w[5],w[7]));break;case 119:diff(w[1],w[5],trY,trU,trV,trA)?(dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=w[4]):(dp[dpIdx]=Mix4To2To1(w[4],w[1],w[3]),dp[dpIdx+1]=Mix2To3To3(w[4],w[1],w[5])),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[8]);break;case 237:case 233:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 175:case 47:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[5],w[7]);break;case 183:case 151:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 245:case 244:dp[dpIdx]=Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[5],w[7]);break;case 250:dp[dpIdx]=Mix3To1(w[4],w[0]),dp[dpIdx+1]=Mix3To1(w[4],w[2]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[5],w[7]);break;case 123:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[2]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[8]);break;case 95:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[6]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[8]);break;case 222:dp[dpIdx]=Mix3To1(w[4],w[0]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[6]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[5],w[7]);break;case 252:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[5],w[7]);break;case 249:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[1]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[5],w[7]);break;case 235:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix2To1To1(w[4],w[2],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 111:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[5]);break;case 63:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix2To1To1(w[4],w[8],w[7]);break;case 159:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[7]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 215:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix2To1To1(w[4],w[6],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[5],w[7]);break;case 246:dp[dpIdx]=Mix2To1To1(w[4],w[0],w[3]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[5],w[7]);break;case 254:dp[dpIdx]=Mix3To1(w[4],w[0]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[5],w[7]);break;case 253:dp[dpIdx]=Mix3To1(w[4],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[1]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[5],w[7]);break;case 251:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[2]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[5],w[7]);break;case 239:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=Mix3To1(w[4],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[5]);break;case 127:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[8]);break;case 191:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[7]),dp[dpIdx+dpL+1]=Mix3To1(w[4],w[7]);break;case 223:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[6]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix2To1To1(w[4],w[5],w[7]);break;case 247:dp[dpIdx]=Mix3To1(w[4],w[3]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=Mix3To1(w[4],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[5],w[7]);break;case 255:dp[dpIdx]=diff(w[3],w[1],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[3],w[1]),dp[dpIdx+1]=diff(w[1],w[5],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[1],w[5]),dp[dpIdx+dpL]=diff(w[7],w[3],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[7],w[3]),dp[dpIdx+dpL+1]=diff(w[5],w[7],trY,trU,trV,trA)?w[4]:Mix14To1To1(w[4],w[5],w[7])}spIdx++,dpIdx+=2}dpIdx+=dpL}return dest}var canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");return hq2x}();
+
+/////////////////////////////////////////////////////////////////////////////////////////
+// From https://github.com/joseprio/xBRjs
+// Copyright 2020 Josep del Rio. It is available under the MIT license.
+
+const [xbr2x, xbr3x, xbr4x] =
+(function () {
+// Options
+const USE_3X_ORIGINAL_IMPLEMENTATION = false;
+
+const
+  REDMASK   = 0x000000FF, // &MASK	>>0
+  GREENMASK = 0x0000FF00, // &MASK	>>8
+  BLUEMASK  = 0x00FF0000, // &MASK	>>16
+  ALPHAMASK = 0xFF000000, // &MASK	>>24
+  THRESHHOLD_Y = 48,
+  THRESHHOLD_U = 7,
+  THRESHHOLD_V = 6;
+
+// Convert an ARGB byte to YUV
+function getYuv(p) {
+  const
+    r = (p & REDMASK),
+    g = (p & GREENMASK) >> 8,
+    b = (p & BLUEMASK) >> 16,
+    y = r * .299000 + g * .587000 + b * .114000,
+    u = r *  - .168736 + g *  - .331264 + b * .500000,
+    v = r * .500000 + g *  - .418688 + b *  - .081312;
+  return [y, u, v];
+}
+
+function yuvDifference(A, B, scaleAlpha) {
+  const
+    alphaA = ((A & ALPHAMASK) >> 24) & 0xff,
+    alphaB = ((B & ALPHAMASK) >> 24) & 0xff;
+
+  if (alphaA === 0 && alphaB === 0) {
+    return 0;
+  }
+
+  if (!scaleAlpha && (alphaA < 255 || alphaB < 255)) {
+    // Very large value not attainable by the thresholds
+    return 1000000;
+  }
+ 
+  if (alphaA === 0 || alphaB === 0) {
+    // Very large value not attainable by the thresholds
+    return 1000000;
+  }
+
+  const
+    yuvA = getYuv(A),
+    yuvB = getYuv(B);
+
+  /*Add HQx filters threshold & return*/
+  return Math.abs(yuvA[0] - yuvB[0]) * THRESHHOLD_Y
+       + Math.abs(yuvA[1] - yuvB[1]) * THRESHHOLD_U
+       + Math.abs(yuvA[2] - yuvB[2]) * THRESHHOLD_V;
+}
+
+function isEqual(A, B, scaleAlpha) {
+  const
+    alphaA = ((A & ALPHAMASK) >> 24) & 0xff,
+    alphaB = ((B & ALPHAMASK) >> 24) & 0xff;
+
+  if (alphaA === 0 && alphaB === 0) {
+    return true;
+  }
+
+  if (!scaleAlpha && (alphaA < 255 || alphaB < 255)) {
+    return false;
+  }
+
+  if (alphaA === 0 || alphaB === 0) {
+    return false;
+  }
+
+  const
+    yuvA = getYuv(A),
+    yuvB = getYuv(B);
+
+  if (Math.abs(yuvA[0] - yuvB[0]) > THRESHHOLD_Y) {
+    return false;
+  }
+  if (Math.abs(yuvA[1] - yuvB[1]) > THRESHHOLD_U) {
+    return false;
+  }
+  if (Math.abs(yuvA[2] - yuvB[2]) > THRESHHOLD_V) {
+    return false;
+  }
+
+  return true;
+}
+
+function pixelInterpolate(A, B, q1, q2) {
+  const
+    alphaA = ((A & ALPHAMASK) >> 24) & 0xff,
+    alphaB = ((B & ALPHAMASK) >> 24) & 0xff;
+
+  /*Extract each value from 32bit Uint & blend colors together*/
+  let r, g, b, a;
+
+  if (alphaA === 0) {
+    r = B & REDMASK;
+    g = (B & GREENMASK) >> 8;
+    b = (B & BLUEMASK) >> 16;
+  } else if (alphaB === 0) {
+    r = A & REDMASK;
+    g = (A & GREENMASK) >> 8;
+    b = (A & BLUEMASK) >> 16;
+  } else {
+    r = (q2 * (B & REDMASK) + q1 * (A & REDMASK)) / (q1 + q2);
+    g = (q2 * ((B & GREENMASK) >> 8) + q1 * ((A & GREENMASK) >> 8)) / (q1 + q2);
+    b = (q2 * ((B & BLUEMASK) >> 16) + q1 * ((A & BLUEMASK) >> 16)) / (q1 + q2);
+  }
+  a = (q2 * alphaB + q1 * alphaA) / (q1 + q2);
+  /*The bit hack '~~' is used to floor the values like Math.floor, but faster*/
+  return ((~~r) | ((~~g) << 8) | ((~~b) << 16) | ((~~a) << 24));
+}
+
+function getRelatedPoints(oriPixelView, oriX, oriY, oriW, oriH) {
+  let xm1 = oriX - 1;
+  if (xm1 < 0) {
+    xm1 = 0;
+  }
+  let xm2 = oriX - 2;
+  if (xm2 < 0) {
+    xm2 = 0;
+  }
+  let xp1 = oriX + 1;
+  if (xp1 >= oriW) {
+    xp1 = oriW - 1;
+  }
+  let xp2 = oriX + 2;
+  if (xp2 >= oriW) {
+    xp2 = oriW - 1;
+  }
+  let ym1 = oriY - 1;
+  if (ym1 < 0) {
+    ym1 = 0;
+  }
+  let ym2 = oriY - 2;
+  if (ym2 < 0) {
+    ym2 = 0;
+  }
+  let yp1 = oriY + 1;
+  if (yp1 >= oriH) {
+    yp1 = oriH - 1;
+  }
+  let yp2 = oriY + 2;
+  if (yp2 >= oriH) {
+    yp2 = oriH - 1;
+  }
+
+  return [
+    oriPixelView[xm1 + ym2 * oriW],  /* a1 */
+    oriPixelView[oriX + ym2 * oriW], /* b1 */
+    oriPixelView[xp1 + ym2 * oriW],  /* c1 */
+
+    oriPixelView[xm2 + ym1 * oriW],  /* a0 */
+    oriPixelView[xm1 + ym1 * oriW],  /* pa */
+    oriPixelView[oriX + ym1 * oriW], /* pb */
+    oriPixelView[xp1 + ym1 * oriW],  /* pc */
+    oriPixelView[xp2 + ym1 * oriW],  /* c4 */
+
+    oriPixelView[xm2 + oriY * oriW], /* d0 */
+    oriPixelView[xm1 + oriY * oriW], /* pd */
+    oriPixelView[oriX + oriY * oriW],/* pe */
+    oriPixelView[xp1 + oriY * oriW], /* pf */
+    oriPixelView[xp2 + oriY * oriW], /* f4 */
+
+    oriPixelView[xm2 + yp1 * oriW],  /* g0 */
+    oriPixelView[xm1 + yp1 * oriW],  /* pg */
+    oriPixelView[oriX + yp1 * oriW], /* ph */
+    oriPixelView[xp1 + yp1 * oriW],  /* pi */
+    oriPixelView[xp2 + yp1 * oriW],  /* i4 */
+
+    oriPixelView[xm1 + yp2 * oriW],  /* g5 */
+    oriPixelView[oriX + yp2 * oriW], /* h5 */
+    oriPixelView[xp1 + yp2 * oriW]   /* i5 */
+  ];
+}
+
+// This is the XBR2x by Hyllian (see http://board.byuu.org/viewtopic.php?f=10&t=2248)
+function computeXbr2x(oriPixelView, oriX, oriY, oriW, oriH, dstPixelView, dstX, dstY, dstW, blendColors, scaleAlpha) {
+  const relatedPoints = getRelatedPoints(oriPixelView, oriX, oriY, oriW, oriH);
+  const
+    [a1,
+     b1,
+     c1,
+	 a0,
+     pa,
+     pb,
+     pc,
+     c4,
+     d0,
+     pd,
+     pe,
+     pf,
+     f4,
+     g0,
+     pg,
+     ph,
+     pi,
+     i4,
+     g5,
+     h5,
+     i5] = relatedPoints;
+  let e0, e1, e2, e3;
+  e0 = e1 = e2 = e3 = pe;
+
+  [e1, e2, e3] = kernel2Xv5(pe, pi, ph, pf, pg, pc, pd, pb, f4, i4, h5, i5, e1, e2, e3, blendColors, scaleAlpha);
+  [e0, e3, e1] = kernel2Xv5(pe, pc, pf, pb, pi, pa, ph, pd, b1, c1, f4, c4, e0, e3, e1, blendColors, scaleAlpha);
+  [e2, e1, e0] = kernel2Xv5(pe, pa, pb, pd, pc, pg, pf, ph, d0, a0, b1, a1, e2, e1, e0, blendColors, scaleAlpha);
+  [e3, e0, e2] = kernel2Xv5(pe, pg, pd, ph, pa, pi, pb, pf, h5, g5, d0, g0, e3, e0, e2, blendColors, scaleAlpha);
+
+  dstPixelView[dstX + dstY * dstW] = e0;
+  dstPixelView[dstX + 1 + dstY * dstW] = e1;
+  dstPixelView[dstX + (dstY + 1) * dstW] = e2;
+  dstPixelView[dstX + 1 + (dstY + 1) * dstW] = e3;  
+}
+
+function computeXbr3x(oriPixelView, oriX, oriY, oriW, oriH, dstPixelView, dstX, dstY, dstW, blendColors, scaleAlpha) {
+  const relatedPoints = getRelatedPoints(oriPixelView, oriX, oriY, oriW, oriH);
+  const
+    [a1,
+     b1,
+     c1,
+	 a0,
+     pa,
+     pb,
+     pc,
+     c4,
+     d0,
+     pd,
+     pe,
+     pf,
+     f4,
+     g0,
+     pg,
+     ph,
+     pi,
+     i4,
+     g5,
+     h5,
+     i5] = relatedPoints;
+  let e0, e1, e2, e3, e4, e5, e6, e7, e8;
+  e0 = e1 = e2 = e3 = e4 = e5 = e6 = e7 = e8 = pe;
+
+  [e2, e5, e6, e7, e8] = kernel3X(pe, pi, ph, pf, pg, pc, pd, pb, f4, i4, h5, i5, e2, e5, e6, e7, e8, blendColors, scaleAlpha);
+  [e0, e1, e8, e5, e2] = kernel3X(pe, pc, pf, pb, pi, pa, ph, pd, b1, c1, f4, c4, e0, e1, e8, e5, e2, blendColors, scaleAlpha);
+  [e6, e3, e2, e1, e0] = kernel3X(pe, pa, pb, pd, pc, pg, pf, ph, d0, a0, b1, a1, e6, e3, e2, e1, e0, blendColors, scaleAlpha);
+  [e8, e7, e0, e3, e6] = kernel3X(pe, pg, pd, ph, pa, pi, pb, pf, h5, g5, d0, g0, e8, e7, e0, e3, e6, blendColors, scaleAlpha);
+
+  dstPixelView[dstX + dstY * dstW] = e0;
+  dstPixelView[dstX + 1 + dstY * dstW] = e1;
+  dstPixelView[dstX + 2 + dstY * dstW] = e2;
+  dstPixelView[dstX + (dstY + 1) * dstW] = e3;
+  dstPixelView[dstX + 1 + (dstY + 1) * dstW] = e4;
+  dstPixelView[dstX + 2 + (dstY + 1) * dstW] = e5;
+  dstPixelView[dstX + (dstY + 2) * dstW] = e6;
+  dstPixelView[dstX + 1 + (dstY + 2) * dstW] = e7;
+  dstPixelView[dstX + 2 + (dstY + 2) * dstW] = e8;
+}
+
+
+function computeXbr4x(oriPixelView, oriX, oriY, oriW, oriH, dstPixelView, dstX, dstY, dstW, blendColors, scaleAlpha) {
+  const relatedPoints = getRelatedPoints(oriPixelView, oriX, oriY, oriW, oriH);
+  const
+    [a1,
+     b1,
+     c1,
+	 a0,
+     pa,
+     pb,
+     pc,
+     c4,
+     d0,
+     pd,
+     pe,
+     pf,
+     f4,
+     g0,
+     pg,
+     ph,
+     pi,
+     i4,
+     g5,
+     h5,
+     i5] = relatedPoints;
+  let e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, ea, eb, ec, ed, ee, ef;
+  e0 = e1 = e2 = e3 = e4 = e5 = e6 = e7 = e8 = e9 = ea = eb = ec = ed = ee = ef = pe;
+
+  [ef, ee, eb, e3, e7, ea, ed, ec] = kernel4Xv2(pe, pi, ph, pf, pg, pc, pd, pb, f4, i4, h5, i5, ef, ee, eb, e3, e7, ea, ed, ec, blendColors, scaleAlpha);
+  [e3, e7, e2, e0, e1, e6, eb, ef] = kernel4Xv2(pe, pc, pf, pb, pi, pa, ph, pd, b1, c1, f4, c4, e3, e7, e2, e0, e1, e6, eb, ef, blendColors, scaleAlpha);
+  [e0, e1, e4, ec, e8, e5, e2, e3] = kernel4Xv2(pe, pa, pb, pd, pc, pg, pf, ph, d0, a0, b1, a1, e0, e1, e4, ec, e8, e5, e2, e3, blendColors, scaleAlpha);
+  [ec, e8, ed, ef, ee, e9, e4, e0] = kernel4Xv2(pe, pg, pd, ph, pa, pi, pb, pf, h5, g5, d0, g0, ec, e8, ed, ef, ee, e9, e4, e0, blendColors, scaleAlpha);
+
+  dstPixelView[dstX + dstY * dstW] = e0;
+  dstPixelView[dstX + 1 + dstY * dstW] = e1;
+  dstPixelView[dstX + 2 + dstY * dstW] = e2;
+  dstPixelView[dstX + 3 + dstY * dstW] = e3;
+  dstPixelView[dstX + (dstY + 1) * dstW] = e4;
+  dstPixelView[dstX + 1 + (dstY + 1) * dstW] = e5;
+  dstPixelView[dstX + 2 + (dstY + 1) * dstW] = e6;
+  dstPixelView[dstX + 3 + (dstY + 1) * dstW] = e7;
+  dstPixelView[dstX + (dstY + 2) * dstW] = e8;
+  dstPixelView[dstX + 1 + (dstY + 2) * dstW] = e9;
+  dstPixelView[dstX + 2 + (dstY + 2) * dstW] = ea;
+  dstPixelView[dstX + 3 + (dstY + 2) * dstW] = eb;
+  dstPixelView[dstX + (dstY + 3) * dstW] = ec;
+  dstPixelView[dstX + 1 + (dstY + 3) * dstW] = ed;
+  dstPixelView[dstX + 2 + (dstY + 3) * dstW] = ee;
+  dstPixelView[dstX + 3 + (dstY + 3) * dstW] = ef;
+}
+
+function alphaBlend32W(dst, src, blendColors) {
+  if (blendColors) {
+    return pixelInterpolate(dst, src, 7, 1);
+  }
+
+  return dst;
+}
+
+function alphaBlend64W(dst, src, blendColors) {
+  if (blendColors) {
+    return pixelInterpolate(dst, src, 3, 1);
+  }
+  return dst;
+}
+
+function alphaBlend128W(dst, src, blendColors) {
+  if (blendColors) {
+    return pixelInterpolate(dst, src, 1, 1);
+  }
+  return dst;
+}
+
+function alphaBlend192W(dst, src, blendColors) {
+  if (blendColors) {
+    return pixelInterpolate(dst, src, 1, 3);
+  }
+  return src;
+}
+
+function alphaBlend224W(dst, src, blendColors) {
+  if (blendColors) {
+    return pixelInterpolate(dst, src, 1, 7);
+  }
+  return src;
+}
+
+function leftUp2_2X(n3, n2, pixel, blendColors) {
+  const blendedN2 = alphaBlend64W(n2, pixel, blendColors);
+  return [
+    alphaBlend224W(n3, pixel, blendColors),
+    blendedN2,
+    blendedN2
+  ];
+}
+
+function left2_2X(n3, n2, pixel, blendColors) {
+  return [
+    alphaBlend192W(n3, pixel, blendColors),
+    alphaBlend64W(n2, pixel, blendColors)
+  ];
+}
+
+function up2_2X(n3, n1, pixel, blendColors) {
+  return [
+    alphaBlend192W(n3, pixel, blendColors),
+    alphaBlend64W(n1, pixel, blendColors)
+  ];
+}
+
+function dia_2X(n3, pixel, blendColors) {
+  return alphaBlend128W(n3, pixel, blendColors);
+}
+
+function kernel2Xv5(pe, pi, ph, pf, pg, pc, pd, pb, f4, i4, h5, i5, n1, n2, n3, blendColors, scaleAlpha) {
+  let ex = (pe != ph && pe != pf);
+  if (!ex) {
+    return [n1, n2, n3];
+  }
+  let
+    e = (yuvDifference(pe, pc, scaleAlpha) + yuvDifference(pe, pg, scaleAlpha) + yuvDifference(pi, h5, scaleAlpha) + yuvDifference(pi, f4, scaleAlpha)) + (yuvDifference(ph, pf) << 2),
+    i = (yuvDifference(ph, pd, scaleAlpha) + yuvDifference(ph, i5, scaleAlpha) + yuvDifference(pf, i4, scaleAlpha) + yuvDifference(pf, pb, scaleAlpha)) + (yuvDifference(pe, pi, scaleAlpha) << 2),
+    px = (yuvDifference(pe, pf, scaleAlpha) <= yuvDifference(pe, ph, scaleAlpha)) ? pf : ph;
+
+  if ((e < i) && (!isEqual(pf, pb, scaleAlpha) && !isEqual(ph, pd, scaleAlpha) || isEqual(pe, pi, scaleAlpha) && (!isEqual(pf, i4, scaleAlpha) && !isEqual(ph, i5, scaleAlpha)) || isEqual(pe, pg, scaleAlpha) || isEqual(pe, pc, scaleAlpha))) {
+    let
+      ke = yuvDifference(pf, pg, scaleAlpha),
+      ki = yuvDifference(ph, pc, scaleAlpha),
+      ex2 = (pe != pc && pb != pc),
+      ex3 = (pe != pg && pd != pg);
+    if (((ke << 1) <= ki) && ex3 || (ke >= (ki << 1)) && ex2) {
+      if (((ke << 1) <= ki) && ex3) {
+        let leftOut = left2_2X(n3, n2, px, blendColors);
+        n3 = leftOut[0];
+        n2 = leftOut[1];
+      }
+      if ((ke >= (ki << 1)) && ex2) {
+        let upOut = up2_2X(n3, n1, px, blendColors);
+        n3 = upOut[0];
+        n1 = upOut[1];
+      }
+    } else {
+      n3 = dia_2X(n3, px, blendColors);
+    }
+
+  } else if (e <= i) {
+    n3 = alphaBlend64W(n3, px, blendColors);
+  }
+  return [n1, n2, n3];
+}
+
+function leftUp2_3X(n7, n5, n6, n2, n8, pixel, blendColors) {
+  const
+    blendedN7 = alphaBlend192W(n7, pixel, blendColors),
+    blendedN6 = alphaBlend64W(n6, pixel, blendColors);
+  return [
+    blendedN7,
+    blendedN7,
+    blendedN6,
+    blendedN6,
+	pixel
+  ];
+}
+
+function left2_3X(n7, n5, n6, n8, pixel, blendColors) {
+  return [
+    alphaBlend192W(n7, pixel, blendColors),
+    alphaBlend64W(n5, pixel, blendColors),
+    alphaBlend64W(n6, pixel, blendColors),
+    pixel
+  ];
+}
+
+function up2_3X(n5, n7, n2, n8, pixel, blendColors) {
+  return [
+    alphaBlend192W(n5, pixel, blendColors),
+    alphaBlend64W(n7, pixel, blendColors),
+    alphaBlend64W(n2, pixel, blendColors),
+    pixel
+  ];
+}
+
+function dia_3X(n8, n5, n7, pixel, blendColors) {
+  return [
+    alphaBlend224W(n8, pixel, blendColors),
+    alphaBlend32W(n5, pixel, blendColors),
+    alphaBlend32W(n7, pixel, blendColors)
+  ];
+}
+
+function kernel3X(pe, pi, ph, pf, pg, pc, pd, pb, f4, i4, h5, i5, n2, n5, n6, n7, n8, blendColors, scaleAlpha) {
+  const ex = (pe != ph && pe != pf);
+  if (!ex) {
+    return [n2, n5, n6, n7, n8];
+  }
+
+  const
+    e = (yuvDifference(pe, pc, scaleAlpha) + yuvDifference(pe, pg, scaleAlpha) + yuvDifference(pi, h5, scaleAlpha) + yuvDifference(pi, f4, scaleAlpha)) + (yuvDifference(ph, pf, scaleAlpha) << 2),
+    i = (yuvDifference(ph, pd, scaleAlpha) + yuvDifference(ph, i5, scaleAlpha) + yuvDifference(pf, i4, scaleAlpha) + yuvDifference(pf, pb, scaleAlpha)) + (yuvDifference(pe, pi, scaleAlpha) << 2);
+
+  let state;
+  if (USE_3X_ORIGINAL_IMPLEMENTATION) {
+    state = ((e < i) && (!isEqual(pf, pb, scaleAlpha) && !isEqual(ph, pd, scaleAlpha) || isEqual(pe, pi, scaleAlpha) && (!isEqual(pf, i4, scaleAlpha) && !isEqual(ph, i5, scaleAlpha)) || isEqual(pe, pg, scaleAlpha) || isEqual(pe, pc, scaleAlpha)));
+  } else {
+    state = ((e < i) && (!isEqual(pf, pb, scaleAlpha) && !isEqual(pf, pc, scaleAlpha) || !isEqual(ph, pd, scaleAlpha) && !isEqual(ph, pg, scaleAlpha) || isEqual(pe, pi, scaleAlpha) && (!isEqual(pf, f4, scaleAlpha) && !isEqual(pf, i4, scaleAlpha) || !isEqual(ph, h5, scaleAlpha) && !isEqual(ph, i5, scaleAlpha)) || isEqual(pe, pg, scaleAlpha) || isEqual(pe, pc, scaleAlpha)));
+  }
+
+  if (state) {
+    const
+      ke = yuvDifference(pf, pg, scaleAlpha),
+      ki = yuvDifference(ph, pc, scaleAlpha),
+      ex2 = (pe != pc && pb != pc),
+      ex3 = (pe != pg && pd != pg),
+      px = (yuvDifference(pe, pf, scaleAlpha) <= yuvDifference(pe, ph, scaleAlpha)) ? pf : ph;
+    if (((ke << 1) <= ki) && ex3 && (ke >= (ki << 1)) && ex2) {
+      [n7, n5, n6, n2, n8] = leftUp2_3X(n7, n5, n6, n2, n8, px, blendColors);
+    } else if (((ke << 1) <= ki) && ex3) {
+      [n7, n5, n6, n8] = left2_3X(n7, n5, n6, n8, px, blendColors);
+    } else if ((ke >= (ki << 1)) && ex2) {
+      [n5, n7, n2, n8] = up2_3X(n5, n7, n2, n8, px, blendColors);
+    } else {
+      [n8, n5, n7] = dia_3X(n8, n5, n7, px, blendColors);
+    }
+  } else if (e <= i) {
+    n8 = alphaBlend128W(n8, ((yuvDifference(pe, pf, scaleAlpha) <= yuvDifference(pe, ph, scaleAlpha)) ? pf : ph), blendColors);
+  }
+  return [n2, n5, n6, n7, n8];
+}
+
+// 4xBR
+function leftUp2(n15, n14, n11, n13, n12, n10, n7, n3, pixel, blendColors) {
+  const
+    blendedN13 = alphaBlend192W(n13, pixel, blendColors),
+    blendedN12 = alphaBlend64W(n12, pixel, blendColors);
+
+  return [pixel, pixel, pixel, blendedN12, blendedN12, blendedN12, blendedN13, n3];
+}
+
+function left2(n15, n14, n11, n13, n12, n10, pixel, blendColors) {
+  return [
+    pixel,
+	pixel,
+	alphaBlend192W(n11, pixel, blendColors),
+	alphaBlend192W(n13, pixel, blendColors),
+	alphaBlend64W(n12, pixel, blendColors),
+	alphaBlend64W(n10, pixel, blendColors)
+  ];
+}
+
+function up2(n15, n14, n11, n3, n7, n10, pixel, blendColors) {
+  return [
+	pixel,
+	alphaBlend192W(n14, pixel, blendColors),
+	pixel,
+	alphaBlend64W(n3, pixel, blendColors),
+	alphaBlend192W(n7, pixel, blendColors),
+	alphaBlend64W(n10, pixel, blendColors)
+  ];
+}
+
+function dia(n15, n14, n11, pixel, blendColors) {
+  return [
+	pixel,
+	alphaBlend128W(n14, pixel, blendColors),
+	alphaBlend128W(n11, pixel, blendColors)
+  ];
+}
+
+function kernel4Xv2(pe, pi, ph, pf, pg, pc, pd, pb, f4, i4, h5, i5, n15, n14, n11, n3, n7, n10, n13, n12, blendColors, scaleAlpha) {
+  var ex = (pe != ph && pe != pf);
+  if (!ex) {
+    return [n15, n14, n11, n3, n7, n10, n13, n12];
+  }
+  const
+    e = (yuvDifference(pe, pc, scaleAlpha) + yuvDifference(pe, pg, scaleAlpha) + yuvDifference(pi, h5, scaleAlpha) + yuvDifference(pi, f4, scaleAlpha)) + (yuvDifference(ph, pf, scaleAlpha) << 2),
+    i = (yuvDifference(ph, pd, scaleAlpha) + yuvDifference(ph, i5, scaleAlpha) + yuvDifference(pf, i4, scaleAlpha) + yuvDifference(pf, pb, scaleAlpha)) + (yuvDifference(pe, pi, scaleAlpha) << 2),
+    px = (yuvDifference(pe, pf, scaleAlpha) <= yuvDifference(pe, ph, scaleAlpha)) ? pf : ph;
+  if ((e < i) && (!isEqual(pf, pb, scaleAlpha) && !isEqual(ph, pd, scaleAlpha) || isEqual(pe, pi, scaleAlpha) && (!isEqual(pf, i4, scaleAlpha) && !isEqual(ph, i5, scaleAlpha)) || isEqual(pe, pg, scaleAlpha) || isEqual(pe, pc, scaleAlpha))) {
+    const
+      ke = yuvDifference(pf, pg, scaleAlpha),
+      ki = yuvDifference(ph, pc, scaleAlpha),
+      ex2 = (pe != pc && pb != pc),
+      ex3 = (pe != pg && pd != pg);
+    if (((ke << 1) <= ki) && ex3 || (ke >= (ki << 1)) && ex2) {
+      if (((ke << 1) <= ki) && ex3) {
+        [n15, n14, n11, n13, n12, n10] = left2(n15, n14, n11, n13, n12, n10, px, blendColors);
+      }
+      if ((ke >= (ki << 1)) && ex2) {
+        [n15, n14, n11, n3, n7, n10] = up2(n15, n14, n11, n3, n7, n10, px, blendColors);
+      }
+    } else {
+      [n15, n14, n11] = dia(n15, n14, n11, px, blendColors);
+    }
+
+  } else if (e <= i) {
+    n15 = alphaBlend128W(n15, px, blendColors);
+  }
+
+  return [n15, n14, n11, n3, n7, n10, n13, n12];
+}
+
+function parseOptions(rawOpts) {
+  let
+    blendColors = true,
+    scaleAlpha = false;
+
+  if (rawOpts) {
+	if (rawOpts.blendColors === false) {
+	  blendColors = false;
+	}
+		
+	if (rawOpts.scaleAlpha === true) {
+      scaleAlpha = true;
+    }
+  }
+	
+  return {blendColors, scaleAlpha};
+}
+
+function xbr2x(pixelArray, width, height, options) {
+  const {blendColors, scaleAlpha} = parseOptions(options);
+  const scaledPixelArray = new Uint32Array(width * height * 4);
+  for (let c = 0; c < width; c++) {
+    for (let d = 0; d < height; d++) {
+      computeXbr2x(pixelArray, c, d, width, height, scaledPixelArray, c * 2, d * 2, width * 2, blendColors, scaleAlpha);
+    }
+  }
+  return scaledPixelArray;
+}
+
+function xbr3x(pixelArray, width, height, options) {
+  const {blendColors, scaleAlpha} = parseOptions(options);
+  const scaledPixelArray = new Uint32Array(width * height * 9);
+  for (let c = 0; c < width; c++) {
+    for (let d = 0; d < height; d++) {
+      computeXbr3x(pixelArray, c, d, width, height, scaledPixelArray, c * 3, d * 3, width * 3, blendColors, scaleAlpha);
+    }
+  }
+  return scaledPixelArray;
+}
+
+function xbr4x(pixelArray, width, height, options) {
+  const {blendColors, scaleAlpha} = parseOptions(options);
+  const scaledPixelArray = new Uint32Array(width * height * 16);
+  for (let c = 0; c < width; c++) {
+    for (let d = 0; d < height; d++) {
+      computeXbr4x(pixelArray, c, d, width, height, scaledPixelArray, c * 4, d * 4, width * 4, blendColors, scaleAlpha);
+    }
+  }
+  return scaledPixelArray;
+}
+    return [xbr2x, xbr3x, xbr4x];
+})();
+</script>

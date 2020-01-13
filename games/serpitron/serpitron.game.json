@@ -6,7 +6,7 @@
 
     "packages":   [],
     "scripts":    ["globals.pyxl"],
-    "modes":      ["Title*", "NewLevel", "LevelTitle", "Play", "Credits", "Pause", "EndTransition", "SingleGameOver", "GameOver"],
+    "modes":      ["Title*", "NewLevel", "LevelTitle", "Play", "Credits", "EndTransition", "SingleGameOver", "GameOver"],
     "docs":       [{"name": "Design", "url": "design.md"}],
     "assets":     {
         "font":                "quad://fonts/broderick-7.font.json",
@@ -25,9 +25,9 @@
         "cloudSprite":         "cloud.sprite.json",
         "ratSpritesheet":      "rat.sprite.json",
         
-        "urbanMusic":          "quad://sounds/loop-edm.sound.json",
+        "desertMusic":         "quad://sounds/loop-edm.sound.json",
         "countryMusic":        "quad://sounds/music-moon.sound.json",
-        "desertMusic":         "quad://sounds/loop-metal.sound.json",
+        "urbanMusic":          "quad://sounds/loop-metal.sound.json",
         "titleMusic":          "quad://sounds/loop-tastic.sound.json",
         "shotgunAudioClip":    "quad://sounds/28-Explode.sound.json",
         "bigGrowAudioClip":    "quad://sounds/29-Powerup.sound.json",

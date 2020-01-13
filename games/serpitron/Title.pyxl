@@ -59,13 +59,8 @@ drawSprite(controllerSprite.player[1], xy(screenSize.x - 30, 29))
 drawSprite(controllerSprite.gamepad, xy(screenSize.x - 30, 47))
 drawSprite(controllerSprite.gamepad, xy(screenSize.x - 30, 170))
 
-drawText(instructionsFont, replace("UD to change, R when ready | L to drop player, Q to quit",
-                       {U: joy.prompt.up,
-                        D: joy.prompt.dn,
-                        R: joy.prompt.rt,
-                        L: joy.prompt.lt,
-                        Q: joy.prompt.q}), xy(screenSize.x / 2, screenSize.y - 10),
-         #d, #8, ∅, "center", "bottom")
+drawText(instructionsFont, replace("[^][v] to change, [>] when ready | [<] to drop player, (q) to quit", joy.prompt),
+         xy(½ screenSize.x, screenSize.y - 10), #d, #8, ∅, "center", "bottom")
 
 let anyQuit = false
 let noneChoosing = true

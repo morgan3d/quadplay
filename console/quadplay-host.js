@@ -3,12 +3,163 @@
 
 "use strict";
 
+if (window.location.toString().startsWith("file://")) {
+    alert('quadplay cannot run from a local filesystem. It requires a web server (which may be local...see the manual)');
+    throw new Error();
+}
+
 // The gif recording object, if in a recording
 let gifRecording = null;
 
 let _ch_audioContext;
 
-console.assert(window.location.toString().substr(0, 7) !== "file://", 'nano cannot run from a local filesystem. It requires a web server (which may be local...see the manual)');
+// Table mapping controller IDs that we've seen to what non-keyboard
+// device was set on them 
+const controllerTypeTable = JSON.parse(localStorage.getItem('controllerTypeTable') || '{}');
+
+function defaultControlType(playerIndex) {
+    if (playerIndex === 0) {
+        if (isMobile) {
+            return 'Quadplay';
+        } else {
+            return 'Kbd_Alt';
+        }
+    } else if (playerIndex === 1) {
+        return 'Kbd_P2';
+    } else {
+        return 'Quadplay';
+    }
+}
+
+
+// See also controllerTypeTable and setPadType()
+function detectControllerType(id) {
+    let type = controllerTypeTable[id];
+    
+    if (type === undefined) {
+        // Not previously observed. Apply heuristics
+        if (/ps3|playstation(r)3/i.test(id)) {
+            type = 'PlayStation3';
+        } else if (/ps4|playstation/i.test(id)) {
+            type = 'PlayStation4';
+        } else if (/joy-con (r)/i.test(id)) {
+            type = 'JoyCon_R';
+        } else if (/joy-con (l)/i.test(id)) {
+            type = 'JoyCon_L';
+        } else if (/joy-con/i.test(id)) {
+            type = 'JoyCon_R';
+        } else if (/stadia/i.test(id)) {
+            type = 'Stadia';
+        } else if (/xbox 360/i.test(id)) {
+            type = 'Xbox360';
+        } else if (/xbox|xinput/i.test(id)) {
+            type = 'XboxOne';
+        } else if (/snes/i.test(id)) {
+            type = 'SNES';
+        } else if (/hotas/i.test(id)) {
+            type = 'HOTAS';
+        } else {
+            type = 'Quadplay';
+        }
+    }
+    
+    return type;
+}
+
+
+function setPadType(p, type) {
+    const prompt = controlSchemeTable[type];
+    if (p === undefined || p < 0 || p > 3) { throw new Error('"setPadType" must be used with an index from 0 to 3'); }
+    if (! prompt) { throw new Error('"setPadType" must be used with one of the legal types, such as "Quadplay" or "PS4" (received "' + type + '")'); }
+
+    const control = QRuntime.pad[p]
+    control.type = type;
+    control.prompt = prompt;
+
+    const id = control._id;
+    if (id && id !== '' && !/^keyboard|^kbd_/i.test(type)) {
+        // Update the autodetection table based on what we just learned from this user
+        controllerTypeTable[id] = type;
+        localStorage.setItem('controllerTypeTable', JSON.stringify(controllerTypeTable));
+    }
+    
+    // Update the stored binding for this controller
+    localStorage.setItem('pad0' + p, JSON.stringify({id: id, type: type}));
+}
+
+
+function deviceControl(cmd) {
+    switch (cmd) {
+    case "startGIFRecording":     startGIFRecording(); break;
+    case "stopGIFRecording":      stopGIFRecording(); break;
+    case "takeScreenshot":        downloadScreenshot(); break;
+    case "startPreviewRecording": startPreviewRecording(); break;
+    case "setDebugFlag":
+        {
+            let value = (arguments[2] ? true : false);
+            switch (arguments[1]) {
+            case "entityBounds":
+                QRuntime._showEntityBoundsEnabled = document.getElementById('showEntityBoundsEnabled').checked = value;
+                break;
+            case "physics":
+                QRuntime._showPhysicsEnabled = document.getElementById('showPhysicsEnabled').checked = value;
+                break;
+            case "debugPrint":
+                QRuntime._debugPrintEnabled = document.getElementById('debugPrintEnabled').checked = value;
+                break;
+            case "assert":
+                QRuntime._assertEnabled = document.getElementById('assertEnabled').checked = value;
+                break;
+            case "debugWatch":
+                QRuntime._debugWatchEnabled = document.getElementById('debugWatchEnabled').checked = value;
+                break;
+            default:
+                throw new Error('Unsupported flagname passed to deviceControl("setDebugFlag", flagname, value): "' + arguments[1] + '"');
+            }
+        }
+        break;
+        
+    case "getDebugFlag":
+        {
+            switch (arguments[1]) {
+            case "entityBounds":
+                return QRuntime._showEntityBoundsEnabled;
+                break;
+            case "physics":
+                return QRuntime._showPhysicsEnabled;
+                break;
+            case "debugPrint":
+                return QRuntime._debugPrintEnabled;
+                break;
+            case "assert":
+                return QRuntime._assertEnabled;
+                break;
+            case "debugWatch":
+                return QRuntime._debugWatchEnabled;
+                break;
+            default:
+                throw new Error('Unsupported flagname passed to deviceControl("getDebugFlag", flagname): "' + arguments[1] + '"');
+            }
+        }
+        break;
+        
+    case "getAnalogAxes":
+        {
+            const i = clamp(parseInt(arguments[1]), 0, 3);
+            const pad = QRuntime.pad[i];
+            return {x: pad._analogX, y: pad._analogY};
+            break;
+        }
+
+    case "setPadType":
+        {
+            const i = arguments[1];
+            const type = arguments[2];
+            setPadType(i, type);
+            break;
+        }
+    }
+}
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 console.assert(window.AudioContext);
@@ -248,8 +399,10 @@ function getIdealGamepads() {
         let pad = gamepads[i];
         if (pad && pad.connected) {
             // Construct a simplified web gamepad API
-            let mypad = {axes:[0, 0, 0, 0], buttons:[], analogAxes:[0,0,0,0]};
-	        const axisRemap = gamepadAxisRemap[pad.id] || gamepadAxisRemap.identity;
+            let mypad = {axes:[0, 0, 0, 0], buttons:[], analogAxes:[0,0,0,0], id: pad.id};
+
+	    const axisRemap = gamepadAxisRemap[pad.id] || gamepadAxisRemap.identity;
+            
             for (let a = 0; a < Math.min(4, pad.axes.length); ++a) {
                 const axis = pad.axes[axisRemap[a]];
                 mypad.axes[a] = (Math.abs(axis) > deadZone) ? Math.sign(axis) : 0;
@@ -257,7 +410,7 @@ function getIdealGamepads() {
             }
             
             // Process all 17 buttons/axes as digital buttons first 
-	        const buttonRemap = gamepadButtonRemap[pad.id] || gamepadButtonRemap.identity;
+	    const buttonRemap = gamepadButtonRemap[pad.id] || gamepadButtonRemap.identity;
             for (let b = 0; b < 17; ++b) {
                 const button = pad.buttons[buttonRemap[b]];
                 // Different browsers follow different APIs for the value of buttons
@@ -629,20 +782,21 @@ function updateInput() {
     const axes = 'xy', AXES = 'XY', buttons = 'abcdpq', BUTTONS = 'ABCDPQ';
 
     // HTML gamepad indices of corresponding elements of the buttons array
-    // A, B, C, D, P, Q
+    // A, B, C, D, _P, Q
     const buttonIndex = [0, 1, 2, 3, 9, 8];
     
     // Aliases on console game controller using stick buttons
     // and trigger + shoulder buttons. These are read from 
     // pad[2] and applied to pad[0]
     const altButtonIndex = [7, 5, 6, 4, undefined, undefined];
-    
+
+    // Also processes input
     const gamepadArray = getIdealGamepads();
     
     // Sample the keys
     for (let player = 0; player < 4; ++player) {
         const map = keyMap[player], pad = QRuntime.pad[player],
-            realGamepad = gamepadArray[player], prevRealGamepad = prevRealGamepadState[player];
+              realGamepad = gamepadArray[player], prevRealGamepad = prevRealGamepadState[player];
 
         /*
 	// Used for having player 0 physical controls set player 2 virtual buttons
@@ -653,12 +807,25 @@ function updateInput() {
 	altPrevRealGamepad = (player === 2) ? prevRealGamepadState[0] : (player === 3) ? prevRealGamepadState[0] : undefined; */
 
         // Have player 0 physical alt controls set player 1 virtual buttons
-	    const altRealGamepad = (player === 1) ? gamepadArray[0] : undefined,
+	const altRealGamepad = (player === 1) ? gamepadArray[0] : undefined,
 	      altPrevRealGamepad = (player === 1) ? prevRealGamepadState[0] : undefined;
 
+        if (realGamepad && (realGamepad.id !== pad._id)) {
+            // The gamepad just connected or changed. Update the control scheme.
+            pad._id = realGamepad.id;
+            pad.type = detectControllerType(realGamepad.id);
+            pad.prompt = controlSchemeTable[pad.type];
+        } else if (! realGamepad && pad._id !== '' && pad._id !== 'mobile') {
+            // Gamepad was just disconnected. Update the control scheme.
+            pad._id = isMobile ? 'mobile' : '';
+            pad.type = defaultControlType(player);
+            pad.prompt = controlSchemeTable[pad.type];
+        }
+        
         // Axes
         for (let a = 0; a < axes.length; ++a) {
             const axis = axes[a];
+            const prefix = '';
             const AXIS = '_analog' + AXES[a];
             const pos = '+' + axis, neg = '-' + axis;
             const old = pad[axis];
@@ -669,25 +836,25 @@ function updateInput() {
                 const n0 = map[neg][0], n1 = map[neg][1], p0 = map[pos][0], p1 = map[pos][1];
 
                 // Current state
-                pad[axis] = (((emulatorKeyState[n0] || emulatorKeyState[n1]) ? -1 : 0) +
+                pad[prefix + axis] = (((emulatorKeyState[n0] || emulatorKeyState[n1]) ? -1 : 0) +
                              ((emulatorKeyState[p0] || emulatorKeyState[p1]) ? +1 : 0)) * scale;
 
                 // Just pressed
-                pad[axis + axis] = (((emulatorKeyJustPressed[n0] || emulatorKeyJustPressed[n1]) ? -1 : 0) +
+                pad[prefix + axis + axis] = (((emulatorKeyJustPressed[n0] || emulatorKeyJustPressed[n1]) ? -1 : 0) +
                                     ((emulatorKeyJustPressed[p0] || emulatorKeyJustPressed[p1]) ? +1 : 0)) * scale;
             } else {
-                pad[axis] = pad[axis + axis] = 0;
+                pad[prefix + axis] = pad[prefix + axis + axis] = 0;
             }
 
-            pad[AXIS] = pad[axis];
+            pad[prefix + AXIS] = pad[prefix + axis];
 
             if (realGamepad && (realGamepad.axes[a] !== 0)) {
-                pad[axis] = realGamepad.axes[a] * scale;
-                pad[AXIS] = realGamepad.analogAxes[a] * scale;
+                pad[prefix + axis] = realGamepad.axes[a] * scale;
+                pad[prefix + AXIS] = realGamepad.analogAxes[a] * scale;
             }
 
             if (realGamepad && (prevRealGamepad.axes[a] !== realGamepad.axes[a])) {
-                pad[axis + axis] = realGamepad.axes[a] * scale;
+                pad[prefix + axis + axis] = realGamepad.axes[a] * scale;
             }
 
             if ((player === 1) && gamepadArray[0]) {
@@ -695,28 +862,29 @@ function updateInput() {
                 // Alias controller[0] right stick (axes 2 + 3) 
                 // to controller[1] d-pad (axes 0 + 1) for "dual stick" controls                
                 if (otherPad.axes[a + 2] !== 0) {
-                    pad[axis] = otherPad.axes[a + 2] * scale;
-                    pad[AXIS] = otherPad.analogAxes[a + 2] * scale;
+                    pad[prefix + axis] = otherPad.axes[a + 2] * scale;
+                    pad[prefix + AXIS] = otherPad.analogAxes[a + 2] * scale;
                 }
                 if (otherPad.axes[a + 2] !== otherPad.axes[a + 2]) {
-                    pad[axis + axis] = otherPad.axes[a + 2] * scale;
+                    pad[prefix + axis + axis] = otherPad.axes[a + 2] * scale;
                 }
             } // dual-stick
 
-            pad['d' + axis] = pad[axis] - old;
+            pad[prefix + 'd' + axis] = pad[axis] - old;
         }
 
         for (let b = 0; b < buttons.length; ++b) {
             const button = buttons[b], BUTTON = BUTTONS[b];
-
+            const prefix = button === 'p' ? '_' : '';
+            
             if (map) {
                 // Keyboard
                 const b0 = map[button][0], b1 = map[button][1];
-                pad[button] = (emulatorKeyState[b0] || emulatorKeyState[b1]) ? 1 : 0;
-                pad[button + button] = pad['pressed' + BUTTON] = (emulatorKeyJustPressed[b0] || emulatorKeyJustPressed[b1]) ? 1 : 0;
-                pad['released' + BUTTON] = (emulatorKeyJustReleased[b0] || emulatorKeyJustReleased[b1]) ? 1 : 0;
+                pad[prefix + button] = (emulatorKeyState[b0] || emulatorKeyState[b1]) ? 1 : 0;
+                pad[prefix + button + button] = pad[prefix + 'pressed' + BUTTON] = (emulatorKeyJustPressed[b0] || emulatorKeyJustPressed[b1]) ? 1 : 0;
+                pad[prefix + 'released' + BUTTON] = (emulatorKeyJustReleased[b0] || emulatorKeyJustReleased[b1]) ? 1 : 0;
             } else {
-                pad[button] = pad[button + button] = pad['released' + BUTTON] = pad['pressed' + BUTTON] = 0;
+                pad[prefix + button] = pad[prefix + button + button] = pad[prefix + 'released' + BUTTON] = pad[prefix + 'pressed' + BUTTON] = 0;
             }
 
             const i = buttonIndex[b], j = altButtonIndex[b];
@@ -725,15 +893,15 @@ function updateInput() {
 	        const wasPressed = (prevRealGamepad && prevRealGamepad.buttons[i]) ||
 		               (altPrevRealGamepad && altPrevRealGamepad.buttons[j]);
 	    
-            if (isPressed) { pad[button] = 1; }
+            if (isPressed) { pad[prefix + button] = 1; }
 	    
             if (isPressed && ! wasPressed) {
-                pad[button + button] = 1;
-                pad['pressed' + BUTTON] = 1;
+                pad[prefix + button + button] = 1;
+                pad[prefix + 'pressed' + BUTTON] = 1;
             }
 
             if (! isPressed && wasPressed) {
-                pad['released' + BUTTON] = 1;
+                pad[prefix + 'released' + BUTTON] = 1;
             }
         }
 
