@@ -1,0 +1,7 @@
+# Make github.io hosting support filenames that begin with underscores
+
+include:
+ - _*
+ - _*.pyxl
+ 
+exclude:
