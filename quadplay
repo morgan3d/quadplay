@@ -17,115 +17,205 @@ exit 2
 # Shell commands end here
 # Python script follows
 
-import os, time, platform, sys, threading, socket
+import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl
 
-port = 8000
+__doc__ = "Quadplay Fantasy Console launcher script."
+
+version = str(sys.version_info.major) + '.' + str(sys.version_info.minor)
 
 try:
-   import msvcrt
+    # Python 3.7
+    from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+    QHTTPServer = ThreadingHTTPServer
+    print('Initializing Quadplay server using Python ' + version + ' ThreadingHTTPServer')
+    
 except ImportError:
-   import termios, atexit, select
-   stdinFd = sys.stdin.fileno()
-   new_term = termios.tcgetattr(stdinFd)
-   old_term = termios.tcgetattr(stdinFd)
-   def set_normal_term():
-       termios.tcsetattr(stdinFd, termios.TCSAFLUSH, old_term)
-   
-   # New terminal setting unbuffered
-   new_term[3] = (new_term[3] & ~termios.ICANON & ~termios.ECHO)
-   termios.tcsetattr(stdinFd, termios.TCSAFLUSH, new_term)
-   
-   # Support normal-terminal reset at exit
-   atexit.register(set_normal_term)
-   
-   
-onWindows = (platform.system() == 'Windows')
-onMac = (platform.system() == 'Darwin')
+    try:
+        # Python 3
+        from http.server import HTTPServer, SimpleHTTPRequestHandler
+        print('Initializing Quadplay server using Python ' + version + ' HTTPServer')
+        QHTTPServer = HTTPServer
+    except ImportError:
+        # Python 2
+        from SimpleHTTPServer import SimpleHTTPRequestHandler
+        import SocketServer
+        QHTTPServer = SocketServer.TCPServer
+        print('Initializing Quadplay server using Python ' + version + ' SocketServer.TCPServer')
 
-myip = ''
-try:
-   print('Getting IP address...')
-   myip = socket.gethostbyname(socket.gethostname())
-except:
-   if onMac:
-      # The above can fail apparently randomly on MacOS (https://bugs.python.org/issue35164)
-      # and has happened to us. This is a workaround:
-      print('gethostbyname failed due to a known on MacOS configuration error. Falling back to\nipconfig...')
-   
-      myip = os.popen('ipconfig getifaddr en0').read().strip()
-      if not myip:
-         myip = os.popen('ipconfig getifaddr en1').read().strip()
-         if not myip:
-            print('WARNING: ipconfig could not find a valid en0 or en1 adapter. Server IP address is unknown.')
-            myip = '127.0.0.1'
-   else:
-      print('WARNING: gethostbyname unexpectedly failed. Server IP address is unknown.')
-      myip = '127.0.0.1'
-         
-url = 'http://' + myip + ':' + str(port) + '/console/quadplay.html?IDE=1'
-print('_________________________________________________________________________\n')
 
-if len(sys.argv) > 1:
-    url += '&game=' + sys.argv[1]
-else:
-    print('Loading default launcher game. You can supply the URL or local relative path to your game on\nthe command line, for example "quadplay foo/mygame", to load it directly.\n')
+class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
+    def do_POST(self):
+        content_len = int(self.headers['Content-Length'])
+        #int(self.headers.getheader('content-length', 0))
+        post_body = self.rfile.read(content_len)
 
-print('\nServing from:\n\n   ' + url + '\n\nNote that your firewall may need to be configured to load on other devices.\n')
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write("Posted".encode("utf8"))
+        
+        print("\nPOST contents:\n")
+        print(post_body)
+        object = json.loads(post_body)
+        print("\n")
 
-try:
-   # Python 3
-   from http.server import HTTPServer, SimpleHTTPRequestHandler
-   print('Initializing quadplay server using Python3')
-except ImportError:
-   # Python 2
-   from SimpleHTTPServer import SimpleHTTPRequestHandler
-   import SocketServer
-   HTTPServer = SocketServer.TCPServer
-   print('Initializing quadplay server using Python2')
 
-   
-# Platform independent keyboard key press detection
-def kbhit():
-   if onWindows:
-      return msvcrt.kbhit()
-   else:
-      dr, dw, de = select.select([sys.stdin], [], [], 0)
-      return dr != []
+def parse_args():
+    """ parse arguments out of sys.argv """
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument(
+        "--host",
+        action="store_true",
+        default=False,
+        help="hosting mode - allow other machines to connect to this one to play on mobile devices"
+    )
+    """parser.add_argument(
+        "-d",
+        "--dryrun",
+        action="store_true",
+        default=False,
+        help="dryrun mode - print what *would* be done"
+    )"""
+    parser.add_argument(
+        'gamepath',
+        type=str,
+        default="",
+        nargs='?',
+        help=(
+            'Game to load.  If not specified, loads default loader scene.'
+            ' Example: examples/accel_demo'
+        )
+    )
+    parser.add_argument(
+        "-p",
+        "--port",
+        type=int,
+        default=8000,
+        help="Port to run the server on."
+    )
+    return parser.parse_args()
 
-httpd = 0
+# Args must be initialized to a constant before launchServer is defined
+# because of the way that multiprocess serialization works on ThreadingHTTPServer
+args = parse_args()
+
+# SSL support doesn't work yet due to self-signed certificates
+useSSL = False
+
 def launchServer():
-    global httpd
+    global httpd, args
     try:
         # '' = 0.0.0.0 = all local IP addresses, needed for
         # supporting devices other than just localhost
-        server_address = ('', port)
-        httpd = HTTPServer(server_address, SimpleHTTPRequestHandler)
-        print(httpd.socket.getsockname())
+        server_address = ('' if args.host else 'localhost', args.port)
+        httpd = QHTTPServer(server_address, QuadplayHTTPRequestHandler)
+
+        if useSSL:
+            httpd.socket = ssl.wrap_socket(httpd.socket, 
+                                           keyfile='console/ssl/local-key.pem', 
+                                           certfile='console/ssl/local-cert.pem',
+                                           do_handshake_on_connect=False,
+                                           server_side=True)
         httpd.serve_forever()
-    except OSError:
+    except OSError as e:
+        print(e)
         print('Not starting a local server, since one is already running.');
 
-serverThread = threading.Thread(target=launchServer)
-print('Starting local server thread...')
-serverThread.start()
-print('\n**Press any key to terminate the server when done**\n')
-time.sleep(2)
+        
+def main():
+    try:
+       import msvcrt
+    except ImportError:
+       import termios, atexit, select
+       stdinFd = sys.stdin.fileno()
+       new_term = termios.tcgetattr(stdinFd)
+       old_term = termios.tcgetattr(stdinFd)
+       def set_normal_term():
+           termios.tcsetattr(stdinFd, termios.TCSAFLUSH, old_term)
 
-if onWindows:
-    # Require NO surrounding quotes on Windows for it to interpret the URL
-    os.system('start ' + url)
-elif onMac:
-    # Require quotes on Unix systems so that bash does not interpret &
-    # as a shell option to run in another thread
-    os.system('open "' + url + '"')
-else:
-    os.system('xdg-open "' + url + '"')
+       # New terminal setting unbuffered
+       new_term[3] = (new_term[3] & ~termios.ICANON & ~termios.ECHO)
+       termios.tcsetattr(stdinFd, termios.TCSAFLUSH, new_term)
 
-while not kbhit():
-    time.sleep(0.25)
+       # Support normal-terminal reset at exit
+       atexit.register(set_normal_term)
 
-print('\nShutting down...')
 
-if httpd: httpd.shutdown()
-time.sleep(1)
-sys.exit(0)
+    onWindows = (platform.system() == 'Windows')
+    onMac = (platform.system() == 'Darwin')
+
+    myip = '127.0.0.1'
+    if args.host:
+        try:
+            print('Getting IP address...')
+            myip = socket.gethostbyname(socket.gethostname())
+        except:
+            if onMac:
+                # The above can fail apparently randomly on MacOS (https://bugs.python.org/issue35164)
+                # and that has happened to us. This is a workaround:
+                print('gethostbyname failed due to a known on MacOS configuration error. Falling back to\nipconfig...')
+                
+                myip = os.popen('ipconfig getifaddr en0').read().strip()
+                if not myip: myip = os.popen('ipconfig getifaddr en1').read().strip()
+                
+                if not myip:
+                    print('WARNING: ipconfig could not find a valid en0 or en1 adapter. Server IP address is unknown.')
+                    myip = '127.0.0.1'
+                else:
+                    print('WARNING: gethostbyname unexpectedly failed. Server IP address is unknown.')
+                    myip = '127.0.0.1'
+
+    url = 'http' + ('s' if useSSL else '')+ '://' + myip + ':' + str(args.port) + '/console/quadplay.html?IDE=1&fastReload=1'
+    print('_________________________________________________________________________\n')
+
+    if args.gamepath != '':
+        url += '&game=' + args.gamepath
+    else:
+        print('Loading default launcher game. You can supply the URL or local relative path to your game on\nthe command line, for example "quadplay foo/mygame", to load it directly.\n')
+
+    print('\nServing from:\n\n   ' + url)
+    if args.host: print('\n\nNote that your firewall may need to be configured to load on other devices.\n')
+
+    # Platform independent keyboard key press detection
+    def kbhit():
+       if onWindows:
+          return msvcrt.kbhit()
+       else:
+          dr, dw, de = select.select([sys.stdin], [], [], 0)
+          return dr != []
+
+    httpd = 0
+
+    serverThread = multiprocessing.Process(target=launchServer)
+    print('Starting local server thread...')
+    serverThread.start()
+    print('\n**Press any key to terminate the server when done**\n')
+    time.sleep(2)
+
+    if onWindows:
+        # Require NO surrounding quotes on Windows for it to interpret the URL.
+        # Must escape & as ^&.
+        os.system('start ' + url.replace('&', '^&'))
+    elif onMac:
+        # Require quotes on Unix systems so that bash does not interpret &
+        # as a shell option to run in another thread
+        os.system('open "' + url + '"')
+    else:
+        os.system('xdg-open "' + url + '"')
+
+    while not kbhit():
+        time.sleep(0.25)
+
+    print('\nShutting down...')
+
+    # Attempt to gracefully shut down
+    if httpd: threading.Thread(target=lambda : httpd.shutdown())
+    time.sleep(1)
+    serverThread.terminate()
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
