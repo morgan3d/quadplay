@@ -376,7 +376,7 @@ const gamepadButtonRemap = {
     'identity':                                    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
     // Windows SNES30
     'SNES30 Joy     (Vendor: 2dc8 Product: ab20)': [1, 0, 4, 3, 6, 7, 5, 2,10,11, 8, 9,   12, 13, 14, 15, 16],
-    
+
     // Linux SNES30
     '8Bitdo SNES30 GamePad (Vendor: 2dc8 Product: 2840)': [1, 0, 4, 3, 6, 7, 5, 2,10,11, 8, 9,   12, 13, 14, 15, 16],
 
@@ -825,8 +825,7 @@ function updateInput() {
         // Axes
         for (let a = 0; a < axes.length; ++a) {
             const axis = axes[a];
-            const prefix = '';
-            const AXIS = '_analog' + AXES[a];
+            const analogAxis = '_analog' + AXES[a];
             const pos = '+' + axis, neg = '-' + axis;
             const old = pad[axis];
             const scale = (axis === 'x') ? QRuntime._scaleX : QRuntime._scaleY;
@@ -836,25 +835,27 @@ function updateInput() {
                 const n0 = map[neg][0], n1 = map[neg][1], p0 = map[pos][0], p1 = map[pos][1];
 
                 // Current state
-                pad[prefix + axis] = (((emulatorKeyState[n0] || emulatorKeyState[n1]) ? -1 : 0) +
+                pad[axis] = (((emulatorKeyState[n0] || emulatorKeyState[n1]) ? -1 : 0) +
                              ((emulatorKeyState[p0] || emulatorKeyState[p1]) ? +1 : 0)) * scale;
 
                 // Just pressed
-                pad[prefix + axis + axis] = (((emulatorKeyJustPressed[n0] || emulatorKeyJustPressed[n1]) ? -1 : 0) +
+                pad[axis + axis] = (((emulatorKeyJustPressed[n0] || emulatorKeyJustPressed[n1]) ? -1 : 0) +
                                     ((emulatorKeyJustPressed[p0] || emulatorKeyJustPressed[p1]) ? +1 : 0)) * scale;
             } else {
-                pad[prefix + axis] = pad[prefix + axis + axis] = 0;
+                // Nothing currently pressed
+                pad[axis] = pad[axis + axis] = 0;
             }
 
-            pad[prefix + AXIS] = pad[prefix + axis];
+            // Reset both digital and analog axes
+            pad[analogAxis] = pad[axis];
 
             if (realGamepad && (realGamepad.axes[a] !== 0)) {
-                pad[prefix + axis] = realGamepad.axes[a] * scale;
-                pad[prefix + AXIS] = realGamepad.analogAxes[a] * scale;
+                pad[axis] = realGamepad.axes[a] * scale;
+                pad[analogAxis] = realGamepad.analogAxes[a] * scale;
             }
 
             if (realGamepad && (prevRealGamepad.axes[a] !== realGamepad.axes[a])) {
-                pad[prefix + axis + axis] = realGamepad.axes[a] * scale;
+                pad[axis + axis] = realGamepad.axes[a] * scale;
             }
 
             if ((player === 1) && gamepadArray[0]) {
@@ -862,15 +863,15 @@ function updateInput() {
                 // Alias controller[0] right stick (axes 2 + 3) 
                 // to controller[1] d-pad (axes 0 + 1) for "dual stick" controls                
                 if (otherPad.axes[a + 2] !== 0) {
-                    pad[prefix + axis] = otherPad.axes[a + 2] * scale;
-                    pad[prefix + AXIS] = otherPad.analogAxes[a + 2] * scale;
+                    pad[axis] = otherPad.axes[a + 2] * scale;
+                    pad[analogAxis] = otherPad.analogAxes[a + 2] * scale;
                 }
                 if (otherPad.axes[a + 2] !== otherPad.axes[a + 2]) {
-                    pad[prefix + axis + axis] = otherPad.axes[a + 2] * scale;
+                    pad[axis + axis] = otherPad.axes[a + 2] * scale;
                 }
             } // dual-stick
 
-            pad[prefix + 'd' + axis] = pad[axis] - old;
+            pad['d' + axis] = pad[axis] - old;
         }
 
         for (let b = 0; b < buttons.length; ++b) {

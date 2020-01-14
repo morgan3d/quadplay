@@ -2041,21 +2041,16 @@ let frameRateFailuresThisRun = 0;
 let lastGraphicsPeriodCheckTime = 0;
 const graphicsPeriodCheckInterval = 1000;// milliseconds
 
+// Invoked by requestAnimationFrame() or setTimeout. 
 function mainLoopStep() {
     // Keep the callback chain going
     if (emulatorMode === 'play') {
-        if ((QRuntime._graphicsPeriod === 1) && (targetFramerate === 60)) {
-            // Line up with Vsync and browser repaint at 60 Hz
-            lastAnimationRequest = requestAnimationFrame(mainLoopStep);
-        } else if (targetFramerate < 60) {
-            // Use manual scheduling when running below 60 Hz due to
-            // the game running too slowly or slow mode intentionally being used.
-            lastAnimationRequest = setTimeout(mainLoopStep, 1000 / targetFramerate);
-        } else {
-            // Use manual scheduling when running below 60 Hz due to
-            // the game running too slowly or slow mode intentionally being used.
-            lastAnimationRequest = setTimeout(mainLoopStep, (1000 / targetFramerate) * QRuntime._graphicsPeriod);
-        }
+        // We intentionally don't use requestAnimationFrame. It can go
+        // above 60 Hz and require explicit throttling on high-refresh
+        // displays. And when the game is falling below frame rate, we
+        // don't trust requestAnimationFrame to reliably hit our
+        // fractions of 60 Hz.
+        lastAnimationRequest = setTimeout(mainLoopStep, (1000 / targetFramerate) * QRuntime._graphicsPeriod);
     }
 
     const frameStart = performance.now();

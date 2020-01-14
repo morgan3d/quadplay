@@ -1,6 +1,6 @@
 _ConfirmDialog
 ════════════════════════════════════════════════════════════════════════
-//
+
 const windowBackgroundColor = #135
 const windowBorderColor     = #fff
 const textColor             = #fff

@@ -151,7 +151,7 @@ local:
 
    const sideX = 295
    const wordX = sideX + 27
-   drawText({font:promptFont, text:joy.prompt["ⓠ"] + "  PLAY", pos:xy(sideX + 7, 74), color:promptColor, shadow:shadowColor, xAlign:"left"})
+   drawText({font:promptFont, text:joy.prompt["ⓟ"] + "  PLAY", pos:xy(sideX + 7, 74), color:promptColor, shadow:shadowColor, xAlign:"left"})
    if not game.builtin: drawText({font:promptFont, text:joy.prompt["ⓓ"] + "  FORGET", pos:xy(sideX + 7, 88), color:promptColor, shadow:shadowColor, xAlign:"left"})
 
    // Icons
@@ -194,7 +194,7 @@ local:
       drawIcon(icons.highscores, xy(sideX, y)).y
       y += drawText({font:mediumFont, text:"Score", pos:xy(wordX, y), color:selectedColor, xAlign:"left"}).y
 
-if joy.aa or joy.qq:
+if joy.aa or joy.qq or joy._pp:
    def callback():
       launchGame(gameArray[gameIndex].url)
    setMode(_SlideOut, callback) because "Player selected game"

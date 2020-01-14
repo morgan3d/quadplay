@@ -34,6 +34,9 @@ let font = _font9
 if screenSize.y <= 64: font = _font5
 else if screenSize.y <= 128: font = _font8
 
+let controlsFont = font
+if screenSize.y <= 64: font = _font5
+else if screenSize.y <= 128: controlsFont = _font6
 
 let choiceFont = _font9
 if screenSize.y <= 64 or screenSize.x <= 128: choiceFont = _font5
@@ -113,33 +116,32 @@ for p < 4:
          deviceControl("setPadType", p, type)
 
       if screenSize.x == 64:
-         setTransform(xy(32, 6))
+         setTransform(xy(32, 6), xy(1, 1))
       else:
          setTransform(xy((0.5 + (p bitand 1)) * screenSize.x / 2,
-                         (p bitshr 1) * screenSize.y / 2 + (32 + shiftY) * scale))
+                         (p bitshr 1) * screenSize.y / 2 + (32 + shiftY) * scale), xy(1, 1))
 
       drawText({font: font, text: "⊲", pos: xy(-arrowX, arrowY) * scale + xy(0, 2), color: textShadowColor, xAlign: "center"})
       drawText({font: font, text: "⊳", pos: xy(+arrowX, arrowY) * scale + xy(0, 2), color: textShadowColor, xAlign: "center"})
       drawText({font: font, text: "⊲", pos: xy(-arrowX, arrowY) * scale, color: promptColor, xAlign: "center"})
       drawText({font: font, text: "⊳", pos: xy(+arrowX, arrowY) * scale, color: promptColor, xAlign: "center"})
 
-      drawText({font: choiceFont,
-                text: playerName[p] + control.type, shadow: textShadowColor,
+      drawText({font: choiceFont, text: playerName[p] + control.type, shadow: textShadowColor,
                 pos: xy(0, -2) * scale, color: textColor, xAlign: "center"})
 
       drawSprite({sprite: controllerSpritesheet[control.type], pos: xy(0, 40 - shiftSpriteY) * scale})
 
       const shiftX = if screenSize.x == screenSize.y then 16 else 0
-      drawText({font: font, text: control.prompt["ⓠ"], pos: xy(-56 + shiftX, 24) * scale, color: #f, xAlign: "center"})
-      drawText({font: font, text: control.prompt["⍐"], pos: xy(-56 + shiftX, 42) * scale, color: #f, xAlign: "center"})
-      drawText({font: font, text: control.prompt["⍇"], pos: xy(-68 + shiftX, 54) * scale, color: #f, xAlign: "center"})
-      drawText({font: font, text: control.prompt["⍈"], pos: xy(-44 + shiftX, 54) * scale, color: #f, xAlign: "center"})
-      drawText({font: font, text: control.prompt["⍗"], pos: xy(-56 + shiftX, 66) * scale, color: #f, xAlign: "center"})
+      drawText({font: controlsFont, text: control.prompt["ⓠ"], pos: xy(-56 + shiftX, 20) * scale, color: #f, xAlign: "center"})
+      drawText({font: controlsFont, text: control.prompt["⍐"], pos: xy(-56 + shiftX, 40) * scale, color: #f, xAlign: "center"})
+      drawText({font: controlsFont, text: control.prompt["⍇"], pos: xy(-70 + shiftX, 52) * scale, color: #f, xAlign: "center"})
+      drawText({font: controlsFont, text: control.prompt["⍈"], pos: xy(-42 + shiftX, 52) * scale, color: #f, xAlign: "center"})
+      drawText({font: controlsFont, text: control.prompt["⍗"], pos: xy(-56 + shiftX, 64) * scale, color: #f, xAlign: "center"})
 
-      drawText({font: font, text: control.prompt["ⓟ"], pos: xy(+56 - shiftX, 24) * scale, color: #f, xAlign: "center"})
-      drawText({font: font, text: control.prompt["ⓓ"], pos: xy(+56 - shiftX, 42) * scale, color: #f, xAlign: "center"})
-      drawText({font: font, text: control.prompt["ⓒ"], pos: xy(+44 - shiftX, 54) * scale, color: #f, xAlign: "center"})
-      drawText({font: font, text: control.prompt["ⓑ"], pos: xy(+68 - shiftX, 54) * scale, color: #f, xAlign: "center"})
-      drawText({font: font, text: control.prompt["ⓐ"], pos: xy(+56 - shiftX, 66) * scale, color: #f, xAlign: "center"})
+      drawText({font: controlsFont, text: control.prompt["ⓟ"], pos: xy(+56 - shiftX, 20) * scale, color: #f, xAlign: "center"})
+      drawText({font: controlsFont, text: control.prompt["ⓓ"], pos: xy(+56 - shiftX, 40) * scale, color: #f, xAlign: "center"})
+      drawText({font: controlsFont, text: control.prompt["ⓒ"], pos: xy(+42 - shiftX, 52) * scale, color: #f, xAlign: "center"})
+      drawText({font: controlsFont, text: control.prompt["ⓑ"], pos: xy(+70 - shiftX, 52) * scale, color: #f, xAlign: "center"})
+      drawText({font: controlsFont, text: control.prompt["ⓐ"], pos: xy(+56 - shiftX, 64) * scale, color: #f, xAlign: "center"})
 
 
