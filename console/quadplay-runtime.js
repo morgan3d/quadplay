@@ -6824,7 +6824,9 @@ function localTime() {
 
 function _show() {
 
-    // Use modeFrames to ensure that frame 0 is always rendered for a mode
+    // Check whether this frame will be shown or not, if running below
+    // frame rate and pruning graphics.  Use modeFrames instead of
+    // gameFrames to ensure that frame 0 is always rendered for a mode.
     if (modeFrames % _graphicsPeriod === 0) {
         const startTime = performance.now();
         
@@ -6851,10 +6853,12 @@ function _show() {
         _graphicsTime = performance.now() - startTime;
     }
     
+    _requestInput();
+    
     // Save for replays
     _previousGraphicsCommandList = _graphicsCommandList;
     
-    // Clear draw list
+    // Clear draw list (regardless of whether it is actually drawn)
     _graphicsCommandList = [];
 
     ++gameFrames;

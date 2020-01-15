@@ -701,6 +701,8 @@ function rgbaToCSSFillStyle(color) {
 }
 
 
+// Invoked from QRuntime._show(). May not actually be invoked every
+// frame if running below framerate.
 function submitFrame() {
     // Update the image
     ctx.msImageSmoothingEnabled = ctx.webkitImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
@@ -775,6 +777,12 @@ function submitFrame() {
     }
     
     refreshPending = true;
+}
+
+
+// Called by show() to trigger sampling input
+function requestInput() {
+    updateKeyboardPending = true;
 }
 
 

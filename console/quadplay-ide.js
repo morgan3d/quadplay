@@ -2,7 +2,7 @@
 "use strict";
 
 const deployed = true;
-const version  = '2020.01.13.00'
+const version  = '2020.01.14.22'
 const launcherURL = 'quad://console/launcher';
 
 {
@@ -434,11 +434,7 @@ function onStopButton(inReset) {
 
     stopAllSounds();
     coroutine = null;
-    if (QRuntime._graphicsPeriod === 1) {
-        cancelAnimationFrame(lastAnimationRequest);
-    } else {
-        clearTimeout(lastAnimationRequest);
-    }
+    clearTimeout(lastAnimationRequest);
     ctx.clearRect(0, 0, emulatorScreen.width, emulatorScreen.height);
 }
 
@@ -2049,7 +2045,9 @@ function mainLoopStep() {
         // above 60 Hz and require explicit throttling on high-refresh
         // displays. And when the game is falling below frame rate, we
         // don't trust requestAnimationFrame to reliably hit our
-        // fractions of 60 Hz.
+        // fractions of 60 Hz. Schedule the next step at the *start* of this
+        // one, so that the time for processing the step does not create a
+        // delay.
         lastAnimationRequest = setTimeout(mainLoopStep, (1000 / targetFramerate) * QRuntime._graphicsPeriod);
     }
 
@@ -2061,21 +2059,26 @@ function mainLoopStep() {
     debugWatchTable = {};
 
     // Run the "infinite" loop for a while, maxing out at just under 1/60 of a second or when
-    // the program explicitly requests a refresh via _show().
+    // the program explicitly requests a refresh or keyboard update via _show(). Note that
+    // refreshPending may already be false if running with _graphicsPeriod > 1, but it does
+    // no harm to set it back to false in that case.
     refreshPending = false;
+    updateKeyboardPending = false;
     try {
         // Worst-case timeout in milliseconds to keep the system responsive
         // even if it isn't receiving graphics submissions
         const endTime = frameStart + 100;
 
-        while (! refreshPending && (performance.now() < endTime) && (emulatorMode === 'play' || emulatorMode === 'step') && coroutine) {
-            updateInput();
+        while (! updateKeyboardPending && ! refreshPending && (performance.now() < endTime) && (emulatorMode === 'play' || emulatorMode === 'step') && coroutine) {
 
-            // Time interval at which to check for new [gamepad]
+            // Time interval at which to check for new **gamepad**
             // input; won't be able to process keyboard input since
-            // that requires events.
-            const inputTime = performance.now() + 1000 / 60;
-            while (! refreshPending && (performance.now() < inputTime) && (emulatorMode === 'play' || emulatorMode === 'step') && coroutine) {
+            // that requires events, which requires going out to the
+            // main JavaScript loop.
+            const gamepadSampleTime = performance.now() + 1000 / 60;
+            
+            updateInput();
+            while (! updateKeyboardPending && ! refreshPending && (performance.now() < gamepadSampleTime) && (emulatorMode === 'play' || emulatorMode === 'step') && coroutine) {
                 coroutine.next();
             }
         }
@@ -2200,6 +2203,7 @@ function mainLoopStep() {
 /** When true, the system is waiting for a refresh to occur and mainLoopStep should yield
     as soon as possible. */
 let refreshPending = false;
+let updateKeyboardPending = false;
 
 function reloadRuntime(oncomplete) {
     QRuntime.document.open();
@@ -2225,6 +2229,7 @@ function reloadRuntime(oncomplete) {
         QRuntime._fontMap       = fontMap;
         QRuntime._parse         = _parse;
         QRuntime._submitFrame   = submitFrame;
+        QRuntime._requestInput  = requestInput;
         QRuntime._updateInput   = updateInput;
         QRuntime._systemPrint   = _systemPrint;
         QRuntime._outputAppend  = _outputAppend;
