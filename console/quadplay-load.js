@@ -455,11 +455,13 @@ function loadFont(name, json, jsonURL) {
         const shadowSize = parseInt(json.shadowSize || 1);
 
         packFont(font, borderSize, shadowSize, json.baseline, json.charSize, Object.freeze({x: json.letterSpacing.x, y: json.letterSpacing.y}), srcMask);
-        
-        resourceStats.spritePixels += font._data.width * font._data.height;
-        ++resourceStats.spritesheets;
-        resourceStats.maxSpritesheetWidth  = Math.max(resourceStats.maxSpritesheetWidth,  font._data.width);
-        resourceStats.maxSpritesheetHeight = Math.max(resourceStats.maxSpritesheetHeight, font._data.height);
+
+        if (name[0] !== '_') {
+            resourceStats.spritePixels += font._data.width * font._data.height;
+            ++resourceStats.spritesheets;
+            resourceStats.maxSpritesheetWidth  = Math.max(resourceStats.maxSpritesheetWidth,  font._data.width);
+            resourceStats.maxSpritesheetHeight = Math.max(resourceStats.maxSpritesheetHeight, font._data.height);
+        }
         
         Object.freeze(font);
     }, loadFailureCallback, loadWarningCallback, forceReload);
@@ -586,7 +588,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
         region.size.y = Math.min(image.height - region.pos.y, region.size.y);
 
         const cacheName = json.url + JSON.stringify(region);
-        if (! alreadyCountedSpritePixels[cacheName]) {
+        if (! alreadyCountedSpritePixels[cacheName] && name[0] !== '_') {
             alreadyCountedSpritePixels[cacheName] = true;
             resourceStats.spritePixels += region.size.x * region.size.y;
             ++resourceStats.spritesheets;
@@ -808,7 +810,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
 const soundCache = {};
 
 function loadSound(name, json, jsonURL) {
-    ++resourceStats.sounds;
+    if (name[0] !== '_') { ++resourceStats.sounds; }
     const forceReload = computeForceReloadFlag(json.url);
 
     let sound;
@@ -1055,7 +1057,10 @@ function addCodeToSourceStats(code, scriptURL) {
     // Remove blank lines
     code = code.replace(/\n\s*\n/g, '\n');
 
-    resourceStats.sourceStatements += Math.max(0, (code.split(';').length - 1) + (code.split('\n').length - 1) - 1);
+    // Ignore statements from system files
+    if (scriptURL.replace(/^.*\//, '')[0] !== '_') {
+        resourceStats.sourceStatements += Math.max(0, (code.split(';').length - 1) + (code.split('\n').length - 1) - 1);
+    }
 }
 
 

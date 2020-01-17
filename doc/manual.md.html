@@ -367,48 +367,6 @@ Games that are also great and whose style and gameplay would fit but who exceed 
 - [Into the Breach](https://subsetgames.com/itb.html)
 
 
-Controllers
-------------------------------------------------------------------------------------
-
-quadplay works with a keyboard, the on-screen controls on mobile, or a physical
-controller. Nearly every USB and Bluetooth physical controller is supported.
-
-After launching a quadplay game, you must press a button on the
-controller for the web browser to allow access to it. quadplay will
-automatically detect the controller and change to appropriate button
-prompts for most standard devices, including Xbox, PlayStation,
-Switch, Stadia, and Thrustmaster controllers. If your device is not
-mapped correctly, just enter the pause menu on any game and select
-"Set Controls".
-
-
-### Windows and Linux
-
-Most USB controllers automatically connet on Windows and Linux.
-For Bluetooth controllers, follow the instructions for your device
-and operating systems.
-
-
-### MacOS
-
-I've found that the easiest Bluetooth controller to pair on MacOS is a
-Switch JoyCon.  Turn on Bluetooth on your Mac and open the Bluetooth
-preferences. Hold the controller horizontally and hold the tiny sync
-button [you have to take off the black wrist strap holder temporarily to access this button].
-You'll see the controller appear on your Mac. Click on its name and select
-"connect". When you want to re-pair the controller with your Switch, just
-slide it back onto the Switch and it will sync.
-
-To use a USB Xbox 360 or Xbox One controller on MacOS,
-first install the [open source driver](https://github.com/d235j/360Controller-n).
-It will then plug-and-play.
-
-
-### Mobile
-
-Many mobile devices support physical game controllers. I've never tried it
-myself, so let me know how it works for you!
-
 
 
 Programming Model
@@ -741,29 +699,71 @@ On MacOS, either Control or Command can be used for "Ctrl".
 
 ### Controls
 
-quadplay✜ supports up to four simultaneous physical game
-controllers. Most PC and console controllers (e.g., Xbox, PlayStation)
-work, as well as retro game pads by [8bitdo](http://www.8bitdo.com/)
-and
-[Logitech](https://www.logitechg.com/en-ca/products/gamepads/f310-gamepad.html).
+quadplay✜ presents virtual controllers for four players. You can use
+the on-screen buttons on mobile and touch screens for a single player, a
+keyboard for up to two players, and connect most USB or Bluetooth game
+controllers for up to four players. 
 
-There is also keyboard mapping for emulating controller input for up
-to two players. _You can use two USB or Bluetooth keyboards_ on the same computer,
-or have both players share a single keyboard.
+For two-player keyboard input, you can use two USB or Bluetooth
+keyboards on the same computer, or have both players share a single
+keyboard.
 
- <center> 
+<center> 
   ![](../console/xbox_controller.png style="border:none; image-rendering:auto" width=50%)
  
   ![](../console/gamepad.png style="border:none; image-rendering:auto" width=50%)
 
   ![](../console/keyboard.png style="border:none; image-rendering:auto" width=75%)
- </center>
+</center>
 
-Note that when using a dual-stick console controller, the unused parts of player 1's
-_physical_ controller are mapped as alternate controls for the player 2 (`pad[1]`) _virtual_
-controller. This makes it easy to test two-player games using a single controller.
-It also allows for single-player games with dual-stick controls
-using either both halves of the keyboard or controller 1.
+<br>
+Physical controllers give the best experience. We have tested:
+
+<table width=100%>
+<tr valign=top>
+<td width=33%>![](sn30-pro.jpg)<br>[8BitDo SN30 Pro](https://amzn.to/35XGEl9) SN or Classic edition</td>
+<td width=33%>![](sn30.jpg)<br>[8BitDo SN30](https://amzn.to/38ay83F)</td>
+<td width=33%>![](zero2.jpg)<br>[8BitDo Zero 2](https://amzn.to/2Ny5nWN)</td>
+</tr>
+<tr><td> <br> </td></tr>
+<tr valign=top>
+<td width=33%>![](xboxone.jpg)<br>[Microsoft Xbox One Wired Controller](https://amzn.to/36Y7CdR)</td>
+<td width=33%>![](xboxone.jpg)<br>[Microsoft Xbox One Wireless Controller for Windows 10](https://amzn.to/35U36vz)</td>
+<td width=33%>![](xbox360.jpg)<br>[Microsoft Xbox 360 Wired Controller](https://www.microsoft.com/accessories/en-ww/products/gaming/xbox-360-controller-for-windows/52a-00004) (which works on all operating systems)</td>
+</tr>
+<tr><td> <br> </td></tr>
+<tr valign=top>
+<td width=33%>![](joy-con.jpg)<br>[Nintendo Joy-Con](https://amzn.to/30recqP)</td>
+<td width=33%>![](thrustmaster.jpg)<br>[Thrustmaster T-Flight HOTAS X Flight Stick](https://amzn.to/2Tvf8J4)</td>
+</tr>
+</table>
+
+8BitDo controllers work in wired, wireless, and
+[XPad](https://support.8bitdo.com/xpad.html) mode.
+
+On MacOS, Xbox wired controllers require a free,
+[open source driver](https://github.com/d235j/360Controller-n). Xbox wireless controllers
+do not work on Mac.
+
+Left and right Joy-Cons work individually in horizontal mode. They cannot be joined as on 
+Switch.
+
+PlayStation, Stadia, and
+[Thrustmaster T-Flight HOTAS 4](https://amzn.to/35WJVB6),
+[Nintendo Switch Pro Controller](https://www.amazon.com/Nintendo-Switch-Pro-Controller/dp/B01NAWKYZ0/),
+[Logitech](https://www.logitechg.com/en-ca/products/gamepads/f310-gamepad.html) controllers,
+as well as all controllers on mobile are intended to work but I have not tested them.
+Please let me know if you are using them successfully.
+
+All browsers have controller support, but Chrome seems to support the most different controllers
+and the rumble feature.
+
+When using a dual-stick console controller, the unused parts
+of player 1's _physical_ controller are mapped as alternate controls
+for the player 2 (`pad[1]`) _virtual_ controller. This makes it easy
+to test two-player games using a single controller.  It also allows
+for single-player games with dual-stick controls using either both
+halves of the keyboard or controller 1.
 
 
 Input       | Player 1 Key| Player 2 Key| XboxOne   | Playstation4| SNES   | Switch_Pro
@@ -778,6 +778,23 @@ Input       | Player 1 Key| Player 2 Key| XboxOne   | Playstation4| SNES   | Swi
 ⓓ           | F           | ; (:)       | Ⓨ          | △          | Ⓧ      | Ⓧ
 ⓠ           | 1 or Q      | 7           |<big>⧉</big>| Share      | Select | <big>⊖</big>
 ⓟ           | 4 or P      | 0           | ☰          | Options    | Start  | <big>⊕</big>
+
+
+After launching a quadplay game, you must press a button on the
+controller for the web browser to allow access to it. quadplay will
+automatically detect the controller and change to appropriate button
+prompts for most standard devices, including Xbox, PlayStation,
+Switch, Stadia, and Thrustmaster controllers. If your device is not
+mapped correctly, just enter the pause menu on any game and select
+"Set Controls".
+
+I've found that the easiest Bluetooth controller to pair on MacOS is a
+Switch JoyCon.  Turn on Bluetooth on your Mac and open the Bluetooth
+preferences. Hold the controller horizontally and hold the tiny sync
+button [you have to take off the black wrist strap holder 
+temporarily to access this button]. You'll see the controller appear on your Mac. 
+Click on its name and select "connect". When you want to re-pair the controller with your
+Switch, just slide it back onto the Switch and it will sync.
 
 
 ### Resolution
@@ -815,26 +832,32 @@ to maximally fill the screen with integer pixel scaling.
 Some physical handhelds that may be capable of running quadplay✜
 games include:
 
- - 1280 x 720 [GPD Win 2](http://gpd.hk/gdpwin2) = full-res quadplay✜ 3X scaling
- - 480 x 320 [Odroid-Go Advance](https://www.hardkernel.com/shop/odroid-go-advance/) = full-res quadplay✜ 1X scaling; bad fit
- - 320 x 240 [PocketGo V2](https://www.bittboy.com/collections/pocketgo/products/new-pocketgo-v2) = 1/2-res quadplay✜ 1X scaling; bad fit
+ - 1280x720 [GPD Win 2](http://gpd.hk/gdpwin2), Windows and Linux = full-res quadplay✜ 3x scaling
+ - 1280x720 [DragonBox Pyra](https://pyra-handheld.com/boards/pages/pyra/), Linux = full-res quadplay✜ 3x scaling
+ - 480x320 [Odroid-Go Advance](https://www.hardkernel.com/shop/odroid-go-advance/), Linux = full-res quadplay✜ 1x scaling; poor fit
+<!--  - 320x240 [PocketGo V2](https://www.bittboy.com/collections/pocketgo/products/new-pocketgo-v2) = 1/2-res quadplay✜ 1x scaling; bad fit -->
+
+The Smach Z prototype has a 1920x1080 screen that would support
+quadplay✜ 4x scaling as a poor fit, and the Alienware UFO prototype has
+a 1920x1200 screen that would support quadplay✜ 5x scaling.  Neither
+product has shipped.
 
 For reference when importing assets or designing games inspired by
 previous work, here are the resolutions of classic and retro machines:
 
- - 480 × 272 PlayStation Portable
- - 400 x 240 Playdate
- - 320 x 200 VGA, including Amiga 500 and Commodore 64
- - 280 x 192 Apple II
- - 256 x 240 NES and TurboGrafx-16
- - 256 x 192 Nintendo DS and Sega Master System
- - 256 x 224 SNES
- - 240 x 160 Gameboy Advance
- - 240 x 136 TIC-80
- - 160 x 192 Atari 2600
- - 160 x 144 Gameboy Color and Sega Game Gear
- - 160 x 102 Atari Lynx
- - 128 x 128 Pico 8
+ - 480×272 PlayStation Portable
+ - 400x240 Playdate
+ - 320x200 VGA, including Amiga 500 and Commodore 64
+ - 280x192 Apple II
+ - 256x240 NES and TurboGrafx-16
+ - 256x192 Nintendo DS and Sega Master System
+ - 256x224 SNES
+ - 240x160 Gameboy Advance
+ - 240x136 TIC-80
+ - 160x192 Atari 2600
+ - 160x144 Gameboy Color and Sega Game Gear
+ - 160x102 Atari Lynx
+ - 128x128 Pico 8
 
 
 
@@ -3661,7 +3684,8 @@ Sprites
 ![`quad://sprites/ninja-black-32x32.sprite.json`](../sprites/ninja-black-32x32.png) ![`quad://sprites/ninja-red-32x32.sprite.json`](../sprites/ninja-red-32x32.png)
 ![`quad://sprites/ninja-yellow-32x32.sprite.json`](../sprites/ninja-yellow-32x32.png) ![`quad://sprites/ninja-blue-32x32.sprite.json`](../sprites/ninja-blue-32x32.png)
 ![`quad://sprites/ninja-purple-32x32.sprite.json`](../sprites/ninja-purple-32x32.png) ![`quad://sprites/ninja-white-32x32.sprite.json`](../sprites/ninja-white-32x32.png)
-![`quad://sprites/ninja-bow-32x32.sprite.json`](../sprites/ninja-bow-32x32.png) ![`quad://sprites/ninja-sword-32x32.sprite.json`](../sprites/ninja-sword-32x32.png)
+![`quad://sprites/ninja-pink-32x32.sprite.json`](../sprites/ninja-pink-32x32.png) ![`quad://sprites/ninja-bow-32x32.sprite.json`](../sprites/ninja-bow-32x32.png)
+![`quad://sprites/ninja-sword-32x32.sprite.json`](../sprites/ninja-sword-32x32.png) ![`quad://sprites/ninja-idle-64x64.sprite.json`](../sprites/ninja-idle-64x64.png)
 
 ### Dawnlike
 
@@ -5766,18 +5790,18 @@ Beta Tester Notes
 =====================================================================================
 
 The API is mostly complete. I'm focusing on bug fixes and minor tweaks
-to improve convenience. Only some minor helpers, primarily for AI
-and physics tasks, will be added before the 1.0 release.
+to improve convenience. Only some minor helpers, primarily for AI,
+will be added before the 1.0 release.
 
 The physics API is the newest, and thus the least stable (in both API and
 implementation) part of quadplay.
 
-Expect rasterization rules for triangles to change slightly
+Expect rasterization alignment rules for triangles to change slightly
 in order to better align for subpixel cases. The current sprite, map,
-disk, line, and rectangle rendering alignment is final. I will add separate
-functions for watertight triangle and line rasterization, which give
-different results than what is typically useful for individual
-primitives.
+disk, line, and rectangle rendering alignment is final. I will add
+separate functions for watertight triangle and line rasterization,
+which give different results than what is typically useful for
+individual primitives.
 
 The `makeSpline()` function using `"continue"` mode will change to be a
 third-order curve outside of the bounds instead of a line.
@@ -5790,7 +5814,7 @@ launched game at some point. The syntax for that game accepting the
 arguments has not yet been determined.
 
 The Library tab of the launcher program is currently hard-coded to the
-three built-in games. During the beta period this will change to show
+four built-in games. During the beta period this will change to show
 any game that has been loaded by URL until the user explicitly "forgets"
 it.
 
@@ -5808,7 +5832,7 @@ updated.
 
 The package manager is not implemented and may actually be removed
 instead of being implemented, depending on the needs that arise in the
-beta. You can load relative URLs for scripts and assets right now, so
+beta. You can load relative URLs for scripts and assets right now. So,
 the need for packages isn't urgent as you can reuse across projects
 already. What packages will provide are namespaces as well as assets
 bundled together with a script.
@@ -5833,19 +5857,12 @@ channel is handled. So, I often have to load them into Photoshop after
 quantization to clean up the alpha channel and then use a separate
 compression program on the output.
 
-The *entity system* is an optional high-level feature. You
-can us it as is, extend it, or replace it with your own. It isn't intended
-to be the ultimate high-level scene graph, just a convenience for quick
-prototypes.
-
-Recent Chrome and Safari give the best *performance*. Firefox is the
-slowest, mostly due to rendering. I recommend targeting 12 ms instead
-of 16 ms for your frame budget to account for this. As JavaScript
+Recent Safari and Firefox builds give the best *performance*. Of the
+the three, Chrome is the slowest, mostly due to rendering. The order
+of these changes frequently. I recommend targeting 13 ms instead of 16 ms for
+your frame budget to account for browser overhead. As JavaScript
 compilers improve, you may see slight improvements from the browser
 itself.
-
-Performance and the overall experience on mobile and embedded
-(Raspberry Pi, Jetson Nano) will improve throughout the beta period.
 
 
 
@@ -5853,6 +5870,17 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 Jan 16: Beta update 23
+
+- No longer count quadplay OS resources against the game's limit
+- Corrected the emulator screen position to remain centered during resizing
+- Added more information on physical controllers
+- Improved manual document layout on mobile phones in portrait mode
+- Added `ninja-pink-32x32.sprite.json`
+- Added `ninja-idle-64x64.sprite.json`
+- Adjusted ninja colors
+
 
 2020 Jan 14: Beta update 22
 
@@ -6252,7 +6280,6 @@ div.preview {
   border: 1px solid #666;
   float:right;
 }
-
 </style>
 <title>manual✜</title>
 <script>setTimeout(function(){document.title='manual✜';},1000);

@@ -443,8 +443,10 @@ function onSlowButton() {
 }
 
 // Allows a framerate to be specified so that the slow button can re-use the logic.
+//
 // isLaunchGame = "has this been triggered by QRuntime.launchGame()"
-function onPlayButton(slow, isLaunchGame) {
+// args = array of arguments to pass to the new program
+function onPlayButton(slow, isLaunchGame, args) {
     if (isSafari && ! isMobile) { unlockAudio(); }
     
     testPost();
@@ -2097,7 +2099,7 @@ function mainLoopStep() {
         } else if (e.launchGame !== undefined) {
             loadGameIntoIDE(e.launchGame, function () {
                 onResize();
-                onPlayButton(false, true);
+                onPlayButton(false, true, e.args);
             });
         } else {
             // Runtime error

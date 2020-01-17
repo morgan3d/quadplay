@@ -3930,6 +3930,10 @@ function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapW
         font = font.font;
     }
 
+    if (font === undefined) {
+        throw new Error('drawText() requires a font');
+    }
+    
     if (P === undefined) {
         throw new Error('drawText() requires a pos');
     }

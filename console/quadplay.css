@@ -670,9 +670,6 @@ body.EmulatorUI .virtualController {
 }
 
 canvas#screen {
-    top: 0px;
-    left: 0px;
-    position: absolute;
     background: #000;
     z-index: 30;
 }
