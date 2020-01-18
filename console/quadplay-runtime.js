@@ -32,7 +32,7 @@ var modeFrames = 0;
 // quadplay-ide.js. Note that game logic always executes at 60 Hz.
 var _graphicsPeriod = 1;
 
-// Time spent in graphics the last time that it executed.
+// Time spent in graphics this frame
 var _graphicsTime = 0;
 
 // Only used on Safari
@@ -1896,6 +1896,11 @@ function entityUpdateChildren(parent) {
 
 
 function entitySimulate(entity, dt) {
+    // Assume this computation takes 0.01 ms. We have no way to time it
+    // properly, but this at least gives some feedback in the profiler
+    // if it is being called continuously.
+    _physicsTimeTotal += 0.01;
+    
     if (dt === undefined) { dt = 1; }
     if (entity.density === Infinity) { return; }
     
@@ -2357,6 +2362,8 @@ function _bodyUpdateFromEntity(body) {
 
       
 function physicsSimulate(physics, stepFrames) {
+    const startTime = performance.now();
+          
     if (stepFrames === undefined) { stepFrames = 1; }
     const engine = physics._engine;
 
@@ -2453,6 +2460,9 @@ function physicsSimulate(physics, stepFrames) {
     } // contact
 
     ++physics._frame;
+
+    const endTime = performance.now();
+    _physicsTimeTotal += endTime - startTime;
 }
 
 
@@ -2566,7 +2576,32 @@ function physicsDetach(physics, attachment) {
     attachment.entityB._attachmentArray.removeValue(attachment);
     if (attachment.entityA) { attachment.entityA._attachmentArray.removeValue(attachment); }
 
-    // TODO: decrement and remove reference-counted no-collision elements
+    // Decrement and remove reference-counted no-collision elements
+    const mapA = param.entityA._body.collisionFilter.excludedBodies;
+    if (mapA) {
+        const count = map.get(param.entityB._body);
+        if (count !== undefined) {
+            if (count > 1) {
+                mapA.set(param.entityB._body, count - 1);
+            } else {
+                // Remove the no-collision condition
+                mapA.delete(param.entityB._body);
+            }
+        }
+    }
+
+    const mapB = param.entityB._body.collisionFilter.excludedBodies;
+    if (mapB) {
+        const count = map.get(param.entityA._body);
+        if (count !== undefined) {
+            if (count > 1) {
+                mapB.set(param.entityA._body, count - 1);
+            } else {
+                // Remove the no-collision condition
+                mapB.delete(param.entityA._body);
+            }
+        }
+    }
 
     // Remove the composite, which will destroy all of the Matter.js elements
     // that comprise this constraint
@@ -2640,14 +2675,14 @@ function physicsAttach(physics, type, param) {
     
     // Update the entity's collision filters. See console/matter-extensions.js
     if (! collide) {
-        // TODO: Reference counting on the excludedBodies arrays
+        // Reference counting on the excludedBodies maps
         param.entityA._body.collisionFilter.body = param.entityA._body;
-        if (! param.entityA._body.collisionFilter.excludedBodies) { param.entityA._body.collisionFilter.excludedBodies = []; }
-        push(param.entityA._body.collisionFilter.excludedBodies, param.entityB._body);
+        if (! param.entityA._body.collisionFilter.excludedBodies) { param.entityA._body.collisionFilter.excludedBodies = new WeakMap(); }
+        param.entityA._body.collisionFilter.excludedBodies.set(param.entityB._body, (param.entityA._body.collisionFilter.excludedBodies.get(param.entityB._body) || 0) + 1);
 
         param.entityB._body.collisionFilter.body = param.entityB._body;
-        if (! param.entityB._body.collisionFilter.excludedBodies) { param.entityB._body.collisionFilter.excludedBodies = []; }
-        push(param.entityB._body.collisionFilter.excludedBodies, param.entityA._body);
+        if (! param.entityB._body.collisionFilter.excludedBodies) { param.entityB._body.collisionFilter.excludedBodies = new WeakMap(); }        
+        param.entityB._body.collisionFilter.excludedBodies.set(param.entityA._body, (param.entityB._body.collisionFilter.excludedBodies.get(param.entityA._body) || 0) + 1);
     }
 
     /////////////////////////////////////////////////////////////////////
@@ -3244,6 +3279,9 @@ function drawTri(A, B, C, color, outline, pos, scale, angle, z) {
 
 
 function drawDisk(center, radius, color, outline, z) {
+    // Skip graphics this frame
+    if (modeFrames % _graphicsPeriod !== 0) { return; }
+
     z = z || 0;
     const skx = (z * _skewXZ), sky = (z * _skewYZ);
     let x = (center.x + skx) * _scaleX + _offsetX, y = (center.y + sky) * _scaleY + _offsetY;
@@ -3488,6 +3526,9 @@ function drawLine(A, B, color, z, openA, openB) {
 
 
 function drawPoint(P, color, z) {
+    // Skip graphics this frame
+    if (modeFrames % _graphicsPeriod !== 0) { return; }
+
     z = z || 0;
     const skx = z * _skewXZ, sky = z * _skewYZ;
     let x = (P.x + skx) * _scaleX + _offsetX, y = (P.y + sky) * _scaleY + _offsetY;
@@ -4161,6 +4202,9 @@ function _maybeApplyPivot(pos, pivot, angle, scale) {
 
 
 function drawSprite(spr, center, angle, scale, opacity, z, overrideColor) {
+    // Skip graphics this frame
+    if (modeFrames % _graphicsPeriod !== 0) { return; }
+
     if (spr && spr.sprite) {
         // This is the "keyword" version of the function
         z = spr.z;
@@ -6648,6 +6692,15 @@ function findPath(start, goal, costEstimator, edgeCost, getNeighbors, nodeToID, 
     return undefined;
 }
 
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Filter functions
+
+
+
+///////////////////////////////////////////////////////////////////////////////
 
 
 var _GeneratorFunction = Object.getPrototypeOf(function*(){}).constructor;

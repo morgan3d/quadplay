@@ -5722,12 +5722,13 @@ Python, [PICO-8](https://www.lexaloffle.com/pico-8.php),
 [codeheart.js](https://casual-effects.com/codeheart/) and
 [the nano JAMMER](https://morgan3d.github.io/nano).
 
-The quadplay✜ IDE and compiler are copyright 2019 Morgan McGuire, including:
+The quadplay✜ IDE and compiler are copyright 2019-2020 Morgan McGuire, including:
 
-- [`index.html`](../console/index.html)
-- [`quadplay.css`](../console/quadplay.css)
 - [`pyxlscript-compiler.js`](../console/pyxlscript-compiler.js)
+- [`quadplay.html`](../console/quadplay.html)
+- [`quadplay.css`](../console/quadplay.css)
 - [`quadplay-runtime.js`](../console/quadplay-runtime.js)
+- [`quadplay-profiler.js`](../console/quadplay-profiler.js)
 - [`quadplay-host.js`](../console/quadplay-host.js)
 - [`quadplay-ide.js`](../console/quadplay-ide.js)
 - [`quadplay-font.js`](../console/quadplay-font.js)
@@ -5871,8 +5872,14 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-2020 Jan 16: Beta update 23
+2020 Jan 18: Beta update 23
 
+- Redesigned profiler output in the "Stats" IDE tab to show 
+  game logic, physics, and graphics time separately
+- Rewrote framerate scaling to maintain the best possible motion
+  appearance independent of framerate
+- Optimized memory management for physics attachments by reference
+  counting and weak pointers
 - No longer count quadplay OS resources against the game's limit
 - Corrected the emulator screen position to remain centered during resizing
 - Added more information on physical controllers
@@ -5943,7 +5950,7 @@ Changes for both the specification and implementation in each release.
 - Added BetterJSON.js to credits
 - Added optional `pos`, `scale`, and `angle` arguments to `drawTri()`
 - Added `drawRect()` that is centered and takes an optional `angle` argument
-- Added `drawPoly()` for drawing convex polygons
+- Added `drawPloy()` for drawing convex polygons
 - Documented that `drawTri()` ignores winding order
 - Updated `tools/pyxlscript-mode.el` emacs syntax highlighting for new APIs
 - Fixed `tools/pyxlscript-mode.el` emacs syntax highlighting of color literals, negative numbers, and `size` properties

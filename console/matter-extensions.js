@@ -1,9 +1,11 @@
 /* Extensions to matter.js added for quadplay */
 
 // Extend collisionFilter so that it may contain a 'body' field and
-// may contain an 'excludedBodies' array of bodies. If present,
+// may contain an 'excludedBodies' WeakMap of bodies. If present,
 // collision lists are checked both ways to determine if the objects
 // can collide with each other. Either filter can exclude the other.
+// Note that undefined > 0 is false, so an element that is either not
+// present or has a count that is zero will not exclude the collision
 
 Matter.Detector.canCollide = function(filterA, filterB) {
     if ((filterA.group === filterB.group) && (filterA.group !== 0)) {
@@ -11,8 +13,8 @@ Matter.Detector.canCollide = function(filterA, filterB) {
     } else if ((filterA.mask & filterB.category) !== 0 && (filterB.mask & filterA.category) !== 0) {
         return ! (filterA.body &&
                   filterB.body && 
-                  ((filterA.excludedBodies && filterA.excludedBodies.length && (filterA.excludedBodies.indexOf(filterB.body) !== -1)) ||
-                   (filterB.excludedBodies && filterB.excludedBodies.length && (filterB.excludedBodies.indexOf(filterA.body) !== -1))));
+                  ((filterA.excludedBodies && filterA.excludedBodies.get(filterB.body) > 0) ||
+                   (filterB.excludedBodies && filterB.excludedBodies.get(filterA.body) > 0)));
     }
     
     return false;

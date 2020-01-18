@@ -234,14 +234,17 @@
         <hr>
         <br/>
         <table style="margin-left: -2px; width: 100%">
-          <tr><td width=180>Frame time:</td><td id="debugFrameTimeDisplay" class="right"></td><td>/</td><td class="right" width=45>16.7&nbsp;ms</td><td id="debugFramePercentDisplay" class="right" width=45></td></tr>
-          <tr><td>Target refresh:</td><td id="debugFrameRateDisplay" class="right"></td><td class="right"></td><td></td><td class="right" id="debugFramePeriodDisplay">(1×)</td></tr>
-          <tr><td>Actual refresh:</td><td id="debugActualFrameRateDisplay" class="right"></td><td class="right"></td><td></td><td></td></tr>
-          <tr><td>Graphics primitives:</td><td id="debugDrawCallsDisplay" class="right"></td></tr>
-          <tr><td><code>getMode()</code>:</td><td id="debugModeDisplay" class="code" style="text-align: right" colspan=1></td></tr>
-          <tr><td><code>getPreviousMode()</code>:</td><td class="code" id="debugPreviousModeDisplay" style="text-align: right" colspan=1></td></tr>
-          <tr><td><code>modeFrames</code>:</td><td id="debugModeFramesDisplay" class="right"></td></tr>
-          <tr><td><code>gameFrames</code>:</td><td id="debugGameFramesDisplay" class="right"></td></tr>
+          <tr><td width=180>Refresh rate</td><td id="debugFrameRateDisplay" class="right"></td><td class="right" width=45></td><td></td><td class="right" id="debugFramePeriodDisplay" width=45>(1×)</td></tr>
+          <tr id="debugFrameTimeRow"><td width=180>Frame time</td><td id="debugFrameTimeDisplay" class="right"></td><td>/</td><td class="right" width=45>16.7&nbsp;ms</td><td id="debugFramePercentDisplay" class="right" width=45></td></tr>
+          <tr><td>Compute time</td><td id="debugComputeTimeDisplay" class="right"></td><td>/</td><td class="right" width=45>16.7&nbsp;ms</td><td id="debugComputePercentDisplay" class="right" width=45></td></tr>
+          <tr><td>&nbsp;&nbsp;&nbsp;Logic</td><td id="debugCPUTimeDisplay" class="right"></td><td>/</td><td class="right" width=45>16.7&nbsp;ms</td><td id="debugCPUPercentDisplay" class="right" width=45></td></tr>
+          <tr><td>&nbsp;&nbsp;&nbsp;Physics</td><td id="debugPPUTimeDisplay" class="right"></td><td>/</td><td class="right" width=45>16.7&nbsp;ms</td><td id="debugPPUPercentDisplay" class="right" width=45></td></tr>
+          <tr><td>&nbsp;&nbsp;&nbsp;Graphics</td><td id="debugGPUTimeDisplay" class="right"></td><td>/</td><td class="right" width=45>16.7&nbsp;ms</td><td id="debugGPUPercentDisplay" class="right" width=45></td></tr>
+          <tr><td>Graphics primitives</td><td id="debugDrawCallsDisplay" class="right"></td></tr>
+          <tr><td><code>getMode()</code></td><td id="debugModeDisplay" class="code" style="text-align: right" colspan=1></td></tr>
+          <tr><td><code>getPreviousMode()</code></td><td class="code" id="debugPreviousModeDisplay" style="text-align: right" colspan=1></td></tr>
+          <tr><td><code>modeFrames</code></td><td id="debugModeFramesDisplay" class="right"></td></tr>
+          <tr><td><code>gameFrames</code></td><td id="debugGameFramesDisplay" class="right"></td></tr>
         </table>
 
         <div id="resourcePane"></div>
@@ -350,6 +353,7 @@
   <script src="decomp.min.js"></script>
   <script src="matter.min.js"></script>
   <script src="matter-extensions.js"></script>
+  <script src="filters.js"></script>
 
   <script>
     // Polyfill for mobile browsers and IE
@@ -369,5 +373,6 @@
   <script src="quadplay-host.js" charset="utf-8"> </script>
   <script src="quadplay-font.js" charset="utf-8"> </script>
   <script src="quadplay-load.js" charset="utf-8"> </script>
+  <script src="quadplay-profiler.js" charset="utf-8"> </script>
   <script src="quadplay-ide.js" charset="utf-8"> </script>
 </html>

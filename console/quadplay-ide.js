@@ -2,8 +2,11 @@
 "use strict";
 
 const deployed = true;
-const version  = '2020.01.14.22'
+const version  = '2020.01.18.17'
 const launcherURL = 'quad://console/launcher';
+
+//////////////////////////////////////////////////////////////////////////////////
+// UI setup
 
 {
     const c = document.getElementsByClassName(isMobile ? 'noMobile' : 'mobileOnly');
@@ -12,6 +15,26 @@ const launcherURL = 'quad://console/launcher';
     }
 }
 
+function getQueryString(field) {
+    const reg = new RegExp('[?&]' + field + '=([^&#]*)', 'i');
+    const string = reg.exec(location.search);
+    return string ? string[1] : null;
+}
+
+const fastReload = getQueryString('fastReload') === '1';
+
+const useIDE = getQueryString('IDE') || false;
+{
+    const c = document.getElementsByClassName(useIDE ? 'noIDE' : 'IDEOnly');
+    for (let i = 0; i < c.length; ++i) {
+        c[i].style.display = 'none';
+    }
+}
+
+// Hide quadplay framerate debugging info
+if (! profiler.debuggingProfiler) {  document.getElementById('debugFrameTimeRow').style.display = 'none'; }
+
+////////////////////////////////////////////////////////////////////////////////
 
 // 'IDE', 'Test', 'Emulator', 'Maximal'. See also setUIMode().
 let uiMode = 'IDE';
@@ -30,22 +53,7 @@ let previewRecording = null;
 let previewRecordingFrame = 0;
 
 function clamp(x, lo, hi) { return Math.min(Math.max(x, lo), hi); }
-
-function getQueryString(field) {
-    const reg = new RegExp('[?&]' + field + '=([^&#]*)', 'i');
-    const string = reg.exec(location.search);
-    return string ? string[1] : null;
-}
-
-const fastReload = getQueryString('fastReload') === '1';
-
-const useIDE = getQueryString('IDE') || false;
-{
-    const c = document.getElementsByClassName(useIDE ? 'noIDE' : 'IDEOnly');
-    for (let i = 0; i < c.length; ++i) {
-        c[i].style.display = 'none';
-    }
-}
+function makeEuroSmoothValue(minCutoff, speedCoefficient) {  return new EuroFilter(minCutoff, speedCoefficient); }
 
 
 function debugOptionClick(event) {
@@ -464,12 +472,8 @@ function onPlayButton(slow, isLaunchGame, args) {
     
         setErrorStatus('');
         emulatorMode = 'play';
-        emwaFrameTime = 0;
-        lastGraphicsPeriodCheckTime = performance.now();
-        emwaFrameInterval = 1000/60;
-        periodCapThisRun = 1;
-        frameRateFailuresThisRun = 0;        
-        prevFrameStart = performance.now();
+        profiler.reset();
+
         previewRecordingFrame = 0;
         previewRecording = null;
         
@@ -1918,8 +1922,6 @@ function setErrorStatus(e) {
 setControlEnable('pause', false);
 let coroutine = null;
 let emwaFrameTime = 0;
-const debugFrameTimeDisplay = document.getElementById('debugFrameTimeDisplay');
-const debugFramePercentDisplay = document.getElementById('debugFramePercentDisplay');
 const debugFrameRateDisplay = document.getElementById('debugFrameRateDisplay');
 const debugActualFrameRateDisplay = document.getElementById('debugActualFrameRateDisplay');
 const debugFramePeriodDisplay = document.getElementById('debugFramePeriodDisplay');
@@ -2025,19 +2027,24 @@ function jsToNSError(error) {
     return {url: url, lineNumber: lineNumber - urlLineIndex - 3 + offset, message: error.message};
 }
     
-// Used for timing the actual frame rate
-let prevFrameStart = 0;
-let emwaFrameInterval = 1000 / 60;
 
-// Minimum graphics period permitted for the game
-// on this run. If the game consistently fails to make
-// 60 fps, it will be capped lower than 1
-let periodCapThisRun = 1;
-let frameRateFailuresThisRun = 0;
+function updateTimeDisplay(time, name) {
+    const td = document.getElementById('debug' + name + 'TimeDisplay');
+    const tp = document.getElementById('debug' + name + 'PercentDisplay');
 
-// performance.now time at which the graphics period was last adjusted
-let lastGraphicsPeriodCheckTime = 0;
-const graphicsPeriodCheckInterval = 1000;// milliseconds
+    if (time >= 16.667) {
+        // Overtime
+        td.style.color = tp.style.color = '#f30';
+    } else if (time >= 15.5) {
+        // Warning
+        td.style.color = tp.style.color = '#fe4';
+    } else {
+        td.style.color = tp.style.color = 'unset';
+    }
+
+    td.innerHTML = '' + time.toFixed(1) + ' ms';
+    tp.innerHTML = '' + Math.round(time * 6) + '%';
+}
 
 // Invoked by requestAnimationFrame() or setTimeout. 
 function mainLoopStep() {
@@ -2050,15 +2057,22 @@ function mainLoopStep() {
         // fractions of 60 Hz. Schedule the next step at the *start* of this
         // one, so that the time for processing the step does not create a
         // delay.
-        lastAnimationRequest = setTimeout(mainLoopStep, (1000 / targetFramerate) * QRuntime._graphicsPeriod);
+        //
+        // Do not account for QRuntime._graphicsPeriod here. Always
+        // try to run at 60 Hz for input processing and game
+        // execution, and drop graphics processing in QRuntime._show()
+        // some of the time.
+        lastAnimationRequest = setTimeout(mainLoopStep, Math.floor(1000 / targetFramerate - 1));
     }
 
-    const frameStart = performance.now();
-    emwaFrameInterval = emwaFrameInterval + (frameStart - prevFrameStart - emwaFrameInterval) * 0.09;
-    prevFrameStart = frameStart;
-    
     // Erase the table every frame
     debugWatchTable = {};
+
+    // Physics time may be spread over multiple QRuntime.physicsSimulate() calls,
+    // but graphics is always a single QRuntime._show() call. Graphics time may
+    // be zero on any individual call.
+    QRuntime._physicsTimeTotal = 0;
+    QRuntime._graphicsTime = 0;
 
     // Run the "infinite" loop for a while, maxing out at just under 1/60 of a second or when
     // the program explicitly requests a refresh or keyboard update via _show(). Note that
@@ -2066,19 +2080,27 @@ function mainLoopStep() {
     // no harm to set it back to false in that case.
     refreshPending = false;
     updateKeyboardPending = false;
+
+    profiler.startFrame();
+    // Run until the end of the game's natural main loop excution, the
+    // game invokes QRuntime._show(), or the user ends the
+    // program. The game may suppress its own graphics computation
+    // inside QRuntime._show() if it is running too slowly.
     try {
-        // Worst-case timeout in milliseconds to keep the system responsive
-        // even if it isn't receiving graphics submissions
+        // Worst-case timeout in milliseconds (to yield 10 fps)
+        // to keep the browser responsive if the game is in a long
+        // top-level loop (which will yield). Some of this is legacy
+        // to nanojammer, as quadplay games tend to have code in
+        // functions where it can't yield.
+        const frameStart = profiler.now();
         const endTime = frameStart + 100;
 
         while (! updateKeyboardPending && ! refreshPending && (performance.now() < endTime) && (emulatorMode === 'play' || emulatorMode === 'step') && coroutine) {
-
             // Time interval at which to check for new **gamepad**
             // input; won't be able to process keyboard input since
             // that requires events, which requires going out to the
             // main JavaScript loop.
             const gamepadSampleTime = performance.now() + 1000 / 60;
-            
             updateInput();
             while (! updateKeyboardPending && ! refreshPending && (performance.now() < gamepadSampleTime) && (emulatorMode === 'play' || emulatorMode === 'step') && coroutine) {
                 coroutine.next();
@@ -2109,60 +2131,42 @@ function mainLoopStep() {
         }
     }
 
-    const frameEnd = performance.now();
-    const frameTime = (frameEnd - frameStart - QRuntime._graphicsTime) / QRuntime._graphicsPeriod + QRuntime._graphicsTime;
-    if (emwaFrameTime === 0) {
-        // First frame
-        emwaFrameTime = frameTime;
-    } else {
-        emwaFrameTime = emwaFrameTime * 0.96 + frameTime * 0.04;
-    }
+    // The frame has ended
+    profiler.endFrame(QRuntime._physicsTimeTotal, QRuntime._graphicsTime);
 
-    if ((lastGraphicsPeriodCheckTime + graphicsPeriodCheckInterval < frameEnd) && ! previewRecording) {
-        // Time to update the graphics period
-        lastGraphicsPeriodCheckTime = frameEnd;
+    if ((uiMode === 'Test') || (uiMode === 'IDE')) {
+        const frame = profiler.smoothFrameTime.get();
+        const logic = profiler.smoothLogicTime.get();
+        const physics = profiler.smoothPhysicsTime.get();
 
-        // "periods" are integer multiples of 1000 ms / 60 frames = 16.7 ms
-        const oldPeriod = QRuntime._graphicsPeriod;
+        // Show the time that graphics *would* be taking if
+        // it wasn't for the frame rate scaler
+        const graphics = profiler.smoothGraphicsTime.get() * QRuntime._graphicsPeriod;
+        const compute = logic + physics + graphics;
         
-        // (f [ms / frame]) / (1000/60 [ms/frame]) = f * 60 / 1000
-        let nextPeriod = frameTime * (60 / 1000);
+        if (profiler.debuggingProfiler) { updateTimeDisplay(frame, 'Frame'); }
+        updateTimeDisplay(compute, 'Compute');
+        updateTimeDisplay(logic, 'CPU');
+        updateTimeDisplay(physics, 'PPU');
+        updateTimeDisplay(graphics, 'GPU');
 
-        // If we're almost making frame rate, do not increase the graphics period
-        if (nextPeriod * 0.96 > QRuntime._graphicsPeriod) {
-            // Increase the period because the program is running too slowly 
-            nextPeriod = clamp(Math.round(nextPeriod), periodCapThisRun, 6);
-        } else if (Math.ceil(nextPeriod) <= QRuntime._graphicsPeriod) {
-            // The program is running fast. Drop down to the new period
-            nextPeriod = clamp(Math.ceil(nextPeriod), periodCapThisRun, 6);
-        } else {
-            // Do not change frame rate
-            nextPeriod = oldPeriod;
+        let color = 'unset';
+        if (QRuntime._graphicsPeriod === 2) {
+            color = '#fe4';
+        } else if (QRuntime._graphicsPeriod > 2) {
+            color = '#f30';
         }
 
-        if ((nextPeriod === 1) && (oldPeriod === 1) && (frameTime >= 18 * oldPeriod)) {
-            // We are missing frame rate badly (worse than 55.5 fps) due to the browser even
-            // though the game itself is running fast enough. Back off to 30 fps.
-            nextPeriod = 2;
-            ++frameRateFailuresThisRun;
-            if (frameRateFailuresThisRun >= 5) {
-                periodCapThisRun = 2;
-            }
-        }
+        debugFrameRateDisplay.style.color = debugFramePeriodDisplay.style.color = color;
+        debugFrameRateDisplay.innerHTML = '' + Math.round(60 / QRuntime._graphicsPeriod) + ' Hz';
+        debugFramePeriodDisplay.innerHTML = '(' + ('1½⅓¼⅕⅙'[QRuntime._graphicsPeriod - 1]) + ' ×)';
 
-        if (nextPeriod !== oldPeriod) {
-            emwaFrameInterval = emwaFrameInterval * 0.7 + 0.3 * nextPeriod * 1000/60;
+        if (QRuntime.modeFrames % QRuntime._graphicsPeriod === 1 % QRuntime._graphicsPeriod) {
+            // Only display if the graphics period has just ended, otherwise the display would
+            // be zero most of the time
+            debugDrawCallsDisplay.innerHTML = '' + QRuntime._previousGraphicsCommandList.length;
         }
-
-        QRuntime._graphicsPeriod = nextPeriod;
     }
-    
-    debugFrameTimeDisplay.innerHTML = '' + emwaFrameTime.toFixed(1) + ' ms';
-    debugFramePercentDisplay.innerHTML = '(' + Math.round(emwaFrameTime * 6) + '%)';
-    debugFrameRateDisplay.innerHTML = '' + Math.round(60 / QRuntime._graphicsPeriod) + ' Hz';
-    debugActualFrameRateDisplay.innerHTML = '' + Math.round(1000 / emwaFrameInterval) + ' Hz';
-    debugFramePeriodDisplay.innerHTML = '(' + ('1½⅓¼⅕⅙'[QRuntime._graphicsPeriod - 1]) + ' ×)';
-    debugDrawCallsDisplay.innerHTML = '' + QRuntime._previousGraphicsCommandList.length;
 
     if (debugWatchEnabled && emulatorMode === 'play') {
         const pane = document.getElementById('debugWatchDisplayPane');
@@ -2196,6 +2200,15 @@ function mainLoopStep() {
     debugModeFramesDisplay.innerHTML = '' + QRuntime.modeFrames;
     debugGameFramesDisplay.innerHTML = '' + QRuntime.gameFrames;
 
+    // Update to the profiler's new model of the graphics period
+    QRuntime._graphicsPeriod = profiler.graphicsPeriod;
+
+    if (targetFramerate < PLAY_FRAMERATE) {
+        // Force the profiler to avoid resetting the
+        // graphics rate when in slow mode.
+        profiler.reset();
+    }
+    
     if (emulatorMode === 'step') {
         onPauseButton();
     }
@@ -2237,6 +2250,7 @@ function reloadRuntime(oncomplete) {
         QRuntime._outputAppend  = _outputAppend;
         QRuntime._parseHexColor = parseHexColor;
         QRuntime._Physics       = Matter;
+        QRuntime.makeEuroSmoothValue = makeEuroSmoothValue;
 
         QRuntime.pad = Object.seal([0,0,0,0]);
         for (let p = 0; p < 4; ++p) {
@@ -2523,7 +2537,7 @@ function loadGameIntoIDE(url, callback) {
             console.log('Loading complete.');
             setFramebufferSize(gameSource.json.screenSize.x, gameSource.json.screenSize.y);
             createProjectWindow(gameSource);
-            let resourcePane = document.getElementById('resourcePane');
+            const resourcePane = document.getElementById('resourcePane');
             resourcePane.innerHTML = `
 <br/><center><b style="color:#888">Resource Limits</b></center>
 <hr>
@@ -2534,7 +2548,7 @@ function loadGameIntoIDE(url, callback) {
 <tr><td>Max Spritesheet Width</td><td class="right">${resourceStats.maxSpritesheetWidth}</td><td>/</td><td class="right">1024</td><td class="right">(${Math.round(resourceStats.maxSpritesheetWidth*100/1024)}%)</td></tr>
 <tr><td>Max Spritesheet Height</td><td class="right">${resourceStats.maxSpritesheetHeight}</td><td>/</td><td class="right">1024</td><td class="right">(${Math.round(resourceStats.maxSpritesheetHeight*100/1024)}%)</td></tr>
 <tr><td>Source Statements</td><td class="right">${resourceStats.sourceStatements}</td><td>/</td><td class="right">8192</td><td class="right">(${Math.round(resourceStats.sourceStatements*100/8192)}%)</td></tr>
-<tr><td>Sounds</td><td class="right">${resourceStats.sounds}</td><td>/</td><td class="right">128</td><td class="right">(${Math.round(resourceStats.sounds*100/128)}%)</td></tr>
+<tr><td>Audio Clips</td><td class="right">${resourceStats.sounds}</td><td>/</td><td class="right">128</td><td class="right">(${Math.round(resourceStats.sounds*100/128)}%)</td></tr>
 </table>`;
             document.getElementById('playButton').enabled = true;
             
