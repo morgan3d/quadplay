@@ -333,7 +333,7 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
 /** The URL is used only for reporting warnings (not errors) */
 LoadManager.prototype.parseJSON = function (text, url, warningCallback) {
     if (this.jsonParser === 'permissive') {
-        return BetterJSON.parse(text);
+        return WorkJSON.parse(text);
     } else {
         return JSON.parse(text);
     }

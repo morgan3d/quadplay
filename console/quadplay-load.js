@@ -90,6 +90,7 @@ function parseHexColor(str) {
 }
 
 
+// Loads the game and then runs the callback() or errorCallback()
 function afterLoadGame(gameURL, callback, errorCallback) {
     // Use a random starting ID so that programmers who don't read the
     // manual won't assume it will be the same for each run and start
@@ -119,6 +120,11 @@ function afterLoadGame(gameURL, callback, errorCallback) {
     fileContents = {};
     alreadyCountedSpritePixels = {};
     gameSource = {};
+
+    // Global arrays for abstracting hardware memory
+    // copies of spritesheet and font data
+    spritesheetArray = [];
+    fontArray = [];
     
     resourceStats = {
         spritePixels: 0,
@@ -139,29 +145,16 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         }
 
         //////////////////////////////////////////////////////////////////////////////////////////////
-        // Inject OS dependencies
+        // Inject OS script dependencies
         gameJSON.modes.push(
             'quad://console/os/_SystemMenu',
             'quad://console/os/_ConfirmDialog',
             'quad://console/os/_SetControls',
             'quad://console/os/_SetControls64'
         );
-        
-        gameJSON.assets = Object.assign(gameJSON.assets, {
-            "_font5":              "quad://fonts/nano-5.font.json",
-            "_font6":              "quad://fonts/scoreboard-6.font.json",
-            "_font8":              "quad://fonts/deja-8.font.json",
-            "_font9":              "quad://fonts/deja-9.font.json",
-            "_moveUISound":        "quad://sounds/Blip-04.sound.json",
-            "_acceptUISound":      "quad://sounds/58-Jump.sound.json",
-            "_openUISound":        "quad://sounds/33-Powerup.sound.json",
-            "_cancelUISound":      "quad://sounds/18-Shoot.sound.json",
-            "_denyUISound":        "quad://sounds/46-Hit.sound.json",
-            "_quadplayLogoSprite": "quad://console/os/logo.sprite.json",
-            "_controlDoneSprite":  "quad://console/os/control-done.sprite.json",
-            "_controllerSpritesheet22": "quad://sprites/controllers-32x22.sprite.json",
-            "_controllerSpritesheet44": "quad://sprites/controllers-64x44.sprite.json"
-        });
+
+        // Any changes here must also be updated in the os_dependencies variable in tools/export.py
+        gameJSON.assets = Object.assign(gameJSON.assets, os_dependencies);
 
         //////////////////////////////////////////////////////////////////////////////////////////////
         
@@ -426,6 +419,7 @@ function computeAssetCredits(gameSource) {
     assetCredits.code.push('gif.js ©2013 Johan Nordberg, used under the MIT license, with additional programming by Kevin Weiner, Thibault Imbert, and Anthony Dekker');
     assetCredits.code.push('xorshift implementation ©2014 Andreas Madsen and Emil Bay, used under the MIT license');
     assetCredits.code.push('LoadManager.js ©2019 Morgan McGuire, used under the BSD license');
+    assetCredits.code.push('WorkJSON.js ©2020 Morgan McGuire, used under the MIT license');
     assetCredits.code.push('js-yaml ©2011-2015 Vitaly Puzrin, used under the MIT license');
     assetCredits.code.push('matter.js © Liam Brummitt and others, used under the MIT license');
     assetCredits.code.push('poly-decomp.js ©2013 Stefan Hedman, used under the MIT license');
@@ -439,8 +433,11 @@ function loadFont(name, json, jsonURL) {
         _type:     'font',
         _url:      json.url,
         _json:     json,
-        _jsonURL:  jsonURL
+        _jsonURL:  jsonURL,
+        _index:    fontArray.length
     };
+
+    fontArray.push(font);
 
     const forceReload = computeForceReloadFlag(json.url);
 
@@ -538,6 +535,14 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
     if (forceReload === false) {
         spritesheet = spritesheetCache[json.url];
         if (spritesheet) {
+            // Make sure the index is updated when pulling from the cache
+            if (spritesheetArray.indexOf(spritesheet) === -1) {
+                spritesheet._index = spritesheetArray.length;
+                spritesheetArray.push(spritesheet);
+            } else {
+                console.assert(spritesheetArray.indexOf(spritesheet) === spritesheet._index);
+            }
+            
             fileContents[json.url] = spritesheet;
             onLoadFileStart(json.url);
             onLoadFileComplete(json.url);
@@ -551,14 +556,17 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
     spritesheet = Object.assign([], {
         _name: 'spritesheet ' + name,
         _type: 'spritesheet',
-        _uint32data: null,
-        _uint32dataFlippedX : null,
+        _uint32Data: null,
+        _uint32DataFlippedX : null,
         _url: json.url,
         _gutter: (json.spriteSize.gutter || 0),
         _json: json,
         _jsonURL: jsonURL,
+        _index: spritesheetArray.length,
         spriteSize: Object.freeze({x: json.spriteSize.x, y: json.spriteSize.y})
     });
+
+    spritesheetArray.push(spritesheet);
 
     // Pivots
     const sspivot = json.pivot ? Object.freeze({x: json.pivot.x - json.spriteSize.x / 2, y: json.pivot.y - json.spriteSize.y / 2}) : Object.freeze({x: 0, y: 0});
@@ -718,7 +726,6 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     if (data.start.x !== data.end.x && data.start.y !== data.end.y) {
                         throw new Error('Animation frames must be in a horizontal or vertical line for animation "' + anim + '"');
                     }
-
                     
                     let pivot = sspivot;
                     if (data.pivot !== undefined) {
@@ -778,8 +785,10 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
             }
         }
 
-        // Prevent the game from modifying this asset
-        Object.freeze(spritesheet);
+        // Prevent the game from modifying this asset.
+        // Can't freeze it because we change the _index when
+        // loading from cache.
+        Object.seal(spritesheet);
         for (let x = 0; x < spritesheet.length; ++x) {
             for (let y = 0; y < spritesheet[x].length; ++y) {
                 const sprite = spritesheet[x][y];

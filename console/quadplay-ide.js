@@ -746,13 +746,26 @@ const controlSchemeTable = {
         '(b)': '2',
         '(c)': '4',
         '(d)': '3',
-        "(p)": 'ST',
+        '(p)': 'ST',
         '(q)': 'SE',
         '[^]': '⍐',
         '[<]': '⍇',
         '[v]': '⍗',
         '[>]': '⍈'
     },
+
+    GPD_Win: {
+        '(a)': 'ⓐ',
+        '(b)': 'ⓑ',
+        '(c)': 'ⓧ',
+        '(d)': 'ⓨ',
+        '(p)': 'STR',
+        '(q)': 'SEL',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    }
 };
 
 // Create aliases
@@ -2043,7 +2056,7 @@ function updateTimeDisplay(time, name) {
     }
 
     td.innerHTML = '' + time.toFixed(1) + ' ms';
-    tp.innerHTML = '' + Math.round(time * 6) + '%';
+    tp.innerHTML = '(' + Math.round(time * 6) + '%)';
 }
 
 // Invoked by requestAnimationFrame() or setTimeout. 
@@ -2250,6 +2263,8 @@ function reloadRuntime(oncomplete) {
         QRuntime._outputAppend  = _outputAppend;
         QRuntime._parseHexColor = parseHexColor;
         QRuntime._Physics       = Matter;
+        QRuntime._spritesheetArray = spritesheetArray;
+        QRuntime._fontArray     = fontArray;
         QRuntime.makeEuroSmoothValue = makeEuroSmoothValue;
 
         QRuntime.pad = Object.seal([0,0,0,0]);
@@ -2496,6 +2511,11 @@ function loadGameIntoIDE(url, callback) {
     }
     window.gameURL = url;
 
+    // Disable the play, slow, and step buttons
+    document.getElementById('slowButton').enabled =
+        document.getElementById('stepButton').enabled =
+        document.getElementById('playButton').enabled = false;
+    
     // Let the boot screen show before appending in the following code
     setTimeout(function() {
         {
@@ -2529,7 +2549,6 @@ function loadGameIntoIDE(url, callback) {
         //aceEditor.setReadOnly(! locallyHosted());
         aceEditor.setReadOnly(true);
     
-        document.getElementById('playButton').enabled = false;
         onLoadFileStart(url);
         afterLoadGame(url, function () {
             onLoadFileComplete(url);
@@ -2550,7 +2569,10 @@ function loadGameIntoIDE(url, callback) {
 <tr><td>Source Statements</td><td class="right">${resourceStats.sourceStatements}</td><td>/</td><td class="right">8192</td><td class="right">(${Math.round(resourceStats.sourceStatements*100/8192)}%)</td></tr>
 <tr><td>Audio Clips</td><td class="right">${resourceStats.sounds}</td><td>/</td><td class="right">128</td><td class="right">(${Math.round(resourceStats.sounds*100/128)}%)</td></tr>
 </table>`;
-            document.getElementById('playButton').enabled = true;
+            document.getElementById('restartButtonContainer').enabled =
+                document.getElementById('slowButton').enabled =
+                document.getElementById('stepButton').enabled =
+                document.getElementById('playButton').enabled = true;
             
             const modeEditor = document.getElementById('modeEditor');
             if (modeEditor.style.visibility === 'visible') {
@@ -2581,6 +2603,10 @@ Starting…
 `);        
             if (callback) { callback(); }
         }, function (e) {
+            document.getElementById('restartButtonContainer').enabled =
+                document.getElementById('slowButton').enabled =
+                document.getElementById('stepButton').enabled =
+                document.getElementById('playButton').enabled = true;
             hideBootScreen();
             setErrorStatus('Loading ' + url + ' failed: ' + e);
             onStopButton();

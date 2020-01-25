@@ -1390,6 +1390,10 @@ function _error(msg) {
 
 
 function xy(x, y) {
+    if (x === undefined) {
+        _error('nil or no argument to xy()');
+    }
+    
     if (x.x !== undefined) {
         if (y !== undefined) { _error('xy(number, number), xy(xy), or xy(array) are the only legal options'); }
         return {x:x.x, y:x.y};
@@ -2002,6 +2006,29 @@ var _PHYSICS_MASS_SCALE     = Math.pow(2,-10);
 var _PHYSICS_MASS_INV_SCALE = Math.pow(2,10);
 var _physicsContextIndex = 0;
 
+function _physicsUpdateContact(physics, contact, pair) {
+    const activeContacts = pair.activeContacts;
+    
+    contact.normal.x = pair.collision.normal.x;
+    contact.normal.y = pair.collision.normal.y;
+    contact.point0.x = activeContacts[0].vertex.x;
+    contact.point0.y = activeContacts[0].vertex.y;
+
+    // For debugging contacts
+    // console.log(" update: ", contact.point0.x);
+    
+    if (activeContacts.length > 1) {
+        if (! contact.point1) { contact.point1 = {}; }
+        contact.point1.x = activeContacts[1].vertex.x;
+        contact.point1.y = activeContacts[1].vertex.y;
+    } else {
+        contact.point1 = undefined;
+    }
+    contact.depth = pair.collision.depth;
+    contact._lastRealContactFrame = physics._frame;
+}
+
+
 function makePhysics(options) {
     const engine = _Physics.Engine.create();
     const physics = Object.seal({
@@ -2013,8 +2040,9 @@ function makePhysics(options) {
         _frame:                0,
         
         // _brokenContactQueue[0] is an array of contacts that broke _brokenContactQueue.length - 1
-        // frames ago (but may have been reestablished). 
-        _brokenContactQueue:   [[], [], []],
+        // frames ago (but may have been reestablished). Add empty arrays to this queue to maintain
+        // old contacts for more frames so that bouncing/sliding contact feels more robust.
+        _brokenContactQueue:   [[], [], [], []],
         
         // Maps bodies to maps of bodies to contacts.
         _entityContactMap:     new Map(), 
@@ -2028,7 +2056,7 @@ function makePhysics(options) {
         engine.world.gravity.x = options.gravity.x;
         engine.world.gravity.y = options.gravity.y;
     } else {
-        engine.world.gravity.y = -1;
+        engine.world.gravity.y = -getYUp();
     }
       
     engine.world.gravity.scale = 0.001; // default 0.001
@@ -2071,7 +2099,7 @@ function makePhysics(options) {
                     normal:  {x: pair.collision.normal.x, y: pair.collision.normal.y},
                     point0:  {x: activeContacts[0].vertex.x, y: activeContacts[0].vertex.y},
                     point1:  (activeContacts.length === 1) ? {} : {x: activeContacts[1].vertex.x, y: activeContacts[1].vertex.y},
-                    depth: pair.collision.depth
+                    depth:   pair.collision.depth
                 }
 
                 let mapB = physics._entityContactMap.get(pair.bodyB);
@@ -2085,17 +2113,18 @@ function makePhysics(options) {
                 mapB.set(pair.bodyA, contact);
 
                 // for debugging collisions
-                // console.log(physics._frame + ' begin ' + contact.entityA.name + "+" + contact.entityB.name);
+                //console.log(physics._frame + ' +begin ' + contact.entityA.name + " & " + contact.entityB.name);
             } else {
                 // ...else: this contact already exists and is in the maps because it was recently active.
-                // it is currently scheduled in the broken contact queue.
+                // it is currently scheduled in the broken contact queue. Update the data; the Active
+                // event will not be called by Matter.js
 
                 // for debugging collisions
-                // console.log(physics._frame + ' resume ' + contact.entityA.name + "+" + contact.entityB.name);
+                //console.log(physics._frame + ' resume ' + contact.entityA.name + " & " + contact.entityB.name);
+                _physicsUpdateContact(physics, contact, pair);
             }
             
-            contact._lastRealContactFrame = physics._frame;
-                
+            contact._lastRealContactFrame = physics._frame;                
         }
     });
 
@@ -2114,22 +2143,9 @@ function makePhysics(options) {
                 continue;
             }
             
-            const activeContacts = pair.activeContacts;
-            
-            // Update:
-            contact.normal.x = pair.collision.normal.x;
-            contact.normal.y = pair.collision.normal.y;
-            contact.point0.x = activeContacts[0].vertex.x;
-            contact.point0.y = activeContacts[0].vertex.y;
-            if (activeContacts.length > 1) {
-                if (! contact.point1) { contact.point1 = {}; }
-                contact.point1.x = activeContacts[1].vertex.x;
-                contact.point1.y = activeContacts[1].vertex.y;
-            } else {
-                contact.point1 = undefined;
-            }
-            contact.depth = pair.collision.depth;
-            contact._lastRealContactFrame = physics._frame;
+            // for debugging collisions
+            // console.log(physics._frame + ' active ' + contact.entityA.name + " & " + contact.entityB.name);
+            _physicsUpdateContact(physics, contact, pair);
         }
     });
 
@@ -2154,7 +2170,7 @@ function makePhysics(options) {
                 // end the contact immediately
 
                 // for debugging collisions
-                // console.log(physics._frame + ' end ' + contact.entityA.name + "+" + contact.entityB.name);
+                //console.log(physics._frame + ' (brk)  ' + contact.entityA.name + " & " + contact.entityB.name);
                 
                 // Schedule the contact for removal. It can gain a reprieve if is updated
                 // before it hits the front of the queue.
@@ -2168,9 +2184,10 @@ function makePhysics(options) {
 
 
 function physicsAddEntity(physics, entity) {
-    if (! physics) { throw new Error("physics context cannot be nil"); }
-    if (! physics._engine) { throw new Error("First argument to physicsAddEntity() must be a physics context."); }
-    if (entity._body) { throw new Error("This entity is already in a physics context"); }
+    if (! physics) { throw _error("physics context cannot be nil"); }
+    if (! physics._engine) { _error("First argument to physicsAddEntity() must be a physics context."); }
+    if (entity._body) { _error("This entity is already in a physics context"); }
+    if (entity.density <= 0) { _error("The entity in physicsAddEntity() must have nonzero density"); }
 
     push(physics._entityArray, entity);
     const engine = physics._engine;
@@ -2211,7 +2228,7 @@ function physicsRemoveAll(physics) {
     }
     
     // Shouldn't be needed, but make sure everything is really gone
-    _Physics.Composite.clear(physics._engine);    
+    _Physics.Composite.clear(physics._engine.world, false, true);
 }
 
 
@@ -2432,7 +2449,7 @@ function physicsSimulate(physics, stepFrames) {
             const bodyA = contact.entityA._body, bodyB = contact.entityB._body;
 
             // For debugging collisions:
-            // console.log(physics._frame + ' end ' + contact.entityA.name + "+" + contact.entityB.name);
+            // console.log(physics._frame + ' - end  ' + contact.entityA.name + " & " + contact.entityB.name + '\n\n');
 
             physics._entityContactMap.get(bodyA).delete(bodyB);
             physics._entityContactMap.get(bodyB).delete(bodyA);
@@ -2479,7 +2496,15 @@ function physicsAddContactCallback(physics, callback, minDepth, maxDepth, collis
 }
 
 
+function physicsEntityHasContacts(physics, entity, region, normal, mask, sensors) {
+    return _physicsEntityContacts(physics, entity, region, normal, mask, sensors, true);
+}
+
 function physicsEntityContacts(physics, entity, region, normal, mask, sensors) {
+    return _physicsEntityContacts(physics, entity, region, normal, mask, sensors, false);
+}
+
+function _physicsEntityContacts(physics, entity, region, normal, mask, sensors, earlyOut) {
     if (mask === undefined) { mask = 0xffffffff; }
     if (mask === 0) { throw new Error('physicsEntityContacts() with mask = 0 will never return anything.'); }
     if (! entity) { throw new Error('physicsEntityContacts() must have a non-nil entity'); }
@@ -2490,14 +2515,15 @@ function physicsEntityContacts(physics, entity, region, normal, mask, sensors) {
     // Look at all contacts for this entity
     const body = entity._body;
     const map = physics._entityContactMap.get(body);
-    const result = [];
+    const result = earlyOut ? false : [];
 
     if (map === undefined) {
         // No contacts
         return result;
     }
     
-    // Used to avoid allocation by the repeated overlaps() calls
+    // Create a test shape with all of the required properties to avoid allocation by the
+    // repeated overlaps() calls
     const testPointShape = {shape: 'disk', angle: 0, size: xy(0, 0), scale: xy(1, 1), pos: xy(0, 0)};
     const testPoint = testPointShape.pos;
 
@@ -2508,27 +2534,26 @@ function physicsEntityContacts(physics, entity, region, normal, mask, sensors) {
     if (region) { region = _cleanupRegion(region); }
     if (normal) { normal = direction(normal); }
     
-    // cosine of 60 degrees
-    const angleThreshold = Math.cos(Math.PI / 3);
+    // cosine of 75 degrees
+    const angleThreshold = Math.cos(Math.PI * 80 / 180);
     
     for (const contact of map.values()) {
         const isA = contact.entityA === entity;
         const isB = contact.entityB === entity;
-
         const other = isA ? contact.entityB : contact.entityA; 
 
         // Are we in the right category?
         if ((other.collisionCategoryMask & mask) === 0) {
-            //console.log("Mask rejection");
+            // console.log("Mask rejection");
             continue;
         }
 
         if (((sensors === 'exclude') && other.collisionSensor) ||
             ((sensors === 'only') && ! other.collisionSensor)) {
-            //console.log("Sensor rejection");
+            // console.log("Sensor rejection");
             continue;
         }
-                
+ 
 
         if (region) {
             let x, y;
@@ -2564,7 +2589,20 @@ function physicsEntityContacts(physics, entity, region, normal, mask, sensors) {
             }
         }
 
-        result.push(deepClone(contact));
+        if (earlyOut) { return true; }
+        
+        // Push a copy of the contact. Do not deep clone,
+        // as that would copy the entitys as well.
+        console.assert(contact.normal && contact.point0);
+        const copy = {
+            entityA: contact.entityA,
+            entityB: contact.entityB,
+            normal:  xy(contact.normal),
+            point0:  xy(contact.point0),
+            depth:   contact.depth
+        };
+        if (contact.point1) { copy.point1 = xy(contact.point1); }
+        result.push(copy);
     }
 
     return result;
@@ -3923,7 +3961,7 @@ function _drawText(offsetIndex, formatIndex, str, formatArray, pos, xAlign, yAli
             _addGraphicsCommand({
                 opcode:  'TXT',
                 str:     str.substring(0, endIndex + 1),
-                font:    format.font,
+                fontIndex: format.font._index,
                 x:       x,
                 y:       y - dy,
                 z:       z,
@@ -4265,17 +4303,26 @@ function drawSprite(spr, center, angle, scale, opacity, z, overrideColor) {
         overrideColor = rgba(overrideColor);
     }    
 
+    console.assert(spr.spritesheet._index < _spritesheetArray.length);
+    
     _addGraphicsCommand({
-        opcode: 'BLT',
-        sprite: spr,
-        angle: (angle || 0),
-        scaleX: scaleX,
-        scaleY: scaleY,
-        opacity: opacity,
+        opcode:       'SPR',
+
+        spritesheetIndex:  spr.spritesheet._index,
+        cornerX:       spr._x,
+        cornerY:       spr._y,
+        sizeX:         spr.size.x,
+        sizeY:         spr.size.y,
+        
+        angle:         (angle || 0),
+        scaleX:        scaleX,
+        scaleY:        scaleY,
+        hasAlpha:      spr._hasAlpha,
+        opacity:       opacity,
         overrideColor: overrideColor,
-        x: x,
-        y: y,
-        z: z,
+        x:             x,
+        y:             y,
+        z:             z,
     });
 }
 
@@ -7289,23 +7336,30 @@ function _executePIX(cmd) {
 
 function _executeMAP(cmd) {
     // One blt command that we'll mutate
-    const bltCmd = {clipX1: cmd.clipX1, clipX2: cmd.clipX2, clipY1: cmd.clipY1, clipY2: cmd.clipY2,
+    const sprCmd = {clipX1: cmd.clipX1, clipX2: cmd.clipX2, clipY1: cmd.clipY1, clipY2: cmd.clipY2,
                     x:0, y:0, z: cmd.z, angle: 0, scaleX: 1, scaleY: 1, opacity: 1, overrideColor: undefined}
 
     // Submit each sprite
     for (let i = 0; i < cmd.layerData.length; ++i) {
         const data = cmd.layerData[i];
-        bltCmd.sprite = data.sprite;
-        bltCmd.x = data.x;
-        bltCmd.y = data.y;
-        bltCmd.scaleX = bltCmd.sprite.scale.x;
-        bltCmd.scaleY = bltCmd.sprite.scale.y;
-        _executeBLT(bltCmd);
+        const sprite = data.sprite;
+        sprCmd.spritesheetIndex = sprite.spritesheet._index;
+        sprCmd.cornerX = sprite._x,
+        sprCmd.cornerY = sprite._y,
+        sprCmd.sizeX   = sprite.size.x,
+        sprCmd.sizeY   = sprite.size.y,
+        sprCmd.x       = x;
+        sprCmd.y       = y;
+        sprCmd.scaleX  = sprite.scale.x;
+        sprCmd.scaleY  = sprite.scale.y;
+        sprCmd.hasAlpha = sprite._hasAlpha;
+
+        _executeSPR(sprCmd);
     }
 }
 
 
-function _executeBLT(cmd) {
+function _executeSPR(cmd) {
     // Note that these are always integers, which we consider
     // pixel centers.
     const clipX1 = cmd.clipX1, clipY1 = cmd.clipY1,
@@ -7320,8 +7374,8 @@ function _executeBLT(cmd) {
     // Compute the net transformation matrix
 
     // Source bounds, inclusive
-    const srcX1 = spr._x, srcX2 = spr._x + spr.size.x - 1,
-          srcY1 = spr._y, srcY2 = spr._y + spr.size.y - 1;
+    const srcX1 = cmd.cornerX, srcX2 = cmd.cornerX + cmd.sizeX - 1,
+          srcY1 = cmd.cornerY, srcY2 = cmd.cornerY + cmd.sizeY - 1;
     
     // The net forward transformation is: (note that SX, SY = source center, not scale!)
     // c = cos, s = sin, f = scale
@@ -7358,7 +7412,7 @@ function _executeBLT(cmd) {
     
     // Source and destination centers
     const DX = cmd.x, DY = cmd.y,
-          SX = srcX1 + spr.size.x * 0.5, SY = srcY1 + spr.size.y * 0.5;
+          SX = srcX1 + cmd.sizeX * 0.5, SY = srcY1 + cmd.sizeY * 0.5;
 
     const cos = Math.cos(cmd.angle), sin = Math.sin(cmd.angle);
     const fx = cmd.scaleX, fy = cmd.scaleY;
@@ -7377,8 +7431,8 @@ function _executeBLT(cmd) {
     for (let i = 0; i <= 1; ++i) {
         for (let j = 0; j <= 1; ++j) {
             // Coordinates of the bounding box extremes
-            const srcX = srcX1 + i * spr.size.x,
-                  srcY = srcY1 + j * spr.size.y;
+            const srcX = srcX1 + i * cmd.sizeX,
+                  srcY = srcY1 + j * cmd.sizeY;
 
             // Transform from texture space to pixel space
             let tmp = E * (srcX - SX) + G * (srcY - SY) + DX;
@@ -7406,11 +7460,13 @@ function _executeBLT(cmd) {
     // correspond to texel centers in the case where there is no
     // rotation or scale (we'll end up rounding the actual destination
     // pixels later and stepping in integer increments anyway).
-    
-    let srcData = spr.spritesheet._uint32Data;
+
+    console.assert(cmd.spritesheetIndex !== undefined);
+    console.assert(cmd.spritesheetIndex < _spritesheetArray.length);
+    let srcData = _spritesheetArray[cmd.spritesheetIndex]._uint32Data;
     const srcDataWidth = srcData.width;
 
-    if ((! spr._hasAlpha) && (Math.abs(opacity - 1) < 1e-10) &&
+    if ((! cmd.hasAlpha) && (Math.abs(opacity - 1) < 1e-10) &&
         (Math.abs(Math.abs(A) - 1) < 1e-10) && (Math.abs(B) < 1e-10) &&
         (Math.abs(C) < 1e-10) && (Math.abs(Math.abs(D) - 1) < 1e-10) &&
         (! overrideColor)) {
@@ -7429,9 +7485,8 @@ function _executeBLT(cmd) {
             if (A < 0) {
                 // Use the flipped version
                 srcOffset += srcDataWidth - 2 * SX;
-                srcData = spr.spritesheet._uint32DataFlippedX;
+                srcData = _spritesheetArray[cmd.spritesheetIndex]._uint32DataFlippedX;
             }
-            
 
             for (let dstY = dstY1; dstY <= dstY2; ++dstY, dstOffset += _SCREEN_WIDTH, srcOffset += srcStep) {
                 // This TypedArray.set call saves about 3.5 ms/frame
@@ -7524,7 +7579,7 @@ function _executeTXT(cmd) {
           str = cmd.str, outline = cmd.outline, shadow = cmd.shadow;
     const clipX1 = cmd.clipX1, clipY1 = cmd.clipY1,
           clipX2 = cmd.clipX2, clipY2 = cmd.clipY2;
-    const font = cmd.font;
+    const font = _fontArray[cmd.fontIndex];
     const data = font._data.data;
     const fontWidth = font._data.width;
 
@@ -7675,7 +7730,7 @@ function _executePLY(cmd) {
 var _executeTable = Object.freeze({
     REC : _executeREC,
     CIR : _executeCIR,
-    BLT : _executeBLT,
+    SPR : _executeSPR,
     PIX : _executePIX,
     TXT : _executeTXT,
     LIN : _executeLIN,

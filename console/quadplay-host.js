@@ -3,6 +3,9 @@
 
 "use strict";
 
+let spritesheetArray = [];
+let fontArray = [];
+
 if (window.location.toString().startsWith("file://")) {
     alert('quadplay cannot run from a local filesystem. It requires a web server (which may be local...see the manual)');
     throw new Error();
@@ -37,7 +40,7 @@ function detectControllerType(id) {
     let type = controllerTypeTable[id];
     
     if (type === undefined) {
-        // Not previously observed. Apply heuristics
+        // Not previously on this machine observed. Apply heuristics
         if (/ps3|playstation(r)3/i.test(id)) {
             type = 'PlayStation3';
         } else if (/ps4|playstation/i.test(id)) {
@@ -56,6 +59,10 @@ function detectControllerType(id) {
             type = 'XboxOne';
         } else if (/snes/i.test(id)) {
             type = 'SNES';
+        } else if (/8bitdo +s[fn]30/i.test(id)) {
+            type = 'SNES';
+        } else if (/8bitdo +zero/i.test(id)) {
+            type = 'Zero';
         } else if (/hotas/i.test(id)) {
             type = 'HOTAS';
         } else {

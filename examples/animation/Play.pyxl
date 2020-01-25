@@ -123,7 +123,7 @@ setBackground(rgb(20%, 50%, 80%))
 drawText(font, assetCredits.title, xy(½ screenSize.x, 20), #FFF, ∅, ∅, 0, 0)
 
 // Ground
-drawCornerRect(xy(0, groundY + 9), xy(screenSize.x, screenSize.y - (groundY + 8)), #DDD)
+drawCornerRect(xy(0, groundY + 8), xy(screenSize.x, screenSize.y - (groundY + 8)), #DDD)
 
 // Instructions
 local:
@@ -140,5 +140,5 @@ drawEntity(ninja)
 
 // Shadow
 with x in ninja.pos:
-   drawLine(xy(x - 7, groundY + 9),  xy(x + 7, groundY + 9),  rgba(0, 0, 0, 20%), ninja.z - 0.1)
-   drawLine(xy(x - 5, groundY + 10), xy(x + 5, groundY + 10), rgba(0, 0, 0, 15%), ninja.z - 0.1)
+   drawLine(xy(x - 7, groundY + 8),  xy(x + 7, groundY + 8),  rgba(0, 0, 0, 20%), ninja.z - 0.1)
+   drawLine(xy(x - 5, groundY + 9), xy(x + 5, groundY + 9), rgba(0, 0, 0, 15%), ninja.z - 0.1)

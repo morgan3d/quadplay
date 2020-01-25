@@ -52,10 +52,10 @@
                                    "makeEntity" "drawEntity" "overlaps" "entityUpdateChildren" "entitySimulate" "split"
                                    "now" "gameFrames" "modeFrames" "findMapPath" "findPath" "join" "entityApplyForce" "entityApplyImpulse"
                                    "gray" "rgb" "rgba" "hsv" "hsva" "lastValue" "lastKey" "insert" "reverse" "reversed"
-                                   "call" "setPostEffects" "getPostEffects" "resetPostEffects" "pushFront" "localTime" "deviceControl" "physicsAddContactCallback" "physicsEntityContacts" "physicsAddEntity" "physicsRemoveEntity" "physicsAttach" "physicsDetach" "makePhysics" "makeCollisionGroup" "drawPhysics" "physicsSimulate"
+                                   "call" "setPostEffects" "getPostEffects" "resetPostEffects" "pushFront" "localTime" "deviceControl" "physicsAddContactCallback" "physicsEntityContacts" "physicsEntityHasContacts" "physicsAddEntity" "physicsRemoveEntity" "physicsRemoveAll" "physicsAttach" "physicsDetach" "makePhysics" "makeCollisionGroup" "drawPhysics" "physicsSimulate"
                                    "abs" "acos" "atan" "asin" "sign" "signNonZero" "cos" "clamp" "hash" "lerp" "log" "log2" "log10" "loop" "min" "max" "mid" "noise" "oscillate" "overlap" "pow" "makeRnd" "rndSign" "rndInt" "rndWithinSphere" "rndOnSphere" "rndWithinCircle" "rndWithinSquare" "rndOnSquare" "rndOnCircle" "rndDir2D" "rndDir3D" "rndValue" "rndGaussian" "rndGaussian2D" "rndTruncatedGaussian" "rndTruncatedGaussian2D" "rnd" "ξ" "sgn" "sqrt" "sin" "srand" "tan"
-                                   "clone" "copy" "drawPreviousMode" "cross" "direction" "dot" "equivalent" "magnitude" "magnitudeSquared" "maxComponent" "minComponent" "xy" "xyz"
-                                   "fastRemoveKey" "find" "keys" "removeKey" "substring" "sort" "resize" "push" "pop" "fastRemoveValue" "removeValues" "pad" "joy" "round" "floor" "ceil"
+                                   "concatenate" "extend" "clone" "copy" "drawPreviousMode" "cross" "direction" "dot" "equivalent" "magnitude" "magnitudeSquared" "maxComponent" "minComponent" "xy" "xyz"
+                                   "fastRemoveKey" "find" "keys" "removeKey" "substring" "sort" "resize" "push" "pop" "fastRemoveValue" "removeValues" "removeAll" "pad" "joy" "round" "floor" "ceil"
                                    "debugPrint") 'words))
         )
 
@@ -72,7 +72,6 @@
        ("\\(popMode\\).+\\(from\\) " (1 font-lock-function-name-face) (2 font-lock-function-name-face))
        ("popMode" . font-lock-keyword-face)
 
-       
        ;; Only treat "size" as a built-in when
        ;; followed by a paren (otherwise it is probably a property)
        ("\\(size\\)(" . (1 font-lock-type-face))

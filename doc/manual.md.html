@@ -977,7 +977,7 @@ before drawing it instead of at program start.
 The `pad[i].type` property describes the control scheme used for
 prompts. The possible values are:
 
-`type`          |`(a)`|`(b)`|`(c)`|`(d)`|`(p)`|`(q)`|`[^]` |`[&lt;]`|`[v]`|`[&gt;]`
+`type`          |`(a)`|`(b)`|`(c)`|`(d)`|`(p)`|`(q)`|`[^]`|`[&lt;]`|`[v]`|`[&gt;]`
 ----------------|-----|-----|-----|-----|-----|-----|------|------|------|-----
 `"Quadplay"`    | `ⓐ` | `ⓑ` | `ⓒ` | `ⓓ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
 `"Zero"`        | `ⓐ` | `ⓑ` | `ⓒ` | `ⓓ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
@@ -994,6 +994,7 @@ prompts. The possible values are:
 `"Kbd_P1"`      | `V` | `G` | `ⓒ` | `ⓕ` | `4` | `1` | `W`  | `A`  | `S`  | `D`
 `"Kbd_P2"`      | `/` | `'` | `.` | `;` | `0` | `7` | `I`  | `J`  | `K`  | `L`
 `"HOTAS"`       | `1` | `2` | `4` | `3` |`ST` |`SE` | `⍐`  | `⍇`  | `⍗`  | `⍈`
+`"GPD_Win"`     | `ⓐ` | `ⓑ` | `ⓧ` | `ⓨ` |`STR`|`SEL`| `⍐`  | `⍇`  | `⍗`  | `⍈`
 
 Note that the `▣⍍☰⧉␣⏎` Unicode characters are rendered similarly to
 other button prompts in quadplay✜ fonts.
@@ -1146,13 +1147,14 @@ Array
 
 `concatenate(array1, array2)`
 : Create a new array that contains all elements of `array1` followed by all elements of `array2`.
+  Identical to `[...array1, ...array2]`.
 
 `equivalent(a, b)`
 : Returns true if these arrays have the same length and the elements are
   `==` (does not recursively test if the elements are equivalent).
 
 `extend(array1, array2)`
-: Mutate `array1` by pushing all elements of `array2` onto it.
+: Mutate `array1` by pushing all elements of `array2` onto it. Identical to `push(array1, ...array2)`.
 
 `fastRemoveKey(array, i)`
 : Delete element `i` from the array, swapping it with the last element. O(1) expected amortized time.
@@ -1343,6 +1345,7 @@ Object
 `concatenate(object1, object2)`
 : Create a new object that is the union of `object1` and `object2`,
   where `object2` keys override in the case of collisions.
+  Identical to `{...object1, ...object2)`.
 
 `extend(object1, object2)`
 : Mutate `object1` by assigning all elements of `object2` into it,
@@ -2345,6 +2348,10 @@ See also the Physics section for relevant functions.
   the object. Note that a sensor must have infinite density or be attached to another object or it will
   fall out of the world by gravity. If you want to never register collisions, instead set `entity.collisionCategoryMask = 0`
   to prevent all collisions and preclude them being reported.
+  
+  Collision sensors have density, and it must be nonzero. Set their density
+  to a small value, such as `epsilon`, to minimize the effect on the motion of other objects
+  that they are attached to.
 
 `entity.collisionGroup`
 : An integer index of a group of other entities that this one should not collide with, regardless
@@ -2651,6 +2658,10 @@ to start colliding with each other.
   for example, `minDepth` = 1 will only trigger on significant,
   new contacts. There is no way to remove a contact callback.
 
+`physicsEntityHasContacts(physics, entity, childRegion (= nil), worldNormal (= nil), mask (= 0xffffffff), sensors (= "exclude"))`
+: Returns true if `physicsEntityContacts()` would produce any contacts with the same arguments.
+  This is more efficient, for the case where the actual contacts are not needed.
+
 `physicsEntityContacts(physics, entity, childRegion (= nil), worldNormal (= nil), mask (= 0xffffffff), sensors (= "exclude"))`
 : Returns an array of all current contacts, where each contact has the form 
   `{entityA, entityB, depth, point0, point1, normal}`. The contact points are
@@ -2663,7 +2674,7 @@ to start colliding with each other.
   within the `childRegion`, which is in the entity's reference frame.
   `childRegion` is either `nil` (all contacts) or an argument suitable
   for passing to `overlaps()`. If `normal` is specified, then the
-  contact normal for the other entity must point within 60 degrees of
+  contact normal for the other entity must point within ±80° degrees of
   this vector. This is a draw-space vector. `sensors` may be `"include"`,
   `"exclude"`, or `"only"` (exclusively return contacts with sensors).
 
@@ -2673,6 +2684,8 @@ to start colliding with each other.
   in resting contact, such as whether a character is standing on the
   ground and can jump. In that case, make the `childRegion` a box around the
   character's feet and set the `worldNormal` to the up vector for the world.
+  The `childRegion` may have to be very wide (e.g., 2x as wide as the character) 
+  to encompass locations where contact was briefly made in a previous frame.
   
   Note that sleeping entities have no contacts.
   See also `physicsAddContactCallback()`.
@@ -5402,18 +5415,26 @@ the one element that will probably confuse your syntax highlighter.
 Command-Line Tools
 ------------------------------------------------------------------------------------
 
-[`quadplay`](../quadplay)`
+[`quadplay`](../quadplay)
 : Launches the emulator from the command line on any operating system. 
-  Requires Python.
+  Requires Python. See the arguments above.
 
 [`quaddepend.py`](../tools/quaddepend.py)
-: Prints dependencies of a `.game.json` file, recursively. Run the script to
-  see the arguments.
+: Prints dependencies of a `.game.json` file, recursively. Run the script  with `--help` to
+  see the arguments. Run as `tools/quaddepend.py ...` or `python3 tools/quaddepend.py ...`
+  from the main quadplay directory.
+  
+[`export.py`](../tools/quaddepend.py)
+: Export a static HTML site for a single game, either lightweight by referencing 
+  `https://github.io/morgan3d/quadplay` or standalone by embeddeding a full copy of
+  the emulator. Run the script with `--help` to see the arguments. Run as `tools/export.py ...` or `python3 tools/export.py ...`
+  from the main quadplay directory. This script itself depends on `quaddepend.py`.
 
 [`sprite_json_generator.py`](../tools/sprite_json_generator.py)
 : Generator for `.sprite.json` files. Requires Python and PIL.
 
-*NOTE* If you are exporting from aseprite, use the following settings:
+If you are exporting from aseprite, use the following settings with `sprite_json_generator.py`:
+
 - "horizontal strip" (quadplay doesn't support animations wrapping around image rows
 - "padding", "trim", and "extrude" should all be off
 - "Layers" should be visible layers (quadplay doesn't support layers")
@@ -5770,8 +5791,8 @@ and [estraverse](https://github.com/estools/estraverse)
 [`LoadManager.js`](https://github.com/morgan3d/misc/tree/master/jsloadmanager) is (c) 2018 Morgan McGuire,
 [BSD-2-Clause](https://opensource.org/licenses/BSD-2-Clause) license.
 
-[`BetterJSON.js`](https://github.com/morgan3d/misc/tree/master/jsloadmanager) is (c) 2020 Morgan McGuire,
-[BSD-2-Clause](https://opensource.org/licenses/BSD-2-Clause) license.
+[`WorkJSON.js`](https://github.com/morgan3d/workjson) is (c) 2020 Morgan McGuire,
+[MIT](https://github.com/morgan3d/workjson/blob/master/LICENSE) license.
 
 [`js-yaml`](https://github.com/morgan3d/misc/tree/master/jsloadmanager) is (C) 2011-2015 by Vitaly Puzrin,
 [MIT](https://raw.githubusercontent.com/nodeca/js-yaml/master/LICENSE)
@@ -5871,6 +5892,22 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 Jan 25: Beta update 24
+
+- Added `physicsEntityHasContacts()` for optimized contact tests
+- Fixed `physicsRemoveAll()` crash
+- Increased physics broken contact forgiveness queue length to four
+  frames to better maintain ground contact for sliding objects
+- Fixed sustained physics contacts for fast moving objects not updating position properly
+- Fixed `"Game start"` argument being passed to the start mode's `enter` event section
+- Added `tools/export.py` tool
+- Made `tools/quaddepend.py` able to launch directly as a script on MacOS and Linux
+- Renamed internal BetterJSON library to WorkJSON
+- Centered ninja sprites
+- Added detection for 8BitDo SN30, SF30, and Zero 2 controllers
+- Redesigned the internals of the virtual sprite and font hardware memory system
+
 
 2020 Jan 18: Beta update 23
 

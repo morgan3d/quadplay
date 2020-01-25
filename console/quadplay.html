@@ -13,11 +13,11 @@
 
     <script>
     function makeButton(label, title, onclick, id) {
-       document.write('<div ' + (id ? 'id="' + id + 'Container" ' : '') + ' onmousedown="event.stopPropagation()" class="button" onclick="' + (onclick || '') + '(event)" title="' + (title || label) + '"><label><span class="label" ' + (id ? 'id="' + id + 'Label"' : '') + '>' + label + '</span></label></div>');
+       document.write('<div ' + (id ? 'id="' + id + 'Container" ' : '') + ' onmousedown="event.stopPropagation()" class="button" onclick="if (event.target.parentElement.parentElement.enabled !== false) ' + (onclick || '') + '(event)" title="' + (title || label) + '"><label><span class="label" ' + (id ? 'id="' + id + 'Label"' : '') + '>' + label + '</span></label></div>');
     }
     
     function makeRadio(labelHTML, id, selected, attribs, groupID) {
-       document.write('<div id="' + id + 'Container" class="button" ' + (attribs || '') + '><label><input type="radio" name="' + groupID + '" id="' + id + '" onclick="onRadio()" autocomplete="off" value="1" ' + (selected ? 'checked="1"' : '') + '><span class="label">' + labelHTML + '</span></label></div>');
+       document.write('<div id="' + id + 'Container" class="button" ' + (attribs || '') + '><label><input type="radio" name="' + groupID + '" id="' + id + '" onclick="(event.target.enabled !== false) ? onRadio() : (event.target.checked = false)" autocomplete="off" value="1" ' + (selected ? 'checked="1"' : '') + '><span class="label">' + labelHTML + '</span></label></div>');
     }
 
     function makeToggle(labelHTML, style, title, id) {
@@ -111,7 +111,7 @@
 
         <span class="IDEOnly">
         <script>
-          makeButton('<img src="button-reload.png" width=32 style="position:relative; top:-2px">', 'Reload and Restart (Ctrl+Shift+F5, Ctrl+R, or Ctrl+G)', 'onRestartButton');
+          makeButton('<img src="button-reload.png" width=32 style="position:relative; top:-2px">', 'Reload and Restart (Ctrl+Shift+F5, Ctrl+R, or Ctrl+G)', 'onRestartButton', 'restartButton');
           makeRadio('<img src="button-stop.png" width=32 style="position:relative; top:-2px">', 'stopButton', true, 'title="Stop (Shift+F5)"', 'controls');
           makeRadio('<img src="button-pause.png" width=32 style="position:relative; top:-2px">', 'pauseButton', false, 'title="Pause (Ctrl+Break or Ctrl+C)"', 'controls');
           makeRadio('<img src="button-step.png" width=32 style="position:relative; top:-2px">', 'stepButton', false, 'title="Step (F10)"', 'controls');
@@ -234,15 +234,15 @@
         <hr>
         <br/>
         <table style="margin-left: -2px; width: 100%">
-          <tr><td width=180>Refresh rate</td><td id="debugFrameRateDisplay" class="right"></td><td class="right" width=45></td><td></td><td class="right" id="debugFramePeriodDisplay" width=45>(1×)</td></tr>
-          <tr id="debugFrameTimeRow"><td width=180>Frame time</td><td id="debugFrameTimeDisplay" class="right"></td><td>/</td><td class="right" width=45>16.7&nbsp;ms</td><td id="debugFramePercentDisplay" class="right" width=45></td></tr>
-          <tr><td>Compute time</td><td id="debugComputeTimeDisplay" class="right"></td><td>/</td><td class="right" width=45>16.7&nbsp;ms</td><td id="debugComputePercentDisplay" class="right" width=45></td></tr>
-          <tr><td>&nbsp;&nbsp;&nbsp;Logic</td><td id="debugCPUTimeDisplay" class="right"></td><td>/</td><td class="right" width=45>16.7&nbsp;ms</td><td id="debugCPUPercentDisplay" class="right" width=45></td></tr>
-          <tr><td>&nbsp;&nbsp;&nbsp;Physics</td><td id="debugPPUTimeDisplay" class="right"></td><td>/</td><td class="right" width=45>16.7&nbsp;ms</td><td id="debugPPUPercentDisplay" class="right" width=45></td></tr>
-          <tr><td>&nbsp;&nbsp;&nbsp;Graphics</td><td id="debugGPUTimeDisplay" class="right"></td><td>/</td><td class="right" width=45>16.7&nbsp;ms</td><td id="debugGPUPercentDisplay" class="right" width=45></td></tr>
+          <tr><td width=200>Refresh rate</td><td id="debugFrameRateDisplay" class="right"></td><td></td><td></td><td class="right" id="debugFramePeriodDisplay">(1×)</td></tr>
+          <tr id="debugFrameTimeRow"><td width>Frame time</td><td id="debugFrameTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&nbsp;ms</td><td id="debugFramePercentDisplay" class="right"></td></tr>
+          <tr><td>Compute time</td><td id="debugComputeTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&nbsp;ms</td><td id="debugComputePercentDisplay" class="right"></td></tr>
+          <tr><td>&nbsp;&nbsp;&nbsp;Logic</td><td id="debugCPUTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&nbsp;ms</td><td id="debugCPUPercentDisplay" class="right"></td></tr>
+          <tr><td>&nbsp;&nbsp;&nbsp;Physics</td><td id="debugPPUTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&nbsp;ms</td><td id="debugPPUPercentDisplay" class="right"></td></tr>
+          <tr><td>&nbsp;&nbsp;&nbsp;Graphics</td><td id="debugGPUTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&nbsp;ms</td><td id="debugGPUPercentDisplay" class="right"></td></tr>
           <tr><td>Graphics primitives</td><td id="debugDrawCallsDisplay" class="right"></td></tr>
-          <tr><td><code>getMode()</code></td><td id="debugModeDisplay" class="code" style="text-align: right" colspan=1></td></tr>
-          <tr><td><code>getPreviousMode()</code></td><td class="code" id="debugPreviousModeDisplay" style="text-align: right" colspan=1></td></tr>
+          <tr><td><code>getMode()</code></td><td id="debugModeDisplay" class="code" style="text-align: left" colspan=4></td></tr>
+          <tr><td><code>getPreviousMode()</code></td><td class="code" id="debugPreviousModeDisplay" style="text-align: left" colspan=2></td></tr>
           <tr><td><code>modeFrames</code></td><td id="debugModeFramesDisplay" class="right"></td></tr>
           <tr><td><code>gameFrames</code></td><td id="debugGameFramesDisplay" class="right"></td></tr>
         </table>
@@ -345,7 +345,7 @@
   <script src="gif.js" async="async"></script>
   <script src="qrcode.min.js"></script>
   <script src="ace/ace.js"></script>
-  <script src="BetterJSON.js"></script>
+  <script src="WorkJSON.js"></script>
   <script src="LoadManager.js"></script>
   <script src="js-yaml.min.js"></script>
   <script src="vectorify.js" charset="utf-8"></script>
@@ -369,6 +369,7 @@
   </script>
 
   <!-- quadplay implementation -->
+  <script src="os/dependencies.py" charset="utf-8" type="text/javascript"></script>
   <script src="pyxlscript-compiler.js" charset="utf-8"></script>
   <script src="quadplay-host.js" charset="utf-8"> </script>
   <script src="quadplay-font.js" charset="utf-8"> </script>

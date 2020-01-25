@@ -588,8 +588,8 @@ var maybeYieldGlobal = ' {if (!(__yieldCounter = (__yieldCounter + 1) & 8191)) {
 /** Expression for 'yield' inside a function, where regular yield is not allowed */
 var maybeYieldFunction = '';
 
-const unprotectQuotedStrings = BetterJSON.unprotectQuotedStrings;
-const protectQuotedStrings = BetterJSON.protectQuotedStrings;
+const unprotectQuotedStrings = WorkJSON.unprotectQuotedStrings;
+const protectQuotedStrings = WorkJSON.protectQuotedStrings;
 
 /** Pull up multi-line expressions enclosed in (), [], {} onto their
     start line and leave the intervening lines empty. This undesirably
@@ -1190,7 +1190,7 @@ return _Object.freeze({_enter:_enter, _frame:_frame, _popModeFrom_SystemMenu:_po
     } // for each mode
 
     // Set the initial mode
-    compiledProgram += 'try { setMode(' + startModeName + ', "Game start"); } catch (e) { if (! e.nextMode) { throw e; } }\n\n';
+    compiledProgram += 'try { setMode(' + startModeName + '); } catch (e) { if (! e.nextMode) { throw e; } }\n\n';
 
     // Main loop
     compiledProgram += '// Main loop\nwhile (true) { _gameMode._frame.next(); yield; };\n\n'
