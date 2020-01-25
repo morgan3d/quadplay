@@ -7348,8 +7348,8 @@ function _executeMAP(cmd) {
         sprCmd.cornerY = sprite._y,
         sprCmd.sizeX   = sprite.size.x,
         sprCmd.sizeY   = sprite.size.y,
-        sprCmd.x       = x;
-        sprCmd.y       = y;
+        sprCmd.x       = data.x;
+        sprCmd.y       = data.y;
         sprCmd.scaleX  = sprite.scale.x;
         sprCmd.scaleY  = sprite.scale.y;
         sprCmd.hasAlpha = sprite._hasAlpha;
