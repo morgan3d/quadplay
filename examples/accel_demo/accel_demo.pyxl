@@ -2,9 +2,9 @@ init
 ───────────────────────────────────────────────────────────
 
 // test object
-let box = makeEntity(
+let box = make_entity(
     {
-        pos:screenSize/2,
+        pos:SCREEN_SIZE/2,
         size:xy(10, 10),
         shape:"rect",
         density:1,
@@ -64,7 +64,7 @@ let accel_release = max_velocity/num_frames_release
 let accel_opp_attack = accel_release + accel_attack
 
 def set_profile(profname):
-    max_velocity = (PROFILES[profname].max_vel * screenSize.x) / 1080.0
+    max_velocity = (PROFILES[profname].max_vel * SCREEN_SIZE.x) / 1080.0
     num_frames_attack = PROFILES[profname].num_frames_attack
     num_frames_release = PROFILES[profname].num_frames_release
     accel_attack = max_velocity/num_frames_attack
@@ -161,12 +161,12 @@ if sign(joy.y) != 0:
     else:
         y_zone += "-"
 
-entitySimulate(box)
-box.pos.x = loop(box.pos.x, screenSize.x)
-box.pos.y = loop(box.pos.y, screenSize.y)
+entity_simulate(box)
+box.pos.x = loop(box.pos.x, SCREEN_SIZE.x)
+box.pos.y = loop(box.pos.y, SCREEN_SIZE.y)
 
 
-drawCornerRect(box.pos, box.size, PROFILES[labels[profile_index]].col)
+draw_corner_rect(box.pos, box.size, PROFILES[labels[profile_index]].col)
 
 // debug text
 let text_color = rgb(1,1,1)
@@ -214,7 +214,7 @@ if MODE == ModeXYMovement:
 
 let current = xy(0, 12)
 for line in text:
-    drawText(
+    draw_text(
         font,
         line,
         current,

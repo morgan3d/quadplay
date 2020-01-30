@@ -3,48 +3,48 @@ Play
 
 // Object the user is driving
 let control  = 0
-let physics  = makePhysics()
+let physics  = make_physics()
 let particleArray = []
 
 
-let pendulum = makeEntity({shape: "rect", size: xy(55, 10), pos: xy(220, 220), drag: 0, density: 2})
+let pendulum = make_entity({shape: "rect", size: xy(55, 10), pos: xy(220, 220), drag: 0, density: 2})
 
 // Directly controlled by the player
-let box      = makeEntity({shape: "rect", size: xy(40, 15), pos: xy(70, 50)})
+let box      = make_entity({shape: "rect", size: xy(40, 15), pos: xy(70, 50)})
 
 // Car
-let carGroup = makeCollisionGroup()
-let wheel1   = physicsAddEntity(physics, makeEntity({shape: "disk", size: xy(12, 12), pos: xy(100, 20), density: 2, friction: 90%, stictionFactor: 50%, restitution: 0%, collisionGroup: carGroup}))
-let wheel2   = physicsAddEntity(physics, makeEntity({shape: "disk", size: xy(12, 12), pos: xy(120, 20), density: 2, friction: 10%, stictionFactor: 10%, restitution: 0%, collisionGroup: carGroup}))
-let carFrame = physicsAddEntity(physics, makeEntity({shape: "rect", size: xy(34, 6), pos: xy(110, 22), collisionGroup: carGroup}))
-physicsAttach(physics, "pin", {entityA: carFrame, pointA: xy(-carFrame.size.x/3.5, -1), entityB: wheel1})
-physicsAttach(physics, "pin", {entityA: carFrame, pointA: xy(carFrame.size.x/3.5, -1), entityB: wheel2})
+let carGroup = make_collision_group()
+let wheel1   = physics_add_entity(physics, make_entity({shape: "disk", size: xy(12, 12), pos: xy(100, 20), density: 2, friction: 90%, stiction_factor: 50%, restitution: 0%, collision_group: carGroup}))
+let wheel2   = physics_add_entity(physics, make_entity({shape: "disk", size: xy(12, 12), pos: xy(120, 20), density: 2, friction: 10%, stiction_factor: 10%, restitution: 0%, collision_group: carGroup}))
+let carFrame = physics_add_entity(physics, make_entity({shape: "rect", size: xy(34, 6), pos: xy(110, 22), collision_group: carGroup}))
+physics_attach(physics, "pin", {entityA: carFrame, pointA: xy(-carFrame.size.x/3.5, -1), entityB: wheel1})
+physics_attach(physics, "pin", {entityA: carFrame, pointA: xy(carFrame.size.x/3.5, -1), entityB: wheel2})
 
-let platform = makeEntity({shape: "rect", size: xy(50, 10), pos: xy(200, 120), friction: 1, stictionFactor: 10, density: infinity})
-let ball     = makeEntity({shape: "disk", size: xy(10, 10), pos: platform.pos + xy(20, -25)})
+let platform = make_entity({shape: "rect", size: xy(50, 10), pos: xy(200, 120), friction: 1, stiction_factor: 10, density: infinity})
+let ball     = make_entity({shape: "disk", size: xy(10, 10), pos: platform.pos + xy(20, -25)})
 
-let elevator = makeEntity({shape: "rect", size: xy(20, 5), pos: xy(15, 5), friction: 1, stictionFactor: 10, density: infinity})
+let elevator = make_entity({shape: "rect", size: xy(20, 5), pos: xy(15, 5), friction: 1, stiction_factor: 10, density: infinity})
 
 // The welded cross
-let weldBox1 = makeEntity({shape: "rect", size: xy(30, 5), pos: xy(70, 80)})
-let weldBox2 = makeEntity({shape: "rect", size: xy(5, 30), pos: xy(80, 90)})
+let weldBox1 = make_entity({shape: "rect", size: xy(30, 5), pos: xy(70, 80)})
+let weldBox2 = make_entity({shape: "rect", size: xy(5, 30), pos: xy(80, 90)})
 
 // Newton's cradle 
-let newton1  = makeEntity({shape: "disk", size: xy(19.5, 19.5), pos: xy(65, 170), density: 10, drag: 0.001, restitution: 110%, friction: 0})
-let newton2  = makeEntity({shape: "disk", size: xy(19.5, 19.5), pos: xy(85, 170), density: 10, drag: 0.001, restitution: 110%, friction: 0})
-let newton3  = makeEntity({shape: "disk", size: xy(19.5, 19.5), pos: xy(155, 220), density: 10, drag: 0.001, restitution: 110%, friction: 0})
+let newton1  = make_entity({shape: "disk", size: xy(19.5, 19.5), pos: xy(65, 170), density: 10, drag: 0.001, restitution: 110%, friction: 0})
+let newton2  = make_entity({shape: "disk", size: xy(19.5, 19.5), pos: xy(85, 170), density: 10, drag: 0.001, restitution: 110%, friction: 0})
+let newton3  = make_entity({shape: "disk", size: xy(19.5, 19.5), pos: xy(155, 220), density: 10, drag: 0.001, restitution: 110%, friction: 0})
 
 // Trigger
-let trigger  = makeEntity({name: "trigger", shape: "rect", size: xy(20, 5), pos:xy(110, 103), density: infinity, collisionSensor: true});
-let spinner  = physicsAddEntity(physics, makeEntity({shape: "rect", size: xy(28, 6), pos: xy(312, 142), density: 12, stiction: 10, friction: 1}))
-physicsAttach(physics, "pin", {entityB: spinner});
+let trigger  = make_entity({name: "trigger", shape: "rect", size: xy(20, 5), pos:xy(110, 103), density: infinity, is_sensor: true});
+let spinner  = physics_add_entity(physics, make_entity({shape: "rect", size: xy(28, 6), pos: xy(312, 142), density: 12, stiction: 10, friction: 1}))
+physics_attach(physics, "pin", {entityB: spinner});
 
 
 // Character with gyroscope
-let person  = physicsAddEntity(physics, makeEntity({shape: "rect", size: xy(10, 20), pos: xy(40, 15)}))
-let head = physicsAddEntity(physics, makeEntity({shape: "disk", size: xy(9, 9), pos: xy(40, 30)}))
-physicsAttach(physics, "pin", {entityA: person, pointA: xy(0, 14.5), entityB: head})
-physicsAttach(physics, "gyro", {entityB: person, angle: 0°})
+let person  = physics_add_entity(physics, make_entity({shape: "rect", size: xy(10, 20), pos: xy(40, 15)}))
+let head = physics_add_entity(physics, make_entity({shape: "disk", size: xy(9, 9), pos: xy(40, 30)}))
+physics_attach(physics, "pin", {entityA: person, pointA: xy(0, 14.5), entityB: head})
+physics_attach(physics, "gyro", {entityB: person, angle: 0°})
 
 const ballCategory = 1 bitshl 1
 const wallCategory = 1 bitshl 2
@@ -52,34 +52,34 @@ const wallCategory = 1 bitshl 2
 // Objects that move (not all are simulated)
 let entityArray = [
    // Boxes on platform:
-   makeEntity({shape: "rect", size: xy(20, 10), pos: xy(platform.pos.x, 150), vel: xy(1, 0)}),
-   makeEntity({shape: "rect", size: xy(20, 10), pos: xy(platform.pos.x, 140), vel: xy(1, 0)}),
-   makeEntity({shape: "rect", size: xy(20, 10), pos: xy(platform.pos.x, 130), vel: xy(1, 0)}),
+   make_entity({shape: "rect", size: xy(20, 10), pos: xy(platform.pos.x, 150), vel: xy(1, 0)}),
+   make_entity({shape: "rect", size: xy(20, 10), pos: xy(platform.pos.x, 140), vel: xy(1, 0)}),
+   make_entity({shape: "rect", size: xy(20, 10), pos: xy(platform.pos.x, 130), vel: xy(1, 0)}),
    ball, box, pendulum, platform, newton1, newton2, newton3, elevator, weldBox1, weldBox2]
 
 // Entities that do not move
 let worldArray = [
    // Walls
-   makeEntity({shape: "rect", size: xy(383,  20), pos: xy(192,   -5), density: infinity, collisionCategoryMask: wallCategory}),
-   makeEntity({shape: "rect", size: xy(20, 1224), pos: xy( -5,  612), density: infinity, collisionCategoryMask: wallCategory}),
-   makeEntity({shape: "rect", size: xy(20, 1224), pos: xy(388,  612), density: infinity, collisionCategoryMask: wallCategory}),
-   makeEntity({shape: "rect", size: xy(383,  20), pos: xy(192, 1214), density: infinity, collisionCategoryMask: wallCategory}),
+   make_entity({shape: "rect", size: xy(383,  20), pos: xy(192,   -5), density: infinity, collision_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(20, 1224), pos: xy( -5,  612), density: infinity, collision_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(20, 1224), pos: xy(388,  612), density: infinity, collision_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(383,  20), pos: xy(192, 1214), density: infinity, collision_category_mask: wallCategory}),
 
    // Car ramp
-   makeEntity({shape: "rect", size: xy(32, 15), pos: xy(250, 5), density: infinity, angle: 26°}),
-   makeEntity({shape: "rect", size: xy(32, 15), pos: xy(273, 5), density: infinity, angle: -26°}),
+   make_entity({shape: "rect", size: xy(32, 15), pos: xy(250, 5), density: infinity, angle: 26°}),
+   make_entity({shape: "rect", size: xy(32, 15), pos: xy(273, 5), density: infinity, angle: -26°}),
 
    // Ball ladder
-   makeEntity({shape: "rect", size: xy(50,    5), pos: xy(360, 250),  density: infinity, angle: 25°, collisionCategoryMask: wallCategory}),
-   makeEntity({shape: "rect", size: xy(200,   5), pos: xy(260, 255),  density: infinity, angle: -25°, collisionCategoryMask: wallCategory}),
-   makeEntity({shape: "rect", size: xy(50,    5), pos: xy(360, 195),  density: infinity, angle: 25°, collisionCategoryMask: wallCategory}),
-   makeEntity({shape: "rect", size: xy(70,    5), pos: xy(320, 170),  density: infinity, angle: -25°, collisionCategoryMask: wallCategory}),
-   makeEntity({shape: "rect", size: xy(6,   140), pos: xy(288, 177),  density: infinity, collisionCategoryMask: wallCategory}),
-   makeEntity({shape: "rect", size: xy(100,   6), pos: xy(335, 110),  density: infinity, collisionCategoryMask: wallCategory}),
+   make_entity({shape: "rect", size: xy(50,    5), pos: xy(360, 250),  density: infinity, angle: 25°, collision_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(200,   5), pos: xy(260, 255),  density: infinity, angle: -25°, collision_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(50,    5), pos: xy(360, 195),  density: infinity, angle: 25°, collision_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(70,    5), pos: xy(320, 170),  density: infinity, angle: -25°, collision_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(6,   140), pos: xy(288, 177),  density: infinity, collision_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(100,   6), pos: xy(335, 110),  density: infinity, collision_category_mask: wallCategory}),
 
    // Landing platforms
-   makeEntity({shape: "rect", size: xy(40, 5), pos: xy(45, 100), friction: 1, stictionFactor: 10, density: infinity}),
-   makeEntity({shape: "rect", size: xy(40, 5), pos: xy(110, 100), friction: 1, stictionFactor: 10, density: infinity}),
+   make_entity({shape: "rect", size: xy(40, 5), pos: xy(45, 100), friction: 1, stiction_factor: 10, density: infinity}),
+   make_entity({shape: "rect", size: xy(40, 5), pos: xy(110, 100), friction: 1, stiction_factor: 10, density: infinity}),
 
    // Spinner triggered by jumping
    trigger
@@ -87,38 +87,38 @@ let worldArray = [
 
 // Fluid-like balls
 for i < 80:
-   push(entityArray, makeEntity({shape: "disk", size: xy(7, 7), pos: xy(rnd(290, 370), 250 + rnd(0, 600)),
-                                 friction: 0, stictionFactor: 0, restitution: 50%, drag: 4%,
-                                 collisionCategoryMask: ballCategory}))
+   push(entityArray, make_entity({shape: "disk", size: xy(7, 7), pos: xy(random(290, 370), 250 + random(0, 600)),
+                                 friction: 0, stiction_factor: 0, restitution: 50%, drag: 4%,
+                                 collision_category_mask: ballCategory}))
 
 // Add the created entities to the world
-for entity in entityArray: physicsAddEntity(physics, entity)
-for entity in worldArray: physicsAddEntity(physics, entity)
+for entity in entityArray: physics_add_entity(physics, entity)
+for entity in worldArray: physics_add_entity(physics, entity)
 
-physicsAttach(physics, "weld",   {entityA: weldBox1, entityB: weldBox2})
+physics_attach(physics, "weld",   {entityA: weldBox1, entityB: weldBox2})
 
-physicsAttach(physics, "pin",    {entityB: pendulum, pointB: xy(-½ pendulum.size.x, 0)})
+physics_attach(physics, "pin",    {entityB: pendulum, pointB: xy(-½ pendulum.size.x, 0)})
 
-physicsAttach(physics, "spring", {entityA: platform, pointA: xy(⅓ platform.size.x, 0), entityB: ball, length: 30})
+physics_attach(physics, "spring", {entityA: platform, pointA: xy(⅓ platform.size.x, 0), entityB: ball, length: 30})
 
 // Newton's cradle
-physicsAttach(physics, "rod",    {pointA: newton1.pos + xy(0, 50), entityB: newton1, length: 50})
-physicsAttach(physics, "rod",    {pointA: newton2.pos + xy(0, 50), entityB: newton2, length: 50})
-physicsAttach(physics, "rod",    {pointA: newton3.pos - xy(50, 0), entityB: newton3, length: 50})
+physics_attach(physics, "rod",    {pointA: newton1.pos + xy(0, 50), entityB: newton1, length: 50})
+physics_attach(physics, "rod",    {pointA: newton2.pos + xy(0, 50), entityB: newton2, length: 50})
+physics_attach(physics, "rod",    {pointA: newton3.pos - xy(50, 0), entityB: newton3, length: 50})
 
 // Chain
 local:
    let prev = platform
    const width = 3
    const length = 14
-   const ropeGroup = makeCollisionGroup()
+   const ropeGroup = make_collision_group()
    for i < 7:
-      const curr = makeEntity({shape: "rect", size: xy(width, length), density: 0.5, drag: 0.08,
+      const curr = make_entity({shape: "rect", size: xy(width, length), density: 0.5, drag: 0.08,
                                pos: platform.pos - xy(⅓ platform.size.x, ½ platform.size.y + length * (i + ½)),
-                               collisionGroup: ropeGroup})
+                               collision_group: ropeGroup})
       push(entityArray, curr)
-      physicsAddEntity(physics, curr)
-      physicsAttach(physics, "pin", {
+      physics_add_entity(physics, curr)
+      physics_attach(physics, "pin", {
          entityA: prev,
          pointA: (if i == 0 then xy(-⅓ platform.size.x, -½ platform.size.y) else xy(0, 1 - ½ length)),
          entityB: curr,
@@ -137,15 +137,15 @@ def spawnParticle(contact):
    for pos in [contact.point0, contact.point1]:
       if pos:
          for i < 30:
-            push(particleArray, {pos: clone(pos), vel: rnd(1, 2) * rndDir2D(),
-                                 color: hsv(rnd(), 50%, 100%), life: rndInt(8, 16)})
+            push(particleArray, {pos: clone(pos), vel: random(1, 2) * random_direction2D(),
+                                 color: hsv(random(), 50%, 100%), life: random_integer(8, 16)})
 
 // Spawn particles on hard collisions, excluding the balls hitting a wall
-physicsAddContactCallback(physics, spawnParticle, 1.9, ∞, bitnot (ballCategory bitor wallCategory))
+physics_add_contact_callback(physics, spawnParticle, 1.9, ∞, bitnot (ballCategory bitor wallCategory))
    
 frame
 ────────────────────────────────────────────────────────────────────────
-setBackground(#234)
+set_background(#234)
 
 // Process user input
 if joy.bb: control = (control + 1) mod size(objectArray)
@@ -174,33 +174,33 @@ else if object == "person":
    if joy.aa or joy.yy > 0:
       // Test whether the character is on the ground
       const childRegion = {shape: "rect", pos: xy(0, -person.size.y / 2), size: xy(120% person.size.x, 3)}
-      const groundContacts = physicsEntityContacts(physics, person, childRegion, xy(0, 1))
+      const groundContacts = physics_entity_contacts(physics, person, childRegion, xy(0, 1))
       if size(groundContacts) > 0: person.vel.y += 6
 
 // Instructions
-drawText({font: font, text: "Move " + object + ": " + replace(scheme, joy.prompt), pos: xy(10, 200), color: #f96, shadow: #0008, z: 100})
-drawText({font: font, text: replace("Next object: ⓑ", joy.prompt), pos: xy(10, 190), color: #f96, shadow: #0008, z: 100})
+draw_text({font: font, text: "Move " + object + ": " + replace(scheme, joy.prompt), pos: xy(10, 200), color: #f96, shadow: #0008, z: 100})
+draw_text({font: font, text: replace("Next object: ⓑ", joy.prompt), pos: xy(10, 190), color: #f96, shadow: #0008, z: 100})
 
 // Move the animated platforms
-entityMove(platform, xy(40 sin(0.05 modeFrames) + 200, 120))
-entityMove(elevator, xy(elevator.pos.x, clamp(oscillate(modeFrames, -45, 148), 3, 100)))
+entity_move(platform, xy(40 sin(0.05 mode_frames) + 200, 120))
+entity_move(elevator, xy(elevator.pos.x, clamp(oscillate(mode_frames, -45, 148), 3, 100)))
 
 // If something is on the trigger, run the spinner
-if size(physicsEntityContacts(physics, trigger)) > 0:
+if size(physics_entity_contacts(physics, trigger)) > 0:
    if spinner.spin < 2°:
       spinner.spin += 1°
       spinner.torque = 15
 
-physicsSimulate(physics)
+physics_simulate(physics)
 
 // Simulate and draw particles
 for pos, vel, color, life in particle in particleArray:
    --life; pos += vel 
-   drawPoint(pos, color, 10)
-   if life < 0: fastRemoveValue(particleArray, particle)
+   draw_point(pos, color, 10)
+   if life < 0: fast_remove_value(particleArray, particle)
 
 // Force the debugging view to draw physics (a normal game
 // would not need this), and disable the IDE's option for
 // physics debugging.
-drawPhysics(physics)
-deviceControl("setDebugFlag", "physics", false)
+draw_physics(physics)
+device_control("setDebugFlag", "physics", false)

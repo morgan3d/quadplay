@@ -1,19 +1,19 @@
 // Draw play mode
-setBackground(rgb(28%, 36%, 55%))
-setClip(xy(0, 0), xy(areaSize, areaSize))
-for B in boxArray: drawEntity(B)
+set_background(rgb(28%, 36%, 55%))
+set_clip(xy(0, 0), xy(areaSize, areaSize))
+for B in boxArray: draw_entity(B)
 processParticles()
 
 // Undoes the transform/clip
 drawScoreboard()
 
 // Animate game over
-const offset = xy(0, min(modeFrames - screenSize.y / 2 - 12, 0))
-const center = screenSize / 2 + offset
-drawSpriteCornerRect(borderSprite[1][16], center - xy(48, 0), xy(96, 16), 4)
-drawText(font, "GAME OVER", center, #ff0, #000, #000, 0, -1, 4)
+const offset = xy(0, min(mode_frames - SCREEN_SIZE.y / 2 - 12, 0))
+const center = SCREEN_SIZE / 2 + offset
+draw_sprite_corner_rect(borderSprite[1][16], center - xy(48, 0), xy(96, 16), 4)
+draw_text(font, "GAME OVER", center, #ff0, #000, #000, 0, -1, 4)
 
-if anyButtonPress():
-   playAudioClip(selectSound)
-   setMode(Title) because "anyButtonPress()"
+if any_button_press():
+   play_audio_clip(selectSound)
+   set_mode(Title) because "any_button_press()"
 

@@ -4,20 +4,20 @@ GameOver
 
 enter
 ────────────────────────────────────────────────────────────────────────
-resetClip()
-resetTransform()
-resetPostEffects()
+reset_clip()
+reset_transform()
+reset_post_effects()
 
-if backgroundSound: stopSound(backgroundSound)
-backgroundSound = playAudioClip(titleMusic, true)
+if backgroundSound: stop_sound(backgroundSound)
+backgroundSound = play_audio_clip(titleMusic, true)
 
 sort(snakeArray, "score", true)
 
 frame
 ────────────────────────────────────────────────────────────────────────
-setBackground(#a)
-drawText({font: largeFont, text: "FINAL RANKING", pos: xy(screenSize.x / 2, 30),
-          color: #f, shadow: #0004, xAlign: "center", yAlign: "center"})
+set_background(#a)
+draw_text({font: largeFont, text: "FINAL RANKING", pos: xy(SCREEN_SIZE.x / 2, 30),
+          color: #f, shadow: #0004, x_align: "center", y_align: "center"})
 
 let y = 90
 for s < size(snakeArray):
@@ -30,30 +30,30 @@ for s < size(snakeArray):
    if s == 0: scale = 1.5; x -= 39
 
    // Tail
-   drawSprite(snake.tailSprite, xy(x, y + sin(modeFrames / 5) * scale), 0, scale); x += 4 scale
+   draw_sprite(snake.tailSprite, xy(x, y + sin(mode_frames / 5) * scale), 0, scale); x += 4 scale
 
    // Body
    let dy
    for i < 8 + (3 - s) * 3:
-      dy = sin(i + modeFrames / 5) * scale
-      drawSprite(snake.bodySprite, xy(x, y + dy + 2), 0, scale, 1, -1, #8)
-      drawSprite(snake.bodySprite, xy(x, y + dy), 0, scale)
+      dy = sin(i + mode_frames / 5) * scale
+      draw_sprite(snake.bodySprite, xy(x, y + dy + 2), 0, scale, 1, -1, #8)
+      draw_sprite(snake.bodySprite, xy(x, y + dy), 0, scale)
       x += 4 scale
       
    // Head
-   drawSprite(snake.headSprite, xy(x, y + dy), 0, scale)
+   draw_sprite(snake.headSprite, xy(x, y + dy), 0, scale)
 
    let hat
    if s == 0:                               hat = hatSpritesheet.crown
    else if s == 1 and size(snakeArray) > 2: hat = hatSpritesheet.tiara
    else if s == size(snakeArray) - 1:       hat = hatSpritesheet.beanie
 
-   if hat: drawSprite(hat, xy(x, y + dy - 5 scale), 0, scale)
+   if hat: draw_sprite(hat, xy(x, y + dy - 5 scale), 0, scale)
       
-   drawText({font: font, text: formatNumber(s + 1, "ordinalabbrev"), pos: xy(150, y), color: snake.textColor, outline: snake.color, yAlign:"center"})
-   y += drawText({font: font, text: formatNumber(snake.score, "commas"), pos: xy(270, y), color: snake.textColor, outline: snake.color, xAlign:"right", yAlign:"center"}).y + 10
+   draw_text({font: font, text: format_number(s + 1, "ordinalabbrev"), pos: xy(150, y), color: snake.text_color, outline: snake.color, y_align:"center"})
+   y += draw_text({font: font, text: format_number(snake.score, "commas"), pos: xy(270, y), color: snake.text_color, outline: snake.color, x_align:"right", y_align:"center"}).y + 10
 
 
-if modeFrames > 120 and anyButtonPress():
-   setMode(Title) because "anyButtonPress()"
+if mode_frames > 120 and any_button_press():
+   set_mode(Title) because "any_button_press()"
    

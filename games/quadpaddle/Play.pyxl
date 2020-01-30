@@ -7,30 +7,30 @@ const padding = 25.5
 def hitBox(box, ball, dir):
    if not box.breakable:
       shakeEntity(box, 3, 2 dir)
-      playAudioClip(unbreakableSound)
+      play_audio_clip(unbreakableSound)
       return
 
    shakeScreen(5, 2 dir)
-   playAudioClip(destroyBlockSound)
+   play_audio_clip(destroyBlockSound)
    increaseScore(100)
    entityToParticlesHit(box, ½ (box.pos + ball.pos), ball.vel, 0.1, 0.5, 50)
-   removeValues(boxArray, box)
+   remove_values(boxArray, box)
   
    // Increase the speed of this ball slightly with each hit
    if magnitude(ball.vel) < 2.3: ball.vel *= 1.09   
 
    // Spawn a powerup
-   if rnd() < powerupDropChance:
-      playAudioClip(powerupSpawnSound)
-      const a = 90° rndInt(3)
+   if random() < powerupDropChance:
+      play_audio_clip(powerupSpawnSound)
+      const a = 90° random_integer(3)
       // The sprite is not actually used for rendering, just for collisions
-      push(powerupArray, makeEntity({pos: box.pos,
+      push(powerupArray, make_entity({pos: box.pos,
                                      vel: ¾ xy(cos a, sin a),
                                      sprite: sparkleSprite[0][0],                                       
-                                     data:rndValue(powerupData)}))
+                                     data:random_value(powerupData)}))
 
 def loseBall(ball):
-   playAudioClip(loseBallSound)
+   play_audio_clip(loseBallSound)
    if size(ballArray) == 1:
       if spareBalls == 0:
          // Melt the paddles away from the center of the screen
@@ -39,22 +39,22 @@ def loseBall(ball):
             let dir = xy(0,0)
             dir[v] = sign(P.pos[v] - areaSize / 2);
             entityToParticlesMelt(P, dir, 0.05, 0.08, 150)
-         setMode(GameOver) because "Lost last ball"
+         set_mode(GameOver) because "Lost last ball"
          
       // Put the ball back on a paddle, chosen at random
       --spareBalls
-      ball.paddle = rndValue(paddleArray)
+      ball.paddle = random_value(paddleArray)
    else:
       // Remove this ball; there are others in play
-      removeValues(ballArray, ball)
+      remove_values(ballArray, ball)
 
 
       
 frame
 ────────────────────────────────────────────────────────────────────────────
 
-setBackground(backgroundColor)
-resetClip()
+set_background(backgroundColor)
+reset_clip()
 
 let levelComplete = true
 
@@ -62,48 +62,48 @@ let levelComplete = true
 // some particles to explode over the scoreboard.
 processParticles()
 
-setClip(xy(0, 0), xy(areaSize, screenSize.y))
+set_clip(xy(0, 0), xy(areaSize, SCREEN_SIZE.y))
 
 // Paddles
 for pad, pos, vel, axis in paddle in paddleArray:
    vel[axis] = paddleSpeed * pad[axis]
    pos[axis] = mid(pos[axis] + vel[axis], ½ paddle.size.x + padding, areaSize - ½ paddle.size.x - padding)
-   drawEntity(paddle)
+   draw_entity(paddle)
    // Sparkle when this paddle has the catch powerup
    if paddle.powerup == "catch":
-      drawSprite(paddleSprite[0][5], paddle.pos, paddle.angle)
-      drawSprite(sparkleSprite[0][⌊modeFrames / 6⌋ mod 5], paddle.pos, paddle.angle)
-      drawSprite(sparkleSprite[0][⌊modeFrames / 5⌋ mod 5], paddle.pos + xy(1, 1), paddle.angle + 180°)
+      draw_sprite(paddleSprite[0][5], paddle.pos, paddle.angle)
+      draw_sprite(sparkleSprite[0][⌊mode_frames / 6⌋ mod 5], paddle.pos, paddle.angle)
+      draw_sprite(sparkleSprite[0][⌊mode_frames / 5⌋ mod 5], paddle.pos + xy(1, 1), paddle.angle + 180°)
 
    
 // Boxes
 for B in boxArray:
    if B.breakable: levelComplete = false
-   drawEntity(B)
+   draw_entity(B)
 
 
 // Powerups
 for pos, vel, data ∊ P ∊ powerupArray:
-   drawText(font, data.name, pos + xy(0, 3), data.color, nil, #FFF, 0)
-   drawSprite(sparkleSprite[0][⌊modeFrames / 6⌋ mod 5], pos)
-   drawSprite(sparkleSprite[0][⌊modeFrames / 5⌋ mod 5], pos + xy(1, 1), 180°)
+   draw_text(font, data.name, pos + xy(0, 3), data.color, nil, #FFF, 0)
+   draw_sprite(sparkleSprite[0][⌊mode_frames / 6⌋ mod 5], pos)
+   draw_sprite(sparkleSprite[0][⌊mode_frames / 5⌋ mod 5], pos + xy(1, 1), 180°)
    createParticle(pos + xy(32 ξ - 16, 16 ξ - 8), xy(0, 0), data.color, 0, 30)
    createParticle(pos + xy(32 ξ - 16, 16 ξ - 8), xy(0, 0), #fff, 0, 20)
    pos += vel
-   if ((pos.x < -½ sparkleSprite[0][0].size.x) or (pos.x > screenSize.x + ½ sparkleSprite[0][0].size.x) or
-       (pos.y < -½ sparkleSprite[0][0].size.y) or (pos.y > screenSize.y + ½ sparkleSprite[0][0].size.y)):
-      removeValues(powerupArray, P)
+   if ((pos.x < -½ sparkleSprite[0][0].size.x) or (pos.x > SCREEN_SIZE.x + ½ sparkleSprite[0][0].size.x) or
+       (pos.y < -½ sparkleSprite[0][0].size.y) or (pos.y > SCREEN_SIZE.y + ½ sparkleSprite[0][0].size.y)):
+      remove_values(powerupArray, P)
 
    for paddle ∊ paddleArray:
       // Receive a powerup
       if overlaps(paddle, P):
-         removeValues(powerupArray, P)
-         playAudioClip(powerupSound)
+         remove_values(powerupArray, P)
+         play_audio_clip(powerupSound)
 
          // Remove the old powerup's boxes before replacing the powerup
          if paddle.powerup and paddle.powerup.name == "wall":
             for box in paddle.powerup.boxArray:
-               removeValues(boxArray, box)
+               remove_values(boxArray, box)
             
          paddle.powerup = ∅
          if data.name == "spare":
@@ -116,7 +116,7 @@ for pos, vel, data ∊ P ∊ powerupArray:
             for B in ballArray:
                if not B.paddle:
                   for i < 2:
-                     push(ballArray, makeEntity({name:"ball", pos:B.pos, vel:(2i - 1) * xy(-B.vel.y,  B.vel.x), sprite:B.sprite, paddle:nil, shape:B.shape}))
+                     push(ballArray, make_entity({name:"ball", pos:B.pos, vel:(2i - 1) * xy(-B.vel.y,  B.vel.x), sprite:B.sprite, paddle:nil, shape:B.shape}))
          else if data.name == "wall":
             // Create a wall of unbreakable boxes
             paddle.powerup = {name: "wall", boxArray:[]}
@@ -128,7 +128,7 @@ for pos, vel, data ∊ P ∊ powerupArray:
                pos[u] = 16 i + 32
                pos[v] = paddle.pos[v] + 8 away
                // Put the wall behind the paddle
-               const box = makeEntity({name:"wall", breakable:false, pos:pos, sprite:darkUnbreakable, z:-1})
+               const box = make_entity({name:"wall", breakable:false, pos:pos, sprite:darkUnbreakable, z:-1})
                // Make sure that the box isn't trapping a ball
                for ball in ballArray: if overlaps(box, ball): loseBall(ball)
                push(paddle.powerup.boxArray, box)
@@ -163,7 +163,7 @@ for pos, vel, paddle in ball in ballArray:
             vel[u] = sign(paddle.vel[u])
          else:
             // Random direction
-            vel[u] = 2 rndInt(1) - 1
+            vel[u] = 2 random_integer(1) - 1
             
          vel[v] = away
          vel *= initialBallSpeed
@@ -209,14 +209,14 @@ for pos, vel, paddle in ball in ballArray:
    
                // Don't intersect if already moving away.
                if sign(pos[v] - paddle.pos[v]) ≠ sign(vel[v]):
-                  playAudioClip(hitPaddleSound);
+                  play_audio_clip(hitPaddleSound);
 
                   // Push the paddle back for three frames
                   paddle.offset[u] = 0
                   paddle.offset[v] = sign(vel[v])
                
                   def zero(): paddle.offset = xy(0, 0)
-                  addFrameHook(∅, zero, 3)
+                  add_frame_hook(∅, zero, 3)
                
                   // Bounce
                   vel[v] = -vel[v]
@@ -237,7 +237,7 @@ for pos, vel, paddle in ball in ballArray:
          loseBall(ball)
          
    // Common
-   drawEntity(ball)
+   draw_entity(ball)
 
 if firstBallLaunched:
    timeLeft = max(0, timeLeft - 1 / 60)
@@ -249,8 +249,8 @@ if levelComplete:
    ++finishLevelFrames
    if finishLevelFrames > 40:
       if level ≥ (levelTemplate.width + 1) / 6:
-         setMode(Win) because "Beat final level"
+         set_mode(Win) because "Beat final level"
       else:
          increaseScore(100 timeLeft)
          // Show the reward screen
-         pushMode(BeatLevel) because "Level completed"
+         push_mode(BeatLevel) because "Level completed"

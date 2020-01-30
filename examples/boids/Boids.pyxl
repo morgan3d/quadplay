@@ -2,7 +2,7 @@ init
 ───────────────────────────────────────────────────────────
 // functions
 def make_boid(position):
-    return makeEntity(
+    return make_entity(
         {
             pos: position,
             angle: 0deg,
@@ -11,7 +11,7 @@ def make_boid(position):
     )
 
 def draw_boid(boid):
-    drawTri(triangle[0], triangle[1], triangle[2], #00f, nil, boid.pos, nil, boid.angle)
+    draw_tri(triangle[0], triangle[1], triangle[2], #00f, nil, boid.pos, nil, boid.angle)
 
 def update_boid(each_boid):
     // let dir = direction(each_boid.pos - attractors[0])
@@ -25,7 +25,7 @@ def update_boid(each_boid):
 
     // acceleration towards goal
     let goal_dir = xy(0, 0)
-    let shortest_distance = magnitude(screenSize*screenSize)
+    let shortest_distance = magnitude(SCREEN_SIZE*SCREEN_SIZE)
     for attractor in attractors:
         let goal_vec = attractor - each_boid.pos
         if magnitude(goal_vec) < shortest_distance:
@@ -61,7 +61,7 @@ def update_boid(each_boid):
     each_boid.force = acceleration / NUM_ITERATIONS
 
     // apply acceleration to velocity
-    entitySimulate(each_boid)
+    entity_simulate(each_boid)
 
 
 
@@ -70,7 +70,7 @@ const boids = []
 const NUM_BOIDS =  30
 const NUM_ITERATIONS = 1
 for i < NUM_BOIDS:
-    push(boids, make_boid(rndWithinSquare() * screenSize / 2))
+    push(boids, make_boid(random_within_square() * SCREEN_SIZE / 2))
 
 // draw shape for each boid
 const triangle = [ 
@@ -89,7 +89,7 @@ const attractors = [
 const IDEAL_DISTANCE = 30
 
 // default camera
-setTransform(screenSize/2)
+set_transform(SCREEN_SIZE/2)
 
 frame
 ───────────────────────────────────────────────────────────
@@ -103,4 +103,4 @@ for each_boid in boids:
     draw_boid(each_boid)
 
 for at in attractors:
-    drawDisk(at, 5, rgb(0,1,0))
+    draw_disk(at, 5, rgb(0,1,0))

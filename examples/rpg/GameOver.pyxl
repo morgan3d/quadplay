@@ -1,5 +1,5 @@
-drawPreviousMode()
-drawText(font, "You Drowned!", xy(½ screenSize.x, min(½ screenSize.y, ¼ modeFrames)),
+draw_previous_mode()
+draw_text(font, "You Drowned!", xy(½ SCREEN_SIZE.x, min(½ SCREEN_SIZE.y, ¼ mode_frames)),
          #f55, #aaa, #fff, 0, 0, 12)
 
-if (modeFrames > 7 * 60) or anyButtonPress(): setMode(Credits, "7 seconds")
+if (mode_frames > 7 * 60) or any_button_press(): set_mode(Credits, "7 seconds")

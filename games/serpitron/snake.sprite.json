@@ -1,6 +1,6 @@
 {
     "url": "snake.png",
-    "spriteSize":   {"x": 6, "y": 6},
+    "sprite_size":   {"x": 6, "y": 6},
     "region":       {
         "pos":      {"x": 0, "y": 0},
         "size":     {"x": 6, "y": 96}

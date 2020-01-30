@@ -2,164 +2,164 @@ Play
 =======================================================================
 
 // The robot is the torso
-const robot = makeEntity({
+const robot = make_entity({
    name:          "robot",
    pos:           xy(180, 100),
    sprite:        robotSprite.center[1],
 
    // Front shoulder plating
-   childArray:    [makeEntity({zInParent: 0.5, sprite: robotSprite[5][1]})]
+   child_array:    [make_entity({z_in_parent: 0.5, sprite: robotSprite[5][1]})]
 }, {
-   neck: makeEntity({
-      posInParent:   xy(3, -11)
+   neck: make_entity({
+      pos_in_parent:   xy(3, -11)
    }, {
-      head: makeEntity({
+      head: make_entity({
          sprite:        robotSprite.center[0],
-         posInParent:   xy(-1, -6)
+         pos_in_parent:   xy(-1, -6)
       })}), // neck
 
 
-   frontShoulder: makeEntity({
-      posInParent:   xy(-10, -7),
-      zInParent:     0.25
+   frontShoulder: make_entity({
+      pos_in_parent:   xy(-10, -7),
+      z_in_parent:     0.25
    }, {
-      arm: makeEntity({
+      arm: make_entity({
          sprite:        robotSprite.arm[0],
-         posInParent:   xy(0, 11)
+         pos_in_parent:   xy(0, 11)
       }, {
-         elbow: makeEntity({
-            posInParent:   xy(-2, 4)
+         elbow: make_entity({
+            pos_in_parent:   xy(-2, 4)
          }, {
-            hand: makeEntity({
+            hand: make_entity({
                sprite:        robotSprite.hand[0],
-               posInParent:   xy(0, 10)
+               pos_in_parent:   xy(0, 10)
             }) // hand
          }) // elbow
       }) // arm
    }), // frontShoulder
 
-   frontHip: makeEntity({
-      posInParent:      xy(-3, 10),
-      zInParent:        0.1
+   frontHip: make_entity({
+      pos_in_parent:      xy(-3, 10),
+      z_in_parent:        0.1
       }, {
-         leg: makeEntity({
+         leg: make_entity({
             sprite:        robotSprite.leg[0],
-            posInParent:   xy(0, 10)
+            pos_in_parent:   xy(0, 10)
          }, {
-            knee: makeEntity({
-               posInParent: xy(1, 9)
+            knee: make_entity({
+               pos_in_parent: xy(1, 9)
             }, {
-               foot: makeEntity({
+               foot: make_entity({
                   sprite:        robotSprite.foot[0],
-                  posInParent:   xy(0, 11)
+                  pos_in_parent:   xy(0, 11)
                }) // foot
             }) // knee
          }) // leg
       }), // frontHip
 
-   rearShoulder: makeEntity({
-      posInParent:   xy(10, -7),
-      zInParent:     -1
+   rearShoulder: make_entity({
+      pos_in_parent:   xy(10, -7),
+      z_in_parent:     -1
    }, {
-      arm: makeEntity({
+      arm: make_entity({
          sprite:        robotSprite.arm[1],
-         posInParent:   xy(0, 11)
+         pos_in_parent:   xy(0, 11)
       }, {
-         elbow: makeEntity({
-            posInParent:   xy(-2, 4)
+         elbow: make_entity({
+            pos_in_parent:   xy(-2, 4)
          }, {
-            hand: makeEntity({
+            hand: make_entity({
                sprite:        robotSprite.hand[1],
-               posInParent:   xy(0, 10)
+               pos_in_parent:   xy(0, 10)
             }) // hand
          }) // elbow
       }) // arm
    }), // rearShoulder
 
-   rearHip: makeEntity({
-      posInParent:      xy(5, 10),
-      zInParent:        -0.5
+   rearHip: make_entity({
+      pos_in_parent:      xy(5, 10),
+      z_in_parent:        -0.5
       }, {
-         leg: makeEntity({
+         leg: make_entity({
             sprite:        robotSprite.leg[1],
-            posInParent:   xy(0, 10)
+            pos_in_parent:   xy(0, 10)
          }, {
-            knee: makeEntity({
-               posInParent: xy(1, 9)
+            knee: make_entity({
+               pos_in_parent: xy(1, 9)
             }, {
-               foot: makeEntity({
+               foot: make_entity({
                   sprite:        robotSprite.foot[1],
-                  posInParent:   xy(0, 11)
+                  pos_in_parent:   xy(0, 11)
                }) // foot
             }) // knee
          }) // leg
       }) // rearHip
 })// robot
 
-//debugPrint(robot.scale, robot.neck.scale)
+//debug_print(robot.scale, robot.neck.scale)
 
 frame
 ───────────────────────────────────────────────────────────
 
-setBackground(hsv(60%, 40%, 60%))
+set_background(hsv(60%, 40%, 60%))
 
 // On [-1, 1]
-const t = oscillate(modeFrames / 200, 2) - 1
+const t = oscillate(mode_frames / 200, 2) - 1
 
 robot.angle = 50° t
 
-robot.neck.angleInParent         =  8° t
+robot.neck.angle_in_parent         =  8° t
 
-robot.frontShoulder.angleInParent = 20° t
-robot.frontShoulder.arm.elbow.angleInParent = 10° (t + 1)
+robot.frontShoulder.angle_in_parent = 20° t
+robot.frontShoulder.arm.elbow.angle_in_parent = 10° (t + 1)
 
-robot.rearShoulder.angleInParent =  20° (t + 1)
-robot.rearShoulder.arm.elbow.angleInParent =  40° (t + 1)
+robot.rearShoulder.angle_in_parent =  20° (t + 1)
+robot.rearShoulder.arm.elbow.angle_in_parent =  40° (t + 1)
 
-robot.frontHip.angleInParent      =   -15° (t + 1)
-robot.frontHip.leg.knee.angleInParent =  -30° (t + 1)
+robot.frontHip.angle_in_parent      =   -15° (t + 1)
+robot.frontHip.leg.knee.angle_in_parent =  -30° (t + 1)
 
-robot.rearHip.angleInParent      =   20° (t + 1.5)
-robot.rearHip.leg.knee.angleInParent =  -35° (t + 1)
+robot.rearHip.angle_in_parent      =   20° (t + 1.5)
+robot.rearHip.leg.knee.angle_in_parent =  -35° (t + 1)
 
 // Flip
 if joy.x: robot.scale.x = joy.x
 
 // Normal rendering example
-entityUpdateChildren(robot)
-drawEntity(robot)
+entity_update_children(robot)
+draw_entity(robot)
 
 
 /////////////////////////////////////////////////////////
 // Fancy ground drawing example
 
 // A cute mirror drawing trick using the entity hierarchy
-preservingTransform:
-   setTransform(xy(0, 50% screenSize.y))
+preserving_transform:
+   set_transform(xy(0, 50% SCREEN_SIZE.y))
    robot.scale.y *= -1
    robot.angle *= -1
    robot.z = -3
-   entityUpdateChildren(robot)
-   drawEntity(robot)
+   entity_update_children(robot)
+   draw_entity(robot)
    robot.z = 0
    robot.scale.y *= -1
    robot.angle *= -1
-   entityUpdateChildren(robot)
+   entity_update_children(robot)
 
    // The fading out reflection on top of the robot reflection
-   drawSprite({
+   draw_sprite({
       sprite: gradient[0][0],
-      pos:    xy(50% screenSize.x, 30% screenSize.y),
+      pos:    xy(50% SCREEN_SIZE.x, 30% SCREEN_SIZE.y),
       z:      -2,
-      scale:  xy(screenSize.x / 32, 3)})
+      scale:  xy(SCREEN_SIZE.x / 32, 3)})
 
    // Grid lines on the ground
-   drawLine(xy(0, 10% screenSize.y), xy(screenSize.x, 10% screenSize.y), #5, -1.5)
-   drawLine(xy(0, 15% screenSize.y), xy(screenSize.x, 15% screenSize.y), #5, -1.5)
-   drawLine(xy(0, 30% screenSize.y), xy(screenSize.x, 30% screenSize.y), #5, -1.5)
+   draw_line(xy(0, 10% SCREEN_SIZE.y), xy(SCREEN_SIZE.x, 10% SCREEN_SIZE.y), #5, -1.5)
+   draw_line(xy(0, 15% SCREEN_SIZE.y), xy(SCREEN_SIZE.x, 15% SCREEN_SIZE.y), #5, -1.5)
+   draw_line(xy(0, 30% SCREEN_SIZE.y), xy(SCREEN_SIZE.x, 30% SCREEN_SIZE.y), #5, -1.5)
 
-   drawCornerRect(xy(0, 10% screenSize.y), xy(screenSize.x, 50% screenSize.y), #bdf, nil, -5)
-   setTransform(xy(50% screenSize.x, nil))
+   draw_corner_rect(xy(0, 10% SCREEN_SIZE.y), xy(SCREEN_SIZE.x, 50% SCREEN_SIZE.y), #bdf, nil, -5)
+   set_transform(50% SCREEN_SIZE)
    for -4 < i < 4:
-      drawLine(xy((i + 0.5) * 15% screenSize.x, 10% screenSize.y),
-               xy((i + 0.5) * 60% screenSize.x, 50% screenSize.y), #5, -1.5)
+      draw_line(xy((i + 0.5) * 15% SCREEN_SIZE.x, 10% SCREEN_SIZE.y),
+               xy((i + 0.5) * 60% SCREEN_SIZE.x, 50% SCREEN_SIZE.y), #5, -1.5)

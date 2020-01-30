@@ -1,14 +1,14 @@
 let player
 
 def drawInventory():
-   drawPreviousMode()
-   drawCornerRect(xy(0,0), screenSize, rgba(1, 1, 1, 60%), ∅, 9)
-   drawSpriteCornerRect(uiSprite[4][15], xy(64, 128), xy(256, 80), 10)
-   drawText(smallFont, "Inventory", xy(½ screenSize.x, 119), #442233, ∅, ∅, 0, 0, 10)
+   draw_previous_mode()
+   draw_corner_rect(xy(0,0), SCREEN_SIZE, rgba(1, 1, 1, 60%), ∅, 9)
+   draw_sprite_corner_rect(uiSprite[4][15], xy(64, 128), xy(256, 80), 10)
+   draw_text(smallFont, "Inventory", xy(½ SCREEN_SIZE.x, 119), #442233, ∅, ∅, 0, 0, 10)
 
    let itemPos = xy(0, 0)
    for item in player.inventory:
-      drawSprite(item, 16 itemPos + xy(72, 136), ∅, ∅, ∅, 10)
+      draw_sprite(item, 16 itemPos + xy(72, 136), ∅, ∅, ∅, 10)
       ++itemPos.x
       if itemPos.x > 8: itemPos.x = 0; ++itemPos.y
 

@@ -29,10 +29,10 @@ def ensureUniqueColor(p, inc, dir):
 
 enter
 ────────────────────────────────────────────────────────────────────────
-resetTransform()
-resetClip()
-setBackground(#a)
-srand(localTime().millisecond)
+reset_transform()
+reset_clip()
+set_background(#a)
+set_random_seed(local_time().millisecond)
 
 countdownTimer = ∅
 // Restore player's preferences
@@ -40,27 +40,27 @@ colorIndex = loadLocal("colorIndex") or [0, 1, 2, 3]
 state = ["out", "out", "out", "out"]
 
 if not backgroundSound or backgroundSound.audioClip ≠ titleMusic:
-   if backgroundSound: stopSound(backgroundSound)
-   backgroundSound = playAudioClip(titleMusic, true)
+   if backgroundSound: stop_sound(backgroundSound)
+   backgroundSound = play_audio_clip(titleMusic, true)
 
    
 frame
 ────────────────────────────────────────────────────────────────────────
 
-drawText(font, "Casual Effects presents", xy(screenSize.x / 2, 10), #d, #8, nil, "center")
+draw_text(font, "Casual Effects presents", xy(SCREEN_SIZE.x / 2, 10), #d, #8, nil, "center")
 
-drawSprite(titleSprite, screenSize / 2)
+draw_sprite(titleSprite, SCREEN_SIZE / 2)
 
-drawSprite(controllerSprite.player[0], xy(29, 29))
-drawSprite(controllerSprite.gamepad, xy(29, 47))
-drawSprite(controllerSprite.gamepad, xy(29, 170))
+draw_sprite(controllerSprite.player[0], xy(29, 29))
+draw_sprite(controllerSprite.gamepad, xy(29, 47))
+draw_sprite(controllerSprite.gamepad, xy(29, 170))
 
-drawSprite(controllerSprite.player[1], xy(screenSize.x - 30, 29))
-drawSprite(controllerSprite.gamepad, xy(screenSize.x - 30, 47))
-drawSprite(controllerSprite.gamepad, xy(screenSize.x - 30, 170))
+draw_sprite(controllerSprite.player[1], xy(SCREEN_SIZE.x - 30, 29))
+draw_sprite(controllerSprite.gamepad, xy(SCREEN_SIZE.x - 30, 47))
+draw_sprite(controllerSprite.gamepad, xy(SCREEN_SIZE.x - 30, 170))
 
-drawText(instructionsFont, replace("[^][v] to change, [>] when ready | [<] to drop player, (q) to quit", joy.prompt),
-         xy(½ screenSize.x, screenSize.y - 10), #d, #8, ∅, "center", "bottom")
+draw_text(instructionsFont, replace("[^][v] to change, [>] when ready | [<] to drop player, (q) to quit", joy.prompt),
+         xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10), #d, #8, ∅, "center", "bottom")
 
 let anyQuit = false
 let noneChoosing = true
@@ -68,19 +68,19 @@ let anyReady = false
 
 // Loop over players, processing input and rendering
 for p < 4:
-   const control = pad[p]
+   const control = gamepad_array[p]
    
    // Force out [some players accidentally hit diagonal; let Y override in that case]
    if control.bb or (control.xx < 0 and not control.y):
       if state[p] == "ready":
-         playAudioClip(blipAudioClip)
+         play_audio_clip(blipAudioClip)
          state[p] = "choosing"
       else if state[p] == "choosing":
          state[p] = "out"
-         playAudioClip(hitAudioClip)
+         play_audio_clip(hitAudioClip)
    
    if (control.aa or (control.xx > 0 and not control.y)) and state[p] == "choosing":
-      playAudioClip(smallGrowAudioClip)
+      play_audio_clip(smallGrowAudioClip)
       state[p] = "ready"
 
    if (control.yy and state[p] != "choosing") or ((control.aa or (control.xx > 0 and not control.y)) and state[p] == "out"):
@@ -88,35 +88,35 @@ for p < 4:
       // Enter choosing mode with the current color, making sure it isn't already taken
       state[p] = "choosing"
       ensureUniqueColor(p, 0, control.yy)
-      playAudioClip(blipAudioClip)
+      play_audio_clip(blipAudioClip)
    else if control.yy and state[p] == "choosing":
       // Y
       ensureUniqueColor(p, control.yy, control.yy)
-      playAudioClip(blipAudioClip)
+      play_audio_clip(blipAudioClip)
 
 
-   const pos = ¼ screenSize * xy(1 + 2 (p mod 2), 90% + 220% ⌊½ p⌋)
+   const pos = ¼ SCREEN_SIZE * xy(1 + 2 (p mod 2), 90% + 220% ⌊½ p⌋)
    let color = #8
    let outline = ∅
    
    if state[p] != "out":
       // Draw the snake
       const colorName = colorNameArray[colorIndex[p]]
-      outline = getSpritePixelColor(snakeHeadSpritesheet[colorName], xy(9, 6))
+      outline = get_sprite_pixel_color(snakeHeadSpritesheet[colorName], xy(9, 6))
       color = 160% outline
       
-      let θ = modeFrames / 40 + 90° p
-      drawSprite(snakeSpritesheet[colorName + "Tail"], pos + 30 xy(cos θ, sin θ), 270° - θ)
+      let θ = mode_frames / 40 + 90° p
+      draw_sprite(snakeSpritesheet[colorName + "Tail"], pos + 30 xy(cos θ, sin θ), 270° - θ)
       θ += 8°
       const N = if state[p] == "ready" then 55 else 20
       for i < N:
          const bodyPos = pos + 30 xy(cos θ, sin θ)
-         drawSprite(snakeSpritesheet[colorName + "Body"], bodyPos)
+         draw_sprite(snakeSpritesheet[colorName + "Body"], bodyPos)
          // Shadow
-         drawCornerRect(bodyPos + xy(-2, 3), xy(4, 2), #9, ∅, -1)
+         draw_corner_rect(bodyPos + xy(-2, 3), xy(4, 2), #9, ∅, -1)
          θ += 6°
          
-      drawSprite(snakeHeadSpritesheet[colorName], pos + 30 xy(cos θ, sin θ), 270° - θ)
+      draw_sprite(snakeHeadSpritesheet[colorName], pos + 30 xy(cos θ, sin θ), 270° - θ)
 
    // Show the player number
    let indicator = "P" + (1 + p);
@@ -126,7 +126,7 @@ for p < 4:
    else if state[p] == "out":
       indicator = "⍈ to join"
       
-   drawText(font, indicator, pos, color, ∅, outline, "center", "center")
+   draw_text(font, indicator, pos, color, ∅, outline, "center", "center")
 
    // Update collective states
    if state[p] == "ready": anyReady = true
@@ -136,8 +136,8 @@ for p < 4:
 
 // Don't allow quit or ready right after the mode was entered in
 // case this is lingering input from the previous game
-if modeFrames > 30:
-   if anyQuit: quitGame()
+if mode_frames > 30:
+   if anyQuit: quit_game()
    if anyReady and noneChoosing:
       if countdownTimer == ∅: countdownTimer = 45 * 3
    else:
@@ -153,8 +153,8 @@ if countdownTimer ≠ ∅:
       snakeArray = []
       for p < 4:
          if state[p] == "ready":
-            push(snakeArray, makeSnake(p, pad[p], colorNameArray[colorIndex[p]]))
+            push(snakeArray, makeSnake(p, gamepad_array[p], colorNameArray[colorIndex[p]]))
       if size(snakeArray) == 1: singlePlayerTimeLeft = singlePlayerGameTime
-      setMode(NewLevel) because "All ready"
+      set_mode(NewLevel) because "All ready"
    else:
-      drawText(instructionsFont, "Starting in " + ceil(countdownTimer / 45) + "…", xy(screenSize.x / 2 + 5, 180), #ee4, ∅, #8, "center")
+      draw_text(instructionsFont, "Starting in " + ceil(countdownTimer / 45) + "…", xy(SCREEN_SIZE.x / 2 + 5, 180), #ee4, ∅, #8, "center")

@@ -1,14 +1,14 @@
-let music = playAudioClip(titleSound, true)
+let music = play_audio_clip(titleSound, true)
 
 // Latest camera offset. Used for respawning
 let camera = {pos: xy(0, 0)}
 
-setTransform(xy(0, screenSize.y - 1), xy(1, -1), 0, 1, xy(0, skewY))
+set_transform(xy(0, SCREEN_SIZE.y - 1), xy(1, -1), 0, 1, xy(0, skewY))
 
-// Recursively set the spriteOverrideColor. Used for blink
+// Recursively set the sprite_override_color. Used for blink
 def setOverrideColor(entity, color):
-   entity.spriteOverrideColor = color
-   for child in entity.childArray: setOverrideColor(child, color)
+   entity.sprite_override_color = color
+   for child in entity.child_array: setOverrideColor(child, color)
    
 
 def makeBike(name, colorIndex, pos, z, playerIndex):
@@ -16,12 +16,12 @@ def makeBike(name, colorIndex, pos, z, playerIndex):
    const frontWheelSSPos = xy(23, 19)
    const rearWheelSSPos = xy(4, 19)
 
-   const color = getSpritePixelColor(bikePart.engine[colorIndex], xy(16, 13))
+   const color = get_sprite_pixel_color(bikePart.engine[colorIndex], xy(16, 13))
    const darkColor = gray(80%) * color
    
    // The bike *is* the suspension as the root frame.
    // Everything else rides on it.
-   const bike = makeEntity({
+   const bike = make_entity({
       name: name,
       pos: pos,
       sprite: bikePart.suspension,
@@ -69,52 +69,52 @@ def makeBike(name, colorIndex, pos, z, playerIndex):
                   {pos:xy( 13, -2), normal:xy(0,0)}] // 4
    })
 
-   bike.mass = entityMass(bike)
+   bike.mass = entity_mass(bike)
 
    for i <= 10:
       push(bike.surfacePos, xy(pos.x - 5 + 2i, pos.y - 10))
 
-   bike.frontWheel = makeEntity({
+   bike.frontWheel = make_entity({
       name: name + " frontWheel",
       pos: xy(0, 0),
       sprite: wheelSprite[0][0],
       
-      posInParent: transformSpriteToEntity(bike, frontWheelSSPos),
-      orientWithParent: false,
-      zInParent: -0.1
+      pos_in_parent: transform_sprite_to_entity(bike, frontWheelSSPos),
+      orient_with_parent: false,
+      z_in_parent: -0.1
    })
 
-   bike.rearWheel = makeEntity({
+   bike.rearWheel = make_entity({
       name: name + " rearWheel",
       pos: xy(0, 0),
       sprite: wheelSprite[0][1],
       
-      posInParent: transformSpriteToEntity(bike, rearWheelSSPos),
-      orientWithParent: false,
-      zInParent: -0.1
+      pos_in_parent: transform_sprite_to_entity(bike, rearWheelSSPos),
+      orient_with_parent: false,
+      z_in_parent: -0.1
    })
 
-   bike.engine = makeEntity({
+   bike.engine = make_entity({
       name: name + " engine",
       pos: xy(0, 0),
       sprite: bikePart.engine[colorIndex],
-      zInParent: +0.1
+      z_in_parent: +0.1
    })
 
-   bike.driver = makeEntity({
+   bike.driver = make_entity({
       name: name + " driver",
       pos: xy(0, 0),
       sprite: bikePart.driver,
-      zInParent: +0.1
+      z_in_parent: +0.1
    })
 
-   entityAddChild(bike, bike.frontWheel)
-   entityAddChild(bike, bike.rearWheel)
-   entityAddChild(bike, bike.engine)
+   entity_add_child(bike, bike.frontWheel)
+   entity_add_child(bike, bike.rearWheel)
+   entity_add_child(bike, bike.engine)
 
-   entityAddChild(bike.engine, bike.driver)
+   entity_add_child(bike.engine, bike.driver)
    
-   entityUpdateChildren(bike)
+   entity_update_children(bike)
    return bike
       
 
@@ -122,13 +122,13 @@ def makeBike(name, colorIndex, pos, z, playerIndex):
 def crashBike(bike):
    // Temporarily remove from the bikeArray
    // to disable simulation
-   removeValues(bikeArray, bike)
+   remove_values(bikeArray, bike)
    
    const explosionCenter = clone(bike.pos)
    const explosionZ = bike.z + 0.25
    
    def drawExplosion():
-      drawDisk(explosionCenter, 30, #f, nil, explosionZ)
+      draw_disk(explosionCenter, 30, #f, nil, explosionZ)
       
    def respawn():
       // Re-insert
@@ -147,10 +147,10 @@ def crashBike(bike):
       bike.pos.y = -infinity
       for -5 < i < 5:
          bike.pos.y = max(bike.pos.y, surfacePointUnder(xy(bike.pos.x + 3i, 200), bike.z).y + 13)
-      entityUpdateChildren(bike)
+      entity_update_children(bike)
       push(bikeArray, bike)
 
-   addFrameHook(drawExplosion, respawn, respawnFrames)
+   add_frame_hook(drawExplosion, respawn, respawnFrames)
 
 
 let bikeArray
@@ -177,13 +177,13 @@ def setCurrentTrick(bike, newDescription, newPoints, newMinimumPoints):
          // Start a new trick
          if points >= minimumPoints:
             // Lock in the old trick first
-            if debugTricks and (bike.playerIndex == 0): debugPrint("Completed '" + description + "'")
+            if debugTricks and (bike.playerIndex == 0): debug_print("Completed '" + description + "'")
             push(bike.combo, clone(bike.currentTrick))
          else if (bike.playerIndex == 0) and (description != ""):
-            if debugTricks: debugPrint("Cancelling '" + description + "' at " + points + "/" + minimumPoints)
+            if debugTricks: debug_print("Cancelling '" + description + "' at " + points + "/" + minimumPoints)
             landCombo(bike, true)
 
-         if debugTricks and (bike.playerIndex == 0) and (newDescription != ""): debugPrint("Starting '" + newDescription + "'")
+         if debugTricks and (bike.playerIndex == 0) and (newDescription != ""): debug_print("Starting '" + newDescription + "'")
             
          description = newDescription
          minimumPoints = newMinimumPoints
@@ -201,7 +201,7 @@ def measureTricks(bike):
    let endPreviousCombo = false
 
    // No tricks allowed during the respawn/drop in period
-   if (bike.blinkFrames > 0) or (modeFrames < 100): return
+   if (bike.blinkFrames > 0) or (mode_frames < 100): return
 
    if bike.recentFrontWheelContact and not bike.recentRearWheelContact:
       bike.frontWheelieFrames += 1
@@ -238,7 +238,7 @@ def measureTricks(bike):
       
 /* Call when the trick ends without a crash */
 def landCombo(bike, doNotScoreLast):
-   if debugTricks: debugPrint("------------------")
+   if debugTricks: debug_print("------------------")
    
    if not doNotScoreLast:
       // Score the last trick performed
@@ -261,7 +261,7 @@ def landCombo(bike, doNotScoreLast):
       bike.points += min(total, rate)
       total -= rate
 
-   addFrameHook(incScore, nil, ceil(total / rate))
+   add_frame_hook(incScore, nil, ceil(total / rate))
    
    // TODO: Display the final combo for a while
    bike.combo = []

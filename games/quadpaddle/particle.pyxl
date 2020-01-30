@@ -11,7 +11,7 @@ def entityToParticlesHit(entity, impactPoint, impactVel, minSpeed, maxSpeed, max
    
 def entityToParticlesMelt(entity, dir, minSpeed, maxSpeed, maxLife):
    const ignore = xy(0, 0)
-   debugPrint(minSpeed)
+   debug_print(minSpeed)
    entityToParticles(entity, ignore, ignore, dir, minSpeed, maxSpeed, 0, 0, maxLife)
 
 
@@ -25,13 +25,13 @@ def entityToParticles(entity,
    const pos = entity.pos
    const z = entity.z + ½
    const center = ½ (sprite.size - 1)
-   const U = xy(cos(entity.angle), -sin(entity.angle) * getRotationSign())
+   const U = xy(cos(entity.angle), -sin(entity.angle) * rotation_sign())
    const V = xy(-U.y, U.x)
    
    for y < sprite.size.y:
       for x < sprite.size.x:
          const spritePos = xy(x, y)
-         const color = getSpritePixelColor(sprite, spritePos)
+         const color = get_sprite_pixel_color(sprite, spritePos)
          
          // Entity space position
          const ePos = (spritePos - center) * entity.scale
@@ -77,7 +77,7 @@ def processParticles():
          const pos = particle.pos
          pos.x += particle.vel.x
          pos.y += particle.vel.y
-         drawPoint(pos, particle.color, particle.z)
+         draw_point(pos, particle.color, particle.z)
 
          // Preserve this element
          ++dst

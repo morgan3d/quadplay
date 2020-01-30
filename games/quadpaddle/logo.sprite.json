@@ -1,5 +1,5 @@
 {
     "url": "logo.png",
     "license": "by Morgan McGuire, 2018, in the Public Domain/CC0 1.0",
-    "spriteSize": {"x":270, "y":64}
+    "sprite_size": {"x":270, "y":64}
 }

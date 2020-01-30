@@ -10,12 +10,12 @@ def spawnPowerups():
       const lastWaveType = waveType
       waveType = ∅
       while waveType == ∅ or waveType == lastWaveType:
-         waveType = rndValue(waveTypeArray)
+         waveType = random_value(waveTypeArray)
       
       // Score disparity increases the probability of a showdown
       if (size(snakeArray) > 1 and
           snakeArray[0].score > 400000 and
-          snakeArray[0].score > 170% lastValue(snakeArray).score and
+          snakeArray[0].score > 170% last_value(snakeArray).score and
           (ξ < 35% or level == numLevels - 1) and
           lastWaveType != "Showdown"):
          waveType = "Showdown"
@@ -48,14 +48,14 @@ def spawnPowerups():
          push(powerupArray, {sprite: powerupSpritesheet.star, type: "points", pos: randomEmptyPosition(), 
                              value: ⌊¼ pointBonus⌋, audioClip: smallPointsAudioClip})
       for snake in snakeArray:
-         snake.hasGun = (snake != snakeArray[0]) and (snake.score ≤ ½(snakeArray[0].score + lastValue(snakeArray).score))
+         snake.hasGun = (snake != snakeArray[0]) and (snake.score ≤ ½(snakeArray[0].score + last_value(snakeArray).score))
          
    else if waveType == "Rats":
       for i < 60:
          push(powerupArray, {sprite: ratSpritesheet[0][0], type: "grow", pos: randomEmptyPosition(), 
                              value: growAmount, audioClip: bigGrowAudioClip,
-                             angle: 90deg rndInt(0, 3),
-                             speed: 0.25 rndInt(1, 3)})
+                             angle: 90deg random_integer(0, 3),
+                             speed: 0.25 random_integer(1, 3)})
    else if waveType == "Coffee Break":
       for i < 21 sqrt(size(snakeArray)):
          push(powerupArray, {sprite: powerupSpritesheet.coffee, type: "speed", pos: randomEmptyPosition(), 
@@ -72,7 +72,7 @@ def spawnBuildings():
    else if locationName == "Urban":
       const sprite = skyscraperSprite[0][0]
       for 0 < i < 16:
-         let y = rndInt(sprite.size.y, playSize.y - sprite.size.y)
+         let y = random_integer(sprite.size.y, playSize.y - sprite.size.y)
          if i == 4 or i == 5 or i == 12 or i == 11: y = playSize.y / 2
          push(buildingArray, {
             pos: xy(round(i * playSize.x / 16, cellSide), round(y, cellSide)),
@@ -84,26 +84,26 @@ def spawnBuildings():
       // center X, random 1/3 Y
       if ξ < 75%:
          push(buildingArray, {
-            pos:    xy(round(playSize.x / 2, cellSide), round(rndInt(sprite.size.y, playSize.y / 2 - sprite.size.y / 2), cellSide)) + cellSide / 2,
+            pos:    xy(round(playSize.x / 2, cellSide), round(random_integer(sprite.size.y, playSize.y / 2 - sprite.size.y / 2), cellSide)) + cellSide / 2,
             sprite: sprite, size: sprite.size, shape: "rect", shadowShape: "tri"})
 
       // center X, random 2/3 Y
       if ξ < 75%:
          push(buildingArray, {
-            pos:    xy(round(playSize.x / 2, cellSide), round(rndInt(playSize.y / 2 + sprite.size.y / 2, playSize.y - sprite.size.y), cellSide)) + cellSide / 2,
+            pos:    xy(round(playSize.x / 2, cellSide), round(random_integer(playSize.y / 2 + sprite.size.y / 2, playSize.y - sprite.size.y), cellSide)) + cellSide / 2,
             sprite: sprite, size: sprite.size, shape: "rect", shadowShape: "tri"})
          
       // random 1/3 X, center Y
       if ξ < 75%:
          push(buildingArray, {
-            pos:    xy(round(rndInt(sprite.size.x, playSize.x / 2 - sprite.size.x), cellSide),
+            pos:    xy(round(random_integer(sprite.size.x, playSize.x / 2 - sprite.size.x), cellSide),
                        round(playSize.y / 2, cellSide)) + cellSide / 2,
             sprite: sprite, size: sprite.size, shape: "rect", shadowShape: "tri"})
          
       // random 2/3 X, center Y
       if ξ < 75%:
          push(buildingArray, {
-            pos:    xy(round(rndInt(playSize.x / 2 + sprite.size.x, playSize.x - sprite.size.x), cellSide),
+            pos:    xy(round(random_integer(playSize.x / 2 + sprite.size.x, playSize.x - sprite.size.x), cellSide),
                        round(playSize.y / 2, cellSide)) + cellSide / 2,
             sprite: sprite, size: sprite.size, shape: "rect", shadowShape: "tri"})
 
@@ -112,23 +112,23 @@ def spawnBuildings():
 def spawnWeather():
    if weatherType == "Blizzard":
       while size(weatherArray) < 50:
-         push(weatherArray, makeEntity({
-            pos: xy(rnd(-50, playSize.x + 50), rnd(-50, playSize.y + 50)),
-            vel: xy(rnd(-0.5, 0.5), -rnd(0.1, 0.5)),
-            sprite: rndValue(snowflakeSprite[0]),
-            angle: rnd(0, 360deg),
-            spin: rnd(-1deg, 1deg),
-            scale: rnd(1, 2),
+         push(weatherArray, make_entity({
+            pos: xy(random(-50, playSize.x + 50), random(-50, playSize.y + 50)),
+            vel: xy(random(-0.5, 0.5), -random(0.1, 0.5)),
+            sprite: random_value(snowflakeSprite[0]),
+            angle: random(0, 360deg),
+            spin: random(-1deg, 1deg),
+            scale: random(1, 2),
             z: 20
          }))
    else if weatherType == "Cloudy":
       while size(weatherArray) < 18:
-         push(weatherArray, makeEntity({
-            pos: xy(rnd(-50, playSize.x + 50), rnd(-50, playSize.y + 50)),
-            vel: xy(rnd(-0.25, 0.25), -rnd(0.05, 0.05)),
-            sprite: rndValue(cloudSprite[0]),
+         push(weatherArray, make_entity({
+            pos: xy(random(-50, playSize.x + 50), random(-50, playSize.y + 50)),
+            vel: xy(random(-0.25, 0.25), -random(0.05, 0.05)),
+            sprite: random_value(cloudSprite[0]),
             spin: 0,
-            scale: xy(rndSign() * rnd(1, 3), rnd(0.75, 1.5)),
+            scale: xy(random_sign() * random(1, 3), random(0.75, 1.5)),
             z: 20
          }))
          
@@ -146,8 +146,8 @@ for snake in snakeArray:
    snake.hasGun = false
 
 // No weather on the first two levels, to make it easier
-weatherType = if level > 1 and ξ < 20% then rndValue(weatherNameArray) else ""
-locationName = if level == 0 then "Country" else rndValue(locationNameArray)
+weatherType = if level > 1 and ξ < 20% then random_value(weatherNameArray) else ""
+locationName = if level == 0 then "Country" else random_value(locationNameArray)
 
 location = locationTable[locationName]
 
@@ -159,27 +159,27 @@ shadowColor = 85% location.background
   
 levelDescription = concat(locationName, weatherType, waveType)
 
-if backgroundSound: stopSound(backgroundSound)
-backgroundSound = playAudioClip(location.music, true)
+if backgroundSound: stop_sound(backgroundSound)
+backgroundSound = play_audio_clip(location.music, true)
 
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
 
-drawPreviousMode()
+draw_previous_mode()
 
 // Pause for half a second on later levels
 const delay = if level == 0 then 0 else 30
 
-const t = max(modeFrames - delay, 0)
+const t = max(mode_frames - delay, 0)
 
 // Spin out
 const k = t² / 200
-setPostEffects({scale: 1 + max(0, k - 2), angle: -k, background: #a})
+set_post_effects({scale: 1 + max(0, k - 2), angle: -k, background: #a})
 
-if modeFrames > 80:
+if mode_frames > 80:
    if size(snakeArray) > 1 and level >= numLevels:
-      setMode(GameOver) because "Multiplayer levels done"
+      set_mode(GameOver) because "Multiplayer levels done"
    else:
-      setMode(LevelTitle) because "Animation end"
+      set_mode(LevelTitle) because "Animation end"

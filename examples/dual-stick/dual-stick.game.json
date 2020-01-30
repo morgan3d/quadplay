@@ -16,5 +16,5 @@
         "speed": {"type": "number", "value": 0.5}
     },
     
-    "flipY": false
+    "flip_y": false
 }

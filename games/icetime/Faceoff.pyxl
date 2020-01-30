@@ -8,7 +8,7 @@ enter
 
 // Slightly offset from the center line to prevent faceoff goal spamming,
 // change randomply to vary advantages.
-startPosArray = [xy(-9, 7 + 2 rnd() - 1), xy(-50, 2), xy(9, -7 + 2 rnd() - 1), xy(50, -2)]
+startPosArray = [xy(-9, 7 + 2 random() - 1), xy(-50, 2), xy(9, -7 + 2 random() - 1), xy(50, -2)]
 
 // Add the puck back into the scene
 puck = {pos: xy(0, 0), z: 0, vel: xy(0, 0), restitution: 90%, mass: 1, owner: ∅, isPuck: true, maxSpeed: 4}
@@ -19,8 +19,8 @@ for player in playerArray: player.vel = xy(0, 0)
 frame
 ───────────────────────────────────────────────────────────────────────────────
 
-setTransform(xy(½ screenSize.x, ½ screenSize.y + 10), xy(1, -1))
-setClip({pos: xy(0, 20), z:-2048, size:xy(192, 90), zSize:4096})
+set_transform(xy(½ SCREEN_SIZE.x, ½ SCREEN_SIZE.y + 10), xy(1, -1))
+set_clip({pos: xy(0, 20), z:-2048, size:xy(192, 90), z_size:4096})
 
 drawScoreboard()
 drawNets()
@@ -43,15 +43,15 @@ for p < 4:
 if |referee.pos.x| > 0: referee.pos.x -= ½ sign(referee.pos.x)
 drawReferee(referee)
 
-if modeFrames < 20:
+if mode_frames < 20:
    // wait 
-else if modeFrames < 200:
+else if mode_frames < 200:
    // Skate in
    referee.animation = 1
    if referee.pos.y > 7: referee.pos.y -= ½
-else if modeFrames < 240:
+else if mode_frames < 240:
    referee.animation = 0
 else:
    referee.animation = 1
-   playAudioClip(dropAudioClip)
-   setMode(Play) because "Drop puck"
+   play_audio_clip(dropAudioClip)
+   set_mode(Play) because "Drop puck"

@@ -15,61 +15,61 @@ const flyOutEnd   = flyOutStart + levelTitle.flyOutFrames - 1
 
 
 def drawDescription(α):
-   drawText({font: largeFont,
+   draw_text({font: largeFont,
              text: "Level " + (level + 1) + "{font:font /" + numLevels + "}",
-             pos: xy(lerp(-50, ½ screenSize.x, α), 90), xAlign: "center",
+             pos: xy(lerp(-50, ½ SCREEN_SIZE.x, α), 90), x_align: "center",
              color: #f, outline: #0002, shadow: #0004, markup: true})
    
-   drawText({font: largeFont,
+   draw_text({font: largeFont,
              text: levelDescription,
-             pos: xy(lerp(screenSize.x + 50, ½ screenSize.x, α), 130),
-             xAlign: "center",
+             pos: xy(lerp(SCREEN_SIZE.x + 50, ½ SCREEN_SIZE.x, α), 130),
+             x_align: "center",
              color: #f, outline:#0002, shadow: #0})
 
    
 enter
 ────────────────────────────────────────────────────────────────────────
-resetTransform()
-resetClip()
-resetPostEffects()
+reset_transform()
+reset_clip()
+reset_post_effects()
 
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
-setBackground(location.background)
+set_background(location.background)
 
 if level > 0:
    drawScores()
 else:
    // Show controls
-   drawText(instructionsFont,
+   draw_text(instructionsFont,
             replace("[^][v][<][>] to move, (p) to pause", joy.prompt),
-            xy(½ screenSize.x, screenSize.y - 10),
+            xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10),
             #4, #0002, ∅, "center", "bottom")
 
 
-if modeFrames ≤ fadeInEnd:
+if mode_frames ≤ fadeInEnd:
    // Fade in
-   const α = (modeFrames - fadeInStart + 1) / fadeInFrames
-   setPostEffects({opacity: α})
+   const α = (mode_frames - fadeInStart + 1) / fadeInFrames
+   set_post_effects({opacity: α})
    
-else if modeFrames ≤ flyInEnd:
-   resetPostEffects()
+else if mode_frames ≤ flyInEnd:
+   reset_post_effects()
    // Fly in the title
-   const α = (modeFrames - flyInStart + 1) / levelTitle.flyInFrames
+   const α = (mode_frames - flyInStart + 1) / levelTitle.flyInFrames
    drawDescription(α)
    
-else if modeFrames ≤ holdEnd:
-   const α = (modeFrames - holdStart + 1) / levelTitle.holdFrames
+else if mode_frames ≤ holdEnd:
+   const α = (mode_frames - holdStart + 1) / levelTitle.holdFrames
    drawDescription(1)
 
-else if modeFrames ≤ flyOutEnd:
-   const α = (modeFrames - flyOutStart + 1) / levelTitle.flyOutFrames
+else if mode_frames ≤ flyOutEnd:
+   const α = (mode_frames - flyOutStart + 1) / levelTitle.flyOutFrames
    drawDescription(1 + α)
 
 else:
    // The Play mode will process the fade in over itself
-   setMode(Play) because "Animation end"
+   set_mode(Play) because "Animation end"
 
 

@@ -1,1 +1,1 @@
-drawText({font: font, text: "Hello, World!", pos: ½ screenSize, color: #f, xAlign: "center"})
+draw_text({font: font, text: "Hello, World!", pos: ½ SCREEN_SIZE, color: #f, x_align: "center"})

@@ -1,6 +1,6 @@
 {
     "url":          "kenney-alien-blue-16x32.png",
-    "spriteSize":   {"x": 16, "y": 32},
+    "sprite_size":   {"x": 16, "y": 32},
     "gutter":       0,
     "transpose":    true,
     "names":        {

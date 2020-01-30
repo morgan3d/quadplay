@@ -10,12 +10,12 @@ def processZamboni():
    x += Δx
    // Nothing else is on screen with the zamboni, so we can draw the reflection
    // in the main draw call.
-   drawSprite({sprite: zamboniSprite, pos: project(xy(x, y)), scale: xy(Δx, 1)})
+   draw_sprite({sprite: zamboniSprite, pos: project(xy(x, y)), scale: xy(Δx, 1)})
 
    if |x| <= 72: return
    
-   if Δx > 0: addFrameHook(moveUp, nil, 21)
-   else:      addFrameHook(moveDown, nil, 7)
+   if Δx > 0: add_frame_hook(moveUp, nil, 21)
+   else:      add_frame_hook(moveDown, nil, 7)
    
    Δx = -Δx
    x += 4 Δx
@@ -42,12 +42,12 @@ for player in playerArray:
 frame
 ───────────────────────────────────────────────────────────────────────────────
 
-setTransform(xy(½ screenSize.x, ½ screenSize.y + 10), xy(1, -1), 0, 1)
-setClip({pos:xy(0, 20), z:-2048, size:xy(192, 90), zSize:4096})
+set_transform(xy(½ SCREEN_SIZE.x, ½ SCREEN_SIZE.y + 10), xy(1, -1), 0, 1)
+set_clip({pos:xy(0, 20), z:-2048, size:xy(192, 90), z_size:4096})
 
 drawScoreboard()
 
-if modeFrames < 120:
+if mode_frames < 120:
    // Skate off
    drawNets()
    
@@ -63,7 +63,7 @@ if modeFrames < 120:
       
       drawPlayer(player)
       
-else if modeFrames < 966:
+else if mode_frames < 966:
    processZamboni()
 else:
-   setMode(Faceoff) because "Time"
+   set_mode(Faceoff) because "Time"

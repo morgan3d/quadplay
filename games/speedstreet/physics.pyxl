@@ -1,7 +1,7 @@
 
 /* Snap to nearest ODD layer, which is where collision data are stored. */
 def transformDrawZToMapSolidLayer(z):
-   const layer = floor(transformDrawZToMapLayer(cityMap, z))
+   const layer = floor(transform_draw_z_to_map_layer(cityMap, z))
    return layer + 1 - (layer bitand 1)
 
 
@@ -25,7 +25,7 @@ def roomForBike(bike, z):
       
       testPoint.x = bike.pos.x + lerp(-xClearance, +xClearance, α)
       const S = surfacePointUnder(testPoint, z)
-      //debugPrint("" + unparse(S) + ", " + yThreshold)
+      //debug_print("" + unparse(S) + ", " + yThreshold)
       if S.y > yThreshold:
          // Hit something
          return false
@@ -39,18 +39,18 @@ def roomForBike(bike, z):
     under pos, up to a maximum step count. */
 def surfacePointUnder(pos, z):
    // Pixel step in map coords
-   const pixelMapStepY = 1 / cityMap.spriteSize.y;
+   const pixelMapStepY = 1 / cityMap.sprite_size.y;
 
    // Make large steps at first, since the map is guaranteed
    // to have objects that are at least this thick in pixels
    const coarseScale = 4;
-   const coarseMapStepY = coarseScale / cityMap.spriteSize.y;
+   const coarseMapStepY = coarseScale / cityMap.sprite_size.y;
 
    // Worst case, span maxSteps * coarseScale pixels
    const maxSteps = 64
 
    const layer = transformDrawZToMapSolidLayer(z)
-   let mapPos = transformDrawToMap(cityMap, pos)
+   let mapPos = transform_draw_to_map(cityMap, pos)
    
    // Offset the y by z
    mapPos.y += (cityMap.zScale * (layer - 9) * skewY) * pixelMapStepY
@@ -60,7 +60,7 @@ def surfacePointUnder(pos, z):
 
    // Coarse search
    for coarseSteps < maxSteps:
-      const color = getMapPixelColor(cityMap, mapPos, layer)
+      const color = get_map_pixel_color(cityMap, mapPos, layer)
       if color and (color.a > 0.5):
          // Hit a solid pixel.
          //
@@ -68,7 +68,7 @@ def surfacePointUnder(pos, z):
          // looking for an empty pixel.
          mapPos.y += pixelMapStepY
          for fineSteps <= coarseScale:
-            const color = getMapPixelColor(cityMap, mapPos, layer)
+            const color = get_map_pixel_color(cityMap, mapPos, layer)
             if not color or (color.a <= 0.5):
                // Hit an empty pixel
                pixelPos.x = pos.x; pixelPos.y = pos.y - coarseSteps * coarseScale + fineSteps
@@ -88,10 +88,10 @@ def surfacePointUnder(pos, z):
     testing the collision layers of the map. */
 def isSolid(pos, z):
    const layer = transformDrawZToMapSolidLayer(z)
-   let mapPos = transformDrawToMap(cityMap, pos)
+   let mapPos = transform_draw_to_map(cityMap, pos)
    // Offset the y by z
-   mapPos.y += (cityMap.zScale * (layer - 9) * skewY) / cityMap.spriteSize.y
-   const color = getMapPixelColor(cityMap, mapPos, layer)
+   mapPos.y += (cityMap.zScale * (layer - 9) * skewY) / cityMap.sprite_size.y
+   const color = get_map_pixel_color(cityMap, mapPos, layer)
    return color and (color.a > 0.5)
 
 
@@ -100,7 +100,7 @@ def simulateBike(bike):
    // Has the bike touched down in the past few frames
    // (have to use full frames instead of simulation microframes
    // to smooth out boucing effects)
-   const recent = modeFrames - 5
+   const recent = mode_frames - 5
    bike.recentRearWheelContact = bike.rearWheelContactFrame > recent
    bike.recentFrontWheelContact = bike.frontWheelContactFrame > recent
    
@@ -131,7 +131,7 @@ def simulateBike(bike):
       wheelForce = bikeAcceleration * mass * lerp(1, 1 - groundDerivative, 50%)
 
    if debugZOrder:
-      wheelForce = pad[bike.playerIndex].x * mass * 0.1
+      wheelForce = gamepad_array[bike.playerIndex].x * mass * 0.1
 
    // On rough ground, apply more friction. Default to air resistance only
    let xEnergyPreservation = 99.98%
@@ -173,10 +173,10 @@ def simulateBike(bike):
       rearWheelContact = rearWheelContact or (max(bike.atomArray[0].normal.y, bike.atomArray[1].normal.y) > epsilon)
       frontWheelContact = frontWheelContact or (max(bike.atomArray[3].normal.y, bike.atomArray[4].normal.y) > epsilon)
       
-      entitySimulate(bike, 1 / physicsSteps)
+      entity_simulate(bike, 1 / physicsSteps)
 
-   if rearWheelContact: bike.rearWheelContactFrame = modeFrames
-   if frontWheelContact: bike.frontWheelContactFrame = modeFrames
+   if rearWheelContact: bike.rearWheelContactFrame = mode_frames
+   if frontWheelContact: bike.frontWheelContactFrame = mode_frames
 
    // Find the surface under the bike. We update this *after*
    // the simulation so that it can be used for the shadow during
@@ -194,7 +194,7 @@ def computeContactForces(body):
       // Reset accumulated properties
       atom.normal.x = atom.normal.y = 0
       atom.minDist2 = infinity
-      let drawPos = transformEntityToDraw(body, atom.pos)
+      let drawPos = transform_entity_to_draw(body, atom.pos)
 
       // Derivation for general case:
       //   atom.normal = getMapNormalByDrawCoord(map, drawPos, atom.z)
@@ -219,9 +219,9 @@ def computeContactForces(body):
 def drawBody(b, color):
    // Draw the atoms
    for atom in b.atomArray:
-      const drawPos = transformEntityToDraw(b, atom.pos)
-      drawLine(b.pos, drawPos, #FFF, b.z)
-      drawDisk(drawPos, 2, color, nil, b.z)
+      const drawPos = transform_entity_to_draw(b, atom.pos)
+      draw_line(b.pos, drawPos, #FFF, b.z)
+      draw_disk(drawPos, 2, color, nil, b.z)
 
    // Draw the center of the object
-   drawDisk(b.pos, 4, color, nil, b.z)
+   draw_disk(b.pos, 4, color, nil, b.z)

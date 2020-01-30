@@ -93,9 +93,9 @@ const league = [
 
 /** Choose a random team with a different league index */
 def createRandomDifferentTeam(team):
-   let t = rndValue(league)
+   let t = random_value(league)
    while t.leagueIndex == team.leagueIndex:
-      t = rndValue(league)
+      t = random_value(league)
    return clone(t)
    
 
@@ -103,20 +103,20 @@ for i < size(league): league[i].leagueIndex = i
 
 
 def drawScoreboard():
-   preservingTransform:
-      setTransform(xy(0, screenSize.y), xy(1, -1))
-      resetClip()
+   preserving_transform:
+      set_transform(xy(0, SCREEN_SIZE.y), xy(1, -1))
+      reset_clip()
 
       // Logos
       for team in teamArray:
          const logoX = 28 + 22 team.sideX
-         drawSprite(team.spriteSheet[4][0], xy(logoX, 106))
-         drawText({text: team.name + formatNumber(team.score, "  0"), font: scoreFont, color:#f, pos:xy(logoX + 7, 111), xAlign: "left", yAlign: "top"})
+         draw_sprite(team.spriteSheet[4][0], xy(logoX, 106))
+         draw_text({text: team.name + format_number(team.score, "  0"), font: scoreFont, color:#f, pos:xy(logoX + 7, 111), x_align: "left", y_align: "top"})
 
-      drawText({text: periodName[period] + " " + formatNumber(floor(time / 60), " 0") + ":" + formatNumber(time mod 60, "00"), font: scoreFont, color:#2, pos: xy(91,111), xAlign: "left", yAlign: "top"})
+      draw_text({text: periodName[period] + " " + format_number(floor(time / 60), " 0") + ":" + format_number(time mod 60, "00"), font: scoreFont, color:#2, pos: xy(91,111), x_align: "left", y_align: "top"})
 
       // Stats data:
-      //drawText({text: "BUKOWSKI: 12 SAVES", font: tinyFont, color:#a, pos: xy(2, 97), xAlign: "left"})
+      //draw_text({text: "BUKOWSKI: 12 SAVES", font: tinyFont, color:#a, pos: xy(2, 97), x_align: "left"})
 
 
       
@@ -124,8 +124,8 @@ def drawNets():
    for net in netArray:
       const pos = project(net.pos, 0)
       const scale = xy(-sign(pos.x), 1)
-      drawSprite({sprite: netSprite[0][0], pos: pos + xyz(0, 3, 0), z: pos.z, scale: scale})
-      drawSprite({sprite: netSprite[0][1], pos: pos - xyz(0, 4, 0), z: pos.z - 100, scale: scale})
+      draw_sprite({sprite: netSprite[0][0], pos: pos + xyz(0, 3, 0), z: pos.z, scale: scale})
+      draw_sprite({sprite: netSprite[0][1], pos: pos - xyz(0, 4, 0), z: pos.z - 100, scale: scale})
       
 
       
@@ -144,7 +144,7 @@ def insideCrease(pos):
    
 
 def createGame():
-   setBackground(rinkSprite)
+   set_background(rinkSprite)
 
    period = 0
    time = secondsPerPeriod

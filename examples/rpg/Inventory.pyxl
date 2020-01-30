@@ -1,4 +1,2 @@
 drawInventory()
-
-for P in pad: if P.qq: pushMode(Pause, "Press ⓠ")
-if joy.pp or joy.bb: popMode("ⓟ or ⓑ")
+if joy.qq or joy.bb: pop_mode("ⓟ or ⓑ")

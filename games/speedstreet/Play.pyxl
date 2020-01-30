@@ -1,6 +1,6 @@
 Play
 ═══════════════════════════════════════════════════════════════════════════════
-const mapWidthPixels = cityMap.size.x * cityMap.spriteSize.x
+const mapWidthPixels = cityMap.size.x * cityMap.sprite_size.x
 
 // Bike shadow as a function of relative x
 const shadowColor = []
@@ -22,7 +22,7 @@ def loopBikes():
    camera.pos.x -= mapWidthPixels
    for bike in bikeArray:
       bike.pos.x -= mapWidthPixels
-      entityUpdateChildren(bike)
+      entity_update_children(bike)
       for pos in bike.surfacePos:
          pos.x -= mapWidthPixels
 
@@ -34,21 +34,21 @@ const shiftY = 96
    
 frame
 ───────────────────────────────────────────────────────────────────────────────
-setBackground(#faed80)
+set_background(#faed80)
 
 // Choose SOME transformation that has an inverted y-axis
 // for the physics processing. We'll change the transformation
 // after simulation for rendering based on the x positions of
 // the bikes.
-setTransform(xy(½ screenSize.x - bikeArray[0].pos.x, screenSize.y), xy(1, -1), 0, 1, xy(0, skewY))
+set_transform(xy(½ SCREEN_SIZE.x - bikeArray[0].pos.x, SCREEN_SIZE.y), xy(1, -1), 0, 1, xy(0, skewY))
 
-const wheelFrame = ⌊½ modeFrames⌋ mod 4
+const wheelFrame = ⌊½ mode_frames⌋ mod 4
 
 // How far can the pack be spread?
 let spreadThreshold = {min: -∞, max: ∞}
 let bounds = getBounds(bikeArray)
 with min, max in bounds:
-   if max.x - min.x ≥ ½ screenSize.x:
+   if max.x - min.x ≥ ½ SCREEN_SIZE.x:
       spreadThreshold = {min: lerp(min.x, max.x, 25%),
                          max: lerp(min.x, max.x, 95%)}
 
@@ -62,7 +62,7 @@ for bike in bikeArray:
    bike.rearWheel.sprite = wheelSprite[0][(wheelFrame + 1) mod 4]
 
    // Make moving in z have some velocity and not allow driving into walls
-   bike.zVel = mid(-1, 92% bike.zVel - pad[bike.playerIndex].y * bikeZAcceleration, +1)
+   bike.zVel = mid(-1, 92% bike.zVel - gamepad_array[bike.playerIndex].y * bikeZAcceleration, +1)
    if |bike.zVel| > 0.08:
       // Look ahead by up to 2x velocity
       if roomForBike(bike, bike.z + 2 sign(bike.zVel)):
@@ -71,8 +71,8 @@ for bike in bikeArray:
          // Cannot move into a wall
          bike.zVel = 0
 
-   bike.spin -= pad[bike.playerIndex].x * bikeTurn
-   //bike.engine.offsetInParent = xy(0, oscillate(modeFrames / 25, 1) - 1)
+   bike.spin -= gamepad_array[bike.playerIndex].x * bikeTurn
+   //bike.engine.offset_in_parent = xy(0, oscillate(mode_frames / 25, 1) - 1)
 
    // Significantly accelerate the bikes that are behind (which nobody complains about)
    // and slightly slow down the bikes that are ahead (to avoid cumulative excess
@@ -86,7 +86,7 @@ for bike in bikeArray:
 
    minBikeVel = min(minBikeVel, bike.vel.x)
    
-   entityUpdateChildren(bike)
+   entity_update_children(bike)
 
    // Detect crashes by testing an arc around the top and slightly above the center.
    // The first and last points are not used  
@@ -116,19 +116,19 @@ bounds = getBounds(bikeArray)
 // between what is desired and the current camera transform, or
 // if the camera should be close to the baseline but isn't.
 local:
-   const targetCameraY = ½ (bounds.max.y + bounds.min.y - screenSize.y) + shiftY
+   const targetCameraY = ½ (bounds.max.y + bounds.min.y - SCREEN_SIZE.y) + shiftY
    const Δy = targetCameraY - camera.pos.y
    if |Δy| > 36 or (|targetCameraY| < 16 and |Δy| > 24):
       camera.pos.y = mid(-48, camera.pos.y + sign(Δy), 64)
 
-   const targetCameraX = ½ (bounds.max.x + bounds.min.x) - ⅓ screenSize.x
+   const targetCameraX = ½ (bounds.max.x + bounds.min.x) - ⅓ SCREEN_SIZE.x
    const Δx = targetCameraX - camera.pos.x
    // When a bike suddenly disappears and adjusts the target
    // camera position, don't ever move the camera backwards
    // or allow it to move faster than the fastest bike or
    // slower than the slowest bike.
    camera.pos.x += min(max(Δx, minBikeVel), bikeMaxSpeed)
-   setTransform(xy(-camera.pos.x, screenSize.y + camera.pos.y - shiftY))
+   set_transform(xy(-camera.pos.x, SCREEN_SIZE.y + camera.pos.y - shiftY))
 
 
 // Draw bikes
@@ -136,12 +136,12 @@ for bike in bikeArray:
    // Shadow
    const shadowZ = bike.z - ε
    let prev = bike.surfacePos[0]
-   if prev: drawCornerRect(prev, xy(2, 2), shadowColor[0], nil, shadowZ)
+   if prev: draw_corner_rect(prev, xy(2, 2), shadowColor[0], nil, shadowZ)
    for 1 ≤ i < bike.surfacePos.length:
       const curr = bike.surfacePos[i]
       if prev and curr:
-         //drawLine(lerp(prev, curr, 50%), lerp(prev, curr, 50%) + xy(0, 1), shadowColor[i], shadowZ)
-         drawCornerRect(curr, xy(2, 2), shadowColor[i], nil, shadowZ)
+         //draw_line(lerp(prev, curr, 50%), lerp(prev, curr, 50%) + xy(0, 1), shadowColor[i], shadowZ)
+         draw_corner_rect(curr, xy(2, 2), shadowColor[i], nil, shadowZ)
       prev = curr
 
    if debugPhysics: // visualize sensor points
@@ -152,7 +152,7 @@ for bike in bikeArray:
          const θ = bike.angle + π i / N
          const testPoint = center + 7 xy(cos(θ), sin(θ))
          // Draw the test points
-         drawPoint(testPoint, #f00, bike.z - 1)
+         draw_point(testPoint, #f00, bike.z - 1)
       
    // Blinking
    bike.blinkFrames = max(0, bike.blinkFrames - 1)
@@ -161,55 +161,55 @@ for bike in bikeArray:
    else:
       setOverrideColor(bike, #fff)
 
-   drawEntity(bike)
+   draw_entity(bike)
 
    // Show current combo
    const uiPos = bike.pos + xy(0, 20)
-   const xAlign = "center"
+   const x_align = "center"
    const uiDir = 1
    const uiZ = bike.z + 1
    with description, points, minimumPoints in bike.currentTrick:
       if points >= minimumPoints:
          // Locked in trick that is still scoring
-         uiPos.y += drawText(trickFont, description + " (" + points + ") +", uiPos, #fff, #000, bike.darkColor, xAlign, "baseline", uiZ).y
+         uiPos.y += draw_text(trickFont, description + " (" + points + ") +", uiPos, #fff, #000, bike.darkColor, x_align, "baseline", uiZ).y
       else if points > 0 and (size(bike.combo) > 0):
          // Scoring potential points, but not yet over the threshold to lock in
          // and no combo is in progress
-         uiPos.y += drawText(trickFont, description + " …", uiPos, #fff, #000, bike.darkColor, xAlign, "baseline", uiZ).y
+         uiPos.y += draw_text(trickFont, description + " …", uiPos, #fff, #000, bike.darkColor, x_align, "baseline", uiZ).y
 
    // list in reverse order
    uiPos.y += 7 (size(bike.combo) - 1)
    for description, points in trick in bike.combo:
-      uiPos.y -= drawText(trickFont, description + " (" + points + ") + ", uiPos, #ddd, ∅, bike.darkColor, xAlign, "baseline", uiZ).y
+      uiPos.y -= draw_text(trickFont, description + " (" + points + ") + ", uiPos, #ddd, ∅, bike.darkColor, x_align, "baseline", uiZ).y
 
 
 
    
    
 // HUD UI
-preservingTransform:
-   resetTransform()
+preserving_transform:
+   reset_transform()
    for bike in bikeArray:
       const uiDir = 1 - 2 ⌊½ bike.playerIndex⌋
-      const uiPos = xy(44, 10) + xy(bike.playerIndex mod 2, ⌊½ bike.playerIndex⌋) * (screenSize - xy(50, 14))
-      uiPos.y += (drawText(font, formatNumber(round(bike.score), "commas"), uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).y + 1) * uiDir
-      uiPos.y += (drawText(hudFont, "+ " + formatNumber(bike.scoreModifier - 1, "percent"), uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).y + 1) * uiDir
+      const uiPos = xy(44, 10) + xy(bike.playerIndex mod 2, ⌊½ bike.playerIndex⌋) * (SCREEN_SIZE - xy(50, 14))
+      uiPos.y += (draw_text(font, format_number(round(bike.score), "commas"), uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).y + 1) * uiDir
+      uiPos.y += (draw_text(hudFont, "+ " + format_number(bike.scoreModifier - 1, "percent"), uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).y + 1) * uiDir
 
       if debugTricks and false:
-         uiPos.y += drawText(font, "Front: " + bike.recentFrontWheelContact, uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).y * uiDir
-         uiPos.y += drawText(font, "Rear: " + bike.recentRearWheelContact, uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).y * uiDir
+         uiPos.y += draw_text(font, "Front: " + bike.recentFrontWheelContact, uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).y * uiDir
+         uiPos.y += draw_text(font, "Rear: " + bike.recentRearWheelContact, uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).y * uiDir
 
       
 
 // Depth fog for debugging z-order
 if debugZOrder:
-   preservingTransform:
-      resetTransform()
-      for -4 <= z <= 4: drawCornerRect(xy(0,0), screenSize, rgba(1,1,1,8%), ∅, z + 0.5)
+   preserving_transform:
+      reset_transform()
+      for -4 <= z <= 4: draw_corner_rect(xy(0,0), SCREEN_SIZE, rgba(1,1,1,8%), ∅, z + 0.5)
 
 // Alternating layers of the map in the center are the collision data, which
 // should be invisible. Draw only the even layers with graphics on
 // them
-drawMap(cityMap, 0, 3)
-for 2 <= i <= 6: drawMap(cityMap, 2 i, 2 i)
-drawMap(cityMap, 14)
+draw_map(cityMap, 0, 3)
+for 2 <= i <= 6: draw_map(cityMap, 2 i, 2 i)
+draw_map(cityMap, 14)

@@ -6,7 +6,7 @@
 
     "packages":   [],
     "scripts":    ["rpg.pyxl"],
-    "modes":      ["Title*", "Play", "Credits", "Win", "Inventory", "Shop", "GameOver", "Pause"],
+    "modes":      ["Title*", "Play", "Credits", "Win", "Inventory", "Shop", "GameOver"],
     "assets":     {
         "castleMap": "castle.map.json",
         "smallFont": "quad://fonts/deja-8.font.json",

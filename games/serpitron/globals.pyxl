@@ -1,5 +1,5 @@
 // Pixel width of the info screens on the left and right
-const INFO_HEIGHT = ½ (screenSize.y - playSize.y)
+const INFO_HEIGHT = ½ (SCREEN_SIZE.y - playSize.y)
 
 // Game world state
 let snakeArray
@@ -79,11 +79,11 @@ def makeSnake(playerIndex, control, colorName):
       growIndex:     ∅,
       growScale:     100%,
       infoPos:       xy(260 (playerIndex mod 2) + 85,
-                        ⌊½ playerIndex⌋ * (screenSize.y - INFO_HEIGHT))
+                        ⌊½ playerIndex⌋ * (SCREEN_SIZE.y - INFO_HEIGHT))
    }
 
-   snake.color = getSpritePixelColor(snake.headSprite, xy(9, 6))
-   snake.textColor = 160% snake.color
+   snake.color = get_sprite_pixel_color(snake.headSprite, xy(9, 6))
+   snake.text_color = 160% snake.color
    for i < 3 startSnakeBody + 1:
       push(snake.body, {angle: 0, pos: xy(0, 0)})
 
@@ -95,19 +95,19 @@ def makeSnake(playerIndex, control, colorName):
 // one or both are empty
 def concat(...args):
    const array = [...args]
-   removeValues(array, "")
+   remove_values(array, "")
    return join(array, " ")
 
 
 def playPositionalAudioClip(audioClip, pos):
-   return playAudioClip({audioClip: audioClip, pan: 80% (2 pos.x / playSize.x - 1)})
+   return play_audio_clip({audioClip: audioClip, pan: 80% (2 pos.x / playSize.x - 1)})
 
 
 def randomEmptyPosition():
    let pos = ∅
    while not pos or samplePosition(pos, ½ cellSide, true):
-      pos = xy(rndInt(1, ⌊playSize.x / cellSide - 2⌋),
-               rndInt(1, ⌊playSize.y / cellSide - 2⌋)) * cellSide
+      pos = xy(random_integer(1, ⌊playSize.x / cellSide - 2⌋),
+               random_integer(1, ⌊playSize.y / cellSide - 2⌋)) * cellSide
 
    return pos
 
@@ -156,23 +156,23 @@ def samplePosition(pos, radius, allowGhosts, ignorePowerups, safeSnakeHead):
 
 def drawScores():
    // Draw the top and bottom reserved areas
-   drawCornerRect(xy(0, 0), xy(screenSize.x, INFO_HEIGHT), #000)
-   drawCornerRect(xy(0, screenSize.y - INFO_HEIGHT), xy(screenSize.x, INFO_HEIGHT), #000)
+   draw_corner_rect(xy(0, 0), xy(SCREEN_SIZE.x, INFO_HEIGHT), #000)
+   draw_corner_rect(xy(0, SCREEN_SIZE.y - INFO_HEIGHT), xy(SCREEN_SIZE.x, INFO_HEIGHT), #000)
 
-   for textColor, score, playerIndex, infoPos in snake in snakeArray:
-      drawText({font:   font,
-                text:   formatNumber(score, "commas") + "/P" + (1 + playerIndex),
-                color:  textColor,
+   for text_color, score, playerIndex, infoPos in snake in snakeArray:
+      draw_text({font:   font,
+                text:   format_number(score, "commas") + "/P" + (1 + playerIndex),
+                color:  text_color,
                 pos:    infoPos,
-                xAlign: "right",
-                yAlign: "top",
+                x_align: "right",
+                y_align: "top",
                 z:      1})
    
-      if snake.hasGun: drawSprite(hatSpritesheet.cowboy, infoPos + xy(6, 6))
+      if snake.hasGun: draw_sprite(hatSpritesheet.cowboy, infoPos + xy(6, 6))
 
    
    if size(snakeArray) > 1:
       // Show hats in multiplayer mode
-      if not snakeArray[0].hasGun: drawSprite(hatSpritesheet.crown, snakeArray[0].infoPos + xy(6, 6))
-      if size(snakeArray) > 2 and not snakeArray[1].hasGun: drawSprite(hatSpritesheet.tiara, snakeArray[1].infoPos + xy(6, 6))
-      if not lastValue(snakeArray).hasGun: drawSprite(hatSpritesheet.beanie, lastValue(snakeArray).infoPos + xy(6, 6))
+      if not snakeArray[0].hasGun: draw_sprite(hatSpritesheet.crown, snakeArray[0].infoPos + xy(6, 6))
+      if size(snakeArray) > 2 and not snakeArray[1].hasGun: draw_sprite(hatSpritesheet.tiara, snakeArray[1].infoPos + xy(6, 6))
+      if not last_value(snakeArray).hasGun: draw_sprite(hatSpritesheet.beanie, last_value(snakeArray).infoPos + xy(6, 6))

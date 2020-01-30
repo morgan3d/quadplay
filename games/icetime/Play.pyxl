@@ -25,14 +25,14 @@ def processPuck(puck):
          // less generous if in the crease, less generous if in the first two
          // seconds after a faceoff.
          let threshold = 6
-         if owner or modeFrames < 120: threshold = 3
+         if owner or mode_frames < 120: threshold = 3
          if insideCrease(pos): threshold = 2
          if closestDistance ≤ threshold:
             // Pick up
             owner = closestPlayer
-            if modeFrames - lastChop > 20:
-               lastChop = modeFrames
-               playAudioClip({audioClip: chopAudioClip, pan: puck.pos.x / 100, volume: 50% + 50% rnd(), pitch: 70% + 20% rnd()})
+            if mode_frames - lastChop > 20:
+               lastChop = mode_frames
+               play_audio_clip({audioClip: chopAudioClip, pan: puck.pos.x / 100, volume: 50% + 50% random(), pitch: 70% + 20% random()})
 
       // Celebrating loses puck ownership
       if owner and owner.pad.d: owner = ∅
@@ -54,7 +54,7 @@ def processPuck(puck):
                vel = (if ‖vel‖ > 0.2
                       then 2.5 direction(vel) + xy(2 owner.faceX, 0)
                       else xy(4 owner.faceX, 0))
-            playAudioClip({audioClip: shootAudioClip, pan: pos.x / 100, volume: 60% + ‖vel‖ / 200})
+            play_audio_clip({audioClip: shootAudioClip, pan: pos.x / 100, volume: 60% + ‖vel‖ / 200})
             owner = ∅
 
          else if owner.pad.bb:
@@ -62,7 +62,7 @@ def processPuck(puck):
             // for shooting so that this doesn't get used as an aimbot cheat
             const delta = owner.teammate.pos - pos
             vel = 1.7 direction(½ ‖delta‖ * owner.teammate.vel + delta)
-            playAudioClip({audioClip: passAudioClip, pan: pos.x / 100, volume: 50% + ‖delta‖ / 150})
+            play_audio_clip({audioClip: passAudioClip, pan: pos.x / 100, volume: 50% + ‖delta‖ / 150})
             owner = ∅
 
          // Passed or shot...get away from the previous owner
@@ -75,7 +75,7 @@ def processPuck(puck):
    simulate(puck)
    const proj = project(puck.pos, puck.z)
    // Keep slightly in front of the player
-   drawSprite({sprite: puckSprite, pos: proj, z: proj.z + 1})
+   draw_sprite({sprite: puckSprite, pos: proj, z: proj.z + 1})
 
 
 
@@ -84,14 +84,14 @@ enter
 ───────────────────────────────────────────────────────────────────────────────
 
 lastPuckMoveTime = lastBump = lastChop = 0
-skateLoopSound = playAudioClip(skateAudioClip, true, 120%)
+skateLoopSound = play_audio_clip(skateAudioClip, true, 120%)
 
 
 
 leave
 ───────────────────────────────────────────────────────────────────────────────
 
-stopSound(skateLoopSound)
+stop_sound(skateLoopSound)
 skateLoopSound = nil
 
 
@@ -99,8 +99,8 @@ skateLoopSound = nil
 frame
 ───────────────────────────────────────────────────────────────────────────────
 
-setTransform(xy(½ screenSize.x, ½ screenSize.y + 10), xy(1, -1), 0, 1)
-setClip({pos:xy(0, 20), z:-2048, size:xy(192, 90), zSize:4096})
+set_transform(xy(½ SCREEN_SIZE.x, ½ SCREEN_SIZE.y + 10), xy(1, -1), 0, 1)
+set_clip({pos:xy(0, 20), z:-2048, size:xy(192, 90), z_size:4096})
 
 drawScoreboard()
 
@@ -113,10 +113,10 @@ if puck:
 
 if time < 0:
    ++period
-   playAudioClip(whistleAudioClip)
+   play_audio_clip(whistleAudioClip)
    time = secondsPerPeriod
-   if period == 3: setMode(GameOver) because "'60' min"
-   else: setMode(Intermission) because "'20' min"
+   if period == 3: set_mode(GameOver) because "'60' min"
+   else: set_mode(Intermission) because "'20' min"
 
 
 drawNets()
@@ -130,12 +130,12 @@ if ξ < 0.5% and puck and |referee.pos.x| < 15: referee.vel.x = 0.3 sign(puck.po
 referee.vel *= 1 - iceFriction
 referee.pos += referee.vel
 
-if not puck or (‖puck.vel‖ > 0.01): lastPuckMoveTime = modeFrames
+if not puck or (‖puck.vel‖ > 0.01): lastPuckMoveTime = mode_frames
 
-if puck and modeFrames - lastPuckMoveTime > 60 * 15:
+if puck and mode_frames - lastPuckMoveTime > 60 * 15:
    // The puck hasn't moved for 15 seconds. Something is
    // clearly wrong. Reset by moving the puck with random velocity
-   puck.vel = 0.5 rndDir2D()
+   puck.vel = 0.5 random_direction2D()
 
 drawReferee(referee)
 
@@ -152,9 +152,9 @@ for player in playerArray:
       if other == player: continue
       const axis = other.pos - player.pos
       if ‖axis * xy(85%, 1)‖ <= 4 and dot(other.vel - player.vel, axis) < 0:
-         if modeFrames - lastBump > 20:
-            lastBump = modeFrames
-            playAudioClip({audioClip: bumpAudioClip, pan: player.pos.x / 100, pitch: 50% + 50% ξ})
+         if mode_frames - lastBump > 20:
+            lastBump = mode_frames
+            play_audio_clip({audioClip: bumpAudioClip, pan: player.pos.x / 100, pitch: 50% + 50% ξ})
          // Nearby and approaching: collide by swapping momentum
          const restitution = 1
          const ρ1 = player.vel * player.mass * restitution
@@ -164,7 +164,7 @@ for player in playerArray:
          if puck and (puck.owner == player or puck.owner == other):
             // Dislodge the puck from the current owner
             puck.owner = ∅
-            puck.vel += ½ rndDir2D()
+            puck.vel += ½ random_direction2D()
             puck.pos += puck.vel
          
 
@@ -175,4 +175,4 @@ for player in playerArray:
 if puck: processPuck(puck)
 
 // Hint for compiler:
-// setMode(Faceoff) because "Goal"
+// set_mode(Faceoff) because "Goal"

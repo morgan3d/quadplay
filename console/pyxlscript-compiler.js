@@ -171,7 +171,7 @@ function processForTest(test) {
         let container = gensym('cntnr'), keys = gensym('keys'), index = gensym('index'),
             cur = match[1], containerExpr = match[2].trim(), tmp = gensym('tmp'), N = gensym('N');
 
-        return [`for (let ${tmp} = ${containerExpr}, ${container} = isObject(${tmp}) ? _Object.keys(${tmp}) : _clone(${tmp}), ${N} = ${container}.length, ` +
+        return [`for (let ${tmp} = ${containerExpr}, ${container} = is_object(${tmp}) ? _Object.keys(${tmp}) : _clone(${tmp}), ${N} = ${container}.length, ` +
                 `${index} = 0; ${index} < ${N}; ++${index}) { let ${cur} = ${container}[${index}]; ${before} ` , after];
     } else {
         before = '{';
@@ -306,7 +306,7 @@ function processLine(line, inFunction) {
                 processLine(rest.substring(end + 1), inFunction) + '; ' + suffix;
             
         } // if control flow block
-    } else if (match = line.match(/^(\s*)(preservingTransform\s*:)(.*)/)) {
+    } else if (match = line.match(/^(\s*)(preserving_transform\s*:)(.*)/)) {
         // line is a control flow-affecting expresion
         let before = match[1], type = match[2], rest = match[3].trim() + '; ' + next;
 
@@ -327,13 +327,13 @@ function processLine(line, inFunction) {
             return before + type + ' ' + rest + ((next !== '') ? '; ' + processLine(next, inFunction) : ';');
         }
 
-    } else if (match = line.match(/^(\s*)(debugWatch)\s*(\(.+)/)) {
+    } else if (match = line.match(/^(\s*)(debug_watch)\s*(\(.+)/)) {
         let before = match[1];
         let rest = match[3];
         let closeIndex = findMatchingParen(rest, 0, +1);
 
         let watchExpr = rest.substring(1, closeIndex - 1);
-        return before + '(_debugWatchEnabled && _debugWatch("' + watchExpr.replace(/"/g, '\"') + '", ' + watchExpr + ')); ' + processLine(rest.substring(closeIndex + 1), inFunction);
+        return before + '(_debugWatchEnabled && _debug_watch("' + watchExpr.replace(/"/g, '\"') + '", ' + watchExpr + ')); ' + processLine(rest.substring(closeIndex + 1), inFunction);
         
     } else {
         // Recursively process the next expression. 
@@ -488,7 +488,7 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode) {
             i = processBlock(lineArray, i + 1, inFunction, internalMode) - 1;
             lineArray[i] += '}';
 
-        } else if (match = lineArray[i].match(/^(\s*)preservingTransform[ \t]*:[ \t]*$/)) {
+        } else if (match = lineArray[i].match(/^(\s*)preserving_transform[ \t]*:[ \t]*$/)) {
             // PRESERVING TRANSFORM
             
             let prefix = match[1];
@@ -802,7 +802,7 @@ function pyxlToJS(src, noYield, internalMode) {
             }
 
             // Insert BECAUSE for state changes that do not use them already
-            line = lineArray[i] = line.replace(/(^|[^,])((?:setMode|pushMode|popMode|launchGame|resetGame|quitGame)[ \t]*\()/g, '$1because("");$2');
+            line = lineArray[i] = line.replace(/(^|[^,])((?:set_mode|push_mode|pop_mode|launch_game|reset_game|quit_game)[ \t]*\()/g, '$1because("");$2');
 
             // Look for mismatched if/then/else (conservative test, misses some)
             const ifCount = countRegexOccurences(line, /\bif\b/g);
@@ -942,7 +942,7 @@ function pyxlToJS(src, noYield, internalMode) {
     src = src.replace(/∪(=?)/g, ' |$1 ');
 
     // Optimize var**(int), which is much less efficient than var*var.
-    // Note that we don't allow rnd (ξ) in here, as it is not constant!
+    // Note that we don't allow random (ξ) in here, as it is not constant!
     src = src.replace(RegExp('(.|..)[ \t]*(' + identifierPattern + ')\\*\\*\\((-?\\d)\\)', 'g'), function (match, br, identifier, exponent) {
 
         if (br.match(/\+\+|--|\.|\*\*/)) {
@@ -966,7 +966,7 @@ function pyxlToJS(src, noYield, internalMode) {
     src = src.replace(/∅|\bnil\b/g,       ' (undefined) ');
     src = src.replace(/π|\bpi\b/g,        ' (_Math.PI+0) ');
     src = src.replace(/ε|\bepsilon\b/g,   ' (1e-7+0) ');
-    src = src.replace(/ξ/g,               ' rnd() ');
+    src = src.replace(/ξ/g,               ' random() ');
 
     // Must come after exponentiation because it uses the same character
     src = src.replace(/⊕(=?)/g, ' ^$1 ');
@@ -981,7 +981,8 @@ function pyxlToJS(src, noYield, internalMode) {
     });
 
     // Debug statements
-    src = src.replace(/\b(assert|debugPrint)\b/g, '_$1Enabled && $1');
+    src = src.replace(/\bassert\b/g, '_assertEnabled && assert');
+    src = src.replace(/\bdebug_print\b/g, '_debugPrintEnabled && debug_print');
 
     try {
         src = vectorify(src, {assignmentReturnsUndefined:true, scalarEscapes:true});
@@ -1017,8 +1018,8 @@ function compile(gameSource, fileContents, isOS) {
     // Protect certain variables by shadowing them, since programs
     // that overwrite (or read!) them could cause problems.
     let compiledProgram = 'const _Object = {}.constructor; let navigator, parent, Object, Array, String, Number, location, document, window, print, Math, RegExp, Date; \n';
-    if (gameSource.json.flipY) {
-        compiledProgram += 'setTransform(xy(0, screenSize.y), xy(1, -1), 0, 1);\n;';
+    if (gameSource.json.flip_y) {
+        compiledProgram += 'set_transform(xy(0, SCREEN_SIZE.y), xy(1, -1), 0, 1);\n;';
     }
     compiledProgram += separator;
     
@@ -1038,7 +1039,7 @@ function compile(gameSource, fileContents, isOS) {
     }
     
     const doubleLineChars = '=═⚌';
-    const splitRegex = RegExp(String.raw`(?:^|\n)[ \t]*(init|enter|frame|leave|popMode|[_A-Z]${identifierPattern})[ \t]*(\([^\n\)]*\))?[\t ]*(\bfrom[ \t]+[_A-Za-z][A-Za-z_0-9]*)?\n((?:-|─|—|━|⎯|=|═|⚌){5,})[ \t]*\n`);
+    const splitRegex = RegExp(String.raw`(?:^|\n)[ \t]*(init|enter|frame|leave|pop_mode|[_A-Z]${identifierPattern})[ \t]*(\([^\n\)]*\))?[\t ]*(\bfrom[ \t]+[_A-Za-z][A-Za-z_0-9]*)?\n((?:-|─|—|━|⎯|=|═|⚌){5,})[ \t]*\n`);
 
     // Compile each mode
     for (let i = 0; i < gameSource.modes.length; ++i) {
@@ -1060,7 +1061,7 @@ function compile(gameSource, fileContents, isOS) {
         const noSections = ! splitRegex.test(file);
 
         // Initalize the table. Note that the top-level mode code will be moved into
-        // the "init" section, which cannot be explicitly declared. Each popMode is mangled
+        // the "init" section, which cannot be explicitly declared. Each pop_mode is mangled
         // to include the "from" mode's name, and then added as encountered.
         const sectionTable = {init:null, enter:null, leave:null, frame:null};
         for (let name in sectionTable) {
@@ -1090,12 +1091,12 @@ function compile(gameSource, fileContents, isOS) {
                 // defining variables.
 
                 line += 1;
-                if ((name !== 'enter') && (name !== 'popMode') && (args !== undefined)) { throw {url:mode.url, lineNumber:line, message:'Only the enter() and popMode() sections in a mode may take arguments'}; }
+                if ((name !== 'enter') && (name !== 'pop_mode') && (args !== undefined)) { throw {url:mode.url, lineNumber:line, message:'Only the enter() and pop_mode() sections in a mode may take arguments'}; }
 
-                if (name === 'popMode') {
+                if (name === 'pop_mode') {
                     // Generate the section
                     const otherMode = from.replace(/^from[\t ]*/,'');
-                    if (otherMode[0] === '_' && ! (internalMode || isOS)) { throw {url:mode.url, lineNumber:line, message:'Illegal mode name in popMode() from section: "' + otherMode + '"'}; }
+                    if (otherMode[0] === '_' && ! (internalMode || isOS)) { throw {url:mode.url, lineNumber:line, message:'Illegal mode name in pop_mode() from section: "' + otherMode + '"'}; }
                     name = name + 'From' + otherMode;
                     sectionTable[name] = {pyxlCode: '', args: '()', jsCode: '', offset: 0};
                 }
@@ -1112,7 +1113,7 @@ function compile(gameSource, fileContents, isOS) {
             sectionTable.frame.pyxlCode = file;
         }
 
-        let wrappedPopModeFromCode = '', popModeBindings = '';
+        let wrappedPopModeFromCode = '', pop_modeBindings = '';
         
         for (let name in sectionTable) {
             const section = sectionTable[name];
@@ -1124,12 +1125,12 @@ function compile(gameSource, fileContents, isOS) {
                 }
                 section.jsCode = `/*@"${mode.url}":${section.offset}*/\n` + section.jsCode;
 
-                const match = name.match(/^popModeFrom(.*)$/);
+                const match = name.match(/^pop_modeFrom(.*)$/);
                 if (match) {
-                    popModeBindings += `, _${name}:_${name}`;
+                    pop_modeBindings += `, _${name}:_${name}`;
                     wrappedPopModeFromCode += `
 
-// popMode from ${match[1]}
+// pop_mode from ${match[1]}
 ${sectionSeparator}
 function _${name}${section.args} {
 ${section.jsCode}
@@ -1140,7 +1141,7 @@ ${section.jsCode}
             }
         }
 
-        // setMode abruptly leaves executing code by throwing an exception that contains
+        // set_mode abruptly leaves executing code by throwing an exception that contains
         // a field 'nextMode' equal to the next mode object.
 
         const wrappedJSCode =
@@ -1167,7 +1168,7 @@ ${wrappedPopModeFromCode}
 
 // system menu
 ${sectionSeparator}
-function _popModeFrom_SystemMenu(callback) {
+function _pop_modeFrom_SystemMenu(callback) {
    if (callback) { callback(); }
 }
 
@@ -1175,13 +1176,13 @@ function _popModeFrom_SystemMenu(callback) {
 ${sectionSeparator}
 const _frame = (function*() { 
 let __yieldCounter = 0; while (true) { try {
-if ((_gameMode._name[0] !== '_') && (pad[0]._pp || pad[1]._pp || pad[2]._pp || pad[3]._pp)) { pushMode(_SystemMenu); }
+if ((_gameMode._name[0] !== '_') && (gamepad_array[0]._pp || gamepad_array[1]._pp || gamepad_array[2]._pp || gamepad_array[3]._pp)) { push_mode(_SystemMenu); }
 _processFrameHooks();
 ${sectionTable.frame.jsCode}
 _show(); } catch (ex) { if (! ex.nextMode) throw ex; else _updateInput(); } yield; }
 })();
 
-return _Object.freeze({_enter:_enter, _frame:_frame, _popModeFrom_SystemMenu:_popModeFrom_SystemMenu, _leave:_leave${popModeBindings}, _name:'${modeName}'});
+return _Object.freeze({_enter:_enter, _frame:_frame, _pop_modeFrom_SystemMenu:_pop_modeFrom_SystemMenu, _leave:_leave${pop_modeBindings}, _name:'${modeName}'});
 })();
 
 `;
@@ -1190,7 +1191,7 @@ return _Object.freeze({_enter:_enter, _frame:_frame, _popModeFrom_SystemMenu:_po
     } // for each mode
 
     // Set the initial mode
-    compiledProgram += 'try { setMode(' + startModeName + '); } catch (e) { if (! e.nextMode) { throw e; } }\n\n';
+    compiledProgram += 'try { set_mode(' + startModeName + '); } catch (e) { if (! e.nextMode) { throw e; } }\n\n';
 
     // Main loop
     compiledProgram += '// Main loop\nwhile (true) { _gameMode._frame.next(); yield; };\n\n'
@@ -1235,13 +1236,13 @@ const resetAnimationSource = `
 if (_numBootAnimationFrames > 0) {
    // flash at start
    for (let i = 0; i < 13; ++i) {
-     setBackground(gray(max(0, 0.75 - i / 12))); 
+     set_background(gray(max(0, 0.75 - i / 12))); 
      _show(); yield;
    }
 
    const fade = min(96, _numBootAnimationFrames / 2);
    for (let k = 0; k < _numBootAnimationFrames; ++k) {
-      setBackground(gray(0));
+      set_background(gray(0));
       const gradient = [rgb(1, 0.7333333333333333, 0.8666666666666667), rgb(1, 0.6666666666666666, 0.8), rgb(1, 0.26666666666666666, 0.5333333333333333), rgb(1, 0.26666666666666666, 0.5333333333333333), rgb(1, 0.26666666666666666, 0.5333333333333333), rgb(0.9333333333333333, 0.3333333333333333, 0.6), rgb(0.8666666666666667, 0.3333333333333333, 0.6), rgb(0.8, 0.4, 0.6666666666666666), rgb(0.6666666666666666, 0.4666666666666667, 0.7333333333333333), rgb(0.6, 0.4666666666666667, 0.7333333333333333), rgb(0.4666666666666667, 0.5333333333333333, 0.7333333333333333), rgb(0.4, 0.6, 0.8), rgb(0.3333333333333333, 0.6, 0.8), rgb(0.26666666666666666, 0.6666666666666666, 0.8666666666666667), rgb(0.6, 0.7333333333333333, 0.8666666666666667), rgb(0.8, 0.8666666666666667, 0.9333333333333333)];
       const N = size(gradient);
 
@@ -1261,13 +1262,13 @@ if (_numBootAnimationFrames > 0) {
       const w = _SCREEN_WIDTH >> 1, h = _SCREEN_HEIGHT >> 1;
       const tmp = {r: 0, g: 0, b: 0};
       for (let i = 0; i < 16000; ++i) {
-         const x = rnd(), y = rnd();
-         const c = gradient[_Math.min((y * (N - 1) + 3 * rnd()) >> 0, N - 1)];
+         const x = random(), y = random();
+         const c = gradient[_Math.min((y * (N - 1) + 3 * random()) >> 0, N - 1)];
          RGB_MUL(c, vDot, tmp);
-         drawPoint(xy(_Math.floor(w * x) * 2, _Math.floor(h * y) * 2), tmp);
+         draw_point(xy(_Math.floor(w * x) * 2, _Math.floor(h * y) * 2), tmp);
       }
 
-      drawSprite({sprite: _quadplayLogoSprite[0][0], pos: xy(screenSize.x * 0.5 + 0.5, screenSize.y * 0.5 + 0.5), opacity: _Math.min(1, 2 * v)})
+      draw_sprite({sprite: _quadplayLogoSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + 0.5, SCREEN_SIZE.y * 0.5 + 0.5), opacity: _Math.min(1, 2 * v)})
 
       _show(); yield;
    }
@@ -1276,7 +1277,7 @@ if (_numBootAnimationFrames > 0) {
    for (let i = 0; i < fade / 2; ++i) {
       _show(); yield;
    }
-   modeFrames = gameFrames = 0;
+   mode_frames = game_frames = 0;
 }
 `;
 

@@ -3,8 +3,8 @@ _ConfirmDialog
 
 const windowBackgroundColor = #135
 const windowBorderColor     = #fff
-const textColor             = #fff
-const textShadowColor       = #0006
+const text_color             = #fff
+const text_shadow_color       = #0006
 const promptColor           = #4DF
 const selectedColor         = #f
 const unselectedColor       = #b
@@ -17,58 +17,58 @@ const choiceArray = ["No", "Yes"]
 let choiceIndex
 
 let font = _font9
-if screenSize.y <= 64: font = _font5
-else if screenSize.y <= 112: font = _font8
+if SCREEN_SIZE.y <= 64: font = _font5
+else if SCREEN_SIZE.y <= 112: font = _font8
 
 
 enter(prevChoice)
 ────────────────────────────────────────────────────────────────────────
 title = prevChoice
 choiceIndex = 0
-playAudioClip(_openUISound)
+play_audio_clip(_openUISound)
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
-drawPreviousMode()
-setTransform(xy(0, 0), xy(1, 1), 2048.6, 1)
+draw_previous_mode()
+set_transform(xy(0, 0), xy(1, 1), 2048.6, 1)
 
-const windowSize = round(xy(min(screenSize.x - 2, 150% * textWidth(font, title.text)),
-                            5 font.lineHeight) * clamp((modeFrames + 1) / openFrames, 0%, 100%))
-drawRect(½ screenSize, windowSize, windowBackgroundColor, windowBorderColor)
+const windowSize = round(xy(min(SCREEN_SIZE.x - 2, 150% * text_width(font, title.text)),
+                            5 font.lineHeight) * clamp((mode_frames + 1) / openFrames, 0%, 100%))
+draw_rect(½ SCREEN_SIZE, windowSize, windowBackgroundColor, windowBorderColor)
 
 // Window ambient occlusion
-drawRect(½ screenSize, windowSize + 2, ∅, #0007)
-drawRect(½ screenSize, windowSize + 4, ∅, #0003)
-if screenSize.y >= 112: drawRect(½ screenSize, windowSize + 6, ∅, #0001)
+draw_rect(½ SCREEN_SIZE, windowSize + 2, ∅, #0007)
+draw_rect(½ SCREEN_SIZE, windowSize + 4, ∅, #0003)
+if SCREEN_SIZE.y >= 112: draw_rect(½ SCREEN_SIZE, windowSize + 6, ∅, #0001)
 
-if modeFrames > max(15, openFrames):
+if mode_frames > max(15, openFrames):
    for control in pad:
       if control.qq or control._pp or (control.aa and choiceIndex == 0):
          // Cancel
-         playAudioClip(_cancelUISound)
-         popMode(∅)
+         play_audio_clip(_cancelUISound)
+         pop_mode(∅)
       else if control.aa:
          // Accept option
-         playAudioClip(_acceptUISound)
-         popMode(title.callback)
+         play_audio_clip(_acceptUISound)
+         pop_mode(title.callback)
       else if control.xx:
          const prev = choiceIndex
          choiceIndex = clamp(choiceIndex + control.xx, 0, 1)
-         playAudioClip(if prev == choiceIndex then _denyUISound else _moveUISound)
+         play_audio_clip(if prev == choiceIndex then _denyUISound else _moveUISound)
 
          
-if modeFrames > openFrames:
-   drawText({font: font, text: title.text + "?", pos: ½ screenSize - xy(0, ½ font.lineHeight), color: textColor, shadow:textShadowColor, xAlign: "center"})
+if mode_frames > openFrames:
+   draw_text({font: font, text: title.text + "?", pos: ½ SCREEN_SIZE - xy(0, ½ font.lineHeight), color: text_color, shadow:text_shadow_color, x_align: "center"})
 
    for i < 2:
       const active      = choiceIndex == i
-      const bright      = ½ (1 + cos(modeFrames / 9))
+      const bright      = ½ (1 + cos(mode_frames / 9))
       const color       = if active then lerp(promptColor, #fff, 50% bright) else unselectedColor
       const outline     = if active then rgba(1,1,1, 25% bright) else ∅
       const offset      = xy(0, if active then -1 else 0)
-      const shadow      = if active then textShadowColor * 50% else textShadowColor
-      const pos         = ½ screenSize + xy((2i - 1) * ⅕ windowSize.x, 150% font.lineHeight)
+      const shadow      = if active then text_shadow_color * 50% else text_shadow_color
+      const pos         = ½ SCREEN_SIZE + xy((2i - 1) * ⅕ windowSize.x, 150% font.lineHeight)
       
-      drawText({font: font, text: choiceArray[i], pos: pos + xy(0, 1), color: shadow, xAlign: "center"})
-      drawText({font: font, text: choiceArray[i], pos: pos + offset, color: color, outline: outline, xAlign: "center"})
+      draw_text({font: font, text: choiceArray[i], pos: pos + xy(0, 1), color: shadow, x_align: "center"})
+      draw_text({font: font, text: choiceArray[i], pos: pos + offset, color: color, outline: outline, x_align: "center"})

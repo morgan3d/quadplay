@@ -11,7 +11,7 @@
 var _gameMode = undefined, _prevMode = undefined;
 var _numBootAnimationFrames = 120;
 
-// Modes from popMode. Does not contain _gameMode
+// Modes from pop_mode. Does not contain _gameMode
 var _modeStack = [], _prevModeStack = [];
 
 // Overriden by setFramebufferSize()
@@ -24,8 +24,8 @@ var _previousModeGraphicsCommandList = [];
 var _previousModeGraphicsCommandListStack = [];
 var _frameHooks = [];
 
-var gameFrames = 0;
-var modeFrames = 0;
+var game_frames = 0;
+var mode_frames = 0;
 
 // Graphics execute once out of this many frames.  Must be 1 (60 Hz),
 // 2 (30 Hz), 3 (20 Hz), or 4 (15 Hz). This is managed by
@@ -38,13 +38,13 @@ var _graphicsTime = 0;
 // Only used on Safari
 var _currentLineNumber = 0;
 
-var _modeFramesStack = [];
+var _mode_framesStack = [];
 
 var _postFX;
 
-var isNaN = Number.isNaN;
+var is_NaN = Number.isNaN;
 
-function resetPostEffects() {
+function reset_post_effects() {
     _postFX = {
         background: {r:0, g:0, b:0, a:0},
         color: {r:0, g:0, b:0, a:0},
@@ -57,13 +57,13 @@ function resetPostEffects() {
     };
 }
 
-resetPostEffects();
+reset_post_effects();
 
-function getPostEffects() {
+function get_post_effects() {
     return clone(_postFX);
 }
 
-function setPostEffects(args) {
+function set_post_effects(args) {
     if (args.background !== undefined) {
         _postFX.background.r = (args.background.r !== undefined) ? args.background.r : 0;
         _postFX.background.g = (args.background.g !== undefined) ? args.background.g : 0;
@@ -114,7 +114,7 @@ function setPostEffects(args) {
 
 
 function delay(callback, frames) {
-    return addFrameHook(undefined, callback, frames || 0);
+    return add_frame_hook(undefined, callback, frames || 0);
 }
 
 
@@ -144,27 +144,27 @@ function sequence(...seq) {
         if (currentFrame >= step.frames) { ++currentStep; }
     }
 
-    const hook = addFrameHook(update, undefined, totalLifetime);
+    const hook = add_frame_hook(update, undefined, totalLifetime);
 
     return hook;
 }
 
 
 
-function addFrameHook(callback, endCallback, lifetime, mode) {
-    if (arguments.length < 4) { mode = getMode(); }
+function add_frame_hook(callback, endCallback, lifetime, mode) {
+    if (arguments.length < 4) { mode = get_mode(); }
     const hook = {_callback:callback, _endCallback:endCallback, _mode:mode, _lifetime:lifetime, _maxLifetime:lifetime};
     _frameHooks.push(hook);
     return hook;
 }
 
 
-function removeFrameHook(hook) {
-    removeValues(_frameHooks, hook);
+function remove_frame_hook(hook) {
+    remove_values(_frameHooks, hook);
 }
 
 
-function removeFrameHooksByMode(mode) {
+function remove_frame_hooks_by_mode(mode) {
     for (let i = 0; i < _frameHooks.length; ++i) {
         if (_frameHooks[i]._mode === mode) {
             _frameHooks[i] = _frameHooks[_frameHooks.length - 1];
@@ -183,7 +183,7 @@ function _processFrameHooks() {
             const r = hook._callback ? hook._callback(hook._lifetime, hook._maxLifetime) : 0;
 
             // Remove the callback *before* it executes so that if
-            // a setMode happens within the callback it does not re-trigger
+            // a set_mode happens within the callback it does not re-trigger
             if (r || (hook._lifetime <= 0)) {
                 _frameHooks[i] = _frameHooks[_frameHooks.length - 1];
                 --i;
@@ -200,20 +200,20 @@ function _processFrameHooks() {
 }
 
 
-function drawPreviousMode() {
+function draw_previous_mode() {
     Array.prototype.push.apply(_graphicsCommandList, _previousModeGraphicsCommandList);
 }
 
 ////////////////////////////////////////////////////////////////////
 // Array
 
-function lastValue(s) {
+function last_value(s) {
     return s[s.length - 1];
 }
 
-function lastKey(s) {
+function last_key(s) {
     if (! Array.isArray(s) || typeof s === 'string') {
-        throw new Error('Argument to lastKey() must be a string or array');
+        throw new Error('Argument to last_key() must be a string or array');
     }
     return size(s) - 1;
 }
@@ -253,15 +253,15 @@ function push(array, ...args) {
 }
 
 
-function pushFront(array, ...args) {
-    if (! Array.isArray(array)) { throw new Error('pushFront() requires an array argument'); }
+function push_front(array, ...args) {
+    if (! Array.isArray(array)) { throw new Error('push_front() requires an array argument'); }
     array.unshift(...args);
     return array[0];
 }
 
 
-function popFront(array) {
-    if (! Array.isArray(array)) { throw new Error('popFront() requires an array argument'); }
+function pop_front(array) {
+    if (! Array.isArray(array)) { throw new Error('pop_front() requires an array argument'); }
     if (array.length === 0) { return undefined;  }
     return array.shift();
 }
@@ -343,20 +343,20 @@ function size(x) {
 }
 
 
-function rndValue(t) {
+function random_value(t) {
     const T = typeof t;
     if (Array.isArray(t) || (T === 'string')) {
-        return t[rndInt(t.length - 1)];
+        return t[random_integer(t.length - 1)];
     } else if (T === 'object') {
         const k = Object.keys(t);
-        return t[k[rndInt(k.length - 1)]];
+        return t[k[random_integer(k.length - 1)]];
     } else {
         return undefined;
     }
 }
 
 
-function removeAll(t) {
+function remove_all(t) {
     if (Array.isArray(t)) {
         t.length = 0;
     } else {
@@ -369,7 +369,7 @@ function removeAll(t) {
 }
 
 
-function removeValues(t, value) {
+function remove_values(t, value) {
     if (Array.isArray(t)) {
         // Place to copy the next element to
         let dst = 0;
@@ -390,7 +390,7 @@ function removeValues(t, value) {
 }
 
 
-function fastRemoveValue(t, value) {
+function fast_remove_value(t, value) {
     if (Array.isArray(t)) {
         for (let i = 0; i < t.length; ++i) {
             if (t[i] === value) {
@@ -416,9 +416,9 @@ function reverse(array) {
 }
 
 
-function removeKey(t, i) {
+function remove_key(t, i) {
     if (Array.isArray(t)) {
-        if (typeof i !== 'number') { throw 'removeKey(array, i) called with a key (' + i + ') that is not a number'; }
+        if (typeof i !== 'number') { throw 'remove_key(array, i) called with a key (' + i + ') that is not a number'; }
         t.splice(i, 1);
     } else if (typeof t === 'object') {
         delete t[i];
@@ -450,12 +450,12 @@ function extend(a, b) {
 }
 
 
-function arrayValue(animation, frame, extrapolate) {
+function array_value(animation, frame, extrapolate) {
     if (! Array.isArray(animation)) {
         if (animation === undefined || animation === null) {
-            throw new Error('Passed nil to arrayValue()');
+            throw new Error('Passed nil to array_value()');
         } else {
-            throw new Error('The first argument to arrayValue() must be an array (was ' + unparse(animation)+ ')');
+            throw new Error('The first argument to array_value() must be an array (was ' + unparse(animation)+ ')');
         }
     }
     
@@ -485,8 +485,8 @@ function concatenate(a, b) {
         a = clone(a);
         extend(a, b);
         return a;
-    } else if (isString(a)) {
-        if (! isString(b)) {
+    } else if (is_string(a)) {
+        if (! is_string(b)) {
             throw new Error('Both arguments to concatenate(a, b) must have the same type. Invoked with one string and one non-string.');
         }
         return a + b;
@@ -501,9 +501,9 @@ function concatenate(a, b) {
 }
 
 
-function fastRemoveKey(t, i) {
+function fast_remove_key(t, i) {
     if (Array.isArray(t)) {
-        if (typeof i !== 'number') { throw 'fastRemoveKey(array, i) called with a key (' + i + ') that is not a number'; }
+        if (typeof i !== 'number') { throw 'fast_remove_key(array, i) called with a key (' + i + ') that is not a number'; }
         let L = t.length;
         t[i] = t[L - 1];
         t.length = L - 1;
@@ -574,7 +574,7 @@ function replace(s, src, dst) {
 function slice(a, s, e) {
     if (Array.isArray(a)) {
         return a.slice(s, e);
-    } else if (isString(a)) {
+    } else if (is_string(a)) {
         return a.substr(s, e);
     } else {
         throw new Error('slice() requires an array or string argument.');
@@ -585,13 +585,13 @@ function slice(a, s, e) {
 //////////////////////////////////////////////////////////////////////
 //
 
-function makeSpline(timeSrc, controlSrc, order, extrapolate) {
+function make_spline(timeSrc, controlSrc, order, extrapolate) {
     // Argument checking
     if (controlSrc.length < 2) { throw new Error('Must specify at least two control points'); }
     if (order === undefined) { order = 3; }
     if (extrapolate === undefined) { extrapolate = 'stall'; }
     if (find(['stall', 'loop', 'clamp', 'continue', 'oscillate'], extrapolate) === undefined) {
-        throw new Error('extrapolate argument to makeSpline must be "stall", "loop", "clamp", or "continue"');
+        throw new Error('extrapolate argument to make_spline must be "stall", "loop", "clamp", or "continue"');
     }
     
     order = Math.round(order);
@@ -934,7 +934,7 @@ var _fontSheet = null;
     reloadRuntime() */
 var _submitFrame = null;
 
-// Scissor (setClipping) region. This is inclusive and is expressed in
+// Scissor (set_clipping) region. This is inclusive and is expressed in
 // terms of pixel indices.
 var _clipY1 = 0, _clipY2 = _SCREEN_HEIGHT - 1, _clipZ1 = -2047, _clipX1 = 0, _clipX2 = _SCREEN_WIDTH - 1, _clipZ2 = 2048;
 
@@ -966,7 +966,7 @@ function _popGraphicsState() {
 }
 
 
-function getTransform() {
+function get_transform() {
     return {pos:  xy(_offsetX, _offsetY),
             dir:  xy(_scaleX, _scaleY),
             z:    _offsetZ,
@@ -976,30 +976,30 @@ function getTransform() {
 }
 
 
-function getRotationSign() {
+function rotation_sign() {
     return -_Math.sign(_scaleX * _scaleY);
 }
 
 
-function getYUp() {
+function up_y() {
     return -_Math.sign(_scaleY);
 }
 
 
-function resetTransform() {
+function reset_transform() {
     _offsetX = _offsetY = _offsetZ = _skewXZ = _skewYZ = 0;
     _scaleX = _scaleY = _scaleZ = 1;
 }
 
 
-function composeTransform(pos, dir, addZ, scaleZ, skew) {
-    if (isObject(pos) && (('pos' in pos) || ('dir' in pos) || ('z' in pos) || ('skew' in pos))) {
+function compose_transform(pos, dir, addZ, scaleZ, skew) {
+    if (is_object(pos) && (('pos' in pos) || ('dir' in pos) || ('z' in pos) || ('skew' in pos))) {
         // Argument version
-        return composeTransform(pos.pos, pos.dir, pos.z, pos.skew);
+        return compose_transform(pos.pos, pos.dir, pos.z, pos.skew);
     }
     let addX, addY, scaleX, scaleY, skewXZ, skewYZ;
     if (pos !== undefined) {
-        if (isNumber(pos)) { throw new Error("pos argument to composeTransform() must be an xy() or nil"); }
+        if (is_number(pos)) { throw new Error("pos argument to compose_transform() must be an xy() or nil"); }
         addX = pos.x; addY = pos.y;
     }
     if (dir !== undefined) { scaleX = dir.x; scaleY = dir.y; }
@@ -1050,16 +1050,16 @@ function composeTransform(pos, dir, addZ, scaleZ, skew) {
 }
 
 
-function setTransform(pos, dir, addZ, scaleZ, skew) {
-    if (arguments.length === 0) { throw new Error("setTransform() called with no arguments"); }
-    if (isObject(pos) && (('pos' in pos) || ('dir' in pos) || ('z' in pos) || ('skew' in pos))) {
+function set_transform(pos, dir, addZ, scaleZ, skew) {
+    if (arguments.length === 0) { throw new Error("set_transform() called with no arguments"); }
+    if (is_object(pos) && (('pos' in pos) || ('dir' in pos) || ('z' in pos) || ('skew' in pos))) {
         // Argument version
-        return setTransform(pos.pos, pos.dir, pos.z, pos.skew);
+        return set_transform(pos.pos, pos.dir, pos.z, pos.skew);
     }
 
     let addX, addY, scaleX, scaleY, skewXZ, skewYZ;
     if (pos !== undefined) {
-        if (isNumber(pos)) { throw new Error("pos argument to setTransform() must be an xy() or nil"); }
+        if (is_number(pos)) { throw new Error("pos argument to set_transform() must be an xy() or nil"); }
         addX = pos.x; addY = pos.y;
     }
     if (dir !== undefined) { scaleX = dir.x; scaleY = dir.y; }
@@ -1088,39 +1088,39 @@ function setTransform(pos, dir, addZ, scaleZ, skew) {
 }
 
 
-function transformDrawToScreen(coord, z) {
+function transform_draw_to_screen(coord, z) {
     z = z || 0;
     return xy((coord.x + (z * _skewXZ)) * _scaleX + _offsetX,
               (coord.y + (z * _skewYZ)) * _scaleY + _offsetY);
 }
 
 
-function transformDrawZToScreenZ(z) {
+function transform_draw_z_to_screen_z(z) {
     return z * _scaleZ + _offsetZ;
 }
 
 
-function transformScreenToDraw(coord) {
+function transform_screen_to_draw(coord) {
     return xy((coord.x - _offsetX) / _scaleX, (coord.y - _offsetY) / _scaleY);
 }
 
 
-function transformScreenZToDrawZ(z) {
+function transform_screen_z_to_draw_z(z) {
     return (z - _offsetZ) / _scaleZ;
 }
 
-function intersectClip(pos, size, z1, zSize) {
-    if (pos.pos || pos.size || (pos.z !== undefined) || (pos.zSize !== undefined)) {
-        return intersectClip(pos.pos, pos.size, pos.z, pos.zSize);
+function intersect_clip(pos, size, z1, z_size) {
+    if (pos.pos || pos.size || (pos.z !== undefined) || (pos.z_size !== undefined)) {
+        return intersect_clip(pos.pos, pos.size, pos.z, pos.z_size);
     }
 
     let x1, y1, dx, dy, dz;
     if (pos !== undefined) {
-        if (isNumber(pos)) { throw new Error('pos argument to setClip() must be an xy() or nil'); }
+        if (is_number(pos)) { throw new Error('pos argument to set_clip() must be an xy() or nil'); }
         x1 = pos.x; y1 = pos.y;
     }
     if (size !== undefined) {
-        if (isNumber(size)) { throw new Error('size argument to setClip() must be an xy() or nil'); }
+        if (is_number(size)) { throw new Error('size argument to set_clip() must be an xy() or nil'); }
         dx = size.x; dy = size.y;
     }
     
@@ -1156,7 +1156,7 @@ function intersectClip(pos, size, z1, zSize) {
 }
 
 
-function resetClip() {
+function reset_clip() {
     _clipX1 = _clipY1 = 0;
     _clipZ1 = -2047;
     _clipX2 = _SCREEN_WIDTH - 1;
@@ -1165,28 +1165,28 @@ function resetClip() {
 }
 
 
-function getClip() {
+function get_clip() {
     return {
         pos:    {x:_clipX1, y:_clipY1},
         size:   {x:_clipX2 - _clipX1 + 1, y:_clipY2 - _clipY1 + 1},
         z:      _clipZ1,
-        zSize:  _clipZ2 - _clipZ1 + 1
+        z_size:  _clipZ2 - _clipZ1 + 1
     };
 }
 
 
-function setClip(pos, size, z1, dz) {
-    if (pos.pos || pos.size || (pos.z !== undefined) || (pos.zSize !== undefined)) {
-        return setClip(pos.pos, pos.size, pos.z, pos.zSize);
+function set_clip(pos, size, z1, dz) {
+    if (pos.pos || pos.size || (pos.z !== undefined) || (pos.z_size !== undefined)) {
+        return set_clip(pos.pos, pos.size, pos.z, pos.z_size);
     }
     
     let x1, y1, dx, dy;
     if (pos !== undefined) {
-        if (isNumber(pos)) { throw new Error('pos argument to setClip() must be an xy() or nil'); }
+        if (is_number(pos)) { throw new Error('pos argument to set_clip() must be an xy() or nil'); }
         x1 = pos.x; y1 = pos.y;
     }
     if (size !== undefined) {
-        if (isNumber(size)) { throw new Error('size argument to setClip() must be an xy() or nil'); }
+        if (is_number(size)) { throw new Error('size argument to set_clip() must be an xy() or nil'); }
         dx = size.x; dy = size.y;
     }
     
@@ -1254,7 +1254,7 @@ var _graphicsCommandList = [];
 var _background = Object.seal({r:0,g:0,b:0,a:1});
 
 var joy = null; // initialized by reloadRuntime()
-var pad = null; // initialized by reloadRuntime()
+var gamepad_array = null; // initialized by reloadRuntime()
 
 var _hashview = new DataView(new ArrayBuffer(8));
 
@@ -1575,34 +1575,34 @@ function _square(x) { return x * x; }
 /*************************************************************************************/
 // Entity functions
 
-function transformDrawToSprite(entity, coord) {
+function transform_draw_to_sprite(entity, coord) {
     // Can be optimized as a single operation later
-    return transformEntityToSprite(entity, transformDrawToEntity(entity, coord));
+    return transform_entity_to_sprite(entity, transform_draw_to_entity(entity, coord));
 }
 
 function transformSpritetoDraw(entity, coord) {
     // Can be optimized as a single operation later
-    return transformEntityToDraw(entity, transformSpriteToEntity(entity, coord));
+    return transform_entity_to_draw(entity, transform_sprite_to_entity(entity, coord));
 }
 
-function transformEntityToSprite(entity, coord) {
+function transform_entity_to_sprite(entity, coord) {
     if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { throw new Error("Requires both an entity and a coordinate"); }
     return xy(coord.x * _scaleX + entity.sprite.size.x * 0.5,
               coord.y * _scaleY + entity.sprite.size.y * 0.5);
 }
 
 
-function transformSpriteToEntity(entity, coord) {
+function transform_sprite_to_entity(entity, coord) {
     if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { throw new Error("Requires both an entity and a coordinate"); }
-    if (! entity.sprite) { throw new Error('Called transformSpriteToEntity() on an entity with no sprite property.'); }
+    if (! entity.sprite) { throw new Error('Called transform_sprite_to_entity() on an entity with no sprite property.'); }
     return xy((coord.x - entity.sprite.size.x * 0.5) / _scaleX,
               (coord.y - entity.sprite.size.y * 0.5) / _scaleY);
 }
 
 
-function transformDrawToEntity(entity, coord) {
+function transform_draw_to_entity(entity, coord) {
     if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { throw new Error("Requires both an entity and a coordinate"); }
-    const a = entity.angle * -getRotationSign();
+    const a = entity.angle * -rotation_sign();
     const C = Math.cos(a);
     const S = Math.sin(a);
     
@@ -1615,10 +1615,10 @@ function transformDrawToEntity(entity, coord) {
 }
 
 
-function transformEntityToDraw(entity, coord) {
-    if (! coord || coord.x == undefined) { throw new Error("transformEntityToDraw() requires both an entity and a coordinate"); }
+function transform_entity_to_draw(entity, coord) {
+    if (! coord || coord.x == undefined) { throw new Error("transform_entity_to_draw() requires both an entity and a coordinate"); }
 
-    const a = entity.angle * -getRotationSign();
+    const a = entity.angle * -rotation_sign();
     const C = Math.cos(a);
     const S = Math.sin(a);
 
@@ -1630,12 +1630,12 @@ function transformEntityToDraw(entity, coord) {
 }
 
 
-function drawEntity(e, recurse) {
-    if (e === undefined) { throw new Error("nil entity in drawEntity()"); }
+function draw_entity(e, recurse) {
+    if (e === undefined) { throw new Error("nil entity in draw_entity()"); }
     if (recurse === undefined) { recurse = true; }
 
     if (_showEntityBoundsEnabled) {
-        drawBounds(e, false);
+        draw_bounds(e, false);
     }
     
     if (e.sprite) {
@@ -1643,21 +1643,21 @@ function drawEntity(e, recurse) {
         // memory allocation
         const oldX = _offsetX, oldY = _offsetY;
         _offsetX += e.offset.x * _scaleX; _offsetY += e.offset.y * _scaleY;
-        drawSprite(e.sprite, e.pos, e.angle, e.scale, e.opacity, e.z, e.spriteOverrideColor);
+        draw_sprite(e.sprite, e.pos, e.angle, e.scale, e.opacity, e.z, e.sprite_override_color);
         _offsetX = oldX; _offsetY = oldY;
     }
 
-    if (e.childArray && recurse) {
-        const N = e.childArray.length;
+    if (e.child_array && recurse) {
+        const N = e.child_array.length;
         for (let i = 0; i < N; ++i) {
-            drawEntity(e.childArray[i], recurse);
+            draw_entity(e.child_array[i], recurse);
         }
     }
 
     if (e.labelFont && e.labelText) {
         const oldX = _offsetX, oldY = _offsetY;
-        _offsetX += (e.offset.x + e.textOffset.x) * _scaleX; _offsetY += (e.offset.y + e.textOffset.y) * _scaleY;
-        drawText(e.font, e.text, e.pos, e.textColor, e.textShadow, e.textOutline, e.textXAlign, e.textYAlign, e.z);
+        _offsetX += (e.offset.x + e.text_offset.x) * _scaleX; _offsetY += (e.offset.y + e.text_offset.y) * _scaleY;
+        draw_text(e.font, e.text, e.pos, e.text_color, e.text_shadow, e.text_outline, e.text_x_align, e.text_y_align, e.z);
         _offsetX = oldX; _offsetY = oldY;
     }
 }
@@ -1670,7 +1670,7 @@ function _isEntity(e) {
 
 
 var _entityID = 0;
-function makeEntity(e, childTable) {
+function make_entity(e, childTable) {
     const r = Object.assign({}, e || {});    
 
     if (e.shape && (e.shape !== 'rect') && (e.shape !== 'disk')) {
@@ -1686,14 +1686,14 @@ function makeEntity(e, childTable) {
     r.restitution = (r.restitution === undefined) ? 0.1 : r.restitution;
     r.friction    = (r.friction === undefined) ? 0.15 : r.friction;
     r.drag        = (r.drag === undefined) ? 0.005 : r.drag;
-    r.stictionFactor = (r.stictionFactor === undefined) ? 1 : r.stictionFactor;
+    r.stiction_factor = (r.stiction_factor === undefined) ? 1 : r.stiction_factor;
 
     r.angle = r.angle || 0;
     r.spin = r.spin || 0;
     r.twist = r.twist || 0;
     r.torque = r.torque || 0;
     
-    r.spriteOverrideColor = clone(r.spriteOverrideColor);
+    r.sprite_override_color = clone(r.sprite_override_color);
     
     r.scale = r.scale ? clone(r.scale) : xy(1, 1);
     r.offset = r.offset ? clone(r.offset) : xy(0, 0);
@@ -1704,12 +1704,12 @@ function makeEntity(e, childTable) {
     r.sprite = r.sprite || undefined;
     r.z = r.z || 0;
 
-    r.physicsSleepState = r.physicsSleepState || 'awake';
+    r.physics_sleep_state = r.physics_sleep_state || 'awake';
 
-    r.collisionGroup = r.collisionGroup || 0;
-    r.collisionCategoryMask = (r.collisionCategoryMask === undefined) ? 1 : r.collisionCategoryMask;
-    r.collisionHitMask = (r.collisionHitMask === undefined) ? 0xffffffff : r.collisionHitMask;
-    r.collisionSensor = (r.collisionSensor === undefined) ? false : r.collisionSensor;
+    r.collision_group = r.collision_group || 0;
+    r.collision_category_mask = (r.collision_category_mask === undefined) ? 1 : r.collision_category_mask;
+    r.collision_hit_mask = (r.collision_hit_mask === undefined) ? 0xffffffff : r.collision_hit_mask;
+    r.is_sensor = (r.is_sensor === undefined) ? false : r.is_sensor;
 
     if (r.density === undefined) { r.density = 1; }
 
@@ -1730,7 +1730,7 @@ function makeEntity(e, childTable) {
             if (r.shape === 'rect') {
                 r.size = clone(r.sprite.size);
             } else if (r.shape === 'disk') {
-                const x = minComponent(r.sprite.size) * r.scale.x;
+                const x = min_component(r.sprite.size) * r.scale.x;
                 r.size = xy(x, x);
                 if (r.scale.x != r.scale.y) {
                     throw new Error('Cannot have different scale factors for x and y on a "disk" shaped entity.');
@@ -1754,83 +1754,83 @@ function makeEntity(e, childTable) {
         r.pivot = clone(r.pivot);
     }
 
-    const childArray = r.childArray ? clone(r.childArray) : [];
-    r.childArray = [];
-    if (r.orientWithParent === undefined) { r.orientWithParent = true; }
-    if (r.offsetWithParent === undefined) { r.offsetWithParent = true; }
+    const child_array = r.child_array ? clone(r.child_array) : [];
+    r.child_array = [];
+    if (r.orient_with_parent === undefined) { r.orient_with_parent = true; }
+    if (r.offset_with_parent === undefined) { r.offset_with_parent = true; }
    
-    r.zInParent = r.zInParent || 0;
-    r.posInParent = r.posInParent ? clone(r.posInParent) : xy(0, 0);
-    r.angleInParent = r.angleInParent || 0;
-    r.offsetInParent = r.offsetInParent ? clone(r.offsetInParent) : xy(0, 0);
-    r.scaleInParent = r.scaleInParent ? clone(r.scaleInParent) : xy(1, 1);
+    r.z_in_parent = r.z_in_parent || 0;
+    r.pos_in_parent = r.pos_in_parent ? clone(r.pos_in_parent) : xy(0, 0);
+    r.angle_in_parent = r.angle_in_parent || 0;
+    r.offset_in_parent = r.offset_in_parent ? clone(r.offset_in_parent) : xy(0, 0);
+    r.scale_in_parent = r.scale_in_parent ? clone(r.scale_in_parent) : xy(1, 1);
 
     // Construct named children
     if (childTable) {
         for (let name in childTable) {
             const child = childTable[name];
             if (! _isEntity(child)) {
-                throw new Error('The child named "' + name + '" in the childTable passed to makeEntity is not itself an entity');
+                throw new Error('The child named "' + name + '" in the childTable passed to make_entity is not itself an entity');
             }
             
             if (r[name] !== undefined) {
-                throw new Error('makeEntity() cannot add a child named "' + name +
+                throw new Error('make_entity() cannot add a child named "' + name +
                                 '" because that is already a property of the entity {' + Object.keys(r) + '}');
             }
             r[name] = child;
             if (child.name === 'Anonymous') {
                 child.name = name;
             }
-            childArray.push(child)
+            child_array.push(child)
         }
     }
 
     // Add and update all children
-    for (let i = 0; i < childArray.length; ++i) {
-        entityAddChild(r, childArray[i]);
+    for (let i = 0; i < child_array.length; ++i) {
+        entity_add_child(r, child_array[i]);
     }
-    entityUpdateChildren(r);
+    entity_update_children(r);
     
     return r;
 }
 
 
-function entityAddChild(parent, child) {
+function entity_add_child(parent, child) {
     if (! child) { return child; }
     
-    entityRemoveChild(parent, child);
+    entity_remove_child(parent, child);
     
     child.parent = parent;
     // Avoid accidental duplicates
-    if (parent.childArray.indexOf(child) === -1) {
-        parent.childArray.push(child);
+    if (parent.child_array.indexOf(child) === -1) {
+        parent.child_array.push(child);
     }
     
     return child;
 }
 
 
-function entityRemoveAll(parent) {
-    for (let i = 0; i < parent.childArray.length; ++i) {
-        const child = parent.childArray[i];
+function entity_remove_all(parent) {
+    for (let i = 0; i < parent.child_array.length; ++i) {
+        const child = parent.child_array[i];
         if (parent !== child.parent) {
             throw new Error('Tried to remove a child from the wrong parent')
         }
-        removeValues(child.parent.childArray, child);
-        if (parent.childArray[i] === child) {
+        remove_values(child.parent.child_array, child);
+        if (parent.child_array[i] === child) {
             throw new Error('Tried to remove a child that did not have a pointer back to its parent');
         }
     }
 }
 
 
-function entityRemoveChild(parent, child) {
+function entity_remove_child(parent, child) {
     if (! child) { return child; }
     
     if (child.parent) {
         if (parent !== child.parent) { throw new Error('Tried to remove a child from the wrong parent'); }
-        removeValues(parent.childArray, child);
-    } else if (parent.childArray.indexOf(child) !== -1) {
+        remove_values(parent.child_array, child);
+    } else if (parent.child_array.indexOf(child) !== -1) {
         throw new Error('Tried to remove a child that did not have a pointer back to its parent');
     }
     
@@ -1839,67 +1839,67 @@ function entityRemoveChild(parent, child) {
 }
 
 
-function transformEntityToEntity(e1, e2, pos) {
-    return transformDrawToEntity(e2, transformEntityToDraw(e1, pos));
+function transform_entity_to_entity(e1, e2, pos) {
+    return transform_draw_to_entity(e2, transform_entity_to_draw(e1, pos));
 }
 
 
-function transformParentToChild(child, pos) {
+function transform_parent_to_child(child, pos) {
     let a = child.parent.angle - child.angle;
     const c = Math.cos(a);
     const s = Math.sin(a);
-    const x = pos.x - child.posInParent.x;
-    const y = pos.y - child.posInParent.y;
+    const x = pos.x - child.pos_in_parent.x;
+    const y = pos.y - child.pos_in_parent.y;
     
     return xy( c * x + s * y,
               -s * x + c * y)
 }
 
 
-function transformChildToParent(child, pos) {
+function transform_child_to_parent(child, pos) {
     let a = child.angle - child.parent.angle;
     const c = Math.cos(a);
     const s = Math.sin(a);
-    return xy( c * pos.x + s * pos.y + child.posInParent.x,
-              -s * pos.x + c * pos.y + child.posInParent.y)
+    return xy( c * pos.x + s * pos.y + child.pos_in_parent.x,
+              -s * pos.x + c * pos.y + child.pos_in_parent.y)
 }
 
 
 // Recursively update all properties of the children
-function entityUpdateChildren(parent) {
+function entity_update_children(parent) {
     if (parent === undefined || parent.pos === undefined) {
-        throw new Error('entityUpdateChildren requires an entity argument')
+        throw new Error('entity_update_children requires an entity argument')
     }
     
-    const N = parent.childArray.length;
+    const N = parent.child_array.length;
     for (let i = 0; i < N; ++i) {
-        const child = parent.childArray[i];
+        const child = parent.child_array[i];
         const rotSign = Math.sign(parent.scale.x * parent.scale.y);
 
-        if (child.orientWithParent) {
-            child.scale.x = parent.scale.x * child.scaleInParent.x;
-            child.scale.y = parent.scale.y * child.scaleInParent.y;
+        if (child.orient_with_parent) {
+            child.scale.x = parent.scale.x * child.scale_in_parent.x;
+            child.scale.y = parent.scale.y * child.scale_in_parent.y;
             
-            child.angle   = parent.angle + child.angleInParent * rotSign;
+            child.angle   = parent.angle + child.angle_in_parent * rotSign;
         }
        
-        const a = parent.angle * getRotationSign() * rotSign;
+        const a = parent.angle * rotation_sign() * rotSign;
         const c = Math.cos(a), s = Math.sin(a);
-        child.pos.x = (c * child.posInParent.x - s * child.posInParent.y) * parent.scale.x + parent.pos.x;
-        child.pos.y = (s * child.posInParent.x + c * child.posInParent.y) * parent.scale.y + parent.pos.y;
-        child.z = parent.z + child.zInParent;
+        child.pos.x = (c * child.pos_in_parent.x - s * child.pos_in_parent.y) * parent.scale.x + parent.pos.x;
+        child.pos.y = (s * child.pos_in_parent.x + c * child.pos_in_parent.y) * parent.scale.y + parent.pos.y;
+        child.z = parent.z + child.z_in_parent;
 
-        if (child.offsetWithParent) {
-            child.offset.x = (c * child.offsetInParent.x - s * child.offsetInParent.y) * parent.scale.x + parent.offset.x;
-            child.offset.y = (s * child.offsetInParent.x + c * child.offsetInParent.y) * parent.scale.y + parent.offset.y;
+        if (child.offset_with_parent) {
+            child.offset.x = (c * child.offset_in_parent.x - s * child.offset_in_parent.y) * parent.scale.x + parent.offset.x;
+            child.offset.y = (s * child.offset_in_parent.x + c * child.offset_in_parent.y) * parent.scale.y + parent.offset.y;
         }
       
-        entityUpdateChildren(child);
+        entity_update_children(child);
     }
 }
 
 
-function entitySimulate(entity, dt) {
+function entity_simulate(entity, dt) {
     // Assume this computation takes 0.01 ms. We have no way to time it
     // properly, but this at least gives some feedback in the profiler
     // if it is being called continuously.
@@ -1908,9 +1908,9 @@ function entitySimulate(entity, dt) {
     if (dt === undefined) { dt = 1; }
     if (entity.density === Infinity) { return; }
     
-    const mass = entityMass(entity);
+    const mass = entity_mass(entity);
     const imass = 1 / mass;
-    const iinertia = 1 / entityInertia(entity, mass);
+    const iinertia = 1 / entity_inertia(entity, mass);
     const acc = entity.acc, vel = entity.vel, pos = entity.pos;
 
     // Overwrite
@@ -1941,36 +1941,36 @@ function entitySimulate(entity, dt) {
     entity.torque = 0;
     entity.force.x = entity.force.y = 0;
 
-    entityUpdateChildren(entity);
+    entity_update_children(entity);
 }
 
 
-function entityApplyForce(entity, worldForce, worldPos) {
+function entity_apply_force(entity, worldForce, worldPos) {
     worldPos = worldPos || entity.pos;
     entity.force.x += worldForce.x;
     entity.force.y += worldForce.y;
     const offsetX = worldPos.x - entity.pos.x;
     const offsetY = worldPos.y - entity.pos.y;
-    entity.torque += -getRotationSign() * (offsetX * worldForce.y - offsetY * worldForce.x);
+    entity.torque += -rotation_sign() * (offsetX * worldForce.y - offsetY * worldForce.x);
 }
 
 
-function entityApplyImpulse(entity, worldImpulse, worldPos) {
+function entity_apply_impulse(entity, worldImpulse, worldPos) {
     worldPos = worldPos || entity.pos;
-    const invMass = 1 / entityMass(entity);
+    const invMass = 1 / entity_mass(entity);
     entity.vel.x += worldImpulse.x * invMass;
     entity.vel.y += worldImpulse.y * invMass;
 
-    const inertia = entityInertia(entity);
+    const inertia = entity_inertia(entity);
     const offsetX = worldPos.x - entity.pos.x;
     const offsetY = worldPos.y - entity.pos.y;
 
-    entity.spin += -getRotationSign() * (offsetX * worldImpulse.y - offsetY * worldImpulse.x) / inertia;
+    entity.spin += -rotation_sign() * (offsetX * worldImpulse.y - offsetY * worldImpulse.x) / inertia;
 }
 
 
          
-function entityMove(entity, pos, angle) {
+function entity_move(entity, pos, angle) {
     if (pos !== undefined) {
         entity.vel.x = pos.x - entity.pos.x;
         entity.vel.y = pos.y - entity.pos.y;
@@ -1990,7 +1990,7 @@ function entityMove(entity, pos, angle) {
 //
 // Physics functions
 
-function makeCollisionGroup() {
+function make_collision_group() {
     // Matter.js uses negative numbers for non-colliding
     // groups, so we negate them everywhere to make it more
     // intuitive for the user.
@@ -2029,7 +2029,7 @@ function _physicsUpdateContact(physics, contact, pair) {
 }
 
 
-function makePhysics(options) {
+function make_physics(options) {
     const engine = _Physics.Engine.create();
     const physics = Object.seal({
         _name:                 "physics" + (_physicsContextIndex++),
@@ -2056,7 +2056,7 @@ function makePhysics(options) {
         engine.world.gravity.x = options.gravity.x;
         engine.world.gravity.y = options.gravity.y;
     } else {
-        engine.world.gravity.y = -getYUp();
+        engine.world.gravity.y = -up_y();
     }
       
     engine.world.gravity.scale = 0.001; // default 0.001
@@ -2152,7 +2152,7 @@ function makePhysics(options) {
     _Physics.Events.on(engine, 'collisionEnd', function (event) {
         // Schedule collisions for removal
         const pairs = event.pairs;
-        const removeArray = lastValue(physics._brokenContactQueue);
+        const removeArray = last_value(physics._brokenContactQueue);
         for (let i = 0; i < pairs.length; ++i) {
             const pair = pairs[i];
 
@@ -2183,11 +2183,11 @@ function makePhysics(options) {
 }
 
 
-function physicsAddEntity(physics, entity) {
+function physics_add_entity(physics, entity) {
     if (! physics) { throw _error("physics context cannot be nil"); }
-    if (! physics._engine) { _error("First argument to physicsAddEntity() must be a physics context."); }
+    if (! physics._engine) { _error("First argument to physics_add_entity() must be a physics context."); }
     if (entity._body) { _error("This entity is already in a physics context"); }
-    if (entity.density <= 0) { _error("The entity in physicsAddEntity() must have nonzero density"); }
+    if (entity.density <= 0) { _error("The entity in physics_add_entity() must have nonzero density"); }
 
     push(physics._entityArray, entity);
     const engine = physics._engine;
@@ -2204,10 +2204,10 @@ function physicsAddEntity(physics, entity) {
         break;
 
     default:
-        throw new Error('Unsupported entity shape for physicsAddEntity(): "' + entity.shape + '"');
+        throw new Error('Unsupported entity shape for physics_add_entity(): "' + entity.shape + '"');
     }
 
-    entity._body.collisionFilter.group = -entity.collisionGroup;
+    entity._body.collisionFilter.group = -entity.collision_group;
     entity._body.entity = entity;
     entity._body.slop = 0.075; // 0.05 is the default. Increase to make large object stacks more stable.
     entity._attachmentArray = [];
@@ -2219,12 +2219,12 @@ function physicsAddEntity(physics, entity) {
 }
 
 
-function physicsRemoveAll(physics) {
+function physics_remove_all(physics) {
     // Remove all (removing mutates the
     // array, so we have to clone it first!)
     const originalArray = clone(physics._entityArray);
     for (let a = 0; a < originalArray.length; ++a) {
-        physicsRemoveEntity(physics, originalArray[a]);
+        physics_remove_entity(physics, originalArray[a]);
     }
     
     // Shouldn't be needed, but make sure everything is really gone
@@ -2232,12 +2232,12 @@ function physicsRemoveAll(physics) {
 }
 
 
-function physicsRemoveEntity(physics, entity) {
+function physics_remove_entity(physics, entity) {
     // Remove all attachments (removing mutates the
     // array, so we have to clone it first!)
     const originalArray = clone(entity._attachmentArray);
     for (let a = 0; a < originalArray.length; ++a) {
-        physicsDetach(physics, originalArray[a]);
+        physics_detach(physics, originalArray[a]);
     }
 
     // Remove all contacts that we are maintaining.  It is OK to have
@@ -2250,7 +2250,7 @@ function physicsRemoveEntity(physics, entity) {
         const contact = newContactArray[c];
         if (contact.entityA === entity || contact.entityB === entity) {
             // Fast remove and shrink
-            newContactArray[c] = lastValue(newContactArray);
+            newContactArray[c] = last_value(newContactArray);
             --newContactArray.length;
             --c;
         }
@@ -2270,7 +2270,7 @@ function physicsRemoveEntity(physics, entity) {
     }
     
     _Physics.World.remove(physics._engine, entity._body, true);
-    fastRemoveValue(physics._entityArray, entity);
+    fast_remove_value(physics._entityArray, entity);
     entity._body = undefined;
     entity._attachmentArray = undefined;
 }
@@ -2278,7 +2278,7 @@ function physicsRemoveEntity(physics, entity) {
    
 // internal   
 function _entityUpdateFromBody(entity) {
-    const S = getRotationSign();
+    const S = rotation_sign();
     
     const body     = entity._body;
     entity.pos.x   = body.position.x;
@@ -2291,10 +2291,10 @@ function _entityUpdateFromBody(entity) {
     entity.angle   = body.angle * S;
     entity.torque  = body.torque * _PHYSICS_MASS_INV_SCALE * S;
 
-    if (entity.physicsSleepState === 'vigilant') {
+    if (entity.physics_sleep_state === 'vigilant') {
         if (body.isSleeping) { _Physics.Sleeping.set(body, false); }
     } else {
-        entity.physicsSleepState = body.isSleeping ? 'sleeping' : 'awake';
+        entity.physics_sleep_state = body.isSleeping ? 'sleeping' : 'awake';
     }
     /*
     // The physics update would never change these:
@@ -2302,7 +2302,7 @@ function _entityUpdateFromBody(entity) {
     entity.restitution    = body.restitution
     entity.friction       = body.friction
     entity.drag           = body.frictionAir
-    entity.stictionFactor = body.frictionStatic
+    entity.stiction_factor = body.frictionStatic
     */
 }
 
@@ -2315,8 +2315,8 @@ function _bodyUpdateFromEntity(body) {
     // on the quadplay side
 
     const changeThreshold = 0.00001;
-    let awake = entity.physicsSleepState === 'vigilant' || entity.physicsSleepState === 'awake';
-    const S = getRotationSign();
+    let awake = entity.physics_sleep_state === 'vigilant' || entity.physics_sleep_state === 'awake';
+    const S = rotation_sign();
 
     // Wake up on changes
     if (Math.abs(body.position.x - entity.pos.x) > changeThreshold ||
@@ -2351,20 +2351,20 @@ function _bodyUpdateFromEntity(body) {
         }
     }
 
-    body.collisionFilter.group = -entity.collisionGroup;
-    body.collisionFilter.mask  = entity.collisionHitMask;
-    body.collisionFilter.category = entity.collisionCategoryMask;
+    body.collisionFilter.group = -entity.collision_group;
+    body.collisionFilter.mask  = entity.collision_hit_mask;
+    body.collisionFilter.category = entity.collision_category_mask;
          
     body.force.x = entity.force.x * _PHYSICS_MASS_SCALE;
     body.force.y = entity.force.y * _PHYSICS_MASS_SCALE;
     body.torque  = entity.torque * S * _PHYSICS_MASS_SCALE;
 
     body.friction       = entity.friction;
-    body.frictionStatic = entity.stictionFactor;
+    body.frictionStatic = entity.stiction_factor;
     body.frictionAir    = entity.drag;
     body.restitution    = entity.restitution;
 
-    body.isSensor       = entity.collisionSensor;
+    body.isSensor       = entity.is_sensor;
     
     // The Matter.js API does not notice if an object woke up due to velocity, only
     // due to forces.
@@ -2378,7 +2378,7 @@ function _bodyUpdateFromEntity(body) {
 }
 
       
-function physicsSimulate(physics, stepFrames) {
+function physics_simulate(physics, stepFrames) {
     const startTime = performance.now();
           
     if (stepFrames === undefined) { stepFrames = 1; }
@@ -2457,21 +2457,28 @@ function physicsSimulate(physics, stepFrames) {
     }
 
     if (_showPhysicsEnabled) {
-        drawPhysics(physics);
+        draw_physics(physics);
     }
 
     // Fire event handlers for new contacts
     for (const event of physics._contactCallbackArray.values()) {
         for (const contact of physics._newContactArray.values()) {
 
-            if ((((contact.entityA.collisionCategoryMask & event.collisionMask) |
-                  (contact.entityB.collisionCategoryMask & event.collisionMask)) !== 0) &&
-                (contact.depth >= event.minDepth) && (contact.depth <= event.maxDepth) &&
+            if ((((contact.entityA.collision_category_mask & event.collision_mask) |
+                  (contact.entityB.collision_category_mask & event.collision_mask)) !== 0) &&
+                (contact.depth >= event.min_depth) && (contact.depth <= event.max_depth) &&
                 ((event.sensors === 'include') ||
-                 ((event.sensors === 'only') && (contact.entityA.collisionSensor || contact.entityB.collisionSensor)) ||
-                 ((event.sensors === 'exclude') && ! (contact.entityA.collisionSensor || contact.entityB.collisionSensor)))) {
-                
-                event.callback(deepClone(contact));
+                 ((event.sensors === 'only') && (contact.entityA.is_sensor || contact.entityB.is_sensor)) ||
+                 ((event.sensors === 'exclude') && ! (contact.entityA.is_sensor || contact.entityB.is_sensor)))) {
+
+                event.callback({
+                    entityA: contact.entityA,
+                    entityB: contact.entityB,
+                    normal:  xy(contact.normal),
+                    point0:  xy(contact.point0),
+                    point1:  clone(contact.point1),
+
+                });
             }
         } // event
     } // contact
@@ -2483,31 +2490,31 @@ function physicsSimulate(physics, stepFrames) {
 }
 
 
-function physicsAddContactCallback(physics, callback, minDepth, maxDepth, collisionMask, sensors) {
-    if (collisionMask === 0) { throw new Error('A contact callback with collisionMask = 0 will never run.'); }
+function physics_add_contact_callback(physics, callback, min_depth, max_depth, collision_mask, sensors) {
+    if (collision_mask === 0) { throw new Error('A contact callback with collision_mask = 0 will never run.'); }
 
     physics._contactCallbackArray.push({
         callback:      callback,
-        minDepth:      minDepth || 0,
-        maxDepth:      (maxDepth !== undefined) ? maxDepth : Infinity,
-        collisionMask: (collisionMask !== undefined) ? collisionMask : 0xffffffff,
+        min_depth:      min_depth || 0,
+        max_depth:      (max_depth !== undefined) ? max_depth : Infinity,
+        collision_mask: (collision_mask !== undefined) ? collision_mask : 0xffffffff,
         sensors:        sensors || 'exclude'
     });
 }
 
 
-function physicsEntityHasContacts(physics, entity, region, normal, mask, sensors) {
-    return _physicsEntityContacts(physics, entity, region, normal, mask, sensors, true);
+function physics_entity_has_contacts(physics, entity, region, normal, mask, sensors) {
+    return _physics_entity_contacts(physics, entity, region, normal, mask, sensors, true);
 }
 
-function physicsEntityContacts(physics, entity, region, normal, mask, sensors) {
-    return _physicsEntityContacts(physics, entity, region, normal, mask, sensors, false);
+function physics_entity_contacts(physics, entity, region, normal, mask, sensors) {
+    return _physics_entity_contacts(physics, entity, region, normal, mask, sensors, false);
 }
 
-function _physicsEntityContacts(physics, entity, region, normal, mask, sensors, earlyOut) {
+function _physics_entity_contacts(physics, entity, region, normal, mask, sensors, earlyOut) {
     if (mask === undefined) { mask = 0xffffffff; }
-    if (mask === 0) { throw new Error('physicsEntityContacts() with mask = 0 will never return anything.'); }
-    if (! entity) { throw new Error('physicsEntityContacts() must have a non-nil entity'); }
+    if (mask === 0) { throw new Error('physics_entity_contacts() with mask = 0 will never return anything.'); }
+    if (! entity) { throw new Error('physics_entity_contacts() must have a non-nil entity'); }
 
     const engine = physics._engine;
     sensors = sensors || 'exclude';
@@ -2527,7 +2534,7 @@ function _physicsEntityContacts(physics, entity, region, normal, mask, sensors, 
     const testPointShape = {shape: 'disk', angle: 0, size: xy(0, 0), scale: xy(1, 1), pos: xy(0, 0)};
     const testPoint = testPointShape.pos;
 
-    const Rx = Math.cos(entity.angle) / entity.scale.x, Ry = Math.sin(entity.angle) * getRotationSign() / entity.scale.y;
+    const Rx = Math.cos(entity.angle) / entity.scale.x, Ry = Math.sin(entity.angle) * rotation_sign() / entity.scale.y;
     const Tx = entity.pos.x, Ty = entity.pos.y;
 
     // Avoid having overlaps() perform the cleanup test many times
@@ -2543,13 +2550,13 @@ function _physicsEntityContacts(physics, entity, region, normal, mask, sensors, 
         const other = isA ? contact.entityB : contact.entityA; 
 
         // Are we in the right category?
-        if ((other.collisionCategoryMask & mask) === 0) {
+        if ((other.collision_category_mask & mask) === 0) {
             // console.log("Mask rejection");
             continue;
         }
 
-        if (((sensors === 'exclude') && other.collisionSensor) ||
-            ((sensors === 'only') && ! other.collisionSensor)) {
+        if (((sensors === 'exclude') && other.is_sensor) ||
+            ((sensors === 'only') && ! other.is_sensor)) {
             // console.log("Sensor rejection");
             continue;
         }
@@ -2609,7 +2616,7 @@ function _physicsEntityContacts(physics, entity, region, normal, mask, sensors, 
 }
 
 
-function physicsDetach(physics, attachment) {
+function physics_detach(physics, attachment) {
     // Remove from the entitys
     attachment.entityB._attachmentArray.removeValue(attachment);
     if (attachment.entityA) { attachment.entityA._attachmentArray.removeValue(attachment); }
@@ -2647,7 +2654,7 @@ function physicsDetach(physics, attachment) {
 }
 
 
-function physicsAttach(physics, type, param) {
+function physics_attach(physics, type, param) {
     if (param.entityA && ! param.entityA._body) { throw new Error("entityA has not been added to the physics context"); }
     if (! param.entityB) { throw new Error("entityB must not be nil"); }
     if (! param.entityB._body) { throw new Error("entityB has not been added to the physics context"); }
@@ -2677,7 +2684,7 @@ function physicsAttach(physics, type, param) {
     // bodies, but not rotated by the bodies
     const options = {
         bodyB:  param.entityB._body,
-        pointB: _objectSub(transformEntityToDraw(param.entityB, param.pointB || xy(0, 0)), param.entityB.pos)
+        pointB: _objectSub(transform_entity_to_draw(param.entityB, param.pointB || xy(0, 0)), param.entityB.pos)
     };
 
     if (type === 'weld') {
@@ -2731,7 +2738,7 @@ function physicsAttach(physics, type, param) {
     if (param.entityA) {
         options.bodyA = param.entityA._body;
         if (param.pointA) {
-            A = transformEntityToDraw(param.entityA, param.pointA);
+            A = transform_entity_to_draw(param.entityA, param.pointA);
             options.pointA = _objectSub(A, param.entityA.pos);
         } else {
             A = param.entityA.pos;
@@ -2835,7 +2842,7 @@ function physicsAttach(physics, type, param) {
 
                 // Higher gives more rigidity but also affects mass
                 // and moment of inertia more;
-                const weldDensity = _PHYSICS_MASS_SCALE * (entityMass(param.entityA) + entityMass(param.entityB)) / 3500;
+                const weldDensity = _PHYSICS_MASS_SCALE * (entity_mass(param.entityA) + entity_mass(param.entityB)) / 3500;
 
                 // In world space
                 const weldPos = _objectAdd(options.pointB, param.entityB._body.position);
@@ -2909,7 +2916,7 @@ function physicsAttach(physics, type, param) {
 }
       
       
-function drawPhysics(physics) {
+function draw_physics(physics) {
     const showSecrets = false;
     const awakeColor   = rgb(0.10, 1.0, 0.5);
     const sleepColor   = rgb(0.05, 0.6, 0.3);
@@ -2943,25 +2950,25 @@ function drawPhysics(physics) {
 
             let r = 4;
             if (body.circleRadius) {
-                drawDisk(part.position, part.circleRadius, undefined, color, z);
+                draw_disk(part.position, part.circleRadius, undefined, color, z);
                 r = Math.min(r, part.circleRadius - 2);
             } else {
                 const V = part.vertices[0];
-                drawLine(lastValue(part.vertices), V, color, z);
-                let maxR2 = magnitudeSquared(V.x - part.position.x, V.y - part.position.y);
+                draw_line(last_value(part.vertices), V, color, z);
+                let maxR2 = magnitude_squared(V.x - part.position.x, V.y - part.position.y);
                 for (let i = 1; i < part.vertices.length; ++i) {
                     const V = part.vertices[i];
-                    maxR2 = Math.max(magnitudeSquared(V.x - part.position.x, V.y - part.position.y), maxR2);
-                    drawLine(part.vertices[i - 1], V, color, z);
+                    maxR2 = Math.max(magnitude_squared(V.x - part.position.x, V.y - part.position.y), maxR2);
+                    draw_line(part.vertices[i - 1], V, color, z);
                 }
                 r = Math.min(Math.sqrt(maxR2) - 2, r);
             }
             
             // Axes
             const axis = xy(r * C, r * S);
-            drawLine(_objectSub(part.position, axis), _objectAdd(part.position, axis), color, z);
+            draw_line(_objectSub(part.position, axis), _objectAdd(part.position, axis), color, z);
             let temp = axis.x; axis.x = -axis.y; axis.y = temp;
-            drawLine(_objectSub(part.position, axis), _objectAdd(part.position, axis), color, z);
+            draw_line(_objectSub(part.position, axis), _objectAdd(part.position, axis), color, z);
         }
     } // bodies
 
@@ -3008,25 +3015,25 @@ function drawPhysics(physics) {
                 const curr = _objectAdd(pointA,
                                         _objectAdd(_objectMul(longAxis, u),
                                                    _objectMul(crossAxis, v))); 
-                drawLine(prev, curr, color, z);
+                draw_line(prev, curr, color, z);
                 prev = curr;
             }
-            drawLine(prev, pointB, color, z);
+            draw_line(prev, pointB, color, z);
         } else {
             // rod
-            drawLine(pointA, pointB, color, z);
+            draw_line(pointA, pointB, color, z);
         }
 
         if (type === 'weld') {
             // Show a triangle to indicate that this attachment is rigid
-            drawPoly(weldTri, color, undefined, pointB, constraint.bodyB.angle, undefined, z);
+            draw_poly(weldTri, color, undefined, pointB, constraint.bodyB.angle, undefined, z);
         } else if (type === 'pin') {
             // Show one disk
-            drawDisk(pointA, 3, color, undefined, z);
+            draw_disk(pointA, 3, color, undefined, z);
         } else {
             // Show the two disks
-            drawDisk(pointA, 3, undefined, color, z);
-            drawDisk(pointB, 2.5, color, undefined, z);
+            draw_disk(pointA, 3, undefined, color, z);
+            draw_disk(pointB, 2.5, color, undefined, z);
         }
     }
 
@@ -3040,8 +3047,8 @@ function drawPhysics(physics) {
             // Draw each only once, for the body with the lower ID
             if (body0.id < body1.id) {
                 const z = Math.max(contact.entityA.z, contact.entityB.z) + zOffset;
-                drawRect(contact.point0, contactBox, contactColor, undefined, 0, z);
-                if (contact.point1) { drawRect(contact.point1, contactBox, contactColor, undefined, 0, z); }
+                draw_rect(contact.point0, contactBox, contactColor, undefined, 0, z);
+                if (contact.point1) { draw_rect(contact.point1, contactBox, contactColor, undefined, 0, z); }
             }
         }
     }
@@ -3054,8 +3061,8 @@ function drawPhysics(physics) {
         // Size based on penetration
         newContactBox.x = newContactBox.y = _clamp(1 + contact.depth * 2, 1, 10);
         
-        drawRect(contact.point0, newContactBox, newContactColor, undefined, 0, z);
-        if (contact.point1) { drawRect(contact.point1, newContactBox, newContactColor, undefined, 0, z); }
+        draw_rect(contact.point0, newContactBox, newContactColor, undefined, 0, z);
+        if (contact.point1) { draw_rect(contact.point1, newContactBox, newContactColor, undefined, 0, z); }
     }
 }
 
@@ -3069,32 +3076,32 @@ function drawPhysics(physics) {
 // centers.
 var _pixelSnap = Math.floor;
 
-function transformMapLayerToDrawZ(map, layer) {
+function transform_map_layer_to_draw_z(map, layer) {
     return layer * map.zScale + map.zOffset;
 }
 
 
-function transformDrawZToMapLayer(map, z) {
+function transform_draw_z_to_map_layer(map, z) {
     return (z - map.zOffset) / map.zScale;
 }
 
 
-function transformMapToDraw(map, mapCoord) {
-    return xy(mapCoord.x * map.spriteSize.x + map._offset.x,
-              mapCoord.y * map.spriteSize.y + map._offset.y);
+function transform_map_to_draw(map, map_coord) {
+    return xy(map_coord.x * map.sprite_size.x + map._offset.x,
+              map_coord.y * map.sprite_size.y + map._offset.y);
 }
 
 
-function transformDrawToMap(map, drawCoord) {
-    return xy((drawCoord.x - map._offset.x) / map.spriteSize.x,
-              (drawCoord.y - map._offset.y) / map.spriteSize.y);
+function transform_draw_to_map(map, draw_coord) {
+    return xy((draw_coord.x - map._offset.x) / map.sprite_size.x,
+              (draw_coord.y - map._offset.y) / map.sprite_size.y);
 }
 
 
-function getMapPixelColor(map, mapCoord, layer, replacementArray) {
+function get_map_pixel_color(map, map_coord, layer, replacement_array) {
     layer = Math.round(layer || 0);
-    let mx = Math.floor(mapCoord.x);
-    let my = Math.floor(mapCoord.y);
+    let mx = Math.floor(map_coord.x);
+    let my = Math.floor(map_coord.y);
 
     if (map.wrapX) { mx = loop(mx, map.size.x); }
     if (map.wrapY) { my = loop(my, map.size.y); }
@@ -3106,10 +3113,10 @@ function getMapPixelColor(map, mapCoord, layer, replacementArray) {
         
         let sprite = map.layer[layer][mx][my];
         if (sprite) {
-            if (replacementArray) {
-                for (let i = 0; i < replacementArray.length; i += 2) {
-                    if (replacementArray[i] === sprite) {
-                        sprite = replacementArray[i + 1];
+            if (replacement_array) {
+                for (let i = 0; i < replacement_array.length; i += 2) {
+                    if (replacement_array[i] === sprite) {
+                        sprite = replacement_array[i + 1];
                         break;
                     }
                 }
@@ -3117,8 +3124,8 @@ function getMapPixelColor(map, mapCoord, layer, replacementArray) {
             
             // Map coord (0, 0) is the corner of the corner sprite.
             const ssX = sprite.size.x, ssY = sprite.size.y;
-            const spriteCoord = {x:_clamp(Math.floor((mapCoord.x - mx) * ssX), 0, ssX - 1),
-                                 y:_clamp(Math.floor((mapCoord.y - my) * ssY), 0, ssY - 1)};
+            const spriteCoord = {x:_clamp(Math.floor((map_coord.x - mx) * ssX), 0, ssX - 1),
+                                 y:_clamp(Math.floor((map_coord.y - my) * ssY), 0, ssY - 1)};
 
             // Account for the automatic flipping that occurs to sprites when rendering
             if (_scaleY < 0) {
@@ -3129,7 +3136,7 @@ function getMapPixelColor(map, mapCoord, layer, replacementArray) {
                 spriteCoord.x = ssX - 1 - spriteCoord.x;
             }
             
-            return getSpritePixelColor(sprite, spriteCoord);
+            return get_sprite_pixel_color(sprite, spriteCoord);
         }
     }
 
@@ -3138,18 +3145,18 @@ function getMapPixelColor(map, mapCoord, layer, replacementArray) {
 }
 
 
-function getMapPixelColorByDrawCoord(map, drawCoord, z, replacementArray) {
-    if (! map.spritesheetTable) { throw new Error('The first argument to getMapPixelColorByDrawCoord() must be a map'); }
+function get_map_pixel_color_by_draw_coord(map, draw_coord, z, replacement_array) {
+    if (! map.spritesheetTable) { throw new Error('The first argument to get_map_pixel_color_by_draw_coord() must be a map'); }
     const layer = (((z || 0) - _offsetZ) / _scaleZ - map.zOffset) / map.zScale;
-    return getMapPixelColor(map, transformDrawToMap(map, drawCoord), layer, replacementArray);
+    return get_map_pixel_color(map, transform_draw_to_map(map, draw_coord), layer, replacement_array);
 }
 
     
-function getMapSprite(map, mapCoord, layer, replacementArray) {
-    if (! map.spritesheetTable) { throw new Error('The first argument to getMapSprite() must be a map'); }
+function get_map_sprite(map, map_coord, layer, replacement_array) {
+    if (! map.spritesheetTable) { throw new Error('The first argument to get_map_sprite() must be a map'); }
     layer = Math.round(layer || 0) | 0;
-    let mx = Math.floor(mapCoord.x);
-    let my = Math.floor(mapCoord.y);
+    let mx = Math.floor(map_coord.x);
+    let my = Math.floor(map_coord.y);
 
     if (map.wrapX) { mx = loop(mx, map.size.x); }
     if (map.wrapY) { my = loop(my, map.size.y); }
@@ -3159,10 +3166,10 @@ function getMapSprite(map, mapCoord, layer, replacementArray) {
         (mx < map.size.x) && (my < map.size.y)) {
         // In bounds
         let sprite = map.layer[layer][mx][my];
-        if (replacementArray) {
-            for (let i = 0; i < replacementArray.length; i += 2) {
-                if (replacementArray[i] === sprite) {
-                    return replacementArray[i + 1];
+        if (replacement_array) {
+            for (let i = 0; i < replacement_array.length; i += 2) {
+                if (replacement_array[i] === sprite) {
+                    return replacement_array[i + 1];
                     break;
                 }
             }
@@ -3176,10 +3183,10 @@ function getMapSprite(map, mapCoord, layer, replacementArray) {
 }
 
 
-function setMapSprite(map, mapCoord, sprite, layer) {
+function set_map_sprite(map, map_coord, sprite, layer) {
     layer = Math.round(layer || 0) | 0;
-    let mx = Math.floor(mapCoord.x);
-    let my = Math.floor(mapCoord.y);
+    let mx = Math.floor(map_coord.x);
+    let my = Math.floor(map_coord.y);
 
     if (map.wrapX) { mx = loop(mx, map.size.x); }
     if (map.wrapY) { my = loop(my, map.size.y); }
@@ -3195,29 +3202,29 @@ function setMapSprite(map, mapCoord, sprite, layer) {
 }
 
 
-function getMapSpriteByDrawCoord(map, drawCoord, z, replacementArray) {
+function get_map_sprite_by_draw_coord(map, draw_coord, z, replacement_array) {
     const layer = ((z || 0) - _offsetZ) / (_scaleZ * map.zScale);
-    return getMapSprite(map, transformDrawToMap(map, drawCoord), layer, replacementArray);
+    return get_map_sprite(map, transform_draw_to_map(map, draw_coord), layer, replacement_array);
 }
 
 
-function setMapSpriteByDrawCoord(map, drawCoord, sprite, z) {
+function set_map_sprite_by_draw_coord(map, draw_coord, sprite, z) {
     const layer = ((z || 0) - _offsetZ) / (_scaleZ * map.zScale);
-    return setMapSprite(map, transformDrawToMap(map, drawCoord), sprite, layer);
+    return set_map_sprite(map, transform_draw_to_map(map, draw_coord), sprite, layer);
 }
 
 
-function drawMap(map, minLayer, maxLayer, replacements) {
-    if (minLayer === undefined) {
-        minLayer = 0;
+function draw_map(map, min_layer, max_layer, replacements) {
+    if (min_layer === undefined) {
+        min_layer = 0;
     }
 
-    if (maxLayer === undefined) {
-        maxLayer = map.layer.length - 1;
+    if (max_layer === undefined) {
+        max_layer = map.layer.length - 1;
     }
 
     if (replacements !== undefined) {
-        if (! Array.isArray(replacements)) { throw new Error('The replacements for drawMap() must be an array'); }
+        if (! Array.isArray(replacements)) { throw new Error('The replacements for draw_map() must be an array'); }
         if (replacements.length & 1 !== 0) { throw new Error('There must be an even number of elements in the replacements array'); }
         // Convert to a map for efficiency (we need to copy anyway)
         let array = replacements;
@@ -3232,22 +3239,22 @@ function drawMap(map, minLayer, maxLayer, replacements) {
     const oldOffsetX = _offsetX, oldOffsetY = _offsetY;
     for (let shiftY = -1; shiftY <= +1; ++shiftY) {
         if (! map.wrapY && shiftY !== 0) { continue; }
-        _offsetY = oldOffsetY + map.size.y * map.spriteSize.y * shiftY;
+        _offsetY = oldOffsetY + map.size.y * map.sprite_size.y * shiftY;
             
         for (let shiftX = -1; shiftX <= +1; ++shiftX) {
             if (! map.wrapX && shiftX !== 0) { continue; }
-            _offsetX = oldOffsetX + map.size.x * map.spriteSize.x * shiftX;
+            _offsetX = oldOffsetX + map.size.x * map.sprite_size.x * shiftX;
             
-            // Compute the setClip coordinates in map coordinates
+            // Compute the set_clip coordinates in map coordinates
 
-            // Take the screen-space setClip coordinates to draw coords, and then
+            // Take the screen-space set_clip coordinates to draw coords, and then
             // compute the min/max map coords in pixel space.
-            const setClip1 = xy((_clipX1 - _offsetX) / _scaleX, (_clipY1 - _offsetY) / _scaleY);
-            const setClip2 = xy((_clipX2 - _offsetX) / _scaleX, (_clipY2 - _offsetY) / _scaleY);
+            const set_clip1 = xy((_clipX1 - _offsetX) / _scaleX, (_clipY1 - _offsetY) / _scaleY);
+            const set_clip2 = xy((_clipX2 - _offsetX) / _scaleX, (_clipY2 - _offsetY) / _scaleY);
 
             let mapX1, mapX2, mapY1, mapY2;
             {
-                const temp1 = transformDrawToMap(map, setClip1), temp2 = transformDrawToMap(map, setClip2);
+                const temp1 = transform_draw_to_map(map, set_clip1), temp2 = transform_draw_to_map(map, set_clip2);
                 mapX1 = Math.floor(Math.min(temp1.x, temp2.x));
                 mapX2 = Math.ceil (Math.max(temp1.x, temp2.x));
                 
@@ -3265,9 +3272,9 @@ function drawMap(map, minLayer, maxLayer, replacements) {
             // calls to reduce sorting, but since the map is mutable we have to actually
             // copy all elements for those calls.
 
-            for (let L = minLayer; L <= maxLayer; ++L) {
+            for (let L = min_layer; L <= max_layer; ++L) {
                 const layer = map.layer[L];
-                const z = transformMapLayerToDrawZ(L) * _scaleZ + _offsetZ;
+                const z = transform_map_layer_to_draw_z(L) * _scaleZ + _offsetZ;
                 
                 const layerData = [];
                 
@@ -3289,8 +3296,8 @@ function drawMap(map, minLayer, maxLayer, replacements) {
                             // coordinates. Sprites are rendered from centers,
                             // so offset each by 1/2 the tile size.
                             layerData.push({sprite: sprite,
-                                            x: ((mapX + 0.5) * map.spriteSize.x + map._offset.x) * _scaleX + _offsetX,
-                                            y: ((mapY + 0.5) * map.spriteSize.y + map._offset.y) * _scaleY + _offsetY})
+                                            x: ((mapX + 0.5) * map.sprite_size.x + map._offset.x) * _scaleX + _offsetX,
+                                            y: ((mapY + 0.5) * map.sprite_size.y + map._offset.y) * _scaleY + _offsetY})
                         }
                     } // y
                 } // x
@@ -3311,14 +3318,14 @@ function drawMap(map, minLayer, maxLayer, replacements) {
 }
 
 
-function drawTri(A, B, C, color, outline, pos, scale, angle, z) {
-    drawPoly([A, B, C], color, outline, pos, angle, scale, z);
+function draw_tri(A, B, C, color, outline, pos, scale, angle, z) {
+    draw_poly([A, B, C], color, outline, pos, angle, scale, z);
 }
 
 
-function drawDisk(center, radius, color, outline, z) {
+function draw_disk(center, radius, color, outline, z) {
     // Skip graphics this frame
-    if (modeFrames % _graphicsPeriod !== 0) { return; }
+    if (mode_frames % _graphicsPeriod !== 0) { return; }
 
     z = z || 0;
     const skx = (z * _skewXZ), sky = (z * _skewYZ);
@@ -3381,39 +3388,39 @@ function _colorToUint32(color) {
 }
 
 
-function drawRect(pos, size, fill, border, angle, z) {
+function draw_rect(pos, size, fill, border, angle, z) {
     angle = loop(angle || 0, -Math.PI, Math.PI);
     const rx = size.x * 0.5, ry = size.y * 0.5;
     if (Math.min(Math.abs(angle), Math.abs(angle - Math.PI), Math.abs(angle + Math.PI)) < 1e-10) {
         // Use the corner rect case for speed
-        drawCornerRect(xy(pos.x - rx, pos.y - ry), size, fill, border, z);
+        draw_corner_rect(xy(pos.x - rx, pos.y - ry), size, fill, border, z);
     } else if (Math.min(Math.abs(angle - Math.PI * 0.5), Math.abs(angle + Math.PI * 0.5)) < 1e-10) {
         // Use the corner rect case for speed, rotated 90 degrees
-        drawCornerRect(xy(pos.x - ry, pos.y - rx), xy(size.y, size.x), fill, border, z);
+        draw_corner_rect(xy(pos.x - ry, pos.y - rx), xy(size.y, size.x), fill, border, z);
     } else {
         const vertexArray = [xy(-rx, -ry), xy(rx, -ry), xy(rx, ry), xy(-rx, ry)];
-        drawPoly(vertexArray, fill, border, pos, angle, undefined, z);
+        draw_poly(vertexArray, fill, border, pos, angle, undefined, z);
     }
 }
 
 
-function drawPoly(vertexArray, fill, border, pos, angle, scale, z) {
+function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
     switch (vertexArray.length) {
     case 0: return;
         
     case 1:
         if (border) {
-            drawPoint(vertexArray[0], border, z);
+            draw_point(vertexArray[0], border, z);
         } else if (fill) {
-            drawPoint(vertexArray[0], fill, z);
+            draw_point(vertexArray[0], fill, z);
         }
         return;
         
     case 2:
         if (border) {
-            drawLine(vertexArray[0], vertexArray[1], border, z);
+            draw_line(vertexArray[0], vertexArray[1], border, z);
         } else if (fill) {
-            drawPoint(vertexArray[0], vertexArray[1], fill, z);
+            draw_point(vertexArray[0], vertexArray[1], fill, z);
         }
         return;
     }
@@ -3434,7 +3441,7 @@ function drawPoly(vertexArray, fill, border, pos, angle, scale, z) {
         } else { Sx = Sy = scale; }
     }
 
-    angle = -(angle || 0) * getRotationSign();
+    angle = -(angle || 0) * rotation_sign();
     const Rx = Math.cos(angle), Ry = Math.sin(angle);
 
     let Tx = 0, Ty = 0;
@@ -3488,7 +3495,7 @@ function drawPoly(vertexArray, fill, border, pos, angle, scale, z) {
 }
 
 
-function drawCornerRect(corner, size, fill, outline, z) {
+function draw_corner_rect(corner, size, fill, outline, z) {
     z = z || 0;
     const skx = (z * _skewXZ), sky = (z * _skewYZ);
     let x1 = (corner.x + skx) * _scaleX + _offsetX, y1 = (corner.y + sky) * _scaleY + _offsetY;
@@ -3531,7 +3538,7 @@ function drawCornerRect(corner, size, fill, outline, z) {
 }
 
 
-function drawLine(A, B, color, z, openA, openB) {
+function draw_line(A, B, color, z, openA, openB) {
     openA = openA || false;
     openB = openB || false;
     z = z || 0;
@@ -3563,9 +3570,9 @@ function drawLine(A, B, color, z, openA, openB) {
 }
 
 
-function drawPoint(P, color, z) {
+function draw_point(P, color, z) {
     // Skip graphics this frame
-    if (modeFrames % _graphicsPeriod !== 0) { return; }
+    if (mode_frames % _graphicsPeriod !== 0) { return; }
 
     z = z || 0;
     const skx = z * _skewXZ, sky = z * _skewYZ;
@@ -3597,7 +3604,7 @@ function drawPoint(P, color, z) {
 }
 
 
-function textWidth(font, str, markup) {
+function text_width(font, str, markup) {
     if (str === '') { return 0; }
 
     let formatArray = [{font: font, color: 0, shadow: 0, outline: 0, startIndex: 0}];
@@ -3619,7 +3626,7 @@ function textWidth(font, str, markup) {
     for (let c = 0; c < str.length; ++c) {
         const chr = _fontMap[str[c]] || ' ';
         const bounds = font._bounds[chr];
-        width += (bounds.x2 - bounds.x1 + 1) + font._spacing.x - font._borderSize * 2 + bounds.pre + bounds.post;
+        width += (bounds.x2 - bounds.x1 + 1) + _postGlyphSpace(str, c, format.font) - font._borderSize * 2 + bounds.pre + bounds.post;
         
         if (offsetIndex === formatArray[formatIndex].endIndex) {
             // Advance to the next format
@@ -3660,7 +3667,7 @@ function _parseMarkupHelper(str, startIndex, stateChanges) {
         end = Math.min(op, cl);
         
         if (end >= str.length) {
-            throw new Error('Unbalanced {} in drawText() with markup');
+            throw new Error('Unbalanced {} in draw_text() with markup');
         }
         
         if (str[end - 1] !== '\\') {
@@ -3716,7 +3723,7 @@ function _parseMarkupHelper(str, startIndex, stateChanges) {
         text = markup.replace(/^\s*(font|color|shadow|outline)\s*:\s*([Δ]?(?:[_A-Za-z][A-Za-z_0-9]*|[αβγΔδζηθιλμρσϕφχψτωΩ][_0-9]*(?:_[A-Za-z_0-9]*)?))\s+/, function (match, prop, value) {
             const v = window[value];
             if (v === undefined) {
-                throw new Error('Global constant ' + value + ' used in drawText markup is undefined.');
+                throw new Error('Global constant ' + value + ' used in draw_text markup is undefined.');
             } else if (prop === 'font' && v._type !== 'font') {
                 throw new Error('Global constant ' + value + ' is not a font'); 
             } else if (prop !== 'font' && value.r === undefined && value.h === undefined) {
@@ -3791,10 +3798,24 @@ function _parseMarkup(str, stateChanges) {
 }
 
 
-/** Helper for drawText() that operates after markup formatting has been processed. 
+// Used for font rendering. Returns the font spacing, unless it is zero. In the zero case, the function
+// tests for symbols (which include superscripts and subscripts, as well as the space character) that
+// require spacing around them even if the font specifies font._spacing.x == 0.
+function _postGlyphSpace(str, i, font) {
+    if (font._spacing.x !== 0 || i >= str.length) {
+        return font._spacing.x;
+    } else {
+        const symbolRegex = /[^A-Za-z0-9_αβγδεζηθικλμνξ§πρστυϕχψωςşğÆÀÁÂÃÄÅÇÈÉÊËÌÍÎÏØÒÓÔÕÖŒÑẞÙÚÛÜБДæàáâãäåçèéêëìíîïøòóôõöœñßùúûüбгдЖЗИЙЛПЦЧШЩЭЮЯЪЫЬжзийлпцчшщэюяъыьΓΔмнкΘΛΞΠİΣℵΦΨΩŞĞ]/;
+        // test() will not fail on undefined or NaN, so ok to not safeguard the string conversions
+        return symbolRegex.test(_fontMap[str[i]] + _fontMap[str[i + 1]]) ? 1 : 0;
+    }
+}
+
+
+/** Helper for draw_text() that operates after markup formatting has been processed. 
     offsetIndex is the amount to add to the indices in formatArray to account for
     the str having been shortened already. */
-function _drawText(offsetIndex, formatIndex, str, formatArray, pos, xAlign, yAlign, z, wrapWidth, textSize, referenceFont) {
+function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_align, z, wrapWidth, textSize, referenceFont) {
     console.assert(typeof str === 'string');
     console.assert(Array.isArray(formatArray));
     console.assert(typeof pos === 'object' && pos.x !== undefined);
@@ -3818,22 +3839,22 @@ function _drawText(offsetIndex, formatIndex, str, formatArray, pos, xAlign, yAli
         if (str[c] === '\n') {
             // Newline, process by breaking and recursively continuing
             const cur = str.substring(0, c).trimEnd();
-            const firstLineBounds = _drawText(startingOffsetIndex, startingFormatIndex, cur, formatArray, pos, xAlign, yAlign, z, wrapWidth, textSize, referenceFont);
+            const firstLineBounds = _draw_text(startingOffsetIndex, startingFormatIndex, cur, formatArray, pos, x_align, y_align, z, wrapWidth, textSize, referenceFont);
 
             // Update formatIndex
             while ((offsetIndex < formatArray[formatIndex].startIndex) || (offsetIndex > formatArray[formatIndex].endIndex)) { ++formatIndex; }
             format = undefined;
             
-            const restBounds = _drawText(offsetIndex + 1, formatIndex, str.substring(c + 1), formatArray, xy(pos.x, pos.y + referenceFont.lineHeight / _scaleY), xAlign, yAlign, z, wrapWidth, textSize - cur.length, referenceFont);
+            const restBounds = _draw_text(offsetIndex + 1, formatIndex, str.substring(c + 1), formatArray, xy(pos.x, pos.y + referenceFont.lineHeight / _scaleY), x_align, y_align, z, wrapWidth, textSize - cur.length, referenceFont);
             firstLineBounds.x = Math.max(firstLineBounds.x, restBounds.x);
-            firstLineBounds.y += restBounds.y + referenceFont.lineHeight + referenceFont._spacing.y;
+            firstLineBounds.y += referenceFont._spacing.y + restBounds.y;
             return firstLineBounds;
         }
         
         const chr = _fontMap[str[c]] || ' ';
         const bounds = format.font._bounds[chr];
 
-        const delta = (bounds.x2 - bounds.x1 + 1) + format.font._spacing.x - format.font._borderSize * 2 + bounds.pre + bounds.post;
+        const delta = (bounds.x2 - bounds.x1 + 1) + _postGlyphSpace(str, c, format.font) - format.font._borderSize * 2 + bounds.pre + bounds.post;
         currentWidth += delta;
         width += delta;
 
@@ -3856,7 +3877,7 @@ function _drawText(offsetIndex, formatIndex, str, formatArray, pos, xAlign, yAli
             }
 
             const cur = str.substring(0, breakIndex);          
-            const firstLineBounds = _drawText(startingOffsetIndex, startingFormatIndex, cur.trimEnd(), formatArray, pos, xAlign, yAlign, z, undefined, textSize, referenceFont);
+            const firstLineBounds = _draw_text(startingOffsetIndex, startingFormatIndex, cur.trimEnd(), formatArray, pos, x_align, y_align, z, undefined, textSize, referenceFont);
             
             // Now draw the rest
             const next = str.substring(breakIndex);
@@ -3872,9 +3893,9 @@ function _drawText(offsetIndex, formatIndex, str, formatArray, pos, xAlign, yAli
             format = undefined;
 
             console.assert(offsetIndex >= formatArray[formatIndex].startIndex && offsetIndex <= formatArray[formatIndex].endIndex);
-            const restBounds = _drawText(offsetIndex, formatIndex, nnext, formatArray, xy(pos.x, pos.y + referenceFont.lineHeight / _scaleY), xAlign, yAlign, z, wrapWidth, textSize - cur.length - (next.length - nnext.length), referenceFont);
+            const restBounds = _draw_text(offsetIndex, formatIndex, nnext, formatArray, xy(pos.x, pos.y + referenceFont.lineHeight / _scaleY), x_align, y_align, z, wrapWidth, textSize - cur.length - (next.length - nnext.length), referenceFont);
             firstLineBounds.x = Math.max(firstLineBounds.x, restBounds.x);
-            firstLineBounds.y += restBounds.y + referenceFont.lineHeight + referenceFont._spacing.y;
+            firstLineBounds.y += referenceFont._spacing.y + restBounds.y;
             return firstLineBounds;
         }
         
@@ -3899,28 +3920,28 @@ function _drawText(offsetIndex, formatIndex, str, formatArray, pos, xAlign, yAli
     let x = (pos.x + skx) * _scaleX + _offsetX, y = (pos.y + sky) * _scaleY + _offsetY;
     z = z * _scaleZ + _offsetZ;
 
-    let height = referenceFont._charHeight;
+    const height = referenceFont._charHeight;
 
-    switch (xAlign) {
-    case undefined: case 'left': xAlign = -1; break;
-    case 'middle': case 'center': xAlign = 0; break;
-    case 'right':  xAlign = +1; break;
+    switch (x_align) {
+    case undefined: case 'left': x_align = -1; break;
+    case 'middle': case 'center': x_align = 0; break;
+    case 'right':  x_align = +1; break;
     }
 
-    switch (yAlign) {
-    case 'top': yAlign = -1; break;
-    case 'center': case 'middle': yAlign = 0; break;
-    case undefined: case 'baseline': yAlign = +1; break;
-    case 'bottom': yAlign = +2; break;
+    switch (y_align) {
+    case 'top': y_align = -1; break;
+    case 'center': case 'middle': y_align = 0; break;
+    case undefined: case 'baseline': y_align = +1; break;
+    case 'bottom': y_align = +2; break;
     }
 
     // Force alignment to retain relative integer pixel alignment
-    x -= Math.round(width * (1 + xAlign) * 0.5);
+    x -= Math.round(width * (1 + x_align) * 0.5);
 
     // Move back to account for the border and shadow padding
-    if (xAlign !== +1) { --x; }
+    if (x_align !== +1) { --x; }
 
-    switch (yAlign) {
+    switch (y_align) {
     case -1: y -= referenceFont._borderSize; break; // Align to the top of the bounds
     case  0:
         // Middle. Center on a '2', which tends to have a typical height 
@@ -3974,7 +3995,7 @@ function _drawText(offsetIndex, formatIndex, str, formatArray, pos, xAlign, yAli
 
             x += format.width;
 
-            // TODO: adjust for the relative y baselines of the fonts,
+            // Should adjust for the relative y baselines of the fonts,
             // changing the returned bounds accordingly
 
             offsetIndex = format.endIndex + 1;
@@ -3987,19 +4008,21 @@ function _drawText(offsetIndex, formatIndex, str, formatArray, pos, xAlign, yAli
         }
     }
 
-    return {x: width, y: referenceFont.lineHeight + referenceFont._spacing.y};
+    // The height is inflated by 3 for the outline on top
+    // and shadow and outline on the bottom.
+    return {x: width, y: height - 3};
 }
 
 
-/** Processes formatting and invokes _drawText() */
-function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapWidth, textSize, markup) {
+/** Processes formatting and invokes _draw_text() */
+function draw_text(font, str, P, color, shadow, outline, x_align, y_align, z, wrapWidth, textSize, markup) {
     if (font && font.font) {
         // Keyword version
         textSize = font.textSize;
         wrapWidth = font.wrapWidth;
         z = font.z;
-        yAlign = font.yAlign;
-        xAlign = font.xAlign;
+        y_align = font.y_align;
+        x_align = font.x_align;
         outline = font.outline;
         shadow = font.shadow;
         color = font.color;
@@ -4010,11 +4033,11 @@ function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapW
     }
 
     if (font === undefined) {
-        throw new Error('drawText() requires a font');
+        throw new Error('draw_text() requires a font');
     }
     
     if (P === undefined) {
-        throw new Error('drawText() requires a pos');
+        throw new Error('draw_text() requires a pos');
     }
 
     if (typeof str !== 'string') {
@@ -4040,7 +4063,7 @@ function drawText(font, str, P, color, shadow, outline, xAlign, yAlign, z, wrapW
     // Debug visualize the markup:
     // for (let i = 0; i < stateChanges.length; ++i) { console.log(str.substring(stateChanges[i].startIndex, stateChanges[i].endIndex + 1)); }
     
-    return _drawText(0, 0, str, stateChanges, P, xAlign, yAlign, z, wrapWidth, textSize, font);
+    return _draw_text(0, 0, str, stateChanges, P, x_align, y_align, z, wrapWidth, textSize, font);
 }
 
 
@@ -4061,9 +4084,9 @@ function _clamp(x, L, H) {
 }
 
 
-function getSpritePixelColor(spr, pos, result) {
+function get_sprite_pixel_color(spr, pos, result) {
     if (! (spr && spr.spritesheet)) {
-        throw new Error('Called getSpritePixelColor() on an object that was not a sprite asset. (' + unparse(spr) + ')');
+        throw new Error('Called get_sprite_pixel_color() on an object that was not a sprite asset. (' + unparse(spr) + ')');
     }
 
     const x = Math.floor((spr.scale.x > 0) ? pos.x : (spr.size.x - 1 - pos.x));
@@ -4091,9 +4114,9 @@ function getSpritePixelColor(spr, pos, result) {
 }
 
 
-function drawSpriteCornerRect(CC, corner, size, z) {
+function draw_sprite_corner_rect(CC, corner, size, z) {
     if (! (CC && CC.spritesheet)) {
-        throw new Error('Called drawSpriteCornerRect() on an object that was not a sprite asset. (' + unparse(CC) + ')');
+        throw new Error('Called draw_sprite_corner_rect() on an object that was not a sprite asset. (' + unparse(CC) + ')');
     }
     z = z || 0;
     const skx = (z * _skewXZ), sky = (z * _skewYZ);
@@ -4124,16 +4147,16 @@ function drawSpriteCornerRect(CC, corner, size, z) {
     // Iterate over center box, clipping at its edges
     const spriteCenter = xy(0,0);
     _pushGraphicsState(); {
-        intersectClip(xy(x1, y1), xy(x2 - x1 + 1, y2 - y1 + 1));
+        intersect_clip(xy(x1, y1), xy(x2 - x1 + 1, y2 - y1 + 1));
         
         for (let y = 0; y < numTilesY; ++y) {
             // Transform individual pixel coordinates *back* to game
-            // coords for the drawSprite call to handle clipping and
+            // coords for the draw_sprite call to handle clipping and
             // insertion into the queue.
             spriteCenter.y = ((centerY + (y - (numTilesY - 1) * 0.5) * CC.size.y) - _offsetY) / _scaleY;
             for (let x = 0; x < numTilesX; ++x) {
                 spriteCenter.x = ((centerX + (x - (numTilesX - 1) * 0.5) * CC.size.x) - _offsetX) / _scaleX;
-                drawSprite(CC, spriteCenter, 0, undefined, 1, z);
+                draw_sprite(CC, spriteCenter, 0, undefined, 1, z);
             }
         }
     } _popGraphicsState();
@@ -4158,31 +4181,31 @@ function drawSpriteCornerRect(CC, corner, size, z) {
     
     // Top and bottom
     _pushGraphicsState(); {
-        intersectClip(xy(x1, _clipY1), xy(x2 - x1 + 1, _clipY2 - _clipY1 + 1));
+        intersect_clip(xy(x1, _clipY1), xy(x2 - x1 + 1, _clipY2 - _clipY1 + 1));
         
         for (let x = 0; x < numTilesX; ++x) {
             spriteCenter.x = ((centerX + (x - (numTilesX - 1) * 0.5) * CC.size.x) - _offsetX) / _scaleX;
 
             spriteCenter.y = top;
-            drawSprite(CT, spriteCenter, 0, undefined, 1, z);
+            draw_sprite(CT, spriteCenter, 0, undefined, 1, z);
             
             spriteCenter.y = bottom;
-            drawSprite(CB, spriteCenter, 0, undefined, 1, z);
+            draw_sprite(CB, spriteCenter, 0, undefined, 1, z);
         }
     } _popGraphicsState();
 
     // Sides
     _pushGraphicsState(); {
-        intersectClip(xy(_clipX1, y1), xy(_clipX2 - _clipX1 + 1, y2 - y1 + 1));
+        intersect_clip(xy(_clipX1, y1), xy(_clipX2 - _clipX1 + 1, y2 - y1 + 1));
         
         for (let y = 0; y < numTilesY; ++y) {
             spriteCenter.y = ((centerY + (y - (numTilesY - 1) * 0.5) * CC.size.y) - _offsetY) / _scaleY;
 
             spriteCenter.x = left;
-            drawSprite(LC, spriteCenter, 0, undefined, 1, z);
+            draw_sprite(LC, spriteCenter, 0, undefined, 1, z);
             
             spriteCenter.x = right;
-            drawSprite(RC, spriteCenter, 0, undefined, 1, z);
+            draw_sprite(RC, spriteCenter, 0, undefined, 1, z);
         }
     } _popGraphicsState();
 
@@ -4190,19 +4213,19 @@ function drawSpriteCornerRect(CC, corner, size, z) {
     {
         // Left Top
         spriteCenter.x = left; spriteCenter.y = top;
-        drawSprite(LT, spriteCenter, 0, undefined, 1, z);
+        draw_sprite(LT, spriteCenter, 0, undefined, 1, z);
         
         // Right Top
         spriteCenter.x = right;
-        drawSprite(RT, spriteCenter, 0, undefined, 1, z);
+        draw_sprite(RT, spriteCenter, 0, undefined, 1, z);
 
         // Left Bottom
         spriteCenter.x = left; spriteCenter.y = bottom;
-        drawSprite(LB, spriteCenter, 0, undefined, 1, z);
+        draw_sprite(LB, spriteCenter, 0, undefined, 1, z);
 
         // Right Bottom
         spriteCenter.x = right;
-        drawSprite(RB, spriteCenter, 0, undefined, 1, z);
+        draw_sprite(RB, spriteCenter, 0, undefined, 1, z);
     }
 }
 
@@ -4216,7 +4239,7 @@ function _maybeApplyPivot(pos, pivot, angle, scale) {
 
     let scaleX = 1, scaleY = 1;
     if (scale) {
-        if (isNumber(scale)) {
+        if (is_number(scale)) {
             scaleX = scaleY = scale;
         } else {
             scaleX = scale.x;
@@ -4233,15 +4256,15 @@ function _maybeApplyPivot(pos, pivot, angle, scale) {
     
     // Rotate into sprite space
     const C = Math.cos(angle);
-    const S = Math.sin(angle) * -getRotationSign();
+    const S = Math.sin(angle) * -rotation_sign();
     return {x: pos.x - (deltaX * C + S * deltaY),
             y: pos.y - (deltaY * C - S * deltaX)};
 }
 
 
-function drawSprite(spr, center, angle, scale, opacity, z, overrideColor) {
+function draw_sprite(spr, center, angle, scale, opacity, z, override_color) {
     // Skip graphics this frame
-    if (modeFrames % _graphicsPeriod !== 0) { return; }
+    if (mode_frames % _graphicsPeriod !== 0) { return; }
 
     if (spr && spr.sprite) {
         // This is the "keyword" version of the function
@@ -4250,19 +4273,19 @@ function drawSprite(spr, center, angle, scale, opacity, z, overrideColor) {
         scale = spr.scale;
         angle = spr.angle;
         center = spr.pos;
-        overrideColor = spr.overrideColor;
+        override_color = spr.override_color;
         spr = spr.sprite;
     }
 
     if (opacity <= 0) { return; }
 
-    if (Array.isArray(spr) && spr.spriteSize && Array.isArray(spr[0])) {
+    if (Array.isArray(spr) && spr.sprite_size && Array.isArray(spr[0])) {
         // The sprite was a spritesheet. Grab the first element
         spr = spr[0][0];
     }
 
     if (! (spr && spr.spritesheet)) {
-        throw new Error('Called drawSprite() on an object that was not a sprite asset. (' + unparse(spr) + ')');
+        throw new Error('Called draw_sprite() on an object that was not a sprite asset. (' + unparse(spr) + ')');
     }
     
     z = z || 0;
@@ -4294,13 +4317,13 @@ function drawSprite(spr, center, angle, scale, opacity, z, overrideColor) {
         return;
     }
 
-    // Don't use getRotationSign() on the angle, because the angle
+    // Don't use rotation_sign() on the angle, because the angle
     // WILL be interpreted as CCW when the queued command actually
     // executes.
 
-    if (overrideColor) {
+    if (override_color) {
         // have to clone and convert to RGB space
-        overrideColor = rgba(overrideColor);
+        override_color = rgba(override_color);
     }    
 
     console.assert(spr.spritesheet._index < _spritesheetArray.length);
@@ -4319,7 +4342,7 @@ function drawSprite(spr, center, angle, scale, opacity, z, overrideColor) {
         scaleY:        scaleY,
         hasAlpha:      spr._hasAlpha,
         opacity:       opacity,
-        overrideColor: overrideColor,
+        override_color: override_color,
         x:             x,
         y:             y,
         z:             z,
@@ -4386,20 +4409,20 @@ function loop(x, lo, hi) {
 }
 
 
-function getBackground() {
+function get_background() {
     return _background;
 }
 
 
-function setBackground(c) {
-    if (Array.isArray(c) && c.spriteSize && Array.isArray(c[0])) {
+function set_background(c) {
+    if (Array.isArray(c) && c.sprite_size && Array.isArray(c[0])) {
         // c was a sprite sheet
         c = c[0][0];
     }
 
     if (c.spritesheet && (c.spritesheet.size.x !== _SCREEN_WIDTH || c.spritesheet.size.y !== _SCREEN_HEIGHT ||
                           c.size.x !== _SCREEN_WIDTH || c.size.y !== _SCREEN_HEIGHT)) {
-        throw new Error('The sprite and its spritesheet for setBackground() must be exactly the screen size.')
+        throw new Error('The sprite and its spritesheet for set_background() must be exactly the screen size.')
     }
     
     _background = c;
@@ -4413,8 +4436,8 @@ function _toFrame(entity, v, out) {
     const y = v.y - entity.pos.y;
     
     // Rotate
-    let c = Math.cos(entity.angle * getRotationSign());
-    let s = Math.sin(entity.angle * getRotationSign());
+    let c = Math.cos(entity.angle * rotation_sign());
+    let s = Math.sin(entity.angle * rotation_sign());
     
     if (out === undefined) { out = {x:0, y:0}; }
     
@@ -4425,14 +4448,14 @@ function _toFrame(entity, v, out) {
 }
 
 
-function drawBounds(entity, color, recurse) {
+function draw_bounds(entity, color, recurse) {
     if (! entity.pos) {
-        throw new Error('drawEntityBounds() must be called on an object with at least a pos property');
+        throw new Error('draw_entityBounds() must be called on an object with at least a pos property');
     }
     
     if (recurse === undefined) { recurse = true; }
     color = color || rgb(0.6, 0.6, 0.6);
-    const angle = (entity.angle || 0) * getRotationSign();
+    const angle = (entity.angle || 0) * rotation_sign();
     const scale = entity.scale || {x:1, y:1};
 
     const pos = _maybeApplyPivot(entity.pos, entity.pivot, entity.angle, scale);
@@ -4440,7 +4463,7 @@ function drawBounds(entity, color, recurse) {
     // Bounds:
     const z = entity.z + 0.01;
     if ((entity.shape === 'disk') && entity.size) {
-        drawDisk(pos, entity.size.x * 0.5 * scale.x, undefined, color, z)
+        draw_disk(pos, entity.size.x * 0.5 * scale.x, undefined, color, z)
     } else if (entity.size) {
         const u = {x: Math.cos(angle) * 0.5, y: Math.sin(angle) * 0.5};
         const v = {x: -u.y, y: u.x};
@@ -4451,12 +4474,12 @@ function drawBounds(entity, color, recurse) {
         const B = {x: pos.x + u.x - v.x, y: pos.y + u.y - v.y};
         const C = {x: pos.x + u.x + v.x, y: pos.y + u.y + v.y};
         const D = {x: pos.x - u.x + v.x, y: pos.y - u.y + v.y};
-        drawLine(A, B, color, z);
-        drawLine(B, C, color, z);
-        drawLine(C, D, color, z);
-        drawLine(D, A, color, z);
+        draw_line(A, B, color, z);
+        draw_line(B, C, color, z);
+        draw_line(C, D, color, z);
+        draw_line(D, A, color, z);
     } else {
-        drawPoint(pos, color, z);
+        draw_point(pos, color, z);
     }
 
     // Axes
@@ -4470,13 +4493,13 @@ function drawBounds(entity, color, recurse) {
         const B = {x: entity.pos.x + u.x, y: entity.pos.y + u.y};
         const C = {x: entity.pos.x + v.x, y: entity.pos.y + v.y};
         
-        drawLine(entity.pos, B, rgb(1,0,0), z);
-        drawLine(entity.pos, C, rgb(0,1,0), z);
+        draw_line(entity.pos, B, rgb(1,0,0), z);
+        draw_line(entity.pos, C, rgb(0,1,0), z);
     }
 
-    if (entity.childArray && recurse) {
-        for (let i = 0; i < entity.childArray; ++i) {
-            debugDrawEntity(entity.childArray[c], color, recurse);
+    if (entity.child_array && recurse) {
+        for (let i = 0; i < entity.child_array; ++i) {
+            debugDrawEntity(entity.child_array[c], color, recurse);
         }
     }
 }
@@ -4501,15 +4524,15 @@ function _getAABB(e, aabb) {
     aabb.min.y = Math.min(aabb.min.y, e.pos.x - h);
 
     // Recurse
-    if (e.childArray) {
-        for (let i = 0; i < e.childArray.length; ++i) {
-            _getAABB(e.childArray[i], aabb);
+    if (e.child_array) {
+        for (let i = 0; i < e.child_array.length; ++i) {
+            _getAABB(e.child_array[i], aabb);
         }
     }
 }
 
 
-function axisAlignedDrawBox(e) {
+function axis_aligned_draw_box(e) {
     const aabb = {max: xy(-Infinity, -Infinity),
                   min: xy( Infinity,  Infinity)};
     _getAABB(e, aabb);
@@ -4530,7 +4553,7 @@ function _makeRayGridIterator(ray, numCells, cellSize) {
         numCells:          numCells,
         enterDistance:     0,
         enterAxis:         'x',
-        ray:               deepClone(ray),
+        ray:               deep_clone(ray),
         cellSize:          cellSize,
         insideGrid:        true,
         containsRayOrigin: true,
@@ -4651,18 +4674,18 @@ function _advanceRayGridIterator(it) {
 
 
 /*
-function rayIntersectMap(ray, map, tileCanBeSolid, pixelIsSolid, layer, replacementArray) {
+function ray_intersectMap(ray, map, tileCanBeSolid, pixelIsSolid, layer, replacement_array) {
     if (arguments.length === 1 && ray && ray.ray) {
         pixelIsSolid = ray.pixelIsSolid;
         tileCanBeSolid = ray.tileCanBeSolid;
         layer = ray.layer;
-        replacementArray = ray.replacementArray;
+        replacement_array = ray.replacement_array;
         map = ray.map;
         ray = ray.ray;
     }
 
     layer = layer || 0;
-    tileCanBeSolid = tileCanBeSolid || getMapSprite;
+    tileCanBeSolid = tileCanBeSolid || get_map_sprite;
 
     // Default to an infinite ray
     if (ray.length === undefined) {
@@ -4679,7 +4702,7 @@ function rayIntersectMap(ray, map, tileCanBeSolid, pixelIsSolid, layer, replacem
     const normal = xy(0, 0);
     const point = xy(0, 0);
     const P = xy(0, 0);
-    for (const it = _makeRayGridIterator(ray, map.size, map.spriteSize);
+    for (const it = _makeRayGridIterator(ray, map.size, map.sprite_size);
          it.insideGrid && (it.enterDistance < it.ray.length);
          _advanceRayGridIterator(it)) {
         
@@ -4692,17 +4715,17 @@ function rayIntersectMap(ray, map, tileCanBeSolid, pixelIsSolid, layer, replacem
         point.y = it.ray.origin.y + it.enterDistance * it.ray.direction.y;
 
         // Bump into the cell and then round
-        P.x = Math.floor((point.x - normal.x) / map.spriteSize.x);
-        P.y = Math.floor((point.y - normal.y) / map.spriteSize.y);
+        P.x = Math.floor((point.x - normal.x) / map.sprite_size.x);
+        P.y = Math.floor((point.y - normal.y) / map.sprite_size.y);
         
-        if (tileCanBeSolid(map, P, layer, replacementArray)) {
+        if (tileCanBeSolid(map, P, layer, replacement_array)) {
 
             // Return the sprite and modify the ray
             ray.length = it.enterDistance;
             return map.layer[layer][P.x][P.y];
             
             // TODO: March the pixels with a second iterator
-            // if (! pixelIsSolid || pixelIsSolid(map, P, layer, replacementArray)) {
+            // if (! pixelIsSolid || pixelIsSolid(map, P, layer, replacement_array)) {
                 // This is a hit
             // }
         }
@@ -4713,11 +4736,11 @@ function rayIntersectMap(ray, map, tileCanBeSolid, pixelIsSolid, layer, replacem
 }
 */
 
-function rayIntersect(ray, obj) {
+function ray_intersect(ray, obj) {
     let hitObj = undefined;
     if (Array.isArray(obj)) {
         for (let i = 0; i < obj.length; ++i) {
-            hitObj = rayIntersect(ray, obj[i]) || hitObj;
+            hitObj = ray_intersect(ray, obj[i]) || hitObj;
         }
         return hitObj;
     }
@@ -4771,7 +4794,7 @@ function rayIntersect(ray, obj) {
             let toriginY = ray.origin.y - pos.y;
             
             // Take the ray into the box's rotational frame
-            const angle = (obj.angle || 0) * getRotationSign();
+            const angle = (obj.angle || 0) * rotation_sign();
             const c = Math.cos(angle), s = Math.sin(angle);
 
             const originX = toriginX * c + toriginY * s;
@@ -4812,22 +4835,22 @@ function rayIntersect(ray, obj) {
     }
 
     // Test children
-    if (obj.childArray) {
-        hitObj = rayIntersect(ray, obj.childArray) || hitObj;
+    if (obj.child_array) {
+        hitObj = ray_intersect(ray, obj.child_array) || hitObj;
     }
 
     return hitObj;
 }
 
 
-function entityInertia(entity, mass) {
+function entity_inertia(entity, mass) {
     const scaleX = entity.scale ? entity.scale.x : 1;
     const scaleY = entity.scale ? entity.scale.y : 1;
     
     // Inertia tensor about the center (https://en.wikipedia.org/wiki/List_of_moments_of_inertia)
     // rect: 1/12 * m * (w^2 + h^2)
     // disk: m * (w/2)^2
-    if (mass === undefined) { mass = entityMass(entity); }
+    if (mass === undefined) { mass = entity_mass(entity); }
     
     if (entity.shape == 'rect') {
         return mass * (_square(entity.size.x * scaleX) + _square(entity.size.y * scaleY)) * (1 / 12);
@@ -4837,12 +4860,12 @@ function entityInertia(entity, mass) {
 }
 
 
-function entityMass(entity) {
-    return entityArea(entity) * ((entity.density !== undefined) ? entity.density : 1);
+function entity_mass(entity) {
+    return entity_area(entity) * ((entity.density !== undefined) ? entity.density : 1);
 }
 
 
-function entityArea(entity) {
+function entity_area(entity) {
     const scaleX = entity.scale ? entity.scale.x : 1;
     const scaleY = entity.scale ? entity.scale.y : 1;
 
@@ -4891,9 +4914,9 @@ var overlaps = (function() {
     function getDescendants(e, output) {
         if (e) {
             output.push(e);
-            if (e.childArray) {
-                for (let i = 0; i < e.childArray; ++i) {
-                    getDescendants(e.childArray[i], output);
+            if (e.child_array) {
+                for (let i = 0; i < e.child_array; ++i) {
+                    getDescendants(e.child_array[i], output);
                 }
             }
         }
@@ -4914,7 +4937,7 @@ var overlaps = (function() {
         temp2.x = B.pos.x - offsetX;
         temp2.y = B.pos.y - offsetY;
         const center = _toFrame(A, temp2, temp);
-        const angle  = (B.angle - A.angle) * getRotationSign();
+        const angle  = (B.angle - A.angle) * rotation_sign();
 
         // Find the extremes of the corners of B along each axis of A
         const c = Math.cos(angle);
@@ -4956,8 +4979,8 @@ var overlaps = (function() {
         if (B === undefined) { throw new Error('Second argument to overlaps() must not be nil'); }
         
         if (((recurse === undefined) || recurse) &&
-            ((A.childArray && (A.childArray.length > 0)) ||
-             (B.childArray && (B.childArray.length > 0)))) {
+            ((A.child_array && (A.child_array.length > 0)) ||
+             (B.child_array && (B.child_array.length > 0)))) {
             // Handle all combinations of chidren here
             const AArray = [], BArray = [];
             getDescendants(A, AArray);
@@ -5053,38 +5076,38 @@ var overlaps = (function() {
 })();
 
 
-function setPauseMenu(...options) {
+function set_pause_menu(...options) {
     if (options.length > 3) { _error("At most three custom menu options are supported."); }
     _customPauseMenuOptions = clone(options);
 }
 
 
-function anyButtonPress() {
-    return pad[0].aa || pad[0].bb || pad[0].cc || pad[0].dd || pad[0].qq ||
-        pad[1].aa || pad[1].bb || pad[1].cc || pad[1].dd || pad[1].qq ||
-        pad[2].aa || pad[2].bb || pad[2].cc || pad[2].dd || pad[2].qq ||
-        pad[3].aa || pad[3].bb || pad[3].cc || pad[3].dd || pad[3].qq;
+function any_button_press() {
+    return gamepad_array[0].aa || gamepad_array[0].bb || gamepad_array[0].cc || gamepad_array[0].dd || gamepad_array[0].qq ||
+        gamepad_array[1].aa || gamepad_array[1].bb || gamepad_array[1].cc || gamepad_array[1].dd || gamepad_array[1].qq ||
+        gamepad_array[2].aa || gamepad_array[2].bb || gamepad_array[2].cc || gamepad_array[2].dd || gamepad_array[2].qq ||
+        gamepad_array[3].aa || gamepad_array[3].bb || gamepad_array[3].cc || gamepad_array[3].dd || gamepad_array[3].qq;
 }
 
 
-function rndTruncatedGaussian(mean, std, radius, rng) {
-    rng = rng || rnd;
+function random_truncated_gaussian(mean, std, radius, rng) {
+    rng = rng || random;
     var g = 0;
     do {
-        g = rndGaussian(mean, std, rng);
+        g = random_gaussian(mean, std, rng);
     } while (g < mean - radius || g > mean + radius);
     return g;
 }
 
-function rndTruncatedGaussian2D(mean, std, radius, rng) {
-    rng = rng || rnd;
+function random_truncated_gaussian2D(mean, std, radius, rng) {
+    rng = rng || random;
     if (radius === undefined) {
-        throw Error("rndTruncatedGaussian2D(mean, stddev, radius, rnd) requires 3 or 4 arguments.");
+        throw Error("random_truncated_gaussian2D(mean, stddev, radius, random) requires 3 or 4 arguments.");
     }
 
-    if (isNumber(std)) { std = {x: std, y: std}; }
-    if (isNumber(mean)) { mean = {x: mean, y: mean}; }
-    if (isNumber(radius)) { radius = {x: radius, y: radius}; }
+    if (is_number(std)) { std = {x: std, y: std}; }
+    if (is_number(mean)) { mean = {x: mean, y: mean}; }
+    if (is_number(radius)) { radius = {x: radius, y: radius}; }
 
     var X = std.x / radius.x;
     var Y = std.y / radius.y;
@@ -5102,11 +5125,11 @@ function rndTruncatedGaussian2D(mean, std, radius, rng) {
 }
 
 
-function rndGaussian(mean, std, rng) {
-    rng = rng || rnd;
+function random_gaussian(mean, std, rng) {
+    rng = rng || random;
     if (std === undefined) {
         if (mean !== undefined) {
-            throw Error("rndGaussian(mean, stddev, rnd) requires 0, 2, or 3 arguments.");
+            throw Error("random_gaussian(mean, stddev, random) requires 0, 2, or 3 arguments.");
         }
         std = 1;
         mean = 0;
@@ -5120,56 +5143,56 @@ function rndGaussian(mean, std, rng) {
     return g1 * std + mean;    
 }
 
-function rndGaussian3D(mean, std, rng) {
-    rng = rng || rnd;
+function random_gaussian3D(mean, std, rng) {
+    rng = rng || random;
     if (std === undefined) {
         if (mean !== undefined) {
-            throw Error("rndGaussian3D(mean, stddev, rnd) requires 0, 2, or 3 arguments.");
+            throw Error("random_gaussian3D(mean, stddev, random) requires 0, 2, or 3 arguments.");
         }
         std = {x: 1, y: 1, z: 1};
         mean = {x: 0, y: 0, z: 0};
     }
-    if (isNumber(std)) { std = {x: std, y: std, z: std}; }
-    if (isNumber(mean)) { mean = {x: mean, y: mean, z: mean}; }
-    var g = rndGaussian2D(mean, std, rng);
-    g.z = rndGaussian(mean.z, std.z, rng);
+    if (is_number(std)) { std = {x: std, y: std, z: std}; }
+    if (is_number(mean)) { mean = {x: mean, y: mean, z: mean}; }
+    var g = random_gaussian2D(mean, std, rng);
+    g.z = random_gaussian(mean.z, std.z, rng);
     return g;
 }
 
-function rndTruncatedGaussian3D(mean, std, radius, rng) {
-    rng = rng || rnd;
+function random_truncated_gaussian3D(mean, std, radius, rng) {
+    rng = rng || random;
     if (radius === undefined) {
-        throw Error("rndTruncatedGaussian3D(mean, stddev, radius, rnd) requires 3 or 4 arguments.");
+        throw Error("random_truncated_gaussian3D(mean, stddev, radius, random) requires 3 or 4 arguments.");
     }
-    if (isNumber(std)) { std = {x: std, y: std, z: std}; }
-    if (isNumber(mean)) { mean = {x: mean, y: mean, z: mean}; }
-    if (isNumber(radius)) { mean = {x: radius, y: radius, z: radius}; }
+    if (is_number(std)) { std = {x: std, y: std, z: std}; }
+    if (is_number(mean)) { mean = {x: mean, y: mean, z: mean}; }
+    if (is_number(radius)) { mean = {x: radius, y: radius, z: radius}; }
 
     var center = {x: 0, y: 0, z: 0};
     var g;
 
     do {
-        g = {x: rndGaussian(0, std.x, rng),
-             y: rndGaussian(0, std.y, rng),
-             z: rndGaussian(0, std.z, rng)};
+        g = {x: random_gaussian(0, std.x, rng),
+             y: random_gaussian(0, std.y, rng),
+             z: random_gaussian(0, std.z, rng)};
     } while (square(g.x / radius.x) + square(g.y / radius.y) + square(g.z / radius.z) > 1);
     
     return {x: g.x + mean.x, y: g.y + mean.y, z: g.z + mean.z};
 }
 
 
-function rndGaussian2D(mean, std, rng) {
-    rng = rng || rnd;
+function random_gaussian2D(mean, std, rng) {
+    rng = rng || random;
     if (std === undefined) {
         if (mean !== undefined) {
-            throw Error("rndGaussian2D(mean, stddev, rnd) requires 0, 2, or 3 arguments.");
+            throw Error("random_gaussian2D(mean, stddev, random) requires 0, 2, or 3 arguments.");
         }
         std = {x: 1, y: 1};
         mean = {x: 0, y: 0};
     }
 
-    if (isNumber(std)) { std = {x: std, y: std}; }
-    if (isNumber(mean)) { mean = {x: mean, y: mean}; }
+    if (is_number(std)) { std = {x: std, y: std}; }
+    if (is_number(mean)) { mean = {x: mean, y: mean}; }
     
     var r = rng();
     if (r > 0) {
@@ -5181,61 +5204,61 @@ function rndGaussian2D(mean, std, rng) {
     return {x: g1 * std.x + mean.x, y: g2 * std.y + mean.y};
 }
 
-function rndWithinSquare(rng) {
-    rng = rng || rnd;
+function random_within_square(rng) {
+    rng = rng || random;
     return {x: rng(-1, 1), y: rng(-1, 1)};
 }
 
-function rndWithinCube(rng) {
-    rng = rng || rnd;
+function random_within_cube(rng) {
+    rng = rng || random;
     return {x: rng(-1, 1), y: rng(-1, 1), z: rng(-1, 1)};
 }
 
-function rndSign(rng) {
-    rng = rng || rnd;
+function random_sign(rng) {
+    rng = rng || random;
     return (rng() < 0.5) ? -1 : +1;
 }
 
-function rndOnSquare(rng) {
-    rng = rng || rnd;
+function random_on_square(rng) {
+    rng = rng || random;
     if (rng() < 0.5) {
-        return {x: rndSign(), y: rng(-1, 1)};
+        return {x: random_sign(), y: rng(-1, 1)};
     } else {
-        return {x: rng(-1, 1), y: rndSign()};
+        return {x: rng(-1, 1), y: random_sign()};
     }
 }
 
-function rndOnCube(rng) {
-    rng = rng || rnd;
+function random_on_cube(rng) {
+    rng = rng || random;
     var r = rng() < 1/3;
     if (r < 1/3) {
-        return {x: rndSign(), y: rng(-1, 1), z: rng(-1, 1)};
+        return {x: random_sign(), y: rng(-1, 1), z: rng(-1, 1)};
     } else if (r < 2/3) {
-        return {x: rng(-1, 1), y: rndSign(), z: rng(-1, 1)};
+        return {x: rng(-1, 1), y: random_sign(), z: rng(-1, 1)};
     } else {
-        return {x: rng(-1, 1), y: rng(-1, 1), z: rndSign()};
+        return {x: rng(-1, 1), y: rng(-1, 1), z: random_sign()};
     }
 }
 
-function rndOnSphere(rng) {
-    rng = rng || rnd;
+function random_on_sphere(rng) {
+    rng = rng || random;
     const a = Math.acos(rng(-1, 1)) - Math.PI / 2;
     const b = rng(0, Math.PI * 2);
     const c = Math.cos(a);
     return {x: c * Math.cos(b), y: c * Math.sin(b), z: Math.sin(a)};
 }
 
-var rndDir3D = rndOnSphere;
+var random_direction3D = random_on_sphere;
 
-function rndOnCircle() {
-    const t = rnd() * 2 * Math.PI;
+function random_on_circle() {
+    const t = random() * 2 * Math.PI;
     return {x: Math.cos(t), y: Math.sin(t)};
 }
 
-var rndDir2D = rndOnCircle;
+var random_direction2D = random_on_circle;
 
-function rndWithinCircle(rng) {
-    rng = rng || rnd;
+function random_within_circle(rng) {
+    rng = rng || random;
     const P = {x:0, y:0}
     let m = 0;
     do {
@@ -5248,8 +5271,8 @@ function rndWithinCircle(rng) {
     return P;
 }
 
-function rndWithinSphere(rng = rng) {
-    rng = rng || rnd;
+function random_within_sphere(rng = rng) {
+    rng = rng || random;
     const P = {x:0, y:0, z:0}
     let m = 0;
     do {
@@ -5289,7 +5312,7 @@ function _makeRng(seed) {
     
     var state0U = 5662365, state0L = 20000, state1U = 30000, state1L = 4095;
 
-    function srand(seed) {
+    function set_random_seed(seed) {
         if (seed === undefined || seed === 0) { seed = 4.7499362e+13; }
         if (seed < 2**16) { seed += seed * 1.3529423483002e15; }
         state0U = Math.abs(seed / 2**24) >>> 0;
@@ -5304,10 +5327,10 @@ function _makeRng(seed) {
     }
 
     if (seed !== undefined) {
-        srand(seed);
+        set_random_seed(seed);
     }
 
-    function rnd(lo, hi) {
+    function random(lo, hi) {
         // uint64_t s1 = s[0]
         var s1U = state0U, s1L = state0L;
         // uint64_t s0 = s[1]
@@ -5367,33 +5390,33 @@ function _makeRng(seed) {
             if (lo === undefined) {
                 return r;
             } else {
-                throw new Error("Use rnd() or rnd(lo, hi). A single argument is not supported.");
+                throw new Error("Use random() or random(lo, hi). A single argument is not supported.");
             }
         } else {
             return r * (hi - lo) + lo;
         }
     }
 
-    return [rnd, srand];
+    return [random, set_random_seed];
 }
         
-var [rnd, srand] = _makeRng();
+var [random, set_random_seed] = _makeRng();
 
-function makeRnd(seed) {
-    var [rnd, srand] = _makeRng(seed || (localTime().millisecond() * 1e6));
-    return rnd;
+function make_random(seed) {
+    var [random, set_random_seed] = _makeRng(seed || (local_time().millisecond() * 1e6));
+    return random;
 }
 
-function rndInt(lo, hi, rng) {
+function random_integer(lo, hi, rng) {
     if (hi === undefined) {
         if (lo === undefined) {
-            throw new Error("rndInt(lo, hi, rnd = rnd) requires at least two arguments.");
+            throw new Error("random_integer(lo, hi, random = random) requires at least two arguments.");
         }
         // Backwards compatibility
         hi = lo;
         lo = 0;        
     }
-    rng = rng || rnd;
+    rng = rng || random;
     var n = hi - lo + 1;
     return Math.min(hi, floor(rng(lo, hi + 1)));
 }
@@ -5609,39 +5632,39 @@ function sign(a) {
 }
 
 
-function isArray(a) {
+function is_array(a) {
     return Array.isArray(a);
 }
 
 
-function isFunction(a) {
+function is_function(a) {
     return typeof a === 'function';
 }
 
 
-function isNil(a) {
+function is_nil(a) {
     return (a === undefined) || (a === null);
 }
 
-function isNumber(a) {
+function is_number(a) {
     return typeof a === 'number';
 }
 
 
-function isBoolean(a) {
+function is_boolean(a) {
     return typeof a === 'boolean';
 }
 
 
-function isString(a) {
+function is_string(a) {
     return typeof a === 'string';
 }
 
 
 function type(a) {
-    if (isArray(a)) {
+    if (is_array(a)) {
         return 'array';
-    } else if (isNil(a)) {
+    } else if (is_nil(a)) {
         return 'nil';
     } else {
         return typeof a;
@@ -5649,8 +5672,8 @@ function type(a) {
 }
 
 
-function isObject(a) {
-    return ! isArray(a) && (typeof a === 'object');
+function is_object(a) {
+    return ! is_array(a) && (typeof a === 'object');
 }
 
 
@@ -5665,7 +5688,7 @@ function clone(a) {
     }
 }
 
-function _deepClone(a, map) {
+function _deep_clone(a, map) {
     if (Object.isFrozen(a) || Object.isSealed(a)) {
         // Built-in
         return a;
@@ -5678,7 +5701,7 @@ function _deepClone(a, map) {
             } else {
                 map.set(a, x = a.slice(0));
                 for (let i = 0; i < x.length; ++i) {
-                    x[i] = _deepClone(x[i], map);
+                    x[i] = _deep_clone(x[i], map);
                 }
                 return x;
             }
@@ -5692,7 +5715,7 @@ function _deepClone(a, map) {
                 const k = Object.keys(a);
                 for (let i = 0; i < k.length; ++i) {
                     const key = k[i];
-                    x[key] = _deepClone(a[key], map);
+                    x[key] = _deep_clone(a[key], map);
                 }
                 return x;
             }
@@ -5704,8 +5727,8 @@ function _deepClone(a, map) {
 }
 
 
-function deepClone(a) {
-    return _deepClone(a, new Map());    
+function deep_clone(a) {
+    return _deep_clone(a, new Map());    
 }
 
 
@@ -5768,11 +5791,11 @@ function dot(a, b) {
     return s;
 }
 
-function lowerCase(s) {
+function lowercase(s) {
     return s.toLowerCase();
 }
 
-function upperCase(s) {
+function uppercase(s) {
     return s.toUpperCase();
 }
 
@@ -5792,9 +5815,9 @@ var _ordinal = Object.freeze(['zeroth', 'first', 'second', 'third', 'fourth', 'f
                               'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteenth',
                               'seventeenth', 'eighteenth', 'ninteenth', 'twentieth']);
                   
-function formatNumber(n, fmt) {
-    if (fmt !== undefined && ! isString(fmt)) { throw new Error('The format argument to formatNumber must be a string'); }
-    if (! isNumber(n)) { throw new Error('The number argument to formatNumber must be a number'); }
+function format_number(n, fmt) {
+    if (fmt !== undefined && ! is_string(fmt)) { throw new Error('The format argument to format_number must be a string'); }
+    if (! is_number(n)) { throw new Error('The number argument to format_number must be a number'); }
     switch (fmt) {
     case 'percent':
     case '%':
@@ -5912,7 +5935,7 @@ function shuffle(array) {
     // While there remain elements to shuffle...
     for (let i = array.length - 1; i > 0; --i) {
         // Pick a remaining element...
-        let j = rndInt(i - 1);
+        let j = random_integer(i - 1);
         
         // ...and swap it with the current element.
         const temp = array[i];
@@ -6079,7 +6102,7 @@ function magnitude(a) {
 }
 
 
-function magnitudeSquared(a) {
+function magnitude_squared(a) {
     if (typeof a === 'number') {
         let s = a * a;
         for (let i = 1; i < arguments.length; ++i) {
@@ -6134,14 +6157,14 @@ function mid(a, b, c) {
     return _minOrMax.apply(Math.mid, arguments);
 }
 
-function maxComponent(a) {
+function max_component(a) {
     if (typeof a === 'number') { return a; }
     let s = -Infinity;
     for (let key in a) s = Math.max(s, a[key]);
     return s;
 }
 
-function minComponent(a) {
+function min_component(a) {
     if (typeof a === 'number') { return a; }
     let s = Infinity;
     for (let key in a) s = Math.min(s, a[key]);
@@ -6453,8 +6476,8 @@ function pow(a, b) {
 //
 //
 
-function findMapPath(map, start, goal, edgeCost, costLayer) {
-    if (isArray(edgeCost)) {
+function find_map_path(map, start, goal, edgeCost, costLayer) {
+    if (is_array(edgeCost)) {
         // Create an edgeTable
         const edgeTable = new Map();
         for (let i = 0; i < edgeCost.length; i += 2) {
@@ -6505,11 +6528,11 @@ function findMapPath(map, start, goal, edgeCost, costLayer) {
         return neighbors;
     }
 
-    return findPath(floor(start), floor(goal), estimatePathCost, edgeCost, getNeighbors, function (N) { return N.x + N.y * map.size.x * 2; }, map);
+    return find_path(floor(start), floor(goal), estimatePathCost, edgeCost, getNeighbors, function (N) { return N.x + N.y * map.size.x * 2; }, map);
 }
 
 
-/** Used by findPath */
+/** Used by find_path */
 function _Step(last, startCost, goalCost) {
     this.last          = last;
     this.previous      = null;
@@ -6518,7 +6541,7 @@ function _Step(last, startCost, goalCost) {
     this.inQueue       = true;
 }
 
-/** Used by findPath */
+/** Used by find_path */
 _Step.prototype.cost = function() {
     return this.costFromStart + this.costToGoal;
 }
@@ -6669,7 +6692,7 @@ function saveLocal(key, value) {
    different costs for moving across different types of terrain in the
    same map.
 */
-function findPath(start, goal, costEstimator, edgeCost, getNeighbors, nodeToID, map) {
+function find_path(start, goal, costEstimator, edgeCost, getNeighbors, nodeToID, map) {
     // Paths encoded by their last Step paired with expected shortest
     // distance
     const queue = new _PriorityQueue();
@@ -6766,11 +6789,11 @@ function _makeCoroutine(code) {
 /** Used by show() */
 function _zSort(a, b) { return a.z - b.z; }
 
-function getMode() {
+function get_mode() {
     return _gameMode;
 }
 
-function getPreviousMode() {
+function get_previous_mode() {
     return _prevMode;
 }
 
@@ -6780,16 +6803,16 @@ function because(reason) {
     _lastBecause = reason;
 }
 
-function pushMode(mode, ...args) {
+function push_mode(mode, ...args) {
     _verifyLegalMode(mode);
 
     // Push the stacks
     _previousModeGraphicsCommandListStack.push(_previousModeGraphicsCommandList);
-    _modeFramesStack.push(modeFrames);
+    _mode_framesStack.push(mode_frames);
     _modeStack.push(_gameMode);
     _prevModeStack.push(_prevMode);
 
-    modeFrames = 0;
+    mode_frames = 0;
     _prevMode = _gameMode;
     _gameMode = mode;
     
@@ -6809,26 +6832,26 @@ function pushMode(mode, ...args) {
 }
 
 
-function quitGame() {
+function quit_game() {
     _systemPrint('Quitting the game' + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
-    throw {quitGame:1};
+    throw {quit_game:1};
 }
 
 
-function launchGame(url) {
+function launch_game(url) {
     _systemPrint('Launching ' + url + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
-    throw {launchGame:url};
+    throw {launch_game:url};
 }
 
 
-function resetGame() {
+function reset_game() {
     _systemPrint('Resetting the game' + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
-    throw {resetGame:1};
+    throw {reset_game:1};
 }
 
 
-function popMode(...args) {
-    if (_modeStack.length === 0) { throw new Error('Cannot popMode() from a mode entered by setMode()'); }
+function pop_mode(...args) {
+    if (_modeStack.length === 0) { throw new Error('Cannot pop_mode() from a mode entered by set_mode()'); }
 
     // Run the leave callback on the current mode
     var old = _gameMode;
@@ -6837,7 +6860,7 @@ function popMode(...args) {
     // Pop the stacks
     _previousModeGraphicsCommandList = _previousModeGraphicsCommandListStack.pop();
     _gameMode = _modeStack.pop();
-    modeFrames = _modeFramesStack.pop();
+    mode_frames = _mode_framesStack.pop();
 
     old._leave();
 
@@ -6847,8 +6870,8 @@ function popMode(...args) {
     
     _systemPrint('Popping back to mode ' + _gameMode._name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
 
-    // Run the popMode event on _gameMode if it exists
-    var eventName = '_popModeFrom' + old._name;
+    // Run the pop_mode event on _gameMode if it exists
+    var eventName = '_pop_modeFrom' + old._name;
     if (_gameMode[eventName] !== undefined) {
         // repeat here so that the "this" is set correctly to _gameMode
         _gameMode[eventName](...args);
@@ -6858,12 +6881,12 @@ function popMode(...args) {
 }
 
 
-function setMode(mode, ...args) {
+function set_mode(mode, ...args) {
     _verifyLegalMode(mode);
     
     // Erase the stacks
     _previousModeGraphicsCommandListStack = [];
-    _modeFramesStack = [];
+    _mode_framesStack = [];
     _modeStack = [];
     _prevModeStack = [];
 
@@ -6874,9 +6897,9 @@ function setMode(mode, ...args) {
     // Run the leave callback on the current mode
     if (_prevMode) { _prevMode._leave(); }
     
-    modeFrames = 0;
+    mode_frames = 0;
 
-    // Save the previous graphics list for drawPreviousMode()
+    // Save the previous graphics list for draw_previous_mode()
     _previousModeGraphicsCommandList = _previousGraphicsCommandList;
 
     // Reset the graphics
@@ -6908,7 +6931,7 @@ function now() {
 }
 
 
-function localTime() {
+function local_time() {
     const d = new Date();
     
     return {
@@ -6929,9 +6952,9 @@ function localTime() {
 function _show() {
 
     // Check whether this frame will be shown or not, if running below
-    // frame rate and pruning graphics.  Use modeFrames instead of
-    // gameFrames to ensure that frame 0 is always rendered for a mode.
-    if (modeFrames % _graphicsPeriod === 0) {
+    // frame rate and pruning graphics.  Use mode_frames instead of
+    // game_frames to ensure that frame 0 is always rendered for a mode.
+    if (mode_frames % _graphicsPeriod === 0) {
         const startTime = performance.now();
         
         // clear the screen
@@ -6965,12 +6988,12 @@ function _show() {
     // Clear draw list (regardless of whether it is actually drawn)
     _graphicsCommandList = [];
 
-    ++gameFrames;
-    ++modeFrames;
+    ++game_frames;
+    ++mode_frames;
 }
 
 
-/** Updates the z value with an epsilon and stores the current setClipping region */
+/** Updates the z value with an epsilon and stores the current set_clipping region */
 function _addGraphicsCommand(cmd) {
     cmd.clipX1 = _clipX1;
     cmd.clipY1 = _clipY1;
@@ -7214,7 +7237,7 @@ function _executeREC(cmd) {
 
     if (fill & 0xff000000) {
         
-        // Snap to integer and setClip to screen. We don't need to
+        // Snap to integer and set_clip to screen. We don't need to
         // round because we know that the rect is visible.
         x1 = Math.max((x1 + 0.5) | 0, clipX1);
         x2 = Math.min((x2 + 0.5) | 0, clipX2);
@@ -7337,7 +7360,7 @@ function _executePIX(cmd) {
 function _executeMAP(cmd) {
     // One blt command that we'll mutate
     const sprCmd = {clipX1: cmd.clipX1, clipX2: cmd.clipX2, clipY1: cmd.clipY1, clipY2: cmd.clipY2,
-                    x:0, y:0, z: cmd.z, angle: 0, scaleX: 1, scaleY: 1, opacity: 1, overrideColor: undefined}
+                    x:0, y:0, z: cmd.z, angle: 0, scaleX: 1, scaleY: 1, opacity: 1, override_color: undefined}
 
     // Submit each sprite
     for (let i = 0; i < cmd.layerData.length; ++i) {
@@ -7369,7 +7392,7 @@ function _executeSPR(cmd) {
 
     const spr = cmd.sprite;
 
-    const overrideColor = cmd.overrideColor;
+    const override_color = cmd.override_color;
     
     // Compute the net transformation matrix
 
@@ -7443,7 +7466,7 @@ function _executeSPR(cmd) {
         }
     }
 
-    // Round the bounding box using the drawRect rules for inclusive integer
+    // Round the bounding box using the draw_rect rules for inclusive integer
     // bounds with open top and left edges at pixel center samples.
     dstX1 = Math.round(dstX1); dstY1 = Math.round(dstY1);
     dstX2 = Math.floor(dstX2 - 0.5); dstY2 = Math.floor(dstY2 - 0.5);
@@ -7469,7 +7492,7 @@ function _executeSPR(cmd) {
     if ((! cmd.hasAlpha) && (Math.abs(opacity - 1) < 1e-10) &&
         (Math.abs(Math.abs(A) - 1) < 1e-10) && (Math.abs(B) < 1e-10) &&
         (Math.abs(C) < 1e-10) && (Math.abs(Math.abs(D) - 1) < 1e-10) &&
-        (! overrideColor)) {
+        (! override_color)) {
         // Simple case; x and y-axis uniform scale, no rotation, and no alpha
         // test. Use a memcpy.  The x and y-axes may be inverted, and there
         // can be xy translation applied. This branch is primarily
@@ -7506,11 +7529,11 @@ function _executeSPR(cmd) {
         // case of no rotation with alpha test and optimize that
         // separately.
 
-        if (overrideColor) {
-            opacity *= overrideColor.a;
+        if (override_color) {
+            opacity *= override_color.a;
         }
         
-        const override = overrideColor ? _colorToUint32(overrideColor) : 0;
+        const override = override_color ? _colorToUint32(override_color) : 0;
         
         for (let dstY = dstY1; dstY <= dstY2; ++dstY) {
             // Offset everything by 0.5 to transform the pixel
@@ -7549,11 +7572,11 @@ function _executeSPR(cmd) {
                     
                     if (a255 >= 0xf0) {
                         // No blending
-                        _screen[dstOffset] = overrideColor ? override : color;
+                        _screen[dstOffset] = override_color ? override : color;
                     } else if (a255 > 0x0f) {
                         // Blend
 
-                        if (overrideColor) { color = override; }
+                        if (override_color) { color = override; }
                         
                         // No need to force to unsigned int because the alpha channel of the output is always 0xff
                         const a = a255 * (1 / 255);
@@ -7635,7 +7658,7 @@ function _executeTXT(cmd) {
             
         } // character in font
 
-        x += (bounds.x2 - bounds.x1 + 1) + font._spacing.x - font._borderSize * 2 + bounds.post;
+        x += (bounds.x2 - bounds.x1 + 1) + _postGlyphSpace(str, c, font) - font._borderSize * 2 + bounds.post;
         
     } // for each character
 }

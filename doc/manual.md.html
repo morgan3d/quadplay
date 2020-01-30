@@ -216,7 +216,7 @@ from a web site or your local machine running the quadplay✜ emulator.
 - Simple physics
 - Orthographic 2.5D graphics
 - Coordinates with +Y pointing up
-- `spriteOverrideColor`
+- `sprite_override_color`
 
 ----------------------------
 
@@ -296,11 +296,15 @@ with gravity and pressure.
 
 [Boids](../console/quadplay.html?game=quad://examples/boids&IDE=1) implements of the famous "boids" flocking algorithm.
 
-[Text](../console/quadplay.html?game=quad://examples/text&IDE=1) shows how to use `replace()`, `drawText()`, `join()`, 
-`formatNumber()`, and `drawSpriteCornerRect()` to build text-heavy interfaces.
+[Text](../console/quadplay.html?game=quad://examples/text&IDE=1) shows how to use `replace()`, `draw_text()`, `join()`, 
+`format_number()`, and `draw_sprite_corner_rect()` to build text-heavy interfaces.
 
 [Physics](../console/quadplay.html?game=quad://examples/physics&IDE=1) shows all of the features of the 
 physics engine, including the debugging visualization.
+
+[Font Preview](../console/quadplay.html?game=quad://examples/fontpreview&IDE=1) shows how to render text in various styles
+and acts as a tool for previewing fonts when creating new ones. Use the arrow keys to scroll down and see more examples
+in the program, and edit the `game.json` file to see a different font.
 
 
 ### Inspiration
@@ -308,6 +312,8 @@ physics engine, including the debugging visualization.
 Some games that were not made in quadplay✜, but which fit within the
 restrictions of quadplay and are sources of inspiration for their arcade
 graphics and gameplay:
+
+<div style="columns:2;-webkit-columns:2;-moz-columns:2;column-gap:3em;-webkit-column-gap:3em;-moz-column-gap:3em">
 
 - [Towerfall Ascension](http://www.towerfall-game.com/)
 - [Crawl](https://www.powerhoof.com/crawl/)
@@ -357,6 +363,8 @@ graphics and gameplay:
 - [NetHack](https://en.wikipedia.org/wiki/NetHack)
 - [Snake]("https://en.wikipedia.org/wiki/Snake_(video_game_genre)")
 
+</div>
+
 Games that would fit the restrictions of Quadplay except they use native vector scopes in their original implementations:
 - [Asteroids]("https://en.wikipedia.org/wiki/Asteroids_(video_game)")
 - [Battle Zone]("https://en.wikipedia.org/wiki/Battlezone_(1980_video_game)")
@@ -393,7 +401,7 @@ features are [*modes*](#modes), [*2.5D graphics*](#2.5dgraphics), and [*frame ho
 ### Modes
 
 Your program consists of one or more *modes* which are game states that the
-player will experience. Common modes are "Play", "Pause", "Title", "Inventory", "CutScene", and "GameOver". Use `setMode()` to change which mode the program is in. 
+player will experience. Common modes are "Play", "Pause", "Title", "Inventory", "CutScene", and "GameOver". Use `set_mode()` to change which mode the program is in. 
 Clicking on the "Modes" label on the left side of the IDE draws
 a diagram showing the modes and transitions for your program.
 
@@ -404,24 +412,24 @@ body of the inner loop. Modes have capitalized names and are defined
 in a script file with the same name. The simplest implementation of a
 mode is just this per-frame code.
 
-The `modeFrames` variable tracks the number of frames since this mode started.
-`setMode()` changes the mode and leaves a note in the debugging output explaining
+The `mode_frames` variable tracks the number of frames since this mode started.
+`set_mode()` changes the mode and leaves a note in the debugging output explaining
 why the mode changed. It is also used by the IDE to visualize the state machine
-of your program and label the transitions. `getMode()` returns the current mode,
+of your program and label the transitions. `get_mode()` returns the current mode,
 which acts like a special constant.
 
 You can also separate the mode file into different sections:
 
 - Top level: runs once when the game is first started. Usually just variable and function declarations.
-- `enter`: event that runs when this mode becomes active by another executing `pushMode()` or `setMode()`. `enter` may be followed by an argument list
-   that will be filled with the values passed to `setMode()` or `pushMode()`.
+- `enter`: event that runs when this mode becomes active by another executing `push_mode()` or `set_mode()`. `enter` may be followed by an argument list
+   that will be filled with the values passed to `set_mode()` or `push_mode()`.
 - `frame`: event that runs every frame while this mode is active. Put your drawing and simulation code here.
-- `leave`: event that runs when the game changes to another mode by executing `popMode()` or `setMode()` itself.
-     Does not run on `resetGame()` or `quitGame()`, or if another mode that was pushed into
-     directly invokes `setMode()` instead of `popMode()`.
-- `popMode`: event that runs when the game returns to this mode from another by `popMode()`
-     Does not run on `resetGame()` or `quitGame()`, or if another mode that was pushed into
-     directly invokes `setMode()` instead of `popMode()`.
+- `leave`: event that runs when the game changes to another mode by executing `pop_mode()` or `set_mode()` itself.
+     Does not run on `reset_game()` or `quit_game()`, or if another mode that was pushed into
+     directly invokes `set_mode()` instead of `pop_mode()`.
+- `pop_mode`: event that runs when the game returns to this mode from another by `pop_mode()`
+     Does not run on `reset_game()` or `quit_game()`, or if another mode that was pushed into
+     directly invokes `set_mode()` instead of `pop_mode()`.
 
 You can think of these as callbacks, although they are not regular
 functions and can only be invoked directly by the console. 
@@ -434,8 +442,8 @@ the modes as the states.
     [impossible](https://en.wikipedia.org/wiki/Undecidable_problem) to
     do this for all programs, but it can usually do a good job. When
     the automatic algorithm misses a link, you can give it a hint
-    using a commented out `setMode()` call in your mode file.  For
-    example, <code style="white-space: nowrap">// setMode(GameOver) because "0 lives"</code>
+    using a commented out `set_mode()` call in your mode file.  For
+    example, <code style="white-space: nowrap">// set_mode(GameOver) because "0 lives"</code>
     will add a link from the current mode to the `GameOver` mode.
 
 The syntax of a mode with multiple sections is similar to [Markdown](https://en.wikipedia.org/wiki/Markdown) format: 
@@ -460,38 +468,38 @@ enter(value)
 
 // Reset any state
 selection = 0
-playAudioClip(menuOpen)
+play_audio_clip(menuOpen)
 
 
 frame
 ───────────────────────────────────────────────────────────
-setBackground(rgb(1, 1, 0))
+set_background(rgb(1, 1, 0))
 
 // Up and down to change the choice
-selection = (selection + 3 + pad[0].y) mod 3
+selection = (selection + 3 + gamepad_array[0].y) mod 3
 
 // Draw the menu
-let pos = screenSize / 2 - xy(0, 50)
-drawText(menuFont, "→", pos + xy(-50, 16 selection), #00F)
+let pos = screen_size / 2 - xy(0, 50)
+draw_text(menuFont, "→", pos + xy(-50, 16 selection), #00F)
 for c in choices:
-   drawText(menuFont, c, pos, #000)
+   draw_text(menu_font, c, pos, #000)
    pos.y += 16
 
 // Button press to choose
-if pad[0].aa:
-   if selection == 0:      setMode(Play)  because "Chose play"
-   else if selection == 1: setMode(Map)   because "Chose map"
-   else:                   pushMode(ConfirmDialog) because "Chose abandon"
+if gamepad_array[0].aa:
+   if selection == 0:      set_mode(Play)  because "Chose play"
+   else if selection == 1: set_mode(Map)   because "Chose map"
+   else:                   push_mode(ConfirmDialog) because "Chose abandon"
 
 
-popMode(confirmed) from ConfirmDialog
+pop_mode(confirmed) from ConfirmDialog
 ───────────────────────────────────────────────────────────
-if confirmed: setMode(Title) because "Confirmed abandon"
+if confirmed: set_mode(Title) because "Confirmed abandon"
 
 
 leave
 ───────────────────────────────────────────────────────────
-playAudioClip(menuClose)
+play_audio_clip(menuClose)
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [A sample in-game menu mode using all of the optional mode sections.]
@@ -507,23 +515,23 @@ public class Menu extends Mode {
    
    public void enter(int value) {
       selection = 0;
-      playAudioClip(menuOpen);
+      play_audio_clip(menuOpen);
    }
    
    public void frame() {
       selection = (selection + gamePad.y + 3) % 3; }
       drawChoices(selection);
       if (gamePad.a) { 
-         if (selection == 0) { setMode(play); } ...
+         if (selection == 0) { set_mode(play); } ...
       }
    }
    
-   public void popMode(boolean confirmed, Mode from) {
+   public void pop_mode(boolean confirmed, Mode from) {
       if (from == confirmDialog) { ... }
    }
    
    public void leave() {
-      playAudioClip(menuClose);
+      play_audio_clip(menuClose);
    }
 }
 
@@ -531,7 +539,7 @@ Mode menu = new Menu();
 
 ...
 menu.enter();
-while (getMode() == menu) { menu.frame(); }
+while (get_mode() == menu) { menu.frame(); }
 menu.leave();
 ...
 
@@ -564,7 +572,7 @@ isometric games such as [_Populous_]("https://en.wikipedia.org/wiki/Populous_(vi
 Although the screen is cleared to the background color every frame,
 all of the drawing commands are stored for one previous frame. 
 This allows dialogue and pause screens to re-render the previous
-mode's last frame using `drawPreviousMode()` so that they can
+mode's last frame using `draw_previous_mode()` so that they can
 render on top of them. This rendering retains z-order, so you can
 even inject new graphics in between objects from a previous mode's
 frozen image.
@@ -573,7 +581,7 @@ frozen image.
 ### Frame Hooks
 
 In addition to the mode's frame code, you can dynamically register
-hook functions to run at the beginning of every frame using `addFrameHook()`. These are
+hook functions to run at the beginning of every frame using `add_frame_hook()`. These are
 useful for timers and animations. For example, you can use this to draw an
 explosion every frame until it dissipates or to shake the screen for three
 frames.
@@ -609,7 +617,7 @@ quadplay✜:
 - Blocks have no `end` statements and indentation is significant
 - Use `:` within object literals instead of `=`
 - It is safe to mutate containers inside iterator loops
-- You must specify a font for `drawText()`.
+- You must specify a font for `draw_text()`.
 Several are provided; see the Fonts section.
 - Enjoy the overloaded operators, array functions, z-order, and alpha blending
 
@@ -621,7 +629,7 @@ The PyxlScript language feels a lot like Python, with these changes:
 - Comments begin with `//` instead of `#`
 - Explicitly declare variables with `let` and `const`
 - Use `size(x)` instead of `len(x)`
-- Use `debugPrint` instead of `print`
+- Use `debug_print` instead of `print`
 - Use `for low <= i < high` instead of `for i in range(low, high)`
 - Variable names can't begin with an underscore
 - The `==` operator is pointer equality (Python `is`). Use `equivalent` for object structural equality tests. 
@@ -655,7 +663,7 @@ The PyxlScript language feels a lot like JavaScript strict mode, with these chan
 - There are no anonymous functions
 - Function names are not lifted to the containing function's scope
 - Use `x = if t then a else b` for JavaScript `x = t ? a : b`
-- Use `debugPrint` instead of `console.log`
+- Use `debug_print` instead of `console.log`
 - Enjoy the overloaded operators for vectors
 
 
@@ -702,7 +710,8 @@ On MacOS, either Control or Command can be used for "Ctrl".
 quadplay✜ presents virtual controllers for four players. You can use
 the on-screen buttons on mobile and touch screens for a single player, a
 keyboard for up to two players, and connect most USB or Bluetooth game
-controllers for up to four players. 
+controllers for up to four players. Physical controllers work on all operating
+systems and mobile devices.
 
 For two-player keyboard input, you can use two USB or Bluetooth
 keyboards on the same computer, or have both players share a single
@@ -739,28 +748,30 @@ Physical controllers give the best experience. We have tested:
 </table>
 
 8BitDo controllers work in wired, wireless, and
-[XPad](https://support.8bitdo.com/xpad.html) mode.
+[XPad](https://support.8bitdo.com/xpad.html) mode. They seem most reliable on Windows and Linux.
+Be sure to install the latest firmware update from the 8BitDo website.
+
+Left and right Joy-Cons work individually in horizontal mode. They cannot be joined as on 
+Switch. The Switch Pro controller and the SNES and NES controllers work normally.
 
 On MacOS, Xbox wired controllers require a free,
 [open source driver](https://github.com/d235j/360Controller-n). Xbox wireless controllers
-do not work on Mac.
-
-Left and right Joy-Cons work individually in horizontal mode. They cannot be joined as on 
-Switch.
+do not work on Mac. Different controllers work with different browsers on MacOS. For example,
+Xbox 360 controllers work well with Chrome and the Nintendo SNES controller works with Safari.
 
 PlayStation, Stadia, and
 [Thrustmaster T-Flight HOTAS 4](https://amzn.to/35WJVB6),
 [Nintendo Switch Pro Controller](https://www.amazon.com/Nintendo-Switch-Pro-Controller/dp/B01NAWKYZ0/),
-[Logitech](https://www.logitechg.com/en-ca/products/gamepads/f310-gamepad.html) controllers,
-as well as all controllers on mobile are intended to work but I have not tested them.
+[Logitech](https://www.logitechg.com/en-ca/products/gamepads/f310-gamepad.html) controllers
+are intended to work but I have not tested them.
 Please let me know if you are using them successfully.
 
-All browsers have controller support, but Chrome seems to support the most different controllers
-and the rumble feature.
+All browsers have controller support, but Chrome seems to support the
+most different controllers and the rumble feature.
 
 When using a dual-stick console controller, the unused parts
 of player 1's _physical_ controller are mapped as alternate controls
-for the player 2 (`pad[1]`) _virtual_ controller. This makes it easy
+for the player 2 (`gamepad_array[1]`) _virtual_ controller. This makes it easy
 to test two-player games using a single controller.  It also allows
 for single-player games with dual-stick controls using either both
 halves of the keyboard or controller 1.
@@ -791,10 +802,14 @@ mapped correctly, just enter the pause menu on any game and select
 I've found that the easiest Bluetooth controller to pair on MacOS is a
 Switch JoyCon.  Turn on Bluetooth on your Mac and open the Bluetooth
 preferences. Hold the controller horizontally and hold the tiny sync
-button [you have to take off the black wrist strap holder 
-temporarily to access this button]. You'll see the controller appear on your Mac. 
-Click on its name and select "connect". When you want to re-pair the controller with your
-Switch, just slide it back onto the Switch and it will sync.
+button
+[you have to take off the black wrist strap holder temporarily to access this button]. You'll
+see the controller appear on your Mac.  Click on its name and select
+"connect". When you want to re-pair the controller with your Switch,
+just slide it back onto the Switch and it will sync.
+
+8BitDo controllers seem to work very reliably on Windows and Linux
+but are inconsistent on MacOS.
 
 
 ### Resolution
@@ -916,65 +931,65 @@ Input
 The gamepad objects in the four-element `pad` array have
 the following fields:
 
-Field             | Values   | Meaning
-------------------|----------|----------------------------------
-`index`           | 0,1,2,3  | Index of this gamepad in `pad` array
-`x`               | -1,0,+1  | Current D-pad value on the $x$-axis (+1 = right)
-`xx`              | -1,0,+1  | Direction that was just pressed this frame on the $x$-axis
-`dx`              | -2 to +2 | Change in direction this frame on the $x$-axis
-`y`               | -1,0,+1  | Current D-pad value on the $y$-axis (+1 = backward)
-`yy`              | -1,0,+1  | Direction that was just pressed this frame on the $y$-axis
-`dy`              | -2 to +2 | Change in direction this frame on the $y$-axis
-`angle`           | -π to +π | `getRotationSign() * atan(y, x)` if both are not zero, otherwise the last angle
-`dangle`          | -π to +π | Change in `angle` this frame
-`a`               | 0 or 1   | 1 if the ⓐ button is currently pressed
-`aa` or `pressedA`| 0 or 1   | 1 if the ⓐ button was just pressed this frame
-`releasedA`       | 0 or 1   | 1 if the ⓐ button was just released this frame
-`b`               | 0 or 1   | 1 if the ⓑ button is currently pressed
-`bb` or `pressedB`| 0 or 1   | 1 if the ⓑ button was just pressed this frame
-`releasedB`       | 0 or 1   | 1 if the ⓑ button was just released this frame
-`c`               | 0 or 1   | 1 if the ⓒ button is currently pressed
-`cc` or `pressedC`| 0 or 1   | 1 if the ⓒ button was just pressed this frame
-`releasedC`       | 0 or 1   | 1 if the ⓒ button was just released this frame
-`d`               | 0 or 1   | 1 if the ⓓ button is currently pressed
-`dd` or `pressedD`| 0 or 1   | 1 if the ⓓ button was just pressed this frame
-`releasedD`       | 0 or 1   | 1 if the ⓓ button was just released this frame
-`q`               | 0 or 1   | 1 if the ⓠ button is currently pressed
-`qq` or `pressedQ`| 0 or 1   | 1 if the ⓠ button was just pressed this frame
-`releasedQ`       | 0 or 1   | 1 if the ⓠ button was just released this frame
-`prompt`          | `{...}`  | An object mapping button names to text prompts (see below)
+Field              | Values   | Meaning
+-------------------|----------|----------------------------------
+`index`            | 0,1,2,3  | Index of this gamepad in `pad` array
+`x`                | -1,0,+1  | Current D-pad value on the $x$-axis (+1 = right)
+`xx`               | -1,0,+1  | Direction that was just pressed this frame on the $x$-axis
+`dx`               | -2 to +2 | Change in direction this frame on the $x$-axis
+`y`                | -1,0,+1  | Current D-pad value on the $y$-axis (+1 = backward)
+`yy`               | -1,0,+1  | Direction that was just pressed this frame on the $y$-axis
+`dy`               | -2 to +2 | Change in direction this frame on the $y$-axis
+`angle`            | -π to +π | `rotation_sign() * atan(y, x)` if both are not zero, otherwise the last angle
+`dangle`           | -π to +π | Change in `angle` this frame
+`a`                | 0 or 1   | 1 if the ⓐ button is currently pressed
+`aa` or `pressed_a`| 0 or 1   | 1 if the ⓐ button was just pressed this frame
+`released_a`       | 0 or 1   | 1 if the ⓐ button was just released this frame
+`b`                | 0 or 1   | 1 if the ⓑ button is currently pressed
+`bb` or `pressed_b`| 0 or 1   | 1 if the ⓑ button was just pressed this frame
+`released_B`       | 0 or 1   | 1 if the ⓑ button was just released this frame
+`c`                | 0 or 1   | 1 if the ⓒ button is currently pressed
+`cc` or `pressed_c`| 0 or 1   | 1 if the ⓒ button was just pressed this frame
+`released_c`       | 0 or 1   | 1 if the ⓒ button was just released this frame
+`d`                | 0 or 1   | 1 if the ⓓ button is currently pressed
+`dd` or `pressed_d`| 0 or 1   | 1 if the ⓓ button was just pressed this frame
+`released_d`       | 0 or 1   | 1 if the ⓓ button was just released this frame
+`q`                | 0 or 1   | 1 if the ⓠ button is currently pressed
+`qq` or `pressed_q`| 0 or 1   | 1 if the ⓠ button was just pressed this frame
+`released_q`       | 0 or 1   | 1 if the ⓠ button was just released this frame
+`prompt`           | `{...}`  | An object mapping button names to text prompts (see below)
 
 The axes are affected by the current transformation _at the end of the frame_, 
-as set by `setTransform()`. The angles are always clockwise in screen space.
+as set by `set_transform()`. The angles are always clockwise in screen space.
 
-The `joy` variable is equal to `pad[0]` as shorthand for single-person games.
+The `joy` variable is equal to `gamepad_array[0]` as shorthand for single-person games.
 
-The `anyButtonPress()` function returns true if any gamepad's button was just
+The `any_button_press()` function returns true if any gamepad's button was just
 pressed.
 
 
 ### Button Prompts
 
-The `prompt` property of `pad[]` is to be used with `replace()` to
+The `prompt` property of `gamepad_array[]` is to be used with `replace()` to
 create strings for showing controls and button prompts to players with
-`drawText()`.  It maps `"ⓐ"`, `"ⓑ"`, `"ⓒ"`, `"ⓓ"`, `"ⓟ"`, `"ⓠ"`,
+`draw_text()`.  It maps `"ⓐ"`, `"ⓑ"`, `"ⓒ"`, `"ⓓ"`, `"ⓟ"`, `"ⓠ"`,
 `"⍐"`, `"⍗"`, `"⍇"`, and `"⍈"` as well as ASCII aliases `"(a)"`,
 `"(b)"`, `"(c)"`, `"(d)"`, `"(p)"`, `"(q")`, `"[^]"`, `"[v]"`,
 `'[&lt;]"`, and `"[&gt;]"` to strings of text. These can be used to describe
 controls to players in a way mapped to the physical controller they
 are currently using instead of the quadplay✜ native controls
 
-For example, `replace("Press (a) to jump", pad[0].prompt)` creates a
+For example, `replace("Press (a) to jump", gamepad_array[0].prompt)` creates a
 string with the proper physical button label for the first player's
 primary button substituted for the string `"(a)"`. On a PlayStation
 controller, this string will be `"Press ⓧ to jump"`. On an Xbox
 controller, it will be `"Press ⓐ to jump"`.  For a player using the
-keyboard, it will be `"Press ␣ to jump"`. The value of `pad[].prompt`
+keyboard, it will be `"Press ␣ to jump"`. The value of `gamepad_array[].prompt`
 can change during the game if the player uses the system menu to change
 the control scheme, so you should always generate the string right
 before drawing it instead of at program start.
 
-The `pad[i].type` property describes the control scheme used for
+The `gamepad_array[i].type` property describes the control scheme used for
 prompts. The possible values are:
 
 `type`          |`(a)`|`(b)`|`(c)`|`(d)`|`(p)`|`(q)`|`[^]`|`[&lt;]`|`[v]`|`[&gt;]`
@@ -999,8 +1014,8 @@ prompts. The possible values are:
 Note that the `▣⍍☰⧉␣⏎` Unicode characters are rendered similarly to
 other button prompts in quadplay✜ fonts.
 
-The current implementation has `pad[i].type = "Quadplay"` for all pads by default.
-This can be changed from within a program using `deviceControl()`. See also the
+The current implementation has `gamepad_array[i].type = "Quadplay"` for all pads by default.
+This can be changed from within a program using `device_control()`. See also the
 `controllers-32x22.sprite.json` for help in making your controller selection menu.
 
 
@@ -1010,7 +1025,7 @@ The system pause menu is bound to the ⓟ button, which is not visible to games.
 Games can add up to three custom elements on the pause menu, and can change these
 at any point.
 
-`setPauseMenu(opt1 (= nil), opt2 (= nil), opt3 (= nil))`
+`set_pause_menu(opt1 (= nil), opt2 (= nil), opt3 (= nil))`
 : Pverride the custom elements on the pause menu. Each argument
   is an object of the form `{text:string, callback:function, confirm:boolean}`.
   
@@ -1024,44 +1039,44 @@ Modes
 ------------------------------------------------------------------------
 
 
-`getPreviousMode()`
+`get_previous_mode()`
 : Return the previous mode, or `nil` if there was no previous
-  mode. When returning to a mode via `popMode()`, the previous mode
+  mode. When returning to a mode via `pop_mode()`, the previous mode
   is the mode from which _that_ one was entered; they are on a stack.
 
-`getMode()`
+`get_mode()`
 : Return the current mode. This can be passed to hook functions or
-  compared against mode names, but not to `setMode`, which requires an
-  explicit mode name. during mode initialization, `getMode()` returns `nil`.
+  compared against mode names, but not to `set_mode`, which requires an
+  explicit mode name. during mode initialization, `get_mode()` returns `nil`.
 
-`launchGame(url)`
+`launch_game(url)`
 : Load a different game. This is primarily used by the built-in
   quadplay✜ launcher, but is available to all programs.
 
-`popMode()`
-: Go back to the previous mode that invoked `pushMode`, restoring the
-  draw calls and `modeFrames` as of that point. It is a runtime error
-  to invoke `popMode()` when the mode was not entered from
-  `pushMode()`. Invokes the `leave` section of the current mode but
+`pop_mode()`
+: Go back to the previous mode that invoked `push_mode`, restoring the
+  draw calls and `mode_frames` as of that point. It is a runtime error
+  to invoke `pop_mode()` when the mode was not entered from
+  `push_mode()`. Invokes the `leave` section of the current mode but
   not the `enter` section of the mode being returned to.
 
-`pushMode(Mode, ...)`
+`push_mode(Mode, ...)`
 : Enter a new mode but remember the current mode. Combines their draw calls
-  for `drawPreviousMode()`. Useful for modal dialogs, such as pause screens, 
+  for `draw_previous_mode()`. Useful for modal dialogs, such as pause screens, 
   inventory screens, and dialogue. Does not invoke the `leave` section of
   the current mode. Does invoke the `enter` section of the mode being entered.
   Any arguments after the `Mode` are passed to the `enter` section.
 
-`quitGame()`
+`quit_game()`
 : Quit the game and exit to the IDE or the launcher. Note that games do not
   form a stack. Quitting a game returns to the built-in quadplay✜ launcher or
   IDE, and not the game that launched it.
 
-`resetGame()`
+`reset_game()`
 : Reset the game, restoring all assets and starting again from the
   initial mode.
 
-`setMode(Mode, ...)`
+`set_mode(Mode, ...)`
 : Immediately switch to the new mode. The current mode stops executing and the new
   mode begins.
   
@@ -1073,48 +1088,48 @@ Modes
   creating state machine diagrams and in the IDE for debugging. It has
   no effect on the executing program.
   
-  Erases the `pushMode` stack but remembers its draw calls.
+  Erases the `push_mode` stack but remembers its draw calls.
   Any arguments after the `Mode` are passed to the `enter` section.
  
-When changing modes via `setMode()`, the order of operations is:
+When changing modes via `set_mode()`, the order of operations is:
 
-1. `getPreviousMode()` switches to the current mode,
-   `getMode()` switches to the _new_ mode.
+1. `get_previous_mode()` switches to the current mode,
+   `get_mode()` switches to the _new_ mode.
 2. The _previous_ mode's graphics commands are captured for future
-   `drawPreviousMode()` calls.
+   `draw_previous_mode()` calls.
 3. Any `leave` code executes on the _previous_ mode.
-4. `modeFrames = 0`, 
+4. `mode_frames = 0`, 
 5. Any `enter` code executes on the _new_ mode and arguments supplied.
  
 
 Types
 ---------------------------------------------------------
 
-`isArray(value)`
+`is_array(value)`
 : Returns true for arrays and false for all other types.
 
-`isBoolean(value)`
+`is_boolean(value)`
 : Returns true for booleans and false for all other types.
 
-`isFunction(value)`
+`is_function(value)`
 : Returns true for functions and false for all other types.
 
-`isNil(value)`
+`is_nil(value)`
 : Returns true for `nil` and false for all other types.
 
-`isNaN(value)`
+`is_NaN(value)`
 : Returns true for the floating point not-a-number value 
   `NaN` and false for all other values.
   Note that you cannot test for `NaN` using `==` due to
   floating point NaN rules.
 
-`isNumber(value)`
+`is_number(value)`
 : Returns true for numbers and false for all other types.
 
-`isObject(value)`
+`is_object(value)`
 : Returns true for objects and false for all other types.
 
-`isString(value)`
+`is_string(value)`
 : Returns true for strings and false for all other types.
 
 `type(value)`
@@ -1125,13 +1140,13 @@ Types
 Array
 ---------------------------------------------------------
 
-`arrayValue(array, i, extrapolate (= array.extrapolate or "clamp"))`
+`array_value(array, i, extrapolate (= array.extrapolate or "clamp"))`
 : Applies `floor()` to `i` and then applies the extrapolation mode, which defaults
   to the extrapolation mode of the array itself if specified.
   Intended primarily for animation of values, including 
   the named arrays of spritesheets, for example, 
-  `sprite = arrayValue(spritesheet[animName], frame)`.
-  See also `makeSpline()` and the Sprite JSON section. The `extrapolate` values accepted are:
+  `sprite = array_value(spritesheet[animName], frame)`.
+  See also `make_spline()` and the Sprite JSON section. The `extrapolate` values accepted are:
   
   - `"oscillate"`
   - `"loop"`
@@ -1141,13 +1156,13 @@ Array
 : Return a shallow clone of `array`. Pointer structures are preserved and loops
   are OK. Built-in objects such as spritesheets and functions are not cloned.
 
-`deepClone(array)`
+`deep_clone(array)`
 : Return a deep clone of `array`. Pointer structures are preserved and loops
   are OK. Built-in objects such as spritesheets and functions are not cloned.
 
 `concatenate(array1, array2)`
 : Create a new array that contains all elements of `array1` followed by all elements of `array2`.
-  Identical to `[...array1, ...array2]`.
+  Identical to `[...array1, ...array2]`. See also `extend()`.
 
 `equivalent(a, b)`
 : Returns true if these arrays have the same length and the elements are
@@ -1155,13 +1170,14 @@ Array
 
 `extend(array1, array2)`
 : Mutate `array1` by pushing all elements of `array2` onto it. Identical to `push(array1, ...array2)`.
+  See also `concatenate()`.
 
-`fastRemoveKey(array, i)`
+`fast_remove_key(array, i)`
 : Delete element `i` from the array, swapping it with the last element. O(1) expected amortized time.
 
-`fastRemoveValue(array, v)`
+`fast_remove_value(array, v)`
 : Delete one element that is `== v`, or do nothing if there is no such element. May reorder the
-  array and may choose any such element, not necessarily the first. See also `removeValues()`.
+  array and may choose any such element, not necessarily the first. See also `remove_values()`.
 
 `find(array, x, i (= 0))`
 : Find the index of the element whose value is `x`, starting at optional index `i` (default 0).
@@ -1178,36 +1194,36 @@ Array
   For example `join(inventory, ", ", ", and ", " and ", "nothing")`.
   The optional `empty` value is used if the array has length 0.
 
-`lastKey(array)`
+`last_key(array)`
 : Returns `size(array) - 1`, the last key (that is, index).
 
-`lastValue(array)`
-: Returns `array[lastKey(array)]`.
+`last_value(array)`
+: Returns `array[last_key(array)]`.
 
 `pop(array)`
 : Remove the last element from the array and return it, or `∅` if the array is empty. O(1) expected amortized time.
 
-`popFront(array)`
+`pop_front(array)`
 : Remove the first element from the array and return it, or `∅` if the array is empty. O(n) expected amortized time.
 
 `push(array, x, ...)`
 : Append `x` and any other arguments to the array and then return the last. O(1) expected
   amortized time for a single argument and O(n) for n arguments.
 
-`pushFront(array, x, ...)`
+`push_front(array, x, ...)`
 : Insert `x` and any other arguments onto the array, preserving the order
   that they appear in the arguments and then return the first. O(n) expected
   amortized time for a single argument and O(m) for m arguments and
   array of length n.
 
-`removeKey(array, i)`
+`remove_key(array, i)`
 : Remove element `i` from the array, preserving order. O(n) expected time.
 
-`removeValues(array, x)`
+`remove_values(array, x)`
 : Remove every instance of `x` in the array, maintaining order. O(n) time in the original
-  length of the array.  Does nothing if `x` is not in the array. See also `fastRemoveValue()`
+  length of the array.  Does nothing if `x` is not in the array. See also `fast_remove_value()`
 
-`removeAll(array)`
+`remove_all(array)`
 : Remove everything from the array. Same as `resize(array, 0)`.
 
 `resize(array, n)`
@@ -1219,7 +1235,7 @@ Array
 `reversed(array)`
 : Returns a shallow, reversed clone of the array, O(size(array))
 
-`rndValue(array)`
+`random_value(array)`
 : Return a random element of the array.
 
 `shuffle(array)`
@@ -1265,7 +1281,7 @@ String
   optional index `i` (default 0).  Returns `∅` if not found. O(n)
   time.
   
-`formatNumber(n, fmt)`
+`format_number(n, fmt)`
 : Produces a string from number `n` in one of the following formats. Input times are in seconds.
   Each is followed by an example output.
 
@@ -1286,13 +1302,13 @@ String
    - `"00"` (or any other leading zero sequence): 07
    - `" 0"` (or any other leading space sequence followed by a zero sequence): " 7"
 
-`lastKey(string)`
+`last_key(string)`
 : Returns `size(string) - 1`.
 
-`lastValue(string)`
-: Returns `string[lastKey(string)]`.
+`last_value(string)`
+: Returns `string[last_key(string)]`.
 
-`lowerCase(s)`
+`lowercase(s)`
 : Returns the lower case version of the string.
 
 `parse(s)`
@@ -1328,7 +1344,7 @@ String
   recursive object or array or a function. Note that strings will have quotes
   around them in the resulting string.
 
-`upperCase(s)`
+`uppercase(s)`
 : Returns the upper case version of the string.
 
 
@@ -1338,25 +1354,26 @@ Object
 : Return a shallow clone of `object`. Pointer structures are preserved and loops
   are OK. Built-in objects such as spritesheets and functions are not cloned.
 
-`deepClone(object)`
+`deep_clone(object)`
 : Return a deep clone of `object`. Pointer structures are preserved and loops
   are OK. Built-in objects such as spritesheets and functions are not cloned.
 
 `concatenate(object1, object2)`
 : Create a new object that is the union of `object1` and `object2`,
   where `object2` keys override in the case of collisions.
-  Identical to `{...object1, ...object2)`.
+  See also `extend()`.
 
 `extend(object1, object2)`
 : Mutate `object1` by assigning all elements of `object2` into it,
   overriding any existing keys in the case of collisions.
+  See also `concatenate()`.
 
-`fastRemoveKey(object, k)`
-: Same as `removeKey` for a object.
+`fast_remove_key(object, k)`
+: Same as `remove_key` for a object.
 
-`fastRemoveValue(object, value)`
+`fast_remove_value(object, value)`
 : Delete one element that is `== v`, or do nothing if there is no such element. 
-  See also `removeValues()`.
+  See also `remove_values()`.
 
 `find(object, x)`
 : Find a key for which the value is `x`.
@@ -1366,16 +1383,16 @@ Object
 : An array of the keys in the object. You almost never need this because
   `for k in object` iterates over the keys directly.
 
-`removeKey(object, k)`
+`remove_key(object, k)`
 : Remove a key-value pair by key. Does nothing if `k` is not in the object.
   Use `object[k] ≠ ∅` to test for containment explicitly.
 
-`removeValues(object, v)`
-: Remove every instance of `v` from the object. See also `fastRemoveValue()`.
+`remove_values(object, v)`
+: Remove every instance of `v` from the object. See also `fast_remove_value()`.
 
-`removeAll(object)`
+`remove_all(object)`
 : Remove everything from the object. It is faster to assign to a new, empty object than to
-  use this function. `removeAll()` is for when it is important to retain a pointer
+  use this function. `remove_all()` is for when it is important to retain a pointer
   to the original object because it is shared.
 
 `size(object)`
@@ -1390,119 +1407,119 @@ Random Values
 
 ### 1D
 
-`makeRnd(seed (= localTime().millisecond))`
-: Returns a new _function_ that acts like `rnd()` but has its own private
-  seed and internal state. See also `srand()`.
+`make_random(seed (= local_time().millisecond))`
+: Returns a new _function_ that acts like `random()` but has its own private
+  seed and internal state. See also `set_random_seed()`.
 
-`rnd()`
-: `rnd(0, 1)`
+`random()`
+: `random(0, 1)`
 
-`rnd(lo, hi)`
+`random(lo, hi)`
 : Random real number between `lo` and `hi`, excluding `hi`. See also the `ξ` operator, the no-argument version
-  of `rnd()`.
+  of `random()`.
 
-`rndGaussian()`
-: Same as `rndGaussian(0, 1, rnd)`
+`random_gaussian()`
+: Same as `random_gaussian(0, 1, random)`
   
-`rndGaussian(mean, stddev, rnd (= rnd))`
+`random_gaussian(mean, stddev, random (= random))`
 : Returns a Gaussian distributed random number on the distribution
-  with the given mean and standard deviation. See also `rndTruncatedGaussian()`.
+  with the given mean and standard deviation. See also `random_truncated_gaussian()`.
 
-`rndInt(hi)`
+`random_integer(hi)`
 : Uniformly distributed random integer between 0 and hi, inclusive. 
-  This version is deprecated. Use `rndInt(0, hi)` instead.
+  This version is deprecated. Use `random_integer(0, hi)` instead.
 
-`rndInt(lo, hi, rnd = rnd)`
+`random_integer(lo, hi, random (= random))`
 : Random integer between `lo` and `hi`, including both ends.
-  The `rnd` argument defaults to common random number generator `rnd()`, but
-  an alternative function previously created by `makeRnd()` can be
+  The `random` argument defaults to common random number generator `random()`, but
+  an alternative function previously created by `make_random()` can be
   passed instead.
   
-`rndSign(rnd (= rnd))`
+`random_sign(random (= random))`
 : Returns +1 or -1 with equal probability.
 
-`rndTruncatedGaussian(mean, stddev, radius, rnd (= rnd))`
+`random_truncated_gaussian(mean, stddev, radius, random (= random))`
 : Returns a Gaussian distributed random number within `radius` of
-  the mean. See also `rndGaussian()`.
+  the mean. See also `random_gaussian()`.
 
-`srand(seed (= localTime().millisecond))`
-: Reset the default random number generator, `rnd()`, using an optional seed.
-  See also `makeRnd()`.
+`set_random_seed(seed (= local_time().millisecond))`
+: Reset the default random number generator, `random()`, using an optional seed.
+  See also `make_random()`.
 
 
 ### 2D
 
-`rndDir2D(rnd = rnd)`
-: Same as `rndOnCircle()`
+`random_direction2D(random (= random))`
+: Same as `random_on_circle()`
 
-`rndGaussian2D()`
-: Same as `rndGaussian2D(xy(0, 0), xy(1, 1), rnd)`.
+`random_gaussian2D()`
+: Same as `random_gaussian2D(xy(0, 0), xy(1, 1), random)`.
 
-`rndGaussian2D(mean, stddev, rnd = rnd)`
+`random_gaussian2D(mean, stddev, random (= random))`
 : Returns a Gaussian distributed random point on the distribution
   with the given mean and standard deviation. The mean and standard
   deviation may each be scalar or `xy()` values.
-  See also `rndGaussian()`, `rndTruncatedGaussian2D()`.
+  See also `random_gaussian()`, `random_truncated_gaussian2D()`.
 
-`rndOnCircle(rnd = rnd)`
+`random_on_circle(random (= random))`
 : Returns a uniformly distributed `xy()` on the perimeter of the circle with center `(0, 0)` with radius 1.
   Useful for random directions.
 
-`rndOnSquare(rnd = rnd)`
+`random_on_square(random (= random))`
 : Uniformly distributed `xy()` on the _perimeter_ of a square from `(-1, -1)` to `(1, 1)`.
 
-`rndWithinCircle(rnd = rnd)`
+`random_within_circle(random (= random))`
 : Returns a uniformly distributed `xy()` in the disk with center `(0, 0)` with radius 1. Useful for
-  random offsets within a circle. See also `rndOnCircle()`
+  random offsets within a circle. See also `random_on_circle()`
 
-`rndWithinSquare(rnd = rnd)`
+`random_within_square(random (= random))`
 : Returns a uniformly distributed `xy()` in the square from `(-1, -1)` to `(1, 1)`, that is, 
   the square that has a "radius" of 1 or sides of length two, and is centered at the origin `(0, 0)`.
-  Analogous to `rndDisk()`.
+  Analogous to `randomDisk()`.
 
-`rndTruncatedGaussian2D(mean, stddev, radius, rnd = rnd)`
+`random_truncated_gaussian2D(mean, stddev, radius, random (= random))`
 : Returns a Gaussian distributed random point within `radius`
   of `mean`. The `mean` and `stddev` may be scalars or `xy()`s.
   If `radius` is a number, the truncation region is a disk. If
   `radius` is an `xy()`, then the truncation region is an ellipse
   that has those radii along each axis.
-  See also `rndGaussian2D()`.
+  See also `random_gaussian2D()`.
 
 
 ### 3D
-`rndDir3D(rnd = rnd)`
-: Same as `rndOnSphere()`.
+`random_direction3D(random (= random))`
+: Same as `random_on_sphere()`.
 
-`rndGaussian3D()`
-: Same as `rndGaussian3D(xy(0, 0), xy(1, 1), rnd)`.
+`random_gaussian3D()`
+: Same as `random_gaussian3D(xy(0, 0), xy(1, 1), random)`.
 
-`rndGaussian3D(mean, stddev, rnd = rnd)`
+`random_gaussian3D(mean, stddev, random = random)`
 : Returns a Gaussian distributed random point on the distribution
   with the given mean and standard deviation. The mean and standard
   deviation may each be scalar or `xyz()` values.
-  See also `rndGaussian()`, `rndTruncatedGaussian3D()`.
+  See also `random_gaussian()`, `random_truncated_gaussian3D()`.
   
-`rndOnCube(rnd = rnd)`
+`random_on_cube(random = random)`
 : A random point on the _surface_ of the cube from `(-1, -1, -1)` to `(1, 1, 1)`.
 
-`rndOnSphere(rnd = rnd)`
+`random_on_sphere(random = random)`
 : Returns a uniformly distributed `xyz()` on the [hollow] sphere with center `(0, 0, 0)` with radius 1. Useful for
-  random directions in 3D. See also `rndWithinSphere()` and `rndOnCircle()`.
+  random directions in 3D. See also `random_within_sphere()` and `random_on_circle()`.
   
-`rndWithinCube(rnd = rnd)`
+`random_within_cube(random = random)`
 : A random point inside the cube from `(-1, -1, -1)` to `(1, 1, 1)`.
 
-`rndWithinSphere(rnd = rnd)`
+`random_within_sphere(random = random)`
 : Returns a uniformly distributed `xyz()` within the unit sphere, that is, the ball with center `(0, 0, 0)` and radius 1. 
-  Useful for random offsets within a sphere. See also `rndOnSphere()`.
+  Useful for random offsets within a sphere. See also `random_on_sphere()`.
 
-`rndTruncatedGaussian3D(mean, stddev, radius, rnd = rnd)`
+`random_truncated_gaussian3D(mean, stddev, radius, random = random)`
 : Returns a Gaussian distributed random point within `radius`
   of `mean`. The `mean` and `stddev` may be scalars or `xyz()`s.
   If `radius` is a number, the truncation region is a disk. If
   `radius` is an `xyz()`, then the truncation region is an ellipsoid
   that has those radii along each axis.
-  See also `rndGaussian3D()`.
+  See also `random_gaussian3D()`.
 
 
 Vector
@@ -1538,13 +1555,13 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 `magnitude(v)`
 : The square root of the sum of the elements (L2 norm).
 
-`magnitudeSequared(v)`
+`magnitude_squared(v)`
 : The sum of squares of the elements.
 
-`maxComponent(v)`
+`max_component(v)`
 : Largest element.
 
-`minComponent(v)`
+`min_component(v)`
 : Smallest element.
 
 `perp(v)`
@@ -1614,7 +1631,7 @@ Math
 `cos(x)`
 : Cosine, `x` in radians 
 
-`deepClone(v)`
+`deep_clone(v)`
 : Return a deep clone of `v`. Pointer structures are preserved and loops
   are OK. Built-in objects such as spritesheets and functions are not cloned.
 
@@ -1650,11 +1667,11 @@ Math
 : The square root of the sum of the arguments, which must all be numbers.
   Same as `magnitude([x, y, ...])`.
 
-`magnitudeSquared(x, y, ...)`
+`magnitude_squared(x, y, ...)`
 : The sum of the squares of the arguments, which must all be numbers.
-  Same as `magnitudeSquared([x, y, ...])`.
+  Same as `magnitude_squared([x, y, ...])`.
 
-`makeSpline(timeArray, valueArray, order = 3, extrapolate = "stall")`
+`make_spline(timeArray, valueArray, order = 3, extrapolate = "stall")`
 : Returns a function mapping numbers to values by piecewise polynomial
   interpolation. The value array must have types for which `*` and `+`
   operate (which includes numbers, `xy()`, `xyz()`, `rgb()`, and
@@ -1758,31 +1775,31 @@ Math
 Sound
 ---------------------------------------------------------
 
-`playAudioClip(args)`
-: Object version of `playAudioClip()`, allowing keyword argument style call.
+`play_audio_clip(args)`
+: Object version of `play_audio_clip()`, allowing keyword argument style call.
   Values default according to the positional argument version.
 
-`playAudioClip(audioClip, loop (=false), volume (=100%), pan (=0%), pitch (=100%), time (=0))`
+`play_audio_clip(audioClip, loop (=false), volume (=100%), pan (=0%), pitch (=100%), time (=0))`
 : Play audio clip `audioClip`, which must have been loaded as an asset. The time
   is in seconds. Full pan left is `-100%` and full pan right is `100%`.
-  Returns a handle that can be used with `stopSound`.
+  Returns a handle that can be used with `stop_sound`.
 
-`resumeSound(sound)`
-: Resume a sound previously stopped with `stopSound()`.
+`resume_sound(sound)`
+: Resume a sound previously stopped with `stop_sound()`.
 
-`setSoundPan(sound, pan)`
+`set_pan(sound, pan)`
 : Set the pan of a sound that is currently playing. 0% is centered.
   -100% is full left, 100% is full right.
 
-`setSoundPitch(sound, pitch)`
+`set_pitch(sound, pitch)`
 : Set the pitch of a sound that is currently playing. 100% is the default pitch from the file.
   200% is one octave higher, 50% is one octave lower.
 
-`setSoundVolume(sound, volume)`
+`set_volume(sound, volume)`
 : Set the volume of a sound that is currently playing. 100% is the default volume from the file.
 
-`stopSound(sound)`
-: Stop playing `sound`, which was created with `playAudioClip`.
+`stop_sound(sound)`
+: Stop playing `sound`, which was created with `play_audio_clip`.
 
 
 
@@ -1796,17 +1813,17 @@ space (sprite indices), and *map* space (map cell indices).
 The helper routines to convert between these each take an `xy()` value
 and return a new `xy()` value (or `z`):
 
-- `transformScreenToDraw(c)`, `transformDrawToScreen(c, z (=0))`, `transformScreenZToDrawZ(z)`, `transformDrawZToScreenZ(z)`
-- `transformDrawToEntity(e, c)`, `transformEntityToDraw(e, c)`
-- `transformEntityToSprite(e, c)`, `transformSpriteToEntity(e, c)`
-- `transformParentToChild(e_child, c)`, `transformChildToParent(e_child, c)` (unlike all other transform methods, does not assume `entityUpdateChildren` has been called)
-- `transformEntityToEntity(e_from, e_to, c)`
-- `transformDrawToSprite(e, c)`, `transformSpriteToDraw(e, c)`
-- `transformDrawToMap(m, c)`, `transformMapToDraw(m, c)`, `transformMapLayerToDrawZ(m, L)`, `transformDrawZToMapLayer(m, z)`
+- `transform_screen_to_draw(c)`, `transform_draw_to_screen(c, z (=0))`, `transform_screen_z_to_draw_z(z)`, `transform_draw_z_to_screen_z(z)`
+- `transform_draw_to_entity(e, c)`, `transform_entity_to_draw(e, c)`
+- `transform_entity_to_sprite(e, c)`, `transform_sprite_to_entity(e, c)`
+- `transform_parent_to_child(e_child, c)`, `transform_child_to_parent(e_child, c)` (unlike all other transform methods, does not assume `entity_update_children` has been called)
+- `transform_entity_to_entity(e_from, e_to, c)`
+- `transform_draw_to_sprite(e, c)`, `transform_sprite_to_draw(e, c)`
+- `transform_draw_to_map(m, c)`, `transform_map_to_draw(m, c)`, `transform_map_layer_to_draw_z(m, L)`, `transform_draw_z_to_map_layer(m, z)`
 
 Where `m` is a map, `e` is an entity, and `c` is an `xy()` coordinate. 
-The `z` value only affects `transformDrawToScreen` if a skew has been set by `setTransform()`.
-In this case, there is no way to invert the draw-to-screen transformation, so `transformScreenToDraw` is
+The `z` value only affects `transform_draw_to_screen` if a skew has been set by `set_transform()`.
+In this case, there is no way to invert the draw-to-screen transformation, so `transform_screen_to_draw` is
 misleading.
 
 There are no transformation functions between entity and draw space
@@ -1816,12 +1833,12 @@ z-axes. Just add or subtract the `entity.z` value.
 ### Screen Space
 
 The clipping region is the only object interacted with in *screen
-space*, via `setClip()`, `getClip()`, and `intersectClip()`.
+space*, via `set_clip()`, `get_clip()`, and `intersect_clip()`.
 
 The screen space graphics coordinate system is:
 
-- x increasing from 0 at the left edge of the screen to `screenSize.x` at the right edge
-- y increasing from 0 at the top edge of the screen to `screenSize.y` at the bottom edge
+- x increasing from 0 at the left edge of the screen to `SCREEN_SIZE.x` at the right edge
+- y increasing from 0 at the top edge of the screen to `SCREEN_SIZE.y` at the bottom edge
 - z increasing from -2047 at the back to 2048 at the front
 
 Integer coordinates correspond to the top-left corner of a pixel.
@@ -1837,7 +1854,7 @@ clipping region makes two pixels visible.
 *     \  z
 *      \ 
 *       \0            x           
-*        *----------------------->* screenSize.x
+*        *----------------------->* SCREEN_SIZE.x
 *        |\                       |
 *        | \                      |
 *        |  \                     |
@@ -1845,7 +1862,7 @@ clipping region makes two pixels visible.
 *        |     -2047              |
 *        v                        |
 *        *------------------------* 
-*   screenSize.y
+*   SCREEN_SIZE.y
 ***********************************************************
 [Figure [coords]: Screen space and default draw space coordinate system.]
 
@@ -1857,19 +1874,19 @@ support potential future voxel-based rendering schemes.
 
 Most graphics commands operate in *draw space*. By default, it is
 identical to screen space, but can be changed with with
-`setTransform()`. See also `getTransform()`, `extendTransform()`, and
-the `preservingTransform:` block.
+`set_transform()`. See also `get_transform()`, `extend_transform()`, and
+the `preserving_transform:` block.
 
 **The transform affects both rendering and simulation**. The direction
 of the x- and y-axes affects the rotation angle of entity space as
 well as draw space. I recommend that for each game you choose a single
 y-axis convention. Set the scale part of the transform only once at
-the beginning, and then use `preservingTransform:` for any localized
+the beginning, and then use `preserving_transform:` for any localized
 needs such as inventory scrolling.
 
 As with screen space, integer coordinates correspond to the top-left
 corner of a pixel and pixel centers are therefore at integers plus ½.
-(½, ½) is the center of the top-left pixel and `screenSize - ½`
+(½, ½) is the center of the top-left pixel and `SCREEN_SIZE - ½`
 is the center of the lower-left pixel.
 
 Drawing commands sample at pixel centers. The pixel ownership rules
@@ -1882,9 +1899,9 @@ centered at `pos` colors pixel `⌊pos⌋`.
 
 For example, the rectangle from (0, 0) to
 (2, 1) covers two pixel centers: (0.5, 0.5) and (1.5, 0.5). The coordinates
-for a `drawCornerRect()` command on integer boundaries are therefore usually 
-`drawCornerRect(topLeft, widthHeight, ...)` or 
-`drawCornerRect(topLeft, bottomRight - topLeft + 1, ...)` where `bottomRight` is the 
+for a `draw_corner_rect()` command on integer boundaries are therefore usually 
+`draw_corner_rect(topLeft, widthHeight, ...)` or 
+`draw_corner_rect(topLeft, bottomRight - topLeft + 1, ...)` where `bottomRight` is the 
 lowest and rightmost pixel that will be visible.
 
 This coordinate system favors intuition for centered, even-sized
@@ -1895,18 +1912,18 @@ such as odd-width text,
 1-pixel lines and points at non-integer, non-half locations will round in ways
 that are less intuitive.
 
-`drawPoint(pos)` draws a one-pixel rectangle from `pos - ½` to `pos + ½`.
-So, when passed integer arguments, `pos` = (0, 0) will color the top-left pixel and `screenSize - 1` is the
+`draw_point(pos)` draws a one-pixel rectangle from `pos - ½` to `pos + ½`.
+So, when passed integer arguments, `pos` = (0, 0) will color the top-left pixel and `SCREEN_SIZE - 1` is the
 lower-right. Any value from 0 to (1 - `ε`) will write to the
 the first pixel. When seeking to draw individual pixels aligned with the grid,
 I recommend that you use integer plus 1/2 coordinates
-for `drawPoint()` for robustness. However, if you use integer coordinates, it will
+for `draw_point()` for robustness. However, if you use integer coordinates, it will
 "do what you expect".
 
-`drawLine()` draws a one-pixel line centered on its endpoints that
+`draw_line()` draws a one-pixel line centered on its endpoints that
 extends ½ pixel beyond its endpoints. When seeking to draw horizontal and vertical lines
 aligned with the grid, I recommend that you use integer plus ½ coordinates
-for `drawPoint()` for robustness. However, if you use integer coordinates, it will
+for `draw_point()` for robustness. However, if you use integer coordinates, it will
 "do what you expect". For other lines, you may be surprised by the result if they
 aren't at half-pixel offsets.
 
@@ -1915,49 +1932,49 @@ edge aligned with the screen edges is centered on coordinate (2, 2),
 that is, half its width and height. A 3x3 object aligned as such
 is centered at (1.5, 1.5) but will draw in the same way if centered
 at (1, 1), which would be consistent with integer pixel centers.
-The center of the entire screen is `½ screenSize`.
+The center of the entire screen is `½ SCREEN_SIZE`.
 
 
-`getRotationSign()`
-: Returns -1 if `(scaleX * scaleY > 0)` for the current transformation
-  and and +1 if `(scaleX * scaleY < 0)`. Useful for computing the
-  coordinate transform of an entity angle. Angles always
-  counter-clockwise on *screen*.  In the *coordinate system*, they
-  rotate counter-clockwise if `getRotationSign() = 1` and clockwise if
-  `getRotationSign() = -1` (which is the default). This is used by `drawSprite()`
-  to determine the rotation direction. See also `getYUp()`.
+`rotation_sign()`
+: Returns -1 if `(t.dir.x * t.dir.y > 0)` for `t = get_transform()`
+  and +1 if `(t.dir.x * t.dir.y < 0)`. Useful for computing the
+  coordinate transform of an entity angle. Angles are always measured
+  counter-clockwise on *screen*.  In the *draw coordinate system*, they
+  rotate counter-clockwise if `rotation_sign() = 1` and clockwise if
+  `rotation_sign() = -1` (which is the default). This is used by `draw_sprite()`
+  to determine the rotation direction. See also `up_y()`.
 
-`getTransform()`
+`get_transform()`
 : Returns the current net transformation as an `args` object that could be passed to
-  `setTransform(args)`.
+  `set_transform(args)`.
   
-`getYUp()`
-: Returns `-sign(getTransform().dir.y)`, which is -1 if Y increases downwards (the default)
-  and +1 if Y increases upwards (`"flipY": true` in the .game.json file). 
+`up_y()`
+: Returns `-sign(get_transform().dir.y)`, which is -1 if Y increases downwards (the default)
+  and +1 if Y increases upwards (`"flip_y": true` in the .game.json file). 
 
-`preservingTransform:`
-: The special `preservingTransform:` block saves the current transform and
+`preserving_transform:`
+: The special `preserving_transform:` block saves the current transform and
   clipping region, executes the code in the body, and then restores the
   previous transform and clipping region. It is useful for making modular
   functions for handling UI scrolling, minimaps, and screenshake.
 
-`resetTransform()`
-: Reset to the default transformation, `setTransform(xy(0, 0), xy(1, 1), 0, 1, xy(0, 0))`.
-  This overrides the `flipY` flag from the .game.json file.
+`reset_transform()`
+: Reset to the default transformation, `set_transform(xy(0, 0), xy(1, 1), 0, 1, xy(0, 0))`.
+  This overrides the `flip_y` flag from the .game.json file.
 
-`composeTransform(args)`
-: Named argument version of `composeTransform()`.
+`compose_transform(args)`
+: Named argument version of `compose_transform()`.
 
-`composeTransform(pos (= nil), dir (= nil), z (= nil), zDir (= nil), skew (= nil))`
+`compose_transform(pos (= nil), dir (= nil), z (= nil), zDir (= nil), skew (= nil))`
 : Apply this local transformation _before_ the current one. Used for entering a child
   coordinate system. Nil arguments or properties default to `(xy(0, 0), xy(1, 1), 0, 1, xy(0, 0))`.
-  Use `preservingTransform` or `getTransform()` plus `setTransform()` to save and restore
+  Use `preserving_transform` or `get_transform()` plus `set_transform()` to save and restore
   nested coordinate systems.
 
-`setTransform(args)`
-: Named argument version of `setTransform()`.
+`set_transform(args)`
+: Named argument version of `set_transform()`.
 
-`setTransform(pos (= nil), dir (= nil), z (= nil), zDir (= nil), skew (= nil))`
+`set_transform(pos (= nil), dir (= nil), z (= nil), zDir (= nil), skew (= nil))`
 : Set the transformation applied to all draw coordinates to compute screen coordinates. Nil values
   or nil properties default to their previous value. The equation 
   mapping draw to screen coordinates is:
@@ -1978,9 +1995,9 @@ The center of the entire screen is `½ screenSize`.
 
 The most common changes are:
 
-- flip the y-axis using `setTransform(xy(0, screenSize.y - 1), xy(1, -1))`. You can also accomplish this by setting `"flipY": true` in the .game.json file.
-- flip y and center using `setTransform(½ screenSize, xy(1, -1))`
-- screenshake using `setTransform(rndSquare())`
+- flip the y-axis using `set_transform(xy(0, SCREEN_SIZE.y - 1), xy(1, -1))`. You can also accomplish this by setting `"flip_y": true` in the .game.json file.
+- flip y and center using `set_transform(½ SCREEN_SIZE, xy(1, -1))`
+- screenshake using `set_transform(randomSquare())`
 
 The default coordinate system is convenient for games that line up
 objects with background images, use a lot of text, or sample values
@@ -1993,7 +2010,7 @@ between axis conventions in arcade games. They do not allow rotation
 or even non-unit scaling between draw space and screen space. They
 also _do not affect the orientation of sprites_.  A sprite rotated 45
 degrees counter-clockwise and at the top of the screen will draw at
-the bottom of the screen after `setTransform(xy(0, screenSize.y - 1), xh(1, -1))`, 
+the bottom of the screen after `set_transform(xy(0, SCREEN_SIZE.y - 1), xh(1, -1))`, 
 but it will not be upside down and will still be rotated
 45 degrees counter-clockwise.
 
@@ -2007,7 +2024,7 @@ coordinate system.
 
 The direction of `entity.angle` is always counter-clockwise in screen
 coordinates. The direction in draw coordinates is given by
-`getRotationSign()`.
+`rotation_sign()`.
 
 ******************************************************************
 *  Default Entity Space         With flipped y-axis
@@ -2026,14 +2043,14 @@ coordinates. The direction in draw coordinates is given by
 The axes of the entity space in draw space are given by:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
-const θ = getRotationSign() * entity.angle
+const θ = rotation_sign() * entity.angle
 const X = xy( cos θ, sin θ) * entity.scale
 const Y = xy(-sin θ, cos θ) * entity.scale
 
 // or
 
-const X = transformEntityToDraw(entity, xy(1, 0)) - entity.pos
-const Y = transformEntityToDraw(entity, xy(0, 1)) - entity.pos
+const X = transform_entity_to_draw(entity, xy(1, 0)) - entity.pos
+const Y = transform_entity_to_draw(entity, xy(0, 1)) - entity.pos
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are currently no graphics commands that themselves take
@@ -2048,7 +2065,7 @@ current location of its engine.
 
 ### Sprite Space
 
-Sprite coordinates are used by `getSpritePixelColor()`. These are integers
+Sprite coordinates are used by `get_sprite_pixel_color()`. These are integers
 with (0,0) on the top left of the sprite and (`sprite.size.x` - 1, `sprite.size.y` - 1)
 on the lower right.
 
@@ -2070,11 +2087,11 @@ convenience, `map[x][y]` is a shorthand for `map.layer[0][x][y]`.
 The top-left corners of map cells are at integers when converting
 between map and draw coordinates. When rendered, a map therefore
 covers the same region as the drawing command
-`drawCornerRect(xy(0,0), map.size * tileSize, #f)`.
+`draw_corner_rect(xy(0,0), map.size * tileSize, #f)`.
 
-The map is aligned by default so that `drawMap()` renders the top-left
+The map is aligned by default so that `draw_map()` renders the top-left
 corner of the map to the top-left corner of the screen. Use 
-`offset` in the `.map.json` file or `setTransform()` to alter
+`offset` in the `.map.json` file or `set_transform()` to alter
 the location of the map when rendered.
 
 
@@ -2089,18 +2106,18 @@ Each element of a spritesheet has the following immutable properties:
 
 `sprite.duration`
 : Number of 1/60-second (≈ 16.7 ms) game frames to hold this sprite during animation.
-  Set by the spritesheet's `defaultDuration`, the animation's `defaultDuration`,
+  Set by the spritesheet's `default_duration`, the animation's `default_duration`,
   or the animation's per-sprite `duration` array.
 
-`sprite.flippedX`
+`sprite.x_flipped`
 : The corresponding derived sprite that is this sprite flipped horizontally.
   Flipped sprites are created on spritesheet load but can only be accessed
-  through the non-flipped sprites. Note that `s.flippedX.flippedX == s`.
+  through the non-flipped sprites. Note that `s.x_flipped.x_flipped == s`.
 
-`sprite.flippedY`
+`sprite.y_flipped`
 : The corresponding derived sprite that is this sprite flipped vertically.
   Flipped sprites are created on spritesheet load but can only be accessed
-  through the non-flipped sprites. Note that `s.flippedY.flippedY == s`.
+  through the non-flipped sprites. Note that `s.y_flipped.y_flipped == s`.
 
 `sprite.scale`
 : An `xy()` value that is `xy(1,1)` for sprites extracted directly from 
@@ -2112,7 +2129,7 @@ Each element of a spritesheet has the following immutable properties:
 `sprite.spritesheet`
 : From which this sprite is taken.
 
-`sprite.tileIndex`
+`sprite.tile_index`
 : Integer `xy()` index of the sprite in its spritesheet.
 
 
@@ -2135,12 +2152,12 @@ built-in properties in the future: `density` and `friction`.
 
 ### Basic
 
-`drawEntity(e, recurse (= true))` 
+`draw_entity(e, recurse (= true))` 
 : Draw the entity, if its sprite is defined. If `recurse` is true,
-  also draws all of the elements of `e.childArray` recursively (see
+  also draws all of the elements of `e.child_array` recursively (see
   the Hierarchy section).
 
-`makeEntity(obj (= {}), childTable (= {}))`
+`make_entity(obj (= {}), childTable (= {}))`
 : Returns a new entity object that is `obj` with defaults applied for
   any properties not specified. This is forward compatible to any
   extended properties that might be added in future versions, however,
@@ -2150,12 +2167,12 @@ built-in properties in the future: `density` and `friction`.
   
   If the `childTable` second argument is provided (note that this is not
   a property of `obj`), then all of the keys become fields of the new
-  entity and the values are added to the entity's `childArray`. This is
+  entity and the values are added to the entity's `child_array`. This is
   a convenient way to build entity hierarchies.
 
-  If a `childArray` property is specified on `obj`, then
-  `entityAddChild()` is called for each element of this array and
-  `entityUpdateChildren()` is automatically invoked after the new entity
+  If a `child_array` property is specified on `obj`, then
+  `entity_add_child()` is called for each element of this array and
+  `entity_update_children()` is automatically invoked after the new entity
   is constructed.
 
 
@@ -2163,14 +2180,14 @@ The basic entity properties and defaults are:
 
 `entity.angle`
 : The draw-space angle from the x-axis to y-axis in radians. See
-  `drawSprite()`. Defaults to 0.
+  `draw_sprite()`. Defaults to 0.
 
 `entity.name`
 : A string useful for debugging and error messages. Defaults to `"entity"` +
   a unique number.
 
 `entity.offset`
-: A draw-space value added to `entity.pos` by `drawEntity()`. Useful
+: A draw-space value added to `entity.pos` by `draw_entity()`. Useful
   for causing the drawn position to temporarily drift from the
   simulated position for effects like shake or blowback after a hit.
   Defaults to `xy(0, 0)`. _Does not affect bounds for `overlaps()`._
@@ -2191,7 +2208,7 @@ The basic entity properties and defaults are:
 : The draw-space `xy` position of the center of the entity. Defaults to (0,0).
 
 `entity.scale`
-: The draw-space `xy` scaling applied before translation and rotation. See `drawSprite()`.
+: The draw-space `xy` scaling applied before translation and rotation. See `draw_sprite()`.
   Defaults to (1, 1). This can be used to grow, stretch, or flip the entity.
   If `entity.shape == "disk"`, then the scale must have the same magnitude
   in both x and y.
@@ -2209,7 +2226,7 @@ The basic entity properties and defaults are:
 `entity.sprite`
 : A sprite from a sprite sheet. Can be `nil`.
 
-`entity.spriteOverrideColor`
+`entity.sprite_override_color`
 : Replaces the color of the sprite with this solid color (only works
   if there is a sprite), keeping its alpha channel. Defaults to `nil`.
 
@@ -2221,23 +2238,23 @@ Examples of creating an entity with different shapes:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 // Disk
-e = makeEntity({pos:P, shape:"disk", size: xy(diameter, diameter)})
+e = make_entity({pos:P, shape:"disk", size: xy(diameter, diameter)})
 
 // Square
-e = makeEntity({pos:P, shape:"rect", size: xy(edge, edge)})
+e = make_entity({pos:P, shape:"rect", size: xy(edge, edge)})
 
 // Rectangle
-e = makeEntity({pos:P, shape:"rect", size: xy(w, h)})
+e = make_entity({pos:P, shape:"rect", size: xy(w, h)})
 
 // Line
-e = makeEntity({pos:(A + B) / 2, shape:"rect", 
+e = make_entity({pos:(A + B) / 2, shape:"rect", 
                 size: xy(magnitude(B - A), 0), 
                 angle:atan(B.y - A.y, B.x - A.x)})
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The entity system is designed to be extensible. You can add your own
 properties to it, and aren't required to use it at all...make direct
-`drawSprite()` calls if you don't like this. You can also use the
+`draw_sprite()` calls if you don't like this. You can also use the
 entity system but replace the rendering if you prefer. For example,
 if you'd like to register your own draw function callbacks instead
 of using the sprite rendering, you can do this:
@@ -2245,18 +2262,18 @@ of using the sprite rendering, you can do this:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 def draw(e):
    if e.draw: e.draw(e)
-   for c in e.childArray: draw(c)
+   for c in e.child_array: draw(c)
    
 def drawInBox(e):
-   drawCornerRect(e.pos, e.size, #FFF)
-   drawSprite(e.sprite, e.pos)
+   draw_corner_rect(e.pos, e.size, #FFF)
+   draw_sprite(e.sprite, e.pos)
 
-let e = makeEntity({..., draw:drawInBox})
+let e = make_entity({..., draw:drawInBox})
 
 draw(e)
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[Example of replacing `drawEntity` with a version that uses arbitrary callbacks.]
+[Example of replacing `draw_entity` with a version that uses arbitrary callbacks.]
 
 
 ### Label Properties
@@ -2268,12 +2285,12 @@ set of label properties is:
 
 - `entity.text`
 - `entity.font`
-- `entity.textXAlign`
-- `entity.textYAlign`
-- `entity.textOffset` (this is not affected by entity rotation but is affected by scale)
-- `entity.textColor`
-- `entity.textShadow`
-- `entity.textOutline`
+- `entity.text_x_align`
+- `entity.text_y_align`
+- `entity.text_offset` (this is not affected by entity rotation but is affected by scale)
+- `entity.text_color`
+- `entity.text_shadow`
+- `entity.text_outline`
 
 
 ### Physics Properties
@@ -2291,7 +2308,7 @@ A key relating textbook symbols and definitions to the quadplay✜ entity proper
   `inertia`       | $I$                              | Inertia
   `density`       | $\rho$                           | Density
   `friction`      | $\mu_\mathrm{k}$                 | Coefficient of kinetic friction
-  `stictionFactor`| $\mu_\mathrm{s}/\mu_\mathrm{k}$  | Static friction multiplier
+  `stiction_factor`| $\mu_\mathrm{s}/\mu_\mathrm{k}$  | Static friction multiplier
   `restitution`   | $e$                              | Coefficient of restitution
 
 You can choose the units and coordinate system. Pixels (of distance),
@@ -2324,7 +2341,7 @@ See also the Physics section for relevant functions.
 : `xy()` linear velocity. Defaults to (0, 0).
   Has units of pixels/frame by default.
 
-`entity.physicsSleepState`
+`entity.physics_sleep_state`
 : Current sleeping state of the entity in a physics engine. Default is `"awake"`. Legal values are
   are `"sleeping"`, `"awake"`, and `"vigilant"` (awake and can never go to sleep). Because
   objects that are sleeping do not maintain contacts with other sleeping objects or parts of
@@ -2335,40 +2352,40 @@ See also the Physics section for relevant functions.
 : Amount of energy preserved in a collision. Useful range is 0%-100%. The default is 10%. 
   The net restitution applied between two entities is the geometric mean of their restitution values.
 
-`entity.collisionCategoryMask`
+`entity.collision_category_mask`
 : Collision categories for this object, as 32 bit flags. 
   Two objects can only collide if
-  `(A.collisionCategoryMask bitand B.collisionHitMask) and (B.collisionCategoryMask bitand A.collisionHitMask)`.
+  `(A.collision_category_mask bitand B.collision_hit_mask) and (B.collision_category_mask bitand A.collision_hit_mask)`.
   Defaults to 1. Does not affect `overlaps()`.
 
-`entity.collisionSensor`
+`entity.is_sensor`
 : If `true`, collisions will occur with this entity as usual but will not cause motion to change
   as a result, like a ghost. Default is `false`. This is useful for detecting triggers such as a character 
   walking through a doorway or touching acid via the physics engine without causing that to affect
   the object. Note that a sensor must have infinite density or be attached to another object or it will
-  fall out of the world by gravity. If you want to never register collisions, instead set `entity.collisionCategoryMask = 0`
+  fall out of the world by gravity. If you want to never register collisions, instead set `entity.collision_category_mask = 0`
   to prevent all collisions and preclude them being reported.
   
   Collision sensors have density, and it must be nonzero. Set their density
   to a small value, such as `epsilon`, to minimize the effect on the motion of other objects
   that they are attached to.
 
-`entity.collisionGroup`
+`entity.collision_group`
 : An integer index of a group of other entities that this one should not collide with, regardless
-  of the `collisionHitMask` or `collisionCategoryMask`. Zero means no group at all. Defaults to 0.
+  of the `collision_hit_mask` or `collision_category_mask`. Zero means no group at all. Defaults to 0.
   Does not affect `overlaps()`.
 
-`entity.collisionHitMask`
-: See `entity.collisionCategoryMask`. Defaults to `0xffffffff`. Does not affect `overlaps()`.
+`entity.collision_hit_mask`
+: See `entity.collision_category_mask`. Defaults to `0xffffffff`. Does not affect `overlaps()`.
 
-`entity.stictionFactor`
+`entity.stiction_factor`
 : Multiplier applied to `entity.friction` in the static dry friction case
   when an object is at rest. Useful range is 0-10. Defaults to 1.
 
   The value 0 disables static friction (since it allows the object to immediately
   start moving, and thus have kinetic friction engage), so that only dynamic friction is applied.
-  The net stictionFactor between two entities is the _maximum_ of each of their
-  stictionFactor values. Set moving platforms and conveyor belts to have high stiction to help characters
+  The net stiction_factor between two entities is the _maximum_ of each of their
+  stiction_factor values. Set moving platforms and conveyor belts to have high stiction to help characters
   move with the surface that they are on.
 
 `entity.friction`
@@ -2390,70 +2407,70 @@ have absolute properties in draw space.
 
 Hierarchy functions:
 
-`entityAddChild(parent, child)`
-: Adds the `child` entity to the `parent.childArray` and sets `child.parent = parent`. 
+`entity_add_child(parent, child)`
+: Adds the `child` entity to the `parent.child_array` and sets `child.parent = parent`. 
   Removes the child from any previous parent's child array if there was one.
   Returns the `child`.
 
-`entityRemoveChild(parent, child)`
-: Removes the `child` from `parent.childArray`, if it is a child. Does nothing if
-  `child` is not in `parent`. Causes an error if `child` and `parent.childArray`
-  are inconsistent.  If the child was added by the `makeEntity` `childTable` as a 
+`entity_remove_child(parent, child)`
+: Removes the `child` from `parent.child_array`, if it is a child. Does nothing if
+  `child` is not in `parent`. Causes an error if `child` and `parent.child_array`
+  are inconsistent.  If the child was added by the `make_entity` `childTable` as a 
   field on parent, that field is not modified. You can remove the field explicitly
-  using `removeKey(parent, "childName")`.
+  using `remove_key(parent, "childName")`.
   
-`entityRemoveAll(parent)`
+`entity_remove_all(parent)`
 : Removes all children.
 
-`transformChildToParent(child, childPos)`
+`transform_child_to_parent(child, childPos)`
 : Takes a coordinate `childPos` in the `child` entity reference frame and transforms it to
   the `child.parent` entity reference frame.
 
-`transformParentToChild(child, parentPos)`
+`transform_parent_to_child(child, parentPos)`
 : Takes a coordinate `parentPos` in the `child.parent` entity reference frame and transforms it to
   the `child` entity reference frame.
 
-`entityUpdateChildren(entity)`
+`entity_update_children(entity)`
 : Recursively update the `pos`, `scale`, `angle`, and `offset` fields of all children and
-  descendants from their `posInParent`, `scaleInParent`, `angleInParent`, and `offsetInparent`
+  descendants from their `pos_in_parent`, `scale_in_parent`, `angle_in_parent`, and `offsetInparent`
   fields. Usually called after simulation or animation processing.
   
 
 
 The hierarchy properties are:
 
-`entity.childArray`
+`entity.child_array`
 : Array of other entities that position themselves relative to
   this one. Defaults to `[]`.
 
 `entity.parent`
 : Another entity that has this one as a child. Defaults to `nil`.
 
-`entity.angleInParent`
+`entity.angle_in_parent`
 : Scalar counter-clockwise angle in radians relative to the parent if
-  `orientWithParent` is true, otherwise ignored.
+  `orient_with_parent` is true, otherwise ignored.
 
-`entity.offsetInParent`
-: `xy()` `offset` relative to the parent in entity space if `offsetWithParent` is true,
+`entity.offset_in_parent`
+: `xy()` `offset` relative to the parent in entity space if `offset_with_parent` is true,
   otherwise ignored.
 
-`entity.offsetWithParent`
-: Boolean. If true, then `entityUpdateChildren()` recomputes `entity.offset` from `entity.offsetInParent`
+`entity.offset_with_parent`
+: Boolean. If true, then `entity_update_children()` recomputes `entity.offset` from `entity.offset_in_parent`
   and `parent.offset`.
 
-`entity.posInParent`
+`entity.pos_in_parent`
 : `xy()` position value relative to the parent, in parent space. There is no way to opt out of this property being
   applied recursively. Defaults to (0, 0).
 
-`entity.orientWithParent`
-: If true, `entityUpdateChildren()` will override this entity's angle and scale with
-  `entity.angle = entity.angleInParent + parent.angle` and `entity.scale = entity.parent.scale * entity.scaleInParent`. 
+`entity.orient_with_parent`
+: If true, `entity_update_children()` will override this entity's angle and scale with
+  `entity.angle = entity.angle_in_parent + parent.angle` and `entity.scale = entity.parent.scale * entity.scale_in_parent`. 
 
-`entity.scaleInParent`
+`entity.scale_in_parent`
 : `xy()` scale relative to the parent axes for flipping
   the child if `scaleWithParent` is true, otherwise ignored.
 
-`entity.zInParent`
+`entity.z_in_parent`
 : Scalar z value relative to the parent. There is no way to opt out of this property being
   applied recursively. Defaults to 0.
 
@@ -2470,8 +2487,8 @@ techniques.
 Also see the Intersections section for computing your own collisions and
 intersections.
 
-`entityApplyForce(entity, worldForce, worldPos (= entity.pos))`
-: Apply world-space `worldForce` to `entity` at world-space position `worldPos`,
+`entity_apply_force(entity, world_force, world_pos (= entity.pos))`
+: Apply world-space `world_force` to `entity` at world-space position `world_pos`,
   updating both `entity.force` and `entity.torque`. To apply
   a force at the center of mass, you can also directly add to `entity.force`.
   To apply a torque without a net force at the center of mass, directly
@@ -2479,8 +2496,8 @@ intersections.
   
   Does not support entities with children or pivots.
 
-`entityApplyImpulse(entity, worldImpulse, worldPos (= entity.pos))`
-: Apply world-space `worldImpulse` (mass * velocity) to `entity` at world-space position `worldPos`,
+`entity_apply_impulse(entity, world_impulse, world_pos (= entity.pos))`
+: Apply world-space `world_impulse` (mass * velocity) to `entity` at world-space position `world_pos`,
   updating both `entity.vel` and `entity.spin`. To apply
   a velocity change at the center of mass, you can also directly add to `entity.vel`.
   To apply angular velicty without a net linear velocity impulse at the center of mass, directly
@@ -2488,23 +2505,23 @@ intersections.
   
   Does not support entities with children or pivots.
 
-`entityArea(e)`
+`entity_area(e)`
 : Returns the world space area of `e`, which must have `shape`
   and `size` properties and may have a `scale` property.
   
-`entityInertia(entity)`
+`entity_inertia(entity)`
 : Scalar inertia tensor about the center of mass. Equal to
-  `entityMass(entity) * magnitude(entity.scale * entity.size)² / 12`
-  when `shape` is `"rect"` and `⅛ entityMass(entity) *
+  `entity_mass(entity) * magnitude(entity.scale * entity.size)² / 12`
+  when `shape` is `"rect"` and `⅛ entity_mass(entity) *
   (entity.scale.x * entity.size.x)²` when `entity.shape == "disk"`.
   Has units of mass * pixels^2.
 
-`entityMass(entity)`
+`entity_mass(entity)`
 : Scalar mass equal to the bounds area in pixels specified by the
   `entity.shape` and `entity.size` times the `entity.density`.
   Returns generic mass units.
   
-`entityMove(entity, pos (= entity.pos), angle (= entity.angle))`
+`entity_move(entity, pos (= entity.pos), angle (= entity.angle))`
 : Instantaneously moves an entity to this position and angle _as if it had
   naturally reached that location in the previous frame_, setting the appropriate 
   `entity.vel` and `entity.spin`. This is useful for moving
@@ -2513,7 +2530,7 @@ intersections.
   For example, use this function for implementing moving platforms,
   scripted set-piece animations, and elevators.
 
-`entitySimulate(entity, t (= 1))`
+`entity_simulate(entity, t (= 1))`
 : Computes `acc = force/mass; twist = torque/inertia` and
   `vel *= 1 - drag; spin *= 1 - drag`.  Then,
   integrates `acc` into `vel` into `pos` and `twist` into `spin` into
@@ -2527,11 +2544,11 @@ intersections.
   integrators.
   
   Does not perform collision detection or response, or enforce attachment 
-  constraints. You do not need to call `entitySimulate()` if you are 
-  already using `physicsSimulate()`.
+  constraints. You do not need to call `entity_simulate()` if you are 
+  already using `physics_simulate()`.
 
-`makeCollisionGroup()`
-: Creates a unique value for an `entity.collisionGroup`.
+`make_collision_group()`
+: Creates a unique value for an `entity.collision_group`.
 
 
 ### Intersections
@@ -2539,7 +2556,7 @@ intersections.
 These are methods for determining intersections and collisions explicitly, without
 using the full physics engine.
 
-`axisAlignedDrawBox(e)`
+`axis_aligned_draw_box(e)`
 : Returns a box specified by `{pos:xy(), size:xy(), shape:"rect"}` that encloses
   the object `e` (and all of its children if it is an entity) in draw space.
 
@@ -2548,7 +2565,7 @@ using the full physics engine.
   shape and orientation into account and incuding the borders. Ignores
   `offset` and `z` for entities. Each of `A` and `B` can be any of:
   
-   - an entity from `makeEntity()`
+   - an entity from `make_entity()`
    - any object with `pos` and optional `shape`, `angle`, `pivot`, and `size` properties
    - an `xy()` point
 
@@ -2559,28 +2576,28 @@ using the full physics engine.
   See `entity.pivot`, `entity.shape`, etc. for discussion of how those properties
   affect the collision detection.
 
-`rayIntersect(ray, obj)`
+`ray_intersect(ray, obj)`
 : The `ray` object must have `xy()` fields for `origin`, `direction`,
   and an optional number field for `length (= inf)`.
   The `ray.direction` will automatically be normalized.
 
   The `obj` has `shape`, `pos`, `size`, and optional `angle`
   properties (an entity satisfies this, but it doesn't have to be a full
-  entity). If there is a `obj.childArray`, then that is recursively
+  entity). If there is a `obj.child_array`, then that is recursively
   processed and the first intersection encountered is returned.
   
   Returns the object hit or `nil` if there was no intersection.
   The `ray.length` is shortened to the hit distance. 
   
-`rayIntersect(ray, array)`
-: Returns the first object intersected when calling `rayIntersect(ray, array[i])`
+`ray_intersect(ray, array)`
+: Returns the first object intersected when calling `ray_intersect(ray, array[i])`
   on each element of the array.
 
 <!--
 `rayIntersectMap(args)`
 : Calls `rayIntersectMap()` with the named arguments.
 
-`rayIntersectMap(ray, map, tileCanBeSolid (= getMapSprite), pixelIsSolid (= nil), layer (= 0), replacementArray (= []))`
+`rayIntersectMap(ray, map, tileCanBeSolid (= get_map_sprite), pixelIsSolid (= nil), layer (= 0), replacement_array (= []))`
 : The `ray` object must have `xy()` fields for `origin`, `direction`,
   and an optional number field for `length (= inf)`. 
   The `ray.direction` will automatically be normalized. The ray is in _draw coordinates_.
@@ -2588,15 +2605,15 @@ using the full physics engine.
   Returns the sprite hit or `nil` if there was no intersection.
   The `ray.length` is shortened to the hit distance. 
 
-  `def tileCanBeSolid(map, P, layer, replacementArray)` returns true
+  `def tileCanBeSolid(map, P, layer, replacement_array)` returns true
   if the tile at `P` _in map coords_ can trigger a collision. The
   callback `pixelIsSolid` is then invoked to find the collision within
   the tile. The default value returns true for any non-`nil` tile.
    
-  `def pixelIsSolid(map, P, layer, replacementArray)` returns true if the pixel at `P` _in map coords_
+  `def pixelIsSolid(map, P, layer, replacement_array)` returns true if the pixel at `P` _in map coords_
   triggers a collision.  The default value, returns true for all pixels,
-  so that any `tileCanBeSolid() == true` tile immediately stops the ray. See `getMapPixelColor()`.
-  As an example of a common alternative, `def pixelIsSolid(map, P, L, R): return getMapPixelColor(map, P, L, R).a > 50%`
+  so that any `tileCanBeSolid() == true` tile immediately stops the ray. See `get_map_pixel_color()`.
+  As an example of a common alternative, `def pixelIsSolid(map, P, L, R): return get_map_pixel_color(map, P, L, R).a > 50%`
   causes collisions with any 50% opaque pixels.
 -->
 
@@ -2624,17 +2641,17 @@ them, and create a new attachment in the new position.  For example,
 when a character flips direction and a rope tied to their hand should
 now be on the other side.
 
-Changing the `collisionGroup`, `collisionHitMask`, or
-`collisionCategoryMask` on the bodies in an attachment with `collide = false`
+Changing the `collision_group`, `collision_hit_mask`, or
+`collision_category_mask` on the bodies in an attachment with `collide = false`
 after the attachment been created may cause the attached bodies
 to start colliding with each other.
 
-`makePhysics(options (= {}))`
+`make_physics(options (= {}))`
 : Create and return a new physics context. There can be multiple, independent physics contexts 
   in the game. Each entity may only be in one physics context at a time.
   The options are:
   
-  - `gravity (= xy(0, -getYUp()))`: Default gravitational acceleration on all objects.
+  - `gravity (= xy(0, -up_y()))`: Default gravitational acceleration on all objects.
     Set to `xy(0,0)` and explicitly apply gravity if your game is not set on a planetary
     surface or requires excluding most objects from gravity.
   - `allowSleeping (= true)`: Allow simple rigid bodies to fall "asleep" and stop simulating
@@ -2642,10 +2659,10 @@ to start colliding with each other.
     will fail to properly waken when the object supporting them is removed and can remain
     floating in the air.
 
-`physicsAddContactCallback(physics, callback, minDepth (= 0), maxDepth (= ∞), collisionMask (= 0xffffffff), sensors (= "exclude"))`
-: Adds a callback that processes collisions (new contacts) at the end of `physicsSimulate()`.
-  If either entity in the collision has a `entity.categoryMask` that intersects the `collisionMask`
-  and the collision has `depth &gt;= minDepth`, then invoke
+`physics_add_contact_callback(physics, callback, min_depth (= 0), max_depth (= ∞), collision_mask (= 0xffffffff), sensors (= "exclude"))`
+: Adds a callback that processes collisions (new contacts) at the end of `physics_simulate()`.
+  If either entity in the collision has a `entity.category_mask` that intersects the `collision_mask`
+  and the collision has `depth &gt;= min_depth`, then invoke
   `callback({entityA, entityB, depth, age, point0, point1, normal})`. 
   `point1` may be `nil`. `normal` is in draw coordinates and
   always points out of `entityA`. 
@@ -2655,24 +2672,24 @@ to start colliding with each other.
   
   This is good for triggering particle effects or sound on collisions,
   or causing damage to objects. When doing so, use the parameters to filter: 
-  for example, `minDepth` = 1 will only trigger on significant,
+  for example, `min_depth` = 1 will only trigger on significant,
   new contacts. There is no way to remove a contact callback.
 
-`physicsEntityHasContacts(physics, entity, childRegion (= nil), worldNormal (= nil), mask (= 0xffffffff), sensors (= "exclude"))`
-: Returns true if `physicsEntityContacts()` would produce any contacts with the same arguments.
+`physics_entity_has_contacts(physics, entity, child_region (= nil), world_normal (= nil), mask (= 0xffffffff), sensors (= "exclude"))`
+: Returns true if `physics_entity_contacts()` would produce any contacts with the same arguments.
   This is more efficient, for the case where the actual contacts are not needed.
 
-`physicsEntityContacts(physics, entity, childRegion (= nil), worldNormal (= nil), mask (= 0xffffffff), sensors (= "exclude"))`
+`physics_entity_contacts(physics, entity, child_region (= nil), world_normal (= nil), mask (= 0xffffffff), sensors (= "exclude"))`
 : Returns an array of all current contacts, where each contact has the form 
   `{entityA, entityB, depth, point0, point1, normal}`. The contact points are
   in draw coordinates.
   
   The region, mask, normal, and sensors setting are used to filter the contacts
-  returned. A contact must have nonzero `collisionMask bitand
-  otherEntity.collisionCategoryMask` for the _other_ entity
+  returned. A contact must have nonzero `collision_mask bitand
+  otherEntity.collision_category_mask` for the _other_ entity
   involved. The average position of point0 and point1 must also lie
-  within the `childRegion`, which is in the entity's reference frame.
-  `childRegion` is either `nil` (all contacts) or an argument suitable
+  within the `child_region`, which is in the entity's reference frame.
+  `child_region` is either `nil` (all contacts) or an argument suitable
   for passing to `overlaps()`. If `normal` is specified, then the
   contact normal for the other entity must point within ±80° degrees of
   this vector. This is a draw-space vector. `sensors` may be `"include"`,
@@ -2682,24 +2699,24 @@ to start colliding with each other.
 
   This function is ueseful for determining if entities are currently
   in resting contact, such as whether a character is standing on the
-  ground and can jump. In that case, make the `childRegion` a box around the
-  character's feet and set the `worldNormal` to the up vector for the world.
-  The `childRegion` may have to be very wide (e.g., 2x as wide as the character) 
+  ground and can jump. In that case, make the `child_region` a box around the
+  character's feet and set the `world_normal` to the up vector for the world.
+  The `child_region` may have to be very wide (e.g., 2x as wide as the character) 
   to encompass locations where contact was briefly made in a previous frame.
   
   Note that sleeping entities have no contacts.
-  See also `physicsAddContactCallback()`.
+  See also `physics_add_contact_callback()`.
 
-`physicsAddEntity(physics, entity)`
+`physics_add_entity(physics, entity)`
 : Add `entity` to this physics context. An entity may only be in
   one physics context at a time. Returns the `entity`.
   
   Once an entity is added to the physics system, it will be retained
-  in the physics system until `physicsRemoveEntity()` is called.
-  Use the `drawPhysics()` command or IDE button to debug physics objects
+  in the physics system until `physics_remove_entity()` is called.
+  Use the `draw_physics()` command or IDE button to debug physics objects
   that correspond to entities which are no longer being drawn.
 
-`physicsAttach(physics, type, {entityA, entityB, pointA, pointB, collide (= nil), ...})` 
+`physics_attach(physics, type, {entityA, entityB, pointA, pointB, collide (= nil), ...})` 
 : Attaches two entities to each other, `entityB` to the
   world. `entityA` may be `nil` (the world) or have infinite
   density. `entityB` must be non-`nil` and have finite density. The
@@ -2715,7 +2732,7 @@ to start colliding with each other.
   are used for explicit positioning. Attachments are for letting simulation position
   objects.
   
-  Returns an attachment object, which can be passed to `physicsDetach()`.
+  Returns an attachment object, which can be passed to `physics_detach()`.
   
   All attachment types are massless, except for weld, which adds a slight amount of
   mass at the weld point and thus affects net mass and moment of inertia.
@@ -2723,7 +2740,7 @@ to start colliding with each other.
   If `collide` is false, then the entities cannot collide with each other while
   the attachment is maintained. The default for `collide` is `true` for spring, rope, and rod
   attachments and `false` for all other types.  You can also disable collisions by putting 
-  the objects in the same `entity.collisionGroup`, which is more efficient.
+  the objects in the same `entity.collision_group`, which is more efficient.
   
   Attached entities cannot sleep.
   
@@ -2734,7 +2751,7 @@ to start colliding with each other.
    - `"rod"`:    `length (= ‖pointB - pointA‖)`
    - `"weld"`:   `angle (= entityB.angle - entityA.angle)`. Rigid attachment with
                  the specified relative angle. <!-- It is more stable and efficient to 
-                 call `physicsRemoveEntity(physics, entityB)` and `entityAddChild(entityA, entityB)`
+                 call `physics_remove_entity(physics, entityB)` and `entity_add_child(entityA, entityB)`
                  than to weld within the physics system. --> Requires `entityA` to be non-`nil`.
    - `"gyro"`:   `angle (= 0)` Free translation, but frozen rotation relative to each other. 
      Useful for keeping characters upright. `entityA` must be `nil`. This kind of 
@@ -2744,20 +2761,20 @@ to start colliding with each other.
    - `"rope"`:   `length`. If the rope will always be under tension, use a rod.
    - `"joint"`:  `minAngle`, `maxAngle`, `angle`, `stiffness (= 100%)` -->
 
-`physicsDetach(physics, attachment)`
-: Remove this attachment, which was previously created by `physicsAttach()`.
+`physics_detach(physics, attachment)`
+: Remove this attachment, which was previously created by `physics_attach()`.
 
-`physicsRemoveAll(physics)`
+`physics_remove_all(physics)`
 : Remove all entities and attachments from this physics context.
 
-`physicsRemoveEntity(physics, entity)`
+`physics_remove_entity(physics, entity)`
 : Remove `entity` and all attachments for it from the physics context.
-  See also `physicsAddEntity()`.
+  See also `physics_add_entity()`.
 
-`physicsSimulate(physics, frames (= 1))`
+`physics_simulate(physics, frames (= 1))`
 : Simulate physics for this many frames, treating all forces and torques
-  as constant over that period. Automatically calls `entityUpdateChildren()`
-  on all entities in the context. See also `entitySimulate()`.
+  as constant over that period. Automatically calls `entity_update_children()`
+  on all entities in the context. See also `entity_simulate()`.
   
 
 Graphics
@@ -2846,12 +2863,12 @@ endpoints and borders.
 
 ### Drawing
 
-`drawPoly(vertexArray, fill, border = (nil), pos (= xy(0, 0)), angle (= 0), scale (= xy(1, 1)), z (= 0))`
+`draw_poly(vertexArray, fill, border = (nil), pos (= xy(0, 0)), angle (= 0), scale (= xy(1, 1)), z (= 0))`
 : Draws the _convex_ polygon defined by the `vertexArray`, first scaling by `scale`, rotating by `angle`,
   and then translating by `pos`. The polygon may have any winding direction. The outcome of the drawn result
   is undefined and may change across platforms if the polygon is not convex (but there will never be an error).
 
-`drawCornerRect(corner, size, fill, border (= nil), z (= 0))`
+`draw_corner_rect(corner, size, fill, border (= nil), z (= 0))`
 : Draw a rectangle covering all of the pixel centers between `corner`
   and `corner + size`. This is primarily for UI window drawing.
   `size` may be negative.
@@ -2859,17 +2876,17 @@ endpoints and borders.
   If the top or right
   sides exactly touch a pixel center (at a half-integer), then they do
   not cover it. The direction in which the `size` applies is determined
-  by the current transform. Note that if `getYUp()` is positive, then
+  by the current transform. Note that if `up_y()` is positive, then
   the rectangle will extend _upward_ from the corner.
   
-  See also `drawRect()`.
+  See also `draw_rect()`.
   
 
-`drawDisk(center, r, fill, border, z (= 0))`
+`draw_disk(center, r, fill, border, z (= 0))`
 : Draw a circle or filled disk centered at (`center.x`, `center.y`)
   with radius `r` and z-order `z`.
 
-`drawLine(A, B, color, z (= 0), openA (= false), openB (= false))`
+`draw_line(A, B, color, z (= 0), openA (= false), openB (= false))`
 : Draw a 1-pixel line from (`A.x`, `A.y`) to (`B.x`, `B.y`) using z-order `z`.
   When using the default transformation, put the endpoints at half-pixel
   positions for the best alignment with the pixel grid.
@@ -2879,46 +2896,46 @@ endpoints and borders.
   These are useful when drawing polylines and curves with transparency, 
   to avoid double-coloring the joints between individual line segments.
 
-`drawPoint(P, c, z (= 0))`
+`draw_point(P, c, z (= 0))`
 : Set the color of pixel (`P.x`, `P.y`) to color `c` with z-order `z`.
-  A series of `drawPoint` calls with the same `z` value are about twice as
+  A series of `draw_point` calls with the same `z` value are about twice as
   fast as ones with mixed `z` values or intermixed with other draw calls.
   For the best alignment under the default transformation, put the endpoints
   at half-pixel positions.
 
-`drawPreviousMode()`
+`draw_previous_mode()`
 : Re-issue all of the drawing commands from the previous mode's frame
-  that completed before the `setMode()` call. These are not
+  that completed before the `set_mode()` call. These are not
   affected by the current `clip` or `transform`. The calls are in full
   2.5D, so calls from this mode may insert graphics between them in
   the z-order.  Useful for drawing the main game background during
   inventory, pause, menu, and dialogue modes.
 
-`drawRect(pos, size, fill, border (= nil), angle (= 0), z (= 0))`
+`draw_rect(pos, size, fill, border (= nil), angle (= 0), z (= 0))`
 : Draws the rectangle _centered_ at `pos` with the given `size` and `angle`. 
   No `scale` argument is provided because it is easy for the caller to 
   explicitly multiply `size` by `scale`.
-  See also `drawCornerRect()` and `drawSpriteCornerRect()`.
+  See also `draw_corner_rect()` and `draw_sprite_corner_rect()`.
 
-`drawSprite(args)`
-: Keyword version of `drawSprite()`. Pass an object that has properties
+`draw_sprite(args)`
+: Keyword version of `draw_sprite()`. Pass an object that has properties
   whose names match the arguments of the positional version. For example,
-  `drawSprite({sprite: wizard, pos: xy(100, 100), z: 2})`.
+  `draw_sprite({sprite: wizard, pos: xy(100, 100), z: 2})`.
   Values default according to the positional argument version.
 
-`drawSprite(sprite, pos, angle (= 0), scale (= nil), opacity (= 1), z (= 0), overrideColor (= nil))`
+`draw_sprite(sprite, pos, angle (= 0), scale (= nil), opacity (= 1), z (= 0), override_color (= nil))`
 : Draw sprite `sprite` with its center at `pos`. `pos` must have at
   least `x` and `y` fields. The sprite appears at `z` in the z-order
   (defaults to 0). The `scale` parameter must be nil (which is treated
   as `xy(1,1)`), a number that is not zero, or an `xy()` with nonzero fields.  Scale is applied before the sprite is
-  rotated.  Sprites are not flipped or scaled by `setTransform`
+  rotated.  Sprites are not flipped or scaled by `set_transform`
   values, but the rotation and center are affected by the
-  `setTransform` scaling.
+  `set_transform` scaling.
   
-  If it is not `nil`, the `overrideColor` replaces the red, green, and blue
+  If it is not `nil`, the `override_color` replaces the red, green, and blue
   values read from each pixel of the sprite. It uses the existing alpha value.
 
-`drawSpriteCornerRect(sprite, corner, size, z ( = 0))`
+`draw_sprite_corner_rect(sprite, corner, size, z ( = 0))`
 : Draw a rectangle enclosing points `corner` and `corner+size`
   filled with `sprite` tiled as needed (and aligned to the
   center), and surrounded by the neighbors of `sprite`
@@ -2928,16 +2945,17 @@ endpoints and borders.
   to only be stretched in one dimension, or to tile only at integer
   multiples.
   
-  See also `drawCornerRect()` and `drawRect()`.
+  See also `draw_corner_rect()` and `draw_rect()`.
 
-`drawText(args)`
-: Keyword version of `drawText()`. Pass an object that has properties
+`draw_text(args)`
+: Keyword version of `draw_text()`. Pass an object that has properties
   whose names match the arguments of the positional version. For example,
-  `drawText({text: "Fire!", pos: xy(100, 100), xAlign:"left", z: 2})`.
+  `draw_text({text: "Fire!", pos: xy(100, 100), x_align:"left", z: 2})`.
   Values default according to the positional argument version.
 
-`drawText(font, text, pos, color (= nil), shadow (= nil), outline (= nil), xAlign (= "left"), yAlign (= "baseline"), z (= 0), wrapWidth (= nil), textSize (= size(text)), markup (= false))`
-: Print string `text` relative to `pos` and return an `xy()` of the bounding box. 
+`draw_text(font, text, pos, color (= nil), shadow (= nil), outline (= nil), x_align (= "left"), y_align (= "baseline"), z (= 0), wrapWidth (= nil), textSize (= size(text)), markup (= false))`
+: Print string `text` relative to `pos`. Returns an `xy()` of the bounding box,
+  excluding shadows and outline.
   
   x-alignment of `-1` or `"left"` = left, 
   `0` or `"center"` = center, `+1` or `"right"` = right, 
@@ -2951,9 +2969,9 @@ endpoints and borders.
   Returns the line height (including spacing) for the next line.  If
   `wrapWidth` is specified, breaks the text at the maximum width and
   renders multiple lines. Each line is offset by the font's vertical
-  spacing and aligned as specified. See also `textWidth()`.
+  spacing and aligned as specified. See also `text_width()`.
   
-  `textSize` restricts drawText to only printing that many characters,
+  `textSize` restricts draw_text to only printing that many characters,
   *after* word-wrapping. This allows gradually revealing text in a stable
   way under word wrap.
   
@@ -2963,7 +2981,7 @@ endpoints and borders.
   That property is valid from the beginning brace to the end one. Only
   one property can be changed per brace, and braces can be nested.
   For strings that word wrap, the vertical spacing of lines is based 
-  on the original font specified as an argument to `drawText()`, so
+  on the original font specified as an argument to `draw_text()`, so
   using very different fonts can result in poorly formatted output. 
   The legal values are colors specified using `rgba()`, `rgb()`, `hsva()`, 
   `hsv()`, or `gray()` with numbers, the `#` color syntax, or the
@@ -2973,60 +2991,60 @@ endpoints and borders.
   using a double slash: `\\{` or `\\}`. _The current implementation
   simply strips markup instead of applying it._
   
-`drawTri(A, B, C, fill, border (= nil), pos (= xy(0, 0)), scale (= xy(1, 1)), angle (= 0), z (= 0))`
+`draw_tri(A, B, C, fill, border (= nil), pos (= xy(0, 0)), scale (= xy(1, 1)), angle (= 0), z (= 0))`
 : Scale `A`, `B`, and `C` by `scale`, rotate them around the origin by `angle`, translate
   by `pos`, and then draw the triangle. The `pos` argument is not first because in many
   cases this is called with draw-space vertices and no translation. The triangle may have
   any winding direction.
 
-`getBackground()`
-: Returns the value previously set with `setBackground()`. 
+`get_background()`
+: Returns the value previously set with `set_background()`. 
 
-`getClip()`
+`get_clip()`
 : Returns the current net clipping region as an object that
-  can be passed to `setClip()`.
+  can be passed to `set_clip()`.
 
-`getSpritePixelColor(sprite, pos, result (= nil))`
+`get_sprite_pixel_color(sprite, pos, result (= nil))`
 : Returns the color of pixel `pos` in the sprite as an `rgba`
   value. When `result` is not `nil`, it is used to store the result
   to avoid memory allocation. If the pixel is out of bounds for that sprite, 
   returns `nil` if there is no `result` specified and `rgba(0,0,0,0)`
   in `result` otherwise.
 
-`intersectClip(args)`
-: Object version of `intersectClip()`.
+`intersect_clip(args)`
+: Object version of `intersect_clip()`.
 
-`intersectClip(pos (= nil), size (= nil), z (= nil), zSize (= nil))`
+`intersect_clip(pos (= nil), size (= nil), z (= nil), z_size (= nil))`
 : Intersect the current clipping region with this new one. Ignores the
   current transformation.
 
-`resetClip()`
-: Reset to the default clipping region, `setClip(xy(0, 0), screenSize, -2047, 4096)`.
+`reset_clip()`
+: Reset to the default clipping region, `set_clip(xy(0, 0), SCREEN_SIZE, -2047, 4096)`.
 
-`setBackground(color (= #0))`
+`set_background(color (= #0))`
 : Replace the background with this color. The background is automatically
   drawn each frame with the last value set.
 
-`setBackground(sprite)`
+`set_background(sprite)`
 : Replace the background with this sprite, which must be the exact size of
   the screen and in a spritesheet that is the exact size of the screen.
 
-`setClip(args)`
-: Object version of `setClip()`.
+`set_clip(args)`
+: Object version of `set_clip()`.
 
-`setClip(pos (= nil), size (= nil), z (= nil), zSize (= nil))`
+`set_clip(pos (= nil), size (= nil), z (= nil), z_size (= nil))`
 : Set the clipping region to this region. Unspecified and `nil` values
   retain their current value. `pos` and `size` must be `nil` or `xy()` values.
   Coordinates are clamped to the physical
-  screen and z to the range [-2047, 2048]. `size` and `zSize` may be
+  screen and z to the range [-2047, 2048]. `size` and `z_size` may be
   negative. It is impossible to set a clipping region smaller than
   1x1x1 pixels.
 
-`textWidth(font, s, markup (= false))`
+`text_width(font, s, markup (= false))`
 : Returns the pixel width of string `s` in this font, including border padding.
   Note that leading and trailing numbers may incur additional empty space for
   column alignment. If `markup` is true, then `s` is processed using the
-  markup rules from `drawText()`.
+  markup rules from `draw_text()`.
   
 `xy(x, y)`
 : Create a structure with values `x` and `y`, which can be used with most drawing routines.
@@ -3037,16 +3055,16 @@ endpoints and borders.
            --------------------------------------------
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
-setBackground(gray(100%))
-drawText("Normal", xy(32,68), rgb(1,0,0), nil, nil, 0)
-drawText("Outline", xy(32,77), rgb(1,0,0), rgb(50%, 50%, 0), nil, 0)
-drawText("Shadow", xy(32,86), rgb(1,0,0), nil, rgb(0,0,0, 50%), 0)
-drawText("Shadow+Outline", xy(32,95), rgb(1,0,0), rgb(50%, 50%, 0), rgb(0,0,0, 50%), 0)
+set_background(gray(100%))
+draw_text("Normal", xy(32,68), rgb(1,0,0), nil, nil, 0)
+draw_text("Outline", xy(32,77), rgb(1,0,0), rgb(50%, 50%, 0), nil, 0)
+draw_text("Shadow", xy(32,86), rgb(1,0,0), nil, rgb(0,0,0, 50%), 0)
+draw_text("Shadow+Outline", xy(32,95), rgb(1,0,0), rgb(50%, 50%, 0), rgb(0,0,0, 50%), 0)
 
 def test(pos, xalign, yalign)
-  drawCornerRect(po, xy(4, 6), gray(85%))
-  drawPoint(pos, gray(0))
-  drawText("X", pos, rgb(1, 0, 0), nil, nil, xalign, yalign)
+  draw_corner_rect(po, xy(4, 6), gray(85%))
+  draw_point(pos, gray(0))
+  draw_text("X", pos, rgb(1, 0, 0), nil, nil, xalign, yalign)
 
 for u < 3
   for v < 3
@@ -3059,18 +3077,18 @@ for u < 3
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
-setBackground(#FFF)
+set_background(#FFF)
 
 // Make the text color clear to draw outlines.
-drawText(goodNeighbors, "Transparent", xy(83, 155), rgba(0,0,0,0), nil, #0)
+draw_text(goodNeighbors, "Transparent", xy(83, 155), rgba(0,0,0,0), nil, #0)
 
 // Make the bottom outline look thick by making the shadow and outline
 // the same color.
-drawText(goodNeighbors, "Thick Bottom", xy(83, 170), #2AF, #0, #0)
+draw_text(goodNeighbors, "Thick Bottom", xy(83, 170), #2AF, #0, #0)
 
 // Draw an explicit shadow wherever you want it
-drawText(goodNeighbors, "Offset Shadow", xy(85, 184), rgba(0,0,0,25%))
-drawText(goodNeighbors, "Offset Shadow", xy(83, 182), #0A0)
+draw_text(goodNeighbors, "Offset Shadow", xy(85, 184), rgba(0,0,0,25%))
+draw_text(goodNeighbors, "Offset Shadow", xy(83, 182), #0A0)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [Tricks with text styling]
 
@@ -3083,12 +3101,12 @@ The final image drawn can be transformed in limited ways during scan
 out to the display, as if it were a sprite being drawn to the screen.
 Setting any post effects may slow down rendering slightly.
 
-`getPostEffects()`
-: Return the current post effects in a form that can be passed to `setPostEffects()`.
+`get_post_effects()`
+: Return the current post effects in a form that can be passed to `set_post_effects()`.
 
-`setPostEffects(args)`
+`set_post_effects(args)`
 : The arguments have the following fields, all optional. nil values default to their previous value.
-  Invoke `resetPostEffects()` first for a clean set.
+  Invoke `reset_post_effects()` first for a clean set.
   
   - `background` is an `rgba()` to draw in the background behind the new frame. The `a` component
     controls how opaque the background is. Setting `background.a = 0` allows new frames to be blended on
@@ -3103,7 +3121,7 @@ Setting any post effects may slow down rendering slightly.
   - `opacity` is the amount of opacity to use for the new frame. If `background.a` and `opacity` are
     both less than 1 then the new and previous frames blend together
 
-`resetPostEffects()`
+`reset_post_effects()`
 : Restore the defaults, which directly composite each frame.
 
 
@@ -3128,28 +3146,28 @@ A map asset has the following fields. Its sprite elements are mutable at runtime
 `map.spritesheetTable`
 : A table mapping TMX tile set names to spritesheets for this map.
 
-`map.spriteSize`
+`map.sprite_size`
 : The `xy()` size of source sprites in pixels.
 
 `map.wrapX`
 : If true, the map wraps horizontally. Array access does not automatically
-  wrap, but function such as `drawMap()`, `findMapPath()`, and `getMapPixelColor()`
+  wrap, but function such as `draw_map()`, `find_map_path()`, and `get_map_pixel_color()`
   will implement wrapping.
 
 `map.wrapY`
 : If true, the map wraps vertically. Array access does not automatically
-  wrap, but function such as `drawMap()`, `findMapPath()`, and `getMapPixelColor()`
+  wrap, but function such as `draw_map()`, `find_map_path()`, and `get_map_pixel_color()`
   will implement wrapping.
 
 `map.zOffset`
 : Amount to add to each layer index when computing a z value for rendering.
   `layer = (z - map.zOffset) / map.zScale`; `z = layer * map.zScale + map.zOffset`.
-  See also `transformDrawToMap()` and `transformMapToDraw()`.
+  See also `transform_draw_to_map()` and `transform_map_to_draw()`.
   
 `map.zScale`
 : Amount to multiply each layer index to compute a z value for rendering.
   `layer = (z - map.zOffset) / map.zScale`; `z = layer * map.zScale + map.zOffset`.
-  See also `transformDrawToMap()` and `transformMapToDraw()`.
+  See also `transform_draw_to_map()` and `transform_map_to_draw()`.
 
 
 The following functions relate maps, pixels, and sprites. In them, a
@@ -3157,15 +3175,15 @@ The following functions relate maps, pixels, and sprites. In them, a
 commands operate and a "map coordinate" is in the space of the map
 indices. The map's z-axis corresponds to layers.
 
-`drawMap(map, minLayer (= 0), maxLayer (= length(map.layer)), replacementArray (= nil))`
+`draw_map(map, min_layer (= 0), max_layer (= length(map.layer)), replacement_array (= nil))`
 : Draws the map with the current transform.  If there is no transform,
   the map is drawn with the first tile's center at (0, 0), which means
-  that the tile will be half off the screen.  If specified, `minLayer`
-  and `maxLayer` determine the inclusive range of layers to draw.  Map
+  that the tile will be half off the screen.  If specified, `min_layer`
+  and `max_layer` determine the inclusive range of layers to draw.  Map
   rendering ignores skew transformations...typically the skew will be
   implicit in the map's layout and rendering. 
   
-  If `replacementArray` is specified, it must be an even length array
+  If `replacement_array` is specified, it must be an even length array
   of the form `[from0, to0, from1, to1, ...]`.  Each `from` value is a
   sprite in the map. It will be replaced during drawing with the
   corresponding `to` value. The `to` values may also be `nil`.
@@ -3174,8 +3192,8 @@ indices. The map's z-axis corresponds to layers.
   appropriately horizontally or vertically when drawn, if it is large
   enough to covers at least 1/3 of the current clipping area.
 
-`findMapPath(map, startXY, goalXY, edgeCost, costLayer = 0)`
-: Specialized version of `findPath` for maps. The start and end positions 
+`find_map_path(map, startXY, goalXY, edgeCost, costLayer = 0)`
+: Specialized version of `find_path` for maps. The start and end positions 
   are rounded down to the nearest integer map coordinates. The `edgeCost`
   is either a function or an array. The function returns an array of
   map coordinates to visit or `nil` if no traversable path exists.
@@ -3194,51 +3212,51 @@ indices. The map's z-axis corresponds to layers.
   `B` values from `edgeCost`. Sprites that are not specified in the array
   cost 1 to traverse, and it costs `infinity` to leave the map bounds.
 
-`getMapPixelColor(map, mapCoord, layer (= 0), replacementArray (= nil))`
+`get_map_pixel_color(map, map_coord, layer (= 0), replacement_array (= nil))`
 : Returns the color of the pixel in `map` at the corresponding
-  `mapCoord` and `round(layer)`. Returns `nil` for out of
+  `map_coord` and `round(layer)`. Returns `nil` for out of
   bounds values and empty sprites. See also
-  `getMapPixelColorByDrawCoord()`.
+  `get_map_pixel_color_by_draw_coord()`.
 
-`getMapPixelColorByDrawCoord(map, drawCoord, drawZ (= 0), replacementArray (= nil))`
-: Returns the pixel color in `map` at the corresponding `drawCoord`
-  and `drawZ` using `transformDrawToMap()`. The result is guaranteed
-  to match what was drawn by `drawMap()`. Returns `nil` for out of
-  bounds values and empty sprites. See also `getMapPixelColor()`.
+`get_map_pixel_color_by_draw_coord(map, draw_coord, drawZ (= 0), replacement_array (= nil))`
+: Returns the pixel color in `map` at the corresponding `draw_coord`
+  and `drawZ` using `transform_draw_to_map()`. The result is guaranteed
+  to match what was drawn by `draw_map()`. Returns `nil` for out of
+  bounds values and empty sprites. See also `get_map_pixel_color()`.
 
-`getMapSprite(map, mapCoord, layer (= 0), replacementArray (= nil))`
-: Returns the sprite in `map` at the corresponding `mapCoord` and
+`get_map_sprite(map, map_coord, layer (= 0), replacement_array (= nil))`
+: Returns the sprite in `map` at the corresponding `map_coord` and
   `layer` using rounding. Returns `nil` for out of bounds values. See
-  also `getMapSpriteByDrawCoord()`.
+  also `get_map_sprite_by_draw_coord()`.
 
-`getMapSpriteByDrawCoord(map, drawCoord, drawZ (= 0), replacementArray (= nil))`
-: Returns the sprite in `map` at the corresponding `drawCoord` and
-  `drawZ` using `transformDrawToMap` and rounding to compute the
+`get_map_sprite_by_draw_coord(map, draw_coord, drawZ (= 0), replacement_array (= nil))`
+: Returns the sprite in `map` at the corresponding `draw_coord` and
+  `drawZ` using `transform_draw_to_map` and rounding to compute the
   coordinates. Returns `nil` for out of bounds values. See also
-  `getMapSprite()`.
+  `get_map_sprite()`.
 
-`setMapSprite(map, mapCoord, sprite, layer (= 0))`
-: Sets the corresponding map sprite. Does nothing if `mapCoord` is out of bounds.
+`set_map_sprite(map, map_coord, sprite, layer (= 0))`
+: Sets the corresponding map sprite. Does nothing if `map_coord` is out of bounds.
 
-`setMapSpriteByDrawCoord(map, drawCoord, sprite, drawZ (= 0))`
-: Sets the corresponding map sprite. Does nothing if `drawCoord` is out of bounds.
+`set_map_sprite_by_draw_coord(map, draw_coord, sprite, drawZ (= 0))`
+: Sets the corresponding map sprite. Does nothing if `draw_coord` is out of bounds.
 
-`transformDrawToMap(map, drawCoord)`
-: Returns the _fractional_ map coordinates of `drawCoord`.  See also
-  `transformMapToDraw()` and `mget()`.
+`transform_draw_to_map(map, draw_coord)`
+: Returns the _fractional_ map coordinates of `draw_coord`.  See also
+  `transform_map_to_draw()` and `mget()`.
 
-`transformDrawZToMapLayer(map, z)`
+`transform_draw_z_to_map_layer(map, z)`
 : Using the current transformation, returns the _fractional_ map layer
   of `z`.
 
-`transformMapLayerToDrawZ(map, L)`
+`transform_map_layer_to_draw_z(map, L)`
 : Returns the `z` value that will be used for `map` under the current
   transformation.
 
-`transformMapToDraw(map, mapCoord)`
-: Returns the draw coordinates of `mapCoord`. Integer mapCoords correspond to the centers of tiles,
-  which will be fractional pixels for even map tile sizes. See also `transformDrawToMap()` 
-  and `getMapPixelColor()`.
+`transform_map_to_draw(map, map_coord)`
+: Returns the draw coordinates of `map_coord`. Integer map_coords correspond to the centers of tiles,
+  which will be fractional pixels for even map tile sizes. See also `transform_draw_to_map()` 
+  and `get_map_pixel_color()`.
 
 
 Frame Hooks
@@ -3254,10 +3272,10 @@ the end of the previous frame.
 When drawing, use `z` arguments to ensure that drawn objects overlap 
 in the desired order regardless of the order in which drawing executes.
 
-`addFrameHook(callback, endCallback, lifetime, runInMode (= getMode()))`
+`add_frame_hook(callback, endCallback, lifetime, runInMode (= get_mode()))`
 : Register a `callback` function to run every frame for `lifetime`
-  frames.  The return value of `addFrameHook()` is a hook that can be
-  passed to `removeFrameHook()`.
+  frames.  The return value of `add_frame_hook()` is a hook that can be
+  passed to `remove_frame_hook()`.
   
   - `callback`: `def callback(framesleft, lifetime)`, runs every frame. `framesleft`
     will be `lifetime - 1` on the first frame and `0` on the last one.
@@ -3271,20 +3289,20 @@ in the desired order regardless of the order in which drawing executes.
   See also `sequence()` and `delay()` for common cases.
 
 `delay(callback, delayFrames)`
-: Same as `addFrameHook(nil, callback, delayFrames or 0)`.
+: Same as `add_frame_hook(nil, callback, delayFrames or 0)`.
 
-`removeFrameHook(hook)`
+`remove_frame_hook(hook)`
 : Remove this frame hook immediately, without executing its `endCallback`.
   If the hook has already ended or is not present, nothing happens.
 
-`removeFrameHooksByMode(mode)`
+`remove_frame_hooks_by_mode(mode)`
 : Remove all frame hooks that are locked to the `mode`. Use `nil` to
   remove all hooks with no mode at all. Do not invoke the
   `endCallback`s on these hooks.
 
 `sequence(...)`
 : Add a series of frame hooks that run in the current mode. Returns a master
-  hook that can be used with `removeFrameHook()` to cancel the entire sequence.
+  hook that can be used with `remove_frame_hook()` to cancel the entire sequence.
   Each argument may be either a function, `nil`, or `{callback: function, frames: number}`.
   The callbacks run for the specified number of frames. If not `nil`, the callback
   signature is `def callback(framesleft, lifetime)`.
@@ -3297,11 +3315,11 @@ in the desired order regardless of the order in which drawing executes.
 Time
 ----------------------------------------------------------
 
-`gameFrames`
+`game_frames`
 : Number of elapsed 1/60 frames since the program started. The program may
   mutate this global variable.
 
-`modeFrames`
+`mode_frames`
 : Number of elapsed 1/60 frames since the current mode was most recently entered.
   The program may mutate this global variable.
 
@@ -3311,7 +3329,7 @@ Time
   Do not use this time for simulation because it will have inconsistent 
   jumps between frames dues to frame rate scaling.
 
-`localTime()`
+`local_time()`
 : Returns an object with the following properties, set in the current time zone:
 
   - `year`, e.g., 2019
@@ -3325,17 +3343,17 @@ Time
   - `daySecond` seconds since midnight, including a fractional part
   - `timezone` minutes from UTC
 
-  See `formatNumber()` for the various clock formatting options for numbers in seconds,
+  See `format_number()` for the various clock formatting options for numbers in seconds,
   and `now()` for a high-precision timer.
 
 Path Finding
 ----------------------------------------------------------
 
-*`findPath(startNode, goalNode, estimatePathCost, edgeCost, getNeighbors, nodeToID, graphObj (= nil))`*
+*`find_path(startNode, goalNode, estimatePathCost, edgeCost, getNeighbors, nodeToID, graphObj (= nil))`*
 
-_See also `findMapPath` for a simpler map-specific version._
+_See also `find_map_path` for a simpler map-specific version._
 
-`findPath()` is a general-purpose path-finding routine for any kind of
+`find_path()` is a general-purpose path-finding routine for any kind of
 world representation. It uses the "A*" (A-star) algorithm. The return value is an
 array of nodes to traverse, including the `startNode` and `goalNode`,
 to follow the shortest path discovered, or `nil` if no path
@@ -3394,13 +3412,13 @@ const dir = [xy(-1, 0), xy(0, -1), xy(0, 1), xy(1, 0)]
 def estimatePathCost(A, B, map): return |B.x - A.x| + |B.y - A.y|
 
 // Moving through swamps is slow
-def edgeCost(A, B, map): return 1 + (getMapSprite(map, A) == swamp)
+def edgeCost(A, B, map): return 1 + (get_map_sprite(map, A) == swamp)
 
 // Block traversal at map edges and walls
 def getNeighbors(A, map):
    const neighbors = []
    for d in dir:
-      const B = A + d; const s = getMapSprite(map, B)
+      const B = A + d; const s = get_map_sprite(map, B)
       if s and s != wall: push(neighbors, B)
    return neighbors
 
@@ -3410,10 +3428,10 @@ def nodeToID(A, map): return A.x + map.width * A.y
 // In map coordinates
 let startNode = xy(1, 1)
 let goalNode = xy(20, 20)
-let path = findPath(startNode, goalNode, estimatePathCost, edgeCost, getNeighbors, nodeToID, map)
+let path = find_path(startNode, goalNode, estimatePathCost, edgeCost, getNeighbors, nodeToID, map)
 
 // Print the path
-for P in path: debugPrint(P)
+for P in path: debug_print(P)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -3431,29 +3449,29 @@ These APIs are subject to change.
   implementation, the `msg` is always evaluated when assertions 
   are enabled even if the assertion test passes.
 
-`debugPause()`
+`debug_pause()`
 : Pause program execution.
 
-`debugPrint(x, ...)`
+`debug_print(x, ...)`
 : If `x` is a string, directly prints it to the Output window, otherwise
   prints `unparse(x)` to the Output window. When multiple arguments
   are provided they are processed individually with spaces between them.
   Debug print statements can be completely disabled from the Output 
   window, which causes them to consume no processing time.
 
-`debugWatch(expr)`
+`debug_watch(expr)`
 : Make the expression appear along with its value at the time that
-  `debugWatch` executs in the Watch pane of the debugger. If there are
+  `debug_watch` executs in the Watch pane of the debugger. If there are
   multiple expressions that are syntactically identical, they will be
   collapsed and only the last to execute each frame will be
   shown. This is *not* a function. It is a special syntax. You may not
-  pass the `debugWatch` command as if it were a function.
+  pass the `debug_watch` command as if it were a function.
 
-`deviceControl(command, ...)`
+`device_control(command, ...)`
 : Reserved function for executing device-specific features such as the
   game launcher, GPIO, and alternative input devices. `command` is a
   string telling the host which control feature to execute, and the
-  remaining arguments are passed to it. All `deviceControl()` commands
+  remaining arguments are passed to it. All `device_control()` commands
   may change in future releases and may not work on any given platform.
 
   - `"startGIFRecording"` Begin GIF recording.
@@ -3462,20 +3480,20 @@ These APIs are subject to change.
   - `"startPreviewRecording"` Begin preview video recording. There is no "stop" command because this
      terminates automatically after a set time.
   - `"takeScreenshot"`    Take a screenshot and download it to the local disk.
-  - `"setPadType", index, "type"` Set `pad[index].type` and the corresponding prompts.
-  - `"getAnalogAxes", index` Return an `xy()` of the analog axis values for `pad[index]`, without D-pad snapping.
+  - `"setPadType", index, "type"` Set `gamepad_array[index].type` and the corresponding prompts.
+  - `"getAnalogAxes", index` Return an `xy()` of the analog axis values for `gamepad_array[index]`, without D-pad snapping.
     Needed for accessing Atari paddles, car pedals, steering wheels, and flight stick throttles in a meaningful way.
   - `"setDebugFlag", flagname, bool` Set the enabled state of an IDE debugging flag. The flagnames are 
-    `"entityBounds"`, `"assert"`, `"debugPrint"`, `"debugWatch"`, `"physics"`.
+    `"entityBounds"`, `"assert"`, `"debug_print"`, `"debug_watch"`, `"physics"`.
   - `"getDebugFlag", flagname` Return the state of an IDE debugging flag.
 
-`drawBounds(e, color (= gray(60%)), recurse (= true))`
+`draw_bounds(e, color (= gray(60%)), recurse (= true))`
 : Render a debugging view of the bounds of an entity or other object `e`
   with `pos` and optional `angle`, `size`, `scale`, and `shape`
   properties. If `recurse` is true, descend into 
-  any `e.childArray` field.
+  any `e.child_array` field.
 
-`drawPhysics(physics)`
+`draw_physics(physics)`
 : Render a debugging view of the physics system
   
 
@@ -3759,6 +3777,8 @@ Fonts
 
 ![`quad://fonts/runes-9.font.json`](../fonts/runes-9.png)
 
+![`quad://fonts/thompson-9.font.json`](../fonts/thompson-9.png)
+
 ![`quad://fonts/roman-8.font.json`](../fonts/roman-8.png)
 
 ![`quad://fonts/deja-8.font.json`](../fonts/deja-8.png)
@@ -3769,7 +3789,13 @@ Fonts
 
 ![`quad://fonts/cga-7.font.json`](../fonts/cga-7.png)
 
+![`quad://fonts/cruise-7.font.json`](../fonts/cruise-7.png)
+
+![`quad://fonts/connelly-7.font.json`](../fonts/conelly-7.png)
+
 ![`quad://fonts/scoreboard-7.font.json`](../fonts/scoreboard-7.png)
+
+![`quad://fonts/hauer-6.font.json`](../fonts/hauer-6.png)
 
 ![`quad://fonts/scoreboard-6.font.json`](../fonts/scoreboard-6.png)
 
@@ -4000,8 +4026,8 @@ options. Project files should have the double extension `.game.json`.
 
    // The default Y axis increases down the screen, like old arcade games.
    // Set this to true for a modern vertical axis good for physics games.
-   // You can also invoke setTransform() in code.
-   "flipY": false,
+   // You can also invoke set_transform() in code.
+   "flip_y": false,
    
    // Supported sizes:
    //
@@ -4012,7 +4038,7 @@ options. Project files should have the double extension `.game.json`.
    //
    // The non-native screen sizes may render with substantial black
    // borders on some implementations to ensure integer pixel scaling.
-   "screenSize": {"x": 384, "y": 224},
+   "SCREEN_SIZE": {"x": 384, "y": 224},
    
    // Description used on the game browser screen
    "description": {
@@ -4098,7 +4124,7 @@ The sprite sheet JSON descriptor looks like:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ JavaScript
 {
     "url":          "hero.png",
-    "spriteSize":   {"x": 8, "y": 8},
+    "sprite_size":   {"x": 8, "y": 8},
 
     // Optional blank pixels between sprites. Default is zero.
     "gutter":       0,
@@ -4109,11 +4135,11 @@ The sprite sheet JSON descriptor looks like:
     
     // Default value for sprite.frames, the number of 1/60-second frames
     // to play a sprite during animation.
-    "defaultDuration": 1,
+    "default_duration": 1,
     
     // Optional. Applies to pre-transpose coordinates. Each becomes
     // an array on the spritesheet with the extrapolate field set.
-    // A name cannot be 'spriteSize' or any other spritesheet field.
+    // A name cannot be 'sprite_size' or any other spritesheet field.
     //
     // If an xy() is specified, creates a single sprite.
     //
@@ -4228,7 +4254,9 @@ Fonts have a JSON descriptor file that looks like:
     // distribution size and loading time).
     "charSize": {"x": 8, "y": 14},
     
-    // Spacing between letters and lines during rendering
+    // Spacing between letters and lines during rendering. If the
+    // x spacing is zero (for script fonts), there will be no space between
+    // letters or digits, but space will still be added around symbols
     "letterSpacing": {"x": 2, "y": 3},
     
     // Defaults to 1 pixel
@@ -4314,7 +4342,7 @@ The map JSON descriptor looks like:
     // Optional. Default = false. If true, flip the map
     // vertically during load so that (0,0) is the bottom
     // of the TMX map instead of the top.
-    "flipY": false,
+    "flip_y": false,
     
     // Optional. Default = false.
     "wrapX": false,
@@ -4442,8 +4470,8 @@ Array examples:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 a = [8, 4, 1]
 a[0] = "hello"
-debugPrint(a[0])
-debugPrint(size(a))
+debug_print(a[0])
+debug_print(size(a))
 a₁ += 2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -4466,9 +4494,9 @@ Object examples:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 t = {x:3, y:10}
 t.x += 1
-debugPrint(t["x"])
-debugPrint(size(t))
-debugPrint(keyArray(t))
+debug_print(t["x"])
+debug_print(size(t))
+debug_print(keyArray(t))
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -4590,13 +4618,13 @@ for future use.
 `get`, `global`, `go`, `goto`, 
 `has`,
 `if`, `in`, `implements`, `inherits`, `include`, `import`, `interface`,
-`launchGame`, `let`, `local`,
+`launch_game`, `let`, `local`,
 `NaN`, `new`, `nil`, `nonlocal`, `not`, `null`, 
 `main`, `MAD`, `mod`, `module`, `mode`, `MUL`,
 `or`, `otherwise`,
-`public`, `private`, `protected`, `prototype`, `package`, `preserve`, `preservingTransform`,
-`quitGame`,
-`ret`, `return`, `resetGame`, `require`, `requires`,
+`public`, `private`, `protected`, `prototype`, `package`, `preserve`, `preserving_transform`,
+`quit_game`,
+`ret`, `return`, `reset_game`, `require`, `requires`,
 `seal`, `set`, `show`, `static`, `strict`, `SUB`, `swap`,
 `to`, `toString`, `then`, `try`, `throw`, `template`, 
 `until`, `use`, `using`, `unless`,
@@ -4606,7 +4634,7 @@ for future use.
 `yield`. 
 
 
-Built-in functions such as `drawTri` that are legal identifiers can be
+Built-in functions such as `draw_tri` that are legal identifiers can be
 rebound. They are not reserved. `cos`, `sin`, and `tan` by themselves
 are bound to first-class functions, but the special syntax that allows
 them to be invoked without parentheses on single variables is tied to
@@ -4682,7 +4710,7 @@ for multi-line comments.
 
 `because "reason"`
 : The special `because` statement allows a compile-time string comment to follow 
-  a mode or game change control flow statement such as `setMode()`. It acts as
+  a mode or game change control flow statement such as `set_mode()`. It acts as
   a machine-readable comment that the IDE will use to automatically annotate the program
   in the debug output and the mode diagram.
 
@@ -4893,8 +4921,8 @@ Symbol         | ASCII         | Value
 `∅`            | `nil`         | ("undefined")
                | `pad`         | array gamepad of objects 
                | `joy`         | shorthand for `pad₀`
-`ξ`            | `rnd()`       | random number on [0, 1), resampled every time the expression is used
-               | `screenSize`  | the size of the screen in pixels, defaults to `xy(384, 224)`
+`ξ`            | `random()`       | random number on [0, 1), resampled every time the expression is used
+               | `SCREEN_SIZE`  | the size of the screen in pixels, defaults to `xy(384, 224)`
 
 
 <!--
@@ -4935,7 +4963,7 @@ as well ("autocorrect"). The list of replacements is:
     `\tau`      |`τ` 
     `\time`     |`τ` 
     `\xi`       |`ξ` 
-    `\rnd`      |`ξ` 
+    `\random`      |`ξ` 
     `==`        |`≟` 
     `?=`        |`≟` 
     `!=`        |`≠` 
@@ -4981,17 +5009,19 @@ The flow control statements are:
   - `until` loop
   - `for` loop, with optional `with` expansion
   - `break` and `continue` within loops
+  - `preserving_transform` and `local`, which do not have branching flow
+    but do create scope lines as do other blocks
 - Modes:
-  - `setMode(ModeName)` to switch game modes. The note is optional.
-  - `pushMode(ModeName)` and `popMode()` to temporarily 
+  - `set_mode(ModeName)` to switch game modes. The note is optional.
+  - `push_mode(ModeName)` and `pop_mode()` to temporarily 
    enter a mode game mode. The notes are optional.
 - Game:
-  - `resetGame()` to reset all state and restart the game.
-  - `quitGame()` to end the current game and return to the launcher.
-  - `launchGame(url)` to launch a different game.
+  - `reset_game()` to reset all state and restart the game.
+  - `quit_game()` to end the current game and return to the launcher.
+  - `launch_game(url)` to launch a different game.
 
-`setMode()`, `pushMode()`, `popMode()`, `resetGame()`, `quitGame()`, and `launchGame()` may be 
-followed by the keyword `because` and a reason that is a compile-time string. For example, `quitGame() because "lives = 0"`.
+`set_mode()`, `push_mode()`, `pop_mode()`, `reset_game()`, `quit_game()`, and `launch_game()` may be 
+followed by the keyword `because` and a reason that is a compile-time string. For example, `quit_game() because "lives = 0"`.
 The reason allows the IDE to label the transitions on the mode diagram for the game.
 
 There is no switch, do loop, goto, or try/catch.
@@ -5019,7 +5049,7 @@ for i < 3
    def capture(): return i
    push(array, capture)
 
-for f in array: debugPrint(f())
+for f in array: debug_print(f())
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 that the value will reflect the time of the capture. This avoids many common bugs when using
@@ -5080,6 +5110,19 @@ for health, power,
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+The `until` loop is a `while` loop with an inverted test:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+until x == "end":
+  x = find_next(x, data)
+
+
+// Is the same as:
+while x != "end":
+  x = find_next(x, data)
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 ### Examples
 
 #### Array Iteration
@@ -5088,26 +5131,26 @@ for health, power,
 let names = ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
 
 // Iterate over array elements
-let pos = xy(½ screenSize.x, 10)
+let pos = xy(½ SCREEN_SIZE.x, 10)
 for planet in names:
-   pos.y += drawText(font, planet, pos, #f)
+   pos.y += draw_text(font, planet, pos, #f)
    
 // Iterate over values and modify (this is safe, no elements will be
 // skipped. You can even remove elements ahead of the iterator and
 // they will still be processed)
 for planet in names:
    // Remove any name with an "a" in it
-   if find(planet, "a") ≠ ∅: removeValues(names, planet)
+   if find(planet, "a") ≠ ∅: remove_values(names, planet)
    
    // Add some random moons...the current loop will not 
    // iterate over these, but they are immediately visible
    // in the array.
-   if rnd() > 50%: push(names, planet + " moon")
+   if random() > 50%: push(names, planet + " moon")
    
 // Iterate over array keys
-pos = xy(½ screenSize.x, 10)
+pos = xy(½ SCREEN_SIZE.x, 10)
 for i < size(names):
-   pos.y += drawText(font, names[i], pos, #f)
+   pos.y += draw_text(font, names[i], pos, #f)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -5126,14 +5169,14 @@ let poemBy = {
 }
 
 // Iterate over array elements
-let pos = xy(½ screenSize.x, 10)
+let pos = xy(½ SCREEN_SIZE.x, 10)
 for author in poemBy:
-   pos.y += drawText(font, poemBy[author] + " by " + author, pos, #f)
+   pos.y += draw_text(font, poemBy[author] + " by " + author, pos, #f)
    
 // Iterate over values and modify (this is safe, no elements will be skipped)
 for author in poemBy:
    // Remove this entry if it contains an "a" in the value
-   if find(poemBy[authpr], "a") ≠ ∅: removeKey(poemBy, author)
+   if find(poemBy[authpr], "a") ≠ ∅: remove_key(poemBy, author)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -5144,13 +5187,13 @@ let spots = [xy(1, 1), xy(100, 2), xy(10, 20), xy(50, 20)]
 
 for x, y in S in spots:
    // Remove any element that is higher than 15
-   if y > 15: removeValues(spots, S)
+   if y > 15: remove_values(spots, S)
    
 let i = 0
 while i < size(spots):
    // More efficient O(1) removal without preserving order
    // if spots is *really* long
-   if spots[i].x > 15: fastRemoveKey(spots, i)
+   if spots[i].x > 15: fast_remove_key(spots, i)
    else: ++i
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -5163,7 +5206,7 @@ disabled at runtime for efficiency on the Output pane. These are not
 functions and cannot be passed as values like functions or stored in
 data structures.
 
-`debugPrint(msg)` sends text output to the IDE Output pane. It runs
+`debug_print(msg)` sends text output to the IDE Output pane. It runs
 `unparse()` on `msg` if it is not already a string. These statements
 are automatically removed from the program when debug printing is
 disabled.
@@ -5426,7 +5469,7 @@ Command-Line Tools
   
 [`export.py`](../tools/quaddepend.py)
 : Export a static HTML site for a single game, either lightweight by referencing 
-  `https://github.io/morgan3d/quadplay` or standalone by embeddeding a full copy of
+  `https://morgan3d.github.io/quadplay` or standalone by embeddeding a full copy of
   the emulator. Run the script with `--help` to see the arguments. Run as `tools/export.py ...` or `python3 tools/export.py ...`
   from the main quadplay directory. This script itself depends on `quaddepend.py`.
 
@@ -5641,10 +5684,10 @@ spent per frame. If time spent is less than 16 ms, then your program
 is running at 60 fps. If time spent is higher than 16 ms, then you may
 need to optimize.
 
-`drawMap()` is substantially faster than making the same `drawSprite()` calls
+`draw_map()` is substantially faster than making the same `draw_sprite()` calls
 by yourself.
 
-A sequence of `drawPoint()` commands that all have the same `z` value is
+A sequence of `draw_point()` commands that all have the same `z` value is
 much faster than ones with mixed `z` values or broken up by other rendering
 calls.
 
@@ -5656,7 +5699,7 @@ but can make code hard to read.
 There is generally no need to cull objects that are off screen. The
 rendering code is very good at removing those for you.
 
-`drawSprite()` is fastest for `opacity=1` sprites that are not rotated
+`draw_sprite()` is fastest for `opacity=1` sprites that are not rotated
 or scaled and do not have alpha. It can directly copy the memory in
 this case.
 
@@ -5676,7 +5719,7 @@ fractional alpha values.
 Perfectly horizontal lines are much faster to draw than vertical lines. 
 Vertical lines are slightly faster than diagonal lines.
 
-Sequential `drawPoint()` calls that have the same `z` value are
+Sequential `draw_point()` calls that have the same `z` value are
 significantly optimized in order to enable per-pixel graphics.
 
 Numeric for loops, such as `for i < N` are slightly faster than
@@ -5825,13 +5868,13 @@ separate functions for watertight triangle and line rasterization,
 which give different results than what is typically useful for
 individual primitives.
 
-The `makeSpline()` function using `"continue"` mode will change to be a
+The `make_spline()` function using `"continue"` mode will change to be a
 third-order curve outside of the bounds instead of a line.
 
 IDE will receive major new features throughout and after the beta
 phase. This includes editors for code, sprites, and maps.
 
-`launchGame()` will probably accept additional arguments to pass to the 
+`launch_game()` will probably accept additional arguments to pass to the 
 launched game at some point. The syntax for that game accepting the
 arguments has not yet been determined.
 
@@ -5893,10 +5936,29 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
+2020 Jan 29: Beta update 25
+
+- Converted the entire API from camelCase to snake_case to improve readability
+  and more closely resemble Python and Lua
+- Replaced all instances of `rnd` with `random` and `int` with `integer` in the API
+- `random_int()` -> `random_integer()`
+- `srand()` -> `set_random_seed()`
+- `pad[]` -> `gamepad_array[]`
+- Removed most scroll bars from the IDE on Windows
+- Clicking on gamepad icon now displays the name of the gamepads in the IDE
+- Added `hauer-6` font asset
+- Added `cruise-7` font asset
+- Added `connelly-7` font asset
+- Added `thompson-8` font asset
+- Increased vertical spacing on `cga-7`, `deja-8`, and `cpc-14` fonts
+- `draw_text()` now returns a tighter vertical bounding box
+- Added kerning for script fonts
+- Added `examples/fontpreview` example
+
 2020 Jan 25: Beta update 24
 
-- Added `physicsEntityHasContacts()` for optimized contact tests
-- Fixed `physicsRemoveAll()` crash
+- Added `physics_entity_has_contacts()` for optimized contact tests
+- Fixed `physics_remove_all()` crash
 - Increased physics broken contact forgiveness queue length to four
   frames to better maintain ground contact for sliding objects
 - Fixed sustained physics contacts for fast moving objects not updating position properly
@@ -5947,48 +6009,48 @@ Changes for both the specification and implementation in each release.
   menu button
 - Added the <big>⊖</big> symbol to all fonts
 - Removed the ⓟ gamepad button from game access space
-- Added an event section for `popMode`, which can be overloaded for the mode
+- Added an event section for `pop_mode`, which can be overloaded for the mode
   being returned from
 - Added `quaddepend.py` script for printing dependencies of a game file
 - Changed quadplay script default to rejecting external connections and made the
   argument to enable mobile support `--host`, replacing the previous `--secure` mode
 - Showed sprite pivots in the sprite viewer
-- Added `entity.collisionSensor` property
+- Added `entity.is_sensor` property
 - Added 64x44 controller spritesheet
 - Separated emulator settings out of the Tools menu into a new Console menu
 - Added [scalepix✜](../tools/scalepix.html) tool for upscaling sprites and fonts
-- Changed the `pad[].prompt` to be a mapping for use with `replace()` instead
+- Changed the `gamepad_array[].prompt` to be a mapping for use with `replace()` instead
   of raw constants and updated example programs to use it
-- Documented the HOTAS `pad[].type`
+- Documented the HOTAS `gamepad_array[].type`
 - Added more error checking for `xy()` to catch common typos
 - Added eight new blip UI sound effects
-- Fixed `resetGame()` running the game at double speed
-- Fixed `gameFrames` and `modeFrames` starting at 60
+- Fixed `reset_game()` running the game at double speed
+- Fixed `game_frames` and `mode_frames` starting at 60
 - Redesigned boot and startup animations
 - Restored `examples/text` program that was broken by the previous update
-- Added `getBackground()`
+- Added `get_background()`
   
 
 2020 Jan 3: Beta update 20
 
-- Renamed `addEntityChild()` to `entityAddChild()`
-- Renamed `removeEntityChild()` to `entityRemoveChild()`
-- Renamed `updateEntityChildren()` to `entityUpdateChildren()`
-- Renamed `physicsStepEntity()` to `entitySimulate()`
+- Renamed `addEntityChild()` to `entity_add_child()`
+- Renamed `removeEntityChild()` to `entity_remove_child()`
+- Renamed `updateEntityChildren()` to `entity_update_children()`
+- Renamed `physicsStepEntity()` to `entity_simulate()`
 - Renamed `drawRect()` to `drawCornerRect()`
-- Renamed `drawSpriteRect()` to `drawSpriteCornerRect()`
-- Made `entitySimulate()` use `entity.drag` and invoke `entityUpdateChildren()`
+- Renamed `draw_spriteRect()` to `draw_spriteCornerRect()`
+- Made `entity_simulate()` use `entity.drag` and invoke `entity_update_children()`
 - Added hardware physics support. See the Physics section for the API
 - Added physics debugging to the IDE
 - Added [physics example](../console/quadplay.html?game=quad://examples/physics&IDE=1)
 - Added `oscillate(x, lo, hi)` and deprecated `oscillate(x, m)`
-- Added `entityRemoveAll()`
+- Added `entity_remove_all()`
 - Allowed more flexible JSON syntax for data files
 - Added BetterJSON.js to credits
-- Added optional `pos`, `scale`, and `angle` arguments to `drawTri()`
+- Added optional `pos`, `scale`, and `angle` arguments to `draw_tri()`
 - Added `drawRect()` that is centered and takes an optional `angle` argument
 - Added `drawPloy()` for drawing convex polygons
-- Documented that `drawTri()` ignores winding order
+- Documented that `draw_tri()` ignores winding order
 - Updated `tools/pyxlscript-mode.el` emacs syntax highlighting for new APIs
 - Fixed `tools/pyxlscript-mode.el` emacs syntax highlighting of color literals, negative numbers, and `size` properties
 - Optimized `overlaps(region, point)` test
@@ -6001,7 +6063,7 @@ Changes for both the specification and implementation in each release.
 - Added the Inspiration section
 - Added support for per-name (i.e., per-animation) pivots on spritesheets
 - Added `"setDebugFlag"` and `"getDebugFlag"` commands for controlling the IDE
-  via `deviceControl()`
+  via `device_control()`
 - Added preview images in the Built-In Games section of the manual
 - Added [poly-decomp.js](https://github.com/schteppe/poly-decomp.js) to dependencies
 - Made `require`, `requires`, `default`, `otherwise`, and `swap` into reserved words
@@ -6009,19 +6071,19 @@ Changes for both the specification and implementation in each release.
   in the same browser hosting the IDE
 - Fixed audio on Safari desktop browser
 - Removed `entity.acc` and `entity.twist` properties
-- New properties for physics: `entity.friction`, `entity.stictionFactor`, 
-  `entity.restitution`, `entity.drag`, `entity.collisionCategoryMask`, `entity.collisionGroup`,
-  and `entity.collisionHitMask`
-- Added `entityApplyForce()` and `entityApplyImpulse()`
-- Added `magnitudeSquared()` function
+- New properties for physics: `entity.friction`, `entity.stiction_factor`, 
+  `entity.restitution`, `entity.drag`, `entity.collision_category_mask`, `entity.collision_group`,
+  and `entity.collision_hit_mask`
+- Added `entity_apply_force()` and `entity_apply_impulse()`
+- Added `magnitude_squared()` function
 
 
 2019 Dec 25: Beta update 18
 
 - Added Deploying Games section
 - Added [Serpitron](../console/quadplay.html?game=quad://games/quadpaddle&IDE=1) sample game
-- Removed `extendPostEffects()` and reverted definition of `setPostEffects()` to match beta 16
-- Added `composeTransform()`
+- Removed `extendPostEffects()` and reverted definition of `set_post_effects()` to match beta 16
+- Added `compose_transform()`
 - Renamed `addFrameSequence()` to `sequence()`
 - Added `entity.pivot` and spritesheet pivots
 - Fixed Chrome and Safari blank region on the bottom of the IDE
@@ -6031,25 +6093,25 @@ Changes for both the specification and implementation in each release.
 
 2019 Dec 14: Beta update 17
 
-- Fixed `getClip()` off-by-one error
-- Changed `intersectClip()` to follow the argument conventions of `setClip()`
-- Fixed `drawText()` using the incorrect vertical clipping region
-- Added `lastValue()` and `lastKey()` for arrays and strings
+- Fixed `get_clip()` off-by-one error
+- Changed `intersect_clip()` to follow the argument conventions of `set_clip()`
+- Fixed `draw_text()` using the incorrect vertical clipping region
+- Added `last_value()` and `last_key()` for arrays and strings
 - Made `floor()` and `ceil()` variants that take a rounding precision
-- Added `fastRemoveValue()`
+- Added `fast_remove_value()`
 - Fixed misalignment of `-` character and enlarged the `+` character in the broderick-7 font
 - Added `delay()` and `addFrameSequence()`
 - Added options for open-ended line segments in `drawLine()` to support
   drawing polylines and curves with transparency 
-- Fixed `setPostEffects()` background color crashing the emulator
+- Fixed `set_post_effects()` background color crashing the emulator
 - Made Modes slightly wider in the visualization graph to accomodate longer mode names
 - Fixed a bug in the parsing of `because` statements that contained parentheses
 - Added support for type `"object"` in game JSON constants
 - Added `broderick-14` font
 - Made `loop()` work on vectors
 - Made `noise()` work on vectors
-- Added `extendPostEffects()` and `getPostEffects()`
-- Fixed `setPostEffects()` not resetting to defaults first
+- Added `extendPostEffects()` and `get_post_effects()`
+- Fixed `set_post_effects()` not resetting to defaults first
 - Added optional `reverse` argument to `sort()`
 - Increased analog stick dead zone to 40% to avoid accidental cross-axis input
 
@@ -6059,20 +6121,20 @@ Changes for both the specification and implementation in each release.
 - Added support for `"array"` constant types in `.game.json` files
 - Added `--secure` option to the quadplay script to prevent other machines from connecting
   to the local webserver
-- `drawText()` markup is now implemented
-- `textWidth()` now supports markup
+- `draw_text()` markup is now implemented
+- `text_width()` now supports markup
 - Added `duration` and `period` to spritesheet animation arrays
 - Upgraded the `quadplay` script to use a multithreaded server when Python 3.7 or later
   is available
 - Fixed a 1-pixel overdraw in `drawSpriteRect()`
-- Made `pushFront()` and `push()` return a pushed value
+- Made `push_front()` and `push()` return a pushed value
 - Overloaded `atan(xy)`
 - Added `insert()`
 - Fixed a parser error on `for` loops that have extra parentheses surrounding the test
 - Made documents appear at 80% scale when viewed in the IDE
 - Upgraded to Markdeep 1.07 for markdown processing
 - Changed the default markdown style sheet to have less vertical spacing and use a sans serif font
-- Fixed a bug in `pushMode()` when arguments are provided
+- Fixed a bug in `push_mode()` when arguments are provided
 - Fixed handling newlines in JSON multiline strings across various OS conventions
 
 
@@ -6085,7 +6147,7 @@ Changes for both the specification and implementation in each release.
 - Made the `quadplay` command line script shut down more gracefully on key press
 - Added per-sprite info viewer in the IDE
 - Added slow play button for debugging animations and interaction
-- Added the specification for `markup` on `drawText()` (but not the implementation)
+- Added the specification for `markup` on `draw_text()` (but not the implementation)
 - Improved the shape and line spacing for the `roman-8` font
 - Added `replace()` for strings
 - Added optional last, pair, and empty separators for `join()`
@@ -6095,17 +6157,17 @@ Changes for both the specification and implementation in each release.
 2019 Nov 17: Beta update 14
 
 - Added `fool-9.font.json`
-- Added `makeRnd()`
-- Added `rndInt(lo, hi)` and deprecated `rndInt(n)`
-- Added `rnd(lo, hi)` overload
-- Added optional `rnd()` function argument to `rndBall()`, `rndSquare()`, etc.
-- Renamed `rndBall()` --> `rndWithinSphere()`, 
-  `rndSquare()` --> `rndWithinSquare()`, 
-  `rndDisk()` --> `rndWithinCircle()`,
-  `rndSphere()` --> `rndOnSphere()`
-- Added `rndGaussian()`, `rndGaussian2D()`, `rndGaussian3D()`, 
-  `rndTruncatedGaussian()`, `rndTruncatedGaussian2D()`, rndTruncatedGaussian3D()`,
-  `rndOnCube()`, `rndWithinCube()`, `rndInt(lo, hi, rnd)`, `rndSign()`, `rndOnSquare()`
+- Added `make_random()`
+- Added `random_integer(lo, hi)` and deprecated `random_integer(n)`
+- Added `random(lo, hi)` overload
+- Added optional `random()` function argument to `randomBall()`, `randomSquare()`, etc.
+- Renamed `randomBall()` --> `random_within_sphere()`, 
+  `randomSquare()` --> `random_within_square()`, 
+  `randomDisk()` --> `random_within_circle()`,
+  `randomSphere()` --> `random_on_sphere()`
+- Added `random_gaussian()`, `random_gaussian2D()`, `random_gaussian3D()`, 
+  `random_truncated_gaussian()`, `random_truncated_gaussian2D()`, random_truncated_gaussian3D()`,
+  `random_on_cube()`, `random_within_cube()`, `random_intege(rlo, hi, random)`, `random_sign()`, `random_on_square()`
 
 2019 Oct 4: Beta update 13
 
@@ -6121,19 +6183,19 @@ Changes for both the specification and implementation in each release.
 - Added `SIGN()` intrinsic
 - Made `sign()` work on vectors
 - Caught CORS errors on sprite loading and reported to GUI
-- Internal objects now `debugPrint()` and `unparse()` as `«type objname»` instead of just `objname`
+- Internal objects now `debug_print()` and `unparse()` as `«type objname»` instead of just `objname`
 - Fixed `forceReload=1` breaking map loading
 - Implemented pivots for sprites and entities (currently not exposed in the API)
 
 
 2019 August 30: Beta update 11
 
-- Added `ordinal` and `ordinalabbrev` to `formatNumber()`
+- Added `ordinal` and `ordinalabbrev` to `format_number()`
 - Fixed implementation errors with `Runtime` naming clash on Firefox
 - Faster reload (no longer force reloading of `quad://` assets when locally hosting)
 - Documented `quadplay.html` arguments
-- Restored `getTransform()` to the API
-- Fixed `"oscillate"` extrapolate mode crash for `arrayValue()`
+- Restored `get_transform()` to the API
+- Fixed `"oscillate"` extrapolate mode crash for `array_value()`
 
 
 2019 August 25: Beta update 10
@@ -6143,8 +6205,8 @@ Changes for both the specification and implementation in each release.
 - Added support for Ctrl+G as an alternative GIF recording keystroke
 - Renamed `signNonZero()` to `signNotZero()` to match the manual
 - Added `MIN()` and `MAX()` intrinsics
-- Fixed `opacity == 0` on `drawSprite()` to draw nothing instead of full opacity
-- Added `rndBall()` and `rndSphere()`
+- Fixed `opacity == 0` on `draw_sprite()` to draw nothing instead of full opacity
+- Added `randomBall()` and `randomSphere()`
 - Changed sprite.json name for a single `xy()` to be a sprite instead of an animation
 
 
@@ -6152,7 +6214,7 @@ Changes for both the specification and implementation in each release.
 
 - Added `nanob-3.font.json` (like nano-3, but with thinner L and I characters)
 - Patch for emulator view resizing for new dimensions on slower browsers
-- Added `deviceControl()` `"getAnalogAxes"` command
+- Added `device_control()` `"getAnalogAxes"` command
 - Renamed `index.html` to `quadplay.html` for improved itch.io compatibility
 
 
@@ -6162,8 +6224,8 @@ Changes for both the specification and implementation in each release.
 - Added `nano-3.font.json`
 - Added `space-planet.sprite.json`, `space-atmosphere.sprite.json`, `space-moon.sprite.json`, and `space-ring.sprite.json` 
 - Made the JSON parser report line numbers instead of character positions for errors
-- Added `getClip()` for returning the current clipping region
-- Added `deviceControl()` support for setting the prompt characters for controllers
+- Added `get_clip()` for returning the current clipping region
+- Added `device_control()` support for setting the prompt characters for controllers
 
 
 2019 August 12: Beta update 7
@@ -6172,7 +6234,7 @@ Changes for both the specification and implementation in each release.
 - Added Linux button mapping for the 8bitdo SNES30 controller
 - Added the spread operator for variable number of arguments
 - Fixed arguments to `enter`
-- Added `…¿¡?` to the characters at which `drawText()` can word wrap
+- Added `…¿¡?` to the characters at which `draw_text()` can word wrap
 - Increased GIF recording pixel size for 64x64 games
 - Fixed compilation of repeated `if`...`then` on a single line
 - Added support for Thrustmaster Flight Hotas X
@@ -6188,15 +6250,15 @@ Changes for both the specification and implementation in each release.
 - Added `scoreboard-6.font.json`
 - Added `nano-4.font.json`
 - Fixed `XY_MUL()` intrinsic
-- Fixed `setTransform()` documentation to match current API
+- Fixed `set_transform()` documentation to match current API
 - Added three argument version of `loop()`
-- Allowed `drawText()` word-wrapping to search further back for a good break point
+- Allowed `draw_text()` word-wrapping to search further back for a good break point
 - Reduced boot loader font size for smaller screens
-- Added `textSize` argument to `drawText()`
+- Added `textSize` argument to `draw_text()`
 - Added units documentation to `entity` physics properties
 - Added space (`␣`) and return (`⏎`) button characters to fonts
 - Added alternative keyboard and 8Bitdo Zero controller to `controllers-32x22.png`
-- Added `pad[i].prompt.type`
+- Added `gamepad_array[i].prompt.type`
 - Fixed compilation of `if...then...else` on lines with other control flow
 - Fixed asset credits leading "by" lacking a trailing space
 
@@ -6223,12 +6285,12 @@ Changes for both the specification and implementation in each release.
 
 - Added syntax highlighting in emacs for `bitand`, `bitor`, and `bitxor`
 - Documented `log()`, `log2()`, and `log10()` 
-- Added optional `result` argument for `getSpritePixelColor()` to reduce memory allocation
-- Made `at`, `because`, `resetGame`, `launchGame`, and `quitGame` into reserved words
-- *Incompatible change*: Changed how the note/reason works for `pushMode`, `popMode`, `setMode`, `launchGame`, `quitGame`, and `resetGame`.
+- Added optional `result` argument for `get_sprite_pixel_color()` to reduce memory allocation
+- Made `at`, `because`, `reset_game`, `launch_game`, and `quit_game` into reserved words
+- *Incompatible change*: Changed how the note/reason works for `push_mode`, `pop_mode`, `set_mode`, `launch_game`, `quit_game`, and `reset_game`.
   The syntax now uses the `because` keyword after the complete expression instead of including the note as an argument.
-- `enter` can now take optional arguments, which are provided by `setMode()` or `pushMode()`
-- Added `deepClone()`
+- `enter` can now take optional arguments, which are provided by `set_mode()` or `push_mode()`
+- Added `deep_clone()`
 - 10% performance optimization for adjacent `drawPoint()` calls
 - Added the Intrinsics section
 
@@ -6236,12 +6298,12 @@ Changes for both the specification and implementation in each release.
 2019 July 13: Beta update 2
 
 - Added `loop-dark-thriller.mp3` audio clip
-- Fixed `mget` --> `getMapSprite()` in manual
+- Fixed `mget` --> `get_map_sprite()` in manual
 - Fixed Unicode characters not appearing correctly on the ad blocker warning page
-- Added `removeAll()`
+- Added `remove_all()`
 - Made IDE mode not automatically full-screen the emulator
 - Added specifically-stylized versions of `ⓧ`, `ⓨ`, `Ⓞ`, `⍍`, `▣`,`⧉`, `☰`, `ⓕ` to fonts for use as button prompts for specific controllers
-- Fixed `overrideColor` in `drawSprite()`
+- Fixed `override_color` in `draw_sprite()`
 - Added `controllers-32x22.sprite.json`
 - Added `prompt` field to `pad` instances/`joy` variable for button prompts
 - Fixed missing `tan()` function in implementation
@@ -6259,29 +6321,29 @@ Changes for both the specification and implementation in each release.
 
 2019 July 4: Public Beta
 
-- Removed `extendTransform()`, `getClip()`, and `getTransform()` from the beta release
+- Removed `extend_transform()`, `get_clip()`, and `get_transform()` from the beta release
 - Specified metadata for launcher
-- Moved programmatic GIF and screenshot recording to `deviceControl()`.
+- Moved programmatic GIF and screenshot recording to `device_control()`.
 - Allowed trailing commas and comments in JSON
 - Increased size of `deja-9` font button characters
 - Changed `pyx` to `pyxl`
 - Added graphics frame scaling for slower devices
 - Added QR codes for easily launching on mobile devices
-- Added `localTime()`
+- Added `local_time()`
 - Added support for inserting padding with `fontpack.html`
-- Added named-argument versions of `setTransform()` and `setClip()`
-- Changed the arguments of `setTransform()` to more closely match other graphics commands
-- Changed the arguments of `setClip()` to more closely match `drawRect()`
+- Added named-argument versions of `set_transform()` and `set_clip()`
+- Changed the arguments of `set_transform()` to more closely match other graphics commands
+- Changed the arguments of `set_clip()` to more closely match `drawRect()`
 - Rerendered emulator case
 - Improved touch regions for mobile emulator
 - Added `games/icetime` complete sample game
 - Changed assignment and mutating operators to no longer return a value
 - Added `examples/animation`
-- Added `arrayValue()` animation support
+- Added `array_value()` animation support
 - Added mapping for 8bitdo SNES30 controller
 - Added animated ninja sprites
 - Mapped trigger and shoulder buttons from player 1's modern game controller to
-  `pad[1]` ABCD buttons. It is now possible to create twin-stick games with all
+  `gamepad_array[1]` ABCD buttons. It is now possible to create twin-stick games with all
   10 buttons
 
 

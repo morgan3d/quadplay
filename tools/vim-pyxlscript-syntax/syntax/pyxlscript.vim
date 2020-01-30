@@ -24,14 +24,14 @@ set cpo&vim
 syn match pyxlscriptModeLine '^init$\n^─\+$\|^enter$\n^─\+$\|^frame$\n^─\+$\|^leave$\n^─\+$' 
 
 syn keyword pyxlscriptStatement let const in return break continue ∊ ∈
-syn keyword pyxlscriptLiteral ½ ⅓ ⅔ ¼ ¾ ⅕ ⅖ ⅗ ⅘ ⅙ ⅐ ⅛ ⅑ ⅒ ° deg ε π nan ∅ screenSize pi epsilon infinity nil
+syn keyword pyxlscriptLiteral ½ ⅓ ⅔ ¼ ¾ ⅕ ⅖ ⅗ ⅘ ⅙ ⅐ ⅛ ⅑ ⅒ ° deg ε π nan ∅ SCREEN_SIZE pi epsilon infinity nil
 syn keyword pyxlscriptBoolean true false
-syn keyword pyxlscriptBuiltIn addFrameHook removeFrameHook drawSprite drawText drawTri textWidth getTransform getClip getRotationSign setTransform unparse formatNumber lowerCase upperCase xy xyz drawMap stopSound playAudioClip gameFrames modeFrames now gameFrames modeFrames gray rgb rgba hsv hsva call abs acos atan getPreviousMode getMode sign getMapSprite getMapPixelColor getMapSpriteByDrawCoord getMapPixelColorByDrawCoord getSpritePixelColor signNonZero asin cos clamp hash lerp loop min max mid noise oscillate overlap pow rndValue rndInt rnd ξ sgn sqrt sin srand tan clone copy cross direction dot equivalent magnitude maxComponent minComponent xy xyz fastRemoveKey find keys removeKey size substring sort resize push pop removeValues pad joy debugPrint drawDisk entitySimulate setTransform resetTransform resetClip setClip drawLine drawPreviousMode drawPoint makeEntity overlaps entityUpdateChildren drawEntity intersectClip drawSpriteRect drawRect setBackground assert debugWatch rayIntersect drawBounds anyButtonPress 
+syn keyword pyxlscriptBuiltIn add_frame_hook remove_frame_hook draw_sprite draw_text draw_tri text_width get_transform get_clip rotation_sign set_transform unparse format_number lowercase uppercase xy xyz draw_map stop_sound play_audio_clip game_frames mode_frames now game_frames mode_frames gray rgb rgba hsv hsva call abs acos atan get_previous_mode get_mode sign get_map_sprite get_map_pixel_color get_map_sprite_by_draw_coord get_map_pixel_color_by_draw_coord get_sprite_pixel_color signNonZero asin cos clamp hash lerp loop min max mid noise oscillate overlap pow random_value random_integer random ξ sgn sqrt sin set_random_seed tan clone copy cross direction dot equivalent magnitude max_component min_component xy xyz fast_remove_key find keys remove_key size substring sort resize push pop remove_values pad joy debug_print draw_disk entity_simulate set_transform reset_transform reset_clip set_clip draw_line draw_previous_mode draw_point make_entity overlaps entity_add_child entity_update_children draw_entity intersect_clip draw_sprite_corner_rect draw_rect set_background get_background assert debug_watch ray_intersect draw_bounds any_button_press 
 
 syn match pyxlscriptColor "#[0-9A-Fa-f]+"
 
 syn keyword pyxlscriptStatement	def nextgroup=pyxlscriptDef skipwhite
-syn keyword pyxlscriptStatement return local preservingTransform with setMode resetGame launchGame quitGame pushMode popMode make_player because
+syn keyword pyxlscriptStatement return local preserving_transform with set_mode reset_game launch_game quit_game push_mode pop_mode make_player because
 syn keyword pyxlscriptConditional if else then
 syn keyword pyxlscriptRepeat	for while until
 syn keyword pyxlscriptOperator	and in is not or

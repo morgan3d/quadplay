@@ -21,7 +21,7 @@ def intersectAxisLine(pos, vel, normal, line, hit):
       
 /* The quadrant is determined by the signs of center */
 def intersectQuarterCircle(pos, vel, center, radius, hit):
-   //drawPoint(project(center, 0), #0F0, 2000); drawDisk(project(center, 0), radius, nil, #0F0, 2000)
+   //draw_point(project(center, 0), #0F0, 2000); draw_disk(project(center, 0), radius, nil, #0F0, 2000)
    
    // Move to the circle's reference frame
    const P = pos - center
@@ -109,13 +109,13 @@ def simulate(obj):
                if obj.isPuck and (net.pos.x * vel.x ≥ 0) and not obj.owner:
                   // Entered the goal
                   ++teamArray[1 - net.index].score
-                  playAudioClip(whistleAudioClip)
-                  playAudioClip({audioClip: goalAudioClip, pan: 40% sign(net.pos.x)})
+                  play_audio_clip(whistleAudioClip)
+                  play_audio_clip({audioClip: goalAudioClip, pan: 40% sign(net.pos.x)})
 
                   // Remove the puck
                   puck = ∅
-                  def goToFaceoff(): setMode(Faceoff, "goal")
-                  addFrameHook(∅, goToFaceoff, framesAfterGoal)
+                  def goToFaceoff(): set_mode(Faceoff, "goal")
+                  add_frame_hook(∅, goToFaceoff, framesAfterGoal)
                else:
                   // Stop movement on collision with goal
                   pos.x -= vel.x; vel.x = 0.1 sign(pos.x - net.pos.x)

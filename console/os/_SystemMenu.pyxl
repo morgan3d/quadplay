@@ -3,8 +3,8 @@ _SystemMenu
 
 const windowBackgroundColor = #135
 const windowBorderColor     = #fff
-const textColor             = #fff
-const textShadowColor       = #0006
+const text_color             = #fff
+const text_shadow_color       = #0006
 const promptColor           = #4DF
 const selectedColor         = #f
 const unselectedColor       = #b
@@ -22,29 +22,29 @@ let maxChoiceWidth
 let lineHeight
 
 let font = _font9
-if screenSize.y <= 64: font = _font5
-else if screenSize.y <= 112: font = _font8
+if SCREEN_SIZE.y <= 64: font = _font5
+else if SCREEN_SIZE.y <= 112: font = _font8
 
 
 def close(callback):
    // TODO: run closing animation
-   popMode(callback)
+   pop_mode(callback)
    
 
 def choose():
    const choice = choiceArray[choiceIndex]
 
    if choice.confirm:
-      pushMode(_ConfirmDialog, choice)
+      push_mode(_ConfirmDialog, choice)
    else:
       close(choice.callback)
 
       
 def setControls():
-   if screenSize.x == 64:
-      pushMode(_SetControls64)
+   if SCREEN_SIZE.x == 64:
+      push_mode(_SetControls64)
    else:
-      pushMode(_SetControls)
+      push_mode(_SetControls)
 
 
       
@@ -52,12 +52,12 @@ enter
 ────────────────────────────────────────────────────────────────────────
 choiceIndex = 0
 
-oldTransform = getTransform()
-oldClip = getClip()
-oldPostEffects = getPostEffects()
+oldTransform = get_transform()
+oldClip = get_clip()
+oldPostEffects = get_post_effects()
 
-resetPostEffects()
-setClip(xy(0, 0), screenSize, -2047, 4096)
+reset_post_effects()
+set_clip(xy(0, 0), SCREEN_SIZE, -2047, 4096)
 // Force the clipping range beyond what the API normally allows
 _clipZ2 = 2049
 
@@ -66,27 +66,27 @@ choiceArray = [{text: "Resume Game", callback: nil, confirm: false},
                // Insert custom menu choices after "Resume"
                ..._customPauseMenuOptions,
                {text: "Set Controls", callback: setControls, confirm: false},
-               {text: "Restart Game", callback: resetGame, confirm: true},
-               {text: "Quit to System", callback: quitGame, confirm: true}]
+               {text: "Restart Game", callback: reset_game, confirm: true},
+               {text: "Quit to System", callback: quit_game, confirm: true}]
 
 maxChoiceWidth = 0
 
 lineHeight = round(110% font.lineHeight)
-if screenSize.y <= 64: ++lineHeight
+if SCREEN_SIZE.y <= 64: ++lineHeight
 
-for c in choiceArray: maxChoiceWidth = max(maxChoiceWidth, textWidth(font, c.text))
+for c in choiceArray: maxChoiceWidth = max(maxChoiceWidth, text_width(font, c.text))
 
 
 
 leave
 ────────────────────────────────────────────────────────────────────────
-setTransform(oldTransform)
-setClip(oldClip)
-setPostEffects(oldPostEffects)
+set_transform(oldTransform)
+set_clip(oldClip)
+set_post_effects(oldPostEffects)
 
 
 
-popMode(callback) from _ConfirmDialog
+pop_mode(callback) from _ConfirmDialog
 ────────────────────────────────────────────────────────────────────────
 // Return with the callback
 if callback: close(callback)
@@ -95,69 +95,69 @@ if callback: close(callback)
 
 frame
 ────────────────────────────────────────────────────────────────────────
-if modeFrames > fadeInFrames + slideInFrames + 2:
-   for control in pad:
+if mode_frames > fadeInFrames + slideInFrames + 2:
+   for control in gamepad_array:
       if control.qq or control._pp:
          // Do NOT use "bb", which maps to enter on the keyboard
          // and may make players think they are executing a command
-         playAudioClip(_cancelUISound)
+         play_audio_clip(_cancelUISound)
          close(nil)
       else if control.aa:
-         playAudioClip(_acceptUISound)
+         play_audio_clip(_acceptUISound)
          choose()
       else if control.yy:
          const prev = choiceIndex
          choiceIndex = clamp(choiceIndex + control.yy, 0, size(choiceArray) - 1)
-         playAudioClip(if prev == choiceIndex then _denyUISound else _moveUISound)
+         play_audio_clip(if prev == choiceIndex then _denyUISound else _moveUISound)
 
-if modeFrames == fadeInFrames: playAudioClip(_openUISound)
+if mode_frames == fadeInFrames: play_audio_clip(_openUISound)
 
 // Draw the paused game shadowed
-resetTransform()
-drawPreviousMode()
+reset_transform()
+draw_previous_mode()
 
 // Draw *at* the near plane, which due to the epsilon z offsets
 // guarantees that the menu draws in front of everything from the
 // previous mode. This forces us to draw in order, however.
-setTransform(xy(0, 0), xy(1, 1), 2048.5, 1)
-drawCornerRect(xy(0, 0), screenSize, rgba(14%, 14%, 14%, 80% clamp((modeFrames + 1) / fadeInFrames, 15%, 100%)))
+set_transform(xy(0, 0), xy(1, 1), 2048.5, 1)
+draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(14%, 14%, 14%, 80% clamp((mode_frames + 1) / fadeInFrames, 15%, 100%)))
 
 
 // Our last menu item is designed to be the longest, so use that
 // to estimate width
-const windowSize = round(xy(maxChoiceWidth + 1.5 font.lineHeight, screenSize.y + 2))
+const windowSize = round(xy(maxChoiceWidth + 1.5 font.lineHeight, SCREEN_SIZE.y + 2))
 
 // Animate sliding in of window
-setTransform(xy(1 + screenSize.x - windowSize.x * (50% - clamp(1 - (modeFrames - fadeInFrames) / slideInFrames, 0%, 100%)), screenSize.y / 2), xy(1, 1), 2048.5, 1)
+set_transform(xy(1 + SCREEN_SIZE.x - windowSize.x * (50% - clamp(1 - (mode_frames - fadeInFrames) / slideInFrames, 0%, 100%)), SCREEN_SIZE.y / 2), xy(1, 1), 2048.5, 1)
 
 // Window shadow
 local:
    const P = xy(0, windowSize.y / 2);
    const s = windowSize.x / 2 - 1
-   drawLine(P + xy(-s, 0), P + xy(s, 0), rgba(0, 0, 0, 40%))
-   drawLine(P + xy(-s+1, 1), P + xy(s-1, 1), rgba(0, 0, 0, 15%))
+   draw_line(P + xy(-s, 0), P + xy(s, 0), rgba(0, 0, 0, 40%))
+   draw_line(P + xy(-s+1, 1), P + xy(s-1, 1), rgba(0, 0, 0, 15%))
 
 // Window
-drawRect(xy(0, 0), windowSize, windowBackgroundColor, windowBorderColor)
+draw_rect(xy(0, 0), windowSize, windowBackgroundColor, windowBorderColor)
 
 let y = -lineHeight * (size(choiceArray) - 1) / 2
 
 // Draw options
 for i < size(choiceArray):
    const active      = choiceIndex == i
-   const bright      = (1 + cos(modeFrames / 9)) / 2
+   const bright      = (1 + cos(mode_frames / 9)) / 2
    const color       = if active then lerp(promptColor, #fff, 50% bright) else unselectedColor
    const outline     = if active then rgba(1,1,1, 25% bright) else nil
    const yOffset     = if active then -1 else 0
-   const shadow      = if active then 50% textShadowColor else textShadowColor
+   const shadow      = if active then 50% text_shadow_color else text_shadow_color
 
    const x           = -(maxChoiceWidth - 0.6 lineHeight + 1) / 2
    const text        = choiceArray[i].text
-   drawText(font, text, xy(x, y + 1), shadow, nil, nil, "left", "center")
-   drawText(font, text, xy(x, y + yOffset), color, nil, outline, "left", "center")
+   draw_text(font, text, xy(x, y + 1), shadow, nil, nil, "left", "center")
+   draw_text(font, text, xy(x, y + yOffset), color, nil, outline, "left", "center")
    
    if active:
-      drawText(font, "✜", xy(x - 40% lineHeight + 1, y + 1), shadow, nil, nil, "right", "center")
-      drawText(font, "✜", xy(x - 40% lineHeight + 1, y + yOffset), color, nil, outline, "right", "center")
+      draw_text(font, "✜", xy(x - 40% lineHeight + 1, y + 1), shadow, nil, nil, "right", "center")
+      draw_text(font, "✜", xy(x - 40% lineHeight + 1, y + yOffset), color, nil, outline, "right", "center")
       
    y += lineHeight

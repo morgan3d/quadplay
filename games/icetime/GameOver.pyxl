@@ -38,7 +38,7 @@ saveLocal("teamStats", {})
 frame
 ───────────────────────────────────────────────────────────────────────────────
 
-drawText({font: scoreFont, text: "GAME OVER", pos: xy(0, 7), color:#f00, outline:#f, xAlign:"center"})
-drawText({font: scoreFont, text: msg, pos: xy(0, -7), color:color, outline:#f, shadow:#a, xAlign:"center"})
+draw_text({font: scoreFont, text: "GAME OVER", pos: xy(0, 7), color:#f00, outline:#f, x_align:"center"})
+draw_text({font: scoreFont, text: msg, pos: xy(0, -7), color:color, outline:#f, shadow:#a, x_align:"center"})
   
-if anyButtonPress(): setMode(Title) because "anyButtonPress()"
+if any_button_press(): set_mode(Title) because "any_button_press()"

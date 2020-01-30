@@ -13,7 +13,7 @@ def processAI(player):
       if puck.owner == player:
          // Choose a random place to shoot from. Tend towards the center
          aiPad.target = xy(-(15 + 40 ξ) player.team.sideX, ½ (ξ + ξ) * (yMax - yMin) + yMin)
-      else if rnd() < 30% and modeFrames > 120:
+      else if random() < 30% and mode_frames > 120:
          // Choose a random target (never do this during the faceoff)
          aiPad.target = xy((xMax - xMin) ξ + xMin, (yMax - yMin) ξ + yMin)
       else if puck.owner and (puck.owner.team == player.team):

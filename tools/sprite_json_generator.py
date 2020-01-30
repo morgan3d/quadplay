@@ -259,7 +259,7 @@ def make_sprite(
     blob.update(
         {
             "url": filepath,
-            "spriteSize": {'x': size[0], 'y': size[1]},
+            "sprite_size": {'x': size[0], 'y': size[1]},
             "license": license
         }
     )

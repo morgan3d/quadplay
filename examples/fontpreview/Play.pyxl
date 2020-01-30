@@ -1,0 +1,150 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+// Replace "font" in the .game.json with your own font to
+// evaluate it under game typesetting samples. Use the arrow
+// keys to scroll if your font is large and the samples don't
+// all fit on one screen
+
+const sampleArray = [
+   {
+      // All letters
+      text: "SPHINX OF BLACK QUARTZ, JUDGE MY VOW! Pack My Box With Five Dozen Liquor Jugs. I saw 17,000 + 3.1415926: (800) 867-5309 sphinx of black quartz, judge my vow. \"Hello, World?\" Don't go; fish this fall cleft waffle fluid 451°",
+      color: #f,
+      background: #052
+   },
+
+   {
+      // Game prompts and info
+      text: "Press ⓐ to fire. ⍐ ACCELERATE © 2020 Casual✜ ¥100 $37 | ammo: ∞ [HEALTH] D&D. Consoleᵗᵐ  4♥ « Ready! » 24%",
+      color: #fe4,
+      outline: #3,
+      background: #33b
+   },
+   
+   {
+      // Top Gun
+      text: "On March 3, 1969 the United States Navy established an elite school for the top one percent of its pilots…the Navy calls it Fighter Weapons School. The flyers call it: TOP GUN.",
+      color:#e,
+      shadow:#5,
+      outline:#146,
+      background:#168
+   },
+
+
+   {
+      // Cien años de soledad
+      text: "Muchos años después, frente al pelotón de fusilamiento, el coronel Aureliano Buendía había de recordar aquella tarde remota en que su padre lo llevó a conocer el hielo.",
+      color: #2,
+      shadow: #cba,
+      background: #dcb
+   },
+
+   { // Peer Gynt
+      text: "Peer, du lyver! / Nej, jeg gør ej! / Nå, så band på, det er sandt! / Hvorfor bande? / Tvi; du tør ej! Alt ihob er tøv og tant!",
+      color: #fc1,
+      shadow: #b70,
+      outline: #3,
+      background: #5
+   },
+   
+   {
+      // Blade Runner
+      text: "Early in the 21ˢᵗ Century, THE TYRELL CORPORATION advanced Robot evolution into the NEXUS phase - a being virtually identical to a human - known as a Replicant…",
+      color:#f20,
+      shadow:#500,
+      outline:#300,
+      background: #1
+   },
+
+
+   {
+      // Anna Karenina
+      text: "Все счастливые семьи похожи друг на друга, каждая несчастливая семья несчастлива по-своему.",
+      color: #ffd,
+      shadow: #774,
+      background: #430
+   },
+   
+   {
+      // Pride and Prejudice
+      text: "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.",
+      color: #2,
+      shadow: #cba,
+      background: #dcb
+   },
+
+   {
+      // Rebecca
+      text: "Last night I dreamt I went to Manderley again. It seemed to me I stood by the iron gate leading to the drive, and for a while I could not enter, for the way was barred to me.",
+      color: #f,
+      shadow: #6,
+      background: #9
+   },
+
+   {
+      // Law and order
+      text: "In the criminal justice system, the people are represented by two separate but equally important groups: The police, who investigate crime, and the district attorneys, who prosecute the offenders. These are their stories.",
+      color: #f,
+      shadow: #0,
+      outline: #008,
+      background: #0
+   },
+
+   {
+      // The Body in the Library
+      text: "Mrs. Bantry was dreaming. Her sweet peas had just taken a First at the flower show. The vicar, dressed in cassock and surplice, was giving out the prizes in church.",
+      color: #000,
+      shadow: #fff5,
+      background: #dbf
+   },
+
+   {
+      // Hitchhiker's guide to the galaxy
+      text: "Far out in the uncharted backwaters of the unfashionable end of the Western Spiral arm of the Galaxy lies a small unregarded yellow sun.",
+      color: nil,
+      shadow: #107,
+      outline: #107,
+      background: #e
+   }
+]
+
+
+let offset = 0
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+offset = 0
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_background(#0)
+
+/*
+local:
+   const s = draw_text({font:font, pos:xy(0,0), wrapWidth: 340, y_align:"top", z:1, color:#f,
+                       text: "Åhello gorld"})
+   draw_corner_rect(xy(0, 0), s, nil, #f00)
+
+local:
+   const s = draw_text({font:font, pos:xy(0,60), wrapWidth: 340, y_align:"top", z:1, color:#f,
+                       text: "Åhello\ngorld"})
+   draw_corner_rect(xy(0, 60), s, nil, #f00)
+
+local:
+   const s = draw_text({font:font, pos:xy(0,120), wrapWidth: 40, y_align:"top", z:1, color:#f,
+                       text: "represent the buttons with"})
+   draw_corner_rect(xy(0, 120), s, nil, #f00)
+*/   
+
+offset -= joy.y
+
+let y = offset
+for sample in sampleArray:
+   const h = draw_text(concatenate({font:font, pos:xy(12, y + 5), wrapWidth:360, y_align:"top", z:1}, sample)).y
+   draw_corner_rect(xy(0, y), xy(SCREEN_SIZE.x, h + 10), sample.background)
+   y += h + 10
+

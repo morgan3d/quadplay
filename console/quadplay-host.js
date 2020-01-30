@@ -79,7 +79,7 @@ function setPadType(p, type) {
     if (p === undefined || p < 0 || p > 3) { throw new Error('"setPadType" must be used with an index from 0 to 3'); }
     if (! prompt) { throw new Error('"setPadType" must be used with one of the legal types, such as "Quadplay" or "PS4" (received "' + type + '")'); }
 
-    const control = QRuntime.pad[p]
+    const control = QRuntime.gamepad_array[p]
     control.type = type;
     control.prompt = prompt;
 
@@ -95,7 +95,7 @@ function setPadType(p, type) {
 }
 
 
-function deviceControl(cmd) {
+function device_control(cmd) {
     switch (cmd) {
     case "startGIFRecording":     startGIFRecording(); break;
     case "stopGIFRecording":      stopGIFRecording(); break;
@@ -111,17 +111,17 @@ function deviceControl(cmd) {
             case "physics":
                 QRuntime._showPhysicsEnabled = document.getElementById('showPhysicsEnabled').checked = value;
                 break;
-            case "debugPrint":
+            case "debug_print":
                 QRuntime._debugPrintEnabled = document.getElementById('debugPrintEnabled').checked = value;
                 break;
             case "assert":
                 QRuntime._assertEnabled = document.getElementById('assertEnabled').checked = value;
                 break;
-            case "debugWatch":
+            case "debug_watch":
                 QRuntime._debugWatchEnabled = document.getElementById('debugWatchEnabled').checked = value;
                 break;
             default:
-                throw new Error('Unsupported flagname passed to deviceControl("setDebugFlag", flagname, value): "' + arguments[1] + '"');
+                throw new Error('Unsupported flagname passed to device_control("setDebugFlag", flagname, value): "' + arguments[1] + '"');
             }
         }
         break;
@@ -135,17 +135,17 @@ function deviceControl(cmd) {
             case "physics":
                 return QRuntime._showPhysicsEnabled;
                 break;
-            case "debugPrint":
+            case "debug_print":
                 return QRuntime._debugPrintEnabled;
                 break;
             case "assert":
                 return QRuntime._assertEnabled;
                 break;
-            case "debugWatch":
+            case "debug_watch":
                 return QRuntime._debugWatchEnabled;
                 break;
             default:
-                throw new Error('Unsupported flagname passed to deviceControl("getDebugFlag", flagname): "' + arguments[1] + '"');
+                throw new Error('Unsupported flagname passed to device_control("getDebugFlag", flagname): "' + arguments[1] + '"');
             }
         }
         break;
@@ -153,7 +153,7 @@ function deviceControl(cmd) {
     case "getAnalogAxes":
         {
             const i = clamp(parseInt(arguments[1]), 0, 3);
-            const pad = QRuntime.pad[i];
+            const pad = QRuntime.gamepad_array[i];
             return {x: pad._analogX, y: pad._analogY};
             break;
         }
@@ -379,21 +379,29 @@ let prevRealGamepadState = [];
 
 // Maps names of gamepads to arrays for mapping standard buttons
 // to that gamepad's buttons. gamepadButtonRemap[canonicalButton] = actualButton
+//
+// Standard mapping https://www.w3.org/TR/gamepad/standard_gamepad.svg
 const gamepadButtonRemap = {
     'identity':                                    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+    
     // Windows SNES30
     'SNES30 Joy     (Vendor: 2dc8 Product: ab20)': [1, 0, 4, 3, 6, 7, 5, 2,10,11, 8, 9,   12, 13, 14, 15, 16],
 
     // Linux SNES30
     '8Bitdo SNES30 GamePad (Vendor: 2dc8 Product: 2840)': [1, 0, 4, 3, 6, 7, 5, 2,10,11, 8, 9,   12, 13, 14, 15, 16],
 
-    'T.Flight Hotas X (Vendor: 044f Product: b108)':[0, 1, 3, 2, 4, 5, 6, 7, 10, 11, 8, 9, 12, 13, 14, 15, 16]
+    'T.Flight Hotas X (Vendor: 044f Product: b108)':[0, 1, 3, 2, 4, 5, 6, 7, 10, 11, 8, 9, 12, 13, 14, 15, 16],
+
+    // Nintendo Switch SNES official controller under safari
+    '57e-2017-SNES Controller': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 12, 13, 14, 15],
+    'SNES Controller (Vendor: 057e Product: 2017)': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 12, 13, 14, 15]
 };
 
 const gamepadAxisRemap = {
     'identity':                                      [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
     'T.Flight Hotas X (Vendor: 044f Product: b108)': [0, 1, 6, 2, 4, 5, 3, 7, 8, 9]
 };
+
 
 function getIdealGamepads() {
     const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
@@ -416,7 +424,7 @@ function getIdealGamepads() {
                 mypad.analogAxes[a] = axis;
             }
             
-            // Process all 17 buttons/axes as digital buttons first 
+            // Process all 17 buttons/axes as digital buttons first
 	    const buttonRemap = gamepadButtonRemap[pad.id] || gamepadButtonRemap.identity;
             for (let b = 0; b < 17; ++b) {
                 const button = pad.buttons[buttonRemap[b]];
@@ -526,18 +534,18 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
 // In seconds
 const audioRampTime = 1 / 60;
 
-function setSoundVolume(handle, volume) {
+function set_volume(handle, volume) {
     if (! (handle && handle._)) {
-        throw new Error("Must call setSoundVolume() on a sound returned from playAudioClip()");
+        throw new Error("Must call set_volume() on a sound returned from play_audio_clip()");
     }
     handle._.volume = volume;
     handle._.gainNode.gain.linearRampToValueAtTime(volume, _ch_audioContext.currentTime + audioRampTime);
 }
 
 
-function setSoundPan(handle, pan) {
+function set_pan(handle, pan) {
     if (! (handle && handle._)) {
-        throw new Error("Must call setSoundPan() on a sound returned from playAudioClip()");
+        throw new Error("Must call set_pan() on a sound returned from play_audio_clip()");
     }
     pan = Math.min(1, Math.max(-1, pan))
 
@@ -551,9 +559,9 @@ function setSoundPan(handle, pan) {
 }
 
 
-function setSoundPitch(handle, pitch) {
+function set_pitch(handle, pitch) {
     if (! (handle && handle._)) {
-        throw new Error("Must call setSoundPitch() on a sound returned from playAudioClip()");
+        throw new Error("Must call set_pitch() on a sound returned from play_audio_clip()");
     }
     handle._.pitch = pitch;
     if (handle._.detune) {
@@ -564,7 +572,7 @@ function setSoundPitch(handle, pitch) {
 
 
 // Exported to QRuntime
-function playAudioClip(audioClip, loop, volume, pan, pitch, time) {
+function play_audio_clip(audioClip, loop, volume, pan, pitch, time) {
     if (audioClip.audioClip && (arguments.length === 1)) {
         // Object version
         loop      = audioClip.loop;
@@ -576,7 +584,7 @@ function playAudioClip(audioClip, loop, volume, pan, pitch, time) {
     }
 
     if (! audioClip || ! audioClip.source) {
-        throw new Error('playAudioClip() requires an audioClip');
+        throw new Error('play_audio_clip() requires an audioClip');
     }
 
     // Ensure that the value is a boolean
@@ -587,15 +595,15 @@ function playAudioClip(audioClip, loop, volume, pan, pitch, time) {
     if (volume === undefined) { volume = 1; }
 
     if (isNaN(pitch)) {
-        throw new Error('pitch cannot be NaN for playAudioClip()');
+        throw new Error('pitch cannot be NaN for play_audio_clip()');
     }
 
     if (isNaN(volume)) {
-        throw new Error('volume cannot be NaN for playAudioClip()');
+        throw new Error('volume cannot be NaN for play_audio_clip()');
     }
 
     if (isNaN(pan)) {
-        throw new Error('pan cannot be NaN for playAudioClip()');
+        throw new Error('pan cannot be NaN for play_audio_clip()');
     }
 
     if (audioClip.loaded) {
@@ -607,9 +615,9 @@ function playAudioClip(audioClip, loop, volume, pan, pitch, time) {
 
 
 // Exported to QRuntime
-function resumeSound(handle) {
+function resume_sound(handle) {
     if (! (handle && handle._ && handle._.stop)) {
-        throw new Error("stopSound() takes one argument that is the handle returned from playAudioClip()");
+        throw new Error("stop_sound() takes one argument that is the handle returned from play_audio_clip()");
     }
     if (handle._.resumePositionMs) {
         // Actually paused
@@ -619,9 +627,9 @@ function resumeSound(handle) {
 
 
 // Exported to QRuntime
-function stopSound(handle) {
+function stop_sound(handle) {
     if (! (handle && handle._ && handle._.stop)) {
-        throw new Error("stopSound() takes one argument that is the handle returned from playAudioClip()");
+        throw new Error("stop_sound() takes one argument that is the handle returned from play_audio_clip()");
     }
     
     try {
@@ -662,8 +670,8 @@ function resumeAllSounds() {
 ////////////////////////////////////////////////////////////////////////////////////
 
 // Escapes HTML
-// Injected as debugPrint in QRuntime
-function debugPrint(...args) {
+// Injected as debug_print in QRuntime
+function debug_print(...args) {
     let s = '';
     for (let i = 0; i < args.length; ++i) {
         let m = args[i]
@@ -794,7 +802,7 @@ function requestInput() {
 
 
 function updateInput() {
-    const axes = 'xy', AXES = 'XY', buttons = 'abcdpq', BUTTONS = 'ABCDPQ';
+    const axes = 'xy', AXES = 'XY', buttons = 'abcdpq';
 
     // HTML gamepad indices of corresponding elements of the buttons array
     // A, B, C, D, _P, Q
@@ -802,7 +810,7 @@ function updateInput() {
     
     // Aliases on console game controller using stick buttons
     // and trigger + shoulder buttons. These are read from 
-    // pad[2] and applied to pad[0]
+    // gamepad_array[2] and applied to gamepad_array[0]
     const altButtonIndex = [7, 5, 6, 4, undefined, undefined];
 
     // Also processes input
@@ -810,7 +818,7 @@ function updateInput() {
     
     // Sample the keys
     for (let player = 0; player < 4; ++player) {
-        const map = keyMap[player], pad = QRuntime.pad[player],
+        const map = keyMap[player], pad = QRuntime.gamepad_array[player],
               realGamepad = gamepadArray[player], prevRealGamepad = prevRealGamepadState[player];
 
         /*
@@ -890,17 +898,17 @@ function updateInput() {
         }
 
         for (let b = 0; b < buttons.length; ++b) {
-            const button = buttons[b], BUTTON = BUTTONS[b];
+            const button = buttons[b];
             const prefix = button === 'p' ? '_' : '';
             
             if (map) {
                 // Keyboard
                 const b0 = map[button][0], b1 = map[button][1];
                 pad[prefix + button] = (emulatorKeyState[b0] || emulatorKeyState[b1]) ? 1 : 0;
-                pad[prefix + button + button] = pad[prefix + 'pressed' + BUTTON] = (emulatorKeyJustPressed[b0] || emulatorKeyJustPressed[b1]) ? 1 : 0;
-                pad[prefix + 'released' + BUTTON] = (emulatorKeyJustReleased[b0] || emulatorKeyJustReleased[b1]) ? 1 : 0;
+                pad[prefix + button + button] = pad[prefix + 'pressed_' + button] = (emulatorKeyJustPressed[b0] || emulatorKeyJustPressed[b1]) ? 1 : 0;
+                pad[prefix + 'released_' + button] = (emulatorKeyJustReleased[b0] || emulatorKeyJustReleased[b1]) ? 1 : 0;
             } else {
-                pad[prefix + button] = pad[prefix + button + button] = pad[prefix + 'released' + BUTTON] = pad[prefix + 'pressed' + BUTTON] = 0;
+                pad[prefix + button] = pad[prefix + button + button] = pad[prefix + 'released_' + button] = pad[prefix + 'pressed_' + button] = 0;
             }
 
             const i = buttonIndex[b], j = altButtonIndex[b];
@@ -913,11 +921,11 @@ function updateInput() {
 	    
             if (isPressed && ! wasPressed) {
                 pad[prefix + button + button] = 1;
-                pad[prefix + 'pressed' + BUTTON] = 1;
+                pad[prefix + 'pressed_' + button] = 1;
             }
 
             if (! isPressed && wasPressed) {
-                pad[prefix + 'released' + BUTTON] = 1;
+                pad[prefix + 'released_' + button] = 1;
             }
         }
 
@@ -930,7 +938,7 @@ function updateInput() {
         } else {
             const newAngle = Math.atan2(pad.y + pad.dy, pad.x + pad.dx);
             // JavaScript operator % is a floating-point operation
-            pad.dangle = ((3 * Math.PI + QRuntime.pad.angle - newAngle) % (2 * Math.PI)) - Math.PI;
+            pad.dangle = ((3 * Math.PI + pad.angle - newAngle) % (2 * Math.PI)) - Math.PI;
         }
     }
     

@@ -1,6 +1,6 @@
 {
     "url": "controller.png",
-    "spriteSize":   {"x": 25, "y": 17},
+    "sprite_size":   {"x": 25, "y": 17},
     "license":      "(c) 2019 Morgan McGuire used under CC-BY 3",
     "names": {
         "player":   {"start": {"x": 0, "y": 0}, "end": {"x": 1, "y": 0}},

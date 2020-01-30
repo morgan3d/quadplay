@@ -1,6 +1,6 @@
 {
     "url": "powerup.png",
-    "spriteSize":   {"x": 8, "y": 8},
+    "sprite_size":   {"x": 8, "y": 8},
     "names":        {
         "apple":    {"x": 0, "y": 0},
         "cherry":   {"x": 1, "y": 0},

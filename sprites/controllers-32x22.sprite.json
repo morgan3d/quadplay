@@ -1,7 +1,7 @@
 {
     "url": "controllers-32x22.png",
     "license": "©2019 Morgan McGuire, licensed as CC BY 4.0",
-    "spriteSize": {"x":32, "y":22},
+    "sprite_size": {"x":32, "y":22},
     "names": {
         "PS3":         {"x": 0, "y": 0},
         "PS4":         {"x": 0, "y": 0},

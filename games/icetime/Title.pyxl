@@ -8,18 +8,18 @@ let titleSound
 
 // Choose random teams
 teamArray = []
-teamArray[0] = clone(rndValue(league))
+teamArray[0] = clone(random_value(league))
 teamArray[1] = createRandomDifferentTeam(teamArray[0])
 
 
 enter
 ───────────────────────────────────────────────────────────────────────────────
-resetTransform()
-resetClip()
-setBackground(labelSprite)
-titleSound = playAudioClip(chantAudioClip, true, 150%)
+reset_transform()
+reset_clip()
+set_background(labelSprite)
+titleSound = play_audio_clip(chantAudioClip, true, 150%)
 
-setPostEffects({background:#0000, opacity: 50%})
+set_post_effects({background:#0000, opacity: 50%})
 
 const c = find(choiceArray, loadLocal("choice"))
 if c ≠ ∅: selection = (c + 5) mod size(choiceArray)
@@ -28,15 +28,15 @@ if c ≠ ∅: selection = (c + 5) mod size(choiceArray)
 
 leave
 ───────────────────────────────────────────────────────────────────────────────
-stopSound(titleSound)
-playAudioClip(shootAudioClip)
-resetPostEffects();
+stop_sound(titleSound)
+play_audio_clip(shootAudioClip)
+reset_post_effects();
 
 
 frame
 ───────────────────────────────────────────────────────────────────────────────
 
-drawSprite(titleSprite, xy(screenSize.x / 2, 48))
+draw_sprite(titleSprite, xy(SCREEN_SIZE.x / 2, 48))
 
 const N = size(choiceArray)
 let choice
@@ -48,34 +48,34 @@ for i < size(choiceArray):
    let color = gray(a)
    let border = gray(65% - 30% a)
    if i == round(selection) mod N: color = #ec0; border = #0; choice = choiceArray[i]
-   drawText({font: scoreFont, text: choiceArray[i],
-             pos: xy(50% screenSize.x, 65% screenSize.y) + xy(75 cos angle, 8 z),
-             color: color, outline: border, z: z, xAlign: "center", yAlign: "center"})
+   draw_text({font: scoreFont, text: choiceArray[i],
+             pos: xy(50% SCREEN_SIZE.x, 65% SCREEN_SIZE.y) + xy(75 cos angle, 8 z),
+             color: color, outline: border, z: z, x_align: "center", y_align: "center"})
 
 
-drawText({font: tinyFont, text: "by Casual Effects", pos: xy(screenSize.x / 2, screenSize.y - 6), color: #5, xAlign: "center"})
+draw_text({font: tinyFont, text: "by Casual Effects", pos: xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y - 6), color: #5, x_align: "center"})
 
 // Spin animation in the intro
-if modeFrames < 72:
-   selection += mid(12%, 12% - modeFrames * 0.2%, 2%)
+if mode_frames < 72:
+   selection += mid(12%, 12% - mode_frames * 0.2%, 2%)
 else if joy.aa or joy.bb:
-   if choice == "Quit": quitGame()
-   else if choice == "Rules": setMode(Rules)
-   else if choice == "Credits": setMode(Credits)
+   if choice == "Quit": quit_game()
+   else if choice == "Rules": set_mode(Rules)
+   else if choice == "Credits": set_mode(Credits)
    else:
       if choice == "Demo": controlPadArray = [makeAI(), makeAI(), makeAI(), makeAI()]
-      else if choice == "1P": controlPadArray = [pad[0], makeAI(), makeAI(), makeAI()]
-      else if choice == "2P-coop": controlPadArray = [pad[0], pad[1], makeAI(), makeAI()]
-      else if choice == "2P-vs": controlPadArray = [pad[0], makeAI(), pad[1], makeAI()]
-      else if choice == "3P": controlPadArray = [pad[0], pad[1], pad[2], makeAI()]
-      else if choice == "4P": controlPadArray = [pad[0], pad[1], pad[2], pad[3]]
+      else if choice == "1P": controlPadArray = [gamepad_array[0], makeAI(), makeAI(), makeAI()]
+      else if choice == "2P-coop": controlPadArray = [gamepad_array[0], gamepad_array[1], makeAI(), makeAI()]
+      else if choice == "2P-vs": controlPadArray = [gamepad_array[0], makeAI(), gamepad_array[1], makeAI()]
+      else if choice == "3P": controlPadArray = [gamepad_array[0], gamepad_array[1], gamepad_array[2], makeAI()]
+      else if choice == "4P": controlPadArray = [gamepad_array[0], gamepad_array[1], gamepad_array[2], gamepad_array[3]]
 
       if choice == "Demo":
          createGame()
-         setMode(Faceoff) because "Demo Mode"
+         set_mode(Faceoff) because "Demo Mode"
       else:
          saveLocal("choice", choice)
-         setMode(TeamSelect) because "1-4P"
+         set_mode(TeamSelect) because "1-4P"
 
 selection = loop(selection - 4% joy.x, N)
 

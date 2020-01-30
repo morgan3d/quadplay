@@ -1,5 +1,5 @@
 {
     "url": "snowflake.png",
-    "spriteSize":   {"x": 29, "y": 27},
+    "sprite_size":   {"x": 29, "y": 27},
     "license":      "(c) 2019 Morgan McGuire used under CC-BY 3"
 }

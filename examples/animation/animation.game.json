@@ -4,7 +4,7 @@
     "copyright":  "2019 Casual Effects",
     "license":    "CC0/Public Domain",
 
-    "screenSize": {"x": 192, "y": 112},
+    "screen_size": {"x": 192, "y": 112},
     
     "packages":   [],
     "scripts":    [],

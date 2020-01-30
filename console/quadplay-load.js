@@ -159,8 +159,8 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         //////////////////////////////////////////////////////////////////////////////////////////////
         
         gameSource.jsonURL = gameURL;
-        if (gameJSON.screenSize === undefined) {
-            gameJSON.screenSize = {x: 384, y:224};
+        if (gameJSON.screen_size === undefined) {
+            gameJSON.screen_size = {x: 384, y:224};
         }
         gameSource.json = gameJSON;
         fileContents[gameURL] = gameJSON;
@@ -169,13 +169,13 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         {
             let ok = false;
             for (let i = 0; i < allowedScreenSizes.length; ++i) {
-                if ((allowedScreenSizes[i].x === gameJSON.screenSize.x) &&
-                    (allowedScreenSizes[i].y === gameJSON.screenSize.y)) {
+                if ((allowedScreenSizes[i].x === gameJSON.screen_size.x) &&
+                    (allowedScreenSizes[i].y === gameJSON.screen_size.y)) {
                     ok = true;
                 }
             }
             if (! ok) {
-                throw new Error(`${gameJSON.screenSize.x} x ${gameJSON.screenSize.y} is not a supported screen size.`);
+                throw new Error(`${gameJSON.screen_size.x} x ${gameJSON.screen_size.y} is not a supported screen size.`);
             }
         }
 
@@ -559,17 +559,17 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
         _uint32Data: null,
         _uint32DataFlippedX : null,
         _url: json.url,
-        _gutter: (json.spriteSize.gutter || 0),
+        _gutter: (json.sprite_size.gutter || 0),
         _json: json,
         _jsonURL: jsonURL,
         _index: spritesheetArray.length,
-        spriteSize: Object.freeze({x: json.spriteSize.x, y: json.spriteSize.y})
+        sprite_size: Object.freeze({x: json.sprite_size.x, y: json.sprite_size.y})
     });
 
     spritesheetArray.push(spritesheet);
 
     // Pivots
-    const sspivot = json.pivot ? Object.freeze({x: json.pivot.x - json.spriteSize.x / 2, y: json.pivot.y - json.spriteSize.y / 2}) : Object.freeze({x: 0, y: 0});
+    const sspivot = json.pivot ? Object.freeze({x: json.pivot.x - json.sprite_size.x / 2, y: json.pivot.y - json.sprite_size.y / 2}) : Object.freeze({x: 0, y: 0});
     
     // Offsets used for scale flipping
     const PP = Object.freeze({x: 1, y: 1});
@@ -615,19 +615,19 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
         spritesheet._uint32Data = data;
         spritesheet._uint32DataFlippedX = dataPair[1];
         
-        const boundingRadius = Math.hypot(spritesheet.spriteSize.x, spritesheet.spriteSize.y);
+        const boundingRadius = Math.hypot(spritesheet.sprite_size.x, spritesheet.sprite_size.y);
         spritesheet.size = {x: data.width, y: data.height};
 
-        const sheetDefaultDuration = Math.max(json.defaultDuration || 1, 0.25);
+        const sheetDefaultDuration = Math.max(json.default_duration || 1, 0.25);
         
         // Create the default grid mapping
-        let rows = Math.floor((data.height + spritesheet._gutter) / (spritesheet.spriteSize.y + spritesheet._gutter));
-        let cols = Math.floor((data.width  + spritesheet._gutter) / (spritesheet.spriteSize.x + spritesheet._gutter));
+        let rows = Math.floor((data.height + spritesheet._gutter) / (spritesheet.sprite_size.y + spritesheet._gutter));
+        let cols = Math.floor((data.width  + spritesheet._gutter) / (spritesheet.sprite_size.x + spritesheet._gutter));
         
         if (json.transpose) { let temp = rows; rows = cols; cols = temp; }
 
         if (rows === 0 || cols === 0) {
-            throw new Error('Spritesheet ' + jsonURL + ' has a spriteSize that is larger than the entire spritesheet.');
+            throw new Error('Spritesheet ' + jsonURL + ' has a sprite_size that is larger than the entire spritesheet.');
         }
         
         for (let x = 0; x < cols; ++x) {
@@ -639,9 +639,9 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                 // Check for alpha channel
                 let hasAlpha = false;
                 outerloop:
-                for (let j = 0; j < spritesheet.spriteSize.y; ++j) {
-                    let index = (y * (spritesheet.spriteSize.y + spritesheet._gutter) + j) * data.width + x * (spritesheet.spriteSize.x + spritesheet._gutter);
-                    for (let i = 0; i < spritesheet.spriteSize.x; ++i, ++index) {
+                for (let j = 0; j < spritesheet.sprite_size.y; ++j) {
+                    let index = (y * (spritesheet.sprite_size.y + spritesheet._gutter) + j) * data.width + x * (spritesheet.sprite_size.x + spritesheet._gutter);
+                    for (let i = 0; i < spritesheet.sprite_size.x; ++i, ++index) {
                         if (data[index] >>> 24 < 0xff) {
                             hasAlpha = true;
                             break outerloop;
@@ -655,30 +655,30 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     _tileX: u,
                     _tileY: v,
                     _boundingRadius: boundingRadius,
-                    _x: u * (spritesheet.spriteSize.x + spritesheet._gutter),
-                    _y: v * (spritesheet.spriteSize.y + spritesheet._gutter),
+                    _x: u * (spritesheet.sprite_size.x + spritesheet._gutter),
+                    _y: v * (spritesheet.sprite_size.y + spritesheet._gutter),
                     _hasAlpha: hasAlpha,
                     spritesheet: spritesheet,
-                    tileIndex: Object.freeze({x:u, y:v}),
+                    tile_index: Object.freeze({x:u, y:v}),
                     id:++lastSpriteID,
-                    size: spritesheet.spriteSize,
+                    size: spritesheet.sprite_size,
                     scale: PP,
                     pivot: sspivot,
                     frames: sheetDefaultDuration
                 };
 
                 // Construct the flipped versions
-                sprite.flippedX = Object.assign({flippedX:sprite}, sprite);
-                sprite.flippedX.scale = NP;
-                sprite.flippedX.lastSpriteID = ++lastSpriteID;
+                sprite.x_flipped = Object.assign({x_flipped:sprite}, sprite);
+                sprite.x_flipped.scale = NP;
+                sprite.x_flipped.lastSpriteID = ++lastSpriteID;
 
-                sprite.flippedY = Object.assign({flippedY:sprite}, sprite);
-                sprite.flippedY.lastSpriteID = ++lastSpriteID;
-                sprite.flippedY.scale = PN;
+                sprite.y_flipped = Object.assign({y_flipped:sprite}, sprite);
+                sprite.y_flipped.lastSpriteID = ++lastSpriteID;
+                sprite.y_flipped.scale = PN;
 
-                sprite.flippedX.flippedY = sprite.flippedY.flippedX = Object.assign({}, sprite);
-                sprite.flippedY.flippedX.scale = NN;
-                sprite.flippedY.flippedX.lastSpriteID = ++lastSpriteID;
+                sprite.x_flipped.y_flipped = sprite.y_flipped.x_flipped = Object.assign({}, sprite);
+                sprite.y_flipped.x_flipped.scale = NN;
+                sprite.y_flipped.x_flipped.lastSpriteID = ++lastSpriteID;
 
                 spritesheet[x][y] = sprite;
             }
@@ -700,7 +700,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     throw new Error('Animation data for "' + anim + '" must have either "x" and "y" fields or a "start" field, but not both');
                 }
                 
-                const animDefaultDuration = Math.max(0.25, data.defaultDuration || sheetDefaultDuration);
+                const animDefaultDuration = Math.max(0.25, data.default_duration || sheetDefaultDuration);
                 
                 // Apply defaults
                 if (data.x !== undefined) {
@@ -729,7 +729,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     
                     let pivot = sspivot;
                     if (data.pivot !== undefined) {
-                        pivot = Object.freeze({x: data.pivot.x - json.spriteSize.x / 2, y: data.pivot.y - json.spriteSize.y / 2});
+                        pivot = Object.freeze({x: data.pivot.x - json.sprite_size.x / 2, y: data.pivot.y - json.sprite_size.y / 2});
                     }
                     const animation = spritesheet[anim] = [];
                     const extrapolate = data.extrapolate || 'loop';
@@ -796,10 +796,10 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                 if (sprite.duration === undefined) {
                     sprite.duration = sheetDefaultDuration;
                 }
-                sprite.flippedX.duration = sprite.flippedY.duration = sprite.flippedY.flippedX.duration = sprite.duration;
-                Object.freeze(sprite.flippedX);
-                Object.freeze(sprite.flippedY);
-                Object.freeze(sprite.flippedY.flippedX);
+                sprite.x_flipped.duration = sprite.y_flipped.duration = sprite.y_flipped.x_flipped.duration = sprite.duration;
+                Object.freeze(sprite.x_flipped);
+                Object.freeze(sprite.y_flipped);
+                Object.freeze(sprite.y_flipped.x_flipped);
                 Object.freeze(sprite);
             }
         }
@@ -895,7 +895,7 @@ function loadMap(name, json, mapJSONUrl) {
         zScale: (json.zScale || 1),
         layer:  [],
         spritesheetTable:Object.create(null),
-        spriteSize: Object.freeze({x:0, y:0}),
+        sprite_size: Object.freeze({x:0, y:0}),
         size:   Object.freeze({x: 0, y: 0}),
         wrapX:  json.wrapX || false,
         wrapY:  json.wrapY || false,
@@ -923,7 +923,7 @@ function loadMap(name, json, mapJSONUrl) {
         
                 let tileSet = xml.getElementsByTagName('tileset');
                 tileSet = tileSet[0];
-                map.spriteSize = Object.freeze({x: parseInt(tileSet.getAttribute('tilewidth')),
+                map.sprite_size = Object.freeze({x: parseInt(tileSet.getAttribute('tilewidth')),
                                                 y: parseInt(tileSet.getAttribute('tileheight'))});
                 const columns = parseInt(tileSet.getAttribute('columns'));
                 const spritesheetName = tileSet.getAttribute('name');
@@ -940,8 +940,8 @@ function loadMap(name, json, mapJSONUrl) {
                               y: parseInt(image.getAttribute('height'))};
                 const filename = image.getAttribute('source');
 
-                if ((spritesheet.spriteSize.x !== map.spriteSize.x) || (spritesheet.spriteSize.y !== map.spriteSize.y)) {
-                    throw `Sprite size (${spritesheet.spriteSize.x}, ${spritesheet.spriteSize.y}) does not match what the map expected, (${map.spriteSize.x}, ${map.spriteSize.y}).`;
+                if ((spritesheet.sprite_size.x !== map.sprite_size.x) || (spritesheet.sprite_size.y !== map.sprite_size.y)) {
+                    throw `Sprite size (${spritesheet.sprite_size.x}, ${spritesheet.sprite_size.y}) does not match what the map expected, (${map.sprite_size.x}, ${map.sprite_size.y}).`;
                 }
 
                 if ((spritesheet.size.x !== size.x) || (spritesheet.size.y !== size.y)) {
@@ -983,9 +983,9 @@ function loadMap(name, json, mapJSONUrl) {
 
                                 let sprite = spritesheet[sx][sy];
 
-                                if (tileFlipX) { sprite = sprite.flippedX; }
+                                if (tileFlipX) { sprite = sprite.x_flipped; }
 
-                                if (tileFlipY) { sprite = sprite.flippedY; }
+                                if (tileFlipY) { sprite = sprite.y_flipped; }
                                 
                                 layer[x][flipY ? map.size.y - 1 - y : y] = sprite;
                             } else {

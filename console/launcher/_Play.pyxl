@@ -86,7 +86,7 @@ let modeFrameShift = 0
 
 def drawIcon(icon, pos):
    assert(icon != nil)
-   drawSprite({sprite: icon, pos: pos + xy(3 + icon.size.x / 2, 3 - icon.size.y / 2)})
+   draw_sprite({sprite: icon, pos: pos + xy(3 + icon.size.x / 2, 3 - icon.size.y / 2)})
    return xy(icon.size.x + 2, icon.size.y + 2)
 
 
@@ -94,70 +94,70 @@ frame
 ────────────────────────────────────────────────────────────────────────
 
 const introFrames = 20
-if gameFrames < introFrames:
+if game_frames < introFrames:
    // Fade and slide in
-   const α = 1 - min(1, (gameFrames + 1) / (introFrames + 1))
-   setPostEffects({background:#0,
-                   pos: xy(α * screenSize.x, 0),
+   const α = 1 - min(1, (game_frames + 1) / (introFrames + 1))
+   set_post_effects({background:#0,
+                   pos: xy(α * SCREEN_SIZE.x, 0),
                    color: rgba(0, 0, 0, α)})
-else if gameFrames == introFrames:
-   resetPostEffects()
+else if game_frames == introFrames:
+   reset_post_effects()
    
-setBackground(backgroundColor)
+set_background(backgroundColor)
 
-drawCornerRect(xy(0,0), xy(90, 15), #2)
-drawCornerRect(xy(155,0), xy(230, 15), #2)
-drawText({font: mediumFont, text:joy.prompt["⍇"], pos: xy(70,12), color: promptColor, shadow: shadowColor})
-drawText({font: mediumFont, text:"LIBRARY", pos: xy(99,12), color: selectedColor, shadow: shadowColor})
-drawText({font: mediumFont, text:"DISCOVER", pos: xy(180,12), color: unselectedColor, shadow: shadowColor})
-drawText({font: mediumFont, text:"URL", pos: xy(260,12), color: unselectedColor, shadow: shadowColor})
-drawText({font: mediumFont, text:joy.prompt["⍈"], pos: xy(300,12), color: promptColor, shadow: shadowColor})
+draw_corner_rect(xy(0,0), xy(90, 15), #2)
+draw_corner_rect(xy(155,0), xy(230, 15), #2)
+draw_text({font: mediumFont, text:joy.prompt["⍇"], pos: xy(70,12), color: promptColor, shadow: shadowColor})
+draw_text({font: mediumFont, text:"LIBRARY", pos: xy(99,12), color: selectedColor, shadow: shadowColor})
+draw_text({font: mediumFont, text:"DISCOVER", pos: xy(180,12), color: unselectedColor, shadow: shadowColor})
+draw_text({font: mediumFont, text:"URL", pos: xy(260,12), color: unselectedColor, shadow: shadowColor})
+draw_text({font: mediumFont, text:joy.prompt["⍈"], pos: xy(300,12), color: promptColor, shadow: shadowColor})
 
-drawLine(xy(0, 16), xy(90, 16), #f)
-drawLine(xy(90, 16), xy(90, 1), #f)
-drawLine(xy(91, 0), xy(154, 0), #f)
-drawLine(xy(155, 1), xy(155, 16), #f)
-drawLine(xy(155, 16), xy(384, 16), #f)
+draw_line(xy(0, 16), xy(90, 16), #f)
+draw_line(xy(90, 16), xy(90, 1), #f)
+draw_line(xy(91, 0), xy(154, 0), #f)
+draw_line(xy(155, 1), xy(155, 16), #f)
+draw_line(xy(155, 16), xy(384, 16), #f)
 
-drawText({font: mediumFont, text:joy.prompt["⍐"], pos: xy(1, 28), color: promptColor, shadow: shadowColor})
-drawText({font: mediumFont, text:joy.prompt["⍗"], pos: xy(1, 220), color: promptColor, shadow: shadowColor})
+draw_text({font: mediumFont, text:joy.prompt["⍐"], pos: xy(1, 28), color: promptColor, shadow: shadowColor})
+draw_text({font: mediumFont, text:joy.prompt["⍗"], pos: xy(1, 220), color: promptColor, shadow: shadowColor})
 
 const boxVerticalSpacing = 75
 
-setClip(xy(12, 20), xy(64, 201))
+set_clip(xy(12, 20), xy(64, 201))
 for gameIndex - 2 <= g <= gameIndex + 2:
-   const game = arrayValue(gameArray, g, "loop")
+   const game = array_value(gameArray, g, "loop")
    const pos = xy(44, boxVerticalSpacing * g + 64/2 + 19 - gameShift - (gameIndex - 1) * boxVerticalSpacing)
-   drawSprite({sprite: game.label, pos: pos})
-   drawLine(pos + xy(1-64/2, 64/2), pos + xy(64/2-2, 64/2), shadowColor)
-resetClip()
+   draw_sprite({sprite: game.label, pos: pos})
+   draw_line(pos + xy(1-64/2, 64/2), pos + xy(64/2-2, 64/2), shadowColor)
+reset_clip()
 
 // Highlight selected game
-drawCornerRect(xy(11, 93), xy(66, 66), nil, #f)
-drawCornerRect(xy(10, 92), xy(68, 68), nil, #d)
+draw_corner_rect(xy(11, 93), xy(66, 66), nil, #f)
+draw_corner_rect(xy(10, 92), xy(68, 68), nil, #d)
    
 local:
    const game = gameArray[gameIndex]
-   const t = floor((modeFrames - modeFrameShift) / 3) mod 60
+   const t = floor((mode_frames - modeFrameShift) / 3) mod 60
    const x = 99
    const pos = xy(x + 384/4, 224/4 + 66)
-   drawSprite({sprite: game.preview[t mod 6][floor(t / 6)], pos: pos})
-   drawLine(pos + xy(1-384/4, 224/4), pos + xy(384/4-2, 224/4), shadowColor)
-   drawLine(pos + xy(2-384/4, 224/4 + 1), pos + xy(384/4-3, 224/4 + 1), shadowColor / 2)
-   drawText({font:largeFont, text:game.title, pos:xy(x, 40), color:selectedColor, shadow:shadowColor, xAlign:"left"})
-   drawText({font:mediumFont, text:"by " + game.developer, pos:xy(x, 56), color:selectedColor, shadow:shadowColor, xAlign:"left"})
-   drawText({font:smallFont, text:game.url, pos:xy(x, 220), color:unselectedColor, xAlign:"left"})
-   drawText({font:smallFont, text:game.description, pos:xy(x, 193), color:selectedColor, xAlign:"left", wrapWidth: 280})
+   draw_sprite({sprite: game.preview[t mod 6][floor(t / 6)], pos: pos})
+   draw_line(pos + xy(1-384/4, 224/4), pos + xy(384/4-2, 224/4), shadowColor)
+   draw_line(pos + xy(2-384/4, 224/4 + 1), pos + xy(384/4-3, 224/4 + 1), shadowColor / 2)
+   draw_text({font:largeFont, text:game.title, pos:xy(x, 40), color:selectedColor, shadow:shadowColor, x_align:"left"})
+   draw_text({font:mediumFont, text:"by " + game.developer, pos:xy(x, 56), color:selectedColor, shadow:shadowColor, x_align:"left"})
+   draw_text({font:smallFont, text:game.url, pos:xy(x, 220), color:unselectedColor, x_align:"left"})
+   draw_text({font:smallFont, text:game.description, pos:xy(x, 193), color:selectedColor, x_align:"left", wrapWidth: 280})
 
    const sideX = 295
    const wordX = sideX + 27
-   drawText({font:promptFont, text:joy.prompt["ⓟ"] + "  PLAY", pos:xy(sideX + 7, 74), color:promptColor, shadow:shadowColor, xAlign:"left"})
-   if not game.builtin: drawText({font:promptFont, text:joy.prompt["ⓓ"] + "  FORGET", pos:xy(sideX + 7, 88), color:promptColor, shadow:shadowColor, xAlign:"left"})
+   draw_text({font:promptFont, text:joy.prompt["ⓟ"] + "  PLAY", pos:xy(sideX + 7, 74), color:promptColor, shadow:shadowColor, x_align:"left"})
+   if not game.builtin: draw_text({font:promptFont, text:joy.prompt["ⓓ"] + "  FORGET", pos:xy(sideX + 7, 88), color:promptColor, shadow:shadowColor, x_align:"left"})
 
    // Icons
    let y = 112
    if game.maxPlayers == 0 or game.minPlayers == 0 and game.maxPlayers == nil:
-      drawText({font:mediumFont, text:"Animation", pos:xy(wordX, y), color:selectedColor, xAlign:"left"}).y
+      draw_text({font:mediumFont, text:"Animation", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
       drawIcon(icons.players[0], xy(sideX, y)).y
       y += 15
    else if game.minPlayers != nil and game.maxPlayers != nil:
@@ -165,56 +165,56 @@ local:
       let hi = clamp(max(game.minPlayers, game.maxPlayers), 1, 5)
       if lo != hi:
          drawIcon(icons.players[lo], xy(sideX, y))
-         drawLine(xy(sideX + 21, y - 4), xy(sideX + 28, y - 4), selectedColor)
+         draw_line(xy(sideX + 21, y - 4), xy(sideX + 28, y - 4), selectedColor)
          drawIcon(icons.players[hi], xy(sideX + 29, y)).y
       else:
          drawIcon(icons.players[lo], xy(sideX, y))
-         drawText({font:mediumFont, text:"" + lo + "-Player", pos:xy(wordX, y), color:selectedColor, xAlign:"left"})
+         draw_text({font:mediumFont, text:"" + lo + "-Player", pos:xy(wordX, y), color:selectedColor, x_align:"left"})
       y += 15
    else if game.minPlayers != nil or game.maxPlayers != nil:
       // Only one specified
       let lo = if game.minPlayers != nil then game.minPlayers else game.maxPlayers
       drawIcon(icons.players[clamp(lo, 1, 5)], xy(sideX, y))
-      drawText({font:mediumFont, text:"" + lo + "-Player", pos:xy(wordX, y), color:selectedColor, xAlign:"left"})
+      draw_text({font:mediumFont, text:"" + lo + "-Player", pos:xy(wordX, y), color:selectedColor, x_align:"left"})
       y += 15
 
    if game.cooperative:
       drawIcon(icons.cooperative, xy(sideX, y)).y
-      y += drawText({font:mediumFont, text:"Cooperate", pos:xy(wordX, y), color:selectedColor, xAlign:"left"}).y
+      y += draw_text({font:mediumFont, text:"Cooperate", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
 
    if game.competitive:
       drawIcon(icons.competitive, xy(sideX, y)).y
-      y += drawText({font:mediumFont, text:"Compete", pos:xy(wordX, y), color:selectedColor, xAlign:"left"}).y
+      y += draw_text({font:mediumFont, text:"Compete", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
       
    if game.achievements:
       drawIcon(icons.achievements, xy(sideX, y)).y
-      y += drawText({font:mediumFont, text:"Achieve", pos:xy(wordX, y), color:selectedColor, xAlign:"left"}).y
+      y += draw_text({font:mediumFont, text:"Achieve", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
 
    if game.highscores:
       drawIcon(icons.highscores, xy(sideX, y)).y
-      y += drawText({font:mediumFont, text:"Score", pos:xy(wordX, y), color:selectedColor, xAlign:"left"}).y
+      y += draw_text({font:mediumFont, text:"Score", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
 
 if joy.aa or joy.qq or joy._pp:
    def callback():
-      launchGame(gameArray[gameIndex].url)
-   setMode(_SlideOut, callback) because "Player selected game"
+      launch_game(gameArray[gameIndex].url)
+   set_mode(_SlideOut, callback) because "Player selected game"
       
 // Animate scrolling
 if joy.yy:
    const Δy = 3 joy.yy
-   playAudioClip(boop, false, 300%)
+   play_audio_clip(boop, false, 300%)
    def shift(): gameShift += Δy
-   addFrameHook(shift, nil, boxVerticalSpacing / 3)
+   add_frame_hook(shift, nil, boxVerticalSpacing / 3)
 
 // Change games
 if gameShift >= boxVerticalSpacing:
    gameShift -= boxVerticalSpacing
-   modeFrameShift = modeFrames - 1
+   modeFrameShift = mode_frames - 1
    ++gameIndex
 else if gameShift <= -boxVerticalSpacing:
    gameShift += boxVerticalSpacing
    --gameIndex
-   modeFrameShift = modeFrames - 1
+   modeFrameShift = mode_frames - 1
 
 gameIndex = loop(gameIndex, gameArray.length)
    

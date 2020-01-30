@@ -1,5 +1,5 @@
 {
     "url": "space-moon.png",
-    "spriteSize": {"x":32, "y":32},
+    "sprite_size": {"x":32, "y":32},
     "license": "©2019 Morgan McGuire, licensed as CC BY 4.0"
 }

@@ -1,6 +1,6 @@
-resetTransform()
-setBackground(#f)
+reset_transform()
+set_background(#f)
 
-drawText({font: scoreFont, text: replace(ruleText, joy.prompt), pos: xy(5, 10), color: #049, wrapWidth: 182})
+draw_text({font: scoreFont, text: replace(ruleText, joy.prompt), pos: xy(5, 10), color: #049, wrapWidth: 182})
    
-if anyButtonPress(): setMode(Title) because "anyButtonPress() or end of credits"
+if any_button_press(): set_mode(Title) because "any_button_press() or end of credits"

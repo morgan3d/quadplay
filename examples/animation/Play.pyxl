@@ -1,8 +1,8 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-const ninja = makeEntity({
-   pos:            xy(½ screenSize.x, groundY),
+const ninja = make_entity({
+   pos:            xy(½ SCREEN_SIZE.x, groundY),
    spritesheet:    ninjaSprite,
    sprite:         ninjaSprite.idle[0],
    animation:      "idle",
@@ -16,13 +16,13 @@ const ninja = makeEntity({
    z:              1,
    weaponIndex:    0,
    weaponArray:    [
-      makeEntity({spritesheet: swordSprite}),
-      makeEntity({spritesheet: bowSprite}),
+      make_entity({spritesheet: swordSprite}),
+      make_entity({spritesheet: bowSprite}),
       ∅
    ]
 })
 
-ninja.weapon = entityAddChild(ninja, ninja.weaponArray[ninja.weaponIndex])
+ninja.weapon = entity_add_child(ninja, ninja.weaponArray[ninja.weaponIndex])
 
 const arrowArray = []
 
@@ -78,7 +78,7 @@ with pos, vel, force, scale, spriteIndex, spriteFrame, animation, spritesheet, s
          if joy.bb: nextAnimation = "attack"
    else:
       // Above ground
-      force.y = gravity * entityMass(ninja)
+      force.y = gravity * entity_mass(ninja)
       
    // Jumping animation
    if pos.y < groundY:
@@ -90,55 +90,55 @@ with pos, vel, force, scale, spriteIndex, spriteFrame, animation, spritesheet, s
       spriteFrame = 0
       spriteIndex = 0
 
-   sprite = arrayValue(spritesheet[animation], spriteIndex)
+   sprite = array_value(spritesheet[animation], spriteIndex)
 
    // Change weapons (not allowed during the landing or attack animation)
    if animation == "idle" or animation == "duck" or find(animation, "jump") ≠ ∅: weaponIndex = loop(weaponIndex + joy.yy, size(ninja.weaponArray))
    const newWeapon = ninja.weaponArray[weaponIndex]
    if weapon != newWeapon:
-      entityRemoveChild(ninja, weapon)
-      weapon = entityAddChild(ninja, newWeapon)
+      entity_remove_child(ninja, weapon)
+      weapon = entity_add_child(ninja, newWeapon)
    
    // Update the weapon to match the main sprite animation
-   if weapon: weapon.sprite = arrayValue(weapon.spritesheet[animation], spriteIndex)
+   if weapon: weapon.sprite = array_value(weapon.spritesheet[animation], spriteIndex)
    
    // Physics
-   entitySimulate(ninja)
+   entity_simulate(ninja)
       
    // Wrap around the screen edges
-   pos.x = loop(pos.x, screenSize.x)
+   pos.x = loop(pos.x, SCREEN_SIZE.x)
 
-entityUpdateChildren(ninja)
+entity_update_children(ninja)
 
 
 for arrow in arrowArray:
-   if arrow.pos.x < -arrowLength or arrow.pos.x > screenSize.x + arrowLength:
-      removeValues(arrow, arrowArray)
+   if arrow.pos.x < -arrowLength or arrow.pos.x > SCREEN_SIZE.x + arrowLength:
+      remove_values(arrow, arrowArray)
    else:
       arrow.pos.x += arrow.vel.x
-      drawLine(arrow.pos, arrow.pos + xy(arrowLength * sign(arrow.vel.x), 0), #0)
+      draw_line(arrow.pos, arrow.pos + xy(arrowLength * sign(arrow.vel.x), 0), #0)
 
 // Sky
-setBackground(rgb(20%, 50%, 80%))
-drawText(font, assetCredits.title, xy(½ screenSize.x, 20), #FFF, ∅, ∅, 0, 0)
+set_background(rgb(20%, 50%, 80%))
+draw_text(font, assetCredits.title, xy(½ SCREEN_SIZE.x, 20), #FFF, ∅, ∅, 0, 0)
 
 // Ground
-drawCornerRect(xy(0, groundY + 8), xy(screenSize.x, screenSize.y - (groundY + 8)), #DDD)
+draw_corner_rect(xy(0, groundY + 8), xy(SCREEN_SIZE.x, SCREEN_SIZE.y - (groundY + 8)), #DDD)
 
 // Instructions
 local:
    let pos = xy(12, groundY + 19)
    for i < size(instructions) / 2:
-      drawText(instructionFont, replace(instructions[2i], joy.prompt), pos, #7)
-      pos.y += drawText(instructionFont, instructions[2i + 1], pos + xy(30, 0), #7).y
-      if pos.y > screenSize.y - 10:
+      draw_text(instructionFont, replace(instructions[2i], joy.prompt), pos, #7)
+      pos.y += draw_text(instructionFont, instructions[2i + 1], pos + xy(30, 0), #7).y
+      if pos.y > SCREEN_SIZE.y - 10:
          pos.x += 97
          pos.y = groundY + 19
 
 // Ninja
-drawEntity(ninja)
+draw_entity(ninja)
 
 // Shadow
 with x in ninja.pos:
-   drawLine(xy(x - 7, groundY + 8),  xy(x + 7, groundY + 8),  rgba(0, 0, 0, 20%), ninja.z - 0.1)
-   drawLine(xy(x - 5, groundY + 9), xy(x + 5, groundY + 9), rgba(0, 0, 0, 15%), ninja.z - 0.1)
+   draw_line(xy(x - 7, groundY + 8),  xy(x + 7, groundY + 8),  rgba(0, 0, 0, 20%), ninja.z - 0.1)
+   draw_line(xy(x - 5, groundY + 9), xy(x + 5, groundY + 9), rgba(0, 0, 0, 15%), ninja.z - 0.1)

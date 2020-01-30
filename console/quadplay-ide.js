@@ -2,7 +2,7 @@
 "use strict";
 
 const deployed = true;
-const version  = '2020.01.18.17'
+const version  = '2020.01.26.20'
 const launcherURL = 'quad://console/launcher';
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -452,7 +452,7 @@ function onSlowButton() {
 
 // Allows a framerate to be specified so that the slow button can re-use the logic.
 //
-// isLaunchGame = "has this been triggered by QRuntime.launchGame()"
+// isLaunchGame = "has this been triggered by QRuntime.launch_game()"
 // args = array of arguments to pass to the new program
 function onPlayButton(slow, isLaunchGame, args) {
     if (isSafari && ! isMobile) { unlockAudio(); }
@@ -785,7 +785,7 @@ for (const name in controlSchemeTable) {
 }
 
 
-/** Called by resetGame() as well as the play and reload buttons to
+/** Called by reset_game() as well as the play and reload buttons to
     reset all game state and load the game.  */
 function restartProgram(numBootAnimationFrames) {
     reloadRuntime(function () {
@@ -983,6 +983,22 @@ function saveIDEState() {
 }
 
 
+function showGamepads() {
+    let s = 'Gamepads = [';
+    const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
+    for (let i = 0; i < gamepads.length; ++i) {
+        let pad = gamepads[i];
+        if (pad && pad.connected) {
+            s += '"' + pad.id + '", ';
+        }
+    }
+
+    s += ']';
+    s = s.replace('", ]', '"]');
+    alert(s);
+}
+
+
 let soundEditorCurrentSound = null;
 function onProjectSelect(target, type, object) {
     
@@ -1102,8 +1118,8 @@ function onProjectSelect(target, type, object) {
                     const mouseX = e.clientX - editorBounds.left;
                     const mouseY = e.clientY - editorBounds.top;
                     
-                    const scaledSpriteWidth = object.spriteSize.x * scale;
-                    const scaledSpriteHeight = object.spriteSize.y * scale;
+                    const scaledSpriteWidth = object.sprite_size.x * scale;
+                    const scaledSpriteHeight = object.sprite_size.y * scale;
 
                     spriteEditorPivot.style.fontSize = Math.round(clamp(Math.min(scaledSpriteWidth, scaledSpriteHeight) * 0.18, 5, 25)) + 'px';
 
@@ -1337,11 +1353,11 @@ function visualizeModes(modeEditor) {
         return;
     }
 
-    const setModeRegexp = /\b(setMode|pushMode)\s*\(([^,_)]+)\)(?:\s*because\s*"([^"\n]*)")?/g;
-    const resetGameRegexp = /\bresetGame\s*\(\s*(?:"([^"]*)")?\s*\)/g;
+    const setModeRegexp = /\b(set_mode|push_mode)\s*\(([^,_)]+)\)(?:\s*because\s*"([^"\n]*)")?/g;
+    const reset_gameRegexp = /\breset_game\s*\(\s*(?:"([^"]*)")?\s*\)/g;
 
     // Modes that have links back to their parent mode, whether
-    // entered by setMode or pushMode. These have to be processed
+    // entered by set_mode or push_mode. These have to be processed
     // after all other links are discovered.
     let backLinks = [];
     
@@ -1359,14 +1375,14 @@ function visualizeModes(modeEditor) {
             if (to) {
                 edgeArray.push({to:to, label:match[3], type:match[1]});
             } else {
-                setErrorStatus(mode.url + ': setMode to nonexistent mode ' + match[2]);
+                setErrorStatus(mode.url + ': set_mode to nonexistent mode ' + match[2]);
                 return;
             }
-        } // for each setMode statement
+        } // for each set_mode statement
 
-        for (let match = resetGameRegexp.exec(code); match; match = resetGameRegexp.exec(code)) {
-            edgeArray.push({to:startNode, label:match[1], type:'resetGame'});
-        } // for each setMode statement
+        for (let match = reset_gameRegexp.exec(code); match; match = reset_gameRegexp.exec(code)) {
+            edgeArray.push({to:startNode, label:match[1], type:'reset_game'});
+        } // for each set_mode statement
     } // for each mode
 
     //////////////////////////////////////////////////////////////////////////////////////
@@ -1394,7 +1410,7 @@ function visualizeModes(modeEditor) {
                            width:     edge.label ? edge.label.length * 3.5 : 0,
                            height:    8,
                            labelpos: 'c',
-                           bidir:    (edge.type === 'pushMode')
+                           bidir:    (edge.type === 'push_mode')
                           }, 'edge' + edgeId);
             ++edgeId;
         }
@@ -1572,8 +1588,8 @@ function visualizeGame(gameEditor, url, game) {
     s += '<tr valign="top"><td>Developer</td><td><input type="text" autocomplete="false" style="width:384px" disabled value="' + game.developer + '"></td></tr>\n';
     s += '<tr valign="top"><td>Copyright</td><td><input type="text" autocomplete="false" style="width:384px" disabled value="' + game.copyright + '"></td></tr>\n';
     s += '<tr valign="top"><td>License</td><td><textarea disabled style="width:384px; padding: 3px; font-family: Helvetica, Arial; font-size:12px" rows=4>' + game.license + '</textarea></td></tr>\n';
-    s += `<tr valign="top"><td>Screen&nbsp;Size</td><td><input type="text" autocomplete="false" style="width:384px" disabled value="${gameSource.json.screenSize.x} × ${gameSource.json.screenSize.y}"></td></tr>\n`;
-    s += `<tr valign="top"><td></td><td><label><input type="checkbox" autocomplete="false" style="margin-left:0" disabled ${game.flipY ? 'checked' : ''}>Flip Y Axis</label></td></tr>\n`;
+    s += `<tr valign="top"><td>Screen&nbsp;Size</td><td><input type="text" autocomplete="false" style="width:384px" disabled value="${gameSource.json.screen_size.x} × ${gameSource.json.screen_size.y}"></td></tr>\n`;
+    s += `<tr valign="top"><td></td><td><label><input type="checkbox" autocomplete="false" style="margin-left:0" disabled ${game.flip_y ? 'checked' : ''}>Flip Y Axis</label></td></tr>\n`;
     s += '<tr valign="top"><td>Path</td><td>' + url + '</td></tr>\n';
 
     const baseURL = url.replace(/\/[^\/]*$/, '');
@@ -1589,12 +1605,12 @@ function visualizeMap(map) {
     const height = map[0].length;
     const depth  = map.layer.length;
 
-    const maxDim = Math.max(width * map.spriteSize.x, height * map.spriteSize.y);
+    const maxDim = Math.max(width * map.sprite_size.x, height * map.sprite_size.y);
     
     const reduce = (maxDim > 4096) ? 4 : (maxDim > 2048) ? 3 : (maxDim > 1024) ? 2 : 1;
 
-    const dstTileX = Math.max(1, Math.floor(map.spriteSize.x / reduce));
-    const dstTileY = Math.max(1, Math.floor(map.spriteSize.y / reduce));
+    const dstTileX = Math.max(1, Math.floor(map.sprite_size.x / reduce));
+    const dstTileY = Math.max(1, Math.floor(map.sprite_size.y / reduce));
 
     const canvas = document.getElementById('mapDisplayCanvas');
     canvas.width = width * dstTileX;
@@ -1719,7 +1735,9 @@ function createProjectWindow(gameSource) {
     
     // Build the project list for the IDE
     const projectElement = document.getElementById('project');
-    projectElement.innerHTML = s;
+
+    // Hide the scrollbars on Windows
+    projectElement.innerHTML = '<div class="hideScrollBars">' + s + '</div>';
 }
 
 
@@ -1748,7 +1766,7 @@ const autocorrectTable = [
     '\\tau',      'τ',
     '\\time',     'τ',
     '\\xi',       'ξ',
-    '\\rnd',      'ξ',
+    '\\random',      'ξ',
     '\\in',       '∊',
     '==',         '≟',
     '?=',         '≟',
@@ -1949,7 +1967,7 @@ const outputDisplayPane = document.getElementById('outputDisplayPane');
 // Maps expression strings to values
 let debugWatchTable = {};
 
-function debugWatch(expr, value) {
+function debug_watch(expr, value) {
     debugWatchTable[expr] = QRuntime.unparse(value);
 }
 
@@ -2081,7 +2099,7 @@ function mainLoopStep() {
     // Erase the table every frame
     debugWatchTable = {};
 
-    // Physics time may be spread over multiple QRuntime.physicsSimulate() calls,
+    // Physics time may be spread over multiple QRuntime.physics_simulate() calls,
     // but graphics is always a single QRuntime._show() call. Graphics time may
     // be zero on any individual call.
     QRuntime._physicsTimeTotal = 0;
@@ -2120,19 +2138,19 @@ function mainLoopStep() {
             }
         }
     } catch (e) {
-        if (e.resetGame === 1) {
+        if (e.reset_game === 1) {
             // Automatic
             onStopButton(true);
             restartProgram(BOOT_ANIMATION.NONE);
             return;
-        } else if (e.quitGame === 1) {
+        } else if (e.quit_game === 1) {
             if (useIDE) {
                 onStopButton();
             } else {
                 onHomeButton();
             }
-        } else if (e.launchGame !== undefined) {
-            loadGameIntoIDE(e.launchGame, function () {
+        } else if (e.launch_game !== undefined) {
+            loadGameIntoIDE(e.launch_game, function () {
                 onResize();
                 onPlayButton(false, true, e.args);
             });
@@ -2174,7 +2192,7 @@ function mainLoopStep() {
         debugFrameRateDisplay.innerHTML = '' + Math.round(60 / QRuntime._graphicsPeriod) + ' Hz';
         debugFramePeriodDisplay.innerHTML = '(' + ('1½⅓¼⅕⅙'[QRuntime._graphicsPeriod - 1]) + ' ×)';
 
-        if (QRuntime.modeFrames % QRuntime._graphicsPeriod === 1 % QRuntime._graphicsPeriod) {
+        if (QRuntime.mode_frames % QRuntime._graphicsPeriod === 1 % QRuntime._graphicsPeriod) {
             // Only display if the graphics period has just ended, otherwise the display would
             // be zero most of the time
             debugDrawCallsDisplay.innerHTML = '' + QRuntime._previousGraphicsCommandList.length;
@@ -2210,8 +2228,8 @@ function mainLoopStep() {
         debugPreviousModeDisplay.innerHTML = '∅';
     }
     
-    debugModeFramesDisplay.innerHTML = '' + QRuntime.modeFrames;
-    debugGameFramesDisplay.innerHTML = '' + QRuntime.gameFrames;
+    debugModeFramesDisplay.innerHTML = '' + QRuntime.mode_frames;
+    debugGameFramesDisplay.innerHTML = '' + QRuntime.game_frames;
 
     // Update to the profiler's new model of the graphics period
     QRuntime._graphicsPeriod = profiler.graphicsPeriod;
@@ -2239,7 +2257,7 @@ function reloadRuntime(oncomplete) {
     QRuntime.onload = function () {
         QRuntime._SCREEN_WIDTH  = SCREEN_WIDTH;
         QRuntime._SCREEN_HEIGHT = SCREEN_HEIGHT;
-        QRuntime.resetClip();
+        QRuntime.reset_clip();
 
         // updateImageData.data is a Uint8Clamped RGBA buffer
         QRuntime._screen = new Uint32Array(updateImageData.data.buffer);
@@ -2253,7 +2271,7 @@ function reloadRuntime(oncomplete) {
         QRuntime._debugWatchEnabled = document.getElementById('debugWatchEnabled').checked;
         QRuntime._showEntityBoundsEnabled = document.getElementById('showEntityBoundsEnabled').checked;
         QRuntime._showPhysicsEnabled = document.getElementById('showPhysicsEnabled').checked;
-        QRuntime._debugWatch    = debugWatch;
+        QRuntime._debug_watch    = debug_watch;
         QRuntime._fontMap       = fontMap;
         QRuntime._parse         = _parse;
         QRuntime._submitFrame   = submitFrame;
@@ -2267,7 +2285,7 @@ function reloadRuntime(oncomplete) {
         QRuntime._fontArray     = fontArray;
         QRuntime.makeEuroSmoothValue = makeEuroSmoothValue;
 
-        QRuntime.pad = Object.seal([0,0,0,0]);
+        QRuntime.gamepad_array = Object.seal([0,0,0,0]);
         for (let p = 0; p < 4; ++p) {
             const type = 'Quadplay';
 
@@ -2278,13 +2296,13 @@ function reloadRuntime(oncomplete) {
                 controlBindings = {id: isMobile ? 'mobile' : '', type: defaultControlType(p)};
             }
             
-            QRuntime.pad[p] = Object.seal({
+            QRuntime.gamepad_array[p] = Object.seal({
                 x:0, dx:0, y:0, dy:0, xx:0, yy:0,
                 angle:0, dangle:0,
                 a:0, b:0, c:0, d:0, _p:0, q:0,
                 aa:0, bb:0, cc:0, dd:0, _pp:0, qq:0,
-                pressedA:0, pressedB:0, pressedC:0, pressedD:0, _pressedP:0, pressedQ:0,
-                releasedA:0, releasedB:0, releasedC:0, releasedD:0, _releasedP:0, releasedQ:0,
+                pressed_a:0, pressed_b:0, pressed_c:0, pressed_d:0, _pressed_p:0, pressed_q:0,
+                released_a:0, released_b:0, released_c:0, released_d:0, _released_p:0, released_q:0,
                 index: p,
                 type: controlBindings.type,
                 prompt: controlSchemeTable[controlBindings.type],
@@ -2293,18 +2311,18 @@ function reloadRuntime(oncomplete) {
                 _analogY: 0
             });
         }
-        QRuntime.joy = QRuntime.pad[0];
+        QRuntime.joy = QRuntime.gamepad_array[0];
         
-        QRuntime.debugPrint     = debugPrint;
+        QRuntime.debug_print     = debug_print;
         QRuntime.assert         = assert;
-        QRuntime.deviceControl  = deviceControl;
-        QRuntime.playAudioClip  = playAudioClip;
-        QRuntime.stopSound      = stopSound;
-        QRuntime.resumeSound    = resumeSound;
-        QRuntime.setSoundVolume = setSoundVolume;
-        QRuntime.setSoundPitch  = setSoundPitch;
-        QRuntime.setSoundPan    = setSoundPan;
-        QRuntime.debugPause     = onPauseButton;
+        QRuntime.device_control  = device_control;
+        QRuntime.play_audio_clip  = play_audio_clip;
+        QRuntime.stop_sound      = stop_sound;
+        QRuntime.resume_sound    = resume_sound;
+        QRuntime.set_volume = set_volume;
+        QRuntime.set_pitch  = set_pitch;
+        QRuntime.set_pan    = set_pan;
+        QRuntime.debug_pause     = onPauseButton;
         
         if (oncomplete) { oncomplete(); }
     };
@@ -2315,7 +2333,7 @@ function reloadRuntime(oncomplete) {
 
 ///////////////////////////////////////////////////////////////////////
 
-function deepClone(src, alreadySeen) {
+function deep_clone(src, alreadySeen) {
     if ((src === null) || (src === undefined)) {
         return undefined;
     } else if (alreadySeen.has(src)) {
@@ -2329,10 +2347,10 @@ function deepClone(src, alreadySeen) {
             const i = parseInt(k);
             if (isNaN(i)) {
                 // Object key
-                v[k] = deepClone(src[k], alreadySeen);
+                v[k] = deep_clone(src[k], alreadySeen);
             } else {
                 // Normal array element
-                v[i] = deepClone(src[i], alreadySeen);
+                v[i] = deep_clone(src[i], alreadySeen);
             }
         }
         
@@ -2342,7 +2360,7 @@ function deepClone(src, alreadySeen) {
         let clone = Object.create(null);
         alreadySeen.set(src, clone);
         for (let key in src) {
-            clone[key] = deepClone(src[key], alreadySeen);
+            clone[key] = deep_clone(src[key], alreadySeen);
         }
         return clone;
     } else {
@@ -2394,7 +2412,7 @@ function frozenDeepClone(src, alreadySeen) {
     iFrame, or the object at that is a package), constants is the
     constants field of a package. */
 function makeConstants(environment, constants) {
-    defineImmutableProperty(environment, 'screenSize', Object.freeze({x:SCREEN_WIDTH, y:SCREEN_HEIGHT}));
+    defineImmutableProperty(environment, 'SCREEN_SIZE', Object.freeze({x:SCREEN_WIDTH, y:SCREEN_HEIGHT}));
 
     const alreadySeen = new Map();
     for (let key in constants) {
@@ -2423,7 +2441,7 @@ function makeAssets(environment, assets) {
     const alreadySeen = new Map();
     
     for (let assetName in assets) {
-        defineImmutableProperty(environment, assetName, deepClone(assets[assetName], alreadySeen));
+        defineImmutableProperty(environment, assetName, deep_clone(assets[assetName], alreadySeen));
     }
 }
 
@@ -2554,7 +2572,7 @@ function loadGameIntoIDE(url, callback) {
             onLoadFileComplete(url);
             hideBootScreen();
             console.log('Loading complete.');
-            setFramebufferSize(gameSource.json.screenSize.x, gameSource.json.screenSize.y);
+            setFramebufferSize(gameSource.json.screen_size.x, gameSource.json.screen_size.y);
             createProjectWindow(gameSource);
             const resourcePane = document.getElementById('resourcePane');
             resourcePane.innerHTML = `

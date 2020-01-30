@@ -11,39 +11,39 @@ _SetControls
 
 const windowBackgroundColor = #135
 const windowBorderColor     = #fff
-const textColor             = #fff
-const textShadowColor       = #0006
+const text_color             = #fff
+const text_shadow_color       = #0006
 const promptColor           = #4DF
 const selectedColor         = #f
 const unselectedColor       = #b
 
-const controllerSpritesheet = if screenSize.y >= 224 then _controllerSpritesheet44 else _controllerSpritesheet22
+const controllerSpritesheet = if SCREEN_SIZE.y >= 224 then _controllerSpritesheet44 else _controllerSpritesheet22
 const controllerTypeArray = ["Quadplay", "XboxOne", "Xbox360", "Keyboard", "Kbd_Alt", "Kbd_P1", "Kbd_P2", "PS4", "PS3", "SNES", "SwitchPro", "JoyCon_R", "JoyCon_L", "Zero", "HOTAS", "Stadia", "GPD_Win"];
 
 // Tweak layout for square aspect ratios. shiftY is ignored at 64x64
-const shiftY = if screenSize.x == screenSize.y then -10 else 0
-let shiftSpriteY = if screenSize.x == screenSize.y then -36 else 0
-if screenSize.x == 64: shiftSpriteY = -34
+const shiftY = if SCREEN_SIZE.x == SCREEN_SIZE.y then -10 else 0
+let shiftSpriteY = if SCREEN_SIZE.x == SCREEN_SIZE.y then -36 else 0
+if SCREEN_SIZE.x == 64: shiftSpriteY = -34
 
 // Position of the scroll arrows
-const arrowX = if screenSize.x == screenSize.y then 54 else 76
-const arrowY = if screenSize.x == 128 then 0 else -2
+const arrowX = if SCREEN_SIZE.x == SCREEN_SIZE.y then 54 else 76
+const arrowY = if SCREEN_SIZE.x == 128 then 0 else -2
 
 
 let font = _font9
-if screenSize.y <= 64: font = _font5
-else if screenSize.y <= 128: font = _font8
+if SCREEN_SIZE.y <= 64: font = _font5
+else if SCREEN_SIZE.y <= 128: font = _font8
 
 let controlsFont = font
-if screenSize.y <= 64: font = _font5
-else if screenSize.y <= 128: controlsFont = _font6
+if SCREEN_SIZE.y <= 64: font = _font5
+else if SCREEN_SIZE.y <= 128: controlsFont = _font6
 
 let choiceFont = _font9
-if screenSize.y <= 64 or screenSize.x <= 128: choiceFont = _font5
-else if screenSize.y <= 112: choiceFont = _font8
+if SCREEN_SIZE.y <= 64 or SCREEN_SIZE.x <= 128: choiceFont = _font5
+else if SCREEN_SIZE.y <= 112: choiceFont = _font8
 
 // For layout
-const scale = if screenSize.y > 128 then 100% else 50%
+const scale = if SCREEN_SIZE.y > 128 then 100% else 50%
 
 const playerName = []
 for p < 4: push(playerName, "P" + (p + 1) + ": ")
@@ -58,45 +58,45 @@ let oldBackground
 enter(p)
 ────────────────────────────────────────────────────────────────────────
 activeIndex = p
-oldBackground = getBackground()
+oldBackground = get_background()
 
 
 
 leave
 ────────────────────────────────────────────────────────────────────────
-setBackground(oldBackground)
+set_background(oldBackground)
 
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
 
-setBackground(windowBackgroundColor)
+set_background(windowBackgroundColor)
 
-if screenSize.x == 64:
-   drawSprite(_controlDoneSprite, xy(70, 53))
-   drawSprite(_controlDoneSprite, xy(-6, 60))
+if SCREEN_SIZE.x == 64:
+   draw_sprite(_controlDoneSprite, xy(70, 53))
+   draw_sprite(_controlDoneSprite, xy(-6, 60))
 else:
-   drawLine(xy(screenSize.x / 2 - 1, 0), xy(screenSize.x / 2 - 1, screenSize.y), #023)
-   if screenSize.x == 384:
-      drawLine(xy(0, screenSize.y / 2), xy(120, screenSize.y / 2), #023)
-      drawLine(xy(screenSize.x - 121, screenSize.y / 2), xy(screenSize.x, screenSize.y / 2), #023)
+   draw_line(xy(SCREEN_SIZE.x / 2 - 1, 0), xy(SCREEN_SIZE.x / 2 - 1, SCREEN_SIZE.y), #023)
+   if SCREEN_SIZE.x == 384:
+      draw_line(xy(0, SCREEN_SIZE.y / 2), xy(120, SCREEN_SIZE.y / 2), #023)
+      draw_line(xy(SCREEN_SIZE.x - 121, SCREEN_SIZE.y / 2), xy(SCREEN_SIZE.x, SCREEN_SIZE.y / 2), #023)
 
    // "Press P when done"
    // Shift over at 128x128 to crop the word "Press"
-   drawSprite(_controlDoneSprite, screenSize / 2 - (if screenSize.x == 128 then xy(10, 0) else xy(0, 0)))
-   if screenSize.x == 128: drawRect(xy(3, screenSize.y / 2), xy(4, 5), windowBackgroundColor)
+   draw_sprite(_controlDoneSprite, SCREEN_SIZE / 2 - (if SCREEN_SIZE.x == 128 then xy(10, 0) else xy(0, 0)))
+   if SCREEN_SIZE.x == 128: draw_rect(xy(3, SCREEN_SIZE.y / 2), xy(4, 5), windowBackgroundColor)
 
    
 for p < 4:
    // In 64x64 mode, skip the non-active players
    if activeIndex != nil and p != activeIndex: continue
    
-   preservingTransform:
-      const control = pad[p]
+   preserving_transform:
+      const control = gamepad_array[p]
 
       if control._pp or control.qq:
-         popMode() because "Pressed P or Q"
+         pop_mode() because "Pressed P or Q"
 
       if control.xx:
          let i = find(controllerTypeArray, control.type)
@@ -113,35 +113,35 @@ for p < 4:
                          ((p > 1) or
                           (p == 1 and (type != "Kbd_P2")))))
          // Switch the device to the selected controller
-         deviceControl("setPadType", p, type)
+         device_control("setPadType", p, type)
 
-      if screenSize.x == 64:
-         setTransform(xy(32, 6), xy(1, 1))
+      if SCREEN_SIZE.x == 64:
+         set_transform(xy(32, 6), xy(1, 1))
       else:
-         setTransform(xy((0.5 + (p bitand 1)) * screenSize.x / 2,
-                         (p bitshr 1) * screenSize.y / 2 + (32 + shiftY) * scale), xy(1, 1))
+         set_transform(xy((0.5 + (p bitand 1)) * SCREEN_SIZE.x / 2,
+                         (p bitshr 1) * SCREEN_SIZE.y / 2 + (32 + shiftY) * scale), xy(1, 1))
 
-      drawText({font: font, text: "⊲", pos: xy(-arrowX, arrowY) * scale + xy(0, 2), color: textShadowColor, xAlign: "center"})
-      drawText({font: font, text: "⊳", pos: xy(+arrowX, arrowY) * scale + xy(0, 2), color: textShadowColor, xAlign: "center"})
-      drawText({font: font, text: "⊲", pos: xy(-arrowX, arrowY) * scale, color: promptColor, xAlign: "center"})
-      drawText({font: font, text: "⊳", pos: xy(+arrowX, arrowY) * scale, color: promptColor, xAlign: "center"})
+      draw_text({font: font, text: "⊲", pos: xy(-arrowX, arrowY) * scale + xy(0, 2), color: text_shadow_color, x_align: "center"})
+      draw_text({font: font, text: "⊳", pos: xy(+arrowX, arrowY) * scale + xy(0, 2), color: text_shadow_color, x_align: "center"})
+      draw_text({font: font, text: "⊲", pos: xy(-arrowX, arrowY) * scale, color: promptColor, x_align: "center"})
+      draw_text({font: font, text: "⊳", pos: xy(+arrowX, arrowY) * scale, color: promptColor, x_align: "center"})
 
-      drawText({font: choiceFont, text: playerName[p] + control.type, shadow: textShadowColor,
-                pos: xy(0, -2) * scale, color: textColor, xAlign: "center"})
+      draw_text({font: choiceFont, text: playerName[p] + control.type, shadow: text_shadow_color,
+                pos: xy(0, -2) * scale, color: text_color, x_align: "center"})
 
-      drawSprite({sprite: controllerSpritesheet[control.type], pos: xy(0, 40 - shiftSpriteY) * scale})
+      draw_sprite({sprite: controllerSpritesheet[control.type], pos: xy(0, 40 - shiftSpriteY) * scale})
 
-      const shiftX = if screenSize.x == screenSize.y then 16 else 0
-      drawText({font: controlsFont, text: control.prompt["ⓠ"], pos: xy(-56 + shiftX, 20) * scale, color: #f, xAlign: "center"})
-      drawText({font: controlsFont, text: control.prompt["⍐"], pos: xy(-56 + shiftX, 40) * scale, color: #f, xAlign: "center"})
-      drawText({font: controlsFont, text: control.prompt["⍇"], pos: xy(-70 + shiftX, 52) * scale, color: #f, xAlign: "center"})
-      drawText({font: controlsFont, text: control.prompt["⍈"], pos: xy(-42 + shiftX, 52) * scale, color: #f, xAlign: "center"})
-      drawText({font: controlsFont, text: control.prompt["⍗"], pos: xy(-56 + shiftX, 64) * scale, color: #f, xAlign: "center"})
+      const shiftX = if SCREEN_SIZE.x == SCREEN_SIZE.y then 16 else 0
+      draw_text({font: controlsFont, text: control.prompt["ⓠ"], pos: xy(-56 + shiftX, 20) * scale, color: #f, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["⍐"], pos: xy(-56 + shiftX, 40) * scale, color: #f, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["⍇"], pos: xy(-70 + shiftX, 52) * scale, color: #f, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["⍈"], pos: xy(-42 + shiftX, 52) * scale, color: #f, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["⍗"], pos: xy(-56 + shiftX, 64) * scale, color: #f, x_align: "center"})
 
-      drawText({font: controlsFont, text: control.prompt["ⓟ"], pos: xy(+56 - shiftX, 20) * scale, color: #f, xAlign: "center"})
-      drawText({font: controlsFont, text: control.prompt["ⓓ"], pos: xy(+56 - shiftX, 40) * scale, color: #f, xAlign: "center"})
-      drawText({font: controlsFont, text: control.prompt["ⓒ"], pos: xy(+42 - shiftX, 52) * scale, color: #f, xAlign: "center"})
-      drawText({font: controlsFont, text: control.prompt["ⓑ"], pos: xy(+70 - shiftX, 52) * scale, color: #f, xAlign: "center"})
-      drawText({font: controlsFont, text: control.prompt["ⓐ"], pos: xy(+56 - shiftX, 64) * scale, color: #f, xAlign: "center"})
+      draw_text({font: controlsFont, text: control.prompt["ⓟ"], pos: xy(+56 - shiftX, 20) * scale, color: #f, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["ⓓ"], pos: xy(+56 - shiftX, 40) * scale, color: #f, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["ⓒ"], pos: xy(+42 - shiftX, 52) * scale, color: #f, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["ⓑ"], pos: xy(+70 - shiftX, 52) * scale, color: #f, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["ⓐ"], pos: xy(+56 - shiftX, 64) * scale, color: #f, x_align: "center"})
 
 

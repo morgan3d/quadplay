@@ -1,24 +1,24 @@
 const creditOrder = ["Game", "Sprite", "Font", "Sound", "Code"]
 
-let creditsScroll = max(modeFrames - 70, 0)
+let creditsScroll = max(mode_frames - 70, 0)
   
-setTransform(xy(0, -creditsScroll))
+set_transform(xy(0, -creditsScroll))
 
-drawText(font, assetCredits.title, xy(screenSize.x / 2, screenSize.y / 3), gray(100%), gray(60%), gray(60%), 0, 0)
-drawText(mediumFont, "by " + assetCredits.developer, xy(screenSize.x / 2, screenSize.y / 3 + 25), gray(100%), gray(60%), nil, 0, 0)
+draw_text(font, assetCredits.title, xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 3), gray(100%), gray(60%), gray(60%), 0, 0)
+draw_text(mediumFont, "by " + assetCredits.developer, xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 3 + 25), gray(100%), gray(60%), nil, 0, 0)
 
-let y = screenSize.y + 15
+let y = SCREEN_SIZE.y + 15
 for type in creditOrder:
    let s = type
-   y += drawText(font, s, xy(screenSize.x / 2, y), gray(100%), gray(60%), nil, 0, 2).y
+   y += draw_text(font, s, xy(SCREEN_SIZE.x / 2, y), gray(100%), gray(60%), nil, 0, 2).y
    
-   for line in assetCredits[lowerCase(type)]:
-      y += drawText(mediumFont, line, xy(screenSize.x / 2, y), gray(60%), nil, nil, 0, 2, 0, screenSize.x).y + 10
+   for line in assetCredits[lowercase(type)]:
+      y += draw_text(mediumFont, line, xy(SCREEN_SIZE.x / 2, y), gray(60%), nil, nil, 0, 2, 0, SCREEN_SIZE.x).y + 10
       
    y += 20
 
    
       
-if anyButtonPress() or y < -100:
-   setTransform(xy(0, 0))
-   popMode() because "anyButtonPress() or end of credits"
+if any_button_press() or y < -100:
+   set_transform(xy(0, 0))
+   pop_mode() because "any_button_press() or end of credits"

@@ -51,10 +51,10 @@ def drawGrid(grid):
             pos.x = MUL(x, grid.cellSize.x)
             pos.y = SUB(MUL(ADD(y, 1), grid.cellSize.y), dim.y)
             if cell.solid:
-               drawCornerRect(pos, dim, solidColor)
+               draw_corner_rect(pos, dim, solidColor)
             else:
                RGBA_LERP(fluidColor, darkFluidColor, CLAMP(MUL(cell.value, 25%), 0, 1), temp)
-               drawCornerRect(pos, dim, temp)
+               draw_corner_rect(pos, dim, temp)
                
                
    // Draw gridlines
@@ -62,10 +62,10 @@ def drawGrid(grid):
       const gridColor = #dc
    
       for x < grid.size.x:
-         drawLine(xy(x * grid.cellSize.x, 0), xy(x * grid.cellSize.x, grid.size.y * grid.cellSize.y), gridColor)
+         draw_line(xy(x * grid.cellSize.x, 0), xy(x * grid.cellSize.x, grid.size.y * grid.cellSize.y), gridColor)
       
       for y < grid.size.y:
-         drawLine(xy(0, y * grid.cellSize.y), xy(grid.size.x * grid.cellSize.x, y * grid.cellSize.y), gridColor)
+         draw_line(xy(0, y * grid.cellSize.y), xy(grid.size.x * grid.cellSize.x, y * grid.cellSize.y), gridColor)
 
          
    // Draw flow directions
@@ -74,16 +74,16 @@ def drawGrid(grid):
          for y < grid.size.y:
             const cell = grid[x][y]
             const pos = grid.cellSize * (xy(x, y) + 0.5)
-            if cell.flowUp:    drawText({font:arrowFont, text:"↑", pos:pos + xy( 1, -1), color:#2, xAlign: "center", yAlign: "center"})
-            if cell.flowDown:  drawText({font:arrowFont, text:"↓", pos:pos + xy( 1,  2), color:#2, xAlign: "center", yAlign: "center"})
-            if cell.flowLeft:  drawText({font:arrowFont, text:"←", pos:pos + xy(-1, -1), color:#2, xAlign: "center", yAlign: "center"})
-            if cell.flowRight: drawText({font:arrowFont, text:"→", pos:pos + xy( 3, -1), color:#2, xAlign: "center", yAlign: "center"})
-            if cell.settled:   drawText({font:arrowFont, text:"×", pos:pos + xy( 1, 0), color:#2, xAlign: "center", yAlign: "center"})
+            if cell.flowUp:    draw_text({font:arrowFont, text:"↑", pos:pos + xy( 1, -1), color:#2, x_align: "center", y_align: "center"})
+            if cell.flowDown:  draw_text({font:arrowFont, text:"↓", pos:pos + xy( 1,  2), color:#2, x_align: "center", y_align: "center"})
+            if cell.flowLeft:  draw_text({font:arrowFont, text:"←", pos:pos + xy(-1, -1), color:#2, x_align: "center", y_align: "center"})
+            if cell.flowRight: draw_text({font:arrowFont, text:"→", pos:pos + xy( 3, -1), color:#2, x_align: "center", y_align: "center"})
+            if cell.settled:   draw_text({font:arrowFont, text:"×", pos:pos + xy( 1, 0), color:#2, x_align: "center", y_align: "center"})
 
       
       
 def makeGrid():
-   const grid = makeArray2D(screenSize.x / CELL_SIZE, screenSize.y / CELL_SIZE)
+   const grid = makeArray2D(SCREEN_SIZE.x / CELL_SIZE, SCREEN_SIZE.y / CELL_SIZE)
    grid.cellSize = xy(CELL_SIZE, CELL_SIZE)
    
    for x < grid.size.x:

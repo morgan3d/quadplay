@@ -3,25 +3,25 @@ BeatLevel
 
 enter
 ────────────────────────────────────────────────────────────────────────────
-playAudioClip(beatLevelSound)
+play_audio_clip(beatLevelSound)
 
 
 frame
 ────────────────────────────────────────────────────────────────────────────
 
-drawPreviousMode()
+draw_previous_mode()
 drawScoreboard()
 
 const bonus = min(floor(4 timeLeft / levelTime), size(wordSprite[0]) - 1)
 
-const angle = max(60 - modeFrames, 0)² * 0.25deg
+const angle = max(60 - mode_frames, 0)² * 0.25deg
 const sprite = wordSprite[0][bonus]
-const center = ½ (screenSize - 1)
+const center = ½ (SCREEN_SIZE - 1)
 
-if modeFrames < 180:
-   drawSprite(sprite, center, angle, ∅, ∅, 8)
+if mode_frames < 180:
+   draw_sprite(sprite, center, angle, ∅, ∅, 8)
 else:
-   playAudioClip(wordExplodeSound)
-   entityToParticlesHit(makeEntity({pos: center, sprite:sprite, z:8}), center, xy(0, 0), 0.2, 1.5, 50)
+   play_audio_clip(wordExplodeSound)
+   entityToParticlesHit(make_entity({pos: center, sprite:sprite, z:8}), center, xy(0, 0), 0.2, 1.5, 50)
    createLevel(level + 1)
-   popMode() because "3 seconds"
+   pop_mode() because "3 seconds"

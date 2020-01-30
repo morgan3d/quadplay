@@ -39,10 +39,10 @@ def getPlayerStat(player, statName):
 def drawReferee(referee):
    const proj = project(referee.pos, 0)
    // Reflection
-   drawSprite({sprite: refereeSprite[referee.animation][1], pos: proj - xyz(0, 5, 0), z: proj.z - 100})
+   draw_sprite({sprite: refereeSprite[referee.animation][1], pos: proj - xyz(0, 5, 0), z: proj.z - 100})
    
    // Character
-   drawSprite({sprite: refereeSprite[referee.animation][0], pos: proj + xyz(0, 5, 0), z: proj.z})
+   draw_sprite({sprite: refereeSprite[referee.animation][0], pos: proj + xyz(0, 5, 0), z: proj.z})
 
    
    
@@ -54,19 +54,19 @@ def drawPlayer(player):
    const col = player.pad.d + player.spriteIndex
 
    // Reflection
-   drawSprite({sprite: player.team.spriteSheet[col][1], pos: proj - xyz(0, 6, 0), z: proj.z - 100, scale: scale})
+   draw_sprite({sprite: player.team.spriteSheet[col][1], pos: proj - xyz(0, 6, 0), z: proj.z - 100, scale: scale})
    
    // Character
-   drawSprite({sprite: player.team.spriteSheet[col][0], pos: proj + xyz(0, 6, 0), z: proj.z, scale: scale})
+   draw_sprite({sprite: player.team.spriteSheet[col][0], pos: proj + xyz(0, 6, 0), z: proj.z, scale: scale})
 
    let color = player.team.labelColor
-   if puck and (puck.owner == player) and (modeFrames mod 25 > 15):
+   if puck and (puck.owner == player) and (mode_frames mod 25 > 15):
       // Flash label
       color = puckColor
       // Flash arrow on ice if not behind goal
       if | player.pos.x | < netArray[1].pos.x:
          const dir = [">>", "<<"][player.team.index]
-         drawText({text: dir, font: tinyFont, pos: proj + xyz(-10 player.team.sideX, -2, 0), z: proj.z - 100, xAlign: "center", color:#9})
+         draw_text({text: dir, font: tinyFont, pos: proj + xyz(-10 player.team.sideX, -2, 0), z: proj.z - 100, x_align: "center", color:#9})
       
    if not player.pad.isAI or (puck and puck.owner == player):
-      drawText({text: "¹²³⁴°"[player.pad.index], font: tinyFont, pos: proj + xyz(0.5 player.faceX, 11, 0), z: proj.z, color: color, outline: #fff9, xAlign: "center"})
+      draw_text({text: "¹²³⁴°"[player.pad.index], font: tinyFont, pos: proj + xyz(0.5 player.faceX, 11, 0), z: proj.z, color: color, outline: #fff9, x_align: "center"})

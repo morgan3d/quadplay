@@ -28,9 +28,9 @@ push(ANIMATE_LIGHTS,
 
 // Don't play the bump into a wall sound too often
 def hitWall():
-   if lastBumped < modeFrames - 20:
-      playAudioClip(bumpSound)
-      lastBumped = modeFrames
+   if lastBumped < mode_frames - 20:
+      play_audio_clip(bumpSound)
+      lastBumped = mode_frames
 
 
 def updatePlayer(P, input):
@@ -42,18 +42,18 @@ def updatePlayer(P, input):
       const footOffset = 6
       
       // Check for collisions at the base of the sprite and then move
-      if getMapSpriteByDrawCoord(castleMap, pos + xy(4 Δx, footOffset), WALL):
+      if get_map_sprite_by_draw_coord(castleMap, pos + xy(4 Δx, footOffset), WALL):
          hitWall()
       else:
          pos.x += Δx
          
-      if getMapSpriteByDrawCoord(castleMap, pos + xy(0, 2 Δy + footOffset), WALL):
+      if get_map_sprite_by_draw_coord(castleMap, pos + xy(0, 2 Δy + footOffset), WALL):
          hitWall()
       else:
          pos.y += Δy
 
       // Animation frame (zeroed when not moving)
-      let f = loop(⌊⅙ modeFrames⌋, 4)
+      let f = loop(⌊⅙ mode_frames⌋, 4)
 
       // Change direction if moving, giving preference to x over y
       if Δx < 0:
@@ -69,13 +69,13 @@ def updatePlayer(P, input):
          f = 0
 
       // See if we've picked anything up
-      let item = getMapSpriteByDrawCoord(castleMap, pos, COLLECTABLE)
+      let item = get_map_sprite_by_draw_coord(castleMap, pos, COLLECTABLE)
       if item:
          // Remove from map
-         setMapSpriteByDrawCoord(castleMap, pos, ∅, COLLECTABLE)
+         set_map_sprite_by_draw_coord(castleMap, pos, ∅, COLLECTABLE)
          // Add to inventory
          push(P.inventory, item)
-         playAudioClip(pickupSound)
+         play_audio_clip(pickupSound)
 
       sprite = spriteSheet[f][dir]
 
@@ -83,29 +83,28 @@ def updatePlayer(P, input):
 enter
 ────────────────────────────────────────────────────────────────────────────
 lastBumped = 0
-player = makeEntity({sprite:playerSprite[0][0], spriteSheet:playerSprite, inventory:[], dir:1, pos:xy(128, 128), z:3.5})
+player = make_entity({sprite:playerSprite[0][0], spriteSheet:playerSprite, inventory:[], dir:1, pos:xy(128, 128), z:3.5})
 
 frame
 ────────────────────────────────────────────────────────────────────────────
 // Replace animated sprites half of the time
 let animate = []
-if loop(modeFrames, 80) < 40: extend(animate, ANIMATE_WATER)
-if loop(modeFrames, 30) < 15: extend(animate, ANIMATE_LIGHTS)
+if loop(mode_frames, 80) < 40: extend(animate, ANIMATE_WATER)
+if loop(mode_frames, 30) < 15: extend(animate, ANIMATE_LIGHTS)
 
 // Shopkeeper
-drawSprite(npcSprite[16][10 + loop(floor(modeFrames / 20), 2)], shopKeeperPos, nil, nil, nil, 0.5)
+draw_sprite(npcSprite[16][10 + loop(floor(mode_frames / 20), 2)], shopKeeperPos, nil, nil, nil, 0.5)
 if magnitude(shopKeeperPos - player.pos) < 32:
-   drawSpriteCornerRect(dialogueSprite[4][1], shopKeeperPos - xy(27, 19), xy(31, 7), 8)
-   drawText(smallFont, "Press ⓒ", shopKeeperPos - xy(12, 16), #000, nil, nil, 0, 0, 8)
-   if joy.cc: pushMode(Shop, "Press ⓒ")
+   draw_sprite_corner_rect(dialogueSprite[4][1], shopKeeperPos - xy(27, 19), xy(31, 7), 8)
+   draw_text(smallFont, "Press " + joy.prompt["(c)"], shopKeeperPos - xy(12, 16), #000, nil, nil, 0, 0, 8)
+   if joy.cc: push_mode(Shop, "Press ⓒ")
 
-drawMap(castleMap, ∅, ∅, animate)
-updatePlayer(player, pad[0])
-drawEntity(player)
+draw_map(castleMap, ∅, ∅, animate)
+updatePlayer(player, gamepad_array[0])
+draw_entity(player)
 
 // Mode transitions
-if joy.pp: pushMode(Inventory, "Press ⓟ")
-for P ∈ pad: if P.qq: pushMode(Pause, "Press ⓠ")
-if find(WATER_SPRITES, getMapSpriteByDrawCoord(castleMap, player.pos, BASE)) != ∅: setMode(GameOver, "Drown")
-if size(player.inventory) > 3: setMode(Win, "Collect all items")
+if joy.qq: push_mode(Inventory, "Press Q")
+if find(WATER_SPRITES, get_map_sprite_by_draw_coord(castleMap, player.pos, BASE)) != ∅: set_mode(GameOver, "Drown")
+if size(player.inventory) > 3: set_mode(Win, "Collect all items")
 

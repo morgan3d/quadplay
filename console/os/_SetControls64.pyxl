@@ -4,8 +4,8 @@ _SetControls64
 
 const windowBackgroundColor = #135
 const windowBorderColor     = #fff
-const textColor             = #fff
-const textShadowColor       = #0006
+const text_color             = #fff
+const text_shadow_color       = #0006
 const promptColor           = #4DF
 const selectedColor         = #f
 const unselectedColor       = #b
@@ -29,51 +29,51 @@ choiceIndex = 0
 frame
 ────────────────────────────────────────────────────────────────────────
 
-drawPreviousMode()
+draw_previous_mode()
 // Force the clipping range beyond what the API normally allows
 _clipZ2 = 2049
-setTransform(xy(0, 0), xy(1, 1), 2048.6, 1)
+set_transform(xy(0, 0), xy(1, 1), 2048.6, 1)
 
-const windowSize = round(xy(26, 50) * clamp((modeFrames + 1) / openFrames, 0%, 100%))
-drawRect(½ screenSize, windowSize, windowBackgroundColor, windowBorderColor)
+const windowSize = round(xy(26, 50) * clamp((mode_frames + 1) / openFrames, 0%, 100%))
+draw_rect(½ SCREEN_SIZE, windowSize, windowBackgroundColor, windowBorderColor)
 
-if modeFrames > openFrames:
+if mode_frames > openFrames:
    // Process input
    for control in pad:
       if control.qq or control._pp:
          // Do NOT use "bb", which maps to enter on the keyboard
          // and may make players think they are executing a command
-         playAudioClip(_cancelUISound)
-         popMode()
+         play_audio_clip(_cancelUISound)
+         pop_mode()
       else if control.aa:
-         playAudioClip(_acceptUISound)
+         play_audio_clip(_acceptUISound)
          if choiceIndex == size(choiceArray) - 1:
-            popMode()
+            pop_mode()
          else:
-            pushMode(_SetControls, choiceIndex)
+            push_mode(_SetControls, choiceIndex)
       else if control.yy:
          const prev = choiceIndex
          choiceIndex = clamp(choiceIndex + control.yy, 0, size(choiceArray) - 1)
-         playAudioClip(if prev == choiceIndex then _denyUISound else _moveUISound)
+         play_audio_clip(if prev == choiceIndex then _denyUISound else _moveUISound)
 
    // Draw options
    let y = 17
    for i < size(choiceArray):
       const active      = choiceIndex == i
-      const bright      = (1 + cos(modeFrames / 9)) / 2
+      const bright      = (1 + cos(mode_frames / 9)) / 2
       const color       = if active then lerp(promptColor, #fff, 50% bright) else unselectedColor
       const outline     = if active then rgba(1,1,1, 25% bright) else nil
       const yOffset     = if active then -1 else 0
-      const shadow      = if active then 50% textShadowColor else textShadowColor
+      const shadow      = if active then 50% text_shadow_color else text_shadow_color
       
       const x           = 27
       const text        = choiceArray[i]
-      drawText(font, text, xy(x, y + 1), shadow, nil, nil, "left", "center")
-      drawText(font, text, xy(x, y + yOffset), color, nil, outline, "left", "center")
+      draw_text(font, text, xy(x, y + 1), shadow, nil, nil, "left", "center")
+      draw_text(font, text, xy(x, y + yOffset), color, nil, outline, "left", "center")
    
       if active:
-         drawText(font, "✜", xy(x - 40% lineHeight + 1, y + 1), shadow, nil, nil, "right", "center")
-         drawText(font, "✜", xy(x - 40% lineHeight + 1, y + yOffset), color, nil, outline, "right", "center")
+         draw_text(font, "✜", xy(x - 40% lineHeight + 1, y + 1), shadow, nil, nil, "right", "center")
+         draw_text(font, "✜", xy(x - 40% lineHeight + 1, y + yOffset), color, nil, outline, "right", "center")
          
       y += lineHeight
 

@@ -16,73 +16,73 @@ def startGame(numPlayers):
    spareBalls = startingSpareBalls
 
    paddleArray = [
-      makeEntity({name: "P1 paddle", pos: xy(112, 213), angle:  0deg, sprite: paddleSprite[0][1], pad: pad[0], axis: "x"}),
-      makeEntity({name: "P2 paddle", pos: xy(213, 112), angle: 90deg, sprite: paddleSprite[0][2], pad: pad[0], axis: "y"}),
-      makeEntity({name: "P3 paddle", pos: xy(112,  11), angle:  0deg, sprite: paddleSprite[0][3], pad: pad[0], axis: "x"}),
-      makeEntity({name: "P4 paddle", pos: xy( 11, 112), angle: 90deg, sprite: paddleSprite[0][4], pad: pad[0], axis: "y"})
+      make_entity({name: "P1 paddle", pos: xy(112, 213), angle:  0deg, sprite: paddleSprite[0][1], pad: gamepad_array[0], axis: "x"}),
+      make_entity({name: "P2 paddle", pos: xy(213, 112), angle: 90deg, sprite: paddleSprite[0][2], pad: gamepad_array[0], axis: "y"}),
+      make_entity({name: "P3 paddle", pos: xy(112,  11), angle:  0deg, sprite: paddleSprite[0][3], pad: gamepad_array[0], axis: "x"}),
+      make_entity({name: "P4 paddle", pos: xy( 11, 112), angle: 90deg, sprite: paddleSprite[0][4], pad: gamepad_array[0], axis: "y"})
    ]
 
    createLevel(1)
-   for P in paddleArray: P.pad = pad[0]
-   if numPlayers ≥ 1: paddleArray[1].pad = pad[1]; paddleArray[3].pad = pad[1]
-   if numPlayers ≥ 2: paddleArray[2].pad = pad[2]
-   if numPlayers ≥ 3: paddleArray[3].pad = pad[3]
+   for P in paddleArray: P.pad = gamepad_array[0]
+   if numPlayers ≥ 1: paddleArray[1].pad = gamepad_array[1]; paddleArray[3].pad = gamepad_array[1]
+   if numPlayers ≥ 2: paddleArray[2].pad = gamepad_array[2]
+   if numPlayers ≥ 3: paddleArray[3].pad = gamepad_array[3]
    
-   setMode(Play) because "# players selected"
+   set_mode(Play) because "# players selected"
 
 
 frame
 ────────────────────────────────────────────────────────────────────────────
-setBackground(backgroundColor)
+set_background(backgroundColor)
 
 processParticles()
-drawSprite(logo[0][0], xy(screenSize.x / 2, screenSize.y / 4))
+draw_sprite(logo[0][0], xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 4))
 
 // Player options
 let color
 for p < 4:
    color = defaultColor
    if (menuItem == p): color = activeColor
-   drawText(font, (p + 1) + " player", xy(screenSize.x / 2 + 5, screenSize.y / 2 + p * 16), color, shadowColor, nil, 0, 0)
+   draw_text(font, (p + 1) + " player", xy(SCREEN_SIZE.x / 2 + 5, SCREEN_SIZE.y / 2 + p * 16), color, shadowColor, nil, 0, 0)
 
    // If any controller presses up or down, change the number of players
-   if pad[p].yy:
-      playAudioClip(menuSound)
-      menuItem = (menuItem + 6 + pad[p].yy) mod 6
+   if gamepad_array[p].yy:
+      play_audio_clip(menuSound)
+      menuItem = (menuItem + 6 + gamepad_array[p].yy) mod 6
 
 // Credits option
 color = defaultColor
 if menuItem == 4: color = activeColor
-drawText(font, "Credits", xy(screenSize.x / 2 + 3, screenSize.y / 2 + 4 * 16), color, shadowColor, nil, "center", "middle")
+draw_text(font, "Credits", xy(SCREEN_SIZE.x / 2 + 3, SCREEN_SIZE.y / 2 + 4 * 16), color, shadowColor, nil, "center", "middle")
 
 color = defaultColor
 if menuItem == 5: color = activeColor
-drawText(font, "Quit", xy(screenSize.x / 2 + 3, screenSize.y / 2 + 5 * 16), color, shadowColor, nil, "center", "middle")
+draw_text(font, "Quit", xy(SCREEN_SIZE.x / 2 + 3, SCREEN_SIZE.y / 2 + 5 * 16), color, shadowColor, nil, "center", "middle")
 
-drawText(font, "✜", xy(screenSize.x / 2 - 29, screenSize.y / 2 + menuItem * 16), activeColor, shadowColor, nil, "center", "middle")
+draw_text(font, "✜", xy(SCREEN_SIZE.x / 2 - 29, SCREEN_SIZE.y / 2 + menuItem * 16), activeColor, shadowColor, nil, "center", "middle")
 
-drawText({font:tinyFont,
+draw_text({font:tinyFont,
           text:"(C) 2019 Morgan McGuire | @CasualEffects | https://casual-effects.com",
-          pos: xy(screenSize.x / 2, screenSize.y - 5),
+          pos: xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y - 5),
           color: gray(60%),
-          xAlign:"center",
-          yAlign:"bottom",
+          x_align:"center",
+          y_align:"bottom",
           z:-2})
 
 const radius = titleBall.size.x / 2
 with pos, vel in titleBall:
-   for i < 2: createParticle(pos + 5 xy(rnd() - 0.5, rnd() - 0.5), vel * rnd(), #ddd, 0, rnd() * 30 + 10)
+   for i < 2: createParticle(pos + 5 xy(random() - 0.5, random() - 0.5), vel * random(), #ddd, 0, random() * 30 + 10)
    pos += vel
    // Bounce off walls
    if pos.x <= radius:               pos.x = radius;                    vel.x =  abs(vel.x); createTitleParticles()
-   if pos.x > screenSize.x - radius: pos.x = screenSize.x - radius - 1; vel.x = -abs(vel.x); createTitleParticles()
+   if pos.x > SCREEN_SIZE.x - radius: pos.x = SCREEN_SIZE.x - radius - 1; vel.x = -abs(vel.x); createTitleParticles()
    if pos.y <= radius:               pos.y = radius;                    vel.y =  abs(vel.y); createTitleParticles()
-   if pos.y > screenSize.y - radius: pos.y = screenSize.y - radius - 1; vel.y = -abs(vel.y); createTitleParticles()
+   if pos.y > SCREEN_SIZE.y - radius: pos.y = SCREEN_SIZE.y - radius - 1; vel.y = -abs(vel.y); createTitleParticles()
 
-drawEntity(titleBall)
+draw_entity(titleBall)
 
-if anyButtonPress():
-   playAudioClip(selectSound)
+if any_button_press():
+   play_audio_clip(selectSound)
    if menuItem < 4:         startGame(menuItem)
-   else if menuItem == 4:   pushMode(Credits) because "Show credits selected"
-   else:                    quitGame()
+   else if menuItem == 4:   push_mode(Credits) because "Show credits selected"
+   else:                    quit_game()

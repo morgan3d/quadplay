@@ -1,6 +1,6 @@
-drawPreviousMode()
-drawSpriteCornerRect(uiSprite[13][9], xy(96,96), screenSize - 2 xy(96,96), 10)
-drawText(font, "You Found All Items!", screenSize / 2, #fff, nil, nil, 0, 0, 10)
+draw_previous_mode()
+draw_sprite_corner_rect(uiSprite[13][9], xy(96,96), SCREEN_SIZE - 2 xy(96,96), 10)
+draw_text(font, "You Found All Items!", SCREEN_SIZE / 2, #fff, nil, nil, 0, 0, 10)
 
-if (modeFrames > 15 * 60) or anyButtonPress(): setMode(Credits, "15 seconds")
+if (mode_frames > 15 * 60) or any_button_press(): set_mode(Credits, "15 seconds")
 

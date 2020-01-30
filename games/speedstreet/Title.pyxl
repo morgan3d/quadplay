@@ -14,54 +14,54 @@ choice = 0
 
 frame
 ───────────────────────────────────────────────────────────────────────────────
-resetTransform()
-setBackground(sky)
+reset_transform()
+set_background(sky)
 
 // Stars
-srand(0)
-const starShift = floor(modeFrames / 20)
+set_random_seed(0)
+const starShift = floor(mode_frames / 20)
 const bright = #fff
-drawCornerRect(xy(0,0), xy(screenSize.x, 30), 65% sky, nil, -2)
-drawCornerRect(xy(0,30), xy(screenSize.x, 30), 85% sky, nil, -2)
+draw_corner_rect(xy(0,0), xy(SCREEN_SIZE.x, 30), 65% sky, nil, -2)
+draw_corner_rect(xy(0,30), xy(SCREEN_SIZE.x, 30), 85% sky, nil, -2)
 for i < 50:
-   const y = rnd()
-   drawPoint(xy(384 - loop(rndInt(384) + starShift, 384), 100 y), lerp(bright, sky, 40% y + 60% rnd()), -1)
+   const y = random()
+   draw_point(xy(384 - loop(random_integer(384) + starShift, 384), 100 y), lerp(bright, sky, 40% y + 60% random()), -1)
 
 // Sidewalk
-drawCornerRect(xy(0, 195), xy(screenSize.x, 16), #999, nil, -10)
+draw_corner_rect(xy(0, 195), xy(SCREEN_SIZE.x, 16), #999, nil, -10)
 
 // Blue
-preservingTransform:
-   setTransform(xy(-loop(modeFrames, 17 * 32), 76))
-   drawMap(titleBackgroundMap, 0, 0);
+preserving_transform:
+   set_transform(xy(-loop(mode_frames, 17 * 32), 76))
+   draw_map(titleBackgroundMap, 0, 0);
 
 // Text
-drawSprite(logoSprite[0][0], xy(screenSize.x / 2, 80 + 3 cos(modeFrames * 0.09) - 10), nil, nil, nil, 0.5)
+draw_sprite(logoSprite[0][0], xy(SCREEN_SIZE.x / 2, 80 + 3 cos(mode_frames * 0.09) - 10), nil, nil, nil, 0.5)
    
 // Red
-preservingTransform:
-   setTransform(xy(-loop(3 modeFrames, 16 * 32), 82))
-   drawMap(titleBackgroundMap, 1, 2);
+preserving_transform:
+   set_transform(xy(-loop(3 mode_frames, 16 * 32), 82))
+   draw_map(titleBackgroundMap, 1, 2);
 
 // Road
-preservingTransform:
-   setTransform(xy(-loop(5 modeFrames, 18 * 32), 82))
-   drawMap(titleBackgroundMap, 3, 3);
+preserving_transform:
+   set_transform(xy(-loop(5 mode_frames, 18 * 32), 82))
+   draw_map(titleBackgroundMap, 3, 3);
 
 // Yellow
-preservingTransform:
-   setTransform(xy(-loop(6 modeFrames, 17 * 32), 82))
-   drawMap(titleBackgroundMap, 4, 5);
+preserving_transform:
+   set_transform(xy(-loop(6 mode_frames, 17 * 32), 82))
+   draw_map(titleBackgroundMap, 4, 5);
 
    
-drawText(hudFont, "RACE", xy(screenSize.x / 2 + 5, screenSize.y * 3/4), #6CE, #333, #0004, 0, 2, 8)
-drawText(hudFont, "QUIT", xy(screenSize.x / 2 + 4, screenSize.y * 3/4 + 20), #6CE, #333, #0004, 0, 2, 8)
-drawText(hudFont, "✜", xy(screenSize.x / 2 - 18, screenSize.y * 3/4 + 20 choice), #FFF, #333, #0004, 0, 2, 8)
+draw_text(hudFont, "RACE", xy(SCREEN_SIZE.x / 2 + 5, SCREEN_SIZE.y * 3/4), #6CE, #333, #0004, 0, 2, 8)
+draw_text(hudFont, "QUIT", xy(SCREEN_SIZE.x / 2 + 4, SCREEN_SIZE.y * 3/4 + 20), #6CE, #333, #0004, 0, 2, 8)
+draw_text(hudFont, "✜", xy(SCREEN_SIZE.x / 2 - 18, SCREEN_SIZE.y * 3/4 + 20 choice), #FFF, #333, #0004, 0, 2, 8)
    
-drawText(font, "©2019 Morgan McGuire | @CasualEffects | https://casual-effects.com", xy(screenSize.x / 2, screenSize.y - 2), gray(20%), nil, nil, 0, 2, 8)
+draw_text(font, "©2019 Morgan McGuire | @CasualEffects | https://casual-effects.com", xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y - 2), gray(20%), nil, nil, 0, 2, 8)
 
-for p in pad: if p.yy: choice = 1 - choice
-if anyButtonPress() or debugPhysics:
-   stopSound(music)
-   if choice == 0: setMode(Play) because "any button press"
-   else: quitGame() because "choose quit"
+for pad in gamepad_array: if pad.yy: choice = 1 - choice
+if any_button_press() or debugPhysics:
+   stop_sound(music)
+   if choice == 0: set_mode(Play) because "any button press"
+   else: quit_game() because "choose quit"

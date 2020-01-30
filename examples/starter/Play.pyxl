@@ -1,7 +1,7 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-let pos = xy(½ screenSize.x, 132)
+let pos = xy(½ SCREEN_SIZE.x, 132)
 let flip = xy(1, 1)
 
 
@@ -11,18 +11,18 @@ frame
 let sprite = astronaut.idle[0]
 if joy.x:
    flip.x = joy.x
-   sprite = astronaut.run[⌊modeFrames / 10⌋ mod 2]
-   pos.x = loop(pos.x + joy.x, screenSize.x)
+   sprite = astronaut.run[⌊mode_frames / 10⌋ mod 2]
+   pos.x = loop(pos.x + joy.x, SCREEN_SIZE.x)
 
 // Sky
-setBackground(rgb(20%, 50%, 80%))
-drawText(font, assetCredits.title, xy(½ screenSize.x, 10), textColor, ∅, ∅, 0, 0)
+set_background(rgb(20%, 50%, 80%))
+draw_text(font, assetCredits.title, xy(½ SCREEN_SIZE.x, 10), text_color, ∅, ∅, 0, 0)
 
 // Ground
-drawCornerRect(xy(0, 140), xy(screenSize.x, screenSize.y - 139), #DDD)
+draw_corner_rect(xy(0, 140), xy(SCREEN_SIZE.x, SCREEN_SIZE.y - 139), #DDD)
 
 // Shadow
-drawLine(pos + xy(-4, 8), pos + xy(+4, 8), rgba(0, 0, 0, 20%))
+draw_line(pos + xy(-4, 8), pos + xy(+4, 8), rgba(0, 0, 0, 20%))
 
 // Alien
-drawSprite(sprite, pos, 0, flip)
+draw_sprite(sprite, pos, 0, flip)

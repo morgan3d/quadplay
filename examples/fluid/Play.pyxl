@@ -17,7 +17,7 @@ for y < grid.size.y:
    grid[grid.size.x - 1][y].solid = true
 
 
-let cursor = floor(½ screenSize / grid.cellSize)
+let cursor = floor(½ SCREEN_SIZE / grid.cellSize)
 
 // Frames for which a direction must be held before it repeats
 const MAX_REPEAT_DELAY = 20
@@ -29,19 +29,19 @@ const REPEAT_RATE = 2
 frame
 ────────────────────────────────────────────────────────────────────────
 
-setBackground(background)
+set_background(background)
 
 simulateGrid(grid)
 drawGrid(grid)
 
-drawCornerRect(cursor * grid.cellSize, grid.cellSize, #f00b)
+draw_corner_rect(cursor * grid.cellSize, grid.cellSize, #f00b)
 
 
 if joy.x or joy.y: --repeatDelay
 else:              repeatDelay = MAX_REPEAT_DELAY
 
 let dir = xy(joy.xx, joy.yy)
-if repeatDelay <= 0 and (modeFrames mod REPEAT_RATE == 0): dir = xy(joy.x, joy.y)
+if repeatDelay <= 0 and (mode_frames mod REPEAT_RATE == 0): dir = xy(joy.x, joy.y)
 cursor = clamp(cursor + dir, xy(0, 0), grid.size - 1)
 
 const cell = grid[cursor.x][cursor.y]
@@ -60,6 +60,6 @@ if joy.c:
    cell.value = 0
    cell.settled = false
 
-drawText({font: font, pos: xy(½ screenSize.x, 2),
+draw_text({font: font, pos: xy(½ SCREEN_SIZE.x, 2),
           text: replace("(a) Water  (b) Draw  (c) Clear  [^][<][v][>] Move", joy.prompt),
-          color: #f00, shadow: #c, outline: #f, xAlign: "center", yAlign: "top"})
+          color: #f00, shadow: #c, outline: #f, x_align: "center", y_align: "top"})

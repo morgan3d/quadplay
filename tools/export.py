@@ -76,7 +76,7 @@ def generate_redirect(args, out_path, game_path, game_title):
    if url[-1] != '/': url += '/'
    url += game_path
 
-   url = 'https://github.io/morgan3d/quadplay/quadplay.html&fastReload=1&game=' + url
+   url = 'https://morgan3d.github.io/quadplay/console/quadplay.html&fastReload=1&game=' + url
    
    htmlSource = f"""
 <!DOCTYPE html>
@@ -148,8 +148,8 @@ if __name__== '__main__':
    parser = argparse.ArgumentParser(description='Export a distributable static HTML game from a game.json game file.\n\n' + 'Example: tools/export.py -o ../www/ games/serpitron')
    parser.add_argument('gamepath', nargs=1, help='the path to the game.json file from the current directory, or the path to the directory containing it if the directory and file have the same basename. For the current version of this script, the game must be in a subdirectory of the quadplay directory. This will be generalized later.')
    parser.add_argument('-o', '--outpath', required=True, help='output directory to put the game in, relative to the current directory')
-   parser.add_argument('--standalone', action='store_true', default=False, help='generate a standalone game that does not depend on github.io/morgan3d/quadplay. This produces a larger export, but locks down the quadplay version and can run offline.')
-   parser.add_argument('--hosturl', help='url for the directory at which your game will be hosted. Required if not standalone. Example: github.io/youraccount/yourgame/')
+   parser.add_argument('--standalone', action='store_true', default=False, help='generate a standalone game that does not depend on morgan3d.github.io/quadplay. This produces a larger export, but locks down the quadplay version and can run offline.')
+   parser.add_argument('--hosturl', help='url for the directory at which your game will be hosted. Required if not standalone. Example: youraccount.github.io/yourgame/')
    parser.add_argument('--dry-run', '-n', action='store_true', default=False, help='print the files that would be created but do not touch the filesystem.')
 
    args = parser.parse_args()
