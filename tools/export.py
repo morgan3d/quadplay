@@ -103,7 +103,7 @@ def generate_remote(args, out_path, game_path, game_title):
    
 def export(args):
    game_path = args.gamepath[0]
-
+   
    out_path = args.outpath
 
    # Will be read  from the JSON file
@@ -114,6 +114,14 @@ def export(args):
    if not game_path.endswith('.game.json'):
       game_path = os.path.join(game_path, os.path.basename(os.path.join(game_path, '')[:-1]) + '.game.json')
 
+   # Strip from source
+   base_path = os.path.join(os.path.dirname(game_path), '')
+   
+   # Add to dest
+   out_subdir = os.path.basename(os.path.dirname(game_path))
+
+   out_url = out_subdir + '/' + os.path.basename(game_path)
+   
    (game_dependency_list, game_title) = get_game_dependency_list(args, game_path)
 
    # Create out_path if it does not exist
@@ -129,20 +137,22 @@ def export(args):
       if args.dry_run: print('cp -r console ' + os.path.join(out_path, ''))      
       else: shutil.copytree('console', os.path.join(out_path, 'console'))
       
-      generate_standalone(args, out_path, game_path, game_title)
+      generate_standalone(args, out_path, out_url, game_title)
    else:
-      # TODO: if game_path is not a subdirectory of the quadplay directory,
-      # then we need to make a relative file structure in the out_path
-      generate_remote(args, out_path, game_path, game_title)
+      generate_remote(args, out_path, out_url, game_title)
 
       
    for src in game_dependency_list:
-      dir = os.path.join(out_path, os.path.dirname(src))
+      if src.startswith(base_path):
+         dst = os.path.join(out_path, out_subdir, src[len(base_path):])
+      else:        
+         dst = os.path.join(out_path, src)
+         
+      dir = os.path.dirname(dst)
       # Makedirs as needed, but don't print on every single file in the dry_run
       if not os.path.isdir(dir) and not args.dry_run:
          os.makedirs(dir, exist_ok = True)
 
-      dst = os.path.join(out_path, src)
       if args.dry_run: print('cp ' + src + ' ' + dst)
       else: shutil.copy2(src, dst)
          
