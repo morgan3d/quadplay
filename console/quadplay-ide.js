@@ -2571,6 +2571,7 @@ function loadGameIntoIDE(url, callback) {
         afterLoadGame(url, function () {
             onLoadFileComplete(url);
             hideBootScreen();
+            document.title = gameSource.json.title;
             console.log('Loading complete.');
             setFramebufferSize(gameSource.json.screen_size.x, gameSource.json.screen_size.y);
             createProjectWindow(gameSource);
