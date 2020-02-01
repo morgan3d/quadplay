@@ -3,7 +3,7 @@
 # tools/export.py --dry-run --standalone -o export games/serpitron
 
 import argparse, sys, os, workjson, types, shutil
-from quaddepend import quaddepend
+from quaddepend import quaddepend, depend_asset
 
 # This implementation needs f-strings from Python 3.6
 if (sys.version_info[0] < 3) or (sys.version_info[0] == 3 and sys.version_info[1] < 6): raise Exception("export.py requires Python 3.1 or later")
@@ -15,12 +15,8 @@ from dependencies import os_dependencies
 # Returns a list of dependencies and the
 # title of the game as a tuple
 def get_game_dependency_list(args, game_path):
-   # Convert the OS dependencies to a list
-   os_dependency_list = [url[len('quad://'):] for url in os_dependencies.values()]
-
    # Include the OS dependencies unless standalone
-   depends = os_dependency_list if args.standalone else []
-   
+   depends = []   
    title = 'Game'
    def callback(filename): depends.append(filename)
 
@@ -37,8 +33,15 @@ def get_game_dependency_list(args, game_path):
    qdargs.filename   = [game_path]
    qdargs.callback   = callback
    qdargs.docs       = False
-   qdargs.title_callback =  title_callback
+   qdargs.title_callback = title_callback
    quaddepend(qdargs)
+   
+   if args.standalone:
+      # Process the quadOS dependencies
+      qdargs.root_dir = ''
+      qdargs.allow_quad = True
+      for url in os_dependencies.values():
+         depend_asset(url, qdargs, '.')
    
    return (depends, title)
 
@@ -50,16 +53,18 @@ def write_text_file(filename, contents):
 
 
 # Source code for the index.html page when making a standalone program
-def generate_embedded(args, out_path, game_path, game_title):
+def generate_standalone(args, out_path, game_path, game_title):
    htmlSource = f"""
 <!DOCTYPE html>
 <html>
   <head>
     <title>{game_title}</title>
     <meta charset="utf-8">
+    <link rel="icon" type="image/png" sizes="64x64" href="console/favicon-64x64.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="console/favicon-32x32.png">
   </head>
-  <body style="margin: 0; background: #000">
-    <iframe src="console/quadplay.html&fastReload=1&game={game_path}" style="width: 100%; height: 100%"></iframe>
+  <body style="margin: 0; background: #000; position: absolute; top: 0; bottom: 0; left: 0; right: 0">
+    <iframe src="console/quadplay.html?fastReload=1&game={game_path}" style="width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; border: none"></iframe>
   </body>
 </html>
 """
@@ -70,23 +75,22 @@ def generate_embedded(args, out_path, game_path, game_title):
 
    
    
-def generate_redirect(args, out_path, game_path, game_title):
-   # Construct the game url
-   url = args.hosturl
-   if url[-1] != '/': url += '/'
-   url += game_path
-
-   url = 'https://morgan3d.github.io/quadplay/console/quadplay.html&fastReload=1&game=' + url
-   
+def generate_remote(args, out_path, game_path, game_title):
    htmlSource = f"""
 <!DOCTYPE html>
 <html>
   <head>
     <title>{game_title}</title>
     <meta charset="utf-8"/>
-    <meta http-equiv="refresh" content="0;URL='{url}'"/>
+    <link rel="icon" type="image/png" sizes="64x64" href="https://morgan3d.github.io/quadplay/console/favicon-64x64.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://morgan3d.github.io/quadplay/console/favicon-32x32.png">
   </head>
-  <body onload="location={url}">
+  <body style="margin: 0; background: #000; position: absolute; top: 0; bottom: 0; left: 0; right: 0">
+    <script>
+      document.write('<iframe src="https://morgan3d.github.io/quadplay/console/quadplay.html#fastReload=1&game=' + 
+          (location + '').replace(/\/[^/]*$/, '/') + 
+          '{game_path}" style="width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; border: none"></iframe>');
+    </script>
   </body>
 </html>
 """
@@ -115,32 +119,34 @@ def export(args):
    # Create out_path if it does not exist
    if not os.path.isdir(out_path):
       if args.dry_run: print('mkdir -p ' + out_path)
-      else: os.makedirs(out_path, exists_ok = True)
+      else: os.makedirs(out_path, exist_ok = True)
 
+   if args.standalone:
+      # Recursively copy everything from 'console/' to out_path
+      # Do this before copying individual dependencies because
+      # shutil.copytree can't take the dirs_exist_ok=True parameter
+      # until Python 3.8 and the dependencies create the console dir
+      if args.dry_run: print('cp -r console ' + os.path.join(out_path, ''))      
+      else: shutil.copytree('console', os.path.join(out_path, 'console'))
+      
+      generate_standalone(args, out_path, game_path, game_title)
+   else:
+      # TODO: if game_path is not a subdirectory of the quadplay directory,
+      # then we need to make a relative file structure in the out_path
+      generate_remote(args, out_path, game_path, game_title)
+
+      
    for src in game_dependency_list:
       dir = os.path.join(out_path, os.path.dirname(src))
       # Makedirs as needed, but don't print on every single file in the dry_run
       if not os.path.isdir(dir) and not args.dry_run:
-         os.makedirs(dir, exists_ok = True)
+         os.makedirs(dir, exist_ok = True)
 
       dst = os.path.join(out_path, src)
       if args.dry_run: print('cp ' + src + ' ' + dst)
       else: shutil.copy2(src, dst)
          
-   
-   if args.standalone:
-      # Recursively copy everything from 'console/' to out_path
-      if args.dry_run: print('cp -r console ' + os.path.join(out_path, ''))
-      else: shutil.copytree('console', os.path.join(out_path, ''))
-      
-      generate_embedded(args, out_path, game_path, game_title)
-   elif args.hosturl:
-      # TODO: if game_path is not a subdirectory of the quadplay directory,
-      # then we need to make a relative file structure in the out_path
-      generate_redirect(args, out_path, game_path, game_title)
-      print('Unimplemented, sorry')
-   else:
-      print('ERROR: Either --hosturl or --standalone must be specified.')     
+  
       
 
 
@@ -149,7 +155,6 @@ if __name__== '__main__':
    parser.add_argument('gamepath', nargs=1, help='the path to the game.json file from the current directory, or the path to the directory containing it if the directory and file have the same basename. For the current version of this script, the game must be in a subdirectory of the quadplay directory. This will be generalized later.')
    parser.add_argument('-o', '--outpath', required=True, help='output directory to put the game in, relative to the current directory')
    parser.add_argument('--standalone', action='store_true', default=False, help='generate a standalone game that does not depend on morgan3d.github.io/quadplay. This produces a larger export, but locks down the quadplay version and can run offline.')
-   parser.add_argument('--hosturl', help='url for the directory at which your game will be hosted. Required if not standalone. Example: youraccount.github.io/yourgame/')
    parser.add_argument('--dry-run', '-n', action='store_true', default=False, help='print the files that would be created but do not touch the filesystem.')
 
    args = parser.parse_args()

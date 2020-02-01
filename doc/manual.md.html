@@ -1572,16 +1572,27 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 : Create the object with `x` and `y` fields. 
 
 `xy(v)`
-: Returns `{x:v.x, y:v.y}`. Useful for removing the `z` component.
+: Returns `{x:v.x, y:v.y}`. Useful for removing the `z` component or cloning.
 
 `xy(a)`
 : Returns `{x:a[0], y:a[1]}`. Useful for converting from a matrix column.
+
+`xz(x, z)`
+: Create the object with `x` and `z` fields. 
+
+`xz(v)`
+: Returns `{x:v.x, z:v.z}`. Useful for removing the `y` component or cloning.
+
+`xz(a)`
+: Returns `{x:a[0], z:a[1]}`. Useful for converting from a matrix column.
 
 `xyz(x, y, z)`
 : Create the object with `x`, `y`, and `z` fields.
 
 `xyz(v)`
 : Returns `{x:v.x, y:v.y, z:v.z}`. Useful for removing a `w` component.
+  Will _not_ expand an `xy()` or `xz()` value--you must do that explicitly as
+  `xyz(v.x, v.y, 0)`, for example
 
 `xyz(a)`
 : Returns `{x:a[0], y:a[1], z:a[2]}`. Useful for converting from a matrix column.
@@ -3644,6 +3655,27 @@ versions may be substantially faster than overloaded operators.
 `XY_CRS_XY(srcx1, srcx2)`
 : 2D cross product (z component of treating as a 3D cross product). Returns the scalar result.
 
+`XZ_ADD_XZ(srcxz1, srcxz2, dstxz)`
+: Element addition.
+
+`XZ_SUB_XZ(srcxy1, srcxz2, dstxz)`
+: Element subtraction.
+
+`XZ_MUL_XZ(srcxz1, srcxz2, dstxz)`
+: Element multiplication.
+
+`XZ_DIV_XZ(srcxz1, srcxy2, dstxz)`
+: Element division.
+
+`XZ_MUL(srcxz1, srcs2, dstxz)`
+: Vector-scalar product.
+
+`XZ_DIV(srcxz1, srcs2, dstxz)`
+: Vector-scalar quotient.
+
+`XZ_DOT_XZ(srcxz1, srcxz2)`
+: Returns the scalar result.
+
 `XYZ_ADD_XYZ(srcxyz1, srcxyz2, dstxyz)`
 : Element addition.
 
@@ -5469,29 +5501,32 @@ Command-Line Tools
   
 [`export.py`](../tools/quaddepend.py)
 : Export a static HTML site for a single game, either lightweight by referencing 
-  `https://morgan3d.github.io/quadplay` or standalone by embeddeding a full copy of
-  the emulator. Run the script with `--help` to see the arguments. Run as `tools/export.py ...` or `python3 tools/export.py ...`
-  from the main quadplay directory. This script itself depends on `quaddepend.py`.
+  `https://morgan3d.github.io/quadplay` or standalone by embedding a full copy of
+  the emulator. Run the script with `--help` to see the arguments. 
+  
+  Run as `tools/export.py ...` or `python3 tools/export.py ...`
+  from the main quadplay directory. This script itself depends on `tools/quaddepend.py`.
 
 [`sprite_json_generator.py`](../tools/sprite_json_generator.py)
 : Generator for `.sprite.json` files. Requires Python and PIL.
 
-If you are exporting from aseprite, use the following settings with `sprite_json_generator.py`:
+  If you are exporting from aseprite, use the following settings with `sprite_json_generator.py`:
 
-- "horizontal strip" (quadplay doesn't support animations wrapping around image rows
-- "padding", "trim", and "extrude" should all be off
-- "Layers" should be visible layers (quadplay doesn't support layers")
-- "frames" should be "all frames" (unless you only want some frames)
-- "export json": yes and under "meta" for this:
+  - "horizontal strip" (quadplay doesn't support animations wrapping around image rows
+  - "padding", "trim", and "extrude" should all be off
+  - "Layers" should be visible layers (quadplay doesn't support layers")
+  - "frames" should be "all frames" (unless you only want some frames)
+  - "export json": yes and under "meta" for this:
     - "layers" should be off
     - "frame tags" should be checked
     - "slices" should be off
-- "open generated sprite sheet" is up to you, if you want it to show you the sprite sheet when its done.
+  - "open generated sprite sheet" is up to you, if you want it to show you the sprite sheet when its done.
 
-If you export with these settings, you can pass the generated json file to the  sprite_json_generator program and it will convert the tags and sprite size
-automatically from the file.
+  If you export with these settings, you can pass the generated json file to the  sprite_json_generator program and it will convert the tags and sprite size
+  automatically from the file.
 
-Note that while aseprite supports sprites of varying size, quadplay does not.
+  Note that while aseprite supports sprites of varying size, quadplay does not.
+
 
 `quadplay.html`
 ------------------------------------------------------------------------------------
@@ -5533,6 +5568,8 @@ own closed-source came). See the Credits section for more information.
 github
 ------------------------------------------------------------------------------------
 
+### From your development repo
+
 This is the easiest method to deploy your game. It also allows you to
 continuously update the game as well as gain the benefit of
 improvements to quadplay✜ itself continuously.
@@ -5542,12 +5579,13 @@ a subdirectory of a github repository.  Do not fork quadplay into the repo
 because that will make it large and disrupt the user's saved per-console state.
 Just keep your game there in the repo by itself as you create it. 
 
+Assume that your github account is named `USER` and your repo is named `REPO`.
+
 To deploy, go to the settings page for your repo on github. For example,
-https://github.com/morgan3d/misc/settings . In the section titled "GitHub Pages"
+https://github.com/USER/REPO/settings. In the section titled "GitHub Pages"
 on the settings page, select "Master Branch" from the Source dropdown.
 
-Assume that your github account is named `USER` and your repo is named `REPO`.
-The URL to play your game is:
+The URL to play your game is then:
 
 https://morgan3d.github.io/quadplay/console/quadplay.html?game=https://USER.github.io/REPO
 
@@ -5559,6 +5597,19 @@ document.write(`<pre class="listing tilde"><code>&amp;lt;meta http-equiv="refres
 </script>
 
 People visiting the URL https://USER.github.io/REPO will then be redirected to the correct page.
+
+
+### From another repo
+
+To keep your development repository private or just separate from the deployment one, 
+create a second repository on github. 
+
+Clone both to your local machine and at the command line, enter the _development_ repo
+and run `python3 tools/export.py -o ../PUBLIC_REPO path/to/game`.
+
+You can then add and commit the public repo. If you want your game to be standalone
+and not depend on the quadplay repo at runtime, just add the `--standalone` argument.
+This will generate an `index.html` file as well as copying all dependencies.
 
 
 
@@ -5579,16 +5630,9 @@ and itch.io will block your upload. Only include the files that you actually use
 
 The steps are:
 
-1. Create a new directory, such as `release`
-2. Copy your game into a _subdirectory_ named `release/GAMENAME` (where GAMENAME is replaced 
-   with the actual name of your game, and there is a correspondingly-named 
-   `release/GAMENAME/GAMENAME.game.json` file).
-3. Recursively copy the `quadplay/console` files into `release/console`
-4. Copy any resources that you used for the quadplay✜ distribution into the corresponding
-   directories. For example, if your game loads `quad://sprites/ninja-bluew-32x32.sprite.json`,
-   then copy `quadplay/sprites/ninja-blue-32x32.*` into `release/sprites`.
-5. Create `release/index.html` as described below.
-6. Zip the _contents_ of the `release` directory into a zipfile.
+1. Delete the `release` subdirectory if it exists
+2. Run `python3 tools/export.py --standalone -o release path/to/game`
+6. Zip the _contents_ of the `release` directory into a zipfile (do not include the `release` directory itself)
 7. Log into the itch.io website and create a new game entry with the following settings:
   - Classification: Games
   - Kind of project: HTML
@@ -5598,13 +5642,6 @@ The steps are:
   - Orientation: Landscape
   - Visibility: Public
 8. In the Uploads section on the itch.io game page, upload your zipfile.
-
-
-The contents of the `release/index.html` file described above are:
-
-<script>
-document.write(`<pre class="listing tilde"><code>&amp;lt;meta http-equiv="refresh" content="0;URL='console/quadplay.html?game=GAMENAME'"/&gt;</code></pre>`);
-</script>
 
 To update your game or upgrade the underlying quadplay✜ distribution,
 you must repeat the process of creating the zipfile and then upload it
@@ -5619,13 +5656,13 @@ You can host your game using only your own files on any web server that supports
 of all of quadplay✜ on _any_ web server, regardless of whether it supports CORS.
 
 To deploy your game on a web server with CORS named `myserver.com` in the `mygame`
-directory, just upload your own game files to the server. The URL for your game is:
+directory, run just upload your own game files to the server. The URL for your game is:
 
 https://morgan3d.github.io/quadplay/console/quadplay.html?game=https://myserver.com/mygame
 
 To deploy a complete package that is independent of the current
-version of quadplay✜, follow the process for building the zipfile and
-`index.html` from the itch.io section, and then upload your files to the server.
+version of quadplay✜, follow the process for building the zipfile from the itch.io section, 
+and then upload your files to the server instead of zipping them.
 Your URL will be just https://myserver.com/mygame.
 
 
@@ -5745,14 +5782,8 @@ There's a long feature list and a short bug list that I'm working
 through. The highlights are, in priority order:
 
 For 1.0:
-- ASESprite native import
 - More AI support
 - Five full sample games
-- Improved Visual Studio Code PyxlScript plugin
-- Export your game to standalone static HTML
-  - itch.io
-  - github.io (github pages)
-  - self-hosted
 - Edit your game and save to local disk using the `quadplay` script
   - Sprite editor
   - Map editor
@@ -5763,6 +5794,7 @@ For 1.0:
 - Polyline rendering without double-blending endpoints
 
 Post 1.0:
+- ASESprite native import
 - Watertight rasterization of triangle meshes
 - Watertight rasterization of polylines
 - Edit your game in the IDE and save to Google Drive
@@ -5935,6 +5967,15 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 Jan 31: Beta update 26
+
+- Fixed Emacs syntax highlighting matching keywords that appear within variable names
+- Added `xz()` for convenience when working with top down coordinate systems,
+  and corresponding intrinsics
+- Fixed multiple bugs in `tools/export.py` (for games in the quadplay directory; 
+  games stored elsewhere are not supported yet)
+
 
 2020 Jan 29: Beta update 25
 
@@ -6203,7 +6244,7 @@ Changes for both the specification and implementation in each release.
 - Added support for `docs` in the `game.json` file using Markdeep, Markdown,
   HTML, and text format. Good for game design docs, TODO lists, and game manuals
 - Added support for Ctrl+G as an alternative GIF recording keystroke
-- Renamed `signNonZero()` to `signNotZero()` to match the manual
+- Renamed `sign_nonzero()` to `signNotZero()` to match the manual
 - Added `MIN()` and `MAX()` intrinsics
 - Fixed `opacity == 0` on `draw_sprite()` to draw nothing instead of full opacity
 - Added `randomBall()` and `randomSphere()`

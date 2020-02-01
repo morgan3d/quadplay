@@ -28,8 +28,8 @@ def _error(msg):
    sys.exit(-1)
 
 
-# Prints recursive dependencies
-def _depend_asset(filename, args, basepath):
+# Computes recursive dependencies
+def depend_asset(filename, args, basepath):
    asset_data, resolved_filename = _depend(filename, args, basepath, True)
    resolved_dirname = os.path.dirname(resolved_filename)
    
@@ -50,10 +50,10 @@ def _depend_asset(filename, args, basepath):
          _depend(asset_data['url'], args, resolved_dirname)
 
          if 'spriteUrl' in asset_data:
-            _depend_asset(asset_data['spriteUrl'], args, resolved_dirname)
+            depend_asset(asset_data['spriteUrl'], args, resolved_dirname)
          elif 'spriteUrlTable' in asset_data:
             for s in asset_data['spriteUrlTable'].values():
-               _depend_asset(s, args, resolved_dirname)
+               depend_asset(s, args, resolved_dirname)
          else:
             print('WARNING: ' + filename + ' is missing a "spriteUrlTable" or "spriteUrl" field', file=sys.stderr)
 
@@ -108,7 +108,7 @@ def quaddepend(args):
 
    if not args.nogame:
       if was_quad:
-         print('quad://' + game_filename)
+         args.callback('quad://' + game_filename)
       else:
          args.callback(game_filename)
       
@@ -122,6 +122,11 @@ def quaddepend(args):
    # Parse
    game_data = workjson.loads(game_data)
 
+   # Indexing images
+   for filename in ['label64.png', 'label128.png', 'preview.png']:
+      if _is_http(game_filename) or os.path.isfile(os.path.join(basepath, filename)):
+         _depend(filename, args, basepath)
+
    # Used by export.py
    if args.title_callback:
       args.title_callback(game_data.get('title', ''))
@@ -134,7 +139,7 @@ def quaddepend(args):
       _depend(f, args, basepath)
 
    for f in game_data.get('assets', {}).values():
-      _depend_asset(f, args, basepath)
+      depend_asset(f, args, basepath)
 
    for f in game_data.get('modes', []):
       _depend(f.replace('*', '') + '.pyxl', args, basepath)

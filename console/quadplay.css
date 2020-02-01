@@ -5,11 +5,6 @@
     src: url("PxPlus_AmstradPC1512-2y.ttf");
 }
 
-@font-face {
-    font-family: "quadplay";
-    src: url("../doc/Audiowide-Regular.ttf");
-}
-
 #docEditor #doc {
     transform-origin: 0 0;
     transform: scale(0.8, 0.8)

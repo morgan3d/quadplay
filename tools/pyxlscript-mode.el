@@ -43,20 +43,20 @@
   (setq-local comment-end-skip "[ \t]*\\*+/")
 
   ;; Syntax highlighting
-  (let ((keyword-exp (regexp-opt '("assert" "debug_pause" "debug_print" "debug_watch" "let" "const" "mod" "local" "preserving_transform" "for" "in" "while" "until" "if" "then" "else" "push_mode" "reset_game" "setMode" "return" "def" "break" "continue" "bitand" "bitor" "bitxor" "bitnot" "bitshl" "bitshr" "because" "quit_game" "launch_game") 'words))
-        (literal-exp (regexp-opt '("deg" "true" "false" "nan" "SCREEN_SIZE" "pi" "epsilon" "infinity" "nil") 'words))
-        (event-exp   (regexp-opt '("enter" "leave" "frame") 'words))
-        (builtin-exp (regexp-opt '("ray_intersect" "draw_bounds" "draw_disk" "reset_clip" "reset_transform" "set_clip" "draw_line" "draw_sprite_corner_rect" "intersect_clip" "draw_point" "draw_corner_rect" "draw_rect" "get_background" "set_background" "text_width" "get_sprite_pixel_color" "draw_sprite" "draw_text" "draw_tri" "draw_poly" "get_transform" "get_clip" "rotation_sign" "signNotZero" "set_transform" "xy" "xyz"
+  (let ((keyword-exp (regexp-opt '("assert" "debug_pause" "debug_print" "debug_watch" "let" "const" "mod" "local" "preserving_transform" "for" "in" "while" "until" "if" "then" "else" "push_mode" "reset_game" "set_mode" "return" "def" "break" "continue" "bitand" "bitor" "bitxor" "bitnot" "bitshl" "bitshr" "because" "quit_game" "launch_game") 'symbols))
+        (literal-exp (regexp-opt '("deg" "true" "false" "nan" "SCREEN_SIZE" "pi" "epsilon" "infinity" "nil") 'symbols))
+        (event-exp   (regexp-opt '("enter" "leave" "frame") 'symbols))
+        (builtin-exp (regexp-opt '("ray_intersect" "draw_bounds" "draw_disk" "reset_clip" "reset_transform" "set_clip" "draw_line" "draw_sprite_corner_rect" "intersect_clip" "draw_point" "draw_corner_rect" "draw_rect" "get_background" "set_background" "text_width" "get_sprite_pixel_color" "draw_sprite" "draw_text" "draw_tri" "draw_poly" "get_transform" "get_clip" "rotation_sign" "signNotZero" "set_transform" "xy" "xz" "xyz"
                                    "any_button_press" "draw_map" "get_mode" "get_previous_mode" "get_map_pixel_color" "get_map_pixel_color_by_draw_coord" "get_map_sprite" "set_map_sprite" "get_map_sprite_by_draw_coord" "set_map_sprite_by_draw_coord" "unparse" "format_number" "uppercase" "lowercase"
-                                   "play_audio_clip" "resume_sound" "stop_sound" "game_frames" "mode_frames" "set_mode" "delay" "sequence" "add_frame_hook" "remove_frame_hook"
+                                   "play_audio_clip" "resume_sound" "stop_sound" "game_frames" "mode_frames" "delay" "sequence" "add_frame_hook" "remove_frame_hook"
                                    "make_entity" "draw_entity" "overlaps" "entity_update_children" "entity_simulate" "split"
                                    "now" "game_frames" "mode_frames" "find_map_path" "find_path" "join" "entity_apply_force" "entity_apply_impulse"
                                    "gray" "rgb" "rgba" "hsv" "hsva" "last_value" "last_key" "insert" "reverse" "reversed"
                                    "call" "set_post_effects" "get_post_effects" "reset_post_effects" "push_front" "local_time" "device_control" "physics_add_contact_callback" "physics_entity_contacts" "physics_entity_has_contacts" "physics_add_entity" "physics_remove_entity" "physics_remove_all" "physics_attach" "physics_detach" "make_physics" "make_collision_group" "draw_physics" "physics_simulate"
-                                   "abs" "acos" "atan" "asin" "sign" "signNonZero" "cos" "clamp" "hash" "lerp" "log" "log2" "log10" "loop" "min" "max" "mid" "noise" "oscillate" "overlap" "pow" "make_random" "random_sign" "random_integer" "random_within_sphere" "random_on_sphere" "random_within_circle" "random_within_square" "random_on_square" "random_on_circle" "random_direction2D" "random_direction3D" "random_value" "random_gaussian" "random_gaussian2D" "random_truncated_gaussian" "random_truncated_gaussian2D" "random" "ξ" "sgn" "sqrt" "sin" "set_random_seed" "tan"
+                                   "abs" "acos" "atan" "asin" "sign" "sign_nonzero" "cos" "clamp" "hash" "lerp" "log" "log2" "log10" "loop" "min" "max" "mid" "noise" "oscillate" "overlap" "pow" "make_random" "random_sign" "random_integer" "random_within_sphere" "random_on_sphere" "random_within_circle" "random_within_square" "random_on_square" "random_on_circle" "random_direction2D" "random_direction3D" "random_value" "random_gaussian" "random_gaussian2D" "random_truncated_gaussian" "random_truncated_gaussian2D" "random" "ξ" "sgn" "sqrt" "sin" "set_random_seed" "tan"
                                    "concatenate" "extend" "clone" "copy" "draw_previous_mode" "cross" "direction" "dot" "equivalent" "magnitude" "magnitude_squared" "max_component" "min_component" "xy" "xyz"
                                    "fast_remove_key" "find" "keys" "remove_key" "substring" "sort" "resize" "push" "pop" "fast_remove_value" "remove_values" "remove_all" "gamepad_array" "joy" "round" "floor" "ceil"
-                                   "debug_print") 'words))
+                                   "debug_print") 'symbols))
         )
 
     (font-lock-add-keywords

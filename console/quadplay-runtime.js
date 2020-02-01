@@ -1395,13 +1395,29 @@ function xy(x, y) {
     }
     
     if (x.x !== undefined) {
-        if (y !== undefined) { _error('xy(number, number), xy(xy), or xy(array) are the only legal options'); }
+        if (y !== undefined) { _error('xy(number, number), xy(xy), xy(xyz), or xy(array) are the only legal options'); }
         return {x:x.x, y:x.y};
     }
     if (Array.isArray(x)) { return {x:x[0], y:x[1]}; }
     if (arguments.length !== 2) { _error('xy() cannot take ' + arguments.length + ' arguments.'); }
     if (typeof y !== 'number') { _error('The second argument to xy(x, y) must be a number'); }
     return {x:x, y:y};
+}
+
+
+function xz(x, z) {
+    if (x === undefined) {
+        _error('nil or no argument to xz()');
+    }
+    
+    if (x.x !== undefined) {
+        if (z !== undefined) { _error('xz(number, number), xz(xz), xz(xyz), or xz(array) are the only legal options'); }
+        return {x:x.x, z:x.z};
+    }
+    if (Array.isArray(x)) { return {x:x[0], z:x[1]}; }
+    if (arguments.length !== 2) { _error('xz() cannot take ' + arguments.length + ' arguments.'); }
+    if (typeof z !== 'number') { _error('The second argument to xz(x, z) must be a number'); }
+    return {x:x, z:z};
 }
 
 
@@ -6292,6 +6308,41 @@ function XY_DOT_XY(v1, v2) {
 
 function XY_CRS_XY(v1, v2) {
     return v1.x * v2.y - v1.y * v2.x;
+}
+
+function XZ_MUL(v1, s, r) {
+    r.x = v1.x * s;
+    r.z = v1.z * s;
+}
+
+function XZ_DIV(v1, s, r) {
+    s = 1 / s;
+    r.x = v1.x * s;
+    r.z = v1.z * s;
+}
+
+function XZ_ADD_XZ(v1, v2, r) {
+    r.x = v1.x + v2.x;
+    r.z = v1.z + v2.z;
+}
+
+function XZ_SUB_XZ(v1, v2, r) {
+    r.x = v1.x - v2.x;
+    r.z = v1.z - v2.z;
+}
+
+function XZ_MUL_XZ(v1, v2, r) {
+    r.x = v1.x * v2.x;
+    r.z = v1.z * v2.z;
+}
+
+function XZ_DIV_XZ(v1, v2, r) {
+    r.x = v1.x / v2.x;
+    r.z = v1.z / v2.z;
+}
+
+function XZ_DOT_XZ(v1, v2) {
+    return v1.x * v2.x + v1.z * v2.z;
 }
 
 function RGBA_LERP(c1, c2, A, dst) {
