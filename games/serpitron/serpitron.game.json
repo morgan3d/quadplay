@@ -42,8 +42,8 @@
 
     "flip_y":                 false,
     "version":               0.1,
-    "minPlayers":            1,
-    "maxPlayers":            4,
+    "min_players":            1,
+    "max_players":            4,
     "cooperative":           false,
     "competitive":           true,
     "achievements":          false,

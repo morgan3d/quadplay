@@ -49,8 +49,8 @@
     
     "version":      0.5,
     "description":  "2 vs. 2 ice hockey with teams, player stats., faceoffs, passing…and a Zamboni.",
-    "minPlayers":   1,
-    "maxPlayers":   4,
+    "min_players":   1,
+    "max_players":   4,
     "cooperative":  true,
     "competitive":  true,
     "achievements": false,

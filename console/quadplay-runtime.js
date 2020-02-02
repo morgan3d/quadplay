@@ -7569,22 +7569,24 @@ function _executeSPR(cmd) {
                 // even for the general case, so this isn't as
                 // necessary on those browsers...but it doesn't hurt.
                 
-                //console.assert(dstOffset + width <= _screen.length, `dstX1=${dstX1}, dstX2 = ${dstX2}, _screen.length = ${_screen.length}, width = ${width}, dstOffset = ${dstOffset}, dstOffset % _SCREEN_WIDTH = ${dstOffset % _SCREEN_WIDTH}, dstY = ${dstY}, dstY2 = ${dstY2}`);
+                // console.assert(dstOffset + width <= _screen.length, `dstX1=${dstX1}, dstX2 = ${dstX2}, _screen.length = ${_screen.length}, width = ${width}, dstOffset = ${dstOffset}, dstOffset % _SCREEN_WIDTH = ${dstOffset % _SCREEN_WIDTH}, dstY = ${dstY}, dstY2 = ${dstY2}`);
                 // console.assert(srcOffset + width <= srcData.length);
                 _screen.set(srcData.slice(srcOffset, srcOffset + width), dstOffset);
             } // dstY
         }
     } else {
-
         // General case. It doesn't help performance to break out the
         // case of no rotation with alpha test and optimize that
-        // separately.
+        // separately, so process everything together.
 
-        if (override_color) {
-            opacity *= override_color.a;
-        }
-        
+        // Extract the common terms of blending into the override color
         const override = override_color ? _colorToUint32(override_color) : 0;
+        const override_a = 1 - (override >>> 24) * (1 / 255);
+
+        const override_mode = (override_a === 1) ? 0 : (override_a === 0) ? 2 : 1;
+        const override_r = (override & 0x00FF0000) * (1 - override_a) + 0.5;
+        const override_g = (override & 0x0000FF00) * (1 - override_a) + 0.5;
+        const override_b = (override & 0x000000FF) * (1 - override_a) + 0.5;
         
         for (let dstY = dstY1; dstY <= dstY2; ++dstY) {
             // Offset everything by 0.5 to transform the pixel
@@ -7620,25 +7622,41 @@ function _executeSPR(cmd) {
                     
                     // Must be unsigned shift to avoid sign extension
                     const a255 = color >>> 24;
-                    
-                    if (a255 >= 0xf0) {
-                        // No blending
-                        _screen[dstOffset] = override_color ? override : color;
-                    } else if (a255 > 0x0f) {
-                        // Blend
+                    if (a255 < 0x10) {
+                        // 0% alpha
+                    } else {
 
-                        if (override_color) { color = override; }
-                        
-                        // No need to force to unsigned int because the alpha channel of the output is always 0xff
-                        const a = a255 * (1 / 255);
-                        const back = _screen[dstOffset];
-                        let result = 0xFF000000;
+                        if (override_mode === 0) {
+                            // Common case, do nothing
+                        } else if (override_mode === 1) {
+                            // Blend
+                            const src = color;
+                            color &= 0xFF000000;
+                            color |= (override_r + (src & 0x00FF0000) * override_a) & 0x00FF0000;
+                            color |= (override_g + (src & 0x0000FF00) * override_a) & 0x0000FF00;
+                            color |= (override_b + (src & 0x000000FF) * override_a) & 0x000000FF;
+                        } else {
+                            // Completely overwrite
+                            color = (color & 0xFF000000) | (override & 0xFFFFFF);
+                        }
 
-                        result |= ((back & 0x00FF0000) * (1 - a) + (color & 0x00FF0000) * a + 0.5) & 0x00FF0000;
-                        result |= ((back & 0x0000FF00) * (1 - a) + (color & 0x0000FF00) * a + 0.5) & 0x0000FF00;
-                        result |= ((back & 0x000000FF) * (1 - a) + (color & 0x000000FF) * a + 0.5) & 0x000000FF;
-                        
-                        _screen[dstOffset] = result;
+                        if (a255 >= 0xf0) {
+                            // 100% alpha
+                            _screen[dstOffset] = color;
+                        } else if (a255 > 0x0f) {
+                            // Fractional alpha
+                            
+                            // No need to force to unsigned int because the alpha channel of the output is always 0xff
+                            const a = a255 * (1 / 255);
+                            const back = _screen[dstOffset];
+                            let result = 0xFF000000;
+                            
+                            result |= ((back & 0x00FF0000) * (1 - a) + (color & 0x00FF0000) * a + 0.5) & 0x00FF0000;
+                            result |= ((back & 0x0000FF00) * (1 - a) + (color & 0x0000FF00) * a + 0.5) & 0x0000FF00;
+                            result |= ((back & 0x000000FF) * (1 - a) + (color & 0x000000FF) * a + 0.5) & 0x000000FF;
+                            
+                            _screen[dstOffset] = result;
+                        }
                     }
                 
                 } // clamp to source bounds

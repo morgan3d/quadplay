@@ -4,7 +4,7 @@
     "copyright":  "© 2019 Morgan McGuire",
     "license":    "Source code © 2019 Morgan McGuire, available under the BSD License https://opensource.org/licenses/BSD-2-Clause",
 
-    "flip_y":      true,
+    "flip_y":     true,
     "packages":   [],
     "scripts":    ["bike.pyxl", "physics.pyxl"],
     "modes":      ["Title*", "Play"],
@@ -22,8 +22,8 @@
 
     "version":      0.5,
     "description":  "How fast can you go? Tear through the road course pulling tricks off jumps and fighting to be the leader of the pack.",
-    "minPlayers":   1,
-    "maxPlayers":   4,
+    "min_players":   1,
+    "max_players":   4,
     "cooperative":  false,
     "competitive":  true,
     "achievements": false,

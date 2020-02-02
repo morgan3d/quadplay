@@ -86,8 +86,8 @@
     
     "version":      0.5,
     "description":  "Blast bricks as a team from all four sides, grabbing powerups and racking up points.",
-    "minPlayers":   1,
-    "maxPlayers":   4,
+    "min_players":   1,
+    "max_players":   4,
     "cooperative":  true,
     "competitive":  false,
     "achievements": false,

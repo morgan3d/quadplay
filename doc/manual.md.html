@@ -1,22 +1,22 @@
-     <meta charset="utf-8"><style class="fallback">@media screen{body{background:#3a3a3a;color:#ccc}}</style>
-                          
+<meta charset="utf-8"><style class="fallback">@media screen{body{background:#3a3a3a;color:#ccc}}</style>
+
                       **quadplay✜**
     Fantasy Console by [Casual Effects](https://casual-effects.com)
 
 <center>[*Quick Start*](#quickstart) ∙ [*Controls*](#controls) ∙ [*Sprites*](#sprites) ∙ [*Fonts*](#fonts) ∙ [*Sounds*](#sounds) ∙ [*Symbols*](#symbols)
-<br/>[*API*](#standardlibrary) ([Input](#standardlibrary/input) ∙ [Physics](#standardlibrary/physics) ∙ [Graphics](#standardlibrary/graphics) ∙ [Sound](#standardlibrary/sound) ∙ [AI](#standardlibrary/pathfinding)) ∙ [*Changes*](#changelog) 
+<br/>[*API*](#standardlibrary) ([Input](#standardlibrary/input) ∙ [Physics](#standardlibrary/physics) ∙ [Graphics](#standardlibrary/graphics) ∙ [Sound](#standardlibrary/sound) ∙ [AI](#standardlibrary/pathfinding)) ∙ [*Changes*](#changelog)
 
 <img src="ide.png" style="image-rendering: auto; width:75%; border-radius: 0 0 4px 4px; box-shadow: 1px 5px 7px rgba(0,0,0,.20); margin-bottom: 28px; margin-top:20px"></center>
 
-The [**<span style="font-size: 95%; font-family: quadplay">quadplay✜</span>**](../index.html?IDE=1) is a 
-fantasy console for sprite-based 2D games. It is perfect for hobby coding, a game programming 
+The [**<span style="font-size: 95%; font-family: quadplay">quadplay✜</span>**](../console/quadplay.html?IDE=1) is a
+fantasy console for sprite-based 2D games. It is perfect for hobby coding, a game programming
 course, teaching yourself game development, and game jams.
 
-Virtual Hardware Features:
+**Virtual Hardware Features**
 
 - 384 x 224 pixel screen = 12:7 aspect ≈ 16:9.3
 - 60 fps
-- 4096 sRGB (4:4:4) colors 
+- 4096 sRGB (4:4:4) colors
 - Native 2.5D graphics
 - 10.5 MB of total sprite memory
 - Max 128 sprite and font sheets, max size 1024x1024
@@ -24,7 +24,7 @@ Virtual Hardware Features:
 - Four 10-button gamepads (D-pad + ⓐⓑⓒⓓ + ⓟⓠ)
 - Optional 192 x 112, 128 x 128, and 64 x 64 screen modes
 
-Software Features:
+**Software Features**
 
 - Runs in all modern browsers
 - Desktop, tablet, phone, Jetson Nano, and Raspberry Pi
@@ -35,32 +35,32 @@ Software Features:
 - Scripts and external editor support for power users
 - A programming language called PyxlScript for easy game coding
 
-API:
+**API**
 
 - Sprite, tilemap, circle, line, triangle, rectangle, and font drawing
 - Optional entity parenting hierarchy
 - Ray casting and collision detection
 - A* pathfinding
 - Postprocessing effects
-- Persistence (saving)
+- Persistence (saving and loading)
 - Nestable state-machine "modes"
 - Per-mode callback "hooks"
 
 
 
-Quickstart
+Quick Start
 ====================================================================================
 
 Welcome to the quadplay✜ public beta!
 
-The 1.0 version will support fully-online editing of games from a
+The release 1.0 version will support fully-online editing of games from a
 browser as well as "pro" development using an external editor and local
 hosting. This beta version only supports "pro" mode, for which you need:
 
-- A code editor (_[Visual Studio Code](https://code.visualstudio.com/), [Atom](https://atom.io/), Vim, Emacs, Sublime, etc._)
-- [Python 3](https://www.python.org/)
 - A modern web browser ([_Chrome_](https://www.google.com/chrome/), [_Firefox_](https://www.mozilla.org/en-US/firefox/new/), _Safari_, _Edge_, etc. Chrome is fastest.)
-- Optionally install the PyxlScript extension for your editor: _[Visual Studio Code](#advancedtools/visualstudiocode))_, _[Vim](#advancedTools/vim)_, _[Emacs](#advancedtools/emacs)_ 
+- A code editor (_[Visual Studio Code](https://code.visualstudio.com/), [Atom](https://atom.io/), [Sublime Text](https://www.sublimetext.com), Vim, Emacs, etc._)
+- [Python 3](https://www.python.org/)
+- Optionally install the PyxlScript extension for your editor: _[Visual Studio Code](#advancedtools/visualstudiocode)_, _[Vim](#advancedTools/vim)_, _[Emacs](#advancedtools/emacs)_
 
 Copy the starter project from `examples/starter` to your own directory
 such as `games/mygame` and start changing it. Look at the Built-In Games
@@ -70,7 +70,7 @@ Read the PICO-8 section, Python section, or JavaScript section of this
 document for some starting tips on the PyxlScript language used in quadplay✜.
 
 Launch your program in the emulator and debugger from the command line
-on Windows, MacOS, or Linux with the `quadplay` command:
+on Windows, macOS, or Linux with the `quadplay` command:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
 # Load the games/quadpaddle/quadpaddle.game.json sample program
@@ -101,7 +101,7 @@ These examples assume that your directory structure is:
 *   +-- 📂 fonts
 *   |   |
 *   |   ⋮
-*   |   
+*   |
 *   +-- 📂 games
 *   |   |
 *   |   +-- 📂 quadpaddle
@@ -127,7 +127,7 @@ These examples assume that your directory structure is:
 The directory and `.game.json` file do not have to have the same
 name. You can list the full path to the actual game file instead.
 
-Every time you push the play button (F5) or reload button (Ctrl+R) in
+Every time you push the Run button (F5) or Reload button (Ctrl+R) in
 the emulator, it will reload your code and assets from disk.
 
 You can use the built-in assets from the developer kit, existing ones
@@ -148,28 +148,28 @@ You should create your programs however works best for you. Here's how
 I like to work in quadplay✜:
 
 1. I start with a project file to load standard assets from `quad://`
-   and single *mode* called `Play.pyxl` that has no sections. I write a
+   and a single *mode* called `Play.pyxl` that has no sections. I write a
    little code to draw the game.
 
 2. Pretty soon, I need some state that persists between frames, so I separate
-   `Play.pyxl` into top level initialization code and `frame` *section*. I then declare variables
+   `Play.pyxl` into top level initialization code and a `frame` *section*. I then declare variables
    in in the top level of the mode, and as my main loop grows too long, I start to define helper
    functions there as well.
-   
-3. At some point, I'm ready for *another mode*. This is usually for 
+
+3. At some point, I'm ready for *another mode*. This is usually for
    gameplay reasons, and not polish, because it is still early in the project.
    This might be a map or inventory screen, for example. As soon as there
    is a new mode, I need to have variables that can be seen by both modes.
-   So, I also create a `common.pyxl` or other *script* to store the global
+   So, I also create a `common.pyxl` file or other *script* to store the global
    variables. I continue this process as more modes are required, periodically
    checking the mode system diagram in the IDE to ensure that the game
    flow is what I expected.
-   
+
 4. As code starts to become duplicated in the modes, I move generally
    useful helper functions out to scripts. When the scripts themselves
    get long, I start grouping them by functionality. For example, `particle.pyxl`,
    `animation.pyxl`, and `hud.pyxl`.
-   
+
 This is a workflow that is good for prototyping, especially in game
 jam and hobby projects. I feel like keeping everything as simple as
 possible and then refactoring at growth points is best for
@@ -179,36 +179,37 @@ Otherwise, it is hard to iterate in the beginning because you're stuck
 with big program abstractions in what is still a small program. Many
 prototypes don't go the distance to become big programs,
 anyway. There's no reason to overdesign early on.
- 
+
 
 Built-In Games
 ------------------------------------------------------------------------------------
 
-Two complete games and a few demos are included to show how to use the APIs.
-The links here will launch the game in your browser if you are accessing this manual
-from a web site or your local machine running the quadplay✜ emulator.
+Four complete games and a few demos are included to show how to use the API.
+If you are accessing this manual from a web site or your local machine running
+the quadplay✜ emulator, use the links here to launch the game in your browser,
+press the Run button (F5) to start the game.
 
 
 ### Playable
 
   <center><img src="../games/quadpaddle/logo.png" width="300px" style="border:0"></center>
-   
+
 <div class="preview pixel" style="background-image:url('../games/quadpaddle/preview.png')"></div>
-[Quadpaddle](../console/quadplay.html?game=quad://games/quadpaddle&IDE=1) is a four-player cooperative game inspired by [_Breakout_]("https://en.wikipedia.org/wiki/Breakout_(video_game)"): 
+[Quadpaddle](../console/quadplay.html?game=quad://games/quadpaddle&IDE=1) is a four-player cooperative game inspired by [_Breakout_]("https://en.wikipedia.org/wiki/Breakout_(video_game)"):
 
 - Powerups
 - Level-end animations
 - Particle system
-- Screenshake
+- Screen shake
 - Menus and pause screen
 - Frame hooks
 - Coordinates with +Y pointing down
 
 
 ----------------------------
- 
+
   <center><img src="../games/speedstreet/logo.png" width=320px style="border:0"></center>
- 
+
 <div class="preview pixel" style="background-image:url('../games/speedstreet/preview.png')"></div>
 [Speed Street](../console/quadplay.html?game=quad://games/speedstreet&IDE=1) is a four-player competitive racing game inspired by [_Excitebike_](https://en.wikipedia.org/wiki/Excitebike):
 
@@ -220,11 +221,11 @@ from a web site or your local machine running the quadplay✜ emulator.
 
 ----------------------------
 
-  <center><img src="../games/serpitron/title.png" width="300px" style="border:0"></center>
-   
+  <center><img src="serpitron_title_alpha.png" width="300px" style="border:0"></center>
+
 <div class="preview pixel" style="background-image:url('../games/serpitron/preview.png')"></div>
-[Serpitron](../console/quadplay.html?game=quad://games/serpitron&IDE=1) is a four-player 
-competive game derived from Snake-like games, including TRON: 
+[Serpitron](../console/quadplay.html?game=quad://games/serpitron&IDE=1) is a four-player
+competive game derived from Snake-like games, including [TRON]("https://en.wikipedia.org/wiki/Tron_(video_game)"):
 
 - Level transitions using post effects
 - Drop shadows
@@ -234,7 +235,7 @@ competive game derived from Snake-like games, including TRON:
 
 ----------------------------
   <center><img src="../games/icetime/title.png" width=200px style="border:0"></center>
- 
+
 <div class="preview pixel" style="background-image:url('../games/icetime/preview.png')"></div>
 [Ice Time](../console/quadplay.html?game=quad://games/icetime&IDE=1) is a four-player competitive or cooperative 2 vs. 2 ice hockey game:
 
@@ -256,23 +257,23 @@ on the screen.
 
 [RPG Demo](../console/quadplay.html?game=quad://examples/rpg&IDE=1) is a simple example of a single-player RPG game design:
 
-- Pause, Inventory, and Shop modes
+- Multiple [modes](#modes): Pause, Inventory, and Shop
 - Multi-layer map
 - Player movement with obstructions
 - NPC interaction
 
 
-[Dual-Stick](../console/quadplay.html?game=quad://examples/dual-stick&IDE=1) shows how to use dual-stick controls.
-The base of the tank is controlled by player 1 and the gun is controlled by player 2. When
-using a dual-stick game controller or keyboard, a single player can also use the right stick 
-or right side of the keyboard to control the gun. 
+[Dual-Stick Example](../console/quadplay.html?game=quad://examples/dual-stick&IDE=1) shows how to use dual-stick controls.
+The body of the tank is controlled by player 1 and the turret is controlled by player 2. When
+using a dual-stick game controller or keyboard, a single player can also use the right stick
+or right side of the keyboard to control the turret.
 
 - Dual-stick controls
 - Working with angles
 - Entity parenting
 
 
-[Robot](../console/quadplay.html?game=quad://examples/robot&IDE=1) shows how to create and animate a deep
+[Robot Example](../console/quadplay.html?game=quad://examples/robot&IDE=1) shows how to create and animate a deep
 entity hierarchy.
 
 - Entity parenting
@@ -280,7 +281,7 @@ entity hierarchy.
 - Using scale and rotation together
 - Graphics tricks for reflections
 
-[Animation](../console/quadplay.html?game=quad://examples/animation&IDE=1) shows how to handle complicated
+[Animation Example](../console/quadplay.html?game=quad://examples/animation&IDE=1) shows how to handle complicated
 sprite animations.
 
 - Sprite animations
@@ -288,19 +289,18 @@ sprite animations.
 - Changing direction
 - Modular items
 
-
-[Fluid](../console/quadplay.html?game=quad://examples/fluid&IDE=1) is a cellular automata fluid flow simulation
+[Fluid Example](../console/quadplay.html?game=quad://examples/fluid&IDE=1) is a cellular automata fluid flow simulation
 with gravity and pressure.
 
-[Acceleration Demo](../console/quadplay.html?game=quad://examples/accel_demo&IDE=1) is a simple demonstration of how various acceleration curves feel, changing only three constants: top speed, acceleration time and deceleration time. Up and down change the constants to fit different games. 
+[Acceleration Curve Example](../console/quadplay.html?game=quad://examples/accel_demo&IDE=1) is a simple demonstration of how various acceleration curves feel, changing only three constants: top speed, acceleration time and deceleration time. Up and down change the constants to fit different games.
 
-[Boids](../console/quadplay.html?game=quad://examples/boids&IDE=1) implements of the famous "boids" flocking algorithm.
+[Boids Example](../console/quadplay.html?game=quad://examples/boids&IDE=1) implements the famous ["boids" flocking algorithm](https://en.wikipedia.org/wiki/Boids).
 
-[Text](../console/quadplay.html?game=quad://examples/text&IDE=1) shows how to use `replace()`, `draw_text()`, `join()`, 
-`format_number()`, and `draw_sprite_corner_rect()` to build text-heavy interfaces.
-
-[Physics](../console/quadplay.html?game=quad://examples/physics&IDE=1) shows all of the features of the 
+[Physics Example](../console/quadplay.html?game=quad://examples/physics&IDE=1) shows all of the features of the
 physics engine, including the debugging visualization.
+
+[Text Example](../console/quadplay.html?game=quad://examples/text&IDE=1) shows how to use `replace()`, `draw_text()`, `join()`,
+`format_number()`, and `draw_sprite_corner_rect()` to build text-heavy interfaces.
 
 [Font Preview](../console/quadplay.html?game=quad://examples/fontpreview&IDE=1) shows how to render text in various styles
 and acts as a tool for previewing fonts when creating new ones. Use the arrow keys to scroll down and see more examples
@@ -325,7 +325,7 @@ graphics and gameplay:
 - [Sonic Mania](https://www.sega.com/games/sonicmania)
 - [Spelunky Classic](https://spelunkyworld.com/original.html)
 - [Dwarf Fortress](http://www.bay12games.com/dwarves/)
-- [Contra](https://en.wikipedia.org/wiki/Contra_(video_game))
+- [Contra]("https://en.wikipedia.org/wiki/Contra_(video_game)")
 - [Super Contra](https://en.wikipedia.org/wiki/Super_Contra)
 - [Kirby's Adventure](https://en.wikipedia.org/wiki/Kirby%27s_Adventure)
 - [Gradius](https://en.wikipedia.org/wiki/Gradius)
@@ -341,21 +341,21 @@ graphics and gameplay:
 - [Castlevania: Dawn of Sorrow](https://en.wikipedia.org/wiki/Castlevania:_Dawn_of_Sorrow)
 - [Advance Wars](https://en.wikipedia.org/wiki/Advance_Wars)
 - [Advance Wars Dual Strike](https://en.wikipedia.org/wiki/Advance_Wars:_Dual_Strike)
-- [Outrun](https://en.wikipedia.org/wiki/Out_Run)
+- [Out Run](https://en.wikipedia.org/wiki/Out_Run)
 - [Dig Dug](https://en.wikipedia.org/wiki/Dig_Dug)
 - [Batman](https://en.wikipedia.org/wiki/Batman:_The_Video_Game)
 - [Tetris](https://en.wikipedia.org/wiki/Tetris)
 - [Blades of Steel](https://en.wikipedia.org/wiki/Blades_of_Steel)
-- [PAC-MAN](https://en.wikipedia.org/wiki/Pac-Man)
+- [Pac-Man](https://en.wikipedia.org/wiki/Pac-Man)
 - [PGA Tour Golf](https://en.wikipedia.org/wiki/PGA_Tour_Golf)
 - [Lode Runner](https://en.wikipedia.org/wiki/Lode_Runner)
 - [Star Fox](https://en.wikipedia.org/wiki/Star_Fox)
 - [Metroid](https://en.wikipedia.org/wiki/Metroid)
-- [The Legend of Zelda](https://en.wikipedia.org/wiki/The_Legend_of_Zelda)
-- [Zelda II](Zelda II: The Adventure of Link)
+- [The Legend of Zelda]("https://en.wikipedia.org/wiki/The_Legend_of_Zelda_(video_game)")
+- [Zelda II: The Adventure of Link](https://en.wikipedia.org/wiki/Zelda_II:_The_Adventure_of_Link)
 - [The Legend of Zelda: Link's Awakening](https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_Link%27s_Awakening)
 - [The Legend of Zelda: A Link to the Past](https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_A_Link_to_the_Past)
-- [Mega Man II](https://en.wikipedia.org/wiki/Mega_Man_2)
+- [Mega Man 2](https://en.wikipedia.org/wiki/Mega_Man_2)
 - [Super Mario Bros.](https://en.wikipedia.org/wiki/Super_Mario_Bros.)
 - [Super Mario Bros. 2](https://en.wikipedia.org/wiki/Super_Mario_Bros._2)
 - [Super Mario Bros. 3](https://en.wikipedia.org/wiki/Super_Mario_Bros._3)
@@ -365,16 +365,15 @@ graphics and gameplay:
 
 </div>
 
-Games that would fit the restrictions of Quadplay except they use native vector scopes in their original implementations:
+These are games that would fit the restrictions of quadplay✜ except they use native vector displays in their original implementations:
 - [Asteroids]("https://en.wikipedia.org/wiki/Asteroids_(video_game)")
-- [Battle Zone]("https://en.wikipedia.org/wiki/Battlezone_(1980_video_game)")
+- [Battlezone]("https://en.wikipedia.org/wiki/Battlezone_(1980_video_game)")
 - [Space War](https://en.wikipedia.org/wiki/Spacewar!)
+- [Tempest]("https://en.wikipedia.org/wiki/Tempest_(video_game)")
 
-Games that are also great and whose style and gameplay would fit but who exceed the resolution limitations:
+These are games whose style and gameplay would fit, but that would exceed the resolution limitations of quadplay✜:
 - [Axiom Verge](http://www.axiomverge.com/)
 - [Into the Breach](https://subsetgames.com/itb.html)
-
-
 
 
 Programming Model
@@ -401,7 +400,7 @@ features are [*modes*](#modes), [*2.5D graphics*](#2.5dgraphics), and [*frame ho
 ### Modes
 
 Your program consists of one or more *modes* which are game states that the
-player will experience. Common modes are "Play", "Pause", "Title", "Inventory", "CutScene", and "GameOver". Use `set_mode()` to change which mode the program is in. 
+player will experience. Common modes are "Play", "Pause", "Title", "Inventory", "CutScene", and "GameOver". Use `set_mode()` to change which mode the program is in.
 Clicking on the "Modes" label on the left side of the IDE draws
 a diagram showing the modes and transitions for your program.
 
@@ -415,8 +414,8 @@ mode is just this per-frame code.
 The `mode_frames` variable tracks the number of frames since this mode started.
 `set_mode()` changes the mode and leaves a note in the debugging output explaining
 why the mode changed. It is also used by the IDE to visualize the state machine
-of your program and label the transitions. `get_mode()` returns the current mode,
-which acts like a special constant.
+of your program and label the transitions, as in the diagram above.
+`get_mode()` returns the current mode, which acts like a special constant.
 
 You can also separate the mode file into different sections:
 
@@ -425,19 +424,17 @@ You can also separate the mode file into different sections:
    that will be filled with the values passed to `set_mode()` or `push_mode()`.
 - `frame`: event that runs every frame while this mode is active. Put your drawing and simulation code here.
 - `leave`: event that runs when the game changes to another mode by executing `pop_mode()` or `set_mode()` itself.
-     Does not run on `reset_game()` or `quit_game()`, or if another mode that was pushed into
-     directly invokes `set_mode()` instead of `pop_mode()`.
-- `pop_mode`: event that runs when the game returns to this mode from another by `pop_mode()`
-     Does not run on `reset_game()` or `quit_game()`, or if another mode that was pushed into
-     directly invokes `set_mode()` instead of `pop_mode()`.
+- `pop_mode`: event that runs when the game returns to this mode from another by `pop_mode()`.
+
+Note that `leave` and `pop_mode` do not run on `reset_game()` or `quit_game()`, or if another mode
+that was pushed into directly invokes `set_mode()` instead of `pop_mode()`.
 
 You can think of these as callbacks, although they are not regular
-functions and can only be invoked directly by the console. 
-You may be familiar with the concept of a state machine, also called a
-finite automata or flow chart. Your program is a state machine with
-the modes as the states.
+functions and can only be invoked directly by the console.
+You may be familiar with the concept of a [state machine](https://en.wikipedia.org/wiki/Finite-state_machine),
+also called a finite automata or flow chart. Your program is a state machine with the modes as the states.
 
-!!! Note: Transition Hints 
+!!! Note: Transition Hints
     The IDE automatically constructs the mode diagram from your program. It is
     [impossible](https://en.wikipedia.org/wiki/Undecidable_problem) to
     do this for all programs, but it can usually do a good job. When
@@ -446,12 +443,12 @@ the modes as the states.
     example, <code style="white-space: nowrap">// set_mode(GameOver) because "0 lives"</code>
     will add a link from the current mode to the `GameOver` mode.
 
-The syntax of a mode with multiple sections is similar to [Markdown](https://en.wikipedia.org/wiki/Markdown) format: 
+The syntax of a mode with multiple sections is similar to [Markdown](https://en.wikipedia.org/wiki/Markdown) format:
 
-1. the name of the mode on the first line
-2. a line of `=`, `═`, or `⚌` characters to underline the mode name
-3. the top-level code
-4. the sections, each with a name underlined by `-`, `-`, `─`, `—`, `━`, or `⎯` characters
+1. The name of the mode on the first line
+2. A line of `=`, `═`, or `⚌` characters to underline the mode name
+3. The top-level code
+4. The sections, each with a name underlined by `-`, `-`, `─`, `—`, `━`, or `⎯` characters
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 
@@ -512,24 +509,24 @@ think of the whole program as:
 public class Menu extends Mode {
    // These variables are the top-level code
    protected int selection;
-   
+
    public void enter(int value) {
       selection = 0;
       play_audio_clip(menuOpen);
    }
-   
+
    public void frame() {
       selection = (selection + gamePad.y + 3) % 3; }
       drawChoices(selection);
-      if (gamePad.a) { 
+      if (gamePad.a) {
          if (selection == 0) { set_mode(play); } ...
       }
    }
-   
+
    public void pop_mode(boolean confirmed, Mode from) {
       if (from == confirmDialog) { ... }
    }
-   
+
    public void leave() {
       play_audio_clip(menuClose);
    }
@@ -544,7 +541,7 @@ menu.leave();
 ...
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[This is the rough equivalent of your PyxlScript program in an object-oriented language. You don't write all of this boilerplate in PyxlScript!]
+[This is the rough equivalent of the menu mode PyxlScript code in an object-oriented language. You don't write all of this boilerplate in PyxlScript!]
 
 
 
@@ -557,20 +554,18 @@ special support for drawing whole tile maps as well.  All drawing
 commands support an [_alpha_ channel](https://en.wikipedia.org/wiki/Alpha_compositing) for transparency.
 
 What is special about the 2.5D graphics in PyxlScript is that each
-drawing command has an associated _z-order_. 
-
-If two commands are at the same z-order, then whichever comes second
-will draw on top of the other one. Commands that have explicit,
-different z-order values will render from low to high values. 
+drawing command has an associated _z-order_. If two commands are at the same z-order,
+then whichever comes second will draw on top of the other one. Commands that have explicit,
+different z-order values will render from low to high values.
 
 This means that you can issue drawing commands in whatever order is
 convenient and let the rendering system organize them as you wish.
 It also makes it easy to render orthographic games such as [_Double Dragon_]("https://en.wikipedia.org/wiki/Double_Dragon_(video_game)"),
 isometric games such as [_Populous_]("https://en.wikipedia.org/wiki/Populous_(video_game)"), and other games with semi-3D effects. The included
-[_Speed Street_](../console/quadplay.html?game=quad://games/speedstreet&IDE=1) game demonstrates this.
+[_Speed Street_](#playable) game demonstrates this.
 
 Although the screen is cleared to the background color every frame,
-all of the drawing commands are stored for one previous frame. 
+all of the drawing commands are stored for one previous frame.
 This allows dialogue and pause screens to re-render the previous
 mode's last frame using `draw_previous_mode()` so that they can
 render on top of them. This rendering retains z-order, so you can
@@ -591,20 +586,20 @@ all modes. You can also specify a separate hook to run each frame
 from the one to run when it expires.
 
 The closest relative to frame hooks is JavaScript's `setTimeout()`
-utility, although it is much more limited.
+function, although it is much more limited.
 
 
 
 Coming from...
 ------------------------------------------------------------------------------------
 
-Here are some tips to get you started quickly when you're coming to 
+Here are some tips to get you started quickly when you're coming to
 PyxlScript from other popular programming languages.
 
 ### PICO-8
 
 If you're used to programming in PICO-8 Lua, make these changes for the
-quadplay✜:
+PyxlScript:
 
 - Create a *mode* for your project.
   - Put your top-level and `_init` code into the top level
@@ -617,9 +612,8 @@ quadplay✜:
 - Blocks have no `end` statements and indentation is significant
 - Use `:` within object literals instead of `=`
 - It is safe to mutate containers inside iterator loops
-- You must specify a font for `draw_text()`.
-Several are provided; see the Fonts section.
-- Enjoy the overloaded operators, array functions, z-order, and alpha blending
+- You must specify a font for `draw_text()`. Several are provided; see the Fonts section.
+- Enjoy the overloaded operators, array functions, z-order, and alpha blend
 
 
 ### Python
@@ -632,7 +626,7 @@ The PyxlScript language feels a lot like Python, with these changes:
 - Use `debug_print` instead of `print`
 - Use `for low <= i < high` instead of `for i in range(low, high)`
 - Variable names can't begin with an underscore
-- The `==` operator is pointer equality (Python `is`). Use `equivalent` for object structural equality tests. 
+- The `==` operator is pointer equality (Python `is`). Use `equivalent` for object structural equality tests.
 - Variables have block scope instead of function scope
 - Function variables have lexical scope (no `global` statement required)
 - No integer division (use `floor`)
@@ -698,7 +692,7 @@ The emulator has special keyboard keys for:
 - Ctrl+Break or Ctrl+C
 - Ctrl+R or Ctrl+F5: reload
 
-On MacOS, either Control or Command can be used for "Ctrl".
+On macOS, either Control or Command can be used for "Ctrl".
 
 [^safariGIF]: On Safari, you have to explicitly allow popups for the website for this to work.
  Go to Preferences --> Websites --> Pop-up Windows and check "allow" for `localhost` (or whatever
@@ -717,9 +711,9 @@ For two-player keyboard input, you can use two USB or Bluetooth
 keyboards on the same computer, or have both players share a single
 keyboard.
 
-<center> 
+<center>
   ![](../console/xbox_controller.png style="border:none; image-rendering:auto" width=50%)
- 
+
   ![](../console/gamepad.png style="border:none; image-rendering:auto" width=50%)
 
   ![](../console/keyboard.png style="border:none; image-rendering:auto" width=75%)
@@ -751,12 +745,12 @@ Physical controllers give the best experience. We have tested:
 [XPad](https://support.8bitdo.com/xpad.html) mode. They seem most reliable on Windows and Linux.
 Be sure to install the latest firmware update from the 8BitDo website.
 
-Left and right Joy-Cons work individually in horizontal mode. They cannot be joined as on 
+Left and right Joy-Cons work individually in horizontal mode. They cannot be joined as on
 Switch. The Switch Pro controller and the SNES and NES controllers work normally.
 
-On MacOS, Xbox wired controllers require a free,
+On macOS, Xbox wired controllers require a free,
 [open source driver](https://github.com/d235j/360Controller-n). Xbox wireless controllers
-do not work on Mac. Different controllers work with different browsers on MacOS. For example,
+do not work on Mac. Different controllers work with different browsers on macOS. For example,
 Xbox 360 controllers work well with Chrome and the Nintendo SNES controller works with Safari.
 
 PlayStation, Stadia, and
@@ -799,7 +793,7 @@ Switch, Stadia, and Thrustmaster controllers. If your device is not
 mapped correctly, just enter the pause menu on any game and select
 "Set Controls".
 
-I've found that the easiest Bluetooth controller to pair on MacOS is a
+I've found that the easiest Bluetooth controller to pair on macOS is a
 Switch JoyCon.  Turn on Bluetooth on your Mac and open the Bluetooth
 preferences. Hold the controller horizontally and hold the tiny sync
 button
@@ -809,7 +803,7 @@ see the controller appear on your Mac.  Click on its name and select
 just slide it back onto the Switch and it will sync.
 
 8BitDo controllers seem to work very reliably on Windows and Linux
-but are inconsistent on MacOS.
+but are inconsistent on macOS.
 
 
 ### Resolution
@@ -817,7 +811,7 @@ but are inconsistent on MacOS.
 The emulator screen tries to maintain an integer multiple of the
 native pixel resolution to prevent distortion of pixel art. When
 running on a very high resolution screen (greater than 2.5x), it
-relaxes this constraint to use the full screen effectively. 
+relaxes this constraint to use the full screen effectively.
 
 As a result, the emulator is pixel-perfect on small displays and fills
 the screen onlarge ones.
@@ -839,9 +833,9 @@ Screen     | Factor      | Used      | Efficiency
 1920x1080  |  4x         | 1536x896  | 66%
 *1920x1200*|  *5x*       | 1920x1120 | *93%*
 
-If building a physical quadplay✜ cabinet or handheld _without_ 
+If building a physical quadplay✜ cabinet or handheld _without_
 on-screen mobile controls, I therefore recommend using a 1280x720,
-1600x900, or 1920x1200 display 
+1600x900, or 1920x1200 display
 to maximally fill the screen with integer pixel scaling.
 
 Some physical handhelds that may be capable of running quadplay✜
@@ -867,50 +861,50 @@ previous work, here are the resolutions of classic and retro machines:
  - 256x240 NES and TurboGrafx-16
  - 256x192 Nintendo DS and Sega Master System
  - 256x224 SNES
- - 240x160 Gameboy Advance
+ - 240x160 Game Boy Advance
  - 240x136 TIC-80
  - 160x192 Atari 2600
- - 160x144 Gameboy Color and Sega Game Gear
+ - 160x144 Game Boy Color and Sega Game Gear
  - 160x102 Atari Lynx
  - 128x128 Pico 8
 
 
 
-Quantize
+quantize✜
 ---------------------------------------------------------------------------------------------
 
-[Quantize✜](../tools/quantize.html) is a standalone browser tool for
+[quantize✜](../tools/quantize.html) is a standalone browser tool for
 converting any image format that your browser can load into a sRGB8 PNG
 for quadplay✜. While the console emulator can load any PNG file, if you convert
-them using Quantize you will have control over the color reduction process
+them using quantize✜ you will have control over the color reduction process
 and be able to produce much smaller files for distribution.
 
 
-Fontgen
+fontgen✜
 ---------------------------------------------------------------------------------------------
 
-[Fontgen✜](../tools/fontgen.html) is a standalone browser tool for
+[fontgen✜](../tools/fontgen.html) is a standalone browser tool for
 producing rough quadplay✜ font images from fonts installed on your local
 computer. You can then screen capture these and edit them in your
 favorite pixel editor to clean them up.
 
 
-Fontpack
+fontpack✜
 ---------------------------------------------------------------------------------------------
 
-[Fontpack✜](../tools/fontpack.html) is a standalone browser tool for
+[fontpack✜](../tools/fontpack.html) is a standalone browser tool for
 taking a font PNG file with regular tiles (such as the one produced by
-fontgen) and packing it tightly. It will generate the output PNG
+fontgen✜) and packing it tightly. It will generate the output PNG
 and the `.font.json` file for you.
 
 
-Scalepix
+scalepix✜
 ---------------------------------------------------------------------------------------------
 
-[Scalepix✜](../tools/scalepix.html) is a standalone browser tool for
-upscaling a font or sprit PNG file to twice the resolution in each 
+[scalepix✜](../tools/scalepix.html) is a standalone browser tool for
+upscaling a font or sprit PNG file to twice the resolution in each
 dimension, for upscaling existing assets or importing
-NES, PICO8, and GameBoy assets.
+NES, PICO8, and Game Boy assets.
 
 
 
@@ -959,7 +953,7 @@ Field              | Values   | Meaning
 `released_q`       | 0 or 1   | 1 if the ⓠ button was just released this frame
 `prompt`           | `{...}`  | An object mapping button names to text prompts (see below)
 
-The axes are affected by the current transformation _at the end of the frame_, 
+The axes are affected by the current transformation _at the end of the frame_,
 as set by `set_transform()`. The angles are always clockwise in screen space.
 
 The `joy` variable is equal to `gamepad_array[0]` as shorthand for single-person games.
@@ -1020,7 +1014,7 @@ This can be changed from within a program using `device_control()`. See also the
 
 
 ### Main Menu
- 
+
 The system pause menu is bound to the ⓟ button, which is not visible to games.
 Games can add up to three custom elements on the pause menu, and can change these
 at any point.
@@ -1028,7 +1022,7 @@ at any point.
 `set_pause_menu(opt1 (= nil), opt2 (= nil), opt3 (= nil))`
 : Pverride the custom elements on the pause menu. Each argument
   is an object of the form `{text:string, callback:function, confirm:boolean}`.
-  
+
   - `text` is the menu item text it will be clipped if too long
   - `callback` is a function of no arguments to execute when this option is selected
   - `confirm` (defaults to `false`) if true, an additional confirmation dialog
@@ -1062,7 +1056,7 @@ Modes
 
 `push_mode(Mode, ...)`
 : Enter a new mode but remember the current mode. Combines their draw calls
-  for `draw_previous_mode()`. Useful for modal dialogs, such as pause screens, 
+  for `draw_previous_mode()`. Useful for modal dialogs, such as pause screens,
   inventory screens, and dialogue. Does not invoke the `leave` section of
   the current mode. Does invoke the `enter` section of the mode being entered.
   Any arguments after the `Mode` are passed to the `enter` section.
@@ -1079,7 +1073,7 @@ Modes
 `set_mode(Mode, ...)`
 : Immediately switch to the new mode. The current mode stops executing and the new
   mode begins.
-  
+
   The mode name must be the literal name of the mode, not a variable,
   a value from a data structure, or the return value of the function.
 
@@ -1087,10 +1081,10 @@ Modes
   an expression.  The note is a comment that is used by the IDE for
   creating state machine diagrams and in the IDE for debugging. It has
   no effect on the executing program.
-  
+
   Erases the `push_mode` stack but remembers its draw calls.
   Any arguments after the `Mode` are passed to the `enter` section.
- 
+
 When changing modes via `set_mode()`, the order of operations is:
 
 1. `get_previous_mode()` switches to the current mode,
@@ -1098,9 +1092,9 @@ When changing modes via `set_mode()`, the order of operations is:
 2. The _previous_ mode's graphics commands are captured for future
    `draw_previous_mode()` calls.
 3. Any `leave` code executes on the _previous_ mode.
-4. `mode_frames = 0`, 
+4. `mode_frames = 0`,
 5. Any `enter` code executes on the _new_ mode and arguments supplied.
- 
+
 
 Types
 ---------------------------------------------------------
@@ -1118,7 +1112,7 @@ Types
 : Returns true for `nil` and false for all other types.
 
 `is_NaN(value)`
-: Returns true for the floating point not-a-number value 
+: Returns true for the floating point not-a-number value
   `NaN` and false for all other values.
   Note that you cannot test for `NaN` using `==` due to
   floating point NaN rules.
@@ -1143,11 +1137,11 @@ Array
 `array_value(array, i, extrapolate (= array.extrapolate or "clamp"))`
 : Applies `floor()` to `i` and then applies the extrapolation mode, which defaults
   to the extrapolation mode of the array itself if specified.
-  Intended primarily for animation of values, including 
-  the named arrays of spritesheets, for example, 
+  Intended primarily for animation of values, including
+  the named arrays of spritesheets, for example,
   `sprite = array_value(spritesheet[animName], frame)`.
   See also `make_spline()` and the Sprite JSON section. The `extrapolate` values accepted are:
-  
+
   - `"oscillate"`
   - `"loop"`
   - `"clamp"` (default, other unsupported values are silentely treated as clamp instead of failing)
@@ -1183,14 +1177,14 @@ Array
 : Find the index of the element whose value is `x`, starting at optional index `i` (default 0).
   Returns `∅` if not found. O(n)
 
-`insert(array, i, x,...)` 
+`insert(array, i, x,...)`
 : Inserts the values into the array, starting at index `i` (as in, `array[i] = x` on return)
   and returns the first value inserted. Similar to Python insert and JavaScript splice functions.
 
 `join(array, separator (= ""), lastSeparator (= separator), pairSeparator (= lastSeparator), empty (= ""))`
 : Joins the elements of the array into a string. Each element converted to a string with `unparse()` if it is not already a string.
   The optional `lastSeparator` allows the final join to use a special case.
-  The optional `pairSeparator` is a special separator used for arrays of length two. 
+  The optional `pairSeparator` is a special separator used for arrays of length two.
   For example `join(inventory, ", ", ", and ", " and ", "nothing")`.
   The optional `empty` value is used if the array has length 0.
 
@@ -1258,15 +1252,15 @@ Array
   to be other arrays or strings and are sorted by that index. If `k`
   is not specified and the array contains objects, then elements are
   sorted by their alphabetically-first key.
-  
+
   If `k` is a function, then it must be a function of the form
   `compare(a, b)` that returns a positive number if `a` is greater
   than `b`, a negative number if `b` is greater than `a`, and zero if
   they are equal.
-  
+
   If `k` is not specified and the array contains numbers or strings,
   then they are sorted by natural order.
-  
+
   If `reverse` is true, then the array is sorted in reverse order
   from greatest to least.
 
@@ -1280,7 +1274,7 @@ String
 : Find the index of the substring whose value is `x`, starting at
   optional index `i` (default 0).  Returns `∅` if not found. O(n)
   time.
-  
+
 `format_number(n, fmt)`
 : Produces a string from number `n` in one of the following formats. Input times are in seconds.
   Each is followed by an example output.
@@ -1298,7 +1292,7 @@ String
    - `"oldstopwatch"`: 1"38'71
    - `"ordinal"`: second
    - `"ordinalabbrev"`: 2ⁿᵈ
-   - `".00"` (or any other trailing zero sequence): 4.91 
+   - `".00"` (or any other trailing zero sequence): 4.91
    - `"00"` (or any other leading zero sequence): 07
    - `" 0"` (or any other leading space sequence followed by a zero sequence): " 7"
 
@@ -1320,7 +1314,7 @@ String
 
 `replace(string, object)`
 : Replace all occurances of each key of `object` with each `value` of object, in `string`,
-  applying longer substitutions first. For example, 
+  applying longer substitutions first. For example,
   `replace("Hey, PROPER_NOUN, use the ADJ NOUN!", {ADJ: "big", NOUN: "stick", PROPER_NOUN: "Runi"})`.
 
 `reversed(string)`
@@ -1372,7 +1366,7 @@ Object
 : Same as `remove_key` for a object.
 
 `fast_remove_value(object, value)`
-: Delete one element that is `== v`, or do nothing if there is no such element. 
+: Delete one element that is `== v`, or do nothing if there is no such element.
   See also `remove_values()`.
 
 `find(object, x)`
@@ -1420,13 +1414,13 @@ Random Values
 
 `random_gaussian()`
 : Same as `random_gaussian(0, 1, random)`
-  
+
 `random_gaussian(mean, stddev, random (= random))`
 : Returns a Gaussian distributed random number on the distribution
   with the given mean and standard deviation. See also `random_truncated_gaussian()`.
 
 `random_integer(hi)`
-: Uniformly distributed random integer between 0 and hi, inclusive. 
+: Uniformly distributed random integer between 0 and hi, inclusive.
   This version is deprecated. Use `random_integer(0, hi)` instead.
 
 `random_integer(lo, hi, random (= random))`
@@ -1434,7 +1428,7 @@ Random Values
   The `random` argument defaults to common random number generator `random()`, but
   an alternative function previously created by `make_random()` can be
   passed instead.
-  
+
 `random_sign(random (= random))`
 : Returns +1 or -1 with equal probability.
 
@@ -1473,7 +1467,7 @@ Random Values
   random offsets within a circle. See also `random_on_circle()`
 
 `random_within_square(random (= random))`
-: Returns a uniformly distributed `xy()` in the square from `(-1, -1)` to `(1, 1)`, that is, 
+: Returns a uniformly distributed `xy()` in the square from `(-1, -1)` to `(1, 1)`, that is,
   the square that has a "radius" of 1 or sides of length two, and is centered at the origin `(0, 0)`.
   Analogous to `randomDisk()`.
 
@@ -1498,19 +1492,19 @@ Random Values
   with the given mean and standard deviation. The mean and standard
   deviation may each be scalar or `xyz()` values.
   See also `random_gaussian()`, `random_truncated_gaussian3D()`.
-  
+
 `random_on_cube(random = random)`
 : A random point on the _surface_ of the cube from `(-1, -1, -1)` to `(1, 1, 1)`.
 
 `random_on_sphere(random = random)`
 : Returns a uniformly distributed `xyz()` on the [hollow] sphere with center `(0, 0, 0)` with radius 1. Useful for
   random directions in 3D. See also `random_within_sphere()` and `random_on_circle()`.
-  
+
 `random_within_cube(random = random)`
 : A random point inside the cube from `(-1, -1, -1)` to `(1, 1, 1)`.
 
 `random_within_sphere(random = random)`
-: Returns a uniformly distributed `xyz()` within the unit sphere, that is, the ball with center `(0, 0, 0)` and radius 1. 
+: Returns a uniformly distributed `xyz()` within the unit sphere, that is, the ball with center `(0, 0, 0)` and radius 1.
   Useful for random offsets within a sphere. See also `random_on_sphere()`.
 
 `random_truncated_gaussian3D(mean, stddev, radius, random = random)`
@@ -1525,7 +1519,7 @@ Random Values
 Vector
 ---------------------------------------------------------
 
-Most of the math functions and operators defined for numbers also 
+Most of the math functions and operators defined for numbers also
 operate component-wise on vectors represented as structures or arrays.
 For example, `clamp()`, `min()`, `loop()`, `+`, `/`, etc.
 
@@ -1541,7 +1535,7 @@ including `xy()` and `rgb()` values, except where specific key names are mention
   returns `a.x * b.y - a.y * b.x`, which is the 2D wedge product.
 
 `direction(v)`
-: `v / magnitude(v)` if the magnitude is greater than 10<sup>-10</sup>, otherwise returns the original 
+: `v / magnitude(v)` if the magnitude is greater than 10<sup>-10</sup>, otherwise returns the original
   (nearly zero) vector. That is, returns a normalized or unit vector unless the input is close to zero.
 
 `dot(a, b)`
@@ -1565,11 +1559,11 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 : Smallest element.
 
 `perp(v)`
-: Returns a vector perpendicular to `v` by rotating it 90 degrees: 
+: Returns a vector perpendicular to `v` by rotating it 90 degrees:
   `xy(-v.y, v.x)`, for `xy()` and 2-element array vectors only.
 
 `xy(x, y)`
-: Create the object with `x` and `y` fields. 
+: Create the object with `x` and `y` fields.
 
 `xy(v)`
 : Returns `{x:v.x, y:v.y}`. Useful for removing the `z` component or cloning.
@@ -1578,7 +1572,7 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 : Returns `{x:a[0], y:a[1]}`. Useful for converting from a matrix column.
 
 `xz(x, z)`
-: Create the object with `x` and `z` fields. 
+: Create the object with `x` and `z` fields.
 
 `xz(v)`
 : Returns `{x:v.x, z:v.z}`. Useful for removing the `y` component or cloning.
@@ -1640,7 +1634,7 @@ Math
 : Copy the properties of `s` onto `d`. Both must be arrays or objects.
 
 `cos(x)`
-: Cosine, `x` in radians 
+: Cosine, `x` in radians
 
 `deep_clone(v)`
 : Return a deep clone of `v`. Pointer structures are preserved and loops
@@ -1689,12 +1683,12 @@ Math
   `rgba()` values, and arrays of numbers), and all elements must have
   the same type. The spline is always interpolating. The `timeArray`
   and `valueArray` must have the same length.
-  
+
   `order`:
   - `0` = nearest neighbor
   - `1` = linear (polyline)
   - `3` = cubic (Catmull-Rom) spline
-  
+
   `extrapolate`:
   - `"loop"` = cyclic. The `timeArray` must have one more element than the `valueArray`.
      That final value is the looped time that matches the start time. Similar to OpenGL
@@ -1745,7 +1739,7 @@ Math
 : Return the nearest value of `x` quantized to `u`: `round(x, u) == round(x * u) / u`.
 
 `sign(x)`
-: Sign of `x`. Returns -1 if `x` is less than zero, -0 if `x` is -0, 
+: Sign of `x`. Returns -1 if `x` is less than zero, -0 if `x` is -0,
   +0 if `x` is +0, and +1 if `x` is greater than zero.
 
 `signNotZero(x)`
@@ -1754,7 +1748,7 @@ Math
 `smoothstep(t_start, t_end, t)`
 : Transition from 0 at `t = t_start` to 1 at `t = t_end`. All arguments must be numbers.
   Typically used as `lerp(A, B, smoothstep(lo, hi, t))` where `A` and `B` are colors or points.
-  This is a common graphics function for cubic Hermite interpolation. See also 
+  This is a common graphics function for cubic Hermite interpolation. See also
   the [GLSL documentation](https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/smoothstep.xhtml).
 
 `smootherstep(t_start, t_end, t)`
@@ -1774,12 +1768,12 @@ Math
 : Tangent of `x` radians.
 
 
-`x`               |  -5  |  -4  |  -3  |  -2  |  -1  |  0  |  1  |  2  |  3  |  4  |  5  |  6  
+`x`               |  -5  |  -4  |  -3  |  -2  |  -1  |  0  |  1  |  2  |  3  |  4  |  5  |  6
 ------------------|-----:|-----:|-----:|-----:|-----:|----:|----:|----:|----:|----:|----:|-----:
-`clamp(x, 0, 4-1)`|  0   |  0   |   0  |   0  |   0  |  0  |  1  |  2  |  3  |  3  |  3  |  3  
-`x mod 4`         |  -1  |  0   |  -3  |  -2  |  -1  |  0  |  1  |  2  |  3  |  0  |  1  |  2  
-`loop(x, 4)`      |  3   |  0   |   1  |   2  |   3  |  0  |  1  |  2  |  3  |  0  |  1  |  2  
-`oscillate(x, 4)` |  1   |  2   |   3  |   2  |   1  |  0  |  1  |  2  |  3  |  2  |  1  |  0  
+`clamp(x, 0, 4-1)`|  0   |  0   |   0  |   0  |   0  |  0  |  1  |  2  |  3  |  3  |  3  |  3
+`x mod 4`         |  -1  |  0   |  -3  |  -2  |  -1  |  0  |  1  |  2  |  3  |  0  |  1  |  2
+`loop(x, 4)`      |  3   |  0   |   1  |   2  |   3  |  0  |  1  |  2  |  3  |  0  |  1  |  2
+`oscillate(x, 4)` |  1   |  2   |   3  |   2  |   1  |  0  |  1  |  2  |  3  |  2  |  1  |  0
 [Table [tblCompare]: Comparison of range restriction functions useful for animation.]
 
 
@@ -1832,7 +1826,7 @@ and return a new `xy()` value (or `z`):
 - `transform_draw_to_sprite(e, c)`, `transform_sprite_to_draw(e, c)`
 - `transform_draw_to_map(m, c)`, `transform_map_to_draw(m, c)`, `transform_map_layer_to_draw_z(m, L)`, `transform_draw_z_to_map_layer(m, z)`
 
-Where `m` is a map, `e` is an entity, and `c` is an `xy()` coordinate. 
+Where `m` is a map, `e` is an entity, and `c` is an `xy()` coordinate.
 The `z` value only affects `transform_draw_to_screen` if a skew has been set by `set_transform()`.
 In this case, there is no way to invert the draw-to-screen transformation, so `transform_screen_to_draw` is
 misleading.
@@ -1863,8 +1857,8 @@ clipping region makes two pixels visible.
 *  2048 (out of the screen)
 *    ^
 *     \  z
-*      \ 
-*       \0            x           
+*      \
+*       \0            x
 *        *----------------------->* SCREEN_SIZE.x
 *        |\                       |
 *        | \                      |
@@ -1872,7 +1866,7 @@ clipping region makes two pixels visible.
 *     y  |   v                    |
 *        |     -2047              |
 *        v                        |
-*        *------------------------* 
+*        *------------------------*
 *   SCREEN_SIZE.y
 ***********************************************************
 [Figure [coords]: Screen space and default draw space coordinate system.]
@@ -1910,9 +1904,9 @@ centered at `pos` colors pixel `⌊pos⌋`.
 
 For example, the rectangle from (0, 0) to
 (2, 1) covers two pixel centers: (0.5, 0.5) and (1.5, 0.5). The coordinates
-for a `draw_corner_rect()` command on integer boundaries are therefore usually 
-`draw_corner_rect(topLeft, widthHeight, ...)` or 
-`draw_corner_rect(topLeft, bottomRight - topLeft + 1, ...)` where `bottomRight` is the 
+for a `draw_corner_rect()` command on integer boundaries are therefore usually
+`draw_corner_rect(topLeft, widthHeight, ...)` or
+`draw_corner_rect(topLeft, bottomRight - topLeft + 1, ...)` where `bottomRight` is the
 lowest and rightmost pixel that will be visible.
 
 This coordinate system favors intuition for centered, even-sized
@@ -1958,10 +1952,10 @@ The center of the entire screen is `½ SCREEN_SIZE`.
 `get_transform()`
 : Returns the current net transformation as an `args` object that could be passed to
   `set_transform(args)`.
-  
+
 `up_y()`
 : Returns `-sign(get_transform().dir.y)`, which is -1 if Y increases downwards (the default)
-  and +1 if Y increases upwards (`"flip_y": true` in the .game.json file). 
+  and +1 if Y increases upwards (`"flip_y": true` in the .game.json file).
 
 `preserving_transform:`
 : The special `preserving_transform:` block saves the current transform and
@@ -1987,7 +1981,7 @@ The center of the entire screen is `½ SCREEN_SIZE`.
 
 `set_transform(pos (= nil), dir (= nil), z (= nil), zDir (= nil), skew (= nil))`
 : Set the transformation applied to all draw coordinates to compute screen coordinates. Nil values
-  or nil properties default to their previous value. The equation 
+  or nil properties default to their previous value. The equation
   mapping draw to screen coordinates is:
   `screen.x = (draw.x + skew.x * draw.z) * dir.x + pos.x`;
   `screen.y = (draw.y + skew.y * draw.z) * dir.y + pos.y`;
@@ -1997,10 +1991,10 @@ The center of the entire screen is `½ SCREEN_SIZE`.
   affects the location of sprites and text but not their own axes;
   text will always render right side up and sprites must be
   independently flipped.
-  
+
   By default, increasing z is towards the viewer, a negative direction can
   be used to make increasing values farther back.
-  
+
   The skew transform applies after direction flipping and can be used for isometric 3D.
 
 
@@ -2021,7 +2015,7 @@ between axis conventions in arcade games. They do not allow rotation
 or even non-unit scaling between draw space and screen space. They
 also _do not affect the orientation of sprites_.  A sprite rotated 45
 degrees counter-clockwise and at the top of the screen will draw at
-the bottom of the screen after `set_transform(xy(0, SCREEN_SIZE.y - 1), xh(1, -1))`, 
+the bottom of the screen after `set_transform(xy(0, SCREEN_SIZE.y - 1), xh(1, -1))`,
 but it will not be upside down and will still be rotated
 45 degrees counter-clockwise.
 
@@ -2041,7 +2035,7 @@ coordinates. The direction in draw coordinates is given by
 *  Default Entity Space         With flipped y-axis
 *
 *                                       ^ y
-*                                       | 
+*                                       |
 *     .---------.                  .----|----.
 *     |    ↶    |                  |    |↶   |
 *     |    *-------> x             |    *--------> x
@@ -2067,7 +2061,7 @@ const Y = transform_entity_to_draw(entity, xy(0, 1)) - entity.pos
 There are currently no graphics commands that themselves take
 entity-space coordinates, but the concept can be important for writing
 your own routines that operate on entities, such as resolving
-attachment points. 
+attachment points.
 
 A planned future physics package extension will use entity
 coordinates, for example, for a space ship to apply thrust at the
@@ -2101,7 +2095,7 @@ covers the same region as the drawing command
 `draw_corner_rect(xy(0,0), map.size * tileSize, #f)`.
 
 The map is aligned by default so that `draw_map()` renders the top-left
-corner of the map to the top-left corner of the screen. Use 
+corner of the map to the top-left corner of the screen. Use
 `offset` in the `.map.json` file or `set_transform()` to alter
 the location of the map when rendered.
 
@@ -2131,7 +2125,7 @@ Each element of a spritesheet has the following immutable properties:
   through the non-flipped sprites. Note that `s.y_flipped.y_flipped == s`.
 
 `sprite.scale`
-: An `xy()` value that is `xy(1,1)` for sprites extracted directly from 
+: An `xy()` value that is `xy(1,1)` for sprites extracted directly from
   the spritesheet and may be +1 or -1 in each axis for flipped sprites.
 
 `sprite.size`
@@ -2163,7 +2157,7 @@ built-in properties in the future: `density` and `friction`.
 
 ### Basic
 
-`draw_entity(e, recurse (= true))` 
+`draw_entity(e, recurse (= true))`
 : Draw the entity, if its sprite is defined. If `recurse` is true,
   also draws all of the elements of `e.child_array` recursively (see
   the Hierarchy section).
@@ -2173,9 +2167,9 @@ built-in properties in the future: `density` and `friction`.
   any properties not specified. This is forward compatible to any
   extended properties that might be added in future versions, however,
   those properties might conflict with any that you add on your
-  own. The built-in entity properties are all cloned if specified. All 
+  own. The built-in entity properties are all cloned if specified. All
   other properties of `obj` are copied over but not cloned.
-  
+
   If the `childTable` second argument is provided (note that this is not
   a property of `obj`), then all of the keys become fields of the new
   entity and the values are added to the entity's `child_array`. This is
@@ -2208,10 +2202,10 @@ The basic entity properties and defaults are:
 : Visibility on the interval 0 to 1. Defaults to 1.
 
 `entity.pivot`
-: Point on the sprite that is mapped to the center of the entity for 
-  collision detection bounds and child reference frames. _Does not affect rendering_. 
-  Defaults to the pivot form the intial 
-  sprite, or `xy(0, 0)` if there was no sprite. If you change the 
+: Point on the sprite that is mapped to the center of the entity for
+  collision detection bounds and child reference frames. _Does not affect rendering_.
+  Defaults to the pivot form the intial
+  sprite, or `xy(0, 0)` if there was no sprite. If you change the
   `entity.sprite`, then you may want to also change the `entity.pivot`
   at the same time. See also `entity.offset` for transient effects.
 
@@ -2233,13 +2227,13 @@ The basic entity properties and defaults are:
   box of the entire object in its own reference frame.  If
   `entity.shape == "disk"`, then the `x` and `y` fields must have the
   same value. If not specified, defaults to the sprite's size.
-  
+
 `entity.sprite`
 : A sprite from a sprite sheet. Can be `nil`.
 
 `entity.sprite_override_color`
-: Replaces the color of the sprite with this solid color (only works
-  if there is a sprite), keeping its alpha channel. Defaults to `nil`.
+: Blends over the color of the sprite with this color (only works
+  if there is a sprite). See `draw_sprite()` for details. Defaults to `nil`.
 
 `entity.z`
 : z-order position (a number). Defaults to zero.
@@ -2258,8 +2252,8 @@ e = make_entity({pos:P, shape:"rect", size: xy(edge, edge)})
 e = make_entity({pos:P, shape:"rect", size: xy(w, h)})
 
 // Line
-e = make_entity({pos:(A + B) / 2, shape:"rect", 
-                size: xy(magnitude(B - A), 0), 
+e = make_entity({pos:(A + B) / 2, shape:"rect",
+                size: xy(magnitude(B - A), 0),
                 angle:atan(B.y - A.y, B.x - A.x)})
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2274,7 +2268,7 @@ of using the sprite rendering, you can do this:
 def draw(e):
    if e.draw: e.draw(e)
    for c in e.child_array: draw(c)
-   
+
 def drawInBox(e):
    draw_corner_rect(e.pos, e.size, #FFF)
    draw_sprite(e.sprite, e.pos)
@@ -2323,7 +2317,7 @@ A key relating textbook symbols and definitions to the quadplay✜ entity proper
   `restitution`   | $e$                              | Coefficient of restitution
 
 You can choose the units and coordinate system. Pixels (of distance),
-pixel mass, and game frames are the most common choice of units in 
+pixel mass, and game frames are the most common choice of units in
 order to simplify conversion factors.
 
 See also the Physics section for relevant functions.
@@ -2332,7 +2326,7 @@ See also the Physics section for relevant functions.
 : `xy()` linear force. Defaults to (0, 0).
   Has units of mass * pixels / frame^2 by default.
   Typical forces are on the scale 1-10.
-  
+
 `entity.density`
 : In mass units per square pixel. Defaults to 1.
   If density is `infinity`, then the object can move others
@@ -2360,23 +2354,23 @@ See also the Physics section for relevant functions.
   entity then it should be `"vigilant"`.
 
 `entity.restitution`
-: Amount of energy preserved in a collision. Useful range is 0%-100%. The default is 10%. 
+: Amount of energy preserved in a collision. Useful range is 0%-100%. The default is 10%.
   The net restitution applied between two entities is the geometric mean of their restitution values.
 
 `entity.collision_category_mask`
-: Collision categories for this object, as 32 bit flags. 
+: Collision categories for this object, as 32 bit flags.
   Two objects can only collide if
   `(A.collision_category_mask bitand B.collision_hit_mask) and (B.collision_category_mask bitand A.collision_hit_mask)`.
   Defaults to 1. Does not affect `overlaps()`.
 
 `entity.is_sensor`
 : If `true`, collisions will occur with this entity as usual but will not cause motion to change
-  as a result, like a ghost. Default is `false`. This is useful for detecting triggers such as a character 
+  as a result, like a ghost. Default is `false`. This is useful for detecting triggers such as a character
   walking through a doorway or touching acid via the physics engine without causing that to affect
   the object. Note that a sensor must have infinite density or be attached to another object or it will
   fall out of the world by gravity. If you want to never register collisions, instead set `entity.collision_category_mask = 0`
   to prevent all collisions and preclude them being reported.
-  
+
   Collision sensors have density, and it must be nonzero. Set their density
   to a small value, such as `epsilon`, to minimize the effect on the motion of other objects
   that they are attached to.
@@ -2400,8 +2394,8 @@ See also the Physics section for relevant functions.
   move with the surface that they are on.
 
 `entity.friction`
-: Kinetic dry friction applied when an object is in motion, damping the velocity. 
-  Useful range is 0%-100%. Defaults to 15%. The net friction applied between two 
+: Kinetic dry friction applied when an object is in motion, damping the velocity.
+  Useful range is 0%-100%. Defaults to 15%. The net friction applied between two
   entities is the geometric mean of their friction values.
 
 `entity.drag`
@@ -2419,17 +2413,17 @@ have absolute properties in draw space.
 Hierarchy functions:
 
 `entity_add_child(parent, child)`
-: Adds the `child` entity to the `parent.child_array` and sets `child.parent = parent`. 
+: Adds the `child` entity to the `parent.child_array` and sets `child.parent = parent`.
   Removes the child from any previous parent's child array if there was one.
   Returns the `child`.
 
 `entity_remove_child(parent, child)`
 : Removes the `child` from `parent.child_array`, if it is a child. Does nothing if
   `child` is not in `parent`. Causes an error if `child` and `parent.child_array`
-  are inconsistent.  If the child was added by the `make_entity` `childTable` as a 
+  are inconsistent.  If the child was added by the `make_entity` `childTable` as a
   field on parent, that field is not modified. You can remove the field explicitly
   using `remove_key(parent, "childName")`.
-  
+
 `entity_remove_all(parent)`
 : Removes all children.
 
@@ -2445,7 +2439,7 @@ Hierarchy functions:
 : Recursively update the `pos`, `scale`, `angle`, and `offset` fields of all children and
   descendants from their `pos_in_parent`, `scale_in_parent`, `angle_in_parent`, and `offsetInparent`
   fields. Usually called after simulation or animation processing.
-  
+
 
 
 The hierarchy properties are:
@@ -2475,7 +2469,7 @@ The hierarchy properties are:
 
 `entity.orient_with_parent`
 : If true, `entity_update_children()` will override this entity's angle and scale with
-  `entity.angle = entity.angle_in_parent + parent.angle` and `entity.scale = entity.parent.scale * entity.scale_in_parent`. 
+  `entity.angle = entity.angle_in_parent + parent.angle` and `entity.scale = entity.parent.scale * entity.scale_in_parent`.
 
 `entity.scale_in_parent`
 : `xy()` scale relative to the parent axes for flipping
@@ -2504,7 +2498,7 @@ intersections.
   a force at the center of mass, you can also directly add to `entity.force`.
   To apply a torque without a net force at the center of mass, directly
   add to `entity.torque`.
-  
+
   Does not support entities with children or pivots.
 
 `entity_apply_impulse(entity, world_impulse, world_pos (= entity.pos))`
@@ -2513,13 +2507,13 @@ intersections.
   a velocity change at the center of mass, you can also directly add to `entity.vel`.
   To apply angular velicty without a net linear velocity impulse at the center of mass, directly
   add to `entity.spin`.
-  
+
   Does not support entities with children or pivots.
 
 `entity_area(e)`
 : Returns the world space area of `e`, which must have `shape`
   and `size` properties and may have a `scale` property.
-  
+
 `entity_inertia(entity)`
 : Scalar inertia tensor about the center of mass. Equal to
   `entity_mass(entity) * magnitude(entity.scale * entity.size)² / 12`
@@ -2531,10 +2525,10 @@ intersections.
 : Scalar mass equal to the bounds area in pixels specified by the
   `entity.shape` and `entity.size` times the `entity.density`.
   Returns generic mass units.
-  
+
 `entity_move(entity, pos (= entity.pos), angle (= entity.angle))`
 : Instantaneously moves an entity to this position and angle _as if it had
-  naturally reached that location in the previous frame_, setting the appropriate 
+  naturally reached that location in the previous frame_, setting the appropriate
   `entity.vel` and `entity.spin`. This is useful for moving
   entities with infinite density in a way that causes them to interact
   naturally with other entities that they come into contact with.
@@ -2547,15 +2541,15 @@ intersections.
   integrates `acc` into `vel` into `pos` and `twist` into `spin` into
   `angle`. Finally, resets `force` and `torque` to zero and
   invokes `entityUpdateChilren()`.
-  
+
   Uses a forward Euler (1st order Runge-Kutta) integrator over
   duration `t` measured in frames. This tends to be a more stable
   method for small, discrete time steps than the analytic quadratic
   solution and avoids the need for additional data of higher-order
   integrators.
-  
-  Does not perform collision detection or response, or enforce attachment 
-  constraints. You do not need to call `entity_simulate()` if you are 
+
+  Does not perform collision detection or response, or enforce attachment
+  constraints. You do not need to call `entity_simulate()` if you are
   already using `physics_simulate()`.
 
 `make_collision_group()`
@@ -2575,7 +2569,7 @@ using the full physics engine.
 : Returns true if the bounds of `A` and `B` overlap each other, taking
   shape and orientation into account and incuding the borders. Ignores
   `offset` and `z` for entities. Each of `A` and `B` can be any of:
-  
+
    - an entity from `make_entity()`
    - any object with `pos` and optional `shape`, `angle`, `pivot`, and `size` properties
    - an `xy()` point
@@ -2583,7 +2577,7 @@ using the full physics engine.
   If `recurse` is true (the default), compares `A` and all of its children
   against `B` and all of its children. This is quadratic in the number of
   elements of each and can be slow for very deep entity hierarchies.
-  
+
   See `entity.pivot`, `entity.shape`, etc. for discussion of how those properties
   affect the collision detection.
 
@@ -2596,10 +2590,10 @@ using the full physics engine.
   properties (an entity satisfies this, but it doesn't have to be a full
   entity). If there is a `obj.child_array`, then that is recursively
   processed and the first intersection encountered is returned.
-  
+
   Returns the object hit or `nil` if there was no intersection.
-  The `ray.length` is shortened to the hit distance. 
-  
+  The `ray.length` is shortened to the hit distance.
+
 `ray_intersect(ray, array)`
 : Returns the first object intersected when calling `ray_intersect(ray, array[i])`
   on each element of the array.
@@ -2610,17 +2604,17 @@ using the full physics engine.
 
 `rayIntersectMap(ray, map, tileCanBeSolid (= get_map_sprite), pixelIsSolid (= nil), layer (= 0), replacement_array (= []))`
 : The `ray` object must have `xy()` fields for `origin`, `direction`,
-  and an optional number field for `length (= inf)`. 
+  and an optional number field for `length (= inf)`.
   The `ray.direction` will automatically be normalized. The ray is in _draw coordinates_.
 
   Returns the sprite hit or `nil` if there was no intersection.
-  The `ray.length` is shortened to the hit distance. 
+  The `ray.length` is shortened to the hit distance.
 
   `def tileCanBeSolid(map, P, layer, replacement_array)` returns true
   if the tile at `P` _in map coords_ can trigger a collision. The
   callback `pixelIsSolid` is then invoked to find the collision within
   the tile. The default value returns true for any non-`nil` tile.
-   
+
   `def pixelIsSolid(map, P, layer, replacement_array)` returns true if the pixel at `P` _in map coords_
   triggers a collision.  The default value, returns true for all pixels,
   so that any `tileCanBeSolid() == true` tile immediately stops the ray. See `get_map_pixel_color()`.
@@ -2632,12 +2626,12 @@ using the full physics engine.
 ### Engine
 
 The full physics engine provides collision detection, response, and
-constraints. 
+constraints.
 
 Children of entities in the physics system have no effect on physics. In future
 releases they will affect the collision shape, moment of inertia, and mass.
 
-While an entity is in a physics context, the following properties may 
+While an entity is in a physics context, the following properties may
 not be changed on that entity:
 
 - `shape`
@@ -2658,10 +2652,10 @@ after the attachment been created may cause the attached bodies
 to start colliding with each other.
 
 `make_physics(options (= {}))`
-: Create and return a new physics context. There can be multiple, independent physics contexts 
+: Create and return a new physics context. There can be multiple, independent physics contexts
   in the game. Each entity may only be in one physics context at a time.
   The options are:
-  
+
   - `gravity (= xy(0, -up_y()))`: Default gravitational acceleration on all objects.
     Set to `xy(0,0)` and explicitly apply gravity if your game is not set on a planetary
     surface or requires excluding most objects from gravity.
@@ -2674,15 +2668,15 @@ to start colliding with each other.
 : Adds a callback that processes collisions (new contacts) at the end of `physics_simulate()`.
   If either entity in the collision has a `entity.category_mask` that intersects the `collision_mask`
   and the collision has `depth &gt;= min_depth`, then invoke
-  `callback({entityA, entityB, depth, age, point0, point1, normal})`. 
+  `callback({entityA, entityB, depth, age, point0, point1, normal})`.
   `point1` may be `nil`. `normal` is in draw coordinates and
-  always points out of `entityA`. 
-  
-  `depth` is a coarse measure of how hard the objects hit each other. It has 
+  always points out of `entityA`.
+
+  `depth` is a coarse measure of how hard the objects hit each other. It has
   a useful scale from 0-4.
-  
+
   This is good for triggering particle effects or sound on collisions,
-  or causing damage to objects. When doing so, use the parameters to filter: 
+  or causing damage to objects. When doing so, use the parameters to filter:
   for example, `min_depth` = 1 will only trigger on significant,
   new contacts. There is no way to remove a contact callback.
 
@@ -2691,10 +2685,10 @@ to start colliding with each other.
   This is more efficient, for the case where the actual contacts are not needed.
 
 `physics_entity_contacts(physics, entity, child_region (= nil), world_normal (= nil), mask (= 0xffffffff), sensors (= "exclude"))`
-: Returns an array of all current contacts, where each contact has the form 
+: Returns an array of all current contacts, where each contact has the form
   `{entityA, entityB, depth, point0, point1, normal}`. The contact points are
   in draw coordinates.
-  
+
   The region, mask, normal, and sensors setting are used to filter the contacts
   returned. A contact must have nonzero `collision_mask bitand
   otherEntity.collision_category_mask` for the _other_ entity
@@ -2712,22 +2706,22 @@ to start colliding with each other.
   in resting contact, such as whether a character is standing on the
   ground and can jump. In that case, make the `child_region` a box around the
   character's feet and set the `world_normal` to the up vector for the world.
-  The `child_region` may have to be very wide (e.g., 2x as wide as the character) 
+  The `child_region` may have to be very wide (e.g., 2x as wide as the character)
   to encompass locations where contact was briefly made in a previous frame.
-  
+
   Note that sleeping entities have no contacts.
   See also `physics_add_contact_callback()`.
 
 `physics_add_entity(physics, entity)`
 : Add `entity` to this physics context. An entity may only be in
   one physics context at a time. Returns the `entity`.
-  
+
   Once an entity is added to the physics system, it will be retained
   in the physics system until `physics_remove_entity()` is called.
   Use the `draw_physics()` command or IDE button to debug physics objects
   that correspond to entities which are no longer being drawn.
 
-`physics_attach(physics, type, {entityA, entityB, pointA, pointB, collide (= nil), ...})` 
+`physics_attach(physics, type, {entityA, entityB, pointA, pointB, collide (= nil), ...})`
 : Attaches two entities to each other, `entityB` to the
   world. `entityA` may be `nil` (the world) or have infinite
   density. `entityB` must be non-`nil` and have finite density. The
@@ -2735,37 +2729,37 @@ to start colliding with each other.
   entity.  The attachment points do not have to be within the bounds
   of the entities. The entities are immediately moved to satisfy the constraint
   of the attachment.
-  
+
   Two entities may not have multiple attachments directly between them. Doing
   so will cause unstable and undefined behavior.
-  
+
   _There is no relationship to the entity parent/child hierarchy_. Entity children
   are used for explicit positioning. Attachments are for letting simulation position
   objects.
-  
+
   Returns an attachment object, which can be passed to `physics_detach()`.
-  
+
   All attachment types are massless, except for weld, which adds a slight amount of
   mass at the weld point and thus affects net mass and moment of inertia.
-  
+
   If `collide` is false, then the entities cannot collide with each other while
   the attachment is maintained. The default for `collide` is `true` for spring, rope, and rod
-  attachments and `false` for all other types.  You can also disable collisions by putting 
+  attachments and `false` for all other types.  You can also disable collisions by putting
   the objects in the same `entity.collision_group`, which is more efficient.
-  
+
   Attached entities cannot sleep.
-  
+
   The supported values of `type` and the additional named parameters supported for each are:
-  
+
    - `"pin"`:    This kind of attachment is referred to in other APIs as a revolute joint.
    - `"spring"`: `length (= ‖pointB - pointA‖)`, `stiffness (= 0.5%)`, `damping (= 0.2%)`
    - `"rod"`:    `length (= ‖pointB - pointA‖)`
    - `"weld"`:   `angle (= entityB.angle - entityA.angle)`. Rigid attachment with
-                 the specified relative angle. <!-- It is more stable and efficient to 
+                 the specified relative angle. <!-- It is more stable and efficient to
                  call `physics_remove_entity(physics, entityB)` and `entity_add_child(entityA, entityB)`
                  than to weld within the physics system. --> Requires `entityA` to be non-`nil`.
-   - `"gyro"`:   `angle (= 0)` Free translation, but frozen rotation relative to each other. 
-     Useful for keeping characters upright. `entityA` must be `nil`. This kind of 
+   - `"gyro"`:   `angle (= 0)` Free translation, but frozen rotation relative to each other.
+     Useful for keeping characters upright. `entityA` must be `nil`. This kind of
      attachment is referred to in other APIs as a Cartesian joint or generalized 2D prismatic joint.
    <!--
    - `"hinge"`:  `minAngle`, `maxAngle`. If the hinge is unconstrained, use a pin.
@@ -2786,7 +2780,7 @@ to start colliding with each other.
 : Simulate physics for this many frames, treating all forces and torques
   as constant over that period. Automatically calls `entity_update_children()`
   on all entities in the context. See also `entity_simulate()`.
-  
+
 
 Graphics
 ---------------------------------------------------------
@@ -2822,7 +2816,7 @@ Graphics
 : Convert the hsv result to rgba.
 
 
-Colors can also be constructed using the syntax of HTML hexadecimal colors (which are also 
+Colors can also be constructed using the syntax of HTML hexadecimal colors (which are also
 shown in Photoshop and other drawing programs) using the syntax:
 
 - #RRGGBBAA
@@ -2847,7 +2841,7 @@ Blending is based on z-order, not draw order, and is always the Porter-Duff
 over-compositing rule:
 
  `result.r = back.r * (1 - front.a) + front.r * front.a`
- 
+
 and so on for `g` and `b`. The runtime is free to implement this
 blending exactly using sorted draw calls or an A-buffer, or to
 approximate it with alpha-to-coverage and multisampling or
@@ -2865,9 +2859,9 @@ Many routines accept both a "fill" color for the interior and a "border" color f
 perimeter.  Set either to transparent (`nil`) to efficiently disable that portion of rendering.
 
 The `nil` value is transparent.
-           
 
-Borders are drawn inside shape coordinate boundaries and on top of fills, so a transparent 
+
+Borders are drawn inside shape coordinate boundaries and on top of fills, so a transparent
 border is identical to a border that is the same color as the fill. Shapes include their
 endpoints and borders.
 
@@ -2883,15 +2877,15 @@ endpoints and borders.
 : Draw a rectangle covering all of the pixel centers between `corner`
   and `corner + size`. This is primarily for UI window drawing.
   `size` may be negative.
-  
+
   If the top or right
   sides exactly touch a pixel center (at a half-integer), then they do
   not cover it. The direction in which the `size` applies is determined
   by the current transform. Note that if `up_y()` is positive, then
   the rectangle will extend _upward_ from the corner.
-  
+
   See also `draw_rect()`.
-  
+
 
 `draw_disk(center, r, fill, border, z (= 0))`
 : Draw a circle or filled disk centered at (`center.x`, `center.y`)
@@ -2901,10 +2895,10 @@ endpoints and borders.
 : Draw a 1-pixel line from (`A.x`, `A.y`) to (`B.x`, `B.y`) using z-order `z`.
   When using the default transformation, put the endpoints at half-pixel
   positions for the best alignment with the pixel grid.
-  
+
   If `openA` is true, then the first pixel is not drawn in the line.
   If `openB` is true, then the last pixel is not drawn in the line.
-  These are useful when drawing polylines and curves with transparency, 
+  These are useful when drawing polylines and curves with transparency,
   to avoid double-coloring the joints between individual line segments.
 
 `draw_point(P, c, z (= 0))`
@@ -2923,8 +2917,8 @@ endpoints and borders.
   inventory, pause, menu, and dialogue modes.
 
 `draw_rect(pos, size, fill, border (= nil), angle (= 0), z (= 0))`
-: Draws the rectangle _centered_ at `pos` with the given `size` and `angle`. 
-  No `scale` argument is provided because it is easy for the caller to 
+: Draws the rectangle _centered_ at `pos` with the given `size` and `angle`.
+  No `scale` argument is provided because it is easy for the caller to
   explicitly multiply `size` by `scale`.
   See also `draw_corner_rect()` and `draw_sprite_corner_rect()`.
 
@@ -2942,9 +2936,12 @@ endpoints and borders.
   rotated.  Sprites are not flipped or scaled by `set_transform`
   values, but the rotation and center are affected by the
   `set_transform` scaling.
-  
-  If it is not `nil`, the `override_color` replaces the red, green, and blue
-  values read from each pixel of the sprite. It uses the existing alpha value.
+
+  If it is not `nil`, the `override_color` blends into the red, green, and blue
+  values read from each pixel of the sprite based on its own alpha. The alpha value
+  of the result is the sprite's original alpha value. Useful for simulating lighting,
+  turning a sprite into a shadow silhouette, or flashing a sprite a different color 
+  to indicate hits or invincibility.
 
 `draw_sprite_corner_rect(sprite, corner, size, z ( = 0))`
 : Draw a rectangle enclosing points `corner` and `corner+size`
@@ -2955,7 +2952,7 @@ endpoints and borders.
   windows and health bars.  Keep in mind that some artwork is designed
   to only be stretched in one dimension, or to tile only at integer
   multiples.
-  
+
   See also `draw_corner_rect()` and `draw_rect()`.
 
 `draw_text(args)`
@@ -2967,13 +2964,13 @@ endpoints and borders.
 `draw_text(font, text, pos, color (= nil), shadow (= nil), outline (= nil), x_align (= "left"), y_align (= "baseline"), z (= 0), wrapWidth (= nil), textSize (= size(text)), markup (= false))`
 : Print string `text` relative to `pos`. Returns an `xy()` of the bounding box,
   excluding shadows and outline.
-  
-  x-alignment of `-1` or `"left"` = left, 
-  `0` or `"center"` = center, `+1` or `"right"` = right, 
-  y-alignment of `-1` or `"top"` = top, `0` or `"center"` = center, 
-  `1` or `"baseline"` = baseline, `2` or `"bottom"` = bottom. 
+
+  x-alignment of `-1` or `"left"` = left,
+  `0` or `"center"` = center, `+1` or `"right"` = right,
+  y-alignment of `-1` or `"top"` = top, `0` or `"center"` = center,
+  `1` or `"baseline"` = baseline, `2` or `"bottom"` = bottom.
   For multiline strings, alignment only applies to the first line.
-  
+
   `font` must be loaded from the assets.  Color,
   shadow, and outline default to transparent. Any non-transparent
   shadow causes the outline to enclose both the shadow and main color.
@@ -2981,27 +2978,27 @@ endpoints and borders.
   `wrapWidth` is specified, breaks the text at the maximum width and
   renders multiple lines. Each line is offset by the font's vertical
   spacing and aligned as specified. See also `text_width()`.
-  
+
   `textSize` restricts draw_text to only printing that many characters,
   *after* word-wrapping. This allows gradually revealing text in a stable
   way under word wrap.
-  
-  `markup = true` enables special syntax for changing the style within 
+
+  `markup = true` enables special syntax for changing the style within
   a single string and removes single linebreaks. The markup syntax is `"...{property:value text...}..."`.
   The valid property names are `color`, `font`, `shadow`, and `outline`.
   That property is valid from the beginning brace to the end one. Only
   one property can be changed per brace, and braces can be nested.
-  For strings that word wrap, the vertical spacing of lines is based 
+  For strings that word wrap, the vertical spacing of lines is based
   on the original font specified as an argument to `draw_text()`, so
-  using very different fonts can result in poorly formatted output. 
-  The legal values are colors specified using `rgba()`, `rgb()`, `hsva()`, 
+  using very different fonts can result in poorly formatted output.
+  The legal values are colors specified using `rgba()`, `rgb()`, `hsva()`,
   `hsv()`, or `gray()` with numbers, the `#` color syntax, or the
   names of constants specified in the `game.json` file. Variables
   and expressions are not permitted in the values. To insert a regular
   brace within markup, use a slash escape, which must be typed in a string
   using a double slash: `\\{` or `\\}`. _The current implementation
   simply strips markup instead of applying it._
-  
+
 `draw_tri(A, B, C, fill, border (= nil), pos (= xy(0, 0)), scale (= xy(1, 1)), angle (= 0), z (= 0))`
 : Scale `A`, `B`, and `C` by `scale`, rotate them around the origin by `angle`, translate
   by `pos`, and then draw the triangle. The `pos` argument is not first because in many
@@ -3009,7 +3006,7 @@ endpoints and borders.
   any winding direction.
 
 `get_background()`
-: Returns the value previously set with `set_background()`. 
+: Returns the value previously set with `set_background()`.
 
 `get_clip()`
 : Returns the current net clipping region as an object that
@@ -3018,7 +3015,7 @@ endpoints and borders.
 `get_sprite_pixel_color(sprite, pos, result (= nil))`
 : Returns the color of pixel `pos` in the sprite as an `rgba`
   value. When `result` is not `nil`, it is used to store the result
-  to avoid memory allocation. If the pixel is out of bounds for that sprite, 
+  to avoid memory allocation. If the pixel is out of bounds for that sprite,
   returns `nil` if there is no `result` specified and `rgba(0,0,0,0)`
   in `result` otherwise.
 
@@ -3056,7 +3053,7 @@ endpoints and borders.
   Note that leading and trailing numbers may incur additional empty space for
   column alignment. If `markup` is true, then `s` is processed using the
   markup rules from `draw_text()`.
-  
+
 `xy(x, y)`
 : Create a structure with values `x` and `y`, which can be used with most drawing routines.
 
@@ -3118,7 +3115,7 @@ Setting any post effects may slow down rendering slightly.
 `set_post_effects(args)`
 : The arguments have the following fields, all optional. nil values default to their previous value.
   Invoke `reset_post_effects()` first for a clean set.
-  
+
   - `background` is an `rgba()` to draw in the background behind the new frame. The `a` component
     controls how opaque the background is. Setting `background.a = 0` allows new frames to be blended on
     top of old ones for a motion blur effect.
@@ -3174,7 +3171,7 @@ A map asset has the following fields. Its sprite elements are mutable at runtime
 : Amount to add to each layer index when computing a z value for rendering.
   `layer = (z - map.zOffset) / map.zScale`; `z = layer * map.zScale + map.zOffset`.
   See also `transform_draw_to_map()` and `transform_map_to_draw()`.
-  
+
 `map.zScale`
 : Amount to multiply each layer index to compute a z value for rendering.
   `layer = (z - map.zOffset) / map.zScale`; `z = layer * map.zScale + map.zOffset`.
@@ -3192,31 +3189,31 @@ indices. The map's z-axis corresponds to layers.
   that the tile will be half off the screen.  If specified, `min_layer`
   and `max_layer` determine the inclusive range of layers to draw.  Map
   rendering ignores skew transformations...typically the skew will be
-  implicit in the map's layout and rendering. 
-  
+  implicit in the map's layout and rendering.
+
   If `replacement_array` is specified, it must be an even length array
   of the form `[from0, to0, from1, to1, ...]`.  Each `from` value is a
   sprite in the map. It will be replaced during drawing with the
   corresponding `to` value. The `to` values may also be `nil`.
-  
+
   The if specified in the source `.json` file, the map will wrap
   appropriately horizontally or vertically when drawn, if it is large
   enough to covers at least 1/3 of the current clipping area.
 
 `find_map_path(map, startXY, goalXY, edgeCost, costLayer = 0)`
-: Specialized version of `find_path` for maps. The start and end positions 
+: Specialized version of `find_path` for maps. The start and end positions
   are rounded down to the nearest integer map coordinates. The `edgeCost`
   is either a function or an array. The function returns an array of
   map coordinates to visit or `nil` if no traversable path exists.
-  
+
   The function version is `def edgeCost(A, B, map)`. It returns
-  the cost of traversing from `A` to `B` in the map, where 
+  the cost of traversing from `A` to `B` in the map, where
   each is an `xy()`. That cost should always be nonnegative. It
   should be 1 for a typical edge,
   `infinity` for an edge that is not traversable, and higher or lower
-  than 1 for edges of varying difficulty such as walking through 
-  rough terrain or downhill. 
-  
+  than 1 for edges of varying difficulty such as walking through
+  rough terrain or downhill.
+
   The array version of `edgeCost` is an array of pairs of the form
   `[sprite0, cost0,   sprite1, cost1, ...]`. Each cost corresponds
   to entering that sprite on `map.layer[costLayer]`. These are the
@@ -3266,7 +3263,7 @@ indices. The map's z-axis corresponds to layers.
 
 `transform_map_to_draw(map, map_coord)`
 : Returns the draw coordinates of `map_coord`. Integer map_coords correspond to the centers of tiles,
-  which will be fractional pixels for even map tile sizes. See also `transform_draw_to_map()` 
+  which will be fractional pixels for even map tile sizes. See also `transform_draw_to_map()`
   and `get_map_pixel_color()`.
 
 
@@ -3274,20 +3271,20 @@ Frame Hooks
 ----------------------------------------------------------
 
 Frame hooks are useful for registering animation callbacks that happen
-at the beginning of every frame or after a set number of frames. 
+at the beginning of every frame or after a set number of frames.
 
 The order of execution between frame hooks is undefined and can change
 as hooks expire. The transform for a frame hook is whatever was set at
 the end of the previous frame.
 
-When drawing, use `z` arguments to ensure that drawn objects overlap 
+When drawing, use `z` arguments to ensure that drawn objects overlap
 in the desired order regardless of the order in which drawing executes.
 
 `add_frame_hook(callback, endCallback, lifetime, runInMode (= get_mode()))`
 : Register a `callback` function to run every frame for `lifetime`
   frames.  The return value of `add_frame_hook()` is a hook that can be
   passed to `remove_frame_hook()`.
-  
+
   - `callback`: `def callback(framesleft, lifetime)`, runs every frame. `framesleft`
     will be `lifetime - 1` on the first frame and `0` on the last one.
     This argument may be `nil`. If the callback returns `true`, the hook
@@ -3296,7 +3293,7 @@ in the desired order regardless of the order in which drawing executes.
   - `lifetime`: Number of frames to run for. May be `inf`.
   - `runInMode`: Only execute while the game is in this mode. Use `nil` to
     run in every mode.
-    
+
   See also `sequence()` and `delay()` for common cases.
 
 `delay(callback, delayFrames)`
@@ -3337,7 +3334,7 @@ Time
 `now()`
 : Returns a time in seconds that is accurate to at least one millisecond.
   The origin for the time is arbitrary but constant per program run.
-  Do not use this time for simulation because it will have inconsistent 
+  Do not use this time for simulation because it will have inconsistent
   jumps between frames dues to frame rate scaling.
 
 `local_time()`
@@ -3368,7 +3365,7 @@ _See also `find_map_path` for a simpler map-specific version._
 world representation. It uses the "A*" (A-star) algorithm. The return value is an
 array of nodes to traverse, including the `startNode` and `goalNode`,
 to follow the shortest path discovered, or `nil` if no path
-exists. 
+exists.
 
 To recover the cost of the path, use the idiom:
 
@@ -3404,13 +3401,13 @@ better understanding of how they are typically computed.
   in only one direction
 
 `def nodeToID(node, graphObj)`
-: Returns a compact integer or string representation of the node, which is 
+: Returns a compact integer or string representation of the node, which is
   required internally by the algorithm for maintaining a table of nodes.
 
 `graphObj`
 : Any object that represents your world graph. This can be `nil` if the other
   function arguments use global state.
-  
+
 ### Map Example
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
@@ -3457,7 +3454,7 @@ These APIs are subject to change.
 : If `x` is true, does nothing. If `x` is false, creates the
   error `msg`. Assertions can be completely disabled
   from the Tools menu to make them have zero cost. In the current
-  implementation, the `msg` is always evaluated when assertions 
+  implementation, the `msg` is always evaluated when assertions
   are enabled even if the assertion test passes.
 
 `debug_pause()`
@@ -3467,7 +3464,7 @@ These APIs are subject to change.
 : If `x` is a string, directly prints it to the Output window, otherwise
   prints `unparse(x)` to the Output window. When multiple arguments
   are provided they are processed individually with spaces between them.
-  Debug print statements can be completely disabled from the Output 
+  Debug print statements can be completely disabled from the Output
   window, which causes them to consume no processing time.
 
 `debug_watch(expr)`
@@ -3494,19 +3491,19 @@ These APIs are subject to change.
   - `"setPadType", index, "type"` Set `gamepad_array[index].type` and the corresponding prompts.
   - `"getAnalogAxes", index` Return an `xy()` of the analog axis values for `gamepad_array[index]`, without D-pad snapping.
     Needed for accessing Atari paddles, car pedals, steering wheels, and flight stick throttles in a meaningful way.
-  - `"setDebugFlag", flagname, bool` Set the enabled state of an IDE debugging flag. The flagnames are 
+  - `"setDebugFlag", flagname, bool` Set the enabled state of an IDE debugging flag. The flagnames are
     `"entityBounds"`, `"assert"`, `"debug_print"`, `"debug_watch"`, `"physics"`.
   - `"getDebugFlag", flagname` Return the state of an IDE debugging flag.
 
 `draw_bounds(e, color (= gray(60%)), recurse (= true))`
 : Render a debugging view of the bounds of an entity or other object `e`
   with `pos` and optional `angle`, `size`, `scale`, and `shape`
-  properties. If `recurse` is true, descend into 
+  properties. If `recurse` is true, descend into
   any `e.child_array` field.
 
 `draw_physics(physics)`
 : Render a debugging view of the physics system
-  
+
 
 Persistence
 -----------------------------------------------------------
@@ -3517,7 +3514,7 @@ quadplay✜ is hosted, as well as the URL of the game. Some browsers will
 automatically synchronize local storage across computers, however.
 
 The storage API performs string manipulation and can be slow relative
-to other commands. Avoid using it every frame. 
+to other commands. Avoid using it every frame.
 
 This API is useful for save games, GUI state defaults, high scores,
 and persistent worlds.
@@ -3701,19 +3698,19 @@ versions may be substantially faster than overloaded operators.
 : Cross product. `dstxyz` can be the same object as one of the input arguments.
 
 `MAT3x3_MATMUL_XYZ(src3x3, srcxyz, dstxyz)`
-: Multiply matrix `src3x3` represented as an array of length three row arrays of length 
-  three by vector `(srcxyz.x, srcxyz.y, srcxyz.z)` and put the result in `dstxyz`, 
+: Multiply matrix `src3x3` represented as an array of length three row arrays of length
+  three by vector `(srcxyz.x, srcxyz.y, srcxyz.z)` and put the result in `dstxyz`,
   which can be the same object as `srczxyz`.
 
 `MAT3x4_MATMUL_XYZ(src3x4, srcxyz, dstxyz)`
-: Multiply matrix `src3x4` represented as an array of length three row arrays of length 
-  four by vector `(srcxyz.x, srcxyz.y, srcxyz.z, 1)` and put the result in `dstxyz`, 
+: Multiply matrix `src3x4` represented as an array of length three row arrays of length
+  four by vector `(srcxyz.x, srcxyz.y, srcxyz.z, 1)` and put the result in `dstxyz`,
   which can be the same object as `srcxyz`. You can use `MAT3x3_MATMUL_XYZ()` on the
   same `src3x4` to effectively multiply by `(srcxyz.x, srcxyz.y, srcxyz.z, 1)`.
 
 `MAT3x4_MATMUL_XYZW(src3x4, srcxyzw, dstxyzw)`
-: Multiply matrix `src3x4` represented as an array of length three row arrays of length 
-  four by vector `(srcxyzw.x, srcxyzw.y, srcxyzw.z, srcxyzw.w)` and put the result in `dstxyzw`, 
+: Multiply matrix `src3x4` represented as an array of length three row arrays of length
+  four by vector `(srcxyzw.x, srcxyzw.y, srcxyzw.z, srcxyzw.w)` and put the result in `dstxyzw`,
   which can be the same object as `srcxyzw`. The `dstxyzw.w = srcxyzw.w`.
 
 
@@ -3846,8 +3843,8 @@ Sounds
 
 ![`quad://sounds/music-opening.sound.json`](../sounds/music-opening.mp3) ![`quad://sounds/music-race.sound.json`](../sounds/music-race.mp3)
 ![`quad://sounds/music-moon.sound.json`](../sounds/music-moon.mp3)  ![`quad://sounds/music-boss.sound.json`](../sounds/music-boss.mp3)
-![`quad://sounds/music-vice.sound.json`](../sounds/music-vice.mp3)  ![`quad://sounds/music-saturday.sound.json`](../sounds/music-saturday.mp3) 
-![`quad://sounds/music-brawl.sound.json`](../sounds/music-brawl.mp3) ![`quad://sounds/music-credits.sound.json`](../sounds/music-credits.mp3) 
+![`quad://sounds/music-vice.sound.json`](../sounds/music-vice.mp3)  ![`quad://sounds/music-saturday.sound.json`](../sounds/music-saturday.mp3)
+![`quad://sounds/music-brawl.sound.json`](../sounds/music-brawl.mp3) ![`quad://sounds/music-credits.sound.json`](../sounds/music-credits.mp3)
 ![`quad://sounds/music-days.sound.json`](../sounds/music-days.mp3)
 
 ### Loops
@@ -3855,14 +3852,14 @@ Sounds
 ![`quad://sounds/loop-arcade.sound.json`](../sounds/loop-arcade.mp3) ![`quad://sounds/loop-mega.sound.json`](../sounds/loop-mega.mp3)
 ![`quad://sounds/loop-edm.sound.json`](../sounds/loop-edm.mp3) ![`quad://sounds/loop-munster.sound.json`](../sounds/loop-munster.mp3)
 ![`quad://sounds/loop-tastic.sound.json`](../sounds/loop-tastic.mp3) ![`quad://sounds/loop-frantic.sound.json`](../sounds/loop-frantic.mp3)
-![`quad://sounds/loop-soar.sound.json`](../sounds/loop-soar.mp3)  ![`quad://sounds/loop-agent.sound.json`](../sounds/loop-agent.mp3) 
-![`quad://sounds/loop-castle.sound.json`](../sounds/loop-castle.mp3)  ![`quad://sounds/loop-space.sound.json`](../sounds/loop-space.mp3) 
-![`quad://sounds/loop-splash.sound.json`](../sounds/loop-splash.mp3) ![`quad://sounds/loop-sanctuary.sound.json`](../sounds/loop-sanctuary.mp3) 
-![`quad://sounds/loop-town.sound.json`](../sounds/loop-town.mp3)  ![`quad://sounds/loop-overworld.sound.json`](../sounds/loop-overworld.mp3) 
-![`quad://sounds/loop-victory.sound.json`](../sounds/loop-victory.mp3)  ![`quad://sounds/loop-joy.sound.json`](../sounds/loop-joy.mp3) 
-![`quad://sounds/loop-built-this.sound.json`](../sounds/loop-built-this.mp3) ![`quad://sounds/loop-fight.sound.json`](../sounds/loop-fight.mp3) 
-![`quad://sounds/loop-select.sound.json`](../sounds/loop-select.mp3)  ![`quad://sounds/loop-metal.sound.json`](../sounds/loop-metal.mp3) 
-![`quad://sounds/loop-puzzle.sound.json`](../sounds/loop-puzzle.mp3) ![`quad://sounds/loop-triumphant.sound.json`](../sounds/loop-triumphant.mp3) 
+![`quad://sounds/loop-soar.sound.json`](../sounds/loop-soar.mp3)  ![`quad://sounds/loop-agent.sound.json`](../sounds/loop-agent.mp3)
+![`quad://sounds/loop-castle.sound.json`](../sounds/loop-castle.mp3)  ![`quad://sounds/loop-space.sound.json`](../sounds/loop-space.mp3)
+![`quad://sounds/loop-splash.sound.json`](../sounds/loop-splash.mp3) ![`quad://sounds/loop-sanctuary.sound.json`](../sounds/loop-sanctuary.mp3)
+![`quad://sounds/loop-town.sound.json`](../sounds/loop-town.mp3)  ![`quad://sounds/loop-overworld.sound.json`](../sounds/loop-overworld.mp3)
+![`quad://sounds/loop-victory.sound.json`](../sounds/loop-victory.mp3)  ![`quad://sounds/loop-joy.sound.json`](../sounds/loop-joy.mp3)
+![`quad://sounds/loop-built-this.sound.json`](../sounds/loop-built-this.mp3) ![`quad://sounds/loop-fight.sound.json`](../sounds/loop-fight.mp3)
+![`quad://sounds/loop-select.sound.json`](../sounds/loop-select.mp3)  ![`quad://sounds/loop-metal.sound.json`](../sounds/loop-metal.mp3)
+![`quad://sounds/loop-puzzle.sound.json`](../sounds/loop-puzzle.mp3) ![`quad://sounds/loop-triumphant.sound.json`](../sounds/loop-triumphant.mp3)
 ![`quad://sounds/loop-dark-thriller.sound.json`](../sounds/loop-dark-thriller.mp3)
 
 
@@ -3955,9 +3952,9 @@ manually. I recommend copying the starter project provided and then
 reading about options in this section that may not be used by the
 starter.
 
-!!! 
+!!!
     quadplay✜ permits C++ style comments, hexadecimal numbers,
-    IEEE 754 constants, raw decimals, leading plus signs, trailing commas, 
+    IEEE 754 constants, raw decimals, leading plus signs, trailing commas,
     and multiline backquote JavaScript strings within JSON files for convenience when
     editing and debugging. This is not legal in strict JSON and
     may be incompatible with other tools.
@@ -3971,15 +3968,15 @@ options. Project files should have the double extension `.game.json`.
   "developer":      "Your Name or Company",
   "copyright":      "© Year Whomever",
   "license":        "Distribution and source code license",
-  
+
   // Not yet supported. These files will be loaded and inserted at the top
   // of your code, before the constant and asset definitions.
   "packages":       ["https://someaccount.github.io/someproject/somefile.package.json",
                      "somefileinyourproject.package.json"],
-  
-  // Documents for players or for yourself as a game developer, such 
+
+  // Documents for players or for yourself as a game developer, such
   // as a TODO list, game design doc, manual, or library specification.
-  // These can be HTML, Markdeep (md.html), Markdown (.md), or text (.txt) format 
+  // These can be HTML, Markdeep (md.html), Markdown (.md), or text (.txt) format
   "docs":           [
        {"name": "Design",
         "url":  "gdd.md.html"},
@@ -3987,10 +3984,10 @@ options. Project files should have the double extension `.game.json`.
        // Raw URLs are supported as well
        "todo.md"
   ],
-  
+
   // Files that form the global scope. Put most of your code in these. They are
   // loaded in order.
-  "scripts":        ["utils.pyxl", 
+  "scripts":        ["utils.pyxl",
                      "juice.pyxl",
                      "https://someaccount.github.io/someproject/inventory.pyxl"],
 
@@ -4004,7 +4001,7 @@ options. Project files should have the double extension `.game.json`.
   "modes": ["Init*",
             "Play"
             "Credits"],
-     
+
   // Assets are loaded as global constants in your program.
   "assets": {
      // Asset names must be legal PyxlScript identifiers
@@ -4013,32 +4010,32 @@ options. Project files should have the double extension `.game.json`.
      "boom": "boom.sound.json",
      "overworld": "overworld.map.json"
   },
-  
-    
-  // The version number is used to create the "Updated" badge in the 
+
+
+  // The version number is used to create the "Updated" badge in the
   // launcher program
   "version":      0.0,
-  
+
   // Properties affecting your game description in the launcher program:
-  "minPlayers":   1,
-  "maxPlayers":   1,
+  "min_players":   1,
+  "max_players":   1,
   "cooperative":  false,
   "competitive":  false,
   "achievements": false,
   "highscores":   false,
   "description": "Description of your game in about 22 words.",
-  
+
   // Other global constants. You could define these in a global source code file
   // as well. The constants specified here have immutable *values*, not just immutable
   // bindings, and are available to editing tools.
   "constants": {
       // If the number value is in quotes it will be parsed.
       // This allows degrees, percents, infinity, and nan.
-      // Raw numbers, strings, and booleans are permitted but 
+      // Raw numbers, strings, and booleans are permitted but
       // restricted to JSON limitations.
-      
+
       "playerSpeed": {"type": "number", "value": "3"},
-      "background": {"type": "rgb", "value": 
+      "background": {"type": "rgb", "value":
           {"r": {"type": "number", "value":  0.8},
            "g": {"type": "number", "value":  0.8},
            "b": {"type": "number", "value":  0.8}},
@@ -4049,7 +4046,7 @@ options. Project files should have the double extension `.game.json`.
       "name": "Destrier",
       "knight": {"type": "object", "value": {
           "upgrades": {"type": "array", "value": [10, 7, 3, 1]},
-          "hp": 50, 
+          "hp": 50,
           "inventory": {"type": "object", "value": {"food": 4, "sword": "a sword"}}}},
       "numbers": {"type": "array", "value": [
         {"type": "number", "value": "10"},
@@ -4060,7 +4057,7 @@ options. Project files should have the double extension `.game.json`.
    // Set this to true for a modern vertical axis good for physics games.
    // You can also invoke set_transform() in code.
    "flip_y": false,
-   
+
    // Supported sizes:
    //
    //   384 x 224 (maximum, native, default)
@@ -4071,7 +4068,7 @@ options. Project files should have the double extension `.game.json`.
    // The non-native screen sizes may render with substantial black
    // borders on some implementations to ensure integer pixel scaling.
    "SCREEN_SIZE": {"x": 384, "y": 224},
-   
+
    // Description used on the game browser screen
    "description": {
        "players": {"min": 1, "max": 4},
@@ -4090,9 +4087,9 @@ Each game must also contain:
   not currently used.
 - 1152x1120 `preview.png` image in the same folder as the `.game.json` file that contains
   6x10 frames of 192x112 video at 20 fps (3 seconds) used for the preview video in the launcher.
-  
+
 You can create the `preview.png` image by pressing Shift+F8 while your game is playing. It will
-record 3s of video, process it to the correct resolution, and open it in a new browser tab. 
+record 3s of video, process it to the correct resolution, and open it in a new browser tab.
 Download this image, compress it as you would a sprite, and save it as your preview. Seek to keep
 the total size around 100 kB for the image by choosing content that compresses well and using a good
 compression tool. If the image is much larger, then there will be delay for players browsing
@@ -4104,7 +4101,7 @@ Constants
 ---------------------------------------------------------------------------------------------
 
 Unlike constants declared in code, the constants in the `.game.json` file appear in the IDE
-in the project list and have GUI editors. 
+in the project list and have GUI editors.
 
 Each constant has the format `"..name..": {"type": "..type..", "value": ..., "comment": "..."}`.
 The `comment` field is optional and the `raw` type permits a `url` instead of a `value`.
@@ -4160,15 +4157,15 @@ The sprite sheet JSON descriptor looks like:
 
     // Optional blank pixels between sprites. Default is zero.
     "gutter":       0,
-    
+
     // Optional. Default is false. If true, indexing is transposed
     // in game.
     "transpose":    false,
-    
+
     // Default value for sprite.frames, the number of 1/60-second frames
     // to play a sprite during animation.
     "default_duration": 1,
-    
+
     // Optional. Applies to pre-transpose coordinates. Each becomes
     // an array on the spritesheet with the extrapolate field set.
     // A name cannot be 'sprite_size' or any other spritesheet field.
@@ -4196,18 +4193,18 @@ The sprite sheet JSON descriptor looks like:
         "parachute":{"start": {"x": 3, "y": 1},
                      "pivot": {"x": 4, "y": 4}}
     },
-    
+
     // Optional offset and extent. Using this conserves memory if the sprites
     // do not fill the entire PNG.
     "region":       {
         "pos":      {"x": 0, "y": 0}, // Optional, defaults to (0, 0)
         "size":     {"x": 128, "y": 32} // Optional, defaults to the remainder of the sheet
     },
-    
+
     // Optional location on the sprites that aligns with (0, 0) in an entity's reference
     // frame. Defaults to the sprite size / 2.
     "pivot":        {"x": 4, "y": 7},
-    
+
     // Optional license and copyright information.
     "license":      "GPL 3.0 (c) 2020 Morgan McGuire"
 }
@@ -4218,7 +4215,7 @@ which is a 2D array of individual sprites.
 
 !!!
    I recommend compressing sprites with the provided [Quantize✜](../tools/quantize.html)
-   tool and then [ImageOptim](https://imageoptim.com/mac) (MacOS) or 
+   tool and then [ImageOptim](https://imageoptim.com/mac) (macOS) or
    [PNGGauntlet](https://pnggauntlet.com/) (Windows).
 
 For a sprite sheet named `S`, individual sprites are accessed as
@@ -4237,7 +4234,7 @@ following additional fields:
 `duration`
 : Equal to `infinity` for `"loop"` and `"oscillate"` animations and the total
   number of 60 Hz game frames of animation for finite `"clamp"` animations.
-  
+
 `period`
 : Equal to `nan` for `"clamp"` animations and the number of 60 Hz game frames
   for one repeat of a `"loop"` or `"oscillate"` animation.
@@ -4264,7 +4261,7 @@ traditional sprites have sides of 8, 16, or 32 pixels. The quadplay✜
 screen resolution is designed to allow an integer number of such
 tiles.
 
-You can use the Python script `tools/sprite_json_generator.py` to generate 
+You can use the Python script `tools/sprite_json_generator.py` to generate
 these json blobs for you. Use the `--help` argument for more details.
 
 
@@ -4280,20 +4277,20 @@ Fonts have a JSON descriptor file that looks like:
     // Optional copyright and license information
     "license": "Public Domain 2018 by Danika Farheed",
 
-    // Size of the glyph bounding boxes. Include gutter pixels in the 
-    // charSize. The loader repacks glyphs tightly, so extra padding 
+    // Size of the glyph bounding boxes. Include gutter pixels in the
+    // charSize. The loader repacks glyphs tightly, so extra padding
     // or horizontal alignment is irrelevant at runtime (but affects
     // distribution size and loading time).
     "charSize": {"x": 8, "y": 14},
-    
+
     // Spacing between letters and lines during rendering. If the
     // x spacing is zero (for script fonts), there will be no space between
     // letters or digits, but space will still be added around symbols
     "letterSpacing": {"x": 2, "y": 3},
-    
+
     // Defaults to 1 pixel
     "shadowSize": 1,
-    
+
     // Zero-based Y value of the baseline relative to charSize.
     // This is one less than the "height" of the baseline because
     // of the zero based value.
@@ -4303,7 +4300,7 @@ Fonts have a JSON descriptor file that looks like:
 
 You can generate a default version of this JSON with the
 [Fontpack✜](../tools/fontpack.html) tool from a PNG image.
-You can generate a PNG template for the glyphs by taking a 
+You can generate a PNG template for the glyphs by taking a
 screenshot from the [Fontgen✜](../tools/fontgen.html) tool.
 
 By convention, the image filename contains the maximum size of the
@@ -4323,13 +4320,13 @@ Because only the specified grid of tiles is read, you can include
 non-character information off the bounds of the tiles, for example,
 putting a copyright statement directly on the font itself.
 
-Fonts count towards the sprite sheet resource limits. Because a font is 
+Fonts count towards the sprite sheet resource limits. Because a font is
 32x26 glyphs, this means that the largest `charSize` can be
 is 24x29 pixels if the `shadowSize` is one pixel.
 
 Fonts enforce uniform width on all full-size digits 0..9 so that
 numbers print in aligned columns. Avoid drawing fonts with one digit
-that is larger than most of the others (usually the "4") 
+that is larger than most of the others (usually the "4")
 because they result in extra padding around all digits.
 
 When loaded into memory, the font object exposes a `font.lineHeight`
@@ -4346,7 +4343,7 @@ The sound JSON descriptor looks like:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ JavaScript
 {
     "url": "boom.mp3",
-         
+
     // Optional license and copyright
     "license": "Released into the public domain by Edouard Gauthier"
 }
@@ -4363,19 +4360,19 @@ The map JSON descriptor looks like:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ JavaScript
 {
     "url": "overworld.tmx",
-  
+
     // Optional. Shift the map by this amount in pixels for all coordinate
     // transformations and rendering. Default = 0, 0.
     "offset": {"x": 7.5, "y": 7.5},
-    
+
     // z value of the first layer. Optional, default = 0
     "zOffset": 0,
-  
+
     // Optional. Default = false. If true, flip the map
     // vertically during load so that (0,0) is the bottom
     // of the TMX map instead of the top.
     "flip_y": false,
-    
+
     // Optional. Default = false.
     "wrapX": false,
 
@@ -4383,16 +4380,16 @@ The map JSON descriptor looks like:
     "wrapY": false,
 
     // Optional. Default is 1.0. This is the z difference
-    // between layers when rendering. Can be negative to 
+    // between layers when rendering. Can be negative to
     // reverse layering direction.
     "zScale": 2,
-         
+
     // Optional license and copyright
     "license": "Released into the public domain by Edouard Gauthier",
-   
+
     // Optional if the map only uses one spritesheet
     "spriteUrl": "tiles.sprite.json"
- 
+
     // If no spriteUrl is specified, then an entire table
     // mapping each spritesheet referenced in the map to a sprite file
     "spriteUrlTable": {
@@ -4409,12 +4406,12 @@ in files ending with `.tmx`. Only the following properties are currently support
 - Tile layers (other layers are ignored)
 - Embedded tile set
 
-![Tiled program options for creating a new map.](tiled-new-map.png width=50% style="image-rendering:auto") 
+![Tiled program options for creating a new map.](tiled-new-map.png width=50% style="image-rendering:auto")
 
 The tile render order from the map is ignored.
 
 The easiest way to create these is using the open source [Tiled](https://www.mapeditor.org/)
-editor, which has pay-what-you-want precompiled binaries for Windows, MacOS, and Linux. The
+editor, which has pay-what-you-want precompiled binaries for Windows, macOS, and Linux. The
 sprite sheet from the map file will be used for visualization if it is available in the IDE,
 but map rendering is performed using a sprite sheet at runtime.
 
@@ -4426,7 +4423,7 @@ Numbers
 -------------------------------------------------------------------------
 
 Numbers are stored internally as double-precision (64-bit) IEEE floating point
-values. Integer operators truncate the decimal places of their arguments. 
+values. Integer operators truncate the decimal places of their arguments.
 
 The first 2^53=9007199254740992 contiguous positive integers are
 exactly representable. The largest finite representable number is
@@ -4469,7 +4466,7 @@ is illegal.
 Booleans
 --------------------------------------------------------------------
 
-The boolean literals are `true` and `false`. 
+The boolean literals are `true` and `false`.
 
 Logical operators work with any values. For logical operators and flow
 control, `0`, `∅`, and empty string `""` act as `false`.
@@ -4479,7 +4476,7 @@ Strings
 --------------------------------------------------------------------
 
 String literals are enclosed in double quotes (`"..."`). They may not contain newlines or
-double quotes. 
+double quotes.
 
 To enter a double quotation mark or slash, escape it with a slash: `"\\"` is the `\` character
 and `"\""` is the `"` character.
@@ -4642,28 +4639,28 @@ of them are keywords, and some of them do nothing now but are reserved
 for future use.
 
 `ADD`, `and`, `arguments`, `args`, `as`, `async`, `at`, `auto`, `await`,
-`because`, `begin`, `bitand`, `bitnot`, `bitor`, `bitashl`, `bitshl`, `bitshr`, `break`, 
+`because`, `begin`, `bitand`, `bitnot`, `bitor`, `bitashl`, `bitshl`, `bitshr`, `break`,
 `catch`, `class`, `const`, `cont`, `coroutine`, `continue`, `constructor`,
 `deg`, `do`, `delete`, `def`, `default`, `DIV`,
 `elif`, `end`, `extern`, `enum`,
-`final`, `finally`, `for`, `from`, `freeze`, `function`, 
-`get`, `global`, `go`, `goto`, 
+`final`, `finally`, `for`, `from`, `freeze`, `function`,
+`get`, `global`, `go`, `goto`,
 `has`,
 `if`, `in`, `implements`, `inherits`, `include`, `import`, `interface`,
 `launch_game`, `let`, `local`,
-`NaN`, `new`, `nil`, `nonlocal`, `not`, `null`, 
+`NaN`, `new`, `nil`, `nonlocal`, `not`, `null`,
 `main`, `MAD`, `mod`, `module`, `mode`, `MUL`,
 `or`, `otherwise`,
 `public`, `private`, `protected`, `prototype`, `package`, `preserve`, `preserving_transform`,
 `quit_game`,
 `ret`, `return`, `reset_game`, `require`, `requires`,
 `seal`, `set`, `show`, `static`, `strict`, `SUB`, `swap`,
-`to`, `toString`, `then`, `try`, `throw`, `template`, 
+`to`, `toString`, `then`, `try`, `throw`, `template`,
 `until`, `use`, `using`, `unless`,
 `var`,
 `while`, `with`, `when`,
 `xor`,
-`yield`. 
+`yield`.
 
 
 Built-in functions such as `draw_tri` that are legal identifiers can be
@@ -4730,7 +4727,7 @@ local:
    // This is a local scope and variables
    // can shadow those in the outer scopes
    let x = 7
-   
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -4738,10 +4735,10 @@ Comments
 -------------------------------------------------------------------
 
 Comments follow C/C++/Java/JavaScript syntax of `//` for single line comments and `/*`...`*/`
-for multi-line comments. 
+for multi-line comments.
 
 `because "reason"`
-: The special `because` statement allows a compile-time string comment to follow 
+: The special `because` statement allows a compile-time string comment to follow
   a mode or game change control flow statement such as `set_mode()`. It acts as
   a machine-readable comment that the IDE will use to automatically annotate the program
   in the debug output and the mode diagram.
@@ -4804,7 +4801,7 @@ ASCII    | Unicode | Meaning
 `<<=`    |`◀=`     | mutating bit shift left
 `>>`     |`▶`      | bit shift right
 `>>=`    |`▶=`     | mutating bit shift right
-`if`...`then`...`else`| | conditional 
+`if`...`then`...`else`| | conditional
 
 Assignment and mutating operators all return `nil`; they cannot be
 chained or used in expressions.
@@ -4824,10 +4821,10 @@ spawnMonster(if pos then pos else xy(0,0))
 
 let data = {name: if i > 2 then "Peter" else "Amit",
             height: 7}
-            
+
 setTarget(if ‖pos - P.pos‖ > 10 then ∅ else P)
 
-// Because "and" and "or" operate on non-booleans, the examples 
+// Because "and" and "or" operate on non-booleans, the examples
 // above could have been written less clearly with alternative
 // logic:
 
@@ -4854,7 +4851,7 @@ floor or ceiling; use the `floor` and `ceil` functions. There is no way to expre
 operators using ASCII.
 
 Behavior of these operators is consistent with the JavaScript definition of the operation
-(even though JavaScript uses different operators). For example, the <b>logical</b>-AND expression 
+(even though JavaScript uses different operators). For example, the <b>logical</b>-AND expression
 `4 and 1` evaluates to `1` because `4` is non-false and the result of non-false AND another
 value is the other value.
 
@@ -4865,7 +4862,7 @@ they may not be invoked in this form when a high-precedence operator follows the
 operators are `.`, `[`, subscript, or exponentiation.
 
 Because back-to-back parentheses are interpreted as implicit multiplication, functions that
-are returned from other functions, determined by parenthesized expressions, or stored in 
+are returned from other functions, determined by parenthesized expressions, or stored in
 objects cannot be invoked using the `()` syntax. Instead, use the `call` function:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
@@ -4927,7 +4924,7 @@ functions with a variable number of arguments. It is the same as
 In a function declaration it designates the final argument as an array of all further arguments.
 For example, `def foo(a, b, …rest):` takes any number of arguments and maps them to `a`, `b`,
 and then an array `rest` of the remainder.
-For example, `def bar(…args):` takes any number of arguments and maps them all into 
+For example, `def bar(…args):` takes any number of arguments and maps them all into
 array `args`.
 
 In a function call or array literal, the spread operator expands an array as if its elements had
@@ -4951,7 +4948,7 @@ Symbol         | ASCII         | Value
                | `nan`         | floating-point "not-a-number" value
                | `assetCredits`| object of credit and license statements from assets and code
 `∅`            | `nil`         | ("undefined")
-               | `pad`         | array gamepad of objects 
+               | `pad`         | array gamepad of objects
                | `joy`         | shorthand for `pad₀`
 `ξ`            | `random()`       | random number on [0, 1), resampled every time the expression is used
                | `SCREEN_SIZE`  | the size of the screen in pixels, defaults to `xy(384, 224)`
@@ -4973,50 +4970,50 @@ as well ("autocorrect"). The list of replacements is:
 
     Sequence    | Replacement
    -------------|--------------
-    `\Delta`    |`Δ` 
-    `\alpha`    |`α` 
-    `\beta`     |`β` 
-    `\gamma`    |`γ` 
-    `\delta`    |`δ` 
-    `\epsilon`  |`ε` 
-    `\zeta`     |`ζ` 
-    `\eta`      |`η` 
-    `\theta`    |`θ` 
-    `\iota`     |`ι` 
-    `\lambda`   |`λ` 
-    `\mu`       |`μ` 
-    `\rho`      |`ρ` 
-    `\sigma`    |`σ` 
-    `\phi`      |`ϕ` 
-    `\chi`      |`χ` 
-    `\psi`      |`ψ` 
-    `\omega`    |`ω` 
-    `\Omega`    |`Ω` 
-    `\tau`      |`τ` 
-    `\time`     |`τ` 
-    `\xi`       |`ξ` 
-    `\random`      |`ξ` 
-    `==`        |`≟` 
-    `?=`        |`≟` 
-    `!=`        |`≠` 
-    `\neq`      |`≠` 
-    `\eq`       |`≟` 
-    `\not`      |`¬` 
-    `\leq`      |`≤` 
+    `\Delta`    |`Δ`
+    `\alpha`    |`α`
+    `\beta`     |`β`
+    `\gamma`    |`γ`
+    `\delta`    |`δ`
+    `\epsilon`  |`ε`
+    `\zeta`     |`ζ`
+    `\eta`      |`η`
+    `\theta`    |`θ`
+    `\iota`     |`ι`
+    `\lambda`   |`λ`
+    `\mu`       |`μ`
+    `\rho`      |`ρ`
+    `\sigma`    |`σ`
+    `\phi`      |`ϕ`
+    `\chi`      |`χ`
+    `\psi`      |`ψ`
+    `\omega`    |`ω`
+    `\Omega`    |`Ω`
+    `\tau`      |`τ`
+    `\time`     |`τ`
+    `\xi`       |`ξ`
+    `\random`      |`ξ`
+    `==`        |`≟`
+    `?=`        |`≟`
+    `!=`        |`≠`
+    `\neq`      |`≠`
+    `\eq`       |`≟`
+    `\not`      |`¬`
+    `\leq`      |`≤`
     `<=`        |`≤`
-    `\geq`      |`≥` 
+    `\geq`      |`≥`
     `>=`        |`≥`
-    `>>`        |`▻` 
-    `<<`        |`◅` 
+    `>>`        |`▻`
+    `<<`        |`◅`
     `\bitand`   |`∩`
     `\bitor`    |`∪`
     `\bitxor`   |`⊕`
-    `\pi`       |`π` 
-    `\infty`    |`∞` 
-    `\nil`      |`∅` 
-    `\half`     |`½` 
-    `\third`    |`⅓` 
-    `\quarter`  |`¼` 
+    `\pi`       |`π`
+    `\infty`    |`∞`
+    `\nil`      |`∅`
+    `\half`     |`½`
+    `\third`    |`⅓`
+    `\quarter`  |`¼`
     `\fifth`    |`⅕`
     `sixth`     |`⅙`
     `seventh`   |`⅐`
@@ -5045,20 +5042,20 @@ The flow control statements are:
     but do create scope lines as do other blocks
 - Modes:
   - `set_mode(ModeName)` to switch game modes. The note is optional.
-  - `push_mode(ModeName)` and `pop_mode()` to temporarily 
+  - `push_mode(ModeName)` and `pop_mode()` to temporarily
    enter a mode game mode. The notes are optional.
 - Game:
   - `reset_game()` to reset all state and restart the game.
   - `quit_game()` to end the current game and return to the launcher.
   - `launch_game(url)` to launch a different game.
 
-`set_mode()`, `push_mode()`, `pop_mode()`, `reset_game()`, `quit_game()`, and `launch_game()` may be 
+`set_mode()`, `push_mode()`, `pop_mode()`, `reset_game()`, `quit_game()`, and `launch_game()` may be
 followed by the keyword `because` and a reason that is a compile-time string. For example, `quit_game() because "lives = 0"`.
 The reason allows the IDE to label the transitions on the mode diagram for the game.
 
 There is no switch, do loop, goto, or try/catch.
 
-Whitespace is significant, as in Python. Indentation must be exactly a 
+Whitespace is significant, as in Python. Indentation must be exactly a
 single space per nested block.
 
 For flow control purposes, the empty string, 0, and `∅` are false.  All other objects (including empty data structures) are true.
@@ -5070,7 +5067,7 @@ multi-line.
 
 Numeric `for` loops increment by 1 each iteration and always count up. The loop variable must
 be on the left-side of a single comparison loop expression or the center of a multi-comparison
-expression. 
+expression.
 
 The loop variable in any `for` loop is freshly bound for each iteration. This means that
 if it is captured by a function as in:
@@ -5166,19 +5163,19 @@ let names = ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus",
 let pos = xy(½ SCREEN_SIZE.x, 10)
 for planet in names:
    pos.y += draw_text(font, planet, pos, #f)
-   
+
 // Iterate over values and modify (this is safe, no elements will be
 // skipped. You can even remove elements ahead of the iterator and
 // they will still be processed)
 for planet in names:
    // Remove any name with an "a" in it
    if find(planet, "a") ≠ ∅: remove_values(names, planet)
-   
-   // Add some random moons...the current loop will not 
+
+   // Add some random moons...the current loop will not
    // iterate over these, but they are immediately visible
    // in the array.
    if random() > 50%: push(names, planet + " moon")
-   
+
 // Iterate over array keys
 pos = xy(½ SCREEN_SIZE.x, 10)
 for i < size(names):
@@ -5204,7 +5201,7 @@ let poemBy = {
 let pos = xy(½ SCREEN_SIZE.x, 10)
 for author in poemBy:
    pos.y += draw_text(font, poemBy[author] + " by " + author, pos, #f)
-   
+
 // Iterate over values and modify (this is safe, no elements will be skipped)
 for author in poemBy:
    // Remove this entry if it contains an "a" in the value
@@ -5220,7 +5217,7 @@ let spots = [xy(1, 1), xy(100, 2), xy(10, 20), xy(50, 20)]
 for x, y in S in spots:
    // Remove any element that is higher than 15
    if y > 15: remove_values(spots, S)
-   
+
 let i = 0
 while i < size(spots):
    // More efficient O(1) removal without preserving order
@@ -5265,7 +5262,7 @@ let player = {
       "money", "watch", "apple"]
 }
 
-let x = (43 + 
+let x = (43 +
    17)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -5300,26 +5297,26 @@ All:
 
 ¥ € £ ¬ ∩ ∪ ≟ ≠ ≤ ≥ ≈ ∊ ∈ ⌊ ⌋ ⌈ ⌉ ⊗ ⊕ ⊖
 ⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁺ ⁻ ⁽ ⁾ …
-₀ ₁ ₂ ₃ ₄ ₅ ₆ ₇ ₈ ₉ ₊ ₋ ₍ ₎ 
-ₐ ᵦ ᵢ ⱼ ₓ ₖ ᵤ ₙ 
+₀ ₁ ₂ ₃ ₄ ₅ ₆ ₇ ₈ ₉ ₊ ₋ ₍ ₎
+ₐ ᵦ ᵢ ⱼ ₓ ₖ ᵤ ₙ
 ᵃ ᵈ ᵉ ʰ ⁱ ʲ ᵏ ᵐ ⁿ ᵒ ʳ ˢ ᵗ ᵘ ˣ ᵝ
 ∅ ∞ ° ½ ⅓ ⅔ ¼ ¾ ⅕ ⅖ ⅗ ⅘ ⅙ ⅐ ⅛ ⅑ ⅒ ∫ ± м н к
 « » ¿ ★ × ⊢ ∙ ○ ● ◻ ◼ △ ▲ ▼ ◀ ▶ ✓ ♠ ♥ ♣ ♦ §
-↑ ↓ ← → ↖ ↗ ↙ ↘ ⓐ ⓑ ⓒ ⓓ ⓕ ⓟ ⓠ ⓧ ⓨ Ⓞ ⍍ ▣ ⧉ ☰ 
-⍐ ⍇ ⍗ ⍈ ❖ ✜ ♆ © ℵ 
+↑ ↓ ← → ↖ ↗ ↙ ↘ ⓐ ⓑ ⓒ ⓓ ⓕ ⓟ ⓠ ⓧ ⓨ Ⓞ ⍍ ▣ ⧉ ☰
+⍐ ⍇ ⍗ ⍈ ❖ ✜ ♆ © ℵ
 A B Γ Δ E Z H Θ I K Λ M N Ξ O Π P Σ T Φ X Ψ Ω
 α β γ δ ε ζ η θ ι κ λ μ ν ξ o π ρ σ τ ϕ χ ψ ω ¡
-ς ş ğ İ Ş Ğ υ г 
-Æ À Á Â Ã Ä Å Ç È É Ê Ë Ì Í Î Ï Ø Ò Ó Ô Õ Ö Œ Ñ 
-æ à á â ã ä å ç è é ê ë ì í î ï ø ò ó ô õ ö œ ñ 
+ς ş ğ İ Ş Ğ υ г
+Æ À Á Â Ã Ä Å Ç È É Ê Ë Ì Í Î Ï Ø Ò Ó Ô Õ Ö Œ Ñ
+æ à á â ã ä å ç è é ê ë ì í î ï ø ò ó ô õ ö œ ñ
 Д Ж З И Й Л П Ц Ч Ш Щ Э Ю Я Ъ Ы Ь ẞ Ù Ú Û Ü Б
-д ж з и й л п ц ч ш щ э ю я ъ ы ь ß ù ú û ü б 
+д ж з и й л п ц ч ш щ э ю я ъ ы ь ß ù ú û ü б
 `````````````````````````````````````````````````````
 
 Note that the superscripts `ᵈᵉʰᵐᵒʳˢᵗ` are legal in text strings but
 not as code. These are present specfically to support ordinals such as
 "1ˢᵗ, 2ⁿᵈ, 3ʳᵈ, 4ᵗʰ, 1ᵉʳ, 1ʳᵉ, 2ᵉ, 2ᵈ, 2ᵈᵉ, 1ᵒ, 1ᵃ, …" in
-various languages. Not all letters are available for subscripts 
+various languages. Not all letters are available for subscripts
 and superscripts in Unicode, so quadplay✜ restricts those available
 as variables to a specific commonly used mathematical and natural language set.
 
@@ -5350,7 +5347,7 @@ without a network connection and to work with local files instead of
 Google Drive ones for the GitHub-hosted IDE.
 
 Launch your program in the emulator and debugger from the command line
-on Windows, MacOS, or Linux with the `quadplay` command:
+on Windows, macOS, or Linux with the `quadplay` command:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
 # Load the games/quadpaddle/quadpaddle.game.json sample program
@@ -5380,7 +5377,7 @@ These examples assume that your directory structure is:
 *   +-- 📂 fonts
 *   |   |
 *   |   ⋮
-*   |   
+*   |
 *   +-- 📂 games
 *   |   |
 *   |   +-- 📂 quadpaddle
@@ -5396,7 +5393,7 @@ These examples assume that your directory structure is:
 *   |       +- 📄 space.game.json
 *   |       |
 *   |       ⋮
-*   |         
+*   |
 *   +-- 📂 sprites
 *   |   |
 *   ⋮   ⋮
@@ -5411,21 +5408,23 @@ the emulator, it will reload your code and assets from disk.
 
 By default, `quad://` assets are cached for fast reload peformance. To
 disable this behavior, force a reload of the entire page with
-shift+browser reload button, or remove `&fastreload=1` from the URL.
+shift+browser reload button, or remove `&fastReload=1` from the URL.
 
 
 Visual Studio Code
 ------------------------------------------------------------------------------------
 
-Visual Studio Code natively supports the `.json` files. To configure it with beta 
-PyxlScript file support as well, run the following command line from the 
+Visual Studio Code natively supports the `.json` files. To configure it with beta
+PyxlScript file support as well, run the following command line from the
 `quadplay/tools` directory:
 
-```code --install-extension vscode-pyxlscript.vsix```
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+code --install-extension vscode-pyxlscript.vsix
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 <!--
-1. Run Visual Studio Code. 
-2. Press Ctrl+Shift+P (Cmd+Shift+P on MacOS) to open the command
+1. Run Visual Studio Code.
+2. Press Ctrl+Shift+P (Cmd+Shift+P on macOS) to open the command
    palette and then type `Open Settings (JSON)` and press enter.
    This opens the `settings.json` file.
 3. Add the following to the `settings.json` file (you may need a comma
@@ -5437,6 +5436,22 @@ PyxlScript file support as well, run the following command line from the
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+Vim
+------------------------------------------------------------------------------------
+
+To install the PyxlScript mode for Vim, you'll need to modify your .vimrc.
+
+If you're using a plugin manager like [dein](https://github.com/Shougo/dein.vim):
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+call dein#add("path/to/quadplay/tools/vim-pyxlscript-syntax", {'frozen':1})
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you want to directly copy the files into your ~/.vim directory, make sure you copy (or symlink) all the files into the corresponding directories like they structured in the plugin.
+
+[`pyxlscript.vim`](../tools/pyxlscript.vim)
+
 
 Emacs
 ------------------------------------------------------------------------------------
@@ -5462,22 +5477,6 @@ edit and add the following before the `autoload` line:
 
 
 
-Vim
-------------------------------------------------------------------------------------
-
-To install the PyxlScript mode for Vim, you'll need to modify your .vimrc.
-
-If you're using a plugin manager like dein (https://github.com/Shougo/dein.vim) :
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-call dein#add("path/to/quadplay/tools/vim-pyxlscript-syntax", {'frozen':1})
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-
-If you want to directly copy the files into your ~/.vim directory, make sure you copy (or symlink) all the files into the corresponding directories like they structured in the plugin.
-
-[`pyxlscript.vim`](../tools/pyxlscript.vim)
-
-
 Other Editors
 ------------------------------------------------------------------------------------
 
@@ -5491,19 +5490,19 @@ Command-Line Tools
 ------------------------------------------------------------------------------------
 
 [`quadplay`](../quadplay)
-: Launches the emulator from the command line on any operating system. 
+: Launches the emulator from the command line on any operating system.
   Requires Python. See the arguments above.
 
 [`quaddepend.py`](../tools/quaddepend.py)
 : Prints dependencies of a `.game.json` file, recursively. Run the script  with `--help` to
   see the arguments. Run as `tools/quaddepend.py ...` or `python3 tools/quaddepend.py ...`
   from the main quadplay directory.
-  
+
 [`export.py`](../tools/quaddepend.py)
-: Export a static HTML site for a single game, either lightweight by referencing 
+: Export a static HTML site for a single game, either lightweight by referencing
   `https://morgan3d.github.io/quadplay` or standalone by embedding a full copy of
-  the emulator. Run the script with `--help` to see the arguments. 
-  
+  the emulator. Run the script with `--help` to see the arguments.
+
   Run as `tools/export.py ...` or `python3 tools/export.py ...`
   from the main quadplay directory. This script itself depends on `tools/quaddepend.py`.
 
@@ -5535,14 +5534,14 @@ The `quadplay.html` application launched by the `quadplay` script accepts the fo
 HTML query arguments:
 
 `IDE`
-: If set, load in development mode with access to the full IDE and stop and pause 
+: If set, load in development mode with access to the full IDE and stop and pause
   buttons.
 
 `fastReload`
 : If `1`, do not force reloading of `quad://` files from disk but instead allow
   browser caching. Those resources are unlikely to change (unless you are modifying
   quadplay itself!), so this speeds up game reloading, especially for music.
-  
+
 `game`
 : URL of a game to load, which can be relative to the `quadplay` script.
 
@@ -5554,7 +5553,7 @@ Your games can be played on any major web browser on desktop/laptop,
 phone, tablet, or embedded processor such as Jetson Nano or Raspberry
 Pi. You can also distribute them as phone or desktop apps. You may
 charge money for your games and may distribute them as closed
-source. 
+source.
 
 It is your responsibility to satisfy copyright law and any licensing
 fees or royalties for content that you use when you distribute your
@@ -5565,7 +5564,7 @@ quadplay✜ is all Open Source (even though it permits you to use it with your
 own closed-source came). See the Credits section for more information.
 
 
-github
+GitHub
 ------------------------------------------------------------------------------------
 
 ### From your development repo
@@ -5574,14 +5573,14 @@ This is the easiest method to deploy your game. It also allows you to
 continuously update the game as well as gain the benefit of
 improvements to quadplay✜ itself continuously.
 
-Store your game in a git repository on [github.com](https://github.com), or in 
-a subdirectory of a github repository.  Do not fork quadplay into the repo 
+Store your game in a git repository on [github.com](https://github.com), or in
+a subdirectory of a GitHub repository.  Do not fork quadplay into the repo
 because that will make it large and disrupt the user's saved per-console state.
-Just keep your game there in the repo by itself as you create it. 
+Just keep your game there in the repo by itself as you create it.
 
-Assume that your github account is named `USER` and your repo is named `REPO`.
+Assume that your GitHub account is named `USER` and your repo is named `REPO`.
 
-To deploy, go to the settings page for your repo on github. For example,
+To deploy, go to the settings page for your repo on GitHub. For example,
 https://github.com/USER/REPO/settings. In the section titled "GitHub Pages"
 on the settings page, select "Master Branch" from the Source dropdown.
 
@@ -5601,8 +5600,8 @@ People visiting the URL https://USER.github.io/REPO will then be redirected to t
 
 ### From another repo
 
-To keep your development repository private or just separate from the deployment one, 
-create a second repository on github. 
+To keep your development repository private or just separate from the deployment one,
+create a second repository on GitHub.
 
 Clone both to your local machine and at the command line, enter the _development_ repo
 and run `python3 tools/export.py -o ../PUBLIC_REPO path/to/game`.
@@ -5617,8 +5616,8 @@ itch.io Browser
 ------------------------------------------------------------------------------------
 
 Deploying to [itch.io](https://itch.io/) as a Browser Game allows you to create a self
-contained online game that others can buy from you, or play for free if you choose. 
-It is slightly more complicated to update than on github because you must make a release
+contained online game that others can buy from you, or play for free if you choose.
+It is slightly more complicated to update than on GitHub because you must make a release
 file and upload it explicitly.
 
 To deploy on itch.io you must make a copy of the files from the quadplay✜ distribution
@@ -5651,8 +5650,8 @@ as a replacement for the original file.
 Web Server
 ------------------------------------------------------------------------------------
 
-You can host your game using only your own files on any web server that supports 
-[CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), or as a copy 
+You can host your game using only your own files on any web server that supports
+[CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), or as a copy
 of all of quadplay✜ on _any_ web server, regardless of whether it supports CORS.
 
 To deploy your game on a web server with CORS named `myserver.com` in the `mygame`
@@ -5661,7 +5660,7 @@ directory, run just upload your own game files to the server. The URL for your g
 https://morgan3d.github.io/quadplay/console/quadplay.html?game=https://myserver.com/mygame
 
 To deploy a complete package that is independent of the current
-version of quadplay✜, follow the process for building the zipfile from the itch.io section, 
+version of quadplay✜, follow the process for building the zipfile from the itch.io section,
 and then upload your files to the server instead of zipping them.
 Your URL will be just https://myserver.com/mygame.
 
@@ -5673,7 +5672,7 @@ Any quadplay✜ game hosted on a web page using the methods from the previous se
 can be played on a mobile phone. The emulator automatically creates on-screen buttons
 when it detects a phone, and it also supports gamepads connected to a phone.
 
-You can also deploy your game through a phone app store in order to sell it. This is 
+You can also deploy your game through a phone app store in order to sell it. This is
 an advanced process. You must wrap your game with a binary program.
 [Cordova](https://cordova.apache.org/) is a free tool that you can use to automate
 this process. It requires familiarity with [npm](https://www.npmjs.com/), web apps,
@@ -5681,13 +5680,13 @@ the app store that you are deploying on, and the tools needed (such as Xcode for
 to compile on the platform.
 
 The basic idea is to use the method described in the itch.io section to create a
-standalone web app, and then use Cordova to create the phone app. 
+standalone web app, and then use Cordova to create the phone app.
 
 
 Desktop
 ------------------------------------------------------------------------------------
 [Electron](https://electronjs.org/) is a tool that turns web apps into desktop binary
-projects which can be distributed through the Windows or Mac App stores, Steam, the 
+projects which can be distributed through the Windows or Mac App stores, Steam, the
 Epic Store, etc. It works by bundling an entire web browser with your application, wrapped
 so that it looks like a native app. The process is similar to that of using Cordova.
 
@@ -5740,7 +5739,7 @@ rendering code is very good at removing those for you.
 or scaled and do not have alpha. It can directly copy the memory in
 this case.
 
-If you have fully opaque map tiles in one layer, remove the tiles behind 
+If you have fully opaque map tiles in one layer, remove the tiles behind
 them in other layers. It can be substantially faster (but use more memory)
 to use pre-drawn transitions between map terrain tiles instead of layering
 an alpha-masked tile on top of another one to blend them.
@@ -5753,7 +5752,7 @@ unseen.
 All of the drawing calls are much faster for opaque colors than ones with
 fractional alpha values.
 
-Perfectly horizontal lines are much faster to draw than vertical lines. 
+Perfectly horizontal lines are much faster to draw than vertical lines.
 Vertical lines are slightly faster than diagonal lines.
 
 Sequential `draw_point()` calls that have the same `z` value are
@@ -5846,7 +5845,7 @@ the [MIT license](https://raw.githubusercontent.com/davidshimjs/qrcodejs/master/
 
 The random number generator is derived from
 [an implementation](https://github.com/AndreasMadsen/xorshift/blob/master/xorshift.js)
-of xorshift (c) 2014 Andreas Madsen and Emil Bay used under the 
+of xorshift (c) 2014 Andreas Madsen and Emil Bay used under the
 [MIT license](https://github.com/AndreasMadsen/xorshift/blob/master/LICENSE.md).
 
 The code editor for the quadplay✜ IDE is [ace.js](https://ace.c9.io/) used under the [BSD license](https://github.com/ajaxorg/ace/blob/master/LICENSE).
@@ -5883,7 +5882,7 @@ It is based on the Amstrad PC1512 BIOS font.
 All built-in assets are Creative Commons licensed have complete license and copyright information in the "license" property of the corresponding JSON file.
 
 
-Beta Tester Notes
+Notes for Beta Testers
 =====================================================================================
 
 The API is mostly complete. I'm focusing on bug fixes and minor tweaks
@@ -5906,7 +5905,7 @@ third-order curve outside of the bounds instead of a line.
 IDE will receive major new features throughout and after the beta
 phase. This includes editors for code, sprites, and maps.
 
-`launch_game()` will probably accept additional arguments to pass to the 
+`launch_game()` will probably accept additional arguments to pass to the
 launched game at some point. The syntax for that game accepting the
 arguments has not yet been determined.
 
@@ -5915,12 +5914,12 @@ four built-in games. During the beta period this will change to show
 any game that has been loaded by URL until the user explicitly "forgets"
 it.
 
-The Discover tab of the launcher program does not currently work. 
+The Discover tab of the launcher program does not currently work.
 It will be manually populated
 later in the beta period and then during 1.0 launch. I will fill it
 with games that I see announced on the
 [Completed Games Forum](http://quadplay.freeforums.net/board/6/completed-games)
-which are hosted online (typically using github Pages). Be sure to
+which are hosted online (typically using GitHub Pages). Be sure to
 provide all of the metadata in your `.game.json` file and the
 `label64.png` and `preview.png` images so that your game appears
 correctly. Version numbers will be used to track updated games so that
@@ -5968,14 +5967,17 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-2020 Jan 31: Beta update 26
+2020 Feb 2: Beta update 26
 
 - Fixed Emacs syntax highlighting matching keywords that appear within variable names
 - Added `xz()` for convenience when working with top down coordinate systems,
   and corresponding intrinsics
-- Fixed multiple bugs in `tools/export.py` and supported games not in the quadplay 
+- Fixed multiple bugs in `tools/export.py` and supported games not in the quadplay
   directory tree
 - Browser tab label is now the game title
+- Significant copyediting of the manual by Mauricio Vives
+- Fixed `flip_y` for maps
+- Changed the definition of `override_color` alpha for `draw_sprite()`
 
 
 2020 Jan 29: Beta update 25
@@ -6006,7 +6008,7 @@ Changes for both the specification and implementation in each release.
 - Fixed sustained physics contacts for fast moving objects not updating position properly
 - Fixed `"Game start"` argument being passed to the start mode's `enter` event section
 - Added `tools/export.py` tool
-- Made `tools/quaddepend.py` able to launch directly as a script on MacOS and Linux
+- Made `tools/quaddepend.py` able to launch directly as a script on macOS and Linux
 - Renamed internal BetterJSON library to WorkJSON
 - Centered ninja sprites
 - Added detection for 8BitDo SN30, SF30, and Zero 2 controllers
@@ -6015,7 +6017,7 @@ Changes for both the specification and implementation in each release.
 
 2020 Jan 18: Beta update 23
 
-- Redesigned profiler output in the "Stats" IDE tab to show 
+- Redesigned profiler output in the "Stats" IDE tab to show
   game logic, physics, and graphics time separately
 - Rewrote framerate scaling to maintain the best possible motion
   appearance independent of framerate
@@ -6047,7 +6049,7 @@ Changes for both the specification and implementation in each release.
 - Replaced with `◅ ▻` with `◀ ▶` in fonts
 - Added `▼` to fonts (all four cardinal solid arrows are now represented)
 - Added a system pause and configuration menu bound to the ⓟ/Start button
-- Added a startup message for standalone games notifying players of the system 
+- Added a startup message for standalone games notifying players of the system
   menu button
 - Added the <big>⊖</big> symbol to all fonts
 - Removed the ⓟ gamepad button from game access space
@@ -6071,7 +6073,7 @@ Changes for both the specification and implementation in each release.
 - Redesigned boot and startup animations
 - Restored `examples/text` program that was broken by the previous update
 - Added `get_background()`
-  
+
 
 2020 Jan 3: Beta update 20
 
@@ -6113,7 +6115,7 @@ Changes for both the specification and implementation in each release.
   in the same browser hosting the IDE
 - Fixed audio on Safari desktop browser
 - Removed `entity.acc` and `entity.twist` properties
-- New properties for physics: `entity.friction`, `entity.stiction_factor`, 
+- New properties for physics: `entity.friction`, `entity.stiction_factor`,
   `entity.restitution`, `entity.drag`, `entity.collision_category_mask`, `entity.collision_group`,
   and `entity.collision_hit_mask`
 - Added `entity_apply_force()` and `entity_apply_impulse()`
@@ -6123,7 +6125,7 @@ Changes for both the specification and implementation in each release.
 2019 Dec 25: Beta update 18
 
 - Added Deploying Games section
-- Added [Serpitron](../console/quadplay.html?game=quad://games/quadpaddle&IDE=1) sample game
+- Added [Serpitron](../console/quadplay.html?game=quad://games/serpitron&IDE=1) sample game
 - Removed `extendPostEffects()` and reverted definition of `set_post_effects()` to match beta 16
 - Added `compose_transform()`
 - Renamed `addFrameSequence()` to `sequence()`
@@ -6144,7 +6146,7 @@ Changes for both the specification and implementation in each release.
 - Fixed misalignment of `-` character and enlarged the `+` character in the broderick-7 font
 - Added `delay()` and `addFrameSequence()`
 - Added options for open-ended line segments in `drawLine()` to support
-  drawing polylines and curves with transparency 
+  drawing polylines and curves with transparency
 - Fixed `set_post_effects()` background color crashing the emulator
 - Made Modes slightly wider in the visualization graph to accomodate longer mode names
 - Fixed a bug in the parsing of `because` statements that contained parentheses
@@ -6203,11 +6205,11 @@ Changes for both the specification and implementation in each release.
 - Added `random_integer(lo, hi)` and deprecated `random_integer(n)`
 - Added `random(lo, hi)` overload
 - Added optional `random()` function argument to `randomBall()`, `randomSquare()`, etc.
-- Renamed `randomBall()` --> `random_within_sphere()`, 
-  `randomSquare()` --> `random_within_square()`, 
+- Renamed `randomBall()` --> `random_within_sphere()`,
+  `randomSquare()` --> `random_within_square()`,
   `randomDisk()` --> `random_within_circle()`,
   `randomSphere()` --> `random_on_sphere()`
-- Added `random_gaussian()`, `random_gaussian2D()`, `random_gaussian3D()`, 
+- Added `random_gaussian()`, `random_gaussian2D()`, `random_gaussian3D()`,
   `random_truncated_gaussian()`, `random_truncated_gaussian2D()`, random_truncated_gaussian3D()`,
   `random_on_cube()`, `random_within_cube()`, `random_intege(rlo, hi, random)`, `random_sign()`, `random_on_square()`
 
@@ -6264,7 +6266,7 @@ Changes for both the specification and implementation in each release.
 
 - Allowed `for` and `with` variable lists to be split across multiple lines
 - Added `nano-3.font.json`
-- Added `space-planet.sprite.json`, `space-atmosphere.sprite.json`, `space-moon.sprite.json`, and `space-ring.sprite.json` 
+- Added `space-planet.sprite.json`, `space-atmosphere.sprite.json`, `space-moon.sprite.json`, and `space-ring.sprite.json`
 - Made the JSON parser report line numbers instead of character positions for errors
 - Added `get_clip()` for returning the current clipping region
 - Added `device_control()` support for setting the prompt characters for controllers
@@ -6326,7 +6328,7 @@ Changes for both the specification and implementation in each release.
 2019 July 17: Beta update 3
 
 - Added syntax highlighting in emacs for `bitand`, `bitor`, and `bitxor`
-- Documented `log()`, `log2()`, and `log10()` 
+- Documented `log()`, `log2()`, and `log10()`
 - Added optional `result` argument for `get_sprite_pixel_color()` to reduce memory allocation
 - Made `at`, `because`, `reset_game`, `launch_game`, and `quit_game` into reserved words
 - *Incompatible change*: Changed how the note/reason works for `push_mode`, `pop_mode`, `set_mode`, `launch_game`, `quit_game`, and `reset_game`.
@@ -6421,10 +6423,10 @@ color: #80bfff !important;
 }
 div.preview {
   width: 256px;
-  height: 149px; 
+  height: 149px;
   background-size: 600% 1000%;
-  image-rendering: -moz-crisp-edges; 
-  image-rendering: pixelated; 
+  image-rendering: -moz-crisp-edges;
+  image-rendering: pixelated;
   border: 1px solid #666;
   float:right;
 }
@@ -6436,4 +6438,3 @@ setTimeout(function(){document.title='manual✜';},5000)</script>
 <link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../console/favicon-32x32.png">
 <!-- Markdeep: --><script src="markdeep.min.js"></script>
-

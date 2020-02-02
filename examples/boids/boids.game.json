@@ -5,12 +5,12 @@
     },
     "copyright": "\u00a92019 Stephan Steinbach",
     "developer": "Stephan Steinbach",
-    "license": "CC0/Public Domain(Replace with your own license)",
+    "license": "CC0/Public Domain",
     "modes": [
         "Boids*"
     ],
     "packages": [],
     "scripts": [
     ],
-    "title": "Boids"
+    "title": "Boids Example"
 }

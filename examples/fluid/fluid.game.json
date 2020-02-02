@@ -14,8 +14,8 @@
     },
 
     "version":      0.0,
-    "minPlayers":   1,
-    "maxPlayers":   1,
+    "min_players":   1,
+    "max_players":   1,
     "cooperative":  false,
     "competitive":  false,
     "achievements": false,

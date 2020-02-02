@@ -888,7 +888,7 @@ function loadMap(name, json, mapJSONUrl) {
         _name:   'map ' + name,
         _url:    json.url,
         _offset: Object.freeze(json.offset ? {x:json.offset.x, y:json.offset.y} : {x:0, y:0}),
-        _flipYOnLoad: json.flipY || false,
+        _flipYOnLoad: json.flip_y || false,
         _json:   json,
         _jsonURL: mapJSONUrl,
         zOffset: json.zOffset || 0,
@@ -956,7 +956,7 @@ function loadMap(name, json, mapJSONUrl) {
                     return layer.lastElementChild.innerHTML.split(',').map(function (m) { return parseInt(m); });
                 });
                 
-                const flipY = (json.flipY === true);
+                const flipY = (json.flip_y === true);
                 
                 for (let L = 0; L < layerList.length; ++L) {
                     // The first level IS the map itself
