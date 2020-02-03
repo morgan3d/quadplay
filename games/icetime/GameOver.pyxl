@@ -8,10 +8,10 @@ enter
 ───────────────────────────────────────────────────────────────────────────────
 
 // Save the stats
-saveLocal("playerStats", playerStats)
+save_local("playerStats", playerStats)
 
 // Initialize team stats
-const teamStats = loadLocal("teamStats") or {}
+const teamStats = load_local("teamStats") or {}
 for team in teamArray: if not teamStats[team.name]: teamStats[team.name] = {win:0, draw:0, lose:0}
 
 const s0 = teamArray[0].score
@@ -33,7 +33,7 @@ else:
    ++teamStats[teamArray[0].name].draw
    ++teamStats[teamArray[1].name].draw
 
-saveLocal("teamStats", {})
+save_local("teamStats", {})
 
 frame
 ───────────────────────────────────────────────────────────────────────────────

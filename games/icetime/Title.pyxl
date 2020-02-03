@@ -21,7 +21,7 @@ titleSound = play_audio_clip(chantAudioClip, true, 150%)
 
 set_post_effects({background:#0000, opacity: 50%})
 
-const c = find(choiceArray, loadLocal("choice"))
+const c = find(choiceArray, load_local("choice"))
 if c ≠ ∅: selection = (c + 5) mod size(choiceArray)
 
 
@@ -74,7 +74,7 @@ else if joy.aa or joy.bb:
          createGame()
          set_mode(Faceoff) because "Demo Mode"
       else:
-         saveLocal("choice", choice)
+         save_local("choice", choice)
          set_mode(TeamSelect) because "1-4P"
 
 selection = loop(selection - 4% joy.x, N)

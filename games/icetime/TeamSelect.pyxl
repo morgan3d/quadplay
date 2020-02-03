@@ -78,7 +78,7 @@ def drawSide(teamIndex):
 enter
 ───────────────────────────────────────────────────────────────────────────────
 
-teamStats = loadLocal("teamStats") or {}
+teamStats = load_local("teamStats") or {}
 // Ensure stats for all teams
 for team in league: if not teamStats[team.name]: teamStats[team.name] = {win:random_integer(3), draw:random_integer(1), lose:random_integer(3)}
 

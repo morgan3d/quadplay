@@ -1,0 +1,50 @@
+EnterScore
+════════════════════════════════════════════════════════════════════════
+
+const allowed_chars = "?ABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÄÅÇÈÉÊËĞÌÍÎÏØÒÓÔÕÖŞÙÚÛÜ0123456789♥★&/"
+
+let new_score
+let char_index = 0
+const char_array = ["?", "?", "?"]
+
+
+enter(a, s)
+────────────────────────────────────────────────────────────────────────
+new_score = s
+char_index = 0
+char_array[0] = "?"
+char_array[1] = "?"
+char_array[2] = "?"
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+draw_previous_mode()
+draw_corner_rect(xy(80, 60), xy(SCREEN_SIZE.x - 80 * 2, 122), #000E, #F)
+
+draw_text(font, "New High Score!", xy(SCREEN_SIZE.x / 2, 80), #F, nil, #500, "center")
+draw_text(font, format_number(new_score, "commas"), xy(SCREEN_SIZE.x / 2, 95), #FF0, nil, nil, "center")
+
+for c < 3:
+   const color = if char_index == c then #ff0 else #c
+   const pos = xy(SCREEN_SIZE.x / 2 + 34 (c - 1), 124)
+   draw_text(bigfont, char_array[c], pos, color, nil, nil, "center", "center")
+   draw_rect(pos, xy(26, 38), nil, color)
+
+if joy.aa:
+   if char_array[char_index] != "?":
+      ++char_index
+      if char_index == 3:
+         // Done!
+         pop_mode(join(char_array), new_score)
+else if joy.bb:
+   // Back up
+   if char_index > 0: --char_index
+else if joy.yy or joy.xx:
+   // Change the current letter
+   const d = if joy.yy then joy.yy else joy.xx
+   char_array[char_index] = array_value(allowed_chars, find(allowed_chars, char_array[char_index]) + d, "loop")
+
+draw_text(font, replace("Enter your name\n[^][v]:Change  (a):Next/Done", joy.prompt), xy(SCREEN_SIZE.x / 2, 160), #F, nil, #500, "center")
+
+

@@ -24,7 +24,7 @@ def makePlayer(description, control, team):
 
 
 // Stats are saved in GameOver
-const playerStats = loadLocal("playerStats") or {}
+const playerStats = load_local("playerStats") or {}
 
 def setPlayerStat(player, statName, value):
    if not playerStats[player.name]: playerStats[player.name] = {}

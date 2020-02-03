@@ -306,6 +306,9 @@ physics engine, including the debugging visualization.
 and acts as a tool for previewing fonts when creating new ones. Use the arrow keys to scroll down and see more examples
 in the program, and edit the `game.json` file to see a different font.
 
+[High Scores](../console/quadplay.html?game=quad://examples/highscores&IDE=1) demonstrates `load_local()` and `save_local()` to
+maintain a high score list, with `push_mode()` for creating a popup dialog.
+
 
 ### Inspiration
 
@@ -1267,6 +1270,16 @@ Array
 
 String
 ---------------------------------------------------------
+`array_value(string, i, extrapolate (= string.extrapolate or "clamp"))`
+: Applies `floor()` to `i` and then applies the extrapolation mode, which defaults
+  to the extrapolation mode of the array itself if specified.
+  The `extrapolate` values accepted are:
+
+  - `"oscillate"`
+  - `"loop"`
+  - `"clamp"` (default, other unsupported values are silentely treated as clamp instead of failing)
+
+
 `concatenate(a, b)`
 : Returns a new string that is `a + b`.
 
@@ -3520,12 +3533,12 @@ This API is useful for save games, GUI state defaults, high scores,
 and persistent worlds.
 
 
-`loadLocal(key)`
+`load_local(key)`
 : The key is loaded and deserialized with `parse()` to return an object
-  that was previously saved with `saveLocal()`. If the `key` is not bound,
+  that was previously saved with `save_local()`. If the `key` is not bound,
   then `∅` is returned.
 
-`saveLocal(key, value)`
+`save_local(key, value)`
 : The value will be serialized to a string with `unparse()` and then
   stored associated with `key` and the URL of the game. Save a value
   of `∅` to delete the key. There is a maximum size of 2048
@@ -5969,15 +5982,20 @@ Changes for both the specification and implementation in each release.
 
 2020 Feb 2: Beta update 26
 
-- Fixed Emacs syntax highlighting matching keywords that appear within variable names
+- Added `examples/highscore` example
 - Added `xz()` for convenience when working with top down coordinate systems,
   and corresponding intrinsics
-- Fixed multiple bugs in `tools/export.py` and supported games not in the quadplay
-  directory tree
 - Browser tab label is now the game title
 - Significant copyediting of the manual by Mauricio Vives
-- Fixed `flip_y` for maps
 - Changed the definition of `override_color` alpha for `draw_sprite()`
+- Added `array_value()` support for strings
+- Fixed Emacs syntax highlighting matching keywords that appear within variable names
+- Fixed multiple bugs in `tools/export.py` and supported games not in the quadplay
+  directory tree
+- Fixed `flip_y` for maps
+- Fixed `save_local` and `load_local`
+- Fixed `join()` default separators
+- Fixed `parse()` for nested objects within arrays
 
 
 2020 Jan 29: Beta update 25

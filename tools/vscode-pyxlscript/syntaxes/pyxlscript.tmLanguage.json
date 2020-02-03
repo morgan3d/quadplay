@@ -74,7 +74,7 @@
 			"patterns": [
 				{
 					"name": "keyword.operator.new.pyxlscript",
-					"match": "\\b(loadLocal|saveLocal|drawText|anyButtonPress)\\b"
+					"match": "\\b(load_local|save_local|drawText|anyButtonPress)\\b"
 				},
 				{
 					"name": "keyword.operator.new.pyxlscript.mode",

@@ -451,11 +451,11 @@ function extend(a, b) {
 
 
 function array_value(animation, frame, extrapolate) {
-    if (! Array.isArray(animation)) {
+    if (! Array.isArray(animation) && (typeof animation !== 'string')) {
         if (animation === undefined || animation === null) {
             throw new Error('Passed nil to array_value()');
         } else {
-            throw new Error('The first argument to array_value() must be an array (was ' + unparse(animation)+ ')');
+            throw new Error('The first argument to array_value() must be an array or string (was ' + unparse(animation)+ ')');
         }
     }
     
@@ -5968,7 +5968,14 @@ function join(array, separator, lastSeparator, lastIfTwoSeparator, empty) {
         return (typeof array[0] === 'string' ? array[0] : unparse(array[0])) + lastIfTwoSeparator +
             (typeof array[1] === 'string' ? array[1] : unparse(array[1]));
     } else {
-        let s = typeof array[0] === 'string' ? array[0] : unparse(array[0]);
+        separator = separator || '';
+        if (lastSeparator === undefined) {
+            lastSeparator = separator;
+        }
+        if (lastIfTwoSeparator === undefined) {
+            lastIfTwoSeparator = lastSeparator;
+        }
+        let s = (typeof array[0] === 'string') ? array[0] : unparse(array[0]);
         for (let i = 1; i < array.length; ++i) {
             let a = array[i];
             if (typeof a !== 'string') {
@@ -6668,12 +6675,12 @@ function split(str, c) {
 }
 
 
-function loadLocal(key) {
+function load_local(key) {
     let table = _window.localStorage.getItem('GAME_STATE_' + _gameURL);
     if (! table) { return undefined; }
     
     table = JSON.parse(table);
-    let value = table[key];
+    const value = table[key];
     if (value) {
         return parse(value);
     } else {
@@ -6682,8 +6689,8 @@ function loadLocal(key) {
 }
 
 
-function saveLocal(key, value) {
-    let table = _window.localStorage.getItem(_gameURL);
+function save_local(key, value) {
+    let table = _window.localStorage.getItem('GAME_STATE_' + _gameURL);
     if (table) {
         table = JSON.parse(table);
     } else {
@@ -6695,11 +6702,11 @@ function saveLocal(key, value) {
     } else {
         const v = unparse(value);
         if (v.length > 2048) {
-            throw new Error('Cannot storeLocal() a value that is greater than 2048 characters after unparse()');
+            throw new Error('Cannot store_local() a value that is greater than 2048 characters after unparse()');
         }
         table[key] = v;
         if (Object.keys(table).length > 128) {
-            throw new Error('Cannot storeLocal() more than 128 separate keys.');
+            throw new Error('Cannot store_local() more than 128 separate keys.');
         }
     }
 

@@ -1204,7 +1204,7 @@ function _parse(source, i) {
             return {result: a, next: i + 1}
             break;
             
-        case '{': // Table
+        case '{': // Object
             ++i;
             const t = {};
             // Consume the leading space
@@ -1240,7 +1240,7 @@ function _parse(source, i) {
                 // Consume the trailing space and comma
                 while (', \t\n'.indexOf(source[i]) !== -1) { ++i; }
             }
-            // consume the ']'
+            // consume the '}'
             return {result: t, next: i + 1}
             break;
             
@@ -1249,58 +1249,58 @@ function _parse(source, i) {
             const end = regexIndexOf(source, /[,:\[{}\] \n\t"]/, i);
             const token = source.substring(i, end).toLowerCase();
             switch (token) {
-            case 'true': return {result: true, next: end + 1};
-            case 'false': return {result: false, next: end + 1};
-            case 'nil': case '∅': case 'builtin': return {result: undefined, next: end + 1};
-            case 'function': return {result: (function () {}), next: end + 1};
-            case 'infinity': case '∞': case '+infinity': case '+∞': return {result: Infinity, next: end + 1};
-            case '-infinity': case '-∞': return {result: -Infinity, next: end + 1};
-            case 'nan': return {result: NaN, next: end + 1};
-            case 'π': return {result: Math.pi, next: end + 1};
-            case '-π': return {result: -Math.pi, next: end + 1};
-            case '¼': return {result: 1/4, next: end + 1};
-            case '½': return {result: 1/2, next: end + 1};
-            case '¾': return {result: 3/4, next: end + 1};
-            case '⅓': return {result: 1/3, next: end + 1};
-            case '⅔': return {result: 2/3, next: end + 1};
-            case '⅕': return {result: 1/5, next: end + 1};
-            case '⅖': return {result: 2/5, next: end + 1};
-            case '⅗': return {result: 3/5, next: end + 1};
-            case '⅘': return {result: 4/5, next: end + 1};
-            case '⅙': return {result: 1/6, next: end + 1};
-            case '⅚': return {result: 5/6, next: end + 1};
-            case '⅐': return {result: 1/7, next: end + 1};
-            case '⅛': return {result: 1/8, next: end + 1};
-            case '⅜': return {result: 3/8, next: end + 1};
-            case '⅝': return {result: 5/8, next: end + 1};
-            case '⅞': return {result: 7/8, next: end + 1};
-            case '⅑': return {result: 1/9, next: end + 1};
-            case '⅒': return {result: 1/10, next: end + 1};
-            case '-¼': return {result: -1/4, next: end + 1};
-            case '-½': return {result: -1/2, next: end + 1};
-            case '-¾': return {result: -3/4, next: end + 1};
-            case '-⅓': return {result: -1/3, next: end + 1};
-            case '-⅔': return {result: -2/3, next: end + 1};
-            case '-⅕': return {result: -1/5, next: end + 1};
-            case '-⅖': return {result: -2/5, next: end + 1};
-            case '-⅗': return {result: -3/5, next: end + 1};
-            case '-⅘': return {result: -4/5, next: end + 1};
-            case '-⅙': return {result: -1/6, next: end + 1};
-            case '-⅚': return {result: -5/6, next: end + 1};
-            case '-⅐': return {result: -1/7, next: end + 1};
-            case '-⅛': return {result: -1/8, next: end + 1};
-            case '-⅜': return {result: -3/8, next: end + 1};
-            case '-⅝': return {result: -5/8, next: end + 1};
-            case '-⅞': return {result: -7/8, next: end + 1};
-            case '-⅑': return {result: -1/9, next: end + 1};
-            case '-⅒': return {result: -1/10, next: end + 1};
+            case 'true': return {result: true, next: end};
+            case 'false': return {result: false, next: end};
+            case 'nil': case '∅': case 'builtin': return {result: undefined, next: end};
+            case 'function': return {result: (function () {}), next: end};
+            case 'infinity': case '∞': case '+infinity': case '+∞': return {result: Infinity, next: end};
+            case '-infinity': case '-∞': return {result: -Infinity, next: end};
+            case 'nan': return {result: NaN, next: end};
+            case 'π': return {result: Math.pi, next: end};
+            case '-π': return {result: -Math.pi, next: end};
+            case '¼': return {result: 1/4, next: end};
+            case '½': return {result: 1/2, next: end};
+            case '¾': return {result: 3/4, next: end};
+            case '⅓': return {result: 1/3, next: end};
+            case '⅔': return {result: 2/3, next: end};
+            case '⅕': return {result: 1/5, next: end};
+            case '⅖': return {result: 2/5, next: end};
+            case '⅗': return {result: 3/5, next: end};
+            case '⅘': return {result: 4/5, next: end};
+            case '⅙': return {result: 1/6, next: end};
+            case '⅚': return {result: 5/6, next: end};
+            case '⅐': return {result: 1/7, next: end};
+            case '⅛': return {result: 1/8, next: end};
+            case '⅜': return {result: 3/8, next: end};
+            case '⅝': return {result: 5/8, next: end};
+            case '⅞': return {result: 7/8, next: end};
+            case '⅑': return {result: 1/9, next: end};
+            case '⅒': return {result: 1/10, next: end};
+            case '-¼': return {result: -1/4, next: end};
+            case '-½': return {result: -1/2, next: end};
+            case '-¾': return {result: -3/4, next: end};
+            case '-⅓': return {result: -1/3, next: end};
+            case '-⅔': return {result: -2/3, next: end};
+            case '-⅕': return {result: -1/5, next: end};
+            case '-⅖': return {result: -2/5, next: end};
+            case '-⅗': return {result: -3/5, next: end};
+            case '-⅘': return {result: -4/5, next: end};
+            case '-⅙': return {result: -1/6, next: end};
+            case '-⅚': return {result: -5/6, next: end};
+            case '-⅐': return {result: -1/7, next: end};
+            case '-⅛': return {result: -1/8, next: end};
+            case '-⅜': return {result: -3/8, next: end};
+            case '-⅝': return {result: -5/8, next: end};
+            case '-⅞': return {result: -7/8, next: end};
+            case '-⅑': return {result: -1/9, next: end};
+            case '-⅒': return {result: -1/10, next: end};
             default:
                 if (/(deg|°)$/.test(token)) {
-                    return {result: parseFloat(token) * Math.PI / 180, next: end + 1};
+                    return {result: parseFloat(token) * Math.PI / 180, next: end};
                 } else if (/%$/.test(token)) {
-                    return {result: parseFloat(token) / 100, next: end + 1};
+                    return {result: parseFloat(token) / 100, next: end};
                 } else {
-                    return {result: parseFloat(token), next: end + 1};
+                    return {result: parseFloat(token), next: end};
                 }
             } // switch on token
         } // switch on character

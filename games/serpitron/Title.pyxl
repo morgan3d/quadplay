@@ -36,7 +36,7 @@ set_random_seed(local_time().millisecond)
 
 countdownTimer = ∅
 // Restore player's preferences
-colorIndex = loadLocal("colorIndex") or [0, 1, 2, 3]
+colorIndex = load_local("colorIndex") or [0, 1, 2, 3]
 state = ["out", "out", "out", "out"]
 
 if not backgroundSound or backgroundSound.audioClip ≠ titleMusic:
@@ -147,7 +147,7 @@ if mode_frames > 30:
 if countdownTimer ≠ ∅:
    --countdownTimer
    if countdownTimer <= 0:
-      saveLocal("colorIndex")
+      save_local("colorIndex")
       // Will immediately increment to 0
       level = -1
       snakeArray = []

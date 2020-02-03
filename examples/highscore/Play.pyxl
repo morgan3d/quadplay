@@ -1,0 +1,51 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+const start_score_array = [
+   {name: "YYZ", score: 31422},
+   {name: "MAC", score: 10750},
+   {name: "BIF", score: 25600},
+   {name: "♥♥♥", score:  9000},
+   {name: "XRD", score: 77100},
+   {name: "LBP", score:  2120}
+]
+
+let score_array
+let new_score
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+score_array = load_local("score_array") or start_score_array
+sort(score_array, "score", true)
+set_background(#400)
+
+// Make up a fake new high score
+new_score = random_integer(last_value(score_array).score, score_array[0].score)
+
+
+
+pop_mode(name, score) from EnterScore
+────────────────────────────────────────────────────────────────────────
+// Remove the lowest score
+pop(score_array)
+push(score_array, {name: name, score: score})
+sort(score_array, "score", true)
+save_local("score_array", score_array)
+// Prevent the dialog from triggering again
+new_score = 0
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+draw_text(bigfont, "HIGH SCORES", xy(SCREEN_SIZE.x / 2, 30), #F, #0, #0, "center")
+
+let pos = xy(SCREEN_SIZE.x / 2 + 26, 75)
+for s in score_array:
+   draw_text(bigfont, format_number(s.score, "commas"), pos - xy(20, 0), #FF0, #0, nil, "right")
+   draw_text(bigfont, s.name, pos + xy(20, 0), #FF0, #0, nil,  "left")
+   pos.y += 25
+
+if mode_frames == 1 and new_score:
+   push_mode(EnterScore, score_array, new_score) because "New high score"
