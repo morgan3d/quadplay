@@ -2,7 +2,7 @@
 "use strict";
 
 const deployed = true;
-const version  = '2020.01.31.22'
+const version  = '2020.02.06.09'
 const launcherURL = 'quad://console/launcher';
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -123,12 +123,17 @@ function setColorScheme(scheme) {
     saveIDEState();
 }
 
+// Used for the event handlers to efficiently
+// know whether to trigger onWelcomeTouch()
+let onWelcomeScreen = ! useIDE;
+
 /* 
-   Force mobile users to interact in order to enable the audio engine and
-   full-screen.
+   Force users in auto-play modes to interact in order to enable the audio engine and
+   full-screen on mobile (where it is harder to hit the small full-screen button).
  */
-function onMobileWelcomeTouch() {
-    const welcome = document.getElementById('mobileWelcome');
+function onWelcomeTouch() {
+    onWelcomeScreen = false;
+    const welcome = document.getElementById('welcome');
     welcome.style.zIndex = -100;
     welcome.style.visibility = 'hidden';
     welcome.style.display = 'none';
@@ -138,6 +143,16 @@ function onMobileWelcomeTouch() {
     if (isMobile) {
         requestFullScreen();
     }
+
+    let url = getQueryString('game') || launcherURL;
+     // If the url doesn't have a prefix, assume that it is relative to
+    // the quadplay script in the parent dir.
+    if (! (/^.{3,}:\/\//).test(url)) {
+        url = '../' + url;
+    }
+    loadGameIntoIDE(url, function () {
+        onPlayButton();
+    });
 }
 
 
@@ -876,6 +891,12 @@ function onPauseButton() {
 function inModal() { return false; }
 
 function onDocumentKeyDown(event) {
+    if (onWelcomeScreen) {
+        onWelcomeTouch();
+        event.preventDefault();
+        return;
+    }
+    
     switch (event.which || event.keyCode) {
     case 121: // F10
         event.preventDefault();
@@ -1016,6 +1037,9 @@ function onProjectSelect(target, type, object) {
     const constantEditor = document.getElementById('constantEditor');
     const mapEditor      = document.getElementById('mapEditor');
     const docEditor      = document.getElementById('docEditor');
+
+    document.getElementById('spriteEditorHighlight').style.visibility =
+        document.getElementById('spriteEditorPivot').style.visibility = 'hidden';
     
     let list = document.getElementsByClassName('selectedProjectElement');
     for (let i = 0; i < list.length; ++i) {
@@ -1205,7 +1229,7 @@ function showGameDoc(docEditor, name, url) {
             // Escape quotes to avoid ending the srcdoc prematurely
             text = `<base href='${base}'>\n${text.replace(/"/g, '&quot;')}
                 <style>
-body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #444 }
+body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif}
 
 .md a, .md div.title, contents, .md .tocHeader, 
 .md h1, .md h2, .md h3, .md h4, .md h5, .md h6, .md .nonumberh1, .md .nonumberh2, .md .nonumberh3, .md .nonumberh4, .md .nonumberh5, .md .nonumberh6, 
@@ -1219,7 +1243,6 @@ margin-top: 0; padding-top: 0
 .md h2 { border-bottom: 2px solid }
 .md div.title { font-size: 40px }
 .md .afterTitles { height: 0; padding-top: 0; padding-bottom: 0 }
-
 </style>\n
 
 <!-- Markdeep: --><script src='${markdeepURL}'></script>\n`;
@@ -2473,6 +2496,8 @@ function updateControllerIcons() {
 }
 
 window.addEventListener("gamepadconnected", function(e) {
+    if (onWelcomeScreen) { onWelcomeTouch(); }
+
     updateControllerIcons();
     console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.", e.gamepad.index, e.gamepad.id, e.gamepad.buttons.length, e.gamepad.axes.length);
 });
@@ -2566,7 +2591,7 @@ function loadGameIntoIDE(url, callback) {
         // TODO: Editor
         //aceEditor.setReadOnly(! locallyHosted());
         aceEditor.setReadOnly(true);
-    
+
         onLoadFileStart(url);
         afterLoadGame(url, function () {
             onLoadFileComplete(url);
@@ -2667,38 +2692,25 @@ if (! localStorage.getItem('debugWatchEnabled')) {
 }
 
 {
-    let url = getQueryString('game') || launcherURL;
+    let url = getQueryString('game');
 
+    if (url && ! useIDE) {
+        // This is a standalone game, so hide the open button
+        document.getElementById('openButton').style.visibility = 'hidden';
+    }
+
+    url = url || launcherURL;
     // If the url doesn't have a prefix, assume that it is relative to
     // the quadplay script in the parent dir.
     if (! (/^.{3,}:\/\//).test(url)) {
         url = '../' + url;
     }
 
-    function go() {
+
+    if (useIDE || (url !== 'quad://console/launcher')) {
         loadGameIntoIDE(url, function () {
             onProjectSelect(null, 'game', gameSource.url);
-            if (! useIDE) { onPlayButton(); }
         });
-    }
-
-    if (! useIDE && (url !== 'quad://console/launcher')) {
-        // Show the pause message before loading when running a
-        // standalone game (not in IDE, not loading the launcher)
-        const pauseMessage = document.getElementById('pauseMessage');
-        pauseMessage.style.zIndex = 120;
-        pauseMessage.style.visibility = 'visible';
-        pauseMessage.style.opacity = 1;
-        setTimeout(function () {
-            pauseMessage.style.opacity = 0;
-            setTimeout(function() {
-                pauseMessage.style.visibility = 'hidden';
-                pauseMessage.style.zIndex = 0;
-                go();
-            }, 800);
-        }, 3000);
-    } else {
-        go();
     }
 }
 

@@ -306,7 +306,7 @@ physics engine, including the debugging visualization.
 and acts as a tool for previewing fonts when creating new ones. Use the arrow keys to scroll down and see more examples
 in the program, and edit the `game.json` file to see a different font.
 
-[High Scores](../console/quadplay.html?game=quad://examples/highscores&IDE=1) demonstrates `load_local()` and `save_local()` to
+[High Score Example](../console/quadplay.html?game=quad://examples/highscore&IDE=1) demonstrates `load_local()` and `save_local()` to
 maintain a high score list, with `push_mode()` for creating a popup dialog.
 
 
@@ -1580,9 +1580,16 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 
 `xy(v)`
 : Returns `{x:v.x, y:v.y}`. Useful for removing the `z` component or cloning.
+  See also `xy_to_xz()`.
 
 `xy(a)`
 : Returns `{x:a[0], y:a[1]}`. Useful for converting from a matrix column.
+
+`xy_to_xz(v)`
+: Returns `{x:v.x, z:v.y}`. See also `xz_to_xy()`.
+
+`xy_to_xyz(v, z (= 0))`
+: Returns `{x:v.x, y:v.y, z:z}`.
 
 `xz(x, z)`
 : Create the object with `x` and `z` fields.
@@ -1592,6 +1599,12 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 
 `xz(a)`
 : Returns `{x:a[0], z:a[1]}`. Useful for converting from a matrix column.
+
+`xz_to_xy(v)`
+: Returns `{x:v.x, y:v.z}`. See also `xy_to_xz()`.
+
+`xz_to_xyz(v, y (= 0))`
+: Returns `{x:v.x, y:y, z:v.z}`. See also `xz_to_xy()`.
 
 `xyz(x, y, z)`
 : Create the object with `x`, `y`, and `z` fields.
@@ -1604,6 +1617,8 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 `xyz(a)`
 : Returns `{x:a[0], y:a[1], z:a[2]}`. Useful for converting from a matrix column.
 
+`xyz_to_rgb(v)`
+: Returns `{r: v.x, g: v.y, b: v.z}`.
 
 
 Function
@@ -2822,6 +2837,9 @@ Graphics
 `rgb(r, g, b)`
 : Create a structure with fields `r`, `g`, and `b` clamped to [0, 1].
 
+`rgb_to_xyz(c)`
+: Returns `{x: c.r, y: c.g, z: c.b}`.
+
 `rgba(r, g, b, a (= 1))`
 : Create a structure with fields `r`, `g`, `b`, and `a` clamped to [0, 1].
 
@@ -2953,7 +2971,7 @@ endpoints and borders.
   If it is not `nil`, the `override_color` blends into the red, green, and blue
   values read from each pixel of the sprite based on its own alpha. The alpha value
   of the result is the sprite's original alpha value. Useful for simulating lighting,
-  turning a sprite into a shadow silhouette, or flashing a sprite a different color 
+  turning a sprite into a shadow silhouette, or flashing a sprite a different color
   to indicate hits or invincibility.
 
 `draw_sprite_corner_rect(sprite, corner, size, z ( = 0))`
@@ -3055,7 +3073,8 @@ endpoints and borders.
 
 `set_clip(pos (= nil), size (= nil), z (= nil), z_size (= nil))`
 : Set the clipping region to this region. Unspecified and `nil` values
-  retain their current value. `pos` and `size` must be `nil` or `xy()` values.
+  retain their current value. `pos` is the upper-left corner. 
+  `pos` and `size` must be `nil` or `xy()` values.
   Coordinates are clamped to the physical
   screen and z to the range [-2047, 2048]. `size` and `z_size` may be
   negative. It is impossible to set a clipping region smaller than
@@ -3710,10 +3729,20 @@ versions may be substantially faster than overloaded operators.
 `XYZ_CRS_XYZ(srcxyz1, srcxyz2, dstxyz)`
 : Cross product. `dstxyz` can be the same object as one of the input arguments.
 
+`MAT2x2_MATMUL_XY(src2x2, srcxy, dstxy)`
+: Multiply matrix `src2x2` represented as `[[m11, m12], [m21, m22]]` by 
+  vector `(srcxy.x, srcxy.y)` and put the result in `dstxy`,
+  which can be the same object as `srcxy`.
+
+`MAT2x2_MATMUL_XZ(src2x2, srcxz, dstxz)`
+: Multiply matrix `src2x2` represented as `[[m11, m12], [m21, m22]]` by 
+  vector `(srcxy.x, srcxy.z)` and put the result in `dstxz`,
+  which can be the same object as `srcxz`.
+
 `MAT3x3_MATMUL_XYZ(src3x3, srcxyz, dstxyz)`
-: Multiply matrix `src3x3` represented as an array of length three row arrays of length
+: Multiply matrix `src3x3` represented as an array of length three row arrays, each of length
   three by vector `(srcxyz.x, srcxyz.y, srcxyz.z)` and put the result in `dstxyz`,
-  which can be the same object as `srczxyz`.
+  which can be the same object as `srcxyz`.
 
 `MAT3x4_MATMUL_XYZ(src3x4, srcxyz, dstxyz)`
 : Multiply matrix `src3x4` represented as an array of length three row arrays of length
@@ -5979,6 +6008,22 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 Feb 6: Beta update 27
+
+- Added `xyz_to_rgb()` and `rgb_to_xyz()`
+- Added `xy_to_xz()` and `xz_to_xy()`
+- Added `xy_to_xyz()` and `xz_to_xyz()`
+- Added `MAT2x2_MATMUL_XY()` and `MAT2x2_MATMUL_XZ()`
+- Fixed outlines breaking up letters on script fonts
+- Removed the home button from the UI, as the in-game OS menu now handles this
+- Forced immediate interaction in autoplay mode to unlock fullscreen and audio context
+  features in various browsers
+- Removed quadplay branding on the mobile welcome screen and removed 
+  escape to OS from standalone games to emphasize the game's own branding
+- Allowed keyboard and gamepad input to activate a standalone game from the
+  welcome screen
+
 
 2020 Feb 2: Beta update 26
 

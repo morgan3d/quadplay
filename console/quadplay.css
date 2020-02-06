@@ -5,6 +5,10 @@
     src: url("PxPlus_AmstradPC1512-2y.ttf");
 }
 
+#docEditor {
+    background:#fff;
+}
+
 #docEditor #doc {
     transform-origin: 0 0;
     transform: scale(0.8, 0.8)
@@ -180,7 +184,7 @@ a {
 
 /*****************************************************/
 
-#mobileWelcome {
+#welcome {
     z-index: 101;
     visibility: visible;
     position: absolute;
@@ -189,6 +193,13 @@ a {
     right: 0px;
     bottom: 0px;
     background: rgba(0,0,0,0.5);
+    -webkit-touch-callout:none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 /*****************************************************/

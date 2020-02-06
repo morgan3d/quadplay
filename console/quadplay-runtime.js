@@ -1405,6 +1405,14 @@ function xy(x, y) {
 }
 
 
+function xz_to_xyz(v, y) {
+    return {x:v.x, y: y || 0, z: v.z};
+}
+
+function xy_to_xyz(v, z) {
+    return {x:v.x, y: v.y, z: z || 0};
+}
+
 function xz(x, z) {
     if (x === undefined) {
         _error('nil or no argument to xz()');
@@ -1421,11 +1429,31 @@ function xz(x, z) {
 }
 
 
+function xy_to_xz(v) {
+    return {x: v.x, z: v.y};
+}
+
+
+function xz_to_xy(v) {
+    return {x: v.x, y: v.z};
+}
+
+
 function xyz(x, y, z) {
     if (x.x !== undefined) { return {x:x.x, y:x.y, z:x.z}; }
     if (Array.isArray(x)) { return {x:x[0], y:x[1], z:x[2]}; }
     if (arguments.length !== 3) { throw new Error('xyz() requires exactly three arguments'); }
     return {x:x, y:y, z:z};
+}
+
+
+function rgb_to_xyz(c) {
+    return {x:c.r, y:c.g, z:c.b};
+}
+
+
+function xyz_to_rgb(v) {
+    return {r: v.x, g: v.y, b: v.z};
 }
 
 
@@ -6485,6 +6513,18 @@ function MAT3x3_MATMUL_XYZ(A, v, c) {
     c.z = A[2][0] * x + A[2][1] * y + A[2][2] * z;
 }
 
+function MAT2x2_MATMUL_XY(A, v, c) {
+    const x = v.x, y = v.y;
+    c.x = A[0][0] * x + A[0][1] * y;
+    c.y = A[1][0] * x + A[1][1] * y;
+}
+
+function MAT2x2_MATMUL_XZ(A, v, c) {
+    const x = v.x, z = v.z;
+    c.x = A[0][0] * x + A[0][1] * z;
+    c.z = A[1][0] * x + A[1][1] * z;
+}
+
 
 function lerp(a, b, t) {
     const ta = typeof a, tb = typeof b;
@@ -7675,7 +7715,8 @@ function _executeSPR(cmd) {
 
 function _executeTXT(cmd) {
     const height = cmd.height, width = cmd.width, color = cmd.color,
-          str = cmd.str, outline = cmd.outline, shadow = cmd.shadow;
+          str = cmd.str
+    let   outline = cmd.outline, shadow = cmd.shadow;
     const clipX1 = cmd.clipX1, clipY1 = cmd.clipY1,
           clipX2 = cmd.clipX2, clipY2 = cmd.clipY2;
     const font = _fontArray[cmd.fontIndex];
@@ -7683,6 +7724,20 @@ function _executeTXT(cmd) {
     const fontWidth = font._data.width;
 
     let x = cmd.x, y = cmd.y;
+
+    if ((font._spacing.x === 0) && (outline & 0xFF000000) && (color & 0xFF000000)) {
+        // Script font with outline and color. Draw in two passes so that
+        // the connectors are not broken by outlines.
+        
+        // Disable color and re-issue the command to draw shadow and outline
+        // before drawing the main text.
+        cmd.color = 0;
+        _executeTXT(cmd);
+
+        // Pass through, disabling outline and shadow that were
+        // already processed.
+        outline = shadow = 0;
+    }
     
     for (let c = 0; c < str.length; ++c) {
         // Remap the character to those in the font sheet

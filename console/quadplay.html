@@ -29,16 +29,16 @@
   </head>
  
   <body>
-    <div id="mobileWelcome" class="mobileOnly" onmousedown="onMobileWelcomeTouch()" ontouchstart="onMobileWelcomeTouch()">
-      <div style="border: 2px solid #fff; background:#ff4488; color: #fff; width: 50%; height: 50%; left: 25%; position: absolute; top: 25%; border-radius: 20px; box-shadow:  2px 5px 4px 0px rgba(0, 0, 0, 0.5);">
-        <div style="margin: 20px; text-align: center; font-size: 20px">
-          <br/>
-          Welcome to
-          <br/><span style="font-family: quadplay; font-size: 25px">quadplay✜</span>
-          <br/>
-          <br/>
-          <br/>
-          <span style="color: #000">Touch to start</span>
+    <div id="welcome" class="noIDE" onmousedown="onWelcomeTouch()" ontouchstart="onWelcomeTouch()">
+      <div style="color: #fff; width: 100%; height: 100%; position: absolute; background: rgba(0, 8, 16, 0.7);">
+        <div style="margin-top: 40px; text-align: center; font-size: 20px; width: 100%; text-shadow: 1px 3px 7px #000">
+          Press a gamepad button, keyboard key, or the icon below
+          <div style="position: absolute; top: 25%; font-size: 150px; width: 100%; text-align: center">
+            ◯
+            <div style="position: absolute; top: 52px; left: 9px; width: 100%; font-size: 105px; text-align: center">
+              ▶
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -82,7 +82,7 @@
           &nbsp;&nbsp; &middot; &nbsp;&nbsp;
           F8 GIF
         </span>
-        <div style="background: #000; margin-left: 10px; display: inline-block; position: relative; top: 6px">
+        <div style="background: #000; margin-left: 10px; display: inline-block; position: relative; top: 6px" id="openButton">
           <script>
             makeButton('<img src="ui-open.png" width=32 style="position:relative; top:-2px;">', 'Load Game from URL', 'onOpenButton');
           </script>
@@ -92,11 +92,14 @@
       </div>
 
       <div style="background: #000; border-top: 3px solid #000; top: 0px; display: inline-block; position: absolute; right: 8px">
+        <!-- Need for home button is eliminated by the in-game menu; home would only be needed
+             to solve a crash, in which case reloading the browser is sufficient.
         <span class="noIDE" style="padding-right: 10px">
           <script>
             makeButton('<img src="ui-home.png" width=32 style="position:relative; top:-2px;">', 'Return to Launcher', 'onHomeButton');
           </script>
         </span>
+        -->
         <div style="display:inline-block; padding-left: 10px;" onclick="showGamepads()">
           <div style="width:48px; margin-top: -4px">
             <div class="controllerAbsent" id="controllerIcon0" title="Connect a controller and press a button"></div>
@@ -142,7 +145,7 @@
     
     <div id="editorPane" class="ide idePart">
       <div id="codeEditor" style="position:absolute; top:0; left:0; visibility:hidden"> </div>
-      <div id="docEditor" style="position:absolute; background:#ccc; top:0; left:0; right: 0; bottom:0; visibility:hidden"> </div>
+      <div id="docEditor" style="position:absolute; top:0; left:0; right: 0; bottom:0; visibility:hidden"> </div>
       <div id="modeEditor" style="position:absolute; top:20px; left:0; visibility:hidden"> </div>
       <div id="gameEditor" style="position:absolute; top:0; left:0; padding: 10px; overflow: scroll; visibility:hidden"> </div>
       <div id="constantEditor" style="position:absolute; top:0; left:0; padding: 10px; visibility:hidden"></div>
@@ -209,7 +212,6 @@
       <div id="screenBorder">
         <canvas id="screen" width=384 height=224></canvas>
         <div id="bootScreen"></div>
-        <div id="pauseMessage"></div>
       </div>
     </div>
 
@@ -340,14 +342,6 @@
   <script>
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     const isMobile = window.matchMedia("only screen and (max-width: 480px)").matches || window.orientation || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-    if (! isMobile) {
-        // Hide the mobile welcome screen, which is not needed
-        // on platforms where audio can be used without a touch
-        const welcome = document.getElementById('mobileWelcome');
-        welcome.style.zIndex = -100;
-        welcome.style.visibility = 'hidden';
-    }
   </script>
 
   <!-- Third-party code -->
