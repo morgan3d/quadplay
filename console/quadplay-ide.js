@@ -144,14 +144,36 @@ function onWelcomeTouch() {
         requestFullScreen();
     }
 
-    let url = getQueryString('game') || launcherURL;
+    let url = getQueryString('game')
+
+    const showPause = url;
+    
+    url = url || launcherURL;
      // If the url doesn't have a prefix, assume that it is relative to
     // the quadplay script in the parent dir.
     if (! (/^.{3,}:\/\//).test(url)) {
         url = '../' + url;
     }
     loadGameIntoIDE(url, function () {
-        onPlayButton();
+        if (showPause) {
+            // Show the pause message before loading when running a
+            // standalone game (not in IDE, not loading the launcher)
+            const pauseMessage = document.getElementById('pauseMessage');
+            pauseMessage.style.zIndex = 120;
+            pauseMessage.style.visibility = 'visible';
+            pauseMessage.style.opacity = 1;
+            setTimeout(function () {
+                pauseMessage.style.opacity = 0;
+                setTimeout(function() {
+                    pauseMessage.style.visibility = 'hidden';
+                    pauseMessage.style.zIndex = 0;
+                    onPlayButton();
+                }, 800);
+            }, 3000);
+        } else {
+            // Loading launcher
+            onPlayButton();
+        }
     });
 }
 

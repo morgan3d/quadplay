@@ -51,7 +51,7 @@
       <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('blue')" id="blueColorScheme" autocomplete="off">Chefchaouen</label>
       <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('black')" id="blackColorScheme" autocomplete="off">New York City</label>
       <hr>
-      <div><a onclick="window.open('../doc/controls.html', '', 'width=400,height=500')">Controls</a></div>
+      <div class="IDEOnly"><a onclick="window.open('../doc/controls.html', '', 'width=400,height=500')">Controls</a></div>
       <div class="noIDE"><a href="../doc/manual.md.html">Create Games</a></div>
       <div><a href="http://quadplay.freeforums.net/" target="_blank">Forums</a></div>
       <div><a href="http://casual-effects.com" target="_blank">CasualEffects</a></div>
@@ -72,6 +72,11 @@
     <div id="header" class="unselectable">
       <div style="position: absolute; left: 8px; top: -2px">
         <a style="cursor:pointer" onclick="onMenuButton(event)" id="consoleMenuButton">Console</a>
+        <span class="noIDE">
+          &nbsp;&nbsp; &middot; &nbsp;&nbsp;
+          <a onclick="window.open('../doc/controls.html', '', 'width=400,height=500')">Controls</a>
+        </span>
+
         <span class="IDEOnly">
           &nbsp;&nbsp; &middot; &nbsp;&nbsp; <a style="cursor:pointer" onclick="onMenuButton(event)" id="toolsMenuButton">Tools</a>
           &nbsp;&nbsp; &middot; &nbsp;&nbsp; <a href="../doc/manual.md.html" target="_blank">Manual</a>
@@ -211,7 +216,10 @@
       <center><input type="button" id="emulatorKeyboardInput" style="z-index:-10;position:fixed;width:10px;margin:auto;top:-30px"></center>
       <div id="screenBorder">
         <canvas id="screen" width=384 height=224></canvas>
+        <!-- Shows file loading progress during boot -->
         <div id="bootScreen"></div>
+        <!-- Shows instructions for reaching pause and controls during boot -->
+        <div id="pauseMessage"></div>
       </div>
     </div>
 

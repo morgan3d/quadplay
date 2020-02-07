@@ -36,19 +36,19 @@ if !exists('g:pyxlscript_indent_searchpair_timeout')
 endif
 
 let s:block_rules = {
-            \ '^\s*elif\>': ['if', 'elif'],
-            \ '^\s*except\>': ['try', 'except'],
-            \ '^\s*finally\>': ['try', 'except', 'else']
+            \ '^\s*else if\>': ['if', 'else if'],
+            \ '^\s*with\>': ['for'],
             \ }
 let s:block_rules_multiple = {
-            \ '^\s*else\>': ['if', 'elif', 'for', 'try', 'except'],
+            \ '^\s*else\>': ['if', 'else if'],
             \ }
 " Pairs to look for when searching for opening parenthesis.
 " The value is the maximum offset in lines.
 let s:paren_pairs = {'()': 50, '[]': 100, '{}': 1000}
 
-let b:control_statement = '\v^\s*(class|def|if|while|with|for|except)>'
-let s:stop_statement = '^\s*\(break\|continue\|raise\|return\|pass\)\>'
+" @TODO: template these
+let b:control_statement = '\v^\s*(def|if|while|with|for|local|preserving_transform)>'
+let s:stop_statement = '^\s*\(break\|continue\|return\|pass\)\>'
 
 let s:skip_after_opening_paren = 'synIDattr(synID(line("."), col("."), 0), "name") ' .
             \ '=~? "\\vcomment|jedi\\S"'
