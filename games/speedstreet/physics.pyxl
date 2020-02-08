@@ -53,7 +53,7 @@ def surfacePointUnder(pos, z):
    let mapPos = transform_draw_to_map(cityMap, pos)
    
    // Offset the y by z
-   mapPos.y += (cityMap.zScale * (layer - 9) * skewY) * pixelMapStepY
+   mapPos.y += (cityMap.z_scale * (layer - 9) * skewY) * pixelMapStepY
 
    // Reuse the mapPos for the final result to avoid allocation
    let pixelPos = mapPos
@@ -90,7 +90,7 @@ def isSolid(pos, z):
    const layer = transformDrawZToMapSolidLayer(z)
    let mapPos = transform_draw_to_map(cityMap, pos)
    // Offset the y by z
-   mapPos.y += (cityMap.zScale * (layer - 9) * skewY) / cityMap.sprite_size.y
+   mapPos.y += (cityMap.z_scale * (layer - 9) * skewY) / cityMap.sprite_size.y
    const color = get_map_pixel_color(cityMap, mapPos, layer)
    return color and (color.a > 0.5)
 

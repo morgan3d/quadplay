@@ -57,20 +57,24 @@ The release 1.0 version will support fully-online editing of games from a
 browser as well as "pro" development using an external editor and local
 hosting. This beta version only supports "pro" mode, for which you need:
 
+- The quadplay✜ SDK: [Download ZIP](https://github.com/morgan3d/quadplay/archive/master.zip) or [Clone on with git](https://github.com/morgan3d/quadplay)
 - A modern web browser ([_Chrome_](https://www.google.com/chrome/), [_Firefox_](https://www.mozilla.org/en-US/firefox/new/), _Safari_, _Edge_, etc. Chrome is fastest.)
 - A code editor (_[Visual Studio Code](https://code.visualstudio.com/), [Atom](https://atom.io/), [Sublime Text](https://www.sublimetext.com), Vim, Emacs, etc._)
-- [Python 3](https://www.python.org/)
+- [Python 3.8](https://www.python.org/)
 - Optionally install the PyxlScript extension for your editor: _[Visual Studio Code](#advancedtools/visualstudiocode)_, _[Vim](#advancedTools/vim)_, _[Emacs](#advancedtools/emacs)_
 
-Copy the starter project from `examples/starter` to your own directory
-such as `games/mygame` and start changing it. Look at the Built-In Games
-section for more examples.
+Download and unzip or clone the SDK from git. There is no install necessary.
+
+To make a game, copy the starter project from `examples/starter` to
+your own directory such as `games/mygame` and start changing it. Look
+at the Built-In Games section for more examples.
 
 Read the PICO-8 section, Python section, or JavaScript section of this
 document for some starting tips on the PyxlScript language used in quadplay✜.
 
 Launch your program in the emulator and debugger from the command line
-on Windows, macOS, or Linux with the `quadplay` command:
+on Windows CMD, macOS Terminal, or a Linux terminal with the `quadplay`
+command in the root of the SDK. Here are some examples:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
 # Load the games/quadpaddle/quadpaddle.game.json sample program
@@ -78,6 +82,10 @@ quadplay quad://games/quadpaddle
 
 # Load a mygames/space/space.game.json game that you've made
 quadplay mygames/space
+
+# Load your game and allow mobile clients to connect by scanning
+# the QR code displayed in the IDE
+quadplay --host mygames/space
 
 # Equivalent to the previous example
 quadplay quad://mygames/space
@@ -127,8 +135,12 @@ These examples assume that your directory structure is:
 The directory and `.game.json` file do not have to have the same
 name. You can list the full path to the actual game file instead.
 
+Your games do not have to be stored in a subdirectory of the SDK.
+They can be anywhere on your system.
+
 Every time you push the Run button (F5) or Reload button (Ctrl+R) in
-the emulator, it will reload your code and assets from disk.
+the emulator within the web browser, it will reload your code and
+assets from disk.
 
 You can use the built-in assets from the developer kit, existing ones
 from sites like [OpenGameArt.org](http://opengameart.org) and
@@ -944,7 +956,7 @@ Field              | Values   | Meaning
 `released_a`       | 0 or 1   | 1 if the ⓐ button was just released this frame
 `b`                | 0 or 1   | 1 if the ⓑ button is currently pressed
 `bb` or `pressed_b`| 0 or 1   | 1 if the ⓑ button was just pressed this frame
-`released_B`       | 0 or 1   | 1 if the ⓑ button was just released this frame
+`released_b`       | 0 or 1   | 1 if the ⓑ button was just released this frame
 `c`                | 0 or 1   | 1 if the ⓒ button is currently pressed
 `cc` or `pressed_c`| 0 or 1   | 1 if the ⓒ button was just pressed this frame
 `released_c`       | 0 or 1   | 1 if the ⓒ button was just released this frame
@@ -961,8 +973,10 @@ as set by `set_transform()`. The angles are always clockwise in screen space.
 
 The `joy` variable is equal to `gamepad_array[0]` as shorthand for single-person games.
 
-The `any_button_press()` function returns true if any gamepad's button was just
-pressed.
+`any_button_press(gamepad (= nil))`
+: Returns true if any button on `gamepad` was just pressed.
+  If `gamepad` is `nil`, returns true if any button on any
+  gamepad was pressed.
 
 
 ### Button Prompts
@@ -3189,24 +3203,24 @@ A map asset has the following fields. Its sprite elements are mutable at runtime
 `map.sprite_size`
 : The `xy()` size of source sprites in pixels.
 
-`map.wrapX`
+`map.wrap_x`
 : If true, the map wraps horizontally. Array access does not automatically
   wrap, but function such as `draw_map()`, `find_map_path()`, and `get_map_pixel_color()`
   will implement wrapping.
 
-`map.wrapY`
+`map.wrap_y`
 : If true, the map wraps vertically. Array access does not automatically
   wrap, but function such as `draw_map()`, `find_map_path()`, and `get_map_pixel_color()`
   will implement wrapping.
 
-`map.zOffset`
+`map.z_offset`
 : Amount to add to each layer index when computing a z value for rendering.
-  `layer = (z - map.zOffset) / map.zScale`; `z = layer * map.zScale + map.zOffset`.
+  `layer = (z - map.z_offset) / map.z_scale`; `z = layer * map.z_scale + map.z_offset`.
   See also `transform_draw_to_map()` and `transform_map_to_draw()`.
 
-`map.zScale`
+`map.z_scale`
 : Amount to multiply each layer index to compute a z value for rendering.
-  `layer = (z - map.zOffset) / map.zScale`; `z = layer * map.zScale + map.zOffset`.
+  `layer = (z - map.z_offset) / map.z_scale`; `z = layer * map.z_scale + map.z_offset`.
   See also `transform_draw_to_map()` and `transform_map_to_draw()`.
 
 
@@ -4408,7 +4422,7 @@ The map JSON descriptor looks like:
     "offset": {"x": 7.5, "y": 7.5},
 
     // z value of the first layer. Optional, default = 0
-    "zOffset": 0,
+    "z_offset": 0,
 
     // Optional. Default = false. If true, flip the map
     // vertically during load so that (0,0) is the bottom
@@ -4416,25 +4430,25 @@ The map JSON descriptor looks like:
     "flip_y": false,
 
     // Optional. Default = false.
-    "wrapX": false,
+    "wrap_x": false,
 
     // Optional. Default = false.
-    "wrapY": false,
+    "wrap_y": false,
 
     // Optional. Default is 1.0. This is the z difference
     // between layers when rendering. Can be negative to
     // reverse layering direction.
-    "zScale": 2,
+    "z_scale": 2,
 
     // Optional license and copyright
     "license": "Released into the public domain by Edouard Gauthier",
 
     // Optional if the map only uses one spritesheet
-    "spriteUrl": "tiles.sprite.json"
+    "sprite_url": "tiles.sprite.json"
 
-    // If no spriteUrl is specified, then an entire table
+    // If no sprite_url is specified, then an entire table
     // mapping each spritesheet referenced in the map to a sprite file
-    "spriteUrlTable": {
+    "sprite_url_table": {
       "tiles":   "tiles.sprite.json"
     }
 }
@@ -4697,7 +4711,7 @@ for future use.
 `quit_game`,
 `ret`, `return`, `reset_game`, `require`, `requires`,
 `seal`, `set`, `show`, `static`, `strict`, `SUB`, `swap`,
-`to`, `toString`, `then`, `try`, `throw`, `template`,
+`to`, `toString`, `then`, `try`, `throw`, `template`, `touch`,
 `until`, `use`, `using`, `unless`,
 `var`,
 `while`, `with`, `when`,
@@ -6010,6 +6024,11 @@ Change Log
 Changes for both the specification and implementation in each release.
 
 2020 Feb TBD: Beta update 28
+
+- Made `touch` a reserved word
+- Added optional `gamepad` argument to `any_button_press()`
+- Made controls menu option more visible in standalone game mode
+- Changed all fields of map to use snake case
 
 
 2020 Feb 6: Beta update 27

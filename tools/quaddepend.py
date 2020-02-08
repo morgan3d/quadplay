@@ -49,13 +49,13 @@ def depend_asset(filename, args, basepath):
          
          _depend(asset_data['url'], args, resolved_dirname)
 
-         if 'spriteUrl' in asset_data:
-            depend_asset(asset_data['spriteUrl'], args, resolved_dirname)
-         elif 'spriteUrlTable' in asset_data:
-            for s in asset_data['spriteUrlTable'].values():
+         if 'sprite_url' in asset_data:
+            depend_asset(asset_data['sprite_url'], args, resolved_dirname)
+         elif 'sprite_url_table' in asset_data:
+            for s in asset_data['sprite_url_table'].values():
                depend_asset(s, args, resolved_dirname)
          else:
-            print('WARNING: ' + filename + ' is missing a "spriteUrlTable" or "spriteUrl" field', file=sys.stderr)
+            print('WARNING: ' + filename + ' is missing a "sprite_url_table" or "sprite_url" field', file=sys.stderr)
 
 
 def _depend(filename, args, basepath, return_contents = False):

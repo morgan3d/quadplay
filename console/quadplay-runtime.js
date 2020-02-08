@@ -5126,11 +5126,12 @@ function set_pause_menu(...options) {
 }
 
 
-function any_button_press() {
-    return gamepad_array[0].aa || gamepad_array[0].bb || gamepad_array[0].cc || gamepad_array[0].dd || gamepad_array[0].qq ||
-        gamepad_array[1].aa || gamepad_array[1].bb || gamepad_array[1].cc || gamepad_array[1].dd || gamepad_array[1].qq ||
-        gamepad_array[2].aa || gamepad_array[2].bb || gamepad_array[2].cc || gamepad_array[2].dd || gamepad_array[2].qq ||
-        gamepad_array[3].aa || gamepad_array[3].bb || gamepad_array[3].cc || gamepad_array[3].dd || gamepad_array[3].qq;
+function any_button_press(gamepad) {
+    if (gamepad === undefined) {
+        return any_button_press(gamepad_array[0]) || any_button_press(gamepad_array[1]) || any_button_press(gamepad_array[2]) || any_button_press(gamepad_array[3]);
+    } else {
+        return gamepad.aa || gamepad.bb || gamepad.cc || gamepad.dd || gamepad.qq;
+    }
 }
 
 

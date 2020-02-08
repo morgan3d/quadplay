@@ -1,4 +1,4 @@
 {
     "url": "titleBackground.tmx",
-    "spriteUrl": "quad://sprites/ortho-city-32x16.sprite.json"
+    "sprite_url": "quad://sprites/ortho-city-32x16.sprite.json"
 }

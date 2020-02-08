@@ -1,4 +1,4 @@
 {
     "url": "levels.tmx",
-    "spriteUrl": "box.sprite.json"
+    "sprite_url": "box.sprite.json"
 }

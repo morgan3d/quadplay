@@ -1,4 +1,4 @@
 {
     "url": "castle.tmx",
-    "spriteUrlTable": {"dawnlike-level-16x16": "quad://sprites/dawnlike-level-16x16.sprite.json"}
+    "sprite_url_table": {"dawnlike-level-16x16": "quad://sprites/dawnlike-level-16x16.sprite.json"}
 }
