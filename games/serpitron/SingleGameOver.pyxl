@@ -26,7 +26,7 @@ draw_text({font: largeFont, text: format_number(snake.score, "commas"),
 
 // Draw snake
 let θ = mode_frames / 40
-const r = lerp(xy(50, 50), xy(120, 70), clamp(sqrt(snake.score / 2e6), 0, 1))
+const r = lerp(xy(50, 50), xy(120, 70), clamp(sqrt(snake.score / 2000000), 0, 1))
 draw_sprite(snake.tailSprite, pos + r * xy(cos θ, sin θ), 270° - θ)
 θ += 2.5°
 const N = 100
