@@ -815,7 +815,7 @@ function updateInput() {
 
     // Also processes input
     const gamepadArray = getIdealGamepads();
-    
+
     // Sample the keys
     for (let player = 0; player < 4; ++player) {
         const map = keyMap[player], pad = QRuntime.gamepad_array[player],
@@ -993,12 +993,51 @@ function onTouchStartOrMove(event) {
         const touch = event.changedTouches[i];
         let tracker = activeTouchTracker[touch.identifier];
 
+        if (event.target === emulatorScreen) {
+            const rect = emulatorScreen.getBoundingClientRect();
+            const screen_x = clamp(Math.round(emulatorScreen.width * (touch.clientX - rect.left) / rect.width), 0, emulatorScreen.width - 1);
+            const screen_y = clamp(Math.round(emulatorScreen.height * (touch.clientY - rect.top) / rect.height), 0, emulatorScreen.height - 1);
+
+            // TODO: Apply transform
+            const draw_x = screen_x;
+            const draw_y = screen_y;
+            
+            if (! tracker || tracker.lastTarget !== emulatorScreen) {
+                // New touch
+                QRuntime.touch.aa = true;
+                QRuntime.touch.pressed_a = true;
+                QRuntime.touch.a = true;
+                QRuntime.touch.screen_dx = 0;
+                QRuntime.touch.screen_dy = 0;
+                QRuntime.touch.dx = 0;
+                QRuntime.touch.dy = 0;
+            } else {
+                // Continued touch
+                QRuntime.touch.screen_dx = screen_x - QRuntime.touch.screen_x;
+                QRuntime.touch.screen_dy = screen_y - QRuntime.touch.screen_y;
+                QRuntime.touch.dx = draw_x - QRuntime.touch.x;
+                QRuntime.touch.dy = draw_y - QRuntime.touch.y;
+            }
+            
+            QRuntime.touch.screen_x = screen_x;
+            QRuntime.touch.screen_y = screen_y;
+            QRuntime.touch.x = draw_x;
+            QRuntime.touch.y = draw_y;
+        }
+
+        if (tracker && (tracker.lastTarget === emulatorScreen) && (event.target !== emulatorScreen)) {
+            // Lost contact with screen
+            QRuntime.touch.a = false;
+            QRuntime.touch.released_a = true;
+        }
+
         if (! tracker) {
             tracker = activeTouchTracker[touch.identifier] = {identifier: touch.identifier};
         }
         
         tracker.clientX = touch.clientX;
         tracker.clientY = touch.clientY;
+        tracker.lastTarget = event.target;
     }
 
     onTouchesChanged(event);
@@ -1009,11 +1048,18 @@ function onTouchStartOrMove(event) {
 function onTouchEndOrCancel(event) {
     // Add the new touches
     for (let i = 0; i < event.changedTouches.length; ++i) {
-        let touch = event.changedTouches[i];
-        let tracker = activeTouchTracker[touch.identifier];
+        const touch = event.changedTouches[i];
+        const tracker = activeTouchTracker[touch.identifier];
+        
         // The tracker *should* be found, but check defensively
         // against weird event delivery
         if (tracker) {
+            if (tracker.lastTarget === emulatorScreen) {
+                // Lost contact with screen
+                QRuntime.touch.a = false;
+                QRuntime.touch.released_a = true;
+            }
+            
             // Delete is relatively slow (https://jsperf.com/delete-vs-undefined-vs-null/16),
             // but there are far more move events than end events and the table is more
             // convenient and faster for processing move events than an array.
@@ -1092,7 +1138,6 @@ function onTouchesChanged(event) {
     }
 }
 
-
 const fakeMouseEvent = {
     changedTouches: [{identifier:-1, clientX: 0, clientY:0}],
     realEvent: null,
@@ -1107,6 +1152,7 @@ function onMouseDownOrMove(event) {
         fakeMouseEvent.changedTouches[0].clientX = event.clientX;
         fakeMouseEvent.changedTouches[0].clientY = event.clientY;
         fakeMouseEvent.realEvent = event;
+        fakeMouseEvent.target = event.target;
         onTouchStartOrMove(fakeMouseEvent);
     }
 }
@@ -1118,6 +1164,7 @@ function onMouseUpOrMove(event) {
     fakeMouseEvent.changedTouches[0].clientX = event.clientX;
     fakeMouseEvent.changedTouches[0].clientY = event.clientY;
     fakeMouseEvent.realEvent = event;
+    fakeMouseEvent.target = event.target;
     onTouchEndOrCancel(fakeMouseEvent);
 }
 
@@ -1129,5 +1176,3 @@ document.addEventListener('touchstart',  onTouchStartOrMove);
 document.addEventListener('touchmove',   onTouchStartOrMove);
 document.addEventListener('touchend',    onTouchEndOrCancel);
 document.addEventListener('touchcancel', onTouchEndOrCancel);
-
-

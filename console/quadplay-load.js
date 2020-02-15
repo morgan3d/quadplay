@@ -462,7 +462,7 @@ function loadFont(name, json, jsonURL) {
         
         Object.freeze(font);
     }, loadFailureCallback, loadWarningCallback, forceReload);
-    
+
     return font;
 }
 

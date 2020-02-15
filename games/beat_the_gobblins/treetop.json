@@ -1,0 +1,23 @@
+{ "frames": [
+   {
+    "filename": "treetop #treetop.aseprite",
+    "frame": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 100
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.16.3",
+  "image": "treetop.png",
+  "format": "RGBA8888",
+  "size": { "w": 96, "h": 96 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "treetop", "from": 0, "to": 0, "direction": "forward" }
+  ]
+ }
+}

@@ -1,0 +1,874 @@
+init
+───────────────────────────────────────────────────────────
+let bgm_music = nil
+let SHOULD_FREEZE_FRAME = false
+let FREEZE_COUNT = 10
+ANIM_MODE = get_mode()
+
+def make_player():
+    let result = make_entity(
+        {
+            pos:xy(0, 0),
+            size:xy(10, 10),
+            shape:"rect",
+            density:1,
+
+            // other parameters
+            last_joy: xy(0, 0),
+            frames_joy: xy(0,0),
+            x_zone: "still",
+            y_zone: "sustain",
+            player_dir: 1,
+            last_vel: xy(0,0),
+            taking_input: true,
+            invincibility: false,
+            health: 1,
+        }
+    )
+
+    // new ADSR system
+    // @{
+    result.accel_attack = PLAYER_MAX_SPEED/PLAYER_ACCEL_FRAMES
+    result.accel_release = PLAYER_MAX_SPEED/PLAYER_DECCEL_FRAMES
+    result.accel_opp_attack = result.accel_release + result.accel_attack
+    // @}
+
+    return result
+
+
+def player_take_damage(from_en, reason):
+    if PLAYER.invincibility or PLAYER.health < 1:
+        return
+
+    PLAYER.invincibility = true
+    PLAYER.taking_input = false
+    PLAYER.health = 0
+
+    debug_print("stun")
+
+    let push_dir = direction(PLAYER.pos-from_en.pos)
+
+    const anim_len = total_duration(driz_anim1Sprite["stun"]);
+    PLAYER.sprite = array_value(driz_anim1Sprite["stun"], 0)
+    let current_frame = 0
+
+    let ouch = play_audio_clip({ audioClip:ouchSound, volume:25})
+
+    def advance(framesLeft, lifetime):
+        let elapsed = lifetime - framesLeft
+        if on_duration(elapsed, PLAYER):
+            current_frame += 1
+
+        if framesLeft > anim_len/2:
+            PLAYER.jolt = PLAYER_MAX_SPEED/2*push_dir
+
+        PLAYER.sprite = array_value(driz_anim1Sprite["stun"], current_frame)
+
+    def done():
+        if PLAYER.health > 0:
+            PLAYER.invincibility = false
+        stop_sound(ouch)
+        set_mode(DeadOutro, reason, SCORE) because "Player dead"
+
+    add_frame_hook(advance, done, anim_len, Play)
+    SHOULD_FREEZE_FRAME = true
+
+
+// enemy system
+// @{
+def still_alive(en):
+    return find(enemies, en) != nil and en.health > 0
+
+def player_alive():
+    return PLAYER.health > 0
+
+def enemy_take_damage(en, amount):
+    if not still_alive(en) or en.unhittable:
+        return
+
+    en.health -= amount
+    let spr = en.base_sprite["Stun"]
+    if not en.has_bomb:
+        spr = en.base_sprite["stun_nb"]
+
+    en.sprite = spr[0]
+    en.taking_input = false
+    let current_frame = 0
+
+    def frame_advance(framesLeft, lifetime):
+        // this pattern is consistent enough that it could probably be factored
+        if on_duration(lifetime - framesLeft, en):
+            current_frame += 1
+        en.sprite = array_value(spr ,current_frame)
+
+        en.vel += PLAYER_SWORD_KNOCKBACK_AMOUNT * direction(en.pos - PLAYER.pos)
+        en.taking_input = false
+        en.unhittable = true
+
+    def unlock_enemy():
+        en.taking_input = true
+        en.unhittable = false
+        if not still_alive(en):
+            // enemy dies
+            add_score(1)
+            add_to_queue(1)
+            remove_values(enemies, en)
+
+    add_frame_hook(frame_advance, unlock_enemy, total_duration(spr))
+    SHOULD_FREEZE_FRAME = true
+
+        
+def bombgoblin_input(en):
+    let goal = PLAYER.pos
+    let en_to_player = goal - en.pos
+    let en_joy = xy(0, 0)
+
+    // bombgoblin tries to get on the same horizontal line as the player,
+    // within range and throw bombs
+    let target_point = (
+        goal - xy(sign(en_to_player).x* BOMBGOBLIN_THROW_DISTANCE, 0)
+    )
+    target_point.y = goal.y
+    target_point.x = clamp(target_point.x, WALL_OFF_MIN.x, WALL_OFF_MAX.x)
+    if DEBUG_DRAW_ORIGINS:
+        draw_disk(target_point, abs(en.min_dist), nil, rgb(0,1,0))
+    let en_to_target_point = target_point - en.pos
+
+    // update animation frame
+    if en.taking_input:
+        let frm_num = 0
+        if magnitude(en.vel) > 0 and en.anim_frames:
+            frm_num =((floor((mode_frames+en.loop_offset)/6)) mod 4) 
+
+        en.sprite = array_value(en.anim_frames, frm_num)
+        let en_dir = -sign(en_to_player.x)
+
+        // flip the sign of the enemy if the enemy is far enough
+        if en_dir != en.scale.x and abs(en_to_player.x) > 1.01:
+            en.scale.x = en_dir
+
+        let all_force_vec = xy(0,0)
+        for other_en in enemies:
+            // accumulate the forces into this
+            all_force_vec += direction(en.pos - other_en.pos)
+
+        all_force_vec/= size(enemies)
+
+        if DEBUG_DRAW_AI_FORCES:
+            draw_line(
+                en.pos,
+                en.pos + all_force_vec*10,
+                rgb(1,0,0),
+                100)
+            draw_line(
+                en.pos,
+                en.pos + direction(en_to_target_point)*5*3,
+                rgb(0,1,0),
+                100)
+
+        all_force_vec += direction(en_to_target_point)
+
+        if DEBUG_DRAW_AI_FORCES:
+            draw_line(
+                en.pos,
+                en.pos + all_force_vec*10,
+                rgb(0,0,1),
+                100)
+
+        // pick a direction for the monster to go
+        if  magnitude(en_to_target_point) > en.min_dist:
+            en_joy = sign(all_force_vec)
+            en.min_dist += 1/4
+        else:
+            start_bomb_throw(en)
+            en.min_dist = BOMBGOBLIN_TARGET_POINT_DISTANCE
+
+    if not BOMBGOBLIN_CHASE_PLAYER:
+        en_joy = xy(0, 0)
+
+    accel_ent(en, en_joy)
+
+    if magnitude(en.vel) > en.max_speed:
+        en.vel = direction(en.vel) * en.max_speed
+
+// compute bombgoblin constants (@CBB)
+const BOMB_INITIAL_SPEED = xy(5, -5)
+const BOMB_FRAMES_TO_DETONATE = 60
+
+// bomb constants
+const BOMB_TARGET = xy(BOMBGOBLIN_THROW_DISTANCE, 0)
+const BOMB_START = xy(0, -22)
+const BOMB_DECEL = (
+    BOMB_INITIAL_SPEED*BOMB_INITIAL_SPEED/(2*(BOMB_TARGET-BOMB_START))
+)
+
+def start_bomb_throw(en, throw_done):
+    // @TODO: this needs to be interruptable
+    en.taking_input = false
+    
+    let spr = bombgoblinSprite["Throw"]
+    let current_frame = 0
+    if throw_done:
+        spr = bombgoblinSprite["Recharge"]
+    en.sprite = array_value(spr, 0)
+
+    def advance(framesLeft, lifetime):
+        if not on_duration(lifetime - framesLeft, en):
+            return
+
+        current_frame += 1
+        if current_frame == 6 and not throw_done:
+            def move_bomb(t, bomb):
+                bomb.force = (
+                    entity_mass(bomb)
+                    *xy(BOMB_DECEL.x*en.scale.x,BOMB_DECEL.y)
+                )
+                if abs(bomb.vel.x) < 0.1:
+                    bomb.force.x = 0
+                physics_step_with_collisions(bomb, en.pos.y)
+                if DEBUG_DRAW_ORIGINS:
+                    draw_line(
+                        xy(-100, en.pos.y),
+                        xy(100, en.pos.y),
+                        rgb(0,0,1),
+                        100
+                    )
+
+                draw_disk(
+                    xy(bomb.pos.x, en.pos.y),
+                    BG_TILE_SIZE_XY_PX.x/3,
+                    rgba(10/255, 10/255, 10/255, 0.75),
+                    nil,
+                    en.z,
+                )
+
+                if bomb.anim_current_frame == 3:
+                    draw_disk(
+                        bomb.pos,
+                        EXPLOSION_DAMAGE_RADIUS/2,
+                        nil,
+                        rgb(1,0,0),
+                        en.z
+                    )
+
+                return on_duration(t, bomb)
+
+            def splode(bomb):
+                debug_print("sploding")
+                let splodesion = make_anim_entity(
+                    {
+                        pos: bomb.pos,
+                        name: "splode",
+                        sprite: splodeSprite["splode"],
+                        size: xy(EXPLOSION_DAMAGE_RADIUS,EXPLOSION_DAMAGE_RADIUS),
+                        scale: xy(1,1),
+                        shape:"disk",
+                        angle: -35deg,
+                    },
+                    splodeSprite["splode"],
+                    delete_from_dust_list,
+                )
+                play_audio_clip(splodeSound)
+                if overlaps(splodesion, PLAYER):
+                    player_take_damage(splodesion, "A BOMB BLEW YOU UP")
+                push(dust,splodesion)
+                delete_from_dust_list(bomb)
+
+            if not (still_alive(en)):
+                return
+
+            // create bomb
+            let bomb = make_anim_entity(
+                {
+                    pos: en.pos + xy(0, -22),
+                    name: "bomb",
+                    vel: BOMB_INITIAL_SPEED*xy(-en.scale.x, 1),
+                    scale: xy(en.scale.x, 1),
+                    sprite: bombSprite["Fuse"],
+                    size: xy(16,16),
+                },
+                bombSprite["Fuse"],
+                splode,
+                move_bomb,
+            )
+            play_audio_clip(bomb_throwSound)
+            push(dust, bomb)
+            en.has_bomb = false
+
+        // pick the frame to play
+        if not throw_done and current_frame > size(spr):
+            current_frame = 0
+            spr = bombgoblinSprite["Recharge"]
+            throw_done = true
+
+        if throw_done and current_frame > 5:
+            en.has_bomb = true
+
+        en.sprite = array_value(spr, current_frame)
+
+    def done():
+        en.taking_input = true
+
+    add_frame_hook(
+        advance,
+        done,
+        (
+            total_duration(bombgoblinSprite["Throw"])
+            + total_duration(bombgoblinSprite["Recharge"])
+        )
+    )
+
+
+def make_dust_cloud(pos, num):
+    const scale_val = xy(2*num, 2*num)
+    for i < num:
+        let dir = if i < num/2 then 1 else -1
+        add_dust_kick(pos + random_within_square()*scale_val, dir)
+
+const SUMMON_ANIM_DURATION = 20
+const SUMMON_ANIM_LERP = 30/(SUMMON_ANIM_DURATION*10)
+const SUMMON_LIGHTNING_COLOR = rgb(39/255, 186/255, 219/255)
+const HALF_SCREEN_SIZE = SCREEN_SIZE/2
+def make_summon(pos, fn):
+    make_dust_cloud(pos, 4)
+    add_cam_shake(1)
+    play_audio_clip(summon_laserSound)
+
+    // plays summon animation and then calls function with pos
+    let box_size = xy(30, -400)
+
+    def advance():
+        box_size.x = lerp(box_size.x, 0, SUMMON_ANIM_LERP)
+        draw_corner_rect(
+            pos - xy(box_size.x/2, 0),
+            box_size,
+            SUMMON_LIGHTNING_COLOR,
+            nil,
+            pos.y + HALF_SCREEN_SIZE.y
+        )
+
+    def next():
+        make_fall(pos, fn)
+
+    add_frame_hook(advance, next, SUMMON_ANIM_DURATION)
+
+
+const SUMMON_VISIBLE_FALL_DURATION =6 
+const ONE_OVER_SUMMON_FALL_DURATION = 1/SUMMON_FALL_DURATION
+const MAX_SUMMON_SHADOW_RADIUS = BG_TILE_SIZE_PX/2
+const SHADOW_COLOR = rgba(.039, .039, .039, 1)
+const SMEAR_COLOR = rgba(0, 1, 0.3, 0.6)
+
+def make_fall(pos, fn):
+    let radius = 0
+
+    def advance(remaining_frames, lifetime):
+        radius = lerp(
+            radius,
+            MAX_SUMMON_SHADOW_RADIUS,
+            ONE_OVER_SUMMON_FALL_DURATION
+        )
+
+        // draw the shadow
+        draw_disk(
+            pos,
+            radius,
+            SHADOW_COLOR,
+            nil,
+            11
+        )
+
+        // blurred thing falling
+        if remaining_frames <= SUMMON_VISIBLE_FALL_DURATION:
+            let smear_loc = lerp(
+                xy(pos.x, -SCREEN_SIZE.y), 
+                pos,
+                1 - remaining_frames*1/SUMMON_VISIBLE_FALL_DURATION
+            )
+            draw_disk(
+                smear_loc,
+                MAX_SUMMON_SHADOW_RADIUS,
+                SMEAR_COLOR,
+                nil,
+                12
+            )
+
+    def end_fn():
+        make_dust_cloud(pos, 12)
+        if fn != make_player:
+            let new_en = fn(pos)
+            push(enemies, new_en)
+            start_bomb_throw(new_en, true)
+        else:
+            PLAYER = make_player()
+        // immediately make the new enemy start the bomb recharge anim
+        // @TODO: add a delay to the recharge animation?  A sunned animation?
+        add_cam_shake(5)
+        play_audio_clip(summon_landSound)
+
+    add_frame_hook(
+        advance,
+        end_fn,
+        SUMMON_FALL_DURATION,
+    )
+
+
+def make_bombgoblin(pos):
+    return make_entity(
+        {
+            // quadplay requires
+            pos:pos,
+            sprite:bombgoblinSprite["Run"][0],
+            scale:xy(1,1),
+            loop_offset: random_integer(4),
+
+            brain: bombgoblin_input,
+
+            // beat the wizard requires
+            base_sprite:bombgoblinSprite,
+            anim_frames:bombgoblinSprite["Run"],
+            accel_attack:BOMBGOBLIN_MAX_SPEED/BOMBGOBLIN_ACCEL_FRAMES,
+            accel_release:BOMBGOBLIN_MAX_SPEED/BOMBGOBLIN_DECCEL_FRAMES,
+            accel_opp_attack:BOMBGOBLIN_MAX_SPEED/BOMBGOBLIN_ACCEL_FRAMES,
+            min_dist: BOMBGOBLIN_TARGET_POINT_DISTANCE,
+            max_speed:BOMBGOBLIN_MAX_SPEED,
+            taking_input: true,
+            health: BOMBGOBLIN_HEALTH,
+            has_bomb: true,
+        },
+        {
+            player_attack_hitbox: make_entity(
+                {
+                    pos_in_parent: xy(0, -8),
+                    size: xy(16, 13),
+                    shape: "rect",
+                }
+            ),
+            player_bump_hitbox: make_entity(
+                {
+                    pos_in_parent: xy(-3, -10),
+                    size: xy(9, 6),
+                    shape: "rect",
+                }
+            )
+        },
+
+    )
+
+// dust system
+
+
+def start_swing_sword(player_loc, player_dir):
+    PLAYER.taking_input = false
+
+    let hit_something = false
+
+    let hitbox = swing_hitbox(PLAYER)
+
+    // do damage
+    for en in enemies:
+        if overlaps(en.player_attack_hitbox, hitbox):
+            hit_something = true
+
+            enemy_take_damage(en, PLAYER_SWORD_DAMAGE)
+
+    let current_frame = 0
+    PLAYER.sprite = array_value(driz_anim1Sprite["atk_2"], 0)
+    add_dust_kick(player_loc, player_dir)
+    let dustloc = {
+        pos: (
+            player_loc 
+            + xy(player_dir, -1) * xy(driz_anim1Sprite["backfx"][0].size/3)
+        ),
+        name: "swing_fx",
+        scale: xy(player_dir, 1),
+    }
+    push(
+        dust,
+        make_anim_entity(
+            clone(dustloc),
+            driz_anim1Sprite["abovefx"],
+            delete_from_dust_list
+        )
+    )
+    dustloc.pos.y += 1
+    push(
+        dust,
+        make_anim_entity(
+            clone(dustloc),
+            driz_anim1Sprite["backfx"],
+            delete_from_dust_list
+        )
+    )
+
+    def advance(framesLeft, lifetime):
+        // camera jerk
+        if lifetime - framesLeft == 1:
+            cam_pos += 4*xy(-player_dir/2, -1)
+
+        if on_duration(lifetime - framesLeft, PLAYER):
+            current_frame += 1
+
+        // lets the index walk off the end of the animation
+        if player_alive():
+            PLAYER.sprite = array_value(driz_anim1Sprite["atk_2"], current_frame)
+
+    def done():
+        if player_alive():
+            PLAYER.taking_input = true
+
+    if hit_something:
+        play_audio_clip({audioClip:hit_thingSound, volume: 4})
+    else:
+        play_audio_clip({ audioClip:swipeSound, volume: 25})
+
+    add_frame_hook(advance, done, total_duration(driz_anim1Sprite["atk_2"]))
+
+
+def add_dust_kick(pos, dir, spr_name):
+    if DEBUG_DISABLE_DUST_KICK:
+        return
+    let newdust = make_anim_entity(
+        {
+            pos: pos + xy(dir*-22, -8),
+            name: "dust kick",
+            scale: xy(dir, 1),
+        },
+        dust_try_twoSprite[spr_name or "Start_Run"],
+        delete_from_dust_list,
+    )
+
+    push(dust, newdust)
+
+
+def accel(vel, joy_comp, acc_attack, acc_release, acc_opp_attack):
+    let vel_sign = sign(vel)
+    let joy_sign = sign(joy_comp)
+
+    if joy_sign != 0:
+        let should_accel = abs(vel) < PLAYER_MAX_SPEED
+        if (
+                (
+                    vel_sign == 0 
+                    or vel_sign == joy_sign
+                ) 
+                and should_accel
+        ):
+            vel += joy_sign * acc_attack
+        else if should_accel:
+            vel += joy_sign * acc_opp_attack
+        else:
+            vel = joy_sign * PLAYER_MAX_SPEED
+
+    else:
+        vel += -1*vel_sign*acc_release
+
+        if abs(vel) < acc_release/2:
+            vel = 0
+
+    return vel
+
+def accel_ent(ent, ijoy):
+    ent.vel.x = accel(ent.vel.x, ijoy.x, ent.accel_attack, ent.accel_release, ent.accel_opp_attack)
+    ent.vel.y = accel(ent.vel.y, ijoy.y, ent.accel_attack, ent.accel_release, ent.accel_opp_attack)
+
+def move_axis(old_val, new_val, thing_size, min_val, max_val):
+    let delta = 0
+    let thing_edge = new_val + thing_size
+    if thing_edge > max_val:
+        delta = max_val - thing_edge
+    thing_edge = new_val - thing_size
+    if thing_edge < min_val:
+        delta = min_val - thing_edge
+    return delta
+
+def physics_step_with_collisions(ent, max_y):
+    let last_pos = clone(ent.pos)
+    entity_simulate(ent)
+
+    let next_pos = clone(ent.pos)
+    // todo: should have size set correctly so that this is computed the right
+    //       way
+    ent.pos += move_with_collision(last_pos, next_pos, 5, max_y)
+    entity_update_children(ent)
+
+def move_with_collision(last, next, thing_size, max_y):
+    if max_y == nil:
+        max_y = WALL_OFF_MAX.y
+    return xy(
+        move_axis(last.x, next.x, thing_size, WALL_OFF_MIN.x, WALL_OFF_MAX.x),
+        move_axis(last.y, next.y, thing_size, WALL_OFF_MIN.y, max_y)
+    )
+
+// score stuff
+def add_score(amount_to_add):
+    play_audio_clip(point_upSound)
+    SCORE += amount_to_add
+    SCORE_ANIM_START = clone(game_frames)
+
+// Enemy Spawning System @{ 
+let spawn_queue = 0
+let next_spawn_threshold = 4
+
+def add_to_queue(enemy_val):
+    spawn_queue += 2*enemy_val
+    debug_print("Adding to spawn queue, total is now: " + unparse(spawn_queue))
+
+// spawn patterns @{
+def all_at_once(num_to_spawn):
+    for i < num_to_spawn:
+        def do_summon():
+            make_summon(
+                random_loc_in_play_area_away_from_player(),
+                make_bombgoblin
+            )
+
+        add_frame_hook(nil, do_summon, i*(5 + random(1, 10)))
+// @}
+
+// spawn some enemies
+// game start logic
+def normal_init():
+    def trigger_summons():
+        all_at_once(5)
+    delay(trigger_summons, SUMMON_FALL_DURATION)
+    make_fall(xy(0, 0), make_player)
+
+
+def debug_init(pos):
+    push(enemies, make_bombgoblin(pos))
+    PLAYER = make_player()
+// @}
+
+// @{ bg + arena
+
+// player input stuff
+def update_player():
+    if not PLAYER:
+        return
+
+    // detect which part of the curve we're in
+    if sign(joy.x) != 0:
+        PLAYER.x_zone = "attack"
+        if sign(joy.x) > 0:
+            PLAYER.x_zone += "+"
+        else:
+            PLAYER.x_zone += "-"
+    else if(PLAYER.x_zone) != "still":
+        PLAYER.x_zone = "release"
+
+
+    // push into still or sustain if we've gone off either end of the curve
+    if find(PLAYER.x_zone, "attack") == 0 and PLAYER.frames_joy.x > PLAYER_ACCEL_FRAMES:
+        PLAYER.x_zone = "sustain"
+    if PLAYER.x_zone == "release" and PLAYER.frames_joy.x > PLAYER_DECCEL_FRAMES:
+        PLAYER.x_zone = "still"
+
+    if not PLAYER.taking_input:
+        joy.x = 0
+        joy.y = 0
+
+    // cycle animation if moving in either x or y
+    if not PLAYER.invincibility:
+        // moving, run animation
+        if sign(joy.x) != 0 or sign(joy.y) != 0:
+            let frame = (floor(mode_frames / 6)) mod 2
+            PLAYER.sprite = array_value(driz_anim1Sprite["Run"], frame)
+        else:
+            // idle animation
+            let frame = (floor(mode_frames / 6)) mod 4
+            // as long as not locked, idle animation
+            if PLAYER.taking_input:
+                PLAYER.sprite = array_value(driz_anim1Sprite["Idle"], frame)
+
+    accel_ent(PLAYER, joy)
+
+    // add dust kicks and other decorations for x-motion
+    if sign(joy.x) != 0:
+        PLAYER.player_dir = sign(joy.x)
+        if PLAYER.last_vel.x == 0:
+            add_dust_kick(PLAYER.pos, PLAYER.player_dir)
+        else if (sign(PLAYER.last_joy.x) != sign(joy.x)):
+            add_dust_kick(PLAYER.pos, PLAYER.player_dir, "Stop")
+
+    // single puff while moving
+    if (sign(PLAYER.vel.x) or sign(PLAYER.vel.y)) and (mode_frames mod 12 == 0):
+        add_dust_kick(
+            (
+                PLAYER.pos 
+                + xy(0, 8+4*random())*abs(perp(direction(PLAYER.vel)))
+                + xy(8*PLAYER.player_dir, -8)
+            ),
+            PLAYER.player_dir,
+            "run"
+        )
+
+    // track how long we've been in that part of the curve
+    if sign(joy.x) == PLAYER.last_joy.x:
+        if PLAYER.last_vel.x != PLAYER.vel.x:
+            PLAYER.frames_joy.x += 1
+    else:
+        PLAYER.frames_joy.x = 0
+    PLAYER.last_joy.x = sign(joy.x)
+    if sign(joy.y) == PLAYER.last_joy.y:
+        if PLAYER.last_vel.y != PLAYER.vel.y:
+            PLAYER.frames_joy.y += 1
+    else:
+        PLAYER.frames_joy.y = 0
+    PLAYER.last_joy.y = sign(joy.y)
+
+
+    if sign(joy.y) != 0:
+        PLAYER.y_zone = "attack"
+        if sign(joy.y) > 0:
+            PLAYER.y_zone += "+"
+        else:
+            PLAYER.y_zone += "-"
+
+    // clamp the speed of the player
+    if magnitude(PLAYER.vel) > PLAYER_MAX_SPEED:
+        PLAYER.vel = direction(PLAYER.vel) * PLAYER_MAX_SPEED
+
+    if PLAYER.jolt:
+        PLAYER.vel += PLAYER.jolt
+
+    // move the player
+    physics_step_with_collisions(PLAYER)
+
+    // pull the jolt back out so that it doesn't mess up max-speed calculations
+    if PLAYER.jolt:
+        PLAYER.vel -= PLAYER.jolt
+        PLAYER.jolt = 0
+
+    // sword swing
+    if PLAYER.taking_input and (joy.aa or joy.bb or joy.cc or joy.dd):
+        start_swing_sword(PLAYER.pos, PLAYER.player_dir)
+
+    for en in enemies:
+        if overlaps(en.player_bump_hitbox, PLAYER):
+            player_take_damage(en, "A BOMBGOBBLIN TOUCHED YOU")
+
+    PLAYER.last_vel = clone(PLAYER.vel)
+
+def update_enemies():
+    if spawn_queue >= next_spawn_threshold:
+        next_spawn_threshold = floor(next_spawn_threshold * 1.5)
+        all_at_once(spawn_queue)
+        debug_print("spawning wave with # of enemies: " + unparse(spawn_queue))
+        spawn_queue = 0
+    for en in enemies:
+        en.brain(en)
+
+        physics_step_with_collisions(en)
+
+        if DEBUG_DRAW_ORIGINS and en.player_attack_hitbox:
+            draw_bounds(en.player_bump_hitbox)
+            draw_bounds(en.player_attack_hitbox)
+
+def reset_game_state():
+    FREEZE_COUNT = 10
+    PLAYER = nil
+    cam_pos = xy(0,0)
+    cam_shake_mag = 0
+
+    SCORE = 0
+    DISPLAYED_SCORE = 0
+    SCORE_ANIM_START = nil
+
+    spawn_queue = 0
+    next_spawn_threshold = 4
+
+    remove_all(enemies)
+    remove_all(dust)
+
+    remove_frame_hooks_by_mode(nil)
+    remove_frame_hooks_by_mode(Play)
+
+
+enter
+───────────────────────────────────────────────────────────
+reset_game_state()
+if DEBUG_LEVEL_INIT:
+    debug_init(xy(50,0))
+else:
+    normal_init()
+
+if bgm_music == nil:
+    // first tiem playing the sound
+    bgm_music = play_audio_clip({ audioClip:play_bgm, loop: true})
+else:
+    // otherwise resume
+    resume_sound(bgm_music)
+
+
+frame
+───────────────────────────────────────────────────────────
+
+SHOULD_FREEZE_FRAME = false
+DEBUG_DRAW_ORIGINS = device_control("getDebugFlag", "entityBounds")
+// debug_print(DEBUG_DRAW_ORIGINS)
+
+// @}
+
+update_enemies()
+
+update_player()
+
+if PLAYER:
+    cam_update_frame(PLAYER.pos)
+else:
+    cam_update_frame(xy(0, 0))
+
+// @{ DRAW CODE
+draw_all()
+
+// draw the arena
+if DRAW_PLAY_AREA_BOUNDS:
+    draw_corner_rect(
+        -ARENA_SIZE_HALF_PX,
+        ARENA_SIZE_PX,
+        // fill
+        nil,
+        // border
+        rgb(0,1,1)
+    )
+if DRAW_WIZZARD_AREA_BOUNDS:
+    draw_corner_rect(
+        xy(
+            -WIZARD_ZONE_SIZE_HALF_PX.x,
+            -ARENA_SIZE_HALF_PX.y - 2*WIZARD_ZONE_SIZE_HALF_PX.y
+        ),
+        WIZARD_ZONE_SIZE_PX,
+        // fill
+        nil,
+        // border
+        rgb(0,1,1)
+    )
+// @}
+
+// debug sprite sheet
+// draw_sprite_sheet(bombgoblinSprite["Run"])
+// draw_sprite_sheet(driz_anim1Sprite["backfx"])
+// draw_sprite_sheet(frametestSprite["zero_to_two"])
+
+if DRAW_DEBUG_SPAWN_LOCATIONS:
+    for l in debug_spawn_locations:
+        draw_disk(l, 5, nil, rgb(0.4, 1, 0), 11)
+
+if DRAW_DEBUG_TEXT:
+    draw_debug_text(PLAYER, dust)
+
+if SHOULD_FREEZE_FRAME:
+    if PLAYER.health > 0:
+        push_mode(FreezeFrame, 3) because "Player hit"
+        SHOULD_FREEZE_FRAME = false
+    else:
+        if FREEZE_COUNT > 1:
+            push_mode(FreezeFrame, 30) because "Player dead"
+            FREEZE_COUNT -= 1
+        else:
+            SHOULD_FREEZE_FRAME = false
+
+leave
+───────────────────────────────────────────────────────────
+stop_sound(bgm_music)

@@ -1,0 +1,254 @@
+{
+    "achievements": false,
+    "assets": {
+        "bgdungeon_fullSprite": "bgdungeon_full.sprite.json",
+        "bombSprite": "bomb.sprite.json",
+        "bomb_throwSound": "bomb_throw.sound.json",
+        "bombgoblinSprite": "bombgoblin.sprite.json",
+        "clouds_layeredSprite": "clouds_layered.sprite.json",
+        "creditsSprite": "credits.sprite.json",
+        "die_bgm": "die.sound.json",
+        "driz_anim1Sprite": "driz_anim1.sprite.json",
+        "dust_try_twoSprite": "dust_try_two.sprite.json",
+        "font": "quad://fonts/deja-9.font.json",
+        "hit_thingSound": "hit_thing.sound.json",
+        "namtari": "namtari-6x7.sprite.json",
+        "ouchSound": "ouch.sound.json",
+        "play_bgm": "play.sound.json",
+        "point_upSound": "point_up.sound.json",
+        "splashSprite": "splash.sprite.json",
+        "splodeSound": "splode.sound.json",
+        "splodeSprite": "splode.sprite.json",
+        "summon_landSound": "summon_land.sound.json",
+        "summon_laserSound": "summon_laser.sound.json",
+        "swipeSound": "swipe.sound.json",
+        "title_bgm": "title.sound.json",
+        "title_two_testSprite": "title_two_test.sprite.json",
+        "tree_background": "tree_background.sprite.json"
+    },
+    "competitive": false,
+    "constants": {
+        "ARENA_SIZE": {
+            "comment": "Size of the arena, in tiles (16x16 blocks)",
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": 22
+                },
+                "y": {
+                    "type": "number",
+                    "value": 13
+                }
+            }
+        },
+        "BG_TILE_SIZE_PX": {
+            "comment": "number of pixels on a side of a BG sprite tile",
+            "type": "number",
+            "value": 16
+        },
+        "BOMBGOBLIN_ACCEL_FRAMES": {
+            "comment": "Number of frames before reaching the maximum speed",
+            "type": "number",
+            "value": 30
+        },
+        "BOMBGOBLIN_CHASE_PLAYER": {
+            "comment": "Toggles the AI for the bombgoblin on or off",
+            "type": "boolean",
+            "value": true
+        },
+        "BOMBGOBLIN_DECCEL_FRAMES": {
+            "comment": "Number of frames before reaching 0 speed from maximum speed",
+            "type": "number",
+            "value": 30
+        },
+        "BOMBGOBLIN_HEALTH": {
+            "comment": "starting health of the bombgoblin",
+            "type": "number",
+            "value": 1
+        },
+        "BOMBGOBLIN_MAX_SPEED": {
+            "comment": "number of pixels per frame max velocity (@60hz)",
+            "type": "number",
+            "value": 1.2
+        },
+        "BOMBGOBLIN_TARGET_POINT_DISTANCE": {
+            "comment": "Distance in pixels from the target point at which the bombgoblin throws the bomb",
+            "type": "number",
+            "value": 20
+        },
+        "BOMBGOBLIN_THROW_DISTANCE": {
+            "comment": "distance in pixels from the player the bombgoblin tries to throw",
+            "type": "number",
+            "value": 80
+        },
+        "CAM_SHAKE_MAX": {
+            "comment": "Maximum amount of camera shake",
+            "type": "number",
+            "value": 7
+        },
+        "DEBUG_DISABLE_DUST_KICK": {
+            "comment": "Hide dust kicks to help debug other particles",
+            "type": "boolean",
+            "value": false
+        },
+        "DEBUG_DRAW_AI_FORCES": {
+            "comment": "Draw the force vectors for the enemy movement",
+            "type": "boolean",
+            "value": false
+        },
+        "DEBUG_LEVEL_INIT": {
+            "comment": "Start with the debug mode instead of regular play",
+            "type": "boolean",
+            "value": false
+        },
+        "DRAW_DEBUG_SPAWN_LOCATIONS": {
+            "comment": "Draw debug spawn locations",
+            "type": "boolean",
+            "value": false
+        },
+        "DRAW_DEBUG_TEXT": {
+            "comment": "Draw debug text info to screen",
+            "type": "boolean",
+            "value": false
+        },
+        "DRAW_PLAY_AREA_BOUNDS": {
+            "comment": "Draw play area bounds",
+            "type": "boolean",
+            "value": false
+        },
+        "DRAW_SPAWN_REJECTION_ZONE": {
+            "comment": "Draw debug zone where enemies are not allowed to spawn",
+            "type": "boolean",
+            "value": false
+        },
+        "DRAW_WIZZARD_AREA_BOUNDS": {
+            "comment": "Draw the are the wizzard goes into",
+            "type": "boolean",
+            "value": false
+        },
+        "EXPLOSION_DAMAGE_RADIUS": {
+            "comment": "Size of the explosion",
+            "type": "number",
+            "value": 64
+        },
+        "PLAYER_ACCEL_FRAMES": {
+            "comment": "Number of frames before reaching the maximum speed",
+            "type": "number",
+            "value": 8
+        },
+        "PLAYER_DECCEL_FRAMES": {
+            "comment": "Number of frames before reaching 0 speed from maximum speed",
+            "type": "number",
+            "value": 8
+        },
+        "PLAYER_MAX_SPEED": {
+            "comment": "number of pixels per frame max velocity (@60hz)",
+            "type": "number",
+            "value": 2.8
+        },
+        "PLAYER_SWORD_DAMAGE": {
+            "comment": "damage the sword does",
+            "type": "number",
+            "value": 1
+        },
+        "PLAYER_SWORD_KNOCKBACK_AMOUNT": {
+            "comment": "amount of knockback from the sword",
+            "type": "number",
+            "value": 10
+        },
+        "SCORE_MOVE_FRAMES": {
+            "comment": "number of frames in the translation animation for the score",
+            "type": "number",
+            "value": 10
+        },
+        "SCORE_OPACITY_FRAMES": {
+            "comment": "number of frames in the opacity fade animation on the score",
+            "type": "number",
+            "value": 5
+        },
+        "SCORE_SCALE": {
+            "comment": "Size of the score numbers",
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": 1
+                },
+                "y": {
+                    "type": "number",
+                    "value": 1
+                }
+            }
+        },
+        "SPAWN_REJECTION_RADIUS": {
+            "comment": "Radius from player in which enemies do not spawn",
+            "type": "number",
+            "value": 80
+        },
+        "SUMMON_FALL_DURATION": {
+            "comment": "Amount of time between the laser disapearing and monster appearing",
+            "type": "number",
+            "value": 150
+        },
+        "WAVE_NUMBER_TIME": {
+            "type": "number",
+            "value": 60
+        },
+        "WIZARD_ZONE_SIZE": {
+            "comment": "Size of the wizard zone, in tiles (16x16 blocks)",
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": 4
+                },
+                "y": {
+                    "type": "number",
+                    "value": 2
+                }
+            }
+        },
+        "textBorderColor": {
+            "type": "rgb",
+            "value": {
+                "b": {
+                    "type": "number",
+                    "value": 0
+                },
+                "g": {
+                    "type": "number",
+                    "value": 0
+                },
+                "r": {
+                    "type": "number",
+                    "value": 0
+                }
+            }
+        }
+    },
+    "cooperative": false,
+    "copyright": "\u00a92019 Stephan Steinbach",
+    "description": "An evil wizzard has trapped you on top of their tower and summoned hordes of angry bombgobblins.  Intense score chasing action game.  Good luck!",
+    "developer": "Stephan Steinbach",
+    "flip_y": false,
+    "highscores": true,
+    "license": "code: MIT / Assets: Creative Commons Attribution 4.0 International",
+    "max_players": 1,
+    "min_players": 1,
+    "modes": [
+        "Failed",
+        "Title*",
+        "Play",
+        "DeadOutro",
+        "FreezeFrame"
+    ],
+    "packages": [],
+    "scripts": [
+        "anim_entity.pyxl",
+        "debug.pyxl",
+        "btw_lib.pyxl"
+    ],
+    "title": "BEAT THE GOBBLINS",
+    "version": 1.0
+}

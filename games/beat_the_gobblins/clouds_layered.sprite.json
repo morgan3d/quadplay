@@ -1,0 +1,53 @@
+{
+    "aseprite_json": "clouds_layered.json",
+    "license": "None",
+    "names": {
+        "low": {
+            "duration": [
+                6.0
+            ],
+            "end": {
+                "x": 0,
+                "y": 2
+            },
+            "extrapolate": "clamp",
+            "start": {
+                "x": 0,
+                "y": 2
+            }
+        },
+        "mid": {
+            "duration": [
+                6.0
+            ],
+            "end": {
+                "x": 0,
+                "y": 1
+            },
+            "extrapolate": "clamp",
+            "start": {
+                "x": 0,
+                "y": 1
+            }
+        },
+        "top": {
+            "duration": [
+                6.0
+            ],
+            "end": {
+                "x": 0,
+                "y": 0
+            },
+            "extrapolate": "clamp",
+            "start": {
+                "x": 0,
+                "y": 0
+            }
+        }
+    },
+    "sprite_size": {
+        "x": 1024,
+        "y": 1024
+    },
+    "url": "clouds_layered.png"
+}

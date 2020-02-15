@@ -144,8 +144,8 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
     // Compute tightest vertical bounding box across all characters
     let tightY1 = Infinity, tightY2 = -Infinity;
 
-    // Compute tight bounds on letters so that we can repack
-    font._charWidth = 0;
+    // Compute tight bounds on letters so that we can repack.
+    let _charWidth = 0;
     for (let charY = 0; charY < 11; ++charY) {
         for (let charX = 0; charX < 32; ++charX) {
             const yTile = charSize.y * charY;
@@ -174,7 +174,7 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
                 tightY1 = Math.min(tightY1, y1 - yTile);
                 tightY2 = Math.max(tightY2, y2 - yTile);
                 bounds[c] = {x1:x1, y1:y1, x2:x2, y2:y2};
-                font._charWidth = Math.max(font._charWidth, x2 - x1 + 1);
+                _charWidth = Math.max(_charWidth, x2 - x1 + 1);
             } // if not space
         }
     }
@@ -204,7 +204,7 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
     // Char width/height is the extent of each character's box
     // in the packed, padded image.  Allocate the final
     // bitmap, including padding for individual fonts.
-    font._charWidth += 2 * borderSize;
+    _charWidth += 2 * borderSize;
     font._charHeight = (tightY2 - tightY1 + 1) + 2 * borderSize + shadowSize;
     
     // Baseline is the distance from the top of each box to
@@ -213,11 +213,11 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
     font._baseline = baseline - tightY1 + borderSize;
 
     // Extract each character
-    const colorMask        = array2DUint8(font._charWidth, font._charHeight);
-    const borderMask       = array2DUint8(font._charWidth, font._charHeight);
-    const shadowMask       = array2DUint8(font._charWidth, font._charHeight);
-    const shadowBorderMask = array2DUint8(font._charWidth, font._charHeight);
-    font._data = array2DUint8(font._charWidth * 32, font._charHeight * 11);
+    const colorMask        = array2DUint8(_charWidth, font._charHeight);
+    const borderMask       = array2DUint8(_charWidth, font._charHeight);
+    const shadowMask       = array2DUint8(_charWidth, font._charHeight);
+    const shadowBorderMask = array2DUint8(_charWidth, font._charHeight);
+    font._data = array2DUint8(_charWidth * 32, font._charHeight * 11);
     font._bounds = {};
 
     for (let charY = 0; charY < 11; ++charY) {
@@ -283,8 +283,8 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
                 for (let srcY = 0; srcY < font._charHeight; ++srcY) {
                     //let tst = ''; // For testing
                     const dstY = font._charHeight * charY + srcY;
-                    for (let srcX = 0; srcX < font._charWidth; ++srcX) {
-                        const dstX = font._charWidth * charX + srcX;
+                    for (let srcX = 0; srcX < _charWidth; ++srcX) {
+                        const dstX = _charWidth * charX + srcX;
                         
                         const m  = array2DGet(colorMask, srcX, srcY);
                         const b  = array2DGet(borderMask, srcX, srcY);
@@ -316,7 +316,7 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
                 } // srcY
                 
                 // Compute the bounds of this character as an absolute position on the final image
-                const tileX = font._charWidth * charX, tileY = font._charHeight * charY, srcTileY = charSize.y * charY;
+                const tileX = _charWidth * charX, tileY = font._charHeight * charY, srcTileY = charSize.y * charY;
 
                 let pre = 0, post = 0;
                 if (isDigit(chr)) {

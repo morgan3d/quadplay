@@ -1,0 +1,41 @@
+init
+───────────────────────────────────────────────────────────
+let death_reason = ""
+let score = 0
+const TRANSITION_DURATION = 120
+
+enter(reason, score_val)
+───────────────────────────────────────────────────────────
+death_reason = reason
+score = score_val
+
+
+frame
+───────────────────────────────────────────────────────────
+cam_update_frame(PLAYER.pos)
+draw_all()
+
+if mode_frames < 2*TRANSITION_DURATION:
+    reset_transform()
+    let color = rgba(0,0,0,0)
+    if mode_frames < TRANSITION_DURATION:
+        color = lerp(
+            rgba(0,0,0,0),
+            rgba(#991515,1),
+            smootherstep(0,1,mode_frames/TRANSITION_DURATION)
+        )
+    else:
+        color = lerp(
+            rgba(#991515,1),
+            rgba(0,0,0,1),
+            smootherstep(0,1,(mode_frames-TRANSITION_DURATION)/TRANSITION_DURATION)
+        )
+    draw_corner_rect(
+        xy(0,0),
+        SCREEN_SIZE,
+        color, 
+        nil,
+        300
+    )
+else if mode_frames < 2 * TRANSITION_DURATION + TRANSITION_DURATION / 2:
+    set_mode(Failed, death_reason, score) because "Animation done"

@@ -1,0 +1,17 @@
+init
+───────────────────────────────────────────────────────────
+let freeze_frames = 0
+
+enter(freeze_frames_val)
+───────────────────────────────────────────────────────────
+freeze_frames = freeze_frames_val
+
+frame
+───────────────────────────────────────────────────────────
+
+// this mode just holds the rendering for a bit then returns
+if mode_frames > freeze_frames:
+    pop_mode()
+
+// draw the scene (but don't update it)
+draw_all()

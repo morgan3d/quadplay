@@ -25,7 +25,10 @@
         "qppreview":  "qppreview.sprite.json",
         
         "splabel":    "splabel.sprite.json",
-        "sppreview":  "sppreview.sprite.json"
+        "sppreview":  "sppreview.sprite.json",
+        
+        "bglabel":    "bglabel.sprite.json",
+        "bgpreview":  "bgpreview.sprite.json"
     },
 
     "constants":  {

@@ -1,0 +1,41 @@
+{
+    "aseprite_json": "title_two_test.json",
+    "license": "None",
+    "names": {
+        "failed": {
+            "duration": [
+                50.4
+            ],
+            "end": {
+                "x": 3,
+                "y": 0
+            },
+            "extrapolate": "clamp",
+            "start": {
+                "x": 3,
+                "y": 0
+            }
+        },
+        "intro_anim": {
+            "duration": [
+                50.4,
+                50.4,
+                50.4
+            ],
+            "end": {
+                "x": 2,
+                "y": 0
+            },
+            "extrapolate": "clamp",
+            "start": {
+                "x": 0,
+                "y": 0
+            }
+        }
+    },
+    "sprite_size": {
+        "x": 384,
+        "y": 224
+    },
+    "url": "title_two_test.png"
+}

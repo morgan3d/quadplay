@@ -1,0 +1,95 @@
+// debug stuff
+
+// draw the sprite sheet with numbers next to each sprite onto the screen
+def draw_sprite_sheet(spr): 
+    let loc = xy(-120, 40)
+    for frame < size(spr):
+        draw_sprite({
+            pos: loc,
+            sprite: array_value(spr, frame),
+        })
+        draw_text(font, unparse(frame), loc, rgb(1,1,1), nil, nil, -1, 1, 10)
+        loc.x += 2*size(spr[0])
+
+def draw_debug_text(PLAYER, dust):
+    // @{
+    // debug text
+    let DEBUG_TEXT = []
+
+    push(
+        DEBUG_TEXT,
+        (
+            "X Sign (joy): " + unparse(sign(joy.x)) 
+            + " zone: " + PLAYER.x_zone 
+            + " frames:" + unparse(PLAYER.frames_joy.x)
+        )
+    )
+
+    push(
+        DEBUG_TEXT,
+        "Y Sign (joy): " + unparse(sign(joy.y)) 
+        + " zone: " + PLAYER.y_zone 
+        + " frames:" + unparse(PLAYER.frames_joy.y)
+    )
+
+    push(
+        DEBUG_TEXT,
+        (
+            "PLAYER_ACCEL_FRAMES: " + unparse(PLAYER_ACCEL_FRAMES) 
+            + " PLAYER_DECCEL_FRAMES: " + unparse(PLAYER_DECCEL_FRAMES)
+        ),
+        "x velocity: " + unparse(PLAYER.vel.x) + " / " + unparse(PLAYER_MAX_SPEED),
+    )
+
+    push(
+        DEBUG_TEXT,
+        "y velocity: " + unparse(PLAYER.vel.y) + " / " + unparse(PLAYER_MAX_SPEED),
+    )
+
+    // push(
+    //     DEBUG_TEXT,
+    //     "anim frame: " + unparse(frame),
+    // )
+    //
+    // push(
+    //     DEBUG_TEXT,
+    //     "base frame: " + unparse(base_frame),
+    // )
+    //
+    push(
+        DEBUG_TEXT,
+        "dust count: " + unparse(size(dust)),
+    )
+
+    push(
+        DEBUG_TEXT,
+        "player pos: " + unparse(PLAYER.pos) + " z: " + floor((PLAYER.pos.y + SCREEN_SIZE.y/2)),
+    )
+
+    // if (enemies != nil and enemies[0]):
+    //     push(
+    //         DEBUG_TEXT,
+    //         (
+    //             "enemy distance: " 
+    //             + unparse(floor(magnitude(enemies[0].pos - PLAYER.pos)))
+    //             + " speed: " 
+    //             + unparse(floor(magnitude(enemies[0].vel)))
+    //         )
+    //     )
+
+    // just for debugging listing some circle
+    if DRAW_SPAWN_REJECTION_ZONE:
+        draw_disk(PLAYER.pos, SPAWN_REJECTION_RADIUS, nil, rgb(0,1,0))
+
+    if DRAW_DEBUG_SPAWN_LOCATIONS:
+        for l in debug_spawn_locations:
+            draw_disk(l, 3, nil, rgb(0,0,1))
+
+    preserving_transform:
+        reset_transform()
+
+        let current = xy(0, 12)
+        for line in DEBUG_TEXT:
+            draw_text(font, line, current, rgb(1,1,1))
+            current += xy(0, 12)
+    // @}

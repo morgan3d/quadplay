@@ -1238,7 +1238,7 @@ var exp = Math.exp;
 var sqrt = Math.sqrt;
 var cbrt = Math.cbrt;
 
-function signNotZero(x) { return (x < 0) ? -1 : 1; }
+function sign_nonzero(x) { return (x < 0) ? -1 : 1; }
 
 function atan(y, x) {
     if (typeof y === 'number') { return Math.atan2(y, x); }

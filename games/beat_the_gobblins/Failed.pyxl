@@ -1,0 +1,141 @@
+init
+───────────────────────────────────────────────────────────
+let bgm_music = nil
+let score = 0
+let fade_alpha = 1
+let best_score = load_local("best_score") or 0
+let death_reason = "no idea"
+const start_fade = 25
+
+let TEXT_LOCATIONS = [
+    15,
+    40,
+    65,
+    90
+]
+const PULSE_TIMES = [
+    // 120,
+    120,
+    170,
+    220,
+    270,
+    320,
+]
+
+const PULSE_WIDTH = 25
+
+def pulse_color(col_a, col_b, timer):
+    let amount = abs(mode_frames - timer)
+    if amount > PULSE_WIDTH:
+        return col_a
+
+    let t = amount
+    return lerp(col_a, col_b, smootherstep(PULSE_WIDTH, 0, amount))
+
+def pulse_text(pulse_peak_time):
+    return pulse_color(#991515, #fe626e, pulse_peak_time)
+
+// fade in
+const START_FADE = 18
+const FADE_IN_LEN = 10
+
+enter(reason, score_val)
+───────────────────────────────────────────────────────────
+death_reason = reason
+bgm_music = play_audio_clip(die_bgm)
+remove_frame_hooks_by_mode(Play)
+score = score_val
+debug_print("died with score: " + unparse(score_val))
+best_score = load_local("best_score") or 0
+debug_print("best score: " + best_score)
+if score > best_score:
+    best_score = score
+    save_local("best_score", score)
+    debug_print("saving new best score: " + score)
+set_background(#000000)
+
+frame
+───────────────────────────────────────────────────────────
+reset_transform()
+
+if mode_frames < START_FADE:
+    draw_rect(
+        xy(SCREEN_SIZE.x/2, SCREEN_SIZE.y/2 - TEXT_LOCATIONS[0]),
+        SCREEN_SIZE, rgba(0,0,0, 1), nil, nil, 100
+    )
+else:
+    fade_alpha = lerp(1, 0, (mode_frames - START_FADE)/FADE_IN_LEN)
+    if mode_frames - START_FADE < FADE_IN_LEN:
+        draw_rect(SCREEN_SIZE/2, SCREEN_SIZE, rgba(0,0,0, fade_alpha), nil, nil, 100)
+
+draw_text(
+    {
+        font:font, 
+        text:"YOU DIED BECAUSE " + death_reason,
+        pos:SCREEN_SIZE/2 + xy(0, TEXT_LOCATIONS[0]),
+        color:pulse_text(PULSE_TIMES[0]),
+        outline: #4c0000,
+        x_align: "center"
+    }
+)
+
+draw_text(
+    {
+        font:font, 
+        text:"YOU ONLY BEAT " + unparse(score) + " GOBBLINS.",
+        pos:SCREEN_SIZE/2 + xy(0, TEXT_LOCATIONS[1]),
+        color:pulse_text(PULSE_TIMES[1]),
+        outline: #4c0000,
+        x_align: "center"
+    }
+)
+
+draw_text(
+    {
+        font:font, 
+        text:"YOUR BEST IS BEATING " + unparse(best_score) + " GOBBLINS.",
+        pos:SCREEN_SIZE/2 + xy(0, TEXT_LOCATIONS[2]),
+        color:pulse_text(PULSE_TIMES[2]),
+        outline: #4c0000,
+        x_align: "center"
+    }
+)
+
+draw_sprite(
+    {
+        pos:SCREEN_SIZE/2 + xy(0, -45),
+        sprite:title_two_testSprite["failed"][0],
+    }
+)
+
+if mode_frames > FADE_IN_LEN + START_FADE:
+    if mode_frames mod 100 < 50:
+        draw_text(
+            {
+                font:font, 
+                text:replace("PRESS (a)", joy.prompt),
+                pos:SCREEN_SIZE/2 + xy(0, TEXT_LOCATIONS[3]),
+                color:pulse_text(PULSE_TIMES[4]),
+                outline: #4c0000,
+                x_align: "center",
+            }
+        )
+    else:
+        draw_text(
+            {
+                font:font, 
+                text:"YOU GOT THIS",
+                pos:SCREEN_SIZE / 2 + xy(0, TEXT_LOCATIONS[3]),
+                color:pulse_text(PULSE_TIMES[3]),
+                outline: #4c0000,
+                x_align: "center",
+            }
+        )
+
+
+    if any_button_press():
+        set_mode(Play) because "any_button_press()"
+
+leave
+───────────────────────────────────────────────────────────
+stop_sound(bgm_music)

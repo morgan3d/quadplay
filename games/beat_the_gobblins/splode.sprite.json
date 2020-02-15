@@ -1,0 +1,33 @@
+{
+    "aseprite_json": "splode.json",
+    "license": "None",
+    "names": {
+        "splode": {
+            "duration": [
+                1.2,
+                2.4,
+                1.2,
+                3.5999999999999996,
+                3.5999999999999996,
+                6.0,
+                6.0,
+                6.0,
+                7.199999999999999
+            ],
+            "end": {
+                "x": 8,
+                "y": 0
+            },
+            "extrapolate": "clamp",
+            "start": {
+                "x": 0,
+                "y": 0
+            }
+        }
+    },
+    "sprite_size": {
+        "x": 128,
+        "y": 128
+    },
+    "url": "splode.png"
+}

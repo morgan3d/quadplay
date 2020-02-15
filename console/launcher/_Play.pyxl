@@ -68,6 +68,25 @@ const gameArray = [{
    builtin:      true,
    label: sslabel[0][0],
    preview: sspreview
+},
+
+                   
+{
+   title: "Beat The Gobblins",
+   developer: "Stephan Steinbach",
+   url: "quad://games/beat_the_gobblins",
+   
+   version:      1.0,
+   description:  "An evil wizzard has trapped you on top of their tower and summoned hordes of angry bombgobblins. Good luck!",
+   min_players:   1,
+   max_players:   1,
+   cooperative:  false,
+   competitive:  false,
+   achievements: false,
+   highscores:   true,
+   builtin:      true,
+   label: bglabel[0][0],
+   preview: bgpreview
 }
 ]
 

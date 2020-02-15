@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 # -*- python -*-
-# tools/export.py --dry-run --standalone -o export games/serpitron
 
-import argparse, sys, os, workjson, types, shutil
+import argparse, sys, os, workjson, types, shutil, tempfile
 from quaddepend import quaddepend, depend_asset
 
 # This implementation needs f-strings from Python 3.6
 if (sys.version_info[0] < 3) or (sys.version_info[0] == 3 and sys.version_info[1] < 6): raise Exception("export.py requires Python 3.1 or later")
 
 # Add the quadplay OS dependencies
-sys.path.append('console/os')
+sys.path.append(os.path.join(os.path.dirname(__file__), '../console/os'))
 from dependencies import os_dependencies
 
 # Returns a list of dependencies and the
@@ -18,14 +17,16 @@ def get_game_dependency_list(args, game_path):
    # Include the OS dependencies unless standalone
    depends = []   
    title = 'Game'
-   def callback(filename): depends.append(filename)
-
+   
+   def callback(filename):
+      depends.append(os.path.join(os.path.dirname(args.gamepath), filename))
+      
    def title_callback(t):
       nonlocal title
       title = t
 
    qdargs = types.SimpleNamespace()
-   qdargs.allow_quad = args.standalone
+   qdargs.allow_quad = not args.noquad
    qdargs.noquad     = False
    qdargs.nogame     = False
    qdargs.nohttp     = True
@@ -34,10 +35,11 @@ def get_game_dependency_list(args, game_path):
    qdargs.callback   = callback
    qdargs.docs       = False
    qdargs.title_callback = title_callback
+   qdargs.quadpath   = args.quadpath
    quaddepend(qdargs)
    
-   if args.standalone:
-      # Process the quadOS dependencies
+   if not args.noquad:
+      # Process the additional quadOS dependencies
       qdargs.root_dir = ''
       qdargs.allow_quad = True
       for url in os_dependencies.values():
@@ -102,18 +104,37 @@ def generate_remote(args, out_path, game_path, game_title):
 
    
 def export(args):
-   game_path = args.gamepath[0]
+   if args.gamepath:
+      args.gamepath = os.path.abspath(args.gamepath[0])
+   else:
+      args.gamepath = os.getcwd()
+      
+   # Handle the case where the argument does not end
+   # in .game.json because it is a path
+   if not args.gamepath.endswith('.game.json'):
+      args.gamepath = os.path.join(args.gamepath, os.path.basename(os.path.join(args.gamepath, '')[:-1]) + '.game.json')
+
+   game_path = args.gamepath
+
+   if not os.path.isfile(game_path):
+      print('ERROR: ' + game_path + ' not found.\nChange directory to your game directory or use the -g argument.')
+      sys.exit(-3)
+      
+   if not args.outpath and not args.zipfile:
+      args.zipfile = [os.path.basename(game_path).replace('.game.json', '.zip')]
    
    out_path = args.outpath
 
+   if args.zipfile:
+      args.zipfile = args.zipfile[0]
+      # Make a temporary output. This will be deleted automatically
+      # by python when tempdir goes out of scope at the end of export()
+      tempdir = tempfile.TemporaryDirectory()
+      out_path = tempdir.name
+   
    # Will be read  from the JSON file
    game_title = ''
    
-   # Handle the case where the argument does not end
-   # in .game.json because it is a path
-   if not game_path.endswith('.game.json'):
-      game_path = os.path.join(game_path, os.path.basename(os.path.join(game_path, '')[:-1]) + '.game.json')
-
    # Strip from source
    base_path = os.path.join(os.path.dirname(game_path), '')
    
@@ -129,13 +150,13 @@ def export(args):
       if args.dry_run: print('mkdir -p ' + out_path)
       else: os.makedirs(out_path, exist_ok = True)
 
-   if args.standalone:
+   if not args.noquad:
       # Recursively copy everything from 'console/' to out_path
       # Do this before copying individual dependencies because
       # shutil.copytree can't take the dirs_exist_ok=True parameter
       # until Python 3.8 and the dependencies create the console dir
-      if args.dry_run: print('cp -r console ' + os.path.join(out_path, ''))      
-      else: shutil.copytree('console', os.path.join(out_path, 'console'))
+      if args.dry_run: print('cp -r ' + os.path.join(args.quadpath, 'console') + ' ' + os.path.join(out_path, ''))
+      else: shutil.copytree(os.path.join(args.quadpath, 'console'), os.path.join(out_path, 'console'))
       
       generate_standalone(args, out_path, out_url, game_title)
    else:
@@ -145,7 +166,9 @@ def export(args):
    for src in game_dependency_list:
       if src.startswith(base_path):
          dst = os.path.join(out_path, out_subdir, src[len(base_path):])
-      else:        
+      elif src.startswith(args.quadpath):
+         dst = os.path.join(out_path, src[len(args.quadpath)+1:])
+      else:
          dst = os.path.join(out_path, src)
          
       dir = os.path.dirname(dst)
@@ -156,23 +179,36 @@ def export(args):
       if args.dry_run: print('cp ' + src + ' ' + dst)
       else: shutil.copy2(src, dst)
          
+   if args.zipfile:
+      # Construct the zipfile
+      if args.dry_run: print('zip -c ' + args.zipfile + ' ' + out_path)
+      else:
+         # Delete the file if it exists so that we won't zip it into itself
+         if os.path.isfile(args.zipfile): os.remove(args.zipfile)
+         old_dir = os.getcwd()
+         os.chdir(out_path)
+         shutil.make_archive(os.path.join(old_dir, os.path.splitext(args.zipfile)[0]), 'zip')
+         os.chdir(old_dir)
+         print('Generated ' + os.path.abspath(args.zipfile))
   
       
 
 
 if __name__== '__main__':
-   parser = argparse.ArgumentParser(description='Export a distributable static HTML game from a game.json game file.\n\n' + 'Example: tools/export.py -o ../www/ games/serpitron')
-   parser.add_argument('gamepath', nargs=1, help='the path to the game.json file from the current directory, or the path to the directory containing it if the directory and file have the same basename. For the current version of this script, the game must be in a subdirectory of the quadplay directory. This will be generalized later.')
-   parser.add_argument('-o', '--outpath', required=True, help='output directory to put the game in, relative to the current directory')
-   parser.add_argument('--standalone', action='store_true', default=False, help='generate a standalone game that does not depend on morgan3d.github.io/quadplay. This produces a larger export, but locks down the quadplay version and can run offline.')
+   parser = argparse.ArgumentParser(description='Export a distributable static HTML game from a game.json game file.\n\n' + 'Example: tools/export.py -g games/serpitron', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+   parser.add_argument('-g', '--gamepath', nargs=1, help='the path to the game.json file from the current directory, or the path to the directory containing it if the directory and file have the same basename. For the current version of this script, the game must be in a subdirectory of the quadplay directory. This will be generalized later.')
+   parser.add_argument('-o', '--outpath', nargs=1, help='output to this directory instead of a zipfile. Relative to the current directory')
+   parser.add_argument('-z', '--zipfile', nargs=1, help='name of the zipfile, relative to the current directory. Defaults to the game name if unspecified')
+   parser.add_argument('--noquad', action='store_true', default=False, help='reduce the export size by making it reference the public quadplay distribution instead of embedding it')
    parser.add_argument('--dry-run', '-n', action='store_true', default=False, help='print the files that would be created but do not touch the filesystem.')
 
    args = parser.parse_args()
 
-   # Ensure that the program is being run from the quadplay directory
-   # so that relative paths can be resolved
-   if not os.path.isfile('quadplay'):
-      print('ERROR: Must be run from the quadplay directory as "tools/export.py" or "python3 tools/export.py"', file=sys.stderr)
-      sys.exit(-1)
+   # Run from the quadplay path
+   args.quadpath = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+   if args.outpath and args.zipfile:
+      print('ERROR: Only one of -o and -z can be specified')
+      sys.exit(-2)
 
    export(args)

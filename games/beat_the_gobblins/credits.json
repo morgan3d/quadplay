@@ -1,0 +1,22 @@
+{ "frames": [
+   {
+    "filename": "credits.aseprite",
+    "frame": { "x": 0, "y": 0, "w": 320, "h": 100 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 320, "h": 100 },
+    "sourceSize": { "w": 320, "h": 100 },
+    "duration": 100
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.16.3",
+  "image": "credits.png",
+  "format": "RGBA8888",
+  "size": { "w": 320, "h": 100 },
+  "scale": "1",
+  "frameTags": [
+  ]
+ }
+}

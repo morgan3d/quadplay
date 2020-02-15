@@ -1,0 +1,10 @@
+{
+    "aseprite_json": "credits.json",
+    "license": "None",
+    "names": {},
+    "sprite_size": {
+        "x": 320,
+        "y": 100
+    },
+    "url": "credits.png"
+}

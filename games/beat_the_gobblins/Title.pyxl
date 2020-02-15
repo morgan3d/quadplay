@@ -1,0 +1,86 @@
+init
+───────────────────────────────────────────────────────────
+let title_bgm_sound = nil
+let title_ent = make_anim_entity(
+    {
+        pos: SCREEN_SIZE/2,
+        name: "title graphic",
+        sprite: title_two_testSprite["intro_anim"],
+    },
+    title_two_testSprite["intro_anim"],
+    nil
+)
+
+enter
+───────────────────────────────────────────────────────────
+title_bgm_sound = play_audio_clip(
+    {
+        audioClip :title_bgm,
+        loop: true,
+        time: 1.62,
+    }
+)
+
+frame
+───────────────────────────────────────────────────────────
+// skip the title in debug mode
+if DEBUG_LEVEL_INIT:
+    set_mode(Play) because "Debug shortcut"
+
+const blink_on_time = 48
+
+const TITLE_ANIM_START = 3.02*60
+const TITLE_ANIM_STOP = TITLE_ANIM_START + 30
+
+const CREDITS_WAIT_TIME = 30
+const INSTRUCTIONS_WAIT_TIME = 30
+const GO_TIME = 30
+
+if game_frames > TITLE_ANIM_STOP:
+    // Credits
+    draw_sprite(
+        {
+            pos: SCREEN_SIZE/2 + xy(0, 25), //+ xy(0, -50),
+            sprite: creditsSprite
+        }
+    )
+
+    if mode_frames mod (blink_on_time) < blink_on_time/2:
+        draw_text(
+            {
+                font:font, 
+                text: replace("START GAME: PRESS ⓐ", joy.prompt),
+                pos:xy(SCREEN_SIZE.x/2, 217),
+                color:#991515,
+                outline: #4c0000,
+                x_align: "center"
+            }
+        )
+
+    draw_text( {
+       font:font, 
+       text: replace(
+           "MOVE: [^][<][v][>]   ATTACK: (a)   PAUSE/CONTROLS: (p)",
+           joy.prompt
+       ),
+        pos:xy(SCREEN_SIZE.x/2, 201),
+       color:#991515,
+       outline: #4c0000,
+       x_align: "center"
+    })
+
+    if any_button_press() or DEBUG_LEVEL_INIT:
+        set_mode(Play) because "Pressed a button"
+else if game_frames > TITLE_ANIM_START:
+    title_ent.pos = lerp(
+        SCREEN_SIZE/2,
+        SCREEN_SIZE/2 + xy(0, -75),
+        smootherstep(TITLE_ANIM_START, TITLE_ANIM_STOP, game_frames)
+    )
+
+draw_sprite(title_ent)
+
+
+leave
+───────────────────────────────────────────────────────────
+stop_sound(title_bgm_sound)

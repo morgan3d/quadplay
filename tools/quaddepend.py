@@ -61,8 +61,8 @@ def depend_asset(filename, args, basepath):
 def _depend(filename, args, basepath, return_contents = False):
    was_quad = _is_quad(filename)
    if was_quad:
-      if not args.allow_quad or args.noquad: return None, filename
-      filename = os.path.join(args.root_dir, filename.replace('quad://', ''))
+      if args.noquad: return None, filename
+      filename = os.path.join(args.quadpath, filename.replace('quad://', ''))
 
    if _is_http(filename):
       if not args.nohttp:
@@ -86,18 +86,17 @@ def _depend(filename, args, basepath, return_contents = False):
          
    
 def quaddepend(args):
-   args.allow_quad = os.path.isfile('quadplay')
-   args.root_dir = ''
-   
    # All filenames are printed relative to the current directory (like unix `find` does)
    game_filename = args.filename[0]
    game_data = None
    was_quad = _is_quad(game_filename)
-   
+
+   if not args.quadpath:
+      args.quadpath = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
    if was_quad:
       # Resolve to a filename
-      if not args.allow_quad: _error('Cannot read a quad:// game when quadplay is not in the current working directory')
-      game_filename = game_filename[len('quad://'):]
+      game_filename = os.path.join(args.quadpath, game_filename.replace('quad://', ''))
       # Fall through to the local case
 
             

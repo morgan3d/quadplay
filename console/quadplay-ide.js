@@ -2,7 +2,7 @@
 "use strict";
 
 const deployed = true;
-const version  = '2020.02.06.09'
+const version  = '2020.02.15.11'
 const launcherURL = 'quad://console/launcher';
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -1398,8 +1398,8 @@ function visualizeModes(modeEditor) {
         return;
     }
 
-    const setModeRegexp = /\b(set_mode|push_mode)\s*\(([^,_)]+)\)(?:\s*because\s*"([^"\n]*)")?/g;
-    const reset_gameRegexp = /\breset_game\s*\(\s*(?:"([^"]*)")?\s*\)/g;
+    const setModeRegexp = /\b(set_mode|push_mode)\s*\(([^,_)]+)(?:.*)\)(?:\s*because\s*"([^"\n]*)")?/g;
+    const reset_gameRegexp = /\breset_game\s*\(.*\)(?:\s*because\s*"([^"\n]*)")?/g;
 
     // Modes that have links back to their parent mode, whether
     // entered by set_mode or push_mode. These have to be processed
@@ -2182,6 +2182,10 @@ function mainLoopStep() {
                 coroutine.next();
             }
         }
+
+        // Reset the touch input state for next frame
+        QRuntime.touch.pressed_a = QRuntime.touch.released_a = QRuntime.touch.aa = false;
+
     } catch (e) {
         if (e.reset_game === 1) {
             // Automatic
@@ -2330,6 +2334,51 @@ function reloadRuntime(oncomplete) {
         QRuntime._fontArray     = fontArray;
         QRuntime.makeEuroSmoothValue = makeEuroSmoothValue;
 
+        const xyGetter = {
+            enumerable: true,
+            get: function () {
+                return {x: this.x, y: this.y}
+            }
+        };
+
+        const dxyGetter = {
+            enumerable: true,
+            get: function () {
+                return {x: this.dx, y: this.dy}
+            }
+        };
+
+        QRuntime.touch = {
+            x: 0,
+            y: 0,
+            dx: 0,
+            dy: 0,
+            screen_x: 0,
+            screen_y: 0,
+            screen_dx: 0,
+            screen_dy: 0,
+            a: false,
+            pressed_a: false,
+            aa: false,
+            released_a: false
+        };
+
+        Object.defineProperty(QRuntime.touch, 'xy', xyGetter);
+        Object.defineProperty(QRuntime.touch, 'dxy', dxyGetter);
+        Object.defineProperty(QRuntime.touch, 'screen_xy', {
+            enumerable: true,
+            get: function () {
+                return {x: this.screen_x, y: this.screen_y}
+            }
+        });
+        Object.defineProperty(QRuntime.touch, 'screen_dxy', {
+            enumerable: true,
+            get: function () {
+                return {x: this.screen_dx, y: this.screen_dy}
+            }
+        });
+        Object.seal(QRuntime.touch);
+        
         QRuntime.gamepad_array = Object.seal([0,0,0,0]);
         for (let p = 0; p < 4; ++p) {
             const type = 'Quadplay';
@@ -2341,7 +2390,7 @@ function reloadRuntime(oncomplete) {
                 controlBindings = {id: isMobile ? 'mobile' : '', type: defaultControlType(p)};
             }
             
-            QRuntime.gamepad_array[p] = Object.seal({
+            QRuntime.gamepad_array[p] = {
                 x:0, dx:0, y:0, dy:0, xx:0, yy:0,
                 angle:0, dangle:0,
                 a:0, b:0, c:0, d:0, _p:0, q:0,
@@ -2354,7 +2403,10 @@ function reloadRuntime(oncomplete) {
                 _id: controlBindings.id, 
                 _analogX: 0,
                 _analogY: 0
-            });
+            };
+            Object.defineProperty(QRuntime.gamepad_array[p], 'xy', xyGetter);
+            Object.defineProperty(QRuntime.gamepad_array[p], 'dxy', dxyGetter);
+            Object.seal(QRuntime.gamepad_array[p]);
         }
         QRuntime.joy = QRuntime.gamepad_array[0];
         

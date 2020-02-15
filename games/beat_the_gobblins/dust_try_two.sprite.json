@@ -1,0 +1,66 @@
+{
+    "aseprite_json": "dust_try_two.json",
+    "license": "None",
+    "names": {
+        "Start_Run": {
+            "duration": [
+                7.199999999999999,
+                6.0,
+                6.0,
+                6.0,
+                6.0,
+                6.0
+            ],
+            "end": {
+                "x": 5,
+                "y": 0
+            },
+            "extrapolate": "clamp",
+            "start": {
+                "x": 0,
+                "y": 0
+            }
+        },
+        "Stop": {
+            "duration": [
+                6.0,
+                6.0,
+                6.0,
+                6.0
+            ],
+            "end": {
+                "x": 3,
+                "y": 1
+            },
+            "extrapolate": "clamp",
+            "start": {
+                "x": 0,
+                "y": 1
+            }
+        },
+        "run": {
+            "duration": [
+                6.0,
+                6.0,
+                6.0,
+                6.0,
+                6.0,
+                6.0
+            ],
+            "end": {
+                "x": 5,
+                "y": 2
+            },
+            "extrapolate": "clamp",
+            "start": {
+                "x": 0,
+                "y": 2
+            }
+        }
+    },
+    "sprite_size": {
+        "x": 32,
+        "y": 32
+    },
+    "url": "dust_try_two.png"
+}

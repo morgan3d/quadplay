@@ -1,0 +1,23 @@
+{ "frames": [
+   {
+    "filename": "bgdungeon_full #bg.aseprite",
+    "frame": { "x": 0, "y": 0, "w": 368, "h": 224 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 368, "h": 224 },
+    "sourceSize": { "w": 368, "h": 224 },
+    "duration": 100
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.16.3",
+  "image": "bgdungeon_full.png",
+  "format": "RGBA8888",
+  "size": { "w": 368, "h": 224 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "bg", "from": 0, "to": 0, "direction": "forward" }
+  ]
+ }
+}

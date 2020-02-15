@@ -15,6 +15,7 @@ course, teaching yourself game development, and game jams.
 **Virtual Hardware Features**
 
 - 384 x 224 pixel screen = 12:7 aspect ≈ 16:9.3
+- Optional 192 x 112, 128 x 128, and 64 x 64 screen modes
 - 60 fps
 - 4096 sRGB (4:4:4) colors
 - Native 2.5D graphics
@@ -22,7 +23,7 @@ course, teaching yourself game development, and game jams.
 - Max 128 sprite and font sheets, max size 1024x1024
 - Order-independent 4-bit (16-level) transparency
 - Four 10-button gamepads (D-pad + ⓐⓑⓒⓓ + ⓟⓠ)
-- Optional 192 x 112, 128 x 128, and 64 x 64 screen modes
+- Optional touch screen
 
 **Software Features**
 
@@ -53,9 +54,7 @@ Quick Start
 
 Welcome to the quadplay✜ public beta!
 
-The release 1.0 version will support fully-online editing of games from a
-browser as well as "pro" development using an external editor and local
-hosting. This beta version only supports "pro" mode, for which you need:
+To get started you only need:
 
 - The quadplay✜ SDK: [Download ZIP](https://github.com/morgan3d/quadplay/archive/master.zip) or [Clone on with git](https://github.com/morgan3d/quadplay)
 - A modern web browser ([_Chrome_](https://www.google.com/chrome/), [_Firefox_](https://www.mozilla.org/en-US/firefox/new/), _Safari_, _Edge_, etc. Chrome is fastest.)
@@ -196,7 +195,7 @@ anyway. There's no reason to overdesign early on.
 Built-In Games
 ------------------------------------------------------------------------------------
 
-Four complete games and a few demos are included to show how to use the API.
+Five complete games and many examples are included to show how to use the API.
 If you are accessing this manual from a web site or your local machine running
 the quadplay✜ emulator, use the links here to launch the game in your browser,
 press the Run button (F5) to start the game.
@@ -256,6 +255,19 @@ competive game derived from Snake-like games, including [TRON]("https://en.wikip
 - Cut scenes
 - Persistent data
 - Reflection effects
+
+
+----------------------------
+  <center><img src="../games/beat_the_gobblins/label128.png" width=128px style="border:0"></center>
+
+<div class="preview pixel" style="background-image:url('../games/beat_the_gobblins/preview.png')"></div>
+[Beat the Gobblins](../console/quadplay.html?game=quad://games/beat_the_gobblins&IDE=1) is a single-player arcade battle arena:
+
+- High scores
+- Custom music
+- Animated title
+- Animated explosions
+- Character spawning
 
 
 ### Examples
@@ -377,6 +389,8 @@ graphics and gameplay:
 - [Rogue]("https://en.wikipedia.org/wiki/Rogue_(video_game)")
 - [NetHack](https://en.wikipedia.org/wiki/NetHack)
 - [Snake]("https://en.wikipedia.org/wiki/Snake_(video_game_genre)")
+- [Minit](https://store.steampowered.com/app/609490/Minit/)
+- [Chasm](https://bitkidinc.itch.io/chasm)
 
 </div>
 
@@ -389,7 +403,6 @@ These are games that would fit the restrictions of quadplay✜ except they use n
 These are games whose style and gameplay would fit, but that would exceed the resolution limitations of quadplay✜:
 - [Axiom Verge](http://www.axiomverge.com/)
 - [Into the Breach](https://subsetgames.com/itb.html)
-
 
 Programming Model
 ------------------------------------------------------------------------------------
@@ -531,9 +544,9 @@ public class Menu extends Mode {
    }
 
    public void frame() {
-      selection = (selection + gamePad.y + 3) % 3; }
+      selection = (selection + gamepad.y + 3) % 3; }
       drawChoices(selection);
-      if (gamePad.a) {
+      if (gamepad.a) {
          if (selection == 0) { set_mode(play); } ...
       }
    }
@@ -937,10 +950,12 @@ specifying `nil` for any parameter forces its default value.
 Input
 -----------------------------------------------------------
 
-The gamepad objects in the four-element `pad` array have
-the following fields:
+### Gamepads
 
-Field              | Values   | Meaning
+The gamepad objects in the four-element `gamepad_array` each have
+the following properties:
+
+Property           | Values   | Meaning
 -------------------|----------|----------------------------------
 `index`            | 0,1,2,3  | Index of this gamepad in `pad` array
 `x`                | -1,0,+1  | Current D-pad value on the $x$-axis (+1 = right)
@@ -949,6 +964,8 @@ Field              | Values   | Meaning
 `y`                | -1,0,+1  | Current D-pad value on the $y$-axis (+1 = backward)
 `yy`               | -1,0,+1  | Direction that was just pressed this frame on the $y$-axis
 `dy`               | -2 to +2 | Change in direction this frame on the $y$-axis
+`xy`               | xy       | `xy(x, y)` for the gamepad
+`dxy`              | xy       | `xy(dx, dy)` for the gamepad
 `angle`            | -π to +π | `rotation_sign() * atan(y, x)` if both are not zero, otherwise the last angle
 `dangle`           | -π to +π | Change in `angle` this frame
 `a`                | 0 or 1   | 1 if the ⓐ button is currently pressed
@@ -1028,6 +1045,43 @@ other button prompts in quadplay✜ fonts.
 The current implementation has `gamepad_array[i].type = "Quadplay"` for all pads by default.
 This can be changed from within a program using `device_control()`. See also the
 `controllers-32x22.sprite.json` for help in making your controller selection menu.
+
+
+### Touch
+
+quadplay✜ provides single-touch input via virtual touch screen. Not
+all quadplay✜ devices support touch input (although most do, through
+either a touch screen, stylus, or mouse). If there is no mouse, then
+`touch.a` is always `false`.
+
+There is a single `touch` global object with the following properties:
+
+Property           | Type     | Meaning
+-------------------|----------|----------------------------------
+`x`                | number   | Draw coordinate x position
+`y`                | number   | Draw coordinate y position
+`dx`               | number   | Change in `x` since the previous frame
+`dy`               | number   | Change in `y` since the previous frame
+`xy`               | xy       | `xy(x, y)` for the touch
+`dxy`              | xy       | `xy(dx, dy)` for the touch
+`screen_x`         | number   | Screen coordinate x position
+`screen_y`         | number   | Screen coordinate y position
+`screen_dx`        | number   | Change in `screen_x` since the previous frame
+`screen_dy`        | number   | Change in `screen_y` since the previous frame
+`screen_xy`        | xy       | `xy(screen_x, screen_y)` for the touch
+`screen_dxy`       | xy       | `xy(screen_dx, screen_dy)` for the touch
+`a`                | boolean  | True if the touch is currently active
+`pressed_a`        | boolean  | Was the touch started this frame?
+`aa`               | boolean  | Same as `pressed_a`
+`released_a`       | boolean  | Was the touch ended this frame?
+
+
+The `x` and `y` values are in draw coordinates using the current transform.
+If there is no active touch, then these reflects the previous active touch location.
+There is no way to track a hovering mouse or detect a scroll wheel or second 
+mouse button, as those would not be mapped to a mobile device.
+
+The `screen_x` and `screen_y` use (0, 0) as the top left of the emulator screen.
 
 
 ### Main Menu
@@ -1784,7 +1838,7 @@ Math
 : Sign of `x`. Returns -1 if `x` is less than zero, -0 if `x` is -0,
   +0 if `x` is +0, and +1 if `x` is greater than zero.
 
-`signNotZero(x)`
+`sign_nonzero(x)`
 : Returns -1 if `x` is less than zero, otherwise returns +1.
 
 `smoothstep(t_start, t_end, t)`
@@ -3596,6 +3650,11 @@ quadplay✜ platform.
 These calls have no argument checking. The vector functions execute
 about twice as fast as regular overloaded operator arithmetic. The scalar
 versions may be substantially faster than overloaded operators.
+
+Intrinsics are never needed on literal values. `5 + 6` compiles to the
+same code as `ADD(5, 6)`, for example. Intrinsics are not provided for
+exponents, square root, bit shifts, trigonometric, modulo (remainder) 
+and other operations that naturally compile with maximum efficiency.
 
 `ADD(s1, s2)`
 : Returns the scalar sum.
@@ -5676,19 +5735,11 @@ contained online game that others can buy from you, or play for free if you choo
 It is slightly more complicated to update than on GitHub because you must make a release
 file and upload it explicitly.
 
-To deploy on itch.io you must make a copy of the files from the quadplay✜ distribution
-that your game requires. I will provide a tool to help with this in the future. In the
-current release, the files that you need are the contents of the `console` directory
-and any files _that your `game.json` references_ from `fonts/`, `sprites/`, etc.
-Do not make a full copy of all of the quadplay✜ distribution. It contains too many files
-and itch.io will block your upload. Only include the files that you actually use.
-
 The steps are:
 
-1. Delete the `release` subdirectory if it exists
-2. Run `python3 tools/export.py --standalone -o release path/to/game`
-6. Zip the _contents_ of the `release` directory into a zipfile (do not include the `release` directory itself)
-7. Log into the itch.io website and create a new game entry with the following settings:
+1. Run `python3 path-to-quadplay/tools/export.py` inside the directory containing
+   your `game.json` file, or `python3 tools/export.py -g path-to-your-game`.
+2. Log into the itch.io website and create a new game entry with the following settings:
   - Classification: Games
   - Kind of project: HTML
   - Mobile friendly: Yes
@@ -5696,7 +5747,7 @@ The steps are:
   - How should your project be run in your page?: Click to launch fullscreen
   - Orientation: Landscape
   - Visibility: Public
-8. In the Uploads section on the itch.io game page, upload your zipfile.
+3. In the Uploads section on the itch.io game page, upload the zipfile generated in step 1.
 
 To update your game or upgrade the underlying quadplay✜ distribution,
 you must repeat the process of creating the zipfile and then upload it
@@ -5716,8 +5767,9 @@ directory, run just upload your own game files to the server. The URL for your g
 https://morgan3d.github.io/quadplay/console/quadplay.html?game=https://myserver.com/mygame
 
 To deploy a complete package that is independent of the current
-version of quadplay✜, follow the process for building the zipfile from the itch.io section,
-and then upload your files to the server instead of zipping them.
+version of quadplay✜, run `python3 tools/export.py -o path/to/output -g path/to/game`
+and then upload your files from the output directory. 
+
 Your URL will be just https://myserver.com/mygame.
 
 
@@ -6023,12 +6075,19 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-2020 Feb TBD: Beta update 28
+2020 Feb 15: Beta update 28
 
-- Made `touch` a reserved word
 - Added optional `gamepad` argument to `any_button_press()`
 - Made controls menu option more visible in standalone game mode
 - Changed all fields of map to use snake case
+- Added `--zipfile` argument to `export.py` to streamline itch.io distribution of games
+- Made `export.py` runnable from any directory
+- Made `export.py` default to a standalone export
+- Added Beat the Gobblins game by Stephan Steinbach
+- Fixed IDE visualiztion of modes to support `push_mode` and `set_mode` with arguments
+- Added the `touch` API (no draw transform support in this implementation)
+- Added `xy` and `dxy` properties to `gamepad_array` elements
+- Improved the startup play icon for mobile using svg
 
 
 2020 Feb 6: Beta update 27
@@ -6332,7 +6391,6 @@ Changes for both the specification and implementation in each release.
 - Added support for `docs` in the `game.json` file using Markdeep, Markdown,
   HTML, and text format. Good for game design docs, TODO lists, and game manuals
 - Added support for Ctrl+G as an alternative GIF recording keystroke
-- Renamed `sign_nonzero()` to `signNotZero()` to match the manual
 - Added `MIN()` and `MAX()` intrinsics
 - Fixed `opacity == 0` on `draw_sprite()` to draw nothing instead of full opacity
 - Added `randomBall()` and `randomSphere()`

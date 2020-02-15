@@ -1,0 +1,26 @@
+{
+    "aseprite_json": "splash.json",
+    "license": "None",
+    "names": {
+        "splash": {
+            "duration": [
+                6.0,
+                6.0
+            ],
+            "end": {
+                "x": 1,
+                "y": 0
+            },
+            "extrapolate": "clamp",
+            "start": {
+                "x": 0,
+                "y": 0
+            }
+        }
+    },
+    "sprite_size": {
+        "x": 16,
+        "y": 16
+    },
+    "url": "splash.png"
+}

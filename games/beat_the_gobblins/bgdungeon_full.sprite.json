@@ -1,0 +1,25 @@
+{
+    "aseprite_json": "bgdungeon_full.json",
+    "license": "None",
+    "names": {
+        "bg": {
+            "duration": [
+                6.0
+            ],
+            "end": {
+                "x": 0,
+                "y": 0
+            },
+            "extrapolate": "clamp",
+            "start": {
+                "x": 0,
+                "y": 0
+            }
+        }
+    },
+    "sprite_size": {
+        "x": 368,
+        "y": 224
+    },
+    "url": "bgdungeon_full.png"
+}

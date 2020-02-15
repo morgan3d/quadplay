@@ -1,0 +1,35 @@
+{
+    "aseprite_json": "bomb.json",
+    "license": "None",
+    "names": {
+        "Fuse": {
+            "duration": [
+                6.0,
+                6.0,
+                6.0,
+                6.0,
+                6.0,
+                6.0,
+                6.0
+            ],
+            "end": {
+                "x": 6,
+                "y": 0
+            },
+            "extrapolate": "clamp",
+            "start": {
+                "x": 0,
+                "y": 0
+            }
+        }
+    },
+    "pivot": {
+        "x": 4,
+        "y": 26
+    },
+    "sprite_size": {
+        "x": 32,
+        "y": 32
+    },
+    "url": "bomb.png"
+}
