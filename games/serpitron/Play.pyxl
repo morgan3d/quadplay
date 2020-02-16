@@ -94,6 +94,7 @@ def moveSnake(snake):
       const obstruction = samplePosition(nextHeadPos, 3, false, false, snake)
       if obstruction:
          if obstruction.snake and snake.ghostFrames ≤ 0:
+            debug_print("hit snake", obstruction.bodyIndex)
             
             // Reward the other player, but show the animation
             // at the hit point if this is not a self hit

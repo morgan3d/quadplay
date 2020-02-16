@@ -132,20 +132,20 @@ def samplePosition(pos, radius, allowGhosts, ignorePowerups, safeSnakeHead):
       // Can't hit anything...pos is not on the grid
       return ∅
 
-   for building in buildingArray:
+   for building ∊ buildingArray:
       if overlaps(building, pos):
          return {building: building}
    
-   for snake in snakeArray:
+   for snake ∊ snakeArray:
       if allowGhosts or (snake.ghostFrames ≤ 0):
          for b < size(snake.body):
             const piece = snake.body[b]
             if (|piece.pos.x - pos.x| ≤ radius and |piece.pos.y - pos.y| ≤ radius
-                and (snake ≠ safeSnakeHead or b > 6)):
+                and (snake ≠ safeSnakeHead or b > 12)):
                return {snake: snake, bodyIndex: b}
 
    if not ignorePowerups:
-      for powerup in powerupArray:
+      for powerup ∊ powerupArray:
          if |powerup.pos.x - pos.x| ≤ radius and |powerup.pos.y - pos.y| ≤ radius:
             return {powerup: powerup}
 
