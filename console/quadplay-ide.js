@@ -2,7 +2,7 @@
 "use strict";
 
 const deployed = true;
-const version  = '2020.02.15.11'
+const version  = '2020.02.16.00'
 const launcherURL = 'quad://console/launcher';
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -263,6 +263,8 @@ function onResize() {
     const background   = document.getElementsByClassName('emulatorBackground')[0];
     const screenBorder = document.getElementById('screenBorder');
 
+    let windowWidth = window.innerWidth, windowHeight = window.innerHeight;
+
     let scale = 1;
     
     switch (uiMode) {
@@ -284,7 +286,7 @@ function onResize() {
     case 'Emulator':
         {
             // What is the largest multiple SCREEN_HEIGHT that is less than windowHeightDevicePixels?
-            scale = Math.max(0, Math.min((window.innerHeight - 70) / SCREEN_HEIGHT, (window.innerWidth - 254) / SCREEN_WIDTH));
+            scale = Math.max(0, Math.min((window.innerHeight - 70) / SCREEN_HEIGHT, (windowWidth - 254) / SCREEN_WIDTH));
             
             if ((scale * window.devicePixelRatio <= 2.5) && (scale * window.devicePixelRatio > 1)) {
                 // Round to nearest even multiple of the actual pixel size for small screens to
@@ -296,15 +298,15 @@ function onResize() {
             // add the "translate3d" hack to trigger hardware acceleration.
             screenBorder.style.transformOrigin = 'center';
             screenBorder.style.transform = 'scale(' + scale + ') translate3d(0,0,0)';
-            screenBorder.style.left = Math.round((window.innerWidth - screenBorder.offsetWidth) / 2) + 'px';
-            screenBorder.style.top  = Math.round((window.innerHeight - screenBorder.offsetHeight - 16) / 2) + 'px';
+            screenBorder.style.left = Math.round((windowWidth - screenBorder.offsetWidth) / 2) + 'px';
+            screenBorder.style.top  = Math.round((windowHeight - screenBorder.offsetHeight - 16) / 2) + 'px';
 
             // Resize the background to bound the screen more tightly.
             // Only resize vertically because the controls need to
             // stay near the edges of the screen horizontally to make
             // them reachable on mobile.
 
-            background.style.top = Math.round(Math.max(0, (window.innerHeight - Math.max(260, 90 + SCREEN_HEIGHT * scale)) / 2)) + 'px';
+            background.style.top = Math.round(Math.max(0, (windowHeight - Math.max(260, 90 + SCREEN_HEIGHT * scale)) / 2)) + 'px';
             background.style.height = Math.round(Math.max(230, SCREEN_HEIGHT * scale + 53)) + 'px';
 
             // Show the controls
@@ -316,7 +318,7 @@ function onResize() {
     case 'Test':
         {
             // What is the largest multiple SCREEN_HEIGHT that is less than windowHeightDevicePixels?
-            scale = Math.max(0, Math.min((window.innerHeight - 24) / SCREEN_HEIGHT, (window.innerWidth - 2) / SCREEN_WIDTH));
+            scale = Math.max(0, Math.min((windowHeight - 24) / SCREEN_HEIGHT, (windowWidth - 2) / SCREEN_WIDTH));
             
             if ((scale * window.devicePixelRatio <= 2.5) && (scale * window.devicePixelRatio > 1)) {
                 // Round to nearest even multiple of the actual pixel size for small screens to
@@ -327,13 +329,13 @@ function onResize() {
             // Setting the scale transform triggers really slow rendering on Raspberry Pi unless we
             // add the "translate3d" hack to trigger hardware acceleration.
             screenBorder.style.transform = 'scale(' + scale + ') translate3d(0,0,0)';
-            screenBorder.style.left = Math.round((window.innerWidth - screenBorder.offsetWidth - 4) / 2) + 'px';
+            screenBorder.style.left = Math.round((windowWidth - screenBorder.offsetWidth - 4) / 2) + 'px';
             screenBorder.style.transformOrigin = 'center top';
             if (uiMode === 'Test') {
                 screenBorder.style.top = '0px';
                 document.getElementById('debugger').style.top = Math.round(scale * screenBorder.offsetHeight + 25) + 'px';
             } else {
-                const t = Math.round((window.innerHeight - screenBorder.offsetHeight * scale - 26) / 2) + 'px';
+                const t = Math.round((windowHeight - screenBorder.offsetHeight * scale - 26) / 2) + 'px';
                 screenBorder.style.top  = t;
             }
         }
@@ -2334,6 +2336,49 @@ function reloadRuntime(oncomplete) {
         QRuntime._fontArray     = fontArray;
         QRuntime.makeEuroSmoothValue = makeEuroSmoothValue;
 
+        // Accessors for touch and gamepads
+        const padXGetter = {
+            enumerable: true,
+            get: function () {
+                return this._x * QRuntime._scaleX;
+            }
+        };
+
+        const dxGetter = {
+            enumerable: true,
+            get: function () {
+                return this._dx * QRuntime._scaleX;
+            }
+        };
+        
+        const padXXGetter = {
+            enumerable: true,
+            get: function () {
+                return this._xx * QRuntime._scaleX;
+            }
+        };
+        
+        const padYGetter = {
+            enumerable: true,
+            get: function () {
+                return this._y * QRuntime._scaleY;
+            }
+        };
+        
+        const dyGetter = {
+            enumerable: true,
+            get: function () {
+                return this._dy * QRuntime._scaleY;
+            }
+        };
+        
+        const padYYGetter = {
+            enumerable: true,
+            get: function () {
+                return this._yy * QRuntime._scaleY;
+            }
+        };
+        
         const xyGetter = {
             enumerable: true,
             get: function () {
@@ -2349,10 +2394,7 @@ function reloadRuntime(oncomplete) {
         };
 
         QRuntime.touch = {
-            x: 0,
-            y: 0,
-            dx: 0,
-            dy: 0,
+            _x: 0, _y: 0, _dx: 0, _dy: 0,
             screen_x: 0,
             screen_y: 0,
             screen_dx: 0,
@@ -2365,6 +2407,30 @@ function reloadRuntime(oncomplete) {
 
         Object.defineProperty(QRuntime.touch, 'xy', xyGetter);
         Object.defineProperty(QRuntime.touch, 'dxy', dxyGetter);
+        Object.defineProperty(QRuntime.touch, 'x', {
+            enumerable: true,
+            get: function () {
+                return this.screen_x * QRuntime._scaleX + QRuntime._offsetX;
+            }
+        });
+        Object.defineProperty(QRuntime.touch, 'y', {
+            enumerable: true,
+            get: function () {
+                return this.screen_y * QRuntime._scaleY + QRuntime._offsetY;
+            }
+        });
+        Object.defineProperty(QRuntime.touch, 'dx', {
+            enumerable: true,
+            get: function () {
+                return this.screen_dx * QRuntime._scaleX;
+            }
+        });
+        Object.defineProperty(QRuntime.touch, 'dy', {
+            enumerable: true,
+            get: function () {
+                return this.screen_dy * QRuntime._scaleY;
+            }
+        });
         Object.defineProperty(QRuntime.touch, 'screen_xy', {
             enumerable: true,
             get: function () {
@@ -2390,8 +2456,9 @@ function reloadRuntime(oncomplete) {
                 controlBindings = {id: isMobile ? 'mobile' : '', type: defaultControlType(p)};
             }
             
-            QRuntime.gamepad_array[p] = {
-                x:0, dx:0, y:0, dy:0, xx:0, yy:0,
+            const pad = {
+                _x: 0, _dx: 0, _xx: 0,
+                _y: 0, _dy: 0, _yy: 0, 
                 angle:0, dangle:0,
                 a:0, b:0, c:0, d:0, _p:0, q:0,
                 aa:0, bb:0, cc:0, dd:0, _pp:0, qq:0,
@@ -2404,9 +2471,15 @@ function reloadRuntime(oncomplete) {
                 _analogX: 0,
                 _analogY: 0
             };
-            Object.defineProperty(QRuntime.gamepad_array[p], 'xy', xyGetter);
-            Object.defineProperty(QRuntime.gamepad_array[p], 'dxy', dxyGetter);
-            Object.seal(QRuntime.gamepad_array[p]);
+            Object.defineProperty(pad, 'x', padXGetter);
+            Object.defineProperty(pad, 'dx', dxGetter);
+            Object.defineProperty(pad, 'xx', padXXGetter);
+            Object.defineProperty(pad, 'y', padYGetter);
+            Object.defineProperty(pad, 'dy', dyGetter);
+            Object.defineProperty(pad, 'yy', padYYGetter);
+            Object.defineProperty(pad, 'xy', xyGetter);
+            Object.defineProperty(pad, 'dxy', dxyGetter);
+            QRuntime.gamepad_array[p] = Object.seal(pad);
         }
         QRuntime.joy = QRuntime.gamepad_array[0];
         
@@ -2535,10 +2608,15 @@ function defineImmutableProperty(object, key, value) {
 function makeAssets(environment, assets) {
     if ((assets === undefined) || (Object.keys(assets).length === 0)) { return; }
 
+    // Clone the assets, as some of them (like the map) can be mutated
+    // at runtime. For speed, do not clone sprites and fonts
     const alreadySeen = new Map();
-    
     for (let assetName in assets) {
-        defineImmutableProperty(environment, assetName, deep_clone(assets[assetName], alreadySeen));
+        const assetValue = assets[assetName];
+        const assetCopy = ((assetValue._type === 'spritesheet') || (assetValue._type === 'font') || (assetValue._type === 'audioClip')) ?
+              assetValue :
+              deep_clone(assetValue, alreadySeen);
+        defineImmutableProperty(environment, assetName, assetCopy);
     }
 }
 

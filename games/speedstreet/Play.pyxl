@@ -20,10 +20,10 @@ def getBounds(bikeArray):
 /* Call to wrap all bikes around map edges */
 def loopBikes():
    camera.pos.x -= mapWidthPixels
-   for bike in bikeArray:
+   for bike ∊ bikeArray:
       bike.pos.x -= mapWidthPixels
       entity_update_children(bike)
-      for pos in bike.surfacePos:
+      for pos ∊ bike.surfacePos:
          pos.x -= mapWidthPixels
 
 
@@ -47,13 +47,13 @@ const wheelFrame = ⌊½ mode_frames⌋ mod 4
 // How far can the pack be spread?
 let spreadThreshold = {min: -∞, max: ∞}
 let bounds = getBounds(bikeArray)
-with min, max in bounds:
+with min, max ∊ bounds:
    if max.x - min.x ≥ ½ SCREEN_SIZE.x:
       spreadThreshold = {min: lerp(min.x, max.x, 25%),
                          max: lerp(min.x, max.x, 95%)}
 
 let minBikeVel = ∞
-for bike in bikeArray:
+for bike ∊ bikeArray:
 
    bike.scoreModifier = 1 + 15% ⌊4 (bike.pos.x - bounds.min.x) / (bounds.max.x - bounds.min.x + 1)⌋
    bike.score += bike.scoreModifier
@@ -132,16 +132,15 @@ local:
 
 
 // Draw bikes
-for bike in bikeArray:
+for bike ∊ bikeArray:
    // Shadow
    const shadowZ = bike.z - ε
    let prev = bike.surfacePos[0]
-   if prev: draw_corner_rect(prev, xy(2, 2), shadowColor[0], nil, shadowZ)
+   if prev: draw_corner_rect(prev, xy(2, 2), shadowColor[0], ∅, shadowZ)
    for 1 ≤ i < bike.surfacePos.length:
       const curr = bike.surfacePos[i]
       if prev and curr:
-         //draw_line(lerp(prev, curr, 50%), lerp(prev, curr, 50%) + xy(0, 1), shadowColor[i], shadowZ)
-         draw_corner_rect(curr, xy(2, 2), shadowColor[i], nil, shadowZ)
+         draw_corner_rect(curr, xy(2, 2), shadowColor[i], ∅, shadowZ)
       prev = curr
 
    if debugPhysics: // visualize sensor points
@@ -150,7 +149,7 @@ for bike in bikeArray:
       const center = bike.pos + 6 xy(-sin(bike.angle), cos(bike.angle))
       for 0 < i < N:
          const θ = bike.angle + π i / N
-         const testPoint = center + 7 xy(cos(θ), sin(θ))
+         const testPoint = center + 7 xy(cos θ, sin θ)
          // Draw the test points
          draw_point(testPoint, #f00, bike.z - 1)
       
@@ -205,11 +204,11 @@ preserving_transform:
 if debugZOrder:
    preserving_transform:
       reset_transform()
-      for -4 <= z <= 4: draw_corner_rect(xy(0,0), SCREEN_SIZE, rgba(1,1,1,8%), ∅, z + 0.5)
+      for -4 ≤ z ≤ 4: draw_corner_rect(xy(0,0), SCREEN_SIZE, rgba(1,1,1,8%), ∅, z + ½)
 
 // Alternating layers of the map in the center are the collision data, which
 // should be invisible. Draw only the even layers with graphics on
 // them
 draw_map(cityMap, 0, 3)
-for 2 <= i <= 6: draw_map(cityMap, 2 i, 2 i)
+for 2 ≤ i ≤ 6: draw_map(cityMap, 2 i, 2 i)
 draw_map(cityMap, 14)

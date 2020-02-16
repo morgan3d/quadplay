@@ -47,7 +47,7 @@ with pos, vel, force, scale, spriteIndex, spriteFrame, animation, spritesheet, s
       spriteFrame = 0
       // Fire the arrow on the third frame of the bow attack animation
       if weaponIndex == 1 and animation == "attack" and spriteIndex == 2:
-         push(arrowArray, { pos: pos + xy(scale.x * arrowLength, 2),
+         push(arrowArray, { pos: pos + xy(scale.x * arrowLength, 0),
                             vel: xy(3 scale.x, 0) })
 
 

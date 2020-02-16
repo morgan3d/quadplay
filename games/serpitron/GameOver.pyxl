@@ -26,15 +26,17 @@ for s < size(snakeArray):
    let scale = 1
    let x = 60 + 12 s
 
-   // Show the winner large
-   if s == 0: scale = 1.5; x -= 39
+   // Show the winner snake larger
+   if s == 0:
+      scale = 1.5
+      x -= 39
 
    // Tail
    draw_sprite(snake.tailSprite, xy(x, y + sin(mode_frames / 5) * scale), 0, scale); x += 4 scale
 
    // Body
    let dy
-   for i < 8 + (3 - s) * 3:
+   for i < 8 + 3 (3 - s):
       dy = sin(i + mode_frames / 5) * scale
       draw_sprite(snake.bodySprite, xy(x, y + dy + 2), 0, scale, 1, -1, #8)
       draw_sprite(snake.bodySprite, xy(x, y + dy), 0, scale)

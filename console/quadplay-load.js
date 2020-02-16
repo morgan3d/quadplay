@@ -390,8 +390,8 @@ function computeAssetCredits(gameSource) {
 
         if (type === 'map') {
             // Process the spritesheets
-            for (let k in asset.spritesheetTable) {
-                const spritesheet = asset.spritesheetTable[k];
+            for (let k in asset.spritesheet_table) {
+                const spritesheet = asset.spritesheet_table[k];
                 const json = spritesheet._json;
                 if (json.license) {
                     addCredit('sprite', spritesheet._jsonURL, json.license);
@@ -533,7 +533,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
     let spritesheet;
 
     if (forceReload === false) {
-        spritesheet = spritesheetCache[json.url];
+        spritesheet = spritesheetCache[jsonURL];
         if (spritesheet) {
             // Make sure the index is updated when pulling from the cache
             if (spritesheetArray.indexOf(spritesheet) === -1) {
@@ -611,7 +611,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
     loadManager.fetch(json.url, 'image', preprocessor, function (dataPair, image, url) {
         onLoadFileComplete(json.url);
         const data = dataPair[0];
-        
+
         spritesheet._uint32Data = data;
         spritesheet._uint32DataFlippedX = dataPair[1];
         
@@ -806,12 +806,12 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
 
         if (forceReload === false) {
             // Store into the cache
-            spritesheetCache[json.url] = spritesheet;
+            spritesheetCache[jsonURL] = spritesheet;
         }
         
         if (callback) { callback(spritesheet); }
     }, loadFailureCallback, loadWarningCallback, forceReload);
-    
+
     return spritesheet;
 }
     
@@ -827,7 +827,7 @@ function loadSound(name, json, jsonURL) {
     if (forceReload === false) {
         // Use the explicit cache for sounds, which are typically
         // the largest assets in a quadplay game.
-        sound = soundCache[json.url];
+        sound = soundCache[jsonURL];
         if (sound) {
             fileContents[json.url] = sound;
             onLoadFileStart(json.url);
@@ -842,6 +842,7 @@ function loadSound(name, json, jsonURL) {
                           source: null,
                           buffer: null,
                           playing: false,
+                          _type: 'audioClip',
                           _json: json,
                           _jsonURL: jsonURL});
 
@@ -869,7 +870,7 @@ function loadSound(name, json, jsonURL) {
                     
                     if (forceReload === false) {
                         // Store into the cache
-                        soundCache[json.url] = sound;
+                        soundCache[jsonURL] = sound;
                     }
                 },
                 function onFailure() {
@@ -886,29 +887,30 @@ function loadSound(name, json, jsonURL) {
 function loadMap(name, json, mapJSONUrl) {
     const map = Object.assign([], {
         _name:   'map ' + name,
+        _type:   'map',
         _url:    json.url,
         _offset: Object.freeze(json.offset ? {x:json.offset.x, y:json.offset.y} : {x:0, y:0}),
         _flipYOnLoad: json.flip_y || false,
         _json:   json,
         _jsonURL: mapJSONUrl,
-        zOffset: json.zOffset || 0,
-        zScale: (json.zScale || 1),
+        z_offset: json.z_offset || 0,
+        z_scale: (json.z_scale || 1),
         layer:  [],
-        spritesheetTable:Object.create(null),
+        spritesheet_table:Object.create(null),
         sprite_size: Object.freeze({x:0, y:0}),
         size:   Object.freeze({x: 0, y: 0}),
-        wrapX:  json.wrapX || false,
-        wrapY:  json.wrapY || false,
+        wrap_x:  json.wrap_x || false,
+        wrap_y:  json.wrap_y || false,
     });
 
-    if (json.spriteUrl) {
-        json.spriteUrlTable = {'<default>': json.spriteUrl};
-    } else if (! json.spriteUrlTable) {
-        throw 'No spriteUrlTable specified';
+    if (json.sprite_url) {
+        json.sprite_url_table = {'<default>': json.sprite_url};
+    } else if (! json.sprite_url_table) {
+        throw 'No sprite_url_table specified';
     }
 
-    const key = Object.keys(json.spriteUrlTable)[0];
-    const spritesheetUrl = makeURLAbsolute(mapJSONUrl, json.spriteUrlTable[key]);
+    const key = Object.keys(json.sprite_url_table)[0];
+    const spritesheetUrl = makeURLAbsolute(mapJSONUrl, json.sprite_url_table[key]);
 
     onLoadFileStart(spritesheetUrl);
     loadManager.fetch(spritesheetUrl, 'json', null, function (spritesheetJson) {
@@ -928,12 +930,12 @@ function loadMap(name, json, mapJSONUrl) {
                 const columns = parseInt(tileSet.getAttribute('columns'));
                 const spritesheetName = tileSet.getAttribute('name');
 
-                if ((Object.keys(json.spriteUrlTable)[0] !== '<default>') &&
-                    (Object.keys(json.spriteUrlTable)[0] !== spritesheetName)) {
+                if ((Object.keys(json.sprite_url_table)[0] !== '<default>') &&
+                    (Object.keys(json.sprite_url_table)[0] !== spritesheetName)) {
                     throw 'Spritesheet name "' + spritesheetName + '" in ' + spritesheetUrl + ' does not match the name from the map file ' + mapJSONUrl;
                 }
                 
-                map.spritesheetTable[spritesheetName] = spritesheet;
+                map.spritesheet_table[spritesheetName] = spritesheet;
 
                 let image = xml.getElementsByTagName('image')[0];
                 const size = {x: parseInt(image.getAttribute('width')),
@@ -1005,7 +1007,7 @@ function loadMap(name, json, mapJSONUrl) {
             }, loadFailureCallback, loadWarningCallback, computeForceReloadFlag(spritesheetJson.url));
         });
     },
-                      loadFailureCallback, loadWarningCallback, computeForceReloadFlag(json.spriteUrlTable[key]));
+                      loadFailureCallback, loadWarningCallback, computeForceReloadFlag(json.sprite_url_table[key]));
     
     return map;
 }

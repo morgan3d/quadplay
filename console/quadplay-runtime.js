@@ -3121,12 +3121,18 @@ function draw_physics(physics) {
 var _pixelSnap = Math.floor;
 
 function transform_map_layer_to_draw_z(map, layer) {
-    return layer * map.zScale + map.zOffset;
+    if (! map._type && map._type === 'map') {
+        _error('First argument to transform_map_layer_to_draw() must be a map');
+    }
+    return layer * map.z_scale + map.z_offset;
 }
 
 
 function transform_draw_z_to_map_layer(map, z) {
-    return (z - map.zOffset) / map.zScale;
+    if (! map._type && map._type === 'map') {
+        _error('First argument to transform_draw_z_to_map_layer() must be a map');
+    }
+    return (z - map.z_offset) / map.z_scale;
 }
 
 
@@ -3147,8 +3153,8 @@ function get_map_pixel_color(map, map_coord, layer, replacement_array) {
     let mx = Math.floor(map_coord.x);
     let my = Math.floor(map_coord.y);
 
-    if (map.wrapX) { mx = loop(mx, map.size.x); }
-    if (map.wrapY) { my = loop(my, map.size.y); }
+    if (map.wrap_x) { mx = loop(mx, map.size.x); }
+    if (map.wrap_y) { my = loop(my, map.size.y); }
 
     if ((layer >= 0) && (layer < map.layer.length) &&
         (mx >= 0) && (my >= 0) &&
@@ -3190,20 +3196,20 @@ function get_map_pixel_color(map, map_coord, layer, replacement_array) {
 
 
 function get_map_pixel_color_by_draw_coord(map, draw_coord, z, replacement_array) {
-    if (! map.spritesheetTable) { throw new Error('The first argument to get_map_pixel_color_by_draw_coord() must be a map'); }
-    const layer = (((z || 0) - _offsetZ) / _scaleZ - map.zOffset) / map.zScale;
+    if (! map.spritesheet_table) { throw new Error('The first argument to get_map_pixel_color_by_draw_coord() must be a map'); }
+    const layer = (((z || 0) - _offsetZ) / _scaleZ - map.z_offset) / map.z_scale;
     return get_map_pixel_color(map, transform_draw_to_map(map, draw_coord), layer, replacement_array);
 }
 
     
 function get_map_sprite(map, map_coord, layer, replacement_array) {
-    if (! map.spritesheetTable) { throw new Error('The first argument to get_map_sprite() must be a map'); }
+    if (! map.spritesheet_table) { throw new Error('The first argument to get_map_sprite() must be a map'); }
     layer = Math.round(layer || 0) | 0;
     let mx = Math.floor(map_coord.x);
     let my = Math.floor(map_coord.y);
 
-    if (map.wrapX) { mx = loop(mx, map.size.x); }
-    if (map.wrapY) { my = loop(my, map.size.y); }
+    if (map.wrap_x) { mx = loop(mx, map.size.x); }
+    if (map.wrap_y) { my = loop(my, map.size.y); }
     
     if ((layer >= 0) && (layer < map.layer.length) &&
         (mx >= 0) && (my >= 0) &&
@@ -3232,8 +3238,8 @@ function set_map_sprite(map, map_coord, sprite, layer) {
     let mx = Math.floor(map_coord.x);
     let my = Math.floor(map_coord.y);
 
-    if (map.wrapX) { mx = loop(mx, map.size.x); }
-    if (map.wrapY) { my = loop(my, map.size.y); }
+    if (map.wrap_x) { mx = loop(mx, map.size.x); }
+    if (map.wrap_y) { my = loop(my, map.size.y); }
 
     if ((layer >= 0) && (layer < map.layer.length) &&
         (mx >= 0) && (my >= 0) &&
@@ -3247,13 +3253,13 @@ function set_map_sprite(map, map_coord, sprite, layer) {
 
 
 function get_map_sprite_by_draw_coord(map, draw_coord, z, replacement_array) {
-    const layer = ((z || 0) - _offsetZ) / (_scaleZ * map.zScale);
+    const layer = ((z || 0) - _offsetZ) / (_scaleZ * map.z_scale);
     return get_map_sprite(map, transform_draw_to_map(map, draw_coord), layer, replacement_array);
 }
 
 
 function set_map_sprite_by_draw_coord(map, draw_coord, sprite, z) {
-    const layer = ((z || 0) - _offsetZ) / (_scaleZ * map.zScale);
+    const layer = ((z || 0) - _offsetZ) / (_scaleZ * map.z_scale);
     return set_map_sprite(map, transform_draw_to_map(map, draw_coord), sprite, layer);
 }
 
@@ -3282,11 +3288,11 @@ function draw_map(map, min_layer, max_layer, replacements) {
     // Handle map wrapping
     const oldOffsetX = _offsetX, oldOffsetY = _offsetY;
     for (let shiftY = -1; shiftY <= +1; ++shiftY) {
-        if (! map.wrapY && shiftY !== 0) { continue; }
+        if (! map.wrap_y && shiftY !== 0) { continue; }
         _offsetY = oldOffsetY + map.size.y * map.sprite_size.y * shiftY;
-            
+        
         for (let shiftX = -1; shiftX <= +1; ++shiftX) {
-            if (! map.wrapX && shiftX !== 0) { continue; }
+            if (! map.wrap_x && shiftX !== 0) { continue; }
             _offsetX = oldOffsetX + map.size.x * map.sprite_size.x * shiftX;
             
             // Compute the set_clip coordinates in map coordinates
@@ -3349,13 +3355,13 @@ function draw_map(map, min_layer, max_layer, replacements) {
                 if (layerData.length > 0) {
                     _addGraphicsCommand({
                         opcode: 'MAP',
-                        z: (L * map.zScale + map.zOffset) * _scaleZ + _offsetZ,
+                        z: (L * map.z_scale + map.z_offset) * _scaleZ + _offsetZ,
                         layerData: layerData
                     });
                 }
             } // L
-        } // wrapX
-    } // wrapY
+        } // wrap_x
+    } // wrap_y
 
     _offsetX = oldOffsetX;
     _offsetY = oldOffsetY;
@@ -4162,6 +4168,7 @@ function draw_sprite_corner_rect(CC, corner, size, z) {
     if (! (CC && CC.spritesheet)) {
         throw new Error('Called draw_sprite_corner_rect() on an object that was not a sprite asset. (' + unparse(CC) + ')');
     }
+
     z = z || 0;
     const skx = (z * _skewXZ), sky = (z * _skewYZ);
     let x1 = (corner.x + skx) * _scaleX + _offsetX, y1 = (corner.y + sky) * _scaleY + _offsetY;
@@ -6593,8 +6600,8 @@ function find_map_path(map, start, goal, edgeCost, costLayer) {
     function estimatePathCost(A, B, m) {
         let dx = Math.abs(A.x - B.x);
         let dy = Math.abs(A.y - B.y);
-        if (map.wrapX) { dx = Math.min(dx, map.size.x - 1 - dx); }
-        if (map.wrapY) { dy = Math.min(dy, map.size.y - 1 - dy); }
+        if (map.wrap_x) { dx = Math.min(dx, map.size.x - 1 - dx); }
+        if (map.wrap_y) { dy = Math.min(dy, map.size.y - 1 - dy); }
         return dx + dy;
     }
 
@@ -6602,25 +6609,25 @@ function find_map_path(map, start, goal, edgeCost, costLayer) {
         const neighbors = [];
         if (node.x > 0) {
             neighbors.push({x:node.x - 1, y:node.y});
-        } else if (map.wrapX) {
+        } else if (map.wrap_x) {
             neighbors.push({x:map.size.x - 1, y:node.y});
         }
 
         if (node.x < map.size.x - 1) {
             neighbors.push({x:node.x + 1, y:node.y});
-        } else if (map.wrapX) {
+        } else if (map.wrap_x) {
             neighbors.push({x:0, y:node.y});
         }
 
         if (node.y > 0) {
             neighbors.push({x:node.x, y:node.y - 1});
-        } else if (map.wrapY) {
+        } else if (map.wrap_y) {
             neighbors.push({x:node.x, y:map.size.y - 1});
         }
 
         if (node.y < map.size.y + 1 - 1) {
             neighbors.push({x:node.x, y:node.y + 1});
-        } else if (map.wrapY) {
+        } else if (map.wrap_y) {
             neighbors.push({x:node.x, y:0});
         }
         

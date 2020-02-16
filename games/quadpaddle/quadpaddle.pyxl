@@ -4,8 +4,8 @@ const areaSize = SCREEN_SIZE.y
 const backgroundColor = rgb(28%, 36%, 55%)
 const wordExplodeSound = destroyBlockSound
 
-const unbreakable = levelTemplate.spritesheetTable["sprites"][3][4]
-const darkUnbreakable = levelTemplate.spritesheetTable["sprites"][3][2]
+const unbreakable = levelTemplate.spritesheet_table["sprites"][3][4]
+const darkUnbreakable = levelTemplate.spritesheet_table["sprites"][3][2]
 
 // Aliased sound
 const selectSound = hitPaddleSound

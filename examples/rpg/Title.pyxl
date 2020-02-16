@@ -18,7 +18,8 @@ frame
 set_background(#9)
 
 preserving_transform:
-   set_transform(xy(0, mode_frames mod (worldMap.size.y * worldMap.sprite_size.y)), ∅, -3)
+   const y = mode_frames mod (worldMap.size.y * worldMap.sprite_size.y)
+   set_transform(xy(0, y), ∅, -3)
    draw_map(worldMap)
 
 draw_text(smallFont, "quadplay✜", xy(½ SCREEN_SIZE.x, 8), #f049ad, ∅, #444, "center", "middle")

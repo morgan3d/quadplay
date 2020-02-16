@@ -980,8 +980,10 @@ Property           | Values   | Meaning
 `released_q`       | 0 or 1   | 1 if the ⓠ button was just released this frame
 `prompt`           | `{...}`  | An object mapping button names to text prompts (see below)
 
-The axes are affected by the current transformation _at the end of the frame_,
-as set by `set_transform()`. The angles are always clockwise in screen space.
+The axes are affected by the current transformation _at the time that
+they are read by your program_, as set by `set_transform()`. Reading the same property twice
+with a transform change in between can change the sign of the value. The
+angles are always clockwise in screen space.
 
 The `joy` variable is equal to `gamepad_array[0]` as shorthand for single-person games.
 
@@ -3246,7 +3248,7 @@ A map asset has the following fields. Its sprite elements are mutable at runtime
 `map.size`
 : `xy()` size in map coordinates (not pixels).
 
-`map.spritesheetTable`
+`map.spritesheet_table`
 : A table mapping TMX tile set names to spritesheets for this map.
 
 `map.sprite_size`
@@ -3506,7 +3508,7 @@ better understanding of how they are typically computed.
 ### Map Example
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
-const sprite = map.spritesheetTable["mapTiles"]
+const sprite = map.spritesheet_table["mapTiles"]
 const wall = sprite[0][0]
 const swamp = sprite[0][1]
 const dir = [xy(-1, 0), xy(0, -1), xy(0, 1), xy(1, 0)]
@@ -6070,6 +6072,23 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
+2020 Feb 16: Beta update 29
+
+- Changed the gamepads to define the direction of `x`, `y`, `dx`, `dy`, `xx`, and `yy`
+  based on the current transformation at the time that they are accessed
+- Reduced number of rats in single-player Serpitron
+- Changed `spriteUrlTable` --> `sprite_url_table` in map format
+- Fixed SpeedStreet loading crash introduced in the previous beta
+- Fixed `map.wrap_y` and `map.wrap_x`, which were broken by the camel case to snake case conversion
+  in a previous beta
+- Fixed caching where multiple json files reference the same sound or image
+- Fixed several bugs in the RPG example
+- On a mobile device in portrait mode, the UI now runs intentionally small
+  and rotated to encourage the user to use landscape (temporary workaround)
+- Optimized game launch time and memory utilization by eliminating 
+  in-memory backup copies of immutable assets
+
+
 2020 Feb 15: Beta update 28
 
 - Added optional `gamepad` argument to `any_button_press()`
@@ -6568,6 +6587,7 @@ div.preview {
   border: 1px solid #666;
   float:right;
 }
+.md h1, .md h2, .md h3 { font-family: quadplay }
 </style>
 <title>manual✜</title>
 <script>setTimeout(function(){document.title='manual✜';},1000);

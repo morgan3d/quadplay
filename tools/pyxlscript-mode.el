@@ -53,7 +53,7 @@
                                    "now" "game_frames" "mode_frames" "replace" "find_map_path" "find_path" "join" "entity_apply_force" "entity_apply_impulse"
                                    "gray" "rgb" "rgba" "hsv" "hsva" "last_value" "last_key" "insert" "reverse" "reversed"
                                    "call" "set_post_effects" "get_post_effects" "reset_post_effects" "push_front" "local_time" "device_control" "physics_add_contact_callback" "physics_entity_contacts" "physics_entity_has_contacts" "physics_add_entity" "physics_remove_entity" "physics_remove_all" "physics_attach" "physics_detach" "make_physics" "make_collision_group" "draw_physics" "physics_simulate"
-                                   "abs" "acos" "atan" "asin" "sign" "sign_nonzero" "cos" "clamp" "hash" "lerp" "log" "log2" "log10" "loop" "min" "max" "mid" "noise" "oscillate" "overlap" "pow" "make_random" "random_sign" "random_integer" "random_within_sphere" "random_on_sphere" "random_within_circle" "random_within_square" "random_on_square" "random_on_circle" "random_direction2D" "random_direction3D" "random_value" "random_gaussian" "random_gaussian2D" "random_truncated_gaussian" "random_truncated_gaussian2D" "random" "ξ" "sgn" "sqrt" "sin" "set_random_seed" "tan"
+                                   "abs" "acos" "atan" "asin" "sign" "sign_nonzero" "cos" "clamp" "hash" "lerp" "log" "log2" "log10" "loop" "noise" "oscillate" "overlap" "pow" "make_random" "random_sign" "random_integer" "random_within_sphere" "random_on_sphere" "random_within_circle" "random_within_square" "random_on_square" "random_on_circle" "random_direction2D" "random_direction3D" "random_value" "random_gaussian" "random_gaussian2D" "random_truncated_gaussian" "random_truncated_gaussian2D" "random" "ξ" "sgn" "sqrt" "sin" "set_random_seed" "tan"
                                    "concatenate" "extend" "clone" "copy" "draw_previous_mode" "cross" "direction" "dot" "equivalent" "magnitude" "magnitude_squared" "max_component" "min_component" "xy" "xyz"
                                    "fast_remove_key" "find" "keys" "remove_key" "substring" "sort" "resize" "push" "pop" "fast_remove_value" "remove_values" "remove_all" "gamepad_array" "joy" "round" "floor" "ceil"
                                    "debug_print") 'symbols))
@@ -72,9 +72,12 @@
        ("\\(pop_mode\\).+\\(from\\) " (1 font-lock-function-name-face) (2 font-lock-function-name-face))
        ("pop_mode" . font-lock-keyword-face)
 
-       ;; Only treat "size" as a built-in when
+       ;; Only treat "size", "mid", "min", and "max" as a built-in when
        ;; followed by a paren (otherwise it is probably a property)
        ("\\(size\\)(" . (1 font-lock-type-face))
+       ("\\(min\\)(" . (1 font-lock-type-face))
+       ("\\(max\\)(" . (1 font-lock-type-face))
+       ("\\(mid\\)(" . (1 font-lock-type-face))
         
        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
        ;; Colors:

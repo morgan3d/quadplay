@@ -51,7 +51,7 @@ def spawnPowerups():
          snake.hasGun = (snake != snakeArray[0]) and (snake.score ≤ ½(snakeArray[0].score + last_value(snakeArray).score))
          
    else if waveType == "Rats":
-      for i < 60:
+      for i < 30 sqrt(size(snakeArray)):
          push(powerupArray, {sprite: ratSpritesheet[0][0], type: "grow", pos: randomEmptyPosition(), 
                              value: growAmount, audioClip: bigGrowAudioClip,
                              angle: 90deg random_integer(0, 3),

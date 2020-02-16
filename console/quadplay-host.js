@@ -154,7 +154,7 @@ function device_control(cmd) {
         {
             const i = clamp(parseInt(arguments[1]), 0, 3);
             const pad = QRuntime.gamepad_array[i];
-            return {x: pad._analogX, y: pad._analogY};
+            return {x: pad._analogX * QRuntime._scaleX, y: pad._analogY * QRuntime._scaleY};
             break;
         }
 
@@ -850,35 +850,35 @@ function updateInput() {
             const axis = axes[a];
             const analogAxis = '_analog' + AXES[a];
             const pos = '+' + axis, neg = '-' + axis;
-            const old = pad[axis];
-            const scale = (axis === 'x') ? QRuntime._scaleX : QRuntime._scaleY;
+            const old = pad['_' + axis];
+            const scale = 1;
 
             if (map) {
                 // Keyboard controls
                 const n0 = map[neg][0], n1 = map[neg][1], p0 = map[pos][0], p1 = map[pos][1];
 
                 // Current state
-                pad[axis] = (((emulatorKeyState[n0] || emulatorKeyState[n1]) ? -1 : 0) +
+                pad['_' + axis] = (((emulatorKeyState[n0] || emulatorKeyState[n1]) ? -1 : 0) +
                              ((emulatorKeyState[p0] || emulatorKeyState[p1]) ? +1 : 0)) * scale;
 
                 // Just pressed
-                pad[axis + axis] = (((emulatorKeyJustPressed[n0] || emulatorKeyJustPressed[n1]) ? -1 : 0) +
+                pad['_' + axis + axis] = (((emulatorKeyJustPressed[n0] || emulatorKeyJustPressed[n1]) ? -1 : 0) +
                                     ((emulatorKeyJustPressed[p0] || emulatorKeyJustPressed[p1]) ? +1 : 0)) * scale;
             } else {
                 // Nothing currently pressed
-                pad[axis] = pad[axis + axis] = 0;
+                pad['_' + axis] = pad['_' + axis + axis] = 0;
             }
 
             // Reset both digital and analog axes
-            pad[analogAxis] = pad[axis];
+            pad[analogAxis] = pad['_' + axis];
 
             if (realGamepad && (realGamepad.axes[a] !== 0)) {
-                pad[axis] = realGamepad.axes[a] * scale;
+                pad['_' + axis] = realGamepad.axes[a] * scale;
                 pad[analogAxis] = realGamepad.analogAxes[a] * scale;
             }
 
             if (realGamepad && (prevRealGamepad.axes[a] !== realGamepad.axes[a])) {
-                pad[axis + axis] = realGamepad.axes[a] * scale;
+                pad['_' + axis + axis] = realGamepad.axes[a] * scale;
             }
 
             if ((player === 1) && gamepadArray[0]) {
@@ -886,15 +886,15 @@ function updateInput() {
                 // Alias controller[0] right stick (axes 2 + 3) 
                 // to controller[1] d-pad (axes 0 + 1) for "dual stick" controls                
                 if (otherPad.axes[a + 2] !== 0) {
-                    pad[axis] = otherPad.axes[a + 2] * scale;
+                    pad['_' + axis] = otherPad.axes[a + 2] * scale;
                     pad[analogAxis] = otherPad.analogAxes[a + 2] * scale;
                 }
                 if (otherPad.axes[a + 2] !== otherPad.axes[a + 2]) {
-                    pad[axis + axis] = otherPad.axes[a + 2] * scale;
+                    pad['_' + axis + axis] = otherPad.axes[a + 2] * scale;
                 }
             } // dual-stick
 
-            pad['d' + axis] = pad[axis] - old;
+            pad['_d' + axis] = pad['_' + axis] - old;
         }
 
         for (let b = 0; b < buttons.length; ++b) {
@@ -995,13 +995,9 @@ function onTouchStartOrMove(event) {
 
         if (event.target === emulatorScreen) {
             const rect = emulatorScreen.getBoundingClientRect();
-            const screen_x = clamp(Math.round(emulatorScreen.width * (touch.clientX - rect.left) / rect.width), 0, emulatorScreen.width - 1);
-            const screen_y = clamp(Math.round(emulatorScreen.height * (touch.clientY - rect.top) / rect.height), 0, emulatorScreen.height - 1);
+            const screen_x = clamp(Math.round(emulatorScreen.width * (touch.clientX - rect.left) / rect.width), 0, emulatorScreen.width - 1) + 0.5;
+            const screen_y = clamp(Math.round(emulatorScreen.height * (touch.clientY - rect.top) / rect.height), 0, emulatorScreen.height - 1) + 0.5;
 
-            // TODO: Apply transform
-            const draw_x = screen_x;
-            const draw_y = screen_y;
-            
             if (! tracker || tracker.lastTarget !== emulatorScreen) {
                 // New touch
                 QRuntime.touch.aa = true;
@@ -1009,20 +1005,14 @@ function onTouchStartOrMove(event) {
                 QRuntime.touch.a = true;
                 QRuntime.touch.screen_dx = 0;
                 QRuntime.touch.screen_dy = 0;
-                QRuntime.touch.dx = 0;
-                QRuntime.touch.dy = 0;
             } else {
                 // Continued touch
                 QRuntime.touch.screen_dx = screen_x - QRuntime.touch.screen_x;
                 QRuntime.touch.screen_dy = screen_y - QRuntime.touch.screen_y;
-                QRuntime.touch.dx = draw_x - QRuntime.touch.x;
-                QRuntime.touch.dy = draw_y - QRuntime.touch.y;
             }
             
             QRuntime.touch.screen_x = screen_x;
             QRuntime.touch.screen_y = screen_y;
-            QRuntime.touch.x = draw_x;
-            QRuntime.touch.y = draw_y;
         }
 
         if (tracker && (tracker.lastTarget === emulatorScreen) && (event.target !== emulatorScreen)) {

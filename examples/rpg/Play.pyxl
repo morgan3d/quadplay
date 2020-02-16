@@ -12,7 +12,7 @@ const WATER_SPRITES = []
 const ANIMATE_WATER = []
 const ANIMATE_LIGHTS = []
 
-const castleSprite = castleMap.spritesheetTable["dawnlike-level-16x16"]
+const castleSprite = castleMap.spritesheet_table["dawnlike-level-16x16"]
 
 let lastBumped = 0
 
@@ -95,6 +95,7 @@ if loop(mode_frames, 30) < 15: extend(animate, ANIMATE_LIGHTS)
 // Shopkeeper
 draw_sprite(npcSprite[16][10 + loop(floor(mode_frames / 20), 2)], shopKeeperPos, nil, nil, nil, 0.5)
 if magnitude(shopKeeperPos - player.pos) < 32:
+   // Show dialogue
    draw_sprite_corner_rect(dialogueSprite[4][1], shopKeeperPos - xy(27, 19), xy(31, 7), 8)
    draw_text(smallFont, "Press " + joy.prompt["(c)"], shopKeeperPos - xy(12, 16), #000, nil, nil, 0, 0, 8)
    if joy.cc: push_mode(Shop, "Press ⓒ")

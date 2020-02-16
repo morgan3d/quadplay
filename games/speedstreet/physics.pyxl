@@ -1,7 +1,7 @@
 
 /* Snap to nearest ODD layer, which is where collision data are stored. */
-def transformDrawZToMapSolidLayer(z):
-   const layer = floor(transform_draw_z_to_map_layer(cityMap, z))
+def transform_draw_z_to_map_solid_layer(z):
+   const layer = ⌊transform_draw_z_to_map_layer(cityMap, z)⌋
    return layer + 1 - (layer bitand 1)
 
 
@@ -49,27 +49,27 @@ def surfacePointUnder(pos, z):
    // Worst case, span maxSteps * coarseScale pixels
    const maxSteps = 64
 
-   const layer = transformDrawZToMapSolidLayer(z)
+   const layer = transform_draw_z_to_map_solid_layer(z)
    let mapPos = transform_draw_to_map(cityMap, pos)
    
    // Offset the y by z
    mapPos.y += (cityMap.z_scale * (layer - 9) * skewY) * pixelMapStepY
 
    // Reuse the mapPos for the final result to avoid allocation
-   let pixelPos = mapPos
+   const pixelPos = mapPos
 
    // Coarse search
    for coarseSteps < maxSteps:
       const color = get_map_pixel_color(cityMap, mapPos, layer)
-      if color and (color.a > 0.5):
+      if color and (color.a > 50%):
          // Hit a solid pixel.
          //
          // Fine search. Begin by backing up one pixel and then
          // looking for an empty pixel.
          mapPos.y += pixelMapStepY
-         for fineSteps <= coarseScale:
+         for fineSteps ≤ coarseScale:
             const color = get_map_pixel_color(cityMap, mapPos, layer)
-            if not color or (color.a <= 0.5):
+            if not color or (color.a ≤ 50%):
                // Hit an empty pixel
                pixelPos.x = pos.x; pixelPos.y = pos.y - coarseSteps * coarseScale + fineSteps
                return pixelPos
@@ -87,12 +87,12 @@ def surfacePointUnder(pos, z):
 /* True if this map position is solid, determined by
     testing the collision layers of the map. */
 def isSolid(pos, z):
-   const layer = transformDrawZToMapSolidLayer(z)
+   const layer = transform_draw_z_to_map_solid_layer(z)
    let mapPos = transform_draw_to_map(cityMap, pos)
    // Offset the y by z
    mapPos.y += (cityMap.z_scale * (layer - 9) * skewY) / cityMap.sprite_size.y
    const color = get_map_pixel_color(cityMap, mapPos, layer)
-   return color and (color.a > 0.5)
+   return color and (color.a > 50%)
 
 
 
@@ -181,19 +181,19 @@ def simulateBike(bike):
    // Find the surface under the bike. We update this *after*
    // the simulation so that it can be used for the shadow during
    // rendering.
-   for -5 <= i <= 5:
-      bike.surfacePos[i + 5] = surfacePointUnder(bike.pos + xy(2i, 0), bike.z)
+   for -5 ≤ i ≤ 5:
+      bike.surfacePos[i + 5] = surfacePointUnder(bike.pos + xy(2 i, 0), bike.z)
    
 
       
 def computeContactForces(body):
    // Compute acceleration terms due to all penalty forces at each atom
-   const repulsionScale = body.mass * 0.25
+   const repulsionScale = 25% body.mass
 
    for atom in body.atomArray:
       // Reset accumulated properties
       atom.normal.x = atom.normal.y = 0
-      atom.minDist2 = infinity
+      atom.minDist2 = ∞
       let drawPos = transform_entity_to_draw(body, atom.pos)
 
       // Derivation for general case:
@@ -218,10 +218,10 @@ def computeContactForces(body):
       
 def drawBody(b, color):
    // Draw the atoms
-   for atom in b.atomArray:
+   for atom ∊ b.atomArray:
       const drawPos = transform_entity_to_draw(b, atom.pos)
       draw_line(b.pos, drawPos, #FFF, b.z)
-      draw_disk(drawPos, 2, color, nil, b.z)
+      draw_disk(drawPos, 2, color, ∅, b.z)
 
    // Draw the center of the object
-   draw_disk(b.pos, 4, color, nil, b.z)
+   draw_disk(b.pos, 4, color, ∅, b.z)
