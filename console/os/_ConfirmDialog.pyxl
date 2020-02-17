@@ -43,7 +43,7 @@ draw_rect(½ SCREEN_SIZE, windowSize + 4, ∅, #0003)
 if SCREEN_SIZE.y >= 112: draw_rect(½ SCREEN_SIZE, windowSize + 6, ∅, #0001)
 
 if mode_frames > max(15, openFrames):
-   for control in pad:
+   for control in gamepad_array:
       if control.qq or control._pp or (control.aa and choiceIndex == 0):
          // Cancel
          play_audio_clip(_cancelUISound)

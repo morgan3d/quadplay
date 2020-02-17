@@ -50,7 +50,7 @@ def spawnPowerups():
          snake.hasGun = (snake != snakeArray[0]) and (snake.score ≤ ½(snakeArray[0].score + last_value(snakeArray).score))
          
    else if waveType == "Rats":
-      for i < 30 sqrt(size(snakeArray)):
+      for i < 16 size(snakeArray):
          push(powerupArray, {sprite: ratSpritesheet[0][0], type: "grow", pos: randomEmptyPosition(), 
                              value: growAmount, audioClip: bigGrowAudioClip,
                              angle: 90° random_integer(0, 3),
@@ -70,11 +70,11 @@ def spawnBuildings():
       return
    else if locationName == "Urban":
       const sprite = skyscraperSprite[0][0]
-      for 0 < i < 16:
+      for 0 < i < 10:
          let y = random_integer(sprite.size.y, playSize.y - sprite.size.y)
-         if i == 4 or i == 5 or i == 12 or i == 11: y = playSize.y / 2
+         if i == 4 or i == 5 or i == 7 or i == 8: y = playSize.y / 2
          push(buildingArray, {
-            pos: xy(round(i * playSize.x / 16, cellSide), round(y, cellSide)),
+            pos: xy(round(i * playSize.x / 10, cellSide), round(y, cellSide)),
                sprite: sprite, size: sprite.size, shape: "rect", shadowShape: "rect"})
             
    else if locationName == "Desert":
