@@ -1124,6 +1124,15 @@ function makeURLAbsolute(parentURL, childURL) {
     } else if (/^.{3,6}:\/\//.test(childURL)) {
         // Already absolute, some other protocol
         return childURL;
+    } else if (/^[\\/]/.test(childURL)) {
+        // Absolute on the server. Copy the host and protocol
+        const match = parentURL.match(/^.{3,6}:\/\/.*?(?=\/)/);
+        if (match) {
+            return match[0] + childURL;
+        } else {
+            // Hope...
+            return childURL;
+        }
     } else {
         // Strip the last part of the parent
         return urlDir(parentURL) + childURL;

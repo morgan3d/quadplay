@@ -664,10 +664,6 @@ def update_player():
     if PLAYER.x_zone == "release" and PLAYER.frames_joy.x > PLAYER_DECCEL_FRAMES:
         PLAYER.x_zone = "still"
 
-    if not PLAYER.taking_input:
-        joy.x = 0
-        joy.y = 0
-
     // cycle animation if moving in either x or y
     if not PLAYER.invincibility:
         // moving, run animation

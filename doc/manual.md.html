@@ -6072,12 +6072,21 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
+2020 Feb TBD: Beta update 30
+
+- Fixed Beat the Gobblins trying to write to read-only properites
+- quadplay internal server now does not return directory listings, to increase security
+- quadplay script now works from any directory for games in any directory
+- `quadplay --host` now launches faster on macOS
+
 2020 Feb 16: Beta update 29
 
 - Changed the gamepads to define the direction of `x`, `y`, `dx`, `dy`, `xx`, and `yy`
   based on the current transformation at the time that they are accessed
 - Reduced number of rats in single-player Serpitron
+- Reduced the coffee speed in Serpitron
 - Changed `spriteUrlTable` --> `sprite_url_table` in map format
+- Fixed single-player snake hitting itself on the donut level in Serpitron
 - Fixed SpeedStreet loading crash introduced in the previous beta
 - Fixed `map.wrap_y` and `map.wrap_x`, which were broken by the camel case to snake case conversion
   in a previous beta

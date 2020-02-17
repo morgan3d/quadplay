@@ -149,9 +149,9 @@ function onWelcomeTouch() {
     const showPause = url;
     
     url = url || launcherURL;
-     // If the url doesn't have a prefix, assume that it is relative to
-    // the quadplay script in the parent dir.
-    if (! (/^.{3,}:\/\//).test(url)) {
+    // If the url doesn't have a prefix and doesn't begin with a slash,
+    // assume that it is relative to the quadplay script in the parent dir.
+    if (! (/^(.{3,}:\/\/|[\\/])/).test(url)) {
         url = '../' + url;
     }
     loadGameIntoIDE(url, function () {
@@ -2852,9 +2852,9 @@ if (! localStorage.getItem('debugWatchEnabled')) {
     }
 
     url = url || launcherURL;
-    // If the url doesn't have a prefix, assume that it is relative to
-    // the quadplay script in the parent dir.
-    if (! (/^.{3,}:\/\//).test(url)) {
+    // If the url doesn't have a prefix and doesn't begin with a slash,
+    // assume that it is relative to the quadplay script in the parent dir.
+    if (! (/^(.{3,}:\/\/|[\\/])/).test(url)) {
         url = '../' + url;
     }
 
