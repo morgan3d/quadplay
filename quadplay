@@ -23,10 +23,16 @@ __doc__ = "Quadplay Fantasy Console launcher script."
 
 version = str(sys.version_info.major) + '.' + str(sys.version_info.minor)
 
+# Largest common prefix of quad_path and game_path. Root for web serving
+web_path = None
+
+# Subdirectories of web_path that are permitted for http access
+whitelist = None
+
 try:
     # Python 3.7
     from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
-    QHTTPServer = ThreadingHTTPServer
+    QuadplayHTTPServer = ThreadingHTTPServer
     print('Initializing Quadplay server using Python ' + version + ' ThreadingHTTPServer')
     
 except ImportError:
@@ -34,31 +40,66 @@ except ImportError:
         # Python 3
         from http.server import HTTPServer, SimpleHTTPRequestHandler
         print('Initializing Quadplay server using Python ' + version + ' HTTPServer')
-        QHTTPServer = HTTPServer
+        QuadplayHTTPServer = HTTPServer
     except ImportError:
         # Python 2
         from SimpleHTTPServer import SimpleHTTPRequestHandler
         import SocketServer
-        QHTTPServer = SocketServer.TCPServer
+        QuadplayHTTPServer = SocketServer.TCPServer
         print('Initializing Quadplay server using Python ' + version + ' SocketServer.TCPServer')
-
-
+        
+# Handles serving from multiple directories
+#
+# See https://github.com/python/cpython/blob/master/Lib/http/server.py for
+# the base class implementation and internal methods
 class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
+    def list_directory(self, path):
+        # Prevent directory listing
+        self.send_error(HTTPStatus.NOT_FOUND, 'No permission to list directory')
+        return None
+        
+    # Used for the IDE to write files. Currently disabled on the IDE side
     def do_POST(self):
         content_len = int(self.headers['Content-Length'])
         #int(self.headers.getheader('content-length', 0))
         post_body = self.rfile.read(content_len)
 
         self.send_response(200)
-        self.send_header("Content-type", "text/html")
+        self.send_header('Content-type', 'text/html')
         self.end_headers()
-        self.wfile.write("Posted".encode("utf8"))
+        self.wfile.write('Posted'.encode('utf8'))
         
         print("\nPOST contents:\n")
         print(post_body)
         object = json.loads(post_body)
         print("\n")
 
+        
+    def do_GET(self):
+        global whitelist, web_path
+        
+        # Remove the query and collapse any ..
+        path = os.path.normpath(self.path.split('?')[0]).replace('\\', '/')
+
+        # Security: Check if path has a prefix in whitelist
+        if not any([path.startswith(prefix) for prefix in whitelist]):
+            self.send_error(404, 'Illegal path: ' + path)
+        
+        f = self.send_head()
+        if f:
+            try:
+                self.copyfile(f, self.wfile)
+            finally:
+                f.close()
+        """
+            def do_GET(self):
+        return super(QuadplayHTTPRequestHandler, self).do_GET()"""
+     
+    def translate_path(self, path):
+        # Intentionally use Python 2 super syntax
+        result = SimpleHTTPRequestHandler.translate_path(self, path)
+        return result
+     
 
 def parse_args():
     """ parse arguments out of sys.argv """
@@ -72,13 +113,6 @@ def parse_args():
         default=False,
         help="hosting mode - allow other machines to connect to this one to play on mobile devices"
     )
-    """parser.add_argument(
-        "-d",
-        "--dryrun",
-        action="store_true",
-        default=False,
-        help="dryrun mode - print what *would* be done"
-    )"""
     parser.add_argument(
         'gamepath',
         type=str,
@@ -102,16 +136,49 @@ def parse_args():
 # because of the way that multiprocess serialization works on ThreadingHTTPServer
 args = parse_args()
 
+# Process paths at top level so that they can be inherited by ThreadingHTTPServer
+if True:
+    quad_path = os.path.abspath(os.path.dirname(__file__))
+
+    # Compute the serving paths
+    if args.gamepath and not args.gamepath.startswith('http:'):
+       # os.path.abspath does not work well here for some reason
+       game_path = os.path.abspath(args.gamepath)
+
+       if game_path.endswith('.game.json'):
+          game_path = os.path.dirname(game_path)
+       
+       whitelist = [quad_path, game_path]
+       
+       # Common ancestor
+       web_path = os.path.dirname(os.path.commonprefix([os.path.join(p, '') for p in whitelist]))
+    else:
+       web_path = quad_path
+       whitelist = [quad_path]
+
+    # Strip the common prefix
+    whitelist = [os.path.join('/', p[len(web_path)+1:], '').replace('\\', '/') for p in whitelist]
+    quad_path = whitelist[0]
+    
+    web_path = web_path.replace('\\', '/')
+
+    
 # SSL support doesn't work yet due to self-signed certificates
 useSSL = False
 
+# Runs in a different process
 def launchServer():
-    global httpd, args
+    global httpd, args, web_path
+    
+    # Serve from the common directory
+    old_path = os.getcwd()
+    os.chdir(web_path)
+    
     try:
         # '' = 0.0.0.0 = all local IP addresses, needed for
         # supporting devices other than just localhost
         server_address = ('' if args.host else 'localhost', args.port)
-        httpd = QHTTPServer(server_address, QuadplayHTTPRequestHandler)
+        httpd = QuadplayHTTPServer(server_address, QuadplayHTTPRequestHandler)
 
         if useSSL:
             httpd.socket = ssl.wrap_socket(httpd.socket, 
@@ -123,9 +190,13 @@ def launchServer():
     except OSError as e:
         print(e)
         print('Not starting a local server, since one is already running.');
+        
+    os.chdir(old_path)
 
         
 def main():
+    global whitelist, web_path
+
     try:
        import msvcrt
     except ImportError:
@@ -143,7 +214,6 @@ def main():
        # Support normal-terminal reset at exit
        atexit.register(set_normal_term)
 
-
     onWindows = (platform.system() == 'Windows')
     onMac = (platform.system() == 'Darwin')
 
@@ -151,15 +221,23 @@ def main():
     if args.host:
         try:
             print('Getting IP address...')
-            myip = socket.gethostbyname(socket.gethostname())
+            myip = ''
+
+            # just try this first on mac because the other approaches fail so frequently
+            if onMac:
+               myip = (os.popen('ipconfig getifaddr en0').read().strip() or
+                       os.popen('ipconfig getifaddr en1').read().strip())
+            if not myip: myip = socket.gethostbyname(socket.gethostname())
         except:
             if onMac:
                 # The above can fail apparently randomly on MacOS (https://bugs.python.org/issue35164)
                 # and that has happened to us. This is a workaround:
-                print('gethostbyname failed due to a known on MacOS configuration error. Falling back to\nipconfig...')
+                print('gethostbyname failed due to a known MacOS internal error. Falling back to\nipconfig...')
                 
                 myip = os.popen('ipconfig getifaddr en0').read().strip()
-                if not myip: myip = os.popen('ipconfig getifaddr en1').read().strip()
+                if not myip:
+                   print('Could not find en0. Looking for en1...')
+                   myip = os.popen('ipconfig getifaddr en1').read().strip()
                 
                 if not myip:
                     print('WARNING: ipconfig could not find a valid en0 or en1 adapter. Server IP address is unknown.')
@@ -168,17 +246,22 @@ def main():
                     print('WARNING: gethostbyname unexpectedly failed. Server IP address is unknown.')
                     myip = '127.0.0.1'
 
-    url = 'http' + ('s' if useSSL else '')+ '://' + myip + ':' + str(args.port) + '/console/quadplay.html?IDE=1&fastReload=1'
+    url = 'http' + ('s' if useSSL else '')+ '://' + myip + ':' + str(args.port) + os.path.join('/', quad_path, 'console/quadplay.html') + '?IDE=1&fastReload=1'
     print('_________________________________________________________________________\n')
 
     if args.gamepath != '':
-        url += '&game=' + args.gamepath
+        url += '&game=' + os.path.join('/', os.path.abspath(args.gamepath)[len(web_path)+1:]).replace('\\', '/')
     else:
         print('Loading default launcher game. You can supply the URL or local relative path to your game on\nthe command line, for example "quadplay foo/mygame", to load it directly.\n')
 
     print('\nServing from:\n\n   ' + url)
     if args.host: print('\n\nNote that your firewall may need to be configured to load on other devices.\n')
 
+    url += '&quadserver=1'
+    
+    # Run from the quadplay path
+    print('\n   the quad:// root path is ' + os.path.abspath(os.path.dirname(__file__)).replace('\\', '/') + '/\n')
+    
     # Platform independent keyboard key press detection
     def kbhit():
        if onWindows:
@@ -215,6 +298,7 @@ def main():
     if httpd: threading.Thread(target=lambda : httpd.shutdown())
     time.sleep(1)
     serverThread.terminate()
+
     return 0
 
 if __name__ == "__main__":
