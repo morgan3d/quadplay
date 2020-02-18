@@ -23,7 +23,7 @@
     "description": "Description of your game in about 22 words.",
 
     "constants":  {
-        "textColor":   {"type": "rgb", "value": {
+        "text_color":   {"type": "rgb", "value": {
             "r": {"type": "number", "value":  1},
             "g": {"type": "number", "value":  1},
             "b": {"type": "number", "value":  1}}}
