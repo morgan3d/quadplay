@@ -5526,28 +5526,14 @@ shift+browser reload button, or remove `&fastReload=1` from the URL.
 Visual Studio Code
 ------------------------------------------------------------------------------------
 
-Visual Studio Code natively supports the `.json` files. To configure it with beta
-PyxlScript file support as well, run the following command line from the
-`quadplay/tools` directory:
+Visual Studio Code natively supports the `.json` files. To configure it with
+PyxlScript file support as well:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-code --install-extension vscode-pyxlscript.vsix
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1. Run Visual Studio Code
+2. Press F1 and type `install code` and then press enter
+3. Open a terminal and change directory to `quadplay/tools`
+4. At the command line, run `code --install-extension vscode-pyxlscript.vsix`
 
-<!--
-1. Run Visual Studio Code.
-2. Press Ctrl+Shift+P (Cmd+Shift+P on macOS) to open the command
-   palette and then type `Open Settings (JSON)` and press enter.
-   This opens the `settings.json` file.
-3. Add the following to the `settings.json` file (you may need a comma
-   on the end of the previous line as well):
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ json
-"files.associations": {
-   "*.pyxl": "python"
-}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
--->
 
 Vim
 ------------------------------------------------------------------------------------
@@ -6097,8 +6083,6 @@ Changes for both the specification and implementation in each release.
   in a previous beta
 - Fixed caching where multiple json files reference the same sound or image
 - Fixed several bugs in the RPG example
-- On a mobile device in portrait mode, the UI now runs intentionally small
-  and rotated to encourage the user to use landscape (temporary workaround)
 - Optimized game launch time and memory utilization by eliminating 
   in-memory backup copies of immutable assets
 
