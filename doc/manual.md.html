@@ -953,12 +953,12 @@ the following properties:
 Property           | Values   | Meaning
 -------------------|----------|----------------------------------
 `index`            | 0,1,2,3  | Index of this gamepad in `pad` array
-`x`                | -1,0,+1  | Current D-pad value on the $x$-axis (+1 = right)
-`xx`               | -1,0,+1  | Direction that was just pressed this frame on the $x$-axis
-`dx`               | -2 to +2 | Change in direction this frame on the $x$-axis
-`y`                | -1,0,+1  | Current D-pad value on the $y$-axis (+1 = backward)
-`yy`               | -1,0,+1  | Direction that was just pressed this frame on the $y$-axis
-`dy`               | -2 to +2 | Change in direction this frame on the $y$-axis
+`x`                | -1,0,+1  | Current D-pad value on the _x_-axis (+1 = right)
+`xx`               | -1,0,+1  | Direction that was just pressed this frame on the _x_-axis
+`dx`               | -2 to +2 | Change in direction this frame on the _x_-axis
+`y`                | -1,0,+1  | Current D-pad value on the _y_-axis (+1 = backward)
+`yy`               | -1,0,+1  | Direction that was just pressed this frame on the _y_-axis
+`dy`               | -2 to +2 | Change in direction this frame on the _y_-axis
 `xy`               | xy       | `xy(x, y)` for the gamepad
 `dxy`              | xy       | `xy(dx, dy)` for the gamepad
 `angle`            | -π to +π | `rotation_sign() * atan(y, x)` if both are not zero, otherwise the last angle
@@ -1819,8 +1819,8 @@ Math
 `oscillate(x, lo, hi)`
 : Like `loop` but alternately counts up and down on the interval
   [`lo`, `hi`], including both ends. Works with negative and fractional values.
-  Let $ k = 2 m - 2, w = \mathrm{loop}(x, k) $.
-  $\mathrm{oscillate}(x, m)$ is $w$ if $ w < m $, otherwise it is $k - w$.
+  Let `k = 2 m - 2; w = loop(x, k)`.
+  `oscillate(x, m)` is `w` if `w < m`, otherwise it is `k - w`.
 
 `pow(a, b)`
 : Exponent. See also the `^` operator.
@@ -2397,17 +2397,17 @@ A key relating textbook symbols and definitions to the quadplay✜ entity proper
 
   Property        | Symbol                           | Definition
   ----------------|----------------------------------|------------------
-  `pos`           | $x(t)$                           | Position
-  `vel`           | $v(t) = \dot{x}(t)$              | Linear velocity
-  `force`         | $F(t) = m \cdot a(t)$            | Force
-  `angle`         | $\theta(t)$                      | Angle
-  `spin`          | $\omega(t) = \dot{\theta}(t)$    | Angular velocity
-  `torque`        | $\tau(t) = I \cdot \alpha(t)$    | Torque
-  `inertia`       | $I$                              | Inertia
-  `density`       | $\rho$                           | Density
-  `friction`      | $\mu_\mathrm{k}$                 | Coefficient of kinetic friction
-  `stiction_factor`| $\mu_\mathrm{s}/\mu_\mathrm{k}$  | Static friction multiplier
-  `restitution`   | $e$                              | Coefficient of restitution
+  `pos`           | _x_(_t_)                         | Position
+  `vel`           | _v_(_t_) = _dx_(_t_) / _dt_      | Linear velocity
+  `force`         | _F_(_t_) = _m_ • _a_(_t_)        | Force
+  `angle`         | _θ_(_t_)                         | Angle
+  `spin`          | _ω_(_t_) = _dθ_(_t_) / _dt_      | Angular velocity
+  `torque`        | _τ_(_t_) = _I_ • _α_(_t_)        | Torque
+  `inertia`       | _I_                              | Inertia
+  `density`       | _ρ_                              | Density
+  `friction`      | _μ_ₖ                             | Coefficient of kinetic friction
+  `stiction_factor`| _μ_ₛ/_μ_ₖ                       | Static friction multiplier
+  `restitution`   | _e_                              | Coefficient of restitution
 
 You can choose the units and coordinate system. Pixels (of distance),
 pixel mass, and game frames are the most common choice of units in
@@ -6072,7 +6072,7 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-2020 Feb TBD: Beta update 30
+2020 Feb 17: Beta update 30
 
 - Fixed Beat the Gobblins trying to write to read-only properites
 - Fixed confirmation dialog crash in OS reset menu
@@ -6081,6 +6081,8 @@ Changes for both the specification and implementation in each release.
 - quadplay internal server now does not return directory listings, to increase security
 - quadplay script now works from any directory for games in any directory
 - `quadplay --host` now launches faster on macOS
+- Optimized manual loading time by removing mathjax
+
 
 2020 Feb 16: Beta update 29
 

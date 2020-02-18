@@ -2,7 +2,7 @@
 "use strict";
 
 const deployed = true;
-const version  = '2020.02.16.00'
+const version  = '2020.02.17.20'
 const launcherURL = 'quad://console/launcher';
 
 //////////////////////////////////////////////////////////////////////////////////
