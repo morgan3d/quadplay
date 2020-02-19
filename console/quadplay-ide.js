@@ -377,9 +377,22 @@ function onMenuButton(event) {
 }
 
 const bootScreen = document.getElementById('bootScreen');
-let emulatorScreen = document.getElementById("screen");
+let emulatorScreen = document.getElementById('screen');
 
-// Do not set desynchronized:true ...it is about 12% slower on Chrome 75!
+// Disable context menu popup on touch events for the game screen or virtual
+// controller buttons because they should be processed solely by the emulator
+emulatorScreen.oncontextmenu = function (event) { event.preventDefault(); event.stopPropagation(); };
+{
+    const classes = ['emulator', 'emulatorBackground', 'emulatorButton', 'virtualController', 'screenBorder'];
+    for (let c = 0; c < classes.length; ++c) {
+        const a = document.getElementsByClassName(classes[c]);
+        for (let i = 0; i < a.length; ++i) {
+            a[i].oncontextmenu = emulatorScreen.oncontextmenu;
+        }
+    }
+}
+
+// Do not set desynchronized:true. Doing so makes Chrome run about 12% slower as of version 75.
 let ctx = emulatorScreen.getContext("2d",
                                     {
                                         alpha: false,

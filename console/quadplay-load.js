@@ -636,35 +636,42 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
             for (let y = 0; y < rows; ++y) {
                 const u = json.transpose ? y : x, v = json.transpose ? x : y;
                 
-                // Check for alpha channel
+                // Check each sprite for alpha channel
                 let hasAlpha = false;
+                let hasFractionalAlpha = false;
                 outerloop:
                 for (let j = 0; j < spritesheet.sprite_size.y; ++j) {
                     let index = (y * (spritesheet.sprite_size.y + spritesheet._gutter) + j) * data.width + x * (spritesheet.sprite_size.x + spritesheet._gutter);
                     for (let i = 0; i < spritesheet.sprite_size.x; ++i, ++index) {
-                        if (data[index] >>> 24 < 0xff) {
+                        const alpha255 = data[index] >>> 24;
+                        if (alpha255 < 0xff) {
                             hasAlpha = true;
-                            break outerloop;
+
+                            if (alpha255 !== 0) {
+                                hasFractionalAlpha = true;
+                                break outerloop;
+                            }
                         }
                     }
                 }
 
                 // Create the actual sprite
                 const sprite = {
-                    _type: 'sprite',
-                    _tileX: u,
-                    _tileY: v,
-                    _boundingRadius: boundingRadius,
-                    _x: u * (spritesheet.sprite_size.x + spritesheet._gutter),
-                    _y: v * (spritesheet.sprite_size.y + spritesheet._gutter),
-                    _hasAlpha: hasAlpha,
-                    spritesheet: spritesheet,
-                    tile_index: Object.freeze({x:u, y:v}),
-                    id:++lastSpriteID,
-                    size: spritesheet.sprite_size,
-                    scale: PP,
-                    pivot: sspivot,
-                    frames: sheetDefaultDuration
+                    _type:             'sprite',
+                    _tileX:            u,
+                    _tileY:            v,
+                    _boundingRadius:   boundingRadius,
+                    _x:                u * (spritesheet.sprite_size.x + spritesheet._gutter),
+                    _y:                v * (spritesheet.sprite_size.y + spritesheet._gutter),
+                    _hasAlpha:         hasAlpha,
+                    _requiresBlending: hasFractionalAlpha,
+                    spritesheet:       spritesheet,
+                    tile_index:        Object.freeze({x:u, y:v}),
+                    id:                ++lastSpriteID,
+                    size:              spritesheet.sprite_size,
+                    scale:             PP,
+                    pivot:             sspivot,
+                    frames:            sheetDefaultDuration
                 };
 
                 // Construct the flipped versions

@@ -1031,6 +1031,14 @@ function onTouchStartOrMove(event) {
     }
 
     onTouchesChanged(event);
+
+    if ((event.target === emulatorScreen) || (event.target.className === 'emulatorButton')) {
+        // Prevent default browser handling on virtual controller buttons
+        event.preventDefault();
+        event.stopPropagation();
+        event.cancelBubble = true;
+    }
+
     return false;
 }
 
@@ -1132,7 +1140,7 @@ const fakeMouseEvent = {
     changedTouches: [{identifier:-1, clientX: 0, clientY:0}],
     realEvent: null,
     preventDefault: function() { this.realEvent.preventDefault(); },
-    stopPropagation: function() { this.realEvent.stopPropagation(); },
+    stopPropagation: function() { this.realEvent.stopPropagation(); this.realEvent.cancelBubble = true; },
 };
 
 function onMouseDownOrMove(event) {
@@ -1143,7 +1151,7 @@ function onMouseDownOrMove(event) {
         fakeMouseEvent.changedTouches[0].clientY = event.clientY;
         fakeMouseEvent.realEvent = event;
         fakeMouseEvent.target = event.target;
-        onTouchStartOrMove(fakeMouseEvent);
+        return onTouchStartOrMove(fakeMouseEvent);
     }
 }
 
@@ -1155,14 +1163,18 @@ function onMouseUpOrMove(event) {
     fakeMouseEvent.changedTouches[0].clientY = event.clientY;
     fakeMouseEvent.realEvent = event;
     fakeMouseEvent.target = event.target;
-    onTouchEndOrCancel(fakeMouseEvent);
+    return onTouchEndOrCancel(fakeMouseEvent);
 }
 
-
-document.addEventListener('mousedown',   onMouseDownOrMove);
-document.addEventListener('mousemove',   onMouseDownOrMove);
-document.addEventListener('mouseup',     onMouseUpOrMove);
-document.addEventListener('touchstart',  onTouchStartOrMove);
-document.addEventListener('touchmove',   onTouchStartOrMove);
-document.addEventListener('touchend',    onTouchEndOrCancel);
-document.addEventListener('touchcancel', onTouchEndOrCancel);
+{
+    // Prevent hitches for touch event handling on Android Chrome
+    // https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#Improving_scrolling_performance_with_passive_listeners
+    const options = {passive: false, capture: true};
+    document.addEventListener('mousedown',   onMouseDownOrMove, options);
+    document.addEventListener('mousemove',   onMouseDownOrMove, options);
+    document.addEventListener('mouseup',     onMouseUpOrMove, options);
+    document.addEventListener('touchstart',  onTouchStartOrMove, options);
+    document.addEventListener('touchmove',   onTouchStartOrMove, options);
+    document.addEventListener('touchend',    onTouchEndOrCancel, options);
+    document.addEventListener('touchcancel', onTouchEndOrCancel, options);
+}

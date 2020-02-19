@@ -1,5 +1,12 @@
 /* By Morgan McGuire @CasualEffects http://casual-effects.com GPL 3.0 License*/
 
+/* Remove mobile pinch-to-zoom and input delays (should be redundant with
+   the viewport device-width meta property).
+   https://developers.google.com/web/updates/2013/12/300ms-tap-delay-gone-away */
+html {
+    touch-action: manipulation;
+}
+ 
 @font-face {
     font-family: "Boot";
     src: url("PxPlus_AmstradPC1512-2y.ttf");

@@ -216,7 +216,7 @@
            dummy object and hide it behind the screen. It can't be a textbox because those
            pop up keyboards on mobile and accent options when holding a key.-->
       <center><input type="button" id="emulatorKeyboardInput" style="z-index:-10;position:fixed;width:10px;margin:auto;top:-30px"></center>
-      <div id="screenBorder">
+      <div id="screenBorder" class="screenBorder">
         <canvas id="screen" width=384 height=224></canvas>
         <!-- Shows file loading progress during boot -->
         <div id="bootScreen"></div>
@@ -384,9 +384,9 @@
   <!-- quadplay implementation -->
   <script src="os/dependencies.py" charset="utf-8" type="text/javascript"></script>
   <script src="pyxlscript-compiler.js" charset="utf-8"></script>
-  <script src="quadplay-host.js" charset="utf-8"> </script>
-  <script src="quadplay-font.js" charset="utf-8"> </script>
-  <script src="quadplay-load.js" charset="utf-8"> </script>
-  <script src="quadplay-profiler.js" charset="utf-8"> </script>
-  <script src="quadplay-ide.js" charset="utf-8"> </script>
+  <script src="quadplay-host.js" charset="utf-8"></script>
+  <script src="quadplay-font.js" charset="utf-8"></script>
+  <script src="quadplay-load.js" charset="utf-8"></script>
+  <script src="quadplay-profiler.js" charset="utf-8"></script>
+  <script src="quadplay-ide.js" charset="utf-8"></script>
 </html>
