@@ -2406,6 +2406,24 @@ function reloadRuntime(oncomplete) {
             }
         };
 
+        const angleGetter = {
+            enumerable: true,
+            get: function () {
+                let a = (this._angle * QRuntime._scaleY + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+                if (Math.abs(a + Math.PI) < 1e-10) { a = Math.PI; }
+                return a;
+            }
+        };
+
+        const dangleGetter = {
+            enumerable: true,
+            get: function () {
+                let a = (this._dangle * QRuntime._scaleY + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+                if (Math.abs(a + Math.PI) < 1e-10) { a = Math.PI; }
+                return a;
+            }
+        };
+        
         QRuntime.touch = {
             _x: 0, _y: 0, _dx: 0, _dy: 0,
             screen_x: 0,
@@ -2472,7 +2490,7 @@ function reloadRuntime(oncomplete) {
             const pad = {
                 _x: 0, _dx: 0, _xx: 0,
                 _y: 0, _dy: 0, _yy: 0, 
-                angle:0, dangle:0,
+                _angle:0, _dangle:0,
                 a:0, b:0, c:0, d:0, _p:0, q:0,
                 aa:0, bb:0, cc:0, dd:0, _pp:0, qq:0,
                 pressed_a:0, pressed_b:0, pressed_c:0, pressed_d:0, _pressed_p:0, pressed_q:0,
@@ -2492,6 +2510,8 @@ function reloadRuntime(oncomplete) {
             Object.defineProperty(pad, 'yy', padYYGetter);
             Object.defineProperty(pad, 'xy', xyGetter);
             Object.defineProperty(pad, 'dxy', dxyGetter);
+            Object.defineProperty(pad, 'angle', angleGetter);
+            Object.defineProperty(pad, 'dangle', dangleGetter);
             QRuntime.gamepad_array[p] = Object.seal(pad);
         }
         QRuntime.joy = QRuntime.gamepad_array[0];

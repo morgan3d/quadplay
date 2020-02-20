@@ -1276,6 +1276,12 @@ function _parse(source, i) {
             case 'nan': return {result: NaN, next: end};
             case 'π': return {result: Math.pi, next: end};
             case '-π': return {result: -Math.pi, next: end};
+            case '¼π': return {result: Math.pi/4, next: end};
+            case '-¼π': return {result: -Math.pi/4, next: end};
+            case '½π': return {result: Math.pi/4, next: end};
+            case '-½π': return {result: -Math.pi/4, next: end};
+            case '¾π': return {result: Math.pi*3/4, next: end};
+            case '-¾π': return {result: -Math.pi*3/4, next: end};
             case '¼': return {result: 1/4, next: end};
             case '½': return {result: 1/2, next: end};
             case '¾': return {result: 3/4, next: end};

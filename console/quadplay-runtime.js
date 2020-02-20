@@ -6125,8 +6125,20 @@ function _unparse(x, alreadySeen) {
             return '-∞';
         } else if (x === Math.PI) {
             return 'π';
+        } else if (x === Math.PI / 2) {
+            return '½π';
+        } else if (x === Math.PI / 4) {
+            return '¼π';
+        } else if (x === Math.PI * 3 / 4) {
+            return '¾π';
         } else if (x === -Math.PI) {
             return '-π';
+        } else if (x === -Math.PI / 2) {
+            return '-½π';
+        } else if (x === -Math.PI / 4) {
+            return '-¼π';
+        } else if (x === -Math.PI * 3 / 4) {
+            return '-¾π';
         } else if (x === NaN) {
             return 'nan';
         } else {

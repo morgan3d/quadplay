@@ -929,16 +929,16 @@ function updateInput() {
             }
         }
 
-        if ((pad.y != 0) || (pad.x != 0)) {
-            pad.angle = Math.atan2(pad.y, pad.x);
+        let oldAngle = pad._angle;
+        if ((pad._y !== 0) || (pad._x !== 0)) {
+            pad._angle = Math.atan2(-pad._y, pad._x);
         }
 
-        if ((pad.y + pad.dy == 0 && pad.x + pad.dx == 0) || (pad.y == 0 && pad.x == 0)) {
-            pad.dangle = 0;
+        if ((pad._y === pad._dy && pad._x === pad._dx) || (pad._y === 0 && pad._x === 0)) {
+            pad._dangle = 0;
         } else {
-            const newAngle = Math.atan2(pad.y + pad.dy, pad.x + pad.dx);
             // JavaScript operator % is a floating-point operation
-            pad.dangle = ((3 * Math.PI + pad.angle - newAngle) % (2 * Math.PI)) - Math.PI;
+            pad._dangle = ((3 * Math.PI + pad._angle - oldAngle) % (2 * Math.PI)) - Math.PI;
         }
     }
     

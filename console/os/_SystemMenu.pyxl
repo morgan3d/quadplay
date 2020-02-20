@@ -3,8 +3,8 @@ _SystemMenu
 
 const windowBackgroundColor = #135
 const windowBorderColor     = #fff
-const text_color             = #fff
-const text_shadow_color       = #0006
+const text_color            = #fff
+const text_shadow_color     = #0006
 const promptColor           = #4DF
 const selectedColor         = #f
 const unselectedColor       = #b
@@ -98,11 +98,9 @@ frame
 if mode_frames > fadeInFrames + slideInFrames + 2:
    for control in gamepad_array:
       if control.qq or control._pp:
-         // Do NOT use "bb", which maps to enter on the keyboard
-         // and may make players think they are executing a command
          play_audio_clip(_cancelUISound)
          close(nil)
-      else if control.aa:
+      else if control.aa or control.bb:
          play_audio_clip(_acceptUISound)
          choose()
       else if control.yy:

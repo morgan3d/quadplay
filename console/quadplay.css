@@ -690,6 +690,8 @@ body.EmulatorUI .virtualController {
     white-space: pre-line;
     font-size: 10px;
     transform-origin: top left;
+    font-smooth: never;
+    -webkit-font-smoothing : none;
 }
 
 canvas#screen {
