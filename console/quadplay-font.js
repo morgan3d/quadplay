@@ -17,20 +17,30 @@
 // bottom. So, beware that there are potentially differences that you
 // cannot see in the source between similar-looking strings!
 //
+// The final row is short because it contains the four-wide characters
+//
 // Map character to canonical character.
 const fontMap = {};
 const fontSubscriptChars = '₀₁₂₃₄₅₆₇₈₉₊₋₍₎ₐᵦᵢⱼₓₖᵤₙ';
-const fontChars = `ABCDEFGHIJKLMNOPQRSTUVWXYZ↑↓;:,.
+const fontChars =
+`ABCDEFGHIJKLMNOPQRSTUVWXYZ↑↓;:,.
 abcdefghijklmnopqrstuvwxyz←→<>◀▶
 0123456789+-()~!@#$%^&*_=?¥€£¬∩∪
 ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁽⁾ᵃᵝⁱʲˣᵏᵘⁿ≟≠≤≥≈{}[]★
-ᵈᵉʰᵐᵒʳˢᵗⓧⓨⓄ⍍▣⧉☰ⓕ␣⏎  ▼⊖∈⊕∞°¼½¾⅓⅔⅕
+ᵈᵉʰᵐᵒʳˢᵗⓌⒶⓈⒹⒾⒿⓀⓁ⍐⍇⍗⍈ⓛⓡ▼∈∞°¼½¾⅓⅔⅕
 «»ΓΔмнкΘ¿¡Λ⊢∙Ξ×ΠİΣ♆ℵΦ©ΨΩ∅ŞĞ\\/|\`'
 αβγδεζηθικλμνξ§πρστυϕχψωςşğ⌊⌋⌈⌉"
 ÆÀÁÂÃÄÅÇÈÉÊËÌÍÎÏØÒÓÔÕÖŒÑẞÙÚÛÜБ✓Д
 æàáâãäåçèéêëìíîïøòóôõöœñßùúûüбгд
-ЖЗИЙЛПЦЧШЩЭЮЯЪЫЬ±⊗↖↗ⓐⓑⓒⓓⓟⓠ○●◻◼△▲
-жзийлпцчшщэюяъыь∫❖↙↘…‖⍐⍇⍗⍈ ♠♥♣♦✜`;
+ЖЗИЙЛПЦЧШЩЭЮЯЪЫЬ±⊗↖↗␣⏎    ○●◻◼△▲
+жзийлпцчшщэюяъыь∫❖↙↘…‖     ♠♥♣♦✜
+ⓐⓑⓒⓓⓕⓖⓟⓠⓥⓧⓨ⬙⬗⬖⬘Ⓞ⍍▣⧉☰⒧⒭①②③④⑦⑧⑨⓪⊖⊕`;
+//SPC ENT RET SEL STR SHR OPT
+
+const FONT_COLS = 32;
+// +1 for the newlines in fontChars, except on the last row
+const FONT_ROWS = Math.floor((fontChars.length + 1) / (FONT_COLS + 1));
+
 {   
     // Build the font map. 
     for (let i = 0, x = 0, y = 0; i < fontChars.length; ++i, ++x) {
@@ -95,12 +105,6 @@ abcdefghijklmnopqrstuvwxyz←→<>◀▶
                      '▶▷⊳ᐅ▹▻',
                      '◀◁⊲ᐊ◃◅⨞',
                      '‖∥𝄁║Ⅱǁ',
-                     'ⓐ🅐Ⓐ',
-                     'ⓑ🅑Ⓑ',
-                     'ⓒ🅒Ⓒ',
-                     'ⓓ🅓Ⓓ',
-                     'ⓟ🅟Ⓟ',
-                     'ⓠ🅠Ⓠ',
                      '⍐⍓⬆️',
                      '⍇⬅️',
                      '⍗⍌⬇️',
@@ -143,11 +147,11 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
 
     // Compute tightest vertical bounding box across all characters
     let tightY1 = Infinity, tightY2 = -Infinity;
-
+          
     // Compute tight bounds on letters so that we can repack.
     let _charWidth = 0;
-    for (let charY = 0; charY < 11; ++charY) {
-        for (let charX = 0; charX < 32; ++charX) {
+    for (let charY = 0; charY < FONT_ROWS; ++charY) {
+        for (let charX = 0; charX < FONT_COLS; ++charX) {
             const yTile = charSize.y * charY;
             
             // fontChars is actually 33 wide because it has newlines in it
@@ -217,20 +221,19 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
     const borderMask       = array2DUint8(_charWidth, font._charHeight);
     const shadowMask       = array2DUint8(_charWidth, font._charHeight);
     const shadowBorderMask = array2DUint8(_charWidth, font._charHeight);
-    font._data = array2DUint8(_charWidth * 32, font._charHeight * 11);
+    font._data = array2DUint8(_charWidth * FONT_COLS, font._charHeight * FONT_ROWS);
     font._bounds = {};
 
-    for (let charY = 0; charY < 11; ++charY) {
-        for (let charX = 0; charX < 32; ++charX) {
+    for (let charY = 0; charY < FONT_ROWS; ++charY) {
+        for (let charX = 0; charX < FONT_COLS; ++charX) {
             // Reset
             array2DClear(colorMask, 0);
             array2DClear(borderMask, 0);
             array2DClear(shadowMask, 0);
             array2DClear(shadowBorderMask, 0);
             
-            // fontChars is 33 elements wide because it has 32
-            // characters plus a newline in each row
-            const chr = fontChars[charX + charY * 33];
+            // +1 for the newline on each row
+            const chr = fontChars[charX + charY * (FONT_COLS + 1)];
             console.assert(chr !== undefined, 'Undefined character at (' + charX + ', ' + charY + ')');
             
             if (chr !== ' ') {

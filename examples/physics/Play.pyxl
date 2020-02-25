@@ -13,10 +13,10 @@ let pendulum = make_entity({shape: "rect", size: xy(55, 10), pos: xy(220, 220), 
 let box      = make_entity({shape: "rect", size: xy(40, 15), pos: xy(70, 50)})
 
 // Car
-let carGroup = make_collision_group()
-let wheel1   = physics_add_entity(physics, make_entity({shape: "disk", size: xy(12, 12), pos: xy(100, 20), density: 2, friction: 90%, stiction_factor: 50%, restitution: 0%, collision_group: carGroup}))
-let wheel2   = physics_add_entity(physics, make_entity({shape: "disk", size: xy(12, 12), pos: xy(120, 20), density: 2, friction: 10%, stiction_factor: 10%, restitution: 0%, collision_group: carGroup}))
-let carFrame = physics_add_entity(physics, make_entity({shape: "rect", size: xy(34, 6), pos: xy(110, 22), collision_group: carGroup}))
+let carGroup = make_contact_group()
+let wheel1   = physics_add_entity(physics, make_entity({shape: "disk", size: xy(12, 12), pos: xy(100, 20), density: 2, friction: 90%, stiction_factor: 50%, restitution: 0%, contact_group: carGroup}))
+let wheel2   = physics_add_entity(physics, make_entity({shape: "disk", size: xy(12, 12), pos: xy(120, 20), density: 2, friction: 10%, stiction_factor: 10%, restitution: 0%, contact_group: carGroup}))
+let carFrame = physics_add_entity(physics, make_entity({shape: "rect", size: xy(34, 6), pos: xy(110, 22), contact_group: carGroup}))
 physics_attach(physics, "pin", {entityA: carFrame, pointA: xy(-carFrame.size.x/3.5, -1), entityB: wheel1})
 physics_attach(physics, "pin", {entityA: carFrame, pointA: xy(carFrame.size.x/3.5, -1), entityB: wheel2})
 
@@ -60,22 +60,22 @@ let entityArray = [
 // Entities that do not move
 let worldArray = [
    // Walls
-   make_entity({shape: "rect", size: xy(383,  20), pos: xy(192,   -5), density: infinity, collision_category_mask: wallCategory}),
-   make_entity({shape: "rect", size: xy(20, 1224), pos: xy( -5,  612), density: infinity, collision_category_mask: wallCategory}),
-   make_entity({shape: "rect", size: xy(20, 1224), pos: xy(388,  612), density: infinity, collision_category_mask: wallCategory}),
-   make_entity({shape: "rect", size: xy(383,  20), pos: xy(192, 1214), density: infinity, collision_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(383,  20), pos: xy(192,   -5), density: infinity, contact_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(20, 1224), pos: xy( -5,  612), density: infinity, contact_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(20, 1224), pos: xy(388,  612), density: infinity, contact_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(383,  20), pos: xy(192, 1214), density: infinity, contact_category_mask: wallCategory}),
 
    // Car ramp
    make_entity({shape: "rect", size: xy(32, 15), pos: xy(250, 5), density: infinity, angle: 26°}),
    make_entity({shape: "rect", size: xy(32, 15), pos: xy(273, 5), density: infinity, angle: -26°}),
 
    // Ball ladder
-   make_entity({shape: "rect", size: xy(50,    5), pos: xy(360, 250),  density: infinity, angle: 25°, collision_category_mask: wallCategory}),
-   make_entity({shape: "rect", size: xy(200,   5), pos: xy(260, 255),  density: infinity, angle: -25°, collision_category_mask: wallCategory}),
-   make_entity({shape: "rect", size: xy(50,    5), pos: xy(360, 195),  density: infinity, angle: 25°, collision_category_mask: wallCategory}),
-   make_entity({shape: "rect", size: xy(70,    5), pos: xy(320, 170),  density: infinity, angle: -25°, collision_category_mask: wallCategory}),
-   make_entity({shape: "rect", size: xy(6,   140), pos: xy(288, 177),  density: infinity, collision_category_mask: wallCategory}),
-   make_entity({shape: "rect", size: xy(100,   6), pos: xy(335, 110),  density: infinity, collision_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(50,    5), pos: xy(360, 250),  density: infinity, angle: 25°, contact_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(200,   5), pos: xy(260, 255),  density: infinity, angle: -25°, contact_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(50,    5), pos: xy(360, 195),  density: infinity, angle: 25°, contact_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(70,    5), pos: xy(320, 170),  density: infinity, angle: -25°, contact_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(6,   140), pos: xy(288, 177),  density: infinity, contact_category_mask: wallCategory}),
+   make_entity({shape: "rect", size: xy(100,   6), pos: xy(335, 110),  density: infinity, contact_category_mask: wallCategory}),
 
    // Landing platforms
    make_entity({shape: "rect", size: xy(40, 5), pos: xy(45, 100), friction: 1, stiction_factor: 10, density: infinity}),
@@ -89,7 +89,7 @@ let worldArray = [
 for i < 80:
    push(entityArray, make_entity({shape: "disk", size: xy(7, 7), pos: xy(random(290, 370), 250 + random(0, 600)),
                                  friction: 0, stiction_factor: 0, restitution: 50%, drag: 4%,
-                                 collision_category_mask: ballCategory}))
+                                 contact_category_mask: ballCategory}))
 
 // Add the created entities to the world
 for entity in entityArray: physics_add_entity(physics, entity)
@@ -111,11 +111,11 @@ local:
    let prev = platform
    const width = 3
    const length = 14
-   const ropeGroup = make_collision_group()
+   const ropeGroup = make_contact_group()
    for i < 7:
       const curr = make_entity({shape: "rect", size: xy(width, length), density: 0.5, drag: 0.08,
                                pos: platform.pos - xy(⅓ platform.size.x, ½ platform.size.y + length * (i + ½)),
-                               collision_group: ropeGroup})
+                               contact_group: ropeGroup})
       push(entityArray, curr)
       physics_add_entity(physics, curr)
       physics_attach(physics, "pin", {

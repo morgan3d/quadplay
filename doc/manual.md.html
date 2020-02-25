@@ -391,6 +391,7 @@ graphics and gameplay:
 - [Snake]("https://en.wikipedia.org/wiki/Snake_(video_game_genre)")
 - [Minit](https://store.steampowered.com/app/609490/Minit/)
 - [Chasm](https://bitkidinc.itch.io/chasm)
+- [Eliminator Boat Duel](https://www.youtube.com/watch?v=NM7ZNX0GUBI)
 
 </div>
 
@@ -2450,10 +2451,10 @@ See also the Physics section for relevant functions.
 : Amount of energy preserved in a collision. Useful range is 0%-100%. The default is 10%.
   The net restitution applied between two entities is the geometric mean of their restitution values.
 
-`entity.collision_category_mask`
-: Collision categories for this object, as 32 bit flags.
-  Two objects can only collide if
-  `(A.collision_category_mask bitand B.collision_hit_mask) and (B.collision_category_mask bitand A.collision_hit_mask)`.
+`entity.contact_category_mask`
+: Contact (collision) categories for this object, as 32-bit flags.
+  Two objects can only contact if
+  `(A.contact_category_mask bitand B.contact_hit_mask) and (B.contact_category_mask bitand A.contact_hit_mask)`.
   Defaults to 1. Does not affect `overlaps()`.
 
 `entity.is_sensor`
@@ -2461,20 +2462,20 @@ See also the Physics section for relevant functions.
   as a result, like a ghost. Default is `false`. This is useful for detecting triggers such as a character
   walking through a doorway or touching acid via the physics engine without causing that to affect
   the object. Note that a sensor must have infinite density or be attached to another object or it will
-  fall out of the world by gravity. If you want to never register collisions, instead set `entity.collision_category_mask = 0`
+  fall out of the world by gravity. If you want to never register collisions, instead set `entity.contact_category_mask = 0`
   to prevent all collisions and preclude them being reported.
 
   Collision sensors have density, and it must be nonzero. Set their density
   to a small value, such as `epsilon`, to minimize the effect on the motion of other objects
   that they are attached to.
 
-`entity.collision_group`
+`entity.contact_group`
 : An integer index of a group of other entities that this one should not collide with, regardless
-  of the `collision_hit_mask` or `collision_category_mask`. Zero means no group at all. Defaults to 0.
+  of the `contact_hit_mask` or `contact_category_mask`. Zero means no group at all. Defaults to 0.
   Does not affect `overlaps()`.
 
-`entity.collision_hit_mask`
-: See `entity.collision_category_mask`. Defaults to `0xffffffff`. Does not affect `overlaps()`.
+`entity.contact_hit_mask`
+: See `entity.contact_category_mask`. Defaults to `0xffffffff`. Does not affect `overlaps()`.
 
 `entity.stiction_factor`
 : Multiplier applied to `entity.friction` in the static dry friction case
@@ -2645,8 +2646,8 @@ intersections.
   constraints. You do not need to call `entity_simulate()` if you are
   already using `physics_simulate()`.
 
-`make_collision_group()`
-: Creates a unique value for an `entity.collision_group`.
+`make_contact_group()`
+: Creates a unique value for an `entity.contact_group`.
 
 
 ### Intersections
@@ -2739,8 +2740,8 @@ them, and create a new attachment in the new position.  For example,
 when a character flips direction and a rope tied to their hand should
 now be on the other side.
 
-Changing the `collision_group`, `collision_hit_mask`, or
-`collision_category_mask` on the bodies in an attachment with `collide = false`
+Changing the `contact_group`, `contact_hit_mask`, or
+`contact_category_mask` on the bodies in an attachment with `collide = false`
 after the attachment been created may cause the attached bodies
 to start colliding with each other.
 
@@ -2757,9 +2758,9 @@ to start colliding with each other.
     will fail to properly waken when the object supporting them is removed and can remain
     floating in the air.
 
-`physics_add_contact_callback(physics, callback, min_depth (= 0), max_depth (= ∞), collision_mask (= 0xffffffff), sensors (= "exclude"))`
+`physics_add_contact_callback(physics, callback, min_depth (= 0), max_depth (= ∞), contact_mask (= 0xffffffff), sensors (= "exclude"))`
 : Adds a callback that processes collisions (new contacts) at the end of `physics_simulate()`.
-  If either entity in the collision has a `entity.category_mask` that intersects the `collision_mask`
+  If either entity in the collision has a `entity.contact_category_mask` that intersects the `contact_mask`
   and the collision has `depth &gt;= min_depth`, then invoke
   `callback({entityA, entityB, depth, age, point0, point1, normal})`.
   `point1` may be `nil`. `normal` is in draw coordinates and
@@ -2783,8 +2784,8 @@ to start colliding with each other.
   in draw coordinates.
 
   The region, mask, normal, and sensors setting are used to filter the contacts
-  returned. A contact must have nonzero `collision_mask bitand
-  otherEntity.collision_category_mask` for the _other_ entity
+  returned. A contact must have nonzero `contact_mask bitand
+  otherEntity.contact_category_mask` for the _other_ entity
   involved. The average position of point0 and point1 must also lie
   within the `child_region`, which is in the entity's reference frame.
   `child_region` is either `nil` (all contacts) or an argument suitable
@@ -2838,7 +2839,7 @@ to start colliding with each other.
   If `collide` is false, then the entities cannot collide with each other while
   the attachment is maintained. The default for `collide` is `true` for spring, rope, and rod
   attachments and `false` for all other types.  You can also disable collisions by putting
-  the objects in the same `entity.collision_group`, which is more efficient.
+  the objects in the same `entity.contact_group`, which is more efficient.
 
   Attached entities cannot sleep.
 
@@ -4907,7 +4908,7 @@ ASCII    | Unicode | Meaning
 `and`    |         | logical AND
 `bitxor` |`⊕`      | bitwise XOR
          |`⊕=`     | mutating bitwise XOR
-`~`      |         | bitwise NOT
+`bitnot` |`~`      | bitwise NOT
 `~=`     |         | mutating bitwise NOT
 `<<`     |`◀`      | bit shift left
 `<<=`    |`◀=`     | mutating bit shift left
@@ -6058,13 +6059,21 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-2020 Feb TBD: Beta update 31
+2020 Feb 24: Beta update 31
 
 - Removed context menu from emulator to make touch screens more responsive
 - Fixed virtual controller responsiveness on Android Chrome
 - Sharpened boot screen text on Safari
 - Fixed `gamepad_array[i].angle` to follow the current Y-axis scaling
   and match `draw_sprite()` angle
+- Changed the internal font image layout and added explicit keycaps 
+  characters to all fonts for all buttons used in controller and 
+  keyboard mappings to distinguish them from regular letters
+- Added `bitnot` text operator as a synonym for `~`
+- `collision_` --> `contact_` in the API to reduce unique terms
+- Switched all GUI tools to dark mode styling
+- quantize tool now allows dropping the image anywhere on the page
+- Improved fontgen button prompt draft characters
 
 
 2020 Feb 17: Beta update 30
@@ -6281,8 +6290,8 @@ Changes for both the specification and implementation in each release.
 - Fixed audio on Safari desktop browser
 - Removed `entity.acc` and `entity.twist` properties
 - New properties for physics: `entity.friction`, `entity.stiction_factor`,
-  `entity.restitution`, `entity.drag`, `entity.collision_category_mask`, `entity.collision_group`,
-  and `entity.collision_hit_mask`
+  `entity.restitution`, `entity.drag`, `entity.contact_category_mask`, `entity.contact_group`,
+  and `entity.contact_hit_mask`
 - Added `entity_apply_force()` and `entity_apply_impulse()`
 - Added `magnitude_squared()` function
 

@@ -1750,9 +1750,9 @@ function make_entity(e, childTable) {
 
     r.physics_sleep_state = r.physics_sleep_state || 'awake';
 
-    r.collision_group = r.collision_group || 0;
-    r.collision_category_mask = (r.collision_category_mask === undefined) ? 1 : r.collision_category_mask;
-    r.collision_hit_mask = (r.collision_hit_mask === undefined) ? 0xffffffff : r.collision_hit_mask;
+    r.contact_group = r.contact_group || 0;
+    r.contact_category_mask = (r.contact_category_mask === undefined) ? 1 : r.contact_category_mask;
+    r.contact_hit_mask = (r.contact_hit_mask === undefined) ? 0xffffffff : r.contact_hit_mask;
     r.is_sensor = (r.is_sensor === undefined) ? false : r.is_sensor;
 
     if (r.density === undefined) { r.density = 1; }
@@ -2034,7 +2034,7 @@ function entity_move(entity, pos, angle) {
 //
 // Physics functions
 
-function make_collision_group() {
+function make_contact_group() {
     // Matter.js uses negative numbers for non-colliding
     // groups, so we negate them everywhere to make it more
     // intuitive for the user.
@@ -2251,7 +2251,7 @@ function physics_add_entity(physics, entity) {
         throw new Error('Unsupported entity shape for physics_add_entity(): "' + entity.shape + '"');
     }
 
-    entity._body.collisionFilter.group = -entity.collision_group;
+    entity._body.collisionFilter.group = -entity.contact_group;
     entity._body.entity = entity;
     entity._body.slop = 0.075; // 0.05 is the default. Increase to make large object stacks more stable.
     entity._attachmentArray = [];
@@ -2395,9 +2395,9 @@ function _bodyUpdateFromEntity(body) {
         }
     }
 
-    body.collisionFilter.group = -entity.collision_group;
-    body.collisionFilter.mask  = entity.collision_hit_mask;
-    body.collisionFilter.category = entity.collision_category_mask;
+    body.collisionFilter.group = -entity.contact_group;
+    body.collisionFilter.mask  = entity.contact_hit_mask;
+    body.collisionFilter.category = entity.contact_category_mask;
          
     body.force.x = entity.force.x * _PHYSICS_MASS_SCALE;
     body.force.y = entity.force.y * _PHYSICS_MASS_SCALE;
@@ -2508,8 +2508,8 @@ function physics_simulate(physics, stepFrames) {
     for (const event of physics._contactCallbackArray.values()) {
         for (const contact of physics._newContactArray.values()) {
 
-            if ((((contact.entityA.collision_category_mask & event.collision_mask) |
-                  (contact.entityB.collision_category_mask & event.collision_mask)) !== 0) &&
+            if ((((contact.entityA.contact_category_mask & event.contact_mask) |
+                  (contact.entityB.contact_category_mask & event.contact_mask)) !== 0) &&
                 (contact.depth >= event.min_depth) && (contact.depth <= event.max_depth) &&
                 ((event.sensors === 'include') ||
                  ((event.sensors === 'only') && (contact.entityA.is_sensor || contact.entityB.is_sensor)) ||
@@ -2534,14 +2534,14 @@ function physics_simulate(physics, stepFrames) {
 }
 
 
-function physics_add_contact_callback(physics, callback, min_depth, max_depth, collision_mask, sensors) {
-    if (collision_mask === 0) { throw new Error('A contact callback with collision_mask = 0 will never run.'); }
+function physics_add_contact_callback(physics, callback, min_depth, max_depth, contact_mask, sensors) {
+    if (contact_mask === 0) { throw new Error('A contact callback with contact_mask = 0 will never run.'); }
 
     physics._contactCallbackArray.push({
         callback:      callback,
         min_depth:      min_depth || 0,
         max_depth:      (max_depth !== undefined) ? max_depth : Infinity,
-        collision_mask: (collision_mask !== undefined) ? collision_mask : 0xffffffff,
+        contact_mask: (contact_mask !== undefined) ? contact_mask : 0xffffffff,
         sensors:        sensors || 'exclude'
     });
 }
@@ -2594,7 +2594,7 @@ function _physics_entity_contacts(physics, entity, region, normal, mask, sensors
         const other = isA ? contact.entityB : contact.entityA; 
 
         // Are we in the right category?
-        if ((other.collision_category_mask & mask) === 0) {
+        if ((other.contact_category_mask & mask) === 0) {
             // console.log("Mask rejection");
             continue;
         }

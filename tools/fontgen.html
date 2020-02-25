@@ -8,8 +8,8 @@
   @font-face { font-family: quadplay; src: url(../doc/Audiowide-Regular.ttf) }
 
   body {
-    background: #ddd;
-    color: #666;
+    background: #302b2b;
+    color: #eee;
     font-family: Arial;
     padding: 25px;
     text-align: justify;
@@ -17,7 +17,7 @@
   }
   
   input {
-    width:240px
+     width:240px
   }
 
   table#font {
@@ -29,6 +29,7 @@
      font-smooth: never;
      -webkit-font-smoothing: none;
   }
+
   table#font td {
      border: none;
      margin: 0;
@@ -38,10 +39,10 @@
   }
 
   h1 {
-  font-family: quadplay;
-  text-align: center;
-  margin-bottom: 30px;
-  color: #000;
+     font-family: quadplay;
+     text-align: center;
+     margin-bottom: 30px;
+     color: #fff;
   }
 </style>
 <body>
@@ -65,18 +66,85 @@
   <script>
 let s = fontChars;
 
+function big(c) {
+    return '<span style="font-size:138%;position:relative;top:0.075em">' + c + '</span>';
+}
+
+function skey(c) {
+    return '<span style="display:inline-block;text-align:center;background:#fff;color:#000;width:1em;font-size:70%;font-weight:bold">' + c + '</span>';
+}
+
+function button(c) {
+    return '<span style="background:#fff;color:#000;padding-left:0.25em;padding-right:0.25em;border-radius:0.7em">' + c + '</span>';
+}
+
+function sbutton(c) {
+    return '<span style="background:#fff;color:#000;font-size:75%;font-weight:bold;padding-left:0.25em;padding-right:0.25em;border-radius:0.7em">' + c + '</span>';
+}
+
+const substitution = {
+    'Ⓦ':big('🆆'),
+    'Ⓐ':big('🅰'),
+    'Ⓢ':big('🆂'),
+    'Ⓓ':big('🅳'),
+    'Ⓘ':big('🅸'),
+    'Ⓙ':big('🅹'),
+    'Ⓚ':big('🅺'),
+    'Ⓛ':big('🅻'),
+    '⒧':'🅛',
+    '⒭':'🅡',
+    '①':big('➊'),
+    '②':big('➋'),
+    '③':big('➌'),
+    '④':big('➍'),
+    '⑦':big('➐'),
+    '⑧':big('➑'),
+    '⑨':big('➒'),
+    '⓪':'⓿',
+    '⬙':sbutton('/'),
+    '⬗':sbutton("'"),
+    '⬖':sbutton('.'),
+    '⬘':sbutton(';'),
+    'Ⓞ':sbutton('O'),
+    '⍍':sbutton('△'),
+    '▣':sbutton('◻'),
+    '⧉':sbutton('⧉'),
+    '☰':sbutton('☰'),
+    '⊖':sbutton('-'),
+    '⊕':sbutton('+'),
+    'ⓐ':button('a'),
+    'ⓑ':button('b'),
+    'ⓒ':button('c'),
+    'ⓓ':button('d'),
+    'ⓕ':button('f'),
+    'ⓖ':button('g'),
+    'ⓟ':button('p'),
+    'ⓠ':button('q'),
+    'ⓥ':button('v'),
+    'ⓧ':button('x'),
+    'ⓨ':button('y'),
+    'ⓛ':sbutton('sl'),
+    'ⓡ':sbutton('sr'),
+    '⍐':skey('↑'),
+    '⍇':skey('←'),
+    '⍗':skey('↓'),
+    '⍈':skey('→'),
+    '○':'<span style="font-size:130%">○</span>',
+    '●':'<span style="font-size:130%">●</span>'
+};    
+
 document.write('<table id="font">');
 while (s.length > 0) {
   // Vertical alignment to control baseline:
   document.write('<tr>');
-  for (let x = 0; x < 32; ++x) {
+  for (let x = 0; x < FONT_COLS; ++x) {
       // Print enclosed alphanumerics smaller
       if ((s.charCodeAt(0) >= 0x2460) && (s.charCodeAt(0) <= 0x24FF)) {
           document.write('<td style="font-size: 75%">');
       } else {
           document.write('<td>');
-      }                      
-      document.write(s[0] + '</td>');
+      }
+      document.write((substitution[s[0]] ? substitution[s[0]] : s[0]) + '</td>');
                       
       s = s.substring(1);
   }
@@ -93,8 +161,8 @@ function onChange() {
     const table = document.getElementById("font");
     table.style.fontFamily = n;
     table.style.fontSize = f + 'px';
-    table.style.width =  (w * 32) + 'px';
-    table.style.height = (h * 11) + 'px';
+    table.style.width =  (w * FONT_COLS) + 'px';
+    table.style.height = (h * FONT_ROWS) + 'px';
     table.style.lineHeight = h + 'px';
 }
 

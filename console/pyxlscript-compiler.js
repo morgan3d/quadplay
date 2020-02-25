@@ -903,7 +903,7 @@ function pyxlToJS(src, noYield, internalMode) {
         // compiler does not inject {} around a loop body: the
         // for-with statement, where it needs to output a single
         // expression to compile those as if they were FOR statements.
-        src = src.replace(/\*[\t ]*(xor|or|and|not|mod|bitxor|bitand|bitor|bitnot|bitshr|bitshl|for|with)(\b|\d|$)/g, ' $1$2');
+        src = src.replace(/\*[\t ]*(xor|or|and|not|mod|bitxor|bitand|bitor|bitnot|bitnot|bitshr|bitshl|for|with)(\b|\d|$)/g, ' $1$2');
 
         // Replace fractions
         src = src.replace(/[½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒]/g, function (match) { return fraction[match]; });

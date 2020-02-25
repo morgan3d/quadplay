@@ -8,28 +8,28 @@
   @font-face { font-family: quadplay; src: url("../doc/Audiowide-Regular.ttf") }
 
   h1 {
-    font-family:   quadplay;
-    text-align:    center;
-    margin-bottom: 30px;
-    color:         #000;
+     font-family:   quadplay;
+     text-align:    center;
+     margin-bottom: 30px;
+     color:         #fff;
   }
 
   body {
-    background: #ddd;
-    color: #666;
-    font-family: Arial;
-    padding: 25px;
-    text-align: justify;
-    line-height: 140%;
+     background: #302b2b;
+     color: #eee;
+     font-family: Arial;
+     padding: 25px;
+     text-align: justify;
+     line-height: 140%;
   }
 
   div.image {
-      position: relative;
-      background: #666;
-      border: 2px solid #000;
-      width: 516px;
-      height: 256px;
-      text-align: center
+     position: relative;
+     background: #666;
+     border: 2px solid #000;
+     width: 516px;
+     height: 256px;
+     text-align: center
   }
 
   img {
@@ -38,27 +38,27 @@
   }
 
   div#json, div#data {
-      font: monospace;
-      white-space: pre;
-      text-align: left;
-      margin-left:auto;
-      margin-right:auto;
+     font: monospace;
+     white-space: pre;
+     text-align: left;
+     margin-left:auto;
+     margin-right:auto;
   }
 
   div#data {
-    font-size: 80%;
-    column-count: 5;
+     font-size: 80%;
+     column-count: 5;
   }
 
   code {
-    font-size: 120%;
+     font-size: 120%;
   }
 
   span.letter {
-    display: inline-block;
-    font-family: serif;
-    min-width: 12px;
-    text-align: center;
+     display: inline-block;
+     font-family: serif;
+     min-width: 12px;
+     text-align: center;
   }
 </style>
 <script src="../console/quadplay-load.js"></script>
@@ -110,8 +110,8 @@
             sourceImage.onload = function () {
                 console.log("loaded " + file.name);
 
-                var tileWidth  = Math.round(sourceImage.width / 32);
-                var tileHeight = Math.round(sourceImage.height / 11);
+                var tileWidth  = Math.round(sourceImage.width / FONT_COLS);
+                var tileHeight = Math.round(sourceImage.height / FONT_ROWS);
 
                 var font = {};
                 var borderSize = parseInt(document.getElementById('extraPadding').value), shadowSize = 0;
@@ -162,7 +162,7 @@
                     // Highlight the largest
                     s += `<style>
 span.width${maxWidth} { background: #f99; color: #000; padding: 0 1px}
-span.height${maxHeight} { background: #ff4; padding: 0 1px}
+span.height${maxHeight} { background: #ff4; padding: 0 1px; color: #000}
 </style>
 `;
                     info.innerHTML = s;
@@ -186,7 +186,7 @@ span.height${maxHeight} { background: #ff4; padding: 0 1px}
                             baseline = Math.min(baseline, bounds.y2 - Math.floor(bounds.y2 / font._charHeight) * font._charHeight);
                         }
                     }
-                    console.assert(font._data.height / 11 === font._charHeight);
+                    console.assert(font._data.height / FONT_ROWS === font._charHeight);
                     
                     document.getElementById('pngfilename').innerHTML = filename + '-' + pxSize + '.png';
                     document.getElementById('jsonfilename').innerHTML = filename + '-' + pxSize + '.font.json';
@@ -237,7 +237,7 @@ span.height${maxHeight} { background: #ff4; padding: 0 1px}
                     json.innerHTML = `{
     "url":           "somefile.png",
     "license":       "by somebody",
-    "charSize":      {"x": ${destImageData.width / 32}, "y": ${destImageData.height / 11}},
+    "charSize":      {"x": ${destImageData.width / FONT_COLS}, "y": ${destImageData.height / FONT_ROWS}},
     "letterSpacing": {"x": ${font._spacing.x}, "y": ${font._spacing.y}},
     "baseline":      ${baseline}
 }

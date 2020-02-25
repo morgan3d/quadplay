@@ -4,26 +4,31 @@
 <link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../console/favicon-32x32.png">
 <link rel="shortcut icon" href="../console/favicon.ico">
-  <style>
-    @font-face { font-family: quadplay; src: url(../doc/Audiowide-Regular.ttf) }
+<style>
+  @font-face { font-family: quadplay; src: url(../doc/Audiowide-Regular.ttf) }
 
-    body {
-    background: #ddd;
-    color: #666;
-    font-family: Arial;
-    padding: 25px;
-    text-align: justify;
-    line-height: 140%;
-    }
+  body {
+     background: #302b2b;
+     color: #eee;
+     font-family: Arial;
+     padding: 25px;
+     text-align: justify;
+     line-height: 140%;
+  }
 
-    h1 {
-    font-family: quadplay;
-    text-align: center;
-    margin-bottom: 30px;
-    color: #000;
-    }
-  </style>
-  <script>
+  h1 {
+     font-family: quadplay;
+     text-align: center;
+     margin-bottom: 30px;
+     color: #fff;
+  }
+
+  a {
+     color: #e61b9d !important;
+     text-decoration: none;
+  }
+</style>
+<script>
     function onDrop(event) {
         // Prevent the browser from opening the file
         event.preventDefault();
@@ -185,11 +190,40 @@
     function onDragOver(event) { event.preventDefault(); }
   </script>
 </head>
-<body>
+<body ondrop="onDrop(event)" ondragover="onDragOver(event)">
   <h1>quantize✜</h1>
+
+  <center>
+    <table style="text-align: center; margin-top: 34px">
+      <tr>
+        <td>Input sRGBA8 Image</td>
+        <td></td>
+        <td>Output sRGBA4 Image</td>
+      </tr>
+      <tr valign="center">
+        <td>
+          <div id="source" style="position: relative; background: #666; border: 2px solid #000; width: 256px; min-height: 128px; text-align: center">
+            <span style="color: #fff; position: absolute;  top: 50%;  left: 50%;  transform: translate(-50%, -50%);">Drop image here</span>
+          </div>
+        </td>
+        <td>
+    <input type="checkbox" id="dither" checked><label for="dither">Dither</label>
+    <br/>
+    <br/>
+    <div style="font-size: 100px">➡</div>
+    <br/>
+    <br/>
+        </td>
+        <td>
+          <div id="dest" style="position: relative; background: #666; border: 2px solid #000; width: 256px; min-height: 128px; text-align: center">
+          </div>
+        </td>
+      </tr>
+    </table>
+  </center>
   <div style="margin: auto; max-width: 600px">
     <p>
-      Drop an image on the target below to quantize it to sRGBA4 PNG, which will match
+      Drop an image on this page to quantize it to sRGBA4 PNG, which will match
       quadplay's input requirements and compress better than sRGBA8.
     </p>
     <p>
@@ -201,30 +235,4 @@
       90%.
     </p>
   </div>
-
-  <center>
-    <input type="checkbox" id="dither" checked><label for="dither">Dither</label>
-
-    <table style="text-align: center; margin-top: 34px">
-      <tr>
-        <td>Input sRGBA8 Image</td>
-        <td></td>
-        <td>Output sRGBA4 Image</td>
-      </tr>
-      <tr valign="center">
-        <td>
-          <div id="source" ondrop="onDrop(event)" ondragover="onDragOver(event)" style="position: relative; background: #666; border: 2px solid #000; width: 256px; min-height: 128px; text-align: center">
-            <span style="color: #fff; position: absolute;  top: 50%;  left: 50%;  transform: translate(-50%, -50%);">Drop image here</span>
-          </div>
-        </td>
-        <td style="font-size: 100px">
-          ➡
-        </td>
-        <td>
-          <div id="dest" style="position: relative; background: #666; border: 2px solid #000; width: 256px; min-height: 128px; text-align: center">
-          </div>
-        </td>
-      </tr>
-    </table>
-  </center>
 </body>

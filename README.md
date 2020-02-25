@@ -1,7 +1,7 @@
 The **quadplay✜** fantasy console by [CasualEffects](https://casual-effects.com)
 is now in public beta.
 
-- [Play online](https://morgan3d.github.io/quadplay/console/quadplay.html)
+- [Play games online](https://morgan3d.github.io/quadplay/console/quadplay.html)
 - [Download the console](https://github.com/morgan3d/quadplay/archive/master.zip)
 - [Preview the web IDE](https://morgan3d.github.io/quadplay/console/quadplay.html?IDE=1&game=quad://games/quadpaddle)
 - [Read the manual](https://morgan3d.github.io/quadplay/doc/manual.md.html)
@@ -12,13 +12,15 @@ is now in public beta.
 Features
 ========================================================
 
+- Create games on Windows, macOS, Linux
+- Play your games in any web browser on laptop, desktop, tablet, phone, Raspberry Pi 4, or Jetson Nano
 - 60 fps @ 384 x 224 pixels = 12:7 aspect ≈ 16:9.3
 - 4096 sRGB (4:4:4) colors
 - Four 10-button gamepads (D-pad + ⓐⓑⓒⓓ + ⓟⓠ)
 - Hundreds of built-in sprites, sounds, and fonts
 - Program in PyxlScript, a friendly Python-like language
 - Order-independent, 4-bit alpha transparency
-- Native 2.5D graphics via z-order
+- Native 2.5D graphics with z-order
 - 9.4 MB of total sprite memory
 - Up to 64 sprite and font sheets of up to 1024x1024
 - Optional 192 x 112, 128 x 128, and [64 x 64](https://itch.io/jam/lowrezjam-2019) screen modes
@@ -32,7 +34,7 @@ This beta version operates only in Pro mode, using external editors.
 It is fully functional and has already been used to ship jam games.
 A future release will also provide a complete IDE.
 
-To get started in Pro mode, you'll need Windows, MacOS, or Linux and 
+To get started in Pro mode, you'll need Windows, macOS, or Linux and 
 the following freely-available software.
 
 _Required_:
@@ -45,10 +47,10 @@ _Required_:
 
 _Optional_:
 
-- An account on the [forums](http://quadplay.freeforums.net)
 - A TMX map editor such as [Tiled](https://www.mapeditor.org/)
-- A pixel editor such as [aseprite](https://www.aseprite.org/) or [Piskel](https://www.piskelapp.com/) for drawing sprites and fonts
+- A sprite and font pixel editor such as [Piskel](https://www.piskelapp.com/) or [GrafX2](http://pulkomandy.tk/projects/GrafX2/downloads?order=version&desc=1)
 - A [SFX generator](https://www.bfxr.net/) and audio editor such as [Audacity](https://www.audacityteam.org/)
+- An account on the [forums](http://quadplay.freeforums.net)
 - Follow development online at [@CasualEffects](https://twitter.com/CasualEffects)
 
 See the manual for a getting started guide, the change log, road map, and beta notes.
