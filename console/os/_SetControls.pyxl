@@ -77,15 +77,14 @@ if SCREEN_SIZE.x == 64:
    draw_sprite(_controlDoneSprite, xy(70, 53))
    draw_sprite(_controlDoneSprite, xy(-6, 60))
 else:
+   const text = "Press " + joy.prompt["(p)"] + " when done"
+   const W = text_width(controlsFont, text)
    draw_line(xy(SCREEN_SIZE.x / 2 - 1, 0), xy(SCREEN_SIZE.x / 2 - 1, SCREEN_SIZE.y), #023)
-   if SCREEN_SIZE.x == 384:
-      draw_line(xy(0, SCREEN_SIZE.y / 2), xy(120, SCREEN_SIZE.y / 2), #023)
-      draw_line(xy(SCREEN_SIZE.x - 121, SCREEN_SIZE.y / 2), xy(SCREEN_SIZE.x, SCREEN_SIZE.y / 2), #023)
-
+   draw_line(xy(0, SCREEN_SIZE.y / 2), xy(SCREEN_SIZE.x / 2 - 55% W, SCREEN_SIZE.y / 2), #023)
+   draw_line(xy(SCREEN_SIZE.x / 2 + 55% W, SCREEN_SIZE.y / 2), xy(SCREEN_SIZE.x, SCREEN_SIZE.y / 2), #023)
+   
    // "Press P when done"
-   // Shift over at 128x128 to crop the word "Press"
-   draw_sprite(_controlDoneSprite, SCREEN_SIZE / 2 - (if SCREEN_SIZE.x == 128 then xy(10, 0) else xy(0, 0)))
-   if SCREEN_SIZE.x == 128: draw_rect(xy(3, SCREEN_SIZE.y / 2), xy(4, 5), windowBackgroundColor)
+   draw_text({font: controlsFont, text: text, pos: SCREEN_SIZE / 2 + xy(0, 1), color: #023, outline: windowBackgroundColor, x_align: "center", y_align: "center"})
 
    
 for p < 4:

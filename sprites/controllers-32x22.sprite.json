@@ -18,6 +18,7 @@
         "SwitchPro":   {"x":10, "y": 0},
         "JoyCon_R":    {"x":11, "y": 0},
         "JoyCon_L":    {"x":12, "y": 0},
-        "Stadia":      {"x":13, "y": 0}
+        "Stadia":      {"x":13, "y": 0},
+        "GPD_Win":     {"x":14, "y": 0}
     }
 }
