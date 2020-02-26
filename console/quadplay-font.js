@@ -32,16 +32,27 @@ abcdefghijklmnopqrstuvwxyz←→<>◀▶
 αβγδεζηθικλμνξ§πρστυϕχψωςşğ⌊⌋⌈⌉"
 ÆÀÁÂÃÄÅÇÈÉÊËÌÍÎÏØÒÓÔÕÖŒÑẞÙÚÛÜБ✓Д
 æàáâãäåçèéêëìíîïøòóôõöœñßùúûüбгд
-ЖЗИЙЛПЦЧШЩЭЮЯЪЫЬ±⊗↖↗␣⏎    ○●◻◼△▲
+ЖЗИЙЛПЦЧШЩЭЮЯЪЫЬ±⊗↖↗      ○●◻◼△▲
 жзийлпцчшщэюяъыь∫❖↙↘…‖     ♠♥♣♦✜
-ⓐⓑⓒⓓⓕⓖⓟⓠⓥⓧⓨ⬙⬗⬖⬘Ⓞ⍍▣⧉☰⒧⒭①②③④⑦⑧⑨⓪⊖⊕`;
-//SPC ENT RET SEL STR SHR OPT
+ⓐⓑⓒⓓⓕⓖⓟⓠⓥⓧⓨ⬙⬗⬖⬘Ⓞ⍍▣⧉☰⒧⒭①②③④⑦⑧⑨⓪⊖⊕
+␣Ɛ⏎ҕﯼડƠ `;
+
+// Word forms of last row: SPC ENT RET SEL STR SHR OPT <reserved>
+// This is used by fontgen.
+const fontSpecials = {
+    '␣':'SPACE',
+    'Ɛ':'ENTER',
+    '⏎':'RETURN',
+    'ҕ':'SELECT',
+    'ﯼ':'START',
+    'ડ':'SHARE',
+    'Ơ':'OPTIONS'};
 
 const FONT_COLS = 32;
-// +1 for the newlines in fontChars, except on the last row
-const FONT_ROWS = Math.floor((fontChars.length + 1) / (FONT_COLS + 1));
+// Accounts for the 4x characters on the last row and the missing last newline
+const FONT_ROWS = Math.floor((fontChars.length + 1) / (FONT_COLS + 1)) + 1;
 
-{   
+{
     // Build the font map. 
     for (let i = 0, x = 0, y = 0; i < fontChars.length; ++i, ++x) {
         const c = fontChars[i];
@@ -151,7 +162,8 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
     // Compute tight bounds on letters so that we can repack.
     let _charWidth = 0;
     for (let charY = 0; charY < FONT_ROWS; ++charY) {
-        for (let charX = 0; charX < FONT_COLS; ++charX) {
+        const charScale = (charY < FONT_ROWS - 1) ? 1 : 4;
+        for (let charX = 0; charX < FONT_COLS / charScale; ++charX) {
             const yTile = charSize.y * charY;
             
             // fontChars is actually 33 wide because it has newlines in it
@@ -161,7 +173,7 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
                 // Find tightest non-black bounds on each character
                 let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
                 for (let y = charY * charSize.y; y < (charY + 1) * charSize.y; ++y) {
-                    for (let x = charX * charSize.x; x < (charX + 1) * charSize.x; ++x) {
+                    for (let x = charX * charSize.x * charScale; x < (charX + 1) * charSize.x * charScale; ++x) {
                         if (array2DGet(srcMask, x, y)) {
                             x1 = Math.min(x, x1); y1 = Math.min(y, y1);
                             x2 = Math.max(x, x2); y2 = Math.max(y, y2);
@@ -178,7 +190,7 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
                 tightY1 = Math.min(tightY1, y1 - yTile);
                 tightY2 = Math.max(tightY2, y2 - yTile);
                 bounds[c] = {x1:x1, y1:y1, x2:x2, y2:y2};
-                _charWidth = Math.max(_charWidth, x2 - x1 + 1);
+                _charWidth = Math.max(_charWidth, Math.ceil((x2 - x1 + 1) / charScale));
             } // if not space
         }
     }
@@ -217,15 +229,16 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
     font._baseline = baseline - tightY1 + borderSize;
 
     // Extract each character
-    const colorMask        = array2DUint8(_charWidth, font._charHeight);
-    const borderMask       = array2DUint8(_charWidth, font._charHeight);
-    const shadowMask       = array2DUint8(_charWidth, font._charHeight);
-    const shadowBorderMask = array2DUint8(_charWidth, font._charHeight);
+    const colorMask        = array2DUint8(_charWidth * 4, font._charHeight);
+    const borderMask       = array2DUint8(_charWidth * 4, font._charHeight);
+    const shadowMask       = array2DUint8(_charWidth * 4, font._charHeight);
+    const shadowBorderMask = array2DUint8(_charWidth * 4, font._charHeight);
     font._data = array2DUint8(_charWidth * FONT_COLS, font._charHeight * FONT_ROWS);
     font._bounds = {};
 
     for (let charY = 0; charY < FONT_ROWS; ++charY) {
-        for (let charX = 0; charX < FONT_COLS; ++charX) {
+        const charScale = (charY < FONT_ROWS - 1) ? 1 : 4;
+        for (let charX = 0; charX < FONT_COLS / charScale; ++charX) {
             // Reset
             array2DClear(colorMask, 0);
             array2DClear(borderMask, 0);
@@ -253,7 +266,7 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
 
                 // For testing
                 /*
-                if (chr === '∫') {
+                if (chr === 'Ɛ') {
                     console.log(srcBounds);
                     console.log(colorMask);
                     array2DPrint(colorMask);
@@ -286,8 +299,9 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
                 for (let srcY = 0; srcY < font._charHeight; ++srcY) {
                     //let tst = ''; // For testing
                     const dstY = font._charHeight * charY + srcY;
-                    for (let srcX = 0; srcX < _charWidth; ++srcX) {
-                        const dstX = _charWidth * charX + srcX;
+
+                    for (let srcX = 0; srcX < _charWidth * charScale; ++srcX) {
+                        const dstX = _charWidth * charScale * charX + srcX;
                         
                         const m  = array2DGet(colorMask, srcX, srcY);
                         const b  = array2DGet(borderMask, srcX, srcY);
@@ -319,7 +333,7 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
                 } // srcY
                 
                 // Compute the bounds of this character as an absolute position on the final image
-                const tileX = _charWidth * charX, tileY = font._charHeight * charY, srcTileY = charSize.y * charY;
+                const tileX = _charWidth * charX * charScale, tileY = font._charHeight * charY, srcTileY = charSize.y * charY;
 
                 let pre = 0, post = 0;
                 if (isDigit(chr)) {
@@ -347,7 +361,8 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
         } // charX
     } // charY
     
-    // Make bounds for the space and tab characters
+    // Make bounds for the space and tab characters based on lower-case i,
+    // which is thin
     font._bounds[' '] = font._bounds['\t'] = font._bounds['i'];
 
     // Compute subscripts

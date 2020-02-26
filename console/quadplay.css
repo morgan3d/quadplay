@@ -595,11 +595,11 @@ code, .code {
   content: '';
   display: block;
   position: absolute;
-  left: 6px;
+  left: -6px;
   right: 6px;
   top: 5px;
   bottom: 8px;
-  border-radius: 32px 32px 32px 32px;
+  border-radius: 32px;
   background: linear-gradient(
       hsla(0, 0%, 100%, 0.05), hsla(0, 0%, 100%, 0) ); 
   box-shadow:  0px -2px 2px 0px rgba(255,255,255,0.2),
@@ -623,8 +623,6 @@ code, .code {
                   inset -1px -6px 6px 2px rgba(0,0,0,0.6);
     
     border:           0.5px outset #888;
-    /* This rule must exactly match setColorScheme() in quadplay-ide.js */
-/*    background:       #e22ba1 !important; */
 }
 
 
@@ -666,6 +664,36 @@ hr {
     z-index:29;
 }
 
+#leftControls, #rightControls {
+    position: absolute;
+    top: 54%;
+    height: 120px
+}
+
+#leftControls { left: 2px; }
+#rightControls { right: 2px; }
+
+@media (orientation: portrait) {
+    #leftControls, #rightControls { top:84% }
+    #leftControls {left: 30px}
+    #rightControls {right: 30px}
+
+    .emulator .emulatorBackground {
+        top:0px !important;
+        height:100% !important;
+        width:100%;
+    }
+
+    .emulator .emulatorBackground {
+        border-radius: 20px;
+    }
+    .EmulatorUI .emulator .emulatorBackground:before {
+        border-radius: 18px;
+        top:4px;
+        left:4px;
+        right:4px;
+    }
+}
 
 body.EmulatorUI .virtualController {
     visibility: visible;

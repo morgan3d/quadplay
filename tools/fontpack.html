@@ -54,11 +54,15 @@
      font-size: 120%;
   }
 
-  span.letter {
+  span.letter, span.special {
      display: inline-block;
      font-family: serif;
      min-width: 12px;
      text-align: center;
+  }
+
+  span.special {
+      font-size: 75%;  
   }
 </style>
 <script src="../console/quadplay-load.js"></script>
@@ -146,7 +150,14 @@
                                 maxHeight = h;
                                 maxHeightChar = k;
                             }
-                            s += `"<span class="letter">${k}</span>": <span class="width${w}">${w}</span> × <span class="height${h}">${h}</span>\n`;
+
+                            const X = fontSpecials[k];
+                            if (X) {
+                                s += `<span class="special">${X}</span>`;
+                            } else {
+                                s += `"<span class="letter">${k}</span>"`;
+                            }
+                            s += `: <span class="width${w}">${w}</span> × <span class="height${h}">${h}</span>\n`;
                         }
                     }
                     

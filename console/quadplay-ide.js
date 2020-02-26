@@ -5,6 +5,8 @@ const deployed = true;
 const version  = '2020.02.17.24'
 const launcherURL = 'quad://console/launcher';
 
+// Is the browser running on an Apple platform?
+const isApple = /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
 //////////////////////////////////////////////////////////////////////////////////
 // UI setup
 
@@ -263,6 +265,8 @@ function onResize() {
     const background   = document.getElementsByClassName('emulatorBackground')[0];
     const screenBorder = document.getElementById('screenBorder');
 
+    const gbMode = window.matchMedia('(orientation: portrait)').matches;
+
     let windowWidth = window.innerWidth, windowHeight = window.innerHeight;
 
     let scale = 1;
@@ -286,7 +290,11 @@ function onResize() {
     case 'Emulator':
         {
             // What is the largest multiple SCREEN_HEIGHT that is less than windowHeightDevicePixels?
-            scale = Math.max(0, Math.min((window.innerHeight - 70) / SCREEN_HEIGHT, (windowWidth - 254) / SCREEN_WIDTH));
+            if (gbMode) {
+                scale = Math.max(0, Math.min((window.innerHeight - 70) / SCREEN_HEIGHT, (windowWidth - 36) / SCREEN_WIDTH));
+            } else {
+                scale = Math.max(0, Math.min((window.innerHeight - 70) / SCREEN_HEIGHT, (windowWidth - 254) / SCREEN_WIDTH));
+            }
             
             if ((scale * window.devicePixelRatio <= 2.5) && (scale * window.devicePixelRatio > 1)) {
                 // Round to nearest even multiple of the actual pixel size for small screens to
@@ -296,18 +304,25 @@ function onResize() {
             
             // Setting the scale transform triggers really slow rendering on Raspberry Pi unless we
             // add the "translate3d" hack to trigger hardware acceleration.
-            screenBorder.style.transformOrigin = 'center';
             screenBorder.style.transform = 'scale(' + scale + ') translate3d(0,0,0)';
-            screenBorder.style.left = Math.round((windowWidth - screenBorder.offsetWidth) / 2) + 'px';
-            screenBorder.style.top  = Math.round((windowHeight - screenBorder.offsetHeight - 16) / 2) + 'px';
+            screenBorder.style.left = Math.round((windowWidth - screenBorder.offsetWidth - 1) / 2) + 'px';
+            if (gbMode) {
+                screenBorder.style.transformOrigin = 'center top';
+                screenBorder.style.top  = '30px';
+            } else {
+                screenBorder.style.transformOrigin = 'center';
+                screenBorder.style.top  = Math.round((windowHeight - screenBorder.offsetHeight - 16) / 2) + 'px';
+            }
 
-            // Resize the background to bound the screen more tightly.
-            // Only resize vertically because the controls need to
-            // stay near the edges of the screen horizontally to make
-            // them reachable on mobile.
-
-            background.style.top = Math.round(Math.max(0, (windowHeight - Math.max(260, 90 + SCREEN_HEIGHT * scale)) / 2)) + 'px';
-            background.style.height = Math.round(Math.max(230, SCREEN_HEIGHT * scale + 53)) + 'px';
+            if (! gbMode) {
+                // Resize the background to bound the screen more tightly.
+                // Only resize vertically because the controls need to
+                // stay near the edges of the screen horizontally to make
+                // them reachable on mobile. In gbMode, the emulator fills
+                // the screen and this is not needed.
+                background.style.top = Math.round(Math.max(0, (windowHeight - Math.max(260, 90 + SCREEN_HEIGHT * scale)) / 2)) + 'px';
+                background.style.height = Math.round(Math.max(230, SCREEN_HEIGHT * scale + 53)) + 'px';
+            }
 
             // Show the controls
             body.classList.add('fullscreenEmulator');
@@ -616,8 +631,8 @@ const controlSchemeTable = {
         '(b)': 'ⓐ',
         '(c)': 'ⓨ',
         '(d)': 'ⓧ',
-        '(p)': 'STR',
-        '(q)': 'SEL',
+        '(p)': 'ﯼ',
+        '(q)': 'ҕ',
         '[^]': '⍐',
         '[<]': '⍇',
         '[v]': '⍗',
@@ -629,8 +644,8 @@ const controlSchemeTable = {
         '(b)': 'Ⓞ',
         '(c)': '▣',
         '(d)': '⍍',
-        '(q)': 'SEL',
-        '(p)': 'STR',
+        '(q)': 'ҕ',
+        '(p)': 'ﯼ',
         '[^]': '⍐',
         '[<]': '⍇',
         '[v]': '⍗',
@@ -642,8 +657,8 @@ const controlSchemeTable = {
         '(b)': 'Ⓞ',
         '(c)': '▣',
         '(d)': '⍍',
-        '(p)': 'OPT',
-        '(q)': 'SHR',
+        '(p)': 'Ơ',
+        '(q)': 'ડ',
         '[^]': '⍐',
         '[<]': '⍇',
         '[v]': '⍗',
@@ -694,8 +709,8 @@ const controlSchemeTable = {
         '(b)': 'ⓐ',
         '(c)': 'ⓨ',
         '(d)': 'ⓧ',
-        '(p)': 'STR',
-        '(q)': 'SEL',
+        '(p)': 'ﯼ',
+        '(q)': 'ҕ',
         '[^]': '⍐',
         '[<]': '⍇',
         '[v]': '⍗',
@@ -741,9 +756,10 @@ const controlSchemeTable = {
         '[>]': '⍈'
     },
 
+    // Use "return" on Apple platforms and "enter" on PCs
     Keyboard: {
         '(a)': '␣',
-        '(b)': '⏎',
+        '(b)': isApple ? '⏎' : 'Ɛ',
         '(c)': 'ⓒ',
         '(d)': 'ⓕ',
         '(p)': 'ⓟ',
@@ -756,7 +772,7 @@ const controlSchemeTable = {
 
     Kbd_Alt: {
         '(a)': '␣',
-        '(b)': '⏎',
+        '(b)': isApple ? '⏎' : 'Ɛ',
         '(c)': 'ⓒ',
         '(d)': 'ⓕ',
         '(p)': 'ⓟ',
@@ -798,8 +814,8 @@ const controlSchemeTable = {
         '(b)': '②',
         '(c)': '④',
         '(d)': '③',
-        '(p)': 'ST',
-        '(q)': 'SE',
+        '(p)': 'ﯼ',
+        '(q)': 'ҕ',
         '[^]': '⍐',
         '[<]': '⍇',
         '[v]': '⍗',
@@ -811,8 +827,8 @@ const controlSchemeTable = {
         '(b)': 'ⓑ',
         '(c)': 'ⓧ',
         '(d)': 'ⓨ',
-        '(p)': 'STR',
-        '(q)': 'SEL',
+        '(p)': 'ﯼ',
+        '(q)': 'ҕ',
         '[^]': '⍐',
         '[<]': '⍇',
         '[v]': '⍗',

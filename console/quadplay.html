@@ -184,7 +184,7 @@
           <img src="logo.png" style="width:15%; max-width:108px; min-width:64px">
         </div>
       </div>
-      <div style="position: absolute; left: 2px; top: 54%; height: 120px" class="virtualController">
+      <div class="virtualController" id="leftControls">
         <div style="background-image: url('controller-dpad.png'); background-size: cover; left:0px; top:-50%; position: absolute; width: 120px; height: 120px" id="minimalDPad">
           <!-- These have to be nested so that the mouse motion events will propagate through all of them -->
           <div id="Wbutton" class="emulatorButton" style="left: 19px; top: -7px; width:80px; height:45px">
@@ -198,7 +198,7 @@
         <img id="Qbutton" src="controller-q.png" style="position: absolute; left:42px; top:-130px; transform: none" width="35px" id="minimalPButton" class="emulatorButton virtualController">
       </div>
       
-      <div style="position: absolute; right: 2px; top: 54%; height: 120px" class="virtualController">
+      <div class="virtualController" id="rightControls">
         <div style="background-image: url('controller-buttons.png'); background-size: cover; position: absolute; right:0px; top:-50%; width: 120px; height: 120px" id="minimalButtons">
           <!-- these class names allow quadplay-host.js to know what button was pressed -->
           <div id="Fbutton" class="emulatorButton" style="left: 33px; top:-2px; width:52px; height:52px; transform: rotate(45deg)"> </div>
