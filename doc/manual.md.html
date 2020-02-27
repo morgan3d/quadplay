@@ -3058,7 +3058,7 @@ endpoints and borders.
   `draw_text({text: "Fire!", pos: xy(100, 100), x_align:"left", z: 2})`.
   Values default according to the positional argument version.
 
-`draw_text(font, text, pos, color (= nil), shadow (= nil), outline (= nil), x_align (= "left"), y_align (= "baseline"), z (= 0), wrapWidth (= nil), textSize (= size(text)), markup (= false))`
+`draw_text(font, text, pos, color (= nil), shadow (= nil), outline (= nil), x_align (= "left"), y_align (= "baseline"), z (= 0), wrap_width (= nil), text_size (= size(text)), markup (= false))`
 : Print string `text` relative to `pos`. Returns an `xy()` of the bounding box,
   excluding shadows and outline.
 
@@ -3072,11 +3072,11 @@ endpoints and borders.
   shadow, and outline default to transparent. Any non-transparent
   shadow causes the outline to enclose both the shadow and main color.
   Returns the line height (including spacing) for the next line.  If
-  `wrapWidth` is specified, breaks the text at the maximum width and
+  `wrap_width` is specified, breaks the text at the maximum width and
   renders multiple lines. Each line is offset by the font's vertical
   spacing and aligned as specified. See also `text_width()`.
 
-  `textSize` restricts draw_text to only printing that many characters,
+  `text_size` restricts draw_text to only printing that many characters,
   *after* word-wrapping. This allows gradually revealing text in a stable
   way under word wrap.
 
@@ -6064,6 +6064,8 @@ Changes for both the specification and implementation in each release.
 - Added long text button prompts for SPACE, ENTER, RETURN, SELECT, START, 
   SHARE, and OPTIONS to fontgen
 - Converted the scalepix tool to dark mode
+- Optimized set controls OS dialog layout for all screen sizes
+- Renamed `draw_text()` arguments `wrapWidth` -> `wrap_width` and `textSize` -> `text_size`
 
 
 2020 Feb 24: Beta update 31
@@ -6478,7 +6480,7 @@ Changes for both the specification and implementation in each release.
 - Added three argument version of `loop()`
 - Allowed `draw_text()` word-wrapping to search further back for a good break point
 - Reduced boot loader font size for smaller screens
-- Added `textSize` argument to `draw_text()`
+- Added `text_size` argument to `draw_text()`
 - Added units documentation to `entity` physics properties
 - Added space (`␣`) and return (`⏎`) button characters to fonts
 - Added alternative keyboard and 8Bitdo Zero controller to `controllers-32x22.png`

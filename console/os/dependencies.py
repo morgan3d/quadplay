@@ -10,7 +10,6 @@ os_dependencies = {
    "_cancelUISound":      "quad://sounds/18-Shoot.sound.json",
    "_denyUISound":        "quad://sounds/46-Hit.sound.json",
    "_quadplayLogoSprite": "quad://console/os/logo.sprite.json",
-   "_controlDoneSprite":  "quad://console/os/control-done.sprite.json",
    "_controllerSpritesheet22": "quad://sprites/controllers-32x22.sprite.json",
    "_controllerSpritesheet44": "quad://sprites/controllers-64x44.sprite.json"
 }

@@ -2,15 +2,15 @@ _SetControls64
 ════════════════════════════════════════════════════════════════════════
 // Choose the active player
 
-const windowBackgroundColor = #135
-const windowBorderColor     = #fff
-const text_color             = #fff
+const window_background_color = #135
+const window_border_color     = #fff
+const text_color              = #fff
 const text_shadow_color       = #0006
-const promptColor           = #4DF
-const selectedColor         = #f
-const unselectedColor       = #b
+const prompt_color            = #4DF
+const selected_color          = #f
+const unselected_color        = #b
 
-const openFrames            = 8
+const open_frames             = 8
 
 const font = _font5
 const lineHeight = round(110% font.lineHeight) + 1
@@ -34,12 +34,15 @@ draw_previous_mode()
 _clipZ2 = 2049
 set_transform(xy(0, 0), xy(1, 1), 2048.6, 1)
 
-const windowSize = round(xy(26, 50) * clamp((mode_frames + 1) / openFrames, 0%, 100%))
-draw_rect(½ SCREEN_SIZE, windowSize, windowBackgroundColor, windowBorderColor)
+const windowSize = round(xy(26, 50) * clamp((mode_frames + 1) / open_frames, 0%, 100%))
+draw_rect(½ SCREEN_SIZE, windowSize, window_background_color, window_border_color)
 
-if mode_frames > openFrames:
-   // Process input
-   for control in pad:
+if mode_frames > open_frames:
+   // Process input. Let any controller
+   // manipulate the result, since we might
+   // have gotten to this screen using a different
+   // controller than the active one.
+   for control in gamepad_array:
       if control.qq or control._pp:
          // Do NOT use "bb", which maps to enter on the keyboard
          // and may make players think they are executing a command
@@ -61,7 +64,7 @@ if mode_frames > openFrames:
    for i < size(choiceArray):
       const active      = choiceIndex == i
       const bright      = (1 + cos(mode_frames / 9)) / 2
-      const color       = if active then lerp(promptColor, #fff, 50% bright) else unselectedColor
+      const color       = if active then lerp(prompt_color, #fff, 50% bright) else unselected_color
       const outline     = if active then rgba(1,1,1, 25% bright) else nil
       const yOffset     = if active then -1 else 0
       const shadow      = if active then 50% text_shadow_color else text_shadow_color

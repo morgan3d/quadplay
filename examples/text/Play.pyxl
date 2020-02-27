@@ -13,7 +13,7 @@ set_background(rgb(0.4, 0.25, 0.3))
 // to see how to add colors and fonts within text strings.
 draw_sprite_corner_rect(uiSpritesheet[10][15], xy(8, 18), xy(SCREEN_SIZE.x - 18, 68))
 draw_text({font: font, text: "Active Quest", pos: xy(½ SCREEN_SIZE.x, 12), x_align: "center", color: #000})
-draw_text({font: font, text: quest, pos: xy(8, 18), y_align: "top", wrapWidth: SCREEN_SIZE.x - 18, color: #000, shadow: #1102, markup: true})
+draw_text({font: font, text: quest, pos: xy(8, 18), y_align: "top", wrap_width: SCREEN_SIZE.x - 18, color: #000, shadow: #1102, markup: true})
 
 // Description: This example uses replace() to show how to conveniently
 // insert variables into a string.
@@ -28,7 +28,7 @@ description += replace("\n\nIt is TIME. The sky is SKY and the temperature is TE
 description += " You have " + join(inventory, ", ", ", and ", " and ", "nothing") + ".";
 
 draw_sprite_corner_rect(uiSpritesheet[7][9], xy(8, 102), xy(SCREEN_SIZE.x - 18, 82))
-draw_text({font: font, text: description, pos: xy(8, 100), y_align: "top", wrapWidth: SCREEN_SIZE.x - 18, color: #ddd, shadow: #1025})
+draw_text({font: font, text: description, pos: xy(8, 100), y_align: "top", wrap_width: SCREEN_SIZE.x - 18, color: #ddd, shadow: #1025})
 
 for c < size(choiceArray):
    const args = {font: buttonFont, text: choiceArray[c], color: #FFF, outline: #0003, shadow: #400,

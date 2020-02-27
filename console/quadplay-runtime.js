@@ -3865,7 +3865,7 @@ function _postGlyphSpace(str, i, font) {
 /** Helper for draw_text() that operates after markup formatting has been processed. 
     offsetIndex is the amount to add to the indices in formatArray to account for
     the str having been shortened already. */
-function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_align, z, wrapWidth, textSize, referenceFont) {
+function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_align, z, wrap_width, text_size, referenceFont) {
     console.assert(typeof str === 'string');
     console.assert(Array.isArray(formatArray));
     console.assert(typeof pos === 'object' && pos.x !== undefined);
@@ -3889,13 +3889,13 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
         if (str[c] === '\n') {
             // Newline, process by breaking and recursively continuing
             const cur = str.substring(0, c).trimEnd();
-            const firstLineBounds = _draw_text(startingOffsetIndex, startingFormatIndex, cur, formatArray, pos, x_align, y_align, z, wrapWidth, textSize, referenceFont);
+            const firstLineBounds = _draw_text(startingOffsetIndex, startingFormatIndex, cur, formatArray, pos, x_align, y_align, z, wrap_width, text_size, referenceFont);
 
             // Update formatIndex
             while ((offsetIndex < formatArray[formatIndex].startIndex) || (offsetIndex > formatArray[formatIndex].endIndex)) { ++formatIndex; }
             format = undefined;
             
-            const restBounds = _draw_text(offsetIndex + 1, formatIndex, str.substring(c + 1), formatArray, xy(pos.x, pos.y + referenceFont.lineHeight / _scaleY), x_align, y_align, z, wrapWidth, textSize - cur.length, referenceFont);
+            const restBounds = _draw_text(offsetIndex + 1, formatIndex, str.substring(c + 1), formatArray, xy(pos.x, pos.y + referenceFont.lineHeight / _scaleY), x_align, y_align, z, wrap_width, text_size - cur.length, referenceFont);
             firstLineBounds.x = Math.max(firstLineBounds.x, restBounds.x);
             firstLineBounds.y += referenceFont._spacing.y + restBounds.y;
             return firstLineBounds;
@@ -3909,7 +3909,7 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
         width += delta;
 
         // Word wrapping
-        if ((wrapWidth !== undefined) && (wrapWidth > 0) && (width > wrapWidth - format.font._spacing.x)) {
+        if ((wrap_width !== undefined) && (wrap_width > 0) && (width > wrap_width - format.font._spacing.x)) {
             // Perform word wrap, we've exceeded the available width
             // Search backwards for a place to break.
             const breakChars = ' \n\t,.!:/\\)]}\'"|`-+=*…\?¿¡';
@@ -3927,7 +3927,7 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
             }
 
             const cur = str.substring(0, breakIndex);          
-            const firstLineBounds = _draw_text(startingOffsetIndex, startingFormatIndex, cur.trimEnd(), formatArray, pos, x_align, y_align, z, undefined, textSize, referenceFont);
+            const firstLineBounds = _draw_text(startingOffsetIndex, startingFormatIndex, cur.trimEnd(), formatArray, pos, x_align, y_align, z, undefined, text_size, referenceFont);
             
             // Now draw the rest
             const next = str.substring(breakIndex);
@@ -3943,7 +3943,7 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
             format = undefined;
 
             console.assert(offsetIndex >= formatArray[formatIndex].startIndex && offsetIndex <= formatArray[formatIndex].endIndex);
-            const restBounds = _draw_text(offsetIndex, formatIndex, nnext, formatArray, xy(pos.x, pos.y + referenceFont.lineHeight / _scaleY), x_align, y_align, z, wrapWidth, textSize - cur.length - (next.length - nnext.length), referenceFont);
+            const restBounds = _draw_text(offsetIndex, formatIndex, nnext, formatArray, xy(pos.x, pos.y + referenceFont.lineHeight / _scaleY), x_align, y_align, z, wrap_width, text_size - cur.length - (next.length - nnext.length), referenceFont);
             firstLineBounds.x = Math.max(firstLineBounds.x, restBounds.x);
             firstLineBounds.y += referenceFont._spacing.y + restBounds.y;
             return firstLineBounds;
@@ -4019,7 +4019,7 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
         offsetIndex = startingOffsetIndex;
         formatIndex = startingFormatIndex;
         format = formatArray[formatIndex];
-        str = str.substring(0, textSize);
+        str = str.substring(0, text_size);
 
         while ((str.length > 0) && (formatIndex < formatArray.length)) {
             // offsetIndex increases and the string itself is
@@ -4065,11 +4065,11 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
 
 
 /** Processes formatting and invokes _draw_text() */
-function draw_text(font, str, P, color, shadow, outline, x_align, y_align, z, wrapWidth, textSize, markup) {
+function draw_text(font, str, P, color, shadow, outline, x_align, y_align, z, wrap_width, text_size, markup) {
     if (font && font.font) {
         // Keyword version
-        textSize = font.textSize;
-        wrapWidth = font.wrapWidth;
+        text_size = font.text_size;
+        wrap_width = font.wrap_width;
         z = font.z;
         y_align = font.y_align;
         x_align = font.x_align;
@@ -4106,14 +4106,14 @@ function draw_text(font, str, P, color, shadow, outline, x_align, y_align, z, wr
         str = _parseMarkup(str, stateChanges);
     }
 
-    if (textSize === undefined) {
-        textSize = str.length;
+    if (text_size === undefined) {
+        text_size = str.length;
     }
 
     // Debug visualize the markup:
     // for (let i = 0; i < stateChanges.length; ++i) { console.log(str.substring(stateChanges[i].startIndex, stateChanges[i].endIndex + 1)); }
     
-    return _draw_text(0, 0, str, stateChanges, P, x_align, y_align, z, wrapWidth, textSize, font);
+    return _draw_text(0, 0, str, stateChanges, P, x_align, y_align, z, wrap_width, text_size, font);
 }
 
 

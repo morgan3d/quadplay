@@ -166,7 +166,7 @@ local:
    draw_text({font:largeFont, text:game.title, pos:xy(x, 40), color:selectedColor, shadow:shadowColor, x_align:"left"})
    draw_text({font:mediumFont, text:"by " + game.developer, pos:xy(x, 56), color:selectedColor, shadow:shadowColor, x_align:"left"})
    draw_text({font:smallFont, text:game.url, pos:xy(x, 220), color:unselectedColor, x_align:"left"})
-   draw_text({font:smallFont, text:game.description, pos:xy(x, 193), color:selectedColor, x_align:"left", wrapWidth: 280})
+   draw_text({font:smallFont, text:game.description, pos:xy(x, 193), color:selectedColor, x_align:"left", wrap_width: 280})
 
    const sideX = 295
    const wordX = sideX + 27
