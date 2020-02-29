@@ -34,7 +34,7 @@ draw_previous_mode()
 set_transform(xy(0, 0), xy(1, 1), 2048.6, 1)
 
 const windowSize = round(xy(min(SCREEN_SIZE.x - 2, 150% * text_width(font, title.text)),
-                            5 font.lineHeight) * clamp((mode_frames + 1) / openFrames, 0%, 100%))
+                            5 font.line_height) * clamp((mode_frames + 1) / openFrames, 0%, 100%))
 draw_rect(½ SCREEN_SIZE, windowSize, windowBackgroundColor, windowBorderColor)
 
 // Window ambient occlusion
@@ -59,7 +59,7 @@ if mode_frames > max(15, openFrames):
 
          
 if mode_frames > openFrames:
-   draw_text({font: font, text: title.text + "?", pos: ½ SCREEN_SIZE - xy(0, ½ font.lineHeight), color: text_color, shadow:text_shadow_color, x_align: "center"})
+   draw_text({font: font, text: title.text + "?", pos: ½ SCREEN_SIZE - xy(0, ½ font.line_height), color: text_color, shadow:text_shadow_color, x_align: "center"})
 
    for i < 2:
       const active      = choiceIndex == i
@@ -68,7 +68,7 @@ if mode_frames > openFrames:
       const outline     = if active then rgba(1,1,1, 25% bright) else ∅
       const offset      = xy(0, if active then -1 else 0)
       const shadow      = if active then text_shadow_color * 50% else text_shadow_color
-      const pos         = ½ SCREEN_SIZE + xy((2i - 1) * ⅕ windowSize.x, 150% font.lineHeight)
+      const pos         = ½ SCREEN_SIZE + xy((2i - 1) * ⅕ windowSize.x, 150% font.line_height)
       
       draw_text({font: font, text: choiceArray[i], pos: pos + xy(0, 1), color: shadow, x_align: "center"})
       draw_text({font: font, text: choiceArray[i], pos: pos + offset, color: color, outline: outline, x_align: "center"})

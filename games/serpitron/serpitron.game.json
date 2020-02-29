@@ -6,7 +6,7 @@
 
     "packages":   [],
     "scripts":    ["globals.pyxl"],
-    "modes":      ["Title*", "NewLevel", "LevelTitle", "Play", "Credits", "EndTransition", "SingleGameOver", "GameOver"],
+    "modes":      ["Title*", "NewLevel", "LevelTitle", "Play", "EndTransition", "SingleGameOver", "GameOver"],
     "docs":       [{"name": "Design", "url": "design.md"}],
     "assets":     {
         "font":                "quad://fonts/broderick-7.font.json",

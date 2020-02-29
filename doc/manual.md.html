@@ -1091,6 +1091,8 @@ at any point.
 `set_pause_menu(opt1 (= nil), opt2 (= nil), opt3 (= nil))`
 : Pverride the custom elements on the pause menu. Each argument
   is an object of the form `{text:string, callback:function, confirm:boolean}`.
+  At 64x64 resolution, specifying opt3 disables the automatic game
+  credits option in the pause menu.
 
   - `text` is the menu item text it will be clipped if too long
   - `callback` is a function of no arguments to execute when this option is selected
@@ -4391,20 +4393,20 @@ Fonts have a JSON descriptor file that looks like:
     "license": "Public Domain 2018 by Danika Farheed",
 
     // Size of the glyph bounding boxes. Include gutter pixels in the
-    // charSize. The loader repacks glyphs tightly, so extra padding
+    // char_size. The loader repacks glyphs tightly, so extra padding
     // or horizontal alignment is irrelevant at runtime (but affects
     // distribution size and loading time).
-    "charSize": {"x": 8, "y": 14},
+    "char_size": {"x": 8, "y": 14},
 
     // Spacing between letters and lines during rendering. If the
     // x spacing is zero (for script fonts), there will be no space between
     // letters or digits, but space will still be added around symbols
-    "letterSpacing": {"x": 2, "y": 3},
+    "letter_spacing": {"x": 2, "y": 3},
 
     // Defaults to 1 pixel
     "shadowSize": 1,
 
-    // Zero-based Y value of the baseline relative to charSize.
+    // Zero-based Y value of the baseline relative to char_size.
     // This is one less than the "height" of the baseline because
     // of the zero based value.
     "baseline": 11
@@ -4417,7 +4419,7 @@ You can generate a PNG template for the glyphs by taking a
 screenshot from the [Fontgen✜](../tools/fontgen.html) tool.
 
 By convention, the image filename contains the maximum size of the
-individual glyphs, which is usually smaller than the charSize due to
+individual glyphs, which is usually smaller than the char_size due to
 gutters. The file can have any name, however.
 
 The image must be grayscale, where white is the font character and
@@ -4434,7 +4436,7 @@ non-character information off the bounds of the tiles, for example,
 putting a copyright statement directly on the font itself.
 
 Fonts count towards the sprite sheet resource limits. Because a font is
-32x26 glyphs, this means that the largest `charSize` can be
+32x26 glyphs, this means that the largest `char_size` can be
 is 24x29 pixels if the `shadowSize` is one pixel.
 
 Fonts enforce uniform width on all full-size digits 0..9 so that
@@ -4442,7 +4444,7 @@ numbers print in aligned columns. Avoid drawing fonts with one digit
 that is larger than most of the others (usually the "4")
 because they result in extra padding around all digits.
 
-When loaded into memory, the font object exposes a `font.lineHeight`
+When loaded into memory, the font object exposes a `font.line_height`
 property that is the spacing used between lines. This is chosen to
 make typical letters well spaced. It may leave some symbols
 overlapping on adjacent lines, especially for decorative fonts.
@@ -6065,7 +6067,9 @@ Changes for both the specification and implementation in each release.
   SHARE, and OPTIONS to fontgen
 - Converted the scalepix tool to dark mode
 - Optimized set controls OS dialog layout for all screen sizes
+- `font.lineHeight` -> `font.line_height`, `font.charSize` -> `font.char_size`, `font.letterSpacing` -> `font.letter_spacing`
 - Renamed `draw_text()` arguments `wrapWidth` -> `wrap_width` and `textSize` -> `text_size`
+- Added auto-generated asset credits screen on pause menu
 
 
 2020 Feb 24: Beta update 31

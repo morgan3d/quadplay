@@ -1,25 +1,25 @@
 _SystemMenu
 ════════════════════════════════════════════════════════════════════════
 
-const windowBackgroundColor = #135
-const windowBorderColor     = #fff
-const text_color            = #fff
-const text_shadow_color     = #0006
-const promptColor           = #4DF
-const selectedColor         = #f
-const unselectedColor       = #b
+const window_background_color = #135
+const window_border_color     = #fff
+const text_color              = #fff
+const text_shadow_color       = #0006
+const prompt_color            = #4DF
+const selected_color          = #f
+const unselected_color        = #b
 
-const fadeInFrames          = 10
-const slideInFrames         = 9
+const fade_in_frames          = 10
+const slide_in_frames         = 9
 
-let choiceArray
-let choiceIndex = 0
+let choice_array
+let choice_index = 0
 
-let oldTransform
-let oldClip
-let oldPostEffects
-let maxChoiceWidth
-let lineHeight
+let old_transform
+let old_clip
+let old_post_effects
+let max_choice_width
+let line_height
 
 let font = _font9
 if SCREEN_SIZE.y <= 64: font = _font5
@@ -32,7 +32,7 @@ def close(callback):
    
 
 def choose():
-   const choice = choiceArray[choiceIndex]
+   const choice = choice_array[choice_index]
 
    if choice.confirm:
       push_mode(_ConfirmDialog, choice)
@@ -40,21 +40,25 @@ def choose():
       close(choice.callback)
 
       
-def setControls():
+def set_controls():
    if SCREEN_SIZE.x == 64:
       push_mode(_SetControls64)
    else:
       push_mode(_SetControls)
 
 
+def game_credits():
+   push_mode(_GameCredits)
+
+
       
 enter
 ────────────────────────────────────────────────────────────────────────
-choiceIndex = 0
+choice_index = 0
 
-oldTransform = get_transform()
-oldClip = get_clip()
-oldPostEffects = get_post_effects()
+old_transform = get_transform()
+old_clip = get_clip()
+old_post_effects = get_post_effects()
 
 reset_post_effects()
 set_clip(xy(0, 0), SCREEN_SIZE, -2047, 4096)
@@ -62,27 +66,33 @@ set_clip(xy(0, 0), SCREEN_SIZE, -2047, 4096)
 _clipZ2 = 2049
 
 
-choiceArray = [{text: "Resume Game", callback: nil, confirm: false},
+choice_array = [{text: "Resume Game", callback: ∅, confirm: false},
                // Insert custom menu choices after "Resume"
-               ..._customPauseMenuOptions,
-               {text: "Set Controls", callback: setControls, confirm: false},
-               {text: "Restart Game", callback: reset_game, confirm: true},
-               {text: "Quit to System", callback: quit_game, confirm: true}]
+               ..._customPauseMenuOptions]
 
-maxChoiceWidth = 0
+if size(_customPauseMenuOptions) < 3 or SCREEN_SIZE.y > 64:
+   // Only add the credits option if there is room
+   push(choice_array, {text: "Game Credits", callback: game_credits, confirm: false})
 
-lineHeight = round(110% font.lineHeight)
-if SCREEN_SIZE.y <= 64: ++lineHeight
+push(choice_array,
+     {text: "Set Controls", callback: set_controls, confirm: false},
+     {text: "Restart Game", callback: reset_game, confirm: true},
+     {text: "Quit to System", callback: quit_game, confirm: true})
 
-for c in choiceArray: maxChoiceWidth = max(maxChoiceWidth, text_width(font, c.text))
+max_choice_width = 0
+
+line_height = round(110% font.line_height)
+if SCREEN_SIZE.y <= 64: ++line_height
+
+for c in choice_array: max_choice_width = max(max_choice_width, text_width(font, c.text))
 
 
 
 leave
 ────────────────────────────────────────────────────────────────────────
-set_transform(oldTransform)
-set_clip(oldClip)
-set_post_effects(oldPostEffects)
+set_transform(old_transform)
+set_clip(old_clip)
+set_post_effects(old_post_effects)
 
 
 
@@ -92,23 +102,28 @@ pop_mode(callback) from _ConfirmDialog
 if callback: close(callback)
 
 
+pop_mode() from _GameCredits
+────────────────────────────────────────────────────────────────────────
+// Return to the main game
+pop_mode()
+
 
 frame
 ────────────────────────────────────────────────────────────────────────
-if mode_frames > fadeInFrames + slideInFrames + 2:
+if mode_frames > fade_in_frames + slide_in_frames + 2:
    for control in gamepad_array:
       if control.qq or control._pp:
          play_audio_clip(_cancelUISound)
-         close(nil)
+         close(∅)
       else if control.aa or control.bb:
          play_audio_clip(_acceptUISound)
          choose()
       else if control.yy:
-         const prev = choiceIndex
-         choiceIndex = clamp(choiceIndex + control.yy, 0, size(choiceArray) - 1)
-         play_audio_clip(if prev == choiceIndex then _denyUISound else _moveUISound)
+         const prev = choice_index
+         choice_index = clamp(choice_index + control.yy, 0, size(choice_array) - 1)
+         play_audio_clip(if prev == choice_index then _denyUISound else _moveUISound)
 
-if mode_frames == fadeInFrames: play_audio_clip(_openUISound)
+if mode_frames == fade_in_frames: play_audio_clip(_openUISound)
 
 // Draw the paused game shadowed
 reset_transform()
@@ -118,44 +133,45 @@ draw_previous_mode()
 // guarantees that the menu draws in front of everything from the
 // previous mode. This forces us to draw in order, however.
 set_transform(xy(0, 0), xy(1, 1), 2048.5, 1)
-draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(14%, 14%, 14%, 80% clamp((mode_frames + 1) / fadeInFrames, 15%, 100%)))
+draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(14%, 14%, 14%, 80% clamp((mode_frames + 1) / fade_in_frames, 15%, 100%)))
 
 
 // Our last menu item is designed to be the longest, so use that
 // to estimate width
-const windowSize = round(xy(maxChoiceWidth + 1.5 font.lineHeight, SCREEN_SIZE.y + 2))
+const window_size = round(xy(max_choice_width + 1.5 font.line_height, SCREEN_SIZE.y + 2))
+debug_watch(font.line_height);
 
 // Animate sliding in of window
-set_transform(xy(1 + SCREEN_SIZE.x - windowSize.x * (50% - clamp(1 - (mode_frames - fadeInFrames) / slideInFrames, 0%, 100%)), SCREEN_SIZE.y / 2), xy(1, 1), 2048.5, 1)
+set_transform(xy(1 + SCREEN_SIZE.x - window_size.x * (50% - clamp(1 - (mode_frames - fade_in_frames) / slide_in_frames, 0%, 100%)), SCREEN_SIZE.y / 2), xy(1, 1), 2048.5, 1)
 
 // Window shadow
 local:
-   const P = xy(0, windowSize.y / 2);
-   const s = windowSize.x / 2 - 1
+   const P = xy(0, window_size.y / 2);
+   const s = window_size.x / 2 - 1
    draw_line(P + xy(-s, 0), P + xy(s, 0), rgba(0, 0, 0, 40%))
-   draw_line(P + xy(-s+1, 1), P + xy(s-1, 1), rgba(0, 0, 0, 15%))
+   draw_line(P + xy(1 - s, 1), P + xy(s - 1, 1), rgba(0, 0, 0, 15%))
 
 // Window
-draw_rect(xy(0, 0), windowSize, windowBackgroundColor, windowBorderColor)
+draw_rect(xy(0, 0), window_size, window_background_color, window_border_color)
 
-let y = -lineHeight * (size(choiceArray) - 1) / 2
+let y = -line_height * (size(choice_array) - 1) / 2
 
 // Draw options
-for i < size(choiceArray):
-   const active      = choiceIndex == i
+for i < size(choice_array):
+   const active      = choice_index == i
    const bright      = (1 + cos(mode_frames / 9)) / 2
-   const color       = if active then lerp(promptColor, #fff, 50% bright) else unselectedColor
-   const outline     = if active then rgba(1,1,1, 25% bright) else nil
+   const color       = if active then lerp(prompt_color, #fff, 50% bright) else unselected_color
+   const outline     = if active then rgba(1, 1, 1, 25% bright) else ∅
    const yOffset     = if active then -1 else 0
    const shadow      = if active then 50% text_shadow_color else text_shadow_color
 
-   const x           = -(maxChoiceWidth - 0.6 lineHeight + 1) / 2
-   const text        = choiceArray[i].text
-   draw_text(font, text, xy(x, y + 1), shadow, nil, nil, "left", "center")
-   draw_text(font, text, xy(x, y + yOffset), color, nil, outline, "left", "center")
+   const x           = -(max_choice_width - 0.6 line_height + 1) / 2
+   const text        = choice_array[i].text
+   draw_text(font, text, xy(x, y + 1), shadow, ∅, ∅, "left", "center")
+   draw_text(font, text, xy(x, y + yOffset), color, ∅, outline, "left", "center")
    
    if active:
-      draw_text(font, "✜", xy(x - 40% lineHeight + 1, y + 1), shadow, nil, nil, "right", "center")
-      draw_text(font, "✜", xy(x - 40% lineHeight + 1, y + yOffset), color, nil, outline, "right", "center")
+      draw_text(font, "✜", xy(x - 40% line_height + 1, y + 1), shadow, ∅, ∅, "right", "center")
+      draw_text(font, "✜", xy(x - 40% line_height + 1, y + yOffset), color, ∅, outline, "right", "center")
       
-   y += lineHeight
+   y += line_height

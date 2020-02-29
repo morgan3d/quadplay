@@ -2,7 +2,7 @@
 "use strict";
 
 const deployed = true;
-const version  = '2020.02.17.24'
+const version  = '2020.02.28.19'
 const launcherURL = 'quad://console/launcher';
 
 // Is the browser running on an Apple platform?

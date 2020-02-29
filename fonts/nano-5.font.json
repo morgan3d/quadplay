@@ -1,7 +1,7 @@
 {
     "url": "nano-5.png",
     "license": "© 2018 Morgan McGuire. Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/",
-    "charSize": {"x": 5, "y": 7},
-    "letterSpacing": {"x": 1, "y": 2},
+    "char_size": {"x": 5, "y": 7},
+    "letter_spacing": {"x": 1, "y": 2},
     "baseline": 4
 }

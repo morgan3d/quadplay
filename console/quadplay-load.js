@@ -149,6 +149,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         gameJSON.modes.push(
             'quad://console/os/_SystemMenu',
             'quad://console/os/_ConfirmDialog',
+            'quad://console/os/_GameCredits',
             'quad://console/os/_SetControls',
             'quad://console/os/_SetControls64'
         );
@@ -451,7 +452,7 @@ function loadFont(name, json, jsonURL) {
         const borderSize = 1;
         const shadowSize = parseInt(json.shadowSize || 1);
 
-        packFont(font, borderSize, shadowSize, json.baseline, json.charSize, Object.freeze({x: json.letterSpacing.x, y: json.letterSpacing.y}), srcMask);
+        packFont(font, borderSize, shadowSize, json.baseline, json.char_size, Object.freeze({x: json.letter_spacing.x, y: json.letter_spacing.y}), srcMask);
 
         if (name[0] !== '_') {
             resourceStats.spritePixels += font._data.width * font._data.height;

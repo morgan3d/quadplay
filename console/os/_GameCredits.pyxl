@@ -1,0 +1,57 @@
+_GameCredits
+════════════════════════════════════════════════════════════════════════
+
+const window_background_color = #135
+const window_border_color     = #fff
+const text_color              = #fff
+const text_shadow_color       = #0006
+const prompt_color            = #4DF
+const selected_color          = #f
+const unselected_color        = #b
+
+const creditOrder = ["Game", "Sprite", "Font", "Sound", "Code"]
+
+let sectionFont = _font9
+if SCREEN_SIZE.y <= 64: sectionFont = _font5
+else if SCREEN_SIZE.y <= 128: sectionFont = _font8
+
+let bodyFont = _font6
+if SCREEN_SIZE.y <= 64: sectionFont = _font3
+else if SCREEN_SIZE.y <= 128: sectionFont = _font5
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+set_background(window_background_color)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+if any_button_press():
+   play_audio_clip(_cancelUISound)
+   pop_mode()
+
+const creditsScroll = max(mode_frames - 70, 0)
+set_transform(xy(0, -creditsScroll))
+
+draw_text(sectionFont, assetCredits.title, xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 3), text_color, text_shadow_color, text_shadow_color, 0, 0)
+draw_text(bodyFont, "by " + assetCredits.developer, xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 3 + 25), text_color, text_shadow_color, nil, 0, 0)
+
+let y = SCREEN_SIZE.y + 15
+for type in creditOrder:
+   let s = type
+   y += draw_text(sectionFont, s + (if type == "Game" or type == "Code" then "" else "s"), xy(SCREEN_SIZE.x / 2, y), text_color, text_shadow_color, nil, 0, 2).y
+   
+   for line in assetCredits[lowercase(type)]:
+      y += draw_text(bodyFont, line, xy(SCREEN_SIZE.x / 2, y), text_color, nil, nil, 0, 2, 0, SCREEN_SIZE.x).y + 10
+      
+   y += 20
+
+   
+   
+   
+//for control in gamepad_array:
+
+// TODO
+

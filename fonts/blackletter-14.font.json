@@ -1,7 +1,7 @@
 {
     "url":           "blackletter-14.png",
     "license":       "© 2019 Morgan McGuire. Licensed as CC-BY 4.0 https://creativecommons.org/licenses/by/4.0/",
-    "charSize":      {"x": 20, "y": 22},
-    "letterSpacing": {"x": 2, "y": 4},
+    "char_size":      {"x": 20, "y": 22},
+    "letter_spacing": {"x": 2, "y": 4},
     "baseline":      19
 }

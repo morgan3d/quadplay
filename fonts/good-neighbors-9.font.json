@@ -1,7 +1,7 @@
 {
     "url": "good-neighbors-9.png",
     "license": "By Clint Bellanger, Morgan McGuire, usr_share, Ryan Wirth, and Seres József 2015-2018 (https://opengameart.org/content/good-neighbors-pixel-font), in the Public Domain/CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/",
-    "charSize": {"x": 10, "y": 15},
-    "letterSpacing": {"x": 1, "y": 1},
+    "char_size": {"x": 10, "y": 15},
+    "letter_spacing": {"x": 1, "y": 1},
     "baseline": 11
 }

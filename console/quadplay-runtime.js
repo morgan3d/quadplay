@@ -3895,7 +3895,7 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
             while ((offsetIndex < formatArray[formatIndex].startIndex) || (offsetIndex > formatArray[formatIndex].endIndex)) { ++formatIndex; }
             format = undefined;
             
-            const restBounds = _draw_text(offsetIndex + 1, formatIndex, str.substring(c + 1), formatArray, xy(pos.x, pos.y + referenceFont.lineHeight / _scaleY), x_align, y_align, z, wrap_width, text_size - cur.length, referenceFont);
+            const restBounds = _draw_text(offsetIndex + 1, formatIndex, str.substring(c + 1), formatArray, xy(pos.x, pos.y + referenceFont.line_height / _scaleY), x_align, y_align, z, wrap_width, text_size - cur.length, referenceFont);
             firstLineBounds.x = Math.max(firstLineBounds.x, restBounds.x);
             firstLineBounds.y += referenceFont._spacing.y + restBounds.y;
             return firstLineBounds;
@@ -3943,7 +3943,7 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
             format = undefined;
 
             console.assert(offsetIndex >= formatArray[formatIndex].startIndex && offsetIndex <= formatArray[formatIndex].endIndex);
-            const restBounds = _draw_text(offsetIndex, formatIndex, nnext, formatArray, xy(pos.x, pos.y + referenceFont.lineHeight / _scaleY), x_align, y_align, z, wrap_width, text_size - cur.length - (next.length - nnext.length), referenceFont);
+            const restBounds = _draw_text(offsetIndex, formatIndex, nnext, formatArray, xy(pos.x, pos.y + referenceFont.line_height / _scaleY), x_align, y_align, z, wrap_width, text_size - cur.length - (next.length - nnext.length), referenceFont);
             firstLineBounds.x = Math.max(firstLineBounds.x, restBounds.x);
             firstLineBounds.y += referenceFont._spacing.y + restBounds.y;
             return firstLineBounds;

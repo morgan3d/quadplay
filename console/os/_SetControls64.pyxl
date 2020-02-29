@@ -13,7 +13,7 @@ const unselected_color        = #b
 const open_frames             = 8
 
 const font = _font5
-const lineHeight = round(110% font.lineHeight) + 1
+const line_height = round(110% font.line_height) + 1
 
 let choiceArray = ["P1", "P2", "P3", "P4", "Done"]
 let choiceIndex
@@ -75,9 +75,9 @@ if mode_frames > open_frames:
       draw_text(font, text, xy(x, y + yOffset), color, nil, outline, "left", "center")
    
       if active:
-         draw_text(font, "✜", xy(x - 40% lineHeight + 1, y + 1), shadow, nil, nil, "right", "center")
-         draw_text(font, "✜", xy(x - 40% lineHeight + 1, y + yOffset), color, nil, outline, "right", "center")
+         draw_text(font, "✜", xy(x - 40% line_height + 1, y + 1), shadow, nil, nil, "right", "center")
+         draw_text(font, "✜", xy(x - 40% line_height + 1, y + yOffset), color, nil, outline, "right", "center")
          
-      y += lineHeight
+      y += line_height
 
 

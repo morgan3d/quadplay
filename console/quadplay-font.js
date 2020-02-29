@@ -148,7 +148,7 @@ function isDigit(c) {
 
     Used by loadFont() in quadplay-load.js and by fontpack.html.
 */
-function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, srcMask) {
+function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, srcMask) {
     // Maps characters to tight bounding boxes in the srcMask
     let bounds = {};
 
@@ -164,7 +164,7 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
     for (let charY = 0; charY < FONT_ROWS; ++charY) {
         const charScale = (charY < FONT_ROWS - 1) ? 1 : 4;
         for (let charX = 0; charX < FONT_COLS / charScale; ++charX) {
-            const yTile = charSize.y * charY;
+            const yTile = char_size.y * charY;
             
             // fontChars is actually 33 wide because it has newlines in it
             const c = fontChars[charX + charY * 33];
@@ -172,8 +172,8 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
             if (c !== ' ') {
                 // Find tightest non-black bounds on each character
                 let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
-                for (let y = charY * charSize.y; y < (charY + 1) * charSize.y; ++y) {
-                    for (let x = charX * charSize.x * charScale; x < (charX + 1) * charSize.x * charScale; ++x) {
+                for (let y = charY * char_size.y; y < (charY + 1) * char_size.y; ++y) {
+                    for (let x = charX * char_size.x * charScale; x < (charX + 1) * char_size.x * charScale; ++x) {
                         if (array2DGet(srcMask, x, y)) {
                             x1 = Math.min(x, x1); y1 = Math.min(y, y1);
                             x2 = Math.max(x, x2); y2 = Math.max(y, y2);
@@ -184,8 +184,8 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
                 if (y1 === Infinity) {
                     // The entire box was empty. Put both bounds in
                     // the center of the box.
-                    y1 = y2 = ((charY + 0.5) * charSize.y) | 0;
-                    x1 = x2 = ((charX + 0.5) * charSize.y) | 0;
+                    y1 = y2 = ((charY + 0.5) * char_size.y) | 0;
+                    x1 = x2 = ((charX + 0.5) * char_size.y) | 0;
                 }
                 tightY1 = Math.min(tightY1, y1 - yTile);
                 tightY2 = Math.max(tightY2, y2 - yTile);
@@ -209,11 +209,11 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
         let yMin = Infinity, yMax = -Infinity;
         for (let i = 0; i < measureLetters.length; ++i) {
             const b = bounds[measureLetters[i]];
-            const baseY = Math.floor(b.y1 / charSize.y) * charSize.y;
+            const baseY = Math.floor(b.y1 / char_size.y) * char_size.y;
             yMin = Math.min(yMin, b.y1 - baseY);
             yMax = Math.max(yMax, b.y2 - baseY);
         }
-        font.lineHeight = yMax - yMin + 1 + spacing.y;
+        font.line_height = yMax - yMin + 1 + spacing.y;
     }
     
 
@@ -255,9 +255,9 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
                 // Extract the colorMask bits, offsetting appropriately
                 console.assert(srcBounds.y2 - srcBounds.y1 + 1 <= colorMask.height);
                 console.assert(srcBounds.x2 - srcBounds.x1 + 1 <= colorMask.width);
-                console.assert(charSize.y * charY === Math.floor(srcBounds.y1 / charSize.y) * charSize.y);
+                console.assert(char_size.y * charY === Math.floor(srcBounds.y1 / char_size.y) * char_size.y);
                 for (let srcY = srcBounds.y1; srcY <= srcBounds.y2; ++srcY) {
-                    const dstY = srcY - charSize.y * charY - tightY1 + borderSize;
+                    const dstY = srcY - char_size.y * charY - tightY1 + borderSize;
                     for (let srcX = srcBounds.x1; srcX <= srcBounds.x2; ++srcX) {
                         const dstX = (srcX - srcBounds.x1) + borderSize;
                         array2DSet(colorMask, dstX, dstY, array2DGet(srcMask, srcX, srcY));
@@ -333,7 +333,7 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
                 } // srcY
                 
                 // Compute the bounds of this character as an absolute position on the final image
-                const tileX = _charWidth * charX * charScale, tileY = font._charHeight * charY, srcTileY = charSize.y * charY;
+                const tileX = _charWidth * charX * charScale, tileY = font._charHeight * charY, srcTileY = char_size.y * charY;
 
                 let pre = 0, post = 0;
                 if (isDigit(chr)) {
@@ -368,7 +368,7 @@ function packFont(font, borderSize, shadowSize, baseline, charSize, spacing, src
     // Compute subscripts
     {
         const b = bounds['⁰'];
-        const tileY = Math.floor(b.y1 / charSize.y) * charSize.y;
+        const tileY = Math.floor(b.y1 / char_size.y) * char_size.y;
         const subscriptOffset = Math.floor(baseline + (b.y1 - b.y2) / 2);
 
         // Map a subscript to the corresponding superscript. Note that there

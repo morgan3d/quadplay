@@ -1,7 +1,7 @@
 {
     "url": "fool-9.png",
     "license": "By Morgan McGuire, derived from the Fool font from Fancisco Beltran. Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/, inspired by DejaVu Sans Mono https://github.com/dejavu-fonts/dejavu-fonts, which is based on Bitstream Vera",
-    "charSize": {"x":12, "y": 18},
-    "letterSpacing": {"x":2, "y": 4},
+    "char_size": {"x":12, "y": 18},
+    "letter_spacing": {"x":2, "y": 4},
     "baseline": 13
 }
