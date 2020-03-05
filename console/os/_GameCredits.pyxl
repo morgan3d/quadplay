@@ -11,6 +11,11 @@ const unselected_color        = #b
 
 const creditOrder = ["Game", "Sprite", "Font", "Sound", "Code"]
 
+let old_transform
+let old_clip
+let old_post_effects
+let old_background
+
 let sectionFont = _font9
 if SCREEN_SIZE.y <= 64: sectionFont = _font5
 else if SCREEN_SIZE.y <= 128: sectionFont = _font8
@@ -19,10 +24,26 @@ let bodyFont = _font6
 if SCREEN_SIZE.y <= 64: sectionFont = _font3
 else if SCREEN_SIZE.y <= 128: sectionFont = _font5
 
+
 enter
 ────────────────────────────────────────────────────────────────────────
+old_transform = get_transform()
+old_clip = get_clip()
+old_post_effects = get_post_effects()
+old_background = get_background()
+
+reset_post_effects()
+set_clip(xy(0, 0), SCREEN_SIZE, -2047, 4096)
 
 set_background(window_background_color)
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+set_transform(old_transform)
+set_clip(old_clip)
+set_post_effects(old_post_effects)
+set_background(old_background)
 
 
 frame
@@ -35,15 +56,15 @@ if any_button_press():
 const creditsScroll = max(mode_frames - 70, 0)
 set_transform(xy(0, -creditsScroll))
 
-draw_text(sectionFont, assetCredits.title, xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 3), text_color, text_shadow_color, text_shadow_color, 0, 0)
-draw_text(bodyFont, "by " + assetCredits.developer, xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 3 + 25), text_color, text_shadow_color, nil, 0, 0)
+draw_text(sectionFont, ASSET_CREDITS.title, xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 3), text_color, text_shadow_color, text_shadow_color, 0, 0)
+draw_text(bodyFont, "by " + ASSET_CREDITS.developer, xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 3 + 25), text_color, text_shadow_color, nil, 0, 0)
 
 let y = SCREEN_SIZE.y + 15
 for type in creditOrder:
    let s = type
    y += draw_text(sectionFont, s + (if type == "Game" or type == "Code" then "" else "s"), xy(SCREEN_SIZE.x / 2, y), text_color, text_shadow_color, nil, 0, 2).y
    
-   for line in assetCredits[lowercase(type)]:
+   for line in ASSET_CREDITS[lowercase(type)]:
       y += draw_text(bodyFont, line, xy(SCREEN_SIZE.x / 2, y), text_color, nil, nil, 0, 2, 0, SCREEN_SIZE.x).y + 10
       
    y += 20

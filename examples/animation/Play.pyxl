@@ -120,7 +120,7 @@ for arrow in arrowArray:
 
 // Sky
 set_background(rgb(20%, 50%, 80%))
-draw_text(font, assetCredits.title, xy(½ SCREEN_SIZE.x, 20), #FFF, ∅, ∅, 0, 0)
+draw_text(font, ASSET_CREDITS.title, xy(½ SCREEN_SIZE.x, 20), #FFF, ∅, ∅, 0, 0)
 
 // Ground
 draw_corner_rect(xy(0, groundY + 8), xy(SCREEN_SIZE.x, SCREEN_SIZE.y - (groundY + 8)), #DDD)

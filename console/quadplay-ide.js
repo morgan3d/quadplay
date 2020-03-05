@@ -2,7 +2,7 @@
 "use strict";
 
 const deployed = true;
-const version  = '2020.02.28.19'
+const version  = '2020.03.05.05'
 const launcherURL = 'quad://console/launcher';
 
 // Is the browser running on an Apple platform?
@@ -1144,10 +1144,14 @@ function onProjectSelect(target, type, object) {
         } else if (typeof c === 'boolean') {
             constantEditor.innerHTML = '<input type="checkbox" autocomplete="false" disabled "' + (c ? 'checked' : '') + '> ' + index;
         } else {
-            // Object or array
+            // Object or array (including built-in objects)
             const L = Object.keys(c).length;
             if ((L <= 4) && (c.r !== undefined) && (c.g !== undefined) && (c.b !== undefined) && ((c.a !== undefined) || (L === 3))) {
+                // RGB[A]
                 constantEditor.innerHTML = index + ` <div style="background: rgb(${255 * c.r}, ${255 * c.g}, ${255 * c.b}); width: 50px; height: 16px; display: inline-block"> </div><br/>(${QRuntime.unparse(c)})`;
+            } else if ((L <= 4) && (c.h !== undefined) && (c.s !== undefined) && (c.v !== undefined) && ((c.a !== undefined) || (L === 3))) {
+                // HSV[A]
+                constantEditor.innerHTML = index + ` <div style="background: hsv(${255 * c.h}, ${255 * c.s}, ${255 * c.v}); width: 50px; height: 16px; display: inline-block"> </div><br/>(${QRuntime.unparse(c)})`;
             } else {
                 let s = QRuntime.unparse(c);
                 if (s.length > 16) {

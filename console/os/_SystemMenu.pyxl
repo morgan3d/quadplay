@@ -18,6 +18,8 @@ let choice_index = 0
 let old_transform
 let old_clip
 let old_post_effects
+let old_background
+
 let max_choice_width
 let line_height
 
@@ -59,6 +61,7 @@ choice_index = 0
 old_transform = get_transform()
 old_clip = get_clip()
 old_post_effects = get_post_effects()
+old_background = get_background()
 
 reset_post_effects()
 set_clip(xy(0, 0), SCREEN_SIZE, -2047, 4096)
@@ -93,7 +96,7 @@ leave
 set_transform(old_transform)
 set_clip(old_clip)
 set_post_effects(old_post_effects)
-
+set_background(old_background)
 
 
 pop_mode(callback) from _ConfirmDialog

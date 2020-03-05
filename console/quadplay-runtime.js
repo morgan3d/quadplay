@@ -713,7 +713,7 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
 
 
     /** Derived from the G3D Innovation Engine (https://casual-effects.com/g3d).
-        Assumes that time[0] <= s < time[N - 1] + time[0].  called by computeIndex. Returns {i, u} */
+        Assumes that time[0] <= s < time[N - 1] + time[0].  called by compute_index. Returns {i, u} */
     function computeIndexInBounds(s) {
         console.assert((s < time[N - 1] + time[0]) && (time[0] <= s));
         const t0 = time[0];
@@ -772,7 +772,7 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
 
        Called from evaluate(). returns {i, u}
     */
-    function computeIndex(s) {
+    function compute_index(s) {
         let i, u;
         const t0 = time[0];
         const tn = time[N - 1];
@@ -829,7 +829,7 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
                 
             } // if in bounds
         } // extrapolation Mode
-    } // computeIndex
+    } // compute_index
     
 
     /* Derived from the G3D Innovation Engine (https://casual-effects.com/g3d).
@@ -841,7 +841,7 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
             else if (s > time[N - 1]) { return clone(control[N - 1]); }
         }
         
-        const indexResult = computeIndex(s);
+        const indexResult = compute_index(s);
         // Index of the first control point
         const i = indexResult.i;
         // Fractional part of the time

@@ -457,13 +457,22 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode) {
                 throw makeError(e, i);
             }
             
-        } else if (match = lineArray[i].match(RegExp('^(\\s*)def\\s+(' + identifierPattern + ')\\s*\\(([^\\)]*)\\)[ \t]*:'))) {
+        } else if (match = lineArray[i].match(RegExp('^(\\s*)def\\s+(' + identifierPattern + ')\\s*\\(([^\\)]*)\\)[ \t]*([a-zA-Z_]*)[ \t]*:'))) {
             // DEF
             
-            let prefix = match[1], name = match[2], args = match[3] || '';
+            let prefix = match[1], name = match[2], args = match[3] || '', modifier = match[4] || '';
             let end = processBlock(lineArray, i + 1, true, internalMode) - 1;
             lineArray[i] = prefix + 'const ' + name + ' = (function(' + args + ') { ' + maybeYieldFunction;
+            if (modifier === 'preserving_transform') {
+                lineArray[i] += 'try { _pushGraphicsState();';
+            } else if (modifier !== '') {
+                throw makeError('Illegal function modifier: ' + modifier, i);
+            }
             i = end;
+
+            if (modifier === 'preserving_transform') {
+                lineArray[i] += '} finally { _popGraphicsState(); }';
+            }
             lineArray[i] += '});';
             
         } else if (match = lineArray[i].match(/^(\s*)with\s+\(?(.+∊.+)\)?[ \t]*:[ \t]*$/)) {
@@ -794,7 +803,7 @@ function pyxlToJS(src, noYield, internalMode) {
 
                 // Move backwards over the identifier
                 --callBeginPos;
-                while (/[ΔA-Za-z_0-9αβγΔδζηθιλμρσϕφχψτωΩ]/.test(line[callBeginPos])) { --callBeginPos; }
+                while ((callBeginPos > 0) && /[ΔA-Za-z_0-9αβγΔδζηθιλμρσϕφχψτωΩ]/.test(line[callBeginPos])) { --callBeginPos; }
                 ++callBeginPos;
 
                 lineArray[i] = line = line.substring(0, callBeginPos) + '(because(' + line.substring(reasonBeginPos, reasonEndPos + 1) + '),' +

@@ -356,6 +356,7 @@ graphics and gameplay:
 - [Super Contra](https://en.wikipedia.org/wiki/Super_Contra)
 - [Kirby's Adventure](https://en.wikipedia.org/wiki/Kirby%27s_Adventure)
 - [Gradius](https://en.wikipedia.org/wiki/Gradius)
+- [Life Force](https://youtu.be/lgfTC3UVCVs)
 - [Gradius II](https://en.wikipedia.org/wiki/Gradius_II)
 - [Gradius III](https://en.wikipedia.org/wiki/Gradius_III)
 - [River City Ransom](https://en.wikipedia.org/wiki/River_City_Ransom)
@@ -455,8 +456,7 @@ You can also separate the mode file into different sections:
 - `leave`: event that runs when the game changes to another mode by executing `pop_mode()` or `set_mode()` itself.
 - `pop_mode`: event that runs when the game returns to this mode from another by `pop_mode()`.
 
-Note that `leave` and `pop_mode` do not run on `reset_game()` or `quit_game()`, or if another mode
-that was pushed into directly invokes `set_mode()` instead of `pop_mode()`.
+Note that `leave` and `pop_mode` do not run on `reset_game()` or `quit_game()`. 
 
 You can think of these as callbacks, although they are not regular
 functions and can only be invoked directly by the console.
@@ -572,6 +572,42 @@ menu.leave();
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [This is the rough equivalent of the menu mode PyxlScript code in an object-oriented language. You don't write all of this boilerplate in PyxlScript!]
 
+
+#### Mismatched Push and Pop Mode
+
+Push and pop on modes aren't always paired, because sometimes an exceptional
+change to state flow occurs. 
+
+*********************************************************************
+*   .-----.   push_mode(B)   .-----.   set_mode(C)   .-----.
+*  (   A   )--------------->(   B   )-------------->(   C   )
+*   '-----'                  '-----'                 '-----'
+*********************************************************************
+[Actual code executed with unmatched push/pop mode calls.]
+ 
+
+For example, if mode `A` executes `push_mode(B)`, and then
+`B` executes `set_mode(C)` (instead of popping), the order of events triggered will be:
+
+1. `B: enter` 
+2. `B: leave` 
+3. `A: pop_mode from B` 
+4. `C: enter` 
+
+This is as if `B` had run the `pop_mode` and then `A` directly
+transitioned to C.
+
+*********************************************************************
+*             push_mode(B)                  
+*   .-----.----------------->.--+--.                 .-----.
+*  (   A   )                (   B   )               (   C   )
+*   '--+--'<-----------------'-----'                 '-----'
+*      |       pop_mode()                               ^
+*      |                                                |
+*       '----------------------------------------------'
+*                          set_mode(C)
+*********************************************************************
+[Equivalent behavior triggered by the actual code, so that PyxlScript can ensure matched push/pop]
 
 
 ### 2.5D Graphics
@@ -1246,7 +1282,8 @@ Array
 
 `find(array, x, i (= 0))`
 : Find the index of the element whose value is `x`, starting at optional index `i` (default 0).
-  Returns `∅` if not found. O(n)
+  Returns `∅` if not found. Uses `==` to compare `x` to array values. Runs in linear time in the length of the list
+  from `i`.
 
 `insert(array, i, x,...)`
 : Inserts the values into the array, starting at index `i` (as in, `array[i] = x` on return)
@@ -1452,7 +1489,8 @@ Object
 
 `find(object, x)`
 : Find a key for which the value is `x`.
-  Returns `∅` if not found. O(n) time in the number of key-value pairs.
+  Returns `∅` if not found. Uses `==` to compare `x` to array values.
+  O(n) time in the number of key-value pairs.
 
 `keys(object)`
 : An array of the keys in the object. You almost never need this because
@@ -3839,7 +3877,7 @@ can start creating games immediately and make games that have a small
 size.
 
 All assets are Creative Commons licensed and automatically include
-their license and copyright information in the `assetCredits` constant
+their license and copyright information in the `ASSET_CREDITS` constant
 when loaded.
 
 
@@ -4238,13 +4276,16 @@ The available constants types are:
 - `boolean`
 - `nil` (no `value` needed)
 - `xy`
+- `xz`
 - `xyz`
 - `rgb`
 - `rgba`
+- `hsv`
+- `hsva`
 - `raw`
-- `object` [tbd]
-- `array` [tbd]
-- `table` [tbd]
+- `object`
+- `array`
+<!-- - `table` [tbd] -->
 
 ### `raw` Format
 
@@ -4673,6 +4714,24 @@ unresponsive.
 To call a function returned from an expression that ends in
 parentheses, use the `call` function.
 
+To avoid having to indent the entire function body twice for the 
+common case of preserving a transform, a joint `def-preserving_transform` statement is
+available:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+def draw_stuff(a, b, c) preserving_transform:
+   set_transform(...)
+   ...
+
+// is the same as:
+
+def draw_stuff(a, b, c):
+   preserving_transform:
+      set_transform(...)
+      ...
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 
 Variables
 ---------------------------------------------------------------------------
@@ -5061,7 +5120,7 @@ Symbol         | ASCII         | Value
 `π`            | `pi`          | `3.141592653589793115997963468544185161590576171875`
 `∞`            | `infinity`    | infinity
                | `nan`         | floating-point "not-a-number" value
-               | `assetCredits`| object of credit and license statements from assets and code
+               | `ASSET_CREDITS`| object of credit and license statements from assets and code
 `∅`            | `nil`         | ("undefined")
                | `pad`         | array gamepad of objects
                | `joy`         | shorthand for `pad₀`
@@ -5154,7 +5213,9 @@ The flow control statements are:
   - `for` loop, with optional `with` expansion
   - `break` and `continue` within loops
   - `preserving_transform` and `local`, which do not have branching flow
-    but do create scope lines as do other blocks
+    but do create local scopes
+  - `def`, which creates a local scope for a function but does not execute
+    immediately
 - Modes:
   - `set_mode(ModeName)` to switch game modes. The note is optional.
   - `push_mode(ModeName)` and `pop_mode()` to temporarily
@@ -5983,9 +6044,6 @@ The API is mostly complete. I'm focusing on bug fixes and minor tweaks
 to improve convenience. Only some minor helpers, primarily for AI,
 will be added before the 1.0 release.
 
-The physics API is the newest, and thus the least stable (in both API and
-implementation) part of quadplay.
-
 Expect rasterization alignment rules for triangles to change slightly
 in order to better align for subpixel cases. The current sprite, map,
 disk, line, and rectangle rendering alignment is final. I will add
@@ -6061,7 +6119,7 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-2020 Feb TBD: Beta update 32
+2020 Mar 5: Beta update 32
 
 - Added long text button prompts for SPACE, ENTER, RETURN, SELECT, START, 
   SHARE, and OPTIONS to fontgen
@@ -6070,6 +6128,13 @@ Changes for both the specification and implementation in each release.
 - `font.lineHeight` -> `font.line_height`, `font.charSize` -> `font.char_size`, `font.letterSpacing` -> `font.letter_spacing`
 - Renamed `draw_text()` arguments `wrapWidth` -> `wrap_width` and `textSize` -> `text_size`
 - Added auto-generated asset credits screen on pause menu
+- Added .game.json constant types for `xz`, `hsv`, and `hsva`
+- Included time in screenshot filenames
+- Added joint `def-preserving_transform` block to reduce indentation
+- Added the Mismatched Push and Pop Mode section explaining complex mode transitions
+- Renamed `assetCredits` -> `ASSET_CREDITS`
+- Added serifs to Broderick font capital I variants
+- Made touching the screen in IDE mode not trigger button presses
 
 
 2020 Feb 24: Beta update 31

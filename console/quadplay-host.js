@@ -217,8 +217,11 @@ function onEmulatorKeyDown(event) {
 
 function downloadScreenshot() {
     // Screenshot
-    // , hour:'2-digit', minute:'2-digit'
-    download(emulatorScreen.toDataURL(), makeFilename(gameSource.constants.assetCredits.title + '-' + new Date().toLocaleString(undefined, {year: 'numeric', month: 'short', day: 'numeric'})) + '.png');
+
+    const dateString = new Date().toLocaleString(
+        undefined,
+        {year: 'numeric', month: 'short', day: 'numeric', hour:'2-digit', minute:'2-digit'})
+    download(emulatorScreen.toDataURL(), makeFilename(gameSource.constants.ASSET_CREDITS.title + '-' + dateString) + '.png');
 }
 
 
@@ -1072,6 +1075,9 @@ function onTouchEndOrCancel(event) {
 /* Processes all emulatorButtons against the activeTouchTracker. If
    any *changed* touch was currently over a button, cancels the event. */
 function onTouchesChanged(event) {
+    // Do not process buttons when they aren't visible
+    if (uiMode !== 'Emulator') { return; }
+    
     // Latch state
     for (let j = 0; j < emulatorButtonArray.length; ++j) {
         const button = emulatorButtonArray[j];

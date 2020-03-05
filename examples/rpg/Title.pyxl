@@ -2,8 +2,8 @@ Title
 ============================================================================
 
 let creditsString = ""
-for section ∈ assetCredits:
-   for line ∈ assetCredits[section]:
+for section ∈ ASSET_CREDITS:
+   for line ∈ ASSET_CREDITS[section]:
       creditsString += line + "  |  "
 
 const creditsWidth = text_width(smallFont, creditsString) + SCREEN_SIZE.x
@@ -23,8 +23,8 @@ preserving_transform:
    draw_map(worldMap)
 
 draw_text(smallFont, "quadplay✜", xy(½ SCREEN_SIZE.x, 8), #f049ad, ∅, #444, "center", "middle")
-draw_text(font, assetCredits.title, ½ SCREEN_SIZE, #f049ad, #9c1d69, #222, "center", "middle")
-draw_text(smallFont, "by " + assetCredits.developer, ½ SCREEN_SIZE + xy(0, 30), #ddd, ∅, #222, "center", "bottom")
+draw_text(font, ASSET_CREDITS.title, ½ SCREEN_SIZE, #f049ad, #9c1d69, #222, "center", "middle")
+draw_text(smallFont, "by " + ASSET_CREDITS.developer, ½ SCREEN_SIZE + xy(0, 30), #ddd, ∅, #222, "center", "bottom")
 
 if ⌊⅕ mode_frames⌋ mod 10 < 6: draw_text(smallFont, "Press Any Button", ½ SCREEN_SIZE + xy(0, 60), #ff8, #444, ∅, "center", "middle")
 draw_text(smallFont, creditsString, xy(SCREEN_SIZE.x - loop(2 mode_frames, creditsWidth), 216), #ddd, ∅, #222)
