@@ -1,0 +1,117 @@
+Title
+════════════════════════════════════════════════════════════════════════
+const CHOICE = {HUMAN:0, AI:1, START:2}
+
+let sprite
+
+const shadow_array = []
+
+let num_AIs = max(2 - num_humans, 0)
+let choice = CHOICE.START
+
+for i < 28:
+   push(shadow_array, {
+      pos: SCREEN_SIZE * (random_within_square() + 1) / 2,
+      vel: random(0.5, 1),
+      angle: random(0, 360deg),
+      spin: random(-2deg, 2deg),
+      sprite: small_spritesheet[random_integer(0, 2)][0]
+   })
+
+def start_game():
+   save_local("num_AIs", num_AIs)
+   save_local("num_humans", num_humans)
+   
+   round_num = 1
+   
+   let ai_num = 1
+   resize(player_array, 0)
+   for p < num_humans + num_AIs:
+      push(player_array, {
+         index: p,
+         transform: xy(p mod 2, ⌊½ p⌋) * ½ SCREEN_SIZE,
+         is_human: p < num_humans,
+         name: (if p ≥ num_humans then "AI" + (p + 1 - num_humans) else "P" + (p + 1)),
+         health: MAX_HEALTH,
+         color: BACKGROUND_ARRAY[p],
+         audio_clip: AUDIO_CLIP_ARRAY[p],
+         score: 0,
+         time_bonus: 0, 
+         choice: ∅
+      })
+      
+   set_mode(Instructions) because "Button pressed"
+
+   
+
+def draw_num(n, type, y, isActive):
+   draw_choice(n + " " + type + (if n != 1 then "s" else ""), y, isActive)
+
+
+   
+def draw_choice(text, y, isActive):
+   draw_text(large_font, text,
+             xy(½ SCREEN_SIZE.x, y - (if isActive then 1 else 0)),
+             (if isActive then #FD0 else #F),
+             (if isActive then #000A else ∅),
+             #000A, "center")
+
+   
+enter
+────────────────────────────────────────────────────────────────────────
+// Random title sprite
+set_random_seed(local_time().millisecond)
+sprite = large_spritesheet[random_integer(0, 2)][0]
+
+num_humans = max(load_local("num_humans") default num_humans, 1)
+num_AIs = min(load_local("num_AIs") default num_AIs, 4 - num_humans)
+
+title_music_sound = play_audio_clip(title_music, true, 40%)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_background(#58B)
+
+for sprite, pos, vel, angle, spin in shadow in shadow_array:
+   draw_sprite(sprite, pos, angle, ∅, ∅, 0, #47a)
+   pos.y += vel
+   angle += spin
+   if pos.y > SCREEN_SIZE.y + 20:
+      pos = xy(random(0, SCREEN_SIZE.x), -10)
+      vel = random(0.5, 1),
+      spin = random(-2°, 2°)
+
+const center = SCREEN_SIZE / xy(2, 2.5)
+draw_sprite(sprite, center)
+draw_text(large_font, "R. P. S.", center, #FFF, #000A, #000A, "center", "center")
+draw_text(font, "Casual Effects presents", xy(½ SCREEN_SIZE.x, 13), #fff, ∅, ∅, "center")
+
+draw_num(num_humans, "Human", 170, choice == CHOICE.HUMAN)
+draw_num(num_AIs, "AI", 192, choice == CHOICE.AI)
+draw_choice("Start", 214, choice == CHOICE.START)
+
+for 1 ≤ p ≤ 4:
+   const gamepad = gamepad_array[p - 1]
+   choice = clamp(choice + gamepad.yy + gamepad.qq, 0, 2)
+
+   if choice == CHOICE.START and (gamepad.aa or gamepad.bb or gamepad.cc or gamepad.dd):
+      start_game()
+
+   if gamepad.yy or gamepad.qq: play_audio_clip(sound1)
+
+   if gamepad.xx:
+      play_audio_clip(sound2)
+      if choice == CHOICE.HUMAN:
+         num_humans = clamp(num_humans + gamepad.xx, 1, 4)
+      else if choice == CHOICE.AI:
+         num_AIs += gamepad.xx
+            
+      // Need at least two players
+      if num_humans == 1: num_AIs = max(num_AIs, 1)
+         
+      // No more than 4 players
+      num_AIs = clamp(num_AIs, 0, 4 - num_humans)
+
+
+

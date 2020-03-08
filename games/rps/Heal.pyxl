@@ -1,0 +1,46 @@
+Heal
+════════════════════════════════════════════════════════════════════════
+// Animated heal
+
+let heal_array
+
+enter(h)
+────────────────────────────────────────────────────────────────────────
+
+heal_array = h
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+const offset = ¼ SCREEN_SIZE
+
+draw_round_indicator()
+
+// Draw players
+for transform, health, choice in player in player_array:
+   draw_hud(player)
+
+   // Choice ghost
+   if health > 0:
+      draw_sprite({sprite: large_spritesheet[choice], pos: transform + offset, override_color: #0, opacity: 35%, z: -2})
+
+// Fade in and out
+const opacity = min(HEAL_FADE_FRAMES, mode_frames,
+                    max(0, HEAL_FRAMES - mode_frames)) / HEAL_FADE_FRAMES 
+
+// Big heart beat
+const scale = 100% + 30% (1 - |2 mode_frames / HEAL_FRAMES - 1|)^4
+
+// Apply bonus at max size
+if mode_frames == ⌊½ HEAL_FRAMES⌋:
+   for health in player in heal_array: ++health   
+
+// Animate the sprites for the current attack
+for transform in player in heal_array:
+   draw_sprite({sprite: large_spritesheet.heal, pos: transform + ¼ SCREEN_SIZE, scale: scale,
+                z: -1, opacity: opacity, z: 15})
+
+if mode_frames == ⌊⅓ HEAL_FRAMES⌋: play_audio_clip(heal_sound)
+
+if mode_frames > HEAL_FRAMES: pop_mode() because "Heal complete"

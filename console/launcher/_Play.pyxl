@@ -87,6 +87,24 @@ const gameArray = [{
    builtin:      true,
    label: bglabel[0][0],
    preview: bgpreview
+},
+
+{
+   title: "R. P. S.",
+   developer: "Casual Effects",
+   url: "quad://games/rps",
+   
+   version:      1.0,
+   description:  "Rock-paper-scissors battle royale.",
+   min_players:   1,
+   max_players:   4,
+   cooperative:  false,
+   competitive:  true,
+   achievements: false,
+   highscores:   true,
+   builtin:      true,
+   label:        rplabel[0][0],
+   preview:      rppreview
 }
 ]
 

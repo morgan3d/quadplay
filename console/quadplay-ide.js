@@ -2,7 +2,7 @@
 "use strict";
 
 const deployed = true;
-const version  = '2020.03.05.05'
+const version  = '2020.03.07.20'
 const launcherURL = 'quad://console/launcher';
 
 // Is the browser running on an Apple platform?
@@ -2638,13 +2638,17 @@ function makeConstants(environment, constants) {
     defineImmutableProperty(environment, 'SCREEN_SIZE', Object.freeze({x:SCREEN_WIDTH, y:SCREEN_HEIGHT}));
 
     const alreadySeen = new Map();
-    for (let key in constants) {
+    const CONSTANT = {};
+    for (const key in constants) {
         if (key[0] === '_') {
             throw 'Illegal constant field name: "' + key + '"';
         }
 
-        defineImmutableProperty(environment, key, frozenDeepClone(constants[key], alreadySeen));
+        const value = frozenDeepClone(constants[key], alreadySeen);
+        CONSTANT[key] = value;
+        defineImmutableProperty(environment, key, value);
     }
+    defineImmutableProperty(environment, 'CONSTANTS', Object.freeze(CONSTANT));
 }
 
 
@@ -2664,14 +2668,18 @@ function makeAssets(environment, assets) {
     // Clone the assets, as some of them (like the map) can be mutated
     // at runtime. For speed, do not clone sprites and fonts
     const alreadySeen = new Map();
-    for (let assetName in assets) {
+    const ASSET = {};
+    for (const assetName in assets) {
         const assetValue = assets[assetName];
         const assetCopy = ((assetValue._type === 'spritesheet') || (assetValue._type === 'font') || (assetValue._type === 'audioClip')) ?
               assetValue :
               deep_clone(assetValue, alreadySeen);
+        ASSET[assetName] = assetCopy;
         defineImmutableProperty(environment, assetName, assetCopy);
     }
+    defineImmutableProperty(environment, 'ASSETS', Object.freeze(ASSET));
 }
+
 
 // Pause when losing focus if currently playing...prevents quadplay from
 // eating resources in the background during development.

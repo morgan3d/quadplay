@@ -1,0 +1,58 @@
+Unchallenged
+════════════════════════════════════════════════════════════════════════
+// Animated unchallenged
+
+let player
+let points
+
+enter(A, p)
+────────────────────────────────────────────────────────────────────────
+
+player = A
+points = p
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+const offset = ¼ SCREEN_SIZE
+
+draw_round_indicator()
+
+// Draw players
+for transform, health, choice in player in player_array:
+   draw_hud(player)
+
+   // Choice ghost
+   if health > 0:
+      draw_sprite({sprite: large_spritesheet[choice], pos: transform + offset, override_color: #0, opacity: 35%, z: -2})
+
+
+// Fade in and out
+const opacity = min(HEAL_FADE_FRAMES, mode_frames, max(0, HEAL_FRAMES - mode_frames)) / HEAL_FADE_FRAMES 
+
+draw_sprite({sprite: large_spritesheet[player.choice], pos: player.transform + offset, z: -1, opacity: opacity, z: 15})
+
+draw_drop_shadow_text({font: large_font,
+              text: "Unchallenged!",
+              pos: player.transform + offset,
+              color: rgba(0, 0, 0, opacity),
+              outline: rgba(1, 1, 1, opacity),
+              x_align: "center",
+              y_align: "center",
+              z: 20})
+
+// Sound
+if mode_frames == ⌊20% HEAL_FRAMES⌋:
+   play_audio_clip(unchallenged_audio_clip, nil, 150%)
+
+// Apply bonus at max opacity
+if mode_frames == ⌊½ HEAL_FRAMES⌋:
+   player.score += points
+
+if mode_frames > 20:
+   draw_text({font: large_font, text: "+" + points,
+               pos: player.transform + ¼ SCREEN_SIZE - xy(0, 0.25 * (mode_frames - 20)),
+               color: #0f4, outline: #0, x_align: "center", y_align: "center", z: 21})
+
+if mode_frames > HEAL_FRAMES: pop_mode() because "Animation complete"

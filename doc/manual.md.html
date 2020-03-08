@@ -270,6 +270,19 @@ competive game derived from Snake-like games, including [TRON]("https://en.wikip
 - Character spawning
 
 
+----------------------------
+  <center><img src="../games/rps/label128.png" width=128px style="border:0"></center>
+
+<div class="preview pixel" style="background-image:url('../games/rps/preview.png')"></div>
+[R. P. S.](../console/quadplay.html?game=quad://games/rps&IDE=1) is a rock-paper-scissors battle royale for up to four players:
+
+- Extensive animation
+- Use of modes for simplicity
+- Timed sound effects
+- Private choices in multiplayer
+- Combinatorial logic
+
+
 ### Examples
 
 [Starter](../console/quadplay.html?game=quad://examples/starter&IDE=1) is a project with a basic setup
@@ -1022,12 +1035,15 @@ they are read by your program_, as set by `set_transform()`. Reading the same pr
 with a transform change in between can change the sign of the value. The
 angles are always clockwise in screen space.
 
-The `joy` variable is equal to `gamepad_array[0]` as shorthand for single-person games.
 
-`any_button_press(gamepad (= nil))`
+`any_button_press(gamepad (= ∅))`
 : Returns true if any button on `gamepad` was just pressed.
   If `gamepad` is `nil`, returns true if any button on any
   gamepad was pressed.
+
+`joy`
+: A variable equal to `gamepad_array[0]` as shorthand for
+  single-person games.
 
 
 ### Button Prompts
@@ -1124,7 +1140,7 @@ The system pause menu is bound to the ⓟ button, which is not visible to games.
 Games can add up to three custom elements on the pause menu, and can change these
 at any point.
 
-`set_pause_menu(opt1 (= nil), opt2 (= nil), opt3 (= nil))`
+`set_pause_menu(opt1 (= ∅), opt2 (= ∅), opt3 (= ∅))`
 : Pverride the custom elements on the pause menu. Each argument
   is an object of the form `{text:string, callback:function, confirm:boolean}`.
   At 64x64 resolution, specifying opt3 disables the automatic game
@@ -2013,10 +2029,10 @@ support potential future voxel-based rendering schemes.
 
 Most graphics commands operate in *draw space*. By default, it is
 identical to screen space, but can be changed with with
-`set_transform()`. See also `get_transform()`, `extend_transform()`, and
+`set_transform()`. See also `get_transform()` and
 the `preserving_transform:` block.
 
-**The transform affects both rendering and simulation**. The direction
+**The transform affects rendering, simulation, and events**. The direction
 of the x- and y-axes affects the rotation angle of entity space as
 well as draw space. I recommend that for each game you choose a single
 y-axis convention. Set the scale part of the transform only once at
@@ -2104,7 +2120,7 @@ The center of the entire screen is `½ SCREEN_SIZE`.
 `compose_transform(args)`
 : Named argument version of `compose_transform()`.
 
-`compose_transform(pos (= nil), dir (= nil), z (= nil), zDir (= nil), skew (= nil))`
+`compose_transform(pos (= ∅), dir (= ∅), z (= ∅), zDir (= ∅), skew (= ∅))`
 : Apply this local transformation _before_ the current one. Used for entering a child
   coordinate system. Nil arguments or properties default to `(xy(0, 0), xy(1, 1), 0, 1, xy(0, 0))`.
   Use `preserving_transform` or `get_transform()` plus `set_transform()` to save and restore
@@ -2113,7 +2129,7 @@ The center of the entire screen is `½ SCREEN_SIZE`.
 `set_transform(args)`
 : Named argument version of `set_transform()`.
 
-`set_transform(pos (= nil), dir (= nil), z (= nil), zDir (= nil), skew (= nil))`
+`set_transform(pos (= ∅), dir (= ∅), z (= ∅), zDir (= ∅), skew (= ∅))`
 : Set the transformation applied to all draw coordinates to compute screen coordinates. Nil values
   or nil properties default to their previous value. The equation
   mapping draw to screen coordinates is:
@@ -2736,7 +2752,7 @@ using the full physics engine.
 `rayIntersectMap(args)`
 : Calls `rayIntersectMap()` with the named arguments.
 
-`rayIntersectMap(ray, map, tileCanBeSolid (= get_map_sprite), pixelIsSolid (= nil), layer (= 0), replacement_array (= []))`
+`rayIntersectMap(ray, map, tileCanBeSolid (= get_map_sprite), pixelIsSolid (= ∅), layer (= 0), replacement_array (= []))`
 : The `ray` object must have `xy()` fields for `origin`, `direction`,
   and an optional number field for `length (= inf)`.
   The `ray.direction` will automatically be normalized. The ray is in _draw coordinates_.
@@ -2814,11 +2830,11 @@ to start colliding with each other.
   for example, `min_depth` = 1 will only trigger on significant,
   new contacts. There is no way to remove a contact callback.
 
-`physics_entity_has_contacts(physics, entity, child_region (= nil), world_normal (= nil), mask (= 0xffffffff), sensors (= "exclude"))`
+`physics_entity_has_contacts(physics, entity, child_region (= ∅), world_normal (= ∅), mask (= 0xffffffff), sensors (= "exclude"))`
 : Returns true if `physics_entity_contacts()` would produce any contacts with the same arguments.
   This is more efficient, for the case where the actual contacts are not needed.
 
-`physics_entity_contacts(physics, entity, child_region (= nil), world_normal (= nil), mask (= 0xffffffff), sensors (= "exclude"))`
+`physics_entity_contacts(physics, entity, child_region (= ∅), world_normal (= ∅), mask (= 0xffffffff), sensors (= "exclude"))`
 : Returns an array of all current contacts, where each contact has the form
   `{entityA, entityB, depth, point0, point1, normal}`. The contact points are
   in draw coordinates.
@@ -2855,7 +2871,7 @@ to start colliding with each other.
   Use the `draw_physics()` command or IDE button to debug physics objects
   that correspond to entities which are no longer being drawn.
 
-`physics_attach(physics, type, {entityA, entityB, pointA, pointB, collide (= nil), ...})`
+`physics_attach(physics, type, {entityA, entityB, pointA, pointB, collide (= ∅), ...})`
 : Attaches two entities to each other, `entityB` to the
   world. `entityA` may be `nil` (the world) or have infinite
   density. `entityB` must be non-`nil` and have finite density. The
@@ -3010,7 +3026,7 @@ endpoints and borders.
   and then translating by `pos`. The polygon may have any winding direction. The outcome of the drawn result
   is undefined and may change across platforms if the polygon is not convex (but there will never be an error).
 
-`draw_corner_rect(corner, size, fill, border (= nil), z (= 0))`
+`draw_corner_rect(corner, size, fill, border (= ∅), z (= 0))`
 : Draw a rectangle covering all of the pixel centers between `corner`
   and `corner + size`. This is primarily for UI window drawing.
   `size` may be negative.
@@ -3053,7 +3069,7 @@ endpoints and borders.
   the z-order.  Useful for drawing the main game background during
   inventory, pause, menu, and dialogue modes.
 
-`draw_rect(pos, size, fill, border (= nil), angle (= 0), z (= 0))`
+`draw_rect(pos, size, fill, border (= ∅), angle (= 0), z (= 0))`
 : Draws the rectangle _centered_ at `pos` with the given `size` and `angle`.
   No `scale` argument is provided because it is easy for the caller to
   explicitly multiply `size` by `scale`.
@@ -3065,7 +3081,7 @@ endpoints and borders.
   `draw_sprite({sprite: wizard, pos: xy(100, 100), z: 2})`.
   Values default according to the positional argument version.
 
-`draw_sprite(sprite, pos, angle (= 0), scale (= nil), opacity (= 1), z (= 0), override_color (= nil))`
+`draw_sprite(sprite, pos, angle (= 0), scale (= ∅), opacity (= 1), z (= 0), override_color (= ∅))`
 : Draw sprite `sprite` with its center at `pos`. `pos` must have at
   least `x` and `y` fields. The sprite appears at `z` in the z-order
   (defaults to 0). The `scale` parameter must be nil (which is treated
@@ -3098,7 +3114,7 @@ endpoints and borders.
   `draw_text({text: "Fire!", pos: xy(100, 100), x_align:"left", z: 2})`.
   Values default according to the positional argument version.
 
-`draw_text(font, text, pos, color (= nil), shadow (= nil), outline (= nil), x_align (= "left"), y_align (= "baseline"), z (= 0), wrap_width (= nil), text_size (= size(text)), markup (= false))`
+`draw_text(font, text, pos, color (= ∅), shadow (= ∅), outline (= ∅), x_align (= "left"), y_align (= "baseline"), z (= 0), wrap_width (= ∅), text_size (= size(text)), markup (= false))`
 : Print string `text` relative to `pos`. Returns an `xy()` of the bounding box,
   excluding shadows and outline.
 
@@ -3136,7 +3152,7 @@ endpoints and borders.
   using a double slash: `\\{` or `\\}`. _The current implementation
   simply strips markup instead of applying it._
 
-`draw_tri(A, B, C, fill, border (= nil), pos (= xy(0, 0)), scale (= xy(1, 1)), angle (= 0), z (= 0))`
+`draw_tri(A, B, C, fill, border (= ∅), pos (= xy(0, 0)), scale (= xy(1, 1)), angle (= 0), z (= 0))`
 : Scale `A`, `B`, and `C` by `scale`, rotate them around the origin by `angle`, translate
   by `pos`, and then draw the triangle. The `pos` argument is not first because in many
   cases this is called with draw-space vertices and no translation. The triangle may have
@@ -3149,7 +3165,7 @@ endpoints and borders.
 : Returns the current net clipping region as an object that
   can be passed to `set_clip()`.
 
-`get_sprite_pixel_color(sprite, pos, result (= nil))`
+`get_sprite_pixel_color(sprite, pos, result (= ∅))`
 : Returns the color of pixel `pos` in the sprite as an `rgba`
   value. When `result` is not `nil`, it is used to store the result
   to avoid memory allocation. If the pixel is out of bounds for that sprite,
@@ -3159,7 +3175,7 @@ endpoints and borders.
 `intersect_clip(args)`
 : Object version of `intersect_clip()`.
 
-`intersect_clip(pos (= nil), size (= nil), z (= nil), z_size (= nil))`
+`intersect_clip(pos (= ∅), size (= ∅), z (= ∅), z_size (= ∅))`
 : Intersect the current clipping region with this new one. Ignores the
   current transformation.
 
@@ -3177,7 +3193,7 @@ endpoints and borders.
 `set_clip(args)`
 : Object version of `set_clip()`.
 
-`set_clip(pos (= nil), size (= nil), z (= nil), z_size (= nil))`
+`set_clip(pos (= ∅), size (= ∅), z (= ∅), z_size (= ∅))`
 : Set the clipping region to this region. Unspecified and `nil` values
   retain their current value. `pos` is the upper-left corner. 
   `pos` and `size` must be `nil` or `xy()` values.
@@ -3321,7 +3337,7 @@ The following functions relate maps, pixels, and sprites. In them, a
 commands operate and a "map coordinate" is in the space of the map
 indices. The map's z-axis corresponds to layers.
 
-`draw_map(map, min_layer (= 0), max_layer (= length(map.layer)), replacement_array (= nil))`
+`draw_map(map, min_layer (= 0), max_layer (= length(map.layer)), replacement_array (= ∅))`
 : Draws the map with the current transform.  If there is no transform,
   the map is drawn with the first tile's center at (0, 0), which means
   that the tile will be half off the screen.  If specified, `min_layer`
@@ -3358,24 +3374,24 @@ indices. The map's z-axis corresponds to layers.
   `B` values from `edgeCost`. Sprites that are not specified in the array
   cost 1 to traverse, and it costs `infinity` to leave the map bounds.
 
-`get_map_pixel_color(map, map_coord, layer (= 0), replacement_array (= nil))`
+`get_map_pixel_color(map, map_coord, layer (= 0), replacement_array (= ∅))`
 : Returns the color of the pixel in `map` at the corresponding
   `map_coord` and `round(layer)`. Returns `nil` for out of
   bounds values and empty sprites. See also
   `get_map_pixel_color_by_draw_coord()`.
 
-`get_map_pixel_color_by_draw_coord(map, draw_coord, drawZ (= 0), replacement_array (= nil))`
+`get_map_pixel_color_by_draw_coord(map, draw_coord, drawZ (= 0), replacement_array (= ∅))`
 : Returns the pixel color in `map` at the corresponding `draw_coord`
   and `drawZ` using `transform_draw_to_map()`. The result is guaranteed
   to match what was drawn by `draw_map()`. Returns `nil` for out of
   bounds values and empty sprites. See also `get_map_pixel_color()`.
 
-`get_map_sprite(map, map_coord, layer (= 0), replacement_array (= nil))`
+`get_map_sprite(map, map_coord, layer (= 0), replacement_array (= ∅))`
 : Returns the sprite in `map` at the corresponding `map_coord` and
   `layer` using rounding. Returns `nil` for out of bounds values. See
   also `get_map_sprite_by_draw_coord()`.
 
-`get_map_sprite_by_draw_coord(map, draw_coord, drawZ (= 0), replacement_array (= nil))`
+`get_map_sprite_by_draw_coord(map, draw_coord, drawZ (= 0), replacement_array (= ∅))`
 : Returns the sprite in `map` at the corresponding `draw_coord` and
   `drawZ` using `transform_draw_to_map` and rounding to compute the
   coordinates. Returns `nil` for out of bounds values. See also
@@ -3495,33 +3511,33 @@ Time
 Path Finding
 ----------------------------------------------------------
 
-*`find_path(startNode, goalNode, estimatePathCost, edgeCost, getNeighbors, nodeToID, graphObj (= nil))`*
+*`find_path(start_node, goal_node, estimate_path_cost, edge_cost, get_neighbors, node_to_ID, graph_obj (= ∅))`*
 
 _See also `find_map_path` for a simpler map-specific version._
 
 `find_path()` is a general-purpose path-finding routine for any kind of
 world representation. It uses the "A*" (A-star) algorithm. The return value is an
-array of nodes to traverse, including the `startNode` and `goalNode`,
-to follow the shortest path discovered, or `nil` if no path
+array of nodes to traverse, including the `start_node` and `goal_node`,
+to follow the shortest path discovered, or `∅` if no path
 exists.
 
 To recover the cost of the path, use the idiom:
 
 ````````````` PyxlScript
 let cost = 0
-for i < size(path) - 1: cost += edgeCost(path[i], path[i + 1])
+for i < size(path) - 1: cost += edge_cost(path[i], path[i + 1])
 `````````````
 
 The arguments are below. See the example of using these on a map for a
 better understanding of how they are typically computed.
 
-`startNode`
+`start_node`
 : The starting location, in your chosen node representation.
 
-`goalNode`
+`goal_node`
 : The ending location, in your chosen node representation.
 
-`def estimatePathCost(nodeA, nodeB, graphObj)`
+`estimate_path_cost(nodeA, nodeB, graphObj)`
 : Returns a numerical estimate of the cost for the path between
   `nodeA` and `nodeB`. For example, the straight line distance.
   The more accurate this estimate is, the faster that the algorithm
@@ -3529,20 +3545,20 @@ better understanding of how they are typically computed.
   will run in the worst case quadratic time but is guaranteed to find
   the exact shortest path instead of an approximation.
 
-`def edgeCost(nodeA, nodeB, graphObj)`
+`edge_cost(nodeA, nodeB, graph_obj)`
 : The actual cost of going from A to B, which are guaranteed to be
   neighbors.
 
-`def getNeighbors(node, graphObj)`
+`get_neighbors(node, graph_obj)`
 : Returns an array of all neighbor nodes reachable from node. It is not required that
   neighbors are bidirectional. For example, a ledge may create an edge traversable
   in only one direction
 
-`def nodeToID(node, graphObj)`
+`node_to_ID(node, graph_obj)`
 : Returns a compact integer or string representation of the node, which is
   required internally by the algorithm for maintaining a table of nodes.
 
-`graphObj`
+`graph_obj`
 : Any object that represents your world graph. This can be `nil` if the other
   function arguments use global state.
 
@@ -3555,13 +3571,13 @@ const swamp = sprite[0][1]
 const dir = [xy(-1, 0), xy(0, -1), xy(0, 1), xy(1, 0)]
 
 // Assume all edges cost 1
-def estimatePathCost(A, B, map): return |B.x - A.x| + |B.y - A.y|
+def estimate_path_cost(A, B, map): return |B.x - A.x| + |B.y - A.y|
 
 // Moving through swamps is slow
-def edgeCost(A, B, map): return 1 + (get_map_sprite(map, A) == swamp)
+def edge_cost(A, B, map): return 1 + (get_map_sprite(map, A) == swamp)
 
 // Block traversal at map edges and walls
-def getNeighbors(A, map):
+def get_neighbors(A, map):
    const neighbors = []
    for d in dir:
       const B = A + d; const s = get_map_sprite(map, B)
@@ -3569,12 +3585,12 @@ def getNeighbors(A, map):
    return neighbors
 
 // Map to integer indices
-def nodeToID(A, map): return A.x + map.width * A.y
+def node_to_ID(A, map): return A.x + map.width * A.y
 
 // In map coordinates
-let startNode = xy(1, 1)
-let goalNode = xy(20, 20)
-let path = find_path(startNode, goalNode, estimatePathCost, edgeCost, getNeighbors, nodeToID, map)
+let start_node = xy(1, 1)
+let goal_node = xy(20, 20)
+let path = find_path(start_node, goal_node, estimate_path_cost, edge_cost, get_neighbors, node_to_ID, map)
 
 // Print the path
 for P in path: debug_print(P)
@@ -3660,7 +3676,7 @@ and persistent worlds.
 
 `load_local(key)`
 : The key is loaded and deserialized with `parse()` to return an object
-  that was previously saved with `save_local()`. If the `key` is not bound,
+  that was previously saved with `save_local()`. If the `key` is not found,
   then `∅` is returned.
 
 `save_local(key, value)`
@@ -4976,6 +4992,7 @@ ASCII    | Unicode | Meaning
 `>>`     |`▶`      | bit shift right
 `>>=`    |`▶=`     | mutating bit shift right
 `if`...`then`...`else`| | conditional
+`default`|         | default value
 
 Assignment and mutating operators all return `nil`; they cannot be
 chained or used in expressions.
@@ -5018,6 +5035,29 @@ setTarget(‖pos - P.pos‖ ≤ 10 and P or ∅)
 To nest conditionals, you must put parentheses around at least the
 `falsevalue`, for example `y = if x > 3 then "cat" else (if x > 2 then
 "dog" else "llama")`.
+
+`a default b` is equal to `a` if `a` is not `nil` and `b`
+otherwise. It does not evaluate `b` if `a` was not `nil`.  This is
+equivalent to the JavaScript and C#
+[nullish](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_operator)
+`??` operator. Some common uses are:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+
+// Default value on load
+num_players = load_local("num_players") default 2
+
+// Default value on missing object property
+height = character_height[name] default 170
+
+// Default value on going out of array bounds
+vel = array[i + 2] default xy(2, 3)
+
+// Fallback value on find() failing
+debug_print(array[find(array, target) default 0])
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 Spaces are not required around operators in most cases, so long as the text parses
 unambiguously. For example, `1or3` is equivalent to `1 or 3`. There is no ASCII operator for
@@ -5114,18 +5154,20 @@ followed by the number 10.
 The following are built-in constants and special zero-argument operators. They are
 not variable names and thus cannot be redefined. Several have both unicode and ASCII names.
 
-Symbol         | ASCII         | Value
----------------|---------------|----------------------------------------
-`ε`            | `epsilon`     | `0.0000001`
-`π`            | `pi`          | `3.141592653589793115997963468544185161590576171875`
-`∞`            | `infinity`    | infinity
-               | `nan`         | floating-point "not-a-number" value
-               | `ASSET_CREDITS`| object of credit and license statements from assets and code
-`∅`            | `nil`         | ("undefined")
-               | `pad`         | array gamepad of objects
-               | `joy`         | shorthand for `pad₀`
-`ξ`            | `random()`       | random number on [0, 1), resampled every time the expression is used
-               | `SCREEN_SIZE`  | the size of the screen in pixels, defaults to `xy(384, 224)`
+Symbol         | ASCII           | Value
+---------------|-----------------|----------------------------------------
+`ε`            | `epsilon`       | `0.0000001`
+`π`            | `pi`            | `3.141592653589793115997963468544185161590576171875`
+`∞`            | `infinity`      | infinity
+               | `nan`           | floating-point "not-a-number" value
+               | `ASSET_CREDITS` | object of credit and license statements from assets and code
+`∅`            | `nil`           | ("undefined")
+               | `pad`           | array gamepad of objects
+               | `joy`           | shorthand for `pad₀`
+`ξ`            | `random()`      | random number on [0, 1), resampled every time the expression is used
+               | `SCREEN_SIZE`   | the size of the screen in pixels, defaults to `xy(384, 224)`
+               | `CONSTANTS`     | an object mapping all game-specific constants to their values
+               | `ASSETS`        | an object mapping all game-specific assets to their values
 
 
 <!--
@@ -6118,6 +6160,13 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 Mar 7: Beta update 33
+
+- Added `CONSTANTS` and `ASSETS` objects
+- Added `default`, a "nullish-coalescing" operator for creating default values
+- Added R. P. S. game
+
 
 2020 Mar 5: Beta update 32
 

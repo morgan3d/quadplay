@@ -1,0 +1,93 @@
+{
+    "title":      "R.P.S.",
+    "developer":  "Casual Effects",
+    "copyright":  "by Morgan McGuire",
+    "license":    "CC0/Public Domain",
+
+    "packages":   [],
+    "scripts":    ["global.pyxl"],
+    "modes":      ["Title*", "Instructions", "Play", "Eliminate", "Battle", "Attack", "Heal", "GameOver", "Unchallenged"],
+    "assets":     {
+        "font": "quad://fonts/broderick-7.font.json",
+        "large_font": "quad://fonts/broderick-14.font.json",
+        "large_spritesheet": "rps-112x112.sprite.json",
+        "small_spritesheet": "rps-32x32.sprite.json",
+        "sound0": "quad://sounds/Blip-07.sound.json",
+        "sound1": "quad://sounds/61-Blip.sound.json",
+        "sound2": "quad://sounds/66-Blip.sound.json",
+        "sound3": "quad://sounds/68-Blip.sound.json",
+        "rock_scissors_audio_clip": "rock-scissors.sound.json",
+        "paper_rock_audio_clip": "paper-rock.sound.json",
+        "scissors_paper_audio_clip": "scissors-paper.sound.json",
+        "rock_rock_audio_clip": "rock-rock.sound.json",
+        "paper_paper_audio_clip": "paper-paper.sound.json",
+        "scissors_scissors_audio_clip": "scissors-scissors.sound.json",
+        "start_sound": "quad://sounds/59-Jump.sound.json",
+        "elimination_sound": "quad://sounds/75-Wild.sound.json",
+        "heal_sound": "quad://sounds/30-Powerup.sound.json",
+        "title_music": "quad://sounds/loop-joy.sound.json",
+        "unchallenged_audio_clip": "unchallenged.sound.json",
+        "game_over_audio_clip": "quad://sounds/music-days.sound.json"
+    },
+
+    "version":      0.0,
+    "min_players":  1,
+    "max_players":  4,
+    "cooperative":  false,
+    "competitive":  true,
+    "achievements": false,
+    "highscores":   false,
+    "description": "Rock-paper-scissors battle royale.",
+
+    "constants":  {
+        "TIME_BONUS_RATE": 0.2,
+        "BONUS_DELAY_FRAMES": 90,
+        "MAX_HEALTH": {"type": "number", "value": 6},
+        "MAX_ROUNDS": {"type": "number", "value": 16},
+        "WIN_POINTS": {"type": "number", "value": 200},
+        "NUM_HEART_PARTICLES": 1024,
+        "ATTACKS":    {"type": "array", "value": ["rock", "paper", "scissors"]},
+        "ATTACK_DESCRIPTION": {"type": "raw", "value":
+                               {
+                                   "rock": "smashes",
+                                   "paper": "covers",
+                                   "scissors": "cut"
+                               }},
+        
+        "HEAL_FRAMES": 90,
+        "HEAL_FADE_FRAMES": 20,
+        
+        "ATTACK_FRAMES": 160,
+        "ATTACK_DELAY_FRAMES": 45,
+        "ATTACK_FADE_FRAMES": 20,
+        "POST_ATTACK_FRAMES": 20,
+        "ATTACK_SPEED": 1000,
+        
+        "CHOICE_LOCATION": {"type": "object", "value":
+                            {
+                                "rock":     {"type": "xy", "value": {"x": 96, "y": 30}},
+                                "paper":    {"type": "xy", "value": {"x": 48, "y": 55}},
+                                "scissors": {"type": "xy", "value": {"x": 96, "y": 80}},
+                                "heal":     {"type": "xy", "value": {"x": 144, "y": 55}}
+                            }},
+        "INSTRUCTIONS":`Choose Rock, Paper, Scissors, or Heal each round.
+
+Your choice fights all other players. Paper beats Rock beats Scissors beats Paper.
+
+Each win gives points. Get bonus points for choosing quickly.
+
+Each loss costs a heart. Lose all of your hearts and you're out of the game.
+
+Heal restores a heart and neither wins nor loses in that round.
+
+The highest score after 10 rounds wins the game.`,
+        "BACKGROUND_ARRAY": {
+            "type": "array",
+            "value": [
+                {"type": "hsv", "value": {"h": 0.00, "s": 0.30, "v": 1.00}},
+                {"type": "hsv", "value": {"h": 0.15, "s": 0.30, "v": 1.00}},
+                {"type": "hsv", "value": {"h": 0.40, "s": 0.30, "v": 1.00}},
+                {"type": "hsv", "value": {"h": 0.55, "s": 0.30, "v": 0.90}}
+            ]}
+    }
+}

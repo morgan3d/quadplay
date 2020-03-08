@@ -1,0 +1,14 @@
+{
+    "url":          "rps-32x32.png",
+    "sprite_size":   {"x": 32, "y": 32},
+    "gutter":       0,
+    "transpose":    false,
+    "default_duration": 5,
+    "names":        {
+        "rock":     {"x": 0, "y": 0},
+        "paper":    {"x": 1, "y": 0},
+        "scissors": {"x": 2, "y": 0},
+        "heal":     {"x": 3, "y": 0}
+    },
+    "license" :     "By Morgan McGuire 2020 derived and caels https://opengameart.org/content/rock-paper-scissors-lpc-style, CC-BY-SA 3.0"
+}

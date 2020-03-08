@@ -1,0 +1,140 @@
+Attack
+════════════════════════════════════════════════════════════════════════
+// Animated attack
+
+let combattants
+let winners
+let losers
+let centroid_transform
+
+const particle_array = []
+
+
+enter(win_group, lose_group, type)
+────────────────────────────────────────────────────────────────────────
+
+assert(size(win_group) > 0 and size(lose_group) > 0)
+
+winners = win_group
+losers = lose_group
+combattants = concatenate(winners, losers)
+
+// Compute the centroid
+centroid_transform = xy(0, 0)
+for transform in c in combattants: centroid_transform += transform
+centroid_transform /= size(combattants)
+
+resize(particle_array, 0)
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+const tie = winners[0].choice == losers[0].choice
+
+const offset = ¼ SCREEN_SIZE
+
+draw_round_indicator()
+
+// Draw players
+for transform, health, choice in player in player_array:
+   let shake = nil
+   if not tie and (find(losers, player) != nil) and (|mode_frames - ½ ATTACK_FRAMES - 1| < 6):
+      shake = 1.5 random_direction2D()
+      
+   draw_hud(player, shake)
+
+   // Choice ghost
+   if health > 0:
+      draw_sprite({sprite: large_spritesheet[choice], pos: transform + offset, override_color: #0, opacity: 35%, z: -2})
+
+// Compute animation lerp parameter
+const s = ATTACK_SPEED / magnitude(winners[0].transform - centroid_transform)
+let t = s * (mode_frames - ATTACK_DELAY_FRAMES) / ATTACK_FRAMES
+
+// Bounce back on ties
+if tie and t > 70%: t = 2 * 70% - t
+t = clamp(t, 0%, 100%)
+
+// Fade in and out
+const win_opacity = min(ATTACK_FADE_FRAMES, mode_frames,
+                    150% max(0, ATTACK_FRAMES - mode_frames)) / ATTACK_FADE_FRAMES 
+
+let lose_opacity = win_opacity
+
+// Fade out loser sooner
+if not tie:
+   lose_opacity = min(lose_opacity, max(0, (ATTACK_FRAMES - 1.6 ATTACK_FADE_FRAMES - mode_frames) / ATTACK_FADE_FRAMES))
+
+// Animate the sprites for the current attack. Draw winners second so that they are on top
+const combos = [{opacity: lose_opacity, array: losers}, {opacity: win_opacity, array: winners}]
+
+for opacity, array in set in combos:
+   for transform, choice, color in player in array:
+      draw_sprite({sprite: large_spritesheet[choice], pos: lerp(transform, centroid_transform, t) + offset,
+                   z: -1, opacity: opacity, z: 15})
+
+   
+let verb = ATTACK_DESCRIPTION[winners[0].choice]
+if tie:
+   if winners.choice == "scissors":
+      verb = "tie"
+   else:
+      verb = "ties"
+
+
+const text_opacity = clamp((mode_frames - 3 ATTACK_FADE_FRAMES) / ATTACK_FADE_FRAMES, 0, win_opacity)
+
+draw_drop_shadow_text({font: large_font,
+                       text: winners[0].choice + " " + verb + " " + losers[0].choice,
+                       pos: xy(lerp(centroid_transform.x + offset.x, ½ SCREEN_SIZE.x, 25%), centroid_transform.y + offset.y),
+                       color: rgba(0, 0, 0, text_opacity),
+                       outline: rgba(1, 1, 1, text_opacity),
+                       x_align: "center",
+                       y_align: "center",
+                       z: 20})
+
+if not tie and mode_frames > ½ ATTACK_FRAMES:
+   for transform in player in winners:
+      draw_text({font: large_font, text: "+" + (WIN_POINTS * size(losers)),
+                 pos: transform + ¼ SCREEN_SIZE - xy(0, 0.25 * (mode_frames - ½ ATTACK_FRAMES)),
+                 color: #0f4, outline: #0, x_align: "center", y_align: "center", z: 21})
+
+
+// Sound
+if (tie and mode_frames == ⌊32% ATTACK_FRAMES⌋) or (not tie and mode_frames == ⌊42% ATTACK_FRAMES⌋):
+   play_audio_clip(ASSETS[winners[0].choice + "_" + losers[0].choice + "_audio_clip"], nil, 220%)
+
+// Health and particles   
+if mode_frames == ⌊½ ATTACK_FRAMES⌋ and not tie:
+   // Don't actually die until the end of the battle, so that the
+   // order of attacks doesn't matter
+   for health, index, transform in player in losers:
+      if health > 0.1:
+         const heart_center = xy(190 - 11 (MAX_HEALTH + 1) + 11 floor(health),
+                                 (if index > 1 then ½ SCREEN_SIZE.y - 12 else 1)) + transform
+         health = max(0.1, health - 1)
+
+         // Spawn particles
+         for i < NUM_HEART_PARTICLES:
+            const vel = xy(random(0.25, 1.0), random(0.5, 2.5)) * (random_direction2D() + xy(0, 0.5))
+            push(particle_array, {pos: heart_center + 3 vel, vel: vel})
+         
+      
+   // Award points
+   for score in player in winners:
+      score += WIN_POINTS * size(losers)
+
+// Move, draw, and expire particles
+let p = size(particle_array)
+while p > 0:
+   --p
+   const particle = particle_array[p]
+   particle.pos += particle.vel
+   particle.vel.y += 0.075
+   draw_point(particle.pos, #f40)
+   draw_point(particle.pos + xy(0, 1), #7)
+   if ξ < 2.5% or particle.pos.y > SCREEN_SIZE.y: fast_remove_key(particle_array, p)
+   
+if mode_frames > ATTACK_FRAMES + POST_ATTACK_FRAMES: pop_mode() because "Attack complete"

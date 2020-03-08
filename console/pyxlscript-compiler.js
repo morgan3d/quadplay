@@ -912,7 +912,7 @@ function pyxlToJS(src, noYield, internalMode) {
         // compiler does not inject {} around a loop body: the
         // for-with statement, where it needs to output a single
         // expression to compile those as if they were FOR statements.
-        src = src.replace(/\*[\t ]*(xor|or|and|not|mod|bitxor|bitand|bitor|bitnot|bitnot|bitshr|bitshl|for|with)(\b|\d|$)/g, ' $1$2');
+        src = src.replace(/\*[\t ]*(default|xor|or|and|not|mod|bitxor|bitand|bitor|bitnot|bitnot|bitshr|bitshl|for|with)(\b|\d|$)/g, ' $1$2');
 
         // Replace fractions
         src = src.replace(/[½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒]/g, function (match) { return fraction[match]; });
@@ -993,8 +993,19 @@ function pyxlToJS(src, noYield, internalMode) {
     src = src.replace(/\bassert\b/g, '_assertEnabled && assert');
     src = src.replace(/\bdebug_print\b/g, '_debugPrintEnabled && debug_print');
 
+    // DEFAULT operators. We replace these with (the unused in pyxlscript) '=='
+    // operator, which has similar precedence, and then use vectorify
+    // to rewrite them as a semantic emulation of nullish operators.
+    // When the esprima library supports '??', we'll change the following
+    // line to replace with that operator and then change vectorify to
+    // have a flag for rewriting nullish, rather than this weird callback.
+    //
+    // Do this immediately before vectorify, which will restore these
+    src = src.replace(/\bdefault\b/g, '==');
+
+    
     try {
-        src = vectorify(src, {assignmentReturnsUndefined:true, scalarEscapes:true});
+        src = vectorify(src, {assignmentReturnsUndefined:true, scalarEscapes:true, equalsCallback: vectorify.nullishRewriter});
     } catch (e) {
         console.log(src);
         throw e;
@@ -1008,7 +1019,7 @@ function pyxlToJS(src, noYield, internalMode) {
     src = src.replace(/_add\(__yieldCounter, 1\)/g, '__yieldCounter + 1');
     src = unprotectQuotedStrings(src, protectionMap);
 
-    // console.log(src);
+    //console.log(src);
     return src;
 }
 

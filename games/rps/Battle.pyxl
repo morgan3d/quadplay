@@ -1,0 +1,124 @@
+Battle
+════════════════════════════════════════════════════════════════════════
+
+let action_array
+
+def done():
+   let num_alive = 0
+   let just_eliminated = []
+   let live_player = nil
+   for choice, health in player in player_array:
+      choice = ∅
+      const new_health = ⌊ health ⌋
+      if new_health != health:
+         health = new_health
+         push(just_eliminated, player)
+         
+      if health > 0:
+         ++num_alive
+         live_player = player
+
+   if num_alive ≤ 1:
+      if live_player:
+         live_player.score += (MAX_ROUNDS - round_num) * (size(player_array)- 1) * ⌊110% WIN_POINTS⌋
+      set_mode(GameOver) because "num_alive ≤ 1"
+   else if round_num == MAX_ROUNDS:
+      set_mode(GameOver) because "Rounds complete"
+   else if size(just_eliminated) > 0:
+      set_mode(Eliminate, just_eliminated) because "Elimination"
+   else:
+      ++round_num
+      set_mode(Play) because "Battle complete"
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+debug_print("------------------------------------")
+
+let num_healing = 0
+let num_alive = 0
+let unchallenged_player = nil
+
+for health, score, time_bonus, choice in player in player_array:
+   score += max(⌊ time_bonus ⌋, 0)
+   time_bonus = 0
+   if choice == "heal":
+      ++num_healing
+      ++num_alive
+   else if health > 0:
+      ++num_alive
+      unchallenged_player = player
+
+debug_print("\n")
+      
+// Build the action array in the order we want events
+// to proceed. Skip empty actions, do not show ties
+// unless there are no successful attacks, and generall
+// build from less to more exciting actions
+action_array = []
+
+// Iterate over all attack combinations. We have to do this
+// before the ties in order to determine if ties will be shown,
+// even though the ties are shown first in the animation
+let attack_array = []
+for i < size(ATTACKS):
+   const win_choice = ATTACKS[i];
+   const lose_choice = array_value(ATTACKS, i - 1, "loop")
+
+   for playerA in player_array:
+      const attack = {mode: Attack, group_A: [], group_B: [], type: "attack"}
+      push(attack.group_A, playerA)
+      if playerA.choice == win_choice:
+         for playerB in player_array:
+            if playerB.choice == lose_choice:
+               push(attack.group_B, playerB)
+      
+      if size(attack.group_B) > 0:
+         push(action_array, attack)
+
+   
+// Iterate over all ties, if there are no attacks
+if size(action_array) == 0:
+   for choice in ATTACKS:
+      const tie = {mode: Attack, group_A: [], group_B: [], type: "tie"}
+      for player in all_pairs(player_array):
+         if player.A.choice == choice and player.B.choice == choice:
+            push(tie.group_A, player.A)
+            push(tie.group_B, player.B)
+
+      // Insert at the FRONT of the action array
+      if size(tie.group_A) > 0: push_front(action_array, tie)
+
+   
+// Extract all heals. These go at the front, but we compute
+// them after the attacks so that the tie checks can test
+// if there were any attacks without empty state
+let heal_array = []
+for player in player_array: if player.choice == "heal": push(heal_array, player)
+if size(heal_array) > 0: push_front(action_array, {mode: Heal, heal_array: heal_array})
+  
+
+// Show the unchallenged player, if present
+if num_healing == num_alive - 1:
+   // This player automatically wins the round, as the only attacker
+   push(action_array, {mode: Unchallenged, player: unchallenged_player, bonus: num_healing * WIN_POINTS})
+
+
+               
+frame
+────────────────────────────────────────────────────────────────────────
+
+while size(action_array) > 0:
+   const action = pop_front(action_array)
+   
+   if action.mode == Unchallenged:
+      push_mode(Unchallenged, action.player, action.bonus) because "No defender"
+   else if action.mode == Heal:
+      push_mode(Heal, action.heal_array) because "Heal"
+   else:
+      push_mode(Attack, action.group_A, action.group_B) because "Next attack"
+   
+done()
+
+

@@ -1,0 +1,29 @@
+GameOver
+════════════════════════════════════════════════════════════════════════
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+play_audio_clip(game_over_audio_clip, true, 55%)
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+if mode_frames == 60 * 15 or any_button_press():
+   reset_game() because "Animation done"
+
+for player in player_array:
+   const isLeader = draw_hud(player)
+   if isLeader:
+      draw_drop_shadow_text({font: large_font,
+                             text: player.name + " WINS!", 
+                             pos: ½ SCREEN_SIZE,
+                             color: #f,
+                             shadow: #0,
+                             outline: #0,
+                             x_align: "center",
+                             y_align: "center",
+                             z: 20})
+
+
+          

@@ -1,0 +1,79 @@
+let num_humans = 1
+let round_num = 1
+
+let title_music_sound
+
+const player_array = []
+
+const AUDIO_CLIP_ARRAY = [sound0, sound1, sound2, sound3]
+
+const ROCK     = small_spritesheet.rock
+const PAPER    = small_spritesheet.paper
+const SCISSORS = small_spritesheet.scissors
+const HEAL     = small_spritesheet.heal
+
+def draw_round_indicator():
+   const z = 10
+   draw_disk(SCREEN_SIZE / 2, 26, #f, #d, z)
+   draw_text({font: font, text: "round", pos: SCREEN_SIZE / 2 - xy(0, 8), color: #a, x_align: "center", y_align: "bottom", z: z})
+   draw_text({font: large_font, text: round_num, pos: SCREEN_SIZE / 2, color: #a, x_align: "center", y_align: "center", z: z})
+   draw_text({font: font, text: "of " + MAX_ROUNDS, pos: SCREEN_SIZE / 2 + xy(0, 8), color: #a, x_align: "center", y_align: "top", z: z})
+
+
+def draw_hud(player, shake) preserving_transform:
+   shake = shake or xy(0, 0)
+   let highest_score = 0
+   for score, health in P in player_array:
+      if health > 0 and score > highest_score: highest_score = score
+   const isLeader = player.health > 0 and highest_score > 0 and player.score == highest_score
+   
+   set_transform(player.transform + shake)
+   set_clip(player.transform, ½ SCREEN_SIZE)
+
+   draw_corner_rect(xy(0, 0), ½ SCREEN_SIZE,
+                    (if shake.x or shake.y then #f else player.color), ∅, -10)
+
+   if player.health == 0:
+      // X out this player
+      draw_rect(¼ SCREEN_SIZE, xy(60% SCREEN_SIZE.x, 10), #4, ∅, 20°, 1)
+      draw_rect(¼ SCREEN_SIZE, xy(60% SCREEN_SIZE.x, 10), #4, ∅, -20°, 1)
+
+   const bottom = player.index > 1
+   // Put the HUD at the bottom for bottom players
+   if bottom: set_transform(player.transform + xy(0, ½ SCREEN_SIZE.y - 23) + shake)
+
+   draw_text(large_font, player.name + (if isLeader then "★" else ""), xy(7, -1), (if isLeader then #0f5 else #fff), #000C, #000C, "left", "top")
+
+   for i < MAX_HEALTH:
+      draw_text(font, "♥", xy(190 - 11 MAX_HEALTH + 11 i, (if bottom then 11 else 1)),
+                (if ⌊player.health⌋ > i then #f40 else ∅), ∅, #000C, "center", "top")
+
+   draw_text(font, format_number(player.score, "commas") + " pts",
+             xy(114 + 11 MAX_HEALTH, (if bottom then -2 else 11)),
+             (if isLeader then #0f5 else #0), ∅,
+             (if isLeader then #000 else ∅), "right", "top")
+
+   return isLeader
+
+
+// Mutates the args
+def draw_drop_shadow_text(args):
+   draw_text(args)
+   args.color = rgba(0, 0, 0, ¼ (if args.color.a == nil then 1 else args.color.a))
+   args.outline = ∅
+   args.shadow = ∅
+   args.z -= 1
+   args.pos.y += 3
+   draw_text(args)
+   
+
+// Returns an array of all (n * n - 1) / 2 combinations of two elements
+// from the array of length n
+def all_pairs(array):
+   const pairs = []
+   
+   for i < size(array):
+      for i < j < size(array):
+         push(pairs, {A: array[i], B: array[j]})
+         
+   return pairs

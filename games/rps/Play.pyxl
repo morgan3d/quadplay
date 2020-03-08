@@ -1,0 +1,89 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+/*
+ - Handle end game ties
+*/
+
+def draw_choice(player) preserving_transform:
+   set_transform(player.transform)
+   set_clip(player.transform, ½ SCREEN_SIZE)
+   
+   if player.choice:
+      // Already chosen
+      if player.time_bonus > 0:
+         draw_text(font, "Time Bonus: +" + format_number(⌊player.time_bonus⌋, "commas"),
+                   xy(CHOICE_LOCATION.rock.x, CHOICE_LOCATION.paper.y), #fff, ∅, #0008, "center", "center")
+   else:
+
+      for item in ATTACKS:
+         draw_sprite(small_spritesheet[item], CHOICE_LOCATION[item])
+
+      const show_heal = player.health < MAX_HEALTH
+      
+      if show_heal:
+         draw_sprite(HEAL, CHOICE_LOCATION.heal)
+
+      if player.is_human:
+         const blink = mode_frames mod 25 < 15
+         const prompt = gamepad_array[player.index].prompt
+         const shadow = if blink then #000C else ∅
+         const offset = if blink then 0 else xy(0, 1)
+
+         draw_text(font, prompt["[^]"], CHOICE_LOCATION.rock + offset, #fff, shadow, #000C, "center", "center")
+         draw_text(font, prompt["[<]"], CHOICE_LOCATION.paper + offset, #fff, shadow, #000C, "center", "center")
+         draw_text(font, prompt["[v]"], CHOICE_LOCATION.scissors + offset, #fff, shadow, #000C, "center", "center")
+         if show_heal: draw_text(font, prompt["[>]"], CHOICE_LOCATION.heal + offset, #fff, shadow, #000C, "center", "center")
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+play_audio_clip(start_sound)
+
+// Start negative and hide until positive
+for player in player_array:
+   player.time_bonus = -BONUS_DELAY_FRAMES * TIME_BONUS_RATE
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_background(#A)
+
+let all_ready = true
+
+for player in player_array:
+   draw_hud(player)
+
+   if player.health == 0: continue
+   
+   draw_choice(player)
+
+   if player.choice:
+      // Reward for having chosen early
+      player.time_bonus += TIME_BONUS_RATE
+      
+   else if player.health > 0:
+      all_ready = false
+      
+      if player.is_human:
+         // Make choices
+         const gamepad = gamepad_array[player.index]
+         if gamepad.yy == -1:
+            player.choice = "rock"
+         else if gamepad.xx == -1:
+            player.choice = "paper"
+         else if gamepad.xx == +1 and player.health < MAX_HEALTH:
+            player.choice = "heal"
+         else if gamepad.yy == +1:
+            player.choice = "scissors"
+
+         if player.choice: play_audio_clip(player.audio_clip)
+            
+      else if ξ < 1%: // AI
+         play_audio_clip(player.audio_clip)
+         player.choice = if ξ < ⅔ (100% - player.health / MAX_HEALTH) then "heal" else random_value(ATTACKS)
+
+draw_round_indicator()
+ 
+if all_ready: set_mode(Battle) because "All chose"

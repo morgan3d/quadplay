@@ -6735,16 +6735,16 @@ function split(str, c) {
 }
 
 
-function load_local(key) {
+function load_local(key, default_value) {
     let table = _window.localStorage.getItem('GAME_STATE_' + _gameURL);
-    if (! table) { return undefined; }
+    if (! table) { return default_value; }
     
     table = JSON.parse(table);
     const value = table[key];
     if (value) {
         return parse(value);
     } else {
-        return undefined;
+        return default_value;
     }
 }
 

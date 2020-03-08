@@ -1,0 +1,32 @@
+Elimination
+════════════════════════════════════════════════════════════════════════
+
+let message
+
+
+enter(eliminated_array)
+────────────────────────────────────────────────────────────────────────
+play_audio_clip(elimination_sound)
+let e = []
+for player in eliminated_array: push(e, player.name)
+message = join(e, ",", ", and", "and") + (if size(e) > 1 then " were" else " was") + " eliminated!"
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+draw_round_indicator()
+
+// Draw players
+for transform, health, choice in player in player_array:
+   draw_hud(player)
+
+draw_drop_shadow_text({font: large_font,
+              text: message,
+              pos: ½ SCREEN_SIZE,
+              color: #fD0,
+              outline: #000,
+              x_align: "center",
+              y_align: "center",
+              z: 20})
+
+if mode_frames > 60 * 2: set_mode(Play) because "2s"
