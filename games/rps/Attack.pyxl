@@ -39,8 +39,8 @@ draw_round_indicator()
 
 // Draw players
 for transform, health, choice in player in player_array:
-   let shake = nil
-   if not tie and (find(losers, player) != nil) and (|mode_frames - ½ ATTACK_FRAMES - 1| < 6):
+   let shake = ∅
+   if not tie and (find(losers, player) != ∅) and (|mode_frames - ½ ATTACK_FRAMES - 1| < 6):
       shake = 1.5 random_direction2D()
       
    draw_hud(player, shake)

@@ -24,6 +24,11 @@
        id = id || title.toLowerCase();
        document.write('<div class="button" title="' + title + '" style="' + (style || '') + '" onmousedown="event.stopPropagation()"><label><input id="' + id + 'Button" autocomplete="off" type="checkbox" onclick="onToggle(this)"><span class="label">' + labelHTML + '</span></label></div>');
     }
+    
+    // Is the browser running on an Apple platform?
+    const isApple = /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const isMobile = window.matchMedia("only screen and (max-width: 480px)").matches || window.orientation || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     </script>
 
   </head>
@@ -138,8 +143,9 @@
         </script>
         <span class="IDEOnly" style="margin-left:-3px">
         <script>
-          makeRadio('<img src="ui-test.png"     width=32 style="position:relative; top:-2px">', 'testUIButton',     false, 'title="Test"', 'ui');
-          makeRadio('<img src="ui-ide.png"      width=32 style="position:relative; top:-2px">', 'IDEUIButton',      true,  'title="Project"',  'ui');
+          makeRadio('<img src="ui-test.png"     width=32 style="position:relative; top:-2px">', 'testUIButton',     false, 'title="Test"',    'ui');
+          makeRadio('<img src="ui-ide.png"      width=32 style="position:relative; top:-2px">', 'IDEUIButton',      true,  'title="Project"', 'ui');
+          makeRadio('<img src="ui-editor.png"   width=32 style="position:relative; top:-2px">', 'editorUIButton',      true,  'title="Editor"',  'ui');
         </script>
         </span>
       </div>
@@ -150,8 +156,19 @@
 
     <div class="project ide unselectable idePart" id="project"> </div>
     
-    <div id="editorPane" class="ide idePart">
-      <div id="codeEditor" style="position:absolute; top:0; left:0; visibility:hidden"> </div>
+    <div id="editorFrame" class="ide idePart">
+      <div id="codeEditor" style="position:absolute; top:0; left:0; visibility:hidden">
+        <div class="toolbar">
+          <script>
+            const cmd = isApple ? '⌘' : '^';
+            makeButton('<img src="ui-bigfont.png" width=32 style="position:relative; top:-2px;">', `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton');
+            makeButton('<img src="ui-smallfont.png" width=32 style="position:relative; top:-2px;">', `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton');
+            makeButton('<img src="ui-find.png" width=32 style="position:relative; top:-2px;">', `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton');
+          </script>
+          <div style="position: absolute; right:5px; top:3px; color:#888" id="codeEditorSessionModeDisplay">All changes saved.</div>
+        </div>
+        <div id="ace"> </div>
+      </div>
       <div id="docEditor" style="position:absolute; top:0; left:0; right: 0; bottom:0; visibility:hidden"> </div>
       <div id="modeEditor" style="position:absolute; top:20px; left:0; visibility:hidden"> </div>
       <div id="gameEditor" style="position:absolute; top:0; left:0; padding: 10px; overflow: scroll; visibility:hidden"> </div>
@@ -335,6 +352,76 @@
     
     <div id="waitDialog" class="modal hidden" style="z-index: 100"> </div>
 
+    <div id="newModeDialog" class="modal hidden">
+      <div class="dialog" style="top:40vh; width: 300px">
+        <center>
+          <b>Add New Mode</b>
+          <p>
+            <br/>
+            <label for="newModeName">Name&nbsp;&nbsp;</label>
+            <input id="newModeName" type="text" style="font-size: 80%; font-family: Monaco, monospace" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '');document.getElementById('newModeCreateButton').disabled = (this.value === '')"></input>
+            <br/>
+            <br/>
+          </p>
+          <button type="button" onclick="hideNewModeDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span><button type="button" id="newModeCreateButton" onclick="onNewModeCreate()">Create</button>
+        </center>
+      </div>
+    </div>
+
+    <div id="newScriptDialog" class="modal hidden">
+      <div class="dialog" style="top:40vh; width: 300px">
+        <center>
+          <b>Add New Script</b>
+          <p>
+            <br/>
+            <label for="newScriptName">Filename&nbsp;&nbsp;</label>
+            <input id="newScriptName" type="text" style="font-size: 80%; font-family: Monaco, monospace" oninput="this.value = this.value.replace(/[^A-Za-z0-9_\-+=]/g, ''); document.getElementById('newScriptCreateButton').disabled = (this.value === '')"></input>.pyxl
+            <br/>
+            <br/>
+          </p>
+          <button type="button" onclick="hideNewScriptDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span><button type="button" id="newScriptCreateButton" onclick="onNewScriptCreate()">Create</button>
+        </center>
+      </div>
+    </div>
+
+    <div id="newDocDialog" class="modal hidden">
+      <div class="dialog" style="top:40vh; width: 500px">
+        <center>
+          <b>Add New Doc</b>
+          <p>
+            <table>
+              <tr>
+                <td>
+                  <label for="newDocName">Filename</label>
+                </td>
+                <td>
+                  <input id="newDocName" type="text" style="width: 160px; font-size: 80%; font-family: Monaco, monospace" oninput="this.value = this.value.replace(/[^A-Za-z0-9_\-+=]/g, ''); document.getElementById('newDocCreateButton').disabled = (this.value === '')"></input>
+                  <select id="newDocFormat" style="font-size: 80%; font-family: Monaco, monospace" >
+                    <option value=".md.html">.md.html</option>
+                    <option value=".txt">.txt</option>
+                    <option value=".md">.md</option>
+                    <option value=".html">.html</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <label for="newDocTemplate">Template</label>
+                </td>
+                <td>
+                  <select id="newDocTemplate" style="width:165px">
+                    <option value="todo">todo</option>
+                    <option value="empty">empty</option>
+                  </select>
+                </td>
+              </tr>
+            </table>
+          </p>
+          <button type="button" onclick="hideNewDocDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span><button type="button" id="newDocCreateButton" onclick="onNewDocCreate()">Create</button>
+        </center>
+      </div>
+    </div>
+    
     <!-- based on https://github.com/sitexw/BlockAdBlock/blob/master/blockadblock.js -->
     <div id="adblockDetector" class="pub_300x250 pub_300x250m pub_728x90 text-ad textAd text_ad text_ads text-ads text-ad-links"></div>
     <script>
@@ -348,11 +435,6 @@
   </body>
   
   <iframe name="QRuntime" style="visibility:hidden"> </iframe>
-
-  <script>
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    const isMobile = window.matchMedia("only screen and (max-width: 480px)").matches || window.orientation || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  </script>
 
   <!-- Third-party code -->
   <script src="gif.js" async="async"></script>
@@ -388,5 +470,6 @@
   <script src="quadplay-font.js" charset="utf-8"></script>
   <script src="quadplay-load.js" charset="utf-8"></script>
   <script src="quadplay-profiler.js" charset="utf-8"></script>
+  <script src="quadplay-codeedit.js" charset="utf-8"></script>
   <script src="quadplay-ide.js" charset="utf-8"></script>
 </html>

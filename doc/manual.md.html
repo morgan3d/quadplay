@@ -29,12 +29,12 @@ course, teaching yourself game development, and game jams.
 
 - Runs in all modern browsers
 - Desktop, tablet, phone, Jetson Nano, and Raspberry Pi
-- Open source: use online, fork, or run locally
-- Host on your own static site or remotely from GitHub
 - Run locally and offline using Python + web browser
 - Hundreds of built-in Creative Commons assets
+- Friendly and powerful PyxlScript Python-like scripting language
 - Scripts and external editor support for power users
-- A programming language called PyxlScript for easy game coding
+- Open source: use online, fork, or run locally
+- Host on your own static site or remotely from GitHub
 
 **API**
 
@@ -62,7 +62,15 @@ To get started you only need:
 - [Python 3.8](https://www.python.org/)
 - Optionally install the PyxlScript extension for your editor: _[Visual Studio Code](#advancedtools/visualstudiocode)_, _[Vim](#advancedTools/vim)_, _[Emacs](#advancedtools/emacs)_
 
-Download and unzip or clone the SDK from git. There is no install necessary.
+For the quadplay✜ SDK, download and unzip or clone the from git. There
+is no install necessary.
+
+
+!!! Info
+   This beta version of quadplay✜ supports programming directly in the browser.
+   An external code editor is needed for changing constants, adding assets,
+   and creating assets. In the future, all editing will be done in the browser,
+   but external editors always will be supported as optional "pro" developer tools.
 
 To make a game, copy the starter project from `examples/starter` to
 your own directory such as `games/mygame` and start changing it. Look
@@ -406,6 +414,7 @@ graphics and gameplay:
 - [Minit](https://store.steampowered.com/app/609490/Minit/)
 - [Chasm](https://bitkidinc.itch.io/chasm)
 - [Eliminator Boat Duel](https://www.youtube.com/watch?v=NM7ZNX0GUBI)
+- [The Eternal Castle](http://www.theeternalcastle.net/)
 
 </div>
 
@@ -797,15 +806,15 @@ Physical controllers give the best experience. We have tested:
 
 <table width=100%>
 <tr valign=top>
-<td width=33%>![](sn30-pro.jpg)<br>[8BitDo SN30 Pro](https://amzn.to/35XGEl9) SN or Classic edition</td>
+<td width=33%>![](sn30-pro.jpg)<br>[8BitDo SN30 Pro](https://amzn.to/35XGEl9) (SN or Classic)</td>
 <td width=33%>![](sn30.jpg)<br>[8BitDo SN30](https://amzn.to/38ay83F)</td>
 <td width=33%>![](zero2.jpg)<br>[8BitDo Zero 2](https://amzn.to/2Ny5nWN)</td>
 </tr>
 <tr><td> <br> </td></tr>
 <tr valign=top>
 <td width=33%>![](xboxone.jpg)<br>[Microsoft Xbox One Wired Controller](https://amzn.to/36Y7CdR)</td>
-<td width=33%>![](xboxone.jpg)<br>[Microsoft Xbox One Wireless Controller for Windows 10](https://amzn.to/35U36vz)</td>
-<td width=33%>![](xbox360.jpg)<br>[Microsoft Xbox 360 Wired Controller](https://www.microsoft.com/accessories/en-ww/products/gaming/xbox-360-controller-for-windows/52a-00004) (which works on all operating systems)</td>
+<td width=33%>![](xboxone.jpg)<br>[Microsoft Xbox One Wireless<br>Controller for Windows 10](https://amzn.to/35U36vz)</td>
+<td width=33%>![](xbox360.jpg)<br>[Microsoft Xbox 360 Wired Controller](https://www.microsoft.com/accessories/en-ww/products/gaming/xbox-360-controller-for-windows/52a-00004)<br>(works on all operating systems)</td>
 </tr>
 <tr><td> <br> </td></tr>
 <tr valign=top>
@@ -835,14 +844,6 @@ Please let me know if you are using them successfully.
 
 All browsers have controller support, but Chrome seems to support the
 most different controllers and the rumble feature.
-
-When using a dual-stick console controller, the unused parts
-of player 1's _physical_ controller are mapped as alternate controls
-for the player 2 (`gamepad_array[1]`) _virtual_ controller. This makes it easy
-to test two-player games using a single controller.  It also allows
-for single-player games with dual-stick controls using either both
-halves of the keyboard or controller 1.
-
 
 Input       | Player 1 Key| Player 2 Key| XboxOne   | Playstation4| SNES   | Switch_Pro
 :----------:|:-----------:|:-----------:|:----------:|:----------:|:------:|:-----------:
@@ -877,6 +878,32 @@ just slide it back onto the Switch and it will sync.
 
 8BitDo controllers seem to work very reliably on Windows and Linux
 but are inconsistent on macOS.
+
+#### Dual Stick, etc.
+
+When using a dual-stick console controller, the unused parts
+of player 1's _physical_ controller are mapped as alternate controls
+for the player 2 (`gamepad_array[1]`) _virtual_ controller. This makes it easy
+to test two-player games using a single controller.  It also allows
+for single-player games with dual-stick controls using either both
+halves of the keyboard or controller 1. For example, using an Xbox 360 controller:
+
+Physical Controller      | Quadplay Input
+-------------------------|-------------------
+Left Stick/D-Pad         | `gamepad_array[0].xy`
+Right Stick              | `gamepad_array[1].xy`
+A                        | `gamepad_array[0].a`
+B                        | `gamepad_array[0].b`
+X                        | `gamepad_array[0].c`
+Y                        | `gamepad_array[0].d`
+R1 (Right Shoulder)      | `gamepad_array[1].b`
+R2 (Right Trigger)       | `gamepad_array[1].a`
+L1 (Left Shoulder)       | `gamepad_array[1].d`
+L2 (Left Trigger)        | `gamepad_array[1].c`
+Start                    | (`gamepad_array[0].p`)
+Back                     | `gamepad_array[0].q`
+R3 (Right Stick Press)   | Not mapped
+L3 (Left Stick Press)    | Not mapped
 
 
 ### Resolution
@@ -1079,6 +1106,7 @@ prompts. The possible values are:
 `"XboxOne"`     | `ⓐ` | `ⓑ` | `ⓧ` | `ⓨ` | `☰` | `⧉` | `⍐`  | `⍇`  | `⍗`  | `⍈`
 `"Xbox360"`     | `ⓐ` | `ⓑ` | `ⓧ` | `ⓨ` | `⊳` | `⊲` | `⍐`  | `⍇`  | `⍗`  | `⍈`
 `"SNES"`        | `ⓑ` | `ⓐ` | `ⓨ` | `ⓧ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
+`"SN30_Pro"`    | `ⓑ` | `ⓐ` | `ⓨ` | `ⓧ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
 `"JoyCon_R"`    | `ⓐ` | `ⓧ` | `ⓑ` | `ⓨ` | `⊕` | `R` | `⍐`  | `⍇`  | `⍗`  | `⍈`
 `"JoyCon_L"`    | `▼` | `▶` | `◀` | `▲` | `⊖` | `L` | `⍐`  | `⍇`  | `⍗`  | `⍈`
 `"SwitchPro"`   | `ⓑ` | `ⓐ` | `ⓨ` | `ⓧ` | `⊕` | `⊖` | `⍐`  | `⍇`  | `⍗`  | `⍈`
@@ -3126,7 +3154,7 @@ endpoints and borders.
 
   `font` must be loaded from the assets.  Color,
   shadow, and outline default to transparent. Any non-transparent
-  shadow causes the outline to enclose both the shadow and main color.
+  outline causes the shadow to move below both the outline and main color.
   Returns the line height (including spacing) for the next line.  If
   `wrap_width` is specified, breaks the text at the maximum width and
   renders multiple lines. Each line is offset by the font's vertical
@@ -3216,25 +3244,8 @@ endpoints and borders.
 
            --------------------------------------------
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
-set_background(gray(100%))
-draw_text("Normal", xy(32,68), rgb(1,0,0), nil, nil, 0)
-draw_text("Outline", xy(32,77), rgb(1,0,0), rgb(50%, 50%, 0), nil, 0)
-draw_text("Shadow", xy(32,86), rgb(1,0,0), nil, rgb(0,0,0, 50%), 0)
-draw_text("Shadow+Outline", xy(32,95), rgb(1,0,0), rgb(50%, 50%, 0), rgb(0,0,0, 50%), 0)
 
-def test(pos, xalign, yalign)
-  draw_corner_rect(po, xy(4, 6), gray(85%))
-  draw_point(pos, gray(0))
-  draw_text("X", pos, rgb(1, 0, 0), nil, nil, xalign, yalign)
-
-for u < 3
-  for v < 3
-    test(xy(10 (u - 1) + 32, 37 + 9 v), u - 1, v - 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[Text styling options]
-
-![Text styling and alignment options](text-style.png)
+![Text styling options](text-style.png width=500%)
 
 
 
@@ -3254,7 +3265,7 @@ draw_text(goodNeighbors, "Offset Shadow", xy(83, 182), #0A0)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [Tricks with text styling]
 
-![Tricks with text styling](text-tricks.png)
+![Tricks with text styling](text-tricks.png width=200%)
 
 
 ### Post Effects
@@ -5660,25 +5671,19 @@ If you want to directly copy the files into your ~/.vim directory, make sure you
 Emacs
 ------------------------------------------------------------------------------------
 
-To install the PyxlScript mode for Emacs, copy the
-[`pyxlscript-mode.el`](../tools/pyxlscript-mode.el) to your elisp
-directory (mine is `~/.emacs.d/lisp`, where `~/` is `AppData/Roaming/` on Windows) and add the following lines to
+To install the PyxlScript mode for Emacs, add the following lines to
 your `~/.emacs` file:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Lisp
 ; Optional if you don't want to copy the files:
-;   (add-to-list 'load-path (expand-file-name "path/to/quadplay/tools"))
+(add-to-list 'load-path (expand-file-name "path/to/quadplay/tools"))
+(autoload 'rainbow-mode "rainbow-mode")
 (autoload 'pyxlscript-mode "pyxlscript-mode")
 (add-to-list 'auto-mode-alist '("\\.pyxl\\'" . pyxlscript-mode))
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you don't want to copy the `pyxlscript-mode.el` file, you can instead
-edit and add the following before the `autoload` line:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Lisp
-(add-to-list 'load-path (expand-file-name "path/to/quadplay/tools"))
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+Note that you have to put the real path in for the `"path/to/quadplay/tools"`,
+such as `~/quadplay/tools`, or wherever you installed quadplay to.
 
 
 Other Editors
@@ -6023,6 +6028,7 @@ The quadplay✜ IDE and compiler are copyright 2019-2020 Morgan McGuire, includi
 - [`quadplay-profiler.js`](../console/quadplay-profiler.js)
 - [`quadplay-host.js`](../console/quadplay-host.js)
 - [`quadplay-ide.js`](../console/quadplay-ide.js)
+- [`quadplay-codeedit.js`](../console/quadplay-codeedit.js)
 - [`quadplay-font.js`](../console/quadplay-font.js)
 - [`quadplay-load.js`](../console/quadplay-load.js)
 
@@ -6161,11 +6167,29 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
+2020 Mar 18: Beta update 34
+
+- New wide editor UI IDE view mode
+- Maximal UI now enters full-screen mode even when the IDE is enabled
+- Editing is enabled for modes and scripts in the IDE
+- Code editor font size is now adjustable
+- Can now create new modes and scripts in the IDE
+- Can now edit screen resolution and flip y-axis in the IDE
+- Can now change the game license in the IDE
+- Can now change the game title, copyright, and developer in the IDE
+- Game description and metadata are now visible and editable in the IDE
+- Added SN30 Pro controller settings
+- Added more explicit dual-stick and shoulder/trigger control documentation
+- `draw_text()` shadows now apply after outlines, so they are on the outside
+- Per-tab editor state for undo/redo, selection, and cursor position
+
+
 2020 Mar 7: Beta update 33
 
 - Added `CONSTANTS` and `ASSETS` objects
 - Added `default`, a "nullish-coalescing" operator for creating default values
 - Added R. P. S. game
+- Syntax highlighting for `#RGB` colors in emacs
 
 
 2020 Mar 5: Beta update 32

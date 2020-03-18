@@ -1,5 +1,5 @@
 {
-    "title":      "Tiny Starter Sample",
+    "title":      "Starter Example",
     "developer":  "Your Name Here",
     "copyright":  "©2020 Your Name Here",
     "license":    "CC0/Public Domain(Replace with your own license)",
@@ -20,7 +20,7 @@
     "competitive":  false,
     "achievements": false,
     "highscores":   false,
-    "description": "Description of your game in about 22 words.",
+    "description": "Description of your game in about 100 characters.",
 
     "constants":  {
         "text_color":   {"type": "rgb", "value": {

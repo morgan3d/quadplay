@@ -7784,19 +7784,19 @@ function _executeTXT(cmd) {
                         // is set before looking deeper
                         if (bits) {
                             let v = 0;
-                            if (bits & 0x1) {
+                            if (bits & 0x1) {                 // 0001 color = color
                                 v = color;
-                            } else if (shadow & 0xff000000) {
-                                if (bits & 0x8) {
-                                    // Shadow + outline
-                                    v = outline;
-                                } else if (bits & 0x4) {
-                                    // Shadow 
+                            } else if (outline & 0xff000000) {
+                                // Outline is on
+                                if (bits & 0x8) {             // 1000 outline w/ shadow = shadow
+                                    // Shadow if using outline
                                     v = shadow;
+                                } else if (bits & 0x2) {      // 0010 outline. May also match 0100 and be ignored
+                                    v = outline;
                                 }
-                            } else if (bits & 0x2) {
-                                // Outline
-                                v = outline;
+                            } else if (bits & 0x4) {          // 0100 shadow w/o outline
+                                // Shadow
+                                v = shadow;
                             }
 
                             // Could inline _pset code for performance and insert dstIndex. There

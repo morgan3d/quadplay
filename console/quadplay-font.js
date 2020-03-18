@@ -274,20 +274,24 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
                 */
                 
                 if (borderSize > 0) {
-                    // Compute the border mask from the colorMask 8-ring
+                    // Compute the borderMask from the colorMask 8-ring
                     makeBorderMask(colorMask, borderMask);
                 }
 
                 if (shadowSize > 0) {
-                    // Compute the shadow mask from the colorMask
+                    // Compute the shadowMask from the colorMask
                     array2DMapSet(shadowMask, function(x, y) {
                         if (array2DGet(colorMask, x, y)) { return 0; }
                         for (let s = 1; s <= shadowSize; ++s) if (array2DGet(colorMask, x, y - s)) return 255;
                         return 0;
                     });
-                
-                    // Compute the shadow border mask from the shadow mask
-                    makeBorderMask(shadowMask, shadowBorderMask);
+
+                    // Compute the shadowBorderMask from the colorMask
+                    array2DMapSet(shadowBorderMask, function(x, y) {
+                        if (array2DGet(borderMask, x, y)) { return 0; }
+                        for (let s = 1; s <= shadowSize; ++s) if (array2DGet(borderMask, x, y - s)) return 255;
+                        return 0;
+                    });
                 }
                 
                 ////////////////////////////////////////////////////////////////
@@ -313,17 +317,9 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
                         if (m) {
                             mask = 0x1;
                         } else {
-                            // Only write other bits if mask is *not* set
                             if (b) { mask |= 0x2; }
-                            
-                            if (s) {
-                                mask |= 0x4;
-                            } else if (b || sb) {
-                                mask |= 0x8;
-                            }
-                            // Shadow-border only appears where there is not shadow (or mask)
-                            // It includes the regular border pixels that don't overlap the
-                            // shadow.
+                            if (s) { mask |= 0x4; }
+                            if (sb) { mask |= 0x8; }
                         }
                         
                         //if (chr === '∫') { tst += (mask < 10 ? '0' : '') + mask + ' '; } // For testing
@@ -447,7 +443,7 @@ function array2DMapSet(a, fcn) {
 }
 
 
-// Set the dsktMask from the srcMask 8-ring
+// Set the dstMask from the srcMask 8-ring
 function makeBorderMask(srcMask, dstMask) {
     array2DMapSet(dstMask, function(x, y) {
         return (! array2DGet(srcMask, x, y) &&

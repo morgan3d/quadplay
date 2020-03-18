@@ -967,7 +967,6 @@ function loadMap(name, json, mapJSONUrl) {
                 });
                 
                 const flipY = (json.flip_y === true);
-                
                 for (let L = 0; L < layerList.length; ++L) {
                     // The first level IS the map itself
                     const layer = (L === 0) ? map : new Array(map.size.x);
@@ -1085,6 +1084,7 @@ function addCodeToSourceStats(code, scriptURL) {
 
 function loadFailureCallback(reason, url) {
     console.log(`ERROR: Failed to load "${url}". ${reason || ''}`);
+    console.error('');
 }
 
 
@@ -1128,7 +1128,7 @@ function computeForceReloadFlag(url) {
 function makeURLAbsolute(parentURL, childURL) {
     if (childURL.startsWith('quad://')) {
         // quad URL. Make relative to the quadplay installation
-        return childURL.replace(/^quad:\/\//, urlDir(location.href) + '../');
+        return childURL.replace(/^quad:\/\//, urlDir(location.href) + '../').replace(/\/console\/\.\.\//, '/');
     } else if (/^.{3,6}:\/\//.test(childURL)) {
         // Already absolute, some other protocol
         return childURL;
@@ -1142,8 +1142,12 @@ function makeURLAbsolute(parentURL, childURL) {
             return childURL;
         }
     } else {
+
         // Strip the last part of the parent
-        return urlDir(parentURL) + childURL;
+        const url = urlDir(parentURL) + childURL;
+        
+        // Hide the common case of console/.. in URLs
+        return url.replace(/\/console\/\.\.\//, '/');
     }
 }
 
@@ -1422,28 +1426,28 @@ function evalJSONGameConstant(json) {
 
     case 'object':
         {
-        if (typeof json.value !== 'object') {
-            throw 'Object constant must have an object {} value field';
-        }
-        const keys = Object.keys(json.value);
-        const result = {};
-        for (let i = 0; i < keys.length; ++i) {
-            const key = keys[i];
-            result[key] = evalJSONGameConstant(json.value[key]);
-        }
-        return result;
+            if (typeof json.value !== 'object') {
+                throw 'Object constant must have an object {} value field';
+            }
+            const keys = Object.keys(json.value);
+            const result = {};
+            for (let i = 0; i < keys.length; ++i) {
+                const key = keys[i];
+                result[key] = evalJSONGameConstant(json.value[key]);
+            }
+            return result;
         }
 
     case 'array':
         {
-        if (! Array.isArray(json.value)) {
-            throw 'Array constant must have an array [] value field';
-        }
-        const result = [];
-        for (let i = 0; i < json.value.length; ++i) {
-            result.push(evalJSONGameConstant(json.value[i]));
-        }
-        return result;
+            if (! Array.isArray(json.value)) {
+                throw 'Array constant must have an array [] value field';
+            }
+            const result = [];
+            for (let i = 0; i < json.value.length; ++i) {
+                result.push(evalJSONGameConstant(json.value[i]));
+            }
+            return result;
         }
 
     default:

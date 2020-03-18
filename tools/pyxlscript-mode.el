@@ -42,6 +42,7 @@
   (setq-local comment-end "*/")
   (setq-local comment-end-skip "[ \t]*\\*+/")
 
+
   ;; Syntax highlighting
   (let ((keyword-exp (regexp-opt '("assert" "debug_pause" "debug_print" "debug_watch" "let" "const" "mod" "local" "preserving_transform" "for" "in" "while" "until" "if" "then" "else" "push_mode" "reset_game" "set_mode" "return" "def" "break" "continue" "default" "bitand" "bitnot" "bitor" "bitxor" "bitnot" "bitshl" "bitshr" "because" "quit_game" "launch_game") 'symbols))
         (literal-exp (regexp-opt '("deg" "true" "false" "nan" "SCREEN_SIZE" "pi" "epsilon" "infinity" "nil") 'symbols))
@@ -95,6 +96,7 @@
        ("‖" . font-lock-type-face)
        ("⌊" . font-lock-type-face)
        ("⌋" . font-lock-type-face)
+       ("|" . font-lock-type-face)
        ("⌈" . font-lock-type-face)
        ("⌉" . font-lock-type-face)
        
@@ -134,6 +136,8 @@
        )))
   
   (set-syntax-table pyxlscript-mode-syntax-table)
+  (rainbow-mode)
+  ;(add-mode-hook 'pyxlscript-mode 'rainbow-mode)
   )
 
 (provide 'pyxlscript-mode)

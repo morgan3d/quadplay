@@ -162,6 +162,16 @@ a {
     -webkit-touch-callout: none;
 }
 
+b.projectTitle.locked:after {
+    content: '';
+    background-size: contain;
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    margin-left: 5px;
+    background-image: url('project-icon-lock.png');
+}
+
 .emulatorButton {
     cursor: pointer;
     position: absolute;
@@ -227,16 +237,16 @@ a {
 }
 
 #uiModeMenu {
-    position: absolute;
-    z-index: 41;
-    top: 23px;
-    left: 0px;
-    background: #FFF;
-    padding-top: 5px;
-    color: #000;
-    visibility: hidden;
-    border: 1px solid #000;
-    box-shadow:       0px 4px 15px 0px rgba(0, 0, 0, 0.4);
+    position:     absolute;
+    z-index:      41;
+    top:          23px;
+    left:         0px;
+    background:   #FFF;
+    padding-top:  5px;
+    color:        #000;
+    visibility:   hidden;
+    border:       1px solid #000;
+    box-shadow:   0px 4px 15px 0px rgba(0, 0, 0, 0.4);
 }
 
 .dropdown {
@@ -294,10 +304,10 @@ a {
     background-color: rgba(255,255,255,0.4); /* Black w/ opacity */
 }
 
-.modalDialog {
+.modal .dialog {
     font-size: 120%;
-    color: #000;
-    background-color: #fff;
+    color:         #eee;
+    background-color: #302b2b;
     margin: 20% auto;
     padding-top: 20px;
     padding-bottom: 20px;
@@ -305,9 +315,12 @@ a {
     padding-right: 30px;
     border: 1px solid #888;
     width: 500px;
+    
     border-radius: 13px;
     box-shadow:       0px 4px 15px 0px rgba(0, 0, 0, 0.4);
 }
+
+/* background: #000; margin-left:auto; margin-right: auto; border-radius: 10px*/
 /*****************************************************/
 
 /* Hide the actual input control */
@@ -389,13 +402,18 @@ div.disabled span.label, div.disabled:active span.label {
 
 /*****************************************************/
 
-#editorPane {
-    overflow:         auto;
+/* Holds the editors */
+#editorFrame {
+    overflow:         hidden;
     position:         absolute;
     left:             176px;
     top:              23px;
     right:            412px;
     bottom:           0px;
+}
+
+.EditorUI #editorFrame {
+    right: 0px;
 }
 
 #error {
@@ -426,7 +444,6 @@ code, .code {
     font-size: 90%;
     font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace
 }
-   
 
 
 #codeEditor {
@@ -434,11 +451,30 @@ code, .code {
     top: 0px;
     width: 100%;
     left: 0px;
-    bottom: 16px;
+    bottom: 0px;
     font-size:        14px;
     box-sizing:       border-box;
     -moz-box-sizing:  border-box;
     -webkit-box-sizing: border-box;
+    overflow: hidden !important;
+}
+
+#codeEditor #ace {
+    position:absolute;
+    border-top: 1px solid #888;
+    top: 22px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+}
+
+#codeEditor .toolbar {
+    position: absolute;
+    padding: 3px;
+    top: 0px;
+    bottom: 20px;
+    left: 0px;
+    right: 0px;
 }
 
 /* Detect Chrome & Safari */
@@ -465,8 +501,8 @@ code, .code {
     z-index:  10;
 }
 
-/* Hide the debugger in emulator modes */
-.MaximalUI #debugger, .EmulatorUI #debugger {
+/* Hide the debugger in emulator modes and full screen editor */
+.MaximalUI #debugger, .EmulatorUI #debugger, .EditorUI #debugger {
     visibility: hidden;
 }
 
@@ -567,6 +603,17 @@ code, .code {
     background-image: url('project-icon-number.png');
 }
 
+/* New menu */
+.project li.new:before {
+    content: '✜';
+    background-image: none;
+}
+
+.project li.new {
+    color: #888;
+}
+
+
 /**************************************************/
 
 .emulator, div#emulatorFrame {
@@ -585,6 +632,11 @@ code, .code {
     border-right: none;
     border-top: none;
 }
+
+.EditorUI div.emulator, .EditorUI div#emulatorFrame, .EditorUI div.screenBorder, .EditorUI #bootScreen, .EditorUI #pauseMessage {
+    visibility: hidden !important;
+}
+
 
 .emulator {
     z-index:          5;

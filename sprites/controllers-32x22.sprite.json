@@ -14,11 +14,12 @@
         "Kbd_Alt":     {"x": 6, "y": 0},
         "Kbd_P1":      {"x": 7, "y": 0},
         "Kbd_P2":      {"x": 8, "y": 0},
-        "HOTAS":       {"x": 9, "y": 0},
-        "SwitchPro":   {"x":10, "y": 0},
-        "JoyCon_R":    {"x":11, "y": 0},
-        "JoyCon_L":    {"x":12, "y": 0},
-        "Stadia":      {"x":13, "y": 0},
-        "GPD_Win":     {"x":14, "y": 0}
+        "HOTAS":       {"x": 0, "y": 1},
+        "SwitchPro":   {"x": 1, "y": 1},
+        "JoyCon_R":    {"x": 2, "y": 1},
+        "JoyCon_L":    {"x": 3, "y": 1},
+        "Stadia":      {"x": 4, "y": 1},
+        "GPD_Win":     {"x": 5, "y": 1},
+        "SN30_Pro":    {"x": 6, "y": 1}
     }
 }

@@ -2,11 +2,9 @@
 "use strict";
 
 const deployed = true;
-const version  = '2020.03.07.20'
+const version  = '2020.03.18.02'
 const launcherURL = 'quad://console/launcher';
 
-// Is the browser running on an Apple platform?
-const isApple = /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
 //////////////////////////////////////////////////////////////////////////////////
 // UI setup
 
@@ -33,12 +31,15 @@ const useIDE = getQueryString('IDE') || false;
     }
 }
 
+// Set on game load
+let editableProject = false;
+
 // Hide quadplay framerate debugging info
 if (! profiler.debuggingProfiler) {  document.getElementById('debugFrameTimeRow').style.display = 'none'; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// 'IDE', 'Test', 'Emulator', 'Maximal'. See also setUIMode().
+// 'IDE', 'Test', 'Emulator', 'Editor', 'Maximal'. See also setUIMode().
 let uiMode = 'IDE';
 
 const BOOT_ANIMATION = Object.freeze({
@@ -68,6 +69,13 @@ function debugOptionClick(event) {
         QRuntime['_' + element.id] = element.checked;
     }
     saveIDEState();
+}
+
+let codeEditorFontSize = 14;
+function setCodeEditorFontSize(f) {
+    codeEditorFontSize = Math.max(6, Math.min(32, f));
+    localStorage.setItem('codeEditorFontSize', '' + codeEditorFontSize)
+    document.getElementById('ace').style.fontSize = codeEditorFontSize + 'px';
 }
 
 
@@ -122,7 +130,7 @@ function setColorScheme(scheme) {
     // Replacement rules
     stylesheet.insertRule(`#header a, .menu a { color: ${hrefColor} !important; text-decoration: none; }`, 0);
     stylesheet.insertRule(`.emulator .emulatorBackground { background: ${emulatorColor}; ! important}`, 0);
-    saveIDEState();
+    localStorage.setItem('colorScheme', colorScheme);
 }
 
 // Used for the event handlers to efficiently
@@ -241,13 +249,16 @@ function setUIMode(d, noAutoPlay) {
     body.classList.remove('MaximalUI');
     body.classList.remove('EmulatorUI');
     body.classList.remove('IDEUI');
+    body.classList.remove('EditorUI');
     body.classList.remove('TestUI');
     body.classList.add(uiMode + 'UI');
 
     // Check the appropriate radio button
-    document.getElementById({'IDE':'IDEUIButton', 'Emulator':'emulatorUIButton', 'Test':'testUIButton', 'Maximal':'maximalUIButton'}[uiMode]).checked = 1;
+    document.getElementById({'IDE':'IDEUIButton', 'Emulator':'emulatorUIButton',
+                             'Test':'testUIButton', 'Maximal':'maximalUIButton',
+                             'Editor':'editorUIButton'}[uiMode]).checked = 1;
 
-    if (((uiMode === 'Maximal') || (uiMode === 'Emulator')) && ! useIDE) {
+    if ((uiMode === 'Maximal') || ((uiMode === 'Emulator') && ! useIDE)) {
         requestFullScreen();
     }
 
@@ -272,6 +283,11 @@ function onResize() {
     let scale = 1;
     
     switch (uiMode) {
+    case 'Editor':
+        document.getElementById('debugger').removeAttribute('style');
+        background.removeAttribute('style');
+        break;
+        
     case 'IDE':
         // Revert to defaults. This has to be done during resize
         // instead of setUIMode() to have any effect.
@@ -429,18 +445,6 @@ function download(url, name) {
 }
 
 
-function onExportFile(event) {
-    var src = codeEditor.getValue();
-    var filename = getFilename(getTitle(src));
-    if (filename) {
-        // Convert unicode to a downloadable binary data URL
-        download(window.URL.createObjectURL(new Blob(['\ufeff', src])), filename);
-    } else {
-        alert('The program must begin with #nanojam and a title before it can be exported');
-    }
-}
-
-
 function onOpenButton() {
     const url = window.prompt("Game URL", "");
     if (url) {
@@ -462,33 +466,7 @@ function onHomeButton() {
 
 /** True if the game is running on the same server as the quadplay console */
 function locallyHosted() {
-    return location.href.replace(/(^http.?:\/\/[^/]+\/).*/, '$1') === window.gameURL.replace(/(^http.?:\/\/[^/]+\/).*/, '$1');
-}
-
-function testPost() {
-    // TODO: Editor
-    return; // This function is not currently needed, so it is disabled in the main build
-    
-    if (! locallyHosted()) {
-        // This server can't modify the game files
-        return;
-    }
-    
-    const serverAddress = location.href.replace(/(^http.?:\/\/[^/]+\/).*/, '$1');
-                          
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", serverAddress, true);
-
-    // Send the proper header information along with the request
-    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    
-    xhr.onreadystatechange = function() {
-        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-            // Request finished. Do processing here.
-        }
-    }
-    
-    xhr.send(JSON.stringify("test post data"));
+    return gameURL.startsWith(location.origin) || ! /^([A-Za-z]){3,6}:\/\//.test(gameURL);
 }
 
     
@@ -523,8 +501,14 @@ function onSlowButton() {
 // args = array of arguments to pass to the new program
 function onPlayButton(slow, isLaunchGame, args) {
     if (isSafari && ! isMobile) { unlockAudio(); }
+
+    if (uiMode === 'Editor') {
+        // There is nothing useful to see in Editor mode
+        // when playing, so bring the emulator up in IDE
+        // mode.
+        setUIMode('IDE', false);
+    }
     
-    testPost();
     targetFramerate = slow ? SLOW_FRAMERATE : PLAY_FRAMERATE;
     
     function doPlay() {
@@ -717,6 +701,19 @@ const controlSchemeTable = {
         '[>]': '⍈'
     },
 
+    SN30_Pro: {
+        '(a)': 'ⓑ',
+        '(b)': 'ⓐ',
+        '(c)': 'ⓨ',
+        '(d)': 'ⓧ',
+        '(p)': 'ﯼ',
+        '(q)': 'ҕ',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
+    
     SwitchPro: {
         '(a)': 'ⓑ',
         '(b)': 'ⓐ',
@@ -951,6 +948,18 @@ function onDocumentKeyDown(event) {
     }
     
     switch (event.which || event.keyCode) {
+    case 187: // ^= ("^+")
+        if (! (event.ctrlKey || event.metaKey)) { break; }
+        event.preventDefault();
+        onIncreaseFontSizeButton();
+        break;
+        
+    case 189: // ^-
+        if (! (event.ctrlKey || event.metaKey)) { break; }
+        event.preventDefault();
+        onDecreaseFontSizeButton();
+        break;
+        
     case 121: // F10
         event.preventDefault();
         if (! inModal() && useIDE) {
@@ -1019,25 +1028,15 @@ function onDocumentKeyDown(event) {
 
 document.addEventListener('keydown', onDocumentKeyDown);
 
-var jsCode = document.getElementById('jsCode') && ace.edit(document.getElementById('jsCode'));
-var editorStatusBar = document.getElementById('editorStatusBar');
-var aceEditor = ace.edit('codeEditor');
+const jsCode = document.getElementById('jsCode') && ace.edit(document.getElementById('jsCode'));
+const editorStatusBar = document.getElementById('editorStatusBar');
+const aceEditor = ace.edit('ace');
 
-aceEditor.setTheme('ace/theme/tomorrow_night_bright');
+aceEditor.setTheme('ace/theme/quadplay');
 
 // Stop auto-completion of parentheses
 aceEditor.setBehavioursEnabled(false);
-
-let aceSession = aceEditor.getSession();
-aceSession.setTabSize(3);
-aceSession.setUseSoftTabs(true);
-
-// Hide the syntax parsing "errors" from misinterpreting the source as JavaScript
-aceEditor.session.setUseWorker(false);
 aceEditor.setOptions({fontSize:'13px', showPrintMargin:false});
-aceSession.setMode('ace/mode/nano');
-aceSession.setUseWrapMode(false);
-
 
 function saveIDEState() {
     const options = {
@@ -1048,7 +1047,8 @@ function saveIDEState() {
         'showEntityBoundsEnabled': document.getElementById('showEntityBoundsEnabled').checked,
         'assertEnabled': document.getElementById('assertEnabled').checked,
         'debugWatchEnabled': document.getElementById('debugWatchEnabled').checked,
-        'debugPrintEnabled': document.getElementById('debugPrintEnabled').checked
+        'debugPrintEnabled': document.getElementById('debugPrintEnabled').checked,
+        'codeEditorFontSize': codeEditorFontSize
     };
 
     for (let name in options) {
@@ -1074,12 +1074,14 @@ function showGamepads() {
 
 
 let soundEditorCurrentSound = null;
+
+/** Called when a project tree control element is clicked */
 function onProjectSelect(target, type, object) {
     
     // Hide all editors
-    const editorPane = document.getElementById('editorPane');
-    for (let i = 0; i < editorPane.children.length; ++i) {
-        editorPane.children[i].style.visibility = 'hidden';
+    const editorFrame = document.getElementById('editorFrame');
+    for (let i = 0; i < editorFrame.children.length; ++i) {
+        editorFrame.children[i].style.visibility = 'hidden';
     }
 
     const gameEditor     = document.getElementById('gameEditor');
@@ -1166,16 +1168,12 @@ function onProjectSelect(target, type, object) {
         
     case 'mode':
     case 'script':
-        let contents;
-        if (type === 'mode') {
-            contents = fileContents[object.url];
-        } else {
-            contents = fileContents[object];
+        {
+            // See if there is already an open editor session, and create one if it
+            // doesn't exist
+            const url = (type === 'mode') ? object.url : object;
+            setCodeEditorSession(url);
         }
-        aceEditor.setValue(contents || '');
-        aceEditor.gotoLine(0, 0, false);
-        aceEditor.scrollToLine(0, false, false, undefined);
-        codeEditor.style.visibility = 'visible';
         break;
         
     case 'asset':
@@ -1269,6 +1267,7 @@ function onProjectSelect(target, type, object) {
 
 function showGameDoc(docEditor, name, url) {
     // Strip anything sketchy that looks like an HTML attack from the URL
+    console.assert(url !== undefined);
     url = url.replace(/" ></g, '');
     if (url.endsWith('.html')) {
         docEditor.innerHTML = `<embed id="doc" width="125%" height="125%" src="${url}"></embed>`;
@@ -1663,18 +1662,85 @@ function visualizeConstant(value, indent) {
 
 
 function visualizeGame(gameEditor, url, game) {
-    let s = '<table>';
-    s += '<tr valign="top"><td width="110px">Title</td><td><input type="text" autocomplete="false" style="width:384px" disabled value="' + game.title + '"></td></tr>\n';
-    s += '<tr valign="top"><td>Developer</td><td><input type="text" autocomplete="false" style="width:384px" disabled value="' + game.developer + '"></td></tr>\n';
-    s += '<tr valign="top"><td>Copyright</td><td><input type="text" autocomplete="false" style="width:384px" disabled value="' + game.copyright + '"></td></tr>\n';
-    s += '<tr valign="top"><td>License</td><td><textarea disabled style="width:384px; padding: 3px; font-family: Helvetica, Arial; font-size:12px" rows=4>' + game.license + '</textarea></td></tr>\n';
-    s += `<tr valign="top"><td>Screen&nbsp;Size</td><td><input type="text" autocomplete="false" style="width:384px" disabled value="${gameSource.json.screen_size.x} × ${gameSource.json.screen_size.y}"></td></tr>\n`;
-    s += `<tr valign="top"><td></td><td><label><input type="checkbox" autocomplete="false" style="margin-left:0" disabled ${game.flip_y ? 'checked' : ''}>Flip Y Axis</label></td></tr>\n`;
-    s += '<tr valign="top"><td>Path</td><td>' + url + '</td></tr>\n';
+    const disabled = editableProject ? '' : 'disabled';
+    
+    let s = '';
 
+    if (! editableProject) {
+        // Why isn't this project editable?
+        const reasons = [];
+
+        if (! locallyHosted()) {
+            reasons.push('is hosted on a remote server');
+        } else {
+            if (getQueryString('quadserver') !== '1') {
+                reasons.push('was not launched from the <code>quadplay</code> script');
+            }
+        }
+            
+        if (! useIDE) { reasons.push('was launched without the IDE'); }
+        
+        if (/^(quad:\/)?\/(games|examples)\//.test(url)) { reasons.push('is a built-in example'); }
+        
+        s += '<i>This project is locked because it';
+        if (reasons.length > 1) {
+            // Many reasons
+            s += '<ol>\n';
+            for (let i = 0; i < reasons.length; ++i) {
+                s += '<li>' + reasons[i] + '</li>\n';
+            }
+            s += '<ol>\n';
+        } else {
+            // One reason
+            s += ' ' + reasons[0] + '.';
+        }
+        s += '</i><br><br>\n';
+    }
+
+    s += '<table>\n';
+    s += '<tr valign="top"><td>Path</td><td colspan=3>' + url + '</td></tr>\n';
+    s += `<tr valign="top"><td width="110px">Title</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectTitle" value="${game.title.replace(/"/g, '\\"')}"></td></tr>\n`;
+    s += `<tr valign="top"><td>Developer</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectDeveloper" value="${game.developer.replace(/"/g, '\\"')}"></td></tr>\n`;
+    s += `<tr valign="top"><td>Copyright</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectCopyright" value="${game.copyright.replace(/"/g, '\\"')}"></td></tr>\n`;
+    s += `<tr valign="top"><td>License</td><td colspan=3><textarea ${disabled} style="width:384px; padding: 3px; margin-bottom:-3px; font-family: Helvetica, Arial; font-size:12px" rows=2 id="projectLicense" onchange="onProjectMetadataChanged(this)">${game.license}</textarea>`;
+    if (editableProject) {
+        // License defaults
+        s += '<br><button onclick="onProjectLicensePreset(\'All\')">All Rights Reserved</button><button onclick="onProjectLicensePreset(\'GPL\')">GPL 3</button><button onclick="onProjectLicensePreset(\'BSD\')">BSD</button><button onclick="onProjectLicensePreset(\'MIT\')">MIT</button><button onclick="onProjectLicensePreset(\'CC0\')">Public Domain</button>';
+    }
+    s += '</td></tr>\n';
+
+    if (editableProject) {
+        s += `<tr valign="top"><td>Screen&nbsp;Size</td><td colspan=3><select style="width:390px" onchange="onProjectScreenSizeChange(this)">`;
+        const res = [[384, 224], [192,112], [128,128], [64,64]];
+        for (let i = 0; i < res.length; ++i) {
+            const W = res[i][0], H = res[i][1];
+            s += `<option value='{"x":${W},"y":${H}}' ${W === gameSource.json.screen_size.x && H == gameSource.json.screen_size.y ? "selected" : ""}>${W} × ${H}</option>`;
+        }
+        s += `</select></td></tr>\n`;
+    } else {
+        // The disabled select box is too hard to read, so revert to a text box when not editable
+        s += `<tr valign="top"><td>Screen&nbsp;Size</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} value="${gameSource.json.screen_size.x} × ${gameSource.json.screen_size.y}"></td></tr>\n`;
+    }
+    s += `<tr valign="top"><td></td><td colspan=3><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.flip_y ? 'checked' : ''} onchange="onProjectFlipYChange(this)">Flip Y Axis</label></td></tr>\n`;
+
+    s+= '<tr><td>&nbsp;</td></tr>\n';
+    
+    s += `<tr valign="top"><td>Description<br><span id="projectDescriptionLength">(${(game.description || '').length}/100 chars)</span> </td><td colspan=3><textarea ${disabled} style="width:384px; padding: 3px; margin-bottom:-3px; font-family: Helvetica, Arial; font-size:12px" rows=2 id="projectDescription" onchange="onProjectMetadataChanged(this)" oninput="document.getElementById('projectDescriptionLength').innerHTML = '(' + this.value.length + '/100 chars)'">${game.description || ''}</textarea>`;
+    s += '<tr valign="top"><td>Features</td><td colspan=3>';
+    const boolFields = ['Cooperative', 'Competitive', 'High Scores', 'Achievements'];
+    for (let f = 0; f < boolFields.length; ++f) {
+        const name = boolFields[f];
+        const field = name.replace(/ /g,'').toLowerCase();
+        s += `<label><input ${disabled} type="checkbox" id="project${capitalize(field)}" onchange="onProjectMetadataChanged(this)" ${game[field] ? 'checked' : ''}>${name}</label> `;
+    }
+    s += '</td></tr>\n';
+    s += `<tr><td></td><td><input type="number" min="1" max="8" ${disabled} onchange="onProjectMetadataChanged(this)" id="projectMinPlayers" value="${game.min_players || 1}"></input> - <input type="number" min="1" max="8" ${disabled} onchange="onProjectMetadataChanged(this)" id="projectMaxPlayers" value=${game.max_players || 1}></input> Players</td></tr>\n`;
+
+    s+= '<tr><td>&nbsp;</td></tr>\n';
+    
     const baseURL = url.replace(/\/[^\/]*$/, '');
-    s += '<tr valign="top"><td>64px&nbsp;Label</td><td><img alt="label64.png" src="' + baseURL + '/label64.png" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:64px; height:64px"></td></tr>\n';
-    s += '<tr valign="top"><td>128px&nbsp;Label</td><td><img alt="label128.png" src="' + baseURL + '/label128.png" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:128px; height:128px"></td></tr>\n';
+    s += '<tr valign="top"><td></td><td style="text-align:center">64px&nbsp;Label<br><img alt="label64.png" src="' + baseURL + '/label64.png" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:64px; height:64px"></td>';
+    s += '<td></td><td style="text-align:center">128px&nbsp;Label<br><img alt="label128.png" src="' + baseURL + '/label128.png" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:128px; height:128px"></td></tr>\n';
     s += '</table>';
     gameEditor.innerHTML = s;
 }
@@ -1740,18 +1806,33 @@ function visualizeMap(map) {
     mapCtx.putImageData(dstImageData, 0, 0);
 }
 
+{
+    const text = document.getElementById('newModeName');
+    text.onkeydown = function (event) {
+        if (event.keyCode === 13) {
+            onNewModeCreate();
+        } else if (event.keyCode === 27) {
+            hideNewModeDialog();
+        }
+    }
+}
+
+
 
 /** Creates the left-hand project listing from the gameSource */
 function createProjectWindow(gameSource) {
     let s = '';
-    s += '<b title="' + gameSource.jsonURL +' " onclick="onProjectSelect(event.target, \'game\', null)" class="clickable">' + gameSource.json.title + '</b>';
+    s += `<b title="${gameSource.jsonURL}" onclick="onProjectSelect(event.target, 'game', null)" class="clickable projectTitle ${editableProject ? '' : 'locked'}">${gameSource.json.title}</b>`;
     s += '<div style="border-left: 1px solid #ccc; margin-left: 4px; padding-top: 5px; padding-bottom: 9px; margin-bottom: -7px"><div style="margin:0; margin-left: -2px; padding:0">';
 
     s += '— <i>Scripts</i>\n';
     s += '<ul class="scripts">';
     for (let i = 0; i < gameSource.scripts.length; ++i) {
         const script = gameSource.scripts[i];
-        s += `<li class="clickable" onclick="onProjectSelect(event.target, 'script', gameSource.scripts[${i}])" title="${script}">${urlFilename(script)}</li>\n`;
+        s += `<li class="clickable" onclick="onProjectSelect(event.target, 'script', gameSource.scripts[${i}])" title="${script}" id="ScriptItem_${script.replace(/\.pyxl$/, '')}">${urlFilename(script)}</li>\n`;
+    }
+    if (editableProject) {
+        s += '<li class="clickable new" onclick="showNewScriptDialog()"><i>New script…</i></li>';
     }
     s += '</ul>';
 
@@ -1762,7 +1843,10 @@ function createProjectWindow(gameSource) {
         const mode = gameSource.modes[i];
         // Hide system modes
         if (/^.*\/_|^_/.test(mode.name)) { continue; }
-        s += `<li class="clickable" onclick="onProjectSelect(event.target, 'mode', gameSource.modes[${i}])" title="${mode.url}"><code>${mode.name}</code></li>\n`;
+        s += `<li class="clickable" onclick="onProjectSelect(event.target, 'mode', gameSource.modes[${i}])" title="${mode.url}" id="ModeItem_${mode.name}"><code>${mode.name}</code></li>\n`;
+    }
+    if (editableProject) {
+        s += '<li class="clickable new" onclick="showNewModeDialog()"><i>New mode…</i></li>';
     }
     s += '</ul>';
 
@@ -1770,7 +1854,10 @@ function createProjectWindow(gameSource) {
     s += '<ul class="docs">';
     for (let i = 0; i < gameSource.docs.length; ++i) {
         const doc = gameSource.docs[i];
-        s += `<li class="clickable" onclick="onProjectSelect(event.target, 'doc', gameSource.docs[${i}])" title="${doc.url}"><code>${doc.name}</code></li>\n`;
+        s += `<li class="clickable" id="DocItem_${doc.name}" onclick="onProjectSelect(event.target, 'doc', gameSource.docs[${i}])" title="${doc.url}"><code>${doc.name}</code></li>\n`;
+    }
+    if (editableProject) {
+        s += '<li class="clickable new" onclick="showNewDocDialog()"><i>New doc…</i></li>';
     }
     s += '</ul>';
     
@@ -1883,44 +1970,6 @@ const autocorrectTable = [
 ];
 
 
-aceEditor.session.on('change', function () {
-    let src = aceEditor.getValue();
-    if (src.match(/\r|\t|[\u2000-\u200B]/)) {
-        // Strip any \r inserted by pasting on windows, replace any \t that
-        // likewise snuck in. This is rare, so don't invoke setValue unless
-        // one is actually inserted.
-        src = src.replace(/\r\n|\n\r/g, '\n').replace(/\r/g, '\n');
-        src = src.replace(/\t/g, '  ').replace(/\u2003|\u2001/g, '  ').replace(/\u2007/g, ' ');
-        aceEditor.setValue(src);
-    } else {
-        // Autocorrect
-        let position = aceEditor.getCursorPosition();
-        let index = aceEditor.session.doc.positionToIndex(position);
-
-        let LONGEST_AUTOCORRECT = 10;
-        let start = index - LONGEST_AUTOCORRECT;
-        let substr = src.substring(start, index + 1);
-
-        // Look for any possible match in substr, which is faster than
-        // searching the entirety of the source on every keystroke
-        for (let i = 0; i < autocorrectTable.length; i += 2) {
-            let target = autocorrectTable[i];
-            let x = substr.indexOf(target);
-            if (x >= 0) {
-                let replacement = autocorrectTable[i + 1];
-                // Found an autocorrectable substring: replace it
-                src = src.substring(0, start + x) + replacement + src.substring(start + x + target.length);
-                aceEditor.setValue(src);
-
-                // Move the cursor to retain its position
-                aceEditor.gotoLine(position.row + 1, Math.max(0, position.column - target.length + replacement.length + 1), false);
-                break;
-            }
-        }
-    }
-});
-
-
 if (jsCode) {
     jsCode.getSession().setUseWorker(false);
     jsCode.getSession().setMode('ace/mode/javascript');
@@ -2012,6 +2061,8 @@ function onRadio() {
         setUIMode('IDE', false);
     } else if (pressed('maximalUI') && (uiMode !== 'Maximal')) {
         setUIMode('Maximal', false);
+    } else if (pressed('editorUI') && (uiMode !== 'Editor')) {
+        setUIMode('Editor', false);
     }
 
     saveIDEState();
@@ -2557,6 +2608,7 @@ function reloadRuntime(oncomplete) {
 ///////////////////////////////////////////////////////////////////////
 
 function deep_clone(src, alreadySeen) {
+    alreadySeen = alreadySeen || new Map();
     if ((src === null) || (src === undefined)) {
         return undefined;
     } else if (alreadySeen.has(src)) {
@@ -2759,6 +2811,11 @@ function appendToBootScreen(msg) {
 
 
 function loadGameIntoIDE(url, callback) {
+    if (url !== gameURL) {
+        // A new game is being loaded. Throw away the editor sessions.
+        removeAllCodeEditorSessions();
+    }
+    
     if (emulatorMode !== 'stop') { onStopButton(); }
 
     const isLauncher = /(^quad:\/\/console\/|\/launcher\.game\.json$)/.test(url);
@@ -2767,6 +2824,11 @@ function loadGameIntoIDE(url, callback) {
     }
     window.gameURL = url;
 
+    // See if the game is on the same server and not in the
+    // games/ or examples/ directory
+    const isBuiltIn = /^(quad:\/)?\/(games|examples)\//.test(url);
+    editableProject = locallyHosted() && useIDE && (getQueryString('quadserver') === '1') && ! isBuiltIn;// && ! /^http(s)?:/.test(url);
+    
     // Disable the play, slow, and step buttons
     document.getElementById('slowButton').enabled =
         document.getElementById('stepButton').enabled =
@@ -2801,10 +2863,6 @@ function loadGameIntoIDE(url, callback) {
             }
         }
 
-        // TODO: Editor
-        //aceEditor.setReadOnly(! locallyHosted());
-        aceEditor.setReadOnly(true);
-
         onLoadFileStart(url);
         afterLoadGame(url, function () {
             onLoadFileComplete(url);
@@ -2837,8 +2895,7 @@ function loadGameIntoIDE(url, callback) {
                 visualizeModes(modeEditor);
             }
             
-            aceEditor.gotoLine(0, 0, false);
-            aceEditor.scrollToLine(0, false, false, undefined);
+            updateAllCodeEditorSessions();
             hideWaitDialog();
             
             appendToBootScreen(`
@@ -2860,6 +2917,7 @@ Starting…
 `);        
             if (callback) { callback(); }
         }, function (e) {
+            updateAllCodeEditorSessions();
             document.getElementById('restartButtonContainer').enabled =
                 document.getElementById('slowButton').enabled =
                 document.getElementById('stepButton').enabled =
@@ -2919,7 +2977,6 @@ if (! localStorage.getItem('debugWatchEnabled')) {
         url = '../' + url;
     }
 
-
     if (useIDE || (url !== 'quad://console/launcher')) {
         loadGameIntoIDE(url, function () {
             onProjectSelect(null, 'game', gameSource.url);
@@ -2931,9 +2988,11 @@ document.getElementById('backgroundPauseCheckbox').checked = backgroundPauseEnab
 
 setUIMode(localStorage.getItem('uiMode') || 'IDE', false);
 setErrorStatus('');
+setCodeEditorFontSize(parseInt(localStorage.getItem('codeEditorFontSize') || '14'));
 setColorScheme(localStorage.getItem('colorScheme') || 'pink');
 onResize();
 setTimeout(onResize, 500);
 // Set the initial size
 setFramebufferSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 reloadRuntime();
+

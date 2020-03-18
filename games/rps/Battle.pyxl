@@ -6,27 +6,36 @@ let action_array
 def done():
    let num_alive = 0
    let just_eliminated = []
-   let live_player = nil
-   for choice, health in player in player_array:
+   let live_player = ∅
+   
+   let max_score = 0
+   
+   for score, choice, health in player in player_array:
       choice = ∅
       const new_health = ⌊ health ⌋
-      if new_health != health:
+      if new_health ≠ health:
          health = new_health
          push(just_eliminated, player)
          
       if health > 0:
+         max_score = max(score, max_score)
          ++num_alive
          live_player = player
 
+   let num_with_max_score = 0
+   for score in player in player_array:
+      if score == max_score: ++num_with_max_score
+         
    if num_alive ≤ 1:
       if live_player:
-         live_player.score += (MAX_ROUNDS - round_num) * (size(player_array)- 1) * ⌊110% WIN_POINTS⌋
+         live_player.score += (MAX_ROUNDS - round_num) * (size(player_array) - 1) * ⌊110% WIN_POINTS⌋
       set_mode(GameOver) because "num_alive ≤ 1"
-   else if round_num == MAX_ROUNDS:
+   else if round_num >= MAX_ROUNDS and num_with_max_score <= 1:
       set_mode(GameOver) because "Rounds complete"
    else if size(just_eliminated) > 0:
       set_mode(Eliminate, just_eliminated) because "Elimination"
    else:
+      // Can go into overtime in the case of a tie
       ++round_num
       set_mode(Play) because "Battle complete"
 
@@ -120,5 +129,4 @@ while size(action_array) > 0:
       push_mode(Attack, action.group_A, action.group_B) because "Next attack"
    
 done()
-
 

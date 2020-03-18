@@ -26,7 +26,7 @@ for i < num_humans:
                x_align: "center", y_align:"center"})
          else:
             all_ready = false
-            draw_disk(pos + transform, 10 + oscillate(mode_frames / 4, 4), color)
+            draw_disk(pos + transform, 10 + oscillate(¼ mode_frames, 4), color)
 
 draw_text(large_font, "How to Play R. P. S.", xy(½ SCREEN_SIZE.x, 17), #fff, #5, ∅, "center")
 draw_text({font: font, text: INSTRUCTIONS, pos: xy(10, 50), color: #fff, shadow: #5, wrap_width: SCREEN_SIZE.x - 20})

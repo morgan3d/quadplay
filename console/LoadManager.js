@@ -81,6 +81,8 @@
     or \a errorCallback when the first fails.  */
 function LoadManager(options) {
 
+    options = options || {};
+
     // Map from url to:
     // {
     //   raw      : result of the fetch
@@ -185,13 +187,15 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
                     v.value = p ? p(rawEntry.raw, rawEntry.url) : rawEntry.raw;
                     
                     for (let c of v.callbackArray) {
-                        // Note that callbacks may increase LM.pendingRequests
+                        // Note that callbacks may trigger their own loads, which
+                        // increase LM.pendingRequests
                         if (c) { c(v.value, rawEntry.raw, rawEntry.url, p); }
                     }
                 }
                 rawEntry.status = 'success';
                 LM.markRequestCompleted(rawEntry.url, '', true);
             } catch (e) {
+                console.dir(e);
                 rawEntry.failureMessage = '' + e;
                 onLoadFailure();
             }
@@ -253,7 +257,7 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
             xhr.onload = function() {
                 const status = xhr.status;
                 if (status === 200) {
-                    if (xhr.response) {
+                    if (xhr.response !== undefined) {
                         // now parse
                         if ((LM.jsonParser !== 'remote') && (type === 'json')) {
                             try {
