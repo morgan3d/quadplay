@@ -17,7 +17,7 @@ exit 2
 # Shell commands end here
 # Python script follows
 
-import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl
+import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs
 
 __doc__ = "Quadplay Fantasy Console launcher script."
 
@@ -28,6 +28,9 @@ web_path = None
 
 # Subdirectories of web_path that are permitted for http access
 whitelist = None
+
+onWindows = (platform.system() == 'Windows')
+onMac = (platform.system() == 'Darwin')
 
 try:
     # Python 3.7
@@ -55,11 +58,21 @@ except ImportError:
 class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
     def list_directory(self, path):
         # Prevent directory listing
-        self.send_error(HTTPStatus.NOT_FOUND, 'No permission to list directory')
+        self.send_error(404, 'No permission to list directory')
         return None
         
     # Used for the IDE to write files. Currently disabled on the IDE side
     def do_POST(self):
+        if args.host:
+           print('Refused POST command while running with --host')
+           return
+        
+        if self.client_address[0] != '127.0.0.1':
+           print('Refused POST command from non-local address', self.client_address[0])
+           return
+        
+        print('\n\nReceived POST from ', self.client_address[0], '\n\n')
+
         content_len = int(self.headers['Content-Length'])
         #int(self.headers.getheader('content-length', 0))
         post_body = self.rfile.read(content_len)
@@ -67,14 +80,24 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        self.wfile.write('Posted'.encode('utf8'))
         
-        print("\nPOST contents:\n")
-        print(post_body)
+        #print("\nPOST contents:\n")
+        #print(post_body)
         object = json.loads(post_body)
-        print("\n")
+        command = object['command']
+        if command == 'write_file':
+           filename = object['filename'][1:]
+           encoding = object['encoding']
+           contents = object['contents']
+           print('wrote ', encoding, 'file: ', filename)
+           if encoding == 'binary':
+              with open(filename, 'wb') as f: f.write(contents)
+           else:
+              with codecs.open(filename, 'w', encoding) as f: f.write(contents)
+              
+        self.wfile.write('OK'.encode('utf8'))
 
-        
+              
     def do_GET(self):
         global whitelist, web_path
         
@@ -130,19 +153,42 @@ def parse_args():
         default=8000,
         help="Port to run the server on."
     )
+
     return parser.parse_args()
 
 # Args must be initialized to a constant before launchServer is defined
 # because of the way that multiprocess serialization works on ThreadingHTTPServer
 args = parse_args()
+if onWindows and args.gamepath:
+    # Make drive letters canonical
+    if args.gamepath[1] == ':':
+        args.gamepath = args.gamepath[0].upper() + args.gamepath[1:]
 
+        
+# Makes a path absolute for the web server root
+def platform_www_abspath(p):
+    if onWindows:
+        p = p[len(web_path):]
+        if not p.endswith('.game.json'): p = os.path.join(p, '')
+        t = p.replace('\\', '/')
+        if len(t) > 1 and t[1] != ':' and t[0] != '/': t = '/' + t
+        return t
+    else:
+        p = p[len(web_path)+1:]
+        if p == '':
+            return ''
+        elif p.endswith('.game.json'):
+            return os.path.join('/', p)            
+        else:
+            return os.path.join('/', p, '')
+
+    
 # Process paths at top level so that they can be inherited by ThreadingHTTPServer
 if True:
     quad_path = os.path.abspath(os.path.dirname(__file__))
 
     # Compute the serving paths
     if args.gamepath and not args.gamepath.startswith('http:'):
-       # os.path.abspath does not work well here for some reason
        game_path = os.path.abspath(args.gamepath)
 
        if game_path.endswith('.game.json'):
@@ -157,10 +203,13 @@ if True:
        whitelist = [quad_path]
 
     # Strip the common prefix
-    whitelist = [os.path.join('/', p[len(web_path)+1:], '').replace('\\', '/') for p in whitelist]
+    whitelist = [platform_www_abspath(p).replace('\\', '/') for p in whitelist]
     quad_path = whitelist[0]
-    
     web_path = web_path.replace('\\', '/')
+
+    #print("web_path = '" + web_path + "'")
+    #print("quad_path = '" + quad_path + "'")
+    #print('whitelist = ', whitelist)
 
     
 # SSL support doesn't work yet due to self-signed certificates
@@ -214,9 +263,6 @@ def main():
        # Support normal-terminal reset at exit
        atexit.register(set_normal_term)
 
-    onWindows = (platform.system() == 'Windows')
-    onMac = (platform.system() == 'Darwin')
-
     myip = '127.0.0.1'
     if args.host:
         try:
@@ -246,22 +292,32 @@ def main():
                     print('WARNING: gethostbyname unexpectedly failed. Server IP address is unknown.')
                     myip = '127.0.0.1'
 
-    url = 'http' + ('s' if useSSL else '')+ '://' + myip + ':' + str(args.port) + os.path.join('/', quad_path, 'console/quadplay.html') + '?IDE=1&fastReload=1'
+    url = 'http' + ('s' if useSSL else '')+ '://' + myip + ':' + str(args.port)
+    if not quad_path or quad_path[0] != '/': url += '/'
+    url += os.path.join(quad_path, 'console/quadplay.html') + '?IDE=1&fastReload=1'
     print('_________________________________________________________________________\n')
 
     if args.gamepath != '':
-        url += '&game=' + os.path.join('/', os.path.abspath(args.gamepath)[len(web_path)+1:]).replace('\\', '/')
+        t = args.gamepath
+        if not t.startswith('http://'):
+            t = platform_www_abspath(os.path.abspath(t))
+            if t and not onWindows and t[0] != '/': t = '/' + t
+        url += '&game=' + t
     else:
         print('Loading default launcher game. You can supply the URL or local relative path to your game on\nthe command line, for example "quadplay foo/mygame", to load it directly.\n')
 
     print('\nServing from:\n\n   ' + url)
-    if args.host: print('\n\nNote that your firewall may need to be configured to load on other devices.\n')
-
-    url += '&quadserver=1'
+                 
+    if args.host:
+        # Do not support POST in host mode
+        print('\n\nNote that your firewall may need to be configured to load on other devices.\n')
+    else:
+        url += '&quadserver=1'
     
     # Run from the quadplay path
     print('\n   the quad:// root path is ' + os.path.abspath(os.path.dirname(__file__)).replace('\\', '/') + '/\n')
     
+
     # Platform independent keyboard key press detection
     def kbhit():
        if onWindows:
