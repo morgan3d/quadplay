@@ -569,6 +569,7 @@ function onPlayButton(slow, isLaunchGame, args) {
     }
 
     if (emulatorMode === 'play') {
+        // Already in play mode, just refocus input
         emulatorKeyboardInput.focus();
         return;
     } else if (emulatorMode === 'stop') {
@@ -578,8 +579,13 @@ function onPlayButton(slow, isLaunchGame, args) {
         } else {
             console.log('\n');
             if (useIDE && ! isLaunchGame) {
-                // Force a reload of the game
-                loadGameIntoIDE(window.gameURL, doPlay);
+                if (savesPending === 0) {
+                    // Force a reload of the game
+                    loadGameIntoIDE(window.gameURL, doPlay);
+                } else {
+                    setErrorStatus('Cannot reload while saving. Try again in a second.');
+                    onStopButton();
+                }
             } else {
                 // Just play the game, no reload required because
                 // we are in user mode.
@@ -1083,13 +1089,21 @@ function onProjectSelect(target, type, object) {
     for (let i = 0; i < editorFrame.children.length; ++i) {
         editorFrame.children[i].style.visibility = 'hidden';
     }
-
+    
     const gameEditor     = document.getElementById('gameEditor');
-    const codeEditor     = document.getElementById('codeEditor');
     const modeEditor     = document.getElementById('modeEditor');
+    const constantEditor = document.getElementById('constantEditor');
+    const codePlusFrame = document.getElementById('codePlusFrame');
+
+    // Hide the viewers within the content pane for the code editor
+    const codeEditorContentFrame = document.getElementById('codeEditorContentFrame');
+    for (let i = 0; i < codeEditorContentFrame.children.length; ++i) {
+        codeEditorContentFrame.children[i].style.visibility = 'hidden';
+    }
+
+    const codeEditor     = document.getElementById('codeEditor');
     const spriteEditor   = document.getElementById('spriteEditor');
     const soundEditor    = document.getElementById('soundEditor');
-    const constantEditor = document.getElementById('constantEditor');
     const mapEditor      = document.getElementById('mapEditor');
     const docEditor      = document.getElementById('docEditor');
 
@@ -1112,8 +1126,31 @@ function onProjectSelect(target, type, object) {
     if (type === 'doc') {
         // Documents
         target.classList.add('selectedProjectElement');
-        showGameDoc(docEditor, object.name, object.url);
+        showGameDoc(object.url);
         docEditor.style.visibility = 'visible';
+        codePlusFrame.style.visibility = 'visible';
+
+        codePlusFrame.style.gridTemplateRows = '0px 0px 100%';
+        
+        if (object.url.endsWith('.md') ||
+            object.url.endsWith('.html') ||
+            object.url.endsWith('.txt')) {
+
+            // Show the editor after loading the content
+            if (fileContents[object.url] !== undefined) {
+                codePlusFrame.style.gridTemplateRows = '3fr 6px 4fr';
+                setCodeEditorSession(object.url);
+            } else {
+                // Load and set the contents
+                const loadManager = new LoadManager({forceReload: true});
+                loadManager.fetch(object.url, 'text', null, function (doc) {
+                    fileContents[object.url] = doc;
+                    codePlusFrame.style.gridTemplateRows = '3fr 6px 4fr';
+                    setCodeEditorSession(object.url);
+                });
+                loadManager.end();
+            }
+        }
         return;
     }
 
@@ -1173,11 +1210,20 @@ function onProjectSelect(target, type, object) {
             // doesn't exist
             const url = (type === 'mode') ? object.url : object;
             setCodeEditorSession(url);
+            // Show the code editor, hide the content pane
+            codePlusFrame.style.visibility = 'visible';
+            codePlusFrame.style.gridTemplateRows = '1fr 0px 0px';
         }
         break;
         
     case 'asset':
         const url = object._url || object.src;
+        setCodeEditorSession(object._jsonURL);
+
+        // Show the code editor and the content pane
+        codePlusFrame.style.visibility = 'visible';
+        codePlusFrame.style.gridTemplateRows = '2fr 6px 5fr';
+        
         if (/\.png$/i.test(url)) {
             // Sprite or font
             spriteEditor.style.visibility = 'visible';
@@ -1264,26 +1310,38 @@ function onProjectSelect(target, type, object) {
     }
 }
 
+/* Updates the preview pane of the doc editor. If useFileContents is true,
+   use fileContents[url] when not undefined instead of actually reloading. */
+function showGameDoc(url, useFileContents) {
+    const docEditor = document.getElementById('docEditor');
 
-function showGameDoc(docEditor, name, url) {
+    const preserveScroll = (docEditor.lastURL === url);
+    docEditor.lastURL = url;
+
+    const srcdoc = useFileContents ? fileContents[url] : undefined;
+          
     // Strip anything sketchy that looks like an HTML attack from the URL
     console.assert(url !== undefined);
-    url = url.replace(/" ></g, '');
+    url = url.replace(/['" ><]/g, '');
     if (url.endsWith('.html')) {
-        docEditor.innerHTML = `<embed id="doc" width="125%" height="125%" src="${url}"></embed>`;
+        // Includes the .md.html case
+        let s = '<embed id="doc" width="125%" height="125%" ';
+        if (srcdoc !== undefined) {
+            s += `srcdoc=${srcdoc.replace(/"/g, '&quot;')}`;
+        } else {
+            s += `src="${url}"`;
+        }
+        docEditor.innerHTML = s +'></embed>';
     } else if (url.endsWith('.md')) {
         // Trick out .md files using Markdeep
-        loadManager = new LoadManager({
-            errorCallback: function () {
-            },
-            forceReload: true});
-        loadManager.fetch(url, 'text', null,  function (text) {
+        
+        function markdeepify(text) {
             // Set base URL and add Markdeep processing
             const base = urlDir(url);
             const markdeepURL = makeURLAbsolute('', 'quad://doc/markdeep.min.js');
-
+            
             // Escape quotes to avoid ending the srcdoc prematurely
-            text = `<base href='${base}'>\n${text.replace(/"/g, '&quot;')}
+            return `<base href='${base}'>\n${text.replace(/"/g, '&quot;')}
                 <style>
 body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif}
 
@@ -1301,10 +1359,20 @@ margin-top: 0; padding-top: 0
 .md .afterTitles { height: 0; padding-top: 0; padding-bottom: 0 }
 </style>\n
 
-<!-- Markdeep: --><script src='${markdeepURL}'></script>\n`;
-            docEditor.innerHTML = `<iframe id="doc" srcdoc="${text}" border=0 width=125% height=125%></iframe>`;
-        }),
-        loadManager.end();
+<!-- Markdeep: --><script src='${markdeepURL}'></script>\n`;            
+        }
+
+        if (srcdoc !== undefined) {
+            docEditor.innerHTML = `<iframe id="doc" srcdoc="${markdeepify(srcdoc)}" border=0 width=125% height=125%></iframe>`;
+        } else {
+            loadManager = new LoadManager({
+                errorCallback: function () { console.log('Error while loading', url); },
+                forceReload: true});
+            loadManager.fetch(url, 'text', null,  function (text) {
+                docEditor.innerHTML = `<iframe id="doc" srcdoc="${markdeepify(text)}" border=0 width=125% height=125%></iframe>`;
+            }),
+            loadManager.end();
+        }
     } else {
         // Treat as text file
         docEditor.innerHTML = `<object id="doc" width="125%" height="125%" type="text/plain" data="${url}" border="0"> </object>`;
@@ -1710,6 +1778,15 @@ function visualizeGame(gameEditor, url, game) {
     s += '</td></tr>\n';
 
     if (editableProject) {
+        s += '<tr valign="top"><td>Initial&nbsp;Mode</td><td colspan=3><select style="width:390px" onchange="onProjectInitialModeChange(this)">\n';
+        for (let i = 0; i < gameSource.modes.length; ++i) {
+            const mode = gameSource.modes[i];
+            if (! mode.name.startsWith('quad://console/os/_')) {
+                s += `<option value=${mode.name} ${mode.name.indexOf('*') !== -1 ? 'selected' : ''}>${mode.name.replace(/\*/g, '')}</option>\n`;
+            }
+        }
+        s += '</select></td></tr>\n';
+        
         s += `<tr valign="top"><td>Screen&nbsp;Size</td><td colspan=3><select style="width:390px" onchange="onProjectScreenSizeChange(this)">`;
         const res = [[384, 224], [192,112], [128,128], [64,64]];
         for (let i = 0; i < res.length; ++i) {
@@ -1719,6 +1796,13 @@ function visualizeGame(gameEditor, url, game) {
         s += `</select></td></tr>\n`;
     } else {
         // The disabled select box is too hard to read, so revert to a text box when not editable
+        for (let i = 0; i < gameSource.modes.length; ++i) {
+            const mode = gameSource.modes[i];
+            if (! mode.name.startsWith('quad://console/os/_') && (mode.name.indexOf('*') !== -1)) {
+                s += `<tr valign="top"><td>Initial&nbsp;Mode</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} value="${mode.name.replace(/\*/g, '')}"></td></tr>\n`;
+                break;
+            }
+        }
         s += `<tr valign="top"><td>Screen&nbsp;Size</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} value="${gameSource.json.screen_size.x} × ${gameSource.json.screen_size.y}"></td></tr>\n`;
     }
     s += `<tr valign="top"><td></td><td colspan=3><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.flip_y ? 'checked' : ''} onchange="onProjectFlipYChange(this)">Flip Y Axis</label></td></tr>\n`;
@@ -1822,14 +1906,18 @@ function visualizeMap(map) {
 /** Creates the left-hand project listing from the gameSource */
 function createProjectWindow(gameSource) {
     let s = '';
-    s += `<b title="${gameSource.jsonURL}" onclick="onProjectSelect(event.target, 'game', null)" class="clickable projectTitle ${editableProject ? '' : 'locked'}">${gameSource.json.title}</b>`;
+    {
+        const badge = isBuiltIn(gameSource.jsonURL) ? 'builtin' : (isRemote(gameSource.jsonURL) ? 'remote' : '');
+        s += `<b title="${gameSource.jsonURL}" onclick="onProjectSelect(event.target, 'game', null)" class="clickable projectTitle ${badge}">${gameSource.json.title}</b>`;
+    }
     s += '<div style="border-left: 1px solid #ccc; margin-left: 4px; padding-top: 5px; padding-bottom: 9px; margin-bottom: -7px"><div style="margin:0; margin-left: -2px; padding:0">';
 
     s += '— <i>Scripts</i>\n';
     s += '<ul class="scripts">';
     for (let i = 0; i < gameSource.scripts.length; ++i) {
         const script = gameSource.scripts[i];
-        s += `<li class="clickable" onclick="onProjectSelect(event.target, 'script', gameSource.scripts[${i}])" title="${script}" id="ScriptItem_${script.replace(/\.pyxl$/, '')}">${urlFilename(script)}</li>\n`;
+        const badge = isBuiltIn(script) ? 'builtin' : (isRemote(script) ? 'remote' : '');
+        s += `<li class="clickable ${badge}" onclick="onProjectSelect(event.target, 'script', gameSource.scripts[${i}])" title="${script}" id="ScriptItem_${script.replace(/\.pyxl$/, '')}">${urlFilename(script)}</li>\n`;
     }
     if (editableProject) {
         s += '<li class="clickable new" onclick="showNewScriptDialog()"><i>New script…</i></li>';
@@ -1843,7 +1931,8 @@ function createProjectWindow(gameSource) {
         const mode = gameSource.modes[i];
         // Hide system modes
         if (/^.*\/_|^_/.test(mode.name)) { continue; }
-        s += `<li class="clickable" onclick="onProjectSelect(event.target, 'mode', gameSource.modes[${i}])" title="${mode.url}" id="ModeItem_${mode.name}"><code>${mode.name}</code></li>\n`;
+        const badge = isBuiltIn(mode.url) ? 'builtin' : (isRemote(mode.url) ? 'remote' : '');
+        s += `<li class="clickable ${badge}" onclick="onProjectSelect(event.target, 'mode', gameSource.modes[${i}])" title="${mode.url}" id="ModeItem_${mode.name}"><code>${mode.name}</code></li>\n`;
     }
     if (editableProject) {
         s += '<li class="clickable new" onclick="showNewModeDialog()"><i>New mode…</i></li>';
@@ -1854,7 +1943,8 @@ function createProjectWindow(gameSource) {
     s += '<ul class="docs">';
     for (let i = 0; i < gameSource.docs.length; ++i) {
         const doc = gameSource.docs[i];
-        s += `<li class="clickable" id="DocItem_${doc.name}" onclick="onProjectSelect(event.target, 'doc', gameSource.docs[${i}])" title="${doc.url}"><code>${doc.name}</code></li>\n`;
+        const badge = isBuiltIn(doc.url) ? 'builtin' : (isRemote(doc.url) ? 'remote' : '');
+        s += `<li class="clickable ${badge}" id="DocItem_${doc.name}" onclick="onProjectSelect(event.target, 'doc', gameSource.docs[${i}])" title="${doc.url}"><code>${doc.name}</code></li>\n`;
     }
     if (editableProject) {
         s += '<li class="clickable new" onclick="showNewDocDialog()"><i>New doc…</i></li>';
@@ -1874,7 +1964,7 @@ function createProjectWindow(gameSource) {
     s += '</ul>';
 
     s += '</div></div>';
-    s += '<div style="margin-left: 3px">— <i>Assets</i>\n';
+    s += '<div style="margin-left: 3px; position: relative; top: -2px">— <i>Assets</i>\n';
     s += '<ul class="assets">';
     {
         const keys = Object.keys(gameSource.assets);
@@ -1888,7 +1978,9 @@ function createProjectWindow(gameSource) {
             let type = asset._jsonURL.match(/\.([^.]+)\.json$/i);
             if (type) { type = type[1].toLowerCase(); }
 
-            s += `<li onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'])" class="clickable ${type}" title="${asset._jsonURL}"><code>${assetName}</code></li>`;
+            const badge = isBuiltIn(asset._jsonURL) ? 'builtin' : (isRemote(asset._jsonURL) ? 'remote' : '');
+                
+            s += `<li onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'])" class="clickable ${type} ${badge}" title="${asset._jsonURL}"><code>${assetName}</code></li>`;
 
             if (type === 'map') {
                 for (let k in asset.spritesheetTable) {

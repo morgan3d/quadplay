@@ -3,10 +3,33 @@
 
 // How long to wait for new input before saving, to avoid
 // constant disk churn
-const CODE_EDITOR_SAVE_DELAY = 2; // seconds
+const CODE_EDITOR_SAVE_DELAY = 1.2; // seconds
 
 // Maps filenames to editor sessions. Cleared when a project is loaded
 const codeEditorSessionMap = new Map();
+
+/* True if a URL does not match the current server */
+function isRemote(url) {
+    return ! url.startsWith(location.origin + '/');
+}
+
+/* Reference count for outstanding saves. Used to disable reload
+   temporarily while a save is pending. */
+let savesPending = 0;
+
+/* True if a URL is to a path that is a built-in dir for the current server */
+function isBuiltIn(url) {
+    const quadPath = location.href.replace(/\/console\/quadplay\.html.*$/, '/');
+    return url.startsWith('quad://') ||
+        url.startsWith(quadPath + 'sprites/') ||
+        url.startsWith(quadPath + 'fonts/') ||
+        url.startsWith(quadPath + 'sounds/') ||
+        url.startsWith(quadPath + 'scripts/') ||
+        url.startsWith(quadPath + 'games/') ||
+        url.startsWith(quadPath + 'examples/') ||
+        url.startsWith(quadPath + 'console/') ||
+        url.startsWith(quadPath + 'doc/');
+}
 
 function onIncreaseFontSizeButton() {
     setCodeEditorFontSize(codeEditorFontSize + 2);
@@ -31,7 +54,22 @@ function updateAllCodeEditorSessions() {
     codeEditorSessionMap.forEach(function (session, url) {
         const newText = fileContents[url];
         if (newText === undefined) {
-            // No longer in use
+            // No longer in use...but may be still in the project if it is a doc
+            for (let i = 0; i < gameSource.docs.length; ++i) {
+                if (gameSource.docs[i].url === url) {
+                    // This document is still in the project, so reload it
+                    const loadManager = new LoadManager({forceReload: true});
+                    loadManager.fetch(url, 'text', null, function (doc) {
+                        fileContents[url] = doc;
+                        updateCodeEditorSession(url, doc);
+                    });
+                    loadManager.end();
+
+                    return;
+                }
+            }
+
+            // Really not in use
             codeEditorSessionMap.delete(url);
             if (session === aceEditor.session) {
                 // Was the active editing session; swap out for the main project page
@@ -44,6 +82,7 @@ function updateAllCodeEditorSessions() {
 }
 
 
+/* bodyText can also be json, which will be immediately serialized. */
 function updateCodeEditorSession(url, bodyText) {
     console.assert(bodyText !== undefined, 'bodyText required');
 
@@ -61,9 +100,15 @@ function updateCodeEditorSession(url, bodyText) {
     }
 }
 
+
 function setCodeEditorSessionMode(session, mode) {
     session.aux.mode = mode;
     codeEditorSessionModeDisplay.innerHTML = mode;
+
+    // Changing the session almost always happens after the layout has
+    // changed, so update the ace layout, which does not automatically
+    // adjust to the grid changes.
+    setTimeout(function() { aceEditor.resize(); });
 }
 
 
@@ -75,17 +120,19 @@ function setCodeEditorSession(url) {
     
     // Reset the mode so that it is visible
     setCodeEditorSessionMode(session, session.aux.mode);
-    codeEditor.style.visibility = 'visible';
 }
 
 
 // One session per edited file is created
 function createCodeEditorSession(url, bodyText) {
     console.assert(! codeEditorSessionMap.has(url));
+    if (typeof bodyText !== 'string') {
+        bodyText = WorkJSON.stringify(bodyText, undefined, 4);
+    }
     const session = new ace.EditSession(bodyText || '\n');
 
     codeEditorSessionMap.set(url, session);
-    
+
     // Extra quadplay data
     session.aux = {
         url: url,
@@ -97,7 +144,8 @@ function createCodeEditorSession(url, bodyText) {
 
         timeoutID: null,
 
-        readOnly: false
+        // Lock all built-in content
+        readOnly: isRemote(url) || isBuiltIn(url)
     };
     
     session.setUseSoftTabs(true);
@@ -117,30 +165,50 @@ function createCodeEditorSession(url, bodyText) {
     session.setUseWrapMode(false);
 
     session.on("change", function (delta) {
+        console.assert(! session.aux.readOnly);
         // Cancel the previous pending timeout if there is one
-        clearTimeout(session.aux.timeoutID);
+        if (session.aux.timeoutID) {
+            --savesPending;
+            clearTimeout(session.aux.timeoutID);
+        }
         
         // Note that the epoch has changed
         ++session.aux.epoch;
         const myEpoch = session.aux.epoch;
         setCodeEditorSessionMode(session, 'Modified<span class="blink">...</span>');
-        
+
+        ++savesPending;
         session.aux.timeoutID = setTimeout(function () {
+            session.aux.timeoutID = null;
             if (myEpoch === session.aux.epoch) {
                 // Epoch has not changed since timeout was created, so begin the POST
                 setCodeEditorSessionMode(session, 'Saving<span class="blink">...</span>');
 
                 // Update the file contents immediately
-                fileContents[url] = session.getValue();
+                let contents = session.getValue();
+
+                const value = url.endsWith('.json') ? WorkJSON.parse(contents) : contents;
+                fileContents[url] = value;
                 
-                const contents = session.getValue();
                 const filename = urlToFilename(url);
                 serverWriteFile(filename, 'utf8', contents, function () {
+                    if (! url.endsWith('.json') && ! url.endsWith('.pyxl')) {
+                        // This must be a doc; update the preview pane
+                        showGameDoc(url, true);
+                    }
+                        
+                    --savesPending;
                     if (myEpoch === session.aux.epoch) {
                         // Only change mode if nothing has changed
                         setCodeEditorSessionMode(session, 'All changes saved.');
                     }
+                }, function () {
+                    // Error case
+                    --savesPending;
                 });
+            } else {
+                // Epoch failed
+                --savesPending;
             }
         }, CODE_EDITOR_SAVE_DELAY * 1000);
     });
@@ -330,6 +398,20 @@ const licenseTable = {
     BSD: 'Open source under the BSD 3-Clause license https://opensource.org/licenses/BSD-3-Clause',
     CC0: 'Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/'
 };
+
+
+function onProjectInitialModeChange(target) {
+    const modes = gameSource.json.modes;
+    for (let i = 0; i < modes.length; ++i) {
+        modes[i] = modes[i].replace(/\*/g, '');
+
+        // Mark the newly selected value
+        if (modes[i] === target.value) {
+            modes[i] += '*';
+        }
+    }
+    serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL); });
+}
 
 
 function onProjectLicensePreset(license) {
@@ -658,4 +740,34 @@ function longestCommonPathPrefix(A, B) {
     while (i >= 0 && A[i] !== '/') { --i; }
     if (i < 0) { return ''; }
     return A.substring(0, i + 1);
+}
+
+
+/**********************************************************************/
+
+let codeEditorDividerInDrag = false;
+
+function onCodeEditorDividerDragStart() {
+    codeEditorDividerInDrag = true;
+    document.getElementById('codePlusFrame').style.cursor = 'ns-resize';
+}
+
+function onCodeEditorDividerDragEnd() {
+    if (codeEditorDividerInDrag) {
+        codeEditorDividerInDrag = false;	
+        document.getElementById('codePlusFrame').style.cursor = 'auto';
+        aceEditor.resize();
+    }
+}
+
+function onCodeEditorDividerDrag(event) {
+    if (codeEditorDividerInDrag) {
+	const codePlusFrame = document.getElementById('codePlusFrame');
+	const codeEditorContentFrame = document.getElementById('codeEditorContentFrame');	
+
+	codePlusFrame.style.gridTemplateRows = `${Math.min(codePlusFrame.clientHeight - 6, Math.max(0, event.clientY))}px 6px auto`;
+	event.preventDefault();
+        
+        // Do not resize the aceEditor while dragging--it is slow. Wait until onCodeEditorDividerDragEnd()
+    }
 }

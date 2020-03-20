@@ -9,8 +9,16 @@
 <img src="ide.png" style="image-rendering: auto; width:75%; border-radius: 0 0 4px 4px; box-shadow: 1px 5px 7px rgba(0,0,0,.20); margin-bottom: 28px; margin-top:20px"></center>
 
 The [**<span style="font-size: 95%; font-family: quadplay">quadplay✜</span>**](../console/quadplay.html?IDE=1) is a
-fantasy console for sprite-based 2D games. It is perfect for hobby coding, a game programming
-course, teaching yourself game development, and game jams.
+web-based fantasy console for sprite-based 2D and 2.5D games. It lets you create games with
+the power and consistency of a game console and the flexibility of modern tools.
+
+Because it is free, is easy to use, and runs everywhere, quadplay✜ is perfect 
+for hobby coding, a game programming course, teaching yourself programming 
+and game development, or game jams.
+
+The integrated development environment (IDE) is packaged as an emulator
+with the tools that you need to make games: an editor, debugger, and 
+profiler.
 
 **Virtual Hardware Features**
 
@@ -28,13 +36,15 @@ course, teaching yourself game development, and game jams.
 **Software Features**
 
 - Runs in all modern browsers
-- Desktop, tablet, phone, Jetson Nano, and Raspberry Pi
+- Deploy games to your own static website, itch.io, github pages, or 
+  for players to download and run locally
+- Free for commercial, personal, and educational use
+- Friendly and powerful PyxlScript Python-like scripting language
+- Games run on mobile, desktop, tablet, Jetson Nano, and Raspberry Pi
 - Run locally and offline using Python + web browser
 - Hundreds of built-in Creative Commons assets
-- Friendly and powerful PyxlScript Python-like scripting language
-- Scripts and external editor support for power users
+- Command-line and external editor support for power users
 - Open source: use online, fork, or run locally
-- Host on your own static site or remotely from GitHub
 
 **API**
 
@@ -56,28 +66,34 @@ Welcome to the quadplay✜ public beta!
 
 To get started you only need:
 
-- The quadplay✜ SDK: [Download ZIP](https://github.com/morgan3d/quadplay/archive/master.zip) or [Clone on with git](https://github.com/morgan3d/quadplay)
-- A modern web browser ([_Chrome_](https://www.google.com/chrome/), [_Firefox_](https://www.mozilla.org/en-US/firefox/new/), _Safari_, _Edge_, etc. Chrome is fastest.)
-- A code editor (_[Visual Studio Code](https://code.visualstudio.com/), [Atom](https://atom.io/), [Sublime Text](https://www.sublimetext.com), Vim, Emacs, etc._)
+- The quadplay✜ SDK: [Download ZIP](https://github.com/morgan3d/quadplay/archive/master.zip)
 - [Python 3.8](https://www.python.org/)
-- Optionally install the PyxlScript extension for your editor: _[Visual Studio Code](#advancedtools/visualstudiocode)_, _[Vim](#advancedTools/vim)_, _[Emacs](#advancedtools/emacs)_
+- A modern web browser ([_Chrome_](https://www.google.com/chrome/), [_Firefox_](https://www.mozilla.org/en-US/firefox/new/), _Safari_, _Edge_, etc.)
 
-For the quadplay✜ SDK, download and unzip or clone the from git. There
-is no install necessary.
+For the quadplay✜ SDK, download, unzip, and copy the files wherever you would like on
+your computer. There is no installation process.
 
-
-!!! Info
-   This beta version of quadplay✜ supports programming directly in the browser.
-   An external code editor is needed for changing constants, adding assets,
-   and creating assets. In the future, all editing will be done in the browser,
-   but external editors always will be supported as optional "pro" developer tools.
 
 To make a game, copy the starter project from `examples/starter` to
 your own directory such as `games/mygame` and start changing it. Look
 at the Built-In Games section for more examples.
 
-Read the PICO-8 section, Python section, or JavaScript section of this
+If you've worked with other scripting languages, 
+read the PICO-8 section, Python section, or JavaScript section of this
 document for some starting tips on the PyxlScript language used in quadplay✜.
+If you're new to programming, look at the many sample games and examples
+that are included and try modifying your own copies of them.
+
+!!! Info Pro Developers
+    Experienced programmers can use external editors with quadplay✜ for both
+    programming and directly modifying game and 
+    asset `.json` files by:
+    <ul>
+      <li>Optionally [clone the SDK with git](https://github.com/morgan3d/quadplay) to manage SDK upgrades</li>
+      <li>Install a code editor (_[Visual Studio Code](https://code.visualstudio.com/), [Atom](https://atom.io/), [Sublime Text](https://www.sublimetext.com), Vim, Emacs, etc._)</li>
+      <li>Install the PyxlScript extension for your editor: _[Visual Studio Code](#advancedtools/visualstudiocode)_, _[Vim](#advancedTools/vim)_, _[Emacs](#advancedtools/emacs)_</li>
+    </ul>
+
 
 Launch your program in the emulator and debugger from the command line
 on Windows CMD, macOS Terminal, or a Linux terminal with the `quadplay`
@@ -4124,20 +4140,18 @@ The project file is a JSON file describing all of the parts of the
 program. The project file and all of its dependencies are reloaded
 every time that you press play or reload in the IDE.
 
-The format is less friendly than you might expect because it is
-designed to be created and maintained by tools instead of seen by the
-programmer. However, I've released the interpreter and debugger ahead
-of the editing tools, so for the moment you have to create it
-manually. I recommend copying the starter project provided and then
-reading about options in this section that may not be used by the
-starter.
+All of the `.game.json` properties can be modified through the user
+interface in the IDE, except for the game constants. The only way
+to modify constants in the current release is through an external
+editor directly changing the `.game.json` file. Future releases
+will provide a user interface for simple constants.
 
 !!!
     quadplay✜ permits C++ style comments, hexadecimal numbers,
     IEEE 754 constants, raw decimals, leading plus signs, trailing commas,
     and multiline backquote JavaScript strings within JSON files for convenience when
     editing and debugging. This is not legal in strict JSON and
-    may be incompatible with other tools.
+    may be incompatible with other tools. 
 
 An example project is below, annotated with comments explaining the
 options. Project files should have the double extension `.game.json`.
@@ -6166,6 +6180,16 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 Mar TBD: Beta update 35
+
+- Editing for sprite, font, map, and sound metadata directly in the IDE
+- Fix for the `quadplay` script when launched with an explicit `.game.json` file
+- Built-in assets cannot be modified and are shown with lock badges on their icons
+- Remote assets cannot be modified and are shown with cloud badges on their icons
+- Disabled reloading while the editor is saving
+- Can change the initial mode from the IDE
+
 
 2020 Mar 18: Beta update 34
 

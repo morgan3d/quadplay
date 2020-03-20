@@ -157,43 +157,48 @@
     <div class="project ide unselectable idePart" id="project"> </div>
     
     <div id="editorFrame" class="ide idePart">
-      <div id="codeEditor" style="position:absolute; top:0; left:0; visibility:hidden">
-        <div class="toolbar">
-          <script>
-            const cmd = isApple ? '⌘' : '^';
-            makeButton('<img src="ui-bigfont.png" width=32 style="position:relative; top:-2px;">', `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton');
-            makeButton('<img src="ui-smallfont.png" width=32 style="position:relative; top:-2px;">', `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton');
-            makeButton('<img src="ui-find.png" width=32 style="position:relative; top:-2px;">', `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton');
-          </script>
-          <div style="position: absolute; right:5px; top:3px; color:#888" id="codeEditorSessionModeDisplay">All changes saved.</div>
-        </div>
-        <div id="ace"> </div>
-      </div>
-      <div id="docEditor" style="position:absolute; top:0; left:0; right: 0; bottom:0; visibility:hidden"> </div>
-      <div id="modeEditor" style="position:absolute; top:20px; left:0; visibility:hidden"> </div>
       <div id="gameEditor" style="position:absolute; top:0; left:0; padding: 10px; overflow: scroll; visibility:hidden"> </div>
+      <div id="modeEditor" style="position:absolute; top:20px; left:0; visibility:hidden"> </div>
       <div id="constantEditor" style="position:absolute; top:0; left:0; padding: 10px; visibility:hidden"></div>
-      <div id="mapEditor" style="position:absolute; top:0; left:0; padding: 10px; overflow: scroll; visibility:hidden"><canvas id="mapDisplayCanvas" style="border:1px solid #ccc"></canvas></div>
-      <div id="spriteEditor" style="position:absolute; top:0; left:0; visibility:hidden; width: 100%; height: 100%; background-size: 100% auto; background-repeat: no-repeat; background-position: left top; image-rendering: -moz-crisp-edges; -ms-interpolation-mode: nearest-neighbor; image-rendering: -ms-interpolation-mode: nearest-neighbor; image-rendering: pixelated;">
-        <div id="spriteEditorHighlight" style="position:absolute; width: 100px; height: 50px; border: 1px solid #0f0; color: #0f0; overflow: visible; box-shadow: 0px 1px 4px #000">
-          <div id="spriteEditorPivot" style="position: absolute; visibility: hidden; text-align: center; font-size:20px; font-family: Arial; color:#0f0">☩</div>
-          <div id="spriteEditorInfo" style="white-space: nowrap; text-shadow: 0px 1px 4px #000"></div>
+      <div id="codePlusFrame" onmouseup="onCodeEditorDividerDragEnd()" onmousemove="onCodeEditorDividerDrag(event)">
+        <div id="codeEditor">
+          <div class="toolbar">
+            <script>
+              const cmd = isApple ? '⌘' : '^';
+              makeButton('<img src="ui-bigfont.png" width=32 style="position:relative; top:-2px;">', `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton');
+              makeButton('<img src="ui-smallfont.png" width=32 style="position:relative; top:-2px;">', `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton');
+              makeButton('<img src="ui-find.png" width=32 style="position:relative; top:-2px;">', `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton');
+            </script>
+            <div style="position: absolute; right:5px; top:3px; color:#888" id="codeEditorSessionModeDisplay">All changes saved.</div>
+          </div>
+          <div id="ace"> </div>
         </div>
-      </div>
-      <div id="soundEditor" style="position:absolute; top:0; left:0; visibility:hidden; width: 100%; height: 100%">
-        <div style="position: absolute; top:50%; left: 50%; margin-top: -10px; margin-left: -40px; width:80px; height: 50px" onmousedown="event.stopPropagation()" class="button" onclick="play_audio_clip(soundEditorCurrentSound)" title="Play Sound">
-          <label>
-            <span class="label">
-              <img src="sound-icon.png" width=14>
-            </span>
-          </label>
+
+        <div id="codeEditorDivider" onmousedown="onCodeEditorDividerDragStart()"></div>
+        
+        <div id="codeEditorContentFrame">
+          <div id="docEditor"> </div>
+          <div id="mapEditor"><canvas id="mapDisplayCanvas" style="border:1px solid #ccc"></canvas></div>
+          <div id="spriteEditor">
+            <div id="spriteEditorHighlight" style="position:absolute; width: 100px; height: 50px; border: 1px solid #0f0; color: #0f0; overflow: visible; box-shadow: 0px 1px 4px #000">
+              <div id="spriteEditorPivot" style="position: absolute; visibility: hidden; text-align: center; font-size:20px; font-family: Arial; color:#0f0">☩</div>
+              <div id="spriteEditorInfo" style="white-space: nowrap; text-shadow: 0px 1px 4px #000"></div>
+            </div>
+          </div>
+          <div id="soundEditor">
+            <div style="position: absolute; top:50%; left: 50%; margin-top: -10px; margin-left: -40px; width:80px; height: 50px" onmousedown="event.stopPropagation()" class="button" onclick="play_audio_clip(soundEditorCurrentSound)" title="Play Sound">
+              <label>
+                <span class="label">
+                  <img src="sound-icon.png" width=14>
+                </span>
+              </label>
+            </div>
+          </div>
         </div>
-      </div>
+      </div>  <!-- codePlusFrame -->
     </div>
     
-
-    <div id="emulatorFrame" class="ide idePart">
-    </div>
+    <div id="emulatorFrame" class="ide idePart"> </div>
     
     <div class="emulator" id="emulator" onclick="document.getElementById('emulatorKeyboardInput').focus()">
       <div class="emulatorBackground">

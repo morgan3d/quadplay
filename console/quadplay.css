@@ -21,6 +21,25 @@ html {
     transform: scale(0.8, 0.8)
 }
 
+#mapEditor {
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    overflow: scroll;
+}
+
+#spriteEditor {
+    background-size: 100% auto;
+    background-repeat: no-repeat;
+    background-position: left top;
+    image-rendering: -moz-crisp-edges; -ms-interpolation-mode: nearest-neighbor; image-rendering: -ms-interpolation-mode: nearest-neighbor; image-rendering: pixelated;
+}
+
+#soundEditor {
+    width: 100%;
+    height: 100%;
+}
+
 canvas {
     -ms-interpolation-mode: nearest-neighbor;
     image-rendering: optimizeSpeed;
@@ -162,14 +181,24 @@ a {
     -webkit-touch-callout: none;
 }
 
-b.projectTitle.locked:after {
+b.projectTitle.builtin:before {
+    content: '';
+    background-size: contain;
+    width: 10px;
+    height: 10px;
+    margin-right: 5px;
+    display: inline-block;
+    background-image: url('project-icon-lock.png');
+}
+
+b.projectTitle.remote:before {
     content: '';
     background-size: contain;
     width: 10px;
     height: 10px;
     display: inline-block;
-    margin-left: 5px;
-    background-image: url('project-icon-lock.png');
+    margin-right: 5px;
+    background-image: url('project-icon-cloud.png');
 }
 
 .emulatorButton {
@@ -445,37 +474,61 @@ code, .code {
     font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace
 }
 
+/**************************************************/
+
+/* Contains the code editor and maybe a preview pane */
+#codePlusFrame {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #302b2b;
+    visibility: hidden;
+    display: grid;
+    grid-template-areas: 'codeEditor' 'codeEditorDivider' 'codeEditorContentFrame';
+    grid-template-rows: 10fr 6px 3fr;
+    grid-template-cols: 100%;
+}
+
+
+#codeEditorContentFrame {
+    grid-area: codeEditorContentFrame;
+    position: relative;
+}
+
+#codeEditorContentFrame div {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+}
+
+#codeEditorDivider {
+    grid-area: codeEditorDivider;
+    background-color: #888;
+    cursor: ns-resize;
+}
 
 #codeEditor {
-    position: absolute;
-    top: 0px;
-    width: 100%;
-    left: 0px;
-    bottom: 0px;
-    font-size:        14px;
-    box-sizing:       border-box;
-    -moz-box-sizing:  border-box;
+    grid-area:          codeEditor;
+    font-size:          14px;
+    box-sizing:         border-box;
+    -moz-box-sizing:    border-box;
     -webkit-box-sizing: border-box;
-    overflow: hidden !important;
+    overflow:           hidden !important;
+    display:            grid;
+    grid-template-rows: 22px 1fr;
 }
 
 #codeEditor #ace {
-    position:absolute;
+    width: 100%;
     border-top: 1px solid #888;
-    top: 22px;
-    bottom: 0px;
-    left: 0px;
-    right: 0px;
 }
 
 #codeEditor .toolbar {
-    position: absolute;
     padding: 3px;
-    top: 0px;
-    bottom: 20px;
-    left: 0px;
-    right: 0px;
+    width: 100%;
 }
+
+/**************************************************/
+
 
 /* Detect Chrome & Safari */
 @media screen and (-webkit-min-device-pixel-ratio:0) and (min-resolution:.001dpcm) {
@@ -560,11 +613,17 @@ code, .code {
 
 .project li:before {
     content: '';
-    background-size: contain;
-    width: 10px;
-    height: 10px;
+    /* Second background image is the cloud/lock modifier*/
+    background-size: 8px 8px, 10px 10px;
+    background-position: bottom right, center;
+    background-repeat: no-repeat, no-repeat;
+    position: relative;
+    top: 2px;
+    margin-left: -6px;
+    width: 17px;
+    height: 14px;
     display: inline-block;
-    margin-right: 5px;
+    margin-right: 4px;
 }
 
 .project .clickable:hover {
@@ -572,44 +631,92 @@ code, .code {
 }
 
 .project .scripts li:before {
-    background-image: url('project-icon-ns.png');
+    background-image: none, url('project-icon-code.png');
+}
+.project .scripts li.remote:before {
+    background-image: url('project-badge-cloud.png'), url('project-icon-code.png');
+}
+.project .scripts li.builtin:before {
+    background-image: url('project-badge-lock.png'), url('project-icon-code.png');
 }
 
+
 .project .modes li:before {
-    background-image: url('project-icon-mode.png');
+    background-image: none, url('project-icon-mode.png');
+}
+.project .modes li.remote:before {
+    background-image: url('project-badge-cloud.png'), url('project-icon-mode.png');
+}
+.project .modes li.builtin:before {
+    background-image: url('project-badge-lock.png'), url('project-icon-mode.png');
 }
 
 .project .docs li:before {
-    background-image: url('project-icon-doc.png');
+    background-image: none, url('project-icon-doc.png');
+}
+.project .docs li.remote:before {
+    background-image: url('project-badge-cloud.png'), url('project-icon-doc.png');
+}
+.project .docs li.builtin:before {
+    background-image: url('project-badge-lock.png'), url('project-icon-doc.png');
 }
 
 .project li.sprite:before {
-    background-image: url('project-icon-sprite.png');
+    background-image: none, url('project-icon-sprite.png');
+}
+.project li.sprite.remote:before {
+    background-image: url('project-badge-cloud.png'), url('project-icon-sprite.png');
+}
+.project li.sprite.builtin:before {
+    background-image: url('project-badge-lock.png'), url('project-icon-sprite.png');
 }
 
 .project li.map:before {
-    background-image: url('project-icon-map.png');
+    background-image: none, url('project-icon-map.png');
+}
+.project li.map.remote:before {
+    background-image: url('project-badge-cloud.png'), url('project-icon-map.png');
+}
+.project li.map.builtin:before {
+    background-image: url('project-badge-lock.png'), url('project-icon-map.png');
 }
 
 .project li.font:before {
-    background-image: url('project-icon-font.png');
+    background-image: none, url('project-icon-font.png');
+}
+.project li.font.remote:before {
+    background-image: url('project-badge-cloud.png'), url('project-icon-font.png');
+}
+.project li.font.builtin:before {
+    background-image: url('project-badge-lock.png'), url('project-icon-font.png');
 }
 
 .project li.sound:before {
-    background-image: url('project-icon-sound.png');
+    background-image: none, url('project-icon-sound.png');
+}
+.project li.sound.remote:before {
+    background-image: url('project-badge-cloud.png'), url('project-icon-sound.png');
+}
+.project li.sound.builtin:before {
+    background-image: url('project-badge-lock.png'), url('project-icon-sound.png');
 }
 
 .project .constants li:before {
-    background-image: url('project-icon-number.png');
+    background-image: none, url('project-icon-number.png');
 }
 
 /* New menu */
 .project li.new:before {
     content: '✜';
     background-image: none;
+    position: relative;
+    left: 6px;
+    top: 0px;
 }
 
 .project li.new {
+    margin-top: 2px;
+    margin-left: -2px;
     color: #888;
 }
 
