@@ -1740,10 +1740,8 @@ function visualizeGame(gameEditor, url, game) {
 
         if (! locallyHosted()) {
             reasons.push('is hosted on a remote server');
-        } else {
-            if (getQueryString('quadserver') !== '1') {
-                reasons.push('was not launched from the <code>quadplay</code> script');
-            }
+        } else if (getQueryString('quadserver') !== '1') {
+            reasons.push('is not running locally with the <code>quadplay</code> script');
         }
             
         if (! useIDE) { reasons.push('was launched without the IDE'); }
