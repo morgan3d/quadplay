@@ -850,7 +850,7 @@ function onCodeEditorDividerDrag(event) {
 	const codePlusFrame = document.getElementById('codePlusFrame');
 	const codeEditorContentFrame = document.getElementById('codeEditorContentFrame');	
 
-	codePlusFrame.style.gridTemplateRows = `${Math.min(codePlusFrame.clientHeight - 6, Math.max(0, event.clientY))}px 6px auto`;
+	codePlusFrame.style.gridTemplateRows = `${Math.min(codePlusFrame.clientHeight - 6, Math.max(0, event.clientY - 26))}px 7px auto`;
 	event.preventDefault();
         
         // Do not resize the aceEditor while dragging--it is slow. Wait until onCodeEditorDividerDragEnd()

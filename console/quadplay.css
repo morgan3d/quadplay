@@ -513,7 +513,7 @@ code, .code {
     visibility: hidden;
     display: grid;
     grid-template-areas: 'codeEditor' 'codeEditorDivider' 'codeEditorContentFrame';
-    grid-template-rows: 10fr 6px 3fr;
+    grid-template-rows: 10fr 7px 3fr;
     grid-template-cols: 100%;
 }
 
