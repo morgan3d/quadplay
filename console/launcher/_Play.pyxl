@@ -130,14 +130,18 @@ def drawIcon(icon, pos):
 frame
 ────────────────────────────────────────────────────────────────────────
 
-const introFrames = 20
-if game_frames < introFrames:
+const intro_frames = 20
+if game_frames < intro_frames:
    // Fade and slide in
-   const α = 1 - min(1, (game_frames + 1) / (introFrames + 1))
-   set_post_effects({background:#0,
-                   pos: xy(α * SCREEN_SIZE.x, 0),
-                   color: rgba(0, 0, 0, α)})
-else if game_frames == introFrames:
+   const α = 1 - min(1, (game_frames + 1) / (intro_frames + 1))
+   
+   set_post_effects({
+      background: #000,
+      pos:        xy(α * SCREEN_SIZE.x, 0),
+      color:      rgba(0, 0, 0, α)
+   })
+   
+else if game_frames == intro_frames:
    reset_post_effects()
    
 set_background(backgroundColor)
@@ -231,17 +235,17 @@ local:
       drawIcon(icons.highscores, xy(sideX, y)).y
       y += draw_text({font:mediumFont, text:"Score", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
 
-if joy.aa or joy.qq or joy._pp:
-   def callback():
-      launch_game(gameArray[gameIndex].url)
-   set_mode(_SlideOut, callback) because "Player selected game"
+for pad in gamepad_array:
+   if pad.aa or pad.qq or pad._pp:
+      def callback(): launch_game(gameArray[gameIndex].url)
+      set_mode(_SlideOut, callback) because "Player selected game"
       
-// Animate scrolling
-if joy.yy:
-   const Δy = 3 joy.yy
-   play_audio_clip(boop, false, 300%)
-   def shift(): gameShift += Δy
-   add_frame_hook(shift, nil, boxVerticalSpacing / 3)
+   // Animate scrolling
+   if joy.yy:
+      const Δy = 3 pad.yy
+      play_audio_clip(boop, false, 300%)
+      def shift(): gameShift += Δy
+      add_frame_hook(shift, nil, boxVerticalSpacing / 3)
 
 // Change games
 if gameShift >= boxVerticalSpacing:

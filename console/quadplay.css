@@ -326,30 +326,59 @@ b.projectTitle.remote:before {
     z-index: 70;
     left: 0;
     top: 0;
-    width: 100%;
-    height: 100%;
+    bottom: 0;
+    right: 0;
     overflow: auto;
     background-color: rgb(0,0,0); /* Fallback color */
     background-color: rgba(255,255,255,0.4); /* Black w/ opacity */
 }
 
 .modal .dialog {
-    font-size: 120%;
-    color:         #eee;
+    font-size:      120%;
+    color:          #eee;
     background-color: #302b2b;
-    margin: 20% auto;
-    padding-top: 20px;
+    margin:         20vh auto;
+    padding-top:    20px;
     padding-bottom: 20px;
-    padding-left: 30px;
-    padding-right: 30px;
-    border: 1px solid #888;
-    width: 500px;
+    padding-left:   30px;
+    padding-right:  30px;
+    width:          500px;
     
+    border:        1px solid #888;
     border-radius: 13px;
-    box-shadow:       0px 4px 15px 0px rgba(0, 0, 0, 0.4);
+    box-shadow:    0px 4px 15px 0px rgba(0, 0, 0, 0.4);
 }
 
-/* background: #000; margin-left:auto; margin-right: auto; border-radius: 10px*/
+/* Slightly round all text boxes on Chrome*/
+input[type=text], input[type=number], textarea {
+    border-radius: 2px;
+    border: none;
+}
+
+/* Using a ul/ol list to emulate a select list */
+.select-list {
+    list-style-type:none;
+    white-space: nowrap;
+    cursor: pointer;
+    padding-left:0px;
+    margin-top: 0px;
+}
+
+.select-list li {
+    padding: 2px;
+    padding-left: 4px;
+    border: 1px solid rgba(0,0,0,0);
+}
+
+.select-list li:hover {
+    border: 1px dashed #ccc;
+}
+
+.select-list li.selected {
+    background: #1188ff;
+    color: #fff;
+}
+
 /*****************************************************/
 
 /* Hide the actual input control */

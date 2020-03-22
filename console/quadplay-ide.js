@@ -1987,6 +1987,10 @@ function createProjectWindow(gameSource) {
             }
         } // for each asset
     }
+    if (editableProject) {
+        s += '<li class="clickable new" onclick="showImportAssetDialog()"><i>Import asset…</i></li>';
+        // s += '<li class="clickable new" onclick=""><i>New asset…</i></li>';
+    }
     s += '</ul>';
     s += '</div>'
     
@@ -3081,7 +3085,6 @@ setErrorStatus('');
 setCodeEditorFontSize(parseInt(localStorage.getItem('codeEditorFontSize') || '14'));
 setColorScheme(localStorage.getItem('colorScheme') || 'pink');
 onResize();
-setTimeout(onResize, 500);
 // Set the initial size
 setFramebufferSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 reloadRuntime();

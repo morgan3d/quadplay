@@ -9,9 +9,11 @@
 
   The routines are:
 
-  - dataManager = new LoadManager()
-  - dataManager.fetch()
-  - dataManager.end()
+  - loadManager = new LoadManager()
+  - loadManager.fetch()
+  - loadManager.end()
+  - LoadManager.fetchOne() to directly run a single fetch _without_ a
+    load manager instance. This does not allow recursive calls, of course.
  
   ----------------------------------------------------
 
@@ -363,4 +365,12 @@ LoadManager.prototype.end = function () {
             this.status = 'loading';
         }
     }
+}
+
+/** Fetch a single url without a LoadManager instance. */
+LoadManager.fetchOne = function (options, ...args) {
+    console.assert(typeof options === 'object', 'First argument must be an options argument');
+    const manager = new LoadManager(options);
+    manager.fetch(...args);
+    manager.end();
 }

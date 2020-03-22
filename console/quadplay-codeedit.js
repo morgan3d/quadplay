@@ -13,6 +13,21 @@ function isRemote(url) {
     return ! url.startsWith(location.origin + '/');
 }
 
+/** Returns the path to the quadplay root from location.origin */
+function getQuadPath() {
+    return location.pathname.replace(/\/console\/quadplay\.html$/, '\/');
+}
+
+
+/* Returns the path to the game's root, relative to location.origin */
+function getGamePath() {
+    let gamePath = gameSource.jsonURL.replace(/\\/g, '/').replace(/\/[^/]+\.game\.json$/g, '/');
+    if (gamePath.startsWith(location.origin)) {
+        gamePath = gamePath.substring(location.origin.length);
+    }
+    return gamePath;
+}
+
 /* Reference count for outstanding saves. Used to disable reload
    temporarily while a save is pending. */
 let savesPending = 0;
@@ -57,13 +72,11 @@ function updateAllCodeEditorSessions() {
             // No longer in use...but may be still in the project if it is a doc
             for (let i = 0; i < gameSource.docs.length; ++i) {
                 if (gameSource.docs[i].url === url) {
-                    // This document is still in the project, so reload it
-                    const loadManager = new LoadManager({forceReload: true});
-                    loadManager.fetch(url, 'text', null, function (doc) {
+                    // This document is still in the project, so reload the document
+                    LoadManager.fetchOne({forceReload: true}, url, 'text', null, function (doc) {
                         fileContents[url] = doc;
                         updateCodeEditorSession(url, doc);
                     });
-                    loadManager.end();
 
                     return;
                 }
@@ -574,6 +587,78 @@ function hideNewModeDialog() {
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+let importAssetFiles = null;
+function showImportAssetDialog() {
+    document.getElementById('importAssetDialog').classList.remove('hidden');
+    document.getElementById('importAssetImportButton').disabled = true;
+    const text = document.getElementById('importAssetName');
+    text.value = '';
+    text.focus();
+
+    const assetListURL = location.origin + getQuadPath() + 'console/_assets.json?gamePath=' + getGamePath();
+    
+    // Fetch the asset list
+    LoadManager.fetchOne({}, assetListURL, 'json', null, function (json) {
+        importAssetFiles = json;
+        onImportAssetTypeChange();
+    });
+}
+
+
+/* Called to regenerate the importAssetList */
+function onImportAssetTypeChange() {
+    const t = document.getElementById('importAssetType').value;
+    let s = '<ol id="importAssetListOL" class="select-list">\n';
+    if (importAssetFiles) {
+        const fileArray = importAssetFiles[t];
+        for (let i = 0; i < fileArray.length; ++i) {
+            const file = fileArray[i];
+            const path = file.replace(/\/[^\/]+$/, '/');
+            const rest = file.replace(/^.*\//, '');
+            const base = rest.replace(/\..+?$/, '');
+            const ext  = rest.replace(/^[^\.]+/, '');
+            s += `<li onclick="onImportAssetListSelect(this)">${path}<b style="color:#000">${base}</b>${ext}</li>\n`;
+        }
+    }
+    s += '</ol>';
+
+    const list = document.getElementById('importAssetList');
+    list.innerHTML = s;
+
+    importAssetFiles.selected = null;
+    // Recreating the list destroys any selection
+    document.getElementById('importAssetImportButton').disabled = true;
+}
+
+/* Called from the "Import" button */
+function onImportAssetImport() {
+    const name = document.getElementById('importAssetName').value;
+    gameSource.json.assets[name] = importAssetFiles.selected;
+    hideImportAssetDialog();
+    
+    // Save and reload the game
+    serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL); });
+}
+
+
+function onImportAssetListSelect(target) {
+    const list = document.getElementById('importAssetListOL');
+    for (let i = 0; i < list.children.length; ++i) {
+        list.children[i].classList.remove('selected');
+    }
+    target.classList.add('selected');
+    importAssetFiles.selected = target.innerText; 
+    document.getElementById('importAssetImportButton').disabled = (document.getElementById('importAssetName').value.length === 0);
+}
+
+
+function hideImportAssetDialog() {
+    document.getElementById('importAssetDialog').classList.add('hidden');
+    importAssetFiles = null;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
 function showNewScriptDialog() {
     document.getElementById('newScriptDialog').classList.remove('hidden');
     document.getElementById('newScriptCreateButton').disabled = true;
@@ -680,13 +765,12 @@ function onNewDocCreate() {
     const docFilename = gamePath + name + format;
 
     // Load the template and then callback to save
-    const templateLoadManager = new LoadManager();
     const templateFilename = makeURLAbsolute('', 'quad://console/templates/' + templateName + format);
 
-    templateLoadManager.fetch(templateFilename, 'text', null, function (templateBody) {
+    LoadManager.fetchOne({}, templateFilename, 'text', null, function (templateBody) {
         if (format === '.md.html') {
             // for .md.html files, compute a relative path to Markdeep
-            const quadPath = location.pathname.replace(/\/console\/quadplay\.html$/, '\/');
+            const quadPath = getQuadPath();
             const basePath = longestCommonPathPrefix(gamePath, quadPath);
 
             console.assert(! /\b\.?\.\//.test(basePath), "Assumed no ../");
@@ -717,11 +801,10 @@ function onNewDocCreate() {
                              });
                          });
     },
-
+                         
                               function (reason, url) {
                                   console.log('fail', reason);
                               });
-    templateLoadManager.end();
     
     hideNewDocDialog();
 }
@@ -752,6 +835,7 @@ function onCodeEditorDividerDragStart() {
     document.getElementById('codePlusFrame').style.cursor = 'ns-resize';
 }
 
+
 function onCodeEditorDividerDragEnd() {
     if (codeEditorDividerInDrag) {
         codeEditorDividerInDrag = false;	
@@ -759,6 +843,7 @@ function onCodeEditorDividerDragEnd() {
         aceEditor.resize();
     }
 }
+
 
 function onCodeEditorDividerDrag(event) {
     if (codeEditorDividerInDrag) {
