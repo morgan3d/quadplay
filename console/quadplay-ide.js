@@ -1223,14 +1223,17 @@ function onProjectSelect(target, type, object) {
         // Show the code editor and the content pane
         codePlusFrame.style.visibility = 'visible';
         codePlusFrame.style.gridTemplateRows = '2fr 6px 5fr';
+        const spriteEditorHighlight = document.getElementById('spriteEditorHighlight');
+        const spriteEditorPivot = document.getElementById('spriteEditorPivot');
+        const spriteEditorInfo = document.getElementById('spriteEditorInfo');
+        spriteEditorHighlight.style.visibility = 'hidden';
+        spriteEditorPivot.style.visibility = 'hidden';
+        spriteEditor.onmousemove = spriteEditor.onmousedown = undefined;
         
         if (/\.png$/i.test(url)) {
             // Sprite or font
             spriteEditor.style.visibility = 'visible';
             spriteEditor.style.backgroundImage = `url("${url}")`;
-            const spriteEditorHighlight = document.getElementById('spriteEditorHighlight');
-            const spriteEditorPivot = document.getElementById('spriteEditorPivot');
-            const spriteEditorInfo = document.getElementById('spriteEditorInfo');
 
             if (object._type === 'spritesheet') {
                 const spritesheetName = object._name.replace(/.* /, '');
@@ -1276,7 +1279,6 @@ function onProjectSelect(target, type, object) {
                         spriteEditorInfo.innerHTML = str;
                         
                         if (X > object.length / 2) {
-                            //spriteEditorInfo.style.textAlign = 'right';
                             spriteEditorInfo.style.float = 'right';
                             spriteEditorHighlight.style.textAlign = 'right';
                         } else {

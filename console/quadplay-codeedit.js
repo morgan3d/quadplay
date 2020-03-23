@@ -630,9 +630,33 @@ function onImportAssetTypeChange() {
     document.getElementById('importAssetImportButton').disabled = true;
 }
 
+
 /* Called from the "Import" button */
 function onImportAssetImport() {
-    const name = document.getElementById('importAssetName').value;
+    const nameBox = document.getElementById('importAssetName');
+    const name = nameBox.value;
+
+    // Warn on overwrite
+    if ((gameSource.json.assets[name] !== undefined) &&
+        ! window.confirm('There is already an asset called ' + name +
+                         ' in your game. Replace it?')) {
+        nameBox.focus();
+        return;
+    }
+
+    // Warn on double import
+    for (const key in gameSource.json.assets) {
+        const value = gameSource.json.assets[key];
+        if ((key[0] !== '_') && (value === importAssetFiles.selected)) {
+            if (window.confirm('The asset ' + importAssetFiles.selected + ' is already in your game, called ' + key + '. Import the same asset again anyway?')) {
+                // The user accepted...go along with it
+                break;
+            } else {
+                return;
+            }
+        }
+    }
+    
     gameSource.json.assets[name] = importAssetFiles.selected;
     hideImportAssetDialog();
     
