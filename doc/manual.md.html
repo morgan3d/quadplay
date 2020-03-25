@@ -6100,7 +6100,8 @@ The quadplay✜ IDE and compiler are copyright 2019-2020 Morgan McGuire, includi
 - [`pyxlscript-compiler.js`](../console/pyxlscript-compiler.js)
 - [`quadplay.html`](../console/quadplay.html)
 - [`quadplay.css`](../console/quadplay.css)
-- [`quadplay-runtime.js`](../console/quadplay-runtime.js)
+- [`quadplay-runtime-cpu.js`](../console/quadplay-runtime-cpu.js)
+- [`quadplay-runtime-gpu.js`](../console/quadplay-runtime-gpu.js)
 - [`quadplay-profiler.js`](../console/quadplay-profiler.js)
 - [`quadplay-host.js`](../console/quadplay-host.js)
 - [`quadplay-ide.js`](../console/quadplay-ide.js)
@@ -6247,6 +6248,8 @@ Changes for both the specification and implementation in each release.
 
 - Documented the autoscaler resolutions
 - Added the advanced Physical Consoles section
+- Optimized IDE load time using `defer`
+- Optimized game load time using `async` and separate CPU and GPU scripts
 
 
 2020 Mar 25: Beta update 35

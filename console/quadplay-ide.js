@@ -2484,7 +2484,7 @@ let updateKeyboardPending = false;
 
 function reloadRuntime(oncomplete) {
     QRuntime.document.open();
-    QRuntime.document.write("<script src='quadplay-runtime.js' charset='utf-8'> </script>");
+    QRuntime.document.write("<script src='quadplay-runtime-cpu.js' async charset='utf-8'> </script> <script src='quadplay-runtime-gpu.js' async charset='utf-8'> </script>");
     QRuntime.onload = function () {
         QRuntime._SCREEN_WIDTH  = SCREEN_WIDTH;
         QRuntime._SCREEN_HEIGHT = SCREEN_HEIGHT;

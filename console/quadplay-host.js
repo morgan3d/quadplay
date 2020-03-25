@@ -718,6 +718,8 @@ function rgbaToCSSFillStyle(color) {
     return `rgba(${color.r*255}, ${color.g*255}, ${color.b*255}, ${color.a})`;
 }
 
+// Performance test buffer for 16-bit graphics. TODO: remove
+//const view32 = new Uint32Array(new ArrayBuffer(384*224*2));
 
 // Invoked from QRuntime._show(). May not actually be invoked every
 // frame if running below framerate.
@@ -738,6 +740,24 @@ function submitFrame() {
     if (! hasPostFX && ! gifRecording && (emulatorScreen.width === SCREEN_WIDTH && emulatorScreen.height === SCREEN_HEIGHT)) {
         // Directly upload to the screen. Fast path for Chrome and Firefox, which support
         // image-rendering on Canvas.
+
+        if (false) {
+            // Performance test for 16-bit graphics
+            const N = 384 * 224 / 2;
+            const target32 = QRuntime._screen;
+            for (let s = 0, d = 0; s < N; ++s) {
+                // Read two 16-bit pixels at once
+                let src = view32[s];
+
+                // Turn into two 32-bit pixels (byte order may be scrambled; this is just a perf test)
+                let A = ((src & 0xf000) << 16) | ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
+                target32[d] = A | (A << 4); ++d; src = src >> 16;
+                
+                A = ((src & 0xf000) << 16) | ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
+                target32[d] = A | (A << 4); ++d;
+            }
+        }
+        
         ctx.putImageData(updateImageData, 0, 0);
     } else {
         // Put on an intermediate image and then stretch. This path is for postFX and supporting Safari
