@@ -2,7 +2,7 @@
 "use strict";
 
 const deployed = true;
-const version  = '2020.03.18.02'
+const version  = '2020.03.25.03'
 const launcherURL = 'quad://console/launcher';
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -35,7 +35,7 @@ const useIDE = getQueryString('IDE') || false;
 let editableProject = false;
 
 // Hide quadplay framerate debugging info
-if (! profiler.debuggingProfiler) {  document.getElementById('debugFrameTimeRow').style.display = 'none'; }
+if (! profiler.debuggingProfiler) {  document.getElementById('debugIntervalTimeRow').style.display = 'none'; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2406,8 +2406,8 @@ function mainLoopStep() {
         const graphics = profiler.smoothGraphicsTime.get() * QRuntime._graphicsPeriod;
         const compute = logic + physics + graphics;
         
-        if (profiler.debuggingProfiler) { updateTimeDisplay(frame, 'Frame'); }
-        updateTimeDisplay(compute, 'Compute');
+        if (profiler.debuggingProfiler) { updateTimeDisplay(frame, 'Interval'); }
+        updateTimeDisplay(compute, 'Frame');
         updateTimeDisplay(logic, 'CPU');
         updateTimeDisplay(physics, 'PPU');
         updateTimeDisplay(graphics, 'GPU');
