@@ -932,38 +932,25 @@ the screen onlarge ones.
 
 Some exact ratios when using quadplay's maximum 384x224 resolution are:
 
-Screen     | Factor      | Used      | Efficiency
-----------:|------------:|----------:|---------:
-480x320    |  1x         | 384x224   | 56%
-640x360    |  1x         | 384x224   | 37%
-640x480    |  1x         | 384x224   | 28%
-800x480    |  2x         | 768x448   | 72%
-1024x768   |  2x         | 768x448   | 44%
-*1280x720* |  *3x*       | 1152x672  | *84%*
-1366x768   |  3x         | 1152x672  | 74%
-1440x900   |  3x         | 1152x672  | 60%
-*1600x900* |  *4x*       | 1536x896  | *96%*
-1680x1050  |  4x         | 1536x896  | 78%
-1920x1080  |  4x         | 1536x896  | 66%
-*1920x1200*|  *5x*       | 1920x1120 | *93%*
+Screen     | Integer     | Used      | Efficiency  | Autoscaler | Used      | Efficiency
+----------:|------------:|----------:|------------:|-----------:|----------:|---------:
+480x320    |  1x         | 384x224   | 56%         | 1.00x      | 384x224   | 56%
+640x360    |  1x         | 384x224   | 37%         | 1.00x      | 384x224   | 37%
+640x480    |  1x         | 384x224   | 28%         | 1.00x      | 384x224   | 28%
+800x480    |  2x         | 768x448   | 72%         | 2.00x      | 768x448   | 72%
+1024x768   |  2x         | 768x448   | 44%         | 2.00x      | 768x448   | 44%
+*1280x720* |  *3x*       |*1152x672* | *84%*       | 3.21x      | 1234x720  | 96%
+1280x800   |  *3x*       | 1152x672  | 76%         | 3.33x      | 1280x747  | 93%
+1366x768   |  3x         | 1152x672  | 74%         | 3.41x      | 1316x768  | 96%
+1440x900   |  3x         | 1152x672  | 60%         | 3.75x      | 1440x840  | 93%
+*1600x900* |  *4x*       |*1536x896* | *96%*       | 4.02x      | 1544x900  | 97%
+1680x1050  |  4x         | 1536x896  | 78%         | 4.38x      | 1680x980  | 93%
+1920x1080  |  4x         | 1536x896  | 66%         | 4.82x      | 1852x1080 | 96%
+*1920x1200*|  *5x*       |*1920x1120*| *93%*       | 5.00x      | 1920x1120 | 93%
 
-If building a physical quadplay✜ cabinet or handheld _without_
-on-screen mobile controls, I therefore recommend using a 1280x720,
-1600x900, or 1920x1200 display
-to maximally fill the screen with integer pixel scaling.
-
-Some physical handhelds that may be capable of running quadplay✜
-games include:
-
- - 1280x720 [GPD Win 2](http://gpd.hk/gdpwin2), Windows and Linux = full-res quadplay✜ 3x scaling
- - 1280x720 [DragonBox Pyra](https://pyra-handheld.com/boards/pages/pyra/), Linux = full-res quadplay✜ 3x scaling
- - 480x320 [Odroid-Go Advance](https://www.hardkernel.com/shop/odroid-go-advance/), Linux = full-res quadplay✜ 1x scaling; poor fit
-<!--  - 320x240 [PocketGo V2](https://www.bittboy.com/collections/pocketgo/products/new-pocketgo-v2) = 1/2-res quadplay✜ 1x scaling; bad fit -->
-
-The Smach Z prototype has a 1920x1080 screen that would support
-quadplay✜ 4x scaling as a poor fit, and the Alienware UFO prototype has
-a 1920x1200 screen that would support quadplay✜ 5x scaling.  Neither
-product has shipped.
+At high resolutions, the quadplay✜ autoscaler uses
+non-integer scaling and always fills the display as much as possible
+within the aspect ratio constraint.
 
 For reference when importing assets or designing games inspired by
 previous work, here are the resolutions of classic and retro machines:
@@ -5767,6 +5754,75 @@ HTML query arguments:
 : URL of a game to load, which can be relative to the `quadplay` script.
 
 
+Physical Consoles
+---------------------------------------------------------------------------------------------
+
+### Build
+
+I expect most people to use quadplay✜ on phones, laptops, and desktops
+as a virtual console. But, if you have some maker experience you can make a
+_real_ quadplay✜ console.
+
+With a 3D-printed case and some Bluetooth or wired game controllers,
+you can build your own quadplay✜ retro mini console to connect to a TV
+or monitor. [Jetson Nano](https://developer.nvidia.com/embedded/jetson-nano-developer-kit)
+and [Raspberry Pi 4](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/) cost less than $100 and can
+power such a box using Linux and Chrome or
+Firefox. Both will hit 60 Hz for most games, and can easily run at
+30 Hz for all games (quadplay✜ handles framerate scaling for you seamlessly,
+so you won't even notice most of the time). Nano has the advantage of a 
+more powerful processor and a 64-bit Ubuntu distribution.
+
+I've built Jetson Nano and Raspberry Pi consoles and the result is satisfyingly comparable to
+the Nintendo [NES Classic Edition](https://www.nintendo.com/nes-classic/),
+[Super NES Classic Edition[(https://www.nintendo.com/super-nes-classic/), 
+Sega [Genesis Mini](https://genesismini.sega.com/), and
+PlayStation [Classic](https://www.playstation.com/en-ca/explore/playstation-classic/) devices--but you can program for it yourself!
+
+I haven't found a prebuilt PS Vita/Switch/Lynx/DS-like case for embedded processors
+that combines buttons, battery power, and a display for building a portable console. 
+I used a touch screen to build a standalone device powered by Raspberry Pi, but found
+the lag and battery setup unacceptable and recommend just using a phone.
+
+An Intel NUC is a much more expensive device for powering a mini console,
+but has a lot more graphics power than an embedded processor and will
+comfortably run all games at 60 Hz.
+
+You can also build a quadplay✜ arcade cabinet. This can be done with
+some carpentry and any low-cost PC and display. There are a lot of
+physical
+[arcade controllers](https://shop.xgaming.com/products/x-arcade-dual-joystick-usb-included)
+available at reasonable prices for building out the controls without
+needing any custom electronics. Note that quadplay✜ supports (but does not require) a touch screen 
+or mouse, which will not be available on a cabinet setup. One alternative is to
+use a small trackpad mounted on top of the joystick controller. This advice is all
+speculative as I have never built an arcade cabinet.
+
+If building a physical cabinet or handheld _without_
+on-screen mobile controls, I recommend using a 1280x720,
+1600x900, or 1920x1200 display to efficiently fill the screen with
+integer pixel scaling.
+
+### Buy
+
+Some physical handhelds that may be capable of running quadplay✜
+games include:
+
+ - 1280x720 [GPD Win 2](http://gpd.hk/gdpwin2), Windows and Linux = full-res quadplay✜ 3x scaling
+ - 1280x720 [DragonBox Pyra](https://pyra-handheld.com/boards/pages/pyra/), Linux = full-res quadplay✜ 3x scaling
+ - 480x320 [Odroid-Go Advance](https://www.hardkernel.com/shop/odroid-go-advance/), Linux = full-res quadplay✜ 1x scaling; poor fit
+<!--  - 320x240 [PocketGo V2](https://www.bittboy.com/collections/pocketgo/products/new-pocketgo-v2) = 1/2-res quadplay✜ 1x scaling; bad fit -->
+
+The Smach Z prototype has a 1920x1080 screen that would support
+quadplay✜ integer 4x scaling as a poor fit, and the Alienware UFO prototype has
+a 1920x1200 screen that would support quadplay✜ integer 5x scaling. 
+The 1280x800 [GPD Win Max](https://www.notebookcheck.net/GPD-Win-Max-full-specs-revealed-Thunderbolt-3-backlit-keyboard-and-an-8-inch-landscape-screen-to-tempt-handheld-PC-fans.456334.0.html)
+will support integer 3x scaling as a poor fit.
+Note that quadplay✜ will automatically non-integer scale at these high resolutions,
+so the imperfect display matches are not an issue, but also that none of these 
+three products have yet shipped.
+
+
 Deploying Games
 ====================================================================================
 
@@ -5991,30 +6047,38 @@ other have relatively less overhead than `xy` vectors.
 Road Map
 ====================================================================================
 
+Quadplay is about 90% of the way to 1.0. The API is stable, and many people are
+using it to make hobby games and to learn/teach programming.
+
 There's a long feature list and a short bug list that I'm working
-through. The highlights are, in priority order:
+through for 1.0. The highlights of this are, in priority order:
 
 For 1.0:
-- More AI support
-- Five full sample games
-- Edit your game and save to local disk using the `quadplay` script
-  - Sprite editor
-  - Map editor
-  - Constant editor
-  - Code editor
-  - Font editor
-- Perfect outlined-disk and outlined-triangle blending
-- Polyline rendering without double-blending endpoints
+
+[x] Five full sample games
+[ ] More AI support
+[ ] Shared-screen network multiplayer
+[ ] Edit your game and save to local disk using the `quadplay` script
+  [x] Code editor
+  [x] Project editor
+  [ ] Constant editor
+  [ ] Map editor
+  [ ] Sprite editor
+  [ ] Font editor
+[ ] Perfect outlined-disk and outlined-triangle blending
+[ ] Polyline rendering without double-blending endpoints
 
 Post 1.0:
-- ASESprite native import
-- Watertight rasterization of triangle meshes
-- Watertight rasterization of polylines
-- Edit your game in the IDE and save to Google Drive
-- Binary game export
-  - Electron
-  - Cordova
-- Load tables of data from CSV files
+
+[ ] ASESprite native import
+[ ] Watertight rasterization of triangle meshes
+[ ] Watertight rasterization of polylines
+[ ] Edit your game in the IDE and save to Google Drive
+[ ] Binary game export
+  [ ] Electron?
+  [ ] Native web view
+  [ ] Cordova
+[ ] Load tables of data from CSV files
 
 
 Credits
@@ -6178,6 +6242,12 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 Mar TBD: Beta update 36
+
+- Documented the autoscaler resolutions
+- Added the advanced Physical Consoles section
+
 
 2020 Mar 25: Beta update 35
 
