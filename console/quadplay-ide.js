@@ -1138,14 +1138,14 @@ function onProjectSelect(target, type, object) {
 
             // Show the editor after loading the content
             if (fileContents[object.url] !== undefined) {
-                codePlusFrame.style.gridTemplateRows = '3fr 6px 4fr';
+                codePlusFrame.style.gridTemplateRows = '3fr 7px 4fr';
                 setCodeEditorSession(object.url);
             } else {
                 // Load and set the contents
                 const loadManager = new LoadManager({forceReload: true});
                 loadManager.fetch(object.url, 'text', null, function (doc) {
                     fileContents[object.url] = doc;
-                    codePlusFrame.style.gridTemplateRows = '3fr 6px 4fr';
+                    codePlusFrame.style.gridTemplateRows = '3fr 7px 4fr';
                     setCodeEditorSession(object.url);
                 });
                 loadManager.end();
@@ -1222,7 +1222,7 @@ function onProjectSelect(target, type, object) {
 
         // Show the code editor and the content pane
         codePlusFrame.style.visibility = 'visible';
-        codePlusFrame.style.gridTemplateRows = '2fr 6px 5fr';
+        codePlusFrame.style.gridTemplateRows = '2fr 7px 5fr';
         const spriteEditorHighlight = document.getElementById('spriteEditorHighlight');
         const spriteEditorPivot = document.getElementById('spriteEditorPivot');
         const spriteEditorInfo = document.getElementById('spriteEditorInfo');

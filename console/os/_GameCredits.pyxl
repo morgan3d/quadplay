@@ -9,7 +9,7 @@ const prompt_color            = #4DF
 const selected_color          = #f
 const unselected_color        = #b
 
-const creditOrder = ["Game", "Sprite", "Font", "Sound", "Code"]
+const creditOrder = ["Game", "Sprite", "Font", "Sound", "Code", "Quadplay"]
 
 let old_transform
 let old_clip
@@ -56,15 +56,15 @@ if any_button_press():
 const creditsScroll = max(mode_frames - 70, 0)
 set_transform(xy(0, -creditsScroll))
 
-draw_text(sectionFont, ASSET_CREDITS.title, xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 3), text_color, text_shadow_color, text_shadow_color, 0, 0)
-draw_text(bodyFont, "by " + ASSET_CREDITS.developer, xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 3 + 25), text_color, text_shadow_color, nil, 0, 0)
+draw_text(sectionFont, CREDITS.title, xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 3), text_color, text_shadow_color, text_shadow_color, 0, 0)
+draw_text(bodyFont, "by " + CREDITS.developer, xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 3 + 25), text_color, text_shadow_color, nil, 0, 0)
 
 let y = SCREEN_SIZE.y + 15
 for type in creditOrder:
-   let s = type
-   y += draw_text(sectionFont, s + (if type == "Game" or type == "Code" then "" else "s"), xy(SCREEN_SIZE.x / 2, y), text_color, text_shadow_color, nil, 0, 2).y
+   const s = if type == "Quadplay" then "quadplay✜" else type
+   y += draw_text(sectionFont, s + (if type == "Game" or type == "Code" or type == "Quadplay" then "" else "s"), xy(SCREEN_SIZE.x / 2, y), text_color, text_shadow_color, nil, 0, 2).y
    
-   for line in ASSET_CREDITS[lowercase(type)]:
+   for line in CREDITS[lowercase(type)]:
       y += draw_text(bodyFont, line, xy(SCREEN_SIZE.x / 2, y), text_color, nil, nil, 0, 2, 0, SCREEN_SIZE.x).y + 10
       
    y += 20

@@ -4966,7 +4966,7 @@ var overlaps = (function() {
         if (e) {
             output.push(e);
             if (e.child_array) {
-                for (let i = 0; i < e.child_array; ++i) {
+                for (let i = 0; i < e.child_array.length; ++i) {
                     getDescendants(e.child_array[i], output);
                 }
             }
@@ -5032,6 +5032,7 @@ var overlaps = (function() {
         if (((recurse === undefined) || recurse) &&
             ((A.child_array && (A.child_array.length > 0)) ||
              (B.child_array && (B.child_array.length > 0)))) {
+
             // Handle all combinations of chidren here
             const AArray = [], BArray = [];
             getDescendants(A, AArray);
@@ -5102,7 +5103,7 @@ var overlaps = (function() {
                 return true;
             } else {
                 // Must be in the "corner" case. Note that these
-                // squared expresissions are all implicitly multipled
+                // squared expressions are all implicitly multipled
                 // by four because of the use of diameters instead of
                 // radii.
 

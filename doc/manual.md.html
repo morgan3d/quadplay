@@ -2606,17 +2606,17 @@ Hierarchy functions:
 `entity_remove_all(parent)`
 : Removes all children.
 
-`transform_child_to_parent(child, childPos)`
-: Takes a coordinate `childPos` in the `child` entity reference frame and transforms it to
+`transform_child_to_parent(child, child_pos)`
+: Takes a coordinate `child_pos` in the `child` entity reference frame and transforms it to
   the `child.parent` entity reference frame.
 
-`transform_parent_to_child(child, parentPos)`
-: Takes a coordinate `parentPos` in the `child.parent` entity reference frame and transforms it to
+`transform_parent_to_child(child, parent_pos)`
+: Takes a coordinate `parent_pos` in the `child.parent` entity reference frame and transforms it to
   the `child` entity reference frame.
 
 `entity_update_children(entity)`
 : Recursively update the `pos`, `scale`, `angle`, and `offset` fields of all children and
-  descendants from their `pos_in_parent`, `scale_in_parent`, `angle_in_parent`, and `offsetInparent`
+  descendants from their `pos_in_parent`, `scale_in_parent`, `angle_in_parent`, and `offset_in_parent`
   fields. Usually called after simulation or animation processing.
 
 
@@ -3905,7 +3905,7 @@ can start creating games immediately and make games that have a small
 size.
 
 All assets are Creative Commons licensed and automatically include
-their license and copyright information in the `ASSET_CREDITS` constant
+their license and copyright information in the `CREDITS` constant
 when loaded.
 
 
@@ -5170,7 +5170,7 @@ Symbol         | ASCII           | Value
 `π`            | `pi`            | `3.141592653589793115997963468544185161590576171875`
 `∞`            | `infinity`      | infinity
                | `nan`           | floating-point "not-a-number" value
-               | `ASSET_CREDITS` | object of credit and license statements from assets and code
+               | `CREDITS`       | object of credit and license statements from assets and code
 `∅`            | `nil`           | ("undefined")
                | `pad`           | array gamepad of objects
                | `joy`           | shorthand for `pad₀`
@@ -6224,19 +6224,7 @@ and compiler know what they are loading.
 
 Take note of the 4-bit sprite
 [quantizing tool](../tools/quantize.html). I find it better than the
-quality produced by Photoshop for quadplay color reduction. However,
-the resulting sprites often compress worse due to the way the alpha
-channel is handled. So, I often have to load them into Photoshop after
-quantization to clean up the alpha channel and then use a separate
-compression program on the output.
-
-Recent Safari and Firefox builds give the best *performance*. Of the
-the three, Chrome is the slowest, mostly due to rendering. The order
-of these changes frequently. I recommend targeting 13 ms instead of 16 ms for
-your frame budget to account for browser overhead. As JavaScript
-compilers improve, you may see slight improvements from the browser
-itself.
-
+quality produced by Photoshop for quadplay color reduction.
 
 
 Change Log
@@ -6246,10 +6234,18 @@ Changes for both the specification and implementation in each release.
 
 2020 Mar TBD: Beta update 36
 
+- Syntax highlighting for intrinsics
 - Documented the autoscaler resolutions
 - Added the advanced Physical Consoles section
 - Optimized IDE load time using `defer`
 - Optimized game load time using `async` and separate CPU and GPU scripts
+- Renamed `ASSET_CREDITS` --> `CREDITS`
+- Moved the console credits out of the `CREDITS.code` section and into
+  their own `quadplay` section
+- Made four-way ball splits in Quadpaddle example game
+- Added paddle shield powerup in Quadpaddle example game
+- Added `entity_remove_all()` to syntax highlighting
+- Fixed recursive `overlaps()` on entitys with children
 
 
 2020 Mar 25: Beta update 35

@@ -178,7 +178,8 @@ function createCodeEditorSession(url, bodyText) {
     session.setUseWrapMode(false);
 
     session.on("change", function (delta) {
-        console.assert(! session.aux.readOnly);
+        if (session.aux.readOnly) { return; }
+        
         // Cancel the previous pending timeout if there is one
         if (session.aux.timeoutID) {
             --savesPending;

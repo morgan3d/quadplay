@@ -1,7 +1,3 @@
-// Play area width and height
-const areaSize = SCREEN_SIZE.y
-
-const backgroundColor = rgb(28%, 36%, 55%)
 const wordExplodeSound = destroyBlockSound
 
 const unbreakable = levelTemplate.spritesheet_table["sprites"][3][4]
@@ -10,36 +6,36 @@ const darkUnbreakable = levelTemplate.spritesheet_table["sprites"][3][2]
 // Aliased sound
 const selectSound = hitPaddleSound
 
-const otherAxis = {"x":"y", "y":"x"}
+// Some powerups are replicated to alter the probability of their appearance
+const POWERUP_DATA = [{name:"spare", color:#C5F},
+                      {name:"spare", color:#C5F},
+                      {name:"2500",  color:#4D4},
+                      {name:"1000",  color:#000},
+                      {name:"split", color:#FD5},
+                      {name:"split", color:#FD5},
+                      {name:"clone", color:#5DF},
+                      {name:"wall",  color:#CCC},
+                      {name:"wall",  color:#CCC},
+                      {name:"shield",color:#F30},
+                      {name:"shield",color:#F30}]
 
-// wall and spare are intentionally doubled to double
-// their occurrance
-const powerupData = [{name:"spare", color:#C5F},
-                     {name:"spare", color:#C5F},
-                     {name:"2500",  color:#4D4},
-                     {name:"1000",  color:#000},
-                     {name:"split", color:#FD5},
-                     {name:"catch", color:#5DF},
-                     {name:"wall",  color:#CCC},
-                     {name:"wall",  color:#CCC}]
-
-let paddleArray, ballArray, boxArray, powerupArray
-let finishLevelFrames
+let paddle_array, ball_array, box_array, powerup_array
+let finish_level_frames
 
 // True when the first ball for a level has been launched, and so
 // the countdown timer should start running
-let firstBallLaunched
+let first_ball_was_launched
 
-let spareBalls
+let spare_balls
 let level
 let score
 
 // Seconds left for bonus
-let timeLeft
+let time_left
 
 // Used to make the score shake
-let scoreOffset
-let scoreColor
+let score_offset
+let score_color
 
 // Start the background music. If we wanted to
 // change music between title, pause, and play modes
@@ -47,31 +43,14 @@ let scoreColor
 // to be able to stop the looping sound.
 play_audio_clip(music, true)
 
-let titleBall = make_entity({
-         name: "titleBall",
-         pos: xy(200, 210),
-         vel: xy(2, -1.2),
-         sprite: ballSprite[0][0],
-         z: -2,
-         shape:"disk"
-      })
-
-
-def createTitleParticles():
-   play_audio_clip(unbreakableSound)
-   const particleColors = [#ffd700, #ff6948, #82e923, #00c1f5, #fff]
-   for i < 250:
-      const a = random() * 360deg
-      createParticle(titleBall.pos, xy(cos a, sin a) * (0.5 + 1.5 random()), random_value(particleColors), 40, random() * 110 + 60)
-
       
 // Increase the score and animate it shaking
-def increaseScore(v):
-   v = floor(v)
-   const step = 25
+def increase_score(v):
+   v = ⌊v⌋
+   const STEP = 25
 
    // Don't take *too* many steps if the increase is huge
-   const frames = min(2 ⌊v / step⌋, 140)
+   const frames = min(2 ⌊v / STEP⌋, 140)
    let remainder = v
    
    def inc(f):
@@ -79,25 +58,22 @@ def increaseScore(v):
       if (v > 100) and (f mod 7) == 1: play_audio_clip(scoreSound)
       
       if f mod 2:
-         score += step
-         remainder -= step
-         if ξ < 75%:
-            scoreColor = rgb(1, 1, 25%)
-         else:
-            scoreColor = rgb(25%, 25%, 0)
-
-         scoreOffset = 2 xy(ξ - ½, ξ - ½)
+         score += STEP
+         remainder -= STEP
+         score_color = if ξ < 75% then rgb(1, 1, 25%) else rgb(25%, 25%, 0)
+         score_offset = random_within_square()
       
    def done():
       // Add the remaining points
       score += remainder
-      scoreOffset = xy(0, 0)
-      scoreColor = defaultTextColor
+      score_offset = xy(0, 0)
+      score_color = DEFAULT_TEXT_COLOR
    
    add_frame_hook(inc, done, frames, ∅)
 
 
-def shakeScreen(frames, mag):
+   
+def shake_screen(frames, mag):
    // Support both scalar and vector
    if mag.x == ∅: mag = xy(mag, mag)
    def shake(f): set_transform(round(random_within_square() * mag))
@@ -105,49 +81,51 @@ def shakeScreen(frames, mag):
    add_frame_hook(shake, done, frames)
 
 
+   
 def shakeEntity(entity, frames, mag):
    // Support both scalar and vector
    if mag.x == ∅: mag = xy(mag, mag)
-   def shake(f): if f mod 2: entity.offset = xy(round((2ξ - 1) mag.x), round((2ξ - 1) mag.y))
+   def shake(f): if f mod 2: entity.offset = random_within_square() * mag
    def done():   entity.offset = xy(0, 0)
 
    shake(1)
    add_frame_hook(shake, done, frames)
   
 
-def createLevel(L):
+   
+def create_level(L):
    level = L
 
-   finishLevelFrames = 0
-   particleArray = []
-   powerupArray = []
+   finish_level_frames = 0
+   particle_array = []
+   powerup_array = []
    
    // Seconds
-   timeLeft = levelTime
+   time_left = LEVEL_TIME
 
-   firstBallLaunched = false
+   first_ball_was_launched = false
    
-   ballArray = [
+   ball_array = [
       make_entity({
          name: "ball",
          pos: xy(80, 200),
-         vel: xy(1, -1) * initialBallSpeed,
+         vel: xy(1, -1) * INITIAL_BALL_SPEED,
          sprite: ballSprite[0][0],
-         paddle: paddleArray[0],
+         paddle: paddle_array[0],
          shape:"disk"
       })
    ]
 
    // Reset powerups
-   for paddle in paddleArray: paddle.powerup = ∅
+   for paddle in paddle_array: paddle.powerup = ∅
 
-   boxArray = []
-   const center = (areaSize - 16 * 5) / 2
+   box_array = []
+   const center = ½ (AREA_SIZE - 16 * 5)
    for y < 6:
       for x < 6:
          const sprite = levelTemplate[x + 7 (level - 1)][y]
          if sprite:
-            push(boxArray, make_entity({
+            push(box_array, make_entity({
                name:       "point box",
                pos:        xy(16 x + center, 16 y + center),
                sprite:     sprite,
@@ -159,9 +137,9 @@ def createLevel(L):
    // Unbreakable corner blocks
    for y < 2:
       for x < 2:
-         push(boxArray, make_entity({
+         push(box_array, make_entity({
             name:        "unbreakable box",
-            pos:         xy(areaSize * (x * 92% + 4%), areaSize * (y * 92% + 4%)) + 0.1,
+            pos:         AREA_SIZE * xy(92% x + 4%, 92% y + 4%) + 0.1,
             sprite:      cornerSprite[1][0],
             shakeFrames: 0,
             breakable:   false,
@@ -169,31 +147,31 @@ def createLevel(L):
          }))
          
 
-def drawScoreboard():
+def draw_scoreboard():
    const z = 1
    reset_transform()
    reset_clip()
-   const centerX = (areaSize + SCREEN_SIZE.x) / 2
-   draw_corner_rect(xy(areaSize, 0), xy(SCREEN_SIZE.x - areaSize, SCREEN_SIZE.y), gray(20%), gray(60%), z)
+   const centerX = ½ (AREA_SIZE + SCREEN_SIZE.x)
+   draw_corner_rect(xy(AREA_SIZE, 0), xy(SCREEN_SIZE.x - AREA_SIZE, SCREEN_SIZE.y), gray(20%), gray(60%), z)
    draw_text(font, "quadpaddle", xy(centerX, 0), gray(100%), gray(60%), gray(60%), 0, -1, z)
    draw_text(font, "LEVEL " + level, xy(centerX, 20), gray(60%), gray(10%), ∅, 0, -1, z)
 
-   for b < spareBalls:
-      draw_sprite(ballSprite[0][0], xy(centerX + 12 (b - maxSpareBalls / 2 + 0.5), 52.5), ∅, ∅, ∅, z)
+   for b < spare_balls:
+      draw_sprite(ballSprite[0][0], xy(centerX + 12 (b - ½ MAX_SPARE_BALLS + ½), 52.5), ∅, ∅, ∅, z)
 
-   for spareBalls <= b < maxSpareBalls:
-      draw_disk(xy(centerX + 12 (b - maxSpareBalls / 2 + 0.5), 52.5), 4.4, gray(0%), gray(10%), z)
+   for spare_balls <= b < MAX_SPARE_BALLS:
+      draw_disk(xy(centerX + 12 (b - ½ MAX_SPARE_BALLS + ½), 52.5), 4.4, gray(0%), gray(10%), z)
 
-   let timeColor = defaultTextColor
-   if timeLeft == 0:
-      timeColor = gray(50%)
-   else if timeLeft < 20:
-      timeColor = rgb(1,0,0)
-   else if timeLeft < 40:
-      timeColor = rgb(1,1,0)
-   else if timeLeft < 60:
-      timeColor = rgb(0,1,0)
+   let time_color = DEFAULT_TEXT_COLOR
+   if time_left == 0:
+      time_color = gray(50%)
+   else if time_left < 20:
+      time_color = rgb(1, 0, 0)
+   else if time_left < 40:
+      time_color = rgb(1, 1, 0)
+   else if time_left < 60:
+      time_color = rgb(0, 1, 0)
 
-   draw_text(font, format_number(timeLeft, "stopwatch"), xy(360, 80), timeColor, gray(10%), ∅, 1, -1, z)
-   draw_text(font, format_number(score, "commas") + " pts", xy(360, 100) + scoreOffset, scoreColor, gray(10%), ∅, 1, -1, z)
+   draw_text(font, format_number(time_left, "stopwatch"), xy(360, 80), time_color, gray(10%), ∅, 1, -1, z)
+   draw_text(font, format_number(score, "commas") + " pts", xy(360, 100) + score_offset, score_color, gray(10%), ∅, 1, -1, z)
 

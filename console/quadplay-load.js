@@ -334,7 +334,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
 }
 
 
-/** Computes gameSource.constants.ASSET_CREDITS from gameSource */
+/** Computes gameSource.constants.CREDITS from gameSource */
 function computeAssetCredits(gameSource) {
     function canonicalizeLicense(license) {
         // Remove space after copyright and always just use the symbol
@@ -345,27 +345,28 @@ function computeAssetCredits(gameSource) {
         return license;
     }
 
-    const ASSET_CREDITS = gameSource.constants.ASSET_CREDITS = {
+    const CREDITS = gameSource.constants.CREDITS = {
         game: [],
         pack: [],
         font: [],
         sprite: [],
         sound: [],
-        code: []
+        code: [],
+        quadplay: []
     };
 
     // Game
-    ASSET_CREDITS.game.push((gameSource.json.title || 'Untitled') + (gameSource.json.developer ? ' by ' +
+    CREDITS.game.push((gameSource.json.title || 'Untitled') + (gameSource.json.developer ? ' by ' +
                                                     gameSource.json.developer : '') + ' ' +
                            (gameSource.json.copyright || ''));
-    if (gameSource.json.license) { ASSET_CREDITS.game.push(canonicalizeLicense(gameSource.json.license)); }
+    if (gameSource.json.license) { CREDITS.game.push(canonicalizeLicense(gameSource.json.license)); }
     
-    ASSET_CREDITS.title = gameSource.json.title || 'Untitled';
-    ASSET_CREDITS.developer = gameSource.json.developer || '';
+    CREDITS.title = gameSource.json.title || 'Untitled';
+    CREDITS.developer = gameSource.json.developer || '';
 
     // Map from canonicalized licenses to assets that use them
     const cache = {};
-    for (let type in ASSET_CREDITS) {
+    for (let type in CREDITS) {
         cache[type] = new Map();
     }
     Object.seal(cache);
@@ -385,7 +386,7 @@ function computeAssetCredits(gameSource) {
         let type = asset._jsonURL.match(/\.([^.]+)\.json$/i);
         if (type) { type = type[1].toLowerCase(); }
 
-        if (json.license && ASSET_CREDITS[type]) {
+        if (json.license && CREDITS[type]) {
             addCredit(type, asset._jsonURL, json.license);
         }
 
@@ -412,19 +413,19 @@ function computeAssetCredits(gameSource) {
             } else {
                 assets = assetList.slice(0, assetList.length - 1).join(', ') + ', and ' + assetList[assetList.length - 1];
             }            
-            ASSET_CREDITS[type].push(assets + ' ' + license);
+            CREDITS[type].push(assets + ' ' + license);
         });
     }
     
     // The quadplay runtime. We only need to credit code that is in the runtime, not the compiler or IDE.
-    ASSET_CREDITS.code.push('gif.js ©2013 Johan Nordberg, used under the MIT license, with additional programming by Kevin Weiner, Thibault Imbert, and Anthony Dekker');
-    ASSET_CREDITS.code.push('xorshift implementation ©2014 Andreas Madsen and Emil Bay, used under the MIT license');
-    ASSET_CREDITS.code.push('LoadManager.js ©2019 Morgan McGuire, used under the BSD license');
-    ASSET_CREDITS.code.push('WorkJSON.js ©2020 Morgan McGuire, used under the MIT license');
-    ASSET_CREDITS.code.push('js-yaml ©2011-2015 Vitaly Puzrin, used under the MIT license');
-    ASSET_CREDITS.code.push('matter.js © Liam Brummitt and others, used under the MIT license');
-    ASSET_CREDITS.code.push('poly-decomp.js ©2013 Stefan Hedman, used under the MIT license');
-    ASSET_CREDITS.code.push('quadplay✜ ©2019 Morgan McGuire, used under the LGPL 3.0 license');
+    CREDITS.quadplay.push('quadplay✜ ©2019-2020 Morgan McGuire, used under the LGPL 3.0 license');
+    CREDITS.quadplay.push('gif.js ©2013 Johan Nordberg, used under the MIT license, with additional programming by Kevin Weiner, Thibault Imbert, and Anthony Dekker');
+    CREDITS.quadplay.push('xorshift implementation ©2014 Andreas Madsen and Emil Bay, used under the MIT license');
+    CREDITS.quadplay.push('LoadManager.js ©2019 Morgan McGuire, used under the BSD license');
+    CREDITS.quadplay.push('WorkJSON.js ©2020 Morgan McGuire, used under the MIT license');
+    CREDITS.quadplay.push('js-yaml ©2011-2015 Vitaly Puzrin, used under the MIT license');
+    CREDITS.quadplay.push('matter.js © Liam Brummitt and others, used under the MIT license');
+    CREDITS.quadplay.push('poly-decomp.js ©2013 Stefan Hedman, used under the MIT license');
 }
 
 

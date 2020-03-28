@@ -19,12 +19,13 @@
         "powerupSpawnSound": "quad://sounds/38-Powerup.sound.json",
         "scoreSound": "quad://sounds/00-Coin.sound.json",
         "sparkleSprite": "sparkle.sprite.json",
-        "tinyFont": "quad://fonts/nano-5.font.json",
+        "tinyFont": "quad://fonts/scoreboard-6.font.json",
         "unbreakableSound": "quad://sounds/04-Coin.sound.json",
-        "wordSprite": "words-224x64.sprite.json"
+        "wordSprite": "words-224x64.sprite.json",
+        "shieldSprite": "shield.sprite.json"
     },
     "constants": {
-        "defaultTextColor": {
+        "DEFAULT_TEXT_COLOR": {
             "type": "rgb",
             "value": {
                 "b": {
@@ -41,37 +42,54 @@
                 }
             }
         },
-        "levelTime": {
+        "LEVEL_TIME": {
             "type": "number",
             "value": 240
         },
-        "maxSpareBalls": {
+        "MAX_SPARE_BALLS": {
             "type": "number",
-            "value": 8
+            "value": 9
         },
-        "paddleSpeed": {
+        "PADDLE_SPEED": {
             "type": "number",
             "value": 3
         },
-        "startingSpareBalls": {
+        "STARTING_SPARE_BALLS": {
             "type": "number",
-            "value": 6
+            "value": 7
         },
-        "initialBallSpeed": {
+        "INITIAL_BALL_SPEED": {
             "type": "number",
-            "value": "0.8"
+            "value": "1.3"
         },
-        "powerupDropChance": {
+        "POWERUP_DROP_CHANCE": {
             "type": "number",
-            "value": "70%"
-        }
+            "value": "65%"
+        },
+        "MAX_POWERUPS": {
+            "type": "number",
+            "value": "3"
+        },
+        "MAX_BALLS": {
+            "type": "number",
+            "value": "11"
+        },
+        "OTHER_AXIS" : {
+            "type": "object",
+            "value": {"x": "y", "y": "x"}
+        },
+        "BACKGROUND_COLOR" : {
+            "type" : "rgb",
+            "value": {"r": 0.28, "g": 0.36, "b": 0.55}
+        },
+        "AREA_SIZE": 224
+
     },
     "copyright": "\u00a92019 Morgan McGuire",
     "developer": "Casual Effects",
     "license": "Source code \u00a92019 Morgan McGuire, available under the BSD License https://opensource.org/licenses/BSD-2-Clause",
     "modes": [
         "Title*",
-        "Credits",
         "Play",
         "BeatLevel",
         "GameOver",

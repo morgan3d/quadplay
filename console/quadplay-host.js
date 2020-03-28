@@ -221,7 +221,7 @@ function downloadScreenshot() {
     const dateString = new Date().toLocaleString(
         undefined,
         {year: 'numeric', month: 'short', day: 'numeric', hour:'2-digit', minute:'2-digit'})
-    download(emulatorScreen.toDataURL(), makeFilename(gameSource.constants.ASSET_CREDITS.title + '-' + dateString) + '.png');
+    download(emulatorScreen.toDataURL(), makeFilename(gameSource.constants.CREDITS.title + '-' + dateString) + '.png');
 }
 
 
