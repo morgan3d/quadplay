@@ -897,6 +897,7 @@ function hideWaitDialog() {
     document.getElementById('waitDialog').classList.add('hidden');
 }
 
+
 function closeDropdowns() {
     const list = document.getElementsByClassName('dropdown');
     for (let i = 0; i < list.length; ++i) {
@@ -1983,12 +1984,13 @@ function createProjectWindow(gameSource) {
             s += `<li onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'])" class="clickable ${type} ${badge}" title="${asset._jsonURL}"><code>${assetName}</code></li>`;
 
             if (type === 'map') {
-                for (let k in asset.spritesheetTable) {
-                    s += `<ul><li onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'].spritesheetTable['${k}'])" class="clickable sprite" title="${asset.spritesheetTable[k]._jsonURL}"><code>${k}</code></li></ul>\n`;
+                for (let k in asset.spritesheet_table) {
+                    s += `<ul><li onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'].spritesheet_table['${k}'])" class="clickable sprite" title="${asset.spritesheet_table[k]._jsonURL}"><code>${k}</code></li></ul>\n`;
                 }
             }
         } // for each asset
     }
+    
     if (editableProject) {
         s += '<li class="clickable new" onclick="showImportAssetDialog()"><i>Import asset…</i></li>';
         // s += '<li class="clickable new" onclick=""><i>New asset…</i></li>';

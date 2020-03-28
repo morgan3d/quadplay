@@ -918,6 +918,7 @@ function loadMap(name, json, mapJSONUrl) {
         throw 'No sprite_url_table specified';
     }
 
+    // Primary spritesheet. We need to load more later
     const key = Object.keys(json.sprite_url_table)[0];
     const spritesheetUrl = makeURLAbsolute(mapJSONUrl, json.sprite_url_table[key]);
 
@@ -925,8 +926,10 @@ function loadMap(name, json, mapJSONUrl) {
     loadManager.fetch(spritesheetUrl, 'json', null, function (spritesheetJson) {
         onLoadFileComplete(spritesheetUrl);
         spritesheetJson.url = makeURLAbsolute(spritesheetUrl, spritesheetJson.url);
+        fileContents[spritesheetUrl] = spritesheetJson;
 
         const spritesheet = loadSpritesheet(name + ' sprites', spritesheetJson, spritesheetUrl, function (spritesheet) {
+            
             // Now go back and fetch the map as a continuation, given that we have the spritesheet
             loadManager.fetch(makeURLAbsolute(mapJSONUrl, json.url), 'text', null, function (xml) {
                 onLoadFileComplete(json.url);

@@ -177,55 +177,57 @@ function createCodeEditorSession(url, bodyText) {
     }
     session.setUseWrapMode(false);
 
-    session.on("change", function (delta) {
-        if (session.aux.readOnly) { return; }
-        
-        // Cancel the previous pending timeout if there is one
-        if (session.aux.timeoutID) {
-            --savesPending;
-            clearTimeout(session.aux.timeoutID);
-        }
-        
-        // Note that the epoch has changed
-        ++session.aux.epoch;
-        const myEpoch = session.aux.epoch;
-        setCodeEditorSessionMode(session, 'Modified<span class="blink">...</span>');
-
-        ++savesPending;
-        session.aux.timeoutID = setTimeout(function () {
-            session.aux.timeoutID = null;
-            if (myEpoch === session.aux.epoch) {
-                // Epoch has not changed since timeout was created, so begin the POST
-                setCodeEditorSessionMode(session, 'Saving<span class="blink">...</span>');
-
-                // Update the file contents immediately
-                let contents = session.getValue();
-
-                const value = url.endsWith('.json') ? WorkJSON.parse(contents) : contents;
-                fileContents[url] = value;
-                
-                const filename = urlToFilename(url);
-                serverWriteFile(filename, 'utf8', contents, function () {
-                    if (! url.endsWith('.json') && ! url.endsWith('.pyxl')) {
-                        // This must be a doc; update the preview pane
-                        showGameDoc(url, true);
-                    }
-                        
-                    --savesPending;
-                    if (myEpoch === session.aux.epoch) {
-                        // Only change mode if nothing has changed
-                        setCodeEditorSessionMode(session, 'All changes saved.');
-                    }
-                }, function () {
-                    // Error case
-                    --savesPending;
-                });
-            } else {
-                // Epoch failed
+    if (! session.aux.readOnly) {
+        session.on("change", function (delta) {
+            if (session.aux.readOnly) { return; }
+            
+            // Cancel the previous pending timeout if there is one
+            if (session.aux.timeoutID) {
                 --savesPending;
+                clearTimeout(session.aux.timeoutID);
             }
-        }, CODE_EDITOR_SAVE_DELAY * 1000);
-    });
+            
+            // Note that the epoch has changed
+            ++session.aux.epoch;
+            const myEpoch = session.aux.epoch;
+            setCodeEditorSessionMode(session, 'Modified<span class="blink">...</span>');
+
+            ++savesPending;
+            session.aux.timeoutID = setTimeout(function () {
+                session.aux.timeoutID = null;
+                if (myEpoch === session.aux.epoch) {
+                    // Epoch has not changed since timeout was created, so begin the POST
+                    setCodeEditorSessionMode(session, 'Saving<span class="blink">...</span>');
+
+                    // Update the file contents immediately
+                    let contents = session.getValue();
+
+                    const value = url.endsWith('.json') ? WorkJSON.parse(contents) : contents;
+                    fileContents[url] = value;
+                    
+                    const filename = urlToFilename(url);
+                    serverWriteFile(filename, 'utf8', contents, function () {
+                        if (! url.endsWith('.json') && ! url.endsWith('.pyxl')) {
+                            // This must be a doc; update the preview pane
+                            showGameDoc(url, true);
+                        }
+                        
+                        --savesPending;
+                        if (myEpoch === session.aux.epoch) {
+                            // Only change mode if nothing has changed
+                            setCodeEditorSessionMode(session, 'All changes saved.');
+                        }
+                    }, function () {
+                        // Error case
+                        --savesPending;
+                    });
+                } else {
+                    // Epoch failed
+                    --savesPending;
+                }
+            }, CODE_EDITOR_SAVE_DELAY * 1000);
+        });
+    }
     
     return session;
 }
