@@ -1,8 +1,13 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
 "use strict";
 
+// Show the compiler output if false
 const deployed = true;
-const version  = '2020.03.25.03'
+
+// Set to true to allow editing of quad://example/ files when developing quadplay
+const ALLOW_EDITING_EXAMPLES = false;
+
+const version  = '2020.03.30.22'
 const launcherURL = 'quad://console/launcher';
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -58,6 +63,21 @@ let previewRecordingFrame = 0;
 function clamp(x, lo, hi) { return Math.min(Math.max(x, lo), hi); }
 function makeEuroSmoothValue(minCutoff, speedCoefficient) {  return new EuroFilter(minCutoff, speedCoefficient); }
 
+/* True if a URL is to a path that is a built-in dir for the current server */
+function isBuiltIn(url) {
+    if (url.startsWith('quad://')) { return true; }
+    const quadPath = location.href.replace(/\/console\/quadplay\.html.*$/, '/');
+    return (! ALLOW_EDITING_EXAMPLES && url.startsWith('/examples/')) ||
+        url.startsWith('/games/') ||
+        url.startsWith(quadPath + 'sprites/') ||
+        url.startsWith(quadPath + 'fonts/') ||
+        url.startsWith(quadPath + 'sounds/') ||
+        url.startsWith(quadPath + 'scripts/') ||
+        url.startsWith(quadPath + 'games/') ||
+        (! ALLOW_EDITING_EXAMPLES && url.startsWith(quadPath + 'examples/')) ||
+        url.startsWith(quadPath + 'console/') ||
+        url.startsWith(quadPath + 'doc/');
+}
 
 function debugOptionClick(event) {
     const element = event.target;
@@ -150,7 +170,7 @@ function onWelcomeTouch() {
 
     unlockAudio();
     
-    if (isMobile) {
+    if (! useIDE || isMobile) {
         requestFullScreen();
     }
 
@@ -1084,7 +1104,6 @@ let soundEditorCurrentSound = null;
 
 /** Called when a project tree control element is clicked */
 function onProjectSelect(target, type, object) {
-    
     // Hide all editors
     const editorFrame = document.getElementById('editorFrame');
     for (let i = 0; i < editorFrame.children.length; ++i) {
@@ -1313,6 +1332,14 @@ function onProjectSelect(target, type, object) {
     }
 }
 
+
+// Callback for iframe reloading
+function setIFrameScroll(iframe, x, y) {
+    const html = iframe.contentWindow.document.getElementsByTagName('html')[0];
+    html.scrollLeft = x;
+    html.scrollTop = y;
+}
+
 /* Updates the preview pane of the doc editor. If useFileContents is true,
    use fileContents[url] when not undefined instead of actually reloading. */
 function showGameDoc(url, useFileContents) {
@@ -1322,19 +1349,39 @@ function showGameDoc(url, useFileContents) {
     docEditor.lastURL = url;
 
     const srcdoc = useFileContents ? fileContents[url] : undefined;
-          
+
+    // Store old scroll position
+    let oldScrollX = 0, oldScrollY = 0;
+    {
+        const element = document.getElementById('doc');
+        if (element) {
+            if (element.contentWindow) {
+                // Only works when the document is on the same domain
+                const doc = element.contentWindow.document;
+                const html = doc.getElementsByTagName('html')[0];
+                oldScrollX = Math.max(html.scrollLeft, doc.body.scrollLeft);
+                oldScrollY = Math.max(html.scrollTop, doc.body.scrollTop);
+            } else {
+                oldScrollX = element.scrollLeft;
+                oldScrollY = element.scrollTop;
+            }
+        }
+    }
+    
     // Strip anything sketchy that looks like an HTML attack from the URL
     console.assert(url !== undefined);
     url = url.replace(/['" ><]/g, '');
     if (url.endsWith('.html')) {
         // Includes the .md.html case
-        let s = '<embed id="doc" width="125%" height="125%" ';
+        let s = `<iframe id="doc" width="125%" height="125%" onload="setIFrameScroll(this, ${oldScrollX}, ${oldScrollY})" `;
+        
         if (srcdoc !== undefined) {
-            s += `srcdoc=${srcdoc.replace(/"/g, '&quot;')}`;
+            const html = srcdoc.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+            s += 'srcdoc="' + html + '"';
         } else {
-            s += `src="${url}"`;
+            s += `src="${url}?"`;
         }
-        docEditor.innerHTML = s +'></embed>';
+        docEditor.innerHTML = s +'></iframe>';
     } else if (url.endsWith('.md')) {
         // Trick out .md files using Markdeep
         
@@ -1366,19 +1413,19 @@ margin-top: 0; padding-top: 0
         }
 
         if (srcdoc !== undefined) {
-            docEditor.innerHTML = `<iframe id="doc" srcdoc="${markdeepify(srcdoc)}" border=0 width=125% height=125%></iframe>`;
+            docEditor.innerHTML = `<iframe id="doc" onload="setIFrameScroll(this, ${oldScrollX}, ${oldScrollY})" srcdoc="${markdeepify(srcdoc)}" border=0 width=125% height=125%></iframe>`;
         } else {
             loadManager = new LoadManager({
                 errorCallback: function () { console.log('Error while loading', url); },
                 forceReload: true});
             loadManager.fetch(url, 'text', null,  function (text) {
-                docEditor.innerHTML = `<iframe id="doc" srcdoc="${markdeepify(text)}" border=0 width=125% height=125%></iframe>`;
+                docEditor.innerHTML = `<iframe id="doc" srcdoc="${markdeepify(text)}" onload="setIFrameScroll(this, ${oldScrollX}, ${oldScrollY})" border=0 width=125% height=125%></iframe>`;
             }),
             loadManager.end();
         }
     } else {
         // Treat as text file
-        docEditor.innerHTML = `<object id="doc" width="125%" height="125%" type="text/plain" data="${url}" border="0"> </object>`;
+        docEditor.innerHTML = `<object id="doc" width="125%" height="125%" type="text/plain" data="${url}?" border="0"> </object>`;
     }
 
 }
@@ -1746,10 +1793,15 @@ function visualizeGame(gameEditor, url, game) {
         } else if (getQueryString('quadserver') !== '1') {
             reasons.push('is not running locally with the <code>quadplay</code> script');
         }
-            
-        if (! useIDE) { reasons.push('was launched without the IDE'); }
-        
-        if (/^(quad:\/)?\/(games|examples)\//.test(url)) { reasons.push('is a built-in example'); }
+
+        if (! useIDE) {
+            reasons.push('was launched without the IDE');
+        }
+
+        // Is built-in
+        if (isBuiltIn(url)) {
+            reasons.push('is a built-in example');
+        }
         
         s += '<i>This project is locked because it';
         if (reasons.length > 1) {
@@ -1985,7 +2037,8 @@ function createProjectWindow(gameSource) {
 
             if (type === 'map') {
                 for (let k in asset.spritesheet_table) {
-                    s += `<ul><li onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'].spritesheet_table['${k}'])" class="clickable sprite" title="${asset.spritesheet_table[k]._jsonURL}"><code>${k}</code></li></ul>\n`;
+                    const badge = isBuiltIn(asset.spritesheet_table[k]._jsonURL) ? 'builtin' : (isRemote(asset.spritesheet_table[k]._jsonURL) ? 'remote' : '');
+                    s += `<ul><li onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'].spritesheet_table['${k}'])" class="clickable sprite ${badge}" title="${asset.spritesheet_table[k]._jsonURL}"><code>${k}</code></li></ul>\n`;
                 }
             }
         } // for each asset
@@ -2924,8 +2977,7 @@ function loadGameIntoIDE(url, callback) {
 
     // See if the game is on the same server and not in the
     // games/ or examples/ directory
-    const isBuiltIn = /^(quad:\/)?\/(games|examples)\//.test(url);
-    editableProject = locallyHosted() && useIDE && (getQueryString('quadserver') === '1') && ! isBuiltIn;// && ! /^http(s)?:/.test(url);
+    editableProject = locallyHosted() && useIDE && (getQueryString('quadserver') === '1') && ! isBuiltIn(url);
     
     // Disable the play, slow, and step buttons
     document.getElementById('slowButton').enabled =
@@ -3084,7 +3136,7 @@ if (! localStorage.getItem('debugWatchEnabled')) {
 
 document.getElementById('backgroundPauseCheckbox').checked = backgroundPauseEnabled || false;
 
-setUIMode(localStorage.getItem('uiMode') || 'IDE', false);
+setUIMode(getQueryString('mode') || localStorage.getItem('uiMode') || 'IDE', false);
 setErrorStatus('');
 setCodeEditorFontSize(parseInt(localStorage.getItem('codeEditorFontSize') || '14'));
 setColorScheme(localStorage.getItem('colorScheme') || 'pink');

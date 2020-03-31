@@ -35,6 +35,11 @@ html {
     image-rendering: -moz-crisp-edges; -ms-interpolation-mode: nearest-neighbor; image-rendering: -ms-interpolation-mode: nearest-neighbor; image-rendering: pixelated;
 }
 
+#serverQRCode img {
+    margin-left: auto;
+    margin-right: auto;
+}
+
 #spriteEditorPivot {
     /* The "line-height" here is forcing vertical centering of the text https://www.tutorialrepublic.com/faq/how-to-align-text-vertically-center-in-a-div-using-css.php */
     position: absolute;

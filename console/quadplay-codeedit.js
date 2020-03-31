@@ -32,19 +32,6 @@ function getGamePath() {
    temporarily while a save is pending. */
 let savesPending = 0;
 
-/* True if a URL is to a path that is a built-in dir for the current server */
-function isBuiltIn(url) {
-    const quadPath = location.href.replace(/\/console\/quadplay\.html.*$/, '/');
-    return url.startsWith('quad://') ||
-        url.startsWith(quadPath + 'sprites/') ||
-        url.startsWith(quadPath + 'fonts/') ||
-        url.startsWith(quadPath + 'sounds/') ||
-        url.startsWith(quadPath + 'scripts/') ||
-        url.startsWith(quadPath + 'games/') ||
-        url.startsWith(quadPath + 'examples/') ||
-        url.startsWith(quadPath + 'console/') ||
-        url.startsWith(quadPath + 'doc/');
-}
 
 function onIncreaseFontSizeButton() {
     setCodeEditorFontSize(codeEditorFontSize + 2);
@@ -208,7 +195,8 @@ function createCodeEditorSession(url, bodyText) {
                     const filename = urlToFilename(url);
                     serverWriteFile(filename, 'utf8', contents, function () {
                         if (! url.endsWith('.json') && ! url.endsWith('.pyxl')) {
-                            // This must be a doc; update the preview pane
+                            // This must be a doc; update the preview pane, preserving
+                            // the scroll position if possible.
                             showGameDoc(url, true);
                         }
                         
@@ -817,10 +805,10 @@ function onNewDocCreate() {
                          function () {
                              loadGameIntoIDE(window.gameURL, function () {
                                  // Find the doc in the new project and select it
-                                 for (let i = 0; i < gameSource.json.docs.length; ++i) {
-                                     if (gameSource.json.docs[i].name === name) {
+                                 for (let i = 0; i < gameSource.docs.length; ++i) {
+                                     if (gameSource.docs[i].name === name) {
                                          // Found the match
-                                         onProjectSelect(document.getElementById('DocItem_' + name), 'doc', gameSource.json.docs[i]);
+                                         onProjectSelect(document.getElementById('DocItem_' + name), 'doc', gameSource.docs[i]);
                                          return;
                                      }
                                  }

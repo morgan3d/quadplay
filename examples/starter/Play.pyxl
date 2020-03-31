@@ -16,7 +16,7 @@ if joy.x:
 
 // Sky
 set_background(rgb(20%, 50%, 80%))
-draw_text(font, ASSET_CREDITS.title, xy(½ SCREEN_SIZE.x, 10), text_color, ∅, ∅, 0, 0)
+draw_text(font, CREDITS.title, xy(½ SCREEN_SIZE.x, 10), text_color, ∅, ∅, 0, 0)
 
 // Ground
 draw_corner_rect(xy(0, 140), xy(SCREEN_SIZE.x, SCREEN_SIZE.y - 139), #DDD)

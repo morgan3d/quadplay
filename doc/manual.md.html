@@ -4,7 +4,7 @@
     Fantasy Console by [Casual Effects](https://casual-effects.com)
 
 <center>[*Quick Start*](#quickstart) ∙ [*Controls*](#controls) ∙ [*Sprites*](#sprites) ∙ [*Fonts*](#fonts) ∙ [*Sounds*](#sounds) ∙ [*Symbols*](#symbols)
-<br/>[*API*](#standardlibrary) ([Input](#standardlibrary/input) ∙ [Physics](#standardlibrary/physics) ∙ [Graphics](#standardlibrary/graphics) ∙ [Sound](#standardlibrary/sound) ∙ [AI](#standardlibrary/pathfinding)) ∙ [*Changes*](#changelog)
+<br/>[*API*](#standardlibrary) ([Input](#standardlibrary/input) ∙ [Physics](#standardlibrary/physics) ∙ [Graphics](#standardlibrary/graphics) ∙ [Sound](#standardlibrary/sound) ∙ [AI](#standardlibrary/pathfinding)) ∙ [*Network*](#network) ∙ [*Changes*](#changelog)
 
 <img src="ide.png" style="image-rendering: auto; width:75%; border-radius: 0 0 4px 4px; box-shadow: 1px 5px 7px rgba(0,0,0,.20); margin-bottom: 28px; margin-top:20px"></center>
 
@@ -5824,6 +5824,128 @@ so the imperfect display matches are not an issue, but also that none of these
 three products have yet shipped.
 
 
+Network
+====================================================================================
+
+You can use quadplay over a local network or the internet in several ways:
+
+[Online Hosted](#network/onlinehosted)
+: Play single-player or local multiplayer quadplay games from the internet on
+   any device with a modern web browser
+   
+[Steam Streaming](#network/steamstreaming)
+: Play quadplay games on a SteamLink or any Steam client, streaming across your local network
+   from a laptop or desktop
+
+[Network Multiplayer](#network/networkmultiplayer)
+: Play multiplayer quadplay games with friends across a local network or the internet
+
+[Mobile Development](#network/mobiledevelopment)
+: Develop and test your quadplay game on a phone or tablet
+
+
+Online Hosted
+------------------------------------------------------------------------------------
+
+Quadplay games can be played on any device with a full modern web
+browser. This includes laptops, desktops, mobile devices, embedded
+processors, and some game consoles. Just enter the URL of the game's
+hosting page into your browser, such as:
+
+https://morgan3d.github.io/quadplay/console/quadplay.html
+
+or launch the `quadplay` script with the URL of the game.
+
+See the Deploying Games section to learn how to upload your own games
+onto an internet server.
+
+
+Steam Streaming
+------------------------------------------------------------------------------------
+
+Games for quadplay are usually best played through a browser. However, if you have a device 
+that runs the [Steam Link](https://store.steampowered.com/steamlink/about/) app or the
+Steam client, but does not have a full web browser, then you can use Steam's streaming
+technology to play on that device.
+
+Steps that you only need to do once, on the hosting computer:
+
+1. Create a free [Steam](https://store.steampowered.com/join) account if you 
+   do not already have one.
+ 
+2. Install the free [Steam](https://store.steampowered.com/about/)
+   client on the computer that you will stream from, if it does not
+   already have Steam.  The Steam client is available for macOS and
+   Windows. There is a partly supported client for Linux as well.
+
+3. Run the Steam client. From the Games menu, select "Add a Non-Steam Game to My Library...":
+   ![](add-non-steam.png)
+
+4. Select your web browser from the list. All browsers should appear under 
+   Windows. If it is not listed or you are on macOS,
+   select "Browse..." and then identify the application. On macOS, you can
+   find `/Applications/Google Chrome.app`, `/Applications/Safari.app`,
+   or `/Applications/Firefox.app` in the list that appears.
+  
+  
+To Stream a game across a local network:
+
+1. *On the hosting computer*, launch `quadplay --kiosk` with the name of your game.
+   Press the icon in the center of the browser, so that it starts playing and
+   goes fullscreen. 
+   
+2. *On the remote computer* where you want to play, launch Steam and 
+   search your Steam library for your browser. Press the green "STREAM"
+   button. After a moment, the game should start in fullscreen mode, showing
+   the same view as the browser. Game controllers will work normally
+   on the remote computer.
+   ![](launch-chrome.png)
+
+
+
+Network Multiplayer
+------------------------------------------------------------------------------------
+
+_Coming soon..._
+
+(The basic idea is to run set up your browser as a non-Steam game as described
+in the Steam Streaming section, and then use Steam Remote Play Together to 
+allow a player to join you across the internet.)
+
+
+Mobile Development
+------------------------------------------------------------------------------------
+
+The quadplay IDE allows you to easily test your game on a mobile device while 
+developing from a laptop or desktop computer. 
+
+First, launch the `quadplay` script on your computer with the `--host` flag. For example, 
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
+quadplay --host games/quadpaddle/
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(Use your own game, not the `quadpaddle` sample, of course).
+
+Second, in the web browser that opens on your computer, select the Project or Test
+view at the upper right. Click on the Host tab of the debugging pane on the lower
+right:
+
+![The QR code in the Host tab of the IDE](host-tab.png)
+
+Third, _on your mobile device_, either scan the QR code and then open the URL
+it shows in a browser, or manually type the URL into your mobile browser.
+
+Your mobile device will now play the game direct from your computer. You can edit
+the game or assets on your computer and reload the browser page on your mobile
+device to see the changes. You do not need to re-scan the QR code for each change.
+
+!!! note Mobile Controls
+    On a mobile device, quadplay games be played with
+    the on-screen touch controls or a physical game controller paired over
+    BlueTooth or plugged in directly over USB.
+
+
 Deploying Games
 ====================================================================================
 
@@ -6233,22 +6355,29 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-2020 Mar TBD: Beta update 36
+2020 Mar 30: Beta update 36
 
-- Syntax highlighting for intrinsics
+- Syntax highlighting for intrinsics in Emacs and the IDE
 - Documented the autoscaler resolutions
-- Added the advanced Physical Consoles section
 - Optimized IDE load time using `defer`
 - Optimized game load time using `async` and separate CPU and GPU scripts
 - Renamed `ASSET_CREDITS` --> `CREDITS`
 - Moved the console credits out of the `CREDITS.code` section and into
   their own `quadplay` section
 - Made four-way ball splits in Quadpaddle example game
+- When launching without the IDE, always go full screen
+- Document editor now preserves scroll position when updating
+- Document editor now forces cache override
 - Added paddle shield powerup in Quadpaddle example game
 - Added `entity_remove_all()` to syntax highlighting
+- Added `miniroguelike-8x8.sprite.json`
+- Added the Network section of the manual
+- Added the advanced Physical Consoles section
+- Added `examples/roguelike`
+- Added `--kiosk` mode for the `quadplay` script
 - Fixed recursive `overlaps()` on entitys with children
 - Fixed spritesheets for maps not showing in the project viewer
-- Added `miniroguelike-8x8.sprite.json`
+
 
 2020 Mar 25: Beta update 35
 
