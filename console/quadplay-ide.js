@@ -5,9 +5,9 @@
 const deployed = true;
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
-const ALLOW_EDITING_EXAMPLES = true;
+const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.03.31.06'
+const version  = '2020.04.04.10'
 const launcherURL = 'quad://console/launcher';
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -2040,7 +2040,7 @@ function createProjectWindow(gameSource) {
         for (let i = 0; i < keys.length; ++i) {
             const c = keys[i];
             const v = gameSource.constants[c];
-            s += `<li class="clickable ${Array.isArray(v) ? 'array' : (typeof v)}" onclick="onProjectSelect(event.target, 'constant', '${c}')"><code>${c}</code></li>\n`;
+            s += `<li class="clickable ${Array.isArray(v) ? 'array' : (typeof v)}" id="projectConstant_${c}" onclick="onProjectSelect(event.target, 'constant', '${c}')"><code>${c}</code></li>\n`;
         }
     }
     if (editableProject) {
