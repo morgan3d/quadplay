@@ -52,11 +52,13 @@
     <div id="consoleMenu" class="unselectable dropdown">
       <label><input id="backgroundPauseCheckbox" type="checkbox" checked onclick="onBackgroundPauseClick(event)" autocomplete="off">Background pause</label>
       <hr>
-      <label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('pink')" type="radio" id="pinkColorScheme" checked autocomplete="off">Miami</label>
-      <br/><label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('gold')" type="radio" id="goldColorScheme" autocomplete="off">Las Vegas</label>
-      <br/><label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('green')" type="radio" id="greenColorScheme" autocomplete="off">Shannon</label>
-      <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('blue')" id="blueColorScheme" autocomplete="off">Chefchaouen</label>
-      <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('black')" id="blackColorScheme" autocomplete="off">New York City</label>
+      <label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('pink')" type="radio" id="pinkColorScheme" checked autocomplete="off">Pink</label>
+      <br/><label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('orange')" type="radio" id="orangeColorScheme" autocomplete="off">Orange</label>
+      <br/><label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('gold')" type="radio" id="goldColorScheme" autocomplete="off">Gold</label>
+      <br/><label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('green')" type="radio" id="greenColorScheme" autocomplete="off">Green</label>
+      <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('blue')" id="blueColorScheme" autocomplete="off">Blue</label>
+      <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('black')" id="blackColorScheme" autocomplete="off">Black</label>
+            <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('white')" id="whiteColorScheme" autocomplete="off">White</label>
       <hr>
       <div class="IDEOnly"><a onclick="window.open('../doc/controls.html', '', 'width=400,height=500')">Controls</a></div>
       <div class="noIDE"><a href="../doc/manual.md.html">Create Games</a></div>
@@ -65,8 +67,7 @@
     </div>
 
     <div id="toolsMenu" class="unselectable dropdown IDEOnly">
-      <label><input id="lockConstantsCheckbox" type="checkbox" checked onclick="" disabled autocomplete="off">Lock constants</label>
-      <br/><label><input id="assertEnabled" type="checkbox" onclick="debugOptionClick(event)" checked autocomplete="off">Enable <code>assert</code></label>
+      <label><input id="assertEnabled" type="checkbox" onclick="debugOptionClick(event)" checked autocomplete="off">Enable <code>assert</code></label>
       <br/><label><input id="showEntityBoundsEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Show entity bounds</label>
       <br/><label><input id="showPhysicsEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Show physics</label>
       <hr>
@@ -104,14 +105,6 @@
       </div>
 
       <div style="background: #000; border-top: 3px solid #000; top: 0px; display: inline-block; position: absolute; right: 8px">
-        <!-- Need for home button is eliminated by the in-game menu; home would only be needed
-             to solve a crash, in which case reloading the browser is sufficient.
-        <span class="noIDE" style="padding-right: 10px">
-          <script>
-            makeButton('<img src="ui-home.png" width=32 style="position:relative; top:-2px;">', 'Return to Launcher', 'onHomeButton');
-          </script>
-        </span>
-        -->
         <div style="display:inline-block; padding-left: 10px;" onclick="showGamepads()">
           <div style="width:48px; margin-top: -4px">
             <div class="controllerAbsent" id="controllerIcon0" title="Connect a controller and press a button"></div>
@@ -138,14 +131,15 @@
         &nbsp;&nbsp;&nbsp;
         
         <script>
-          makeRadio('<img src="ui-maximal.png"  width=32 style="position:relative; top:-2px">', 'maximalUIButton',  false, 'title="Maximal"',  'ui');
-          makeRadio('<img src="ui-emulator.png" width=32 style="position:relative; top:-2px">', 'emulatorUIButton', false, 'title="Emulator"', 'ui');
+          makeRadio('<img src="ui-maximal.png"  width=32 style="position:relative; top:-2px">', 'maximalUIButton',  false, 'title="Full Screen"',  'ui');
+          makeRadio('<img src="ui-emulator.png" width=32 style="position:relative; top:-2px">', 'emulatorUIButton', false, 'title="Touch Screen"', 'ui');
         </script>
         <span class="IDEOnly" style="margin-left:-3px">
         <script>
           makeRadio('<img src="ui-test.png"     width=32 style="position:relative; top:-2px">', 'testUIButton',     false, 'title="Test"',    'ui');
-          makeRadio('<img src="ui-ide.png"      width=32 style="position:relative; top:-2px">', 'IDEUIButton',      true,  'title="Project"', 'ui');
-          makeRadio('<img src="ui-editor.png"   width=32 style="position:relative; top:-2px">', 'editorUIButton',      true,  'title="Editor"',  'ui');
+          makeRadio('<img src="ui-wideide.png"  width=32 style="position:relative; top:-2px">', 'wideIDEUIButton',  false, 'title="Debug"',   'ui');
+          makeRadio('<img src="ui-ide.png"      width=32 style="position:relative; top:-2px">', 'IDEUIButton',      true,  'title="Develop"', 'ui');
+          makeRadio('<img src="ui-editor.png"   width=32 style="position:relative; top:-2px">', 'editorUIButton',   false, 'title="Editor"',  'ui');
         </script>
         </span>
       </div>
@@ -165,8 +159,10 @@
           <div class="toolbar">
             <script>
               const cmd = isApple ? '⌘' : '^';
-              makeButton('<img src="ui-bigfont.png" width=32 style="position:relative; top:-2px;">', `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton');
+              makeButton('<img src="ui-undo.png" width=32 style="position:relative; top:-2px;">', `Undo (${cmd}Z)`, 'onCodeEditorUndoButton', 'codeEditorUndo');
+              makeButton('<img src="ui-redo.png" width=32 style="position:relative; top:-2px;">', `Redo (${cmd}Y)`, 'onCodeEditorRedoButton', 'codeEditorRedo');
               makeButton('<img src="ui-smallfont.png" width=32 style="position:relative; top:-2px;">', `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton');
+              makeButton('<img src="ui-bigfont.png" width=32 style="position:relative; top:-2px;">', `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton');
               makeButton('<img src="ui-find.png" width=32 style="position:relative; top:-2px;">', `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton');
             </script>
             <div style="position: absolute; right:5px; top:3px; color:#888" id="codeEditorSessionModeDisplay">All changes saved.</div>
@@ -204,7 +200,7 @@
     
     <div class="emulator" id="emulator" onclick="document.getElementById('emulatorKeyboardInput').focus()">
       <div class="emulatorBackground">
-        <div style="position: absolute; left: 0; right: 0; top: 4px; width: 100%; text-align: center" id="logo">
+        <div id="logo">
           <img src="logo.png" style="width:15%; max-width:108px; min-width:64px">
         </div>
       </div>
@@ -375,6 +371,36 @@
       </div>
     </div>
 
+    <div id="newConstantDialog" class="modal hidden">
+      <div class="dialog" style="top:40vh; width: 300px">
+        <center>
+          <b>Add New Constant</b>
+          <p>
+            <br/>
+            <label for="newConstantName">Name&nbsp;&nbsp;</label>
+            <input id="newConstantName" type="text" style="font-size: 80%; font-family: Monaco, monospace" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '');document.getElementById('newConstantCreateButton').disabled = (this.value === '')"></input>
+            <div style="text-align:left; margin-left: 50px; column-width: 100px">
+              <input type="radio" name="newConstantType" value="string"  id="newConstantTypeString" checked><label for="newConstantTypeString">Text</label>
+              <br/><input type="radio" name="newConstantType" value="number"  id="newConstantTypeNumber"><label for="newConstantTypeNumber">Number</label>
+              <br/><input type="radio" name="newConstantType" value="boolean" id="newConstantTypeBoolean"><label for="newConstantTypeBoolean">Boolean</label>
+              <br/><input type="radio" name="newConstantType" value="boolean" id="newConstantTypeNil"><label for="newConstantTypeNil">Nil</label>
+              <br/><input type="radio" name="newConstantType" value="xy" id="newConstantTypeXY" disabled><label for="newConstantTypeXY"><code>xy()</code></label>
+              <br/><input type="radio" name="newConstantType" value="xz" id="newConstantTypeXZ" disabled><label for="newConstantTypeXZ"><code>xz()</code></label>
+              <br/><input type="radio" name="newConstantType" value="xyz" id="newConstantTypeXYZ" disabled><label for="newConstantTypeXYZ"><code>xyz()</code></label>
+              <br/><input type="radio" name="newConstantType" value="rgb" id="newConstantTypeRGB" disabled><label for="newConstantTypeRGB"><code>rgb()</code></label>
+              <br/><input type="radio" name="newConstantType" value="rgba" id="newConstantTypeRGBA" disabled><label for="newConstantTypeRGBA"><code>rgba()</code></label>
+              <br/><input type="radio" name="newConstantType" value="hsv" id="newConstantTypeHSV" disabled><label for="newConstantTypeHSV"><code>hsv()</code></label>
+              <br/><input type="radio" name="newConstantType" value="hsva" id="newConstantTypeHSVA" disabled><label for="newConstantTypeHSVA"><code>hsva()</code></label>
+              <br/><input type="radio" name="newConstantType" value="object" id="newConstantTypeObject" disabled><label for="newConstantTypeObject">Object</label>
+              <br/><input type="radio" name="newConstantType" value="array" id="newConstantTypeArray" disabled><label for="newConstantTypeArray">Array</label>
+              <br/><input type="radio" name="newConstantType" value="raw" id="newConstantTypeRaw" disabled><label for="newConstantTypeRaw">JSON/YAML</label>
+            </div>
+          </p>
+          <button type="button" onclick="hideNewConstantDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span><button type="button" id="newConstantCreateButton" onclick="onNewConstantCreate()">Create</button>
+        </center>
+      </div>
+    </div>
+
     <div id="newScriptDialog" class="modal hidden">
       <div class="dialog" style="top:40vh; width: 300px">
         <center>
@@ -506,5 +532,6 @@
   <script defer src="quadplay-load.js" charset="utf-8"></script>
   <script defer src="quadplay-profiler.js" charset="utf-8"></script>
   <script defer src="quadplay-codeedit.js" charset="utf-8"></script>
+  <script defer src="quadplay-constantedit.js" charset="utf-8"></script>
   <script defer src="quadplay-ide.js" charset="utf-8"></script>
 </html>

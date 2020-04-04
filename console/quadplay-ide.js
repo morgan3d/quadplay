@@ -5,9 +5,9 @@
 const deployed = true;
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
-const ALLOW_EDITING_EXAMPLES = false;
+const ALLOW_EDITING_EXAMPLES = true;
 
-const version  = '2020.03.30.22'
+const version  = '2020.03.31.06'
 const launcherURL = 'quad://console/launcher';
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -44,7 +44,7 @@ if (! profiler.debuggingProfiler) {  document.getElementById('debugIntervalTimeR
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// 'IDE', 'Test', 'Emulator', 'Editor', 'Maximal'. See also setUIMode().
+// 'WideIDE', 'IDE', 'Test', 'Emulator', 'Editor', 'Maximal'. See also setUIMode().
 let uiMode = 'IDE';
 
 const BOOT_ANIMATION = Object.freeze({
@@ -95,7 +95,8 @@ let codeEditorFontSize = 14;
 function setCodeEditorFontSize(f) {
     codeEditorFontSize = Math.max(6, Math.min(32, f));
     localStorage.setItem('codeEditorFontSize', '' + codeEditorFontSize)
-    document.getElementById('ace').style.fontSize = codeEditorFontSize + 'px';
+    //document.getElementById('ace').style.fontSize = codeEditorFontSize + 'px';
+    aceEditor.setOption('fontSize',  codeEditorFontSize + 'px');
 }
 
 
@@ -120,22 +121,33 @@ function setColorScheme(scheme) {
     switch (scheme) {
     case 'black':
         hrefColor = '#0af';
-        emulatorColor = '#151515';
+        emulatorColor = '#090909';
+        break;
+        
+    case 'white':
+        hrefColor = '#0af';
+        emulatorColor = '#D2C4D2';
+        break;
+
+    case 'orange':
+        hrefColor = '#ff7030';
+        emulatorColor = '#f04C12';
         break;
         
     case 'gold':
-        hrefColor = '#dcb102';
-        emulatorColor = '#b69206';
+        hrefColor = '#dca112';
+        emulatorColor = '#b68216';
         break;
-
+        
+    case 'green':
+        hrefColor = '#47b52e';
+        emulatorColor = '#139613';
+        break;
+        
     case 'blue':
         hrefColor = '#0af';
         emulatorColor = '#1074b6';
         break;
-
-    case 'green':
-        hrefColor = '#47b52e';
-        emulatorColor = '#337923';
     }
     
     // Find the relevant rules and remove them
@@ -257,7 +269,7 @@ function onBackgroundPauseClick(event) {
 
 
 function setUIMode(d, noAutoPlay) {
-    if (! useIDE && (d === 'IDE' || d === 'Test')) {
+    if (! useIDE && (d === 'IDE' || d === 'WideIDE' || d === 'Editor' || d === 'Test')) {
         // When in dedicated play, no-IDE mode and the UI was
         // previously set to UI, fall back to the emulator.
         d = 'Emulator';
@@ -269,14 +281,18 @@ function setUIMode(d, noAutoPlay) {
     body.classList.remove('MaximalUI');
     body.classList.remove('EmulatorUI');
     body.classList.remove('IDEUI');
+    body.classList.remove('WideIDEUI');
     body.classList.remove('EditorUI');
     body.classList.remove('TestUI');
     body.classList.add(uiMode + 'UI');
 
     // Check the appropriate radio button
-    document.getElementById({'IDE':'IDEUIButton', 'Emulator':'emulatorUIButton',
-                             'Test':'testUIButton', 'Maximal':'maximalUIButton',
-                             'Editor':'editorUIButton'}[uiMode]).checked = 1;
+    document.getElementById({'IDE'      : 'IDEUIButton',
+                             'WideIDE'  : 'wideIDEUIButton',
+                             'Emulator' : 'emulatorUIButton',
+                             'Test'     : 'testUIButton',
+                             'Maximal'  : 'maximalUIButton',
+                             'Editor'   : 'editorUIButton'}[uiMode]).checked = 1;
 
     if ((uiMode === 'Maximal') || ((uiMode === 'Emulator') && ! useIDE)) {
         requestFullScreen();
@@ -308,6 +324,10 @@ function onResize() {
         background.removeAttribute('style');
         break;
         
+    case 'WideIDE':
+        scale = 2;
+        // Fall through to IDE case
+        
     case 'IDE':
         // Revert to defaults. This has to be done during resize
         // instead of setUIMode() to have any effect.
@@ -315,8 +335,10 @@ function onResize() {
         screenBorder.removeAttribute('style');
         document.getElementById('debugger').removeAttribute('style');
         if (SCREEN_WIDTH <= 384/2 && SCREEN_HEIGHT <= 224/2) {
-            // Half-size runs with pixel doubling
-            scale = 2;
+            // Half-resolution games run with pixel doubling
+            scale *= 2;
+        }
+        if (scale !== 1) {
             screenBorder.style.transform = 'scale(' + scale + ') translate3d(0,0,0)';
             screenBorder.style.transformOrigin = 'left top';
         }
@@ -338,6 +360,17 @@ function onResize() {
                 scale = Math.floor(scale * window.devicePixelRatio) / window.devicePixelRatio;
             }
             
+            let delta = (windowHeight - Math.max(260, 90 + SCREEN_HEIGHT * scale)) / 2;
+            if (! gbMode) {
+                // Resize the background to bound the screen more tightly.
+                // Only resize vertically because the controls need to
+                // stay near the edges of the screen horizontally to make
+                // them reachable on mobile. In gbMode, the emulator fills
+                // the screen and this is not needed.
+                background.style.top = Math.round(Math.max(0, delta)) + 'px';
+                background.style.height = Math.round(Math.max(230, SCREEN_HEIGHT * scale + 53)) + 'px';
+            }
+            
             // Setting the scale transform triggers really slow rendering on Raspberry Pi unless we
             // add the "translate3d" hack to trigger hardware acceleration.
             screenBorder.style.transform = 'scale(' + scale + ') translate3d(0,0,0)';
@@ -347,18 +380,9 @@ function onResize() {
                 screenBorder.style.top  = '30px';
             } else {
                 screenBorder.style.transformOrigin = 'center';
-                screenBorder.style.top  = Math.round((windowHeight - screenBorder.offsetHeight - 16) / 2) + 'px';
+                screenBorder.style.top  = Math.round(Math.max(0, -delta) + (windowHeight - screenBorder.offsetHeight - 34) / 2) + 'px';
             }
 
-            if (! gbMode) {
-                // Resize the background to bound the screen more tightly.
-                // Only resize vertically because the controls need to
-                // stay near the edges of the screen horizontally to make
-                // them reachable on mobile. In gbMode, the emulator fills
-                // the screen and this is not needed.
-                background.style.top = Math.round(Math.max(0, (windowHeight - Math.max(260, 90 + SCREEN_HEIGHT * scale)) / 2)) + 'px';
-                background.style.height = Math.round(Math.max(230, SCREEN_HEIGHT * scale + 53)) + 'px';
-            }
 
             // Show the controls
             body.classList.add('fullscreenEmulator');
@@ -882,7 +906,7 @@ function restartProgram(numBootAnimationFrames) {
     reloadRuntime(function () {
         try {
             // Inject the constants into the runtime space
-            makeConstants(QRuntime, gameSource.constants);
+            makeConstants(QRuntime, gameSource.constants, gameSource.CREDITS);
             makeAssets(QRuntime, gameSource.assets);
         } catch (e) {
             // Compile-time error
@@ -1063,7 +1087,7 @@ aceEditor.setTheme('ace/theme/quadplay');
 
 // Stop auto-completion of parentheses
 aceEditor.setBehavioursEnabled(false);
-aceEditor.setOptions({fontSize:'13px', showPrintMargin:false});
+aceEditor.setOptions({showPrintMargin:false});
 
 function saveIDEState() {
     const options = {
@@ -1192,36 +1216,40 @@ function onProjectSelect(target, type, object) {
 
     switch (type) {
     case 'constant':
-        const index = object;
-        const c = gameSource.constants[object];
-        if (typeof c === 'string') {
-            constantEditor.innerHTML = index + ' <input type="text" autocomplete="false" disabled value="' + c + '">';
-        } else if (c === undefined) {
-            constantEditor.innerHTML = index + ' = nil';
-        } else if (typeof c === 'number') {
-            constantEditor.innerHTML = index + ' <input style="width:50px" type="number" step="1" autocomplete="false" disabled value="' + c + '">';
-        } else if (typeof c === 'boolean') {
-            constantEditor.innerHTML = '<input type="checkbox" autocomplete="false" disabled "' + (c ? 'checked' : '') + '> ' + index;
-        } else {
-            // Object or array (including built-in objects)
-            const L = Object.keys(c).length;
-            if ((L <= 4) && (c.r !== undefined) && (c.g !== undefined) && (c.b !== undefined) && ((c.a !== undefined) || (L === 3))) {
-                // RGB[A]
-                constantEditor.innerHTML = index + ` <div style="background: rgb(${255 * c.r}, ${255 * c.g}, ${255 * c.b}); width: 50px; height: 16px; display: inline-block"> </div><br/>(${QRuntime.unparse(c)})`;
-            } else if ((L <= 4) && (c.h !== undefined) && (c.s !== undefined) && (c.v !== undefined) && ((c.a !== undefined) || (L === 3))) {
-                // HSV[A]
-                constantEditor.innerHTML = index + ` <div style="background: hsv(${255 * c.h}, ${255 * c.s}, ${255 * c.v}); width: 50px; height: 16px; display: inline-block"> </div><br/>(${QRuntime.unparse(c)})`;
+        {
+            const index = object;
+            const c = gameSource.constants[index];
+            const json = gameSource.json.constants[index];
+            const disabled = editableProject ? '' : 'disabled';
+            if (typeof c === 'string') {
+                constantEditor.innerHTML = `${index} "<textarea style="vertical-align:top; margin-left:1px; margin-right:2px;" autocomplete="false" ${disabled} onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.value, this)" rows=4 cols=40>${c}</textarea>"`;
+            } else if (c === undefined) {
+                constantEditor.innerHTML = index + ' = nil';
+            } else if (typeof c === 'number') {
+                constantEditor.innerHTML = index + ' <input style="width:50px" type="number" step="1" autocomplete="false" disabled value="' + c + '">';
+            } else if (typeof c === 'boolean') {
+                constantEditor.innerHTML = `<input type="checkbox" autocomplete="false" onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.checked, this)" ${disabled} ${c ? 'checked' : ''}> ${index}`;
             } else {
-                let s = QRuntime.unparse(c);
-                if (s.length > 16) {
-                    constantEditor.innerHTML = index + ' = <table>' + visualizeConstant(c, '') + '</table>';
+                // Object or array (including built-in objects)
+                const L = Object.keys(c).length;
+                if ((L <= 4) && (c.r !== undefined) && (c.g !== undefined) && (c.b !== undefined) && ((c.a !== undefined) || (L === 3))) {
+                    // RGB[A]
+                    constantEditor.innerHTML = index + ` <div style="background: rgb(${255 * c.r}, ${255 * c.g}, ${255 * c.b}); width: 50px; height: 16px; display: inline-block"> </div><br/>(${QRuntime.unparse(c)})`;
+                } else if ((L <= 4) && (c.h !== undefined) && (c.s !== undefined) && (c.v !== undefined) && ((c.a !== undefined) || (L === 3))) {
+                    // HSV[A]
+                    constantEditor.innerHTML = index + ` <div style="background: hsv(${255 * c.h}, ${255 * c.s}, ${255 * c.v}); width: 50px; height: 16px; display: inline-block"> </div><br/>(${QRuntime.unparse(c)})`;
                 } else {
-                    constantEditor.innerHTML = index + ' = ' + escapeHTMLEntities(s);
+                    let s = QRuntime.unparse(c);
+                    if (s.length > 16) {
+                        constantEditor.innerHTML = index + ' = <table>' + visualizeConstant(c, '') + '</table>';
+                    } else {
+                        constantEditor.innerHTML = index + ' = ' + escapeHTMLEntities(s);
+                    }
                 }
             }
+            constantEditor.style.visibility = 'visible';
+            break;
         }
-        constantEditor.style.visibility = 'visible';
-        break;
         
     case 'mode':
     case 'script':
@@ -1844,7 +1872,7 @@ function visualizeGame(gameEditor, url, game) {
         const res = [[384, 224], [192,112], [128,128], [64,64]];
         for (let i = 0; i < res.length; ++i) {
             const W = res[i][0], H = res[i][1];
-            s += `<option value='{"x":${W},"y":${H}}' ${W === gameSource.json.screen_size.x && H == gameSource.json.screen_size.y ? "selected" : ""}>${W} × ${H}</option>`;
+            s += `<option value='{"x":${W},"y":${H}}' ${W === gameSource.json.screen_size.x && H === gameSource.json.screen_size.y ? "selected" : ""}>${W} × ${H}</option>`;
         }
         s += `</select></td></tr>\n`;
     } else {
@@ -2007,12 +2035,16 @@ function createProjectWindow(gameSource) {
     s += '— <i>Constants</i>\n';
     s += '<ul class="constants">';
     {
-        const keys = Object.keys(gameSource.constants);
+        const keys = Object.keys(gameSource.json.constants || {});
         keys.sort();
         for (let i = 0; i < keys.length; ++i) {
             const c = keys[i];
-            s += `<li class="clickable" onclick="onProjectSelect(event.target, 'constant', '${c}')"><code>${c}</code></li>\n`;
+            const v = gameSource.constants[c];
+            s += `<li class="clickable ${Array.isArray(v) ? 'array' : (typeof v)}" onclick="onProjectSelect(event.target, 'constant', '${c}')"><code>${c}</code></li>\n`;
         }
+    }
+    if (editableProject) {
+        s += '<li class="clickable new" onclick="showNewConstantDialog()"><i>New constant…</i></li>';
     }
     s += '</ul>';
 
@@ -2192,6 +2224,7 @@ function onToggle(button) {
 
 /** Called by the IDE radio buttons */
 function onRadio() {
+    // Controls
     if (pressed('play') && ((emulatorMode !== 'play') || (targetFramerate !== PLAY_FRAMERATE))) {
         onPlayButton();
     } else if (pressed('slow') && ((emulatorMode !== 'play') || (targetFramerate !== SLOW_FRAMERATE))) {
@@ -2204,12 +2237,15 @@ function onRadio() {
         onStepButton();
     }
 
+    // UI Layout
     if (pressed('emulatorUI') && (uiMode !== 'Emulator')) {
         setUIMode('Emulator', false);
     } else if (pressed('testUI') && (uiMode !== 'Test')) {
         setUIMode('Test', false);
     } else if (pressed('IDEUI') && (uiMode !== 'IDE')) {
         setUIMode('IDE', false);
+    } else if (pressed('wideIDEUI') && (uiMode !== 'WideIDE')) {
+        setUIMode('WideIDE', false);
     } else if (pressed('maximalUI') && (uiMode !== 'Maximal')) {
         setUIMode('Maximal', false);
     } else if (pressed('editorUI') && (uiMode !== 'Editor')) {
@@ -2305,7 +2341,7 @@ function jsToNSError(error) {
         }
     }
 
-    if (error.stack && (error.stack.indexOf('<anonymous>') == -1) && (error.stack.indexOf('GeneratorFunction') == -1) && (error.stack.indexOf('quadplay-runtime.js') !== -1)) {
+    if (error.stack && (error.stack.indexOf('<anonymous>') === -1) && (error.stack.indexOf('GeneratorFunction') === -1) && (error.stack.indexOf('quadplay-runtime.js') !== -1)) {
         return {url:'(unknown)', lineNumber: '(unknown)', message: '' + error};
     }
 
@@ -2451,7 +2487,7 @@ function mainLoopStep() {
     // The frame has ended
     profiler.endFrame(QRuntime._physicsTimeTotal, QRuntime._graphicsTime);
 
-    if ((uiMode === 'Test') || (uiMode === 'IDE')) {
+    if ((uiMode === 'Test') || (uiMode === 'IDE') || (uiMode === 'WideIDE')) {
         const frame = profiler.smoothFrameTime.get();
         const logic = profiler.smoothLogicTime.get();
         const physics = profiler.smoothPhysicsTime.get();
@@ -2478,7 +2514,7 @@ function mainLoopStep() {
         debugFrameRateDisplay.innerHTML = '' + Math.round(60 / QRuntime._graphicsPeriod) + ' Hz';
         debugFramePeriodDisplay.innerHTML = '(' + ('1½⅓¼⅕⅙'[QRuntime._graphicsPeriod - 1]) + ' ×)';
 
-        if (QRuntime.mode_frames % QRuntime._graphicsPeriod === 1 % QRuntime._graphicsPeriod) {
+        if ((QRuntime.mode_frames - 1) % QRuntime._graphicsPeriod === 0) {
             // Only display if the graphics period has just ended, otherwise the display would
             // be zero most of the time
             debugDrawCallsDisplay.innerHTML = '' + QRuntime._previousGraphicsCommandList.length;
@@ -2833,35 +2869,48 @@ function frozenDeepClone(src, alreadySeen) {
     } // switch
 }
 
-
 /** Environment is the object to create the constants on (the QRuntime
-    iFrame, or the object at that is a package), constants is the
-    constants field of a package. */
-function makeConstants(environment, constants) {
-    defineImmutableProperty(environment, 'SCREEN_SIZE', Object.freeze({x:SCREEN_WIDTH, y:SCREEN_HEIGHT}));
-
+    iFrame, or the object at that is a package). */
+function makeConstants(environment, constants, CREDITS) {
     const alreadySeen = new Map();
-    const CONSTANT = {};
+
+    // Create the CONSTANTS object on the environment
+    const CONSTANTS = Object.create({});
+    defineImmutableProperty(environment, 'CONSTANTS', CONSTANTS);
+
+    // Now redefine all constants appropriately
+    redefineConstant(environment, 'SCREEN_SIZE', {x:SCREEN_WIDTH, y:SCREEN_HEIGHT}, alreadySeen);
+    redefineConstant(environment, 'CREDITS', CREDITS, alreadySeen);
+    
     for (const key in constants) {
         if (key[0] === '_') {
             throw 'Illegal constant field name: "' + key + '"';
         }
-
-        const value = frozenDeepClone(constants[key], alreadySeen);
-        CONSTANT[key] = value;
-        defineImmutableProperty(environment, key, value);
+        redefineConstant(environment, key, constants[key], alreadySeen);
     }
-    defineImmutableProperty(environment, 'CONSTANTS', Object.freeze(CONSTANT));
+
+    // Cannot seal CONSTANTS because that would make the properties non-configurable,
+    // which would prevent redefining them during debugging.
+    Object.preventExtensions(CONSTANTS);
 }
 
 
-/** Called by constants and assets to extend the QRuntime environment */
+/** Redefines an existing constant on the give environment and its CONSTANTS object. 
+    The map is used for cloning and can be undefined */
+function redefineConstant(environment, key, value, alreadySeenMap) {
+    value = frozenDeepClone(value, alreadySeenMap || new Map());
+    defineImmutableProperty(environment, key, value);
+    defineImmutableProperty(environment.CONSTANTS, key, value);
+}
+
+
+/** Called by constants and assets to extend the QRuntime environment or redefine
+    values within it*/
 function defineImmutableProperty(object, key, value) {
-    Object.defineProperty(object, key,
-                          {configurable: true,
-                           get: function () { return value; },
-                           set: function (ignore) { throw 'Cannot reassign constant "' + key + '"'; }});
+    // Set configurable to true so that we can later redefine
+    Object.defineProperty(object, key, {configurable: true, writable: false, value: value});
 }
+
 
 
 /** Bind assets in the environment */
@@ -3089,24 +3138,24 @@ if (backgroundPauseEnabled === undefined || backgroundPauseEnabled === null) {
 
 if (! localStorage.getItem('debugPrintEnabled')) {
     // Default to true
-    localStorage.setItem('debugPrintEnabled', "true")
+    localStorage.setItem('debugPrintEnabled', 'true')
 }
 
 if (! localStorage.getItem('assertEnabled')) {
     // Default to true
-    localStorage.setItem('assertEnabled', "true")
+    localStorage.setItem('assertEnabled', 'true')
 }
 
 if (! localStorage.getItem('debugWatchEnabled')) {
     // Default to true
-    localStorage.setItem('debugWatchEnabled', "true")
+    localStorage.setItem('debugWatchEnabled', 'true')
 }
 
 {
     const optionNames = ['showPhysicsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'debugPrintEnabled', 'debugWatchEnabled'];
     for (let i = 0; i < optionNames.length; ++i) {
         const name = optionNames[i];
-        const value = JSON.parse(localStorage.getItem(name) || "false");
+        const value = JSON.parse(localStorage.getItem(name) || 'false');
         const element = document.getElementById(name);
         element.checked = value;
     }

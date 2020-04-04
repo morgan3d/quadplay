@@ -334,7 +334,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
 }
 
 
-/** Computes gameSource.constants.CREDITS from gameSource */
+/** Computes gameSource.CREDITS from gameSource, mutating it */
 function computeAssetCredits(gameSource) {
     function canonicalizeLicense(license) {
         // Remove space after copyright and always just use the symbol
@@ -345,7 +345,7 @@ function computeAssetCredits(gameSource) {
         return license;
     }
 
-    const CREDITS = gameSource.constants.CREDITS = {
+    const CREDITS = gameSource.CREDITS = {
         game: [],
         pack: [],
         font: [],
@@ -1088,7 +1088,6 @@ function addCodeToSourceStats(code, scriptURL) {
 
 function loadFailureCallback(reason, url) {
     console.log(`ERROR: Failed to load "${url}". ${reason || ''}`);
-    console.error('');
 }
 
 

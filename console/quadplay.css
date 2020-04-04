@@ -490,9 +490,15 @@ div.disabled span.label, div.disabled:active span.label {
     bottom:           0px;
 }
 
+.WideIDEUI #editorFrame {
+    left: 141px;
+    right: 798px;
+}
+
 .EditorUI #editorFrame {
     right: 0px;
 }
+
 
 #error {
     position: absolute;
@@ -603,6 +609,11 @@ code, .code {
     z-index:  10;
 }
 
+.WideIDEUI #debugger {
+    top: 515px;
+    width: 798px;
+}
+
 /* Hide the debugger in emulator modes and full screen editor */
 .MaximalUI #debugger, .EmulatorUI #debugger, .EditorUI #debugger {
     visibility: hidden;
@@ -640,6 +651,9 @@ code, .code {
     white-space: nowrap;
 }
 
+.WideIDEUI .project {
+    width: 140px;
+}
 
 /** Used for selecting objects */
 .project .selectedProjectElement {
@@ -754,6 +768,22 @@ code, .code {
     background-image: none, url('project-icon-number.png');
 }
 
+.project .constants li.string:before {
+    background-image: none, url('project-icon-string.png');
+}
+
+.project .constants li.boolean:before {
+    background-image: none, url('project-icon-boolean.png');
+}
+
+.project .constants li.array:before {
+    background-image: none, url('project-icon-array.png');
+}
+
+.project .constants li.object:before {
+    background-image: none, url('project-icon-object.png');
+}
+
 /* New menu */
 .project li.new:before {
     content: '✜';
@@ -789,10 +819,14 @@ code, .code {
     border-top: none;
 }
 
+.WideIDEUI .emulator, .WideIDEUI div#emulatorFrame {
+    width: 796px;
+    height: 486px;
+}
+
 .EditorUI div.emulator, .EditorUI div#emulatorFrame, .EditorUI div.screenBorder, .EditorUI #bootScreen, .EditorUI #pauseMessage {
     visibility: hidden !important;
 }
-
 
 .emulator {
     z-index:          5;
@@ -803,16 +837,16 @@ code, .code {
   content: '';
   display: block;
   position: absolute;
-  left: -6px;
+  left: 6px;
   right: 6px;
   top: 5px;
-  bottom: 8px;
-  border-radius: 32px;
+  bottom: 12px;
+  border-radius: 35px;
+  /* Overgloss */
   background: linear-gradient(
-      hsla(0, 0%, 100%, 0.05), hsla(0, 0%, 100%, 0) ); 
-  box-shadow:  0px -2px 2px 0px rgba(255,255,255,0.2),
-               inset  0px 2px 2px 0px rgba(255,255,255,0.2);
-
+      hsla(0, 0%, 100%, 0.15), hsla(0, 0%, 100%, 0), hsla(0, 0%, 100%, 0), hsla(0, 0%, 0%, 0), hsla(0, 0%, 0%, 0.05));
+  box-shadow:  0px -2px 6px 0px rgba(255,255,255,0.7),
+               inset  0px 2px 3px 0px rgba(255,255,255,0.15);
 }
 
 .emulator .emulatorBackground {
@@ -824,11 +858,11 @@ code, .code {
     border-radius:    12px;
     box-shadow:
     /* Drop */
-    0px 4px 13px 0px rgba(0, 0, 0, 0.35),
+    0px 4px 13px 0px rgba(0, 0, 0, 0.4),
     /* Highlight */
-    inset 1px 4px 8px 1px rgba(255,255,255,0.2),
+    inset 1px 4px 8px 1px rgba(255,255,255,0.4),
     /* Shadow */
-                  inset -1px -6px 6px 2px rgba(0,0,0,0.6);
+    inset -1px -6px 7px 2px rgba(0,0,0,0.7);
     
     border:           0.5px outset #888;
 }
@@ -935,8 +969,25 @@ canvas#screen {
     z-index: 30;
 }
 
+#logo {
+    position: absolute;
+    top: 2px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    text-align: center;
+}
+
+.WideIDEUI #logo {
+    top: 0px;
+}
+
+.IDEUI #logo {
+    top: 3px; 
+}
+
 #screenBorder {
-    top: 20px;
+    top: 18px;
     left: 8px;
     position: absolute;
     display: block;
@@ -946,8 +997,8 @@ canvas#screen {
        and Safari to ignore pixelated image rendering */
     border-radius: 6px;
     border: 5px solid #111;
-    box-shadow: -0.5px -0.8px 0.8px 0.15px rgba(0,0,0,0.30),
-                0.2px 1px 0.8px 0.5px rgba(255,255,255,0.3);
+    box-shadow: -0.5px -0.8px 1px 0.15px rgba(0,0,0,0.5),
+                0.2px 0.8px 0.8px 0.5px rgba(255,255,255,0.3);
 }
 
 .TestUI #screenBorder, .MaximalUI #screenBorder {
@@ -1076,3 +1127,4 @@ svg.modeGraph text.edgeLabel {
     border: solid 1px #888;
     padding-left: 5px;
 }
+

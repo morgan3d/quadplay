@@ -1,0 +1,39 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+let pos = xy(½ SCREEN_SIZE.x, 132)
+let flip = xy(1, 1)
+
+
+def draw_vignette():
+   const s = ½ vignetteSprite.size
+   draw_sprite({sprite: vignetteSprite, pos: s, z: 100})
+   draw_sprite({sprite: vignetteSprite, pos: xy(VIEWPORT_WIDTH - s.x, s.y), scale: xy(-1, 1), z: 100})
+   draw_sprite({sprite: vignetteSprite, pos: xy(s.x, SCREEN_SIZE.y - s.y), scale: xy(1, -1), z: 100})
+   draw_sprite({sprite: vignetteSprite, pos: xy(VIEWPORT_WIDTH - s.x, SCREEN_SIZE.y - s.y), scale: xy(-1, -1), z: 100})
+
+enter
+────────────────────────────────────────────────────────────────────────
+set_background(#444)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+draw_corner_rect(xy(VIEWPORT_WIDTH, 0), xy(SCREEN_SIZE.x - VIEWPORT_WIDTH, 224), #000)
+draw_text(font, "STR: 18\nDEX: 14\nINT: 15\nWIS:  8\nCON: 12", xy(VIEWPORT_WIDTH + 20, 20), #FE8);
+draw_line(xy(VIEWPORT_WIDTH, 0), xy(VIEWPORT_WIDTH, 223), #FE8)
+
+draw_sprite(rpgSpritesheet[12][7], xy(VIEWPORT_WIDTH + 24, 100))
+draw_sprite(rpgSpritesheet[12][7], xy(VIEWPORT_WIDTH + 24 + 10, 100))
+draw_sprite(rpgSpritesheet[9][7],  xy(VIEWPORT_WIDTH + 24 + 20, 100))
+draw_sprite(rpgSpritesheet[1][6],  xy(VIEWPORT_WIDTH + 24 + 30, 100))
+
+preserving_transform:
+   set_clip(xy(0,0), xy(VIEWPORT_WIDTH, 224))
+   
+   // Layer 0 of the map is just the gray background to make it easier to
+   // draw in Tiled. There's no need to draw that in game
+   draw_map(map, 1)
+   
+   draw_vignette()

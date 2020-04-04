@@ -4317,7 +4317,7 @@ The available constants types are:
 ### `raw` Format
 
 The `raw` format allows embedding a JSON-expressible value directly. `raw` format also
-supports the format `{"type":"raw", "url": "<your url>"}` instead of an inline value.
+supports the format <code>{"type":"raw", "url": "</code><i>your url</i><code>"}</code> instead of an inline value.
 The URL must be for a [JSON](https://www.json.org/) or [YAML](https://yaml.org/) file.
 Note that the `raw` format is restricted to values that are expressible in those interchange
 formats and does not support the full GUI editors and other format features.
@@ -6229,6 +6229,7 @@ The quadplay✜ IDE and compiler are copyright 2019-2020 Morgan McGuire, includi
 - [`quadplay-host.js`](../console/quadplay-host.js)
 - [`quadplay-ide.js`](../console/quadplay-ide.js)
 - [`quadplay-codeedit.js`](../console/quadplay-codeedit.js)
+- [`quadplay-constantedit.js`](../console/quadplay-constantedit.js)
 - [`quadplay-font.js`](../console/quadplay-font.js)
 - [`quadplay-load.js`](../console/quadplay-load.js)
 
@@ -6354,6 +6355,18 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 Mar TBD: Beta update 37
+
+- New wide-screen "Debug" UI layout option with 2x scale emulator
+- Undo and redo hot keys and buttons in the code editor
+- Changed case color names
+- Added new orange and white case color options
+- Tuned gold case color
+- Improved case layout for small sizes
+- Can now edit string and boolean constant values in the IDE while the game is running
+- Added unique icons for different constant types in the IDE
+
 
 2020 Mar 30: Beta update 36
 

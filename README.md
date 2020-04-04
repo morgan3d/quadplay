@@ -23,7 +23,7 @@ Features
 - Native 2.5D graphics with z-order
 - 9.4 MB of total sprite memory
 - Up to 64 sprite and font sheets of up to 1024x1024
-- Optional 192 x 112, 128 x 128, and [64 x 64](https://itch.io/jam/lowrezjam-2019) screen modes
+- Optional 384 x 224, 192 x 112, 128 x 128, and [64 x 64](https://itch.io/jam/lowrezjam-2019) screen modes
 - Free and open source
 
 

@@ -1,0 +1,8 @@
+{
+    "url": "roguelike.tmx",
+    "license": "By Morgan McGuire 2020. Public Domain/CC0",
+    "sprite_url_table": {
+        "miniroguelike-8x8": "quad://sprites/miniroguelike-8x8.sprite.json"
+    }
+   
+}

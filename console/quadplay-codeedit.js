@@ -1,5 +1,5 @@
 "use strict";
-// Parts of the IDE that are for editing, vs. simply running and debugging
+// Parts of the IDE that are for editing source files using ace.js, vs. simply running and debugging
 
 // How long to wait for new input before saving, to avoid
 // constant disk churn
@@ -28,7 +28,7 @@ function getGamePath() {
     return gamePath;
 }
 
-/* Reference count for outstanding saves. Used to disable reload
+/* Reference count for outstanding saves to all files. Used to disable reload
    temporarily while a save is pending. */
 let savesPending = 0;
 
@@ -44,6 +44,14 @@ function onDecreaseFontSizeButton() {
 
 function onCodeEditorSearchButton() {
     aceEditor.execCommand('find');
+}
+
+function onCodeEditorUndoButton() {
+    aceEditor.session.getUndoManager().undo();
+}
+
+function onCodeEditorRedoButton() {
+    aceEditor.session.getUndoManager().redo();
 }
 
 function removeAllCodeEditorSessions() {
@@ -90,6 +98,12 @@ function updateCodeEditorSession(url, bodyText) {
 
     console.assert(session, 'Editor session not found!');
     console.assert(session.aux.url === url, 'Inconsistent url in codeEditorSessionMap');
+
+    if (typeof bodyText === 'undefined' || typeof bodyText === 'null') {
+        bodyText = '\n';
+    } else if (typeof bodyText !== 'string') {
+        bodyText = WorkJSON.stringify(bodyText, undefined, 4);
+    }
     
     if (session.getValue() !== bodyText) {
         // Update the value only when it has changed, to avoid
@@ -117,6 +131,9 @@ function setCodeEditorSession(url) {
     const session = codeEditorSessionMap.get(url) || createCodeEditorSession(url, contents);
     aceEditor.setSession(session);
     aceEditor.setReadOnly(session.aux.readOnly || ! editableProject);
+
+    document.getElementById('codeEditorUndoContainer').enabled =
+        document.getElementById('codeEditorRedoContainer').enabled = aceEditor.getReadOnly();
     
     // Reset the mode so that it is visible
     setCodeEditorSessionMode(session, session.aux.mode);
@@ -126,12 +143,18 @@ function setCodeEditorSession(url) {
 // One session per edited file is created
 function createCodeEditorSession(url, bodyText) {
     console.assert(! codeEditorSessionMap.has(url));
-    if (typeof bodyText !== 'string') {
+    if (typeof bodyText === 'undefined' || typeof bodyText === 'null') {
+        bodyText = '\n';
+    } else if (typeof bodyText !== 'string') {
         bodyText = WorkJSON.stringify(bodyText, undefined, 4);
     }
-    const session = new ace.EditSession(bodyText || '\n');
+    const session = new ace.EditSession(bodyText);
 
+    const readOnly = isRemote(url) || isBuiltIn(url);
     codeEditorSessionMap.set(url, session);
+    if (! readOnly) {
+        session.setUndoManager(new ace.UndoManager());
+    }
 
     // Extra quadplay data
     session.aux = {
@@ -142,10 +165,10 @@ function createCodeEditorSession(url, bodyText) {
         
         mode: 'All changes saved.',
 
-        timeoutID: null,
+        saveTimeoutID: null,
 
         // Lock all built-in content
-        readOnly: isRemote(url) || isBuiltIn(url)
+        readOnly: readOnly
     };
     
     session.setUseSoftTabs(true);
@@ -169,9 +192,9 @@ function createCodeEditorSession(url, bodyText) {
             if (session.aux.readOnly) { return; }
             
             // Cancel the previous pending timeout if there is one
-            if (session.aux.timeoutID) {
+            if (session.aux.saveTimeoutID) {
                 --savesPending;
-                clearTimeout(session.aux.timeoutID);
+                clearTimeout(session.aux.saveTimeoutID);
             }
             
             // Note that the epoch has changed
@@ -180,8 +203,8 @@ function createCodeEditorSession(url, bodyText) {
             setCodeEditorSessionMode(session, 'Modified<span class="blink">...</span>');
 
             ++savesPending;
-            session.aux.timeoutID = setTimeout(function () {
-                session.aux.timeoutID = null;
+            session.aux.saveTimeoutID = setTimeout(function () {
+                session.aux.saveTimeoutID = null;
                 if (myEpoch === session.aux.epoch) {
                     // Epoch has not changed since timeout was created, so begin the POST
                     setCodeEditorSessionMode(session, 'Saving<span class="blink">...</span>');
@@ -357,6 +380,29 @@ function serverWriteFiles(array, callback, errorCallback) {
     }
 }
 
+
+/* Schedules gameSource.json to be saved to the .game.json via
+   serverSaveGameJSON after a delay. No callback or reload. 
+   If a new call comes in, this schedule is delayed. */
+function serverScheduleSaveGameJSON(delaySeconds) {
+    if (gameSource.saveTimeoutID) {
+        // Replace existing pending save
+        clearTimeout(gameSource.saveTimeoutID);
+    } else {
+        ++savesPending;
+    }
+    
+    gameSource.saveTimeoutID = setTimeout(function () {
+        gameSource.saveTimeoutID = null;
+        serverSaveGameJSON(function () {
+            // Wait until the actual save has occurred to reduce
+            // the counter.
+            --savesPending;
+        });
+    }, (delaySeconds || 0) * 1000);
+}
+
+
 /* Save the current .game.json file, which has
    presumably been modified by the caller */
 function serverSaveGameJSON(callback) {
@@ -367,7 +413,7 @@ function serverSaveGameJSON(callback) {
 
     console.assert(gameFilename.endsWith('.game.json'));
  
-    const gameContents = WorkJSON.stringify(getEditableGameJSON(), undefined, 4);
+    const gameContents = WorkJSON.stringify(getEditableGameJSON(), undefined, 3);
     serverWriteFile(gameFilename, 'utf8', gameContents, callback);
 }
 
@@ -591,12 +637,38 @@ function showImportAssetDialog() {
     // Fetch the asset list
     LoadManager.fetchOne({}, assetListURL, 'json', null, function (json) {
         importAssetFiles = json;
+
+        // Strip the path to the current game off assets in the same dir
+        // or subdirectory of it. We do not do this on the server side
+        // because we may later allow developers to have their own asset directories
+        // separate from games, and the existing protocol allows that.
+
+        let gamePath = gameSource.jsonURL.replace(/[^\/]+\.game\.json$/g, '');
+        if (gamePath.startsWith(location.origin)) {
+            gamePath = gamePath.substring(location.origin.length);
+        }
+        if (gamePath.length > 0 && gamePath[0] === '/') {
+            gamePath = gamePath.substring(1);
+        }
+        
+        for (const key in importAssetFiles) {
+            const array = importAssetFiles[key];
+            for (let i = 0; i < array.length; ++i) {
+                const url = array[i];
+                if (url.startsWith(gamePath)) {
+                    array[i] = url.substring(gamePath.length);
+                }
+            }
+        }
+
+        // Create the initial display
         onImportAssetTypeChange();
     });
 }
 
 
-/* Called to regenerate the importAssetList */
+/* Called to regenerate the importAssetList display for the import asset dialog
+   when the type of asset to be imported is changed by the user. */
 function onImportAssetTypeChange() {
     const t = document.getElementById('importAssetType').value;
     let s = '<ol id="importAssetListOL" class="select-list">\n';
@@ -604,7 +676,7 @@ function onImportAssetTypeChange() {
         const fileArray = importAssetFiles[t];
         for (let i = 0; i < fileArray.length; ++i) {
             const file = fileArray[i];
-            const path = file.replace(/\/[^\/]+$/, '/');
+            const path = (file.indexOf('/') === -1) ? '' : file.replace(/\/[^\/]+$/, '/');
             const rest = file.replace(/^.*\//, '');
             const base = rest.replace(/\..+?$/, '');
             const ext  = rest.replace(/^[^\.]+/, '');
@@ -647,7 +719,7 @@ function onImportAssetImport() {
             }
         }
     }
-    
+
     gameSource.json.assets[name] = importAssetFiles.selected;
     hideImportAssetDialog();
     

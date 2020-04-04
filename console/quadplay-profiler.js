@@ -155,11 +155,13 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime) {
                 // It is worth lowering the graphics rate, as it
                 // should help us hit frame rate
                 newG = G + 1;
+                _systemPrint(`Lowered graphics update to ${60 / newG} Hz.\n  minTime = ${minTime}\n  lowerTime = ${lowerTime}\n  higherTime = ${higherTime}, frameTime = ${frameTime}`, 'color:#F43');
             }
         } else if ((G > 1) && (higherTime < 16)) {
             // We have headroom and should increase the graphics rate
             // back towards full framerate.
             newG = G - 1;
+            _systemPrint(`Raised graphics update to ${60 / newG} Hz.\n  minTime = ${minTime}\n  lowerTime = ${lowerTime}\n  higherTime = ${higherTime}, frameTime = ${frameTime}`, 'color:#18F');
         }
 
         if (newG !== G) {

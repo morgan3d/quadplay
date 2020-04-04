@@ -1,0 +1,122 @@
+                **Design**
+
+Cell
+: Holds objects
+
+Entity
+: First-class object in the world.
+
+AirEffect
+: Effect applied in the air
+
+
+Map Layers
+=======================================================
+
+*AirEffect*
+: Environmental effects that appear over everything else.
+  e.g., fog
+  
+*HighEntity*
+: The main layer. Contains all entitys.
+
+*MidEntity*
+: The main layer. Contains all entitys.
+
+*LowEntity*
+: The main layer. Contains all entitys.
+
+*GroundEffect*
+: Environmental effects applied to the cell that appear underneath all mains.
+  e.g., wet, bloody, icy
+
+*FloorEntity*
+: Drawn on top of the ground and underneath everything else, but not immutable.
+  e.g., stairs, bridges, ladders
+
+*Ground*
+: Immutable terrain property of the cell. e.g., stream, gravel, lava, grass.
+ 
+ 
+Entity Properties
+=======================================================
+
+`map_layer`
+: Which general z-layer the object appears in: `"FloorEntity"`, 
+  `"LowEntity"`, `"MidEntity"`, `"HighEntity"`.  
+
+`fills_cell`
+: True for objects that are exclusive in a cell. Most
+  characters, all walls, etc. You cannot pass this
+  object without changing or destroying it.
+
+`size`
+: For purposes of fitting one thing inside of another
+
+`weight`
+: Weight for carrying purposes
+
+`uproot_force`
+: Extra effort required to remove this object before it can be
+  moved or carried.
+  
+`move_force`
+: Force required to push this object
+
+`health`
+: How much damage this can take before destroyed.
+
+`destroy_into`
+: What this object is replaced with when destroyed.
+  Extra damage is applied to the new objects, and
+  any effects are applied to them as well.
+
+`burning`
+: True if on fire (renders with a fire overlay)
+
+`poisoned`
+: True if poisoned
+
+`sensitivity`
+: Table mapping damage types to modifiers. E.g.,
+  `sensitivity.heat = 100%` means normal sensitivity
+  to heat damage, `0%` = immune, `200%` = takes
+  double damage, `50%` = partly resistant. Unspecified
+  defaults to `100%`. The net damage taken is the product
+  of all multipliers.
+  
+
+Damage Types
+--------------------------------------------------------
+
+- `heat`
+- `cold`
+- `electric`
+- `acid`
+- `poison`
+- `psychic`
+- `sonic`
+- `pierce`
+- `blunt`
+- `slash`
+- `magic`
+- `silver`
+- `light`
+- `dark`
+
+TODO
+========================================================
+
+New items to draw:
+
+- Rubble
+- Horse
+- Deer
+- Fruit
+- Veg
+- Bone
+- Skull
+
+
+<!-- Markdeep: --><script src="../../doc/markdeep.min.js"></script><script src="https://casual-effects.com/markdeep/latest/markdeep.min.js?"></script>
+
