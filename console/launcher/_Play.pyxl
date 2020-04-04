@@ -237,7 +237,9 @@ local:
 
 for pad in gamepad_array:
    if pad.aa or pad.qq or pad._pp:
-      def callback(): launch_game(gameArray[gameIndex].url)
+      def callback():
+         launch_game(gameArray[gameIndex].url)
+         
       set_mode(_SlideOut, callback) because "Player selected game"
       
    // Animate scrolling
