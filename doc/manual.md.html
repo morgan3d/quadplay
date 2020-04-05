@@ -948,10 +948,6 @@ Screen     | Integer     | Used      | Efficiency  | Autoscaler | Used      | Ef
 1920x1080  |  4x         | 1536x896  | 66%         | 4.82x      | 1852x1080 | 96%
 *1920x1200*|  *5x*       |*1920x1120*| *93%*       | 5.00x      | 1920x1120 | 93%
 
-At high resolutions, the quadplay✜ autoscaler uses
-non-integer scaling and always fills the display as much as possible
-within the aspect ratio constraint.
-
 For reference when importing assets or designing games inspired by
 previous work, here are the resolutions of classic and retro machines:
 
@@ -6170,7 +6166,7 @@ other have relatively less overhead than `xy` vectors.
 Road Map
 ====================================================================================
 
-Quadplay is about 90% of the way to 1.0. The API is stable, and many people are
+Quadplay is about 90% of the way to version 1.0. The API is stable, and many people are
 using it to make hobby games and to learn/teach programming.
 
 There's a long feature list and a short bug list that I'm working
@@ -6178,30 +6174,40 @@ through for 1.0. The highlights of this are, in priority order:
 
 For 1.0:
 
+[x] macOS, Windows, Linux, and Raspbian
+[x] Gamepads
+[x] Full graphics API
+[x] Scripts
+[x] Physics
+[x] Path finding
 [x] Five full sample games
-[ ] More AI support
-[ ] Shared-screen network multiplayer
-[ ] Edit your game and save to local disk using the `quadplay` script
+[ ] Standalone IDE (no external editors required)
   [x] Code editor
   [x] Project editor
-  [ ] Constant editor
+  [x] Constant editor
   [ ] Map editor
   [ ] Sprite editor
   [ ] Font editor
-[ ] Perfect outlined-disk and outlined-triangle blending
-[ ] Polyline rendering without double-blending endpoints
-
+[ ] Python not required
+[ ] Shared-screen network multiplayer
+[ ] Binary game export for macOS and Windows (unsigned)
+  
 Post 1.0:
 
+[ ] 30% virtual GPU graphics speedup
+[ ] Extended constant editor
+[ ] More AI routines
+   [ ] Shadowing/line of sight
+   [ ] Board game logic
+   [ ] Maze and level generation
 [ ] ASESprite native import
+[ ] Perfect outlined-disk and outlined-triangle blending
+[ ] Polyline rendering without double-blending endpoints
 [ ] Watertight rasterization of triangle meshes
 [ ] Watertight rasterization of polylines
 [ ] Edit your game in the IDE and save to Google Drive
-[ ] Binary game export
-  [ ] Electron?
-  [ ] Native web view
-  [ ] Cordova
 [ ] Load tables of data from CSV files
+[ ] Binary game export for mobile
 
 
 Credits
@@ -6304,11 +6310,7 @@ The `make_spline()` function using `"continue"` mode will change to be a
 third-order curve outside of the bounds instead of a line.
 
 IDE will receive major new features throughout and after the beta
-phase. This includes editors for code, sprites, and maps.
-
-`launch_game()` will probably accept additional arguments to pass to the
-launched game at some point. The syntax for that game accepting the
-arguments has not yet been determined.
+phase. This includes editors for sprites and maps.
 
 The Library tab of the launcher program is currently hard-coded to the
 four built-in games. During the beta period this will change to show
@@ -6356,7 +6358,7 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-2020 Mar TBD: Beta update 37
+2020 Apr TBD: Beta update 37
 
 - New wide-screen "Debug" UI layout option with 2x scale emulator
 - Undo and redo hot keys and buttons in the code editor
@@ -6364,7 +6366,7 @@ Changes for both the specification and implementation in each release.
 - Added new orange and white case color options
 - Tuned gold case color
 - Improved case layout for small sizes
-- Can now edit string and boolean constant values in the IDE while the game is running
+- Can now edit string, number, `xy()`, and boolean constant values in the IDE while the game is running
 - Added unique icons for different constant types in the IDE
 - Dialog for creating new constant values
 

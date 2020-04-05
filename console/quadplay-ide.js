@@ -7,7 +7,7 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.04.04.11'
+const version  = '2020.04.05.01'
 const launcherURL = 'quad://console/launcher';
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -1220,15 +1220,36 @@ function onProjectSelect(target, type, object) {
             const index = object;
             const c = gameSource.constants[index];
             const json = gameSource.json.constants[index];
+            const type = json.type || typeof c;
+            
             const disabled = editableProject ? '' : 'disabled';
-            if (typeof c === 'string') {
-                constantEditor.innerHTML = `${index} "<textarea style="vertical-align:top; margin-left:1px; margin-right:2px;" autocomplete="false" ${disabled} onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.value, this)" rows=4 cols=40>${c}</textarea>"`;
-            } else if (c === undefined) {
-                constantEditor.innerHTML = index + ' = nil';
-            } else if (typeof c === 'number') {
-                constantEditor.innerHTML = index + ' <input style="width:50px" type="number" step="1" autocomplete="false" disabled value="' + c + '">';
-            } else if (typeof c === 'boolean') {
-                constantEditor.innerHTML = `<input type="checkbox" autocomplete="false" onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.checked, this)" ${disabled} ${c ? 'checked' : ''}> ${index}`;
+            if (type === 'string') {
+                constantEditor.innerHTML = `${index} = "<textarea style="vertical-align:top; margin-left:1px; margin-right:2px;" autocomplete="false" ${disabled} onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.value, this.value)" rows=4 cols=40>${c}</textarea>"`;
+            } else if (c === undefined || c === null) {
+                constantEditor.innerHTML = index + ' = <code>∅</code>';
+            } else if (type === 'number') {
+                const value = (typeof json === 'number') ? c : json.value;
+                constantEditor.innerHTML = `${index} = <input style="width:100px; text-align: right" type="text" onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.value, QRuntime.parse(this.value))" autocomplete="false" ${disabled} value="${value}">`;
+                constantEditor.innerHTML += '<br/><br/><i>All PyxlScript number formats supported. For example, <code>10, -3, 1.5, 90deg, 90°, -∞, π, ½</code></i>';
+            } else if (type === 'boolean') {
+                constantEditor.innerHTML = `<input type="checkbox" autocomplete="false" onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.checked, this.checked)" ${disabled} ${c ? 'checked' : ''}> ${index}`;
+            } else if (type === 'xy') {
+                const fields = type;
+                
+                // Start with the parsed values as a backup
+                let x_value = c.x, y_value = c.y;
+
+                // Preserve the unparsed json formatting if available
+                if (json.value.x.type && json.value.y.type) {
+                    x_value = json.value.x.value;
+                    y_value = json.value.y.value;
+                }
+
+                const onchange = `onConstantEditorVectorValueChange(gameSource, QRuntime, '${index}', '${fields}')`;
+                
+                constantEditor.innerHTML = `${index} = (` +
+                    `<input id="constantEditor_${index}_x" onchange="${onchange}" style="width:80px; text-align: right; margin-left: 1px; margin-right: 1px" type="text" autocomplete="false" ${disabled} value="${x_value}">, ` +
+                    `<input id="constantEditor_${index}_y" onchange="${onchange}" style="width:80px; text-align: right; margin-right: 1px" type="text" autocomplete="false" ${disabled} value="${y_value}">)`;
             } else {
                 // Object or array (including built-in objects)
                 const L = Object.keys(c).length;

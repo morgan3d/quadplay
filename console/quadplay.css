@@ -540,7 +540,9 @@ code, .code {
     display: grid;
     grid-template-areas: 'codeEditor' 'codeEditorDivider' 'codeEditorContentFrame';
     grid-template-rows: 10fr 7px 3fr;
-    grid-template-cols: 100%;
+    grid-template-columns: 100%;
+    /* Needed for Safari grid layout */
+    height: 100%;
 }
 
 
