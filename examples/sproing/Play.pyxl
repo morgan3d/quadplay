@@ -1,0 +1,99 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+let pos = xy(½ SCREEN_SIZE.x, 132)
+let flip = xy(1, 1)
+let bounce_amount = 1
+let last_watch_frame = nil
+let text_color = rgb(1,1,1)
+
+// bouncey interpolant back to rest_value
+def make_bounce(
+      displaced_value,
+      rest_value=1,
+      vel_damp=0.9,
+      vel_restore=0.05,
+      sigma=0.1):
+   
+    const bouncer = {
+        current_pos: displaced_value,
+        current_vel: 0,
+        prev_pos:    displaced_value,
+    }
+    
+    def update():
+        bouncer.prev_pos = bouncer.current_pos
+        bouncer.current_pos += bouncer.current_vel
+        bouncer.current_vel *= vel_damp
+        
+        if ((sign(rest_value - bouncer.prev_pos) != sign(rest_value - bouncer.current_pos)) and
+            |bouncer.current_vel| < sigma):
+            bouncer.current_vel = 0
+            bouncer.current_pos = rest_value
+
+        bouncer.current_vel += sign(bouncer.current_pos - rest_value) *vel_restore
+
+    bouncer.update = update
+
+    return bouncer
+
+let x_bouncer = make_bounce(1)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+draw_text(
+    font,
+    replace("press (a) to bounce", gamepad_array[0].prompt),
+    SCREEN_SIZE/2 - xy(0, SCREEN_SIZE.y/4),
+    text_color,
+    rgb(1,0,0),
+    nil,
+    "center",
+    "center",
+)
+
+x_bouncer.update()
+text_color = lerp(text_color, rgb(1,1,1), 0.04)
+
+let sprite = astronaut.idle[0]
+if joy.x:
+   flip.x = joy.x
+   sprite = astronaut.run[⌊mode_frames / 10⌋ mod 2]
+   pos.x = loop(pos.x + joy.x, SCREEN_SIZE.x)
+   pos.x = loop(pos.x + joy.x, SCREEN_SIZE.x)
+
+
+if joy.aa:
+   x_bouncer = make_bounce(2)
+   last_watch_frame = mode_frames
+   text_color = rgb(0,1,0)
+
+
+let x_size = x_bouncer.current_pos
+let y_size = 1/x_size
+let this_pos = xy(pos.x, pos.y + 4*sprite.size.y/2 - 4*y_size*sprite.size.y/2)
+
+// Sky
+set_background(#000)
+for i < 100: draw_point(xy(hash(i), hash(i + 1000)) * SCREEN_SIZE * xy(1, 0.6), #ccc)
+
+draw_text(
+    font,
+    "SPROING EXAMPLE",
+    xy(½ SCREEN_SIZE.x, 10),
+    text_color,
+    rgb(1,0,0),
+    ∅,
+    "center",
+    "center"
+)
+
+// Ground
+draw_corner_rect(xy(0, 140), xy(SCREEN_SIZE.x, SCREEN_SIZE.y - 139), #444)
+
+// Shadow
+draw_line(pos + xy(-4, 8), pos + xy(+4, 8), rgba(0, 0, 0, 20%))
+
+// Alien
+draw_sprite(sprite, this_pos, 0, 4*flip * xy(x_size, y_size))

@@ -1,9 +1,39 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-let pos = xy(½ SCREEN_SIZE.x, 132)
-let flip = xy(1, 1)
+let choice_index = 0
 
+// Characters
+let entity_array = []
+
+// Water, lava, acid
+let fluid_array = []
+
+// Strip entities from the map
+local:
+   for layer < 5:
+      const data = map.layer[layer]
+      for x < size(data):
+         for y < size(data[x]):
+            const sprite = data[x][y]
+            if not sprite: continue
+         
+            const tile_y = sprite.tile_index.y
+            let target = nil
+            
+            if tile_y < 5:
+               target = entity_array
+            else if tile_y >= 15 and tile_y <= 18 and sprite.tile_index.x < 15:
+               target = fluid_array
+   
+            if target:
+               push(target, make_entity({
+                  pos: 8 xy(x + 0.5, y + 0.5),
+                  sprite: sprite,
+                  z: layer
+                  }))
+               data[x][y] = nil
+            
 
 def draw_vignette():
    const s = ½ vignetteSprite.size
@@ -11,6 +41,9 @@ def draw_vignette():
    draw_sprite({sprite: vignetteSprite, pos: xy(VIEWPORT_WIDTH - s.x, s.y), scale: xy(-1, 1), z: 100})
    draw_sprite({sprite: vignetteSprite, pos: xy(s.x, SCREEN_SIZE.y - s.y), scale: xy(1, -1), z: 100})
    draw_sprite({sprite: vignetteSprite, pos: xy(VIEWPORT_WIDTH - s.x, SCREEN_SIZE.y - s.y), scale: xy(-1, -1), z: 100})
+
+
+
 
 enter
 ────────────────────────────────────────────────────────────────────────
@@ -21,7 +54,31 @@ frame
 ────────────────────────────────────────────────────────────────────────
 
 draw_corner_rect(xy(VIEWPORT_WIDTH, 0), xy(SCREEN_SIZE.x - VIEWPORT_WIDTH, 224), #000)
-draw_text(font, "STR: 18\nDEX: 14\nINT: 15\nWIS:  8\nCON: 12", xy(VIEWPORT_WIDTH + 20, 20), #FE8);
+const stats = {
+   DEX: 14,
+   INT: 15,
+   STR: 8,
+   CAP: 12,
+   SIZ: 2
+}
+
+draw_text(stat_font, "Lothar", xy(VIEWPORT_WIDTH + (SCREEN_SIZE.x - VIEWPORT_WIDTH) / 2, 10), STAT_TEXT_COLOR, nil, STAT_TEXT_SHADOW, "center")
+let y = 30
+for stat in stats:
+   draw_text(stat_font, stats[stat], xy(VIEWPORT_WIDTH + 20 + 50, y), STAT_TEXT_COLOR, STAT_TEXT_SHADOW, nil, "right")
+   y += draw_text(stat_font, stat, xy(VIEWPORT_WIDTH + 20, y), STAT_TEXT_COLOR, STAT_TEXT_SHADOW).y
+
+const action_array = ["Move", "Fight", "Cast", "Use", "Look", "Wait"]
+y += 50
+const blink = mode_frames mod 40 < 10
+draw_text(stat_font, "♥", xy(VIEWPORT_WIDTH + 8, y + stat_font.line_height * choice_index), 
+   (if blink then STAT_TEXT_COLOR else STAT_TEXT_SHADOW), nil, 
+   (if blink then nil else STAT_TEXT_COLOR))
+for action in action_array:
+   y += draw_text(stat_font, action, xy(VIEWPORT_WIDTH + 20, y), STAT_TEXT_COLOR, STAT_TEXT_SHADOW).y
+
+choice_index = clamp(choice_index + joy.yy, 0, size(action_array) - 1)
+
 draw_line(xy(VIEWPORT_WIDTH, 0), xy(VIEWPORT_WIDTH, 223), #FE8)
 
 draw_sprite(rpgSpritesheet[12][7], xy(VIEWPORT_WIDTH + 24, 100))
@@ -31,9 +88,27 @@ draw_sprite(rpgSpritesheet[1][6],  xy(VIEWPORT_WIDTH + 24 + 30, 100))
 
 preserving_transform:
    set_clip(xy(0,0), xy(VIEWPORT_WIDTH, 224))
+   draw_vignette()
+   // camera
+   set_transform(xy(-96, 0))
    
    // Layer 0 of the map is just the gray background to make it easier to
-   // draw in Tiled. There's no need to draw that in game
+   // draw in Tiled. There's no need to draw that in game.
    draw_map(map, 1)
    
-   draw_vignette()
+   // Draw the characters, bopping to show that they can move
+   const bop = lerp(1.14, 0.89, 0.5 cos(0.1 mode_frames) + 0.5)
+   for entity in entity_array:
+      entity.scale.y = bop
+      entity.offset.y = 4 (1 - bop)
+      draw_disk(entity.pos + xy(-0.5, 4), 2.5, #0001)
+      draw_entity(entity)
+
+   // Draw fluids, squashing and stretching a little to look like waves
+   for entity in fluid_array:
+      const stretch_x = 1 + 0.1 oscillate((0.008 mode_frames + entity.pos.x / 40 + entity.pos.y / 24), 2)
+      const stretch_y = 1 + 0.1 oscillate((0.008 mode_frames + entity.pos.x / 24 + entity.pos.y / 40), 2)
+      entity.scale.x = stretch_x
+      entity.scale.y = stretch_y
+      draw_entity(entity)
+      

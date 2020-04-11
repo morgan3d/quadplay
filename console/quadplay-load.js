@@ -1377,10 +1377,10 @@ function evalJSONGameConstant(json) {
         return {x: evalJSONGameConstant(json.value.x),
                 y: evalJSONGameConstant(json.value.y)};
 
-    case 'xyz':
+    case 'xz':
         return {x: evalJSONGameConstant(json.value.x),
                 z: evalJSONGameConstant(json.value.z)};
-
+        
     case 'xyz':
         return {x: evalJSONGameConstant(json.value.x),
                 y: evalJSONGameConstant(json.value.y),

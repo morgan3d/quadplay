@@ -1,0 +1,40 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+// let pos = xy(½ SCREEN_SIZE.x, 132)
+// let flip = xy(1, 1)
+
+let world = make_entity(
+    {
+        pos: xy(0,0),
+        sprite:nil,
+        scale:xy(1,1),
+    },
+    {
+    }
+)
+
+let SPACING = 100
+for x < 10:
+    for y < 10:
+        let child=make_entity(
+            {
+                pos_in_parent: (xy(x*SPACING, y*SPACING) - xy(5, 5)*SPACING),
+                sprite:astronaut.idle[0]
+            }
+        )
+        entity_add_child(world, child)
+        debug_print("adding child")
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_transform(SCREEN_SIZE/2)
+
+if joy.y:
+    world.scale += joy.y * 0.1
+if joy.x:
+    world.pos.x += joy.x
+
+entity_update_children(world)
+
+draw_entity(world)

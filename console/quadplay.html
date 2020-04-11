@@ -377,20 +377,36 @@
           <b>Add New Constant</b>
           <p>
             <br/>
-            <label for="newConstantName">Name&nbsp;&nbsp;</label>
-            <input id="newConstantName" type="text" style="font-size: 80%; font-family: Monaco, monospace" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '');document.getElementById('newConstantCreateButton').disabled = (this.value === '')"></input>
-            <div style="text-align:left; margin-left: 50px; column-width: 100px">
+            <table style="border-collapse:collapse">
+              <tr valign="top">
+                <td>
+                  <label for="newConstantName">Name</label>
+                </td>
+                <td>
+                  <input id="newConstantName" type="text" style="margin-bottom: 2px; width: 270px; font-size: 80%; font-family: Monaco, monospace" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '');document.getElementById('newConstantCreateButton').disabled = (this.value === '')"></input>
+                </td>
+              </tr>
+              <tr valign="top">
+                <td>
+                  <label for="newConstantDescription">Description</label>&nbsp;&nbsp;
+                </td>
+                <td>
+                  <textarea id="newConstantDescription" rows="2" type="text" style="width:268px"> </textarea>
+                </td>
+              </tr>
+            </table>
+            <div style="text-align:left; margin-left: 50px; column-width: 100px; margin-top:20px">
               <input type="radio" name="newConstantType" value="string"  id="newConstantTypeString" checked><label for="newConstantTypeString">String</label>
               <br/><input type="radio" name="newConstantType" value="number"  id="newConstantTypeNumber"><label for="newConstantTypeNumber">Number</label>
               <br/><input type="radio" name="newConstantType" value="boolean" id="newConstantTypeBoolean"><label for="newConstantTypeBoolean">Boolean</label>
               <br/><input type="radio" name="newConstantType" value="nil" id="newConstantTypeNil"><label for="newConstantTypeNil">Nil</label>
               <br/><input type="radio" name="newConstantType" value="xy" id="newConstantTypeXY"><label for="newConstantTypeXY"><code>xy()</code></label>
-              <br/><input type="radio" name="newConstantType" value="xz" id="newConstantTypeXZ" disabled><label for="newConstantTypeXZ"><code>xz()</code></label>
-              <br/><input type="radio" name="newConstantType" value="xyz" id="newConstantTypeXYZ" disabled><label for="newConstantTypeXYZ"><code>xyz()</code></label>
-              <br/><input type="radio" name="newConstantType" value="rgb" id="newConstantTypeRGB" disabled><label for="newConstantTypeRGB"><code>rgb()</code></label>
-              <br/><input type="radio" name="newConstantType" value="rgba" id="newConstantTypeRGBA" disabled><label for="newConstantTypeRGBA"><code>rgba()</code></label>
-              <br/><input type="radio" name="newConstantType" value="hsv" id="newConstantTypeHSV" disabled><label for="newConstantTypeHSV"><code>hsv()</code></label>
-              <br/><input type="radio" name="newConstantType" value="hsva" id="newConstantTypeHSVA" disabled><label for="newConstantTypeHSVA"><code>hsva()</code></label>
+              <br/><input type="radio" name="newConstantType" value="xz" id="newConstantTypeXZ"><label for="newConstantTypeXZ"><code>xz()</code></label>
+              <br/><input type="radio" name="newConstantType" value="xyz" id="newConstantTypeXYZ"><label for="newConstantTypeXYZ"><code>xyz()</code></label>
+              <br/><input type="radio" name="newConstantType" value="rgb" id="newConstantTypeRGB"><label for="newConstantTypeRGB"><code>rgb()</code></label>
+              <br/><input type="radio" name="newConstantType" value="rgba" id="newConstantTypeRGBA"><label for="newConstantTypeRGBA"><code>rgba()</code></label>
+              <br/><input type="radio" name="newConstantType" value="hsv" id="newConstantTypeHSV"><label for="newConstantTypeHSV"><code>hsv()</code></label>
+              <br/><input type="radio" name="newConstantType" value="hsva" id="newConstantTypeHSVA"><label for="newConstantTypeHSVA"><code>hsva()</code></label>
               <br/><input type="radio" name="newConstantType" value="object" id="newConstantTypeObject" disabled><label for="newConstantTypeObject">Object</label>
               <br/><input type="radio" name="newConstantType" value="array" id="newConstantTypeArray" disabled><label for="newConstantTypeArray">Array</label>
               <br/><input type="radio" name="newConstantType" value="raw" id="newConstantTypeRaw" disabled><label for="newConstantTypeRaw">JSON/YAML</label>

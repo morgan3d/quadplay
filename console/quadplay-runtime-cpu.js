@@ -532,6 +532,9 @@ function _entryKeyLengthCompare(a, b) {
 }
 
 function replace(s, src, dst) {
+
+    const ESCAPABLES = /([\/\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g;
+    
     if (typeof s !== 'string') {
         throw new Error('The first argument to replace() must be a string');
     }
@@ -543,18 +546,24 @@ function replace(s, src, dst) {
             throw new Error("replace(string, object) requires exactly two arguments");
         }
         
-        // Sort the keys by length so that substrings are processed last
-        const entries = Object.entries(src);
-        entries.sort(_entryKeyLengthCompare);
-
-        for (let i = 0; i < entries.length; ++i) {
-            const e = entries[i];
-            s = replace(s, e[0], e[1]);
+        // Generate the replacement regexp that will find all target
+        // patterns simultaneously.  We have to do this instead of
+        // replacing sequentially because there might be cyclic
+        // replacement patterns and we don't want to double-replace.
+        //
+        // In this pattern, escape any aspect of the target that would
+        // be misinterpreted as a regexp character.
+        let R = '';
+        for (const pattern in src) {
+            R += (R.length === 0 ? '' : '|') + pattern.replace(ESCAPABLES, '\\$&');
         }
-        
-        return s;
 
+        return s.replace(new RegExp(R, 'g'), function (match) {
+            return src[match];
+        });
+        
     } else {
+        console.log(`replace(${s}, ${src}, ${dst})`);
         // String replace
         if (dst === undefined || src === undefined) {
             throw new Error("replace(string, string, string) requires three arguments");
@@ -564,7 +573,7 @@ function replace(s, src, dst) {
 
         // Escape any special characters, build a global replacement regexp, and then
         // run it on dst.
-        src = src.replace(/([\/\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g, '\\$&');
+        src = src.replace(ESCAPABLES, '\\$&');
         dst = dst.replace(/\$/g, '$$');
         return s.replace(new RegExp(src, 'g'), dst);
     }
@@ -3588,9 +3597,20 @@ function draw_corner_rect(corner, size, fill, outline, z) {
 }
 
 
-function draw_line(A, B, color, z, openA, openB) {
-    openA = openA || false;
-    openB = openB || false;
+function draw_line(A, B, color, z, width) {
+    if (width === undefined) { width = 1; }
+    if (width >= 1.5) {
+        // Draw a polygon instead of a thin line
+        const delta = xy(B.y - A.y, A.x - B.x);
+        let mag = sqrt(delta.x * delta.x + delta.y * delta.y);
+        if (mag < 0.001) { return; }
+        mag = width / (2 * mag);
+        delta.x *= mag; delta.y *= mag;
+        draw_poly([_sub(A, delta), _add(A, delta),_add(B, delta), _sub(B, delta)],
+                  color, undefined, undefined, undefined, undefined, z);
+        return;
+    }
+    
     z = z || 0;
     const skx = (z * _skewXZ), sky = (z * _skewYZ);
     let x1 = (A.x + skx) * _scaleX + _offsetX, y1 = (A.y + sky) * _scaleY + _offsetY;
@@ -3614,8 +3634,8 @@ function draw_line(A, B, color, z, openA, openB) {
         y2: y2,
         z: z,
         color: color,
-        open1: openA,
-        open2: openB
+        open1: false,
+        open2: false
     });
 }
 

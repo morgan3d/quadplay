@@ -368,6 +368,10 @@ in the program, and edit the `game.json` file to see a different font.
 [High Score Example](../console/quadplay.html?game=quad://examples/highscore&IDE=1) demonstrates `load_local()` and `save_local()` to
 maintain a high score list, with `push_mode()` for creating a popup dialog.
 
+[Sproing Example](../console/quadplay.html?game=quad://examples/sproing&IDE=1) Shows a squash and stretch effect for transforming sprites.
+
+[Camera Zoom Exampe](../console/quadplay.html?game=quad://examples/camera_zoom&IDE=1) Shows how to get camera zooming by using the entity hierarchy.
+
 
 ### Inspiration
 
@@ -1472,8 +1476,8 @@ String
 : Replace all occurances of `src` in `string` with `dst`.
 
 `replace(string, object)`
-: Replace all occurances of each key of `object` with each `value` of object, in `string`,
-  applying longer substitutions first. For example,
+: Replace all occurances of each key of `object` with each `value` of object in `string`
+  simultaneously. For example,
   `replace("Hey, PROPER_NOUN, use the ADJ NOUN!", {ADJ: "big", NOUN: "stick", PROPER_NOUN: "Runi"})`.
 
 `reversed(string)`
@@ -2100,7 +2104,7 @@ I recommend that you use integer plus 1/2 coordinates
 for `draw_point()` for robustness. However, if you use integer coordinates, it will
 "do what you expect".
 
-`draw_line()` draws a one-pixel line centered on its endpoints that
+`draw_line()` draws a line centered on its endpoints that
 extends ½ pixel beyond its endpoints. When seeking to draw horizontal and vertical lines
 aligned with the grid, I recommend that you use integer plus ½ coordinates
 for `draw_point()` for robustness. However, if you use integer coordinates, it will
@@ -3069,15 +3073,10 @@ endpoints and borders.
 : Draw a circle or filled disk centered at (`center.x`, `center.y`)
   with radius `r` and z-order `z`.
 
-`draw_line(A, B, color, z (= 0), openA (= false), openB (= false))`
+`draw_line(A, B, color, z (= 0), width (= 1))`
 : Draw a 1-pixel line from (`A.x`, `A.y`) to (`B.x`, `B.y`) using z-order `z`.
   When using the default transformation, put the endpoints at half-pixel
   positions for the best alignment with the pixel grid.
-
-  If `openA` is true, then the first pixel is not drawn in the line.
-  If `openB` is true, then the last pixel is not drawn in the line.
-  These are useful when drawing polylines and curves with transparency,
-  to avoid double-coloring the joints between individual line segments.
 
 `draw_point(P, c, z (= 0))`
 : Set the color of pixel (`P.x`, `P.y`) to color `c` with z-order `z`.
@@ -3988,6 +3987,8 @@ Fonts
 
 ![`quad://fonts/roman-8.font.json`](../fonts/roman-8.png)
 
+![`quad://fonts/wright-8.font.json`](../fonts/wright-8.png)
+
 ![`quad://fonts/deja-8.font.json`](../fonts/deja-8.png)
 
 ![`quad://fonts/pryce-7.font.json`](../fonts/pryce-7.png)
@@ -4000,17 +4001,27 @@ Fonts
 
 ![`quad://fonts/connelly-7.font.json`](../fonts/connelly-7.png)
 
+![`quad://fonts/deja-7.font.json`](../fonts/deja-7.png)
+
 ![`quad://fonts/scoreboard-7.font.json`](../fonts/scoreboard-7.png)
 
 ![`quad://fonts/hauer-6.font.json`](../fonts/hauer-6.png)
 
+![`quad://fonts/deja-6.font.json`](../fonts/deja-6.png)
+
 ![`quad://fonts/scoreboard-6.font.json`](../fonts/scoreboard-6.png)
 
+![`quad://fonts/deja-5.font.json`](../fonts/deja-5.png)
+
 ![`quad://fonts/nano-5.font.json`](../fonts/nano-5.png)
+
+![`quad://fonts/deja-4.font.json`](../fonts/deja-4.png)
 
 ![`quad://fonts/nano-4.font.json`](../fonts/nano-4.png)
 
 ![`quad://fonts/nano-3.font.json`](../fonts/nano-3.png)
+
+![`quad://fonts/deja-3.font.json`](../fonts/deja-3.png)
 
 ![`quad://fonts/nanob-3.font.json`](../fonts/nanob-3.png)
 
@@ -5767,8 +5778,10 @@ and [Raspberry Pi 4](https://www.raspberrypi.org/products/raspberry-pi-4-model-b
 power such a box using Linux and Chrome or
 Firefox. Both will hit 60 Hz for most games, and can easily run at
 30 Hz for all games (quadplay✜ handles framerate scaling for you seamlessly,
-so you won't even notice most of the time). Nano has the advantage of a 
+so you won't even notice most of the time). Nano is more expensive but has the advantage of a 
 more powerful processor and a 64-bit Ubuntu distribution.
+
+![Quadplay mini-console built by Morgan McGuire from a Jetson Nano with a 3D-printed case, USB Xbox 360 controller, and small external monitor.](nano-arcade.jpg width=50%)
 
 I've built Jetson Nano and Raspberry Pi consoles and the result is satisfyingly comparable to
 the Nintendo [NES Classic Edition](https://www.nintendo.com/nes-classic/),
@@ -5776,10 +5789,7 @@ the Nintendo [NES Classic Edition](https://www.nintendo.com/nes-classic/),
 Sega [Genesis Mini](https://genesismini.sega.com/), and
 PlayStation [Classic](https://www.playstation.com/en-ca/explore/playstation-classic/) devices--but you can program for it yourself!
 
-I haven't found a prebuilt PS Vita/Switch/Lynx/DS-like case for embedded processors
-that combines buttons, battery power, and a display for building a portable console. 
-I used a touch screen to build a standalone device powered by Raspberry Pi, but found
-the lag and battery setup unacceptable and recommend just using a phone.
+![Self-contained quadplay console built by Morgan McGuire from a Raspberry Pi and standard screen case, with Bluetooth controllers.](rpi-arcade.jpg width=50%)
 
 An Intel NUC is a much more expensive device for powering a mini console,
 but has a lot more graphics power than an embedded processor and will
@@ -5794,6 +5804,8 @@ needing any custom electronics. Note that quadplay✜ supports (but does not req
 or mouse, which will not be available on a cabinet setup. One alternative is to
 use a small trackpad mounted on top of the joystick controller. This advice is all
 speculative as I have never built an arcade cabinet.
+
+![Arcade station custom built by Nick Porcino running quadplay on Raspberry Pi](arcade.jpg width=50%)
 
 If building a physical cabinet or handheld _without_
 on-screen mobile controls, I recommend using a 1280x720,
@@ -6180,6 +6192,8 @@ For 1.0:
 [x] Scripts
 [x] Physics
 [x] Path finding
+[x] Vim, Emacs, and Visual Studio code external editor support
+[x] Aseprite, Photoshop, Krita, and Tiled external editor support
 [x] Five full sample games
 [ ] Standalone IDE (no external editors required)
   [x] Code editor
@@ -6187,7 +6201,6 @@ For 1.0:
   [x] Constant editor
   [ ] Map editor
   [ ] Sprite editor
-  [ ] Font editor
 [ ] Python not required
 [ ] Shared-screen network multiplayer
 [ ] Binary game export for macOS and Windows (unsigned)
@@ -6196,6 +6209,7 @@ Post 1.0:
 
 [ ] 30% virtual GPU graphics speedup
 [ ] Extended constant editor
+[ ] Font editor
 [ ] More AI routines
    [ ] Shadowing/line of sight
    [ ] Board game logic
@@ -6366,9 +6380,25 @@ Changes for both the specification and implementation in each release.
 - Added new orange and white case color options
 - Tuned gold case color
 - Improved case layout for small sizes
-- Can now edit string, number, `xy()`, and boolean constant values in the IDE while the game is running
+- Can now edit string, number, `xy()`, `xz()`, `xyz()`, 
+  `hsv()`, `hsva()`, `rgb()`, `rgba()`, and boolean
+  constant values in the IDE while the game is running
 - Added unique icons for different constant types in the IDE
 - Dialog for creating new constant values
+- Made `replace(string, object)` operate on all values simultaneously
+- Fixed IDE syntax higlighting for boolean operators
+- `draw_line()` now accepts a width argument
+- New wright-8 font
+- New deja-7 font
+- New deja-6 font
+- New deja-5 font
+- New deja-4 font
+- New deja-3 font
+- "Sproing" and "Camera Zoom" examples
+- Constants now have an `description` documentation field that appears in the IDE
+  and as tooltips
+- Updated markdown and [Markdeep](http://casual-effects.com/markdeep) processing to version 1.10
+- Created more room for the code editor in Debug view
 
 
 2020 Mar 30: Beta update 36

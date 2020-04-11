@@ -1,8 +1,8 @@
 "This file is read by both Python and JavaScript, so it has a strange syntax and filename"
 os_dependencies = {
-   "_font3":              "quad://fonts/nano-3.font.json",
-   "_font5":              "quad://fonts/nano-5.font.json",
-   "_font6":              "quad://fonts/scoreboard-6.font.json",
+   "_font3":              "quad://fonts/deja-3.font.json",
+   "_font5":              "quad://fonts/deja-5.font.json",
+   "_font6":              "quad://fonts/deja-6.font.json",
    "_font8":              "quad://fonts/deja-8.font.json",
    "_font9":              "quad://fonts/deja-9.font.json",
    "_moveUISound":        "quad://sounds/Blip-04.sound.json",

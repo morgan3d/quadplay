@@ -7,6 +7,82 @@
 // dragging a slider.
 const CONSTANT_EDITOR_SAVE_DELAY = 1.2; // seconds
 
+/* Called from onProjectSelect() */
+function showConstantEditor(index) {
+    const constantEditor = document.getElementById('constantEditor');
+    const c = gameSource.constants[index];
+    const json = gameSource.json.constants[index];
+    const type = json.type || typeof c;
+
+    let html = '';
+
+    if (json.description && json.description !== '') {
+        html += '<p><i>' + json.description + '</i></p>';
+    }
+    
+    const disabled = editableProject ? '' : 'disabled';
+    if (type === 'string') {
+        html += `${index} = "<textarea style="vertical-align:top; margin-left:1px; margin-right:2px;" autocomplete="false" ${disabled} onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.value, this.value)" rows=4 cols=40>${c}</textarea>"`;
+    } else if (c === undefined || c === null) {
+        html += index + ' = <code>∅</code>';
+    } else if (type === 'number') {
+        const value = (typeof json === 'number') ? c : json.value;
+        html += `${index} = <input style="width:100px; text-align: right" type="text" onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.value, QRuntime.parse(this.value))" autocomplete="false" ${disabled} value="${value}">`;
+        html += '<br/><br/><i>All PyxlScript number formats supported. For example, <code>10, -3, 1.5, 90deg, 90°, -∞, π, ½</code></i>';
+    } else if (type === 'boolean') {
+        html += `<input type="checkbox" autocomplete="false" onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.checked, this.checked)" ${disabled} ${c ? 'checked' : ''}> ${index}`;
+    } else if (type === 'xy' || type === 'xz' || type === 'xyz' ||
+               type === 'rgb' || type === 'rgba' ||
+               type === 'hsv' || type === 'hsva') {
+
+        const fields = type;
+        
+        const onchange = `onConstantEditorVectorValueChange(gameSource, QRuntime, '${index}', '${fields}')`;
+
+        html += `${index} = {<table style="margin-left:10px">`;
+
+        // Preserve the unparsed json formatting if available
+        for (let i = 0; i < fields.length; ++i) {
+            const element = fields[i];
+            
+            // Start with the already-parsed value as a backup
+            let value = json.value[element].type ? json.value[element].value : c[element];
+            html += `<tr><td>${element}:</td><td><input id="constantEditor_${index}_${element}" onchange="${onchange}" style="width:80px; text-align: right; margin-left: 1px; margin-right: 1px" type="text" autocomplete="false" ${disabled} value="${value}">`;
+            html +=  (i < fields.length - 1) ? ', ' : '';
+            html += '</td></tr>';
+        }
+
+        html += '</table>}';
+
+        if (type[0] === 'r') {
+            html += `<div id="constantEditor_${index}_preview" style="background: rgb(${255 * c.r}, ${255 * c.g}, ${255 * c.b}); margin-top: 10px; border: 1px solid #000; width: 64px; height: 64px"> </div>`;
+        } else if (type[0] === 'h') {
+            html += `<div id="constantEditor_${index}_preview" style="background: hsv(${255 * c.h}, ${255 * c.s}, ${255 * c.v}); margin-top: 10px; border: 1px solid #000; width: 64px; height: 64px"> </div>`;
+        }
+        
+    } else {
+        // Object or array (including built-in objects)
+        const L = Object.keys(c).length;
+        if ((L <= 4) && (c.r !== undefined) && (c.g !== undefined) && (c.b !== undefined) && ((c.a !== undefined) || (L === 3))) {
+            // RGB[A]
+            html += index + ` <div style="background: rgb(${255 * c.r}, ${255 * c.g}, ${255 * c.b}); width: 50px; height: 16px; display: inline-block"> </div><br/>(${QRuntime.unparse(c)})`;
+        } else if ((L <= 4) && (c.h !== undefined) && (c.s !== undefined) && (c.v !== undefined) && ((c.a !== undefined) || (L === 3))) {
+            // HSV[A]
+            html += index + ` <div style="background: hsv(${255 * c.h}, ${255 * c.s}, ${255 * c.v}); width: 50px; height: 16px; display: inline-block"> </div><br/>(${QRuntime.unparse(c)})`;
+        } else {
+            const s = QRuntime.unparse(c);
+            if (s.length > 16) {
+                html += index + ' = <table>' + visualizeConstant(c, '') + '</table>';
+            } else {
+                html += index + ' = ' + escapeHTMLEntities(s);
+            }
+        }
+    }
+    constantEditor.innerHTML = html;
+    constantEditor.style.visibility = 'visible';
+}
+
+
 /** Allows editing an object with a set of numeric fields. fields can be a string of
     single-letter fields or an array of multi-letter ones. */
 function onConstantEditorVectorValueChange(sourceObj, environment, key, fields) {
@@ -23,9 +99,23 @@ function onConstantEditorVectorValueChange(sourceObj, environment, key, fields) 
         // Update value
         json.value[element].value = document.getElementById('constantEditor_' + key + '_' + element).value;
     }
+
+    const value = evalJSONGameConstant(json);
+
+    // Update the color preview
+    const type = sourceObj.json.constants[key].type;
+    if (type === 'rgb' || type === 'rgba' ||
+        type === 'hsv' || type === 'hsva') {
+        const preview = document.getElementById('constantEditor_' + key + '_preview');
+        if (type[0] === 'r') {
+            preview.style.background = `rgb(${255 * value.r}, ${255 * value.g}, ${255 * value.b})`;
+        } else {
+            preview.style.background = `hsv(${255 * value.h}, ${255 * value.s}, ${255 * value.v})`;
+        }
+    }
     
     // Pass down to the generic value change handler
-    onConstantEditorValueChange(sourceObj, environment, key, evalJSONGameConstant(json), json.value, null);
+    onConstantEditorValueChange(sourceObj, environment, key, value, json.value, null);
 }
 
 
@@ -83,6 +173,8 @@ function showNewConstantDialog() {
     const text = document.getElementById('newConstantName');
     text.value = "";
     text.focus();
+
+    document.getElementById('newConstantDescription').value = "";
 }
 
 
@@ -139,7 +231,12 @@ function onNewConstantCreate() {
         gameSource.json.constants = {};
     }
 
-    gameSource.json.constants[key] = {'type': type, 'value': value };
+    const obj = {type: type, value: value};
+    const description = document.getElementById('newConstantDescription').value;
+    if (description !== '') {
+        obj.description = description;
+    }
+    gameSource.json.constants[key] = obj;
 
     // Reload
     serverSaveGameJSON(function () {

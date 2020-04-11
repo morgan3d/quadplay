@@ -1,0 +1,31 @@
+{
+    "title":      "Camera Zoom Test",
+    "developer":  "Your Name Here",
+    "copyright":  "©2020 Your Name Here",
+    "license":    "CC0/Public Domain(Replace with your own license)",
+
+    "packages":   [],
+    "scripts":    [],
+    "modes":      ["Play*"],
+    "docs":       [{"name": "TODO", "url": "todo.md"}],
+    "assets":     {
+        "font": "quad://fonts/deja-8.font.json",
+        "astronaut": "quad://sprites/kenney-alien-yellow-16x32.sprite.json"
+    },
+
+    "version":      0.0,
+    "min_players":  1,
+    "max_players":  1,
+    "cooperative":  false,
+    "competitive":  false,
+    "achievements": false,
+    "highscores":   false,
+    "description": "Description of your game in about 100 characters.",
+
+    "constants":  {
+        "text_color":   {"type": "rgb", "value": {
+            "r": {"type": "number", "value":  1},
+            "g": {"type": "number", "value":  1},
+            "b": {"type": "number", "value":  1}}}
+    }
+}

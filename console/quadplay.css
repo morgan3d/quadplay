@@ -491,14 +491,33 @@ div.disabled span.label, div.disabled:active span.label {
 }
 
 .WideIDEUI #editorFrame {
-    left: 141px;
-    right: 798px;
+    left: 0px;
+    right: 769px;
 }
+
 
 .EditorUI #editorFrame {
     right: 0px;
 }
 
+/* Shrink ace gutters to leave an extra column of text editing space */
+.ace_gutter > .ace_layer {
+    width: 36px !important;
+}
+
+.ace_gutter-cell {
+  padding-left: 0 !important;
+  padding-right: 15px !important;
+  padding-top: 0.42em;
+  font-size: 65%;
+}
+
+.ace_gutter-cell span {
+    position: relative;
+    /* Pull the collapse icons back up*/
+    margin-top: -0.42em;
+    left: -1px;
+}
 
 #error {
     position: absolute;
@@ -613,7 +632,7 @@ code, .code {
 
 .WideIDEUI #debugger {
     top: 515px;
-    width: 798px;
+    width: 771px;
 }
 
 /* Hide the debugger in emulator modes and full screen editor */
@@ -782,6 +801,22 @@ code, .code {
     background-image: none, url('project-icon-array.png');
 }
 
+.project .constants li.nil:before {
+    background-image: none, url('project-icon-nil.png');
+}
+
+.project .constants li.color:before {
+    background-image: none, url('project-icon-color.png');
+}
+
+.project .constants li.vec2D:before {
+    background-image: none, url('project-icon-2D.png');
+}
+
+.project .constants li.vec3D:before {
+    background-image: none, url('project-icon-3D.png');
+}
+
 .project .constants li.object:before {
     background-image: none, url('project-icon-object.png');
 }
@@ -812,6 +847,7 @@ code, .code {
     height:           260px;
     margin-top: -1px;
     padding: 1px 1px 3px 1px;
+    overflow: hidden;
 }
 
 #emulatorFrame {
@@ -822,8 +858,12 @@ code, .code {
 }
 
 .WideIDEUI .emulator, .WideIDEUI div#emulatorFrame {
-    width: 796px;
+    width: 769px;
     height: 486px;
+}
+
+.WideIDEUI #screenBorder {
+    left: -5px;
 }
 
 .EditorUI div.emulator, .EditorUI div#emulatorFrame, .EditorUI div.screenBorder, .EditorUI #bootScreen, .EditorUI #pauseMessage {

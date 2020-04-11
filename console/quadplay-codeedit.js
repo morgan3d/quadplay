@@ -42,21 +42,26 @@ function onDecreaseFontSizeButton() {
     setCodeEditorFontSize(codeEditorFontSize - 2);
 }
 
+
 function onCodeEditorSearchButton() {
     aceEditor.execCommand('find');
 }
+
 
 function onCodeEditorUndoButton() {
     aceEditor.session.getUndoManager().undo();
 }
 
+
 function onCodeEditorRedoButton() {
     aceEditor.session.getUndoManager().redo();
 }
 
+
 function removeAllCodeEditorSessions() {
     codeEditorSessionMap.clear();
 }
+
 
 /* Update all sessions from fileContents after load, and destroy
    any that no longer are needed. */

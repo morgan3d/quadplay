@@ -7,7 +7,7 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.04.05.01'
+const version  = '2020.04.11.19'
 const launcherURL = 'quad://console/launcher';
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -1136,7 +1136,6 @@ function onProjectSelect(target, type, object) {
     
     const gameEditor     = document.getElementById('gameEditor');
     const modeEditor     = document.getElementById('modeEditor');
-    const constantEditor = document.getElementById('constantEditor');
     const codePlusFrame = document.getElementById('codePlusFrame');
 
     // Hide the viewers within the content pane for the code editor
@@ -1216,61 +1215,8 @@ function onProjectSelect(target, type, object) {
 
     switch (type) {
     case 'constant':
-        {
-            const index = object;
-            const c = gameSource.constants[index];
-            const json = gameSource.json.constants[index];
-            const type = json.type || typeof c;
-            
-            const disabled = editableProject ? '' : 'disabled';
-            if (type === 'string') {
-                constantEditor.innerHTML = `${index} = "<textarea style="vertical-align:top; margin-left:1px; margin-right:2px;" autocomplete="false" ${disabled} onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.value, this.value)" rows=4 cols=40>${c}</textarea>"`;
-            } else if (c === undefined || c === null) {
-                constantEditor.innerHTML = index + ' = <code>∅</code>';
-            } else if (type === 'number') {
-                const value = (typeof json === 'number') ? c : json.value;
-                constantEditor.innerHTML = `${index} = <input style="width:100px; text-align: right" type="text" onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.value, QRuntime.parse(this.value))" autocomplete="false" ${disabled} value="${value}">`;
-                constantEditor.innerHTML += '<br/><br/><i>All PyxlScript number formats supported. For example, <code>10, -3, 1.5, 90deg, 90°, -∞, π, ½</code></i>';
-            } else if (type === 'boolean') {
-                constantEditor.innerHTML = `<input type="checkbox" autocomplete="false" onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.checked, this.checked)" ${disabled} ${c ? 'checked' : ''}> ${index}`;
-            } else if (type === 'xy') {
-                const fields = type;
-                
-                // Start with the parsed values as a backup
-                let x_value = c.x, y_value = c.y;
-
-                // Preserve the unparsed json formatting if available
-                if (json.value.x.type && json.value.y.type) {
-                    x_value = json.value.x.value;
-                    y_value = json.value.y.value;
-                }
-
-                const onchange = `onConstantEditorVectorValueChange(gameSource, QRuntime, '${index}', '${fields}')`;
-                
-                constantEditor.innerHTML = `${index} = (` +
-                    `<input id="constantEditor_${index}_x" onchange="${onchange}" style="width:80px; text-align: right; margin-left: 1px; margin-right: 1px" type="text" autocomplete="false" ${disabled} value="${x_value}">, ` +
-                    `<input id="constantEditor_${index}_y" onchange="${onchange}" style="width:80px; text-align: right; margin-right: 1px" type="text" autocomplete="false" ${disabled} value="${y_value}">)`;
-            } else {
-                // Object or array (including built-in objects)
-                const L = Object.keys(c).length;
-                if ((L <= 4) && (c.r !== undefined) && (c.g !== undefined) && (c.b !== undefined) && ((c.a !== undefined) || (L === 3))) {
-                    // RGB[A]
-                    constantEditor.innerHTML = index + ` <div style="background: rgb(${255 * c.r}, ${255 * c.g}, ${255 * c.b}); width: 50px; height: 16px; display: inline-block"> </div><br/>(${QRuntime.unparse(c)})`;
-                } else if ((L <= 4) && (c.h !== undefined) && (c.s !== undefined) && (c.v !== undefined) && ((c.a !== undefined) || (L === 3))) {
-                    // HSV[A]
-                    constantEditor.innerHTML = index + ` <div style="background: hsv(${255 * c.h}, ${255 * c.s}, ${255 * c.v}); width: 50px; height: 16px; display: inline-block"> </div><br/>(${QRuntime.unparse(c)})`;
-                } else {
-                    let s = QRuntime.unparse(c);
-                    if (s.length > 16) {
-                        constantEditor.innerHTML = index + ' = <table>' + visualizeConstant(c, '') + '</table>';
-                    } else {
-                        constantEditor.innerHTML = index + ' = ' + escapeHTMLEntities(s);
-                    }
-                }
-            }
-            constantEditor.style.visibility = 'visible';
-            break;
-        }
+        showConstantEditor(object);
+        break;
         
     case 'mode':
     case 'script':
@@ -2061,7 +2007,16 @@ function createProjectWindow(gameSource) {
         for (let i = 0; i < keys.length; ++i) {
             const c = keys[i];
             const v = gameSource.constants[c];
-            s += `<li class="clickable ${Array.isArray(v) ? 'array' : (typeof v)}" id="projectConstant_${c}" onclick="onProjectSelect(event.target, 'constant', '${c}')"><code>${c}</code></li>\n`;
+            const json = gameSource.json.constants[c];
+            const tooltip = (json.description || '').replace(/"/g, '\\"');
+            const type = (v === undefined || v === null) ?
+                  'nil' :
+                  Array.isArray(v) ? 'array' :
+                  (json.type && (json.type === 'xy' || json.type === 'xz')) ? 'vec2D' :
+                  (json.type && json.type === 'xyz') ? 'vec3D' :
+                  (json.type && (json.type === 'rgba' || json.type === 'rgb' || json.type === 'hsva' || json.type === 'hsv')) ? 'color' :
+                  (typeof v);
+            s += `<li class="clickable ${type}" title="${tooltip}" id="projectConstant_${c}" onclick="onProjectSelect(event.target, 'constant', '${c}')"><code>${c}</code></li>\n`;
         }
     }
     if (editableProject) {
