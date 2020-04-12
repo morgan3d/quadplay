@@ -7,7 +7,7 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.04.11.19'
+const version  = '2020.04.12.11'
 const launcherURL = 'quad://console/launcher';
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -44,7 +44,7 @@ if (! profiler.debuggingProfiler) {  document.getElementById('debugIntervalTimeR
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// 'WideIDE', 'IDE', 'Test', 'Emulator', 'Editor', 'Maximal'. See also setUIMode().
+// 'WideIDE', 'IDE', 'Test', 'Emulator', 'Editor', 'Maximal', 'Ghost'. See also setUIMode().
 let uiMode = 'IDE';
 
 const BOOT_ANIMATION = Object.freeze({
@@ -269,7 +269,7 @@ function onBackgroundPauseClick(event) {
 
 
 function setUIMode(d, noAutoPlay) {
-    if (! useIDE && (d === 'IDE' || d === 'WideIDE' || d === 'Editor' || d === 'Test')) {
+    if (! useIDE && (d === 'IDE' || d === 'WideIDE' || d === 'Ghost' || d === 'Editor' || d === 'Test')) {
         // When in dedicated play, no-IDE mode and the UI was
         // previously set to UI, fall back to the emulator.
         d = 'Emulator';
@@ -283,6 +283,7 @@ function setUIMode(d, noAutoPlay) {
     body.classList.remove('IDEUI');
     body.classList.remove('WideIDEUI');
     body.classList.remove('EditorUI');
+    body.classList.remove('GhostUI');
     body.classList.remove('TestUI');
     body.classList.add(uiMode + 'UI');
 
@@ -292,7 +293,8 @@ function setUIMode(d, noAutoPlay) {
                              'Emulator' : 'emulatorUIButton',
                              'Test'     : 'testUIButton',
                              'Maximal'  : 'maximalUIButton',
-                             'Editor'   : 'editorUIButton'}[uiMode]).checked = 1;
+                             'Editor'   : 'editorUIButton',
+                             'Ghost'    : 'ghostUIButton'}[uiMode]).checked = 1;
 
     if ((uiMode === 'Maximal') || ((uiMode === 'Emulator') && ! useIDE)) {
         requestFullScreen();
@@ -389,11 +391,14 @@ function onResize() {
             break;
         }
 
+    case 'Ghost':
     case 'Maximal':
     case 'Test':
         {
             // What is the largest multiple SCREEN_HEIGHT that is less than windowHeightDevicePixels?
-            scale = Math.max(0, Math.min((windowHeight - 24) / SCREEN_HEIGHT, (windowWidth - 2) / SCREEN_WIDTH));
+            const isKiosk = getQueryString('kiosk') === '1';
+            const headerBar = isKiosk ? 0 : 24;
+            scale = Math.max(0, Math.min((windowHeight - headerBar) / SCREEN_HEIGHT, (windowWidth - 2) / SCREEN_WIDTH));
             
             if ((scale * window.devicePixelRatio <= 2.5) && (scale * window.devicePixelRatio > 1)) {
                 // Round to nearest even multiple of the actual pixel size for small screens to
@@ -410,8 +415,8 @@ function onResize() {
                 screenBorder.style.top = '0px';
                 document.getElementById('debugger').style.top = Math.round(scale * screenBorder.offsetHeight + 25) + 'px';
             } else {
-                const t = Math.round((windowHeight - screenBorder.offsetHeight * scale - 26) / 2) + 'px';
-                screenBorder.style.top  = t;
+                const t = Math.round((windowHeight - screenBorder.offsetHeight * scale - headerBar - 2) / 2) + 'px';
+                screenBorder.style.top = t;
             }
         }
         break;
@@ -419,8 +424,13 @@ function onResize() {
 
     screenBorder.style.width = SCREEN_WIDTH + 'px';
     screenBorder.style.height = SCREEN_HEIGHT + 'px';
-    screenBorder.style.borderRadius = Math.ceil(6 / scale) + 'px';
-    screenBorder.style.borderWidth  = Math.ceil(5 / scale) + 'px';
+    if (uiMode === 'Maximal') {
+        screenBorder.style.borderRadius = '0px';
+        screenBorder.style.borderWidth  = '0px';
+    } else {
+        screenBorder.style.borderRadius = Math.ceil(6 / scale) + 'px';
+        screenBorder.style.borderWidth  = Math.ceil(5 / scale) + 'px';
+    }
     screenBorder.style.boxShadow = `${1/scale}px ${2/scale}px ${2/scale}px 0px rgba(255,255,255,0.16), ${-1.5/scale}px {-2/scale}px ${2/scale}px 0px rgba(0,0,0,0.19)`;
 
     if (isSafari) {
@@ -548,12 +558,20 @@ function onPlayButton(slow, isLaunchGame, args) {
 
     if (uiMode === 'Editor') {
         // There is nothing useful to see in Editor mode
-        // when playing, so bring the emulator up in IDE
+        // when playing, so switch the emulator to IDE
         // mode.
         setUIMode('IDE', false);
     }
     
-    targetFramerate = slow ? SLOW_FRAMERATE : PLAY_FRAMERATE;
+    const newTargetFramerate = slow ? SLOW_FRAMERATE : PLAY_FRAMERATE;
+
+    if ((emulatorMode === 'play') && (targetFramerate === newTargetFramerate)) {
+        // Already in play mode, just refocus input
+        emulatorKeyboardInput.focus();
+        return;
+    }
+
+    targetFramerate = newTargetFramerate;
     
     function doPlay() {
         if (slow) {
@@ -612,11 +630,8 @@ function onPlayButton(slow, isLaunchGame, args) {
         saveIDEState();
     }
 
-    if (emulatorMode === 'play') {
-        // Already in play mode, just refocus input
-        emulatorKeyboardInput.focus();
-        return;
-    } else if (emulatorMode === 'stop') {
+
+    if (emulatorMode === 'stop') {
         // Reload the program
         if (loadManager.status !== 'complete' && loadManager.status !== 'failure') {
             console.log('Load already in progress...');
@@ -627,8 +642,30 @@ function onPlayButton(slow, isLaunchGame, args) {
                     // Force a reload of the game
                     loadGameIntoIDE(window.gameURL, doPlay);
                 } else {
-                    setErrorStatus('Cannot reload while saving. Try again in a second.');
                     onStopButton();
+                    if (pendingSaveCallbacks.length > 0) {
+                        // Some saves haven't even been attempted.
+                        //
+                        // Force the saves to occur right now and then
+                        // try running again shortly afterward.
+                        //
+                        // Work with a clone of the array because
+                        // calling these functions removes them from
+                        // pendingSaveCallbacks.
+                        const copy = pendingSaveCallbacks.slice();
+                        for (let i = 0; i < copy.length; ++i) { copy[i](); }
+
+                        console.assert(pendingSaveCallbacks.length === 0);
+                        // Now reschedule pressing this button soon,
+                        // after the saves complete. It might fail
+                        // again, of course...in that case, we'll end
+                        // up in the error message.
+                        setTimeout(function () { 
+                            onPlayButton(slow, isLaunchGame, args);
+                        }, 300);
+                    } else {
+                        setErrorStatus('Cannot reload while saving. Try again in a second.');
+                    }
                 }
             } else {
                 // Just play the game, no reload required because
@@ -2201,7 +2238,7 @@ function onToggle(button) {
 /** Called by the IDE radio buttons */
 function onRadio() {
     // Controls
-    if (pressed('play') && ((emulatorMode !== 'play') || (targetFramerate !== PLAY_FRAMERATE))) {
+    if (pressed('play')) {
         onPlayButton();
     } else if (pressed('slow') && ((emulatorMode !== 'play') || (targetFramerate !== SLOW_FRAMERATE))) {
         onSlowButton();
@@ -2226,6 +2263,8 @@ function onRadio() {
         setUIMode('Maximal', false);
     } else if (pressed('editorUI') && (uiMode !== 'Editor')) {
         setUIMode('Editor', false);
+    } else if (pressed('ghostUI') && (uiMode !== 'Ghost')) {
+        setUIMode('Ghost', false);
     }
 
     saveIDEState();
@@ -3161,6 +3200,10 @@ if (! localStorage.getItem('debugWatchEnabled')) {
 
 document.getElementById('backgroundPauseCheckbox').checked = backgroundPauseEnabled || false;
 
+if (getQueryString('kiosk') === '1') {
+    // Hide the console menu and mode buttons
+    document.getElementsByTagName('body')[0].classList.add('kiosk');
+}
 setUIMode(getQueryString('mode') || localStorage.getItem('uiMode') || 'IDE', false);
 setErrorStatus('');
 setCodeEditorFontSize(parseInt(localStorage.getItem('codeEditorFontSize') || '14'));
@@ -3169,4 +3212,3 @@ onResize();
 // Set the initial size
 setFramebufferSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 reloadRuntime();
-

@@ -8,7 +8,7 @@ var PyxlScriptHighlightRules = function() {
 
     var keywords = "assert|debug_pause|debug_print|debug_watch|let|const|mod|local|preserving_transform|for|in|and|or|xor|not|while|until|if|then|else|push_mode|reset_game|set_mode|return|def|break|continue|default|bitand|bitnot|bitor|bitxor|bitnot|bitshl|bitshr|because|quit_game|launch_game|∈|∊";
 
-    var builtinConstants = "deg|true|false|nan|SCREEN_SIZE|pi|epsilon|infinity|nil|∞|½|⅓|⅔|¼|¾|⅕|⅖|⅗|⅘|⅙|⅐|⅛|⅑|⅒|°|ε|π|∅|∞|⁰|¹|²|³|⁴|⁵|⁶|⁷|⁸|⁹|ASSET_CREDITS";
+    var builtinConstants = "deg|true|false|nan|SCREEN_SIZE|pi|epsilon|infinity|nil|∞|½|⅓|⅔|¼|¾|⅕|⅖|⅗|⅘|⅙|⅐|⅛|⅑|⅒|°|ε|π|∅|∞|⁰|¹|²|³|⁴|⁵|⁶|⁷|⁸|⁹|CREDITS";
 
     var builtinFunctions = (
         "size|ray_intersect|draw_bounds|draw_disk|reset_clip|reset_transform|set_clip|draw_line|draw_sprite_corner_rect|intersect_clip|draw_point|draw_corner_rect|draw_rect|get_background|set_background|text_width|get_sprite_pixel_color|draw_sprite|draw_text|draw_tri|draw_poly|get_transform|get_clip|rotation_sign|sign_nonzero|set_transform|xy|xz_to_xyz|xy_to_xyz|xz|xyz|any_button_press|draw_map|get_mode|get_previous_mode|get_map_pixel_color|get_map_pixel_color_by_draw_coord|get_map_sprite|set_map_sprite|get_map_sprite_by_draw_coord|set_map_sprite_by_draw_coord|unparse|format_number|uppercase|lowercase|" +

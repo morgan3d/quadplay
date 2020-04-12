@@ -35,12 +35,10 @@ profiler.
 
 **Software Features**
 
-- Runs in all modern browsers
-- Deploy games to your own static website, itch.io, github pages, or 
-  for players to download and run locally
+- Export to your own website, itch.io, github pages, or download
 - Free for commercial, personal, and educational use
 - Friendly and powerful PyxlScript Python-like scripting language
-- Games run on mobile, desktop, tablet, Jetson Nano, and Raspberry Pi
+- Games run on web, mobile, desktop, tablet, Jetson Nano, and Raspberry Pi
 - Run locally and offline using Python + web browser
 - Hundreds of built-in Creative Commons assets
 - Command-line and external editor support for power users
@@ -770,6 +768,54 @@ The PyxlScript language feels a lot like JavaScript strict mode, with these chan
 Tools
 ====================================================================================
 
+Development Environment
+-----------------------------------------------------------------------------
+
+The browser development environment supports several alternative
+layouts, which are selected from the buttons on the upper right of the
+screen.
+
+I expect most experienced programmers to use external editors such as
+Visual Studio Code and Photoshop and put the development environment in 
+Full Screen or Test layout. Most newer programmers will
+directly use the built-in integrated development environment within
+the browser in the Develop and Debug modes.
+
+
+![](../console/ui-fullscreen.png width=32) Full Screen
+: Play your game full screen. Good for playtesting.
+
+![](../console/ui-touchscreen.png width=32) Touch Screen
+: Play your game with single-player mobile touch controls.
+
+![](../console/ui-test.png width=32) Test
+: Run with a large emulator and the debugger visible. This is 
+  good for using on the left or right half of the screen when 
+  running an external editor on the other half.
+  
+![](../console/ui-debug.png width=32) Debug
+: Pixel-doubled emulator and compressed text editor. Good for
+  debugging graphics code and tuning constants.
+  
+![](../console/ui-develop.png width=32) Develop
+: 1:1 pixel emulator with text editor and debugger. Good for
+  working on gameplay code.
+  
+![](../console/ui-edit.png width=32) Edit
+: Full-screen code editor. Good for writing lots of code.
+
+![](../console/ui-ghost.png width=32) Ghost
+: Show-off mode for livestreaming, with the full screen code
+  editor and the game running behind it full screen, like a
+  ghost. Press the Play button to switch input to the game
+  in the background.
+
+
+There's also a special "kiosk" mode that the `quadplay` script
+can run in for removing the top control bar when running on
+an arcade machine or other public display mode.
+
+
 Emulator
 ------------------------------------------------------------------------------------
 
@@ -781,7 +827,7 @@ directly pressing its buttons on screen for mobile. On a gamepad, you
 must press a button before directional input will register in a web
 browser.
 
-Pressing the "run" button on the editor automatically transfers keyboard focus to the emulator.
+Pressing the "Play" button on the editor automatically transfers keyboard focus to the emulator.
 
 The emulator has special keyboard keys for:
 
@@ -5751,7 +5797,7 @@ HTML query arguments:
 
 `IDE`
 : If set, load in development mode with access to the full IDE and stop and pause
-  buttons.
+  buttons. Cannot be set with `kiosk`
 
 `fastReload`
 : If `1`, do not force reloading of `quad://` files from disk but instead allow
@@ -5760,6 +5806,12 @@ HTML query arguments:
 
 `game`
 : URL of a game to load, which can be relative to the `quadplay` script.
+
+`mode`
+: Initial mode to display: `Maximal`, `Emulator`, `IDE`, or `Test`
+
+`kiosk`
+: If `1`, hide the entire menu bar. Cannot be set with `IDE`
 
 
 Physical Consoles
@@ -6188,26 +6240,32 @@ For 1.0:
 
 [x] macOS, Windows, Linux, and Raspbian
 [x] Gamepads
-[x] Full graphics API
-[x] Scripts
-[x] Physics
-[x] Path finding
-[x] Vim, Emacs, and Visual Studio code external editor support
-[x] Aseprite, Photoshop, Krita, and Tiled external editor support
+[x] APIs
+  [x] Graphics
+  [x] Physics
+  [x] AI
 [x] Five full sample games
-[ ] Standalone IDE (no external editors required)
+[ ] Export to:
+  [x] web page
+  [x] github pages
+  [x] itch.io (browser)
+  [x] macOS/Windows/Linux download (browser)
+  [ ] macOS binary
+  [ ] Windows binary
+[ ] Built-in IDE
   [x] Code editor
   [x] Project editor
   [x] Constant editor
   [ ] Map editor
   [ ] Sprite editor
-[ ] Python not required
-[ ] Shared-screen network multiplayer
-[ ] Binary game export for macOS and Windows (unsigned)
+[x] Vim, Emacs, and Visual Studio code external editor support
+[x] Aseprite, Photoshop, Krita, and Tiled external editor support
   
 Post 1.0:
 
 [ ] 30% virtual GPU graphics speedup
+[ ] Python not required
+[ ] Shared-screen network multiplayer
 [ ] Extended constant editor
 [ ] Font editor
 [ ] More AI routines
@@ -6372,6 +6430,16 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
+2020 Apr TBD: Beta update 38
+
+- Kiosk mode now completely fills the screen, removing all quadplay UI
+- Pressing play or reload now saves all documents immediately
+- Prevented frame rate changes during the first second of a new mode
+  to allow the JIT to catch up
+- Ghost mode for livestreaming the development environment
+- Pressing Play now restores keyboard focus to the game
+
+
 2020 Apr 11: Beta update 37
 
 - New wide-screen "Debug" UI layout option with 2x scale emulator
@@ -6395,7 +6463,7 @@ Changes for both the specification and implementation in each release.
 - New deja-4 font
 - New deja-3 font
 - "Sproing" and "Camera Zoom" examples
-- Constants now have an `description` documentation field that appears in the IDE
+- Constants now have a `description` documentation field that appears in the IDE
   and as tooltips
 - Updated markdown and [Markdeep](http://casual-effects.com/markdeep) processing to version 1.10
 - Created more room for the code editor in Debug view

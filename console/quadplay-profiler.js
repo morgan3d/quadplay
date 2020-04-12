@@ -144,26 +144,39 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime) {
         const G            = this.graphicsPeriod;
 
         // Estimates of the best frame time we might hit if graphicsPeriod changes 
-        const lowerTime  = logicTime + physicsTime + graphicsTime * G / (G + 1);
-        const minTime    = logicTime + physicsTime + graphicsTime * G / maxG;
-        const higherTime = logicTime + physicsTime + graphicsTime * G / (G - 1);
+        const minAchievableTime    = logicTime + physicsTime + graphicsTime * G / maxG;
+        const expectedTimeAtLowerFramerate  = logicTime + physicsTime + graphicsTime * G / (G + 1);
+        const expectedTimeAtCurrentFramerate = logicTime + physicsTime + graphicsTime * G;
+        const expectedTimeAtHigherFramerate = logicTime + physicsTime + graphicsTime * G / (G - 1);
         let newG = G;
-        
+
         if (frameTime > 18.5) {
-            // Not making frame rate
-            if (((minTime <= 16) || (minTime < frameTime * 0.6)) && (G < maxG)) {
+            // Not making frame rate, and we've been in the current
+            // mode for what we expected to be one second worth of
+            // frames.
+            if (((minAchievableTime <= 16) || (minAchievableTime < frameTime * 0.6)) && (G < maxG) && (QRuntime.mode_frames > 60 / G)) {
                 // It is worth lowering the graphics rate, as it
                 // should help us hit frame rate
                 newG = G + 1;
-                _systemPrint(`Lowered graphics update to ${60 / newG} Hz.\n  minTime = ${minTime}\n  lowerTime = ${lowerTime}\n  higherTime = ${higherTime}, frameTime = ${frameTime}`, 'color:#F43');
+                _systemPrint(`Lowered graphics update to ${60 / newG} Hz.\n` +
+                             `  minAchievableTime = ${minAchievableTime}\n` +
+                             `  expectedTimeAtLowerFramerate   = ${expectedTimeAtLowerFramerate}\n` +
+                             `  expectedTimeAtCurrentFramerate = ${expectedTimeAtCurrentFramerate}\n` +
+                             `  expectedTimeAtHigherFramerate  = ${expectedTimeAtHigherFramerate}\n` +
+                             `  actualTimeAtCurrentFramerate   = ${frameTime}`, 'color:#F43');
             }
-        } else if ((G > 1) && (higherTime < 16)) {
+        } else if ((G > 1) && (expectedTimeAtHigherFramerate < 16)) {
             // We have headroom and should increase the graphics rate
             // back towards full framerate.
             newG = G - 1;
-            _systemPrint(`Raised graphics update to ${60 / newG} Hz.\n  minTime = ${minTime}\n  lowerTime = ${lowerTime}\n  higherTime = ${higherTime}, frameTime = ${frameTime}`, 'color:#18F');
+            _systemPrint(`Raised graphics update to ${60 / newG} Hz.\n` +
+                         `  minAchievableTime = ${minAchievableTime}\n` +
+                         `  expectedTimeAtLowerFramerate   = ${expectedTimeAtLowerFramerate}\n` +
+                         `  expectedTimeAtCurrentFramerate = ${expectedTimeAtCurrentFramerate}\n` +
+                         `  expectedTimeAtHigherFramerate  = ${expectedTimeAtHigherFramerate}\n` +
+                         `  actualTimeAtCurrentFramerate   = ${frameTime}`, 'color:#18F');
         }
-
+        
         if (newG !== G) {
             // Period changed
             this.graphicsPeriod = newG;

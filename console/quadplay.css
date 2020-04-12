@@ -153,6 +153,11 @@ div#header {
     white-space: nowrap;
 }
 
+.kiosk #header {
+    display: none;
+    height: 0px;
+}
+
 /** Do not change this selector without changing quadplay-ide.js setColorScheme() */
 #header a, .menu a {
     color: #e61b9d !important;
@@ -496,7 +501,7 @@ div.disabled span.label, div.disabled:active span.label {
 }
 
 
-.EditorUI #editorFrame {
+.EditorUI #editorFrame, .GhostUI #editorFrame {
     right: 0px;
 }
 
@@ -636,7 +641,7 @@ code, .code {
 }
 
 /* Hide the debugger in emulator modes and full screen editor */
-.MaximalUI #debugger, .EmulatorUI #debugger, .EditorUI #debugger {
+.MaximalUI #debugger, .EmulatorUI #debugger, .EditorUI #debugger, .GhostUI #debugger {
     visibility: hidden;
 }
 
@@ -662,7 +667,7 @@ code, .code {
     position: absolute;
     top: 23px;
     left: 0px;
-    width: 175px;
+    width: 165px;
     bottom: 0px;
     padding: 5px;
     font-size: 14px;
@@ -850,11 +855,29 @@ code, .code {
     overflow: hidden;
 }
 
+/* In kiosk mode, fill the entire screen */
+body.kiosk .emulator {
+    top: 0px;
+}
+
+body.kiosk, body.GhostUI {
+    background: #000 !important;
+}
+
+body.kiosk #logo, body.GhostUI #logo {
+    display: none;
+}
+
 #emulatorFrame {
     background: #331c2a;
     border-left: 1px solid #888;
     border-right: none;
     border-top: none;
+}
+
+.GhostUI #emulatorFrame {
+    background: none;
+    border: none;
 }
 
 .WideIDEUI .emulator, .WideIDEUI div#emulatorFrame {
@@ -917,7 +940,7 @@ hr {
     border: none;
 }
 
-.EmulatorUI .emulator, .MaximalUI .emulator, .TestUI .emulator {
+.EmulatorUI .emulator, .MaximalUI .emulator, .TestUI .emulator, .GhostUI .emulator {
     left: 1px;
     width: unset;
     right: 1px;
@@ -925,12 +948,26 @@ hr {
     height: unset;
 }
 
-.EmulatorUI .emulatorBackground, .MaximalUI .emulatorBackground, .TestUI .emulatorBackground {
+.GhostUI .emulator {
+    z-index: -10;
+    /* Dim into the background */
+    opacity: 40%;
+    filter: blur(0.15vmin);
+}
+
+.GhostUI .ide {
+    text-shadow: rgba(0,0,0,100%) 0px 2px 6px;
+    mix-blend-mode: screen;
+    color:#fff;
+}
+
+
+.EmulatorUI .emulatorBackground, .MaximalUI .emulatorBackground, .TestUI .emulatorBackground, .GhostUI .emulatorBackground {
     border-radius:    40px;
 }
 
 
-.TestUI .emulatorBackground, .MaximalUI .emulatorBackground {
+.TestUI .emulatorBackground, .MaximalUI .emulatorBackground, .GhostUI .emulatorBackground {
     background: none !important;
     border: none;
     box-shadow: none;
@@ -1043,7 +1080,7 @@ canvas#screen {
                 0.2px 0.8px 0.8px 0.5px rgba(255,255,255,0.3);
 }
 
-.TestUI #screenBorder, .MaximalUI #screenBorder {
+.TestUI #screenBorder, .MaximalUI #screenBorder, .GhostUI #screenBorder {
     border: none;
     box-shadow: none;
 }

@@ -3,7 +3,7 @@
 
 // How long to wait for new input before saving, to avoid
 // constant disk churn
-const CODE_EDITOR_SAVE_DELAY = 1.2; // seconds
+const CODE_EDITOR_SAVE_DELAY = 5; // seconds
 
 // Maps filenames to editor sessions. Cleared when a project is loaded
 const codeEditorSessionMap = new Map();
@@ -31,6 +31,19 @@ function getGamePath() {
 /* Reference count for outstanding saves to all files. Used to disable reload
    temporarily while a save is pending. */
 let savesPending = 0;
+
+/** Array of pending save callbacks. It is possible for savesPending to be nonzero
+    when this is empty if the callbacks have run but the saves themselves haven't
+    completed. */
+let pendingSaveCallbacks = [];
+function removePendingSaveCallback(callback) {
+    const i = pendingSaveCallbacks.indexOf(callback);
+    if (i !== -1) {
+        pendingSaveCallbacks.splice(i, 1);
+    } else {
+        console.warn('Could not find a callback to remove.');
+    }
+}
 
 
 function onIncreaseFontSizeButton() {
@@ -200,6 +213,7 @@ function createCodeEditorSession(url, bodyText) {
             if (session.aux.saveTimeoutID) {
                 --savesPending;
                 clearTimeout(session.aux.saveTimeoutID);
+                removePendingSaveCallback(session.aux.saveCallback);
             }
             
             // Note that the epoch has changed
@@ -208,8 +222,14 @@ function createCodeEditorSession(url, bodyText) {
             setCodeEditorSessionMode(session, 'Modified<span class="blink">...</span>');
 
             ++savesPending;
-            session.aux.saveTimeoutID = setTimeout(function () {
+            session.aux.saveCallback = function () {
+                // Remove the callback
+                removePendingSaveCallback(session.aux.saveCallback);
+                // Clear the timeout in case this function was explicitly invoked
+                clearTimeout(session.aux.saveTimeoutID);
                 session.aux.saveTimeoutID = null;
+                session.aux.saveCallback = null;
+                
                 if (myEpoch === session.aux.epoch) {
                     // Epoch has not changed since timeout was created, so begin the POST
                     setCodeEditorSessionMode(session, 'Saving<span class="blink">...</span>');
@@ -241,7 +261,10 @@ function createCodeEditorSession(url, bodyText) {
                     // Epoch failed
                     --savesPending;
                 }
-            }, CODE_EDITOR_SAVE_DELAY * 1000);
+            };
+
+            pendingSaveCallbacks.push(session.aux.saveCallback);
+            session.aux.saveTimeoutID = setTimeout(session.aux.saveCallback, CODE_EDITOR_SAVE_DELAY * 1000);
         });
     }
     
