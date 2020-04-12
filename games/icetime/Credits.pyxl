@@ -4,7 +4,7 @@ let y = SCREEN_SIZE.y + 15
 for type in ["Game", "Sprite", "Font", "Sound", "Code"]:
    y += draw_text(scoreFont, type, xy(½ SCREEN_SIZE.x, y), #ec0, #0, #0, 0, 2).y
    
-   for line in ASSET_CREDITS[lowercase(type)]:
+   for line in CREDITS[lowercase(type)]:
       y += draw_text(tinyFont, line, xy(½ SCREEN_SIZE.x, y), #f, ∅, #0, 0, 2, 0, SCREEN_SIZE.x).y + 10
       
    y += 20
