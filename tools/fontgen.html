@@ -135,7 +135,7 @@ const substitution = {
 
 // The main grid of 1-wide characters
 document.write('<table id="font">');
-for (let y = 0; y < FONT_ROWS - 1; ++y) {
+for (let y = 0; y < FONT_ROWS - 2; ++y) {
   // Vertical alignment to control baseline:
   document.write('<tr>');
   for (let x = 0; x < FONT_COLS; ++x) {
@@ -153,10 +153,13 @@ for (let y = 0; y < FONT_ROWS - 1; ++y) {
   document.write('</tr>');
 }
 
-// The final, special row of 4-wide characters
+// The final two special rows of 4-wide characters
 document.write('<tr>');
 for (let i = 0; i < fontSpecials.length; ++i) {
     document.write('<td colspan=4><span style="font-size:70%;padding-left:0.25em;padding-right:0.25em;border-radius:0.5em;font-weight:bold;background:#fff; color:#000">' + fontSpecials[i] + '</span></td>');
+    if (i + 1 === FONT_COLS / 4) {
+        document.write('</tr><tr>');
+    }
 }
 document.write('</tr>');
 document.write('</table>');

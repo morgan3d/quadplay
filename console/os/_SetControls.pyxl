@@ -18,7 +18,7 @@ const selected_color          = #f
 const unselected_color        = #b
 
 const controllerSpritesheet = if SCREEN_SIZE.y >= 224 then _controllerSpritesheet44 else _controllerSpritesheet22
-const controllerTypeArray = ["Quadplay", "XboxOne", "Xbox360", "Keyboard", "Kbd_Alt", "Kbd_P1", "Kbd_P2", "PS4", "PS3", "SNES", "SwitchPro", "JoyCon_R", "JoyCon_L", "Zero", "HOTAS", "Stadia", "GPD_Win", "SN30_Pro"];
+const controllerTypeArray = ["Quadplay", "Xbox", "Xbox360", "Keyboard", "Kbd_Alt", "Kbd_P1", "Kbd_P2", "PS5", "PS4", "PS3", "SNES", "SwitchPro", "JoyCon_R", "JoyCon_L", "Zero", "HOTAS", "Stadia", "GPD_Win", "SN30_Pro"];
 
 // Tweak layout for square aspect ratios
 let shiftX = 0 // Symmetric text shift from center
@@ -26,8 +26,8 @@ let shiftY = 0 // Vertical offset
 let offsetX = 0 // Asymmetric text shift to left to accomodate large button prompt
 let shiftSpriteY = 0
 let arrowX = 76 // Position of the scroll arrows
-let arrowY = -2
-let titleY = -8
+let arrowY = -3
+let titleY = -7
 
 
 if SCREEN_SIZE.x == 64:
@@ -41,7 +41,7 @@ if SCREEN_SIZE.x == 64:
 else if SCREEN_SIZE.x == 128:
    shiftY = 10
    shiftX = 22
-   offsetX = 18
+   offsetX = 12
    shiftSpriteY = -36
    arrowY = -10
    arrowX = 54
@@ -56,7 +56,7 @@ else if SCREEN_SIZE.x == 192:
    shiftSpriteY = -24
 else if SCREEN_SIZE.x == 384:
    arrowX = 62
-   arrowY = -8
+   arrowY = -7
    shiftX = -18
    shiftSpriteY = -24
 
@@ -92,7 +92,7 @@ enter(p)
 ────────────────────────────────────────────────────────────────────────
 activeIndex = p
 oldBackground = get_background()
-
+set_clip(xy(0, 0), SCREEN_SIZE, -2047, 4096)
 
 
 leave
@@ -154,26 +154,28 @@ for p < 4:
          set_transform(xy((0.5 + (p bitand 1)) * SCREEN_SIZE.x / 2,
                          (p bitshr 1) * SCREEN_SIZE.y / 2 + (26 + shiftY) * scale), xy(1, 1))
 
+      draw_text({font: choiceFont, text: playerName[p] + control.type, shadow: text_shadow_color,
+                pos: xy(0, titleY) * scale, color: text_color, x_align: "center"})
+
       draw_text({font: font, text: "⊲", pos: xy(-arrowX, arrowY) * scale + xy(0, 2), color: text_shadow_color, x_align: "center"})
       draw_text({font: font, text: "⊳", pos: xy(+arrowX, arrowY) * scale + xy(0, 2), color: text_shadow_color, x_align: "center"})
       draw_text({font: font, text: "⊲", pos: xy(-arrowX, arrowY) * scale, color: prompt_color, x_align: "center"})
       draw_text({font: font, text: "⊳", pos: xy(+arrowX, arrowY) * scale, color: prompt_color, x_align: "center"})
 
-      draw_text({font: choiceFont, text: playerName[p] + control.type, shadow: text_shadow_color,
-                pos: xy(0, titleY) * scale, color: text_color, x_align: "center"})
+      draw_sprite({sprite: controllerSpritesheet[control.type], pos: xy(-offsetX / 2, 30 - shiftSpriteY) * scale})
 
-      draw_sprite({sprite: controllerSpritesheet[control.type], pos: xy(-offsetX / 2, 26 - shiftSpriteY) * scale})
+      draw_text({font: controlsFont, text: control.prompt["ⓔ"], pos: xy(-44 + shiftX - offsetX, 10) * scale, color: #f, shadow: #023, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["ⓠ"], pos: xy(-44 + shiftX - offsetX, 26) * scale, color: #f, shadow: #023, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["⍐"], pos: xy(-44 + shiftX - offsetX, 44) * scale, color: #f, shadow: #023, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["⍈"], pos: xy(-28 + shiftX - offsetX, 61) * scale, color: #f, shadow: #023, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["⍇"], pos: xy(-60 + shiftX - offsetX, 61) * scale, color: #f, shadow: #023, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["⍗"], pos: xy(-44 + shiftX - offsetX, 80) * scale, color: #f, shadow: #023, x_align: "center"})
 
-      draw_text({font: controlsFont, text: control.prompt["ⓠ"], pos: xy(-44 + shiftX - offsetX, 16) * scale, color: #f, shadow: #023, x_align: "center"})
-      draw_text({font: controlsFont, text: control.prompt["⍐"], pos: xy(-44 + shiftX - offsetX, 38) * scale, color: #f, shadow: #023, x_align: "center"})
-      draw_text({font: controlsFont, text: control.prompt["⍈"], pos: xy(-28 + shiftX - offsetX, 55) * scale, color: #f, shadow: #023, x_align: "center"})
-      draw_text({font: controlsFont, text: control.prompt["⍇"], pos: xy(-60 + shiftX - offsetX, 55) * scale, color: #f, shadow: #023, x_align: "center"})
-      draw_text({font: controlsFont, text: control.prompt["⍗"], pos: xy(-44 + shiftX - offsetX, 74) * scale, color: #f, shadow: #023, x_align: "center"})
-
-      draw_text({font: controlsFont, text: control.prompt["ⓟ"], pos: xy(+44 - shiftX, 16) * scale, color: #f, shadow: #023, x_align: "center"})
-      draw_text({font: controlsFont, text: control.prompt["ⓓ"], pos: xy(+44 - shiftX, 38) * scale, color: #f, shadow: #023, x_align: "center"})
-      draw_text({font: controlsFont, text: control.prompt["ⓒ"], pos: xy(+28 - shiftX, 55) * scale, color: #f, shadow: #023, x_align: "center"})
-      draw_text({font: controlsFont, text: control.prompt["ⓑ"], pos: xy(+60 - shiftX, 55) * scale, color: #f, shadow: #023, x_align: "center"})
-      draw_text({font: controlsFont, text: control.prompt["ⓐ"], pos: xy(+44 - shiftX, 74) * scale, color: #f, shadow: #023, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["ⓕ"], pos: xy(+44 - shiftX, 10) * scale, color: #f, shadow: #023, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["ⓟ"], pos: xy(+44 - shiftX, 26) * scale, color: #f, shadow: #023, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["ⓓ"], pos: xy(+44 - shiftX, 44) * scale, color: #f, shadow: #023, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["ⓒ"], pos: xy(+28 - shiftX, 61) * scale, color: #f, shadow: #023, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["ⓑ"], pos: xy(+60 - shiftX, 61) * scale, color: #f, shadow: #023, x_align: "center"})
+      draw_text({font: controlsFont, text: control.prompt["ⓐ"], pos: xy(+44 - shiftX, 80) * scale, color: #f, shadow: #023, x_align: "center"})
 
 

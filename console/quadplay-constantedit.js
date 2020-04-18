@@ -16,10 +16,6 @@ function showConstantEditor(index) {
 
     let html = '';
 
-    if (json.description && json.description !== '') {
-        html += '<p><i>' + json.description + '</i></p>';
-    }
-    
     const disabled = editableProject ? '' : 'disabled';
     if (type === 'string') {
         html += `${index} = "<textarea style="vertical-align:top; margin-left:1px; margin-right:2px;" autocomplete="false" ${disabled} onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.value, this.value)" rows=4 cols=40>${c}</textarea>"`;
@@ -37,7 +33,7 @@ function showConstantEditor(index) {
 
         const fields = type;
         
-        const onchange = `onConstantEditorVectorValueChange(gameSource, QRuntime, '${index}', '${fields}')`;
+        const onchange = `onConstantEditorVectorValueChange(gameSource, QRuntime, '${index}', '${fields}', event)`;
 
         html += `${index} = {<table style="margin-left:10px">`;
 
@@ -47,45 +43,123 @@ function showConstantEditor(index) {
             
             // Start with the already-parsed value as a backup
             let value = json.value[element].type ? json.value[element].value : c[element];
-            html += `<tr><td>${element}:</td><td><input id="constantEditor_${index}_${element}" onchange="${onchange}" style="width:80px; text-align: right; margin-left: 1px; margin-right: 1px" type="text" autocomplete="false" ${disabled} value="${value}">`;
+            html += `<tr><td>${element}:</td><td style="white-space: nowrap"><input id="constantEditor_${index}_${element}" onchange="${onchange}" style="width:80px; text-align: right; margin-left: 1px; margin-right: 1px" type="text" autocomplete="false" ${disabled} value="${value}">`;
             html +=  (i < fields.length - 1) ? ', ' : '';
             html += '</td></tr>';
         }
 
         html += '</table>}';
 
-        if (type[0] === 'r') {
-            html += `<div id="constantEditor_${index}_preview" style="background: rgb(${255 * c.r}, ${255 * c.g}, ${255 * c.b}); margin-top: 10px; border: 1px solid #000; width: 64px; height: 64px"> </div>`;
-        } else if (type[0] === 'h') {
-            html += `<div id="constantEditor_${index}_preview" style="background: hsv(${255 * c.h}, ${255 * c.s}, ${255 * c.v}); margin-top: 10px; border: 1px solid #000; width: 64px; height: 64px"> </div>`;
+        let editor = '', metaEditor = '';
+        if (editableProject && (type === 'xy' || type === 'xz' || type === 'xyz')) {
+            // Position editor
+            
+            // The arrow characters here must be kept in sync with onConstantEditorVectorNudge
+            const buttonParams = ` style="width:24px; height:24px; font-weight: bold; font-family: sans-serif" onclick="onConstantEditorVectorNudge('constantEditor_${index}', '${type}', this.innerText)"`;
+            editor = `<table style="border-collapse:collapse"><tr><td></td><td><button ${buttonParams} title="+${type[1]}">↑</button></td><td>` + (type.length === 3 ? `<button ${buttonParams} title="-z">↗</button>` : '') + `</td></tr>` +
+                `<tr><td><button ${buttonParams} title="-x">←</button></td><td></td><td><button ${buttonParams} title="+x">→</button></td></tr>` +
+                `<tr><td>` + (type.length === 3 ? `<button ${buttonParams} title="+z">↙</button>` : '') + `</td><td><button ${buttonParams} title="-${type[1]}">↓</button></td><td></td></tr></table>`;
+            
+            metaEditor = '<br><table style="margin-left:10px">';
+            if (! json.nudge) {
+                // Add nudge values if they aren't present.
+                json.nudge = {};
+                for (let i = 0; i < fields.length; ++i) { json.nudge[fields[i]] = '+1'; }
+                if (type[1] === 'y' && gameSource.json.flip_y !== false) {
+                    json.nudge.y = -1;
+                }
+            }
+            
+            for (let i = 0; i < fields.length; ++i) {
+                const element = fields[i];
+                metaEditor += `<tr><td>Δ${element}</td><td><input id="constantEditor_${index}_nudge_${element}" type="text" value="${json.nudge[element]}" onchange="${onchange}" style="width:32px; text-align:right"></input></td></tr>`;
+            }
+            metaEditor += '</table>';
+        } else if (type === 'rgb' || type === 'rgba' || type === 'hsv' || type === 'hsva') {
+            // Color editor
+
+            // Display color
+            if (type[0] === 'r') {
+                editor = `<br><div id="constantEditor_${index}_preview" style="background: rgb(${255 * c.r}, ${255 * c.g}, ${255 * c.b}); border-radius: 4px; border: 1px solid #000; width: 58px; height: 58px"> </div>`;
+            } else if (type[0] === 'h') {
+                editor = `<br><div id="constantEditor_${index}_preview" style="background: hsv(${255 * c.h}, ${255 * c.s}, ${255 * c.v}); border-radius: 4px; border: 1px solid #000; width: 58px; height: 58px"> </div>`;
+            }
+            
+            // Sliders
+            if (editableProject) {
+                // Move the color preview over to make room for the sliders
+                metaEditor = editor;
+                
+                editor = '<br><table>';
+                for (let i = 0; i < fields.length; ++i) {
+                    const element = fields[i];
+                    editor += `<tr><td><input id="constantEditor_${index}_slider_${element}" type="range" oninput="onConstantEditorVectorSliderChange('constantEditor_${index}', '${type}', '${element}', this.value / 255)" style="height: 1em" min="0" max="255" value="${255 * c[element]}"></input></td></tr>`;
+                }
+                editor += '</table>';
+            }
+        } // End special case editors
+
+        
+        if (editor !== '') {
+            html = '<table style="border-collapse: collapse"><tr valign="top"><td>' + html + '</td><td style="padding-left: 10px">' + editor + '</td><td>' + metaEditor + '</td></tr></table>';
         }
         
     } else {
         // Object or array (including built-in objects)
         const L = Object.keys(c).length;
-        if ((L <= 4) && (c.r !== undefined) && (c.g !== undefined) && (c.b !== undefined) && ((c.a !== undefined) || (L === 3))) {
-            // RGB[A]
-            html += index + ` <div style="background: rgb(${255 * c.r}, ${255 * c.g}, ${255 * c.b}); width: 50px; height: 16px; display: inline-block"> </div><br/>(${QRuntime.unparse(c)})`;
-        } else if ((L <= 4) && (c.h !== undefined) && (c.s !== undefined) && (c.v !== undefined) && ((c.a !== undefined) || (L === 3))) {
-            // HSV[A]
-            html += index + ` <div style="background: hsv(${255 * c.h}, ${255 * c.s}, ${255 * c.v}); width: 50px; height: 16px; display: inline-block"> </div><br/>(${QRuntime.unparse(c)})`;
+        const s = QRuntime.unparse(c);
+        if (s.length > 16) {
+            html += index + ' = <table>' + visualizeConstant(c, '') + '</table>';
         } else {
-            const s = QRuntime.unparse(c);
-            if (s.length > 16) {
-                html += index + ' = <table>' + visualizeConstant(c, '') + '</table>';
-            } else {
-                html += index + ' = ' + escapeHTMLEntities(s);
-            }
+            html += index + ' = ' + escapeHTMLEntities(s);
         }
     }
+
+    if (json.description && json.description !== '') {
+        html = '<p><i>' + json.description + '</i></p>' + html;
+    }
+    
     constantEditor.innerHTML = html;
     constantEditor.style.visibility = 'visible';
 }
 
 
+function onConstantEditorVectorSliderChange(idPrefix, type, field, value) {
+    const textBox = document.getElementById(idPrefix + '_' + field);
+    textBox.value = Math.round(100 * value) + '%';
+    textBox.onchange();
+}
+
+/** Called when a direction button is pressed on a vector editor */
+function onConstantEditorVectorNudge(idPrefix, type, direction) {
+    let field = '';
+    let sign = 1;
+    
+    switch (direction) {
+    case '↓': sign = -1; // Fall through
+    case '↑': field = type[1]; break;
+        
+    case '←': sign = -1; // Fall through
+    case '→': field = type[0]; break;
+
+    case '↗': sign = -1; // Fall through
+    case '↙': field = type[2]; break;
+    }
+
+    const textBox = document.getElementById(idPrefix + '_' + field);
+    const nudgeBox = document.getElementById(idPrefix + '_nudge_' + field);
+    const step = _parse(nudgeBox.value).result;
+    const newValue = _parse(textBox.value).result + step * sign;
+    textBox.value = newValue;
+    textBox.onchange();
+}
+
 /** Allows editing an object with a set of numeric fields. fields can be a string of
-    single-letter fields or an array of multi-letter ones. */
-function onConstantEditorVectorValueChange(sourceObj, environment, key, fields) {
+    single-letter fields or an array of multi-letter ones.
+
+    If the event is undefined, then this was programmatically invoked. */
+function onConstantEditorVectorValueChange(sourceObj, environment, key, fields, event) {
+    
     const json  = sourceObj.json.constants[key];
     console.assert(json !== undefined);
     for (let f = 0; f < fields.length; ++f) {
@@ -98,6 +172,10 @@ function onConstantEditorVectorValueChange(sourceObj, environment, key, fields) 
 
         // Update value
         json.value[element].value = document.getElementById('constantEditor_' + key + '_' + element).value;
+
+        if (json.nudge) {
+            json.nudge[element] = document.getElementById('constantEditor_' + key + '_nudge_' + element).value;
+        }
     }
 
     const value = evalJSONGameConstant(json);
@@ -111,6 +189,13 @@ function onConstantEditorVectorValueChange(sourceObj, environment, key, fields) 
             preview.style.background = `rgb(${255 * value.r}, ${255 * value.g}, ${255 * value.b})`;
         } else {
             preview.style.background = `hsv(${255 * value.h}, ${255 * value.s}, ${255 * value.v})`;
+        }
+
+        // Update sliders
+        for (let i = 0; i < type.length; ++i) {
+            const field = type[i];
+            const slider = document.getElementById('constantEditor_' + key + '_slider_' + field);
+            slider.value = value[field] * 255;
         }
     }
     

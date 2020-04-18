@@ -32,12 +32,13 @@ abcdefghijklmnopqrstuvwxyz←→<>◀▶
 αβγδεζηθικλμνξ§πρστυϕχψωςşğ⌊⌋⌈⌉"
 ÆÀÁÂÃÄÅÇÈÉÊËÌÍÎÏØÒÓÔÕÖŒÑẞÙÚÛÜБ✓Д
 æàáâãäåçèéêëìíîïøòóôõöœñßùúûüбгд
-ЖЗИЙЛПЦЧШЩЭЮЯЪЫЬ±⊗↖↗      ○●◻◼△▲
+ЖЗИЙЛПЦЧШЩЭЮЯЪЫЬ±⊗↖↗  ⓔ⦸ⓝⓗ○●◻◼△▲
 жзийлпцчшщэюяъыь∫❖↙↘…‖     ♠♥♣♦✜
 ⓐⓑⓒⓓⓕⓖⓟⓠⓥⓧⓨ⬙⬗⬖⬘Ⓞ⍍▣⧉☰⒧⒭①②③④⑦⑧⑨⓪⊖⊕
-␣Ɛ⏎ҕﯼડƠ `;
+␣Ɛ⏎ҕﯼડƠ⇥
+⬁⬀⌥     `;
 
-// Word forms of last row: SPC ENT RET SEL STR SHR OPT <reserved>
+// Word forms of last two rows: SPC ENT RET SEL STR SHR OPT TAB / LSH RSH
 // This is used by fontgen.
 const fontSpecials = {
     '␣':'SPACE',
@@ -46,11 +47,16 @@ const fontSpecials = {
     'ҕ':'SELECT',
     'ﯼ':'START',
     'ડ':'SHARE',
-    'Ơ':'OPTIONS'};
+    'Ơ':'OPTION',
+    '⇥':'TAB',
+
+    '⬁':'L.SHIFT',
+    '⬀':'R.SHIFT',
+    '⌥':'ALT'};
 
 const FONT_COLS = 32;
-// Accounts for the 4x characters on the last row and the missing last newline
-const FONT_ROWS = Math.floor((fontChars.length + 1) / (FONT_COLS + 1)) + 1;
+// Accounts for the 4x characters on the last two rows, and the missing last newline
+const FONT_ROWS = Math.floor((fontChars.length + 1) / (FONT_COLS + 1)) + 2;
 
 {
     // Build the font map. 
@@ -162,12 +168,14 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
     // Compute tight bounds on letters so that we can repack.
     let _charWidth = 0;
     for (let charY = 0; charY < FONT_ROWS; ++charY) {
-        const charScale = (charY < FONT_ROWS - 1) ? 1 : 4;
+        const charScale = (charY < FONT_ROWS - 2) ? 1 : 4;
         for (let charX = 0; charX < FONT_COLS / charScale; ++charX) {
             const yTile = char_size.y * charY;
             
             // fontChars is actually 33 wide because it has newlines in it
-            const c = fontChars[charX + charY * 33];
+            const index = charX + Math.min(charY, FONT_ROWS - 2) * (FONT_COLS + 1) +
+                  Math.max(charY - (FONT_ROWS - 2), 0) * (FONT_COLS / 4 + 1);
+            const c = fontChars[index];
             
             if (c !== ' ') {
                 // Find tightest non-black bounds on each character
@@ -237,7 +245,7 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
     font._bounds = {};
 
     for (let charY = 0; charY < FONT_ROWS; ++charY) {
-        const charScale = (charY < FONT_ROWS - 1) ? 1 : 4;
+        const charScale = (charY < FONT_ROWS - 2) ? 1 : 4;
         for (let charX = 0; charX < FONT_COLS / charScale; ++charX) {
             // Reset
             array2DClear(colorMask, 0);
@@ -246,7 +254,11 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
             array2DClear(shadowBorderMask, 0);
             
             // +1 for the newline on each row
-            const chr = fontChars[charX + charY * (FONT_COLS + 1)];
+            // take into account that the last two rows are short
+            const index = charX +
+                  Math.min(charY, FONT_ROWS - 2) * (FONT_COLS + 1) +
+                  Math.max(charY - (FONT_ROWS - 2), 0) * (FONT_COLS / 4 + 1);
+            const chr = fontChars[index];
             console.assert(chr !== undefined, 'Undefined character at (' + charX + ', ' + charY + ')');
             
             if (chr !== ' ') {
@@ -256,6 +268,7 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
                 console.assert(srcBounds.y2 - srcBounds.y1 + 1 <= colorMask.height);
                 console.assert(srcBounds.x2 - srcBounds.x1 + 1 <= colorMask.width);
                 console.assert(char_size.y * charY === Math.floor(srcBounds.y1 / char_size.y) * char_size.y);
+                
                 for (let srcY = srcBounds.y1; srcY <= srcBounds.y2; ++srcY) {
                     const dstY = srcY - char_size.y * charY - tightY1 + borderSize;
                     for (let srcX = srcBounds.x1; srcX <= srcBounds.x2; ++srcX) {

@@ -947,8 +947,16 @@ var _submitFrame = null;
 // terms of pixel indices.
 var _clipY1 = 0, _clipY2 = _SCREEN_HEIGHT - 1, _clipZ1 = -2047, _clipX1 = 0, _clipX2 = _SCREEN_WIDTH - 1, _clipZ2 = 2048;
 
-// Draw call offset
+// Transform
 var _offsetX = 0, _offsetY = 0, _offsetZ = 0, _scaleX = 1, _scaleY = 1, _scaleZ = 1, _skewXZ = 0, _skewYZ = 0;
+
+// Camera
+var _camera = {
+    pos_x: 0,
+    pos_y: 0,
+    angle: 0,
+    zoom: 1
+};
 
 var _graphicsStateStack = [];
 
@@ -959,7 +967,12 @@ function _pushGraphicsState() {
         cx2:_clipX2, cy2:_clipY2, cz2:_clipZ2, 
         ax:_offsetX, ay:_offsetY, az:_offsetZ,
         sx:_scaleX,  sy:_scaleY,  sz:_scaleZ,
-        kx:_skewXZ,  ky:_skewYZ
+        kx:_skewXZ,  ky:_skewYZ,
+
+        camera_pos_x: _camera.pos_x,
+        camera_pos_y: _camera.pos_y,
+        camera_angle: _camera.angle,
+        camera_zoom: _camera.zoom
     });
 }
 
@@ -972,8 +985,38 @@ function _popGraphicsState() {
 
     _clipX1 = s.cx1; _clipY1 = s.cy1; _clipZ1 = s.cz1;
     _clipX2 = s.cx2; _clipY2 = s.cy2; _clipZ2 = s.cz2;
+
+    _camera.pos_x = s.camera_pos_x;
+    _camera.pos_y = s.camera_pos_y;
+    _camera.angle = s.camera_angle;
+    _camera.zoom = s.camera_zoom;
+
 }
 
+
+function set_camera(pos, angle, zoom) {
+    if (is_object(pos) && 'pos' in pos) {
+        zoom = pos.zoom;
+        angle = pos.angle;
+        pos = pos.pos;
+    }
+    
+    if (pos === undefined) { pos = xy(0, 0); }
+    if (zoom === undefined) { zoom = 1; }
+    angle = angle || 0;
+    _camera.pos_x = pos.x;
+    _camera.pos_y = pos.y;
+    _camera.angle = angle;
+    _camera.zoom = zoom;
+}
+
+function get_camera() {
+    return {
+        pos: xy(_camera.pos_x, _camera.pos_y),
+        angle: _camera.angle,
+        zoom: _camera.zoom
+    };
+}
 
 function get_transform() {
     return {pos:  xy(_offsetX, _offsetY),
@@ -1655,31 +1698,13 @@ function transform_sprite_to_entity(entity, coord) {
 
 function transform_draw_to_entity(entity, coord) {
     if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { throw new Error("Requires both an entity and a coordinate"); }
-    const a = entity.angle * -rotation_sign();
-    const C = Math.cos(a);
-    const S = Math.sin(a);
-    
-    const Xx =  C, Xy = S;
-    const Yx = -S, Yy = C;
-
-    const x = coord.x - entity.pos.x, y = coord.y - entity.pos.y;
-    return xy((x * Xx + y * Yx) / entity.scale.x,
-              (x * Xy + y * Yy) / entity.scale.y);
+    return transform_to(entity.pos, entity.angle, entity.scale, coord);
 }
 
 
 function transform_entity_to_draw(entity, coord) {
     if (! coord || coord.x == undefined) { throw new Error("transform_entity_to_draw() requires both an entity and a coordinate"); }
-
-    const a = entity.angle * -rotation_sign();
-    const C = Math.cos(a);
-    const S = Math.sin(a);
-
-    const Xx =  C, Xy = S;
-    const Yx = -S, Yy = C;
-
-    const x = coord.x * entity.scale.x, y = coord.y * entity.scale.y;
-    return xy(x * Xx + y * Xy + entity.pos.x, x * Yx + y * Yy + entity.pos.y);
+    return transform_from(entity.pos, entity.angle, entity.scale, coord);
 }
 
 
@@ -1898,7 +1923,7 @@ function transform_entity_to_entity(e1, e2, pos) {
 
 
 function transform_parent_to_child(child, pos) {
-    let a = child.parent.angle - child.angle;
+    const a = child.parent.angle - child.angle;
     const c = Math.cos(a);
     const s = Math.sin(a);
     const x = pos.x - child.pos_in_parent.x;
@@ -1910,7 +1935,7 @@ function transform_parent_to_child(child, pos) {
 
 
 function transform_child_to_parent(child, pos) {
-    let a = child.angle - child.parent.angle;
+    const a = child.angle - child.parent.angle;
     const c = Math.cos(a);
     const s = Math.sin(a);
     return xy( c * pos.x + s * pos.y + child.pos_in_parent.x,
@@ -3151,6 +3176,33 @@ function transform_map_to_draw(map, map_coord) {
 }
 
 
+function transform_to(pos, angle, scale, coord) {
+    const a = angle * -rotation_sign();
+    const C = Math.cos(a);
+    const S = Math.sin(a);
+    
+    const Xx =  C, Xy = S;
+    const Yx = -S, Yy = C;
+
+    const x = coord.x - pos.x, y = coord.y - pos.y;
+    return xy((x * Xx + y * Yx) / scale.x,
+              (x * Xy + y * Yy) / scale.y);
+}
+
+
+function transform_from(pos, angle, scale, coord) {
+    const a = angle * -rotation_sign();
+    const C = Math.cos(a);
+    const S = Math.sin(a);
+
+    const Xx =  C, Xy = S;
+    const Yx = -S, Yy = C;
+
+    const x = coord.x * scale.x, y = coord.y * scale.y;
+    return xy(x * Xx + y * Xy + pos.x, x * Yx + y * Yy + pos.y);
+}
+
+
 function transform_draw_to_map(map, draw_coord) {
     return xy((draw_coord.x - map._offset.x) / map.sprite_size.x,
               (draw_coord.y - map._offset.y) / map.sprite_size.y);
@@ -3273,20 +3325,33 @@ function set_map_sprite_by_draw_coord(map, draw_coord, sprite, z) {
 }
 
 
-function draw_map(map, min_layer, max_layer, replacements) {
-    if (min_layer === undefined) {
-        min_layer = 0;
+function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale) {
+    if (map.map && arguments.length === 1) {
+        // named argument version
+        min_layer = map.min_layer;
+        max_layer = map.max_layer;
+        replacements = map.replacements;
+        pos = map.pos;
+        angle = map.angle;
+        scale = map.scale;
+        map = map.map; 
     }
+    
+    if (min_layer === undefined) { min_layer = 0; }
 
-    if (max_layer === undefined) {
-        max_layer = map.layer.length - 1;
-    }
+    if (max_layer === undefined) { max_layer = map.layer.length - 1; }
+
+    if (pos === undefined) { pos = xy(0, 0); }
+
+    if (angle === undefined) { angle = 0; }
+
+    if (scale === undefined) { scale = xy(1, 1); }    
 
     if (replacements !== undefined) {
         if (! Array.isArray(replacements)) { throw new Error('The replacements for draw_map() must be an array'); }
         if (replacements.length & 1 !== 0) { throw new Error('There must be an even number of elements in the replacements array'); }
         // Convert to a map for efficiency (we need to copy anyway)
-        let array = replacements;
+        const array = replacements;
         replacements = new Map();
         const N = array.length;
         for (let i = 0; i < N; i += 2) {
@@ -3294,26 +3359,37 @@ function draw_map(map, min_layer, max_layer, replacements) {
         }
     }
 
-    // Handle map wrapping
+    // TODO:
+    // Map axes in draw space
+    const U = xy(Math.cos(angle), Math.sin(angle * rotation_sign()));
+    const V = perp(U);
+    U.x *= scale.x; U.y *= scale.x;
+    V.x *= scale.y; V.y *= scale.y;
+    
+    // Handle map wrapping with a 4x4 grid
     const oldOffsetX = _offsetX, oldOffsetY = _offsetY;
     for (let shiftY = -1; shiftY <= +1; ++shiftY) {
         if (! map.wrap_y && shiftY !== 0) { continue; }
-        _offsetY = oldOffsetY + map.size.y * map.sprite_size.y * shiftY;
         
         for (let shiftX = -1; shiftX <= +1; ++shiftX) {
             if (! map.wrap_x && shiftX !== 0) { continue; }
-            _offsetX = oldOffsetX + map.size.x * map.sprite_size.x * shiftX;
+
+            const mapSpaceOffset = xy(map.size.x * map.sprite_size.x * shiftX,
+                                      map.size.y * map.sprite_size.y * shiftY);
+            _offsetX = oldOffsetX + U.x * mapSpaceOffset.x + V.x * mapSpaceOffset.y;
+            _offsetY = oldOffsetY + U.y * mapSpaceOffset.x + V.y * mapSpaceOffset.y;
             
-            // Compute the set_clip coordinates in map coordinates
+            // Take the screen-space clip coordinates to draw coords
+            const drawClip1 = xy((_clipX1 - _offsetX) / _scaleX, (_clipY1 - _offsetY) / _scaleY);
+            const drawClip2 = xy((_clipX2 - _offsetX) / _scaleX, (_clipY2 - _offsetY) / _scaleY);
 
-            // Take the screen-space set_clip coordinates to draw coords, and then
-            // compute the min/max map coords in pixel space.
-            const set_clip1 = xy((_clipX1 - _offsetX) / _scaleX, (_clipY1 - _offsetY) / _scaleY);
-            const set_clip2 = xy((_clipX2 - _offsetX) / _scaleX, (_clipY2 - _offsetY) / _scaleY);
-
+            // Take the draw-space clip coordinates to the min/max map coords.
             let mapX1, mapX2, mapY1, mapY2;
             {
-                const temp1 = transform_draw_to_map(map, set_clip1), temp2 = transform_draw_to_map(map, set_clip2);
+                // Apply pos, angle, scale
+                const temp1 = transform_draw_to_map(map, transform_to(pos, angle, scale, drawClip1)),
+                      temp2 = transform_draw_to_map(map, transform_to(pos, angle, scale, drawClip2));
+                
                 mapX1 = Math.floor(Math.min(temp1.x, temp2.x));
                 mapX2 = Math.ceil (Math.max(temp1.x, temp2.x));
                 
@@ -3336,7 +3412,16 @@ function draw_map(map, min_layer, max_layer, replacements) {
                 const z = transform_map_layer_to_draw_z(L) * _scaleZ + _offsetZ;
                 
                 const layerData = [];
+
+                const baseZ = (L * map.z_scale + map.z_offset) * _scaleZ + _offsetZ;
+                _addGraphicsCommand({
+                    opcode: 'SPR',
+                    baseZ: baseZ,
+                    z: baseZ,
+                    data: []
+                });
                 
+                const layerCommand = _graphicsCommandList[_graphicsCommandList.length - 1];
                 for (let mapX = mapX1; mapX <= mapX2; ++mapX) {
                     const column = layer[mapX];
                     for (let mapY = mapY1; mapY <= mapY2; ++mapY) {
@@ -3354,20 +3439,25 @@ function draw_map(map, min_layer, max_layer, replacements) {
                             // Compute the screen (not draw)
                             // coordinates. Sprites are rendered from centers,
                             // so offset each by 1/2 the tile size.
-                            layerData.push({sprite: sprite,
-                                            x: ((mapX + 0.5) * map.sprite_size.x + map._offset.x) * _scaleX + _offsetX,
-                                            y: ((mapY + 0.5) * map.sprite_size.y + map._offset.y) * _scaleY + _offsetY})
+                            const x = (mapX + 0.5) * map.sprite_size.x + map._offset.x;
+                            const y = (mapY + 0.5) * map.sprite_size.y + map._offset.y;
+                            layerCommand.data.push({
+                                spritesheetIndex: sprite.spritesheet._index,
+                                cornerX: sprite._x,
+                                cornerY: sprite._y,
+                                sizeX: sprite.size.x,
+                                sizeY: sprite.size.y,
+                                angle: angle,
+                                scaleX: sprite.scale.x * scale.x,
+                                scaleY: sprite.scale.y * scale.y,
+                                hasAlpha: sprite._hasAlpha,
+                                opacity: 1,
+                                override_color: undefined,
+                                x: (U.x * x + V.x * y + pos.x) * _scaleX + _offsetX,
+                                y: (U.y * x + V.y * y + pos.y) * _scaleY + _offsetY})
                         }
                     } // y
                 } // x
-
-                if (layerData.length > 0) {
-                    _addGraphicsCommand({
-                        opcode: 'MAP',
-                        z: (L * map.z_scale + map.z_offset) * _scaleZ + _offsetZ,
-                        layerData: layerData
-                    });
-                }
             } // L
         } // wrap_x
     } // wrap_y
@@ -4398,10 +4488,8 @@ function draw_sprite(spr, center, angle, scale, opacity, z, override_color) {
     }    
 
     console.assert(spr.spritesheet._index < _spritesheetArray.length);
-    
-    _addGraphicsCommand({
-        opcode:       'SPR',
 
+    const sprElt = {
         spritesheetIndex:  spr.spritesheet._index,
         cornerX:       spr._x,
         cornerY:       spr._y,
@@ -4416,8 +4504,26 @@ function draw_sprite(spr, center, angle, scale, opacity, z, override_color) {
         override_color: override_color,
         x:             x,
         y:             y,
-        z:             z,
-    });
+    };
+    
+    // Aggregate multiple sprite calls
+    const prevCommand = _graphicsCommandList[_graphicsCommandList.length - 1];
+    if (prevCommand && (prevCommand.baseZ === z) && (prevCommand.opcode === 'SPR') &&
+        (prevCommand.clipX1 === _clipX1) && (prevCommand.clipX2 === _clipX2) &&
+        (prevCommand.clipY1 === _clipY1) && (prevCommand.clipY2 === _clipY2)) {
+        // Modify the existing command to reduce sorting demands for scenes
+        // with a large number of sprites
+        prevCommand.data.push(sprElt);
+    } else {
+        _addGraphicsCommand({
+            opcode:       'SPR',
+            // Comparison z for detecting runs of sprites
+            baseZ:         z,
+
+            // Sorting Z
+            z:             z,
+            data: [sprElt]});
+    }
 }
 
 
@@ -5158,7 +5264,7 @@ function any_button_press(gamepad) {
     if (gamepad === undefined) {
         return any_button_press(gamepad_array[0]) || any_button_press(gamepad_array[1]) || any_button_press(gamepad_array[2]) || any_button_press(gamepad_array[3]);
     } else {
-        return gamepad.aa || gamepad.bb || gamepad.cc || gamepad.dd || gamepad.qq;
+        return gamepad.aa || gamepad.bb || gamepad.cc || gamepad.dd || gamepad.ee || gamepad.ff || gamepad.qq;
     }
 }
 
@@ -5171,6 +5277,7 @@ function random_truncated_gaussian(mean, std, radius, rng) {
     } while (g < mean - radius || g > mean + radius);
     return g;
 }
+
 
 function random_truncated_gaussian2D(mean, std, radius, rng) {
     rng = rng || random;

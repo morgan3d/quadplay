@@ -7,7 +7,7 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.04.12.11'
+const version  = '2020.04.17.23'
 const launcherURL = 'quad://console/launcher';
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -689,6 +689,8 @@ const controlSchemeTable = {
         '(b)': 'ⓑ',
         '(c)': 'ⓒ',
         '(d)': 'ⓓ',
+        '(e)': 'ⓔ',
+        '(f)': 'ⓕ',
         '(p)': 'ⓟ',
         '(q)': 'ⓠ',
         '[^]': '⍐',
@@ -702,6 +704,8 @@ const controlSchemeTable = {
         '(b)': 'ⓐ',
         '(c)': 'ⓨ',
         '(d)': 'ⓧ',
+        '(e)': '⒧',
+        '(f)': '⒭',
         '(p)': 'ﯼ',
         '(q)': 'ҕ',
         '[^]': '⍐',
@@ -715,6 +719,8 @@ const controlSchemeTable = {
         '(b)': 'Ⓞ',
         '(c)': '▣',
         '(d)': '⍍',
+        '(e)': '⒧',
+        '(f)': '⒭',
         '(q)': 'ҕ',
         '(p)': 'ﯼ',
         '[^]': '⍐',
@@ -728,6 +734,8 @@ const controlSchemeTable = {
         '(b)': 'Ⓞ',
         '(c)': '▣',
         '(d)': '⍍',
+        '(e)': '⒧',
+        '(f)': '⒭',
         '(p)': 'Ơ',
         '(q)': 'ડ',
         '[^]': '⍐',
@@ -736,11 +744,28 @@ const controlSchemeTable = {
         '[>]': '⍈'
     },
 
-    XboxOne: {
+    PS5: {
+        '(a)': 'ⓧ',
+        '(b)': 'Ⓞ',
+        '(c)': '▣',
+        '(d)': '⍍',
+        '(e)': '⒧',
+        '(f)': '⒭',
+        '(p)': '☰',
+        '(q)': 'ડ',// Ⅲ
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
+    
+    Xbox: {
         '(a)': 'ⓐ',
         '(b)': 'ⓑ',
         '(c)': 'ⓧ',
         '(d)': 'ⓨ',
+        '(e)': '⒧',
+        '(f)': '⒭',
         '(p)': '☰',
         '(q)': '⧉',
         '[^]': '⍐',
@@ -754,6 +779,8 @@ const controlSchemeTable = {
         '(b)': 'ⓑ',
         '(c)': 'ⓧ',
         '(d)': 'ⓨ',
+        '(e)': '⒧',
+        '(f)': '⒭',
         '(q)': '⊲',
         '(p)': '⊳',
         '[^]': '⍐',
@@ -767,6 +794,8 @@ const controlSchemeTable = {
         '(b)': 'ⓑ',
         '(c)': 'ⓧ',
         '(d)': 'ⓨ',
+        '(e)': '⒧',
+        '(f)': '⒭',
         '(q)': '…',
         '(p)': '☰',
         '[^]': '⍐',
@@ -780,6 +809,8 @@ const controlSchemeTable = {
         '(b)': 'ⓐ',
         '(c)': 'ⓨ',
         '(d)': 'ⓧ',
+        '(e)': '⒧',
+        '(f)': '⒭',
         '(p)': 'ﯼ',
         '(q)': 'ҕ',
         '[^]': '⍐',
@@ -793,6 +824,8 @@ const controlSchemeTable = {
         '(b)': 'ⓐ',
         '(c)': 'ⓨ',
         '(d)': 'ⓧ',
+        '(e)': '⒧',
+        '(f)': '⒭',
         '(p)': 'ﯼ',
         '(q)': 'ҕ',
         '[^]': '⍐',
@@ -806,6 +839,8 @@ const controlSchemeTable = {
         '(b)': 'ⓐ',
         '(c)': 'ⓨ',
         '(d)': 'ⓧ',
+        '(e)': 'ⓛ',
+        '(f)': '⒭',
         '(q)': '⊖',
         '(p)': '⊕',
         '[^]': '⍐',
@@ -819,6 +854,8 @@ const controlSchemeTable = {
         '(b)': 'ⓧ',
         '(c)': 'ⓑ',
         '(d)': 'ⓨ',
+        '(e)': 'ⓛ',
+        '(f)': 'ⓡ',
         '(q)': '⒭',
         '(p)': '⊕',
         '[^]': '⍐',
@@ -832,6 +869,8 @@ const controlSchemeTable = {
         '(b)': '▶',
         '(c)': '◀',
         '(d)': '▲',
+        '(e)': 'ⓛ',
+        '(f)': 'ⓡ',
         '(q)': '⒧',
         '(p)': '⊖',
         '[^]': '⍐',
@@ -844,8 +883,10 @@ const controlSchemeTable = {
     Keyboard: {
         '(a)': '␣',
         '(b)': isApple ? '⏎' : 'Ɛ',
-        '(c)': 'ⓒ',
-        '(d)': 'ⓕ',
+        '(c)': 'ⓥ',
+        '(d)': 'ⓖ',
+        '(e)': '⬁',
+        '(f)': '⬀',
         '(p)': 'ⓟ',
         '(q)': 'ⓠ',
         '[^]': 'Ⓦ',
@@ -859,6 +900,8 @@ const controlSchemeTable = {
         '(b)': isApple ? '⏎' : 'Ɛ',
         '(c)': 'ⓒ',
         '(d)': 'ⓕ',
+        '(e)': '⬁',
+        '(f)': '⬀',
         '(p)': 'ⓟ',
         '(q)': 'ⓠ',
         '[^]': '⍐',
@@ -868,10 +911,12 @@ const controlSchemeTable = {
     },
 
     Kbd_P1: {
-        '(a)': 'ⓥ',
-        '(b)': 'ⓖ',
-        '(c)': 'ⓒ',
-        '(d)': 'ⓕ',
+        '(a)': 'ⓑ',
+        '(b)': 'ⓗ',
+        '(c)': 'ⓥ',
+        '(d)': 'ⓖ',
+        '(e)': '⬁',
+        '(f)': 'ⓒ',
         '(p)': '④',
         '(q)': '①',
         '[^]': 'Ⓦ',
@@ -885,6 +930,8 @@ const controlSchemeTable = {
         '(b)': '⬗',
         '(c)': '⬖',
         '(d)': '⬘',
+        '(e)': 'ⓝ',
+        '(f)': isApple ? 'Ơ' : '⌥',
         '(p)': '⓪',
         '(q)': '⑦',
         '[^]': 'Ⓘ',
@@ -892,12 +939,14 @@ const controlSchemeTable = {
         '[v]': 'Ⓚ',
         '[>]': 'Ⓛ'
     },
-
+    
     HOTAS: {
         '(a)': '①',
         '(b)': '②',
         '(c)': '④',
         '(d)': '③',
+        '(e)': '⒧',
+        '(f)': '⒭',
         '(p)': 'ﯼ',
         '(q)': 'ҕ',
         '[^]': '⍐',
@@ -911,6 +960,8 @@ const controlSchemeTable = {
         '(b)': 'ⓑ',
         '(c)': 'ⓧ',
         '(d)': 'ⓨ',
+        '(e)': '⒧',
+        '(f)': '⒭',
         '(p)': 'ﯼ',
         '(q)': 'ҕ',
         '[^]': '⍐',
@@ -927,6 +978,8 @@ for (const name in controlSchemeTable) {
     scheme['ⓑ'] = scheme['(b)'];
     scheme['ⓒ'] = scheme['(c)'];
     scheme['ⓓ'] = scheme['(d)'];
+    scheme['ⓔ'] = scheme['(e)'];
+    scheme['ⓕ'] = scheme['(f)'];
     scheme['ⓟ'] = scheme['(p)'];
     scheme['ⓠ'] = scheme['(q)'];
     scheme['⍐'] = scheme['[^]'];
@@ -1028,6 +1081,16 @@ function onPauseButton() {
 
 function inModal() { return false; }
 
+function onDocumentKeyUp(event) {
+    if (((event.which || event.keyCode) === 82) && (event.ctrlKey || event.metaKey)) { // Ctrl+R
+        // Intercept from browser to prevent page reload
+        event.stopPropagation();
+        event.preventDefault();
+        return false;
+    }
+}
+
+
 function onDocumentKeyDown(event) {
     if (onWelcomeScreen) {
         onWelcomeTouch();
@@ -1036,19 +1099,19 @@ function onDocumentKeyDown(event) {
     }
     
     switch (event.which || event.keyCode) {
-    case 187: // ^= ("^+")
+    case 187: // ^= ("^+") = zoom in
         if (! (event.ctrlKey || event.metaKey)) { break; }
         event.preventDefault();
         onIncreaseFontSizeButton();
         break;
         
-    case 189: // ^-
+    case 189: // ^- = zoom out
         if (! (event.ctrlKey || event.metaKey)) { break; }
         event.preventDefault();
         onDecreaseFontSizeButton();
         break;
         
-    case 121: // F10
+    case 121: // F10 = single step
         event.preventDefault();
         if (! inModal() && useIDE) {
             onStepButton();
@@ -1059,9 +1122,6 @@ function onDocumentKeyDown(event) {
         downloadScreenshot();
         break;
 
-    case 71: // G
-        if (! (event.ctrlKey || event.metaKey)) { break; }
-        // Otherwise, Ctrl+G was pressed, so fall through
     case gifCaptureKey: // F8
         if (event.shiftKey) {
             if (! previewRecording) {
@@ -1085,36 +1145,34 @@ function onDocumentKeyDown(event) {
         }
         break;
 
-    case 80: // P
-        if (event.ctrlKey || event.metaKey) { // Ctrl+P
-            // Don't print!
-            // Intercept from browser
-            event.preventDefault();
-        }
-        break;
-        
-        
     case 82: // R
         if (event.ctrlKey || event.metaKey) { // Ctrl+R
             // Intercept from browser
             event.preventDefault();
+            event.stopPropagation();
             if (! inModal()) { onRestartButton(); }
         }
         break;
 
-    case 67: // C
-        if (! event.ctrlKey && ! event.metaKey) {
+    case 67: // C = pause
+    case 80: // P = pause
+        if (! event.ctrlKey && ! event.metaKey) { 
             return;
         }
-        // Fall through
-            
+        // Don't print or handle a C or P in game!
+        // Intercept from browser
+        event.preventDefault();
+        event.stopPropagation();
+        
     case 19: // [Ctrl+] Break
         if (useIDE) { onPauseButton(); }
         break;
     }
 }
 
+
 document.addEventListener('keydown', onDocumentKeyDown);
+document.addEventListener('keyup', onDocumentKeyUp);
 
 const jsCode = document.getElementById('jsCode') && ace.edit(document.getElementById('jsCode'));
 const editorStatusBar = document.getElementById('editorStatusBar');
@@ -2764,10 +2822,10 @@ function reloadRuntime(oncomplete) {
                 _x: 0, _dx: 0, _xx: 0,
                 _y: 0, _dy: 0, _yy: 0, 
                 _angle:0, _dangle:0,
-                a:0, b:0, c:0, d:0, _p:0, q:0,
-                aa:0, bb:0, cc:0, dd:0, _pp:0, qq:0,
-                pressed_a:0, pressed_b:0, pressed_c:0, pressed_d:0, _pressed_p:0, pressed_q:0,
-                released_a:0, released_b:0, released_c:0, released_d:0, _released_p:0, released_q:0,
+                a:0, b:0, c:0, d:0, e:0, f:0, _p:0, q:0,
+                aa:0, bb:0, cc:0, dd:0, ee:0, ff:0, _pp:0, qq:0,
+                pressed_a:0, pressed_b:0, pressed_c:0, pressed_d:0, pressed_e: 0, pressed_f:0, _pressed_p:0, pressed_q:0,
+                released_a:0, released_b:0, released_c:0, released_d:0, released_e:0, released_f:0, _released_p:0, released_q:0,
                 index: p,
                 type: controlBindings.type,
                 prompt: controlSchemeTable[controlBindings.type],
@@ -2790,14 +2848,14 @@ function reloadRuntime(oncomplete) {
         QRuntime.joy = QRuntime.gamepad_array[0];
         
         QRuntime.debug_print     = debug_print;
-        QRuntime.assert         = assert;
+        QRuntime.assert          = assert;
         QRuntime.device_control  = device_control;
-        QRuntime.play_audio_clip  = play_audio_clip;
+        QRuntime.play_audio_clip = play_audio_clip;
         QRuntime.stop_sound      = stop_sound;
         QRuntime.resume_sound    = resume_sound;
-        QRuntime.set_volume = set_volume;
-        QRuntime.set_pitch  = set_pitch;
-        QRuntime.set_pan    = set_pan;
+        QRuntime.set_volume      = set_volume;
+        QRuntime.set_pitch       = set_pitch;
+        QRuntime.set_pan         = set_pan;
         QRuntime.debug_pause     = onPauseButton;
         
         if (oncomplete) { oncomplete(); }

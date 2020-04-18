@@ -29,6 +29,11 @@
     const isApple = /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     const isMobile = window.matchMedia("only screen and (max-width: 480px)").matches || window.orientation || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    // Keys
+    const cmd = isApple ? '⌘' : '^';
+    const alt = '⎇';
+    const shift = '⇧';
     </script>
 
   </head>
@@ -119,9 +124,9 @@
 
         <span class="IDEOnly">
         <script>
-          makeButton('<img src="button-reload.png" width=32 style="position:relative; top:-2px">', 'Reload and Restart (Ctrl+Shift+F5, Ctrl+R, or Ctrl+G)', 'onRestartButton', 'restartButton');
-          makeRadio('<img src="button-stop.png" width=32 style="position:relative; top:-2px">', 'stopButton', true, 'title="Stop (Shift+F5)"', 'controls');
-          makeRadio('<img src="button-pause.png" width=32 style="position:relative; top:-2px">', 'pauseButton', false, 'title="Pause (Ctrl+Break or Ctrl+C)"', 'controls');
+          makeButton('<img src="button-reload.png" width=32 style="position:relative; top:-2px">', `Reload and Play (^R)`, 'onRestartButton', 'restartButton');
+          makeRadio('<img src="button-stop.png" width=32 style="position:relative; top:-2px">', 'stopButton', true, `title="Stop (${shift}F5)"`, 'controls');
+          makeRadio('<img src="button-pause.png" width=32 style="position:relative; top:-2px">', 'pauseButton', false, `title="Pause (${cmd}P)"`, 'controls');
           makeRadio('<img src="button-step.png" width=32 style="position:relative; top:-2px">', 'stepButton', false, 'title="Step (F10)"', 'controls');
           makeRadio('<img src="button-slow.png" width=32 style="position:relative; top:-2px">', 'slowButton', false, 'title="Play Slow"', 'controls');
           makeRadio('<img src="button-play.png" width=32 style="position:relative; top:-2px">', 'playButton', false, 'title="Run (F5)"', 'controls');
@@ -159,7 +164,6 @@
         <div id="codeEditor">
           <div class="toolbar">
             <script>
-              const cmd = isApple ? '⌘' : '^';
               makeButton('<img src="ui-undo.png" width=32 style="position:relative; top:-2px;">', `Undo (${cmd}Z)`, 'onCodeEditorUndoButton', 'codeEditorUndo');
               makeButton('<img src="ui-redo.png" width=32 style="position:relative; top:-2px;">', `Redo (${cmd}Y)`, 'onCodeEditorRedoButton', 'codeEditorRedo');
               makeButton('<img src="ui-smallfont.png" width=32 style="position:relative; top:-2px;">', `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton');
@@ -293,7 +297,7 @@
           <br/>
           <img src="gamepad.png" style="width:60%; margin-bottom:10px">
           <table style="text-align: center; border-collapse: collapse">
-            <tr style="border-bottom: 1px solid #888"><th style="padding-right:4px">quadplay</th><th>Player 1 Key</th><th>Player 2 Key</th><th>Xbox One</th><th>PS4</th><th>SNES</th></tr>
+            <tr style="border-bottom: 1px solid #888"><th style="padding-right:4px">quadplay</th><th>Player 1 Key</th><th>Player 2 Key</th><th>Xbox</th><th>PS4</th><th>SNES</th></tr>
             <tr><td>▲         </td><td> W or ↑      </td><td> I           </td><td> ▲          </td><td> ▲       </td><td> ▲</td></tr>
             <tr><td>◀         </td><td> A or ←      </td><td> J           </td><td> ◀          </td><td> ◀       </td><td> ◀</td></tr>
             <tr><td>▼         </td><td> S or ↓      </td><td> K           </td><td> ▼          </td><td> ▼       </td><td> ▼</td></tr>
@@ -302,6 +306,8 @@
             <tr><td>ⓑ         </td><td> G or enter  </td><td> ' or "      </td><td> Ⓑ          </td><td> ◯       </td><td> Ⓐ</td></tr>
             <tr><td>ⓒ         </td><td> C           </td><td> . or &gt;   </td><td> Ⓧ          </td><td> ▢       </td><td> Ⓨ</td></tr>
             <tr><td>ⓓ         </td><td> F           </td><td> : or ;      </td><td> Ⓨ          </td><td style="font-size:120%"> △</td><td> Ⓧ</td></tr>
+            <tr><td>ⓔ         </td><td> L.shift     </td><td> R.shift     </td><td> LB         </td><td> L1       </td><td> L</td></tr>
+            <tr><td>ⓕ         </td><td> tab         </td><td> \           </td><td> RB         </td><td> R1       </td><td> R</td></tr>
             <tr><td>ⓠ         </td><td> 1 or Q      </td><td> 7           </td><td style="font-size:120%"> ⧉</td><td> Share   </td><td> Select</td></tr>
             <tr><td>ⓟ         </td><td> 4 or P      </td><td> 0           </td><td> ☰          </td><td> Options </td><td> Start</td></tr>
           </table>

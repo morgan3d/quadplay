@@ -34,7 +34,7 @@ draw_previous_mode()
 _clipZ2 = 2049
 set_transform(xy(0, 0), xy(1, 1), 2048.6, 1)
 
-const windowSize = round(xy(26, 50) * clamp((mode_frames + 1) / open_frames, 0%, 100%))
+const windowSize = round(xy(26, 56) * clamp((mode_frames + 1) / open_frames, 0%, 100%))
 draw_rect(½ SCREEN_SIZE, windowSize, window_background_color, window_border_color)
 
 if mode_frames > open_frames:
@@ -60,7 +60,7 @@ if mode_frames > open_frames:
          play_audio_clip(if prev == choiceIndex then _denyUISound else _moveUISound)
 
    // Draw options
-   let y = 17
+   let y = 13
    for i < size(choiceArray):
       const active      = choiceIndex == i
       const bright      = (1 + cos(mode_frames / 9)) / 2

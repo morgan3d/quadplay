@@ -56,7 +56,7 @@ function detectControllerType(id) {
         } else if (/xbox 360/i.test(id)) {
             type = 'Xbox360';
         } else if (/xbox|xinput/i.test(id)) {
-            type = 'XboxOne';
+            type = 'Xbox';
         } else if (/snes/i.test(id)) {
             type = 'SNES';
         } else if (/8bitdo +s[fn]30/i.test(id)) {
@@ -200,9 +200,9 @@ function onEmulatorKeyDown(event) {
     // synthetic repeat events
     if (event.repeat) { return; }
 
-    const key = event.which || event.keyCode;
-    if ((key === 67) && (event.ctrlKey || event.metaKey)) {
-        // Ctrl+C
+    const key = event.code;
+    if (((key === 'KeyC') || (key === 'KeyP')) && (event.ctrlKey || event.metaKey)) {
+        // Ctrl+C or Ctrl+P
         onPauseButton();
         return;
     }
@@ -214,14 +214,17 @@ function onEmulatorKeyDown(event) {
     onDocumentKeyDown(event);
 }
 
-
-function downloadScreenshot() {
-    // Screenshot
-
+function makeDateFilename() {
     const dateString = new Date().toLocaleString(
         undefined,
         {year: 'numeric', month: 'short', day: 'numeric', hour:'2-digit', minute:'2-digit'})
-    download(emulatorScreen.toDataURL(), makeFilename(gameSource.CREDITS.title + '-' + dateString) + '.png');
+    return makeFilename(gameSource.CREDITS.title + '-' + dateString);
+}
+
+
+function downloadScreenshot() {
+    // Screenshot
+    download(emulatorScreen.toDataURL(), makeDateFilename() + '.png');
 }
 
 
@@ -331,7 +334,9 @@ function startGIFRecording() {
         }
         
         gifRecording.on('finished', function (blob) {
-            window.open(URL.createObjectURL(blob));
+            //window.open(URL.createObjectURL(blob));
+            download(URL.createObjectURL(blob), makeDateFilename() + '.gif');
+
             document.getElementById('recording').innerHTML = '';
             document.getElementById('recording').classList.add('hidden');
             gifCtx = null;
@@ -360,7 +365,7 @@ function toggleGIFRecording() {
 
 
 function onEmulatorKeyUp(event) {
-    const key = event.which || event.keyCode;
+    const key = event.code;
     emulatorKeyState[key] = false;
     emulatorKeyJustReleased[key] = true;
     event.stopPropagation();
@@ -375,9 +380,14 @@ emulatorKeyboardInput.addEventListener('keyup', onEmulatorKeyUp, false);
 function ascii(x) { return x.charCodeAt(0); }
 
 /** Used by _submitFrame() to map axes and buttons to event key codes when sampling the keyboard controller */
-const keyMap = [{'-x':[ascii('A'), 37],         '+x':[ascii('D'), 39],          '-y':[ascii('W'), 38], '+y':[ascii('S'), 40],          a:[ascii('V'), 32], b:[ascii('G'), 13],  c:[ascii('C'), ascii('C')], d:[ascii('F'), ascii('F')], q:[ascii('1'), ascii('Q')], p:[ascii('4'), ascii('P')]},
-                {'-x':[ascii('J'), ascii('J')], '+x':[ascii('L'), ascii('L')],  '-y':[ascii('I')],     '+y':[ascii('K'), ascii('K')],  a:[191, 191],       b:[222, 222],        c:[190, 190],               d:[186, 186],               q:[ascii('7'), ascii('7')], p:[ascii('0'), ascii('0')]}];
-
+const keyMap = [{'-x':['KeyA', 'ArrowLeft'], '+x':['KeyD', 'ArrowRight'], '-y':['KeyW', 'ArrowUp'], '+y':['KeyS', 'ArrowDown'], a:['KeyB', 'Space'],  b:['KeyH', 'Enter'],  c:['KeyV', 'KeyV'],     d:['KeyG', 'KeyG'],          e:['ShiftLeft', 'ShiftLeft'], f:['KeyC', 'ShiftRight'],  q:['Digit1', 'KeyQ'],   p:['Digit4', 'KeyP']},
+                {'-x':['KeyJ', 'KeyJ'],      '+x':['KeyL', 'KeyL'],       '-y':['KeyI', 'KeyI'],    '+y':['KeyK', 'KeyK'],     a:['Slash', 'Slash'], b:['Quote', 'Quote'], c:['Period', 'Period'], d:['Semicolon', 'Semicolon'], e:['KeyN','KeyN'],            f:['AltRight', 'AltLeft'], q:['Digit7', 'Digit7'], p:['Digit0', 'Digit0']}];
+/*
+Previous:
+      [{'-x':['KeyA', 'ArrowLeft'], '+x':['KeyD', 'ArrowRight'], '-y':['KeyW', 'ArrowUp'], '+y':['KeyS', 'ArrowDown'], a:['KeyV', 'Space'],  b:['KeyG', 'Enter'],  c:['KeyC', 'KeyC'],     d:['KeyF', 'KeyF'],           e:['ShiftLeft', 'ShiftLeft'],  f:['Tab', 'Tab'],             q:['Digit1', 'KeyQ'],   p:['Digit4', 'KeyP']},
+       {'-x':['KeyJ', 'KeyJ'],      '+x':['KeyL', 'KeyL'],       '-y':['KeyI', 'KeyI'],    '+y':['KeyK', 'KeyK'],     a:['Slash', 'Slash'], b:['Quote', 'Quote'], c:['Period', 'Period'], d:['Semicolon', 'Semicolon'], e:['ShiftRight','ShiftRight'], f:['Backslash', 'Backslash'], q:['Digit7', 'Digit7'], p:['Digit0', 'Digit0']}];
+*/
+      
 let prevRealGamepadState = [];
 
 // Maps names of gamepads to arrays for mapping standard buttons
@@ -408,16 +418,16 @@ const gamepadAxisRemap = {
 
 function getIdealGamepads() {
     const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
-    let gamepadArray = [];
+    const gamepadArray = [];
     // Center of gamepad
     const deadZone = 0.35;
     
     // Compact gamepads array and perform thresholding
     for (let i = 0; i < gamepads.length; ++i) {
-        let pad = gamepads[i];
+        const pad = gamepads[i];
         if (pad && pad.connected) {
             // Construct a simplified web gamepad API
-            let mypad = {axes:[0, 0, 0, 0], buttons:[], analogAxes:[0,0,0,0], id: pad.id};
+            const mypad = {axes:[0, 0, 0, 0], buttons:[], analogAxes:[0,0,0,0], id: pad.id};
 
 	    const axisRemap = gamepadAxisRemap[pad.id] || gamepadAxisRemap.identity;
             
@@ -825,16 +835,16 @@ function requestInput() {
 
 
 function updateInput() {
-    const axes = 'xy', AXES = 'XY', buttons = 'abcdpq';
+    const axes = 'xy', AXES = 'XY', buttons = 'abcdefpq';
 
     // HTML gamepad indices of corresponding elements of the buttons array
-    // A, B, C, D, _P, Q
-    const buttonIndex = [0, 1, 2, 3, 9, 8];
+    // A, B, C, D, E, F, _P, Q
+    const buttonIndex = [0, 1, 2, 3, 4, 5, 9, 8];
     
     // Aliases on console game controller using stick buttons
     // and trigger + shoulder buttons. These are read from 
     // gamepad_array[2] and applied to gamepad_array[0]
-    const altButtonIndex = [7, 5, 6, 4, undefined, undefined];
+    const altButtonIndex = [7, 6, undefined, undefined, undefined, undefined, undefined, undefined];
 
     // Also processes input
     const gamepadArray = getIdealGamepads();
@@ -882,11 +892,11 @@ function updateInput() {
 
                 // Current state
                 pad['_' + axis] = (((emulatorKeyState[n0] || emulatorKeyState[n1]) ? -1 : 0) +
-                             ((emulatorKeyState[p0] || emulatorKeyState[p1]) ? +1 : 0)) * scale;
+                                   ((emulatorKeyState[p0] || emulatorKeyState[p1]) ? +1 : 0)) * scale;
 
                 // Just pressed
                 pad['_' + axis + axis] = (((emulatorKeyJustPressed[n0] || emulatorKeyJustPressed[n1]) ? -1 : 0) +
-                                    ((emulatorKeyJustPressed[p0] || emulatorKeyJustPressed[p1]) ? +1 : 0)) * scale;
+                                          ((emulatorKeyJustPressed[p0] || emulatorKeyJustPressed[p1]) ? +1 : 0)) * scale;
             } else {
                 // Nothing currently pressed
                 pad['_' + axis] = pad['_' + axis + axis] = 0;

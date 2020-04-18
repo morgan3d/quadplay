@@ -24,29 +24,30 @@ profiler.
 
 - 384 x 224 pixel screen = 12:7 aspect ≈ 16:9.3
 - Optional 192 x 112, 128 x 128, and 64 x 64 screen modes
-- 60 fps
+- 60 fps with autoscaling on low-end machines
 - 4096 sRGB (4:4:4) colors
 - Native 2.5D graphics
 - 10.5 MB of total sprite memory
 - Max 128 sprite and font sheets, max size 1024x1024
 - Order-independent 4-bit (16-level) transparency
-- Four 10-button gamepads (D-pad + ⓐⓑⓒⓓ + ⓟⓠ)
+- 4 SNES/PS1/Saturn-style D-pad + 8-button gamepads
 - Optional touch screen
 
 **Software Features**
 
 - Export to your own website, itch.io, github pages, or download
+- Games run on web, mobile, desktop, tablet, Jetson Nano, and Raspberry Pi 4
 - Free for commercial, personal, and educational use
 - Friendly and powerful PyxlScript Python-like scripting language
-- Games run on web, mobile, desktop, tablet, Jetson Nano, and Raspberry Pi
 - Run locally and offline using Python + web browser
 - Hundreds of built-in Creative Commons assets
-- Command-line and external editor support for power users
+- Full commandline, external editor, and external art tool support for power users
 - Open source: use online, fork, or run locally
 
 **API**
 
-- Sprite, tilemap, circle, line, triangle, rectangle, and font drawing
+- Sprite, pixel, circle, line, triangle, rectangle, and polygon drawing with rotation and scaling
+- Tilemap, UI window, and font drawing
 - Optional entity parenting hierarchy
 - Ray casting and collision detection
 - A* pathfinding
@@ -305,13 +306,17 @@ competive game derived from Snake-like games, including [TRON]("https://en.wikip
 
 ### Examples
 
+<table class="aligned">
+<tr><td width=192>![](../examples/starter/label128.png)</td><td>
 [Starter](../console/quadplay.html?game=quad://examples/starter&IDE=1) is a project with a basic setup
 from which you can build your own.
 
+</td></tr><tr><td>![](../examples/helloworld/label128.png)</td><td>
 [Hello, World](../console/quadplay.html?game=quad://examples/helloworld&IDE=1) is a minimal example of a program with
 one mode, one asset, and no sections or optional elements, and that simply puts text
 on the screen.
 
+</td></tr><tr><td>![](../examples/rpg/label128.png)</td><td>
 [RPG Demo](../console/quadplay.html?game=quad://examples/rpg&IDE=1) is a simple example of a single-player RPG game design:
 
 - Multiple [modes](#modes): Pause, Inventory, and Shop
@@ -319,7 +324,7 @@ on the screen.
 - Player movement with obstructions
 - NPC interaction
 
-
+</td></tr><tr><td>![](../examples/dual-stick/label128.png)</td><td>
 [Dual-Stick Example](../console/quadplay.html?game=quad://examples/dual-stick&IDE=1) shows how to use dual-stick controls.
 The body of the tank is controlled by player 1 and the turret is controlled by player 2. When
 using a dual-stick game controller or keyboard, a single player can also use the right stick
@@ -330,6 +335,7 @@ or right side of the keyboard to control the turret.
 - Entity parenting
 
 
+</td></tr><tr><td>![](../examples/robot/label128.png)</td><td>
 [Robot Example](../console/quadplay.html?game=quad://examples/robot&IDE=1) shows how to create and animate a deep
 entity hierarchy.
 
@@ -338,6 +344,7 @@ entity hierarchy.
 - Using scale and rotation together
 - Graphics tricks for reflections
 
+</td></tr><tr><td>![](../examples/animation/label128.png)</td><td>
 [Animation Example](../console/quadplay.html?game=quad://examples/animation&IDE=1) shows how to handle complicated
 sprite animations.
 
@@ -346,30 +353,42 @@ sprite animations.
 - Changing direction
 - Modular items
 
+</td></tr><tr><td>![](../examples/fluid/label128.png)</td><td>
 [Fluid Example](../console/quadplay.html?game=quad://examples/fluid&IDE=1) is a cellular automata fluid flow simulation
 with gravity and pressure.
 
+</td></tr><tr><td>![](../examples/accel_demo/label128.png)</td><td>
 [Acceleration Curve Example](../console/quadplay.html?game=quad://examples/accel_demo&IDE=1) is a simple demonstration of how various acceleration curves feel, changing only three constants: top speed, acceleration time and deceleration time. Up and down change the constants to fit different games.
 
+</td></tr><tr><td>![](../examples/boids/label128.png)</td><td>
 [Boids Example](../console/quadplay.html?game=quad://examples/boids&IDE=1) implements the famous ["boids" flocking algorithm](https://en.wikipedia.org/wiki/Boids).
 
+</td></tr><tr><td>![](../examples/physics/label128.png)</td><td>
 [Physics Example](../console/quadplay.html?game=quad://examples/physics&IDE=1) shows all of the features of the
 physics engine, including the debugging visualization.
 
+</td></tr><tr><td>![](../examples/text/label128.png)</td><td>
 [Text Example](../console/quadplay.html?game=quad://examples/text&IDE=1) shows how to use `replace()`, `draw_text()`, `join()`,
 `format_number()`, and `draw_sprite_corner_rect()` to build text-heavy interfaces.
 
+</td></tr><tr><td>![](../examples/fontpreview/label128.png)</td><td>
 [Font Preview](../console/quadplay.html?game=quad://examples/fontpreview&IDE=1) shows how to render text in various styles
 and acts as a tool for previewing fonts when creating new ones. Use the arrow keys to scroll down and see more examples
 in the program, and edit the `game.json` file to see a different font.
 
+</td></tr><tr><td>![](../examples/highscore/label128.png)</td><td>
 [High Score Example](../console/quadplay.html?game=quad://examples/highscore&IDE=1) demonstrates `load_local()` and `save_local()` to
 maintain a high score list, with `push_mode()` for creating a popup dialog.
 
-[Sproing Example](../console/quadplay.html?game=quad://examples/sproing&IDE=1) Shows a squash and stretch effect for transforming sprites.
+</td></tr><tr><td>![](../examples/sproing/label128.png)</td><td>
+[Sproing Example](../console/quadplay.html?game=quad://examples/sproing&IDE=1) shows a squash and stretch effect for transforming sprites.
 
-[Camera Zoom Exampe](../console/quadplay.html?game=quad://examples/camera_zoom&IDE=1) Shows how to get camera zooming by using the entity hierarchy.
+</td></tr><tr><td>![](../examples/camera_zoom/label128.png)</td><td>
+[Camera Zoom Example](../console/quadplay.html?game=quad://examples/camera_zoom&IDE=1) shows how to get camera zooming by using the entity hierarchy.
 
+</td></tr><tr><td>![](../examples/touch/label128.png)</td><td>
+[Touch Example](../console/quadplay.html?game=quad://examples/touch&IDE=1) uses the mouse/touch API.
+</td></tr></table>
 
 ### Inspiration
 
@@ -611,7 +630,7 @@ menu.leave();
 [This is the rough equivalent of the menu mode PyxlScript code in an object-oriented language. You don't write all of this boilerplate in PyxlScript!]
 
 
-#### Mismatched Push and Pop Mode
+#### Unmatched Push and Pop Mode
 
 Push and pop on modes aren't always paired, because sometimes an exceptional
 change to state flow occurs. 
@@ -808,7 +827,8 @@ the browser in the Develop and Debug modes.
 : Show-off mode for livestreaming, with the full screen code
   editor and the game running behind it full screen, like a
   ghost. Press the Play button to switch input to the game
-  in the background.
+  in the background. Game touch input is obviously not available
+  in this layout.
 
 
 There's also a special "kiosk" mode that the `quadplay` script
@@ -878,11 +898,12 @@ Physical controllers give the best experience. We have tested:
 <tr valign=top>
 <td width=33%>![](xboxone.jpg)<br>[Microsoft Xbox One Wired Controller](https://amzn.to/36Y7CdR)</td>
 <td width=33%>![](xboxone.jpg)<br>[Microsoft Xbox One Wireless<br>Controller for Windows 10](https://amzn.to/35U36vz)</td>
-<td width=33%>![](xbox360.jpg)<br>[Microsoft Xbox 360 Wired Controller](https://www.microsoft.com/accessories/en-ww/products/gaming/xbox-360-controller-for-windows/52a-00004)<br>(works on all operating systems)</td>
+<td width=33%>![](xbox360.jpg)<br>[Microsoft Xbox 360 Wired Controller](https://www.microsoft.com/accessories/en-ww/products/gaming/xbox-360-controller-for-windows/52a-00004)</td>
 </tr>
 <tr><td> <br> </td></tr>
 <tr valign=top>
 <td width=33%>![](joy-con.jpg)<br>[Nintendo Joy-Con](https://amzn.to/30recqP)</td>
+<td width=33%>![](switch-pro.jpg)<br>[Nintendo Switch Pro Controller](https://www.amazon.com/Nintendo-Switch-Pro-Controller/dp/B01NAWKYZ0)</td>
 <td width=33%>![](thrustmaster.jpg)<br>[Thrustmaster T-Flight HOTAS X Flight Stick](https://amzn.to/2Tvf8J4)</td>
 </tr>
 </table>
@@ -899,29 +920,28 @@ On macOS, Xbox wired controllers require a free,
 do not work on Mac. Different controllers work with different browsers on macOS. For example,
 Xbox 360 controllers work well with Chrome and the Nintendo SNES controller works with Safari.
 
-PlayStation, Stadia, and
-[Thrustmaster T-Flight HOTAS 4](https://amzn.to/35WJVB6),
-[Nintendo Switch Pro Controller](https://www.amazon.com/Nintendo-Switch-Pro-Controller/dp/B01NAWKYZ0/),
-[Logitech](https://www.logitechg.com/en-ca/products/gamepads/f310-gamepad.html) controllers
+PlayStation, Stadia, and [Logitech](https://www.logitechg.com/en-ca/products/gamepads/f310-gamepad.html) controllers
 are intended to work but I have not tested them.
 Please let me know if you are using them successfully.
 
 All browsers have controller support, but Chrome seems to support the
 most different controllers and the rumble feature.
 
-Input       | Player 1 Key| Player 2 Key| XboxOne   | Playstation4| SNES   | Switch_Pro
+Input       | Player 1 Key| Player 2 Key| Xbox       | Playstation| SNES   | Switch Pro
 :----------:|:-----------:|:-----------:|:----------:|:----------:|:------:|:-----------:
 <big>⍐</big>| W or ↑      | I           | ▲          | ▲          | ▲      | ▲
 <big>⍇</big>| A or ←      | J           | ◀          | ◀          | ◀      | ◀
 <big>⍗</big>| S or ↓      | K           | ▼          | ▼          | ▼      | ▼
 <big>⍈</big>| D or →      | L           | ▶          | ▶          | ▶      | ▶
-ⓐ           | V or space  | / (?)       | Ⓐ          | ╳          | Ⓑ      | Ⓑ
-ⓑ           | G or enter  | ' (")       | Ⓑ          | ◯          | Ⓐ      | Ⓐ
-ⓒ           | C           | . (&gt;)    | Ⓧ          | ▢          | Ⓨ      | Ⓨ
-ⓓ           | F           | ; (:)       | Ⓨ          | △          | Ⓧ      | Ⓧ
+ⓐ           | V or space  | /           | Ⓐ          | ╳          | Ⓑ      | Ⓑ
+ⓑ           | G or enter  | '           | Ⓑ          | ◯          | Ⓐ      | Ⓐ
+ⓒ           | C           | .           | Ⓧ          | ▢          | Ⓨ      | Ⓨ
+ⓓ           | F           | ;           | Ⓨ          | △          | Ⓧ      | Ⓧ
+ⓔ           | L.shift     | N           | LB         | L1         | L      | L
+ⓕ           | C or R.shift| alt/option  | RB         | R1         | R      | R
 ⓠ           | 1 or Q      | 7           |<big>⧉</big>| Share      | Select | <big>⊖</big>
 ⓟ           | 4 or P      | 0           | ☰          | Options    | Start  | <big>⊕</big>
-
+[Sample controller mappings. quadplay✜ supports many more, including JoyCons and flight sticks.]
 
 After launching a quadplay game, you must press a button on the
 controller for the web browser to allow access to it. quadplay will
@@ -960,9 +980,9 @@ A                        | `gamepad_array[0].a`
 B                        | `gamepad_array[0].b`
 X                        | `gamepad_array[0].c`
 Y                        | `gamepad_array[0].d`
-R1 (Right Shoulder)      | `gamepad_array[1].b`
+R1 (Right Shoulder)      | `gamepad_array[0].e`
 R2 (Right Trigger)       | `gamepad_array[1].a`
-L1 (Left Shoulder)       | `gamepad_array[1].d`
+L1 (Left Shoulder)       | `gamepad_array[0].f`
 L2 (Left Trigger)        | `gamepad_array[1].c`
 Start                    | (`gamepad_array[0].p`)
 Back                     | `gamepad_array[0].q`
@@ -1003,6 +1023,7 @@ previous work, here are the resolutions of classic and retro machines:
 
  - 480×272 PlayStation Portable
  - 400x240 Playdate
+ - 384x224 quadplay✜
  - 320x200 VGA, including Amiga 500 and Commodore 64
  - 280x192 Apple II
  - 256x240 NES and TurboGrafx-16
@@ -1099,6 +1120,12 @@ Property           | Values   | Meaning
 `d`                | 0 or 1   | 1 if the ⓓ button is currently pressed
 `dd` or `pressed_d`| 0 or 1   | 1 if the ⓓ button was just pressed this frame
 `released_d`       | 0 or 1   | 1 if the ⓓ button was just released this frame
+`e`                | 0 or 1   | 1 if the ⓔ button is currently pressed
+`ee` or `pressed_e`| 0 or 1   | 1 if the ⓔ button was just pressed this frame
+`released_e`       | 0 or 1   | 1 if the ⓔ button was just released this frame
+`f`                | 0 or 1   | 1 if the ⓕ button is currently pressed
+`ff` or `pressed_e`| 0 or 1   | 1 if the ⓕ button was just pressed this frame
+`released_f`       | 0 or 1   | 1 if the ⓕ button was just released this frame
 `q`                | 0 or 1   | 1 if the ⓠ button is currently pressed
 `qq` or `pressed_q`| 0 or 1   | 1 if the ⓠ button was just pressed this frame
 `released_q`       | 0 or 1   | 1 if the ⓠ button was just released this frame
@@ -1124,9 +1151,9 @@ angles are always clockwise in screen space.
 
 The `prompt` property of `gamepad_array[]` is to be used with `replace()` to
 create strings for showing controls and button prompts to players with
-`draw_text()`.  It maps `"ⓐ"`, `"ⓑ"`, `"ⓒ"`, `"ⓓ"`, `"ⓟ"`, `"ⓠ"`,
+`draw_text()`.  It maps `"ⓐ"`, `"ⓑ"`, `"ⓒ"`, `"ⓓ"`, `"ⓔ"`,`"ⓕ"`, `"ⓟ"`, `"ⓠ"`,
 `"⍐"`, `"⍗"`, `"⍇"`, and `"⍈"` as well as ASCII aliases `"(a)"`,
-`"(b)"`, `"(c)"`, `"(d)"`, `"(p)"`, `"(q")`, `"[^]"`, `"[v]"`,
+`"(b)"`, `"(c)"`, `"(d)"`, `"(e)"`, `"(f)"`,`"(p)"`, `"(q")`, `"[^]"`, `"[v]"`,
 `'[&lt;]"`, and `"[&gt;]"` to strings of text. These can be used to describe
 controls to players in a way mapped to the physical controller they
 are currently using instead of the quadplay✜ native controls
@@ -1142,34 +1169,7 @@ the control scheme, so you should always generate the string right
 before drawing it instead of at program start.
 
 The `gamepad_array[i].type` property describes the control scheme used for
-prompts. The possible values are:
-
-`type`          |`(a)`|`(b)`|`(c)`|`(d)`|`(p)`|`(q)`|`[^]`|`[&lt;]`|`[v]`|`[&gt;]`
-----------------|-----|-----|-----|-----|-----|-----|------|------|------|-----
-`"Quadplay"`    | `ⓐ` | `ⓑ` | `ⓒ` | `ⓓ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
-`"Zero"`        | `ⓐ` | `ⓑ` | `ⓒ` | `ⓓ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
-`"PS3"`         | `ⓧ` | `Ⓞ` | `▣` | `⍍` |`STR`|`SEL`| `⍐`  | `⍇`  | `⍗`  | `⍈`
-`"PS4"`         | `ⓧ` | `Ⓞ` | `▣` | `⍍` |`OPT`|`SHR`| `⍐`  | `⍇`  | `⍗`  | `⍈`
-`"XboxOne"`     | `ⓐ` | `ⓑ` | `ⓧ` | `ⓨ` | `☰` | `⧉` | `⍐`  | `⍇`  | `⍗`  | `⍈`
-`"Xbox360"`     | `ⓐ` | `ⓑ` | `ⓧ` | `ⓨ` | `⊳` | `⊲` | `⍐`  | `⍇`  | `⍗`  | `⍈`
-`"SNES"`        | `ⓑ` | `ⓐ` | `ⓨ` | `ⓧ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
-`"SN30_Pro"`    | `ⓑ` | `ⓐ` | `ⓨ` | `ⓧ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
-`"JoyCon_R"`    | `ⓐ` | `ⓧ` | `ⓑ` | `ⓨ` | `⊕` | `R` | `⍐`  | `⍇`  | `⍗`  | `⍈`
-`"JoyCon_L"`    | `▼` | `▶` | `◀` | `▲` | `⊖` | `L` | `⍐`  | `⍇`  | `⍗`  | `⍈`
-`"SwitchPro"`   | `ⓑ` | `ⓐ` | `ⓨ` | `ⓧ` | `⊕` | `⊖` | `⍐`  | `⍇`  | `⍗`  | `⍈`
-`"Keyboard"`    | `␣` | `⏎` | `ⓒ` | `ⓕ` | `ⓟ` | `ⓠ` | `W`  | `A`  | `S`  | `D`
-`"Kbd_Alt"`     | `␣` | `⏎` | `ⓒ` | `ⓕ` | `ⓟ` | `ⓠ` | `⍐`  | `⍇`  | `⍗`  | `⍈`
-`"Kbd_P1"`      | `V` | `G` | `ⓒ` | `ⓕ` | `4` | `1` | `W`  | `A`  | `S`  | `D`
-`"Kbd_P2"`      | `/` | `'` | `.` | `;` | `0` | `7` | `I`  | `J`  | `K`  | `L`
-`"HOTAS"`       | `1` | `2` | `4` | `3` |`ST` |`SE` | `⍐`  | `⍇`  | `⍗`  | `⍈`
-`"GPD_Win"`     | `ⓐ` | `ⓑ` | `ⓧ` | `ⓨ` |`STR`|`SEL`| `⍐`  | `⍇`  | `⍗`  | `⍈`
-
-Note that the `▣⍍☰⧉␣⏎` Unicode characters are rendered similarly to
-other button prompts in quadplay✜ fonts.
-
-The current implementation has `gamepad_array[i].type = "Quadplay"` for all pads by default.
-This can be changed from within a program using `device_control()`. See also the
-`controllers-32x22.sprite.json` for help in making your controller selection menu.
+prompts.
 
 
 ### Touch
@@ -1216,15 +1216,15 @@ Games can add up to three custom elements on the pause menu, and can change thes
 at any point.
 
 `set_pause_menu(opt1 (= ∅), opt2 (= ∅), opt3 (= ∅))`
-: Pverride the custom elements on the pause menu. Each argument
+: Override the custom elements on the pause menu. Each argument
   is an object of the form `{text:string, callback:function, confirm:boolean}`.
-  At 64x64 resolution, specifying opt3 disables the automatic game
+  At 64x64 resolution, specifying `opt3` disables the automatic game
   credits option in the pause menu.
 
-  - `text` is the menu item text it will be clipped if too long
-  - `callback` is a function of no arguments to execute when this option is selected
-  - `confirm` (defaults to `false`) if true, an additional confirmation dialog
-    appears when this option is selected
+  - `text` is the menu item text. It will be clipped if too long.
+  - `callback` is a function of no arguments to execute when this option is selected.
+  - `confirm` (defaults to `false`) if true, is an additional confirmation dialog
+    appears when this option is selected.
 
 
 Modes
@@ -1243,7 +1243,8 @@ Modes
 
 `launch_game(url)`
 : Load a different game. This is primarily used by the built-in
-  quadplay✜ launcher, but is available to all programs.
+  quadplay✜ launcher, but is available to all programs. This may be
+  removed in version 1.0.
 
 `pop_mode()`
 : Go back to the previous mode that invoked `push_mode`, restoring the
@@ -2043,6 +2044,7 @@ space (sprite indices), and *map* space (map cell indices).
 The helper routines to convert between these each take an `xy()` value
 and return a new `xy()` value (or `z`):
 
+- `transform_to(pos, angle, scale, c)`, `transform_from(pos, angle, scale, c)` Enter and exit generalized reference frames
 - `transform_screen_to_draw(c)`, `transform_draw_to_screen(c, z (=0))`, `transform_screen_z_to_draw_z(z)`, `transform_draw_z_to_screen_z(z)`
 - `transform_draw_to_entity(e, c)`, `transform_entity_to_draw(e, c)`
 - `transform_entity_to_sprite(e, c)`, `transform_sprite_to_entity(e, c)`
@@ -2055,6 +2057,9 @@ Where `m` is a map, `e` is an entity, and `c` is an `xy()` coordinate.
 The `z` value only affects `transform_draw_to_screen` if a skew has been set by `set_transform()`.
 In this case, there is no way to invert the draw-to-screen transformation, so `transform_screen_to_draw` is
 misleading.
+
+
+All drawing routines assume the default camera.
 
 There are no transformation functions between entity and draw space
 z-axes. Just add or subtract the `entity.z` value.
@@ -2165,33 +2170,6 @@ at (1, 1), which would be consistent with integer pixel centers.
 The center of the entire screen is `½ SCREEN_SIZE`.
 
 
-`rotation_sign()`
-: Returns -1 if `(t.dir.x * t.dir.y > 0)` for `t = get_transform()`
-  and +1 if `(t.dir.x * t.dir.y < 0)`. Useful for computing the
-  coordinate transform of an entity angle. Angles are always measured
-  counter-clockwise on *screen*.  In the *draw coordinate system*, they
-  rotate counter-clockwise if `rotation_sign() = 1` and clockwise if
-  `rotation_sign() = -1` (which is the default). This is used by `draw_sprite()`
-  to determine the rotation direction. See also `up_y()`.
-
-`get_transform()`
-: Returns the current net transformation as an `args` object that could be passed to
-  `set_transform(args)`.
-
-`up_y()`
-: Returns `-sign(get_transform().dir.y)`, which is -1 if Y increases downwards (the default)
-  and +1 if Y increases upwards (`"flip_y": true` in the .game.json file).
-
-`preserving_transform:`
-: The special `preserving_transform:` block saves the current transform and
-  clipping region, executes the code in the body, and then restores the
-  previous transform and clipping region. It is useful for making modular
-  functions for handling UI scrolling, minimaps, and screenshake.
-
-`reset_transform()`
-: Reset to the default transformation, `set_transform(xy(0, 0), xy(1, 1), 0, 1, xy(0, 0))`.
-  This overrides the `flip_y` flag from the .game.json file.
-
 `compose_transform(args)`
 : Named argument version of `compose_transform()`.
 
@@ -2201,8 +2179,44 @@ The center of the entire screen is `½ SCREEN_SIZE`.
   Use `preserving_transform` or `get_transform()` plus `set_transform()` to save and restore
   nested coordinate systems.
 
+`get_transform()`
+: Returns the current net transformation as an `args` object that could be passed to
+  `set_transform(args)`.
+
+<!--
+`get_camera()`
+: Returns the current camera as an `args` object that could be passed to `set_camera(args)`. -->
+
+`preserving_transform:`
+: The special `preserving_transform:` block saves the current transform, camera, and
+  clipping region, executes the code in the body, and then restores the
+  previous transform and clipping region when the block is exited (including abruptly by 
+  `return`, `continue`, or `break`). It is useful for making modular
+  functions for handling UI scrolling, minimaps, and screenshake. 
+
+`reset_transform()`
+: Reset to the default transformation, `set_transform(xy(0, 0), xy(1, 1), 0, 1, xy(0, 0))`.
+  This overrides the `flip_y` flag from the .game.json file.
+
+`rotation_sign()`
+: Returns -1 if `(t.dir.x * t.dir.y > 0)` for `t = get_transform()`
+  and +1 if `(t.dir.x * t.dir.y < 0)`. Useful for computing the
+  coordinate transform of an entity angle. Angles are always measured
+  counter-clockwise on *screen*.  In the *draw coordinate system*, they
+  rotate counter-clockwise if `rotation_sign() = 1` and clockwise if
+  `rotation_sign() = -1` (which is the default). This is used by `draw_sprite()`
+  to determine the rotation direction. See also `up_y()`.
+<!--
+`set_camera(args)`
+: Named argument object version of `set_camera()`.
+
+`set_camera(pos (= xy(0, 0)), angle (= 0), zoom (= 1))`
+: Positions the camera used to transform other draw calls. Note that
+  `zoom` is the inverse of a scale transformation on the camera itself.
+  Use `set_transform()` to move the on-screen origin. -->
+
 `set_transform(args)`
-: Named argument version of `set_transform()`.
+: Named argument object version of `set_transform()`.
 
 `set_transform(pos (= ∅), dir (= ∅), z (= ∅), zDir (= ∅), skew (= ∅))`
 : Set the transformation applied to all draw coordinates to compute screen coordinates. Nil values
@@ -2221,6 +2235,11 @@ The center of the entire screen is `½ SCREEN_SIZE`.
   be used to make increasing values farther back.
 
   The skew transform applies after direction flipping and can be used for isometric 3D.
+
+`up_y()`
+: Returns `-sign(get_transform().dir.y)`, which is -1 if Y increases downwards (the default)
+  and +1 if Y increases upwards (`"flip_y": true` in the .game.json file).
+
 
 
 The most common changes are:
@@ -3390,6 +3409,12 @@ The following functions relate maps, pixels, and sprites. In them, a
 commands operate and a "map coordinate" is in the space of the map
 indices. The map's z-axis corresponds to layers.
 
+`draw_map(args)`
+: Draw the map using the named argument object.
+
+<!--
+`draw_map(map, min_layer (= 0), max_layer (= length(map.layer)), replacement_array (= ∅), pos (= xy(0, 0)), angle (= 0), scale (= xy(1, 1)))`
+-->
 `draw_map(map, min_layer (= 0), max_layer (= length(map.layer)), replacement_array (= ∅))`
 : Draws the map with the current transform.  If there is no transform,
   the map is drawn with the first tile's center at (0, 0), which means
@@ -3406,6 +3431,11 @@ indices. The map's z-axis corresponds to layers.
   The if specified in the source `.json` file, the map will wrap
   appropriately horizontally or vertically when drawn, if it is large
   enough to covers at least 1/3 of the current clipping area.
+  
+  The `pos`, `angle`, and `scale` apply the position of the map
+  as if it was a giant object centered at the center of tile (0, 0).
+  Using a non-default `angle` and `scale` will approximately double
+  the cost of drawing the map.
 
 `find_map_path(map, startXY, goalXY, edgeCost, costLayer = 0)`
 : Specialized version of `find_path` for maps. The start and end positions
@@ -3459,6 +3489,9 @@ indices. The map's z-axis corresponds to layers.
 `transform_draw_to_map(map, draw_coord)`
 : Returns the _fractional_ map coordinates of `draw_coord`.  See also
   `transform_map_to_draw()` and `mget()`.
+  
+  To account for a map that is rendered by `draw_map()` with its own `pos`, `angle`, and `scale`, use
+  `transform_draw_to_map(map, transform_to(pos, angle, scale, draw_coord))`.
 
 `transform_draw_z_to_map_layer(map, z)`
 : Using the current transformation, returns the _fractional_ map layer
@@ -3472,6 +3505,9 @@ indices. The map's z-axis corresponds to layers.
 : Returns the draw coordinates of `map_coord`. Integer map_coords correspond to the centers of tiles,
   which will be fractional pixels for even map tile sizes. See also `transform_draw_to_map()`
   and `get_map_pixel_color()`.
+  
+  To account for a map that is rendered by `draw_map()` with its own `pos`, `angle`, and `scale`, use
+  `transform_from(pos, angle, scale, transform_map_to_draw(map, map_coord))`.
 
 
 Frame Hooks
@@ -4336,8 +4372,9 @@ Constants
 Unlike constants declared in code, the constants in the `.game.json` file appear in the IDE
 in the project list and have GUI editors.
 
-Each constant has the format `"..name..": {"type": "..type..", "value": ..., "comment": "..."}`.
-The `comment` field is optional and the `raw` type permits a `url` instead of a `value`.
+Each constant has the format `"..name..": {"type": "..type..", "value": ..., "description": "..."}`.
+The `description` field is optional and the `raw` type permits a `url` instead of a `value`.
+Other types may have additional metadata used for the IDE.
 
 Explicit types allow support for the full PyxlScript literal syntax
 beyond that permitted natively in JSON, appropriate GUI editors, and
@@ -4355,9 +4392,14 @@ The available constants types are:
 - `string`
 - `boolean`
 - `nil` (no `value` needed)
-- `xy`
-- `xz`
-- `xyz`
+- vectors
+  - `xy`
+  - `xz`
+  - `xyz`
+  - Each of these may have a `"nudge"` field, which is another vector of the same type
+    that specifies the amount that the IDE should shift by along each axis when nudging.
+    The nudge vector expects strings of numbers or numbers directly, rather than
+    recursive fields with type and value elements.
 - `rgb`
 - `rgba`
 - `hsv`
@@ -5837,9 +5879,11 @@ more powerful processor and a 64-bit Ubuntu distribution.
 
 I've built Jetson Nano and Raspberry Pi consoles and the result is satisfyingly comparable to
 the Nintendo [NES Classic Edition](https://www.nintendo.com/nes-classic/),
-[Super NES Classic Edition[(https://www.nintendo.com/super-nes-classic/), 
+[Super NES Classic Edition](https://www.nintendo.com/super-nes-classic/), 
 Sega [Genesis Mini](https://genesismini.sega.com/), and
-PlayStation [Classic](https://www.playstation.com/en-ca/explore/playstation-classic/) devices--but you can program for it yourself!
+PlayStation [Classic](https://www.playstation.com/en-ca/explore/playstation-classic/) devices. The big difference
+from commercial mini retro consoles is that you can program your own quadplay console. The commercial consoles
+only play their own games.
 
 ![Self-contained quadplay console built by Morgan McGuire from a Raspberry Pi and standard screen case, with Bluetooth controllers.](rpi-arcade.jpg width=50%)
 
@@ -5848,16 +5892,49 @@ but has a lot more graphics power than an embedded processor and will
 comfortably run all games at 60 Hz.
 
 You can also build a quadplay✜ arcade cabinet. This can be done with
-some carpentry and any low-cost PC and display. There are a lot of
+some carpentry and any low-cost PC and display, or by purchasing some (expensive!)
+pre-built arcade cabinets.
+
+There are a lot of
 physical
 [arcade controllers](https://shop.xgaming.com/products/x-arcade-dual-joystick-usb-included)
 available at reasonable prices for building out the controls without
 needing any custom electronics. Note that quadplay✜ supports (but does not require) a touch screen 
-or mouse, which will not be available on a cabinet setup. One alternative is to
-use a small trackpad mounted on top of the joystick controller. This advice is all
-speculative as I have never built an arcade cabinet.
+or mouse, which will not be available on a normal cabinet setup. One alternative is to
+use a small trackpad mounted on top of the joystick controller. 
 
 ![Arcade station custom built by Nick Porcino running quadplay on Raspberry Pi](arcade.jpg width=50%)
+
+When building your own controller, ensure that it maps correctly using the online tool at 
+https://html5gamepad.com/. The specific mapping between HTML buttons and quadplay✜ is:
+
+quadplay✜            |   HTML Gamepad
+:-------------------:|:-------------------------------:
+Analog x-axis        | axis 0 (left is negative)
+Analog y-axis        | axis 1 (forward is negative)
+ⓐ                    | button 0
+ⓑ                    | button 1
+ⓒ                    | button 2
+ⓓ                    | button 3
+ⓔ                    | button 4
+ⓕ                    | button 5
+ⓠ                    | button 8
+ⓟ                    | button 9
+D-pad <big>⍐</big>   | button 12
+D-pad <big>⍗</big>   | button 13
+D-pad <big>⍇</big>   | button 14
+D-pad <big>⍈</big>   | button 15
+
+The D-pad is not typically provided for an arcade setup. quadplay✜
+automatically maps the analog stick into D-pad inputs as well
+as providing analog access under `device_control()`. 
+The ⓔ button should be placed where it can
+be easily held while using the main buttons and stick, for example, 
+as a hat button on the stick or under the right thumb or pinkie. The
+ⓕ button should be placed where it can be used similarly, but ⓔ should
+be the more convenient of the two. Note the positioning of the
+player 1 and 2 ⓕ on the keyboard compared to on a NES-style gamepad.
+
 
 If building a physical cabinet or handheld _without_
 on-screen mobile controls, I recommend using a 1280x720,
@@ -6209,7 +6286,11 @@ Perfectly horizontal lines are much faster to draw than vertical lines.
 Vertical lines are slightly faster than diagonal lines.
 
 Sequential `draw_point()` calls that have the same `z` value are
-significantly optimized in order to enable per-pixel graphics.
+significantly optimized in order to enable efficient per-pixel graphics.
+
+Sequential `draw_sprite()` calls that have the same `z` value and
+the same clipping region are slightly optimized to enable efficient custom
+map rendering and particle systems.
 
 Numeric for loops, such as `for i < N` are slightly faster than
 iterator for loops such as `for x in A`.
@@ -6367,6 +6448,13 @@ All built-in assets are Creative Commons licensed have complete license and copy
 Notes for Beta Testers
 =====================================================================================
 
+There is no mapping on the mobile touchscreen controls for the
+"shoulder" buttons E and F.  I'm still trying to find a workable
+solution on mobile. 
+
+Fonts beginning with letters F-W do not have all button
+prompts yet.
+
 The API is mostly complete. I'm focusing on bug fixes and minor tweaks
 to improve convenience. Only some minor helpers, primarily for AI,
 will be added before the 1.0 release.
@@ -6430,15 +6518,33 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-2020 Apr TBD: Beta update 38
+2020 Apr 17: Beta update 38
 
 - Kiosk mode now completely fills the screen, removing all quadplay UI
 - Pressing play or reload now saves all documents immediately
-- Prevented frame rate changes during the first second of a new mode
+- Prevented frame rate changes during the first 1000 ms of a new mode
   to allow the JIT to catch up
 - Ghost mode for livestreaming the development environment
 - Pressing Play now restores keyboard focus to the game
-
+- Added touch example program
+- Added arrows for nudging vector constants in the IDE
+- Added sliders for color constants in the IDE
+- Fixed syntax highlighting for `with`, `entity_add_child`, and `entity_remove_child`
+- Improved frame rate scaling to avoid dropping to 30 Hz during transient browser hitches
+- Changed the player 1 keyboard mapping to B,H,V,G for the main buttons
+  to make room for new virtual "shoulder" buttons
+- Changed mapping of game reload to Ctrl+R on Safari to prevent browser reload of the
+  page, and clarified all hotkeys with improved tooltips.
+- Added PS5 controller mappings and graphics
+- Optimized sequential rendering of multiple sprites with the same `z` value
+  and clipping region
+- Argument object version of `draw_map()`
+- `draw_map()` now accepts optional `pos`, `scale`, and `angle` arguments
+- Recorded GIFs now download in the same way as recorded PNGs
+- Added generalized `transform_to()` and `transform_from()` routines for points
+- Added support for Xbox Series X controller
+- Added a second row of 4x wide glyphs to the font format
+- Redrew all fonts with new glyphs for ⓔ, <big>⦸</big>, ⓝ, ⓗ, alt, left shift, right shift, and tab
 
 2020 Apr 11: Beta update 37
 
@@ -6542,7 +6648,7 @@ Changes for both the specification and implementation in each release.
 - Added .game.json constant types for `xz`, `hsv`, and `hsva`
 - Included time in screenshot filenames
 - Added joint `def-preserving_transform` block to reduce indentation
-- Added the Mismatched Push and Pop Mode section explaining complex mode transitions
+- Added the Unmatched Push and Pop Mode section explaining complex mode transitions
 - Renamed `assetCredits` -> `ASSET_CREDITS`
 - Added serifs to Broderick font capital I variants
 - Made touching the screen in IDE mode not trigger button presses
@@ -7083,6 +7189,10 @@ left: 230px;
 .md .longTOC a, .md .longTOC code, .md a:link, .md a:visited, .md a:link code, .md a:visited code {
 color: #80bfff !important;
 }
+table.aligned tr {
+  vertical-align: top;
+}
+
 div.preview {
   width: 256px;
   height: 149px;

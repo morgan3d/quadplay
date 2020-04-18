@@ -145,16 +145,19 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime) {
 
         // Estimates of the best frame time we might hit if graphicsPeriod changes 
         const minAchievableTime    = logicTime + physicsTime + graphicsTime * G / maxG;
-        const expectedTimeAtLowerFramerate  = logicTime + physicsTime + graphicsTime * G / (G + 1);
+        const expectedTimeAtLowerFramerate   = logicTime + physicsTime + graphicsTime * G / (G + 1);
         const expectedTimeAtCurrentFramerate = logicTime + physicsTime + graphicsTime * G;
-        const expectedTimeAtHigherFramerate = logicTime + physicsTime + graphicsTime * G / (G - 1);
+        const expectedTimeAtHigherFramerate  = logicTime + physicsTime + graphicsTime * G / Math.max(G - 1, 0.5);
         let newG = G;
 
-        if (frameTime > 18.5) {
+        // Sometimes the JIT runs or another scheduling event occurs and the actual time
+        // is way out of sync with the expected time. Do not change the framerate in this case
+        if ((frameTime > 18.5) && (frameTime < 2 * expectedTimeAtCurrentFramerate)) {
             // Not making frame rate, and we've been in the current
             // mode for what we expected to be one second worth of
             // frames.
-            if (((minAchievableTime <= 16) || (minAchievableTime < frameTime * 0.6)) && (G < maxG) && (QRuntime.mode_frames > 60 / G)) {
+            if (((minAchievableTime <= 16) ||
+                 (minAchievableTime < frameTime * 0.6)) && (G < maxG) && (QRuntime.mode_frames > 60 / G)) {
                 // It is worth lowering the graphics rate, as it
                 // should help us hit frame rate
                 newG = G + 1;
@@ -174,7 +177,7 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime) {
                          `  expectedTimeAtLowerFramerate   = ${expectedTimeAtLowerFramerate}\n` +
                          `  expectedTimeAtCurrentFramerate = ${expectedTimeAtCurrentFramerate}\n` +
                          `  expectedTimeAtHigherFramerate  = ${expectedTimeAtHigherFramerate}\n` +
-                         `  actualTimeAtCurrentFramerate   = ${frameTime}`, 'color:#18F');
+                         `  actualTimeAtCurrentFramerate   = ${frameTime}`, 'color:#1E8');
         }
         
         if (newG !== G) {

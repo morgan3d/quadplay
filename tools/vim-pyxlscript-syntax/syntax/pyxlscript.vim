@@ -31,7 +31,7 @@ syn keyword pyxlscriptBuiltIn add_frame_hook remove_frame_hook draw_sprite draw_
 syn match pyxlscriptColor "#[0-9A-Fa-f]+"
 
 syn keyword pyxlscriptStatement	def nextgroup=pyxlscriptDef skipwhite
-syn keyword pyxlscriptStatement return local preserving_transform with set_mode reset_game launch_game quit_game push_mode pop_mode make_player because
+syn keyword pyxlscriptStatement return local preserving_transform with set_mode reset_game launch_game quit_game push_mode pop_mode because
 syn keyword pyxlscriptConditional if else then
 syn keyword pyxlscriptRepeat	for while until
 syn keyword pyxlscriptOperator	and in is not or

@@ -410,261 +410,242 @@ function _executePIX(cmd) {
 }
 
 
-function _executeMAP(cmd) {
-    // One blt command that we'll mutate
-    const sprCmd = {clipX1: cmd.clipX1, clipX2: cmd.clipX2, clipY1: cmd.clipY1, clipY2: cmd.clipY2,
-                    x:0, y:0, z: cmd.z, angle: 0, scaleX: 1, scaleY: 1, opacity: 1, override_color: undefined}
-
-    // Submit each sprite
-    for (let i = 0; i < cmd.layerData.length; ++i) {
-        const data = cmd.layerData[i];
-        const sprite = data.sprite;
-        sprCmd.spritesheetIndex = sprite.spritesheet._index;
-        sprCmd.cornerX = sprite._x,
-        sprCmd.cornerY = sprite._y,
-        sprCmd.sizeX   = sprite.size.x,
-        sprCmd.sizeY   = sprite.size.y,
-        sprCmd.x       = data.x;
-        sprCmd.y       = data.y;
-        sprCmd.scaleX  = sprite.scale.x;
-        sprCmd.scaleY  = sprite.scale.y;
-        sprCmd.hasAlpha = sprite._hasAlpha;
-
-        _executeSPR(sprCmd);
-    }
-}
-
-
-function _executeSPR(cmd) {
+function _executeSPR(metaCmd) {
     // Note that these are always integers, which we consider
     // pixel centers.
-    const clipX1 = cmd.clipX1, clipY1 = cmd.clipY1,
-          clipX2 = cmd.clipX2, clipY2 = cmd.clipY2;
+    const clipX1 = metaCmd.clipX1, clipY1 = metaCmd.clipY1,
+          clipX2 = metaCmd.clipX2, clipY2 = metaCmd.clipY2;
 
-    let opacity = cmd.opacity;
-
-    const spr = cmd.sprite;
-
-    const override_color = cmd.override_color;
-    
-    // Compute the net transformation matrix
-
-    // Source bounds, inclusive
-    const srcX1 = cmd.cornerX, srcX2 = cmd.cornerX + cmd.sizeX - 1,
-          srcY1 = cmd.cornerY, srcY2 = cmd.cornerY + cmd.sizeY - 1;
-    
-    // The net forward transformation is: (note that SX, SY = source center, not scale!)
-    // c = cos, s = sin, f = scale
-    //
-    // [srcx]   [1 0 SX][1/fx 0   0][ c -s 0][1 0 -DX][dstx]
-    // [srcy] = [0 1 SY][0   1/fy 0][ s  c 0][0 1 -DY][dsty]
-    // [ 1  ]   [0 0  1][0    0   1][ 0  0 1][0 0   1][ 1  ]
-    //
-    // [srcx]   [1 0 SX][c/fx -s/fx 0][1 0 -DX][dstx]
-    // [srcy] = [0 1 SY][s/fy  c/fy 0][0 1 -DY][dsty]
-    // [ 1  ]   [0 0  1][  0    0   1][0 0   1][ 1  ]
-    //
-    // A = c/fx, B = -s/fx, C = s/fy, D = c/fy
-    //
-    // [srcx]   [1 0 SX][A B 0][1 0 -DX][dstx]
-    // [srcy] = [0 1 SY][C D 0][0 1 -DY][dsty]
-    // [ 1  ]   [0 0  1][0 0 1][0 0   1][ 1  ]
-    //
-    // [srcx]    [A B (SX - A*DX - B*DY)][dstx]
-    // [srcy] =  [C D (SY - C*DX - D*DY)][dsty]
-    //                                   [ 1  ]
-    //
-    // The inverse transformation for computing destination bounds is:
-    //  
-    // [dstx]   [1 0 DX][ c s 0][fx  0 0][1 0 -SX][srcx]
-    // [dsty] = [0 1 DY][-s c 0][ 0 fy 0][0 1 -SY][srcy]
-    // [ 1  ]   [0 0  1][ 0 0 1][ 0  0 1][0 0   1][ 1  ]
-    //
-    // E = c*fx, F = -s*fx, G = s*fy, H = c*fy
-    //
-    // [dstx]   [E F DX][srcx - SX]
-    // [dsty] = [G H DY][srcy - SY]
-    //                  [   1     ]
-    
-    // Source and destination centers
-    const DX = cmd.x, DY = cmd.y,
-          SX = srcX1 + cmd.sizeX * 0.5, SY = srcY1 + cmd.sizeY * 0.5;
-
-    const cos = Math.cos(cmd.angle), sin = Math.sin(cmd.angle);
-    const fx = cmd.scaleX, fy = cmd.scaleY;
-
-    const A = cos/fx, B = -sin/fx, C = sin/fy, D = cos/fy;
-    const E = cos*fx, F =  sin*fx, G = -sin*fy, H = cos*fy;
-    const I = DX - SX*E - SY*G, J = DY - SX*F - SY*H;
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // Compute the (inclusive) destination bounds by projecting all
-    // four corners from texture space to screen space
-    
-    let dstX1 = Infinity, dstX2 = -Infinity,
-        dstY1 = Infinity, dstY2 = -Infinity;
-
-    for (let i = 0; i <= 1; ++i) {
-        for (let j = 0; j <= 1; ++j) {
-            // Coordinates of the bounding box extremes
-            const srcX = srcX1 + i * cmd.sizeX,
-                  srcY = srcY1 + j * cmd.sizeY;
-
-            // Transform from texture space to pixel space
-            let tmp = E * (srcX - SX) + G * (srcY - SY) + DX;
-            dstX1 = Math.min(tmp, dstX1); dstX2 = Math.max(tmp, dstX2);
-            
-            tmp     = F * (srcX - SX) + H * (srcY - SY) + DY;
-            dstY1 = Math.min(tmp, dstY1); dstY2 = Math.max(tmp, dstY2);
-        }
-    }
-
-    // Round the bounding box using the draw_rect rules for inclusive integer
-    // bounds with open top and left edges at pixel center samples.
-    dstX1 = Math.round(dstX1); dstY1 = Math.round(dstY1);
-    dstX2 = Math.floor(dstX2 - 0.5); dstY2 = Math.floor(dstY2 - 0.5);
-
-    // Restrict to the clipping region
-    dstX1 = Math.max(dstX1, clipX1); dstY1 = Math.max(dstY1, clipY1);
-    dstX2 = Math.min(dstX2, clipX2); dstY2 = Math.min(dstY2, clipY2);
-
-    // Iterate over *output* pixel centers in this region. Because the
-    // transformed texel centers won't usually land exactly on pixel
-    // centers, we have to be conservative with the bounds here.
-    //
-    // Don't snap the bounds to integers...we want to hit points that
-    // correspond to texel centers in the case where there is no
-    // rotation or scale (we'll end up rounding the actual destination
-    // pixels later and stepping in integer increments anyway).
-
-    console.assert(cmd.spritesheetIndex !== undefined);
-    console.assert(cmd.spritesheetIndex < _spritesheetArray.length);
-    let srcData = _spritesheetArray[cmd.spritesheetIndex]._uint32Data;
-    const srcDataWidth = srcData.width;
-
-    if ((! cmd.hasAlpha) && (Math.abs(opacity - 1) < 1e-10) &&
-        (Math.abs(Math.abs(A) - 1) < 1e-10) && (Math.abs(B) < 1e-10) &&
-        (Math.abs(C) < 1e-10) && (Math.abs(Math.abs(D) - 1) < 1e-10) &&
-        (! override_color)) {
-        // Simple case; x and y-axis uniform scale, no rotation, and no alpha
-        // test. Use a memcpy.  The x and y-axes may be inverted, and there
-        // can be xy translation applied. This branch is primarily
-        // here to accelerate map rendering.
+    // For each sprite in the array
+    const data = metaCmd.data;
+    for (let i = 0; i < data.length; ++i) {
+        const cmd = data[i];
         
-        const width = (dstX2 - dstX1 + 1) | 0;
-        if (width >= 1) {
-            const srcY = ((dstY1 + 0.4999 - DY) * D + SY) | 0;
-            let srcOffset = (((dstX1 + 0.4999 - DX) + SX) | 0) + srcY * srcDataWidth;
-            let dstOffset = (dstX1 + dstY1 * _SCREEN_WIDTH) | 0;
-            const srcStep = (srcDataWidth * D) | 0;
+        let opacity = cmd.opacity;
+        const spr = cmd.sprite;
+        const override_color = cmd.override_color;
+        
+        // Compute the net transformation matrix
 
-            if (A < 0) {
-                // Use the flipped version
-                srcOffset += srcDataWidth - 2 * SX;
-                srcData = _spritesheetArray[cmd.spritesheetIndex]._uint32DataFlippedX;
+        // Source bounds, inclusive
+        const srcX1 = cmd.cornerX, srcX2 = cmd.cornerX + cmd.sizeX - 1,
+              srcY1 = cmd.cornerY, srcY2 = cmd.cornerY + cmd.sizeY - 1;
+        
+        // The net forward transformation is: (note that SX, SY = source center, not scale!)
+        // c = cos, s = sin, f = scale
+        //
+        // [srcx]   [1 0 SX][1/fx 0   0][ c -s 0][1 0 -DX][dstx]
+        // [srcy] = [0 1 SY][0   1/fy 0][ s  c 0][0 1 -DY][dsty]
+        // [ 1  ]   [0 0  1][0    0   1][ 0  0 1][0 0   1][ 1  ]
+        //
+        // [srcx]   [1 0 SX][c/fx -s/fx 0][1 0 -DX][dstx]
+        // [srcy] = [0 1 SY][s/fy  c/fy 0][0 1 -DY][dsty]
+        // [ 1  ]   [0 0  1][  0    0   1][0 0   1][ 1  ]
+        //
+        // A = c/fx, B = -s/fx, C = s/fy, D = c/fy
+        //
+        // [srcx]   [1 0 SX][A B 0][1 0 -DX][dstx]
+        // [srcy] = [0 1 SY][C D 0][0 1 -DY][dsty]
+        // [ 1  ]   [0 0  1][0 0 1][0 0   1][ 1  ]
+        //
+        // [srcx]    [A B (SX - A*DX - B*DY)][dstx]
+        // [srcy] =  [C D (SY - C*DX - D*DY)][dsty]
+        //                                   [ 1  ]
+        //
+        // The inverse transformation for computing destination bounds is:
+        //  
+        // [dstx]   [1 0 DX][ c s 0][fx  0 0][1 0 -SX][srcx]
+        // [dsty] = [0 1 DY][-s c 0][ 0 fy 0][0 1 -SY][srcy]
+        // [ 1  ]   [0 0  1][ 0 0 1][ 0  0 1][0 0   1][ 1  ]
+        //
+        // E = c*fx, F = -s*fx, G = s*fy, H = c*fy
+        //
+        // [dstx]   [E F DX][srcx - SX]
+        // [dsty] = [G H DY][srcy - SY]
+        //                  [   1     ]
+        
+        // Source and destination centers
+        const DX = cmd.x, DY = cmd.y,
+              SX = srcX1 + cmd.sizeX * 0.5, SY = srcY1 + cmd.sizeY * 0.5;
+
+        const cos = Math.cos(cmd.angle), sin = Math.sin(cmd.angle);
+        const fx = cmd.scaleX, fy = cmd.scaleY;
+
+        const A = cos/fx, B = -sin/fx, C = sin/fy, D = cos/fy;
+        const E = cos*fx, F =  sin*fx, G = -sin*fy, H = cos*fy;
+        const I = DX - SX*E - SY*G, J = DY - SX*F - SY*H;
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // Compute the (inclusive) destination bounds by projecting all
+        // four corners from texture space to screen space
+        
+        let dstX1 = Infinity, dstX2 = -Infinity,
+            dstY1 = Infinity, dstY2 = -Infinity;
+
+        for (let i = 0; i <= 1; ++i) {
+            for (let j = 0; j <= 1; ++j) {
+                // Coordinates of the bounding box extremes
+                const srcX = srcX1 + i * cmd.sizeX,
+                      srcY = srcY1 + j * cmd.sizeY;
+
+                // Transform from texture space to pixel space
+                let tmp = E * (srcX - SX) + G * (srcY - SY) + DX;
+                dstX1 = Math.min(tmp, dstX1); dstX2 = Math.max(tmp, dstX2);
+                
+                tmp     = F * (srcX - SX) + H * (srcY - SY) + DY;
+                dstY1 = Math.min(tmp, dstY1); dstY2 = Math.max(tmp, dstY2);
             }
-
-            for (let dstY = dstY1; dstY <= dstY2; ++dstY, dstOffset += _SCREEN_WIDTH, srcOffset += srcStep) {
-                // This TypedArray.set call saves about 3.5 ms/frame
-                // compared to an explicit horizontal loop for map
-                // rendering on Firefox. Chrome and Safari are fast
-                // even for the general case, so this isn't as
-                // necessary on those browsers...but it doesn't hurt.
-                
-                // console.assert(dstOffset + width <= _screen.length, `dstX1=${dstX1}, dstX2 = ${dstX2}, _screen.length = ${_screen.length}, width = ${width}, dstOffset = ${dstOffset}, dstOffset % _SCREEN_WIDTH = ${dstOffset % _SCREEN_WIDTH}, dstY = ${dstY}, dstY2 = ${dstY2}`);
-                // console.assert(srcOffset + width <= srcData.length);
-                _screen.set(srcData.slice(srcOffset, srcOffset + width), dstOffset);
-            } // dstY
         }
-    } else {
-        // General case. It doesn't help performance to break out the
-        // case of no rotation with alpha test and optimize that
-        // separately, so process everything together.
 
-        // Extract the common terms of blending into the override color
-        const override = override_color ? _colorToUint32(override_color) : 0;
-        const override_a = 1 - (override >>> 24) * (1 / 255);
+        // Round the bounding box using the draw_rect rules for inclusive integer
+        // bounds with open top and left edges at pixel center samples.
+        dstX1 = Math.round(dstX1); dstY1 = Math.round(dstY1);
+        dstX2 = Math.floor(dstX2 - 0.5); dstY2 = Math.floor(dstY2 - 0.5);
 
-        const override_mode = (override_a === 1) ? 0 : (override_a === 0) ? 2 : 1;
-        const override_r = (override & 0x00FF0000) * (1 - override_a) + 0.5;
-        const override_g = (override & 0x0000FF00) * (1 - override_a) + 0.5;
-        const override_b = (override & 0x000000FF) * (1 - override_a) + 0.5;
-        
-        for (let dstY = dstY1; dstY <= dstY2; ++dstY) {
-            // Offset everything by 0.5 to transform the pixel
-            // center. Needs to be *slightly* less in order to round
-            // the correct way.
-            const xterms = (dstY + 0.4999 - DY) * B + SX;
-            const yterms = (dstY + 0.4999 - DY) * D + SY;
+        // Restrict to the clipping region
+        dstX1 = Math.max(dstX1, clipX1); dstY1 = Math.max(dstY1, clipY1);
+        dstX2 = Math.min(dstX2, clipX2); dstY2 = Math.min(dstY2, clipY2);
+
+        // Iterate over *output* pixel centers in this region. Because the
+        // transformed texel centers won't usually land exactly on pixel
+        // centers, we have to be conservative with the bounds here.
+        //
+        // Don't snap the bounds to integers...we want to hit points that
+        // correspond to texel centers in the case where there is no
+        // rotation or scale (we'll end up rounding the actual destination
+        // pixels later and stepping in integer increments anyway).
+
+        console.assert(cmd.spritesheetIndex !== undefined &&
+                       cmd.spritesheetIndex >= 0 &&
+                       cmd.spritesheetIndex < _spritesheetArray.length);
+        // May be reassigned below when using flipped X values
+        let srcData = _spritesheetArray[cmd.spritesheetIndex]._uint32Data;
+        const srcDataWidth = srcData.width;
+
+        if ((! cmd.hasAlpha) && (Math.abs(opacity - 1) < 1e-10) &&
+            (Math.abs(Math.abs(A) - 1) < 1e-10) && (Math.abs(B) < 1e-10) &&
+            (Math.abs(C) < 1e-10) && (Math.abs(Math.abs(D) - 1) < 1e-10) &&
+            (! override_color)) {
+            // Simple case; x and y-axis uniform scale, no rotation, and no alpha
+            // test. Use a memcpy.  The x and y-axes may be inverted, and there
+            // can be xy translation applied. This branch is primarily
+            // here to accelerate map rendering.
             
-            let dstOffset = dstX1 + dstY * _SCREEN_WIDTH;
-            
-            for (let dstX = dstX1; dstX <= dstX2; ++dstX, ++dstOffset) {
-                const srcX = ((dstX + 0.4999 - DX) * A + xterms) | 0;
-                const srcY = ((dstX + 0.4999 - DX) * C + yterms) | 0;
+            const width = (dstX2 - dstX1 + 1) | 0;
+            if (width >= 1) {
+                const srcY = ((dstY1 + 0.4999 - DY) * D + SY) | 0;
+                let srcOffset = (((dstX1 + 0.4999 - DX) + SX) | 0) + srcY * srcDataWidth;
+                let dstOffset = (dstX1 + dstY1 * _SCREEN_WIDTH) | 0;
+                const srcStep = (srcDataWidth * D) | 0;
 
-                // Show bounds
-                //_screen[dstOffset] = 0xffffffff;// continue;
-                
-                if ((srcX >= srcX1) && (srcX <= srcX2) && (srcY >= srcY1) && (srcY <= srcY2)) {
-                    // Inside the source sprite
+                if (A < 0) {
+                    // Use the flipped version
+                    srcOffset += srcDataWidth - 2 * SX;
+                    srcData = _spritesheetArray[cmd.spritesheetIndex]._uint32DataFlippedX;
+                }
 
-                    // May be overriden below.
-                    let color = srcData[srcX + srcY * srcDataWidth];
+                for (let dstY = dstY1; dstY <= dstY2; ++dstY, dstOffset += _SCREEN_WIDTH, srcOffset += srcStep) {
+                    // This TypedArray.set call saves about 3.5 ms/frame
+                    // compared to an explicit horizontal loop for map
+                    // rendering on Firefox. Chrome and Safari are fast
+                    // even for the general case, so this isn't as
+                    // necessary on those browsers...but it doesn't hurt.
                     
-                    if (opacity < 1) {
-                        // Make more transparent
+                    // console.assert(dstOffset + width <= _screen.length, `dstX1=${dstX1}, dstX2 = ${dstX2}, _screen.length = ${_screen.length}, width = ${width}, dstOffset = ${dstOffset}, dstOffset % _SCREEN_WIDTH = ${dstOffset % _SCREEN_WIDTH}, dstY = ${dstY}, dstY2 = ${dstY2}`);
+                    // console.assert(srcOffset + width <= srcData.length);
+                    _screen.set(srcData.slice(srcOffset, srcOffset + width), dstOffset);
+                } // dstY
+            }
+        } else {
+            // General case. It doesn't help performance to break out the
+            // case of no rotation with alpha test and optimize that
+            // separately, so process everything together.
+
+            // Extract the common terms of blending into the override color
+            const override = override_color ? _colorToUint32(override_color) : 0;
+            const override_a = 1 - (override >>> 24) * (1 / 255);
+
+            const override_mode = (override_a === 1) ? 0 : (override_a === 0) ? 2 : 1;
+            const override_r = (override & 0x00FF0000) * (1 - override_a) + 0.5;
+            const override_g = (override & 0x0000FF00) * (1 - override_a) + 0.5;
+            const override_b = (override & 0x000000FF) * (1 - override_a) + 0.5;
+            
+            for (let dstY = dstY1; dstY <= dstY2; ++dstY) {
+                // Offset everything by 0.5 to transform the pixel
+                // center. Needs to be *slightly* less in order to round
+                // the correct way.
+                const xterms = (dstY + 0.4999 - DY) * B + SX;
+                const yterms = (dstY + 0.4999 - DY) * D + SY;
+                
+                let dstOffset = dstX1 + dstY * _SCREEN_WIDTH;
+                
+                for (let dstX = dstX1; dstX <= dstX2; ++dstX, ++dstOffset) {
+                    const srcX = ((dstX + 0.4999 - DX) * A + xterms) | 0;
+                    const srcY = ((dstX + 0.4999 - DX) * C + yterms) | 0;
+
+                    // Show bounds
+                    //_screen[dstOffset] = 0xffffffff;// continue;
+                    
+                    if ((srcX >= srcX1) && (srcX <= srcX2) && (srcY >= srcY1) && (srcY <= srcY2)) {
+                        // Inside the source sprite
+
+                        // May be overriden below.
+                        let color = srcData[srcX + srcY * srcDataWidth];
                         
-                        // 4 high bits
-                        const alpha4 = ((color >>> 28) * opacity + 0.5) | 0;
-                        color = ((alpha4 << 28) | (alpha4 << 24) | (color & 0xFFFFFF)) >>> 0;
-                    }
-                    
-                    // the following is an inlining of: _pset(dstX, dstY, color, clipX1, clipY1, clipX2, clipY2);
-                    
-                    // Must be unsigned shift to avoid sign extension
-                    const a255 = color >>> 24;
-                    if (a255 < 0x10) {
-                        // 0% alpha
-                    } else {
-
-                        if (override_mode === 0) {
-                            // Common case, do nothing
-                        } else if (override_mode === 1) {
-                            // Blend
-                            const src = color;
-                            color &= 0xFF000000;
-                            color |= (override_r + (src & 0x00FF0000) * override_a) & 0x00FF0000;
-                            color |= (override_g + (src & 0x0000FF00) * override_a) & 0x0000FF00;
-                            color |= (override_b + (src & 0x000000FF) * override_a) & 0x000000FF;
+                        if (opacity < 1) {
+                            // Make more transparent
+                            
+                            // 4 high bits
+                            const alpha4 = ((color >>> 28) * opacity + 0.5) | 0;
+                            color = ((alpha4 << 28) | (alpha4 << 24) | (color & 0xFFFFFF)) >>> 0;
+                        }
+                        
+                        // the following is an inlining of: _pset(dstX, dstY, color, clipX1, clipY1, clipX2, clipY2);
+                        
+                        // Must be unsigned shift to avoid sign extension
+                        const a255 = color >>> 24;
+                        if (a255 < 0x10) {
+                            // 0% alpha
                         } else {
-                            // Completely overwrite
-                            color = (color & 0xFF000000) | (override & 0xFFFFFF);
-                        }
 
-                        if (a255 >= 0xf0) {
-                            // 100% alpha
-                            _screen[dstOffset] = color;
-                        } else if (a255 > 0x0f) {
-                            // Fractional alpha
-                            
-                            // No need to force to unsigned int because the alpha channel of the output is always 0xff
-                            const a = a255 * (1 / 255);
-                            const back = _screen[dstOffset];
-                            let result = 0xFF000000;
-                            
-                            result |= ((back & 0x00FF0000) * (1 - a) + (color & 0x00FF0000) * a + 0.5) & 0x00FF0000;
-                            result |= ((back & 0x0000FF00) * (1 - a) + (color & 0x0000FF00) * a + 0.5) & 0x0000FF00;
-                            result |= ((back & 0x000000FF) * (1 - a) + (color & 0x000000FF) * a + 0.5) & 0x000000FF;
-                            
-                            _screen[dstOffset] = result;
+                            if (override_mode === 0) {
+                                // Common case, do nothing
+                            } else if (override_mode === 1) {
+                                // Blend
+                                const src = color;
+                                color &= 0xFF000000;
+                                color |= (override_r + (src & 0x00FF0000) * override_a) & 0x00FF0000;
+                                color |= (override_g + (src & 0x0000FF00) * override_a) & 0x0000FF00;
+                                color |= (override_b + (src & 0x000000FF) * override_a) & 0x000000FF;
+                            } else {
+                                // Completely overwrite
+                                color = (color & 0xFF000000) | (override & 0xFFFFFF);
+                            }
+
+                            if (a255 >= 0xf0) {
+                                // 100% alpha
+                                _screen[dstOffset] = color;
+                            } else if (a255 > 0x0f) {
+                                // Fractional alpha
+                                
+                                // No need to force to unsigned int because the alpha channel of the output is always 0xff
+                                const a = a255 * (1 / 255);
+                                const back = _screen[dstOffset];
+                                let result = 0xFF000000;
+                                
+                                result |= ((back & 0x00FF0000) * (1 - a) + (color & 0x00FF0000) * a + 0.5) & 0x00FF0000;
+                                result |= ((back & 0x0000FF00) * (1 - a) + (color & 0x0000FF00) * a + 0.5) & 0x0000FF00;
+                                result |= ((back & 0x000000FF) * (1 - a) + (color & 0x000000FF) * a + 0.5) & 0x000000FF;
+                                
+                                _screen[dstOffset] = result;
+                            }
                         }
-                    }
-                
-                } // clamp to source bounds
-            } // i
-        } // j
-    } // if simple case
+                        
+                    } // clamp to source bounds
+                } // i
+            } // j
+        } // if simple case
+    } // for each sprite
 }
 
 
@@ -843,6 +824,5 @@ var _executeTable = Object.freeze({
     PIX : _executePIX,
     TXT : _executeTXT,
     LIN : _executeLIN,
-    PLY : _executePLY,
-    MAP : _executeMAP
+    PLY : _executePLY
 });
