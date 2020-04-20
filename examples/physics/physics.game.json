@@ -8,7 +8,7 @@
     "scripts":    [],
     "modes":      ["Play*"],
     "docs":       [],
-    "flip_y":     true,
+    "y_up":     true,
     "assets":     {
         "font": "quad://fonts/scoreboard-7.font.json"
     }

@@ -1,0 +1,299 @@
+const LEFT_SCREEN_EDGE = ½ - ½ SCREEN_SIZE.x
+const RIGHT_SCREEN_EDGE = ½ + ½ SCREEN_SIZE.x
+
+let background
+let next_background
+
+/* Time at which we started transitioning from
+   background to next_background.*/
+let background_change_start_frame = -10000
+
+/* Computed at the bottom. This tells us where we are in the scene */
+let segments
+
+/* The current segment */
+let current_segment
+
+/* Computed in draw_game every frame */
+let background_color = rgba(0, 0, 0, 0)
+
+
+/* Purely cosmetic graphics features */
+const splash_array = []
+
+/* Stuff floating on the water randomly */
+const particle_array = []
+
+/* Background objects in three layers. Each array is 2 elements long.
+   When element leaves the screen, it is replaced with its successor
+   based on where in the world the cam_pos.x is */
+const distant_element_array = []
+
+/* Controls horizontal parallax rate. Don't change; too much is hardcoded to it now. */
+const PARALLAX_BASE = 1.5
+
+/* The perspective scaling factor at this z value*/
+def perspective(z):
+   return PARALLAX_BASE^(z * PARALLAX_STRENGTH)
+
+// Returns the xyz() that a given position projects to,
+// taking parallax and the camera into account.
+def world_to_draw(pos, z):
+   const parallax_x = perspective(z)
+   let z_factor = sign(z) * 1.55 |z|^(if z < 0 then 0.75 else 1.0)
+   const parallax_y = -up_y() * (z_factor + 45)
+
+   // Dolly in X, Pan in Y
+   return xyz(pos.x - cam_pos.x * max(parallax_x, 0.075), pos.y - cam_pos.y + parallax_y, z)
+
+
+def update_and_draw_particles():
+   // Shrink or grow the array. Done here for when debugging in the GUI
+   resize(particle_array, min(size(particle_array), MAX_PARTICLES))
+   const Z_SPREAD = 25
+   while size(particle_array) < MAX_PARTICLES:
+      // Compensate for perspective by increasing density in the distance
+      const z = 2 (ξ⁴ - ½) * Z_SPREAD + 5
+      const scale = perspective(z)
+
+      push(particle_array, {
+         color: hsv(
+            random(70%, 100%),
+            random(0, 75%),
+            lerp(10%, 55%, clamp(z / Z_SPREAD + ½, 0, 1) * clamp(1 + z / 10, 0, 1)) 
+            
+         ),
+         pos: xy(random(-½, ½) * SCREEN_SIZE.x / scale + cam_pos.x, 0),
+         draw_length: max(5 scale, 1),
+         z: z
+      })
+
+   for particle in particle_array:
+      const draw_pos = world_to_draw(particle.pos, particle.z)
+      draw_pos.x += round((particle.draw_length) * cos(0.02 game_frames / particle.draw_length + draw_pos.y))
+      const right_edge = draw_pos.x + particle.draw_length
+      draw_line(draw_pos, xy(right_edge, draw_pos.y), particle.color, draw_pos.z)
+      
+      // Wrap if off screen
+      if draw_pos.x < LEFT_SCREEN_EDGE: particle.pos.x += SCREEN_SIZE.x
+         
+
+      
+def update_and_draw_splashes():
+   for splash in splash_array:
+      ++splash.frame
+      const draw_pos = world_to_draw(splash.pos, STONE_Z)
+      if draw_pos.x < LEFT_SCREEN_EDGE:
+         fast_remove_value(splash, splash_array)
+      else:
+         const alpha = clamp(100% - |splash.frame - 6| / 30, 0%, 100%)
+         const small_scale = xy(lerp(20%, 100%, clamp(splash.frame / 17, 0, 1)),
+                        lerp(5%, 80%, alpha))
+         
+         const draw_small_spray = splash.type > SPLASH_PERFECT
+         const draw_double_spray = splash.type == SPLASH_BIG
+         
+         const ripple_scale = xy(small_scale.x * (1.0 + splash.type / 10), small_scale.y)
+         const small_spray_scale = xy(ripple_scale.x, ripple_scale.y * (0.5 + splash.type / 5))
+         const big_spray_scale = xy(small_spray_scale.x * 1.5, small_spray_scale.y * 0.8)
+         
+         draw_sprite({
+               sprite:  SPLASH_SPRITESHEET[0][0],
+               pos:     draw_pos,
+               scale:   ripple_scale,
+               opacity: 80% alpha,
+               z:       draw_pos.z})
+         if draw_small_spray:
+            draw_sprite({
+               sprite:  SPLASH_SPRITESHEET[1][0],
+               pos:     draw_pos,
+               scale:   small_spray_scale,
+               opacity: 80% alpha,
+               z:       draw_pos.z})
+         if draw_double_spray:
+            draw_sprite({
+               sprite:  SPLASH_SPRITESHEET[1][0],
+               pos:     draw_pos,
+               scale:   big_spray_scale,
+               opacity: 80% alpha,
+               z:       draw_pos.z})
+         
+         
+def spawn_splash(type):
+   push(splash_array, {pos: clone(skippy_position), frame: 0, type: type})
+
+
+   
+def draw_skippy():
+   const sprite = array_value(SKIPPY_SPRITESHEET.spin,
+                              game_frames / SKIPPY_SPRITESHEET.spin[0].duration)
+
+   const pos = world_to_draw(skippy_position, STONE_Z)
+   const angle = (skippy_angle - launch_angle) * 5.0
+   
+   if skippy_position.y < 0:
+      // Dying
+      const progress = clamp(-skippy_position.y / 45, 0, 100%)
+      draw_sprite({sprite: sprite, pos: pos, z: pos.z,
+                   override_color: rgba(10%, 0, 30%, clamp(progress + 20%, 0%, 100%)),
+                   opacity: clamp(100% - progress, 0, 100%)})
+      return
+      
+   // Reflection
+   const reflection_pos = world_to_draw(xy(skippy_position.x, -skippy_position.y / 2.5), STONE_Z - epsilon)
+   const reflection_alpha = 100% - sqrt(|skippy_position.y / 100|)
+   const reflection_tint = 80% background_color
+   reflection_tint.a = 60%
+
+   draw_sprite({
+      sprite: sprite,
+      pos:    reflection_pos,
+      z:      pos.z,
+      angle:  -angle,
+      scale:  xy(1, -0.8),
+      override_color: reflection_tint,
+      opacity: reflection_alpha
+   })
+   
+   // Stone
+   draw_sprite({sprite: sprite, pos: pos, z: pos.z, angle: angle})
+
+   
+   
+def draw_distant_elements():
+   for layer < size(distant_element_array):
+      for sprite, pos, z in element in distant_element_array[layer]:
+         const draw_pos = world_to_draw(pos, z)
+         draw_sprite({sprite: sprite, pos: draw_pos, z: draw_pos.z})
+
+         // (sprites are drawn from their centers)
+         const right_sprite_edge = draw_pos.x + ½ sprite.size.x
+         const left_sprite_edge = draw_pos.x - ½ sprite.size.x
+         if right_sprite_edge < LEFT_SCREEN_EDGE:
+            // Permanently offscreen. Leapfrog the next element. All sprites in an element_array
+            // must have the same width to make this leapfrogging easier.
+            pos.x += 2 sprite.size.x
+         else if left_sprite_edge > RIGHT_SCREEN_EDGE:
+            // Replace this element, which hasn't come on screen yet. This ensures
+            // that it is up to date during transitions
+            sprite = random_value(current_segment[element.range])
+
+
+            
+def draw_background():
+   background_color = get_sprite_pixel_color(background, xy(0, 223))
+   if background != next_background:
+      const α = clamp((game_frames - background_change_start_frame) / BACKGROUND_TRANSITION_FRAMES, 0, 1)
+      background_color = lerp(background_color, get_sprite_pixel_color(next_background, xy(0, 223)), α)
+      if α == 1:
+         // The transition is complete
+         background = next_background
+      else:
+         // Full-screen fade in of the next background
+         draw_sprite({sprite: next_background, pos: xy(0, 0), opacity: α, z: -1000})
+   
+   set_background(background)
+
+
+
+def draw_game() preserving_transform:
+   set_transform(½ SCREEN_SIZE)
+
+   if cam_pos.x > current_segment.end_x:
+      // Find the next segment
+      for segment in segments:
+         if cam_pos.x > segment.start_x && cam_pos.x <= segment.end_x:
+            current_segment = segment
+            background_change_start_frame = game_frames
+            next_background = segment.background
+            break
+   
+   draw_background()
+   draw_distant_elements()
+   update_and_draw_splashes()
+   update_and_draw_particles()
+   draw_skippy()
+
+   
+// Initialization:
+local:
+   // This describes the narrative flow of the background content
+   segments = [
+      {
+         // Spritesheets
+         background: SUNSET_SKY,
+         far:        [MOUNTAINS],
+         mid:        [HILLS],
+         near:       [DEAD_TREES_0, DEAD_TREES_1],
+
+         // In kilopixels (converted below)
+         distance:   1
+      },
+      {
+         background: SUNSET_SKY,
+         far:        [TWILIGHT_MOUNTAINS],
+         mid:        [HILLS],
+         near:       [DEAD_TREES_0, DEAD_TREES_1],
+         distance:   2
+      },
+      {
+         background: SUNSET_SKY,
+         far:        [TWILIGHT_MOUNTAINS],
+         mid:        [NIGHT_HILLS],
+         near:       [DEAD_TREES_0, DEAD_TREES_1],
+         distance:   3
+      },
+      {
+         background: TWILIGHT_SKY,
+         far:        [NIGHT_MOUNTAINS],
+         mid:        [NIGHT_HILLS],
+         near:       [LIVE_TREES_0, DEAD_TREES_0],
+         // Has to be long to let the mountains switch over
+         // to the darker sky before hitting night
+         distance:   10
+      },
+      {
+         background: NIGHT_SKY,
+         far:        [NIGHT_MOUNTAINS],
+         mid:        [NIGHT_HILLS],
+         near:       [CABINS_0],
+         distance:   infinity
+      }
+   ]
+
+   // Set up the ranges
+   const ranges = {far: -90, mid: -54, near:-36}
+   
+   // Compute the cumulative distances
+   let total = 0
+   for s < size(segments):
+      const segment = segments[s]
+      segment.distance *= 1024
+      segment.start_x = total
+      total += segment.distance
+      segment.end_x = total
+
+      // Switch to sprites from spritesheets
+      segment.background = segment.background[0][0]
+      for range in ranges:
+         const s = segment[range]
+         for i < size(s): s[i] = s[i][0][0]
+
+
+   // Construct the initial value
+   current_segment = segments[0]
+   background = current_segment.background
+   next_background = background
+   background_change_start_frame = 100
+   
+   // Three ranges
+   for range in ranges:
+      const array = []
+      push(distant_element_array, array)
+
+      // Two elements per range, to allow leapfrogging
+      for i < 2:
+         const sprite = random_value(current_segment[range])
+         push(array, {sprite: sprite, range: range, z: ranges[range], pos: xy(i * sprite.size.x, 0)})
+ 
+   

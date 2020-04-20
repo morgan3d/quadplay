@@ -72,6 +72,10 @@
     </div>
 
     <div id="toolsMenu" class="unselectable dropdown IDEOnly">
+      <div><a>Open Game…</a></div>
+      <hr>
+      <div><a onclick="onNewGameClick()">New Game…</a></div>
+      <hr>
       <label><input id="assertEnabled" type="checkbox" onclick="debugOptionClick(event)" checked autocomplete="off">Enable <code>assert</code></label>
       <br/><label><input id="showEntityBoundsEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Show entity bounds</label>
       <br/><label><input id="showPhysicsEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Show physics</label>
@@ -84,14 +88,16 @@
 
     <div id="header" class="unselectable">
       <div style="position: absolute; left: 8px; top: -2px">
+        <span class="IDEOnly">
+          <a style="cursor:pointer" onclick="onMenuButton(event)" id="toolsMenuButton">Tools</a>
+          &nbsp;&nbsp; &middot; &nbsp;&nbsp;
+        </span>
         <a style="cursor:pointer" onclick="onMenuButton(event)" id="consoleMenuButton">Console</a>
         <span class="noIDE">
           &nbsp;&nbsp; &middot; &nbsp;&nbsp;
           <a onclick="window.open('../doc/controls.html', '', 'width=400,height=500')">Controls</a>
         </span>
-
-        <span class="IDEOnly">
-          &nbsp;&nbsp; &middot; &nbsp;&nbsp; <a style="cursor:pointer" onclick="onMenuButton(event)" id="toolsMenuButton">Tools</a>
+        <span class="IDEOnly">        
           &nbsp;&nbsp; &middot; &nbsp;&nbsp; <a href="../doc/manual.md.html" target="_blank">Manual</a>
         </span>
         <span class="noMobile">

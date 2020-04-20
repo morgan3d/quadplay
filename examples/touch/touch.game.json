@@ -1,0 +1,20 @@
+{
+    "title":      "Touch Example",
+    "developer":  "Casual Effects",
+    "copyright":  "©2020 Morgan McGuire",
+    "license":    "CC0/Public Domain",
+    "modes":      ["Play*"],
+    "assets":     {
+        "font": "quad://fonts/deja-8.font.json",
+        "astronaut": "quad://sprites/kenney-alien-yellow-16x32.sprite.json"
+    },
+
+    "version":      0.0,
+    "min_players":  1,
+    "max_players":  1,
+    "cooperative":  false,
+    "competitive":  false,
+    "achievements": false,
+    "highscores":   false,
+    "description": "Shows how to use the touch input"
+}

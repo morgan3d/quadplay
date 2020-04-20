@@ -201,8 +201,8 @@ function onEmulatorKeyDown(event) {
     if (event.repeat) { return; }
 
     const key = event.code;
-    if (((key === 'KeyC') || (key === 'KeyP')) && (event.ctrlKey || event.metaKey)) {
-        // Ctrl+C or Ctrl+P
+    if ((key === 'KeyP') && (event.ctrlKey || event.metaKey)) {
+        // Ctrl+P
         onPauseButton();
         return;
     }
@@ -382,11 +382,6 @@ function ascii(x) { return x.charCodeAt(0); }
 /** Used by _submitFrame() to map axes and buttons to event key codes when sampling the keyboard controller */
 const keyMap = [{'-x':['KeyA', 'ArrowLeft'], '+x':['KeyD', 'ArrowRight'], '-y':['KeyW', 'ArrowUp'], '+y':['KeyS', 'ArrowDown'], a:['KeyB', 'Space'],  b:['KeyH', 'Enter'],  c:['KeyV', 'KeyV'],     d:['KeyG', 'KeyG'],          e:['ShiftLeft', 'ShiftLeft'], f:['KeyC', 'ShiftRight'],  q:['Digit1', 'KeyQ'],   p:['Digit4', 'KeyP']},
                 {'-x':['KeyJ', 'KeyJ'],      '+x':['KeyL', 'KeyL'],       '-y':['KeyI', 'KeyI'],    '+y':['KeyK', 'KeyK'],     a:['Slash', 'Slash'], b:['Quote', 'Quote'], c:['Period', 'Period'], d:['Semicolon', 'Semicolon'], e:['KeyN','KeyN'],            f:['AltRight', 'AltLeft'], q:['Digit7', 'Digit7'], p:['Digit0', 'Digit0']}];
-/*
-Previous:
-      [{'-x':['KeyA', 'ArrowLeft'], '+x':['KeyD', 'ArrowRight'], '-y':['KeyW', 'ArrowUp'], '+y':['KeyS', 'ArrowDown'], a:['KeyV', 'Space'],  b:['KeyG', 'Enter'],  c:['KeyC', 'KeyC'],     d:['KeyF', 'KeyF'],           e:['ShiftLeft', 'ShiftLeft'],  f:['Tab', 'Tab'],             q:['Digit1', 'KeyQ'],   p:['Digit4', 'KeyP']},
-       {'-x':['KeyJ', 'KeyJ'],      '+x':['KeyL', 'KeyL'],       '-y':['KeyI', 'KeyI'],    '+y':['KeyK', 'KeyK'],     a:['Slash', 'Slash'], b:['Quote', 'Quote'], c:['Period', 'Period'], d:['Semicolon', 'Semicolon'], e:['ShiftRight','ShiftRight'], f:['Backslash', 'Backslash'], q:['Digit7', 'Digit7'], p:['Digit0', 'Digit0']}];
-*/
       
 let prevRealGamepadState = [];
 

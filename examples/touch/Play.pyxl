@@ -1,0 +1,25 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+const trail = []
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_background(#000)
+draw_text(font, "Draw with the mouse or touch", xy(SCREEN_SIZE.x / 2, 20), #fff, #666, nil, "center")
+
+if touch.a and (touch.dx or touch.dy):
+   push(trail, touch.xy)
+
+const color = rgb(0,0,0)
+for 1 < i < size(trail):
+   const r = i / size(trail)
+   color.r = r; color.g = r
+   draw_disk(trail[i - 1], 5, color)
+   draw_line(trail[i - 1], trail[i], color, nil, 10)
+
+while size(trail) > 100:
+   pop_front(trail)
+
+if size(trail) > 0:
+   draw_sprite(astronaut.idle[0], last_value(trail), 0)

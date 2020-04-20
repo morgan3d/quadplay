@@ -1,0 +1,60 @@
+GameOver
+════════════════════════════════════════════════════════════════════════
+
+let result_skip_count = 0
+let result_distance = 0
+let cam_velocity = nil
+let interp_amount = 0
+let result_travelled = 0
+let fade_out = nil 
+const fade_out_time = 15
+
+
+enter(times_skipped, distance_travelled, total)
+────────────────────────────────────────────────────────────────────────
+result_skip_count = times_skipped
+result_distance = distance_travelled
+result_travelled = total
+cam_velocity = xy(skippy_velocity.x, 0)
+play_audio_clip(SFXSINK)
+fade_out = nil
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+if mode_frames > 60:
+    interp_amount = smootherstep(0, 1, (mode_frames-60)/60)
+    cam_velocity = lerp(cam_velocity, xy(0,0), interp_amount)
+
+update_skippy_momentum_only()
+
+cam_pos += cam_velocity
+
+draw_game()
+
+if fade_out != nil:
+    draw_gameover_ui(
+        result_distance,
+        result_skip_count,
+        total_travelled,
+        1-(mode_frames-fade_out)/fade_out_time
+    )
+else:
+    draw_gameover_ui(
+        result_distance,
+        result_skip_count,
+        total_travelled,
+        1
+    )
+draw_title_ui(true, true)
+
+if fade_out == nil and any_button_press() and mode_frames > 120:
+    fade_out = mode_frames
+
+// fade is complete
+if mode_frames - fade_out > fade_out_time:
+    first_time_playing = false
+    reset_skippy()
+    set_mode(Play) because "Button press"

@@ -237,6 +237,21 @@ press the Run button (F5) to start the game.
 - Frame hooks
 - Coordinates with +Y pointing down
 
+----------------------------
+
+  <center><img src="../games/across_the_lake/title_text.png" width=320px style="border:0"></center>
+
+<div class="preview pixel" style="background-image:url('../games/across_the_lake/preview.png')"></div>
+[across the lake](../console/quadplay.html?game=quad://games/across_the_lake&IDE=1) is an endless runner created for Ludum Dare 46
+based on skipping stones over a lake in the evening.
+
+- Crossfading
+- Simple custom physics
+- Custom camera
+- Coordinates with +Y pointing up
+- Procedural content
+- Fake reflections
+- Parallax and pseudo 3D
 
 ----------------------------
 
@@ -246,7 +261,7 @@ press the Run button (F5) to start the game.
 [Speed Street](../console/quadplay.html?game=quad://games/speedstreet&IDE=1) is a four-player competitive racing game inspired by [_Excitebike_](https://en.wikipedia.org/wiki/Excitebike):
 
 - Entity hierarchy
-- Simple physics
+- Simple custom physics
 - Orthographic 2.5D graphics
 - Coordinates with +Y pointing up
 - `sprite_override_color`
@@ -1137,10 +1152,10 @@ with a transform change in between can change the sign of the value. The
 angles are always clockwise in screen space.
 
 
-`any_button_press(gamepad (= ∅))`
-: Returns true if any button on `gamepad` was just pressed.
-  If `gamepad` is `nil`, returns true if any button on any
-  gamepad was pressed.
+`any_button_press(gamepad_or_touch (= ∅))`
+: Returns true if any button on `gamepad_or_touch` was just pressed.
+  If `gamepad_or_touch` is `nil`, returns true if any button on any
+  gamepad was pressed or there was any touch.
 
 `joy`
 : A variable equal to `gamepad_array[0]` as shorthand for
@@ -2196,7 +2211,7 @@ The center of the entire screen is `½ SCREEN_SIZE`.
 
 `reset_transform()`
 : Reset to the default transformation, `set_transform(xy(0, 0), xy(1, 1), 0, 1, xy(0, 0))`.
-  This overrides the `flip_y` flag from the .game.json file.
+  This overrides the `y_up` flag from the .game.json file.
 
 `rotation_sign()`
 : Returns -1 if `(t.dir.x * t.dir.y > 0)` for `t = get_transform()`
@@ -2238,13 +2253,13 @@ The center of the entire screen is `½ SCREEN_SIZE`.
 
 `up_y()`
 : Returns `-sign(get_transform().dir.y)`, which is -1 if Y increases downwards (the default)
-  and +1 if Y increases upwards (`"flip_y": true` in the .game.json file).
+  and +1 if Y increases upwards (`"y_up": true` in the .game.json file).
 
 
 
 The most common changes are:
 
-- flip the y-axis using `set_transform(xy(0, SCREEN_SIZE.y - 1), xy(1, -1))`. You can also accomplish this by setting `"flip_y": true` in the .game.json file.
+- flip the y-axis using `set_transform(xy(0, SCREEN_SIZE.y - 1), xy(1, -1))`. You can also accomplish this by setting `"y_up": true` in the .game.json file.
 - flip y and center using `set_transform(½ SCREEN_SIZE, xy(1, -1))`
 - screenshake using `set_transform(randomSquare())`
 
@@ -4325,7 +4340,7 @@ options. Project files should have the double extension `.game.json`.
    // The default Y axis increases down the screen, like old arcade games.
    // Set this to true for a modern vertical axis good for physics games.
    // You can also invoke set_transform() in code.
-   "flip_y": false,
+   "y_up": false,
 
    // Supported sizes:
    //
@@ -4463,8 +4478,8 @@ The sprite sheet JSON descriptor looks like:
     // to the corresponding part of `start`.
     "names":        {
         "idle":     {"start": {"x": 0, "y": 0}, "end": {"x": 0, "y": 3}, "extrapolate": "oscillate",
-                     "frames": [1, 2, 2, 1]},
-        "run":      {"start": {"x": 1, "y": 0}, "end": {"y": 3}, "defaultFrames": 2},
+                     "duration": [1, 2, 2, 1]},
+        "run":      {"start": {"x": 1, "y": 0}, "end": {"y": 3}, "duration": 2},
         "jumpUp":   {"start": {"x": 2, "y": 0}},
         "jumpDown": {"start": {"x": 2, "y": 1}},
         "dead":     {"x": 3, "y": 0},
@@ -4649,7 +4664,7 @@ The map JSON descriptor looks like:
     // Optional. Default = false. If true, flip the map
     // vertically during load so that (0,0) is the bottom
     // of the TMX map instead of the top.
-    "flip_y": false,
+    "y_up": false,
 
     // Optional. Default = false.
     "wrap_x": false,
@@ -5626,8 +5641,8 @@ All:
 ᵃ ᵈ ᵉ ʰ ⁱ ʲ ᵏ ᵐ ⁿ ᵒ ʳ ˢ ᵗ ᵘ ˣ ᵝ
 ∅ ∞ ° ½ ⅓ ⅔ ¼ ¾ ⅕ ⅖ ⅗ ⅘ ⅙ ⅐ ⅛ ⅑ ⅒ ∫ ± м н к
 « » ¿ ★ × ⊢ ∙ ○ ● ◻ ◼ △ ▲ ▼ ◀ ▶ ✓ ♠ ♥ ♣ ♦ §
-↑ ↓ ← → ↖ ↗ ↙ ↘ ⓐ ⓑ ⓒ ⓓ ⓕ ⓟ ⓠ ⓧ ⓨ Ⓞ ⍍ ▣ ⧉ ☰
-⍐ ⍇ ⍗ ⍈ ❖ ✜ ♆ © ℵ
+↑ ↓ ← → ↖ ↗ ↙ ↘ ⓐ ⓑ ⓒ ⓓ ⓔ ⓕ ⓟ ⓠ ⓧ ⓨ Ⓞ ⍍ ▣ ⧉ ☰
+⍐ ⍇ ⍗ ⍈ ❖ ✜ ♆ © ℵ Ⓦ Ⓐ Ⓢ Ⓓ
 A B Γ Δ E Z H Θ I K Λ M N Ξ O Π P Σ T Φ X Ψ Ω
 α β γ δ ε ζ η θ ι κ λ μ ν ξ o π ρ σ τ ϕ χ ψ ω ¡
 ς ş ğ İ Ş Ğ υ г
@@ -6325,7 +6340,7 @@ For 1.0:
   [x] Graphics
   [x] Physics
   [x] AI
-[x] Five full sample games
+[x] Six full sample games
 [ ] Export to:
   [x] web page
   [x] github pages
@@ -6452,7 +6467,7 @@ There is no mapping on the mobile touchscreen controls for the
 "shoulder" buttons E and F.  I'm still trying to find a workable
 solution on mobile. 
 
-Fonts beginning with letters F-W do not have all button
+Fonts beginning with letters G-W do not have all button
 prompts yet.
 
 The API is mostly complete. I'm focusing on bug fixes and minor tweaks
@@ -6517,6 +6532,22 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 Apr TBD: Beta update 39
+
+- Changed `"frames"` to `"duration"` in .sprite.json files for consistency
+- Fixed Ctrl/Command+C not copying in the IDE
+- Added button prompts to all fonts
+- *Incompatible change*: Renamed `"flip_y"` to `"y_up"` in .map.json and .game.json files
+- Fixed editor making relative URLs inside .sprite.json and other asset files absolute
+- The IDE now uses `$HOME/my_quadplay` as the root for new games
+- `any_button_press()` now responds to any `touch` as well
+- Increased the QR code size in the host tab to make it easier to scan
+- Changed the way that the width of the white space character is computed for
+  fonts. It now uses the largest width of the `"il¹;["` characters
+- Added "across the lake" game
+- 2x performance optimization for alpha blending large sprites with no rotation or
+  scale
 
 2020 Apr 17: Beta update 38
 

@@ -1,0 +1,30 @@
+Title
+════════════════════════════════════════════════════════════════════════
+
+init
+────────────────────────────────────────────────────────────────────────
+play_audio_clip(BGM, true)
+
+// Warm up all of the sprites and JIT the blending code on Safari, so that
+// the game does not hitch during transitions
+for i < 4:
+   for spritesheet in [NIGHT_SKY, TWILIGHT_SKY, HILLS, NIGHT_HILLS, NIGHT_MOUNTAINS, TWILIGHT_MOUNTAINS, CABINS_0, DEAD_TREES_0, DEAD_TREES_1, LIVE_TREES_0]:
+      draw_sprite({sprite: spritesheet[0][0], pos: xy(0, 0), opacity: 50%})
+
+// Hide what we just did
+draw_rect(SCREEN_SIZE / 2, SCREEN_SIZE, #000)
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+start_pos = cam_pos.x
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+draw_game()
+draw_title_ui(false)
+
+if any_button_press():
+    set_mode(Play) because "Button pressed"

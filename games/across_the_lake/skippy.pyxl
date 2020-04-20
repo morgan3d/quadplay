@@ -1,0 +1,174 @@
+const SPLASH_PERFECT = 0
+const SPLASH_TINY = 1
+const SPLASH_SMALL = 2
+const SPLASH_MEDIUM = 3
+const SPLASH_BIG = 4
+
+const SPLASH_SOUNDS = [
+    SFXSPLASH1,
+    SFXSPLASH2,
+    SFXSPLASH4,
+    SFXSPLASH5
+]
+let last_splash = nil
+
+let skippy_position = xy(0, 0)
+let skippy_velocity = xy(0, 0)
+let gravity = xy(0, -0.03)
+let skippy_hit_water_this_frame = nil
+let skippy_splash_type = SPLASH_BIG
+let launch_angle = 15 deg 
+let skippy_angle = launch_angle
+
+let last_position = skippy_position
+let last_press = nil
+let last_hit_water = nil
+
+let times_skipped = 0
+let last_travelled = 0
+let total_travelled = 0
+
+
+// penalties
+let splash_types = [
+   SPLASH_PERFECT,
+   SPLASH_TINY,
+   SPLASH_SMALL,
+   SPLASH_MEDIUM,
+   SPLASH_BIG
+]
+let bounce_angle_change = [
+    0 deg,
+    1 deg,
+    3 deg,
+    6 deg,
+    10 deg
+]
+let speed_lerp_penalty = [
+   1.0,
+   0.6,
+   0.3,
+   0.1,
+   -0.3,
+]
+   
+let PENALTY_WINDOW = 3
+let MAX_FRAMES_UNDERWATER = 12
+
+def reset_skippy():
+    skippy_position = xy(cam_pos.x - 200, random(15, 25)) 
+    //debug_print("starting at " + unparse(skippy_position))
+    skippy_velocity = xy(3.5, 1.8)//xy(random(2.5, 3.5), random(0.1, 1.5))
+    launch_angle = 28 deg //random(12 deg, 18 deg)
+    skippy_angle = launch_angle
+    last_press = nil
+    times_skipped = 0
+
+def short_vec(v):
+    return unparse(v.x) + ", " + v.y
+
+def compute_hit_time(loc, vel, acc):
+    let det = (vel.y^2) - (4 acc.y * loc.y)
+
+    let result = (-vel.y + sqrt(det)) / (2 loc.y)
+    //debug_print(result)
+
+    return result
+
+
+def skippy_underwater_behavior():
+    let frames_under_water = mode_frames - skippy_hit_water_this_frame
+
+    //debug_print(frames_under_water)
+
+    if frames_under_water > MAX_FRAMES_UNDERWATER:
+        game_over()
+
+    if last_press == nil and not DEBUG_ALWAYS_BOUNCE:
+        return
+
+    let penalty_index = 4
+    if DEBUG_ALWAYS_BOUNCE:
+        penalty_index = 0
+    else:
+       const window = if magnitude(skippy_velocity) < 2.2 then 2 else PENALTY_WINDOW
+       penalty_index = floor(|skippy_hit_water_this_frame - last_press| / window)
+
+    penalty_index = min(penalty_index, size(speed_lerp_penalty) - 1)
+    let penalty_angle_change = bounce_angle_change[penalty_index]
+    if last_press > skippy_hit_water_this_frame:
+       penalty_angle_change *= -1.0 
+
+    //debug_print("penalty: " +unparse(penalty_index))
+
+    //debug_print("last_press: " + unparse(last_press))
+
+    let speed_lerp = speed_lerp_penalty[penalty_index]
+    let fall_angle = atan(skippy_velocity)
+    let current_speed = magnitude(skippy_velocity)
+    let physics_bounce_speed = current_speed * cos(-fall_angle + skippy_angle)
+    let adjusted_new_speed = lerp(physics_bounce_speed, current_speed, speed_lerp)
+    //debug_print("old speed: " + current_speed)
+    //debug_print("new speed: " + adjusted_new_speed)
+    
+    //debug_print("previous velocity: " + short_vec(skippy_velocity))
+    skippy_velocity = xy(cos(skippy_angle), sin(skippy_angle)) * adjusted_new_speed
+    skippy_angle = launch_angle + penalty_angle_change
+    //debug_print("new velocity: " + short_vec(skippy_velocity))
+    
+    skippy_splash_type = splash_types[penalty_index]
+    
+    times_skipped += 1
+
+    //play_audio_clip(SPLASH_SOUNDS[penalty_index])
+
+
+def update_skippy_momentum_only():
+    skippy_position += skippy_velocity // px/f
+    skippy_velocity *= 0.95 // px/f/f
+    skippy_velocity = lerp(skippy_velocity, xy(0.0, -0.5), 0.05)
+
+def update_skippy():
+    if mode_frames - last_press > 30:
+       last_press = nil
+    if any_button_press() or touch.aa:
+        if last_press == nil or mode_frames - last_press > 30:
+            last_press = mode_frames
+            let this_splash = random_value(SPLASH_SOUNDS)
+            while this_splash == last_splash:
+                this_splash = random_value(SPLASH_SOUNDS)
+            last_splash = this_splash
+
+    last_position = clone(skippy_position) // px
+
+    // hit the water surface this frame
+    if (
+            sign(skippy_position.y) < 0 
+            and sign(skippy_velocity.y) < 0
+            and skippy_hit_water_this_frame == nil
+    ):
+        skippy_hit_water_this_frame = mode_frames
+        if last_splash:
+            play_audio_clip(last_splash)
+
+    if sign(skippy_position.y) < 0:
+        skippy_underwater_behavior()
+
+        if magnitude(skippy_velocity) < 1.0:
+            game_over()
+
+        // clear the last press
+        last_press = nil
+        skippy_position += skippy_velocity // px/f
+    else:
+        skippy_hit_water_this_frame = nil
+        skippy_position += skippy_velocity // px/f
+        skippy_velocity += gravity // px/f/f
+
+
+
+def game_over():
+    let distance = (skippy_position.x - last_travelled)/100
+    last_travelled = skippy_position.x
+    total_travelled += distance
+    set_mode(GameOver, times_skipped, distance, total_travelled)

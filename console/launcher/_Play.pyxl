@@ -105,7 +105,25 @@ const gameArray = [{
    builtin:      true,
    label:        rplabel[0][0],
    preview:      rppreview
+},
+
+{
+   title: "across the lake",
+   developer: "The Steinbachers",
+   url: "quad://games/across_the_lake",
+   version:      1.0,
+   description:  "You are a stone, skipping across the lake in this endless skipper.",
+   min_players:   1,
+   max_players:   1,
+   cooperative:  false,
+   competitive:  false,
+   achievements: false,
+   highscores:   false,
+   builtin:      true,
+   label:        allabel[0][0],
+   preview:      alpreview
 }
+
 ]
 
 const backgroundColor = #135

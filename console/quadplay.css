@@ -341,6 +341,7 @@ b.projectTitle.remote:before {
 
 .dropdown a {
     text-decoration: none;
+    cursor: pointer;
 }
 
 /*****************************************************/
@@ -840,7 +841,6 @@ code, .code {
     margin-left: -2px;
     color: #888;
 }
-
 
 /**************************************************/
 

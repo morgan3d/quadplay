@@ -65,7 +65,7 @@ function showConstantEditor(index) {
                 // Add nudge values if they aren't present.
                 json.nudge = {};
                 for (let i = 0; i < fields.length; ++i) { json.nudge[fields[i]] = '+1'; }
-                if (type[1] === 'y' && gameSource.json.flip_y !== false) {
+                if (type[1] === 'y' && gameSource.json.y_up !== false) {
                     json.nudge.y = -1;
                 }
             }

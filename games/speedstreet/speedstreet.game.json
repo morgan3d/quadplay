@@ -4,7 +4,7 @@
     "copyright":  "© 2019 Morgan McGuire",
     "license":    "Source code © 2019 Morgan McGuire, available under the BSD License https://opensource.org/licenses/BSD-2-Clause",
 
-    "flip_y":     true,
+    "y_up":     true,
     "packages":   [],
     "scripts":    ["bike.pyxl", "physics.pyxl"],
     "modes":      ["Title*", "Play"],

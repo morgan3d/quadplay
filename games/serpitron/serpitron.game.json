@@ -40,7 +40,7 @@
         "blipAudioClip":       "quad://sounds/67-Blip.sound.json"
     },
 
-    "flip_y":                 false,
+    "y_up":                 false,
     "version":               0.1,
     "min_players":            1,
     "max_players":            4,

@@ -15,5 +15,5 @@
     "constants":  {
     },
     
-    "flip_y": false
+    "y_up": false
 }

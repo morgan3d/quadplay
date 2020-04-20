@@ -297,8 +297,8 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 if (type) { type = type[1].toLowerCase(); }
 
                 loadManager.fetch(assetURL, 'json', null, function (json) {
-                    json.url = makeURLAbsolute(assetURL, json.url);
-                    
+                    // assetURL is the asset json file
+                    // json.url is the png, mp3, etc. referenced by the file
                     fileContents[assetURL] = json;
                     
                     switch (type) {
@@ -433,7 +433,7 @@ function loadFont(name, json, jsonURL) {
     const font = {
         _name:     'font ' + name,
         _type:     'font',
-        _url:      json.url,
+        _url:      makeURLAbsolute(jsonURL, json.url),
         _json:     json,
         _jsonURL:  jsonURL,
         _index:    fontArray.length
@@ -441,11 +441,11 @@ function loadFont(name, json, jsonURL) {
 
     fontArray.push(font);
 
-    const forceReload = computeForceReloadFlag(json.url);
+    const forceReload = computeForceReloadFlag(font._url);
 
-    onLoadFileStart(json.url);
-    loadManager.fetch(json.url, 'image', getBinaryImageData, function (srcMask, image, url) {
-        onLoadFileComplete(json.url);
+    onLoadFileStart(font._url);
+    loadManager.fetch(font._url, 'image', getBinaryImageData, function (srcMask, image, url) {
+        onLoadFileComplete(font._url);
 
         // Save the raw image for the IDE
         fileContents[url] = image;
@@ -534,6 +534,8 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
 
     let spritesheet;
 
+    const pngURL = makeURLAbsolute(jsonURL, json.url);
+
     if (forceReload === false) {
         spritesheet = spritesheetCache[jsonURL];
         if (spritesheet) {
@@ -545,9 +547,9 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                 console.assert(spritesheetArray.indexOf(spritesheet) === spritesheet._index);
             }
             
-            fileContents[json.url] = spritesheet;
-            onLoadFileStart(json.url);
-            onLoadFileComplete(json.url);
+            fileContents[pngURL] = spritesheet;
+            onLoadFileStart(pngURL);
+            onLoadFileComplete(pngURL);
             if (callback) { callback(spritesheet); }
             return spritesheet;
         }
@@ -560,7 +562,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
         _type: 'spritesheet',
         _uint32Data: null,
         _uint32DataFlippedX : null,
-        _url: json.url,
+        _url: pngURL,
         _gutter: (json.sprite_size.gutter || 0),
         _json: json,
         _jsonURL: jsonURL,
@@ -580,12 +582,12 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
     const NN = Object.freeze({x:-1, y:-1});
           
     // Actually load the image
-    onLoadFileStart(json.url);
+    onLoadFileStart(pngURL);
 
     const preprocessor = function(image) {
-        if (! (json.url in fileContents)) {
+        if (! (pngURL in fileContents)) {
             // This image has not been previously loaded by this project
-            fileContents[json.url] = image;
+            fileContents[pngURL] = image;
         }
 
         let region = json.region || {};
@@ -597,7 +599,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
         region.size.x = Math.min(image.width - region.pos.x, region.size.x);
         region.size.y = Math.min(image.height - region.pos.y, region.size.y);
 
-        const cacheName = json.url + JSON.stringify(region);
+        const cacheName = pngURL + JSON.stringify(region);
         if (! alreadyCountedSpritePixels[cacheName] && name[0] !== '_') {
             alreadyCountedSpritePixels[cacheName] = true;
             resourceStats.spritePixels += region.size.x * region.size.y;
@@ -610,8 +612,8 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
     };
     
     
-    loadManager.fetch(json.url, 'image', preprocessor, function (dataPair, image, url) {
-        onLoadFileComplete(json.url);
+    loadManager.fetch(pngURL, 'image', preprocessor, function (dataPair, image, url) {
+        onLoadFileComplete(pngURL);
         const data = dataPair[0];
 
         spritesheet._uint32Data = data;
@@ -673,7 +675,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     size:              spritesheet.sprite_size,
                     scale:             PP,
                     pivot:             sspivot,
-                    frames:            sheetDefaultDuration
+                    duration:          sheetDefaultDuration
                 };
 
                 // Construct the flipped versions
@@ -702,7 +704,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
             }
 
             for (let anim in json.names) {
-                let data = json.names[anim];
+                const data = json.names[anim];
                 
                 // Error checking
                 if ((data.start !== undefined && data.x !== undefined) || (data.start === undefined && data.x === undefined)) {
@@ -744,6 +746,12 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     const extrapolate = data.extrapolate || 'loop';
                     animation.extrapolate = extrapolate;
 
+                    const duration = Array.isArray(data.duration) ?
+                          data.duration : // array
+                          (data.duration !== undefined) ?
+                          [data.duration] : // number
+                          [animDefaultDuration]; // default
+                    
                     for (let y = data.start.y, i = 0; y <= data.end.y; ++y) {
                         for (let x = data.start.x; x <= data.end.x; ++x, ++i) {
                             const u = json.transpose ? y : x, v = json.transpose ? x : y;
@@ -755,11 +763,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                             sprite._animationName = anim;
                             sprite._animationIndex = i;
                             sprite.pivot = pivot;
-                            if (data.duration && (i < data.duration.length)) {
-                                sprite.duration = Math.max(0.25, data.duration[i]);
-                            } else {
-                                sprite.duration = animDefaultDuration;
-                            }
+                            sprite.duration = Math.max(0.25, duration[Math.min(i, duration.length - 1)]);
 
                             animation.push(sprite);
                         }
@@ -829,7 +833,8 @@ const soundCache = {};
 
 function loadSound(name, json, jsonURL) {
     if (name[0] !== '_') { ++resourceStats.sounds; }
-    const forceReload = computeForceReloadFlag(json.url);
+    const mp3URL = makeURLAbsolute(jsonURL, json.url);
+    const forceReload = computeForceReloadFlag(mp3URL);
 
     let sound;
 
@@ -838,14 +843,14 @@ function loadSound(name, json, jsonURL) {
         // the largest assets in a quadplay game.
         sound = soundCache[jsonURL];
         if (sound) {
-            fileContents[json.url] = sound;
-            onLoadFileStart(json.url);
-            onLoadFileComplete(json.url);
+            fileContents[mp3URL] = sound;
+            onLoadFileStart(mp3URL);
+            onLoadFileComplete(mp3URL);
             return sound;
         }
     }
     
-    sound = Object.seal({ src: json.url,
+    sound = Object.seal({ src: mp3URL,
                           name: name,
                           loaded: false, 
                           source: null,
@@ -855,9 +860,9 @@ function loadSound(name, json, jsonURL) {
                           _json: json,
                           _jsonURL: jsonURL});
 
-    fileContents[json.url] = sound;
-    onLoadFileStart(json.url);
-    loadManager.fetch(json.url, 'arraybuffer', null, function (arraybuffer) {
+    fileContents[mp3URL] = sound;
+    onLoadFileStart(mp3URL);
+    loadManager.fetch(mp3URL, 'arraybuffer', null, function (arraybuffer) {
         // LoadManager can't see the async decodeAudioData calls
         ++loadManager.pendingRequests;
 
@@ -883,10 +888,10 @@ function loadSound(name, json, jsonURL) {
                     }
                 },
                 function onFailure() {
-                    loadManager.markRequestCompleted(json.url, 'unknown error', false);
+                    loadManager.markRequestCompleted(mp3URL, 'unknown error', false);
                 });
         } catch (e) {
-            loadManager.markRequestCompleted(json.url, e, false);
+            loadManager.markRequestCompleted(mp3URL, e, false);
         }
     }, loadFailureCallback, loadWarningCallback, forceReload);
     return sound;
@@ -894,12 +899,13 @@ function loadSound(name, json, jsonURL) {
 
 
 function loadMap(name, json, mapJSONUrl) {
+    const tmxURL = makeURLAbsolute(mapJSONUrl, json.url);
     const map = Object.assign([], {
         _name:   'map ' + name,
         _type:   'map',
-        _url:    json.url,
+        _url:    tmxURL,
         _offset: Object.freeze(json.offset ? {x:json.offset.x, y:json.offset.y} : {x:0, y:0}),
-        _flipYOnLoad: json.flip_y || false,
+        _flipYOnLoad: json.y_up || false,
         _json:   json,
         _jsonURL: mapJSONUrl,
         z_offset: json.z_offset || 0,
@@ -931,8 +937,8 @@ function loadMap(name, json, mapJSONUrl) {
         const spritesheet = loadSpritesheet(name + ' sprites', spritesheetJson, spritesheetUrl, function (spritesheet) {
             
             // Now go back and fetch the map as a continuation, given that we have the spritesheet
-            loadManager.fetch(makeURLAbsolute(mapJSONUrl, json.url), 'text', null, function (xml) {
-                onLoadFileComplete(json.url);
+            loadManager.fetch(tmxURL, 'text', null, function (xml) {
+                onLoadFileComplete(tmxURL);
                 xml = new DOMParser().parseFromString(xml, 'application/xml');
         
                 let tileSet = xml.getElementsByTagName('tileset');
@@ -970,7 +976,7 @@ function loadMap(name, json, mapJSONUrl) {
                     return layer.lastElementChild.innerHTML.split(',').map(function (m) { return parseInt(m); });
                 });
                 
-                const flipY = (json.flip_y === true);
+                const flipY = (json.y_up === true);
                 for (let L = 0; L < layerList.length; ++L) {
                     // The first level IS the map itself
                     const layer = (L === 0) ? map : new Array(map.size.x);

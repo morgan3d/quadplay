@@ -30,8 +30,8 @@ const instructions = [
    "⍇⍈", "RUN",
    "ⓐ ", "JUMP",
    "ⓑ ", "ATTACK",
-   "ⓒ ", "DUCK",
-   "⍐⍗", "SWITCH"
+   "⍗ ", "DUCK",
+   "ⓒⓓ", "SWITCH"
 ]
 
    
@@ -58,10 +58,10 @@ with pos, vel, force, scale, spriteIndex, spriteFrame, animation, spritesheet, s
       // Running
       scale.x = joy.x
       vel.x = joy.x * runSpeed
-      nextAnimation = if joy.c then "crawl" else "run"
+      nextAnimation = if joy.y < 0 then "crawl" else "run"
    else: // Not running
       vel.x *= 70%
-      nextAnimation = if joy.c then "duck" else "idle"
+      nextAnimation = if joy.y < 0 then "duck" else "idle"
       
 
    // Clamp to ground and set landing pose
@@ -93,7 +93,8 @@ with pos, vel, force, scale, spriteIndex, spriteFrame, animation, spritesheet, s
    sprite = array_value(spritesheet[animation], spriteIndex)
 
    // Change weapons (not allowed during the landing or attack animation)
-   if animation == "idle" or animation == "duck" or find(animation, "jump") ≠ ∅: weaponIndex = loop(weaponIndex + joy.yy, size(ninja.weaponArray))
+   if animation == "idle" or animation == "duck" or find(animation, "jump") ≠ ∅:
+      weaponIndex = loop(weaponIndex + joy.cc - joy.dd, size(ninja.weaponArray))
    const newWeapon = ninja.weaponArray[weaponIndex]
    if weapon != newWeapon:
       entity_remove_child(ninja, weapon)

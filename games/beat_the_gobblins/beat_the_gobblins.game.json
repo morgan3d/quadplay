@@ -231,7 +231,7 @@
     "copyright": "\u00a92019 Stephan Steinbach",
     "description": "An evil wizzard has trapped you on top of their tower and summoned hordes of angry bombgobblins.  Intense score chasing action game.  Good luck!",
     "developer": "Stephan Steinbach",
-    "flip_y": false,
+    "y_up": false,
     "highscores": true,
     "license": "code: MIT / Assets: Creative Commons Attribution 4.0 International",
     "max_players": 1,

@@ -349,11 +349,11 @@ function postToServer(payload, callback, errorCallback) {
     xhr.onreadystatechange = function() {
         if (this.readyState === XMLHttpRequest.DONE) {
             // Request finished. Do processing here.
-            if (this.status === 200) {
+            if (this.status === 200 || this.status === 201) {
                 if (callback) {
                     // Give the server a little more time to catch up
                     // if it is writing to disk and needs to flush or
-                    // such.
+                    // such before invoking the callback.
                     setTimeout(callback, 150);
                 }
             } else if (errorCallback) {
@@ -368,9 +368,15 @@ function postToServer(payload, callback, errorCallback) {
 
 /* Convert a URL to a local filename suitable for use with serverWriteFile() */
 function urlToFilename(url) {
-    const basePath = longestCommonPathPrefix(location.origin + location.pathname, url);
-    const filename = url.substring(basePath.length);
-    return (filename[0] !== '/' ? '/' : '') + filename;
+    url = url.replace(/\\/g, '/');
+    
+    if (url.startsWith(location.origin + '/')) {
+        url = url.substring(location.origin.length + 1);
+    }
+
+    if (url[0] !== '/') { url = '/' + url; }
+
+    return url;
 }
 
 
@@ -378,7 +384,7 @@ function urlToFilename(url) {
  the callback when the server is done. If the filename is a url,
  computes the appropriate local file. */
 function serverWriteFile(filename, encoding, contents, callback, errorCallback) {
-    
+
     console.assert(encoding === 'utf8' || encoding === 'binary');
     
     postToServer({
@@ -434,10 +440,7 @@ function serverScheduleSaveGameJSON(delaySeconds) {
 /* Save the current .game.json file, which has
    presumably been modified by the caller */
 function serverSaveGameJSON(callback) {
-    let gameFilename = gameSource.jsonURL.replace(/\\/g, '/');
-    if (gameFilename.startsWith(location.origin)) {
-        gameFilename = gameFilename.substring(location.origin.length);
-    }
+    let gameFilename = urlToFilename(gameSource.jsonURL);
 
     console.assert(gameFilename.endsWith('.game.json'));
  
@@ -532,8 +535,8 @@ function capitalize(key) {
     return key[0].toUpperCase() + key.substring(1);
 }
 
-function onProjectFlipYChange(target) {
-    gameSource.json.flip_y = (target.checked === true);
+function onProjectYUpChange(target) {
+    gameSource.json.y_up = (target.checked === true);
     serverSaveGameJSON();
 }
 

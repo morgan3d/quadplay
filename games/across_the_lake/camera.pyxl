@@ -1,0 +1,8 @@
+let cam_pos = xy(200, 0)
+// Debug transition: xy(6685, 0)
+
+def update_camera(target):
+   const offset_target = xy(target.x + 50, target.y)
+   if cam_pos.x < offset_target.x:
+      cam_pos.x = lerp(cam_pos.x, offset_target.x, 0.09)
+

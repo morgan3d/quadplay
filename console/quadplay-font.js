@@ -370,10 +370,23 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
         } // charX
     } // charY
     
-    // Make bounds for the space and tab characters based on lower-case i,
-    // which is thin
-    font._bounds[' '] = font._bounds['\t'] = font._bounds['i'];
-
+    // Make bounds for the space and tab characters based on whichever
+    // is larger of several thin characters.
+    {
+        const candidates = 'il¹;[';
+        let thickestBounds = null, thickestWidth = 0;
+        for (let i = 0; i < candidates.length; ++i) {
+            const c = candidates[i];
+            const bounds = font._bounds[c];
+            const width = bounds.x2 - bounds.x1 + 1;
+            if (width > thickestWidth) {
+                thickestWidth = width;
+                thickestBounds = bounds;
+            }
+        }
+        font._bounds[' '] = font._bounds['\t'] = thickestBounds;
+    }
+        
     // Compute subscripts
     {
         const b = bounds['⁰'];

@@ -7,7 +7,7 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.04.17.23'
+const version  = '2020.04.18.23'
 const launcherURL = 'quad://console/launcher';
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -250,7 +250,7 @@ function requestFullScreen() {
         if (body.requestFullscreen) {
             body.requestFullscreen();
         } else if (body.webkitRequestFullscreen) {
-            body.webkitRequestFullscreen();
+            body.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
         } else if (body.mozRequestFullScreen) {
             body.mozRequestFullScreen();
         } else if (body.msRequestFullscreen) {
@@ -1154,12 +1154,11 @@ function onDocumentKeyDown(event) {
         }
         break;
 
-    case 67: // C = pause
     case 80: // P = pause
         if (! event.ctrlKey && ! event.metaKey) { 
             return;
         }
-        // Don't print or handle a C or P in game!
+        // Don't print or handle a P in game!
         // Intercept from browser
         event.preventDefault();
         event.stopPropagation();
@@ -1229,8 +1228,8 @@ function onProjectSelect(target, type, object) {
         editorFrame.children[i].style.visibility = 'hidden';
     }
     
-    const gameEditor     = document.getElementById('gameEditor');
-    const modeEditor     = document.getElementById('modeEditor');
+    const gameEditor    = document.getElementById('gameEditor');
+    const modeEditor    = document.getElementById('modeEditor');
     const codePlusFrame = document.getElementById('codePlusFrame');
 
     // Hide the viewers within the content pane for the code editor
@@ -1948,7 +1947,7 @@ function visualizeGame(gameEditor, url, game) {
         }
         s += `<tr valign="top"><td>Screen&nbsp;Size</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} value="${gameSource.json.screen_size.x} × ${gameSource.json.screen_size.y}"></td></tr>\n`;
     }
-    s += `<tr valign="top"><td></td><td colspan=3><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.flip_y ? 'checked' : ''} onchange="onProjectFlipYChange(this)">Flip Y Axis</label></td></tr>\n`;
+    s += `<tr valign="top"><td></td><td colspan=3><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.y_up ? 'checked' : ''} onchange="onProjectYUpChange(this)">Y-Axis = Up</label></td></tr>\n`;
 
     s+= '<tr><td>&nbsp;</td></tr>\n';
     
@@ -2159,6 +2158,33 @@ function createProjectWindow(gameSource) {
 
     // Hide the scrollbars on Windows
     projectElement.innerHTML = '<div class="hideScrollBars">' + s + '</div>';
+}
+
+
+function makeGoodFilename(text) {
+    let filename = text.replace(/[ \n\t]/g, '_').replace(/[^A-Za-z0-9_+-]/g, '');
+    if (filename.length > 17) {
+        let i = filename.indexOf('_', 12);
+        if (i === -1) { i = 17; }
+        filename = filename.substring(i);
+    }
+    return filename.toLowercase();
+}
+
+
+function onNewGameClick() {
+    const gameName = window.prompt('New Game Title', 'My New Game');
+    if (gameName && gameName !== '') {
+        // Mangle name
+        const gameDir = makeGoodFilename(gameName);
+        
+        // Send the POST to make the game
+        // TODO
+        
+        // Receive response back with a URL and load the game, or receive an error
+        // on name collision and try again
+        // TODO 
+    }
 }
 
 
@@ -3049,8 +3075,8 @@ window.addEventListener("gamepaddisconnected", function(e) {
 setTimeout(updateControllerIcons, 100);
 
 const qrcode = new QRCode('serverQRCode',
-                          {width:  192,
-                           height: 192,
+                          {width:  256,
+                           height: 256,
                            colorDark: "rgba(0,0,0,0)",
                            colorLight: "#eee",
                            correctLevel: QRCode.CorrectLevel.H

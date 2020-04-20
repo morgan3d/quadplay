@@ -1,0 +1,16 @@
+{
+    "url": "skippy.png",
+    "license": "",
+    "sprite_size": {
+        "x": 11,
+        "y": 6
+    },
+    "names": {
+        "spin": {
+            "start": {"x": 0, "y": 0},
+            "end": {"x": 5},
+            "extrapolate": "loop",
+            "duration": 5
+        }
+    }
+}

@@ -522,8 +522,7 @@ function _executeSPR(metaCmd) {
         let srcData = _spritesheetArray[cmd.spritesheetIndex]._uint32Data;
         const srcDataWidth = srcData.width;
 
-        if ((! cmd.hasAlpha) && (Math.abs(opacity - 1) < 1e-10) &&
-            (Math.abs(Math.abs(A) - 1) < 1e-10) && (Math.abs(B) < 1e-10) &&
+        if ((Math.abs(Math.abs(A) - 1) < 1e-10) && (Math.abs(B) < 1e-10) &&
             (Math.abs(C) < 1e-10) && (Math.abs(Math.abs(D) - 1) < 1e-10) &&
             (! override_color)) {
             // Simple case; x and y-axis uniform scale, no rotation, and no alpha
@@ -544,18 +543,61 @@ function _executeSPR(metaCmd) {
                     srcData = _spritesheetArray[cmd.spritesheetIndex]._uint32DataFlippedX;
                 }
 
-                for (let dstY = dstY1; dstY <= dstY2; ++dstY, dstOffset += _SCREEN_WIDTH, srcOffset += srcStep) {
-                    // This TypedArray.set call saves about 3.5 ms/frame
-                    // compared to an explicit horizontal loop for map
-                    // rendering on Firefox. Chrome and Safari are fast
-                    // even for the general case, so this isn't as
-                    // necessary on those browsers...but it doesn't hurt.
-                    
-                    // console.assert(dstOffset + width <= _screen.length, `dstX1=${dstX1}, dstX2 = ${dstX2}, _screen.length = ${_screen.length}, width = ${width}, dstOffset = ${dstOffset}, dstOffset % _SCREEN_WIDTH = ${dstOffset % _SCREEN_WIDTH}, dstY = ${dstY}, dstY2 = ${dstY2}`);
-                    // console.assert(srcOffset + width <= srcData.length);
-                    _screen.set(srcData.slice(srcOffset, srcOffset + width), dstOffset);
-                } // dstY
-            }
+                if ((! cmd.hasAlpha) && (Math.abs(opacity - 1) < 1e-10)) {
+                    // Memcpy case
+                    for (let dstY = dstY1; dstY <= dstY2; ++dstY, dstOffset += _SCREEN_WIDTH, srcOffset += srcStep) {
+                        // This TypedArray.set call saves about 3.5 ms/frame
+                        // compared to an explicit horizontal loop for map
+                        // rendering on Firefox. Chrome and Safari are fast
+                        // even for the general case, so this isn't as
+                        // necessary on those browsers...but it doesn't hurt.
+                        
+                        // console.assert(dstOffset + width <= _screen.length, `dstX1=${dstX1}, dstX2 = ${dstX2}, _screen.length = ${_screen.length}, width = ${width}, dstOffset = ${dstOffset}, dstOffset % _SCREEN_WIDTH = ${dstOffset % _SCREEN_WIDTH}, dstY = ${dstY}, dstY2 = ${dstY2}`);
+                        // console.assert(srcOffset + width <= srcData.length);
+                        _screen.set(srcData.slice(srcOffset, srcOffset + width), dstOffset);
+                    } // dstY
+                } else {
+                    // Blending case
+                    for (let dstY = dstY1; dstY <= dstY2; ++dstY, dstOffset += _SCREEN_WIDTH, srcOffset += srcStep) {
+                        for (let i = 0; i < width; ++i) {
+                            let color = srcData[srcOffset + i];
+                            let a255 = color >>> 24;
+                            
+                            // Test alpha *first* in this case, because quite often we'll be in a sprite
+                            // with a lot of alpha == 0 pixels and not need to go further.
+                            if (a255 > 0x0f) {
+                                // Blending
+                                if (opacity < 1) {
+                                    // Make more transparent
+                                    
+                                    // 4 high bits
+                                    const alpha4 = ((a255 >>> 4) * opacity + 0.5) >>> 0;
+                                    a255 = ((alpha4 << 4) | alpha4) >>> 0;
+                                }
+
+                                if (a255 >= 0xf0) {
+                                    // 100% alpha, no blend needed
+                                    _screen[dstOffset + i] = (color | 0xFF000000) >>> 0;
+                                } else if (a255 > 0x0f) {
+                                    // Fractional alpha
+                                
+                                    // No need to force to unsigned int because the alpha channel of
+                                    // the output is always 0xff
+                                    const a = a255 * (1 / 255);
+                                    const back = _screen[dstOffset + i];
+                                    
+                                    let result = 0xFF000000;
+                                    result |= ((back & 0x00FF0000) * (1 - a) + (color & 0x00FF0000) * a + 0.5) & 0x00FF0000;
+                                    result |= ((back & 0x0000FF00) * (1 - a) + (color & 0x0000FF00) * a + 0.5) & 0x0000FF00;
+                                    result |= ((back & 0x000000FF) * (1 - a) + (color & 0x000000FF) * a + 0.5) & 0x000000FF;
+                                
+                                    _screen[dstOffset + i] = result;
+                                }
+                            } // alpha > 0
+                        } // column
+                    } // row
+                } // needs alpha
+            } // width >= 1
         } else {
             // General case. It doesn't help performance to break out the
             // case of no rotation with alpha test and optimize that

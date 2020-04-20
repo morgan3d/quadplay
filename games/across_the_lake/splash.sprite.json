@@ -1,0 +1,12 @@
+{
+    "url": "splash.png",
+    "license": "",
+    "sprite_size": {
+        "x": 32,
+        "y": 32
+    },
+    "pivot": {
+        "x": 16,
+        "y": 19
+    }
+}

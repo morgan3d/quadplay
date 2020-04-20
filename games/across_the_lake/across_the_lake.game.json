@@ -1,0 +1,88 @@
+{
+   "title": "across the lake",
+   "developer": "Steinbach, McGuire, Cole, and Lavietes",
+   "copyright": "©2020 Steinbach, McGuire, Cole, and Lavietes",
+   "license": "Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/",
+   "scripts": [
+      "skippy.pyxl",
+      "camera.pyxl",
+      "draw.pyxl",
+      "ui.pyxl"
+   ],
+   "modes": [
+      "Play",
+      "Title*",
+      "GameOver"
+   ],
+   "docs": [
+      {
+         "name": "Design Doc",
+         "url": "design.md"
+      }
+   ],
+   "assets": {
+      "FONT": "quad://fonts/suchet-9.font.json",
+      "BIGFONT": "quad://fonts/suchet-12.font.json",
+      "TWILIGHT_SKY": "twilight.sprite.json",
+      "SUNSET_SKY": "sunset.sprite.json",
+      "NIGHT_SKY": "night.sprite.json",
+      "DEAD_TREES_0": "dead_trees_0.sprite.json",
+      "DEAD_TREES_1": "dead_trees_1.sprite.json",
+      "LIVE_TREES_0": "live_trees_0.sprite.json",
+      "CABINS_0": "cabins_0.sprite.json",
+      "HILLS": "hills.sprite.json",
+      "NIGHT_HILLS": "night_hills.sprite.json",
+      "MOUNTAINS": "mountains.sprite.json",
+      "NIGHT_MOUNTAINS": "night_mountains.sprite.json",
+      "TWILIGHT_MOUNTAINS": "twilight_mountains.sprite.json",
+      "SKIPPY_SPRITESHEET": "skippy.sprite.json",
+      "SPLASH_SPRITESHEET": "splash.sprite.json",
+      "TITLE_TEXT_SPRITESHEET": "title_text.sprite.json",
+      "BGM": "bgm.sound.json",
+      "SFXSINK": "sink.sound.json",
+      "SFXSPLASH1": "splash1.sound.json",
+      "SFXSPLASH2": "splash2.sound.json",
+      "SFXSPLASH4": "splash4.sound.json",
+      "SFXSPLASH5": "splash5.sound.json",
+      "SFXTHROW": "throw.sound.json"
+   },
+   "y_up": true,
+   "version": 1.0,
+   "min_players": 1,
+   "max_players": 1,
+   "cooperative": false,
+   "competitive": false,
+   "achievements": false,
+   "highscores": false,
+   "description": "You are a stone skipping across a lake. One-button endless skipper.",
+   "constants": {
+      "DEBUG_ALWAYS_BOUNCE": {
+         "type": "boolean",
+         "value": false,
+         "description": "Automatically have Skippy bounce perfectly."
+      },
+      "PARALLAX_STRENGTH": {
+         "type": "number",
+         "value": "10%",
+         "description": "Higher leads to slower background movement."
+      },
+      "MAX_PARTICLES": {
+         "type": "number",
+         "value": "100",
+         "description": "Amount of stuff floating in the water."
+      },
+      "BACKGROUND_TRANSITION_FRAMES": {
+         "type": "number",
+         "value": "1000"
+      },
+      "STONE_Z": {
+         "type": "number",
+         "value": "0",
+         "description": "The plane of the game and stone is always z=0"
+      }
+   },
+   "screen_size": {
+      "x": 384,
+      "y": 224
+   }
+}

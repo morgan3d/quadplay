@@ -1,0 +1,176 @@
+const END_POP_LENGTH = 180
+
+let start_pos = 0
+
+const END_LINE = SCREEN_SIZE.x - 5
+const ALIGN = "right"
+const FINAL_SHADOW_COLOR = rgb(240/255, 142/255, 154/255)
+const FINAL_OUTLINE_COLOR = rgb(24/255, 4/255, 80/255)
+
+let first_time_playing = true
+
+def rgb_to_a(c, a):
+    return rgba(c.r, c.g, c.b, a)
+
+def draw_across_the_lake_text(x_pos, fade):
+    draw_ui_text(
+        "across the lake",
+        xy(x_pos, SCREEN_SIZE.y - 55),
+        BIGFONT,
+        fade,
+        "right",
+        "top"
+    )
+
+
+def draw_title_ui(fade=true, everything=false):
+    // just draw the small repeating title
+    if not first_time_playing:
+        draw_across_the_lake_text(
+            start_pos - 5 + SCREEN_SIZE.x - cam_pos.x,
+            1
+        )
+        return
+
+    draw_sprite(
+        {
+            sprite:TITLE_TEXT_SPRITESHEET[0][0],
+            pos:xy(start_pos + SCREEN_SIZE.x/2 - cam_pos.x,
+                   SCREEN_SIZE.y / 2 - 20),
+            z:2
+        }
+    )
+
+    if everything:
+        return
+
+    let text = replace("tap, click or press (a)", gamepad_array[0].prompt)
+    let interp = 0
+    let color = #f
+    if fade:
+        interp = clamp(0, 1, mode_frames / 10)
+        color = rgba(1, 1, 1, 1 - interp)
+
+    draw_text(
+        {
+            font: BIGFONT,
+            text:text,
+            pos: xy(start_pos - 5 + SCREEN_SIZE.x/2 - cam_pos.x, 20),
+            color: color,
+            outline: rgba(24/255, 4/255, 80/255, lerp(0.2, 0, interp)),
+            shadow: lerp(
+                rgba(FINAL_SHADOW_COLOR, 1),
+                rgba(0,0,0,0),
+                interp
+            ),
+            x_align: "center",
+            y_align: "top",
+            z:100
+        }
+    )
+
+
+def draw_ui_text(
+        text,
+        pos,
+        font,
+        interp_amount,
+        x_align,
+        y_align
+
+):
+    draw_text(
+        {
+            font: font,
+            text: text,
+            pos: pos,
+            color: rgba(0,0,0,0),
+            outline: rgba(0,0,0, 0.25 interp_amount),
+            shadow: rgba(0,0,0, 0.25 interp_amount),
+            x_align: x_align,
+            y_align: y_align,
+            z:100
+        }
+    )
+    return draw_text(
+        {
+            font: font,
+            text: text,
+            pos: pos,
+            color: rgba(1,1,1, interp_amount),
+            shadow: lerp(
+                rgb_to_a(FINAL_SHADOW_COLOR, 0.0),
+                rgb_to_a(FINAL_SHADOW_COLOR, 0.75),
+                interp_amount
+            ),
+            x_align: x_align,
+            y_align: y_align,
+            z:100
+        }
+    )
+
+
+def draw_gameover_ui(distance, skip_count, total_travelled, fade=1):
+    let interp_amount = 0
+    if mode_frames > 30:
+        interp_amount = smootherstep(0, 1, (mode_frames-30)/90)
+    let fade_amount = min(interp_amount, fade)
+
+    // @{ lower right
+    let root_loc = lerp(
+        SCREEN_SIZE.x + 60,
+        END_LINE,
+        interp_amount
+    )
+    let text = [
+        replace("press (a) to skip again", gamepad_array[0].prompt),
+        format_number(distance, ".0") + "m / total: " + format_number(total_travelled, ".0") + "m", 
+        "skips: " + unparse(skip_count),
+    ]
+
+    draw_ui_text(
+        join(text,"\n"),
+        xy(root_loc, 30),
+        FONT,
+        fade_amount,
+        ALIGN,
+        "bottom"
+    )
+    // @}
+
+    // @{ upper right
+    let root_y = 4
+    text = [
+        "you are",
+        "a stone",
+        "skipping",
+    ]
+    draw_ui_text(
+        join(text, "\n"),
+        xy(root_loc, SCREEN_SIZE.y - root_y),
+        BIGFONT,
+        fade_amount,
+        ALIGN,
+        "top"
+    )
+    draw_across_the_lake_text(root_loc, interp_amount)
+
+    // @{ upper left
+    root_loc = lerp(SCREEN_SIZE.x + 60, 5, interp_amount)
+    root_y = 5
+    text = [
+        "game:   stephan steinbach",
+        "art:       morgan mcguire",
+        "physics: forrester cole",
+        "sound:   steve lavietes"
+    ]
+    interp_amount = clamp(0, 1, smootherstep(0, 1, (mode_frames - 75) / 90))
+    draw_ui_text(
+        join(text, "\n"),
+        xy(root_loc, SCREEN_SIZE.y - root_y),
+        FONT,
+        min(interp_amount, fade_amount),
+        "left",
+        "top"
+    )
+    // @}
