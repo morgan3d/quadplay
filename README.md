@@ -30,23 +30,24 @@ Features
 Join the Beta
 ========================================================
 
-This beta version operates only in Pro mode, using external editors.
-It is fully functional and has already been used to ship jam games.
-A future release will also provide a complete IDE.
+This beta version is fully functional and has already been used to ship jam games.
+You can use an external editor (like VSCode) or the browser-based development environment.
+To enable some features, you may have to edit a line of a text file in a separate editor (even Notepad)
+right now. Soon, all core features will be supported directly in the browser.
 
-To get started in Pro mode, you'll need Windows, macOS, or Linux and 
+To get started, you'll need Windows, macOS, or Linux and 
 the following freely-available software.
 
 _Required_:
 
-- [**This repository**](https://github.com/morgan3d/quadplay/archive/master.zip)
-- A **code editor** such as [VS Code](https://code.visualstudio.com/), Emacs, or VIM. Use Python mode for PyxlScript or install our provided editor extensions
-- [**Python 3**](https://www.python.org/downloads/)
+- [**This SDK**](https://github.com/morgan3d/quadplay/archive/master.zip)
+- [**Python 3.8**](https://www.python.org/downloads/)
 - A **modern web browser** such as Chrome, Edge, Safari, or Firefox
 - [**The manual**](https://morgan3d.github.io/quadplay/doc/manual.md.html)
 
 _Optional_:
 
+- A **code editor** such as [VS Code](https://code.visualstudio.com/), Emacs, or VIM. Use Python mode for PyxlScript or install our provided editor extensions
 - A TMX map editor such as [Tiled](https://www.mapeditor.org/)
 - A sprite and font pixel editor such as [Piskel](https://www.piskelapp.com/) or [GrafX2](http://pulkomandy.tk/projects/GrafX2/downloads?order=version&desc=1)
 - A [SFX generator](https://www.bfxr.net/) and audio editor such as [Audacity](https://www.audacityteam.org/)
@@ -60,11 +61,12 @@ License
 ========================================================
 
 The quadplay✜ runtime, compiler, and emulator are licensed as
-[LGPL3](https://www.gnu.org/licenses/lgpl-3.0.en.html). You can create
-closed-source games with it and distribute your games however you
-want, including commercially. If you modify the runtime, compiler, or
-emulator, then you must redistribute your changes to those under the
-LGPL3 with your game as open source.
+[LGPL3](https://www.gnu.org/licenses/lgpl-3.0.en.html). 
+
+You can create closed-source games with it and distribute your games
+however you want, including commercially. If you modify the runtime
+library, compiler, or emulator, then you must redistribute your
+changes to those under the LGPL3 with your game as open source.
 
 Portions of the IDE are under different open source licenses (BSD,
 MIT, and public domain).
