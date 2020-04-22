@@ -713,10 +713,10 @@ frozen image.
 ### Frame Hooks
 
 In addition to the mode's frame code, you can dynamically register
-hook functions to run at the beginning of every frame using `add_frame_hook()`. These are
-useful for timers and animations. For example, you can use this to draw an
-explosion every frame until it dissipates or to shake the screen for three
-frames.
+hook functions to run at the beginning of every frame using
+`add_frame_hook()`. These are useful for timers and animations. For
+example, you can use this to draw an explosion every frame until it
+dissipates or to shake the screen for three frames.
 
 Frame hooks can be tied to only run in a specific mode or to run in
 all modes. You can also specify a separate hook to run each frame
@@ -2021,6 +2021,10 @@ Math
 Sound
 ---------------------------------------------------------
 
+`get_sound_status(sound)`
+: Returns an object describing the current properties of this sound.
+  The `state` property will have the value `"PLAYING"`, `"STOPPED"`, or `"ENDED"`
+
 `play_audio_clip(args)`
 : Object version of `play_audio_clip()`, allowing keyword argument style call.
   Values default according to the positional argument version.
@@ -2028,10 +2032,10 @@ Sound
 `play_audio_clip(audioClip, loop (=false), volume (=100%), pan (=0%), pitch (=100%), time (=0))`
 : Play audio clip `audioClip`, which must have been loaded as an asset. The time
   is in seconds. Full pan left is `-100%` and full pan right is `100%`.
-  Returns a handle that can be used with `stop_sound`.
+  Returns a handle that can be used with `stop_sound()`.
 
 `resume_sound(sound)`
-: Resume a sound previously stopped with `stop_sound()`.
+: Resume a sound previously stopped with `stop_sound()`. Sets the state to `"PLAYING"`.
 
 `set_pan(sound, pan)`
 : Set the pan of a sound that is currently playing. 0% is centered.
@@ -2045,7 +2049,7 @@ Sound
 : Set the volume of a sound that is currently playing. 100% is the default volume from the file.
 
 `stop_sound(sound)`
-: Stop playing `sound`, which was created with `play_audio_clip`.
+: Stop playing `sound`, which was created with `play_audio_clip`. Sets the state to `"STOPPED"`.
 
 
 
@@ -3538,27 +3542,27 @@ the end of the previous frame.
 When drawing, use `z` arguments to ensure that drawn objects overlap
 in the desired order regardless of the order in which drawing executes.
 
-`add_frame_hook(callback, endCallback, lifetime, runInMode (= get_mode()))`
-: Register a `callback` function to run every frame for `lifetime`
-  frames.  The return value of `add_frame_hook()` is a hook that can be
+`add_frame_hook(callback, end_callback, frames, run_in_mode (= get_mode()))`
+: Register a `callback` function to run every frame for the given number of 
+  `frames`.  The return value of `add_frame_hook()` is a hook that can be
   passed to `remove_frame_hook()`.
 
-  - `callback`: `def callback(framesleft, lifetime)`, runs every frame. `framesleft`
-    will be `lifetime - 1` on the first frame and `0` on the last one.
+  - `callback`: `def callback(framesleft, total_frames)`, runs every frame. `framesleft`
+    will be `total_frames - 1` on the first frame and `0` on the last one.
     This argument may be `nil`. If the callback returns `true`, the hook
-    is removed without running the `endCallback`, otherwise it keeps running.
-  - `endCallback`: `def endCallback()`, runs on the last frame. Can be `nil`.
-  - `lifetime`: Number of frames to run for. May be `inf`.
-  - `runInMode`: Only execute while the game is in this mode. Use `nil` to
+    is removed without running the `end_callback`, otherwise it keeps running.
+  - `end_callback`: `def end_callback()`, runs on the last frame. Can be `nil`.
+  - `frames`: Number of frames to run for. May be `inf`.
+  - `run_in_mode`: Only execute while the game is in this mode. Use `nil` to
     run in every mode.
 
   See also `sequence()` and `delay()` for common cases.
 
-`delay(callback, delayFrames)`
-: Same as `add_frame_hook(nil, callback, delayFrames or 0)`.
+`delay(callback, delay_frames)`
+: Same as `add_frame_hook(nil, callback, delay_frames or 0)`.
 
 `remove_frame_hook(hook)`
-: Remove this frame hook immediately, without executing its `endCallback`.
+: Remove this frame hook immediately, without executing its `end_callback`.
   If the hook has already ended or is not present, nothing happens.
 
 `remove_frame_hooks_by_mode(mode)`
@@ -3570,9 +3574,9 @@ in the desired order regardless of the order in which drawing executes.
 : Add a series of frame hooks that run in the current mode. Returns a master
   hook that can be used with `remove_frame_hook()` to cancel the entire sequence.
   Each argument may be either a function, `nil`, or `{callback: function, frames: number}`.
-  The callbacks run for the specified number of frames. If not `nil`, the callback
-  signature is `def callback(framesleft, lifetime)`.
-  Example: `addFrameSequence(drawExplosion, {callback: drawFire, frames: 20}, {callback: drawSmoke, frames: 4}, cleanup)`.
+  The callbacks run for duration number of frames. If not `nil`, the callback
+  signature is `def callback(framesleft, total_frames)`.
+  Example: `sequence(drawExplosion, {callback: drawFire, frames: 20}, {callback: drawSmoke, frames: 4}, cleanup)`.
   Note that for convenience, `sequence(...array)` will take the arguments from an array instead of as separate
   parameters.
 
@@ -4457,7 +4461,7 @@ The sprite sheet JSON descriptor looks like:
 
     // Default value for sprite.frames, the number of 1/60-second frames
     // to play a sprite during animation.
-    "default_duration": 1,
+    "default_frames": 1,
 
     // Optional. Applies to pre-transpose coordinates. Each becomes
     // an array on the spritesheet with the extrapolate field set.
@@ -4478,8 +4482,8 @@ The sprite sheet JSON descriptor looks like:
     // to the corresponding part of `start`.
     "names":        {
         "idle":     {"start": {"x": 0, "y": 0}, "end": {"x": 0, "y": 3}, "extrapolate": "oscillate",
-                     "duration": [1, 2, 2, 1]},
-        "run":      {"start": {"x": 1, "y": 0}, "end": {"y": 3}, "duration": 2},
+                     "frames": [1, 2, 2, 1]},
+        "run":      {"start": {"x": 1, "y": 0}, "end": {"y": 3}, "frames": 2},
         "jumpUp":   {"start": {"x": 2, "y": 0}},
         "jumpDown": {"start": {"x": 2, "y": 1}},
         "dead":     {"x": 3, "y": 0},
@@ -4524,7 +4528,7 @@ following additional fields:
 `extrapolate`
 : Equal to `"clamp"`, `"loop"`, or `"oscillate"` as specified in the spritesheet.
 
-`duration`
+`frames`
 : Equal to `infinity` for `"loop"` and `"oscillate"` animations and the total
   number of 60 Hz game frames of animation for finite `"clamp"` animations.
 
@@ -6535,7 +6539,8 @@ Changes for both the specification and implementation in each release.
 
 2020 Apr TBD: Beta update 39
 
-- Changed `"frames"` to `"duration"` in .sprite.json files for consistency
+- Changed `lifetime` and `duration` arguments to various APIs to `frames` in for consistency
+  with the sprite and other settings, and the name "frame hook"
 - Fixed Ctrl/Command+C not copying in the IDE
 - Added button prompts to all fonts
 - *Incompatible change*: Renamed `"flip_y"` to `"y_up"` in .map.json and .game.json files
@@ -6548,6 +6553,10 @@ Changes for both the specification and implementation in each release.
 - Added "across the lake" game
 - 2x performance optimization for alpha blending large sprites with no rotation or
   scale
+- Added `get_sound_status()` function
+- The IDE now puts badges on constants that are uneditable because the .game.json file is 
+  on a remote server or built-in
+
 
 2020 Apr 17: Beta update 38
 

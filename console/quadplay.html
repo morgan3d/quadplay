@@ -12,19 +12,27 @@
     <title>quadplay✜</title>
 
     <script>
-    function makeButton(label, title, onclick, id) {
-       document.write('<div ' + (id ? 'id="' + id + 'Container" ' : '') + ' onmousedown="event.stopPropagation()" class="button" onclick="if (event.target.parentElement.parentElement.enabled !== false) ' + (onclick || '') + '(event)" title="' + (title || label) + '"><label><span class="label" ' + (id ? 'id="' + id + 'Label"' : '') + '>' + label + '</span></label></div>');
-    }
-    
-    function makeRadio(labelHTML, id, selected, attribs, groupID) {
-       document.write('<div id="' + id + 'Container" class="button" ' + (attribs || '') + '><label><input type="radio" name="' + groupID + '" id="' + id + '" onclick="(event.target.enabled !== false) ? onRadio() : (event.target.checked = false)" autocomplete="off" value="1" ' + (selected ? 'checked="1"' : '') + '><span class="label">' + labelHTML + '</span></label></div>');
-    }
+      function getQueryString(field) {
+         const reg = new RegExp('[?&]' + field + '=([^&#]*)', 'i');
+         const string = reg.exec(location.search);
+         return string ? string[1] : null;
+      }
 
-    function makeToggle(labelHTML, style, title, id) {
-       id = id || title.toLowerCase();
-       document.write('<div class="button" title="' + title + '" style="' + (style || '') + '" onmousedown="event.stopPropagation()"><label><input id="' + id + 'Button" autocomplete="off" type="checkbox" onclick="onToggle(this)"><span class="label">' + labelHTML + '</span></label></div>');
-    }
+      const isQuadserver = getQueryString('quadserver') !== '1';
+
+      function makeButton(label, title, onclick, id) {
+         document.write('<div ' + (id ? 'id="' + id + 'Container" ' : '') + ' onmousedown="event.stopPropagation()" class="button" onclick="if (event.target.parentElement.parentElement.enabled !== false) ' + (onclick || '') + '(event)" title="' + (title || label) + '"><label><span class="label" ' + (id ? 'id="' + id + 'Label"' : '') + '>' + label + '</span></label></div>');
+      }
     
+      function makeRadio(labelHTML, id, selected, attribs, groupID) {
+         document.write('<div id="' + id + 'Container" class="button" ' + (attribs || '') + '><label><input type="radio" name="' + groupID + '" id="' + id + '" onclick="(event.target.enabled !== false) ? onRadio() : (event.target.checked = false)" autocomplete="off" value="1" ' + (selected ? 'checked="1"' : '') + '><span class="label">' + labelHTML + '</span></label></div>');
+      }
+
+      function makeToggle(labelHTML, style, title, id) {
+         id = id || title.toLowerCase();
+         document.write('<div class="button" title="' + title + '" style="' + (style || '') + '" onmousedown="event.stopPropagation()"><label><input id="' + id + 'Button" autocomplete="off" type="checkbox" onclick="onToggle(this)"><span class="label">' + labelHTML + '</span></label></div>');
+      }
+      
     // Is the browser running on an Apple platform?
     const isApple = /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
@@ -72,6 +80,12 @@
     </div>
 
     <div id="toolsMenu" class="unselectable dropdown IDEOnly">
+      <!--
+      <div><a>Open Game…</a></div>
+      <hr>
+      <div><a onclick="onNewGameClick()">New Game…</a></div>
+      <hr>
+-->
       <label><input id="assertEnabled" type="checkbox" onclick="debugOptionClick(event)" checked autocomplete="off">Enable <code>assert</code></label>
       <br/><label><input id="showEntityBoundsEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Show entity bounds</label>
       <br/><label><input id="showPhysicsEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Show physics</label>

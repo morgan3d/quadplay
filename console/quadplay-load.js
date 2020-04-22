@@ -622,7 +622,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
         const boundingRadius = Math.hypot(spritesheet.sprite_size.x, spritesheet.sprite_size.y);
         spritesheet.size = {x: data.width, y: data.height};
 
-        const sheetDefaultDuration = Math.max(json.default_duration || 1, 0.25);
+        const sheetDefaultframes = Math.max(json.default_frames || 1, 0.25);
         
         // Create the default grid mapping
         let rows = Math.floor((data.height + spritesheet._gutter) / (spritesheet.sprite_size.y + spritesheet._gutter));
@@ -675,7 +675,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     size:              spritesheet.sprite_size,
                     scale:             PP,
                     pivot:             sspivot,
-                    duration:          sheetDefaultDuration
+                    frames:          sheetDefaultframes
                 };
 
                 // Construct the flipped versions
@@ -711,7 +711,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     throw new Error('Animation data for "' + anim + '" must have either "x" and "y" fields or a "start" field, but not both');
                 }
                 
-                const animDefaultDuration = Math.max(0.25, data.default_duration || sheetDefaultDuration);
+                const animDefaultframes = Math.max(0.25, data.default_frames || sheetDefaultframes);
                 
                 // Apply defaults
                 if (data.x !== undefined) {
@@ -722,7 +722,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     }
 
                     const sprite = spritesheet[anim] = spritesheet[u][v];
-                    sprite.duration = animDefaultDuration;
+                    sprite.frames = animDefaultframes;
                     sprite._animationName = anim;
                     sprite._animationIndex = undefined;
 
@@ -746,11 +746,11 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     const extrapolate = data.extrapolate || 'loop';
                     animation.extrapolate = extrapolate;
 
-                    const duration = Array.isArray(data.duration) ?
-                          data.duration : // array
-                          (data.duration !== undefined) ?
-                          [data.duration] : // number
-                          [animDefaultDuration]; // default
+                    const frames = Array.isArray(data.frames) ?
+                          data.frames : // array
+                          (data.frames !== undefined) ?
+                          [data.frames] : // number
+                          [animDefaultframes]; // default
                     
                     for (let y = data.start.y, i = 0; y <= data.end.y; ++y) {
                         for (let x = data.start.x; x <= data.end.x; ++x, ++i) {
@@ -763,7 +763,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                             sprite._animationName = anim;
                             sprite._animationIndex = i;
                             sprite.pivot = pivot;
-                            sprite.duration = Math.max(0.25, duration[Math.min(i, duration.length - 1)]);
+                            sprite.frames = Math.max(0.25, frames[Math.min(i, frames.length - 1)]);
 
                             animation.push(sprite);
                         }
@@ -771,24 +771,24 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
 
                     
                     animation.period = (extrapolate === 'clamp' ? NaN : 0);
-                    animation.duration = (extrapolate === 'clamp' ? 0 : Infinity);
+                    animation.frames = (extrapolate === 'clamp' ? 0 : Infinity);
                     for (let i = 0; i < animation.length; ++i) {
-                        const duration = animation[i].duration;
+                        const frames = animation[i].frames;
                         switch (extrapolate) {
                         case 'oscillate':
                             if (i === 0 || i === animation.length - 1) {
-                                animation.period += duration;
+                                animation.period += frames;
                             } else {
-                                animation.period += duration * 2;
+                                animation.period += frames * 2;
                             }
                             break;
                             
                         case 'loop':
-                            animation.period += duration;
+                            animation.period += frames;
                             break;
 
                         default: // clamp
-                            animation.duration += duration;
+                            animation.frames += frames;
                             break;
                         }
                     }
@@ -806,10 +806,10 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
             for (let y = 0; y < spritesheet[x].length; ++y) {
                 const sprite = spritesheet[x][y];
                 // Freeze all versions
-                if (sprite.duration === undefined) {
-                    sprite.duration = sheetDefaultDuration;
+                if (sprite.frames === undefined) {
+                    sprite.frames = sheetDefaultframes;
                 }
-                sprite.x_flipped.duration = sprite.y_flipped.duration = sprite.y_flipped.x_flipped.duration = sprite.duration;
+                sprite.x_flipped.frames = sprite.y_flipped.frames = sprite.y_flipped.x_flipped.frames = sprite.frames;
                 Object.freeze(sprite.x_flipped);
                 Object.freeze(sprite.y_flipped);
                 Object.freeze(sprite.y_flipped.x_flipped);
@@ -850,15 +850,16 @@ function loadSound(name, json, jsonURL) {
         }
     }
     
-    sound = Object.seal({ src: mp3URL,
-                          name: name,
-                          loaded: false, 
-                          source: null,
-                          buffer: null,
-                          playing: false,
-                          _type: 'audioClip',
-                          _json: json,
-                          _jsonURL: jsonURL});
+    sound = Object.seal({
+        src: mp3URL,
+        name: name,
+        loaded: false,
+        source: null,
+        buffer: null,
+        frames: 0,
+        _type: 'audioClip',
+        _json: json,
+        _jsonURL: jsonURL});
 
     fileContents[mp3URL] = sound;
     onLoadFileStart(mp3URL);
@@ -879,6 +880,7 @@ function loadSound(name, json, jsonURL) {
                     // without delay later.
                     sound.source = _ch_audioContext.createBufferSource();
                     sound.source.buffer = sound.buffer;
+                    sound.frames = sound.source.buffer.duration * 60;
                     onLoadFileComplete(json.url);
                     loadManager.markRequestCompleted(json.url, '', true);
                     

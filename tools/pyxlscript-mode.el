@@ -58,7 +58,7 @@
                                    "abs" "acos" "atan" "asin" "sign" "sign_nonzero" "cos" "clamp" "hash" "lerp" "log" "log2" "log10" "loop" "noise" "oscillate" "overlap" "pow" "make_random" "random_sign" "random_integer" "random_within_sphere" "random_on_sphere" "random_within_circle" "random_within_square" "random_on_square" "random_on_circle" "random_direction2D" "random_direction3D" "random_value" "random_gaussian" "random_gaussian2D" "random_truncated_gaussian" "random_truncated_gaussian2D" "random" "ξ" "sgn" "sqrt" "sin" "set_random_seed" "tan"
                                    "concatenate" "extend" "clone" "copy" "draw_previous_mode" "cross" "direction" "dot" "equivalent" "magnitude" "magnitude_squared" "max_component" "min_component" "xy" "xyz"
                                    "fast_remove_key" "find" "keys" "remove_key" "substring" "sort" "resize" "push" "pop" "pop_front" "push_front" "fast_remove_value" "remove_values" "remove_all" "gamepad_array" "joy" "round" "floor" "ceil"
-                                   "debug_print"
+                                   "debug_print" "get_sound_status" "set_pitch" "set_volume" "set_pan" "set_loop"
                                    
                                    "ADD" "DIV" "MAD" "MUL" "SUB" "MAX" "MIN" "SIGN" "CLAMP"
                                    

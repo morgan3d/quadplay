@@ -40,7 +40,7 @@ frame
 
 with pos, vel, force, scale, spriteIndex, spriteFrame, animation, spritesheet, sprite, weaponIndex, weapon in ninja:
    // Advance animation. It is looped per-animation below.
-   if spriteFrame < sprite.duration:
+   if spriteFrame < sprite.frames:
       ++spriteFrame
    else:
       ++spriteIndex

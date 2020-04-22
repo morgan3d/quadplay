@@ -3,7 +3,7 @@
     "sprite_size":   {"x": 112, "y": 112},
     "gutter":       0,
     "transpose":    false,
-    "default_duration": 5,
+    "default_frames": 5,
     "names":        {
         "rock":     {"x": 0, "y": 0},
         "paper":    {"x": 1, "y": 0},

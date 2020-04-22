@@ -11,7 +11,7 @@ def on_duration(frames_elapsed, new_ent):
     if not new_ent.duration_tracker:
         new_ent.duration_tracker = 0
     new_ent.duration_tracker += 1
-    if new_ent.duration_tracker > new_ent.sprite.duration:
+    if new_ent.duration_tracker > new_ent.sprite.frames:
         new_ent.duration_tracker = 0
         return true
     return false
@@ -19,7 +19,7 @@ def on_duration(frames_elapsed, new_ent):
 def total_duration(frames):
     let total_duration = 0
     for frm in frames:
-        total_duration += frm.duration
+        total_duration += frm.frames
     return total_duration
 
 def make_anim_entity(

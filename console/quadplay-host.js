@@ -482,6 +482,7 @@ let activeSoundHandleMap = new Map();
 let pausedSoundHandleArray = null;
 
 function soundSourceOnEnded() {
+    this.state = 'ENDED';
     this.resumePositionMs = Date.now() - this.startTimeMs;
     activeSoundHandleMap.delete(this.handle);
 }
@@ -493,6 +494,7 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
     // A new source must be created every time that the sound is played
     const source = _ch_audioContext.createBufferSource();
     source.buffer = audioClip.buffer;
+    source.state = 'PLAYING';
 
     if (_ch_audioContext.createStereoPanner) {
         source.panNode = _ch_audioContext.createStereoPanner();
@@ -510,6 +512,7 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
     source.gainNode.connect(_ch_audioContext.gainNode);
     
     source.onended = soundSourceOnEnded;
+    source.state = 'PLAYING';
     
     if (! source.start) {
         // Backwards compatibility
@@ -579,6 +582,23 @@ function set_pitch(handle, pitch) {
 }
 
 
+function get_sound_status(handle) {
+    if (! (handle && handle._)) {
+        throw new Error("Must call get_sound_status() on a sound returned from play_audio_clip()");
+    }
+
+    const source = handle._;
+    
+    return {
+        pitch:    source.pitch,
+        volume:   source.volume,
+        pan:      source.pan,
+        loop:     source.loop,
+        state:    source.state
+    }
+}
+
+
 // Exported to QRuntime
 function play_audio_clip(audioClip, loop, volume, pan, pitch, time) {
     if (audioClip.audioClip && (arguments.length === 1)) {
@@ -641,6 +661,7 @@ function stop_sound(handle) {
     }
     
     try {
+        handle._.state = 'STOPPED';
         handle._.stop();
     } catch (e) {
         // Ignore invalid state error if loading has not succeeded yet

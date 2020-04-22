@@ -126,7 +126,7 @@ def spawn_splash(type):
    
 def draw_skippy():
    const sprite = array_value(SKIPPY_SPRITESHEET.spin,
-                              game_frames / SKIPPY_SPRITESHEET.spin[0].duration)
+                              game_frames / SKIPPY_SPRITESHEET.spin[0].frames)
 
    const pos = world_to_draw(skippy_position, STONE_Z)
    const angle = (skippy_angle - launch_angle) * 5.0

@@ -3,7 +3,7 @@
     "sprite_size":   {"x": 64, "y": 64},
     "gutter":       0,
     "transpose":    false,
-    "default_duration": 5,
+    "default_frames": 5,
     "names":        {
         "pink":     {"start": {"x": 0, "y": 0}, "end": {"y": 2}, "extrapolate": "oscillate"},
         "red":      {"start": {"x": 1, "y": 0}, "end": {"y": 2}, "extrapolate": "oscillate"},

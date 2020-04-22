@@ -20,12 +20,6 @@ const launcherURL = 'quad://console/launcher';
     }
 }
 
-function getQueryString(field) {
-    const reg = new RegExp('[?&]' + field + '=([^&#]*)', 'i');
-    const string = reg.exec(location.search);
-    return string ? string[1] : null;
-}
-
 const fastReload = getQueryString('fastReload') === '1';
 
 const useIDE = getQueryString('IDE') || false;
@@ -66,6 +60,10 @@ function makeEuroSmoothValue(minCutoff, speedCoefficient) {  return new EuroFilt
 /* True if a URL is to a path that is a built-in dir for the current server */
 function isBuiltIn(url) {
     if (url.startsWith('quad://')) { return true; }
+    if (! url.startsWith('http://') || url.startsWith('https://')) {
+        url = location.origin + url;
+    }
+    
     const quadPath = location.href.replace(/\/console\/quadplay\.html.*$/, '/');
     return (! ALLOW_EDITING_EXAMPLES && url.startsWith('/examples/')) ||
         url.startsWith('/games/') ||
@@ -1879,7 +1877,7 @@ function visualizeGame(gameEditor, url, game) {
 
         if (! locallyHosted()) {
             reasons.push('is hosted on a remote server');
-        } else if (getQueryString('quadserver') !== '1') {
+        } else if (isQuadserver) {
             reasons.push('is not running locally with the <code>quadplay</code> script');
         }
 
@@ -2098,6 +2096,7 @@ function createProjectWindow(gameSource) {
     {
         const keys = Object.keys(gameSource.json.constants || {});
         keys.sort();
+        const badge = isBuiltIn(gameSource.jsonURL) ? 'builtin' : (isRemote(gameSource.jsonURL) ? 'remote' : '');
         for (let i = 0; i < keys.length; ++i) {
             const c = keys[i];
             const v = gameSource.constants[c];
@@ -2110,7 +2109,7 @@ function createProjectWindow(gameSource) {
                   (json.type && json.type === 'xyz') ? 'vec3D' :
                   (json.type && (json.type === 'rgba' || json.type === 'rgb' || json.type === 'hsva' || json.type === 'hsv')) ? 'color' :
                   (typeof v);
-            s += `<li class="clickable ${type}" title="${tooltip}" id="projectConstant_${c}" onclick="onProjectSelect(event.target, 'constant', '${c}')"><code>${c}</code></li>\n`;
+            s += `<li class="clickable ${badge} ${type}" title="${tooltip}" id="projectConstant_${c}" onclick="onProjectSelect(event.target, 'constant', '${c}')"><code>${c}</code></li>\n`;
         }
     }
     if (editableProject) {
@@ -2173,6 +2172,15 @@ function makeGoodFilename(text) {
 
 
 function onNewGameClick() {
+    if (! isQuadserver()) {
+        // Can't create a game on this server
+        if (window.confirm('This game is hosted on the web. You must launch quadplay✜ from a script on your computer to create a new game. Go to the quadplay✜ installer website now?')) {
+            window.open('https://github.com/morgan3d/quadplay');
+        }
+        
+        return;
+    }
+    
     const gameName = window.prompt('New Game Title', 'My New Game');
     if (gameName && gameName !== '') {
         // Mangle name
@@ -2882,6 +2890,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.set_volume      = set_volume;
         QRuntime.set_pitch       = set_pitch;
         QRuntime.set_pan         = set_pan;
+        QRuntime.get_sound_status= get_sound_status;
         QRuntime.debug_pause     = onPauseButton;
         
         if (oncomplete) { oncomplete(); }

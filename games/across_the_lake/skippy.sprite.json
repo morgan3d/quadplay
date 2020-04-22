@@ -9,8 +9,8 @@
         "spin": {
             "start": {"x": 0, "y": 0},
             "end": {"x": 5},
-            "extrapolate": "loop",
-            "duration": 5
+            "frames": 5,
+            "extrapolate": "loop"
         }
     }
 }

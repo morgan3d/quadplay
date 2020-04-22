@@ -3,7 +3,7 @@
     "license": "None",
     "names": {
         "failed": {
-            "duration": [
+            "frames": [
                 50.4
             ],
             "end": {
@@ -17,7 +17,7 @@
             }
         },
         "intro_anim": {
-            "duration": [
+            "frames": [
                 50.4,
                 50.4,
                 50.4
