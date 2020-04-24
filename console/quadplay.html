@@ -18,7 +18,7 @@
          return string ? string[1] : null;
       }
 
-      const isQuadserver = getQueryString('quadserver') !== '1';
+      const isQuadserver = getQueryString('quadserver') === '1';
 
       function makeButton(label, title, onclick, id) {
          document.write('<div ' + (id ? 'id="' + id + 'Container" ' : '') + ' onmousedown="event.stopPropagation()" class="button" onclick="if (event.target.parentElement.parentElement.enabled !== false) ' + (onclick || '') + '(event)" title="' + (title || label) + '"><label><span class="label" ' + (id ? 'id="' + id + 'Label"' : '') + '>' + label + '</span></label></div>');
@@ -80,12 +80,10 @@
     </div>
 
     <div id="toolsMenu" class="unselectable dropdown IDEOnly">
-      <!--
-      <div><a>Open Game…</a></div>
+      <div><a onclick="showOpenGameDialog()">Open Game…</a></div>
       <hr>
       <div><a onclick="onNewGameClick()">New Game…</a></div>
       <hr>
--->
       <label><input id="assertEnabled" type="checkbox" onclick="debugOptionClick(event)" checked autocomplete="off">Enable <code>assert</code></label>
       <br/><label><input id="showEntityBoundsEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Show entity bounds</label>
       <br/><label><input id="showPhysicsEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Show physics</label>
@@ -97,7 +95,7 @@
     </div>
 
     <div id="header" class="unselectable">
-      <div style="position: absolute; left: 8px; top: -2px">
+      <div style="position: absolute; left: 8px; top: 5px; font-size: 110%">
         <span class="IDEOnly">
           <a style="cursor:pointer" onclick="onMenuButton(event)" id="toolsMenuButton">Tools</a>
           &nbsp;&nbsp; &middot; &nbsp;&nbsp;
@@ -116,11 +114,6 @@
           &nbsp;&nbsp; &middot; &nbsp;&nbsp;
           F8 GIF
         </span>
-        <div style="background: #000; margin-left: 10px; display: inline-block; position: relative; top: 6px" id="openButton">
-          <script>
-            makeButton('<img src="ui-open.png" width=32 style="position:relative; top:-2px;">', 'Load Game from URL', 'onOpenButton');
-          </script>
-        </div>
         <span id="recording" class="blink hidden" style="margin-left: 10px; color:#F00">RECORDING</span>
         <span id="adblockWarning"></span>
       </div>
@@ -522,6 +515,32 @@
           <br/>
           <button type="button" onclick="hideImportAssetDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span>
           <button type="button" id="importAssetImportButton" onclick="onImportAssetImport()">Import</button>
+        </center>
+      </div>
+    </div>
+
+    <div id="openGameDialog" class="modal hidden">
+      <div class="dialog" style="top:10px; width: 400px">
+        <center>
+          <b>Open Game</b>
+          <p>
+            <label for="openGameType">Type&nbsp;&nbsp;</label>
+            <select id="openGameType" style="width:320px" onchange="onOpenGameTypeChange()">
+              <script>
+                // Only emit this option if it is going to be populated
+                if (isQuadserver) { document.write('<option value="mine">Mine</option>'); }
+              </script>
+              <option value="builtins">Built In</option>
+              <option value="examples">Examples</option>
+            </select>
+          </p>
+          <p>
+            <div id="openGameList" style="width:380px; height: 300px; background: #fff; border-radius: 2px; overflow: scroll scroll; color: #888; text-align: left; font-size: 80%; font-family: Monaco, monospace">
+            </div>
+          </p>
+          <br/>
+          <button type="button" onclick="hideOpenGameDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span>
+          <button type="button" id="openGameOpenButton" onclick="onOpenGameOpen()">Open</button>
         </center>
       </div>
     </div>

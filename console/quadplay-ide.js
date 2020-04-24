@@ -7,7 +7,7 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.04.18.23'
+const version  = '2020.04.23.23'
 const launcherURL = 'quad://console/launcher';
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -496,16 +496,6 @@ function download(url, name) {
     }, 0);
 }
 
-
-function onOpenButton() {
-    const url = window.prompt("Game URL", "");
-    if (url) {
-        onStopButton();
-        loadGameIntoIDE(url, function () {
-            onPlayButton();
-        });
-    }
-}
 
 function onHomeButton() {
     onStopButton();
@@ -1877,7 +1867,7 @@ function visualizeGame(gameEditor, url, game) {
 
         if (! locallyHosted()) {
             reasons.push('is hosted on a remote server');
-        } else if (isQuadserver) {
+        } else if (! isQuadserver) {
             reasons.push('is not running locally with the <code>quadplay</code> script');
         }
 
@@ -2167,12 +2157,12 @@ function makeGoodFilename(text) {
         if (i === -1) { i = 17; }
         filename = filename.substring(i);
     }
-    return filename.toLowercase();
+    return filename.toLowerCase();
 }
 
 
 function onNewGameClick() {
-    if (! isQuadserver()) {
+    if (! isQuadserver) {
         // Can't create a game on this server
         if (window.confirm('This game is hosted on the web. You must launch quadplay✜ from a script on your computer to create a new game. Go to the quadplay✜ installer website now?')) {
             window.open('https://github.com/morgan3d/quadplay');
@@ -2187,12 +2177,35 @@ function onNewGameClick() {
         const gameDir = makeGoodFilename(gameName);
         
         // Send the POST to make the game
-        // TODO
-        
-        // Receive response back with a URL and load the game, or receive an error
-        // on name collision and try again
-        // TODO 
+        postToServer({
+            command: 'new_game',
+            dir_name: gameDir,
+            game_name: gameName
+        },
+                     function (response, code) {
+                         // Success. Load the new game
+                         loadGameFromUrl(response.game);
+                     },
+                     
+                     function (resonse, code) {
+                         // Failure. Warn the user why
+                         alert(`Could not create the game "${gameName}" because a similar directory name "${gameDir}" already exists in you my_quadplay folder in your home folder.`);
+                     });
     }
+}
+
+
+// Supports quad:// urls, relative files, etc.
+function loadGameFromUrl(game_url) {
+    // Our URL, with the game removed
+    let url = location.href.replace(/(\?(?:.+&)?)game=.+(?=&|$)/, '$1');
+    if (url.indexOf('?') === -1) { url += '?'; }
+    if (url[url.length - 1] !== '&') { url += '&'; }
+    
+    url += 'game=' + game_url;
+    
+    // Go to this location now to load the new game
+    location = url;
 }
 
 
@@ -2362,6 +2375,79 @@ function onRadio() {
     saveIDEState();
 }
 
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+let openGameFiles = null;
+function showOpenGameDialog() {
+    document.getElementById('openGameDialog').classList.remove('hidden');
+    document.getElementById('openGameOpenButton').disabled = true;
+
+    const gameListURL = location.origin + getQuadPath() + 'console/games.json?';
+
+    // Fetch the asset list
+    LoadManager.fetchOne({}, gameListURL, 'json', null, function (json) {
+        openGameFiles = json;
+        onOpenGameTypeChange();
+    });
+}
+
+
+/* Called to regenerate the openGameList display for the import asset dialog
+   when the type of asset to be imported is changed by the user. */
+function onOpenGameTypeChange() {
+    const t = document.getElementById('openGameType').value;
+    let s = '<ol id="openGameListOL" class="select-list" style="font-family: Helvetica, Arial; font-size: 120%">\n';
+    if (openGameFiles) {
+        const fileArray = openGameFiles[t];
+        for (let i = 0; i < fileArray.length; ++i) {
+            const game = fileArray[i];
+
+            // Replace quad:// with a proper URL for HTML
+            let label_path = game.url.replace('quad://', location.origin + getQuadPath());
+
+            // Remove the game.json file
+            label_path = label_path.replace(/\/[^/]+\.game.json$/, '/');
+            label_path += 'label64.png';
+            
+            s += `<li onclick="onOpenGameListSelect(this, '${game.url}')" title="${game.url}"><img src="${label_path}" width=32 height=32 style="margin-right: 10px; vertical-align: middle;">${game.title}</li>\n`;
+        }
+    }
+    s += '</ol>';
+
+    const list = document.getElementById('openGameList');
+    list.innerHTML = s;
+
+    openGameFiles.selected = null;
+    // Recreating the list destroys any selection
+    document.getElementById('openGameOpenButton').disabled = true;
+}
+
+
+/* Called from the "Open" button */
+function onOpenGameOpen() {
+    onStopButton();
+    loadGameFromUrl(openGameFiles.selected);
+}
+
+
+function onOpenGameListSelect(target, url) {
+    const list = document.getElementById('openGameListOL');
+    for (let i = 0; i < list.children.length; ++i) {
+        list.children[i].classList.remove('selected');
+    }
+    target.classList.add('selected');
+    openGameFiles.selected = url; 
+    document.getElementById('openGameOpenButton').disabled = false;
+}
+
+
+function hideOpenGameDialog() {
+    document.getElementById('openGameDialog').classList.add('hidden');
+    openGameFiles = null;
+}
+
+/**********************************************************************************/
 
 function setErrorStatus(e) {
     e = escapeHTMLEntities(e);
@@ -3134,7 +3220,7 @@ function loadGameIntoIDE(url, callback) {
 
     // See if the game is on the same server and not in the
     // games/ or examples/ directory
-    editableProject = locallyHosted() && useIDE && (getQueryString('quadserver') === '1') && ! isBuiltIn(url);
+    editableProject = locallyHosted() && useIDE && isQuadserver && ! isBuiltIn(url);
     
     // Disable the play, slow, and step buttons
     document.getElementById('slowButton').enabled =

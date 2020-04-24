@@ -349,15 +349,16 @@ function postToServer(payload, callback, errorCallback) {
     xhr.onreadystatechange = function() {
         if (this.readyState === XMLHttpRequest.DONE) {
             // Request finished. Do processing here.
-            if (this.status === 200 || this.status === 201) {
+            const jsonResponse = WorkJSON.parse(xhr.response);
+            if ((this.status >= 200) && (this.status <= 299)) {
                 if (callback) {
                     // Give the server a little more time to catch up
                     // if it is writing to disk and needs to flush or
                     // such before invoking the callback.
-                    setTimeout(callback, 150);
+                    setTimeout(function () { callback(jsonResponse, this.status); }, 150);
                 }
             } else if (errorCallback) {
-                errorCallback();                
+                errorCallback(jsonResponse, this.status);
             }
         }
     }

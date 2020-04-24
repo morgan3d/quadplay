@@ -1,0 +1,103 @@
+{
+    "mine": [],
+    "examples": [
+        {
+            "url": "quad://examples/accel_demo/",
+            "title": "Acceleration Curve Example"
+        },
+        {
+            "url": "quad://examples/animation/",
+            "title": "Animation Example"
+        },
+        {
+            "url": "quad://examples/boids/",
+            "title": "Boids Example"
+        },
+        {
+            "url": "quad://examples/camera_zoom/",
+            "title": "Camera Zoom Test"
+        },
+        {
+            "url": "quad://examples/dual-stick/",
+            "title": "Dual Stick Example"
+        },
+        {
+            "url": "quad://examples/fluid/",
+            "title": "Fluid Example"
+        },
+        {
+            "url": "quad://examples/fontpreview/",
+            "title": "Font Preview"
+        },
+        {
+            "url": "quad://examples/helloworld/",
+            "title": "Hello World"
+        },
+        {
+            "url": "quad://examples/highscore/",
+            "title": "High Score Example"
+        },
+        {
+            "url": "quad://examples/physics/",
+            "title": "Physics Example"
+        },
+        {
+            "url": "quad://examples/robot/",
+            "title": "Robot Example"
+        },
+        {
+            "url": "quad://examples/roguelike/",
+            "title": "Roguelike Example"
+        },
+        {
+            "url": "quad://examples/rpg/",
+            "title": "RPG Demo"
+        },
+        {
+            "url": "quad://examples/sproing/",
+            "title": "Squash and Stretch Example"
+        },
+        {
+            "url": "quad://examples/starter/",
+            "title": "Starter Example"
+        },
+        {
+            "url": "quad://examples/text/",
+            "title": "Text Example"
+        },
+        {
+            "url": "quad://examples/touch/",
+            "title": "Touch Example"
+        }
+    ],
+    "builtins": [
+        {
+            "url": "quad://games/across_the_lake/",
+            "title": "across the lake"
+        },
+        {
+            "url": "quad://games/beat_the_gobblins/",
+            "title": "BEAT THE GOBBLINS"
+        },
+        {
+            "url": "quad://games/icetime/",
+            "title": "Ice Time"
+        },
+        {
+            "url": "quad://games/quadpaddle/",
+            "title": "quadpaddle"
+        },
+        {
+            "url": "quad://games/rps/",
+            "title": "R.P.S."
+        },
+        {
+            "url": "quad://games/serpitron/",
+            "title": "Serpitron"
+        },
+        {
+            "url": "quad://games/speedstreet/",
+            "title": "Speed Street"
+        }
+    ]
+}

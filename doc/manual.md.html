@@ -72,9 +72,9 @@ To get started you only need:
 For the quadplay✜ SDK, download, unzip, and copy the files wherever you would like on
 your computer. There is no installation process.
 
-To make a game, copy the starter project from `examples/starter` to
-your own directory such as `games/mygame` and start changing it. Look
-at the Built-In Games section for more examples.
+To make a game, run the `quadplay` script at the command line. When it opens your browser,
+select the "Tools" menu from inside the quadplay development environment and then the "New Game"
+option. Look at the Built-In Games section for more examples.
 
 If you've worked with other scripting languages, 
 read the PICO-8 section, Python section, or JavaScript section of this
@@ -100,7 +100,7 @@ command in the root of the SDK. Here are some examples:
 # Load the games/quadpaddle/quadpaddle.game.json sample program
 quadplay quad://games/quadpaddle
 
-# Load a mygames/space/space.game.json game that you've made
+# Load the mygames/space/space.game.json game that you've made
 quadplay mygames/space
 
 # Load your game and allow mobile clients to connect by scanning
@@ -6539,6 +6539,8 @@ Changes for both the specification and implementation in each release.
 
 2020 Apr TBD: Beta update 39
 
+- New games can now be created from the browser based IDE using "New Game..."
+- Games can now be loaded from the browser based IDE using "Open Game..."
 - Changed `lifetime` and `duration` arguments to various APIs to `frames` in for consistency
   with the sprite and other settings, and the name "frame hook"
 - Fixed Ctrl/Command+C not copying in the IDE
