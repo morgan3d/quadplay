@@ -22,7 +22,7 @@ const launcherURL = 'quad://console/launcher';
 
 const fastReload = getQueryString('fastReload') === '1';
 
-const useIDE = getQueryString('IDE') || false;
+const useIDE = (getQueryString('IDE') === '1') || false;
 {
     const c = document.getElementsByClassName(useIDE ? 'noIDE' : 'IDEOnly');
     for (let i = 0; i < c.length; ++i) {
@@ -246,7 +246,7 @@ function requestFullScreen() {
     try { 
         const body = document.getElementsByTagName('body')[0];
         if (body.requestFullscreen) {
-            body.requestFullscreen();
+            body.requestFullscreen().catch(function(){});
         } else if (body.webkitRequestFullscreen) {
             body.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
         } else if (body.mozRequestFullScreen) {
@@ -441,8 +441,6 @@ function onResize() {
         emulatorScreen.style.transform = 'scale(' + (1 / scale) + ') translate3d(0,0,0)';
     }
 }
-
-window.addEventListener("resize", onResize, false);
 
 function onMenuButton(event) {
     closeDropdowns();
@@ -1157,9 +1155,6 @@ function onDocumentKeyDown(event) {
     }
 }
 
-
-document.addEventListener('keydown', onDocumentKeyDown);
-document.addEventListener('keyup', onDocumentKeyUp);
 
 const jsCode = document.getElementById('jsCode') && ace.edit(document.getElementById('jsCode'));
 const editorStatusBar = document.getElementById('editorStatusBar');
@@ -3125,15 +3120,6 @@ function makeAssets(environment, assets) {
     defineImmutableProperty(environment, 'ASSETS', Object.freeze(ASSET));
 }
 
-
-// Pause when losing focus if currently playing...prevents quadplay from
-// eating resources in the background during development.
-window.addEventListener("blur", function () {
-    if (backgroundPauseEnabled && useIDE) {
-        onPauseButton();
-    }
-}, false);
-
 function updateControllerIcons() {
     const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
     let num = 0;
@@ -3152,18 +3138,6 @@ function updateControllerIcons() {
         ++num;
     }
 }
-
-window.addEventListener("gamepadconnected", function(e) {
-    if (onWelcomeScreen) { onWelcomeTouch(); }
-
-    updateControllerIcons();
-    console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.", e.gamepad.index, e.gamepad.id, e.gamepad.buttons.length, e.gamepad.axes.length);
-});
-
-window.addEventListener("gamepaddisconnected", function(e) {
-    updateControllerIcons();
-    console.log("Gamepad disconnected from index %d: %s", e.gamepad.index, e.gamepad.id);
-});
 
 
 setTimeout(updateControllerIcons, 100);
@@ -3322,6 +3296,34 @@ Starting…
     }, 15);
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// See also more event handlers for the emulator in quadplay-host.js
+
+window.addEventListener("gamepadconnected", function(e) {
+    if (onWelcomeScreen) { onWelcomeTouch(); }
+    updateControllerIcons();
+    console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.", e.gamepad.index, e.gamepad.id, e.gamepad.buttons.length, e.gamepad.axes.length);
+});
+
+window.addEventListener("gamepaddisconnected", function(e) {
+    updateControllerIcons();
+    console.log("Gamepad disconnected from index %d: %s", e.gamepad.index, e.gamepad.id);
+});
+
+window.addEventListener('resize', onResize, false);
+document.addEventListener('keydown', onDocumentKeyDown);
+document.addEventListener('keyup', onDocumentKeyUp);
+
+// Pause when losing focus if currently playing...prevents quadplay from
+// eating resources in the background during development.
+window.addEventListener('blur', function () {
+    if (backgroundPauseEnabled && useIDE) {
+        onPauseButton();
+    }
+}, false);
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // Load state
 backgroundPauseEnabled = localStorage.getItem('backgroundPauseEnabled');
 if (backgroundPauseEnabled === undefined || backgroundPauseEnabled === null) {
@@ -3357,11 +3359,6 @@ if (! localStorage.getItem('debugWatchEnabled')) {
 {
     let url = getQueryString('game');
 
-    if (url && ! useIDE) {
-        // This is a standalone game, so hide the open button
-        document.getElementById('openButton').style.visibility = 'hidden';
-    }
-
     url = url || launcherURL;
     // If the url doesn't have a prefix and doesn't begin with a slash,
     // assume that it is relative to the quadplay script in the parent dir.
@@ -3381,8 +3378,23 @@ document.getElementById('backgroundPauseCheckbox').checked = backgroundPauseEnab
 if (getQueryString('kiosk') === '1') {
     // Hide the console menu and mode buttons
     document.getElementsByTagName('body')[0].classList.add('kiosk');
+    setUIMode('Maximal', false);
+} else {
+    let newMode = getQueryString('mode');
+    if (! newMode) {
+        if (useIDE) {
+            newMode = localStorage.getItem('uiMode') || 'IDE';
+            if (newMode === 'Maximal' || 'newMode' === 'Emulator') {
+                // Nobody starting in IDE mode wants to be in the emulator,
+                // so override this default
+                newMode = 'IDE';
+            }
+        } else {
+            newMode = isMobile ? 'Emulator' : 'Maximal';
+        }
+    }
+    setUIMode(newMode, false);
 }
-setUIMode(getQueryString('mode') || localStorage.getItem('uiMode') || 'IDE', false);
 setErrorStatus('');
 setCodeEditorFontSize(parseInt(localStorage.getItem('codeEditorFontSize') || '14'));
 setColorScheme(localStorage.getItem('colorScheme') || 'pink');

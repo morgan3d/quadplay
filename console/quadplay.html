@@ -221,29 +221,29 @@
       <div class="virtualController" id="leftControls">
         <div style="background-image: url('controller-dpad.png'); background-size: cover; left:0px; top:-50%; position: absolute; width: 120px; height: 120px" id="minimalDPad">
           <!-- These have to be nested so that the mouse motion events will propagate through all of them -->
-          <div id="Wbutton" class="emulatorButton" style="left: 19px; top: -7px; width:80px; height:45px">
-            <div id="Sbutton" class="emulatorButton" style="left: 0px; top: 78px; width:80px; height:45px">
-              <div id="Abutton" class="emulatorButton" style="left: -23px; top: -60px; width:45px; height:80px">
-                <div id="Dbutton" class="emulatorButton" style="left: 75px; top: 0px; width:45px; height:80px"> </div>
+          <div id="KeyWbutton" class="emulatorButton" style="left: 19px; top: -7px; width:80px; height:45px">
+            <div id="KeySbutton" class="emulatorButton" style="left: 0px; top: 78px; width:80px; height:45px">
+              <div id="KeyAbutton" class="emulatorButton" style="left: -23px; top: -60px; width:45px; height:80px">
+                <div id="KeyDbutton" class="emulatorButton" style="left: 75px; top: 0px; width:45px; height:80px"> </div>
               </div>
             </div>
           </div>
         </div>
-        <img id="Qbutton" src="controller-q.png" style="position: absolute; left:42px; top:-130px; transform: none" width="35px" id="minimalPButton" class="emulatorButton virtualController">
+        <img id="KeyQbutton" src="controller-q.png" style="position: absolute; left:42px; top:-130px; transform: none" width="35px" id="minimalPButton" class="emulatorButton virtualController">
       </div>
       
       <div class="virtualController" id="rightControls">
         <div style="background-image: url('controller-buttons.png'); background-size: cover; position: absolute; right:0px; top:-50%; width: 120px; height: 120px" id="minimalButtons">
-          <!-- these class names allow quadplay-host.js to know what button was pressed -->
-          <div id="Fbutton" class="emulatorButton" style="left: 33px; top:-2px; width:52px; height:52px; transform: rotate(45deg)"> </div>
-          <div id="Cbutton" class="emulatorButton" style="left: -3px; top:31px; width:52px; height:52px; transform: rotate(45deg)"> </div>
-          <div id="Gbutton" class="emulatorButton" style="left: 69px; top:31px; width:52px; height:52px; transform: rotate(45deg)"> </div>
-          <div id="Vbutton" class="emulatorButton" style="left: 33px; top:64px; width:52px; height:52px; transform: rotate(45deg)"> </div>
+          <!-- these id names allow quadplay-host.js to know what button was pressed -->
+          <div id="KeyGbutton" class="emulatorButton" style="left: 33px; top:-2px; width:52px; height:52px; transform: rotate(45deg)"> </div>
+          <div id="KeyVbutton" class="emulatorButton" style="left: -3px; top:31px; width:52px; height:52px; transform: rotate(45deg)"> </div>
+          <div id="KeyHbutton" class="emulatorButton" style="left: 69px; top:31px; width:52px; height:52px; transform: rotate(45deg)"> </div>
+          <div id="KeyBbutton" class="emulatorButton" style="left: 33px; top:64px; width:52px; height:52px; transform: rotate(45deg)"> </div>
           
           <!-- dead zone -->
           <div style="left:46px; top: 45px; width:26px; height:20px; position: absolute" class="deadZone"> </div>
         </div>
-        <img id="Pbutton" src="controller-p.png" style="position: absolute; right:43px; top:-130px; transform: none" width="35px" id="minimalPButton" class="emulatorButton virtualController">
+        <img id="KeyPbutton" src="controller-p.png" style="position: absolute; right:43px; top:-130px; transform: none" width="35px" id="minimalPButton" class="emulatorButton virtualController">
       </div>
       
       <!-- MacOS can't assign keyboard focus to a non-keyboard control, so we introduce this

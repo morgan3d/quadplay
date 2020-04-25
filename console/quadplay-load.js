@@ -356,9 +356,10 @@ function computeAssetCredits(gameSource) {
     };
 
     // Game
-    CREDITS.game.push((gameSource.json.title || 'Untitled') + (gameSource.json.developer ? ' by ' +
-                                                    gameSource.json.developer : '') + ' ' +
-                           (gameSource.json.copyright || ''));
+    CREDITS.game.push((gameSource.json.title || 'Untitled') +
+                      (gameSource.json.developer ? ' by ' +
+                       gameSource.json.developer : '') + ' ' +
+                      (gameSource.json.copyright || ''));
     if (gameSource.json.license) { CREDITS.game.push(canonicalizeLicense(gameSource.json.license)); }
     
     CREDITS.title = gameSource.json.title || 'Untitled';

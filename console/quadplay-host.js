@@ -422,7 +422,7 @@ function getIdealGamepads() {
         const pad = gamepads[i];
         if (pad && pad.connected) {
             // Construct a simplified web gamepad API
-            const mypad = {axes:[0, 0, 0, 0], buttons:[], analogAxes:[0,0,0,0], id: pad.id};
+            const mypad = {axes: [0, 0, 0, 0], buttons: [], analogAxes: [0, 0, 0, 0], id: pad.id};
 
 	    const axisRemap = gamepadAxisRemap[pad.id] || gamepadAxisRemap.identity;
             
@@ -1009,7 +1009,6 @@ function updateInput() {
 //
 // Mobile button support
 //
-//
 // Because a touch end for *one* finger could occur for an element
 // that still has another finger holding it down, we have to track
 // all active touches and synthesize events for them rather than
@@ -1157,17 +1156,17 @@ function onTouchesChanged(event) {
         const button = emulatorButtonArray[j];
         if (button.wasPressed !== button.currentlyPressed) {
             // This button's state changed
-            const buttonKey = button.id[0];
+            const buttonCode = button.id.substring(0, button.id.length - 'button'.length);
 
             // Fake a keyboard event
-            const fakeEvent = {keyCode:ascii(buttonKey), stopPropagation:Math.abs, preventDefault:Math.abs}
+            const fakeEvent = {code: buttonCode, stopPropagation:Math.abs, preventDefault:Math.abs}
             
             if (button.currentlyPressed) {
                 onEmulatorKeyDown(fakeEvent);
-                emulatorButtonState[buttonKey] = 1;
+                emulatorButtonState[buttonCode] = 1;
             } else {
                 onEmulatorKeyUp(fakeEvent);
-                emulatorButtonState[buttonKey] = 0;
+                emulatorButtonState[buttonCode] = 0;
             }
         }
     }
