@@ -667,7 +667,7 @@ function showImportAssetDialog() {
     const assetListURL = location.origin + getQuadPath() + 'console/_assets.json?gamePath=' + getGamePath();
     
     // Fetch the asset list
-    LoadManager.fetchOne({}, assetListURL, 'json', null, function (json) {
+    LoadManager.fetchOne({forceReload: true}, assetListURL, 'json', null, function (json) {
         importAssetFiles = json;
 
         // Strip the path to the current game off assets in the same dir

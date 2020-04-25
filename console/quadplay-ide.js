@@ -7,7 +7,7 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.04.23.23'
+const version  = '2020.04.25.11'
 const launcherURL = 'quad://console/launcher';
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -1492,19 +1492,16 @@ margin-top: 0; padding-top: 0
         if (srcdoc !== undefined) {
             docEditor.innerHTML = `<iframe id="doc" onload="setIFrameScroll(this, ${oldScrollX}, ${oldScrollY})" srcdoc="${markdeepify(srcdoc)}" border=0 width=125% height=125%></iframe>`;
         } else {
-            loadManager = new LoadManager({
+            LoadManager.fetchOne({
                 errorCallback: function () { console.log('Error while loading', url); },
-                forceReload: true});
-            loadManager.fetch(url, 'text', null,  function (text) {
-                docEditor.innerHTML = `<iframe id="doc" srcdoc="${markdeepify(text)}" onload="setIFrameScroll(this, ${oldScrollX}, ${oldScrollY})" border=0 width=125% height=125%></iframe>`;
-            }),
-            loadManager.end();
+                forceReload: true}, url, 'text', null,  function (text) {
+                    docEditor.innerHTML = `<iframe id="doc" srcdoc="${markdeepify(text)}" onload="setIFrameScroll(this, ${oldScrollX}, ${oldScrollY})" border=0 width=125% height=125%></iframe>`;
+                });
         }
     } else {
         // Treat as text file
         docEditor.innerHTML = `<object id="doc" width="125%" height="125%" type="text/plain" data="${url}?" border="0"> </object>`;
     }
-
 }
 
 
@@ -2198,9 +2195,10 @@ function onNewGameClick() {
 // Supports quad:// urls, relative files, etc.
 function loadGameFromUrl(game_url) {
     // Our URL, with the game removed
-    let url = location.href.replace(/(\?(?:.+&)?)game=.+(?=&|$)/, '$1');
+    let url = location.href.replace(/(\?(?:.+&)?)game=[^&]+(?=&|$)/, '$1');
     if (url.indexOf('?') === -1) { url += '?'; }
     if (url[url.length - 1] !== '&') { url += '&'; }
+    url = url.replace(/&&/g, '&');
     
     url += 'game=' + game_url;
     
@@ -2385,8 +2383,9 @@ function showOpenGameDialog() {
 
     const gameListURL = location.origin + getQuadPath() + 'console/games.json?';
 
+    console.log(gameListURL)
     // Fetch the asset list
-    LoadManager.fetchOne({}, gameListURL, 'json', null, function (json) {
+    LoadManager.fetchOne({forceReload: true}, gameListURL, 'json', null, function (json) {
         openGameFiles = json;
         onOpenGameTypeChange();
     });
@@ -2410,7 +2409,7 @@ function onOpenGameTypeChange() {
             label_path = label_path.replace(/\/[^/]+\.game.json$/, '/');
             label_path += 'label64.png';
             
-            s += `<li onclick="onOpenGameListSelect(this, '${game.url}')" title="${game.url}"><img src="${label_path}" width=32 height=32 style="margin-right: 10px; vertical-align: middle;">${game.title}</li>\n`;
+            s += `<li ondblclick="onOpenGameOpen()" onclick="onOpenGameListSelect(this, '${game.url}')" class="unselectable" title="${game.url}"><img src="${label_path}" width=32 height=32 style="margin-right: 10px; vertical-align: middle;">${game.title}</li>\n`;
         }
     }
     s += '</ol>';
