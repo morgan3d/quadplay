@@ -359,8 +359,9 @@ function onResize() {
                 // keep per-pixel accuracy
                 scale = Math.floor(scale * window.devicePixelRatio) / window.devicePixelRatio;
             }
-            
-            let delta = (windowHeight - Math.max(260, 90 + SCREEN_HEIGHT * scale)) / 2;
+
+            const minHeight = Math.min(windowHeight, 288);
+            const delta = (windowHeight - Math.max(minHeight + 30, 90 + SCREEN_HEIGHT * scale)) / 2;
             if (! gbMode) {
                 // Resize the background to bound the screen more tightly.
                 // Only resize vertically because the controls need to
@@ -368,7 +369,8 @@ function onResize() {
                 // them reachable on mobile. In gbMode, the emulator fills
                 // the screen and this is not needed.
                 background.style.top = Math.round(Math.max(0, delta)) + 'px';
-                background.style.height = Math.round(Math.max(230, SCREEN_HEIGHT * scale + 53)) + 'px';
+                const height = Math.round(Math.max(minHeight, SCREEN_HEIGHT * scale + 53));
+                background.style.height = height + 'px';
             }
             
             // Setting the scale transform triggers really slow rendering on Raspberry Pi unless we
@@ -377,12 +379,11 @@ function onResize() {
             screenBorder.style.left = Math.round((windowWidth - screenBorder.offsetWidth - 1) / 2) + 'px';
             if (gbMode) {
                 screenBorder.style.transformOrigin = 'center top';
-                screenBorder.style.top  = '30px';
+                screenBorder.style.top  = '15px';
             } else {
                 screenBorder.style.transformOrigin = 'center';
                 screenBorder.style.top  = Math.round(Math.max(0, -delta) + (windowHeight - screenBorder.offsetHeight - 34) / 2) + 'px';
             }
-
 
             // Show the controls
             body.classList.add('fullscreenEmulator');

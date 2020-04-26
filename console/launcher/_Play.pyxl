@@ -108,7 +108,7 @@ const gameArray = [{
 },
 
 {
-   title: "across the lake",
+   title: "Across the Lake",
    developer: "The Steinbachers",
    url: "quad://games/across_the_lake",
    version:      1.0,

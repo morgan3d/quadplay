@@ -2363,19 +2363,49 @@ corner of the map to the top-left corner of the screen. Use
 the location of the map when rendered.
 
 
+Animations
+------------------------------------------------------------
+
+Each named sprite animation `spritesheet["`<i>animation_name</i>`"]`
+or `spritesheet.`<i>animation_name</i> of a spritesheet is an array
+that has the following immutable properties:
+
+`animation.period`
+: Number of frames before the animation repeats, which is
+  `0` for `clamp` animations.
+
+`animation.frames`
+: Number of frames before the animation ends, which is
+  `infinity` for `loop` or `oscillate` animations.
+
+`animation.frame(t)`
+: Return the sprite to show for the animation at time `t` measured in frames, obeying the individual
+  `sprite.frames` durations and wrapping or clamping appropriately.
+
+Because it is an array, the i<sup>th</sup> sprite is `animation[i]` and
+you can loop that using `array_value(animation, i)` or choose a random
+one with `random_value(animation)`.
+
+To create an animation, there must be a `start` field in the named 
+entry of the .sprite.json file.
+
+
 Sprite
 ------------------------------------------------------------
 
-Each element of a spritesheet has the following immutable properties:
+Each sprite element `spritesheet[x][y]` of a spritesheet has the following immutable properties.
+Sprites can also be referenced by name `spritesheet["`<i>name</i>`"]` or 
+`spritesheet.`<i>name</i>, if the named sprite has an `x` and `y` field instead of
+a `start` field in the .sprite.json file.
 
 `sprite.id`
 : Unique integer identifying this sprite. This may change every time
   the program is run.
 
-`sprite.duration`
+`sprite.frames`
 : Number of 1/60-second (≈ 16.7 ms) game frames to hold this sprite during animation.
-  Set by the spritesheet's `default_duration`, the animation's `default_duration`,
-  or the animation's per-sprite `duration` array.
+  Set by the spritesheet's `default_frames`, the animation's `default_frames`,
+  or the animation's per-sprite `frames` array.
 
 `sprite.x_flipped`
 : The corresponding derived sprite that is this sprite flipped horizontally.
@@ -3574,7 +3604,7 @@ in the desired order regardless of the order in which drawing executes.
 : Add a series of frame hooks that run in the current mode. Returns a master
   hook that can be used with `remove_frame_hook()` to cancel the entire sequence.
   Each argument may be either a function, `nil`, or `{callback: function, frames: number}`.
-  The callbacks run for duration number of frames. If not `nil`, the callback
+  The callbacks run for the specified number of `frames`. If not `nil`, the callback
   signature is `def callback(framesleft, total_frames)`.
   Example: `sequence(drawExplosion, {callback: drawFire, frames: 20}, {callback: drawSmoke, frames: 4}, cleanup)`.
   Note that for convenience, `sequence(...array)` will take the arguments from an array instead of as separate
@@ -6537,13 +6567,17 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-2020 Apr TBD: Beta update 39
+2020 Apr 25: Beta update 39
 
+- Added ⓔ and ⓕ buttons, which are mapped to shoulder buttons on physical controllers
+- Added a new playable game, "Across the Lake"
 - New games can now be created from the browser based IDE using "New Game..."
 - Games can now be loaded from the browser based IDE using "Open Game..."
 - Changed `lifetime` and `duration` arguments to various APIs to `frames` in for consistency
   with the sprite and other settings, and the name "frame hook"
 - Fixed Ctrl/Command+C not copying in the IDE
+- Added an Animation section for sprites
+- Added `animation.frame()` for accessing animations by game frames instead of sprite index
 - Added button prompts to all fonts
 - *Incompatible change*: Renamed `"flip_y"` to `"y_up"` in .map.json and .game.json files
 - Fixed editor making relative URLs inside .sprite.json and other asset files absolute
@@ -6552,7 +6586,6 @@ Changes for both the specification and implementation in each release.
 - Increased the QR code size in the host tab to make it easier to scan
 - Changed the way that the width of the white space character is computed for
   fonts. It now uses the largest width of the `"il¹;["` characters
-- Added "across the lake" game
 - 2x performance optimization for alpha blending large sprites with no rotation or
   scale
 - Added `get_sound_status()` function

@@ -334,6 +334,42 @@ function afterLoadGame(gameURL, callback, errorCallback) {
 }
 
 
+// Becomes the `frame(f)` method on sprite animation arrays.
+// Runs in linear time in the length of the array (*not* linear in the value of f).
+function animationFrame(f) {
+    const animation = this;
+    const N = animation.length;
+
+    if (animation.extrapolate === 'clamp') {
+        // Handle out of bounds cases by clamping
+        if (f < 0) { return animation[0]; }
+        if (f >= frames) { return animation[N - 1]; }
+    } else {
+        // Handle out of bounds cases by looping. To handle negatives, we need
+        // to add and then mod again 
+        f = ((f % animation.period) + animation.period) % animation.period;
+    }
+
+    if (animation.extrapolate === 'oscillate') {
+        // Oscillation will give us twice the actual number of frames from the
+        // looping, so we need to figure out which part of the period we're in.
+        const reverseTime = (animation.period + animation[0].frames + animation[N - 1].frames) / 2;
+        if (f >= reverseTime) {
+            // Count backwards from the end
+            f -= reverseTime;
+            for (let i = N - 1; i > 0 && f < animation[i].frames; --i, f -= animation[i].frames) {}
+            return animation[Math.max(i, 0)];
+        }
+    }
+    
+    // Find the value by searching linearly within the array (since we do not
+    // store cumulative values to binary search by).
+    for (let i = 0; i < N && f < animation[i].frames; ++i, f -= animation[i].frames) {}
+    return animation[Math.min(i, N - 1)];
+
+}
+
+
 /** Computes gameSource.CREDITS from gameSource, mutating it */
 function computeAssetCredits(gameSource) {
     function canonicalizeLicense(license) {
@@ -676,7 +712,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     size:              spritesheet.sprite_size,
                     scale:             PP,
                     pivot:             sspivot,
-                    frames:          sheetDefaultframes
+                    frames:            sheetDefaultframes
                 };
 
                 // Construct the flipped versions
@@ -746,6 +782,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                     const animation = spritesheet[anim] = [];
                     const extrapolate = data.extrapolate || 'loop';
                     animation.extrapolate = extrapolate;
+                    animation.frame = animationFrame;
 
                     const frames = Array.isArray(data.frames) ?
                           data.frames : // array
@@ -769,14 +806,14 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                             animation.push(sprite);
                         }
                     }
-
                     
-                    animation.period = (extrapolate === 'clamp' ? NaN : 0);
+                    animation.period = 0;
                     animation.frames = (extrapolate === 'clamp' ? 0 : Infinity);
                     for (let i = 0; i < animation.length; ++i) {
                         const frames = animation[i].frames;
                         switch (extrapolate) {
                         case 'oscillate':
+                            // The number of frames is infinite; compute the period
                             if (i === 0 || i === animation.length - 1) {
                                 animation.period += frames;
                             } else {
@@ -785,6 +822,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                             break;
                             
                         case 'loop':
+                            // The number of frames is infinite; compute the period
                             animation.period += frames;
                             break;
 

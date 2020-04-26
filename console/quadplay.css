@@ -918,11 +918,11 @@ body.kiosk .emulator {
     top: 0px;
 }
 
-body.kiosk, body.GhostUI {
+body.kiosk, body.GhostUI, body.MaximalUI {
     background: #000 !important;
 }
 
-body.kiosk #logo, body.GhostUI #logo {
+body.kiosk div#logo, body.GhostUI div#logo, body.MaximalUI div#logo {
     display: none;
 }
 
@@ -1045,34 +1045,13 @@ hr {
 
 #leftControls, #rightControls {
     position: absolute;
-    top: 54%;
+    top: 50%;
     height: 120px
 }
 
 #leftControls { left: 2px; }
 #rightControls { right: 2px; }
 
-@media (orientation: portrait) {
-    #leftControls, #rightControls { top:84% }
-    #leftControls {left: 30px}
-    #rightControls {right: 30px}
-
-    .emulator .emulatorBackground {
-        top:0px !important;
-        height:100% !important;
-        width:100%;
-    }
-
-    .emulator .emulatorBackground {
-        border-radius: 20px;
-    }
-    .EmulatorUI .emulator .emulatorBackground:before {
-        border-radius: 18px;
-        top:4px;
-        left:4px;
-        right:4px;
-    }
-}
 
 body.EmulatorUI .virtualController {
     visibility: visible;
@@ -1265,3 +1244,55 @@ svg.modeGraph text.edgeLabel {
     padding-left: 5px;
 }
 
+
+/* Portrait (GameBoy) layout  */
+@media (orientation: portrait) {
+    #leftControls, #rightControls { top:unset; bottom:-30px }
+    #leftControls {left: 30px}
+    #rightControls {right: 30px}
+
+    #KeyShiftbutton, #KeyFbutton {
+        top: -105px  !important;
+    }
+
+    #KeyShiftbutton {
+        left: 2px !important;
+    }
+
+    #KeyFbutton {
+        left: -80px !important;
+    }
+    
+    #KeyQbutton, #KeyPbutton {
+        top:  -20px !important;
+    }
+
+    #logo {
+        top: unset;
+        bottom: 10px;
+    }
+
+    #KeyQbutton {
+        left: 155px !important;
+    }
+
+    #KeyPbutton {
+        left: -200px !important;
+    }
+    
+    .emulator .emulatorBackground {
+        top:0px !important;
+        height:100% !important;
+        width:100%;
+    }
+
+    .emulator .emulatorBackground {
+        border-radius: 20px;
+    }
+    .EmulatorUI .emulator .emulatorBackground:before {
+        border-radius: 18px;
+        top:4px;
+        left:4px;
+        right:4px;
+    }
+}
