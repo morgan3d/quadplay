@@ -149,7 +149,18 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 response_obj = {'message': dst_path + ' already exists'}
             else:
                 os.makedirs(dst_path)
-                shutil.copyfile(os.path.join(starter_path + '/starter.game.json'), os.path.join(dst_path, dir_name + '.game.json'))
+
+                # Parse the starter game
+                with open(os.path.join(starter_path + '/starter.game.json'), 'rt') as f:
+                    game_json = workjson.loads(f.read())
+
+                # Change the title
+                game_json['title'] = game_name
+
+                # Save the new game
+                with codecs.open(os.path.join(dst_path, dir_name + '.game.json'), 'w', 'utf8') as f:
+                    f.write(workjson.dumps(game_json))
+                
                 for filename in ['label64.png', 'label128.png', 'Play.pyxl', 'TODO.md']:
                     shutil.copyfile(os.path.join(starter_path, filename), os.path.join(dst_path, filename))
 
