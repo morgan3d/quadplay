@@ -1,7 +1,37 @@
 #!/bin/sh
 # -*- python -*-
-# Shell commands follow
-# Next line is bilingual: it starts a comment in Python, and is a no-op in shell
+#
+# This is the quadplay server script. The quadplay server is a stock web server with the following
+# extensions:
+#
+#  - POST commands take a JSON argument with a `command` that is:
+#    
+#    "write_file":    Write the specified contents to disk at the specified location.
+#                     Used by the IDE to save files.
+#
+#    "new_game":      Create a new game by copying and renaming the starter template
+#                     and return the URL of the new game, or return an error if the
+#                     directory already existed.
+# 
+#  - GET commands:
+#
+#    - Are limited to the quadplay directory, the directory passed on the
+#      command line, and $HOME/my_game
+# 
+#    - The special quad_path + `/console/_assets.json` "file" gives a listing
+#      of all assets in the specified directory and the quadplay built-in directories.
+#
+#    - The special quad_path + `/console/games.json` file gives a listing
+#      of all games in subdirectories of examples/, games/, and my_quadplay/
+#      (not recursive)
+#
+#
+# A "path" in this code is a file-system path, where '/' means the filesystem true root
+#
+# A "webpath" is a URL subpath, where '/' means the server root = filesystem root_path
+
+# Shell commands follow.
+# The next line is bilingual: it starts a comment in Python, and is a no-op in shell
 """:"
 # Find a suitable Python interpreter
 for cmd in python3 python python2 ; do
@@ -17,20 +47,34 @@ exit 2
 # Shell commands end here
 # Python script follows
 
-import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs
+import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs, glob, shutil, re
+sys.path.append('tools')
+import workjson
 
 __doc__ = "Quadplay Fantasy Console launcher script."
 
 version = str(sys.version_info.major) + '.' + str(sys.version_info.minor)
 
 # Largest common prefix of quad_path and game_path. Root for web serving
-web_path = None
+server_root_path = None
 
-# Subdirectories of web_path that are permitted for http access
-whitelist = None
+# Magic path that the browser will use to communicate that it wants an asset listing
+# or game listing for import in IDE mode
+asset_query_webpath = None
+game_query_webpath = None
+
+# Subdirectories of server_root_path that are permitted for http access.
+# These are relative to server_root_path and contain a leading slash because
+# they are url subpaths relative to quad://
+webpath_whitelist = None
 
 onWindows = (platform.system() == 'Windows')
 onMac = (platform.system() == 'Darwin')
+
+# Will be made relative to the CWD later
+my_games_path = os.path.join(os.path.expanduser('~'), 'my_quadplay')
+
+def remove_leading_slash(path): return path[1:] if len(path) > 0 and path[0] == '/' else path
 
 try:
     # Python 3.7
@@ -71,54 +115,131 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
            print('Refused POST command from non-local address', self.client_address[0])
            return
         
-        print('\n\nReceived POST from ', self.client_address[0], '\n\n')
+        #print('\n\nReceived POST from ', self.client_address[0], '\n\n')
 
         content_len = int(self.headers['Content-Length'])
-        #int(self.headers.getheader('content-length', 0))
-        post_body = self.rfile.read(content_len)
-
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
-        
-        #print("\nPOST contents:\n")
-        #print(post_body)
-        object = json.loads(post_body)
+        object = json.loads(self.rfile.read(content_len))
         command = object['command']
+        response_obj = None
+        code = 201
         if command == 'write_file':
-           filename = object['filename'][1:]
-           encoding = object['encoding']
-           contents = object['contents']
-           print('wrote ', encoding, 'file: ', filename)
-           if encoding == 'binary':
-              with open(filename, 'wb') as f: f.write(contents)
-           else:
-              with codecs.open(filename, 'w', encoding) as f: f.write(contents)
-              
-        self.wfile.write('OK'.encode('utf8'))
+            filename = object['filename'][1:]
+            encoding = object['encoding']
+            contents = object['contents']
+            if encoding == 'binary':
+                with open(filename, 'wb') as f: f.write(contents)
+            else:
+                with codecs.open(filename, 'w', encoding) as f: f.write(contents)
+            print('Wrote', encoding, 'file', filename)
+                
+            response_obj = 'OK'
+                
+        elif command == 'new_game':
+            dir_name = object['dir_name']
+            game_name = object['game_name']
+
+            dst_path = my_games_path + '/' + dir_name
+            starter_path = os.path.join(quad_path, 'examples/starter')
+            
+            print('Created game', dir_name, 'at', dst_path)
+            
+            # Copy and rename files
+            if os.path.exists(dst_path):
+                code = 406
+                response_obj = {'message': dst_path + ' already exists'}
+            else:
+                os.makedirs(dst_path)
+                shutil.copyfile(os.path.join(starter_path + '/starter.game.json'), os.path.join(dst_path, dir_name + '.game.json'))
+                for filename in ['label64.png', 'label128.png', 'Play.pyxl', 'TODO.md']:
+                    shutil.copyfile(os.path.join(starter_path, filename), os.path.join(dst_path, filename))
+
+                response_obj = {'game': '/' + dst_path + '/'}
+
+        response = json.dumps(response_obj, separators = (',', ':'));
+        self.send_response(code)
+        self.send_header('Content-type', 'text/json')
+        self.send_header('Content-length', len(response))
+        self.end_headers()
+        self.wfile.write(response.encode('utf8'))
 
               
     def do_GET(self):
-        global whitelist, web_path
-        
         # Remove the query and collapse any ..
-        path = os.path.normpath(self.path.split('?')[0]).replace('\\', '/')
+        path_parts = self.path.split('?')
+        webpath = os.path.normpath(path_parts[0]).replace('\\', '/')
+        query = path_parts[1] if len(path_parts) > 1 else ''
 
-        # Security: Check if path has a prefix in whitelist
-        if not any([path.startswith(prefix) for prefix in whitelist]):
-            self.send_error(404, 'Illegal path: ' + path)
+        # Security: Check if path has a prefix in webpath_whitelist
+        if not any([webpath.startswith(prefix) for prefix in webpath_whitelist]):
+            self.send_error(404, 'Illegal webpath: ' + webpath)
+
+        if webpath == asset_query_webpath or webpath == game_query_webpath:
+            response_obj = {}
+            if webpath == asset_query_webpath:
+                aux_path = query[query.index('=') + 1:]
+
+                # Security: check if aux_path has a prefix in webpath_whitelist
+                if not any([aux_path.startswith(prefix) for prefix in webpath_whitelist]):
+                    self.send_error(404, 'Illegal path: ' + aux_path)
+                
+                # Search quad_path + type + 's/*.' + type + '.json'
+                for t in ['font', 'sprite', 'sound', 'map']:
+                    response_obj[t] = sorted(glob.glob(remove_leading_slash(aux_path + '**/*.' + t + '.json'), recursive=True))
+                    response_obj[t] += ['quad://' + f[len(quad_path):] for f in sorted(glob.glob(quad_path + t + 's/*.' + t + '.json'))]
+
+            else: # game list query
+                
+                redundant_pattern = re.compile(r'(?P<name>/[^/]+)(?P=name)\.game\.json$')
+                for key, path in {'examples' : quad_path + 'examples',
+                                  'builtins' : quad_path + 'games',
+                                  'mine'     : my_games_path}.items():
+                    list = [{'url': path, 'title': 'TBD'} for path in sorted(glob.glob(path + '/**/*.game.json'))]
+                    for entry in list:
+                        path = entry['url']
+
+                        if key == 'mine':
+                            # Make relative to the web root
+                            entry['url'] = '/' + entry['url']
+                        else:
+                            # Shorten built-ins to quad://
+                            entry['url'] = 'quad://' + path[len(quad_path):]
+
+                        # Shorten games with redundant names to just the directory
+                        entry['url'] = redundant_pattern.sub(r'\1/', entry['url'])
+                        # Fetch the titles
+                        with open(path, 'rt') as f:
+                            entry['title'] = workjson.loads(f.read())['title']
+
+                    response_obj[key] = list
+
+            response = json.dumps(response_obj, separators = (',', ':'));
+            self.send_response(200)
+            self.send_header('Content-type', 'text/json')
+            self.send_header('Content-length', len(response))
+            self.end_headers()
+            self.wfile.write(response.encode('utf8'))
+        else:
+            f = self.send_head()
+            if f:
+               try:
+                   self.copyfile(f, self.wfile)
+               finally:
+                   f.close()
+
+                   
+    def log_request(self, code = '-', size = '-'):
+        # Overridden to not show all requests
+        # self.log_message('"%s" %s %s', self.requestline, str(code), str(size))
+        pass
+
+    
+    def log_error(self, format, *args):
+        # Overridden to allow a debugging point
+        self.log_message(format, *args)
+
         
-        f = self.send_head()
-        if f:
-            try:
-                self.copyfile(f, self.wfile)
-            finally:
-                f.close()
-        """
-            def do_GET(self):
-        return super(QuadplayHTTPRequestHandler, self).do_GET()"""
-     
     def translate_path(self, path):
+        # Overridden to allow a debugging point
         # Intentionally use Python 2 super syntax
         result = SimpleHTTPRequestHandler.translate_path(self, path)
         return result
@@ -130,22 +251,32 @@ def parse_args():
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
+    
     parser.add_argument(
-        "--host",
-        action="store_true",
+        '--host',
+        action='store_true',
         default=False,
-        help="hosting mode - allow other machines to connect to this one to play on mobile devices"
+        help='hosting mode - allow other machines to connect to this one to play on mobile devices'
     )
+    
     parser.add_argument(
         'gamepath',
         type=str,
-        default="",
+        default='',
         nargs='?',
         help=(
             'Game to load.  If not specified, loads default loader scene.'
             ' Example: examples/accel_demo'
         )
     )
+    
+    parser.add_argument(
+        '--kiosk',
+        action='store_true',
+        default=False,
+        help='kiosk mode - launch full screen and without the IDE'
+    )
+    
     parser.add_argument(
         "-p",
         "--port",
@@ -168,13 +299,13 @@ if onWindows and args.gamepath:
 # Makes a path absolute for the web server root
 def platform_www_abspath(p):
     if onWindows:
-        p = p[len(web_path):]
+        p = p[len(server_root_path):]
         if not p.endswith('.game.json'): p = os.path.join(p, '')
         t = p.replace('\\', '/')
         if len(t) > 1 and t[1] != ':' and t[0] != '/': t = '/' + t
         return t
     else:
-        p = p[len(web_path)+1:]
+        p = p[len(server_root_path)+1:]
         if p == '':
             return ''
         elif p.endswith('.game.json'):
@@ -184,44 +315,54 @@ def platform_www_abspath(p):
 
     
 # Process paths at top level so that they can be inherited by ThreadingHTTPServer
-if True:
-    quad_path = os.path.abspath(os.path.dirname(__file__))
+quad_path = os.path.abspath(os.path.dirname(__file__))
 
-    # Compute the serving paths
-    if args.gamepath and not args.gamepath.startswith('http:'):
-       game_path = os.path.abspath(args.gamepath)
-
-       if game_path.endswith('.game.json'):
-          game_path = os.path.dirname(game_path)
-       
-       whitelist = [quad_path, game_path]
-       
-       # Common ancestor
-       web_path = os.path.dirname(os.path.commonprefix([os.path.join(p, '') for p in whitelist]))
-    else:
-       web_path = quad_path
-       whitelist = [quad_path]
-
-    # Strip the common prefix
-    whitelist = [platform_www_abspath(p).replace('\\', '/') for p in whitelist]
-    quad_path = whitelist[0]
-    web_path = web_path.replace('\\', '/')
-
-    #print("web_path = '" + web_path + "'")
-    #print("quad_path = '" + quad_path + "'")
-    #print('whitelist = ', whitelist)
-
+# Compute the serving paths
+if not (args.gamepath and args.kiosk):
+    game_path = os.path.abspath(args.gamepath)
     
+    if game_path.endswith('.game.json'):
+        game_path = os.path.dirname(game_path)
+       
+    webpath_whitelist = [quad_path, game_path, my_games_path]
+       
+    # Common ancestor
+    server_root_path = os.path.dirname(os.path.commonprefix([os.path.join(p, '') for p in webpath_whitelist]))
+else:
+    server_root_path = quad_path
+    webpath_whitelist = [quad_path]
+
+# Strip the common prefix
+webpath_whitelist = [platform_www_abspath(p).replace('\\', '/') for p in webpath_whitelist]
+server_root_path = server_root_path.replace('\\', '/')
+my_games_path = remove_leading_slash(my_games_path[len(server_root_path):])
+
+# Remove trailing slash
+asset_query_webpath = webpath_whitelist[0]
+if len(asset_query_webpath) > 0 and asset_query_webpath[-1] == '/': asset_query_webpath = asset_query_webpath[:-1]
+game_query_webpath = asset_query_webpath + '/console/games.json'
+asset_query_webpath += '/console/_assets.json'
+quad_path = remove_leading_slash(webpath_whitelist[0])
+
+if False:
+    # Debug paths
+    print("\nserver_root_path = '" + server_root_path + "'")
+    print("quad_path = '" + quad_path + "'")
+    print("my_games_path = '" + my_games_path + "'")
+    print("asset_query_webpath = '" + asset_query_webpath + "'")
+    print("game_query_webpath = '" + game_query_webpath + "'")
+    print('webpath_whitelist = ', webpath_whitelist, '\n')
+    sys.exit()
 # SSL support doesn't work yet due to self-signed certificates
 useSSL = False
 
 # Runs in a different process
 def launchServer():
-    global httpd, args, web_path
+    global httpd, args, server_root_path
     
     # Serve from the common directory
     old_path = os.getcwd()
-    os.chdir(web_path)
+    os.chdir(server_root_path)
     
     try:
         # '' = 0.0.0.0 = all local IP addresses, needed for
@@ -244,7 +385,7 @@ def launchServer():
 
         
 def main():
-    global whitelist, web_path
+    global webpath_whitelist, server_root_path
 
     try:
        import msvcrt
@@ -294,7 +435,13 @@ def main():
 
     url = 'http' + ('s' if useSSL else '')+ '://' + myip + ':' + str(args.port)
     if not quad_path or quad_path[0] != '/': url += '/'
-    url += os.path.join(quad_path, 'console/quadplay.html') + '?IDE=1&fastReload=1'
+    url += os.path.join(quad_path, 'console/quadplay.html?fastReload=1')
+
+    if args.kiosk:
+        url += '&mode=Maximal&kiosk=1'
+    else: 
+        url += '&IDE=1'
+        
     print('_________________________________________________________________________\n')
 
     if args.gamepath != '':
@@ -306,16 +453,18 @@ def main():
     else:
         print('Loading default launcher game. You can supply the URL or local relative path to your game on\nthe command line, for example "quadplay foo/mygame", to load it directly.\n')
 
-    print('\nServing from:\n\n   ' + url)
+    print('\nServing from:\n\n   ' + url + '\n')
                  
     if args.host:
         # Do not support POST in host mode
-        print('\n\nNote that your firewall may need to be configured to load on other devices.\n')
+        print('\nYour firewall may need to be configured to load on other devices.\n')
     else:
         url += '&quadserver=1'
     
     # Run from the quadplay path
-    print('\n   the quad:// root path is ' + os.path.abspath(os.path.dirname(__file__)).replace('\\', '/') + '/\n')
+    print('   quad://  = ' + os.path.abspath(os.path.dirname(__file__)).replace('\\', '/') + '/')
+    print('   My games = ' + os.path.join(os.path.expanduser('~'), 'my_quadplay') + '/')
+    print('   cwd      = ' + server_root_path + '/\n')
     
 
     # Platform independent keyboard key press detection
