@@ -1,0 +1,18 @@
+{
+    "url": "tank-46x108.png",
+    "sprite_size": {
+        "x": 46,
+        "y": 108
+    },
+    "names": {
+        "yellow" : {"x": 0, "y": 0},
+        "red" : {"x": 1, "y": 0},
+        "blue" : {"x": 2, "y": 0},
+        "green" : {"x": 3, "y": 0},
+        "pink" : {"x": 4, "y": 0},
+        "purple" : {"x": 5, "y": 0}
+    },
+    "region": {"pos": {"x": 0, "y": 85},
+               "size": {"x": 276, "y": 108}},
+    "license": "By Morgan McGuire 2020, released into the Public Domain/CC0"
+}

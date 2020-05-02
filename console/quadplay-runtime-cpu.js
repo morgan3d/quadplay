@@ -952,10 +952,12 @@ var _offsetX = 0, _offsetY = 0, _offsetZ = 0, _scaleX = 1, _scaleY = 1, _scaleZ 
 
 // Camera
 var _camera = {
-    pos_x: 0,
-    pos_y: 0,
+    // Raw fields
+    x:     0,
+    y:     0,
+    z:     0,
     angle: 0,
-    zoom: 1
+    zoom:  1
 };
 
 var _graphicsStateStack = [];
@@ -969,8 +971,9 @@ function _pushGraphicsState() {
         sx:_scaleX,  sy:_scaleY,  sz:_scaleZ,
         kx:_skewXZ,  ky:_skewYZ,
 
-        camera_pos_x: _camera.pos_x,
-        camera_pos_y: _camera.pos_y,
+        camera_x: _camera.x,
+        camera_y: _camera.y,
+        camera_z: _camera.z,
         camera_angle: _camera.angle,
         camera_zoom: _camera.zoom
     });
@@ -986,35 +989,51 @@ function _popGraphicsState() {
     _clipX1 = s.cx1; _clipY1 = s.cy1; _clipZ1 = s.cz1;
     _clipX2 = s.cx2; _clipY2 = s.cy2; _clipZ2 = s.cz2;
 
-    _camera.pos_x = s.camera_pos_x;
-    _camera.pos_y = s.camera_pos_y;
+    _camera.x = s.camera_x;
+    _camera.y = s.camera_y;
+    _camera.z = s.camera_z;
     _camera.angle = s.camera_angle;
     _camera.zoom = s.camera_zoom;
 
 }
 
 
-function set_camera(pos, angle, zoom) {
+function reset_camera() {
+    set_camera({x:0, y:0}, 0, 1, 0);
+}
+
+
+function set_camera(pos, angle, zoom, z) {
     if (is_object(pos) && 'pos' in pos) {
         zoom = pos.zoom;
         angle = pos.angle;
+        z = pos.z;
         pos = pos.pos;
     }
-    
+
     if (pos === undefined) { pos = xy(0, 0); }
     if (zoom === undefined) { zoom = 1; }
-    angle = angle || 0;
-    _camera.pos_x = pos.x;
-    _camera.pos_y = pos.y;
-    _camera.angle = angle;
+
+    if (typeof zoom !== 'number' && typeof zoom !== 'function') {
+        throw new Error('zoom argument to set_camera() must be a number or function');
+    }
+    if (typeof zoom === 'number' && (zoom <= 0 || !(zoom < Infinity))) {
+        throw new Error('zoom argument to set_camera() must be positive and finite');
+    }
+    _camera.x = pos.x;
+    _camera.y = pos.y;
+    _camera.z = z || 0;
+    _camera.angle = angle || 0;
     _camera.zoom = zoom;
 }
 
+
 function get_camera() {
     return {
-        pos: xy(_camera.pos_x, _camera.pos_y),
+        pos: xy(_camera.x, _camera.y),
         angle: _camera.angle,
-        zoom: _camera.zoom
+        zoom: _camera.zoom,
+        z: _camera.z
     };
 }
 
@@ -1162,7 +1181,7 @@ function transform_screen_z_to_draw_z(z) {
 }
 
 function intersect_clip(pos, size, z1, z_size) {
-    if (pos.pos || pos.size || (pos.z !== undefined) || (pos.z_size !== undefined)) {
+    if (pos && (pos.pos || pos.size || (pos.z !== undefined) || (pos.z_size !== undefined))) {
         return intersect_clip(pos.pos, pos.size, pos.z, pos.z_size);
     }
 
@@ -1228,7 +1247,7 @@ function get_clip() {
 
 
 function set_clip(pos, size, z1, dz) {
-    if (pos.pos || pos.size || (pos.z !== undefined) || (pos.z_size !== undefined)) {
+    if (pos && (pos.pos || pos.size || (pos.z !== undefined) || (pos.z_size !== undefined))) {
         return set_clip(pos.pos, pos.size, pos.z, pos.z_size);
     }
     
@@ -1676,7 +1695,7 @@ function transform_draw_to_sprite(entity, coord) {
     return transform_entity_to_sprite(entity, transform_draw_to_entity(entity, coord));
 }
 
-function transformSpritetoDraw(entity, coord) {
+function transform_sprite_to_draw(entity, coord) {
     // Can be optimized as a single operation later
     return transform_entity_to_draw(entity, transform_sprite_to_entity(entity, coord));
 }
@@ -3189,7 +3208,6 @@ function transform_to(pos, angle, scale, coord) {
               (x * Xy + y * Yy) / scale.y);
 }
 
-
 function transform_from(pos, angle, scale, coord) {
     const a = angle * -rotation_sign();
     const C = Math.cos(a);
@@ -3325,8 +3343,8 @@ function set_map_sprite_by_draw_coord(map, draw_coord, sprite, z) {
 }
 
 
-function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale) {
-    if (map.map && arguments.length === 1) {
+function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_shift) {
+    if (! map.layer && map.map && (arguments.length === 1)) {
         // named argument version
         min_layer = map.min_layer;
         max_layer = map.max_layer;
@@ -3334,18 +3352,47 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale) {
         pos = map.pos;
         angle = map.angle;
         scale = map.scale;
+        z_shift = map.z;
         map = map.map; 
     }
-    
+
     if (min_layer === undefined) { min_layer = 0; }
 
     if (max_layer === undefined) { max_layer = map.layer.length - 1; }
+
+    if ((typeof _camera.zoom === 'function') && (min_layer !== max_layer)) {
+        // Must draw layers separately when there is a zoom function.
+        // Draw in order from back to front to preserve z-order.
+        for (let L = min_layer; L <= max_layer; ++L) {
+            draw_map(map, L, L, replacements, pos, angle, scale, z_shift);
+        }
+        return;
+    }
+    
+    if (typeof scale === 'number') { scale = xy(scale, scale); }
 
     if (pos === undefined) { pos = xy(0, 0); }
 
     if (angle === undefined) { angle = 0; }
 
-    if (scale === undefined) { scale = xy(1, 1); }    
+    if (scale === undefined) { scale = xy(1, 1); }
+
+    z_shift = z_shift || 0;
+
+    if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {
+        // Use the z-value from the lowest layer for perspective. If the zoom is a
+        // function, then draw_map() guarantees that there is only one
+        // layer at a time!
+        const z = (min_layer * map.z_scale + map.z_offset + z_shift) - _camera.z;
+        
+        // Transform the arguments to account for the camera
+        const mag = _zoom(z);
+        const C = Math.cos(_camera.angle) * mag, S = Math.sin(_camera.angle * rotation_sign()) * mag;
+        const x = pos.x - _camera.x, y = pos.y - _camera.y;
+        pos = {x: x * C + y * S, y: y * C - x * S};
+        angle -= _camera.angle;
+        scale = {x: scale.x * mag, y: scale.y * mag};
+    }
 
     if (replacements !== undefined) {
         if (! Array.isArray(replacements)) { throw new Error('The replacements for draw_map() must be an array'); }
@@ -3359,42 +3406,54 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale) {
         }
     }
 
-    // TODO:
-    // Map axes in draw space
-    const U = xy(Math.cos(angle), Math.sin(angle * rotation_sign()));
-    const V = perp(U);
-    U.x *= scale.x; U.y *= scale.x;
-    V.x *= scale.y; V.y *= scale.y;
+    // Compute the map axes in draw space
+    const drawU = xy(Math.cos(angle), Math.sin(angle * rotation_sign()));
+    const drawV = perp(drawU);
+    drawU.x *= scale.x; drawU.y *= scale.x;
+    drawV.x *= scale.y; drawV.y *= scale.y;
+
+    const spriteSizeX = map.sprite_size.x;
+    const spriteSizeY = map.sprite_size.y;
     
     // Handle map wrapping with a 4x4 grid
-    const oldOffsetX = _offsetX, oldOffsetY = _offsetY;
+    const oldDrawOffsetX = _offsetX, oldDrawOffsetY = _offsetY;
     for (let shiftY = -1; shiftY <= +1; ++shiftY) {
         if (! map.wrap_y && shiftY !== 0) { continue; }
         
         for (let shiftX = -1; shiftX <= +1; ++shiftX) {
             if (! map.wrap_x && shiftX !== 0) { continue; }
 
+            // Shift amount for this instance of the tiled map
             const mapSpaceOffset = xy(map.size.x * map.sprite_size.x * shiftX,
                                       map.size.y * map.sprite_size.y * shiftY);
-            _offsetX = oldOffsetX + U.x * mapSpaceOffset.x + V.x * mapSpaceOffset.y;
-            _offsetY = oldOffsetY + U.y * mapSpaceOffset.x + V.y * mapSpaceOffset.y;
+            _offsetX = oldDrawOffsetX + drawU.x * mapSpaceOffset.x + drawV.x * mapSpaceOffset.y;
+            _offsetY = oldDrawOffsetY + drawU.y * mapSpaceOffset.x + drawV.y * mapSpaceOffset.y;
             
-            // Take the screen-space clip coordinates to draw coords
+            // Take the screen-space clip coordinates to draw coords.
+            // This does nothing if there is no offset or scale
             const drawClip1 = xy((_clipX1 - _offsetX) / _scaleX, (_clipY1 - _offsetY) / _scaleY);
             const drawClip2 = xy((_clipX2 - _offsetX) / _scaleX, (_clipY2 - _offsetY) / _scaleY);
 
-            // Take the draw-space clip coordinates to the min/max map coords.
+            // Take the draw-space clip coordinates to the min/max map
+            // coords.  When rotated, this may cause significant
+            // overdraw, as snapping to an axis-aligned bounding box
+            // in the rotated map space could be fitting a diamond
+            // with a square. 
             let mapX1, mapX2, mapY1, mapY2;
             {
-                // Apply pos, angle, scale
+                //console.log(transform_to(pos, angle, scale, drawClip2));
+                // Apply pos, angle, scale.
+                // We have to consider all four corners for the rotation case.
                 const temp1 = transform_draw_to_map(map, transform_to(pos, angle, scale, drawClip1)),
-                      temp2 = transform_draw_to_map(map, transform_to(pos, angle, scale, drawClip2));
+                      temp2 = transform_draw_to_map(map, transform_to(pos, angle, scale, drawClip2)),
+                      temp3 = transform_draw_to_map(map, transform_to(pos, angle, scale, xy(drawClip1.x, drawClip2.y))),
+                      temp4 = transform_draw_to_map(map, transform_to(pos, angle, scale, xy(drawClip2.x, drawClip1.y)));
                 
-                mapX1 = Math.floor(Math.min(temp1.x, temp2.x));
-                mapX2 = Math.ceil (Math.max(temp1.x, temp2.x));
+                mapX1 = Math.floor(Math.min(temp1.x, temp2.x, temp3.x, temp4.x));
+                mapX2 = Math.ceil (Math.max(temp1.x, temp2.x, temp3.x, temp4.x));
                 
-                mapY1 = Math.floor(Math.min(temp1.y, temp2.y));
-                mapY2 = Math.ceil (Math.max(temp1.y, temp2.y));
+                mapY1 = Math.floor(Math.min(temp1.y, temp2.y, temp3.y, temp4.y));
+                mapY2 = Math.ceil (Math.max(temp1.y, temp2.y, temp3.y, temp4.y));
 
                 mapX1 = Math.max(mapX1, 0);
                 mapX2 = Math.min(mapX2, map.size.x - 1);
@@ -3403,67 +3462,129 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale) {
                 mapY2 = Math.min(mapY2, map.size.y - 1);
             }
 
-            // Submit the sprite calls. We pack them together into big layer
-            // calls to reduce sorting, but since the map is mutable we have to actually
-            // copy all elements for those calls.
-
+            // Setup draw calls for the layers. We process each cell
+            // "vertically" within all layers from top to bottom in
+            // the following code so that lower layers can be culled
+            // when occluded.
+            
+            const numLayers = max_layer - min_layer + 1;
+            const layerSpriteArrays = [];
+            const layerZ = [];
+            layerSpriteArrays.length = numLayers;
+            layerZ.length = numLayers;
             for (let L = min_layer; L <= max_layer; ++L) {
                 const layer = map.layer[L];
-                const z = transform_map_layer_to_draw_z(L) * _scaleZ + _offsetZ;
+                const i = L - min_layer;
                 
-                const layerData = [];
+                const baseZ = layerZ[i] = (L * map.z_scale + map.z_offset + z_shift - _camera.z) * _scaleZ + _offsetZ;
+                if (baseZ >= _clipZ1 && baseZ <= _clipZ2) {
+                    layerSpriteArrays[i] = [];
+                } 
+            }
 
-                const baseZ = (L * map.z_scale + map.z_offset) * _scaleZ + _offsetZ;
-                _addGraphicsCommand({
-                    opcode: 'SPR',
-                    baseZ: baseZ,
-                    z: baseZ,
-                    data: []
-                });
-                
-                const layerCommand = _graphicsCommandList[_graphicsCommandList.length - 1];
-                for (let mapX = mapX1; mapX <= mapX2; ++mapX) {
-                    const column = layer[mapX];
-                    for (let mapY = mapY1; mapY <= mapY2; ++mapY) {
-                        let sprite = column[mapY];
-                        if (sprite !== undefined) {
+            // Compute the sprite calls. We pack them together into big
+            // layer calls to reduce sorting, but since the map is
+            // mutable we have to actually copy all elements for those
+            // calls.
+
+            const radius = Math.hypot(map.sprite_size.x, map.sprite_size.y) * 0.5 *
+                  Math.max(Math.abs(scale.x), Math.abs(scale.y));
+            
+            for (let mapX = mapX1; mapX <= mapX2; ++mapX) {
+                for (let mapY = mapY1; mapY <= mapY2; ++mapY) {
                             
-                            if (replacements && replacements.has(sprite)) {
-                                // Perform replacement
-                                sprite = replacements.get(sprite);
-                                
-                                // Which may be empty
-                                if (sprite === undefined) { continue; }
-                            }
-                            
-                            // Compute the screen (not draw)
-                            // coordinates. Sprites are rendered from centers,
-                            // so offset each by 1/2 the tile size.
-                            const x = (mapX + 0.5) * map.sprite_size.x + map._offset.x;
-                            const y = (mapY + 0.5) * map.sprite_size.y + map._offset.y;
-                            layerCommand.data.push({
-                                spritesheetIndex: sprite.spritesheet._index,
-                                cornerX: sprite._x,
-                                cornerY: sprite._y,
-                                sizeX: sprite.size.x,
-                                sizeY: sprite.size.y,
-                                angle: angle,
-                                scaleX: sprite.scale.x * scale.x,
-                                scaleY: sprite.scale.y * scale.y,
-                                hasAlpha: sprite._hasAlpha,
-                                opacity: 1,
-                                override_color: undefined,
-                                x: (U.x * x + V.x * y + pos.x) * _scaleX + _offsetX,
-                                y: (U.y * x + V.y * y + pos.y) * _scaleY + _offsetY})
+                    // Compute the screen coordinates. Sprites are
+                    // rendered from centers, so offset each by 1/2
+                    // the tile size.
+                    const x = (mapX + 0.5) * map.sprite_size.x + map._offset.x;
+                    const y = (mapY + 0.5) * map.sprite_size.y + map._offset.y;
+                    
+                    const screenX = (drawU.x * x + drawV.x * y + pos.x) * _scaleX + _offsetX;
+                    const screenY = (drawU.y * x + drawV.y * y + pos.y) * _scaleY + _offsetY;
+                    
+                    // If there is rotation, this particular sprite
+                    // column might be off screen
+                    if ((screenX + radius < _clipX1 - 0.5) && (screenY + radius < _clipY1 - 0.5) &&
+                        (screenX >= _clipX2 + radius + 0.5) && (screenY >= _clipY2 + radius + 0.5)) {
+                        continue;
+                    }
+                    
+                    // Process layers from the top down, so that we can occlusion cull
+                    for (let L = max_layer; L >= min_layer; --L) {
+                        const i = L - min_layer;
+                        const baseZ = layerZ[i];
+                        
+                        // Sprite calls in this layer
+                        const data = layerSpriteArrays[i];
+                                                
+                        if (! data) {
+                            // This layer is z-clipped
+                            continue;
                         }
+
+                        let sprite = map.layer[L][mapX][mapY];
+                    
+                        if (sprite === undefined) {
+                            // Empty sprite cell
+                            continue;
+                        }
+                            
+                        if (replacements && replacements.has(sprite)) {
+                            // Perform replacement
+                            sprite = replacements.get(sprite);
+                            
+                            // ...which may be empty
+                            if (sprite === undefined) { continue; }
+                        }
+
+                        data.push({
+                            spritesheetIndex: sprite.spritesheet._index,
+                            cornerX:  sprite._x,
+                            cornerY:  sprite._y,
+                            sizeX:    sprite.size.x,
+                            sizeY:    sprite.size.y,
+                            angle:    angle,
+                            scaleX:   scale.x * sprite.scale.x,
+                            scaleY:   scale.y * sprite.scale.y,
+                            hasAlpha: sprite._hasAlpha,
+                            opacity:  1,
+                            override_color: undefined,
+                            x:        screenX,
+                            y:        screenY
+                        }); // push
+                        
+                        if (sprite._hasAlpha) {
+                            // No need to process other layers, since this sprite
+                            // occludes everything under it.
+                            break;
+                        } // occlusion cull
                     } // y
                 } // x
-            } // L
+            } // For each layer L
+
+            // Submit the non-empty draw calls
+            for (let i = 0; i < numLayers; ++i) {
+                // Sprite calls in this layer
+                const data = layerSpriteArrays[i];
+                const baseZ = layerZ[i];
+                
+                // Push the command if there were sprites.
+                // Note that the z will be offset based on the order
+                // of submission even if all baseZ values are the same.
+                if (data && data.length > 0) {
+                    _addGraphicsCommand({
+                        opcode: 'SPR',
+                        baseZ:  baseZ,
+                        z:      baseZ,
+                        data:   data
+                    });
+                }
+            } // for each layer
         } // wrap_x
     } // wrap_y
 
-    _offsetX = oldOffsetX;
-    _offsetY = oldOffsetY;
+    _offsetX = oldDrawOffsetX;
+    _offsetY = oldDrawOffsetY;
 }
 
 
@@ -3472,13 +3593,22 @@ function draw_tri(A, B, C, color, outline, pos, scale, angle, z) {
 }
 
 
-function draw_disk(center, radius, color, outline, z) {
+function draw_disk(pos, radius, color, outline, z) {
     // Skip graphics this frame
     if (mode_frames % _graphicsPeriod !== 0) { return; }
 
-    z = z || 0;
+    z = (z || 0) - _camera.z;
+    if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {
+        // Transform the arguments to account for the camera
+        const mag = _zoom(z);
+        const C = Math.cos(_camera.angle) * mag, S = Math.sin(_camera.angle * rotation_sign()) * mag;
+        const x = pos.x - _camera.x, y = pos.y - _camera.y;
+        pos = {x: x * C + y * S, y: y * C - x * S};
+        radius *= mag;
+    }
+    
     const skx = (z * _skewXZ), sky = (z * _skewYZ);
-    let x = (center.x + skx) * _scaleX + _offsetX, y = (center.y + sky) * _scaleY + _offsetY;
+    let x = (pos.x + skx) * _scaleX + _offsetX, y = (pos.y + sky) * _scaleY + _offsetY;
     z = z * _scaleZ + _offsetZ;
     
     radius = (radius + 0.5) | 0;
@@ -3539,48 +3669,25 @@ function _colorToUint32(color) {
 
 function draw_rect(pos, size, fill, border, angle, z) {
     angle = loop(angle || 0, -Math.PI, Math.PI);
+
     const rx = size.x * 0.5, ry = size.y * 0.5;
-    if (Math.min(Math.abs(angle), Math.abs(angle - Math.PI), Math.abs(angle + Math.PI)) < 1e-10) {
+    if ((_camera.angle === 0) && (Math.min(Math.abs(angle), Math.abs(angle - Math.PI), Math.abs(angle + Math.PI)) < 1e-10)) {
         // Use the corner rect case for speed
         draw_corner_rect(xy(pos.x - rx, pos.y - ry), size, fill, border, z);
-    } else if (Math.min(Math.abs(angle - Math.PI * 0.5), Math.abs(angle + Math.PI * 0.5)) < 1e-10) {
+    } else if ((_camera.angle === 0) && (Math.min(Math.abs(angle - Math.PI * 0.5), Math.abs(angle + Math.PI * 0.5)) < 1e-10)) {
         // Use the corner rect case for speed, rotated 90 degrees
         draw_corner_rect(xy(pos.x - ry, pos.y - rx), xy(size.y, size.x), fill, border, z);
     } else {
         const vertexArray = [xy(-rx, -ry), xy(rx, -ry), xy(rx, ry), xy(-rx, ry)];
+        // Undo the camera angle transformation, since draw_poly will apply it again
         draw_poly(vertexArray, fill, border, pos, angle, undefined, z);
     }
 }
 
 
 function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
-    switch (vertexArray.length) {
-    case 0: return;
-        
-    case 1:
-        if (border) {
-            draw_point(vertexArray[0], border, z);
-        } else if (fill) {
-            draw_point(vertexArray[0], fill, z);
-        }
-        return;
-        
-    case 2:
-        if (border) {
-            draw_line(vertexArray[0], vertexArray[1], border, z);
-        } else if (fill) {
-            draw_point(vertexArray[0], vertexArray[1], fill, z);
-        }
-        return;
-    }
-
-
-    z = z || 0
-    const skx = z * _skewXZ, sky = z * _skewYZ;
-
-    // Preallocate the output array
-    const N = vertexArray.length;
-    const points = []; points.length = N * 2;
+    angle = (angle || 0) * rotation_sign();
+    let Rx = Math.cos(angle), Ry = Math.sin(-angle);
 
     // Clean up transformation arguments
     let Sx = 1, Sy = 1;
@@ -3590,11 +3697,68 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
         } else { Sx = Sy = scale; }
     }
 
-    angle = -(angle || 0) * rotation_sign();
-    const Rx = Math.cos(angle), Ry = Math.sin(angle);
-
     let Tx = 0, Ty = 0;
     if (pos) { Tx = pos.x; Ty = pos.y; }
+
+    switch (vertexArray.length) {
+    case 0: return;
+        
+    case 1:
+        {
+            let p = vertexArray[0];
+            if (pos) { p = {x: Tx + p.x, y: Ty + p.y}; }
+            if (border) {
+                draw_point(p, border, z);
+            } else if (fill) {
+                draw_point(p, fill, z);
+            }
+        }
+        return;
+        
+    case 2:
+        {
+            let p = vertexArray[0];
+            let q = vertexArray[1];
+            if (pos || angle || (scale && scale !== 1)) {
+                p = {x: Tx + p.x * Sx * Rx + p.y * Sy * Ry,
+                     y: Ty + p.y * Sy * Rx - p.x * Sx * Ry};
+                q = {x: Tx + q.x * Sx * Rx + q.y * Sy * Ry,
+                     y: Ty + q.y * Sy * Rx - q.x * Sx * Ry};
+            }
+
+            if (border) {
+                draw_line(p, q, border, z);
+            } else if (fill) {
+                draw_line(p, q, fill, z);
+            }
+        }
+        return;
+    }
+
+    z = (z || 0) - _camera.z;
+    if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {
+        if (scale === undefined) { scale = {x:1, y:1}; }
+        // Transform the arguments to account for the camera
+        const mag = _zoom(z);
+        const C = Math.cos(_camera.angle) * mag, S = Math.sin(_camera.angle * rotation_sign()) * mag;
+        
+        if (! pos) { pos = {x: 0, y: 0}; }
+        if (typeof scale === undefined) { scale = {x: 1, y: 1}; }
+        
+        let x = Tx - _camera.x, y = Ty - _camera.y;
+        Tx = x * C + y * S; Ty = y * C - x * S;
+        angle -= _camera.angle;
+
+        // Update matrix
+        Rx = Math.cos(angle); Ry = Math.sin(-angle);
+        Sx *= mag; Sy *= mag;
+    }
+
+    const skx = z * _skewXZ, sky = z * _skewYZ;
+
+    // Preallocate the output array
+    const N = vertexArray.length;
+    const points = []; points.length = N * 2;
     
     // Compute the net transformation
     let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
@@ -3621,7 +3785,7 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
         
         points[p]     = Px;                points[p + 1] = Py;
     }
-    
+
     z = z * _scaleZ + _offsetZ;
     
     fill   = _colorToUint32(fill);
@@ -3645,7 +3809,14 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
 
 
 function draw_corner_rect(corner, size, fill, outline, z) {
-    z = z || 0;
+    if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {
+        // Draw using a polygon
+        draw_rect({x: corner.x + size.x * 0.5, y: corner.y + size.y * 0.5}, size, fill, outline, 0, z);
+        return;
+    }
+    
+    z = (z || 0) - _camera.z;
+
     const skx = (z * _skewXZ), sky = (z * _skewYZ);
     let x1 = (corner.x + skx) * _scaleX + _offsetX, y1 = (corner.y + sky) * _scaleY + _offsetY;
     let x2 = (corner.x + size.x + skx) * _scaleX + _offsetX, y2 = (corner.y + size.y + sky) * _scaleY + _offsetY;
@@ -3686,13 +3857,20 @@ function draw_corner_rect(corner, size, fill, outline, z) {
     });
 }
 
+// Compute the zoom for this z value for the current camera
+function _zoom(z) {
+    return typeof _camera.zoom === 'number' ? _camera.zoom : _camera.zoom(z);
+}
+
 
 function draw_line(A, B, color, z, width) {
     if (width === undefined) { width = 1; }
-    if (width >= 1.5) {
-        // Draw a polygon instead of a thin line
+
+    if (width * _zoom((z || 0) - _camera.z) >= 1.5) {
+        // Draw a polygon instead of a thin line, as this will
+        // be more than one pixel wide in screen space.
         const delta = xy(B.y - A.y, A.x - B.x);
-        let mag = sqrt(delta.x * delta.x + delta.y * delta.y);
+        let mag = Math.hypot(delta.x, delta.y);
         if (mag < 0.001) { return; }
         mag = width / (2 * mag);
         delta.x *= mag; delta.y *= mag;
@@ -3701,7 +3879,19 @@ function draw_line(A, B, color, z, width) {
         return;
     }
     
-    z = z || 0;
+    z = (z || 0) - _camera.z;
+    
+    if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {
+        // Transform the arguments to account for the camera
+        const mag = _zoom(z);
+        const C = Math.cos(_camera.angle) * mag, S = Math.sin(_camera.angle * rotation_sign()) * mag;
+        let x = A.x - _camera.x, y = A.y - _camera.y;
+        A = {x: x * C + y * S, y: y * C - x * S};
+        x = B.x - _camera.x, y = B.y - _camera.y;
+        B = {x: x * C + y * S, y: y * C - x * S};
+        width *= mag;
+    }
+    
     const skx = (z * _skewXZ), sky = (z * _skewYZ);
     let x1 = (A.x + skx) * _scaleX + _offsetX, y1 = (A.y + sky) * _scaleY + _offsetY;
     let x2 = (B.x + skx) * _scaleX + _offsetX, y2 = (B.y + sky) * _scaleY + _offsetY;
@@ -3730,15 +3920,23 @@ function draw_line(A, B, color, z, width) {
 }
 
 
-function draw_point(P, color, z) {
+function draw_point(pos, color, z) {
     // Skip graphics this frame
     if (mode_frames % _graphicsPeriod !== 0) { return; }
+    z = (z || 0) - _camera.z;
 
-    z = z || 0;
+    if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {
+        // Transform the arguments to account for the camera
+        const mag = (typeof _camera.zoom === 'number') ? _camera.zoom : _camera.zoom(z);
+        const C = Math.cos(_camera.angle) * mag, S = Math.sin(_camera.angle * rotation_sign()) * mag;
+        const x = pos.x - _camera.x, y = pos.y - _camera.y;
+        pos = {x: x * C + y * S, y: y * C - x * S};
+    }
+    
     const skx = z * _skewXZ, sky = z * _skewYZ;
-    let x = (P.x + skx) * _scaleX + _offsetX, y = (P.y + sky) * _scaleY + _offsetY;
+    let x = (pos.x + skx) * _scaleX + _offsetX, y = (pos.y + sky) * _scaleY + _offsetY;
     z = z * _scaleZ + _offsetZ;
-
+    
     x = Math.floor(x); y = Math.floor(y);
     
     if ((z < _clipZ1 - 0.5) || (z >= _clipZ2 + 0.5) ||
@@ -4175,7 +4373,10 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
 
 
 /** Processes formatting and invokes _draw_text() */
-function draw_text(font, str, P, color, shadow, outline, x_align, y_align, z, wrap_width, text_size, markup) {
+function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, wrap_width, text_size, markup) {
+    // Skip graphics this frame
+    if (mode_frames % _graphicsPeriod !== 0) { return; }
+    
     if (font && font.font) {
         // Keyword version
         text_size = font.text_size;
@@ -4186,7 +4387,7 @@ function draw_text(font, str, P, color, shadow, outline, x_align, y_align, z, wr
         outline = font.outline;
         shadow = font.shadow;
         color = font.color;
-        P = font.pos;
+        pos = font.pos;
         str = font.text;
         markup = font.markup;
         font = font.font;
@@ -4196,7 +4397,7 @@ function draw_text(font, str, P, color, shadow, outline, x_align, y_align, z, wr
         throw new Error('draw_text() requires a font');
     }
     
-    if (P === undefined) {
+    if (pos === undefined) {
         throw new Error('draw_text() requires a pos');
     }
 
@@ -4206,12 +4407,25 @@ function draw_text(font, str, P, color, shadow, outline, x_align, y_align, z, wr
     
     if (str === '') { return {x:0, y:0}; }
 
-    let stateChanges = [{font:       font,
-                         color:      _colorToUint32(color),
-                         shadow:     _colorToUint32(shadow),
-                         outline:    _colorToUint32(outline),
-                         startIndex: 0,
-                         endIndex:   str.length - 1}];
+    z = (z || 0) - _camera.z;
+
+    if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {
+        // Transform the arguments to account for the camera
+        const mag = (typeof _camera.zoom === 'number') ? _camera.zoom : _camera.zoom(z);
+        const C = Math.cos(_camera.angle) * mag, S = Math.sin(_camera.angle * rotation_sign()) * mag;
+        const x = pos.x - _camera.x, y = pos.y - _camera.y;
+        pos = {x: x * C + y * S, y: y * C - x * S};
+    }
+    
+    const stateChanges = [{
+        font:       font,
+        color:      _colorToUint32(color),
+        shadow:     _colorToUint32(shadow),
+        outline:    _colorToUint32(outline),
+        startIndex: 0,
+        endIndex:   str.length - 1
+    }];
+    
     if (markup) {
         str = _parseMarkup(str, stateChanges);
     }
@@ -4223,7 +4437,7 @@ function draw_text(font, str, P, color, shadow, outline, x_align, y_align, z, wr
     // Debug visualize the markup:
     // for (let i = 0; i < stateChanges.length; ++i) { console.log(str.substring(stateChanges[i].startIndex, stateChanges[i].endIndex + 1)); }
     
-    return _draw_text(0, 0, str, stateChanges, P, x_align, y_align, z, wrap_width, text_size, font);
+    return _draw_text(0, 0, str, stateChanges, pos, x_align, y_align, z, wrap_width, text_size, font);
 }
 
 
@@ -4423,7 +4637,7 @@ function _maybeApplyPivot(pos, pivot, angle, scale) {
 }
 
 
-function draw_sprite(spr, center, angle, scale, opacity, z, override_color) {
+function draw_sprite(spr, pos, angle, scale, opacity, z, override_color) {
     // Skip graphics this frame
     if (mode_frames % _graphicsPeriod !== 0) { return; }
 
@@ -4433,7 +4647,7 @@ function draw_sprite(spr, center, angle, scale, opacity, z, override_color) {
         opacity = spr.opacity;
         scale = spr.scale;
         angle = spr.angle;
-        center = spr.pos;
+        pos = spr.pos;
         override_color = spr.override_color;
         spr = spr.sprite;
     }
@@ -4449,13 +4663,29 @@ function draw_sprite(spr, center, angle, scale, opacity, z, override_color) {
         throw new Error('Called draw_sprite() on an object that was not a sprite asset. (' + unparse(spr) + ')');
     }
     
-    z = z || 0;
+    z = (z || 0) - _camera.z;
+    angle = angle || 0;
 
-    center = _maybeApplyPivot(center, spr.pivot, angle, scale);
+    pos = _maybeApplyPivot(pos, spr.pivot, angle, scale);
+
+    if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {
+        // Transform the arguments to account for the camera
+        const mag = _zoom(z);
+        const C = Math.cos(_camera.angle) * mag, S = Math.sin(_camera.angle * rotation_sign()) * mag;
+        const x = pos.x - _camera.x, y = pos.y - _camera.y;
+        pos = {x: x * C + y * S, y: y * C - x * S};
+        angle -= _camera.angle;
+
+        switch (typeof scale) {
+        case 'number': scale = {x: scale, y: scale}; break;
+        case 'undefined': scale = {x: 1, y: 1}; break;
+        }
+        scale = {x: scale.x * mag, y: scale.y * mag};
+    }
     
     const skx = (z * _skewXZ), sky = (z * _skewYZ);
-    const x = (center.x + skx) * _scaleX + _offsetX;
-    const y = (center.y + sky) * _scaleY + _offsetY;
+    const x = (pos.x + skx) * _scaleX + _offsetX;
+    const y = (pos.y + sky) * _scaleY + _offsetY;
     z = z * _scaleZ + _offsetZ;
 
     let scaleX = 1, scaleY = 1;

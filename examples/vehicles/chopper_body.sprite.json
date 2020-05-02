@@ -1,0 +1,12 @@
+{
+    "url": "chopper_body_bicubic.png",
+    "sprite_size": {
+        "x": 60,
+        "y": 132
+    },
+    "pivot": {
+        "x": 30.5,
+        "y": 45
+    },
+    "license": "By Morgan McGuire 2020 CC0"
+}

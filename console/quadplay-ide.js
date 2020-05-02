@@ -7,7 +7,7 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.04.25.11'
+const version  = '2020.05.01.23'
 const launcherURL = 'quad://console/launcher';
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -1141,6 +1141,14 @@ function onDocumentKeyDown(event) {
         }
         break;
 
+    case 83: // S
+        if (event.ctrlKey || event.metaKey) { // Ctrl+S; "save" is never needed
+            // Intercept from browser
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        break;
+        
     case 80: // P = pause
         if (! event.ctrlKey && ! event.metaKey) { 
             return;
@@ -1153,6 +1161,14 @@ function onDocumentKeyDown(event) {
     case 19: // [Ctrl+] Break
         if (useIDE) { onPauseButton(); }
         break;
+
+    case 27: // Esc
+        if (customContextMenu.style.visibility === 'visible') {
+            customContextMenu.style.visibility = 'hidden';
+            event.stopPropagation();
+            event.preventDefault();
+        }
+
     }
 }
 
@@ -1175,6 +1191,7 @@ function saveIDEState() {
         'showPhysicsEnabled': document.getElementById('showPhysicsEnabled').checked,
         'showEntityBoundsEnabled': document.getElementById('showEntityBoundsEnabled').checked,
         'assertEnabled': document.getElementById('assertEnabled').checked,
+        'automathEnabled': document.getElementById('automathEnabled').checked,
         'debugWatchEnabled': document.getElementById('debugWatchEnabled').checked,
         'debugPrintEnabled': document.getElementById('debugPrintEnabled').checked,
         'codeEditorFontSize': codeEditorFontSize
@@ -1980,9 +1997,13 @@ function visualizeMap(map) {
                 const sprite = map.layer[z][mapX][y];
                 if (sprite) {
                     const srcData = sprite.spritesheet._uint32Data;
+                    const xShift = (sprite.scale.x === -1) ? (sprite.size.x - 1) : 0;
+                    const yShift = (sprite.scale.y === -1) ? (sprite.size.y - 1) : 0;
+                    const xReduce = reduce * sprite.scale.x;
+                    const yReduce = reduce * sprite.scale.y;
                     for (let y = 0; y < dstTileY; ++y) {
                         for (let x = 0; x < dstTileX; ++x) {
-                            const srcOffset = (sprite._x + x * reduce) + (sprite._y + y * reduce) * srcData.width;
+                            const srcOffset = (sprite._x + x * xReduce + xShift) + (sprite._y + y * yReduce + yShift) * srcData.width;
                             const dstOffset = (x + mapX * dstTileX) + (y + mapY * dstTileY) * dstImageData.width;
                             const srcValue = srcData[srcOffset];
                             if ((srcValue >>> 24) > 127) { // Alpha test
@@ -2092,7 +2113,8 @@ function createProjectWindow(gameSource) {
                   (json.type && json.type === 'xyz') ? 'vec3D' :
                   (json.type && (json.type === 'rgba' || json.type === 'rgb' || json.type === 'hsva' || json.type === 'hsv')) ? 'color' :
                   (typeof v);
-            s += `<li class="clickable ${badge} ${type}" title="${tooltip}" id="projectConstant_${c}" onclick="onProjectSelect(event.target, 'constant', '${c}')"><code>${c}</code></li>\n`;
+            const contextMenu = editableProject ? `oncontextmenu="showConstantContextMenu('${c}')"` : '';
+            s += `<li ${contextMenu} class="clickable ${badge} ${type}" title="${tooltip}" id="projectConstant_${c}" onclick="onProjectSelect(event.target, 'constant', '${c}')"><code>${c}</code></li>\n`;
         }
     }
     if (editableProject) {
@@ -2117,7 +2139,8 @@ function createProjectWindow(gameSource) {
 
             const badge = isBuiltIn(asset._jsonURL) ? 'builtin' : (isRemote(asset._jsonURL) ? 'remote' : '');
                 
-            s += `<li onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'])" class="clickable ${type} ${badge}" title="${asset._jsonURL}"><code>${assetName}</code></li>`;
+            const contextMenu = editableProject ? `oncontextmenu="showAssetContextMenu('${assetName}')"` : '';
+            s += `<li id="projectAsset_${assetName}" ${contextMenu} onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'])" class="clickable ${type} ${badge}" title="${asset._jsonURL}"><code>${assetName}</code></li>`;
 
             if (type === 'map') {
                 for (let k in asset.spritesheet_table) {
@@ -2129,7 +2152,7 @@ function createProjectWindow(gameSource) {
     }
     
     if (editableProject) {
-        s += '<li class="clickable new" onclick="showImportAssetDialog()"><i>Import asset…</i></li>';
+        s += '<li class="clickable new" onclick="showAddAssetDialog()"><i>Add asset…</i></li>';
         // s += '<li class="clickable new" onclick=""><i>New asset…</i></li>';
     }
     s += '</ul>';
@@ -2388,8 +2411,8 @@ function showOpenGameDialog() {
 }
 
 
-/* Called to regenerate the openGameList display for the import asset dialog
-   when the type of asset to be imported is changed by the user. */
+/* Called to regenerate the openGameList display for the add asset dialog
+   when the type of asset to be added is changed by the user. */
 function onOpenGameTypeChange() {
     const t = document.getElementById('openGameType').value;
     let s = '<ol id="openGameListOL" class="select-list" style="font-family: Helvetica, Arial; font-size: 120%">\n';
@@ -3315,6 +3338,29 @@ window.addEventListener('resize', onResize, false);
 document.addEventListener('keydown', onDocumentKeyDown);
 document.addEventListener('keyup', onDocumentKeyUp);
 
+const customContextMenu = document.getElementById('customContextMenu');
+document.addEventListener('contextmenu', function (event) {
+    if (event.target.type !== 'textarea' && event.target.type !== 'text' && event.target.type !== 'a') {
+        // Not a text box or link, so no reason to provide a context menu.
+        // Prevent it:
+        event.preventDefault();
+    }
+}, {capture: true});
+
+
+function showContextMenu() {
+    customContextMenu.style.left = event.pageX + 'px';
+    customContextMenu.style.top = event.pageY + 'px';
+    customContextMenu.style.visibility = 'visible';
+}
+
+document.addEventListener('mousedown', function (event) {
+    if (customContextMenu.style.visibility === 'visible') {
+        customContextMenu.style.visibility = 'hidden';
+    }
+});
+
+
 // Pause when losing focus if currently playing...prevents quadplay from
 // eating resources in the background during development.
 window.addEventListener('blur', function () {
@@ -3342,13 +3388,18 @@ if (! localStorage.getItem('assertEnabled')) {
     localStorage.setItem('assertEnabled', 'true')
 }
 
+if (! localStorage.getItem('automathEnabled')) {
+    // Default to true
+    localStorage.setItem('automathEnabled', 'true')
+}
+
 if (! localStorage.getItem('debugWatchEnabled')) {
     // Default to true
     localStorage.setItem('debugWatchEnabled', 'true')
 }
 
 {
-    const optionNames = ['showPhysicsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'debugPrintEnabled', 'debugWatchEnabled'];
+    const optionNames = ['showPhysicsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'automathEnabled', 'debugPrintEnabled', 'debugWatchEnabled'];
     for (let i = 0; i < optionNames.length; ++i) {
         const name = optionNames[i];
         const value = JSON.parse(localStorage.getItem(name) || 'false');

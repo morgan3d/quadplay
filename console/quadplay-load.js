@@ -950,7 +950,7 @@ function loadMap(name, json, mapJSONUrl) {
         _json:   json,
         _jsonURL: mapJSONUrl,
         z_offset: json.z_offset || 0,
-        z_scale: (json.z_scale || 1),
+        z_scale: (json.z_scale !== undefined ? json.z_scale : 1),
         layer:  [],
         spritesheet_table:Object.create(null),
         sprite_size: Object.freeze({x:0, y:0}),

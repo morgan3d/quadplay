@@ -1,0 +1,14 @@
+{
+    "url": "tank_bicubic.png",
+    "sprite_size": {
+        "x": 46,
+        "y": 110
+    },
+    "region": {"pos": {"x": 1, "y": 88},
+               "size": {"x": 46, "y": 110}},
+    "pivot": {
+        "x": 22.5,
+        "y": 75
+    },
+    "license": "By Morgan McGuire 2020 CC0"
+}

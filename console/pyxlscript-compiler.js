@@ -973,8 +973,8 @@ function pyxlToJS(src, noYield, internalMode) {
     src = src.replace(/∞|\binfinity\b/g,  ' (Infinity) ');
     src = src.replace(/\bnan\b/g,         ' (NaN) ');
     src = src.replace(/∅|\bnil\b/g,       ' (undefined) ');
-    src = src.replace(/π|\bpi\b/g,        ' (_Math.PI+0) ');
-    src = src.replace(/ε|\bepsilon\b/g,   ' (1e-7+0) ');
+    src = src.replace(/π|\bpi\b/g,        ' (_Math.PI) ');
+    src = src.replace(/ε|\bepsilon\b/g,   ' (1e-6) ');
     src = src.replace(/ξ/g,               ' random() ');
 
     // Must come after exponentiation because it uses the same character

@@ -14,10 +14,6 @@
             "title": "Boids Example"
         },
         {
-            "url": "quad://examples/camera_zoom/",
-            "title": "Camera Zoom Test"
-        },
-        {
             "url": "quad://examples/dual-stick/",
             "title": "Dual Stick Example"
         },
@@ -68,6 +64,10 @@
         {
             "url": "quad://examples/touch/",
             "title": "Touch Example"
+        },
+        {
+            "url": "quad://examples/vehicles/",
+            "title": "Spy Game"
         }
     ],
     "builtins": [

@@ -114,19 +114,19 @@
             sourceImage.onload = function () {
                 console.log("loaded " + file.name);
 
-                var tileWidth  = Math.round(sourceImage.width / FONT_COLS);
-                var tileHeight = Math.round(sourceImage.height / FONT_ROWS);
+                let tileWidth  = Math.round(sourceImage.width / FONT_COLS);
+                let tileHeight = Math.round(sourceImage.height / FONT_ROWS);
 
-                var font = {};
-                var borderSize = parseInt(document.getElementById('extraPadding').value), shadowSize = 0;
-                var baseline = Math.floor(tileHeight * 0.7);
+                let font = {};
+                let borderSize = parseInt(document.getElementById('extraPadding').value), shadowSize = 0;
+                let baseline = Math.floor(tileHeight * 0.7);
 
-                var srcMask = getBinaryImageData(sourceImage);
+                let srcMask = getBinaryImageData(sourceImage);
 
-                var s = (tileHeight > 15) ? 2 : 1;
+                let s = (tileHeight > 15) ? 2 : 1;
                 packFont(font, borderSize, shadowSize, baseline,
                          {x:tileWidth, y:tileHeight},
-                         {x:s, y:2*s}, srcMask);
+                         {x:s, y:2 * s}, srcMask);
 
                 if (font._charHeight < 12) {
                     font._spacing.y = 2;
@@ -134,16 +134,22 @@
                 }
                 console.dir(font);
                 {
-                    var info = document.getElementById('data');
-                    var s = '';
-                    var maxWidth = -Infinity, maxWidthChar = '', maxHeight = -Infinity, maxHeightchar = '';
-                    for (let k in font._bounds) {
+                    let info = document.getElementById('data');
+                    let s = '';
+                    let maxWidth = -Infinity, maxWidthChar = '', maxHeight = -Infinity, maxHeightchar = '';
+                    for (const k in font._bounds) {
                         if (k !== '\t') {
+                            const special = fontSpecials[k];
+                            
                             const b = font._bounds[k];
                             const w = b.x2 - b.x1 + 1;
                             const h = b.y2 - b.y1 + 1;
-                            if (w > maxWidth) {
-                                maxWidth = w;
+
+                            const effectiveWidth = w / (special ? 4 : 1);
+
+                            // Handle 4-wide special button prompt characters
+                            if (effectiveWidth > maxWidth) {
+                                maxWidth = effectiveWidth;
                                 maxWidthChar = k;
                             }
                             if (h > maxHeight) {
@@ -151,9 +157,8 @@
                                 maxHeightChar = k;
                             }
 
-                            const X = fontSpecials[k];
-                            if (X) {
-                                s += `<span class="special">${X}</span>`;
+                            if (special) {
+                                s += `<span class="special">${special}</span>`;
                             } else {
                                 s += `"<span class="letter">${k}</span>"`;
                             }
@@ -178,7 +183,8 @@ span.height${maxHeight} { background: #ff4; padding: 0 1px; color: #000}
 `;
                     info.innerHTML = s;
 
-                    // Suggest size name as the minimum height of d, D, I, l
+                    // Suggest size name as the minimum height of d, D, I, l. We use the MINIMUM
+                    // because sometimes letters have flourishes that go beyond the normal size.
                     let pxSize = Infinity;
                     {
                         const candidates = 'dDIl';
@@ -188,7 +194,7 @@ span.height${maxHeight} { background: #ff4; padding: 0 1px; color: #000}
                         }
                     }
 
-                    // find the baseline as the highest bottom of certain characters
+                    // Find the baseline as the highest bottom of certain characters
                     {
                         const candidates = 'ELZBabo';
                         baseline = Infinity;
@@ -204,13 +210,13 @@ span.height${maxHeight} { background: #ff4; padding: 0 1px; color: #000}
                 }
 
                 // Convert back to an image
-                var canvas = document.createElement('canvas');
+                let canvas = document.createElement('canvas');
                 canvas.width = font._data.width;
                 canvas.height = font._data.height;
 
-                var ctx = canvas.getContext('2d');
-                var destImageData = ctx.createImageData(font._data.width, font._data.height);
-                var packedData = font._data.data;
+                let ctx = canvas.getContext('2d');
+                let destImageData = ctx.createImageData(font._data.width, font._data.height);
+                let packedData = font._data.data;
 
                 for (let i = 0; i < packedData.length; ++i) {
                     // Color
@@ -226,24 +232,24 @@ span.height${maxHeight} { background: #ff4; padding: 0 1px; color: #000}
                                 
                 // Put the data back to create a data URL
                 ctx.putImageData(destImageData, 0, 0);
-                var destImage = new Image();
+                let destImage = new Image();
                 destImage.src = canvas.toDataURL();
                 destImage.onload = function () {
                     // Show the input
-                    var sourceDisplay = document.getElementById('source');
+                    let sourceDisplay = document.getElementById('source');
                     sourceDisplay.innerHTML = '';
                     sourceDisplay.style.width = sourceImage.width + 'px';
                     sourceDisplay.style.height = sourceImage.height + 'px';
                     sourceDisplay.appendChild(sourceImage);
                     
                     // Show the output
-                    var destDisplay = document.getElementById('dest');
+                    let destDisplay = document.getElementById('dest');
                     destDisplay.innerHTML = '';
                     destDisplay.style.width = destImage.width + 'px';
                     destDisplay.style.height = destImage.height + 'px';
                     destDisplay.appendChild(destImage);
 
-                    var json = document.getElementById('json');
+                    let json = document.getElementById('json');
                     
                     json.innerHTML = `{
     "url":           "somefile.png",

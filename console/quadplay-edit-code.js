@@ -145,6 +145,7 @@ function setCodeEditorSessionMode(session, mode) {
 
 
 function setCodeEditorSession(url) {
+    console.assert(url);
     const contents = fileContents[url] || '';
     const session = codeEditorSessionMap.get(url) || createCodeEditorSession(url, contents);
     aceEditor.setSession(session);
@@ -160,6 +161,7 @@ function setCodeEditorSession(url) {
 
 // One session per edited file is created
 function createCodeEditorSession(url, bodyText) {
+    console.assert(url);
     console.assert(! codeEditorSessionMap.has(url));
     if (typeof bodyText === 'undefined' || typeof bodyText === 'null') {
         bodyText = '\n';
@@ -652,128 +654,6 @@ function showNewModeDialog() {
 function hideNewModeDialog() {
     document.getElementById('newModeDialog').classList.add('hidden');
     document.getElementById('newModeName').blur();
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-
-let importAssetFiles = null;
-function showImportAssetDialog() {
-    document.getElementById('importAssetDialog').classList.remove('hidden');
-    document.getElementById('importAssetImportButton').disabled = true;
-    const text = document.getElementById('importAssetName');
-    text.value = '';
-    text.focus();
-
-    const assetListURL = location.origin + getQuadPath() + 'console/_assets.json?gamePath=' + getGamePath();
-    
-    // Fetch the asset list
-    LoadManager.fetchOne({forceReload: true}, assetListURL, 'json', null, function (json) {
-        importAssetFiles = json;
-
-        // Strip the path to the current game off assets in the same dir
-        // or subdirectory of it. We do not do this on the server side
-        // because we may later allow developers to have their own asset directories
-        // separate from games, and the existing protocol allows that.
-
-        let gamePath = gameSource.jsonURL.replace(/[^\/]+\.game\.json$/g, '');
-        if (gamePath.startsWith(location.origin)) {
-            gamePath = gamePath.substring(location.origin.length);
-        }
-        if (gamePath.length > 0 && gamePath[0] === '/') {
-            gamePath = gamePath.substring(1);
-        }
-        
-        for (const key in importAssetFiles) {
-            const array = importAssetFiles[key];
-            for (let i = 0; i < array.length; ++i) {
-                const url = array[i];
-                if (url.startsWith(gamePath)) {
-                    array[i] = url.substring(gamePath.length);
-                }
-            }
-        }
-
-        // Create the initial display
-        onImportAssetTypeChange();
-    });
-}
-
-
-/* Called to regenerate the importAssetList display for the import asset dialog
-   when the type of asset to be imported is changed by the user. */
-function onImportAssetTypeChange() {
-    const t = document.getElementById('importAssetType').value;
-    let s = '<ol id="importAssetListOL" class="select-list">\n';
-    if (importAssetFiles) {
-        const fileArray = importAssetFiles[t];
-        for (let i = 0; i < fileArray.length; ++i) {
-            const file = fileArray[i];
-            const path = (file.indexOf('/') === -1) ? '' : file.replace(/\/[^\/]+$/, '/');
-            const rest = file.replace(/^.*\//, '');
-            const base = rest.replace(/\..+?$/, '');
-            const ext  = rest.replace(/^[^\.]+/, '');
-            s += `<li onclick="onImportAssetListSelect(this)">${path}<b style="color:#000">${base}</b>${ext}</li>\n`;
-        }
-    }
-    s += '</ol>';
-
-    const list = document.getElementById('importAssetList');
-    list.innerHTML = s;
-
-    importAssetFiles.selected = null;
-    // Recreating the list destroys any selection
-    document.getElementById('importAssetImportButton').disabled = true;
-}
-
-
-/* Called from the "Import" button */
-function onImportAssetImport() {
-    const nameBox = document.getElementById('importAssetName');
-    const name = nameBox.value;
-
-    // Warn on overwrite
-    if ((gameSource.json.assets[name] !== undefined) &&
-        ! window.confirm('There is already an asset called ' + name +
-                         ' in your game. Replace it?')) {
-        nameBox.focus();
-        return;
-    }
-
-    // Warn on double import
-    for (const key in gameSource.json.assets) {
-        const value = gameSource.json.assets[key];
-        if ((key[0] !== '_') && (value === importAssetFiles.selected)) {
-            if (window.confirm('The asset ' + importAssetFiles.selected + ' is already in your game, called ' + key + '. Import the same asset again anyway?')) {
-                // The user accepted...go along with it
-                break;
-            } else {
-                return;
-            }
-        }
-    }
-
-    gameSource.json.assets[name] = importAssetFiles.selected;
-    hideImportAssetDialog();
-    
-    // Save and reload the game
-    serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL); });
-}
-
-
-function onImportAssetListSelect(target) {
-    const list = document.getElementById('importAssetListOL');
-    for (let i = 0; i < list.children.length; ++i) {
-        list.children[i].classList.remove('selected');
-    }
-    target.classList.add('selected');
-    importAssetFiles.selected = target.innerText; 
-    document.getElementById('importAssetImportButton').disabled = (document.getElementById('importAssetName').value.length === 0);
-}
-
-
-function hideImportAssetDialog() {
-    document.getElementById('importAssetDialog').classList.add('hidden');
-    importAssetFiles = null;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

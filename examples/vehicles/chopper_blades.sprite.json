@@ -1,0 +1,12 @@
+{
+    "url": "chopper_blades_bicubic.png",
+    "sprite_size": {
+        "x": 140,
+        "y": 140
+    },
+    "pivot": {
+        "x": 69.5,
+        "y": 69.5
+    },
+    "license": "By Morgan McGuire 2020 CC0"
+}

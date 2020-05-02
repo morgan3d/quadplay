@@ -97,15 +97,15 @@ function setPadType(p, type) {
 
 function device_control(cmd) {
     switch (cmd) {
-    case "startGIFRecording":     startGIFRecording(); break;
-    case "stopGIFRecording":      stopGIFRecording(); break;
-    case "takeScreenshot":        downloadScreenshot(); break;
-    case "startPreviewRecording": startPreviewRecording(); break;
-    case "setDebugFlag":
+    case "start_GIF_recording":     startGIFRecording(); break;
+    case "stop_GIF_recording":      stopGIFRecording(); break;
+    case "take_screenshot":        downloadScreenshot(); break;
+    case "start_preview_recording": startPreviewRecording(); break;
+    case "set_debug_flag":
         {
             let value = (arguments[2] ? true : false);
             switch (arguments[1]) {
-            case "entityBounds":
+            case "entity_bounds":
                 QRuntime._showEntityBoundsEnabled = document.getElementById('showEntityBoundsEnabled').checked = value;
                 break;
             case "physics":
@@ -126,10 +126,10 @@ function device_control(cmd) {
         }
         break;
         
-    case "getDebugFlag":
+    case "get_debug_flag":
         {
             switch (arguments[1]) {
-            case "entityBounds":
+            case "entity_bounds":
                 return QRuntime._showEntityBoundsEnabled;
                 break;
             case "physics":
@@ -145,12 +145,12 @@ function device_control(cmd) {
                 return QRuntime._debugWatchEnabled;
                 break;
             default:
-                throw new Error('Unsupported flagname passed to device_control("getDebugFlag", flagname): "' + arguments[1] + '"');
+                throw new Error('Unsupported flagname passed to device_control("get_debug_flag", flagname): "' + arguments[1] + '"');
             }
         }
         break;
         
-    case "getAnalogAxes":
+    case "get_analog_axes":
         {
             const i = clamp(parseInt(arguments[1]), 0, 3);
             const pad = QRuntime.gamepad_array[i];
@@ -158,7 +158,7 @@ function device_control(cmd) {
             break;
         }
 
-    case "setPadType":
+    case "set_pad_type":
         {
             const i = arguments[1];
             const type = arguments[2];

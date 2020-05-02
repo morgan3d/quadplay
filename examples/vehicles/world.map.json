@@ -1,0 +1,9 @@
+{
+    "url": "world.tmx",
+    "sprite_url": "quad://sprites/road_tiles_64.sprite.json",
+    "sprite_url_table": {
+        "<default>": "quad://sprites/road_tiles_64.sprite.json"
+    },
+    "y_up": true,
+    "z_scale": 0
+}

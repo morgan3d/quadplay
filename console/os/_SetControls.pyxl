@@ -146,7 +146,7 @@ for p < 4:
                          ((p > 1) or
                           (p == 1 and (type ≠ "Kbd_P2")))))
          // Switch the device to the selected controller
-         device_control("setPadType", p, type)
+         device_control("set_pad_type", p, type)
 
       if SCREEN_SIZE.x == 64:
          set_transform(xy(32, shiftY), xy(1, 1))

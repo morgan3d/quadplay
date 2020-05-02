@@ -54,8 +54,10 @@ function _addGraphicsCommand(cmd) {
     cmd.clipY2 = _clipY2;
 
     // Offset subsequent commands to get a unique z value for each,
-    // and stable sort ordering
-    cmd.z     += _graphicsCommandList.length * Math.sign(_scaleZ) * 0.0009765625;
+    // and stable sort ordering. The offset value must be orders of
+    // magnitude less than the quadplay epsilon value to avoid
+    // confusion for programmers with z ordering.
+    cmd.z     += _graphicsCommandList.length * Math.sign(_scaleZ) * 1e-10;
     
     _graphicsCommandList.push(cmd);
 }

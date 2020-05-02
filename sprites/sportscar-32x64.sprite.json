@@ -1,0 +1,20 @@
+{
+    "url": "sportscar-32x64.png",
+    "sprite_size": {
+        "x": 32,
+        "y": 64
+    },
+    "names": {
+        "yellow" : {"x": 0, "y": 0},
+        "red" : {"x": 1, "y": 0},
+        "blue" : {"x": 2, "y": 0},
+        "green" : {"x": 3, "y": 0},
+        "pink" : {"x": 4, "y": 0},
+        "purple" : {"x": 5, "y": 0},
+        "stripe" : {"x": 0, "y": 1},
+        "front_guns" : {"x": 1, "y": 1},
+        "rear_wing" : {"x": 2, "y": 1},
+        "quad_exhaust" : {"x": 3, "y": 1}
+    },
+    "license": "By Morgan McGuire 2020, released into the Public Domain/CC0"
+}

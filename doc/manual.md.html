@@ -23,7 +23,6 @@ profiler.
 **Virtual Hardware Features**
 
 - 384 x 224 pixel screen = 12:7 aspect ≈ 16:9.3
-- Optional 192 x 112, 128 x 128, and 64 x 64 screen modes
 - 60 fps with autoscaling on low-end machines
 - 4096 sRGB (4:4:4) colors
 - Native 2.5D graphics
@@ -31,7 +30,9 @@ profiler.
 - Max 128 sprite and font sheets, max size 1024x1024
 - Order-independent 4-bit (16-level) transparency
 - 4 SNES/PS1/Saturn-style D-pad + 8-button gamepads
-- Optional touch screen
+- Touch screen/mouse
+- Optional 192 x 112, 128 x 128, and 64 x 64 screen modes, 
+  analog sticks, and dual sticks
 
 **Software Features**
 
@@ -368,9 +369,25 @@ sprite animations.
 - Changing direction
 - Modular items
 
+</td></tr><tr><td>![](../examples/vehicles/label128.png)</td><td>
+[Vehicles Example](../console/quadplay.html?game=quad://examples/vehicles&IDE=1) contains examples of several vehicle controls
+from a free-direction top-down perspective.
+
+- 2.5D camera perspective
+- Using the ⓔ and ⓕ buttons
+- Simple vehicle simulation for control feel
+- Entities with moving child parts
+- 2.5D sprite stacking
+- Dynamic shadows
+- Minimap
+
 </td></tr><tr><td>![](../examples/fluid/label128.png)</td><td>
 [Fluid Example](../console/quadplay.html?game=quad://examples/fluid&IDE=1) is a cellular automata fluid flow simulation
 with gravity and pressure.
+
+</td></tr><tr><td>![](../examples/vehicles/label128.png)</td><td>
+[Vehicles Example](../console/quadplay.html?game=quad://examples/roguelike&IDE=1) uses the roguelike sprite set for tilemap
+rendering with a simple text-heavy UI section.
 
 </td></tr><tr><td>![](../examples/accel_demo/label128.png)</td><td>
 [Acceleration Curve Example](../console/quadplay.html?game=quad://examples/accel_demo&IDE=1) is a simple demonstration of how various acceleration curves feel, changing only three constants: top speed, acceleration time and deceleration time. Up and down change the constants to fit different games.
@@ -398,9 +415,6 @@ maintain a high score list, with `push_mode()` for creating a popup dialog.
 </td></tr><tr><td>![](../examples/sproing/label128.png)</td><td>
 [Sproing Example](../console/quadplay.html?game=quad://examples/sproing&IDE=1) shows a squash and stretch effect for transforming sprites.
 
-</td></tr><tr><td>![](../examples/camera_zoom/label128.png)</td><td>
-[Camera Zoom Example](../console/quadplay.html?game=quad://examples/camera_zoom&IDE=1) shows how to get camera zooming by using the entity hierarchy.
-
 </td></tr><tr><td>![](../examples/touch/label128.png)</td><td>
 [Touch Example](../console/quadplay.html?game=quad://examples/touch&IDE=1) uses the mouse/touch API.
 </td></tr></table>
@@ -418,6 +432,7 @@ graphics and gameplay:
 - [Nuclear Throne](http://nuclearthrone.com/)
 - [Celeste](http://www.celestegame.com/)
 - [Undertale](https://undertale.com/)
+- [Monolith](https://store.steampowered.com/app/603960/Monolith/)
 - [Crypt of the Necrodancer](https://store.steampowered.com/app/247080/Crypt_of_the_NecroDancer/)
 - [Shovel Knight](https://yachtclubgames.com/shovel-knight/)
 - [Sonic Mania](https://www.sega.com/games/sonicmania)
@@ -1005,6 +1020,18 @@ R3 (Right Stick Press)   | Not mapped
 L3 (Left Stick Press)    | Not mapped
 
 
+### Analog Sticks
+
+Quadplay exposes system features beyond the standard quadplay
+capabilities using the `device_control()` function for low-level
+system access.
+
+You can read analog sticks, steering wheels, foot pedals, flight
+sticks, etc. directly using this API. Games that use these features
+will not work on all quadplay devices. But, it is a great way to
+program for a specific platform that you have in mind or have built.
+
+
 ### Resolution
 
 The emulator screen tries to maintain an integer multiple of the
@@ -1013,25 +1040,13 @@ running on a very high resolution screen (greater than 2.5x), it
 relaxes this constraint to use the full screen effectively.
 
 As a result, the emulator is pixel-perfect on small displays and fills
-the screen onlarge ones.
+the screen on large ones. Quadplay supports the following resolutions,
+all with 4:4:4:4 RGBA color and 60 Hz refresh:
 
-Some exact ratios when using quadplay's maximum 384x224 resolution are:
-
-Screen     | Integer     | Used      | Efficiency  | Autoscaler | Used      | Efficiency
-----------:|------------:|----------:|------------:|-----------:|----------:|---------:
-480x320    |  1x         | 384x224   | 56%         | 1.00x      | 384x224   | 56%
-640x360    |  1x         | 384x224   | 37%         | 1.00x      | 384x224   | 37%
-640x480    |  1x         | 384x224   | 28%         | 1.00x      | 384x224   | 28%
-800x480    |  2x         | 768x448   | 72%         | 2.00x      | 768x448   | 72%
-1024x768   |  2x         | 768x448   | 44%         | 2.00x      | 768x448   | 44%
-*1280x720* |  *3x*       |*1152x672* | *84%*       | 3.21x      | 1234x720  | 96%
-1280x800   |  *3x*       | 1152x672  | 76%         | 3.33x      | 1280x747  | 93%
-1366x768   |  3x         | 1152x672  | 74%         | 3.41x      | 1316x768  | 96%
-1440x900   |  3x         | 1152x672  | 60%         | 3.75x      | 1440x840  | 93%
-*1600x900* |  *4x*       |*1536x896* | *96%*       | 4.02x      | 1544x900  | 97%
-1680x1050  |  4x         | 1536x896  | 78%         | 4.38x      | 1680x980  | 93%
-1920x1080  |  4x         | 1536x896  | 66%         | 4.82x      | 1852x1080 | 96%
-*1920x1200*|  *5x*       |*1920x1120*| *93%*       | 5.00x      | 1920x1120 | 93%
+- 384x224
+- 192x112
+- 128x128
+- 64x64
 
 For reference when importing assets or designing games inspired by
 previous work, here are the resolutions of classic and retro machines:
@@ -1194,34 +1209,40 @@ all quadplay✜ devices support touch input (although most do, through
 either a touch screen, stylus, or mouse). If there is no mouse, then
 `touch.a` is always `false`.
 
-There is a single `touch` global object with the following properties:
+`touch`
+: There is a single `touch` global object with the following properties:
 
-Property           | Type     | Meaning
--------------------|----------|----------------------------------
-`x`                | number   | Draw coordinate x position
-`y`                | number   | Draw coordinate y position
-`dx`               | number   | Change in `x` since the previous frame
-`dy`               | number   | Change in `y` since the previous frame
-`xy`               | xy       | `xy(x, y)` for the touch
-`dxy`              | xy       | `xy(dx, dy)` for the touch
-`screen_x`         | number   | Screen coordinate x position
-`screen_y`         | number   | Screen coordinate y position
-`screen_dx`        | number   | Change in `screen_x` since the previous frame
-`screen_dy`        | number   | Change in `screen_y` since the previous frame
-`screen_xy`        | xy       | `xy(screen_x, screen_y)` for the touch
-`screen_dxy`       | xy       | `xy(screen_dx, screen_dy)` for the touch
-`a`                | boolean  | True if the touch is currently active
-`pressed_a`        | boolean  | Was the touch started this frame?
-`aa`               | boolean  | Same as `pressed_a`
-`released_a`       | boolean  | Was the touch ended this frame?
+Property                 | Type     | Meaning
+-------------------------|----------|----------------------------------
+`touch.x`                | number   | Camera-space x position
+`touch.y`                | number   | Camera-space y position
+`touch.dx`               | number   | Change in `x` since the previous frame
+`touch.dy`               | number   | Change in `y` since the previous frame
+`touch.xy`               | xy       | `xy(touch.x, touch.y)`
+`touch.dxy`              | xy       | `xy(touch.dx, touch.dy)`
+`touch.a`                | boolean  | True if the touch is currently active
+`touch.pressed_a`        | boolean  | Was the touch started this frame?
+`touch.aa`               | boolean  | Same as `pressed_a`
+`touch.released_a`       | boolean  | Was the touch ended this frame?
+<!-- `touch.screen_x`      | number   | Screen-space x position
+`touch.screen_y`           | number   | Screen-space y position
+`touch.screen_dx`          | number   | Change in `screen_x` since the previous frame
+`touch.screen_dy`          | number   | Change in `screen_y` since the previous frame
+`touch.screen_xy`          | xy       | `xy(touch.screen_x, touch.screen_y)` for the touch
+`touch.screen_dxy`         | xy       | `xy(touch.screen_dx, touch.screen_dy)` for the touch -->
 
 
-The `x` and `y` values are in draw coordinates using the current transform.
-If there is no active touch, then these reflects the previous active touch location.
-There is no way to track a hovering mouse or detect a scroll wheel or second 
-mouse button, as those would not be mapped to a mobile device.
+The `x` and `y` values are in camera-space coordinates using the current transform.
+Change or reset the transform to read them in a different coordinate system, or use
+the transformation routines.
 
-The `screen_x` and `screen_y` use (0, 0) as the top left of the emulator screen.
+If there is no active touch, then the coordinates reflect the previous
+active touch location.  There is no way to track a hovering mouse or
+detect a scroll wheel or second mouse button with `touch`, which would not be
+mapped to a mobile device anyway. `device_control()` allows low-level access to
+additional device-specific pointer properties.
+
+<!-- The `screen_x` and `screen_y` use (0, 0) as the top left of the emulator screen. -->
 
 
 ### Main Menu
@@ -2056,51 +2077,7 @@ Sound
 Coordinates
 -----------------------------------------------------------
 
-The major coordinate systems for the standard library are *screen*
-space, *draw* space, *entity* space, *sprite* space, *sprite sheet*
-space (sprite indices), and *map* space (map cell indices).
-
-The helper routines to convert between these each take an `xy()` value
-and return a new `xy()` value (or `z`):
-
-- `transform_to(pos, angle, scale, c)`, `transform_from(pos, angle, scale, c)` Enter and exit generalized reference frames
-- `transform_screen_to_draw(c)`, `transform_draw_to_screen(c, z (=0))`, `transform_screen_z_to_draw_z(z)`, `transform_draw_z_to_screen_z(z)`
-- `transform_draw_to_entity(e, c)`, `transform_entity_to_draw(e, c)`
-- `transform_entity_to_sprite(e, c)`, `transform_sprite_to_entity(e, c)`
-- `transform_parent_to_child(e_child, c)`, `transform_child_to_parent(e_child, c)` (unlike all other transform methods, does not assume `entity_update_children` has been called)
-- `transform_entity_to_entity(e_from, e_to, c)`
-- `transform_draw_to_sprite(e, c)`, `transform_sprite_to_draw(e, c)`
-- `transform_draw_to_map(m, c)`, `transform_map_to_draw(m, c)`, `transform_map_layer_to_draw_z(m, L)`, `transform_draw_z_to_map_layer(m, z)`
-
-Where `m` is a map, `e` is an entity, and `c` is an `xy()` coordinate.
-The `z` value only affects `transform_draw_to_screen` if a skew has been set by `set_transform()`.
-In this case, there is no way to invert the draw-to-screen transformation, so `transform_screen_to_draw` is
-misleading.
-
-
-All drawing routines assume the default camera.
-
-There are no transformation functions between entity and draw space
-z-axes. Just add or subtract the `entity.z` value.
-
-
-### Screen Space
-
-The clipping region is the only object interacted with in *screen
-space*, via `set_clip()`, `get_clip()`, and `intersect_clip()`.
-
-The screen space graphics coordinate system is:
-
-- x increasing from 0 at the left edge of the screen to `SCREEN_SIZE.x` at the right edge
-- y increasing from 0 at the top edge of the screen to `SCREEN_SIZE.y` at the bottom edge
-- z increasing from -2047 at the back to 2048 at the front
-
-Integer coordinates correspond to the top-left corner of a pixel.
-Pixel centers are therefore at integers plus 0.5.
-
-Drawing commands sample at pixel centers. For example, the rectangle from (0, 0) to
-(2, 1) covers two pixel centers: (0.5, 0.5) and (1.5, 0.5). Setting this as the
-clipping region makes two pixels visible.
+The default quadplay screen coordinate system is:
 
 ************************************************************
 *  2048 (out of the screen)
@@ -2118,30 +2095,236 @@ clipping region makes two pixels visible.
 *        *------------------------*
 *   SCREEN_SIZE.y
 ***********************************************************
-[Figure [coords]: Screen space and default draw space coordinate system.]
+[Figure [coords]: Screen space coordinate system.]
 
-I recommend treating the z-axis as scaled identically to x and y to
-support potential future voxel-based rendering schemes.
+If you use default values of the camera, transform, and `y_up`, and do
+not use the entity hierarchy, then everything that you encounter will
+use this screen coordinate system and you can ignore the others.
+
+Advanced users can leverage the full set of coordinate systems for the
+standard library, which are:
+
+- *screen* space
+- *world* space
+- *camera* space
+- *entity* space (a.k.a., "body" or "object" space) 
+- *sprite* space (pixels within in a sprite)
+- *spritesheet* space (indices of sprites in a spritesheet)
+- *map* space (indices of sprites in a map)
+
+Entities can also form hierarchies using the `entity.child_array`. The first four coordinate
+systems are related by:
+
+<style>
+table.coord {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  width: 80%;
+  border-collapse: separate;
+}
+
+table.coord th { font-weight: normal; font-style: italic; padding-bottom: 10px }
+table.coord tr:not(.space) td:first-child,
+table.coord tr:not(.space) td:nth-child(4) {font-size: 80%;}
+table.coord tr.space { background: #555; }
+table.coord tr.space td { padding-top: 4px; padding-bottom: 4px; }
+table.coord tr.space td:first-child { border-radius: 8px 0px 0px 8px}
+table.coord tr.space td:last-child { border-radius: 0px 8px 8px 0px}
+table.coord td.arrow { line-height: 80%; font-size: 120%; }
+</style>
 
 
-### Draw Space
+<table class="coord">
+<tr><th colspan=4>       Coordinate&nbsp;System          </th><th>        Controlled By       </th><th width="50%">     Used By           </th></tr>
 
-Most graphics commands operate in *draw space*. By default, it is
-identical to screen space, but can be changed with with
-`set_transform()`. See also `get_transform()` and
-the `preserving_transform:` block.
+<tr class="space"><td colspan=4>  Screen Space           </td><td>                            </td><td>`set_clip()`, `reset_clip()`,
+                                                                                             `intersect_clip()`,
+                                                                                             `set_post_effects()`     </td></tr>
 
-**The transform affects rendering, simulation, and events**. The direction
-of the x- and y-axes affects the rotation angle of entity space as
-well as draw space. I recommend that for each game you choose a single
-y-axis convention. Set the scale part of the transform only once at
-the beginning, and then use `preserving_transform:` for any localized
-needs such as inventory scrolling.
+<tr><td>`transform_camera_to_screen()`</td>
+    <td class="arrow" width=10>▲<br>┃<br>┃<br>┃<br>┃</td>
+    <td class="arrow" width=10>┃<br>┃<br>┃<br>┃<br>▼</td>
+    <td>`transform_screen_to_camera()`</td>
+                                                    <td>`y_up` in game.json
+                                                    <br>`set_transform()`, 
+                                                        `reset_transform()`,
+                                                        `compose_transform()`       </td><td>                         </td></tr>
 
-As with screen space, integer coordinates correspond to the top-left
-corner of a pixel and pixel centers are therefore at integers plus ½.
-(½, ½) is the center of the top-left pixel and `SCREEN_SIZE - ½`
-is the center of the lower-left pixel.
+<tr class="space"><td colspan=4>  Camera Space           </td><td>                            </td><td>`touch`, `joy`, `text_width()`  </td></tr>
+
+<tr><td>`transform_world_to_camera()`</td>
+    <td class="arrow" width=10>▲<br>┃<br>┃<br>┃<br>┃</td>
+    <td class="arrow" width=10>┃<br>┃<br>┃<br>┃<br>▼</td>
+    <td>`transform_camera_to_world()`</td> 
+                                                    <td>`set_camera()`,
+                                                        `reset_camera()`            </td><td>                         </td></tr>
+
+
+<tr class="space"><td colspan=4>  World Space            </td><td>                            </td><td>`draw_sprite()`, `draw_line()`,
+                                                                                             `draw_map()`, `draw_entity()`, `draw_sprite_corner_rect()`,
+                                                                                             `draw_text()`, `draw_point()` etc.;
+                                                                                             `ray_intersect()`, `overlaps()`, etc.</td></tr>
+
+<tr><td>`transform_entity_to_camera()`</td>
+    <td class="arrow" width=10>▲<br>┃<br>┃<br>┃<br>┃</td>
+    <td class="arrow" width=10>┃<br>┃<br>┃<br>┃<br>▼</td>
+    <td>`transform_camera_to_entity()`</td>         <td>`entity.pos`, `entity.angle`, `entity.scale`,
+                                                        and `pos`, `angle`, `scale` arguments
+                                                        to `draw_` functions        </td><td>                         </td></tr>
+
+<tr class="space"><td colspan=4> Entity/Body Space       </td><td>                            </td><td>                         </td></tr>
+
+<tr><td>`transform_child_to_parent()`</td>
+    <td class="arrow" width=10>▲<br>┃<br>┃<br>┃<br>┃</td>
+    <td class="arrow" width=10>┃<br>┃<br>┃<br>┃<br>▼</td>
+    <td>`transform_parent_to_child()`</td>              </td><td>`entity.pos_in_parent`,
+                                                        `entity.angle_in_parent`,
+                                                        `entity.scale_in_parent`    </td><td>                         </td></tr>
+
+<tr class="space"><td colspan=4> Child Space             </td><td>                            </td><td>                         </td></tr>
+<tr><td class="arrow" colspan=4>▲<br>┃<br>&vellip;<br>:  </td><td>                            </td><td>                         </td></tr>
+
+</table>
+
+To simplify common game programming tasks and avoid certain kinds of mistakes,
+quadplay has some differences from traditional graphics systems under coordinate
+system transformations:
+
+- Angles are always measured counter-clockwise, and routines automatically 
+  change their angle direction to compensate. Use `rotation_sign()` to
+  determine the current direction when using `sin()` and `cos()` to convert
+  an angle to a vector.
+  
+- Sprites automatically flip vertically to match when the y axis is inverted.
+
+- The anchor points for text will transform, but font characters are never
+  rendered with scale or rotation because pixel fonts are generally unreadable if
+  transformed and upside-down fonts are rarely what is intended when flipping an axis.
+  Convert your text to a sprite if you want transformed text as an effect, or use a set of
+  fonts available at different sizes (such as deja) if you want text at different sizes to
+  correspond to zooming.
+
+- `touch` and `gamepad_array`/`joy` `xy` values match the current screen-to-camera space
+  transformation from `set_transform` at the time that they are read. This is mostly
+  so that controls and event coordinates will match drawing coordinates when the
+  axis is flipped or the screen origin changed.
+  
+
+In general, `set_transform()` is good for tasks such as, "I'm making
+the user interface and want Y=down and 0 at top left" vs.  "I'm
+drawing the world and want Y=up and the origin in the center". It
+cannot rotate the viewpoint. 
+
+`set_camera()` is for shifting the viewpoint in 2.5D within
+the world coordinate system. It cannot flip axes (it only allows
+positive, uniform zoom), but it can rotate, translate, and zoom. 
+  
+Common situations are:
+  
+ - No camera or transform. Use `y_up` in the game.json file if you want the y axis to go up
+ - Move (0, 0) to the center of the screen: `set_transform(SCREEN_SIZE / 2)`
+ - Center on the player entity, without rotation: `set_transform(SCREEN_SIZE / 2); set_camera(pos:player_entity.pos})`
+ - Center on the player and rotate the y-axis to match (good for sprites drawn facing up): `set_transform(SCREEN_SIZE / 2); set_camera(player_entity)`
+ - Center on the player and rotate the x-axis to the y-axis (good if you want `player.angle=0` to be the x-axis) `set_transform(SCREEN_SIZE / 2); set_camera({pos:player_entity, angle:player.angle - 90deg})`
+
+!!! Warning
+    The following APIs are being renamed during the beta. They predate the global camera
+    and use "draw" to refer to both camera and world space.
+
+The full set of coordinate transformation helper functions is:
+
+- `transform_to(pos, angle, scale, c)`, `transform_from(pos, angle, scale, c)` Enter and exit generalized reference frames
+- `transform_screen_to_draw(c)`, `transform_draw_to_screen(c, z (=0))`, `transform_screen_z_to_draw_z(z)`, `transform_draw_z_to_screen_z(z)`
+- `transform_draw_to_entity(e, c)`, `transform_entity_to_draw(e, c)`
+- `transform_entity_to_sprite(e, c)`, `transform_sprite_to_entity(e, c)`
+- `transform_parent_to_child(e_child, c)`, `transform_child_to_parent(e_child, c)` (unlike all other transform methods, does not assume `entity_update_children` has been called)
+- `transform_entity_to_entity(e_from, e_to, c)`
+- `transform_draw_to_sprite(e, c)`, `transform_sprite_to_draw(e, c)`
+- `transform_draw_to_map(m, c)`, `transform_map_to_draw(m, c)`, `transform_map_layer_to_draw_z(m, L)`, `transform_draw_z_to_map_layer(m, z)`
+
+Where `m` is a map, `e` is an entity, and `c` is an `xy()` coordinate.
+The `z` value only affects `transform_draw_to_screen` if a skew has been set by `set_transform()`.
+In this case, there is no way to invert the draw-to-screen transformation, so `transform_screen_to_draw` is
+misleading.
+
+There are no transformation functions between entity and draw space
+z-axes. Just add or subtract the `entity.z` value.
+
+### Screen Space
+
+`compose_transform(args)`
+: Named argument version of `compose_transform()`.
+
+`compose_transform(pos (= ∅), dir (= ∅), z (= ∅), zDir (= ∅), skew (= ∅))`
+: Apply this local transformation _before_ the current one. Used for entering a child
+  coordinate system. Nil arguments or properties default to `(xy(0, 0), xy(1, 1), 0, 1, xy(0, 0))`.
+  Use `preserving_transform` or `get_transform()` plus `set_transform()` to save and restore
+  nested coordinate systems.
+
+`get_transform()`
+: Returns the current net transformation as an `args` object that could be passed to
+  `set_transform(args)`.
+
+`preserving_transform:`
+: The special `preserving_transform:` block saves the current transform, camera, and
+  clipping region, executes the code in the body, and then restores the
+  previous transform and clipping region when the block is exited (including abruptly by 
+  `return`, `continue`, or `break`). It is useful for making modular
+  functions for handling UI scrolling, minimaps, and screenshake. 
+
+`rotation_sign()`
+: Returns -1 if `(t.dir.x * t.dir.y > 0)` for `t = get_transform()`
+  and +1 if `(t.dir.x * t.dir.y < 0)`. Useful for computing the
+  coordinate transform of an entity angle. Angles are always measured
+  counter-clockwise on *screen*.  In the *draw coordinate system*, they
+  rotate counter-clockwise if `rotation_sign() = 1` and clockwise if
+  `rotation_sign() = -1` (which is the default). This is used by `draw_sprite()`
+  to determine the rotation direction. See also `up_y()`.
+
+`reset_transform()`
+: Reset to the default transformation, `set_transform(xy(0, 0), xy(1, 1), 0, 1, xy(0, 0))`.
+  This overrides the `y_up` flag from the .game.json file.
+
+`set_transform(args)`
+: Named argument object version of `set_transform()`.
+
+`set_transform(pos (= ∅), dir (= ∅), z (= ∅), zDir (= ∅), skew (= ∅))`
+: Set the transformation applied to all draw coordinates to compute screen coordinates. Nil values
+  or nil properties default to their previous value. The equation
+  mapping draw to screen coordinates is:
+  `screen.x = (draw.x + skew.x * draw.z) * dir.x + pos.x`;
+  `screen.y = (draw.y + skew.y * draw.z) * dir.y + pos.y`;
+  `screen.z = draw.z * zDir + z`.
+
+  The `dir` parameters must be +1 or -1, for flipping axes. This
+  affects the location of sprites and text but not their own axes;
+  text will always render right side up and sprites must be
+  independently flipped.
+
+  By default, increasing z is towards the viewer, a negative direction can
+  be used to make increasing values farther back.
+
+  The skew transform applies after direction flipping and can be used for isometric 3D.
+
+`up_y()`
+: Returns `-sign(get_transform().dir.y)`, which is -1 if Y increases downwards (the default)
+  and +1 if Y increases upwards (`"y_up": true` in the .game.json file).
+
+
+
+The clipping region is the only object interacted with in *screen
+space*, via `set_clip()`, `get_clip()`, and `intersect_clip()`.
+
+The screen space graphics coordinate system is:
+
+- x increasing from 0 at the left edge of the screen to `SCREEN_SIZE.x` at the right edge
+- y increasing from 0 at the top edge of the screen to `SCREEN_SIZE.y` at the bottom edge
+- z increasing from -2047 at the back to 2048 at the front
+
+Integer coordinates correspond to the top-left corner of a pixel.
+Pixel centers are therefore at integers plus ½ and the top-left 
+pixel center s (½, ½).
 
 Drawing commands sample at pixel centers. The pixel ownership rules
 are bottom and right, so a primitive that has a top or left boundary
@@ -2152,11 +2335,9 @@ pixel elements, the snapping rule is essentially that a 1-pixel rectangle
 centered at `pos` colors pixel `⌊pos⌋`.
 
 For example, the rectangle from (0, 0) to
-(2, 1) covers two pixel centers: (0.5, 0.5) and (1.5, 0.5). The coordinates
-for a `draw_corner_rect()` command on integer boundaries are therefore usually
-`draw_corner_rect(topLeft, widthHeight, ...)` or
-`draw_corner_rect(topLeft, bottomRight - topLeft + 1, ...)` where `bottomRight` is the
-lowest and rightmost pixel that will be visible.
+(2, 1) covers two pixel centers: (0.5, 0.5) and (1.5, 0.5). 
+Setting this as the
+clipping region makes two pixels visible.
 
 This coordinate system favors intuition for centered, even-sized
 objects such as sprites. It also gives the result that you might
@@ -2188,103 +2369,38 @@ is centered at (1.5, 1.5) but will draw in the same way if centered
 at (1, 1), which would be consistent with integer pixel centers.
 The center of the entire screen is `½ SCREEN_SIZE`.
 
+### Camera Space
 
-`compose_transform(args)`
-: Named argument version of `compose_transform()`.
+Note that `preserving_transform` also preserves the camera.
 
-`compose_transform(pos (= ∅), dir (= ∅), z (= ∅), zDir (= ∅), skew (= ∅))`
-: Apply this local transformation _before_ the current one. Used for entering a child
-  coordinate system. Nil arguments or properties default to `(xy(0, 0), xy(1, 1), 0, 1, xy(0, 0))`.
-  Use `preserving_transform` or `get_transform()` plus `set_transform()` to save and restore
-  nested coordinate systems.
-
-`get_transform()`
-: Returns the current net transformation as an `args` object that could be passed to
-  `set_transform(args)`.
-
-<!--
 `get_camera()`
-: Returns the current camera as an `args` object that could be passed to `set_camera(args)`. -->
+: Returns the current camera as an `args` object that could be passed to `set_camera(args)`.
 
-`preserving_transform:`
-: The special `preserving_transform:` block saves the current transform, camera, and
-  clipping region, executes the code in the body, and then restores the
-  previous transform and clipping region when the block is exited (including abruptly by 
-  `return`, `continue`, or `break`). It is useful for making modular
-  functions for handling UI scrolling, minimaps, and screenshake. 
+`reset_camera()`
+: `set_camera({pos: xy(0, 0), angle: 0deg, zoom: 100%, z: 0})`
 
-`reset_transform()`
-: Reset to the default transformation, `set_transform(xy(0, 0), xy(1, 1), 0, 1, xy(0, 0))`.
-  This overrides the `y_up` flag from the .game.json file.
-
-`rotation_sign()`
-: Returns -1 if `(t.dir.x * t.dir.y > 0)` for `t = get_transform()`
-  and +1 if `(t.dir.x * t.dir.y < 0)`. Useful for computing the
-  coordinate transform of an entity angle. Angles are always measured
-  counter-clockwise on *screen*.  In the *draw coordinate system*, they
-  rotate counter-clockwise if `rotation_sign() = 1` and clockwise if
-  `rotation_sign() = -1` (which is the default). This is used by `draw_sprite()`
-  to determine the rotation direction. See also `up_y()`.
-<!--
 `set_camera(args)`
 : Named argument object version of `set_camera()`.
 
-`set_camera(pos (= xy(0, 0)), angle (= 0), zoom (= 1))`
+`set_camera(pos (= xy(0, 0)), angle (= 0), zoom (= 1), z (= 0))`
 : Positions the camera used to transform other draw calls. Note that
   `zoom` is the inverse of a scale transformation on the camera itself.
-  Use `set_transform()` to move the on-screen origin. -->
-
-`set_transform(args)`
-: Named argument object version of `set_transform()`.
-
-`set_transform(pos (= ∅), dir (= ∅), z (= ∅), zDir (= ∅), skew (= ∅))`
-: Set the transformation applied to all draw coordinates to compute screen coordinates. Nil values
-  or nil properties default to their previous value. The equation
-  mapping draw to screen coordinates is:
-  `screen.x = (draw.x + skew.x * draw.z) * dir.x + pos.x`;
-  `screen.y = (draw.y + skew.y * draw.z) * dir.y + pos.y`;
-  `screen.z = draw.z * zDir + z`.
-
-  The `dir` parameters must be +1 or -1, for flipping axes. This
-  affects the location of sprites and text but not their own axes;
-  text will always render right side up and sprites must be
-  independently flipped.
-
-  By default, increasing z is towards the viewer, a negative direction can
-  be used to make increasing values farther back.
-
-  The skew transform applies after direction flipping and can be used for isometric 3D.
-
-`up_y()`
-: Returns `-sign(get_transform().dir.y)`, which is -1 if Y increases downwards (the default)
-  and +1 if Y increases upwards (`"y_up": true` in the .game.json file).
+  Use `set_transform()` to move the on-screen origin.
+  
+  `zoom` can be a number or a function, `zoom(z)`. If it is a function,
+  it computes the zoom factor for an object at `z` in camera space.
+  This is useful for creating pseudo-3D effects. If you do not want your
+  map layers to zoom in perspective, set the `"z_scale"` value in the map.json file to a 
+  small number or zero. Enabling a zoom function with nonzero `z_scale` 
+  can make map rendering significantly slower in the case of multiple layers because it disables
+  occlusion culling.
+  
+  To render sprites with parallax but 1:1 pixel scaling when using a zoom 
+  function, set the sprite or entity `scale` to `1 / camera.zoom(entity.pos.z - camera.pos.z)`.
 
 
+### Entity Space
 
-The most common changes are:
-
-- flip the y-axis using `set_transform(xy(0, SCREEN_SIZE.y - 1), xy(1, -1))`. You can also accomplish this by setting `"y_up": true` in the .game.json file.
-- flip y and center using `set_transform(½ SCREEN_SIZE, xy(1, -1))`
-- screenshake using `set_transform(randomSquare())`
-
-The default coordinate system is convenient for games that line up
-objects with background images, use a lot of text, or sample values
-from sprites. The inverted coordinate system is preferable for games
-with a lot of rotation or physics simulation.
-
-Unlike 3D rendering systems with arbitrary transformations, the
-quadplay✜ transformations are designed specifically for switching
-between axis conventions in arcade games. They do not allow rotation
-or even non-unit scaling between draw space and screen space. They
-also _do not affect the orientation of sprites_.  A sprite rotated 45
-degrees counter-clockwise and at the top of the screen will draw at
-the bottom of the screen after `set_transform(xy(0, SCREEN_SIZE.y - 1), xh(1, -1))`,
-but it will not be upside down and will still be rotated
-45 degrees counter-clockwise.
-
-
-#### Entity Space
-vvv
 Each entity has its own coordinate system defined by `entity.pos`,
 `entity.scale`, and `entity.angle`. The `entity.scale` is often used to
 flip sprites from left to right, which also flips the entity's local
@@ -3245,6 +3361,8 @@ endpoints and borders.
   multiples.
 
   See also `draw_corner_rect()` and `draw_rect()`.
+  
+  This routine ignores the global camera. That may change before SDK version 1.0.
 
 `draw_text(args)`
 : Keyword version of `draw_text()`. Pass an object that has properties
@@ -3254,7 +3372,10 @@ endpoints and borders.
 
 `draw_text(font, text, pos, color (= ∅), shadow (= ∅), outline (= ∅), x_align (= "left"), y_align (= "baseline"), z (= 0), wrap_width (= ∅), text_size (= size(text)), markup (= false))`
 : Print string `text` relative to `pos`. Returns an `xy()` of the bounding box,
-  excluding shadows and outline.
+  excluding shadows and outline.  The positioning of text will follow the transform and camera,
+  but individual letters always draw upright and 1:1 pixel perfect, 
+  without flipping, rotation, or scaling, no matter what the transform or camera
+  are.
 
   x-alignment of `-1` or `"left"` = left,
   `0` or `"center"` = center, `+1` or `"right"` = right,
@@ -3461,10 +3582,7 @@ indices. The map's z-axis corresponds to layers.
 `draw_map(args)`
 : Draw the map using the named argument object.
 
-<!--
-`draw_map(map, min_layer (= 0), max_layer (= length(map.layer)), replacement_array (= ∅), pos (= xy(0, 0)), angle (= 0), scale (= xy(1, 1)))`
--->
-`draw_map(map, min_layer (= 0), max_layer (= length(map.layer)), replacement_array (= ∅))`
+`draw_map(map, min_layer (= 0), max_layer (= length(map.layer)), replacement_array (= ∅), pos (= xy(0, 0)), angle (= 0), scale (= xy(1, 1)), z (= 0))`
 : Draws the map with the current transform.  If there is no transform,
   the map is drawn with the first tile's center at (0, 0), which means
   that the tile will be half off the screen.  If specified, `min_layer`
@@ -3481,10 +3599,10 @@ indices. The map's z-axis corresponds to layers.
   appropriately horizontally or vertically when drawn, if it is large
   enough to covers at least 1/3 of the current clipping area.
   
-  The `pos`, `angle`, and `scale` apply the position of the map
-  as if it was a giant object centered at the center of tile (0, 0).
-  Using a non-default `angle` and `scale` will approximately double
-  the cost of drawing the map.
+  The `pos`, `angle`, and `scale` apply the position of the map as if
+  it was a giant object, with the origin centered at the center of
+  tile (0, 0).  Using a non-default `angle` and `scale` will
+  approximately double the cost of drawing the map.
 
 `find_map_path(map, startXY, goalXY, edgeCost, costLayer = 0)`
 : Specialized version of `find_path` for maps. The start and end positions
@@ -3492,18 +3610,17 @@ indices. The map's z-axis corresponds to layers.
   is either a function or an array. The function returns an array of
   map coordinates to visit or `nil` if no traversable path exists.
 
-  The function version is `def edgeCost(A, B, map)`. It returns
-  the cost of traversing from `A` to `B` in the map, where
-  each is an `xy()`. That cost should always be nonnegative. It
-  should be 1 for a typical edge,
-  `infinity` for an edge that is not traversable, and higher or lower
-  than 1 for edges of varying difficulty such as walking through
-  rough terrain or downhill.
+  The function version is `def edgeCost(A, B, map)`. It returns the
+  cost of traversing from `A` to `B` in the map, where each is an
+  `xy()`. That cost should always be nonnegative. It should be 1 for a
+  typical edge, `infinity` for an edge that is not traversable, and
+  higher or lower than 1 for edges of varying difficulty such as
+  walking through rough terrain or downhill.
 
   The array version of `edgeCost` is an array of pairs of the form
-  `[sprite0, cost0,   sprite1, cost1, ...]`. Each cost corresponds
-  to entering that sprite on `map.layer[costLayer]`. These are the
-  `B` values from `edgeCost`. Sprites that are not specified in the array
+  `[sprite0, cost0, sprite1, cost1, ...]`. Each cost corresponds to
+  entering that sprite on `map.layer[costLayer]`. These are the `B`
+  values from `edgeCost`. Sprites that are not specified in the array
   cost 1 to traverse, and it costs `infinity` to leave the map bounds.
 
 `get_map_pixel_color(map, map_coord, layer (= 0), replacement_array (= ∅))`
@@ -3774,18 +3891,18 @@ These APIs are subject to change.
   remaining arguments are passed to it. All `device_control()` commands
   may change in future releases and may not work on any given platform.
 
-  - `"startGIFRecording"` Begin GIF recording.
-  - `"stopGIFRecording"`  End GIF recording. When the compression completes, the GIF will appear in a
+  - `"start_GIF_recording"` Begin GIF recording.
+  - `"stop_GIF_recording"`  End GIF recording. When the compression completes, the GIF will appear in a
      new tab.
-  - `"startPreviewRecording"` Begin preview video recording. There is no "stop" command because this
+  - `"start_preview_recording"` Begin preview video recording. There is no "stop" command because this
      terminates automatically after a set time.
-  - `"takeScreenshot"`    Take a screenshot and download it to the local disk.
-  - `"setPadType", index, "type"` Set `gamepad_array[index].type` and the corresponding prompts.
-  - `"getAnalogAxes", index` Return an `xy()` of the analog axis values for `gamepad_array[index]`, without D-pad snapping.
+  - `"take_screenshot"`    Take a screenshot and download it to the local disk.
+  - `"set_pad_type", index, "type"` Set `gamepad_array[index].type` and the corresponding prompts.
+  - `"get_analog_axes", index` Return an `xy()` of the analog axis values for `gamepad_array[index]`, without D-pad snapping.
     Needed for accessing Atari paddles, car pedals, steering wheels, and flight stick throttles in a meaningful way.
-  - `"setDebugFlag", flagname, bool` Set the enabled state of an IDE debugging flag. The flagnames are
-    `"entityBounds"`, `"assert"`, `"debug_print"`, `"debug_watch"`, `"physics"`.
-  - `"getDebugFlag", flagname` Return the state of an IDE debugging flag.
+  - `"set_debug_flag", flagname, bool` Set the enabled state of an IDE debugging flag. The flagnames are
+    `"entity_bounds"`, `"assert"`, `"debug_print"`, `"debug_watch"`, `"physics"`.
+  - `"get_debug_flag", flagname` Return the state of an IDE debugging flag.
 
 `draw_bounds(e, color (= gray(60%)), recurse (= true))`
 : Render a debugging view of the bounds of an entity or other object `e`
@@ -4074,6 +4191,14 @@ Sprites
 ![`quad://sprites/space-ring.sprite.json`](../sprites/space-ring.png)
 
 
+### Spy Set
+
+![`quad://sprites/sportscar-32x64.sprite.json`](../sprites/sportscar-32x64.png)
+![`quad://sprites/road_tiles_64.sprite.json`](../sprites/road_tiles_64.png)
+![`quad://sprites/chopper-body-44x99.sprite.json`](../sprites/chopper-44x99.png)
+![`quad://sprites/tank-body-46x85.sprite.json`](../sprites/tank-46x85.png)
+
+
 ### Other
 ![`quad://sprites/miniroguelike-8x8.sprite.json`](../sprites/miniroguelike-8x8.png)
 ![`quad://sprites/ortho-city-32x16.sprite.json`](../sprites/ortho-city-32x16.png)
@@ -4113,6 +4238,8 @@ Fonts
 ![`quad://fonts/bogart-9.font.json`](../fonts/bogart-9.png)
 
 ![`quad://fonts/runes-9.font.json`](../fonts/runes-9.png)
+
+![`quad://fonts/suchet-9.font.json`](../fonts/suchet-9.png)
 
 ![`quad://fonts/thompson-8.font.json`](../fonts/thompson-8.png)
 
@@ -4733,6 +4860,10 @@ in files ending with `.tmx`. Only the following properties are currently support
 - Tile layers (other layers are ignored)
 - Embedded tile set
 
+Flipped sprites (horizontal, vertical, and both) in TMX maps are
+supported. Rotated sprites are not supported.  Note that 180 degree
+rotation can be achieved by flipping both horizontally and vertically.
+
 ![Tiled program options for creating a new map.](tiled-new-map.png width=50% style="image-rendering:auto")
 
 The tile render order from the map is ignored.
@@ -5311,7 +5442,7 @@ not variable names and thus cannot be redefined. Several have both unicode and A
 
 Symbol         | ASCII           | Value
 ---------------|-----------------|----------------------------------------
-`ε`            | `epsilon`       | `0.0000001`
+`ε`            | `epsilon`       | `0.000001`
 `π`            | `pi`            | `3.141592653589793115997963468544185161590576171875`
 `∞`            | `infinity`      | infinity
                | `nan`           | floating-point "not-a-number" value
@@ -5976,19 +6107,43 @@ D-pad <big>⍈</big>   | button 15
 
 The D-pad is not typically provided for an arcade setup. quadplay✜
 automatically maps the analog stick into D-pad inputs as well
-as providing analog access under `device_control()`. 
+as providing analog access under `device_control()`.
+
 The ⓔ button should be placed where it can
 be easily held while using the main buttons and stick, for example, 
 as a hat button on the stick or under the right thumb or pinkie. The
 ⓕ button should be placed where it can be used similarly, but ⓔ should
 be the more convenient of the two. Note the positioning of the
-player 1 and 2 ⓕ on the keyboard compared to on a NES-style gamepad.
+player 1 and 2 ⓔ and ⓕ on the keyboard compared to on a NES-style gamepad...the
+keyboard controls place these buttons _lower_ than on a gamepad, so that they
+are in reach of the pinkies for eas of holding down. They are not "shoulder"
+buttons, even though that is the best location for them on a physical controller.
 
 
 If building a physical cabinet or handheld _without_
 on-screen mobile controls, I recommend using a 1280x720,
 1600x900, or 1920x1200 display to efficiently fill the screen with
 integer pixel scaling.
+
+Some exact ratios when using quadplay's maximum 384x224 resolution are:
+
+Screen     | Integer     | Used      | Efficiency  | Autoscaler | Used      | Efficiency
+----------:|------------:|----------:|------------:|-----------:|----------:|---------:
+480x320    |  1x         | 384x224   | 56%         | 1.00x      | 384x224   | 56%
+640x360    |  1x         | 384x224   | 37%         | 1.00x      | 384x224   | 37%
+640x480    |  1x         | 384x224   | 28%         | 1.00x      | 384x224   | 28%
+800x480    |  2x         | 768x448   | 72%         | 2.00x      | 768x448   | 72%
+1024x768   |  2x         | 768x448   | 44%         | 2.00x      | 768x448   | 44%
+*1280x720* |  *3x*       |*1152x672* | *84%*       | 3.21x      | 1234x720  | 96%
+1280x800   |  *3x*       | 1152x672  | 76%         | 3.33x      | 1280x747  | 93%
+1366x768   |  3x         | 1152x672  | 74%         | 3.41x      | 1316x768  | 96%
+1440x900   |  3x         | 1152x672  | 60%         | 3.75x      | 1440x840  | 93%
+*1600x900* |  *4x*       |*1536x896* | *96%*       | 4.02x      | 1544x900  | 97%
+1680x1050  |  4x         | 1536x896  | 78%         | 4.38x      | 1680x980  | 93%
+1920x1080  |  4x         | 1536x896  | 66%         | 4.82x      | 1852x1080 | 96%
+*1920x1200*|  *5x*       |*1920x1120*| *93%*       | 5.00x      | 1920x1120 | 93%
+
+
 
 ### Buy
 
@@ -6299,8 +6454,13 @@ spent per frame. If time spent is less than 16 ms, then your program
 is running at 60 fps. If time spent is higher than 16 ms, then you may
 need to optimize.
 
-`draw_map()` is substantially faster than making the same `draw_sprite()` calls
-by yourself.
+`draw_map()` is substantially faster than making the same
+`draw_sprite()` calls by yourself. It culls all off-screen
+sprites. Drawing a map with `zoom = 1` or `z_scale = 0` is faster than
+with perspective and zoom. Tiles without alpha will cull everything
+behind them when not using perspective, so you don't have to leave out
+the hidden map tiles for performance when drawing maps. Maps with
+opaque tiles that are not rotated or scaled draw extremely fast.
 
 A sequence of `draw_point()` commands that all have the same `z` value is
 much faster than ones with mixed `z` values or broken up by other rendering
@@ -6428,16 +6588,17 @@ Python, [PICO-8](https://www.lexaloffle.com/pico-8.php),
 
 The quadplay✜ IDE and compiler are copyright 2019-2020 Morgan McGuire, including:
 
-- [`pyxlscript-compiler.js`](../console/pyxlscript-compiler.js)
 - [`quadplay.html`](../console/quadplay.html)
 - [`quadplay.css`](../console/quadplay.css)
+- [`pyxlscript-compiler.js`](../console/pyxlscript-compiler.js)
 - [`quadplay-runtime-cpu.js`](../console/quadplay-runtime-cpu.js)
 - [`quadplay-runtime-gpu.js`](../console/quadplay-runtime-gpu.js)
 - [`quadplay-profiler.js`](../console/quadplay-profiler.js)
 - [`quadplay-host.js`](../console/quadplay-host.js)
 - [`quadplay-ide.js`](../console/quadplay-ide.js)
-- [`quadplay-codeedit.js`](../console/quadplay-codeedit.js)
-- [`quadplay-constantedit.js`](../console/quadplay-constantedit.js)
+- [`quadplay-edit-asset.js`](../console/quadplay-edit-asset.js)
+- [`quadplay-edit-code.js`](../console/quadplay-edit-code.js)
+- [`quadplay-edit-constant.js`](../console/quadplay-edit-constant.js)
 - [`quadplay-font.js`](../console/quadplay-font.js)
 - [`quadplay-load.js`](../console/quadplay-load.js)
 
@@ -6555,11 +6716,11 @@ the browser reduced to the quadplay✜ debugging output and emulator.
 
 Be careful to always end your *filenames* with _two_ extensions:
 `.game.json`, `.sprite.json`, `.map.json`, etc. This is how the IDE
-and compiler know what they are loading.
+and compiler knows what type it is loading.
 
 Take note of the 4-bit sprite
 [quantizing tool](../tools/quantize.html). I find it better than the
-quality produced by Photoshop for quadplay color reduction.
+quality produced by Photoshop for color reduction.
 
 
 Change Log
@@ -6567,14 +6728,45 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
+2020 May 1: Beta update 40
+
+- Added `set_camera()` and `get_camera()` and global camera support
+  to all drawing functions for camera rotation, translation, and zoom
+- Added occlusion culling optimizations to `draw_map()` for eliminating
+  completely covered tiles
+- New sportscar sprites
+- New attack helicopter ("chopper") sprites
+- New tank sprites
+- New road tile sprites
+- New suchet-9 font
+- Removed browser context menu from most UI surfaces (it is still
+  present on links and text boxes)
+- Constants can now be deleted from a project
+- Assets can now be renamed in a project
+- Added `pos`, `angle`, and `scale` arguments to `draw_map()`
+- Implemented z clipping for `draw_map()`
+- Added `examples/vehicles` sample
+- Renamed "draw" space to "world" space and introduced "camera" space
+- Removed screen-space touch events
+- Changed all `device_control()` arguments to snake case
+- map.json `z_scale` is now permitted to be 0
+- Increased the built-in epsilon value by 10x and decreased the 
+  sprite draw call order-preserving offset by 1000x to ensure that epsilons
+  can override sprite draw call order
+- Made Ctrl/Cmd-S do nothing, to avoid accidentally saving the browser page
+  when using the IDE (since the game autosaves)
+- Fixed map preview rendering of flipped sprites
+- Fixed `set_clip()` with `pos = nil`
+- Added autocorrect for math symbols option to the Tools menu
+
 2020 Apr 25: Beta update 39
 
 - Added ⓔ and ⓕ buttons, which are mapped to shoulder buttons on physical controllers
 - Added a new playable game, "Across the Lake"
 - New games can now be created from the browser based IDE using "New Game..."
 - Games can now be loaded from the browser based IDE using "Open Game..."
-- Changed `lifetime` and `duration` arguments to various APIs to `frames` in for consistency
-  with the sprite and other settings, and the name "frame hook"
+- Changed `lifetime` and `duration` arguments to various APIs to `frames` for consistency
+  with the sprite and other settings, and to match the name "frame hook"
 - Fixed Ctrl/Command+C not copying in the IDE
 - Added an Animation section for sprites
 - Added `animation.frame()` for accessing animations by game frames instead of sprite index
@@ -6592,8 +6784,8 @@ Changes for both the specification and implementation in each release.
 - The IDE now puts badges on constants that are uneditable because the .game.json file is 
   on a remote server or built-in
 - `quadplay` script no longer prints all internal messages
-- Changed default startup mode to `Emulator` for non-IDE mobile, `Maximal` for non-IDE 
-  desktop, and `IDE` for IDE present
+- Changed default startup UI layout to `Emulator` for non-IDE mobile, `Maximal` for non-IDE 
+  desktop, and `IDE` if running in IDE mode
 
 2020 Apr 17: Beta update 38
 

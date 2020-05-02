@@ -331,3 +331,94 @@ function onNewConstantCreate() {
         });
     });
 }
+
+
+function onRemoveConstant(key) {
+    if (confirm('Remove constant \'' + key + '\' from this project?')) {
+        delete gameSource.json.constants[key];
+        serverSaveGameJSON(function () {
+            loadGameIntoIDE(window.gameURL);
+        });
+    }
+}
+
+
+function onEditConstantMetadata(key) {
+    /*
+    // Reload
+    serverSaveGameJSON(function () {
+        loadGameIntoIDE(window.gameURL, function () {
+            // Select
+            onProjectSelect(document.getElementById('projectConstant_' + key), 'constant', key);
+        });
+    });
+    */
+}
+
+
+function onEditConstantDescription(constantName) {
+    let json = gameSource.json.constants[constantName];
+    
+    let description = json.description || '';
+    
+    description = window.prompt("Description for constant '" + constantName + "'", description);
+    if (description) {
+        switch (typeof json) {
+        case 'string': json = {'type': 'string', 'value': json}; break;
+        case 'number': json = {'type': 'number', 'value': json}; break;
+        }
+        json.description = description;
+        gameSource.json.constants[constantName] = json;
+        
+        serverSaveGameJSON(function () {
+            loadGameIntoIDE(window.gameURL, function () {
+                // Select
+                onProjectSelect(document.getElementById('projectConstant_' + key), 'constant', key);
+            });
+        });
+    }
+}
+
+
+function onRenameConstant(constantName) {
+    let newName;
+    while (true) {
+        newName = window.prompt("New name for constant '" + constantName + "'", constantName);
+        if (! newName || newName === '') { return; }
+        
+        // Mangle
+        newName = newName.replace(/(^_|[^_0-9A-Za-z])/g, '');
+
+        // Check for conflict
+        if (gameSource.json.assets[newName]) {
+            window.alert("There is already an  asset named '" + newName + "'");
+        } else if (gameSource.json.constants[newName]) {
+            window.alert("There is already another constant named '" + newName + "'");
+        } else {
+
+            // Perform the rename
+            gameSource.json.constants[newName] = gameSource.json.constants[constantName];
+            delete gameSource.json.constants[constantName];
+            
+            serverSaveGameJSON(function () {
+                loadGameIntoIDE(window.gameURL, function () {
+                    // Select the renamed asset
+                    onProjectSelect(document.getElementById('projectConstant_' + newName), 'constant', newName);
+                });
+            });
+            
+            return;
+        } // if ok name
+    } // while true
+}
+
+
+function showConstantContextMenu(constantName) {
+    const getElement = `document.getElementById('projectConstant_${constantName}')`;
+    customContextMenu.innerHTML =
+        `<div onmousedown="onProjectSelect(${getElement}, 'constant', '${constantName}')">Change Value</div>` +
+        `<div onmousedown="onRenameConstant('${constantName}')">Rename&hellip;</div>` +
+        `<div onmousedown="onEditConstantDescription('${constantName}')">Edit Description&hellip;</div>` +
+        `<hr><div onmousedown="onRemoveConstant('${constantName}')">Remove '${constantName}'</div>`;
+    showContextMenu();
+}

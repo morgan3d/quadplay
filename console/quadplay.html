@@ -63,7 +63,7 @@
       </div>
     </div>
     <div id="consoleMenu" class="unselectable dropdown">
-      <label><input id="backgroundPauseCheckbox" type="checkbox" checked onclick="onBackgroundPauseClick(event)" autocomplete="off">Background pause</label>
+      <label><input id="backgroundPauseCheckbox" type="checkbox" title="Pause the game when not in focus" checked onclick="onBackgroundPauseClick(event)" autocomplete="off">Background pause</label>
       <hr>
       <label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('pink')" type="radio" id="pinkColorScheme" checked autocomplete="off">Pink</label>
       <br/><label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('orange')" type="radio" id="orangeColorScheme" autocomplete="off">Orange</label>
@@ -73,10 +73,10 @@
       <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('black')" id="blackColorScheme" autocomplete="off">Black</label>
             <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('white')" id="whiteColorScheme" autocomplete="off">White</label>
       <hr>
-      <div class="IDEOnly"><a onclick="window.open('../doc/controls.html', '', 'width=400,height=500')">Controls</a></div>
-      <div class="noIDE"><a href="../doc/manual.md.html">Create Games</a></div>
-      <div><a href="http://quadplay.freeforums.net/" target="_blank">Forums</a></div>
-      <div><a href="http://casual-effects.com" target="_blank">CasualEffects</a></div>
+      <div class="IDEOnly"><a onclick="window.open('../doc/controls.html', '', 'width=400,height=500')" title="Show keyboard and gamepad controls in a popup window">Controls</a></div>
+      <div class="noIDE"><a href="../doc/manual.md.html" title="Use quadplay to make your own games like this">Create Games</a></div>
+      <div><a href="http://quadplay.freeforums.net/" target="_blank" title="The online quadplay community">Forums</a></div>
+      <div><a href="https://casual-effects.com" target="_blank" title="Website for the quadplay creator">CasualEffects</a></div>
     </div>
 
     <div id="toolsMenu" class="unselectable dropdown IDEOnly">
@@ -85,8 +85,9 @@
       <div><a onclick="onNewGameClick()">New Game…</a></div>
       <hr>
       <label><input id="assertEnabled" type="checkbox" onclick="debugOptionClick(event)" checked autocomplete="off">Enable <code>assert</code></label>
-      <br/><label><input id="showEntityBoundsEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Show entity bounds</label>
-      <br/><label><input id="showPhysicsEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Show physics</label>
+      <br/><label><input id="showEntityBoundsEnabled" type="checkbox" onclick="debugOptionClick(event)" title="Visualize debugging bounds on draw_entity() calls" autocomplete="off">Show entity bounds</label>
+      <br/><label><input id="showPhysicsEnabled" type="checkbox" onclick="debugOptionClick(event)" title="Visualize debugging data from the physics system" autocomplete="off">Show physics</label>
+      <br/><label><input id="automathEnabled" type="checkbox" onclick="" title="Automatically convert text to math symbols in the code editor" autocomplete="off">Automath in editor</label>
       <hr>
       <div><a href="../tools/quantize.html" target="_blank">quantize✜</a></div>
       <div><a href="../tools/fontgen.html" target="_blank">fontgen✜</a></div>
@@ -493,13 +494,13 @@
       </div>
     </div>
     
-    <div id="importAssetDialog" class="modal hidden">
+    <div id="addAssetDialog" class="modal hidden">
       <div class="dialog" style="top:10px; width: 400px">
         <center>
-          <b>Import Existing Asset</b>
+          <b>Add Existing Asset</b>
           <p>
-            <label for="importAssetType">Type&nbsp;&nbsp;</label>
-            <select id="importAssetType" style="width:320px" onchange="onImportAssetTypeChange()">
+            <label for="addAssetType">Type&nbsp;&nbsp;</label>
+            <select id="addAssetType" style="width:320px" onchange="onAddAssetTypeChange()">
               <option value="sprite">Sprite</option>
               <option value="sound">Sound</option>
               <option value="font">Font</option>
@@ -507,16 +508,16 @@
             </select>
           </p>
           <p>
-            <div id="importAssetList" style="width:380px; height: 300px; background: #fff; border-radius: 2px; overflow: scroll scroll; color: #888; text-align: left; font-size: 80%; font-family: Monaco, monospace">
+            <div id="addAssetList" style="width:380px; height: 300px; background: #fff; border-radius: 2px; overflow: scroll scroll; color: #888; text-align: left; font-size: 80%; font-family: Monaco, monospace">
             </div>
           </p>
           <p>
-            <label for="importAssetName">Name&nbsp;&nbsp;</label>
-            <input id="importAssetName" type="text" style="font-size: 80%; font-family: Monaco, monospace; width: 320px" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '').replace(/^_+/, '');document.getElementById('importAssetImportButton').disabled = (this.value === '' || !importAssetFiles.selected)"></input>
+            <label for="addAssetName">Name&nbsp;&nbsp;</label>
+            <input id="addAssetName" type="text" style="font-size: 80%; font-family: Monaco, monospace; width: 320px" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '').replace(/^_+/, '');document.getElementById('addAssetAddButton').disabled = (this.value === '' || !addAssetFiles.selected)"></input>
           </p>
           <br/>
-          <button type="button" onclick="hideImportAssetDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span>
-          <button type="button" id="importAssetImportButton" onclick="onImportAssetImport()">Import</button>
+          <button type="button" onclick="hideAddAssetDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span>
+          <button type="button" id="addAssetAddButton" onclick="onAddAssetAdd()">Add</button>
         </center>
       </div>
     </div>
@@ -546,6 +547,8 @@
         </center>
       </div>
     </div>
+
+    <div id="customContextMenu" style="visibility:hidden; z-index: 10"></div>
     
     <!-- based on https://github.com/sitexw/BlockAdBlock/blob/master/blockadblock.js -->
     <div id="adblockDetector" class="pub_300x250 pub_300x250m pub_728x90 text-ad textAd text_ad text_ads text-ads text-ad-links"></div>
@@ -595,7 +598,8 @@
   <script defer src="quadplay-font.js" charset="utf-8"></script>
   <script defer src="quadplay-load.js" charset="utf-8"></script>
   <script defer src="quadplay-profiler.js" charset="utf-8"></script>
-  <script defer src="quadplay-codeedit.js" charset="utf-8"></script>
-  <script defer src="quadplay-constantedit.js" charset="utf-8"></script>
+  <script defer src="quadplay-edit-code.js" charset="utf-8"></script>
+  <script defer src="quadplay-edit-asset.js" charset="utf-8"></script>
+  <script defer src="quadplay-edit-constant.js" charset="utf-8"></script>
   <script defer src="quadplay-ide.js" charset="utf-8"></script>
 </html>

@@ -1,0 +1,228 @@
+Play
+════════════════════════════════════════════════════════════════════════
+// Z is elevation in this game and the vehicle faces along its Y axis,
+// which is up.
+
+const player = make_entity({
+   name: "player",
+   type: "car",
+   speed: 0,
+   pos: ½ WORLD_DATA.size * WORLD_DATA.sprite_size,
+   angle: 0°,
+   z: Z_MIN,
+   scale: xy(50%, 50%),
+   sprite: CAR_SPRITESHEET[0][0],
+   joy: joy,
+   vel: xy(0,0),
+   controls: {}})
+
+
+def perspective_zoom(z):
+   // Traditional linear perspective (hyperbolic function):
+   // const clip_z = 6.5
+   // return clip_z / (clip_z - z)
+   
+   // Exponential perspective function:
+   // Avoids the need for z clipping. Won't preserve
+   // straight vertical lines over large z distances
+   return 0.9^-z
+
+const camera = {
+   pos: player.pos, 
+   angle: player.angle, 
+   z: player.z,
+   zoom: perspective_zoom
+}
+
+
+def simulate_car(player):
+   player.z = Z_MIN
+   with angle, speed, joy, vel in player:
+      angle += -2° joy.x * sign(speed) * min(1, 140% |speed| / CAR_MAX_FORWARD_SPEED)
+      if joy.y * up_y() > 0:
+         speed = min(CAR_MAX_FORWARD_SPEED, speed + CAR_FORWARD_ACCELERATION)
+      else if joy.y * up_y() < 0:
+         if speed > 0:
+            // Brake
+            speed = max(0, 93% speed - 0.025)
+         else:
+            // Reverse
+            speed = max(-CAR_MAX_REVERSE_SPEED, speed - CAR_REVERSE_ACCELERATION)
+      else:
+         // Slow down gently
+         speed = sign(speed) * max(0, 99% |speed| - 0.01)
+   
+      vel = xy(sin(-player.angle * rotation_sign()), cos(player.angle)) * player.speed
+
+
+
+def simulate_chopper(player):
+   player.blades.angle_in_parent += 10°
+   with z, angle, speed, joy, vel in player:
+      // Up and down
+      z = clamp(z + 4% (joy.d - joy.c), Z_MIN, Z_MAX)
+      
+      // Turn
+      angle += -2° joy.x
+
+      const axis = xy(sin(-player.angle * rotation_sign()), cos(angle))
+      
+      // Front-back      
+      vel += CHOPPER_ACCELERATION * up_y() * joy.y * axis
+      
+      // Strafe
+      vel += CHOPPER_ACCELERATION * (joy.e - joy.f) * perp(axis)
+      
+      // Drag
+      speed = clamp(‖vel‖ - 0.0075, 0, CHOPPER_MAX_SPEED)
+      vel = direction(vel) * speed
+
+
+def simulate_tank(player):
+   player.z = Z_MIN
+   with angle, speed, joy, vel in player:
+      angle += -1° joy.x
+      if joy.y * up_y() > 0:
+         speed = min(TANK_MAX_FORWARD_SPEED, speed + TANK_FORWARD_ACCELERATION)
+      else if joy.y * up_y() < 0:
+         if speed > 0:
+            // Brake
+            speed = max(0, 93% speed - 0.025)
+         else:
+            // Reverse
+            speed = max(-TANK_MAX_REVERSE_SPEED, speed - TANK_REVERSE_ACCELERATION)
+      else:
+         // Slow down gently
+         speed = sign(speed) * max(0, 99% |speed| - 0.01)
+   
+      vel = xy(sin(-player.angle * rotation_sign()), cos(player.angle)) * player.speed
+      
+   player.turret.angle_in_parent = clamp(player.turret.angle_in_parent + 1.25° (player.joy.e - player.joy.f), -85°, 85°)
+
+
+def set_vehicle(player, type):
+   player.type = type
+   entity_remove_all(player)
+   player.blades = nil
+   player.turret = nil
+   
+   if type == "car":
+      player.sprite = CAR_SPRITESHEET[0][0]
+      player.simulate = simulate_car
+      player.controls = {
+         "(q)": "Change vehicle",
+         "[<][>]": "Turn",
+         "[^]": "Accelerate",
+         "[v]": "Brake/Reverse"
+      }
+   else if type == "chopper":
+      player.sprite = CHOPPER_BODY_SPRITESHEET[0][0]
+      player.blades = entity_add_child(player, make_entity({
+         name: "blades",
+         sprite: CHOPPER_BLADES_SPRITESHEET[1][0]
+         }))
+      player.simulate = simulate_chopper
+      player.controls = {
+         "(q)": "Change vehicle",
+         "[<][>]": "Turn",
+         "[^]": "Forward",
+         "[v]": "Reverse",
+         "(e)": "Left",
+         "(f)": "Right",
+         "(d)": "Ascend",
+         "(c)": "Descend"
+     }
+   else if type == "tank":
+      player.sprite = TANK_BODY_SPRITESHEET[0][0]
+      player.turret = entity_add_child(player, make_entity({
+         name: "turret",
+         sprite: TANK_TURRET_SPRITESHEET[0][0]
+         }))
+      player.simulate = simulate_tank
+      player.controls = {
+         "(q)": "Change vehicle",
+         "[<][>]": "Turn",
+         "[^]": "Accelerate",
+         "[v]": "Brake/Reverse",
+         "(e)": "Turret Left",
+         "(f)": "Turret Right"
+     }
+
+   player.size = player.sprite.size
+      
+      
+
+def simulate_player(player):
+   player.simulate(player)
+   player.pos += player.vel
+
+
+def draw_controls(player) preserving_transform:
+   set_transform(xy(0, 0), xy(1, 1))
+   const pos = xy(5, 10)
+   for control in player.controls:
+      draw_text(font, replace(control, player.joy.prompt), pos, #fffd, nil, #0004)
+      draw_text(font, player.controls[control], pos + xy(35, 0), #fffd, nil, #0004)
+      pos.y += font.line_height
+
+enter
+────────────────────────────────────────────────────────────────────────
+set_vehicle(player, "tank")
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+if player.joy.qq:
+   if player.type == "chopper":
+      set_vehicle(player, "car")
+   else if player.type == "car":
+      set_vehicle(player, "tank")
+   else if player.type == "tank":
+      set_vehicle(player, "chopper")
+
+draw_controls(player)
+
+simulate_player(player)
+entity_update_children(player)
+
+// Camera (use θ = player.angle - 90° to look along the x axis instead of the y axis)
+camera.pos = player.pos
+camera.z = player.z
+const θ = player.angle
+const Δθ = θ - camera.angle
+camera.angle += if (|Δθ| < 1°) then Δθ else sign(Δθ) * clamp(7% ‖Δθ‖, 0.5°, 2°)
+
+// Minimap
+preserving_transform:
+   set_transform(xy(SCREEN_SIZE.x - 40, 40))
+   draw_disk(xy(0, 0), 35, #0004)
+   set_camera({pos: WORLD_DATA.size / 2 * WORLD_DATA.sprite_size, angle: camera.angle, zoom: 1.5%})
+   draw_map(WORLD_DATA, 2)
+   draw_disk(player.pos, 200, #ff0, #000)
+
+
+// Draw world
+preserving_transform:
+   set_transform(½ SCREEN_SIZE + xy(0, 50))
+   set_camera(camera)
+
+   // Draw poles for tuning perspective
+   for x < 5:
+      for y < 5:
+         const height = 1
+         const pos = xy(64 x, 64 y) + ½ WORLD_DATA.size * WORLD_DATA.sprite_size
+         draw_line(pos, pos + SHADOW_VECTOR * (0.2 + height), rgba(0, 0, 0, SHADOW_OPACITY), -epsilon, 2)
+         for i <= 20:
+            draw_disk(pos, 2, gray(i/40 + 0.5), nil, height * i / 20)
+   
+   // Shadow (always on ground)
+   draw_sprite(player.sprite, player.pos + SHADOW_VECTOR * (0.2 + player.z), player.angle, player.scale, SHADOW_OPACITY, -epsilon, #000)
+   if player.turret:
+      // Helicopter blades look bad due to overdraw, so only draw turret
+      draw_sprite(player.turret.sprite, player.turret.pos + SHADOW_VECTOR * (0.2 + player.turret.z), player.turret.angle, player.turret.scale, SHADOW_OPACITY, -epsilon, #000)
+      
+   draw_entity(player)
+
+   // Draw the map slightly under ground so that it doesn't clip objects directly on it
+   draw_map({map:WORLD_DATA, z:-10 epsilon})
