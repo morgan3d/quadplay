@@ -12,7 +12,10 @@
 #    "new_game":      Create a new game by copying and renaming the starter template
 #                     and return the URL of the new game, or return an error if the
 #                     directory already existed.
-# 
+#
+#    "open":          Open the specified file in finder/explorer or using an external
+#                     application editor
+#
 #  - GET commands:
 #
 #    - Are limited to the quadplay directory, the directory passed on the
@@ -25,6 +28,8 @@
 #      of all games in subdirectories of examples/, games/, and my_quadplay/
 #      (not recursive)
 #
+#    - The special quad_path + `/console/_quadserver.json` "file" describes
+#      the available external applications, which are a subset of console/external-applications.json
 #
 # A "path" in this code is a file-system path, where '/' means the filesystem true root
 #
@@ -67,14 +72,15 @@ server_root_path = None
 # or game listing for import in IDE mode
 asset_query_webpath = None
 game_query_webpath = None
+config_query_webpath = None
 
 # Subdirectories of server_root_path that are permitted for http access.
 # These are relative to server_root_path and contain a leading slash because
 # they are url subpaths relative to quad://
 webpath_whitelist = None
 
-onWindows = (platform.system() == 'Windows')
-onMac = (platform.system() == 'Darwin')
+isWindows = (platform.system() == 'Windows')
+isMacOS = (platform.system() == 'Darwin')
 
 # Ensure that slashes and case are consistent when on windows, and make absolute
 def canonicalize_path(path): return os.path.normcase(os.path.abspath(path)).replace('\\', '/')
@@ -103,6 +109,11 @@ except ImportError:
         import SocketServer
         QuadplayHTTPServer = SocketServer.TCPServer
         print('Initializing Quadplay server using Python ' + version + ' SocketServer.TCPServer')
+
+        
+def load_json(filename):
+    with open(filename, 'rt', encoding='utf8') as f:
+        return workjson.loads(f.read())
         
 # Handles serving from multiple directories. Overrides the default restriction to
 # the CWD with its own security whitelist.
@@ -143,7 +154,22 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             print('Wrote', encoding, 'file', filename)
                 
             response_obj = 'OK'
+            
+        elif command == 'open':
+            app = object['app']
+            filename = '"' + object['file'] + '"'
+            cmd = ''            
+            if app == '<finder>':
+                if isMacOS:
+                    cmd = 'open -R "' + filename + '"'
+                else:
+                    cmd = 'start "' + os.path.dirname(filename) + '"'
+            elif isMacOS:
+                cmd = 'open -a "' + app + '" "' + filename + '"'
                 
+            os.system(cmd)
+            response_obj = 'OK'
+            
         elif command == 'new_game':
             dir_name = object['dir_name']
             game_name = object['game_name']
@@ -161,8 +187,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 os.makedirs(dst_path)
 
                 # Parse the starter game
-                with open(os.path.join(starter_path + '/starter.game.json'), 'rt', encoding='utf8') as f:
-                    game_json = workjson.loads(f.read())
+                game_json = load_json(os.path.join(starter_path + '/starter.game.json'))
 
                 # Change the title
                 game_json['title'] = game_name
@@ -189,7 +214,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         path_parts = self.path.split('?')
         webpath = os.path.normpath(path_parts[0]).replace('\\', '/')
         query = path_parts[1] if len(path_parts) > 1 else ''
-        if onWindows and len(webpath) > 3 and webpath[2] == ':' and webpath[0] == '/':
+        if isWindows and len(webpath) > 3 and webpath[2] == ':' and webpath[0] == '/':
             # On Windows, remove a leading slash if there is a drive letter
             webpath = webpath[1:]
             self.path = self.path[1:]
@@ -198,9 +223,27 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         if webpath != '/favicon.ico' and not any([webpath.startswith(prefix) for prefix in webpath_whitelist]):
             self.send_error(404, 'Illegal webpath: ' + webpath)
 
-        if webpath == asset_query_webpath or webpath == game_query_webpath:
+        if webpath == config_query_webpath or webpath == asset_query_webpath or webpath == game_query_webpath:
             response_obj = {}
-            if webpath == asset_query_webpath:
+            if webpath == config_query_webpath:
+                response_obj['rootPath'] = server_root_path
+                response_obj['hasFinder'] = isWindows or isMacOS;
+                if (isWindows or isMacOS):
+                    applications = {} 
+                    response_obj['applications'] = applications
+                    potential_applications = load_json(os.path.join(quad_path, 'console/external-applications.json'))['Windows' if isWindows else 'macOS']
+                    for type, list in potential_applications.items():
+                        applications[type] = []
+                        for app in list:
+                            for path in app['path']:
+                                path = os.path.expanduser(path)
+                                if os.path.exists(path):
+                                    # Found this app
+                                    applications[type].append({'name': app['name'], 'path': path})
+                                    break
+                            
+                    
+            elif webpath == asset_query_webpath:
                 aux_path = query[query.index('=') + 1:]
 
                 # Security: check if aux_path has a prefix in webpath_whitelist
@@ -212,7 +255,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                     response_obj[t] = sorted(glob.glob(remove_leading_slash(aux_path + '**/*.' + t + '.json'), recursive=True))
                     response_obj[t] += ['quad://' + f[len(quad_path):] for f in sorted(glob.glob(quad_path + t + 's/*.' + t + '.json'))]
                     # Fix slashes on windows
-                    if onWindows: response_obj[t] = [f.replace('\\', '/') for f in response_obj[t]]
+                    if isWindows: response_obj[t] = [f.replace('\\', '/') for f in response_obj[t]]
 
             else: # game list query
                 
@@ -222,7 +265,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                                   'mine'     : my_games_path}.items():
                     # Do not change case on Windows (because this will be part of the json file that is read
                     # on multiple platforms) but *do* fix slashes
-                    list = [{'url': path.replace('\\', '/'), 'title': 'TBD'} for path in sorted(glob.glob(path + '/**/*.game.json'))]
+                    list = [{'url': path.replace('\\', '/'), 'title': 'TBD'} for path in sorted(glob.glob(path + '/**/*.game.json', recursive=True))]
                     for entry in list:
                         path = entry['url']
 
@@ -273,7 +316,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             # directory instead
             return quad_path + '/console/favicon.ico'
 
-        elif onWindows and server_root_path == '':
+        elif isWindows and server_root_path == '':
             # Need the whole path, since the "cwd" is wrong
             return self.path.split('?')[0]
         else:
@@ -328,7 +371,7 @@ def parse_args():
 # Args must be initialized to a constant before launchServer is defined
 # because of the way that multiprocess serialization works on ThreadingHTTPServer
 args = parse_args()
-if onWindows and args.gamepath:
+if isWindows and args.gamepath:
     # Make drive letters canonical
     if args.gamepath[1] == ':':
         args.gamepath = args.gamepath[0].upper() + args.gamepath[1:]
@@ -337,7 +380,7 @@ if onWindows and args.gamepath:
 # Makes a path relative to the server_root_path, and thus "absolute"
 # for the web server root (not for the filesystem)
 def platform_www_abspath(p):
-    if onWindows:
+    if isWindows:
         p = p[len(server_root_path):]
         if not p.endswith('.game.json'): p = os.path.join(p, '')
         t = os.path.normcase(p).replace('\\', '/')
@@ -374,6 +417,7 @@ my_games_path = remove_leading_slash(my_games_path[len(server_root_path):])
 asset_query_webpath = webpath_whitelist[0]
 if len(asset_query_webpath) > 0 and asset_query_webpath[-1] == '/': asset_query_webpath = asset_query_webpath[:-1]
 game_query_webpath = asset_query_webpath + '/console/games.json'
+config_query_webpath = asset_query_webpath + '/console/_config.json'
 asset_query_webpath += '/console/_assets.json'
 quad_path = remove_leading_slash(webpath_whitelist[0])
 
@@ -397,7 +441,7 @@ def launchServer():
     # is the filesystem root and we're on windows where that cannot
     # be the cwd
     old_path = os.getcwd()
-    if not onWindows or server_root_path != '':
+    if not isWindows or server_root_path != '':
         os.chdir(server_root_path)
     
     try:
@@ -447,12 +491,12 @@ def main():
             myip = ''
 
             # just try this first on mac because the other approaches fail so frequently
-            if onMac:
+            if isMacOS:
                myip = (os.popen('ipconfig getifaddr en0').read().strip() or
                        os.popen('ipconfig getifaddr en1').read().strip())
             if not myip: myip = socket.gethostbyname(socket.gethostname())
         except:
-            if onMac:
+            if isMacOS:
                 # The above can fail apparently randomly on MacOS (https://bugs.python.org/issue35164)
                 # and that has happened to us. This is a workaround:
                 print('gethostbyname failed due to a known MacOS internal error. Falling back to\nipconfig...')
@@ -482,9 +526,9 @@ def main():
 
     if args.gamepath != '':
         t = args.gamepath
-        if not t.startswith('http://'):
+        if not t.startswith('http://') and not t.startswith('quad://'):
             t = platform_www_abspath(os.path.abspath(t))
-            if t and not onWindows and t[0] != '/': t = '/' + t
+            if t and not isWindows and t[0] != '/': t = '/' + t
         url += '&game=' + t
     else:
         print('Loading default launcher game. You can supply the URL or local relative path to your game on\nthe command line, for example "quadplay foo/mygame", to load it directly.\n')
@@ -505,7 +549,7 @@ def main():
 
     # Platform independent keyboard key press detection
     def kbhit():
-       if onWindows:
+       if isWindows:
           return msvcrt.kbhit()
        else:
           dr, dw, de = select.select([sys.stdin], [], [], 0)
@@ -519,11 +563,11 @@ def main():
     print('\n**Press any key to terminate the server when done**\n')
     time.sleep(2)
 
-    if onWindows:
+    if isWindows:
         # Require NO surrounding quotes on Windows for it to interpret the URL.
         # Must escape & as ^&.
         os.system('start ' + url.replace('&', '^&'))
-    elif onMac:
+    elif isMacOS:
         # Require quotes on Unix systems so that bash does not interpret &
         # as a shell option to run in another thread
         os.system('open "' + url + '"')

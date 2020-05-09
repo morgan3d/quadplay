@@ -1903,6 +1903,12 @@ function visualizeGame(gameEditor, url, game) {
 
     s += '<table>\n';
     s += '<tr valign="top"><td>Path</td><td colspan=3>' + url + '</td></tr>\n';
+
+    if (editableProject) {
+        const filename = serverConfig.rootPath + urlToFilename(url);
+        s += '<tr valign="top"><td>Disk</td><td colspan=3>' + filename + '</td></tr>\n';
+    }
+    
     s += `<tr valign="top"><td width="110px">Title</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectTitle" value="${game.title.replace(/"/g, '\\"')}"></td></tr>\n`;
     s += `<tr valign="top"><td>Developer</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectDeveloper" value="${game.developer.replace(/"/g, '\\"')}"></td></tr>\n`;
     s += `<tr valign="top"><td>Copyright</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectCopyright" value="${game.copyright.replace(/"/g, '\\"')}"></td></tr>\n`;
