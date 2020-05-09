@@ -7,7 +7,7 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.05.08.20'
+const version  = '2020.05.09.01'
 const launcherURL = 'quad://console/launcher';
 
 // This will be filled in by a special call on a quadplay server at
@@ -3295,7 +3295,7 @@ document.addEventListener('contextmenu', function (event) {
 
 function showContextMenu() {
     customContextMenu.style.left = event.pageX + 'px';
-    customContextMenu.style.top = event.pageY + 'px';
+    customContextMenu.style.top = min(event.pageY, window.innerHeight - 200) + 'px';
     customContextMenu.style.visibility = 'visible';
 }
 

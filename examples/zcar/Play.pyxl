@@ -46,7 +46,7 @@ frame
 // User input
 if mode_frames < 20:
    Δθ = 2° 
-   Δϕ = -0.5° 
+   Δϕ = -½° 
 else:
    Δθ = clamp(0.92 Δθ - 0.2° joy.x, -1.2°, 1.2°)
    Δϕ = clamp(0.92 Δϕ + 0.2° joy.y, -1.2°, 1.2°)

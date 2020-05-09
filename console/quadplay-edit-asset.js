@@ -100,7 +100,7 @@ function onAddAssetAdd() {
     hideAddAssetDialog();
     
     // Save and reload the game
-    serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL); });
+    serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
 }
 
 
@@ -146,7 +146,7 @@ function onRenameAsset(assetName) {
                 loadGameIntoIDE(window.gameURL, function () {
                     // Select the renamed asset
                     onProjectSelect(document.getElementById('projectAsset_' + newName), 'asset', gameSource.assets['${newName}']);
-                });
+                }, true);
             });
             
             return;
@@ -159,7 +159,7 @@ function onRemoveAsset(key) {
     if (confirm('Remove asset \'' + key + '\' from this project?')) {
         delete gameSource.json.assets[key];
         serverSaveGameJSON(function () {
-            loadGameIntoIDE(window.gameURL);
+            loadGameIntoIDE(window.gameURL, null, true);
         });
     }
 }
@@ -188,8 +188,10 @@ function showAssetContextMenu(assetName) {
             }
             
             const ext = url.split('.').pop();
+            console.log(ext);
             if (serverConfig.applications && serverConfig.applications[ext]) {
                 const list = serverConfig.applications[ext];
+                console.log(list);
                 for (let i = 0; i < list.length; ++i) {
                     externalCmds += `<div onmousedown="onOpenAssetExternally('${list[i].path}', '${assetName}')">Open with ${list[i].name}</div>`;
                 }
@@ -206,5 +208,6 @@ function showAssetContextMenu(assetName) {
         <div onmousedown="onRenameAsset('${assetName}')">Rename&hellip;</div>` +
         externalCmds + 
         `<hr><div onmousedown="onRemoveAsset('${assetName}')">Remove '${assetName}'</div>`;
+    console.log(customContextMenu.innerHTML);
     showContextMenu();
 }

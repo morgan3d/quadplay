@@ -328,7 +328,7 @@ function onNewConstantCreate() {
         loadGameIntoIDE(window.gameURL, function () {
             // Select
             onProjectSelect(document.getElementById('projectConstant_' + key), 'constant', key);
-        });
+        }, true);
     });
 }
 
@@ -337,7 +337,7 @@ function onRemoveConstant(key) {
     if (confirm('Remove constant \'' + key + '\' from this project?')) {
         delete gameSource.json.constants[key];
         serverSaveGameJSON(function () {
-            loadGameIntoIDE(window.gameURL);
+            loadGameIntoIDE(window.gameURL, null, true);
         });
     }
 }
@@ -374,7 +374,7 @@ function onEditConstantDescription(constantName) {
             loadGameIntoIDE(window.gameURL, function () {
                 // Select
                 onProjectSelect(document.getElementById('projectConstant_' + key), 'constant', key);
-            });
+            }, true);
         });
     }
 }
@@ -404,7 +404,7 @@ function onRenameConstant(constantName) {
                 loadGameIntoIDE(window.gameURL, function () {
                     // Select the renamed asset
                     onProjectSelect(document.getElementById('projectConstant_' + newName), 'constant', newName);
-                });
+                }, true);
             });
             
             return;

@@ -899,6 +899,7 @@ function loadSound(name, json, jsonURL) {
     
     sound = Object.seal({
         src: mp3URL,
+        _url: mp3URL,
         name: name,
         loaded: false,
         source: null,

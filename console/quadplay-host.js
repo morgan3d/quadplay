@@ -1212,6 +1212,8 @@ const fakeMouseEvent = {
 
 const mouse = {screen_x:0, screen_y:0, buttons: 0};
 function updateMouseDevice(event) {
+    // Sometimes during load this fires before the constants are set up properly
+    if (! window.emulatorScreen) { return; }
     if (event.target === emulatorScreen) {
         const rect = emulatorScreen.getBoundingClientRect();
         mouse.screen_x = clamp(Math.round(emulatorScreen.width * (event.clientX - rect.left) / rect.width), 0, emulatorScreen.width - 1) + 0.5;

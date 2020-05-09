@@ -3606,7 +3606,7 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                             y:        screenY
                         }); // push
                         
-                        if (sprite._hasAlpha) {
+                        if (! sprite._hasAlpha) {
                             // No need to process other layers, since this sprite
                             // occludes everything under it.
                             break;

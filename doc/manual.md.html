@@ -9,7 +9,7 @@
 <img src="ide.png" style="image-rendering: auto; width:75%; border-radius: 0 0 4px 4px; box-shadow: 1px 5px 7px rgba(0,0,0,.20); margin-bottom: 28px; margin-top:20px"></center>
 
 The [**<span style="font-size: 95%; font-family: quadplay">quadplay✜</span>**](../console/quadplay.html?IDE=1) is a
-web-based fantasy console for sprite-based 2D and 2.5D games. It lets you create games with
+web-based fantasy game console for sprite-based 2D and 2.5D games. It lets you create games with
 the power and consistency of a game console and the flexibility of modern tools and web deployment.
 
 Because it is free, is easy to use, and runs everywhere, quadplay✜ is perfect 
@@ -5044,8 +5044,7 @@ Arrays
 Arrays are ordered sets of values. They are zero-based and have
 dynamically typed elements.  Array literals are surrounded in square
 brackets and separated by commas. Square brackets are also used for
-l-value and r-value dereference. Arrays also support the special
-indexing syntax described in the Subscripts section.
+l-value and r-value dereference. 
 
 Array examples:
 
@@ -5472,7 +5471,7 @@ The trigonometric functions `cos`, `sin`, and `tan` may be invoked as if they we
 when the order of operations is unambiguous. For example, `cos a` ==> `cos(a)`, `cosβ` ==>
 `cos(β)`, and `cosθ*sinφ` ==> `cos(θ) * sin(φ)`.  To avoid confusion and reserve future syntax,
 they may not be invoked in this form when a high-precedence operator follows the argument. Those
-operators are `.`, `[`, subscript, or exponentiation.
+operators are `.`, `[`, and exponentiation.
 
 Because back-to-back parentheses are interpreted as implicit multiplication, functions that
 are returned from other functions, determined by parenthesized expressions, or stored in
@@ -5506,17 +5505,6 @@ without parentheses. This follows the rules from JavaScript's `**` operator. For
 confusing and redundant expression, if that's really what was intended) `x=y+-(1²)`.
 
 
-### Subscripts
-
-The characters `₊₋₀₁₂₃₄₅₆₇₈₉ₐᵦᵢⱼₓₖᵤₙ₍₎` can form subscript expressions that operate as if
-the array/object element accessor was invoked using those expressions as the second
-argument.  For example, `aᵢ₊₂` is equivalent to `a[i+2]`. The entire subscript expression
-is implicitly surrounded in parentheses.
-
-The variables `a`, `β`, `i`, `j`, `x`, `n`, `k`, and `u` may appear only as single-character
-variable names in subscripts.
-
-
 ### Implicit Multiplication
 
 Multiplication is implicit wherever a number is immediately followed by a parenthesized
@@ -5525,7 +5513,7 @@ appears immediately preceeding a parenthesized expression or variable, and where
 parenthesized expressions are back to back. For example,
 `2x`, `x²y`, `3(x+y)`, `(y+2)(x+1)`.
 
-Implicit multiplication can be used within subscripts or exponents.
+Implicit multiplication can be used within exponents.
 
 
 ### Spread Operator
@@ -5828,52 +5816,84 @@ For convenience when using an external editor or typing the full set
 of characters supported by fonts into strings on a US-EN keyboard, you
 can also copy and paste from here:
 
+
 ````````````````````````````````````````````````````` none big
+∅ ° ½ ² ³ ξ ∞ ε ≠ ≤ ≥ π ∊ ⌊ ⌋ ⌈ ⌉ ‖ ≟ θ
+
 Mode
 ══════════════════════════════════════════
 
 frame
 ──────────────────────────────────────────
+`````````````````````````````````````````````````````
+[Most common symbols]
 
 
-Most Common:
+````````````````````````````````````````````````````` none big
+1ˢᵗ 2ⁿᵈ 3ʳᵈ 4ᵗʰ
+1ᵉʳ 1ʳᵉ 2ᵉ 2ᵈ 2ᵈᵉ
+1ᵒ  1ᵃ
+`````````````````````````````````````````````````````
+[Ordinals in different languages]
 
-∅ ° ½ ² ³ ξ ∞ ε ≠ ≤ ≥ π ∊ ⌊ ⌋ ⌈ ⌉ ‖ ≟ θ
+
+````````````````````````````````````````````````````` none big
+x⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁺ ⁻ ⁽ ⁾ yᵃ ᵝ ⁱ ʲ ᵏ ⁿ ᵘ ˣ ʸ ᶻ 
+`````````````````````````````````````````````````````
+[Superscripts. These are legal math in code and can be used in strings.]
 
 
-All:
+````````````````````````````````````````````````````` none big
+A B Γ Δ E Z H Θ I K Λ M N Ξ O Π P Σ T Φ X Ψ Ω
+α β γ δ ε ζ η θ ι κ λ μ ν ξ o π ρ σ τ ϕ χ ψ ω
+`````````````````````````````````````````````````````
+[Greek alphabet]
 
-¥ € £ ¬ ∩ ∪ ≟ ≠ ≤ ≥ ≈ ∊ ∈ ⌊ ⌋ ⌈ ⌉ ⊗ ⊕ ⊖
-⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁺ ⁻ ⁽ ⁾ …
-₀ ₁ ₂ ₃ ₄ ₅ ₆ ₇ ₈ ₉ ₊ ₋ ₍ ₎
-ₐ ᵦ ᵢ ⱼ ₓ ₖ ᵤ ₙ
-ᵃ ᵈ ᵉ ʰ ⁱ ʲ ᵏ ᵐ ⁿ ᵒ ʳ ˢ ᵗ ᵘ ˣ ᵝ
-∅ ∞ ° ½ ⅓ ⅔ ¼ ¾ ⅕ ⅖ ⅗ ⅘ ⅙ ⅐ ⅛ ⅑ ⅒ ∫ ± м н к
+
+````````````````````````````````````````````````````` none big
+½ ⅓ ⅔ ¼ ¾ ⅕ ⅖ ⅗ ⅘ ⅙ ⅐ ⅛ ⅑ ⅒ 
+∩ ∪ ≟ ≠ ≤ ≥ ∊ ⌊ ⌋ ⌈ ⌉ ∅ ∞ °
+`````````````````````````````````````````````````````
+[Math symbols legal in code and strings.]
+
+
+````````````````````````````````````````````````````` none big
+ς ş ğ İ Ş Ğ υ г ¡ м н к Ñ ñ б Б Œ œ ℵ
+Æ À Á Â Ã Ä Å Ç È É Ê Ë Ì Í Î Ï Ø Ò Ó Ô Õ Ö
+æ à á â ã ä å ç è é ê ë ì í î ï ø ò ó ô õ ö
+Д Ж З И Й Л П Ц Ч Ш Щ Э Ю Я Ъ Ы Ь ẞ Ù Ú Û Ü
+д ж з и й л п ц ч ш щ э ю я ъ ы ь ß ù ú û ü 
+`````````````````````````````````````````````````````
+[Accented and Cyrillic characters]
+
+
+````````````````````````````````````````````````````` none big
+¥ € £ ¬ ≈ ⊗ ⊕ ⊖ … ∫ ± 
 « » ¿ ★ × ⊢ ∙ ○ ● ◻ ◼ △ ▲ ▼ ◀ ▶ ✓ ♠ ♥ ♣ ♦ §
 ↑ ↓ ← → ↖ ↗ ↙ ↘ ⓐ ⓑ ⓒ ⓓ ⓔ ⓕ ⓟ ⓠ ⓧ ⓨ Ⓞ ⍍ ▣ ⧉ ☰
-⍐ ⍇ ⍗ ⍈ ❖ ✜ ♆ © ℵ Ⓦ Ⓐ Ⓢ Ⓓ
-A B Γ Δ E Z H Θ I K Λ M N Ξ O Π P Σ T Φ X Ψ Ω
-α β γ δ ε ζ η θ ι κ λ μ ν ξ o π ρ σ τ ϕ χ ψ ω ¡
-ς ş ğ İ Ş Ğ υ г
-Æ À Á Â Ã Ä Å Ç È É Ê Ë Ì Í Î Ï Ø Ò Ó Ô Õ Ö Œ Ñ
-æ à á â ã ä å ç è é ê ë ì í î ï ø ò ó ô õ ö œ ñ
-Д Ж З И Й Л П Ц Ч Ш Щ Э Ю Я Ъ Ы Ь ẞ Ù Ú Û Ü Б
-д ж з и й л п ц ч ш щ э ю я ъ ы ь ß ù ú û ü б
+⍐ ⍇ ⍗ ⍈ ❖ ✜ ♆ ©  Ⓦ Ⓐ Ⓢ Ⓓ
 `````````````````````````````````````````````````````
+[Others]
+
+
+````````````````````````````````````````````````````` none big
+₀ ₁ ₂ ₃ ₄ ₅ ₆ ₇ ₈ ₉ ₊ ₋ ₍ ₎ ₐ ᵦ ᵢ ⱼ ₓ ₖ ᵤ ₙ
+`````````````````````````````````````````````````````
+[Subscript symbols]
 
 Note that the superscripts `ᵈᵉʰᵐᵒʳˢᵗ` are legal in text strings but
 not as code. These are present specfically to support ordinals such as
 "1ˢᵗ, 2ⁿᵈ, 3ʳᵈ, 4ᵗʰ, 1ᵉʳ, 1ʳᵉ, 2ᵉ, 2ᵈ, 2ᵈᵉ, 1ᵒ, 1ᵃ, …" in
-various languages. Not all letters are available for subscripts
-and superscripts in Unicode, so quadplay✜ restricts those available
-as variables to a specific commonly used mathematical and natural language set.
+various languages.
 
 The encircled characters and arrows are intended for use as button
 prompts.  The characters `Ⓞ ⍍ ▣ ⧉ ☰` are drawn in quadplay✜ fonts to
 represent the buttons with approximately those symbols on PlayStation
 and Xbox controllers. The `ⓧ` character is drawn to ambiguously
 represent the "X"/cross buttons on PlayStation, Xbox, and Nintendo
-controllers.
+controllers. Note that the preferred way of generating button prompts
+is using the `gamepad.prompt` object with the string `replace()`
+function, rather than hardcoding.
 
 
 Advanced Tools
@@ -6789,6 +6809,17 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
+2020 May TBD: Beta update 42
+
+- Incompatible change: Removed subscripts as array indices. They are still valid characters for strings.
+- Made `Delta` autocorrect to `Δ` without requiring a following space in the IDE
+- Added autocorrect support for additional capital Greek letters `ΓΔΘΛΞΠΣΦΨΩ`
+- Fixed compilation of fractional degrees and percentages
+- Made rename and add asset/constant update faster
+- Search and Replace in the editor now triggers autosave
+- Added right-click menu for music assets
+- Fixed map occlusion culling (was showing empty tiles)
+
 2020 May 8: Beta update 41
 
 - Added named argument versions of all drawing routines
@@ -7556,6 +7587,10 @@ div.preview {
   float:right;
 }
 .md h1, .md h2, .md h3 { font-family: quadplay }
+.md pre.listing.backtick {
+  margin-bottom: 0px;
+}
+
 </style>
 <title>manual✜</title>
 <script>setTimeout(function(){document.title='manual✜';},1000);

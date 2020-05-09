@@ -128,6 +128,7 @@ function updateCodeEditorSession(url, bodyText) {
         // disturbing the active line. Calling setValue()
         // resets the undo history, which is what we want when
         // the disk version has changed.
+        session.aux.ignoreChange = true;
         session.setValue(bodyText);
     }
 }
@@ -160,6 +161,9 @@ function setCodeEditorSession(url) {
 
 
 const autocorrectTable = [
+    '^-1',      '⁻¹',
+    '^0',       '⁰',
+    '^1',       '¹',
     '^2',       '²',
     '^3',       '³',
     '^4',       '⁴',
@@ -192,7 +196,6 @@ const autocorrectTable = [
     '^-j',      '⁻ʲ',
     '^-k',      '⁻ᵏ',
     '^beta',    'ᵝ', // process before beta, so that it triggers first
-    'Delta',    'Δ',
     'alpha',    'α',
     'beta',     'β',
     'gamma',    'γ',
@@ -211,8 +214,15 @@ const autocorrectTable = [
     'psi',      'ψ',
     'omega',    'ω',
     'Omega',    'Ω',
+    'Gamma',    'Γ',
+    'Lambda',   'Λ',
+    'Theta',    'Θ',
+    'Xi',       'Ξ',
+    'Pi',       'Π',
+    'Sigma',    'Σ',
+    'Phi',      'Φ',
+    'Psi',      'Ψ',
     'tau',      'τ',
-    'time',     'τ',
     'xi',       'ξ',
     'pi',       'π',
 
@@ -274,8 +284,8 @@ function autocorrectSession(session) {
         src += '\n';
     }
 
-    if ((src.length === 0) || /[0-9A-Za-z_|=-\^]/.test(src[src.length - 1])) {
-        // This is not a symbol-breaking character, so return immediately
+    if ((src.length === 0) || (/[0-9A-Za-z_|=-\^]/.test(src[src.length - 1]) && ! src.endsWith('Delta'))) {
+        // The last character is not a symbol-breaking character, so return immediately
         return;
     }
     
@@ -314,6 +324,20 @@ function autocorrectSession(session) {
         }        
     }
 
+    // Replace Delta immediately on typing the 'a'
+    if (! replacement && lastChar === 'a') {
+        // Look for a breaking character before the target sequence
+        if (src.endsWith('Delta') && ((src.length === 'Delta'.length) || /[ +\-\.\t\n,:()\[\]]/.test(src[src.length - 'Delta'.length - 1]))) {
+            replacement = 'Δ';
+            target = 'Delta';
+            
+            session.replace(new ace.Range(position.row, position.column - target.length + 1, position.row, position.column + 1), replacement);
+            // Advance the cursor to the end over the replacement
+            aceEditor.gotoLine(position.row + 1, position.column - target.length + replacement.length + 1, false)
+            return;
+        }
+    }
+
     if (! replacement) {
         // Strip the last character, which will not be part of the autocorrect.
         src = src.substring(0, src.length - 1);
@@ -326,7 +350,7 @@ function autocorrectSession(session) {
             if (((src.length === target.length) ||
                  ((src.length > target.length) &&
                   ((target[0] === '^') || // exponents don't need to be broken
-                   /[ +\-\.\t\n,:()\[\]]/.test(src[src.length - target.length - 1])))) &&
+                   /[ +\-\.\t\n,:()\[\]∅ΓΨΩΦΣΠΞΛΘΔαβγδεζηθικλμνξπρστυϕχψω]/.test(src[src.length - target.length - 1])))) &&
                 src.endsWith(target)) {
                 replacement = autocorrectTable[i + 1];                
                 break;
@@ -411,14 +435,19 @@ function createCodeEditorSession(url, bodyText) {
     session.setUseWrapMode(false);
 
     if (! session.aux.readOnly) {
+        // onchange handler
         session.on('change', function (delta) {
-            if (session.aux.readOnly) { return; }
-
-            if (! aceEditor.curOp || ! aceEditor.curOp.command.name) {
+            if (session.aux.ignoreChange) {
                 // Programmatic update using setValue, not a change
                 // due to the user. Do not try to save or autocorrect.
+                session.aux.ignoreChange = false;
                 return;
             }
+
+            if (session.aux.readOnly) { return; }
+
+            // Programmatic change, but can't distinguish search and replace
+            // if (! aceEditor.curOp || ! aceEditor.curOp.command.name) { return; }
 
             if (document.getElementById('automathEnabled').checked) {
                 autocorrectSession(session);

@@ -760,10 +760,11 @@ function pyxlToJS(src, noYield, internalMode) {
     // Numbers ending in percent. This regex is dangerous because it
     // does not distinguish variables ending with a number from standalone
     // number tokens.
-    src = src.replace(/(\d+(?:\.\d*)?)%/g, '($1 * 0.01)');
+    src = src.replace(/(\d+(?:\.\d*)?|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒])%/g, '($1 * 0.01)');
 
-    // Numbers ending in degrees.
-    src = src.replace(/(\d+|\d\.\d*)(°|[ ]*deg\b)/g, '($1 * .017453292519943295)');
+    // Numbers ending in degrees. Does not distinguish variables ending
+    // in a number from standalone number tokens.
+    src = src.replace(/(\d+|\d\.\d*|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒])(°|[ ]*deg\b)/g, '($1 * .017453292519943295)');
 
     // Switch FOR loops (will be switched back later)
     src = src.replace(/<=/g, '≤');
@@ -1023,7 +1024,7 @@ function pyxlToJS(src, noYield, internalMode) {
     src = src.replace(/_add\(__yieldCounter, 1\)/g, '__yieldCounter + 1');
     src = unprotectQuotedStrings(src, protectionMap);
 
-    console.log(src);
+    //console.log(src);
     return src;
 }
 
