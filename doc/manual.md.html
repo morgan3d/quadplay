@@ -6137,14 +6137,18 @@ Ubuntu 64-bit already comes preinstalled on the Jetson Nano L4T disk image.
 
 For Raspberry Pi 4, I recommend the following 64-bit Ubuntu
 instead of the default Raspbian image because it gives you access to more packages, including
-faster browsers. My installation process is:
+faster browsers. The following installation process takes about an hour.
 
 1. Install the [Ubuntu Linux 64-bit](https://ubuntu.com/download/raspberry-pi) the disk image
-2. `sudo apt update`
-3. `sudo apt upgrade`
-4. `sudo apt install lubuntu-desktop`
-5. `sudo apt install -y chromium-browser`
-6. Install the quadplay SDK
+2. Log in as the default user `ubuntu` with password `ubuntu`, and then immediately change the password
+5. `sudo apt install xubuntu-desktop` (lubuntu always crashed for me)
+   - Select the `lightdm` desktop when prompted
+   - TODO: Switch to the XFCE desktop, somehow
+3. `sudo apt update`
+4. `sudo apt upgrade`
+6. `sudo reboot`
+7. `sudo snap install chromium`
+8. Install the quadplay SDK as usual for Linux and run the `quadplay` script.
 
 #### NUC
 An Intel NUC is a much more expensive device for powering a mini console,
@@ -6819,6 +6823,7 @@ Changes for both the specification and implementation in each release.
 - Search and Replace in the editor now triggers autosave
 - Added right-click menu for music assets
 - Fixed map occlusion culling (was showing empty tiles)
+- Fixed loading quad:// games from the command line
 
 2020 May 8: Beta update 41
 
