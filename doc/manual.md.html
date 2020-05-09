@@ -10,11 +10,11 @@
 
 The [**<span style="font-size: 95%; font-family: quadplay">quadplay✜</span>**](../console/quadplay.html?IDE=1) is a
 web-based fantasy console for sprite-based 2D and 2.5D games. It lets you create games with
-the power and consistency of a game console and the flexibility of modern tools.
+the power and consistency of a game console and the flexibility of modern tools and web deployment.
 
 Because it is free, is easy to use, and runs everywhere, quadplay✜ is perfect 
 for hobby coding, a game programming course, teaching yourself programming 
-and game development, or game jams.
+and game development, and game jams.
 
 The integrated development environment (IDE) is packaged as an emulator
 with the tools that you need to make games: an editor, debugger, and 
@@ -66,22 +66,25 @@ Welcome to the quadplay✜ public beta!
 
 To get started you only need:
 
-- The quadplay✜ SDK: [Download ZIP](https://github.com/morgan3d/quadplay/archive/master.zip)
+- [The quadplay✜ development kit](https://github.com/morgan3d/quadplay/archive/master.zip)
 - [Python 3.8](https://www.python.org/)
-- A modern web browser ([_Chrome_](https://www.google.com/chrome/), [_Firefox_](https://www.mozilla.org/en-US/firefox/new/), _Safari_, _Edge_, etc.)
+- A modern web browser ([_Chrome_](https://www.google.com/chrome/), [_Firefox_](https://www.mozilla.org/en-US/firefox/new/), [_Edge_](https://www.microsoft.com/en-us/edge), or _Safari_)
 
-For the quadplay✜ SDK, download, unzip, and copy the files wherever you would like on
-your computer. There is no installation process.
+For the quadplay✜ development kit, just download, unzip, and then copy
+the files wherever you would like on your computer. There is no
+installer or configuration required.
 
-To make a game, run the `quadplay` script at the command line. When it opens your browser,
-select the "Tools" menu from inside the quadplay development environment and then the "New Game"
-option. Look at the Built-In Games section for more examples.
+To make a game, run the `quadplay` script at the command line. When it
+opens your browser, select the "Tools" menu from inside the quadplay
+development environment and then the "New Game" option. Look at the
+Built-In Games section for more examples.
 
-If you've worked with other scripting languages, 
+If you've worked with other scripting languages, then you may want to
 read the PICO-8 section, Python section, or JavaScript section of this
-document for some starting tips on the PyxlScript language used in quadplay✜.
-If you're new to programming, look at the many sample games and examples
-that are included and try modifying your own copies of them.
+document for some starting tips. 
+
+If you're new to programming, just look at the many sample games and
+examples that are included and try modifying your own copies of them.
 
 !!! Info Pro Developers
     Experienced programmers can use external editors with quadplay✜ for both
@@ -90,6 +93,9 @@ that are included and try modifying your own copies of them.
       <li>Optionally [clone the SDK with git](https://github.com/morgan3d/quadplay) to manage SDK upgrades</li>
       <li>Install a code editor (_[Visual Studio Code](https://code.visualstudio.com/), [Atom](https://atom.io/), [Sublime Text](https://www.sublimetext.com), Vim, Emacs, etc._)</li>
       <li>Install the PyxlScript extension for your editor: _[Visual Studio Code](#advancedtools/visualstudiocode)_, _[Vim](#advancedTools/vim)_, _[Emacs](#advancedtools/emacs)_</li>
+      <li>Put your games under `~/my_quadplay/`. The IDE always creates new games in the root of that path, but
+          you can reoganize it to form a hierarchy to group games or manage different games
+          using different version control repositories. </li>
     </ul>
 
 
@@ -98,30 +104,42 @@ on Windows CMD, macOS Terminal, or a Linux terminal with the `quadplay`
 command in the root of the SDK. Here are some examples:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
+# Run the emulator and IDE. You can use Open Game from the Tools
+# menu to load games
+quadplay
+
 # Load the games/quadpaddle/quadpaddle.game.json sample program
 quadplay quad://games/quadpaddle
 
-# Load the mygames/space/space.game.json game that you've made
-quadplay mygames/space
+# Load the space.game.json game that you've made (on Mac and Linux)
+quadplay ~/my_quadplay/space
+
+# Load the space.game.json game that you've made (on Windows)
+quadplay C:\Users\MYNAME\my_quadplay\space
 
 # Load your game and allow mobile clients to connect by scanning
-# the QR code displayed in the IDE
-quadplay --host mygames/space
+# the QR code displayed in the IDE (Mac and Linux)
+quadplay --host ~/my_quadplay/space
 
-# Equivalent to the previous example
-quadplay quad://mygames/space
+# ... Windows
+quadplay --host C:\Users\MYNAME\my_quadplay\space
 
-# Load from the internet (server must support CORS)
+# Load a game from the web (their server must support CORS)
 quadplay https://morgan3d.github.io/somegame/foo.game.json
-
-# Just run the emulator. You can modify the URL in your browser
-# to add "?game=" and the game's URL or relative path
-quadplay
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 These examples assume that your directory structure is:
 
 **********************************************************
+*   📂 HOME (~/ on Mac and Linux, %HOMEDRIVE%%HOMEPATH% on Windows)
+*   |
+*   +-- 📂 my_quadplay
+*   |   |
+*   |   '-- 📂 space
+*   |       |
+*   |       +-- 📄 space.game.json
+*   |       |
+*   ⋮       ⋮
 *
 *   📂 quadplay
 *   |
@@ -138,14 +156,6 @@ These examples assume that your directory structure is:
 *   |   |   +-- 📄 quadpaddle.game.json
 *   |   |   |
 *   |   ⋮   ⋮
-*   |
-*   +-- 📂 mygames
-*   |   |
-*   |   '-- 📂 space
-*   |       |
-*   |       +-- 📄 space.game.json
-*   |       |
-*   |       ⋮
 *   |
 *   +-- 📂 sprites
 *   |   |
@@ -414,6 +424,10 @@ maintain a high score list, with `push_mode()` for creating a popup dialog.
 
 </td></tr><tr><td>![](../examples/sproing/label128.png)</td><td>
 [Sproing Example](../console/quadplay.html?game=quad://examples/sproing&IDE=1) shows a squash and stretch effect for transforming sprites.
+
+</td></tr><tr><td>![](../examples/zcar/label128.png)</td><td>
+[Z-Car Example](../console/quadplay.html?game=quad://examples/zcar&IDE=1) draws a 3D wireframe car using 2.5D graphics
+and CRT orange-screen retro phosophor effects.
 
 </td></tr><tr><td>![](../examples/touch/label128.png)</td><td>
 [Touch Example](../console/quadplay.html?game=quad://examples/touch&IDE=1) uses the mouse/touch API.
@@ -1176,10 +1190,13 @@ angles are always clockwise in screen space.
 : A variable equal to `gamepad_array[0]` as shorthand for
   single-person games.
 
+`gamepad_array[]`
+: The array of all gamepads. Regardless of how many physical controllers are
+  connected, there are always four elements.
 
 ### Button Prompts
 
-The `prompt` property of `gamepad_array[]` is to be used with `replace()` to
+The `prompt` property of a `gamepad_array[]` value is to be used with `replace()` to
 create strings for showing controls and button prompts to players with
 `draw_text()`.  It maps `"ⓐ"`, `"ⓑ"`, `"ⓒ"`, `"ⓓ"`, `"ⓔ"`,`"ⓕ"`, `"ⓟ"`, `"ⓠ"`,
 `"⍐"`, `"⍗"`, `"⍇"`, and `"⍈"` as well as ASCII aliases `"(a)"`,
@@ -1204,10 +1221,10 @@ prompts.
 
 ### Touch
 
-quadplay✜ provides single-touch input via virtual touch screen. Not
-all quadplay✜ devices support touch input (although most do, through
-either a touch screen, stylus, or mouse). If there is no mouse, then
-`touch.a` is always `false`.
+quadplay✜ provides single-touch and single-button mouse input via
+virtual touch screen. Not all quadplay✜ devices support touch input
+(although most do, through a touch screen, stylus, or
+mouse). If there is no mouse, then `touch.a` is always `false`.
 
 `touch`
 : There is a single `touch` global object with the following properties:
@@ -1230,7 +1247,6 @@ Property                 | Type     | Meaning
 `touch.screen_dy`          | number   | Change in `screen_y` since the previous frame
 `touch.screen_xy`          | xy       | `xy(touch.screen_x, touch.screen_y)` for the touch
 `touch.screen_dxy`         | xy       | `xy(touch.screen_dx, touch.screen_dy)` for the touch -->
-
 
 The `x` and `y` values are in camera-space coordinates using the current transform.
 Change or reset the transform to read them in a different coordinate system, or use
@@ -2077,7 +2093,7 @@ Sound
 Coordinates
 -----------------------------------------------------------
 
-The default quadplay screen coordinate system is:
+The quadplay default *screen space* coordinate system is:
 
 ************************************************************
 *  2048 (out of the screen)
@@ -2097,20 +2113,25 @@ The default quadplay screen coordinate system is:
 ***********************************************************
 [Figure [coords]: Screen space coordinate system.]
 
+Almost all standard library functions take arguments in world space.
+This includes drawing routines, intersection routines, and the properties
+of entities without parents. The functions that don't use screen space
+are obvious, since what they do requires another space.
+
 If you use default values of the camera, transform, and `y_up`, and do
-not use the entity hierarchy, then everything that you encounter will
-use this screen coordinate system and you can ignore the others.
+not use child entities, then world space and camera space match the
+screen space coordinate system and you can ignore the rest of this section.
 
 Advanced users can leverage the full set of coordinate systems for the
 standard library, which are:
 
-- *screen* space
-- *world* space
-- *camera* space
-- *entity* space (a.k.a., "body" or "object" space) 
-- *sprite* space (pixels within in a sprite)
-- *spritesheet* space (indices of sprites in a spritesheet)
-- *map* space (indices of sprites in a map)
+- *screen* space (ss)
+- *world* space (ws)
+- *camera* space (cs)
+- *entity* space (es) 
+- *sprite* space - pixels within in a sprite
+- *map* space - indices of sprites in a map
+<!-- - *spritesheet* space - indices of sprites in a spritesheet -->
 
 Entities can also form hierarchies using the `entity.child_array`. The first four coordinate
 systems are related by:
@@ -2131,59 +2152,52 @@ table.coord tr.space { background: #555; }
 table.coord tr.space td { padding-top: 4px; padding-bottom: 4px; }
 table.coord tr.space td:first-child { border-radius: 8px 0px 0px 8px}
 table.coord tr.space td:last-child { border-radius: 0px 8px 8px 0px}
-table.coord td.arrow { line-height: 80%; font-size: 120%; }
+table.coord td.arrow { line-height: 80%; font-size: 120%; color: #555}
 </style>
 
 
 <table class="coord">
-<tr><th colspan=4>       Coordinate&nbsp;System          </th><th>        Controlled By       </th><th width="50%">     Used By           </th></tr>
+<tr class="space"><td colspan=4>  Screen Space (ss)      </td><td>_Used by_: `set_clip()`, `reset_clip()`, `get_clip()`,
+                                                                   `intersect_clip()`, `set_post_effects()`, `get_post_effects()`     </td></tr>
 
-<tr class="space"><td colspan=4>  Screen Space           </td><td>                            </td><td>`set_clip()`, `reset_clip()`,
-                                                                                             `intersect_clip()`,
-                                                                                             `set_post_effects()`     </td></tr>
-
-<tr><td>`transform_camera_to_screen()`</td>
+<tr><td>`transform_cs_to_ss()`</td>
     <td class="arrow" width=10>▲<br>┃<br>┃<br>┃<br>┃</td>
     <td class="arrow" width=10>┃<br>┃<br>┃<br>┃<br>▼</td>
-    <td>`transform_screen_to_camera()`</td>
-                                                    <td>`y_up` in game.json
-                                                    <br>`set_transform()`, 
-                                                        `reset_transform()`,
-                                                        `compose_transform()`       </td><td>                         </td></tr>
+    <td>`transform_ss_to_cs()`</td>
+                                                        <td colspan>_Controlled by_: `y_up` in game.json,
+                                                         `set_transform()`, `reset_transform()`, `compose_transform()`,
+                                                        `get_transform()`       </td></tr>
 
-<tr class="space"><td colspan=4>  Camera Space           </td><td>                            </td><td>`touch`, `joy`, `text_width()`  </td></tr>
+<tr class="space"><td colspan=4>  Camera Space (cs)        </td><td>_Used by_: `touch`, `joy`, `gamepad_array[]`, `text_width()`  </td></tr>
 
-<tr><td>`transform_world_to_camera()`</td>
+<tr><td>`transform_ws_to_cs()`</td>
     <td class="arrow" width=10>▲<br>┃<br>┃<br>┃<br>┃</td>
     <td class="arrow" width=10>┃<br>┃<br>┃<br>┃<br>▼</td>
-    <td>`transform_camera_to_world()`</td> 
-                                                    <td>`set_camera()`,
-                                                        `reset_camera()`            </td><td>                         </td></tr>
+    <td>`transform_cs_to_ws()`</td> 
+                                                        <td>_Controlled by_: `set_camera()`, `reset_camera()`, `get_camera()`</td></tr>
 
 
-<tr class="space"><td colspan=4>  World Space            </td><td>                            </td><td>`draw_sprite()`, `draw_line()`,
-                                                                                             `draw_map()`, `draw_entity()`, `draw_sprite_corner_rect()`,
-                                                                                             `draw_text()`, `draw_point()` etc.;
-                                                                                             `ray_intersect()`, `overlaps()`, etc.</td></tr>
+<tr class="space"><td colspan=4>  World Space (ws)      </td><td>_Used by_: `draw_sprite()`, `draw_line()`, `draw_map()`, `draw_entity()`,
+                                                                 `draw_text()`, `draw_point()`, `ray_intersect()`, `overlaps()`, etc.</td></tr>
 
-<tr><td>`transform_entity_to_camera()`</td>
+<tr><td>`transform_es_to_ws()`</td>
     <td class="arrow" width=10>▲<br>┃<br>┃<br>┃<br>┃</td>
     <td class="arrow" width=10>┃<br>┃<br>┃<br>┃<br>▼</td>
-    <td>`transform_camera_to_entity()`</td>         <td>`entity.pos`, `entity.angle`, `entity.scale`,
-                                                        and `pos`, `angle`, `scale` arguments
-                                                        to `draw_` functions        </td><td>                         </td></tr>
+    <td>`transform_ws_to_es()`</td>                    <td>_Controlled by_: `entity.pos`, `entity.angle`, `entity.scale`</td></tr>
 
-<tr class="space"><td colspan=4> Entity/Body Space       </td><td>                            </td><td>                         </td></tr>
+<tr class="space"><td colspan=4> Entity Space (es)    </td><td>                         </td></tr>
 
-<tr><td>`transform_child_to_parent()`</td>
+<tr><td>`transform_to_parent()`</td>
     <td class="arrow" width=10>▲<br>┃<br>┃<br>┃<br>┃</td>
     <td class="arrow" width=10>┃<br>┃<br>┃<br>┃<br>▼</td>
-    <td>`transform_parent_to_child()`</td>              </td><td>`entity.pos_in_parent`,
+    <td>`transform_to_child()`</td>
+                                                        </td><td>`entity.pos_in_parent`,
                                                         `entity.angle_in_parent`,
                                                         `entity.scale_in_parent`    </td><td>                         </td></tr>
 
-<tr class="space"><td colspan=4> Child Space             </td><td>                            </td><td>                         </td></tr>
-<tr><td class="arrow" colspan=4>▲<br>┃<br>&vellip;<br>:  </td><td>                            </td><td>                         </td></tr>
+<tr class="space"><td colspan=4> Child Entity Space      </td><td>                            </td></tr>
+<tr><td></td><td class="arrow">▲<br>┃<br>&vellip;</td>
+<td class="arrow">┃<br>&vellip;</td><td></td><td>                            </td></tr>
 
 </table>
 
@@ -2205,20 +2219,26 @@ system transformations:
   fonts available at different sizes (such as deja) if you want text at different sizes to
   correspond to zooming.
 
-- `touch` and `gamepad_array`/`joy` `xy` values match the current screen-to-camera space
+- `touch`, `gamepad_array[]`, and `joy` `xy` values match the current screen-to-camera space
   transformation from `set_transform` at the time that they are read. This is mostly
   so that controls and event coordinates will match drawing coordinates when the
   axis is flipped or the screen origin changed.
   
+- Every `entity` contains both a transformation to its parent (`entity.pos_in_parent`, `entity.angle_in_parent`, `entity.scale_in_parent`, `entity.z_in_parent`)
+  and a transformation directly to world space (`entity.pos`, `entity.angle`, `entity.scale`, `entity.z`).
+  Storing the direct transformation improves performance and simplifies many common operations.
+  `entity_update_children(root)` recursively updates the direct transformation for an entire hierarchy.
 
 In general, `set_transform()` is good for tasks such as, "I'm making
-the user interface and want Y=down and 0 at top left" vs.  "I'm
+the user interface and want Y=down and 0 at top left" or "I'm
 drawing the world and want Y=up and the origin in the center". It
 cannot rotate the viewpoint. 
 
 `set_camera()` is for shifting the viewpoint in 2.5D within
 the world coordinate system. It cannot flip axes (it only allows
 positive, uniform zoom), but it can rotate, translate, and zoom. 
+Use it to show different views of the same scene, follow a character,
+or render a minimap. 
   
 Common situations are:
   
@@ -2228,6 +2248,52 @@ Common situations are:
  - Center on the player and rotate the y-axis to match (good for sprites drawn facing up): `set_transform(SCREEN_SIZE / 2); set_camera(player_entity)`
  - Center on the player and rotate the x-axis to the y-axis (good if you want `player.angle=0` to be the x-axis) `set_transform(SCREEN_SIZE / 2); set_camera({pos:player_entity, angle:player.angle - 90deg})`
 
+The transformation routines are:
+
+`transform_cs_to_ss(cs_point, cs_z (= 0))`
+: Transform `cs_point` at `cs_z` from camera space to screen space. The `cs_z` is needed 
+  only if a skew transformation is active.
+  
+`transform_cs_z_to_ss_z(cs_z)`
+: Transform camera space `cs_z` to a screen space z value.
+
+`transform_ss_to_cs(ss_point, ss_z (= 0))`
+: Transform `ss_point` from screen space to camera space.
+
+`transform_ss_z_to_cs_z(cs_z)`
+: Transform screen space `ss_z` to a camera space z value.
+  If the current transform has a zero z-scale then the result will be positive infinity,
+  negative infinity, or zero because the transformation is not invertible in that case.
+
+`transform_ws_to_cs(ws_point, ws_z (= 0))`
+: Transform world space `ws_point` to camera space. There is no
+  transformation function for `cs_z` value because you can 
+  transform it yourself `cs_z = ws_z - get_camera().z`.
+
+`transform_cs_to_ws(cs_point, cs_z (= 0))`
+: Transform camera space `cs_point` to world space. There is no
+  transformation function for `cs_z` because you can transform
+  it yourself as `ws_z = cs_z + get_camera().z`.
+
+`transform_ws_to_es(entity, ws_point)`
+: Transform world space point `ws_point` into the entity space of `entity`, wherever it is
+  in the hierarchy. There is no transformation function for `ws_z` because you can transform
+  it yourself as `es_z = ws_z - entity.z`.
+
+`transform_es_to_ws(entity, es_point)`
+: Transform entity space point `es_point` into world space, wherever the entity is in the hierarchy.
+  There is no transformation function for `es_z` because you can transform
+  it yourself as `ws_z = es_z + entity.z`.
+
+`transform_to_parent(child, child_point)`
+: Takes a coordinate `child_point` in the `child` entity reference frame and transforms it to
+  the `child.parent` entity reference frame.
+
+`transform_to_child(child, parent_point)`
+: Takes a coordinate `parent_point` in the `child.parent` entity reference frame and transforms it to
+  the `child` entity reference frame.
+
+<!--
 !!! Warning
     The following APIs are being renamed during the beta. They predate the global camera
     and use "draw" to refer to both camera and world space.
@@ -2238,20 +2304,16 @@ The full set of coordinate transformation helper functions is:
 - `transform_screen_to_draw(c)`, `transform_draw_to_screen(c, z (=0))`, `transform_screen_z_to_draw_z(z)`, `transform_draw_z_to_screen_z(z)`
 - `transform_draw_to_entity(e, c)`, `transform_entity_to_draw(e, c)`
 - `transform_entity_to_sprite(e, c)`, `transform_sprite_to_entity(e, c)`
-- `transform_parent_to_child(e_child, c)`, `transform_child_to_parent(e_child, c)` (unlike all other transform methods, does not assume `entity_update_children` has been called)
+- `transform_to_child(e_child, c)`, `transform_child_to_parent(e_child, c)` (unlike all other transform methods, does not assume `entity_update_children` has been called)
 - `transform_entity_to_entity(e_from, e_to, c)`
 - `transform_draw_to_sprite(e, c)`, `transform_sprite_to_draw(e, c)`
 - `transform_draw_to_map(m, c)`, `transform_map_to_draw(m, c)`, `transform_map_layer_to_draw_z(m, L)`, `transform_draw_z_to_map_layer(m, z)`
 
-Where `m` is a map, `e` is an entity, and `c` is an `xy()` coordinate.
-The `z` value only affects `transform_draw_to_screen` if a skew has been set by `set_transform()`.
-In this case, there is no way to invert the draw-to-screen transformation, so `transform_screen_to_draw` is
-misleading.
-
-There are no transformation functions between entity and draw space
-z-axes. Just add or subtract the `entity.z` value.
+-->
 
 ### Screen Space
+
+Note that `preserving_transform` also preserves the clipping rectangle.
 
 `compose_transform(args)`
 : Named argument version of `compose_transform()`.
@@ -2384,27 +2446,33 @@ Note that `preserving_transform` also preserves the camera.
 
 `set_camera(pos (= xy(0, 0)), angle (= 0), zoom (= 1), z (= 0))`
 : Positions the camera used to transform other draw calls. Note that
-  `zoom` is the inverse of a scale transformation on the camera itself.
-  Use `set_transform()` to move the on-screen origin.
+  `zoom` is the inverse of a scale transformation on the camera
+  itself.  Use `set_transform()` to move the on-screen origin.
   
-  `zoom` can be a number or a function, `zoom(z)`. If it is a function,
-  it computes the zoom factor for an object at `z` in camera space.
-  This is useful for creating pseudo-3D effects. If you do not want your
-  map layers to zoom in perspective, set the `"z_scale"` value in the map.json file to a 
-  small number or zero. Enabling a zoom function with nonzero `z_scale` 
-  can make map rendering significantly slower in the case of multiple layers because it disables
-  occlusion culling.
+  `zoom` can be a number or a function, `zoom(cs_z)`. If it is a
+  function, it computes the zoom factor for an object at `cs_z` in
+  camera space.  This is useful for creating pseudo-3D effects. If you
+  do not want your map layers to zoom in perspective, set the
+  `"z_scale"` value in the map.json file to a small number or
+  zero. Enabling a zoom function with nonzero `z_scale` can make map
+  rendering significantly slower in the case of multiple layers
+  because it disables occlusion culling.
   
-  To render sprites with parallax but 1:1 pixel scaling when using a zoom 
-  function, set the sprite or entity `scale` to `1 / camera.zoom(entity.pos.z - camera.pos.z)`.
-
+  To render sprites with parallax but 1:1 pixel scaling when using a
+  zoom function, set the sprite or entity `scale` to `1 / camera.zoom(entity.pos.z - camera.pos.z)`.
 
 ### Entity Space
 
 Each entity has its own coordinate system defined by `entity.pos`,
 `entity.scale`, and `entity.angle`. The `entity.scale` is often used to
 flip sprites from left to right, which also flips the entity's local
-coordinate system.
+coordinate system. 
+
+In most cases, you won't have to think about entity space beyond setting
+those fields. Entitys drawn with sprites and interacting with physics
+automatically handle the transformations. Only if you're doing detailed
+manipulation of children or drawing explicitly in entity space do you
+need to apply transformations.
 
 The direction of `entity.angle` is always counter-clockwise in screen
 coordinates. The direction in draw coordinates is given by
@@ -2437,31 +2505,41 @@ const X = transform_entity_to_draw(entity, xy(1, 0)) - entity.pos
 const Y = transform_entity_to_draw(entity, xy(0, 1)) - entity.pos
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are currently no graphics commands that themselves take
-entity-space coordinates, but the concept can be important for writing
-your own routines that operate on entities, such as resolving
-attachment points.
+Entity space is mostly used for moving a character relative to its own
+axes or resolving attachment points. Drawing commands always take 
+world space arguments and physics, per-pixel hit detection, and sprite drawing
+automatically handle the world-to-entity transformation for you.
 
-A planned future physics package extension will use entity
-coordinates, for example, for a space ship to apply thrust at the
-current location of its engine.
+In the rare case where you want to draw in entity space, you can transform the arguments to world space:
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+draw_disk(transform_es_to_ws(entity, es_pos), es_radius * entity.scale.x, color)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-### Sprite Space
+This works even if the entity is deep in an entity hierarchy.
+When drawing a shape with more parameters, the draw commands have additional arguments to help
+with this process. For example:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+draw_rect(transform_es_to_ws(entity, es_pos), size * entity.scale, fill, border, entity.angle, entity.z)
+draw_poly(es_vertex_array, fill, border, entity.pos, entity.angle, entity.scale, entity.z))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+### Sprite Pixel Coordinates
 
 Sprite coordinates are used by `get_sprite_pixel_color()`. These are integers
 with (0,0) on the top left of the sprite and (`sprite.size.x` - 1, `sprite.size.y` - 1)
 on the lower right.
 
 
-### Sprite Sheet Space
+### Spritesheet Indices
 
 *Sprite sheets* use integer coordinates with (0, 0) at the upper-left
 corner and (`size(sheet)` - 1, `size(sheet[0])` - 1) at the
 lower-right corner. Instead of functions for operating on these, sprite
 sheets are directly accessed as 2D arrays: `sheet[x][y]`.
 
-### Map Space
+### Map Cell Indices
 
 *Map space* integer coordinates used by maps have (0, 0) as upper-left
 tile and `map.size` - 1 at the lower-right tile.
@@ -2593,7 +2671,7 @@ built-in properties in the future: `density` and `friction`.
 The basic entity properties and defaults are:
 
 `entity.angle`
-: The draw-space angle from the x-axis to y-axis in radians. See
+: The world space angle from the x-axis to y-axis in radians. See
   `draw_sprite()`. Defaults to 0.
 
 `entity.name`
@@ -2619,10 +2697,10 @@ The basic entity properties and defaults are:
   at the same time. See also `entity.offset` for transient effects.
 
 `entity.pos`
-: The draw-space `xy` position of the center of the entity. Defaults to (0,0).
+: The world space `xy` position of the center of the entity. Defaults to (0,0).
 
 `entity.scale`
-: The draw-space `xy` scaling applied before translation and rotation. See `draw_sprite()`.
+: The world space `xy` scaling applied before translation and rotation. See `draw_sprite()`.
   Defaults to (1, 1). This can be used to grow, stretch, or flip the entity.
   If `entity.shape == "disk"`, then the scale must have the same magnitude
   in both x and y.
@@ -2836,19 +2914,10 @@ Hierarchy functions:
 `entity_remove_all(parent)`
 : Removes all children.
 
-`transform_child_to_parent(child, child_pos)`
-: Takes a coordinate `child_pos` in the `child` entity reference frame and transforms it to
-  the `child.parent` entity reference frame.
-
-`transform_parent_to_child(child, parent_pos)`
-: Takes a coordinate `parent_pos` in the `child.parent` entity reference frame and transforms it to
-  the `child` entity reference frame.
-
 `entity_update_children(entity)`
 : Recursively update the `pos`, `scale`, `angle`, and `offset` fields of all children and
   descendants from their `pos_in_parent`, `scale_in_parent`, `angle_in_parent`, and `offset_in_parent`
   fields. Usually called after simulation or animation processing.
-
 
 
 The hierarchy properties are:
@@ -3280,12 +3349,15 @@ endpoints and borders.
 
 ### Drawing
 
-`draw_poly(vertexArray, fill, border = (nil), pos (= xy(0, 0)), angle (= 0), scale (= xy(1, 1)), z (= 0))`
-: Draws the _convex_ polygon defined by the `vertexArray`, first scaling by `scale`, rotating by `angle`,
+`draw_poly(args)`
+: Named argument version of `draw_poly()`.
+
+`draw_poly(vertex_array, color, outline = (nil), pos (= xy(0, 0)), angle (= 0), scale (= xy(1, 1)), z (= 0))`
+: Draws the _convex_ polygon defined by the `vertex_array`, first scaling by `scale`, rotating by `angle`,
   and then translating by `pos`. The polygon may have any winding direction. The outcome of the drawn result
   is undefined and may change across platforms if the polygon is not convex (but there will never be an error).
 
-`draw_corner_rect(corner, size, fill, border (= ∅), z (= 0))`
+`draw_corner_rect(corner, size, color, outline (= ∅), z (= 0))`
 : Draw a rectangle covering all of the pixel centers between `corner`
   and `corner + size`. This is primarily for UI window drawing.
   `size` may be negative.
@@ -3298,18 +3370,26 @@ endpoints and borders.
 
   See also `draw_rect()`.
 
+`draw_disk(args)`
+: Object version of `draw_disk()`.
 
-`draw_disk(center, r, fill, border, z (= 0))`
-: Draw a circle or filled disk centered at (`center.x`, `center.y`)
+`draw_disk(pos, r, color, outline, z (= 0))`
+: Draw a circle or filled disk centered at (`pos.x`, `pos.y`)
   with radius `r` and z-order `z`.
+
+`draw_line(args)`
+: Named argument version of `draw_line()`.
 
 `draw_line(A, B, color, z (= 0), width (= 1))`
 : Draw a 1-pixel line from (`A.x`, `A.y`) to (`B.x`, `B.y`) using z-order `z`.
   When using the default transformation, put the endpoints at half-pixel
   positions for the best alignment with the pixel grid.
 
-`draw_point(P, c, z (= 0))`
-: Set the color of pixel (`P.x`, `P.y`) to color `c` with z-order `z`.
+`draw_point(args)`
+: Named argument version of `draw_point()`.
+
+`draw_point(pos, color, z (= 0))`
+: Set the color of pixel (`pos.x`, `pos.y`) to color `color` with z-order `z`.
   A series of `draw_point` calls with the same `z` value are about twice as
   fast as ones with mixed `z` values or intermixed with other draw calls.
   For the best alignment under the default transformation, put the endpoints
@@ -3323,7 +3403,10 @@ endpoints and borders.
   the z-order.  Useful for drawing the main game background during
   inventory, pause, menu, and dialogue modes.
 
-`draw_rect(pos, size, fill, border (= ∅), angle (= 0), z (= 0))`
+`draw_rect(args)`
+: Named argument version of `draw_rect()`.
+
+`draw_rect(pos, size, color, outline (= ∅), angle (= 0), z (= 0))`
 : Draws the rectangle _centered_ at `pos` with the given `size` and `angle`.
   No `scale` argument is provided because it is easy for the caller to
   explicitly multiply `size` by `scale`.
@@ -3411,7 +3494,10 @@ endpoints and borders.
   using a double slash: `\\{` or `\\}`. _The current implementation
   simply strips markup instead of applying it._
 
-`draw_tri(A, B, C, fill, border (= ∅), pos (= xy(0, 0)), scale (= xy(1, 1)), angle (= 0), z (= 0))`
+`draw_tri(args)`
+: Named argument version of `draw_tri()`.
+
+`draw_tri(A, B, C, color, outline (= ∅), pos (= xy(0, 0)), scale (= xy(1, 1)), angle (= 0), z (= 0))`
 : Scale `A`, `B`, and `C` by `scale`, rotate them around the origin by `angle`, translate
   by `pos`, and then draw the triangle. The `pos` argument is not first because in many
   cases this is called with draw-space vertices and no translation. The triangle may have
@@ -3891,18 +3977,25 @@ These APIs are subject to change.
   remaining arguments are passed to it. All `device_control()` commands
   may change in future releases and may not work on any given platform.
 
-  - `"start_GIF_recording"` Begin GIF recording.
-  - `"stop_GIF_recording"`  End GIF recording. When the compression completes, the GIF will appear in a
-     new tab.
-  - `"start_preview_recording"` Begin preview video recording. There is no "stop" command because this
-     terminates automatically after a set time.
-  - `"take_screenshot"`    Take a screenshot and download it to the local disk.
-  - `"set_pad_type", index, "type"` Set `gamepad_array[index].type` and the corresponding prompts.
-  - `"get_analog_axes", index` Return an `xy()` of the analog axis values for `gamepad_array[index]`, without D-pad snapping.
-    Needed for accessing Atari paddles, car pedals, steering wheels, and flight stick throttles in a meaningful way.
-  - `"set_debug_flag", flagname, bool` Set the enabled state of an IDE debugging flag. The flagnames are
-    `"entity_bounds"`, `"assert"`, `"debug_print"`, `"debug_watch"`, `"physics"`.
-  - `"get_debug_flag", flagname` Return the state of an IDE debugging flag.
+  <style>table.nested td:first-child {padding-right: 25px; white-space: nowrap;} 
+         table.nested th {border-bottom: 1px solid} </style>
+  <table class="nested">
+    <tr><th> Parameters                      </th><th> Effect </th></tr>
+    <tr><td> `"start_GIF_recording"`         </td><td> Begin GIF recording.</td></tr>
+    <tr><td> `"stop_GIF_recording"`          </td><td> End GIF recording. When the compression completes, the GIF will appear in a new tab.</td></tr>
+    <tr><td> `"start_preview_recording"`     </td><td> Begin preview video recording. There is no "stop" command because this terminates automatically after a set time.</td></tr>
+    <tr><td> `"take_screenshot"`             </td><td> Take a screenshot and download it to the local disk. </td></tr>
+    <tr><td> `"set_pad_type", index, "type"` </td><td> Set `gamepad_array[index].type` and the corresponding prompts. </td></tr>
+    <tr><td> `"get_analog_axes", index`      </td><td> Return an `xy()` of the analog axis values for `gamepad_array[index]`, without D-pad snapping.
+                                                       Needed for accessing Atari paddles, car pedals, steering wheels, and flight stick throttles in
+                                                       a meaningful way.</td></tr>
+    <tr><td> `"get_mouse_state"`             </td><td> Return `{x:, y:, button_array:}` for the current mouse position and buttons. Each element of
+                                                       `button_array` is 0 or 1. There are at least two buttons, but may be more.</td></tr>
+    <tr><td> `"set_debug_flag", flagname, bool`</td><td> Set the enabled state of an IDE debugging flag. The flagnames are 
+                                                       `"entity_bounds"`, `"assert"`, `"debug_print"`, 
+                                                        `"debug_watch"`, `"physics"`.</td></tr>
+    <tr><td> `"get_debug_flag", flagname`    </td><td> Return the state of an IDE debugging flag.</td></tr>
+  </table>
 
 `draw_bounds(e, color (= gray(60%)), recurse (= true))`
 : Render a debugging view of the bounds of an entity or other object `e`
@@ -4191,21 +4284,23 @@ Sprites
 ![`quad://sprites/space-ring.sprite.json`](../sprites/space-ring.png)
 
 
-### Spy Set
+### Action Hero
 
 ![`quad://sprites/sportscar-32x64.sprite.json`](../sprites/sportscar-32x64.png)
 ![`quad://sprites/road_tiles_64.sprite.json`](../sprites/road_tiles_64.png)
 ![`quad://sprites/chopper-body-44x99.sprite.json`](../sprites/chopper-44x99.png)
 ![`quad://sprites/tank-body-46x85.sprite.json`](../sprites/tank-46x85.png)
+![`quad://sprites/top-runner-16x25.sprite.json`](../sprites/top-runner-16x25.png)
+![`quad://sprites/top-runner-32x50.sprite.json`](../sprites/top-runner-32x50.png)
 
 
 ### Other
+
 ![`quad://sprites/miniroguelike-8x8.sprite.json`](../sprites/miniroguelike-8x8.png)
 ![`quad://sprites/ortho-city-32x16.sprite.json`](../sprites/ortho-city-32x16.png)
 ![`quad://sprites/controllers-64x44.sprite.json`](../sprites/controllers-64x44.png)
 ![`quad://sprites/controllers-32x22.sprite.json`](../sprites/controllers-32x22.png)
 ![`quad://sprites/explosion-realistic-128x128.sprite.json`](../sprites/explosion-realistic-128x128.png)
-
 
 
 Fonts
@@ -5285,6 +5380,24 @@ chained or used in expressions.
 
 There is no logical XOR in PyxlScript.
 
+The `default` operator has the form: _expr1_ `default` _expr2_. If
+_expr1_ is not `nil`, then the value of the operation is the value
+of `_expr1_`. If it is `nil`, then _expr2_ is evaluated and the value of the expression is
+the value of `_expr2_`. This allows compact statements handling default arguments
+or out of bounds array accesses, for example:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+// Returns a transparent gray. Opacity is optional
+// and defaults to 1
+def transparent_gray(g, opacity):
+  return rgba(g, g, g, opacity default 1)
+  
+
+// Print the first element of array matching target, or 
+// the first element of the entire array if not found.
+debug_print(array[find(array, target) default 0])
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 The conditional operator (distinct from the `if` block statement) has
 the form: `if testexpr then truevalue else falsevalue`.  Note that
 there are no colons (:), because it does not create blocks. The
@@ -5380,11 +5493,11 @@ z = call(f(a), b)
 
 ### Exponents
 
-The characters `⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣᵏᵘⁿ⁽⁾` can form exponent expressions that operate as if
+The characters `⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲᵏⁿᵘˣʸᶻ⁽⁾` can form exponent expressions that operate as if
 the `^` operator or `pow` function was invoked using those expressions as a second argument.
 The entire exponent expression is implicitly surrounded in parentheses.
 
-The variables `a`, `β`, `i`, `j`, `x`, `n`, `k`, and `u` may appear only as single-character
+The variables `a`, `β`, `i`, `j`, `x`, `y`, `z`, `n`, `k`, and `u` may appear only as single-character
 variable names in exponents.
 
 Exponentiation, including via exponent characters, may not be performed on a negative number
@@ -5436,7 +5549,6 @@ followed by the number 10.
 
 ### Built-in Objects
 
-
 The following are built-in constants and special zero-argument operators. They are
 not variable names and thus cannot be redefined. Several have both unicode and ASCII names.
 
@@ -5454,79 +5566,6 @@ Symbol         | ASCII           | Value
                | `SCREEN_SIZE`   | the size of the screen in pixels, defaults to `xy(384, 224)`
                | `CONSTANTS`     | an object mapping all game-specific constants to their values
                | `ASSETS`        | an object mapping all game-specific assets to their values
-
-
-<!--
-Typing
-----------------------------------------------------------------------------------------------
-
-Because many of the characters used in nano operators and built-in objects do not appear on
-standard keyboards, there are two special text entry methods available in the development
-environment. (You can also copy and paste characters from other programs or documentation.)
-
-The Symbols panel marked with "ξ½≤" at the top of the editor brings up a virtual keyboard
-for entering these symbols. The tool tips on those buttons also explain the use of each.
-
-The editor automatically replaces certain typed sequences with their corresponding character
-as well ("autocorrect"). The list of replacements is:
-
-    Sequence    | Replacement
-   -------------|--------------
-    `\Delta`    |`Δ`
-    `\alpha`    |`α`
-    `\beta`     |`β`
-    `\gamma`    |`γ`
-    `\delta`    |`δ`
-    `\epsilon`  |`ε`
-    `\zeta`     |`ζ`
-    `\eta`      |`η`
-    `\theta`    |`θ`
-    `\iota`     |`ι`
-    `\lambda`   |`λ`
-    `\mu`       |`μ`
-    `\rho`      |`ρ`
-    `\sigma`    |`σ`
-    `\phi`      |`ϕ`
-    `\chi`      |`χ`
-    `\psi`      |`ψ`
-    `\omega`    |`ω`
-    `\Omega`    |`Ω`
-    `\tau`      |`τ`
-    `\time`     |`τ`
-    `\xi`       |`ξ`
-    `\random`      |`ξ`
-    `==`        |`≟`
-    `?=`        |`≟`
-    `!=`        |`≠`
-    `\neq`      |`≠`
-    `\eq`       |`≟`
-    `\not`      |`¬`
-    `\leq`      |`≤`
-    `<=`        |`≤`
-    `\geq`      |`≥`
-    `>=`        |`≥`
-    `>>`        |`▻`
-    `<<`        |`◅`
-    `\bitand`   |`∩`
-    `\bitor`    |`∪`
-    `\bitxor`   |`⊕`
-    `\pi`       |`π`
-    `\infty`    |`∞`
-    `\nil`      |`∅`
-    `\half`     |`½`
-    `\third`    |`⅓`
-    `\quarter`  |`¼`
-    `\fifth`    |`⅕`
-    `sixth`     |`⅙`
-    `seventh`   |`⅐`
-    `eighth`    |`⅛`
-    `ninth`     |`⅑`
-    `tenth`     |`⅒'`
-    `\lfloor`   |`⌊`
-    `\rfloor`   |`⌋`
-    `\lceil`    |`⌈`
-    `\rceil`    |`⌉`
--->
 
 
 Flow Control
@@ -5780,9 +5819,14 @@ Symbols
 ---------------------------------------------------------------
 
 The quadplay✜ IDE supports autocorrect for typing the optional special
-symbols such as ∅ and ∈. For convenience when using an external editor
-or typing the full set of characters supported by fonts into
-strings on a US-EN keyboard, you can also copy and paste from here:
+symbols such as `nil` --> `∅`, `1/2` --> `½`, and `>=` --> `≥`. To generate
+paired symbols, type the name of the corresponding function without arguments.
+For example: `floor()` --> `⌊⌋`, `ceil()` --> `⌈⌉`, `magnitude()` --> `‖‖`,
+and `abs()` --> `||`.
+
+For convenience when using an external editor or typing the full set
+of characters supported by fonts into strings on a US-EN keyboard, you
+can also copy and paste from here:
 
 ````````````````````````````````````````````````````` none big
 Mode
@@ -6045,6 +6089,7 @@ I expect most people to use quadplay✜ on phones, laptops, and desktops
 as a virtual console. But, if you have some maker experience you can make a
 _real_ quadplay✜ console.
 
+#### Nano or Pi 4
 With a 3D-printed case and some Bluetooth or wired game controllers,
 you can build your own quadplay✜ retro mini console to connect to a TV
 or monitor. [Jetson Nano](https://developer.nvidia.com/embedded/jetson-nano-developer-kit)
@@ -6053,7 +6098,8 @@ power such a box using Linux and Chrome or
 Firefox. Both will hit 60 Hz for most games, and can easily run at
 30 Hz for all games (quadplay✜ handles framerate scaling for you seamlessly,
 so you won't even notice most of the time). Nano is more expensive but has the advantage of a 
-more powerful processor and a 64-bit Ubuntu distribution.
+more powerful processor. 
+
 
 ![Quadplay mini-console built by Morgan McGuire from a Jetson Nano with a 3D-printed case, USB Xbox 360 controller, and small external monitor.](nano-arcade.jpg width=50%)
 
@@ -6067,10 +6113,25 @@ only play their own games.
 
 ![Self-contained quadplay console built by Morgan McGuire from a Raspberry Pi and standard screen case, with Bluetooth controllers.](rpi-arcade.jpg width=50%)
 
+Ubuntu 64-bit already comes preinstalled on the Jetson Nano L4T disk image.
+
+For Raspberry Pi 4, I recommend the following 64-bit Ubuntu
+instead of the default Raspbian image because it gives you access to more packages, including
+faster browsers. My installation process is:
+
+1. Install the [Ubuntu Linux 64-bit](https://ubuntu.com/download/raspberry-pi) the disk image
+2. `sudo apt update`
+3. `sudo apt upgrade`
+4. `sudo apt install lubuntu-desktop`
+5. `sudo apt install -y chromium-browser`
+6. Install the quadplay SDK
+
+#### NUC
 An Intel NUC is a much more expensive device for powering a mini console,
 but has a lot more graphics power than an embedded processor and will
 comfortably run all games at 60 Hz.
 
+#### Cabinets
 You can also build a quadplay✜ arcade cabinet. This can be done with
 some carpentry and any low-cost PC and display, or by purchasing some (expensive!)
 pre-built arcade cabinets.
@@ -6144,25 +6205,25 @@ Screen     | Integer     | Used      | Efficiency  | Autoscaler | Used      | Ef
 *1920x1200*|  *5x*       |*1920x1120*| *93%*       | 5.00x      | 1920x1120 | 93%
 
 
-
 ### Buy
 
-Some physical handhelds that may be capable of running quadplay✜
-games include:
+quadplay✜ works on all Mac, Windows, and Linux devices, so any computer you buy can be 
+a dedicated device for playing or making games. For a _handheld_ form factor there
+are a few options.
+
+We've tested on the GPD Win 2 and it runs quadplay✜ well. Its successor is not yet available
+but should also work well, in a slightly larger form factor:
 
  - 1280x720 [GPD Win 2](http://gpd.hk/gdpwin2), Windows and Linux = full-res quadplay✜ 3x scaling
- - 1280x720 [DragonBox Pyra](https://pyra-handheld.com/boards/pages/pyra/), Linux = full-res quadplay✜ 3x scaling
- - 480x320 [Odroid-Go Advance](https://www.hardkernel.com/shop/odroid-go-advance/), Linux = full-res quadplay✜ 1x scaling; poor fit
-<!--  - 320x240 [PocketGo V2](https://www.bittboy.com/collections/pocketgo/products/new-pocketgo-v2) = 1/2-res quadplay✜ 1x scaling; bad fit -->
+ - 1280x800 [GPD Win Max](http://gpd.hk/gpdwinmax), Windows and Linux = full-res quadplay✜ 3x scaling
 
-The Smach Z prototype has a 1920x1080 screen that would support
-quadplay✜ integer 4x scaling as a poor fit, and the Alienware UFO prototype has
-a 1920x1200 screen that would support quadplay✜ integer 5x scaling. 
-The 1280x800 [GPD Win Max](https://www.notebookcheck.net/GPD-Win-Max-full-specs-revealed-Thunderbolt-3-backlit-keyboard-and-an-8-inch-landscape-screen-to-tempt-handheld-PC-fans.456334.0.html)
-will support integer 3x scaling as a poor fit.
-Note that quadplay✜ will automatically non-integer scale at these high resolutions,
-so the imperfect display matches are not an issue, but also that none of these 
-three products have yet shipped.
+Some other physical handhelds that may be capable of running quadplay✜
+games when/if released include:
+
+ - 480x320 [Odroid-Go Advance Black](https://liliputing.com/2020/05/the-new-odroid-go-advance-adds-wifi-and-more-buttons-linux-handheld-game-console.html), Linux = full-res quadplay✜ 1x scaling; poor fit
+ - 1280x720 [DragonBox Pyra](https://pyra-handheld.com/boards/pages/pyra/), Linux = full-res quadplay✜ 3x scaling
+ - 1920x1080 The Smach Z
+ - 1920x1200 Alienware UFO
 
 
 Network
@@ -6179,7 +6240,7 @@ You can use quadplay over a local network or the internet in several ways:
    from a laptop or desktop
 
 [Network Multiplayer](#network/networkmultiplayer)
-: Play multiplayer quadplay games with friends across a local network or the internet
+: Play multiplayer quadplay games with friends across a local network or the internet. Maybe.
 
 [Mobile Development](#network/mobiledevelopment)
 : Develop and test your quadplay game on a phone or tablet
@@ -6249,9 +6310,9 @@ Network Multiplayer
 
 _Coming soon..._
 
-(The basic idea is to run set up your browser as a non-Steam game as described
-in the Steam Streaming section, and then use Steam Remote Play Together to 
-allow a player to join you across the internet.)
+(I'm investigating building and distributing a standalone binary quadplay on Steam.
+ You could then use Steam Remote Play Together to allow up to three players to join
+ you across the internet.)
 
 
 Mobile Development
@@ -6456,7 +6517,7 @@ need to optimize.
 
 `draw_map()` is substantially faster than making the same
 `draw_sprite()` calls by yourself. It culls all off-screen
-sprites. Drawing a map with `zoom = 1` or `z_scale = 0` is faster than
+sprites. Drawing a map with `camera.zoom = 1` or `z_scale = 0` is faster than
 with perspective and zoom. Tiles without alpha will cull everything
 behind them when not using perspective, so you don't have to leave out
 the hidden map tiles for performance when drawing maps. Maps with
@@ -6727,6 +6788,29 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 May 8: Beta update 41
+
+- Added named argument versions of all drawing routines
+- The new game's title now appears in the game and JSON when creating a new game in the IDE
+- IDE now automatically reloads externally changed files from disk when it regains focus
+- Faster saves on constant changes in the IDE
+- Added "Show in Finder/Explorer" for assets in the IDE
+- Added "Open with..." support for Photoshop, Krita, Aseprite, GIMP, Audacity, and Tiled in the IDE
+- Avoided IDE touching unchanged source files on disk to improve external editor interop
+- Added top runner sprites to complete the Action Spy set
+- Added support in the `quadplay` script for Windows systems with multiple drives
+- Added 'y' and 'z' superscript characters to fonts and the compiler (there are no
+  subscripts for these because they do not appear in Unicode)
+- Documented backdoor mouse support via `device_control()`
+- Changed the mouse cursor to a crosshair over the emulator screen
+- Fixed relative paths when creating a new game from the IDE
+- Fixed `animation.frames`, which was completely broken in the previous release
+- Supported hierarchical directory structure under `~/my_games/`
+- Implemented "automath" autocorrect-style typing of Unicode symbols in the text editor
+- Assets now appear in consistent alphabetical order in the project view of the IDE
+- New "Z-Car" wireframe 3D example
+
 
 2020 May 1: Beta update 40
 

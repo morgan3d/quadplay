@@ -1,0 +1,16 @@
+{
+    "url": "chopper-44x99.png",
+    "sprite_size": {
+        "x": 96,
+        "y": 96
+    },
+    "names": {
+        "slow" : {"x": 0, "y": 0},
+        "fast" : {"x": 0, "y": 1}
+    },
+    "region":       {
+        "pos":      {"x": 133, "y": 0},
+        "size":     {"x": 96, "y": 192}
+    },
+    "license": "By Morgan McGuire 2020, released into the Public Domain/CC0"
+}

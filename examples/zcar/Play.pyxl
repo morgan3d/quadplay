@@ -1,0 +1,79 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+let θ = -15°
+let ϕ = -10°
+
+let Δθ = 0°
+let Δϕ = 0° 
+
+// Cache of projected vertices to avoid allocation
+const transformed_array = []
+transformed_array.extrapolate = "loop"
+for i < size(mesh.vertex_array):
+   push(transformed_array, xyz(0, 0, 0))
+
+
+def draw_3D() preserving_transform:
+   set_transform(½ SCREEN_SIZE)
+   draw_sprite({sprite: vignette, pos: xy(0, 0), z: 1024})
+   
+   // Transform all vertices
+   const rot = matmul_3x3(pitch_matrix(ϕ), yaw_matrix(θ))
+   const M = size(mesh.vertex_array)
+   for v < M:
+      transform_3D(rot, mesh.vertex_array[v], transformed_array[v])
+   
+   // Draw all lines
+   const L = ½ size(mesh.line_array)
+   for i < L:
+      const A = transformed_array[mesh.line_array[2 i]]
+      const B = transformed_array[mesh.line_array[2 i + 1]]
+   
+      const z = ½ (A.z + B.z)
+      const brightness = clamp(ADD(z, 150) * (1 / 200), 15%, 100%)
+      
+      // Antialias by drawing a fat, dim version in
+      // the distance for the brighter lines
+      if z > 0:
+         draw_line(A, B, lerp(BACKGROUND_COLOR, LINE_COLOR, ½ brightness), SUB(z, 300), 2)
+      draw_line(A, B, lerp(BACKGROUND_COLOR, LINE_COLOR, brightness), z, 1)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+// User input
+if mode_frames < 20:
+   Δθ = 2° 
+   Δϕ = -0.5° 
+else:
+   Δθ = clamp(0.92 Δθ - 0.2° joy.x, -1.2°, 1.2°)
+   Δϕ = clamp(0.92 Δϕ + 0.2° joy.y, -1.2°, 1.2°)
+
+// Simulation
+θ += Δθ 
+ϕ = clamp(ϕ + Δϕ, -30°, 30°)  
+
+// Graphics
+set_background(scanlines)
+// Ghosting
+set_post_effects({background: rgba(0,0,0,0), opacity: 70%})
+draw_3D()
+
+// Text scroll for flavor
+preserving_transform:
+   set_transform(xy(0, SCREEN_SIZE.y), xy(1, -1))
+   let pos = xy(0, 2)
+   let i = 0
+   const TEXT_COLOR = 40% LINE_COLOR;
+   while pos.y < SCREEN_SIZE.y:
+      const V = array_value(transformed_array, i - mode_frames)
+      draw_text(computer_font, 
+         format_number(V.x, "0.000") + " " +
+         format_number(V.y, "0.000") + " " +
+         format_number(V.z, "0.000"), pos, TEXT_COLOR,
+         ∅, ∅, ∅, ∅, -100)
+      i += 1
+      pos.y += 12
+

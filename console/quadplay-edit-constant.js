@@ -416,9 +416,9 @@ function onRenameConstant(constantName) {
 function showConstantContextMenu(constantName) {
     const getElement = `document.getElementById('projectConstant_${constantName}')`;
     customContextMenu.innerHTML =
-        `<div onmousedown="onProjectSelect(${getElement}, 'constant', '${constantName}')">Change Value</div>` +
-        `<div onmousedown="onRenameConstant('${constantName}')">Rename&hellip;</div>` +
-        `<div onmousedown="onEditConstantDescription('${constantName}')">Edit Description&hellip;</div>` +
-        `<hr><div onmousedown="onRemoveConstant('${constantName}')">Remove '${constantName}'</div>`;
+        `<div onmousedown="onProjectSelect(${getElement}, 'constant', '${constantName}')">Change Value</div>
+        <div onmousedown="onRenameConstant('${constantName}')">Rename&hellip;</div>
+        <div onmousedown="onEditConstantDescription('${constantName}')">Edit Description&hellip;</div>
+        <hr><div onmousedown="onRemoveConstant('${constantName}')">Remove '${constantName}'</div>`;
     showContextMenu();
 }

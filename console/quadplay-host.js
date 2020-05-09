@@ -154,7 +154,23 @@ function device_control(cmd) {
         {
             const i = clamp(parseInt(arguments[1]), 0, 3);
             const pad = QRuntime.gamepad_array[i];
-            return {x: pad._analogX * QRuntime._scaleX, y: pad._analogY * QRuntime._scaleY};
+            return Object.freeze({x: pad._analogX * QRuntime._scaleX, y: pad._analogY * QRuntime._scaleY});
+            break;
+        }
+
+    case "get_mouse_state":
+        {
+            const mask = mouse.buttons;
+            return Object.freeze({
+                x: mouse.screen_x * QRuntime._scaleX + mouse._offsetX,
+                y: mouse.screen_y * QRuntime._scaleY + mouse._offsetY,
+                button_array: Object.freeze([
+                    (mask & 1),
+                    (mask & 2) >> 1,
+                    (mask & 4) >> 2,
+                    (mask & 8) >> 3,
+                    (mask & 16) >> 4,
+                    (mask & 32) >> 5])});
             break;
         }
 
@@ -1194,7 +1210,18 @@ const fakeMouseEvent = {
     stopPropagation: function() { this.realEvent.stopPropagation(); this.realEvent.cancelBubble = true; },
 };
 
+const mouse = {screen_x:0, screen_y:0, buttons: 0};
+function updateMouseDevice(event) {
+    if (event.target === emulatorScreen) {
+        const rect = emulatorScreen.getBoundingClientRect();
+        mouse.screen_x = clamp(Math.round(emulatorScreen.width * (event.clientX - rect.left) / rect.width), 0, emulatorScreen.width - 1) + 0.5;
+        mouse.screen_y = clamp(Math.round(emulatorScreen.height * (event.clientY - rect.top) / rect.height), 0, emulatorScreen.height - 1) + 0.5;
+    }
+    mouse.buttons = event.buttons;
+}
+        
 function onMouseDownOrMove(event) {
+    updateMouseDevice(event);
     if (event.buttons !== 0) {
         // Synthesize a fake touch event (which will then get turned
         // into a fake key event!)
@@ -1208,6 +1235,7 @@ function onMouseDownOrMove(event) {
 
 
 function onMouseUpOrMove(event) {
+    updateMouseDevice(event);
     // Synthesize a fake touch event (which will then get turned
     // into a fake key event!)
     fakeMouseEvent.changedTouches[0].clientX = event.clientX;

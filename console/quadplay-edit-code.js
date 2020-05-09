@@ -122,7 +122,7 @@ function updateCodeEditorSession(url, bodyText) {
     } else if (typeof bodyText !== 'string') {
         bodyText = WorkJSON.stringify(bodyText, undefined, 4);
     }
-    
+
     if (session.getValue() !== bodyText) {
         // Update the value only when it has changed, to avoid
         // disturbing the active line. Calling setValue()
@@ -156,6 +156,209 @@ function setCodeEditorSession(url) {
     
     // Reset the mode so that it is visible
     setCodeEditorSessionMode(session, session.aux.mode);
+}
+
+
+const autocorrectTable = [
+    '^2',       '²',
+    '^3',       '³',
+    '^4',       '⁴',
+    '^5',       '⁵',
+    '^6',       '⁶',
+    '^7',       '⁷',
+    '^8',       '⁸',
+    '^9',       '⁹',
+    '^a',       'ᵃ',
+    '^d',       'ᵈ',
+    '^e',       'ᵉ',
+    '^h',       'ʰ',
+    '^i',       'ⁱ',
+    '^j',       'ʲ',
+    '^k',       'ᵏ',
+    '^m',       'ᵐ',
+    '^n',       'ⁿ',
+    '^o',       'ᵒ',
+    '^r',       'ʳ',
+    '^s',       'ˢ',
+    '^t',       'ᵗ',
+    '^u',       'ᵘ',
+    '^x',       'ˣ',
+    '^y',       'ʸ',
+    '^z',       'ᶻ',
+    '^-x',      '⁻ˣ',
+    '^-y',      '⁻ʸ',
+    '^-z',      '⁻ᶻ',
+    '^-i',      '⁻ⁱ',
+    '^-j',      '⁻ʲ',
+    '^-k',      '⁻ᵏ',
+    '^beta',    'ᵝ', // process before beta, so that it triggers first
+    'Delta',    'Δ',
+    'alpha',    'α',
+    'beta',     'β',
+    'gamma',    'γ',
+    'delta',    'δ',
+    'epsilon',  'ε',
+    'zeta',     'ζ',
+    'eta',      'η',
+    'theta',    'θ',
+    'iota',     'ι',
+    'lambda',   'λ',
+    'mu',       'μ',
+    'rho',      'ρ',
+    'sigma',    'σ',
+    'phi',      'ϕ',
+    'chi',      'χ',
+    'psi',      'ψ',
+    'omega',    'ω',
+    'Omega',    'Ω',
+    'tau',      'τ',
+    'time',     'τ',
+    'xi',       'ξ',
+    'pi',       'π',
+
+    // Intentionally disabled (looks weird to experienced programmers):
+    // '==',       '≟',
+    // 'in',       '∊',
+    // '>>',       '▶',
+    // '<<',       '◀',
+    // '>>=',      '▶=',
+    // '<<=',      '◀=',
+    
+    '?=',       '≟',
+    '=?',       '≟',
+    '!=',       '≠',
+    '<=',       '≤',
+    '...',      '…',
+    '>=',       '≥',
+    'bitand',   '∩',
+    'bitor',    '∪',
+    'bitxor',   '⊕',
+    'bitnot',   '~',
+    'infinity', '∞',
+    'nil',      '∅',
+    '1/2',      '½',
+    '1/3',      '⅓',
+    '1/4',      '¼',
+    '1/5',      '⅕',
+    '1/6',      '⅙',
+    '1/7',      '⅐',
+    '1/8',      '⅛',
+    '1/9',      '⅑',
+    '1/10',     '⅒',
+    '2/3',      '⅔',
+    '3/4',      '¾',
+    '2/5',      '⅖',
+    '3/5',      '⅗',
+    '4/5',      '⅘'
+];
+
+
+const autocorrectFunctionTable = [
+    'floor()',   '⌊⌋',
+    'ceil()',    '⌈⌉',
+    'magnitude()', '‖‖',
+    'abs()', '||',
+    'random()', 'ξ'];
+
+
+/* Called when the contents change and autocorrect is enabled */
+function autocorrectSession(session) {
+    const position = aceEditor.getCursorPosition();
+
+    // The current row, including the just-typed character
+    let src = session.getTextRange(new ace.Range(position.row, 0, position.row, position.column + 1));
+
+    // ace.js represents the newline as reporting one past the end of the actual range,
+    // even though it will draw the cursor on the *next* line.
+    if (src.length === position.column) {
+        src += '\n';
+    }
+
+    if ((src.length === 0) || /[0-9A-Za-z_|=-\^]/.test(src[src.length - 1])) {
+        // This is not a symbol-breaking character, so return immediately
+        return;
+    }
+    
+    // See if there are an odd number of double quotes on this row up to this point.
+    let quotes = 0;
+    for (let i = 0; i < src.length - 1; ++i) {
+        if (src[i] === '"') { ++quotes; }
+    }
+    if (quotes & 1) {
+        // There's an odd number of quotes...we must be in a quoted string, so
+        // disable autocorrect
+        return;
+    }
+
+    let target, replacement;
+
+    const lastChar = src[src.length - 1];
+    if (lastChar === ')') {
+        // Check for special functions. These are weird because we want them to
+        // trigger right on the closing paren instead of waiting for the next character,
+        // as they are unambiguous immediately after typing.
+        for (let i = 0; i < autocorrectFunctionTable.length; i += 2) {
+            target = autocorrectFunctionTable[i];
+            // Look for a breaking character before the target sequence
+            if (((src.length === target.length) ||
+                 ((src.length > target.length) &&
+                  /[ +\-\.\t\n,:()\[\]]/.test(src[src.length - target.length - 1]))) &&
+                src.endsWith(target)) {
+                replacement = autocorrectFunctionTable[i + 1];
+
+                session.replace(new ace.Range(position.row, position.column - target.length + 1, position.row, position.column + 1), replacement);
+                // Advance the cursor to the end over the replacement
+                aceEditor.gotoLine(position.row + 1, position.column - target.length + replacement.length + 1, false)
+                return;
+            }
+        }        
+    }
+
+    if (! replacement) {
+        // Strip the last character, which will not be part of the autocorrect.
+        src = src.substring(0, src.length - 1);
+        
+        // Look for any possible match in substr.
+        for (let i = 0; i < autocorrectTable.length; i += 2) {
+            target = autocorrectTable[i];
+            
+            // Look for a breaking character before the target sequence
+            if (((src.length === target.length) ||
+                 ((src.length > target.length) &&
+                  ((target[0] === '^') || // exponents don't need to be broken
+                   /[ +\-\.\t\n,:()\[\]]/.test(src[src.length - target.length - 1])))) &&
+                src.endsWith(target)) {
+                replacement = autocorrectTable[i + 1];                
+                break;
+            }
+        } // for each autocorrect choice
+    }
+
+    // Degrees are a very special case. We need to search backwards for
+    // the previous breaking character, and then check if we're looking
+    // at a number followed by 'deg'
+    if (! replacement && /(^|[^A-Za-z_])[\.0-9½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒]+deg$/.test(src)) {
+        target = 'deg';
+        replacement = '°';
+    }
+
+    // Mode line
+    if (! replacement && (src[0] === '=') && /^={5,}$/.test(src)) {
+        target = src;
+        replacement = '═'.repeat(src.length);
+    }
+
+    // Event line
+    if (! replacement && (src[0] === '-') && /^-{5,}$/.test(src)) {
+        target = src;
+        replacement = '─'.repeat(src.length);
+    }
+    
+    if (replacement) {
+        session.replace(new ace.Range(position.row, position.column - target.length, position.row, position.column), replacement);
+        // Advance the cursor to the end over the replacement
+        aceEditor.gotoLine(position.row + 1, position.column - target.length + replacement.length + 1, false)
+    }
 }
 
 
@@ -208,8 +411,18 @@ function createCodeEditorSession(url, bodyText) {
     session.setUseWrapMode(false);
 
     if (! session.aux.readOnly) {
-        session.on("change", function (delta) {
+        session.on('change', function (delta) {
             if (session.aux.readOnly) { return; }
+
+            if (! aceEditor.curOp || ! aceEditor.curOp.command.name) {
+                // Programmatic update using setValue, not a change
+                // due to the user. Do not try to save or autocorrect.
+                return;
+            }
+
+            if (document.getElementById('automathEnabled').checked) {
+                autocorrectSession(session);
+            }
             
             // Cancel the previous pending timeout if there is one
             if (session.aux.saveTimeoutID) {
@@ -273,44 +486,6 @@ function createCodeEditorSession(url, bodyText) {
     return session;
 }
 
-/*
-aceEditor.session.on('change', function () {
-    let src = aceEditor.session.value;
-    if (src.match(/\r|\t|[\u2000-\u200B]/)) {
-        // Strip any \r inserted by pasting on windows, replace any \t that
-        // likewise snuck in. This is rare, so don't invoke setValue unless
-        // one is actually inserted.
-        src = src.replace(/\r\n|\n\r/g, '\n').replace(/\r/g, '\n');
-        src = src.replace(/\t/g, '  ').replace(/\u2003|\u2001/g, '  ').replace(/\u2007/g, ' ');
-        aceEditor.session.value = src;
-    } else {
-        // Autocorrect
-        let position = aceEditor.getCursorPosition();
-        let index = aceEditor.session.doc.positionToIndex(position);
-
-        let LONGEST_AUTOCORRECT = 10;
-        let start = index - LONGEST_AUTOCORRECT;
-        let substr = src.substring(start, index + 1);
-
-        // Look for any possible match in substr, which is faster than
-        // searching the entirety of the source on every keystroke
-        for (let i = 0; i < autocorrectTable.length; i += 2) {
-            let target = autocorrectTable[i];
-            let x = substr.indexOf(target);
-            if (x >= 0) {
-                let replacement = autocorrectTable[i + 1];
-                // Found an autocorrectable substring: replace it
-                src = src.substring(0, start + x) + replacement + src.substring(start + x + target.length);
-                aceEditor.session.value = src;
-
-                // Move the cursor to retain its position
-                aceEditor.gotoLine(position.row + 1, Math.max(0, position.column - target.length + replacement.length + 1), false);
-                break;
-            }
-        }
-    }
-});
-*/
 
 /*
     .-------------------.                    
@@ -424,19 +599,34 @@ function serverWriteFiles(array, callback, errorCallback) {
 function serverScheduleSaveGameJSON(delaySeconds) {
     if (gameSource.saveTimeoutID) {
         // Replace existing pending save
+        removePendingSaveCallback(gameSource.saveCallback);
         clearTimeout(gameSource.saveTimeoutID);
     } else {
         ++savesPending;
     }
-    
-    gameSource.saveTimeoutID = setTimeout(function () {
+
+    const saveCallback = function () {
+        // Remove the callback
+        removePendingSaveCallback(saveCallback);
+        // Clear the timeout in case this function was explicitly invoked
+        clearTimeout(gameSource.saveTimeoutID);
+
         gameSource.saveTimeoutID = null;
+        gameSource.saveCallback = null;
         serverSaveGameJSON(function () {
-            // Wait until the actual save has occurred to reduce
+            // Wait until the actual save has occurred before reducing
             // the counter.
             --savesPending;
         });
-    }, (delaySeconds || 0) * 1000);
+    };
+    gameSource.saveCallback = saveCallback;
+    
+    if (delaySeconds > 0) {
+        pendingSaveCallbacks.push(saveCallback);
+        gameSource.saveTimeoutID = setTimeout(saveCallback, (delaySeconds || 0) * 1000);
+    } else {
+        saveCallback();
+    }
 }
 
 

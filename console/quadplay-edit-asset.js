@@ -165,11 +165,46 @@ function onRemoveAsset(key) {
 }
 
 
+function onOpenAssetExternally(appName, assetName) {
+    // Assumes that the asset was local and not built-in
+    const url = gameSource.assets[assetName]._url;
+    const filename = serverConfig.rootPath + urlToFilename(url);
+    postToServer({command: 'open',
+                  app: appName,
+                  file: filename});
+}
+
+
+
 function showAssetContextMenu(assetName) {
     const getElement = `document.getElementById('projectAsset_${assetName}')`;
+
+    let externalCmds = '';
+    if (gameSource.assets) {
+        const url = gameSource.assets[assetName]._url;
+        if (! isRemote(url) && !isBuiltIn(url)) {
+            if (serverConfig.hasFinder) {
+                externalCmds += `<div onmousedown="onOpenAssetExternally('<finder>', '${assetName}')">Show in ${isApple ? 'Finder' : 'Explorer'}</div>`;
+            }
+            
+            const ext = url.split('.').pop();
+            if (serverConfig.applications && serverConfig.applications[ext]) {
+                const list = serverConfig.applications[ext];
+                for (let i = 0; i < list.length; ++i) {
+                    externalCmds += `<div onmousedown="onOpenAssetExternally('${list[i].path}', '${assetName}')">Open with ${list[i].name}</div>`;
+                }
+            }
+
+            if (externalCmds.length > 0) {
+                externalCmds = '<hr>' + externalCmds;
+            }
+        }    
+    }
+          
     customContextMenu.innerHTML =
-        `<div onmousedown="onProjectSelect(${getElement}, 'asset', gameSource.assets['${assetName}'])">Inspect</div>` +
-        `<div onmousedown="onRenameAsset('${assetName}')">Rename&hellip;</div>` +
+        `<div onmousedown="onProjectSelect(${getElement}, 'asset', gameSource.assets['${assetName}'])">Inspect</div>
+        <div onmousedown="onRenameAsset('${assetName}')">Rename&hellip;</div>` +
+        externalCmds + 
         `<hr><div onmousedown="onRemoveAsset('${assetName}')">Remove '${assetName}'</div>`;
     showContextMenu();
 }

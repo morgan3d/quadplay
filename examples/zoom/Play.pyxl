@@ -1,0 +1,72 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+const POINT_GRID_SIZE = xy(50, 50)
+const SPACING = 50
+const POINT_RADIUS = 10
+
+const POINTS = []
+for x < POINT_GRID_SIZE.x:
+    for y < POINT_GRID_SIZE.y:
+        push(
+            POINTS,
+            make_entity(
+                {
+                    pos: SPACING * (xy(x, y) - (POINT_GRID_SIZE - 1) / 2),
+                    radius: POINT_RADIUS,
+                    color: rgb(1,1,1),
+                    z: 0,
+                    name: "POINT_" + unparse(x) + "_" + unparse(y),
+                    grid: xy(x,y),
+                }
+            )
+        )
+
+def perspective_zoom(cs_z):
+   const clip_z = 6.5
+   return clip_z / (clip_z - cs_z)
+
+const CAMERA = make_entity({
+   pos: xy(0, 0),
+   angle: 0,
+   z: 10,
+   zoom: perspective_zoom
+})
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+reset_transform()
+
+draw_text(
+    font,
+    "CAMERA.z: " + unparse(CAMERA.z),
+    SCREEN_SIZE - xy(10, 10),
+    rgb(0,1,0),
+    nil,
+    rgb(0,0,0),
+    "right",
+    "bottom"
+)
+
+set_transform(½ SCREEN_SIZE)
+draw_disk(xy(0, 0), 10, ∅, rgb(0,1,0))
+draw_disk(xy(0, 0), 3, rgb(0,1,0), rgb(0,0,0))
+draw_text(
+    font,
+    "screen center",
+    xy(0, 12),
+    rgb(0,1,0),
+    ∅,
+    rgb(0,0,0),
+    "center",
+    "top"
+)
+
+CAMERA.z += gamepad_array[0].y
+
+preserving_transform:
+    set_camera(CAMERA)
+
+    for point in POINTS:
+        draw_disk(point.pos, point.radius, point.color)

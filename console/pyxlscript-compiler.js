@@ -918,8 +918,8 @@ function pyxlToJS(src, noYield, internalMode) {
         src = src.replace(/[½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒]/g, function (match) { return fraction[match]; });
         
         // Replace exponents
-        src = src.replace(/([⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣᵏᵘⁿ⁽⁾][⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣᵏᵘⁿ⁽⁾ ]*)/g, '^($1)');
-        src = src.replace(/[⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣᵏᵘⁿ⁽⁾]/g, function (match) { return superscriptToNormal[match]; });
+        src = src.replace(/([⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁽⁾][⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁽⁾ ]*)/g, '^($1)');
+        src = src.replace(/[⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣᵏʸᶻᵘⁿ⁽⁾]/g, function (match) { return superscriptToNormal[match]; });
         
         // Replace subscripts
         src = src.replace(/([₊₋₀₁₂₃₄₅₆₇₈₉ₐᵦᵢⱼₓₖᵤₙ₍₎][₊₋₀₁₂₃₄₅₆₇₈₉ₐᵦᵢⱼₓₖᵤₙ₍₎ ]*)/g, '[($1)]');
@@ -1000,12 +1000,16 @@ function pyxlToJS(src, noYield, internalMode) {
     // line to replace with that operator and then change vectorify to
     // have a flag for rewriting nullish, rather than this weird callback.
     //
-    // Do this immediately before vectorify, which will restore these
+    // Do this immediately before vectorify, which will restore these.
     src = src.replace(/\bdefault\b/g, '==');
 
     
     try {
-        src = vectorify(src, {assignmentReturnsUndefined:true, scalarEscapes:true, equalsCallback: vectorify.nullishRewriter});
+        src = vectorify(src, {
+            assignmentReturnsUndefined: true,
+            scalarEscapes: true,
+            equalsCallback: vectorify.nullishRewriter
+        });
     } catch (e) {
         console.log(src);
         throw e;
@@ -1019,7 +1023,7 @@ function pyxlToJS(src, noYield, internalMode) {
     src = src.replace(/_add\(__yieldCounter, 1\)/g, '__yieldCounter + 1');
     src = unprotectQuotedStrings(src, protectionMap);
 
-    //console.log(src);
+    console.log(src);
     return src;
 }
 
@@ -1363,6 +1367,8 @@ const superscriptToNormal = Object.freeze({
     'ⁱ':' i ',
     'ʲ':' j ',
     'ˣ':' x ',
+    'ʸ':' y ',
+    'ᶻ':' z ',
     'ᵘ':' u ',
     'ᵏ':' k ',
     'ⁿ':' n ',

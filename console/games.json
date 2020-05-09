@@ -67,7 +67,15 @@
         },
         {
             "url": "quad://examples/vehicles/",
-            "title": "Spy Game"
+            "title": "Vehicles"
+        },
+        {
+            "url": "quad://examples/zcar/",
+            "title": "Z-Car"
+        },
+        {
+            "url": "quad://examples/zoom/",
+            "title": "Zoom"
         }
     ],
     "builtins": [

@@ -1004,14 +1004,14 @@ function reset_camera() {
 
 
 function set_camera(pos, angle, zoom, z) {
-    if (is_object(pos) && 'pos' in pos) {
+    if (is_object(pos) && (pos.x === undefined)) {
         zoom = pos.zoom;
         angle = pos.angle;
         z = pos.z;
         pos = pos.pos;
     }
 
-    if (pos === undefined) { pos = xy(0, 0); }
+    if (pos === undefined) { pos = {x:0, y:0}; }
     if (zoom === undefined) { zoom = 1; }
 
     if (typeof zoom !== 'number' && typeof zoom !== 'function') {
@@ -1159,23 +1159,24 @@ function set_transform(pos, dir, addZ, scaleZ, skew) {
 }
 
 
+// TODO: Delete
 function transform_draw_to_screen(coord, z) {
     z = z || 0;
     return xy((coord.x + (z * _skewXZ)) * _scaleX + _offsetX,
               (coord.y + (z * _skewYZ)) * _scaleY + _offsetY);
 }
 
-
+// TODO: delete
 function transform_draw_z_to_screen_z(z) {
     return z * _scaleZ + _offsetZ;
 }
 
-
+// TODO: Delete
 function transform_screen_to_draw(coord) {
     return xy((coord.x - _offsetX) / _scaleX, (coord.y - _offsetY) / _scaleY);
 }
 
-
+// TODO: Delete
 function transform_screen_z_to_draw_z(z) {
     return (z - _offsetZ) / _scaleZ;
 }
@@ -1714,13 +1715,13 @@ function transform_sprite_to_entity(entity, coord) {
               (coord.y - entity.sprite.size.y * 0.5) / _scaleY);
 }
 
-
+// TODO: Delete
 function transform_draw_to_entity(entity, coord) {
     if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { throw new Error("Requires both an entity and a coordinate"); }
     return transform_to(entity.pos, entity.angle, entity.scale, coord);
 }
 
-
+// TODO: Delete
 function transform_entity_to_draw(entity, coord) {
     if (! coord || coord.x == undefined) { throw new Error("transform_entity_to_draw() requires both an entity and a coordinate"); }
     return transform_from(entity.pos, entity.angle, entity.scale, coord);
@@ -1941,7 +1942,60 @@ function transform_entity_to_entity(e1, e2, pos) {
 }
 
 
-function transform_parent_to_child(child, pos) {
+function transform_cs_to_ss(cs_point, cs_z) {
+    cs_z = cs_z || 0;
+    return xy((cs_point.x + (cs_z * _skewXZ)) * _scaleX + _offsetX,
+              (cs_point.y + (cs_z * _skewYZ)) * _scaleY + _offsetY);
+}
+
+function transform_ss_to_cs(ss_point, ss_z) {
+    ss_z = ss_z || 0;
+    cs_z = transform_ss_z_to_cs_z(ss_z);
+    
+    return xy((ss_point.x - _offsetX) / _scaleX - cs_z / _skewXZ,
+              (ss_point.y - _offsetY) / _scaleY - cs_z / _skewYZ);
+}
+
+function transform_cs_z_to_ss_z(cs_z) {
+    return cs_z * _scaleZ + _offsetZ;
+}
+
+
+function transform_ss_z_to_cs_z(ss_z) {
+    return (ss_z - _offsetZ) / _scaleZ;
+}
+
+
+function transform_ws_to_cs(ws_point, ws_z) {
+    const cs_z = (ws_z || 0) - _camera.z;
+    const mag = _zoom(cs_z);
+    const C = Math.cos(_camera.angle) * mag, S = Math.sin(_camera.angle * rotation_sign()) * mag;
+    const x = ws_point.x - _camera.x, y = ws_point.y - _camera.y;
+    return {x: x * C + y * S, y: y * C - x * S};
+}
+
+function transform_cs_to_ws(cs_point, cs_z) {
+    const mag = 1 / _zoom(cs_z);
+    const C = Math.cos(-_camera.angle) * mag, S = Math.sin(-_camera.angle * rotation_sign()) * mag;
+    
+    const x = cs_point.x - _camera.x, y = cs_point.y - _camera.y;
+    return {x: cs_point.x * C + cs_point.y * S + _camera.pos.y,
+            y: cs_point.y * C - cs_point.x * S + _camera.pos.x};
+}
+
+function transform_ws_to_es(entity, coord) {
+    if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { throw new Error("Requires both an entity and a coordinate"); }
+    return transform_to(entity.pos, entity.angle, entity.scale, coord);
+}
+
+
+function transform_es_to_ws(entity, coord) {
+    if (! coord || coord.x == undefined) { throw new Error("transform_entity_to_draw() requires both an entity and a coordinate"); }
+    return transform_from(entity.pos, entity.angle, entity.scale, coord);
+}
+
+
+function transform_to_child(child, pos) {
     const a = child.parent.angle - child.angle;
     const c = Math.cos(a);
     const s = Math.sin(a);
@@ -1952,8 +2006,7 @@ function transform_parent_to_child(child, pos) {
               -s * x + c * y)
 }
 
-
-function transform_child_to_parent(child, pos) {
+function transform_to_parent(child, pos) {
     const a = child.angle - child.parent.angle;
     const c = Math.cos(a);
     const s = Math.sin(a);
@@ -3589,6 +3642,18 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
 
 
 function draw_tri(A, B, C, color, outline, pos, scale, angle, z) {
+    if (A.A) {
+        // Object version
+        z = A.z;
+        angle = A.angle;
+        scale = A.scale;
+        pos = A.pos;
+        outline = A.outline;
+        color = A.color;
+        C = A.C;
+        B = A.B;
+        A = A.A;
+    }
     draw_poly([A, B, C], color, outline, pos, angle, scale, z);
 }
 
@@ -3596,6 +3661,15 @@ function draw_tri(A, B, C, color, outline, pos, scale, angle, z) {
 function draw_disk(pos, radius, color, outline, z) {
     // Skip graphics this frame
     if (mode_frames % _graphicsPeriod !== 0) { return; }
+
+    if (pos.pos) {
+        // Object version
+        outline = pos.outline;
+        color = pos.color;
+        radius = pos.radius;
+        z = pos.z;
+        pos = pos.pos;
+    }
 
     z = (z || 0) - _camera.z;
     if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {
@@ -3668,6 +3742,15 @@ function _colorToUint32(color) {
 
 
 function draw_rect(pos, size, fill, border, angle, z) {
+    if (pos.pos) {
+        z = pos.z;
+        angle = pos.angle;
+        border = pos.outline;
+        fill = pos.color;
+        size = pos.size;
+        pos = pos.pos;
+    }
+    
     angle = loop(angle || 0, -Math.PI, Math.PI);
 
     const rx = size.x * 0.5, ry = size.y * 0.5;
@@ -3686,6 +3769,16 @@ function draw_rect(pos, size, fill, border, angle, z) {
 
 
 function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
+    if (vertexArray.vertex_array) {
+        z = vertexArray.z;
+        scale = vertexArray.scale;
+        angle = vertexArray.angle;
+        pos = vertexArray.pos;
+        border = vertexArray.outline;
+        fill = vertexArray.color;
+        vertexArray = vertexArray.vertex_array;
+    }
+    
     angle = (angle || 0) * rotation_sign();
     let Rx = Math.cos(angle), Ry = Math.sin(-angle);
 
@@ -3864,6 +3957,14 @@ function _zoom(z) {
 
 
 function draw_line(A, B, color, z, width) {
+    if (A.A) {
+        width = A.width;
+        z = A.z;
+        color = A.color;
+        B = A.B;
+        A = A.A;
+    }
+    
     if (width === undefined) { width = 1; }
 
     if (width * _zoom((z || 0) - _camera.z) >= 1.5) {
@@ -3923,6 +4024,13 @@ function draw_line(A, B, color, z, width) {
 function draw_point(pos, color, z) {
     // Skip graphics this frame
     if (mode_frames % _graphicsPeriod !== 0) { return; }
+
+    if (pos.pos) {
+        z = pos.z;
+        color = pos.color;
+        pos = pos.pos;
+    }
+    
     z = (z || 0) - _camera.z;
 
     if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {

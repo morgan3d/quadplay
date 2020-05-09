@@ -551,8 +551,13 @@ div.disabled span.label, div.disabled:active span.label {
 
 code, .code {
     font-size: 90%;
-    font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace
 }
+
+.ace_editor, code, .code {
+    /* Menlo has better exponents than Monaco*/
+    font-family: 'Menlo', 'Monaco', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+}
+
 
 /**************************************************/
 
@@ -603,6 +608,7 @@ code, .code {
     width: 100%;
     border-top: 1px solid #888;
 }
+
 
 #codeEditor .toolbar {
     padding: 3px;
@@ -1108,6 +1114,7 @@ body.EmulatorUI .virtualController {
 canvas#screen {
     background: #000;
     z-index: 30;
+    cursor: crosshair;
 }
 
 #logo {

@@ -1,0 +1,28 @@
+{
+   "achievements": false,
+   "assets": {
+      "font": "quad://fonts/deja-8.font.json"
+   },
+   "competitive": false,
+   "constants": {},
+   "cooperative": false,
+   "copyright": "©2020 Stephan Steinback",
+   "description": "Very simple camera example with a grid of points",
+   "developer": "Stephan Steinback",
+   "docs": [],
+   "highscores": false,
+   "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+   "max_players": 1,
+   "min_players": 1,
+   "modes": [
+      "Play*"
+   ],
+   "packages": [],
+   "scripts": [],
+   "title": "Zoom",
+   "version": 0,
+   "screen_size": {
+      "x": 384,
+      "y": 224
+   }
+}

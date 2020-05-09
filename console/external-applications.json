@@ -1,0 +1,115 @@
+{
+    "macOS": {
+        "png": [
+            {
+                "name": "Photoshop",
+                "path": [
+                "/Applications/Adobe Photoshop 2020/Adobe Photoshop 2020.app",
+                "/Applications/Adobe Photoshop CC 2017/Adobe Photoshop CC 2017.app"]
+            },
+            {
+                "name": "Krita",            
+                "path": ["/Applications/krita.app"]
+            },
+            {
+                "name": "Aseprite",
+                "path": ["~/Library/Application Support/Steam/SteamApps/common/Aseprite/Aseprite.app"]
+            },
+            {
+                "name": "GIMP",
+                "path": ["/Applications/GIMP-2.10.app"]
+            }
+         ],
+
+         "tmx" : [
+            {
+                "name": "Tiled",
+                "path": ["/Applications/Tiled.app"]
+            }
+        ],
+
+        "mp3" : [
+            {
+                "name" : "Audacity",
+                "path" : ["/Applications/Audacity.app"]
+            }
+        ],
+
+       "pyxl" : [
+           {
+               "name" : "VS Code",
+               "path" : ["/Applications/Visual Studio Code.app"]
+           },
+           {
+               "name" : "Xcode",
+               "path" : ["/Applications/Xcode.app"]
+           },
+           {
+               "name" : "Emacs",
+               "path" : ["/usr/bin/emacs"]
+           },
+           {
+               "name" : "Vim",
+               "path" : ["/usr/bin/vim"]
+           }
+       ],
+        
+        "json" : [
+            {
+                "name" : "VS Code",
+                "path" : ["/Applications/Visual Studio Code.app"]
+            },
+            {
+                "name" : "Xcode",
+                "path" : ["/Applications/Xcode.app"]
+            },
+            {
+                "name" : "Emacs",
+                "path" : ["/usr/bin/emacs"]
+            },
+            {
+                "name" : "Vim",
+               "path" : ["/usr/bin/vim"]
+           }
+        ]
+    },
+
+   "Windows": {
+       "png": [
+            {
+                "name": "Photoshop",
+                "path": [
+                    "C:/Program Files/Adobe/Adobe Photoshop 2020/Photoshop.exe",
+                    "C:/Program Files/Adobe/Adobe Photoshop CC 2017/Photoshop.exe"]
+            }
+       ],
+
+       "tmx" : [
+           {
+               "name" : "Tiled",
+               "path" : ["C:/Program Files/Tiled/tiled.exe"]
+           }
+       ],
+
+       "pyxl" : [
+            {
+                "name" : "VS Code",
+                "path" : ["C:/Users/mcguire/AppData/Local/Programs/Microsoft VS Code/Code.exe"]
+            }
+        ],
+
+       "json" : [
+           {
+               "name" : "VS Code",
+               "path" : ["C:/Users/mcguire/AppData/Local/Programs/Microsoft VS Code/Code.exe"]
+           }
+        ],
+
+       "mp3" : [
+           {
+               "name" : "Audacity",
+               "path" : ["C:/Program Files (x86)/Audacity/audacity.exe"]
+           }
+       ]
+    }
+}

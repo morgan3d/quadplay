@@ -1,0 +1,26 @@
+// Transform src by mat, project to 2D,
+// and return in dst.xyz
+def transform_3D(mat, src, dst):
+   MAT3x3_MATMUL_XYZ(mat, src, dst)
+   XY_MUL(dst, 0.998^SUB(0, dst.z), dst)
+
+
+def yaw_matrix(θ):
+   return [[sin θ, 0,  cos θ],
+           [ 0,    1,   0   ],
+           [cos θ, 0, -sin θ]]
+           
+           
+def pitch_matrix(ϕ):
+   return [[1,     0,    0  ],
+           [0, cos ϕ, -sin ϕ],
+           [0, sin ϕ, -cos ϕ]]
+
+
+def matmul_3x3(A, B):
+   const C = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+   for i < 3:
+      for j < 3:
+         for k < 3:
+            C[i][j] += A[i][k] * B[k][j]            
+   return C     

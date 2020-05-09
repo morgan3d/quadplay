@@ -1,0 +1,37 @@
+{
+    "url": "hero_bicubic.png",
+    "sprite_size": {
+        "x": 34,
+        "y": 50
+    },
+    "default_frames": 8,
+    "names": {
+        "yellow_run_arms": {
+            "start": {
+                "x": 0,
+                "y": 0
+            },
+            "end": {
+                "x": 0,
+                "y": 5
+            },
+            "extrapolate": "loop"
+        },
+        "run_legs": {
+            "start": {
+                "x": 1,
+                "y": 0
+            },
+            "end": {
+                "x": 1,
+                "y": 5
+            },
+            "extrapolate": "loop"
+        },
+        "yellow_shoot_arms": {
+            "x": 0,
+            "y": 6
+        }
+    },
+    "license": "By Morgan McGuire 2020 and Tokka. https://opengameart.org/content/top-down-runner. Available as CC-By 3.0"
+}

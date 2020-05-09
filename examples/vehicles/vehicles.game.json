@@ -1,7 +1,7 @@
 {
-   "title": "Spy Game",
-   "developer": "Your Name Here",
-   "copyright": "©2020 Your Name Here",
+   "title": "Vehicles",
+   "developer": "Casual Effects",
+   "copyright": "©2020 Morgan McGuire",
    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
    "packages": [],
    "scripts": [],
@@ -15,7 +15,8 @@
       "CHOPPER_BODY_SPRITESHEET": "chopper_body.sprite.json",
       "CHOPPER_BLADES_SPRITESHEET": "chopper_blades.sprite.json",
       "TANK_BODY_SPRITESHEET": "tank_body.sprite.json",
-      "TANK_TURRET_SPRITESHEET": "tank_turret.sprite.json"
+      "TANK_TURRET_SPRITESHEET": "tank_turret.sprite.json",
+      "HERO_SPRITESHEET": "hero_bicubic.sprite.json"
    },
    "version": 0,
    "min_players": 1,
@@ -24,11 +25,11 @@
    "competitive": false,
    "achievements": false,
    "highscores": false,
-   "description": "Description of your game in about 100 characters.",
+   "description": "Example of vehicle controls",
    "constants": {
       "CAR_MAX_FORWARD_SPEED": {
          "type": "number",
-         "value": "3.5",
+         "value": "3.8",
          "description": "Pix/frame"
       },
       "CAR_FORWARD_ACCELERATION": {
@@ -46,7 +47,7 @@
       },
       "CHOPPER_MAX_SPEED": {
          "type": "number",
-         "value": "4",
+         "value": "4.5",
          "description": "Pix/frame"
       },
       "CHOPPER_ACCELERATION": {
@@ -55,12 +56,12 @@
       },
       "TANK_MAX_FORWARD_SPEED": {
          "type": "number",
-         "value": "1",
+         "value": "0.9",
          "description": "Pix/frame"
       },
       "TANK_FORWARD_ACCELERATION": {
          "type": "number",
-         "value": "0.02"
+         "value": "0.008"
       },
       "TANK_MAX_REVERSE_SPEED": {
          "type": "number",
@@ -69,7 +70,7 @@
       },
       "TANK_REVERSE_ACCELERATION": {
          "type": "number",
-         "value": "0.02"
+         "value": "0.008"
       },
       "Z_MAX": {
          "type": "number",
@@ -96,6 +97,14 @@
             "x": "+1",
             "y": "-1"
          }
+      },
+      "HERO_MAX_FORWARD_SPEED": {
+         "type": "number",
+         "value": "0.6"
+      },
+      "HERO_MAX_REVERSE_SPEED": {
+         "type": "number",
+         "value": "0.3"
       }
    },
    "screen_size": {

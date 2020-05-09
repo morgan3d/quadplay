@@ -1,0 +1,20 @@
+{
+    "url": "top-runner-32x50.png",
+    "sprite_size": {"x": 32, "y": 50},
+    "names": {
+        "yellow_run_arms": {
+            "start": {"x": 0, "y": 0},
+            "end": {"x": 0, "y": 5},
+            "extrapolate": "loop",
+            "frames": 6
+        },
+        "run_legs": {
+            "start": {"x": 1, "y": 0},
+            "end": {"x": 1, "y": 5},
+            "extrapolate": "loop",
+            "frames": 6
+        },
+        "yellow_shoot_arms": {"x": 0, "y": 6}
+    },
+    "license": "By Morgan McGuire 2020 and Tokka. https://opengameart.org/content/top-down-runner. Available as CC-By 3.0"
+}

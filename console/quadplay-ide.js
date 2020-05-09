@@ -7,8 +7,13 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.05.01.23'
+const version  = '2020.05.08.20'
 const launcherURL = 'quad://console/launcher';
+
+// This will be filled in by a special call on a quadplay server at
+// the bottom of this script with a list of available applications on
+// this machine.
+let serverConfig = {};
 
 //////////////////////////////////////////////////////////////////////////////////
 // UI setup
@@ -459,7 +464,7 @@ function onMenuButton(event) {
 }
 
 const bootScreen = document.getElementById('bootScreen');
-let emulatorScreen = document.getElementById('screen');
+const emulatorScreen = document.getElementById('screen');
 
 // Disable context menu popup on touch events for the game screen or virtual
 // controller buttons because they should be processed solely by the emulator
@@ -496,18 +501,9 @@ function download(url, name) {
 }
 
 
-function onHomeButton() {
-    onStopButton();
-    loadGameIntoIDE(launcherURL, function () {
-        onResize();
-        // Preven the boot animation
-        onPlayButton(false, true);
-    });
-}
-
 /** True if the game is running on the same server as the quadplay console */
 function locallyHosted() {
-    return gameURL.startsWith(location.origin) || ! /^([A-Za-z]){3,6}:\/\//.test(gameURL);
+    return gameURL.startsWith('quad://') || gameURL.startsWith(location.origin) || ! /^([A-Za-z]){3,6}:\/\//.test(gameURL);
 }
 
     
@@ -2085,10 +2081,12 @@ function createProjectWindow(gameSource) {
 
     s += '— <i>Docs</i>\n';
     s += '<ul class="docs">';
-    for (let i = 0; i < gameSource.docs.length; ++i) {
-        const doc = gameSource.docs[i];
-        const badge = isBuiltIn(doc.url) ? 'builtin' : (isRemote(doc.url) ? 'remote' : '');
-        s += `<li class="clickable ${badge}" id="DocItem_${doc.name}" onclick="onProjectSelect(event.target, 'doc', gameSource.docs[${i}])" title="${doc.url}"><code>${doc.name}</code></li>\n`;
+    {
+        for (let i = 0; i < gameSource.docs.length; ++i) {
+            const doc = gameSource.docs[i];
+            const badge = isBuiltIn(doc.url) ? 'builtin' : (isRemote(doc.url) ? 'remote' : '');
+            s += `<li class="clickable ${badge}" id="DocItem_${doc.name}" onclick="onProjectSelect(event.target, 'doc', gameSource.docs[${i}])" title="${doc.url}"><code>${doc.name}</code></li>\n`;
+        }
     }
     if (editableProject) {
         s += '<li class="clickable new" onclick="showNewDocDialog()"><i>New doc…</i></li>';
@@ -2127,6 +2125,7 @@ function createProjectWindow(gameSource) {
     s += '<ul class="assets">';
     {
         const keys = Object.keys(gameSource.assets);
+        keys.sort();
         for (let i = 0; i < keys.length; ++i) {
             const assetName = keys[i];
 
@@ -2227,65 +2226,6 @@ function loadGameFromUrl(game_url) {
 
 
 window.gameURL = '';
-
-const autocorrectTable = [
-    '\\Delta',    'Δ',
-    '\\alpha',    'α',
-    '\\beta',     'β',
-    '\\gamma',    'γ',
-    '\\delta',    'δ',
-    '\\epsilon',  'ε',
-    '\\zeta',     'ζ',
-    '\\eta',      'η',
-    '\\theta',    'θ',
-    '\\iota',     'ι',
-    '\\lambda',   'λ',
-    '\\mu',       'μ',
-    '\\rho',      'ρ',
-    '\\sigma',    'σ',
-    '\\phi',      'ϕ',
-    '\\chi',      'χ',
-    '\\psi',      'ψ',
-    '\\omega',    'ω',
-    '\\Omega',    'Ω',
-    '\\tau',      'τ',
-    '\\time',     'τ',
-    '\\xi',       'ξ',
-    '\\random',      'ξ',
-    '\\in',       '∊',
-    '==',         '≟',
-    '?=',         '≟',
-    '!=',         '≠',
-    '\\neq',      '≠',
-    '\\eq',       '≟',
-    '\\not',      '¬',
-    '\\leq',      '≤',
-    '<=',         '≤',
-    '\\geq',      '≥',
-    '>=',         '≥',
-    '>>',         '▻',
-    '<<',         '◅',
-    '\\bitand',   '∩',
-    '\\bitor',    '∪',
-    '\\bitxor',   '⊕',
-    '\\pi',       'π',
-    '\\infty',    '∞',
-    '\\nil',      '∅',
-    '\\half',     '½',
-    '\\third',    '⅓',
-    '\\quarter',  '¼',
-    '\\fifth',    '⅕',
-    '\\sixth',    '⅙',
-    '\\seventh',  '⅐',
-    '\\eighth',   '⅛',
-    '\\ninth',    '⅑',
-    '\\tenth',    '⅒',     
-    '\\lfloor',   '⌊',
-    '\\rfloor',   '⌋',
-    '\\lceil',    '⌈',
-    '\\rceil',    '⌉',
-    '\\deg',      '°'
-];
 
 
 if (jsCode) {
@@ -3201,7 +3141,7 @@ function appendToBootScreen(msg) {
 }
 
 
-function loadGameIntoIDE(url, callback) {
+function loadGameIntoIDE(url, callback, loadFast) {
     if (url !== gameURL) {
         // A new game is being loaded. Throw away the editor sessions.
         removeAllCodeEditorSessions();
@@ -3210,14 +3150,14 @@ function loadGameIntoIDE(url, callback) {
     if (emulatorMode !== 'stop') { onStopButton(); }
 
     const isLauncher = /(^quad:\/\/console\/|\/launcher\.game\.json$)/.test(url);
-    if (! isLauncher) {
+    if (! isLauncher && ! loadFast) {
         showBootScreen();
     }
-    window.gameURL = url;
+    gameURL = url;
 
     // See if the game is on the same server and not in the
     // games/ or examples/ directory
-    editableProject = locallyHosted() && useIDE && isQuadserver && ! isBuiltIn(url);
+    editableProject = locallyHosted() && useIDE && isQuadserver && (! isBuiltIn(url) || ALLOW_EDITING_EXAMPLES);
     
     // Disable the play, slow, and step buttons
     document.getElementById('slowButton').enabled =
@@ -3225,7 +3165,7 @@ function loadGameIntoIDE(url, callback) {
         document.getElementById('playButton').enabled = false;
     
     // Let the boot screen show before appending in the following code
-    setTimeout(function() {
+    const loadFunction = function() {
         {
             let serverURL = location.origin + location.pathname;
             // Remove common subexpression for shorter URLs
@@ -3287,7 +3227,6 @@ function loadGameIntoIDE(url, callback) {
             
             updateAllCodeEditorSessions();
             hideWaitDialog();
-            
             appendToBootScreen(`
 
 QuadOS ROM:        256269 bytes    
@@ -3317,7 +3256,13 @@ Starting…
             onStopButton();
             hideWaitDialog();
         });
-    }, 15);
+    };
+
+    if (loadFast) {
+        loadFunction();
+    } else {
+        setTimeout(loadFunction, 15);
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3366,6 +3311,14 @@ document.addEventListener('mousedown', function (event) {
 window.addEventListener('blur', function () {
     if (backgroundPauseEnabled && useIDE) {
         onPauseButton();
+    }
+}, false);
+
+window.addEventListener('focus', function() {
+    if (editableProject && useIDE && isQuadserver && (emulatorMode === 'stop')) {
+        // Regained focus while stopped and in the IDE. Reload in case anything changed
+        // on disk
+        loadGameIntoIDE(window.gameURL, null, true);        
     }
 }, false);
 
@@ -3454,3 +3407,8 @@ onResize();
 // Set the initial size
 setFramebufferSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 reloadRuntime();
+
+// Get the configuration
+LoadManager.fetchOne({}, location.origin + getQuadPath() + 'console/_config.json', 'json', null, function (json) {
+    serverConfig = json;
+});

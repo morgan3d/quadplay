@@ -338,6 +338,9 @@ function afterLoadGame(gameURL, callback, errorCallback) {
 // Runs in linear time in the length of the array (*not* linear in the value of f).
 function animationFrame(f) {
     const animation = this;
+    if (! animation) {
+        throw new Error('The frame() function can only be called directly from a sprite animation array.');
+    }
     const N = animation.length;
 
     if (animation.extrapolate === 'clamp') {
@@ -346,7 +349,7 @@ function animationFrame(f) {
         if (f >= frames) { return animation[N - 1]; }
     } else {
         // Handle out of bounds cases by looping. To handle negatives, we need
-        // to add and then mod again 
+        // to add and then mod again. Mod preserves fractions.
         f = ((f % animation.period) + animation.period) % animation.period;
     }
 
@@ -364,7 +367,12 @@ function animationFrame(f) {
     
     // Find the value by searching linearly within the array (since we do not
     // store cumulative values to binary search by).
-    for (let i = 0; i < N && f < animation[i].frames; ++i, f -= animation[i].frames) {}
+    let i = 0;
+    while ((i < N) && (f > animation[i].frames)) {
+        f -= animation[i].frames;
+        ++i;
+    }
+    
     return animation[Math.min(i, N - 1)];
 
 }
@@ -403,7 +411,7 @@ function computeAssetCredits(gameSource) {
 
     // Map from canonicalized licenses to assets that use them
     const cache = {};
-    for (let type in CREDITS) {
+    for (const type in CREDITS) {
         cache[type] = new Map();
     }
     Object.seal(cache);
@@ -440,7 +448,7 @@ function computeAssetCredits(gameSource) {
     }
 
     // Generate the credits from the cache, consolidating those with the same license.
-    for (let type in cache) {
+    for (const type in cache) {
         cache[type].forEach(function (assetList, license) {
             let assets;
             if (assetList.length === 1) {
