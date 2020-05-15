@@ -1,0 +1,11 @@
+{
+    "url": "player_thruster.png",
+    "sprite_size": {
+        "x": 8,
+        "y": 7
+    },
+    "license": "TODO: Insert License",
+    "gutter": 0,
+    "transpose": false,
+    "default_frames": 1
+}

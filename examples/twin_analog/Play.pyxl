@@ -1,0 +1,57 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+const bindings = {
+   "Lt Stick" : "Fly",
+   "Rt Stick" : "Aim",
+   "Rt Trigger": "Fire"}
+
+def draw_instructions():
+   let y = 2
+   for control in bindings:
+      draw_text(font, control, xy(1, y), #abf, ∅, #00d)
+      draw_text(font, bindings[control], xy(70, y), #abf, ∅, #00d)
+      y += 12
+   draw_text(font, "TWIN ANALOG STICK EXAMPLE\n(nonstandard controls)", xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y), 
+      #fff, ∅, #800, "center", "top") 
+
+
+const star_array = []
+for i < 300:
+   push(star_array, {
+      pos: 2 (xy(ξ, ξ) - ½) * SCREEN_SIZE,
+      color: hsv(ξ, random(0, 40%), random(25%, 100%))})
+
+play_sound(music_audio_clip, true)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+simulate_player()
+
+preserving_transform:
+   set_transform(½ SCREEN_SIZE)
+   set_camera({pos: player.pos})
+   
+   simulate_player_bullets()
+   for bullet in player_bullet_array:
+      draw_entity(bullet)
+   
+   draw_entity(player)
+
+   // Draw a wrapping starfield         
+   for star in star_array:
+      if star.pos.x > player.pos.x + SCREEN_SIZE.x:
+         star.pos.x -= 2 SCREEN_SIZE.x
+      else if star.pos.x < player.pos.x - SCREEN_SIZE.x:
+         star.pos.x += 2 SCREEN_SIZE.x
+         
+      if star.pos.y > player.pos.y + SCREEN_SIZE.y:
+         star.pos.y -= 2 SCREEN_SIZE.y
+      else if star.pos.y < player.pos.y - SCREEN_SIZE.y:
+         star.pos.y += 2 SCREEN_SIZE.y
+         
+      draw_point(star.pos, star.color)
+
+draw_instructions()

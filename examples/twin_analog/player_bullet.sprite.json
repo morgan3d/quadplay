@@ -1,0 +1,30 @@
+{
+    "url":          "player_bullet.png",
+    "sprite_size":  {"x": 5, "y": 9},
+    "license":      "TODO: Insert License",
+    
+    "gutter":       0,
+    "transpose":    false,
+    "default_frames": 1,
+    /*
+    "names":        {
+        "idle": {
+            "start":       {"x": 0, "y": 0},
+            "end":         {"x": 0, "y": 0},
+            "extrapolate": "oscillate",
+            "frames": [1]
+        }
+    },
+    */
+    
+    /*
+    "region":       {
+        "pos":      {"x": 0, "y": 0},
+        "size":     {"x": 64, "y": 64}
+    },
+    */
+    
+    /*
+    "pivot":     {"x": 15.5, "y": 15.5},
+    */
+}

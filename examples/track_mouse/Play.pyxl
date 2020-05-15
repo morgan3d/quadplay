@@ -1,0 +1,17 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+// This is a low-level API that will not work on
+// all quadplay platforms (such as phones). Use the
+// `touch` API instead to access single-finger touch
+// or mouse-down position in a platform independent way.
+
+set_background(#58f)
+const mouse = device_control("get_mouse_state")
+draw_rect(xy(mouse.x, mouse.y), xy(9, 9), #0)
+draw_text(font, mouse, xy(50, 10), #fff)
+

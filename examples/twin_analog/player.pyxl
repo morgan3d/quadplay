@@ -1,0 +1,100 @@
+const player = make_entity({
+      name: "player",
+      sprite: player_ship_sprite[0][0],
+      target_angle: 0°,
+      z: 0
+   },
+   {
+      "gun": make_entity({   
+         name: "gun",
+         cooldown: 0,
+         orient_with_parent: false,
+         z_in_parent: 1,
+         side: -1,
+         sprite: player_gun_sprite[0][0]
+      }),
+      
+      "thruster": make_entity({   
+         name: "thruster",
+         // Hide under parent
+         z_in_parent: -1,
+         sprite: player_thruster_sprite[0][0]
+      })
+   })
+
+const player_bullet_array = []
+
+
+def angle_to_direction(θ):
+   return xy(-sin θ, cos θ)
+
+def direction_to_angle(v):
+   return atan(-v.x, v.y)
+
+// Return the analog stick, with fallback to
+// the dpad/keyboard
+def analog_stick(index):
+   const THRESHOLD = 10%
+   const stick = device_control("get_analog_axes", index)
+   const dpad = gamepad_array[index].xy
+   const result = xy(0, 0)
+   for axis in "xy":
+      result[axis] = if (|stick[axis]| > THRESHOLD) then stick[axis] else dpad[axis]
+   return result
+   
+
+def simulate_player():
+   const lt_stick = analog_stick(0)
+   const rt_stick = analog_stick(1)
+   
+   with angle, target_angle, vel, pos, thruster in player:
+      const Δangle = loop(target_angle - angle, -180°, 180°)
+
+      // Rotate to match the target angle, but do not overshoot
+      if |Δangle| > 1°:
+         angle += min(|Δangle|, 15°) * sign(Δangle)         
+         
+      if ‖lt_stick‖ > 0:
+         target_angle = atan(-lt_stick.x, lt_stick.y)         
+         vel += angle_to_direction(angle) * ACCELERATION
+         vel = min(MAX_SPEED, ‖vel‖) * direction(vel)
+         thruster.pos_in_parent.y = -14
+      else:
+         // Friction
+         vel *= (100% - LINEAR_FRICTION)
+         thruster.pos_in_parent.y = 0
+   
+      pos += vel
+   
+   entity_update_children(player)
+   
+   with angle, cooldown, side in player.gun:
+      cooldown = max(cooldown - 1, 0) 
+      if ‖rt_stick‖ > 0:
+         // Change the gun angle (absolute) and fire
+         angle = direction_to_angle(rt_stick)
+         
+      if cooldown == 0 and (gamepad_array[0].a or gamepad_array[0].f or gamepad_array[1].a):
+         // Fire
+         cooldown = GUN_MAX_COOLDOWN
+         side = -side
+         const dir = angle_to_direction(angle)
+         play_sound(player_fire_audio_clip, ∅, ∅, 10% side)
+         push(player_bullet_array, make_entity({
+            name: "bulet", 
+            pos: player.pos + 3 perp(dir) * side,
+            angle: angle,
+            life: PLAYER_BULLET_LIFE,
+            sprite: player_bullet_sprite[0][0],
+            z: 0.5,
+            vel: dir * PLAYER_BULLET_SPEED
+         }))
+      
+
+def simulate_player_bullets():
+   for pos, vel, life in bullet in player_bullet_array:
+      if life > 0:
+         --life
+         pos += vel
+      else:
+         fast_remove_value(player_bullet_array, bullet)
