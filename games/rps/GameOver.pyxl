@@ -4,7 +4,7 @@ GameOver
 enter
 ────────────────────────────────────────────────────────────────────────
 
-play_audio_clip(game_over_audio_clip, true, 55%)
+play_sound(game_over_audio_clip, true, 55%)
 
 frame
 ────────────────────────────────────────────────────────────────────────

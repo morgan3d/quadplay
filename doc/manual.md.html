@@ -266,19 +266,6 @@ based on skipping stones over a lake in the evening.
 
 ----------------------------
 
-  <center><img src="../games/speedstreet/logo.png" width=320px style="border:0"></center>
-
-<div class="preview pixel" style="background-image:url('../games/speedstreet/preview.png')"></div>
-[Speed Street](../console/quadplay.html?game=quad://games/speedstreet&IDE=1) is a four-player competitive racing game inspired by [_Excitebike_](https://en.wikipedia.org/wiki/Excitebike):
-
-- Entity hierarchy
-- Simple custom physics
-- Orthographic 2.5D graphics
-- Coordinates with +Y pointing up
-- `sprite_override_color`
-
-----------------------------
-
   <center><img src="serpitron_title_alpha.png" width="300px" style="border:0"></center>
 
 <div class="preview pixel" style="background-image:url('../games/serpitron/preview.png')"></div>
@@ -429,8 +416,23 @@ maintain a high score list, with `push_mode()` for creating a popup dialog.
 [Z-Car Example](../console/quadplay.html?game=quad://examples/zcar&IDE=1) draws a 3D wireframe car using 2.5D graphics
 and CRT orange-screen retro phosophor effects.
 
+
+</td></tr><tr><td>![](../examples/speedstreet/label128.png)</td><td>
+[Speed Street](../console/quadplay.html?game=quad://examples/speedstreet&IDE=1) is the setup for a four-player competitive racing game inspired by [_Excitebike_](https://en.wikipedia.org/wiki/Excitebike) and Tony Hawk games, using:
+
+- Entity hierarchy
+- Simple custom physics
+- Orthographic 2.5D graphics
+- Coordinates with +Y pointing up
+- `sprite_override_color`
+
+
 </td></tr><tr><td>![](../examples/touch/label128.png)</td><td>
 [Touch Example](../console/quadplay.html?game=quad://examples/touch&IDE=1) uses the mouse/touch API.
+
+</td></tr><tr><td>![](../examples/twin_analog/label128.png)</td><td>
+[Twin Analog Example](../console/quadplay.html?game=quad://examples/twin_analog&IDE=1) shows how to use `device_control()` to access
+twin analog sticks and game controller triggers that are not standard on quadplay consoles.
 </td></tr></table>
 
 ### Inspiration
@@ -595,7 +597,7 @@ enter(value)
 
 // Reset any state
 selection = 0
-play_audio_clip(menuOpen)
+play_sound(menuOpen)
 
 
 frame
@@ -626,7 +628,7 @@ if confirmed: set_mode(Title) because "Confirmed abandon"
 
 leave
 ───────────────────────────────────────────────────────────
-play_audio_clip(menuClose)
+play_sound(menuClose)
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [A sample in-game menu mode using all of the optional mode sections.]
@@ -642,7 +644,7 @@ public class Menu extends Mode {
 
    public void enter(int value) {
       selection = 0;
-      play_audio_clip(menuOpen);
+      play_sound(menuOpen);
    }
 
    public void frame() {
@@ -658,7 +660,7 @@ public class Menu extends Mode {
    }
 
    public void leave() {
-      play_audio_clip(menuClose);
+      play_sound(menuClose);
    }
 }
 
@@ -965,11 +967,12 @@ do not work on Mac. Different controllers work with different browsers on macOS.
 Xbox 360 controllers work well with Chrome and the Nintendo SNES controller works with Safari.
 
 PlayStation, Stadia, and [Logitech](https://www.logitechg.com/en-ca/products/gamepads/f310-gamepad.html) controllers
-are intended to work but I have not tested them.
+as well as various fightstick arcade controllers are intended to work but I have not tested them.
 Please let me know if you are using them successfully.
 
 All browsers have controller support, but Chrome seems to support the
 most different controllers and the rumble feature.
+
 
 Input       | Player 1 Key| Player 2 Key| Xbox       | Playstation| SNES   | Switch Pro
 :----------:|:-----------:|:-----------:|:----------:|:----------:|:------:|:-----------:
@@ -1007,6 +1010,17 @@ just slide it back onto the Switch and it will sync.
 8BitDo controllers seem to work very reliably on Windows and Linux
 but are inconsistent on macOS.
 
+Ten-button arcade fightsticks have two common button layouts. The
+symmetric ECDF layout used by inexpensive Honcam and PXN sticks puts the
+"shoulder" buttons that correspond to ⓔ and ⓕ on the left and right of
+the other "face" buttons. The CDEF layout used by more expensive Mayflash,
+Hori, eTokki, Qanba, and other sticks puts the "shoulder" buttons to
+the right of the "face" buttons. The appropriate button prompts will
+appear in quadplay for each one, but you'll have to change which fingers
+you use to play games depending on the physical layout.
+
+![Symmetric ECDF fightstick layout.<br>(Example only; this controller has not been tested with quadplay)](symmetric-arcade.jpg width=80%) ![Asymmetric CDEF fightstick layout.<br>(Example only; this controller has not been tested with quadplay)](right-arcade.jpg width=80%)
+
 #### Dual Stick, etc.
 
 When using a dual-stick console controller, the unused parts
@@ -1027,7 +1041,7 @@ Y                        | `gamepad_array[0].d`
 R1 (Right Shoulder)      | `gamepad_array[0].e`
 R2 (Right Trigger)       | `gamepad_array[1].a`
 L1 (Left Shoulder)       | `gamepad_array[0].f`
-L2 (Left Trigger)        | `gamepad_array[1].c`
+L2 (Left Trigger)        | `gamepad_array[1].b`
 Start                    | (`gamepad_array[0].p`)
 Back                     | `gamepad_array[0].q`
 R3 (Right Stick Press)   | Not mapped
@@ -1037,7 +1051,7 @@ L3 (Left Stick Press)    | Not mapped
 ### Analog Sticks
 
 Quadplay exposes system features beyond the standard quadplay
-capabilities using the `device_control()` function for low-level
+capabilities using the `device_control("get_analog_axes", stick_index)` function for low-level
 system access.
 
 You can read analog sticks, steering wheels, foot pedals, flight
@@ -2058,35 +2072,35 @@ Math
 Sound
 ---------------------------------------------------------
 
-`get_sound_status(sound)`
-: Returns an object describing the current properties of this sound.
+`get_audio_status(audio)`
+: Returns an object describing the current properties of this audio object.
   The `state` property will have the value `"PLAYING"`, `"STOPPED"`, or `"ENDED"`
 
-`play_audio_clip(args)`
-: Object version of `play_audio_clip()`, allowing keyword argument style call.
+`play_sound(args)`
+: Object version of `play_sound()`, allowing keyword argument style call.
   Values default according to the positional argument version.
 
-`play_audio_clip(audioClip, loop (=false), volume (=100%), pan (=0%), pitch (=100%), time (=0))`
-: Play audio clip `audioClip`, which must have been loaded as an asset. The time
+`play_sound(sound, loop (=false), volume (=100%), pan (=0%), pitch (=100%), time (=0))`
+: Play `sound`, which must have been loaded as an asset. The time
   is in seconds. Full pan left is `-100%` and full pan right is `100%`.
-  Returns a handle that can be used with `stop_sound()`.
+  Returns an audio object that can be used with `stop_audio()`.
 
-`resume_sound(sound)`
-: Resume a sound previously stopped with `stop_sound()`. Sets the state to `"PLAYING"`.
+`resume_audio(audio)`
+: Resume a sound previously stopped with `stop_audio()`. Sets the state to `"PLAYING"`.
 
-`set_pan(sound, pan)`
-: Set the pan of a sound that is currently playing. 0% is centered.
+`set_pan(audio, pan)`
+: Set the pan of an audio object that is currently playing. 0% is centered.
   -100% is full left, 100% is full right.
 
-`set_pitch(sound, pitch)`
-: Set the pitch of a sound that is currently playing. 100% is the default pitch from the file.
+`set_pitch(audio, pitch)`
+: Set the pitch of an audio object that is currently playing. 100% is the default pitch from the file.
   200% is one octave higher, 50% is one octave lower.
 
-`set_volume(sound, volume)`
-: Set the volume of a sound that is currently playing. 100% is the default volume from the file.
+`set_volume(audio, volume)`
+: Set the volume of an audio object that is currently playing. 100% is the default volume from the file.
 
-`stop_sound(sound)`
-: Stop playing `sound`, which was created with `play_audio_clip`. Sets the state to `"STOPPED"`.
+`stop_audio(audio)`
+: Stop playing `audio`, which was created with `play_sound`. Sets the state to `"STOPPED"`.
 
 
 
@@ -2248,6 +2262,11 @@ Common situations are:
  - Center on the player and rotate the y-axis to match (good for sprites drawn facing up): `set_transform(SCREEN_SIZE / 2); set_camera(player_entity)`
  - Center on the player and rotate the x-axis to the y-axis (good if you want `player.angle=0` to be the x-axis) `set_transform(SCREEN_SIZE / 2); set_camera({pos:player_entity, angle:player.angle - 90deg})`
 
+The coordinate systems are defined by transformations _from_ a
+coordinate system to its parent always being applied in the order of
+scale, rotation (`angle`), translation (`pos`). That is, objects scale
+along their own axes and rotate about their own origin.
+
 The transformation routines are:
 
 `transform_cs_to_ss(cs_point, cs_z (= 0))`
@@ -2293,23 +2312,27 @@ The transformation routines are:
 : Takes a coordinate `parent_point` in the `child.parent` entity reference frame and transforms it to
   the `child` entity reference frame.
 
-<!--
-!!! Warning
-    The following APIs are being renamed during the beta. They predate the global camera
-    and use "draw" to refer to both camera and world space.
+`transform_es_to_es(entity_from, entity_to, es_from_point)`
+: Transform the `es_from_point` in the reference frame of
+  `entity_from` to the reference frame of `entity_to`.
+  There is no transformation function for `z` values because you can transform
+  it yourself as `z += entity_from.z - entity_to.z`.
 
-The full set of coordinate transformation helper functions is:
+`transform_es_to_sprite_space(entity, es_point)`
+: Transform `es_point` in the reference frame of `entity`
+  into the pixel coordinates of the current `entity.sprite`.
+  
+`transform_sprite_space_to_es(entity, sprite_point)`
+: Transform `sprite_point` in the pixel coordinates of the
+  current `entity.sprite` into the reference frame of the
+  entity.
 
-- `transform_to(pos, angle, scale, c)`, `transform_from(pos, angle, scale, c)` Enter and exit generalized reference frames
-- `transform_screen_to_draw(c)`, `transform_draw_to_screen(c, z (=0))`, `transform_screen_z_to_draw_z(z)`, `transform_draw_z_to_screen_z(z)`
-- `transform_draw_to_entity(e, c)`, `transform_entity_to_draw(e, c)`
-- `transform_entity_to_sprite(e, c)`, `transform_sprite_to_entity(e, c)`
-- `transform_to_child(e_child, c)`, `transform_child_to_parent(e_child, c)` (unlike all other transform methods, does not assume `entity_update_children` has been called)
-- `transform_entity_to_entity(e_from, e_to, c)`
-- `transform_draw_to_sprite(e, c)`, `transform_sprite_to_draw(e, c)`
-- `transform_draw_to_map(m, c)`, `transform_map_to_draw(m, c)`, `transform_map_layer_to_draw_z(m, L)`, `transform_draw_z_to_map_layer(m, z)`
+`transform_to(pos, angle, scale, point)`
+: Transform `point` into the reference frame defined by `pos`, `angle`, and `scale`.
 
--->
+`transform_from(pos, angle, scale, point)`
+: Transform `point` from the reference frame defined by `pos`, `angle`, and `scale`.
+
 
 ### Screen Space
 
@@ -4710,6 +4733,12 @@ The sprite sheet JSON descriptor looks like:
     // Optional. Default is false. If true, indexing is transposed
     // in game.
     "transpose":    false,
+    
+    // Optional name of the file to load with an exsternal editor from the IDE
+    // instead of the url one when editing. For example, if you export from
+    // another tool such as Aseprite or Photoshop and would like to load *this*
+    // instead from the IDE when editing the sprite.
+    "source_url":   "hero.psd",
 
     // Default value for sprite.frames, the number of 1/60-second frames
     // to play a sprite during animation.
@@ -4763,9 +4792,13 @@ This will appear as the global variable `heroSpriteSheet` in memory,
 which is a 2D array of individual sprites.
 
 !!!
-   I recommend compressing sprites with the provided [Quantize✜](../tools/quantize.html)
-   tool and then [ImageOptim](https://imageoptim.com/mac) (macOS) or
-   [PNGGauntlet](https://pnggauntlet.com/) (Windows).
+   I recommend a two-step process for compressing sprites to minimize loading time
+   and game size.  First, use the quadplay✜ [Quantize✜](../tools/quantize.html)
+   tool to reduce bit depth. Second, use [ImageOptim](https://imageoptim.com/mac) (macOS),
+   [PNGGauntlet](https://pnggauntlet.com/) (Windows), 
+   [TriImage](https://trimage.org/) (Linux),
+   or [PNG Crush online](https://richardassar.github.io/pngcrush.js/)
+   to improve the PNG encoding.
 
 For a sprite sheet named `S`, individual sprites are accessed as
 `S[x][y]` in game. If the sprite sheet contains a single row, then
@@ -6114,11 +6147,11 @@ With a 3D-printed case and some Bluetooth or wired game controllers,
 you can build your own quadplay✜ retro mini console to connect to a TV
 or monitor. [Jetson Nano](https://developer.nvidia.com/embedded/jetson-nano-developer-kit)
 and [Raspberry Pi 4](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/) cost less than $100 and can
-power such a box using Linux and Chrome or
-Firefox. Both will hit 60 Hz for most games, and can easily run at
+power such a box using Linux and Chromium. Both will hit 60 Hz for most games, and can easily run at
 30 Hz for all games (quadplay✜ handles framerate scaling for you seamlessly,
-so you won't even notice most of the time). Nano is more expensive but has the advantage of a 
-more powerful processor. 
+so you won't even notice most of the time). Jetson Nano is more expensive but has the advantage of a 
+more powerful processor. Raspberry Pi 3B+ can run some quadplay games, but will underperform
+on those with sophisticated graphics.
 
 
 ![Quadplay mini-console built by Morgan McGuire from a Jetson Nano with a 3D-printed case, USB Xbox 360 controller, and small external monitor.](nano-arcade.jpg width=50%)
@@ -6133,27 +6166,6 @@ only play their own games.
 
 ![Self-contained quadplay console built by Morgan McGuire from a Raspberry Pi and standard screen case, with Bluetooth controllers.](rpi-arcade.jpg width=50%)
 
-Ubuntu 64-bit already comes preinstalled on the Jetson Nano L4T disk image.
-
-1. Install the [Raspbian with Desktop](https://www.raspberrypi.org/downloads/raspbian/)
-2. 
-
-<!--
-For Raspberry Pi 4, I recommend the following 64-bit Ubuntu
-instead of the default Raspbian image because it gives you access to more packages, including
-faster browsers. The following installation process takes about an hour.
-
-1. Install the [Ubuntu Linux 64-bit](https://ubuntu.com/download/raspberry-pi) the disk image
-2. Log in as the default user `ubuntu` with password `ubuntu`, and then immediately change the password
-5. `sudo apt install xubuntu-desktop` (lubuntu always crashed for me)
-   - Select the `lightdm` desktop when prompted
-   - TODO: Switch to the XFCE desktop, somehow
-3. `sudo apt update`
-4. `sudo apt upgrade`
-6. `sudo reboot`
-7. `sudo snap install chromium`
-8. Install the quadplay SDK as usual for Linux and run the `quadplay` script.
--->
 
 #### NUC
 An Intel NUC is a much more expensive device for powering a mini console,
@@ -6417,7 +6429,7 @@ on the settings page, select "Master Branch" from the Source dropdown.
 
 The URL to play your game is then:
 
-https://morgan3d.github.io/quadplay/console/quadplay.html?game=https://USER.github.io/REPO
+`https://morgan3d.github.io/quadplay/console/quadplay.html?game=https://USER.github.io/REPO&mode=Maximal&kiosk=1`.
 
 If you'd like to make a friendlier URL, then you can also create an `index.html` file
 in the root of your repo with the contents:
@@ -6435,7 +6447,11 @@ To keep your development repository private or just separate from the deployment
 create a second repository on GitHub.
 
 Clone both to your local machine and at the command line, enter the _development_ repo
-and run `python3 tools/export.py -o ../PUBLIC_REPO path/to/game`.
+and run 
+
+`````````````````````````````````````````````````````````````
+python3 tools/export.py -o ../PUBLIC_REPO path/to/game
+`````````````````````````````````````````````````````````````
 
 You can then add and commit the public repo. If you want your game to be standalone
 and not depend on the quadplay repo at runtime, just add the `--standalone` argument.
@@ -6820,15 +6836,26 @@ Changes for both the specification and implementation in each release.
 
 2020 May TBD: Beta update 42
 
+- Added "New Asset..." dialog in the IDE for creating new sprites
 - Incompatible change: Removed subscripts as array indices. They are still valid characters for strings.
+- Incompatible change: renamed "sound" --> "audio" and "audio clip" --> "sound" in the API
+- Added `source_url` field for sprites to support export processesqu
 - Made `Delta` autocorrect to `Δ` without requiring a following space in the IDE
 - Added autocorrect support for additional capital Greek letters `ΓΔΘΛΞΠΣΦΨΩ`
 - Fixed compilation of fractional degrees and percentages
 - Made rename and add asset/constant update faster
 - Search and Replace in the editor now triggers autosave
+- IDE open dialog now includes game descriptions and icons
+- Added `transform_es_to_es()`
 - Added right-click menu for music assets
+- Added new Twin Analog stick example for dual stick shooters
 - Fixed map occlusion culling (was showing empty tiles)
 - Fixed loading quad:// games from the command line
+- Added `Arcade` (quadplay native), `Arcade_X` (Xbox labels), and `Arcade_PS` (PlayStation labels) controller
+  options
+- Changed default tab/indentation size to four spaces to reduce conflicts with Python editors
+- The quantize tool now allows toggling the "dither" option after dropping the image
+- Made quantize display using nearest neighbor interpolation
 
 2020 May 8: Beta update 41
 

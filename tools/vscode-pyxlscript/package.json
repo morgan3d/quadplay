@@ -32,7 +32,7 @@
         "configurationDefaults": {
             "[pyxlscript]": {
                 "editor.detectIndentation": false,
-                "editor.tabSize": 3,
+                "editor.tabSize": 4,
                 "editor.insertSpaces": true
             }
         }

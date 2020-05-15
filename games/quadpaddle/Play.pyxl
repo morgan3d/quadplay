@@ -9,11 +9,11 @@ def hit_box(box, ball, dir):
       shakeEntity(box, 3, 2 dir)
       // Slightly randomize to avoid getting stuck
       ball.vel = ‖ball.vel‖ * direction(ball.vel + random_direction2D() * 0.1)
-      play_audio_clip(unbreakableSound)
+      play_sound(unbreakableSound)
       return
 
    shake_screen(5, 2 dir)
-   play_audio_clip(destroyBlockSound)
+   play_sound(destroyBlockSound)
    increase_score(100)
    entity_to_particles_hit(box, ½ (box.pos + ball.pos), ball.vel, 0.1, 0.5, 50)
    fast_remove_value(box_array, box)
@@ -23,7 +23,7 @@ def hit_box(box, ball, dir):
 
    // Spawn a powerup
    if ξ < POWERUP_DROP_CHANCE:
-      play_audio_clip(powerupSpawnSound)
+      play_sound(powerupSpawnSound)
       let a = 90° random_integer(3)
       for i < 2:
          a += 90°
@@ -35,7 +35,7 @@ def hit_box(box, ball, dir):
 
          
 def lose_ball(ball):
-   play_audio_clip(loseBallSound)
+   play_sound(loseBallSound)
    if size(ball_array) == 1:
       if spare_balls == 0:
          // Melt the paddles away from the center of the screen
@@ -136,7 +136,7 @@ def handle_paddle_collisions(ball, paddle):
       new_ball.paddle = paddle
       push(ball_array, new_ball)
 
-   play_audio_clip(hitPaddleSound)
+   play_sound(hitPaddleSound)
 
    // Push the paddle back for three frames
    paddle.offset[u] = 0
@@ -218,7 +218,7 @@ for pos, vel, data ∊ P ∊ powerup_array:
       // Receive a powerup
       if overlaps(paddle, P):
          remove_values(powerup_array, P)
-         play_audio_clip(powerupSound)
+         play_sound(powerupSound)
 
          gain_powerup(paddle, data)
 

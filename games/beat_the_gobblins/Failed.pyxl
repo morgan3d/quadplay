@@ -42,7 +42,7 @@ const FADE_IN_LEN = 10
 enter(reason, score_val)
 ───────────────────────────────────────────────────────────
 death_reason = reason
-bgm_music = play_audio_clip(die_bgm)
+bgm_music = play_sound(die_bgm)
 remove_frame_hooks_by_mode(Play)
 score = score_val
 debug_print("died with score: " + unparse(score_val))
@@ -138,4 +138,4 @@ if mode_frames > FADE_IN_LEN + START_FADE:
 
 leave
 ───────────────────────────────────────────────────────────
-stop_sound(bgm_music)
+stop_audio(bgm_music)

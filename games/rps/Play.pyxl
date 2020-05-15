@@ -35,7 +35,7 @@ def draw_choice(player) preserving_transform:
 enter
 ────────────────────────────────────────────────────────────────────────
 
-play_audio_clip(start_sound)
+play_sound(start_sound)
 
 // Start negative and hide until positive
 for player in player_array:
@@ -74,10 +74,10 @@ for player in player_array:
          else if gamepad.yy == +1:
             player.choice = "scissors"
 
-         if player.choice: play_audio_clip(player.audio_clip)
+         if player.choice: play_sound(player.audio_clip)
             
       else if ξ < 1%: // AI
-         play_audio_clip(player.audio_clip)
+         play_sound(player.audio_clip)
          player.choice = if ξ < ⅔ (100% - player.health / MAX_HEALTH) then "heal" else random_value(ATTACKS)
 
 draw_round_indicator()

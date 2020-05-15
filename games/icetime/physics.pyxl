@@ -109,8 +109,8 @@ def simulate(obj):
                if obj.isPuck and (net.pos.x * vel.x ≥ 0) and not obj.owner:
                   // Entered the goal
                   ++teamArray[1 - net.index].score
-                  play_audio_clip(whistleAudioClip)
-                  play_audio_clip({audioClip: goalAudioClip, pan: 40% sign(net.pos.x)})
+                  play_sound(whistleAudioClip)
+                  play_sound({sound: goalAudioClip, pan: 40% sign(net.pos.x)})
 
                   // Remove the puck
                   puck = ∅

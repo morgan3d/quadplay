@@ -16,7 +16,7 @@ let title_ball = make_entity({
 
 
 def create_title_particles():
-   play_audio_clip(unbreakableSound)
+   play_sound(unbreakableSound)
    const PARTICLE_COLORS = [#ffd700, #ff6948, #82e923, #00c1f5, #fff]
    for i < 250:
       create_particle(title_ball.pos, random_direction2D() * random(0.5, 2.0), random_value(PARTICLE_COLORS), 40, random(60, 170))
@@ -63,7 +63,7 @@ for p < 4:
 
    // If any controller presses up or down, change the number of players
    if gamepad_array[p].yy:
-      play_audio_clip(menuSound)
+      play_sound(menuSound)
       menuItem = (menuItem + 5 + gamepad_array[p].yy) mod 5
 
 color = DEFAULT_COLOR
@@ -93,6 +93,6 @@ with pos, vel in title_ball:
 draw_entity(title_ball)
 
 if any_button_press():
-   play_audio_clip(selectSound)
+   play_sound(selectSound)
    if menuItem < 4:         start_game(menuItem)
    else:                    quit_game()

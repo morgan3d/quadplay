@@ -50,7 +50,7 @@ frame
 ────────────────────────────────────────────────────────────────────────
 
 if any_button_press():
-   play_audio_clip(_cancelUISound)
+   play_sound(_cancelUISound)
    pop_mode()
 
 const creditsScroll = max(mode_frames - 70, 0)

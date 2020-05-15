@@ -66,7 +66,7 @@ sprite = large_spritesheet[random_integer(0, 2)][0]
 num_humans = max(load_local("num_humans") default num_humans, 1)
 num_AIs = min(load_local("num_AIs") default num_AIs, 4 - num_humans)
 
-title_music_sound = play_audio_clip(title_music, true, 40%)
+title_music_sound = play_sound(title_music, true, 40%)
 
 
 frame
@@ -98,10 +98,10 @@ for 1 ≤ p ≤ 4:
    if choice == CHOICE.START and (gamepad.aa or gamepad.bb or gamepad.cc or gamepad.dd):
       start_game()
 
-   if gamepad.yy or gamepad.qq: play_audio_clip(sound1)
+   if gamepad.yy or gamepad.qq: play_sound(sound1)
 
    if gamepad.xx:
-      play_audio_clip(sound2)
+      play_sound(sound2)
       if choice == CHOICE.HUMAN:
          num_humans = clamp(num_humans + gamepad.xx, 1, 4)
       else if choice == CHOICE.AI:

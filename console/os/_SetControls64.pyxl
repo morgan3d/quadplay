@@ -46,10 +46,10 @@ if mode_frames > open_frames:
       if control.qq or control._pp:
          // Do NOT use "bb", which maps to enter on the keyboard
          // and may make players think they are executing a command
-         play_audio_clip(_cancelUISound)
+         play_sound(_cancelUISound)
          pop_mode()
       else if control.aa:
-         play_audio_clip(_acceptUISound)
+         play_sound(_acceptUISound)
          if choiceIndex == size(choiceArray) - 1:
             pop_mode()
          else:
@@ -57,7 +57,7 @@ if mode_frames > open_frames:
       else if control.yy:
          const prev = choiceIndex
          choiceIndex = clamp(choiceIndex + control.yy, 0, size(choiceArray) - 1)
-         play_audio_clip(if prev == choiceIndex then _denyUISound else _moveUISound)
+         play_sound(if prev == choiceIndex then _denyUISound else _moveUISound)
 
    // Draw options
    let y = 13

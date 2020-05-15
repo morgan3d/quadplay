@@ -120,7 +120,7 @@ def skippy_underwater_behavior():
     
     times_skipped += 1
 
-    //play_audio_clip(SPLASH_SOUNDS[penalty_index])
+    //play_sound(SPLASH_SOUNDS[penalty_index])
 
 
 def update_skippy_momentum_only():
@@ -149,7 +149,7 @@ def update_skippy():
     ):
         skippy_hit_water_this_frame = mode_frames
         if last_splash:
-            play_audio_clip(last_splash)
+            play_sound(last_splash)
 
     if sign(skippy_position.y) < 0:
         skippy_underwater_behavior()

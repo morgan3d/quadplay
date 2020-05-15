@@ -430,7 +430,7 @@ function createCodeEditorSession(url, bodyText) {
         session.setMode('ace/mode/html');
     } else if (url.endsWith('.pyxl')) {
         session.setMode('ace/mode/pyxlscript');
-        session.setTabSize(3);
+        session.setTabSize(4);
     }
     session.setUseWrapMode(false);
 
@@ -543,7 +543,9 @@ function createCodeEditorSession(url, bodyText) {
 // Payload should be JSON. It will be stringified
 function postToServer(payload, callback, errorCallback) {
     console.assert(locallyHosted());
-    
+
+    payload.token = postToken;
+
     const serverAddress = location.href.replace(/(^http.?:\/\/[^/]+\/).*/, '$1');
                           
     const xhr = new XMLHttpRequest();
@@ -588,12 +590,29 @@ function urlToFilename(url) {
 
 
 /* Tells a quadplay server to write this file to disk and then invoke
- the callback when the server is done. If the filename is a url,
- computes the appropriate local file. */
-function serverWriteFile(filename, encoding, contents, callback, errorCallback) {
+   the callback when the server is done. If the filename is a url,
+   computes the appropriate local file. 
 
+   The contents may be a string or arraybuffer
+*/
+function serverWriteFile(filename, encoding, contents, callback, errorCallback) {
     console.assert(encoding === 'utf8' || encoding === 'binary');
     
+    if (typeof contents !== 'string') {
+        console.assert(contents.byteLength !== undefined && encoding === 'binary');
+        
+        // Contents are an arraybuffer. base64 encode to a string.
+        // JavaScript requires us to pack into a string and then
+        // base64 encode that string to another string.
+        const len = contents.byteLength;
+        const view = new Uint8Array(contents);
+        const array = new Array(len);
+        for (let i = 0; i < len; ++i) {
+            array[i] = String.fromCharCode(view[i]);
+        }
+        contents = window.btoa(array.join(''));
+    }
+
     postToServer({
         command: 'write_file',
         filename: filename,
@@ -612,12 +631,7 @@ function serverWriteFiles(array, callback, errorCallback) {
     }
 
     for (let i = 0; i < array.length; ++i) {
-        postToServer({
-            command: 'write_file',
-            filename: array[i].filename,
-            encoding: array[i].encoding,
-            contents: array[i].contents
-        }, onSuccess, errorCallback);
+        serverWriteFile(array[i].filename, array[i].encoding, array[i].contents, onSuccess, errorCallback);
     }
 }
 
@@ -662,7 +676,7 @@ function serverScheduleSaveGameJSON(delaySeconds) {
 /* Save the current .game.json file, which has
    presumably been modified by the caller */
 function serverSaveGameJSON(callback) {
-    let gameFilename = urlToFilename(gameSource.jsonURL);
+    const gameFilename = urlToFilename(gameSource.jsonURL);
 
     console.assert(gameFilename.endsWith('.game.json'));
  

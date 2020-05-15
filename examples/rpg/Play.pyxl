@@ -29,7 +29,7 @@ push(ANIMATE_LIGHTS,
 // Don't play the bump into a wall sound too often
 def hitWall():
    if lastBumped < mode_frames - 20:
-      play_audio_clip(bumpSound)
+      play_sound(bumpSound)
       lastBumped = mode_frames
 
 
@@ -75,7 +75,7 @@ def updatePlayer(P, input):
          set_map_sprite_by_draw_coord(castleMap, pos, ∅, COLLECTABLE)
          // Add to inventory
          push(P.inventory, item)
-         play_audio_clip(pickupSound)
+         play_sound(pickupSound)
 
       sprite = spriteSheet[f][dir]
 

@@ -18,7 +18,7 @@ const selected_color          = #f
 const unselected_color        = #b
 
 const controllerSpritesheet = if SCREEN_SIZE.y >= 224 then _controllerSpritesheet44 else _controllerSpritesheet22
-const controllerTypeArray = ["Quadplay", "Xbox", "Xbox360", "Keyboard", "Kbd_Alt", "Kbd_P1", "Kbd_P2", "PS5", "PS4", "PS3", "SNES", "SwitchPro", "JoyCon_R", "JoyCon_L", "Zero", "HOTAS", "Stadia", "GPD_Win", "SN30_Pro"];
+const controllerTypeArray = ["Quadplay", "Xbox", "Xbox360", "Keyboard", "Kbd_Alt", "Kbd_P1", "Kbd_P2", "PS5", "PS4", "PS3", "SNES", "SwitchPro", "JoyCon_R", "JoyCon_L", "Zero", "HOTAS", "Arcade", "Arcade_X", "Arcade_PS", "Stadia", "GPD_Win", "SN30_Pro"];
 
 // Tweak layout for square aspect ratios
 let shiftX = 0 // Symmetric text shift from center

@@ -25,7 +25,7 @@ enter(prevChoice)
 ────────────────────────────────────────────────────────────────────────
 title = prevChoice
 choiceIndex = 0
-play_audio_clip(_openUISound)
+play_sound(_openUISound)
 
 
 frame
@@ -46,16 +46,16 @@ if mode_frames > max(15, openFrames):
    for control in gamepad_array:
       if control.qq or control._pp or (control.aa and choiceIndex == 0):
          // Cancel
-         play_audio_clip(_cancelUISound)
+         play_sound(_cancelUISound)
          pop_mode(∅)
       else if control.aa:
          // Accept option
-         play_audio_clip(_acceptUISound)
+         play_sound(_acceptUISound)
          pop_mode(title.callback)
       else if control.xx:
          const prev = choiceIndex
          choiceIndex = clamp(choiceIndex + control.xx, 0, 1)
-         play_audio_clip(if prev == choiceIndex then _denyUISound else _moveUISound)
+         play_sound(if prev == choiceIndex then _denyUISound else _moveUISound)
 
          
 if mode_frames > openFrames:

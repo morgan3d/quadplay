@@ -122,6 +122,85 @@ function hideAddAssetDialog() {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+function showNewAssetDialog() {
+    document.getElementById('newAssetDialog').classList.remove('hidden');
+    document.getElementById('newAssetCreateButton').disabled = true;
+    const text = document.getElementById('newAssetName');
+    text.value = '';
+    text.focus();
+}
+
+
+function onNewAssetCreate() {
+    const type = document.getElementById('newAssetType').value;
+    const nameBox = document.getElementById('newAssetName');
+    const fileName = nameBox.value;
+    const assetName = fileName + '_' + type.toLowerCase();
+
+    // Warn on overwrite
+    if ((gameSource.json.assets[assetName] !== undefined) &&
+        ! window.confirm(`There is already an asset called ${name} in your game. Replace it?`)) {
+        nameBox.focus();
+        return;
+    }
+
+    // Add the new name to the game
+    gameSource.json.assets[assetName] = fileName + '.sprite.json';
+
+    let gamePath = gameSource.jsonURL.replace(/\\/g, '/');
+    if (gamePath.startsWith(location.origin)) {
+        gamePath = gamePath.substring(location.origin.length);
+    }
+    gamePath = gamePath.replace(/\/[^/]+\.game\.json$/, '\/');
+
+    let spriteJSONText;
+    let spritePNGBits;
+    
+    // Create from the template and write to disk
+    // Load the template JSON and PNG
+    const templateLoadManager = new LoadManager({
+        callback: function() {
+            // Copy the template
+            serverWriteFiles(
+                [{filename: gamePath + fileName + '.sprite.json', contents: spriteJSONText, encoding: 'utf8'},
+                 {filename: gamePath + fileName + '.png', contents: spritePNGBits, encoding: 'binary'}],
+                function () {
+                    // Save the game
+                    serverSaveGameJSON(function () {
+                        // Reload the game
+                        loadGameIntoIDE(window.gameURL, function () {
+                            // Select the new asset
+                            onProjectSelect(document.getElementById('projectAsset_' + assetName), 'asset', gameSource.assets[assetName]);
+                        }, true);
+                    });
+                });
+        },
+        jsonParser:  'permissive',
+        forceReload: false
+    });
+
+    // Load the data
+    templateLoadManager.fetch(makeURLAbsolute('', 'quad://console/templates/sprite-32x32.sprite.json'), 'text', null, function (data) {
+        spriteJSONText = data.replace('"sprite-32x32.png"', '"' + fileName + '.png"');
+    });
+    
+    templateLoadManager.fetch(makeURLAbsolute('', 'quad://console/templates/sprite-32x32.png'), 'arraybuffer', null, function (data) {
+        spritePNGBits = data;
+    });
+
+    templateLoadManager.end();
+
+    hideNewAssetDialog();
+}
+
+
+function hideNewAssetDialog() {
+    document.getElementById('newAssetDialog').classList.add('hidden');
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
 function onRenameAsset(assetName) {
     let newName;
     while (true) {
@@ -145,7 +224,7 @@ function onRenameAsset(assetName) {
             serverSaveGameJSON(function () {
                 loadGameIntoIDE(window.gameURL, function () {
                     // Select the renamed asset
-                    onProjectSelect(document.getElementById('projectAsset_' + newName), 'asset', gameSource.assets['${newName}']);
+                    onProjectSelect(document.getElementById('projectAsset_' + newName), 'asset', gameSource.assets[newName]);
                 }, true);
             });
             
@@ -167,7 +246,7 @@ function onRemoveAsset(key) {
 
 function onOpenAssetExternally(appName, assetName) {
     // Assumes that the asset was local and not built-in
-    const url = gameSource.assets[assetName]._url;
+    const url = gameSource.assets[assetName]._sourceURL || gameSource.assets[assetName]._url;
     const filename = serverConfig.rootPath + urlToFilename(url);
     postToServer({command: 'open',
                   app: appName,
@@ -181,19 +260,19 @@ function showAssetContextMenu(assetName) {
 
     let externalCmds = '';
     if (gameSource.assets) {
-        const url = gameSource.assets[assetName]._url;
+        const url = gameSource.assets[assetName]._sourceURL || gameSource.assets[assetName]._url;
         if (! isRemote(url) && !isBuiltIn(url)) {
             if (serverConfig.hasFinder) {
                 externalCmds += `<div onmousedown="onOpenAssetExternally('<finder>', '${assetName}')">Show in ${isApple ? 'Finder' : 'Explorer'}</div>`;
             }
-            
+
             const ext = url.split('.').pop();
-            console.log(ext);
-            if (serverConfig.applications && serverConfig.applications[ext]) {
-                const list = serverConfig.applications[ext];
-                console.log(list);
+            const list = serverConfig.applications;
+            if (list) {
                 for (let i = 0; i < list.length; ++i) {
-                    externalCmds += `<div onmousedown="onOpenAssetExternally('${list[i].path}', '${assetName}')">Open with ${list[i].name}</div>`;
+                    if (list[i].types.indexOf(ext) !== -1) {
+                        externalCmds += `<div onmousedown="onOpenAssetExternally('${list[i].path}', '${assetName}')">Open ${ext} with ${list[i].name}</div>`;
+                    }
                 }
             }
 
@@ -208,6 +287,5 @@ function showAssetContextMenu(assetName) {
         <div onmousedown="onRenameAsset('${assetName}')">Rename&hellip;</div>` +
         externalCmds + 
         `<hr><div onmousedown="onRemoveAsset('${assetName}')">Remove '${assetName}'</div>`;
-    console.log(customContextMenu.innerHTML);
     showContextMenu();
 }

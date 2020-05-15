@@ -7,14 +7,11 @@ let box = make_entity(
         pos:SCREEN_SIZE/2,
         size:xy(10, 10),
         shape:"rect",
-        density:1,
     }
 )
 
-const ModeXYMovement = "XY Movement"
-const ModeProfileTest = "Profile Test"
-const MODE = ModeProfileTest
-
+// DATA
+// ------------------------
 // from GMTK: https://www.patreon.com/posts/why-does-celeste-28582857
 // vel is in 1080p pixels / s
 const PROFILES = {
@@ -73,15 +70,119 @@ def set_profile(profname):
 
 set_profile(labels[profile_index])
 
+// @{a lso just for labelling
 let last_joy = xy(0,0)
 let frames_joy = xy(0,0)
 let x_zone = "still"
+// @}
+
+// function that performs the acceleration
+def accel(
+        vel,
+        joy_comp,
+        acc_attack,
+        acc_release,
+        acc_opp_attack,
+        max_vel_comp
+):
+    let vel_sign = sign(vel)
+    let joy_sign = sign(joy_comp)
+
+    if joy_sign != 0:
+        let should_accel = abs(vel) < max_vel_comp
+        if (
+                (
+                    vel_sign == 0 
+                    or vel_sign == joy_sign
+                ) 
+                and should_accel
+        ):
+            vel += joy_sign * acc_attack
+        else if should_accel:
+            vel += joy_sign * acc_opp_attack
+        else:
+            vel = joy_sign * max_vel_comp
+
+    else:
+        vel += -1*vel_sign*acc_release
+
+        if abs(vel) < acc_release/2:
+            vel = 0
+
+    return vel
+
+def draw_ui():
+    // debug text
+    const num_fmt = ".00"
+    let text = []
+
+    // draw instructions
+    push(text, "ACCELERATION DEMO")
+    push(text, replace("use [^]/[v] to switch games", gamepad_array[0].prompt))
+    push(text, replace("use [<]/[>] to move the block", gamepad_array[0].prompt))
+    push(text, "small changes make a big difference in feel!")
+    draw_text(
+        font,
+        join(text, "\n"),
+        xy(4, 3),
+        rgb(0.8, 0.8, 0.8),
+        rgb(0.2, 0.2, 0.2),
+        nil,
+        "left",
+        "top"
+    )
+
+    remove_all(text)
+
+    // draw data text
+    push(text, "DATA:")
+    push(text, "Profile: " + labels[profile_index])
+    push(
+        text,
+        "accel/decel frames: " + unparse(num_frames_attack) 
+        + "/" + unparse(num_frames_release)
+    )
+    push(
+        text,
+        "current x vel/max: " + format_number(box.vel.x, num_fmt) 
+        + " / " + format_number(max_velocity, num_fmt)
+    )
+    push(
+        text,
+        "sign(joy.x): " + unparse(sign(joy.x)) 
+        + " / zone: " + x_zone 
+        + " / frames: " + unparse(frames_joy.x)
+    )
+
+    let current = xy(4, SCREEN_SIZE.y - 3)
+    // draw_disk(current, 5, rgb(1,0,0))
+    // draw_text(
+    //     font,
+    //     join(text, "\n"),
+    //     current,
+    //     rgb(0.8, 0.8, 0.8),  // text color
+    //     rgb(0.2,0.2,0.2),    // shadow
+    //     nil,                 // outline
+    //     "left",              // x-align
+    //     "bottom"             // y-align
+    // )
+    reverse(text)
+    for line in text:
+        let bbox = draw_text(
+            font,
+            line,
+            current,
+            rgb(0.8, 0.8, 0.8),  // text color
+            rgb(0.2,0.2,0.2),    // shadow
+            nil,                 // outline
+            "left",              // x-align
+            "bottom"             // y-align
+        )
+        current -= xy(0, bbox.y)
 
 frame
 ───────────────────────────────────────────────────────────
-let y_zone = "sustain"
-
-// detect which part of the curve we're in
+// detect which part of the curve we're in, for logging and labelling
 if sign(joy.x) != 0:
     x_zone = "attack"
     if sign(joy.x) > 0:
@@ -91,53 +192,24 @@ if sign(joy.x) != 0:
 else if(x_zone) != "still":
     x_zone = "release"
 
-
-// push into still or sustain if we've gone off either end of the curve
 if find(x_zone, "attack") == 0 and frames_joy.x > num_frames_attack:
     x_zone = "sustain"
 if x_zone == "release" and frames_joy.x > num_frames_release:
     x_zone = "still"
 
-
-def accel(vel, joy_comp):
-    let vel_sign = sign(vel)
-    let joy_sign = sign(joy_comp)
-
-    if joy_sign != 0:
-        let should_accel = abs(vel) < max_velocity
-        if (
-                (
-                    vel_sign == 0 
-                    or vel_sign == joy_sign
-                ) 
-                and should_accel
-        ):
-            vel += joy_sign * accel_attack
-        else if should_accel:
-            vel += joy_sign * accel_opp_attack
-        else:
-            vel = joy_sign * max_velocity
-
-    else:
-        vel += -1*vel_sign*accel_release
-
-        if abs(vel) < accel_release/2:
-            vel = 0
-
-    return vel
-
 let last_vel = clone(box.vel)
-box.vel.x = accel(box.vel.x, joy.x)
+box.vel.x = accel(
+    box.vel.x,
+    joy.x,
+    accel_attack,
+    accel_release,
+    accel_opp_attack,
+    max_velocity
+)
 
-if MODE == ModeXYMovement:
-    box.vel.y = accel(box.vel.y, joy.y)
-else if MODE == ModeProfileTest:
-    profile_index = loop(profile_index + joy.yy, size(labels))
-    set_profile(labels[profile_index])
-
-
-if magnitude(box.vel) > max_velocity:
-    box.vel = direction(box.vel) * max_velocity
+// cycle through profiles
+profile_index = loop(profile_index + joy.yy, size(labels))
+set_profile(labels[profile_index])
 
 // track how long we've been in that part of the curve
 if sign(joy.x) == last_joy.x:
@@ -146,78 +218,12 @@ if sign(joy.x) == last_joy.x:
 else:
     frames_joy.x = 0
 last_joy.x = sign(joy.x)
-if sign(joy.y) == last_joy.y:
-    if last_vel.y != box.vel.y:
-        frames_joy.y += 1
-else:
-    frames_joy.y = 0
-last_joy.y = sign(joy.y)
 
-
-if sign(joy.y) != 0:
-    y_zone = "attack"
-    if sign(joy.y) > 0:
-        y_zone += "+"
-    else:
-        y_zone += "-"
 
 entity_simulate(box)
 box.pos.x = loop(box.pos.x, SCREEN_SIZE.x)
-box.pos.y = loop(box.pos.y, SCREEN_SIZE.y)
 
+// the character
+draw_rect(box.pos, box.size, PROFILES[labels[profile_index]].col)
 
-draw_corner_rect(box.pos, box.size, PROFILES[labels[profile_index]].col)
-
-// debug text
-let text_color = rgb(1,1,1)
-
-let text = [
-]
-
-if MODE == ModeProfileTest:
-    push(
-        text,
-        "Profile: " + labels[profile_index]
-    )
-
-push(
-    text,
-    (
-        "X Sign (joy): " + unparse(sign(joy.x)) 
-        + " zone: " + x_zone 
-        + " frames:" + unparse(frames_joy.x)
-    )
-)
-
-if MODE == ModeXYMovement:
-    push(
-        text,
-        "Y Sign (joy): " + unparse(sign(joy.y)) 
-        + " zone: " + y_zone 
-        + " frames:" + unparse(frames_joy.y)
-    )
-
-push(
-    text,
-    (
-        "num_frames_attack: " + unparse(num_frames_attack) 
-        + " num_frames_release: " + unparse(num_frames_release)
-    ),
-    "x velocity: " + unparse(box.vel.x) + " / " + unparse(max_velocity),
-)
-
-if MODE == ModeXYMovement:
-    push(
-        text,
-        "y velocity: " + unparse(box.vel.y) + " / " + unparse(max_velocity),
-    )
-
-let current = xy(0, 12)
-for line in text:
-    draw_text(
-        font,
-        line,
-        current,
-        rgb(1,1,1)
-    )
-    current += xy(0, 12)
+draw_ui()

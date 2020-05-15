@@ -168,7 +168,7 @@ function processForTest(test) {
     
     if (match) {
         // Generate variables
-        let container = gensym('cntnr'), keys = gensym('keys'), index = gensym('index'),
+        const container = gensym('cntnr'), keys = gensym('keys'), index = gensym('index'),
             cur = match[1], containerExpr = match[2].trim(), tmp = gensym('tmp'), N = gensym('N');
 
         return [`for (let ${tmp} = ${containerExpr}, ${container} = is_object(${tmp}) ? _Object.keys(${tmp}) : _clone(${tmp}), ${N} = ${container}.length, ` +
@@ -591,8 +591,10 @@ function gensym(base) {
     return '__' + (base || '') + (++gensymNum) + '__';
 }
 
-/** Expression for selective yields to avoid slowing down tight loops */
-var maybeYieldGlobal = ' {if (!(__yieldCounter = (__yieldCounter + 1) & 8191)) { yield; }} ';
+/** Expression for selective yields to avoid slowing down tight loops. This weird syntax
+    of incrementing and then assigning back to what was incremented is to avoid the operator
+     overloading triggering a slow increment */
+var maybeYieldGlobal = ' {if (!(__yieldCounter = ((++__yieldCounter) & 8191)) { yield; }} ';
 
 /** Expression for 'yield' inside a function, where regular yield is not allowed */
 var maybeYieldFunction = '';

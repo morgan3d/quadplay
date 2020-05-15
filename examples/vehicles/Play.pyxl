@@ -26,7 +26,7 @@ def perspective_zoom(z):
    // Exponential perspective function:
    // Avoids the need for z clipping. Won't preserve
    // straight vertical lines over large z distances
-   return camera.base_zoom * 0.9⁻ᶻ 
+   return camera.base_zoom * 1.111ᶻ 
 
 const camera = {
    pos: player.pos, 

@@ -104,7 +104,7 @@ if not tie and mode_frames > ½ ATTACK_FRAMES:
 
 // Sound
 if (tie and mode_frames == ⌊32% ATTACK_FRAMES⌋) or (not tie and mode_frames == ⌊42% ATTACK_FRAMES⌋):
-   play_audio_clip(ASSETS[winners[0].choice + "_" + losers[0].choice + "_audio_clip"], nil, 220%)
+   play_sound(ASSETS[winners[0].choice + "_" + losers[0].choice + "_audio_clip"], nil, 220%)
 
 // Health and particles   
 if mode_frames == ⌊½ ATTACK_FRAMES⌋ and not tie:

@@ -4,7 +4,7 @@ Play
 enter
 ────────────────────────────────────────────────────────────────────────
 start_pos = cam_pos.x
-play_audio_clip(SFXTHROW)
+play_sound(SFXTHROW)
 reset_skippy()
 
 

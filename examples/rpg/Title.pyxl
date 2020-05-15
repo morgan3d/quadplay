@@ -8,7 +8,7 @@ for section ∈ CREDITS:
 
 const creditsWidth = text_width(smallFont, creditsString) + SCREEN_SIZE.x
 
-play_audio_clip(music, true)
+play_sound(music, true)
 
 
 

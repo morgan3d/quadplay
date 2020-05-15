@@ -100,7 +100,7 @@ def concat(...args):
 
 
 def playPositionalAudioClip(audioClip, pos):
-   return play_audio_clip({audioClip: audioClip, pan: 80% (2 pos.x / playSize.x - 1)})
+   return play_sound({sound: audioClip, pan: 80% (2 pos.x / playSize.x - 1)})
 
 
 def randomEmptyPosition():

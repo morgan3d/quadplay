@@ -16,7 +16,7 @@ const sampleArray = [
 
    {
       // Game prompts and info
-      text: "Press ⓐ to fire. ⍐ ACCELERATE © 2020 Casual✜ ¥100 $37 | ammo: ∞ [HEALTH] D&D. Consoleᵗᵐ  4♥ « Ready! » 24%",
+      text: replace("Press (a) to fire. [^] ACCELERATE (e)(c) Combo Block  © 2020 Casual✜ ¥100 $37 | ammo: ∞ [HEALTH] D&D. Consoleᵗᵐ  4♥ « Ready! » 24%", joy.prompt),
       color: #fe4,
       outline: #3,
       background: #33b

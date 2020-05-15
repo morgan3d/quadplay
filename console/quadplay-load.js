@@ -608,6 +608,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
         _uint32Data: null,
         _uint32DataFlippedX : null,
         _url: pngURL,
+        _sourceURL: (json.source_url && json.source_url !== '') ? makeURLAbsolute(jsonURL, json.source_url) : null,
         _gutter: (json.sprite_size.gutter || 0),
         _json: json,
         _jsonURL: jsonURL,
@@ -669,16 +670,16 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
 
         const sheetDefaultframes = Math.max(json.default_frames || 1, 0.25);
         
-        // Create the default grid mapping
+        // Create the default grid mapping (may be swapped on the following line)
         let rows = Math.floor((data.height + spritesheet._gutter) / (spritesheet.sprite_size.y + spritesheet._gutter));
         let cols = Math.floor((data.width  + spritesheet._gutter) / (spritesheet.sprite_size.x + spritesheet._gutter));
-        
+
         if (json.transpose) { let temp = rows; rows = cols; cols = temp; }
 
         if (rows === 0 || cols === 0) {
             throw new Error('Spritesheet ' + jsonURL + ' has a sprite_size that is larger than the entire spritesheet.');
         }
-        
+
         for (let x = 0; x < cols; ++x) {
             spritesheet[x] = [];
             

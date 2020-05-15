@@ -53,5 +53,5 @@ else if mode_frames < 240:
    referee.animation = 0
 else:
    referee.animation = 1
-   play_audio_clip(dropAudioClip)
+   play_sound(dropAudioClip)
    set_mode(Play) because "Drop puck"

@@ -162,8 +162,8 @@ function device_control(cmd) {
         {
             const mask = mouse.buttons;
             return Object.freeze({
-                x: mouse.screen_x * QRuntime._scaleX + mouse._offsetX,
-                y: mouse.screen_y * QRuntime._scaleY + mouse._offsetY,
+                x: mouse.screen_x * QRuntime._scaleX + QRuntime._offsetX,
+                y: mouse.screen_y * QRuntime._scaleY + QRuntime._offsetY,
                 button_array: Object.freeze([
                     (mask & 1),
                     (mask & 2) >> 1,
@@ -563,7 +563,7 @@ const audioRampTime = 1 / 60;
 
 function set_volume(handle, volume) {
     if (! (handle && handle._)) {
-        throw new Error("Must call set_volume() on a sound returned from play_audio_clip()");
+        throw new Error("Must call set_volume() on a sound returned from play_sound()");
     }
     handle._.volume = volume;
     handle._.gainNode.gain.linearRampToValueAtTime(volume, _ch_audioContext.currentTime + audioRampTime);
@@ -572,7 +572,7 @@ function set_volume(handle, volume) {
 
 function set_pan(handle, pan) {
     if (! (handle && handle._)) {
-        throw new Error("Must call set_pan() on a sound returned from play_audio_clip()");
+        throw new Error("Must call set_pan() on a sound returned from play_sound()");
     }
     pan = Math.min(1, Math.max(-1, pan))
 
@@ -588,7 +588,7 @@ function set_pan(handle, pan) {
 
 function set_pitch(handle, pitch) {
     if (! (handle && handle._)) {
-        throw new Error("Must call set_pitch() on a sound returned from play_audio_clip()");
+        throw new Error("Must call set_pitch() on a sound returned from play_sound()");
     }
     handle._.pitch = pitch;
     if (handle._.detune) {
@@ -598,9 +598,9 @@ function set_pitch(handle, pitch) {
 }
 
 
-function get_sound_status(handle) {
+function get_audio_status(handle) {
     if (! (handle && handle._)) {
-        throw new Error("Must call get_sound_status() on a sound returned from play_audio_clip()");
+        throw new Error("Must call get_sound_status() on a sound returned from play_sound()");
     }
 
     const source = handle._;
@@ -616,19 +616,20 @@ function get_sound_status(handle) {
 
 
 // Exported to QRuntime
-function play_audio_clip(audioClip, loop, volume, pan, pitch, time) {
-    if (audioClip.audioClip && (arguments.length === 1)) {
+function play_sound(audioClip, loop, volume, pan, pitch, time) {
+    if (audioClip.sound && (arguments.length === 1)) {
         // Object version
         loop      = audioClip.loop;
         volume    = audioClip.volume;
         pan       = audioClip.pan;
         pitch     = audioClip.pitch;
         time      = audioClip.time;
-        audioClip = audioClip.audioClip;
+        audioClip = audioClip.sound;
     }
 
     if (! audioClip || ! audioClip.source) {
-        throw new Error('play_audio_clip() requires an audioClip');
+        console.log(audioClip);
+        throw new Error('play_sound() requires a sound asset');
     }
 
     // Ensure that the value is a boolean
@@ -639,15 +640,15 @@ function play_audio_clip(audioClip, loop, volume, pan, pitch, time) {
     if (volume === undefined) { volume = 1; }
 
     if (isNaN(pitch)) {
-        throw new Error('pitch cannot be NaN for play_audio_clip()');
+        throw new Error('pitch cannot be NaN for play_sound()');
     }
 
     if (isNaN(volume)) {
-        throw new Error('volume cannot be NaN for play_audio_clip()');
+        throw new Error('volume cannot be NaN for play_sound()');
     }
 
     if (isNaN(pan)) {
-        throw new Error('pan cannot be NaN for play_audio_clip()');
+        throw new Error('pan cannot be NaN for play_sound()');
     }
 
     if (audioClip.loaded) {
@@ -659,9 +660,9 @@ function play_audio_clip(audioClip, loop, volume, pan, pitch, time) {
 
 
 // Exported to QRuntime
-function resume_sound(handle) {
+function resume_audio(handle) {
     if (! (handle && handle._ && handle._.stop)) {
-        throw new Error("stop_sound() takes one argument that is the handle returned from play_audio_clip()");
+        throw new Error("resume_audio() takes one argument that is the handle returned from play_sound()");
     }
     if (handle._.resumePositionMs) {
         // Actually paused
@@ -671,9 +672,9 @@ function resume_sound(handle) {
 
 
 // Exported to QRuntime
-function stop_sound(handle) {
+function stop_audio(handle) {
     if (! (handle && handle._ && handle._.stop)) {
-        throw new Error("stop_sound() takes one argument that is the handle returned from play_audio_clip()");
+        throw new Error("stop_audio() takes one argument that is the handle returned from play_sound()");
     }
     
     try {
@@ -1212,8 +1213,6 @@ const fakeMouseEvent = {
 
 const mouse = {screen_x:0, screen_y:0, buttons: 0};
 function updateMouseDevice(event) {
-    // Sometimes during load this fires before the constants are set up properly
-    if (! window.emulatorScreen) { return; }
     if (event.target === emulatorScreen) {
         const rect = emulatorScreen.getBoundingClientRect();
         mouse.screen_x = clamp(Math.round(emulatorScreen.width * (event.clientX - rect.left) / rect.width), 0, emulatorScreen.width - 1) + 0.5;

@@ -16,7 +16,7 @@ result_skip_count = times_skipped
 result_distance = distance_travelled
 result_travelled = total
 cam_velocity = xy(skippy_velocity.x, 0)
-play_audio_clip(SFXSINK)
+play_sound(SFXSINK)
 fade_out = nil
 
 

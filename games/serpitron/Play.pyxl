@@ -343,7 +343,7 @@ reset_post_effects()
 
 leave
 ────────────────────────────────────────────────────────────────────────
-if backgroundSound: stop_sound(backgroundSound)
+if backgroundSound: stop_audio(backgroundSound)
 
 
 

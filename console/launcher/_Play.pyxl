@@ -52,25 +52,7 @@ const gameArray = [{
    preview: itpreview
 },
 
-{
-   title: "SpeedStreet",
-   developer: "CasualEffects",
-   url: "quad://games/speedstreet",
-   
-   version:      0.5,
-   description:  "How fast can you go? Tear through the road course pulling tricks off jumps and fighting to be the leader of the pack.",
-   min_players:   1,
-   max_players:   4,
-   cooperative:  false,
-   competitive:  true,
-   achievements: false,
-   highscores:   false,
-   builtin:      true,
-   label: sslabel[0][0],
-   preview: sspreview
-},
-
-                   
+                  
 {
    title: "Beat The Gobblins",
    developer: "Stephan Steinbach",
@@ -263,7 +245,7 @@ for pad in gamepad_array:
    // Animate scrolling
    if joy.yy:
       const Δy = 3 pad.yy
-      play_audio_clip(boop, false, 300%)
+      play_sound(boop, false, 300%)
       def shift(): gameShift += Δy
       add_frame_hook(shift, nil, boxVerticalSpacing / 3)
 

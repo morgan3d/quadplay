@@ -41,6 +41,6 @@ for transform in player in heal_array:
    draw_sprite({sprite: large_spritesheet.heal, pos: transform + ¼ SCREEN_SIZE, scale: scale,
                 z: -1, opacity: opacity, z: 15})
 
-if mode_frames == ⌊⅓ HEAL_FRAMES⌋: play_audio_clip(heal_sound)
+if mode_frames == ⌊⅓ HEAL_FRAMES⌋: play_sound(heal_sound)
 
 if mode_frames > HEAL_FRAMES: pop_mode() because "Heal complete"

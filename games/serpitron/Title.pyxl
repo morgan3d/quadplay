@@ -40,8 +40,8 @@ colorIndex = load_local("colorIndex") or [0, 1, 2, 3]
 state = ["out", "out", "out", "out"]
 
 if not backgroundSound or backgroundSound.audioClip ≠ titleMusic:
-   if backgroundSound: stop_sound(backgroundSound)
-   backgroundSound = play_audio_clip(titleMusic, true)
+   if backgroundSound: stop_audio(backgroundSound)
+   backgroundSound = play_sound(titleMusic, true)
 
    
 frame
@@ -73,14 +73,14 @@ for p < 4:
    // Force out [some players accidentally hit diagonal; let Y override in that case]
    if control.bb or (control.xx < 0 and not control.y):
       if state[p] == "ready":
-         play_audio_clip(blipAudioClip)
+         play_sound(blipAudioClip)
          state[p] = "choosing"
       else if state[p] == "choosing":
          state[p] = "out"
-         play_audio_clip(hitAudioClip)
+         play_sound(hitAudioClip)
    
    if (control.aa or (control.xx > 0 and not control.y)) and state[p] == "choosing":
-      play_audio_clip(smallGrowAudioClip)
+      play_sound(smallGrowAudioClip)
       state[p] = "ready"
 
    if (control.yy and state[p] != "choosing") or ((control.aa or (control.xx > 0 and not control.y)) and state[p] == "out"):
@@ -88,11 +88,11 @@ for p < 4:
       // Enter choosing mode with the current color, making sure it isn't already taken
       state[p] = "choosing"
       ensureUniqueColor(p, 0, control.yy)
-      play_audio_clip(blipAudioClip)
+      play_sound(blipAudioClip)
    else if control.yy and state[p] == "choosing":
       // Y
       ensureUniqueColor(p, control.yy, control.yy)
-      play_audio_clip(blipAudioClip)
+      play_sound(blipAudioClip)
 
 
    const pos = ¼ SCREEN_SIZE * xy(1 + 2 (p mod 2), 90% + 220% ⌊½ p⌋)

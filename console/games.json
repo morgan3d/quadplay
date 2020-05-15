@@ -3,109 +3,140 @@
     "examples": [
         {
             "url": "quad://examples/accel_demo/",
-            "title": "Acceleration Curve Example"
+            "title": "Acceleration Curve Example",
+            "description": ""
         },
         {
             "url": "quad://examples/animation/",
-            "title": "Animation Example"
+            "title": "Animation Example",
+            "description": ""
         },
         {
             "url": "quad://examples/boids/",
-            "title": "Boids Example"
+            "title": "Boids Example",
+            "description": ""
         },
         {
             "url": "quad://examples/dual-stick/",
-            "title": "Dual Stick Example"
+            "title": "Dual Stick Example",
+            "description": ""
         },
         {
             "url": "quad://examples/fluid/",
-            "title": "Fluid Example"
+            "title": "Fluid Example",
+            "description": "Cellular automata fluid simulation."
         },
         {
             "url": "quad://examples/fontpreview/",
-            "title": "Font Preview"
+            "title": "Font Preview",
+            "description": ""
         },
         {
             "url": "quad://examples/helloworld/",
-            "title": "Hello World"
+            "title": "Hello World",
+            "description": ""
         },
         {
             "url": "quad://examples/highscore/",
-            "title": "High Score Example"
+            "title": "High Score Example",
+            "description": ""
         },
         {
             "url": "quad://examples/physics/",
-            "title": "Physics Example"
+            "title": "Physics Example",
+            "description": ""
         },
         {
             "url": "quad://examples/robot/",
-            "title": "Robot Example"
+            "title": "Robot Example",
+            "description": ""
         },
         {
             "url": "quad://examples/roguelike/",
-            "title": "Roguelike Example"
+            "title": "Roguelike Example",
+            "description": "Sample roguelike game setup"
         },
         {
             "url": "quad://examples/rpg/",
-            "title": "RPG Demo"
+            "title": "RPG Demo",
+            "description": ""
+        },
+        {
+            "url": "quad://examples/speedstreet/",
+            "title": "Speed Street",
+            "description": "How fast can you go? Tear through the road course pulling tricks off jumps and fighting to be the leader of the pack."
         },
         {
             "url": "quad://examples/sproing/",
-            "title": "Squash and Stretch Example"
+            "title": "Squash and Stretch Example",
+            "description": "Description of your game in about 100 characters."
         },
         {
             "url": "quad://examples/starter/",
-            "title": "Starter Example"
+            "title": "Starter Example",
+            "description": "Description of your game in about 100 characters."
         },
         {
             "url": "quad://examples/text/",
-            "title": "Text Example"
+            "title": "Text Example",
+            "description": ""
         },
         {
             "url": "quad://examples/touch/",
-            "title": "Touch Example"
+            "title": "Touch Example",
+            "description": "Shows how to use the touch input"
+        },
+        {
+            "url": "quad://examples/twin_analog/",
+            "title": "Twin Analog",
+            "description": "Example of using device_control() to access raw analog sticks"
         },
         {
             "url": "quad://examples/vehicles/",
-            "title": "Vehicles"
+            "title": "Vehicles",
+            "description": "Example of vehicle controls"
         },
         {
             "url": "quad://examples/zcar/",
-            "title": "Z-Car"
+            "title": "Z-Car",
+            "description": "Example of simple 3D wireframe effect."
         },
         {
             "url": "quad://examples/zoom/",
-            "title": "Zoom"
+            "title": "Zoom",
+            "description": "Very simple camera example with a grid of points"
         }
     ],
     "builtins": [
         {
             "url": "quad://games/across_the_lake/",
-            "title": "Across the Lake"
+            "title": "Across the Lake",
+            "description": "You are a stone skipping across a lake. One-button endless skipper."
         },
         {
             "url": "quad://games/beat_the_gobblins/",
-            "title": "BEAT THE GOBBLINS"
+            "title": "BEAT THE GOBBLINS",
+            "description": "An evil wizzard has trapped you on top of their tower and summoned hordes of angry bombgobblins.  Intense score chasing action game.  Good luck!"
         },
         {
             "url": "quad://games/icetime/",
-            "title": "Ice Time"
+            "title": "Ice Time",
+            "description": "2 vs. 2 ice hockey with teams, player stats., faceoffs, passing\u2026and a Zamboni."
         },
         {
             "url": "quad://games/quadpaddle/",
-            "title": "quadpaddle"
+            "title": "quadpaddle",
+            "description": "Blast bricks as a team from all four sides, grabbing powerups and racking up points."
         },
         {
             "url": "quad://games/rps/",
-            "title": "R.P.S."
+            "title": "R.P.S.",
+            "description": "Rock-paper-scissors battle royale."
         },
         {
             "url": "quad://games/serpitron/",
-            "title": "Serpitron"
-        },
-        {
-            "url": "quad://games/speedstreet/",
-            "title": "Speed Street"
+            "title": "Serpitron",
+            "description": "Grow your hungry serpent without crashing into obstacles or yourself. With rats, shotguns, blizzards, cities, pyramids..."
         }
     ]
 }

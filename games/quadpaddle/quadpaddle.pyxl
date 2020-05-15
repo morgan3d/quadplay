@@ -41,7 +41,7 @@ let score_color
 // change music between title, pause, and play modes
 // then we'd have to save the handle this returns
 // to be able to stop the looping sound.
-play_audio_clip(music, true)
+play_sound(music, true)
 
       
 // Increase the score and animate it shaking
@@ -55,7 +55,7 @@ def increase_score(v):
    
    def inc(f):
       // For big increases, play a coin sound
-      if (v > 100) and (f mod 7) == 1: play_audio_clip(scoreSound)
+      if (v > 100) and (f mod 7) == 1: play_sound(scoreSound)
       
       if f mod 2:
          score += STEP

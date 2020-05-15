@@ -17,7 +17,7 @@ enter
 reset_transform()
 reset_clip()
 set_background(labelSprite)
-titleSound = play_audio_clip(chantAudioClip, true, 150%)
+titleSound = play_sound(chantAudioClip, true, 150%)
 
 set_post_effects({background:#0000, opacity: 50%})
 
@@ -28,8 +28,8 @@ if c ≠ ∅: selection = (c + 5) mod size(choiceArray)
 
 leave
 ───────────────────────────────────────────────────────────────────────────────
-stop_sound(titleSound)
-play_audio_clip(shootAudioClip)
+stop_audio(titleSound)
+play_sound(shootAudioClip)
 reset_post_effects();
 
 

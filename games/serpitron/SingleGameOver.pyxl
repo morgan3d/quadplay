@@ -8,8 +8,8 @@ reset_clip()
 reset_transform()
 reset_post_effects()
 
-if backgroundSound: stop_sound(backgroundSound)
-backgroundSound = play_audio_clip(titleMusic, true)
+if backgroundSound: stop_audio(backgroundSound)
+backgroundSound = play_sound(titleMusic, true)
 
 
 frame

@@ -3,7 +3,7 @@ BeatLevel
 
 enter
 ────────────────────────────────────────────────────────────────────────────
-play_audio_clip(beatLevelSound)
+play_sound(beatLevelSound)
 
 
 frame
@@ -21,7 +21,7 @@ const center = ½ (SCREEN_SIZE - 1)
 if mode_frames < 180:
    draw_sprite(sprite, center, angle, ∅, ∅, 8)
 else:
-   play_audio_clip(wordExplodeSound)
+   play_sound(wordExplodeSound)
    entity_to_particles_hit(make_entity({pos: center, sprite:sprite, z:8}), center, xy(0, 0), 0.2, 1.5, 50)
    create_level(level + 1)
    pop_mode() because "3 seconds"

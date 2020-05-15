@@ -1159,28 +1159,6 @@ function set_transform(pos, dir, addZ, scaleZ, skew) {
 }
 
 
-// TODO: Delete
-function transform_draw_to_screen(coord, z) {
-    z = z || 0;
-    return xy((coord.x + (z * _skewXZ)) * _scaleX + _offsetX,
-              (coord.y + (z * _skewYZ)) * _scaleY + _offsetY);
-}
-
-// TODO: delete
-function transform_draw_z_to_screen_z(z) {
-    return z * _scaleZ + _offsetZ;
-}
-
-// TODO: Delete
-function transform_screen_to_draw(coord) {
-    return xy((coord.x - _offsetX) / _scaleX, (coord.y - _offsetY) / _scaleY);
-}
-
-// TODO: Delete
-function transform_screen_z_to_draw_z(z) {
-    return (z - _offsetZ) / _scaleZ;
-}
-
 function intersect_clip(pos, size, z1, z_size) {
     if (pos && (pos.pos || pos.size || (pos.z !== undefined) || (pos.z_size !== undefined))) {
         return intersect_clip(pos.pos, pos.size, pos.z, pos.z_size);
@@ -1691,40 +1669,18 @@ function _square(x) { return x * x; }
 /*************************************************************************************/
 // Entity functions
 
-function transform_draw_to_sprite(entity, coord) {
-    // Can be optimized as a single operation later
-    return transform_entity_to_sprite(entity, transform_draw_to_entity(entity, coord));
-}
-
-function transform_sprite_to_draw(entity, coord) {
-    // Can be optimized as a single operation later
-    return transform_entity_to_draw(entity, transform_sprite_to_entity(entity, coord));
-}
-
-function transform_entity_to_sprite(entity, coord) {
+function transform_es_to_sprite_space(entity, coord) {
     if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { throw new Error("Requires both an entity and a coordinate"); }
     return xy(coord.x * _scaleX + entity.sprite.size.x * 0.5,
               coord.y * _scaleY + entity.sprite.size.y * 0.5);
 }
 
 
-function transform_sprite_to_entity(entity, coord) {
+function transform_sprite_space_to_es(entity, coord) {
     if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { throw new Error("Requires both an entity and a coordinate"); }
-    if (! entity.sprite) { throw new Error('Called transform_sprite_to_entity() on an entity with no sprite property.'); }
+    if (! entity.sprite) { throw new Error('Called transform_sprite_space_to_es() on an entity with no sprite property.'); }
     return xy((coord.x - entity.sprite.size.x * 0.5) / _scaleX,
               (coord.y - entity.sprite.size.y * 0.5) / _scaleY);
-}
-
-// TODO: Delete
-function transform_draw_to_entity(entity, coord) {
-    if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { throw new Error("Requires both an entity and a coordinate"); }
-    return transform_to(entity.pos, entity.angle, entity.scale, coord);
-}
-
-// TODO: Delete
-function transform_entity_to_draw(entity, coord) {
-    if (! coord || coord.x == undefined) { throw new Error("transform_entity_to_draw() requires both an entity and a coordinate"); }
-    return transform_from(entity.pos, entity.angle, entity.scale, coord);
 }
 
 
@@ -1937,8 +1893,8 @@ function entity_remove_child(parent, child) {
 }
 
 
-function transform_entity_to_entity(e1, e2, pos) {
-    return transform_draw_to_entity(e2, transform_entity_to_draw(e1, pos));
+function transform_es_to_es(entity_from, entity_to, point) {
+    return transform_ws_to_es(entity_to, transform_es_to_ws(entity_from, point));
 }
 
 
@@ -1990,7 +1946,7 @@ function transform_ws_to_es(entity, coord) {
 
 
 function transform_es_to_ws(entity, coord) {
-    if (! coord || coord.x == undefined) { throw new Error("transform_entity_to_draw() requires both an entity and a coordinate"); }
+    if (! coord || coord.x == undefined) { throw new Error("transform_es_to_ws() requires both an entity and a coordinate"); }
     return transform_from(entity.pos, entity.angle, entity.scale, coord);
 }
 
@@ -2316,8 +2272,9 @@ function make_physics(options) {
 
             // If not already removed
             if (contact) {
-                // TODO: if moving with high velocity away from the contact, then
-                // end the contact immediately
+                // A potential improvement to add here later: if
+                // moving with high velocity away from the contact,
+                // then maybe end the contact immediately
 
                 // for debugging collisions
                 //console.log(physics._frame + ' (brk)  ' + contact.entityA.name + " & " + contact.entityB.name);
@@ -2834,7 +2791,7 @@ function physics_attach(physics, type, param) {
     // bodies, but not rotated by the bodies
     const options = {
         bodyB:  param.entityB._body,
-        pointB: _objectSub(transform_entity_to_draw(param.entityB, param.pointB || xy(0, 0)), param.entityB.pos)
+        pointB: _objectSub(transform_es_to_ws(param.entityB, param.pointB || xy(0, 0)), param.entityB.pos)
     };
 
     if (type === 'weld') {
@@ -2888,7 +2845,7 @@ function physics_attach(physics, type, param) {
     if (param.entityA) {
         options.bodyA = param.entityA._body;
         if (param.pointA) {
-            A = transform_entity_to_draw(param.entityA, param.pointA);
+            A = transform_es_to_ws(param.entityA, param.pointA);
             options.pointA = _objectSub(A, param.entityA.pos);
         } else {
             A = param.entityA.pos;

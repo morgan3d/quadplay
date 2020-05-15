@@ -11,15 +11,15 @@ let title_ent = make_anim_entity(
     nil
 )
 
+
 enter
 ───────────────────────────────────────────────────────────
-title_bgm_sound = play_audio_clip(
-    {
-        audioClip :title_bgm,
-        loop: true,
-        time: 1.62,
-    }
-)
+title_bgm_sound = play_sound({
+    sound: title_bgm,
+    loop: true,
+    time: 1.62,
+})
+
 
 frame
 ───────────────────────────────────────────────────────────
@@ -83,4 +83,4 @@ draw_sprite(title_ent)
 
 leave
 ───────────────────────────────────────────────────────────
-stop_sound(title_bgm_sound)
+stop_audio(title_bgm_sound)

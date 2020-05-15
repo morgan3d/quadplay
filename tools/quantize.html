@@ -27,168 +27,212 @@
      color: #e61b9d !important;
      text-decoration: none;
   }
+
+  .display {
+      position: relative;
+      background: #666;
+      border: 2px solid #000;
+      width: 384px;
+      min-height: 224px;
+      text-align: center;
+  }
+
+  .display img {
+      image-rendering: optimizeSpeed;
+      image-rendering: -o-crisp-edges;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: -moz-crisp-edges;
+      -ms-interpolation-mode: nearest-neighbor;
+      image-rendering: crisp-edges;
+      image-rendering: pixelated;
+  }
 </style>
 <script>
-    function onDrop(event) {
-        // Prevent the browser from opening the file
-        event.preventDefault();
-        if (event.dataTransfer.items) {
-            // Use DataTransferItemList interface to access the file(s)
-            for (var i = 0; i < event.dataTransfer.items.length; i++) {
-                // If dropped items aren't files, reject them
-                if (event.dataTransfer.items[i].kind === 'file') {
-                    processDrop(event.dataTransfer.items[i].getAsFile());
-                }
-            }
-        } else {
-            // Use DataTransfer interface to access the file(s)
-            for (var i = 0; i < ev.dataTransfer.files.length; i++) {
-                processDrop(event.dataTransfer.files[i]);
-            }
-        } 
+// Compression tools
     
-        // Pass event to removeDragData for cleanup
-        removeDragData(event)
-    }
-
-    function removeDragData(event) {
-        if (event.dataTransfer.items) {
-            // Use DataTransferItemList interface to remove the drag data
-            event.dataTransfer.items.clear();
-        } else {
-            // Use DataTransfer interface to remove the drag data
-            event.dataTransfer.clearData();
-        }
-    }
-
-    function floydSteinbergDither(sourceImageData, destImageData) {
-        const w = sourceImageData.width, h = sourceImageData.height; 
-        // Need more than 8 bit precision for intermediate results, so copy to int32
-        const temp = new Int32Array(w * h * 4);
-        temp.set(sourceImageData.data, 0);
-
-        for (let y = 0; y < h; ++y) {
-            for (let x = 0; x < w; ++x) {
-                // Color channel
-                for (let c = 0; c < 4; ++c) {
-                    // current buffer index
-                    const i = (y * w + x) * 4 + c;
-
-                    // current value
-                    const v = temp[i];
-
-                    // quantized value
-                    let q = Math.min(255, Math.max(0, Math.round(v * (15 / 255))));
-                    q = q | (q << 4);
-                        
-                    const err = v - q;
-
-                    // Store the quantized color back
-                    temp[i] = q;
-
-                    // If not in the last column, spread error horizontally
-                    if (x < w - 1) { temp[i + 4] += (err * 7) >> 4; }
+function floydSteinbergDither(sourceImageData, destImageData) {
+    const w = sourceImageData.width, h = sourceImageData.height; 
+    // Need more than 8 bit precision for intermediate results, so copy to int32
+    const temp = new Int32Array(w * h * 4);
+    temp.set(sourceImageData.data, 0);
+    
+    for (let y = 0; y < h; ++y) {
+        for (let x = 0; x < w; ++x) {
+            // Color channel
+            for (let c = 0; c < 4; ++c) {
+                // current buffer index
+                const i = (y * w + x) * 4 + c;
+                
+                // current value
+                const v = temp[i];
+                
+                // quantized value
+                let q = Math.min(255, Math.max(0, Math.round(v * (15 / 255))));
+                q = q | (q << 4);
+                
+                const err = v - q;
+                
+                // Store the quantized color back
+                temp[i] = q;
+                
+                // If not in the last column, spread error horizontally
+                if (x < w - 1) { temp[i + 4] += (err * 7) >> 4; }
+                
+                // If not the last row, spread error to the row below
+                if (y < h - 1) {
+                    // bottom left
+                    if (x > 0) { temp[i + (w - 1) * 4] += (err * 3) >> 4; }
                     
-                    // If not the last row, spread error to the row below
-                    if (y < h - 1) {
-                        // bottom left
-                        if (x > 0) { temp[i + (w - 1) * 4] += (err * 3) >> 4; }
-
-                        // bottom center
-                        temp[i + w * 4] += (err * 5) >> 4;
-
-                        // bottom right
-                        if (x < w - 1) { temp[i + (w + 1) * 4] += (err * 1) >> 4; }
-                    }
-                } // c
-            } // x
-        } // y
-
-        // Copy back
-        destImageData.data.set(temp);
-    }
+                    // bottom center
+                    temp[i + w * 4] += (err * 5) >> 4;
+                    
+                    // bottom right
+                    if (x < w - 1) { temp[i + (w + 1) * 4] += (err * 1) >> 4; }
+                }
+            } // c
+        } // x
+    } // y
+    
+    // Copy back
+    destImageData.data.set(temp);
+}
 
 
-    function nearestNeighborQuantize(sourceImageData, destImageData) {
-        // Quantize all channels
-        for (let i = 0; i < sourceImageData.data.length; ++i) {
-            let c = sourceImageData.data[i];
-            // Nearest-neighbor quantization to 4 bits.  Could
-            // optionally dither here.
-            c = Math.round(c * (15 / 255));
-            
-            // Extend back to 8 bits by duplication
-            c = c | (c << 4);
-            
-            destImageData.data[i] = c;
-        }
-    }
-
-
-    function processDrop(file) {
-        // Do not use a regex here; it will not give the
-        // correct result
-        if (! file.type.match('^image\/.*')) return;
+function nearestNeighborQuantize(sourceImageData, destImageData) {
+    // Quantize all channels
+    for (let i = 0; i < sourceImageData.data.length; ++i) {
+        let c = sourceImageData.data[i];
+        // Nearest-neighbor quantization to 4 bits.
+        c = Math.round(c * (15 / 255));
         
-        var reader = new FileReader();
-        reader.addEventListener('loadend', function() {
-            var sourceImage = new Image();
-            sourceImage.crossOrigin = 'anonymous';
-            sourceImage.src = reader.result;
-            sourceImage.onload = function () {
-                console.log("loaded " + file.name);
-
-                // Get the image data
-                var canvas = document.createElement('canvas');
-                canvas.width = sourceImage.width;
-                canvas.height = sourceImage.height;
-
-                var ctx = canvas.getContext('2d');
-                ctx.drawImage(sourceImage, 0, 0);
-                var sourceImageData = ctx.getImageData(0, 0, sourceImage.width, sourceImage.height);
-                var destImageData = ctx.createImageData(sourceImage.width, sourceImage.height);
-
-                var dither = document.getElementById('dither').checked;
-                    
-                if (dither) {
-                    floydSteinbergDither(sourceImageData, destImageData);
-                } else {
-                    nearestNeighborQuantize(sourceImageData, destImageData);
-                }
-                
-                // Put the data back to create a data URL
-                ctx.putImageData(destImageData, 0, 0);
-                var destImage = new Image();
-                destImage.src = canvas.toDataURL();
-                destImage.setAttribute('data-downloadurl', 'image/png:' + file.name);
-                destImage.onload = function () {
-                    // Show the input
-                    var sourceDisplay = document.getElementById('source');
-                    sourceDisplay.innerHTML = '';
-                    sourceImage.style.width = '256px';
-                    sourceImage.style.height = '' + Math.round(sourceImage.height * 256 / sourceImage.width) + 'px';
-                    sourceDisplay.appendChild(sourceImage);
-                    
-                    // Show the output
-                    var destDisplay = document.getElementById('dest');
-                    destDisplay.innerHTML = '';
-                    destDisplay.appendChild(destImage);
-                    destImage.style.width = '256px';
-                    destImage.style.height = '' + Math.round(destImage.height * 256 / destImage.width) + 'px';
-                };
-                
-            };
-            sourceImage.onerror = function () {
-                console.log("failed to load image " + file.name);
-            };
-        });
-    
-        reader.readAsDataURL(file);
+        // Extend back to 8 bits by duplication
+        c = c | (c << 4);
+        
+        destImageData.data[i] = c;
     }
+}
 
 
-    function onDragOver(event) { event.preventDefault(); }
-  </script>
+////////////////////////////////////////////////////////////////////////////////////////
+// App
+
+let sourceImageData = null;
+let destImageData = null;
+let filename = "";
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+
+
+// Convert sourceImageData to destImageData and show the result
+function processImage() {
+    if (! sourceImageData) { return; }
+    
+    const dither = document.getElementById('dither').checked;
+            
+    if (dither) {
+        floydSteinbergDither(sourceImageData, destImageData);
+    } else {
+        nearestNeighborQuantize(sourceImageData, destImageData);
+    }
+    
+    // Put the data back to create a data URL
+    const ctx = canvas.getContext('2d');
+    ctx.putImageData(destImageData, 0, 0);
+    const destImage = new Image();
+    destImage.src = canvas.toDataURL();
+    destImage.setAttribute('data-downloadurl', 'image/png:' + filename);
+    destImage.onload = function () {        
+        // Show the output
+        const destDisplay = document.getElementById('dest');
+        destDisplay.innerHTML = '';
+        destDisplay.appendChild(destImage);
+        destImage.style.width = destDisplay.clientWidth + 'px';
+        const h = Math.round(destImage.height * destDisplay.clientWidth / destImage.width);
+        destDisplay.style.height = h + 'px';
+        destImage.style.height = h + 'px';
+    };
+}
+
+
+function onDrop(event) {
+    // Prevent the browser from opening the file
+    event.preventDefault();
+    if (event.dataTransfer.items) {
+        // Use DataTransferItemList interface to access the file(s)
+        for (let i = 0; i < event.dataTransfer.items.length; i++) {
+            // If dropped items aren't files, reject them
+            if (event.dataTransfer.items[i].kind === 'file') {
+                processDrop(event.dataTransfer.items[i].getAsFile());
+            }
+        }
+    } else {
+        // Use DataTransfer interface to access the file(s)
+        for (let i = 0; i < ev.dataTransfer.files.length; i++) {
+            processDrop(event.dataTransfer.files[i]);
+        }
+    } 
+    
+    // Pass event to removeDragData for cleanup
+    removeDragData(event)
+}
+
+
+function removeDragData(event) {
+    if (event.dataTransfer.items) {
+        // Use DataTransferItemList interface to remove the drag data
+        event.dataTransfer.items.clear();
+    } else {
+        // Use DataTransfer interface to remove the drag data
+        event.dataTransfer.clearData();
+    }
+}
+
+
+function processDrop(file) {
+    // Do not use a regex here; it will not give the
+    // correct result
+    if (! file.type.match('^image\/.*')) return;
+    
+    const reader = new FileReader();
+    reader.addEventListener('loadend', function() {
+        const sourceImage = new Image();
+        sourceImage.crossOrigin = 'anonymous';
+        sourceImage.src = reader.result;
+        sourceImage.onload = function () {
+            filename = file.name;
+            console.log("loaded " + filename);
+            
+            // Get the image data
+            canvas.width = sourceImage.width;
+            canvas.height = sourceImage.height;
+            
+            ctx.drawImage(sourceImage, 0, 0);
+            sourceImageData = ctx.getImageData(0, 0, sourceImage.width, sourceImage.height);
+            destImageData = ctx.createImageData(sourceImage.width, sourceImage.height);
+
+            // Show the input
+            const sourceDisplay = document.getElementById('source');
+            sourceDisplay.innerHTML = '';
+            sourceImage.style.width = sourceDisplay.clientWidth + 'px';
+            const h = + Math.round(sourceImage.height * sourceDisplay.clientWidth / sourceImage.width);
+            sourceDisplay.style.height = h + 'px';
+            sourceImage.style.height = h + 'px';
+            sourceDisplay.appendChild(sourceImage);
+            
+            processImage();
+                
+        };
+        sourceImage.onerror = function () {
+            console.log("failed to load image " + file.name);
+        };
+    });
+    
+    reader.readAsDataURL(file);
+}
+
+
+function onDragOver(event) { event.preventDefault(); }
+</script>
 </head>
 <body ondrop="onDrop(event)" ondragover="onDragOver(event)">
   <h1>quantize✜</h1>
@@ -202,16 +246,16 @@
       </tr>
       <tr valign="center">
         <td>
-          <div id="source" style="position: relative; background: #666; border: 2px solid #000; width: 256px; min-height: 128px; text-align: center">
+          <div id="source" class="display">
             <span style="color: #fff; position: absolute;  top: 50%;  left: 50%;  transform: translate(-50%, -50%);">Drop image here</span>
           </div>
         </td>
         <td>
-          <input type="checkbox" id="dither" checked style="z-index:10"><label for="dither" style="z-index:10">Dither</label>
+          <input type="checkbox" id="dither" checked style="z-index:10" onchange="processImage()"><label for="dither" style="z-index:10">Dither</label>
           <div style="font-size: 100px; z-index:-10; margin-top: 20px; margin-bottom: 45px; pointer-events: none">➡</div>
         </td>
         <td>
-          <div id="dest" style="position: relative; background: #666; border: 2px solid #000; width: 256px; min-height: 128px; text-align: center">
+          <div id="dest" class="display">
           </div>
         </td>
       </tr>

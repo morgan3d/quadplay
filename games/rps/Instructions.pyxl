@@ -5,7 +5,7 @@ const state = []
 
 enter
 ────────────────────────────────────────────────────────────────────────
-play_audio_clip(sound3)
+play_sound(sound3)
 resize(state, num_humans)
 for i < num_humans: 
    state[i] = {pos: ¼ SCREEN_SIZE, ready: false}
@@ -33,6 +33,6 @@ draw_text({font: font, text: INSTRUCTIONS, pos: xy(10, 50), color: #fff, shadow:
 draw_text(font, "Press any button when ready", xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10), #fff, #5, ∅, "center")
 
 if all_ready:
-   stop_sound(title_music_sound)
+   stop_audio(title_music_sound)
    set_mode(Play) because "Button pressed"
    

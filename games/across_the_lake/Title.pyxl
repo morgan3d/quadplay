@@ -3,7 +3,7 @@ Title
 
 init
 ────────────────────────────────────────────────────────────────────────
-play_audio_clip(BGM, true)
+play_sound(BGM, true)
 
 // Warm up all of the sprites and JIT the blending code on Safari, so that
 // the game does not hitch during transitions

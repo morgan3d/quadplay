@@ -7,9 +7,13 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.05.09.18'
+const version  = '2020.05.15.08'
 const launcherURL = 'quad://console/launcher';
 
+// Token that must be passed to the server to make POST calls
+// for security purposes
+const postToken = getQueryString('token');
+      
 // This will be filled in by a special call on a quadplay server at
 // the bottom of this script with a list of available applications on
 // this machine.
@@ -463,8 +467,6 @@ function onMenuButton(event) {
     event.stopPropagation();
 }
 
-const bootScreen = document.getElementById('bootScreen');
-const emulatorScreen = document.getElementById('screen');
 
 // Disable context menu popup on touch events for the game screen or virtual
 // controller buttons because they should be processed solely by the emulator
@@ -772,6 +774,51 @@ const controlSchemeTable = {
         '[>]': '⍈'
     },
 
+    Arcade: {
+        '(a)': 'ⓐ',
+        '(b)': 'ⓑ',
+        '(c)': 'ⓒ',
+        '(d)': 'ⓓ',
+        '(e)': 'ⓔ',
+        '(f)': 'ⓕ',
+        '(p)': 'ⓟ',
+        '(q)': 'ⓠ',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
+    
+    Arcade_X: {
+        '(a)': 'ⓐ',
+        '(b)': 'ⓑ',
+        '(c)': 'ⓧ',
+        '(d)': 'ⓨ',
+        '(e)': '⒧',
+        '(f)': '⒭',
+        '(p)': 'ﯼ',
+        '(q)': 'ҕ',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
+    
+    Arcade_PS: {
+        '(a)': 'ⓧ',
+        '(b)': 'Ⓞ',
+        '(c)': '▣',
+        '(d)': '⍍',
+        '(e)': '⒧',
+        '(f)': '⒭',
+        '(p)': 'Ơ',
+        '(q)': 'ડ',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
+    
     Stadia: {
         '(a)': 'ⓐ',
         '(b)': 'ⓑ',
@@ -2158,7 +2205,7 @@ function createProjectWindow(gameSource) {
     
     if (editableProject) {
         s += '<li class="clickable new" onclick="showAddAssetDialog()"><i>Add asset…</i></li>';
-        // s += '<li class="clickable new" onclick=""><i>New asset…</i></li>';
+        s += '<li class="clickable new" onclick="showNewAssetDialog()"><i>New asset…</i></li>';
     }
     s += '</ul>';
     s += '</div>'
@@ -2361,7 +2408,7 @@ function showOpenGameDialog() {
    when the type of asset to be added is changed by the user. */
 function onOpenGameTypeChange() {
     const t = document.getElementById('openGameType').value;
-    let s = '<ol id="openGameListOL" class="select-list" style="font-family: Helvetica, Arial; font-size: 120%">\n';
+    let s = '<ol id="openGameListOL" class="select-list" style="font-family: Helvetica, Arial; font-size: 120%; white-space: normal">\n';
     if (openGameFiles) {
         const fileArray = openGameFiles[t];
         for (let i = 0; i < fileArray.length; ++i) {
@@ -2374,7 +2421,8 @@ function onOpenGameTypeChange() {
             label_path = label_path.replace(/\/[^/]+\.game.json$/, '/');
             label_path += 'label64.png';
             
-            s += `<li ondblclick="onOpenGameOpen()" onclick="onOpenGameListSelect(this, '${game.url}')" class="unselectable" title="${game.url}"><img src="${label_path}" width=32 height=32 style="margin-right: 10px; vertical-align: middle;">${game.title}</li>\n`;
+            s += `<li ondblclick="onOpenGameOpen()" onclick="onOpenGameListSelect(this, '${game.url}')" class="unselectable" title="${game.url}">
+<table><tr><td><img src="${label_path}" width=48 height=48 style="margin-right: 10px"></td><td>${game.title}<br/><span style="font-size:70%; font-style:italic">${game.description}</span></td></tr></table></li>\n`;
         }
     }
     s += '</ol>';
@@ -2552,6 +2600,16 @@ function updateTimeDisplay(time, name) {
     tp.innerHTML = '(' + Math.round(time * 6) + '%)';
 }
 
+
+function goToLauncher() {
+    onStopButton();
+    loadGameIntoIDE(launcherURL, function () {
+        onResize();
+        // Prevent the boot animation
+        onPlayButton(false, true);
+    }, true);
+}
+
 // Invoked by requestAnimationFrame() or setTimeout. 
 function mainLoopStep() {
     // Keep the callback chain going
@@ -2626,7 +2684,7 @@ function mainLoopStep() {
             if (useIDE) {
                 onStopButton();
             } else {
-                onHomeButton();
+                goToLauncher();
             }
         } else if (e.launch_game !== undefined) {
             loadGameIntoIDE(e.launch_game, function () {
@@ -2934,13 +2992,13 @@ function reloadRuntime(oncomplete) {
         QRuntime.debug_print     = debug_print;
         QRuntime.assert          = assert;
         QRuntime.device_control  = device_control;
-        QRuntime.play_audio_clip = play_audio_clip;
-        QRuntime.stop_sound      = stop_sound;
-        QRuntime.resume_sound    = resume_sound;
+        QRuntime.play_sound      = play_sound;
+        QRuntime.stop_audio      = stop_audio;
+        QRuntime.resume_audio    = resume_audio;
         QRuntime.set_volume      = set_volume;
         QRuntime.set_pitch       = set_pitch;
         QRuntime.set_pan         = set_pan;
-        QRuntime.get_sound_status= get_sound_status;
+        QRuntime.get_audio_status= get_audio_status;
         QRuntime.debug_pause     = onPauseButton;
         
         if (oncomplete) { oncomplete(); }

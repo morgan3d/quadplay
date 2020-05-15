@@ -116,7 +116,7 @@
           F8 GIF
         </span>
         <span id="recording" class="blink hidden" style="margin-left: 10px; color:#F00">RECORDING</span>
-        <span id="adblockWarning"></span>
+        <!-- <span id="adblockWarning"></span> -->
       </div>
 
       <div style="background: #000; border-top: 3px solid #000; top: 0px; display: inline-block; position: absolute; right: 8px">
@@ -199,7 +199,7 @@
             </div>
           </div>
           <div id="soundEditor">
-            <div style="position: absolute; top:50%; left: 50%; margin-top: -10px; margin-left: -40px; width:80px; height: 50px" onmousedown="event.stopPropagation()" class="button" onclick="play_audio_clip(soundEditorCurrentSound)" title="Play Sound">
+            <div style="position: absolute; top:50%; left: 50%; margin-top: -10px; margin-left: -40px; width:80px; height: 50px" onmousedown="event.stopPropagation()" class="button" onclick="play_sound(soundEditorCurrentSound)" title="Play Sound">
               <label>
                 <span class="label">
                   <img src="sound-icon.png" width=14>
@@ -522,6 +522,32 @@
       </div>
     </div>
 
+    <div id="newAssetDialog" class="modal hidden">
+      <div class="dialog" style="top:10px; width: 400px">
+        <center>
+          <b>Create New Asset</b>
+          <p>
+            <label for="newAssetType">Type&nbsp;&nbsp;</label>
+            <select id="newAssetType" style="width:320px" onchange="onNewAssetTypeChange()">
+              <option value="sprite">Sprite</option>
+              <!-- <option value="sound">Sound</option>
+                   <option value="font">Font</option>
+                   <option value="map">Map</option> -->
+            </select>
+          </p>
+          <p>
+            <label for="newAssetName">Name&nbsp;&nbsp;</label>
+            <input id="newAssetName" type="text" style="font-size: 80%; font-family: Monaco, monospace; width: 260px" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '').replace(/(^_+)|(_sprite$)/g, '');document.getElementById('newAssetCreateButton').disabled = (this.value === '')"></input><span style="font-size: 80%; font-family: Monaco, monospace" id="newAssetSuffix">_sprite</span>
+          </p>
+          <p>
+          <i>In this beta version of quadplay, you will need an external program to edit the asset once it is created.</i>
+          </p>
+          <button type="button" onclick="hideNewAssetDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span>
+          <button type="button" id="newAssetCreateButton" onclick="onNewAssetCreate()">Create</button>
+        </center>
+      </div>
+    </div>
+
     <div id="openGameDialog" class="modal hidden">
       <div class="dialog" style="top:10px; width: 400px">
         <center>
@@ -551,6 +577,7 @@
     <div id="customContextMenu" style="visibility:hidden; z-index: 10"></div>
     
     <!-- based on https://github.com/sitexw/BlockAdBlock/blob/master/blockadblock.js -->
+    <!--
     <div id="adblockDetector" class="pub_300x250 pub_300x250m pub_728x90 text-ad textAd text_ad text_ads text-ads text-ad-links"></div>
     <script>
       setTimeout(function() {
@@ -560,6 +587,7 @@
       }
       }, 500);
     </script>
+    -->
   </body>
   
   <iframe name="QRuntime" style="visibility:hidden"> </iframe>
@@ -575,6 +603,12 @@
             };
         }
     }
+
+   // Bind these here so that they are immediately available to event handlers
+   // regardless of script load order
+   const bootScreen = document.getElementById('bootScreen');
+   const emulatorScreen = document.getElementById('screen');
+    
   </script>
   
   <!-- Third-party code -->
@@ -592,14 +626,15 @@
   <script defer src="filters.js"></script>
 
   <!-- quadplay implementation -->
+  <!-- force reload, as these are changing often during the beta -->
   <script defer src="os/dependencies.py" charset="utf-8" type="text/javascript"></script>
-  <script defer src="pyxlscript-compiler.js" charset="utf-8"></script>
-  <script defer src="quadplay-host.js" charset="utf-8"></script>
-  <script defer src="quadplay-font.js" charset="utf-8"></script>
-  <script defer src="quadplay-load.js" charset="utf-8"></script>
-  <script defer src="quadplay-profiler.js" charset="utf-8"></script>
-  <script defer src="quadplay-edit-code.js" charset="utf-8"></script>
-  <script defer src="quadplay-edit-asset.js" charset="utf-8"></script>
-  <script defer src="quadplay-edit-constant.js" charset="utf-8"></script>
-  <script defer src="quadplay-ide.js" charset="utf-8"></script>
+  <script defer src="pyxlscript-compiler.js?" charset="utf-8"></script>
+  <script defer src="quadplay-host.js?" charset="utf-8"></script>
+  <script defer src="quadplay-font.js?" charset="utf-8"></script>
+  <script defer src="quadplay-load.js?" charset="utf-8"></script>
+  <script defer src="quadplay-profiler.js?" charset="utf-8"></script>
+  <script defer src="quadplay-edit-code.js?" charset="utf-8"></script>
+  <script defer src="quadplay-edit-asset.js?" charset="utf-8"></script>
+  <script defer src="quadplay-edit-constant.js?" charset="utf-8"></script>
+  <script defer src="quadplay-ide.js?" charset="utf-8"></script>
 </html>

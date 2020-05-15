@@ -52,9 +52,18 @@ exit 2
 # Shell commands end here
 # Python script follows
 
-import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs, glob, shutil, re
-sys.path.append('tools')
+import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs, glob, shutil, re, base64, random
+
+# Import workjson, which is in the tools directory and we do not have
+# an __init__.py file because we keep the main quadplay directory
+# clean of dependencies.
+sys.path.append(os.path.join(os.path.dirname(__file__), 'tools'))
 import workjson
+
+# Catch a common mistake. This binary file should be large if LFS is present:
+if os.path.exists(os.path.join(os.path.dirname(__file__), '_dev')) and os.stat(os.path.join(os.path.dirname(__file__), 'console/xbox_controller.png')).st_size < 1000:
+    print('You are running the development build of quadplay without git LFS, so the binary files are not present. Enable LFS and pull.')
+    sys.exit(2)
 
 # If needed, this is how we'd restrict the version. The current implementation does not need to restrict the version:
 #if sys.version_info[0] < 3 or sys.version_info[1] < 7:
@@ -81,6 +90,10 @@ webpath_whitelist = None
 
 isWindows = (platform.system() == 'Windows')
 isMacOS = (platform.system() == 'Darwin')
+
+# Authentication token, used to ensure that only browsers launched by this server can
+# ask it to POST
+token = None
 
 # Ensure that slashes and case are consistent when on windows, and make absolute
 def canonicalize_path(path): return os.path.normcase(os.path.abspath(path)).replace('\\', '/')
@@ -141,19 +154,34 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         content_len = int(self.headers['Content-Length'])
         object = json.loads(self.rfile.read(content_len))
         command = object['command']
+        post_token = object['token']
+        
         response_obj = None
         code = 201
-        if command == 'write_file':
+        if post_token != token:
+            print('WARNING: Ignored ', command, ' request without proper token (expected ', token, '/ received ', post_token, ')')
+            response_obj = 'Bad token'
+            code = 401
+            
+        elif command == 'write_file':
             filename = object['filename'][1:]
             encoding = object['encoding']
             contents = object['contents']
-            if encoding == 'binary':
-                with open(filename, 'wb') as f: f.write(contents)
+            if not re.search(re.compile(r'\.(json|pyxl|png|html|txt|md|tmx|mp3)$'), filename):
+                print('Wrote', encoding, 'file', filename)
+                print('WARNING: Ignored request to write illegal file', filename)
+                response_obj = 'Illegal'
+                code = 401
             else:
-                with codecs.open(filename, 'w', encoding) as f: f.write(contents)
-            print('Wrote', encoding, 'file', filename)
-                
-            response_obj = 'OK'
+                if encoding == 'binary':
+                    # Contents is base64 encoded for the JSON transmission.
+                    # Convert back to bytes
+                    contents = base64.standard_b64decode(contents)
+                    with open(filename, 'wb') as f: f.write(contents)
+                else:
+                    with codecs.open(filename, 'w', encoding) as f: f.write(contents)
+                print('Wrote', encoding, 'file', filename)
+                response_obj = 'OK'
             
         elif command == 'open':
             app = object['app']
@@ -229,18 +257,16 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 response_obj['rootPath'] = server_root_path
                 response_obj['hasFinder'] = isWindows or isMacOS;
                 if (isWindows or isMacOS):
-                    applications = {} 
+                    applications = []
                     response_obj['applications'] = applications
                     potential_applications = load_json(os.path.join(quad_path, 'console/external-applications.json'))['Windows' if isWindows else 'macOS']
-                    for type, list in potential_applications.items():
-                        applications[type] = []
-                        for app in list:
-                            for path in app['path']:
-                                path = os.path.expanduser(path)
-                                if os.path.exists(path):
-                                    # Found this app
-                                    applications[type].append({'name': app['name'], 'path': path})
-                                    break
+                    for app in potential_applications:
+                        for path in app['paths']:
+                            path = os.path.expandvars(os.path.expanduser(path))
+                            if os.path.exists(path):
+                                # Found this app
+                                applications.append({'name': app['name'], 'path': path, 'types': app['types']})
+                                break
                             
                     
             elif webpath == asset_query_webpath:
@@ -280,7 +306,9 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                         entry['url'] = redundant_pattern.sub(r'\1/', entry['url'])
                         # Fetch the titles
                         with open(path, 'rt', encoding='utf8') as f:
-                            entry['title'] = workjson.loads(f.read())['title']
+                            game = workjson.loads(f.read())
+                            entry['description'] = game['description'] if 'description' in game else ''
+                            entry['title'] = game['title']
 
                     response_obj[key] = list
 
@@ -428,14 +456,19 @@ if False:
     print("my_games_path = '" + my_games_path + "'")
     print("asset_query_webpath = '" + asset_query_webpath + "'")
     print("game_query_webpath = '" + game_query_webpath + "'")
+    print("config_query_webpath = '" + config_query_webpath + "'")
     print('webpath_whitelist = ', webpath_whitelist, '\n')
     sys.exit()
 # SSL support doesn't work yet due to self-signed certificates
 useSSL = False
 
 # Runs in a different process
-def launchServer():
-    global httpd, args, server_root_path
+def launchServer(post_token):
+    global httpd, args, server_root_path, token
+
+    # Assign back to the global token. We have to do this because
+    # Python reinitializes all globals
+    token = post_token
     
     # Serve from the common directory, unless the common directory
     # is the filesystem root and we're on windows where that cannot
@@ -465,7 +498,9 @@ def launchServer():
 
         
 def main():
-    global webpath_whitelist, server_root_path
+    global webpath_whitelist, server_root_path, token
+
+    token = "%0.7X" % random.randrange(0, 0x10000000)
 
     try:
        import msvcrt
@@ -515,7 +550,7 @@ def main():
 
     url = 'http' + ('s' if useSSL else '')+ '://' + myip + ':' + str(args.port)
     if not quad_path or quad_path[0] != '/': url += '/'
-    url += os.path.join(quad_path, 'console/quadplay.html?fastReload=1')
+    url += os.path.join(quad_path, 'console/quadplay.html?fastReload=1&token=' + token)
 
     if args.kiosk:
         url += '&mode=Maximal&kiosk=1'
@@ -557,7 +592,7 @@ def main():
 
     httpd = 0
 
-    serverThread = multiprocessing.Process(target=launchServer)
+    serverThread = multiprocessing.Process(target=launchServer, args=[token])
     print('Starting local server thread...')
     serverThread.start()
     print('\n**Press any key to terminate the server when done**\n')

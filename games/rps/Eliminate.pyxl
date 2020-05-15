@@ -6,7 +6,7 @@ let message
 
 enter(eliminated_array)
 ────────────────────────────────────────────────────────────────────────
-play_audio_clip(elimination_sound)
+play_sound(elimination_sound)
 let e = []
 for player in eliminated_array: push(e, player.name)
 message = join(e, ",", ", and", "and") + (if size(e) > 1 then " were" else " was") + " eliminated!"

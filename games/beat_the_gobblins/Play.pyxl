@@ -52,7 +52,7 @@ def player_take_damage(from_en, reason):
     PLAYER.sprite = array_value(driz_anim1Sprite["stun"], 0)
     let current_frame = 0
 
-    let ouch = play_audio_clip({ audioClip:ouchSound, volume:25})
+    let ouch = play_sound({ sound:ouchSound, volume:25})
 
     def advance(framesLeft, lifetime):
         let elapsed = lifetime - framesLeft
@@ -67,7 +67,7 @@ def player_take_damage(from_en, reason):
     def done():
         if PLAYER.health > 0:
             PLAYER.invincibility = false
-        stop_sound(ouch)
+        stop_audio(ouch)
         set_mode(DeadOutro, reason, SCORE) because "Player dead"
 
     add_frame_hook(advance, done, anim_len, Play)
@@ -268,7 +268,7 @@ def start_bomb_throw(en, throw_done):
                     splodeSprite["splode"],
                     delete_from_dust_list,
                 )
-                play_audio_clip(splodeSound)
+                play_sound(splodeSound)
                 if overlaps(splodesion, PLAYER):
                     player_take_damage(splodesion, "A BOMB BLEW YOU UP")
                 push(dust,splodesion)
@@ -291,7 +291,7 @@ def start_bomb_throw(en, throw_done):
                 splode,
                 move_bomb,
             )
-            play_audio_clip(bomb_throwSound)
+            play_sound(bomb_throwSound)
             push(dust, bomb)
             en.has_bomb = false
 
@@ -332,7 +332,7 @@ const HALF_SCREEN_SIZE = SCREEN_SIZE/2
 def make_summon(pos, fn):
     make_dust_cloud(pos, 4)
     add_cam_shake(1)
-    play_audio_clip(summon_laserSound)
+    play_sound(summon_laserSound)
 
     // plays summon animation and then calls function with pos
     let box_size = xy(30, -400)
@@ -404,7 +404,7 @@ def make_fall(pos, fn):
         // immediately make the new enemy start the bomb recharge anim
         // @TODO: add a delay to the recharge animation?  A sunned animation?
         add_cam_shake(5)
-        play_audio_clip(summon_landSound)
+        play_sound(summon_landSound)
 
     add_frame_hook(
         advance,
@@ -518,9 +518,9 @@ def start_swing_sword(player_loc, player_dir):
             PLAYER.taking_input = true
 
     if hit_something:
-        play_audio_clip({audioClip:hit_thingSound, volume: 4})
+        play_sound({sound:hit_thingSound, volume: 4})
     else:
-        play_audio_clip({ audioClip:swipeSound, volume: 25})
+        play_sound({ sound:swipeSound, volume: 25})
 
     add_frame_hook(advance, done, total_duration(driz_anim1Sprite["atk_2"]))
 
@@ -602,7 +602,7 @@ def move_with_collision(last, next, thing_size, max_y):
 
 // score stuff
 def add_score(amount_to_add):
-    play_audio_clip(point_upSound)
+    play_sound(point_upSound)
     SCORE += amount_to_add
     SCORE_ANIM_START = clone(game_frames)
 
@@ -791,7 +791,7 @@ else:
 
 if bgm_music == nil:
     // first tiem playing the sound
-    bgm_music = play_audio_clip({ audioClip:play_bgm, loop: true})
+    bgm_music = play_sound({ sound:play_bgm, loop: true})
 else:
     // otherwise resume
     resume_sound(bgm_music)
@@ -867,4 +867,4 @@ if SHOULD_FREEZE_FRAME:
 
 leave
 ───────────────────────────────────────────────────────────
-stop_sound(bgm_music)
+stop_audio(bgm_music)

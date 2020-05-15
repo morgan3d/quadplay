@@ -116,17 +116,17 @@ frame
 if mode_frames > fade_in_frames + slide_in_frames + 2:
    for control in gamepad_array:
       if control.qq or control._pp:
-         play_audio_clip(_cancelUISound)
+         play_sound(_cancelUISound)
          close(∅)
       else if control.aa or control.bb:
-         play_audio_clip(_acceptUISound)
+         play_sound(_acceptUISound)
          choose()
       else if control.yy:
          const prev = choice_index
          choice_index = clamp(choice_index + control.yy, 0, size(choice_array) - 1)
-         play_audio_clip(if prev == choice_index then _denyUISound else _moveUISound)
+         play_sound(if prev == choice_index then _denyUISound else _moveUISound)
 
-if mode_frames == fade_in_frames: play_audio_clip(_openUISound)
+if mode_frames == fade_in_frames: play_sound(_openUISound)
 
 // Draw the paused game shadowed
 reset_transform()

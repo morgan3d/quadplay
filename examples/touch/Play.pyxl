@@ -6,12 +6,13 @@ const trail = []
 frame
 ────────────────────────────────────────────────────────────────────────
 set_background(#000)
-draw_text(font, "Draw with the mouse or touch", xy(SCREEN_SIZE.x / 2, 20), #fff, #666, nil, "center")
+draw_text(font, "Drag with the mouse or touch to move the alien",
+   xy(½ SCREEN_SIZE.x, 20), #fff, #666, ∅, "center")
 
-if touch.a and (touch.dx or touch.dy):
+if touch.aa or (touch.a and (touch.dx or touch.dy)):
    push(trail, touch.xy)
 
-const color = rgb(0,0,0)
+const color = rgb(0, 0, 0)
 for 1 < i < size(trail):
    const r = i / size(trail)
    color.r = r; color.g = r
