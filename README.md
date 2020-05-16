@@ -8,7 +8,6 @@ is now in public beta.
 
 ![](doc/emulator.png)
 
-
 Features
 ========================================================
 
@@ -57,6 +56,13 @@ _Optional_:
 
 See the manual for a getting started guide, the change log, road map, and beta notes.
 
+
+Platforms
+========================================================
+
+Play on any laptop, desktop, tablet, or phone, or build your own programmable arcade machine like these:
+
+<img src="doc/rpi-arcade.jpg" height=200> <img src="doc/arcade.jpg" height=200> <img src="doc/xarcade-arcade.jpg" height=200> <img src="doc/nano-arcade.jpg" height=200>
 
 License
 ========================================================
