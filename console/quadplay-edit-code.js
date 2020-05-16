@@ -284,7 +284,7 @@ function autocorrectSession(session) {
         src += '\n';
     }
 
-    if ((src.length === 0) || (/[0-9A-Za-z_|=-\^]/.test(src[src.length - 1]) && ! src.endsWith('Delta'))) {
+    if ((src.length === 0) || (/[0-9A-Za-z_|=\-^]/.test(src[src.length - 1]) && ! src.endsWith('Delta'))) {
         // The last character is not a symbol-breaking character, so return immediately
         return;
     }
@@ -367,13 +367,13 @@ function autocorrectSession(session) {
     }
 
     // Mode line
-    if (! replacement && (src[0] === '=') && /^={5,}$/.test(src)) {
+    if (! replacement && /^={5,}$/.test(src)) {
         target = src;
         replacement = '═'.repeat(src.length);
     }
 
     // Event line
-    if (! replacement && (src[0] === '-') && /^-{5,}$/.test(src)) {
+    if (! replacement && /^-{5,}$/.test(src)) {
         target = src;
         replacement = '─'.repeat(src.length);
     }

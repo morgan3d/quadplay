@@ -271,7 +271,7 @@ function showAssetContextMenu(assetName) {
             if (list) {
                 for (let i = 0; i < list.length; ++i) {
                     if (list[i].types.indexOf(ext) !== -1) {
-                        externalCmds += `<div onmousedown="onOpenAssetExternally('${list[i].path}', '${assetName}')">Open ${ext} with ${list[i].name}</div>`;
+                        externalCmds += `<div onmousedown="onOpenAssetExternally('${list[i].path}', '${assetName}')">Open ${ext.toUpperCase()} with ${list[i].name}</div>`;
                     }
                 }
             }

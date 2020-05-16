@@ -895,19 +895,30 @@ function pyxlToJS(src, noYield, internalMode) {
     src = processBars(src, '|', 'abs');
     src = processBars(src, '‖', 'magnitude');
 
-    // Process implicit multiplication twice, so that it can happen within exponents and subscripts
-    for (var i = 0; i < 2; ++i) {
+    // Convert hexadecimal and binary so that it is not interpreted as implicit multiplication of 0 * x
+    src = src.replace(/([^A-Za-z0-9αβγδζηθιλμρσϕφχτψωΩ_]|^)0x([A-Fa-f0-9]+)([^A-Za-z0-9αβγδζηθιλμρσϕφχτψωΩ_]|$)/g,
+                      function (match, pre, num, post) {
+                          return pre + ' (' + parseInt(num, 16) + ') ' + post;
+                      });
+    src = src.replace(/([^A-Za-z0-9αβγδζηθιλμρσϕφχτψωΩ_]|^)0b([01]+)([^A-Za-z0-9αβγδζηθιλμρσϕφχτψωΩ_]|$)/g,
+                      function (match, pre, num, post) {
+                          return pre + ' (' + parseInt(num, 2) + ') ' + post;
+                      });
+
+    // Process implicit multiplication twice, so that it can happen within exponents
+    for (let i = 0; i < 2; ++i) {
         // Implicit multiplication. Must be before operations that may
         // put parentheses after numbers, making the product
         // unclear. Regexp is: a (number, parenthetical expression, or
         // bracketed expression), followed by a variable name.
 
         // Specials and parens case
-        src = src.replace(/([επξ∞½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣᵏᵘⁿ⁾₀₁₂₃₄₅₆₇₈₉ₐᵦᵢⱼₓₖᵤₙ₎]|\))[ \t]*([\(A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞])/g, '$1 * $2');
+        src = src.replace(/([επξ∞½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁾]|\))[ \t]*([\(A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞])/g, '$1 * $2');
 
-        // Number case (has to rule out a variable name that ends in a number or has a number inside of it)
+        // Number case (has to rule out a variable name that ends in a
+        // number or has a number inside of it)
         src = src.replace(/([^A-Za-z0-9αβγδζηθιλμρσϕφχτψωΩ_]|^)([0-9\.]*?[0-9])[ \t]*([\(A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞_])/g, '$1$2 * $3');
-        
+
         // Fix any instances of text operators that got accentially
         // turned into implicit multiplication. If there are other
         // text operators in the future, they can be added to this
@@ -925,8 +936,8 @@ function pyxlToJS(src, noYield, internalMode) {
         src = src.replace(/[⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣᵏʸᶻᵘⁿ⁽⁾]/g, function (match) { return superscriptToNormal[match]; });
         
         // Replace subscripts
-        src = src.replace(/([₊₋₀₁₂₃₄₅₆₇₈₉ₐᵦᵢⱼₓₖᵤₙ₍₎][₊₋₀₁₂₃₄₅₆₇₈₉ₐᵦᵢⱼₓₖᵤₙ₍₎ ]*)/g, '[($1)]');
-        src = src.replace(/[₊₋₀₁₂₃₄₅₆₇₈₉ₐᵦᵢⱼₓₖᵤₙ₍₎]/g, function (match) { return subscriptToNormal[match]; });
+        //src = src.replace(/([₊₋₀₁₂₃₄₅₆₇₈₉ₐᵦᵢⱼₓₖᵤₙ₍₎][₊₋₀₁₂₃₄₅₆₇₈₉ₐᵦᵢⱼₓₖᵤₙ₍₎ ]*)/g, '[($1)]');
+        //src = src.replace(/[₊₋₀₁₂₃₄₅₆₇₈₉ₐᵦᵢⱼₓₖᵤₙ₍₎]/g, function (match) { return subscriptToNormal[match]; });
 
         // Back-to-back parens. Note that floor, ceiling, and abs have already been mapped to
         // ().

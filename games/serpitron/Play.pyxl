@@ -27,7 +27,7 @@ def shrinkSnake(snake, amount):
    
    
 def recoilSnake(snake, nextHeadPos):
-   playPositionalAudioClip(hitAudioClip, nextHeadPos)
+   playPositionalSound(hitAudioClip, nextHeadPos)
    
    if size(snake.body) > 3 minSnakeBody + 1:
       // Shrink
@@ -103,7 +103,7 @@ def moveSnake(snake):
             nextHeadPos = recoilSnake(snake, nextHeadPos)
                   
          else if obstruction.powerup:
-            playPositionalAudioClip(obstruction.powerup.audioClip, nextHeadPos)
+            playPositionalSound(obstruction.powerup.sound, nextHeadPos)
             if obstruction.powerup.type == "speed":
                snake.speed = obstruction.powerup.value;
                // Grow the snake by duplicating the tail
@@ -300,7 +300,7 @@ def processShotArray():
          fast_remove_value(shotArray, shot)
          if hit.snake and hit.snake ≠ shot.snake:
             // Hit another player
-            playPositionalAudioClip(hitAudioClip, shot.pos)
+            playPositionalSound(hitAudioClip, shot.pos)
             if hit.bodyIndex == 0:
                // Hit the head! Massive shrink.
                awardBonus(shot.snake, round(max(6 hitBodyPointBonus, 10% hit.snake.score)))
@@ -411,7 +411,7 @@ for score, control ∊ snake ∊ snakeArray:
        snake.hasGun and
        (((mode_frames + 35 snake.playerIndex) mod shotgunPeriodFrames == 0) or ξ < 2%)):
       screenShakeFrames = max(screenShakeFrames, 8)
-      playPositionalAudioClip(shotgunAudioClip, snake.body[0].pos)
+      playPositionalSound(shotgunAudioClip, snake.body[0].pos)
       for i < 55: spawnShot(snake)
       
    drawSnake(snake)

@@ -174,8 +174,8 @@ else if object == "person":
    if joy.aa or joy.yy > 0:
       // Test whether the character is on the ground
       const childRegion = {shape: "rect", pos: xy(0, -person.size.y / 2), size: xy(120% person.size.x, 3)}
-      const groundContacts = physics_entity_contacts(physics, person, childRegion, xy(0, 1))
-      if size(groundContacts) > 0: person.vel.y += 6
+      if physics_entity_has_contacts(physics, person, childRegion, xy(0, 1)):
+        person.vel.y += 6
 
 // Instructions
 draw_text({font: font, text: "Move " + object + ": " + replace(scheme, joy.prompt), pos: xy(10, 200), color: #f96, shadow: #0008, z: 100})
@@ -186,7 +186,7 @@ entity_move(platform, xy(40 sin(0.05 mode_frames) + 200, 120))
 entity_move(elevator, xy(elevator.pos.x, clamp(oscillate(mode_frames, -45, 148), 3, 100)))
 
 // If something is on the trigger, run the spinner
-if size(physics_entity_contacts(physics, trigger)) > 0:
+if physics_entity_has_contacts(physics, trigger):
    if spinner.spin < 2°:
       spinner.spin += 1°
       spinner.torque = 15

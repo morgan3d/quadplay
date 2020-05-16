@@ -85,7 +85,23 @@
            "paths" : ["C:/Users/${USER}/AppData/Local/Programs/Microsoft VS Code/Code.exe"],
            "types": ["pyxl", "json", "html", "md"]
        },
-
+       {
+        "name" : "Visual Studio 2019",
+        "paths" : [
+            "C:/Program Files (x86)/Microsoft Visual Studio/2019/Professional/Common7/IDE/devenv.exe",
+            "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/devenv.exe"],
+        "types": ["pyxl", "json", "html", "md"]
+       },
+       {
+        "name": "Aseprite",
+        "paths": ["C:/Program Files/steam/steamapps/common/Aseprite/aseprite.exe"],
+        "types": ["png", "aseprite"]
+        },       
+       {
+            "name" : "Notepad++",
+            "paths" : ["C:/Program Files (x86)/Notepad++/notepad++.exe"],
+            "types": ["json", "html", "md"]
+       },    
        {
            "name" : "Audacity",
            "paths" : ["C:/Program Files (x86)/Audacity/audacity.exe"],

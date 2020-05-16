@@ -2370,13 +2370,13 @@ function physics_remove_entity(physics, entity) {
         for (const otherBody of map.keys()) {
             // Remove the reverse pointers
             const otherMap = physics._entityContactMap.get(otherBody);
-            physics.otherMap.delete(body);
+            otherMap.delete(body);
         }
         // Remove the entire map from body
         physics._entityContactMap.delete(body);
     }
     
-    _Physics.World.remove(physics._engine, entity._body, true);
+    _Physics.World.remove(physics._engine.world, body, true);
     fast_remove_value(physics._entityArray, entity);
     entity._body = undefined;
     entity._attachmentArray = undefined;
@@ -2715,7 +2715,7 @@ function _physics_entity_contacts(physics, entity, region, normal, mask, sensors
             point0:  xy(contact.point0),
             depth:   contact.depth
         };
-        if (contact.point1) { copy.point1 = xy(contact.point1); }
+        if (contact.point1) { copy.point1 = {x:contact.point1.x, y:contact.point1.y}; }
         result.push(copy);
     }
 
@@ -2725,32 +2725,32 @@ function _physics_entity_contacts(physics, entity, region, normal, mask, sensors
 
 function physics_detach(physics, attachment) {
     // Remove from the entitys
-    attachment.entityB._attachmentArray.removeValue(attachment);
-    if (attachment.entityA) { attachment.entityA._attachmentArray.removeValue(attachment); }
+    fast_remove_value(attachment.entityB._attachmentArray, attachment);
+    if (attachment.entityA) { fast_remove_value(attachment.entityA._attachmentArray, attachment); }
 
     // Decrement and remove reference-counted no-collision elements
-    const mapA = param.entityA._body.collisionFilter.excludedBodies;
+    const mapA = attachment.entityA._body.collisionFilter.excludedBodies;
     if (mapA) {
-        const count = map.get(param.entityB._body);
+        const count = map.get(attachment.entityB._body);
         if (count !== undefined) {
             if (count > 1) {
-                mapA.set(param.entityB._body, count - 1);
+                mapA.set(attachment.entityB._body, count - 1);
             } else {
                 // Remove the no-collision condition
-                mapA.delete(param.entityB._body);
+                mapA.delete(attachment.entityB._body);
             }
         }
     }
 
-    const mapB = param.entityB._body.collisionFilter.excludedBodies;
+    const mapB = attachment.entityB._body.collisionFilter.excludedBodies;
     if (mapB) {
-        const count = map.get(param.entityA._body);
+        const count = map.get(attachment.entityA._body);
         if (count !== undefined) {
             if (count > 1) {
-                mapB.set(param.entityA._body, count - 1);
+                mapB.set(attachment.entityA._body, count - 1);
             } else {
                 // Remove the no-collision condition
-                mapB.delete(param.entityA._body);
+                mapB.delete(attachment.entityA._body);
             }
         }
     }
@@ -3859,10 +3859,14 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
 
 
 function draw_corner_rect(corner, size, fill, outline, z) {
-    if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {
+    if ((_camera.angle !== 0) || (_camera.zoom !== 1)) {
         // Draw using a polygon
         draw_rect({x: corner.x + size.x * 0.5, y: corner.y + size.y * 0.5}, size, fill, outline, 0, z);
         return;
+    }
+
+    if ((_camera.x !== 0) || (_camera.y !== 0)) {
+        corner = {x: corner.x - _camera.x, y: corner.y - _camera.y};
     }
     
     z = (z || 0) - _camera.z;
@@ -4029,6 +4033,9 @@ function draw_point(pos, color, z) {
 
 function text_width(font, str, markup) {
     if (str === '') { return 0; }
+    if (str === undefined) {
+        throw new Error('text_width() requires a valid string as the second argument');
+    }
 
     let formatArray = [{font: font, color: 0, shadow: 0, outline: 0, startIndex: 0}];
     if (markup) {
@@ -4458,8 +4465,8 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
         font = font.font;
     }
 
-    if (font === undefined) {
-        throw new Error('draw_text() requires a font');
+    if (font === undefined || font._url === undefined) {
+        throw new Error('draw_text() requires a font as the first argument');
     }
     
     if (pos === undefined) {
@@ -5551,6 +5558,11 @@ var overlaps = (function() {
 
 function set_pause_menu(...options) {
     if (options.length > 3) { _error("At most three custom menu options are supported."); }
+    for (let i = 0; i < options.length; ++i) {
+        if (options[i].text === undefined) {
+            _error('set_pause_menu() options must be objects with text properties');
+        }
+    }
     _customPauseMenuOptions = clone(options);
 }
 

@@ -99,7 +99,7 @@ def concat(...args):
    return join(array, " ")
 
 
-def playPositionalAudioClip(audioClip, pos):
+def playPositionalSound(audioClip, pos):
    return play_sound({sound: audioClip, pan: 80% (2 pos.x / playSize.x - 1)})
 
 
