@@ -8,6 +8,7 @@ is now in public beta.
 
 ![](doc/emulator.png)
 
+<img src="doc/emulator.png">
 
 Features
 ========================================================
