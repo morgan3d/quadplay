@@ -794,7 +794,7 @@ if bgm_music == nil:
     bgm_music = play_sound({ sound:play_bgm, loop: true})
 else:
     // otherwise resume
-    resume_sound(bgm_music)
+    resume_audio(bgm_music)
 
 
 frame

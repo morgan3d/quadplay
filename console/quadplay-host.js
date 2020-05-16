@@ -887,24 +887,17 @@ function updateInput() {
         const map = keyMap[player], pad = QRuntime.gamepad_array[player],
               realGamepad = gamepadArray[player], prevRealGamepad = prevRealGamepadState[player];
 
-        /*
-	// Used for having player 0 physical controls set player 2 virtual buttons
-        // and player 1 controls set player 3 buttons. This allows two 
-        // dual-stick controls. Unfortunately, it doesn't let the keyboard
-        // work for 1-player dual-stick.
-	const altRealGamepad = (player === 2) ? gamepadArray[0] : (player === 3) ? gamepadArray[1] : undefined,
-	altPrevRealGamepad = (player === 2) ? prevRealGamepadState[0] : (player === 3) ? prevRealGamepadState[0] : undefined; */
-
-        // Have player 0 physical alt controls set player 1 virtual buttons
-	const altRealGamepad = (player === 1) ? gamepadArray[0] : undefined,
-	      altPrevRealGamepad = (player === 1) ? prevRealGamepadState[0] : undefined;
+        // Have player 0 physical alt controls set player 1 virtual buttons only
+        // if there is no second controller physically present
+	    const altRealGamepad = ((player === 1) && ! realGamepad) ? gamepadArray[0] : undefined,
+	        altPrevRealGamepad = ((player === 1) && ! realGamepad) ? prevRealGamepadState[0] : undefined;
 
         if (realGamepad && (realGamepad.id !== pad._id)) {
             // The gamepad just connected or changed. Update the control scheme.
             pad._id = realGamepad.id;
             pad.type = detectControllerType(realGamepad.id);
             pad.prompt = controlSchemeTable[pad.type];
-        } else if (! realGamepad && pad._id !== '' && pad._id !== 'mobile') {
+        } else if (! realGamepad && (pad._id !== '') && (pad._id !== 'mobile')) {
             // Gamepad was just disconnected. Update the control scheme.
             pad._id = isMobile ? 'mobile' : '';
             pad.type = defaultControlType(player);
@@ -947,7 +940,7 @@ function updateInput() {
                 pad['_' + axis + axis] = realGamepad.axes[a] * scale;
             }
 
-            if ((player === 1) && gamepadArray[0]) {
+            if ((player === 1) && ! realGamepad && gamepadArray[0]) {
                 const otherPad = gamepadArray[0];
                 // Alias controller[0] right stick (axes 2 + 3) 
                 // to controller[1] d-pad (axes 0 + 1) for "dual stick" controls                
