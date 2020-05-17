@@ -7,7 +7,7 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.05.16.14'
+const version  = '2020.05.17.02'
 const launcherURL = 'quad://console/launcher';
 
 // Token that must be passed to the server to make POST calls
@@ -217,7 +217,7 @@ function onWelcomeTouch() {
                     pauseMessage.style.visibility = 'hidden';
                     pauseMessage.style.zIndex = 0;
                     onPlayButton();
-                }, 800);
+                }, 200);
             }, 3000);
         } else {
             // Loading launcher
@@ -347,9 +347,16 @@ function onResize() {
             // Half-resolution games run with pixel doubling
             scale *= 2;
         }
+
         if (scale !== 1) {
-            screenBorder.style.transform = 'scale(' + scale + ') translate3d(0,0,0)';
-            screenBorder.style.transformOrigin = 'left top';
+            if (isSafari) {
+                screenBorder.style.zoom = '' + scale;
+                screenBorder.style.left = (-5 / scale) + 'px';
+                screenBorder.style.top = (18 / scale) + 'px';
+            } else {
+                screenBorder.style.transform = 'scale(' + scale + ') translate3d(0,0,0)';
+                screenBorder.style.transformOrigin = 'left top';
+            }
         }
         background.removeAttribute('style');
         break;
@@ -381,17 +388,28 @@ function onResize() {
                 const height = Math.round(Math.max(minHeight, SCREEN_HEIGHT * scale + 53));
                 background.style.height = height + 'px';
             }
+
+            let zoom = 1;
+
+            if (isSafari) {
+                // On Safari, CSS scaling overrides the crisp image rendering.
+                // We have to zoom instead (zoom acts differently on other browsers,
+                // so we don't use zoom on all platforms).
+                screenBorder.style.zoom = '' + scale;
+                zoom = scale;
+            } else {
+                // Setting the scale transform triggers really slow rendering on Raspberry Pi unless we
+                // add the "translate3d" hack to trigger hardware acceleration.
+                screenBorder.style.transform = 'scale(' + scale + ') translate3d(0,0,0)';
+            }
             
-            // Setting the scale transform triggers really slow rendering on Raspberry Pi unless we
-            // add the "translate3d" hack to trigger hardware acceleration.
-            screenBorder.style.transform = 'scale(' + scale + ') translate3d(0,0,0)';
-            screenBorder.style.left = Math.round((windowWidth - screenBorder.offsetWidth - 1) / 2) + 'px';
+            screenBorder.style.left = Math.round((windowWidth / zoom - screenBorder.offsetWidth - 1 / zoom) / 2) + 'px';
             if (gbMode) {
                 screenBorder.style.transformOrigin = 'center top';
-                screenBorder.style.top  = '15px';
+                screenBorder.style.top  = (15 / zoom) + 'px';
             } else {
                 screenBorder.style.transformOrigin = 'center';
-                screenBorder.style.top  = Math.round(Math.max(0, -delta) + (windowHeight - screenBorder.offsetHeight - 34) / 2) + 'px';
+                screenBorder.style.top  = (Math.round(Math.max(0, -delta / zoom) + (windowHeight / zoom - screenBorder.offsetHeight - 34 / zoom) / 2)) + 'px';
             }
 
             // Show the controls
@@ -413,18 +431,30 @@ function onResize() {
                 // keep per-pixel accuracy
                 scale = Math.floor(scale * window.devicePixelRatio) / window.devicePixelRatio;
             }
+
+            let zoom = 1;
+            if (isSafari) {
+                // On Safari, CSS scaling overrides the crisp image rendering.
+                // We have to zoom instead (zoom acts differently on other browsers,
+                // so we don't use zoom on all platforms).
+                screenBorder.style.zoom = '' + scale;
+                zoom = scale;
+            } else {
+                // Setting the scale transform causes really slow
+                // rendering on Raspberry Pi unless we add the
+                // "translate3d" hack to trigger hardware
+                // acceleration for the blit.
+                screenBorder.style.transform = 'scale(' + scale + ') translate3d(0,0,0)';
+            }
             
-            // Setting the scale transform triggers really slow rendering on Raspberry Pi unless we
-            // add the "translate3d" hack to trigger hardware acceleration.
-            screenBorder.style.transform = 'scale(' + scale + ') translate3d(0,0,0)';
-            screenBorder.style.left = Math.round((windowWidth - screenBorder.offsetWidth - 4) / 2) + 'px';
-            screenBorder.style.transformOrigin = 'center top';
+            screenBorder.style.left = Math.round((windowWidth - screenBorder.offsetWidth * zoom - 4) / (2 * zoom)) + 'px';
             if (uiMode === 'Test') {
                 screenBorder.style.top = '0px';
                 document.getElementById('debugger').style.top = Math.round(scale * screenBorder.offsetHeight + 25) + 'px';
+                screenBorder.style.transformOrigin = 'center top';
             } else {
-                const t = Math.round((windowHeight - screenBorder.offsetHeight * scale - headerBar - 2) / 2) + 'px';
-                screenBorder.style.top = t;
+                screenBorder.style.transformOrigin = 'center';
+                screenBorder.style.top = Math.round((windowHeight - screenBorder.offsetHeight * zoom - headerBar - 2) / (2 * zoom)) + 'px';
             }
         }
         break;
@@ -440,17 +470,8 @@ function onResize() {
         screenBorder.style.borderWidth  = Math.ceil(5 / scale) + 'px';
     }
     screenBorder.style.boxShadow = `${1/scale}px ${2/scale}px ${2/scale}px 0px rgba(255,255,255,0.16), ${-1.5/scale}px {-2/scale}px ${2/scale}px 0px rgba(0,0,0,0.19)`;
-
-    if (isSafari) {
-        // Safari cannot perform proper CSS image scaling, so we have
-        // to resize the underlying canvas and copy to it with nearest
-        // neighbor interpolation.
-        emulatorScreen.width = Math.round(SCREEN_WIDTH * scale);
-        emulatorScreen.height = Math.round(SCREEN_HEIGHT * scale);
-        emulatorScreen.style.transformOrigin = 'top left';
-        emulatorScreen.style.transform = 'scale(' + (1 / scale) + ') translate3d(0,0,0)';
-    }
 }
+
 
 function onMenuButton(event) {
     closeDropdowns();

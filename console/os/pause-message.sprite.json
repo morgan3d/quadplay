@@ -1,5 +1,6 @@
 {
     "url": "pause-message.png",
     "license": "©2020 Morgan McGuire, licensed as CC BY 4.0",
-    "sprite_size": {"x":277, "y":65}
+    // Intentionally sized to be a clean fraction of 384x224: 75% x 31.25%
+    "sprite_size": {"x":288, "y":70}
 }

@@ -781,8 +781,7 @@ function submitFrame() {
     }
     
     if (! hasPostFX && ! gifRecording && (emulatorScreen.width === SCREEN_WIDTH && emulatorScreen.height === SCREEN_HEIGHT)) {
-        // Directly upload to the screen. Fast path for Chrome and Firefox, which support
-        // image-rendering on Canvas.
+        // Directly upload to the screen. Fast path when there are no PostFX
 
         if (false) {
             // Performance test for 16-bit graphics
@@ -1208,8 +1207,14 @@ const mouse = {screen_x:0, screen_y:0, buttons: 0};
 function updateMouseDevice(event) {
     if (event.target === emulatorScreen) {
         const rect = emulatorScreen.getBoundingClientRect();
-        mouse.screen_x = clamp(Math.round(emulatorScreen.width * (event.clientX - rect.left) / rect.width), 0, emulatorScreen.width - 1) + 0.5;
-        mouse.screen_y = clamp(Math.round(emulatorScreen.height * (event.clientY - rect.top) / rect.height), 0, emulatorScreen.height - 1) + 0.5;
+
+        let zoom = 1;
+        if (isSafari) {
+            zoom = parseFloat(document.getElementById('screenBorder').style.zoom || '1');
+        }
+
+        mouse.screen_x = clamp(Math.round(emulatorScreen.width * (event.clientX - rect.left * zoom) / (rect.width * zoom)), 0, emulatorScreen.width - 1) + 0.5;
+        mouse.screen_y = clamp(Math.round(emulatorScreen.height * (event.clientY - rect.top * zoom) / (rect.height * zoom)), 0, emulatorScreen.height - 1) + 0.5;
     }
     mouse.buttons = event.buttons;
 }

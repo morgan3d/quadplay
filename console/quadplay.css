@@ -28,10 +28,7 @@ html {
     overflow: scroll;
 }
 
-#spriteEditor {
-    background-size: 100% auto;
-    background-repeat: no-repeat;
-    background-position: left top;
+.pixelate {
     image-rendering: optimizeSpeed;
     image-rendering: -o-crisp-edges;
     image-rendering: -webkit-optimize-contrast;
@@ -39,6 +36,19 @@ html {
     -ms-interpolation-mode: nearest-neighbor;
     image-rendering: crisp-edges;
     image-rendering: pixelated;
+
+    /* On Safari, the following works around blurring when resizing images
+       where their PARENT has a transform on it. */
+    transform: scale(1);
+    filter: blur(0px);
+    -webkit-filter: blur(0);
+    backface-visibility: hidden;
+}
+
+#spriteEditor {
+    background-size: 100% auto;
+    background-repeat: no-repeat;
+    background-position: left top;
 }
 
 #serverQRCode img {
@@ -67,36 +77,19 @@ html {
 }
 
 canvas {
-    -ms-interpolation-mode: nearest-neighbor;
-    image-rendering: optimizeSpeed;
-    image-rendering: -o-crisp-edges;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-    -ms-interpolation-mode: nearest-neighbor;
-    image-rendering: pixelated;
-
     /* Attempt to trick canvas into using hardware acceleration for the blit */
     transform: translate3d(0,0,0);
 }
 
 #pauseMessage {
     position: absolute;
-    left: 20%;
-    top: 20%;
-    width: 60%;
-    height: 60%;
+    left: 12.5%;
+    top: 34.75%;
+    width: 75%;
+    height: 31.25%;
     text-align: center;
     overflow: visible;
     background-position: center;
-    -ms-interpolation-mode: nearest-neighbor;
-    image-rendering: optimizeSpeed;
-    image-rendering: -o-crisp-edges;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-    -ms-interpolation-mode: nearest-neighbor;
-    image-rendering: pixelated !important;
     background-image: url("os/pause-message.png");
     background-size: contain;
     background-repeat: no-repeat;
@@ -104,8 +97,6 @@ canvas {
     opacity: 0;
     transition: opacity 0.8s ease-in-out;
 }
-
- 
 
 body {
     font-family: Helvetica, Arial;
@@ -1114,7 +1105,7 @@ body.EmulatorUI .virtualController {
     font-size: 10px;
     transform-origin: top left;
     font-smooth: never;
-    -webkit-font-smoothing : none;
+    -webkit-font-smoothing: none;
 }
 
 canvas#screen {

@@ -30,7 +30,7 @@
 
   Open Source under the BSD-2-Clause License:
 
-  Copyright 2018 Morgan McGuire, https://casual-effects.com
+  Copyright 2018-2020 Morgan McGuire, https://casual-effects.com
 
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions
@@ -219,6 +219,8 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
         }        
         
         // Fire off the asynchronous request
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        const MAX_REQUESTS = 6;
         if (type === 'image') {
             const image = new Image();
             rawEntry.raw = image;
@@ -231,7 +233,18 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
             }
             image.onload = onLoadSuccess;
             image.onerror = onLoadFailure;
-            image.src = url + (forceReload ? ('?refresh=' + Date.now()) : '');
+
+            const sendRequest = function () {
+                image.src = url + (forceReload ? ('?refresh=' + Date.now()) : '');
+            };
+            
+            if (isSafari && (this.pendingRequests > MAX_REQUESTS)) {
+                // Delay the fetch to avoid overloading Safari
+                setTimeout(sendRequest, 15 * this.pendingRequests);
+            } else {
+                sendRequest();
+            }
+            
         } else {
             const xhr = new XMLHttpRequest();
 
@@ -292,13 +305,23 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
                 rawEntry.failureMessage = xhr.statusText;
                 onLoadFailure();
             };
-            
-            try {
-                xhr.send();
-            } catch (e) {
-                rawEntry.failureMessage = '' + e;
-                onLoadFailure();
+
+            const sendRequest = function() {
+                try {
+                    xhr.send();
+                } catch (e) {
+                    rawEntry.failureMessage = '' + e;
+                    onLoadFailure();
+                }
+            };
+
+            if (isSafari && (this.pendingRequests > MAX_REQUESTS)) {
+                // Delay the fetch to avoid overloading Safari
+                setTimeout(sendRequest, 15 * this.pendingRequests);
+            } else {
+                sendRequest();
             }
+
         } // if XMLHttp
     }
 

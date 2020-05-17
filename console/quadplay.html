@@ -192,7 +192,7 @@
         <div id="codeEditorContentFrame">
           <div id="docEditor"> </div>
           <div id="mapEditor"><canvas id="mapDisplayCanvas" style="border:1px solid #ccc"></canvas></div>
-          <div id="spriteEditor">
+          <div id="spriteEditor" class="pixelate">
             <div id="spriteEditorHighlight" style="position:absolute; width: 100px; height: 50px; border: 1px solid #0f0; color: #0f0; overflow: visible; box-shadow: 0px 1px 4px #000">
               <div id="spriteEditorPivot" style="line-height: 30px; height: 30px">☩</div>
               <div id="spriteEditorInfo" style="white-space: nowrap; text-shadow: 0px 1px 4px #000"></div>
@@ -254,11 +254,13 @@
            pop up keyboards on mobile and accent options when holding a key.-->
       <center><input type="button" id="emulatorKeyboardInput" style="z-index:-10;position:fixed;width:10px;margin:auto;top:-30px"></center>
       <div id="screenBorder" class="screenBorder">
-        <canvas id="screen" width=384 height=224></canvas>
+        <canvas id="screen" width=384 height=224 class="pixelate"></canvas>
+        
         <!-- Shows file loading progress during boot -->
-        <div id="bootScreen"></div>
+        <div id="bootScreen" class="pixelate"></div>
+        
         <!-- Shows instructions for reaching pause and controls during boot -->
-        <div id="pauseMessage"></div>
+        <div id="pauseMessage" class="pixelate"></div>
       </div>
     </div>
 

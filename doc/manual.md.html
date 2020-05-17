@@ -6859,7 +6859,6 @@ Changes for both the specification and implementation in each release.
 - Added `source_url` field for sprites to support export processesqu
 - Made `Delta` autocorrect to `Δ` without requiring a following space in the IDE
 - Added autocorrect support for additional capital Greek letters `ΓΔΘΛΞΠΣΦΨΩ`
-- Fixed compilation of fractional degrees and percentages
 - Made rename and add asset/constant update faster
 - Search and Replace in the editor now triggers autosave
 - IDE open dialog now includes game descriptions and icons
@@ -6868,13 +6867,19 @@ Changes for both the specification and implementation in each release.
 - Added `transform_es_to_es()`
 - Added right-click menu for music assets
 - Added new Twin Analog stick example for dual stick shooters
-- Fixed map occlusion culling (was showing empty tiles)
-- Fixed loading quad:// games from the command line
 - Added `Arcade` (quadplay native), `Arcade_X` (Xbox labels), and `Arcade_PS` (PlayStation labels) controller
   options
 - Changed default tab/indentation size to four spaces to reduce conflicts with Python editors
 - The quantize tool now allows toggling the "dither" option after dropping the image
-- Made quantize display using nearest neighbor interpolation
+- Made quantize tool display using nearest neighbor interpolation
+- Improved Safari performance by removing explicit nearest-neighbor upscaling and using CSS zoom
+- Improved Safari load time by spreading out asynchronous requests in time
+- Fixed compilation of fractional degrees and percentages
+- Fixed map occlusion culling (was showing empty tiles)
+- Fixed loading quad:// games from the command line
+- Fixed blurring on Safari by using CSS zoom instead of CSS scale on that platform and adjusting layout
+  to compensate
+- Fixed Safari mouse and touch event scaling
 
 2020 May 8: Beta update 41
 
