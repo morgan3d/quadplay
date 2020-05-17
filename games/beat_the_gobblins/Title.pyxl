@@ -6,6 +6,7 @@ let title_ent = make_anim_entity(
         pos: SCREEN_SIZE/2,
         name: "title graphic",
         sprite: title_two_testSprite["intro_anim"],
+        z: -1
     },
     title_two_testSprite["intro_anim"],
     nil
@@ -38,12 +39,10 @@ const GO_TIME = 30
 
 if game_frames > TITLE_ANIM_STOP:
     // Credits
-    draw_sprite(
-        {
-            pos: SCREEN_SIZE/2 + xy(0, 25), //+ xy(0, -50),
-            sprite: creditsSprite
-        }
-    )
+    draw_sprite({
+        pos: SCREEN_SIZE/2 + xy(0, 25),
+        sprite: creditsSprite
+    })
 
     if mode_frames mod (blink_on_time) < blink_on_time/2:
         draw_text(

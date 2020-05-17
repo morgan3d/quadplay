@@ -7,7 +7,7 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.05.17.11'
+const version  = '2020.05.17.13'
 const launcherURL = 'quad://console/launcher';
 
 // Token that must be passed to the server to make POST calls

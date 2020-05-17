@@ -101,12 +101,11 @@ draw_text(
     }
 )
 
-draw_sprite(
-    {
-        pos:SCREEN_SIZE/2 + xy(0, -45),
-        sprite:title_two_testSprite["failed"][0],
-    }
-)
+draw_sprite({
+    pos: SCREEN_SIZE/2 + xy(0, -45),
+    sprite:title_two_testSprite["failed"][0],
+    z: -1
+})
 
 if mode_frames > FADE_IN_LEN + START_FADE:
     if mode_frames mod 100 < 50:

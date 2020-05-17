@@ -101,6 +101,7 @@ let next_flash = INTERVAL_BETWEEN_FLASHES + random_integer(INTERVAL_BETWEEN_FLAS
 const FLASH_LENGTH = 7
 
 def draw_cloud_border():
+    return // TODO
    /*   
    preserving_transform:
       for layer < 2:
