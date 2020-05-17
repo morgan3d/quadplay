@@ -105,7 +105,6 @@ const gameArray = [{
    label:        allabel[0][0],
    preview:      alpreview
 }
-
 ]
 
 const backgroundColor = #135
@@ -145,9 +144,18 @@ else if game_frames == intro_frames:
    reset_post_effects()
    
 set_background(backgroundColor)
+draw_corner_rect(xy(0, 0), xy(384, 15), #2)
+draw_line(xy(0, 16), xy(384, 16), #f)
+draw_text({font: mediumFont, text:"quadplay✜ games", pos: xy(SCREEN_SIZE.x / 2, 11), color: selectedColor, shadow: shadowColor, x_align: "center"})
+
+
+
+/*
+// Disable these features until we're ready for it
 
 draw_corner_rect(xy(0,0), xy(90, 15), #2)
 draw_corner_rect(xy(155,0), xy(230, 15), #2)
+
 draw_text({font: mediumFont, text:joy.prompt["⍇"], pos: xy(70,12), color: promptColor, shadow: shadowColor})
 draw_text({font: mediumFont, text:"LIBRARY", pos: xy(99,12), color: selectedColor, shadow: shadowColor})
 draw_text({font: mediumFont, text:"DISCOVER", pos: xy(180,12), color: unselectedColor, shadow: shadowColor})
@@ -159,6 +167,7 @@ draw_line(xy(90, 16), xy(90, 1), #f)
 draw_line(xy(91, 0), xy(154, 0), #f)
 draw_line(xy(155, 1), xy(155, 16), #f)
 draw_line(xy(155, 16), xy(384, 16), #f)
+*/
 
 draw_text({font: mediumFont, text:joy.prompt["⍐"], pos: xy(1, 28), color: promptColor, shadow: shadowColor})
 draw_text({font: mediumFont, text:joy.prompt["⍗"], pos: xy(1, 220), color: promptColor, shadow: shadowColor})
