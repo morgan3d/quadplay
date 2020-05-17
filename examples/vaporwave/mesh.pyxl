@@ -1,0 +1,91 @@
+// Array of quads for the terrain
+const mesh = []
+def addQuad(mesh, p0, p1, p2, p3):
+   const quad = [p0, p1, p2, p3]
+   // Compute Y values
+   for P in quad:
+      const m = max(0.18 |P.x| - 8, 0) * grid * 0.2
+      P.y = max(0.3 + noise(4, P.x * 0.01, -2 + 0.01 (P.z mod (wrapZ - grid))), 0)^2 * m
+
+   push(mesh, quad)
+
+
+def lineColorZ(z):
+   const fade = 0.1 + 2 (z / meshNearZ)^3
+   const c = min(1, 70% fade)
+   return rgb(c, c, min(1, 40% fade + 30%))
+
+
+def drawMesh(mesh):
+   // Array of points
+   const p = [0,0,0,0]
+
+   // Offsets for thick/AA lines
+   const offset = [xy(0.3, -1), xy(0.8, 1), xy(-0.8, 1), xy(-0.3, -1)]
+   
+   for quad in mesh:
+      for i < 4: p[i] = project(quad[i])
+
+      // Average depth of this tile
+      let z = ½ (quad[0].z + quad[1].z)
+
+      // Frustum and backface culling ("cross" will ignore the .s fields)
+      if (z < farZ or z > meshNearZ or
+          (cross(p[1] - p[0], p[2] - p[0]) < 0 and
+           cross(p[2] - p[0], p[3] - p[0]) < 0)): continue
+      
+      const fade = 0.1 + 2 (z / meshNearZ)³
+      
+      // Prioritize in z-order objects that are closer to the center
+      z -= 0.05 |p[0].x + p[2].x|
+
+      const outside = |quad[0].x + quad[2].x| > 4 grid
+      
+      // Only fill external tiles
+      if outside:
+         let faceColor
+         if fade > 0.1:
+            // Grab a random pixel off the logo as a fake reflection
+            faceColor = get_sprite_pixel_color(logoSprite[0][0],
+                                            xy(36, (z - 100) / 20 + 2 (quad[0].y - quad[2].y) + |quad[0].x - 2 camera.x| / 10 + 26)) or black
+            faceColor = faceColor * 70% min((fade - 0.1) * 0.008 |quad[0].x + quad[2].x|, 1)³
+            faceColor.a = 1
+         else:
+            faceColor = black
+
+         draw_tri(p[0], p[1], p[2], faceColor, ∅, ∅, ∅, ∅, z - 0.5)
+         draw_tri(p[0], p[2], p[3], faceColor, ∅, ∅, ∅, ∅, z - 0.5)
+
+      const c = min(1, 70% fade)
+      const lineColor = rgb(c, c, min(1, 40% fade + 30%))
+      const darkLineColor = 40% lineColor
+            
+      for i < 4:
+         const j = (i + 1) mod 4
+         const A = p[i]
+         const B = p[j]
+         draw_line(A, B, lineColor, z)
+
+         // Near line thickening and antialiasing
+         if not outside and z > 100: draw_line(A + offset[i], B + offset[j], darkLineColor, z - 0.1)
+   
+
+// Size of mesh quads
+const zIterations = 15
+// In each direction
+const xIterations = 16
+const wrapZ = grid * zIterations
+
+// Side, including slight inset
+const k = ½ grid - 0.08
+
+// Build the grid
+for j < zIterations:
+   const z = grid * j
+   for -xIterations ≤ i ≤ xIterations:
+      const x = grid * i
+      addQuad(mesh,
+              xyz(x - k, 0, z - k),
+              xyz(x - k, 0, z + k),
+              xyz(x + k, 0, z + k),
+              xyz(x + k, 0, z - k))

@@ -1,0 +1,37 @@
+def drawHovertank(hovertank):
+   const yawSprites = 17
+   const halfYawSprites = 9
+   const flip = xy(1, 1)
+
+   let yawFrame = round((hovertank.yaw + hovertank.pos.x * 0.4°) * ((yawSprites - 1) / 180°))
+   // draw_text({font:font, text:yawFrame, pos:xy(0,-50), color: #f, z: 1000})
+   if yawFrame < 0:
+      yawFrame = |yawFrame|
+      flip.x *= -1
+      
+   if yawFrame >= yawSprites:
+      yawFrame = 2 * yawSprites - yawFrame - 2
+      flip.x *= -1
+      
+   yawFrame = mid(0, yawFrame, yawSprites - 1)
+
+   const rollFrame = sign(hovertank.roll * (|hovertank.yaw| - 90 deg) * flip.x) + 1
+   const col = yawFrame mod halfYawSprites
+   const halfRow = 2 rollFrame + ⌊yawFrame / halfYawSprites⌋
+   const sprite = hovertankSprite[col][2 halfRow]
+   const reflectionSprite = hovertankSprite[col][2 halfRow + 1]
+
+   const bounce = cos(mode_frames / 20)
+   const z = hovertank.pos.z + grid
+   
+   draw_sprite({sprite: reflectionSprite, pos: project(hovertank.pos + xyz(0, -0.4 bounce, 0)) + xy(0, -50), scale: flip, z: z});
+   draw_sprite({sprite: sprite,           pos: project(hovertank.pos + xyz(0, bounce, 0)),                   scale: flip, z: z});
+
+
+const hovertank = {
+   yaw:  0,
+   roll: 0,
+   vel:  xyz(0, 0, 0),
+   pos:  xyz(0, 10, logoZ)
+}
+

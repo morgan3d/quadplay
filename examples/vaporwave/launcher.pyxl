@@ -1,0 +1,7 @@
+const camera = xy(0, grid)
+
+// Cheat the perspective with an extra polynomial term so
+// that objects vanish more quickly
+def project(P):
+   const s = 0.6 * max(0, (P.z + 100) / nearZ)^3 * (farZ - nearZ - grid) / (P.z - nearZ - grid)
+   return {x:(P.x - camera.x) * s, y: (P.y - camera.y) * s, s: s}

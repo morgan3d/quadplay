@@ -92,6 +92,11 @@
             "description": "Example of using device_control() to access raw analog sticks"
         },
         {
+            "url": "quad://examples/vaporwave/",
+            "title": "Vaporwave Demo",
+            "description": "Example of pseudo-3D effects and pre-rendered 3D sprites."
+        },
+        {
             "url": "quad://examples/vehicles/",
             "title": "Vehicles",
             "description": "Example of vehicle controls"

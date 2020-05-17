@@ -47,7 +47,7 @@
       "SFXTHROW": "throw.sound.json"
    },
    "y_up": true,
-   "version": 1.0,
+   "version": 1,
    "min_players": 1,
    "max_players": 1,
    "cooperative": false,

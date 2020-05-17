@@ -154,7 +154,8 @@ def draw_skippy():
       override_color: reflection_tint,
       opacity: reflection_alpha
    })
-   
+
+
    // Stone
    draw_sprite({sprite: sprite, pos: pos, z: pos.z, angle: angle})
 
@@ -297,3 +298,19 @@ local:
          push(array, {sprite: sprite, range: range, z: ranges[range], pos: xy(i * sprite.size.x, 0)})
  
    
+def warm_jit():
+    const all_sprites = [NIGHT_SKY, TWILIGHT_SKY, HILLS, NIGHT_HILLS, NIGHT_MOUNTAINS, MOUNTAINS,
+                         TWILIGHT_MOUNTAINS, CABINS_0, DEAD_TREES_0, DEAD_TREES_1, LIVE_TREES_0,
+                         SUNSET_SKY]
+    for spritesheet in all_sprites:
+        draw_sprite({sprite: spritesheet[0][0], pos: SCREEN_SIZE / 2 + xy(random(-1000, 1000), random(-100, 100)), opacity: random(), z:random(-1000, -900)})
+        draw_sprite({sprite: spritesheet[0][0], pos: SCREEN_SIZE / 2 + xy(random(-1000, 1000), 0), z:random(-1000, -900)})
+    for f < size(SKIPPY_SPRITESHEET.spin):
+        draw_sprite({sprite: SKIPPY_SPRITESHEET.spin[f], pos: SCREEN_SIZE / 2 + xy(random(-100, 100), 0), angle: random(-pi, pi), z: random() - 1000})
+        draw_sprite({sprite: SKIPPY_SPRITESHEET.spin[f], pos: SCREEN_SIZE / 2, angle: random(-pi, pi), override_color: rgba(random(), random(), random(), 60%), opacity: random(), z: random() - 1000})
+
+    draw_sprite({sprite: SPLASH_SPRITESHEET, pos: SCREEN_SIZE / 2, scale: xy(random(-1, 2), random(0.1, 2)), z: random() - 900})
+    
+    // Hide what we just did
+    draw_sprite({sprite: background, pos: SCREEN_SIZE / 2, z: -200})
+

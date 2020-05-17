@@ -1,0 +1,113 @@
+Play
+===================================================================
+
+set_transform(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y * 0.63))
+set_background(backgroundColor)
+
+enter
+-------------------------------------------------------------------
+
+play_sound({sound:music, loop:true, volume:200%})
+
+
+frame
+-------------------------------------------------------------------
+
+/////////////////////////////////////////////////// Tank simulation
+
+if mode_frames > 210:
+   // Normal gameplay
+   hovertank.roll = joy.x
+   if joy.x: hovertank.vel.x = mid(-0.5, hovertank.vel.x + 15% joy.x, +0.5)
+   else:     hovertank.vel.x *= 97%
+
+   if joy.y: hovertank.vel.z = mid(-0.6, hovertank.vel.z + 7% joy.y, +0.6)
+   else:     hovertank.vel.z *= 0.98
+
+   // Accelerate/turn sound
+   if joy.yy and |hovertank.vel.z| < 0.3: play_sound({sound: hoverSpinClip, pan: hovertank.pos.x / 90, volume: 65%})
+   
+   let targetYaw = 0°
+   if hovertank.vel.z < -ε:
+      // Turn around
+      targetYaw = +180°
+      // Turn the short way
+      if hovertank.yaw + 0.1° hovertank.pos.x < 0: targetYaw *= -1
+      
+
+   const maxYawRate = 3°
+   let deltaYaw = targetYaw - hovertank.yaw
+   deltaYaw = sign(deltaYaw) * min(|deltaYaw|, maxYawRate)
+   hovertank.yaw += deltaYaw
+   
+   hovertank.pos.x = mid(-45, hovertank.pos.x + hovertank.vel.x, 45)
+
+   // Bank sound
+   if joy.xx: play_sound({sound: hoverBankClip, pan: hovertank.pos.x / 90, volume: 110%, pitch: 80% + 40% random()})
+
+else:
+   // Intro animation
+   hovertank.pos.x = mode_frames / 1.7 - 105
+   hovertank.vel.z = -0.001
+   hovertank.yaw = -90 deg
+   if mode_frames == 50: play_sound({sound: hoverStopClip, pan: -50%, volume: 220%})
+   if mode_frames == 210: play_sound(hoverBankClip)
+
+/////////////////////////////////////////////////////////////////
+
+camera.x = 0.3 hovertank.pos.x
+camera.y = 0.6 grid
+   
+const deltaZ = hovertank.vel.z
+      
+// Move the games
+let uiY = 70
+/*
+for game in gameArray:
+   game.pos.z += deltaZ
+   
+   // See if we've collided
+   if |hovertank.pos.z - game.pos.z| < 5 and |hovertank.pos.x - game.pos.x| < 20:
+      // Hit this game
+      launch_game(game.url)
+  */
+  
+// Move the mesh
+for quad in mesh:
+   let minZ = infinity
+   for P in quad:
+      P.z += deltaZ
+      minZ = min(minZ, P.z)
+
+   // Wrap around
+   if minZ > wrapZ * 0.65:       for P in quad: P.z -= wrapZ
+   else if minZ < -wrapZ * 0.35: for P in quad: P.z += wrapZ
+
+/////////////////////////////////////////////////////////////////
+
+// Quadplay logo
+draw_sprite({sprite: logoSprite, pos: xy(0, SCREEN_SIZE.y * 0.47), z: logoZ})
+draw_sprite(logoSprite, xy(0, -SCREEN_SIZE.y * 0.26), 0, xy(1, -½), 0.2, logoZ)
+
+// Ground
+draw_corner_rect(xy(-½ SCREEN_SIZE.x, -3), xy(SCREEN_SIZE.x, -SCREEN_SIZE.y * 0.56), #0)
+
+// Debug
+//draw_text({font:font, text:hovertank.yaw / 1deg, pos:xy(0,0), color: #f, z: 1000})
+
+// Sky gradient
+for i <= 10:
+   draw_line(xy(-½ SCREEN_SIZE.x, 2i + 1), xy(½ SCREEN_SIZE.x, 2i + 1),
+            lerp(lerp(#aaa, #b36, min(⅕i, 1)²), backgroundColor, (i / 10)²))
+   draw_line(xy(-½ SCREEN_SIZE.x, 2i + 2), xy(½ SCREEN_SIZE.x, 2i + 2),
+            lerp(#b36, backgroundColor, i / 10))
+
+
+drawHovertank(hovertank)
+
+drawMesh(mesh)
+
+// Draw the games
+//for game in gameArray:
+//   drawGame(game)
+

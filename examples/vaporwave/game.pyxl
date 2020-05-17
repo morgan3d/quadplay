@@ -1,0 +1,30 @@
+/*
+const gameArray = []
+
+// side = ±1
+def addGame(labelSprite, url, side, z):
+      push(gameArray, {
+         sprite: labelSprite,
+         pos: xyz(28 side, labelSprite.size.y * ½ billboardScale, z),
+         url: url
+      })
+
+      
+def drawGame(game):
+   // Draw game billboards
+   if game.pos.z < farZ or game.pos.z > nearZ: return
+   const P = project(game.pos)
+   const s = P.s * billboardScale
+   //draw_text({font:font, text:format_number(s, "%"), pos:xy(0,50), color: #f, z: 1000})
+   // Pull forward in z-order to avoid z clipping against the ground lines
+   const z = game.pos.z + grid
+   draw_sprite({sprite: game.sprite, pos: P - xy(0, 85 s), scale:xy(s, -½ s), z: z, opacity: 30%})
+   draw_sprite({sprite: game.sprite, pos: P, scale: xy(s, s), z: z})
+   // Outline
+   draw_corner_rect(P - s * ½ game.sprite.size - xy(1, 1), s * game.sprite.size + xy(2, 2), ∅, lineColorZ(game.pos.z), z)
+
+   
+addGame(qplabel[0][0], "quad://games/quadpaddle",  +1, 2 grid)
+addGame(itlabel[0][0], "quad://games/icetime",  -1, -7 grid)
+addGame(sslabel[0][0], "quad://games/speedstreet", +1, -16 grid)
+*/

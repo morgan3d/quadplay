@@ -1,0 +1,31 @@
+{
+    "title":      "Vaporwave Demo",
+    "developer":  "Casual Effects",
+    "copyright":  "© 2019-2020 Morgan McGuire",
+    "scripts":    ["launcher.pyxl", "hovertank.pyxl", "mesh.pyxl", "game.pyxl"],
+    "modes":      ["Play*"],
+    "assets":     {
+        "logoSprite": "logo.sprite.json",
+        "font": "quad://fonts/roman-8.font.json",
+        "hovertankSprite": "hovertank.sprite.json",
+        "music": "darkFuture.sound.json",
+        "hoverSpinClip": "hoverSpin.sound.json",
+        "hoverBankClip": "hoverBank.sound.json",
+        "hoverStopClip": "hoverStop.sound.json"
+    },
+
+    "constants":  {
+        "backgroundColor": {"type": "rgb",    "value": "#013"},
+        "logoZ":           {"type": "number", "value": 160},
+        "black":           {"type": "rgb",    "value": "#000"},
+        "grid":            {"type": "number", "value": 20, "description": "Size of grid squares"},
+        "nearZ":           {"type": "number", "value": 200},
+        "meshNearZ":       {"type": "number", "value": 180, "description": "Near plane for mesh grid"},
+        "farZ":            {"type": "number", "value": 0},
+        "billboardScale":  {"type": "number", "value": "30%"}
+    },
+
+    "description": "Example of pseudo-3D effects and pre-rendered 3D sprites.",
+    
+    "y_up":      true
+}

@@ -217,10 +217,14 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
 
             LM.markRequestCompleted(rawEntry.url, rawEntry.failureMessage, false);
         }        
+
+        // Safari slows down badly when it must handle too many async requests
+        // at the same time
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        const MAX_REQUESTS = isSafari ? 5 : 10;
+        const REQUEST_DELAY_MILLISECONDS = 20;
         
         // Fire off the asynchronous request
-        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-        const MAX_REQUESTS = 6;
         if (type === 'image') {
             const image = new Image();
             rawEntry.raw = image;
@@ -238,9 +242,9 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
                 image.src = url + (forceReload ? ('?refresh=' + Date.now()) : '');
             };
             
-            if (isSafari && (this.pendingRequests > MAX_REQUESTS)) {
-                // Delay the fetch to avoid overloading Safari
-                setTimeout(sendRequest, 15 * this.pendingRequests);
+            if (this.pendingRequests > MAX_REQUESTS) {
+                // Delay the fetch to avoid overloading the browser
+                setTimeout(sendRequest, REQUEST_DELAY_MILLISECONDS * this.pendingRequests);
             } else {
                 sendRequest();
             }
@@ -315,9 +319,9 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
                 }
             };
 
-            if (isSafari && (this.pendingRequests > MAX_REQUESTS)) {
-                // Delay the fetch to avoid overloading Safari
-                setTimeout(sendRequest, 15 * this.pendingRequests);
+            if (this.pendingRequests > MAX_REQUESTS) {
+                // Delay the fetch to avoid overloading the browser
+                setTimeout(sendRequest, REQUEST_DELAY_MILLISECONDS * this.pendingRequests);
             } else {
                 sendRequest();
             }

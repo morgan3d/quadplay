@@ -382,8 +382,8 @@ from a free-direction top-down perspective.
 [Fluid Example](../console/quadplay.html?game=quad://examples/fluid&IDE=1) is a cellular automata fluid flow simulation
 with gravity and pressure.
 
-</td></tr><tr><td>![](../examples/vehicles/label128.png)</td><td>
-[Vehicles Example](../console/quadplay.html?game=quad://examples/roguelike&IDE=1) uses the roguelike sprite set for tilemap
+</td></tr><tr><td>![](../examples/roguelike/label128.png)</td><td>
+[Roguelike Example](../console/quadplay.html?game=quad://examples/roguelike&IDE=1) uses the roguelike sprite set for tilemap
 rendering with a simple text-heavy UI section.
 
 </td></tr><tr><td>![](../examples/accel_demo/label128.png)</td><td>
@@ -408,6 +408,10 @@ in the program, and edit the `game.json` file to see a different font.
 </td></tr><tr><td>![](../examples/highscore/label128.png)</td><td>
 [High Score Example](../console/quadplay.html?game=quad://examples/highscore&IDE=1) demonstrates `load_local()` and `save_local()` to
 maintain a high score list, with `push_mode()` for creating a popup dialog.
+
+</td></tr><tr><td>![](../examples/vaporwave/label128.png)</td><td>
+[Vaporwave Example](../console/quadplay.html?game=quad://examples/vaporwave&IDE=1) uses pseudo-3D techniques of pre-rendered
+sprites and polygon meshes.
 
 </td></tr><tr><td>![](../examples/sproing/label128.png)</td><td>
 [Sproing Example](../console/quadplay.html?game=quad://examples/sproing&IDE=1) shows a squash and stretch effect for transforming sprites.
@@ -6864,6 +6868,7 @@ Changes for both the specification and implementation in each release.
 - IDE open dialog now includes game descriptions and icons
 - P1's right stick and triggers no longer provide input to P2 unless P2 does not
   have a physical controller
+- Added Vaporwave 3D example program
 - Added `transform_es_to_es()`
 - Added right-click menu for music assets
 - Added new Twin Analog stick example for dual stick shooters
@@ -6872,6 +6877,8 @@ Changes for both the specification and implementation in each release.
 - Changed default tab/indentation size to four spaces to reduce conflicts with Python editors
 - The quantize tool now allows toggling the "dither" option after dropping the image
 - Made quantize tool display using nearest neighbor interpolation
+- Optimized Across the Lake for Safari by warming the JIT and sprites during the
+  Title screen
 - Improved Safari performance by removing explicit nearest-neighbor upscaling and using CSS zoom
 - Improved Safari load time by spreading out asynchronous requests in time
 - Fixed compilation of fractional degrees and percentages

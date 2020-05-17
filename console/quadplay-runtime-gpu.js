@@ -523,10 +523,10 @@ function _executeSPR(metaCmd) {
         // May be reassigned below when using flipped X values
         let srcData = _spritesheetArray[cmd.spritesheetIndex]._uint32Data;
         const srcDataWidth = srcData.width;
-
         if ((Math.abs(Math.abs(A) - 1) < 1e-10) && (Math.abs(B) < 1e-10) &&
             (Math.abs(C) < 1e-10) && (Math.abs(Math.abs(D) - 1) < 1e-10) &&
             (! override_color)) {
+
             // Simple case; x and y-axis uniform scale, no rotation, and no alpha
             // test. Use a memcpy.  The x and y-axes may be inverted, and there
             // can be xy translation applied. This branch is primarily
@@ -559,7 +559,7 @@ function _executeSPR(metaCmd) {
                         _screen.set(srcData.slice(srcOffset, srcOffset + width), dstOffset);
                     } // dstY
                 } else {
-                    // Blending case
+                    // Blending or alpha test case
                     for (let dstY = dstY1; dstY <= dstY2; ++dstY, dstOffset += _SCREEN_WIDTH, srcOffset += srcStep) {
                         for (let i = 0; i < width; ++i) {
                             let color = srcData[srcOffset + i];
@@ -601,9 +601,7 @@ function _executeSPR(metaCmd) {
                 } // needs alpha
             } // width >= 1
         } else {
-            // General case. It doesn't help performance to break out the
-            // case of no rotation with alpha test and optimize that
-            // separately, so process everything together.
+            // General case.
 
             // Extract the common terms of blending into the override color
             const override = override_color ? _colorToUint32(override_color) : 0;
