@@ -221,7 +221,7 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
         // Safari slows down badly when it must handle too many async requests
         // at the same time
         const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-        const MAX_REQUESTS = isSafari ? 5 : 10;
+        const MAX_REQUESTS = isSafari ? 20 : 50;
         const REQUEST_DELAY_MILLISECONDS = 20;
         
         // Fire off the asynchronous request

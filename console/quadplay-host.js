@@ -1051,9 +1051,7 @@ function onTouchStartOrMove(event) {
         let tracker = activeTouchTracker[touch.identifier];
 
         if (event.target === emulatorScreen) {
-            const rect = emulatorScreen.getBoundingClientRect();
-            const screen_x = clamp(Math.round(emulatorScreen.width * (touch.clientX - rect.left) / rect.width), 0, emulatorScreen.width - 1) + 0.5;
-            const screen_y = clamp(Math.round(emulatorScreen.height * (touch.clientY - rect.top) / rect.height), 0, emulatorScreen.height - 1) + 0.5;
+            const screen_coord = emulatorScreenEventCoordToQuadplayScreenCoord(touch);
 
             if (! tracker || tracker.lastTarget !== emulatorScreen) {
                 // New touch
@@ -1064,12 +1062,12 @@ function onTouchStartOrMove(event) {
                 QRuntime.touch.screen_dy = 0;
             } else {
                 // Continued touch
-                QRuntime.touch.screen_dx = screen_x - QRuntime.touch.screen_x;
-                QRuntime.touch.screen_dy = screen_y - QRuntime.touch.screen_y;
+                QRuntime.touch.screen_dx = screen_coord.x - QRuntime.touch.screen_x;
+                QRuntime.touch.screen_dy = screen_coord.y - QRuntime.touch.screen_y;
             }
             
-            QRuntime.touch.screen_x = screen_x;
-            QRuntime.touch.screen_y = screen_y;
+            QRuntime.touch.screen_x = screen_coord.x;
+            QRuntime.touch.screen_y = screen_coord.y;
         }
 
         if (tracker && (tracker.lastTarget === emulatorScreen) && (event.target !== emulatorScreen)) {
@@ -1203,18 +1201,25 @@ const fakeMouseEvent = {
     stopPropagation: function() { this.realEvent.stopPropagation(); this.realEvent.cancelBubble = true; },
 };
 
-const mouse = {screen_x:0, screen_y:0, buttons: 0};
+function emulatorScreenEventCoordToQuadplayScreenCoord(event) {
+    const rect = emulatorScreen.getBoundingClientRect();
+    
+    let zoom = 1;
+    if (isSafari) {
+        zoom = parseFloat(document.getElementById('screenBorder').style.zoom || '1');
+    }
+
+    return {x: clamp(Math.round(emulatorScreen.width  * (event.clientX - rect.left * zoom) / (rect.width  * zoom)), 0, emulatorScreen.width  - 1) + 0.5,
+            y: clamp(Math.round(emulatorScreen.height * (event.clientY - rect.top  * zoom) / (rect.height * zoom)), 0, emulatorScreen.height - 1) + 0.5};
+}
+
+const mouse = {screen_x: 0, screen_y: 0, buttons: 0};
+
 function updateMouseDevice(event) {
     if (event.target === emulatorScreen) {
-        const rect = emulatorScreen.getBoundingClientRect();
-
-        let zoom = 1;
-        if (isSafari) {
-            zoom = parseFloat(document.getElementById('screenBorder').style.zoom || '1');
-        }
-
-        mouse.screen_x = clamp(Math.round(emulatorScreen.width * (event.clientX - rect.left * zoom) / (rect.width * zoom)), 0, emulatorScreen.width - 1) + 0.5;
-        mouse.screen_y = clamp(Math.round(emulatorScreen.height * (event.clientY - rect.top * zoom) / (rect.height * zoom)), 0, emulatorScreen.height - 1) + 0.5;
+        const coord = emulatorScreenEventCoordToQuadplayScreenCoord(event);
+        mouse.screen_x = coord.x;
+        mouse.screen_y = coord.y;
     }
     mouse.buttons = event.buttons;
 }

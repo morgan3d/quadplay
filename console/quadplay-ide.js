@@ -7,7 +7,7 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.05.17.13'
+const version  = '2020.05.18.10'
 const launcherURL = 'quad://console/launcher';
 
 // Token that must be passed to the server to make POST calls
@@ -313,6 +313,11 @@ function setUIMode(d, noAutoPlay) {
 
     // Reset keyboard focus
     emulatorKeyboardInput.focus();
+
+    // Ace doesn't notice CSS changes. This explicit resize is needed
+    // to ensure that the editor can fully scroll horizontally
+    // in 'wide' mode
+    setTimeout(function() { aceEditor.resize(); });
 }
 
 

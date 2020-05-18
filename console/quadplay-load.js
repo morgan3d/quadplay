@@ -1066,12 +1066,12 @@ function loadMap(name, json, mapJSONUrl) {
                     
                     // Prevent the arrays themselves from being reassigned
                     for (let x = 0; x < map.size.x; ++x) {
-                        Object.seal(layer[x]);
+                        Object.freeze(layer[x]);
                     }
                 } // L
                 
                 // Don't allow the array of arrays to be changed (just the individual elements)
-                Object.seal(map.layer);
+                Object.freeze(map.layer);
             }, loadFailureCallback, loadWarningCallback, computeForceReloadFlag(spritesheetJson.url));
         });
     },

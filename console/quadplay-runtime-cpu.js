@@ -3183,15 +3183,15 @@ function draw_physics(physics) {
 // centers.
 var _pixelSnap = Math.floor;
 
-function transform_map_layer_to_draw_z(map, layer) {
+function transform_map_layer_to_ws_z(map, layer) {
     if (! map._type && map._type === 'map') {
-        _error('First argument to transform_map_layer_to_draw() must be a map');
+        _error('First argument to transform_map_layer_to_ws_z() must be a map');
     }
     return layer * map.z_scale + map.z_offset;
 }
 
 
-function transform_draw_z_to_map_layer(map, z) {
+function transform_ws_z_to_map_layer(map, z) {
     if (! map._type && map._type === 'map') {
         _error('First argument to transform_draw_z_to_map_layer() must be a map');
     }
@@ -3199,9 +3199,14 @@ function transform_draw_z_to_map_layer(map, z) {
 }
 
 
-function transform_map_to_draw(map, map_coord) {
+function transform_map_space_to_ws(map, map_coord) {
     return xy(map_coord.x * map.sprite_size.x + map._offset.x,
               map_coord.y * map.sprite_size.y + map._offset.y);
+}
+
+function transform_ws_to_map_space(map, ws_coord) {
+    return xy((ws_coord.x - map._offset.x) / map.sprite_size.x,
+              (ws_coord.y - map._offset.y) / map.sprite_size.y);
 }
 
 
@@ -3859,17 +3864,23 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
 
 
 function draw_corner_rect(corner, size, fill, outline, z) {
-    if ((_camera.angle !== 0) || (_camera.zoom !== 1)) {
-        // Draw using a polygon
+    if (Math.abs(_camera.angle) >= 1e-10) {
+        // Draw using a polygon because it is rotated
         draw_rect({x: corner.x + size.x * 0.5, y: corner.y + size.y * 0.5}, size, fill, outline, 0, z);
         return;
     }
 
+    z = (z || 0) - _camera.z;
+
     if ((_camera.x !== 0) || (_camera.y !== 0)) {
         corner = {x: corner.x - _camera.x, y: corner.y - _camera.y};
     }
-    
-    z = (z || 0) - _camera.z;
+
+    if (_camera.zoom !== 1) {
+        const m = _zoom(z);
+        corner = {x: corner.x * m, y: corner.y * m};
+        size = {x: size.x * m, y: size.y * m};
+    }
 
     const skx = (z * _skewXZ), sky = (z * _skewYZ);
     let x1 = (corner.x + skx) * _scaleX + _offsetX, y1 = (corner.y + sky) * _scaleY + _offsetY;

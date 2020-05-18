@@ -1112,6 +1112,8 @@ canvas#screen {
     background: #000;
     z-index: 30;
     cursor: crosshair;
+    /* Force hardware acceleration */
+    transform: scale(1) translateZ(0) !important;
 }
 
 #logo {

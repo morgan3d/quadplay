@@ -3693,12 +3693,12 @@ A map asset has the following fields. Its sprite elements are mutable at runtime
 `map.z_offset`
 : Amount to add to each layer index when computing a z value for rendering.
   `layer = (z - map.z_offset) / map.z_scale`; `z = layer * map.z_scale + map.z_offset`.
-  See also `transform_draw_to_map()` and `transform_map_to_draw()`.
+  See also `transform_ws_to_map_space()` and `transform_map_space_to_ws()`.
 
 `map.z_scale`
 : Amount to multiply each layer index to compute a z value for rendering.
   `layer = (z - map.z_offset) / map.z_scale`; `z = layer * map.z_scale + map.z_offset`.
-  See also `transform_draw_to_map()` and `transform_map_to_draw()`.
+  See also `transform_ws_z_to_map_layer()` and `transform_map_layer_to_ws_z()`.
 
 
 The following functions relate maps, pixels, and sprites. In them, a
@@ -3779,28 +3779,28 @@ indices. The map's z-axis corresponds to layers.
 `set_map_sprite_by_draw_coord(map, draw_coord, sprite, drawZ (= 0))`
 : Sets the corresponding map sprite. Does nothing if `draw_coord` is out of bounds.
 
-`transform_draw_to_map(map, draw_coord)`
-: Returns the _fractional_ map coordinates of `draw_coord`.  See also
-  `transform_map_to_draw()` and `mget()`.
+`transform_ws_to_map_space(map, ws_point)`
+: Returns the _fractional_ map coordinates of `ws_point`.  See also
+  `transform_map_space_to_ws()`.
   
   To account for a map that is rendered by `draw_map()` with its own `pos`, `angle`, and `scale`, use
-  `transform_draw_to_map(map, transform_to(pos, angle, scale, draw_coord))`.
+  `transform_ws_to_map_space(map, transform_to(pos, angle, scale, ws_coord))`.
 
-`transform_draw_z_to_map_layer(map, z)`
+`transform_ws_z_to_map_layer(map, ws_z)`
 : Using the current transformation, returns the _fractional_ map layer
   of `z`.
 
-`transform_map_layer_to_draw_z(map, L)`
+`transform_map_layer_to_ws_z(map, L)`
 : Returns the `z` value that will be used for `map` under the current
   transformation.
 
-`transform_map_to_draw(map, map_coord)`
+`transform_map_space_to_ws(map, map_coord)`
 : Returns the draw coordinates of `map_coord`. Integer map_coords correspond to the centers of tiles,
-  which will be fractional pixels for even map tile sizes. See also `transform_draw_to_map()`
+  which will be fractional pixels for even map tile sizes. See also `transform_ws_to_map_space()`
   and `get_map_pixel_color()`.
   
   To account for a map that is rendered by `draw_map()` with its own `pos`, `angle`, and `scale`, use
-  `transform_from(pos, angle, scale, transform_map_to_draw(map, map_coord))`.
+  `transform_from(pos, angle, scale, transform_map_space_to_ws(map, map_coord))`.
 
 
 Frame Hooks
@@ -6857,37 +6857,41 @@ Changes for both the specification and implementation in each release.
 
 2020 May TBD: Beta update 42
 
-- Added "New Asset..." dialog in the IDE for creating new sprites
 - Incompatible change: Removed subscripts as array indices. They are still valid characters for strings.
 - Incompatible change: renamed "sound" --> "audio" and "audio clip" --> "sound" in the API
-- Added `source_url` field for sprites to support export processesqu
 - Made `Delta` autocorrect to `Δ` without requiring a following space in the IDE
-- Added autocorrect support for additional capital Greek letters `ΓΔΘΛΞΠΣΦΨΩ`
 - Made rename and add asset/constant update faster
 - Search and Replace in the editor now triggers autosave
 - IDE open dialog now includes game descriptions and icons
 - P1's right stick and triggers no longer provide input to P2 unless P2 does not
   have a physical controller
 - Added Vaporwave 3D example program
+- Added "New Asset..." dialog in the IDE for creating new sprites
+- Added `source_url` field for sprites to support export processesqu
+- Added autocorrect support for additional capital Greek letters `ΓΔΘΛΞΠΣΦΨΩ`
 - Added `transform_es_to_es()`
 - Added right-click menu for music assets
 - Added new Twin Analog stick example for dual stick shooters
 - Added `Arcade` (quadplay native), `Arcade_X` (Xbox labels), and `Arcade_PS` (PlayStation labels) controller
   options
+- Added X-Arcade controller information to the manual
+- Renamed map transformation functions to `transform_ws_to_map_space()`, `transform_map_space_to_ws()`, `transform_ws_z_to_map_layer()`,
+  and `transform_map_layer_to_ws_z()`
 - Changed default tab/indentation size to four spaces to reduce conflicts with Python editors
 - The quantize tool now allows toggling the "dither" option after dropping the image
 - Made quantize tool display using nearest neighbor interpolation
-- Optimized Across the Lake for Safari by warming the JIT and sprites during the
+- Improved Safari performance of Across the Lake by warming the JIT and sprites during the
   Title screen
-- Optimized Beat the Gobblins for Safari by eliminating large alpha-masked sprites
+- Improved Safari performance for Beat the Gobblinsby eliminating large alpha-masked sprites
 - Improved Safari performance by removing explicit nearest-neighbor upscaling and using CSS zoom
-- Improved Safari load time by spreading out asynchronous requests in time
+- Improved Safari load time on dual-core processors by spreading out asynchronous requests in time
 - Fixed compilation of fractional degrees and percentages
 - Fixed map occlusion culling (was showing empty tiles)
 - Fixed loading quad:// games from the command line
 - Fixed blurring on Safari by using CSS zoom instead of CSS scale on that platform and adjusting layout
   to compensate
 - Fixed Safari mouse and touch event scaling
+- Fixed Debug UI layout not allowing full horizontal scrolling of the editor
 
 2020 May 8: Beta update 41
 
