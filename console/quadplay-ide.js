@@ -2431,7 +2431,7 @@ function showOpenGameDialog() {
             // Remove the alpha tester options
             let a = document.getElementById('openTestsOption');
             if (a) { a.remove(); }
-            a = document.getElementById('openAlphaOption').remove();
+            a = document.getElementById('openAlphaOption');
             if (a) { a.remove(); }
             if (json.mine && json.mine.length === 0) {
                 // Select built-ins if I don't have any games
