@@ -171,24 +171,17 @@
       <div id="modeEditor" style="position:absolute; top:20px; left:0; visibility:hidden"> </div>
       <div id="constantEditor" style="position:absolute; top:0; left:0; padding: 10px; visibility:hidden"></div>
       <div id="codePlusFrame" onmouseup="onCodeEditorDividerDragEnd()" onmousemove="onCodeEditorDividerDrag(event)">
-        <div id="codeEditor">
-          <div class="toolbar">
-            <script>
-              makeButton('<img src="ui-undo.png" width=32 style="position:relative; top:-2px;">', `Undo (${cmd}Z)`, 'onCodeEditorUndoButton', 'codeEditorUndo');
-              makeButton('<img src="ui-redo.png" width=32 style="position:relative; top:-2px;">', `Redo (${cmd}Y)`, 'onCodeEditorRedoButton', 'codeEditorRedo');
-              makeButton('<img src="ui-smallfont.png" width=32 style="position:relative; top:-2px;">', `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton');
-              makeButton('<img src="ui-bigfont.png" width=32 style="position:relative; top:-2px;">', `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton');
-              makeButton('<img src="ui-find.png" width=32 style="position:relative; top:-2px;">', `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton');
-            </script>
-            <div style="position: absolute; right:5px; top:3px; color:#888" id="codeEditorSessionModeDisplay">All changes saved.</div>
-          </div>
-          <div id="ace"> </div>
+        <div class="toolbar">
+          <script>
+            makeButton('<img src="ui-undo.png" width=32 style="position:relative; top:-2px;">', `Undo (${cmd}Z)`, 'onCodeEditorUndoButton', 'codeEditorUndo');
+            makeButton('<img src="ui-redo.png" width=32 style="position:relative; top:-2px;">', `Redo (${cmd}Y)`, 'onCodeEditorRedoButton', 'codeEditorRedo');
+            makeButton('<img src="ui-smallfont.png" width=32 style="position:relative; top:-2px;">', `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton');
+            makeButton('<img src="ui-bigfont.png" width=32 style="position:relative; top:-2px;">', `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton');
+            makeButton('<img src="ui-find.png" width=32 style="position:relative; top:-2px;">', `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton');
+          </script>
+          <div style="position: absolute; right:5px; top:4px; color:#888" id="codeEditorSessionModeDisplay">All changes saved.</div>
         </div>
-
-        <div id="codeEditorDivider" onmousedown="onCodeEditorDividerDragStart()">
-          <div style="width:20px; border-top: 1px solid #302b2b; border-bottom: 1px solid #302b2b; height: 1px; margin-top: 2px; margin-left: auto; margin-right: auto"></div>
-        </div>
-        
+          
         <div id="codeEditorContentFrame">
           <div id="docEditor"> </div>
           <div id="mapEditor"><canvas id="mapDisplayCanvas" style="border:1px solid #ccc"></canvas></div>
@@ -208,6 +201,12 @@
             </div>
           </div>
         </div>
+
+        <div id="codeEditorDivider" onmousedown="onCodeEditorDividerDragStart()">
+          <div style="width:20px; border-top: 1px solid #302b2b; border-bottom: 1px solid #302b2b; height: 1px; margin-top: 2px; margin-left: auto; margin-right: auto"></div>
+        </div>
+        
+        <div id="ace"> </div>
       </div>  <!-- codePlusFrame -->
     </div>
     
@@ -558,11 +557,14 @@
             <label for="openGameType">Type&nbsp;&nbsp;</label>
             <select id="openGameType" style="width:320px" onchange="onOpenGameTypeChange()">
               <script>
-                // Only emit this option if it is going to be populated
-                if (isQuadserver) { document.write('<option value="mine">Mine</option>'); }
+                // Only emit these options if they are going to be populated
+                if (isQuadserver) { document.write('<option value="alpha" id="openAlphaOption">Alpha</option><option value="mine">Mine</option>'); }
               </script>
               <option value="builtins">Built In</option>
               <option value="examples">Examples</option>
+              <script>
+                if (isQuadserver) { document.write('<option value="tests" id="openTestsOption">Tests</option>'); }
+              </script>
             </select>
           </p>
           <p>

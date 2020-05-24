@@ -286,9 +286,16 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             else: # game list query
                 
                 redundant_pattern = re.compile(r'(?P<name>/[^/]+)(?P=name)\.game\.json$')
-                for key, path in {'examples' : quad_path + 'examples',
-                                  'builtins' : quad_path + 'games',
-                                  'mine'     : my_games_path}.items():
+                set = {'examples' : quad_path + 'examples',
+                       'builtins' : quad_path + 'games',
+                       'mine'     : my_games_path}
+
+                # For alpha testers and internal development
+                if os.path.exists(quad_path + '_alpha'):
+                    set['alpha'] = quad_path + '_alpha'
+                    set['tests'] = quad_path + '_tests'
+                    
+                for key, path in set.items():
                     # Do not change case on Windows (because this will be part of the json file that is read
                     # on multiple platforms) but *do* fix slashes
                     list = [{'url': path.replace('\\', '/'), 'title': 'TBD'} for path in sorted(glob.glob(path + '/**/*.game.json', recursive=True))]
@@ -323,6 +330,8 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             if f:
                try:
                    self.copyfile(f, self.wfile)
+               except BrokenPipeError:
+                   print('Broken pipe while loading', webpath)
                finally:
                    f.close()
 

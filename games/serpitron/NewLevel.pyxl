@@ -43,7 +43,9 @@ def spawnPowerups():
          push(powerupArray, {sprite: powerupSpritesheet.coin, type: "points", pos: randomEmptyPosition(), 
                              value: ⌊¼ pointBonus⌋, sound: smallPointsAudioClip})         
    else if waveType == "Showdown":
-      for i < 7 sqrt(size(snakeArray)):
+      // Not too many apples on showdown levels or in two player
+      // mode the leader gets slaughtered
+      for i < 5 size(snakeArray):
          push(powerupArray, {sprite: powerupSpritesheet.star, type: "points", pos: randomEmptyPosition(), 
                              value: ⌊¼ pointBonus⌋, sound: smallPointsAudioClip})
       for snake in snakeArray:

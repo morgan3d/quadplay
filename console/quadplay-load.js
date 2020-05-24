@@ -29,13 +29,13 @@ let alreadyCountedSpritePixels = {};
 let lastSpriteID = 0;
 
 function onLoadFileStart(url) {
-    console.log('Fetching "' + url + '"');
+    // console.log('Fetching "' + url + '"');
     appendToBootScreen('Fetching ' + url.replace(/^.*\//, ''));
 }
 
 // Invoked when any file load completes
 function onLoadFileComplete(url) {
-    console.log('Processing "' + url + '"');
+    //console.log('Processing "' + url + '"');
     appendToBootScreen('Processing ' + url.replace(/^.*\//, ''));
 }
 
@@ -104,7 +104,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         },
         errorCallback: errorCallback,
         jsonParser: 'permissive',
-        forceReload: useIDE});
+        forceReload: false});
 
     // If given a directory, assume that the file has the same name
     if (! /\.game\.json$/i.test(gameURL)) {
@@ -200,7 +200,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                     scriptText = scriptText.replace(/\r/g, '');
                     addCodeToSourceStats(scriptText, scriptURL);
                     fileContents[scriptURL] = scriptText;
-                });
+                }, null, null, computeForceReloadFlag(scriptURL));
             }
         }
 
@@ -231,7 +231,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                     modeCode = modeCode.replace(/\r/g, '');
                     addCodeToSourceStats(modeCode, mode.url);
                     fileContents[mode.url] = modeCode;
-                });
+                }, null, null, computeForceReloadFlag(mode.url));
             }
         }
 
@@ -311,6 +311,8 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                         break;
                         
                     case 'sound':
+                        console.assert(gameSource);
+                        console.assert(gameSource.assets);
                         gameSource.assets[assetName] = loadSound(assetName, json, assetURL);
                         break;
                         
@@ -327,8 +329,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 
             } // for each asset
         }
-
-    }, loadFailureCallback, loadWarningCallback);
+    }, loadFailureCallback, loadWarningCallback, computeForceReloadFlag(gameURL));
 
     loadManager.end();
 }
@@ -574,12 +575,16 @@ const spritesheetCache = {};
 
 function loadSpritesheet(name, json, jsonURL, callback, noForce) {
     let forceReload = undefined;
-    if (noForce) { forceReload = false; }
-    if (fastReload && isBuiltinURL(json.url)) { forceReload = false; }
 
     let spritesheet;
 
     const pngURL = makeURLAbsolute(jsonURL, json.url);
+
+    if (noForce) {
+        forceReload = false;
+    } else {
+        forceReload = computeForceReloadFlag(pngURL);
+    }
 
     if (forceReload === false) {
         spritesheet = spritesheetCache[jsonURL];
@@ -596,6 +601,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
             onLoadFileStart(pngURL);
             onLoadFileComplete(pngURL);
             if (callback) { callback(spritesheet); }
+
             return spritesheet;
         }
     }
@@ -865,10 +871,8 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
             }
         }
 
-        if (forceReload === false) {
-            // Store into the cache
-            spritesheetCache[jsonURL] = spritesheet;
-        }
+        // Store into the cache
+        spritesheetCache[jsonURL] = spritesheet;
         
         if (callback) { callback(spritesheet); }
     }, loadFailureCallback, loadWarningCallback, forceReload);
@@ -933,10 +937,8 @@ function loadSound(name, json, jsonURL) {
                     onLoadFileComplete(json.url);
                     loadManager.markRequestCompleted(json.url, '', true);
                     
-                    if (forceReload === false) {
-                        // Store into the cache
-                        soundCache[jsonURL] = sound;
-                    }
+                    // Store into the cache
+                    soundCache[jsonURL] = sound;
                 },
                 function onFailure() {
                     loadManager.markRequestCompleted(mp3URL, 'unknown error', false);
@@ -1162,26 +1164,8 @@ function urlFile(url) {
     return url.substring(url.lastIndexOf('/') + 1);
 }
 
-const quadURLPrefixArray = ['quad://'];
-{
-    const base = location.href.replace(/console\/quadplay.html.*/, 'console/../');
-    const prefix = ['sprites', 'fonts', 'sounds'];
-    for (let p = 0; p < prefix.length; ++p) {
-        quadURLPrefixArray.push(base + prefix[p] + '/');
-        quadURLPrefixArray.push('/' + prefix[p] + '/');
-    }
-}
-
-/** Returns true if url begins with `quad://` or is inside the quadplay default directories */
-function isBuiltinURL(url) {
-    for (let p = 0; p < quadURLPrefixArray.length; ++p) {
-        if (url.startsWith(quadURLPrefixArray[p])) { return true; }
-    }
-    return false;
-}
-
 function computeForceReloadFlag(url) {
-    return (fastReload && isBuiltinURL(url)) ? false : undefined;
+    return (fastReload && isBuiltIn(url)) ? false : useIDE;
 }
 
 /** Returns the childURL made absolute relative to the parent */

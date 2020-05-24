@@ -4286,9 +4286,12 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
             while ((offsetIndex < formatArray[formatIndex].startIndex) || (offsetIndex > formatArray[formatIndex].endIndex)) { ++formatIndex; }
             format = undefined;
             
-            const restBounds = _draw_text(offsetIndex + 1, formatIndex, str.substring(c + 1), formatArray, xy(pos.x, pos.y + referenceFont.line_height / _scaleY), x_align, y_align, z, wrap_width, text_size - cur.length, referenceFont);
+            const restBounds = _draw_text(offsetIndex + 1, formatIndex, str.substring(c + 1), formatArray, {x:pos.x, y:pos.y + referenceFont.line_height / _scaleY},
+                                          x_align, y_align, z, wrap_width, text_size - cur.length, referenceFont);
             firstLineBounds.x = Math.max(firstLineBounds.x, restBounds.x);
-            firstLineBounds.y += referenceFont._spacing.y + restBounds.y;
+            if (restBounds.y > 0) {
+                firstLineBounds.y += referenceFont._spacing.y + restBounds.y;
+            }
             return firstLineBounds;
         }
         
@@ -4334,9 +4337,12 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
             format = undefined;
 
             console.assert(offsetIndex >= formatArray[formatIndex].startIndex && offsetIndex <= formatArray[formatIndex].endIndex);
-            const restBounds = _draw_text(offsetIndex, formatIndex, nnext, formatArray, xy(pos.x, pos.y + referenceFont.line_height / _scaleY), x_align, y_align, z, wrap_width, text_size - cur.length - (next.length - nnext.length), referenceFont);
+            const restBounds = _draw_text(offsetIndex, formatIndex, nnext, formatArray, {x:pos.x, y:pos.y + referenceFont.line_height / _scaleY},
+                                          x_align, y_align, z, wrap_width, text_size - cur.length - (next.length - nnext.length), referenceFont);
             firstLineBounds.x = Math.max(firstLineBounds.x, restBounds.x);
-            firstLineBounds.y += referenceFont._spacing.y + restBounds.y;
+            if (restBounds.y > 0) {
+                firstLineBounds.y += referenceFont._spacing.y + restBounds.y;
+            }
             return firstLineBounds;
         }
         
@@ -4449,8 +4455,9 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
         }
     }
 
-    // The height is inflated by 3 for the outline on top
-    // and shadow and outline on the bottom.
+    // The height in memory is inflated by 3 for the outline on top
+    // and shadow and outline on the bottom. Return the tight
+    // bound on the characters themselves.
     return {x: width, y: height - 3};
 }
 
@@ -4862,7 +4869,12 @@ function oscillate(x, lo, hi) {
 
 
 function clamp(x, lo, hi) {
-    return min(max(x, lo), hi);
+    // Test for all three being Numbes, which have a toFixed method
+    if (x.toFixed && lo.toFixed && hi.toFixed) {
+        return x < lo ? lo : x > hi ? hi : x;
+    } else {
+        return min(max(x, lo), hi);
+    }
 }
 
 
@@ -5928,6 +5940,7 @@ function _mutate(obj, key, op, val) {
 
 //////////////////////////////////////////////////////////////////////////////
 
+// Note that add includes concatenation
 function _add(a, b) {
     // Keep short to encourage inlining
     return ((typeof a === 'object') && (a !== null)) ? _objectAdd(a, b) : a + b;
@@ -5939,11 +5952,11 @@ function _addMutate(a, b) {
 
 function _objectAdd(a, b) {
     // clone, preserving prototype
-    let c = a.constructor ? a.constructor() : Object.create(null);
+    const c = a.constructor ? a.constructor() : Object.create(null);
 
     // avoid hasOwnProperty for speed
-    if (typeof b === 'object') for (let key in a) c[key] = a[key] + b[key];
-    else                       for (let key in a) c[key] = a[key] + b;
+    if (typeof b === 'object') for (const key in a) c[key] = a[key] + b[key];
+    else                       for (const key in a) c[key] = a[key] + b;
     
     return c;
 }
@@ -6005,14 +6018,20 @@ function _objectDiv(a, b) {
     let c = a.constructor ? a.constructor() : Object.create(null);
 
     if (typeof b === 'object') for (let key in a) c[key] = a[key] / b[key];
-    else                       for (let key in a) c[key] = a[key] / b;
+    else {
+        b = 1 / b;
+        for (let key in a) c[key] = a[key] * b;
+    }
     
     return c;
 }
 
 function _objectDivMutate(a, b) {
-    if (typeof b === 'object') for (let key in a) a[key] /= b[key];
-    else                       for (let key in a) a[key] /= b;
+    if (typeof b === 'object') for (const key in a) a[key] /= b[key];
+    else {
+        b = 1 / b;
+        for (const key in a) a[key] *= b;
+    }
     return a;
 }
 
@@ -6032,10 +6051,10 @@ function _mulMutate(a, b) {
 }
 
 function _objectMul(a, b) {
-    let c = a.constructor ? a.constructor() : Object.create(null);
+    const c = a.constructor ? a.constructor() : Object.create(null);
 
-    if (typeof b === 'object') for (let key in a) c[key] = a[key] * b[key];
-    else                       for (let key in a) c[key] = a[key] * b;
+    if (typeof b === 'object') for (const key in a) c[key] = a[key] * b[key];
+    else                       for (const key in a) c[key] = a[key] * b;
     
     return c;
 }
@@ -6993,11 +7012,53 @@ function MAT2x2_MATMUL_XZ(A, v, c) {
 
 
 function lerp(a, b, t) {
-    const ta = typeof a, tb = typeof b;
-    if (typeof t !== 'number') { throw new Error("The third argument to lerp must be a number"); }
-    if ((ta === 'number') && (tb === 'number')) {
-        return _lerp(a, b, t);
+    // Test if these are numbers quickly using the presence of the toFixed method
+    if (! t.toFixed) { throw new Error("The third argument to lerp must be a number"); }
+    if (a.toFixed && b.toFixed) {
+        return a + (b - a) * t;
     } else {
+        const ta = typeof a, tb = typeof b;    
+        if (! Array.isArray(a) && (tb === 'object') && (ta === 'object')) {
+            // Handle some common cases efficiently without overloading and allocation.
+            // The type checking is expensive but is much faster than not doing it.
+            const ca = Object.keys(a).length;
+            const cb = Object.keys(b).length;
+            if (ca !== cb) { throw new Error("The arguments to lerp must have the same number of elements"); }
+
+            // xy()
+            if (ca === 2 &&
+                a.x !== undefined && a.y !== undefined &&
+                b.x !== undefined && b.y !== undefined) {
+                return {
+                    x: a.x + (b.x - a.x) * t,
+                    y: a.y + (b.y - a.y) * t
+                };
+            }
+
+            // rgb()
+            if (ca === 3 &&
+                a.r !== undefined && a.g !== undefined && a.b !== undefined &&
+                b.r !== undefined && b.g !== undefined && b.b !== undefined) {
+                return {
+                    r: a.r + (b.r - a.r) * t,
+                    g: a.g + (b.g - a.g) * t,
+                    b: a.b + (b.b - a.b) * t
+                };
+            }
+
+            // rgba()
+            if (ca === 4 &&
+                a.r !== undefined && a.g !== undefined && a.b !== undefined && a.a !== undefined &&
+                b.r !== undefined && b.g !== undefined && b.b !== undefined && b.a !== undefined) {
+                return {
+                    r: a.r + (b.r - a.r) * t,
+                    g: a.g + (b.g - a.g) * t,
+                    b: a.b + (b.b - a.b) * t,
+                    a: a.a + (b.a - a.a) * t
+                };
+            }
+        }
+
         return _add(_mul(a, 1 - t), _mul(b, t));
     }
 }

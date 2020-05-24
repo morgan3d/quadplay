@@ -6,9 +6,6 @@ init
 ────────────────────────────────────────────────────────────────────────
 play_sound(BGM, true)
 
-for i < 50:
-    warm_jit()
-
 
 enter
 ────────────────────────────────────────────────────────────────────────
@@ -18,18 +15,8 @@ start_pos = cam_pos.x
 frame
 ────────────────────────────────────────────────────────────────────────
 
-
-// Warm up all of the sprites and JIT on Safari, so that
-// the game does not hitch during play. The randomization
-// is to avoid the JIT thinking that certain arguments are
-// always the same and optimizing those cases too narrowly
-if mode_frames < 60:
-    warm_jit()
-
 draw_game()
 draw_title_ui(false)
-
-
 
 if any_button_press():
     set_mode(Play) because "Button pressed"

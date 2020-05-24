@@ -1,0 +1,39 @@
+{
+   "title": "Lift Team Example",
+   "developer": "Casual Effects",
+   "copyright": "©2020 Morgan McGuire",
+   "license": "Open source under the BSD 3-Clause license https://opensource.org/licenses/BSD-3-Clause",
+   "packages": [],
+   "scripts": [],
+   "modes": [
+      "Play*"
+   ],
+   "assets": {
+      "font": "quad://fonts/robot-9.font.json",
+      "player_mech_sprite": "player_mech.sprite.json",
+      "quantum_district_map": "quantum_district.map.json",
+      "cloud_sprite": "cloud.sprite.json",
+      "player_chopper_sprite": "player_chopper.sprite.json",
+      "prompt_font": "quad://fonts/deja-6.font.json"
+   },
+   "version": 0,
+   "min_players": 2,
+   "max_players": 2,
+   "cooperative": true,
+   "competitive": false,
+   "achievements": false,
+   "highscores": false,
+   "description": "Physics example of a player helicoper that can lift another player's mech.",
+   "constants": {
+      "LIFT_RANGE": {
+         "type": "number",
+         "value": "60",
+         "description": "Maximum distance at which a lift can trigger"
+      }
+   },
+   "screen_size": {
+      "x": 384,
+      "y": 224
+   },
+   "y_up": true
+}

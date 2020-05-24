@@ -7,7 +7,7 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.05.18.10'
+const version  = '2020.05.22.14'
 const launcherURL = 'quad://console/launcher';
 
 // Token that must be passed to the server to make POST calls
@@ -74,16 +74,17 @@ function isBuiltIn(url) {
     }
     
     const quadPath = location.href.replace(/\/console\/quadplay\.html.*$/, '/');
-    return (! ALLOW_EDITING_EXAMPLES && url.startsWith('/examples/')) ||
-        url.startsWith('/games/') ||
-        url.startsWith(quadPath + 'sprites/') ||
-        url.startsWith(quadPath + 'fonts/') ||
-        url.startsWith(quadPath + 'sounds/') ||
-        url.startsWith(quadPath + 'scripts/') ||
-        url.startsWith(quadPath + 'games/') ||
-        (! ALLOW_EDITING_EXAMPLES && url.startsWith(quadPath + 'examples/')) ||
-        url.startsWith(quadPath + 'console/') ||
-        url.startsWith(quadPath + 'doc/');
+
+    return url.startsWith(quadPath) && // Early out
+        ((! ALLOW_EDITING_EXAMPLES && url.startsWith(quadPath + 'examples/')) ||
+         url.startsWith(quadPath + 'sprites/') ||
+         url.startsWith(quadPath + 'fonts/') ||
+         url.startsWith(quadPath + 'sounds/') ||
+         url.startsWith(quadPath + 'scripts/') ||
+         url.startsWith(quadPath + 'games/') ||
+         url.startsWith(quadPath + 'console/') ||
+         url.startsWith(quadPath + 'doc/'));
+;
 }
 
 function debugOptionClick(event) {
@@ -651,7 +652,7 @@ function onPlayButton(slow, isLaunchGame, args) {
             if (useIDE && ! isLaunchGame) {
                 if (savesPending === 0) {
                     // Force a reload of the game
-                    loadGameIntoIDE(window.gameURL, doPlay);
+                    loadGameIntoIDE(window.gameURL, doPlay, false);
                 } else {
                     onStopButton();
                     if (pendingSaveCallbacks.length > 0) {
@@ -1330,6 +1331,7 @@ function onProjectSelect(target, type, object) {
         return;
     }
 
+    document.getElementById('codeEditorDivider').style.visibility = 'unset';    
     if (type === 'doc') {
         // Documents
         target.classList.add('selectedProjectElement');
@@ -1337,7 +1339,7 @@ function onProjectSelect(target, type, object) {
         docEditor.style.visibility = 'visible';
         codePlusFrame.style.visibility = 'visible';
 
-        codePlusFrame.style.gridTemplateRows = '0px 0px 100%';
+        codePlusFrame.style.gridTemplateRows = `auto 0px 0px 100%`;
         
         if (object.url.endsWith('.md') ||
             object.url.endsWith('.html') ||
@@ -1345,14 +1347,14 @@ function onProjectSelect(target, type, object) {
 
             // Show the editor after loading the content
             if (fileContents[object.url] !== undefined) {
-                codePlusFrame.style.gridTemplateRows = '3fr 7px 4fr';
+                codePlusFrame.style.gridTemplateRows = `auto 4fr auto 3fr`;
                 setCodeEditorSession(object.url);
             } else {
                 // Load and set the contents
                 const loadManager = new LoadManager({forceReload: true});
                 loadManager.fetch(object.url, 'text', null, function (doc) {
                     fileContents[object.url] = doc;
-                    codePlusFrame.style.gridTemplateRows = '3fr 7px 4fr';
+                    codePlusFrame.style.gridTemplateRows = `auto 4fr auto 3fr`;
                     setCodeEditorSession(object.url);
                 });
                 loadManager.end();
@@ -1391,7 +1393,8 @@ function onProjectSelect(target, type, object) {
             setCodeEditorSession(url);
             // Show the code editor, hide the content pane
             codePlusFrame.style.visibility = 'visible';
-            codePlusFrame.style.gridTemplateRows = '1fr 0px 0px';
+            codePlusFrame.style.gridTemplateRows = 'auto 0px 0px 100%';
+            document.getElementById('codeEditorDivider').style.visibility = 'hidden';
         }
         break;
         
@@ -1401,7 +1404,7 @@ function onProjectSelect(target, type, object) {
 
         // Show the code editor and the content pane
         codePlusFrame.style.visibility = 'visible';
-        codePlusFrame.style.gridTemplateRows = '2fr 7px 5fr';
+        codePlusFrame.style.gridTemplateRows = 'auto 5fr auto 2fr';
         const spriteEditorHighlight = document.getElementById('spriteEditorHighlight');
         const spriteEditorPivot = document.getElementById('spriteEditorPivot');
         const spriteEditorInfo = document.getElementById('spriteEditorInfo');
@@ -2425,6 +2428,11 @@ function showOpenGameDialog() {
     // Fetch the asset list
     LoadManager.fetchOne({forceReload: true}, gameListURL, 'json', null, function (json) {
         openGameFiles = json;
+        if (! json.tests) {
+            // Remove the alpha tester options
+            document.getElementById('openTestsOption').remove();
+            document.getElementById('openAlphaOption').remove();
+        }
         onOpenGameTypeChange();
     });
 }
@@ -3204,16 +3212,17 @@ const qrcode = new QRCode('serverQRCode',
                            correctLevel: QRCode.CorrectLevel.H
                           });
 
-function showBootScreen() {
-    bootScreen.innerHTML = `<span style="color:#ec5588">quadplay✜ ${version}</span>
+const BOOT_INFO = `<span style="color:#ec5588">quadplay✜ ${version}</span>
 <span style="color:#937ab7">© 2020 Morgan McGuire</span>
 <span style="color:#5ea9d8">Licensed under LGPL 3.0</span>
 <span style="color:#859ca6">https://casual-effects.com</span>
 
 `;
+
+function showBootScreen() {
+    bootScreen.innerHTML = BOOT_INFO;
     bootScreen.style.zIndex = 100;
     bootScreen.style.visibility = 'visible';
-    
     bootScreen.style.fontSize = '' + Math.max(10 * SCREEN_WIDTH / 384, 4) + 'px';
 }
 
@@ -3284,6 +3293,7 @@ function loadGameIntoIDE(url, callback, loadFast) {
         }
 
         onLoadFileStart(url);
+
         afterLoadGame(url, function () {
             onLoadFileComplete(url);
             hideBootScreen();
@@ -3317,23 +3327,7 @@ function loadGameIntoIDE(url, callback, loadFast) {
             
             updateAllCodeEditorSessions();
             hideWaitDialog();
-            appendToBootScreen(`
 
-QuadOS ROM:        256269 bytes    
-Runtime ROM:       159754 bytes
-Framebuffer RAM:   ${384 * 224 * 2} bytes
-Sprite RAM:        ${4718592 * 2} bytes
-AudioClip units:   128 slots
-Code memory:       8192 lines
-
-Boot loader initialized
-Checking ROM…OK
-Checking kernel…OK
-Checking RAM…OK
-Checking game pad input…OK
-
-Starting…
-`);        
             if (callback) { callback(); }
         }, function (e) {
             updateAllCodeEditorSessions();
@@ -3351,7 +3345,7 @@ Starting…
     if (loadFast) {
         loadFunction();
     } else {
-        setTimeout(loadFunction, 15);
+        setTimeout(loadFunction, 0);
     }
 }
 

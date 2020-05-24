@@ -1,0 +1,23 @@
+{
+    "url": "quantum_district.tmx",
+
+    "offset": {"x": 0, "y": 0},
+
+    // z value of the first layer. Optional, default = 0
+    "z_offset": -2,
+
+    "y_up": true,
+
+    "wrap_x": true,
+
+    // Optional. Default = false.
+    "wrap_y": false,
+
+    "z_scale": 1,
+
+    "license": "Copyright 2020 Morgan McGuire, CC-BY 3.0",
+
+    "sprite_url_table": {
+        "urban_scifi":   "urban_scifi.sprite.json"
+    }
+}

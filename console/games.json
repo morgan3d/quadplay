@@ -42,6 +42,11 @@
             "description": ""
         },
         {
+            "url": "quad://examples/lift_team/",
+            "title": "Lift Team Example",
+            "description": "Physics example of a player helicoper that can lift another player's mech."
+        },
+        {
             "url": "quad://examples/physics/",
             "title": "Physics Example",
             "description": ""

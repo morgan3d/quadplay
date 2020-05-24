@@ -565,8 +565,8 @@ code, .code {
     background: #302b2b;
     visibility: hidden;
     display: grid;
-    grid-template-areas: 'codeEditor' 'codeEditorDivider' 'codeEditorContentFrame';
-    grid-template-rows: 10fr 7px 3fr;
+    grid-template-areas: 'codeEditorToolbar' 'codeEditorContentFrame' 'codeEditorDivider' 'codeEditor';
+    grid-template-rows: 23px 7fr 7px 3fr;
     grid-template-columns: 100%;
     /* Needed for Safari grid layout */
     height: 100%;
@@ -588,28 +588,28 @@ code, .code {
     grid-area: codeEditorDivider;
     background-color: #888;
     cursor: ns-resize;
+    height: 7px;
+    z-index: 1;
 }
 
-#codeEditor {
-    grid-area:          codeEditor;
-    font-size:          14px;
+#ace {
+    grid-area: codeEditor;
+    width: 100%;
+    margin-bottom:6px;
     box-sizing:         border-box;
     -moz-box-sizing:    border-box;
     -webkit-box-sizing: border-box;
-    overflow:           hidden !important;
-    display:            grid;
-    grid-template-rows: 22px 1fr;
-}
-
-#codeEditor #ace {
-    width: 100%;
-    border-top: 1px solid #888;
 }
 
 
-#codeEditor .toolbar {
-    padding: 3px;
+#codePlusFrame .toolbar {
+    grid-area: codeEditorToolbar;
     width: 100%;
+    padding-top: 3px;
+    padding-left: 3px;
+    border-bottom: 1px solid #888;
+    height: 19px;
+    z-index: 1;
 }
 
 /**************************************************/

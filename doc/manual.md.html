@@ -420,6 +420,9 @@ sprites and polygon meshes.
 [Z-Car Example](../console/quadplay.html?game=quad://examples/zcar&IDE=1) draws a 3D wireframe car using 2.5D graphics
 and CRT orange-screen retro phosophor effects.
 
+</td></tr><tr><td>![](../examples/lift_team/label128.png)</td><td>
+[Speed Street](../console/quadplay.html?game=quad://examples/lift_team&IDE=1) combines physics and dynamic constraints for an asymmetric platformer setup, where one
+player flies a helicopter that can lift the other player's mech.
 
 </td></tr><tr><td>![](../examples/speedstreet/label128.png)</td><td>
 [Speed Street](../console/quadplay.html?game=quad://examples/speedstreet&IDE=1) is the setup for a four-player competitive racing game inspired by [_Excitebike_](https://en.wikipedia.org/wiki/Excitebike) and Tony Hawk games, using:
@@ -3495,25 +3498,37 @@ endpoints and borders.
   Values default according to the positional argument version.
 
 `draw_text(font, text, pos, color (= ∅), shadow (= ∅), outline (= ∅), x_align (= "left"), y_align (= "baseline"), z (= 0), wrap_width (= ∅), text_size (= size(text)), markup (= false))`
-: Print string `text` relative to `pos`. Returns an `xy()` of the bounding box,
-  excluding shadows and outline.  The positioning of text will follow the transform and camera,
-  but individual letters always draw upright and 1:1 pixel perfect, 
-  without flipping, rotation, or scaling, no matter what the transform or camera
-  are.
+: Print string `text` relative to `pos`. Returns an `xy()` size of the
+  bounding box, excluding shadows and outline. This bounding box is
+  conservative in height and accounts for the highest ascender and
+  accent and lowest descender.  It is tight in width and tailored to
+  the exact characters. The bounding box also does not include the
+  spacing that should be added between consecutive lines. Use
+  `font.line_height` to know how far to place separate lines
+  vertically or simply use strings with `"\n"` characters in them to
+  print multiple lines. _This return value will change in a future implementation._
+  
+  The positioning of text will follow the transform and camera, but
+  individual letters always draw upright and 1:1 pixel perfect,
+  without flipping, rotation, or scaling, no matter what the transform
+  or camera are.
 
   x-alignment of `-1` or `"left"` = left,
   `0` or `"center"` = center, `+1` or `"right"` = right,
   y-alignment of `-1` or `"top"` = top, `0` or `"center"` = center,
   `1` or `"baseline"` = baseline, `2` or `"bottom"` = bottom.
-  For multiline strings, alignment only applies to the first line.
+  For multiline strings, alignment only applies to the first line 
+  in the current version. _This will change in a future implementation._
+  
 
   `font` must be loaded from the assets.  Color,
   shadow, and outline default to transparent. Any non-transparent
   outline causes the shadow to move below both the outline and main color.
-  Returns the line height (including spacing) for the next line.  If
-  `wrap_width` is specified, breaks the text at the maximum width and
-  renders multiple lines. Each line is offset by the font's vertical
-  spacing and aligned as specified. See also `text_width()`.
+  Returns the line height (including spacing) for the next line.  
+  
+  If `wrap_width` is specified, breaks the text at the maximum width
+  and renders multiple lines. Each line is offset by the font's
+  vertical spacing and aligned as specified. See also `text_width()`.
 
   `text_size` restricts draw_text to only printing that many characters,
   *after* word-wrapping. This allows gradually revealing text in a stable
@@ -3532,8 +3547,7 @@ endpoints and borders.
   names of constants specified in the `game.json` file. Variables
   and expressions are not permitted in the values. To insert a regular
   brace within markup, use a slash escape, which must be typed in a string
-  using a double slash: `\\{` or `\\}`. _The current implementation
-  simply strips markup instead of applying it._
+  using a double slash: `\\{` or `\\}`. 
 
 `draw_tri(args)`
 : Named argument version of `draw_tri()`.
@@ -4428,7 +4442,7 @@ Sounds
 ![`quad://sounds/music-moon.sound.json`](../sounds/music-moon.mp3)  ![`quad://sounds/music-boss.sound.json`](../sounds/music-boss.mp3)
 ![`quad://sounds/music-vice.sound.json`](../sounds/music-vice.mp3)  ![`quad://sounds/music-saturday.sound.json`](../sounds/music-saturday.mp3)
 ![`quad://sounds/music-brawl.sound.json`](../sounds/music-brawl.mp3) ![`quad://sounds/music-credits.sound.json`](../sounds/music-credits.mp3)
-![`quad://sounds/music-days.sound.json`](../sounds/music-days.mp3)
+![`quad://sounds/music-days.sound.json`](../sounds/music-days.mp3)   ![`quad://sounds/music-viper.sound.json`](../sounds/music-viper.mp3)
 
 ### Loops
 
@@ -4443,7 +4457,7 @@ Sounds
 ![`quad://sounds/loop-built-this.sound.json`](../sounds/loop-built-this.mp3) ![`quad://sounds/loop-fight.sound.json`](../sounds/loop-fight.mp3)
 ![`quad://sounds/loop-select.sound.json`](../sounds/loop-select.mp3)  ![`quad://sounds/loop-metal.sound.json`](../sounds/loop-metal.mp3)
 ![`quad://sounds/loop-puzzle.sound.json`](../sounds/loop-puzzle.mp3) ![`quad://sounds/loop-triumphant.sound.json`](../sounds/loop-triumphant.mp3)
-![`quad://sounds/loop-dark-thriller.sound.json`](../sounds/loop-dark-thriller.mp3)
+![`quad://sounds/loop-dark-thriller.sound.json`](../sounds/loop-dark-thriller.mp3) ![`quad://sounds/loop-chilltech.sound.json`](../sounds/loop-chilltech.mp3)
 
 
 ### Coin
@@ -4885,11 +4899,11 @@ Fonts have a JSON descriptor file that looks like:
 
     // Spacing between letters and lines during rendering. If the
     // x spacing is zero (for script fonts), there will be no space between
-    // letters or digits, but space will still be added around symbols
+    // letters or digits, but space will still be added around symbols.
     "letter_spacing": {"x": 2, "y": 3},
 
     // Defaults to 1 pixel
-    "shadowSize": 1,
+    "shadow_size": 1,
 
     // Zero-based Y value of the baseline relative to char_size.
     // This is one less than the "height" of the baseline because
@@ -4922,17 +4936,20 @@ putting a copyright statement directly on the font itself.
 
 Fonts count towards the sprite sheet resource limits. Because a font is
 32x26 glyphs, this means that the largest `char_size` can be
-is 24x29 pixels if the `shadowSize` is one pixel.
+is 24x29 pixels if the `shadow_size` is one pixel.
 
 Fonts enforce uniform width on all full-size digits 0..9 so that
 numbers print in aligned columns. Avoid drawing fonts with one digit
 that is larger than most of the others (usually the "4")
 because they result in extra padding around all digits.
 
-When loaded into memory, the font object exposes a `font.line_height`
-property that is the spacing used between lines. This is chosen to
-make typical letters well spaced. It may leave some symbols
-overlapping on adjacent lines, especially for decorative fonts.
+`font.line_height`
+: When loaded into memory, the font object exposes a
+  `font.line_height` property that is the spacing used between
+  consecutive baselines. This is chosen to make typical letters well
+  spaced. It may leave some symbols overlapping on adjacent lines,
+  especially for decorative fonts. This is the height of the actual
+  characters plus the `char_size.y` value.
 
 
 Sound JSON
@@ -6855,7 +6872,7 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-2020 May TBD: Beta update 42
+2020 May 23: Beta update 42
 
 - Incompatible change: Removed subscripts as array indices. They are still valid characters for strings.
 - Incompatible change: renamed "sound" --> "audio" and "audio clip" --> "sound" in the API
@@ -6865,6 +6882,11 @@ Changes for both the specification and implementation in each release.
 - IDE open dialog now includes game descriptions and icons
 - P1's right stick and triggers no longer provide input to P2 unless P2 does not
   have a physical controller
+- New sound `loop-chilltech.sound.json`
+- New sound `music-vice.sound.json`
+- RPS game now times out after about 15 seconds when a player hasn't chosen
+- Serpitron game now has shorter showdown levels in 2-player games
+- Moved the code editor below the map/sprite/font view in the IDE
 - Added Vaporwave 3D example program
 - Added "New Asset..." dialog in the IDE for creating new sprites
 - Added `source_url` field for sprites to support export processesqu
@@ -6875,16 +6897,17 @@ Changes for both the specification and implementation in each release.
 - Added `Arcade` (quadplay native), `Arcade_X` (Xbox labels), and `Arcade_PS` (PlayStation labels) controller
   options
 - Added X-Arcade controller information to the manual
+- Added buttons (as well as D-pad) choices for RPS game to better conceal player movements on an arcade controller
 - Renamed map transformation functions to `transform_ws_to_map_space()`, `transform_map_space_to_ws()`, `transform_ws_z_to_map_layer()`,
   and `transform_map_layer_to_ws_z()`
 - Changed default tab/indentation size to four spaces to reduce conflicts with Python editors
 - The quantize tool now allows toggling the "dither" option after dropping the image
 - Made quantize tool display using nearest neighbor interpolation
-- Improved Safari performance of Across the Lake by warming the JIT and sprites during the
-  Title screen
-- Improved Safari performance for Beat the Gobblinsby eliminating large alpha-masked sprites
+- Improved Safari performance by warming the sprite blitter JIT during the quadplay logo screen
+- Improved Safari performance for Beat the Gobblins by eliminating large alpha-masked sprites
 - Improved Safari performance by removing explicit nearest-neighbor upscaling and using CSS zoom
 - Improved Safari load time on dual-core processors by spreading out asynchronous requests in time
+- Improved `lerp()` and `clamp()` performance
 - Fixed compilation of fractional degrees and percentages
 - Fixed map occlusion culling (was showing empty tiles)
 - Fixed loading quad:// games from the command line
@@ -6892,6 +6915,7 @@ Changes for both the specification and implementation in each release.
   to compensate
 - Fixed Safari mouse and touch event scaling
 - Fixed Debug UI layout not allowing full horizontal scrolling of the editor
+- Fixed button prompt alignment in Broderick-7 font
 
 2020 May 8: Beta update 41
 

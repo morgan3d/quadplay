@@ -1278,6 +1278,28 @@ if (_numBootAnimationFrames > 0) {
      _show(); yield;
    }
 
+   // Warm the jit by hitting all of the key sprite cases and randomizing parameters so that
+   // the jit doesn't over specialize (needed on Safari to prevent compilation stutters)
+
+   for (let i = 0; i < 150; ++i) {
+     // Alpha cases (the regular nontransformed alpha case is handled automatically by drawing the visible logo)
+     draw_sprite({sprite: _quadplayLogoSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
+        opacity: random(), z: random() - 100, angle: random(), scale: {x: random(), y: random()}, override_color: rgba(random(), random(), random(), random())});
+     draw_sprite({sprite: _quadplayLogoSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
+        opacity: random(), z: random() - 100});
+
+     // No-alpha cases (the regular nontransformed alpha case is handled automatically by drawing the visible logo)
+     draw_sprite({sprite: _opaqueSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
+        opacity: random(), z: random() - 100, angle: random(), scale: {x: random(), y: random()}, override_color: rgba(random(), random(), random(), random())});
+     draw_sprite({sprite: _opaqueSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
+        opacity: random(), z: random() - 100});
+     draw_sprite({sprite: _opaqueSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()), z: random() - 100});
+   }
+
+   // Hide the warmup sprites
+   draw_rect({x: SCREEN_SIZE.x * 0.5, y: SCREEN_SIZE.y * 0.5}, {x: 100, y: 100}, rgb(0,0,0), undefined, -1);
+
+
    const fade = min(96, _numBootAnimationFrames / 2);
    for (let k = 0; k < _numBootAnimationFrames; ++k) {
       set_background(gray(0));

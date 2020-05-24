@@ -26,10 +26,10 @@ def draw_choice(player) preserving_transform:
          const shadow = if blink then #000C else ∅
          const offset = if blink then 0 else xy(0, 1)
 
-         draw_text(font, prompt["[^]"], CHOICE_LOCATION.rock + offset, #fff, shadow, #000C, "center", "center")
-         draw_text(font, prompt["[<]"], CHOICE_LOCATION.paper + offset, #fff, shadow, #000C, "center", "center")
-         draw_text(font, prompt["[v]"], CHOICE_LOCATION.scissors + offset, #fff, shadow, #000C, "center", "center")
-         if show_heal: draw_text(font, prompt["[>]"], CHOICE_LOCATION.heal + offset, #fff, shadow, #000C, "center", "center")
+         draw_text(font, replace("[^] / (d)", prompt), CHOICE_LOCATION.rock + offset, #fff, shadow, #000C, "center", "center")
+         draw_text(font, replace("[<] / (c)", prompt), CHOICE_LOCATION.paper + offset, #fff, shadow, #000C, "center", "center")
+         draw_text(font, replace("[v] / (a)", prompt), CHOICE_LOCATION.scissors + offset, #fff, shadow, #000C, "center", "center")
+         if show_heal: draw_text(font, replace("[>] / (b)", prompt), CHOICE_LOCATION.heal + offset, #fff, shadow, #000C, "center", "center")
 
 
 enter
@@ -61,22 +61,23 @@ for player in player_array:
       
    else if player.health > 0:
       all_ready = false
-      
-      if player.is_human:
+
+      // If the player waits TOOO long, take them over with an AI
+      if player.is_human and mode_frames < TIMEOUT_FRAMES:
          // Make choices
          const gamepad = gamepad_array[player.index]
-         if gamepad.yy == -1:
+         if gamepad.yy == -1 or gamepad.dd:
             player.choice = "rock"
-         else if gamepad.xx == -1:
+         else if gamepad.xx == -1 or gamepad.cc:
             player.choice = "paper"
-         else if gamepad.xx == +1 and player.health < MAX_HEALTH:
+         else if (gamepad.xx == +1 or gamepad.bb) and player.health < MAX_HEALTH:
             player.choice = "heal"
-         else if gamepad.yy == +1:
+         else if gamepad.yy == +1 or gamepad.aa:
             player.choice = "scissors"
 
          if player.choice: play_sound(player.audio_clip)
             
-      else if ξ < 1%: // AI
+      else if ξ < 1% or mode_frames >= TIMEOUT_FRAMES: // AI
          play_sound(player.audio_clip)
          player.choice = if ξ < ⅔ (100% - player.health / MAX_HEALTH) then "heal" else random_value(ATTACKS)
 

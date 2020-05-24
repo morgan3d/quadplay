@@ -47,6 +47,7 @@
         "WIN_POINTS": {"type": "number", "value": 200},
         "NUM_HEART_PARTICLES": 1024,
         "ATTACKS":    {"type": "array", "value": ["rock", "paper", "scissors"]},
+        "TIMEOUT_FRAMES": {"type": "number", "value": 800},
         "ATTACK_DESCRIPTION": {"type": "raw", "value":
                                {
                                    "rock": "smashes",

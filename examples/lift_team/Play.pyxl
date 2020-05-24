@@ -1,0 +1,260 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+const AIR_UNIT  = 0
+const GROUND_UNIT = 1
+
+// When true, the ground unit is hooked to the air unit
+const FREE_STATE = 0
+
+// Not yet connected, but hook deployed
+const HOOK_STATE = 1
+
+// Connected
+const LIFT_STATE = 2
+
+let state = FREE_STATE
+
+const physics = make_physics()
+
+// Ground
+let ground_plane = make_entity({shape: "rect", size: xy(1024, 16), pos: xy(512, 0), friction: 1, stiction_factor: 10, density: infinity})
+physics_add_entity(physics, ground_plane)
+
+def make_player(i):
+    const y = if (i == AIR_UNIT) then 140 else 12
+    const spritesheet = if (i == AIR_UNIT) then player_chopper_sprite else player_mech_sprite
+        
+    const player = make_entity({
+        sprite: spritesheet[0][0],
+        spritesheet: spritesheet,
+        pos: xy(½ SCREEN_SIZE.x, y),
+        vel: xy(0, 0),
+        gamepad: gamepad_array[i],
+        index: i,
+        unit: i,
+        z: 1
+        })
+        
+    physics_add_entity(physics, player)
+    physics_attach(physics, "gyro", {entityB: player, angle: 0°})
+
+    return player
+
+// air player is always player_array[0]. We swap
+// the order of players to ensure this
+const player_array = [make_player(0), make_player(1)]
+
+
+// Ensure that the air unit is always first
+sort(player_array, "unit")
+
+const air_unit = player_array[AIR_UNIT]
+const ground_unit = player_array[GROUND_UNIT]
+
+let chain_entity_array = []
+let hook_entity = ∅ 
+
+def extend_hook():
+    state = HOOK_STATE
+    
+    // Create the chain
+    let prev = air_unit
+    const width = 1
+    const length = 6
+    //const chain_group = make_contact_group()
+    for i < 5:  
+        const curr = make_entity({
+            shape: "rect",
+            size: xy(width, length),
+            density: 0.5, drag: 0.08,
+            z: air_unit.z - 2 ε,
+            pos: air_unit.pos - xy(0, length * (i + ½)),
+            // Make heavy so that it hangs in interesting curves with
+            // some momentum
+            density: 3,
+            contact_hit_mask: 0,
+            contact_category_mask: 0})
+        push(chain_entity_array, curr)
+        physics_add_entity(physics, curr)
+        physics_attach(physics, "spring", {
+            entityA: prev,
+            pointA: (if i == 0 then xy(0, 0) else xy(0, 1 - ½ length)),
+            entityB: curr,
+            pointB: xy(0, ½ length - 1),
+            // Allow collide for performance; collisions were disabled
+            // by masks anyway
+            collide: true,
+            stiffness: 70%, 
+            damping: 40%
+            })
+        prev = curr
+          
+    // Create the hook
+    hook_entity = make_entity({
+        name: "hook", 
+        shape: "disk",
+        size: xy(4, 4),
+        is_sensor: true,
+        pos: prev.pos})
+    physics_add_entity(physics, hook_entity)
+    physics_attach(physics, "pin", {
+        entityA: prev,
+        pointA: xy(0, 1 - ½ length),
+        entityB: hook_entity,
+        pointB: xy(0, 0)})
+
+
+def connect_hook():
+    state = LIFT_STATE
+    // Get significantly lighter when hooked
+    // to avoid jerking the chopper
+    ground_unit.density = ⅓ 
+    physics_attach(physics, "spring", {
+            entityA: last_value(chain_entity_array),
+            pointA: xy(0, -3),
+            entityB: ground_unit,
+            pointB: xy(0, 4),
+            damping: 50%,
+            stiffness: 50%})
+
+
+def retract_hook():
+    state = FREE_STATE
+        
+    // Restore the mech's density
+    ground_unit.density = 1
+    
+    // Destroy the chain and hook
+    for link in chain_entity_array:
+        physics_remove_entity(physics, link)
+        
+    remove_all(chain_entity_array)
+    physics_remove_entity(physics, hook_entity)
+    hook_entity = ∅ 
+    
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+set_pause_menu({text:"Save to Title"})
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+set_pause_menu()
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_background(#3bf)
+
+
+// Movement
+for gamepad, force, vel, pos, unit in player in player_array:
+    if unit == AIR_UNIT:       
+        if gamepad.x:
+            force.x += 0.2 gamepad.x
+        else:
+            vel.x *= 97%
+        
+        if gamepad.y:
+            force.y += 0.12 gamepad.y
+        else:
+            vel.y *= 97%
+            
+        vel.y = min(|vel.y|, 2) * sign(vel.y)
+        vel.x = min(|vel.x|, 4) * sign(vel.x)
+            
+        // Hover, countering gravity
+        force.y += 0.001 * up_y() * entity_mass(player)
+
+        if gamepad.cc:
+            if state == FREE_STATE:
+                extend_hook()     
+            else:
+                retract_hook()
+
+        player.sprite = player.spritesheet[clamp(2 - ⌊|80% vel.x|⌋, 0, 2)][⌊¼ mode_frames⌋ mod 2]
+    
+    else: // GROUND
+    
+        if state ≠ LIFT_STATE:
+            vel.x = ½ gamepad.x
+       
+        
+    if gamepad.x: player.scale.x = gamepad.x
+
+physics_simulate(physics)
+
+
+// Hook the other unit
+if hook_entity and state == HOOK_STATE:
+    const contact_array = physics_entity_contacts(physics, ground_unit, ∅, ∅, 0xffffffff, "only")
+    for contact in contact_array:
+        if contact.entityA == hook_entity or contact.entityB == hook_entity:
+            connect_hook()
+            break            
+
+// Clamp positions
+for pos in player in player_array:
+    pos.y = clamp(pos.y, 10, SCREEN_SIZE.y - 10)
+
+local:
+    const limiter = if (state == LIFT_STATE) then air_unit else ground_unit
+    limiter.pos.x = clamp(limiter.pos.x, 100, 700) 
+    
+
+// Never let the air unit get too far away
+local:
+    const Δx = air_unit.pos.x - ground_unit.pos.x
+    const w = 60% SCREEN_SIZE.x
+    if |Δx| > w:
+        air_unit.pos.x = ground_unit.pos.x + sign(Δx) * w
+
+
+preserving_transform:
+    const camera = {pos: xy(lerp(air_unit.pos.x, ground_unit.pos.x, 75%), 112)}
+    
+    // Flip the axis so y=up
+    set_transform(xy(½ SCREEN_SIZE.x, ½ SCREEN_SIZE.y), xy(1, -1))
+    set_camera(camera)
+    
+    draw_map(quantum_district_map)
+
+    for i < 30:
+        draw_sprite(cloud_sprite, xy(2000 hash(i), 100 + 100 hash(i+100)))
+
+    // Display hook instruction
+    if ‖ air_unit.pos - ground_unit.pos ‖ < LIFT_RANGE and state == FREE_STATE:
+        draw_text(prompt_font, replace("(c) LOWER HOOK", air_unit.gamepad.prompt), 
+            air_unit.pos + xy(0, 10), #fff, ∅, #000, "center", "bottom", air_unit.z)
+        
+    for player in player_array:
+        draw_entity(player)
+
+    // Draw the chain when deployed    
+    if size(chain_entity_array) > 0:
+        draw_line(air_unit.pos, chain_entity_array[0].pos, #000, chain_entity_array[0].z)
+    for i < size(chain_entity_array) - 1:
+        draw_line(chain_entity_array[i].pos, chain_entity_array[i + 1].pos, #000, chain_entity_array[i].z)
+    if state == LIFT_STATE:
+        // Connect to the ground mech
+        draw_line(ground_unit.pos + xy(0, 4), last_value(chain_entity_array).pos, #000, chain_entity_array[0].z)
+        
+    //draw_physics(physics)
+
+for index in player in player_array: 
+    // Stats
+    const text_pos = xy((SCREEN_SIZE.x - 16) * index + 2, (SCREEN_SIZE.y - 16) * (1 - index) + 4)
+    draw_text({
+        font: font, 
+        text: "P" + (index + 1), 
+        pos: text_pos, 
+        color: #000,
+        outline: #ccc,
+        shadow: #000,
+        z: 1024
+        }) 
+  
+

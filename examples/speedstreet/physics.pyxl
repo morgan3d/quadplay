@@ -1,7 +1,7 @@
 
 /* Snap to nearest ODD layer, which is where collision data are stored. */
-def transform_draw_z_to_map_solid_layer(z):
-   const layer = ⌊transform_draw_z_to_map_layer(cityMap, z)⌋
+def transform_ws_z_to_map_solid_layer(z):
+   const layer = ⌊transform_ws_z_to_map_layer(cityMap, z)⌋
    return layer + 1 - (layer bitand 1)
 
 
@@ -49,8 +49,8 @@ def surfacePointUnder(pos, z):
    // Worst case, span maxSteps * coarseScale pixels
    const maxSteps = 64
 
-   const layer = transform_draw_z_to_map_solid_layer(z)
-   let mapPos = transform_draw_to_map(cityMap, pos)
+   const layer = transform_ws_z_to_map_solid_layer(z)
+   let mapPos = transform_ws_to_map_space(cityMap, pos)
    
    // Offset the y by z
    mapPos.y += (cityMap.z_scale * (layer - 9) * skewY) * pixelMapStepY
@@ -87,8 +87,8 @@ def surfacePointUnder(pos, z):
 /* True if this map position is solid, determined by
     testing the collision layers of the map. */
 def isSolid(pos, z):
-   const layer = transform_draw_z_to_map_solid_layer(z)
-   let mapPos = transform_draw_to_map(cityMap, pos)
+   const layer = transform_ws_z_to_map_solid_layer(z)
+   let mapPos = transform_ws_to_map_space(cityMap, pos)
    // Offset the y by z
    mapPos.y += (cityMap.z_scale * (layer - 9) * skewY) / cityMap.sprite_size.y
    const color = get_map_pixel_color(cityMap, mapPos, layer)

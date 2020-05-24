@@ -1080,11 +1080,13 @@ function onCodeEditorDividerDragEnd() {
 function onCodeEditorDividerDrag(event) {
     if (codeEditorDividerInDrag) {
 	const codePlusFrame = document.getElementById('codePlusFrame');
-	const codeEditorContentFrame = document.getElementById('codeEditorContentFrame');	
-
-	codePlusFrame.style.gridTemplateRows = `${Math.min(codePlusFrame.clientHeight - 6, Math.max(0, event.clientY - 26))}px 7px auto`;
+        const topHeight = Math.min(codePlusFrame.clientHeight - 6, Math.max(0, event.clientY - 26 - 24));
+	codePlusFrame.style.gridTemplateRows = `auto ${topHeight}px auto 1fr`;
 	event.preventDefault();
         
-        // Do not resize the aceEditor while dragging--it is slow. Wait until onCodeEditorDividerDragEnd()
+        // Do not resize the aceEditor while dragging most of the time--it is slow. Wait until onCodeEditorDividerDragEnd()
+        if (Math.random() < 0.07) {
+            aceEditor.resize();
+        }
     }
 }
