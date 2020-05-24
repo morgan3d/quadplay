@@ -2445,6 +2445,7 @@ function showOpenGameDialog() {
    when the type of asset to be added is changed by the user. */
 function onOpenGameTypeChange() {
     const t = document.getElementById('openGameType').value;
+    console.log(t);
     let s = '<ol id="openGameListOL" class="select-list" style="font-family: Helvetica, Arial; font-size: 120%; white-space: normal">\n';
     if (openGameFiles) {
         const fileArray = openGameFiles[t];
