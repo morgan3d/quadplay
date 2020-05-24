@@ -2424,7 +2424,6 @@ function showOpenGameDialog() {
 
     const gameListURL = location.origin + getQuadPath() + 'console/games.json?';
 
-    console.log(gameListURL)
     // Fetch the asset list
     LoadManager.fetchOne({forceReload: true}, gameListURL, 'json', null, function (json) {
         openGameFiles = json;
@@ -2432,6 +2431,10 @@ function showOpenGameDialog() {
             // Remove the alpha tester options
             document.getElementById('openTestsOption').remove();
             document.getElementById('openAlphaOption').remove();
+            if (json.mine && json.mine.length === 0) {
+                // Select built-ins if I don't have any games
+                document.getElementById('openGameType').value = 'builtins';
+            }
         }
         onOpenGameTypeChange();
     });
