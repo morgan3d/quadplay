@@ -2429,8 +2429,10 @@ function showOpenGameDialog() {
         openGameFiles = json;
         if (! json.tests) {
             // Remove the alpha tester options
-            document.getElementById('openTestsOption').remove();
-            document.getElementById('openAlphaOption').remove();
+            let a = document.getElementById('openTestsOption');
+            if (a) { a.remove(); }
+            a = document.getElementById('openAlphaOption').remove();
+            if (a) { a.remove(); }
             if (json.mine && json.mine.length === 0) {
                 // Select built-ins if I don't have any games
                 document.getElementById('openGameType').value = 'builtins';
@@ -2445,7 +2447,6 @@ function showOpenGameDialog() {
    when the type of asset to be added is changed by the user. */
 function onOpenGameTypeChange() {
     const t = document.getElementById('openGameType').value;
-    console.log(t);
     let s = '<ol id="openGameListOL" class="select-list" style="font-family: Helvetica, Arial; font-size: 120%; white-space: normal">\n';
     if (openGameFiles) {
         const fileArray = openGameFiles[t];
