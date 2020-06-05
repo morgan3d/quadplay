@@ -5,6 +5,9 @@
    https://developers.google.com/web/updates/2013/12/300ms-tap-delay-gone-away */
 html {
     touch-action: manipulation;
+
+    /** Disable apple mouse back gesture https://stackoverflow.com/questions/15829172/stop-chrome-back-forward-two-finger-swipe */
+    overscroll-behavior-x: none;
 }
  
 @font-face {
@@ -99,6 +102,9 @@ canvas {
 }
 
 body {
+    /** Disable apple mouse back gesture https://stackoverflow.com/questions/15829172/stop-chrome-back-forward-two-finger-swipe */
+    overscroll-behavior-x: none;
+
     font-family: Helvetica, Arial;
     font-size: 13px;
     margin: 0;
@@ -487,14 +493,15 @@ div.disabled span.label, div.disabled:active span.label {
 #editorFrame {
     overflow:         hidden;
     position:         absolute;
-    left:             176px;
-    top:              23px;
+    left:             196px;
+    top:              0px;
     right:            412px;
     bottom:           0px;
 }
 
 .WideIDEUI #editorFrame {
     left: 0px;
+    /* Sized for large screens */
     right: 769px;
 }
 
@@ -561,7 +568,7 @@ code, .code {
 /* Contains the code editor and maybe a preview pane */
 #codePlusFrame {
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0; left: 0; right: 0; bottom: 0px;
     background: #302b2b;
     visibility: hidden;
     display: grid;
@@ -595,7 +602,8 @@ code, .code {
 #ace {
     grid-area: codeEditor;
     width: 100%;
-    margin-bottom:6px;
+    /* Make sure that the bottom row is visible */
+    /*margin-bottom:23px; */
     box-sizing:         border-box;
     -moz-box-sizing:    border-box;
     -webkit-box-sizing: border-box;
@@ -630,7 +638,7 @@ code, .code {
 
 #debugger {
     position: absolute;
-    top:      288px;
+    top:      265px;
     right:    0px;
     width:    412px;
     bottom:   0px;
@@ -640,7 +648,7 @@ code, .code {
 }
 
 .WideIDEUI #debugger {
-    top: 515px;
+    top: 492px;
     width: 771px;
 }
 
@@ -669,9 +677,9 @@ code, .code {
 
 .project {
     position: absolute;
-    top: 23px;
+    top: 0px;
     left: 0px;
-    width: 165px;
+    width: 195px;
     bottom: 0px;
     padding: 5px;
     font-size: 14px;
@@ -1273,6 +1281,25 @@ svg.modeGraph text.edgeLabel {
 #debugWatchDisplayPane td {
     border: solid 1px #888;
     padding-left: 5px;
+}
+
+
+
+/** Wide IDE is 1.5x instead of 2x on smaller screens */
+@media screen and (max-device-width: 1600px) {
+    .WideIDEUI #editorFrame {
+        right: 578px;
+    }
+
+    .WideIDEUI .emulator, .WideIDEUI div#emulatorFrame {
+        width: 576px;
+        height: 380px;
+    }
+
+    .WideIDEUI #debugger {
+        width: 578px;
+        top: 408px;
+    }
 }
 
 

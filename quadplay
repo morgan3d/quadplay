@@ -254,6 +254,8 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         if webpath == config_query_webpath or webpath == asset_query_webpath or webpath == game_query_webpath:
             response_obj = {}
             if webpath == config_query_webpath:
+                if not args.kiosk:
+                    response_obj['IDE_USER'] = os.environ['USERNAME' if isWindows else 'USER']
                 response_obj['rootPath'] = server_root_path
                 response_obj['hasFinder'] = isWindows or isMacOS;
                 if (isWindows or isMacOS):

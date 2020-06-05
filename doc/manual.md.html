@@ -130,7 +130,7 @@ quadplay https://morgan3d.github.io/somegame/foo.game.json
 
 These examples assume that your directory structure is:
 
-**********************************************************
+*****************************************************************************
 *   📂 HOME (~/ on Mac and Linux, %HOMEDRIVE%%HOMEPATH% on Windows)
 *   |
 *   +-- 📂 my_quadplay
@@ -160,7 +160,7 @@ These examples assume that your directory structure is:
 *   +-- 📂 sprites
 *   |   |
 *   ⋮   ⋮
-**********************************************************
+*****************************************************************************
 [Directory structure with the `quadplay` script in the root.]
 
 The directory and `.game.json` file do not have to have the same
@@ -177,7 +177,7 @@ You can use the built-in assets from the developer kit, existing ones
 from sites like [OpenGameArt.org](http://opengameart.org) and
 [FreeSound](http://freesound.org), or create your own using:
 
-- PNG pixel art editor for sprites and fonts (_[Gimp](https://www.gimp.org/), [AseSprite](https://www.aseprite.org/), Photoshop, GraphicsGale, etc._)
+- PNG pixel art editor for sprites and fonts (_[Gimp](https://www.gimp.org/), [AseSprite](https://www.aseprite.org/), [Krita](https://krita.org/en/), Photoshop, GraphicsGale, etc._)
 - MP3 sound tools (_[BFXR](https://www.bfxr.net/), [Audacity](https://www.audacityteam.org/), etc._)
 - TMX map tool ([Tiled](https://www.mapeditor.org/))
 
@@ -1467,6 +1467,26 @@ Array
 `insert(array, i, x,...)`
 : Inserts the values into the array, starting at index `i` (as in, `array[i] = x` on return)
   and returns the first value inserted. Similar to Python insert and JavaScript splice functions.
+
+`iterate(array, callback)`
+: Iterates through array in order using a callback function, with
+   optional O(1) order-preserving removal. This is an imperative
+   version of map(), filter(), and list comprehension primitives from
+   other languages.
+
+   If `callback` is a string, iterate then calls `array[i][callback](array[i])`
+   on each element.  If `callback` is a function, it instead calls `callback(array[i])`
+   on each element.
+   
+   Return values from the called function have the following effects:
+
+   - `iterate.REMOVE`: remove the current value and continue iterating
+   - `iterate.BREAK`: immediately stop iterating
+   - `iterate.REMOVE_AND_BREAK`: remove the current element and then stop processing
+   - `iterate.CONTINUE`: continue with iteration. This is not required; as long as the previous
+      values are not returned by the callback, the iterator will still continue
+
+   It is illegal for the callback to modify the array itself during iteration.
 
 `join(array, separator (= ""), lastSeparator (= separator), pairSeparator (= lastSeparator), empty (= ""))`
 : Joins the elements of the array into a string. Each element converted to a string with `unparse()` if it is not already a string.
@@ -3768,29 +3788,29 @@ indices. The map's z-axis corresponds to layers.
 : Returns the color of the pixel in `map` at the corresponding
   `map_coord` and `round(layer)`. Returns `nil` for out of
   bounds values and empty sprites. See also
-  `get_map_pixel_color_by_draw_coord()`.
+  `get_map_pixel_color_by_ws_coord()`.
 
-`get_map_pixel_color_by_draw_coord(map, draw_coord, drawZ (= 0), replacement_array (= ∅))`
+`get_map_pixel_color_by_ws_coord(map, ws_coord, ws_z (= 0), replacement_array (= ∅))`
 : Returns the pixel color in `map` at the corresponding `draw_coord`
-  and `drawZ` using `transform_draw_to_map()`. The result is guaranteed
+  and `ws_z` using `transform_ws_to_map_space()`. The result is guaranteed
   to match what was drawn by `draw_map()`. Returns `nil` for out of
   bounds values and empty sprites. See also `get_map_pixel_color()`.
 
 `get_map_sprite(map, map_coord, layer (= 0), replacement_array (= ∅))`
 : Returns the sprite in `map` at the corresponding `map_coord` and
   `layer` using rounding. Returns `nil` for out of bounds values. See
-  also `get_map_sprite_by_draw_coord()`.
+  also `get_map_sprite_by_ws_coord()`.
 
-`get_map_sprite_by_draw_coord(map, draw_coord, drawZ (= 0), replacement_array (= ∅))`
+`get_map_sprite_by_ws_coord(map, ws_coord, ws_z (= 0), replacement_array (= ∅))`
 : Returns the sprite in `map` at the corresponding `draw_coord` and
-  `drawZ` using `transform_draw_to_map` and rounding to compute the
+  `ws_z` using `transform_ws_to_map_space()` and rounding to compute the
   coordinates. Returns `nil` for out of bounds values. See also
   `get_map_sprite()`.
 
 `set_map_sprite(map, map_coord, sprite, layer (= 0))`
 : Sets the corresponding map sprite. Does nothing if `map_coord` is out of bounds.
 
-`set_map_sprite_by_draw_coord(map, draw_coord, sprite, drawZ (= 0))`
+`set_map_sprite_by_ws_coord(map, draw_coord, sprite, ws_z (= 0))`
 : Sets the corresponding map sprite. Does nothing if `draw_coord` is out of bounds.
 
 `transform_ws_to_map_space(map, ws_point)`
@@ -3873,6 +3893,18 @@ in the desired order regardless of the order in which drawing executes.
 Time
 ----------------------------------------------------------
 
+Quadplay always runs your `frame` event code at 60 fps. You can
+hardcode this assumption into your program. For example, the built-in
+simulation routines all use "frame" as the unit of time (and "pixel"
+as the unit of distance). 
+
+The _display_ may not refresh at 60 fps if
+your program is consuming too much computation, because the runtime
+will start dropping graphics calls to maintain the simulation rate.
+It will scale all the way down to 12 fps on refresh while still
+trying to execute your main loop at 60 fps so that simulation is
+unaffected. 
+
 `game_frames`
 : Number of elapsed 1/60 frames since the program started. The program may
   mutate this global variable.
@@ -3907,15 +3939,14 @@ Time
 Path Finding
 ----------------------------------------------------------
 
-*`find_path(start_node, goal_node, estimate_path_cost, edge_cost, get_neighbors, node_to_ID, graph_obj (= ∅))`*
+`find_path(start_node, goal_node, estimate_path_cost, edge_cost, get_neighbors, node_to_ID, graph_obj (= ∅))`
+: `find_path()` is a general-purpose path-finding routine for any kind of
+  world representation. It uses the "A*" (A-star) algorithm. _See also `find_map_path()` for a simpler, map-specific version._
 
-_See also `find_map_path` for a simpler map-specific version._
-
-`find_path()` is a general-purpose path-finding routine for any kind of
-world representation. It uses the "A*" (A-star) algorithm. The return value is an
-array of nodes to traverse, including the `start_node` and `goal_node`,
-to follow the shortest path discovered, or `∅` if no path
-exists.
+  The return value is an array of nodes to traverse to follow the shortest path discovered.
+  The first node in the returned path will
+  be the `start_node` and the last node will be the `goal_node`.
+  `find_path()` will return `∅` if no path exists between the `start_node` and `goal_node`.
 
 To recover the cost of the path, use the idiom:
 
@@ -3933,7 +3964,7 @@ better understanding of how they are typically computed.
 `goal_node`
 : The ending location, in your chosen node representation.
 
-`estimate_path_cost(nodeA, nodeB, graphObj)`
+`estimate_path_cost(nodeA, nodeB, graph_obj)`
 : Returns a numerical estimate of the cost for the path between
   `nodeA` and `nodeB`. For example, the straight line distance.
   The more accurate this estimate is, the faster that the algorithm
@@ -3998,7 +4029,36 @@ Debugging
 
 The following are provided for debugging and development support
 only. They may do nothing on some platforms and may crash on others.
-These APIs are subject to change.
+These APIs are subject to change. None of these are regular functions
+or variables. They are special syntax that cannot be bound as values.
+
+For enabling or disabling large sets of debugging statements at once in a
+program, they can be masked using standard boolean operators. For example:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+// Error on unimplemented routine
+todo("Implement explosions")
+
+// Only error if your own debug_graphics constant is true.
+// You can change a constant from the IDE while the program
+// is running!
+debug_graphics and todo("Implement explosions")
+
+// Error if running in the IDE using a local quadplay server
+// and the current developer's local machine username is "stephan"
+(IDE_USER == "stephan") and todo("Implement explosions")
+
+// Only print if debug_graphics is true.
+debug_graphics and debug_print("Running iteration" + i)
+
+// Print when your own LOG_LEVEL constant is greater than 5
+(LOG_LEVEL > 5) and debug_print("Simulating")
+
+// Print when the 2nd bit of your own LOG_MASK constant 
+// is set
+(LOG_MASK bitand 0b010) and debug_print(format_number(x, "%"))
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 `assert(x, msg (= "Assertion Failed"))`
 : If `x` is true, does nothing. If `x` is false, creates the
@@ -4025,32 +4085,6 @@ These APIs are subject to change.
   shown. This is *not* a function. It is a special syntax. You may not
   pass the `debug_watch` command as if it were a function.
 
-`device_control(command, ...)`
-: Reserved function for executing device-specific features such as the
-  game launcher, GPIO, and alternative input devices. `command` is a
-  string telling the host which control feature to execute, and the
-  remaining arguments are passed to it. All `device_control()` commands
-  may change in future releases and may not work on any given platform.
-
-  <style>table.nested td:first-child {padding-right: 25px; white-space: nowrap;} 
-         table.nested th {border-bottom: 1px solid} </style>
-  <table class="nested">
-    <tr><th> Parameters                      </th><th> Effect </th></tr>
-    <tr><td> `"start_GIF_recording"`         </td><td> Begin GIF recording.</td></tr>
-    <tr><td> `"stop_GIF_recording"`          </td><td> End GIF recording. When the compression completes, the GIF will appear in a new tab.</td></tr>
-    <tr><td> `"start_preview_recording"`     </td><td> Begin preview video recording. There is no "stop" command because this terminates automatically after a set time.</td></tr>
-    <tr><td> `"take_screenshot"`             </td><td> Take a screenshot and download it to the local disk. </td></tr>
-    <tr><td> `"set_pad_type", index, "type"` </td><td> Set `gamepad_array[index].type` and the corresponding prompts. </td></tr>
-    <tr><td> `"get_analog_axes", index`      </td><td> Return an `xy()` of the analog axis values for `gamepad_array[index]`, without D-pad snapping.
-                                                       Needed for accessing Atari paddles, car pedals, steering wheels, and flight stick throttles in
-                                                       a meaningful way.</td></tr>
-    <tr><td> `"get_mouse_state"`             </td><td> Return `{x:, y:, button_array:}` for the current mouse position and buttons. Each element of
-                                                       `button_array` is 0 or 1. There are at least two buttons, but may be more.</td></tr>
-    <tr><td> `"set_debug_flag", flagname, bool`</td><td> Set the enabled state of an IDE debugging flag. The flagnames are 
-                                                       `"entity_bounds"`, `"assert"`, `"debug_print"`, 
-                                                        `"debug_watch"`, `"physics"`.</td></tr>
-    <tr><td> `"get_debug_flag", flagname`    </td><td> Return the state of an IDE debugging flag.</td></tr>
-  </table>
 
 `draw_bounds(e, color (= gray(60%)), recurse (= true))`
 : Render a debugging view of the bounds of an entity or other object `e`
@@ -4060,6 +4094,18 @@ These APIs are subject to change.
 
 `draw_physics(physics)`
 : Render a debugging view of the physics system
+
+`IDE_USER`
+: A string constant bound to the `USER` environment variable for the operating
+  system. This is "anonymous" when not running the IDE or a quadplay local
+  server.
+
+`todo`
+: Same as `todo()`
+
+`todo(message (= ""))`
+: If todo errors are enabled in the IDE, reports the error `"Unimplemented: " + message`,
+  otherwise does nothing.
 
 
 Persistence
@@ -4089,6 +4135,37 @@ and persistent worlds.
   characters for the unparsed value for each key and a maximum size of
   128 keys per application. There is no way for two different games to
   read each other's values.
+
+
+Raw Device Access
+-----------------------------------------------------------
+
+`device_control(command, ...)`
+: Reserved function for executing device-specific features such as the
+  game launcher, GPIO, and alternative input devices. `command` is a
+  string telling the host which control feature to execute, and the
+  remaining arguments are passed to it. All `device_control()` commands
+  may change in future releases and may not work on any given platform.
+
+  <style>table.nested td:first-child {padding-right: 25px; white-space: nowrap;} 
+         table.nested th {border-bottom: 1px solid} </style>
+  <table class="nested">
+    <tr><th> Parameters                      </th><th> Effect </th></tr>
+    <tr><td> `"start_GIF_recording"`         </td><td> Begin GIF recording.</td></tr>
+    <tr><td> `"stop_GIF_recording"`          </td><td> End GIF recording. When the compression completes, the GIF will appear in a new tab.</td></tr>
+    <tr><td> `"start_preview_recording"`     </td><td> Begin preview video recording. There is no "stop" command because this terminates automatically after a set time.</td></tr>
+    <tr><td> `"take_screenshot"`             </td><td> Take a screenshot and download it to the local disk. </td></tr>
+    <tr><td> `"set_pad_type", index, "type"` </td><td> Set `gamepad_array[index].type` and the corresponding prompts. </td></tr>
+    <tr><td> `"get_analog_axes", index`      </td><td> Return an `xy()` of the analog axis values for `gamepad_array[index]`, without D-pad snapping.
+                                                       Needed for accessing Atari paddles, car pedals, steering wheels, and flight stick throttles in
+                                                       a meaningful way.</td></tr>
+    <tr><td> `"get_mouse_state"`             </td><td> Return `{x:number, y:number, dx:number, dy:number, xy:xy(...), dxy:xy(...), button_array:[...]}` for the current mouse position and buttons. Each element of
+                                                       `button_array` is 0 or 1. There are at least two buttons, but may be more.</td></tr>
+    <tr><td> `"set_debug_flag", flagname, bool`</td><td> Set the enabled state of an IDE debugging flag. The flagnames are 
+                                                       `"entity_bounds"`, `"assert"`, `"debug_print"`, 
+                                                        `"debug_watch"`, `"physics"`.</td></tr>
+    <tr><td> `"get_debug_flag", flagname`    </td><td> Return the state of an IDE debugging flag.</td></tr>
+  </table>
 
 
 Intrinsics
@@ -4476,6 +4553,7 @@ Sounds
 ![`quad://sounds/14-Shoot.sound.json`](../sounds/14-Shoot.mp3) ![`quad://sounds/15-Shoot.sound.json`](../sounds/15-Shoot.mp3)
 ![`quad://sounds/16-Shoot.sound.json`](../sounds/16-Shoot.mp3) ![`quad://sounds/17-Shoot.sound.json`](../sounds/17-Shoot.mp3)
 ![`quad://sounds/18-Shoot.sound.json`](../sounds/18-Shoot.mp3) ![`quad://sounds/19-Shoot.sound.json`](../sounds/19-Shoot.mp3)
+![`quad://sounds/shoot-10.sound.json`](../sounds/shoot-10.mp3)
 
 ### Explode
 
@@ -4573,10 +4651,7 @@ options. Project files should have the double extension `.game.json`.
   // as a TODO list, game design doc, manual, or library specification.
   // These can be HTML, Markdeep (md.html), Markdown (.md), or text (.txt) format
   "docs":           [
-       {"name": "Design",
-        "url":  "gdd.md.html"},
-
-       // Raw URLs are supported as well
+       "gdd.md.html",
        "todo.md"
   ],
 
@@ -4731,8 +4806,14 @@ The available constants types are:
 - `hsv`
 - `hsva`
 - `raw`
+  - Loaded from a json or yml file or inline as a json value. When in 
+    an external file, must be at top level and not nested inside an array or object.
 - `object`
 - `array`
+- `reference`
+  - The value of a reference is the name of another constant or asset. These
+    can be recursive, but obviously cannot form a cycle. References must be 
+    defined at top level and not nested inside an array or object.
 <!-- - `table` [tbd] -->
 
 ### `raw` Format
@@ -4744,9 +4825,10 @@ Note that the `raw` format is restricted to values that are expressible in those
 formats and does not support the full GUI editors and other format features.
 
 `raw` type constants with URLs must be top-level constants. They
-cannot be embedded within other constants.
-
-<!-- xy, xyz, rgb, rgba, arrays, grids, and objects have elements that are themselves values. -->
+cannot be embedded within other constants. This is required in order
+to separate the asynchronous loading from constant evaluation in the
+implementation and to ensure that GUI editors can be built effectively
+for objects and arrays.
 
 
 Sprite JSON
@@ -5021,7 +5103,7 @@ in files ending with `.tmx`. Only the following properties are currently support
 - Orthogonal
 - CSV format
 - Tile layers (other layers are ignored)
-- Embedded tile set
+- Embedded tileset (a PNG reference in the TMX, _not_ a TSX file)
 
 Flipped sprites (horizontal, vertical, and both) in TMX maps are
 supported. Rotated sprites are not supported.  Note that 180 degree
@@ -5035,6 +5117,9 @@ The easiest way to create these is using the open source [Tiled](https://www.map
 editor, which has pay-what-you-want precompiled binaries for Windows, macOS, and Linux. The
 sprite sheet from the map file will be used for visualization if it is available in the IDE,
 but map rendering is performed using a sprite sheet at runtime.
+
+When drawing, layer zero for `draw_map()` corresponds to the lowst layer in Tiled and
+the layer indices increase upwards.
 
 
 PyxlScript Language
@@ -5576,7 +5661,7 @@ confusing and redundant expression, if that's really what was intended) `x=y+-(1
 ### Implicit Multiplication
 
 Multiplication is implicit wherever a number is immediately followed by a parenthesized
-expression or variable (including a function call). This also ocurs when any exponent
+expression or variable (including a function call). This also ocurrs when any exponent
 appears immediately preceeding a parenthesized expression or variable, and where two
 parenthesized expressions are back to back. For example,
 `2x`, `x²y`, `3(x+y)`, `(y+2)(x+1)`.
@@ -5624,7 +5709,7 @@ Symbol         | ASCII           | Value
                | `ASSETS`        | an object mapping all game-specific assets to their values
 
 
-Flow Control
+Loops and Flow Control
 --------------------------------------------------------------------------
 
 The flow control statements are:
@@ -5633,7 +5718,8 @@ The flow control statements are:
   - `if` conditional with optional `else` and `else if` clauses
   - `while` loop
   - `until` loop
-  - `for` loop, with optional `with` expansion
+  - `for` loop and `for...in` loop, both with optional `with` expansion.
+     _See also the `iterate()` function_.
   - `break` and `continue` within loops
   - `preserving_transform` and `local`, which do not have branching flow
     but do create local scopes
@@ -5683,12 +5769,47 @@ for f in array: debug_print(f())
 that the value will reflect the time of the capture. This avoids many common bugs when using
 first class functions with loops.
 
+Container iteration `for` loops iterate over the keys of a object, the
+characters of a string, or the elements of an array. 
 
-Container iteration `for` loops iterate over the keys of a object, the characters of a string,
-or the elements of an array _as of the beginning of the loop_. If the container is modified
-during iteration, the original is still used. That means that you can delete elements from the array
-without affecting the iteration. The Java/C++ equivalents of `for`-loop conditions
-are:
+`while` loops evaluate the condition at the top of the loop for every
+iteration.
+
+`for` loops evaluate the bounds once, before the first iteration.
+
+`for...in` loops evaluate the container expression once, before the
+first iteration.
+
+It is illegal (and will usually result in an error) to add or remove
+values from the container of a `for...in` loop. This semantic avoids
+confusing situations for the programmer and is necessary for
+performance optimizations in the iterator implementation. Changing
+the order of values is legal, but discouraged because the iterator
+will touch each slot in order and will skip or duplicate values if they
+change slots. Writing to the current value is legal and frequently useful.
+
+If you would like to add or remove from the container, transform your code from
+`for x in container:` to `for x in clone(container):`. Cloning is
+fairly fast in PyxlScript. Or, use the syntax
+`let i = 0; while i < size(container): let x = container[i] ... ++i` and account for the
+index and size changes in your own iteration.
+
+The main variations of a `for...in` loop are:
+
+- `for key in object:`
+- `for value at key in object:`
+- `for value in array:`
+- `for value at index in array:`
+- `for value at index in string:`
+
+The value variable is bound with `let`, so assignment to the value
+variable is legal but will not affect the underlying value in the array.
+
+In any loop, `break` immediately terminates the tightest enclosing loop
+and `continue` immediately begins the next iteration of the tightest
+enclosing loop.
+
+The Java/C++ equivalents of `for`-loop conditions are:
 
 quadplay✜             | Java/C++
 ----------------------|------------------------
@@ -5698,10 +5819,10 @@ quadplay✜             | Java/C++
 `for 4 &lt; i &lt; k` | `for (i = 5; i &lt; k; ++i)`
 `for x ∈ S`           | `for (x : S)`
 
-The upper bound is evaluated for each loop iteration.
-
-You can pack a `for` and `with` statement together by chaining `∈` expressions, in what
-is called a `for`-`with` loop:
+You can pack a `for` and `with` statement together by chaining `∈`
+expressions, in what is called a `for`-`with` loop. The properties
+exposed by the `with` are references to the actual values and can be
+mutated directly.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 for x,y ∈ point ∈ set:
@@ -5752,6 +5873,51 @@ while x != "end":
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ### Examples
+
+#### `for` loop variations
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+// Iterate over each current enemy once, destroying those
+// that overlap the missile
+for enemy in clone(enemy_array):
+    if overlaps(enemy, missile):
+        remove_value(enemy_array, enemy)
+        
+
+// Regenerate hit points for every player
+for health, regen_rate in player in player_array:
+    health += regen_rate
+
+
+// Position each equally-spaced satellite
+for satellite at i in satellite_array:
+    const a = i * 360deg / size(planet_array)
+    satellite.pos = xy(cos a, sin a) * ORBIT_RADIUS
+
+
+// Iterate over an object's keys
+for rating at stat in player.stats:
+    draw_text(font, stat + ": " + format_number(rating, "%"), pos, #FFF)
+    pos.y += font.line_height
+
+
+// Iterate over an object used as a set
+already_visited[current_room] = true
+
+for room_name in already_visited:
+    draw_text(font, room_name, pos, #FFF)
+    pos.y += font.line_height
+    
+
+// Make a segmented-body centipede move
+if joy.x or joy.y:
+    // Don't use += because the loop passes objects instead of copying them
+    centipede[0] = centipede[0] + joy.xy
+    for 0 < i < size(centipede):
+        centipede[i] = centipede[i - 1]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[`for` loop examples]
+
 
 #### Array Iteration
 
@@ -6742,6 +6908,7 @@ The quadplay✜ IDE and compiler are copyright 2019-2020 Morgan McGuire, includi
 - [`quadplay-ide.js`](../console/quadplay-ide.js)
 - [`quadplay-edit-asset.js`](../console/quadplay-edit-asset.js)
 - [`quadplay-edit-code.js`](../console/quadplay-edit-code.js)
+- [`quadplay-edit-game.js`](../console/quadplay-edit-code.js)
 - [`quadplay-edit-constant.js`](../console/quadplay-edit-constant.js)
 - [`quadplay-font.js`](../console/quadplay-font.js)
 - [`quadplay-load.js`](../console/quadplay-load.js)
@@ -6871,6 +7038,53 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 June TBD: Beta update 43
+
+- Incompatible change: it is now illegal to mutate the container being iterated over
+  by a `for...in` loop. Use `for x in clone(container):` as a workaround if you need
+  mutation, which is still relatively fast.
+- Incompatible change: `for` loops now evaluate the upper bound only once, before the loop body begins
+- Optimized nonrotated opaque sprite drawing by up to 2x and halved memory usage by reducing 
+  GPU implementation to true 16 bit
+- Optimized Safari sprite drawing using forced integer coordinates for up to 4x performance
+  increases in specific cases
+- Optimized rotated and scaled opaque sprite drawing by 10% by handling this case separate
+  from tinting, alpha test, and opacity
+- Optimized thick line rendering by reducing virtual CPU Logic overhead
+- Optimized default `for` and `for...in` loops under the new semantics
+- The game.json file is now directly editable in the IDE
+- Errors now report the filename with the URL truncated if it matches the game URL
+- Added `IDE_USER` constant
+- Added `iterate()` function
+- The game.json structure for docs stores only raw URLs now, not metadata
+- Made the project pane wider to make it easier to see long variable names
+- Disabled browser navigation hotkeys to prevent accidentally leaving
+  the IDE
+- Disabled chrome two-finger back gesture to prevent accidentally leaving
+  games or the IDE
+- Added `xy`, `dx`, `dy`, and `dxy` values to `device_control("get_mouse_state")`
+- Added syntax highlighting for `touch` in the IDE
+- Added syntax highlighting for the type-testing functions `is_array()`, `is_object()`, etc. in the IDE
+- `for` loops now test for illegal containers
+- Added mouse support to the fluid simulation demo
+- Added more error checking to entity functions
+- Added `todo()` debugging statement
+- Added `"reference"` constant type 
+- Added `scripts/particle.pyxl` reusable script
+- Added `sounds/shoot-10.sound.json`
+- Tooltips in the project listing of the IDE now show the full names of variables and scripts
+  as well as URLs and descriptions
+- Fixed line number errors for programs with long lines
+- Improved error checking for `find_path()`
+- Made the Debug mode use a 1.5x scale emulator on displays of 1600 pixels wide or less
+  (factoring in pixel doubling for retina displays) and 2.0x scaling at higher resolutions
+- Linked the game folder display in the IDE to opening the folder on disk
+- Fixed the bottom rows of the code editor being cropped
+- Fixed automath operating on non-pyxl files
+- Renamed `get_map_sprite_by_draw_coord()` --> `get_map_sprite_by_ws_coord()`
+- Renamed `get_map_pixel_color_by_draw_coord()` --> `get_map_pixel_color_by_ws_coord()`
+
 
 2020 May 23: Beta update 42
 
@@ -7052,7 +7266,7 @@ Changes for both the specification and implementation in each release.
 - "Sproing" and "Camera Zoom" examples
 - Constants now have a `description` documentation field that appears in the IDE
   and as tooltips
-- Updated markdown and [Markdeep](http://casual-effects.com/markdeep) processing to version 1.10
+- Updated markdown and [Markdeep](https://casual-effects.com/markdeep) processing to version 1.10
 - Created more room for the code editor in Debug view
 
 

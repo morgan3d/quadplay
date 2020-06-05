@@ -1,4 +1,4 @@
-/* By Morgan McGuire @CasualEffects http://casual-effects.com GPL 3.0 License */
+/* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License */
 "use strict";
 
 function makeError(msg, srcLine) {
@@ -168,11 +168,16 @@ function processForTest(test) {
     
     if (match) {
         // Generate variables
-        const container = gensym('cntnr'), keys = gensym('keys'), index = gensym('index'),
-            cur = match[1], containerExpr = match[2].trim(), tmp = gensym('tmp'), N = gensym('N');
+        const key_array = gensym('key_array'), index = gensym('index'),
+            cur = match[1], containerExpr = match[2].trim(), container = gensym('container'), N = gensym('N');
 
-        return [`for (let ${tmp} = ${containerExpr}, ${container} = is_object(${tmp}) ? _Object.keys(${tmp}) : _clone(${tmp}), ${N} = ${container}.length, ` +
-                `${index} = 0; ${index} < ${N}; ++${index}) { let ${cur} = ${container}[${index}]; ${before} ` , after];
+        return [`{const ${container} = ${containerExpr};` +
+                `_checkContainer(${container}); try { ` +
+                `_iteratorCount.set(${container}, (_iteratorCount.get(${container}) || 0) + 1); ` +
+                `for (let ${key_array} = is_object(${container}) ? _Object.keys(${container}) : ${container}, ${N} = ${key_array}.length, ` +
+                `${index} = 0; ${index} < ${N}; ++${index}) { let ${cur} = ${key_array}[${index}]; ${before} `,
+                after +
+                `} finally { _iteratorCount.set(${container}, _iteratorCount.get(${container}) - 1); }}`];
     } else {
         before = '{';
     }
@@ -209,7 +214,8 @@ function processForTest(test) {
 
     if (! legalIdentifier(identifier)) { throw 'Illegal FOR-loop variable syntax'; }
     const iterator = gensym(identifier);
-    return [`for (let ${iterator} = ${initExpr}; ${iterator} ${op} ${endExpr}; ++${iterator}) ${before} let ${identifier} = ${iterator};`, after];
+    const endVar = gensym('end');
+    return [`for (let ${iterator} = ${initExpr}, ${endVar} = ${endExpr}; ${iterator} ${op} ${endVar}; ++${iterator}) ${before} let ${identifier} = ${iterator};`, after];
 }
 
 
@@ -1005,7 +1011,9 @@ function pyxlToJS(src, noYield, internalMode) {
 
     // Debug statements
     src = src.replace(/\bassert\b/g, '_assertEnabled && assert');
-    src = src.replace(/\bdebug_print\b/g, '_debugPrintEnabled && debug_print');
+    src = src.replace(/\btodo[ \t]*\(/g, '_todoEnabled && _todo(');
+    src = src.replace(/\btodo\b/g, '_todoEnabled && _todo()');
+    src = src.replace(/\bdebug_print[ \t]*\(\b/g, '_debugPrintEnabled && debug_print(');
 
     // DEFAULT operators. We replace these with (the unused in pyxlscript) '=='
     // operator, which has similar precedence, and then use vectorify
@@ -1017,7 +1025,6 @@ function pyxlToJS(src, noYield, internalMode) {
     // Do this immediately before vectorify, which will restore these.
     src = src.replace(/\bdefault\b/g, '==');
 
-    
     try {
         src = vectorify(src, {
             assignmentReturnsUndefined: true,

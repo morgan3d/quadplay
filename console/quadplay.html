@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- By Morgan McGuire @CasualEffects http://casual-effects.com GPL 3.0 License -->
+<!-- By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License -->
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -84,7 +84,8 @@
       <hr>
       <div><a onclick="onNewGameClick()">New Game…</a></div>
       <hr>
-      <label><input id="assertEnabled" type="checkbox" onclick="debugOptionClick(event)" checked autocomplete="off">Enable <code>assert</code></label>
+      <label><input id="assertEnabled" type="checkbox" onclick="debugOptionClick(event)" checked autocomplete="off"><code>assert()</code> as error</label>
+      <br/><label><input id="todoEnabled" type="checkbox" onclick="debugOptionClick(event)" checked autocomplete="off"><code>todo()</code> as error</label>
       <br/><label><input id="showEntityBoundsEnabled" type="checkbox" onclick="debugOptionClick(event)" title="Visualize debugging bounds on draw_entity() calls" autocomplete="off">Show entity bounds</label>
       <br/><label><input id="showPhysicsEnabled" type="checkbox" onclick="debugOptionClick(event)" title="Visualize debugging data from the physics system" autocomplete="off">Show physics</label>
       <br/><label><input id="automathEnabled" type="checkbox" onclick="" title="Automatically convert text to math symbols in the code editor" autocomplete="off">Automath in editor</label>
@@ -162,13 +163,11 @@
       
     </div>
 
-    <div id="error" class="ide"> </div>
-
+    <div id="realBody" style="position: absolute; top: 23px; left: 0px; right: 0px; bottom: 16px">
     <div class="project ide unselectable idePart" id="project"> </div>
     
     <div id="editorFrame" class="ide idePart">
-      <div id="gameEditor" style="position:absolute; top:0; left:0; padding: 10px; overflow: scroll; visibility:hidden"> </div>
-      <div id="modeEditor" style="position:absolute; top:20px; left:0; visibility:hidden"> </div>
+      <div id="modeEditor" style="position:absolute; top:0px; left:0; visibility:hidden"> </div>
       <div id="constantEditor" style="position:absolute; top:0; left:0; padding: 10px; visibility:hidden"></div>
       <div id="codePlusFrame" onmouseup="onCodeEditorDividerDragEnd()" onmousemove="onCodeEditorDividerDrag(event)">
         <div class="toolbar">
@@ -183,6 +182,7 @@
         </div>
           
         <div id="codeEditorContentFrame">
+          <div id="gameEditor" style="padding: 10px; overflow: scroll; visibility:hidden"> </div>
           <div id="docEditor"> </div>
           <div id="mapEditor"><canvas id="mapDisplayCanvas" style="border:1px solid #ccc"></canvas></div>
           <div id="spriteEditor" class="pixelate">
@@ -212,56 +212,6 @@
     
     <div id="emulatorFrame" class="ide idePart"> </div>
     
-    <div class="emulator" id="emulator" onclick="document.getElementById('emulatorKeyboardInput').focus()">
-      <div class="emulatorBackground">
-        <div id="logo">
-          <img src="logo.png" style="width:15%; max-width:108px; min-width:64px">
-        </div>
-      </div>
-      <div class="virtualController" id="leftControls">
-        <img id="KeyShiftbutton" src="controller-e.png" style="position: absolute; left:21px; top:-138px; transform: none" width="75px" class="emulatorButton virtualController">
-        <div style="background-image: url('controller-dpad.png'); background-size: cover; left:0px; top:-50%; position: absolute; width: 120px; height: 120px" id="minimalDPad">
-          <!-- These have to be nested so that the mouse motion events will propagate through all of them -->
-          <div id="KeyWbutton" class="emulatorButton" style="left: 19px; top: -7px; width:80px; height:45px">
-            <div id="KeySbutton" class="emulatorButton" style="left: 0px; top: 78px; width:80px; height:45px">
-              <div id="KeyAbutton" class="emulatorButton" style="left: -23px; top: -60px; width:45px; height:80px">
-                <div id="KeyDbutton" class="emulatorButton" style="left: 75px; top: 0px; width:45px; height:80px"> </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <img id="KeyQbutton" src="controller-q.png" style="position: absolute; left:42px; top:80px; transform: none" width="35px" class="emulatorButton virtualController">
-      </div>
-      
-      <div class="virtualController" id="rightControls">
-        <img id="KeyFbutton" src="controller-f.png" style="position: absolute; left:-98px; top:-140px; transform: none" width="75px" class="emulatorButton virtualController">
-        <div style="background-image: url('controller-buttons.png'); background-size: cover; position: absolute; right:0px; top:-50%; width: 120px; height: 120px" id="minimalButtons">
-          <!-- these id names allow quadplay-host.js to know what button was pressed -->
-          <div id="KeyGbutton" class="emulatorButton" style="left: 33px; top:-2px; width:52px; height:52px; transform: rotate(45deg)"> </div>
-          <div id="KeyVbutton" class="emulatorButton" style="left: -3px; top:31px; width:52px; height:52px; transform: rotate(45deg)"> </div>
-          <div id="KeyHbutton" class="emulatorButton" style="left: 69px; top:31px; width:52px; height:52px; transform: rotate(45deg)"> </div>
-          <div id="KeyBbutton" class="emulatorButton" style="left: 33px; top:64px; width:52px; height:52px; transform: rotate(45deg)"> </div>
-          
-          <!-- dead zone -->
-          <div style="left:46px; top: 45px; width:26px; height:20px; position: absolute" class="deadZone"> </div>
-        </div>
-        <img id="KeyPbutton" src="controller-p.png" style="position: absolute; right:43px; top:80px; transform: none" width="35px" id="minimalPButton" class="emulatorButton virtualController">
-      </div>
-      
-      <!-- MacOS can't assign keyboard focus to a non-keyboard control, so we introduce this
-           dummy object and hide it behind the screen. It can't be a textbox because those
-           pop up keyboards on mobile and accent options when holding a key.-->
-      <center><input type="button" id="emulatorKeyboardInput" style="z-index:-10;position:fixed;width:10px;margin:auto;top:-30px"></center>
-      <div id="screenBorder" class="screenBorder">
-        <canvas id="screen" width=384 height=224 class="pixelate"></canvas>
-        
-        <!-- Shows file loading progress during boot -->
-        <div id="bootScreen" class="pixelate"></div>
-        
-        <!-- Shows instructions for reaching pause and controls during boot -->
-        <div id="pauseMessage" class="pixelate"></div>
-      </div>
-    </div>
 
     <tabbox id="debugger">
       <input id="performanceTab" type="radio" name="tabs" checked>
@@ -372,7 +322,61 @@
         </div>
       </pane>
     </tabbox>
-    
+    </div>
+
+        <div class="emulator" id="emulator" onclick="document.getElementById('emulatorKeyboardInput').focus()">
+      <div class="emulatorBackground">
+        <div id="logo">
+          <img src="logo.png" style="width:15%; max-width:108px; min-width:64px">
+        </div>
+      </div>
+      <div class="virtualController" id="leftControls">
+        <img id="KeyShiftbutton" src="controller-e.png" style="position: absolute; left:21px; top:-138px; transform: none" width="75px" class="emulatorButton virtualController">
+        <div style="background-image: url('controller-dpad.png'); background-size: cover; left:0px; top:-50%; position: absolute; width: 120px; height: 120px" id="minimalDPad">
+          <!-- These have to be nested so that the mouse motion events will propagate through all of them -->
+          <div id="KeyWbutton" class="emulatorButton" style="left: 19px; top: -7px; width:80px; height:45px">
+            <div id="KeySbutton" class="emulatorButton" style="left: 0px; top: 78px; width:80px; height:45px">
+              <div id="KeyAbutton" class="emulatorButton" style="left: -23px; top: -60px; width:45px; height:80px">
+                <div id="KeyDbutton" class="emulatorButton" style="left: 75px; top: 0px; width:45px; height:80px"> </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <img id="KeyQbutton" src="controller-q.png" style="position: absolute; left:42px; top:80px; transform: none" width="35px" class="emulatorButton virtualController">
+      </div>
+      
+      <div class="virtualController" id="rightControls">
+        <img id="KeyFbutton" src="controller-f.png" style="position: absolute; left:-98px; top:-140px; transform: none" width="75px" class="emulatorButton virtualController">
+        <div style="background-image: url('controller-buttons.png'); background-size: cover; position: absolute; right:0px; top:-50%; width: 120px; height: 120px" id="minimalButtons">
+          <!-- these id names allow quadplay-host.js to know what button was pressed -->
+          <div id="KeyGbutton" class="emulatorButton" style="left: 33px; top:-2px; width:52px; height:52px; transform: rotate(45deg)"> </div>
+          <div id="KeyVbutton" class="emulatorButton" style="left: -3px; top:31px; width:52px; height:52px; transform: rotate(45deg)"> </div>
+          <div id="KeyHbutton" class="emulatorButton" style="left: 69px; top:31px; width:52px; height:52px; transform: rotate(45deg)"> </div>
+          <div id="KeyBbutton" class="emulatorButton" style="left: 33px; top:64px; width:52px; height:52px; transform: rotate(45deg)"> </div>
+          
+          <!-- dead zone -->
+          <div style="left:46px; top: 45px; width:26px; height:20px; position: absolute" class="deadZone"> </div>
+        </div>
+        <img id="KeyPbutton" src="controller-p.png" style="position: absolute; right:43px; top:80px; transform: none" width="35px" id="minimalPButton" class="emulatorButton virtualController">
+      </div>
+      
+      <!-- MacOS can't assign keyboard focus to a non-keyboard control, so we introduce this
+           dummy object and hide it behind the screen. It can't be a textbox because those
+           pop up keyboards on mobile and accent options when holding a key.-->
+      <center><input type="button" id="emulatorKeyboardInput" style="z-index:-10;position:fixed;width:10px;margin:auto;top:-30px"></center>
+      <div id="screenBorder" class="screenBorder">
+        <canvas id="screen" width=384 height=224 class="pixelate"></canvas>
+        
+        <!-- Shows file loading progress during boot -->
+        <div id="bootScreen" class="pixelate"></div>
+        
+        <!-- Shows instructions for reaching pause and controls during boot -->
+        <div id="pauseMessage" class="pixelate"></div>
+      </div>
+    </div>
+
+    <div id="error" class="ide"> </div>
+
     <div id="waitDialog" class="modal hidden" style="z-index: 100"> </div>
 
     <div id="newModeDialog" class="modal hidden">
@@ -430,6 +434,7 @@
               <br/><input type="radio" name="newConstantType" value="object" id="newConstantTypeObject" disabled><label for="newConstantTypeObject">Object</label>
               <br/><input type="radio" name="newConstantType" value="array" id="newConstantTypeArray" disabled><label for="newConstantTypeArray">Array</label>
               <br/><input type="radio" name="newConstantType" value="raw" id="newConstantTypeRaw" disabled><label for="newConstantTypeRaw">JSON/YAML</label>
+              <br/><input type="radio" name="newConstantType" value="reference" id="newConstantTypeReference" disabled><label for="newConstantTypeReference">Reference</label>
             </div>
           </p>
           <button type="button" onclick="hideNewConstantDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span><button type="button" id="newConstantCreateButton" onclick="onNewConstantCreate()">Create</button>
@@ -638,6 +643,7 @@
   <script defer src="quadplay-load.js?" charset="utf-8"></script>
   <script defer src="quadplay-profiler.js?" charset="utf-8"></script>
   <script defer src="quadplay-edit-code.js?" charset="utf-8"></script>
+  <script defer src="quadplay-edit-game.js?" charset="utf-8"></script>
   <script defer src="quadplay-edit-asset.js?" charset="utf-8"></script>
   <script defer src="quadplay-edit-constant.js?" charset="utf-8"></script>
   <script defer src="quadplay-ide.js?" charset="utf-8"></script>

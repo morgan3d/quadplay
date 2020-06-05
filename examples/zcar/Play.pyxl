@@ -16,7 +16,6 @@ for v in mesh.vertex_array:
    push(transformed_array, xyz(0, 0, 0))
 
 
-
 frame
 ────────────────────────────────────────────────────────────────────────
 
@@ -53,7 +52,7 @@ preserving_transform:
       
       // Antialias by drawing a fat, dim version in
       // the distance for the brighter lines
-      if z > 0: draw_line(A, B, lerp(BACKGROUND_COLOR, LINE_COLOR, ½ brightness), SUB(z, 300), 2)
+      if z > 0: draw_line(A, B, lerp(BACKGROUND_COLOR, LINE_COLOR, ½ brightness), z - 300, 2)
       draw_line(A, B, lerp(BACKGROUND_COLOR, LINE_COLOR, brightness), z, 1)
 
 

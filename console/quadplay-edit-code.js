@@ -415,7 +415,9 @@ function createCodeEditorSession(url, bodyText) {
         saveTimeoutID: null,
 
         // Lock all built-in content
-        readOnly: readOnly
+        readOnly: readOnly,
+
+        fileType: url.replace(/^.+\.([A-Za-z0-9]+)$/, '$1')
     };
     
     session.setUseSoftTabs(true);
@@ -446,10 +448,12 @@ function createCodeEditorSession(url, bodyText) {
 
             if (session.aux.readOnly) { return; }
 
-            // Programmatic change, but can't distinguish search and replace
+            // This is code to detect programmatic changes to the value, but it
+            // can't distinguish search-and-replace from other
+            // code changes, so not a good idea.
             // if (! aceEditor.curOp || ! aceEditor.curOp.command.name) { return; }
 
-            if (document.getElementById('automathEnabled').checked) {
+            if ((session.aux.fileType === 'pyxl') && document.getElementById('automathEnabled').checked) {
                 autocorrectSession(session);
             }
             
@@ -636,154 +640,6 @@ function serverWriteFiles(array, callback, errorCallback) {
 }
 
 
-/* Schedules gameSource.json to be saved to the .game.json via
-   serverSaveGameJSON after a delay. No callback or reload. 
-   If a new call comes in, this schedule is delayed. */
-function serverScheduleSaveGameJSON(delaySeconds) {
-    if (gameSource.saveTimeoutID) {
-        // Replace existing pending save
-        removePendingSaveCallback(gameSource.saveCallback);
-        clearTimeout(gameSource.saveTimeoutID);
-    } else {
-        ++savesPending;
-    }
-
-    const saveCallback = function () {
-        // Remove the callback
-        removePendingSaveCallback(saveCallback);
-        // Clear the timeout in case this function was explicitly invoked
-        clearTimeout(gameSource.saveTimeoutID);
-
-        gameSource.saveTimeoutID = null;
-        gameSource.saveCallback = null;
-        serverSaveGameJSON(function () {
-            // Wait until the actual save has occurred before reducing
-            // the counter.
-            --savesPending;
-        });
-    };
-    gameSource.saveCallback = saveCallback;
-    
-    if (delaySeconds > 0) {
-        pendingSaveCallbacks.push(saveCallback);
-        gameSource.saveTimeoutID = setTimeout(saveCallback, (delaySeconds || 0) * 1000);
-    } else {
-        saveCallback();
-    }
-}
-
-
-/* Save the current .game.json file, which has
-   presumably been modified by the caller */
-function serverSaveGameJSON(callback) {
-    const gameFilename = urlToFilename(gameSource.jsonURL);
-
-    console.assert(gameFilename.endsWith('.game.json'));
- 
-    const gameContents = WorkJSON.stringify(getEditableGameJSON(), undefined, 3);
-    serverWriteFile(gameFilename, 'utf8', gameContents, callback);
-}
-
-
-/** Returns an editable copy of the game JSON, suitable for editing when saving the project. */
-function getEditableGameJSON() {
-    const gameJSON = deep_clone(gameSource.json);
-    
-    // Remove the auto-generated elements
-    for (let i = 0; i < gameJSON.modes.length; ++i) {
-        if (gameJSON.modes[i].startsWith('quad://')) {
-            gameJSON.modes.splice(i, 1);
-            --i;
-        }
-    }
-    
-    for (const key in gameJSON.assets) {
-        if (key.startsWith('_')) {
-            delete gameJSON.assets[key];
-        }
-    }
-    
-    return gameJSON;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-
-const licenseTable = {
-    All: 'All Rights Reserved. Redistribution prohibited.',
-    GPL: 'Open source under the GPL-3.0-only license https://www.gnu.org/licenses/gpl-3.0.html',
-    MIT: 'Open source under the MIT license https://opensource.org/licenses/MIT',
-    BSD: 'Open source under the BSD 3-Clause license https://opensource.org/licenses/BSD-3-Clause',
-    CC0: 'Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/'
-};
-
-
-function onProjectInitialModeChange(target) {
-    const modes = gameSource.json.modes;
-    for (let i = 0; i < modes.length; ++i) {
-        modes[i] = modes[i].replace(/\*/g, '');
-
-        // Mark the newly selected value
-        if (modes[i] === target.value) {
-            modes[i] += '*';
-        }
-    }
-    serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL); });
-}
-
-
-function onProjectLicensePreset(license) {
-    const projectLicense = document.getElementById('projectLicense');
-    projectLicense.value = licenseTable[license];
-    onProjectMetadataChanged();
-}
-
-
-function onProjectMetadataChanged(projectLicense) {
-    const t = document.getElementById('projectTitle').value.trim();
-    const titleChanged = t !== gameSource.json.title;
-    gameSource.json.title = t;
-
-    const textFields = ['developer', 'copyright', 'license', 'description'];
-    for (let f = 0; f < textFields.length; ++f) {
-        const key = textFields[f];
-        gameSource.json[key] = document.getElementById('project' + capitalize(key)).value.trim();
-    }
-
-    const boolFields = ['Cooperative', 'Competitive', 'High Scores', 'Achievements'];
-    for (let f = 0; f < boolFields.length; ++f) {
-        const name = boolFields[f];
-        const key = name.replace(/ /g,'').toLowerCase();
-        gameSource.json[key] = document.getElementById('project' + capitalize(key)).checked ? true : false;
-    }
-
-    const mn = parseInt(document.getElementById('projectMinPlayers').value);
-    const mx = parseInt(document.getElementById('projectMaxPlayers').value);
-    gameSource.json.min_players = Math.min(mn, mx);
-    gameSource.json.max_players = Math.max(mn, mx);
-    document.getElementById('projectMinPlayers').value = gameSource.json.min_players;
-    document.getElementById('projectMaxPlayers').value = gameSource.json.max_players;
-    
-    serverSaveGameJSON(titleChanged ? function () { loadGameIntoIDE(window.gameURL); }: undefined);
-}
-
-
-function capitalize(key) {
-    return key[0].toUpperCase() + key.substring(1);
-}
-
-function onProjectYUpChange(target) {
-    gameSource.json.y_up = (target.checked === true);
-    serverSaveGameJSON();
-}
-
-
-function onProjectScreenSizeChange(target) {
-    const res = JSON.parse(target.value);
-    gameSource.json.screen_size = res;
-    serverSaveGameJSON();
-}
-   
-
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 function onNewModeCreate() {
@@ -811,21 +667,22 @@ function onNewModeCreate() {
     // Name is OK, create the mode
     const modeContents = `${name}
 ════════════════════════════════════════════════════════════════════════
-
+// Put local state for the mode here.  Declare variables with let, constants with const, and functions with def.
 
 
 enter
 ────────────────────────────────────────────────────────────────────────
-
+// This event runs when the mode is entered via set_mode() or push_mode().
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
-
+// This event runs 60 times per second. Game logic, simulation, user input, and drawing all go here.
 
 
 leave
 ────────────────────────────────────────────────────────────────────────
+// This event runs just before leaving for another mode by set_mode() or pop_mode().
 
 `;
     // Tell the server
@@ -839,8 +696,7 @@ leave
     const gameFilename = gamePath;
     console.assert(gameFilename.endsWith('.game.json'));
 
-    // Construct the game.json contents
-    const gameJSON = getEditableGameJSON();
+    const gameJSON = gameSource.json;
 
     // Add the new mode
     gameJSON.modes.push(name);
@@ -935,7 +791,7 @@ function onNewScriptCreate() {
     console.assert(gameFilename.endsWith('.game.json'));
 
     // Construct the game.json contents
-    const gameJSON = getEditableGameJSON();
+    const gameJSON = gameSource.json;
 
     // Add the new mode
     gameJSON.scripts.push(name);
@@ -949,12 +805,14 @@ function onNewScriptCreate() {
     scriptFilename += name;
 
     // Write the file and then reload
-    serverWriteFiles([{filename: scriptFilename, contents: '\n', encoding: 'utf8'},
+    serverWriteFiles([{filename: scriptFilename, contents: '// Scripts, variables, and constants here are visible to all modes\n', encoding: 'utf8'},
                       {filename: gameFilename, contents: gameContents, encoding: 'utf8'}],
                      function () {
         loadGameIntoIDE(window.gameURL, function () {
             // Find the script in the new project and select it
-            onProjectSelect(document.getElementById('ScriptItem_' + name.replace(/\.pyxl$/, '')), 'script', name);
+            const url = gameSource.jsonURL.replace(/\/[^/]+\.game\.json$/, '\/') + name;
+            const id = 'ScriptItem_' + url;
+            onProjectSelect(document.getElementById(id), 'script', url);
         })});
     
     hideNewScriptDialog();
@@ -1013,7 +871,7 @@ function onNewDocCreate() {
             templateBody = templateBody.replace(/src="doc\/markdeep\.min\.js"/g, 'src="' + relPath + 'doc/markdeep.min.js"');
         }
 
-        const gameJSON = getEditableGameJSON();
+        const gameJSON = gameSource.json;
         gameJSON.docs.push({name: name, url: name + format});
         
         // Write the file and then reload
@@ -1025,7 +883,8 @@ function onNewDocCreate() {
                                  for (let i = 0; i < gameSource.docs.length; ++i) {
                                      if (gameSource.docs[i].name === name) {
                                          // Found the match
-                                         onProjectSelect(document.getElementById('DocItem_' + name), 'doc', gameSource.docs[i]);
+                                         const id = doc.replace(/[^A-Za-z0-9-_+\/]/g, '_');
+                                         onProjectSelect(document.getElementById('DocItem_' + id), 'doc', gameSource.docs[i]);
                                          return;
                                      }
                                  }

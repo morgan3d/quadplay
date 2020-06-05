@@ -37,29 +37,47 @@ drawGrid(grid)
 draw_corner_rect(cursor * grid.cellSize, grid.cellSize, #f00b)
 
 
+// D-pad/keyboard cursor movement:
 if joy.x or joy.y: --repeatDelay
 else:              repeatDelay = MAX_REPEAT_DELAY
 
 let dir = xy(joy.xx, joy.yy)
-if repeatDelay <= 0 and (mode_frames mod REPEAT_RATE == 0): dir = xy(joy.x, joy.y)
-cursor = clamp(cursor + dir, xy(0, 0), grid.size - 1)
+if repeatDelay ≤ 0 and (mode_frames mod REPEAT_RATE == 0): dir = joy.xy
+let new_cursor = cursor + dir
 
-const cell = grid[cursor.x][cursor.y]
+// Mouse and touch movement
+const mouse = device_control("get_mouse_state")
 
-if joy.a:
-   cell.value += 0.75
-   cell.settled = false
-   
-if joy.b:
-   cell.solid = true
-   cell.value = 0
-   cell.settled = true
+if ‖mouse.dxy‖ > 0: 
+    new_cursor = ⌊mouse.xy / grid.cellSize⌋
+else if touch.a:
+    new_cursor = ⌊touch.xy / grid.cellSize⌋
 
-if joy.c:
-   cell.solid = false
-   cell.value = 0
-   cell.settled = false
+// Restrict cursor to screen
+new_cursor = clamp(new_cursor, xy(0, 0), grid.size - 1)
 
-draw_text({font: font, pos: xy(½ SCREEN_SIZE.x, 2),
-          text: replace("(a) Water  (b) Draw  (c) Clear  [^][<][v][>] Move", joy.prompt),
-          color: #f00, shadow: #c, outline: #f, x_align: "center", y_align: "top"})
+let first_time = true
+while first_time or ‖new_cursor - cursor‖ > 0:
+    cursor += sign(new_cursor - cursor)
+        
+    const cell = grid[cursor.x][cursor.y]
+    
+    if joy.a:
+       cell.value += 0.75
+       cell.settled = false
+       
+    if joy.b or touch.a:
+       cell.solid = true
+       cell.value = 0
+       cell.settled = true
+    
+    if joy.c or mouse.button_array[1]:
+       cell.solid = false
+       cell.value = 0
+       cell.settled = false
+
+    first_time = false
+
+draw_text({font: font, pos: xy(5, 2),
+          text: replace("(a): Water\n(b) or left mouse: Draw\n(c) or right mouse: Clear\n[^][<][v][>] or mouse: Move", joy.prompt),
+          color: #f00, shadow: #c, outline: #f, x_align: "left", y_align: "top"})

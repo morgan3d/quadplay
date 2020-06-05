@@ -103,7 +103,8 @@ function showConstantEditor(index) {
         if (editor !== '') {
             html = '<table style="border-collapse: collapse"><tr valign="top"><td>' + html + '</td><td style="padding-left: 10px">' + editor + '</td><td>' + metaEditor + '</td></tr></table>';
         }
-        
+    } else if (type === 'reference') {
+        html += index + ' → ' + json.value;
     } else {
         // Object or array (including built-in objects)
         const L = Object.keys(c).length;

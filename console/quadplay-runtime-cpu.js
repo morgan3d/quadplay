@@ -44,6 +44,17 @@ var _postFX;
 
 var is_NaN = Number.isNaN;
 
+// Maps container objects to the count of how many iterators
+// they are currently used within, so that the runtime can
+// detect when they are illegally being mutated.
+var _iteratorCount = new WeakMap();
+
+function _checkContainer(container) {
+    if (! Array.isArray(container) && (typeof container !== 'string') && (typeof container !== 'object')) {
+        _error('The container used with a for...in loop must be an object, string, or array.');
+    }
+}
+
 function reset_post_effects() {
     _postFX = {
         background: {r:0, g:0, b:0, a:0},
@@ -248,6 +259,9 @@ function insert(array, i, ...args) {
 
 function push(array, ...args) {
     if (! Array.isArray(array)) { throw new Error('push() requires an array argument'); }
+    if (_iteratorCount.get(array)) {
+        _error('Cannot push() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    }
     array.push(...args);
     return array[array.length - 1];
 }
@@ -255,6 +269,9 @@ function push(array, ...args) {
 
 function push_front(array, ...args) {
     if (! Array.isArray(array)) { throw new Error('push_front() requires an array argument'); }
+    if (_iteratorCount.get(array)) {
+        _error('Cannot push_front() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    }
     array.unshift(...args);
     return array[0];
 }
@@ -262,12 +279,18 @@ function push_front(array, ...args) {
 
 function pop_front(array) {
     if (! Array.isArray(array)) { throw new Error('pop_front() requires an array argument'); }
+    if (_iteratorCount.get(array)) {
+        _error('Cannot pop_front() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    }
     if (array.length === 0) { return undefined;  }
     return array.shift();
 }
 
 
 function pop(array) {
+    if (_iteratorCount.get(array)) {
+        _error('Cannot pop() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    }
     return array.pop();
 }
 
@@ -318,6 +341,9 @@ function sort(array, k, reverse) {
 
 
 function resize(a, n) {
+    if (_iteratorCount.get(a)) {
+        _error('Cannot resize() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    }
     a.length = n;
 }
 
@@ -357,6 +383,9 @@ function random_value(t) {
 
 
 function remove_all(t) {
+    if (_iteratorCount.get(t)) {
+        _error('Cannot remove_all() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    }
     if (Array.isArray(t)) {
         t.length = 0;
     } else {
@@ -370,6 +399,10 @@ function remove_all(t) {
 
 
 function remove_values(t, value) {
+    if (_iteratorCount.get(t)) {
+        _error('Cannot remove_values() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    }
+    
     if (Array.isArray(t)) {
         // Place to copy the next element to
         let dst = 0;
@@ -391,6 +424,9 @@ function remove_values(t, value) {
 
 
 function fast_remove_value(t, value) {
+    if (_iteratorCount.get(t)) {
+        _error('Cannot fast_remove_value() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    }
     if (Array.isArray(t)) {
         for (let i = 0; i < t.length; ++i) {
             if (t[i] === value) {
@@ -410,6 +446,72 @@ function fast_remove_value(t, value) {
 }
 
 
+function iterate(array, callback) {
+    if (! is_string(callback) && !is_function(callback)) {
+        _error('The callback to iterate() must be a function or string property name');
+    }
+    
+    // Place to copy the next element to
+    let dst = 0;
+    let done = false;
+
+    const stringCase = is_string(callback);
+
+    _iteratorCount.set(array, (_iteratorCount.get(array) || 0) + 1);
+    try {
+        for (let src = 0; src < array.length; ++src) {
+            const value = array[src]
+            if (src > dst) { array[dst] = value; }
+            
+            let r = 0; // continue 
+            if (done) {
+                ++dst;
+            } else {
+                if (stringCase) {
+                    const fcn = value[callback];
+                    if (typeof fcn !== 'function') {
+                        _error("value does not have callback in iterate()");
+                    }
+                    r = fcn(value);
+                } else {
+                    r = callback(value);
+                }
+                
+                if (r === iterate.REMOVE_AND_BREAK) {
+                    done = true;
+                } else {
+                    if (r === iterate.BREAK) {
+                        if (src === dst) {
+                            // Can stop immediately
+                            return
+                        } else {
+                            // Have to continue iteration for removal copies
+                            done = true;
+                        }
+                    }
+                    
+                    if (r !== iterate.REMOVE) {
+                        ++dst;
+                    }
+                }
+            }
+        }
+    } finally {
+        _iteratorCount.set(array, _iteratorCount.get(array) - 1);
+    }
+                     
+    // Remove extra elements
+    resize(array, dst);
+}
+
+// Unique objects for ==
+iterate.REMOVE = ["REMOVE"]
+iterate.BREAK  = ["BREAK"]
+iterate.REMOVE_AND_BREAK = ["REMOVE_AND_BREAK"]
+iterate.CONTINUE = ["CONTINUE"]
+Object.freeze(iterate);
+
+
 function reverse(array) {
     if (! Array.isArray(array)) { throw new Error('reverse() takes an array as the argument'); }
     array.reverse();
@@ -417,6 +519,9 @@ function reverse(array) {
 
 
 function remove_key(t, i) {
+    if (_iteratorCount.get(t)) {
+        _error('Cannot remove_key() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    }
     if (Array.isArray(t)) {
         if (typeof i !== 'number') { throw 'remove_key(array, i) called with a key (' + i + ') that is not a number'; }
         t.splice(i, 1);
@@ -427,6 +532,9 @@ function remove_key(t, i) {
 
 
 function extend(a, b) {
+    if (_iteratorCount.get(a)) {
+        _error('Cannot extend() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    }
     if (Array.isArray(a)) {
         if (! Array.isArray(b)) {
             throw new Error('Both arguments to extend(a, b) must have the same type. Invoked with one array and one non-array.');
@@ -502,6 +610,9 @@ function concatenate(a, b) {
 
 
 function fast_remove_key(t, i) {
+    if (_iteratorCount.get(t)) {
+        _error('Cannot fast_remove_key() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    }
     if (Array.isArray(t)) {
         if (typeof i !== 'number') { throw 'fast_remove_key(array, i) called with a key (' + i + ') that is not a number'; }
         let L = t.length;
@@ -932,9 +1043,6 @@ function call(f) {
 }
 
 //////////////////////////////////////////////////////////////////////
-
-/** Set by the IDE. A view onto the imagedata */
-var _updateImageDataUint32;
 
 /** Set by reloadRuntime(). 128x23 Uint8 array */
 var _fontSheet = null;
@@ -1439,6 +1547,15 @@ function _error(msg) {
 }
 
 
+function _todo(msg) {
+    if (msg === undefined) {
+        throw new Error("Unimplemented");
+    } else {
+        throw new Error("Unimplemented: " + _unparse(msg));
+    }
+}
+
+
 function xy(x, y) {
     if (x === undefined) {
         _error('nil or no argument to xy()');
@@ -1786,7 +1903,7 @@ function make_entity(e, childTable) {
             } else if (r.shape === 'disk') {
                 const x = min_component(r.sprite.size) * r.scale.x;
                 r.size = xy(x, x);
-                if (r.scale.x != r.scale.y) {
+                if (r.scale.x !== r.scale.y) {
                     throw new Error('Cannot have different scale factors for x and y on a "disk" shaped entity.');
                 }
             }
@@ -1819,6 +1936,10 @@ function make_entity(e, childTable) {
     r.offset_in_parent = r.offset_in_parent ? clone(r.offset_in_parent) : xy(0, 0);
     r.scale_in_parent = r.scale_in_parent ? clone(r.scale_in_parent) : xy(1, 1);
 
+    if (typeof r.scale !== 'object') { _error('The scale of an entity must be an xy().'); }
+    if (isNaN(r.angle)) { _error('NaN angle on entity'); }
+    if (isNaN(r.z)) { _error('NaN z on entity'); }
+    
     // Construct named children
     if (childTable) {
         for (let name in childTable) {
@@ -1946,7 +2067,7 @@ function transform_ws_to_es(entity, coord) {
 
 
 function transform_es_to_ws(entity, coord) {
-    if (! coord || coord.x == undefined) { throw new Error("transform_es_to_ws() requires both an entity and a coordinate"); }
+    if (! coord || coord.x === undefined) { throw new Error("transform_es_to_ws() requires both an entity and a coordinate"); }
     return transform_from(entity.pos, entity.angle, entity.scale, coord);
 }
 
@@ -1976,21 +2097,25 @@ function entity_update_children(parent) {
     if (parent === undefined || parent.pos === undefined) {
         throw new Error('entity_update_children requires an entity argument')
     }
+
+    if (typeof parent.scale !== 'object') { _error('The scale of the parent entity must be an xy().'); }
+    if (isNaN(parent.angle)) { _error('NaN angle on parent entity'); }
+    if (isNaN(parent.z)) { _error('NaN z on parent entity'); }
     
     const N = parent.child_array.length;
+    const rotSign = Math.sign(parent.scale.x * parent.scale.y);
+    const a = parent.angle * rotation_sign() * rotSign;
+    const c = Math.cos(a), s = Math.sin(a);
+    
     for (let i = 0; i < N; ++i) {
         const child = parent.child_array[i];
-        const rotSign = Math.sign(parent.scale.x * parent.scale.y);
 
         if (child.orient_with_parent) {
             child.scale.x = parent.scale.x * child.scale_in_parent.x;
             child.scale.y = parent.scale.y * child.scale_in_parent.y;
-            
             child.angle   = parent.angle + child.angle_in_parent * rotSign;
         }
        
-        const a = parent.angle * rotation_sign() * rotSign;
-        const c = Math.cos(a), s = Math.sin(a);
         child.pos.x = (c * child.pos_in_parent.x - s * child.pos_in_parent.y) * parent.scale.x + parent.pos.x;
         child.pos.y = (s * child.pos_in_parent.x + c * child.pos_in_parent.y) * parent.scale.y + parent.pos.y;
         child.z = parent.z + child.z_in_parent;
@@ -3236,12 +3361,6 @@ function transform_from(pos, angle, scale, coord) {
 }
 
 
-function transform_draw_to_map(map, draw_coord) {
-    return xy((draw_coord.x - map._offset.x) / map.sprite_size.x,
-              (draw_coord.y - map._offset.y) / map.sprite_size.y);
-}
-
-
 function get_map_pixel_color(map, map_coord, layer, replacement_array) {
     layer = Math.round(layer || 0);
     let mx = Math.floor(map_coord.x);
@@ -3289,10 +3408,10 @@ function get_map_pixel_color(map, map_coord, layer, replacement_array) {
 }
 
 
-function get_map_pixel_color_by_draw_coord(map, draw_coord, z, replacement_array) {
+function get_map_pixel_color_by_ws_coord(map, ws_coord, ws_z, replacement_array) {
     if (! map.spritesheet_table) { throw new Error('The first argument to get_map_pixel_color_by_draw_coord() must be a map'); }
-    const layer = (((z || 0) - _offsetZ) / _scaleZ - map.z_offset) / map.z_scale;
-    return get_map_pixel_color(map, transform_draw_to_map(map, draw_coord), layer, replacement_array);
+    const layer = (((ws_z || 0) - _offsetZ) / _scaleZ - map.z_offset) / map.z_scale;
+    return get_map_pixel_color(map, transform_ws_to_map_space(map, ws_coord), layer, replacement_array);
 }
 
     
@@ -3346,15 +3465,15 @@ function set_map_sprite(map, map_coord, sprite, layer) {
 }
 
 
-function get_map_sprite_by_draw_coord(map, draw_coord, z, replacement_array) {
-    const layer = ((z || 0) - _offsetZ) / (_scaleZ * map.z_scale);
-    return get_map_sprite(map, transform_draw_to_map(map, draw_coord), layer, replacement_array);
+function get_map_sprite_by_ws_coord(map, ws_coord, ws_z, replacement_array) {
+    const layer = ((ws_z || 0) - _offsetZ) / (_scaleZ * map.z_scale);
+    return get_map_sprite(map, transform_ws_to_map_space(map, ws_coord), layer, replacement_array);
 }
 
 
 function set_map_sprite_by_draw_coord(map, draw_coord, sprite, z) {
     const layer = ((z || 0) - _offsetZ) / (_scaleZ * map.z_scale);
-    return set_map_sprite(map, transform_draw_to_map(map, draw_coord), sprite, layer);
+    return set_map_sprite(map, transform_ws_to_map_space(map, draw_coord), sprite, layer);
 }
 
 
@@ -3459,10 +3578,10 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                 //console.log(transform_to(pos, angle, scale, drawClip2));
                 // Apply pos, angle, scale.
                 // We have to consider all four corners for the rotation case.
-                const temp1 = transform_draw_to_map(map, transform_to(pos, angle, scale, drawClip1)),
-                      temp2 = transform_draw_to_map(map, transform_to(pos, angle, scale, drawClip2)),
-                      temp3 = transform_draw_to_map(map, transform_to(pos, angle, scale, xy(drawClip1.x, drawClip2.y))),
-                      temp4 = transform_draw_to_map(map, transform_to(pos, angle, scale, xy(drawClip2.x, drawClip1.y)));
+                const temp1 = transform_ws_to_map_space(map, transform_to(pos, angle, scale, drawClip1)),
+                      temp2 = transform_ws_to_map_space(map, transform_to(pos, angle, scale, drawClip2)),
+                      temp3 = transform_ws_to_map_space(map, transform_to(pos, angle, scale, xy(drawClip1.x, drawClip2.y))),
+                      temp4 = transform_ws_to_map_space(map, transform_to(pos, angle, scale, xy(drawClip2.x, drawClip1.y)));
                 
                 mapX1 = Math.floor(Math.min(temp1.x, temp2.x, temp3.x, temp4.x));
                 mapX2 = Math.ceil (Math.max(temp1.x, temp2.x, temp3.x, temp4.x));
@@ -3655,8 +3774,8 @@ function draw_disk(pos, radius, color, outline, z) {
         return;
     }
 
-    color   = _colorToUint32(color);
-    outline = _colorToUint32(outline);
+    color   = _colorToUint16(color);
+    outline = _colorToUint16(outline);
 
     _addGraphicsCommand({
         opcode: 'CIR',
@@ -3670,15 +3789,15 @@ function draw_disk(pos, radius, color, outline, z) {
 }
 
 
-function _colorToUint32(color) {
+function _colorToUint16(color) {
     if (color === undefined) { return 0; }
     
     const a = color.a;
     
-    let c = 0x0F000000 >>> 0;
+    let c = 0xF000 >>> 0;
     if (a !== undefined) {
         // >>> 0 ensures uint32
-        c = (((_clamp(a, 0, 1) * 15 + 0.5) & 0xf) << 24) >>> 0;
+        c = (((_clamp(a, 0, 1) * 15 + 0.5) & 0xf) << 12) >>> 0;
     }
 
     let r = color.r, g = color.g, b = color.b, h = color.h;
@@ -3693,13 +3812,10 @@ function _colorToUint32(color) {
     }
 
     if (r !== undefined) {
-        c = (c | ((b * 15 + 0.5) << 16) | ((g * 15 + 0.5) << 8) | (r * 15 + 0.5)) >>> 0;
+        return (c | ((b * 15 + 0.5) << 8) | ((g * 15 + 0.5) << 4) | (r * 15 + 0.5)) >>> 0;
     } else {
-        return 0xFFFFFFFF >>> 0;
+        return 0xFFFF >>> 0;
     }
-
-    // Set high bits, keeping everything in uint32
-    return (c | (c << 4)) >>> 0;
 }
 
 
@@ -3843,13 +3959,13 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
 
     z = z * _scaleZ + _offsetZ;
     
-    fill   = _colorToUint32(fill);
-    border = _colorToUint32(border);
+    fill   = _colorToUint16(fill);
+    border = _colorToUint16(border);
 
     // Culling/all transparent optimization
     if ((minx > _clipX2 + 0.5) || (miny > _clipY2 + 0.5) || (z < _clipZ1 - 0.5) ||
         (maxx < _clipX1 - 0.5) || (maxy < _clipY1 - 0.5) || (z > _clipZ2 + 0.5) ||
-        !((fill | border) & 0xff000000)) {
+        !((fill | border) & 0xf000)) {
         return;
     }
 
@@ -3887,8 +4003,8 @@ function draw_corner_rect(corner, size, fill, outline, z) {
     let x2 = (corner.x + size.x + skx) * _scaleX + _offsetX, y2 = (corner.y + size.y + sky) * _scaleY + _offsetY;
     z = z * _scaleZ + _offsetZ;
 
-    fill = _colorToUint32(fill);
-    outline = _colorToUint32(outline);
+    fill = _colorToUint16(fill);
+    outline = _colorToUint16(outline);
 
     // Sort coordinates
     let t1 = Math.min(x1, x2), t2 = Math.max(x1, x2);
@@ -3942,13 +4058,17 @@ function draw_line(A, B, color, z, width) {
     if (width * _zoom((z || 0) - _camera.z) >= 1.5) {
         // Draw a polygon instead of a thin line, as this will
         // be more than one pixel wide in screen space.
-        const delta = xy(B.y - A.y, A.x - B.x);
-        let mag = Math.hypot(delta.x, delta.y);
+        let delta_x = B.y - A.y, delta_y = A.x - B.x;
+        let mag = Math.hypot(delta_x, delta_y);
         if (mag < 0.001) { return; }
         mag = width / (2 * mag);
-        delta.x *= mag; delta.y *= mag;
-        draw_poly([_sub(A, delta), _add(A, delta),_add(B, delta), _sub(B, delta)],
-                  color, undefined, undefined, undefined, undefined, z);
+        delta_x *= mag; delta_y *= mag;
+        draw_poly(
+            [{x:A.x - delta_x, y:A.y - delta_y},
+             {x:A.x + delta_x, y:A.y + delta_y},
+             {x:B.x + delta_x, y:B.y + delta_y},
+             {x:B.x - delta_x, y:B.y - delta_y}],
+            color, undefined, undefined, undefined, undefined, z);
         return;
     }
     
@@ -3970,10 +4090,10 @@ function draw_line(A, B, color, z, width) {
     let x2 = (B.x + skx) * _scaleX + _offsetX, y2 = (B.y + sky) * _scaleY + _offsetY;
     z = z * _scaleZ + _offsetZ
 
-    color = _colorToUint32(color);
+    color = _colorToUint16(color);
 
     // Offscreen culling optimization
-    if (! (color & 0xff000000) ||
+    if (! (color & 0xf000) ||
         (Math.min(x1, x2) > _clipX2 + 0.5) || (Math.max(x1, x2) < _clipX1 - 0.5) || (z < _clipZ1 - 0.5) ||
         (Math.min(y1, y2) > _clipY2 + 0.5) || (Math.max(y1, y2) < _clipY1 - 0.5) || (z > _clipZ2 + 0.5)) {
         return;
@@ -4030,13 +4150,13 @@ function draw_point(pos, color, z) {
         // Many points with the same z value are often drawn right
         // after each other.  Aggregate these (preserving their
         // ordering) for faster sorting and rendering.
-        prevCommand.data.push((x + y * _SCREEN_WIDTH) >>> 0, _colorToUint32(color)); 
+        prevCommand.data.push((x + y * _SCREEN_WIDTH) >>> 0, _colorToUint16(color)); 
     } else {
         _addGraphicsCommand({
             z: z,
             baseZ: z,
             opcode: 'PIX',
-            data: [(x + y * _SCREEN_WIDTH) >>> 0, _colorToUint32(color)]
+            data: [(x + y * _SCREEN_WIDTH) >>> 0, _colorToUint16(color)]
         });
     }
 }
@@ -4153,7 +4273,7 @@ function _parseMarkupHelper(str, startIndex, stateChanges) {
             case 'gray': value = {h:param[0]}; break;
             }
         }
-        newState[prop] = _colorToUint32(value);
+        newState[prop] = _colorToUint16(value);
         return '';
     });
 
@@ -4172,7 +4292,7 @@ function _parseMarkupHelper(str, startIndex, stateChanges) {
             }
 
             if (prop !== 'font') {
-                v = _colorToUint32(v);
+                v = _colorToUint16(v);
             }
             
             newState[prop] = v;
@@ -4241,7 +4361,7 @@ function _parseMarkup(str, stateChanges) {
 
 // Used for font rendering. Returns the font spacing, unless it is zero. In the zero case, the function
 // tests for symbols (which include superscripts and subscripts, as well as the space character) that
-// require spacing around them even if the font specifies font._spacing.x == 0.
+// require spacing around them even if the font specifies font._spacing.x === 0.
 function _postGlyphSpace(str, i, font) {
     if (font._spacing.x !== 0 || i >= str.length) {
         return font._spacing.x;
@@ -4509,9 +4629,9 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
     
     const stateChanges = [{
         font:       font,
-        color:      _colorToUint32(color),
-        shadow:     _colorToUint32(shadow),
-        outline:    _colorToUint32(outline),
+        color:      _colorToUint16(color),
+        shadow:     _colorToUint16(shadow),
+        outline:    _colorToUint16(outline),
         startIndex: 0,
         endIndex:   str.length - 1
     }];
@@ -4564,14 +4684,14 @@ function get_sprite_pixel_color(spr, pos, result) {
         }
     } else {
         const sheet = spr.spritesheet;
-        const pixel = sheet._uint32Data[(spr._x + x) + (spr._y + y) * sheet._uint32Data.width];
+        const pixel = sheet._uint16Data[(spr._x + x) + (spr._y + y) * sheet._uint16Data.width];
 
         result = result || {r:0, g:0, b:0, a:0};
         
-        result.a = ((pixel >>> 28) & 0xf) * (1 / 15);
-        result.b = ((pixel >>> 20) & 0xf) * (1 / 15);
-        result.g = ((pixel >>> 12) & 0xf) * (1 / 15);
-        result.r = ((pixel >>>  4) & 0xf) * (1 / 15);
+        result.a = ((pixel >>> 12) & 0xf) * (1 / 15);
+        result.b = ((pixel >>> 8) & 0xf) * (1 / 15);
+        result.g = ((pixel >>> 4) & 0xf) * (1 / 15);
+        result.r = (pixel & 0xf) * (1 / 15);
         
         return result;
     }
@@ -4773,7 +4893,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color) {
         scale = {x: scale.x * mag, y: scale.y * mag};
     }
     
-    const skx = (z * _skewXZ), sky = (z * _skewYZ);
+    const skx = z * _skewXZ, sky = z * _skewYZ;
     const x = (pos.x + skx) * _scaleX + _offsetX;
     const y = (pos.y + sky) * _scaleY + _offsetY;
     z = z * _scaleZ + _offsetZ;
@@ -4823,7 +4943,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color) {
         opacity:       opacity,
         override_color: override_color,
         x:             x,
-        y:             y,
+        y:             y
     };
     
     // Aggregate multiple sprite calls
@@ -5136,7 +5256,7 @@ function _makeRayGridIterator(ray, numCells, cellSize) {
             it.exitDistance[a] = d / Math.abs(it.ray.direction[a]) + it.enterDistance;
         } else {
             // Ray is parallel to this partition axis.
-            // Avoid dividing by zero, which could be NaN if d == 0
+            // Avoid dividing by zero, which could be NaN if d === 0
             it.exitDistance[a] = Infinity;
         }
     }
@@ -5354,7 +5474,7 @@ function entity_inertia(entity, mass) {
     // disk: m * (w/2)^2
     if (mass === undefined) { mass = entity_mass(entity); }
     
-    if (entity.shape == 'rect') {
+    if (entity.shape === 'rect') {
         return mass * (_square(entity.size.x * scaleX) + _square(entity.size.y * scaleY)) * (1 / 12);
     } else {
         return mass * _square(entity.scale.x * scaleX * 0.5);
@@ -7318,6 +7438,13 @@ function save_local(key, value) {
    same map.
 */
 function find_path(start, goal, costEstimator, edgeCost, getNeighbors, nodeToID, map) {
+    if (start === undefined) { throw _error('The start_node argument to find_path() must not be nil'); }
+    if (goal === undefined) { throw _error('The goal_node argument to find_path() must not be nil'); }
+    if (typeof costEstimator !== 'function') { _error('The estimate_path_cost() argument to find_path() must be a function'); }
+    if (typeof getNeighbors !== 'function') { _error('The get_neighbors() argument to find_path() must be a function'); }
+    if (typeof edgeCost !== 'function') { _error('The edge_cost() argument to find_path() must be a function'); }
+    if (typeof nodeToID !== 'function') { _error('The node_to_ID() argument to find_path() must be a function'); }
+    
     // Paths encoded by their last Step paired with expected shortest
     // distance
     const queue = new _PriorityQueue();
@@ -7343,7 +7470,7 @@ function find_path(start, goal, costEstimator, edgeCost, getNeighbors, nodeToID,
             const path = [goal];
 
             // Construct the path backwards
-            while (shortest.previous !== null) {
+            while (shortest.previous) {
                 shortest = bestPathTo.get(nodeToID(shortest.previous, map));
                 path.push(shortest.last);
             }
@@ -7352,11 +7479,14 @@ function find_path(start, goal, costEstimator, edgeCost, getNeighbors, nodeToID,
 
         // Consider all neighbors of P (that are still in the queue
         // for consideration)
-        let neighbors = getNeighbors(P, map);
+        const neighbors = getNeighbors(P, map);
+        if (! Array.isArray(neighbors)) { _error('The get_neighbors() function passed to find_path() must return an array of nodes. Received: ' + unparse(neighbors)); }
         for (let i = 0; i < neighbors.length; ++i) {
             const N = neighbors[i];
+            if (N === undefined) { _error('get_neighbors() returned an array containing nil node in find_path().'); }
             const id = nodeToID(N, map);
             const cost = edgeCost(P, N, map);
+            if (typeof cost !== 'number') { _error('edge_cost() must return a number. Received: ' + unparse(cost)); }
             
             if (cost < Infinity) {
                 const newCostFromStart = shortest.costFromStart + cost;

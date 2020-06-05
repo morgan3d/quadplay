@@ -13,20 +13,17 @@ def swing_hitbox(PLAYER):
 
 // @{ Utility for placing into play area 
 def random_loc_in_play_area():
-    return random_within_square()*(ARENA_SIZE_HALF_PX - BG_TILE_SIZE_PX)
-
-// def polar_to_xy(angle, radius=1):
-//     return xy(radius * cos(angle), radius * sin(angle))
+    return random_within_square() * (ARENA_SIZE_HALF_PX - BG_TILE_SIZE_PX)
 
 def polar_to_xy(angle):
-    return xy(cos(angle), sin(angle))
+    return xy(cos(angle), sin(angle) * rotation_sign())
 
 // uses rejection sampling to find a location inside the play area that is
 // outside the SPAWN_REJECTION_RADIUS of the player
 def random_loc_in_play_area_away_from_player():
     let candidate_pos = xy(0,0)
 
-    let target=xy(0,0)
+    let target = xy(0,0)
     if PLAYER:
         target = PLAYER.pos
     
@@ -101,8 +98,8 @@ let next_flash = INTERVAL_BETWEEN_FLASHES + random_integer(INTERVAL_BETWEEN_FLAS
 const FLASH_LENGTH = 7
 
 def draw_cloud_border():
-    return // TODO
    /*   
+   // This *should* be faster, but isn't...
    preserving_transform:
       for layer < 2:
          set_transform(cam_pos * CLOUD_PARALLAX_MAP[layer], nil, CLOUD_Z_MAP[layer])

@@ -48,7 +48,7 @@
         (literal-exp (regexp-opt '("deg" "true" "false" "nan" "SCREEN_SIZE" "pi" "epsilon" "infinity" "nil") 'symbols))
         (event-exp   (regexp-opt '("enter" "leave" "frame") 'symbols))
         (builtin-exp (regexp-opt '("ray_intersect" "draw_bounds" "draw_disk" "reset_clip" "set_camera" "reset_camera" "get_camera" "reset_transform" "set_clip" "draw_line" "draw_sprite_corner_rect" "intersect_clip" "draw_point" "draw_corner_rect" "draw_rect" "get_background" "set_background" "text_width" "get_sprite_pixel_color" "draw_sprite" "draw_text" "draw_tri" "draw_poly" "get_transform" "get_clip" "rotation_sign" "sign_nonzero" "set_transform" "xy" "xz_to_xyz" "xy_to_xyz" "xz" "xyz"
-                                   "any_button_press" "draw_map" "get_mode" "get_previous_mode" "get_map_pixel_color" "get_map_pixel_color_by_draw_coord" "get_map_sprite" "set_map_sprite" "get_map_sprite_by_draw_coord" "set_map_sprite_by_draw_coord" "unparse" "format_number" "uppercase" "lowercase"
+                                   "any_button_press" "draw_map" "get_mode" "get_previous_mode" "get_map_pixel_color" "get_map_pixel_color_by_draw_coord" "get_map_sprite" "set_map_sprite" "get_map_pixel_color_by_ws_coord" "get_map_sprite_by_ws_coord" "set_map_sprite_by_ws_coord" "unparse" "format_number" "uppercase" "lowercase"
                                    "array_value" "play_sound" "resume_sound" "stop_audio" "game_frames" "mode_frames" "delay" "sequence" "add_frame_hook" "remove_frame_hook"
                                    "make_entity" "draw_entity" "overlaps"
                                    "entity_add_child" "entity_remove_child" "entity_remove_all" "entity_update_children" "entity_simulate" "split"

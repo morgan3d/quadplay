@@ -28,6 +28,10 @@ let alreadyCountedSpritePixels = {};
 
 let lastSpriteID = 0;
 
+// Type used as the value of a constant that references
+// another constant or asset
+function GlobalReference(name) { this.identifier = name; }
+
 function onLoadFileStart(url) {
     // console.log('Fetching "' + url + '"');
     appendToBootScreen('Fetching ' + url.replace(/^.*\//, ''));
@@ -144,7 +148,16 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             if (assetName[0] === '_') { throw 'Illegal asset name: "' + assetName + '"'; }
         }
 
+        // Store the original value, unmodified, so that it
+        // can be accessed by the IDE for editing
+        fileContents[gameURL] = gameSource.json = gameJSON;
+
         //////////////////////////////////////////////////////////////////////////////////////////////
+
+        // Clone for the extended version actually loaded
+        gameJSON = deep_clone(gameJSON);
+        gameSource.extendedJSON = gameJSON;
+        
         // Inject OS script dependencies
         gameJSON.modes.push(
             'quad://console/os/_SystemMenu',
@@ -156,15 +169,12 @@ function afterLoadGame(gameURL, callback, errorCallback) {
 
         // Any changes here must also be updated in the os_dependencies variable in tools/export.py
         gameJSON.assets = Object.assign(gameJSON.assets, os_dependencies);
-
         //////////////////////////////////////////////////////////////////////////////////////////////
         
         gameSource.jsonURL = gameURL;
         if (gameJSON.screen_size === undefined) {
             gameJSON.screen_size = {x: 384, y:224};
         }
-        gameSource.json = gameJSON;
-        fileContents[gameURL] = gameJSON;
 
         const allowedScreenSizes = [{x: 384, y: 224}, {x: 192, y: 112}, {x: 128, y: 128}, {x: 64, y: 64}];
         {
@@ -235,53 +245,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             }
         }
 
-        // Constants:
-        gameSource.constants = {};
-        if (gameJSON.constants) {
-            // Sort constants alphabetically
-            const keys = Object.keys(gameJSON.constants);
-            keys.sort();
-            for (let i = 0; i < keys.length; ++i) {
-                const c = keys[i];
-                const definition = gameJSON.constants[c];
-                if ((definition.type === 'raw') && (definition.url !== undefined)) {
-                    // Raw value loaded from a URL
-                    const constantURL = makeURLAbsolute(gameURL, definition.url);
-                    if (/\.json$/.test(constantURL)) {
-                        loadManager.fetch(constantURL, 'json', nullToUndefined, function (data) {
-                            gameSource.constants[c] = data;
-                        });
-                    } else if (/\.yml$/.test(constantURL)) {
-                        loadManager.fetch(constantURL, 'text', null, function (yaml) {
-                            const json = jsyaml.safeLoad(yaml);
-                            gameSource.constants[c] = nullToUndefined(json);
-                        });
-                    } else {
-                        throw 'Unsupported file format for ' + definition.url;
-                    }
-                } else {
-                    // Inline value
-                    gameSource.constants[c] = evalJSONGameConstant(definition);
-                }
-            }
-        }
-
-        // Docs:
-        gameSource.docs = [];
-        if (gameJSON.docs) {
-            // Just clone the array
-            gameSource.docs = gameJSON.docs.slice(0);
-            for (let d = 0; d < gameSource.docs.length; ++d) {
-                const doc = gameSource.docs[d];
-                if (typeof doc === 'string') {
-                    gameSource.docs[d] = {name: doc, url: makeURLAbsolute(gameURL, doc)};
-                } else {
-                    gameSource.docs[d] = {name: doc.name, url: makeURLAbsolute(gameURL, doc.url)};
-                }               
-            }
-        } // if docs
-        
-        // Assets:
+        // Assets (processed before constants to allow references to point to them)
         if (gameJSON.assets) {
             gameSource.assets = {};
             
@@ -325,10 +289,97 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                     }
 
                 });
-                
-                
             } // for each asset
+        } // Assets
+
+        // Constants:
+        gameSource.constants = {};
+        if (gameJSON.constants) {
+            // Sort constants alphabetically
+            const keys = Object.keys(gameJSON.constants);
+            keys.sort();
+            let hasReferences = false;
+            for (let i = 0; i < keys.length; ++i) {
+                const c = keys[i];
+                const definition = gameJSON.constants[c];
+                if ((definition.type === 'raw') && (definition.url !== undefined)) {
+                    // Raw value loaded from a URL
+                    const constantURL = makeURLAbsolute(gameURL, definition.url);
+                    if (/\.json$/.test(constantURL)) {
+                        loadManager.fetch(constantURL, 'json', nullToUndefined, function (data) {
+                            gameSource.constants[c] = data;
+                        });
+                    } else if (/\.yml$/.test(constantURL)) {
+                        loadManager.fetch(constantURL, 'text', null, function (yaml) {
+                            const json = jsyaml.safeLoad(yaml);
+                            gameSource.constants[c] = nullToUndefined(json);
+                        });
+                    } else {
+                        throw 'Unsupported file format for ' + definition.url;
+                    }
+                } else if (definition.type === 'reference') {
+                    // Defer
+                    hasReferences = true;
+                } else {
+                    // Inline value
+                    gameSource.constants[c] = evalJSONGameConstant(definition);
+                }
+            }
+
+            // Now evaluate references
+            if (hasReferences) {
+                for (let i = 0; i < keys.length; ++i) {
+                    const c = keys[i];
+                    let definition = gameJSON.constants[c];
+                    if (definition.type === 'reference') {
+                        // Recursively evaluate references until an actual
+                        // value is encountered.
+                        let id = undefined;
+                        const alreadySeen = new Map();
+                        alreadySeen.set(c, true);
+                        let path = c;
+                        do {
+                            id = definition.value;
+                            path += ' → ' + id;
+                            if (alreadySeen.has(id)) {
+                                throw 'Cycle in reference chain: ' + path;
+                            }
+                            definition = gameJSON.constants[id];
+                        } while (definition && definition.type === 'reference');
+                        
+                        if (id in gameSource.constants || id in gameSource.assets) {
+                            // Store the *original* reference, which
+                            // will be re-traversed per call at
+                            // runtime to ensure that changes are
+                            // consistent when debugging (this is not
+                            // the fastest choice...we could instead
+                            // make the debugger re-evalue the full
+                            // constant chain for all forward and backward references).
+                            gameSource.constants[c] = new GlobalReference(gameJSON.constants[c].value);
+                        } else {
+                            throw 'Unresolved reference: ' + path;
+                        }
+                    }
+                }
+            } // has references
         }
+
+        // Docs:
+        gameSource.docs = [];
+        if (gameJSON.docs) {
+            // Just clone the array
+            gameSource.docs = gameJSON.docs.slice(0);
+            for (let d = 0; d < gameSource.docs.length; ++d) {
+                const doc = gameSource.docs[d];
+                if (typeof doc === 'string') {
+                    gameSource.docs[d] = makeURLAbsolute(gameURL, doc);
+                } else {
+                    // Legacy format, no longer supported
+                    gameSource.docs[d] = makeURLAbsolute(gameURL, doc.url);
+                }               
+            }
+        } // if docs
+        
     }, loadFailureCallback, loadWarningCallback, computeForceReloadFlag(gameURL));
 
     loadManager.end();
@@ -515,11 +566,11 @@ function loadFont(name, json, jsonURL) {
 }
 
 
-/** Extracts the image data and returns two RGBA4 arrays as [Uint32Array, Uint32Array],
+/** Extracts the image data and returns two RGBA4 arrays as [Uint16Array, Uint16Array],
     where the second is flipped horizontally. Region is an optional crop region. */
 function getImageData4BitAndFlip(image, region) {
     const data = getImageData4Bit(image, region);
-    const flipped = new Uint32Array(data.length);
+    const flipped = new Uint16Array(data.length);
     flipped.width = data.width;
     flipped.height = data.height;
 
@@ -536,7 +587,7 @@ function getImageData4BitAndFlip(image, region) {
 
 
 /** Extracts the image data from an Image and quantizes it to RGBA4
-    format, returning a Uint32Array. region is an optional crop region. */
+    format, returning a Uint16Array. region is an optional crop region. */
 function getImageData4Bit(image, region) {
     // Make a uint32 aliased version
     const dataRaw = new Uint32Array(getImageData(image).data.buffer);
@@ -559,15 +610,18 @@ function getImageData4Bit(image, region) {
     // Quantize (more efficient to process four bytes at once!)
     // Converts R8G8B8A8 to R4G4B4A4-equivalent by copying high bits to low bits.
     const N = data.length;
-            
+
+    const result = new Uint16Array(N);
+    result.height = data.height;
+    result.width = data.width;
     for (let i = 0; i < N; ++i) {
         // Debug endianness
         //console.log('0x' + a[i].toString(16) + ' : [0]=' + spritesheet.data[4*i] + ', [1] = '+ spritesheet.data[4*i+1] + ', [2] = '+ spritesheet.data[4*i+2] + ', [3] = '+ spritesheet.data[4*i+3]);
-        const c = (data[i] >> 4) & 0x0F0F0F0F;
-        data[i] = (c << 4) | c;
+        const c = data[i] >> 4;
+        result[i] = ((c & 0xf000000) >> 12) | ((c & 0xf0000) >> 8) | ((c & 0xf00) >> 4) | c & 0xf;
     }
 
-    return data;
+    return result;
 }
 
 
@@ -611,8 +665,8 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
     spritesheet = Object.assign([], {
         _name: 'spritesheet ' + name,
         _type: 'spritesheet',
-        _uint32Data: null,
-        _uint32DataFlippedX : null,
+        _uint16Data: null,
+        _uint16DataFlippedX : null,
         _url: pngURL,
         _sourceURL: (json.source_url && json.source_url !== '') ? makeURLAbsolute(jsonURL, json.source_url) : null,
         _gutter: (json.sprite_size.gutter || 0),
@@ -668,8 +722,8 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
         onLoadFileComplete(pngURL);
         const data = dataPair[0];
 
-        spritesheet._uint32Data = data;
-        spritesheet._uint32DataFlippedX = dataPair[1];
+        spritesheet._uint16Data = data;
+        spritesheet._uint16DataFlippedX = dataPair[1];
         
         const boundingRadius = Math.hypot(spritesheet.sprite_size.x, spritesheet.sprite_size.y);
         spritesheet.size = {x: data.width, y: data.height};
@@ -699,11 +753,11 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                 for (let j = 0; j < spritesheet.sprite_size.y; ++j) {
                     let index = (y * (spritesheet.sprite_size.y + spritesheet._gutter) + j) * data.width + x * (spritesheet.sprite_size.x + spritesheet._gutter);
                     for (let i = 0; i < spritesheet.sprite_size.x; ++i, ++index) {
-                        const alpha255 = data[index] >>> 24;
-                        if (alpha255 < 0xff) {
+                        const alpha15 = data[index] >>> 12;
+                        if (alpha15 < 0xf) {
                             hasAlpha = true;
 
-                            if (alpha255 !== 0) {
+                            if (alpha15 !== 0) {
                                 hasFractionalAlpha = true;
                                 break outerloop;
                             }
@@ -1396,6 +1450,9 @@ function evalJSONGameConstant(json) {
         
     case 'raw':
         if (json.url !== undefined) {
+            // We only allow raw at top level because otherwise we'd have to traverse
+            // constants during loading or load during constant evaluation, and would also
+            // have to deal with this mess from the GUI.
             throw 'Raw values with URLs only permitted for top-level constants';
         }
         
@@ -1492,6 +1549,12 @@ function evalJSONGameConstant(json) {
                 result.push(evalJSONGameConstant(json.value[i]));
             }
             return result;
+        }
+
+    case 'reference':
+        {
+            throw 'References only permitted for top-level constants';
+            return undefined;
         }
 
     default:

@@ -13,10 +13,10 @@ function _show() {
         // clear the screen
         if (_background.spritesheet) {
             // Image background
-            _screen.set(_background.spritesheet._uint32Data);
+            _screen.set(_background.spritesheet._uint16Data);
         } else {
             // Color background (force alpha = 1)
-            let c = (_colorToUint32(_background) >>> 0) | 0xff000000;
+            let c = (_colorToUint16(_background) >>> 0) | 0xf000;
             _screen.fill(c, 0, _screen.length);
         }
         
@@ -81,22 +81,22 @@ function _pset(x, y, color, clipX1, clipY1, clipX2, clipY2) {
         const offset = i + j * _SCREEN_WIDTH;
 
         // Must be unsigned shift to avoid sign extension
-        const a255 = color >>> 24;
+        const a15 = color >>> 12;
 
-        if (a255 === 0xff) {
+        if (a15 === 0xf) {
             // No blending
             _screen[offset] = color;
-        } else if (a255 > 0) {
+        } else if (a15 !== 0) {
             // Blend
 
             // No need to force to unsigned int because the alpha channel of the output is always 0xff
             
-            const a = a255 * (1 / 255);
+            const a = a15 * (1 / 15);
             let back = _screen[offset];
-            let result = 0xFF000000;
-            result |= ((back & 0x00FF0000) * (1 - a) + (color & 0x00FF0000) * a + 0.5) & 0x00FF0000;
-            result |= ((back & 0x0000FF00) * (1 - a) + (color & 0x0000FF00) * a + 0.5) & 0x0000FF00;
-            result |= ((back & 0x000000FF) * (1 - a) + (color & 0x000000FF) * a + 0.5) & 0x000000FF;
+            let result = 0xF000;
+            result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5) & 0x0F00;
+            result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5) & 0x00F0;
+            result |= ((back & 0x000F) * (1 - a) + (color & 0x000F) * a + 0.5) & 0x000F;
             _screen[offset] = result;
         }
     }
@@ -113,31 +113,32 @@ function _hline(x1, y, x2, color, clipX1, clipY1, clipX2, clipY2) {
         // Some part is on screen
 
         // Don't draw past the edge of the screen
-        x1 = Math.max(x1, clipX1);
-        x2 = Math.min(x2, clipX2);
+        x1 = Math.max(x1, clipX1) | 0;
+        x2 = Math.min(x2, clipX2) | 0;
         
-        let a255 = color >>> 24;
-        if (a255 === 0xff) {
+        let a15 = color >>> 12;
+        if (a15 === 0xf) {
             // Overwrite
             _screen.fill(color, x1 + (y * _SCREEN_WIDTH), x2 + (y * _SCREEN_WIDTH) + 1);
-        } else if (a255 > 0) {
+        } else if (a15 !== 0) {
             // Blend (see comments in _pset)
-            const a = a255 * (1 / 255);
-            const r = (color & 0x00FF0000) * a + 0.5;
-            const g = (color & 0x0000FF00) * a + 0.5;
-            const b = (color & 0x000000FF) * a + 0.5;
+            const a = a15 * (1 / 15);
+            const r = (color & 0x0F0) * a + 0.5;
+            const g = (color & 0x0F0) * a + 0.5;
+            const b = (color & 0x00F) * a + 0.5;
 
-            for (let x = x1, offset = x1 + y * _SCREEN_WIDTH; x <= x2; ++x, ++offset) {
-                let back = _screen[offset];
-                let result = 0xFF000000;
-                result |= ((back & 0x00FF0000) * (1 - a) + r) & 0x00FF0000;
-                result |= ((back & 0x0000FF00) * (1 - a) + g) & 0x0000FF00;
-                result |= ((back & 0x000000FF) * (1 - a) + b) & 0x000000FF;
+            for (let x = x1, offset = (x1 + y * _SCREEN_WIDTH) | 0; x <= x2; ++x, ++offset) {
+                let back = _screen[offset] >>> 0;
+                let result = 0xF000 >>> 0;
+                result |= ((back & 0x0F00) * (1 - a) + r) & 0x0F00;
+                result |= ((back & 0x00F0) * (1 - a) + g) & 0x00F0;
+                result |= ((back & 0x000F) * (1 - a) + b) & 0x000F;
                 _screen[offset] = result;
             }
         }
     }
 }
+
 
 /** Assumes y2 >= y1 and that color is RGBA. Does not assume that y1 and y2 or x are
     on screen */
@@ -150,23 +151,23 @@ function _vline(x, y1, y2, color, clipX1, clipY1, clipX2, clipY2) {
         y1 = Math.max(clipY1, y1);
         y2 = Math.min(clipY2, y2);
 
-        let a255 = color >>> 24;
-        if (a255 === 0xff) {
+        let a15 = color >>> 12;
+        if (a15 === 0xf) {
             for (let y = y1, offset = y1 * _SCREEN_WIDTH + x; y <= y2; ++y, offset += _SCREEN_WIDTH) {
                 _screen[offset] = color;
             }
-        } else if (a255 > 0) {
+        } else if (a15 !== 0) {
             // Blend (see comments in _pset)
-            const a = a255 * (1 / 255);
-            const r = (color & 0x00FF0000) * a + 0.5;
-            const g = (color & 0x0000FF00) * a + 0.5;
-            const b = (color & 0x000000FF) * a + 0.5;
+            const a = a15 * (1 / 15);
+            const r = (color & 0x0F00) * a + 0.5;
+            const g = (color & 0x00F0) * a + 0.5;
+            const b = (color & 0x000F) * a + 0.5;
             for (let y = y1, offset = y1 * _SCREEN_WIDTH + x; y <= y2; ++y, offset += _SCREEN_WIDTH) {
                 let back = _screen[offset];
-                let result = 0xFF000000;
-                result |= ((back & 0x00FF0000) * (1 - a) + r) & 0x00FF0000;
-                result |= ((back & 0x0000FF00) * (1 - a) + g) & 0x0000FF00;
-                result |= ((back & 0x000000FF) * (1 - a) + b) & 0x000000FF;
+                let result = 0xF000;
+                result |= ((back & 0x0F00) * (1 - a) + r) & 0x0F00;
+                result |= ((back & 0x00F0) * (1 - a) + g) & 0x00F0;
+                result |= ((back & 0x000F) * (1 - a) + b) & 0x000F;
                 _screen[offset] = result;
             }
         }
@@ -181,7 +182,7 @@ function _executeCIR(cmd) {
     const clipX1 = cmd.clipX1, clipY1 = cmd.clipY1,
           clipX2 = cmd.clipX2, clipY2 = cmd.clipY2;
     
-    if (color & 0xff000000) {
+    if (color & 0xf000) {
         // offset
         let ox = radius - 1, oy = 0;
         
@@ -223,7 +224,7 @@ function _executeCIR(cmd) {
     } // if color
 
     
-    if ((outline & 0xff000000) && (outline !== color)) {
+    if ((outline & 0xf000) && (outline !== color)) {
         // offset
         let ox = radius - 1, oy = 0;
         
@@ -282,7 +283,7 @@ function _executeREC(cmd) {
     
     let x1 = cmd.x1, x2 = cmd.x2, y1 = cmd.y1, y2 = cmd.y2;
 
-    if ((outline !== fill) && (outline > 0xFFFFFF)) {
+    if ((outline !== fill) && (outline > 0xFFF)) {
         _hline(x1, y1, x2, outline, clipX1, clipY1, clipX2, clipY2);
         _hline(x1, y2, x2, outline, clipX1, clipY1, clipX2, clipY2);
         _vline(x1, y1 + 1, y2 - 1, outline, clipX1, clipY1, clipX2, clipY2);
@@ -290,7 +291,7 @@ function _executeREC(cmd) {
         x1 += 1; y1 += 1; x2 -= 1; y2 -= 1;
     }
 
-    if (fill & 0xff000000) {
+    if (fill & 0xf000) {
         
         // Snap to integer and set_clip to screen. We don't need to
         // round because we know that the rect is visible.
@@ -355,7 +356,8 @@ function _line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2, open1, ope
 
             // Adjust for x2 being clipped (y2 is unused, so ignore it)
             x2 = Math.min(x2, clipX2);
-            
+
+            x1 |= 0; x2 |= 0;
             for (let x = x1, y = y1; x <= x2; ++x, y += m) {
                 _pset(x, y, color, clipX1, clipY1, clipX2, clipY2);
             } // for x
@@ -370,6 +372,7 @@ function _line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2, open1, ope
             const step = Math.max(clipY1, y1) - y1;
             x1 += step * m; y1 += step;
             y2 = Math.min(y2, clipY2);
+            y1 |= 0; y2 |= 0;
             for (let y = y1, x = x1; y <= y2; ++y, x += m) {
                 _pset(x, y, color, clipX1, clipY1, clipX2, clipY2);
             } // for y
@@ -390,22 +393,22 @@ function _executePIX(cmd) {
         const color = data[p + 1];
 
         // Must be unsigned shift to avoid sign extension
-        const a255 = color >>> 24;
+        const a15 = color >>> 12;
 
-        if (a255 === 0xff) {
+        if (a15 === 0xf) {
             // No blending
             _screen[offset] = color;
-        } else if (a255 > 0) {
+        } else if (a15 !== 0) {
             // Blend
 
             // No need to force to unsigned int because the alpha channel of the output is always 0xff
             
-            const a = a255 * (1 / 255);
+            const a = a15 * (1 / 15);
             let back = _screen[offset];
-            let result = 0xFF000000;
-            result |= ((back & 0x00FF0000) * (1 - a) + (color & 0x00FF0000) * a + 0.5) & 0x00FF0000;
-            result |= ((back & 0x0000FF00) * (1 - a) + (color & 0x0000FF00) * a + 0.5) & 0x0000FF00;
-            result |= ((back & 0x000000FF) * (1 - a) + (color & 0x000000FF) * a + 0.5) & 0x000000FF;
+            let result = 0xF000;
+            result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5) & 0x0F00;
+            result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5) & 0x00F0;
+            result |= ((back & 0x000F) * (1 - a) + (color & 0x000F) * a + 0.5) & 0x000F;
             _screen[offset] = result;
         }
     }
@@ -521,8 +524,8 @@ function _executeSPR(metaCmd) {
                        cmd.spritesheetIndex >= 0 &&
                        cmd.spritesheetIndex < _spritesheetArray.length);
         // May be reassigned below when using flipped X values
-        let srcData = _spritesheetArray[cmd.spritesheetIndex]._uint32Data;
-        const srcDataWidth = srcData.width;
+        let srcData = _spritesheetArray[cmd.spritesheetIndex]._uint16Data;
+        const srcDataWidth = srcData.width >>> 0;
         if ((Math.abs(Math.abs(A) - 1) < 1e-10) && (Math.abs(B) < 1e-10) &&
             (Math.abs(C) < 1e-10) && (Math.abs(Math.abs(D) - 1) < 1e-10) &&
             (! override_color)) {
@@ -531,23 +534,26 @@ function _executeSPR(metaCmd) {
             // test. Use a memcpy.  The x and y-axes may be inverted, and there
             // can be xy translation applied. This branch is primarily
             // here to accelerate map rendering.
-            
+
+            // All of the "| 0" are to force values to integers, which massively
+            // improves performance on Safari (5x in some cases)
+
             const width = (dstX2 - dstX1 + 1) | 0;
             if (width >= 1) {
                 const srcY = ((dstY1 + 0.4999 - DY) * D + SY) | 0;
-                let srcOffset = (((dstX1 + 0.4999 - DX) + SX) | 0) + srcY * srcDataWidth;
+                let srcOffset = ((((dstX1 + 0.4999 - DX) + SX) | 0) + srcY * srcDataWidth) | 0;
                 let dstOffset = (dstX1 + dstY1 * _SCREEN_WIDTH) | 0;
                 const srcStep = (srcDataWidth * D) | 0;
 
                 if (A < 0) {
                     // Use the flipped version
-                    srcOffset += srcDataWidth - 2 * SX;
-                    srcData = _spritesheetArray[cmd.spritesheetIndex]._uint32DataFlippedX;
+                    srcOffset = (srcOffset + srcDataWidth - 2 * SX) | 0;
+                    srcData = _spritesheetArray[cmd.spritesheetIndex]._uint16DataFlippedX;
                 }
-
+                
                 if ((! cmd.hasAlpha) && (Math.abs(opacity - 1) < 1e-10)) {
                     // Memcpy case
-                    for (let dstY = dstY1; dstY <= dstY2; ++dstY, dstOffset += _SCREEN_WIDTH, srcOffset += srcStep) {
+                    for (let dstY = dstY1; dstY <= dstY2; ++dstY) {
                         // This TypedArray.set call saves about 3.5 ms/frame
                         // compared to an explicit horizontal loop for map
                         // rendering on Firefox. Chrome and Safari are fast
@@ -556,97 +562,126 @@ function _executeSPR(metaCmd) {
                         
                         // console.assert(dstOffset + width <= _screen.length, `dstX1=${dstX1}, dstX2 = ${dstX2}, _screen.length = ${_screen.length}, width = ${width}, dstOffset = ${dstOffset}, dstOffset % _SCREEN_WIDTH = ${dstOffset % _SCREEN_WIDTH}, dstY = ${dstY}, dstY2 = ${dstY2}`);
                         // console.assert(srcOffset + width <= srcData.length);
-                        _screen.set(srcData.slice(srcOffset, srcOffset + width), dstOffset);
+                        _screen.set(srcData.subarray(srcOffset, srcOffset + width), dstOffset);
+                        
+                        // Putting this increment at the bottom slightly
+                        // improves Safari performance
+                        dstOffset = (dstOffset + _SCREEN_WIDTH) | 0;
+                        srcOffset = (srcOffset + srcStep) | 0;
                     } // dstY
                 } else {
                     // Blending or alpha test case
-                    for (let dstY = dstY1; dstY <= dstY2; ++dstY, dstOffset += _SCREEN_WIDTH, srcOffset += srcStep) {
+                    for (let dstY = dstY1; dstY <= dstY2; ++dstY) {
                         for (let i = 0; i < width; ++i) {
-                            let color = srcData[srcOffset + i];
-                            let a255 = color >>> 24;
-                            
+                            // Forcing the read value back to an integer improves
+                            // performance slightly on Safari (5%)
+                            let color = srcData[srcOffset + i] >>> 0;
+                            let a15 = color >>> 12;
+
                             // Test alpha *first* in this case, because quite often we'll be in a sprite
-                            // with a lot of alpha == 0 pixels and not need to go further.
-                            if (a255 > 0x0f) {
+                            // with a lot of alpha === 0 pixels and not need to go further.
+                            if (a15 !== 0) {
                                 // Blending
                                 if (opacity < 1) {
                                     // Make more transparent
-                                    
-                                    // 4 high bits
-                                    const alpha4 = ((a255 >>> 4) * opacity + 0.5) >>> 0;
-                                    a255 = ((alpha4 << 4) | alpha4) >>> 0;
+                                    a15 = (a15 * opacity + 0.5) >>> 0;
                                 }
 
-                                if (a255 >= 0xf0) {
+                                if (a15 === 0xf) {
                                     // 100% alpha, no blend needed
-                                    _screen[dstOffset + i] = (color | 0xFF000000) >>> 0;
-                                } else if (a255 > 0x0f) {
+                                    _screen[dstOffset + i] = (color | 0xF000) >>> 0;
+                                } else if (a15 !== 0) {
                                     // Fractional alpha
                                 
                                     // No need to force to unsigned int because the alpha channel of
                                     // the output is always 0xff
-                                    const a = a255 * (1 / 255);
-                                    const back = _screen[dstOffset + i];
+                                    const a = a15 * (1 / 15);
+                                    const back = _screen[dstOffset + i] >>> 0;
                                     
-                                    let result = 0xFF000000;
-                                    result |= ((back & 0x00FF0000) * (1 - a) + (color & 0x00FF0000) * a + 0.5) & 0x00FF0000;
-                                    result |= ((back & 0x0000FF00) * (1 - a) + (color & 0x0000FF00) * a + 0.5) & 0x0000FF00;
-                                    result |= ((back & 0x000000FF) * (1 - a) + (color & 0x000000FF) * a + 0.5) & 0x000000FF;
+                                    let result = 0xF000 >>> 0;
+                                    result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5) & 0x0F00;
+                                    result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5) & 0x00F0;
+                                    result |= ((back & 0x000F) * (1 - a) + (color & 0x000F) * a + 0.5) & 0x000F;
                                 
                                     _screen[dstOffset + i] = result;
                                 }
                             } // alpha > 0
                         } // column
+                        
+                        // Putting this increment at the bottom slightly
+                        // improves Safari performance. Casting to integer
+                        // MASSIVELY improves Safari performance.
+                        dstOffset = (dstOffset + _SCREEN_WIDTH) | 0;
+                        srcOffset = (srcOffset + srcStep) | 0;
                     } // row
                 } // needs alpha
             } // width >= 1
-        } else {
-            // General case.
-
-            // Extract the common terms of blending into the override color
-            const override = override_color ? _colorToUint32(override_color) : 0;
-            const override_a = 1 - (override >>> 24) * (1 / 255);
-
-            const override_mode = (override_a === 1) ? 0 : (override_a === 0) ? 2 : 1;
-            const override_r = (override & 0x00FF0000) * (1 - override_a) + 0.5;
-            const override_g = (override & 0x0000FF00) * (1 - override_a) + 0.5;
-            const override_b = (override & 0x000000FF) * (1 - override_a) + 0.5;
-            
+        } else if (! override_color && (! cmd.hasAlpha) && (Math.abs(opacity - 1) < 1e-10)) {
+            // No blending case with rotation and scale
+            dstY1 |= 0; dstY2 |= 0;
             for (let dstY = dstY1; dstY <= dstY2; ++dstY) {
                 // Offset everything by 0.5 to transform the pixel
                 // center. Needs to be *slightly* less in order to round
                 // the correct way.
-                const xterms = (dstY + 0.4999 - DY) * B + SX;
-                const yterms = (dstY + 0.4999 - DY) * D + SY;
+                const xterms = (dstY + 0.4999 - DY) * B + SX + (0.4999 - DX) * A;
+                const yterms = (dstY + 0.4999 - DY) * D + SY + (0.4999 - DX) * C;
                 
                 let dstOffset = dstX1 + dstY * _SCREEN_WIDTH;
                 
                 for (let dstX = dstX1; dstX <= dstX2; ++dstX, ++dstOffset) {
-                    const srcX = ((dstX + 0.4999 - DX) * A + xterms) | 0;
-                    const srcY = ((dstX + 0.4999 - DX) * C + yterms) | 0;
+                    const srcX = (dstX * A + xterms) | 0;
+                    const srcY = (dstX * C + yterms) | 0;
 
-                    // Show bounds
-                    //_screen[dstOffset] = 0xffffffff;// continue;
-                    
+                    if ((srcX >= srcX1) && (srcX <= srcX2) && (srcY >= srcY1) && (srcY <= srcY2)) {
+                        // Inside the source sprite
+                        _screen[dstOffset] = srcData[srcX + srcY * srcDataWidth];
+                    } // clamp to source bounds
+                } // dstX
+            } // dstY
+            
+        } else {
+            // General case.
+            // Extract the common terms of blending into the override color
+            const override = override_color ? _colorToUint16(override_color) : 0;
+            const override_a = 1 - (override >>> 12) * (1 / 15);
+
+            const override_mode = (override_a === 1) ? 0 : (override_a === 0) ? 2 : 1;
+            const override_r = (override & 0x0F00) * (1 - override_a) + 0.5;
+            const override_g = (override & 0x00F0) * (1 - override_a) + 0.5;
+            const override_b = (override & 0x000F) * (1 - override_a) + 0.5;
+
+            dstY1 |= 0; dstY2 |= 0;
+            for (let dstY = dstY1; dstY <= dstY2; ++dstY) {
+                // Offset everything by 0.5 to transform the pixel
+                // center. Needs to be *slightly* less in order to round
+                // the correct way.
+                const xterms = (dstY + 0.4999 - DY) * B + SX + (0.4999 - DX) * A;
+                const yterms = (dstY + 0.4999 - DY) * D + SY + (0.4999 - DX) * C;
+                
+                let dstOffset = (dstX1 + dstY * _SCREEN_WIDTH) | 0;
+                
+                for (let dstX = dstX1; dstX <= dstX2; ++dstX, ++dstOffset) {
+                    const srcX = (dstX * A + xterms) | 0;
+                    const srcY = (dstX * C + yterms) | 0;
+
                     if ((srcX >= srcX1) && (srcX <= srcX2) && (srcY >= srcY1) && (srcY <= srcY2)) {
                         // Inside the source sprite
 
                         // May be overriden below.
                         let color = srcData[srcX + srcY * srcDataWidth];
-                        
                         if (opacity < 1) {
                             // Make more transparent
                             
                             // 4 high bits
-                            const alpha4 = ((color >>> 28) * opacity + 0.5) | 0;
-                            color = ((alpha4 << 28) | (alpha4 << 24) | (color & 0xFFFFFF)) >>> 0;
+                            const alpha4 = ((color >>> 12) * opacity + 0.5) | 0;
+                            color = ((alpha4 << 12) | (color & 0xFFF)) >>> 0;
                         }
                         
                         // the following is an inlining of: _pset(dstX, dstY, color, clipX1, clipY1, clipX2, clipY2);
                         
                         // Must be unsigned shift to avoid sign extension
-                        const a255 = color >>> 24;
-                        if (a255 < 0x10) {
+                        const a15 = color >>> 12;
+                        if (a15 === 0) {
                             // 0% alpha
                         } else {
 
@@ -655,34 +690,33 @@ function _executeSPR(metaCmd) {
                             } else if (override_mode === 1) {
                                 // Blend
                                 const src = color;
-                                color &= 0xFF000000;
-                                color |= (override_r + (src & 0x00FF0000) * override_a) & 0x00FF0000;
-                                color |= (override_g + (src & 0x0000FF00) * override_a) & 0x0000FF00;
-                                color |= (override_b + (src & 0x000000FF) * override_a) & 0x000000FF;
+                                color &= 0xF000;
+                                color |= (override_r + (src & 0x0F00) * override_a) & 0x0F00;
+                                color |= (override_g + (src & 0x00F0) * override_a) & 0x00F0;
+                                color |= (override_b + (src & 0x000F) * override_a) & 0x000F;
                             } else {
                                 // Completely overwrite
-                                color = (color & 0xFF000000) | (override & 0xFFFFFF);
+                                color = (color & 0xF000) | (override & 0xFFF);
                             }
 
-                            if (a255 >= 0xf0) {
+                            if (a15 === 0xf) {
                                 // 100% alpha
                                 _screen[dstOffset] = color;
-                            } else if (a255 > 0x0f) {
+                            } else if (a15 != 0) {
                                 // Fractional alpha
                                 
                                 // No need to force to unsigned int because the alpha channel of the output is always 0xff
-                                const a = a255 * (1 / 255);
+                                const a = a15 * (1 / 15);
                                 const back = _screen[dstOffset];
-                                let result = 0xFF000000;
+                                let result = 0xF000;
                                 
-                                result |= ((back & 0x00FF0000) * (1 - a) + (color & 0x00FF0000) * a + 0.5) & 0x00FF0000;
-                                result |= ((back & 0x0000FF00) * (1 - a) + (color & 0x0000FF00) * a + 0.5) & 0x0000FF00;
-                                result |= ((back & 0x000000FF) * (1 - a) + (color & 0x000000FF) * a + 0.5) & 0x000000FF;
+                                result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5) & 0x0F00;
+                                result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5) & 0x00F0;
+                                result |= ((back & 0x000F) * (1 - a) + (color & 0x000F) * a + 0.5) & 0x000F;
                                 
                                 _screen[dstOffset] = result;
                             }
                         }
-                        
                     } // clamp to source bounds
                 } // i
             } // j
@@ -703,7 +737,7 @@ function _executeTXT(cmd) {
 
     let x = cmd.x, y = cmd.y;
 
-    if ((font._spacing.x === 0) && (outline & 0xFF000000) && (color & 0xFF000000)) {
+    if ((font._spacing.x === 0) && (outline & 0xF000) && (color & 0xF000)) {
         // Script font with outline and color. Draw in two passes so that
         // the connectors are not broken by outlines.
         
@@ -744,7 +778,7 @@ function _executeTXT(cmd) {
                             let v = 0;
                             if (bits & 0x1) {                 // 0001 color = color
                                 v = color;
-                            } else if (outline & 0xff000000) {
+                            } else if (outline & 0xf000) {
                                 // Outline is on
                                 if (bits & 0x8) {             // 1000 outline w/ shadow = shadow
                                     // Shadow if using outline
@@ -782,8 +816,8 @@ function _executePLY(cmd) {
     const color = cmd.color, outline = cmd.outline;
     
     // Fill
-    if (color & 0xff000000) {
-        const shift = ((outline & 0xff000000) && (outline !== color)) ? 0.5 : 0;
+    if (color & 0xf000) {
+        const shift = ((outline & 0xf000) && (outline !== color)) ? 0.5 : 0;
         // For each non-horizontal edge, store:
         //
         //    [startX, startY, dx/dy slope, vertical height].
@@ -846,7 +880,7 @@ function _executePLY(cmd) {
         }
     }
 
-    if ((outline & 0xff000000) && (outline !== color)) {
+    if ((outline & 0xf000) && (outline !== color)) {
         for (let p = 0; p < points.length - 3; p += 2) {
             _line(points[p], points[p + 1], points[p + 2], points[p + 3], outline, clipX1, clipY1, clipX2, clipY2, false, true);
         }

@@ -7,7 +7,7 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.05.22.14'
+const version  = '2020.06.05.01'
 const launcherURL = 'quad://console/launcher';
 
 // Token that must be passed to the server to make POST calls
@@ -340,7 +340,7 @@ function onResize() {
         break;
         
     case 'WideIDE':
-        scale = 2;
+        scale = window.screen.width <= 1600 ? 1.5 : 2.0;
         // Fall through to IDE case
         
     case 'IDE':
@@ -614,7 +614,7 @@ function onPlayButton(slow, isLaunchGame, args) {
                     e.message += ', possible due to a missing { on a previous line';
                 }
                 
-                setErrorStatus('Error: ' + e.url + ', line ' + e.lineNumber + ': ' + e.message);
+                setErrorStatus(shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message);
                 if (isSafari) {
                     console.log('_currentLineNumber = ' + QRuntime._currentLineNumber);
                 }
@@ -1052,9 +1052,10 @@ for (const name in controlSchemeTable) {
 function restartProgram(numBootAnimationFrames) {
     reloadRuntime(function () {
         try {
-            // Inject the constants into the runtime space
-            makeConstants(QRuntime, gameSource.constants, gameSource.CREDITS);
+            // Inject the constants into the runtime space. Define
+            // assets first so that references can point to them.
             makeAssets(QRuntime, gameSource.assets);
+            makeConstants(QRuntime, gameSource.constants, gameSource.CREDITS);
         } catch (e) {
             // Compile-time error
             onStopButton();
@@ -1072,7 +1073,7 @@ function restartProgram(numBootAnimationFrames) {
             // "Link"-time or run-time on a script error
             onStopButton();
             e = jsToNSError(e);
-            setErrorStatus('file ' + e.url + ' line ' + clamp(1, e.lineNumber, programNumLines) + ': ' + e.message);
+            setErrorStatus(shortURL(e.url) + ' line ' + clamp(1, e.lineNumber, programNumLines) + ': ' + e.message);
             return;
         }
     });
@@ -1203,7 +1204,7 @@ function onDocumentKeyDown(event) {
         break;
 
     case 82: // R
-        if (event.ctrlKey || event.metaKey) { // Ctrl+R
+        if (useIDE && (event.ctrlKey || event.metaKey)) { // Ctrl+R
             // Intercept from browser
             event.preventDefault();
             event.stopPropagation();
@@ -1218,6 +1219,17 @@ function onDocumentKeyDown(event) {
             event.stopPropagation();
         }
         break;
+
+    case 219: // [
+    case 221: // ]
+    case 72: // H
+        if (useIDE && (event.ctrlKey || event.metaKey)) {
+            // Browser navigation keys...disable!
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        break;
+        
         
     case 80: // P = pause
         if (! event.ctrlKey && ! event.metaKey) { 
@@ -1238,6 +1250,7 @@ function onDocumentKeyDown(event) {
             event.stopPropagation();
             event.preventDefault();
         }
+        break;
 
     }
 }
@@ -1261,6 +1274,7 @@ function saveIDEState() {
         'showPhysicsEnabled': document.getElementById('showPhysicsEnabled').checked,
         'showEntityBoundsEnabled': document.getElementById('showEntityBoundsEnabled').checked,
         'assertEnabled': document.getElementById('assertEnabled').checked,
+        'todoEnabled': document.getElementById('todoEnabled').checked,
         'automathEnabled': document.getElementById('automathEnabled').checked,
         'debugWatchEnabled': document.getElementById('debugWatchEnabled').checked,
         'debugPrintEnabled': document.getElementById('debugPrintEnabled').checked,
@@ -1335,27 +1349,27 @@ function onProjectSelect(target, type, object) {
     if (type === 'doc') {
         // Documents
         target.classList.add('selectedProjectElement');
-        showGameDoc(object.url);
+        showGameDoc(object);
         docEditor.style.visibility = 'visible';
         codePlusFrame.style.visibility = 'visible';
 
         codePlusFrame.style.gridTemplateRows = `auto 0px 0px 100%`;
         
-        if (object.url.endsWith('.md') ||
-            object.url.endsWith('.html') ||
-            object.url.endsWith('.txt')) {
+        if (object.endsWith('.md') ||
+            object.endsWith('.html') ||
+            object.endsWith('.txt')) {
 
             // Show the editor after loading the content
-            if (fileContents[object.url] !== undefined) {
+            if (fileContents[object] !== undefined) {
                 codePlusFrame.style.gridTemplateRows = `auto 4fr auto 3fr`;
-                setCodeEditorSession(object.url);
+                setCodeEditorSession(object);
             } else {
                 // Load and set the contents
                 const loadManager = new LoadManager({forceReload: true});
-                loadManager.fetch(object.url, 'text', null, function (doc) {
-                    fileContents[object.url] = doc;
+                loadManager.fetch(object, 'text', null, function (doc) {
+                    fileContents[object] = doc;
                     codePlusFrame.style.gridTemplateRows = `auto 4fr auto 3fr`;
-                    setCodeEditorSession(object.url);
+                    setCodeEditorSession(object);
                 });
                 loadManager.end();
             }
@@ -1367,6 +1381,9 @@ function onProjectSelect(target, type, object) {
         if (target) { target.classList.add('selectedProjectElement'); }
         visualizeGame(gameEditor, gameSource.jsonURL, gameSource.json);
         gameEditor.style.visibility = 'visible';
+        codePlusFrame.style.visibility = 'visible';
+        codePlusFrame.style.gridTemplateRows = `auto 4fr auto 3fr`;
+        setCodeEditorSession(gameSource.jsonURL);
         return;
     }
 
@@ -1533,12 +1550,15 @@ function showGameDoc(url, useFileContents) {
     // Strip anything sketchy that looks like an HTML attack from the URL
     console.assert(url !== undefined);
     url = url.replace(/['" ><]/g, '');
+
+    // Add a base tag to HTML documents so that relative URLs are parsed correctly
+    const baseTag = `<base href="${urlDir(url)}">`;
     if (url.endsWith('.html')) {
         // Includes the .md.html case
         let s = `<iframe id="doc" width="125%" height="125%" onload="setIFrameScroll(this, ${oldScrollX}, ${oldScrollY})" `;
         
         if (srcdoc !== undefined) {
-            const html = srcdoc.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+            const html = baseTag + srcdoc.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
             s += 'srcdoc="' + html + '"';
         } else {
             s += `src="${url}?"`;
@@ -1548,12 +1568,10 @@ function showGameDoc(url, useFileContents) {
         // Trick out .md files using Markdeep
         
         function markdeepify(text) {
-            // Set base URL and add Markdeep processing
-            const base = urlDir(url);
             const markdeepURL = makeURLAbsolute('', 'quad://doc/markdeep.min.js');
             
             // Escape quotes to avoid ending the srcdoc prematurely
-            return `<base href='${base}'>\n${text.replace(/"/g, '&quot;')}
+            return `${baseTag}${text.replace(/"/g, '&quot;')}
                 <style>
 body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif}
 
@@ -1937,6 +1955,10 @@ function visualizeConstant(value, indent) {
     return s;
 }
 
+function onOpenFolder(filename) {
+    postToServer({command: 'open', app: '<finder>', file: filename});
+}
+
 
 function visualizeGame(gameEditor, url, game) {
     const disabled = editableProject ? '' : 'disabled';
@@ -1982,7 +2004,8 @@ function visualizeGame(gameEditor, url, game) {
 
     if (editableProject) {
         const filename = serverConfig.rootPath + urlToFilename(url);
-        s += '<tr valign="top"><td>Disk</td><td colspan=3>' + filename + '</td></tr>\n';
+        const path = filename.replace(/\/[^.\/\\]+?\.game\.json$/, '');
+        s += `<tr valign="top"><td>Folder</td><td colspan=3><a onclick="onOpenFolder('${path}')" style="cursor:pointer">${path}</a></td></tr>\n`;
     }
     
     s += `<tr valign="top"><td width="110px">Title</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="projectTitle" value="${game.title.replace(/"/g, '\\"')}"></td></tr>\n`;
@@ -2009,7 +2032,7 @@ function visualizeGame(gameEditor, url, game) {
         const res = [[384, 224], [192,112], [128,128], [64,64]];
         for (let i = 0; i < res.length; ++i) {
             const W = res[i][0], H = res[i][1];
-            s += `<option value='{"x":${W},"y":${H}}' ${W === gameSource.json.screen_size.x && H === gameSource.json.screen_size.y ? "selected" : ""}>${W} × ${H}</option>`;
+            s += `<option value='{"x":${W},"y":${H}}' ${W === gameSource.extendedJSON.screen_size.x && H === gameSource.extendedJSON.screen_size.y ? "selected" : ""}>${W} × ${H}</option>`;
         }
         s += `</select></td></tr>\n`;
     } else {
@@ -2021,7 +2044,7 @@ function visualizeGame(gameEditor, url, game) {
                 break;
             }
         }
-        s += `<tr valign="top"><td>Screen&nbsp;Size</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} value="${gameSource.json.screen_size.x} × ${gameSource.json.screen_size.y}"></td></tr>\n`;
+        s += `<tr valign="top"><td>Screen&nbsp;Size</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} value="${gameSource.extendedJSON.screen_size.x} × ${gameSource.extendedJSON.screen_size.y}"></td></tr>\n`;
     }
     s += `<tr valign="top"><td></td><td colspan=3><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.y_up ? 'checked' : ''} onchange="onProjectYUpChange(this)">Y-Axis = Up</label></td></tr>\n`;
 
@@ -2130,7 +2153,7 @@ function createProjectWindow(gameSource) {
     let s = '';
     {
         const badge = isBuiltIn(gameSource.jsonURL) ? 'builtin' : (isRemote(gameSource.jsonURL) ? 'remote' : '');
-        s += `<b title="${gameSource.jsonURL}" onclick="onProjectSelect(event.target, 'game', null)" class="clickable projectTitle ${badge}">${gameSource.json.title}</b>`;
+        s += `<b title="${gameSource.extendedJSON.title} (${gameSource.jsonURL})" onclick="onProjectSelect(event.target, 'game', null)" class="clickable projectTitle ${badge}">${gameSource.extendedJSON.title}</b>`;
     }
     s += '<div style="border-left: 1px solid #ccc; margin-left: 4px; padding-top: 5px; padding-bottom: 9px; margin-bottom: -7px"><div style="margin:0; margin-left: -2px; padding:0">';
 
@@ -2139,13 +2162,12 @@ function createProjectWindow(gameSource) {
     for (let i = 0; i < gameSource.scripts.length; ++i) {
         const script = gameSource.scripts[i];
         const badge = isBuiltIn(script) ? 'builtin' : (isRemote(script) ? 'remote' : '');
-        s += `<li class="clickable ${badge}" onclick="onProjectSelect(event.target, 'script', gameSource.scripts[${i}])" title="${script}" id="ScriptItem_${script.replace(/\.pyxl$/, '')}">${urlFilename(script)}</li>\n`;
+        s += `<li class="clickable ${badge}" onclick="onProjectSelect(event.target, 'script', gameSource.scripts[${i}])" title="${script}" id="ScriptItem_${script}">${urlFilename(script)}</li>\n`;
     }
     if (editableProject) {
         s += '<li class="clickable new" onclick="showNewScriptDialog()"><i>New script…</i></li>';
     }
     s += '</ul>';
-
     
     s += '— <i class="clickable" onclick="onProjectSelect(event.target, \'mode\', undefined)">Modes</i>\n';
     s += '<ul class="modes">';
@@ -2166,8 +2188,8 @@ function createProjectWindow(gameSource) {
     {
         for (let i = 0; i < gameSource.docs.length; ++i) {
             const doc = gameSource.docs[i];
-            const badge = isBuiltIn(doc.url) ? 'builtin' : (isRemote(doc.url) ? 'remote' : '');
-            s += `<li class="clickable ${badge}" id="DocItem_${doc.name}" onclick="onProjectSelect(event.target, 'doc', gameSource.docs[${i}])" title="${doc.url}"><code>${doc.name}</code></li>\n`;
+            const badge = isBuiltIn(doc) ? 'builtin' : (isRemote(doc) ? 'remote' : '');
+            s += `<li class="clickable ${badge}" id="DocItem_${doc.replace(/[^A-Za-z0-9-_+\/]/g, '_')}" onclick="onProjectSelect(event.target, 'doc', gameSource.docs[${i}])" title="${doc}"><code>${doc.replace(/^.*\//, '')}</code></li>\n`;
         }
     }
     if (editableProject) {
@@ -2178,14 +2200,15 @@ function createProjectWindow(gameSource) {
     s += '— <i>Constants</i>\n';
     s += '<ul class="constants">';
     {
-        const keys = Object.keys(gameSource.json.constants || {});
+        const keys = Object.keys(gameSource.extendedJSON.constants || {});
         keys.sort();
         const badge = isBuiltIn(gameSource.jsonURL) ? 'builtin' : (isRemote(gameSource.jsonURL) ? 'remote' : '');
         for (let i = 0; i < keys.length; ++i) {
             const c = keys[i];
             const v = gameSource.constants[c];
-            const json = gameSource.json.constants[c];
-            const tooltip = (json.description || '').replace(/"/g, '\\"');
+            const json = gameSource.extendedJSON.constants[c];
+            let tooltip = (json.description || '').replace(/"/g, '\\"');
+            if (tooltip.length > 0) { tooltip = ': ' + tooltip; }
             const type = (v === undefined || v === null) ?
                   'nil' :
                   Array.isArray(v) ? 'array' :
@@ -2194,7 +2217,7 @@ function createProjectWindow(gameSource) {
                   (json.type && (json.type === 'rgba' || json.type === 'rgb' || json.type === 'hsva' || json.type === 'hsv')) ? 'color' :
                   (typeof v);
             const contextMenu = editableProject ? `oncontextmenu="showConstantContextMenu('${c}')"` : '';
-            s += `<li ${contextMenu} class="clickable ${badge} ${type}" title="${tooltip}" id="projectConstant_${c}" onclick="onProjectSelect(event.target, 'constant', '${c}')"><code>${c}</code></li>\n`;
+            s += `<li ${contextMenu} class="clickable ${badge} ${type}" title="${c}${tooltip}" id="projectConstant_${c}" onclick="onProjectSelect(event.target, 'constant', '${c}')"><code>${c}</code></li>\n`;
         }
     }
     if (editableProject) {
@@ -2221,12 +2244,12 @@ function createProjectWindow(gameSource) {
             const badge = isBuiltIn(asset._jsonURL) ? 'builtin' : (isRemote(asset._jsonURL) ? 'remote' : '');
                 
             const contextMenu = editableProject ? `oncontextmenu="showAssetContextMenu('${assetName}')"` : '';
-            s += `<li id="projectAsset_${assetName}" ${contextMenu} onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'])" class="clickable ${type} ${badge}" title="${asset._jsonURL}"><code>${assetName}</code></li>`;
+            s += `<li id="projectAsset_${assetName}" ${contextMenu} onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'])" class="clickable ${type} ${badge}" title="${assetName} (${asset._jsonURL})"><code>${assetName}</code></li>`;
 
             if (type === 'map') {
                 for (let k in asset.spritesheet_table) {
                     const badge = isBuiltIn(asset.spritesheet_table[k]._jsonURL) ? 'builtin' : (isRemote(asset.spritesheet_table[k]._jsonURL) ? 'remote' : '');
-                    s += `<ul><li onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'].spritesheet_table['${k}'])" class="clickable sprite ${badge}" title="${asset.spritesheet_table[k]._jsonURL}"><code>${k}</code></li></ul>\n`;
+                    s += `<ul><li onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'].spritesheet_table['${k}'])" class="clickable sprite ${badge}" title="${k} (${asset.spritesheet_table[k]._jsonURL})"><code>${k}</code></li></ul>\n`;
                 }
             }
         } // for each asset
@@ -2318,7 +2341,11 @@ if (jsCode) {
 }
 
 let updateImage = document.createElement('canvas');
+
+// updateImageData.data is a Uint8Clamped RGBA buffer
 let updateImageData;
+let updateImageData32;
+
 let error = document.getElementById('error');
 
 function setFramebufferSize(w, h) {
@@ -2330,6 +2357,7 @@ function setFramebufferSize(w, h) {
     updateImage.width  = w;
     updateImage.height = h;
     updateImageData = ctx.createImageData(w, h);
+    updateImageData32 = new Uint32Array(updateImageData.data.buffer);
 
     bootScreen.style.fontSize = '' + Math.max(10 * SCREEN_WIDTH / 384, 4) + 'px';
     
@@ -2504,10 +2532,7 @@ function setErrorStatus(e) {
     e = escapeHTMLEntities(e);
     error.innerHTML = e;
     if (e !== '') {
-        error.style.visibility = 'visible';
         _outputAppend('\n<span style="color:#f55">' + e + '<span>\n');
-    } else {
-        error.style.visibility = 'hidden';
     }
 }
 
@@ -2611,10 +2636,14 @@ function jsToNSError(error) {
     endCharIndex = url.lastIndexOf(':');
     const quoteIndex = url.lastIndexOf('"');
     let offset = 0;
+
     if ((endCharIndex !== -1) && (quoteIndex < endCharIndex)) {
         // of the form "url":line
         offset = parseInt(url.substring(endCharIndex + 1));
         url = url.substring(0, endCharIndex);
+    }
+    if (url[url.length - 1] === '"') {
+        url = url.substring(0, url.length - 1);
     }
 
     return {url: url, lineNumber: lineNumber - urlLineIndex - 3 + offset, message: error.message};
@@ -2734,7 +2763,9 @@ function mainLoopStep() {
             // Runtime error
             onStopButton();
             e = jsToNSError(e);
-            setErrorStatus('file ' + e.url + ' line ' + clamp(1, e.lineNumber, programNumLines) + ': ' + e.message);
+
+            // Try to compute a short URL
+            setErrorStatus(shortURL(e.url) + ' line ' + clamp(1, e.lineNumber, programNumLines) + ': ' + e.message);
         }
     }
 
@@ -2822,6 +2853,17 @@ function mainLoopStep() {
 }
 
 
+/* Print only the filename base when it is the same as the game base */
+function shortURL(url) {
+    const gamePath = gameSource.jsonURL.replace(/\/[^/]+\.game\.json$/, '/');
+    if (url.startsWith(gamePath)) {
+        return url.substring(gamePath.length);
+    } else {
+        return url;
+    }
+}
+
+
 /** When true, the system is waiting for a refresh to occur and mainLoopStep should yield
     as soon as possible. */
 let refreshPending = false;
@@ -2835,8 +2877,9 @@ function reloadRuntime(oncomplete) {
         QRuntime._SCREEN_HEIGHT = SCREEN_HEIGHT;
         QRuntime.reset_clip();
 
-        // updateImageData.data is a Uint8Clamped RGBA buffer
-        QRuntime._screen = new Uint32Array(updateImageData.data.buffer);
+        // Aliased views
+        QRuntime._screen = new Uint16Array(SCREEN_WIDTH * SCREEN_HEIGHT);
+        QRuntime._screen32 = new Uint32Array(QRuntime._screen.buffer);
 
         // Remove any base URL that appears to include the quadplay URL
         const _gameURL = gameSource ? (gameSource.jsonURL || '').replace(location.href.replace(/\?.*/, ''), '') : '';
@@ -2844,6 +2887,7 @@ function reloadRuntime(oncomplete) {
         QRuntime._gameURL = _gameURL;
         QRuntime._debugPrintEnabled = document.getElementById('debugPrintEnabled').checked;
         QRuntime._assertEnabled = document.getElementById('assertEnabled').checked;
+        QRuntime._todoEnabled = document.getElementById('todoEnabled').checked;
         QRuntime._debugWatchEnabled = document.getElementById('debugWatchEnabled').checked;
         QRuntime._showEntityBoundsEnabled = document.getElementById('showEntityBoundsEnabled').checked;
         QRuntime._showPhysicsEnabled = document.getElementById('showPhysicsEnabled').checked;
@@ -3136,14 +3180,34 @@ function makeConstants(environment, constants, CREDITS) {
     // Now redefine all constants appropriately
     redefineConstant(environment, 'SCREEN_SIZE', {x:SCREEN_WIDTH, y:SCREEN_HEIGHT}, alreadySeen);
     redefineConstant(environment, 'CREDITS', CREDITS, alreadySeen);
-    
+
+    const IDE_USER = (isQuadserver && useIDE && serverConfig && serverConfig.IDE_USER) || 'anonymous';
+    redefineConstant(environment, 'IDE_USER', IDE_USER, alreadySeen);
+
+    let hasReferences = false;
     for (const key in constants) {
         if (key[0] === '_') {
             throw 'Illegal constant field name: "' + key + '"';
         }
-        redefineConstant(environment, key, constants[key], alreadySeen);
+        const value = constants[key];
+
+        if (value instanceof GlobalReference) {
+            hasReferences = true;
+        } else {
+            redefineConstant(environment, key, value, alreadySeen);
+        }
     }
 
+    if (hasReferences) {
+        for (const key in constants) {
+            const value = constants[key];
+            if (value instanceof GlobalReference) {
+                redefineReference(environment, key, value.identifier);
+            }
+        }
+    }
+
+    
     // Cannot seal CONSTANTS because that would make the properties non-configurable,
     // which would prevent redefining them during debugging.
     Object.preventExtensions(CONSTANTS);
@@ -3151,8 +3215,9 @@ function makeConstants(environment, constants, CREDITS) {
 
 
 /** Redefines an existing constant on the give environment and its CONSTANTS object. 
-    The map is used for cloning and can be undefined */
+    The map is used for cloning and can be undefined. */
 function redefineConstant(environment, key, value, alreadySeenMap) {
+    console.assert(! (value instanceof GlobalReference));
     value = frozenDeepClone(value, alreadySeenMap || new Map());
     defineImmutableProperty(environment, key, value);
     defineImmutableProperty(environment.CONSTANTS, key, value);
@@ -3163,9 +3228,27 @@ function redefineConstant(environment, key, value, alreadySeenMap) {
     values within it*/
 function defineImmutableProperty(object, key, value) {
     // Set configurable to true so that we can later redefine
-    Object.defineProperty(object, key, {configurable: true, writable: false, value: value});
+    Object.defineProperty(object, key, {configurable: true, enumerable: true, writable: false, value: value});
 }
 
+
+/** Called by makeConstant to extend the QRuntime environment or redefine values
+    within it that are pointers. */
+function redefineReference(environment, key, identifier) {
+    const descriptor = {
+        enumerable: true,
+        configurable: true,
+        get: function () {
+            // Look up the value, potentially recursively, based on
+            // the identifier
+            return environment[identifier];
+        }
+    };
+    console.log('binding ' + key + ' -> ' + identifier);
+    console.dir(identifier);
+    Object.defineProperty(environment, key, descriptor);
+    Object.defineProperty(environment.CONSTANTS, key, descriptor);
+}
 
 
 /** Bind assets in the environment */
@@ -3302,9 +3385,9 @@ function loadGameIntoIDE(url, callback, loadFast) {
         afterLoadGame(url, function () {
             onLoadFileComplete(url);
             hideBootScreen();
-            document.title = gameSource.json.title;
+            document.title = gameSource.extendedJSON.title;
             console.log('Loading complete.');
-            setFramebufferSize(gameSource.json.screen_size.x, gameSource.json.screen_size.y);
+            setFramebufferSize(gameSource.extendedJSON.screen_size.x, gameSource.extendedJSON.screen_size.y);
             createProjectWindow(gameSource);
             const resourcePane = document.getElementById('resourcePane');
             resourcePane.innerHTML = `
@@ -3430,6 +3513,11 @@ if (! localStorage.getItem('assertEnabled')) {
     localStorage.setItem('assertEnabled', 'true')
 }
 
+if (! localStorage.getItem('todoEnabled')) {
+    // Default to false
+    localStorage.setItem('todoEnabled', 'false')
+}
+
 if (! localStorage.getItem('automathEnabled')) {
     // Default to true
     localStorage.setItem('automathEnabled', 'true')
@@ -3441,7 +3529,7 @@ if (! localStorage.getItem('debugWatchEnabled')) {
 }
 
 {
-    const optionNames = ['showPhysicsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'automathEnabled', 'debugPrintEnabled', 'debugWatchEnabled'];
+    const optionNames = ['showPhysicsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'todoEnabled', 'automathEnabled', 'debugPrintEnabled', 'debugWatchEnabled'];
     for (let i = 0; i < optionNames.length; ++i) {
         const name = optionNames[i];
         const value = JSON.parse(localStorage.getItem(name) || 'false');

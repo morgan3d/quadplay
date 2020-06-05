@@ -77,7 +77,7 @@ def gain_powerup(paddle, data):
       spare_balls = min(spare_balls + 1, MAX_SPARE_BALLS)
             
    else if data.name == "split":
-      for B in ball_array:
+      for B in clone(ball_array):
          if not B.paddle and size(ball_array) < MAX_BALLS:
             // Parallel
             push(ball_array, make_entity({name: "ball", pos: B.pos + 15 direction(perp(B.vel)), vel: B.vel, sprite:B.sprite, paddle: ∅, shape:B.shape}))
@@ -101,7 +101,7 @@ def gain_powerup(paddle, data):
          const box = make_entity({name:"wall", breakable:false, pos:pos, sprite:darkUnbreakable, z:-1})
 
          // Make sure that the box isn't trapping a ball
-         for ball in ball_array: if overlaps(box, ball): lose_ball(ball)
+         for ball in clone(ball_array): if overlaps(box, ball): lose_ball(ball)
          
          push(paddle.powerup.box_array, box)
          push(box_array, box)
@@ -203,7 +203,7 @@ for B in box_array:
 
 
 // Powerups
-for pos, vel, data ∊ P ∊ powerup_array:
+for pos, vel, data ∊ P ∊ clone(powerup_array):
    draw_text(font, data.name, pos + xy(0, 3), data.color, ∅, #FFF, 0)
    draw_sprite(sparkleSprite[0][⌊⅙ mode_frames⌋ mod 5], pos)
    draw_sprite(sparkleSprite[0][⌊⅕ mode_frames⌋ mod 5], pos + xy(1, 1), 180°)
@@ -230,7 +230,7 @@ for pos, vel, data ∊ P ∊ powerup_array:
 
 
 // Balls
-for pos, vel, paddle in ball in ball_array:
+for pos, vel, paddle in ball in clone(ball_array):
    if paddle:
       // This ball is on a paddle, waiting to
       // be launched. Follow the paddle's position.
@@ -265,7 +265,7 @@ for pos, vel, paddle in ball in ball_array:
    
       // Back up and reverse direction on box collision, which
       // must be due to ball movement.
-      for box ∊ box_array:
+      for box ∊ clone(box_array):
          if overlaps(ball, box):
             hit_box(box, ball, xy(1, 0))
             pos.x -= vel.x; vel.x = -vel.x
@@ -273,7 +273,7 @@ for pos, vel, paddle in ball in ball_array:
       // Now, move second in Y
       pos.y += vel.y
    
-      for box ∊ box_array:
+      for box ∊ clone(box_array):
          if overlaps(ball, box):
             hit_box(box, ball, xy(0, 1))
             pos.y -= vel.y; vel.y = -vel.y

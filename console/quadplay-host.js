@@ -161,9 +161,21 @@ function device_control(cmd) {
     case "get_mouse_state":
         {
             const mask = mouse.buttons;
-            return Object.freeze({
+            const xy = Object.freeze({
                 x: mouse.screen_x * QRuntime._scaleX + QRuntime._offsetX,
-                y: mouse.screen_y * QRuntime._scaleY + QRuntime._offsetY,
+                y: mouse.screen_y * QRuntime._scaleY + QRuntime._offsetY});
+
+            const dxy = Object.freeze({
+                x: (mouse.screen_x - mouse.screen_x_prev) * QRuntime._scaleX,
+                y: (mouse.screen_x - mouse.screen_y_prev) * QRuntime._scaleY});
+            
+            return Object.freeze({
+                x: xy.x,
+                y: xy.y,
+                dx: dxy.x,
+                dy: dxy.y,
+                xy: xy,
+                dxy: dxy,
                 button_array: Object.freeze([
                     (mask & 1),
                     (mask & 2) >> 1,
@@ -273,29 +285,33 @@ function processPreviewRecording() {
                 for (let dy = 0; dy <= 1; ++dy) {
                     for (let dx = 0; dx <= 1; ++dx) {
                         const src = QRuntime._screen[(x*2 + dx) + (y*2 + dy) * 384];
-                        r += (src >>> 16) & 0xff;
-                        g += (src >>> 8) & 0xff;
-                        b += src & 0xff;
+                        r += (src >>> 8) & 0xf;
+                        g += (src >>> 4) & 0xf;
+                        b += src & 0xf;
                     } // dx
                 } // dy
 
+                // 16->32
+                r |= r << 4;
+                g |= g << 4;
+                b |= b << 4;
                 previewRecording[dstOffset] = (((r >> 2) & 0xff) << 16) + (((g >> 2) & 0xff) << 8) + ((b >> 2) & 0xff);
             } // x
         } // y
     } else if (SCREEN_WIDTH === 192 && SCREEN_HEIGHT === 112) {
         // Half-resolution. Copy lines directly
         for (let y = 0; y < 112; ++y) {
-            previewRecording.set(QRuntime._screen.slice(y * 192, (y + 1) * 192), targetX + (targetY + y) * 192 * PREVIEW_FRAMES_X);
+            previewRecording.set(updateImageData32.slice(y * 192, (y + 1) * 192), targetX + (targetY + y) * 192 * PREVIEW_FRAMES_X);
         }
     } else if (SCREEN_WIDTH === 128 && SCREEN_HEIGHT === 128) {
         // 128x128. Crop
         for (let y = 0; y < 112; ++y) {
-            previewRecording.set(QRuntime._screen.slice((y + 8) * 128, (y + 9) * 128), (targetX + 32) + (targetY + y) * 192 * PREVIEW_FRAMES_X);
+            previewRecording.set(updateImageData32.slice((y + 8) * 128, (y + 9) * 128), (targetX + 32) + (targetY + y) * 192 * PREVIEW_FRAMES_X);
         }
     } else if (SCREEN_WIDTH === 128 && SCREEN_HEIGHT === 128) {
         // 64x64. Copy
         for (let y = 0; y < 64; ++y) {
-            previewRecording.set(QRuntime._screen.slice(y * 64, (y + 1) * 64), (targetX + 64) + (targetY + y + 64) * 192 * PREVIEW_FRAMES_X);
+            previewRecording.set(updateImageData32.slice(y * 64, (y + 1) * 64), (targetX + 64) + (targetY + y + 64) * 192 * PREVIEW_FRAMES_X);
         }
     } else {
         alert('Preview recording not supported at this resolution');
@@ -761,9 +777,6 @@ function rgbaToCSSFillStyle(color) {
     return `rgba(${color.r*255}, ${color.g*255}, ${color.b*255}, ${color.a})`;
 }
 
-// Performance test buffer for 16-bit graphics. TODO: remove
-//const view32 = new Uint32Array(new ArrayBuffer(384*224*2));
-
 // Invoked from QRuntime._show(). May not actually be invoked every
 // frame if running below framerate.
 function submitFrame() {
@@ -776,30 +789,30 @@ function submitFrame() {
           (_postFX.scale.x !== 1) || (_postFX.scale.y !== 1) ||
           (_postFX.blendMode !== 'source-over');
 
+    {
+        // Convert 16-bit to 32-bit
+        const dst32 = updateImageData32;
+        const src32 = QRuntime._screen32;
+        const N = src32.length;
+        for (let s = 0, d = 0; s < N; ++s) {
+            // Read two 16-bit pixels at once
+            let src = src32[s];
+            
+            // Turn into two 32-bit pixels
+            let A = ((src & 0xf000) << 16) | ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
+            dst32[d] = A | (A << 4); ++d; src = src >> 16;
+            
+            A = ((src & 0xf000) << 16) | ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
+            dst32[d] = A | (A << 4); ++d;
+        }
+    }
+    
     if (previewRecording) {
         processPreviewRecording();
     }
     
     if (! hasPostFX && ! gifRecording && (emulatorScreen.width === SCREEN_WIDTH && emulatorScreen.height === SCREEN_HEIGHT)) {
         // Directly upload to the screen. Fast path when there are no PostFX
-
-        if (false) {
-            // Performance test for 16-bit graphics
-            const N = 384 * 224 / 2;
-            const target32 = QRuntime._screen;
-            for (let s = 0, d = 0; s < N; ++s) {
-                // Read two 16-bit pixels at once
-                let src = view32[s];
-
-                // Turn into two 32-bit pixels (byte order may be scrambled; this is just a perf test)
-                let A = ((src & 0xf000) << 16) | ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
-                target32[d] = A | (A << 4); ++d; src = src >> 16;
-                
-                A = ((src & 0xf000) << 16) | ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
-                target32[d] = A | (A << 4); ++d;
-            }
-        }
-        
         ctx.putImageData(updateImageData, 0, 0);
     } else {
         // Put on an intermediate image and then stretch. This path is for postFX and supporting Safari
@@ -867,6 +880,9 @@ function requestInput() {
 
 
 function updateInput() {
+    mouse.screen_x_prev = mouse.screen_x;
+    mouse.screen_y_prev = mouse.screen_y;
+    
     const axes = 'xy', AXES = 'XY', buttons = 'abcdefpq';
 
     // HTML gamepad indices of corresponding elements of the buttons array
@@ -1213,7 +1229,7 @@ function emulatorScreenEventCoordToQuadplayScreenCoord(event) {
             y: clamp(Math.round(emulatorScreen.height * (event.clientY - rect.top  * zoom) / (rect.height * zoom)), 0, emulatorScreen.height - 1) + 0.5};
 }
 
-const mouse = {screen_x: 0, screen_y: 0, buttons: 0};
+const mouse = {screen_x: 0, screen_y: 0, screen_x_prev: 0, screen_y_prev: 0, buttons: 0};
 
 function updateMouseDevice(event) {
     if (event.target === emulatorScreen) {
