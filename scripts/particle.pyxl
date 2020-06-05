@@ -1,0 +1,92 @@
+/*
+ quad://scripts/particle.pyxl
+
+ @meta {license: "Copyright 2020 Morgan McGuire, Open source under the MIT License, https://opensource.org/licenses/MIT"}
+ */
+
+const particle_array = []
+
+// Create a single moving particle and add it to the global array
+def spawn_particle(pos, vel, color, z, frames):
+   push(particle_array, {pos: clone(pos), vel:vel, color: clone(color), z: z, frames: frames})
+
+
+// Convert an entity's sprite into a particle system.
+def spawn_particles_from_entity(entity, max_frames, z_offset,
+    spread_center, min_spread_speed, max_spread_speed, 
+    common_dir, min_common_speed, max_common_speed,
+    common_vel, copies):
+        
+    z_offset = z_offset default ½
+    spread_center = spread_center default entity.pos
+    min_spread_speed = min_spread_speed default 0
+    max_spread_speed = max_spread_speed default 0
+    common_dir = common_dir default xy(0, 0)
+    min_common_speed = min_common_speed default 0
+    max_common_speed = max_common_speed default 0
+    common_vel = common_vel default xy(0, 0)
+    copies = copies default 1
+        
+    const sprite = entity.sprite
+    const z = entity.z + z_offset
+    const center = ½ (sprite.size - 1)
+    const U = xy(cos(entity.angle), -sin(entity.angle) * rotation_sign())
+    const V = perp(U)
+   
+    for y < sprite.size.y:
+        for x < sprite.size.x:
+            const sprite_pos = xy(x, y)
+            const color = get_sprite_pixel_color(sprite, sprite_pos)
+            
+            // Entity space position
+            const es_pos = (sprite_pos - center) * entity.scale
+            
+            // Draw space position
+            const pos = entity.pos + U * es_pos.x + V * es_pos.y
+            
+            for i < copies:
+                let vel = entity.vel * random(¼, ¾) + common_vel            
+                vel += direction(pos - spread_center) * random(min_spread_speed, max_spread_speed)
+                vel += common_dir * random(min_common_speed, max_common_speed)
+                spawn_particle(pos, vel, color, z, lerp(30%, 100%, ξ²) * max_frames)
+
+
+         
+// You can register this as a frame hook or explicitly run it once per frame
+def update_and_draw_particles():
+    
+    // There are a LOT of particles, so avoid the cost of a WITH statement
+    // here.
+    //
+    // Also, particles will render fastest if they are kept grouped by z
+    // value, so we preserve the order of the array when removing elements
+    // by always copying elements during iteration to close gaps, amortizing
+    // the cost of in-order removal.
+   
+    const N = size(particle_array)
+    
+    // Place to copy the next element to
+    let dst = 0
+
+    // Iterate over all particles. src == dst and no actual copy happens
+    // until they start being removed and these separate
+    for src < N:
+        const particle = particle_array[src]
+        if src > dst: particle_array[dst] = particle
+      
+        --particle.frames
+        if particle.frames ≥ 0:
+            // Fade out near end of life
+            if particle.frames < 10:
+                particle.color.a = MUL(particle.color.a, 95%)
+    
+            // Integrate
+            const pos = particle.pos
+            XY_ADD_XY(pos, particle.vel, pos)
+            draw_point(pos, particle.color, particle.z)
+    
+            // Preserve this element
+            ++dst
+         
+    // Remove extra elements
+    if dst < N: resize(particle_array, dst)

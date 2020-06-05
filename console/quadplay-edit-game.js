@@ -31,7 +31,7 @@ function onProjectMetadataChanged(projectLicense) {
     document.getElementById('projectMinPlayers').value = gameSource.json.min_players;
     document.getElementById('projectMaxPlayers').value = gameSource.json.max_players;
     
-    serverSaveGameJSON(titleChanged ? function () { loadGameIntoIDE(window.gameURL); }: undefined);
+    serverSaveGameJSON(titleChanged ? function () { loadGameIntoIDE(window.gameURL, null, true); }: undefined);
 }
 
 function onProjectYUpChange(target) {
@@ -67,7 +67,7 @@ function onProjectInitialModeChange(target) {
             modes[i] += '*';
         }
     }
-    serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL); });
+    serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
 }
 
 

@@ -45,6 +45,20 @@ function removePendingSaveCallback(callback) {
     }
 }
 
+/**
+   If there are saves pending, run the callbacks as soon
+   as possible and execute the followup function when
+   
+ */
+function runPendingSaveCallbacksImmediately() {
+    // Work with a clone of the array because calling these functions
+    // removes them from pendingSaveCallbacks.
+    const copy = pendingSaveCallbacks.slice();
+    for (let i = 0; i < copy.length; ++i) { copy[i](); }
+
+    console.assert(pendingSaveCallbacks.length === 0);
+}
+
 
 function onIncreaseFontSizeButton() {
     setCodeEditorFontSize(codeEditorFontSize + 2);
@@ -494,6 +508,9 @@ function createCodeEditorSession(url, bodyText) {
                             // This must be a doc; update the preview pane, preserving
                             // the scroll position if possible.
                             showGameDoc(url, true);
+                        } else if (url.endsWith('.game.json')) {
+                            // Reload the game
+                            loadGameIntoIDE(window.gameURL, null, true);
                         }
                         
                         --savesPending;

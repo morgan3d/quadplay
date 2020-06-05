@@ -6,7 +6,7 @@ var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 
 var PyxlScriptHighlightRules = function() {
 
-    var keywords = "assert|debug_pause|debug_print|debug_watch|with_camera|let|const|mod|local|preserving_transform|for|in|and|or|xor|not|with|while|until|if|then|else|push_mode|reset_game|set_mode|return|def|break|continue|default|bitand|bitnot|bitor|bitxor|bitshl|bitshr|because|quit_game|launch_game";
+    var keywords = "assert|debug_pause|debug_print|debug_watch|with_camera|let|const|mod|local|preserving_transform|for|at|in|and|or|xor|not|with|while|until|if|then|else|push_mode|reset_game|set_mode|return|def|break|continue|default|bitand|bitnot|bitor|bitxor|bitshl|bitshr|because|quit_game|launch_game";
 
     var builtinConstants = "deg|true|false|nan|SCREEN_SIZE|pi|epsilon|infinity|nil|∞|½|⅓|⅔|¼|¾|⅕|⅖|⅗|⅘|⅙|⅐|⅛|⅑|⅒|°|ε|π|∅|∞|⁰|¹|²|³|⁴|⁵|⁶|⁷|⁸|⁹|CREDITS|CONSTANTS|ASSETS";
 

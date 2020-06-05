@@ -5,7 +5,7 @@
 const deployed = true;
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
-const ALLOW_EDITING_EXAMPLES = false;
+const ALLOW_EDITING_EXAMPLES = true;
 
 const version  = '2020.06.05.01'
 const launcherURL = 'quad://console/launcher';
@@ -561,6 +561,9 @@ function onSlowButton() {
     onPlayButton(true);
 }
 
+// Used to detect when we're waiting for a save to complete
+let alreadyInPlayButtonAttempt = false;
+
 // Allows a framerate to be specified so that the slow button can re-use the logic.
 //
 // isLaunchGame = "has this been triggered by QRuntime.launch_game()"
@@ -655,25 +658,24 @@ function onPlayButton(slow, isLaunchGame, args) {
                     loadGameIntoIDE(window.gameURL, doPlay, false);
                 } else {
                     onStopButton();
-                    if (pendingSaveCallbacks.length > 0) {
+                    if (pendingSaveCallbacks.length > 0 || ! alreadyInPlayButtonAttempt) {
                         // Some saves haven't even been attempted.
                         //
                         // Force the saves to occur right now and then
                         // try running again shortly afterward.
-                        //
-                        // Work with a clone of the array because
-                        // calling these functions removes them from
-                        // pendingSaveCallbacks.
-                        const copy = pendingSaveCallbacks.slice();
-                        for (let i = 0; i < copy.length; ++i) { copy[i](); }
-
-                        console.assert(pendingSaveCallbacks.length === 0);
+                        runPendingSaveCallbacksImmediately();
+                        
                         // Now reschedule pressing this button soon,
                         // after the saves complete. It might fail
                         // again, of course...in that case, we'll end
                         // up in the error message.
-                        setTimeout(function () { 
-                            onPlayButton(slow, isLaunchGame, args);
+                        alreadyInPlayButtonAttempt = true;
+                        setTimeout(function () {
+                            try {
+                                onPlayButton(slow, isLaunchGame, args);
+                            } finally {
+                                alreadyInPlayButtonAttempt = false;
+                            }
                         }, 300);
                     } else {
                         setErrorStatus('Cannot reload while saving. Try again in a second.');
@@ -1265,6 +1267,11 @@ aceEditor.setTheme('ace/theme/quadplay');
 // Stop auto-completion of parentheses
 aceEditor.setBehavioursEnabled(false);
 aceEditor.setOptions({showPrintMargin:false});
+
+if (useIDE) {
+    // Save when losing focus
+    aceEditor.on('blur', runPendingSaveCallbacksImmediately);
+}
 
 function saveIDEState() {
     const options = {

@@ -150,6 +150,13 @@ function processForTest(test) {
         test = test.substring(1, test.length - 1);
     }
 
+    // Named index/key
+    let key_name;
+    test = test.replace(RegExp('\\s+at\\s+(' + identifierPattern + ')\\s*∊'), function (match, key) {
+        key_name = key;
+        return ' ∊';
+    });
+
     // The case of a FOR-WITH loop of the form 'for x,y,... ∊ a ∊ array ...'
     let match = test.match(RegExp('^\\s*(\\S.*)∊\\s*(' + identifierPattern + ')\\s*∊(.*)$'));
     if (match) {
@@ -168,13 +175,18 @@ function processForTest(test) {
     
     if (match) {
         // Generate variables
-        const key_array = gensym('key_array'), index = gensym('index'),
+        const key_array = gensym('key_array'), index = gensym('index'), is_obj = gensym('is_obj'),
             cur = match[1], containerExpr = match[2].trim(), container = gensym('container'), N = gensym('N');
 
-        return [`{const ${container} = ${containerExpr};` +
+        if (key_name) {
+            // The 'at' variable
+            before = before + ` let ${key_name} = ${is_obj} ? ${cur} : ${index}; `;
+        }
+
+        return [`{const ${container} = ${containerExpr}; const ${is_obj} = is_object(${container}); ` +
                 `_checkContainer(${container}); try { ` +
                 `_iteratorCount.set(${container}, (_iteratorCount.get(${container}) || 0) + 1); ` +
-                `for (let ${key_array} = is_object(${container}) ? _Object.keys(${container}) : ${container}, ${N} = ${key_array}.length, ` +
+                `for (let ${key_array} = ${is_obj} ? _Object.keys(${container}) : ${container}, ${N} = ${key_array}.length, ` +
                 `${index} = 0; ${index} < ${N}; ++${index}) { let ${cur} = ${key_array}[${index}]; ${before} `,
                 after +
                 `} finally { _iteratorCount.set(${container}, _iteratorCount.get(${container}) - 1); }}`];
