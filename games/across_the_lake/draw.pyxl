@@ -276,7 +276,7 @@ local:
 
       // Switch to sprites from spritesheets
       segment.background = segment.background[0][0]
-      for range in ranges:
+      for z at range in ranges:
          const s = segment[range]
          for i < size(s): s[i] = s[i][0][0]
 
@@ -288,12 +288,12 @@ local:
    background_change_start_frame = 100
    
    // Three ranges
-   for range in ranges:
+   for z at range in ranges:
       const array = []
       push(distant_element_array, array)
 
       // Two elements per range, to allow leapfrogging
       for i < 2:
          const sprite = random_value(current_segment[range])
-         push(array, {sprite: sprite, range: range, z: ranges[range], pos: xy(i * sprite.size.x, 0)})
+         push(array, {sprite: sprite, range: range, z: z, pos: xy(i * sprite.size.x, 0)})
    

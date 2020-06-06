@@ -5,9 +5,9 @@
 const deployed = true;
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
-const ALLOW_EDITING_EXAMPLES = true;
+const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.06.05.01'
+const version  = '2020.06.06.06'
 const launcherURL = 'quad://console/launcher';
 
 // Token that must be passed to the server to make POST calls
@@ -68,6 +68,7 @@ function makeEuroSmoothValue(minCutoff, speedCoefficient) {  return new EuroFilt
 
 /* True if a URL is to a path that is a built-in dir for the current server */
 function isBuiltIn(url) {
+    if (ALLOW_EDITING_EXAMPLES) { return false; }
     if (url.startsWith('quad://')) { return true; }
     if (! url.startsWith('http://') || url.startsWith('https://')) {
         url = location.origin + url;
@@ -1576,9 +1577,9 @@ function showGameDoc(url, useFileContents) {
         
         function markdeepify(text) {
             const markdeepURL = makeURLAbsolute('', 'quad://doc/markdeep.min.js');
-            
+            text = baseTag + text;
             // Escape quotes to avoid ending the srcdoc prematurely
-            return `${baseTag}${text.replace(/"/g, '&quot;')}
+            return `${text.replace(/"/g, '&quot;')}
                 <style>
 body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif}
 

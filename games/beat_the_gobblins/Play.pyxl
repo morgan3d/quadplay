@@ -48,11 +48,11 @@ def player_take_damage(from_en, reason):
 
     let push_dir = direction(PLAYER.pos-from_en.pos)
 
-    const anim_len = total_duration(driz_anim1Sprite["stun"]);
-    PLAYER.sprite = array_value(driz_anim1Sprite["stun"], 0)
+    const anim_len = driz_anim1Sprite.stun.frames;
+    PLAYER.sprite = array_value(driz_anim1Sprite.stun, 0)
     let current_frame = 0
 
-    let ouch = play_sound({ sound:ouchSound, volume:25})
+    let ouch = play_sound({sound: ouchSound, volume: 2500%})
 
     def advance(framesLeft, lifetime):
         let elapsed = lifetime - framesLeft
@@ -60,9 +60,9 @@ def player_take_damage(from_en, reason):
             current_frame += 1
 
         if framesLeft > anim_len/2:
-            PLAYER.jolt = PLAYER_MAX_SPEED/2*push_dir
+            PLAYER.jolt = PLAYER_MAX_SPEED / 2 * push_dir
 
-        PLAYER.sprite = array_value(driz_anim1Sprite["stun"], current_frame)
+        PLAYER.sprite = array_value(driz_anim1Sprite.stun, current_frame)
 
     def done():
         if PLAYER.health > 0:
@@ -114,7 +114,7 @@ def enemy_take_damage(en, amount):
             add_to_queue(1)
             remove_values(enemies, en)
 
-    add_frame_hook(frame_advance, unlock_enemy, total_duration(spr))
+    add_frame_hook(frame_advance, unlock_enemy, spr.frames)
     SHOULD_FREEZE_FRAME = true
 
         
@@ -202,6 +202,61 @@ const BOMB_DECEL = (
     BOMB_INITIAL_SPEED*BOMB_INITIAL_SPEED/(2*(BOMB_TARGET-BOMB_START))
 )
 
+
+def move_bomb(t, bomb):
+    const en = bomb.en
+    bomb.force = (
+        entity_mass(bomb) *
+        xy(BOMB_DECEL.x * en.scale.x, BOMB_DECEL.y)
+    )
+    if |bomb.vel.x| < 0.1: bomb.force.x = 0
+    physics_step_with_collisions(bomb, en.pos.y)
+    if DEBUG_DRAW_ORIGINS:
+        draw_line(
+            xy(-100, en.pos.y),
+            xy(100, en.pos.y),
+            rgb(0,0,1),
+            100)
+
+    draw_disk(
+        xy(bomb.pos.x, en.pos.y),
+        BG_TILE_SIZE_XY_PX.x/3,
+        rgba(10/255, 10/255, 10/255, 75%),
+        nil,
+        en.z)
+
+    if bomb.anim_current_frame == 3:
+        draw_disk(
+            bomb.pos,
+            EXPLOSION_DAMAGE_RADIUS / 2,
+            nil,
+            rgb(1,0,0),
+            en.z)
+
+    return on_duration(t, bomb)
+
+
+def splode_bomb(bomb):
+    assert(bomb)
+    const splosion = make_anim_entity(
+        {
+            pos: bomb.pos,
+            name: "splode",
+            sprite: splodeSprite.splode,
+            size: xy(EXPLOSION_DAMAGE_RADIUS, EXPLOSION_DAMAGE_RADIUS),
+            shape: "disk",
+            angle: -35deg,
+        },
+        splodeSprite["splode"],
+        delete_from_dust_list,
+    )
+    play_sound(splodeSound)
+    if overlaps(splosion, PLAYER):
+        player_take_damage(splosion, "A BOMB BLEW YOU UP")
+    push(dust, splosion)
+    delete_from_dust_list(bomb)
+
+
 def start_bomb_throw(en, throw_done):
     // @TODO: this needs to be interruptable
     en.taking_input = false
@@ -218,77 +273,21 @@ def start_bomb_throw(en, throw_done):
 
         current_frame += 1
         if current_frame == 6 and not throw_done:
-            def move_bomb(t, bomb):
-                bomb.force = (
-                    entity_mass(bomb)
-                    *xy(BOMB_DECEL.x*en.scale.x,BOMB_DECEL.y)
-                )
-                if abs(bomb.vel.x) < 0.1:
-                    bomb.force.x = 0
-                physics_step_with_collisions(bomb, en.pos.y)
-                if DEBUG_DRAW_ORIGINS:
-                    draw_line(
-                        xy(-100, en.pos.y),
-                        xy(100, en.pos.y),
-                        rgb(0,0,1),
-                        100
-                    )
-
-                draw_disk(
-                    xy(bomb.pos.x, en.pos.y),
-                    BG_TILE_SIZE_XY_PX.x/3,
-                    rgba(10/255, 10/255, 10/255, 0.75),
-                    nil,
-                    en.z,
-                )
-
-                if bomb.anim_current_frame == 3:
-                    draw_disk(
-                        bomb.pos,
-                        EXPLOSION_DAMAGE_RADIUS/2,
-                        nil,
-                        rgb(1,0,0),
-                        en.z
-                    )
-
-                return on_duration(t, bomb)
-
-            def splode(bomb):
-                debug_print("sploding")
-                let splodesion = make_anim_entity(
-                    {
-                        pos: bomb.pos,
-                        name: "splode",
-                        sprite: splodeSprite["splode"],
-                        size: xy(EXPLOSION_DAMAGE_RADIUS,EXPLOSION_DAMAGE_RADIUS),
-                        scale: xy(1,1),
-                        shape:"disk",
-                        angle: -35deg,
-                    },
-                    splodeSprite["splode"],
-                    delete_from_dust_list,
-                )
-                play_sound(splodeSound)
-                if overlaps(splodesion, PLAYER):
-                    player_take_damage(splodesion, "A BOMB BLEW YOU UP")
-                push(dust,splodesion)
-                delete_from_dust_list(bomb)
-
-            if not (still_alive(en)):
+            if not still_alive(en):
                 return
 
             // create bomb
-            let bomb = make_anim_entity(
-                {
+            const bomb = make_anim_entity({
+                    en: en,
                     pos: en.pos + xy(0, -22),
                     name: "bomb",
-                    vel: BOMB_INITIAL_SPEED*xy(-en.scale.x, 1),
+                    vel: BOMB_INITIAL_SPEED * xy(-en.scale.x, 1),
                     scale: xy(en.scale.x, 1),
-                    sprite: bombSprite["Fuse"],
-                    size: xy(16,16),
+                    sprite: bombSprite.Fuse,
+                    size: xy(16, 16),
                 },
                 bombSprite["Fuse"],
-                splode,
+                splode_bomb,
                 move_bomb,
             )
             play_sound(bomb_throwSound)
@@ -298,7 +297,7 @@ def start_bomb_throw(en, throw_done):
         // pick the frame to play
         if not throw_done and current_frame > size(spr):
             current_frame = 0
-            spr = bombgoblinSprite["Recharge"]
+            spr = bombgoblinSprite.Recharge
             throw_done = true
 
         if throw_done and current_frame > 5:
@@ -312,23 +311,19 @@ def start_bomb_throw(en, throw_done):
     add_frame_hook(
         advance,
         done,
-        (
-            total_duration(bombgoblinSprite["Throw"])
-            + total_duration(bombgoblinSprite["Recharge"])
-        )
-    )
+        bombgoblinSprite.Throw.frames + bombgoblinSprite.Recharge.frames)
 
 
 def make_dust_cloud(pos, num):
     const scale_val = xy(2*num, 2*num)
     for i < num:
         let dir = if i < num/2 then 1 else -1
-        add_dust_kick(pos + random_within_square()*scale_val, dir)
+        add_dust_kick(pos + random_within_square() * scale_val, dir)
 
 const SUMMON_ANIM_DURATION = 20
-const SUMMON_ANIM_LERP = 30/(SUMMON_ANIM_DURATION*10)
+const SUMMON_ANIM_LERP = 30 / (SUMMON_ANIM_DURATION * 10)
 const SUMMON_LIGHTNING_COLOR = rgb(39/255, 186/255, 219/255)
-const HALF_SCREEN_SIZE = SCREEN_SIZE/2
+const HALF_SCREEN_SIZE = SCREEN_SIZE / 2
 def make_summon(pos, fn):
     make_dust_cloud(pos, 4)
     add_cam_shake(1)
@@ -473,30 +468,30 @@ def start_swing_sword(player_loc, player_dir):
             enemy_take_damage(en, PLAYER_SWORD_DAMAGE)
 
     let current_frame = 0
-    PLAYER.sprite = array_value(driz_anim1Sprite["atk_2"], 0)
+    PLAYER.sprite = array_value(driz_anim1Sprite.atk_2, 0)
     add_dust_kick(player_loc, player_dir)
     let dustloc = {
         pos: (
             player_loc 
-            + xy(player_dir, -1) * xy(driz_anim1Sprite["backfx"][0].size/3)
+            + xy(player_dir, -1) * xy(driz_anim1Sprite.backfx[0].size / 3)
         ),
         name: "swing_fx",
         scale: xy(player_dir, 1),
     }
+    
     push(
         dust,
         make_anim_entity(
             clone(dustloc),
-            driz_anim1Sprite["abovefx"],
-            delete_from_dust_list
-        )
-    )
-    dustloc.pos.y += 1
+            driz_anim1Sprite.abovefx,
+            delete_from_dust_list))
+    
+    ++dustloc.pos.y
     push(
         dust,
         make_anim_entity(
             clone(dustloc),
-            driz_anim1Sprite["backfx"],
+            driz_anim1Sprite.backfx,
             delete_from_dust_list
         )
     )
@@ -504,25 +499,25 @@ def start_swing_sword(player_loc, player_dir):
     def advance(framesLeft, lifetime):
         // camera jerk
         if lifetime - framesLeft == 1:
-            cam_pos += 4*xy(-player_dir/2, -1)
+            cam_pos += 4 * xy(-player_dir / 2, -1)
 
         if on_duration(lifetime - framesLeft, PLAYER):
-            current_frame += 1
+            ++current_frame
 
         // lets the index walk off the end of the animation
         if player_alive():
-            PLAYER.sprite = array_value(driz_anim1Sprite["atk_2"], current_frame)
+            PLAYER.sprite = array_value(driz_anim1Sprite.atk_2, current_frame)
 
     def done():
         if player_alive():
             PLAYER.taking_input = true
 
     if hit_something:
-        play_sound({sound:hit_thingSound, volume: 4})
+        play_sound({sound:hit_thingSound, volume: 400%})
     else:
-        play_sound({ sound:swipeSound, volume: 25})
+        play_sound({sound:swipeSound, volume: 2500%})
 
-    add_frame_hook(advance, done, total_duration(driz_anim1Sprite["atk_2"]))
+    add_frame_hook(advance, done, driz_anim1Sprite.atk_2.frames)
 
 
 def add_dust_kick(pos, dir, spr_name):
@@ -530,11 +525,11 @@ def add_dust_kick(pos, dir, spr_name):
         return
     let newdust = make_anim_entity(
         {
-            pos: pos + xy(dir*-22, -8),
+            pos: pos + xy(-22 dir, -8),
             name: "dust kick",
             scale: xy(dir, 1),
         },
-        dust_try_twoSprite[spr_name or "Start_Run"],
+        dust_try_twoSprite[spr_name default "Start_Run"],
         delete_from_dust_list,
     )
 
@@ -547,13 +542,9 @@ def accel(vel, joy_comp, acc_attack, acc_release, acc_opp_attack):
 
     if joy_sign != 0:
         let should_accel = abs(vel) < PLAYER_MAX_SPEED
-        if (
-                (
-                    vel_sign == 0 
-                    or vel_sign == joy_sign
-                ) 
-                and should_accel
-        ):
+        if ((vel_sign == 0 or
+             vel_sign == joy_sign) 
+            and should_accel):
             vel += joy_sign * acc_attack
         else if should_accel:
             vel += joy_sign * acc_opp_attack
@@ -561,16 +552,16 @@ def accel(vel, joy_comp, acc_attack, acc_release, acc_opp_attack):
             vel = joy_sign * PLAYER_MAX_SPEED
 
     else:
-        vel += -1*vel_sign*acc_release
-
-        if abs(vel) < acc_release/2:
-            vel = 0
+        vel -= vel_sign * acc_release
+        if |vel| < acc_release / 2: vel = 0
 
     return vel
+
 
 def accel_ent(ent, ijoy):
     ent.vel.x = accel(ent.vel.x, ijoy.x, ent.accel_attack, ent.accel_release, ent.accel_opp_attack)
     ent.vel.y = accel(ent.vel.y, ijoy.y, ent.accel_attack, ent.accel_release, ent.accel_opp_attack)
+
 
 def move_axis(old_val, new_val, thing_size, min_val, max_val):
     let delta = 0
@@ -582,23 +573,22 @@ def move_axis(old_val, new_val, thing_size, min_val, max_val):
         delta = min_val - thing_edge
     return delta
 
+
 def physics_step_with_collisions(ent, max_y):
-    let last_pos = clone(ent.pos)
+    const last_pos = clone(ent.pos)
     entity_simulate(ent)
 
-    let next_pos = clone(ent.pos)
-    // todo: should have size set correctly so that this is computed the right
-    //       way
+    const next_pos = clone(ent.pos)
     ent.pos += move_with_collision(last_pos, next_pos, 5, max_y)
     entity_update_children(ent)
+
 
 def move_with_collision(last, next, thing_size, max_y):
     if max_y == nil:
         max_y = WALL_OFF_MAX.y
     return xy(
         move_axis(last.x, next.x, thing_size, WALL_OFF_MIN.x, WALL_OFF_MAX.x),
-        move_axis(last.y, next.y, thing_size, WALL_OFF_MIN.y, max_y)
-    )
+        move_axis(last.y, next.y, thing_size, WALL_OFF_MIN.y, max_y))
 
 // score stuff
 def add_score(amount_to_add):

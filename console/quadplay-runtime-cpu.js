@@ -163,7 +163,8 @@ function sequence(...seq) {
 
 
 function add_frame_hook(callback, endCallback, lifetime, mode) {
-    if (arguments.length < 4) { mode = get_mode(); }
+    if (mode === undefined) { mode = get_mode(); }
+    if (isNaN(lifetime)) { _error("NaN lifetime on add_frame_hook()"); }
     const hook = {_callback:callback, _endCallback:endCallback, _mode:mode, _lifetime:lifetime, _maxLifetime:lifetime};
     _frameHooks.push(hook);
     return hook;

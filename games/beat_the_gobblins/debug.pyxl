@@ -8,8 +8,9 @@ def draw_sprite_sheet(spr):
             pos: loc,
             sprite: array_value(spr, frame),
         })
-        draw_text(font, unparse(frame), loc, rgb(1,1,1), nil, nil, -1, 1, 10)
-        loc.x += 2*size(spr[0])
+        draw_text(font, unparse(frame), loc, #FFF, nil, nil, -1, 1, 10)
+        loc.x += 2 size(spr[0])
+
 
 def draw_debug_text(PLAYER, dust):
     // @{

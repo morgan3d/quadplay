@@ -228,7 +228,7 @@
         }
     },
     "cooperative": false,
-    "copyright": "\u00a92019 Stephan Steinbach",
+    "copyright": "©2019 Stephan Steinbach",
     "description": "An evil wizzard has trapped you on top of their tower and summoned hordes of angry bombgobblins.  Intense score chasing action game.  Good luck!",
     "developer": "Stephan Steinbach",
     "y_up": false,
@@ -250,5 +250,5 @@
         "btw_lib.pyxl"
     ],
     "title": "BEAT THE GOBBLINS",
-    "version": 1.0
+    "version": 1
 }

@@ -64,8 +64,8 @@ const stats = {
 
 draw_text(stat_font, "Lothar", xy(VIEWPORT_WIDTH + (SCREEN_SIZE.x - VIEWPORT_WIDTH) / 2, 10), STAT_TEXT_COLOR, nil, STAT_TEXT_SHADOW, "center")
 let y = 30
-for stat in stats:
-   draw_text(stat_font, stats[stat], xy(VIEWPORT_WIDTH + 20 + 50, y), STAT_TEXT_COLOR, STAT_TEXT_SHADOW, nil, "right")
+for value at stat in stats:
+   draw_text(stat_font, value, xy(VIEWPORT_WIDTH + 20 + 50, y), STAT_TEXT_COLOR, STAT_TEXT_SHADOW, nil, "right")
    y += draw_text(stat_font, stat, xy(VIEWPORT_WIDTH + 20, y), STAT_TEXT_COLOR, STAT_TEXT_SHADOW).y
 
 const action_array = ["Move", "Fight", "Cast", "Use", "Look", "Wait"]

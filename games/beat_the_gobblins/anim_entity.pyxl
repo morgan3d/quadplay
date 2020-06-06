@@ -10,58 +10,53 @@ let ANIM_MODE = nil
 def on_duration(frames_elapsed, new_ent):
     if not new_ent.duration_tracker:
         new_ent.duration_tracker = 0
-    new_ent.duration_tracker += 1
+        
+    ++new_ent.duration_tracker
+    
     if new_ent.duration_tracker > new_ent.sprite.frames:
         new_ent.duration_tracker = 0
         return true
     return false
 
-def total_duration(frames):
-    let total_duration = 0
-    for frm in frames:
-        total_duration += frm.frames
-    return total_duration
 
 def make_anim_entity(
         // make an entity with position and scale and stuff
         entity,
         // sprite
-        frames,
+        animation,
         // callback when it dies
         death_callback,
         // function to call to compute what frame to play
         frame_func,
         // frames to run before calling the lifetime
-        lifetime,
-):
+        lifetime):
+            
     // debug_print("anim entity: " + entity.name)
-    entity.sprite = array_value(frames, 0)
+    entity.sprite = array_value(animation, 0)
 
-    let new_ent = make_entity(entity)
+    const new_ent = make_entity(entity)
     new_ent.anim_current_frame = 0
 
-    if frame_func == nil:
-        frame_func = on_duration
+    frame_func = frame_func default on_duration
 
-    if lifetime == nil:
-        lifetime = total_duration(frames)
+    lifetime = lifetime default animation.frames
+    assert(not is_NaN(lifetime))
 
     def frame_advance(framesLeft, lifetime):
-        new_ent.sprite = array_value(frames, new_ent.anim_current_frame)
-        if frame_func(lifetime-framesLeft, new_ent):
-            new_ent.anim_current_frame += 1
+        new_ent.sprite = array_value(animation, new_ent.anim_current_frame)
+        if frame_func(lifetime - framesLeft, new_ent):
+            ++new_ent.anim_current_frame
 
-    def kill_thing():
+    def last_frame():
         if death_callback:
             death_callback(new_ent)
-
+            
     add_frame_hook(
         frame_advance,
-        kill_thing,
+        last_frame,
         lifetime,
         ANIM_MODE
     )
-    // @}
 
     return new_ent
 

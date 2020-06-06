@@ -151,9 +151,9 @@ function processForTest(test) {
     }
 
     // Named index/key
-    let key_name;
-    test = test.replace(RegExp('\\s+at\\s+(' + identifierPattern + ')\\s*∊'), function (match, key) {
-        key_name = key;
+    let key = gensym('key');
+    test = test.replace(RegExp('\\s+at\\s+(' + identifierPattern + ')\\s*∊'), function (match, keyName) {
+        key = keyName;
         return ' ∊';
     });
 
@@ -165,7 +165,7 @@ function processForTest(test) {
         // match[3] = for container expr
 
         // Rewrite the tested expr
-        let withPart = processWithHeader(match[1] + '∊' + match[2]);
+        const withPart = processWithHeader(match[1] + '∊' + match[2]);
         before = withPart[0];
         after = withPart[1] + '}';
         test = match[2] + '∊' + match[3]
@@ -175,19 +175,16 @@ function processForTest(test) {
     
     if (match) {
         // Generate variables
-        const key_array = gensym('key_array'), index = gensym('index'), is_obj = gensym('is_obj'),
-            cur = match[1], containerExpr = match[2].trim(), container = gensym('container'), N = gensym('N');
+        const value = match[1],
+              container = gensym('container'),
+              is_obj = gensym('is_obj'),
+              containerExpr = match[2].trim();
 
-        if (key_name) {
-            // The 'at' variable
-            before = before + ` let ${key_name} = ${is_obj} ? ${cur} : ${index}; `;
-        }
-
+        // The '==' on the next line is converted to a === by the remaining compiler pass
         return [`{const ${container} = ${containerExpr}; const ${is_obj} = is_object(${container}); ` +
                 `_checkContainer(${container}); try { ` +
                 `_iteratorCount.set(${container}, (_iteratorCount.get(${container}) || 0) + 1); ` +
-                `for (let ${key_array} = ${is_obj} ? _Object.keys(${container}) : ${container}, ${N} = ${key_array}.length, ` +
-                `${index} = 0; ${index} < ${N}; ++${index}) { let ${cur} = ${key_array}[${index}]; ${before} `,
+                `for (let ${key} in ${container}) { if (${is_obj} && (${key}[0] == '_')) { continue; }; let ${value} = ${container}[${key}]; ${before} `,
                 after +
                 `} finally { _iteratorCount.set(${container}, _iteratorCount.get(${container}) - 1); }}`];
     } else {

@@ -16,7 +16,7 @@ var PyxlScriptHighlightRules = function() {
             "min|max|mid|abs|acos|atan|asin|sign|sign_nonzero|cos|clamp|hash|lerp|log|log2|log10|loop|noise|oscillate|overlap|pow|make_random|random_sign|random_integer|random_within_sphere|random_on_sphere|random_within_circle|random_within_square|random_on_square|random_on_circle|random_direction2D|random_direction3D|random_value|random_gaussian|random_gaussian2D|random_truncated_gaussian|random_truncated_gaussian2D|random|ξ|sgn|sqrt|sin|set_random_seed|tan|conncatenate|extend|clone|copy|draw_previous_mode|cross|direction|dot|equivalent|magnitude|magnitude_squared|max_component|min_component|xy|xyz|" +
             "fast_remove_key|find|keys|remove_key|substring|sort|resize|push|pop|pop_front|push_front|fast_remove_value|remove_values|remove_all|gamepad_array|touch|joy|round|floor|ceil|debug_print|" +
             "get_sound_status|set_pitch|set_volume|set_pan|set_loop|" +
-            "is_string|is_function|is_object|is_nil|is_boolean|is_number|is_array|type|" +
+            "is_string|is_function|is_NaN|is_object|is_nil|is_boolean|is_number|is_array|type|" +
             "ADD|DIV|MAD|MUL|SUB|MAX|MIN|SIGN|CLAMP|" +
             "RGB_ADD_RGB|RGB_SUB_RGB|RGB_MUL_RGB|RGB_DIV_RGB|RGB_MUL|RGB_DIV|RGB_DOT_RGB|RGB_LERP|" +
             "RGBA_ADD_RGBA|RGBA_SUB_RGBA|RGBA_MUL_RGBA|RGBA_DIV_RGBA|RGBA_MUL|RGBA_DIV|RGBA_DOT_RGBA|RGBA_LERP|" +

@@ -7,7 +7,7 @@ def swing_hitbox(PLAYER):
         size: xy(PLAYER.player_dir*34, 40),
         shape:"rect",
         color: rgb(1,0,0),
-        z:100,
+        z: 100,
     }
 
 
@@ -21,9 +21,9 @@ def polar_to_xy(angle):
 // uses rejection sampling to find a location inside the play area that is
 // outside the SPAWN_REJECTION_RADIUS of the player
 def random_loc_in_play_area_away_from_player():
-    let candidate_pos = xy(0,0)
+    let candidate_pos = xy(0, 0)
 
-    let target = xy(0,0)
+    let target = xy(0, 0)
     if PLAYER:
         target = PLAYER.pos
     
@@ -40,10 +40,10 @@ if DRAW_DEBUG_SPAWN_LOCATIONS:
     for i < 128:
         push(debug_spawn_locations, random_loc_in_play_area_away_from_player())
 // @}
-let cam_pos = xy(0,0)
+let cam_pos = xy(0, 0)
 
 
-// detect debvug variable status
+// detect debug variable status
 // this one is in the tools menu and draws the origins, bounds, and other 
 // things
 let DEBUG_DRAW_ORIGINS = device_control("getDebugFlag", "entityBounds")
@@ -51,8 +51,8 @@ let DEBUG_DRAW_ORIGINS = device_control("getDebugFlag", "entityBounds")
 // how to offset the sprite by direction
 // @TODO: set a pivot instead
 const PLAYER_SPRITE_OFFSET = {
-    "1" : xy(16,-16),
-    "-1": xy(-16,-16),
+    "1" : xy( 16, -16),
+    "-1": xy(-16, -16),
 }
 
 let SCORE = 0
@@ -82,14 +82,14 @@ const WALL_OFF_MAX = ARENA_SIZE_HALF_PX - BG_TILE_SIZE_XY_PX - xy(0, 6)
 // @}
 
 const CLOUD_PARALLAX_MAP = {
-    0: 7/8,
-    1: 1/2,
+    0:  7/8,
+    1:  1/2,
     2: -0.2
 }
 
 const CLOUD_Z_MAP = {
-    0: -4,
-    1: -3,
+    0:  -4,
+    1:  -3,
     2: 190,
 }
 
@@ -98,30 +98,13 @@ let next_flash = INTERVAL_BETWEEN_FLASHES + random_integer(INTERVAL_BETWEEN_FLAS
 const FLASH_LENGTH = 7
 
 def draw_cloud_border():
-   /*   
-   // This *should* be faster, but isn't...
-   preserving_transform:
-      for layer < 2:
-         set_transform(cam_pos * CLOUD_PARALLAX_MAP[layer], nil, CLOUD_Z_MAP[layer])
-         draw_map(clouds_map, layer, layer)
-   */
     for 0 < layer < 3:
-        draw_sprite(
-            {
-                sprite:clouds_layeredSprite[0][(2-layer)],
-                pos:xy(0,0) + cam_pos*CLOUD_PARALLAX_MAP[layer],
-                z: CLOUD_Z_MAP[layer],
-            }
-        )
+        draw_sprite({
+            sprite: clouds_layeredSprite[0][2 - layer],
+            pos: cam_pos * CLOUD_PARALLAX_MAP[layer],
+            z: CLOUD_Z_MAP[layer],
+        })
 
-// @TODO: base a transition off this?
-// const RAIN_STREAKS = 100
-// def draw_rain():
-//     for i < RAIN_STREAKS:
-//         let angle = (pi * i/RAIN_STREAKS)
-//         let RAY_ORIGIN = xy(0, 1.5*SCREEN_SIZE.y)
-//         let target = -xy(cos(angle), sin(angle)) * 1.5 * SCREEN_SIZE.x + RAY_ORIGIN
-//         draw_line(RAY_ORIGIN, target, rgb(1,1,1), 100)
 
 const RAIN_STREAKS = 200
 const RAIN_OFFSETS = []
@@ -136,47 +119,46 @@ const RAIN_COLORS = [
 
 const SPLASHES_PER_FRAME = 1
 const SPLASHES = []
+
 def delete_splash(spl):
-    remove_values(SPLASHES, spl)
-const Z_OFF = SCREEN_SIZE.y/2
-const RAIN_ANGLE_INC = pi/RAIN_STREAKS
-const RAY_ORIGIN = xy(0, 1.5*SCREEN_SIZE.y)
+    fast_remove_value(SPLASHES, spl)
+    
+const Z_OFF = SCREEN_SIZE.y / 2
+const RAIN_ANGLE_INC = 180deg / RAIN_STREAKS
+const RAY_ORIGIN = xy(0, 1.5 SCREEN_SIZE.y)
 
 def draw_rain():
     // add splashes every ten frames
     if mode_frames mod 10 == 0:
-        let l = random_loc_in_play_area()
-        let spl = make_anim_entity(
-            {
-                pos: l,
+        const pos = random_loc_in_play_area()
+        push(SPLASHES, make_anim_entity({
                 name: "splash",
-                scale: xy(1,1),
+                pos: pos,
+                z: pos.y + Z_OFF
             },
-            splashSprite["splash"],
+            splashSprite.splash,
             delete_splash
-        )
-        spl.z = spl.pos.y + Z_OFF,
-        push(SPLASHES, spl)
+        ))
 
-    let angle = 0
+    let angle = 0deg
     const PARALLAXES = [
-        cam_pos*CLOUD_PARALLAX_MAP[0],
-        cam_pos*CLOUD_PARALLAX_MAP[1],
-        cam_pos*CLOUD_PARALLAX_MAP[2],
+        cam_pos * CLOUD_PARALLAX_MAP[0],
+        cam_pos * CLOUD_PARALLAX_MAP[1],
+        cam_pos * CLOUD_PARALLAX_MAP[2],
     ]
 
-    const MAX_LEN_FACT = SCREEN_SIZE.x*1.5
+    const MAX_LEN_FACT = 1.5 SCREEN_SIZE.x
     const rain_z = CLOUD_Z_MAP[2]
     for i < RAIN_STREAKS:
-        let length = i mod 3
+        const length = i mod 3
 
         angle += RAIN_ANGLE_INC
-        let dir_vec = -polar_to_xy(angle)
+        const dir_vec = polar_to_xy(angle)
 
-        let amount_along_line = 1 - ((mode_frames + RAIN_OFFSETS[i]) mod 60)/60
-        let ray_start = RAY_ORIGIN + MAX_LEN_FACT*amount_along_line*dir_vec
-        let ray_end = ray_start + 10*dir_vec
-
+        const amount_along_line = 1 - ((mode_frames + RAIN_OFFSETS[i]) mod 60) / 60
+        const ray_start = RAY_ORIGIN + MAX_LEN_FACT * amount_along_line * dir_vec
+        const ray_end = ray_start + 10 dir_vec
+        
         draw_line(
             ray_start,
             ray_end,
@@ -187,15 +169,16 @@ def draw_rain():
     for spl in SPLASHES:
         draw_sprite(spl)
 
-def draw_score(score, scale=SCORE_SCALE, z=200):
+
+def draw_score(score, scale, z):
     preserving_transform:
         reset_transform()
-        let pos = SCORE_SCALE*SCORE_SPR[0][0].size/2 + SCORE_ORIGIN
+        let pos = SCORE_SCALE * SCORE_SPR[0][0].size / 2 + SCORE_ORIGIN
         let opacity = 1
 
         if SCORE_ANIM_START != nil:
             let frames_past = (game_frames - SCORE_ANIM_START)
-            opacity = lerp(opacity, 0, min(frames_past/SCORE_OPACITY_FRAMES, 1))
+            opacity = lerp(opacity, 0, min(frames_past / SCORE_OPACITY_FRAMES, 1))
             if frames_past > SCORE_OPACITY_FRAMES:
                 opacity = 1
                 let amount = min((frames_past-SCORE_OPACITY_FRAMES)/SCORE_MOVE_FRAMES, 1)
@@ -204,20 +187,18 @@ def draw_score(score, scale=SCORE_SCALE, z=200):
             if frames_past > SCORE_OPACITY_FRAMES + SCORE_MOVE_FRAMES:
                 SCORE_ANIM_START = nil
 
-        let num_str = unparse(DISPLAYED_SCORE)
-
-        for char in split(num_str, ""):
-            let num = parse(char)
+        for char in split(unparse(DISPLAYED_SCORE), ""):
+            const num = parse(char)
             draw_sprite(
                 {
-                    sprite: SCORE_SPR["fancy"][num],
+                    sprite: SCORE_SPR.fancy[num],
                     pos: pos,
                     scale:scale,
                     opacity: opacity,
                     z: z,
                 }
             )
-            pos.x += SCORE_SCALE.x * 24
+            pos.x += 24 SCORE_SCALE.x
     // @}
 
 def draw_player():
@@ -225,18 +206,19 @@ def draw_player():
         return
 
     draw_disk(
-        PLAYER.pos + xy(2 * PLAYER.player_dir, 5),
-        BG_TILE_SIZE_XY_PX.x/2,
-        rgba(10/255, 10/255, 10/255, 0.25),
+        PLAYER.pos + xy(2 PLAYER.player_dir, 5),
+        BG_TILE_SIZE_XY_PX.x / 2,
+        rgba(10/255, 10/255, 10/255, 25%),
         nil,
-        PLAYER.pos.y + SCREEN_SIZE.y/2,
+        PLAYER.pos.y + SCREEN_SIZE.y / 2,
     )
+    
     draw_disk(
-        PLAYER.pos + xy(2 * PLAYER.player_dir, 5),
-        BG_TILE_SIZE_XY_PX.x/3,
-        rgba(10/255, 10/255, 10/255, 0.75),
+        PLAYER.pos + xy(2 PLAYER.player_dir, 5),
+        BG_TILE_SIZE_XY_PX.x / 3,
+        rgba(10/255, 10/255, 10/255, 75%),
         nil,
-        PLAYER.pos.y + SCREEN_SIZE.y/2,
+        PLAYER.pos.y + SCREEN_SIZE.y / 2,
     )
 
     // draw the character
@@ -245,12 +227,12 @@ def draw_player():
             sprite: PLAYER.sprite,
             pos: PLAYER.pos + PLAYER_SPRITE_OFFSET[unparse(PLAYER.player_dir)], 
             scale: xy(PLAYER.player_dir, 1),
-            z: PLAYER.pos.y + SCREEN_SIZE.y/2,
+            z: PLAYER.pos.y + SCREEN_SIZE.y / 2,
         }
     )
 
     if DEBUG_DRAW_ORIGINS:
-        draw_disk(PLAYER.pos, 5, rgb(1,0,0))
+        draw_disk(PLAYER.pos, 5, #F00)
 
         let swing_hitbox_size = xy(46, -13)
         let hitbox2 = swing_hitbox(PLAYER)
@@ -265,7 +247,7 @@ def draw_player():
             color = rgb(0,1,0)
         // draw_text(font, hit_enemies, hitbox.pos+hitbox.size, color)
         draw_bounds(PLAYER)
-        draw_corner_rect(hitbox2.pos - hitbox2/2, hitbox2.size + xy(1,1), nil, color, 100)
+        draw_corner_rect(hitbox2.pos - hitbox2 / 2, hitbox2.size + xy(1, 1), nil, color, 100)
 
 
 def draw_enemies():
@@ -280,6 +262,7 @@ def draw_enemies():
             nil,
             en.z,
         )
+        
         draw_disk(
             en.pos,
             BG_TILE_SIZE_XY_PX.x/3,
@@ -291,15 +274,17 @@ def draw_enemies():
 
         draw_entity(en)
         if DEBUG_DRAW_ORIGINS:
-            draw_disk(en.pos, 5, rgb(1,0,0))
+            draw_disk(en.pos, 5, #F00)
             draw_bounds(en)
+
 
 def draw_dust():
     for d in dust:
-        d.z = d.pos.y + SCREEN_SIZE.y/2 + 15
+        d.z = d.pos.y + SCREEN_SIZE.y / 2 + 15
         draw_sprite(d)
         if DEBUG_DRAW_ORIGINS:
             draw_bounds(d)
+
 
 def draw_arena():
     // arena_bg
@@ -309,7 +294,7 @@ def draw_arena():
     draw_cloud_border()
 
     // let parallax_amount = xy(cam_pos.x/4, cam_pos.y)
-    draw_sprite({sprite: bgdungeon_fullSprite, pos: xy(0,0)})
+    draw_sprite({sprite: bgdungeon_fullSprite, pos: xy(0, 0)})
 
     // right points
     let right_top_pt = ARENA_SIZE_HALF_PX + BG_TILE_SIZE_XY_PX/2  - xy(0, 1)
@@ -340,9 +325,8 @@ def draw_all():
     draw_player()
     draw_enemies()
     draw_dust()
-
-    // draw the score
     draw_score(SCORE)
+
 
 def clamp_position(pos):
     let clamped_pos =  xy(
@@ -351,9 +335,8 @@ def clamp_position(pos):
     )
 
     // this gives a little drift so it is dead even when its in the dead area
-    let result = (pos - clamped_pos)/3 + clamped_pos
+    return (pos - clamped_pos) / 3 + clamped_pos
 
-    return result
 
 const cam_shake_approach_zero = 0.2
 
@@ -369,12 +352,12 @@ def cam_update_frame(goal_pos):
     else:
         cam_shake_mag = 0
     cam_pos = cam_pos + 0.1 * (goal - cam_pos) + cam_shake_displacement
-    set_transform(SCREEN_SIZE/2-cam_pos)
+    set_transform(SCREEN_SIZE / 2-cam_pos)
 
 // camera shake system
 let cam_shake_mag = 0
 def add_cam_shake(intensity):
     cam_shake_mag += intensity
     cam_shake_mag = min(CAM_SHAKE_MAX, cam_shake_mag)
-    debug_print("Adding camera shake: " + intensity + ", cam shake is: " + cam_shake_mag)
+    // debug_print("Adding camera shake: " + intensity + ", cam shake is: " + cam_shake_mag)
 

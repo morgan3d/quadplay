@@ -5754,7 +5754,7 @@ Numeric `for` loops increment by 1 each iteration and always count up. The loop 
 be on the left-side of a single comparison loop expression or the center of a multi-comparison
 expression.
 
-The loop variable in any `for` loop is freshly bound for each iteration. This means that
+The iteration variable in any `for` loop is freshly bound for each iteration. This means that
 if it is captured by a function as in:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
@@ -5796,11 +5796,12 @@ index and size changes in your own iteration.
 
 The main variations of a `for...in` loop are:
 
-- `for key in object:`
-- `for value at key in object:`
 - `for value in array:`
+- `for value in object:`
+- `for char in string:`
 - `for value at index in array:`
-- `for value at index in string:`
+- `for char at index in string:`
+- `for value at key in object:`
 
 The value variable is bound with `let`, so assignment to the value
 variable is legal but will not affect the underlying value in the array.
