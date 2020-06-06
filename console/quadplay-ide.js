@@ -7,7 +7,7 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.06.06.06'
+const version  = '2020.06.06.13'
 const launcherURL = 'quad://console/launcher';
 
 // Token that must be passed to the server to make POST calls
@@ -69,7 +69,13 @@ function makeEuroSmoothValue(minCutoff, speedCoefficient) {  return new EuroFilt
 /* True if a URL is to a path that is a built-in dir for the current server */
 function isBuiltIn(url) {
     if (ALLOW_EDITING_EXAMPLES) { return false; }
-    if (url.startsWith('quad://')) { return true; }
+    if (url.startsWith('quad://examples/') ||
+        url.startsWith('quad://games/') ||
+        url.startsWith('quad://sprites/') ||
+        url.startsWith('quad://fonts/') ||
+        url.startsWith('quad://scripts/') ||
+        url.startsWith('quad://console/') ||
+        url.startsWith('quad://doc/')) { return true; }
     if (! url.startsWith('http://') || url.startsWith('https://')) {
         url = location.origin + url;
     }
@@ -1987,8 +1993,9 @@ function visualizeGame(gameEditor, url, game) {
             reasons.push('was launched without the IDE');
         }
 
+        console.log(gameURL);
         // Is built-in
-        if (isBuiltIn(url)) {
+        if (isBuiltIn(gameURL)) {
             reasons.push('is a built-in example');
         }
         
@@ -3352,8 +3359,7 @@ function loadGameIntoIDE(url, callback, loadFast) {
 
     // See if the game is on the same server and not in the
     // games/ or examples/ directory
-    editableProject = locallyHosted() && useIDE && isQuadserver && (! isBuiltIn(url) || ALLOW_EDITING_EXAMPLES);
-    
+    editableProject = locallyHosted() && useIDE && isQuadserver && ! isBuiltIn(gameURL);
     // Disable the play, slow, and step buttons
     document.getElementById('slowButton').enabled =
         document.getElementById('stepButton').enabled =

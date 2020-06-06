@@ -1193,7 +1193,9 @@ function addCodeToSourceStats(code, scriptURL) {
     code = code.replace(/\n\s*\n/g, '\n');
 
     // Ignore statements from system files
-    if (scriptURL.replace(/^.*\//, '')[0] !== '_') {
+    if ((scriptURL.replace(/^.*\//, '')[0] !== '_') &&
+        ! scriptURL.startsWith('quad://scripts/') &&
+        ! scriptURL.startsWith(location.href.replace(/\/console\/quadplay\.html.*$/, '/scripts/'))) {
         resourceStats.sourceStatements += Math.max(0, (code.split(';').length - 1) + (code.split('\n').length - 1) - 1);
     }
 }

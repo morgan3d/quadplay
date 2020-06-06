@@ -2415,13 +2415,14 @@ Note that `preserving_transform` also preserves the clipping rectangle.
 `set_transform(args)`
 : Named argument object version of `set_transform()`.
 
-`set_transform(pos (= ∅), dir (= ∅), z (= ∅), zDir (= ∅), skew (= ∅))`
-: Set the transformation applied to all draw coordinates to compute screen coordinates. Nil values
-  or nil properties default to their previous value. The equation
-  mapping draw to screen coordinates is:
-  `screen.x = (draw.x + skew.x * draw.z) * dir.x + pos.x`;
-  `screen.y = (draw.y + skew.y * draw.z) * dir.y + pos.y`;
-  `screen.z = draw.z * zDir + z`.
+`set_transform(pos (= ∅), dir (= ∅), z (= ∅), z_dir (= ∅), skew (= ∅))`
+: Set the transformation applied to all camera coordinates to compute screen coordinates. Nil values
+  or nil properties default to their previous value. The equation applied when mapping from
+  camera space (cs) to screen space (ss) is:
+  
+  - `ss.x = (cs.x + skew.x * cs.z) * dir.x + pos.x`;
+  - `ss.y = (cs.y + skew.y * cs.z) * dir.y + pos.y`;
+  - `ss.z = cs.z * z_dir + z`.
 
   The `dir` parameters must be +1 or -1, for flipping axes. This
   affects the location of sprites and text but not their own axes;
@@ -7054,6 +7055,7 @@ Changes for both the specification and implementation in each release.
   from tinting, alpha test, and opacity
 - Optimized thick line rendering by reducing virtual CPU Logic overhead
 - Optimized default `for` and `for...in` loops under the new semantics
+- Scripts loaded from `quad://scripts/` no longer count against the total program size
 - The game.json file is now directly editable in the IDE
 - Errors now report the filename with the URL truncated if it matches the game URL
 - Added `IDE_USER` constant
