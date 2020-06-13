@@ -11,7 +11,7 @@
         "logo": "logo.sprite.json",
         "loseBallSound": "quad://sounds/75-Wild.sound.json",
         "mediumFont": "quad://fonts/deja-8.font.json",
-        "menuSound": "quad://sounds/67-Blip.sound.json",
+        "menuSound": "quad://sounds/blip-17.sound.json",
         "music": "quad://sounds/loop-arcade.sound.json",
         "paddleSprite": "paddle.sprite.json",
         "pauseSound": "quad://sounds/57-Jump.sound.json",

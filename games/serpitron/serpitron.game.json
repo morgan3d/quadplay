@@ -35,9 +35,9 @@
         "speedUpAudioClip":    "quad://sounds/35-Powerup.sound.json",
         "slowDownAudioClip":   "quad://sounds/36-Powerup.sound.json",
         "bigPointsAudioClip":  "quad://sounds/09-Coin.sound.json",
-        "smallPointsAudioClip":"quad://sounds/64-Blip.sound.json",
+        "smallPointsAudioClip":"quad://sounds/blip-14.sound.json",
         "hitAudioClip":        "quad://sounds/70-Wild.sound.json",
-        "blipAudioClip":       "quad://sounds/67-Blip.sound.json"
+        "blipAudioClip":       "quad://sounds/blip-17.sound.json"
     },
 
     "y_up":                 false,
