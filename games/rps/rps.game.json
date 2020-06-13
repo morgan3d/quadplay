@@ -15,7 +15,7 @@
         "sound0": "quad://sounds/blip-07.sound.json",
         "sound1": "quad://sounds/61-Blip.sound.json",
         "sound2": "quad://sounds/66-Blip.sound.json",
-        "sound3": "quad://sounds/68-Blip.sound.json",
+        "sound3": "quad://sounds/blip-08.sound.json",
         "rock_scissors_audio_clip": "rock-scissors.sound.json",
         "paper_rock_audio_clip": "paper-rock.sound.json",
         "scissors_paper_audio_clip": "scissors-paper.sound.json",
