@@ -12,7 +12,7 @@
         "large_font": "quad://fonts/broderick-14.font.json",
         "large_spritesheet": "rps-112x112.sprite.json",
         "small_spritesheet": "rps-32x32.sprite.json",
-        "sound0": "quad://sounds/Blip-07.sound.json",
+        "sound0": "quad://sounds/blip-07.sound.json",
         "sound1": "quad://sounds/61-Blip.sound.json",
         "sound2": "quad://sounds/66-Blip.sound.json",
         "sound3": "quad://sounds/68-Blip.sound.json",

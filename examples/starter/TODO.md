@@ -1,5 +1,7 @@
-                    **TODO**
+                         **TODO**
   
-[ ] Rename from `starter` to your project
+[ ] Write your game design idea here
+[ ] Add assets
 [ ] Write code
-[ ] Change the copyright statement in the `game.json` file
+[ ] Test
+[ ] Select a license and complete the copyright statement

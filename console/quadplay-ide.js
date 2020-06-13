@@ -5,7 +5,7 @@
 const deployed = true;
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
-const ALLOW_EDITING_EXAMPLES = false;
+const ALLOW_EDITING_EXAMPLES = true;
 
 const version  = '2020.06.06.13'
 const launcherURL = 'quad://console/launcher';
@@ -100,7 +100,7 @@ function debugOptionClick(event) {
     if (element.id === 'wordWrapEnabled') {
         const outputDisplayPane = document.getElementById('outputDisplayPane');
         outputDisplayPane.style.whiteSpace = element.checked ? 'pre-wrap' : 'pre';
-    } else {
+    } else if (element.id !== 'automathEnabled' && element.id !== 'restartOnFocusEnabled') {
         QRuntime['_' + element.id] = element.checked;
     }
     saveIDEState();
@@ -628,7 +628,6 @@ function onPlayButton(slow, isLaunchGame, args) {
                 if (isSafari) {
                     console.log('_currentLineNumber = ' + QRuntime._currentLineNumber);
                 }
-                console.log(e);
             }
             
             if (compiledProgram) {
@@ -1081,7 +1080,7 @@ function restartProgram(numBootAnimationFrames) {
         } catch (e) {
             // "Link"-time or run-time on a script error
             onStopButton();
-            e = jsToNSError(e);
+            e = jsToPSError(e);
             setErrorStatus(shortURL(e.url) + ' line ' + clamp(1, e.lineNumber, programNumLines) + ': ' + e.message);
             return;
         }
@@ -1292,6 +1291,7 @@ function saveIDEState() {
         'automathEnabled': document.getElementById('automathEnabled').checked,
         'debugWatchEnabled': document.getElementById('debugWatchEnabled').checked,
         'debugPrintEnabled': document.getElementById('debugPrintEnabled').checked,
+        'restartOnFocusEnabled': document.getElementById('restartOnFocusEnabled').checked,
         'codeEditorFontSize': codeEditorFontSize
     };
 
@@ -1488,7 +1488,7 @@ function onProjectSelect(target, type, object) {
                             }
                         }
 
-                        str += `<br>duration: ${sprite.duration}`;
+                        str += `<br>frames: ${sprite.frames}`;
                         spriteEditorInfo.innerHTML = str;
                         
                         if (X > object.length / 2) {
@@ -1572,7 +1572,7 @@ function showGameDoc(url, useFileContents) {
         let s = `<iframe id="doc" width="125%" height="125%" onload="setIFrameScroll(this, ${oldScrollX}, ${oldScrollY})" `;
         
         if (srcdoc !== undefined) {
-            const html = baseTag + srcdoc.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+            const html = (srcdoc.replace(/&/g, '&amp;') + baseTag).replace(/"/g, '&quot;');
             s += 'srcdoc="' + html + '"';
         } else {
             s += `src="${url}?"`;
@@ -2575,10 +2575,10 @@ function debug_watch(expr, value) {
 
 
 /** 
-    Given a JavaScript runtime error, compute the corresponding nanoscript error by
+    Given a JavaScript runtime error, compute the corresponding PyxlScript error by
     parsing the @ pragmas in the compiledProgram code.
  */
-function jsToNSError(error) {
+function jsToPSError(error) {
     console.log(error);
            
     // Firefox
@@ -2599,7 +2599,6 @@ function jsToNSError(error) {
                     }
                 }
             } else {
-            
                 for (let i = 1; i < stack.length; ++i) {
                     const match = stack[i].match(/(?:GeneratorFunction|<anonymous>):(\d+):/);
                     if (match) {
@@ -2661,7 +2660,7 @@ function jsToNSError(error) {
         url = url.substring(0, url.length - 1);
     }
 
-    return {url: url, lineNumber: lineNumber - urlLineIndex - 3 + offset, message: error.message};
+    return {url: url, lineNumber: lineNumber - urlLineIndex - 3 + offset, message: error.message.replace(/\bundefined\b/g, 'nil')};
 }
     
 
@@ -2777,7 +2776,7 @@ function mainLoopStep() {
         } else {
             // Runtime error
             onStopButton();
-            e = jsToNSError(e);
+            e = jsToPSError(e);
 
             // Try to compute a short URL
             setErrorStatus(shortURL(e.url) + ' line ' + clamp(1, e.lineNumber, programNumLines) + ': ' + e.message);
@@ -3342,7 +3341,7 @@ function appendToBootScreen(msg) {
     bootScreen.scrollTop = bootScreen.scrollHeight;
 }
 
-
+/** If loadFast is true, do not make any cosmetic delays. */
 function loadGameIntoIDE(url, callback, loadFast) {
     if (url !== gameURL) {
         // A new game is being loaded. Throw away the editor sessions.
@@ -3423,7 +3422,7 @@ function loadGameIntoIDE(url, callback, loadFast) {
             
             const modeEditor = document.getElementById('modeEditor');
             if (modeEditor.style.visibility === 'visible') {
-                // Update the editor
+                // Update the mode diagram if it is visible
                 visualizeModes(modeEditor);
             }
             
@@ -3501,10 +3500,14 @@ window.addEventListener('blur', function () {
 }, false);
 
 window.addEventListener('focus', function() {
-    if (editableProject && useIDE && isQuadserver && (emulatorMode === 'stop')) {
-        // Regained focus while stopped and in the IDE. Reload in case anything changed
-        // on disk
-        loadGameIntoIDE(window.gameURL, null, true);        
+    if (editableProject && useIDE && isQuadserver) {
+        if (document.getElementById('restartOnFocusEnabled').checked) {
+            onRestartButton();
+        } else if (emulatorMode === 'stop') {
+            // Regained focus while stopped and in the IDE. Reload in case
+            // anything changed on disk
+            loadGameIntoIDE(window.gameURL, null, true);
+        }
     }
 }, false);
 
@@ -3535,6 +3538,11 @@ if (! localStorage.getItem('todoEnabled')) {
 if (! localStorage.getItem('automathEnabled')) {
     // Default to true
     localStorage.setItem('automathEnabled', 'true')
+}
+
+if (! localStorage.getItem('restartOnFocusEnabled')) {
+    // Default to false
+    localStorage.setItem('restartOnFocusEnabled', 'false')
 }
 
 if (! localStorage.getItem('debugWatchEnabled')) {

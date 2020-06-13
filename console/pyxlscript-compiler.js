@@ -13,12 +13,12 @@ String.prototype.rtrim = function() {
     matching close ')', assuming that parens are balanced
     and there are no quoted strings or incorrectly
     nested other grouping characters. */
-function findMatchingParen(str, i, direction) {
+function findMatchingParen(str, i, direction, open = '(', close = ')') {
     i += direction;
     for (let stack = 1; stack > 0; i += direction) {
         switch (str[i]) {
-        case '(': stack += direction; break;
-        case ')': stack -= direction; break;
+        case open: stack += direction; break;
+        case close: stack -= direction; break;
         }
         if (i === str.length || i === -1) {
             throw 'Missing matching parenthesis';
@@ -115,6 +115,8 @@ function processWithHeader(test) {
     const varDescriptorArray = varArray.map(function (vari) { return gensym(vari + 'Descriptor'); });
 
     const result = [];
+    
+    const index = gensym('index');
     result[0] = `{ let ${obj} = (${expr})`;
     for (let i = 0; i < varArray.length; ++i) {
         result[0] += `, ${varArray[i]} = ${obj}.${varArray[i]}`;
@@ -123,8 +125,14 @@ function processWithHeader(test) {
     for (let i = 0; i < varArray.length; ++i) {
         result[0] += `, ${varDescriptorArray[i]} = _Object.getOwnPropertyDescriptor(${obj}, '${varArray[i]}')`;
     }
+
+    result[0] += ';';
+
+    for (let i = 0; i < varArray.length; ++i) {
+        result[0] += ` if (! ${varDescriptorArray[i]}) { _error("No '${varArray[i]}' property on object in this with statement")};`;
+    }
     
-    result[0] += `; _Object.defineProperties(${obj}, {` +
+    result[0] += `_Object.defineProperties(${obj}, {` +
         varArray.reduce(function(prev, vari) { return prev + `${vari}: {configurable: true, get() { return ${vari}; }, set(${v}) { ${vari} = ${v}; }}, `; }, '') +
         '}); try {';
     
@@ -178,13 +186,21 @@ function processForTest(test) {
         const value = match[1],
               container = gensym('container'),
               is_obj = gensym('is_obj'),
+              index = gensym('index'),
+              key_array = gensym('key_array'),
               containerExpr = match[2].trim();
 
         // The '==' on the next line is converted to a === by the remaining compiler pass
-        return [`{const ${container} = ${containerExpr}; const ${is_obj} = is_object(${container}); ` +
-                `_checkContainer(${container}); try { ` +
-                `_iteratorCount.set(${container}, (_iteratorCount.get(${container}) || 0) + 1); ` +
-                `for (let ${key} in ${container}) { if (${is_obj} && (${key}[0] == '_')) { continue; }; let ${value} = ${container}[${key}]; ${before} `,
+        return [`{const ${container} = ${containerExpr}; ` +
+                `const ${is_obj} = is_object(${container}); ` +
+                `_checkContainer(${container}); ` +
+                `try { ` +
+                `  let ${key_array} = ${is_obj} ? _Object.keys(${container}) : ${container}; ` +
+                `  _iteratorCount.set(${container}, (_iteratorCount.get(${container}) || 0) + 1); ` +
+                `  for (let ${index} = 0; ${index} < ${key_array}.length; ++${index}) { ` +
+                `    let ${key} = ${is_obj} ? ${key_array}[${index}] : ${index}; ` +
+                `    if (${is_obj} && (${key}[0] == '_')) { continue; }; ` +
+                `    let ${value} = ${container}[${key}]; ${before} `,
                 after +
                 `} finally { _iteratorCount.set(${container}, _iteratorCount.get(${container}) - 1); }}`];
     } else {
@@ -256,13 +272,15 @@ function processLine(line, inFunction) {
         // line is a control flow-affecting expresion
         let before = match[1], type = match[2], rest = match[3].trim() + '; ' + next;
 
-        if ((type === 'function') || (type === 'def')) {
+        if (type === 'def') {
             match = rest.match(/\s*([^\( \n\t]+)?\s*\((.*?)\)[ \t]*:(.*)/);
 
             if (! match) { throw 'Ill-formed single-line function definition'; }
             let name = match[1];
             let args = match[2] || '';
             let body = match[3];
+
+            args = processDefaultArgSyntax(args)
 
             body = processLine(body, true);
             // Wrapping the function definition in parens can trigger heuristics in Chromium
@@ -356,6 +374,59 @@ function processLine(line, inFunction) {
     }
 }
 
+
+/** 
+    Given a string containing the arguments [without surrounding
+    function parentheses], rewrite 'arg default ...' as 'arg = ...',
+    handling complicated cases such as chained use of the default
+    statement and other further quadplay statements in the default
+    expression. Return legal JavaScript for substitution.
+*/
+function processDefaultArgSyntax(args) {
+    // Nothing to parse
+    if (! /\bdefault\b/.test(args)) { return args; }
+
+    const match = {'(':')', '[':']', '{':'}'};
+
+    let accum = '';
+    let i = 0;
+    let first = true;
+    while (i !== -1) {
+        // Find the next interesting symbol or character. The first time
+        // through, we stop at 'default'. Thereafter, we only stop for
+        // commas or parens.
+        i = args.search(first ? /[,\(\[\{]| default / : /[,\(\[\{]/);
+        first = false;
+        if (i === -1) {
+            // Nothing to do, break
+        } else if (args[i] === ',' || args[i] === ' ') {
+            if (args[i] === ',') {
+                do { ++i; } while (i < args.length && args[i] === ' ');
+                // Skip over the argument
+                do { ++i; } while (i < args.length && ! /[ ,\)]/.test(args[i]));
+            }
+
+            // And any space after the argument
+            while (i < args.length && args[i] === ' ') { ++i; };
+
+            // Move all of this to accum
+            accum += args.substring(0, i); args = args.substring(i);
+            //console.log(accum + '/' + args);
+
+            // See if there's a 'default', and convert it if so
+            if (args.startsWith('default ')) {
+                accum += '= ';
+                args = args.substring('default '.length);
+            }
+        } else {
+            // Skip to the matching paren
+            i = findMatchingParen(args, i, +1, args[i], match[args[i]]);
+            accum += args.substring(0, i); args = args.substring(i);
+        }
+    }
+    // No more, we're done
+    return accum + args;
+}
 
 /**
  returns nextLineIndex
@@ -472,11 +543,14 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode) {
                 throw makeError(e, i);
             }
             
-        } else if (match = lineArray[i].match(RegExp('^(\\s*)def\\s+(' + identifierPattern + ')\\s*\\(([^\\)]*)\\)[ \t]*([a-zA-Z_]*)[ \t]*:'))) {
+        } else if (match = lineArray[i].match(RegExp('^(\\s*)def\\s+(' + identifierPattern + ')\\s*\\((.*)\\)[ \t]*([a-zA-Z_]*)[ \t]*:\\s*$'))) {
             // DEF
-            
             let prefix = match[1], name = match[2], args = match[3] || '', modifier = match[4] || '';
             let end = processBlock(lineArray, i + 1, true, internalMode) - 1;
+
+            // Rewrite args for default values
+            args = processDefaultArgSyntax(args);
+            
             lineArray[i] = prefix + 'const ' + name + ' = (function(' + args + ') { ' + maybeYieldFunction;
             if (modifier === 'preserving_transform') {
                 lineArray[i] += 'try { _pushGraphicsState();';
@@ -1053,7 +1127,7 @@ function pyxlToJS(src, noYield, internalMode) {
     src = src.replace(/_add\(__yieldCounter, 1\)/g, '__yieldCounter + 1');
     src = unprotectQuotedStrings(src, protectionMap);
 
-    //console.log(src);
+    // if (! internalMode) { console.log(src); }
     return src;
 }
 

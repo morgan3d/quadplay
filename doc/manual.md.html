@@ -805,15 +805,20 @@ The PyxlScript language feels a lot like Python, with these changes:
 - Variables have block scope instead of function scope
 - Function variables have lexical scope (no `global` statement required)
 - No integer division (use `floor`)
-- It is safe to mutate containers inside iterator loops
-- No comparison operator chaining, except on `for` loop definition
-- Use `keys(obj)` and `values(obj)` instead of `obj.keys()` and `obj.values()` (although you almost never need either)
+- No comparison operator chaining
+- Use `keys(obj)` and `values(obj)` instead of `obj.keys()` and `obj.values()` (although you almost never need either due to the `for` loop syntax)
+- Use `iterate()` instead of `map()`, `filter()`, or list comprehensions
 - Use `extend(a, b)` for Python `objA.update(objB)` and `listA.extend(listB)`
 - Use `concatenate(a, b)` for Python `listA + listB` and `{**objA, **objB}`
 - Use `x = if t then a else b` for Python `x = a if t else b`
 - Use `true`, `false`, `nil` instead of `True`, `False`, `None`
 - Use `def foo(a, b, ...rest)` instead of `def foo(a, b, *rest)`
 - Use `foo(a, b, ...rest)` instead of `foo(a, b, *rest)`
+- Use `[...array1, ...array2]` or `concatenate(array1, array2)` instead of `array1 + array2`
+- Use `extend(array1, array2)` instead of `array1 += array2`
+- Use `def foo(x default y)` instead of `def foo(x = y)`
+- Default function parameters are evaluated once per call instead of once per program,
+  so they do not capture and share values
 
 
 ### JavaScript
@@ -826,13 +831,15 @@ The PyxlScript language feels a lot like JavaScript strict mode, with these chan
 - Variable names can't begin with an underscore
 - No `;` required, except for multiple statements on the same line
 - Use `size(x)` instead of `x.length`
-- Use `for k in object:` instead of `for (k in object)`
+- Use `for v at k in object:` instead of `for (k in object)`
+- Use `for k in array:` instead of `for (k in array)`
 - Use `for v in array:` instead of `for (v of array)`
 - It is safe to mutate containers inside iterator loops
 - There are no anonymous functions
 - Function names are not lifted to the containing function's scope
 - Use `x = if t then a else b` for JavaScript `x = t ? a : b`
 - Use `debug_print` instead of `console.log`
+- Use `a default b` instead of `a ?? b`
 - Enjoy the overloaded operators for vectors
 
 
@@ -1161,9 +1168,9 @@ Standard Library
 Standard library functions are first-class values. They can be stored
 in data structures and variables.
 
-A parameter shown with parentheses and an equal sign after it, for
-example: `i (= 0)` indicates that this is an optional parameter and
-the value in parentheses will be used if none is supplied. Explicitly
+In PyxlScript syntax, a parameter shown with `default` after it, for
+example: `i default 0` indicates that this is an optional parameter and
+the value after `default` be used if none is supplied. Explicitly
 specifying `nil` for any parameter forces its default value.
 
 Input
@@ -1216,7 +1223,7 @@ with a transform change in between can change the sign of the value. The
 angles are always clockwise in screen space.
 
 
-`any_button_press(gamepad_or_touch (= ∅))`
+`any_button_press(gamepad_or_touch default ∅)`
 : Returns true if any button on `gamepad_or_touch` was just pressed.
   If `gamepad_or_touch` is `nil`, returns true if any button on any
   gamepad was pressed or there was any touch.
@@ -1302,7 +1309,7 @@ The system pause menu is bound to the ⓟ button, which is not visible to games.
 Games can add up to three custom elements on the pause menu, and can change these
 at any point.
 
-`set_pause_menu(opt1 (= ∅), opt2 (= ∅), opt3 (= ∅))`
+`set_pause_menu(opt1 default ∅, opt2 default ∅, opt3 default ∅)`
 : Override the custom elements on the pause menu. Each argument
   is an object of the form `{text:string, callback:function, confirm:boolean}`.
   At 64x64 resolution, specifying `opt3` disables the automatic game
@@ -1420,7 +1427,7 @@ Types
 Array
 ---------------------------------------------------------
 
-`array_value(array, i, extrapolate (= array.extrapolate or "clamp"))`
+`array_value(array, i, extrapolate default (array.extrapolate or "clamp"))`
 : Applies `floor()` to `i` and then applies the extrapolation mode, which defaults
   to the extrapolation mode of the array itself if specified.
   Intended primarily for animation of values, including
@@ -1459,7 +1466,7 @@ Array
 : Delete one element that is `== v`, or do nothing if there is no such element. May reorder the
   array and may choose any such element, not necessarily the first. See also `remove_values()`.
 
-`find(array, x, i (= 0))`
+`find(array, x, i default 0)`
 : Find the index of the element whose value is `x`, starting at optional index `i` (default 0).
   Returns `∅` if not found. Uses `==` to compare `x` to array values. Runs in linear time in the length of the list
   from `i`.
@@ -1488,7 +1495,7 @@ Array
 
    It is illegal for the callback to modify the array itself during iteration.
 
-`join(array, separator (= ""), lastSeparator (= separator), pairSeparator (= lastSeparator), empty (= ""))`
+`join(array, separator default "", lastSeparator default separator, pairSeparator default lastSeparator, empty default "")`
 : Joins the elements of the array into a string. Each element converted to a string with `unparse()` if it is not already a string.
   The optional `lastSeparator` allows the final join to use a special case.
   The optional `pairSeparator` is a special separator used for arrays of length two.
@@ -1548,11 +1555,11 @@ Array
 `size(array)`
 : Get the length of the array. O(1) time.
 
-`slice(array, s, e (= size(array)))`
+`slice(array, s, e default size(array))`
 : Return the subarray of `array` between `s` (inclusive) and
   optional `e` (exclusive, defaults to length).
 
-`sort(array, k, reverse (= false))`
+`sort(array, k, reverse default false)`
 : Sort the array from least to greatest. If `k` is a string, then
   elements of the array are assumed to be objects and are sorted by
   that key. If `k` is a number, then elements of the array are assumed
@@ -1574,7 +1581,7 @@ Array
 
 String
 ---------------------------------------------------------
-`array_value(string, i, extrapolate (= string.extrapolate or "clamp"))`
+`array_value(string, i, extrapolate default (string.extrapolate or "clamp"))`
 : Applies `floor()` to `i` and then applies the extrapolation mode, which defaults
   to the extrapolation mode of the array itself if specified.
   The `extrapolate` values accepted are:
@@ -1587,7 +1594,7 @@ String
 `concatenate(a, b)`
 : Returns a new string that is `a + b`.
 
-`find(string, x, i (= 0))`
+`find(string, x, i default 0)`
 : Find the index of the substring whose value is `x`, starting at
   optional index `i` (default 0).  Returns `∅` if not found. O(n)
   time.
@@ -1643,11 +1650,11 @@ String
 `size(s)`
 : Get the length of the string. O(1) time.
 
-`slice(string, s, e (= size(str)))`
+`slice(string, s, e default size(str))`
 : Return the substring of `string` between `s` (inclusive) and
   optional `e` (exclusive, defaults to length).
 
-`split(string, separator (=""))`
+`split(string, separator default "")`
 : Returns an array of strings separated by `separator`. If the separator is the empty string, then all characters are separated.
 
 `unparse(x)`
@@ -1719,7 +1726,7 @@ Random Values
 
 ### 1D
 
-`make_random(seed (= local_time().millisecond))`
+`make_random(seed default local_time().millisecond)`
 : Returns a new _function_ that acts like `random()` but has its own private
   seed and internal state. See also `set_random_seed()`.
 
@@ -1733,7 +1740,7 @@ Random Values
 `random_gaussian()`
 : Same as `random_gaussian(0, 1, random)`
 
-`random_gaussian(mean, stddev, random (= random))`
+`random_gaussian(mean, stddev, random default random)`
 : Returns a Gaussian distributed random number on the distribution
   with the given mean and standard deviation. See also `random_truncated_gaussian()`.
 
@@ -1741,50 +1748,50 @@ Random Values
 : Uniformly distributed random integer between 0 and hi, inclusive.
   This version is deprecated. Use `random_integer(0, hi)` instead.
 
-`random_integer(lo, hi, random (= random))`
+`random_integer(lo, hi, random default random)`
 : Random integer between `lo` and `hi`, including both ends.
   The `random` argument defaults to common random number generator `random()`, but
   an alternative function previously created by `make_random()` can be
   passed instead.
 
-`random_sign(random (= random))`
+`random_sign(random default random)`
 : Returns +1 or -1 with equal probability.
 
-`random_truncated_gaussian(mean, stddev, radius, random (= random))`
+`random_truncated_gaussian(mean, stddev, radius, random default random)`
 : Returns a Gaussian distributed random number within `radius` of
   the mean. See also `random_gaussian()`.
 
-`set_random_seed(seed (= local_time().millisecond))`
+`set_random_seed(seed default local_time().millisecond)`
 : Reset the default random number generator, `random()`, using an optional seed.
   See also `make_random()`.
 
 
 ### 2D
 
-`random_direction2D(random (= random))`
+`random_direction2D(random default random)`
 : Same as `random_on_circle()`
 
 `random_gaussian2D()`
 : Same as `random_gaussian2D(xy(0, 0), xy(1, 1), random)`.
 
-`random_gaussian2D(mean, stddev, random (= random))`
+`random_gaussian2D(mean, stddev, random default random)`
 : Returns a Gaussian distributed random point on the distribution
   with the given mean and standard deviation. The mean and standard
   deviation may each be scalar or `xy()` values.
   See also `random_gaussian()`, `random_truncated_gaussian2D()`.
 
-`random_on_circle(random (= random))`
+`random_on_circle(random default random)`
 : Returns a uniformly distributed `xy()` on the perimeter of the circle with center `(0, 0)` with radius 1.
   Useful for random directions.
 
-`random_on_square(random (= random))`
+`random_on_square(random default random)`
 : Uniformly distributed `xy()` on the _perimeter_ of a square from `(-1, -1)` to `(1, 1)`.
 
-`random_within_circle(random (= random))`
+`random_within_circle(random default random)`
 : Returns a uniformly distributed `xy()` in the disk with center `(0, 0)` with radius 1. Useful for
   random offsets within a circle. See also `random_on_circle()`
 
-`random_within_square(random (= random))`
+`random_within_square(random default random)`
 : Returns a uniformly distributed `xy()` in the square from `(-1, -1)` to `(1, 1)`, that is,
   the square that has a "radius" of 1 or sides of length two, and is centered at the origin `(0, 0)`.
   Analogous to `randomDisk()`.
@@ -1799,7 +1806,7 @@ Random Values
 
 
 ### 3D
-`random_direction3D(random (= random))`
+`random_direction3D(random default random)`
 : Same as `random_on_sphere()`.
 
 `random_gaussian3D()`
@@ -1893,7 +1900,7 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 `xy_to_xz(v)`
 : Returns `{x:v.x, z:v.y}`. See also `xz_to_xy()`.
 
-`xy_to_xyz(v, z (= 0))`
+`xy_to_xyz(v, z default 0)`
 : Returns `{x:v.x, y:v.y, z:z}`.
 
 `xz(x, z)`
@@ -1908,7 +1915,7 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 `xz_to_xy(v)`
 : Returns `{x:v.x, y:v.z}`. See also `xy_to_xz()`.
 
-`xz_to_xyz(v, y (= 0))`
+`xz_to_xyz(v, y default 0)`
 : Returns `{x:v.x, y:y, z:v.z}`. See also `xz_to_xy()`.
 
 `xyz(x, y, z)`
@@ -2046,7 +2053,7 @@ Math
 `noise(octaves, v)`
 : Applies `noise()` to an `xy()`, `xyz()`, or array position.
 
-`noise(octaves, x, y (=0), z (=0))`
+`noise(octaves, x, y default 0, z default 0)`
 : Value noise on the range [-1, 1], bicubically interpolated between integer locations at
   octave 0. Unused dimensions default to zero.
 
@@ -2121,7 +2128,7 @@ Sound
 : Object version of `play_sound()`, allowing keyword argument style call.
   Values default according to the positional argument version.
 
-`play_sound(sound, loop (=false), volume (=100%), pan (=0%), pitch (=100%), time (=0))`
+`play_sound(sound, loop default false, volume default 100%, pan default 0%, pitch default 100%, time default 0)`
 : Play `sound`, which must have been loaded as an asset. The time
   is in seconds. Full pan left is `-100%` and full pan right is `100%`.
   Returns an audio object that can be used with `stop_audio()`.
@@ -2310,14 +2317,14 @@ along their own axes and rotate about their own origin.
 
 The transformation routines are:
 
-`transform_cs_to_ss(cs_point, cs_z (= 0))`
+`transform_cs_to_ss(cs_point, cs_z default 0)`
 : Transform `cs_point` at `cs_z` from camera space to screen space. The `cs_z` is needed 
   only if a skew transformation is active.
   
 `transform_cs_z_to_ss_z(cs_z)`
 : Transform camera space `cs_z` to a screen space z value.
 
-`transform_ss_to_cs(ss_point, ss_z (= 0))`
+`transform_ss_to_cs(ss_point, ss_z default 0)`
 : Transform `ss_point` from screen space to camera space.
 
 `transform_ss_z_to_cs_z(cs_z)`
@@ -2325,12 +2332,12 @@ The transformation routines are:
   If the current transform has a zero z-scale then the result will be positive infinity,
   negative infinity, or zero because the transformation is not invertible in that case.
 
-`transform_ws_to_cs(ws_point, ws_z (= 0))`
+`transform_ws_to_cs(ws_point, ws_z default 0)`
 : Transform world space `ws_point` to camera space. There is no
   transformation function for `cs_z` value because you can 
   transform it yourself `cs_z = ws_z - get_camera().z`.
 
-`transform_cs_to_ws(cs_point, cs_z (= 0))`
+`transform_cs_to_ws(cs_point, cs_z default 0)`
 : Transform camera space `cs_point` to world space. There is no
   transformation function for `cs_z` because you can transform
   it yourself as `ws_z = cs_z + get_camera().z`.
@@ -2382,7 +2389,7 @@ Note that `preserving_transform` also preserves the clipping rectangle.
 `compose_transform(args)`
 : Named argument version of `compose_transform()`.
 
-`compose_transform(pos (= ∅), dir (= ∅), z (= ∅), zDir (= ∅), skew (= ∅))`
+`compose_transform(pos default ∅, dir default ∅, z default ∅, zDir default ∅, skew default ∅)`
 : Apply this local transformation _before_ the current one. Used for entering a child
   coordinate system. Nil arguments or properties default to `(xy(0, 0), xy(1, 1), 0, 1, xy(0, 0))`.
   Use `preserving_transform` or `get_transform()` plus `set_transform()` to save and restore
@@ -2415,7 +2422,7 @@ Note that `preserving_transform` also preserves the clipping rectangle.
 `set_transform(args)`
 : Named argument object version of `set_transform()`.
 
-`set_transform(pos (= ∅), dir (= ∅), z (= ∅), z_dir (= ∅), skew (= ∅))`
+`set_transform(pos default ∅, dir default ∅, z default ∅, z_dir default ∅, skew default ∅)`
 : Set the transformation applied to all camera coordinates to compute screen coordinates. Nil values
   or nil properties default to their previous value. The equation applied when mapping from
   camera space (cs) to screen space (ss) is:
@@ -2434,7 +2441,7 @@ Note that `preserving_transform` also preserves the clipping rectangle.
 
   The skew transform applies after direction flipping and can be used for isometric 3D.
 
-`up_y()`
+<code lang=PyxlScript>up_y()</code>
 : Returns `-sign(get_transform().dir.y)`, which is -1 if Y increases downwards (the default)
   and +1 if Y increases upwards (`"y_up": true` in the .game.json file).
 
@@ -2509,7 +2516,7 @@ Note that `preserving_transform` also preserves the camera.
 `set_camera(args)`
 : Named argument object version of `set_camera()`.
 
-`set_camera(pos (= xy(0, 0)), angle (= 0), zoom (= 1), z (= 0))`
+`set_camera(pos default xy(0, 0), angle default 0, zoom default 1, z default 0)`
 : Positions the camera used to transform other draw calls. Note that
   `zoom` is the inverse of a scale transformation on the camera
   itself.  Use `set_transform()` to move the on-screen origin.
@@ -2709,12 +2716,12 @@ built-in properties in the future: `density` and `friction`.
 
 ### Basic
 
-`draw_entity(e, recurse (= true))`
+`draw_entity(e, recurse default true)`
 : Draw the entity, if its sprite is defined. If `recurse` is true,
   also draws all of the elements of `e.child_array` recursively (see
   the Hierarchy section).
 
-`make_entity(obj (= {}), childTable (= {}))`
+`make_entity(obj default {}, childTable default {})`
 : Returns a new entity object that is `obj` with defaults applied for
   any properties not specified. This is forward compatible to any
   extended properties that might be added in future versions, however,
@@ -3035,7 +3042,7 @@ techniques.
 Also see the Intersections section for computing your own collisions and
 intersections.
 
-`entity_apply_force(entity, world_force, world_pos (= entity.pos))`
+`entity_apply_force(entity, world_force, world_pos default entity.pos)`
 : Apply world-space `world_force` to `entity` at world-space position `world_pos`,
   updating both `entity.force` and `entity.torque`. To apply
   a force at the center of mass, you can also directly add to `entity.force`.
@@ -3044,7 +3051,7 @@ intersections.
 
   Does not support entities with children or pivots.
 
-`entity_apply_impulse(entity, world_impulse, world_pos (= entity.pos))`
+`entity_apply_impulse(entity, world_impulse, world_pos default entity.pos)`
 : Apply world-space `world_impulse` (mass * velocity) to `entity` at world-space position `world_pos`,
   updating both `entity.vel` and `entity.spin`. To apply
   a velocity change at the center of mass, you can also directly add to `entity.vel`.
@@ -3069,7 +3076,7 @@ intersections.
   `entity.shape` and `entity.size` times the `entity.density`.
   Returns generic mass units.
 
-`entity_move(entity, pos (= entity.pos), angle (= entity.angle))`
+`entity_move(entity, pos default entity.pos, angle default entity.angle)`
 : Instantaneously moves an entity to this position and angle _as if it had
   naturally reached that location in the previous frame_, setting the appropriate
   `entity.vel` and `entity.spin`. This is useful for moving
@@ -3078,7 +3085,7 @@ intersections.
   For example, use this function for implementing moving platforms,
   scripted set-piece animations, and elevators.
 
-`entity_simulate(entity, t (= 1))`
+`entity_simulate(entity, t default 1)`
 : Computes `acc = force/mass; twist = torque/inertia` and
   `vel *= 1 - drag; spin *= 1 - drag`.  Then,
   integrates `acc` into `vel` into `pos` and `twist` into `spin` into
@@ -3108,7 +3115,7 @@ using the full physics engine.
 : Returns a box specified by `{pos:xy(), size:xy(), shape:"rect"}` that encloses
   the object `e` (and all of its children if it is an entity) in draw space.
 
-`overlaps(A, B, recurse (= true))`
+`overlaps(A, B, recurse default true)`
 : Returns true if the bounds of `A` and `B` overlap each other, taking
   shape and orientation into account and incuding the borders. Ignores
   `offset` and `z` for entities. Each of `A` and `B` can be any of:
@@ -3126,7 +3133,7 @@ using the full physics engine.
 
 `ray_intersect(ray, obj)`
 : The `ray` object must have `xy()` fields for `origin`, `direction`,
-  and an optional number field for `length (= inf)`.
+  and an optional number field for `length default infinity`.
   The `ray.direction` will automatically be normalized.
 
   The `obj` has `shape`, `pos`, `size`, and optional `angle`
@@ -3145,9 +3152,9 @@ using the full physics engine.
 `rayIntersectMap(args)`
 : Calls `rayIntersectMap()` with the named arguments.
 
-`rayIntersectMap(ray, map, tileCanBeSolid (= get_map_sprite), pixelIsSolid (= ∅), layer (= 0), replacement_array (= []))`
+`rayIntersectMap(ray, map, tileCanBeSolid default get_map_sprite, pixelIsSolid default ∅, layer default 0, replacement_array default [])`
 : The `ray` object must have `xy()` fields for `origin`, `direction`,
-  and an optional number field for `length (= inf)`.
+  and an optional number field for `length default infinity`.
   The `ray.direction` will automatically be normalized. The ray is in _draw coordinates_.
 
   Returns the sprite hit or `nil` if there was no intersection.
@@ -3194,20 +3201,20 @@ Changing the `contact_group`, `contact_hit_mask`, or
 after the attachment been created may cause the attached bodies
 to start colliding with each other.
 
-`make_physics(options (= {}))`
+`make_physics(options default {})`
 : Create and return a new physics context. There can be multiple, independent physics contexts
   in the game. Each entity may only be in one physics context at a time.
   The options are:
 
-  - `gravity (= xy(0, -up_y()))`: Default gravitational acceleration on all objects.
+  - `gravity default xy(0, -up_y())`: Default gravitational acceleration on all objects.
     Set to `xy(0,0)` and explicitly apply gravity if your game is not set on a planetary
     surface or requires excluding most objects from gravity.
-  - `allowSleeping (= true)`: Allow simple rigid bodies to fall "asleep" and stop simulating
+  - `allowSleeping default true`: Allow simple rigid bodies to fall "asleep" and stop simulating
     until touched. This dramatically increases simulation performance, however some entities
     will fail to properly waken when the object supporting them is removed and can remain
     floating in the air.
 
-`physics_add_contact_callback(physics, callback, min_depth (= 0), max_depth (= ∞), contact_mask (= 0xffffffff), sensors (= "exclude"))`
+`physics_add_contact_callback(physics, callback, min_depth default 0, max_depth default ∞, contact_mask default 0xffffffff, sensors default "exclude")`
 : Adds a callback that processes collisions (new contacts) at the end of `physics_simulate()`.
   If either entity in the collision has a `entity.contact_category_mask` that intersects the `contact_mask`
   and the collision has `depth &gt;= min_depth`, then invoke
@@ -3223,11 +3230,11 @@ to start colliding with each other.
   for example, `min_depth` = 1 will only trigger on significant,
   new contacts. There is no way to remove a contact callback.
 
-`physics_entity_has_contacts(physics, entity, child_region (= ∅), world_normal (= ∅), mask (= 0xffffffff), sensors (= "exclude"))`
+`physics_entity_has_contacts(physics, entity, child_region default ∅, world_normal default ∅, mask default 0xffffffff, sensors default "exclude")`
 : Returns true if `physics_entity_contacts()` would produce any contacts with the same arguments.
   This is more efficient, for the case where the actual contacts are not needed.
 
-`physics_entity_contacts(physics, entity, child_region (= ∅), world_normal (= ∅), mask (= 0xffffffff), sensors (= "exclude"))`
+`physics_entity_contacts(physics, entity, child_region default ∅, world_normal default ∅, mask default 0xffffffff, sensors default "exclude")`
 : Returns an array of all current contacts, where each contact has the form
   `{entityA, entityB, depth, point0, point1, normal}`. The contact points are
   in draw coordinates.
@@ -3264,7 +3271,7 @@ to start colliding with each other.
   Use the `draw_physics()` command or IDE button to debug physics objects
   that correspond to entities which are no longer being drawn.
 
-`physics_attach(physics, type, {entityA, entityB, pointA, pointB, collide (= ∅), ...})`
+`physics_attach(physics, type, {entityA, entityB, pointA, pointB, collide default ∅, ...})`
 : Attaches two entities to each other, `entityB` to the
   world. `entityA` may be `nil` (the world) or have infinite
   density. `entityB` must be non-`nil` and have finite density. The
@@ -3295,19 +3302,19 @@ to start colliding with each other.
   The supported values of `type` and the additional named parameters supported for each are:
 
    - `"pin"`:    This kind of attachment is referred to in other APIs as a revolute joint.
-   - `"spring"`: `length (= ‖pointB - pointA‖)`, `stiffness (= 0.5%)`, `damping (= 0.2%)`
-   - `"rod"`:    `length (= ‖pointB - pointA‖)`
-   - `"weld"`:   `angle (= entityB.angle - entityA.angle)`. Rigid attachment with
+   - `"spring"`: `length default ‖pointB - pointA‖`, `stiffness default 0.5%`, `damping default 0.2%`
+   - `"rod"`:    `length default ‖pointB - pointA‖`
+   - `"weld"`:   `angle default entityB.angle - entityA.angle`. Rigid attachment with
                  the specified relative angle. <!-- It is more stable and efficient to
                  call `physics_remove_entity(physics, entityB)` and `entity_add_child(entityA, entityB)`
                  than to weld within the physics system. --> Requires `entityA` to be non-`nil`.
-   - `"gyro"`:   `angle (= 0)` Free translation, but frozen rotation relative to each other.
+   - `"gyro"`:   `angle default 0` Free translation, but frozen rotation relative to each other.
      Useful for keeping characters upright. `entityA` must be `nil`. This kind of
      attachment is referred to in other APIs as a Cartesian joint or generalized 2D prismatic joint.
    <!--
    - `"hinge"`:  `minAngle`, `maxAngle`. If the hinge is unconstrained, use a pin.
    - `"rope"`:   `length`. If the rope will always be under tension, use a rod.
-   - `"joint"`:  `minAngle`, `maxAngle`, `angle`, `stiffness (= 100%)` -->
+   - `"joint"`:  `minAngle`, `maxAngle`, `angle`, `stiffness default 100%` -->
 
 `physics_detach(physics, attachment)`
 : Remove this attachment, which was previously created by `physics_attach()`.
@@ -3319,7 +3326,7 @@ to start colliding with each other.
 : Remove `entity` and all attachments for it from the physics context.
   See also `physics_add_entity()`.
 
-`physics_simulate(physics, frames (= 1))`
+`physics_simulate(physics, frames default 1)`
 : Simulate physics for this many frames, treating all forces and torques
   as constant over that period. Automatically calls `entity_update_children()`
   on all entities in the context. See also `entity_simulate()`.
@@ -3338,7 +3345,7 @@ Graphics
 : Returns `rgb(n, n, n)`, with `n` equal to a perceptually-weighted average of the rgb values from color.
   The RGB --> gray conversion algorithm weights will likely change in a future release.
 
-`hsva(h, s, v, a (= 1))`
+`hsva(h, s, v, a default 1)`
 : Returns an object with field `h` _wrapped_ to [0, 1], and fields `s`, `v`, and `a` clamped to [0, 1].
 
 `hsv(h, s, v)`
@@ -3355,7 +3362,7 @@ Graphics
 `rgb_to_xyz(c)`
 : Returns `{x: c.r, y: c.g, z: c.b}`.
 
-`rgba(r, g, b, a (= 1))`
+`rgba(r, g, b, a default 1)`
 : Create a structure with fields `r`, `g`, `b`, and `a` clamped to [0, 1].
 
 `rgba(hsvaValue)`
@@ -3417,12 +3424,12 @@ endpoints and borders.
 `draw_poly(args)`
 : Named argument version of `draw_poly()`.
 
-`draw_poly(vertex_array, color, outline = (nil), pos (= xy(0, 0)), angle (= 0), scale (= xy(1, 1)), z (= 0))`
+`draw_poly(vertex_array, color, outline = (nil), pos default xy(0, 0), angle default 0, scale default xy(1, 1), z default 0)`
 : Draws the _convex_ polygon defined by the `vertex_array`, first scaling by `scale`, rotating by `angle`,
   and then translating by `pos`. The polygon may have any winding direction. The outcome of the drawn result
   is undefined and may change across platforms if the polygon is not convex (but there will never be an error).
 
-`draw_corner_rect(corner, size, color, outline (= ∅), z (= 0))`
+`draw_corner_rect(corner, size, color, outline default ∅, z default 0)`
 : Draw a rectangle covering all of the pixel centers between `corner`
   and `corner + size`. This is primarily for UI window drawing.
   `size` may be negative.
@@ -3438,14 +3445,14 @@ endpoints and borders.
 `draw_disk(args)`
 : Object version of `draw_disk()`.
 
-`draw_disk(pos, r, color, outline, z (= 0))`
+`draw_disk(pos, r, color, outline, z default 0)`
 : Draw a circle or filled disk centered at (`pos.x`, `pos.y`)
   with radius `r` and z-order `z`.
 
 `draw_line(args)`
 : Named argument version of `draw_line()`.
 
-`draw_line(A, B, color, z (= 0), width (= 1))`
+`draw_line(A, B, color, z default 0, width default 1)`
 : Draw a 1-pixel line from (`A.x`, `A.y`) to (`B.x`, `B.y`) using z-order `z`.
   When using the default transformation, put the endpoints at half-pixel
   positions for the best alignment with the pixel grid.
@@ -3453,7 +3460,7 @@ endpoints and borders.
 `draw_point(args)`
 : Named argument version of `draw_point()`.
 
-`draw_point(pos, color, z (= 0))`
+`draw_point(pos, color, z default 0)`
 : Set the color of pixel (`pos.x`, `pos.y`) to color `color` with z-order `z`.
   A series of `draw_point` calls with the same `z` value are about twice as
   fast as ones with mixed `z` values or intermixed with other draw calls.
@@ -3471,7 +3478,7 @@ endpoints and borders.
 `draw_rect(args)`
 : Named argument version of `draw_rect()`.
 
-`draw_rect(pos, size, color, outline (= ∅), angle (= 0), z (= 0))`
+`draw_rect(pos, size, color, outline default ∅, angle default 0, z default 0)`
 : Draws the rectangle _centered_ at `pos` with the given `size` and `angle`.
   No `scale` argument is provided because it is easy for the caller to
   explicitly multiply `size` by `scale`.
@@ -3483,7 +3490,7 @@ endpoints and borders.
   `draw_sprite({sprite: wizard, pos: xy(100, 100), z: 2})`.
   Values default according to the positional argument version.
 
-`draw_sprite(sprite, pos, angle (= 0), scale (= ∅), opacity (= 1), z (= 0), override_color (= ∅))`
+`draw_sprite(sprite, pos, angle default 0°, scale default xy(100%, 100%), opacity default 100%, z default 0, override_color default rgba(0,0,0,0))`
 : Draw sprite `sprite` with its center at `pos`. `pos` must have at
   least `x` and `y` fields. The sprite appears at `z` in the z-order
   (defaults to 0). The `scale` parameter must be nil (which is treated
@@ -3518,7 +3525,7 @@ endpoints and borders.
   `draw_text({text: "Fire!", pos: xy(100, 100), x_align:"left", z: 2})`.
   Values default according to the positional argument version.
 
-`draw_text(font, text, pos, color (= ∅), shadow (= ∅), outline (= ∅), x_align (= "left"), y_align (= "baseline"), z (= 0), wrap_width (= ∅), text_size (= size(text)), markup (= false))`
+`draw_text(font, text, pos, color default ∅, shadow default ∅, outline default ∅, x_align default "left", y_align default "baseline", z default 0, wrap_width default ∅, text_size default size(text), markup default false)`
 : Print string `text` relative to `pos`. Returns an `xy()` size of the
   bounding box, excluding shadows and outline. This bounding box is
   conservative in height and accounts for the highest ascender and
@@ -3573,7 +3580,7 @@ endpoints and borders.
 `draw_tri(args)`
 : Named argument version of `draw_tri()`.
 
-`draw_tri(A, B, C, color, outline (= ∅), pos (= xy(0, 0)), scale (= xy(1, 1)), angle (= 0), z (= 0))`
+`draw_tri(A, B, C, color, outline default ∅, pos default xy(0, 0), scale default xy(1, 1), angle default 0, z default 0)`
 : Scale `A`, `B`, and `C` by `scale`, rotate them around the origin by `angle`, translate
   by `pos`, and then draw the triangle. The `pos` argument is not first because in many
   cases this is called with draw-space vertices and no translation. The triangle may have
@@ -3586,7 +3593,7 @@ endpoints and borders.
 : Returns the current net clipping region as an object that
   can be passed to `set_clip()`.
 
-`get_sprite_pixel_color(sprite, pos, result (= ∅))`
+`get_sprite_pixel_color(sprite, pos, result default ∅)`
 : Returns the color of pixel `pos` in the sprite as an `rgba`
   value. When `result` is not `nil`, it is used to store the result
   to avoid memory allocation. If the pixel is out of bounds for that sprite,
@@ -3596,14 +3603,14 @@ endpoints and borders.
 `intersect_clip(args)`
 : Object version of `intersect_clip()`.
 
-`intersect_clip(pos (= ∅), size (= ∅), z (= ∅), z_size (= ∅))`
+`intersect_clip(pos default ∅, size default ∅, z default ∅, z_size default ∅)`
 : Intersect the current clipping region with this new one. Ignores the
   current transformation.
 
 `reset_clip()`
 : Reset to the default clipping region, `set_clip(xy(0, 0), SCREEN_SIZE, -2047, 4096)`.
 
-`set_background(color (= #0))`
+`set_background(color default #000)`
 : Replace the background with this color. The background is automatically
   drawn each frame with the last value set.
 
@@ -3614,7 +3621,7 @@ endpoints and borders.
 `set_clip(args)`
 : Object version of `set_clip()`.
 
-`set_clip(pos (= ∅), size (= ∅), z (= ∅), z_size (= ∅))`
+`set_clip(pos default ∅, size default ∅, z default ∅, z_size default ∅)`
 : Set the clipping region to this region. Unspecified and `nil` values
   retain their current value. `pos` is the upper-left corner. 
   `pos` and `size` must be `nil` or `xy()` values.
@@ -3623,7 +3630,7 @@ endpoints and borders.
   negative. It is impossible to set a clipping region smaller than
   1x1x1 pixels.
 
-`text_width(font, s, markup (= false))`
+`text_width(font, s, markup default false)`
 : Returns the pixel width of string `s` in this font, including border padding.
   Note that leading and trailing numbers may incur additional empty space for
   column alignment. If `markup` is true, then `s` is processed using the
@@ -3744,7 +3751,7 @@ indices. The map's z-axis corresponds to layers.
 `draw_map(args)`
 : Draw the map using the named argument object.
 
-`draw_map(map, min_layer (= 0), max_layer (= length(map.layer)), replacement_array (= ∅), pos (= xy(0, 0)), angle (= 0), scale (= xy(1, 1)), z (= 0))`
+`draw_map(map, min_layer default 0, max_layer default length(map.layer), replacement_array default ∅, pos default xy(0, 0), angle default 0, scale default xy(1, 1), z default 0)`
 : Draws the map with the current transform.  If there is no transform,
   the map is drawn with the first tile's center at (0, 0), which means
   that the tile will be half off the screen.  If specified, `min_layer`
@@ -3785,33 +3792,33 @@ indices. The map's z-axis corresponds to layers.
   values from `edgeCost`. Sprites that are not specified in the array
   cost 1 to traverse, and it costs `infinity` to leave the map bounds.
 
-`get_map_pixel_color(map, map_coord, layer (= 0), replacement_array (= ∅))`
+`get_map_pixel_color(map, map_coord, layer default 0, replacement_array default ∅)`
 : Returns the color of the pixel in `map` at the corresponding
   `map_coord` and `round(layer)`. Returns `nil` for out of
   bounds values and empty sprites. See also
   `get_map_pixel_color_by_ws_coord()`.
 
-`get_map_pixel_color_by_ws_coord(map, ws_coord, ws_z (= 0), replacement_array (= ∅))`
+`get_map_pixel_color_by_ws_coord(map, ws_coord, ws_z default 0, replacement_array default ∅)`
 : Returns the pixel color in `map` at the corresponding `draw_coord`
   and `ws_z` using `transform_ws_to_map_space()`. The result is guaranteed
   to match what was drawn by `draw_map()`. Returns `nil` for out of
   bounds values and empty sprites. See also `get_map_pixel_color()`.
 
-`get_map_sprite(map, map_coord, layer (= 0), replacement_array (= ∅))`
+`get_map_sprite(map, map_coord, layer default 0, replacement_array default ∅)`
 : Returns the sprite in `map` at the corresponding `map_coord` and
   `layer` using rounding. Returns `nil` for out of bounds values. See
   also `get_map_sprite_by_ws_coord()`.
 
-`get_map_sprite_by_ws_coord(map, ws_coord, ws_z (= 0), replacement_array (= ∅))`
+`get_map_sprite_by_ws_coord(map, ws_coord, ws_z default 0, replacement_array default ∅)`
 : Returns the sprite in `map` at the corresponding `draw_coord` and
   `ws_z` using `transform_ws_to_map_space()` and rounding to compute the
   coordinates. Returns `nil` for out of bounds values. See also
   `get_map_sprite()`.
 
-`set_map_sprite(map, map_coord, sprite, layer (= 0))`
+`set_map_sprite(map, map_coord, sprite, layer default 0)`
 : Sets the corresponding map sprite. Does nothing if `map_coord` is out of bounds.
 
-`set_map_sprite_by_ws_coord(map, draw_coord, sprite, ws_z (= 0))`
+`set_map_sprite_by_ws_coord(map, draw_coord, sprite, ws_z default 0)`
 : Sets the corresponding map sprite. Does nothing if `draw_coord` is out of bounds.
 
 `transform_ws_to_map_space(map, ws_point)`
@@ -3851,7 +3858,7 @@ the end of the previous frame.
 When drawing, use `z` arguments to ensure that drawn objects overlap
 in the desired order regardless of the order in which drawing executes.
 
-`add_frame_hook(callback, end_callback, frames, run_in_mode (= get_mode()))`
+`add_frame_hook(callback, end_callback, frames, run_in_mode default get_mode())`
 : Register a `callback` function to run every frame for the given number of 
   `frames`.  The return value of `add_frame_hook()` is a hook that can be
   passed to `remove_frame_hook()`.
@@ -3940,7 +3947,7 @@ unaffected.
 Path Finding
 ----------------------------------------------------------
 
-`find_path(start_node, goal_node, estimate_path_cost, edge_cost, get_neighbors, node_to_ID, graph_obj (= ∅))`
+`find_path(start_node, goal_node, estimate_path_cost, edge_cost, get_neighbors, node_to_ID, graph_obj default ∅)`
 : `find_path()` is a general-purpose path-finding routine for any kind of
   world representation. It uses the "A*" (A-star) algorithm. _See also `find_map_path()` for a simpler, map-specific version._
 
@@ -4061,7 +4068,7 @@ debug_graphics and debug_print("Running iteration" + i)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-`assert(x, msg (= "Assertion Failed"))`
+`assert(x, msg default "Assertion Failed")`
 : If `x` is true, does nothing. If `x` is false, creates the
   error `msg`. Assertions can be completely disabled
   from the Tools menu to make them have zero cost. In the current
@@ -4087,7 +4094,7 @@ debug_graphics and debug_print("Running iteration" + i)
   pass the `debug_watch` command as if it were a function.
 
 
-`draw_bounds(e, color (= gray(60%)), recurse (= true))`
+`draw_bounds(e, color default gray(60%), recurse default true)`
 : Render a debugging view of the bounds of an entity or other object `e`
   with `pos` and optional `angle`, `size`, `scale`, and `shape`
   properties. If `recurse` is true, descend into
@@ -4104,7 +4111,7 @@ debug_graphics and debug_print("Running iteration" + i)
 `todo`
 : Same as `todo()`
 
-`todo(message (= ""))`
+`todo(message default "")`
 : If todo errors are enabled in the IDE, reports the error `"Unimplemented: " + message`,
   otherwise does nothing.
 
@@ -4563,6 +4570,7 @@ Sounds
 ![`quad://sounds/24-Explode.sound.json`](../sounds/24-Explode.mp3) ![`quad://sounds/25-Explode.sound.json`](../sounds/25-Explode.mp3)
 ![`quad://sounds/26-Explode.sound.json`](../sounds/26-Explode.mp3) ![`quad://sounds/27-Explode.sound.json`](../sounds/27-Explode.mp3)
 ![`quad://sounds/28-Explode.sound.json`](../sounds/28-Explode.mp3) ![`quad://sounds/29-Explode.sound.json`](../sounds/29-Explode.mp3)
+![`quad://sounds/explode-11.sound.json`](../sounds/explode-11.mp3)
 
 ### Powerup
 
@@ -4596,10 +4604,10 @@ Sounds
 ![`quad://sounds/64-Blip.sound.json`](../sounds/64-Blip.mp3) ![`quad://sounds/65-Blip.sound.json`](../sounds/65-Blip.mp3)
 ![`quad://sounds/66-Blip.sound.json`](../sounds/66-Blip.mp3) ![`quad://sounds/67-Blip.sound.json`](../sounds/67-Blip.mp3)
 ![`quad://sounds/68-Blip.sound.json`](../sounds/68-Blip.mp3) ![`quad://sounds/69-Blip.sound.json`](../sounds/69-Blip.mp3)
-![`quad://sounds/Blip-00.sound.json`](../sounds/Blip-00.mp3) ![`quad://sounds/Blip-01.sound.json`](../sounds/Blip-01.mp3)
-![`quad://sounds/Blip-02.sound.json`](../sounds/Blip-02.mp3) ![`quad://sounds/Blip-03.sound.json`](../sounds/Blip-03.mp3)
-![`quad://sounds/Blip-04.sound.json`](../sounds/Blip-04.mp3) ![`quad://sounds/Blip-05.sound.json`](../sounds/Blip-05.mp3)
-![`quad://sounds/Blip-06.sound.json`](../sounds/Blip-06.mp3) ![`quad://sounds/Blip-07.sound.json`](../sounds/Blip-07.mp3)
+![`quad://sounds/blip-00.sound.json`](../sounds/blip-00.mp3) ![`quad://sounds/blip-01.sound.json`](../sounds/blip-01.mp3)
+![`quad://sounds/blip-02.sound.json`](../sounds/blip-02.mp3) ![`quad://sounds/blip-03.sound.json`](../sounds/blip-03.mp3)
+![`quad://sounds/blip-04.sound.json`](../sounds/blip-04.mp3) ![`quad://sounds/blip-05.sound.json`](../sounds/blip-05.mp3)
+![`quad://sounds/blip-06.sound.json`](../sounds/blip-06.mp3) ![`quad://sounds/blip-07.sound.json`](../sounds/blip-07.mp3)
 
 ### Wild
 
@@ -5473,8 +5481,7 @@ Operators
 -------------------------------------------------------------------
 
 Arithmetic operators and functions are overloaded to operate on
-numbers, objects, and arrays, and mixtures of objects/arrays and
-numbers where that makes sense.
+numbers and objects.
 
 Some operators support a compact Unicode version and an ASCII version
 that is easier to type on a conventional keyboard.
@@ -6487,7 +6494,8 @@ You can use quadplay over a local network or the internet in several ways:
    from a laptop or desktop
 
 [Network Multiplayer](#network/networkmultiplayer)
-: Play multiplayer quadplay games with friends across a local network or the internet. Maybe.
+: Play multiplayer quadplay games with friends across a local network or the internet, with some limitations.
+  This is a work in progress and will improve before the final release.
 
 [Mobile Development](#network/mobiledevelopment)
 : Develop and test your quadplay game on a phone or tablet
@@ -6516,6 +6524,9 @@ Games for quadplay are usually best played through a browser. However, if you ha
 that runs the [Steam Link](https://store.steampowered.com/steamlink/about/) app or the
 Steam client, but does not have a full web browser, then you can use Steam's streaming
 technology to play on that device.
+
+This allows you to have up to four players on a single machine that is not the machine
+which is running quadplay. For example, to stream to a living room set-top box.
 
 Steps that you only need to do once, on the hosting computer:
 
@@ -6555,11 +6566,42 @@ To Stream a game across a local network:
 Network Multiplayer
 ------------------------------------------------------------------------------------
 
-_Coming soon..._
+This process uses the Steam Remote Play feature in an unusual way to
+connect up to four players on two different computers. It works best
+for two players on different computers using keyboard controls. 
 
-(I'm investigating building and distributing a standalone binary quadplay on Steam.
- You could then use Steam Remote Play Together to allow up to three players to join
- you across the internet.)
+The 1.0 release of quadplay will contain a more straightforward network
+multiplayer solution. This is a temporary workaround.
+
+One-time setup:
+
+1. Install [Steam](https://store.steampowered.com/) on both computers. 
+2. Create/log in with an account that you do not mind sharing the password to.
+3. On the "hosting" computer, in Steam:
+  1. Select from the menu Steam -> Settings -> Remote Play and then:
+    1. Check *Enable Remote Play*
+    2. *Pair* your "remote" computer
+    3. Press *Advanced Host Options* and check *Play audio on host*
+  2. Select from the menu Games -> Add a Non-Steam Game to My Library..., and then
+     add your preferred web browser, as described in the Steam Streaming section
+
+
+To play:
+
+1. Log in to the same Steam account on both computers
+2. On the "remote" computer, in Steam, choose to run your browser via Streaming
+3. On the "hosting" computer, run `quadplay` from the command line. If it does not
+   launch in the browser that came up due to Steam, copy the url from the one that
+   launched to the one that Steam launched. Make the browser full screen, and push
+   play in the quadplay IDE.
+4. Both players should now be sharing a view. The keyboard and controllers are shared
+   as well, so one player must be sure to use use the Player 2 controls (IJKL).
+   
+You may use game controllers as well, but if you have only one
+plugged in, it will be the player 1 game controller regardless of the
+machine that you use. So, one player must plug in _two_ game controllers
+and use the second one.
+
 
 
 Mobile Development
@@ -6847,13 +6889,11 @@ For 1.0:
   [x] Physics
   [x] AI
 [x] Six full sample games
-[ ] Export to:
+[x] Export to:
   [x] web page
   [x] github pages
   [x] itch.io (browser)
   [x] macOS/Windows/Linux download (browser)
-  [ ] macOS binary
-  [ ] Windows binary
 [ ] Built-in IDE
   [x] Code editor
   [x] Project editor
@@ -6862,12 +6902,15 @@ For 1.0:
   [ ] Sprite editor
 [x] Vim, Emacs, and Visual Studio code external editor support
 [x] Aseprite, Photoshop, Krita, and Tiled external editor support
+[x] 30% virtual GPU graphics speedup
+[ ] Python not required
+[ ] Shared-screen network multiplayer
   
 Post 1.0:
 
-[ ] 30% virtual GPU graphics speedup
-[ ] Python not required
-[ ] Shared-screen network multiplayer
+[ ] Export to:
+  [ ] macOS binary
+  [ ] Windows binary
 [ ] Extended constant editor
 [ ] Font editor
 [ ] More AI routines
@@ -7046,7 +7089,14 @@ Changes for both the specification and implementation in each release.
 - Incompatible change: it is now illegal to mutate the container being iterated over
   by a `for...in` loop. Use `for x in clone(container):` as a workaround if you need
   mutation, which is still relatively fast.
+- Incompatible change: `+ - / * += -= /= *=` operators are now illegal to use on arrays (they 
+  are still overloaded for objects)
 - Incompatible change: `for` loops now evaluate the upper bound only once, before the loop body begins
+- Incompatible change: renamed `Blip*.sound.json` to `blip*.sound.json`
+- Temporary Network Multiplayer workaround solution (to be replaced with a more straightforward 
+  method at release)
+- Added IDE option to restart a paused game automatically when focus switching back to the browser
+  from an external editor or other tab
 - Optimized nonrotated opaque sprite drawing by up to 2x and halved memory usage by reducing 
   GPU implementation to true 16 bit
 - Optimized Safari sprite drawing using forced integer coordinates for up to 4x performance
@@ -7055,9 +7105,11 @@ Changes for both the specification and implementation in each release.
   from tinting, alpha test, and opacity
 - Optimized thick line rendering by reducing virtual CPU Logic overhead
 - Optimized default `for` and `for...in` loops under the new semantics
+- Added `explode-11.sound.json`
 - Scripts loaded from `quad://scripts/` no longer count against the total program size
 - The game.json file is now directly editable in the IDE
 - Errors now report the filename with the URL truncated if it matches the game URL
+- Added syntax highlighting to inline code in the manual
 - Added `IDE_USER` constant
 - Added `iterate()` function
 - The game.json structure for docs stores only raw URLs now, not metadata
@@ -7867,7 +7919,18 @@ Changes for both the specification and implementation in each release.
 <link rel="shortcut icon" href="../console/favicon.ico">
 
 
-<script>markdeepOptions = {tocStyle:'long', definitionStyle:'long', linkAPIDefinitions: true};</script>
+<script>
+// Not used as Markdeep has added this feature internally
+function pyxlScriptHighlight() {
+    var elementList = document.getElementsByTagName('code');
+    for (var e = 0; e < elementList.length; ++e) {
+        var element = elementList[e];
+        if (element.parentNode.tag !== 'pre') {
+            element.innerHTML = hljs.highlight('PyxlScript', element.innerText, true).value;
+        }
+    }
+}
+markdeepOptions = {tocStyle:'long', definitionStyle:'long', linkAPIDefinitions: true, inlineCodeLang: 'PyxlScript'};</script>
 <link rel="stylesheet" href="slate.css">
 <style>
 @font-face { font-family: quadplay; src: url(Audiowide-Regular.ttf) }
@@ -7884,7 +7947,7 @@ width: 200px;
 body {
 left: 230px;
 }
-.md .longTOC a, .md .longTOC code, .md a:link, .md a:visited, .md a:link code, .md a:visited code {
+.md .longTOC a, .md .longTOC code, .md a:link, .md a:visited, .md a:link code, .md a:visited code, a code .hljs-keyword, a code .hljs-selector-tag {
 color: #80bfff !important;
 }
 table.aligned tr {

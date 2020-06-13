@@ -389,6 +389,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
 // Becomes the `frame(f)` method on sprite animation arrays.
 // Runs in linear time in the length of the array (*not* linear in the value of f).
 function animationFrame(f) {
+    f = Math.floor(f);
     const animation = this;
     if (! animation) {
         throw new Error('The frame() function can only be called directly from a sprite animation array.');
@@ -413,7 +414,7 @@ function animationFrame(f) {
             // Count backwards from the end
             f -= reverseTime;
             for (let i = N - 1; i > 0 && f < animation[i].frames; --i, f -= animation[i].frames) {}
-            return animation[Math.max(i, 0)];
+            return animation[Math.max(f, 0)];
         }
     }
     

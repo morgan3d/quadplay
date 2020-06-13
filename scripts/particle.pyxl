@@ -12,22 +12,24 @@ def spawn_particle(pos, vel, color, z, frames):
 
 
 // Convert an entity's sprite into a particle system.
-def spawn_particles_from_entity(entity, max_frames, z_offset,
-    spread_center, min_spread_speed, max_spread_speed, 
-    common_dir, min_common_speed, max_common_speed,
-    common_vel, copies):
-        
-    z_offset = z_offset default ½
-    spread_center = spread_center default entity.pos
-    min_spread_speed = min_spread_speed default 0
-    max_spread_speed = max_spread_speed default 0
-    common_dir = common_dir default xy(0, 0)
-    min_common_speed = min_common_speed default 0
-    max_common_speed = max_common_speed default 0
-    common_vel = common_vel default xy(0, 0)
-    copies = copies default 1
-        
+def spawn_particles_from_entity(
+    entity,
+    max_frames,
+    z_offset            default ½,
+    spread_center       default entity.pos,
+    min_spread_speed    default 0,
+    max_spread_speed    default 0, 
+    common_dir          default xy(0, 0),
+    min_common_speed    default 0,
+    max_common_speed    default 0,
+    common_vel          default xy(0, 0),
+    copies              default 1):
+                
+    assert(entity, "entity must not be nil")
+
     const sprite = entity.sprite
+    assert(sprite, "entity does not have a sprite in spawn_particles_from_entity()")
+    
     const z = entity.z + z_offset
     const center = ½ (sprite.size - 1)
     const U = xy(cos(entity.angle), -sin(entity.angle) * rotation_sign())

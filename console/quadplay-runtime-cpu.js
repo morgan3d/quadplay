@@ -675,10 +675,9 @@ function replace(s, src, dst) {
         });
         
     } else {
-        console.log(`replace(${s}, ${src}, ${dst})`);
         // String replace
         if (dst === undefined || src === undefined) {
-            throw new Error("replace(string, string, string) requires three arguments");
+            throw new Error("Use replace(string, object) or replace(string, string, string)");
         }
         if (typeof src !== 'string') { src = unparse(src); }
         if (typeof dst !== 'string') { dst = unparse(dst); }
@@ -4380,11 +4379,16 @@ function _postGlyphSpace(str, i, font) {
 function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_align, z, wrap_width, text_size, referenceFont) {
     console.assert(typeof str === 'string');
     console.assert(Array.isArray(formatArray));
+    console.assert(formatIndex < formatArray.length);
     console.assert(typeof pos === 'object' && pos.x !== undefined);
 
     let format;
 
-    console.assert(offsetIndex >= formatArray[formatIndex].startIndex && offsetIndex <= formatArray[formatIndex].endIndex);
+    if (offsetIndex < formatArray[formatIndex].startIndex || offsetIndex > formatArray[formatIndex].endIndex) {
+        // Empty, just return newline
+        return {x:0, y:referenceFont._charHeight};
+    }
+    
     // Identify the starting format. This snippet is repeated throughout the function.
     while ((offsetIndex < formatArray[formatIndex].startIndex) || (offsetIndex > formatArray[formatIndex].endIndex)) { ++formatIndex; }
     format = formatArray[formatIndex];
@@ -4406,6 +4410,8 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
             // Update formatIndex
             while ((offsetIndex < formatArray[formatIndex].startIndex) || (offsetIndex > formatArray[formatIndex].endIndex)) { ++formatIndex; }
             format = undefined;
+
+            console.assert(formatIndex < formatArray.length);
             
             const restBounds = _draw_text(offsetIndex + 1, formatIndex, str.substring(c + 1), formatArray, {x:pos.x, y:pos.y + referenceFont.line_height / _scaleY},
                                           x_align, y_align, z, wrap_width, text_size - cur.length, referenceFont);
@@ -6072,6 +6078,8 @@ function _addMutate(a, b) {
 }
 
 function _objectAdd(a, b) {
+    if (Array.isArray(a) || Array.isArray(b)) { _error('Cannot use + with arrays'); }
+    
     // clone, preserving prototype
     const c = a.constructor ? a.constructor() : Object.create(null);
 
@@ -6083,6 +6091,8 @@ function _objectAdd(a, b) {
 }
 
 function _objectAddMutate(a, b) {
+    if (Array.isArray(a) || Array.isArray(b)) { _error('Cannot use += with arrays'); }
+    
     if (typeof b === 'object') for (let key in a) a[key] += b[key];
     else                       for (let key in a) a[key] += b;
     return a;
@@ -6095,6 +6105,7 @@ function _neg(a) {
 }
 
 function _objectNeg(a) {
+    if (Array.isArray(a)) { _error('Cannot use - with arrays'); }
     let c = a.constructor ? a.constructor() : Object.create(null);
     for (let key in a) c[key] = -a[key];
     return c;
@@ -6111,17 +6122,19 @@ function _subMutate(a, b) {
 }
 
 function _objectSub(a, b) {
-    let c = a.constructor ? a.constructor() : Object.create(null);
+    if (Array.isArray(a) || Array.isArray(b)) { _error('Cannot use - with arrays'); }
+    const c = a.constructor ? a.constructor() : Object.create(null);
     
-    if (typeof b === 'object') for (let key in a) c[key] = a[key] - b[key];
-    else                       for (let key in a) c[key] = a[key] - b;
+    if (typeof b === 'object') for (const key in a) c[key] = a[key] - b[key];
+    else                       for (const key in a) c[key] = a[key] - b;
     
     return c;
 }
 
 function _objectSubMutate(a, b) {
-    if (typeof b === 'object') for (let key in a) a[key] -= b[key];
-    else                       for (let key in a) a[key] -= b;
+    if (Array.isArray(a) || Array.isArray(b)) { _error('Cannot use -= with arrays'); }
+    if (typeof b === 'object') for (const key in a) a[key] -= b[key];
+    else                       for (const key in a) a[key] -= b;
     return a;
 }
 
@@ -6136,18 +6149,20 @@ function _divMutate(a, b) {
 }
 
 function _objectDiv(a, b) {
-    let c = a.constructor ? a.constructor() : Object.create(null);
+    if (Array.isArray(a) || Array.isArray(b)) { _error('Cannot use / with arrays'); }    
+    const c = a.constructor ? a.constructor() : Object.create(null);
 
-    if (typeof b === 'object') for (let key in a) c[key] = a[key] / b[key];
+    if (typeof b === 'object') for (const key in a) c[key] = a[key] / b[key];
     else {
         b = 1 / b;
-        for (let key in a) c[key] = a[key] * b;
+        for (const key in a) c[key] = a[key] * b;
     }
     
     return c;
 }
 
 function _objectDivMutate(a, b) {
+    if (Array.isArray(a) || Array.isArray(b)) { _error('Cannot use /= with arrays'); }    
     if (typeof b === 'object') for (const key in a) a[key] /= b[key];
     else {
         b = 1 / b;
@@ -6172,6 +6187,7 @@ function _mulMutate(a, b) {
 }
 
 function _objectMul(a, b) {
+    if (Array.isArray(a) || Array.isArray(b)) { _error('Cannot use * with arrays'); }    
     const c = a.constructor ? a.constructor() : Object.create(null);
 
     if (typeof b === 'object') for (const key in a) c[key] = a[key] * b[key];
@@ -6181,8 +6197,9 @@ function _objectMul(a, b) {
 }
 
 function _objectMulMutate(a, b) {
-    if (typeof b === 'object') for (let key in a) a[key] *= b[key];
-    else                       for (let key in a) a[key] *= b;
+    if (Array.isArray(a) || Array.isArray(b)) { _error('Cannot use *= with arrays'); }    
+    if (typeof b === 'object') for (const key in a) a[key] *= b[key];
+    else                       for (const key in a) a[key] *= b;
     return a;
 }
 
