@@ -99,7 +99,7 @@ function device_control(cmd) {
     switch (cmd) {
     case "start_GIF_recording":     startGIFRecording(); break;
     case "stop_GIF_recording":      stopGIFRecording(); break;
-    case "take_screenshot":        downloadScreenshot(); break;
+    case "take_screenshot":         downloadScreenshot(); break;
     case "start_preview_recording": startPreviewRecording(); break;
     case "set_debug_flag":
         {
@@ -243,12 +243,15 @@ function onEmulatorKeyDown(event) {
 }
 
 function makeDateFilename() {
-    const dateString = new Date().toLocaleString(
-        undefined,
-        {year: 'numeric', month: 'short', day: 'numeric', hour:'2-digit', minute:'2-digit'})
-    return makeFilename(gameSource.CREDITS.title + '-' + dateString);
+    const now = new Date();
+    const dateString = now.getFullYear() + '-' + twoDigit(now.getMonth() + 1) + '-' + twoDigit(now.getDate()) + '_' + twoDigit(now.getHours()) + 'h' + twoDigit(now.getMinutes());
+    return makeFilename(gameSource.CREDITS.title + '_' + dateString);
 }
 
+
+function twoDigit(num) {
+    return ((num < 10) ? '0' : '') + num;
+}
 
 function downloadScreenshot() {
     // Screenshot

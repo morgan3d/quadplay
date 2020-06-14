@@ -1659,11 +1659,21 @@ function rgb(r, g, b) {
     if (arguments.length !== 3 && arguments.length !== 1) { throw new Error('rgb() requires exactly one or three arguments or one hsv value'); }
 
     if (r.h !== undefined) {
-        // Convert to RGB
-        const h = loop(r.h, 1), s = _clamp(r.s, 0, 1), v = _clamp(r.v, 0, 1);
-        r = v * (1 - s + s * _clamp(Math.abs(_fract(h + 1.0) * 6 - 3) - 1, 0, 1));
+        // Convert HSV --> RGB
+        const h = _loop(r.h, 0, 1), s = _clamp(r.s, 0, 1), v = _clamp(r.v, 0, 1);
+        let k = (5 + 6 * h) % 6;
+        r = v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+
+        k = (3 + 6 * h) % 6;
+        g = v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+
+        k = (1 + 6 * h) % 6;
+        b = v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+        /*
+        r = v * (1 - s + s * _clamp(Math.abs(_fract(h +  1 ) * 6 - 3) - 1, 0, 1));
         g = v * (1 - s + s * _clamp(Math.abs(_fract(h + 2/3) * 6 - 3) - 1, 0, 1));
         b = v * (1 - s + s * _clamp(Math.abs(_fract(h + 1/3) * 6 - 3) - 1, 0, 1));
+*/
     } else if (r.r !== undefined) {
         // Clone
         g = r.g;
@@ -1710,26 +1720,35 @@ function rgba(r, g, b, a) {
 
 function hsv(h, s, v) {
     if (h.r !== undefined) {
-        // convert to hsv
+        // Convert RGB -> HSV
         const r = _clamp(h.r, 0, 1), g = _clamp(h.g, 0, 1), b = _clamp(h.b, 0, 1);
 
         v = Math.max(r, g, b);
 
-        if (v === 0) {
+        if (v <= 0) {
+            // Black
             h = 0; s = 0;
         } else {
-            const mn = Math.min(r, g, b);
-            s = 1 - mn / v;
-            
-            if (r === v)      h =     (g - b); // between yellow & magenta
-            else if (g === v) h = 2 + (b - r); // between cyan & yellow
-            else              h = 4 + (r - g); // between magenta & cyan
+            const lowest = Math.min(r, g, b);
 
-            h /= 6 * (v - mn);
-            if (h < 0) h += 1;
+            // (highest - lowest) / highest = 1 - lowest / v
+            s = 1 - lowest / v;
+            const diff = v - lowest;
+
+            if (diff > 0) {
+                // Choose range based on which is the highest
+                if (r === v)      { h =     (g - b) / diff; } // between yellow & magenta
+                else if (g === v) { h = 2 + (b - r) / diff; } // between cyan & yellow
+                else              { h = 4 + (r - g) / diff; } // between magenta & cyan
+            } else {
+                h = 0;
+            }
+            
+            h /= 6;
+            if (h < 0) { h += 1; }
         }
     } else if (h.h) {
-        // clone
+        // Clone hsv or hsva -> hsv
         v = h.v;
         s = h.s;
         h = h.h;
@@ -1745,8 +1764,8 @@ function hsva(h, s, v, a) {
         c.a = (h.a !== undefined) ? h.a : 1;
         return c;
     } else if (h.h !== undefined) {
-        // clone
-        a = h.a === undefined ? 1 : h.a;
+        // Clone, or hsv -> hsva
+        a = (h.a === undefined) ? 1 : h.a;
         v = h.v;
         s = h.s;
         h = h.h;
@@ -2416,7 +2435,7 @@ function make_physics(options) {
 
 
 function physics_add_entity(physics, entity) {
-    if (! physics) { throw _error("physics context cannot be nil"); }
+    if (! physics) { _error("physics context cannot be nil"); }
     if (! physics._engine) { _error("First argument to physics_add_entity() must be a physics context."); }
     if (entity._body) { _error("This entity is already in a physics context"); }
     if (entity.density <= 0) { _error("The entity in physics_add_entity() must have nonzero density"); }
@@ -3800,15 +3819,33 @@ function _colorToUint16(color) {
         c = (((_clamp(a, 0, 1) * 15 + 0.5) & 0xf) << 12) >>> 0;
     }
 
-    let r = color.r, g = color.g, b = color.b, h = color.h;
+    let r = 0, g = 0, b = 0, h = color.h;
 
     if (h !== undefined) {
+        h = _loop(h, 0, 1);
         const s = _clamp(color.s, 0, 1), v = _clamp(color.v, 0, 1);
 
         // Convert to RGB
-        r = v * (1 - s + s * _clamp(Math.abs(_fract(h + 1.0) * 6 - 3) - 1, 0, 1));
-        g = v * (1 - s + s * _clamp(Math.abs(_fract(h + 2/3) * 6 - 3) - 1, 0, 1));
-        b = v * (1 - s + s * _clamp(Math.abs(_fract(h + 1/3) * 6 - 3) - 1, 0, 1));
+        // https://en.wikipedia.org/wiki/HSL_and_HSV#HSV_to_RGB
+        let k = (5 + 6 * h) % 6;
+        r = v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+
+        k = (3 + 6 * h) % 6;
+        g = v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+
+        k = (1 + 6 * h) % 6;
+        b = v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+        
+        /*
+        r = v * (1 + s - s * _clamp(Math.abs(_fract(h +  1 ) * 6 - 3) - 1, 0, 1));
+        g = v * (1 + s - s * _clamp(Math.abs(_fract(h + 2/3) * 6 - 3) - 1, 0, 1));
+        b = v * (1 + s - s * _clamp(Math.abs(_fract(h + 1/3) * 6 - 3) - 1, 0, 1));
+        */
+        
+    } else {
+        r = _clamp(color.r, 0, 1);
+        g = _clamp(color.g, 0, 1);
+        b = _clamp(color.b, 0, 1);
     }
 
     if (r !== undefined) {
@@ -5004,6 +5041,12 @@ function clamp(x, lo, hi) {
     }
 }
 
+// On numbers only
+function _loop(x, lo, hi) {
+    x -= lo;
+    hi -= lo;
+    return (x - Math.floor(x / hi) * hi) + lo;
+}
 
 function loop(x, lo, hi) {
     if (typeof x === 'object') {
@@ -5032,9 +5075,8 @@ function loop(x, lo, hi) {
     }
 
     if (hi === undefined) { hi = 1; }
-    x -= lo;
-    hi -= lo;
-    return (x - Math.floor(x / hi) * hi) + lo;
+
+    return _loop(x, lo, hi);
 }
 
 
@@ -7149,6 +7191,190 @@ function MAT2x2_MATMUL_XZ(A, v, c) {
 }
 
 
+function lerp_angle(a, b, t) {
+    a = _loop(a, -_Math.PI, _Math.PI);
+    b = _loop(b, -_Math.PI, _Math.PI);
+
+    // Find the shortest direction
+    if (b > a + _Math.PI) {
+        b -= 2 * _Math.PI;
+    } else if (b < a - _Math.PI) {
+        b += 2 * _Math.PI;
+    }
+
+    return a + (b - a) * t;    
+}
+
+
+
+// https://en.wikipedia.org/wiki/SRGB#The_reverse_transformation
+function _SRGB_to_RGB_one_channel(u) {
+    return u > 0.04045 ? Math.pow(((u + 0.055) * (1 / 1.055)), 2.4) : u * (1 / 12.92);
+}
+
+
+// https://en.wikipedia.org/wiki/SRGB
+function _RGB_to_SRGB_one_channel(u) {
+    return  u > 0.0031308 ? 1.055 * Math.pow(u, (1 / 2.4)) - 0.055 : 12.92 * u;
+}
+
+// Convert SRGB[A] to RGB[A]
+function _SRGB_to_RGB(color) {
+    const result = {
+        r: _SRGB_to_RGB_one_channel(color.r),
+        g: _SRGB_to_RGB_one_channel(color.g),
+        b: _SRGB_to_RGB_one_channel(color.b)
+    };
+                    
+    if (color.a !== undefined) {
+        result.a = color.a;
+    }
+
+    return result;    
+}
+
+// Convert RGB[A] to SRGB[A]
+function _RGB_to_SRGB(color) {
+    const result = {
+        r: _RGB_to_SRGB_one_channel(color.r),
+        g: _RGB_to_SRGB_one_channel(color.g),
+        b: _RGB_to_SRGB_one_channel(color.b)
+    };
+                    
+    if (color.a !== undefined) {
+        result.a = color.a;
+    }
+
+    return result;    
+}
+
+// Color space conversion for RGB[A] to XYZ[A]. Note: *not* SRGB input!
+// May go out of gamut. http://www.brucelindbloom.com/index.html?Eqn_RGB_to_XYZ.html
+function _RGB_to_XYZ(color) {
+    // Observer = 2°, Illuminant = D65
+    const result = {
+        x: color.r * 0.4124 + color.g * 0.3576 + color.b * 0.1805,
+        y: color.r * 0.2126 + color.g * 0.7152 + color.b * 0.0722,
+        z: color.r * 0.0193 + color.g * 0.1192 + color.b * 0.9505
+    };
+
+    if (color.a !== undefined) {
+        result.a = color.a;
+    }
+
+    return result;
+}
+
+// Color space conversion for XYZ[A] to RGB[A]. Note: *not* SRGB output!
+// May go out of gamut.
+function _XYZ_to_RGB(color) {
+    // Observer = 2°, Illuminant = D65
+    const result = {
+        r: color.x * 3.2406 + color.y * -1.5372 + color.z * -0.4986,
+        g: color.x * -0.9689 + color.y * 1.8758 + color.z * 0.0415,
+        b: color.x * 0.0557 + color.y * -0.204 + color.z * 1.057
+    };
+
+    if (color.a !== undefined) {
+        result.a = color.a;
+    }
+
+    return result;
+}
+
+function _XYZ_to_LAsBs_one_channel(u) {
+    return u > 0.008856 ? _Math.cbrt(u) : 7.787 * u + 16 / 116;
+}
+
+// XYZ[A] color to L A* B*[A] (where .as is the color channel and .a
+// is the alpha channel) May go out of gamut. l is on the range [0, 100],
+// as and bs are on the range [-100, 100]
+function _XYZ_to_LAsBs(color) {
+    const x = _XYZ_to_LAsBs_one_channel(color.x * (1 / 0.95047));
+    const y = _XYZ_to_LAsBs_one_channel(color.y);
+    const z = _XYZ_to_LAsBs_one_channel(color.z * (1 / 1.08883));
+
+    // if (116 * y - 16 < 0) throw new Error('Invalid input for XYZ');
+    const result = {
+        l: _Math.max(0, 116 * y - 16),
+        as: 500 * (x - y),
+        bs: 200 * (y - z)
+    };
+    
+    if (color.a !== undefined) {
+        result.a = color.a;
+    }
+
+    return result;
+}
+
+function _LAsBs_to_XYZ_one_channel(n) {
+    return n > 0.206893034 ? (n * n * n) : (n - 16 / 116) * (1 / 7.787);
+}
+
+// L A* B*[A] to XYZ[A] color (where .as is the color channel and .a
+// is the alpha channel) May go out of gamut.
+function _LAsBs_to_XYZ(color) {
+    const y = (color.l + 16) / 116;
+    const x = color.as / 500 + y;
+    const z = y - color.bs / 200;
+
+    const result = {
+        x: 0.95047 * _LAsBs_to_XYZ_one_channel(x),
+        y: _LAsBs_to_XYZ_one_channel(y),
+        z: 1.08883 * _LAsBs_to_XYZ_one_channel(z)
+    };
+    
+    if (color.a !== undefined) {
+        result.a = color.a;
+    }
+
+    return result;
+}
+
+function perceptual_lerp_color(a, b, t) {
+    let was_rgb = false;
+    if (a.h === undefined && a.r !== undefined) {
+        if (b.h !== undefined || b.r === undefined) { _error("perceptual_lerp_color() requires both colors to be rgb() or hsv()"); }
+        // rgb case
+        was_rgb = true;
+        
+    } else if (a.r === undefined && a.h !== undefined) {
+        // hsv case
+        if (b.r !== undefined || b.h === undefined) { _error("perceptual_lerp_color() requires both colors to be rgb() or hsv()"); }
+        if (a.a !== undefined) {
+            a = rgba(a);
+            b = rgba(b);
+        } else {
+            a = rgb(a);
+            b = rgb(b);
+        }
+    } else {
+        _error("perceptual_lerp_color() requires both colors to be rgb() or hsv()");
+    }
+
+    a = _XYZ_to_LAsBs(_RGB_to_XYZ(_SRGB_to_RGB(a)));
+    b = _XYZ_to_LAsBs(_RGB_to_XYZ(_SRGB_to_RGB(b)));
+    let c = lerp(a, b, t);
+    c = _RGB_to_SRGB(_XYZ_to_RGB(_LAsBs_to_XYZ(c)));
+
+    c.r = _clamp(c.r, 0, 1);
+    c.g = _clamp(c.g, 0, 1);
+    c.b = _clamp(c.b, 0, 1);
+    
+    if (! was_rgb) {
+        // Go back to HSV
+        if (c.a !== undefined) {
+            c = hsva(c);
+        } else {
+            c = hsv(c);
+        }
+    }
+    
+    return c;
+}
+
+
 function lerp(a, b, t) {
     // Test if these are numbers quickly using the presence of the toFixed method
     if (! t.toFixed) { throw new Error("The third argument to lerp must be a number"); }
@@ -7456,8 +7682,8 @@ function save_local(key, value) {
    same map.
 */
 function find_path(start, goal, costEstimator, edgeCost, getNeighbors, nodeToID, map) {
-    if (start === undefined) { throw _error('The start_node argument to find_path() must not be nil'); }
-    if (goal === undefined) { throw _error('The goal_node argument to find_path() must not be nil'); }
+    if (start === undefined) { _error('The start_node argument to find_path() must not be nil'); }
+    if (goal === undefined) { _error('The goal_node argument to find_path() must not be nil'); }
     if (typeof costEstimator !== 'function') { _error('The estimate_path_cost() argument to find_path() must be a function'); }
     if (typeof getNeighbors !== 'function') { _error('The get_neighbors() argument to find_path() must be a function'); }
     if (typeof edgeCost !== 'function') { _error('The edge_cost() argument to find_path() must be a function'); }

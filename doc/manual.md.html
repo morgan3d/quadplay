@@ -416,12 +416,15 @@ sprites and polygon meshes.
 </td></tr><tr><td>![](../examples/sproing/label128.png)</td><td>
 [Sproing Example](../console/quadplay.html?game=quad://examples/sproing&IDE=1) shows a squash and stretch effect for transforming sprites.
 
+</td></tr><tr><td>![](../examples/perceptual_color/label128.png)</td><td>
+[Perceptual Color](../console/quadplay.html?game=quad://examples/perceptual_color&IDE=1) shows the difference between `perceptual_lerp_color()` and `lerp()`.
+
 </td></tr><tr><td>![](../examples/zcar/label128.png)</td><td>
 [Z-Car Example](../console/quadplay.html?game=quad://examples/zcar&IDE=1) draws a 3D wireframe car using 2.5D graphics
 and CRT orange-screen retro phosophor effects.
 
 </td></tr><tr><td>![](../examples/lift_team/label128.png)</td><td>
-[Speed Street](../console/quadplay.html?game=quad://examples/lift_team&IDE=1) combines physics and dynamic constraints for an asymmetric platformer setup, where one
+[Lift Team](../console/quadplay.html?game=quad://examples/lift_team&IDE=1) combines physics and dynamic constraints for an asymmetric platformer setup, where one
 player flies a helicopter that can lift the other player's mech.
 
 </td></tr><tr><td>![](../examples/speedstreet/label128.png)</td><td>
@@ -1992,6 +1995,12 @@ Math
 
 `lerp(a, b, t)`
 : Returns `a * (1 - t) + b * t`. See also `smoothstep()` and `smootherstep()`.
+  See also `perceptual_lerp_color()`.
+
+`lerp_angle(a, b, t)`
+: Linear interpolation between angles `a` and `b` by `t`, taking wrapping
+  into account and always going the short way. Returns a value between
+  `-pi` and `+pi`.
 
 `log(x)`
 : Natural logarithm (base _e_) of `x`, _ln x_ in math notation.
@@ -3338,8 +3347,14 @@ Graphics
 
 ### Colors
 
+Colors in quadplay are interpreted in the
+[sRGB](https://en.wikipedia.org/wiki/SRGB) color space and are on the
+range 0 to 1 for each channel.  Although the screen and GPU operate in
+4-bit per channel mode, arbitrary colors (including negative and out
+of gamut ones) can be represented using these types.
+
 `gray(n)`
-: Returns `rgb(n, n, n)`, with `n` clamped to [0, 1].
+: Returns `rgb(n, n, n)`, with `n` clamped to the range 0 to 1.
 
 `gray(color)`
 : Returns `rgb(n, n, n)`, with `n` equal to a perceptually-weighted average of the rgb values from color.
@@ -3352,6 +3367,12 @@ Graphics
 : Returns an object with field `h` _wrapped_ to [0, 1], and fields `s` and `v` clamped to [0, 1].
   `h=0` and `h=1` are red, `h=1/3` is green, and `h=2/3` is blue, with values inbetween
   interpolated.
+
+`perceptual_lerp_color(c1, c2, t)`
+: Both `c1` and `c2` must have the same type: `hsv()`, `hsva()`, `rgb()`, or `rgba()`.
+  Performs a linear interpolation in CIELAB perceptual space and returns a value
+  in the original color space. See also `lerp()`, `smoothstep()`, and `smootherstep()`,
+  which can be applied to colors.
 
 `rgb(hsvValue)`
 : Convert the hsv result to rgba.
@@ -4607,7 +4628,7 @@ Sounds
 ![`quad://sounds/blip-10.sound.json`](../sounds/blip-10.mp3) ![`quad://sounds/blip-11.sound.json`](../sounds/blip-11.mp3)
 ![`quad://sounds/blip-12.sound.json`](../sounds/blip-12.mp3) ![`quad://sounds/blip-13.sound.json`](../sounds/blip-13.mp3)
 ![`quad://sounds/blip-14.sound.json`](../sounds/blip-14.mp3) ![`quad://sounds/blip-15.sound.json`](../sounds/blip-15.mp3)
-![`quad://sounds/blip-16.sound.json`](../sounds/blip-16.mp3) ![`quad://sounds/67-Blip.sound.json`](../sounds/blip-17.mp3)
+![`quad://sounds/blip-16.sound.json`](../sounds/blip-16.mp3) ![`quad://sounds/blip-17.sound.json`](../sounds/blip-17.mp3)
 
 ### Wild
 
@@ -7095,6 +7116,7 @@ Changes for both the specification and implementation in each release.
 - Incompatible change: renamed `Blip*.sound.json` to `blip*.sound.json`
 - Temporary Network Multiplayer workaround solution (to be replaced with a more straightforward 
   method at release)
+- Changed screenshot filename format to international date format to sort correctly
 - Added IDE option to restart a paused game automatically when focus switching back to the browser
   from an external editor or other tab
 - Optimized nonrotated opaque sprite drawing by up to 2x and halved memory usage by reducing 
@@ -7105,19 +7127,22 @@ Changes for both the specification and implementation in each release.
   from tinting, alpha test, and opacity
 - Optimized thick line rendering by reducing virtual CPU Logic overhead
 - Optimized default `for` and `for...in` loops under the new semantics
-- Added `explode-11.sound.json`
 - Scripts loaded from `quad://scripts/` no longer count against the total program size
 - The game.json file is now directly editable in the IDE
 - Errors now report the filename with the URL truncated if it matches the game URL
-- Added syntax highlighting to inline code in the manual
-- Added `IDE_USER` constant
-- Added `iterate()` function
 - The game.json structure for docs stores only raw URLs now, not metadata
 - Made the project pane wider to make it easier to see long variable names
 - Disabled browser navigation hotkeys to prevent accidentally leaving
   the IDE
-- Disabled chrome two-finger back gesture to prevent accidentally leaving
+- Disabled Chrome browser two-finger back gesture to prevent accidentally leaving
   games or the IDE
+- Added syntax highlighting to inline code in the manual
+- Added `IDE_USER` constant
+- Added `iterate()` function
+- Added `lerp_angle()`
+- Added `perceptual_lerp_color()`
+- Added `examples/perceptual_color`
+- Added `explode-11.sound.json`
 - Added `xy`, `dx`, `dy`, and `dxy` values to `device_control("get_mouse_state")`
 - Added syntax highlighting for `touch` in the IDE
 - Added syntax highlighting for the type-testing functions `is_array()`, `is_object()`, etc. in the IDE
@@ -7130,11 +7155,13 @@ Changes for both the specification and implementation in each release.
 - Added `sounds/shoot-10.sound.json`
 - Tooltips in the project listing of the IDE now show the full names of variables and scripts
   as well as URLs and descriptions
-- Fixed line number errors for programs with long lines
 - Improved error checking for `find_path()`
 - Made the Debug mode use a 1.5x scale emulator on displays of 1600 pixels wide or less
   (factoring in pixel doubling for retina displays) and 2.0x scaling at higher resolutions
 - Linked the game folder display in the IDE to opening the folder on disk
+- Fixed missing clamping of RGB colors outside the 0-1 range during rendering
+- Fixed HSV to and from RGB conversion
+- Fixed line number errors for programs with long lines
 - Fixed the bottom rows of the code editor being cropped
 - Fixed automath operating on non-pyxl files
 - Renamed `get_map_sprite_by_draw_coord()` --> `get_map_sprite_by_ws_coord()`

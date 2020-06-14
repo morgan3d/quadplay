@@ -1,0 +1,27 @@
+{
+    "title": "Perceptual Color",
+    "developer": "Casual Effects",
+    "copyright": "©2020 Morgan McGuire",
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play*"
+    ],
+    "assets": {
+        "font": "quad://fonts/cga-7.font.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "Shows the difference between perceptual_lerp_color() and lerp().",
+    "constants": {},
+    "screen_size": {
+        "x": 192,
+        "y": 112
+    }
+}

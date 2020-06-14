@@ -399,7 +399,7 @@ function animationFrame(f) {
     if (animation.extrapolate === 'clamp') {
         // Handle out of bounds cases by clamping
         if (f < 0) { return animation[0]; }
-        if (f >= frames) { return animation[N - 1]; }
+        if (f >= animation.frames) { return animation[N - 1]; }
     } else {
         // Handle out of bounds cases by looping. To handle negatives, we need
         // to add and then mod again. Mod preserves fractions.
@@ -413,15 +413,20 @@ function animationFrame(f) {
         if (f >= reverseTime) {
             // Count backwards from the end
             f -= reverseTime;
-            for (let i = N - 1; i > 0 && f < animation[i].frames; --i, f -= animation[i].frames) {}
-            return animation[Math.max(f, 0)];
+            let i = N - 2;
+            while ((i > 0) && (f >= animation[i].frames)) {
+                f -= animation[i].frames;
+                --i;
+            }
+               
+            return animation[i];
         }
     }
     
     // Find the value by searching linearly within the array (since we do not
     // store cumulative values to binary search by).
     let i = 0;
-    while ((i < N) && (f > animation[i].frames)) {
+    while ((i < N) && (f >= animation[i].frames)) {
         f -= animation[i].frames;
         ++i;
     }

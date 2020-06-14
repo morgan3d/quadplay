@@ -47,6 +47,11 @@
             "description": "Physics example of a player helicoper that can lift another player's mech."
         },
         {
+            "url": "quad://examples/perceptual_color/",
+            "title": "Perceptual Color",
+            "description": "Shows the difference between perceptual_lerp_color() and lerp()."
+        },
+        {
             "url": "quad://examples/physics/",
             "title": "Physics Example",
             "description": ""

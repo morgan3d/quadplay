@@ -1,0 +1,55 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+def val(i):
+    const t = 2 ⌊mode_frames / 200⌋ 
+    return clamp(75% noise(1, t, 2i) + 0.5, 0, 1)
+    
+
+def lerp_hsv(a, b, t):
+    let ah = a.h
+    let bh = b.h
+        
+    if |ah - bh| < 0.5: return lerp(a, b, t)
+    
+    // Go the short way around
+    if ah > bh + 0.5:
+        ah -= 1
+    else:
+        ah += 1
+    
+    return hsv(lerp(ah, bh, t),
+               lerp(a.s, b.s, t),
+               lerp(a.v, b.v, t))
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+const A = rgb(val(0), val(1), val(2))
+const B = rgb(val(4), val(5), val(6))
+
+const hA = hsv(A)
+const hB = hsv(B)
+
+set_post_effects({background:#0000, opacity: 10%})
+
+const N = ⌊192 / 3⌋
+const extent = xy((SCREEN_SIZE.x - 20) / N, ⅓ SCREEN_SIZE.y)
+
+for i < N:
+    const α = i / (N - 1)
+    const temporal_dither = (1/8 - 1/16) * rgb(ξ, ξ, ξ)
+    const x = i * extent.x + 10
+    draw_corner_rect(xy(x, 0), extent, perceptual_lerp_color(A, B, α) + temporal_dither)        
+    draw_corner_rect(xy(x, extent.y), extent, lerp(A, B, α) + temporal_dither)    
+    draw_corner_rect(xy(x, 2 extent.y), extent, rgb(lerp_hsv(hA, hB, α)) + temporal_dither)
+
+draw_corner_rect(xy(0, 0), xy(10, SCREEN_SIZE.y), A)
+draw_corner_rect(xy(SCREEN_SIZE.x - 10, 0), xy(10, SCREEN_SIZE.y), B)
+
+draw_line(xy(0, extent.y), xy(SCREEN_SIZE.x, extent.y), #fff)
+draw_line(xy(0, 2 extent.y), xy(SCREEN_SIZE.x, 2 extent.y), #fff)
+draw_text(font, "perceptual_lerp_color", xy(½ SCREEN_SIZE.x, 0.5 extent.y), #fff, ∅, #0008, "center", "center")
+draw_text(font, "lerp rgb", xy(½ SCREEN_SIZE.x, 1.5 extent.y), #fff, ∅, #0008, "center", "center")
+draw_text(font, "lerp hsv", xy(½ SCREEN_SIZE.x, 2.5 extent.y), #fff, ∅, #0008, "center", "center")
+
