@@ -376,21 +376,19 @@ function runMcScaly2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
     } // Y
 }
 
+
 function runNearest2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
     const src = makeSrcGet(srcBuffer, srcWidth, srcHeight);
     
     for (let srcY = 0; srcY < srcHeight; ++srcY) {
         for (let srcX = 0; srcX < srcWidth; ++srcX) {
-            const E = src(srcX    , srcY    );
+            const E = src(srcX, srcY);
 
-            let J = E, K = E, L = E, M = E;
-            
-            // Write output
             const dstIndex = srcX * 2 + srcY * 4 * srcWidth;
-            dstBuffer[dstIndex] = J;
-            dstBuffer[dstIndex + 1] = K;
-            dstBuffer[dstIndex + srcWidth * 2] = L;
-            dstBuffer[dstIndex + srcWidth * 2 + 1] = M;
+            dstBuffer[dstIndex] = E;
+            dstBuffer[dstIndex + 1] = E;
+            dstBuffer[dstIndex + srcWidth * 2] = E;
+            dstBuffer[dstIndex + srcWidth * 2 + 1] = E;
         } // X
     } // Y
 }
@@ -503,142 +501,136 @@ function average4(A, B, C, D) {
 }
 
 
-    function onDrop(event) {
-        // Prevent the browser from opening the file
-        event.preventDefault();
-        if (event.dataTransfer.items) {
-            // Use DataTransferItemList interface to access the file(s)
-            for (var i = 0; i < event.dataTransfer.items.length; i++) {
-                // If dropped items aren't files, reject them
-                if (event.dataTransfer.items[i].kind === 'file') {
-                    processDrop(event.dataTransfer.items[i].getAsFile());
-                }
+function onDrop(event) {
+    // Prevent the browser from opening the file
+    event.preventDefault();
+    if (event.dataTransfer.items) {
+        // Use DataTransferItemList interface to access the file(s)
+        for (var i = 0; i < event.dataTransfer.items.length; i++) {
+            // If dropped items aren't files, reject them
+            if (event.dataTransfer.items[i].kind === 'file') {
+                processDrop(event.dataTransfer.items[i].getAsFile());
             }
-        } else {
-            // Use DataTransfer interface to access the file(s)
-            for (var i = 0; i < ev.dataTransfer.files.length; i++) {
-                processDrop(event.dataTransfer.files[i]);
-            }
-        } 
-    
-        // Pass event to removeDragData for cleanup
-        removeDragData(event)
-    }
-
-    function removeDragData(event) {
-        if (event.dataTransfer.items) {
-            // Use DataTransferItemList interface to remove the drag data
-            event.dataTransfer.items.clear();
-        } else {
-            // Use DataTransfer interface to remove the drag data
-            event.dataTransfer.clearData();
         }
-    }
-
-    function processDrop(file) {
-        // Do not use a regex here; it will not give the
-        // correct result
-        if (! file.type.match('^image\/.*')) return;
-        const filename = file.name.replace(/\.[^.]+$/, '').replace(/-\d+$/, '');
-        
-        var reader = new FileReader();
-        reader.addEventListener('loadend', function() {
-            var sourceImage = new Image();
-            sourceImage.crossOrigin = 'anonymous';
-            sourceImage.src = reader.result;
-            sourceImage.onload = function () {
-                console.log("loaded " + file.name);
-                const srcWidth = sourceImage.width, srcHeight = sourceImage.height;
-                const dstWidth = srcWidth * 2, dstHeight = srcHeight * 2;
-
-                /*
-                const bilinearDisplay = document.getElementById('bilinearDisplay');
-                bilinearDisplay.innerHTML = '';
-                bilinearDisplay.style.width = dstWidth + 'px';
-                bilinearDisplay.style.height = dstHeight + 'px';
-                bilinearDisplay.appendChild(sourceImage);
-                */
-
-                const srcBuffer = getImageData4Bit(sourceImage);
-
-                const canvas = document.createElement('canvas');
-                canvas.width = sourceImage.width * 2;
-                canvas.height = sourceImage.height * 2;
-
-                const ctx = canvas.getContext('2d');
-                const dstImageData = ctx.createImageData(canvas.width, canvas.height);
-                // Make a uint32 aliased version
-                const dstBuffer = new Uint32Array(dstImageData.data.buffer);
-
-                // Process hq2X, which has a different format than the other functions
-                // because it expects an ImageData directly.
-                {
-                    const srcImageData = {
-                        width: sourceImage.width,
-                        height: sourceImage.height,
-                        data: { buffer: srcBuffer }
-                    };
-                    
-                    const dstImageData = hq2x(srcImageData);
-
-                    // Restrict output to 4-bit palette
-                    if (false) {
-                        for (let i = 0; i < dstImageData.data.buffer.length; ++i) {
-                            dstImageData[i] = (dstImageData[i] >> 4) | (dstImageData[i] & 0xf0);
-                        }
-                    }
-
-                    // Put the data back to create a data URL
-                    ctx.putImageData(dstImageData, 0, 0);
-                    const dstImage = new Image();
-                    dstImage.src = canvas.toDataURL();
-                    dstImage.onload = function () {
-                        const dstDisplay = document.getElementById('hq2XDisplay');
-                        dstDisplay.innerHTML = '';
-                        dstDisplay.style.width = dstImage.width + 'px';
-                        dstDisplay.style.height = dstImage.height + 'px';
-                        dstDisplay.appendChild(dstImage);
-                    };
-                }                
-
-                function process2X(scaler, elementName) {
-                    scaler(srcBuffer, srcWidth, srcHeight, dstBuffer);
-                
-                    // Put the data back to create a data URL
-                    ctx.putImageData(dstImageData, 0, 0);
-                    const dstImage = new Image();
-                    dstImage.src = canvas.toDataURL();
-                    dstImage.onload = function () {
-                        const dstDisplay = document.getElementById(elementName);
-                        dstDisplay.innerHTML = '';
-                        dstDisplay.style.width = dstImage.width + 'px';
-                        dstDisplay.style.height = dstImage.height + 'px';
-                        dstDisplay.appendChild(dstImage);
-                    };
-                }
-
-                process2X(runScale2X,    'scale2XDisplay');
-                process2X(runMcScaly2X,  'mcscaly2XDisplay');
-                process2X(runNearest2X,  'nearest2XDisplay');
-                if (document.getElementById('xbr2XDisplay')) {
-                    // The XBR2 has been enabled
-                    process2X(runXBR2X,      'xbr2XDisplay');
-                } else {
-                    process2X(runUnbiasedBilinear2X, 'unbiasedBilinear2XDisplay');
-                }
-                process2X(runBilinear2X, 'bilinear2XDisplay');
-            };
-            
-            sourceImage.onerror = function () {
-                console.log("failed to load image " + file.name);
-            };
-        });
+    } else {
+        // Use DataTransfer interface to access the file(s)
+        for (var i = 0; i < ev.dataTransfer.files.length; i++) {
+            processDrop(event.dataTransfer.files[i]);
+        }
+    } 
     
-        reader.readAsDataURL(file);
+    // Pass event to removeDragData for cleanup
+    removeDragData(event)
+}
+
+function removeDragData(event) {
+    if (event.dataTransfer.items) {
+        // Use DataTransferItemList interface to remove the drag data
+        event.dataTransfer.items.clear();
+    } else {
+        // Use DataTransfer interface to remove the drag data
+        event.dataTransfer.clearData();
     }
+}
 
 
-    function onDragOver(event) { event.preventDefault(); }
+function processDrop(file) {
+    // Do not use a regex here; it will not give the
+    // correct result
+    if (! file.type.match('^image\/.*')) return;
+    const filename = file.name.replace(/\.[^.]+$/, '').replace(/-\d+$/, '');
+    
+    var reader = new FileReader();
+    reader.addEventListener('loadend', function() {
+        var sourceImage = new Image();
+        sourceImage.crossOrigin = 'anonymous';
+        sourceImage.src = reader.result;
+        sourceImage.onload = function () {
+            console.log("loaded " + file.name);
+            const srcWidth = sourceImage.width, srcHeight = sourceImage.height;
+            const dstWidth = srcWidth * 2, dstHeight = srcHeight * 2;
+            
+            const srcBuffer = getImageData4Bit(sourceImage, undefined, true);
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = sourceImage.width * 2;
+            canvas.height = sourceImage.height * 2;
+            
+            const ctx = canvas.getContext('2d');
+            const dstImageData = ctx.createImageData(canvas.width, canvas.height);
+            // Make a uint32 aliased version
+            const dstBuffer = new Uint32Array(dstImageData.data.buffer);
+            
+            // Process hq2X, which has a different format than the other functions
+            // because it expects an ImageData directly.
+            {
+                const srcImageData = {
+                    width: sourceImage.width,
+                    height: sourceImage.height,
+                    data: { buffer: srcBuffer }
+                };
+                
+                const dstImageData = hq2x(srcImageData);
+                
+                // Restrict output to 4-bit palette
+                if (false) {
+                    for (let i = 0; i < dstImageData.data.buffer.length; ++i) {
+                        dstImageData[i] = (dstImageData[i] >> 4) | (dstImageData[i] & 0xf0);
+                    }
+                }
+                
+                // Put the data back to create a data URL
+                ctx.putImageData(dstImageData, 0, 0);
+                const dstImage = new Image();
+                dstImage.src = canvas.toDataURL();
+                dstImage.onload = function () {
+                    const dstDisplay = document.getElementById('hq2XDisplay');
+                    dstDisplay.innerHTML = '';
+                    dstDisplay.style.width = dstImage.width + 'px';
+                    dstDisplay.style.height = dstImage.height + 'px';
+                    dstDisplay.appendChild(dstImage);
+                };
+            }                
+            
+            function process2X(scaler, elementName) {
+                scaler(srcBuffer, srcWidth, srcHeight, dstBuffer);
+                
+                // Put the data back to create a data URL
+                ctx.putImageData(dstImageData, 0, 0);
+                const dstImage = new Image();
+                dstImage.src = canvas.toDataURL();
+                dstImage.onload = function () {
+                    const dstDisplay = document.getElementById(elementName);
+                    dstDisplay.innerHTML = '';
+                    dstDisplay.style.width = dstImage.width + 'px';
+                    dstDisplay.style.height = dstImage.height + 'px';
+                    dstDisplay.appendChild(dstImage);
+                };
+            }
+            
+            process2X(runScale2X,    'scale2XDisplay');
+            process2X(runMcScaly2X,  'mcscaly2XDisplay');
+            process2X(runNearest2X,  'nearest2XDisplay');
+            if (document.getElementById('xbr2XDisplay')) {
+                // The XBR2 has been enabled
+                process2X(runXBR2X,      'xbr2XDisplay');
+            } else {
+                process2X(runUnbiasedBilinear2X, 'unbiasedBilinear2XDisplay');
+            }
+            process2X(runBilinear2X, 'bilinear2XDisplay');
+        };
+        
+        sourceImage.onerror = function () {
+            console.log("failed to load image " + file.name);
+        };
+    });
+    
+    reader.readAsDataURL(file);
+}
+
+
+function onDragOver(event) { event.preventDefault(); }
+
 </script>
 <body ondrop="onDrop(event)" ondragover="onDragOver(event)">
   <h1>scalepix✜</h1>

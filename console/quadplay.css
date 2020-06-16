@@ -679,7 +679,7 @@ code, .code {
     position: absolute;
     top: 0px;
     left: 0px;
-    width: 195px;
+    width: 185px;
     bottom: 0px;
     padding: 5px;
     font-size: 14px;
@@ -691,6 +691,12 @@ code, .code {
 
 .WideIDEUI .project {
     width: 140px;
+}
+
+.project li {
+    /* Make selections actually span the content */
+    width:auto;
+    display:table-row;
 }
 
 /** Used for selecting objects */
@@ -1218,7 +1224,7 @@ tabbox > label.ide {
     display: inline-block;
     margin-right: -2px;
     padding: 5px 7px 4px;
-    min-width: 60px;
+    min-width: 45px;
     height: 15px;
     font-weight: 600;
     text-align: center;
@@ -1243,6 +1249,7 @@ tabbox > input:checked + label.ide {
 
 tabbox #performanceTab:checked ~ #performancePane,
 tabbox #controlTab:checked ~ #controlPane,
+tabbox #todoTab:checked ~ #todoPane,
 tabbox #outputTab:checked ~ #outputPane,
 tabbox #watchTab:checked ~ #watchPane,
 tabbox #hostTab:checked ~ #hostPane {
@@ -1298,7 +1305,7 @@ svg.modeGraph text.edgeLabel {
 
     .WideIDEUI #debugger {
         width: 578px;
-        top: 408px;
+        top: 386px;
     }
 }
 

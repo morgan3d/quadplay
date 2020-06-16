@@ -7,7 +7,7 @@ const deployed = true;
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = false;
 
-const version  = '2020.06.14.10'
+const version  = '2020.06.16.11'
 const launcherURL = 'quad://console/launcher';
 
 // Token that must be passed to the server to make POST calls
@@ -364,7 +364,11 @@ function onResize() {
         if (scale !== 1) {
             if (isSafari) {
                 screenBorder.style.zoom = '' + scale;
-                screenBorder.style.left = (-5 / scale) + 'px';
+                if (uiMode === 'WideIDE') {
+                    screenBorder.style.left = (-5 / scale) + 'px';
+                } else {
+                    screenBorder.style.left = (8 / scale) + 'px';
+                }
                 screenBorder.style.top = (18 / scale) + 'px';
             } else {
                 screenBorder.style.transform = 'scale(' + scale + ') translate3d(0,0,0)';
@@ -1375,14 +1379,14 @@ function onProjectSelect(target, type, object) {
 
             // Show the editor after loading the content
             if (fileContents[object] !== undefined) {
-                codePlusFrame.style.gridTemplateRows = `auto 4fr auto 3fr`;
+                codePlusFrame.style.gridTemplateRows = `auto 1fr auto 1fr`;
                 setCodeEditorSession(object);
             } else {
                 // Load and set the contents
                 const loadManager = new LoadManager({forceReload: true});
                 loadManager.fetch(object, 'text', null, function (doc) {
                     fileContents[object] = doc;
-                    codePlusFrame.style.gridTemplateRows = `auto 4fr auto 3fr`;
+                    codePlusFrame.style.gridTemplateRows = `auto 1fr auto 1fr`;
                     setCodeEditorSession(object);
                 });
                 loadManager.end();
@@ -2112,7 +2116,7 @@ function visualizeMap(map) {
             for (let mapX = 0; mapX < width; ++mapX) {
                 const sprite = map.layer[z][mapX][y];
                 if (sprite) {
-                    const srcData = sprite.spritesheet._uint32Data;
+                    const srcData = sprite.spritesheet._uint16Data;
                     const xShift = (sprite.scale.x === -1) ? (sprite.size.x - 1) : 0;
                     const yShift = (sprite.scale.y === -1) ? (sprite.size.y - 1) : 0;
                     const xReduce = reduce * sprite.scale.x;
@@ -2122,8 +2126,12 @@ function visualizeMap(map) {
                             const srcOffset = (sprite._x + x * xReduce + xShift) + (sprite._y + y * yReduce + yShift) * srcData.width;
                             const dstOffset = (x + mapX * dstTileX) + (y + mapY * dstTileY) * dstImageData.width;
                             const srcValue = srcData[srcOffset];
-                            if ((srcValue >>> 24) > 127) { // Alpha test
-                                dstData[dstOffset] = srcValue;
+                            if ((srcValue >>> 12) > 7) { // Alpha test
+                                dstData[dstOffset] =
+                                    0xff000000 +
+                                    (((srcValue & 0xf00) + ((srcValue & 0xf00) << 4)) << 8) +
+                                    (((srcValue & 0xf0) + ((srcValue & 0xf0) << 4)) << 4) +
+                                    (srcValue & 0xf) + ((srcValue & 0xf) << 4);
                             }
                         } // x
                     } // y
@@ -2232,7 +2240,8 @@ function createProjectWindow(gameSource) {
                   (json.type && (json.type === 'rgba' || json.type === 'rgb' || json.type === 'hsva' || json.type === 'hsv')) ? 'color' :
                   (typeof v);
             const contextMenu = editableProject ? `oncontextmenu="showConstantContextMenu('${c}')"` : '';
-            s += `<li ${contextMenu} class="clickable ${badge} ${type}" title="${c}${tooltip}" id="projectConstant_${c}" onclick="onProjectSelect(event.target, 'constant', '${c}')"><code>${c}</code></li>\n`;
+            // Pad with enough space to extend into the hidden scrollbar area
+            s += `<li ${contextMenu} class="clickable ${badge} ${type}" title="${c}${tooltip}" id="projectConstant_${c}" onclick="onProjectSelect(event.target, 'constant', '${c}')"><code>${c}</code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>\n`;
         }
     }
     if (editableProject) {
@@ -2259,7 +2268,7 @@ function createProjectWindow(gameSource) {
             const badge = isBuiltIn(asset._jsonURL) ? 'builtin' : (isRemote(asset._jsonURL) ? 'remote' : '');
                 
             const contextMenu = editableProject ? `oncontextmenu="showAssetContextMenu('${assetName}')"` : '';
-            s += `<li id="projectAsset_${assetName}" ${contextMenu} onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'])" class="clickable ${type} ${badge}" title="${assetName} (${asset._jsonURL})"><code>${assetName}</code></li>`;
+            s += `<li id="projectAsset_${assetName}" ${contextMenu} onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'])" class="clickable ${type} ${badge}" title="${assetName} (${asset._jsonURL})"><code>${assetName}</code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>`;
 
             if (type === 'map') {
                 for (let k in asset.spritesheet_table) {
@@ -2271,7 +2280,7 @@ function createProjectWindow(gameSource) {
     }
     
     if (editableProject) {
-        s += '<li class="clickable new" onclick="showAddAssetDialog()"><i>Add asset…</i></li>';
+        s += '<li class="clickable new" onclick="showAddAssetDialog()"><i>Add existing asset…</i></li>';
         s += '<li class="clickable new" onclick="showNewAssetDialog()"><i>New asset…</i></li>';
     }
     s += '</ul>';

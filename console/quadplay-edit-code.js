@@ -395,8 +395,13 @@ function autocorrectSession(session) {
     
     if (replacement) {
         session.replace(new ace.Range(position.row, position.column - target.length, position.row, position.column), replacement);
-        // Advance the cursor to the end over the replacement
-        aceEditor.gotoLine(position.row + 1, position.column - target.length + replacement.length + 1, false)
+        // Advance the cursor to the end over the replacement. Ace does not appear to have
+        // processed at the editor level that the session has just changed, so it will be off by
+        // one in the goto line when the before/after code has different lengths. So, we delay
+        // positioning until after the editor has processed the replace.
+        setTimeout(function() {
+            aceEditor.gotoLine(position.row + 1, position.column - target.length + replacement.length + 1, false)
+        });
     }
 }
 
@@ -797,7 +802,6 @@ function onNewScriptCreate() {
     }
 
     // Name is OK, create the script
-    // Tell the server
 
     // Canonicalize slashes and remove the game.json
     let gamePath = gameSource.jsonURL.replace(/\\/g, '/');
@@ -831,7 +835,7 @@ function onNewScriptCreate() {
             const url = gameSource.jsonURL.replace(/\/[^/]+\.game\.json$/, '\/') + name;
             const id = 'ScriptItem_' + url;
             onProjectSelect(document.getElementById(id), 'script', url);
-        })});
+        }, true)});
     
     hideNewScriptDialog();
 }

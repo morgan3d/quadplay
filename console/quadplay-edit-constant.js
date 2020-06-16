@@ -5,7 +5,7 @@
 // but delays writing to the game.json for a few seconds
 // in case the programmer is trying different things out or
 // dragging a slider.
-const CONSTANT_EDITOR_SAVE_DELAY = 1.2; // seconds
+const CONSTANT_EDITOR_SAVE_DELAY = 1.0; // seconds
 
 /* Called from onProjectSelect() */
 function showConstantEditor(index) {
@@ -23,8 +23,8 @@ function showConstantEditor(index) {
         html += index + ' = <code>∅</code>';
     } else if (type === 'number') {
         const value = (typeof json === 'number') ? c : json.value;
-        html += `${index} = <input style="width:100px; text-align: right" type="text" onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.value, QRuntime.parse(this.value))" autocomplete="false" ${disabled} value="${value}">`;
-        html += '<br/><br/><i>All PyxlScript number formats supported. For example, <code>10, -3, 1.5, 90deg, 90°, -∞, π, ½</code></i>';
+        html += `${index} = <input style="width:100px; text-align: right" type="text" onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', _parse(this.value, 0).result, this.value)" autocomplete="false" ${disabled} value="${value}">`;
+        html += '<br/><br/><i>All PyxlScript number formats supported. For example, <code>10, -3, 1.5, 2pi, 90deg, 90°, -∞, π, ½</code></i>';
     } else if (type === 'boolean') {
         html += `<input type="checkbox" autocomplete="false" onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.checked, this.checked)" ${disabled} ${c ? 'checked' : ''}> ${index}`;
     } else if (type === 'xy' || type === 'xz' || type === 'xyz' ||
@@ -205,8 +205,10 @@ function onConstantEditorVectorValueChange(sourceObj, environment, key, fields, 
 }
 
 
+/** Value is the numeric value to assign. jsonValue is what to store in the .value
+    field of the game.json file. */
 function onConstantEditorValueChange(sourceObj, environment, key, value, jsonValue) {
-    const json  = sourceObj.json.constants;
+    const json = sourceObj.json.constants;
 
     // Update pre-evaluated objects
     sourceObj.constants[key] = value;

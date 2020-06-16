@@ -594,7 +594,7 @@ function getImageData4BitAndFlip(image, region) {
 
 /** Extracts the image data from an Image and quantizes it to RGBA4
     format, returning a Uint16Array. region is an optional crop region. */
-function getImageData4Bit(image, region) {
+function getImageData4Bit(image, region, full32bitoutput) {
     // Make a uint32 aliased version
     const dataRaw = new Uint32Array(getImageData(image).data.buffer);
     dataRaw.width = image.width;
@@ -612,6 +612,9 @@ function getImageData4Bit(image, region) {
             data.set(dataRaw.slice(srcOffset, srcOffset + data.width), y * data.width);
         }
     }
+
+    // Used by scalepix
+    if (full32bitoutput) { return data; }
     
     // Quantize (more efficient to process four bytes at once!)
     // Converts R8G8B8A8 to R4G4B4A4-equivalent by copying high bits to low bits.
@@ -1289,7 +1292,7 @@ function regexIndexOf(text, re, i) {
 }
 
 
-/** Also used by the runtime */
+/** Parse the JSON value starting at character i. Also used by the runtime as QRuntime.parse(str) */
 function _parse(source, i) {
     i = i || 0;
     if (typeof source !== 'string') {
@@ -1385,14 +1388,14 @@ function _parse(source, i) {
             case 'infinity': case '∞': case '+infinity': case '+∞': return {result: Infinity, next: end};
             case '-infinity': case '-∞': return {result: -Infinity, next: end};
             case 'nan': return {result: NaN, next: end};
-            case 'π': return {result: Math.pi, next: end};
-            case '-π': return {result: -Math.pi, next: end};
-            case '¼π': return {result: Math.pi/4, next: end};
-            case '-¼π': return {result: -Math.pi/4, next: end};
-            case '½π': return {result: Math.pi/4, next: end};
-            case '-½π': return {result: -Math.pi/4, next: end};
-            case '¾π': return {result: Math.pi*3/4, next: end};
-            case '-¾π': return {result: -Math.pi*3/4, next: end};
+            case 'pi': case 'π': case '+pi': case '+π': return {result: Math.PI, next: end};
+            case '-pi': case '-π': return {result: -Math.PI, next: end};
+            case '¼pi': case '¼π': case '+¼pi': case '+¼π': return {result: Math.PI/4, next: end};
+            case '-¼pi': case '-¼π': return {result: -Math.PI/4, next: end};
+            case '½pi': case '½π': case '+½pi': case '+½π': return {result: Math.PI/4, next: end};
+            case '-½pi': case '-½π': return {result: -Math.PI/4, next: end};
+            case '¾pi': case '¾π': case '+¾pi': case '+¾π': return {result: Math.PI*3/4, next: end};
+            case '-¾pi': case '-¾π': return {result: -Math.PI*3/4, next: end};
             case '¼': return {result: 1/4, next: end};
             case '½': return {result: 1/2, next: end};
             case '¾': return {result: 3/4, next: end};

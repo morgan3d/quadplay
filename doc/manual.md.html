@@ -4134,7 +4134,8 @@ debug_graphics and debug_print("Running iteration" + i)
 
 `todo(message default "")`
 : If todo errors are enabled in the IDE, reports the error `"Unimplemented: " + message`,
-  otherwise does nothing.
+  otherwise does nothing. The `message` must be a compile-time constant
+  string, similar to `because`.
 
 
 Persistence
@@ -5388,8 +5389,8 @@ It is an error to assign to a variable before it is declared.
 
 
 These are reserved tokens that cannot be used as variable names. Some
-of them are keywords, and some of them do nothing now but are reserved
-for future use.
+of them are keywords or built-in syntax, and some of them do nothing
+now but are reserved for future use.
 
 `ADD`, `and`, `arguments`, `args`, `as`, `async`, `at`, `auto`, `await`,
 `because`, `begin`, `bitand`, `bitnot`, `bitor`, `bitashl`, `bitshl`, `bitshr`, `break`,
@@ -5408,7 +5409,7 @@ for future use.
 `quit_game`,
 `ret`, `return`, `reset_game`, `require`, `requires`,
 `seal`, `set`, `show`, `static`, `strict`, `SUB`, `swap`,
-`to`, `toString`, `then`, `try`, `throw`, `template`, `touch`,
+`to`, `todo`, `to_string`, `then`, `try`, `throw`, `template`, `touch`,
 `until`, `use`, `using`, `unless`,
 `var`,
 `while`, `with`, `when`,
@@ -7104,6 +7105,19 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 June TBD: Beta update 44
+
+- Changed document editor layout to show 50% preview and 50% source editor
+- Load a new script faster after creation
+- Fixed emulator alignment on Safari
+- Fixed constant parsing for `pi` in game.json files
+- Fixed map preview rendering (was broken by the previous update)
+- Fixed scalepix tool (was broken by the previous update)
+- Fixed new game-level constants reverting to zero on Chrome
+- Fixed project asset/constant scrolling to allow full variable
+  names to be seen
+- Fixed automath sometimes leaving the cursor off by one character
 
 2020 June 14: Beta update 43
 

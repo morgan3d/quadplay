@@ -89,7 +89,7 @@
       <br/><label><input id="showEntityBoundsEnabled" type="checkbox" onclick="debugOptionClick(event)" title="Visualize debugging bounds on draw_entity() calls" autocomplete="off">Show entity bounds</label>
       <br/><label><input id="showPhysicsEnabled" type="checkbox" onclick="debugOptionClick(event)" title="Visualize debugging data from the physics system" autocomplete="off">Show physics</label>
       <br/><label><input id="automathEnabled" type="checkbox" onclick="debugOptionClick(event)" title="Automatically convert text to math symbols in the code editor" autocomplete="off">Automath in editor</label>
-      <br/><label><input id="restartOnFocusEnabled" type="checkbox"  onclick="debugOptionClick(event)" title="Restart the game when the browser gains focus if paused (games always reload on focus, if stopped)" autocomplete="off">Restart on focus if paused</label>
+      <br/><label><input id="restartOnFocusEnabled" type="checkbox"  onclick="debugOptionClick(event)" title="When using an external editor, restart the game when the browser gains focus (games always *reload* on focus, if stopped)" autocomplete="off">Restart on focus</label>
       <hr>
       <div><a href="../tools/quantize.html" target="_blank">quantize✜</a></div>
       <div><a href="../tools/fontgen.html" target="_blank">fontgen✜</a></div>
@@ -218,17 +218,27 @@
       <input id="performanceTab" type="radio" name="tabs" checked>
       <label for="performanceTab" class="ide unselectable" style="margin-left: 5px">Stats</label>
     
-      <input id="controlTab" type="radio" name="tabs">
-      <label for="controlTab" class="ide unselectable">Controls</label>
-      
       <input id="outputTab" type="radio" name="tabs">
       <label for="outputTab" class="ide unselectable">Output</label>
 
       <input id="watchTab" type="radio" name="tabs">
       <label for="watchTab" class="ide unselectable">Watch</label>
 
+      <input id="todoTab" type="radio" name="tabs">
+      <label for="todoTab" class="ide unselectable">To Do</label>
+
+      <input id="controlTab" type="radio" name="tabs">
+      <label for="controlTab" class="ide unselectable">Controls</label>
+      
       <input id="hostTab" type="radio" name="tabs">
       <label for="hostTab" class="ide unselectable">Host</label>
+
+      <pane id="todoPane" class="ide" style="overflow:hidden; width:100%">
+        <div class="hideScrollBars" style="width: 97%">
+          The <code>todo</code> statements will appear here in an upcoming
+          version of quadplay.
+        </div>
+      </pane>
 
       <pane id="performancePane" class="ide" style="overflow:hidden; width:100%">
         <div class="hideScrollBars" style="width: 97%">
@@ -284,7 +294,7 @@
         <div class="hideScrollBars">
             <div style="position: absolute; top:1px; left:0; right:0; padding-left:5px; border-bottom: solid 1px #888; height:20px">
               Enable: &nbsp; &nbsp; 
-              <input type="checkbox" id="debugPrintEnabled" onclick="debugOptionClick(event)" checked/><label for="debugPrintEnabled"><code>debug_print</code></label>
+              <input type="checkbox" id="debugPrintEnabled" onclick="debugOptionClick(event)" checked/><label for="debugPrintEnabled"><code>debug_print()</code></label>
               &nbsp; &nbsp;
               <input type="checkbox" id="wordWrapEnabled" onclick="debugOptionClick(event)" checked/><label for="debugPrintEnabled">Wrapping</label>
             </div>
@@ -297,7 +307,7 @@
       <pane id="watchPane" class="ide" style="overflow:hidden; width:100%">
         <div class="hideScrollBars">
         <div style="position: absolute; top:1px; left:0; right:0; padding-left:5px; border-bottom: solid 1px #888; height:20px">
-          <input type="checkbox" id="debugWatchEnabled" onclick="debugOptionClick(event)" checked/><label for="debugWatchEnabled">Enable <code>debug_watch</code></label>
+          <input type="checkbox" id="debugWatchEnabled" onclick="debugOptionClick(event)" checked/><label for="debugWatchEnabled">Enable <code>debug_watch()</code></label>
         </div>
         <div id="debugWatchDisplayPane" style="position: absolute; top: 21px; bottom:0; left:-1px; right:-1px; font-family: monospace; white-space: pre-wrap; overflow:scroll; overflow-wrap:break-word; background: #222">
         </div>
