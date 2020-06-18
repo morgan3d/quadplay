@@ -178,6 +178,7 @@
             makeButton('<img src="ui-smallfont.png" width=32 style="position:relative; top:-2px;">', `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton');
             makeButton('<img src="ui-bigfont.png" width=32 style="position:relative; top:-2px;">', `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton');
             makeButton('<img src="ui-find.png" width=32 style="position:relative; top:-2px;">', `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton');
+            makeButton('<img src="ui-goto.png" width=32 style="position:relative; top:-2px;">', `Go to line (${cmd}G)`, 'onCodeEditorGoToLineButton');
           </script>
           <div style="position: absolute; right:5px; top:4px; color:#888" id="codeEditorSessionModeDisplay">All changes saved.</div>
         </div>
@@ -233,12 +234,7 @@
       <input id="hostTab" type="radio" name="tabs">
       <label for="hostTab" class="ide unselectable">Host</label>
 
-      <pane id="todoPane" class="ide" style="overflow:hidden; width:100%">
-        <div class="hideScrollBars" style="width: 97%">
-          The <code>todo</code> statements will appear here in an upcoming
-          version of quadplay.
-        </div>
-      </pane>
+      <pane id="todoPane" class="ide" style="overflow:hidden; width:100%"></pane>
 
       <pane id="performancePane" class="ide" style="overflow:hidden; width:100%">
         <div class="hideScrollBars" style="width: 97%">

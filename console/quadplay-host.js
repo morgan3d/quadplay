@@ -242,6 +242,7 @@ function onEmulatorKeyDown(event) {
     onDocumentKeyDown(event);
 }
 
+
 function makeDateFilename() {
     const now = new Date();
     const dateString = now.getFullYear() + '-' + twoDigit(now.getMonth() + 1) + '-' + twoDigit(now.getDate()) + '_' + twoDigit(now.getHours()) + 'h' + twoDigit(now.getMinutes());
@@ -513,8 +514,8 @@ let emulatorButtonState = {};
 // Sounds
 
 /** All sound sources that are playing */
-let activeSoundHandleMap = new Map();
-let pausedSoundHandleArray = null;
+const activeSoundHandleMap = new Map();
+const pausedSoundHandleArray = [];
 
 function soundSourceOnEnded() {
     this.state = 'ENDED';
@@ -708,8 +709,8 @@ function stop_audio(handle) {
 function pauseAllSounds() {
     // We can't save the iterator itself because that doesn't keep the
     // sounds alive, so we store a duplicate array.
-    pausedSoundHandleArray = [];
-    for (let handle of activeSoundHandleMap.keys()) {
+    pausedSoundHandleArray.length = 0;
+    for (const handle of activeSoundHandleMap.keys()) {
         pausedSoundHandleArray.push(handle);
         try { handle._.stop(); } catch (e) {}
     }
@@ -717,19 +718,20 @@ function pauseAllSounds() {
 
 
 function stopAllSounds() {
-    pausedSoundHandleArray = null;
-    for (let handle of activeSoundHandleMap.keys()) {
+    pausedSoundHandleArray.length = 0;
+    for (const handle of activeSoundHandleMap.keys()) {
         try { handle._.stop(); } catch (e) {}
     }
+    activeSoundHandleMap.clear();
 }
 
 
 function resumeAllSounds() {
-    for (let handle of pausedSoundHandleArray) {
+    for (const handle of pausedSoundHandleArray) {
         // Have to recreate, since no way to restart 
         internalSoundSourcePlay(handle, handle._.audioClip, handle._.resumePositionMs, handle._.loop, handle._.volume, handle._.pitch, handle._.pan);
     }
-    pausedSoundHandleArray = null;
+    pausedSoundHandleArray.length = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -801,12 +803,13 @@ function submitFrame() {
             // Read two 16-bit pixels at once
             let src = src32[s];
             
-            // Turn into two 32-bit pixels
-            let A = ((src & 0xf000) << 16) | ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
-            dst32[d] = A | (A << 4); ++d; src = src >> 16;
+            // Turn into two 32-bit pixels. Only process RGB, as the alpha channel is
+            // overwritten
+            let A = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
+            dst32[d] = 0xff000000 | A | (A << 4); ++d; src = src >> 16;
             
-            A = ((src & 0xf000) << 16) | ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
-            dst32[d] = A | (A << 4); ++d;
+            A = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
+            dst32[d] = 0xff000000 | A | (A << 4); ++d;
         }
     }
     

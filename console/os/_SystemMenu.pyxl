@@ -56,6 +56,7 @@ def game_credits():
       
 enter
 ────────────────────────────────────────────────────────────────────────
+_pauseAllSounds()
 choice_index = 0
 
 old_transform = get_transform()
@@ -97,6 +98,7 @@ set_transform(old_transform)
 set_clip(old_clip)
 set_post_effects(old_post_effects)
 set_background(old_background)
+_resumeAllSounds()
 
 
 pop_mode(callback) from _ConfirmDialog

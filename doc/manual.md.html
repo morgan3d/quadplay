@@ -811,13 +811,13 @@ The PyxlScript language feels a lot like Python, with these changes:
 - No comparison operator chaining
 - Use `keys(obj)` and `values(obj)` instead of `obj.keys()` and `obj.values()` (although you almost never need either due to the `for` loop syntax)
 - Use `iterate()` instead of `map()`, `filter()`, or list comprehensions
-- Use `extend(a, b)` for Python `objA.update(objB)` and `listA.extend(listB)`
-- Use `concatenate(a, b)` for Python `listA + listB` and `{**objA, **objB}`
 - Use `x = if t then a else b` for Python `x = a if t else b`
 - Use `true`, `false`, `nil` instead of `True`, `False`, `None`
 - Use `def foo(a, b, ...rest)` instead of `def foo(a, b, *rest)`
 - Use `foo(a, b, ...rest)` instead of `foo(a, b, *rest)`
-- Use `[...array1, ...array2]` or `concatenate(array1, array2)` instead of `array1 + array2`
+- Use `[...array1, ...array2]` or `extended(array1, array2)` instead of `array1 + array2`
+- Use `extend(a, b)` for Python `objA.update(objB)` and `listA.extend(listB)`
+- Use `extended(a, b)` for Python `listA + listB` or `{**objA, **objB}`
 - Use `extend(array1, array2)` instead of `array1 += array2`
 - Use `def foo(x default y)` instead of `def foo(x = y)`
 - Default function parameters are evaluated once per call instead of once per program,
@@ -1450,7 +1450,7 @@ Array
 : Return a deep clone of `array`. Pointer structures are preserved and loops
   are OK. Built-in objects such as spritesheets and functions are not cloned.
 
-`concatenate(array1, array2)`
+`extended(array1, array2)`
 : Create a new array that contains all elements of `array1` followed by all elements of `array2`.
   Identical to `[...array1, ...array2]`. See also `extend()`.
 
@@ -1460,7 +1460,7 @@ Array
 
 `extend(array1, array2)`
 : Mutate `array1` by pushing all elements of `array2` onto it. Identical to `push(array1, ...array2)`.
-  See also `concatenate()`.
+  See also `extended()`.
 
 `fast_remove_key(array, i)`
 : Delete element `i` from the array, swapping it with the last element. O(1) expected amortized time.
@@ -1594,7 +1594,7 @@ String
   - `"clamp"` (default, other unsupported values are silentely treated as clamp instead of failing)
 
 
-`concatenate(a, b)`
+`extended(a, b)`
 : Returns a new string that is `a + b`.
 
 `find(string, x, i default 0)`
@@ -1679,7 +1679,7 @@ Object
 : Return a deep clone of `object`. Pointer structures are preserved and loops
   are OK. Built-in objects such as spritesheets and functions are not cloned.
 
-`concatenate(object1, object2)`
+`extended(object1, object2)`
 : Create a new object that is the union of `object1` and `object2`,
   where `object2` keys override in the case of collisions.
   See also `extend()`.
@@ -1687,7 +1687,7 @@ Object
 `extend(object1, object2)`
 : Mutate `object1` by assigning all elements of `object2` into it,
   overriding any existing keys in the case of collisions.
-  See also `concatenate()`.
+  See also `extended()`.
 
 `fast_remove_key(object, k)`
 : Same as `remove_key` for a object.
@@ -3913,9 +3913,13 @@ in the desired order regardless of the order in which drawing executes.
   Each argument may be either a function, `nil`, or `{callback: function, frames: number}`.
   The callbacks run for the specified number of `frames`. If not `nil`, the callback
   signature is `def callback(framesleft, total_frames)`.
+  
   Example: `sequence(drawExplosion, {callback: drawFire, frames: 20}, {callback: drawSmoke, frames: 4}, cleanup)`.
-  Note that for convenience, `sequence(...array)` will take the arguments from an array instead of as separate
-  parameters.
+  Runs `drawExplosion` after the first frame, `drawFire` after each of the next 20 frames after that, 
+  `drawSmoke` for the next 4 frames after _that_, and then `cleanup` for one frame.
+  
+  Note that `sequence(...array)` allows passing an array of the individual
+  callbacks instead of as separate parameters.
 
 
 
@@ -4240,6 +4244,9 @@ and other operations that naturally compile with maximum efficiency.
 
 `MIN(s1, s2)`
 : Returns the smaller scalar.
+
+`LERP(s1, s2, s3)`
+: Returns `lerp(s1, s2, s3)`.
 
 `SIGN(s1)`
 : Returns +1, -1, or 0 as the sign of the scalar.
@@ -7108,8 +7115,16 @@ Changes for both the specification and implementation in each release.
 
 2020 June TBD: Beta update 44
 
+- Auto-generated TODO lists in the IDE from `todo()` statements in code
+- Errors will now open the appropriate file and line in the IDE
 - Changed document editor layout to show 50% preview and 50% source editor
 - Load a new script faster after creation
+- Active debugger tab persists over reloading
+- System pause menu now pauses game sound effects
+- Added `LERP()` intrinsic
+- Added "go to line" command (Ctrl-G/⌘-G) for the IDE
+- Fixed asset json editor changes being overwritten by caches
+- Fixed alpha channel of screenshots
 - Fixed emulator alignment on Safari
 - Fixed constant parsing for `pi` in game.json files
 - Fixed map preview rendering (was broken by the previous update)

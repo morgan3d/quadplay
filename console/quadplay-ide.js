@@ -1,13 +1,17 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
 "use strict";
 
-// Show the compiler output if false
+// Set to false when working on quadplay itself
 const deployed = true;
+const version  = '2020.06.18.06'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
-const ALLOW_EDITING_EXAMPLES = false;
+const ALLOW_EDITING_EXAMPLES = ! deployed;
 
-const version  = '2020.06.16.11'
+// Set to true to automatically reload on switching
+// to the browser when the game is stopped.
+const AUTO_RELOAD_ON_FOCUS = deployed;
+
 const launcherURL = 'quad://console/launcher';
 
 // Token that must be passed to the server to make POST calls
@@ -49,7 +53,6 @@ if (! profiler.debuggingProfiler) {  document.getElementById('debugIntervalTimeR
 
 // 'WideIDE', 'IDE', 'Test', 'Emulator', 'Editor', 'Maximal', 'Ghost'. See also setUIMode().
 let uiMode = 'IDE';
-
 const BOOT_ANIMATION = Object.freeze({
     NONE:      0,
     SHORT:    32,
@@ -629,13 +632,14 @@ function onPlayButton(slow, isLaunchGame, args) {
                 }
                 
                 setErrorStatus(shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message);
+                editorGotoFileLine(e.url, e.lineNumber);
                 if (isSafari) {
                     console.log('_currentLineNumber = ' + QRuntime._currentLineNumber);
                 }
             }
             
             if (compiledProgram) {
-                if (! deployed && useIDE) { console.log(compiledProgram); }
+                // if (! deployed && useIDE) { console.log(compiledProgram); }
                 
                 // Ready to execute. Reload the runtime and compile and launch
                 // this code within it.
@@ -1083,12 +1087,25 @@ function restartProgram(numBootAnimationFrames) {
             emulatorKeyboardInput.focus();
         } catch (e) {
             // "Link"-time or run-time on a script error
-            onStopButton();
-            e = jsToPSError(e);
-            setErrorStatus(shortURL(e.url) + ' line ' + clamp(1, e.lineNumber, programNumLines) + ': ' + e.message);
+            onError(e);
             return;
         }
     });
+}
+
+function onError(jsError) {
+    // Runtime error
+    onStopButton();
+    if (useIDE && (uiMode === 'Emulator' || uiMode === 'Maximal')) {
+        // Go to a mode where the error will be visible.
+        setUIMode('IDE');
+    }
+    
+    e = jsToPSError(e);
+    
+    // Try to compute a short URL
+    setErrorStatus(shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message);
+    editorGotoFileLine(e.url, e.lineNumber);
 }
 
 
@@ -1167,18 +1184,22 @@ function onDocumentKeyDown(event) {
         event.preventDefault();
         return;
     }
-    
+
     switch (event.which || event.keyCode) {
     case 187: // ^= ("^+") = zoom in
         if (! (event.ctrlKey || event.metaKey)) { break; }
-        event.preventDefault();
-        onIncreaseFontSizeButton();
+        if (useIDE) {
+            event.preventDefault();
+            onIncreaseFontSizeButton();
+        }
         break;
         
     case 189: // ^- = zoom out
         if (! (event.ctrlKey || event.metaKey)) { break; }
-        event.preventDefault();
-        onDecreaseFontSizeButton();
+        if (useIDE) {
+            event.preventDefault();
+            onDecreaseFontSizeButton();
+        }
         break;
         
     case 121: // F10 = single step
@@ -1236,14 +1257,21 @@ function onDocumentKeyDown(event) {
     case 221: // ]
     case 72: // H
         if (useIDE && (event.ctrlKey || event.metaKey)) {
-            // Browser navigation keys...disable!
+            // Browser navigation keys...disable when in the IDE!
             event.preventDefault();
             event.stopPropagation();
         }
         break;
         
+    case 71: // Ctrl+G = go to line
+        if (useIDE && (event.ctrlKey || event.metaKey)) {
+            event.preventDefault();
+            event.stopPropagation();
+            onCodeEditorGoToLineButton();
+        }
+        break;
         
-    case 80: // P = pause
+    case 80: // Ctrl+P = pause
         if (! event.ctrlKey && ! event.metaKey) { 
             return;
         }
@@ -1283,7 +1311,11 @@ if (useIDE) {
     aceEditor.on('blur', runPendingSaveCallbacksImmediately);
 }
 
+
 function saveIDEState() {
+    // Never save in kiosk mode
+    if (getQueryString('kiosk') === '1') { return; }
+    
     const options = {
         'uiMode': uiMode,
         'backgroundPauseEnabled': backgroundPauseEnabled,
@@ -1298,6 +1330,17 @@ function saveIDEState() {
         'restartOnFocusEnabled': document.getElementById('restartOnFocusEnabled').checked,
         'codeEditorFontSize': codeEditorFontSize
     };
+
+    // Find the selected debugger tab
+    {
+        const array = document.getElementById('debugger').children;
+        for (let i = 0; i < array.length; ++i) {
+            if (array[i].tagName === 'INPUT' && array[i].checked) {
+                options.activeDebuggerTab = array[i].id;
+                break;
+            }
+        }
+    }
 
     for (let name in options) {
         localStorage.setItem(name, options[name]);
@@ -2199,7 +2242,7 @@ function createProjectWindow(gameSource) {
         // Hide system modes
         if (/^.*\/_|^_/.test(mode.name)) { continue; }
         const badge = isBuiltIn(mode.url) ? 'builtin' : (isRemote(mode.url) ? 'remote' : '');
-        s += `<li class="clickable ${badge}" onclick="onProjectSelect(event.target, 'mode', gameSource.modes[${i}])" title="${mode.url}" id="ModeItem_${mode.name}"><code>${mode.name}</code></li>\n`;
+        s += `<li class="clickable ${badge}" onclick="onProjectSelect(event.target, 'mode', gameSource.modes[${i}])" title="${mode.url}" id="ModeItem_${mode.name.replace('*', '')}"><code>${mode.name}</code></li>\n`;
     }
     if (editableProject) {
         s += '<li class="clickable new" onclick="showNewModeDialog()"><i>New mode…</i></li>';
@@ -2784,11 +2827,7 @@ function mainLoopStep() {
             });
         } else {
             // Runtime error
-            onStopButton();
-            e = jsToPSError(e);
-
-            // Try to compute a short URL
-            setErrorStatus(shortURL(e.url) + ' line ' + clamp(1, e.lineNumber, programNumLines) + ': ' + e.message);
+            onError(e);
         }
     }
 
@@ -2927,6 +2966,8 @@ function reloadRuntime(oncomplete) {
         QRuntime._spritesheetArray = spritesheetArray;
         QRuntime._fontArray     = fontArray;
         QRuntime.makeEuroSmoothValue = makeEuroSmoothValue;
+        QRuntime._pauseAllSounds = pauseAllSounds;
+        QRuntime._resumeAllSounds = resumeAllSounds;
 
         // Accessors for touch and gamepads
         const padXGetter = {
@@ -3402,13 +3443,16 @@ function loadGameIntoIDE(url, callback, loadFast) {
             }
         }
 
+        const startTime = performance.now();
         onLoadFileStart(url);
 
         afterLoadGame(url, function () {
             onLoadFileComplete(url);
             hideBootScreen();
+            updateTodoList();
             document.title = gameSource.extendedJSON.title;
-            console.log('Loading complete.');
+            console.log(`Loading complete (${Math.round(performance.now() - startTime)} ms)`);
+
             setFramebufferSize(gameSource.extendedJSON.screen_size.x, gameSource.extendedJSON.screen_size.y);
             createProjectWindow(gameSource);
             const resourcePane = document.getElementById('resourcePane');
@@ -3419,10 +3463,10 @@ function loadGameIntoIDE(url, callback, loadFast) {
 <table style="margin-left: -2px; width: 100%">
 <tr><td width=180>Sprite Pixels</td><td class="right">${Math.round(resourceStats.spritePixels / 1000)}k</td><td>/</td><td class="right" width=40>5505k</td><td class="right" width=45>(${Math.round(resourceStats.spritePixels*100/5505024)}%)</td></tr>
 <tr><td>Spritesheets</td><td class="right">${resourceStats.spritesheets}</td><td>/</td><td class="right">128</td><td class="right">(${Math.round(resourceStats.spritesheets*100/128)}%)</td></tr>
-<tr><td>Max Spritesheet Width</td><td class="right">${resourceStats.maxSpritesheetWidth}</td><td>/</td><td class="right">1024</td><td class="right">(${Math.round(resourceStats.maxSpritesheetWidth*100/1024)}%)</td></tr>
-<tr><td>Max Spritesheet Height</td><td class="right">${resourceStats.maxSpritesheetHeight}</td><td>/</td><td class="right">1024</td><td class="right">(${Math.round(resourceStats.maxSpritesheetHeight*100/1024)}%)</td></tr>
+<tr><td>Spritesheet Width</td><td class="right">${resourceStats.maxSpritesheetWidth}</td><td>/</td><td class="right">1024</td><td class="right">(${Math.round(resourceStats.maxSpritesheetWidth*100/1024)}%)</td></tr>
+<tr><td>Spritesheet Height</td><td class="right">${resourceStats.maxSpritesheetHeight}</td><td>/</td><td class="right">1024</td><td class="right">(${Math.round(resourceStats.maxSpritesheetHeight*100/1024)}%)</td></tr>
 <tr><td>Source Statements</td><td class="right">${resourceStats.sourceStatements}</td><td>/</td><td class="right">8192</td><td class="right">(${Math.round(resourceStats.sourceStatements*100/8192)}%)</td></tr>
-<tr><td>Audio Clips</td><td class="right">${resourceStats.sounds}</td><td>/</td><td class="right">128</td><td class="right">(${Math.round(resourceStats.sounds*100/128)}%)</td></tr>
+<tr><td>Sounds</td><td class="right">${resourceStats.sounds}</td><td>/</td><td class="right">128</td><td class="right">(${Math.round(resourceStats.sounds*100/128)}%)</td></tr>
 </table>`;
             document.getElementById('restartButtonContainer').enabled =
                 document.getElementById('slowButton').enabled =
@@ -3474,6 +3518,16 @@ window.addEventListener("gamepaddisconnected", function(e) {
 });
 
 window.addEventListener('resize', onResize, false);
+
+// Ace's default "go to line" dialog is confusing, so
+// we replace it with our friendlier one.
+aceEditor.commands.addCommand({
+    name: "go to line",
+    bindKey: {win: "Ctrl-G", linux: "Ctrl-G", mac: "Command-G"},
+    exec: function(editor) {
+        onCodeEditorGoToLineButton();
+    }
+});
 document.addEventListener('keydown', onDocumentKeyDown);
 document.addEventListener('keyup', onDocumentKeyUp);
 
@@ -3509,6 +3563,10 @@ window.addEventListener('blur', function () {
 }, false);
 
 window.addEventListener('focus', function() {
+    // Quadplay development; avoid autoreloading because
+    // it makes debugging the compiler and IDE difficult
+    if (! AUTO_RELOAD_ON_FOCUS) { return; }
+    
     if (editableProject && useIDE && isQuadserver) {
         if (document.getElementById('restartOnFocusEnabled').checked) {
             onRestartButton();
@@ -3559,8 +3617,10 @@ if (! localStorage.getItem('debugWatchEnabled')) {
     localStorage.setItem('debugWatchEnabled', 'true')
 }
 
+document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanceTab').checked = true;
+
 {
-    const optionNames = ['showPhysicsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'todoEnabled', 'automathEnabled', 'debugPrintEnabled', 'debugWatchEnabled'];
+    const optionNames = ['showPhysicsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'todoEnabled', 'automathEnabled', 'debugPrintEnabled', 'debugWatchEnabled', 'restartOnFocusEnabled'];
     for (let i = 0; i < optionNames.length; ++i) {
         const name = optionNames[i];
         const value = JSON.parse(localStorage.getItem(name) || 'false');

@@ -3,7 +3,7 @@
 
 // How long to wait for new input before saving, to avoid
 // constant disk churn
-const CODE_EDITOR_SAVE_DELAY = 5; // seconds
+const CODE_EDITOR_SAVE_DELAY_SECONDS = 5;
 
 // Maps filenames to editor sessions. Cleared when a project is loaded
 const codeEditorSessionMap = new Map();
@@ -142,9 +142,12 @@ function updateCodeEditorSession(url, bodyText) {
         // Update the value only when it has changed, to avoid
         // disturbing the active line. Calling setValue()
         // resets the undo history, which is what we want when
-        // the disk version has changed.
+        // the disk version has changed. Tell the onChange
+        // handler that it can ignore the change because it is
+        // programmatic and does not require saving or autocorrect.
         session.aux.ignoreChange = true;
         session.setValue(bodyText);
+        session.aux.ignoreChange = false;
     }
 }
 
@@ -168,7 +171,8 @@ function setCodeEditorSession(url) {
     aceEditor.setReadOnly(session.aux.readOnly || ! editableProject);
 
     document.getElementById('codeEditorUndoContainer').enabled =
-        document.getElementById('codeEditorRedoContainer').enabled = aceEditor.getReadOnly();
+        document.getElementById('codeEditorRedoContainer').enabled =
+          aceEditor.getReadOnly();
     
     // Reset the mode so that it is visible
     setCodeEditorSessionMode(session, session.aux.mode);
@@ -395,10 +399,13 @@ function autocorrectSession(session) {
     
     if (replacement) {
         session.replace(new ace.Range(position.row, position.column - target.length, position.row, position.column), replacement);
-        // Advance the cursor to the end over the replacement. Ace does not appear to have
-        // processed at the editor level that the session has just changed, so it will be off by
-        // one in the goto line when the before/after code has different lengths. So, we delay
-        // positioning until after the editor has processed the replace.
+        
+        // Advance the cursor to the end over the replacement. Ace
+        // does not appear to have processed at the editor level that
+        // the session has just changed, so it will be off by one in
+        // the goto line when the before/after code has different
+        // lengths. So, we delay positioning until after the editor
+        // has processed the replace.
         setTimeout(function() {
             aceEditor.gotoLine(position.row + 1, position.column - target.length + replacement.length + 1, false)
         });
@@ -462,7 +469,6 @@ function createCodeEditorSession(url, bodyText) {
             if (session.aux.ignoreChange) {
                 // Programmatic update using setValue, not a change
                 // due to the user. Do not try to save or autocorrect.
-                session.aux.ignoreChange = false;
                 return;
             }
 
@@ -502,11 +508,13 @@ function createCodeEditorSession(url, bodyText) {
                     // Epoch has not changed since timeout was created, so begin the POST
                     setCodeEditorSessionMode(session, 'Saving<span class="blink">...</span>');
 
-                    // Update the file contents immediately
+                    // Update the file contents and cache immediately
                     let contents = session.getValue();
-
                     const value = url.endsWith('.json') ? WorkJSON.parse(contents) : contents;
                     fileContents[url] = value;
+
+                    // If this is present in a cache, delete it
+                    delete assetCache[url];
                     
                     const filename = urlToFilename(url);
                     serverWriteFile(filename, 'utf8', contents, function () {
@@ -535,7 +543,7 @@ function createCodeEditorSession(url, bodyText) {
             };
 
             pendingSaveCallbacks.push(session.aux.saveCallback);
-            session.aux.saveTimeoutID = setTimeout(session.aux.saveCallback, CODE_EDITOR_SAVE_DELAY * 1000);
+            session.aux.saveTimeoutID = setTimeout(session.aux.saveCallback, CODE_EDITOR_SAVE_DELAY_SECONDS * 1000);
         });
     }
     
@@ -620,8 +628,7 @@ function urlToFilename(url) {
    the callback when the server is done. If the filename is a url,
    computes the appropriate local file. 
 
-   The contents may be a string or arraybuffer
-*/
+   The contents may be a string or arraybuffer */
 function serverWriteFile(filename, encoding, contents, callback, errorCallback) {
     console.assert(encoding === 'utf8' || encoding === 'binary');
     
@@ -646,6 +653,10 @@ function serverWriteFile(filename, encoding, contents, callback, errorCallback) 
         encoding: encoding,
         contents: contents
     }, callback, errorCallback);
+
+    if (filename.endsWith('.pyxl')) {
+        updateTodoList();
+    }
 }
 
 
@@ -969,5 +980,141 @@ function onCodeEditorDividerDrag(event) {
         if (Math.random() < 0.07) {
             aceEditor.resize();
         }
+    }
+}
+
+
+function onCodeEditorGoToLineButton() {
+    const result = parseInt(window.prompt("Go to line:", ""));
+    if (! isNaN(result)) {
+        aceEditor.gotoLine(result, 0, true);
+        aceEditor.focus();
+    }
+}
+
+/** Generates the todo() list in the debugger from gamesource */
+function updateTodoList() {
+    if (! useIDE) { return; }
+    const todoPane = document.getElementById('todoPane');
+
+    let result = '<table style="width: 100%">\n';
+    let hasAnyTodo = false;
+
+    function processFile(type, name, url) {
+        const source = fileContents[url];
+        if (source === undefined) {
+            console.log("No source code for " + url);
+            return;
+        }
+        
+        // Terminate early if there's no todo() at all
+        if (source.indexOf('todo(') === -1) { return; }
+
+        // Header
+        result += '<tr><td colspan=2 style="border-bottom: double 3px; padding-bottom: 1px">';
+        if (type === 'mode') {
+            result += `<code>${name}</code>`;
+        } else {
+            result += name;
+        }
+        result += '</td></tr>\n';
+
+        // Individual items
+        let line = 1;
+        let pos = 0;
+        while (pos < source.length) {
+            // Find the first of a "todo" or newline
+            let a = source.indexOf('todo(', pos);
+            if (a === -1) { a = Infinity; }
+            
+            let b = source.indexOf('\n', pos);
+            if (b === -1) { b = Infinity; }
+
+            if (b < a) {
+                // Newline was first
+                ++line;
+            } else if (a < b) {
+                // "todo(" was first. Find the end
+                a += "todo(".length;
+
+                // Find the start quote
+                while (a < source.length && source[a] !== '"' && source[a] !== '\n') { ++a; }
+                if (a === source.length || source[a] === '\n') {
+                    // This is an ill-formed todo() statement; stop processing
+                    // this file.
+                    console.log('Newline or end of file in todo in ' + name);
+                    break;
+                }
+                
+                // a is now the open quote position. Find the end
+                ++a;
+                b = a;
+                while (b < source.length && source[b] !== '\n' && (source[b] !== '"' || source[b - 1] === '\\')) { ++b; }
+                if (b === source.length || source[b] === '\n') {
+                    // This is an ill-formed todo() statement; stop processing
+                    // this file.
+                    console.log('Newline or end of file in todo in ' + name);
+                    break;
+                }
+
+                // b is now the close quote position
+                const message = source.substring(a, b);
+                result += `<tr valign=top style="cursor:pointer" onclick="editorGotoFileLine('${url}', ${line})">` +
+                    `<td style="text-align: right; padding-right:10px">${line}</td><td>${message}</td></tr>\n`;
+            }
+            
+            pos = b + 1;
+        }
+
+        // Separator
+        result += `<tr><td colspan=2>&nbsp;</td></tr>\n`;
+        hasAnyTodo = true;
+    }
+    
+    for (let i = 0; i < gameSource.scripts.length; ++i) {
+        const url = gameSource.scripts[i];
+        processFile('script', url.replace(/^.*\//, ''), url);
+    }
+    
+    for (let i = 0; i < gameSource.modes.length; ++i) {
+        const mode = gameSource.modes[i];
+        if (mode.name[0] !== '_') {
+            processFile('mode', mode.name.replace('*', ''), mode.url);
+        }
+    }
+
+    result += '</table>';
+    
+    // If there are no todo() statements
+    if (! hasAnyTodo) {
+        result += 'Put <code>todo()</code> statements in your code to automatically generate this list.';
+    }
+
+    todoPane.innerHTML = `<div class="hideScrollBars" style="width: 97%">${result}</div>`;
+}
+
+
+/** Lines and characters are 1-based. Silently ignored if the 
+    url does not correspond to a script or mode in the project.  */
+function editorGotoFileLine(url, line, character) {
+    if (character === undefined) { character = 1; }
+
+    for (let i = 0; i < gameSource.modes.length; ++i) {
+        const mode = gameSource.modes[i];
+        if (mode.url === url) {
+            // Found the mode
+            onProjectSelect(document.getElementById('ModeItem_' + mode.name.replace('*', '')), 'mode', mode);
+            aceEditor.focus();
+            aceEditor.gotoLine(line, character - 1, false);
+            return;
+        }
+    }
+
+    // Look in scripts
+    const i = gameSource.scripts.indexOf(url);
+    if (i !== -1) {
+        onProjectSelect(document.getElementById('ScriptItem_' + url), 'script', url);
+        aceEditor.focus();
+        aceEditor.gotoLine(line, character - 1, false);
     }
 }

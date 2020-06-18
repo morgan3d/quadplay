@@ -609,6 +609,8 @@ function concatenate(a, b) {
     }
 }
 
+var extended = concatenate;
+
 
 function fast_remove_key(t, i) {
     if (_iteratorCount.get(t)) {
@@ -6908,7 +6910,7 @@ function MUL(a, b) {
 }
 
 function SIGN(a) {
-    return Math.sign(a);
+    return _Math.sign(a);
 }
 
 function MAD(a, b, c) {
@@ -6920,7 +6922,11 @@ function DIV(a, b) {
 }
 
 function CLAMP(a, lo, hi) {
-    return Math.min(Math.max(a, lo), hi);
+    return _clamp(a, lo, hi);
+}
+
+function LERP(a, b, t) {
+    return _lerp(a, b, t);
 }
 
 function XYZ_ADD_XYZ(v1, v2, r) {

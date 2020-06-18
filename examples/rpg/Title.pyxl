@@ -3,8 +3,9 @@ Title
 
 let creditsString = ""
 for section ∈ CREDITS:
-   for line ∈ CREDITS[section]:
-      creditsString += line + "  |  "
+    if is_array(section):
+        for line ∈ section:
+            creditsString += line + "  |  "
 
 const creditsWidth = text_width(smallFont, creditsString) + SCREEN_SIZE.x
 

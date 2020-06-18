@@ -695,8 +695,8 @@ code, .code {
 
 .project li {
     /* Make selections actually span the content */
-    width:auto;
-    display:table-row;
+    min-width: 190px;
+    display: block;
 }
 
 /** Used for selecting objects */

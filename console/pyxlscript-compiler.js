@@ -1134,8 +1134,11 @@ function pyxlToJS(src, noYield, internalMode) {
 
 /** Constructs JavaScript source code for the body of a generator function 
 
-fileContents[url] maps URLs to their text source
-isOS = "this is the OS itself, do not create a pause menu"
+gameSource.modes[i].url is a list of URLs of source code.
+fileContents[url] maps URLs to their text source.
+isOS = "this is the OS itself, do not create a pause menu".
+
+This never reads from disk or the web itself.
 */
 function compile(gameSource, fileContents, isOS) {
     const separator = '\n\n////////////////////////////////////////////////////////////////////////////////////\n\n';
@@ -1173,9 +1176,9 @@ function compile(gameSource, fileContents, isOS) {
     for (let i = 0; i < gameSource.modes.length; ++i) {
 
         // Trust the mode to have the correct name in the gameSource
-        // data structure, and just extract if from the filename.
+        // data structure, but remove the "*" that marks the startup mode..
         const mode = gameSource.modes[i];
-        const modeName = mode.name.replace('*', '').replace(/^.*\//, '');
+        const modeName = mode.name.replace('*', '');
         
         // If true, this is an internal mode that is allowed to access
         // "_" private variables.

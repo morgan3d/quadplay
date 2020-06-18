@@ -224,8 +224,9 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 if (gameJSON.modes[i].indexOf('*') !== -1) {
                     ++numStartModes;
                 }
-                
-                gameSource.modes.push({name: gameJSON.modes[i], url:modeURL});                
+
+                // Remove the quad://... from internal modes
+                gameSource.modes.push({name: gameJSON.modes[i].replace(/^.*\//, ''), url:modeURL});                
             }
 
             if (numStartModes === 0) {
@@ -543,9 +544,12 @@ function loadFont(name, json, jsonURL) {
     };
 
     fontArray.push(font);
-
     const forceReload = computeForceReloadFlag(font._url);
 
+    // No need to avoid the processing of the font once it is loaded
+    // into memory, because that is fast. So, fonts don't appear in the
+    // asset cache.
+    
     onLoadFileStart(font._url);
     loadManager.fetch(font._url, 'image', getBinaryImageData, function (srcMask, image, url) {
         onLoadFileComplete(font._url);
@@ -633,24 +637,19 @@ function getImageData4Bit(image, region, full32bitoutput) {
     return result;
 }
 
+// Maps *.json urls to the live quadplay asset to reduce loading times
+// for sounds and spritesheets.
+const assetCache = {};
 
-const spritesheetCache = {};
-
-function loadSpritesheet(name, json, jsonURL, callback, noForce) {
-    let forceReload = undefined;
-
+function loadSpritesheet(name, json, jsonURL, callback) {
     let spritesheet;
 
     const pngURL = makeURLAbsolute(jsonURL, json.url);
 
-    if (noForce) {
-        forceReload = false;
-    } else {
-        forceReload = computeForceReloadFlag(pngURL);
-    }
+    const forceReload = computeForceReloadFlag(pngURL);
 
     if (forceReload === false) {
-        spritesheet = spritesheetCache[jsonURL];
+        spritesheet = assetCache[jsonURL];
         if (spritesheet) {
             // Make sure the index is updated when pulling from the cache
             if (spritesheetArray.indexOf(spritesheet) === -1) {
@@ -762,11 +761,11 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
                 for (let j = 0; j < spritesheet.sprite_size.y; ++j) {
                     let index = (y * (spritesheet.sprite_size.y + spritesheet._gutter) + j) * data.width + x * (spritesheet.sprite_size.x + spritesheet._gutter);
                     for (let i = 0; i < spritesheet.sprite_size.x; ++i, ++index) {
-                        const alpha15 = data[index] >>> 12;
+                        const alpha15 = (data[index] >>> 12) & 0xf;
                         if (alpha15 < 0xf) {
                             hasAlpha = true;
 
-                            if (alpha15 !== 0) {
+                            if (alpha15 > 0) {
                                 hasFractionalAlpha = true;
                                 break outerloop;
                             }
@@ -935,7 +934,7 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
         }
 
         // Store into the cache
-        spritesheetCache[jsonURL] = spritesheet;
+        assetCache[jsonURL] = spritesheet;
         
         if (callback) { callback(spritesheet); }
     }, loadFailureCallback, loadWarningCallback, forceReload);
@@ -943,8 +942,6 @@ function loadSpritesheet(name, json, jsonURL, callback, noForce) {
     return spritesheet;
 }
     
-
-const soundCache = {};
 
 function loadSound(name, json, jsonURL) {
     if (name[0] !== '_') { ++resourceStats.sounds; }
@@ -956,7 +953,7 @@ function loadSound(name, json, jsonURL) {
     if (forceReload === false) {
         // Use the explicit cache for sounds, which are typically
         // the largest assets in a quadplay game.
-        sound = soundCache[jsonURL];
+        sound = assetCache[jsonURL];
         if (sound) {
             fileContents[mp3URL] = sound;
             onLoadFileStart(mp3URL);
@@ -1001,7 +998,7 @@ function loadSound(name, json, jsonURL) {
                     loadManager.markRequestCompleted(json.url, '', true);
                     
                     // Store into the cache
-                    soundCache[jsonURL] = sound;
+                    assetCache[jsonURL] = sound;
                 },
                 function onFailure() {
                     loadManager.markRequestCompleted(mp3URL, 'unknown error', false);
@@ -1137,10 +1134,10 @@ function loadMap(name, json, mapJSONUrl) {
                 
                 // Don't allow the array of arrays to be changed (just the individual elements)
                 Object.freeze(map.layer);
-            }, loadFailureCallback, loadWarningCallback, computeForceReloadFlag(spritesheetJson.url));
+            }, loadFailureCallback, loadWarningCallback);
         });
     },
-                      loadFailureCallback, loadWarningCallback, computeForceReloadFlag(json.sprite_url_table[key]));
+                      loadFailureCallback, loadWarningCallback);
     
     return map;
 }
