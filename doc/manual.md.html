@@ -1994,8 +1994,11 @@ Math
   If `y` is specified, the hash considers the union of the values.
 
 `lerp(a, b, t)`
-: Returns `a * (1 - t) + b * t`. See also `smoothstep()` and `smootherstep()`.
+: Returns `a + (b - a) * t`. See also `smoothstep()` and `smootherstep()`.
   See also `perceptual_lerp_color()`.
+
+`lerp(a, b, t, t_min, t_max)`
+: Returns `a + (b - a) * ((t - t_min) / (t_max - t_min))`.
 
 `lerp_angle(a, b, t)`
 : Linear interpolation between angles `a` and `b` by `t`, taking wrapping
@@ -3566,9 +3569,6 @@ endpoints and borders.
   `0` or `"center"` = center, `+1` or `"right"` = right,
   y-alignment of `-1` or `"top"` = top, `0` or `"center"` = center,
   `1` or `"baseline"` = baseline, `2` or `"bottom"` = bottom.
-  For multiline strings, alignment only applies to the first line 
-  in the current version. _This will change in a future implementation._
-  
 
   `font` must be loaded from the assets.  Color,
   shadow, and outline default to transparent. Any non-transparent
@@ -3839,8 +3839,8 @@ indices. The map's z-axis corresponds to layers.
 `set_map_sprite(map, map_coord, sprite, layer default 0)`
 : Sets the corresponding map sprite. Does nothing if `map_coord` is out of bounds.
 
-`set_map_sprite_by_ws_coord(map, draw_coord, sprite, ws_z default 0)`
-: Sets the corresponding map sprite. Does nothing if `draw_coord` is out of bounds.
+`set_map_sprite_by_ws_coord(map, ws_point, sprite, ws_z default 0)`
+: Sets the corresponding map sprite. Does nothing if `ws_point` is out of bounds.
 
 `transform_ws_to_map_space(map, ws_point)`
 : Returns the _fractional_ map coordinates of `ws_point`.  See also
@@ -3912,11 +3912,16 @@ in the desired order regardless of the order in which drawing executes.
   hook that can be used with `remove_frame_hook()` to cancel the entire sequence.
   Each argument may be either a function, `nil`, or `{callback: function, frames: number}`.
   The callbacks run for the specified number of `frames`. If not `nil`, the callback
-  signature is `def callback(framesleft, total_frames)`.
+  signature is `def callback(frames_left, total_frames)`.
   
   Example: `sequence(drawExplosion, {callback: drawFire, frames: 20}, {callback: drawSmoke, frames: 4}, cleanup)`.
   Runs `drawExplosion` after the first frame, `drawFire` after each of the next 20 frames after that, 
   `drawSmoke` for the next 4 frames after _that_, and then `cleanup` for one frame.
+  
+  If a callback returns the special value `sequence.NEXT`, then the
+  sequence advances to the next step regardless of the frame count. If
+  it returns `sequence.BREAK`, then the sequence immediately
+  terminates. All other return values are ignored.
   
   Note that `sequence(...array)` allows passing an array of the individual
   callbacks instead of as separate parameters.
@@ -4189,7 +4194,7 @@ Raw Device Access
     <tr><td> `"stop_GIF_recording"`          </td><td> End GIF recording. When the compression completes, the GIF will appear in a new tab.</td></tr>
     <tr><td> `"start_preview_recording"`     </td><td> Begin preview video recording. There is no "stop" command because this terminates automatically after a set time.</td></tr>
     <tr><td> `"take_screenshot"`             </td><td> Take a screenshot and download it to the local disk. </td></tr>
-    <tr><td> `"set_pad_type", index, "type"` </td><td> Set `gamepad_array[index].type` and the corresponding prompts. </td></tr>
+    <tr><td> `"set_pad_type", index, "type"` </td><td> Set `gamepad_array[index].type` and the corresponding prompts. There is no "get" version because you can read the property directly from the gamepad object.</td></tr>
     <tr><td> `"get_analog_axes", index`      </td><td> Return an `xy()` of the analog axis values for `gamepad_array[index]`, without D-pad snapping.
                                                        Needed for accessing Atari paddles, car pedals, steering wheels, and flight stick throttles in
                                                        a meaningful way.</td></tr>
@@ -4487,6 +4492,8 @@ Fonts
 
 ![`quad://fonts/ivanhoe-12.font.json`](../fonts/ivanhoe-12.png)
 
+![`quad://fonts/suchet-12.font.json`](../fonts/suchet-12.png)
+
 ![`quad://fonts/federation-11.font.json`](../fonts/federation-11.png)
 
 ![`quad://fonts/good-neighbors-9.font.json`](../fonts/good-neighbors-9.png)
@@ -4576,20 +4583,20 @@ Sounds
 
 ### Coin
 
-![`quad://sounds/00-Coin.sound.json`](../sounds/00-Coin.mp3) ![`quad://sounds/01-Coin.sound.json`](../sounds/01-Coin.mp3)
-![`quad://sounds/02-Coin.sound.json`](../sounds/02-Coin.mp3) ![`quad://sounds/03-Coin.sound.json`](../sounds/03-Coin.mp3)
-![`quad://sounds/04-Coin.sound.json`](../sounds/04-Coin.mp3) ![`quad://sounds/05-Coin.sound.json`](../sounds/05-Coin.mp3)
-![`quad://sounds/06-Coin.sound.json`](../sounds/06-Coin.mp3) ![`quad://sounds/07-Coin.sound.json`](../sounds/07-Coin.mp3)
-![`quad://sounds/08-Coin.sound.json`](../sounds/08-Coin.mp3) ![`quad://sounds/09-Coin.sound.json`](../sounds/09-Coin.mp3)
+![`quad://sounds/coin-00.sound.json`](../sounds/coin-00.mp3) ![`quad://sounds/coin-01.sound.json`](../sounds/coin-01.mp3)
+![`quad://sounds/coin-02.sound.json`](../sounds/coin-02.mp3) ![`quad://sounds/coin-03.sound.json`](../sounds/coin-03.mp3)
+![`quad://sounds/coin-04.sound.json`](../sounds/coin-04.mp3) ![`quad://sounds/coin-05.sound.json`](../sounds/coin-05.mp3)
+![`quad://sounds/coin-06.sound.json`](../sounds/coin-06.mp3) ![`quad://sounds/coin-07.sound.json`](../sounds/coin-07.mp3)
+![`quad://sounds/coin-08.sound.json`](../sounds/coin-08.mp3) ![`quad://sounds/coin-09.sound.json`](../sounds/coin-09.mp3)
 
 
 ### Shoot
 
-![`quad://sounds/10-Shoot.sound.json`](../sounds/10-Shoot.mp3) ![`quad://sounds/11-Shoot.sound.json`](../sounds/11-Shoot.mp3)
-![`quad://sounds/12-Shoot.sound.json`](../sounds/12-Shoot.mp3) ![`quad://sounds/13-Shoot.sound.json`](../sounds/13-Shoot.mp3)
-![`quad://sounds/14-Shoot.sound.json`](../sounds/14-Shoot.mp3) ![`quad://sounds/15-Shoot.sound.json`](../sounds/15-Shoot.mp3)
-![`quad://sounds/16-Shoot.sound.json`](../sounds/16-Shoot.mp3) ![`quad://sounds/17-Shoot.sound.json`](../sounds/17-Shoot.mp3)
-![`quad://sounds/18-Shoot.sound.json`](../sounds/18-Shoot.mp3) ![`quad://sounds/19-Shoot.sound.json`](../sounds/19-Shoot.mp3)
+![`quad://sounds/shoot-00.sound.json`](../sounds/shoot-00.mp3) ![`quad://sounds/shoot-01.sound.json`](../sounds/shoot-01.mp3)
+![`quad://sounds/shoot-02.sound.json`](../sounds/shoot-02.mp3) ![`quad://sounds/shoot-03.sound.json`](../sounds/shoot-03.mp3)
+![`quad://sounds/shoot-04.sound.json`](../sounds/shoot-04.mp3) ![`quad://sounds/shoot-05.sound.json`](../sounds/shoot-05.mp3)
+![`quad://sounds/shoot-06.sound.json`](../sounds/shoot-06.mp3) ![`quad://sounds/shoot-07.sound.json`](../sounds/shoot-07.mp3)
+![`quad://sounds/shoot-08.sound.json`](../sounds/shoot-08.mp3) ![`quad://sounds/shoot-09.sound.json`](../sounds/shoot-09.mp3)
 ![`quad://sounds/shoot-10.sound.json`](../sounds/shoot-10.mp3)
 
 ### Explode
@@ -6818,10 +6825,6 @@ for readability instead of performance. However, at some point you'll
 probably hit the performance limits and want to optimize at least some
 of the program. Here's where to focus your efforts.
 
-Chrome, Edge, and Safari give far better performance on graphics
-calls than Firefox. Just switching browsers will give you a boost if
-you're on Firefox.
-
 To avoid input lag, process game pad input _before_ rendering and
 simulation each frame. This allows the players' input to affect the
 current frame instead of being delayed one frame. Game pads (and browsers)
@@ -6830,7 +6833,6 @@ such as a jump, block, or dodge to happen up to one or two frames _after_
 the period in which it should have. For example, do not damage the player
 character until one frame after they are attacked and allow a late dodge
 or block to save them retroactively.
-
 
 In the "Performance" tab of the IDE, you can see the amount of time
 spent per frame. If time spent is less than 16 ms, then your program
@@ -6845,10 +6847,6 @@ behind them when not using perspective, so you don't have to leave out
 the hidden map tiles for performance when drawing maps. Maps with
 opaque tiles that are not rotated or scaled draw extremely fast.
 
-A sequence of `draw_point()` commands that all have the same `z` value is
-much faster than ones with mixed `z` values or broken up by other rendering
-calls.
-
 Built-in math functions are faster than math functions that you write
 to do equivalent operations because they are designed to minimize
 memory allocation internally. The intrinsics are maximum speed
@@ -6857,12 +6855,11 @@ but can make code hard to read.
 There is generally no need to cull objects that are off screen. The
 rendering code is very good at removing those for you.
 
-`draw_sprite()` is fastest for `opacity=1` sprites that are not rotated
+`draw_sprite()` and `draw_map()` are fastest for `opacity=1` sprites that are not rotated
 or scaled and do not have alpha. It can directly copy the memory in
 this case.
 
-If you have fully opaque map tiles in one layer, remove the tiles behind
-them in other layers. It can be substantially faster (but use more memory)
+It can be substantially faster (but use more memory)
 to use pre-drawn transitions between map terrain tiles instead of layering
 an alpha-masked tile on top of another one to blend them.
 
@@ -6933,10 +6930,11 @@ For 1.0:
 [x] Aseprite, Photoshop, Krita, and Tiled external editor support
 [x] 30% virtual GPU graphics speedup
 [ ] Python not required
-[ ] Shared-screen network multiplayer
+[ ] Load tables of data from CSV files
   
 Post 1.0:
 
+[ ] Shared-screen network multiplayer
 [ ] Export to:
   [ ] macOS binary
   [ ] Windows binary
@@ -6952,7 +6950,6 @@ Post 1.0:
 [ ] Watertight rasterization of triangle meshes
 [ ] Watertight rasterization of polylines
 [ ] Edit your game in the IDE and save to Google Drive
-[ ] Load tables of data from CSV files
 [ ] Binary game export for mobile
 
 
@@ -7043,12 +7040,8 @@ All built-in assets are Creative Commons licensed have complete license and copy
 Notes for Beta Testers
 =====================================================================================
 
-There is no mapping on the mobile touchscreen controls for the
-"shoulder" buttons E and F.  I'm still trying to find a workable
-solution on mobile. 
-
-Fonts beginning with letters G-W do not have all button
-prompts yet.
+IDE will receive major new features throughout and after the beta
+phase. This includes editors for sprites and maps.
 
 The API is mostly complete. I'm focusing on bug fixes and minor tweaks
 to improve convenience. Only some minor helpers, primarily for AI,
@@ -7063,26 +7056,6 @@ individual primitives.
 
 The `make_spline()` function using `"continue"` mode will change to be a
 third-order curve outside of the bounds instead of a line.
-
-IDE will receive major new features throughout and after the beta
-phase. This includes editors for sprites and maps.
-
-The Library tab of the launcher program is currently hard-coded to the
-four built-in games. During the beta period this will change to show
-any game that has been loaded by URL until the user explicitly "forgets"
-it.
-
-The Discover tab of the launcher program does not currently work.
-It will be manually populated
-later in the beta period and then during 1.0 launch. I will fill it
-with games that I see announced on the
-[Completed Games Forum](http://quadplay.freeforums.net/board/6/completed-games)
-which are hosted online (typically using GitHub Pages). Be sure to
-provide all of the metadata in your `.game.json` file and the
-`label64.png` and `preview.png` images so that your game appears
-correctly. Version numbers will be used to track updated games so that
-they automatically return to the front of the queue after being
-updated.
 
 The package manager is not implemented and may actually be removed
 instead of being implemented, depending on the needs that arise in the
@@ -7115,12 +7088,20 @@ Changes for both the specification and implementation in each release.
 
 2020 June TBD: Beta update 44
 
+- Incompatible change: `draw_text()` multiline `y_align = "center"` and 
+  `y_align = "bottom"` now adjust to the entire text block and not the first
+  line
+- Incompatible change: Renamed `##-Coin.sound.json` to `coin-##.sound.json`,
+  `##-Shoot.sound.json` to `shoot-##.sound.json`
+- New font: `suchet-12`
 - Auto-generated TODO lists in the IDE from `todo()` statements in code
 - Errors will now open the appropriate file and line in the IDE
 - Changed document editor layout to show 50% preview and 50% source editor
 - Load a new script faster after creation
 - Active debugger tab persists over reloading
 - System pause menu now pauses game sound effects
+- Added `sequence.BREAK` and `sequence.NEXT` options
+- Added five-argument version of `lerp()`
 - Added `LERP()` intrinsic
 - Added "go to line" command (Ctrl-G/⌘-G) for the IDE
 - Fixed asset json editor changes being overwritten by caches

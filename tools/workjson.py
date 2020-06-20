@@ -100,7 +100,8 @@ def dumps(obj, skipkeys=False, ensure_ascii=True, allow_nan=True,
           cls=None, indent=None, separators=None, default=None, sort_keys=False):
    
    return json.dumps(obj, skipkeys=skipkeys, allow_nan=allow_nan, ensure_ascii=ensure_ascii,
-                     separators=separators, default=default, sort_keys=sort_keys)
+                     separators=separators, default=default, sort_keys=sort_keys,
+                     cls=cls, indent=indent)
 
 
 """ s must be a string, unlike json.loads """

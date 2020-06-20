@@ -5,164 +5,164 @@ Play
 const PADDING = 25.5
 
 def hit_box(box, ball, dir):
-   if not box.breakable:
-      shakeEntity(box, 3, 2 dir)
-      // Slightly randomize to avoid getting stuck
-      ball.vel = ‖ball.vel‖ * direction(ball.vel + random_direction2D() * 0.1)
-      play_sound(unbreakableSound)
-      return
+    if not box.breakable:
+        shakeEntity(box, 3, 2 dir)
+        // Slightly randomize to avoid getting stuck
+        ball.vel = ‖ball.vel‖ * direction(ball.vel + random_direction2D() * 0.1)
+        play_sound(unbreakableSound)
+        return
 
-   shake_screen(5, 2 dir)
-   play_sound(destroyBlockSound)
-   increase_score(100)
-   entity_to_particles_hit(box, ½ (box.pos + ball.pos), ball.vel, 0.1, 0.5, 50)
-   fast_remove_value(box_array, box)
+    shake_screen(5, 2 dir)
+    play_sound(destroyBlockSound)
+    increase_score(100)
+    entity_to_particles_hit(box, ½ (box.pos + ball.pos), ball.vel, 0.1, 0.5, 50)
+    fast_remove_value(box_array, box)
   
-   // Increase the speed of this ball slightly with each hit
-   if ‖ball.vel‖ < 130% INITIAL_BALL_SPEED: ball.vel *= 108%
+    // Increase the speed of this ball slightly with each hit
+    if ‖ball.vel‖ < 130% INITIAL_BALL_SPEED: ball.vel *= 108%
 
-   // Spawn a powerup
-   if ξ < POWERUP_DROP_CHANCE:
-      play_sound(powerupSpawnSound)
-      let a = 90° random_integer(3)
-      for i < 2:
-         a += 90°
-         if size(powerup_array) < MAX_POWERUPS:
-            // The sprite is not actually used for rendering, just for collisions
-            push(powerup_array,
-               make_entity({pos: box.pos, vel: ¾ xy(cos a, sin a),
-                              sprite: sparkleSprite[0][0], data: random_value(POWERUP_DATA)}))
+    // Spawn a powerup
+    if ξ < POWERUP_DROP_CHANCE:
+        play_sound(powerupSpawnSound)
+        let a = 90° random_integer(3)
+        for i < 2:
+            a += 90°
+            if size(powerup_array) < MAX_POWERUPS:
+                // The sprite is not actually used for rendering, just for collisions
+                push(powerup_array,
+                     make_entity({pos: box.pos, vel: ¾ xy(cos a, sin a),
+                                  sprite: sparkleSprite[0][0], data: random_value(POWERUP_DATA)}))
 
          
 def lose_ball(ball):
-   play_sound(loseBallSound)
-   if size(ball_array) == 1:
-      if spare_balls == 0:
-         // Melt the paddles away from the center of the screen
-         for P in paddle_array:
-            const v = OTHER_AXIS[P.axis]
-            let dir = xy(0,0)
-            dir[v] = sign(P.pos[v] - ½ AREA_SIZE);
-            entity_to_particles_melt(P, dir, 0.05, 0.08, 150)
+    play_sound(loseBallSound)
+    if size(ball_array) == 1:
+        if spare_balls == 0:
+            // Melt the paddles away from the center of the screen
+            for P in paddle_array:
+                const v = OTHER_AXIS[P.axis]
+                let dir = xy(0,0)
+                dir[v] = sign(P.pos[v] - ½ AREA_SIZE);
+                entity_to_particles_melt(P, dir, 0.05, 0.08, 150)
             
-         set_mode(GameOver) because "Lost last ball"
+            set_mode(GameOver) because "Lost last ball"
          
-      // Put the ball back on a paddle, chosen at random
-      --spare_balls
-      ball.paddle = random_value(paddle_array)
-   else:
-      // Remove this ball; there are others in play
-      remove_values(ball_array, ball)
+        // Put the ball back on a paddle, chosen at random
+        --spare_balls
+        ball.paddle = random_value(paddle_array)
+    else:
+        // Remove this ball; there are others in play
+        remove_values(ball_array, ball)
 
 
 def remove_powerup(paddle):
-   // Remove the old powerup's boxes before replacing the powerup
-   if paddle.powerup and paddle.powerup.name == "wall":
-      for box in paddle.powerup.box_array: fast_remove_value(box_array, box)
+    // Remove the old powerup's boxes before replacing the powerup
+    if paddle.powerup and paddle.powerup.name == "wall":
+        for box in paddle.powerup.box_array: fast_remove_value(box_array, box)
 
-   // Remove the shield child entity
-   entity_remove_all(paddle)   
-   paddle.powerup = ∅
+    // Remove the shield child entity
+    entity_remove_all(paddle)   
+    paddle.powerup = ∅
 
       
 def gain_powerup(paddle, data):
-   if data.name == "2500" or data.name == "1000":
-      // points don't remove powerup
-      increase_score(parse(data.name))
-      return
+    if data.name == "2500" or data.name == "1000":
+        // points don't remove powerup
+        increase_score(parse(data.name))
+        return
 
-   remove_powerup(paddle)
+    remove_powerup(paddle)
    
-   if data.name == "spare":
-      spare_balls = min(spare_balls + 1, MAX_SPARE_BALLS)
+    if data.name == "spare":
+        spare_balls = min(spare_balls + 1, MAX_SPARE_BALLS)
             
-   else if data.name == "split":
-      for B in clone(ball_array):
-         if not B.paddle and size(ball_array) < MAX_BALLS:
-            // Parallel
-            push(ball_array, make_entity({name: "ball", pos: B.pos + 15 direction(perp(B.vel)), vel: B.vel, sprite:B.sprite, paddle: ∅, shape:B.shape}))
+    else if data.name == "split":
+        for B in clone(ball_array):
+            if not B.paddle and size(ball_array) < MAX_BALLS:
+                // Parallel
+                push(ball_array, make_entity({name: "ball", pos: B.pos + 15 direction(perp(B.vel)), vel: B.vel, sprite:B.sprite, paddle: ∅, shape:B.shape}))
             
-            // Perpendicular
-            for i < 2:
-               push(ball_array, make_entity({name: "ball", pos:B.pos, vel:(2 i - 1) * xy(-B.vel.y,  B.vel.x), sprite:B.sprite, paddle: ∅, shape:B.shape}))
+                // Perpendicular
+                for i < 2:
+                    push(ball_array, make_entity({name: "ball", pos:B.pos, vel:(2 i - 1) * xy(-B.vel.y,  B.vel.x), sprite:B.sprite, paddle: ∅, shape:B.shape}))
 
-   else if data.name == "wall":
-      // Create a wall of unbreakable boxes
-      paddle.powerup = {name: "wall", box_array:[]}
-      let pos = xy(0, 0)
-      const u = paddle.axis
-      const v = OTHER_AXIS[u]
-      const away = sign(paddle.pos[v] - ½ AREA_SIZE);
-      for i < 11:
-         pos[u] = 16 i + 32
-         pos[v] = paddle.pos[v] + 8 away
+    else if data.name == "wall":
+        // Create a wall of unbreakable boxes
+        paddle.powerup = {name: "wall", box_array:[]}
+        let pos = xy(0, 0)
+        const u = paddle.axis
+        const v = OTHER_AXIS[u]
+        const away = sign(paddle.pos[v] - ½ AREA_SIZE);
+        for i < 11:
+            pos[u] = 16 i + 32
+            pos[v] = paddle.pos[v] + 8 away
+            
+            // Put the wall behind the paddle
+            const box = make_entity({name:"wall", breakable:false, pos:pos, sprite:darkUnbreakable, z:-1})
 
-         // Put the wall behind the paddle
-         const box = make_entity({name:"wall", breakable:false, pos:pos, sprite:darkUnbreakable, z:-1})
-
-         // Make sure that the box isn't trapping a ball
-         for ball in clone(ball_array): if overlaps(box, ball): lose_ball(ball)
+            // Make sure that the box isn't trapping a ball
+            for ball in clone(ball_array): if overlaps(box, ball): lose_ball(ball)
          
-         push(paddle.powerup.box_array, box)
-         push(box_array, box)
+            push(paddle.powerup.box_array, box)
+            push(box_array, box)
                
-   else if data.name == "clone":
-      paddle.powerup = data
+    else if data.name == "clone":
+        paddle.powerup = data
             
-   else if data.name == "shield":
-      paddle.powerup = data
-      with sprite, normal in paddle:
-         entity_add_child(paddle, make_entity({
-            name: paddle.name + " shield",
-            sprite: paddle.shieldSprite,
-            // The parent is rotated if on a vertical wall
-            pos_in_parent: 49 xy(0, sign(normal.y) - sign(normal.x))
-         }))
+    else if data.name == "shield":
+        paddle.powerup = data
+        with sprite, normal in paddle:
+            entity_add_child(paddle, make_entity({
+                name: paddle.name + " shield",
+                sprite: paddle.shieldSprite,
+                // The parent is rotated if on a vertical wall
+                pos_in_parent: 49 xy(0, sign(normal.y) - sign(normal.x))
+            }))
 
 
          
 def handle_paddle_collisions(ball, paddle):
-   if not overlaps(ball, paddle): return
+    if not overlaps(ball, paddle): return
       
-   const u = paddle.axis
-   const v = OTHER_AXIS[paddle.axis]
+    const u = paddle.axis
+    const v = OTHER_AXIS[paddle.axis]
    
-   // Don't intersect if already moving away.
-   if sign(ball.pos[v] - paddle.pos[v]) == sign(ball.vel[v]): return
+    // Don't intersect if already moving away.
+    if sign(ball.pos[v] - paddle.pos[v]) == sign(ball.vel[v]): return
    
-   if paddle.powerup and paddle.powerup.name == "clone":
-      // Clone on hit
-      const new_ball = deep_clone(ball)
-      new_ball.paddle = paddle
-      push(ball_array, new_ball)
+    if paddle.powerup and paddle.powerup.name == "clone":
+        // Clone on hit
+        const new_ball = deep_clone(ball)
+        new_ball.paddle = paddle
+        push(ball_array, new_ball)
 
-   play_sound(hitPaddleSound)
+    play_sound(hitPaddleSound)
 
-   // Push the paddle back for three frames
-   paddle.offset[u] = 0
-   paddle.offset[v] = sign(ball.vel[v])
+    // Push the paddle back for three frames
+    paddle.offset[u] = 0
+    paddle.offset[v] = sign(ball.vel[v])
    
-   def zero(): paddle.offset = xy(0, 0)
-   add_frame_hook(∅, zero, 3)
+    def zero(): paddle.offset = xy(0, 0)
+    add_frame_hook(∅, zero, 3)
 
-   const old_speed = ‖ball.vel‖ 
-   // Bounce perpindicular
-   ball.vel[v] = -ball.vel[v]
+    const old_speed = ‖ball.vel‖ 
+    // Bounce perpindicular
+    ball.vel[v] = -ball.vel[v]
    
-   // Friction/ball control parallel
-   ball.vel[u] += 20% paddle.vel[u]
+    // Friction/ball control parallel
+    ball.vel[u] += 20% paddle.vel[u]
 
-   // Avoid reflections that are *too* vertical (worse than 3.5:1), despite
-   // friction
-   if 3.5 |ball.vel[u]| < |ball.vel[v]|:
-      ball.vel[u] = random_sign()
+    // Avoid reflections that are *too* vertical (worse than 3.5:1), despite
+    // friction
+    if 3.5 |ball.vel[u]| < |ball.vel[v]|:
+        ball.vel[u] = random_sign()
    
-   // Maintain constant speed
-   ball.vel = old_speed * direction(ball.vel)
+    // Maintain constant speed
+    ball.vel = old_speed * direction(ball.vel)
    
-   // Give bonus points for hitting with
-   // a moving paddle
-   increase_score(25 |paddle.vel[u]| + 25)
+    // Give bonus points for hitting with
+    // a moving paddle
+    increase_score(25 |paddle.vel[u]| + 25)
       
          
 
@@ -183,131 +183,131 @@ set_clip(xy(0, 0), xy(AREA_SIZE, SCREEN_SIZE.y))
 
 // Paddles
 for pad, pos, vel, axis in paddle in paddle_array:
-   vel[axis] = PADDLE_SPEED * pad[axis]
-   pos[axis] = mid(pos[axis] + vel[axis], ½ paddle.size.x + PADDING, AREA_SIZE - ½ paddle.size.x - PADDING)
+    vel[axis] = PADDLE_SPEED * pad[axis]
+    pos[axis] = mid(pos[axis] + vel[axis], ½ paddle.size.x + PADDING, AREA_SIZE - ½ paddle.size.x - PADDING)
       
-   entity_update_children(paddle)  
-   draw_entity(paddle)
+    entity_update_children(paddle)  
+    draw_entity(paddle)
 
-   // Sparkle when this paddle has the clone powerup
-   if paddle.powerup and paddle.powerup.name == "clone":
-      draw_sprite(paddleSprite[0][5], paddle.pos, paddle.angle)
-      draw_sprite(sparkleSprite[0][⌊mode_frames / 6⌋ mod 5], paddle.pos, paddle.angle)
-      draw_sprite(sparkleSprite[0][⌊mode_frames / 5⌋ mod 5], paddle.pos + xy(1, 1), paddle.angle + 180°)
+    // Sparkle when this paddle has the clone powerup
+    if paddle.powerup and paddle.powerup.name == "clone":
+        draw_sprite(paddleSprite[0][5], paddle.pos, paddle.angle)
+        draw_sprite(sparkleSprite[0][⌊mode_frames / 6⌋ mod 5], paddle.pos, paddle.angle)
+        draw_sprite(sparkleSprite[0][⌊mode_frames / 5⌋ mod 5], paddle.pos + xy(1, 1), paddle.angle + 180°)
 
    
 // Boxes
 for B in box_array:
-   if B.breakable: levelComplete = false
-   draw_entity(B)
+    if B.breakable: levelComplete = false
+    draw_entity(B)
 
 
 // Powerups
 for pos, vel, data ∊ P ∊ clone(powerup_array):
-   draw_text(font, data.name, pos + xy(0, 3), data.color, ∅, #FFF, 0)
-   draw_sprite(sparkleSprite[0][⌊⅙ mode_frames⌋ mod 5], pos)
-   draw_sprite(sparkleSprite[0][⌊⅕ mode_frames⌋ mod 5], pos + xy(1, 1), 180°)
-   create_particle(pos + random_within_square() * xy(16, 8), xy(0, 0), data.color, 0, 30)
-   create_particle(pos + random_within_square() * xy(16, 8), xy(0, 0), #fff, 0, 20)
-   pos += vel
-   if ((pos.x < -½ sparkleSprite[0][0].size.x) or (pos.x > SCREEN_SIZE.x + ½ sparkleSprite[0][0].size.x) or
-       (pos.y < -½ sparkleSprite[0][0].size.y) or (pos.y > SCREEN_SIZE.y + ½ sparkleSprite[0][0].size.y)):
-      remove_values(powerup_array, P)
+    draw_text(font, data.name, pos + xy(0, 3), data.color, ∅, #FFF, 0)
+    draw_sprite(sparkleSprite[0][⌊⅙ mode_frames⌋ mod 5], pos)
+    draw_sprite(sparkleSprite[0][⌊⅕ mode_frames⌋ mod 5], pos + xy(1, 1), 180°)
+    create_particle(pos + random_within_square() * xy(16, 8), xy(0, 0), data.color, 0, 30)
+    create_particle(pos + random_within_square() * xy(16, 8), xy(0, 0), #fff, 0, 20)
+    pos += vel
+    if ((pos.x < -½ sparkleSprite[0][0].size.x) or (pos.x > SCREEN_SIZE.x + ½ sparkleSprite[0][0].size.x) or
+        (pos.y < -½ sparkleSprite[0][0].size.y) or (pos.y > SCREEN_SIZE.y + ½ sparkleSprite[0][0].size.y)):
+        remove_values(powerup_array, P)
 
-   for paddle ∊ paddle_array:
-      // Receive a powerup
-      if overlaps(paddle, P):
-         remove_values(powerup_array, P)
-         play_sound(powerupSound)
+    for paddle ∊ paddle_array:
+        // Receive a powerup
+        if overlaps(paddle, P):
+            remove_values(powerup_array, P)
+            play_sound(powerupSound)
 
-         gain_powerup(paddle, data)
-
-         for i < 180:
-            const θ = 2° i
-            create_particle(pos + xy(8 cos θ, 4 sin θ), xy(2 cos θ, sin θ), #fff, 1, 35)
-            create_particle(pos + xy(8 cos θ, 4 sin θ), 0.95 xy(2 cos θ, sin θ), data.color, 1, 50)
+            gain_powerup(paddle, data)
+            
+            for i < 180:
+                const θ = 2° i
+                create_particle(pos + xy(8 cos θ, 4 sin θ), xy(2 cos θ, sin θ), #fff, 1, 35)
+                create_particle(pos + xy(8 cos θ, 4 sin θ), 0.95 xy(2 cos θ, sin θ), data.color, 1, 50)
          
 
 
 // Balls
 for pos, vel, paddle in ball in clone(ball_array):
-   if paddle:
-      // This ball is on a paddle, waiting to
-      // be launched. Follow the paddle's position.
-      const u = paddle.axis
-      const v = OTHER_AXIS[u]
-      const away = sign(½ AREA_SIZE - paddle.pos[v]);
-      pos[u] = paddle.pos[u]
-      pos[v] = paddle.pos[v] + away * ½ (paddle.sprite.size.y + ball.sprite.size.y)
+    if paddle:
+        // This ball is on a paddle, waiting to
+        // be launched. Follow the paddle's position.
+        const u = paddle.axis
+        const v = OTHER_AXIS[u]
+        const away = sign(½ AREA_SIZE - paddle.pos[v]);
+        pos[u] = paddle.pos[u]
+        pos[v] = paddle.pos[v] + away * ½ (paddle.sprite.size.y + ball.sprite.size.y)
 
-      if any_button_press(paddle.pad):
-         first_ball_was_launched = true
+        if any_button_press(paddle.pad):
+            first_ball_was_launched = true
          
-         // Release the ball away from the paddle in the direction of movement
-         if |paddle.vel[u]| > 0.1:
-            vel[u] = sign(paddle.vel[u])
-         else:
-            // Allow clone to throw almost vertically as a further advantage
-            vel[u] = random_sign() * (if paddle.powerup and paddle.powerup.name == "clone" then 15% else 100%)
+            // Release the ball away from the paddle in the direction of movement
+            if |paddle.vel[u]| > 0.1:
+                vel[u] = sign(paddle.vel[u])
+            else:
+                // Allow clone to throw almost vertically as a further advantage
+                vel[u] = random_sign() * (if paddle.powerup and paddle.powerup.name == "clone" then 15% else 100%)
             
-         vel[v] = away
-         vel = direction(vel) * INITIAL_BALL_SPEED
-         paddle = ∅
+            vel[v] = away
+            vel = direction(vel) * INITIAL_BALL_SPEED
+            paddle = ∅
 
-   else: // Normal ball movement. Look for collisions.
-      // Spawn trails
-      for i < 3:
-         create_particle(pos + 5 xy(ξ - ½, ξ - ½), ½ vel * ξ, if i < 2 then #89a else #c,
-                         -½, 20 ξ + 15)
+    else: // Normal ball movement. Look for collisions.
+        // Spawn trails
+        for i < 3:
+            create_particle(pos + 5 xy(ξ - ½, ξ - ½), ½ vel * ξ, if i < 2 then #89a else #c,
+                            -½, 20 ξ + 15)
       
-      // Move first in X
-      pos.x += vel.x
+        // Move first in X
+        pos.x += vel.x
    
-      // Back up and reverse direction on box collision, which
-      // must be due to ball movement.
-      for box ∊ clone(box_array):
-         if overlaps(ball, box):
-            hit_box(box, ball, xy(1, 0))
-            pos.x -= vel.x; vel.x = -vel.x
+        // Back up and reverse direction on box collision, which
+        // must be due to ball movement.
+        for box ∊ clone(box_array):
+            if overlaps(ball, box):
+                hit_box(box, ball, xy(1, 0))
+                pos.x -= vel.x; vel.x = -vel.x
    
-      // Now, move second in Y
-      pos.y += vel.y
+        // Now, move second in Y
+        pos.y += vel.y
    
-      for box ∊ clone(box_array):
-         if overlaps(ball, box):
-            hit_box(box, ball, xy(0, 1))
-            pos.y -= vel.y; vel.y = -vel.y
+        for box ∊ clone(box_array):
+            if overlaps(ball, box):
+                hit_box(box, ball, xy(0, 1))
+                pos.y -= vel.y; vel.y = -vel.y
    
-      // Bounce off paddles by moving away from the intersection
-      for paddle ∊ paddle_array:
-         handle_paddle_collisions(ball, paddle)
+        // Bounce off paddles by moving away from the intersection
+        for paddle ∊ paddle_array:
+            handle_paddle_collisions(ball, paddle)
       
-      //////////////////////////////////
-      const radius = ½ ball.size.x
-      if pos.x < -radius or pos.x > AREA_SIZE + radius or pos.y < -radius or pos.y > AREA_SIZE + radius:
-         lose_ball(ball)
+        //////////////////////////////////
+        const radius = ½ ball.size.x
+        if pos.x < -radius or pos.x > AREA_SIZE + radius or pos.y < -radius or pos.y > AREA_SIZE + radius:
+            lose_ball(ball)
          
-   // Common
-   draw_entity(ball)
+    // Common
+    draw_entity(ball)
 
    
 // Is the clock running?
 if first_ball_was_launched:
-   time_left = max(0, time_left - 1 / 60)
+    time_left = max(0, time_left - 1 / 60)
 
    
 // Scores
 draw_scoreboard()
 
 if levelComplete:
-   ++finish_level_frames
-   if finish_level_frames > 40:
-      if level ≥ 6:
-         set_mode(Win) because "Beat final level"
-      else:
-         increase_score(80 time_left)
-         // Show the reward screen
-         for paddle in paddle_array:
-            remove_powerup(paddle)
+    ++finish_level_frames
+    if finish_level_frames > 40:
+        if level ≥ 6:
+            set_mode(Win) because "Beat final level"
+        else:
+            increase_score(80 time_left)
+            // Show the reward screen
+            for paddle in paddle_array:
+                remove_powerup(paddle)
 
-         push_mode(BeatLevel) because "Level completed"
+            push_mode(BeatLevel) because "Level completed"

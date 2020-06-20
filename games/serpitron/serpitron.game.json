@@ -34,7 +34,7 @@
         "smallGrowAudioClip":  "quad://sounds/32-Powerup.sound.json",
         "speedUpAudioClip":    "quad://sounds/35-Powerup.sound.json",
         "slowDownAudioClip":   "quad://sounds/36-Powerup.sound.json",
-        "bigPointsAudioClip":  "quad://sounds/09-Coin.sound.json",
+        "bigPointsAudioClip":  "quad://sounds/coin-09.sound.json",
         "smallPointsAudioClip":"quad://sounds/blip-14.sound.json",
         "hitAudioClip":        "quad://sounds/70-Wild.sound.json",
         "blipAudioClip":       "quad://sounds/blip-17.sound.json"

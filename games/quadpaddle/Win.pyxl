@@ -3,5 +3,5 @@ draw_previous_mode()
 draw_text(font, "WIN!", ½ SCREEN_SIZE, #ff0, #000, #000, 0, 0, 4)
 
 if any_button_press():
-   play_sound(selectSound)
-   set_mode(Title) because "any_button_press()"
+    play_sound(selectSound)
+    set_mode(Title) because "any_button_press()"

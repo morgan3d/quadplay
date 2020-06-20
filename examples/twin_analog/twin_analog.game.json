@@ -19,7 +19,7 @@
       "player_ship_sprite": "player_ship.sprite.json",
       "player_thruster_sprite": "player_thruster.sprite.json",
       "music_audio_clip": "quad://sounds/loop-select.sound.json",
-      "player_fire_audio_clip": "quad://sounds/16-Shoot.sound.json"
+      "player_fire_audio_clip": "quad://sounds/shoot-06.sound.json"
    },
    "version": 0,
    "min_players": 1,

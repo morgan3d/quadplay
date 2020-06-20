@@ -17,10 +17,10 @@
         "pauseSound": "quad://sounds/57-Jump.sound.json",
         "powerupSound": "quad://sounds/37-Powerup.sound.json",
         "powerupSpawnSound": "quad://sounds/38-Powerup.sound.json",
-        "scoreSound": "quad://sounds/00-Coin.sound.json",
+        "scoreSound": "quad://sounds/coin-00.sound.json",
         "sparkleSprite": "sparkle.sprite.json",
         "tinyFont": "quad://fonts/scoreboard-6.font.json",
-        "unbreakableSound": "quad://sounds/04-Coin.sound.json",
+        "unbreakableSound": "quad://sounds/coin-04.sound.json",
         "wordSprite": "words-224x64.sprite.json",
         "shieldSprite": "shield.sprite.json"
     },

@@ -222,7 +222,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
 
                 # Save the new game
                 with open(os.path.join(dst_path, dir_name + '.game.json'), 'wt', encoding='utf8') as f:
-                    f.write(workjson.dumps(game_json))
+                    f.write(workjson.dumps(game_json, indent=4))
                 
                 for filename in ['label64.png', 'label128.png', 'Play.pyxl', 'TODO.md']:
                     shutil.copyfile(os.path.join(starter_path, filename), os.path.join(dst_path, filename))

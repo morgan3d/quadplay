@@ -72,6 +72,11 @@
             "description": ""
         },
         {
+            "url": "quad://examples/sequence_demo/",
+            "title": "sequence_demo",
+            "description": "Demo of using sequence()"
+        },
+        {
             "url": "quad://examples/speedstreet/",
             "title": "Speed Street",
             "description": "How fast can you go? Tear through the road course pulling tricks off jumps and fighting to be the leader of the pack."

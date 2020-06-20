@@ -2,24 +2,24 @@ Play
 ════════════════════════════════════════════════════════════════════════
 
 const ninja = make_entity({
-   pos:            xy(½ SCREEN_SIZE.x, groundY),
-   spritesheet:    ninjaSprite,
-   sprite:         ninjaSprite.idle[0],
-   animation:      "idle",
-   
-   // Current animation frame
-   spriteIndex:    0,
-   
-   // How long we've been on this sprite in the animation
-   spriteFrame:    0,
-   
-   z:              1,
-   weaponIndex:    0,
-   weaponArray:    [
-      make_entity({spritesheet: swordSprite}),
-      make_entity({spritesheet: bowSprite}),
-      ∅
-   ]
+    pos:            xy(½ SCREEN_SIZE.x, groundY),
+    spritesheet:    ninjaSprite,
+    sprite:         ninjaSprite.idle[0],
+    animation:      "idle",
+    
+    // Current animation frame
+    spriteIndex:    0,
+    
+    // How long we've been on this sprite in the animation
+    spriteFrame:    0,
+    
+    z:              1,
+    weaponIndex:    0,
+    weaponArray:    [
+        make_entity({spritesheet: swordSprite}),
+        make_entity({spritesheet: bowSprite}),
+        ∅
+    ]
 })
 
 ninja.weapon = entity_add_child(ninja, ninja.weaponArray[ninja.weaponIndex])
@@ -27,97 +27,99 @@ ninja.weapon = entity_add_child(ninja, ninja.weaponArray[ninja.weaponIndex])
 const arrowArray = []
 
 const instructions = [
-   "⍇⍈", "RUN",
-   "ⓐ ", "JUMP",
-   "ⓑ ", "ATTACK",
-   "⍗ ", "DUCK",
-   "ⓒⓓ", "SWITCH"
+    "⍇⍈", "RUN",
+    "ⓐ ", "JUMP",
+    "ⓑ ", "ATTACK",
+    "⍗ ", "DUCK",
+    "ⓒⓓ", "SWITCH"
 ]
 
    
 frame
 ────────────────────────────────────────────────────────────────────────
 
+const gamepad = gamepad_array[0]
+
 with pos, vel, force, scale, spriteIndex, spriteFrame, animation, spritesheet, sprite, weaponIndex, weapon in ninja:
-   // Advance animation. It is looped per-animation below.
-   if spriteFrame < sprite.frames:
-      ++spriteFrame
-   else:
-      ++spriteIndex
-      spriteFrame = 0
-      // Fire the arrow on the third frame of the bow attack animation
-      if weaponIndex == 1 and animation == "attack" and spriteIndex == 2:
-         push(arrowArray, { pos: pos + xy(scale.x * arrowLength, 0),
-                            vel: xy(3 scale.x, 0) })
+    // Advance animation. It is looped per-animation below.
+    if spriteFrame < sprite.frames:
+        ++spriteFrame
+    else:
+        ++spriteIndex
+        spriteFrame = 0
+        // Fire the arrow on the third frame of the bow attack animation
+        if weaponIndex == 1 and animation == "attack" and spriteIndex == 2:
+            push(arrowArray, {pos: pos + xy(scale.x * arrowLength, 0),
+                              vel: xy(3 scale.x, 0) })
 
 
-   let nextAnimation = animation;
-   if animation == "attack" and spriteIndex < size(spritesheet[animation]):
-      // Playing attack animation, do not interrupt for any new animation
-   else if joy.x and animation ≠ "land":
-      // Running
-      scale.x = joy.x
-      vel.x = joy.x * runSpeed
-      nextAnimation = if joy.y < 0 then "crawl" else "run"
-   else: // Not running
-      vel.x *= 70%
-      nextAnimation = if joy.y < 0 then "duck" else "idle"
+    let nextAnimation = animation;
+    if animation == "attack" and spriteIndex < size(spritesheet[animation]):
+        // Playing attack animation, do not interrupt for any new animation
+    else if gamepad.x and animation ≠ "land":
+        // Running
+        scale.x = gamepad.x
+        vel.x = gamepad.x * runSpeed
+        nextAnimation = if gamepad.y < 0 then "crawl" else "run"
+    else: // Not running
+        vel.x *= 70%
+        nextAnimation = if gamepad.y < 0 then "duck" else "idle"
       
 
-   // Clamp to ground and set landing pose
-   if ((find(animation, "jump") ≠ ∅ and pos.y ≥ groundY) or
-       (animation == "land" and spriteIndex < size(spritesheet[animation]))):
-      nextAnimation = "land"
+    // Clamp to ground and set landing pose
+    if ((find(animation, "jump") ≠ ∅ and pos.y ≥ groundY) or
+        (animation == "land" and spriteIndex < size(spritesheet[animation]))):
+        nextAnimation = "land"
       
-   if pos.y > groundY: pos.y = groundY; vel.y = 0
+    if pos.y > groundY: pos.y = groundY; vel.y = 0
    
-   if pos.y == groundY:
-      if animation ≠ "land" and nextAnimation ≠ "land" and animation ≠ "attack":
-         // On ground, we can jump and attack
-         if joy.aa: vel.y = -jumpSpeed
-         if joy.bb: nextAnimation = "attack"
-   else:
-      // Above ground
-      force.y = gravity * entity_mass(ninja)
+    if pos.y == groundY:
+        if animation ≠ "land" and nextAnimation ≠ "land" and animation ≠ "attack":
+            // On ground, we can jump and attack
+            if gamepad.aa: vel.y = -jumpSpeed
+            if gamepad.bb: nextAnimation = "attack"
+    else:
+        // Above ground
+        force.y = gravity * entity_mass(ninja)
       
-   // Jumping animation
-   if pos.y < groundY:
-      nextAnimation = if vel.y < ½ then "jumpUp" else "jumpDown"
+    // Jumping animation
+    if pos.y < groundY:
+        nextAnimation = if vel.y < ½ then "jumpUp" else "jumpDown"
       
-   // Change animation
-   if nextAnimation ≠ animation:
-      animation = nextAnimation
-      spriteFrame = 0
-      spriteIndex = 0
+    // Change animation
+    if nextAnimation ≠ animation:
+        animation = nextAnimation
+        spriteFrame = 0
+        spriteIndex = 0
 
-   sprite = array_value(spritesheet[animation], spriteIndex)
+    sprite = array_value(spritesheet[animation], spriteIndex)
 
-   // Change weapons (not allowed during the landing or attack animation)
-   if animation == "idle" or animation == "duck" or find(animation, "jump") ≠ ∅:
-      weaponIndex = loop(weaponIndex + joy.cc - joy.dd, size(ninja.weaponArray))
-   const newWeapon = ninja.weaponArray[weaponIndex]
-   if weapon != newWeapon:
-      entity_remove_child(ninja, weapon)
-      weapon = entity_add_child(ninja, newWeapon)
+    // Change weapons (not allowed during the landing or attack animation)
+    if animation == "idle" or animation == "duck" or find(animation, "jump") ≠ ∅:
+        weaponIndex = loop(weaponIndex + gamepad.cc - gamepad.dd, size(ninja.weaponArray))
+    const newWeapon = ninja.weaponArray[weaponIndex]
+    if weapon ≠ newWeapon:
+        entity_remove_child(ninja, weapon)
+        weapon = entity_add_child(ninja, newWeapon)
    
-   // Update the weapon to match the main sprite animation
-   if weapon: weapon.sprite = array_value(weapon.spritesheet[animation], spriteIndex)
+    // Update the weapon to match the main sprite animation
+    if weapon: weapon.sprite = array_value(weapon.spritesheet[animation], spriteIndex)
    
-   // Physics
-   entity_simulate(ninja)
+    // Physics
+    entity_simulate(ninja)
       
-   // Wrap around the screen edges
-   pos.x = loop(pos.x, SCREEN_SIZE.x)
+    // Wrap around the screen edges
+    pos.x = loop(pos.x, SCREEN_SIZE.x)
 
 entity_update_children(ninja)
 
 
 for arrow in arrowArray:
-   if arrow.pos.x < -arrowLength or arrow.pos.x > SCREEN_SIZE.x + arrowLength:
-      remove_values(arrow, arrowArray)
-   else:
-      arrow.pos.x += arrow.vel.x
-      draw_line(arrow.pos, arrow.pos + xy(arrowLength * sign(arrow.vel.x), 0), #0)
+    if arrow.pos.x < -arrowLength or arrow.pos.x > SCREEN_SIZE.x + arrowLength:
+        remove_values(arrow, arrowArray)
+    else:
+        arrow.pos.x += arrow.vel.x
+        draw_line(arrow.pos, arrow.pos + xy(arrowLength * sign(arrow.vel.x), 0), #0)
 
 // Sky
 set_background(rgb(20%, 50%, 80%))
@@ -126,20 +128,20 @@ draw_text(font, CREDITS.title, xy(½ SCREEN_SIZE.x, 20), #FFF, ∅, ∅, 0, 0)
 // Ground
 draw_corner_rect(xy(0, groundY + 8), xy(SCREEN_SIZE.x, SCREEN_SIZE.y - (groundY + 8)), #DDD)
 
-// Instructions
+// Show instructions
 local:
-   let pos = xy(12, groundY + 19)
-   for i < size(instructions) / 2:
-      draw_text(instructionFont, replace(instructions[2i], joy.prompt), pos, #7)
-      pos.y += draw_text(instructionFont, instructions[2i + 1], pos + xy(30, 0), #7).y
-      if pos.y > SCREEN_SIZE.y - 10:
-         pos.x += 97
-         pos.y = groundY + 19
+    let pos = xy(12, groundY + 19)
+    for i < ½ size(instructions):
+        draw_text(instructionFont, replace(instructions[2i], gamepad.prompt), pos, #7)
+        pos.y += draw_text(instructionFont, instructions[2i + 1], pos + xy(30, 0), #7).y
+        if pos.y > SCREEN_SIZE.y - 10:
+            pos.x += 97
+            pos.y = groundY + 19
 
 // Ninja
 draw_entity(ninja)
 
 // Shadow
 with x in ninja.pos:
-   draw_line(xy(x - 7, groundY + 8),  xy(x + 7, groundY + 8),  rgba(0, 0, 0, 20%), ninja.z - 0.1)
-   draw_line(xy(x - 5, groundY + 9), xy(x + 5, groundY + 9), rgba(0, 0, 0, 15%), ninja.z - 0.1)
+    draw_line(xy(x - 7, groundY + 8), xy(x + 7, groundY + 8), rgba(0, 0, 0, 20%), ninja.z - 0.1)
+    draw_line(xy(x - 5, groundY + 9), xy(x + 5, groundY + 9), rgba(0, 0, 0, 15%), ninja.z - 0.1)

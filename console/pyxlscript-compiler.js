@@ -1127,7 +1127,7 @@ function pyxlToJS(src, noYield, internalMode) {
     src = src.replace(/_add\(__yieldCounter, 1\)/g, '__yieldCounter + 1');
     src = unprotectQuotedStrings(src, protectionMap);
 
-    // if (! internalMode) { console.log(src); }
+    //if (! internalMode) { console.log(src); }
     return src;
 }
 
