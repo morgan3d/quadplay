@@ -14,7 +14,7 @@
         "menuSound": "quad://sounds/blip-17.sound.json",
         "music": "quad://sounds/loop-arcade.sound.json",
         "paddleSprite": "paddle.sprite.json",
-        "pauseSound": "quad://sounds/57-Jump.sound.json",
+        "pauseSound": "quad://sounds/jump-07.sound.json",
         "powerupSound": "quad://sounds/37-Powerup.sound.json",
         "powerupSpawnSound": "quad://sounds/38-Powerup.sound.json",
         "scoreSound": "quad://sounds/coin-00.sound.json",
