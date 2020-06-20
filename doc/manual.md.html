@@ -4601,11 +4601,11 @@ Sounds
 
 ### Explode
 
-![`quad://sounds/20-Explode.sound.json`](../sounds/20-Explode.mp3) ![`quad://sounds/21-Explode.sound.json`](../sounds/21-Explode.mp3)
-![`quad://sounds/22-Explode.sound.json`](../sounds/22-Explode.mp3) ![`quad://sounds/23-Explode.sound.json`](../sounds/23-Explode.mp3)
-![`quad://sounds/24-Explode.sound.json`](../sounds/24-Explode.mp3) ![`quad://sounds/25-Explode.sound.json`](../sounds/25-Explode.mp3)
-![`quad://sounds/26-Explode.sound.json`](../sounds/26-Explode.mp3) ![`quad://sounds/27-Explode.sound.json`](../sounds/27-Explode.mp3)
-![`quad://sounds/28-Explode.sound.json`](../sounds/28-Explode.mp3) ![`quad://sounds/29-Explode.sound.json`](../sounds/29-Explode.mp3)
+![`quad://sounds/explode-00.sound.json`](../sounds/explode-00.mp3) ![`quad://sounds/explode-01.sound.json`](../sounds/explode-01.mp3)
+![`quad://sounds/explode-02.sound.json`](../sounds/explode-02.mp3) ![`quad://sounds/explode-03.sound.json`](../sounds/explode-03.mp3)
+![`quad://sounds/explode-04.sound.json`](../sounds/explode-04.mp3) ![`quad://sounds/explode-05.sound.json`](../sounds/explode-05.mp3)
+![`quad://sounds/explode-06.sound.json`](../sounds/explode-06.mp3) ![`quad://sounds/explode-07.sound.json`](../sounds/explode-07.mp3)
+![`quad://sounds/explode-08.sound.json`](../sounds/explode-08.mp3) ![`quad://sounds/explode-09.sound.json`](../sounds/explode-09.mp3)
 ![`quad://sounds/explode-11.sound.json`](../sounds/explode-11.mp3)
 
 ### Powerup
@@ -7094,7 +7094,8 @@ Changes for both the specification and implementation in each release.
 - Incompatible change: Renamed 
   `##-Coin.sound.json` to `coin-##.sound.json`,
   `##-Shoot.sound.json` to `shoot-##.sound.json`, 
-  `##-Jump.sound.json` to `jump-##.sound.json`
+  `##-Jump.sound.json` to `jump-##.sound.json`,
+  `##-Explode.sound.json` to `explode-##.sound.json`
 - New font: `suchet-12`
 - Auto-generated TODO lists in the IDE from `todo()` statements in code
 - Errors will now open the appropriate file and line in the IDE
@@ -7102,10 +7103,12 @@ Changes for both the specification and implementation in each release.
 - Load a new script faster after creation
 - Active debugger tab persists over reloading
 - System pause menu now pauses game sound effects
+- Syntax highlighting in the IDE for `parse()`
 - Added `sequence.BREAK` and `sequence.NEXT` options
 - Added five-argument version of `lerp()`
 - Added `LERP()` intrinsic
 - Added "go to line" command (Ctrl-G/⌘-G) for the IDE
+- Fixed `random_within_sphere()` crashing
 - Fixed asset json editor changes being overwritten by caches
 - Fixed alpha channel of screenshots
 - Fixed emulator alignment on Safari

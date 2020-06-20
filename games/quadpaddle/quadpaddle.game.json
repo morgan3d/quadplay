@@ -4,7 +4,7 @@
         "beatLevelSound": "quad://sounds/78-Wild.sound.json",
         "borderSprite": "quad://sprites/kenney-ui-16x16.sprite.json",
         "cornerSprite": "corner.sprite.json",
-        "destroyBlockSound": "quad://sounds/28-Explode.sound.json",
+        "destroyBlockSound": "quad://sounds/explode-08.sound.json",
         "font": "quad://fonts/good-neighbors-9.font.json",
         "hitPaddleSound": "quad://sounds/33-Powerup.sound.json",
         "levelTemplate": "levels.map.json",

@@ -5997,7 +5997,8 @@ function random_within_circle(rng) {
     return P;
 }
 
-function random_within_sphere(rng = rng) {
+
+function random_within_sphere(rng) {
     rng = rng || random;
     const P = {x:0, y:0, z:0}
     let m = 0;

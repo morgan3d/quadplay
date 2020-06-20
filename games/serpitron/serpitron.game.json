@@ -29,7 +29,7 @@
         "countryMusic":        "quad://sounds/music-moon.sound.json",
         "urbanMusic":          "quad://sounds/loop-metal.sound.json",
         "titleMusic":          "quad://sounds/loop-tastic.sound.json",
-        "shotgunAudioClip":    "quad://sounds/28-Explode.sound.json",
+        "shotgunAudioClip":    "quad://sounds/explode-08.sound.json",
         "bigGrowAudioClip":    "quad://sounds/29-Powerup.sound.json",
         "smallGrowAudioClip":  "quad://sounds/32-Powerup.sound.json",
         "speedUpAudioClip":    "quad://sounds/35-Powerup.sound.json",
