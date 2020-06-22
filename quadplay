@@ -257,8 +257,9 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 if not args.kiosk:
                     response_obj['IDE_USER'] = os.environ['USERNAME' if isWindows else 'USER']
                 response_obj['rootPath'] = server_root_path
-                response_obj['hasFinder'] = isWindows or isMacOS;
-                if (isWindows or isMacOS):
+                response_obj['hasFinder'] = isWindows or isMacOS
+
+                if isWindows or isMacOS:
                     applications = []
                     response_obj['applications'] = applications
                     potential_applications = load_json(os.path.join(quad_path, 'console/external-applications.json'))['Windows' if isWindows else 'macOS']
@@ -272,6 +273,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                             
                     
             elif webpath == asset_query_webpath:
+                print('query', query)
                 aux_path = query[query.index('=') + 1:]
 
                 # Security: check if aux_path has a prefix in webpath_whitelist

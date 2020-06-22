@@ -90,9 +90,8 @@ function _pset(x, y, color, clipX1, clipY1, clipX2, clipY2) {
             // Blend
 
             // No need to force to unsigned int because the alpha channel of the output is always 0xff
-            
             const a = a15 * (1 / 15);
-            let back = _screen[offset];
+            let back = _screen[offset] >>> 0;
             let result = 0xF000;
             result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5) & 0x0F00;
             result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5) & 0x00F0;
@@ -116,23 +115,24 @@ function _hline(x1, y, x2, color, clipX1, clipY1, clipX2, clipY2) {
         x1 = Math.max(x1, clipX1) | 0;
         x2 = Math.min(x2, clipX2) | 0;
         
-        let a15 = color >>> 12;
+        let a15 = (color >>> 12) & 0xf;
         if (a15 === 0xf) {
             // Overwrite
             _screen.fill(color, x1 + (y * _SCREEN_WIDTH), x2 + (y * _SCREEN_WIDTH) + 1);
         } else if (a15 !== 0) {
             // Blend (see comments in _pset)
             const a = a15 * (1 / 15);
-            const r = (color & 0x0F0) * a + 0.5;
+            const inva = 1 - a;
+            const r = (color & 0xF00) * a + 0.5;
             const g = (color & 0x0F0) * a + 0.5;
             const b = (color & 0x00F) * a + 0.5;
 
             for (let x = x1, offset = (x1 + y * _SCREEN_WIDTH) | 0; x <= x2; ++x, ++offset) {
                 let back = _screen[offset] >>> 0;
                 let result = 0xF000 >>> 0;
-                result |= ((back & 0x0F00) * (1 - a) + r) & 0x0F00;
-                result |= ((back & 0x00F0) * (1 - a) + g) & 0x00F0;
-                result |= ((back & 0x000F) * (1 - a) + b) & 0x000F;
+                result |= ((back & 0x0F00) * inva + r) & 0x0F00;
+                result |= ((back & 0x00F0) * inva + g) & 0x00F0;
+                result |= ((back & 0x000F) * inva + b) & 0x000F;
                 _screen[offset] = result;
             }
         }
@@ -159,15 +159,16 @@ function _vline(x, y1, y2, color, clipX1, clipY1, clipX2, clipY2) {
         } else if (a15 !== 0) {
             // Blend (see comments in _pset)
             const a = a15 * (1 / 15);
+            const inva = 1 - a;
             const r = (color & 0x0F00) * a + 0.5;
             const g = (color & 0x00F0) * a + 0.5;
             const b = (color & 0x000F) * a + 0.5;
             for (let y = y1, offset = y1 * _SCREEN_WIDTH + x; y <= y2; ++y, offset += _SCREEN_WIDTH) {
-                let back = _screen[offset];
+                let back = _screen[offset] >>> 0;
                 let result = 0xF000;
-                result |= ((back & 0x0F00) * (1 - a) + r) & 0x0F00;
-                result |= ((back & 0x00F0) * (1 - a) + g) & 0x00F0;
-                result |= ((back & 0x000F) * (1 - a) + b) & 0x000F;
+                result |= ((back & 0x0F00) * inva + r) & 0x0F00;
+                result |= ((back & 0x00F0) * inva + g) & 0x00F0;
+                result |= ((back & 0x000F) * inva + b) & 0x000F;
                 _screen[offset] = result;
             }
         }

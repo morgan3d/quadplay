@@ -7,7 +7,7 @@ os_dependencies = {
    "_font9":              "quad://fonts/deja-9.font.json",
    "_moveUISound":        "quad://sounds/blip-04.sound.json",
    "_acceptUISound":      "quad://sounds/jump-08.sound.json",
-   "_openUISound":        "quad://sounds/33-Powerup.sound.json",
+   "_openUISound":        "quad://sounds/powerup-03.sound.json",
    "_cancelUISound":      "quad://sounds/shoot-08.sound.json",
    "_denyUISound":        "quad://sounds/46-Hit.sound.json",
    "_quadplayLogoSprite": "quad://console/os/logo.sprite.json",

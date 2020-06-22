@@ -427,6 +427,12 @@ and CRT orange-screen retro phosophor effects.
 [Lift Team](../console/quadplay.html?game=quad://examples/lift_team&IDE=1) combines physics and dynamic constraints for an asymmetric platformer setup, where one
 player flies a helicopter that can lift the other player's mech.
 
+</td></tr><tr><td>![](../examples/sequence_demo/label128.png)</td><td>
+[Sequence Demo (transition effect)](../console/quadplay.html?game=quad://examples/sequence_demo&IDE=1)
+Shows how to use the sequence function to create a transition effect, which is
+factored out into an easy to drop in library.  The sequence function lets 
+choreograph series of frame hooks one after the other.
+
 </td></tr><tr><td>![](../examples/speedstreet/label128.png)</td><td>
 [Speed Street](../console/quadplay.html?game=quad://examples/speedstreet&IDE=1) is the setup for a four-player competitive racing game inspired by [_Excitebike_](https://en.wikipedia.org/wiki/Excitebike) and Tony Hawk games, using:
 
@@ -1593,7 +1599,9 @@ String
   - `"loop"`
   - `"clamp"` (default, other unsupported values are silentely treated as clamp instead of failing)
 
-
+`ends_with(string, target)`
+  : Returns true if `string` ends with the substring `target`.
+  
 `extended(a, b)`
 : Returns a new string that is `a + b`.
 
@@ -1659,6 +1667,9 @@ String
 
 `split(string, separator default "")`
 : Returns an array of strings separated by `separator`. If the separator is the empty string, then all characters are separated.
+
+`starts_with(string, target)`
+: Returns true if `string` begins with the substring `target`. See also `ends_with()`.
 
 `unparse(x)`
 : Returns code that is equivalent to producing data object `x`, if it is not a
@@ -3763,6 +3774,8 @@ A map asset has the following fields. Its sprite elements are mutable at runtime
   `layer = (z - map.z_offset) / map.z_scale`; `z = layer * map.z_scale + map.z_offset`.
   See also `transform_ws_z_to_map_layer()` and `transform_map_layer_to_ws_z()`.
 
+Any other custom properties set on the map in the TMX file are added to this set of
+properties.
 
 The following functions relate maps, pixels, and sprites. In them, a
 "pixel coordinate" is in the _pre-transformed_ space in which graphics
@@ -4194,6 +4207,7 @@ Raw Device Access
     <tr><td> `"stop_GIF_recording"`          </td><td> End GIF recording. When the compression completes, the GIF will appear in a new tab.</td></tr>
     <tr><td> `"start_preview_recording"`     </td><td> Begin preview video recording. There is no "stop" command because this terminates automatically after a set time.</td></tr>
     <tr><td> `"take_screenshot"`             </td><td> Take a screenshot and download it to the local disk. </td></tr>
+    <tr><td> `"take_label_image"`            </tr><td> Capture the center of the image and save it to disk, overwriting the label128 and label64 images (only works when running in the IDE on an editable project). </td></tr>
     <tr><td> `"set_pad_type", index, "type"` </td><td> Set `gamepad_array[index].type` and the corresponding prompts. There is no "get" version because you can read the property directly from the gamepad object.</td></tr>
     <tr><td> `"get_analog_axes", index`      </td><td> Return an `xy()` of the analog axis values for `gamepad_array[index]`, without D-pad snapping.
                                                        Needed for accessing Atari paddles, car pedals, steering wheels, and flight stick throttles in
@@ -4589,6 +4603,9 @@ Sounds
 ![`quad://sounds/coin-06.sound.json`](../sounds/coin-06.mp3) ![`quad://sounds/coin-07.sound.json`](../sounds/coin-07.mp3)
 ![`quad://sounds/coin-08.sound.json`](../sounds/coin-08.mp3) ![`quad://sounds/coin-09.sound.json`](../sounds/coin-09.mp3)
 
+### Engine Loops
+
+![`quad://sounds/engine-00.sound.json`](../sounds/engine-00.mp3) ![`quad://sounds/engine-01.sound.json`](../sounds/engine-01.mp3)
 
 ### Shoot
 
@@ -4610,12 +4627,12 @@ Sounds
 
 ### Powerup
 
-![`quad://sounds/30-Powerup.sound.json`](../sounds/30-Powerup.mp3) ![`quad://sounds/31-Powerup.sound.json`](../sounds/31-Powerup.mp3)
-![`quad://sounds/32-Powerup.sound.json`](../sounds/32-Powerup.mp3) ![`quad://sounds/33-Powerup.sound.json`](../sounds/33-Powerup.mp3)
-![`quad://sounds/34-Powerup.sound.json`](../sounds/34-Powerup.mp3) ![`quad://sounds/35-Powerup.sound.json`](../sounds/35-Powerup.mp3)
-![`quad://sounds/36-Powerup.sound.json`](../sounds/36-Powerup.mp3) ![`quad://sounds/37-Powerup.sound.json`](../sounds/37-Powerup.mp3)
-![`quad://sounds/38-Powerup.sound.json`](../sounds/38-Powerup.mp3) ![`quad://sounds/39-Powerup.sound.json`](../sounds/39-Powerup.mp3)
-![`quad://sounds/29-Powerup.sound.json`](../sounds/29-Powerup.mp3)
+![`quad://sounds/powerup-00.sound.json`](../sounds/powerup-00.mp3) ![`quad://sounds/powerup-01.sound.json`](../sounds/powerup-01.mp3)
+![`quad://sounds/powerup-02.sound.json`](../sounds/powerup-02.mp3) ![`quad://sounds/powerup-03.sound.json`](../sounds/powerup-03.mp3)
+![`quad://sounds/powerup-04.sound.json`](../sounds/powerup-04.mp3) ![`quad://sounds/powerup-05.sound.json`](../sounds/powerup-05.mp3)
+![`quad://sounds/powerup-06.sound.json`](../sounds/powerup-06.mp3) ![`quad://sounds/powerup-07.sound.json`](../sounds/powerup-07.mp3)
+![`quad://sounds/powerup-08.sound.json`](../sounds/powerup-08.mp3) ![`quad://sounds/powerup-09.sound.json`](../sounds/powerup-09.mp3)
+![`quad://sounds/powerup-10.sound.json`](../sounds/powerup-10.mp3)
 
 ### Hit
 
@@ -4796,19 +4813,31 @@ options. Project files should have the double extension `.game.json`.
 
 Each game must also contain:
 
-- 64x64 `label64.png` box art image in the same folder as the `.game.json` file. This is
-  used for display in the launcher.
-- 128x128 `label128.png` box art image in the same folder as the `.game.json` file. This is
-  not currently used.
-- 1152x1120 `preview.png` image in the same folder as the `.game.json` file that contains
-  6x10 frames of 192x112 video at 20 fps (3 seconds) used for the preview video in the launcher.
+- 64x64 `label64.png` box art image in the same folder as the
+  `.game.json` file. This is used for display in the launcher.
+- 128x128 `label128.png` box art image in the same folder as the
+  `.game.json` file. This is not currently used.
+- 1152x1120 `preview.png` image in the same folder as the `.game.json`
+  file that contains 6x10 frames of 192x112 video at 20 fps (3
+  seconds total) used for the preview video in the launcher.
+  
+You can create these images however you wish, including manually
+drawing them. The IDE has some tools to automate the process.
 
-You can create the `preview.png` image by pressing Shift+F8 while your game is playing. It will
-record 3s of video, process it to the correct resolution, and open it in a new browser tab.
-Download this image, compress it as you would a sprite, and save it as your preview. Seek to keep
-the total size around 100 kB for the image by choosing content that compresses well and using a good
-compression tool. If the image is much larger, then there will be delay for players browsing
-your game in the discover tab.
+You can create the `label128.png` and `label64.png` images by pressing
+*Shift+F6* while your game is playing (). It will capture a 128x128
+region from the center of the screen and resize it using bilinear
+interpolation to create the 64x64 image, and then save them with the
+appropriate filenames in the game's directory. Edit and compress these
+images as you would a sprite.
+
+You can create the `preview.png` image by pressing *Shift+F8* while
+your game is playing. It will record 3s of video, process it to the
+correct resolution, and save it to disk.  Compress it as you would a
+sprite. Seek to keep the total size around 100 kB for the image by
+choosing content that compresses well and using a good compression
+tool. If the image is much larger, then there will be delay for
+players browsing your game in the discover tab.
 
 
 
@@ -7095,19 +7124,28 @@ Changes for both the specification and implementation in each release.
   `##-Coin.sound.json` to `coin-##.sound.json`,
   `##-Shoot.sound.json` to `shoot-##.sound.json`, 
   `##-Jump.sound.json` to `jump-##.sound.json`,
-  `##-Explode.sound.json` to `explode-##.sound.json`
+  `##-Explode.sound.json` to `explode-##.sound.json`,
+  `##-Powerup.sound.json` to `powerup-##.sound.json`
 - New font: `suchet-12`
+- Support for custom properties on TMX maps
 - Auto-generated TODO lists in the IDE from `todo()` statements in code
 - Errors will now open the appropriate file and line in the IDE
 - Changed document editor layout to show 50% preview and 50% source editor
 - Load a new script faster after creation
 - Active debugger tab persists over reloading
 - System pause menu now pauses game sound effects
-- Syntax highlighting in the IDE for `parse()`
+- Syntax highlighting in the IDE for `parse()` and `random_within_cube()`
+- Added Shift+F6 hotkey for label generation
+- Added a context menu for modes in the project view of the IDE
 - Added `sequence.BREAK` and `sequence.NEXT` options
 - Added five-argument version of `lerp()`
 - Added `LERP()` intrinsic
+- Added `starts_with()` and `ends_with()` functions for strings
 - Added "go to line" command (Ctrl-G/⌘-G) for the IDE
+- Added `engine-00.sound.json` and `engine-01.sound.json`
+- Fixed Windows paths in URLs
+- Fixed Add Existing Asset... on Windows
+- Fixed rectangle alpha blending
 - Fixed `random_within_sphere()` crashing
 - Fixed asset json editor changes being overwritten by caches
 - Fixed alpha channel of screenshots

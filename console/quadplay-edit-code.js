@@ -25,6 +25,10 @@ function getGamePath() {
     if (gamePath.startsWith(location.origin)) {
         gamePath = gamePath.substring(location.origin.length);
     }
+    if (/^\/[A-Za-z]:\//.test(gamePath)) {
+        // Remove the leading slash on Windows absolute paths
+        gamePath = gamePath.substring(1);
+    }
     return gamePath;
 }
 
@@ -1058,7 +1062,7 @@ function updateTodoList() {
                 }
 
                 // b is now the close quote position
-                const message = source.substring(a, b);
+                const message = escapeHTMLEntities(source.substring(a, b));
                 result += `<tr valign=top style="cursor:pointer" onclick="editorGotoFileLine('${url}', ${line})">` +
                     `<td style="text-align: right; padding-right:10px">${line}</td><td>${message}</td></tr>\n`;
             }
@@ -1117,4 +1121,17 @@ function editorGotoFileLine(url, line, character) {
         aceEditor.focus();
         aceEditor.gotoLine(line, character - 1, false);
     }
+}
+
+
+function showModeContextMenu(mode) {
+    const id = 'ModeItem_' + mode.name.replace('*', '');
+
+    let s = `<div onmousedown="onProjectSelect(document.getElementById('${id}'}), 'mode', gameSource.modes[${gameSource.modes.indexOf(mode)}])">Edit</div>`;
+    if (! mode.name.endsWith('*')) {
+        s += `<div onmousedown="onProjectInitialModeChange({value:'${mode.name}'})">Set As Initial Mode</div>`
+    }
+
+    customContextMenu.innerHTML = s;
+    showContextMenu();
 }

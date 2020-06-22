@@ -17,7 +17,7 @@
         "npcSprite": "quad://sprites/dawnlike-npcs-16x16.sprite.json",
         "worldMap": "world.map.json",
         "music": "quad://sounds/loop-sanctuary.sound.json",
-        "pickupSound": "quad://sounds/33-Powerup.sound.json",
+        "pickupSound": "quad://sounds/powerup-03.sound.json",
         "pauseAudioClip": "quad://sounds/70-Wild.sound.json",
         "resumeAudioClip": "quad://sounds/73-Wild.sound.json",
         "bumpSound": "quad://sounds/48-Hit.sound.json"

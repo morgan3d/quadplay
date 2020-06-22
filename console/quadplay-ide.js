@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.06.20.12'
+const version  = '2020.06.22.06'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -1210,13 +1210,25 @@ function onDocumentKeyDown(event) {
         break;
 
     case screenshotKey: // F6
-        downloadScreenshot();
+        if (event.shiftKey) {
+            if (editableProject) {
+                takeLabelImage();
+            } else {
+                _systemPrint('Cannot create a label image because this project is not editable.');
+            }
+        } else {
+            downloadScreenshot();
+        }
         break;
 
     case gifCaptureKey: // F8
         if (event.shiftKey) {
             if (! previewRecording) {
-                startPreviewRecording();
+                if (editableProject) {
+                    startPreviewRecording();
+                } else {
+                    _systemPrint('Cannot create a preview sequence because this project is not editable.');
+                }
             }
         } else {
             toggleGIFRecording();
@@ -2126,8 +2138,10 @@ function visualizeGame(gameEditor, url, game) {
     s+= '<tr><td>&nbsp;</td></tr>\n';
     
     const baseURL = url.replace(/\/[^\/]*$/, '');
-    s += '<tr valign="top"><td></td><td style="text-align:center">64px&nbsp;Label<br><img alt="label64.png" src="' + baseURL + '/label64.png" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:64px; height:64px"></td>';
-    s += '<td></td><td style="text-align:center">128px&nbsp;Label<br><img alt="label128.png" src="' + baseURL + '/label128.png" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:128px; height:128px"></td></tr>\n';
+    s += '<tr valign="top">';
+    s += '<td>Label&nbsp;Icons</td><td style="text-align:left">128px&nbsp;&times;&nbsp;128px<br><img alt="label128.png" src="' + baseURL + '/label128.png" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:128px; height:128px"></td>';
+    s += '<td></td><td style="text-align:left">64px&nbsp;&times;&nbsp;64px<br><img alt="label64.png" src="' + baseURL + '/label64.png" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:64px; height:64px"></td>';
+    s += '</tr>\n<tr><td></td><td colspan=3><i>Press Shift+F6 in game to create <code>label64.png</code> and <code>label128.png</code> templates.</i></td></tr><tr><td><br/><br/></td></tr>\n';
     s += '</table>';
     gameEditor.innerHTML = s;
 }
@@ -2242,7 +2256,8 @@ function createProjectWindow(gameSource) {
         // Hide system modes
         if (/^.*\/_|^_/.test(mode.name)) { continue; }
         const badge = isBuiltIn(mode.url) ? 'builtin' : (isRemote(mode.url) ? 'remote' : '');
-        s += `<li class="clickable ${badge}" onclick="onProjectSelect(event.target, 'mode', gameSource.modes[${i}])" title="${mode.url}" id="ModeItem_${mode.name.replace('*', '')}"><code>${mode.name}</code></li>\n`;
+        const contextMenu = editableProject ? `oncontextmenu="showModeContextMenu(gameSource.modes[${i}])"` : '';
+        s += `<li ${contextMenu} class="clickable ${badge}" onclick="onProjectSelect(event.target, 'mode', gameSource.modes[${i}])" title="${mode.url}" id="ModeItem_${mode.name.replace('*', '')}"><code>${mode.name}</code></li>\n`;
     }
     if (editableProject) {
         s += '<li class="clickable new" onclick="showNewModeDialog()"><i>New mode…</i></li>';
@@ -3532,7 +3547,7 @@ window.addEventListener('focus', function() {
     // Quadplay development; avoid autoreloading because
     // it makes debugging the compiler and IDE difficult
     if (! AUTO_RELOAD_ON_FOCUS) { return; }
-    
+
     if (editableProject && useIDE && isQuadserver) {
         if (document.getElementById('restartOnFocusEnabled').checked) {
             onRestartButton();
@@ -3599,9 +3614,10 @@ document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanc
     let url = getQueryString('game');
 
     url = url || launcherURL;
-    // If the url doesn't have a prefix and doesn't begin with a slash,
-    // assume that it is relative to the quadplay script in the parent dir.
-    if (! (/^(.{3,}:\/\/|[\\/])/).test(url)) {
+
+    // If the url doesn't have a prefix and doesn't begin with a slash or 
+    // drive letter, assume that it is relative to the quadplay script in the parent dir.
+    if (! (/^(.{3,}:\/\/|[\\/]|[a-zA-Z]:[\/\\])/).test(url)) {
         url = '../' + url;
     }
 

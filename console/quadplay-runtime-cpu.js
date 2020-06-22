@@ -664,6 +664,14 @@ function values(t) {
 //
 // String
 
+function starts_with(str, pattern) {
+    return str.startsWith(pattern);
+}
+
+function ends_with(str, pattern) {
+    return str.endsWith(pattern);
+}
+
 // Helper for replace()
 function _entryKeyLengthCompare(a, b) {
     return b[0].length - a[0].length;

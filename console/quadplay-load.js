@@ -53,7 +53,7 @@ function parseHex(str) {
     return parseInt(str, 16) / div;
 }
 
-
+// Assumes no prefix
 function parseHexColor(str) {
     let r, g, b, a = 1;
 
@@ -1026,9 +1026,9 @@ function loadMap(name, json, mapJSONUrl) {
         layer:  [],
         spritesheet_table:Object.create(null),
         sprite_size: Object.freeze({x:0, y:0}),
-        size:   Object.freeze({x: 0, y: 0}),
-        wrap_x:  json.wrap_x || false,
-        wrap_y:  json.wrap_y || false,
+        size:        Object.freeze({x: 0, y: 0}),
+        wrap_x:      json.wrap_x || false,
+        wrap_y:      json.wrap_y || false
     });
 
     if (json.sprite_url) {
@@ -1053,11 +1053,52 @@ function loadMap(name, json, mapJSONUrl) {
             loadManager.fetch(tmxURL, 'text', null, function (xml) {
                 onLoadFileComplete(tmxURL);
                 xml = new DOMParser().parseFromString(xml, 'application/xml');
-        
+
+                // Custom properties
+                let properties = xml.getElementsByTagName('properties');
+                if (properties) {
+                    properties = properties[0].children;
+                    for (let i = 0; i < properties.length; ++i) {
+                        const node = properties[i];
+                        if (node.tagName === 'property') {
+                            const name = node.getAttribute('name');
+                            let value = node.getAttribute('value');
+
+                            switch (node.getAttribute('type')) {
+                            case null:
+                            case 'file':
+                            case 'string':
+                                // Nothing to do!
+                                break;
+
+                            case 'color': // #AARRGGBB hex color
+                                value = parseHexColor(value.substring(3) + value.substring(1, 3));
+                                break;
+
+                            case 'bool':
+                                value = (value !== 'false');
+                                break;
+                                
+                            case 'float':
+                                value = parseFloat(value);
+                                break;
+                                
+                            case 'int':
+                                value = parseInt(value);
+                                break;
+                            }
+
+                            if (name[0] !== '_') {
+                                map[name] = value;
+                            }
+                        }
+                    }
+                } // if properties
+                
                 let tileSet = xml.getElementsByTagName('tileset');
                 tileSet = tileSet[0];
                 map.sprite_size = Object.freeze({x: parseInt(tileSet.getAttribute('tilewidth')),
-                                                y: parseInt(tileSet.getAttribute('tileheight'))});
+                                                 y: parseInt(tileSet.getAttribute('tileheight'))});
                 const columns = parseInt(tileSet.getAttribute('columns'));
                 const spritesheetName = tileSet.getAttribute('name');
 
@@ -1239,10 +1280,19 @@ function makeURLAbsolute(parentURL, childURL) {
         // Already absolute, some other protocol
         return childURL;
     } else if (/^[\\/]/.test(childURL)) {
-        // Absolute on the server. Copy the host and protocol
+        // Absolute on the server, Unix path. Copy the host and protocol
         const match = parentURL.match(/^.{3,6}:\/\/.*?(?=\/)/);
         if (match) {
             return match[0] + childURL;
+        } else {
+            // Hope...
+            return childURL;
+        }
+    } else if (/^[A-Za-z]:[\\\/]/.test(childURL)) {
+        // Absolute on the server, Windows path. Copy the host and protocol
+        const match = parentURL.match(/^.{3,6}:\/\/.*?(?=\/)/);
+        if (match) {
+            return match[0] + '/' + childURL;
         } else {
             // Hope...
             return childURL;

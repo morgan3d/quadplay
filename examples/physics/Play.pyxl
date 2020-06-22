@@ -140,6 +140,13 @@ def spawnParticle(contact):
             push(particleArray, {pos: clone(pos), vel: random(1, 2) * random_direction2D(),
                                  color: hsv(random(), 50%, 100%), life: random_integer(8, 16)})
 
+def particleUpdate(particle):
+    with pos, vel, color, life in particle:
+        --life; pos += vel 
+        draw_point(pos, color, 10)
+        if life < 0: return iterate.REMOVE
+
+
 // Spawn particles on hard collisions, excluding the balls hitting a wall
 physics_add_contact_callback(physics, spawnParticle, 1.9, ∞, bitnot (ballCategory bitor wallCategory))
    
@@ -194,10 +201,7 @@ if physics_entity_has_contacts(physics, trigger):
 physics_simulate(physics)
 
 // Simulate and draw particles
-for pos, vel, color, life in particle in particleArray:
-   --life; pos += vel 
-   draw_point(pos, color, 10)
-   if life < 0: fast_remove_value(particleArray, particle)
+iterate(particleArray, particleUpdate);
 
 // Force the debugging view to draw physics (a normal game
 // would not need this), and disable the IDE's option for
