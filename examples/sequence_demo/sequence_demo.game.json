@@ -1,0 +1,62 @@
+{
+    "achievements": false,
+    "assets": {
+        "big_font": "quad://fonts/deja-15.font.json"
+    },
+    "competitive": false,
+    "constants": {
+        "ANIMATE_IN_TIME" : {
+            "help": "amount of 60hz frames to animate in and out for",
+            "type": "number",
+            "value": 30
+        },
+        "HOLD_TIME": {
+            "help": "Amount of 60hz frames banner freezes while visible for",
+            "type": "number",
+            "value": 60
+        },
+        "HEADER_TEXT": {
+            "help": "Text to show on the banner",
+            "type": "string",
+            "value": "SEQUENCE DEMO"
+        },
+        "BANNER_BG": {
+            "help" : "background color of text banner",
+            "type": "rgb",
+            "value": {
+                "b": {
+                    "type": "number",
+                    "value": 0
+                },
+                "g": {
+                    "type": "number",
+                    "value": 0
+                },
+                "r": {
+                    "type": "number",
+                    "value": 1
+                }
+            }
+        }
+    },
+    "cooperative": false,
+    "copyright": "\u00a92020 Your Name Here",
+    "description": "Demo of using sequence()",
+    "developer": "Your Name Here",
+    "docs": [
+        "todo.md"
+    ],
+    "highscores": false,
+    "license": "CC0/Public Domain (Replace with your own license)",
+    "max_players": 1,
+    "min_players": 1,
+    "modes": [
+        "Play*"
+    ],
+    "packages": [],
+    "scripts": [
+        "turn_transition_lib.pyxl"
+    ],
+    "title": "sequence_demo",
+    "version": 0.0
+}

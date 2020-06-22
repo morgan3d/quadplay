@@ -1,0 +1,16 @@
+init
+────────────────────────────────────────────────────────────────────────
+def loop_transition():
+    let opts = clone(SLIDE_TRANSITION_DEFAULTS)
+    opts.HOLD_TIME = HOLD_TIME
+    opts.SLIDE_IN_TIME = ANIMATE_IN_TIME
+
+    start_transition(HEADER_TEXT, big_font, BANNER_BG, loop_transition, opts)
+
+enter
+────────────────────────────────────────────────────────────────────────
+loop_transition()
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_transform(SCREEN_SIZE/2)

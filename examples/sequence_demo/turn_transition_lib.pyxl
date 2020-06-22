@@ -1,0 +1,80 @@
+const SLIDE_TRANSITION_DEFAULTS = {
+    SLIDE_IN_TIME: 30,
+    START_POS: xy(SCREEN_SIZE.x, 0),
+    TARGET_POS: xy(0, 0),
+    HOLD_TIME: 60,
+}
+
+def lerp_text(framesleft, total_frames, text, pos, alpha, banner_color, font):
+    const text_pos = lerp(
+        pos.start,
+        pos.target,
+        smootherstep(total_frames, 0, framesleft)
+    )
+    const text_alpha = lerp(
+        alpha.start,
+        alpha.target,
+        smootherstep(total_frames, 0, framesleft)
+    )
+    draw_transition(text_pos, text_alpha, text, banner_color, font)
+
+def swizzle_args(pos, alpha, text, banner_color, font, transition_opts):
+    pos.start = transition_opts.TARGET_POS
+    pos.target = -transition_opts.START_POS
+    alpha.start = 1
+    alpha.target = 0
+    draw_transition(pos.start, alpha.start, text, banner_color, font)
+
+def start_transition(
+        text,
+        font,
+        banner_color,
+        after_function,
+        transition_opts default SLIDE_TRANSITION_DEFAULTS
+):
+    // pos
+    let pos = {
+        start: transition_opts.START_POS,
+        target: transition_opts.TARGET_POS,
+    }
+
+    // alpha
+    let alpha = {
+        start: 0,
+        target: 1,
+    }
+
+    def draw_text_transition():
+        draw_transition(pos.target, 1, text, banner_color, font)
+    def lerp_text_specific(framesleft, total_frames):
+        lerp_text(framesleft, total_frames, text, pos, alpha, banner_color, font)
+    def swizzle_args_and_draw():
+        swizzle_args(pos, alpha, text, banner_color, font, transition_opts)
+
+    sequence(
+        {callback: lerp_text_specific, frames: transition_opts.SLIDE_IN_TIME},
+        {callback: draw_text_transition, frames: transition_opts.HOLD_TIME},
+        swizzle_args_and_draw,
+        {callback: lerp_text_specific, frames: transition_opts.SLIDE_IN_TIME},
+        after_function
+    )
+
+def draw_transition(pos, alpha, text, banner_color, font):
+    draw_corner_rect(
+        xy(-SCREEN_SIZE.x/2, -40),
+        xy(SCREEN_SIZE.x, 80),
+        rgba(banner_color.r, banner_color.g, banner_color.b, alpha),
+        nil,
+        100
+    )
+    draw_text(
+        font,
+        text,
+        pos,
+        rgba(0,0,0, alpha),
+        rgba(0,0,0, alpha),
+        nil,
+        "center",
+        "center",
+        100
+    )
