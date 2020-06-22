@@ -18,8 +18,8 @@
         "worldMap": "world.map.json",
         "music": "quad://sounds/loop-sanctuary.sound.json",
         "pickupSound": "quad://sounds/powerup-03.sound.json",
-        "pauseAudioClip": "quad://sounds/70-Wild.sound.json",
-        "resumeAudioClip": "quad://sounds/73-Wild.sound.json",
+        "pauseAudioClip": "quad://sounds/wild-00.sound.json",
+        "resumeAudioClip": "quad://sounds/wild-03.sound.json",
         "bumpSound": "quad://sounds/hit-08.sound.json"
     },
 

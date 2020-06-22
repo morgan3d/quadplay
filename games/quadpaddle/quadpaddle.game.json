@@ -1,7 +1,7 @@
 {
     "assets": {
         "ballSprite": "ball.sprite.json",
-        "beatLevelSound": "quad://sounds/78-Wild.sound.json",
+        "beatLevelSound": "quad://sounds/wild-08.sound.json",
         "borderSprite": "quad://sprites/kenney-ui-16x16.sprite.json",
         "cornerSprite": "corner.sprite.json",
         "destroyBlockSound": "quad://sounds/explode-08.sound.json",
@@ -9,7 +9,7 @@
         "hitPaddleSound": "quad://sounds/powerup-03.sound.json",
         "levelTemplate": "levels.map.json",
         "logo": "logo.sprite.json",
-        "loseBallSound": "quad://sounds/75-Wild.sound.json",
+        "loseBallSound": "quad://sounds/wild-05.sound.json",
         "mediumFont": "quad://fonts/deja-8.font.json",
         "menuSound": "quad://sounds/blip-17.sound.json",
         "music": "quad://sounds/loop-arcade.sound.json",

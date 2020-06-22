@@ -23,7 +23,7 @@
         "paper_paper_audio_clip": "paper-paper.sound.json",
         "scissors_scissors_audio_clip": "scissors-scissors.sound.json",
         "start_sound": "quad://sounds/jump-09.sound.json",
-        "elimination_sound": "quad://sounds/75-Wild.sound.json",
+        "elimination_sound": "quad://sounds/wild-05.sound.json",
         "heal_sound": "quad://sounds/powerup-00.sound.json",
         "title_music": "quad://sounds/loop-joy.sound.json",
         "unchallenged_audio_clip": "unchallenged.sound.json",
