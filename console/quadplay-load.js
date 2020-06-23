@@ -1056,7 +1056,7 @@ function loadMap(name, json, mapJSONUrl) {
 
                 // Custom properties
                 let properties = xml.getElementsByTagName('properties');
-                if (properties) {
+                if (properties && properties.length > 0) {
                     properties = properties[0].children;
                     for (let i = 0; i < properties.length; ++i) {
                         const node = properties[i];

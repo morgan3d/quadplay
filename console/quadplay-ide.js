@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.06.22.06'
+const version  = '2020.06.23.12'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -3606,6 +3606,9 @@ document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanc
         const name = optionNames[i];
         const value = JSON.parse(localStorage.getItem(name) || 'false');
         const element = document.getElementById(name);
+        if (! element) {
+            console.error(name + " not found");
+        }
         element.checked = value;
     }
 }

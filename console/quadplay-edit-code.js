@@ -1094,7 +1094,7 @@ function updateTodoList() {
         result += 'Put <code>todo()</code> statements in your code to automatically generate this list.';
     }
 
-    todoPane.innerHTML = `<div class="hideScrollBars" style="width: 97%">${result}</div>`;
+    todoPane.innerHTML = result;//`<div class="hideScrollBars" style="width: 97%">${result}</div>`;
 }
 
 
