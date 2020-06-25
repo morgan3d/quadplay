@@ -347,8 +347,10 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                             }
                             definition = gameJSON.constants[id];
                         } while (definition && definition.type === 'reference');
-                        
-                        if (id in gameSource.constants || id in gameSource.assets) {
+
+                        // Check the JSON for the assets, not the source---assets haven't
+                        // yet loaded as they are asynchronous
+                        if ((id in gameSource.constants) || (id in gameJSON.assets)) {
                             // Store the *original* reference, which
                             // will be re-traversed per call at
                             // runtime to ensure that changes are
