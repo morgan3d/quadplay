@@ -1238,6 +1238,9 @@ function addCodeToSourceStats(code, scriptURL) {
     const sectionRegex = /(?:^|\n)[ \t]*(init|enter|frame|leave)[ \t]*\n(?:-|─|—|━|⎯){5,}[ \t]*\n/;
     code = code.replace(sectionRegex, '\n');
 
+    // Remove function definition lines
+    code = code.replace(/\n *def [^\n]+: *\n/gm, '\n');
+    
     // Remove blank lines
     code = code.replace(/\n\s*\n/g, '\n');
 
