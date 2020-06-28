@@ -787,25 +787,14 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     _requiresBlending: hasFractionalAlpha,
                     spritesheet:       spritesheet,
                     tile_index:        Object.freeze({x:u, y:v}),
-                    id:                ++lastSpriteID,
+                    id:                lastSpriteID,
+                    orientation_id:    lastSpriteID,
                     size:              spritesheet.sprite_size,
                     scale:             PP,
                     pivot:             sspivot,
                     frames:            sheetDefaultframes
                 };
-
-                // Construct the flipped versions
-                sprite.x_flipped = Object.assign({x_flipped:sprite}, sprite);
-                sprite.x_flipped.scale = NP;
-                sprite.x_flipped.lastSpriteID = ++lastSpriteID;
-
-                sprite.y_flipped = Object.assign({y_flipped:sprite}, sprite);
-                sprite.y_flipped.lastSpriteID = ++lastSpriteID;
-                sprite.y_flipped.scale = PN;
-
-                sprite.x_flipped.y_flipped = sprite.y_flipped.x_flipped = Object.assign({}, sprite);
-                sprite.y_flipped.x_flipped.scale = NN;
-                sprite.y_flipped.x_flipped.lastSpriteID = ++lastSpriteID;
+                lastSpriteID += 3;
 
                 spritesheet[x][y] = sprite;
             }
@@ -819,6 +808,9 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 throw new Error('The "names" entry in a sprite.json file must be an object (was "' + (typeof json.names) + '")');
             }
 
+            // Excluded from the default property list
+            const builtInProperties = ['', 'id', 'frames', 'x', 'y', 'x_flipped', 'y_flipped', 'scale', 'size', 'pivot', 'spritesheet', 'tile_index', 'start', 'end'];
+            
             for (let anim in json.names) {
                 const data = json.names[anim];
                 
@@ -828,6 +820,17 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 }
                 
                 const animDefaultframes = Math.max(0.25, data.default_frames || sheetDefaultframes);
+
+                const otherProperties = {};
+                for (const key in data) {
+                    if (key[0] !== '_' && builtInProperties.indexOf(key) === -1) {
+                        try {
+                            otherProperties[key] = evalJSONGameConstant(data[key]);
+                        } catch (e) {
+                            throw e + " while parsing " + anim + "." + key;
+                        }
+                    }
+                }
                 
                 // Apply defaults
                 if (data.x !== undefined) {
@@ -838,6 +841,8 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     }
 
                     const sprite = spritesheet[anim] = spritesheet[u][v];
+                    // Copy other properties
+                    Object.assign(sprite, otherProperties);
                     sprite.frames = animDefaultframes;
                     sprite._animationName = anim;
                     sprite._animationIndex = undefined;
@@ -881,6 +886,8 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                             sprite._animationIndex = i;
                             sprite.pivot = pivot;
                             sprite.frames = Math.max(0.25, frames[Math.min(i, frames.length - 1)]);
+                            // Copy other properties
+                            Object.assign(sprite, otherProperties);
 
                             animation.push(sprite);
                         }
@@ -923,11 +930,19 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         for (let x = 0; x < spritesheet.length; ++x) {
             for (let y = 0; y < spritesheet[x].length; ++y) {
                 const sprite = spritesheet[x][y];
-                // Freeze all versions
-                if (sprite.frames === undefined) {
-                    sprite.frames = sheetDefaultframes;
-                }
-                sprite.x_flipped.frames = sprite.y_flipped.frames = sprite.y_flipped.x_flipped.frames = sprite.frames;
+                // Construct the flipped versions and freeze all
+                sprite.x_flipped = Object.assign({x_flipped:sprite}, sprite);
+                sprite.x_flipped.scale = NP;
+                sprite.x_flipped.orientation_id += 1;
+
+                sprite.y_flipped = Object.assign({y_flipped:sprite}, sprite);
+                sprite.y_flipped.orientation_id += 2;
+                sprite.y_flipped.scale = PN;
+
+                sprite.x_flipped.y_flipped = sprite.y_flipped.x_flipped = Object.assign({}, sprite);
+                sprite.y_flipped.x_flipped.scale = NN;
+                sprite.y_flipped.x_flipped.orientation_id += 3;
+                
                 Object.freeze(sprite.x_flipped);
                 Object.freeze(sprite.y_flipped);
                 Object.freeze(sprite.y_flipped.x_flipped);
@@ -1240,6 +1255,12 @@ function addCodeToSourceStats(code, scriptURL) {
 
     // Remove function definition lines
     code = code.replace(/\n *def [^\n]+: *\n/gm, '\n');
+    
+    // Remove TODOs and ASSERTs (assume that they are on their own lines to simplify parsing)
+    code = code.replace(/(todo|assert) *\(.*\n/g, '\n');
+
+    // Remove semicolons (which may be left after removing todo or assert)
+    code = code.replace(/;/g, '');
     
     // Remove blank lines
     code = code.replace(/\n\s*\n/g, '\n');

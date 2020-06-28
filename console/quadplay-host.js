@@ -792,11 +792,20 @@ function _systemPrint(m, style) {
 
 
 // Allows HTML
-function _outputAppend(m) {
+function _outputAppend(m) {    
     if (m !== '') {
         // Remove tags and then restore HTML entities
         console.log(m.replace(/<.+?>/g, '').replace(/&quot;/g,'"').replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
-        outputDisplayPane.innerHTML += m;
+
+        const MAX_LENGTH = 300;
+        if (outputDisplayPane.childNodes.length > MAX_LENGTH) {
+            // Remove a lot, so that we amortize the cost of manipulating the DOM
+            while (outputDisplayPane.childNodes.length > MAX_LENGTH - 10) {
+                outputDisplayPane.removeChild(outputDisplayPane.firstChild);
+            }
+        }
+        outputDisplayPane.insertAdjacentHTML('beforeend', m);
+        
         // Scroll to bottom
         outputDisplayPane.scrollTop = outputDisplayPane.scrollHeight - outputDisplayPane.clientHeight;
     }

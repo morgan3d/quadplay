@@ -10,20 +10,84 @@ const particle_array = []
 def spawn_particle(pos, vel, color, z, frames):
    push(particle_array, {pos: clone(pos), vel:vel, color: clone(color), z: z, frames: frames})
 
+   
+def spawn_particles_from_map_ws_coord(
+        map,
+        pos,
+        z,
+        max_frames          default 40,
+        z_offset            default ½,
+        spread_center       default pos,
+        min_spread_speed    default ½,
+        max_spread_speed    default 1, 
+        common_dir          default xy(0, 0),
+        min_common_speed    default 0,
+        max_common_speed    default 0,
+        common_vel          default xy(0, 0),
+        density             default 3):
+    
+    if map.map and (pos == nil):
+        pos = map.pos
+        z = map.z
+        max_frames = map.max_frames default 40
+        z_offset = map.z_offset default ½
+        spread_center = map.spread_center default pos
+        min_spread_speed = map.min_spread_speed default ½
+        max_spread_speed = map.max_spread_speed default 1 
+        common_dir = map.common_dir default xy(0, 0)
+        min_common_speed = map.min_common_speed default 0
+        max_common_speed = map.max_common_speed default 0
+        common_vel = map.common_vel default xy(0, 0)
+        density = map.density default 3
+        map = map.map
+
+    // Make a fake entity
+    const entity = {
+        z: z,
+        pos: transform_map_space_to_ws(map, round(transform_ws_to_map_space(map, pos))),
+        sprite: get_map_sprite_by_ws_coord(map, pos, z),
+        scale: xy(1, 1),
+        angle: 0,
+        offset: xy(0, 0),
+        vel: xy(0, 0)
+    }
+
+    if not entity.sprite: return
+        
+    spawn_particles_from_entity(entity, max_frames, z_offset, spread_center,
+        min_spread_speed, max_spread_speed, common_dir,
+        min_common_speed, max_common_speed, common_vel, density)
+
+
 
 // Convert an entity's sprite into a particle system.
+// Can also be called as spawn_particles_from_entity(args)
 def spawn_particles_from_entity(
-    entity,
-    max_frames,
-    z_offset            default ½,
-    spread_center       default entity.pos,
-    min_spread_speed    default 0,
-    max_spread_speed    default 0, 
-    common_dir          default xy(0, 0),
-    min_common_speed    default 0,
-    max_common_speed    default 0,
-    common_vel          default xy(0, 0),
-    copies              default 1):
+        entity,
+        max_frames          default 40,
+        z_offset            default ½,
+        spread_center       default entity.pos,
+        min_spread_speed    default 0,
+        max_spread_speed    default 0, 
+        common_dir          default xy(0, 0),
+        min_common_speed    default ½,
+        max_common_speed    default 1,
+        common_vel          default xy(0, 0),
+        density             default 3):
+
+    if entity.entity and (max_frames == nil):
+        // Overloaded named argument version
+        max_frames = entity.max_frames default 40
+        z_offset = entity.z_offset default ½
+        spread_center = entity.spread_center default entity.pos.pos
+        min_spread_speed = entity.min_spread_speed default 0
+        max_spread_speed = entity.max_spread_speed default 0
+        common_dir = entity.common_dir default xy(0, 0)
+        min_common_speed = entity.min_common_speed default ½
+        max_common_speed = entity.max_common_speed default 1
+        common_vel = entity.common_vel default xy(0, 0)
+        density = entity.density default 3
+        entity = entity.entity
                 
     assert(entity, "entity must not be nil")
 
@@ -46,7 +110,7 @@ def spawn_particles_from_entity(
             // Draw space position
             const pos = entity.pos + U * es_pos.x + V * es_pos.y
             
-            for i < copies:
+            for i < density:
                 let vel = entity.vel * random(¼, ¾) + common_vel            
                 vel += direction(pos - spread_center) * random(min_spread_speed, max_spread_speed)
                 vel += common_dir * random(min_common_speed, max_common_speed)

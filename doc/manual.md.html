@@ -1235,7 +1235,14 @@ angles are always clockwise in screen space.
 `any_button_press(gamepad_or_touch default ∅)`
 : Returns true if any button on `gamepad_or_touch` was just pressed.
   If `gamepad_or_touch` is `nil`, returns true if any button on any
-  gamepad was pressed or there was any touch.
+  gamepad was pressed or there was any touch pressed.
+
+`any_button_release(gamepad_or_touch default ∅)`
+: Returns true if any button on `gamepad_or_touch` was just released.
+  This is useful on main menus to ensure that the button is no longer
+  held at the end of the mode.
+  If `gamepad_or_touch` is `nil`, returns true if any button on any
+  gamepad was released or there was any touch released.
 
 `joy`
 : A variable equal to `gamepad_array[0]` as shorthand for
@@ -2688,8 +2695,14 @@ Sprites can also be referenced by name `spritesheet["`<i>name</i>`"]` or
 a `start` field in the .sprite.json file.
 
 `sprite.id`
-: Unique integer identifying this sprite. This may change every time
+: Unique integer identifying this sprite by spritesheet and tile_index, but 
+  excluding orientation.  This may change every time
   the program is run.
+
+`sprite.orientation_id`
+: Unique integer identifying this sprite, including orientation. This may change every time
+  the program is run. The flipped versions of a sprite have _different_
+  IDs. To tell if two sprites are the same except for flipping, use `sprite.id`.
 
 `sprite.frames`
 : Number of 1/60-second (≈ 16.7 ms) game frames to hold this sprite during animation.
@@ -2718,6 +2731,9 @@ a `start` field in the .sprite.json file.
 
 `sprite.tile_index`
 : Integer `xy()` index of the sprite in its spritesheet.
+
+Any properties attached to a named sprite or animation in the `sprite.json` file also
+appear as properties of the sprite (and its flipped variations).
 
 
 Entity
@@ -3857,10 +3873,12 @@ indices. The map's z-axis corresponds to layers.
 
 `transform_ws_to_map_space(map, ws_point)`
 : Returns the _fractional_ map coordinates of `ws_point`.  See also
-  `transform_map_space_to_ws()`.
+  `transform_map_space_to_ws()`. Note that integer map coordinates are
+  at the centers of map tiles.
   
-  To account for a map that is rendered by `draw_map()` with its own `pos`, `angle`, and `scale`, use
-  `transform_ws_to_map_space(map, transform_to(pos, angle, scale, ws_coord))`.
+  To account for a map that is rendered by `draw_map()` with its own
+  `pos`, `angle`, and `scale`, use `transform_ws_to_map_space(map,
+  transform_to(pos, angle, scale, ws_coord))`.
 
 `transform_ws_z_to_map_layer(map, ws_z)`
 : Using the current transformation, returns the _fractional_ map layer
@@ -3871,8 +3889,9 @@ indices. The map's z-axis corresponds to layers.
   transformation.
 
 `transform_map_space_to_ws(map, map_coord)`
-: Returns the draw coordinates of `map_coord`. Integer map_coords correspond to the centers of tiles,
-  which will be fractional pixels for even map tile sizes. See also `transform_ws_to_map_space()`
+: Returns the draw coordinates of `map_coord`. Integer map_coords correspond to the _centers_ of tiles if
+ the offset on the map is zero (the default).
+  (Centers will also be fractional _pixels_ for even map tile sizes). See also `transform_ws_to_map_space()`
   and `get_map_pixel_color()`.
   
   To account for a map that is rendered by `draw_map()` with its own `pos`, `angle`, and `scale`, use
@@ -4625,7 +4644,8 @@ Sounds
 ![`quad://sounds/explode-04.sound.json`](../sounds/explode-04.mp3) ![`quad://sounds/explode-05.sound.json`](../sounds/explode-05.mp3)
 ![`quad://sounds/explode-06.sound.json`](../sounds/explode-06.mp3) ![`quad://sounds/explode-07.sound.json`](../sounds/explode-07.mp3)
 ![`quad://sounds/explode-08.sound.json`](../sounds/explode-08.mp3) ![`quad://sounds/explode-09.sound.json`](../sounds/explode-09.mp3)
-![`quad://sounds/explode-11.sound.json`](../sounds/explode-11.mp3)
+![`quad://sounds/explode-11.sound.json`](../sounds/explode-11.mp3) 
+![`quad://sounds/explode-12.sound.json`](../sounds/explode-12.mp3)
 
 ### Powerup
 
@@ -4959,7 +4979,10 @@ The sprite sheet JSON descriptor looks like:
         "jumpDown": {"start": {"x": 2, "y": 1}},
         "dead":     {"x": 3, "y": 0},
         "parachute":{"start": {"x": 3, "y": 1},
-                     "pivot": {"x": 4, "y": 4}}
+                     "pivot": {"x": 4, "y": 4},
+                     "is_item": true // Arbitrary properties can be attached here, using the
+                                     // same syntax as game constants
+                     },
     },
 
     // Optional offset and extent. Using this conserves memory if the sprites
@@ -5137,7 +5160,8 @@ The map JSON descriptor looks like:
     "url": "overworld.tmx",
 
     // Optional. Shift the map by this amount in pixels for all coordinate
-    // transformations and rendering. Default = 0, 0.
+    // transformations and rendering. Default = (0,0), which puts integer
+    // map coordinates at the centers of tiles.
     "offset": {"x": 7.5, "y": 7.5},
 
     // z value of the first layer. Optional, default = 0
@@ -7119,10 +7143,23 @@ Changes for both the specification and implementation in each release.
 
 2020 July TBD: Beta update 45
 
-- Fixed constant references to assets
-- Stopped counting function definition lines against the total source statement limit
-  to encourage abstraction
+- Stopped counting function definition lines, `todo()`, and `assert()` against the total source statement limit
+  since they do not reflect actual functionality
+- Optimized `debug_print()` to make it practical to print large amounts of data
+- Added support for arbitrary properties on sprites in the `sprite.json`
 - Added `kenney-cartography-64x64.sprite.json`
+- Added `sprite.orientation_id` to distinguish unique orientations
+- Added `any_button_release()`
+- Added `explode-12.sound.json`
+- Added `spawn_particles_from_map_ws_coord()` to `scripts/particle.pyxl`
+- Changed all map functions to _round_ to the nearest integer map coordinate instead 
+  of flooring to be consistent with transformations
+- Fixed `draw_map()` case using named arguments for `replacement_array`
+- Fixed `transform_map_space_to_ws()` and `transform_ws_to_map_space()` to map 
+  integer map coordinates to the centers of map tiles, as specified in the manual
+- Fixed constant references to assets
+- Fixed RPG demo crash
+- Fixed vehicle demo button prompts
 
 2020 June 23: Beta update 44
 

@@ -3378,13 +3378,14 @@ function transform_ws_z_to_map_layer(map, z) {
 
 
 function transform_map_space_to_ws(map, map_coord) {
-    return xy(map_coord.x * map.sprite_size.x + map._offset.x,
-              map_coord.y * map.sprite_size.y + map._offset.y);
+    return xy((map_coord.x + 0.5) * map.sprite_size.x + map._offset.x,
+              (map_coord.y + 0.5) * map.sprite_size.y + map._offset.y);
 }
 
+
 function transform_ws_to_map_space(map, ws_coord) {
-    return xy((ws_coord.x - map._offset.x) / map.sprite_size.x,
-              (ws_coord.y - map._offset.y) / map.sprite_size.y);
+    return xy((ws_coord.x - map._offset.x) / map.sprite_size.x - 0.5,
+              (ws_coord.y - map._offset.y) / map.sprite_size.y - 0.5);
 }
 
 
@@ -3416,8 +3417,8 @@ function transform_from(pos, angle, scale, coord) {
 
 function get_map_pixel_color(map, map_coord, layer, replacement_array) {
     layer = Math.round(layer || 0);
-    let mx = Math.floor(map_coord.x);
-    let my = Math.floor(map_coord.y);
+    let mx = Math.round(map_coord.x);
+    let my = Math.round(map_coord.y);
 
     if (map.wrap_x) { mx = loop(mx, map.size.x); }
     if (map.wrap_y) { my = loop(my, map.size.y); }
@@ -3471,8 +3472,8 @@ function get_map_pixel_color_by_ws_coord(map, ws_coord, ws_z, replacement_array)
 function get_map_sprite(map, map_coord, layer, replacement_array) {
     if (! map.spritesheet_table) { throw new Error('The first argument to get_map_sprite() must be a map'); }
     layer = Math.round(layer || 0) | 0;
-    let mx = Math.floor(map_coord.x);
-    let my = Math.floor(map_coord.y);
+    let mx = Math.round(map_coord.x);
+    let my = Math.round(map_coord.y);
 
     if (map.wrap_x) { mx = loop(mx, map.size.x); }
     if (map.wrap_y) { my = loop(my, map.size.y); }
@@ -3501,8 +3502,8 @@ function get_map_sprite(map, map_coord, layer, replacement_array) {
 
 function set_map_sprite(map, map_coord, sprite, layer) {
     layer = Math.round(layer || 0) | 0;
-    let mx = Math.floor(map_coord.x);
-    let my = Math.floor(map_coord.y);
+    let mx = Math.round(map_coord.x);
+    let my = Math.round(map_coord.y);
 
     if (map.wrap_x) { mx = loop(mx, map.size.x); }
     if (map.wrap_y) { my = loop(my, map.size.y); }
@@ -3512,8 +3513,6 @@ function set_map_sprite(map, map_coord, sprite, layer) {
         (mx < map.size.x) && (my < map.size.y)) {
         // In bounds
         map.layer[layer][mx][my] = sprite;
-    } else {
-        return undefined;
     }
 }
 
@@ -3535,7 +3534,7 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
         // named argument version
         min_layer = map.min_layer;
         max_layer = map.max_layer;
-        replacements = map.replacements;
+        replacements = map.replacement_array;
         pos = map.pos;
         angle = map.angle;
         scale = map.scale;
@@ -5819,6 +5818,15 @@ function any_button_press(gamepad) {
         return any_button_press(gamepad_array[0]) || any_button_press(gamepad_array[1]) || any_button_press(gamepad_array[2]) || any_button_press(gamepad_array[3]) || touch.aa;
     } else {
         return gamepad.aa || gamepad.bb || gamepad.cc || gamepad.dd || gamepad.ee || gamepad.ff || gamepad.qq;
+    }
+}
+
+
+function any_button_release(gamepad) {
+    if (gamepad === undefined) {
+        return any_button_release(gamepad_array[0]) || any_button_release(gamepad_array[1]) || any_button_release(gamepad_array[2]) || any_button_release(gamepad_array[3]) || touch.released_a;
+    } else {
+        return gamepad.released_a || gamepad.released_b || gamepad.released_c || gamepad.released_d || gamepad.released_e || gamepad.released_f || gamepad.released_q;
     }
 }
 

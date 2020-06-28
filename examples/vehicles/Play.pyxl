@@ -84,6 +84,7 @@ def simulate_chopper(player):
       vel = direction(vel) * speed
 
 
+
 def simulate_tank(player):
    player.z = Z_MIN
    with angle, speed, gamepad, vel in player:
@@ -105,6 +106,7 @@ def simulate_tank(player):
       
    const turret = player.child_array[0]
    turret.angle_in_parent = clamp(turret.angle_in_parent + 2° (player.gamepad.e - player.gamepad.f), -85°, 85°)
+
 
 
 def simulate_hero(player):
@@ -215,20 +217,23 @@ def simulate_player(player):
    player.pos += player.vel
 
 
+
 def draw_controls(player) preserving_transform:
    set_transform(xy(0, 0), xy(1, 1))
    const pos = xy(5, 10)
    draw_text(font, uppercase(player.type), pos, #fffd, nil, #0004)
    
-   for control in player.controls:
+   for control at prompt in player.controls:
       pos.y += font.line_height
-      draw_text(font, replace(control, player.gamepad.prompt), pos, #fffd, ∅, #0004)
-      draw_text(font, player.controls[control], pos + xy(35, 0), #fffd, ∅, #0004)
+      draw_text(font, replace(prompt, player.gamepad.prompt), pos, #fffd, ∅, #0004)
+      draw_text(font, control, pos + xy(35, 0), #fffd, ∅, #0004)
+
 
 
 enter
 ────────────────────────────────────────────────────────────────────────
 set_vehicle(player, "hero")
+
 
 
 frame
@@ -243,6 +248,7 @@ draw_controls(player)
 simulate_player(player)
 entity_update_children(player)
 
+
 // Camera (use θ = player.angle - 90° to look along the x axis instead of the y axis)
 with pos, z, base_zoom, angle in camera:
    pos = player.pos
@@ -254,6 +260,7 @@ with pos, z, base_zoom, angle in camera:
    // Zoom the camera to an appropriate scale
    if player.type == "hero": base_zoom = min(150%, base_zoom + 2%)
    else: base_zoom = max(100%, base_zoom - 5%)
+     
          
 // Minimap
 preserving_transform:

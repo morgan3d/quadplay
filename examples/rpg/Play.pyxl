@@ -42,12 +42,12 @@ def updatePlayer(P, input):
       const footOffset = 6
       
       // Check for collisions at the base of the sprite and then move
-      if get_map_sprite_by_draw_coord(castleMap, pos + xy(4 Δx, footOffset), WALL):
+      if get_map_sprite_by_ws_coord(castleMap, pos + xy(4 Δx, footOffset), WALL):
          hitWall()
       else:
          pos.x += Δx
          
-      if get_map_sprite_by_draw_coord(castleMap, pos + xy(0, 2 Δy + footOffset), WALL):
+      if get_map_sprite_by_ws_coord(castleMap, pos + xy(0, 2 Δy + footOffset), WALL):
          hitWall()
       else:
          pos.y += Δy
@@ -69,10 +69,10 @@ def updatePlayer(P, input):
          f = 0
 
       // See if we've picked anything up
-      let item = get_map_sprite_by_draw_coord(castleMap, pos, COLLECTABLE)
+      let item = get_map_sprite_by_ws_coord(castleMap, pos, COLLECTABLE)
       if item:
          // Remove from map
-         set_map_sprite_by_draw_coord(castleMap, pos, ∅, COLLECTABLE)
+         set_map_sprite_by_ws_coord(castleMap, pos, ∅, COLLECTABLE)
          // Add to inventory
          push(P.inventory, item)
          play_sound(pickupSound)
@@ -98,14 +98,17 @@ if magnitude(shopKeeperPos - player.pos) < 32:
    // Show dialogue
    draw_sprite_corner_rect(dialogueSprite[4][1], shopKeeperPos - xy(27, 19), xy(31, 7), 8)
    draw_text(smallFont, "Press " + joy.prompt["(c)"], shopKeeperPos - xy(12, 16), #000, nil, nil, 0, 0, 8)
-   if joy.cc: push_mode(Shop, "Press ⓒ")
+   if joy.cc: push_mode(Shop) because "Press ⓒ"
 
 draw_map(castleMap, ∅, ∅, animate)
 updatePlayer(player, gamepad_array[0])
 draw_entity(player)
 
 // Mode transitions
-if joy.qq: push_mode(Inventory, "Press Q")
-if find(WATER_SPRITES, get_map_sprite_by_draw_coord(castleMap, player.pos, BASE)) != ∅: set_mode(GameOver, "Drown")
-if size(player.inventory) > 3: set_mode(Win, "Collect all items")
+if joy.qq: push_mode(Inventory) because "Press Q"
+
+if find(WATER_SPRITES, get_map_sprite_by_ws_coord(castleMap, player.pos, BASE)) != ∅: 
+    set_mode(GameOver) because "Drown"
+    
+if size(player.inventory) > 3: set_mode(Win) because "Collect all items"
 
