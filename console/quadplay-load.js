@@ -1065,7 +1065,6 @@ function loadMap(name, json, mapJSONUrl) {
         fileContents[spritesheetUrl] = spritesheetJson;
 
         const spritesheet = loadSpritesheet(name + ' sprites', spritesheetJson, spritesheetUrl, function (spritesheet) {
-            
             // Now go back and fetch the map as a continuation, given that we have the spritesheet
             loadManager.fetch(tmxURL, 'text', null, function (xml) {
                 onLoadFileComplete(tmxURL);
@@ -1192,7 +1191,10 @@ function loadMap(name, json, mapJSONUrl) {
                 
                 // Don't allow the array of arrays to be changed (just the individual elements)
                 Object.freeze(map.layer);
-            }, loadFailureCallback, loadWarningCallback);
+            },
+                              loadFailureCallback,
+                              loadWarningCallback,
+                              computeForceReloadFlag(tmxURL));
         });
     },
                       loadFailureCallback, loadWarningCallback);

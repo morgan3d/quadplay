@@ -44,7 +44,7 @@ def spawn_particles_from_map_ws_coord(
     // Make a fake entity
     const entity = {
         z: z,
-        pos: transform_map_space_to_ws(map, round(transform_ws_to_map_space(map, pos))),
+        pos: transform_map_space_to_ws(map, floor(transform_ws_to_map_space(map, pos))) + 0.5 map.sprite_size,
         sprite: get_map_sprite_by_ws_coord(map, pos, z),
         scale: xy(1, 1),
         angle: 0,

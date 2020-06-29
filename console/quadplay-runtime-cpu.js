@@ -2078,6 +2078,7 @@ function transform_cs_to_ss(cs_point, cs_z) {
               (cs_point.y + (cs_z * _skewYZ)) * _scaleY + _offsetY);
 }
 
+
 function transform_ss_to_cs(ss_point, ss_z) {
     ss_z = ss_z || 0;
     cs_z = transform_ss_z_to_cs_z(ss_z);
@@ -3378,14 +3379,14 @@ function transform_ws_z_to_map_layer(map, z) {
 
 
 function transform_map_space_to_ws(map, map_coord) {
-    return xy((map_coord.x + 0.5) * map.sprite_size.x + map._offset.x,
-              (map_coord.y + 0.5) * map.sprite_size.y + map._offset.y);
+    return xy(map_coord.x * map.sprite_size.x + map._offset.x,
+              map_coord.y * map.sprite_size.y + map._offset.y);
 }
 
 
 function transform_ws_to_map_space(map, ws_coord) {
-    return xy((ws_coord.x - map._offset.x) / map.sprite_size.x - 0.5,
-              (ws_coord.y - map._offset.y) / map.sprite_size.y - 0.5);
+    return xy((ws_coord.x - map._offset.x) / map.sprite_size.x,
+              (ws_coord.y - map._offset.y) / map.sprite_size.y);
 }
 
 
@@ -3416,9 +3417,9 @@ function transform_from(pos, angle, scale, coord) {
 
 
 function get_map_pixel_color(map, map_coord, layer, replacement_array) {
-    layer = Math.round(layer || 0);
-    let mx = Math.round(map_coord.x);
-    let my = Math.round(map_coord.y);
+    layer = Math.floor(layer || 0);
+    let mx = Math.floor(map_coord.x);
+    let my = Math.floor(map_coord.y);
 
     if (map.wrap_x) { mx = loop(mx, map.size.x); }
     if (map.wrap_y) { my = loop(my, map.size.y); }
@@ -3471,9 +3472,9 @@ function get_map_pixel_color_by_ws_coord(map, ws_coord, ws_z, replacement_array)
     
 function get_map_sprite(map, map_coord, layer, replacement_array) {
     if (! map.spritesheet_table) { throw new Error('The first argument to get_map_sprite() must be a map'); }
-    layer = Math.round(layer || 0) | 0;
-    let mx = Math.round(map_coord.x);
-    let my = Math.round(map_coord.y);
+    layer = Math.floor(layer || 0) | 0;
+    let mx = Math.floor(map_coord.x);
+    let my = Math.floor(map_coord.y);
 
     if (map.wrap_x) { mx = loop(mx, map.size.x); }
     if (map.wrap_y) { my = loop(my, map.size.y); }
@@ -3501,9 +3502,9 @@ function get_map_sprite(map, map_coord, layer, replacement_array) {
 
 
 function set_map_sprite(map, map_coord, sprite, layer) {
-    layer = Math.round(layer || 0) | 0;
-    let mx = Math.round(map_coord.x);
-    let my = Math.round(map_coord.y);
+    layer = _Math.floor(layer || 0) | 0;
+    let mx = _Math.floor(map_coord.x);
+    let my = _Math.floor(map_coord.y);
 
     if (map.wrap_x) { mx = loop(mx, map.size.x); }
     if (map.wrap_y) { my = loop(my, map.size.y); }
@@ -6439,19 +6440,30 @@ function is_object(a) {
 
 
 function clone(a) {
-    if (Array.isArray(a)) {
-        return a.slice(0);
+    if (! a || Object.isFrozen(a) || (a._type === 'spritesheet')) {
+        return a;
     } else if (typeof a === 'object') {
-        let c = a.constructor ? a.constructor() : Object.create(null);
-        return Object.assign(c, a)
+        // Includes arrays; we have to copy the non-indexed properties,
+        // so we treat them as objects.
+        const c = a.constructor ? a.constructor() : Object.create(null);
+        let x = Object.assign(c, a);
+        if (Object.isSealed(a)) {
+            Object.seal(x);
+        }
+        return x;            
     } else {
         return a;
     }
 }
 
 function _deep_clone(a, map) {
-    if (Object.isFrozen(a) || Object.isSealed(a)) {
-        // Built-in
+    if (! a || Object.isFrozen(a) || (a._type === 'spritesheet')) {
+        // Built-in; return directly instead of cloning since it is
+        // immutable (this is based on the assumption that quadplay
+        // makes frozen recursive, which it does). Spritesheets are
+        // weird in that they aren't frozen because they need their
+        // _index updated by the loader, but are supposed to act as
+        // if they are.
         return a;
     } else {
         if (Array.isArray(a)) {
@@ -6464,6 +6476,19 @@ function _deep_clone(a, map) {
                 for (let i = 0; i < x.length; ++i) {
                     x[i] = _deep_clone(x[i], map);
                 }
+                
+                // Clone all non-Array properties that might have been
+                // added to this array.  They are distinguished by
+                // names that are not numbers.
+                const k = Object.keys(a);
+                for (let i = 0; i < k.length; ++i) {
+                    const key = k[i];
+                    if (key[0] > "9" || key[0] < "0") {
+                        x[key] = _deep_clone(a[key], map);
+                    }
+                }
+                
+                if (Object.isSealed(a)) { Object.seal(x); }
                 return x;
             }
         } else if (typeof a === 'object') {
@@ -6478,10 +6503,11 @@ function _deep_clone(a, map) {
                     const key = k[i];
                     x[key] = _deep_clone(a[key], map);
                 }
+                if (Object.isSealed(a)) { Object.seal(x); }
                 return x;
             }
         } else {
-            // Primitive
+            // Other primitive; just return the value
             return a;
         }
     }
@@ -7715,6 +7741,28 @@ function save_local(key, value) {
     }
 
     _window.localStorage.setItem('GAME_STATE_' + _gameURL, JSON.stringify(table));
+}
+
+
+function play_sound(sound, loop, volume, pan, pitch, time) {
+    if (sound.sound && (arguments.length === 1)) {
+        // Object version
+        loop    = sound.loop;
+        volume  = sound.volume;
+        pan     = sound.pan;
+        pitch   = sound.pitch;
+        time    = sound.time;
+        sound   = sound.sound;
+    }
+
+    if (pan && pan.x !== undefined && pan.y !== undefined) {
+        // Positional sound
+        pan = transform_cs_to_ss(transform_ws_to_cs(pan))
+        pan = _clamp((2 * pan.x / SCREEN_SIZE.x) - 1, -1, 1)
+    }
+
+    _play_sound(sound, loop, volume, pan, pitch, time);
+    
 }
 
 

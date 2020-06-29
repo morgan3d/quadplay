@@ -662,16 +662,6 @@ function get_audio_status(handle) {
 
 // Exported to QRuntime
 function play_sound(audioClip, loop, volume, pan, pitch, time) {
-    if (audioClip.sound && (arguments.length === 1)) {
-        // Object version
-        loop      = audioClip.loop;
-        volume    = audioClip.volume;
-        pan       = audioClip.pan;
-        pitch     = audioClip.pitch;
-        time      = audioClip.time;
-        audioClip = audioClip.sound;
-    }
-
     if (! audioClip || ! audioClip.source) {
         console.log(audioClip);
         throw new Error('play_sound() requires a sound asset');

@@ -3120,7 +3120,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.debug_print     = debug_print;
         QRuntime.assert          = assert;
         QRuntime.device_control  = device_control;
-        QRuntime.play_sound      = play_sound;
+        QRuntime._play_sound      = play_sound;
         QRuntime.stop_audio      = stop_audio;
         QRuntime.resume_audio    = resume_audio;
         QRuntime.set_volume      = set_volume;
