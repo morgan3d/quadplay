@@ -7761,8 +7761,7 @@ function play_sound(sound, loop, volume, pan, pitch, time) {
         pan = _clamp((2 * pan.x / SCREEN_SIZE.x) - 1, -1, 1)
     }
 
-    _play_sound(sound, loop, volume, pan, pitch, time);
-    
+    return _play_sound(sound, loop, volume, pan, pitch, time);    
 }
 
 
