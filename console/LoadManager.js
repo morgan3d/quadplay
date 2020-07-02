@@ -163,7 +163,7 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
 
     //if (forceReload) { console.log('Forcing reload of ' + url); }
     console.assert(this.status !== 'complete',
-                   'Cannot call LoadManager.fetch() after LoadManager.end()');
+                   'Cannot call LoadManager.fetch() after LoadManager.end(). url = ' + url);
 
     let rawEntry = this.resource.get(url);
     

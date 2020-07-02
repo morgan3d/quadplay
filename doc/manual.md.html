@@ -1817,7 +1817,7 @@ Random Values
   the square that has a "radius" of 1 or sides of length two, and is centered at the origin `(0, 0)`.
   Analogous to `randomDisk()`.
 
-`random_truncated_gaussian2D(mean, stddev, radius, random (= random))`
+`random_truncated_gaussian2D(mean, stddev, radius, random default random)`
 : Returns a Gaussian distributed random point within `radius`
   of `mean`. The `mean` and `stddev` may be scalars or `xy()`s.
   If `radius` is a number, the truncation region is a disk. If
@@ -3776,6 +3776,9 @@ to mutate the asset.
 `map.spritesheet_table`
 : A table mapping TMX tile set names to spritesheets for this map.
 
+`map.spritesheet`
+: For maps with a single spritesheet, this is the spritesheet.
+
 `map.sprite_size`
 : The `xy()` size of source sprites in pixels.
 
@@ -5059,11 +5062,14 @@ limits. This allows you to pack sprites with different sizes into the
 same physical sheet at no penalty and treat them as different logical
 sprite sheets.
 
+Multiple spritesheets loaded from the same sprite.json file will be
+pointers to the same object, which is immutable.
+
 There is no performance advantage or requirement for making sprites or
-sprite sheets sizes even sizes or power of two sizes, although many
-traditional sprites have sides of 8, 16, or 32 pixels. The quadplay✜
-screen resolution is designed to allow an integer number of such
-tiles.
+spritesheets even sizes or power of two sizes, although many
+traditional sprites happen have sides of 8, 16, or 32 pixels. The
+quadplay✜ screen resolution is designed to allow an integer number of
+such tiles.
 
 You can use the Python script `tools/sprite_json_generator.py` to generate
 these json blobs for you. Use the `--help` argument for more details.
@@ -5141,6 +5147,9 @@ because they result in extra padding around all digits.
   especially for decorative fonts. This is the height of the actual
   characters plus the `char_size.y` value.
 
+Multiple fonts loaded from the same sound.json file will be pointers
+to the same object, which is immutable.
+
 
 Sound JSON
 ---------------------------------------------------------------------------------------------
@@ -5158,9 +5167,18 @@ The sound JSON descriptor looks like:
 
 Sounds must be in MP3 format.
 
+Multiple sounds loaded from the same sound.json file will be pointers
+to the same object, which is immutable.
+
 
 Map JSON
 ---------------------------------------------------------------------------------------------
+
+Multiple maps loaded from the same map.json file will produce
+different map objects in memory because maps are mutable.  The
+spritesheets that they load will be shared if they come from the same
+sprite.json files.
+
 
 The map JSON descriptor looks like:
 
@@ -7152,17 +7170,25 @@ Changes for both the specification and implementation in each release.
 
 2020 July TBD: Beta update 45
 
-- Stopped counting function definition lines, `todo()`, and `assert()` against the total source statement limit
-  since they do not reflect actual functionality
+- Made function definition lines, `todo()`, and `assert()` 
+  free versus the total source statement limit
 - Optimized `debug_print()` to make it practical to print large amounts of data
+- Made assets print in `debug_print()` and `debug_watch()` as their variable name
+- Assets with the same source URL are now guaranteed to produce live objects that
+  are `==` to each other, except for maps, which are guaranteed to be `!=` because
+  they are mutable
 - Made `clone()` and `deep_clone()` work properly on assets and constants
 - The `pan` argument to `play_sound()` can now be an `xy()` value for positional sound
+- Added `map.spritesheet` convenience helper
 - Added support for arbitrary properties on sprites in the `sprite.json`
 - Added `kenney-cartography-64x64.sprite.json`
 - Added `sprite.orientation_id` to distinguish unique orientations
 - Added `any_button_release()`
 - Added `explode-12.sound.json`
 - Added `spawn_particles_from_map_ws_coord()` to `scripts/particle.pyxl`
+- Optimized in-IDE game start time
+- Fixed a slight blue bias in alpha blending
+- Fixed alpha blending on sprites that are transposed at load
 - Fixed map coordinate documentation to match the practice, which is that
   map coordinates are at tile _corners_ if there is no `offset` on the map.
 - Fixed too-aggressive caching of map loading from IDE

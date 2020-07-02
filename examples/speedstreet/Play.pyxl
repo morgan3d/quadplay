@@ -53,7 +53,7 @@ with min, max ∊ bounds:
                          max: lerp(min.x, max.x, 95%)}
 
 let minBikeVel = ∞
-for bike ∊ bikeArray:
+for bike ∊ clone(bikeArray):
 
    bike.scoreModifier = 1 + 15% ⌊4 (bike.pos.x - bounds.min.x) / (bounds.max.x - bounds.min.x + 1)⌋
    bike.score += bike.scoreModifier

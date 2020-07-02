@@ -93,6 +93,39 @@ function parseHexColor(str) {
     return {r:r, g:g, b:b, a:a};
 }
 
+/** 
+    Maps *.json urls directly to the live quadplay asset to reduce
+    reloading times and collapse multiple references to a single
+    in-memory asset, which is guaranteed by quadplay semantics.
+    
+    When fastReload is true or useIDE is false, built-in assets are not
+    wiped from this cache per load.
+
+    See clearAssetCache()
+*/
+let assetCache = {};
+
+/** Wipes non-builtins from the asset cache, or everything if
+    fastReload is not set and not in the IDE. */
+function clearAssetCache() {
+    if (! useIDE || fastReload) {
+        // Remove non-builtins from the asset cache, but keep the
+        // builtin assets since we don't expect them to change and can
+        // reduce loading time. Make a copy of the keys since we'll be
+        // mutating the object while iterating through it.
+        const keys = Object.keys(assetCache);
+        for (let i = 0; i < keys.length; ++i) {
+            const url = keys[i];
+            if (! isBuiltIn(url)) {
+                delete assetCache[url];
+            }
+        }
+    } else {
+        // Wipe the entire asset cache
+        assetCache = {};
+    }
+}
+
 
 // Loads the game and then runs the callback() or errorCallback()
 function afterLoadGame(gameURL, callback, errorCallback) {
@@ -119,14 +152,15 @@ function afterLoadGame(gameURL, callback, errorCallback) {
     gameURL = makeURLAbsolute(location.href, gameURL);
     window.gameURL = gameURL;
     console.log('Loading ' + gameURL);
+
+    clearAssetCache();
     
-    // Wipe the caches
+    // Wipe the file data for the IDE
     fileContents = {};
     alreadyCountedSpritePixels = {};
     gameSource = {};
 
-    // Global arrays for abstracting hardware memory
-    // copies of spritesheet and font data
+    // Wipe the virtual GPU memory
     spritesheetArray = [];
     fontArray = [];
     
@@ -261,6 +295,9 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 let type = assetURL.match(/\.([^.]+)\.json$/i);
                 if (type) { type = type[1].toLowerCase(); }
 
+                // Always re-fetch and parse the json, even though
+                // this asset may be in the cache if it is a built-in
+                // or duplicate asset.
                 loadManager.fetch(assetURL, 'json', null, function (json) {
                     // assetURL is the asset json file
                     // json.url is the png, mp3, etc. referenced by the file
@@ -276,8 +313,6 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                         break;
                         
                     case 'sound':
-                        console.assert(gameSource);
-                        console.assert(gameSource.assets);
                         gameSource.assets[assetName] = loadSound(assetName, json, assetURL);
                         break;
                         
@@ -487,6 +522,7 @@ function computeAssetCredits(gameSource) {
     
     for (let a in gameSource.assets) {
         const asset = gameSource.assets[a];
+        console.assert(asset, 'Asset ' + a + ' is not in gameSource.assets');
         const json = asset._json;
         
         let type = asset._jsonURL.match(/\.([^.]+)\.json$/i);
@@ -536,28 +572,40 @@ function computeAssetCredits(gameSource) {
 
 
 function loadFont(name, json, jsonURL) {
-    const font = {
-        _name:     'font ' + name,
+    const pngURL = makeURLAbsolute(jsonURL, json.url);
+
+    let font = assetCache[jsonURL];
+    if (font) {
+        // Make sure the index is updated when pulling from the cache
+        if (fontArray.indexOf(font) === -1) {
+            font._index[0] = fontArray.length;
+            fontArray.push(font);
+        } else {
+            console.assert(fontArray.indexOf(font) === font._index[0]);
+        }
+
+        // Print faux loading messages
+        onLoadFileStart(pngURL);
+        onLoadFileComplete(pngURL);
+        return font;
+    }
+
+    // Load from disk and create a new object, and then store in the cache
+    assetCache[jsonURL] = font = {
+        _name:     name,
         _type:     'font',
-        _url:      makeURLAbsolute(jsonURL, json.url),
+        _url:      pngURL,
         _json:     json,
         _jsonURL:  jsonURL,
-        _index:    fontArray.length
+        _index:    [fontArray.length]
     };
 
     fontArray.push(font);
-    const forceReload = computeForceReloadFlag(font._url);
+    const forceReload = computeForceReloadFlag(pngURL);
 
-    // No need to avoid the processing of the font once it is loaded
-    // into memory, because that is fast. So, fonts don't appear in the
-    // asset cache.
-    
-    onLoadFileStart(font._url);
-    loadManager.fetch(font._url, 'image', getBinaryImageData, function (srcMask, image, url) {
-        onLoadFileComplete(font._url);
-
-        // Save the raw image for the IDE
-        fileContents[url] = image;
+    onLoadFileStart(pngURL);
+    loadManager.fetch(pngURL, 'image', getBinaryImageData, function (srcMask, image) {
+        onLoadFileComplete(pngURL);
         
         const borderSize = 1;
         const shadowSize = parseInt(json.shadowSize || 1);
@@ -639,41 +687,61 @@ function getImageData4Bit(image, region, full32bitoutput) {
     return result;
 }
 
-// Maps *.json urls to the live quadplay asset to reduce loading times
-// for sounds and spritesheets.
-const assetCache = {};
 
 function loadSpritesheet(name, json, jsonURL, callback) {
-    let spritesheet;
-
     const pngURL = makeURLAbsolute(jsonURL, json.url);
+
+    let spritesheet = assetCache[jsonURL];
+    if (spritesheet) {
+        // Make sure the index is updated when pulling from the cache.
+        // For built-in sprites it could have been wiped.
+        if (spritesheetArray.indexOf(spritesheet) === -1) {
+            // Change the index
+            spritesheet._index[0] = spritesheetArray.length;
+            spritesheetArray.push(spritesheet);
+        }
+
+        console.assert(spritesheetArray.indexOf(spritesheet) === spritesheet._index[0]);
+
+        onLoadFileStart(pngURL);
+        onLoadFileComplete(pngURL);
+
+        // If the spritesheet is in the assetCache, then some other
+        // resource has triggered it to load (or it is built in), but
+        // it may not yet be completely processed. Do not run our
+        // callback until the spritesheet is fully loaded. We can
+        // check by looking at whether the spritesheet is frozen,
+        // which is the last step of spritesheet loading.
+
+        if (callback) {
+            // Warn the load manager that we are not done yet
+            ++loadManager.pendingRequests;
+            
+            function runCallbackWhenLoaded() {
+                if (Object.isFrozen(spritesheet)) {
+                    callback(spritesheet);
+                    loadManager.markRequestCompleted(jsonURL + ' callback', '', true);
+                } else {
+                    // Re-queue a test after a few milliseconds
+                    setTimeout(runCallbackWhenLoaded, 8);
+                }
+            };
+            runCallbackWhenLoaded();
+        }
+        
+        return spritesheet;
+    }
+
 
     const forceReload = computeForceReloadFlag(pngURL);
 
-    if (forceReload === false) {
-        spritesheet = assetCache[jsonURL];
-        if (spritesheet) {
-            // Make sure the index is updated when pulling from the cache
-            if (spritesheetArray.indexOf(spritesheet) === -1) {
-                spritesheet._index = spritesheetArray.length;
-                spritesheetArray.push(spritesheet);
-            } else {
-                console.assert(spritesheetArray.indexOf(spritesheet) === spritesheet._index);
-            }
-            
-            fileContents[pngURL] = spritesheet;
-            onLoadFileStart(pngURL);
-            onLoadFileComplete(pngURL);
-            if (callback) { callback(spritesheet); }
-
-            return spritesheet;
-        }
-    }
-
-   
-    // These fields have underscores so that they can't be accessed from pyxlscript.
-    spritesheet = Object.assign([], {
-        _name: 'spritesheet ' + name,
+    // These fields have underscores so that they can't be accessed
+    // from pyxlscript. Create the object before launching the async
+    // load so that the per-reload cache can hold it. The _index is an
+    // array so that the spritesheet can be frozen but the index
+    // rewritten.
+    assetCache[jsonURL] = spritesheet = Object.assign([], {
+        _name: name,
         _type: 'spritesheet',
         _uint16Data: null,
         _uint16DataFlippedX : null,
@@ -682,11 +750,12 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         _gutter: (json.sprite_size.gutter || 0),
         _json: json,
         _jsonURL: jsonURL,
-        _index: spritesheetArray.length,
+        _index: [spritesheetArray.length],
         sprite_size: Object.freeze({x: json.sprite_size.x, y: json.sprite_size.y})
     });
 
     spritesheetArray.push(spritesheet);
+    console.assert(spritesheetArray.indexOf(spritesheet) === spritesheet._index[0]);
 
     // Pivots
     const sspivot = json.pivot ? Object.freeze({x: json.pivot.x - json.sprite_size.x / 2, y: json.pivot.y - json.sprite_size.y / 2}) : Object.freeze({x: 0, y: 0});
@@ -761,7 +830,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 let hasFractionalAlpha = false;
                 outerloop:
                 for (let j = 0; j < spritesheet.sprite_size.y; ++j) {
-                    let index = (y * (spritesheet.sprite_size.y + spritesheet._gutter) + j) * data.width + x * (spritesheet.sprite_size.x + spritesheet._gutter);
+                    let index = (v * (spritesheet.sprite_size.y + spritesheet._gutter) + j) * data.width + u * (spritesheet.sprite_size.x + spritesheet._gutter);
                     for (let i = 0; i < spritesheet.sprite_size.x; ++i, ++index) {
                         const alpha15 = (data[index] >>> 12) & 0xf;
                         if (alpha15 < 0xf) {
@@ -785,6 +854,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     _y:                v * (spritesheet.sprite_size.y + spritesheet._gutter),
                     _hasAlpha:         hasAlpha,
                     _requiresBlending: hasFractionalAlpha,
+                    _name:             spritesheet._name + '[' + u + '][' + v + ']',
                     spritesheet:       spritesheet,
                     tile_index:        Object.freeze({x:u, y:v}),
                     id:                lastSpriteID,
@@ -847,6 +917,9 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     sprite._animationName = anim;
                     sprite._animationIndex = undefined;
 
+                    // Rename
+                    sprite._name = spritesheet._name + '.' + anim;
+
                 } else {
                 
                     if (data.end === undefined) { data.end = Object.assign({}, data.start); }
@@ -884,6 +957,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                             const sprite = spritesheet[u][v];
                             sprite._animationName = anim;
                             sprite._animationIndex = i;
+                            sprite._name = spritesheet._name + '.' + anim + '[' + i + ']';
                             sprite.pivot = pivot;
                             sprite.frames = Math.max(0.25, frames[Math.min(i, frames.length - 1)]);
                             // Copy other properties
@@ -923,26 +997,27 @@ function loadSpritesheet(name, json, jsonURL, callback) {
             }
         }
 
-        // Prevent the game from modifying this asset.
-        // Can't freeze it because we change the _index when
-        // loading from cache.
-        Object.seal(spritesheet);
+        // Create flipped versions and freeze
         for (let x = 0; x < spritesheet.length; ++x) {
             for (let y = 0; y < spritesheet[x].length; ++y) {
                 const sprite = spritesheet[x][y];
+                
                 // Construct the flipped versions and freeze all
                 sprite.x_flipped = Object.assign({x_flipped:sprite}, sprite);
                 sprite.x_flipped.scale = NP;
                 sprite.x_flipped.orientation_id += 1;
+                sprite.x_flipped.name += '.x_flipped';
 
                 sprite.y_flipped = Object.assign({y_flipped:sprite}, sprite);
                 sprite.y_flipped.orientation_id += 2;
                 sprite.y_flipped.scale = PN;
-
+                sprite.y_flipped.name += '.x_flipped';
+                
                 sprite.x_flipped.y_flipped = sprite.y_flipped.x_flipped = Object.assign({}, sprite);
                 sprite.y_flipped.x_flipped.scale = NN;
                 sprite.y_flipped.x_flipped.orientation_id += 3;
-                
+                sprite.x_flipped.y_flipped.name += '.x_flipped.y_flipped';
+
                 Object.freeze(sprite.x_flipped);
                 Object.freeze(sprite.y_flipped);
                 Object.freeze(sprite.y_flipped.x_flipped);
@@ -951,7 +1026,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         }
 
         // Store into the cache
-        assetCache[jsonURL] = spritesheet;
+        Object.freeze(spritesheet);
         
         if (callback) { callback(spritesheet); }
     }, loadFailureCallback, loadWarningCallback, forceReload);
@@ -963,35 +1038,29 @@ function loadSpritesheet(name, json, jsonURL, callback) {
 function loadSound(name, json, jsonURL) {
     if (name[0] !== '_') { ++resourceStats.sounds; }
     const mp3URL = makeURLAbsolute(jsonURL, json.url);
+
+    let sound = assetCache[jsonURL];
+    if (sound) {
+        // Print faux loading messages
+        onLoadFileStart(mp3URL);
+        onLoadFileComplete(mp3URL);
+        return sound;
+    }
+
     const forceReload = computeForceReloadFlag(mp3URL);
 
-    let sound;
-
-    if (forceReload === false) {
-        // Use the explicit cache for sounds, which are typically
-        // the largest assets in a quadplay game.
-        sound = assetCache[jsonURL];
-        if (sound) {
-            fileContents[mp3URL] = sound;
-            onLoadFileStart(mp3URL);
-            onLoadFileComplete(mp3URL);
-            return sound;
-        }
-    }
-    
-    sound = Object.seal({
+    assetCache[jsonURL] = sound = Object.seal({
         src: mp3URL,
-        _url: mp3URL,
         name: name,
         loaded: false,
         source: null,
         buffer: null,
         frames: 0,
-        _type: 'audioClip',
+        _url: mp3URL,
+        _type: 'sound',
         _json: json,
         _jsonURL: jsonURL});
 
-    fileContents[mp3URL] = sound;
     onLoadFileStart(mp3URL);
     loadManager.fetch(mp3URL, 'arraybuffer', null, function (arraybuffer) {
         // LoadManager can't see the async decodeAudioData calls
@@ -1001,7 +1070,7 @@ function loadSound(name, json, jsonURL) {
             _ch_audioContext.decodeAudioData(
                 // The need for slice is some Chrome multithreading issue
                 // https://github.com/WebAudio/web-audio-api/issues/1175
-                arraybuffer.slice(0), 
+                arraybuffer.slice(0),
                 function onSuccess(buffer) {
                     sound.buffer = buffer;
                     sound.loaded = true;
@@ -1013,9 +1082,6 @@ function loadSound(name, json, jsonURL) {
                     sound.frames = sound.source.buffer.duration * 60;
                     onLoadFileComplete(json.url);
                     loadManager.markRequestCompleted(json.url, '', true);
-                    
-                    // Store into the cache
-                    assetCache[jsonURL] = sound;
                 },
                 function onFailure() {
                     loadManager.markRequestCompleted(mp3URL, 'unknown error', false);
@@ -1024,14 +1090,33 @@ function loadSound(name, json, jsonURL) {
             loadManager.markRequestCompleted(mp3URL, e, false);
         }
     }, loadFailureCallback, loadWarningCallback, forceReload);
+    
     return sound;
 }
 
 
 function loadMap(name, json, mapJSONUrl) {
     const tmxURL = makeURLAbsolute(mapJSONUrl, json.url);
-    const map = Object.assign([], {
-        _name:   'map ' + name,
+
+    let map = assetCache[mapJSONUrl];
+    if (map) {
+        // Print faux loading messages
+        onLoadFileStart(tmxURL);
+        onLoadFileComplete(tmxURL);
+
+        // Make sure that the underlying spritesheets are up to date
+        const spritesheet = map.spritesheet;
+        if (spritesheetArray.indexOf(spritesheet) === -1) {
+            // Change the index
+            spritesheet._index[0] = spritesheetArray.length;
+            spritesheetArray.push(spritesheet);
+        }
+
+        return map;
+    }
+    
+    assetCache[mapJSONUrl] = map = Object.assign([], {
+        _name:   name,
         _type:   'map',
         _url:    tmxURL,
         _offset: Object.freeze(json.offset ? {x:json.offset.x, y:json.offset.y} : {x:0, y:0}),
@@ -1048,163 +1133,183 @@ function loadMap(name, json, mapJSONUrl) {
         wrap_y:      json.wrap_y || false
     });
 
+    // Map loading proceeds in three steps:
+    //
+    // 1. Load the .spritesheet.json for the spritesheet referenced in the .map.json
+    // 2. Load the spritesheet from its png file
+    // 3. Load the map from its tmx file
+
+    // Extract the spritesheet info
     if (json.sprite_url) {
         json.sprite_url_table = {'<default>': json.sprite_url};
     } else if (! json.sprite_url_table) {
         throw 'No sprite_url_table specified';
     }
 
-    // Primary spritesheet. We need to load more later
-    const key = Object.keys(json.sprite_url_table)[0];
-    const spritesheetUrl = makeURLAbsolute(mapJSONUrl, json.sprite_url_table[key]);
+    // Primary spritesheet. (Only one is supported in this version of quadplay.)
+    const spritesheetUrl = makeURLAbsolute(mapJSONUrl, json.sprite_url_table[Object.keys(json.sprite_url_table)[0]]);
 
-    onLoadFileStart(spritesheetUrl);
-    loadManager.fetch(spritesheetUrl, 'json', null, function (spritesheetJson) {
+    const loadSpritesheetJSONCallback = function (spritesheetJson) {
         onLoadFileComplete(spritesheetUrl);
         spritesheetJson.url = makeURLAbsolute(spritesheetUrl, spritesheetJson.url);
         fileContents[spritesheetUrl] = spritesheetJson;
+        loadSpritesheet(name + '.spritesheet', spritesheetJson, spritesheetUrl, loadSpritesheetCallback);
+    };
 
-        const spritesheet = loadSpritesheet(name + ' sprites', spritesheetJson, spritesheetUrl, function (spritesheet) {
-            // Now go back and fetch the map as a continuation, given that we have the spritesheet
-            loadManager.fetch(tmxURL, 'text', null, function (xml) {
-                onLoadFileComplete(tmxURL);
-                xml = new DOMParser().parseFromString(xml, 'application/xml');
-
-                // Custom properties
-                let properties = xml.getElementsByTagName('properties');
-                if (properties && properties.length > 0) {
-                    properties = properties[0].children;
-                    for (let i = 0; i < properties.length; ++i) {
-                        const node = properties[i];
-                        if (node.tagName === 'property') {
-                            const name = node.getAttribute('name');
-                            let value = node.getAttribute('value');
-
-                            switch (node.getAttribute('type')) {
-                            case null:
-                            case 'file':
-                            case 'string':
-                                // Nothing to do!
-                                break;
-
-                            case 'color': // #AARRGGBB hex color
-                                value = parseHexColor(value.substring(3) + value.substring(1, 3));
-                                break;
-
-                            case 'bool':
-                                value = (value !== 'false');
-                                break;
-                                
-                            case 'float':
-                                value = parseFloat(value);
-                                break;
-                                
-                            case 'int':
-                                value = parseInt(value);
-                                break;
-                            }
-
-                            if (name[0] !== '_') {
-                                map[name] = value;
-                            }
-                        }
+    const loadSpritesheetCallback = function (spritesheet) {
+        // Fetch the actual map data, given that we have the spritesheet
+        map.spritesheet = spritesheet;
+        loadManager.fetch(tmxURL, 'text', null, loadTMXCallback,
+                          loadFailureCallback, loadWarningCallback,
+                          computeForceReloadFlag(tmxURL));
+    };
+    
+    const loadTMXCallback = function (xml) {
+        onLoadFileComplete(tmxURL);
+        xml = new DOMParser().parseFromString(xml, 'application/xml');
+        
+        // Custom properties
+        let properties = xml.getElementsByTagName('properties');
+        if (properties && properties.length > 0) {
+            properties = properties[0].children;
+            for (let i = 0; i < properties.length; ++i) {
+                const node = properties[i];
+                if (node.tagName === 'property') {
+                    const name = node.getAttribute('name');
+                    let value = node.getAttribute('value');
+                    
+                    switch (node.getAttribute('type')) {
+                    case null:
+                    case 'file':
+                    case 'string':
+                        // Nothing to do!
+                        break;
+                        
+                    case 'color': // #AARRGGBB hex color
+                        value = parseHexColor(value.substring(3) + value.substring(1, 3));
+                        break;
+                        
+                    case 'bool':
+                        value = (value !== 'false');
+                        break;
+                        
+                    case 'float':
+                        value = parseFloat(value);
+                        break;
+                        
+                    case 'int':
+                        value = parseInt(value);
+                        break;
                     }
-                } // if properties
-                
-                let tileSet = xml.getElementsByTagName('tileset');
-                tileSet = tileSet[0];
-                map.sprite_size = Object.freeze({x: parseInt(tileSet.getAttribute('tilewidth')),
-                                                 y: parseInt(tileSet.getAttribute('tileheight'))});
-                const columns = parseInt(tileSet.getAttribute('columns'));
-                const spritesheetName = tileSet.getAttribute('name');
-
-                if ((Object.keys(json.sprite_url_table)[0] !== '<default>') &&
-                    (Object.keys(json.sprite_url_table)[0] !== spritesheetName)) {
-                    throw 'Spritesheet name "' + spritesheetName + '" in ' + spritesheetUrl + ' does not match the name from the map file ' + mapJSONUrl;
-                }
-                
-                map.spritesheet_table[spritesheetName] = spritesheet;
-
-                let image = xml.getElementsByTagName('image')[0];
-                const size = {x: parseInt(image.getAttribute('width')),
-                              y: parseInt(image.getAttribute('height'))};
-                const filename = image.getAttribute('source');
-
-                if ((spritesheet.sprite_size.x !== map.sprite_size.x) || (spritesheet.sprite_size.y !== map.sprite_size.y)) {
-                    throw `Sprite size (${spritesheet.sprite_size.x}, ${spritesheet.sprite_size.y}) does not match what the map expected, (${map.sprite_size.x}, ${map.sprite_size.y}).`;
-                }
-
-                if ((spritesheet.size.x !== size.x) || (spritesheet.size.y !== size.y)) {
-                    throw `Sprite sheet size (${spritesheet.size.x}, ${spritesheet.size.y}) does not match what the map expected, (${size.x}, ${size.y}).`;
-                }
-                
-                const layerList = Array.from(xml.getElementsByTagName('layer'));
-                const layerData = layerList.map(function (layer) {
-                    map.size = Object.freeze({x: parseInt(layer.getAttribute('width')),
-                                              y: parseInt(layer.getAttribute('height'))});
-                    // Can't directly pass parseInt for some reason
-                    return layer.lastElementChild.innerHTML.split(',').map(function (m) { return parseInt(m); });
-                });
-                
-                const flipY = (json.y_up === true);
-                for (let L = 0; L < layerList.length; ++L) {
-                    // The first level IS the map itself
-                    const layer = (L === 0) ? map : new Array(map.size.x);
-                    const data = layerData[L];
                     
-                    // Construct the layer
-                    for (let x = 0; x < map.size.x; ++x) { layer[x] = new Array(map.size.y); }
-                    map.layer.push(layer);
-                    
-                    // Extract CSV values
-                    for (let y = 0, i = 0; y < map.size.y; ++y) {
-                        for (let x = 0; x < map.size.x; ++x, ++i) {
-                            const gid = data[i];
-
-                            // See https://doc.mapeditor.org/en/stable/reference/tmx-map-format/#layer
-                            const tileFlipX = (gid & 0x80000000) !== 0;
-                            const tileFlipY = (gid & 0x40000000) !== 0;
-                            const tmxIndex  = (gid & 0x0fffffff) - 1;
-                            
-                            if (tmxIndex >= 0) {
-                                const sx = tmxIndex % columns;
-                                const sy = Math.floor(tmxIndex / columns);
-
-                                let sprite = spritesheet[sx][sy];
-
-                                if (tileFlipX) { sprite = sprite.x_flipped; }
-
-                                if (tileFlipY) { sprite = sprite.y_flipped; }
-                                
-                                layer[x][flipY ? map.size.y - 1 - y : y] = sprite;
-                            } else {
-                                layer[x][flipY ? map.size.y - 1 - y : y] = undefined;
-                            } // if not empty
-                        } // x
-                    } // y
-                    
-                    // Prevent the arrays themselves from being reassigned
-                    for (let x = 0; x < map.size.x; ++x) {
-                        Object.freeze(layer[x]);
+                    if (name[0] !== '_') {
+                        map[name] = value;
                     }
-                } // L
-                
-                // Don't allow the array of arrays to be changed (just the individual elements)
-                Object.freeze(map.layer);
-            },
-                              loadFailureCallback,
-                              loadWarningCallback,
-                              computeForceReloadFlag(tmxURL));
+                }
+            }
+        } // if properties
+        
+        let tileSet = xml.getElementsByTagName('tileset');
+        tileSet = tileSet[0];
+        map.sprite_size = Object.freeze({x: parseInt(tileSet.getAttribute('tilewidth')),
+                                         y: parseInt(tileSet.getAttribute('tileheight'))});
+        const columns = parseInt(tileSet.getAttribute('columns'));
+        const spritesheetName = tileSet.getAttribute('name');
+        
+        if ((Object.keys(json.sprite_url_table)[0] !== '<default>') &&
+            (Object.keys(json.sprite_url_table)[0] !== spritesheetName)) {
+            throw 'Spritesheet name "' + spritesheetName + '" in ' + spritesheetUrl + ' does not match the name from the map file ' + mapJSONUrl;
+        }
+        
+        map.spritesheet_table[spritesheetName] = map.spritesheet;
+        
+        let image = xml.getElementsByTagName('image')[0];
+        const size = {x: parseInt(image.getAttribute('width')),
+                      y: parseInt(image.getAttribute('height'))};
+        const filename = image.getAttribute('source');
+        
+        if ((map.spritesheet.sprite_size.x !== map.sprite_size.x) || (map.spritesheet.sprite_size.y !== map.sprite_size.y)) {
+            throw `Sprite size (${spritesheet.sprite_size.x}, ${spritesheet.sprite_size.y}) does not match what the map expected, (${map.sprite_size.x}, ${map.sprite_size.y}).`;
+        }
+        
+        if ((map.spritesheet.size.x !== size.x) || (map.spritesheet.size.y !== size.y)) {
+            throw `Sprite sheet size (${spritesheet.size.x}, ${spritesheet.size.y}) does not match what the map expected, (${size.x}, ${size.y}).`;
+        }
+        
+        const layerList = Array.from(xml.getElementsByTagName('layer'));
+        const layerData = layerList.map(function (layer) {
+            map.size = Object.freeze({x: parseInt(layer.getAttribute('width')),
+                                      y: parseInt(layer.getAttribute('height'))});
+            // Can't directly pass parseInt for some reason
+            return layer.lastElementChild.innerHTML.split(',').map(function (m) { return parseInt(m); });
         });
-    },
+        
+        const flipY = (json.y_up === true);
+        for (let L = 0; L < layerList.length; ++L) {
+            // The first level IS the map itself
+            const layer = (L === 0) ? map : new Array(map.size.x);
+            const data = layerData[L];
+            
+            // Construct the layer's columns and prevent them from being extended
+            for (let x = 0; x < map.size.x; ++x) {
+                layer[x] = new Array(map.size.y);
+            }
+            map.layer.push(layer);
+            
+            // Extract CSV values
+            for (let y = 0, i = 0; y < map.size.y; ++y) {
+                for (let x = 0; x < map.size.x; ++x, ++i) {
+                    const gid = data[i];
+                    
+                    // See https://doc.mapeditor.org/en/stable/reference/tmx-map-format/#layer
+                    const tileFlipX = (gid & 0x80000000) !== 0;
+                    const tileFlipY = (gid & 0x40000000) !== 0;
+                    const tmxIndex  = (gid & 0x0fffffff) - 1;
+                    
+                    if (tmxIndex >= 0) {
+                        const sx = tmxIndex % columns;
+                        const sy = Math.floor(tmxIndex / columns);
+                        
+                        let sprite = map.spritesheet[sx][sy];
+                        
+                        if (tileFlipX) { sprite = sprite.x_flipped; }
+                        
+                        if (tileFlipY) { sprite = sprite.y_flipped; }
+                        
+                        layer[x][flipY ? map.size.y - 1 - y : y] = sprite;
+                    } else {
+                        layer[x][flipY ? map.size.y - 1 - y : y] = undefined;
+                    } // if not empty
+                } // x
+            } // y
+            
+            // Prevent the arrays themselves from being reassigned
+            for (let x = 0; x < map.size.x; ++x) {
+                Object.preventExtensions(Object.seal(layer[x]));                
+            }
+            
+        } // L
+        
+        // Don't allow the array of arrays to be changed (just the individual elements)
+        Object.freeze(map.layer);
+    };
+
+    // Start the process by loading the spritesheet data. We first have to load
+    // the JSON for the spritesheet itself, which loadSpritesheet() expects to be
+    // already processed
+    onLoadFileStart(spritesheetUrl);   
+    loadManager.fetch(spritesheetUrl, 'json', null, loadSpritesheetJSONCallback,
                       loadFailureCallback, loadWarningCallback);
     
     return map;
 }
 
 
-/** Maps URLs to their raw contents for use in displaying them in the IDE */
+/** Maps URLs to their raw contents for use in editing and displaying
+    them in the IDE. Not for caching purposes during loading. */
 let fileContents = {};
+
+/** Resource tracking for reporting limits in the IDE */
 let resourceStats = {};
 
 function modeNameToFileName(modeName) {
@@ -1295,8 +1400,10 @@ function urlFile(url) {
     return url.substring(url.lastIndexOf('/') + 1);
 }
 
+/** When reloading, force assets to be loaded from disk if using the IDE
+    and they are not built-in or fastReload is false. */
 function computeForceReloadFlag(url) {
-    return (fastReload && isBuiltIn(url)) ? false : useIDE;
+    return useIDE && ! (fastReload && isBuiltIn(url));
 }
 
 /** Returns the childURL made absolute relative to the parent */

@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.06.28.23'
+const version  = '2020.07.02.00'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -1093,6 +1093,7 @@ function restartProgram(numBootAnimationFrames) {
     });
 }
 
+
 function onError(e) {
     // Runtime error
     onStopButton();
@@ -1570,12 +1571,13 @@ function onProjectSelect(target, type, object) {
                 const editorBounds = spriteEditor.getBoundingClientRect();
                 spriteEditor.onmousemove({clientX: editorBounds.left, clientY: editorBounds.top});
             } else {
+                // Font
                 spriteEditorHighlight.style.visibility = 'hidden';
                 spriteEditorPivot.style.visibility = 'hidden';
             }
         } else if (/\.mp3$/i.test(url)) {
             soundEditor.style.visibility = 'visible';
-            soundEditorCurrentSound = fileContents[url];
+            soundEditorCurrentSound = object;
         } else if (/\.tmx$/i.test(url)) {
             visualizeMap(object);
             mapEditor.style.visibility = 'visible';
@@ -3138,10 +3140,14 @@ function reloadRuntime(oncomplete) {
 
 ///////////////////////////////////////////////////////////////////////
 
+// Used to clone constants. Assets do not need to be cloned.
 function deep_clone(src, alreadySeen) {
     alreadySeen = alreadySeen || new Map();
     if ((src === null) || (src === undefined)) {
         return undefined;
+    } else if (src && src._type && (src._type !== 'map')) {
+        // Immutable asset types, so no need to clone
+        return src;
     } else if (alreadySeen.has(src)) {
         return alreadySeen.get(src);
     } else if (Array.isArray(src)) {
@@ -3160,14 +3166,27 @@ function deep_clone(src, alreadySeen) {
             }
         }
         
+        if (Object.isFrozen(src)) {
+            Object.freeze(v);
+        } else if (Object.isSealed(src)) {
+            Object.seal(v);
+        }
+            
         return v;
     } else if (typeof src === 'object' && (! src.constructor || (src.constructor === Object.prototype.constructor))) {
         // Some generic object that is safe to clone
-        let clone = Object.create(null);
+        const clone = Object.create(null);
         alreadySeen.set(src, clone);
         for (let key in src) {
             clone[key] = deep_clone(src[key], alreadySeen);
         }
+        
+        if (Object.isFrozen(src)) {
+            Object.freeze(clone);
+        } else if (Object.isSealed(src)) {
+            Object.seal(clone);
+        }
+        
         return clone;
     } else {
         // Some other built-in type
@@ -3300,15 +3319,28 @@ function redefineReference(environment, key, identifier) {
 function makeAssets(environment, assets) {
     if ((assets === undefined) || (Object.keys(assets).length === 0)) { return; }
 
+    // Check the spritesheet array for consistency
+    for (let i = 0; i < spritesheetArray.length; ++i) {
+        console.assert(spritesheetArray[i]._index[0] == i,
+                       'spritesheetArray[' + i + '] has the wrong index'); 
+    }
+    
     // Clone the assets, as some of them (like the map) can be mutated
     // at runtime. For speed, do not clone sprites and fonts
     const alreadySeen = new Map();
     const ASSET = {};
     for (const assetName in assets) {
         const assetValue = assets[assetName];
-        const assetCopy = ((assetValue._type === 'spritesheet') || (assetValue._type === 'font') || (assetValue._type === 'audioClip')) ?
-              assetValue :
-              deep_clone(assetValue, alreadySeen);
+
+        if (assetValue._type === 'spritesheet') {
+            console.assert(spritesheetArray[assetValue._index[0]] === assetValue,
+                           'spritesheet ' + assetName + ' is at the wrong index.');
+        }
+        
+        // Clone maps because if not in forceReload mode they are
+        // shared between runs when the program resets. Everything
+        // else is immutable so it doesn't matter.
+        const assetCopy = (assetValue._type === 'map') ? deep_clone(assetValue, alreadySeen) : assetValue;
         ASSET[assetName] = assetCopy;
         defineImmutableProperty(environment, assetName, assetCopy);
     }

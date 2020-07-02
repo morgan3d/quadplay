@@ -93,8 +93,8 @@ function _pset(x, y, color, clipX1, clipY1, clipX2, clipY2) {
             const a = a15 * (1 / 15);
             let back = _screen[offset] >>> 0;
             let result = 0xF000;
-            result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5) & 0x0F00;
-            result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5) & 0x00F0;
+            result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5 * 0x100) & 0x0F00;
+            result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5 * 0x010) & 0x00F0;
             result |= ((back & 0x000F) * (1 - a) + (color & 0x000F) * a + 0.5) & 0x000F;
             _screen[offset] = result;
         }
@@ -123,8 +123,8 @@ function _hline(x1, y, x2, color, clipX1, clipY1, clipX2, clipY2) {
             // Blend (see comments in _pset)
             const a = a15 * (1 / 15);
             const inva = 1 - a;
-            const r = (color & 0xF00) * a + 0.5;
-            const g = (color & 0x0F0) * a + 0.5;
+            const r = (color & 0xF00) * a + 0.5 * 0x100;
+            const g = (color & 0x0F0) * a + 0.5 * 0x010;
             const b = (color & 0x00F) * a + 0.5;
 
             for (let x = x1, offset = (x1 + y * _SCREEN_WIDTH) | 0; x <= x2; ++x, ++offset) {
@@ -160,8 +160,8 @@ function _vline(x, y1, y2, color, clipX1, clipY1, clipX2, clipY2) {
             // Blend (see comments in _pset)
             const a = a15 * (1 / 15);
             const inva = 1 - a;
-            const r = (color & 0x0F00) * a + 0.5;
-            const g = (color & 0x00F0) * a + 0.5;
+            const r = (color & 0x0F00) * a + 0.5 * 0x100;
+            const g = (color & 0x00F0) * a + 0.5 * 0x010;
             const b = (color & 0x000F) * a + 0.5;
             for (let y = y1, offset = y1 * _SCREEN_WIDTH + x; y <= y2; ++y, offset += _SCREEN_WIDTH) {
                 let back = _screen[offset] >>> 0;
@@ -407,8 +407,8 @@ function _executePIX(cmd) {
             const a = a15 * (1 / 15);
             let back = _screen[offset];
             let result = 0xF000;
-            result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5) & 0x0F00;
-            result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5) & 0x00F0;
+            result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5 * 0x0100) & 0x0F00;
+            result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5 * 0x0010) & 0x00F0;
             result |= ((back & 0x000F) * (1 - a) + (color & 0x000F) * a + 0.5) & 0x000F;
             _screen[offset] = result;
         }
@@ -600,8 +600,8 @@ function _executeSPR(metaCmd) {
                                     const back = _screen[dstOffset + i] >>> 0;
                                     
                                     let result = 0xF000 >>> 0;
-                                    result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5) & 0x0F00;
-                                    result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5) & 0x00F0;
+                                    result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5 * 0x100) & 0x0F00;
+                                    result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5 * 0x010) & 0x00F0;
                                     result |= ((back & 0x000F) * (1 - a) + (color & 0x000F) * a + 0.5) & 0x000F;
                                 
                                     _screen[dstOffset + i] = result;
@@ -711,8 +711,8 @@ function _executeSPR(metaCmd) {
                                 const back = _screen[dstOffset];
                                 let result = 0xF000;
                                 
-                                result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5) & 0x0F00;
-                                result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5) & 0x00F0;
+                                result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5 * 0x100) & 0x0F00;
+                                result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5 * 0x010) & 0x00F0;
                                 result |= ((back & 0x000F) * (1 - a) + (color & 0x000F) * a + 0.5) & 0x000F;
                                 
                                 _screen[dstOffset] = result;

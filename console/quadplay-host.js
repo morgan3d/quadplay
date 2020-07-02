@@ -3,6 +3,13 @@
 
 "use strict";
 
+/**
+   Global arrays for abstracting hardware memory copies of spritesheet
+   and font data. Indices into these are is used as "pointers" when
+   communicating with the virtual GPU. These are mapped to
+   QRuntime._spritesheetArray and QRuntime._fontArray. Each asset has
+   a _index[0] field describing its index in this array.
+*/
 let spritesheetArray = [];
 let fontArray = [];
 

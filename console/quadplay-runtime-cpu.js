@@ -3725,7 +3725,7 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                         }
 
                         data.push({
-                            spritesheetIndex: sprite.spritesheet._index,
+                            spritesheetIndex: sprite.spritesheet._index[0],
                             cornerX:  sprite._x,
                             cornerY:  sprite._y,
                             sizeX:    sprite.size.x,
@@ -4614,7 +4614,7 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
             _addGraphicsCommand({
                 opcode:  'TXT',
                 str:     str.substring(0, endIndex + 1),
-                fontIndex: format.font._index,
+                fontIndex: format.font._index[0],
                 x:       x,
                 y:       y - dy,
                 z:       z,
@@ -5026,10 +5026,10 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color) {
         override_color = rgba(override_color);
     }    
 
-    console.assert(spr.spritesheet._index < _spritesheetArray.length);
+    console.assert(spr.spritesheet._index[0] < _spritesheetArray.length);
 
     const sprElt = {
-        spritesheetIndex:  spr.spritesheet._index,
+        spritesheetIndex:  spr.spritesheet._index[0],
         cornerX:       spr._x,
         cornerY:       spr._y,
         sizeX:         spr.size.x,
@@ -5044,6 +5044,12 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color) {
         x:             x,
         y:             y
     };
+
+    /*
+    console.assert(sprElt.spritesheetIndex >= 0 &&
+                   sprElt.spritesheetIndex < _spritesheetArray.length,
+                   spr._name + ' has a bad index: ' + sprElt.spritesheetIndex);
+    */
     
     // Aggregate multiple sprite calls
     const prevCommand = _graphicsCommandList[_graphicsCommandList.length - 1];
@@ -6447,6 +6453,10 @@ function clone(a) {
         // so we treat them as objects.
         const c = a.constructor ? a.constructor() : Object.create(null);
         let x = Object.assign(c, a);
+        if (x._name && (x_name[0] !== '«')) {
+            x._name = '«cloned ' + a._name + '»';
+        }
+        
         if (Object.isSealed(a)) {
             Object.seal(x);
         }
@@ -6456,60 +6466,68 @@ function clone(a) {
     }
 }
 
+
 function _deep_clone(a, map) {
-    if (! a || Object.isFrozen(a) || (a._type === 'spritesheet')) {
+    if (! a || Object.isFrozen(a)) {
         // Built-in; return directly instead of cloning since it is
         // immutable (this is based on the assumption that quadplay
-        // makes frozen recursive, which it does). Spritesheets are
-        // weird in that they aren't frozen because they need their
-        // _index updated by the loader, but are supposed to act as
-        // if they are.
+        // makes frozen recursive, which it does).
         return a;
-    } else {
-        if (Array.isArray(a)) {
-            let x = map.get(a);
-            if (x !== undefined) {
-                // Already cloned
-                return x;
-            } else {
-                map.set(a, x = a.slice(0));
-                for (let i = 0; i < x.length; ++i) {
-                    x[i] = _deep_clone(x[i], map);
-                }
-                
-                // Clone all non-Array properties that might have been
-                // added to this array.  They are distinguished by
-                // names that are not numbers.
-                const k = Object.keys(a);
-                for (let i = 0; i < k.length; ++i) {
-                    const key = k[i];
-                    if (key[0] > "9" || key[0] < "0") {
+    } else if (Array.isArray(a)) {
+        let x = map.get(a);
+        if (x !== undefined) {
+            // Already cloned
+            return x;
+        } else {
+            map.set(a, x = a.slice(0));
+            for (let i = 0; i < x.length; ++i) {
+                x[i] = _deep_clone(x[i], map);
+            }
+            
+            // Clone all non-Array properties that might have been
+            // added to this array.  They are distinguished by
+            // names that are not numbers.
+            const k = Object.keys(a);
+            for (let i = 0; i < k.length; ++i) {
+                const key = k[i];
+                if (key[0] > '9' || key[0] < '0') {
+                    if ((key === '_name') && (a._name[0] !== '«')) {
+                        x[key] = '«cloned ' + a._name + '»';
+                    } else {
                         x[key] = _deep_clone(a[key], map);
                     }
                 }
-                
-                if (Object.isSealed(a)) { Object.seal(x); }
-                return x;
             }
-        } else if (typeof a === 'object') {
-            let x = map.get(a);
-            if (x !== undefined) {
-                // Already cloned
-                return x;
-            } else {
-                map.set(a, x = a.constructor ? a.constructor() : Object.create(null));
-                const k = Object.keys(a);
-                for (let i = 0; i < k.length; ++i) {
-                    const key = k[i];
+            
+            if (Object.isSealed(a)) { Object.seal(x); }
+            return x;
+        }
+    } else if (typeof a === 'object') {
+        let x = map.get(a);
+        if (x !== undefined) {
+            // Already cloned
+            return x;
+        } else {
+            map.set(a, x = a.constructor ? a.constructor() : Object.create(null));
+            const k = Object.keys(a);
+            for (let i = 0; i < k.length; ++i) {
+                const key = k[i];
+                if (key === '_name') {
+                    if (a._name[0] !== '«') {
+                        x._name = '«cloned ' + a._name + '»';
+                    } else {
+                        x._name = a._name;
+                    }
+                } else {
                     x[key] = _deep_clone(a[key], map);
                 }
-                if (Object.isSealed(a)) { Object.seal(x); }
-                return x;
             }
-        } else {
-            // Other primitive; just return the value
-            return a;
+            if (Object.isSealed(a)) { Object.seal(x); }
+            return x;
         }
+    } else {
+        // Other primitive; just return the value
+        return a;
     }
 }
 
@@ -6806,7 +6824,7 @@ function _unparse(x, alreadySeen) {
     if (Array.isArray(x)) {
         if (x._name !== undefined) {
             // Internal object
-            return '«' + x._name + '»';
+            return x._name;
         } else if (alreadySeen.has(x)) {
             return '[…]';
         }
@@ -6827,7 +6845,7 @@ function _unparse(x, alreadySeen) {
             return '∅';
         } else if (x._name !== undefined) {
             // Internal object
-            return '«' + x._name + '»';
+            return x._name;
         } else if (alreadySeen.has(x)) {
             return '{…}';
         } else {
