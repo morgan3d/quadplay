@@ -244,7 +244,6 @@ press the Run button (F5) to start the game.
 - Level-end animations
 - Particle system
 - Screen shake
-- Menus and pause screen
 - Frame hooks
 - Coordinates with +Y pointing down
 
@@ -332,7 +331,7 @@ on the screen.
 </td></tr><tr><td>![](../examples/rpg/label128.png)</td><td>
 [RPG Demo](../console/quadplay.html?game=quad://examples/rpg&IDE=1) is a simple example of a single-player RPG game design:
 
-- Multiple [modes](#modes): Pause, Inventory, and Shop
+- Multiple [modes](#modes): Play, Inventory, and Shop
 - Multi-layer map
 - Player movement with obstructions
 - NPC interaction
@@ -549,7 +548,7 @@ features are [*modes*](#modes), [*2.5D graphics*](#2.5dgraphics), and [*frame ho
 ### Modes
 
 Your program consists of one or more *modes* which are game states that the
-player will experience. Common modes are "Play", "Pause", "Title", "Inventory", "CutScene", and "GameOver". Use `set_mode()` to change which mode the program is in.
+player will experience. Common modes are "Play", "Title", "Inventory", "CutScene", and "GameOver". Use `set_mode()` to change which mode the program is in.
 Clicking on the "Modes" label on the left side of the IDE draws
 a diagram showing the modes and transitions for your program.
 
@@ -750,7 +749,7 @@ isometric games such as [_Populous_]("https://en.wikipedia.org/wiki/Populous_(vi
 
 Although the screen is cleared to the background color every frame,
 all of the drawing commands are stored for one previous frame.
-This allows dialogue and pause screens to re-render the previous
+This allows dialogue and inventory screens to re-render the previous
 mode's last frame using `draw_previous_mode()` so that they can
 render on top of them. This rendering retains z-order, so you can
 even inject new graphics in between objects from a previous mode's
@@ -1334,7 +1333,8 @@ at any point.
   - `text` is the menu item text. It will be clipped if too long.
   - `callback` is a function of no arguments to execute when this option is selected.
   - `confirm` (defaults to `false`) if true, is an additional confirmation dialog
-    appears when this option is selected.
+    appears when this option is selected. If a non-empty string, displays that
+    string as an additional message on the confirmation dialog.
 
 
 Modes
@@ -7173,6 +7173,8 @@ Changes for both the specification and implementation in each release.
 - Made function definition lines, `todo()`, and `assert()` 
   free versus the total source statement limit
 - Optimized `debug_print()` to make it practical to print large amounts of data
+- The `confirm` argument to `set_pause_menu()` can now be a string that specifies
+  additional message text
 - Made assets print in `debug_print()` and `debug_watch()` as their variable name
 - Assets with the same source URL are now guaranteed to produce live objects that
   are `==` to each other, except for maps, which are guaranteed to be `!=` because
