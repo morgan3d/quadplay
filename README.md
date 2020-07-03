@@ -14,7 +14,7 @@ Platforms
 Create and play games on any laptop, desktop, tablet, or phone. Or, build your own programmable arcade machine
 from a Raspberry Pi, Tegra, or old computer:
 
-<img src="doc/laptop.jpg" height=200> <img src="doc/rpi-arcade.jpg" height=200> <img src="doc/arcade.jpg" height=200> <img src="doc/xarcade-arcade.jpg" height=200> <img src="doc/nano-arcade.jpg" height=200>
+<img src="doc/laptop.jpg" height=200> <img src="doc/phone.jpg" height=200> <img src="doc/rpi-arcade.jpg" height=200> <img src="doc/arcade.jpg" height=200> <img src="doc/xarcade-arcade.jpg" height=200> <img src="doc/nano-arcade.jpg" height=200>
 
 
 Features
