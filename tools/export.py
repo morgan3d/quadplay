@@ -155,8 +155,12 @@ def export(args):
       # Do this before copying individual dependencies because
       # shutil.copytree can't take the dirs_exist_ok=True parameter
       # until Python 3.8 and the dependencies create the console dir
-      if args.dry_run: print('cp -r ' + os.path.join(args.quadpath, 'console') + ' ' + os.path.join(out_path, ''))
-      else: shutil.copytree(os.path.join(args.quadpath, 'console'), os.path.join(out_path, 'console'))
+      if args.dry_run:
+         print('cp -r ' + os.path.join(args.quadpath, 'console') + ' ' + os.path.join(out_path, ''))
+      else:
+         shutil.copytree(os.path.join(args.quadpath, 'console'),
+                         os.path.join(out_path, 'console'),
+                         ignore = shutil.ignore_patterns('.DS_Store', '*~', '#*', '*.pyc'))
       
       generate_standalone(args, out_path, out_url, game_title)
    else:
@@ -178,6 +182,17 @@ def export(args):
 
       if args.dry_run: print('cp ' + src + ' ' + dst)
       else: shutil.copy2(src, dst)
+
+      
+   # Make everything world-readable
+   print('------------------------' + out_path)
+   if args.dry_run:
+      print('chmod -R uga+r ' + os.path.join(out_path, '*'))
+   else:
+      for root, dirs, files in os.walk(out_path):
+         for name in files + dirs:
+            os.chmod(os.path.join(root, name), stat.S_IRUSR | stat.S_IROTH | stat.S_IRGRP)
+
          
    if args.zipfile:
       # Construct the zipfile

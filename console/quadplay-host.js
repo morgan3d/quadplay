@@ -470,7 +470,9 @@ const gamepadButtonRemap = {
 
     // Nintendo Switch SNES official controller under safari
     '57e-2017-SNES Controller': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 12, 13, 14, 15],
-    'SNES Controller (Vendor: 057e Product: 2017)': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 12, 13, 14, 15]
+    'SNES Controller (Vendor: 057e Product: 2017)': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 12, 13, 14, 15],
+
+    // This is how the X-Arcade controller reports under macOS
 };
 
 const gamepadAxisRemap = {
@@ -926,10 +928,8 @@ function updateInput() {
     // A, B, C, D, E, F, _P, Q
     const buttonIndex = [0, 1, 2, 3, 4, 5, 9, 8];
     
-    // Aliases on console game controller using stick buttons
-    // and trigger + shoulder buttons. These are read from 
-    // gamepad_array[2] and applied to gamepad_array[0]
-    const altButtonIndex = [7, 6, undefined, undefined, undefined, undefined, undefined, undefined];
+    // Aliases on console game controller
+    const altButtonIndex = [undefined, undefined, undefined, undefined, 6, 7, undefined, undefined];
 
     // Also processes input
     const gamepadArray = getIdealGamepads();
@@ -941,8 +941,8 @@ function updateInput() {
 
         // Have player 0 physical alt controls set player 1 virtual buttons only
         // if there is no second controller physically present
-	    const altRealGamepad = ((player === 1) && ! realGamepad) ? gamepadArray[0] : undefined,
-	        altPrevRealGamepad = ((player === 1) && ! realGamepad) ? prevRealGamepadState[0] : undefined;
+	const altRealGamepad = ((player === 1) && ! realGamepad) ? gamepadArray[0] : undefined,
+	      altPrevRealGamepad = ((player === 1) && ! realGamepad) ? prevRealGamepadState[0] : undefined;
 
         if (realGamepad && (realGamepad.id !== pad._id)) {
             // The gamepad just connected or changed. Update the control scheme.
@@ -1023,10 +1023,9 @@ function updateInput() {
             }
 
             const i = buttonIndex[b], j = altButtonIndex[b];
-            const isPressed  = (realGamepad && realGamepad.buttons[i]) || (altRealGamepad && altRealGamepad.buttons[j]);
+            const isPressed  = realGamepad && (realGamepad.buttons[i] || realGamepad.buttons[j]);
 	    
-	        const wasPressed = (prevRealGamepad && prevRealGamepad.buttons[i]) ||
-		               (altPrevRealGamepad && altPrevRealGamepad.buttons[j]);
+	    const wasPressed = prevRealGamepad && (prevRealGamepad.buttons[i] || prevRealGamepad.buttons[j]);
 	    
             if (isPressed) { pad[prefix + button] = 1; }
 	    
