@@ -60,9 +60,9 @@ See the manual for a getting started guide, the change log, road map, and beta n
 Platforms
 ========================================================
 
-Play on any laptop, desktop, tablet, or phone, or build your own programmable arcade machine like these:
+Play on any laptop, desktop, tablet, or phone, or build your own programmable arcade machine:
 
-<img src="doc/rpi-arcade.jpg" height=200> <img src="doc/arcade.jpg" height=200> <img src="doc/xarcade-arcade.jpg" height=200> <img src="doc/nano-arcade.jpg" height=200>
+<img src="doc/laptop.jpg height=200> <img src="doc/rpi-arcade.jpg" height=200> <img src="doc/arcade.jpg" height=200> <img src="doc/xarcade-arcade.jpg" height=200> <img src="doc/nano-arcade.jpg" height=200>
 
 License
 ========================================================

@@ -60,10 +60,10 @@ with pos, vel, force, scale, spriteIndex, spriteFrame, animation, spritesheet, s
         // Running
         scale.x = gamepad.x
         vel.x = gamepad.x * runSpeed
-        nextAnimation = if gamepad.y < 0 then "crawl" else "run"
+        nextAnimation = if gamepad.y > 0 then "crawl" else "run"
     else: // Not running
         vel.x *= 70%
-        nextAnimation = if gamepad.y < 0 then "duck" else "idle"
+        nextAnimation = if gamepad.y > 0 then "duck" else "idle"
       
 
     // Clamp to ground and set landing pose
