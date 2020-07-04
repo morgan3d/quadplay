@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.07.03.11'
+const version  = '2020.07.04.19'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -1427,7 +1427,7 @@ function onProjectSelect(target, type, object) {
         docEditor.style.visibility = 'visible';
         codePlusFrame.style.visibility = 'visible';
 
-        codePlusFrame.style.gridTemplateRows = `auto 0px 0px 100%`;
+        codePlusFrame.style.gridTemplateRows = `auto 0px 0px 1fr`;
         
         if (object.endsWith('.md') ||
             object.endsWith('.html') ||
@@ -1484,7 +1484,7 @@ function onProjectSelect(target, type, object) {
             setCodeEditorSession(url);
             // Show the code editor, hide the content pane
             codePlusFrame.style.visibility = 'visible';
-            codePlusFrame.style.gridTemplateRows = 'auto 0px 0px 100%';
+            codePlusFrame.style.gridTemplateRows = 'auto 0px 0px 1fr';
             document.getElementById('codeEditorDivider').style.visibility = 'hidden';
         }
         break;
@@ -1874,6 +1874,8 @@ function visualizeModes(modeEditor) {
 <filter id="outerglow">
 <feDropShadow dx="0" dy="0" stdDeviation="0.5" flood-opacity="1.0" flood-color="#302b2b" filterUnits="userSpaceOnUse"/>
 <feDropShadow dx="0" dy="0" stdDeviation="1" flood-opacity="1.0" flood-color="#302b2b" filterUnits="userSpaceOnUse"/>
+<feDropShadow dx="0" dy="0" stdDeviation="1" flood-opacity="1.0" flood-color="#302b2b" filterUnits="userSpaceOnUse"/>
+<feDropShadow dx="0" dy="0" stdDeviation="2" flood-opacity="1.0" flood-color="#302b2b" filterUnits="userSpaceOnUse"/>
 </filter>
 </defs>`
 

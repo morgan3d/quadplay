@@ -285,7 +285,7 @@ def spawnShot(snake):
    
 def processShotArray():
    const nextPos = xy(0, 0)
-   for shot ∊ shotArray:
+   for shot ∊ clone(shotArray):
       // Draw the shot
       XY_ADD_XY(shot.pos, shot.vel, nextPos)
       draw_line(shot.pos, nextPos, shot.color)

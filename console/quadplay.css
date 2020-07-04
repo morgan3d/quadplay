@@ -31,6 +31,12 @@ html {
     overflow: scroll;
 }
 
+#modeEditor {
+    width: 100%;
+    height: 100%;
+    overflow: scroll;
+}
+
 .pixelate {
     image-rendering: optimizeSpeed;
     image-rendering: -o-crisp-edges;
@@ -602,8 +608,8 @@ code, .code {
 #ace {
     grid-area: codeEditor;
     width: 100%;
-    /* Make sure that the bottom row is visible */
-    /*margin-bottom:23px; */
+    top: 0px;
+    bottom: 23px;
     box-sizing:         border-box;
     -moz-box-sizing:    border-box;
     -webkit-box-sizing: border-box;

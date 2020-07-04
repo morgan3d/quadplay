@@ -2372,6 +2372,9 @@ function make_physics(options) {
             let mapA = physics._entityContactMap.get(pair.bodyA);
             if (mapA === undefined) { physics._entityContactMap.set(pair.bodyA, mapA = new Map()); }
 
+            let mapB = physics._entityContactMap.get(pair.bodyB);
+            if (mapB === undefined) { physics._entityContactMap.set(pair.bodyB, mapB = new Map()); }
+            
             let contact = mapA.get(pair.bodyB);
             
             if (! contact) {
@@ -2387,9 +2390,6 @@ function make_physics(options) {
                     depth:   pair.collision.depth
                 }
 
-                let mapB = physics._entityContactMap.get(pair.bodyB);
-                if (mapB === undefined) { physics._entityContactMap.set(pair.bodyB, mapB = new Map()); }
-                
                 // For use in collision callbacks
                 physics._newContactArray.push(contact);
 
@@ -2400,6 +2400,7 @@ function make_physics(options) {
                 // for debugging collisions
                 //console.log(physics._frame + ' +begin ' + contact.entityA.name + " & " + contact.entityB.name);
             } else {
+                console.assert(mapB.get(pair.bodyA), 'Internal error: Mismatched contact pair in physics simulation');
                 // ...else: this contact already exists and is in the maps because it was recently active.
                 // it is currently scheduled in the broken contact queue. Update the data; the Active
                 // event will not be called by Matter.js
@@ -2551,7 +2552,8 @@ function physics_remove_entity(physics, entity) {
             const otherMap = physics._entityContactMap.get(otherBody);
             otherMap.delete(body);
         }
-        // Remove the entire map from body
+        // Remove the entire map for body, so that
+        // body can be garbage collected
         physics._entityContactMap.delete(body);
     }
     
@@ -2737,8 +2739,12 @@ function physics_simulate(physics, stepFrames) {
             // For debugging collisions:
             // console.log(physics._frame + ' - end  ' + contact.entityA.name + " & " + contact.entityB.name + '\n\n');
 
-            physics._entityContactMap.get(bodyA).delete(bodyB);
-            physics._entityContactMap.get(bodyB).delete(bodyA);
+            // Remove the contact both ways
+            const mapA = physics._entityContactMap.get(bodyA);
+            if (mapA) { mapA.delete(bodyB); }
+            
+            const mapB = physics._entityContactMap.get(bodyB);
+            if (mapB) { mapB.delete(bodyA); }
         }
     }
 
@@ -4269,9 +4275,7 @@ function text_width(font, str, markup) {
             }
         }
     }
-
-    width -= format.font._spacing.x;
-
+ 
     return width;    
 }
 
