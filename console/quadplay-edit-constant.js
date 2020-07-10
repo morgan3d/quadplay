@@ -7,6 +7,34 @@
 // dragging a slider.
 const CONSTANT_EDITOR_SAVE_DELAY = 1.0; // seconds
 
+/** Input is a scalar on [0, 1], output is a scalar on 0-255. Exactly matches _colorToUint16 */
+function htmlColorChannel4Bit(value) {
+    value = clamp(value, 0, 1);
+    value = (value * 15 + 0.5) >>> 0;
+    value = (value << 4) + value;
+    return value;
+}
+
+/** Rounds to the nearest rgba/hsva 4-bit color and returns a CSS string */
+function htmlColor4Bit(value) {
+    if (value.r !== undefined) {
+        if (value.a !== undefined) {
+            // RGBA
+            return `rgba(${htmlColorChannel4Bit(value.r)}, ${htmlColorChannel4Bit(value.g)}, ${htmlColorChannel4Bit(value.b)}, ${htmlColorChannel4Bit(value.a) / 255})`;
+        } else {
+            // RGB
+            return `rgb(${htmlColorChannel4Bit(value.r)}, ${htmlColorChannel4Bit(value.g)}, ${htmlColorChannel4Bit(value.b)})`;
+        }
+    } else if (value.a !== undefined) {
+        // HSVA
+        return `hsva(${htmlColorChannel4Bit(value.h)}, ${htmlColorChannel4Bit(value.s)}, ${htmlColorChannel4Bit(value.v)}, ${htmlColorChannel4Bit(value.a) / 255})`;
+    } else {
+        // HSV
+        return `hsv(${htmlColorChannel4Bit(value.h)}, ${htmlColorChannel4Bit(value.s)}, ${htmlColorChannel4Bit(value.v)})`;
+    }
+}
+
+
 /* Called from onProjectSelect() */
 function showConstantEditor(index) {
     const constantEditor = document.getElementById('constantEditor');
@@ -79,11 +107,7 @@ function showConstantEditor(index) {
             // Color editor
 
             // Display color
-            if (type[0] === 'r') {
-                editor = `<br><div id="constantEditor_${index}_preview" style="background: rgb(${255 * c.r}, ${255 * c.g}, ${255 * c.b}); border-radius: 4px; border: 1px solid #000; width: 58px; height: 58px"> </div>`;
-            } else if (type[0] === 'h') {
-                editor = `<br><div id="constantEditor_${index}_preview" style="background: hsv(${255 * c.h}, ${255 * c.s}, ${255 * c.v}); border-radius: 4px; border: 1px solid #000; width: 58px; height: 58px"> </div>`;
-            }
+            editor = `<br><div style="border-radius: 4px; border: 1px solid #000; width: 64px; height: 64px; overflow: hidden" class="checkerboard"><div id="constantEditor_${index}_preview" style="background: ${htmlColor4Bit(c)}; width: 64px; height: 64px"> </div></div>`;
             
             // Sliders
             if (editableProject) {
@@ -186,11 +210,7 @@ function onConstantEditorVectorValueChange(sourceObj, environment, key, fields, 
     if (type === 'rgb' || type === 'rgba' ||
         type === 'hsv' || type === 'hsva') {
         const preview = document.getElementById('constantEditor_' + key + '_preview');
-        if (type[0] === 'r') {
-            preview.style.background = `rgb(${255 * value.r}, ${255 * value.g}, ${255 * value.b})`;
-        } else {
-            preview.style.background = `hsv(${255 * value.h}, ${255 * value.s}, ${255 * value.v})`;
-        }
+        preview.style.background = htmlColor4Bit(value);
 
         // Update sliders
         for (let i = 0; i < type.length; ++i) {

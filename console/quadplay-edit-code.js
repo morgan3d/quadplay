@@ -142,6 +142,8 @@ function updateCodeEditorSession(url, bodyText) {
         bodyText = WorkJSON.stringify(bodyText, undefined, 4);
     }
 
+    if (session.errorMarker) { session.removeMarker(session.errorMarker); }
+
     if (session.getValue() !== bodyText) {
         // Update the value only when it has changed, to avoid
         // disturbing the active line. Calling setValue()
@@ -168,6 +170,7 @@ function setCodeEditorSessionMode(session, mode) {
 
 
 function setCodeEditorSession(url) {
+    if (aceEditor.session.errorMarker) { aceEditor.session.removeMarker(aceEditor.session.errorMarker); }
     console.assert(url);
     const contents = fileContents[url] || '';
     const session = codeEditorSessionMap.get(url) || createCodeEditorSession(url, contents);
@@ -477,6 +480,8 @@ function createCodeEditorSession(url, bodyText) {
             }
 
             if (session.aux.readOnly) { return; }
+
+            if (session.errorMarker) { session.removeMarker(session.errorMarker); }
 
             // This is code to detect programmatic changes to the value, but it
             // can't distinguish search-and-replace from other

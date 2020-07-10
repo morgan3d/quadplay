@@ -1134,6 +1134,9 @@ function onError(e) {
     // Try to compute a short URL
     setErrorStatus(shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message);
     editorGotoFileLine(e.url, e.lineNumber);
+    const Range = ace.require('ace/range').Range;
+    if (aceEditor.session.errorMarker) { aceEditor.session.removeMarker(aceEditor.session.errorMarker); }
+    aceEditor.session.errorMarker = aceEditor.session.addMarker(new Range(e.lineNumber - 1, 0, e.lineNumber - 1, 1), "aceErrorMarker", "fullLine", false);
 }
 
 
