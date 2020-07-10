@@ -715,10 +715,6 @@ code, .code {
     list-style: none;
 }
 
-.clickable {
-    cursor: pointer;
-}
-
 .project li {
     padding-left: 7px;
 }
@@ -738,7 +734,11 @@ code, .code {
     margin-right: 4px;
 }
 
-.project .clickable:hover {
+.clickable {
+    cursor: pointer;
+}
+
+.clickable:hover {
   color: #789;
 }
 

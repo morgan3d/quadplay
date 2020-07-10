@@ -2194,6 +2194,9 @@ function entity_simulate(entity, dt) {
     if (entity.density === Infinity) { return; }
     
     const mass = entity_mass(entity);
+    if (mass <= 0) {
+        _error('Mass must be positive in entity_simulate()');
+    }
     const imass = 1 / mass;
     const iinertia = 1 / entity_inertia(entity, mass);
     const acc = entity.acc, vel = entity.vel, pos = entity.pos;

@@ -261,6 +261,10 @@
            these controls that don't have horizontal ones anyway -->
         <style>#performancePane::-webkit-scrollbar, #todoPane::-webkit-scrollbar, #controlPane::-webkit-scrollbar { display: none; }</style>
         <pane id="controlPane" class="ide" style="overflow-y:auto;overflow-x:hidden;text-align:center">
+          <div id="gamepadIndexPane" style="width:100%; box-sizing: border-box;">
+            
+          </div>
+          <br/>
           <img src="keyboard.png" style="width:100%; margin-bottom:10px">
           <br/>
           <img src="xbox_controller.png" style="width:80%; margin-bottom:10px">
@@ -401,6 +405,24 @@
       </div>
     </div>
 
+    <div id="reorderGamepadsDialog" class="modal hidden">
+      <div class="dialog" style="top:40vh; width: 300px">
+        <center>
+          <b>Reorder Gamepads</b>
+          <p>
+          <div id="reorderGamepadsMessage" style="text-align: left">
+          </div>
+          </p>
+          <br/>
+          <button onclick="onReorderGamepadsReset()">Reset</button>
+          <span style="display: inline-block; width:40px"> </span>
+          <button onclick="hideReorderGamepadsDialog()">Cancel</button>
+          <span style="display: inline-block; width:40px"> </span>
+          <button onclick="onReorderGamepadsDone()">Done</button>
+        </center>
+      </div>
+    </div>
+    
     <div id="newConstantDialog" class="modal hidden">
       <div class="dialog" style="top:40vh; width: 360px">
         <center>

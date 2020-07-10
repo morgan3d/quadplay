@@ -118,6 +118,33 @@ function setCodeEditorFontSize(f) {
 }
 
 
+// Controls the mapping order used by quadplay-host for gamepads. Can
+// be changed as an advanced feature, intended for arcade setups.
+// gamepad_array[i] = real_pad[gamepadOrderMap[i]].
+// Set to DISABLED_GAMEPAD for 'skip'. Each element must be a single-digit number
+// for the serialization code to work correctly.
+const DISABLED_GAMEPAD = 9;
+let gamepadOrderMap = [0, 1, 2, 3];
+function setGamepadOrderMap(map) {
+    const pane = document.getElementById('gamepadIndexPane');
+
+    let s = '';
+    if (map[0] === 0 && map[1] === 1 && map[2] === 2 && map[3] === 3) {
+        // Default configuration
+        s = 'Your gamepads are in default order.';
+    } else {
+        s = 'Your gamepads are in custom order:<br>';
+        for (let i = 0; i < 4; ++i) {
+            const m = map[i];
+            s += `P${i + 1}&nbsp;=&nbsp;${(m === DISABLED_GAMEPAD) ? '∅' : 'controller' + (m + 1)}${i < 3 ? ', ' : '.<br/>'}`;
+        }
+    }
+    pane.innerHTML = s + ' <a title="Change gamepad order" onclick="showReorderGamepadsDialog(); return false" href="#">Click to change</a>';
+    gamepadOrderMap = map;
+    localStorage.setItem('gamepadOrderMap', gamepadOrderMap.join(''));
+}
+
+
 let colorScheme = 'pink';
 function setColorScheme(scheme) {
     colorScheme = scheme;
@@ -1110,6 +1137,113 @@ function onError(e) {
 }
 
 
+function showReorderGamepadsDialog() {
+    const dialog = document.getElementById('reorderGamepadsDialog');
+    dialog.classList.remove('hidden');
+
+    // Store the state on this function
+
+    // Start with a mapping that is useless, so that we can use indexOf on
+    // real indices to see if they have been consumed.
+    showReorderGamepadsDialog.map = [9, 9, 9, 9];
+
+    // Gamepad we are currently testing for
+    showReorderGamepadsDialog.index = 0;
+
+    // Set the initial message
+    showReorderGamepadsDialog.assign(undefined);
+
+    const poll = function() {
+        const gamepads = navigator.getGamepads();
+
+        if (gamepads) {
+            let g = -1;
+            for (let i = 0; i < gamepads.length; ++i) {
+                const gamepad = gamepads[i];
+
+                // Chrome may have null gamepads in the list
+                if (! gamepad) { continue; } else { ++g; }
+
+                // Ignore buttons on gamepads that have been assigned already
+                if (showReorderGamepadsDialog.map.indexOf(g) === -1) {
+                    for (let b = 0; b < gamepad.buttons.length; ++b) {
+                        if (gamepad.buttons[b].pressed) {
+                            // A button is pressed on this gamepad. Assign it and advance
+                            // to the next one.
+                            showReorderGamepadsDialog.assign(g);
+                            break;
+                        }
+                    } // for b
+                } // if
+            } // for i/g
+        } // if gamepads exist
+
+        if (showReorderGamepadsDialog.index > 3) {
+            // Done!
+            onReorderGamepadsDone();
+        } else if (! dialog.classList.contains('hidden')) {
+            // Poll repeatedly until the dialog closes
+            setTimeout(poll, 15);
+        }
+    };
+    
+    poll();
+}
+
+
+showReorderGamepadsDialog.assign = function (value) {
+    if (value !== undefined) {
+        // On the first call, just set the message
+        showReorderGamepadsDialog.map[showReorderGamepadsDialog.index] = value;
+        ++showReorderGamepadsDialog.index;
+    }
+    const index = showReorderGamepadsDialog.index;
+    const messagePane = document.getElementById('reorderGamepadsMessage');
+    messagePane.innerHTML = `Press a button on player ${index + 1}'s controller (<code>gamepad_array[${index}]</code>) or <button onclick="showReorderGamepadsDialog.assign(DISABLED_GAMEPAD)">Disable</button> the P${index + 1} physical gamepad support.`;
+    
+    // The polling test will automatically save when done, so no need
+    // to test for the last assignment here.    
+}
+
+
+function hideReorderGamepadsDialog() {
+    document.getElementById('reorderGamepadsDialog').classList.add('hidden');
+}
+
+
+function onReorderGamepadsReset() {
+    setGamepadOrderMap([0, 1, 2, 3])
+    hideReorderGamepadsDialog();
+}
+
+
+function onReorderGamepadsDone() {
+    hideReorderGamepadsDialog();
+    
+    // Set the unassigned values
+    for (let i = showReorderGamepadsDialog.index; i <= 3; ++i) {
+        // These are the unset ones. Temporarily make them values that
+        // won't match existing values so that we can use indexOf
+        showReorderGamepadsDialog.map[i] = 9;
+    }
+
+    // Iterate again, setting gamepad i
+    for (; showReorderGamepadsDialog.index <= 3; ++showReorderGamepadsDialog.index) {
+        // Choose the first unused value
+        for (let g = 0; g < i; ++g) {
+            // Is g in use?
+            if (showReorderGamepadsDialog.map.indexOf(g) === -1) {
+                // This one is free
+                showReorderGamepadsDialog.map[showReorderGamepadsDialog.index] = g;
+                break;
+            }
+        }
+    }
+    
+    setGamepadOrderMap(showReorderGamepadsDialog.map);
+}
+
+
 function showWaitDialog() {
     document.getElementById('waitDialog').classList.remove('hidden');
 }
@@ -1333,6 +1467,7 @@ function saveIDEState() {
         'uiMode': uiMode,
         'backgroundPauseEnabled': backgroundPauseEnabled,
         'colorScheme': colorScheme,
+        'gamepadOrderMap': gamepadOrderMap.join(''),
         'showPhysicsEnabled': document.getElementById('showPhysicsEnabled').checked,
         'showEntityBoundsEnabled': document.getElementById('showEntityBoundsEnabled').checked,
         'assertEnabled': document.getElementById('assertEnabled').checked,
@@ -1869,7 +2004,7 @@ function visualizeModes(modeEditor) {
     dagre.layout(graph);
 
     // Render the mode graph to SVG
-    let svg = `<svg class="modeGraph" width=${graph._label.width + 40} height=${graph._label.height + 60} viewbox="-20 -30 ${graph._label.width + 40} ${graph._label.height + 40}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">`;
+    let svg = `<svg class="modeGraph" width=${graph._label.width + 40} height=${graph._label.height + 60} viewbox="-20 -30 ${graph._label.width + 40} ${graph._label.height + 60}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">`;
     svg += `<defs><filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="2" y="-25%" height="150%" flood-opacity="0.5" filterUnits="userSpaceOnUse"/></filter>
 <filter id="outerglow">
 <feDropShadow dx="0" dy="0" stdDeviation="0.5" flood-opacity="1.0" flood-color="#302b2b" filterUnits="userSpaceOnUse"/>
@@ -3471,7 +3606,8 @@ function loadGameIntoIDE(url, callback, loadFast) {
             setFramebufferSize(gameSource.extendedJSON.screen_size.x, gameSource.extendedJSON.screen_size.y);
             createProjectWindow(gameSource);
             const resourcePane = document.getElementById('resourcePane');
-            resourcePane.innerHTML = `
+
+            let s = `
 <br/><center><b style="color:#888">Resource Limits</b></center>
 <hr>
 <br/>
@@ -3480,9 +3616,34 @@ function loadGameIntoIDE(url, callback, loadFast) {
 <tr><td>Spritesheets</td><td class="right">${resourceStats.spritesheets}</td><td>/</td><td class="right">128</td><td class="right">(${Math.round(resourceStats.spritesheets*100/128)}%)</td></tr>
 <tr><td>Spritesheet Width</td><td class="right">${resourceStats.maxSpritesheetWidth}</td><td>/</td><td class="right">1024</td><td class="right">(${Math.round(resourceStats.maxSpritesheetWidth*100/1024)}%)</td></tr>
 <tr><td>Spritesheet Height</td><td class="right">${resourceStats.maxSpritesheetHeight}</td><td>/</td><td class="right">1024</td><td class="right">(${Math.round(resourceStats.maxSpritesheetHeight*100/1024)}%)</td></tr>
-<tr><td>Source Statements</td><td class="right">${resourceStats.sourceStatements}</td><td>/</td><td class="right">8192</td><td class="right">(${Math.round(resourceStats.sourceStatements*100/8192)}%)</td></tr>
+<tr><td>Code Statements</td><td class="right">${resourceStats.sourceStatements}</td><td>/</td><td class="right">8192</td><td class="right">(${Math.round(resourceStats.sourceStatements*100/8192)}%)</td></tr>
 <tr><td>Sounds</td><td class="right">${resourceStats.sounds}</td><td>/</td><td class="right">128</td><td class="right">(${Math.round(resourceStats.sounds*100/128)}%)</td></tr>
+<!--<tr><td>Sound Bytes</td><td class="right">${resourceStats.soundKilobytes}</td><td>/</td><td class="right">256 MB</td><td class="right">(${Math.round(resourceStats.soundKilobytes*100/(1024*256))}%)</td></tr>-->
 </table>`;
+
+
+            const resourceArray = [
+                {name: 'Code Memory',   prop: 'sourceStatements', units: 'Statements', scale:1, suffix:''},
+                {name: 'Sprite Memory', prop: 'spritePixels',     units: 'Pixels', scale: 1/1024, suffix: 'k'}//,
+                // {name: 'Sound Memory',  prop: 'soundKilobytes',       units: 'Bytes', scale: 1, suffix:'kB'}
+            ];
+
+            for (const resource of resourceArray) {
+                s += `<br/><center><b style="color:#888">${resource.name}</b></center><hr><br/>`;
+                const entryArray = Object.entries(resourceStats[resource.prop + 'ByURL']);
+                
+                // Sort by length
+                entryArray.sort(function (a, b) { return b[1] - a[1]; });
+                
+                s += `<table width=100%><tr><th style="text-align:left">File</th><th width=120 colspan=2>${resource.units}</th></tr>\n`;
+                for (const entry of entryArray) {
+                    s += `<tr><td>${entry[0].replace(/^.*\//, '')}</td><td style="text-align:right">${Math.ceil(entry[1] * resource.scale)}${resource.suffix}</td><td width=30px></td></tr>\n`;
+                }
+                s += '</table>';
+            }
+
+            resourcePane.innerHTML = s;
+            
             document.getElementById('restartButtonContainer').enabled =
                 document.getElementById('slowButton').enabled =
                 document.getElementById('stepButton').enabled =
@@ -3517,6 +3678,7 @@ function loadGameIntoIDE(url, callback, loadFast) {
         setTimeout(loadFunction, 0);
     }
 }
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // See also more event handlers for the emulator in quadplay-host.js
@@ -3690,6 +3852,13 @@ if (getQueryString('kiosk') === '1') {
 setErrorStatus('');
 setCodeEditorFontSize(parseInt(localStorage.getItem('codeEditorFontSize') || '14'));
 setColorScheme(localStorage.getItem('colorScheme') || 'pink');
+{
+    let tmp = gamepadOrderMap = (localStorage.getItem('gamepadOrderMap') || '0123').split('');
+    for (let i = 0; i < tmp.length; ++i) {
+        tmp[i] = parseInt(tmp[i]);
+    }
+    setGamepadOrderMap(tmp);
+}
 onResize();
 // Set the initial size
 setFramebufferSize(SCREEN_WIDTH, SCREEN_HEIGHT);

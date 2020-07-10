@@ -86,7 +86,7 @@ config_query_webpath = None
 # Subdirectories of server_root_path that are permitted for http access.
 # These are relative to server_root_path and contain a leading slash because
 # they are url subpaths relative to quad://
-webpath_whitelist = None
+webpath_allowlist = None
 
 isWindows = (platform.system() == 'Windows')
 isMacOS = (platform.system() == 'Darwin')
@@ -129,7 +129,7 @@ def load_json(filename):
         return workjson.loads(f.read())
         
 # Handles serving from multiple directories. Overrides the default restriction to
-# the CWD with its own security whitelist.
+# the CWD with its own security allowlist.
 #
 # See https://github.com/python/cpython/blob/master/Lib/http/server.py for
 # the base class implementation and internal methods
@@ -247,8 +247,8 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             webpath = webpath[1:]
             self.path = self.path[1:]
 
-        # Security: Check if path has a prefix in webpath_whitelist
-        if webpath != '/favicon.ico' and not any([webpath.startswith(prefix) for prefix in webpath_whitelist]):
+        # Security: Check if path has a prefix in webpath_allowlist
+        if webpath != '/favicon.ico' and not any([webpath.startswith(prefix) for prefix in webpath_allowlist]):
             self.send_error(404, 'Illegal webpath: ' + webpath)
 
         if webpath == config_query_webpath or webpath == asset_query_webpath or webpath == game_query_webpath:
@@ -276,8 +276,8 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 print('query', query)
                 aux_path = query[query.index('=') + 1:]
 
-                # Security: check if aux_path has a prefix in webpath_whitelist
-                if not any([aux_path.startswith(prefix) for prefix in webpath_whitelist]):
+                # Security: check if aux_path has a prefix in webpath_allowlist
+                if not any([aux_path.startswith(prefix) for prefix in webpath_allowlist]):
                     self.send_error(404, 'Illegal path: ' + aux_path)
                 
                 # Search (quad_path | aux_path) + type + 's/*.' + type + '.json'
@@ -428,7 +428,9 @@ def platform_www_abspath(p):
         if len(t) > 1 and t[1] != ':' and t[0] != '/': t = '/' + t
         return t
     else:
-        p = p[len(server_root_path)+1:]
+        if server_root_path != '/':
+            p = p[len(server_root_path)+1:]
+            
         if p == '':
             return ''
         elif p.endswith('.game.json'):
@@ -443,34 +445,35 @@ quad_path = canonicalize_path(os.path.dirname(__file__))
 # Compute the serving paths
 game_path = canonicalize_path(args.gamepath)
 if game_path.endswith('.game.json'): game_path = os.path.dirname(game_path)
-webpath_whitelist = [quad_path, game_path]
+webpath_allowlist = [quad_path, game_path]
 
-if not args.kiosk: webpath_whitelist.append(my_games_path)
+if not args.kiosk: webpath_allowlist.append(my_games_path)
        
 # Common ancestor
-server_root_path = os.path.dirname(os.path.commonprefix([os.path.join(p, '') for p in webpath_whitelist]))
+server_root_path = os.path.dirname(os.path.commonprefix([os.path.join(p, '') for p in webpath_allowlist]))
 
 # Strip the common prefix
-webpath_whitelist = [platform_www_abspath(p) for p in webpath_whitelist]
+# HERE
+webpath_allowlist = [platform_www_abspath(p) for p in webpath_allowlist]
 my_games_path = remove_leading_slash(my_games_path[len(server_root_path):])
 
 # Remove trailing slash
-asset_query_webpath = webpath_whitelist[0]
+asset_query_webpath = webpath_allowlist[0]
 if len(asset_query_webpath) > 0 and asset_query_webpath[-1] == '/': asset_query_webpath = asset_query_webpath[:-1]
 game_query_webpath = asset_query_webpath + '/console/games.json'
 config_query_webpath = asset_query_webpath + '/console/_config.json'
 asset_query_webpath += '/console/_assets.json'
-quad_path = remove_leading_slash(webpath_whitelist[0])
+quad_path = remove_leading_slash(webpath_allowlist[0])
 
 if False:
     # Debug paths
-    print("\nserver_root_path = '" + server_root_path + "'")
-    print("quad_path = '" + quad_path + "'")
-    print("my_games_path = '" + my_games_path + "'")
-    print("asset_query_webpath = '" + asset_query_webpath + "'")
-    print("game_query_webpath = '" + game_query_webpath + "'")
+    print("\nserver_root_path   = '" + server_root_path + "'")
+    print("quad_path            = '" + quad_path + "'")
+    print("my_games_path        = '" + my_games_path + "'")
+    print("asset_query_webpath  = '" + asset_query_webpath + "'")
+    print("game_query_webpath   = '" + game_query_webpath + "'")
     print("config_query_webpath = '" + config_query_webpath + "'")
-    print('webpath_whitelist = ', webpath_whitelist, '\n')
+    print('webpath_allowlist    = ', webpath_allowlist, '\n')
     sys.exit()
 # SSL support doesn't work yet due to self-signed certificates
 useSSL = False
@@ -511,7 +514,7 @@ def launchServer(post_token):
 
         
 def main():
-    global webpath_whitelist, server_root_path, token
+    global webpath_allowlist, server_root_path, token
 
     token = "%0.7X" % random.randrange(0, 0x10000000)
 

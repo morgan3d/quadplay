@@ -936,13 +936,14 @@ function updateInput() {
 
     // Sample the keys
     for (let player = 0; player < 4; ++player) {
+        const reordered_player = gamepadOrderMap[player];
         const map = keyMap[player], pad = QRuntime.gamepad_array[player],
-              realGamepad = gamepadArray[player], prevRealGamepad = prevRealGamepadState[player];
+              realGamepad = gamepadArray[reordered_player], prevRealGamepad = prevRealGamepadState[reordered_player];
 
         // Have player 0 physical alt controls set player 1 virtual buttons only
         // if there is no second controller physically present
-	const altRealGamepad = ((player === 1) && ! realGamepad) ? gamepadArray[0] : undefined,
-	      altPrevRealGamepad = ((player === 1) && ! realGamepad) ? prevRealGamepadState[0] : undefined;
+	const altRealGamepad = ((player === 1) && ! realGamepad) ? gamepadArray[gamepadOrderMap[0]] : undefined,
+	      altPrevRealGamepad = ((player === 1) && ! realGamepad) ? prevRealGamepadState[gamepadOrderMap[0]] : undefined;
 
         if (realGamepad && (realGamepad.id !== pad._id)) {
             // The gamepad just connected or changed. Update the control scheme.
@@ -992,8 +993,8 @@ function updateInput() {
                 pad['_' + axis + axis] = realGamepad.axes[a] * scale;
             }
 
-            if ((player === 1) && ! realGamepad && gamepadArray[0]) {
-                const otherPad = gamepadArray[0];
+            if ((player === 1) && ! realGamepad && gamepadArray[gamepadOrderMap[0]]) {
+                const otherPad = gamepadArray[gamepadOrderMap[0]];
                 // Alias controller[0] right stick (axes 2 + 3) 
                 // to controller[1] d-pad (axes 0 + 1) for "dual stick" controls                
                 if (otherPad.axes[a + 2] !== 0) {
@@ -1052,12 +1053,13 @@ function updateInput() {
         }
     }
     
-    // Update previous state. This has to be done AFTER the above
-    // loop so that the alternative buttons for player 2 are not
-    // immediately overrident during player 1's processing.
-    for (let player = 0; player < 4; ++player) {
-        if (gamepadArray[player]) {
-            prevRealGamepadState[player] = gamepadArray[player];
+    // Update previous state. This has to be done AFTER the above loop
+    // so that any alternative state for player 2 are not immediately
+    // overriden during player 1's processing. These do not need to be
+    // remapped because they are a straight copy.
+    for (let i = 0; i < 4; ++i) {
+        if (gamepadArray[i]) {
+            prevRealGamepadState[i] = gamepadArray[i];
         }
     }
 

@@ -24,8 +24,6 @@
 // Allocated by afterLoadGame
 let loadManager = null;
 
-let alreadyCountedSpritePixels = {};
-
 let lastSpriteID = 0;
 
 // Type used as the value of a constant that references
@@ -157,7 +155,6 @@ function afterLoadGame(gameURL, callback, errorCallback) {
     
     // Wipe the file data for the IDE
     fileContents = {};
-    alreadyCountedSpritePixels = {};
     gameSource = {};
 
     // Wipe the virtual GPU memory
@@ -167,10 +164,14 @@ function afterLoadGame(gameURL, callback, errorCallback) {
     resourceStats = {
         spritePixels: 0,
         spritesheets: 0,
+        soundKilobytes: 0,
         maxSpritesheetWidth: 0,
         maxSpritesheetHeight: 0,
         sourceStatements: 0,
-        sounds: 0
+        sounds: 0,
+        sourceStatementsByURL: {},
+        spritePixelsByURL: {},
+        soundKilobytesByURL: {}
     };
 
     loadManager.fetch(gameURL, 'json', null, function (gameJSON) {
@@ -584,6 +585,7 @@ function loadFont(name, json, jsonURL) {
             console.assert(fontArray.indexOf(font) === font._index[0]);
         }
 
+        recordSpriteStats(font);
         // Print faux loading messages
         onLoadFileStart(pngURL);
         onLoadFileComplete(pngURL);
@@ -611,14 +613,7 @@ function loadFont(name, json, jsonURL) {
         const shadowSize = parseInt(json.shadowSize || 1);
 
         packFont(font, borderSize, shadowSize, json.baseline, json.char_size, Object.freeze({x: json.letter_spacing.x, y: json.letter_spacing.y}), srcMask);
-
-        if (name[0] !== '_') {
-            resourceStats.spritePixels += font._data.width * font._data.height;
-            ++resourceStats.spritesheets;
-            resourceStats.maxSpritesheetWidth  = Math.max(resourceStats.maxSpritesheetWidth,  font._data.width);
-            resourceStats.maxSpritesheetHeight = Math.max(resourceStats.maxSpritesheetHeight, font._data.height);
-        }
-        
+        recordSpriteStats(font);
         Object.freeze(font);
     }, loadFailureCallback, loadWarningCallback, forceReload);
 
@@ -688,6 +683,20 @@ function getImageData4Bit(image, region, full32bitoutput) {
 }
 
 
+// Handles fonts as well
+function recordSpriteStats(spritesheet) {
+    if (spritesheet._name[0] === '_') { return; }
+    const data = (spritesheet._uint16Data || spritesheet._data);
+    const count = data.width * data.height;
+    resourceStats.spritePixels += count;
+    resourceStats.spritePixelsByURL[spritesheet._url] = count;
+    
+    ++resourceStats.spritesheets;
+    resourceStats.maxSpritesheetWidth = Math.max(resourceStats.maxSpritesheetWidth, data.width);
+    resourceStats.maxSpritesheetHeight = Math.max(resourceStats.maxSpritesheetHeight, data.height);
+}
+
+
 function loadSpritesheet(name, json, jsonURL, callback) {
     const pngURL = makeURLAbsolute(jsonURL, json.url);
 
@@ -719,6 +728,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
             
             function runCallbackWhenLoaded() {
                 if (Object.isFrozen(spritesheet)) {
+                    recordSpriteStats(spritesheet)
                     callback(spritesheet);
                     loadManager.markRequestCompleted(jsonURL + ' callback', '', true);
                 } else {
@@ -727,6 +737,8 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 }
             };
             runCallbackWhenLoaded();
+        } else {
+            recordSpriteStats(spritesheet);                          
         }
         
         return spritesheet;
@@ -784,15 +796,6 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         region.size.x = Math.min(image.width - region.pos.x, region.size.x);
         region.size.y = Math.min(image.height - region.pos.y, region.size.y);
 
-        const cacheName = pngURL + JSON.stringify(region);
-        if (! alreadyCountedSpritePixels[cacheName] && name[0] !== '_') {
-            alreadyCountedSpritePixels[cacheName] = true;
-            resourceStats.spritePixels += region.size.x * region.size.y;
-            ++resourceStats.spritesheets;
-            resourceStats.maxSpritesheetWidth = Math.max(resourceStats.maxSpritesheetWidth, region.size.x);
-            resourceStats.maxSpritesheetHeight = Math.max(resourceStats.maxSpritesheetHeight, region.size.y);
-        }
-
         return getImageData4BitAndFlip(image, region);
     };
     
@@ -803,6 +806,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
 
         spritesheet._uint16Data = data;
         spritesheet._uint16DataFlippedX = dataPair[1];
+        recordSpriteStats(spritesheet);
         
         const boundingRadius = Math.hypot(spritesheet.sprite_size.x, spritesheet.sprite_size.y);
         spritesheet.size = {x: data.width, y: data.height};
@@ -1033,10 +1037,19 @@ function loadSpritesheet(name, json, jsonURL, callback) {
 
     return spritesheet;
 }
-    
+
+
+function recordSoundStats(sound) {
+    if (sound.name[0] !== '_') {
+        ++resourceStats.sounds;
+        const count = Math.ceil(4 * sound.buffer.numberOfChannels * sound.buffer.length / 1024);
+        resourceStats.soundKilobytes += count;
+        resourceStats.soundKilobytesByURL[sound._url] = count;
+    }
+}
+
 
 function loadSound(name, json, jsonURL) {
-    if (name[0] !== '_') { ++resourceStats.sounds; }
     const mp3URL = makeURLAbsolute(jsonURL, json.url);
 
     let sound = assetCache[jsonURL];
@@ -1044,6 +1057,7 @@ function loadSound(name, json, jsonURL) {
         // Print faux loading messages
         onLoadFileStart(mp3URL);
         onLoadFileComplete(mp3URL);
+        recordSoundStats(sound);
         return sound;
     }
 
@@ -1074,6 +1088,8 @@ function loadSound(name, json, jsonURL) {
                 function onSuccess(buffer) {
                     sound.buffer = buffer;
                     sound.loaded = true;
+
+                    recordSoundStats(sound);
                     
                     // Create a buffer, which primes this sound for playing
                     // without delay later.
@@ -1338,6 +1354,13 @@ function getImageData(image) {
 
 
 function addCodeToSourceStats(code, scriptURL) {
+    if ((scriptURL.replace(/^.*\//, '')[0] === '_') ||
+        scriptURL.startsWith('quad://scripts/') ||
+        scriptURL.startsWith(location.href.replace(/\/console\/quadplay\.html.*$/, '/scripts/'))) {
+        // Ignore statements from system files
+        return;
+    }
+
     // Remove strings
     code = code.replace(/"(?:[^"\\]|\\.)*"/g, '');
 
@@ -1362,22 +1385,21 @@ function addCodeToSourceStats(code, scriptURL) {
 
     // Remove function definition lines
     code = code.replace(/\n *def [^\n]+: *\n/gm, '\n');
+
+    // Remove local and preserving transform lines
+    code = code.replace(/\n *(local|preserving_transform): *\n/gm, '\n');
     
     // Remove TODOs and ASSERTs (assume that they are on their own lines to simplify parsing)
     code = code.replace(/(todo|assert) *\(.*\n/g, '\n');
 
-    // Remove semicolons (which may be left after removing todo or assert)
-    code = code.replace(/;/g, '');
-    
     // Remove blank lines
     code = code.replace(/\n\s*\n/g, '\n');
 
-    // Ignore statements from system files
-    if ((scriptURL.replace(/^.*\//, '')[0] !== '_') &&
-        ! scriptURL.startsWith('quad://scripts/') &&
-        ! scriptURL.startsWith(location.href.replace(/\/console\/quadplay\.html.*$/, '/scripts/'))) {
-        resourceStats.sourceStatements += Math.max(0, (code.split(';').length - 1) + (code.split('\n').length - 1) - 1);
-    }
+    const count = Math.max(1, (code.split(';').length - 1) + (code.split('\n').length - 1) - 1);
+
+    resourceStats.sourceStatementsByURL[scriptURL] = count;
+    
+    resourceStats.sourceStatements += count;
 }
 
 

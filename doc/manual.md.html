@@ -915,7 +915,8 @@ directly pressing its buttons on screen for mobile. On a gamepad, you
 must press a button before directional input will register in a web
 browser.
 
-Pressing the "Play" button on the editor automatically transfers keyboard focus to the emulator.
+Pressing the "Play" button on the editor automatically transfers
+keyboard focus to the emulator.
 
 The emulator has special keyboard keys for:
 
@@ -936,14 +937,19 @@ On macOS, either Control or Command can be used for "Ctrl".
 ### Controls
 
 quadplay✜ presents virtual controllers for four players. You can use
-the on-screen buttons on mobile and touch screens for a single player, a
-keyboard for up to two players, and connect most USB or Bluetooth game
-controllers for up to four players. Physical controllers work on all operating
-systems and mobile devices.
+the on-screen buttons on mobile and touch screens for a single player,
+a keyboard for up to two players, and connect most USB or Bluetooth
+game controllers for up to four players. Physical controllers work on
+all operating systems and mobile devices.
 
 For two-player keyboard input, you can use two USB or Bluetooth
 keyboards on the same computer, or have both players share a single
 keyboard.
+
+The order of physical controllers can be changed from the Controls
+panel in the quadplay debugger. This is needed when configuring an 
+arcade kiosk with physical positions for the players, or to allow
+mixed keyboard and physical controller play.
 
 <center>
   ![](../console/xbox_controller.png style="border:none; image-rendering:auto" width=50%)
@@ -3326,7 +3332,7 @@ to start colliding with each other.
   that correspond to entities which are no longer being drawn.
 
 `physics_attach(physics, type, {entityA, entityB, pointA, pointB, collide default ∅, ...})`
-: Attaches two entities to each other, `entityB` to the
+: Attaches two entities to each other or `entityB` to the
   world. `entityA` may be `nil` (the world) or have infinite
   density. `entityB` must be non-`nil` and have finite density. The
   points are optional attachment points in the reference frame of each
@@ -3337,19 +3343,23 @@ to start colliding with each other.
   Two entities may not have multiple attachments directly between them. Doing
   so will cause unstable and undefined behavior.
 
-  _There is no relationship to the entity parent/child hierarchy_. Entity children
-  are used for explicit positioning. Attachments are for letting simulation position
+  _There is no relationship to the entity parent/child
+  hierarchy_. Entity children are used for explicit
+  positioning. Attachments are for letting simulation position
   objects.
 
-  Returns an attachment object, which can be passed to `physics_detach()`.
+  Returns an attachment object, which can be passed to
+  `physics_detach()`.
 
-  All attachment types are massless, except for weld, which adds a slight amount of
-  mass at the weld point and thus affects net mass and moment of inertia.
+  All attachment types are massless, except for weld, which adds a
+  slight amount of mass at the weld point and thus affects net mass
+  and moment of inertia.
 
-  If `collide` is false, then the entities cannot collide with each other while
-  the attachment is maintained. The default for `collide` is `true` for spring, rope, and rod
-  attachments and `false` for all other types.  You can also disable collisions by putting
-  the objects in the same `entity.contact_group`, which is more efficient.
+  If `collide` is false, then the entities cannot collide with each
+  other while the attachment is maintained. The default for `collide`
+  is `true` for spring and rod attachments and `false` for all
+  other types.  You can also disable collisions by putting the objects
+  in the same `entity.contact_group`, which is more efficient.
 
   Attached entities cannot sleep.
 
@@ -4537,6 +4547,8 @@ Sprites
 Fonts
 ------------------------------------------------------------------------------------
 
+![`quad://fonts/robot-18.font.json`](../fonts/robot-18.png)
+
 ![`quad://fonts/octant-17.font.json`](../fonts/octant-17.png)
 
 ![`quad://fonts/deja-15.font.json`](../fonts/deja-15.png)
@@ -4550,6 +4562,8 @@ Fonts
 ![`quad://fonts/ivanhoe-12.font.json`](../fonts/ivanhoe-12.png)
 
 ![`quad://fonts/suchet-12.font.json`](../fonts/suchet-12.png)
+
+![`quad://fonts/hauer-12.font.json`](../fonts/hauer-12.png)
 
 ![`quad://fonts/federation-11.font.json`](../fonts/federation-11.png)
 
@@ -6476,11 +6490,12 @@ Physical Consoles
 
 ### Build
 
-I expect most people to use quadplay✜ on phones, laptops, and desktops
-as a virtual console. But, if you have some maker experience you can make a
+I expect most people will use quadplay✜ on phones, laptops, and desktops
+as a _virtual_ console. But, if you have some maker experience you can make a
 _real_ quadplay✜ console.
 
 #### Nano or Pi 4
+
 With a 3D-printed case and some Bluetooth or wired game controllers,
 you can build your own quadplay✜ retro mini console to connect to a TV
 or monitor. [Jetson Nano](https://developer.nvidia.com/embedded/jetson-nano-developer-kit)
@@ -6527,6 +6542,11 @@ use a small trackpad mounted on top of the joystick controller.
 
 
 ![Arcade station custom built by Nick Porcino running quadplay on Raspberry Pi](arcade.jpg  style="image-rendering:none" width=50%)
+
+For arcade configurations, the order of the physical controllers in
+the `gamepad_array[]` matters because they are at fixed locations. The default
+order of controllers is set by the operating system. From the Controls tab of the
+IDE's debugger, you can bring up the quadplay dialog to change this order.
 
 When building your own controller, ensure that it maps correctly using the online tool at 
 https://html5gamepad.com/. The specific mapping between HTML buttons and quadplay✜ is:
@@ -7180,12 +7200,21 @@ Changes for both the specification and implementation in each release.
 
 2020 July TBD: Beta update 46
 
-- Made the mode view scrollable
+- New font: `hauer-12`
+- New font: `robot-18`
+- Made `local:` and `preserving_transform:` lines free versus total source statement limit
+- Added `gamepad_array[]` reordering dialog to support arcade configurations. 
+  Access this from the Controls tab of the debugger.
+- Added a breakdown of code size by file in the Stats window of the debugger.
+- Added a breakdown of sprite pixels by file in the Stats window of the debugger.
+- Fixed macOS quadplay script when quadplay and the home directory are on different volumes.
 - Fixed the bottom line not appearing on the editor on some browsers
 - Fixed binding on the animation example ninja duck key
 - Fixed `text_width()` being too small by one space between letters
 - Fixed a physics system crash on rare contact breaking situation
 - Fixed an API upgrade bug on object removal in Serpitron during showdowns
+- Made the mode graph scrollable
+- Fixed the mode graph clipping on the bottom
 
 2020 July 3: Beta update 45
 
