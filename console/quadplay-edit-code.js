@@ -5,6 +5,10 @@
 // constant disk churn
 const CODE_EDITOR_SAVE_DELAY_SECONDS = 5;
 
+// How long to wait when saving an asset file's json, which
+// typically receives very brief edits
+const ASSET_EDITOR_SAVE_DELAY_SECONDS = 1.5;
+
 // Maps filenames to editor sessions. Cleared when a project is loaded
 const codeEditorSessionMap = new Map();
 
@@ -469,8 +473,10 @@ function createCodeEditorSession(url, bodyText) {
         session.setTabSize(4);
     }
     session.setUseWrapMode(false);
-
+    
     if (! session.aux.readOnly) {
+        const delaySeconds = session.aux.url.endsWith('.json') ? ASSET_EDITOR_SAVE_DELAY_SECONDS : CODE_EDITOR_SAVE_DELAY_SECONDS;
+        
         // onchange handler
         session.on('change', function (delta) {
             if (session.aux.ignoreChange) {
@@ -482,6 +488,9 @@ function createCodeEditorSession(url, bodyText) {
             if (session.aux.readOnly) { return; }
 
             if (session.errorMarker) { session.removeMarker(session.errorMarker); }
+
+            // Remove this object from the cache (if present)
+            delete assetCache[session.aux.url];
 
             // This is code to detect programmatic changes to the value, but it
             // can't distinguish search-and-replace from other
@@ -552,7 +561,8 @@ function createCodeEditorSession(url, bodyText) {
             };
 
             pendingSaveCallbacks.push(session.aux.saveCallback);
-            session.aux.saveTimeoutID = setTimeout(session.aux.saveCallback, CODE_EDITOR_SAVE_DELAY_SECONDS * 1000);
+
+            session.aux.saveTimeoutID = setTimeout(session.aux.saveCallback, delaySeconds * 1000);
         });
     }
     

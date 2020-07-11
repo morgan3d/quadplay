@@ -441,6 +441,8 @@ choreograph series of frame hooks one after the other.
 - Coordinates with +Y pointing up
 - `sprite_override_color`
 
+</td></tr><tr><td>![](../examples/planetgen/label128.png)</td><td>
+[Planet Generator](../console/quadplay.html?game=quad://examples/planetgen&IDE=1) uses built-in assets to create random 3D planets with moons, stars, atmosphere, and rings.
 
 </td></tr><tr><td>![](../examples/touch/label128.png)</td><td>
 [Touch Example](../console/quadplay.html?game=quad://examples/touch&IDE=1) uses the mouse/touch API.
@@ -3505,6 +3507,9 @@ endpoints and borders.
   and then translating by `pos`. The polygon may have any winding direction. The outcome of the drawn result
   is undefined and may change across platforms if the polygon is not convex (but there will never be an error).
 
+`draw_corner_rect(args)`
+: Named argument version of `draw_corner_rect()`.
+
 `draw_corner_rect(corner, size, color, outline default ∅, z default 0)`
 : Draw a rectangle covering all of the pixel centers between `corner`
   and `corner + size`. This is primarily for UI window drawing.
@@ -3521,7 +3526,7 @@ endpoints and borders.
 `draw_disk(args)`
 : Object version of `draw_disk()`.
 
-`draw_disk(pos, r, color, outline, z default 0)`
+`draw_disk(pos, r, color, outline default ∅, z default 0)`
 : Draw a circle or filled disk centered at (`pos.x`, `pos.y`)
   with radius `r` and z-order `z`.
 
@@ -3759,7 +3764,7 @@ Setting any post effects may slow down rendering slightly.
     top of old ones for a motion blur effect.
   - `color` is an `rgba()` to combine with the the new frame before it is composited. Setting the `a`
     to 0 disables the color.
-  - `blendMode` is one of the following strings: `"source-over"`, `"difference"`, `"hue"`, `"multiply"`
+  - `blend_mode` is one of the following strings: `"source-over"`, `"difference"`, `"hue"`, `"multiply"`
     describing how the `color` affects the frame.
   - `scale` is an `xy` for how to stretch the new frame
   - `angle` is a counter-clockwise angle in radians to rotate the image about its center by
@@ -7197,6 +7202,14 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 July TBD: Beta update 47
+
+- New Planet Generator 2.5D procedural content example
+- Added named argument version of `draw_corner_rect()`
+- Incompatible change: made the order of arguments for `draw_tri()` consistent
+  with other drawing functions
+- Added a global volume control on the Console menu
 
 2020 July 10: Beta update 46
 

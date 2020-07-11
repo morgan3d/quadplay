@@ -1,0 +1,26 @@
+ShowPlanet
+════════════════════════════════════════════════════════════════════════
+
+const stars = []
+let planet
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+// Motion blur to reduce aliasing
+set_post_effects({background: rgba(0,0,0,0), opacity:15%})
+set_background(#0)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+if mode_frames mod 200 == 0:
+    // new planet
+    remove_all(stars)
+    for i < 600: push(stars, {pos:xy(ξ, ξ) * SCREEN_SIZE, color:gray(85% (i / 600)² + 15%)})
+    for i < 64: push(stars, {pos:xy(ξ, ξ) * SCREEN_SIZE, color:rgb(hsv(ξ, 50%, 80% (i / 64) + 10%))})
+    planet = makePlanet()
+
+for star in stars: draw_point(star.pos, star.color)
+drawPlanet(planet)

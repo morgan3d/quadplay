@@ -63,7 +63,8 @@
       </div>
     </div>
     <div id="consoleMenu" class="unselectable dropdown">
-      <label><input id="backgroundPauseCheckbox" type="checkbox" title="Pause the game when not in focus" checked onclick="onBackgroundPauseClick(event)" autocomplete="off">Background pause</label>
+      <label for="volumeSlider" style="padding-left: 6px; position: relative; top:-2px"><img src="ui-speaker.png" width=12 height=12></label><input id="volumeSlider" style="width:100px; position: relative; margin-left:0px; left: 2px" type="range" min="0" max="200" oninput="onVolumeChange()" onchange="onVolumeChange()"></input>
+      <br/><label><input id="backgroundPauseCheckbox" type="checkbox" title="Pause the game when not in focus" checked onclick="onBackgroundPauseClick(event)" autocomplete="off">Auto-pause</label>
       <hr>
       <label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('pink')" type="radio" id="pinkColorScheme" checked autocomplete="off">Pink</label>
       <br/><label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('orange')" type="radio" id="orangeColorScheme" autocomplete="off">Orange</label>
@@ -71,7 +72,7 @@
       <br/><label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('green')" type="radio" id="greenColorScheme" autocomplete="off">Green</label>
       <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('blue')" id="blueColorScheme" autocomplete="off">Blue</label>
       <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('black')" id="blackColorScheme" autocomplete="off">Black</label>
-            <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('white')" id="whiteColorScheme" autocomplete="off">White</label>
+      <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('white')" id="whiteColorScheme" autocomplete="off">White</label>
       <hr>
       <div class="IDEOnly"><a onclick="window.open('../doc/controls.html', '', 'width=400,height=500')" title="Show keyboard and gamepad controls in a popup window">Controls</a></div>
       <div class="noIDE"><a href="../doc/manual.md.html" title="Use quadplay to make your own games like this">Create Games</a></div>
@@ -88,7 +89,7 @@
       <br/><label><input id="todoEnabled" type="checkbox" onclick="debugOptionClick(event)" checked autocomplete="off"><code>todo()</code> as error</label>
       <br/><label><input id="showEntityBoundsEnabled" type="checkbox" onclick="debugOptionClick(event)" title="Visualize debugging bounds on draw_entity() calls" autocomplete="off">Show entity bounds</label>
       <br/><label><input id="showPhysicsEnabled" type="checkbox" onclick="debugOptionClick(event)" title="Visualize debugging data from the physics system" autocomplete="off">Show physics</label>
-      <br/><label><input id="automathEnabled" type="checkbox" onclick="debugOptionClick(event)" title="Automatically convert text to math symbols in the code editor" autocomplete="off">Automath in editor</label>
+      <br/><label><input id="automathEnabled" type="checkbox" onclick="debugOptionClick(event)" title="Automatically convert text to math symbols in the code editor" autocomplete="off">Auto-math in editor</label>
       <br/><label><input id="restartOnFocusEnabled" type="checkbox"  onclick="debugOptionClick(event)" title="When using an external editor, restart the game when the browser gains focus (games always *reload* on focus, if stopped)" autocomplete="off">Restart on focus</label>
       <hr>
       <div><a href="../tools/quantize.html" target="_blank">quantize✜</a></div>

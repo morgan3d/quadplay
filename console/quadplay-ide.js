@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.07.04.19'
+const version  = '2020.07.11.08'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -94,7 +94,6 @@ function isBuiltIn(url) {
          url.startsWith(quadPath + 'games/') ||
          url.startsWith(quadPath + 'console/') ||
          url.startsWith(quadPath + 'doc/'));
-;
 }
 
 function debugOptionClick(event) {
@@ -114,7 +113,7 @@ function setCodeEditorFontSize(f) {
     codeEditorFontSize = Math.max(6, Math.min(32, f));
     localStorage.setItem('codeEditorFontSize', '' + codeEditorFontSize)
     //document.getElementById('ace').style.fontSize = codeEditorFontSize + 'px';
-    aceEditor.setOption('fontSize',  codeEditorFontSize + 'px');
+    aceEditor.setOption('fontSize', codeEditorFontSize + 'px');
 }
 
 
@@ -1470,6 +1469,7 @@ function saveIDEState() {
         'uiMode': uiMode,
         'backgroundPauseEnabled': backgroundPauseEnabled,
         'colorScheme': colorScheme,
+        'volumeLevel': '' + volumeLevel,
         'gamepadOrderMap': gamepadOrderMap.join(''),
         'showPhysicsEnabled': document.getElementById('showPhysicsEnabled').checked,
         'showEntityBoundsEnabled': document.getElementById('showEntityBoundsEnabled').checked,
@@ -1479,7 +1479,7 @@ function saveIDEState() {
         'debugWatchEnabled': document.getElementById('debugWatchEnabled').checked,
         'debugPrintEnabled': document.getElementById('debugPrintEnabled').checked,
         'restartOnFocusEnabled': document.getElementById('restartOnFocusEnabled').checked,
-        'codeEditorFontSize': codeEditorFontSize
+        'codeEditorFontSize': '' + codeEditorFontSize
     };
 
     // Find the selected debugger tab
@@ -1649,6 +1649,10 @@ function onProjectSelect(target, type, object) {
             if (object._type === 'spritesheet') {
                 const spritesheetName = object._name.replace(/.* /, '');
                 spriteEditor.onmousemove = spriteEditor.onmousedown = function (e) {
+                    if (object.size === undefined) {
+                        console.warn('object.size is undefined');
+                        return;
+                    }
                     const editorBounds = spriteEditor.getBoundingClientRect();
 
                     // The spritesheet is always fit along the horizontal axis
@@ -3853,7 +3857,7 @@ if (getQueryString('kiosk') === '1') {
     setUIMode(newMode, false);
 }
 setErrorStatus('');
-setCodeEditorFontSize(parseInt(localStorage.getItem('codeEditorFontSize') || '14'));
+setCodeEditorFontSize(parseFloat(localStorage.getItem('codeEditorFontSize') || '14'));
 setColorScheme(localStorage.getItem('colorScheme') || 'pink');
 {
     let tmp = gamepadOrderMap = (localStorage.getItem('gamepadOrderMap') || '0123').split('');

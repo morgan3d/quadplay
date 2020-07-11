@@ -207,15 +207,22 @@ function device_control(cmd) {
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 console.assert(window.AudioContext);
+let volumeLevel = parseFloat(localStorage.getItem('volumeLevel') || '1');
+document.getElementById('volumeSlider').value = Math.round(volumeLevel * 100);
 try {
     _ch_audioContext = new AudioContext();
     _ch_audioContext.gainNode = _ch_audioContext.createGain();
-    _ch_audioContext.gainNode.gain.value = 0.2;
+    _ch_audioContext.gainNode.gain.value = 0.2 * volumeLevel;
     _ch_audioContext.gainNode.connect(_ch_audioContext.destination);
 } catch(e) {
     console.log(e);
 }
 
+function onVolumeChange() {
+    volumeLevel = parseInt(document.getElementById('volumeSlider').value) / 100;
+    localStorage.setItem('volumeLevel', '' + volumeLevel);
+    _ch_audioContext.gainNode.gain.value = 0.2 * volumeLevel;
+}
 
 /************** Emulator event handling ******************************/
 let emulatorKeyState = {};
@@ -611,6 +618,7 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
 
     return handle;
 }
+
 
 // In seconds
 const audioRampTime = 1 / 60;

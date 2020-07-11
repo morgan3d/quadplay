@@ -62,6 +62,11 @@
             "description": ""
         },
         {
+            "url": "quad://examples/planetgen/",
+            "title": "Planet Generator",
+            "description": "Random planet generator with moons, atmosphere, and rings"
+        },
+        {
             "url": "quad://examples/robot/",
             "title": "Robot Example",
             "description": ""

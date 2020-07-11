@@ -1,0 +1,118 @@
+def makePlanet():
+   const noAtmosphere = atmosphereSpritesheet[3][3]
+   
+   const θ = 45° (ξ - ½) 
+   const planet = {
+      radius:  round(48 ξ + 16),
+      axis:    xy(cos(θ), sin(θ)),
+      inclination: θ,
+      sprite:  random_value(random_value(planetSpritesheet)),
+      atmosphere: noAtmosphere,
+      spin:    0.4 (ξ - 0.3),
+      moons:   []
+   }
+
+   if ξ < 12%: planet.ringIndex = random_integer(½ size(ringSpritesheet[0]) - 1)
+
+   if ξ < 80%: planet.atmosphere = random_value(random_value(atmosphereSpritesheet))
+   
+   for i < random_integer(6) - 2:
+      const orbitRadius = 16 + planet.radius * 1.4 + ξ * (planet.radius + 64) / 2  
+      push(planet.moons, {
+         scale: 50% + 50% ξ,
+         orbitRadius: orbitRadius,
+         sprite: random_value(random_value(moonSpritesheet)),
+         orbitSpeed: (ξ - 0.2) * 0.005 * sign(planet.spin),
+         yOffset: (2 ξ - 1) * 80% * planet.radius 
+      })
+      
+   return planet
+
+
+
+def drawPlanet(planet):
+   preserving_transform:
+      set_transform(½ SCREEN_SIZE)
+
+      const time = mode_frames
+      const phase = time * planet.spin
+      const sprite = planet.sprite
+      const r = planet.radius
+      const ax = planet.axis.x / r
+      const ay = planet.axis.y / r
+      const nay = -ay;
+ 
+      // Bitmask used for MIP-mapping to avoid flicker on small planets.
+      // Always wraps at the 256-texel boundary, but also knocks out
+      // low bits for small planets so that they effectively see a lower-
+      // resolution texture.
+      const MIP = max(0, floor(log2(planet.sprite.size.y / (2 r))))
+      // (256 - 1) - ((1 << MIP) - 1) = 
+      const mask = 256 - (1 << MIP)
+
+      const tex = xy(0, 0)
+      const pos = xy(0, 0)
+
+      const temp = rgba(0,0,0,1)
+      let color = rgba(0,0,0,1)
+   
+      for -r ≤ y < r:
+         // x² + y² = r²
+         // x = sqrt(r² - y²)
+         // Avoid memory allocation in the inner loop
+         const k = ceil(sqrt(r² - (y + ½)²))
+         pos.y = y
+         
+         // Precompute the y terms of the rotation,
+         // and include the 1/2 x-axis term that will be needed
+         // to shift x from integer to 0.5-pixel locations
+         const ayyy = ay * (y + ½) + ½ ax 
+         const axyy = ax * (y + ½) - ½ ay
+         
+         for -k ≤ x < k:
+            pos.x = x;
+
+            // Rotate tex coords by the inverse of the planet's inclination.
+            // This is just a 2D rotation matrix that has been precomputed as constants.
+            const u = MAD(ax, x, ayyy)
+            const v = MAD(nay, x, axyy)
+
+            // (v + ½) * 32 + 32 = 32v + 48
+            tex.y = MAD(v, 32, 48) bitand mask
+
+            // planet.sprite.size.y / π = 40.7436654315
+            // float portion of the x-coordinate, before rounding
+            const f = ADD(40.7436654315 asin(u), phase)
+
+            // Cheap 3-tap integration/interpolation to reduce flicker
+            tex.x = f bitand mask
+            get_sprite_pixel_color(sprite, tex, color)
+
+            tex.x = ADD(f, ½) bitand mask
+            //color += temp
+            RGB_ADD_RGB(color, get_sprite_pixel_color(sprite, tex, temp), color)
+            
+            tex.x = ADD(f, ½) bitand mask
+            //color += temp
+            RGB_ADD_RGB(color, get_sprite_pixel_color(sprite, tex, temp), color)
+            
+            //color *= ⅓
+            RGB_MUL(color, ⅓, color)
+            
+            draw_point(pos, color)
+
+            
+      for moon in planet.moons:
+         // Use the radius as a random phase offset
+         const a = 10 moon.orbitRadius + time * moon.orbitSpeed
+         const pos = xy(cos(a) * moon.orbitRadius, moon.yOffset)
+         draw_sprite(moon.sprite,
+                    xy(pos.x * planet.axis.x - pos.y * planet.axis.y,
+                       pos.x * planet.axis.y + pos.y * planet.axis.x),
+                    0, moon.scale, ∅, sin(a))
+
+      draw_sprite(planet.atmosphere, xy(0, 0), 0, planet.radius / 36)
+      if planet.ringIndex ≠ ∅:
+         const ringScale = planet.radius / 28
+         draw_sprite(ringSpritesheet[0][2 planet.ringIndex], -perp(planet.axis) * 16 * ringScale, -planet.inclination, ringScale, nil, -1)
+         draw_sprite(ringSpritesheet[0][2 planet.ringIndex + 1],  perp(planet.axis) * 16 * ringScale, -planet.inclination, ringScale, nil, 1)

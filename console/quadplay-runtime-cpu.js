@@ -3784,7 +3784,7 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
 }
 
 
-function draw_tri(A, B, C, color, outline, pos, scale, angle, z) {
+function draw_tri(A, B, C, color, outline, pos, angle, scale, z) {
     if (A.A) {
         // Object version
         z = A.z;
@@ -4060,6 +4060,18 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
 
 
 function draw_corner_rect(corner, size, fill, outline, z) {
+
+    if (corner.corner) {
+        if (size !== undefined) {
+            _error('Named argument version of draw_corner_rect() must have only one argument');
+        }
+        size = corner.size;
+        fill = corner.color;
+        outline = corner.outline;
+        z = corner.z;
+        corner = corner.corner;
+    }
+    
     if (Math.abs(_camera.angle) >= 1e-10) {
         // Draw using a polygon because it is rotated
         draw_rect({x: corner.x + size.x * 0.5, y: corner.y + size.y * 0.5}, size, fill, outline, 0, z);
