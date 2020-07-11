@@ -1,0 +1,71 @@
+init
+────────────────────────────────────────────────────────────────────────
+let pos = xy(SCREEN_SIZE.x/2, 132)
+let flip = xy(1, 1)
+
+let btn_map = {
+    "a": 2,
+    "b": 5,
+    "c": 10,
+    "d": 40,
+}
+
+frame
+────────────────────────────────────────────────────────────────────────
+// animate the camera
+cam_update_frame(xy(0,0))
+set_camera(CAMERA)
+
+let sprite = astronaut.idle[0]
+if joy.x:
+   flip.x = joy.x
+   sprite = astronaut.run[⌊mode_frames / 10⌋ mod 2]
+   pos.x = loop(pos.x + joy.x, SCREEN_SIZE.x)
+for key in keys(btn_map):
+    if gamepad_array[0]["released_" + key]:
+        cam_add_shake(btn_map[key])
+
+// Sky
+set_background(rgb(20%, 50%, 80%))
+
+// text
+let btn_text = [
+    "CAMERA SHAKE DEMO",
+    "current shake: " + format_number(CAMERA.shake_mag, ".00"),
+    "add shake:"
+]
+for key in keys(btn_map):
+    push(
+        btn_text,
+        replace(
+            "(" + key + "): " + btn_map[key],
+            gamepad_array[0].prompt
+        )
+    )
+
+// title text
+preserving_transform:
+    set_camera()
+    draw_text(
+        font,
+        join(btn_text, "\n"),
+        xy(SCREEN_SIZE.x/2, 10),
+        text_color,
+        nil,
+        nil,
+        "center",
+        "top",
+    )
+
+// Ground
+draw_corner_rect(
+    xy(-SCREEN_SIZE.x/2, 140), 
+    xy(4*SCREEN_SIZE.x, 4*SCREEN_SIZE.y - 139), 
+    #DDD
+)
+
+// Shadow
+draw_line(pos + xy(-4, 8), pos + xy(+4, 8), rgba(0, 0, 0, 20%))
+
+// Alien
+draw_sprite(sprite, pos, 0, flip)

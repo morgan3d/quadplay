@@ -1,0 +1,59 @@
+def perspective_zoom(cs_z):
+   const clip_z = 6.5
+   return clip_z / (clip_z - cs_z)
+
+// based on the camera from the zoom example.  pass to set_camera()
+const CAMERA = make_entity(
+    {
+        pos: xy(0, 0),
+        angle: 0,
+        z: 0,
+        zoom: perspective_zoom,
+        shake_mag: 0,
+        clamp_position_min: nil,
+        clamp_position_max: nil,
+    }
+)
+
+// @{ constants -- you might want to move these into your .game.json
+const CAM_SHAKE_MAX = 100 // higher than you probably want it
+const CAM_SHAKE_DECAY = 0.2
+const DEBUG_CAM_SHAKE = true
+const CAM_CLAMPED_DRIFT_DENOMINATOR = 3
+// @}
+
+def clamp_position(pos, minp, maxp):
+    let clamped_pos =  xy(
+        mid(minp.x, pos.x, maxp.x),
+        mid(minp.y, pos.y, maxp.y)
+    )
+
+    // this gives a little drift so it is dead even when its in the dead area
+    return (pos - clamped_pos) / CAM_CLAMPED_DRIFT_DENOMINATOR + clamped_pos
+
+// compute camera position, will ease-out towards the goal_pos, and optionally 
+// clamp the camera within the clamp_bounds_min and clamp_bounds_max.
+def cam_update_frame(goal_pos, clamp_bounds_min, clamp_bounds_max):
+    let goal = clone(goal_pos)
+
+    if clamp_bounds_min and clamp_bounds_max:
+        goal = clamp_position(goal)
+
+    // @TODO: shuffle a jittered list of directions instead of calling 
+    // random_direction2D directly.  this would give a more even distrivbution
+    // of camera motion
+    let cam_shake_displacement = CAMERA.shake_mag * random_direction2D()
+    if CAMERA.shake_mag >= 1:
+        // let the magnitude decay every frame
+        CAMERA.shake_mag = lerp(CAMERA.shake_mag, 0, CAM_SHAKE_DECAY)
+    else:
+        CAMERA.shake_mag = 0
+    CAMERA.pos = CAMERA.pos + 0.1 * (goal - CAMERA.pos) + cam_shake_displacement
+
+def cam_add_shake(intensity):
+    CAMERA.shake_mag += intensity
+    CAMERA.shake_mag = min(CAM_SHAKE_MAX, CAMERA.shake_mag)
+    DEBUG_CAM_SHAKE and debug_print(
+        "Adding camera shake: " + intensity 
+        + ", cam shake is: " + CAMERA.shake_mag
+    )
