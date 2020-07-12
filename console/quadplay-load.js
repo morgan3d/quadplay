@@ -650,14 +650,14 @@ function getImageData4Bit(image, region, full32bitoutput) {
     dataRaw.height = image.height;
 
     let data = dataRaw;
-    if (region && ((region.pos.x !== 0) || (region.pos.y !== 0) || (region.size.x !== image.width) || (region.size.y !== image.height))) {
+    if (region && ((region.corner.x !== 0) || (region.corner.y !== 0) || (region.size.x !== image.width) || (region.size.y !== image.height))) {
         // Crop
         data = new Uint32Array(region.size.x * region.size.y);
         data.width = region.size.x;
         data.height = region.size.y;
 
         for (let y = 0; y < data.height; ++y) {
-            const srcOffset = (y + region.pos.y) * dataRaw.width + region.pos.x;
+            const srcOffset = (y + region.corner.y) * dataRaw.width + region.corner.x;
             data.set(dataRaw.slice(srcOffset, srcOffset + data.width), y * data.width);
         }
     }
@@ -759,6 +759,10 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         _uint16DataFlippedX : null,
         _url: pngURL,
         _sourceURL: (json.source_url && json.source_url !== '') ? makeURLAbsolute(jsonURL, json.source_url) : null,
+        // Before the region is applied. Used by the IDE
+        _sourceSize: {x: 0, y: 0},
+        // Used by the IDE
+        _region: null,
         _gutter: (json.sprite_size.gutter || 0),
         _json: json,
         _jsonURL: jsonURL,
@@ -780,25 +784,32 @@ function loadSpritesheet(name, json, jsonURL, callback) {
           
     // Actually load the image
     onLoadFileStart(pngURL);
-
-    const preprocessor = function(image) {
+    
+    // Clone the region to avoid mutating the original json
+    const region = Object.assign({}, json.region || {});
+    if (region.pos !== undefined) { region.corner = region.pos; }
+    if (region.corner === undefined) { region.corner = {x: 0, y: 0}; }
+    
+    const preprocessor = function (image) {
         if (! (pngURL in fileContents)) {
             // This image has not been previously loaded by this project
             fileContents[pngURL] = image;
         }
 
-        let region = json.region || {};
-        if (region.pos === undefined) { region.pos = {x: 0, y: 0}; }
-        region.pos.x = Math.min(Math.max(0, region.pos.x), image.width);
-        region.pos.y = Math.min(Math.max(0, region.pos.y), image.height);
+        // Save these for the editor in the IDE
+        spritesheet._sourceSize.x = image.width;
+        spritesheet._sourceSize.y = image.height;
+        
+        // Update the region now that we know the image size
+        region.corner.x = Math.min(Math.max(0, region.corner.x), image.width);
+        region.corner.y = Math.min(Math.max(0, region.corner.y), image.height);
         
         if (region.size === undefined) { region.size = {x: Infinity, y: Infinity}; }
-        region.size.x = Math.min(image.width - region.pos.x, region.size.x);
-        region.size.y = Math.min(image.height - region.pos.y, region.size.y);
-
+        region.size.x = Math.min(image.width - region.corner.x, region.size.x);
+        region.size.y = Math.min(image.height - region.corner.y, region.size.y);
+        
         return getImageData4BitAndFlip(image, region);
     };
-    
     
     loadManager.fetch(pngURL, 'image', preprocessor, function (dataPair, image, url) {
         onLoadFileComplete(pngURL);
@@ -806,6 +817,9 @@ function loadSpritesheet(name, json, jsonURL, callback) {
 
         spritesheet._uint16Data = data;
         spritesheet._uint16DataFlippedX = dataPair[1];
+        
+        // Store the region for the editor
+        spritesheet._sourceRegion = region;
         recordSpriteStats(spritesheet);
         
         const boundingRadius = Math.hypot(spritesheet.sprite_size.x, spritesheet.sprite_size.y);

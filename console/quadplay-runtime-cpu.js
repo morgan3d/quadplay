@@ -3785,6 +3785,8 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
 
 
 function draw_tri(A, B, C, color, outline, pos, angle, scale, z) {
+    // Skip graphics this frame
+    if (mode_frames % _graphicsPeriod !== 0) { return; }
     if (A.A) {
         // Object version
         z = A.z;
@@ -3927,6 +3929,9 @@ function draw_rect(pos, size, fill, border, angle, z) {
 
 
 function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
+    // Skip graphics this frame
+    if (mode_frames % _graphicsPeriod !== 0) { return; }
+    
     if (vertexArray.vertex_array) {
         z = vertexArray.z;
         scale = vertexArray.scale;
@@ -8014,6 +8019,7 @@ function pop_mode(...args) {
     _prevMode = _prevModeStack.pop();
 
     // Pop the stacks
+    _previousGraphicsCommandList = _previousModeGraphicsCommandList;
     _previousModeGraphicsCommandList = _previousModeGraphicsCommandListStack.pop();
     _gameMode = _modeStack.pop();
     mode_frames = _mode_framesStack.pop();
@@ -8022,7 +8028,6 @@ function pop_mode(...args) {
 
     // Reset the graphics
     _graphicsCommandList = [];
-    _previousGraphicsCommandList = [];
     
     _systemPrint('Popping back to mode ' + _gameMode._name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
 

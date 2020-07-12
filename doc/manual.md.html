@@ -5029,7 +5029,7 @@ The sprite sheet JSON descriptor looks like:
     // Optional offset and extent. Using this conserves memory if the sprites
     // do not fill the entire PNG.
     "region":       {
-        "pos":      {"x": 0, "y": 0}, // Optional, defaults to (0, 0)
+        "corner":   {"x": 0, "y": 0}, // Optional, defaults to (0, 0)
         "size":     {"x": 128, "y": 32} // Optional, defaults to the remainder of the sheet
     },
 
@@ -7209,7 +7209,16 @@ Changes for both the specification and implementation in each release.
 - Added named argument version of `draw_corner_rect()`
 - Incompatible change: made the order of arguments for `draw_tri()` consistent
   with other drawing functions
+- Changed the `region` of a sprite JSON file to take `"corner"` instead of `"pos"`
+  (the old version is accepted as a synonym for backwards compatibility at the moment)
+- The sprite viewer in the IDE now autoscales for tall sprites
+- IDE can now create new sound assets
+- Added support for transposed spritesheets in the IDE sprite viewer
+- Added support for regions in the IDE sprite viewer
 - Added a global volume control on the Console menu
+- Fixed recursive `push_mode()` and `pop_mode()` not preserving `draw_previous_mode()` state
+<!-- - Fixed IDE edits to asset JSON files not persisting after load -->
+- Fixed sprite editor not updating after JSON edits
 
 2020 July 10: Beta update 46
 

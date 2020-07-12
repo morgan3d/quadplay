@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.07.11.08'
+const version  = '2020.07.11.22'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -1629,7 +1629,22 @@ function onProjectSelect(target, type, object) {
         
     case 'asset':
         const url = object._url || object.src;
-        setCodeEditorSession(object._jsonURL);
+        // Find the underlying gameSource.asset key for this asset so
+        // that we can fetch it again if needed
+        let assetName;
+        for (const k in gameSource.assets) {
+            const asset = gameSource.assets[k];
+            if (asset === object) {
+                assetName = k;
+                break;
+            } else if (asset.spritesheet && asset.spritesheet === object) {
+                // Spritesheet on a map
+                assetName = asset + '.' + Object.keys(asset.spritesheet_table)[0];
+                break;
+            }
+        }
+        console.assert(assetName, 'Could not find asset name for ' + object);
+        setCodeEditorSession(object._jsonURL, assetName);
 
         // Show the code editor and the content pane
         codePlusFrame.style.visibility = 'visible';
@@ -1646,17 +1661,28 @@ function onProjectSelect(target, type, object) {
             spriteEditor.style.visibility = 'visible';
             spriteEditor.style.backgroundImage = `url("${url}")`;
 
+            if (object.size.x > object.size.y) {
+                // Fit horizontally
+                spriteEditor.style.backgroundSize = '100% auto';
+            } else {
+                // Fit vertically
+                spriteEditor.style.backgroundSize = 'auto 100%';
+            }
+        
             if (object._type === 'spritesheet') {
-                const spritesheetName = object._name.replace(/.* /, '');
+                    
                 spriteEditor.onmousemove = spriteEditor.onmousedown = function (e) {
+                    
                     if (object.size === undefined) {
                         console.warn('object.size is undefined');
                         return;
                     }
                     const editorBounds = spriteEditor.getBoundingClientRect();
 
-                    // The spritesheet is always fit along the horizontal axis
-                    const scale = editorBounds.width / object.size.x;
+                    // The spritesheet fits along the longer axis
+                    const scale = (object.size.x > object.size.y) ?
+                          (editorBounds.width / object._sourceSize.x) :
+                          (editorBounds.height / object._sourceSize.y);
                     
                     const mouseX = e.clientX - editorBounds.left;
                     const mouseY = e.clientY - editorBounds.top;
@@ -1666,24 +1692,32 @@ function onProjectSelect(target, type, object) {
 
                     spriteEditorPivot.style.fontSize = Math.round(clamp(Math.min(scaledSpriteWidth, scaledSpriteHeight) * 0.18, 5, 25)) + 'px';
 
-                    const X = Math.floor(mouseX / scaledSpriteWidth);
-                    const Y = Math.floor(mouseY / scaledSpriteHeight);
+                    // Offset for the sprite region within the PNG
+                    const scaledCornerX = object._sourceRegion.corner.x * scale;
+                    const scaledCornerY = object._sourceRegion.corner.y * scale;
 
-                    spriteEditorHighlight.style.left   = Math.floor(X * scaledSpriteWidth) + 'px';
-                    spriteEditorHighlight.style.top    = Math.floor(Y * scaledSpriteHeight) + 'px';
+                    // Integer spritesheet index (before transpose)
+                    let X = Math.floor((mouseX - scaledCornerX) / scaledSpriteWidth);
+                    let Y = Math.floor((mouseY - scaledCornerY) / scaledSpriteHeight);
+
+                    spriteEditorHighlight.style.left   = Math.floor(X * scaledSpriteWidth + scaledCornerX) + 'px';
+                    spriteEditorHighlight.style.top    = Math.floor(Y * scaledSpriteHeight + scaledCornerY) + 'px';
                     spriteEditorHighlight.style.width  = Math.floor(scaledSpriteWidth) + 'px';
                     spriteEditorHighlight.style.height = Math.floor(scaledSpriteHeight) + 'px';
-                    
-                    const sprite = object[X] && object[X][Y];
+
+                    let U = X, V = Y;
+                    if (object._json.transpose) { U = Y; V = X; }
+                    const sprite = object[U] && object[U][V];
+
                     if (sprite) {
                         const pivot = sprite.pivot || {x: 0, y: 0};
                         spriteEditorPivot.style.visibility = 'visible';
                         spriteEditorPivot.style.left = Math.floor(scale * (sprite.pivot.x + sprite.size.x / 2) - spriteEditorPivot.offsetWidth / 2) + 'px';
                         spriteEditorPivot.style.top = Math.floor(scale * (sprite.pivot.y + sprite.size.y / 2) - spriteEditorPivot.offsetHeight / 2) + 'px';
                             
-                        let str = `${spritesheetName}[${X}][${Y}]`;
+                        let str = `${assetName}[${U}][${V}]`;
                         if (sprite._animationName) {
-                            str += `<br>${spritesheetName}.${sprite._animationName}`
+                            str += `<br>${assetName}.${sprite._animationName}`
                             if (sprite._animationIndex !== undefined) {
                                 const animation = object[sprite._animationName];
                                 str += `[${sprite._animationIndex}]<br>extrapolate: "${animation.extrapolate || 'clamp'}"`;
@@ -1693,14 +1727,21 @@ function onProjectSelect(target, type, object) {
                         str += `<br>frames: ${sprite.frames}`;
                         spriteEditorInfo.innerHTML = str;
                         
-                        if (X > object.length / 2) {
+                        if (mouseX > editorBounds.width / 2) {
+                            // Move the info to be right aligned to keep it visible
                             spriteEditorInfo.style.float = 'right';
                             spriteEditorHighlight.style.textAlign = 'right';
                         } else {
                             spriteEditorInfo.style.float = 'none';
                             spriteEditorHighlight.style.textAlign = 'left';
                         }
-                        spriteEditorInfo.style.marginTop = Math.floor(scaledSpriteHeight + 5) + 'px';
+
+                        if (mouseY > editorBounds.height / 2) {
+                            // Move the info to the top to keep it visible
+                            spriteEditorInfo.style.top = '-68px';
+                        } else {
+                            spriteEditorInfo.style.top = Math.floor(scaledSpriteHeight + 5) + 'px';
+                        }
                         spriteEditorHighlight.style.visibility = 'inherit';
                     } else {
                         // Out of bounds
@@ -2477,7 +2518,7 @@ function createProjectWindow(gameSource) {
             if (type === 'map') {
                 for (let k in asset.spritesheet_table) {
                     const badge = isBuiltIn(asset.spritesheet_table[k]._jsonURL) ? 'builtin' : (isRemote(asset.spritesheet_table[k]._jsonURL) ? 'remote' : '');
-                    s += `<ul><li onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'].spritesheet_table['${k}'])" class="clickable sprite ${badge}" title="${k} (${asset.spritesheet_table[k]._jsonURL})"><code>${k}</code></li></ul>\n`;
+                    s += `<ul><li id="projectAsset_${assetName}.${k}" onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'].spritesheet_table['${k}'])" class="clickable sprite ${badge}" title="${k} (${asset.spritesheet_table[k]._jsonURL})"><code>${k}</code></li></ul>\n`;
                 }
             }
         } // for each asset

@@ -131,12 +131,17 @@ function showNewAssetDialog() {
     text.focus();
 }
 
+function onNewAssetTypeChange() {
+    const type = document.getElementById('newAssetType').value.toLowerCase();
+    document.getElementById('newAssetSuffix').innerHTML = '_' + type;
+}
+
 
 function onNewAssetCreate() {
-    const type = document.getElementById('newAssetType').value;
+    const type = document.getElementById('newAssetType').value.toLowerCase();
     const nameBox = document.getElementById('newAssetName');
     const fileName = nameBox.value;
-    const assetName = fileName + '_' + type.toLowerCase();
+    const assetName = fileName + '_' + type;
 
     // Warn on overwrite
     if ((gameSource.json.assets[assetName] !== undefined) &&
@@ -146,7 +151,7 @@ function onNewAssetCreate() {
     }
 
     // Add the new name to the game
-    gameSource.json.assets[assetName] = fileName + '.sprite.json';
+    gameSource.json.assets[assetName] = fileName + '.' + type + '.json';
 
     let gamePath = gameSource.jsonURL.replace(/\\/g, '/');
     if (gamePath.startsWith(location.origin)) {
@@ -154,8 +159,24 @@ function onNewAssetCreate() {
     }
     gamePath = gamePath.replace(/\/[^/]+\.game\.json$/, '\/');
 
-    let spriteJSONText;
-    let spritePNGBits;
+
+    switch (type) {
+    case 'sprite':
+        createNewAssetFromTemplate(assetName, gamePath, fileName, type, 'png', 'sprite-32x32');
+        break;
+
+    case 'sound':
+        createNewAssetFromTemplate(assetName, gamePath, fileName, type, 'mp3', 'sound');
+        break;
+    }
+
+    hideNewAssetDialog();
+}
+
+
+function createNewAssetFromTemplate(assetName, gamePath, fileName, type, binaryType, templateName) {
+    let assetJSONText;
+    let assetBits;
     
     // Create from the template and write to disk
     // Load the template JSON and PNG
@@ -163,8 +184,8 @@ function onNewAssetCreate() {
         callback: function() {
             // Copy the template
             serverWriteFiles(
-                [{filename: gamePath + fileName + '.sprite.json', contents: spriteJSONText, encoding: 'utf8'},
-                 {filename: gamePath + fileName + '.png', contents: spritePNGBits, encoding: 'binary'}],
+                [{filename: gamePath + fileName + '.' + type + '.json', contents: assetJSONText, encoding: 'utf8'},
+                 {filename: gamePath + fileName + '.' + binaryType, contents: assetBits, encoding: 'binary'}],
                 function () {
                     // Save the game
                     serverSaveGameJSON(function () {
@@ -181,17 +202,15 @@ function onNewAssetCreate() {
     });
 
     // Load the data
-    templateLoadManager.fetch(makeURLAbsolute('', 'quad://console/templates/sprite-32x32.sprite.json'), 'text', null, function (data) {
-        spriteJSONText = data.replace('"sprite-32x32.png"', '"' + fileName + '.png"');
+    templateLoadManager.fetch(makeURLAbsolute('', 'quad://console/templates/' + templateName + '.' + type + '.json'), 'text', null, function (data) {
+        assetJSONText = data.replace('"' + templateName + '.' + binaryType + '"', '"' + fileName + '.' + binaryType + '"');
     });
     
-    templateLoadManager.fetch(makeURLAbsolute('', 'quad://console/templates/sprite-32x32.png'), 'arraybuffer', null, function (data) {
-        spritePNGBits = data;
+    templateLoadManager.fetch(makeURLAbsolute('', 'quad://console/templates/' + templateName + '.' + binaryType), 'arraybuffer', null, function (data) {
+        assetBits = data;
     });
 
     templateLoadManager.end();
-
-    hideNewAssetDialog();
 }
 
 

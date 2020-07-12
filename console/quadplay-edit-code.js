@@ -7,7 +7,7 @@ const CODE_EDITOR_SAVE_DELAY_SECONDS = 5;
 
 // How long to wait when saving an asset file's json, which
 // typically receives very brief edits
-const ASSET_EDITOR_SAVE_DELAY_SECONDS = 1.5;
+const ASSET_EDITOR_SAVE_DELAY_SECONDS = 2.5;
 
 // Maps filenames to editor sessions. Cleared when a project is loaded
 const codeEditorSessionMap = new Map();
@@ -173,11 +173,12 @@ function setCodeEditorSessionMode(session, mode) {
 }
 
 
-function setCodeEditorSession(url) {
+// assetName may be undefined
+function setCodeEditorSession(url, assetName) {
     if (aceEditor.session.errorMarker) { aceEditor.session.removeMarker(aceEditor.session.errorMarker); }
     console.assert(url);
     const contents = fileContents[url] || '';
-    const session = codeEditorSessionMap.get(url) || createCodeEditorSession(url, contents);
+    const session = codeEditorSessionMap.get(url) || createCodeEditorSession(url, contents, assetName);
     aceEditor.setSession(session);
     aceEditor.setReadOnly(session.aux.readOnly || ! editableProject);
 
@@ -425,7 +426,7 @@ function autocorrectSession(session) {
 
 
 // One session per edited file is created
-function createCodeEditorSession(url, bodyText) {
+function createCodeEditorSession(url, bodyText, assetName) {
     console.assert(url);
     console.assert(! codeEditorSessionMap.has(url));
     if (typeof bodyText === 'undefined' || typeof bodyText === 'null') {
@@ -441,12 +442,17 @@ function createCodeEditorSession(url, bodyText) {
         session.setUndoManager(new ace.UndoManager());
     }
 
+    console.assert(! url.endsWith('.sprite.json') || assetName !== undefined,
+                   'Undefined asset name for ' + url);
     // Extra quadplay data
     session.aux = {
         url: url,
         
         // Increments on change
         epoch: 0,
+
+        // Undefined for non-assets
+        assetName: assetName,
         
         mode: 'All changes saved.',
 
@@ -540,6 +546,20 @@ function createCodeEditorSession(url, bodyText) {
                             // This must be a doc; update the preview pane, preserving
                             // the scroll position if possible.
                             showGameDoc(url, true);
+                        } else if (url.endsWith('.sprite.json')) {
+                            // Reload the game to pick up the new sprite, and then
+                            // reselect
+                            loadGameIntoIDE(window.gameURL, function () {
+                                // (for a spritesheet in a map, it has a dot in it)
+                                const assetName = session.aux.assetName;
+                                if (assetName.indexOf('.') !== -1) {
+                                    // Spritesheet within a map
+                                    onProjectSelect(document.getElementById('projectAsset_' + assetName), 'asset', gameSource.assets[assetName.replace(/\..*$/, '')].spritesheet_table[assetName.replace(/^.*\./, '')]);
+                                } else {
+                                    onProjectSelect(document.getElementById('projectAsset_' + assetName), 'asset', gameSource.assets[assetName]);
+                                }
+                            }, true);
+                            
                         } else if (url.endsWith('.game.json')) {
                             // Reload the game
                             loadGameIntoIDE(window.gameURL, null, true);
