@@ -354,6 +354,76 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                     } else {
                         throw 'Unsupported file format for ' + definition.url;
                     }
+                } else if ((definition.type === 'table') && (definition.url !== undefined)) {
+                    // Raw value loaded from a URL
+                    const constantURL = makeURLAbsolute(gameURL, definition.url);
+                    loadManager.fetch(constantURL, 'text', null, function (csv) {
+                        // Parse cells
+                        let grid = parseCSV(csv, definition.trim !== false);
+
+                        // By parseCSV returns row-major data and
+                        // tables in quadplay default to column major,
+                        // so transpose the CSV parse oppositely to
+                        // the transpose flag.
+                        if (! definition.transpose) {
+                            grid = transposeGrid(grid);
+                        }
+
+                        const row_type = (definition.transpose ? definition.column_type : definition.row_type) || 'object';
+                        const col_type = (definition.transpose ? definition.row_type : definition.column_type) || 'object';
+
+                        if (definition.ignore_first_row || (definition.ignore_first_column && definition.transpose)) {
+                            // Remove the first row of each column
+                            for (let x = 0; x < grid.length; ++x) {
+                                grid[x].shift();
+                            }
+                        }
+
+                        if (definition.ignore_first_column || (definition.ignore_first_row && definition.transpose)) {
+                            // Remove the first column
+                            grid.shift();
+                        }
+
+                        // Parse table
+                        let data;
+
+                        if ((col_type === 'array') && (row_type === 'array')) {
+                            // This is the data structure that we already have
+                            // in memory
+                            data = grid;
+                        } else {
+                            if (col_type === 'object') {
+                                data = {};
+                                if (row_type === 'object') {
+                                    // Object of objects
+                                    for (let c = 1; c < grid.length; ++c) {
+                                        const dst = data[grid[c][0]] = {};
+                                        const src = grid[c];
+                                        for (let r = 1; r < grid[0].length; ++r) {
+                                            dst[grid[0][r]] = src[r];
+                                        }
+                                    } // for each column (key)
+                                } else {
+                                    // Object of arrays. The first row contains the object property names
+                                    for (let c = 0; c < grid.length; ++c) {
+                                        data[grid[c][0]] = grid[c].slice(1);
+                                    } // for each column (key)
+                                }
+                            } else {
+                                // Array of objects. The first column contains the object property names
+                                data = new Array(grid.length  - 1);
+                                for (let c = 1; c < data.length; ++c) {
+                                    const src = grid[c];
+                                    const dst = data[c - 1] = {};
+                                    for (let r = 0; r < src.length; ++r) {
+                                        dst[grid[0][r]] = grid[c][r];
+                                    } // for row
+                                } // for col
+                            } // array of objects
+                        }
+                        
+                        gameSource.constants[c] = data;
+                    });
                 } else if (definition.type === 'reference') {
                     // Defer
                     hasReferences = true;
@@ -1789,4 +1859,103 @@ function evalJSONGameConstant(json) {
     default:
         throw 'Unrecognized data type: "' + json.type + '"';
     }
+}
+
+
+/** Transposes an array of arrays and returns the new grid */
+function transposeGrid(src) {
+    const dst = [];
+    dst.length = src[0].length;
+    for (let i = 0; i < dst.length; ++i) {
+        dst[i] = [];
+        dst[i].length = src.length;
+        for (let j = 0; j < src.length; ++j) {
+            dst[i][j] = src[j][i];
+        }
+    }
+    return dst;
+}
+
+
+
+/** Given a CSV file as a text string, parses into a row-major array of arrays 
+
+ Based on https://www.bennadel.com/blog/1504-ask-ben-parsing-csv-strings-with-javascript-exec-regular-expression-command.htm
+ via https://stackoverflow.com/questions/1293147/javascript-code-to-parse-csv-data
+ via https://gist.github.com/Jezternz/c8e9fafc2c114e079829974e3764db75
+*/
+function parseCSV(strData, trim) {
+    const objPattern = /(,|\r?\n|\r|^)(?:"([^"]*(?:""[^"]*)*)"|([^,\r\n]*))/gi;
+    let arrMatches = null, data = [[]];
+    while (arrMatches = objPattern.exec(strData)) {
+        if (arrMatches[1].length && arrMatches[1] !== ',') {
+            data.push([]);
+        }
+        
+        data[data.length - 1].push(arrMatches[2] ? 
+            arrMatches[2].replace(/""/g, '"') :
+            arrMatches[3]);
+    }
+
+    // Find the max array length
+    let max = 0;
+    for (let i = 0; i < data.length; ++i) { max = Math.max(max, data[i].length); }
+
+    // Look for quadplay special patterns and normalize array lengths
+    for (let r = 0; r < data.length; ++r) {
+        const array = data[r];
+        
+        for (let c = 0; c < array.length; ++c) {
+            let val = array[c];
+            if (val && (typeof val === 'string') && (val.length > 0)) {
+                // May be a special string
+                if (trim) {
+                    val = array[c] = array[c].trim();
+                }
+
+                switch (val) {
+                case 'infinity': case '+infinity':
+                    array[c] = Infinity;
+                    break;
+                    
+                case '-infinity':
+                    array[c] = -Infinity;
+                    break;
+                    
+                case 'nil': case 'null':
+                    array[c] = undefined;
+                    break;
+                    
+                case 'NaN': case 'nan':
+                    array[c] = NaN;
+                    break;
+                    
+                case 'TRUE': case 'true':
+                    array[c] = true;
+                    break;
+                    
+                case 'FALSE': case 'false':
+                    array[c] = false;
+                    break;
+                
+                default:
+                    if (/^[\$¥€£§][+\-0-9\.e]+$/.test(val)) {
+                        array[c] = parseFloat(val.substring(1));
+                    } else if (/^[+\-0-9\.e]+%$/.test(val)) {
+                        array[c] = parseFloat(val.substring(0, val.length - 1)) / 100;
+                    } else if (/^[+\-0-9\.e]+ ?deg$/.test(val)) {
+                        array[c] = parseFloat(val.substring(0, val.length - 3).trim()) * Math.PI / 180;
+                    }                       
+                } // switch
+            } // nonempty string
+        } // for each column
+        
+        if (array.length < max) {
+            const old = array.length;
+            array.length = max;
+            array.fill(old, max, '');
+        }
+    }
+    
+    return data;
 }

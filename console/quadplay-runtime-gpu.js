@@ -646,11 +646,16 @@ function _executeSPR(metaCmd) {
             const override = override_color ? _colorToUint16(override_color) : 0;
             const override_a = 1 - (override >>> 12) * (1 / 15);
 
-            const override_mode = (override_a === 1) ? 0 : (override_a === 0) ? 2 : 1;
+            const override_mode = cmd.multiply ? 3 : ((override_a === 1) ? 0 : (override_a === 0) ? 2 : 1);
             const override_r = (override & 0x0F00) * (1 - override_a) + 0.5;
             const override_g = (override & 0x00F0) * (1 - override_a) + 0.5;
             const override_b = (override & 0x000F) * (1 - override_a) + 0.5;
 
+            // Float versions
+            const override_fr = ((override >> 8) & 0xf) * (1 / 255);
+            const override_fg = ((override >> 4) & 0xf) * (1 / 255);
+            const override_fb = (override & 0xf) * (1 / 255);
+            
             dstY1 |= 0; dstY2 |= 0;
             for (let dstY = dstY1; dstY <= dstY2; ++dstY) {
                 // Offset everything by 0.5 to transform the pixel
@@ -695,9 +700,16 @@ function _executeSPR(metaCmd) {
                                 color |= (override_r + (src & 0x0F00) * override_a) & 0x0F00;
                                 color |= (override_g + (src & 0x00F0) * override_a) & 0x00F0;
                                 color |= (override_b + (src & 0x000F) * override_a) & 0x000F;
-                            } else {
+                            } else if (override_mode === 2) {
                                 // Completely overwrite
                                 color = (color & 0xF000) | (override & 0xFFF);
+                            } else {
+                                // Multiply
+                                const src = color;
+                                color &= 0xF000;
+                                color |= (override_fr * (src & 0x0F00) + (0.5 * 0x100)) & 0x0F00;
+                                color |= (override_fg * (src & 0x00F0) + (0.5 * 0x10)) & 0x00F0;
+                                color |= (override_fb * (src & 0x000F) + 0.5) & 0x000F;
                             }
 
                             if (a15 === 0xf) {
@@ -902,4 +914,9 @@ var _executeTable = Object.freeze({
     TXT : _executeTXT,
     LIN : _executeLIN,
     PLY : _executePLY
+
+    // Future:
+    // CLT : _executeCLT  // [Gouraud] color triangle
+    // SPT : _executeSPT  // Sprite-textured triangle
+    // CST : _executeCST  // Sprite * color
 });

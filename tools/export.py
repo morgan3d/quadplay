@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- python -*-
 
-import argparse, sys, os, workjson, types, shutil, tempfile
+import argparse, sys, os, workjson, types, shutil, tempfile, stat
 from quaddepend import quaddepend, depend_asset
 
 # This implementation needs f-strings from Python 3.6
@@ -160,7 +160,7 @@ def export(args):
       else:
          shutil.copytree(os.path.join(args.quadpath, 'console'),
                          os.path.join(out_path, 'console'),
-                         ignore = shutil.ignore_patterns('.DS_Store', '*~', '#*', '*.pyc'))
+                         ignore = shutil.ignore_patterns('.DS_Store', '*~', '#*', '*.pyc', '__pycache__'))
       
       generate_standalone(args, out_path, out_url, game_title)
    else:
@@ -185,13 +185,27 @@ def export(args):
 
       
    # Make everything world-readable
-   print('------------------------' + out_path)
    if args.dry_run:
-      print('chmod -R uga+r ' + os.path.join(out_path, '*'))
+       print('chmod -R uga+r ' + os.path.join(out_path, '*'))
    else:
-      for root, dirs, files in os.walk(out_path):
-         for name in files + dirs:
-            os.chmod(os.path.join(root, name), stat.S_IRUSR | stat.S_IROTH | stat.S_IRGRP)
+       for root, dirs, files in os.walk(out_path):
+           # Make dirs readable and executable. Make them user writable
+           # so that the temp dir can be deleted as well!
+           for name in dirs:
+               try:
+                   os.chmod(os.path.join(root, name),
+                            stat.S_IRUSR | stat.S_IROTH | stat.S_IRGRP |
+                            stat.S_IXUSR | stat.S_IXGRP | stat.S_IRWXO |
+                            stat.S_IWUSR)
+               except:
+                  pass
+
+           # Make files readable
+           for name in files:
+               try:
+                   os.chmod(os.path.join(root, name), stat.S_IRUSR | stat.S_IROTH | stat.S_IRGRP | stat.S_IWUSR)
+               except:
+                   print('Warning: could not set read permission on', os.path.join(root, name))
 
          
    if args.zipfile:

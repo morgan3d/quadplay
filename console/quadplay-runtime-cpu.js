@@ -3784,6 +3784,34 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
 }
 
 
+function draw_color_tri(A, B, C, color_A, color_B, color_C, pos, angle, scale, z) {
+    // Skip graphics this frame
+    if (mode_frames % _graphicsPeriod !== 0) { return; }
+    if (A.A) {
+        // Object version
+        z = A.z;
+        angle = A.angle;
+        scale = A.scale;
+        pos = A.pos;
+        color_A = A.color_A;
+        color_B = A.color_B;
+        color_C = A.color_C;
+        C = A.C;
+        B = A.B;
+        A = A.A;
+    }
+
+    color_A = _colorToUint16(color_A);
+    color_B = _colorToUint16(color_B);
+    color_C = _colorToUint16(color_C);
+
+    // TODO: transform to screen space
+    // TODO: clip empty triangles
+    // TODO: add graphics command
+}
+
+
+
 function draw_tri(A, B, C, color, outline, pos, angle, scale, z) {
     // Skip graphics this frame
     if (mode_frames % _graphicsPeriod !== 0) { return; }
@@ -4970,7 +4998,7 @@ function _maybeApplyPivot(pos, pivot, angle, scale) {
 }
 
 
-function draw_sprite(spr, pos, angle, scale, opacity, z, override_color) {
+function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, blend) {
     // Skip graphics this frame
     if (mode_frames % _graphicsPeriod !== 0) { return; }
 
@@ -4982,8 +5010,11 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color) {
         angle = spr.angle;
         pos = spr.pos;
         override_color = spr.override_color;
+        blend = spr.blend;
         spr = spr.sprite;
     }
+
+    const multiply = blend === 'multiply';
 
     if (opacity <= 0) { return; }
 
@@ -5065,6 +5096,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color) {
         hasAlpha:      spr._hasAlpha,
         opacity:       opacity,
         override_color: override_color,
+        multiply:      multiply,
         x:             x,
         y:             y
     };

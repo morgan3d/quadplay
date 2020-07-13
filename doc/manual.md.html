@@ -3,8 +3,15 @@
                       **quadplay✜**
     Fantasy Console by [Casual Effects](https://casual-effects.com)
 
-<center>[*Quick Start*](#quickstart) ∙ [*Controls*](#controls) ∙ [*Sprites*](#sprites) ∙ [*Fonts*](#fonts) ∙ [*Sounds*](#sounds) ∙ [*Symbols*](#symbols)
-<br/>[*API*](#standardlibrary) ([Input](#standardlibrary/input) ∙ [Physics](#standardlibrary/physics) ∙ [Graphics](#standardlibrary/graphics) ∙ [Sound](#standardlibrary/sound) ∙ [AI](#standardlibrary/pathfinding)) ∙ [*Network*](#network) ∙ [*Changes*](#changelog)
+<center>[*Quick Start*](#quickstart) 
+∙ [*API*](#standardlibrary) ([*Input*](#standardlibrary/input) ∙ [*Physics*](#standardlibrary/physics) ∙ [*Graphics*](#standardlibrary/graphics) ∙ [*Sound*](#standardlibrary/sound) ∙ [*AI*](#standardlibrary/pathfinding)) 
+∙ [*Assets*](#built-inassets) ([*Sprites*](#sprites) ∙ [*Fonts*](#fonts) ∙ [*Sounds*](#sounds))
+<br>[Controls](#controls) 
+∙ [Symbols](#symbols)
+∙ [JSON Formats](#projectfile) 
+∙ [Language Spec](#pyxlscriptlanguage) 
+∙ [Network](#network) 
+∙ [Change Log](#changelog)
 
 <img src="ide.png" style="image-rendering: auto; width:75%; border-radius: 0 0 4px 4px; box-shadow: 1px 5px 7px rgba(0,0,0,.20); margin-bottom: 28px; margin-top:20px"></center>
 
@@ -44,6 +51,7 @@ profiler.
 - Hundreds of built-in Creative Commons assets
 - Full commandline, external editor, and external art tool support for power users
 - Open source: use online, fork, or run locally
+- Import PNG, MP3, TMX, JSON, YAML, and CSV data
 
 **API**
 
@@ -3571,7 +3579,7 @@ endpoints and borders.
   `draw_sprite({sprite: wizard, pos: xy(100, 100), z: 2})`.
   Values default according to the positional argument version.
 
-`draw_sprite(sprite, pos, angle default 0°, scale default xy(100%, 100%), opacity default 100%, z default 0, override_color default rgba(0,0,0,0))`
+`draw_sprite(sprite, pos, angle default 0°, scale default xy(100%, 100%), opacity default 100%, z default 0, override_color default rgba(0,0,0,0), blend default "lerp")`
 : Draw sprite `sprite` with its center at `pos`. `pos` must have at
   least `x` and `y` fields. The sprite appears at `z` in the z-order
   (defaults to 0). The `scale` parameter must be nil (which is treated
@@ -3580,11 +3588,16 @@ endpoints and borders.
   values, but the rotation and center are affected by the
   `set_transform` scaling.
 
-  If it is not `nil`, the `override_color` blends into the red, green, and blue
-  values read from each pixel of the sprite based on its own alpha. The alpha value
-  of the result is the sprite's original alpha value. Useful for simulating lighting,
+  If it is not `nil`, the `override_color` blends with the red, green, and blue
+  values read from each pixel of the sprite. The default blend mode is "lerp",
+  which interpolates between the sprite color and the `override_color` based on
+  `override_color.a`. The other blend operation supported is `"multiply"`, which multiplies
+  the `r`, `g`, `b` values and ignores the `override_color.a`. The alpha value
+  of the result is always the sprite's original alpha value. Useful for simulating lighting,
   turning a sprite into a shadow silhouette, or flashing a sprite a different color
   to indicate hits or invincibility.
+  
+  
 
 `draw_sprite_corner_rect(sprite, corner, size, z ( = 0))`
 : Draw a rectangle enclosing points `corner` and `corner+size`
@@ -4145,6 +4158,14 @@ program, they can be masked using standard boolean operators. For example:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 // Error on unimplemented routine
 todo("Implement explosions")
+
+// To customize the startup mode per user when working on a team,
+// add a conditional set_mode() to your program's general startup mode (for example, Title)
+if IDE_USER == "forrester": set_mode(Inventory) because "Forrester is debugging inventory"
+
+// Make a global flag that jumps to gameplay in a debug build by putting
+// this in your Title or other startup mode
+if DEBUG: set_mode(Play) because "in DEBUG build"
 
 // Only error if your own debug_graphics constant is true.
 // You can change a constant from the IDE while the program
@@ -4797,7 +4818,9 @@ options. Project files should have the double extension `.game.json`.
             "Play"
             "Credits"],
 
-  // Assets are loaded as global constants in your program.
+  // Assets are bound as global constants in your program.
+  // They also properties of the global ASSETS object so that
+  // they can be referenced by string names.
   "assets": {
      // Asset names must be legal PyxlScript identifiers
      "mysprite": "mysprite.sprite.json",
@@ -4806,10 +4829,7 @@ options. Project files should have the double extension `.game.json`.
      "overworld": "overworld.map.json"
   },
 
-
-  // The version number is used to create the "Updated" badge in the
-  // launcher program
-  "version":      0.0,
+  "version":      1.0,
 
   // Properties affecting your game description in the launcher program:
   "min_players":   1,
@@ -4818,35 +4838,45 @@ options. Project files should have the double extension `.game.json`.
   "competitive":  false,
   "achievements": false,
   "highscores":   false,
-  "description": "Description of your game in about 22 words.",
+  "description":  "Description of your game in about 22 words.",
 
   // Other global constants. You could define these in a global source code file
   // as well. The constants specified here have immutable *values*, not just immutable
-  // bindings, and are available to editing tools.
+  // bindings, and are available to editing tools. These are bound as global
+  // variables and are also properties of the global CONSTANTS object so that
+  // they can be referenced by string names.
   "constants": {
       // If the number value is in quotes it will be parsed.
       // This allows degrees, percents, infinity, and nan.
       // Raw numbers, strings, and booleans are permitted but
       // restricted to JSON limitations.
 
-      "playerSpeed": {"type": "number", "value": "3"},
+      "player_speed": {"type": "number", "value": "3"},
+      
       "background": {"type": "rgb", "value":
           {"r": {"type": "number", "value":  0.8},
            "g": {"type": "number", "value":  0.8},
            "b": {"type": "number", "value":  0.8}},
+           
       "data": {"type": "object", "value": {
           "height": {"type": "number", "value": 1},
           "foo": {"type": "object", "value": {"a": {"type": "boolean", "value": true}},
+          
       "starmap": {"type": "raw", "url": "stars.yml"},
+      
       "name": "Destrier",
+      
       "knight": {"type": "object", "value": {
           "upgrades": {"type": "array", "value": [10, 7, 3, 1]},
           "hp": 50,
           "inventory": {"type": "object", "value": {"food": 4, "sword": "a sword"}}}},
+          
       "numbers": {"type": "array", "value": [
         {"type": "number", "value": "10"},
-        {"type": "number", "value": "infinity"}]}
-      }}},
+        {"type": "number", "value": "infinity"}]},
+        
+      "level_table", {"type": "table", "url": "level_table.csv"}
+   },
 
    // The default Y axis increases down the screen, like old arcade games.
    // Set this to true for a modern vertical axis good for physics games.
@@ -4863,14 +4893,6 @@ options. Project files should have the double extension `.game.json`.
    // The non-native screen sizes may render with substantial black
    // borders on some implementations to ensure integer pixel scaling.
    "SCREEN_SIZE": {"x": 384, "y": 224},
-
-   // Description used on the game browser screen
-   "description": {
-       "players": {"min": 1, "max": 4},
-       "competitive": false,
-       "cooperative": false
-   }
-  }
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -4879,7 +4901,7 @@ Each game must also contain:
 - 64x64 `label64.png` box art image in the same folder as the
   `.game.json` file. This is used for display in the launcher.
 - 128x128 `label128.png` box art image in the same folder as the
-  `.game.json` file. This is not currently used.
+  `.game.json` file. This is used for the open dialog.
 - 1152x1120 `preview.png` image in the same folder as the `.game.json`
   file that contains 6x10 frames of 192x112 video at 20 fps (3
   seconds total) used for the preview video in the launcher.
@@ -4902,6 +4924,16 @@ choosing content that compresses well and using a good compression
 tool. If the image is much larger, then there will be delay for
 players browsing your game in the discover tab.
 
+Assets and constants are both data used by your program. Assets
+include standalone JSON metadata files of their own to make them easy
+to reuse between projects and are usually relatively large media
+files.
+
+Constants have metadata embedded directly in the game to reduce files
+and maintenance and are usualy relatively small individual data. The
+`table` and `raw` constant types can use external files as constants,
+but still have metadata embedded in the game itself and use raw data
+instead of media formats.
 
 
 Constants
@@ -4947,11 +4979,160 @@ The available constants types are:
     an external file, must be at top level and not nested inside an array or object.
 - `object`
 - `array`
+- `table`
 - `reference`
   - The value of a reference is the name of another constant or asset. These
     can be recursive, but obviously cannot form a cycle. References must be 
     defined at top level and not nested inside an array or object.
-<!-- - `table` [tbd] -->
+
+### `table` Constants
+
+A `table` entry in the game constants has additional properties:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ json
+{
+  "type": "table",
+  "transpose": "false",         // Optional, default false
+  "column_type": "object",      // Optional, default "object"
+  "ignore_first_column": false, // Optional, default to false. Removes the source 1st column if true
+  "row_type": "array",          // Optional, default "object"
+  "ignore_first_row": false,    // Optional, default to false. Removes the source 1st row if true
+  "url": "somefile.csv",        // Must use a "url" property, not "value". Must be a csv file.
+  "trim": true                  // If true, trim extra whitespace. Default is true
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tables are indexed in-game as `table[x][y]` a.k.a. `table[col][row]` if `transpose == false` (the default)
+and as `table[y][x]` a.k.a. `table[row][col]` if `transpose == true`.
+
+The `column_type`, `ignore_first_column`, `row_type`, and `ignore_first_row` refer to the data in the original format, before
+any transpose has occured. This is consistent with named animation indexing in sprite sheets.
+
+If `column_type` is `"object"` (the default), then the first row of the data is treated
+as property names. If `column_type` is `"array"`, then the first row is considered element
+0 of the column.
+
+If `row_type` is `"object"` (the default), then the first column of the data is treated
+as property names. If `row_type` is `"array"`, then the first column is considered element
+0 of the row.
+
+If both `row_type` and `column_type` are `"object"` (the default), then the top-left element
+is not used.
+
+Quadplay parses values in [CSV](https://tools.ietf.org/html/rfc4180) files with these rules for data types:
+
+CSV Value                |  Quadplay Type
+-------------------------|-----------------
+number                   |  number
+number ending in `%`     |  number
+date                     |  string
+`TRUE` or `FALSE`        |  boolean
+`$`, `¥`, `€`, `£`, or `§` + number       |  number (ignores currency unit)
+double-quoted text       |  string (without quotes)
+other text               |  string
+empty                    |  (empty) string
+`""` in text             |  `"`
+`infinity`               |  number (`infinity`)
+`-infinity`              |  number (`-infinity`)
+`nil`, `null`            |  `nil`
+`NaN`                    |  `NaN`
+number ending in `deg`   |  number (in radians, same as native quadplay constants)
+
+
+Double-quoted text may contain newlines.
+
+
+#### Object Examples
+
+Consider the following CSV files, produced using a spreadsheet program
+or by hand:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ csv
+state,      bird,                 flower
+Louisiana,  Brown pelican,        Magnolia
+Maine,      Chickadee,            White pine cone and tassel
+Wisconsin,  American robin,       Wood violet
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[`state.csv`]
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ csv
+slot,        fighter,              rogue,             wizard
+main,        sword,                dagger,            fireball
+off,         shield,               blackjack,         teleport
+aux,         rope,                 lockpick,          potion
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[`rpg.csv`]
+
+
+The following examples show how the data can be accessed in code, depending
+on the properties set on the constants
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+// "state": {"type": "table", "url": "state.csv", "transpose": true}
+debug_print( state["Louisiana"]["bird"] ) // "Brown pelican"
+debug_print( state.Louisiana.bird ) // "Brown pelican"
+
+
+// "represent": {"type": "table", "url": "state.csv"}
+debug_print( represent.bird.Maine ) // "Chickadee"
+
+
+// "role": {"type": "table", "url": "rpg.csv"}
+debug_print( role.fighter.main )
+
+
+// "slot": {"type": "table", "url": "rpg.csv", "transpose": true}
+debug_print( slot.main.fighter ) // "sword"
+debug_print( 'off-hand actions: ', slot.off) // {fighter:"shield", rogue:"blackjack", wizard:"teleport"}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+#### Array Examples
+
+Consider the following CSV files, produced using a spreadsheet program
+or by hand:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ csv
+level, strength,  hit_points,   total_skills
+0,         0,         0,           0
+1,        16,        10,           1
+2,        18,        15,           1
+3,        18,        20,           2
+4,        20,        25,           2 
+5,        21,        30,           2 
+6,        21,        35,           3
+7,        22,        40,           3
+8,        22,        45,           4
+9,        22,        50,           5
+10,       24,        55,           6
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[`level_table.csv`]
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ csv
+ 0,  10,  20,  30
+ 1,  11,  21,  31
+ 2,  12,  22,  32
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[`grid.csv`]
+
+
+The following examples show how the data can be accessed in code, depending
+on the properties set on the constants
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+// "level": {"type": "table", "url": "stats.csv", "transpose": true, "column_type": "array", "ignore_first_column": true}
+debug_print( level[1].strength ) // 16
+
+// "grid": {"type": "table", "url": "grid.csv", "column_type": "array", "row_type": "array"}
+debug_print( grid[1][2] ) // 12
+debug_print( grid[3][1] ) // 31
+
+// "matrix": {"type": "table", "url": "grid.csv", "transpose": true, "column_type": "array", "row_type": "array"}
+debug_print( matrix[1][2] ) // 21
+debug_print( matrix[3][1] ) // 13
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 ### `raw` Format
 
@@ -7046,8 +7227,8 @@ For 1.0:
 [x] Vim, Emacs, and Visual Studio code external editor support
 [x] Aseprite, Photoshop, Krita, and Tiled external editor support
 [x] 30% virtual GPU graphics speedup
+[x] Load tables of data from CSV files
 [ ] Python not required
-[ ] Load tables of data from CSV files
   
 Post 1.0:
 
@@ -7206,19 +7387,27 @@ Changes for both the specification and implementation in each release.
 2020 July TBD: Beta update 47
 
 - New Planet Generator 2.5D procedural content example
-- Added named argument version of `draw_corner_rect()`
 - Incompatible change: made the order of arguments for `draw_tri()` consistent
   with other drawing functions
 - Changed the `region` of a sprite JSON file to take `"corner"` instead of `"pos"`
   (the old version is accepted as a synonym for backwards compatibility at the moment)
 - The sprite viewer in the IDE now autoscales for tall sprites
 - IDE can now create new sound assets
+- Increased the contrast of the text in ghost mode
+- Reordered quick links on the top of the manual
+- Rewrote the Project File section of the manual to clarify the asset vs. constant distinction
+- Added named argument version of `draw_corner_rect()`
+- Added `table` constants that use external CSV files
+- Added `"multiply"` blend mode for `draw_sprite()`, useful for colored lighting
 - Added support for transposed spritesheets in the IDE sprite viewer
 - Added support for regions in the IDE sprite viewer
 - Added a global volume control on the Console menu
+- Fixed `draw_sprite()` API links in the manual
 - Fixed recursive `push_mode()` and `pop_mode()` not preserving `draw_previous_mode()` state
-<!-- - Fixed IDE edits to asset JSON files not persisting after load -->
+- Fixed `export.py` script to set read file permissions on the contents of the zipfile
+- Fixed constant editor vector vertical nudge value to default sign based on `y_up` setting
 - Fixed sprite editor not updating after JSON edits
+<!-- - Fixed IDE edits to asset JSON files not persisting after load -->
 
 2020 July 10: Beta update 46
 
@@ -8187,6 +8376,7 @@ em.asterisk { font-style: normal; font-weight: bold; }
 .md div.title, .md div.subtitle {text-align: center}
 img { image-rendering: -moz-crisp-edges; image-rendering: pixelated; border: 1px solid #666}
 .md .hljs-built_in {font-weight: bold; color: inherit}
+.md div.listingcaption {margin: 5px 0 15px}
 .md .longToc {
 font-size: 80%;
 width: 200px;

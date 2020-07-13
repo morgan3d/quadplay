@@ -1069,12 +1069,12 @@ hr {
 .GhostUI .emulator {
     z-index: -10;
     /* Dim into the background */
-    opacity: 40%;
-    filter: blur(0.15vmin);
+    opacity: 35%;
+    filter: blur(0.17vmin);
 }
 
 .GhostUI .ide {
-    text-shadow: rgba(0,0,0,100%) 0px 2px 6px;
+    text-shadow: rgba(0,0,0,100%) 0px 2px 6px, rgba(0,0,0,100%) 0px 0px 3px;
     mix-blend-mode: screen;
     color:#fff;
 }
