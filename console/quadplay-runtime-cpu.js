@@ -7083,6 +7083,8 @@ function DIV(a, b) {
     return a / b;
 }
 
+var ABS = Math.abs;
+
 function CLAMP(a, lo, hi) {
     return _clamp(a, lo, hi);
 }

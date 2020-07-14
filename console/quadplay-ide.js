@@ -1690,6 +1690,9 @@ function onProjectSelect(target, type, object) {
                     const scaledSpriteWidth = object.sprite_size.x * scale;
                     const scaledSpriteHeight = object.sprite_size.y * scale;
 
+                    const scaledSpriteStrideWidth = (object.sprite_size.x + object._gutter) * scale;
+                    const scaledSpriteStrideHeight = (object.sprite_size.y + object._gutter) * scale;
+
                     spriteEditorPivot.style.fontSize = Math.round(clamp(Math.min(scaledSpriteWidth, scaledSpriteHeight) * 0.18, 5, 25)) + 'px';
 
                     // Offset for the sprite region within the PNG
@@ -1697,11 +1700,11 @@ function onProjectSelect(target, type, object) {
                     const scaledCornerY = object._sourceRegion.corner.y * scale;
 
                     // Integer spritesheet index (before transpose)
-                    let X = Math.floor((mouseX - scaledCornerX) / scaledSpriteWidth);
-                    let Y = Math.floor((mouseY - scaledCornerY) / scaledSpriteHeight);
+                    let X = Math.floor((mouseX - scaledCornerX) / scaledSpriteStrideWidth);
+                    let Y = Math.floor((mouseY - scaledCornerY) / scaledSpriteStrideHeight);
 
-                    spriteEditorHighlight.style.left   = Math.floor(X * scaledSpriteWidth + scaledCornerX) + 'px';
-                    spriteEditorHighlight.style.top    = Math.floor(Y * scaledSpriteHeight + scaledCornerY) + 'px';
+                    spriteEditorHighlight.style.left   = Math.floor(X * scaledSpriteStrideWidth + scaledCornerX) + 'px';
+                    spriteEditorHighlight.style.top    = Math.floor(Y * scaledSpriteStrideHeight + scaledCornerY) + 'px';
                     spriteEditorHighlight.style.width  = Math.floor(scaledSpriteWidth) + 'px';
                     spriteEditorHighlight.style.height = Math.floor(scaledSpriteHeight) + 'px';
 

@@ -965,9 +965,9 @@ function onNewDocCreate() {
                          });
     },
                          
-                              function (reason, url) {
-                                  console.log('fail', reason);
-                              });
+                         function (reason, url) {
+                             console.log('fail', reason);
+                         });
     
     hideNewDocDialog();
 }

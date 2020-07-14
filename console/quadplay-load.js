@@ -135,6 +135,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
     loadManager = new LoadManager({
         callback: function () {
             computeAssetCredits(gameSource);
+            computeResourceStats(gameSource);
             if (callback) { callback(); }
         },
         errorCallback: errorCallback,
@@ -473,7 +474,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             } // has references
         }
 
-        // Docs:
+        // Docs: Load the names, but do not load the documents themselves.
         gameSource.docs = [];
         if (gameJSON.docs) {
             // Just clone the array
@@ -483,9 +484,9 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 if (typeof doc === 'string') {
                     gameSource.docs[d] = makeURLAbsolute(gameURL, doc);
                 } else {
-                    // Legacy format, no longer supported
+                    // Legacy game.json format with metadata on the document. No longer supported
                     gameSource.docs[d] = makeURLAbsolute(gameURL, doc.url);
-                }               
+                }
             }
         } // if docs
         
@@ -655,7 +656,6 @@ function loadFont(name, json, jsonURL) {
             console.assert(fontArray.indexOf(font) === font._index[0]);
         }
 
-        recordSpriteStats(font);
         // Print faux loading messages
         onLoadFileStart(pngURL);
         onLoadFileComplete(pngURL);
@@ -683,13 +683,35 @@ function loadFont(name, json, jsonURL) {
         const shadowSize = parseInt(json.shadowSize || 1);
 
         packFont(font, borderSize, shadowSize, json.baseline, json.char_size, Object.freeze({x: json.letter_spacing.x, y: json.letter_spacing.y}), srcMask);
-        recordSpriteStats(font);
         Object.freeze(font);
     }, loadFailureCallback, loadWarningCallback, forceReload);
 
     return font;
 }
 
+
+function computeResourceStats(gameSource) {
+    for (let key in gameSource.assets) {
+        if (key[0] !== '_') {
+            const asset = gameSource.assets[key];
+            switch (asset._type) {
+            case 'font': case 'spritesheet':
+                recordSpriteStats(asset);
+                break;
+                
+            case 'sound':
+                recordSoundStats(asset);
+                break;
+                
+            case 'map':
+                for (let spritesheetKey in asset.spritesheet_table) {
+                    recordSpriteStats(asset.spritesheet_table[spritesheetKey]);
+                }
+                break;
+            }
+        }
+    }
+}
 
 /** Extracts the image data and returns two RGBA4 arrays as [Uint16Array, Uint16Array],
     where the second is flipped horizontally. Region is an optional crop region. */
@@ -798,7 +820,6 @@ function loadSpritesheet(name, json, jsonURL, callback) {
             
             function runCallbackWhenLoaded() {
                 if (Object.isFrozen(spritesheet)) {
-                    recordSpriteStats(spritesheet)
                     callback(spritesheet);
                     loadManager.markRequestCompleted(jsonURL + ' callback', '', true);
                 } else {
@@ -807,8 +828,6 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 }
             };
             runCallbackWhenLoaded();
-        } else {
-            recordSpriteStats(spritesheet);                          
         }
         
         return spritesheet;
@@ -833,7 +852,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         _sourceSize: {x: 0, y: 0},
         // Used by the IDE
         _region: null,
-        _gutter: (json.sprite_size.gutter || 0),
+        _gutter: (json.gutter || 0),
         _json: json,
         _jsonURL: jsonURL,
         _index: [spritesheetArray.length],
@@ -890,7 +909,6 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         
         // Store the region for the editor
         spritesheet._sourceRegion = region;
-        recordSpriteStats(spritesheet);
         
         const boundingRadius = Math.hypot(spritesheet.sprite_size.x, spritesheet.sprite_size.y);
         spritesheet.size = {x: data.width, y: data.height};
@@ -1141,7 +1159,6 @@ function loadSound(name, json, jsonURL) {
         // Print faux loading messages
         onLoadFileStart(mp3URL);
         onLoadFileComplete(mp3URL);
-        recordSoundStats(sound);
         return sound;
     }
 
@@ -1173,8 +1190,6 @@ function loadSound(name, json, jsonURL) {
                     sound.buffer = buffer;
                     sound.loaded = true;
 
-                    recordSoundStats(sound);
-                    
                     // Create a buffer, which primes this sound for playing
                     // without delay later.
                     sound.source = _ch_audioContext.createBufferSource();

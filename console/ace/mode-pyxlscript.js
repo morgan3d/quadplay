@@ -18,7 +18,7 @@ var PyxlScriptHighlightRules = function() {
             "get_sound_status|set_pitch|set_volume|set_pan|set_loop|" +
             "is_string|is_function|is_NaN|is_object|is_nil|is_boolean|is_number|is_array|type|" +
             "transform_map_layer_to_ws_z|transform_map_space_to_ws|transform_ws_to_map_space|transform_cs_to_ss|transform_ss_to_cs|transform_cs_to_ws|transform_ws_to_cs|transform_es_to_ws|transform_ws_to_ws|transform_to_parent|transform_to_child|" +
-            "ADD|DIV|MAD|MUL|SUB|MAX|MIN|SIGN|CLAMP|" +
+            "ABS|ADD|DIV|MAD|MUL|SUB|MAX|MIN|SIGN|CLAMP|" +
             "RGB_ADD_RGB|RGB_SUB_RGB|RGB_MUL_RGB|RGB_DIV_RGB|RGB_MUL|RGB_DIV|RGB_DOT_RGB|RGB_LERP|" +
             "RGBA_ADD_RGBA|RGBA_SUB_RGBA|RGBA_MUL_RGBA|RGBA_DIV_RGBA|RGBA_MUL|RGBA_DIV|RGBA_DOT_RGBA|RGBA_LERP|" +
             "XY_ADD_XY|XY_SUB_XY|XY_MUL_XY|XY_DIV_XY|XY_MUL|XY_DIV|XY_DOT_XY|XY_CRS_XY|" +

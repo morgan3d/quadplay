@@ -4335,6 +4335,9 @@ and other operations that naturally compile with maximum efficiency.
 `SUB(s1, s2)`
 : Returns the scalar difference.
 
+`ABS(s1)`
+: Returns the absolute value of a scalar.
+
 `MAX(s1, s2)`
 : Returns the larger scalar.
 
@@ -5159,7 +5162,7 @@ The sprite sheet JSON descriptor looks like:
     "url":          "hero.png",
     "sprite_size":   {"x": 8, "y": 8},
 
-    // Optional blank pixels between sprites. Default is zero.
+    // Optional blank pixels between sprites on the bottom and right. Default is zero.
     "gutter":       0,
 
     // Optional. Default is false. If true, indexing is transposed
@@ -5437,14 +5440,20 @@ The map JSON descriptor looks like:
 The url must reference a map file in [TMX format](https://doc.mapeditor.org/en/stable/reference/tmx-map-format/) and
 in files ending with `.tmx`. Only the following properties are currently supported:
 
-- Orthogonal
-- CSV format
-- Tile layers (other layers are ignored)
-- Embedded tileset (a PNG reference in the TMX, _not_ a TSX file)
+- `Orthogonal` or `Hexagonal (Staggered)`
+- `CSV` format
+- `Tile layers` (other layers are ignored)
+- `Embedded tileset` (a PNG reference in the TMX, _not_ a TSX file)
+- For an Orthogonal map, set the map tile size equal to the tileset tile size (e.g., 32x32)
+- For a Hexagonal map, set the map tile size to be 1.5x larger along the "pointy" direction (e.g., 32x48 for a 32x32 hex with points up and down)
+
+When accessing a Hexagonal map in memory, even rows should be rendered offset by 1/2 a tile width.
 
 Flipped sprites (horizontal, vertical, and both) in TMX maps are
-supported. Rotated sprites are not supported.  Note that 180 degree
-rotation can be achieved by flipping both horizontally and vertically.
+supported. 
+
+*Rotated sprites are not supported*.  Note that 180 degree rotation
+can be achieved by flipping both horizontally and vertically.
 
 ![Tiled program options for creating a new map.](tiled-new-map.png width=50% style="image-rendering:auto")
 
@@ -7396,6 +7405,8 @@ Changes for both the specification and implementation in each release.
 - Increased the contrast of the text in ghost mode
 - Reordered quick links on the top of the manual
 - Rewrote the Project File section of the manual to clarify the asset vs. constant distinction
+- Added `ABS()` intrinsic
+- Added `design` document template for New Doc menu
 - Added named argument version of `draw_corner_rect()`
 - Added `table` constants that use external CSV files
 - Added `"multiply"` blend mode for `draw_sprite()`, useful for colored lighting
@@ -7407,6 +7418,7 @@ Changes for both the specification and implementation in each release.
 - Fixed `export.py` script to set read file permissions on the contents of the zipfile
 - Fixed constant editor vector vertical nudge value to default sign based on `y_up` setting
 - Fixed sprite editor not updating after JSON edits
+- Fixed gutters on sprites
 <!-- - Fixed IDE edits to asset JSON files not persisting after load -->
 
 2020 July 10: Beta update 46
