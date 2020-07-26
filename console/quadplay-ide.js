@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.07.13.07'
+const version  = '2020.07.26.00'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -656,12 +656,9 @@ function onPlayButton(slow, isLaunchGame, args) {
                 if (e.message === 'Unexpected token :') {
                     e.message += ', possible due to a missing { on a previous line';
                 }
-                
+
                 setErrorStatus(shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message);
-                editorGotoFileLine(e.url, e.lineNumber);
-                if (isSafari) {
-                    console.log('_currentLineNumber = ' + QRuntime._currentLineNumber);
-                }
+                editorGotoFileLine(e.url, e.lineNumber, undefined, true);
             }
             
             if (compiledProgram) {
@@ -844,6 +841,21 @@ const controlSchemeTable = {
     },
 
     Arcade: {
+        '(a)': 'ⓐ',
+        '(b)': 'ⓑ',
+        '(c)': 'ⓒ',
+        '(d)': 'ⓓ',
+        '(e)': 'ⓔ',
+        '(f)': 'ⓕ',
+        '(p)': 'ⓟ',
+        '(q)': 'ⓠ',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
+
+    X_Arcade: {
         '(a)': 'ⓐ',
         '(b)': 'ⓑ',
         '(c)': 'ⓒ',
@@ -1067,7 +1079,23 @@ const controlSchemeTable = {
         '[<]': '⍇',
         '[v]': '⍗',
         '[>]': '⍈'
-    }
+    },
+
+    PiBoy_DMG: {
+        '(a)': 'ⓑ',
+        '(b)': 'ⓐ',
+        '(c)': 'ⓨ',
+        '(d)': 'ⓧ',
+        '(e)': 'ⓛ',
+        '(f)': '⒭',
+        '(p)': 'ﯼ',
+        '(q)': 'ҕ',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
+    
 };
 
 // Create aliases
@@ -1121,7 +1149,6 @@ function restartProgram(numBootAnimationFrames) {
 
 
 function onError(e) {
-    // Runtime error
     onStopButton();
     if (useIDE && (uiMode === 'Emulator' || uiMode === 'Maximal')) {
         // Go to a mode where the error will be visible.
@@ -1129,13 +1156,10 @@ function onError(e) {
     }
     
     e = jsToPSError(e);
-    
+
     // Try to compute a short URL
     setErrorStatus(shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message);
-    editorGotoFileLine(e.url, e.lineNumber);
-    const Range = ace.require('ace/range').Range;
-    if (aceEditor.session.errorMarker) { aceEditor.session.removeMarker(aceEditor.session.errorMarker); }
-    aceEditor.session.errorMarker = aceEditor.session.addMarker(new Range(e.lineNumber - 1, 0, e.lineNumber - 1, 1), "aceErrorMarker", "fullLine", false);
+    editorGotoFileLine(e.url, e.lineNumber, undefined, true);
 }
 
 
@@ -1201,7 +1225,7 @@ showReorderGamepadsDialog.assign = function (value) {
     }
     const index = showReorderGamepadsDialog.index;
     const messagePane = document.getElementById('reorderGamepadsMessage');
-    messagePane.innerHTML = `Press a button on player ${index + 1}'s controller (<code>gamepad_array[${index}]</code>) or <button onclick="showReorderGamepadsDialog.assign(DISABLED_GAMEPAD)">Disable</button> the P${index + 1} physical gamepad support.`;
+    messagePane.innerHTML = `<div style="text-align:center; font-size:400%; font-weight:bold; color:#FFF">P${index+1}</div>Press a button on player ${index + 1}'s controller (<code>gamepad_array[${index}]</code>) or <button onclick="showReorderGamepadsDialog.assign(DISABLED_GAMEPAD)">Disable</button> the P${index + 1} physical gamepad support.`;
     
     // The polling test will automatically save when done, so no need
     // to test for the last assignment here.    
@@ -1573,14 +1597,14 @@ function onProjectSelect(target, type, object) {
 
             // Show the editor after loading the content
             if (fileContents[object] !== undefined) {
-                codePlusFrame.style.gridTemplateRows = `auto 1fr auto 1fr`;
+                setCodeEditorDividerFromLocalStorage();
                 setCodeEditorSession(object);
             } else {
                 // Load and set the contents
                 const loadManager = new LoadManager({forceReload: true});
                 loadManager.fetch(object, 'text', null, function (doc) {
                     fileContents[object] = doc;
-                    codePlusFrame.style.gridTemplateRows = `auto 1fr auto 1fr`;
+                    setCodeEditorDividerFromLocalStorage();
                     setCodeEditorSession(object);
                 });
                 loadManager.end();
@@ -1594,7 +1618,7 @@ function onProjectSelect(target, type, object) {
         visualizeGame(gameEditor, gameSource.jsonURL, gameSource.json);
         gameEditor.style.visibility = 'visible';
         codePlusFrame.style.visibility = 'visible';
-        codePlusFrame.style.gridTemplateRows = `auto 4fr auto 3fr`;
+        setCodeEditorDividerFromLocalStorage();
         setCodeEditorSession(gameSource.jsonURL);
         return;
     }
@@ -1648,7 +1672,7 @@ function onProjectSelect(target, type, object) {
 
         // Show the code editor and the content pane
         codePlusFrame.style.visibility = 'visible';
-        codePlusFrame.style.gridTemplateRows = 'auto 5fr auto 2fr';
+        setCodeEditorDividerFromLocalStorage();
         const spriteEditorHighlight = document.getElementById('spriteEditorHighlight');
         const spriteEditorPivot = document.getElementById('spriteEditorPivot');
         const spriteEditorInfo = document.getElementById('spriteEditorInfo');
@@ -1661,7 +1685,7 @@ function onProjectSelect(target, type, object) {
             spriteEditor.style.visibility = 'visible';
             spriteEditor.style.backgroundImage = `url("${url}")`;
 
-            if (object.size.x > object.size.y) {
+            if (! object.size || (object.size.x > object.size.y)) {
                 // Fit horizontally
                 spriteEditor.style.backgroundSize = '100% auto';
             } else {
@@ -1733,15 +1757,19 @@ function onProjectSelect(target, type, object) {
                         if (mouseX > editorBounds.width / 2) {
                             // Move the info to be right aligned to keep it visible
                             spriteEditorInfo.style.float = 'right';
+                            spriteEditorInfo.style.right = '10px';
+                            spriteEditorInfo.style.left = 'unset';
                             spriteEditorHighlight.style.textAlign = 'right';
                         } else {
                             spriteEditorInfo.style.float = 'none';
+                            spriteEditorInfo.style.right = 'unset';
+                            spriteEditorInfo.style.left = '10px';
                             spriteEditorHighlight.style.textAlign = 'left';
                         }
 
                         if (mouseY > editorBounds.height / 2) {
                             // Move the info to the top to keep it visible
-                            spriteEditorInfo.style.top = '-68px';
+                            spriteEditorInfo.style.top = '-60px';
                         } else {
                             spriteEditorInfo.style.top = Math.floor(scaledSpriteHeight + 5) + 'px';
                         }
@@ -1819,7 +1847,7 @@ function showGameDoc(url, useFileContents) {
         let s = `<iframe id="doc" width="125%" height="125%" onload="setIFrameScroll(this, ${oldScrollX}, ${oldScrollY})" `;
         
         if (srcdoc !== undefined) {
-            const html = (srcdoc.replace(/&/g, '&amp;') + baseTag).replace(/"/g, '&quot;');
+            const html = (baseTag + srcdoc).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
             s += 'srcdoc="' + html + '"';
         } else {
             s += `src="${url}?"`;
@@ -1973,18 +2001,18 @@ function visualizeModes(modeEditor) {
     let startNode = null;
     for (let m = 0; m < gameSource.modes.length; ++m) {
         const mode = gameSource.modes[m];
-        const name = mode.name.replace(/^.*\/|\*/g, '');
         // Skip system modes
-        if (name[0] === '_') { continue; }
-        const isStart = (mode.name.indexOf('*') !== -1);
-        const node = {name:name, label:name, edgeArray:[], isStart:isStart};
+        if (mode.name[0] === '_') { continue; }
+
+        const isStart = (gameSource.json.start_mode === mode.name);
+        const node = {name: mode.name, label: mode.name, edgeArray:[], isStart:isStart};
         if (isStart) { startNode = node; }
         nodeArray.push(node);
-        nodeTable[name] = node;
+        nodeTable[mode.name] = node;
     }
 
     if (! startNode) {
-        setErrorStatus('No starting node specified.');
+        setErrorStatus('No start mode specified.');
         return;
     }
 
@@ -2283,17 +2311,17 @@ function visualizeGame(gameEditor, url, game) {
     s += '</td></tr>\n';
 
     if (editableProject) {
-        s += '<tr valign="top"><td>Initial&nbsp;Mode</td><td colspan=3><select style="width:390px" onchange="onProjectInitialModeChange(this)">\n';
+        s += '<tr valign="top"><td>Start&nbsp;Mode</td><td colspan=3><select style="width:390px" onchange="onProjectInitialModeChange(this.value)">\n';
         for (let i = 0; i < gameSource.modes.length; ++i) {
             const mode = gameSource.modes[i];
-            if (! mode.name.startsWith('quad://console/os/_')) {
-                s += `<option value=${mode.name} ${mode.name.indexOf('*') !== -1 ? 'selected' : ''}>${mode.name.replace(/\*/g, '')}</option>\n`;
+            if (! mode.name.startsWith('quad://console/os/_') && ! mode.name.startsWith('_')) {
+                s += `<option value=${mode.name} ${mode.name === gameSource.json.start_mode ? 'selected' : ''}>${mode.name}</option>\n`;
             }
         }
         s += '</select></td></tr>\n';
         
         s += `<tr valign="top"><td>Screen&nbsp;Size</td><td colspan=3><select style="width:390px" onchange="onProjectScreenSizeChange(this)">`;
-        const res = [[384, 224], [192,112], [128,128], [64,64]];
+        const res = [[384, 224], [320, 180], [192,112], [128,128], [64,64]];
         for (let i = 0; i < res.length; ++i) {
             const W = res[i][0], H = res[i][1];
             s += `<option value='{"x":${W},"y":${H}}' ${W === gameSource.extendedJSON.screen_size.x && H === gameSource.extendedJSON.screen_size.y ? "selected" : ""}>${W} × ${H}</option>`;
@@ -2303,7 +2331,7 @@ function visualizeGame(gameEditor, url, game) {
         // The disabled select box is too hard to read, so revert to a text box when not editable
         for (let i = 0; i < gameSource.modes.length; ++i) {
             const mode = gameSource.modes[i];
-            if (! mode.name.startsWith('quad://console/os/_') && (mode.name.indexOf('*') !== -1)) {
+            if (! mode.name.startsWith('quad://console/os/_') && (mode.name === gameSource.json.start_mode)) {
                 s += `<tr valign="top"><td>Initial&nbsp;Mode</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} value="${mode.name.replace(/\*/g, '')}"></td></tr>\n`;
                 break;
             }
@@ -2432,7 +2460,8 @@ function createProjectWindow(gameSource) {
     for (let i = 0; i < gameSource.scripts.length; ++i) {
         const script = gameSource.scripts[i];
         const badge = isBuiltIn(script) ? 'builtin' : (isRemote(script) ? 'remote' : '');
-        s += `<li class="clickable ${badge}" onclick="onProjectSelect(event.target, 'script', gameSource.scripts[${i}])" title="${script}" id="ScriptItem_${script}">${urlFilename(script)}</li>\n`;
+        const contextMenu = editableProject ? `oncontextmenu="showScriptContextMenu('${script}')" ` : '';
+        s += `<li class="clickable ${badge}" ${contextMenu} onclick="onProjectSelect(event.target, 'script', '${script}')" title="${script}" id="ScriptItem_${script}">${urlFilename(script)}</li>\n`;
     }
     if (editableProject) {
         s += '<li class="clickable new" onclick="showNewScriptDialog()"><i>New script…</i></li>';
@@ -2447,7 +2476,7 @@ function createProjectWindow(gameSource) {
         if (/^.*\/_|^_/.test(mode.name)) { continue; }
         const badge = isBuiltIn(mode.url) ? 'builtin' : (isRemote(mode.url) ? 'remote' : '');
         const contextMenu = editableProject ? `oncontextmenu="showModeContextMenu(gameSource.modes[${i}])"` : '';
-        s += `<li ${contextMenu} class="clickable ${badge}" onclick="onProjectSelect(event.target, 'mode', gameSource.modes[${i}])" title="${mode.url}" id="ModeItem_${mode.name.replace('*', '')}"><code>${mode.name}</code></li>\n`;
+        s += `<li ${contextMenu} class="clickable ${badge}" onclick="onProjectSelect(event.target, 'mode', gameSource.modes[${i}])" title="${mode.url}" id="ModeItem_${mode.name}"><code>${mode.name}${mode.name === gameSource.json.start_mode ? '*' : ''}</code></li>\n`;
     }
     if (editableProject) {
         s += '<li class="clickable new" onclick="showNewModeDialog()"><i>New mode…</i></li>';
@@ -2528,8 +2557,8 @@ function createProjectWindow(gameSource) {
     }
     
     if (editableProject) {
-        s += '<li class="clickable new" onclick="showAddAssetDialog()"><i>Add existing asset…</i></li>';
-        s += '<li class="clickable new" onclick="showNewAssetDialog()"><i>New asset…</i></li>';
+        s += '<li class="clickable new" onclick="showAddAssetDialog()"><i>Import existing asset…</i></li>';
+        s += '<li class="clickable new" onclick="showNewAssetDialog()"><i>Create new asset…</i></li>';
     }
     s += '</ul>';
     s += '</div>'
@@ -2544,10 +2573,13 @@ function createProjectWindow(gameSource) {
 
 function makeGoodFilename(text) {
     let filename = text.replace(/[ \n\t]/g, '_').replace(/[^A-Za-z0-9_+-]/g, '');
-    if (filename.length > 17) {
-        let i = filename.indexOf('_', 12);
-        if (i === -1) { i = 17; }
-        filename = filename.substring(i);
+
+    const MAX_FILENAME_LENGTH = 50;
+    if (filename.length > MAX_FILENAME_LENGTH) {
+        // Break after an underscore
+        let i = filename.indexOf('_', MAX_FILENAME_LENGTH * 0.85);
+        if (i === -1) { i = MAX_FILENAME_LENGTH; }
+        filename = filename.substring(0, i);
     }
     return filename.toLowerCase();
 }
@@ -2901,7 +2933,7 @@ function updateTimeDisplay(time, name) {
         td.style.color = tp.style.color = 'unset';
     }
 
-    td.innerHTML = '' + time.toFixed(1) + ' ms';
+    td.innerHTML = '' + time.toFixed(1) + '&#8239;ms';
     tp.innerHTML = '(' + Math.round(time * 6) + '%)';
 }
 
@@ -2914,6 +2946,14 @@ function goToLauncher() {
         onPlayButton(false, true);
     }, true);
 }
+
+
+function onCopyPerformanceSummary() {
+    let summary = `Framerate ${debugFrameRateDisplay.textContent} ${debugFramePeriodDisplay.textContent}; `;
+    summary += `${debugFrameTimeDisplay.textContent} Total = ${debugCPUTimeDisplay.textContent} CPU + ${debugPPUTimeDisplay.textContent} Phys + ${debugGPUTimeDisplay.textContent} GPU`;
+    navigator.clipboard.writeText(summary);
+}
+
 
 // Invoked by requestAnimationFrame() or setTimeout. 
 function mainLoopStep() {
@@ -2958,7 +2998,7 @@ function mainLoopStep() {
     try {
         // Worst-case timeout in milliseconds (to yield 10 fps)
         // to keep the browser responsive if the game is in a long
-        // top-level loop (which will yield). Some of this is legacy
+        // top-level loop (which will yield). This is legacy
         // to nanojammer, as quadplay games tend to have code in
         // functions where it can't yield.
         const frameStart = profiler.now();
@@ -3029,8 +3069,8 @@ function mainLoopStep() {
         }
 
         debugFrameRateDisplay.style.color = debugFramePeriodDisplay.style.color = color;
-        debugFrameRateDisplay.innerHTML = '' + Math.round(60 / QRuntime._graphicsPeriod) + ' Hz';
-        debugFramePeriodDisplay.innerHTML = '(' + ('1½⅓¼⅕⅙'[QRuntime._graphicsPeriod - 1]) + ' ×)';
+        debugFrameRateDisplay.innerHTML = '' + Math.round(60 / QRuntime._graphicsPeriod) + '&#8239;Hz';
+        debugFramePeriodDisplay.innerHTML = '(' + ('1½⅓¼⅕⅙'[QRuntime._graphicsPeriod - 1]) + '×)';
 
         if ((QRuntime.mode_frames - 1) % QRuntime._graphicsPeriod === 0) {
             // Only display if the graphics period has just ended, otherwise the display would
@@ -3232,25 +3272,25 @@ function reloadRuntime(oncomplete) {
         Object.defineProperty(QRuntime.touch, 'x', {
             enumerable: true,
             get: function () {
-                return this.screen_x * QRuntime._scaleX + QRuntime._offsetX;
+                return (this.screen_x - QRuntime._offsetX) / QRuntime._scaleX;
             }
         });
         Object.defineProperty(QRuntime.touch, 'y', {
             enumerable: true,
             get: function () {
-                return this.screen_y * QRuntime._scaleY + QRuntime._offsetY;
+                return (this.screen_y - QRuntime._offsetY) / QRuntime._scaleY;
             }
         });
         Object.defineProperty(QRuntime.touch, 'dx', {
             enumerable: true,
             get: function () {
-                return this.screen_dx * QRuntime._scaleX;
+                return this.screen_dx / QRuntime._scaleX;
             }
         });
         Object.defineProperty(QRuntime.touch, 'dy', {
             enumerable: true,
             get: function () {
-                return this.screen_dy * QRuntime._scaleY;
+                return this.screen_dy / QRuntime._scaleY;
             }
         });
         Object.defineProperty(QRuntime.touch, 'screen_xy', {
@@ -3291,7 +3331,8 @@ function reloadRuntime(oncomplete) {
                 prompt: controlSchemeTable[controlBindings.type],
                 _id: controlBindings.id, 
                 _analogX: 0,
-                _analogY: 0
+                _analogY: 0,
+                _name: `gamepad_array[${p}]`
             };
             Object.defineProperty(pad, 'x', padXGetter);
             Object.defineProperty(pad, 'dx', dxGetter);
@@ -3663,14 +3704,19 @@ function loadGameIntoIDE(url, callback, loadFast) {
 <hr>
 <br/>
 <table style="margin-left: -2px; width: 100%">
-<tr><td width=180>Sprite Pixels</td><td class="right">${Math.round(resourceStats.spritePixels / 1000)}k</td><td>/</td><td class="right" width=40>5505k</td><td class="right" width=45>(${Math.round(resourceStats.spritePixels*100/5505024)}%)</td></tr>
+<tr><td width=180>Code Statements</td><td class="right">${resourceStats.sourceStatements}</td><td>/</td><td class="right">8192</td><td class="right">(${Math.round(resourceStats.sourceStatements*100/8192)}%)</td></tr>
+<tr><td>Sounds</td><td class="right">${resourceStats.sounds}</td><td>/</td><td class="right">128</td><td class="right">(${Math.round(resourceStats.sounds*100/128)}%)</td></tr>
+<!--<tr><td>Sound Bytes</td><td class="right">${resourceStats.soundKilobytes}</td><td>/</td><td class="right">256 MB</td><td class="right">(${Math.round(resourceStats.soundKilobytes*100/(1024*256))}%)</td></tr>-->
+<tr><td>Sprite Pixels</td><td class="right">${Math.round(resourceStats.spritePixels / 1000)}k</td><td>/</td><td class="right" width=40>5505k</td><td class="right" width=45>(${Math.round(resourceStats.spritePixels*100/5505024)}%)</td></tr>
 <tr><td>Spritesheets</td><td class="right">${resourceStats.spritesheets}</td><td>/</td><td class="right">128</td><td class="right">(${Math.round(resourceStats.spritesheets*100/128)}%)</td></tr>
 <tr><td>Spritesheet Width</td><td class="right">${resourceStats.maxSpritesheetWidth}</td><td>/</td><td class="right">1024</td><td class="right">(${Math.round(resourceStats.maxSpritesheetWidth*100/1024)}%)</td></tr>
 <tr><td>Spritesheet Height</td><td class="right">${resourceStats.maxSpritesheetHeight}</td><td>/</td><td class="right">1024</td><td class="right">(${Math.round(resourceStats.maxSpritesheetHeight*100/1024)}%)</td></tr>
-<tr><td>Code Statements</td><td class="right">${resourceStats.sourceStatements}</td><td>/</td><td class="right">8192</td><td class="right">(${Math.round(resourceStats.sourceStatements*100/8192)}%)</td></tr>
-<tr><td>Sounds</td><td class="right">${resourceStats.sounds}</td><td>/</td><td class="right">128</td><td class="right">(${Math.round(resourceStats.sounds*100/128)}%)</td></tr>
-<!--<tr><td>Sound Bytes</td><td class="right">${resourceStats.soundKilobytes}</td><td>/</td><td class="right">256 MB</td><td class="right">(${Math.round(resourceStats.soundKilobytes*100/(1024*256))}%)</td></tr>-->
 </table>`;
+
+            {
+                const summary = `${resourceStats.sourceStatements} statements, ${resourceStats.sounds} sounds, ${Math.round(resourceStats.spritePixels / 1000)}k pixels`;
+                s += `<button style="margin-top: 5px; font-size: 80%" onclick="navigator.clipboard.writeText('${summary}')">Copy Summary</button>`;
+            }
 
 
             const resourceArray = [
@@ -3873,7 +3919,7 @@ document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanc
 
     if (useIDE || (url !== 'quad://console/launcher')) {
         loadGameIntoIDE(url, function () {
-            onProjectSelect(null, 'game', gameSource.url);
+            onProjectSelect(null, 'game', gameSource.jsonURL);
         });
     }
 }

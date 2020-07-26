@@ -539,6 +539,8 @@ function createCodeEditorSession(url, bodyText, assetName) {
 
                     // If this is present in a cache, delete it
                     delete assetCache[url];
+
+                    console.log('purging', url, 'from caches');
                     
                     const filename = urlToFilename(url);
                     serverWriteFile(filename, 'utf8', contents, function () {
@@ -667,7 +669,10 @@ function urlToFilename(url) {
    the callback when the server is done. If the filename is a url,
    computes the appropriate local file. 
 
-   The contents may be a string or arraybuffer */
+   encoding is utf8 or binary
+
+   The contents may be a string or arraybuffer. To convert JSON to a string,
+   use WorkJSON.stringify. */
 function serverWriteFile(filename, encoding, contents, callback, errorCallback) {
     console.assert(encoding === 'utf8' || encoding === 'binary');
     
@@ -1008,11 +1013,24 @@ function onCodeEditorDividerDragEnd() {
 }
 
 
+function setCodeEditorDividerFromLocalStorage() {
+    let dividerHeight = parseInt(localStorage.getItem('codeDividerTop'));
+    if (isNaN(dividerHeight) || dividerHeight > window.innerHeight - 64) {
+        // Fallback
+        dividerHeight = '1fr';
+    } else {
+        dividerHeight += 'px';
+    }
+    codePlusFrame.style.gridTemplateRows = `auto ${dividerHeight} auto 1fr`;
+}
+
+
 function onCodeEditorDividerDrag(event) {
     if (codeEditorDividerInDrag) {
 	const codePlusFrame = document.getElementById('codePlusFrame');
         const topHeight = Math.min(codePlusFrame.clientHeight - 6, Math.max(0, event.clientY - 26 - 24));
 	codePlusFrame.style.gridTemplateRows = `auto ${topHeight}px auto 1fr`;
+        localStorage.setItem('codeDividerTop', Math.round(topHeight));
 	event.preventDefault();
         
         // Do not resize the aceEditor while dragging most of the time--it is slow. Wait until onCodeEditorDividerDragEnd()
@@ -1135,9 +1153,10 @@ function updateTodoList() {
 
 /** Lines and characters are 1-based. Silently ignored if the 
     url does not correspond to a script or mode in the project.  */
-function editorGotoFileLine(url, line, character) {
+function editorGotoFileLine(url, line, character, highlight) {
     if (character === undefined) { character = 1; }
 
+    let done = false;
     for (let i = 0; i < gameSource.modes.length; ++i) {
         const mode = gameSource.modes[i];
         if (mode.url === url) {
@@ -1145,28 +1164,98 @@ function editorGotoFileLine(url, line, character) {
             onProjectSelect(document.getElementById('ModeItem_' + mode.name.replace('*', '')), 'mode', mode);
             aceEditor.focus();
             aceEditor.gotoLine(line, character - 1, false);
-            return;
+            done = true;
+            break;
         }
     }
 
-    // Look in scripts
-    const i = gameSource.scripts.indexOf(url);
-    if (i !== -1) {
-        onProjectSelect(document.getElementById('ScriptItem_' + url), 'script', url);
-        aceEditor.focus();
-        aceEditor.gotoLine(line, character - 1, false);
+    if (! done) {
+        // Look in scripts
+        const i = gameSource.scripts.indexOf(url);
+        if (i !== -1) {
+            onProjectSelect(document.getElementById('ScriptItem_' + url), 'script', url);
+            aceEditor.focus();
+            aceEditor.gotoLine(line, character - 1, false);
+        }
+    }
+
+    if (highlight) {
+        const Range = ace.require('ace/range').Range;
+        if (aceEditor.session.errorMarker) { aceEditor.session.removeMarker(aceEditor.session.errorMarker); }
+        aceEditor.session.errorMarker = aceEditor.session.addMarker(new Range(line - 1, 0, line - 1, 1), "aceErrorMarker", "fullLine", false);
     }
 }
 
 
 function showModeContextMenu(mode) {
-    const id = 'ModeItem_' + mode.name.replace('*', '');
+    const id = 'ModeItem_' + mode.name;
 
     let s = `<div onmousedown="onProjectSelect(document.getElementById('${id}'}), 'mode', gameSource.modes[${gameSource.modes.indexOf(mode)}])">Edit</div>`;
-    if (! mode.name.endsWith('*')) {
-        s += `<div onmousedown="onProjectInitialModeChange({value:'${mode.name}'})">Set As Initial Mode</div>`
+    if (mode.name !== gameSource.json.start_mode) {
+        s += `<div onmousedown="onProjectInitialModeChange('${mode.name}')">Set As Start Mode</div>`
     }
 
     customContextMenu.innerHTML = s;
     showContextMenu();
+}
+
+
+/** Moves a script up or down in the execution order */
+function onMoveScript(scriptURL, deltaIndex) {
+    const index = gameSource.scripts.indexOf(scriptURL);
+    console.assert(index !== -1);
+
+    gameSource.json.scripts[index] = gameSource.json.scripts[index + deltaIndex];
+    gameSource.json.scripts[index + deltaIndex] = scriptURL;
+    serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
+}
+
+
+function onRemoveScript(scriptURL) {
+    const index = gameSource.scripts.indexOf(scriptURL);
+    console.assert(index !== -1);
+    gameSource.json.scripts.splice(index, 1);
+    serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
+}
+
+
+function showScriptContextMenu(scriptURL) {
+    const id = 'ScriptItem_' + scriptURL;
+    const filename = urlFilename(scriptURL);
+    const builtIn = isBuiltIn(scriptURL);
+
+    const index = gameSource.scripts.indexOf(scriptURL);
+    console.assert(index !== -1);
+    
+    let s = `<div onmousedown="onProjectSelect(document.getElementById('${id}'}), 'script', '${scriptURL}'])">${builtIn ? 'View' : 'Edit'}</div>`;
+    if (index > 0) {
+        s += `<div onmousedown="onMoveScript('${scriptURL}', -1)"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&uarr;</span>Execute earlier</div>`
+    }
+
+    if (index < gameSource.scripts.length - 1) {
+        s += `<div onmousedown="onMoveScript('${scriptURL}', +1)"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&darr;</span>Execute later</div>`
+    }
+    if (! builtIn) {
+        // TODO:
+        s += `<div onmousedown="onRenameScript('${scriptURL}')">Rename&hellip;</div>`
+    }
+    s += `<div onmousedown="onRemoveScript('${scriptURL}')"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&times;</span>Remove ${filename}</div>`
+
+    customContextMenu.innerHTML = s;
+    showContextMenu();
+}
+
+
+function onRenameScript(scriptURL) {
+    const filename = urlFilename(scriptURL);
+
+    let newName;
+    while (true) {
+        newName = window.prompt("New name for script '" + filename + "'", filename);
+        if (! newName || newName === '') { return; }
+
+        alert('(Sorry) TODO: Implement script renaming');
+
+        // TODO: Reload project
+    }
 }

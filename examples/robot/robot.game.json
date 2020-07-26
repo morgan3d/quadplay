@@ -6,7 +6,8 @@
 
     "packages":   [],
     "scripts":    [],
-    "modes":      ["Play*"],
+    "modes":      ["Play"],
+    "start_mode": "Play",
     "assets":     {
         "robotSprite": "robot.sprite.json",
         "gradient":    "gradient.sprite.json"

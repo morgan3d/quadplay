@@ -414,7 +414,7 @@ function onRenameConstant(constantName) {
 
         // Check for conflict
         if (gameSource.json.assets[newName]) {
-            window.alert("There is already an  asset named '" + newName + "'");
+            window.alert("There is already an asset named '" + newName + "'");
         } else if (gameSource.json.constants[newName]) {
             window.alert("There is already another constant named '" + newName + "'");
         } else {
@@ -442,6 +442,6 @@ function showConstantContextMenu(constantName) {
         `<div onmousedown="onProjectSelect(${getElement}, 'constant', '${constantName}')">Change Value</div>
         <div onmousedown="onRenameConstant('${constantName}')">Rename&hellip;</div>
         <div onmousedown="onEditConstantDescription('${constantName}')">Edit Description&hellip;</div>
-        <hr><div onmousedown="onRemoveConstant('${constantName}')">Remove '${constantName}'</div>`;
+        <hr><div onmousedown="onRemoveConstant('${constantName}')""><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&times;</span>Remove '${constantName}'</div>`;
     showContextMenu();
 }

@@ -15,17 +15,26 @@
 
 <img src="ide.png" style="image-rendering: auto; width:75%; border-radius: 0 0 4px 4px; box-shadow: 1px 5px 7px rgba(0,0,0,.20); margin-bottom: 28px; margin-top:20px"></center>
 
-The [**<span style="font-size: 95%; font-family: quadplay">quadplay✜</span>**](../console/quadplay.html?IDE=1) is a
-web-based fantasy game console for sprite-based 2D and 2.5D games. It lets you create games with
-the power and consistency of a game console and the flexibility of modern tools and web deployment.
+> "Imagine a fantasy timeline 1989, where modern video game mechanics,
+> scripting languages, data structures, and AI all developed before
+> the internet and 3D graphics. The quadplay✜ is a virtual predecessor of
+> Nintendo64 and PlayStation so friendly that anyone can make their
+> own beautiful game in a few days, which supports play as creative and deep as 2020
+> indie titles."
 
-Because it is free, is easy to use, and runs everywhere, quadplay✜ is perfect 
-for hobby coding, a game programming course, teaching yourself programming 
-and game development, and game jams.
+The
+[**<span style="font-size: 95%; font-family: quadplay">quadplay✜</span>**](../console/quadplay.html?IDE=1)
+is a web-based fantasy game console for sprite-based 2D and 2.5D
+games. It lets you create games with the power and consistency of a
+game console and the flexibility of modern tools and web deployment.
 
-The integrated development environment (IDE) is packaged as an emulator
-with the tools that you need to make games: an editor, debugger, and 
-profiler.
+Because it is free, is easy to use, and runs everywhere, quadplay✜ is
+perfect for hobby coding, a game programming course, teaching yourself
+programming and game development, and game jams.
+
+The integrated development environment (IDE) is packaged as an
+emulator with the tools that you need to make games: an editor,
+debugger, and profiler.
 
 **Virtual Hardware Features**
 
@@ -187,7 +196,7 @@ from sites like [OpenGameArt.org](http://opengameart.org) and
 
 - PNG pixel art editor for sprites and fonts (_[Gimp](https://www.gimp.org/), [AseSprite](https://www.aseprite.org/), [Krita](https://krita.org/en/), Photoshop, GraphicsGale, etc._)
 - MP3 sound tools (_[BFXR](https://www.bfxr.net/), [Audacity](https://www.audacityteam.org/), etc._)
-- TMX map tool ([Tiled](https://www.mapeditor.org/))
+- TMX map tool ([Tiled](https://www.mapeditor.org/), [TileKit](https://rxi.itch.io/tilekit))
 
 _People playing your game don't need Python, just a web browser. See the Deploying Games section for more information._
 
@@ -353,6 +362,7 @@ or right side of the keyboard to control the turret.
 - Dual-stick controls
 - Working with angles
 - Entity parenting
+- 320x180 resolution
 
 
 </td></tr><tr><td>![](../examples/robot/label128.png)</td><td>
@@ -1131,7 +1141,8 @@ As a result, the emulator is pixel-perfect on small displays and fills
 the screen on large ones. Quadplay supports the following resolutions,
 all with 4:4:4:4 RGBA color and 60 Hz refresh:
 
-- 384x224
+- 384x224 (default and recommended)
+- 320x180 (¼ 720p, ⅙ 1080p, ⅛ 1440p)
 - 192x112
 - 128x128
 - 64x64
@@ -1139,14 +1150,20 @@ all with 4:4:4:4 RGBA color and 60 Hz refresh:
 For reference when importing assets or designing games inspired by
 previous work, here are the resolutions of classic and retro machines:
 
- - 480×272 PlayStation Portable
- - 400x240 Playdate
+ - 800x480 Raspberry Pi official 7" touchscreen
+ - 640x480 PiBoy DMG
+ - 480x320 Odroid Go Advance
+ - 480x272 PlayStation Portable
+ - 480x270 Hyperlight Drifter
+ - 400x240 Playdate, 2DS, 3DS
  - 384x224 quadplay✜
+ - 320x240 "240p", Towerfall
+ - 320x180 Celeste and other Switch pixel art games
  - 320x200 VGA, including Amiga 500 and Commodore 64
  - 280x192 Apple II
  - 256x240 NES and TurboGrafx-16
- - 256x192 Nintendo DS and Sega Master System
  - 256x224 SNES
+ - 256x192 Nintendo DS and Sega Master System
  - 240x160 Game Boy Advance
  - 240x136 TIC-80
  - 160x192 Atari 2600
@@ -1322,12 +1339,12 @@ Property                 | Type     | Meaning
 `touch.pressed_a`        | boolean  | Was the touch started this frame?
 `touch.aa`               | boolean  | Same as `pressed_a`
 `touch.released_a`       | boolean  | Was the touch ended this frame?
-<!-- `touch.screen_x`      | number   | Screen-space x position
-`touch.screen_y`           | number   | Screen-space y position
-`touch.screen_dx`          | number   | Change in `screen_x` since the previous frame
-`touch.screen_dy`          | number   | Change in `screen_y` since the previous frame
-`touch.screen_xy`          | xy       | `xy(touch.screen_x, touch.screen_y)` for the touch
-`touch.screen_dxy`         | xy       | `xy(touch.screen_dx, touch.screen_dy)` for the touch -->
+`touch.screen_x`         | number   | Screen-space x position
+`touch.screen_y`         | number   | Screen-space y position
+`touch.screen_dx`        | number   | Change in `screen_x` since the previous frame
+`touch.screen_dy`        | number   | Change in `screen_y` since the previous frame
+`touch.screen_xy`        | xy       | `xy(touch.screen_x, touch.screen_y)` for the touch
+`touch.screen_dxy`       | xy       | `xy(touch.screen_dx, touch.screen_dy)` for the touch
 
 The `x` and `y` values are in camera-space coordinates using the current transform.
 Change or reset the transform to read them in a different coordinate system, or use
@@ -1631,7 +1648,7 @@ String
   - `"clamp"` (default, other unsupported values are silentely treated as clamp instead of failing)
 
 `ends_with(string, target)`
-  : Returns true if `string` ends with the substring `target`.
+: Returns true if `string` ends with the substring `target`.
   
 `extended(a, b)`
 : Returns a new string that is `a + b`.
@@ -1806,8 +1823,9 @@ Random Values
 : Returns a Gaussian distributed random number within `radius` of
   the mean. See also `random_gaussian()`.
 
-`set_random_seed(seed default local_time().millisecond)`
+`set_random_seed(seed)`
 : Reset the default random number generator, `random()`, using an optional seed.
+  A common choice is `set_random_seed(local_time().millisecond)`.
   See also `make_random()`.
 
 
@@ -1933,49 +1951,54 @@ including `xy()` and `rgb()` values, except where specific key names are mention
   `xy(-v.y, v.x)`, for `xy()` and 2-element array vectors only.
 
 `xy(x, y)`
-: Create the object with `x` and `y` fields.
+: Create the object with `x` and `y` properties.
 
-`xy(v)`
-: Returns `{x:v.x, y:v.y}`. Useful for removing the `z` component or cloning.
+`xy(xy)`
+: Returns `{x:xy.x, y:xy.y}`. Useful for removing the `z` component or cloning.
   See also `xy_to_xz()`.
 
-`xy(a)`
-: Returns `{x:a[0], y:a[1]}`. Useful for converting from a matrix column.
+`xy(array)`
+: Returns `{x:array[0], y:array[1]}`. Useful for converting from a matrix column.
 
-`xy_to_xz(v)`
-: Returns `{x:v.x, z:v.y}`. See also `xz_to_xy()`.
+`xy_to_xz(xy)`
+: Returns `{x:xy.x, z:xy.y}`. See also `xz_to_xy()`.
 
-`xy_to_xyz(v, z default 0)`
-: Returns `{x:v.x, y:v.y, z:z}`.
+`xz_to_xyz(v, new_z default 0)`
+: Returns `{x:v.x, y:v.z, z:new_z}`.
 
 `xz(x, z)`
 : Create the object with `x` and `z` fields.
 
-`xz(v)`
-: Returns `{x:v.x, z:v.z}`. Useful for removing the `y` component or cloning.
+`xz(xz)`
+: Returns `{x:xz.x, z:xz.z}`. Useful for removing the `y` property or cloning.
 
-`xz(a)`
-: Returns `{x:a[0], z:a[1]}`. Useful for converting from a matrix column.
+`xz(array)`
+: Returns `{x:array[0], z:array[1]}`. Useful for converting from a matrix column.
 
-`xz_to_xy(v)`
-: Returns `{x:v.x, y:v.z}`. See also `xy_to_xz()`.
+`xz_to_xy(xz)`
+: Returns `{x:xz.x, y:xz.z}`. See also `xy_to_xz()`.
 
-`xz_to_xyz(v, y default 0)`
-: Returns `{x:v.x, y:y, z:v.z}`. See also `xz_to_xy()`.
+`xz_to_xyz(xz, new_z default 0)`
+: Returns `{x:xz.x, y:xz, z:new_z}`. See also `xz_to_xy()`.
 
 `xyz(x, y, z)`
 : Create the object with `x`, `y`, and `z` fields.
 
-`xyz(v)`
-: Returns `{x:v.x, y:v.y, z:v.z}`. Useful for removing a `w` component.
-  Will _not_ expand an `xy()` or `xz()` value--you must do that explicitly as
-  `xyz(v.x, v.y, 0)`, for example
+`xyz(xy, z default 0)`
+: Creates `{x: xy.x, xy:y, z}`
 
-`xyz(a)`
-: Returns `{x:a[0], y:a[1], z:a[2]}`. Useful for converting from a matrix column.
+`xyz(xz, y default 0)`
+: Creates `{x: xz.x, y:y, z:xz.z}`. See also `xz_to_xyz()`
+
+`xyz(xyz)`
+: Clones the `xyz` value, stripping any other properties
+
+`xyz(array)`
+: Returns `{x:array[0], y:array[1], z:array[2]}`. Useful for converting from a matrix column.
 
 `xyz_to_rgb(v)`
-: Returns `{r: v.x, g: v.y, b: v.z}`.
+: Returns `{r: v.x, g: v.y, b: v.z}`. This does _not_ convert between the XYZ and sRGB
+  color spaces.
 
 
 Function
@@ -2013,7 +2036,9 @@ Math
 : Clamp `x` to the range [`lo`, `hi`] inclusive.
 
 `clone(v)`
-: Return a shallow clone of `v`
+: Return a shallow clone of `v`. For built-in objects and functions returns the
+  original object, because they are immutable. For map assets, automatically deep clones
+  the 3D layer array/2D XY array.
 
 `copy(s, d)`
 : Copy the properties of `s` onto `d`. Both must be arrays or objects.
@@ -2209,6 +2234,10 @@ Sound
 `stop_audio(audio)`
 : Stop playing `audio`, which was created with `play_sound`. Sets the state to `"STOPPED"`.
 
+`stop_audio(nil)`
+: Does nothing. This is provided because it is often convenient to stop background
+  sound if there is one on entering a mode and do nothing if there is no background
+  sound value in a variable, e.g., `stop_audio(background_audio)`
 
 
 Coordinates
@@ -2390,6 +2419,12 @@ The transformation routines are:
 : Transform screen space `ss_z` to a camera space z value.
   If the current transform has a zero z-scale then the result will be positive infinity,
   negative infinity, or zero because the transformation is not invertible in that case.
+
+`transform_ss_to_ws(ss_point, ss_z default 0)`
+: Transform `ss_point` from screen space through camera space to world space.
+
+`transform_ws_to_ss(ws_point, ws_z default 0)`
+: Transform `ws_point` from world space through camera space to screen space.
 
 `transform_ws_to_cs(ws_point, ws_z default 0)`
 : Transform world space `ws_point` to camera space. There is no
@@ -2722,6 +2757,10 @@ Each sprite element `spritesheet[x][y]` of a spritesheet has the following immut
 Sprites can also be referenced by name `spritesheet["`<i>name</i>`"]` or 
 `spritesheet.`<i>name</i>, if the named sprite has an `x` and `y` field instead of
 a `start` field in the .sprite.json file.
+
+`sprite.animation`
+: If the sprite is in an animation (a multi-frame named array from a `sprite.json` file),
+  this is the array that contains it.
 
 `sprite.id`
 : Unique integer identifying this sprite by spritesheet and tile_index, but 
@@ -3428,6 +3467,21 @@ of gamut ones) can be represented using these types.
 `hsva(h, s, v, a default 1)`
 : Returns an object with field `h` _wrapped_ to [0, 1], and fields `s`, `v`, and `a` clamped to [0, 1].
 
+`hsva(hsv, a default 1)`
+: Clone the `hsv` object, adding an `a` property.
+
+`hsva(rgb, a default 1)`
+: Convert the `rgb` value to hsv and add an `a` property.
+
+`hsva(rgba)`
+: Convert the `rgba` to hsva.
+
+`hsva(hsva)`
+: Clone the `hsva` object, stripping other properties.
+
+`hsv(hsv)`
+: Clone the `hsv` object, stripping other properties (such as an `a` channel).
+
 `hsv(h, s, v)`
 : Returns an object with field `h` _wrapped_ to [0, 1], and fields `s` and `v` clamped to [0, 1].
   `h=0` and `h=1` are red, `h=1/3` is green, and `h=2/3` is blue, with values inbetween
@@ -3439,20 +3493,32 @@ of gamut ones) can be represented using these types.
   in the original color space. See also `lerp()`, `smoothstep()`, and `smootherstep()`,
   which can be applied to colors.
 
-`rgb(hsvValue)`
-: Convert the hsv result to rgba.
+`rgb(hsv)`
+: Convert the `hsv` result to rgb, stripping other properties.
+
+`rgb(rgb)`
+: Clone the `rgb` value (stripping other properties, such as an `a` property).
 
 `rgb(r, g, b)`
-: Create a structure with fields `r`, `g`, and `b` clamped to [0, 1].
+: Create a structure with properties `r`, `g`, and `b` clamped to [0, 1].
 
 `rgb_to_xyz(c)`
 : Returns `{x: c.r, y: c.g, z: c.b}`.
 
-`rgba(r, g, b, a default 1)`
-: Create a structure with fields `r`, `g`, `b`, and `a` clamped to [0, 1].
+`rgba(rgb, a default 1)`
+: Clone the `rgb` value and add an alpha property.
 
-`rgba(hsvaValue)`
-: Convert the hsv result to rgba.
+`rgba(rgba)`
+: Clone the `rgba` value, stripping other properties.
+
+`rgba(r, g, b, a default 1)`
+: Create a structure with properties `r`, `g`, `b`, and `a` clamped to [0, 1].
+
+`rgba(hsva)`
+: Convert the `hsva` result to rgba.
+
+`rgba(hsv, a default 1)`
+: Convert the `hsv` result to rgb and add an `a` property.
 
 
 Colors can also be constructed using the syntax of HTML hexadecimal colors (which are also
@@ -3654,7 +3720,10 @@ endpoints and borders.
   way under word wrap.
 
   `markup = true` enables special syntax for changing the style within
-  a single string and removes single linebreaks. The markup syntax is `"...{property:value text...}..."`.
+  a single string and removes single linebreaks, in order to make it
+  easier to import long text strings from constants or data files. 
+  
+  The markup syntax is `"...{property:value text...}..."`.
   The valid property names are `color`, `font`, `shadow`, and `outline`.
   That property is valid from the beginning brace to the end one. Only
   one property can be changed per brace, and braces can be nested.
@@ -3664,9 +3733,12 @@ endpoints and borders.
   The legal values are colors specified using `rgba()`, `rgb()`, `hsva()`,
   `hsv()`, or `gray()` with numbers, the `#` color syntax, or the
   names of constants specified in the `game.json` file. Variables
-  and expressions are not permitted in the values. To insert a regular
-  brace within markup, use a slash escape, which must be typed in a string
-  using a double slash: `\\{` or `\\}`. 
+  and expressions are not permitted in the values. 
+  
+  To insert a regular brace within markup, use a slash escape, which
+  must be typed in a string using a double slash: `\\{` or `\\}`.
+  
+  To insert a single linebreak within markup, use `{br}`.
 
 `draw_tri(args)`
 : Named argument version of `draw_tri()`.
@@ -3730,8 +3802,17 @@ endpoints and borders.
 `xy(x, y)`
 : Create a structure with values `x` and `y`, which can be used with most drawing routines.
 
+`xy(xy)`
+: Clone the `xy` value, stripping other properties (such as a `z` property).
+
 `xyz(x, y, z)`
-: Create a structure with values `x`, `y`, and `z`, which can be used with most drawing routines.
+: Create an object `x`, `y`, and `z` properties, which can be used with most drawing routines.
+
+`xyz(xyz)`
+: Clone the `xyz` value, stripping other properties.
+
+`xyz(xy, z default 0)`
+: Clone the `xy` value, adding a `z` property.
 
            --------------------------------------------
 
@@ -3977,8 +4058,8 @@ in the desired order regardless of the order in which drawing executes.
 
   See also `sequence()` and `delay()` for common cases.
 
-`delay(callback, delay_frames)`
-: Same as `add_frame_hook(nil, callback, delay_frames or 0)`.
+`delay(callback, delay_frames default 0)`
+: Same as `add_frame_hook(nil, callback, delay_frames)`.
 
 `remove_frame_hook(hook)`
 : Remove this frame hook immediately, without executing its `end_callback`.
@@ -4050,7 +4131,7 @@ unaffected.
   - `second` 0-59
   - `millisecond` 0-999
   - `weekday` 0-6, where 0 = Sunday
-  - `daySecond` seconds since midnight, including a fractional part
+  - `day_second` seconds since midnight, including a fractional part
   - `timezone` minutes from UTC
 
   See `format_number()` for the various clock formatting options for numbers in seconds,
@@ -4295,6 +4376,7 @@ Raw Device Access
                                                        `"entity_bounds"`, `"assert"`, `"debug_print"`, 
                                                         `"debug_watch"`, `"physics"`.</td></tr>
     <tr valign=top><td> `"get_debug_flag", flagname`    </td><td> Return the state of an IDE debugging flag.</td></tr>
+    <tr valign=top><td> `"console.dir", ...`            </td><td> Execute `console.dir(...)` if running in a web browser.</td></tr>
   </table>
 
 
@@ -4640,6 +4722,8 @@ Fonts
 
 ![`quad://fonts/scoreboard-6.font.json`](../fonts/scoreboard-6.png)
 
+![`quad://fonts/scoreboard-5.font.json`](../fonts/scoreboard-5.png)
+
 ![`quad://fonts/deja-5.font.json`](../fonts/deja-5.png)
 
 ![`quad://fonts/nano-5.font.json`](../fonts/nano-5.png)
@@ -4709,7 +4793,7 @@ Sounds
 ![`quad://sounds/explode-04.sound.json`](../sounds/explode-04.mp3) ![`quad://sounds/explode-05.sound.json`](../sounds/explode-05.mp3)
 ![`quad://sounds/explode-06.sound.json`](../sounds/explode-06.mp3) ![`quad://sounds/explode-07.sound.json`](../sounds/explode-07.mp3)
 ![`quad://sounds/explode-08.sound.json`](../sounds/explode-08.mp3) ![`quad://sounds/explode-09.sound.json`](../sounds/explode-09.mp3)
-![`quad://sounds/explode-11.sound.json`](../sounds/explode-11.mp3) 
+![`quad://sounds/explode-11.sound.json`](../sounds/explode-11.mp3) ![`quad://sounds/explode-10.sound.json`](../sounds/explode-10.mp3)
 ![`quad://sounds/explode-12.sound.json`](../sounds/explode-12.mp3)
 
 ### Powerup
@@ -4719,7 +4803,7 @@ Sounds
 ![`quad://sounds/powerup-04.sound.json`](../sounds/powerup-04.mp3) ![`quad://sounds/powerup-05.sound.json`](../sounds/powerup-05.mp3)
 ![`quad://sounds/powerup-06.sound.json`](../sounds/powerup-06.mp3) ![`quad://sounds/powerup-07.sound.json`](../sounds/powerup-07.mp3)
 ![`quad://sounds/powerup-08.sound.json`](../sounds/powerup-08.mp3) ![`quad://sounds/powerup-09.sound.json`](../sounds/powerup-09.mp3)
-![`quad://sounds/powerup-10.sound.json`](../sounds/powerup-10.mp3)
+![`quad://sounds/powerup-10.sound.json`](../sounds/powerup-10.mp3) ![`quad://sounds/powerup-11.sound.json`](../sounds/powerup-11.mp3)
 
 ### Hit
 
@@ -4758,8 +4842,24 @@ Sounds
 ![`quad://sounds/wild-08.sound.json`](../sounds/wild-08.mp3) ![`quad://sounds/wild-09.sound.json`](../sounds/wild-09.mp3)
 
 
+### Splash
+
+![`quad://sounds/splash-00.sound.json`](../sounds/splash-00.mp3)
+
+
+### Sparks
+
+![`quad://sounds/sparks-00.sound.json`](../sounds/sparks-00.mp3) ![`quad://sounds/sparks-01.sound.json`](../sounds/sparks-01.mp3)
+![`quad://sounds/sparks-02.sound.json`](../sounds/sparks-02.mp3) ![`quad://sounds/sparks-03.sound.json`](../sounds/sparks-03.mp3)
+![`quad://sounds/sparks-04.sound.json`](../sounds/sparks-04.mp3)
+
+
 Project File
 =============================================================================================
+
+When importing assets using the IDE as JSON or raw PNG, MP3, or TMX
+files, the subdirectories `journal`, `screenshots`, `metadata`,
+`backlot` and `graveyard` are excluded.
 
 Game JSON
 ---------------------------------------------------------------------------------------------
@@ -4810,14 +4910,15 @@ options. Project files should have the double extension `.game.json`.
                      "juice.pyxl",
                      "https://someaccount.github.io/someproject/inventory.pyxl"],
 
+  // The name of the mode at which the program should begin.
+  "start_mode":    "Init",
+  
   // These are the names of modes, which must start with a capital letter and
   // be legal identifiers in PyxlScript. These correspond to files that must
   // be stored in the same path as the project file. So, "Init" is in "Init.pyxl".
-  // One mode must have an asterisk * after its name, marking it as the start
-  // mode. This is not part of the filename.
   //
   // Modes become global constants in your program.
-  "modes": ["Init*",
+  "modes": ["Init",
             "Play"
             "Credits"],
 
@@ -5005,24 +5106,27 @@ A `table` entry in the game constants has additional properties:
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tables are indexed in-game as `table[x][y]` a.k.a. `table[col][row]` if `transpose == false` (the default)
-and as `table[y][x]` a.k.a. `table[row][col]` if `transpose == true`.
+By default, tables are indexed in-game as `table[x][y]` a.k.a. `table[col][row]`.
+To use `table[y][x]` a.k.a. `table[row][col]` indexing, set `transpose == true`.
 
-The `column_type`, `ignore_first_column`, `row_type`, and `ignore_first_row` refer to the data in the original format, before
-any transpose has occured. This is consistent with named animation indexing in sprite sheets.
+The `column_type`, `ignore_first_column`, `row_type`, and
+`ignore_first_row` refer to the data in the original format, before
+any transpose has occured. This is consistent with named animation
+indexing in sprite sheets.
 
-If `column_type` is `"object"` (the default), then the first row of the data is treated
-as property names. If `column_type` is `"array"`, then the first row is considered element
-0 of the column.
+If `column_type` is `"object"` (the default), then the first row of
+the data is treated as property names. If `column_type` is `"array"`,
+then the first row is considered element 0 of the column.
 
-If `row_type` is `"object"` (the default), then the first column of the data is treated
-as property names. If `row_type` is `"array"`, then the first column is considered element
-0 of the row.
+If `row_type` is `"object"` (the default), then the first column of
+the data is treated as property names. If `row_type` is `"array"`,
+then the first column is considered element 0 of the row.
 
-If both `row_type` and `column_type` are `"object"` (the default), then the top-left element
-is not used.
+If both `row_type` and `column_type` are `"object"` (the default),
+then the top-left element is not used.
 
-Quadplay parses values in [CSV](https://tools.ietf.org/html/rfc4180) files with these rules for data types:
+Quadplay parses values in [CSV](https://tools.ietf.org/html/rfc4180)
+files with these additional rules for data types:
 
 CSV Value                |  Quadplay Type
 -------------------------|-----------------
@@ -5096,6 +5200,27 @@ Consider the following CSV files, produced using a spreadsheet program
 or by hand:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ csv
+x,y
+101,89
+106,88
+88,98
+124,29
+130,34
+131,46
+136,48
+204,72
+205,66
+208,62
+202,60
+279,90
+289,103
+293,110
+345,98
+348,94
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[`positions.csv`]
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ csv
 level, strength,  hit_points,   total_skills
 0,         0,         0,           0
 1,        16,        10,           1
@@ -5124,6 +5249,9 @@ The following examples show how the data can be accessed in code, depending
 on the properties set on the constants
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+// "position_array": {"type": "table", "url": "positions.csv", "transpose": true, "column_type": "array"}
+for pos in position_array: draw_point(pos, #F00)
+
 // "level": {"type": "table", "url": "stats.csv", "transpose": true, "column_type": "array", "ignore_first_column": true}
 debug_print( level[1].strength ) // 16
 
@@ -5160,6 +5288,8 @@ The sprite sheet JSON descriptor looks like:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ JavaScript
 {
     "url":          "hero.png",
+    
+    // Optional. Defaults to the size of the png.
     "sprite_size":   {"x": 8, "y": 8},
 
     // Optional blank pixels between sprites on the bottom and right. Default is zero.
@@ -5343,7 +5473,9 @@ Because only the specified grid of tiles is read, you can include
 non-character information off the bounds of the tiles, for example,
 putting a copyright statement directly on the font itself.
 
-Fonts count towards the sprite sheet resource limits. Because a font is
+Fonts count 1/2 as much towards the spritesheet pixel limit because they
+are internally compressed to 8 bits per pixel. They still count fully 
+towards the maximum spritesheet dimensions. Because a font is
 32x26 glyphs, this means that the largest `char_size` can be
 is 24x29 pixels if the `shadow_size` is one pixel.
 
@@ -5464,7 +5596,10 @@ editor, which has pay-what-you-want precompiled binaries for Windows, macOS, and
 sprite sheet from the map file will be used for visualization if it is available in the IDE,
 but map rendering is performed using a sprite sheet at runtime.
 
-When drawing, layer zero for `draw_map()` corresponds to the lowst layer in Tiled and
+For more sophisticated map drawing, [TileKit](https://rxi.itch.io/tilekit) is a US$20 Windows
+and Linux mapping program.
+
+When drawing, layer zero for `draw_map()` corresponds to the lowest layer in Tiled and
 the layer indices increase upwards.
 
 
@@ -6714,6 +6849,15 @@ only play their own games.
 
 ![Self-contained quadplay console built by Morgan McGuire from a Raspberry Pi and standard screen case, with Bluetooth controllers.](rpi-arcade.jpg  style="image-rendering:none" width=50%)
 
+My Raspberry Pi 4 software configuration from the default Raspbian install is simply:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
+sudo apt install chromium
+
+sudo update-alternatives --config x-www-browser
+# + choose /usr/bin/chromium
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 #### NUC
 An Intel NUC is a much more expensive device for powering a mini console,
@@ -7204,19 +7348,66 @@ larger. For example, `rgba` vectors or adding whole arrays to each
 other have relatively less overhead than `xy` vectors.
 
 
+The IDE is designed to collapse gracefully so that you can use an
+external editor. Here's one useful layout:
+
+![](external-editor.png width=50% style="image-rendering:auto")
+
+The editor on the left is emacs running in a terminal. On the right is
+the browser reduced to the quadplay✜ debugging output and emulator.
+
+Be careful to always end your *filenames* with _two_ extensions:
+`.game.json`, `.sprite.json`, `.map.json`, etc. This is how the IDE
+and compiler knows what type it is loading.
+
+Take note of the 4-bit sprite
+[quantizing tool](../tools/quantize.html). I find it better than the
+quality produced by Photoshop for color reduction.
+
+
 Road Map
 ====================================================================================
 
-Quadplay is about 90% of the way to version 1.0. The API is stable, and many people are
-using it to make hobby games and to learn/teach programming.
+Quadplay is about 90% of the way to version 1.0. The API is stable,
+and many people are using it to make hobby games, participate in game
+jams, and to learn/teach programming.
+
+The soul of quadplay as a console is described by:
+
+- Four players with a shared screen
+- Minimal time from launch to main play
+- 1985 output limitations, 2020 development power
+
+The overarching design principles of the quadplay IDE and language are:
+
+- Keep small game development friendly and fun
+- Limitations that:
+   - Allow games to run effectively on a wide range of displays,
+     processors, and input devices without any per-platform work
+   - Focus developers on gameplay and innovation
+   - Help developers prevent scope creep
+- Allow expert users to bypass limitations to customize for a specific
+  platform or game
+- Support working where developers choose:
+   - Entirely in a browser
+   - Primarily in external tools
+   - Or any combination!
+
+1.0
+-------------------------------------------------------------
 
 There's a long feature list and a short bug list that I'm working
 through for 1.0. The highlights of this are, in priority order:
 
-For 1.0:
-
-[x] macOS, Windows, Linux, and Raspbian
+[x] Development on macOS, Windows, Ubuntu Linux, and Raspbian
+[x] Playing on phones, tablets, desktop, laptop, 
+    homebrew arcades, Raspberry Pi, Jetson Nano, PiBoy DMG
 [x] Gamepads
+  [x] 8BitDo
+  [x] Switch JoyCons
+  [x] X-Arcade
+  [x] Xbox and PlayStation
+  [ ] PiBoy DMG
 [x] APIs
   [x] Graphics
   [x] Physics
@@ -7235,13 +7426,15 @@ For 1.0:
   [ ] Sprite editor
 [x] Vim, Emacs, and Visual Studio code external editor support
 [x] Aseprite, Photoshop, Krita, and Tiled external editor support
-[x] 30% virtual GPU graphics speedup
+[x] 50% virtual GPU graphics speedup over the alpha
 [x] Load tables of data from CSV files
-[ ] Python not required
-  
-Post 1.0:
+
+
+Post 1.0
+--------------------------------------------------------------
 
 [ ] Shared-screen network multiplayer
+[ ] Python not required
 [ ] Export to:
   [ ] macOS binary
   [ ] Windows binary
@@ -7251,13 +7444,11 @@ Post 1.0:
    [ ] Shadowing/line of sight
    [ ] Board game logic
    [ ] Maze and level generation
-[ ] ASESprite native import
 [ ] Perfect outlined-disk and outlined-triangle blending
 [ ] Polyline rendering without double-blending endpoints
 [ ] Watertight rasterization of triangle meshes
 [ ] Watertight rasterization of polylines
 [ ] Edit your game in the IDE and save to Google Drive
-[ ] Binary game export for mobile
 
 
 Credits
@@ -7371,21 +7562,6 @@ the need for packages isn't urgent as you can reuse across projects
 already. What packages will provide are namespaces as well as assets
 bundled together with a script.
 
-The IDE is designed to collapse gracefully so that you can use an
-external editor. Here's one useful layout:
-
-![](external-editor.png width=50% style="image-rendering:auto")
-
-The editor on the left is emacs running in a terminal. On the right is
-the browser reduced to the quadplay✜ debugging output and emulator.
-
-Be careful to always end your *filenames* with _two_ extensions:
-`.game.json`, `.sprite.json`, `.map.json`, etc. This is how the IDE
-and compiler knows what type it is loading.
-
-Take note of the 4-bit sprite
-[quantizing tool](../tools/quantize.html). I find it better than the
-quality produced by Photoshop for color reduction.
 
 
 Change Log
@@ -7396,16 +7572,48 @@ Changes for both the specification and implementation in each release.
 2020 July TBD: Beta update 47
 
 - New Planet Generator 2.5D procedural content example
-- Incompatible change: made the order of arguments for `draw_tri()` consistent
+- New `scoreboard-5` font
+- New `splash-00` sound
+- New `sparks-00` through `sparks-04` sounds
+- New `explode-10` sound
+- New `powerup-11` sound
+- Added 320x180 support for targeting Switch, PiBoy, 720p, 1080p, and 1440p
+- Added support for TileKit
+- Packed `suchet-12` font characters more tightly to conserve memory
+- Incompatible changes: 
+  - Made the order of arguments for `draw_tri()` consistent
   with other drawing functions
+  - `local_time().daySecond` --> `local_time().day_second`
+  - `xz_to_xyz()` now swizzles `z` -> `y`
+- The start mode is now specified with `start_mode` in the game JSON file instead of
+  an asterisk
 - Changed the `region` of a sprite JSON file to take `"corner"` instead of `"pos"`
   (the old version is accepted as a synonym for backwards compatibility at the moment)
 - The sprite viewer in the IDE now autoscales for tall sprites
+- `stop_audio()` now allows the argument to be `nil`
 - IDE can now create new sound assets
+- IDE can now change the order of execution of scripts
+- IDE can now remove scripts
+- `gamepad_array[]` elements now print as their name instead of properties
 - Increased the contrast of the text in ghost mode
 - Reordered quick links on the top of the manual
 - Rewrote the Project File section of the manual to clarify the asset vs. constant distinction
+- Increased the contrast on the sprite editor info data
+- The Import Asset dialog will now automatically default to a useful variable name
+- The Import Asset dialog can now import raw PNG, TMX, and MP3 files
+- Sprite JSON files now default to assuming a single sprite that is the size of
+  the spritesheet if none is specified
+- Fonts now only count as 1/2 pixels towards the sprite pixel limit because they are
+  compressed
+- IDE code editor now highlights compile-time error lines in red
+- Editor divider pane layout now persists over reload
+- Added `touch.screen_x`, `touch.screen_y`, `touch.screen_xy`, `touch.screen_dx`, `touch.screen_dy`,
+  and `touch.screen_dxy` accessors for screen-space (instead of camera-space) positions
+- Added `rgba(rgb, a)`, `rgba(hsv, a)`, `xyz(xy, z)`, `xyz(xz, y)`, `hsva(hsv, a)`, `hsva(rgb, a)`
+- Added `transform_ws_to_ss()` and `transform_ss_to_ws()`
+- Added `{br}` line break markup
 - Added `ABS()` intrinsic
+- Added `sprite.animation` property
 - Added `design` document template for New Doc menu
 - Added named argument version of `draw_corner_rect()`
 - Added `table` constants that use external CSV files
@@ -7413,19 +7621,33 @@ Changes for both the specification and implementation in each release.
 - Added support for transposed spritesheets in the IDE sprite viewer
 - Added support for regions in the IDE sprite viewer
 - Added a global volume control on the Console menu
+- Added buttons to copy stats summaries from the Stats pane
+- Added `X_Arcade` controller icon and mapping for the [X-Arcade](https://shop.xgaming.com/) USB controller
+- Added `PiBoy` controller icon and mapping for the [PiBoy DMG](https://www.experimentalpi.com/PiBoy-DMG--Assembled_p_16.html)
+- Added `device_control("console.dir", ...)` for web browser console access
+- Fixed new game filename shortener to keep the beginning instead of the end of names
+- Fixed iterator container-mutation check when changing modes
 - Fixed `draw_sprite()` API links in the manual
+- Fixed `touch.xy` coordinates under translation transformations
 - Fixed recursive `push_mode()` and `pop_mode()` not preserving `draw_previous_mode()` state
 - Fixed `export.py` script to set read file permissions on the contents of the zipfile
 - Fixed constant editor vector vertical nudge value to default sign based on `y_up` setting
 - Fixed sprite editor not updating after JSON edits
 - Fixed gutters on sprites
-<!-- - Fixed IDE edits to asset JSON files not persisting after load -->
+- Fixed broken images in Markdeep design documents after edits
+- Fixed incorrect image scaling when embedded in itch.io at 1080p
+- Fixed IDE edits to asset JSON files not persisting after load
+- Fixed incorrect line numbers when using `default` expressions
+- Fixed 3-space indenting in .game.json files
+- `clone()` and `deep_clone()` on _constants_ now clones the value
+  and makes it mutable, while on _assets_ (other than maps) and built-in objects 
+  returns the original object.
 
 2020 July 10: Beta update 46
 
 - New font: `hauer-12`
 - New font: `robot-18`
-- IDE code editor now highlights error lines in red
+- IDE code editor now highlights run-time error lines in red
 - Color constant editor preview now shows the exact 16-bit color
 - Color constant editor preview now visualizes alpha channel
 - Made `local:` and `preserving_transform:` lines free versus total source statement limit

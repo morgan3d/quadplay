@@ -190,6 +190,16 @@ function afterLoadGame(gameURL, callback, errorCallback) {
 
         //////////////////////////////////////////////////////////////////////////////////////////////
 
+        // Fix legacy files that use a * to denote the start mode
+        if (! gameJSON.start_mode) {
+            for (let i = 0; i < gameJSON.modes.length; ++i) {
+                if (gameJSON.modes[i].indexOf('*') !== -1) {
+                    console.log('WARNING: Legacy start mode upgraded on load');
+                    gameJSON.start_mode = gameJSON.modes[i] = gameJSON.modes[i].replace('*', '');
+                }
+            }
+        }
+
         // Clone for the extended version actually loaded
         gameJSON = deep_clone(gameJSON);
         gameSource.extendedJSON = gameJSON;
@@ -212,7 +222,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             gameJSON.screen_size = {x: 384, y:224};
         }
 
-        const allowedScreenSizes = [{x: 384, y: 224}, {x: 192, y: 112}, {x: 128, y: 128}, {x: 64, y: 64}];
+        const allowedScreenSizes = [{x: 384, y: 224}, {x: 320, y: 180}, {x: 192, y: 112}, {x: 128, y: 128}, {x: 64, y: 64}];
         {
             let ok = false;
             for (let i = 0; i < allowedScreenSizes.length; ++i) {
@@ -255,20 +265,19 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             gameSource.modes = [];
             let numStartModes = 0;
             for (let i = 0; i < gameJSON.modes.length; ++i) {
-                const modeURL = makeURLAbsolute(gameURL, gameJSON.modes[i].replace('*', '') + '.pyxl');
-
-                if (gameJSON.modes[i].indexOf('*') !== -1) {
+                const modeURL = makeURLAbsolute(gameURL, gameJSON.modes[i] + '.pyxl');
+                // Remove any URL prefix
+                const name = gameJSON.modes[i].replace(/^.*\//, '');
+                if (name === gameJSON.start_mode) {
                     ++numStartModes;
                 }
 
                 // Remove the quad://... from internal modes
-                gameSource.modes.push({name: gameJSON.modes[i].replace(/^.*\//, ''), url:modeURL});                
+                gameSource.modes.push({name: name, url: modeURL});                
             }
 
             if (numStartModes === 0) {
-                throw new Error('No starting mode (noted with *)');
-            } else if (numStartModes > 1) {
-                throw new Error('Too many starting modes (noted with *)');
+                throw new Error('No "start_mode" specified');
             }
 
             // Load all modes
@@ -304,7 +313,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                     // assetURL is the asset json file
                     // json.url is the png, mp3, etc. referenced by the file
                     fileContents[assetURL] = json;
-                    
+
                     switch (type) {
                     case 'font':
                         gameSource.assets[assetName] = loadFont(assetName, json, assetURL);
@@ -326,7 +335,11 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                         console.log('Unrecognized asset type: "' + type + '"');
                     }
 
-                });
+                }, // callback
+                                  null, // error callback
+                                  null, // warning callback
+                                  computeForceReloadFlag(assetURL)
+                                 );
             } // for each asset
         } // Assets
 
@@ -393,9 +406,9 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                             // in memory
                             data = grid;
                         } else {
-                            if (col_type === 'object') {
+                            if (row_type === 'object') {
                                 data = {};
-                                if (row_type === 'object') {
+                                if (col_type === 'object') {
                                     // Object of objects
                                     for (let c = 1; c < grid.length; ++c) {
                                         const dst = data[grid[c][0]] = {};
@@ -404,7 +417,9 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                                             dst[grid[0][r]] = src[r];
                                         }
                                     } // for each column (key)
-                                } else {
+                                    
+                                } else { // row_type == 'array'
+
                                     // Object of arrays. The first row contains the object property names
                                     for (let c = 0; c < grid.length; ++c) {
                                         data[grid[c][0]] = grid[c].slice(1);
@@ -412,12 +427,12 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                                 }
                             } else {
                                 // Array of objects. The first column contains the object property names
-                                data = new Array(grid.length  - 1);
-                                for (let c = 1; c < data.length; ++c) {
-                                    const src = grid[c];
-                                    const dst = data[c - 1] = {};
+                                data = new Array(grid.length - 1);
+                                for (let c = 0; c < data.length; ++c) {
+                                    const src = grid[c + 1];
+                                    const dst = data[c] = {};
                                     for (let r = 0; r < src.length; ++r) {
-                                        dst[grid[0][r]] = grid[c][r];
+                                        dst[grid[0][r]] = grid[c + 1][r];
                                     } // for row
                                 } // for col
                             } // array of objects
@@ -691,24 +706,32 @@ function loadFont(name, json, jsonURL) {
 
 
 function computeResourceStats(gameSource) {
+    const alreadyCounted = new Map();
     for (let key in gameSource.assets) {
         if (key[0] !== '_') {
             const asset = gameSource.assets[key];
-            switch (asset._type) {
-            case 'font': case 'spritesheet':
-                recordSpriteStats(asset);
-                break;
-                
-            case 'sound':
-                recordSoundStats(asset);
-                break;
-                
-            case 'map':
-                for (let spritesheetKey in asset.spritesheet_table) {
-                    recordSpriteStats(asset.spritesheet_table[spritesheetKey]);
+            if (! alreadyCounted.has(asset)) {
+                alreadyCounted.set(asset, true);
+                switch (asset._type) {
+                case 'font': case 'spritesheet':
+                    recordSpriteStats(asset);
+                    break;
+                    
+                case 'sound':
+                    recordSoundStats(asset);
+                    break;
+                    
+                case 'map':
+                    for (let spritesheetKey in asset.spritesheet_table) {
+                        const spritesheet = asset.spritesheet_table[spritesheetKey];
+                        if (! alreadyCounted.has(spritesheet)) {
+                            alreadyCounted.set(spritesheet, true);
+                            recordSpriteStats(spritesheet);
+                        }
+                    }
+                    break;
                 }
-                break;
-            }
+            } // already counted
         }
     }
 }
@@ -779,7 +802,12 @@ function getImageData4Bit(image, region, full32bitoutput) {
 function recordSpriteStats(spritesheet) {
     if (spritesheet._name[0] === '_') { return; }
     const data = (spritesheet._uint16Data || spritesheet._data);
-    const count = data.width * data.height;
+    let count = data.width * data.height;
+    
+    if (spritesheet._type === 'font') {
+        // Fonts count half as much because they are 8-bit
+        count = Math.ceil(count / 2) >>> 0;
+    }
     resourceStats.spritePixels += count;
     resourceStats.spritePixelsByURL[spritesheet._url] = count;
     
@@ -856,7 +884,8 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         _json: json,
         _jsonURL: jsonURL,
         _index: [spritesheetArray.length],
-        sprite_size: Object.freeze({x: json.sprite_size.x, y: json.sprite_size.y})
+        // If unspecified, load the sprite size later
+        sprite_size: json.sprite_size ? Object.freeze({x: json.sprite_size.x, y: json.sprite_size.y}) : undefined
     });
 
     spritesheetArray.push(spritesheet);
@@ -883,6 +912,11 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         if (! (pngURL in fileContents)) {
             // This image has not been previously loaded by this project
             fileContents[pngURL] = image;
+        }
+
+        if (! spritesheet.sprite_size) {
+            // Apply the default size of the whole image
+            spritesheet.sprite_size = Object.freeze({x: image.width, y: image.height});
         }
 
         // Save these for the editor in the IDE
@@ -1066,6 +1100,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                             sprite._name = spritesheet._name + '.' + anim + '[' + i + ']';
                             sprite.pivot = pivot;
                             sprite.frames = Math.max(0.25, frames[Math.min(i, frames.length - 1)]);
+                            sprite.animation = animation;
                             // Copy other properties
                             Object.assign(sprite, otherProperties);
 
@@ -1344,11 +1379,11 @@ function loadMap(name, json, mapJSONUrl) {
         const filename = image.getAttribute('source');
         
         if ((map.spritesheet.sprite_size.x !== map.sprite_size.x) || (map.spritesheet.sprite_size.y !== map.sprite_size.y)) {
-            throw `Sprite size (${spritesheet.sprite_size.x}, ${spritesheet.sprite_size.y}) does not match what the map expected, (${map.sprite_size.x}, ${map.sprite_size.y}).`;
+            throw `Sprite size (${map.spritesheet.sprite_size.x}, ${map.spritesheet.sprite_size.y}) does not match what the map expected, (${map.sprite_size.x}, ${map.sprite_size.y}).`;
         }
         
         if ((map.spritesheet.size.x !== size.x) || (map.spritesheet.size.y !== size.y)) {
-            throw `Sprite sheet size (${spritesheet.size.x}, ${spritesheet.size.y}) does not match what the map expected, (${size.x}, ${size.y}).`;
+            throw `Sprite sheet size (${map.spritesheet.size.x}, ${map.spritesheet.size.y}) does not match what the map expected, (${size.x}, ${size.y}).`;
         }
         
         const layerList = Array.from(xml.getElementsByTagName('layer'));
@@ -1922,7 +1957,10 @@ function parseCSV(strData, trim) {
         
         for (let c = 0; c < array.length; ++c) {
             let val = array[c];
-            if (val && (typeof val === 'string') && (val.length > 0)) {
+            const v = parseFloat(val);
+            if (! isNaN(v)) {
+                array[c] = v;
+            } else if (val && (typeof val === 'string') && (val.length > 0)) {
                 // May be a special string
                 if (trim) {
                     val = array[c] = array[c].trim();

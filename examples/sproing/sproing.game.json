@@ -6,7 +6,8 @@
 
     "packages":   [],
     "scripts":    [],
-    "modes":      ["Play*"],
+    "modes":      ["Play"],
+    "start_mode": "Play",
     "assets":     {
         "font": "quad://fonts/deja-8.font.json",
         "astronaut": "quad://sprites/kenney-alien-blue-16x32.sprite.json"

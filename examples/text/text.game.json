@@ -6,7 +6,8 @@
 
     "packages":   [],
     "scripts":    [],
-    "modes":      ["Play*"],
+    "modes":      ["Play"],
+    "start_mode": "Play",
     "assets":     {
         "font": "quad://fonts/roman-8.font.json",
         "runeFont": "quad://fonts/runes-9.font.json",

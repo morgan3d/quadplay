@@ -6,7 +6,8 @@
 
     "packages":   [],
     "scripts":    ["global.pyxl"],
-    "modes":      ["Title*", "Instructions", "Play", "Eliminate", "Battle", "Attack", "Heal", "GameOver", "Unchallenged"],
+    "start_mode": "Title",
+    "modes":      ["Title", "Instructions", "Play", "Eliminate", "Battle", "Attack", "Heal", "GameOver", "Unchallenged"],
     "assets":     {
         "font": "quad://fonts/broderick-7.font.json",
         "large_font": "quad://fonts/broderick-14.font.json",

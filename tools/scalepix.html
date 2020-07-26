@@ -2,7 +2,7 @@
 <!--
 Scale2X/EPX designed by Eric Johnston and Andrea Mazzoleni.
 Scale3X designed by Andrea Mazzoleni.
-McScaly2X designed by Morgan McGuire.
+MScale2X designed by Morgan McGuire.
 Nearest Neighbor and Bilinear scaling are well known trivial
 mathematical sampling methods.
 
@@ -210,9 +210,9 @@ function none_eq(first, ...args) {
     return s;
 }
 
-// Morgan McGuire's McScaly2X algorithm, derived from Scale2X/EPX
+// Morgan McGuire's MScale2X algorithm, derived from Scale2X/EPX
 // and designed to avoid rounding square corners, especially on text.
-function runMcScaly2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
+function runMScale2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
     const [isBinary, src] = makeSpecialSrcGet(srcBuffer, srcWidth, srcHeight);
 
     // If it was important to run this faster (e.g., as a full screen
@@ -456,7 +456,7 @@ function runBilinear2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
 
 
 function runXBR2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
-    const out = xbr2x(srcBuffer, srcWidth, srcHeight, {blendColors: false, scaleAlpha: true});
+    const out = xbr2x(srcBuffer, srcWidth, srcHeight, {blendColors: document.getElementById('xbr_blend').checked, scaleAlpha: true});
     // Copy to the output
     dstBuffer.set(out);
 }
@@ -609,15 +609,10 @@ function processDrop(file) {
             }
             
             process2X(runScale2X,    'scale2XDisplay');
-            process2X(runMcScaly2X,  'mcscaly2XDisplay');
+            process2X(runMScale2X,   'mscale2XDisplay');
             process2X(runNearest2X,  'nearest2XDisplay');
-            if (document.getElementById('xbr2XDisplay')) {
-                // The XBR2 has been enabled
-                process2X(runXBR2X,      'xbr2XDisplay');
-            } else {
-                process2X(runUnbiasedBilinear2X, 'unbiasedBilinear2XDisplay');
-            }
-            process2X(runBilinear2X, 'bilinear2XDisplay');
+            process2X(runXBR2X,      'xbr2XDisplay');
+            process2X(document.getElementById('bilinear_unbiased').checked ? runUnbiasedBilinear2X : runBilinear2X, 'bilinear2XDisplay');
         };
         
         sourceImage.onerror = function () {
@@ -647,20 +642,16 @@ function onDragOver(event) { event.preventDefault(); }
     <table>
     <tr>
     <td>
-    <b>McScaly2X</b>
-    <div id="mcscaly2XDisplay" class="image"></div>
+    <b>MScale2X</b>
+    <div id="mscale2XDisplay" class="image"></div>
     </td>
     <td>
     <b>Scale2X/EPX</b>
     <div id="scale2XDisplay" class="image"></div>
     </td>
     <td>
-    <b>xBR2X</b>
+    <b>xBR2X</b> <label for="xbr_blend"><input id="xbr_blend" type="checkbox"></input>Antialias</label>
     <div id="xbr2XDisplay" class="image"></div>
-    <!--
-    <b>Unbiased2X</b>
-    <div id="unbiasedBilinear2XDisplay" class="image"></div>
-    -->
     </td>
     </tr>
     <tr>
@@ -673,7 +664,7 @@ function onDragOver(event) { event.preventDefault(); }
     <div id="hq2XDisplay" class="image"></div>
     </td>
     <td>
-    <b>Bilinear2X</b>
+    <b>Bilinear2X</b> <label for="bilinear_unbiased"><input id="bilinear_unbiased" type="checkbox"></input>Unbiased</label>
     <div id="bilinear2XDisplay" class="image"></div>
     </td>
     </tr>
@@ -688,7 +679,7 @@ function onDragOver(event) { event.preventDefault(); }
     the tips of arrows.
     </p>
     <p>
-    The "McScaly2X" algorithm is by Morgan McGuire, and is usually the best choice for upscaling small sprites
+    The "MScale2X" algorithm is by Morgan McGuire, and is usually the best choice for upscaling small sprites
     and fonts. It maintains the good properties of Scale2X and also maintains square corners, handles 2:1 and 
     1:2 as well as 1:1 slopes, and has special handling of sprite silhouettes against transparency.
     </p>

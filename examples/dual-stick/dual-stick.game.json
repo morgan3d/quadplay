@@ -1,20 +1,27 @@
 {
-    "title":      "Dual Stick Example",
-    "developer":  "CasualEffects",
-    "copyright":  "©2019 Morgan McGuire",
-    "license":    "Available under the BSD License https://opensource.org/licenses/BSD-2-Clause",
-
-    "packages":   [],
-    "scripts":    [],
-    "modes":      ["Play*"],
-    "assets":     {
+    "title": "Dual Stick Example",
+    "developer": "CasualEffects",
+    "copyright": "©2019 Morgan McGuire",
+    "license": "Available under the BSD License https://opensource.org/licenses/BSD-2-Clause",
+    "packages": [],
+    "scripts": [],
+    "start_mode": "Play",
+    "modes": [
+        "Play"
+    ],
+    "assets": {
         "font": "quad://fonts/stencil-9.font.json",
         "tankSprite": "tank.sprite.json"
     },
-
-    "constants":  {
-        "speed": {"type": "number", "value": 0.5}
+    "constants": {
+        "speed": {
+            "type": "number",
+            "value": 0.5
+        }
     },
-    
-    "y_up": false
+    "y_up": false,
+    "screen_size": {
+        "x": 320,
+        "y": 180
+    }
 }

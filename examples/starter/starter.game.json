@@ -6,7 +6,8 @@
 
     "packages":   [],
     "scripts":    [],
-    "modes":      ["Play*"],
+    "modes":      ["Play"],
+    "start_mode": "Play",
     "docs":       ["todo.md"],
     "assets":     {
         "font": "quad://fonts/deja-8.font.json",

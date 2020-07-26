@@ -25,11 +25,10 @@ let line_height
 
 let font = _font9
 if SCREEN_SIZE.y <= 64: font = _font5
-else if SCREEN_SIZE.y <= 112: font = _font8
+else if SCREEN_SIZE.y <= 180: font = _font8
 
 
 def close(callback):
-   // TODO: run closing animation
    pop_mode(callback)
    
 

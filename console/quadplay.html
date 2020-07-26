@@ -191,7 +191,7 @@
           <div id="spriteEditor" class="pixelate">
             <div id="spriteEditorHighlight" style="position:absolute; width: 100px; height: 50px; border: 1px solid #0f0; color: #0f0; overflow: visible; box-shadow: 0px 1px 4px #000">
               <div id="spriteEditorPivot" style="line-height: 30px; height: 30px">☩</div>
-              <div id="spriteEditorInfo" style="white-space: nowrap; text-shadow: 0px 1px 4px #000"></div>
+              <div id="spriteEditorInfo" style="white-space: nowrap; text-shadow: 0px 1px 4px #000, 0px 0px 2px #000, 0px 0px 3px #000"></div>
             </div>
           </div>
           <div id="soundEditor">
@@ -244,10 +244,10 @@
         <table style="margin-left: -2px; width: 100%">
           <tr><td width=200>Refresh rate</td><td id="debugFrameRateDisplay" class="right"></td><td></td><td></td><td class="right" id="debugFramePeriodDisplay">(1×)</td></tr>
           <tr id="debugIntervalTimeRow"><td width>Frame interval</td><td id="debugIntervalTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&nbsp;ms</td><td id="debugIntervalPercentDisplay" class="right"></td></tr>
-          <tr><td>Frame time</td><td id="debugFrameTimeDisplay" class="right" style="border-bottom: 1px solid"></td><td style="border-bottom: 1px solid">/</td><td class="right"  style="border-bottom: 1px solid">16.7&nbsp;ms</td><td id="debugFramePercentDisplay" class="right" style="border-bottom: 1px solid"></td></tr>
-          <tr><td>&nbsp;&nbsp;&nbsp;Logic</td><td id="debugCPUTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&nbsp;ms</td><td id="debugCPUPercentDisplay" class="right"></td></tr>
-          <tr><td>&nbsp;&nbsp;&nbsp;Physics</td><td id="debugPPUTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&nbsp;ms</td><td id="debugPPUPercentDisplay" class="right"></td></tr>
-          <tr><td>&nbsp;&nbsp;&nbsp;Graphics</td><td id="debugGPUTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&nbsp;ms</td><td id="debugGPUPercentDisplay" class="right"></td></tr>
+          <tr><td>Frame time</td><td id="debugFrameTimeDisplay" class="right" style="border-bottom: 1px solid"></td><td style="border-bottom: 1px solid">/</td><td class="right"  style="border-bottom: 1px solid">16.7&#8239;ms</td><td id="debugFramePercentDisplay" class="right" style="border-bottom: 1px solid"></td></tr>
+          <tr><td>&nbsp;&nbsp;&nbsp;Logic</td><td id="debugCPUTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&#8239;ms</td><td id="debugCPUPercentDisplay" class="right"></td></tr>
+          <tr><td>&nbsp;&nbsp;&nbsp;Physics</td><td id="debugPPUTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&#8239;ms</td><td id="debugPPUPercentDisplay" class="right"></td></tr>
+          <tr><td>&nbsp;&nbsp;&nbsp;Graphics</td><td id="debugGPUTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&#8239;ms</td><td id="debugGPUPercentDisplay" class="right"></td></tr>
           <tr><td>Graphics primitives</td><td id="debugDrawCallsDisplay" class="right"></td></tr>
           <tr><td><code>get_mode()</code></td><td id="debugModeDisplay" class="code" style="text-align: left" colspan=4></td></tr>
           <tr><td><code>get_previous_mode()</code></td><td class="code" id="debugPreviousModeDisplay" style="text-align: left" colspan=2></td></tr>
@@ -255,6 +255,7 @@
           <tr><td><code>game_frames</code></td><td id="debugGameFramesDisplay" class="right"></td></tr>
         </table>
 
+        <button style="margin-top: 5px; font-size: 80%" onclick="onCopyPerformanceSummary()">Copy Summary</button>
         <div id="resourcePane"></div>
       </pane>
       
@@ -533,7 +534,7 @@
     <div id="addAssetDialog" class="modal hidden">
       <div class="dialog" style="top:10px; width: 400px">
         <center>
-          <b>Add Existing Asset</b>
+          <b>Import Existing Asset</b>
           <p>
             <label for="addAssetType">Type&nbsp;&nbsp;</label>
             <select id="addAssetType" style="width:320px" onchange="onAddAssetTypeChange()">

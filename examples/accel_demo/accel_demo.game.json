@@ -7,8 +7,9 @@
     "copyright": "\u00a92019 Stephan Steinbach",
     "developer": "Stephan Steinbach",
     "license": "CC0/Public Domain",
+    "start_mode": "Play",
     "modes": [
-        "accel_demo*"
+        "Play*"
     ],
     "packages": [],
     "scripts": [

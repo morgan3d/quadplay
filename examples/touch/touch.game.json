@@ -3,7 +3,8 @@
     "developer":  "Casual Effects",
     "copyright":  "©2020 Morgan McGuire",
     "license":    "CC0/Public Domain",
-    "modes":      ["Play*"],
+    "modes":      ["Play"],
+    "start_mode": "Play",
     "assets":     {
         "font": "quad://fonts/deja-8.font.json",
         "astronaut": "quad://sprites/kenney-alien-yellow-16x32.sprite.json"

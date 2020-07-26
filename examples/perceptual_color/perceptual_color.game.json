@@ -6,8 +6,9 @@
     "packages": [],
     "scripts": [],
     "modes": [
-        "Play*"
+        "Play"
     ],
+    "start_mode": "Play",
     "assets": {
         "font": "quad://fonts/cga-7.font.json"
     },

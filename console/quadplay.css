@@ -973,6 +973,11 @@ code, .code {
     overflow: hidden;
 }
 
+.GhostUI .emulator, .GhostUI div#emulatorFrame, .MaximalUI .emulator, .MaximalUI div#emulatorFrame {
+    padding: 0px;
+    margin-top: 0px;
+}
+
 /* In kiosk mode, fill the entire screen */
 body.kiosk .emulator {
     top: 0px;
@@ -996,6 +1001,7 @@ body.kiosk div#logo, body.GhostUI div#logo, body.MaximalUI div#logo {
 .GhostUI #emulatorFrame {
     background: none;
     border: none;
+    padding: 0px;
 }
 
 .WideIDEUI .emulator, .WideIDEUI div#emulatorFrame {
@@ -1059,10 +1065,10 @@ hr {
 }
 
 .EmulatorUI .emulator, .MaximalUI .emulator, .TestUI .emulator, .GhostUI .emulator {
-    left: 1px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
     width: unset;
-    right: 1px;
-    bottom: 1px;
     height: unset;
 }
 

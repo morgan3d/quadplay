@@ -24,6 +24,8 @@
         "Xbox":        {"x": 8, "y": 1},
         "Arcade":      {"x": 0, "y": 2},
         "Arcade_X":    {"x": 1, "y": 2},
-        "Arcade_PS":   {"x": 2, "y": 2}
+        "Arcade_PS":   {"x": 2, "y": 2},
+        "X_Arcade":    {"x": 3, "y": 2},
+        "PiBoy_DMG":   {"x": 4, "y": 2}
     }
 }

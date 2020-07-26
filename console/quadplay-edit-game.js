@@ -31,8 +31,9 @@ function onProjectMetadataChanged(projectLicense) {
     document.getElementById('projectMinPlayers').value = gameSource.json.min_players;
     document.getElementById('projectMaxPlayers').value = gameSource.json.max_players;
     
-    serverSaveGameJSON(titleChanged ? function () { loadGameIntoIDE(window.gameURL, null, true); }: undefined);
+    serverSaveGameJSON(titleChanged ? function () { loadGameIntoIDE(window.gameURL, null, true); } : undefined);
 }
+
 
 function onProjectYUpChange(target) {
     gameSource.json.y_up = (target.checked === true);
@@ -57,16 +58,8 @@ const licenseTable = {
 };
 
 
-function onProjectInitialModeChange(target) {
-    const modes = gameSource.json.modes;
-    for (let i = 0; i < modes.length; ++i) {
-        modes[i] = modes[i].replace(/\*/g, '');
-
-        // Mark the newly selected value
-        if (modes[i] === target.value) {
-            modes[i] += '*';
-        }
-    }
+function onProjectInitialModeChange(newStartModeName) {
+    gameSource.json.start_mode = newStartModeName;
     serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
 }
 
@@ -119,7 +112,7 @@ function serverSaveGameJSON(callback) {
     const gameFilename = urlToFilename(gameSource.jsonURL);
     console.assert(gameFilename.endsWith('.game.json'));
  
-    const gameContents = WorkJSON.stringify(gameSource.json, undefined, 3);
+    const gameContents = WorkJSON.stringify(gameSource.json, undefined, 4);
     serverWriteFile(gameFilename, 'utf8', gameContents, callback);
 }
 

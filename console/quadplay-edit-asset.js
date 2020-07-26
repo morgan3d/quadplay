@@ -70,6 +70,29 @@ function onAddAssetTypeChange() {
 }
 
 
+function suggestedAssetFilename(url, suffix) {
+    // Remove extension
+    url = url.replace(/\..*$/, '');
+
+    // Remove prefix
+    url = url.replace(/^.*\//, '');
+
+    // Spaces (!) and punctuation to underscores
+    url = url.replace(/[+\- ,\(\)\[\]\$]/g, '_');
+
+    // Remove dimension specifications
+    url = url.replace(/_\d+x\d+/g, '');
+
+    // Remove leading underscore or number
+    url = url.replace(/^[0-9_]+/, '');
+
+    // Remove 'kenny_', 'dawnlike_', or 'dawnbringer_'
+    url = url.replace(/^(kenney|dawnbringer|dawnlike)_/, '');
+
+    return url + (suffix || '');
+}
+
+
 /* Called from the "Add" button */
 function onAddAssetAdd() {
     const nameBox = document.getElementById('addAssetName');
@@ -96,11 +119,48 @@ function onAddAssetAdd() {
         }
     }
 
-    gameSource.json.assets[name] = addAssetFiles.selected;
+    const url = addAssetFiles.selected;
     hideAddAssetDialog();
+
+    if (url.endsWith('.png') ||
+        url.endsWith('.tmx') ||
+        url.endsWith('.mp3')) {
+        // Handle raw assets
+        
+        const rawName = url;
+        const type = document.getElementById('addAssetType').value;
+        const jsonBase = rawName.replace(/\..*$/, '.' + type + '.json');
+
+        // Interpret jsonBase relative to the game
+        let gamePath = gameSource.jsonURL.replace(/\\/g, '/');
+        if (gamePath.startsWith(location.origin)) {
+            gamePath = gamePath.substring(location.origin.length);
+        }
+        gamePath = gamePath.replace(/\/[^/]+\.game\.json$/, '\/');
+
+        const jsonAbsoluteURL = gamePath + jsonBase;
+
+        const json = {
+            'url': rawName,
+            'license': 'TODO'
+        };
+        
+        if (type === 'map') {
+            json.sprite_url_table = {'todo': 'todo'};
+        }
+
+        gameSource.json.assets[name] = jsonBase;
+
+        // Save the new JSON file, and then reload the game
+        serverWriteFile(jsonAbsoluteURL, 'utf8', WorkJSON.stringify(json, undefined, 4), function () {
+            serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
+        });
+    } else {
+        gameSource.json.assets[name] = url;
     
-    // Save and reload the game
-    serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
+        // Save and reload the game
+        serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
+    }
 }
 
 
@@ -110,8 +170,15 @@ function onAddAssetListSelect(target) {
         list.children[i].classList.remove('selected');
     }
     target.classList.add('selected');
-    addAssetFiles.selected = target.innerText; 
-    document.getElementById('addAssetAddButton').disabled = (document.getElementById('addAssetName').value.length === 0);
+    addAssetFiles.selected = target.innerText;
+
+    const addAssetName = document.getElementById('addAssetName');
+    if (addAssetName.value.length === 0) {
+        const type = document.getElementById('addAssetType').value;
+        addAssetName.value = suggestedAssetFilename(addAssetFiles.selected, '_' + type);
+    }
+    
+    document.getElementById('addAssetAddButton').disabled = (addAssetName.value.length === 0);
 }
 
 
@@ -172,6 +239,7 @@ function onNewAssetCreate() {
 
     hideNewAssetDialog();
 }
+
 
 
 function createNewAssetFromTemplate(assetName, gamePath, fileName, type, binaryType, templateName) {
@@ -263,6 +331,7 @@ function onRemoveAsset(key) {
 }
 
 
+
 function onOpenAssetExternally(appName, assetName) {
     // Assumes that the asset was local and not built-in
     const url = gameSource.assets[assetName]._sourceURL || gameSource.assets[assetName]._url;
@@ -305,6 +374,6 @@ function showAssetContextMenu(assetName) {
         `<div onmousedown="onProjectSelect(${getElement}, 'asset', gameSource.assets['${assetName}'])">Inspect</div>
         <div onmousedown="onRenameAsset('${assetName}')">Rename&hellip;</div>` +
         externalCmds + 
-        `<hr><div onmousedown="onRemoveAsset('${assetName}')">Remove '${assetName}'</div>`;
+        `<hr><div onmousedown="onRemoveAsset('${assetName}')"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&times;</span>Remove '${assetName}'</div>`;
     showContextMenu();
 }

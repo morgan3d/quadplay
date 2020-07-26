@@ -88,8 +88,9 @@
     "copyright": "\u00a92019 Morgan McGuire",
     "developer": "Casual Effects",
     "license": "Source code \u00a92019 Morgan McGuire, available under the BSD License https://opensource.org/licenses/BSD-2-Clause",
+    "start_mode": "Title",
     "modes": [
-        "Title*",
+        "Title",
         "Play",
         "BeatLevel",
         "GameOver",

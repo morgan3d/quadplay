@@ -1,44 +1,45 @@
 {
-   "title": "Animation Example",
-   "developer": "Casual Effects",
-   "copyright": "2019 Casual Effects",
-   "license": "CC0/Public Domain",
-   "screen_size": {
-      "x": 192,
-      "y": 112
-   },
-   "packages": [],
-   "scripts": [],
-   "modes": [
-      "Play*"
-   ],
-   "assets": {
-      "font": "quad://fonts/good-neighbors-9.font.json",
-      "instructionFont": "quad://fonts/cga-7.font.json",
-      "ninjaSprite": "quad://sprites/ninja-black-32x32.sprite.json",
-      "swordSprite": "quad://sprites/ninja-sword-32x32.sprite.json",
-      "bowSprite": "quad://sprites/ninja-bow-32x32.sprite.json"
-   },
-   "constants": {
-      "groundY": {
-         "type": "number",
-         "value": 60
-      },
-      "arrowLength": {
-         "type": "number",
-         "value": 12
-      },
-      "gravity": {
-         "type": "number",
-         "value": 0.1
-      },
-      "jumpSpeed": {
-         "type": "number",
-         "value": 2.5
-      },
-      "runSpeed": {
-         "type": "number",
-         "value": 1.5
-      }
-   }
+    "title": "Animation Example",
+    "developer": "Casual Effects",
+    "copyright": "2019 Casual Effects",
+    "license": "CC0/Public Domain",
+    "screen_size": {
+        "x": 192,
+        "y": 112
+    },
+    "packages": [],
+    "scripts": [],
+    "start_mode": "Play",
+    "modes": [
+        "Play"
+    ],
+    "assets": {
+        "font": "quad://fonts/good-neighbors-9.font.json",
+        "instructionFont": "quad://fonts/cga-7.font.json",
+        "ninjaSprite": "quad://sprites/ninja-black-32x32.sprite.json",
+        "swordSprite": "quad://sprites/ninja-sword-32x32.sprite.json",
+        "bowSprite": "quad://sprites/ninja-bow-32x32.sprite.json"
+    },
+    "constants": {
+        "groundY": {
+            "type": "number",
+            "value": 60
+        },
+        "arrowLength": {
+            "type": "number",
+            "value": 12
+        },
+        "gravity": {
+            "type": "number",
+            "value": 0.1
+        },
+        "jumpSpeed": {
+            "type": "number",
+            "value": 2.5
+        },
+        "runSpeed": {
+            "type": "number",
+            "value": 1.5
+        }
+    }
 }

@@ -6,7 +6,8 @@
 
     "packages":   [],
     "scripts":    [],
-    "modes":      ["Play*", "EnterScore"],
+    "start_mode": "Play",
+    "modes":      ["Play", "EnterScore"],
     "assets":     {
         "bigfont": "quad://fonts/octant-17.font.json",
         "font":    "quad://fonts/robot-9.font.json"

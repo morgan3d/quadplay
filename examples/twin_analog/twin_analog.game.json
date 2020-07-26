@@ -1,63 +1,64 @@
 {
-   "title": "Twin Analog",
-   "developer": "Casual Effects",
-   "copyright": "©2020 Morgan McGuire",
-   "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
-   "packages": [],
-   "scripts": [
-      "player.pyxl"
-   ],
-   "modes": [
-      "Play*"
-   ],
-   "docs": [
-   ],
-   "assets": {
-      "font": "quad://fonts/robot-9.font.json",
-      "player_bullet_sprite": "player_bullet.sprite.json",
-      "player_gun_sprite": "player_gun.sprite.json",
-      "player_ship_sprite": "player_ship.sprite.json",
-      "player_thruster_sprite": "player_thruster.sprite.json",
-      "music_audio_clip": "quad://sounds/loop-select.sound.json",
-      "player_fire_audio_clip": "quad://sounds/shoot-06.sound.json"
-   },
-   "version": 0,
-   "min_players": 1,
-   "max_players": 1,
-   "cooperative": false,
-   "competitive": false,
-   "achievements": false,
-   "highscores": false,
-   "description": "Example of using device_control() to access raw analog sticks",
-   "constants": {
-      "ACCELERATION": {
-         "type": "number",
-         "value": "1"
-      },
-      "MAX_SPEED": {
-         "type": "number",
-         "value": "4"
-      },
-      "LINEAR_FRICTION": {
-         "type": "number",
-         "value": "2%"
-      },
-      "GUN_MAX_COOLDOWN": {
-         "type": "number",
-         "value": "10"
-      },
-      "PLAYER_BULLET_SPEED": {
-         "type": "number",
-         "value": "10"
-      },
-      "PLAYER_BULLET_LIFE": {
-         "type": "number",
-         "value": "100"
-      }
-   },
-   "screen_size": {
-      "x": 384,
-      "y": 224
-   },
-   "y_up": true
+    "title": "Twin Analog",
+    "developer": "Casual Effects",
+    "copyright": "©2020 Morgan McGuire",
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+    "packages": [],
+    "scripts": [
+        "player.pyxl"
+    ],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [
+    ],
+    "assets": {
+        "font": "quad://fonts/robot-9.font.json",
+        "player_bullet_sprite": "player_bullet.sprite.json",
+        "player_gun_sprite": "player_gun.sprite.json",
+        "player_ship_sprite": "player_ship.sprite.json",
+        "player_thruster_sprite": "player_thruster.sprite.json",
+        "music_audio_clip": "quad://sounds/loop-select.sound.json",
+        "player_fire_audio_clip": "quad://sounds/shoot-06.sound.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "Example of using device_control() to access raw analog sticks",
+    "constants": {
+        "ACCELERATION": {
+            "type": "number",
+            "value": "1"
+        },
+        "MAX_SPEED": {
+            "type": "number",
+            "value": "4"
+        },
+        "LINEAR_FRICTION": {
+            "type": "number",
+            "value": "2%"
+        },
+        "GUN_MAX_COOLDOWN": {
+            "type": "number",
+            "value": "10"
+        },
+        "PLAYER_BULLET_SPEED": {
+            "type": "number",
+            "value": "10"
+        },
+        "PLAYER_BULLET_LIFE": {
+            "type": "number",
+            "value": "100"
+        }
+    },
+    "screen_size": {
+        "x": 384,
+        "y": 224
+    },
+    "y_up": true
 }

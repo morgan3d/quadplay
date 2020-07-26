@@ -7,8 +7,9 @@
     "scripts": [
         "camera_shake.pyxl"
     ],
+    "start_mode": "Play",
     "modes": [
-        "Play*"
+        "Play"
     ],
     "docs": [
         "todo.md"

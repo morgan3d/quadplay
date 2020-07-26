@@ -164,7 +164,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             code = 401
             
         elif command == 'write_file':
-            filename = object['filename'][1:]
+            filename = remove_leading_slash(object['filename'])
             encoding = object['encoding']
             contents = object['contents']
             if not re.search(re.compile(r'\.(json|pyxl|png|html|txt|md|tmx|mp3)$'), filename):
@@ -280,10 +280,43 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 if not any([aux_path.startswith(prefix) for prefix in webpath_allowlist]):
                     self.send_error(404, 'Illegal path: ' + aux_path)
                 
+                # Raw files to exclude because they are already in use. Exclude
+                # the files from quadplay's own metadata automatically.
+                exclude_table = {}
+                for f in ['label64.png', 'label128.png', 'preview.png']:
+                    exclude_table[remove_leading_slash(aux_path) + f] = True
+
                 # Search (quad_path | aux_path) + type + 's/*.' + type + '.json'
-                for t in ['font', 'sprite', 'sound', 'map']:
-                    response_obj[t] = sorted(glob.glob(remove_leading_slash(aux_path + '**/*.' + t + '.json'), recursive=True))
+                asset_type_array = ['font', 'sprite', 'sound', 'map']
+                for t in asset_type_array:
+                    # Get the json files from the game directory
+                    response_obj[t] = glob.glob(remove_leading_slash(aux_path + '**/*.' + t + '.json'), recursive=True)
+
+                    # Look in each of the files for the URLs of raw files to exclude
+                    for file in response_obj[t]:
+                        tmp = load_json(file)
+                        if 'url' in tmp: exclude_table[remove_leading_slash(aux_path) + tmp['url']] = True
+
+                raw_extension = {'sprite': 'png', 'font': 'png', 'sound': 'mp3', 'map':'tmx'}
+                special_dir_regex = re.compile('(^|/)(journal|screenshots|metadata|backlot|graveyard)/', re.IGNORECASE)
+
+                for t in asset_type_array:
+                    # Get raw files
+                    raw_files = glob.glob(remove_leading_slash(aux_path + '**/*.' + raw_extension[t]), recursive=True)
+
+                    # Remove from raw_files anything that is in exclude_table
+                    raw_files = [f for f in raw_files if not f in exclude_table]
+                    
+                    # Sort all files from the game directory
+                    response_obj[t] = sorted(response_obj[t] + raw_files)
+
+                    # Remove anything in a magic directory
+                    response_obj[t] = [f for f in response_obj[t] if not special_dir_regex.search(f)]
+
+                    # Get the json files from the quadplay directory,
+                    # sort, and append them to the list
                     response_obj[t] += ['quad://' + f[len(quad_path):] for f in sorted(glob.glob(quad_path + t + 's/*.' + t + '.json'))]
+                    
                     # Fix slashes on windows
                     if isWindows: response_obj[t] = [f.replace('\\', '/') for f in response_obj[t]]
 

@@ -3,7 +3,8 @@
     "developer":  "Casual Effects",
     "copyright":  "© 2019-2020 Morgan McGuire",
     "scripts":    ["launcher.pyxl", "hovertank.pyxl", "mesh.pyxl", "game.pyxl"],
-    "modes":      ["Play*"],
+    "modes":      ["Play"],
+    "start_mode": "Play",
     "assets":     {
         "logoSprite": "logo.sprite.json",
         "font": "quad://fonts/roman-8.font.json",

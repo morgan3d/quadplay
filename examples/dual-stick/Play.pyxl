@@ -6,23 +6,17 @@ let trackArray = []
 let tank = make_entity({
    pos:    ½ SCREEN_SIZE,
    angle:  0,
-   sprite: tankSprite[0][0],
-   turret: make_entity({
-      pos:              xy(0, 0),
-      sprite:           tankSprite[0][1],
-      orient_with_parent: false,
-      z_in_parent:        1
-   })
-})
-
-entity_add_child(tank, tank.turret)
-
-def wrap(x, lo, hi):
-   return loop(x - lo, hi - lo) + lo
+   sprite: tankSprite[0][0]},
+   {turret: make_entity({
+        pos:                xy(0, 0),
+        sprite:             tankSprite[0][1],
+        orient_with_parent: false,
+        z_in_parent:        1
+   })})
 
 
 def wrapAngle(a):
-   return wrap(a, -180°, +180°)
+   return loop(a, -180°, +180°)
 
 
 def rotateToTarget(entity, target, rate):
@@ -40,21 +34,21 @@ rotateToTarget(tank.turret, gamepad_array[1].angle, 5°)
 
 with pos, angle in tank:
    const dir = xy(cos angle, rotation_sign() * sin angle)
-   pos.x = wrap(pos.x + speed * dir.x, -32, SCREEN_SIZE.x + 32)
-   pos.y = wrap(pos.y + speed * dir.y, -32, SCREEN_SIZE.y + 32)
+   pos =  loop(pos + speed * dir, xy(-32, -32), SCREEN_SIZE + 32)
 
-   const normal = xy(-dir.y, dir.x)
+   const normal = perp(dir)
    if mode_frames mod 8 == 0:
       push(trackArray, pos + 10 normal)
       push(trackArray, pos - 10 normal)
       push(trackArray, pos + 11 normal - 9 dir)
       push(trackArray, pos - 11 normal - 9 dir)
+      
 entity_update_children(tank)
 
 set_background(rgb(55%, 65%, 30%))
 
 draw_text(font, "Tank: "   + format_number(tank.angle, "degrees"), xy(20% SCREEN_SIZE.x, 0), #f, nil, #3, "left", "top")
-draw_text(font, "Turret: " + format_number(tank.turret.angle, "degrees"), xy(55% SCREEN_SIZE.x, 0), #f, nil, #3, "left", "top")
+draw_text(font, "Turret: " + format_number(tank.turret.angle, "degrees"), xy(50% SCREEN_SIZE.x, 0), #f, nil, #3, "left", "top")
 
 draw_entity(tank)
 

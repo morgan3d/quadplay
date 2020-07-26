@@ -51,8 +51,9 @@
     "max_players": 1,
     "min_players": 1,
     "modes": [
-        "Play*"
+        "Play"
     ],
+    "start_mode": "Play",
     "packages": [],
     "scripts": [
         "turn_transition_lib.pyxl"

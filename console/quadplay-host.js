@@ -201,6 +201,10 @@ function device_control(cmd) {
             setPadType(i, type);
             break;
         }
+
+    case "console.dir":
+        console.dir(...Array.prototype.slice.call(arguments, 1));
+        break;
     }
 }
 
@@ -340,6 +344,12 @@ function processPreviewRecording() {
                 previewRecording[dstOffset] = (((r >> 2) & 0xff) << 16) + (((g >> 2) & 0xff) << 8) + ((b >> 2) & 0xff);
             } // x
         } // y
+    } else if (SCREEN_WIDTH === 320 && SCREEN_HEIGHT === 180) {
+        // Crop
+        for (let y = 0; y < 112; ++y) {
+            const offset = (y + 22) * 320 + 64;
+            previewRecording.set(updateImageData32.slice(offset, offset + 192, targetX + (targetY + y) * 192 * PREVIEW_FRAMES_X));
+        }
     } else if (SCREEN_WIDTH === 192 && SCREEN_HEIGHT === 112) {
         // Half-resolution. Copy lines directly
         for (let y = 0; y < 112; ++y) {
@@ -725,6 +735,9 @@ function resume_audio(handle) {
 
 // Exported to QRuntime
 function stop_audio(handle) {
+    // Intentionally fail silently
+    if (handle === undefined) { return; }
+    
     if (! (handle && handle._ && handle._.stop)) {
         throw new Error("stop_audio() takes one argument that is the handle returned from play_sound()");
     }

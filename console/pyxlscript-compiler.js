@@ -1127,7 +1127,8 @@ function pyxlToJS(src, noYield, internalMode) {
     src = src.replace(/_add\(__yieldCounter, 1\)/g, '__yieldCounter + 1');
     src = unprotectQuotedStrings(src, protectionMap);
 
-    //if (! internalMode) { console.log(src); }
+    // Print source for debugging
+    // if (! internalMode) { console.log(src); }
     return src;
 }
 
@@ -1143,8 +1144,6 @@ This never reads from disk or the web itself.
 function compile(gameSource, fileContents, isOS) {
     const separator = '\n\n////////////////////////////////////////////////////////////////////////////////////\n\n';
     const sectionSeparator = '//--------------------------------------------------------------------------------';
-    
-    let startModeName = '';
     
     // Protect certain variables by shadowing them, since programs
     // that overwrite (or read!) them could cause problems.
@@ -1163,7 +1162,7 @@ function compile(gameSource, fileContents, isOS) {
             try {
                 jsCode = pyxlToJS(pyxlCode, true);
             } catch (e) {
-                throw {url:url, lineNumber:e.lineNumber, message:e.message};
+                throw {url:url, lineNumber:e.lineNumber, message: e.message.replace('Unexpected token ===', 'Unexpected token ==')};
             }
             compiledProgram += '/*@"' + url + '"*/\n' + jsCode + separator;
         }
@@ -1178,15 +1177,11 @@ function compile(gameSource, fileContents, isOS) {
         // Trust the mode to have the correct name in the gameSource
         // data structure, but remove the "*" that marks the startup mode..
         const mode = gameSource.modes[i];
-        const modeName = mode.name.replace('*', '');
         
         // If true, this is an internal mode that is allowed to access
         // "_" private variables.
-        const internalMode = modeName[0] === '_';
+        const internalMode = mode.name[0] === '_';
 
-        // Is this the start mode?
-        if ((mode.name.indexOf('*') !== -1) || (gameSource.modes.length === 1)) { startModeName = modeName; }
-        
         // Eliminate \r on Windows
         const file = fileContents[mode.url] + '\n';
         const noSections = ! splitRegex.test(file);
@@ -1276,9 +1271,9 @@ ${section.jsCode}
         // a field 'nextMode' equal to the next mode object.
 
         const wrappedJSCode =
-`// ${modeName}.pyxl
+`// ${mode.name}.pyxl
 //========================================================================
-const ${modeName} = (function() {
+const ${mode.name} = (function() {
 
 // init
 ${sectionSeparator}
@@ -1313,16 +1308,16 @@ ${sectionTable.frame.jsCode}
 _show(); } catch (ex) { if (! ex.nextMode) throw ex; else _updateInput(); } yield; }
 })();
 
-return _Object.freeze({_enter:_enter, _frame:_frame, _pop_modeFrom_SystemMenu:_pop_modeFrom_SystemMenu, _leave:_leave${pop_modeBindings}, _name:'${modeName}'});
+return _Object.freeze({_enter:_enter, _frame:_frame, _pop_modeFrom_SystemMenu:_pop_modeFrom_SystemMenu, _leave:_leave${pop_modeBindings}, _name:'${mode.name}'});
 })();
 
 `;
         compiledProgram += wrappedJSCode;            
 
     } // for each mode
-
+    
     // Set the initial mode
-    compiledProgram += 'try { set_mode(' + startModeName + '); } catch (e) { if (! e.nextMode) { throw e; } }\n\n';
+    compiledProgram += 'try { set_mode(' + gameSource.json.start_mode + '); } catch (e) { if (! e.nextMode) { throw e; } }\n\n';
 
     // Main loop
     compiledProgram += '// Main loop\nwhile (true) { _gameMode._frame.next(); yield; };\n\n'

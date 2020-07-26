@@ -18,7 +18,7 @@ const selected_color          = #f
 const unselected_color        = #b
 
 const controllerSpritesheet = if SCREEN_SIZE.y >= 224 then _controllerSpritesheet44 else _controllerSpritesheet22
-const controllerTypeArray = ["Quadplay", "Xbox", "Xbox360", "Keyboard", "Kbd_Alt", "Kbd_P1", "Kbd_P2", "PS5", "PS4", "PS3", "SNES", "SwitchPro", "JoyCon_R", "JoyCon_L", "Zero", "HOTAS", "Arcade", "Arcade_X", "Arcade_PS", "Stadia", "GPD_Win", "SN30_Pro"];
+const controllerTypeArray = ["Quadplay", "Xbox", "Xbox360", "Keyboard", "Kbd_Alt", "Kbd_P1", "Kbd_P2", "PS5", "PS4", "PS3", "SNES", "SwitchPro", "JoyCon_R", "JoyCon_L", "Zero", "HOTAS", "X_Arcade", "Arcade", "Arcade_X", "Arcade_PS", "Stadia", "GPD_Win", "SN30_Pro", "PiBoy_DMG"];
 
 // Tweak layout for square aspect ratios
 let shiftX = 0 // Symmetric text shift from center
@@ -47,14 +47,14 @@ else if SCREEN_SIZE.x == 128:
    arrowX = 54
    shiftSpriteY = 0
    titleY = -14
-else if SCREEN_SIZE.x == 192:
+else if SCREEN_SIZE.x < 384: // 192 or 320
    arrowY = -6
    shiftX = -10
    offsetX = 8
    shiftY = 2
    titleY = -4
    shiftSpriteY = -24
-else if SCREEN_SIZE.x == 384:
+else: // 384
    arrowX = 62
    arrowY = -7
    shiftX = -18
@@ -63,19 +63,23 @@ else if SCREEN_SIZE.x == 384:
 
 let font = _font9
 if SCREEN_SIZE.y <= 64: font = _font5
-else if SCREEN_SIZE.y <= 128: font = _font8
+else if SCREEN_SIZE.y <= 180: font = _font8
 
 let controlsFont = font
 if SCREEN_SIZE.y <= 64: font = _font5
-else if SCREEN_SIZE.y <= 128: controlsFont = _font6
+else if SCREEN_SIZE.y <= 180: controlsFont = _font6
 
 let choiceFont = _font9
 if SCREEN_SIZE.y <= 64 or SCREEN_SIZE.x <= 128: choiceFont = _font5
-else if SCREEN_SIZE.y <= 112: choiceFont = _font8
+else if SCREEN_SIZE.y <= 180: choiceFont = _font8
 
 // For layout
-const scale = if SCREEN_SIZE.y > 128 then 100% else 50%
-
+let scale = 100%
+if SCREEN_SIZE.y <= 180:
+    if SCREEN_SIZE.y <= 112:
+        scale = 50%
+    else:
+        scale = 75%
 
 
 const playerName = []

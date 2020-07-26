@@ -53,7 +53,7 @@ set_background(#444)
 frame
 ────────────────────────────────────────────────────────────────────────
 
-draw_corner_rect(xy(VIEWPORT_WIDTH, 0), xy(SCREEN_SIZE.x - VIEWPORT_WIDTH, 224), #000)
+draw_corner_rect(xy(VIEWPORT_WIDTH, 0), xy(SCREEN_SIZE.x - VIEWPORT_WIDTH, SCREEN_SIZE.y), #000)
 const stats = {
    DEX: 14,
    INT: 15,
@@ -62,7 +62,7 @@ const stats = {
    SIZ: 2
 }
 
-draw_text(stat_font, "Lothar", xy(VIEWPORT_WIDTH + (SCREEN_SIZE.x - VIEWPORT_WIDTH) / 2, 10), STAT_TEXT_COLOR, nil, STAT_TEXT_SHADOW, "center")
+draw_text(stat_font, "Lothar", xy(VIEWPORT_WIDTH + ½ (SCREEN_SIZE.x - VIEWPORT_WIDTH), 10), STAT_TEXT_COLOR, nil, STAT_TEXT_SHADOW, "center")
 let y = 30
 for value at stat in stats:
    draw_text(stat_font, value, xy(VIEWPORT_WIDTH + 20 + 50, y), STAT_TEXT_COLOR, STAT_TEXT_SHADOW, nil, "right")
@@ -74,8 +74,8 @@ const blink = mode_frames mod 40 < 10
 draw_text(stat_font, "♥", xy(VIEWPORT_WIDTH + 8, y + stat_font.line_height * choice_index), 
    (if blink then STAT_TEXT_COLOR else STAT_TEXT_SHADOW), nil, 
    (if blink then nil else STAT_TEXT_COLOR))
-for action in action_array:
-   y += draw_text(stat_font, action, xy(VIEWPORT_WIDTH + 20, y), STAT_TEXT_COLOR, STAT_TEXT_SHADOW).y
+
+y += draw_text(stat_font, join(action_array, "\n"), xy(VIEWPORT_WIDTH + 20, y), STAT_TEXT_COLOR, STAT_TEXT_SHADOW).y
 
 choice_index = clamp(choice_index + joy.yy, 0, size(action_array) - 1)
 
@@ -87,17 +87,16 @@ draw_sprite(rpgSpritesheet[9][7],  xy(VIEWPORT_WIDTH + 24 + 20, 100))
 draw_sprite(rpgSpritesheet[1][6],  xy(VIEWPORT_WIDTH + 24 + 30, 100))
 
 preserving_transform:
-   set_clip(xy(0,0), xy(VIEWPORT_WIDTH, 224))
+   set_clip(xy(0, 0), xy(VIEWPORT_WIDTH, 224))
    draw_vignette()
-   // camera
-   set_transform(xy(-96, 0))
+   set_camera({pos: xy(96, 0)})
    
    // Layer 0 of the map is just the gray background to make it easier to
    // draw in Tiled. There's no need to draw that in game.
    draw_map(map, 1)
    
    // Draw the characters, bopping to show that they can move
-   const bop = lerp(1.14, 0.89, 0.5 cos(0.1 mode_frames) + 0.5)
+   const bop = lerp(114%, 89%, ½ cos(⅒ mode_frames) + ½)
    for entity in entity_array:
       entity.scale.y = bop
       entity.offset.y = 4 (1 - bop)

@@ -8,7 +8,7 @@ const particle_array = []
 
 // Create a single moving particle and add it to the global array
 def spawn_particle(pos, vel, color, z, frames):
-   push(particle_array, {pos: clone(pos), vel:vel, color: clone(color), z: z, frames: frames})
+   push(particle_array, {pos: {x:pos.x, y:pos.y}, vel:vel, color: clone(color), z: z, frames: frames})
 
    
 def spawn_particles_from_map_ws_coord(

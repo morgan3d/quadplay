@@ -1,28 +1,29 @@
 {
-   "title": "Planet Generator",
-   "developer": "CasualEffects",
-   "copyright": "©2019 Morgan McGuire",
-   "license": "CC BY-NC 2.0 https://creativecommons.org/licenses/by-nc/2.0/",
-   "packages": [],
-   "scripts": [
-      "planet.pyxl"
-   ],
-   "modes": [
-      "ShowPlanet*"
-   ],
-   "assets": {
-      "moonSpritesheet": "quad://sprites/space-moon.sprite.json",
-      "ringSpritesheet": "quad://sprites/space-ring.sprite.json",
-      "planetSpritesheet": "quad://sprites/space-planet.sprite.json",
-      "atmosphereSpritesheet": "quad://sprites/space-atmosphere.sprite.json"
-   },
-   "version": 0,
-   "min_players": 1,
-   "max_players": 1,
-   "cooperative": false,
-   "competitive": false,
-   "achievements": true,
-   "highscores": false,
-   "description": "Random planet generator with moons, atmosphere, and rings",
-   "constants": { }
+    "title": "Planet Generator",
+    "developer": "CasualEffects",
+    "copyright": "©2019 Morgan McGuire",
+    "license": "CC BY-NC 2.0 https://creativecommons.org/licenses/by-nc/2.0/",
+    "packages": [],
+    "scripts": [
+        "planet.pyxl"
+    ],
+    "modes": [
+        "ShowPlanet"
+    ],
+    "start_mode": "ShowPlanet",
+    "assets": {
+        "moonSpritesheet": "quad://sprites/space-moon.sprite.json",
+        "ringSpritesheet": "quad://sprites/space-ring.sprite.json",
+        "planetSpritesheet": "quad://sprites/space-planet.sprite.json",
+        "atmosphereSpritesheet": "quad://sprites/space-atmosphere.sprite.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": true,
+    "highscores": false,
+    "description": "Random planet generator with moons, atmosphere, and rings",
+    "constants": { }
 }

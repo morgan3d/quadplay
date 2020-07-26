@@ -7,7 +7,8 @@
     "y_up":      true,
     "packages":   [],
     "scripts":    ["common.pyxl", "ai.pyxl", "physics.pyxl", "player.pyxl"],
-    "modes":      ["Title*", "Play", "TeamSelect", "Intermission", "Faceoff", "Credits", "Rules", "GameOver"],
+    "start_mode": "Title",
+    "modes":      ["Title", "Play", "TeamSelect", "Intermission", "Faceoff", "Credits", "Rules", "GameOver"],
     "assets":     {
         "rinkSprite":   "rink-192x112.sprite.json",
         "titleSprite":  "title-182x93.sprite.json",

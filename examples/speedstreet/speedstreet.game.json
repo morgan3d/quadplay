@@ -7,7 +7,8 @@
     "y_up":     true,
     "packages":   [],
     "scripts":    ["bike.pyxl", "physics.pyxl"],
-    "modes":      ["Title*", "Play"],
+    "start_mode": "Title",
+    "modes":      ["Title", "Play"],
     "assets":     {
         "bikePart":    "bikePart.sprite.json",
         "wheelSprite": "wheels.sprite.json",

@@ -6,7 +6,8 @@
 
     "packages":   [],
     "scripts":    ["util.pyxl", "grid.pyxl"],
-    "modes":      ["Play*"],
+    "start_mode": "Play",
+    "modes":      ["Play"],
     "assets":     {
         "font":       "quad://fonts/good-neighbors-9.font.json",
         "arrowFont":  "quad://fonts/deja-8.font.json",

@@ -236,10 +236,11 @@
     "license": "code: MIT / Assets: Creative Commons Attribution 4.0 International",
     "max_players": 1,
     "min_players": 1,
+    "start_mode": "Title",
     "modes": [
-        "Failed",
-        "Title*",
+        "Title",
         "Play",
+        "Failed",
         "DeadOutro",
         "FreezeFrame"
     ],

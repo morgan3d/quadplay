@@ -1,115 +1,116 @@
 {
-   "title": "Vehicles",
-   "developer": "Casual Effects",
-   "copyright": "©2020 Morgan McGuire",
-   "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
-   "packages": [],
-   "scripts": [],
-   "modes": [
-      "Play*"
-   ],
-   "assets": {
-      "font": "quad://fonts/hauer-6.font.json",
-      "WORLD_DATA": "world.map.json",
-      "CAR_SPRITESHEET": "car.sprite.json",
-      "CHOPPER_BODY_SPRITESHEET": "chopper_body.sprite.json",
-      "CHOPPER_BLADES_SPRITESHEET": "chopper_blades.sprite.json",
-      "TANK_BODY_SPRITESHEET": "tank_body.sprite.json",
-      "TANK_TURRET_SPRITESHEET": "tank_turret.sprite.json",
-      "HERO_SPRITESHEET": "hero_bicubic.sprite.json"
-   },
-   "version": 0,
-   "min_players": 1,
-   "max_players": 1,
-   "cooperative": false,
-   "competitive": false,
-   "achievements": false,
-   "highscores": false,
-   "description": "Example of vehicle controls",
-   "constants": {
-      "CAR_MAX_FORWARD_SPEED": {
-         "type": "number",
-         "value": "3.8",
-         "description": "Pix/frame"
-      },
-      "CAR_FORWARD_ACCELERATION": {
-         "type": "number",
-         "value": "0.06"
-      },
-      "CAR_MAX_REVERSE_SPEED": {
-         "type": "number",
-         "value": "1.5",
-         "description": "Pix/frame"
-      },
-      "CAR_REVERSE_ACCELERATION": {
-         "type": "number",
-         "value": "0.05"
-      },
-      "CHOPPER_MAX_SPEED": {
-         "type": "number",
-         "value": "4.5",
-         "description": "Pix/frame"
-      },
-      "CHOPPER_ACCELERATION": {
-         "type": "number",
-         "value": "0.04"
-      },
-      "TANK_MAX_FORWARD_SPEED": {
-         "type": "number",
-         "value": "0.9",
-         "description": "Pix/frame"
-      },
-      "TANK_FORWARD_ACCELERATION": {
-         "type": "number",
-         "value": "0.008"
-      },
-      "TANK_MAX_REVERSE_SPEED": {
-         "type": "number",
-         "value": "0.5",
-         "description": "In pix/frame"
-      },
-      "TANK_REVERSE_ACCELERATION": {
-         "type": "number",
-         "value": "0.008"
-      },
-      "Z_MAX": {
-         "type": "number",
-         "value": "10",
-         "description": "Flight ceiling = near clipping plane"
-      },
-      "Z_MIN": {
-         "type": "number",
-         "value": "0.1",
-         "description": "Lowest an object can be"
-      },
-      "SHADOW_OPACITY": {
-         "type": "number",
-         "value": "20%"
-      },
-      "SHADOW_VECTOR": {
-         "type": "xy",
-         "value": {
-            "x": 10,
-            "y": -5
-         },
-         "description": "Direction and magnitude of the 2D vector opposite the sun for casting shadows",
-         "nudge": {
-            "x": "+1",
-            "y": "-1"
-         }
-      },
-      "HERO_MAX_FORWARD_SPEED": {
-         "type": "number",
-         "value": "0.6"
-      },
-      "HERO_MAX_REVERSE_SPEED": {
-         "type": "number",
-         "value": "0.3"
-      }
-   },
-   "screen_size": {
-      "x": 384,
-      "y": 224
-   },
-   "y_up": true
+    "title": "Vehicles",
+    "developer": "Casual Effects",
+    "copyright": "©2020 Morgan McGuire",
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "assets": {
+        "font": "quad://fonts/hauer-6.font.json",
+        "WORLD_DATA": "world.map.json",
+        "CAR_SPRITESHEET": "car.sprite.json",
+        "CHOPPER_BODY_SPRITESHEET": "chopper_body.sprite.json",
+        "CHOPPER_BLADES_SPRITESHEET": "chopper_blades.sprite.json",
+        "TANK_BODY_SPRITESHEET": "tank_body.sprite.json",
+        "TANK_TURRET_SPRITESHEET": "tank_turret.sprite.json",
+        "HERO_SPRITESHEET": "hero_bicubic.sprite.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "Example of vehicle controls",
+    "constants": {
+        "CAR_MAX_FORWARD_SPEED": {
+            "type": "number",
+            "value": "3.8",
+            "description": "Pix/frame"
+        },
+        "CAR_FORWARD_ACCELERATION": {
+            "type": "number",
+            "value": "0.06"
+        },
+        "CAR_MAX_REVERSE_SPEED": {
+            "type": "number",
+            "value": "1.5",
+            "description": "Pix/frame"
+        },
+        "CAR_REVERSE_ACCELERATION": {
+            "type": "number",
+            "value": "0.05"
+        },
+        "CHOPPER_MAX_SPEED": {
+            "type": "number",
+            "value": "4.5",
+            "description": "Pix/frame"
+        },
+        "CHOPPER_ACCELERATION": {
+            "type": "number",
+            "value": "0.04"
+        },
+        "TANK_MAX_FORWARD_SPEED": {
+            "type": "number",
+            "value": "0.9",
+            "description": "Pix/frame"
+        },
+        "TANK_FORWARD_ACCELERATION": {
+            "type": "number",
+            "value": "0.008"
+        },
+        "TANK_MAX_REVERSE_SPEED": {
+            "type": "number",
+            "value": "0.5",
+            "description": "In pix/frame"
+        },
+        "TANK_REVERSE_ACCELERATION": {
+            "type": "number",
+            "value": "0.008"
+        },
+        "Z_MAX": {
+            "type": "number",
+            "value": "10",
+            "description": "Flight ceiling = near clipping plane"
+        },
+        "Z_MIN": {
+            "type": "number",
+            "value": "0.1",
+            "description": "Lowest an object can be"
+        },
+        "SHADOW_OPACITY": {
+            "type": "number",
+            "value": "20%"
+        },
+        "SHADOW_VECTOR": {
+            "type": "xy",
+            "value": {
+                "x": 10,
+                "y": -5
+            },
+            "description": "Direction and magnitude of the 2D vector opposite the sun for casting shadows",
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            }
+        },
+        "HERO_MAX_FORWARD_SPEED": {
+            "type": "number",
+            "value": "0.6"
+        },
+        "HERO_MAX_REVERSE_SPEED": {
+            "type": "number",
+            "value": "0.3"
+        }
+    },
+    "screen_size": {
+        "x": 384,
+        "y": 224
+    },
+    "y_up": true
 }

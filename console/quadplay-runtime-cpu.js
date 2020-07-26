@@ -49,6 +49,7 @@ var is_NaN = Number.isNaN;
 // detect when they are illegally being mutated.
 var _iteratorCount = new WeakMap();
 
+
 function _checkContainer(container) {
     if (! Array.isArray(container) && (typeof container !== 'string') && (typeof container !== 'object')) {
         _error('The container used with a for...in loop must be an object, string, or array.');
@@ -1605,9 +1606,8 @@ function xy(x, y) {
     return {x:x, y:y};
 }
 
-
-function xz_to_xyz(v, y) {
-    return {x:v.x, y: y || 0, z: v.z};
+function xz_to_xyz(v, new_z) {
+    return {x:v.x, y: v.z, z: new_z || 0};
 }
 
 function xy_to_xyz(v, z) {
@@ -1619,7 +1619,7 @@ function xz(x, z) {
         _error('nil or no argument to xz()');
     }
     
-    if (x.x !== undefined) {
+    if (x.x !== undefined) { // xz(xyz)
         if (z !== undefined) { _error('xz(number, number), xz(xz), xz(xyz), or xz(array) are the only legal options'); }
         return {x:x.x, z:x.z};
     }
@@ -1641,7 +1641,18 @@ function xz_to_xy(v) {
 
 
 function xyz(x, y, z) {
-    if (x.x !== undefined) { return {x:x.x, y:x.y, z:x.z}; }
+    if (x.x !== undefined) {
+        if (x.z !== undefined) { 
+            if (x.y === undefined) { // xyz(xz)
+                return {x:x.x, y:(y === undefined ? 0 : y), z:x.z};
+            } else { // xyz(xyz) {
+                if (y !== undefined) { _error('Cannot run xyz(xyz, z)'); }
+                return {x:x.x, y:x.y, z:x.z};
+            }
+        } else { // xyz(xy, y default 0)
+            return {x:x.x, y:x.y, z:(y === undefined ? 0 : y)}
+        }
+    }
     if (Array.isArray(x)) { return {x:x[0], y:x[1], z:x[2]}; }
     if (arguments.length !== 3) { throw new Error('xyz() requires exactly three arguments'); }
     return {x:x, y:y, z:z};
@@ -1732,12 +1743,12 @@ function rgba(r, g, b, a) {
         if (r.a !== undefined) {
             c.a = r.a;
         } else {
-            c.a = 1;
+            c.a = (g === undefined ? 1 : g);
         }
         return c;
     } else if (r.r !== undefined) {
-        // Clone
-        a = (r.a === undefined) ? 1 : r.a;
+        // Clone, maybe overriding alpha
+        a = (r.a === undefined) ? (g === undefined ? 1 : g) : r.a;
         g = r.g;
         b = r.b;
         r = r.r;
@@ -2081,11 +2092,25 @@ function transform_cs_to_ss(cs_point, cs_z) {
 
 function transform_ss_to_cs(ss_point, ss_z) {
     ss_z = ss_z || 0;
-    cs_z = transform_ss_z_to_cs_z(ss_z);
-    
-    return xy((ss_point.x - _offsetX) / _scaleX - cs_z / _skewXZ,
-              (ss_point.y - _offsetY) / _scaleY - cs_z / _skewYZ);
+    const cs_z = transform_ss_z_to_cs_z(ss_z);
+    return xy((ss_point.x - _offsetX) / _scaleX - cs_z * _skewXZ,
+              (ss_point.y - _offsetY) / _scaleY - cs_z * _skewYZ);
 }
+
+
+function transform_ss_to_ws(ss_point, ss_z) {
+    ss_z = ss_z || 0;
+    const cs_z = transform_ss_z_to_cs_z(ss_z);
+    return transform_cs_to_ws(transform_ss_to_cs(ss_point, ss_z), cs_z);
+}
+
+
+function transform_ws_to_ss(ws_point, ws_z) {
+    ws_z = ws_z || 0;
+    const cs_z = transform_ws_z_to_cs_z(ws_z);
+    return transform_cs_to_ss(transform_ws_to_cs(ws_point, ws_z), cs_z);
+}
+
 
 function transform_cs_z_to_ss_z(cs_z) {
     return cs_z * _scaleZ + _offsetZ;
@@ -2110,8 +2135,8 @@ function transform_cs_to_ws(cs_point, cs_z) {
     const C = Math.cos(-_camera.angle) * mag, S = Math.sin(-_camera.angle * rotation_sign()) * mag;
     
     const x = cs_point.x - _camera.x, y = cs_point.y - _camera.y;
-    return {x: cs_point.x * C + cs_point.y * S + _camera.pos.y,
-            y: cs_point.y * C - cs_point.x * S + _camera.pos.x};
+    return {x: cs_point.x * C + cs_point.y * S + _camera.y,
+            y: cs_point.y * C - cs_point.x * S + _camera.x};
 }
 
 function transform_ws_to_es(entity, coord) {
@@ -4432,11 +4457,13 @@ function _parseMarkupHelper(str, startIndex, stateChanges) {
     stateChanges.push(newState);
     text = _parseMarkupHelper(text, before.length + startIndex, stateChanges);
     str += text;
+    
     // Restore the old state after the body
     const restoreState = Object.assign({}, oldState);
     restoreState.startIndex = before.length + text.length + startIndex;
     stateChanges.push(restoreState);
-    
+
+    // Is there more after the first markup?
     if (after !== '') {
         str += _parseMarkupHelper(after, restoreState.startIndex, stateChanges);
     }
@@ -4447,10 +4474,15 @@ function _parseMarkupHelper(str, startIndex, stateChanges) {
 
 function _parseMarkup(str, stateChanges) {
     // First instance.
-    // Remove single newlines, temporarily protecting paragraph breaks
+    
+    // Remove single newlines, temporarily protecting paragraph breaks.
+    // This is intended to 
     str = str.replace(/ *\n{2,}/g, '¶');
     str = str.replace(/ *\n/g, ' ');
     str = str.replace(/¶/g, '\n\n');
+
+    // Convert {br} to a newline
+    str = str.replace(/\{br\}/g, '\n');
 
     str = _parseMarkupHelper(str, 0, stateChanges);
 
@@ -6502,29 +6534,34 @@ function is_object(a) {
 
 
 function clone(a) {
-    if (! a || Object.isFrozen(a) || (a._type === 'spritesheet')) {
+    if (! a || (a._type !== undefined && a._type !== 'map')) {
+        // Built-in that is not a map; maps are treated
+        // specially as an only partly-immutable asset.
         return a;
+    } else if (a._type === 'map') {
+        // Maps are a special case, where we want the full layer
+        // structure and arrays preserved when cloning, instead of
+        // pointers.
+        return deep_clone(a);
     } else if (typeof a === 'object') {
         // Includes arrays; we have to copy the non-indexed properties,
         // so we treat them as objects.
         const c = a.constructor ? a.constructor() : Object.create(null);
-        let x = Object.assign(c, a);
-        if (x._name && (x_name[0] !== '«')) {
-            x._name = '«cloned ' + a._name + '»';
-        }
-        
-        if (Object.isSealed(a)) {
-            Object.seal(x);
-        }
-        return x;            
+        return Object.assign(c, a);     
     } else {
         return a;
     }
 }
 
 
-function _deep_clone(a, map) {
-    if (! a || Object.isFrozen(a)) {
+// The "map" argument is a map from original object pointers to their
+// existing clones during this particular cloning.
+//
+// The is_map_asset argument refers to whether the 'a' argument is
+// an asset that is a game map, or is a part of a game map, which
+// is a special case for the sealing and finalization rules.
+function _deep_clone(a, map, is_map_asset) {
+    if (! a || (a._type !== undefined && a._type !== 'map')) {
         // Built-in; return directly instead of cloning since it is
         // immutable (this is based on the assumption that quadplay
         // makes frozen recursive, which it does).
@@ -6535,9 +6572,17 @@ function _deep_clone(a, map) {
             // Already cloned
             return x;
         } else {
+            // Clone the array structure and store the new value in
+            // the memoization map
             map.set(a, x = a.slice(0));
+
+            if (is_map_asset === undefined) {
+                is_map_asset = (a._type === 'map');
+            }
+
+            // Clone array elements
             for (let i = 0; i < x.length; ++i) {
-                x[i] = _deep_clone(x[i], map);
+                x[i] = _deep_clone(x[i], map, is_map_asset);
             }
             
             // Clone all non-Array properties that might have been
@@ -6550,15 +6595,21 @@ function _deep_clone(a, map) {
                     if ((key === '_name') && (a._name[0] !== '«')) {
                         x[key] = '«cloned ' + a._name + '»';
                     } else {
-                        x[key] = _deep_clone(a[key], map);
+                        x[key] = _deep_clone(a[key], map, is_map_asset);
                     }
                 }
             }
-            
-            if (Object.isSealed(a)) { Object.seal(x); }
+
+            if (is_map_asset) {
+                if (Object.isSealed(a)) { Object.seal(x); }
+                if (Object.isFrozen(a)) { Object.freeze(x); }
+            }
+
             return x;
         }
     } else if (typeof a === 'object') {
+        console.assert(a._type === undefined);
+        
         let x = map.get(a);
         if (x !== undefined) {
             // Already cloned
@@ -6575,10 +6626,10 @@ function _deep_clone(a, map) {
                         x._name = a._name;
                     }
                 } else {
-                    x[key] = _deep_clone(a[key], map);
+                    x[key] = _deep_clone(a[key], map, is_map_asset);
                 }
             }
-            if (Object.isSealed(a)) { Object.seal(x); }
+            if (a._name && Object.isSealed(a)) { Object.seal(x); }
             return x;
         }
     } else {
@@ -8020,6 +8071,7 @@ function push_mode(mode, ...args) {
     _systemPrint('Pushing into mode ' + mode._name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
 
     // Run the enter callback on the new mode
+    _iteratorCount = new WeakMap();
     _gameMode._enter.apply(null, args);
 
     throw {nextMode: mode};
@@ -8058,6 +8110,7 @@ function pop_mode(...args) {
     _gameMode = _modeStack.pop();
     mode_frames = _mode_framesStack.pop();
 
+    _iteratorCount = new WeakMap();
     old._leave();
 
     // Reset the graphics
@@ -8069,6 +8122,7 @@ function pop_mode(...args) {
     var eventName = '_pop_modeFrom' + old._name;
     if (_gameMode[eventName] !== undefined) {
         // repeat here so that the "this" is set correctly to _gameMode
+        _iteratorCount = new WeakMap();
         _gameMode[eventName](...args);
     }
 
@@ -8088,6 +8142,10 @@ function set_mode(mode, ...args) {
     // Set up the new mode
     _prevMode = _gameMode;
     _gameMode = mode;
+
+    // Loop nesting is irrelvant, since we're about to leave
+    // that scope permanently.
+    _iteratorCount = new WeakMap();
     
     // Run the leave callback on the current mode
     if (_prevMode) { _prevMode._leave(); }
@@ -8104,7 +8162,8 @@ function set_mode(mode, ...args) {
     _systemPrint('Entering mode ' + mode._name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
     
     // Run the enter callback on the new mode
-    _gameMode._enter.apply(null, args);
+    _iteratorCount = new WeakMap();
+    if (_gameMode._enter) { _gameMode._enter.apply(null, args); }
 
     throw {nextMode: mode};
 }
@@ -8138,7 +8197,7 @@ function local_time() {
         second:      d.getSeconds(),
         millisecond: d.getMilliseconds(),
         weekday:     d.getDay(),
-        daySecond:   (d.getHours() * 60 + d.getMinutes()) * 60 + d.getSeconds() + d.getMilliseconds() * 0.001,
+        day_second:  (d.getHours() * 60 + d.getMinutes()) * 60 + d.getSeconds() + d.getMilliseconds() * 0.001,
         timezone:    d.getTimezoneOffset()
     };
 }
