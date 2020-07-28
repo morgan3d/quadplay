@@ -682,8 +682,8 @@ function gensym(base) {
 
 /** Expression for selective yields to avoid slowing down tight loops. This weird syntax
     of incrementing and then assigning back to what was incremented is to avoid the operator
-     overloading triggering a slow increment */
-var maybeYieldGlobal = ' {if (!(__yieldCounter = ((++__yieldCounter) & 8191)) { yield; }} ';
+    overloading triggering a slow increment */
+var maybeYieldGlobal = '';//' {if (!(__yieldCounter = ((++__yieldCounter) & 8191)) { yield; }} ';
 
 /** Expression for 'yield' inside a function, where regular yield is not allowed */
 var maybeYieldFunction = '';
