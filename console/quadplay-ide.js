@@ -1656,6 +1656,7 @@ function onProjectSelect(target, type, object) {
         // Find the underlying gameSource.asset key for this asset so
         // that we can fetch it again if needed
         let assetName;
+        console.dir(object);
         for (const k in gameSource.assets) {
             const asset = gameSource.assets[k];
             if (asset === object) {
@@ -1663,7 +1664,7 @@ function onProjectSelect(target, type, object) {
                 break;
             } else if (asset.spritesheet && asset.spritesheet === object) {
                 // Spritesheet on a map
-                assetName = asset + '.' + Object.keys(asset.spritesheet_table)[0];
+                assetName = asset._name + '.spritesheet';
                 break;
             }
         }
@@ -1683,7 +1684,8 @@ function onProjectSelect(target, type, object) {
         if (/\.png$/i.test(url)) {
             // Sprite or font
             spriteEditor.style.visibility = 'visible';
-            spriteEditor.style.backgroundImage = `url("${url}")`;
+            // Force a reload with the ?
+            spriteEditor.style.backgroundImage = `url("${url}?reload${Math.floor(Math.random() * 1e6)}")`;
 
             if (! object.size || (object.size.x > object.size.y)) {
                 // Fit horizontally
@@ -1694,7 +1696,6 @@ function onProjectSelect(target, type, object) {
             }
         
             if (object._type === 'spritesheet') {
-                    
                 spriteEditor.onmousemove = spriteEditor.onmousedown = function (e) {
                     
                     if (object.size === undefined) {
@@ -3817,7 +3818,7 @@ document.addEventListener('contextmenu', function (event) {
 
 function showContextMenu() {
     customContextMenu.style.left = event.pageX + 'px';
-    customContextMenu.style.top = min(event.pageY, window.innerHeight - 200) + 'px';
+    customContextMenu.style.top = Math.min(event.pageY, window.innerHeight - 200) + 'px';
     customContextMenu.style.visibility = 'visible';
 }
 

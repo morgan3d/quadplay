@@ -1301,7 +1301,6 @@ function loadMap(name, json, mapJSONUrl) {
 
     const loadSpritesheetJSONCallback = function (spritesheetJson) {
         onLoadFileComplete(spritesheetUrl);
-        spritesheetJson.url = makeURLAbsolute(spritesheetUrl, spritesheetJson.url);
         fileContents[spritesheetUrl] = spritesheetJson;
         loadSpritesheet(name + '.spritesheet', spritesheetJson, spritesheetUrl, loadSpritesheetCallback);
     };

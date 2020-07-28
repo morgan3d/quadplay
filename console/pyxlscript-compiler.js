@@ -499,10 +499,10 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode) {
         if (lineArray[i].indexOf('%') !== -1) {
             throw makeError('% may only appear at the end of a number (did you intend to use the "mod" operator?)', i);
         }
-        
+
         const illegal = lineArray[i].match(/\b(===|!==|toString|try|switch|this|delete|null|arguments|undefined|use|using|yield|prototype|var|new|auto|as|instanceof|typeof|\$|class)\b/) ||
-              lineArray[i].match(/('|!(?!=))/) ||
-              (! internalMode && lineArray[i].match(/\b_.*?\b/));
+              lineArray[i].match(/('|!(?!=))/) || // Single quote
+              (! internalMode && lineArray[i].match(/\b[_\$]\S*?\b/)); // Underscores or dollar signs
         
         if (illegal) {
             const alternative = {"'":'"', '!==':'!=', '!':'not', 'var':'let', 'null':'nil', '===':'=='};
@@ -956,8 +956,8 @@ function pyxlToJS(src, noYield, internalMode) {
     
     // Handle scopes and block statement translations
     {
-        let lineArray = src.split('\n');
-        processBlock(lineArray, 0, {}, {}, noYield, internalMode);
+        const lineArray = src.split('\n');
+        processBlock(lineArray, 0, noYield, internalMode);
         src = lineArray.join('\n');
     }
 
