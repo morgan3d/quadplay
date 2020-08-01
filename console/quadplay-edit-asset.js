@@ -130,15 +130,7 @@ function onAddAssetAdd() {
         const rawName = url;
         const type = document.getElementById('addAssetType').value;
         const jsonBase = rawName.replace(/\..*$/, '.' + type + '.json');
-
-        // Interpret jsonBase relative to the game
-        let gamePath = gameSource.jsonURL.replace(/\\/g, '/');
-        if (gamePath.startsWith(location.origin)) {
-            gamePath = gamePath.substring(location.origin.length);
-        }
-        gamePath = gamePath.replace(/\/[^/]+\.game\.json$/, '\/');
-
-        const jsonAbsoluteURL = gamePath + jsonBase;
+        const jsonAbsoluteURL = makeURLRelativeToGame(jsonBase);
 
         const json = {
             'url': rawName,
@@ -220,12 +212,7 @@ function onNewAssetCreate() {
     // Add the new name to the game
     gameSource.json.assets[assetName] = fileName + '.' + type + '.json';
 
-    let gamePath = gameSource.jsonURL.replace(/\\/g, '/');
-    if (gamePath.startsWith(location.origin)) {
-        gamePath = gamePath.substring(location.origin.length);
-    }
-    gamePath = gamePath.replace(/\/[^/]+\.game\.json$/, '\/');
-
+    let gamePath = getGamePath();
 
     switch (type) {
     case 'sprite':

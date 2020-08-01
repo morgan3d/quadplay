@@ -4354,8 +4354,10 @@ Raw Device Access
 : Reserved function for executing device-specific features such as the
   game launcher, GPIO, and alternative input devices. `command` is a
   string telling the host which control feature to execute, and the
-  remaining arguments are passed to it. All `device_control()` commands
-  may change in future releases and may not work on any given platform.
+  remaining arguments are passed to it. 
+  
+  All `device_control()` commands may change in future releases and 
+  may fail silently on any given platform or when not using the IDE.
 
   <style>table.nested td:first-child {padding-right: 25px; white-space: nowrap;} 
          table.nested th {border-bottom: 1px solid} </style>
@@ -4377,6 +4379,14 @@ Raw Device Access
                                                         `"debug_watch"`, `"physics"`.</td></tr>
     <tr valign=top><td> `"get_debug_flag", flagname`    </td><td> Return the state of an IDE debugging flag.</td></tr>
     <tr valign=top><td> `"console.dir", ...`            </td><td> Execute `console.dir(...)` if running in a web browser.</td></tr>
+    <tr valign=top><td> `"save", filename, value, callback`</td><td> Serializes `value` to JSON using WorkJSON extensions and writes to `filename` on disk in the same directory as the game.json file. `filename` cannot contain slashes
+                                                         and must end in `.json`. 
+                                                         This is intended for creating development
+                                                         tools within quadplay itself, for example, level editors, NPC ghost tracks, and demo sequences. 
+                                                         The JSON files can be loaded as game constants with the `raw` type. If present, `callback` is invoked with `value, filename` when the asynchronous
+                                                         save is complete. This will only work with the IDE enabled and a quadplay server.</td></tr>
+    <tr valign=top><td> `"load", filename, callback`</td><td>Loads `filename` and (asynchronously) runs the callback with the arguments `value, filename` when
+                                                         the load is complete. This will only work with the IDE enabled and a quadplay server.</td></tr>
   </table>
 
 
@@ -5043,8 +5053,10 @@ instead of media formats.
 Constants
 ---------------------------------------------------------------------------------------------
 
-Unlike constants declared in code, the constants in the `.game.json` file appear in the IDE
-in the project list and have GUI editors.
+Unlike constants declared in code, the constants in the `.game.json`
+file appear in the IDE in the project list and have GUI editors. They
+are immutable at runtime by the program, but can be changed by the GUI
+editors for debugging and tuning at runtime.
 
 Each constant has the format `"..name..": {"type": "..type..", "value": ..., "description": "..."}`.
 The `description` field is optional and the `raw` type permits a `url` instead of a `value`.
@@ -5952,8 +5964,8 @@ for multi-line comments.
 Operators
 -------------------------------------------------------------------
 
-Arithmetic operators and functions are overloaded to operate on
-numbers and objects.
+Built-in arithmetic operators and functions are overloaded for numbers
+and objects.
 
 Some operators support a compact Unicode version and an ASCII version
 that is easier to type on a conventional keyboard.
@@ -5984,11 +5996,11 @@ ASCII    | Unicode | Meaning
          |`⌈⌉`     | ceiling function
 `||`     |         | absolute value
          |`‖‖`     | magnitude (of a vector or array)
-`[]`     |         | object/array element or array constructor
-`{}`     |         | object constructor (follow JavaScript syntax)
+`[]`     |         | object/array element reference, or array constructor
+`{}`     |         | object constructor (follows JavaScript syntax)
 `.`      |         | object property
 `()`     |         | grouping or function call
-`...`    | `…`     | spread operator
+`...`    | `…`     | spread operator for arrays
 `bitand` |`∩`      | bitwise AND (bit set intersection)
          |`∩=`     | mutating bitwise AND
 `bitor`  |`∪`      | bitwise OR (bit set union)
@@ -6000,23 +6012,27 @@ ASCII    | Unicode | Meaning
          |`⊕=`     | mutating bitwise XOR
 `bitnot` |`~`      | bitwise NOT
 `~=`     |         | mutating bitwise NOT
-`<<`     |`◀`      | bit shift left
-`<<=`    |`◀=`     | mutating bit shift left
-`>>`     |`▶`      | bit shift right
-`>>=`    |`▶=`     | mutating bit shift right
+`<<` or `bitshl`   |`◀`      | arithmetic bit shift left
+`<<=`    |`◀=`     | mutating arithmetic bit shift left
+`>>` or `bitshr`   |`▶`      | arithmetic bit shift right
+`>>=`    |`▶=`     | mutating arithmetic bit shift right
 `if`...`then`...`else`| | conditional
-`default`|         | default value
+`default`|         | default value operator
 
 Assignment and mutating operators all return `nil`; they cannot be
 chained or used in expressions.
 
-There is no logical XOR in PyxlScript.
+There is no logical XOR or logical shift right.
 
 The `default` operator has the form: _expr1_ `default` _expr2_. If
-_expr1_ is not `nil`, then the value of the operation is the value
-of `_expr1_`. If it is `nil`, then _expr2_ is evaluated and the value of the expression is
-the value of `_expr2_`. This allows compact statements handling default arguments
-or out of bounds array accesses, for example:
+_expr1_ is not `nil`, then the value of the operation is the value of
+_expr1_. If it is `nil`, then _expr2_ is evaluated and the value of
+the expression is the value of _expr2_. Note that the second expression
+is not evaluated unless it is needed, as with `and`, `or`, and `if` operators.
+
+The `default` operator allows compact
+statements handling default arguments or out of bounds array accesses,
+for example:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 // Returns a transparent gray. Opacity is optional
@@ -6121,6 +6137,38 @@ x = call(a and abs or cos, θ)
 y = call(tbl["myfunc"], 3, 4)
 z = call(f(a), b)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+### Assignment and Equality
+
+As in Python and JavaScript, all assignment operators perform pointer
+assignment and all equality operators check for pointer equality. All
+function call parameters are passed by pointer. Strings, `nil`,
+numbers, and booleans are immutable and unique.
+
+This means that variables will be aliased after assignment:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+let v = xy(1, 2)
+let k = v
+
+k.x = 3
+// v.x is 3 now
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use `clone()`, `deep_clone()`, or one of the vector-specific helper
+functions for copying assignment:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+let v = xy(4, 5)
+let k = xy(v) // copy
+
+k = clone(v) // generic version
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A global game constant that is cloned becomes mutable. There is no way
+to declare immutable objects or arrays at runtime in code. `const`
+makes the _binding_ constant, but has no effect on the value (as in
+JavaScript).
 
 
 ### Exponents
@@ -7607,6 +7655,7 @@ Changes for both the specification and implementation in each release.
   compressed
 - IDE code editor now highlights compile-time error lines in red
 - Editor divider pane layout now persists over reload
+- Added `device_control()` `"load"` and `"save"` commands for JSON files
 - Added `touch.screen_x`, `touch.screen_y`, `touch.screen_xy`, `touch.screen_dx`, `touch.screen_dy`,
   and `touch.screen_dxy` accessors for screen-space (instead of camera-space) positions
 - Added `rgba(rgb, a)`, `rgba(hsv, a)`, `xyz(xy, z)`, `xyz(xz, y)`, `hsva(hsv, a)`, `hsva(rgb, a)`

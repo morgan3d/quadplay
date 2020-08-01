@@ -8,21 +8,24 @@
 
 'use strict';
 
-var _gameMode = undefined, _prevMode = undefined;
-var _numBootAnimationFrames = 120;
+var $Object = Object;
+var $console = console;
+var $Math = Math;
 
-// Modes from pop_mode. Does not contain _gameMode
-var _modeStack = [], _prevModeStack = [];
+var $gameMode = undefined, $prevMode = undefined;
+var $numBootAnimationFrames = 120;
+
+// Modes from pop_mode. Does not contain $gameMode
+var $modeStack = [], $prevModeStack = [];
 
 // Overriden by setFramebufferSize()
-var _SCREEN_WIDTH = 384, _SCREEN_HEIGHT = 224;
+var $SCREEN_WIDTH = 384, $SCREEN_HEIGHT = 224;
 
-var _Math = Math;
-var _previousModeGraphicsCommandList = [];
+var $previousModeGraphicsCommandList = [];
 
-// Does not contain _previousModeGraphicsCommandList
-var _previousModeGraphicsCommandListStack = [];
-var _frameHooks = [];
+// Does not contain $previousModeGraphicsCommandList
+var $previousModeGraphicsCommandListStack = [];
+var $frameHooks = [];
 
 var game_frames = 0;
 var mode_frames = 0;
@@ -30,34 +33,34 @@ var mode_frames = 0;
 // Graphics execute once out of this many frames.  Must be 1 (60 Hz),
 // 2 (30 Hz), 3 (20 Hz), or 4 (15 Hz). This is managed by
 // quadplay-ide.js. Note that game logic always executes at 60 Hz.
-var _graphicsPeriod = 1;
+var $graphicsPeriod = 1;
 
 // Time spent in graphics this frame
-var _graphicsTime = 0;
+var $graphicsTime = 0;
 
 // Only used on Safari
-var _currentLineNumber = 0;
+var $currentLineNumber = 0;
 
-var _mode_framesStack = [];
+var $mode_framesStack = [];
 
-var _postFX;
+var $postFX;
 
 var is_NaN = Number.isNaN;
 
 // Maps container objects to the count of how many iterators
 // they are currently used within, so that the runtime can
 // detect when they are illegally being mutated.
-var _iteratorCount = new WeakMap();
+var $iteratorCount = new WeakMap();
 
 
-function _checkContainer(container) {
+function $checkContainer(container) {
     if (! Array.isArray(container) && (typeof container !== 'string') && (typeof container !== 'object')) {
-        _error('The container used with a for...in loop must be an object, string, or array.');
+        $error('The container used with a for...in loop must be an object, string, or array.');
     }
 }
 
 function reset_post_effects() {
-    _postFX = {
+    $postFX = {
         background: {r:0, g:0, b:0, a:0},
         color: {r:0, g:0, b:0, a:0},
         blendMode: "source-over",
@@ -72,22 +75,22 @@ function reset_post_effects() {
 reset_post_effects();
 
 function get_post_effects() {
-    return clone(_postFX);
+    return clone($postFX);
 }
 
 function set_post_effects(args) {
     if (args.background !== undefined) {
-        _postFX.background.r = (args.background.r !== undefined) ? args.background.r : 0;
-        _postFX.background.g = (args.background.g !== undefined) ? args.background.g : 0;
-        _postFX.background.b = (args.background.b !== undefined) ? args.background.b : 0;
-        _postFX.background.a = (args.background.a !== undefined) ? args.background.a : 1;
+        $postFX.background.r = (args.background.r !== undefined) ? args.background.r : 0;
+        $postFX.background.g = (args.background.g !== undefined) ? args.background.g : 0;
+        $postFX.background.b = (args.background.b !== undefined) ? args.background.b : 0;
+        $postFX.background.a = (args.background.a !== undefined) ? args.background.a : 1;
     }
 
     if (args.color !== undefined) {
-        _postFX.color.r = (args.color.r !== undefined) ? args.color.r : 0;
-        _postFX.color.g = (args.color.g !== undefined) ? args.color.g : 0;
-        _postFX.color.b = (args.color.b !== undefined) ? args.color.b : 0;
-        _postFX.color.a = (args.color.a !== undefined) ? args.color.a : 1;
+        $postFX.color.r = (args.color.r !== undefined) ? args.color.r : 0;
+        $postFX.color.g = (args.color.g !== undefined) ? args.color.g : 0;
+        $postFX.color.b = (args.color.b !== undefined) ? args.color.b : 0;
+        $postFX.color.a = (args.color.a !== undefined) ? args.color.a : 1;
     }
 
     switch (args.blendMode) {
@@ -96,31 +99,31 @@ function set_post_effects(args) {
     case 'hue':
     case 'multiply':
     case 'difference':
-        _postFX.blendMode = args.blendMode;
+        $postFX.blendMode = args.blendMode;
         break;
     default: throw new Error('Illegal blendMode for post effects: "' + args.blendMode + '"');
     }
 
     if (args.scale !== undefined) {
         if (typeof args.scale === 'number') {
-            _postFX.scale.x = _postFX.scale.y = args.scale;
+            $postFX.scale.x = $postFX.scale.y = args.scale;
         } else {
-            _postFX.scale.x = (args.scale.x !== undefined) ? args.scale.x : 1;
-            _postFX.scale.y = (args.scale.y !== undefined) ? args.scale.y : 1;
+            $postFX.scale.x = (args.scale.x !== undefined) ? args.scale.x : 1;
+            $postFX.scale.y = (args.scale.y !== undefined) ? args.scale.y : 1;
         }
     }
 
     if (args.angle !== undefined) {
-        _postFX.angle = args.angle;
+        $postFX.angle = args.angle;
     }
 
     if (args.pos !== undefined) {
-        _postFX.pos.x = (args.pos.x !== undefined) ? args.pos.x : SCREEN_WIDTH / 2;
-        _postFX.pos.y = (args.pos.y !== undefined) ? args.pos.y : SCREEN_HEIGHT / 2;
+        $postFX.pos.x = (args.pos.x !== undefined) ? args.pos.x : SCREEN_WIDTH / 2;
+        $postFX.pos.y = (args.pos.y !== undefined) ? args.pos.y : SCREEN_HEIGHT / 2;
     }
     
     if (args.opacity !== undefined) {
-        _postFX.opacity = args.opacity;
+        $postFX.opacity = args.opacity;
     }
 }
 
@@ -142,7 +145,7 @@ function sequence(...seq) {
             ++totalLifetime;
             queue.push({callback: seq[i], frames: 1})
         } else {
-            const frames = Math.max(1, Math.round(seq[i].frames || 1));
+            const frames = $Math.max(1, $Math.round(seq[i].frames || 1));
             totalLifetime += frames;
             queue.push({callback: seq[i].callback, frames: frames})
         }
@@ -187,49 +190,49 @@ sequence.BREAK = ["BREAK"];
 
 
 
-function add_frame_hook(callback, endCallback, lifetime, mode) {
+function add_frame_hook(callback, endCallback, frames, mode) {
     if (mode === undefined) { mode = get_mode(); }
-    if (isNaN(lifetime)) { _error("NaN lifetime on add_frame_hook()"); }
-    const hook = {_callback:callback, _endCallback:endCallback, _mode:mode, _lifetime:lifetime, _maxLifetime:lifetime};
-    _frameHooks.push(hook);
+    if (isNaN(frames)) { $error("NaN frames on add_frame_hook()"); }
+    const hook = {$callback:callback, $endCallback:endCallback, $mode:mode, $frames:frames, $maxFrames:frames};
+    $frameHooks.push(hook);
     return hook;
 }
 
 
 function remove_frame_hook(hook) {
-    remove_values(_frameHooks, hook);
+    remove_values($frameHooks, hook);
 }
 
 
 function remove_frame_hooks_by_mode(mode) {
-    for (let i = 0; i < _frameHooks.length; ++i) {
-        if (_frameHooks[i]._mode === mode) {
-            _frameHooks[i] = _frameHooks[_frameHooks.length - 1];
+    for (let i = 0; i < $frameHooks.length; ++i) {
+        if ($frameHooks[i].$mode === mode) {
+            $frameHooks[i] = $frameHooks[$frameHooks.length - 1];
             --i;
-            --_frameHooks.length;
+            --$frameHooks.length;
         }
     }
 }
 
 
-function _processFrameHooks() {
-    for (let i = 0; i < _frameHooks.length; ++i) {
-        const hook = _frameHooks[i];
-        if ((hook._mode === undefined) || (hook._mode === _gameMode)) {
-            --hook._lifetime;
-            const r = hook._callback ? hook._callback(hook._lifetime, hook._maxLifetime) : 0;
+function $processFrameHooks() {
+    for (let i = 0; i < $frameHooks.length; ++i) {
+        const hook = $frameHooks[i];
+        if ((hook.$mode === undefined) || (hook.$mode === $gameMode)) {
+            --hook.$frames;
+            const r = hook.$callback ? hook.$callback(hook.$frames, hook.$maxFrames) : 0;
 
             // Remove the callback *before* it executes so that if
             // a set_mode happens within the callback it does not re-trigger
-            if (r || (hook._lifetime <= 0)) {
-                _frameHooks[i] = _frameHooks[_frameHooks.length - 1];
+            if (r || (hook.$frames <= 0)) {
+                $frameHooks[i] = $frameHooks[$frameHooks.length - 1];
                 --i;
-                --_frameHooks.length;
+                --$frameHooks.length;
             }
             
-            if (! r && (hook._lifetime <= 0)) {
+            if (! r && (hook.$frames <= 0)) {
                 // End hook
-                if (hook._endCallback) { hook._endCallback(); }
+                if (hook.$endCallback) { hook.$endCallback(); }
             }
 
         }
@@ -238,7 +241,7 @@ function _processFrameHooks() {
 
 
 function draw_previous_mode() {
-    Array.prototype.push.apply(_graphicsCommandList, _previousModeGraphicsCommandList);
+    Array.prototype.push.apply($graphicsCommandList, $previousModeGraphicsCommandList);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -285,8 +288,8 @@ function insert(array, i, ...args) {
 
 function push(array, ...args) {
     if (! Array.isArray(array)) { throw new Error('push() requires an array argument'); }
-    if (_iteratorCount.get(array)) {
-        _error('Cannot push() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    if ($iteratorCount.get(array)) {
+        $error('Cannot push() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
     }
     array.push(...args);
     return array[array.length - 1];
@@ -295,8 +298,8 @@ function push(array, ...args) {
 
 function push_front(array, ...args) {
     if (! Array.isArray(array)) { throw new Error('push_front() requires an array argument'); }
-    if (_iteratorCount.get(array)) {
-        _error('Cannot push_front() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    if ($iteratorCount.get(array)) {
+        $error('Cannot push_front() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
     }
     array.unshift(...args);
     return array[0];
@@ -305,8 +308,8 @@ function push_front(array, ...args) {
 
 function pop_front(array) {
     if (! Array.isArray(array)) { throw new Error('pop_front() requires an array argument'); }
-    if (_iteratorCount.get(array)) {
-        _error('Cannot pop_front() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    if ($iteratorCount.get(array)) {
+        $error('Cannot pop_front() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
     }
     if (array.length === 0) { return undefined;  }
     return array.shift();
@@ -314,18 +317,18 @@ function pop_front(array) {
 
 
 function pop(array) {
-    if (_iteratorCount.get(array)) {
-        _error('Cannot pop() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    if ($iteratorCount.get(array)) {
+        $error('Cannot pop() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
     }
     return array.pop();
 }
 
 
-function _defaultComparator(a, b) {
+function $defaultComparator(a, b) {
     return (a < b) ? -1 : (a > b) ? 1 : 0;
 }
 
-function _defaultReverseComparator(b, a) {
+function $defaultReverseComparator(b, a) {
     return (a < b) ? -1 : (a > b) ? 1 : 0;
 }
 
@@ -340,23 +343,23 @@ function sort(array, k, reverse) {
             keys.sort();
             k = keys[0];
             if (reverse) {
-                compare = function (a, b) { return _defaultComparator(a[k], b[k]); };
+                compare = function (a, b) { return $defaultComparator(a[k], b[k]); };
             } else {
-                compare = function (a, b) { return _defaultComparator(b[k], a[k]); };
+                compare = function (a, b) { return $defaultComparator(b[k], a[k]); };
             }
         } else if (reverse) {
             // Just use the default reverse comparator
-            compare = _defaultReverseComparator;
+            compare = $defaultReverseComparator;
         } else {
             // Just use the default comparator
-            compare = _defaultComparator;
+            compare = $defaultComparator;
         }
     } else if (typeof compare !== 'function') {
         // sort by index or key k
         if (reverse) {
-            compare = function (a, b) { return _defaultComparator(b[k], a[k]); };
+            compare = function (a, b) { return $defaultComparator(b[k], a[k]); };
         } else {
-            compare = function (a, b) { return _defaultComparator(a[k], b[k]); };
+            compare = function (a, b) { return $defaultComparator(a[k], b[k]); };
         }
     } else if (reverse) {
         compare = function (a, b) { return k(b, a); };
@@ -367,8 +370,8 @@ function sort(array, k, reverse) {
 
 
 function resize(a, n) {
-    if (_iteratorCount.get(a)) {
-        _error('Cannot resize() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    if ($iteratorCount.get(a)) {
+        $error('Cannot resize() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
     }
     a.length = n;
 }
@@ -409,8 +412,8 @@ function random_value(t) {
 
 
 function remove_all(t) {
-    if (_iteratorCount.get(t)) {
-        _error('Cannot remove_all() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    if ($iteratorCount.get(t)) {
+        $error('Cannot remove_all() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
     }
     if (Array.isArray(t)) {
         t.length = 0;
@@ -425,8 +428,8 @@ function remove_all(t) {
 
 
 function remove_values(t, value) {
-    if (_iteratorCount.get(t)) {
-        _error('Cannot remove_values() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    if ($iteratorCount.get(t)) {
+        $error('Cannot remove_values() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
     }
     
     if (Array.isArray(t)) {
@@ -450,8 +453,8 @@ function remove_values(t, value) {
 
 
 function fast_remove_value(t, value) {
-    if (_iteratorCount.get(t)) {
-        _error('Cannot fast_remove_value() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    if ($iteratorCount.get(t)) {
+        $error('Cannot fast_remove_value() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
     }
     if (Array.isArray(t)) {
         for (let i = 0; i < t.length; ++i) {
@@ -474,7 +477,7 @@ function fast_remove_value(t, value) {
 
 function iterate(array, callback) {
     if (! is_string(callback) && !is_function(callback)) {
-        _error('The callback to iterate() must be a function or string property name');
+        $error('The callback to iterate() must be a function or string property name');
     }
     
     // Place to copy the next element to
@@ -483,7 +486,7 @@ function iterate(array, callback) {
 
     const stringCase = is_string(callback);
 
-    _iteratorCount.set(array, (_iteratorCount.get(array) || 0) + 1);
+    $iteratorCount.set(array, ($iteratorCount.get(array) || 0) + 1);
     try {
         for (let src = 0; src < array.length; ++src) {
             const value = array[src]
@@ -496,7 +499,7 @@ function iterate(array, callback) {
                 if (stringCase) {
                     const fcn = value[callback];
                     if (typeof fcn !== 'function') {
-                        _error("value does not have callback in iterate()");
+                        $error("value does not have callback in iterate()");
                     }
                     r = fcn(value);
                 } else {
@@ -523,7 +526,7 @@ function iterate(array, callback) {
             }
         }
     } finally {
-        _iteratorCount.set(array, _iteratorCount.get(array) - 1);
+        $iteratorCount.set(array, $iteratorCount.get(array) - 1);
     }
                      
     // Remove extra elements
@@ -545,8 +548,8 @@ function reverse(array) {
 
 
 function remove_key(t, i) {
-    if (_iteratorCount.get(t)) {
-        _error('Cannot remove_key() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    if ($iteratorCount.get(t)) {
+        $error('Cannot remove_key() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
     }
     if (Array.isArray(t)) {
         if (typeof i !== 'number') { throw 'remove_key(array, i) called with a key (' + i + ') that is not a number'; }
@@ -558,8 +561,8 @@ function remove_key(t, i) {
 
 
 function extend(a, b) {
-    if (_iteratorCount.get(a)) {
-        _error('Cannot extend() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    if ($iteratorCount.get(a)) {
+        $error('Cannot extend() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
     }
     if (Array.isArray(a)) {
         if (! Array.isArray(b)) {
@@ -604,7 +607,7 @@ function array_value(animation, frame, extrapolate) {
         break;
         
     default:
-        frame = _clamp(frame, 0, animation.length - 1)
+        frame = $clamp(frame, 0, animation.length - 1)
     }
       
     return animation[frame];
@@ -638,8 +641,8 @@ var extended = concatenate;
 
 
 function fast_remove_key(t, i) {
-    if (_iteratorCount.get(t)) {
-        _error('Cannot fast_remove_key() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
+    if ($iteratorCount.get(t)) {
+        $error('Cannot fast_remove_key() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
     }
     if (Array.isArray(t)) {
         if (typeof i !== 'number') { throw 'fast_remove_key(array, i) called with a key (' + i + ') that is not a number'; }
@@ -674,7 +677,7 @@ function ends_with(str, pattern) {
 }
 
 // Helper for replace()
-function _entryKeyLengthCompare(a, b) {
+function $entryKeyLengthCompare(a, b) {
     return b[0].length - a[0].length;
 }
 
@@ -720,7 +723,7 @@ function replace(s, src, dst) {
         // Escape any special characters, build a global replacement regexp, and then
         // run it on dst.
         src = src.replace(ESCAPABLES, '\\$&');
-        dst = dst.replace(/\$/g, '$$');
+        dst = dst.replace(/\$/g, '$');
         return s.replace(new RegExp(src, 'g'), dst);
     }
 }
@@ -749,7 +752,7 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
         throw new Error('extrapolate argument to make_spline must be "stall", "loop", "clamp", or "continue"');
     }
     
-    order = Math.round(order);
+    order = $Math.round(order);
     if (order === 2 || order < 0 || order > 3) { throw new Error('order must be 0, 1, or 3'); }
 
     // Clone the arrays
@@ -870,12 +873,12 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
     /** Derived from the G3D Innovation Engine (https://casual-effects.com/g3d).
         Assumes that time[0] <= s < time[N - 1] + time[0].  called by compute_index. Returns {i, u} */
     function computeIndexInBounds(s) {
-        console.assert((s < time[N - 1] + time[0]) && (time[0] <= s));
+        $console.assert((s < time[N - 1] + time[0]) && (time[0] <= s));
         const t0 = time[0];
         const tn = time[N - 1];
 
         if (s > time[N - 1]) {
-            console.assert(extrapolate === 'loop');
+            $console.assert(extrapolate === 'loop');
             return {i:N - 1, u:(s - time[N - 1]) / (time[N] - time[N - 1])};
         }
 
@@ -888,7 +891,7 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
     
         while ((time[i] > s) || ((i < time.length - 1) && (time[i + 1] <= s))) {
             if (hi <= lo) {
-                console.log(lo, hi, i, s);
+                $console.log(lo, hi, i, s);
                 throw new Error('Infinite loop?');
             }
 
@@ -962,7 +965,7 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
                 // following the first time interval.
                 const dt = time[1] - t0;
                 const x = (s - t0) / dt;
-                i = Math.floor(x);
+                i = $Math.floor(x);
                 u = x - i;
                 return {i:i, u:u};
                 
@@ -971,7 +974,7 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
                 // the last time interval.
                 const dt = tn - time[N - 2];
                 const x = (N - 1) + (s - tn) / dt;
-                i = Math.floor(x);
+                i = $Math.floor(x);
                 u = x - i;
                 return {i:i, u:u};
                 
@@ -1079,22 +1082,19 @@ function call(f) {
 
 //////////////////////////////////////////////////////////////////////
 
-/** Set by reloadRuntime(). 128x23 Uint8 array */
-var _fontSheet = null;
-
 /** Callback to show the screen buffer and yield to the browser. Set by
     reloadRuntime() */
-var _submitFrame = null;
+var $submitFrame = null;
 
 // Scissor (set_clipping) region. This is inclusive and is expressed in
 // terms of pixel indices.
-var _clipY1 = 0, _clipY2 = _SCREEN_HEIGHT - 1, _clipZ1 = -2047, _clipX1 = 0, _clipX2 = _SCREEN_WIDTH - 1, _clipZ2 = 2048;
+var $clipY1 = 0, $clipY2 = $SCREEN_HEIGHT - 1, $clipZ1 = -2047, $clipX1 = 0, $clipX2 = $SCREEN_WIDTH - 1, $clipZ2 = 2048;
 
 // Transform
-var _offsetX = 0, _offsetY = 0, _offsetZ = 0, _scaleX = 1, _scaleY = 1, _scaleZ = 1, _skewXZ = 0, _skewYZ = 0;
+var $offsetX = 0, $offsetY = 0, $offsetZ = 0, $scaleX = 1, $scaleY = 1, $scaleZ = 1, $skewXZ = 0, $skewYZ = 0;
 
 // Camera
-var _camera = {
+var $camera = {
     // Raw fields
     x:     0,
     y:     0,
@@ -1103,40 +1103,40 @@ var _camera = {
     zoom:  1
 };
 
-var _graphicsStateStack = [];
+var $graphicsStateStack = [];
 
 
-function _pushGraphicsState() {
-    _graphicsStateStack.push({
-        cx1:_clipX1, cy1:_clipY1, cz1:_clipZ1,
-        cx2:_clipX2, cy2:_clipY2, cz2:_clipZ2, 
-        ax:_offsetX, ay:_offsetY, az:_offsetZ,
-        sx:_scaleX,  sy:_scaleY,  sz:_scaleZ,
-        kx:_skewXZ,  ky:_skewYZ,
+function $pushGraphicsState() {
+    $graphicsStateStack.push({
+        cx1:$clipX1, cy1:$clipY1, cz1:$clipZ1,
+        cx2:$clipX2, cy2:$clipY2, cz2:$clipZ2, 
+        ax:$offsetX, ay:$offsetY, az:$offsetZ,
+        sx:$scaleX,  sy:$scaleY,  sz:$scaleZ,
+        kx:$skewXZ,  ky:$skewYZ,
 
-        camera_x: _camera.x,
-        camera_y: _camera.y,
-        camera_z: _camera.z,
-        camera_angle: _camera.angle,
-        camera_zoom: _camera.zoom
+        camera_x: $camera.x,
+        camera_y: $camera.y,
+        camera_z: $camera.z,
+        camera_angle: $camera.angle,
+        camera_zoom: $camera.zoom
     });
 }
 
 
-function _popGraphicsState() {
-    const s = _graphicsStateStack.pop();
-    _offsetX = s.ax; _offsetY = s.ay; _offsetZ = s.az;
-    _scaleX = s.sx; _scaleY = s.sy; _scaleZ = s.sz;
-    _skewXZ = s.kx; _skewYZ = s.ky;
+function $popGraphicsState() {
+    const s = $graphicsStateStack.pop();
+    $offsetX = s.ax; $offsetY = s.ay; $offsetZ = s.az;
+    $scaleX = s.sx; $scaleY = s.sy; $scaleZ = s.sz;
+    $skewXZ = s.kx; $skewYZ = s.ky;
 
-    _clipX1 = s.cx1; _clipY1 = s.cy1; _clipZ1 = s.cz1;
-    _clipX2 = s.cx2; _clipY2 = s.cy2; _clipZ2 = s.cz2;
+    $clipX1 = s.cx1; $clipY1 = s.cy1; $clipZ1 = s.cz1;
+    $clipX2 = s.cx2; $clipY2 = s.cy2; $clipZ2 = s.cz2;
 
-    _camera.x = s.camera_x;
-    _camera.y = s.camera_y;
-    _camera.z = s.camera_z;
-    _camera.angle = s.camera_angle;
-    _camera.zoom = s.camera_zoom;
+    $camera.x = s.camera_x;
+    $camera.y = s.camera_y;
+    $camera.z = s.camera_z;
+    $camera.angle = s.camera_angle;
+    $camera.zoom = s.camera_zoom;
 
 }
 
@@ -1163,46 +1163,46 @@ function set_camera(pos, angle, zoom, z) {
     if (typeof zoom === 'number' && (zoom <= 0 || !(zoom < Infinity))) {
         throw new Error('zoom argument to set_camera() must be positive and finite');
     }
-    _camera.x = pos.x;
-    _camera.y = pos.y;
-    _camera.z = z || 0;
-    _camera.angle = angle || 0;
-    _camera.zoom = zoom;
+    $camera.x = pos.x;
+    $camera.y = pos.y;
+    $camera.z = z || 0;
+    $camera.angle = angle || 0;
+    $camera.zoom = zoom;
 }
 
 
 function get_camera() {
     return {
-        pos: xy(_camera.x, _camera.y),
-        angle: _camera.angle,
-        zoom: _camera.zoom,
-        z: _camera.z
+        pos: xy($camera.x, $camera.y),
+        angle: $camera.angle,
+        zoom: $camera.zoom,
+        z: $camera.z
     };
 }
 
 function get_transform() {
-    return {pos:  xy(_offsetX, _offsetY),
-            dir:  xy(_scaleX, _scaleY),
-            z:    _offsetZ,
-            zDir: _scaleZ,
-            skew: xy(_skewXZ, _skewYZ)
+    return {pos:  xy($offsetX, $offsetY),
+            dir:  xy($scaleX, $scaleY),
+            z:    $offsetZ,
+            zDir: $scaleZ,
+            skew: xy($skewXZ, $skewYZ)
            };
 }
 
 
 function rotation_sign() {
-    return -_Math.sign(_scaleX * _scaleY);
+    return -$Math.sign($scaleX * $scaleY);
 }
 
 
 function up_y() {
-    return -_Math.sign(_scaleY);
+    return -$Math.sign($scaleY);
 }
 
 
 function reset_transform() {
-    _offsetX = _offsetY = _offsetZ = _skewXZ = _skewYZ = 0;
-    _scaleX = _scaleY = _scaleZ = 1;
+    $offsetX = $offsetY = $offsetZ = $skewXZ = $skewYZ = 0;
+    $scaleX = $scaleY = $scaleZ = 1;
 }
 
 
@@ -1251,16 +1251,16 @@ function compose_transform(pos, dir, addZ, scaleZ, skew) {
     
 
     // Order matters because these calls mutate the parameters.
-    _offsetX = addX * _scaleX + _offsetX;
-    _skewXZ  = skewXZ + _skewXZ / _scaleX;
-    _scaleX  = scaleX * _scaleX;
+    $offsetX = addX * $scaleX + $offsetX;
+    $skewXZ  = skewXZ + $skewXZ / $scaleX;
+    $scaleX  = scaleX * $scaleX;
 
-    _offsetY = addY * _scaleY + _offsetY;
-    _skewYZ  = skewYZ + _skewYZ / _scaleY;
-    _scaleY  = scaleY * _scaleY;
+    $offsetY = addY * $scaleY + $offsetY;
+    $skewYZ  = skewYZ + $skewYZ / $scaleY;
+    $scaleY  = scaleY * $scaleY;
     
-    _offsetZ = addZ * _scaleZ + _offsetZ;
-    _scaleZ  = scaleZ * _scaleZ;    
+    $offsetZ = addZ * $scaleZ + $offsetZ;
+    $scaleZ  = scaleZ * $scaleZ;    
 }
 
 
@@ -1280,25 +1280,25 @@ function set_transform(pos, dir, addZ, scaleZ, skew) {
     if (skew !== undefined) { skewXZ = skew.x; skewYZ = skew.y; }
 
     // Any undefined fields will default to their previous values
-    if (addX === undefined) { addX = _offsetX; }
-    if (addY === undefined) { addY = _offsetY; }
-    if (addZ === undefined) { addZ = _offsetZ; }
-    if (scaleX === undefined) { scaleX = _scaleX; }
-    if (scaleY === undefined) { scaleY = _scaleY; }
-    if (scaleZ === undefined) { scaleZ = _scaleZ; }
-    if (skewXZ === undefined) { skewXZ = _skewXZ; }
-    if (skewYZ === undefined) { skewYZ = _skewYZ; }
+    if (addX === undefined) { addX = $offsetX; }
+    if (addY === undefined) { addY = $offsetY; }
+    if (addZ === undefined) { addZ = $offsetZ; }
+    if (scaleX === undefined) { scaleX = $scaleX; }
+    if (scaleY === undefined) { scaleY = $scaleY; }
+    if (scaleZ === undefined) { scaleZ = $scaleZ; }
+    if (skewXZ === undefined) { skewXZ = $skewXZ; }
+    if (skewYZ === undefined) { skewYZ = $skewYZ; }
     
-    _offsetX = addX;
-    _offsetY = addY;
-    _offsetZ = addZ;
+    $offsetX = addX;
+    $offsetY = addY;
+    $offsetZ = addZ;
 
-    _scaleX = (scaleX === -1) ? -1 : +1;
-    _scaleY = (scaleY === -1) ? -1 : +1;
-    _scaleZ = (scaleZ === -1) ? -1 : +1;
+    $scaleX = (scaleX === -1) ? -1 : +1;
+    $scaleY = (scaleY === -1) ? -1 : +1;
+    $scaleZ = (scaleZ === -1) ? -1 : +1;
 
-    _skewXZ = skewXZ;
-    _skewYZ = skewYZ;
+    $skewXZ = skewXZ;
+    $skewYZ = skewYZ;
 }
 
 
@@ -1317,12 +1317,12 @@ function intersect_clip(pos, size, z1, z_size) {
         dx = size.x; dy = size.y;
     }
     
-    if (x1 === undefined) { x1 = _clipX1; }
-    if (y1 === undefined) { y1 = _clipY1; }
-    if (z1 === undefined) { z1 = _clipZ1; }
-    if (dx === undefined) { dx = _clipX2 - _clipX1 + 1; }
-    if (dy === undefined) { dy = _clipY2 - _clipY1 + 1; }
-    if (dz === undefined) { dz = _clipZ2 - _clipZ1 + 1; }
+    if (x1 === undefined) { x1 = $clipX1; }
+    if (y1 === undefined) { y1 = $clipY1; }
+    if (z1 === undefined) { z1 = $clipZ1; }
+    if (dx === undefined) { dx = $clipX2 - $clipX1 + 1; }
+    if (dy === undefined) { dy = $clipY2 - $clipY1 + 1; }
+    if (dz === undefined) { dz = $clipZ2 - $clipZ1 + 1; }
 
     let x2 = x1 + dx, y2 = y1 + dy, z2 = z1 + dz;
 
@@ -1331,39 +1331,39 @@ function intersect_clip(pos, size, z1, z_size) {
     if (y2 < y1) { let temp = y1; y1 = y2; y2 = temp; }
     if (z2 < z1) { let temp = z1; z1 = z2; z2 = temp; }
     
-    x1 = Math.round(x1);
-    y1 = Math.round(y1);
-    z1 = Math.round(z1);
+    x1 = $Math.round(x1);
+    y1 = $Math.round(y1);
+    z1 = $Math.round(z1);
 
-    x2 = Math.floor(x2 - 0.5);
-    y2 = Math.floor(y2 - 0.5);
-    z2 = Math.floor(z2 - 0.5);
+    x2 = $Math.floor(x2 - 0.5);
+    y2 = $Math.floor(y2 - 0.5);
+    z2 = $Math.floor(z2 - 0.5);
 
-    _clipX1 = _clamp(Math.max(x1, _clipX1), 0, _SCREEN_WIDTH - 1);
-    _clipY1 = _clamp(Math.max(y1, _clipY1), 0, _SCREEN_HEIGHT - 1);
-    _clipZ1 = _clamp(Math.max(z1, _clipZ1), -2047, 2048);
+    $clipX1 = $clamp($Math.max(x1, $clipX1), 0, $SCREEN_WIDTH - 1);
+    $clipY1 = $clamp($Math.max(y1, $clipY1), 0, $SCREEN_HEIGHT - 1);
+    $clipZ1 = $clamp($Math.max(z1, $clipZ1), -2047, 2048);
     
-    _clipX2 = _clamp(Math.min(x2, _clipX2), 0, _SCREEN_WIDTH - 1);
-    _clipY2 = _clamp(Math.min(y2, _clipY2), 0, _SCREEN_HEIGHT - 1);
-    _clipZ2 = _clamp(Math.min(z2, _clipZ2), -2047, 2048);
+    $clipX2 = $clamp($Math.min(x2, $clipX2), 0, $SCREEN_WIDTH - 1);
+    $clipY2 = $clamp($Math.min(y2, $clipY2), 0, $SCREEN_HEIGHT - 1);
+    $clipZ2 = $clamp($Math.min(z2, $clipZ2), -2047, 2048);
 }
 
 
 function reset_clip() {
-    _clipX1 = _clipY1 = 0;
-    _clipZ1 = -2047;
-    _clipX2 = _SCREEN_WIDTH - 1;
-    _clipY2 = _SCREEN_HEIGHT - 1;
-    _clipZ2 = 2048;
+    $clipX1 = $clipY1 = 0;
+    $clipZ1 = -2047;
+    $clipX2 = $SCREEN_WIDTH - 1;
+    $clipY2 = $SCREEN_HEIGHT - 1;
+    $clipZ2 = 2048;
 }
 
 
 function get_clip() {
     return {
-        pos:    {x:_clipX1, y:_clipY1},
-        size:   {x:_clipX2 - _clipX1 + 1, y:_clipY2 - _clipY1 + 1},
-        z:      _clipZ1,
-        z_size:  _clipZ2 - _clipZ1 + 1
+        pos:    {x:$clipX1, y:$clipY1},
+        size:   {x:$clipX2 - $clipX1 + 1, y:$clipY2 - $clipY1 + 1},
+        z:      $clipZ1,
+        z_size:  $clipZ2 - $clipZ1 + 1
     };
 }
 
@@ -1383,12 +1383,12 @@ function set_clip(pos, size, z1, dz) {
         dx = size.x; dy = size.y;
     }
     
-    if (x1 === undefined) { x1 = _clipX1; }
-    if (y1 === undefined) { y1 = _clipY1; }
-    if (z1 === undefined) { z1 = _clipZ1; }
-    if (dx === undefined) { dx = _clipX2 - _clipX1 + 1; }
-    if (dy === undefined) { dy = _clipY2 - _clipY1 + 1; }
-    if (dz === undefined) { dz = _clipZ2 - _clipZ1 + 1; }
+    if (x1 === undefined) { x1 = $clipX1; }
+    if (y1 === undefined) { y1 = $clipY1; }
+    if (z1 === undefined) { z1 = $clipZ1; }
+    if (dx === undefined) { dx = $clipX2 - $clipX1 + 1; }
+    if (dy === undefined) { dy = $clipY2 - $clipY1 + 1; }
+    if (dz === undefined) { dz = $clipZ2 - $clipZ1 + 1; }
 
     let x2 = x1 + dx, y2 = y1 + dy, z2 = z1 + dz;
 
@@ -1397,61 +1397,61 @@ function set_clip(pos, size, z1, dz) {
     if (y2 < y1) { let temp = y1; y1 = y2; y2 = temp; }
     if (z2 < z1) { let temp = z1; z1 = z2; z2 = temp; }
     
-    x1 = Math.round(x1);
-    y1 = Math.round(y1);
-    z1 = Math.round(z1);
+    x1 = $Math.round(x1);
+    y1 = $Math.round(y1);
+    z1 = $Math.round(z1);
 
-    x2 = Math.floor(x2 - 0.5);
-    y2 = Math.floor(y2 - 0.5);
-    z2 = Math.floor(z2 - 0.5);
+    x2 = $Math.floor(x2 - 0.5);
+    y2 = $Math.floor(y2 - 0.5);
+    z2 = $Math.floor(z2 - 0.5);
 
-    _clipX1 = _clamp(x1, 0, _SCREEN_WIDTH - 1);
-    _clipY1 = _clamp(y1, 0, _SCREEN_HEIGHT - 1);
-    _clipZ1 = _clamp(z1, -2047, 2048);
+    $clipX1 = $clamp(x1, 0, $SCREEN_WIDTH - 1);
+    $clipY1 = $clamp(y1, 0, $SCREEN_HEIGHT - 1);
+    $clipZ1 = $clamp(z1, -2047, 2048);
     
-    _clipX2 = _clamp(x2, 0, _SCREEN_WIDTH - 1);
-    _clipY2 = _clamp(y2, 0, _SCREEN_HEIGHT - 1);
-    _clipZ2 = _clamp(z2, -2047, 2048);
+    $clipX2 = $clamp(x2, 0, $SCREEN_WIDTH - 1);
+    $clipY2 = $clamp(y2, 0, $SCREEN_HEIGHT - 1);
+    $clipZ2 = $clamp(z2, -2047, 2048);
 }
 
 
 function abs(x) {
-    return (x.length !== undefined) ? x.length : Math.abs(x);
+    return (x.length !== undefined) ? x.length : $Math.abs(x);
 }
 
-var sin = Math.sin;
-var cos = Math.cos;
-var tan = Math.tan;
-var acos = Math.acos;
-var asin = Math.asin;
-var log = Math.log;
-var log2 = Math.log2;
-var log10 = Math.log10;
-var exp = Math.exp;
-var sqrt = Math.sqrt;
-var cbrt = Math.cbrt;
+var sin = $Math.sin;
+var cos = $Math.cos;
+var tan = $Math.tan;
+var acos = $Math.acos;
+var asin = $Math.asin;
+var log = $Math.log;
+var log2 = $Math.log2;
+var log10 = $Math.log10;
+var exp = $Math.exp;
+var sqrt = $Math.sqrt;
+var cbrt = $Math.cbrt;
 
 function sign_nonzero(x) { return (x < 0) ? -1 : 1; }
 
 function atan(y, x) {
-    if (typeof y === 'number') { return Math.atan2(y, x); }
-    return Math.atan2(y.y, y.x);
+    if (typeof y === 'number') { return $Math.atan2(y, x); }
+    return $Math.atan2(y.y, y.x);
 }
 
-var _screen;
+var $screen;
 
 
 /** List of graphics commands to be sorted and then executed by show(). */
-var _previousGraphicsCommandList = [];
-var _graphicsCommandList = [];
-var _background = Object.seal({r:0,g:0,b:0,a:1});
+var $previousGraphicsCommandList = [];
+var $graphicsCommandList = [];
+var $background = Object.seal({r:0,g:0,b:0,a:1});
 
 var joy = null; // initialized by reloadRuntime()
 var gamepad_array = null; // initialized by reloadRuntime()
 
-var _hashview = new DataView(new ArrayBuffer(8));
+var $hashview = new DataView(new ArrayBuffer(8));
 
-var _customPauseMenuOptions = [];
+var $customPauseMenuOptions = [];
 
 function _hash(d) {
     // 32-bit FNV-1a
@@ -1465,16 +1465,16 @@ function _hash(d) {
         }
     } else {
         // Number
-        _hashview.setFloat64(0, d);
+        $hashview.setFloat64(0, d);
         for (var i = 7; i >= 0; --i) {
-            hval ^= _hashview.getUint8(i);
+            hval ^= $hashview.getUint8(i);
             hval += (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24);
         }
 
         // Near integers, FNV sometimes does a bad job because it doesn't
         // mix the low bits enough. XOR with some well-distributed
         // bits
-        hval ^= (_fract(Math.sin(d * 10) * 1e6) * 0xffffffff) | 0;
+        hval ^= ($fract($Math.sin(d * 10) * 1e6) * 0xffffffff) | 0;
     }
     
     // Force to unsigned 32-bit
@@ -1489,13 +1489,13 @@ function hash(x, y) {
         h ^= ((hy >> 16) & 0xffff) | ((hy & 0xffff) << 16);
     }
     
-    return Math.abs(h) / 0xffffffff;
+    return $Math.abs(h) / 0xffffffff;
 }
 
 function _lerp(a, b, t) { return a * (1 - t) + b * t; }
 
 // Fast 1D "hash" used by noise()
-function _nhash1(n) { n = Math.sin(n) * 1e4; return n - Math.floor(n); }
+function _nhash1(n) { n = $Math.sin(n) * 1e4; return n - $Math.floor(n); }
 
 // bicubic fbm value noise
 // from https://www.shadertoy.com/view/4dS3Wd
@@ -1515,7 +1515,7 @@ function noise(octaves, x, y, z) {
     y = y || 0;
     z = z || 0;
 
-    let temp = Math.round(octaves);
+    let temp = $Math.round(octaves);
     if (octaves - k > 1e-10) {
         // Catch the common case where the order of arguments was swapped
         // by recognizing fractions in the octave value
@@ -1527,16 +1527,16 @@ function noise(octaves, x, y, z) {
     // Maximum value is 1/2 + 1/4 + 1/8 ... from the straight summation
     // The max is always pow(2,-octaves) less than 1.
     // So, divide by (1-pow(2,-octaves))
-    octaves = Math.max(1, octaves);
+    octaves = $Math.max(1, octaves);
 
     
-    var v = 0, k = 1 / (1 - Math.pow(2, -octaves));
+    var v = 0, k = 1 / (1 - $Math.pow(2, -octaves));
 
     var stepx = 110, stepy = 241, stepz = 171;
     
     for (; octaves > 0; --octaves) {
         
-        var ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
+        var ix = $Math.floor(x), iy = $Math.floor(y), iz = $Math.floor(z);
         var fx = x - ix,        fy = y - iy,        fz = z - iz;
  
         // For performance, compute the base input to a 1D hash from the integer part of the argument and the 
@@ -1577,32 +1577,32 @@ function vec(x, y, z, w) {
     }
 }
 
-function _error(msg) {
+function $error(msg) {
     throw new Error(msg);
 }
 
 
-function _todo(msg) {
+function $todo(msg) {
     if (msg === undefined) {
         throw new Error("Unimplemented");
     } else {
-        throw new Error("Unimplemented: " + _unparse(msg));
+        throw new Error("Unimplemented: " + $unparse(msg));
     }
 }
 
 
 function xy(x, y) {
     if (x === undefined) {
-        _error('nil or no argument to xy()');
+        $error('nil or no argument to xy()');
     }
     
     if (x.x !== undefined) {
-        if (y !== undefined) { _error('xy(number, number), xy(xy), xy(xyz), or xy(array) are the only legal options'); }
+        if (y !== undefined) { $error('xy(number, number), xy(xy), xy(xyz), or xy(array) are the only legal options'); }
         return {x:x.x, y:x.y};
     }
     if (Array.isArray(x)) { return {x:x[0], y:x[1]}; }
-    if (arguments.length !== 2) { _error('xy() cannot take ' + arguments.length + ' arguments.'); }
-    if (typeof y !== 'number') { _error('The second argument to xy(x, y) must be a number'); }
+    if (arguments.length !== 2) { $error('xy() cannot take ' + arguments.length + ' arguments.'); }
+    if (typeof y !== 'number') { $error('The second argument to xy(x, y) must be a number'); }
     return {x:x, y:y};
 }
 
@@ -1616,16 +1616,16 @@ function xy_to_xyz(v, z) {
 
 function xz(x, z) {
     if (x === undefined) {
-        _error('nil or no argument to xz()');
+        $error('nil or no argument to xz()');
     }
     
     if (x.x !== undefined) { // xz(xyz)
-        if (z !== undefined) { _error('xz(number, number), xz(xz), xz(xyz), or xz(array) are the only legal options'); }
+        if (z !== undefined) { $error('xz(number, number), xz(xz), xz(xyz), or xz(array) are the only legal options'); }
         return {x:x.x, z:x.z};
     }
     if (Array.isArray(x)) { return {x:x[0], z:x[1]}; }
-    if (arguments.length !== 2) { _error('xz() cannot take ' + arguments.length + ' arguments.'); }
-    if (typeof z !== 'number') { _error('The second argument to xz(x, z) must be a number'); }
+    if (arguments.length !== 2) { $error('xz() cannot take ' + arguments.length + ' arguments.'); }
+    if (typeof z !== 'number') { $error('The second argument to xz(x, z) must be a number'); }
     return {x:x, z:z};
 }
 
@@ -1646,7 +1646,7 @@ function xyz(x, y, z) {
             if (x.y === undefined) { // xyz(xz)
                 return {x:x.x, y:(y === undefined ? 0 : y), z:x.z};
             } else { // xyz(xyz) {
-                if (y !== undefined) { _error('Cannot run xyz(xyz, z)'); }
+                if (y !== undefined) { $error('Cannot run xyz(xyz, z)'); }
                 return {x:x.x, y:x.y, z:x.z};
             }
         } else { // xyz(xy, y default 0)
@@ -1705,19 +1705,19 @@ function rgb(r, g, b) {
 
     if (r.h !== undefined) {
         // Convert HSV --> RGB
-        const h = _loop(r.h, 0, 1), s = _clamp(r.s, 0, 1), v = _clamp(r.v, 0, 1);
+        const h = _loop(r.h, 0, 1), s = $clamp(r.s, 0, 1), v = $clamp(r.v, 0, 1);
         let k = (5 + 6 * h) % 6;
-        r = v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+        r = v - v * s * $Math.max(0, $Math.min(k, 4 - k, 1));
 
         k = (3 + 6 * h) % 6;
-        g = v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+        g = v - v * s * $Math.max(0, $Math.min(k, 4 - k, 1));
 
         k = (1 + 6 * h) % 6;
-        b = v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+        b = v - v * s * $Math.max(0, $Math.min(k, 4 - k, 1));
         /*
-        r = v * (1 - s + s * _clamp(Math.abs(_fract(h +  1 ) * 6 - 3) - 1, 0, 1));
-        g = v * (1 - s + s * _clamp(Math.abs(_fract(h + 2/3) * 6 - 3) - 1, 0, 1));
-        b = v * (1 - s + s * _clamp(Math.abs(_fract(h + 1/3) * 6 - 3) - 1, 0, 1));
+        r = v * (1 - s + s * $clamp($Math.abs($fract(h +  1 ) * 6 - 3) - 1, 0, 1));
+        g = v * (1 - s + s * $clamp($Math.abs($fract(h + 2/3) * 6 - 3) - 1, 0, 1));
+        b = v * (1 - s + s * $clamp($Math.abs($fract(h + 1/3) * 6 - 3) - 1, 0, 1));
 */
     } else if (r.r !== undefined) {
         // Clone
@@ -1725,9 +1725,9 @@ function rgb(r, g, b) {
         b = r.b;
         r = r.r;
     } else {
-        r = _clamp(r, 0, 1);
-        g = _clamp(g, 0, 1);
-        b = _clamp(b, 0, 1);
+        r = $clamp(r, 0, 1);
+        g = $clamp(g, 0, 1);
+        b = $clamp(b, 0, 1);
     }
     
     return {r:r, g:g, b:b};
@@ -1753,10 +1753,10 @@ function rgba(r, g, b, a) {
         b = r.b;
         r = r.r;
     } else {
-        r = _clamp(r, 0, 1);
-        g = _clamp(g, 0, 1);
-        b = _clamp(b, 0, 1);
-        a = _clamp(a, 0, 1);
+        r = $clamp(r, 0, 1);
+        g = $clamp(g, 0, 1);
+        b = $clamp(b, 0, 1);
+        a = $clamp(a, 0, 1);
     }
     
     return {r:r, g:g, b:b, a:a};
@@ -1766,15 +1766,15 @@ function rgba(r, g, b, a) {
 function hsv(h, s, v) {
     if (h.r !== undefined) {
         // Convert RGB -> HSV
-        const r = _clamp(h.r, 0, 1), g = _clamp(h.g, 0, 1), b = _clamp(h.b, 0, 1);
+        const r = $clamp(h.r, 0, 1), g = $clamp(h.g, 0, 1), b = $clamp(h.b, 0, 1);
 
-        v = Math.max(r, g, b);
+        v = $Math.max(r, g, b);
 
         if (v <= 0) {
             // Black
             h = 0; s = 0;
         } else {
-            const lowest = Math.min(r, g, b);
+            const lowest = $Math.min(r, g, b);
 
             // (highest - lowest) / highest = 1 - lowest / v
             s = 1 - lowest / v;
@@ -1820,7 +1820,7 @@ function hsva(h, s, v, a) {
 }
 
 
-Math.mid = function(a, b, c) {
+$Math.mid = function(a, b, c) {
     if (a < b) {
         if (b < c) {
             // a < b < c
@@ -1843,8 +1843,8 @@ Math.mid = function(a, b, c) {
 }
 
 function _lerp(x, y, a) { return (1 - a) * x + a * y; }
-function _clamp(x, lo, hi) { return Math.min(Math.max(x, lo), hi); }
-function _fract(x) { return x - Math.floor(x); }
+function $clamp(x, lo, hi) { return $Math.min($Math.max(x, lo), hi); }
+function $fract(x) { return x - $Math.floor(x); }
 function _square(x) { return x * x; }
 
 /*************************************************************************************/
@@ -1852,16 +1852,16 @@ function _square(x) { return x * x; }
 
 function transform_es_to_sprite_space(entity, coord) {
     if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { throw new Error("Requires both an entity and a coordinate"); }
-    return xy(coord.x * _scaleX + entity.sprite.size.x * 0.5,
-              coord.y * _scaleY + entity.sprite.size.y * 0.5);
+    return xy(coord.x * $scaleX + entity.sprite.size.x * 0.5,
+              coord.y * $scaleY + entity.sprite.size.y * 0.5);
 }
 
 
 function transform_sprite_space_to_es(entity, coord) {
     if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { throw new Error("Requires both an entity and a coordinate"); }
     if (! entity.sprite) { throw new Error('Called transform_sprite_space_to_es() on an entity with no sprite property.'); }
-    return xy((coord.x - entity.sprite.size.x * 0.5) / _scaleX,
-              (coord.y - entity.sprite.size.y * 0.5) / _scaleY);
+    return xy((coord.x - entity.sprite.size.x * 0.5) / $scaleX,
+              (coord.y - entity.sprite.size.y * 0.5) / $scaleY);
 }
 
 
@@ -1869,17 +1869,17 @@ function draw_entity(e, recurse) {
     if (e === undefined) { throw new Error("nil entity in draw_entity()"); }
     if (recurse === undefined) { recurse = true; }
 
-    if (_showEntityBoundsEnabled) {
+    if ($showEntityBoundsEnabled) {
         draw_bounds(e, false);
     }
     
     if (e.sprite) {
         // Shift the transform temporarily to support the offset without
         // memory allocation
-        const oldX = _offsetX, oldY = _offsetY;
-        _offsetX += e.offset.x * _scaleX; _offsetY += e.offset.y * _scaleY;
+        const oldX = $offsetX, oldY = $offsetY;
+        $offsetX += e.offset.x * $scaleX; $offsetY += e.offset.y * $scaleY;
         draw_sprite(e.sprite, e.pos, e.angle, e.scale, e.opacity, e.z, e.sprite_override_color);
-        _offsetX = oldX; _offsetY = oldY;
+        $offsetX = oldX; $offsetY = oldY;
     }
 
     if (e.child_array && recurse) {
@@ -1890,10 +1890,10 @@ function draw_entity(e, recurse) {
     }
 
     if (e.labelFont && e.labelText) {
-        const oldX = _offsetX, oldY = _offsetY;
-        _offsetX += (e.offset.x + e.text_offset.x) * _scaleX; _offsetY += (e.offset.y + e.text_offset.y) * _scaleY;
+        const oldX = $offsetX, oldY = $offsetY;
+        $offsetX += (e.offset.x + e.text_offset.x) * $scaleX; $offsetY += (e.offset.y + e.text_offset.y) * $scaleY;
         draw_text(e.font, e.text, e.pos, e.text_color, e.text_shadow, e.text_outline, e.text_x_align, e.text_y_align, e.z);
-        _offsetX = oldX; _offsetY = oldY;
+        $offsetX = oldX; $offsetY = oldY;
     }
 }
 
@@ -2000,9 +2000,9 @@ function make_entity(e, childTable) {
     r.offset_in_parent = r.offset_in_parent ? clone(r.offset_in_parent) : xy(0, 0);
     r.scale_in_parent = r.scale_in_parent ? clone(r.scale_in_parent) : xy(1, 1);
 
-    if (typeof r.scale !== 'object') { _error('The scale of an entity must be an xy().'); }
-    if (isNaN(r.angle)) { _error('NaN angle on entity'); }
-    if (isNaN(r.z)) { _error('NaN z on entity'); }
+    if (typeof r.scale !== 'object') { $error('The scale of an entity must be an xy().'); }
+    if (isNaN(r.angle)) { $error('NaN angle on entity'); }
+    if (isNaN(r.z)) { $error('NaN z on entity'); }
     
     // Construct named children
     if (childTable) {
@@ -2085,16 +2085,16 @@ function transform_es_to_es(entity_from, entity_to, point) {
 
 function transform_cs_to_ss(cs_point, cs_z) {
     cs_z = cs_z || 0;
-    return xy((cs_point.x + (cs_z * _skewXZ)) * _scaleX + _offsetX,
-              (cs_point.y + (cs_z * _skewYZ)) * _scaleY + _offsetY);
+    return xy((cs_point.x + (cs_z * $skewXZ)) * $scaleX + $offsetX,
+              (cs_point.y + (cs_z * $skewYZ)) * $scaleY + $offsetY);
 }
 
 
 function transform_ss_to_cs(ss_point, ss_z) {
     ss_z = ss_z || 0;
     const cs_z = transform_ss_z_to_cs_z(ss_z);
-    return xy((ss_point.x - _offsetX) / _scaleX - cs_z * _skewXZ,
-              (ss_point.y - _offsetY) / _scaleY - cs_z * _skewYZ);
+    return xy((ss_point.x - $offsetX) / $scaleX - cs_z * $skewXZ,
+              (ss_point.y - $offsetY) / $scaleY - cs_z * $skewYZ);
 }
 
 
@@ -2113,30 +2113,30 @@ function transform_ws_to_ss(ws_point, ws_z) {
 
 
 function transform_cs_z_to_ss_z(cs_z) {
-    return cs_z * _scaleZ + _offsetZ;
+    return cs_z * $scaleZ + $offsetZ;
 }
 
 
 function transform_ss_z_to_cs_z(ss_z) {
-    return (ss_z - _offsetZ) / _scaleZ;
+    return (ss_z - $offsetZ) / $scaleZ;
 }
 
 
 function transform_ws_to_cs(ws_point, ws_z) {
-    const cs_z = (ws_z || 0) - _camera.z;
+    const cs_z = (ws_z || 0) - $camera.z;
     const mag = _zoom(cs_z);
-    const C = Math.cos(_camera.angle) * mag, S = Math.sin(_camera.angle * rotation_sign()) * mag;
-    const x = ws_point.x - _camera.x, y = ws_point.y - _camera.y;
+    const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
+    const x = ws_point.x - $camera.x, y = ws_point.y - $camera.y;
     return {x: x * C + y * S, y: y * C - x * S};
 }
 
 function transform_cs_to_ws(cs_point, cs_z) {
     const mag = 1 / _zoom(cs_z);
-    const C = Math.cos(-_camera.angle) * mag, S = Math.sin(-_camera.angle * rotation_sign()) * mag;
+    const C = $Math.cos(-$camera.angle) * mag, S = $Math.sin(-$camera.angle * rotation_sign()) * mag;
     
-    const x = cs_point.x - _camera.x, y = cs_point.y - _camera.y;
-    return {x: cs_point.x * C + cs_point.y * S + _camera.y,
-            y: cs_point.y * C - cs_point.x * S + _camera.x};
+    const x = cs_point.x - $camera.x, y = cs_point.y - $camera.y;
+    return {x: cs_point.x * C + cs_point.y * S + $camera.y,
+            y: cs_point.y * C - cs_point.x * S + $camera.x};
 }
 
 function transform_ws_to_es(entity, coord) {
@@ -2153,8 +2153,8 @@ function transform_es_to_ws(entity, coord) {
 
 function transform_to_child(child, pos) {
     const a = child.parent.angle - child.angle;
-    const c = Math.cos(a);
-    const s = Math.sin(a);
+    const c = $Math.cos(a);
+    const s = $Math.sin(a);
     const x = pos.x - child.pos_in_parent.x;
     const y = pos.y - child.pos_in_parent.y;
     
@@ -2164,8 +2164,8 @@ function transform_to_child(child, pos) {
 
 function transform_to_parent(child, pos) {
     const a = child.angle - child.parent.angle;
-    const c = Math.cos(a);
-    const s = Math.sin(a);
+    const c = $Math.cos(a);
+    const s = $Math.sin(a);
     return xy( c * pos.x + s * pos.y + child.pos_in_parent.x,
               -s * pos.x + c * pos.y + child.pos_in_parent.y)
 }
@@ -2177,14 +2177,14 @@ function entity_update_children(parent) {
         throw new Error('entity_update_children requires an entity argument')
     }
 
-    if (typeof parent.scale !== 'object') { _error('The scale of the parent entity must be an xy().'); }
-    if (isNaN(parent.angle)) { _error('NaN angle on parent entity'); }
-    if (isNaN(parent.z)) { _error('NaN z on parent entity'); }
+    if (typeof parent.scale !== 'object') { $error('The scale of the parent entity must be an xy().'); }
+    if (isNaN(parent.angle)) { $error('NaN angle on parent entity'); }
+    if (isNaN(parent.z)) { $error('NaN z on parent entity'); }
     
     const N = parent.child_array.length;
-    const rotSign = Math.sign(parent.scale.x * parent.scale.y);
+    const rotSign = $Math.sign(parent.scale.x * parent.scale.y);
     const a = parent.angle * rotation_sign() * rotSign;
-    const c = Math.cos(a), s = Math.sin(a);
+    const c = $Math.cos(a), s = $Math.sin(a);
     
     for (let i = 0; i < N; ++i) {
         const child = parent.child_array[i];
@@ -2220,7 +2220,7 @@ function entity_simulate(entity, dt) {
     
     const mass = entity_mass(entity);
     if (mass <= 0) {
-        _error('Mass must be positive in entity_simulate()');
+        $error('Mass must be positive in entity_simulate()');
     }
     const imass = 1 / mass;
     const iinertia = 1 / entity_inertia(entity, mass);
@@ -2232,7 +2232,7 @@ function entity_simulate(entity, dt) {
 
     // Drag should fall off with the time step to remain constant
     // as the time step varies (in the absence of acceleration)
-    const k = Math.pow(1 - entity.drag, dt);
+    const k = $Math.pow(1 - entity.drag, dt);
     
     // Integrate
     vel.x *= k;
@@ -2293,7 +2293,7 @@ function entity_move(entity, pos, angle) {
       
     if (angle !== undefined) {
         // Rotate the short way
-        entity.spin = loop(angle - entity.angle, -PI, Math.PI);
+        entity.spin = loop(angle - entity.angle, -PI, $Math.PI);
         entity.angle = angle;
     }
 }
@@ -2307,7 +2307,7 @@ function make_contact_group() {
     // Matter.js uses negative numbers for non-colliding
     // groups, so we negate them everywhere to make it more
     // intuitive for the user.
-    return -_Physics.Body.nextGroup(true);
+    return -$Physics.Body.nextGroup(true);
 }
 
 
@@ -2315,11 +2315,11 @@ function make_contact_group() {
 // matter.js constants are tuned for. Using a power of 2 makes
 // the round trip between matter and quadplay more stable.
 // This is about 0.001, which is the default density in matter.js.
-var _PHYSICS_MASS_SCALE     = Math.pow(2,-10);
-var _PHYSICS_MASS_INV_SCALE = Math.pow(2,10);
+var _PHYSICS_MASS_SCALE     = $Math.pow(2,-10);
+var _PHYSICS_MASS_INV_SCALE = $Math.pow(2,10);
 var _physicsContextIndex = 0;
 
-function _physicsUpdateContact(physics, contact, pair) {
+function $physicsUpdateContact(physics, contact, pair) {
     const activeContacts = pair.activeContacts;
     
     contact.normal.x = pair.collision.normal.x;
@@ -2328,7 +2328,7 @@ function _physicsUpdateContact(physics, contact, pair) {
     contact.point0.y = activeContacts[0].vertex.y;
 
     // For debugging contacts
-    // console.log(" update: ", contact.point0.x);
+    // $console.log(" update: ", contact.point0.x);
     
     if (activeContacts.length > 1) {
         if (! contact.point1) { contact.point1 = {}; }
@@ -2343,7 +2343,7 @@ function _physicsUpdateContact(physics, contact, pair) {
 
 
 function make_physics(options) {
-    const engine = _Physics.Engine.create();
+    const engine = $Physics.Engine.create();
     const physics = Object.seal({
         _name:                 "physics" + (_physicsContextIndex++),
         _engine:               engine,
@@ -2390,7 +2390,7 @@ function make_physics(options) {
     // Allows slowmo, etc.
     // engine.timing.timeScale = 1
 
-    _Physics.Events.on(engine, 'collisionStart', function (event) {
+    $Physics.Events.on(engine, 'collisionStart', function (event) {
         const pairs = event.pairs;
         for (let i = 0; i < pairs.length; ++i) {
             const pair = pairs[i];
@@ -2426,23 +2426,23 @@ function make_physics(options) {
                 mapB.set(pair.bodyA, contact);
 
                 // for debugging collisions
-                //console.log(physics._frame + ' +begin ' + contact.entityA.name + " & " + contact.entityB.name);
+                //$console.log(physics._frame + ' +begin ' + contact.entityA.name + " & " + contact.entityB.name);
             } else {
-                console.assert(mapB.get(pair.bodyA), 'Internal error: Mismatched contact pair in physics simulation');
+                $console.assert(mapB.get(pair.bodyA), 'Internal error: Mismatched contact pair in physics simulation');
                 // ...else: this contact already exists and is in the maps because it was recently active.
                 // it is currently scheduled in the broken contact queue. Update the data; the Active
                 // event will not be called by Matter.js
 
                 // for debugging collisions
-                //console.log(physics._frame + ' resume ' + contact.entityA.name + " & " + contact.entityB.name);
-                _physicsUpdateContact(physics, contact, pair);
+                //$console.log(physics._frame + ' resume ' + contact.entityA.name + " & " + contact.entityB.name);
+                $physicsUpdateContact(physics, contact, pair);
             }
             
             contact._lastRealContactFrame = physics._frame;                
         }
     });
 
-    _Physics.Events.on(engine, 'collisionActive', function (event) {
+    $Physics.Events.on(engine, 'collisionActive', function (event) {
         const pairs = event.pairs;
         for (let i = 0; i < pairs.length; ++i) {
             const pair = pairs[i];
@@ -2458,12 +2458,12 @@ function make_physics(options) {
             }
             
             // for debugging collisions
-            // console.log(physics._frame + ' active ' + contact.entityA.name + " & " + contact.entityB.name);
-            _physicsUpdateContact(physics, contact, pair);
+            // $console.log(physics._frame + ' active ' + contact.entityA.name + " & " + contact.entityB.name);
+            $physicsUpdateContact(physics, contact, pair);
         }
     });
 
-    _Physics.Events.on(engine, 'collisionEnd', function (event) {
+    $Physics.Events.on(engine, 'collisionEnd', function (event) {
         // Schedule collisions for removal
         const pairs = event.pairs;
         const removeArray = last_value(physics._brokenContactQueue);
@@ -2485,7 +2485,7 @@ function make_physics(options) {
                 // then maybe end the contact immediately
 
                 // for debugging collisions
-                //console.log(physics._frame + ' (brk)  ' + contact.entityA.name + " & " + contact.entityB.name);
+                //$console.log(physics._frame + ' (brk)  ' + contact.entityA.name + " & " + contact.entityB.name);
                 
                 // Schedule the contact for removal. It can gain a reprieve if is updated
                 // before it hits the front of the queue.
@@ -2499,10 +2499,10 @@ function make_physics(options) {
 
 
 function physics_add_entity(physics, entity) {
-    if (! physics) { _error("physics context cannot be nil"); }
-    if (! physics._engine) { _error("First argument to physics_add_entity() must be a physics context."); }
-    if (entity._body) { _error("This entity is already in a physics context"); }
-    if (entity.density <= 0) { _error("The entity in physics_add_entity() must have nonzero density"); }
+    if (! physics) { $error("physics context cannot be nil"); }
+    if (! physics._engine) { $error("First argument to physics_add_entity() must be a physics context."); }
+    if (entity.$body) { $error("This entity is already in a physics context"); }
+    if (entity.density <= 0) { $error("The entity in physics_add_entity() must have nonzero density"); }
 
     push(physics._entityArray, entity);
     const engine = physics._engine;
@@ -2511,24 +2511,24 @@ function physics_add_entity(physics, entity) {
 
     switch (entity.shape) {
     case "rect":
-        entity._body = _Physics.Bodies.rectangle(entity.pos.x, entity.pos.y, entity.size.x * entity.scale.x, entity.size.y * entity.scale.y, params);
+        entity.$body = $Physics.Bodies.rectangle(entity.pos.x, entity.pos.y, entity.size.x * entity.scale.x, entity.size.y * entity.scale.y, params);
         break;
         
     case "disk":
-        entity._body = _Physics.Bodies.circle(entity.pos.x, entity.pos.y, 0.5 * entity.size.x * entity.scale.x, params);
+        entity.$body = $Physics.Bodies.circle(entity.pos.x, entity.pos.y, 0.5 * entity.size.x * entity.scale.x, params);
         break;
 
     default:
         throw new Error('Unsupported entity shape for physics_add_entity(): "' + entity.shape + '"');
     }
 
-    entity._body.collisionFilter.group = -entity.contact_group;
-    entity._body.entity = entity;
-    entity._body.slop = 0.075; // 0.05 is the default. Increase to make large object stacks more stable.
+    entity.$body.collisionFilter.group = -entity.contact_group;
+    entity.$body.entity = entity;
+    entity.$body.slop = 0.075; // 0.05 is the default. Increase to make large object stacks more stable.
     entity._attachmentArray = [];
-    _Physics.World.add(engine.world, entity._body);
+    $Physics.World.add(engine.world, entity.$body);
 
-    _bodyUpdateFromEntity(entity._body);
+    $bodyUpdateFromEntity(entity.$body);
 
     return entity;
 }
@@ -2543,7 +2543,7 @@ function physics_remove_all(physics) {
     }
     
     // Shouldn't be needed, but make sure everything is really gone
-    _Physics.Composite.clear(physics._engine.world, false, true);
+    $Physics.Composite.clear(physics._engine.world, false, true);
 }
 
 
@@ -2572,7 +2572,7 @@ function physics_remove_entity(physics, entity) {
     }
 
     // Maintained contacts:
-    const body = entity._body;
+    const body = entity.$body;
     const map = physics._entityContactMap.get(body);
     if (map) {
         for (const otherBody of map.keys()) {
@@ -2585,9 +2585,9 @@ function physics_remove_entity(physics, entity) {
         physics._entityContactMap.delete(body);
     }
     
-    _Physics.World.remove(physics._engine.world, body, true);
+    $Physics.World.remove(physics._engine.world, body, true);
     fast_remove_value(physics._entityArray, entity);
-    entity._body = undefined;
+    entity.$body = undefined;
     entity._attachmentArray = undefined;
 }
 
@@ -2596,7 +2596,7 @@ function physics_remove_entity(physics, entity) {
 function _entityUpdateFromBody(entity) {
     const S = rotation_sign();
     
-    const body     = entity._body;
+    const body     = entity.$body;
     entity.pos.x   = body.position.x;
     entity.pos.y   = body.position.y;
     entity.vel.x   = body.velocity.x;
@@ -2608,7 +2608,7 @@ function _entityUpdateFromBody(entity) {
     entity.torque  = body.torque * _PHYSICS_MASS_INV_SCALE * S;
 
     if (entity.physics_sleep_state === 'vigilant') {
-        if (body.isSleeping) { _Physics.Sleeping.set(body, false); }
+        if (body.isSleeping) { $Physics.Sleeping.set(body, false); }
     } else {
         entity.physics_sleep_state = body.isSleeping ? 'sleeping' : 'awake';
     }
@@ -2624,7 +2624,7 @@ function _entityUpdateFromBody(entity) {
 
 
 // internal   
-function _bodyUpdateFromEntity(body) {
+function $bodyUpdateFromEntity(body) {
     const entity  = body.entity;
 
     // For numerical stability, do not set properties unless they appear to have changed
@@ -2635,34 +2635,34 @@ function _bodyUpdateFromEntity(body) {
     const S = rotation_sign();
 
     // Wake up on changes
-    if (Math.abs(body.position.x - entity.pos.x) > changeThreshold ||
-        Math.abs(body.position.y - entity.pos.y) > changeThreshold) {
-        _Physics.Body.setPosition(body, entity.pos)
+    if ($Math.abs(body.position.x - entity.pos.x) > changeThreshold ||
+        $Math.abs(body.position.y - entity.pos.y) > changeThreshold) {
+        $Physics.Body.setPosition(body, entity.pos)
         awake = true;
     }
     
     // Must set velocity after position, because matter.js is a vertlet integrator
-    if (Math.abs(body.velocity.x - entity.vel.x) > changeThreshold ||
-        Math.abs(body.velocity.y - entity.vel.y) > changeThreshold) {
+    if ($Math.abs(body.velocity.x - entity.vel.x) > changeThreshold ||
+        $Math.abs(body.velocity.y - entity.vel.y) > changeThreshold) {
         // Note: a future Matter.js API will change body.velocity and require using body.getVelocity
-        _Physics.Body.setVelocity(body, entity.vel);
+        $Physics.Body.setVelocity(body, entity.vel);
         awake = true;
     }
 
-    if (Math.abs(body.angularVelocity - entity.spin * S) > changeThreshold) {
-        _Physics.Body.setAngularVelocity(body, entity.spin * S);
+    if ($Math.abs(body.angularVelocity - entity.spin * S) > changeThreshold) {
+        $Physics.Body.setAngularVelocity(body, entity.spin * S);
         awake = true;
     }
 
-    if (Math.abs(body.angle - entity.angle * S) > changeThreshold) {
-        _Physics.Body.setAngle(body, entity.angle * S);
+    if ($Math.abs(body.angle - entity.angle * S) > changeThreshold) {
+        $Physics.Body.setAngle(body, entity.angle * S);
         awake = true;
     }
 
     if (! body.isStatic) {
         const d = entity.density * _PHYSICS_MASS_SCALE;
-        if (Math.abs(body.density - d) > changeThreshold) {
-            _Physics.Body.setDensity(body, d);
+        if ($Math.abs(body.density - d) > changeThreshold) {
+            $Physics.Body.setDensity(body, d);
             awake = true;
         }
     }
@@ -2684,12 +2684,12 @@ function _bodyUpdateFromEntity(body) {
     
     // The Matter.js API does not notice if an object woke up due to velocity, only
     // due to forces.
-    awake = awake || Math.max(Math.abs(body.angularVelocity), Math.abs(body.velocity.x), Math.abs(body.velocity.y)) > 0.01;
-    // Math.max(Math.abs(body.torque), Math.abs(body.force.x), Math.abs(body.force.y)) > 1e-9 ||
+    awake = awake || $Math.max($Math.abs(body.angularVelocity), $Math.abs(body.velocity.x), $Math.abs(body.velocity.y)) > 0.01;
+    // $Math.max($Math.abs(body.torque), $Math.abs(body.force.x), $Math.abs(body.force.y)) > 1e-9 ||
     
     // Change wake state if needed
     if (body.isSleeping === awake) {
-        _Physics.Sleeping.set(body, ! awake);
+        $Physics.Sleeping.set(body, ! awake);
     }
 }
 
@@ -2700,46 +2700,46 @@ function physics_simulate(physics, stepFrames) {
     if (stepFrames === undefined) { stepFrames = 1; }
     const engine = physics._engine;
 
-    // console.log('--------------- timestamp: ' + physics.timing.timestamp);
+    // $console.log('--------------- timestamp: ' + physics.timing.timestamp);
     
     physics._newContactArray = [];
 
-    const bodies = _Physics.Composite.allBodies(engine.world);
+    const bodies = $Physics.Composite.allBodies(engine.world);
     for (let b = 0; b < bodies.length; ++b) {
         const body = bodies[b];
         // Not all bodies have entities; some are created
         // internally by the physics system.
-        if (body.entity) { _bodyUpdateFromEntity(body); }
+        if (body.entity) { $bodyUpdateFromEntity(body); }
     }
       
-    _Physics.Engine.update(engine, stepFrames * 1000 / 60);
+    $Physics.Engine.update(engine, stepFrames * 1000 / 60);
 
     // Enforce the quadplay special constraints. This would be better
     // implemented by injecting the new constraint solver directly
-    // into _Physics.Constraint.solveAll, so that it happens within
+    // into $Physics.Constraint.solveAll, so that it happens within
     // the solver during the main iterations.
     if (engine.customAttachments.length > 0) {
         for (let it = 0; it < 2; ++it) {
             for (let a = 0; a < engine.customAttachments.length; ++a) {
                 const attachment = engine.customAttachments[a];
                 if (attachment.type === 'gyro') {
-                    const body = attachment.entityB._body;
+                    const body = attachment.entityB.$body;
                     const angle = attachment.angle;
-                    _Physics.Body.setAngularVelocity(body, 0);
-                    _Physics.Body.setAngle(body, angle);
+                    $Physics.Body.setAngularVelocity(body, 0);
+                    $Physics.Body.setAngle(body, angle);
                 }
             }
             
             // Force one extra iteration of constraint solving to reconcile
             // what we just did above, so that attached parts are not lagged
             if (it === 0) {
-                let allConstraints = _Physics.Composite.allConstraints(engine.world);
+                let allConstraints = $Physics.Composite.allConstraints(engine.world);
                 
-                _Physics.Constraint.preSolveAll(bodies);
+                $Physics.Constraint.preSolveAll(bodies);
                 for (let i = 0; i < engine.constraintIterations; ++i) {
-                    _Physics.Constraint.solveAll(allConstraints, engine.timing.timeScale);
+                    $Physics.Constraint.solveAll(allConstraints, engine.timing.timeScale);
                 }
-                _Physics.Constraint.postSolveAll(bodies);
+                $Physics.Constraint.postSolveAll(bodies);
             }
         }
     }
@@ -2762,10 +2762,10 @@ function physics_simulate(physics, stepFrames) {
         // See if contact was reestablished within the lifetime of the queue:
         if (contact._lastRealContactFrame <= physics._frame - physics._brokenContactQueue.length) {
             // Contact was not reestablished in time, so remove it
-            const bodyA = contact.entityA._body, bodyB = contact.entityB._body;
+            const bodyA = contact.entityA.$body, bodyB = contact.entityB.$body;
 
             // For debugging collisions:
-            // console.log(physics._frame + ' - end  ' + contact.entityA.name + " & " + contact.entityB.name + '\n\n');
+            // $console.log(physics._frame + ' - end  ' + contact.entityA.name + " & " + contact.entityB.name + '\n\n');
 
             // Remove the contact both ways
             const mapA = physics._entityContactMap.get(bodyA);
@@ -2776,12 +2776,12 @@ function physics_simulate(physics, stepFrames) {
         }
     }
 
-    if (_showPhysicsEnabled) {
+    if ($showPhysicsEnabled) {
         draw_physics(physics);
     }
 
     // Fire event handlers for new contacts
-    for (const event of physics._contactCallbackArray.values()) {
+    for (const event of physics.$contactCallbackArray.values()) {
         for (const contact of physics._newContactArray.values()) {
 
             if ((((contact.entityA.contact_category_mask & event.contact_mask) |
@@ -2813,25 +2813,25 @@ function physics_simulate(physics, stepFrames) {
 function physics_add_contact_callback(physics, callback, min_depth, max_depth, contact_mask, sensors) {
     if (contact_mask === 0) { throw new Error('A contact callback with contact_mask = 0 will never run.'); }
 
-    physics._contactCallbackArray.push({
+    physics.$contactCallbackArray.push({
         callback:      callback,
-        min_depth:      min_depth || 0,
-        max_depth:      (max_depth !== undefined) ? max_depth : Infinity,
-        contact_mask: (contact_mask !== undefined) ? contact_mask : 0xffffffff,
-        sensors:        sensors || 'exclude'
+        min_depth:     min_depth || 0,
+        max_depth:     (max_depth !== undefined) ? max_depth : Infinity,
+        contact_mask:  (contact_mask !== undefined) ? contact_mask : 0xffffffff,
+        sensors:       sensors || 'exclude'
     });
 }
 
 
 function physics_entity_has_contacts(physics, entity, region, normal, mask, sensors) {
-    return _physics_entity_contacts(physics, entity, region, normal, mask, sensors, true);
+    return $physics_entity_contacts(physics, entity, region, normal, mask, sensors, true);
 }
 
 function physics_entity_contacts(physics, entity, region, normal, mask, sensors) {
-    return _physics_entity_contacts(physics, entity, region, normal, mask, sensors, false);
+    return $physics_entity_contacts(physics, entity, region, normal, mask, sensors, false);
 }
 
-function _physics_entity_contacts(physics, entity, region, normal, mask, sensors, earlyOut) {
+function $physics_entity_contacts(physics, entity, region, normal, mask, sensors, earlyOut) {
     if (mask === undefined) { mask = 0xffffffff; }
     if (mask === 0) { throw new Error('physics_entity_contacts() with mask = 0 will never return anything.'); }
     if (! entity) { throw new Error('physics_entity_contacts() must have a non-nil entity'); }
@@ -2840,7 +2840,7 @@ function _physics_entity_contacts(physics, entity, region, normal, mask, sensors
     sensors = sensors || 'exclude';
 
     // Look at all contacts for this entity
-    const body = entity._body;
+    const body = entity.$body;
     const map = physics._entityContactMap.get(body);
     const result = earlyOut ? false : [];
 
@@ -2854,7 +2854,7 @@ function _physics_entity_contacts(physics, entity, region, normal, mask, sensors
     const testPointShape = {shape: 'disk', angle: 0, size: xy(0, 0), scale: xy(1, 1), pos: xy(0, 0)};
     const testPoint = testPointShape.pos;
 
-    const Rx = Math.cos(entity.angle) / entity.scale.x, Ry = Math.sin(entity.angle) * rotation_sign() / entity.scale.y;
+    const Rx = $Math.cos(entity.angle) / entity.scale.x, Ry = $Math.sin(entity.angle) * rotation_sign() / entity.scale.y;
     const Tx = entity.pos.x, Ty = entity.pos.y;
 
     // Avoid having overlaps() perform the cleanup test many times
@@ -2862,7 +2862,7 @@ function _physics_entity_contacts(physics, entity, region, normal, mask, sensors
     if (normal) { normal = direction(normal); }
     
     // cosine of 75 degrees
-    const angleThreshold = Math.cos(Math.PI * 80 / 180);
+    const angleThreshold = $Math.cos($Math.PI * 80 / 180);
     
     for (const contact of map.values()) {
         const isA = contact.entityA === entity;
@@ -2871,13 +2871,13 @@ function _physics_entity_contacts(physics, entity, region, normal, mask, sensors
 
         // Are we in the right category?
         if ((other.contact_category_mask & mask) === 0) {
-            // console.log("Mask rejection");
+            // $console.log("Mask rejection");
             continue;
         }
 
         if (((sensors === 'exclude') && other.is_sensor) ||
             ((sensors === 'only') && ! other.is_sensor)) {
-            // console.log("Sensor rejection");
+            // $console.log("Sensor rejection");
             continue;
         }
  
@@ -2901,7 +2901,7 @@ function _physics_entity_contacts(physics, entity, region, normal, mask, sensors
             
             // Is the average contact point within the region?
             if (! overlaps(region, testPointShape, false)) {
-                // console.log("Region rejection");
+                // $console.log("Region rejection");
                 continue;
             }
         }
@@ -2911,7 +2911,7 @@ function _physics_entity_contacts(physics, entity, region, normal, mask, sensors
             let Cx = contact.normal.x, Cy = contact.normal.y;
             if (isB) { Cx = -Cx; Cy = -Cy; }
             if (Cx * normal.x + Cy * normal.y < angleThreshold) {
-                // console.log("Angle rejection");
+                // $console.log("Angle rejection");
                 continue;
             }
         }
@@ -2920,7 +2920,7 @@ function _physics_entity_contacts(physics, entity, region, normal, mask, sensors
         
         // Push a copy of the contact. Do not deep clone,
         // as that would copy the entitys as well.
-        console.assert(contact.normal && contact.point0);
+        $console.assert(contact.normal && contact.point0);
         const copy = {
             entityA: contact.entityA,
             entityB: contact.entityB,
@@ -2942,42 +2942,42 @@ function physics_detach(physics, attachment) {
     if (attachment.entityA) { fast_remove_value(attachment.entityA._attachmentArray, attachment); }
 
     // Decrement and remove reference-counted no-collision elements
-    const mapA = attachment.entityA._body.collisionFilter.excludedBodies;
+    const mapA = attachment.entityA.$body.collisionFilter.excludedBodies;
     if (mapA) {
-        const count = map.get(attachment.entityB._body);
+        const count = map.get(attachment.entityB.$body);
         if (count !== undefined) {
             if (count > 1) {
-                mapA.set(attachment.entityB._body, count - 1);
+                mapA.set(attachment.entityB.$body, count - 1);
             } else {
                 // Remove the no-collision condition
-                mapA.delete(attachment.entityB._body);
+                mapA.delete(attachment.entityB.$body);
             }
         }
     }
 
-    const mapB = attachment.entityB._body.collisionFilter.excludedBodies;
+    const mapB = attachment.entityB.$body.collisionFilter.excludedBodies;
     if (mapB) {
-        const count = map.get(attachment.entityA._body);
+        const count = map.get(attachment.entityA.$body);
         if (count !== undefined) {
             if (count > 1) {
-                mapB.set(attachment.entityA._body, count - 1);
+                mapB.set(attachment.entityA.$body, count - 1);
             } else {
                 // Remove the no-collision condition
-                mapB.delete(attachment.entityA._body);
+                mapB.delete(attachment.entityA.$body);
             }
         }
     }
 
     // Remove the composite, which will destroy all of the Matter.js elements
     // that comprise this constraint
-    _Physics.Composite.remove(physics._engine.world, attachment._composite, true);
+    $Physics.Composite.remove(physics._engine.world, attachment._composite, true);
 }
 
 
 function physics_attach(physics, type, param) {
-    if (param.entityA && ! param.entityA._body) { throw new Error("entityA has not been added to the physics context"); }
+    if (param.entityA && ! param.entityA.$body) { throw new Error("entityA has not been added to the physics context"); }
     if (! param.entityB) { throw new Error("entityB must not be nil"); }
-    if (! param.entityB._body) { throw new Error("entityB has not been added to the physics context"); }
+    if (! param.entityB.$body) { throw new Error("entityB has not been added to the physics context"); }
     if (param.entityB.density === Infinity) { throw new Error("entityB must have finite density"); }
 
     physics = physics._engine;
@@ -2995,7 +2995,7 @@ function physics_attach(physics, type, param) {
         if (param.length !== undefined) { throw new Error('Weld attachments do not accept a length parameter'); }
         if (param.angle !== undefined) {
             param.entityB.angle = param.angle + (param.entityA ? param.entityA.angle : 0);
-            _bodyUpdateFromEntity(attachment.entityB._body);
+            $bodyUpdateFromEntity(attachment.entityB.$body);
         }        
     }
     
@@ -3003,7 +3003,7 @@ function physics_attach(physics, type, param) {
     // matter.js wants the points relative to the centers of the
     // bodies, but not rotated by the bodies
     const options = {
-        bodyB:  param.entityB._body,
+        bodyB:  param.entityB.$body,
         pointB: _objectSub(transform_es_to_ws(param.entityB, param.pointB || xy(0, 0)), param.entityB.pos)
     };
 
@@ -3024,16 +3024,16 @@ function physics_attach(physics, type, param) {
     if (! param.entityA) { collide = true; }
 
     if (param.entityA &&
-        (param.entityA._body.collisionFilter.group < 0) &&
-        (param.entityA._body.collisionFilter.group === param.entityB._body.collisionFilter.group)) {
+        (param.entityA.$body.collisionFilter.group < 0) &&
+        (param.entityA.$body.collisionFilter.group === param.entityB.$body.collisionFilter.group)) {
         // These are in the same collision group; they couldn't collide anyway, so there is no
         // need to explicitly prevent collisions
         collide = true;
     }
 
     if (param.entityA &&
-        ((param.entityB._body.collisionFilter.mask & param.entityA._body.collisionFilter.category) === 0) &&
-        ((param.entityA._body.collisionFilter.mask & param.entityB._body.collisionFilter.category) === 0)) {
+        ((param.entityB.$body.collisionFilter.mask & param.entityA.$body.collisionFilter.category) === 0) &&
+        ((param.entityA.$body.collisionFilter.mask & param.entityB.$body.collisionFilter.category) === 0)) {
         // These could not collide with each other because they have no overlap in their masks
         collide = true;
     }
@@ -3041,13 +3041,13 @@ function physics_attach(physics, type, param) {
     // Update the entity's collision filters. See console/matter-extensions.js
     if (! collide) {
         // Reference counting on the excludedBodies maps
-        param.entityA._body.collisionFilter.body = param.entityA._body;
-        if (! param.entityA._body.collisionFilter.excludedBodies) { param.entityA._body.collisionFilter.excludedBodies = new WeakMap(); }
-        param.entityA._body.collisionFilter.excludedBodies.set(param.entityB._body, (param.entityA._body.collisionFilter.excludedBodies.get(param.entityB._body) || 0) + 1);
+        param.entityA.$body.collisionFilter.body = param.entityA.$body;
+        if (! param.entityA.$body.collisionFilter.excludedBodies) { param.entityA.$body.collisionFilter.excludedBodies = new WeakMap(); }
+        param.entityA.$body.collisionFilter.excludedBodies.set(param.entityB.$body, (param.entityA.$body.collisionFilter.excludedBodies.get(param.entityB.$body) || 0) + 1);
 
-        param.entityB._body.collisionFilter.body = param.entityB._body;
-        if (! param.entityB._body.collisionFilter.excludedBodies) { param.entityB._body.collisionFilter.excludedBodies = new WeakMap(); }        
-        param.entityB._body.collisionFilter.excludedBodies.set(param.entityA._body, (param.entityB._body.collisionFilter.excludedBodies.get(param.entityA._body) || 0) + 1);
+        param.entityB.$body.collisionFilter.body = param.entityB.$body;
+        if (! param.entityB.$body.collisionFilter.excludedBodies) { param.entityB.$body.collisionFilter.excludedBodies = new WeakMap(); }        
+        param.entityB.$body.collisionFilter.excludedBodies.set(param.entityA.$body, (param.entityB.$body.collisionFilter.excludedBodies.get(param.entityA.$body) || 0) + 1);
     }
 
     /////////////////////////////////////////////////////////////////////
@@ -3056,7 +3056,7 @@ function physics_attach(physics, type, param) {
     const B = _objectAdd(attachment.entityB.pos, options.pointB);
     let A;
     if (param.entityA) {
-        options.bodyA = param.entityA._body;
+        options.bodyA = param.entityA.$body;
         if (param.pointA) {
             A = transform_es_to_ws(param.entityA, param.pointA);
             options.pointA = _objectSub(A, param.entityA.pos);
@@ -3112,7 +3112,7 @@ function physics_attach(physics, type, param) {
                 // positions of the bodies to determine the rest length
                 const change = attachment.length - len;
                 
-                if (Math.abs(change) > 1e-9) {
+                if ($Math.abs(change) > 1e-9) {
                     // Teleport entityB to satisfy the rest length
                     if (magnitude(delta) <= 1e-9) {
                         // If A and B are on top of each other and there's
@@ -3123,14 +3123,14 @@ function physics_attach(physics, type, param) {
                         attachment.entityB.pos.x += delta.x * change / len;
                         attachment.entityB.pos.y += delta.y * change / len;
                     }
-                    _bodyUpdateFromEntity(attachment.entityB._body);
+                    $bodyUpdateFromEntity(attachment.entityB.$body);
                 }
             }
 
-            attachment._composite = _Physics.Composite.create();
-            const constraint = _Physics.Constraint.create(options);
+            attachment._composite = $Physics.Composite.create();
+            const constraint = $Physics.Constraint.create(options);
             constraint.attachment = attachment;
-            _Physics.Composite.add(attachment._composite, constraint);
+            $Physics.Composite.add(attachment._composite, constraint);
             
             if (attachment.type === 'weld') {
                 if (! param.entityA) { throw new Error('Entities may not be welded to the world.'); }
@@ -3165,34 +3165,34 @@ function physics_attach(physics, type, param) {
                 const weldDensity = _PHYSICS_MASS_SCALE * (entity_mass(param.entityA) + entity_mass(param.entityB)) / 3500;
 
                 // In world space
-                const weldPos = _objectAdd(options.pointB, param.entityB._body.position);
+                const weldPos = _objectAdd(options.pointB, param.entityB.$body.position);
                 const weldDamping = 0.2;
                 
                 // Iterate around the circle
                 for (let p = 0; p < numPins; ++p) {
-                    const offsetAngle = 2 * Math.PI * p / numPins;
-                    const offset = xy(offsetRadius * Math.cos(offsetAngle), offsetRadius * Math.sin(offsetAngle));
+                    const offsetAngle = 2 * $Math.PI * p / numPins;
+                    const offset = xy(offsetRadius * $Math.cos(offsetAngle), offsetRadius * $Math.sin(offsetAngle));
 
-                    const weldBody = _Physics.Bodies.circle(weldPos.x + offset.x, weldPos.y + offset.y, weldPinRadius, {density: weldDensity});
+                    const weldBody = $Physics.Bodies.circle(weldPos.x + offset.x, weldPos.y + offset.y, weldPinRadius, {density: weldDensity});
                     // Prevent collisions with everything
                     weldBody.collisionFilter.mask = weldBody.collisionFilter.category = 0;
                     // Add the invisible weldBody
-                    _Physics.Composite.add(attachment._composite, weldBody);
+                    $Physics.Composite.add(attachment._composite, weldBody);
 
                     // B -> Weld
-                    _Physics.Composite.add(attachment._composite, _Physics.Constraint.create({
-                        bodyA:     param.entityB._body,
-                        pointA:    _objectSub(weldBody.position, param.entityB._body.position),
+                    $Physics.Composite.add(attachment._composite, $Physics.Constraint.create({
+                        bodyA:     param.entityB.$body,
+                        pointA:    _objectSub(weldBody.position, param.entityB.$body.position),
                         bodyB:     weldBody,
                         damping:   weldDamping,
                         stiffness: 0.9
                     }));
                     
                     // Weld -> A
-                    _Physics.Composite.add(attachment._composite, _Physics.Constraint.create({
+                    $Physics.Composite.add(attachment._composite, $Physics.Constraint.create({
                         bodyA:     weldBody,
-                        bodyB:     param.entityA._body, 
-                        pointB:    _objectSub(weldBody.position, param.entityA._body.position),
+                        bodyB:     param.entityA.$body, 
+                        pointB:    _objectSub(weldBody.position, param.entityA.$body.position),
                         damping:   weldDamping,
                         stiffness: 0.9
                     }));
@@ -3205,17 +3205,17 @@ function physics_attach(physics, type, param) {
       
     case "pin":
         {
-            if (Math.abs(len) > 1e-9) {
+            if ($Math.abs(len) > 1e-9) {
                 attachment.entityB.pos.x -= delta.x;
                 attachment.entityB.pos.y -= delta.y;
-                _bodyUpdateFromEntity(attachment.entityB._body);
+                $bodyUpdateFromEntity(attachment.entityB.$body);
             }
 
             // matter.js uses the current positions of the bodies to determine the rest length
-            attachment._composite = _Physics.Composite.create();
-            const constraint = _Physics.Constraint.create(options);
+            attachment._composite = $Physics.Composite.create();
+            const constraint = $Physics.Constraint.create(options);
             constraint.attachment = attachment;
-            _Physics.Composite.add(attachment._composite, constraint);
+            $Physics.Composite.add(attachment._composite, constraint);
         }
         break;
         
@@ -3226,7 +3226,7 @@ function physics_attach(physics, type, param) {
     
     if (attachment._composite) {
         // Push the attachment's composite into the world
-        _Physics.Composite.add(physics.world, attachment._composite);
+        $Physics.Composite.add(physics.world, attachment._composite);
     }
 
     if (attachment.entityA) { push(attachment.entityA._attachmentArray, attachment); }
@@ -3250,7 +3250,7 @@ function draw_physics(physics) {
 
     const engine       = physics._engine;
     
-    const bodies = _Physics.Composite.allBodies(engine.world);
+    const bodies = $Physics.Composite.allBodies(engine.world);
     for (let b = 0; b < bodies.length; ++b) {
         const body = bodies[b];
         if (! body.entity && ! showSecrets) { continue; }
@@ -3265,23 +3265,23 @@ function draw_physics(physics) {
         const z = body.entity ? body.entity.z + zOffset : 100;
         for (let p = 0; p < body.parts.length; ++p) {
             const part = body.parts[p];
-            const C = Math.cos(part.angle);
-            const S = Math.sin(part.angle);
+            const C = $Math.cos(part.angle);
+            const S = $Math.sin(part.angle);
 
             let r = 4;
             if (body.circleRadius) {
                 draw_disk(part.position, part.circleRadius, undefined, color, z);
-                r = Math.min(r, part.circleRadius - 2);
+                r = $Math.min(r, part.circleRadius - 2);
             } else {
                 const V = part.vertices[0];
                 draw_line(last_value(part.vertices), V, color, z);
                 let maxR2 = magnitude_squared(V.x - part.position.x, V.y - part.position.y);
                 for (let i = 1; i < part.vertices.length; ++i) {
                     const V = part.vertices[i];
-                    maxR2 = Math.max(magnitude_squared(V.x - part.position.x, V.y - part.position.y), maxR2);
+                    maxR2 = $Math.max(magnitude_squared(V.x - part.position.x, V.y - part.position.y), maxR2);
                     draw_line(part.vertices[i - 1], V, color, z);
                 }
-                r = Math.min(Math.sqrt(maxR2) - 2, r);
+                r = $Math.min($Math.sqrt(maxR2) - 2, r);
             }
             
             // Axes
@@ -3293,7 +3293,7 @@ function draw_physics(physics) {
     } // bodies
 
     const weldTri = [xy(0, 5), xy(4.330127018922194, -2.5), xy(-4.330127018922194, -2.5)];
-    const constraints = _Physics.Composite.allConstraints(engine.world);
+    const constraints = $Physics.Composite.allConstraints(engine.world);
     for (let c = 0; c < constraints.length; ++c) {
         const constraint = constraints[c];
         const attachment = constraint.attachment;
@@ -3316,7 +3316,7 @@ function draw_physics(physics) {
             pointB = _objectAdd(pointB, constraint.bodyB.position);
             zB = attachment ? constraint.bodyB.entity.z : 100;
         }
-        const z = Math.max(zA, zB) + zOffset;
+        const z = $Math.max(zA, zB) + zOffset;
 
         const color = attachment ? constraintColor : secretColor;
         
@@ -3325,8 +3325,8 @@ function draw_physics(physics) {
             // and then stretch
             const longAxis = _objectSub(pointB, pointA);
             const crossAxis = _objectMul(xy(-longAxis.y, longAxis.x),
-                                         _clamp(8 - Math.pow(constraint.stiffness, 0.1) * 8, 1, 7) / magnitude(longAxis));
-            const numBends = Math.ceil(attachment.length / 2.5);
+                                         $clamp(8 - $Math.pow(constraint.stiffness, 0.1) * 8, 1, 7) / magnitude(longAxis));
+            const numBends = $Math.ceil(attachment.length / 2.5);
             let prev = pointA;
             for (let i = 1; i < numBends; ++i) {
                 const end = (i === 1 || i === numBends - 1);
@@ -3366,7 +3366,7 @@ function draw_physics(physics) {
         for (const [body1, contact] of map) {
             // Draw each only once, for the body with the lower ID
             if (body0.id < body1.id) {
-                const z = Math.max(contact.entityA.z, contact.entityB.z) + zOffset;
+                const z = $Math.max(contact.entityA.z, contact.entityB.z) + zOffset;
                 draw_rect(contact.point0, contactBox, contactColor, undefined, 0, z);
                 if (contact.point1) { draw_rect(contact.point1, contactBox, contactColor, undefined, 0, z); }
             }
@@ -3376,10 +3376,10 @@ function draw_physics(physics) {
     const newContactBox = xy(7, 7);
     for (let c = 0; c < physics._newContactArray.length; ++c) {
         const contact = physics._newContactArray[c];
-        const z = Math.max(contact.entityA.z, contact.entityB.z) + zOffset;
+        const z = $Math.max(contact.entityA.z, contact.entityB.z) + zOffset;
 
         // Size based on penetration
-        newContactBox.x = newContactBox.y = _clamp(1 + contact.depth * 2, 1, 10);
+        newContactBox.x = newContactBox.y = $clamp(1 + contact.depth * 2, 1, 10);
         
         draw_rect(contact.point0, newContactBox, newContactColor, undefined, 0, z);
         if (contact.point1) { draw_rect(contact.point1, newContactBox, newContactColor, undefined, 0, z); }
@@ -3394,11 +3394,11 @@ function draw_physics(physics) {
 // Snap points to the pixels that they cover. This follows our rule of
 // integer pixel CORNERS and BOTTOM-RIGHT coverage rules at pixel
 // centers.
-var _pixelSnap = Math.floor;
+var _pixelSnap = $Math.floor;
 
 function transform_map_layer_to_ws_z(map, layer) {
     if (! map._type && map._type === 'map') {
-        _error('First argument to transform_map_layer_to_ws_z() must be a map');
+        $error('First argument to transform_map_layer_to_ws_z() must be a map');
     }
     return layer * map.z_scale + map.z_offset;
 }
@@ -3406,7 +3406,7 @@ function transform_map_layer_to_ws_z(map, layer) {
 
 function transform_ws_z_to_map_layer(map, z) {
     if (! map._type && map._type === 'map') {
-        _error('First argument to transform_draw_z_to_map_layer() must be a map');
+        $error('First argument to transform_draw_z_to_map_layer() must be a map');
     }
     return (z - map.z_offset) / map.z_scale;
 }
@@ -3426,8 +3426,8 @@ function transform_ws_to_map_space(map, ws_coord) {
 
 function transform_to(pos, angle, scale, coord) {
     const a = angle * -rotation_sign();
-    const C = Math.cos(a);
-    const S = Math.sin(a);
+    const C = $Math.cos(a);
+    const S = $Math.sin(a);
     
     const Xx =  C, Xy = S;
     const Yx = -S, Yy = C;
@@ -3439,8 +3439,8 @@ function transform_to(pos, angle, scale, coord) {
 
 function transform_from(pos, angle, scale, coord) {
     const a = angle * -rotation_sign();
-    const C = Math.cos(a);
-    const S = Math.sin(a);
+    const C = $Math.cos(a);
+    const S = $Math.sin(a);
 
     const Xx =  C, Xy = S;
     const Yx = -S, Yy = C;
@@ -3451,9 +3451,9 @@ function transform_from(pos, angle, scale, coord) {
 
 
 function get_map_pixel_color(map, map_coord, layer, replacement_array) {
-    layer = Math.floor(layer || 0);
-    let mx = Math.floor(map_coord.x);
-    let my = Math.floor(map_coord.y);
+    layer = $Math.floor(layer || 0);
+    let mx = $Math.floor(map_coord.x);
+    let my = $Math.floor(map_coord.y);
 
     if (map.wrap_x) { mx = loop(mx, map.size.x); }
     if (map.wrap_y) { my = loop(my, map.size.y); }
@@ -3476,15 +3476,15 @@ function get_map_pixel_color(map, map_coord, layer, replacement_array) {
             
             // Map coord (0, 0) is the corner of the corner sprite.
             const ssX = sprite.size.x, ssY = sprite.size.y;
-            const spriteCoord = {x:_clamp(Math.floor((map_coord.x - mx) * ssX), 0, ssX - 1),
-                                 y:_clamp(Math.floor((map_coord.y - my) * ssY), 0, ssY - 1)};
+            const spriteCoord = {x:$clamp($Math.floor((map_coord.x - mx) * ssX), 0, ssX - 1),
+                                 y:$clamp($Math.floor((map_coord.y - my) * ssY), 0, ssY - 1)};
 
             // Account for the automatic flipping that occurs to sprites when rendering
-            if (_scaleY < 0) {
+            if ($scaleY < 0) {
                 spriteCoord.y = ssY - 1 - spriteCoord.y;
             }
             
-            if (_scaleX < 0) {
+            if ($scaleX < 0) {
                 spriteCoord.x = ssX - 1 - spriteCoord.x;
             }
             
@@ -3499,16 +3499,16 @@ function get_map_pixel_color(map, map_coord, layer, replacement_array) {
 
 function get_map_pixel_color_by_ws_coord(map, ws_coord, ws_z, replacement_array) {
     if (! map.spritesheet_table) { throw new Error('The first argument to get_map_pixel_color_by_draw_coord() must be a map'); }
-    const layer = (((ws_z || 0) - _offsetZ) / _scaleZ - map.z_offset) / map.z_scale;
+    const layer = (((ws_z || 0) - $offsetZ) / $scaleZ - map.z_offset) / map.z_scale;
     return get_map_pixel_color(map, transform_ws_to_map_space(map, ws_coord), layer, replacement_array);
 }
 
     
 function get_map_sprite(map, map_coord, layer, replacement_array) {
     if (! map.spritesheet_table) { throw new Error('The first argument to get_map_sprite() must be a map'); }
-    layer = Math.floor(layer || 0) | 0;
-    let mx = Math.floor(map_coord.x);
-    let my = Math.floor(map_coord.y);
+    layer = $Math.floor(layer || 0) | 0;
+    let mx = $Math.floor(map_coord.x);
+    let my = $Math.floor(map_coord.y);
 
     if (map.wrap_x) { mx = loop(mx, map.size.x); }
     if (map.wrap_y) { my = loop(my, map.size.y); }
@@ -3536,9 +3536,9 @@ function get_map_sprite(map, map_coord, layer, replacement_array) {
 
 
 function set_map_sprite(map, map_coord, sprite, layer) {
-    layer = _Math.floor(layer || 0) | 0;
-    let mx = _Math.floor(map_coord.x);
-    let my = _Math.floor(map_coord.y);
+    layer = $Math.floor(layer || 0) | 0;
+    let mx = $Math.floor(map_coord.x);
+    let my = $Math.floor(map_coord.y);
 
     if (map.wrap_x) { mx = loop(mx, map.size.x); }
     if (map.wrap_y) { my = loop(my, map.size.y); }
@@ -3553,13 +3553,13 @@ function set_map_sprite(map, map_coord, sprite, layer) {
 
 
 function get_map_sprite_by_ws_coord(map, ws_coord, ws_z, replacement_array) {
-    const layer = ((ws_z || 0) - _offsetZ) / (_scaleZ * map.z_scale);
+    const layer = ((ws_z || 0) - $offsetZ) / ($scaleZ * map.z_scale);
     return get_map_sprite(map, transform_ws_to_map_space(map, ws_coord), layer, replacement_array);
 }
 
 
 function set_map_sprite_by_ws_coord(map, ws_coord, sprite, z) {
-    const layer = ((z || 0) - _offsetZ) / (_scaleZ * map.z_scale);
+    const layer = ((z || 0) - $offsetZ) / ($scaleZ * map.z_scale);
     return set_map_sprite(map, transform_ws_to_map_space(map, ws_coord), sprite, layer);
 }
 
@@ -3581,7 +3581,7 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
 
     if (max_layer === undefined) { max_layer = map.layer.length - 1; }
 
-    if ((typeof _camera.zoom === 'function') && (min_layer !== max_layer)) {
+    if ((typeof $camera.zoom === 'function') && (min_layer !== max_layer)) {
         // Must draw layers separately when there is a zoom function.
         // Draw in order from back to front to preserve z-order.
         for (let L = min_layer; L <= max_layer; ++L) {
@@ -3600,18 +3600,18 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
 
     z_shift = z_shift || 0;
 
-    if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {
+    if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Use the z-value from the lowest layer for perspective. If the zoom is a
         // function, then draw_map() guarantees that there is only one
         // layer at a time!
-        const z = (min_layer * map.z_scale + map.z_offset + z_shift) - _camera.z;
+        const z = (min_layer * map.z_scale + map.z_offset + z_shift) - $camera.z;
         
         // Transform the arguments to account for the camera
         const mag = _zoom(z);
-        const C = Math.cos(_camera.angle) * mag, S = Math.sin(_camera.angle * rotation_sign()) * mag;
-        const x = pos.x - _camera.x, y = pos.y - _camera.y;
+        const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
+        const x = pos.x - $camera.x, y = pos.y - $camera.y;
         pos = {x: x * C + y * S, y: y * C - x * S};
-        angle -= _camera.angle;
+        angle -= $camera.angle;
         scale = {x: scale.x * mag, y: scale.y * mag};
     }
 
@@ -3628,7 +3628,7 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
     }
 
     // Compute the map axes in draw space
-    const drawU = xy(Math.cos(angle), Math.sin(angle * rotation_sign()));
+    const drawU = xy($Math.cos(angle), $Math.sin(angle * rotation_sign()));
     const drawV = perp(drawU);
     drawU.x *= scale.x; drawU.y *= scale.x;
     drawV.x *= scale.y; drawV.y *= scale.y;
@@ -3637,7 +3637,7 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
     const spriteSizeY = map.sprite_size.y;
     
     // Handle map wrapping with a 4x4 grid
-    const oldDrawOffsetX = _offsetX, oldDrawOffsetY = _offsetY;
+    const oldDrawOffsetX = $offsetX, oldDrawOffsetY = $offsetY;
     for (let shiftY = -1; shiftY <= +1; ++shiftY) {
         if (! map.wrap_y && shiftY !== 0) { continue; }
         
@@ -3647,13 +3647,13 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
             // Shift amount for this instance of the tiled map
             const mapSpaceOffset = xy(map.size.x * map.sprite_size.x * shiftX,
                                       map.size.y * map.sprite_size.y * shiftY);
-            _offsetX = oldDrawOffsetX + drawU.x * mapSpaceOffset.x + drawV.x * mapSpaceOffset.y;
-            _offsetY = oldDrawOffsetY + drawU.y * mapSpaceOffset.x + drawV.y * mapSpaceOffset.y;
+            $offsetX = oldDrawOffsetX + drawU.x * mapSpaceOffset.x + drawV.x * mapSpaceOffset.y;
+            $offsetY = oldDrawOffsetY + drawU.y * mapSpaceOffset.x + drawV.y * mapSpaceOffset.y;
             
             // Take the screen-space clip coordinates to draw coords.
             // This does nothing if there is no offset or scale
-            const drawClip1 = xy((_clipX1 - _offsetX) / _scaleX, (_clipY1 - _offsetY) / _scaleY);
-            const drawClip2 = xy((_clipX2 - _offsetX) / _scaleX, (_clipY2 - _offsetY) / _scaleY);
+            const drawClip1 = xy(($clipX1 - $offsetX) / $scaleX, ($clipY1 - $offsetY) / $scaleY);
+            const drawClip2 = xy(($clipX2 - $offsetX) / $scaleX, ($clipY2 - $offsetY) / $scaleY);
 
             // Take the draw-space clip coordinates to the min/max map
             // coords.  When rotated, this may cause significant
@@ -3662,7 +3662,7 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
             // with a square. 
             let mapX1, mapX2, mapY1, mapY2;
             {
-                //console.log(transform_to(pos, angle, scale, drawClip2));
+                //$console.log(transform_to(pos, angle, scale, drawClip2));
                 // Apply pos, angle, scale.
                 // We have to consider all four corners for the rotation case.
                 const temp1 = transform_ws_to_map_space(map, transform_to(pos, angle, scale, drawClip1)),
@@ -3670,17 +3670,17 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                       temp3 = transform_ws_to_map_space(map, transform_to(pos, angle, scale, xy(drawClip1.x, drawClip2.y))),
                       temp4 = transform_ws_to_map_space(map, transform_to(pos, angle, scale, xy(drawClip2.x, drawClip1.y)));
                 
-                mapX1 = Math.floor(Math.min(temp1.x, temp2.x, temp3.x, temp4.x));
-                mapX2 = Math.ceil (Math.max(temp1.x, temp2.x, temp3.x, temp4.x));
+                mapX1 = $Math.floor($Math.min(temp1.x, temp2.x, temp3.x, temp4.x));
+                mapX2 = $Math.ceil ($Math.max(temp1.x, temp2.x, temp3.x, temp4.x));
                 
-                mapY1 = Math.floor(Math.min(temp1.y, temp2.y, temp3.y, temp4.y));
-                mapY2 = Math.ceil (Math.max(temp1.y, temp2.y, temp3.y, temp4.y));
+                mapY1 = $Math.floor($Math.min(temp1.y, temp2.y, temp3.y, temp4.y));
+                mapY2 = $Math.ceil ($Math.max(temp1.y, temp2.y, temp3.y, temp4.y));
 
-                mapX1 = Math.max(mapX1, 0);
-                mapX2 = Math.min(mapX2, map.size.x - 1);
+                mapX1 = $Math.max(mapX1, 0);
+                mapX2 = $Math.min(mapX2, map.size.x - 1);
                 
-                mapY1 = Math.max(mapY1, 0);
-                mapY2 = Math.min(mapY2, map.size.y - 1);
+                mapY1 = $Math.max(mapY1, 0);
+                mapY2 = $Math.min(mapY2, map.size.y - 1);
             }
 
             // Setup draw calls for the layers. We process each cell
@@ -3697,8 +3697,8 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                 const layer = map.layer[L];
                 const i = L - min_layer;
                 
-                const baseZ = layerZ[i] = (L * map.z_scale + map.z_offset + z_shift - _camera.z) * _scaleZ + _offsetZ;
-                if (baseZ >= _clipZ1 && baseZ <= _clipZ2) {
+                const baseZ = layerZ[i] = (L * map.z_scale + map.z_offset + z_shift - $camera.z) * $scaleZ + $offsetZ;
+                if (baseZ >= $clipZ1 && baseZ <= $clipZ2) {
                     layerSpriteArrays[i] = [];
                 } 
             }
@@ -3708,8 +3708,8 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
             // mutable we have to actually copy all elements for those
             // calls.
 
-            const radius = Math.hypot(map.sprite_size.x, map.sprite_size.y) * 0.5 *
-                  Math.max(Math.abs(scale.x), Math.abs(scale.y));
+            const radius = $Math.hypot(map.sprite_size.x, map.sprite_size.y) * 0.5 *
+                  $Math.max($Math.abs(scale.x), $Math.abs(scale.y));
             
             for (let mapX = mapX1; mapX <= mapX2; ++mapX) {
                 for (let mapY = mapY1; mapY <= mapY2; ++mapY) {
@@ -3720,13 +3720,13 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                     const x = (mapX + 0.5) * map.sprite_size.x + map._offset.x;
                     const y = (mapY + 0.5) * map.sprite_size.y + map._offset.y;
                     
-                    const screenX = (drawU.x * x + drawV.x * y + pos.x) * _scaleX + _offsetX;
-                    const screenY = (drawU.y * x + drawV.y * y + pos.y) * _scaleY + _offsetY;
+                    const screenX = (drawU.x * x + drawV.x * y + pos.x) * $scaleX + $offsetX;
+                    const screenY = (drawU.y * x + drawV.y * y + pos.y) * $scaleY + $offsetY;
                     
                     // If there is rotation, this particular sprite
                     // column might be off screen
-                    if ((screenX + radius < _clipX1 - 0.5) && (screenY + radius < _clipY1 - 0.5) &&
-                        (screenX >= _clipX2 + radius + 0.5) && (screenY >= _clipY2 + radius + 0.5)) {
+                    if ((screenX + radius < $clipX1 - 0.5) && (screenY + radius < $clipY1 - 0.5) &&
+                        (screenX >= $clipX2 + radius + 0.5) && (screenY >= $clipY2 + radius + 0.5)) {
                         continue;
                     }
                     
@@ -3804,14 +3804,14 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
         } // wrap_x
     } // wrap_y
 
-    _offsetX = oldDrawOffsetX;
-    _offsetY = oldDrawOffsetY;
+    $offsetX = oldDrawOffsetX;
+    $offsetY = oldDrawOffsetY;
 }
 
 
 function draw_color_tri(A, B, C, color_A, color_B, color_C, pos, angle, scale, z) {
     // Skip graphics this frame
-    if (mode_frames % _graphicsPeriod !== 0) { return; }
+    if (mode_frames % $graphicsPeriod !== 0) { return; }
     if (A.A) {
         // Object version
         z = A.z;
@@ -3839,7 +3839,7 @@ function draw_color_tri(A, B, C, color_A, color_B, color_C, pos, angle, scale, z
 
 function draw_tri(A, B, C, color, outline, pos, angle, scale, z) {
     // Skip graphics this frame
-    if (mode_frames % _graphicsPeriod !== 0) { return; }
+    if (mode_frames % $graphicsPeriod !== 0) { return; }
     if (A.A) {
         // Object version
         z = A.z;
@@ -3858,7 +3858,7 @@ function draw_tri(A, B, C, color, outline, pos, angle, scale, z) {
 
 function draw_disk(pos, radius, color, outline, z) {
     // Skip graphics this frame
-    if (mode_frames % _graphicsPeriod !== 0) { return; }
+    if (mode_frames % $graphicsPeriod !== 0) { return; }
 
     if (pos.pos) {
         // Object version
@@ -3869,25 +3869,25 @@ function draw_disk(pos, radius, color, outline, z) {
         pos = pos.pos;
     }
 
-    z = (z || 0) - _camera.z;
-    if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {
+    z = (z || 0) - $camera.z;
+    if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
         const mag = _zoom(z);
-        const C = Math.cos(_camera.angle) * mag, S = Math.sin(_camera.angle * rotation_sign()) * mag;
-        const x = pos.x - _camera.x, y = pos.y - _camera.y;
+        const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
+        const x = pos.x - $camera.x, y = pos.y - $camera.y;
         pos = {x: x * C + y * S, y: y * C - x * S};
         radius *= mag;
     }
     
-    const skx = (z * _skewXZ), sky = (z * _skewYZ);
-    let x = (pos.x + skx) * _scaleX + _offsetX, y = (pos.y + sky) * _scaleY + _offsetY;
-    z = z * _scaleZ + _offsetZ;
+    const skx = (z * $skewXZ), sky = (z * $skewYZ);
+    let x = (pos.x + skx) * $scaleX + $offsetX, y = (pos.y + sky) * $scaleY + $offsetY;
+    z = z * $scaleZ + $offsetZ;
     
     radius = (radius + 0.5) | 0;
 
     // Culling optimization
-    if ((x - radius > _clipX2 + 0.5) || (y - radius > _clipY2 + 0.5) || (z > _clipZ2 + 0.5) ||
-        (x + radius < _clipX1 - 0.5) || (y + radius < _clipY1 - 0.5) || (z < _clipZ1 - 0.5)) {
+    if ((x - radius > $clipX2 + 0.5) || (y - radius > $clipY2 + 0.5) || (z > $clipZ2 + 0.5) ||
+        (x + radius < $clipX1 - 0.5) || (y + radius < $clipY1 - 0.5) || (z < $clipZ1 - 0.5)) {
         return;
     }
 
@@ -3914,36 +3914,36 @@ function _colorToUint16(color) {
     let c = 0xF000 >>> 0;
     if (a !== undefined) {
         // >>> 0 ensures uint32
-        c = (((_clamp(a, 0, 1) * 15 + 0.5) & 0xf) << 12) >>> 0;
+        c = ((($clamp(a, 0, 1) * 15 + 0.5) & 0xf) << 12) >>> 0;
     }
 
     let r = 0, g = 0, b = 0, h = color.h;
 
     if (h !== undefined) {
         h = _loop(h, 0, 1);
-        const s = _clamp(color.s, 0, 1), v = _clamp(color.v, 0, 1);
+        const s = $clamp(color.s, 0, 1), v = $clamp(color.v, 0, 1);
 
         // Convert to RGB
         // https://en.wikipedia.org/wiki/HSL_and_HSV#HSV_to_RGB
         let k = (5 + 6 * h) % 6;
-        r = v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+        r = v - v * s * $Math.max(0, $Math.min(k, 4 - k, 1));
 
         k = (3 + 6 * h) % 6;
-        g = v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+        g = v - v * s * $Math.max(0, $Math.min(k, 4 - k, 1));
 
         k = (1 + 6 * h) % 6;
-        b = v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+        b = v - v * s * $Math.max(0, $Math.min(k, 4 - k, 1));
         
         /*
-        r = v * (1 + s - s * _clamp(Math.abs(_fract(h +  1 ) * 6 - 3) - 1, 0, 1));
-        g = v * (1 + s - s * _clamp(Math.abs(_fract(h + 2/3) * 6 - 3) - 1, 0, 1));
-        b = v * (1 + s - s * _clamp(Math.abs(_fract(h + 1/3) * 6 - 3) - 1, 0, 1));
+        r = v * (1 + s - s * $clamp($Math.abs($fract(h +  1 ) * 6 - 3) - 1, 0, 1));
+        g = v * (1 + s - s * $clamp($Math.abs($fract(h + 2/3) * 6 - 3) - 1, 0, 1));
+        b = v * (1 + s - s * $clamp($Math.abs($fract(h + 1/3) * 6 - 3) - 1, 0, 1));
         */
         
     } else {
-        r = _clamp(color.r, 0, 1);
-        g = _clamp(color.g, 0, 1);
-        b = _clamp(color.b, 0, 1);
+        r = $clamp(color.r, 0, 1);
+        g = $clamp(color.g, 0, 1);
+        b = $clamp(color.b, 0, 1);
     }
 
     if (r !== undefined) {
@@ -3964,13 +3964,13 @@ function draw_rect(pos, size, fill, border, angle, z) {
         pos = pos.pos;
     }
     
-    angle = loop(angle || 0, -Math.PI, Math.PI);
+    angle = loop(angle || 0, -$Math.PI, $Math.PI);
 
     const rx = size.x * 0.5, ry = size.y * 0.5;
-    if ((_camera.angle === 0) && (Math.min(Math.abs(angle), Math.abs(angle - Math.PI), Math.abs(angle + Math.PI)) < 1e-10)) {
+    if (($camera.angle === 0) && ($Math.min($Math.abs(angle), $Math.abs(angle - $Math.PI), $Math.abs(angle + $Math.PI)) < 1e-10)) {
         // Use the corner rect case for speed
         draw_corner_rect(xy(pos.x - rx, pos.y - ry), size, fill, border, z);
-    } else if ((_camera.angle === 0) && (Math.min(Math.abs(angle - Math.PI * 0.5), Math.abs(angle + Math.PI * 0.5)) < 1e-10)) {
+    } else if (($camera.angle === 0) && ($Math.min($Math.abs(angle - $Math.PI * 0.5), $Math.abs(angle + $Math.PI * 0.5)) < 1e-10)) {
         // Use the corner rect case for speed, rotated 90 degrees
         draw_corner_rect(xy(pos.x - ry, pos.y - rx), xy(size.y, size.x), fill, border, z);
     } else {
@@ -3983,7 +3983,7 @@ function draw_rect(pos, size, fill, border, angle, z) {
 
 function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
     // Skip graphics this frame
-    if (mode_frames % _graphicsPeriod !== 0) { return; }
+    if (mode_frames % $graphicsPeriod !== 0) { return; }
     
     if (vertexArray.vertex_array) {
         z = vertexArray.z;
@@ -3996,7 +3996,7 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
     }
     
     angle = (angle || 0) * rotation_sign();
-    let Rx = Math.cos(angle), Ry = Math.sin(-angle);
+    let Rx = $Math.cos(angle), Ry = $Math.sin(-angle);
 
     // Clean up transformation arguments
     let Sx = 1, Sy = 1;
@@ -4044,26 +4044,26 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
         return;
     }
 
-    z = (z || 0) - _camera.z;
-    if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {
+    z = (z || 0) - $camera.z;
+    if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         if (scale === undefined) { scale = {x:1, y:1}; }
         // Transform the arguments to account for the camera
         const mag = _zoom(z);
-        const C = Math.cos(_camera.angle) * mag, S = Math.sin(_camera.angle * rotation_sign()) * mag;
+        const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
         
         if (! pos) { pos = {x: 0, y: 0}; }
         if (typeof scale === undefined) { scale = {x: 1, y: 1}; }
         
-        let x = Tx - _camera.x, y = Ty - _camera.y;
+        let x = Tx - $camera.x, y = Ty - $camera.y;
         Tx = x * C + y * S; Ty = y * C - x * S;
-        angle -= _camera.angle;
+        angle -= $camera.angle;
 
         // Update matrix
-        Rx = Math.cos(angle); Ry = Math.sin(-angle);
+        Rx = $Math.cos(angle); Ry = $Math.sin(-angle);
         Sx *= mag; Sy *= mag;
     }
 
-    const skx = z * _skewXZ, sky = z * _skewYZ;
+    const skx = z * $skewXZ, sky = z * $skewYZ;
 
     // Preallocate the output array
     const N = vertexArray.length;
@@ -4085,8 +4085,8 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
         // Object rotate
         const Bx = Ax * Rx + Ay * Ry,      By = Ay * Rx - Ax * Ry;
 
-        const Px = (Bx + Tx + skx) * _scaleX + _offsetX;
-        const Py = (By + Ty + sky) * _scaleY + _offsetY;
+        const Px = (Bx + Tx + skx) * $scaleX + $offsetX;
+        const Py = (By + Ty + sky) * $scaleY + $offsetY;
 
         // Update bounding box
         minx = (Px < minx) ? Px : minx;    miny = (Py < miny) ? Py : miny;
@@ -4095,14 +4095,14 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
         points[p]     = Px;                points[p + 1] = Py;
     }
 
-    z = z * _scaleZ + _offsetZ;
+    z = z * $scaleZ + $offsetZ;
     
     fill   = _colorToUint16(fill);
     border = _colorToUint16(border);
 
     // Culling/all transparent optimization
-    if ((minx > _clipX2 + 0.5) || (miny > _clipY2 + 0.5) || (z < _clipZ1 - 0.5) ||
-        (maxx < _clipX1 - 0.5) || (maxy < _clipY1 - 0.5) || (z > _clipZ2 + 0.5) ||
+    if ((minx > $clipX2 + 0.5) || (miny > $clipY2 + 0.5) || (z < $clipZ1 - 0.5) ||
+        (maxx < $clipX1 - 0.5) || (maxy < $clipY1 - 0.5) || (z > $clipZ2 + 0.5) ||
         !((fill | border) & 0xf000)) {
         return;
     }
@@ -4121,7 +4121,7 @@ function draw_corner_rect(corner, size, fill, outline, z) {
 
     if (corner.corner) {
         if (size !== undefined) {
-            _error('Named argument version of draw_corner_rect() must have only one argument');
+            $error('Named argument version of draw_corner_rect() must have only one argument');
         }
         size = corner.size;
         fill = corner.color;
@@ -4130,49 +4130,49 @@ function draw_corner_rect(corner, size, fill, outline, z) {
         corner = corner.corner;
     }
     
-    if (Math.abs(_camera.angle) >= 1e-10) {
+    if ($Math.abs($camera.angle) >= 1e-10) {
         // Draw using a polygon because it is rotated
         draw_rect({x: corner.x + size.x * 0.5, y: corner.y + size.y * 0.5}, size, fill, outline, 0, z);
         return;
     }
 
-    z = (z || 0) - _camera.z;
+    z = (z || 0) - $camera.z;
 
-    if ((_camera.x !== 0) || (_camera.y !== 0)) {
-        corner = {x: corner.x - _camera.x, y: corner.y - _camera.y};
+    if (($camera.x !== 0) || ($camera.y !== 0)) {
+        corner = {x: corner.x - $camera.x, y: corner.y - $camera.y};
     }
 
-    if (_camera.zoom !== 1) {
+    if ($camera.zoom !== 1) {
         const m = _zoom(z);
         corner = {x: corner.x * m, y: corner.y * m};
         size = {x: size.x * m, y: size.y * m};
     }
 
-    const skx = (z * _skewXZ), sky = (z * _skewYZ);
-    let x1 = (corner.x + skx) * _scaleX + _offsetX, y1 = (corner.y + sky) * _scaleY + _offsetY;
-    let x2 = (corner.x + size.x + skx) * _scaleX + _offsetX, y2 = (corner.y + size.y + sky) * _scaleY + _offsetY;
-    z = z * _scaleZ + _offsetZ;
+    const skx = (z * $skewXZ), sky = (z * $skewYZ);
+    let x1 = (corner.x + skx) * $scaleX + $offsetX, y1 = (corner.y + sky) * $scaleY + $offsetY;
+    let x2 = (corner.x + size.x + skx) * $scaleX + $offsetX, y2 = (corner.y + size.y + sky) * $scaleY + $offsetY;
+    z = z * $scaleZ + $offsetZ;
 
     fill = _colorToUint16(fill);
     outline = _colorToUint16(outline);
 
     // Sort coordinates
-    let t1 = Math.min(x1, x2), t2 = Math.max(x1, x2);
+    let t1 = $Math.min(x1, x2), t2 = $Math.max(x1, x2);
     x1 = t1; x2 = t2;
     
-    t1 = Math.min(y1, y2), t2 = Math.max(y1, y2);
+    t1 = $Math.min(y1, y2), t2 = $Math.max(y1, y2);
     y1 = t1; y2 = t2;
 
     // Inclusive bounds for open top and left edges at the pixel center samples
     // low 0 -> 0, 0.5 -> 1
     // high 4 -> 3, 4.5 -> 4
-    x1 = Math.round(x1); y1 = Math.round(y1);
-    x2 = Math.floor(x2 - 0.5); y2 = Math.floor(y2 - 0.5);
+    x1 = $Math.round(x1); y1 = $Math.round(y1);
+    x2 = $Math.floor(x2 - 0.5); y2 = $Math.floor(y2 - 0.5);
 
     // Culling optimization
     if ((x2 < x1) || (y2 < y1) ||
-        (x1 > _clipX2 + 0.5) || (x2 < _clipX1 - 0.5) || (z < _clipZ1 - 0.5) ||
-        (y1 > _clipY2 + 0.5) || (y2 < _clipY1 - 0.5) || (z > _clipZ2 + 0.5)) {
+        (x1 > $clipX2 + 0.5) || (x2 < $clipX1 - 0.5) || (z < $clipZ1 - 0.5) ||
+        (y1 > $clipY2 + 0.5) || (y2 < $clipY1 - 0.5) || (z > $clipZ2 + 0.5)) {
         return;
     }
 
@@ -4190,7 +4190,7 @@ function draw_corner_rect(corner, size, fill, outline, z) {
 
 // Compute the zoom for this z value for the current camera
 function _zoom(z) {
-    return typeof _camera.zoom === 'number' ? _camera.zoom : _camera.zoom(z);
+    return typeof $camera.zoom === 'number' ? $camera.zoom : $camera.zoom(z);
 }
 
 
@@ -4205,11 +4205,11 @@ function draw_line(A, B, color, z, width) {
     
     if (width === undefined) { width = 1; }
 
-    if (width * _zoom((z || 0) - _camera.z) >= 1.5) {
+    if (width * _zoom((z || 0) - $camera.z) >= 1.5) {
         // Draw a polygon instead of a thin line, as this will
         // be more than one pixel wide in screen space.
         let delta_x = B.y - A.y, delta_y = A.x - B.x;
-        let mag = Math.hypot(delta_x, delta_y);
+        let mag = $Math.hypot(delta_x, delta_y);
         if (mag < 0.001) { return; }
         mag = width / (2 * mag);
         delta_x *= mag; delta_y *= mag;
@@ -4222,30 +4222,30 @@ function draw_line(A, B, color, z, width) {
         return;
     }
     
-    z = (z || 0) - _camera.z;
+    z = (z || 0) - $camera.z;
     
-    if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {
+    if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
         const mag = _zoom(z);
-        const C = Math.cos(_camera.angle) * mag, S = Math.sin(_camera.angle * rotation_sign()) * mag;
-        let x = A.x - _camera.x, y = A.y - _camera.y;
+        const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
+        let x = A.x - $camera.x, y = A.y - $camera.y;
         A = {x: x * C + y * S, y: y * C - x * S};
-        x = B.x - _camera.x, y = B.y - _camera.y;
+        x = B.x - $camera.x, y = B.y - $camera.y;
         B = {x: x * C + y * S, y: y * C - x * S};
         width *= mag;
     }
     
-    const skx = (z * _skewXZ), sky = (z * _skewYZ);
-    let x1 = (A.x + skx) * _scaleX + _offsetX, y1 = (A.y + sky) * _scaleY + _offsetY;
-    let x2 = (B.x + skx) * _scaleX + _offsetX, y2 = (B.y + sky) * _scaleY + _offsetY;
-    z = z * _scaleZ + _offsetZ
+    const skx = (z * $skewXZ), sky = (z * $skewYZ);
+    let x1 = (A.x + skx) * $scaleX + $offsetX, y1 = (A.y + sky) * $scaleY + $offsetY;
+    let x2 = (B.x + skx) * $scaleX + $offsetX, y2 = (B.y + sky) * $scaleY + $offsetY;
+    z = z * $scaleZ + $offsetZ
 
     color = _colorToUint16(color);
 
     // Offscreen culling optimization
     if (! (color & 0xf000) ||
-        (Math.min(x1, x2) > _clipX2 + 0.5) || (Math.max(x1, x2) < _clipX1 - 0.5) || (z < _clipZ1 - 0.5) ||
-        (Math.min(y1, y2) > _clipY2 + 0.5) || (Math.max(y1, y2) < _clipY1 - 0.5) || (z > _clipZ2 + 0.5)) {
+        ($Math.min(x1, x2) > $clipX2 + 0.5) || ($Math.max(x1, x2) < $clipX1 - 0.5) || (z < $clipZ1 - 0.5) ||
+        ($Math.min(y1, y2) > $clipY2 + 0.5) || ($Math.max(y1, y2) < $clipY1 - 0.5) || (z > $clipZ2 + 0.5)) {
         return;
     }
 
@@ -4265,7 +4265,7 @@ function draw_line(A, B, color, z, width) {
 
 function draw_point(pos, color, z) {
     // Skip graphics this frame
-    if (mode_frames % _graphicsPeriod !== 0) { return; }
+    if (mode_frames % $graphicsPeriod !== 0) { return; }
 
     if (pos.pos) {
         z = pos.z;
@@ -4273,40 +4273,40 @@ function draw_point(pos, color, z) {
         pos = pos.pos;
     }
     
-    z = (z || 0) - _camera.z;
+    z = (z || 0) - $camera.z;
 
-    if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {
+    if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
-        const mag = (typeof _camera.zoom === 'number') ? _camera.zoom : _camera.zoom(z);
-        const C = Math.cos(_camera.angle) * mag, S = Math.sin(_camera.angle * rotation_sign()) * mag;
-        const x = pos.x - _camera.x, y = pos.y - _camera.y;
+        const mag = (typeof $camera.zoom === 'number') ? $camera.zoom : $camera.zoom(z);
+        const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
+        const x = pos.x - $camera.x, y = pos.y - $camera.y;
         pos = {x: x * C + y * S, y: y * C - x * S};
     }
     
-    const skx = z * _skewXZ, sky = z * _skewYZ;
-    let x = (pos.x + skx) * _scaleX + _offsetX, y = (pos.y + sky) * _scaleY + _offsetY;
-    z = z * _scaleZ + _offsetZ;
+    const skx = z * $skewXZ, sky = z * $skewYZ;
+    let x = (pos.x + skx) * $scaleX + $offsetX, y = (pos.y + sky) * $scaleY + $offsetY;
+    z = z * $scaleZ + $offsetZ;
     
-    x = Math.floor(x); y = Math.floor(y);
+    x = $Math.floor(x); y = $Math.floor(y);
     
-    if ((z < _clipZ1 - 0.5) || (z >= _clipZ2 + 0.5) ||
-        (x < _clipX1) || (x > _clipX2) ||
-        (y < _clipY1) || (y > _clipY2)) {
+    if ((z < $clipZ1 - 0.5) || (z >= $clipZ2 + 0.5) ||
+        (x < $clipX1) || (x > $clipX2) ||
+        (y < $clipY1) || (y > $clipY2)) {
         return;
     }
 
-    const prevCommand = _graphicsCommandList[_graphicsCommandList.length - 1];
+    const prevCommand = $graphicsCommandList[$graphicsCommandList.length - 1];
     if (prevCommand && (prevCommand.baseZ === z) && (prevCommand.opcode === 'PIX')) {
         // Many points with the same z value are often drawn right
         // after each other.  Aggregate these (preserving their
         // ordering) for faster sorting and rendering.
-        prevCommand.data.push((x + y * _SCREEN_WIDTH) >>> 0, _colorToUint16(color)); 
+        prevCommand.data.push((x + y * $SCREEN_WIDTH) >>> 0, _colorToUint16(color)); 
     } else {
         _addGraphicsCommand({
             z: z,
             baseZ: z,
             opcode: 'PIX',
-            data: [(x + y * _SCREEN_WIDTH) >>> 0, _colorToUint16(color)]
+            data: [(x + y * $SCREEN_WIDTH) >>> 0, _colorToUint16(color)]
         });
     }
 }
@@ -4320,7 +4320,7 @@ function text_width(font, str, markup) {
 
     let formatArray = [{font: font, color: 0, shadow: 0, outline: 0, startIndex: 0}];
     if (markup) {
-        str = _parseMarkup(str, formatArray);
+        str = $parseMarkup(str, formatArray);
     }
 
     // Don't add space after the last letter
@@ -4335,7 +4335,7 @@ function text_width(font, str, markup) {
     let format = formatArray[formatIndex];
 
     for (let c = 0; c < str.length; ++c) {
-        const chr = _fontMap[str[c]] || ' ';
+        const chr = $fontMap[str[c]] || ' ';
         const bounds = font._bounds[chr];
         width += (bounds.x2 - bounds.x1 + 1) + _postGlyphSpace(str, c, format.font) - font._borderSize * 2 + bounds.pre + bounds.post;
         
@@ -4355,7 +4355,7 @@ function text_width(font, str, markup) {
 
 // Returns a string and appends to the array of state changes.
 // Each has the form {color:..., outline:..., shadow:..., font:..., startIndex:...}
-function _parseMarkupHelper(str, startIndex, stateChanges) {
+function $parseMarkupHelper(str, startIndex, stateChanges) {
 
     // Find the first unescaped {, or return if there is none
     let start = -1;
@@ -4373,7 +4373,7 @@ function _parseMarkupHelper(str, startIndex, stateChanges) {
     while (stack > 0) {
         let op = str.indexOf('{', end + 1); if (op === -1) { op = Infinity; }
         let cl = str.indexOf('}', end + 1); if (cl === -1) { cl = Infinity; }
-        end = Math.min(op, cl);
+        end = $Math.min(op, cl);
         
         if (end >= str.length) {
             throw new Error('Unbalanced {} in draw_text() with markup');
@@ -4401,16 +4401,16 @@ function _parseMarkupHelper(str, startIndex, stateChanges) {
     let text = markup.replace(/^\s*(color|shadow|outline)\s*:\s*(#[A-Fa-f0-9]+|(rgb|rgba|gray|hsv|hsva)\([0-9%., ]+\))\s*/, function (match, prop, value) {
         wasColor = true;
         if (value[0] === '#') {
-            value = _parseHexColor(value.substring(1));
+            value = $parseHexColor(value.substring(1));
         } else {
             // Parse the color specification
             let i = value.indexOf('(');
 
-            // (Could also use _parse's indexing arguments to avoid all of this string work)
+            // (Could also use $parse's indexing arguments to avoid all of this string work)
             const type = value.substring(0, i).trim();
             const param = value.substring(i + 1, value.length - 1).split(',');
             // Parse all parameters
-            for (let i = 0; i < param.length; ++i) { param[i] = _parse(param[i].trim()).result; }
+            for (let i = 0; i < param.length; ++i) { param[i] = $parse(param[i].trim()).result; }
 
             // Convert to a structure
             switch (type) {
@@ -4455,7 +4455,7 @@ function _parseMarkupHelper(str, startIndex, stateChanges) {
 
     // Recursively process the main body
     stateChanges.push(newState);
-    text = _parseMarkupHelper(text, before.length + startIndex, stateChanges);
+    text = $parseMarkupHelper(text, before.length + startIndex, stateChanges);
     str += text;
     
     // Restore the old state after the body
@@ -4465,14 +4465,14 @@ function _parseMarkupHelper(str, startIndex, stateChanges) {
 
     // Is there more after the first markup?
     if (after !== '') {
-        str += _parseMarkupHelper(after, restoreState.startIndex, stateChanges);
+        str += $parseMarkupHelper(after, restoreState.startIndex, stateChanges);
     }
     
     return str;
 }
 
 
-function _parseMarkup(str, stateChanges) {
+function $parseMarkup(str, stateChanges) {
     // First instance.
     
     // Remove single newlines, temporarily protecting paragraph breaks.
@@ -4484,7 +4484,7 @@ function _parseMarkup(str, stateChanges) {
     // Convert {br} to a newline
     str = str.replace(/\{br\}/g, '\n');
 
-    str = _parseMarkupHelper(str, 0, stateChanges);
+    str = $parseMarkupHelper(str, 0, stateChanges);
 
     // Efficiently remove degenerate state changes and compact
     {
@@ -4523,7 +4523,7 @@ function _postGlyphSpace(str, i, font) {
     } else {
         const symbolRegex = /[^A-Za-z0-9_αβγδεζηθικλμνξ§πρστυϕχψωςşğÆÀÁÂÃÄÅÇÈÉÊËÌÍÎÏØÒÓÔÕÖŒÑẞÙÚÛÜБДæàáâãäåçèéêëìíîïøòóôõöœñßùúûüбгдЖЗИЙЛПЦЧШЩЭЮЯЪЫЬжзийлпцчшщэюяъыьΓΔмнкΘΛΞΠİΣℵΦΨΩŞĞ]/;
         // test() will not fail on undefined or NaN, so ok to not safeguard the string conversions
-        return symbolRegex.test(_fontMap[str[i]] + _fontMap[str[i + 1]]) ? 1 : 0;
+        return symbolRegex.test($fontMap[str[i]] + $fontMap[str[i + 1]]) ? 1 : 0;
     }
 }
 
@@ -4532,10 +4532,10 @@ function _postGlyphSpace(str, i, font) {
     offsetIndex is the amount to add to the indices in formatArray to account for
     the str having been shortened already. */
 function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_align, z, wrap_width, text_size, referenceFont) {
-    console.assert(typeof str === 'string');
-    console.assert(Array.isArray(formatArray));
-    console.assert(formatIndex < formatArray.length);
-    console.assert(typeof pos === 'object' && pos.x !== undefined);
+    $console.assert(typeof str === 'string');
+    $console.assert(Array.isArray(formatArray));
+    $console.assert(formatIndex < formatArray.length);
+    $console.assert(typeof pos === 'object' && pos.x !== undefined);
 
     let format;
 
@@ -4566,18 +4566,18 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
             while ((offsetIndex < formatArray[formatIndex].startIndex) || (offsetIndex > formatArray[formatIndex].endIndex)) { ++formatIndex; }
             format = undefined;
 
-            console.assert(formatIndex < formatArray.length);
+            $console.assert(formatIndex < formatArray.length);
             
-            const restBounds = _draw_text(offsetIndex + 1, formatIndex, str.substring(c + 1), formatArray, {x:pos.x, y:pos.y + referenceFont.line_height / _scaleY},
+            const restBounds = _draw_text(offsetIndex + 1, formatIndex, str.substring(c + 1), formatArray, {x:pos.x, y:pos.y + referenceFont.line_height / $scaleY},
                                           x_align, y_align, z, wrap_width, text_size - cur.length, referenceFont);
-            firstLineBounds.x = Math.max(firstLineBounds.x, restBounds.x);
+            firstLineBounds.x = $Math.max(firstLineBounds.x, restBounds.x);
             if (restBounds.y > 0) {
                 firstLineBounds.y += referenceFont._spacing.y + restBounds.y;
             }
             return firstLineBounds;
         }
         
-        const chr = _fontMap[str[c]] || ' ';
+        const chr = $fontMap[str[c]] || ' ';
         const bounds = format.font._bounds[chr];
 
         const delta = (bounds.x2 - bounds.x1 + 1) + _postGlyphSpace(str, c, format.font) - format.font._borderSize * 2 + bounds.pre + bounds.post;
@@ -4591,10 +4591,10 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
             const breakChars = ' \n\t,.!:/\\)]}\'"|`-+=*…\?¿¡';
 
             // Avoid breaking more than 25% back along the string
-            const maxBreakSearch = Math.max(1, (c * 0.25) | 0);
+            const maxBreakSearch = $Math.max(1, (c * 0.25) | 0);
             let breakIndex = -1;
             for (let i = 0; (breakIndex < maxBreakSearch) && (i < breakChars.length); ++i) {
-                breakIndex = Math.max(breakIndex, str.lastIndexOf(breakChars[i], c));
+                breakIndex = $Math.max(breakIndex, str.lastIndexOf(breakChars[i], c));
             }
             
             if ((breakIndex > c) || (breakIndex < maxBreakSearch)) {
@@ -4618,10 +4618,10 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
             while ((offsetIndex < formatArray[formatIndex].startIndex) || (offsetIndex > formatArray[formatIndex].endIndex)) { ++formatIndex; }
             format = undefined;
 
-            console.assert(offsetIndex >= formatArray[formatIndex].startIndex && offsetIndex <= formatArray[formatIndex].endIndex);
-            const restBounds = _draw_text(offsetIndex, formatIndex, nnext, formatArray, {x:pos.x, y:pos.y + referenceFont.line_height / _scaleY},
+            $console.assert(offsetIndex >= formatArray[formatIndex].startIndex && offsetIndex <= formatArray[formatIndex].endIndex);
+            const restBounds = _draw_text(offsetIndex, formatIndex, nnext, formatArray, {x:pos.x, y:pos.y + referenceFont.line_height / $scaleY},
                                           x_align, y_align, z, wrap_width, text_size - cur.length - (next.length - nnext.length), referenceFont);
-            firstLineBounds.x = Math.max(firstLineBounds.x, restBounds.x);
+            firstLineBounds.x = $Math.max(firstLineBounds.x, restBounds.x);
             if (restBounds.y > 0) {
                 firstLineBounds.y += referenceFont._spacing.y + restBounds.y;
             }
@@ -4645,14 +4645,14 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
     format.width -= format.font._spacing.x;
 
     z = z || 0;
-    const skx = (z * _skewXZ), sky = (z * _skewYZ);
-    let x = (pos.x + skx) * _scaleX + _offsetX, y = (pos.y + sky) * _scaleY + _offsetY;
-    z = z * _scaleZ + _offsetZ;
+    const skx = (z * $skewXZ), sky = (z * $skewYZ);
+    let x = (pos.x + skx) * $scaleX + $offsetX, y = (pos.y + sky) * $scaleY + $offsetY;
+    z = z * $scaleZ + $offsetZ;
 
     const height = referenceFont._charHeight;
 
     // Force alignment to retain relative integer pixel alignment
-    x -= Math.round(width * (1 + x_align) * 0.5);
+    x -= $Math.round(width * (1 + x_align) * 0.5);
 
     // Move back to account for the border and shadow padding
     if (x_align !== +1) { --x; }
@@ -4662,8 +4662,8 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
     case  0:
         // Middle. Center on a '2', which tends to have a typical height 
         const bounds = referenceFont._bounds['2'];
-        const tileY = Math.floor(bounds.y1 / referenceFont._charHeight) * referenceFont._charHeight;
-        y -= Math.round((bounds.y1 + bounds.y2) / 2) - tileY;
+        const tileY = $Math.floor(bounds.y1 / referenceFont._charHeight) * referenceFont._charHeight;
+        y -= $Math.round((bounds.y1 + bounds.y2) / 2) - tileY;
         break;
     case  1: y -= referenceFont._baseline; break; // baseline
     case  2: y -= (referenceFont._charHeight - referenceFont._borderSize * 2 - referenceFont._shadowSize); break; // bottom of bounds
@@ -4672,11 +4672,11 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
 
     // Center and round. Have to call round() because values may
     // be negative
-    x = Math.round(x) | 0;
-    y = Math.round(y) | 0;
+    x = $Math.round(x) | 0;
+    y = $Math.round(y) | 0;
 
-    if ((x > _clipX2) || (y > _clipY2) || (y + height < _clipY1) || (x + width < _clipX1) ||
-        (z > _clipZ2 + 0.5) || (z < _clipZ1 - 0.5)) {
+    if ((x > $clipX2) || (y > $clipY2) || (y + height < $clipY1) || (x + width < $clipX1) ||
+        (z > $clipZ2 + 0.5) || (z < $clipZ1 - 0.5)) {
         // Cull when off-screen
     } else {
         // Break by formatting, re-traversing the formatting array.
@@ -4734,7 +4734,7 @@ function _draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
 /** Processes formatting and invokes _draw_text() */
 function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, wrap_width, text_size, markup) {
     // Skip graphics this frame
-    if (mode_frames % _graphicsPeriod !== 0) { return; }
+    if (mode_frames % $graphicsPeriod !== 0) { return; }
     
     if (font && font.font) {
         // Keyword version
@@ -4766,13 +4766,13 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
     
     if (str === '') { return {x:0, y:0}; }
 
-    z = (z || 0) - _camera.z;
+    z = (z || 0) - $camera.z;
 
-    if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {
+    if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
-        const mag = (typeof _camera.zoom === 'number') ? _camera.zoom : _camera.zoom(z);
-        const C = Math.cos(_camera.angle) * mag, S = Math.sin(_camera.angle * rotation_sign()) * mag;
-        const x = pos.x - _camera.x, y = pos.y - _camera.y;
+        const mag = (typeof $camera.zoom === 'number') ? $camera.zoom : $camera.zoom(z);
+        const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
+        const x = pos.x - $camera.x, y = pos.y - $camera.y;
         pos = {x: x * C + y * S, y: y * C - x * S};
     }
     
@@ -4786,7 +4786,7 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
     }];
     
     if (markup) {
-        str = _parseMarkup(str, stateChanges);
+        str = $parseMarkup(str, stateChanges);
     }
 
     if (text_size === undefined) {
@@ -4807,10 +4807,10 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
     }
     
     // Debug visualize the markup:
-    // for (let i = 0; i < stateChanges.length; ++i) { console.log(str.substring(stateChanges[i].startIndex, stateChanges[i].endIndex + 1)); }
+    // for (let i = 0; i < stateChanges.length; ++i) { $console.log(str.substring(stateChanges[i].startIndex, stateChanges[i].endIndex + 1)); }
 
     // Track draw calls generated by _draw_text
-    const first_graphics_command_index = _graphicsCommandList.length;
+    const first$graphics_command_index = $graphicsCommandList.length;
     const bounds = _draw_text(0, 0, str, stateChanges, pos, x_align, y_align, z, wrap_width, text_size, font);
 
     if ((bounds.y > font.line_height) && (y_align === 0 || y_align === 2)) {
@@ -4825,8 +4825,8 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
         
         // Multiline needing vertical adjustment. Go back to the issued
         // draw calls and shift them vertically as required.
-        for (let i = first_graphics_command_index; i < _graphicsCommandList.length; ++i) {
-            _graphicsCommandList[i].y += y_shift;
+        for (let i = first$graphics_command_index; i < $graphicsCommandList.length; ++i) {
+            $graphicsCommandList[i].y += y_shift;
         }
     }
 
@@ -4846,8 +4846,8 @@ function _clone(a) {
 }
 
 
-function _clamp(x, L, H) {
-    return Math.max(Math.min(x, H), L);
+function $clamp(x, L, H) {
+    return $Math.max($Math.min(x, H), L);
 }
 
 
@@ -4856,8 +4856,8 @@ function get_sprite_pixel_color(spr, pos, result) {
         throw new Error('Called get_sprite_pixel_color() on an object that was not a sprite asset. (' + unparse(spr) + ')');
     }
 
-    const x = Math.floor((spr.scale.x > 0) ? pos.x : (spr.size.x - 1 - pos.x));
-    const y = Math.floor((spr.scale.y > 0) ? pos.y : (spr.size.y - 1 - pos.y));
+    const x = $Math.floor((spr.scale.x > 0) ? pos.x : (spr.size.x - 1 - pos.x));
+    const y = $Math.floor((spr.scale.y > 0) ? pos.y : (spr.size.y - 1 - pos.y));
     
     if ((x < 0) || (x >= spr.size.x) || (y < 0) || (y >= spr.size.y)) {
         if (result) {
@@ -4887,21 +4887,21 @@ function draw_sprite_corner_rect(CC, corner, size, z) {
     }
 
     z = z || 0;
-    const skx = (z * _skewXZ), sky = (z * _skewYZ);
-    let x1 = (corner.x + skx) * _scaleX + _offsetX, y1 = (corner.y + sky) * _scaleY + _offsetY;
-    let x2 = (corner.x + size.x + skx) * _scaleX + _offsetX, y2 = (corner.y + size.y + sky) * _scaleY + _offsetY;
-    z = z * _scaleZ + _offsetZ;
+    const skx = (z * $skewXZ), sky = (z * $skewYZ);
+    let x1 = (corner.x + skx) * $scaleX + $offsetX, y1 = (corner.y + sky) * $scaleY + $offsetY;
+    let x2 = (corner.x + size.x + skx) * $scaleX + $offsetX, y2 = (corner.y + size.y + sky) * $scaleY + $offsetY;
+    z = z * $scaleZ + $offsetZ;
 
     // Sort coordinates
-    let t1 = Math.min(x1, x2), t2 = Math.max(x1, x2);
+    let t1 = $Math.min(x1, x2), t2 = $Math.max(x1, x2);
     x1 = t1; x2 = t2;
     
-    t1 = Math.min(y1, y2), t2 = Math.max(y1, y2);
+    t1 = $Math.min(y1, y2), t2 = $Math.max(y1, y2);
     y1 = t1; y2 = t2;
 
     // Lock to the pixel grid before computing offsets
-    x1 = Math.round(x1); y1 = Math.round(y1);
-    x2 = Math.floor(x2 - 0.5); y2 = Math.floor(y2 - 0.5);
+    x1 = $Math.round(x1); y1 = $Math.round(y1);
+    x2 = $Math.floor(x2 - 0.5); y2 = $Math.floor(y2 - 0.5);
     
     const centerX = (x2 + x1) / 2, centerY = (y2 + y1) / 2;
 
@@ -4909,50 +4909,50 @@ function draw_sprite_corner_rect(CC, corner, size, z) {
     // the ceiling of the *half* width, not the full width. Note the
     // the number of tiles in each direction is therefore guaranteed
     // to be odd.
-    const numTilesX = 1 + Math.ceil((x2 - x1 + 1) / (2 * CC.size.x) - 0.49) * 2;
-    const numTilesY = 1 + Math.ceil((y2 - y1 + 1) / (2 * CC.size.y) - 0.49) * 2;
+    const numTilesX = 1 + $Math.ceil((x2 - x1 + 1) / (2 * CC.size.x) - 0.49) * 2;
+    const numTilesY = 1 + $Math.ceil((y2 - y1 + 1) / (2 * CC.size.y) - 0.49) * 2;
     
     // Iterate over center box, clipping at its edges
     const spriteCenter = xy(0,0);
-    _pushGraphicsState(); {
+    $pushGraphicsState(); {
         intersect_clip(xy(x1, y1), xy(x2 - x1 + 1, y2 - y1 + 1));
         
         for (let y = 0; y < numTilesY; ++y) {
             // Transform individual pixel coordinates *back* to game
             // coords for the draw_sprite call to handle clipping and
             // insertion into the queue.
-            spriteCenter.y = ((centerY + (y - (numTilesY - 1) * 0.5) * CC.size.y) - _offsetY) / _scaleY;
+            spriteCenter.y = ((centerY + (y - (numTilesY - 1) * 0.5) * CC.size.y) - $offsetY) / $scaleY;
             for (let x = 0; x < numTilesX; ++x) {
-                spriteCenter.x = ((centerX + (x - (numTilesX - 1) * 0.5) * CC.size.x) - _offsetX) / _scaleX;
+                spriteCenter.x = ((centerX + (x - (numTilesX - 1) * 0.5) * CC.size.x) - $offsetX) / $scaleX;
                 draw_sprite(CC, spriteCenter, 0, undefined, 1, z);
             }
         }
-    } _popGraphicsState();
+    } $popGraphicsState();
     
     // Generate relative sprites
-    const LT = CC.spritesheet[Math.max(0, CC._tileX - 1)][Math.max(0, CC._tileY - 1)];
-    const CT = CC.spritesheet[Math.max(0, CC._tileX    )][Math.max(0, CC._tileY - 1)];
-    const RT = CC.spritesheet[Math.max(0, CC._tileX + 1)][Math.max(0, CC._tileY - 1)];
+    const LT = CC.spritesheet[$Math.max(0, CC._tileX - 1)][$Math.max(0, CC._tileY - 1)];
+    const CT = CC.spritesheet[$Math.max(0, CC._tileX    )][$Math.max(0, CC._tileY - 1)];
+    const RT = CC.spritesheet[$Math.max(0, CC._tileX + 1)][$Math.max(0, CC._tileY - 1)];
 
-    const LC = CC.spritesheet[Math.max(0, CC._tileX - 1)][Math.max(0, CC._tileY    )];
-    const RC = CC.spritesheet[Math.max(0, CC._tileX + 1)][Math.max(0, CC._tileY    )];
+    const LC = CC.spritesheet[$Math.max(0, CC._tileX - 1)][$Math.max(0, CC._tileY    )];
+    const RC = CC.spritesheet[$Math.max(0, CC._tileX + 1)][$Math.max(0, CC._tileY    )];
 
-    const LB = CC.spritesheet[Math.max(0, CC._tileX - 1)][Math.max(0, CC._tileY + 1)];
-    const CB = CC.spritesheet[Math.max(0, CC._tileX    )][Math.max(0, CC._tileY + 1)];
-    const RB = CC.spritesheet[Math.max(0, CC._tileX + 1)][Math.max(0, CC._tileY + 1)];
+    const LB = CC.spritesheet[$Math.max(0, CC._tileX - 1)][$Math.max(0, CC._tileY + 1)];
+    const CB = CC.spritesheet[$Math.max(0, CC._tileX    )][$Math.max(0, CC._tileY + 1)];
+    const RB = CC.spritesheet[$Math.max(0, CC._tileX + 1)][$Math.max(0, CC._tileY + 1)];
 
     // Centers of the sprites on these edges
-    const left   = ((x1 - CC.size.x * 0.5) - _offsetX) / _scaleX - 0.5;
-    const right  = ((x2 + CC.size.x * 0.5) - _offsetX) / _scaleX + 1;
-    const top    = ((y1 - CC.size.y * 0.5) - _offsetY) / _scaleY - 0.5;
-    const bottom = ((y2 + CC.size.y * 0.5) - _offsetY) / _scaleY + 1;
+    const left   = ((x1 - CC.size.x * 0.5) - $offsetX) / $scaleX - 0.5;
+    const right  = ((x2 + CC.size.x * 0.5) - $offsetX) / $scaleX + 1;
+    const top    = ((y1 - CC.size.y * 0.5) - $offsetY) / $scaleY - 0.5;
+    const bottom = ((y2 + CC.size.y * 0.5) - $offsetY) / $scaleY + 1;
     
     // Top and bottom
-    _pushGraphicsState(); {
-        intersect_clip(xy(x1, _clipY1), xy(x2 - x1 + 1, _clipY2 - _clipY1 + 1));
+    $pushGraphicsState(); {
+        intersect_clip(xy(x1, $clipY1), xy(x2 - x1 + 1, $clipY2 - $clipY1 + 1));
         
         for (let x = 0; x < numTilesX; ++x) {
-            spriteCenter.x = ((centerX + (x - (numTilesX - 1) * 0.5) * CC.size.x) - _offsetX) / _scaleX;
+            spriteCenter.x = ((centerX + (x - (numTilesX - 1) * 0.5) * CC.size.x) - $offsetX) / $scaleX;
 
             spriteCenter.y = top;
             draw_sprite(CT, spriteCenter, 0, undefined, 1, z);
@@ -4960,14 +4960,14 @@ function draw_sprite_corner_rect(CC, corner, size, z) {
             spriteCenter.y = bottom;
             draw_sprite(CB, spriteCenter, 0, undefined, 1, z);
         }
-    } _popGraphicsState();
+    } $popGraphicsState();
 
     // Sides
-    _pushGraphicsState(); {
-        intersect_clip(xy(_clipX1, y1), xy(_clipX2 - _clipX1 + 1, y2 - y1 + 1));
+    $pushGraphicsState(); {
+        intersect_clip(xy($clipX1, y1), xy($clipX2 - $clipX1 + 1, y2 - y1 + 1));
         
         for (let y = 0; y < numTilesY; ++y) {
-            spriteCenter.y = ((centerY + (y - (numTilesY - 1) * 0.5) * CC.size.y) - _offsetY) / _scaleY;
+            spriteCenter.y = ((centerY + (y - (numTilesY - 1) * 0.5) * CC.size.y) - $offsetY) / $scaleY;
 
             spriteCenter.x = left;
             draw_sprite(LC, spriteCenter, 0, undefined, 1, z);
@@ -4975,7 +4975,7 @@ function draw_sprite_corner_rect(CC, corner, size, z) {
             spriteCenter.x = right;
             draw_sprite(RC, spriteCenter, 0, undefined, 1, z);
         }
-    } _popGraphicsState();
+    } $popGraphicsState();
 
     // Corners (no new clipping needed)
     {
@@ -5019,12 +5019,12 @@ function _maybeApplyPivot(pos, pivot, angle, scale) {
     
     // Raw sprite offset
     // Scale into sprite space
-    let deltaX = pivot.x * Math.sign(_scaleX) * scaleX;
-    let deltaY = pivot.y * Math.sign(_scaleY) * scaleY;
+    let deltaX = pivot.x * $Math.sign($scaleX) * scaleX;
+    let deltaY = pivot.y * $Math.sign($scaleY) * scaleY;
     
     // Rotate into sprite space
-    const C = Math.cos(angle);
-    const S = Math.sin(angle) * -rotation_sign();
+    const C = $Math.cos(angle);
+    const S = $Math.sin(angle) * -rotation_sign();
     return {x: pos.x - (deltaX * C + S * deltaY),
             y: pos.y - (deltaY * C - S * deltaX)};
 }
@@ -5032,7 +5032,7 @@ function _maybeApplyPivot(pos, pivot, angle, scale) {
 
 function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, blend) {
     // Skip graphics this frame
-    if (mode_frames % _graphicsPeriod !== 0) { return; }
+    if (mode_frames % $graphicsPeriod !== 0) { return; }
 
     if (spr && spr.sprite) {
         // This is the "keyword" version of the function
@@ -5059,18 +5059,18 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, blend) 
         throw new Error('Called draw_sprite() on an object that was not a sprite asset. (' + unparse(spr) + ')');
     }
     
-    z = (z || 0) - _camera.z;
+    z = (z || 0) - $camera.z;
     angle = angle || 0;
 
     pos = _maybeApplyPivot(pos, spr.pivot, angle, scale);
 
-    if ((_camera.x !== 0) || (_camera.y !== 0) || (_camera.angle !== 0) || (_camera.zoom !== 1)) {
+    if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
         const mag = _zoom(z);
-        const C = Math.cos(_camera.angle) * mag, S = Math.sin(_camera.angle * rotation_sign()) * mag;
-        const x = pos.x - _camera.x, y = pos.y - _camera.y;
+        const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
+        const x = pos.x - $camera.x, y = pos.y - $camera.y;
         pos = {x: x * C + y * S, y: y * C - x * S};
-        angle -= _camera.angle;
+        angle -= $camera.angle;
 
         switch (typeof scale) {
         case 'number': scale = {x: scale, y: scale}; break;
@@ -5079,10 +5079,10 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, blend) 
         scale = {x: scale.x * mag, y: scale.y * mag};
     }
     
-    const skx = z * _skewXZ, sky = z * _skewYZ;
-    const x = (pos.x + skx) * _scaleX + _offsetX;
-    const y = (pos.y + sky) * _scaleY + _offsetY;
-    z = z * _scaleZ + _offsetZ;
+    const skx = z * $skewXZ, sky = z * $skewYZ;
+    const x = (pos.x + skx) * $scaleX + $offsetX;
+    const y = (pos.y + sky) * $scaleY + $offsetY;
+    z = z * $scaleZ + $offsetZ;
 
     let scaleX = 1, scaleY = 1;
     if ((scale !== 0) && (typeof scale === 'number')) {
@@ -5095,12 +5095,12 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, blend) 
     // Apply the sprite's own flipping
     scaleX *= spr.scale.x; scaleY *= spr.scale.y;
     
-    opacity = Math.max(0, Math.min(1, (opacity === undefined) ? 1 : opacity));
-    const radius = spr._boundingRadius * Math.max(Math.abs(scaleX), Math.abs(scaleY));
+    opacity = $Math.max(0, $Math.min(1, (opacity === undefined) ? 1 : opacity));
+    const radius = spr._boundingRadius * $Math.max($Math.abs(scaleX), $Math.abs(scaleY));
 
-    if ((opacity <= 0) || (x + radius < _clipX1 - 0.5) || (y + radius < _clipY1 - 0.5) ||
-        (x >= _clipX2 + radius + 0.5) || (y >= _clipY2 + radius + 0.5) ||
-        (z < _clipZ1 - 0.5) || (z >= _clipZ2 + 0.5)) {
+    if ((opacity <= 0) || (x + radius < $clipX1 - 0.5) || (y + radius < $clipY1 - 0.5) ||
+        (x >= $clipX2 + radius + 0.5) || (y >= $clipY2 + radius + 0.5) ||
+        (z < $clipZ1 - 0.5) || (z >= $clipZ2 + 0.5)) {
         return;
     }
 
@@ -5113,7 +5113,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, blend) 
         override_color = rgba(override_color);
     }    
 
-    console.assert(spr.spritesheet._index[0] < _spritesheetArray.length);
+    $console.assert(spr.spritesheet._index[0] < $spritesheetArray.length);
 
     const sprElt = {
         spritesheetIndex:  spr.spritesheet._index[0],
@@ -5134,16 +5134,16 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, blend) 
     };
 
     /*
-    console.assert(sprElt.spritesheetIndex >= 0 &&
-                   sprElt.spritesheetIndex < _spritesheetArray.length,
+    $console.assert(sprElt.spritesheetIndex >= 0 &&
+                   sprElt.spritesheetIndex < $spritesheetArray.length,
                    spr._name + ' has a bad index: ' + sprElt.spritesheetIndex);
     */
     
     // Aggregate multiple sprite calls
-    const prevCommand = _graphicsCommandList[_graphicsCommandList.length - 1];
+    const prevCommand = $graphicsCommandList[$graphicsCommandList.length - 1];
     if (prevCommand && (prevCommand.baseZ === z) && (prevCommand.opcode === 'SPR') &&
-        (prevCommand.clipX1 === _clipX1) && (prevCommand.clipX2 === _clipX2) &&
-        (prevCommand.clipY1 === _clipY1) && (prevCommand.clipY2 === _clipY2)) {
+        (prevCommand.clipX1 === $clipX1) && (prevCommand.clipX2 === $clipX2) &&
+        (prevCommand.clipY1 === $clipY1) && (prevCommand.clipY2 === $clipY2)) {
         // Modify the existing command to reduce sorting demands for scenes
         // with a large number of sprites
         prevCommand.data.push(sprElt);
@@ -5194,7 +5194,7 @@ function clamp(x, lo, hi) {
 function _loop(x, lo, hi) {
     x -= lo;
     hi -= lo;
-    return (x - Math.floor(x / hi) * hi) + lo;
+    return (x - $Math.floor(x / hi) * hi) + lo;
 }
 
 function loop(x, lo, hi) {
@@ -5230,7 +5230,7 @@ function loop(x, lo, hi) {
 
 
 function get_background() {
-    return _background;
+    return $background;
 }
 
 
@@ -5240,12 +5240,12 @@ function set_background(c) {
         c = c[0][0];
     }
 
-    if (c.spritesheet && (c.spritesheet.size.x !== _SCREEN_WIDTH || c.spritesheet.size.y !== _SCREEN_HEIGHT ||
-                          c.size.x !== _SCREEN_WIDTH || c.size.y !== _SCREEN_HEIGHT)) {
+    if (c.spritesheet && (c.spritesheet.size.x !== $SCREEN_WIDTH || c.spritesheet.size.y !== $SCREEN_HEIGHT ||
+                          c.size.x !== $SCREEN_WIDTH || c.size.y !== $SCREEN_HEIGHT)) {
         throw new Error('The sprite and its spritesheet for set_background() must be exactly the screen size.')
     }
     
-    _background = c;
+    $background = c;
 }
 
 
@@ -5256,8 +5256,8 @@ function _toFrame(entity, v, out) {
     const y = v.y - entity.pos.y;
     
     // Rotate
-    let c = Math.cos(entity.angle * rotation_sign());
-    let s = Math.sin(entity.angle * rotation_sign());
+    let c = $Math.cos(entity.angle * rotation_sign());
+    let s = $Math.sin(entity.angle * rotation_sign());
     
     if (out === undefined) { out = {x:0, y:0}; }
     
@@ -5285,7 +5285,7 @@ function draw_bounds(entity, color, recurse) {
     if ((entity.shape === 'disk') && entity.size) {
         draw_disk(pos, entity.size.x * 0.5 * scale.x, undefined, color, z)
     } else if (entity.size) {
-        const u = {x: Math.cos(angle) * 0.5, y: Math.sin(angle) * 0.5};
+        const u = {x: $Math.cos(angle) * 0.5, y: $Math.sin(angle) * 0.5};
         const v = {x: -u.y, y: u.x};
         u.x *= entity.size.x * scale.x; u.y *= entity.size.x * scale.x;
         v.x *= entity.size.y * scale.y; v.y *= entity.size.y * scale.y;
@@ -5304,7 +5304,7 @@ function draw_bounds(entity, color, recurse) {
 
     // Axes
     {
-        const u = {x: Math.cos(angle) * 16, y: Math.sin(angle) * 16};
+        const u = {x: $Math.cos(angle) * 16, y: $Math.sin(angle) * 16};
         const v = {x: -u.y, y: u.x};
         u.x *= scale.x; u.y *= scale.x;
         v.x *= scale.y; v.y *= scale.y;
@@ -5330,18 +5330,18 @@ function _getAABB(e, aabb) {
     let w = (e.scale ? e.scale.x : 1) * e.size.x;
     let h = (e.scale ? e.scale.y : 1) * e.size.y;
     if ((e.shape !== 'disk') && (e.angle !== undefined)) {
-        const c = Math.abs(Math.cos(e.angle));
-        const s = Math.abs(Math.sin(e.angle));
+        const c = $Math.abs($Math.cos(e.angle));
+        const s = $Math.abs($Math.sin(e.angle));
         const x = w * c + h * s;
         const y = h * c + w * s;
         w = x; h = y;
     }
     w *= 0.5;
     h *= 0.5;
-    aabb.max.x = Math.max(aabb.max.x, e.pos.x + w);
-    aabb.min.x = Math.min(aabb.min.x, e.pos.x - w);
-    aabb.max.y = Math.max(aabb.max.y, e.pos.y + h);
-    aabb.min.y = Math.min(aabb.min.y, e.pos.x - h);
+    aabb.max.x = $Math.max(aabb.max.x, e.pos.x + w);
+    aabb.min.x = $Math.min(aabb.min.x, e.pos.x - w);
+    aabb.max.y = $Math.max(aabb.max.y, e.pos.y + h);
+    aabb.min.y = $Math.min(aabb.min.y, e.pos.x - h);
 
     // Recurse
     if (e.child_array) {
@@ -5410,11 +5410,11 @@ function _makeRayGridIterator(ray, numCells, cellSize) {
         const t1 = xy((numCells.x * cellSize.x - ray.origin.x) / ray.direction.x,
                       (numCells.y * cellSize.y - ray.origin.y) / ray.direction.y);
         const tmin = min(t0, t1), tmax = max(t0, t1);
-        const passesThroughGrid = Math.max(tmin.x, tmin.y) <= Math.min(tmax.x, tmax.y);
+        const passesThroughGrid = $Math.max(tmin.x, tmin.y) <= $Math.min(tmax.x, tmax.y);
         
         if (passesThroughGrid) {
             // Back up slightly so that we immediately hit the start location.
-            it.enterDistance = Math.hypot(it.ray.origin.x - startLocation.x,
+            it.enterDistance = $Math.hypot(it.ray.origin.x - startLocation.x,
                                           it.ray.origin.y - startLocation.y) - 0.0001;
             startLocation = xy(it.ray.origin.x + it.ray.direction.x * it.enterDistance,
                                it.ray.origin.y + it.ray.direction.y * it.enterDistance);
@@ -5432,9 +5432,9 @@ function _makeRayGridIterator(ray, numCells, cellSize) {
     for (let i = 0; i < 2; ++i) {
         const a = axisArray[i];
         
-        it.index[a]  = Math.floor(startLocation[a] / cellSize[a]);
-        it.tDelta[a] = Math.abs(cellSize[a] / it.ray.direction[a]);
-        it.step[a]   = Math.sign(it.ray.direction[a]);
+        it.index[a]  = $Math.floor(startLocation[a] / cellSize[a]);
+        it.tDelta[a] = $Math.abs(cellSize[a] / it.ray.direction[a]);
+        it.step[a]   = $Math.sign(it.ray.direction[a]);
 
         // Distance to the edge fo the cell along the ray direction
         let d = startLocation[a] - it.index[a] * cellSize[a];
@@ -5448,10 +5448,10 @@ function _makeRayGridIterator(ray, numCells, cellSize) {
             // Exit on the low side (or never)
             it.boundaryIndex[a] = -1;
         }
-        console.assert(d >= 0 && d <= cellSize[a]);
+        $console.assert(d >= 0 && d <= cellSize[a]);
 
         if (it.ray.direction[a] !== 0) {
-            it.exitDistance[a] = d / Math.abs(it.ray.direction[a]) + it.enterDistance;
+            it.exitDistance[a] = d / $Math.abs(it.ray.direction[a]) + it.enterDistance;
         } else {
             // Ray is parallel to this partition axis.
             // Avoid dividing by zero, which could be NaN if d === 0
@@ -5514,7 +5514,7 @@ function ray_intersectMap(ray, map, tileCanBeSolid, pixelIsSolid, layer, replace
 
     // Normalize the direction
     {
-        const inv = 1 / Math.hypot(ray.direction.x, ray.direction.y);
+        const inv = 1 / $Math.hypot(ray.direction.x, ray.direction.y);
         ray.direction.x *= inv; ray.direction.y *= inv;
     }
 
@@ -5535,8 +5535,8 @@ function ray_intersectMap(ray, map, tileCanBeSolid, pixelIsSolid, layer, replace
         point.y = it.ray.origin.y + it.enterDistance * it.ray.direction.y;
 
         // Bump into the cell and then round
-        P.x = Math.floor((point.x - normal.x) / map.sprite_size.x);
-        P.y = Math.floor((point.y - normal.y) / map.sprite_size.y);
+        P.x = $Math.floor((point.x - normal.x) / map.sprite_size.x);
+        P.y = $Math.floor((point.y - normal.y) / map.sprite_size.y);
         
         if (tileCanBeSolid(map, P, layer, replacement_array)) {
 
@@ -5577,13 +5577,13 @@ function ray_intersect(ray, obj) {
     
     if (obj.size) {
         // Normalize the direction
-        let inv = 1 / Math.hypot(ray.direction.x, ray.direction.y);
+        let inv = 1 / $Math.hypot(ray.direction.x, ray.direction.y);
         ray.direction.x *= inv; ray.direction.y *= inv;
         
         if (obj.shape === 'disk') {
             // ray-disk (https://www.geometrictools.com/Documentation/IntersectionLine2Circle2.pdf)
             let dx = ray.origin.x - pos.x, dy = ray.origin.y - pos.y;
-            if (dx * dx + dy * dy * 4 <= Math.abs(obj.size.x * obj.size.y * scaleX * scaleY)) {
+            if (dx * dx + dy * dy * 4 <= $Math.abs(obj.size.x * obj.size.y * scaleX * scaleY)) {
                 // Origin is inside the disk, so instant hit and no need
                 // to look at children
                 ray.length = 0;
@@ -5593,7 +5593,7 @@ function ray_intersect(ray, obj) {
                 const b = ray.direction.x * dx + ray.direction.y * dy
                 const discrim = b*b - (dx*dx + dy*dy - 0.25 * obj.size.x * obj.size.y * scaleX * scaleY);
                 if (discrim >= 0) {
-                    const a = Math.sqrt(discrim);
+                    const a = $Math.sqrt(discrim);
                     
                     // Start with the smaller root
                     let t = -b - a;
@@ -5615,7 +5615,7 @@ function ray_intersect(ray, obj) {
             
             // Take the ray into the box's rotational frame
             const angle = (obj.angle || 0) * rotation_sign();
-            const c = Math.cos(angle), s = Math.sin(angle);
+            const c = $Math.cos(angle), s = $Math.sin(angle);
 
             const originX = toriginX * c + toriginY * s;
             const originY =-toriginX * s + toriginY * c;
@@ -5629,18 +5629,18 @@ function ray_intersect(ray, obj) {
             // Perform ray vs. oriented box intersection
             // (http://jcgt.org/published/0007/03/04/)
 
-            const winding = (Math.max(abs(originX / radX),
+            const winding = ($Math.max(abs(originX / radX),
                                       abs(originY / radY)) < 1.0) ? -1 : 1;
 
-            const sgnX = -Math.sign(directionX);
-            const sgnY = -Math.sign(directionY);
+            const sgnX = -$Math.sign(directionX);
+            const sgnY = -$Math.sign(directionY);
             
             // Distance to edge lines
             const dX = (radX * winding * sgnX - originX) / directionX;
             const dY = (radY * winding * sgnY - originY) / directionY;
 
-            const testX = (dX >= 0) && (Math.abs(originY + directionY * dX) < radY);
-            const testY = (dY >= 0) && (Math.abs(originX + directionX * dY) < radX);
+            const testX = (dX >= 0) && ($Math.abs(originY + directionY * dX) < radY);
+            const testY = (dY >= 0) && ($Math.abs(originX + directionX * dY) < radX);
 
             if (testX) {
                 if (dX < ray.length) {
@@ -5692,9 +5692,9 @@ function entity_area(entity) {
     if (entity.size === undefined) {
         return 0;
     } else if (entity.shape === 'disk') {
-        return Math.abs(Math.PI * 0.25 * scaleX * scaleY * entity.size.x * entity.size.y);
+        return $Math.abs($Math.PI * 0.25 * scaleX * scaleY * entity.size.x * entity.size.y);
     } else {
-        return Math.abs(scaleX * scaleY * entity.size.x * entity.size.y);
+        return $Math.abs(scaleX * scaleY * entity.size.x * entity.size.y);
     }
 }
 
@@ -5760,8 +5760,8 @@ var overlaps = (function() {
         const angle  = (B.angle - A.angle) * rotation_sign();
 
         // Find the extremes of the corners of B along each axis of A
-        const c = Math.cos(angle);
-        const s = Math.sin(angle);
+        const c = $Math.cos(angle);
+        const s = $Math.sin(angle);
 
         let loX =  Infinity, loY =  Infinity;
         var hiX = -Infinity, hiY = -Infinity;
@@ -5770,16 +5770,16 @@ var overlaps = (function() {
         // vector operations to avoid memory allocation.
         for (let signX = -1; signX <= +1; signX += 2) {
             for (let signY = -1; signY <= +1; signY += 2) {
-                const xx = signX * B.size.x * 0.5 * Math.abs(B.scale.x);
-                const yy = signY * B.size.y * 0.5 * Math.abs(B.scale.y);
+                const xx = signX * B.size.x * 0.5 * $Math.abs(B.scale.x);
+                const yy = signY * B.size.y * 0.5 * $Math.abs(B.scale.y);
                 const cornerX = xx *  c + yy * s;
                 const cornerY = xx * -s + yy * c;
 
-                loX = Math.min(loX, cornerX);
-                loY = Math.min(loY, cornerY);
+                loX = $Math.min(loX, cornerX);
+                loY = $Math.min(loY, cornerY);
 
-                hiX = Math.max(hiX, cornerX);
-                hiY = Math.max(hiY, cornerY);
+                hiX = $Math.max(hiX, cornerX);
+                hiY = $Math.max(hiY, cornerY);
             }
         }
 
@@ -5790,8 +5790,8 @@ var overlaps = (function() {
         
         // We can now perform an AABB test to see if there is no separating
         // axis under this projection
-        return ((loX * 2 <= A.size.x * Math.abs(A.scale.x)) && (hiX * 2 >= -A.size.x * Math.abs(A.scale.x)) &&
-                (loY * 2 <= A.size.y * Math.abs(A.scale.y)) && (hiY * 2 >= -A.size.y * Math.abs(A.scale.y)));
+        return ((loX * 2 <= A.size.x * $Math.abs(A.scale.x)) && (hiX * 2 >= -A.size.x * $Math.abs(A.scale.x)) &&
+                (loY * 2 <= A.size.y * $Math.abs(A.scale.y)) && (hiY * 2 >= -A.size.y * $Math.abs(A.scale.y)));
     }
 
     return function(A, B, recurse) {
@@ -5839,13 +5839,13 @@ var overlaps = (function() {
             
             // Disk-Disk. Multiply the right-hand side by 4 because
             // we're computing diameter^2 instead of radius^2
-            return distanceSquared2D(A.pos, temp2) * 4 <= _square(A.size.x * Math.abs(A.scale.x) + B.size.x * Math.abs(B.scale.x));
+            return distanceSquared2D(A.pos, temp2) * 4 <= _square(A.size.x * $Math.abs(A.scale.x) + B.size.x * $Math.abs(B.scale.x));
 
         } else if ((B.size.x === 0) && (B.size.y === 0) && (A.angle === 0)) {
 
             // Trivial axis-aligned test against a rectangle
-            return (Math.abs(B.pos.x - A.pos.x) * 2 <= Math.abs(A.size.x * A.scale.x) &&
-                    Math.abs(B.pos.y - A.pos.y) * 2 <= Math.abs(A.size.y * A.scale.y));
+            return ($Math.abs(B.pos.x - A.pos.x) * 2 <= $Math.abs(A.size.x * A.scale.x) &&
+                    $Math.abs(B.pos.y - A.pos.y) * 2 <= $Math.abs(A.size.y * A.scale.y));
     
         } else if (B.shape === 'disk') {
             // Box A vs. Disk B 
@@ -5859,12 +5859,12 @@ var overlaps = (function() {
             // twice as big so that we can compare to diameters
             // instead of radii below.
             const P = _toFrame(A, temp2, temp);
-            P.x = 2 * Math.abs(P.x); P.y = 2 * Math.abs(P.y);
+            P.x = 2 * $Math.abs(P.x); P.y = 2 * $Math.abs(P.y);
             
-            if ((P.x > A.size.x * Math.abs(A.scale.x) + B.size.x * Math.abs(B.scale.x)) || (P.y > A.size.y * Math.abs(A.scale.y) + B.size.y * Math.abs(B.scale.y))) {
+            if ((P.x > A.size.x * $Math.abs(A.scale.x) + B.size.x * $Math.abs(B.scale.x)) || (P.y > A.size.y * $Math.abs(A.scale.y) + B.size.y * $Math.abs(B.scale.y))) {
                 // Trivially outside by box-box overlap test
                 return false;
-            } else if ((P.x <= A.size.x * Math.abs(A.scale.x)) || (P.y <= A.size.y * Math.abs(A.scale.y))) {
+            } else if ((P.x <= A.size.x * $Math.abs(A.scale.x)) || (P.y <= A.size.y * $Math.abs(A.scale.y))) {
                 // Trivially inside because the center of disk B is
                 // inside the perimeter of box A. Note that we tested
                 // twice the absolute position against twice the
@@ -5876,16 +5876,16 @@ var overlaps = (function() {
                 // by four because of the use of diameters instead of
                 // radii.
 
-                temp2.x = A.size.x * Math.abs(A.scale.x);
-                temp2.y = A.size.y * Math.abs(A.scale.y);
+                temp2.x = A.size.x * $Math.abs(A.scale.x);
+                temp2.y = A.size.y * $Math.abs(A.scale.y);
                 return distanceSquared2D(P, temp2) <= _square(B.size.x * B.scale.x);
             }       
             
         } else if ((A.angle === 0) && (B.angle === 0)) {
             
             // Axis-aligned Box-Box: 2D interval overlap
-            return ((Math.abs(A.pos.x - temp2.x) * 2 <= (Math.abs(A.size.x * A.scale.x) + Math.abs(B.size.x * B.scale.x))) &&
-                    (Math.abs(A.pos.y - temp2.y) * 2 <= (Math.abs(A.size.y * A.scale.x) + Math.abs(B.size.y * B.scale.x))));
+            return (($Math.abs(A.pos.x - temp2.x) * 2 <= ($Math.abs(A.size.x * A.scale.x) + $Math.abs(B.size.x * B.scale.x))) &&
+                    ($Math.abs(A.pos.y - temp2.y) * 2 <= ($Math.abs(A.size.y * A.scale.x) + $Math.abs(B.size.y * B.scale.x))));
         
         } else {
             
@@ -5898,13 +5898,13 @@ var overlaps = (function() {
 
 
 function set_pause_menu(...options) {
-    if (options.length > 3) { _error("At most three custom menu options are supported."); }
+    if (options.length > 3) { $error("At most three custom menu options are supported."); }
     for (let i = 0; i < options.length; ++i) {
         if (options[i].text === undefined) {
-            _error('set_pause_menu() options must be objects with text properties');
+            $error('set_pause_menu() options must be objects with text properties');
         }
     }
-    _customPauseMenuOptions = clone(options);
+    $customPauseMenuOptions = clone(options);
 }
 
 
@@ -5952,12 +5952,12 @@ function random_truncated_gaussian2D(mean, std, radius, rng) {
     do {
         r = rng();
         if (r > 0) {
-            r = Math.sqrt(-2 * Math.log(r));
+            r = $Math.sqrt(-2 * $Math.log(r));
         }
     } while (square(r * X) + square(r * Y) > 1);
-    var q = rng(0, 2 * Math.PI);
-    var g1 = r * Math.cos(q);
-    var g2 = r * Math.sin(q);
+    var q = rng(0, 2 * $Math.PI);
+    var g1 = r * $Math.cos(q);
+    var g2 = r * $Math.sin(q);
     return {x: g1 * std.x + mean.x, y: g2 * std.y + mean.y};
 }
 
@@ -5973,10 +5973,10 @@ function random_gaussian(mean, std, rng) {
     }
     var r = rng();
     if (r > 0) {
-        r = Math.sqrt(-2 * Math.log(r));
+        r = $Math.sqrt(-2 * $Math.log(r));
     }
-    var q = rng(0, 2 * Math.PI);
-    var g1 = r * Math.cos(q);
+    var q = rng(0, 2 * $Math.PI);
+    var g1 = r * $Math.cos(q);
     return g1 * std + mean;    
 }
 
@@ -6033,11 +6033,11 @@ function random_gaussian2D(mean, std, rng) {
     
     var r = rng();
     if (r > 0) {
-        r = Math.sqrt(-2 * Math.log(r));
+        r = $Math.sqrt(-2 * $Math.log(r));
     }
-    var q = rng(0, 2 * Math.PI);
-    var g1 = r * Math.cos(q);
-    var g2 = r * Math.sin(q);
+    var q = rng(0, 2 * $Math.PI);
+    var g1 = r * $Math.cos(q);
+    var g2 = r * $Math.sin(q);
     return {x: g1 * std.x + mean.x, y: g2 * std.y + mean.y};
 }
 
@@ -6079,17 +6079,17 @@ function random_on_cube(rng) {
 
 function random_on_sphere(rng) {
     rng = rng || random;
-    const a = Math.acos(rng(-1, 1)) - Math.PI / 2;
-    const b = rng(0, Math.PI * 2);
-    const c = Math.cos(a);
-    return {x: c * Math.cos(b), y: c * Math.sin(b), z: Math.sin(a)};
+    const a = $Math.acos(rng(-1, 1)) - $Math.PI / 2;
+    const b = rng(0, $Math.PI * 2);
+    const c = $Math.cos(a);
+    return {x: c * $Math.cos(b), y: c * $Math.sin(b), z: $Math.sin(a)};
 }
 
 var random_direction3D = random_on_sphere;
 
 function random_on_circle() {
-    const t = random() * 2 * Math.PI;
-    return {x: Math.cos(t), y: Math.sin(t)};
+    const t = random() * 2 * $Math.PI;
+    return {x: $Math.cos(t), y: $Math.sin(t)};
 }
 
 var random_direction2D = random_on_circle;
@@ -6153,15 +6153,15 @@ function _makeRng(seed) {
     function set_random_seed(seed) {
         if (seed === undefined || seed === 0) { seed = 4.7499362e+13; }
         if (seed < 2**16) { seed += seed * 1.3529423483002e15; }
-        state0U = Math.abs(seed / 2**24) >>> 0;
+        state0U = $Math.abs(seed / 2**24) >>> 0;
 
         // Avoid all zeros
         if (state0U === 0) { state0U = 5662365; }
         
-        state0L = Math.abs(seed) >>> 0;
-        state1U = Math.abs(seed / 2**16) >>> 0;
-        state1L = Math.abs(seed / 2**32) >>> 0;
-        //console.log(seed, state0U, state0L, state1U, state1L)
+        state0L = $Math.abs(seed) >>> 0;
+        state1U = $Math.abs(seed / 2**16) >>> 0;
+        state1L = $Math.abs(seed / 2**32) >>> 0;
+        //$console.log(seed, state0U, state0L, state1U, state1L)
     }
 
     if (seed !== undefined) {
@@ -6256,7 +6256,7 @@ function random_integer(lo, hi, rng) {
     }
     rng = rng || random;
     var n = hi - lo + 1;
-    return Math.min(hi, floor(rng(lo, hi + 1)));
+    return $Math.min(hi, floor(rng(lo, hi + 1)));
 }
 
 
@@ -6279,10 +6279,10 @@ function _addMutate(a, b) {
 }
 
 function _objectAdd(a, b) {
-    if (Array.isArray(a) || Array.isArray(b)) { _error('Cannot use + with arrays'); }
+    if (Array.isArray(a) || Array.isArray(b)) { $error('Cannot use + with arrays'); }
     
     // clone, preserving prototype
-    const c = a.constructor ? a.constructor() : Object.create(null);
+    const c = a.constructor ? a.constructor() : $Object.create(null);
 
     // avoid hasOwnProperty for speed
     if (typeof b === 'object') for (const key in a) c[key] = a[key] + b[key];
@@ -6292,7 +6292,7 @@ function _objectAdd(a, b) {
 }
 
 function _objectAddMutate(a, b) {
-    if (Array.isArray(a) || Array.isArray(b)) { _error('Cannot use += with arrays'); }
+    if (Array.isArray(a) || Array.isArray(b)) { $error('Cannot use += with arrays'); }
     
     if (typeof b === 'object') for (let key in a) a[key] += b[key];
     else                       for (let key in a) a[key] += b;
@@ -6306,8 +6306,8 @@ function _neg(a) {
 }
 
 function _objectNeg(a) {
-    if (Array.isArray(a)) { _error('Cannot use - with arrays'); }
-    let c = a.constructor ? a.constructor() : Object.create(null);
+    if (Array.isArray(a)) { $error('Cannot use - with arrays'); }
+    let c = a.constructor ? a.constructor() : $Object.create(null);
     for (let key in a) c[key] = -a[key];
     return c;
 }
@@ -6323,8 +6323,8 @@ function _subMutate(a, b) {
 }
 
 function _objectSub(a, b) {
-    if (Array.isArray(a) || Array.isArray(b)) { _error('Cannot use - with arrays'); }
-    const c = a.constructor ? a.constructor() : Object.create(null);
+    if (Array.isArray(a) || Array.isArray(b)) { $error('Cannot use - with arrays'); }
+    const c = a.constructor ? a.constructor() : $Object.create(null);
     
     if (typeof b === 'object') for (const key in a) c[key] = a[key] - b[key];
     else                       for (const key in a) c[key] = a[key] - b;
@@ -6333,7 +6333,7 @@ function _objectSub(a, b) {
 }
 
 function _objectSubMutate(a, b) {
-    if (Array.isArray(a) || Array.isArray(b)) { _error('Cannot use -= with arrays'); }
+    if (Array.isArray(a) || Array.isArray(b)) { $error('Cannot use -= with arrays'); }
     if (typeof b === 'object') for (const key in a) a[key] -= b[key];
     else                       for (const key in a) a[key] -= b;
     return a;
@@ -6350,8 +6350,8 @@ function _divMutate(a, b) {
 }
 
 function _objectDiv(a, b) {
-    if (Array.isArray(a) || Array.isArray(b)) { _error('Cannot use / with arrays'); }    
-    const c = a.constructor ? a.constructor() : Object.create(null);
+    if (Array.isArray(a) || Array.isArray(b)) { $error('Cannot use / with arrays'); }    
+    const c = a.constructor ? a.constructor() : $Object.create(null);
 
     if (typeof b === 'object') for (const key in a) c[key] = a[key] / b[key];
     else {
@@ -6363,7 +6363,7 @@ function _objectDiv(a, b) {
 }
 
 function _objectDivMutate(a, b) {
-    if (Array.isArray(a) || Array.isArray(b)) { _error('Cannot use /= with arrays'); }    
+    if (Array.isArray(a) || Array.isArray(b)) { $error('Cannot use /= with arrays'); }    
     if (typeof b === 'object') for (const key in a) a[key] /= b[key];
     else {
         b = 1 / b;
@@ -6388,8 +6388,8 @@ function _mulMutate(a, b) {
 }
 
 function _objectMul(a, b) {
-    if (Array.isArray(a) || Array.isArray(b)) { _error('Cannot use * with arrays'); }    
-    const c = a.constructor ? a.constructor() : Object.create(null);
+    if (Array.isArray(a) || Array.isArray(b)) { $error('Cannot use * with arrays'); }    
+    const c = a.constructor ? a.constructor() : $Object.create(null);
 
     if (typeof b === 'object') for (const key in a) c[key] = a[key] * b[key];
     else                       for (const key in a) c[key] = a[key] * b;
@@ -6398,7 +6398,7 @@ function _objectMul(a, b) {
 }
 
 function _objectMulMutate(a, b) {
-    if (Array.isArray(a) || Array.isArray(b)) { _error('Cannot use *= with arrays'); }    
+    if (Array.isArray(a) || Array.isArray(b)) { $error('Cannot use *= with arrays'); }    
     if (typeof b === 'object') for (const key in a) a[key] *= b[key];
     else                       for (const key in a) a[key] *= b;
     return a;
@@ -6410,45 +6410,45 @@ function _objectMulMutate(a, b) {
 
 function abs(a) {
     if (typeof a === 'object') {
-        let c = a.constructor ? a.constructor() : Object.create(null);
-        for (let key in a) c[key] = Math.abs(a[key]);
+        let c = a.constructor ? a.constructor() : $Object.create(null);
+        for (let key in a) c[key] = $Math.abs(a[key]);
         return c;
     } else {
-        return Math.abs(a);
+        return $Math.abs(a);
     }
 }
 
 function floor(a, u) {
     if (typeof a === 'object') {
-        const c = a.constructor ? a.constructor() : Object.create(null);
+        const c = a.constructor ? a.constructor() : $Object.create(null);
 
         if (u === undefined) {
-            for (let key in a) c[key] = Math.floor(a[key]);
+            for (let key in a) c[key] = $Math.floor(a[key]);
         } else {
-            for (let key in a) c[key] = Math.floor(a[key] / u) * u;
+            for (let key in a) c[key] = $Math.floor(a[key] / u) * u;
         }
         return c;
     } else if (u === undefined) {
-        return Math.floor(a);
+        return $Math.floor(a);
     } else {
-        return Math.floor(a / u) * u;
+        return $Math.floor(a / u) * u;
     }
 }
 
 
 function ceil(a, u) {
     if (typeof a === 'object') {
-        const c = a.constructor ? a.constructor() : Object.create(null);
+        const c = a.constructor ? a.constructor() : $Object.create(null);
         if (u === undefined) {
-            for (let key in a) c[key] = Math.ceil(a[key]);
+            for (let key in a) c[key] = $Math.ceil(a[key]);
         } else {
-            for (let key in a) c[key] = Math.ceil(a[key] / u) * u;
+            for (let key in a) c[key] = $Math.ceil(a[key] / u) * u;
         }
         return c;
     } else if (u === undefined) {
-        return Math.ceil(a);
+        return $Math.ceil(a);
     } else {
-        return Math.ceil(a / u) * u;
+        return $Math.ceil(a / u) * u;
     }
 }
 
@@ -6457,33 +6457,33 @@ function round(a, unit) {
     if (typeof a === 'object') {
         unit = unit || 1;
         const invUnit = 1 / unit;
-        const c = a.constructor ? a.constructor() : Object.create(null);
-        for (let key in a) c[key] = Math.round(a[key] * invUnit) * unit;
+        const c = a.constructor ? a.constructor() : $Object.create(null);
+        for (let key in a) c[key] = $Math.round(a[key] * invUnit) * unit;
         return c;
     } else if (unit) {
-        return Math.round(a / unit) * unit;
+        return $Math.round(a / unit) * unit;
     } else  {
-        return Math.round(a);
+        return $Math.round(a);
     }
 }
 
 function trunc(a) {
     if (typeof a === 'object') {
-        let c = a.constructor ? a.constructor() : Object.create(null);
-        for (let key in a) c[key] = Math.trunc(a[key]);
+        let c = a.constructor ? a.constructor() : $Object.create(null);
+        for (let key in a) c[key] = $Math.trunc(a[key]);
         return c;
     } else {
-        return Math.trunc(a);
+        return $Math.trunc(a);
     }
 }
 
 function sign(a) {
     if (typeof a === 'object') {
-        let c = a.constructor ? a.constructor() : Object.create(null);
-        for (let key in a) c[key] = Math.sign(a[key]);
+        let c = a.constructor ? a.constructor() : $Object.create(null);
+        for (let key in a) c[key] = $Math.sign(a[key]);
         return c;
     } else {
-        return Math.sign(a);
+        return $Math.sign(a);
     }
 }
 
@@ -6546,8 +6546,8 @@ function clone(a) {
     } else if (typeof a === 'object') {
         // Includes arrays; we have to copy the non-indexed properties,
         // so we treat them as objects.
-        const c = a.constructor ? a.constructor() : Object.create(null);
-        return Object.assign(c, a);     
+        const c = a.constructor ? a.constructor() : $Object.create(null);
+        return $Object.assign(c, a);
     } else {
         return a;
     }
@@ -6588,7 +6588,7 @@ function _deep_clone(a, map, is_map_asset) {
             // Clone all non-Array properties that might have been
             // added to this array.  They are distinguished by
             // names that are not numbers.
-            const k = Object.keys(a);
+            const k = $Object.keys(a);
             for (let i = 0; i < k.length; ++i) {
                 const key = k[i];
                 if (key[0] > '9' || key[0] < '0') {
@@ -6601,22 +6601,22 @@ function _deep_clone(a, map, is_map_asset) {
             }
 
             if (is_map_asset) {
-                if (Object.isSealed(a)) { Object.seal(x); }
-                if (Object.isFrozen(a)) { Object.freeze(x); }
+                if ($Object.isSealed(a)) { $Object.seal(x); }
+                if ($Object.isFrozen(a)) { $Object.freeze(x); }
             }
 
             return x;
         }
     } else if (typeof a === 'object') {
-        console.assert(a._type === undefined);
+        $console.assert(a._type === undefined);
         
         let x = map.get(a);
         if (x !== undefined) {
             // Already cloned
             return x;
         } else {
-            map.set(a, x = a.constructor ? a.constructor() : Object.create(null));
-            const k = Object.keys(a);
+            map.set(a, x = a.constructor ? a.constructor() : $Object.create(null));
+            const k = $Object.keys(a);
             for (let i = 0; i < k.length; ++i) {
                 const key = k[i];
                 if (key === '_name') {
@@ -6629,7 +6629,7 @@ function _deep_clone(a, map, is_map_asset) {
                     x[key] = _deep_clone(a[key], map, is_map_asset);
                 }
             }
-            if (a._name && Object.isSealed(a)) { Object.seal(x); }
+            if (a._name && $Object.isSealed(a)) { $Object.seal(x); }
             return x;
         }
     } else {
@@ -6654,7 +6654,7 @@ function copy(s, d) {
         return d;
     } else if (typeof s === 'object') {
         if (typeof d !== 'object') { throw new Error("Destination must be an object"); }
-        return Object.assign(d, s);
+        return $Object.assign(d, s);
     } else {
         throw new Error("Not an array or object");
     }
@@ -6677,7 +6677,7 @@ function cross(a, b) {
         if (a.length === 2) {
             return a[0] * b[1] - a[1] * b[0];
         } else {
-            let c = a.constructor ? a.constructor() : Object.create(null);
+            let c = a.constructor ? a.constructor() : $Object.create(null);
             c[0] = a[1] * b[2] - a[2] * b[1];
             c[1] = a[2] * b[0] - a[0] * b[2];
             c[2] = a[0] * b[1] - a[1] * b[0];
@@ -6687,7 +6687,7 @@ function cross(a, b) {
         // 2D
         return a.x * b.y - a.y * b.x;
     } else {
-        let c = a.constructor ? a.constructor() : Object.create(null);
+        let c = a.constructor ? a.constructor() : $Object.create(null);
         c.x = a.y * b.z - a.z * b.y;
         c.y = a.z * b.x - a.x * b.z;
         c.z = a.x * b.y - a.y * b.x;
@@ -6716,16 +6716,16 @@ var _superscriptTable = {'0':'⁰', '1':'¹', '2':'²', '3':'³', '4':'⁴', '5'
 
 // Pads to be two digits with zeros
 function _padZero(n) {
-    n = Math.min(Math.max(0, Math.floor(n)), 99);
+    n = $Math.min($Math.max(0, $Math.floor(n)), 99);
     if (n < 10) return '0' + n;
     else        return '' + n;
 }
 
 
-var _ordinal = Object.freeze(['zeroth', 'first', 'second', 'third', 'fourth', 'fifth',
-                              'sixth', 'seventh', 'eighth', 'ninth', 'tenth', 'eleventh',
-                              'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteenth',
-                              'seventeenth', 'eighteenth', 'ninteenth', 'twentieth']);
+var _ordinal = $Object.freeze(['zeroth', 'first', 'second', 'third', 'fourth', 'fifth',
+                               'sixth', 'seventh', 'eighth', 'ninth', 'tenth', 'eleventh',
+                               'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteenth',
+                               'seventeenth', 'eighteenth', 'ninteenth', 'twentieth']);
                   
 function format_number(n, fmt) {
     if (fmt !== undefined && ! is_string(fmt)) { throw new Error('The format argument to format_number must be a string'); }
@@ -6733,7 +6733,7 @@ function format_number(n, fmt) {
     switch (fmt) {
     case 'percent':
     case '%':
-        return Math.round(n * 100) + '%';
+        return $Math.round(n * 100) + '%';
     case 'commas':
     case ',':
         return n.toLocaleString('en');
@@ -6744,18 +6744,18 @@ function format_number(n, fmt) {
     case 'degrees':
     case '°':
     case 'deg':
-        return Math.round(n * 180 / Math.PI) + '°';
+        return $Math.round(n * 180 / $Math.PI) + '°';
     case 'hex':
         return '0x' + n.toString(16);
     case 'scientific':
         {
-            let x = Math.floor(Math.log10(Math.abs(n)));
-            if (Math.abs(x) === Infinity) { x = 0; }
+            let x = $Math.floor($Math.log10($Math.abs(n)));
+            if ($Math.abs(x) === Infinity) { x = 0; }
             // round to 3 decimal places in scientific notation
-            let s = '' + (Math.round(n * Math.pow(10, 3 - x)) * 1e-3);
+            let s = '' + ($Math.round(n * $Math.pow(10, 3 - x)) * 1e-3);
             // If rounding failed due to precision, truncate the
             // string itself
-            s = s.substring(0, Math.min((n < 0) ? 6 : 5), s.length);
+            s = s.substring(0, $Math.min((n < 0) ? 6 : 5), s.length);
             s += '×10';
             const e = '' + x;
             for (let i = 0; i < e.length; ++i) {
@@ -6766,9 +6766,9 @@ function format_number(n, fmt) {
 
     case 'clock12':
         {
-            n = Math.round(n / 60);
+            n = $Math.round(n / 60);
             const m = n % 60;
-            let h = Math.floor(n / 60);
+            let h = $Math.floor(n / 60);
             const suffix = ((h % 24) < 12) ? 'am' : 'pm';
             h = h % 12;
             if (h === 0) { h = 12; }
@@ -6776,27 +6776,27 @@ function format_number(n, fmt) {
         }
     case 'clock24':
         {
-            const m = Math.floor(n / 60) % 60;
-            const h = Math.floor(n / 3600) % 24;
+            const m = $Math.floor(n / 60) % 60;
+            const h = $Math.floor(n / 3600) % 24;
             return h + ':' + _padZero(m);
         }
     case 'stopwatch':
         {
-            const m = Math.floor(n / 60);
+            const m = $Math.floor(n / 60);
             const s = _padZero(n % 60);
-            const f = _padZero((n - Math.floor(n)) * 100);
+            const f = _padZero((n - $Math.floor(n)) * 100);
             return m + ':' + s + '.' + f;
         }
     case 'oldstopwatch':
         {
-            const m = Math.floor(n / 60);
+            const m = $Math.floor(n / 60);
             const s = _padZero(n % 60);
-            const f = _padZero((n - Math.floor(n)) * 100);
+            const f = _padZero((n - $Math.floor(n)) * 100);
             return m + '"' + s + "'" + f;
         }
 
     case 'ordinalabbrev':
-        n = Math.round(n);
+        n = $Math.round(n);
         switch (n) {
         case 1: return '1ˢᵗ';
         case 2: return '2ⁿᵈ';
@@ -6805,7 +6805,7 @@ function format_number(n, fmt) {
         }
 
     case 'ordinal':
-        n = Math.round(n);
+        n = $Math.round(n);
         if (n >= 0 && n < _ordinal.length) {
             return _ordinal[n];
         } else {
@@ -6822,9 +6822,9 @@ function format_number(n, fmt) {
             if (match) {
                 const spaceNum = match[1].length;
                 const intNum = match[2].length;
-                const fracNum = match[3] ? Math.max(match[3].length - 1, 0) : 0;
+                const fracNum = match[3] ? $Math.max(match[3].length - 1, 0) : 0;
 
-                let s = Math.abs(n).toFixed(fracNum);
+                let s = $Math.abs(n).toFixed(fracNum);
 
                 let i = (fracNum === 0) ? s.length : s.indexOf('.');
                 while (i < intNum) { s = '0' + s; ++i; }
@@ -6918,16 +6918,16 @@ function reversed(a) {
 
 
 function parse(source) {
-    return _parse(source, 0).result;
+    return $parse(source, 0).result;
 }
 
 
 function unparse(x) {
-    return _unparse(x, new Map());
+    return $unparse(x, new Map());
 }
 
 
-function _unparse(x, alreadySeen) {
+function $unparse(x, alreadySeen) {
     if (Array.isArray(x)) {
         if (x._name !== undefined) {
             // Internal object
@@ -6940,7 +6940,7 @@ function _unparse(x, alreadySeen) {
  
         let s = '[';
         for (let i = 0; i < x.length; ++i) {
-            s += _unparse(x[i], alreadySeen) + ', ';
+            s += $unparse(x[i], alreadySeen) + ', ';
         }
         return s.substring(0, s.length - 2) + ']';
     }
@@ -6959,15 +6959,15 @@ function _unparse(x, alreadySeen) {
             alreadySeen.set(x, true);
             
             let s = '{';
-            const keys = Object.keys(x);
+            const keys = $Object.keys(x);
             for (let i = 0; i < keys.length; ++i) {
                 const k = keys[i];
-                // Hide underscore members
-                if (k[0] !== '_') {
+                // Hide quadplay-internal members
+                if (k[0] !== '_' && k[0] !== '$') {
                     // Quote illegal identifiers used as keys
                     const legalIdentifier = /^[Δ]?(?:[A-Za-z][A-Za-z_0-9]*|[αβγδζηθιλμρσϕφχψτωΩ][_0-9]*)$/.test(k);
                     const key = legalIdentifier ? k : ('"' + k + '"');
-                    s += key + ':' + _unparse(x[k], alreadySeen) + ', ';
+                    s += key + ':' + $unparse(x[k], alreadySeen) + ', ';
                 }
             }
 
@@ -6983,21 +6983,21 @@ function _unparse(x, alreadySeen) {
             return '∞';
         } else if (x === -Infinity) {
             return '-∞';
-        } else if (x === Math.PI) {
+        } else if (x === $Math.PI) {
             return 'π';
-        } else if (x === Math.PI / 2) {
+        } else if (x === $Math.PI / 2) {
             return '½π';
-        } else if (x === Math.PI / 4) {
+        } else if (x === $Math.PI / 4) {
             return '¼π';
-        } else if (x === Math.PI * 3 / 4) {
+        } else if (x === $Math.PI * 3 / 4) {
             return '¾π';
-        } else if (x === -Math.PI) {
+        } else if (x === -$Math.PI) {
             return '-π';
-        } else if (x === -Math.PI / 2) {
+        } else if (x === -$Math.PI / 2) {
             return '-½π';
-        } else if (x === -Math.PI / 4) {
+        } else if (x === -$Math.PI / 4) {
             return '-¼π';
-        } else if (x === -Math.PI * 3 / 4) {
+        } else if (x === -$Math.PI * 3 / 4) {
             return '-¾π';
         } else if (x === NaN) {
             return 'nan';
@@ -7026,9 +7026,9 @@ function _unparse(x, alreadySeen) {
 
 function magnitude(a) {
     if (typeof a === 'number') {
-        return Math.hypot.apply(null, arguments);
+        return $Math.hypot.apply(null, arguments);
     } else {
-        return Math.sqrt(dot(a, a));
+        return $Math.sqrt(dot(a, a));
     }
 }
 
@@ -7051,7 +7051,7 @@ function direction(a) {
     return (m > 1e-10) ? _mul(a, 1.0 / m) : clone(a);
 }
 
-// Used by min and max (and mid). Assumes 'this' is bound to the corresponding Math function.
+// Used by min and max (and mid). Assumes 'this' is bound to the corresponding $Math function.
 function _minOrMax(a, b) {
     const ta = typeof a, tb = typeof b;
     let allNumbers = (ta === 'number') && (tb === 'number');
@@ -7059,7 +7059,7 @@ function _minOrMax(a, b) {
 
     if (allNumbers || (arguments.length > 2)) {
         // common case on only numbers
-        return fcn.apply(Math, arguments);
+        return fcn.apply($Math, arguments);
     } else {
         if (ta === 'Number') {
             // Swap, b is the vector
@@ -7067,38 +7067,38 @@ function _minOrMax(a, b) {
             tmp = tb; tb = ta; ta = tmp;
         }
 
-        let c = a.constructor ? a.constructor() : Object.create(null);
+        let c = a.constructor ? a.constructor() : $Object.create(null);
         if (tb === 'Number') for (let key in a) c[key] = fcn(a[key], b);
         else                 for (let key in a) c[key] = fcn(a[key], b[key]);
-        return Object.isFrozen(a) ? Object.freeze(c) : c;
+        return $Object.isFrozen(a) ? $Object.freeze(c) : c;
     }
 }
 
 // Handles any number of arguments for Numbers, two
 // arguments for vectors
 function max(a, b) {
-    return _minOrMax.apply(Math.max, arguments);
+    return _minOrMax.apply($Math.max, arguments);
 }
     
 function min(a, b) {
-    return _minOrMax.apply(Math.min, arguments);
+    return _minOrMax.apply($Math.min, arguments);
 }
 
 function mid(a, b, c) {
-    return _minOrMax.apply(Math.mid, arguments);
+    return _minOrMax.apply($Math.mid, arguments);
 }
 
 function max_component(a) {
     if (typeof a === 'number') { return a; }
     let s = -Infinity;
-    for (let key in a) s = Math.max(s, a[key]);
+    for (let key in a) s = $Math.max(s, a[key]);
     return s;
 }
 
 function min_component(a) {
     if (typeof a === 'number') { return a; }
     let s = Infinity;
-    for (let key in a) s = Math.min(s, a[key]);
+    for (let key in a) s = $Math.min(s, a[key]);
     return s;
 }
 
@@ -7123,7 +7123,7 @@ function MUL(a, b) {
 }
 
 function SIGN(a) {
-    return _Math.sign(a);
+    return $Math.sign(a);
 }
 
 function MAD(a, b, c) {
@@ -7134,10 +7134,10 @@ function DIV(a, b) {
     return a / b;
 }
 
-var ABS = Math.abs;
+var ABS = $Math.abs;
 
 function CLAMP(a, lo, hi) {
-    return _clamp(a, lo, hi);
+    return $clamp(a, lo, hi);
 }
 
 function LERP(a, b, t) {
@@ -7413,14 +7413,14 @@ function MAT2x2_MATMUL_XZ(A, v, c) {
 
 
 function lerp_angle(a, b, t) {
-    a = _loop(a, -_Math.PI, _Math.PI);
-    b = _loop(b, -_Math.PI, _Math.PI);
+    a = _loop(a, -$Math.PI, $Math.PI);
+    b = _loop(b, -$Math.PI, $Math.PI);
 
     // Find the shortest direction
-    if (b > a + _Math.PI) {
-        b -= 2 * _Math.PI;
-    } else if (b < a - _Math.PI) {
-        b += 2 * _Math.PI;
+    if (b > a + $Math.PI) {
+        b -= 2 * $Math.PI;
+    } else if (b < a - $Math.PI) {
+        b += 2 * $Math.PI;
     }
 
     return a + (b - a) * t;    
@@ -7430,13 +7430,13 @@ function lerp_angle(a, b, t) {
 
 // https://en.wikipedia.org/wiki/SRGB#The_reverse_transformation
 function _SRGB_to_RGB_one_channel(u) {
-    return u > 0.04045 ? Math.pow(((u + 0.055) * (1 / 1.055)), 2.4) : u * (1 / 12.92);
+    return u > 0.04045 ? $Math.pow(((u + 0.055) * (1 / 1.055)), 2.4) : u * (1 / 12.92);
 }
 
 
 // https://en.wikipedia.org/wiki/SRGB
 function _RGB_to_SRGB_one_channel(u) {
-    return  u > 0.0031308 ? 1.055 * Math.pow(u, (1 / 2.4)) - 0.055 : 12.92 * u;
+    return  u > 0.0031308 ? 1.055 * $Math.pow(u, (1 / 2.4)) - 0.055 : 12.92 * u;
 }
 
 // Convert SRGB[A] to RGB[A]
@@ -7504,7 +7504,7 @@ function _XYZ_to_RGB(color) {
 }
 
 function _XYZ_to_LAsBs_one_channel(u) {
-    return u > 0.008856 ? _Math.cbrt(u) : 7.787 * u + 16 / 116;
+    return u > 0.008856 ? $Math.cbrt(u) : 7.787 * u + 16 / 116;
 }
 
 // XYZ[A] color to L A* B*[A] (where .as is the color channel and .a
@@ -7517,7 +7517,7 @@ function _XYZ_to_LAsBs(color) {
 
     // if (116 * y - 16 < 0) throw new Error('Invalid input for XYZ');
     const result = {
-        l: _Math.max(0, 116 * y - 16),
+        l: $Math.max(0, 116 * y - 16),
         as: 500 * (x - y),
         bs: 200 * (y - z)
     };
@@ -7556,13 +7556,13 @@ function _LAsBs_to_XYZ(color) {
 function perceptual_lerp_color(a, b, t) {
     let was_rgb = false;
     if (a.h === undefined && a.r !== undefined) {
-        if (b.h !== undefined || b.r === undefined) { _error("perceptual_lerp_color() requires both colors to be rgb() or hsv()"); }
+        if (b.h !== undefined || b.r === undefined) { $error("perceptual_lerp_color() requires both colors to be rgb() or hsv()"); }
         // rgb case
         was_rgb = true;
         
     } else if (a.r === undefined && a.h !== undefined) {
         // hsv case
-        if (b.r !== undefined || b.h === undefined) { _error("perceptual_lerp_color() requires both colors to be rgb() or hsv()"); }
+        if (b.r !== undefined || b.h === undefined) { $error("perceptual_lerp_color() requires both colors to be rgb() or hsv()"); }
         if (a.a !== undefined) {
             a = rgba(a);
             b = rgba(b);
@@ -7571,7 +7571,7 @@ function perceptual_lerp_color(a, b, t) {
             b = rgb(b);
         }
     } else {
-        _error("perceptual_lerp_color() requires both colors to be rgb() or hsv()");
+        $error("perceptual_lerp_color() requires both colors to be rgb() or hsv()");
     }
 
     a = _XYZ_to_LAsBs(_RGB_to_XYZ(_SRGB_to_RGB(a)));
@@ -7579,9 +7579,9 @@ function perceptual_lerp_color(a, b, t) {
     let c = lerp(a, b, t);
     c = _RGB_to_SRGB(_XYZ_to_RGB(_LAsBs_to_XYZ(c)));
 
-    c.r = _clamp(c.r, 0, 1);
-    c.g = _clamp(c.g, 0, 1);
-    c.b = _clamp(c.b, 0, 1);
+    c.r = $clamp(c.r, 0, 1);
+    c.g = $clamp(c.g, 0, 1);
+    c.b = $clamp(c.b, 0, 1);
     
     if (! was_rgb) {
         // Go back to HSV
@@ -7611,8 +7611,8 @@ function lerp(a, b, t, t_min, t_max) {
         if (! Array.isArray(a) && (tb === 'object') && (ta === 'object')) {
             // Handle some common cases efficiently without overloading and allocation.
             // The type checking is expensive but is much faster than not doing it.
-            const ca = Object.keys(a).length;
-            const cb = Object.keys(b).length;
+            const ca = $Object.keys(a).length;
+            const cb = $Object.keys(b).length;
             if (ca !== cb) { throw new Error("The arguments to lerp must have the same number of elements"); }
 
             // xy()
@@ -7655,13 +7655,13 @@ function lerp(a, b, t, t_min, t_max) {
 
 
 function smoothstep(start, end, t) {
-    t = Math.max(0, Math.min(1, (t - start) / (end - start)));
+    t = $Math.max(0, $Math.min(1, (t - start) / (end - start)));
     return t * t * (3 - 2 * t);
 }
 
 
 function smootherstep(start, end, t) {
-    t = Math.max(0, Math.min(1, (t - start) / (end - start)));
+    t = $Math.max(0, $Math.min(1, (t - start) / (end - start)));
     return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
@@ -7669,19 +7669,19 @@ function smootherstep(start, end, t) {
 function pow(a, b) {
     const ta = typeof a, tb = typeof b;
     if (ta === 'object') {
-        let c = a.constructor ? a.constructor() : Object.create(null);
+        let c = a.constructor ? a.constructor() : $Object.create(null);
         if (tb === 'number') {
-            for (let key in a) c[key] = Math.pow(a[key], b);
+            for (let key in a) c[key] = $Math.pow(a[key], b);
         } else {
-            for (let key in a) c[key] = Math.pow(a[key], b[key]);
+            for (let key in a) c[key] = $Math.pow(a[key], b[key]);
         }
-        return Object.isFrozen(a) ? Object.freeze(c) : c;
+        return $Object.isFrozen(a) ? $Object.freeze(c) : c;
     } else if ((ta === 'number') && (tb === 'object')) {
         let c = b.constructor ? b.constructor() : Object.create(null);
-        for (let key in b) c[key] = Math.pow(a, b[key]);
-        return Object.isFrozen(a) ? Object.freeze(c) : c;
+        for (let key in b) c[key] = $Math.pow(a, b[key]);
+        return $Object.isFrozen(a) ? $Object.freeze(c) : c;
     } else {
-        return Math.ceil(a, b);
+        return $Math.ceil(a, b);
     }
 }
 
@@ -7707,10 +7707,10 @@ function find_map_path(map, start, goal, edgeCost, costLayer) {
     }
 
     function estimatePathCost(A, B, m) {
-        let dx = Math.abs(A.x - B.x);
-        let dy = Math.abs(A.y - B.y);
-        if (map.wrap_x) { dx = Math.min(dx, map.size.x - 1 - dx); }
-        if (map.wrap_y) { dy = Math.min(dy, map.size.y - 1 - dy); }
+        let dx = $Math.abs(A.x - B.x);
+        let dy = $Math.abs(A.y - B.y);
+        if (map.wrap_x) { dx = $Math.min(dx, map.size.x - 1 - dx); }
+        if (map.wrap_y) { dy = $Math.min(dy, map.size.y - 1 - dy); }
         return dx + dy;
     }
 
@@ -7748,7 +7748,7 @@ function find_map_path(map, start, goal, edgeCost, costLayer) {
 
 
 /** Used by find_path */
-function _Step(last, startCost, goalCost) {
+function $Step(last, startCost, goalCost) {
     this.last          = last;
     this.previous      = null;
     this.costFromStart = startCost;
@@ -7757,7 +7757,7 @@ function _Step(last, startCost, goalCost) {
 }
 
 /** Used by find_path */
-_Step.prototype.cost = function() {
+$Step.prototype.cost = function() {
     return this.costFromStart + this.costToGoal;
 }
 
@@ -7833,7 +7833,7 @@ function split(str, c) {
 
 
 function load_local(key, default_value) {
-    let table = _window.localStorage.getItem('GAME_STATE_' + _gameURL);
+    let table = $window.localStorage.getItem('GAME_STATE_' + $gameURL);
     if (! table) { return default_value; }
     
     table = JSON.parse(table);
@@ -7847,7 +7847,7 @@ function load_local(key, default_value) {
 
 
 function save_local(key, value) {
-    let table = _window.localStorage.getItem('GAME_STATE_' + _gameURL);
+    let table = $window.localStorage.getItem('GAME_STATE_' + $gameURL);
     if (table) {
         table = JSON.parse(table);
     } else {
@@ -7862,12 +7862,12 @@ function save_local(key, value) {
             throw new Error('Cannot store_local() a value that is greater than 2048 characters after unparse()');
         }
         table[key] = v;
-        if (Object.keys(table).length > 128) {
+        if ($Object.keys(table).length > 128) {
             throw new Error('Cannot store_local() more than 128 separate keys.');
         }
     }
 
-    _window.localStorage.setItem('GAME_STATE_' + _gameURL, JSON.stringify(table));
+    $window.localStorage.setItem('GAME_STATE_' + $gameURL, JSON.stringify(table));
 }
 
 
@@ -7885,10 +7885,10 @@ function play_sound(sound, loop, volume, pan, pitch, time) {
     if (pan && pan.x !== undefined && pan.y !== undefined) {
         // Positional sound
         pan = transform_cs_to_ss(transform_ws_to_cs(pan))
-        pan = _clamp((2 * pan.x / SCREEN_SIZE.x) - 1, -1, 1)
+        pan = $clamp((2 * pan.x / SCREEN_SIZE.x) - 1, -1, 1)
     }
 
-    return _play_sound(sound, loop, volume, pan, pitch, time);    
+    return $play_sound(sound, loop, volume, pan, pitch, time);    
 }
 
 
@@ -7929,21 +7929,21 @@ function play_sound(sound, loop, volume, pan, pitch, time) {
    same map.
 */
 function find_path(start, goal, costEstimator, edgeCost, getNeighbors, nodeToID, map) {
-    if (start === undefined) { _error('The start_node argument to find_path() must not be nil'); }
-    if (goal === undefined) { _error('The goal_node argument to find_path() must not be nil'); }
-    if (typeof costEstimator !== 'function') { _error('The estimate_path_cost() argument to find_path() must be a function'); }
-    if (typeof getNeighbors !== 'function') { _error('The get_neighbors() argument to find_path() must be a function'); }
-    if (typeof edgeCost !== 'function') { _error('The edge_cost() argument to find_path() must be a function'); }
-    if (typeof nodeToID !== 'function') { _error('The node_to_ID() argument to find_path() must be a function'); }
+    if (start === undefined) { $error('The start_node argument to find_path() must not be nil'); }
+    if (goal === undefined) { $error('The goal_node argument to find_path() must not be nil'); }
+    if (typeof costEstimator !== 'function') { $error('The estimate_path_cost() argument to find_path() must be a function'); }
+    if (typeof getNeighbors !== 'function') { $error('The get_neighbors() argument to find_path() must be a function'); }
+    if (typeof edgeCost !== 'function') { $error('The edge_cost() argument to find_path() must be a function'); }
+    if (typeof nodeToID !== 'function') { $error('The node_to_ID() argument to find_path() must be a function'); }
     
     // Paths encoded by their last Step paired with expected shortest
     // distance
-    const queue = new _PriorityQueue();
+    const queue = new $PriorityQueue();
     
     // Maps each Node to the Step on the best known path to that Node.
     const bestPathTo = new Map();
 
-    let shortest = new _Step(start, 0, costEstimator(start, goal, map));
+    let shortest = new $Step(start, 0, costEstimator(start, goal, map));
     bestPathTo.set(nodeToID(start, map), shortest);
     queue.insert(shortest, shortest.cost());
 
@@ -7971,13 +7971,13 @@ function find_path(start, goal, costEstimator, edgeCost, getNeighbors, nodeToID,
         // Consider all neighbors of P (that are still in the queue
         // for consideration)
         const neighbors = getNeighbors(P, map);
-        if (! Array.isArray(neighbors)) { _error('The get_neighbors() function passed to find_path() must return an array of nodes. Received: ' + unparse(neighbors)); }
+        if (! Array.isArray(neighbors)) { $error('The get_neighbors() function passed to find_path() must return an array of nodes. Received: ' + unparse(neighbors)); }
         for (let i = 0; i < neighbors.length; ++i) {
             const N = neighbors[i];
-            if (N === undefined) { _error('get_neighbors() returned an array containing nil node in find_path().'); }
+            if (N === undefined) { $error('get_neighbors() returned an array containing nil node in find_path().'); }
             const id = nodeToID(N, map);
             const cost = edgeCost(P, N, map);
-            if (typeof cost !== 'number') { _error('edge_cost() must return a number. Received: ' + unparse(cost)); }
+            if (typeof cost !== 'number') { $error('edge_cost() must return a number. Received: ' + unparse(cost)); }
             
             if (cost < Infinity) {
                 const newCostFromStart = shortest.costFromStart + cost;
@@ -7986,7 +7986,7 @@ function find_path(start, goal, costEstimator, edgeCost, getNeighbors, nodeToID,
                 let oldBestToN = bestPathTo.get(id);
                 if (oldBestToN === undefined) {
                     // Create an expensive dummy path that will immediately be overwritten
-                    oldBestToN = new _Step(N, Infinity, costEstimator(N, goal, map));
+                    oldBestToN = new $Step(N, Infinity, costEstimator(N, goal, map));
                     bestPathTo.set(id, oldBestToN);
                     queue.insert(oldBestToN, oldBestToN.cost());
                 }
@@ -8019,12 +8019,12 @@ function find_path(start, goal, costEstimator, edgeCost, getNeighbors, nodeToID,
 ///////////////////////////////////////////////////////////////////////////////
 
 
-var _GeneratorFunction = Object.getPrototypeOf(function*(){}).constructor;
+var $GeneratorFunction = $Object.getPrototypeOf(function*(){}).constructor;
 
 /** Creates a new coroutine from code in this environment.  Invoke next() repeatedly on the
     returned object to execute it. */
 function _makeCoroutine(code) {
-    return (new _GeneratorFunction(code))();
+    return (new $GeneratorFunction(code))();
 }
 
 
@@ -8033,46 +8033,46 @@ function _makeCoroutine(code) {
 ////////////////////////////////////////////////////////////////////////////////////////
 
 /** Used by show() */
-function _zSort(a, b) { return a.z - b.z; }
+function $zSort(a, b) { return a.z - b.z; }
 
 function get_mode() {
-    return _gameMode;
+    return $gameMode;
 }
 
 function get_previous_mode() {
-    return _prevMode;
+    return $prevMode;
 }
 
 
-var _lastBecause = ''
+var $lastBecause = ''
 function because(reason) {
-    _lastBecause = reason;
+    $lastBecause = reason;
 }
 
 function push_mode(mode, ...args) {
-    _verifyLegalMode(mode);
+    $verifyLegalMode(mode);
 
     // Push the stacks
-    _previousModeGraphicsCommandListStack.push(_previousModeGraphicsCommandList);
-    _mode_framesStack.push(mode_frames);
-    _modeStack.push(_gameMode);
-    _prevModeStack.push(_prevMode);
+    $previousModeGraphicsCommandListStack.push($previousModeGraphicsCommandList);
+    $mode_framesStack.push(mode_frames);
+    $modeStack.push($gameMode);
+    $prevModeStack.push($prevMode);
 
     mode_frames = 0;
-    _prevMode = _gameMode;
-    _gameMode = mode;
+    $prevMode = $gameMode;
+    $gameMode = mode;
     
-    _previousModeGraphicsCommandList = _previousGraphicsCommandList;
+    $previousModeGraphicsCommandList = $previousGraphicsCommandList;
 
     // Reset the graphics
-    _graphicsCommandList = [];
-    _previousGraphicsCommandList = [];
+    $graphicsCommandList = [];
+    $previousGraphicsCommandList = [];
 
-    _systemPrint('Pushing into mode ' + mode._name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
+    $systemPrint('Pushing into mode ' + mode._name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
 
     // Run the enter callback on the new mode
-    _iteratorCount = new WeakMap();
-    _gameMode._enter.apply(null, args);
+    $iteratorCount = new WeakMap();
+    $gameMode.$enter.apply(null, args);
 
     throw {nextMode: mode};
 
@@ -8080,98 +8080,98 @@ function push_mode(mode, ...args) {
 
 
 function quit_game() {
-    _systemPrint('Quitting the game' + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
+    $systemPrint('Quitting the game' + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
     throw {quit_game:1};
 }
 
 
 function launch_game(url) {
-    _systemPrint('Launching ' + url + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
+    $systemPrint('Launching ' + url + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
     throw {launch_game:url};
 }
 
 
 function reset_game() {
-    _systemPrint('Resetting the game' + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
+    $systemPrint('Resetting the game' + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
     throw {reset_game:1};
 }
 
 
 function pop_mode(...args) {
-    if (_modeStack.length === 0) { throw new Error('Cannot pop_mode() from a mode entered by set_mode()'); }
+    if ($modeStack.length === 0) { throw new Error('Cannot pop_mode() from a mode entered by set_mode()'); }
 
     // Run the leave callback on the current mode
-    var old = _gameMode;
-    _prevMode = _prevModeStack.pop();
+    var old = $gameMode;
+    $prevMode = $prevModeStack.pop();
 
     // Pop the stacks
-    _previousGraphicsCommandList = _previousModeGraphicsCommandList;
-    _previousModeGraphicsCommandList = _previousModeGraphicsCommandListStack.pop();
-    _gameMode = _modeStack.pop();
-    mode_frames = _mode_framesStack.pop();
+    $previousGraphicsCommandList = $previousModeGraphicsCommandList;
+    $previousModeGraphicsCommandList = $previousModeGraphicsCommandListStack.pop();
+    $gameMode = $modeStack.pop();
+    mode_frames = $mode_framesStack.pop();
 
-    _iteratorCount = new WeakMap();
-    old._leave();
+    $iteratorCount = new WeakMap();
+    old.$leave();
 
     // Reset the graphics
-    _graphicsCommandList = [];
+    $graphicsCommandList = [];
     
-    _systemPrint('Popping back to mode ' + _gameMode._name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
+    $systemPrint('Popping back to mode ' + $gameMode._name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
 
-    // Run the pop_mode event on _gameMode if it exists
-    var eventName = '_pop_modeFrom' + old._name;
-    if (_gameMode[eventName] !== undefined) {
-        // repeat here so that the "this" is set correctly to _gameMode
-        _iteratorCount = new WeakMap();
-        _gameMode[eventName](...args);
+    // Run the pop_mode event on $gameMode if it exists
+    var eventName = '$pop_modeFrom' + old._name;
+    if ($gameMode[eventName] !== undefined) {
+        // repeat here so that the "this" is set correctly to $gameMode
+        $iteratorCount = new WeakMap();
+        $gameMode[eventName](...args);
     }
 
-    throw {nextMode: _gameMode};
+    throw {nextMode: $gameMode};
 }
 
 
 function set_mode(mode, ...args) {
-    _verifyLegalMode(mode);
+    $verifyLegalMode(mode);
     
     // Erase the stacks
-    _previousModeGraphicsCommandListStack = [];
-    _mode_framesStack = [];
-    _modeStack = [];
-    _prevModeStack = [];
+    $previousModeGraphicsCommandListStack = [];
+    $mode_framesStack = [];
+    $modeStack = [];
+    $prevModeStack = [];
 
     // Set up the new mode
-    _prevMode = _gameMode;
-    _gameMode = mode;
+    $prevMode = $gameMode;
+    $gameMode = mode;
 
     // Loop nesting is irrelvant, since we're about to leave
     // that scope permanently.
-    _iteratorCount = new WeakMap();
+    $iteratorCount = new WeakMap();
     
     // Run the leave callback on the current mode
-    if (_prevMode) { _prevMode._leave(); }
+    if ($prevMode) { $prevMode.$leave(); }
     
     mode_frames = 0;
 
     // Save the previous graphics list for draw_previous_mode()
-    _previousModeGraphicsCommandList = _previousGraphicsCommandList;
+    $previousModeGraphicsCommandList = $previousGraphicsCommandList;
 
     // Reset the graphics
-    _graphicsCommandList = [];
-    _previousGraphicsCommandList = [];
+    $graphicsCommandList = [];
+    $previousGraphicsCommandList = [];
     
-    _systemPrint('Entering mode ' + mode._name + (_lastBecause ? ' because "' + _lastBecause + '"' : ''));
+    $systemPrint('Entering mode ' + mode._name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
     
     // Run the enter callback on the new mode
-    _iteratorCount = new WeakMap();
-    if (_gameMode._enter) { _gameMode._enter.apply(null, args); }
+    $iteratorCount = new WeakMap();
+    if ($gameMode.$enter) { $gameMode.$enter.apply(null, args); }
 
     throw {nextMode: mode};
 }
 
 
-function _verifyLegalMode(mode) {
+function $verifyLegalMode(mode) {
     try {
-        if (mode._frame.constructor.constructor.name !== 'GeneratorFunction') {
+        if (mode.$frame.constructor.constructor.name !== 'GeneratorFunction') {
             throw 1;
         }
     } catch (e) {

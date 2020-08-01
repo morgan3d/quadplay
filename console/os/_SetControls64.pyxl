@@ -12,7 +12,7 @@ const unselected_color        = #b
 
 const open_frames             = 8
 
-const font = _font5
+const font = $font5
 const line_height = round(110% font.line_height) + 1
 
 let choiceArray = ["P1", "P2", "P3", "P4", "Done"]
@@ -31,7 +31,7 @@ frame
 
 draw_previous_mode()
 // Force the clipping range beyond what the API normally allows
-_clipZ2 = 2049
+$clipZ2 = 2049
 set_transform(xy(0, 0), xy(1, 1), 2048.6, 1)
 
 const windowSize = round(xy(26, 56) * clamp((mode_frames + 1) / open_frames, 0%, 100%))
@@ -43,13 +43,13 @@ if mode_frames > open_frames:
    // have gotten to this screen using a different
    // controller than the active one.
    for control in gamepad_array:
-      if control.qq or control._pp:
+      if control.qq or control.$pp:
          // Do NOT use "bb", which maps to enter on the keyboard
          // and may make players think they are executing a command
-         play_sound(_cancelUISound)
+         play_sound($cancelUISound)
          pop_mode()
       else if control.aa:
-         play_sound(_acceptUISound)
+         play_sound($acceptUISound)
          if choiceIndex == size(choiceArray) - 1:
             pop_mode()
          else:
@@ -57,7 +57,7 @@ if mode_frames > open_frames:
       else if control.yy:
          const prev = choiceIndex
          choiceIndex = clamp(choiceIndex + control.yy, 0, size(choiceArray) - 1)
-         play_sound(if prev == choiceIndex then _denyUISound else _moveUISound)
+         play_sound(if prev == choiceIndex then $denyUISound else $moveUISound)
 
    // Draw options
    let y = 13

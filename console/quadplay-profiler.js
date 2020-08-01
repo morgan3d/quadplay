@@ -161,7 +161,7 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime) {
                 // It is worth lowering the graphics rate, as it
                 // should help us hit frame rate
                 newG = G + 1;
-                _systemPrint(`Lowered graphics update to ${60 / newG} Hz.\n` +
+                $systemPrint(`Lowered graphics update to ${60 / newG} Hz.\n` +
                              `  minAchievableTime = ${minAchievableTime}\n` +
                              `  expectedTimeAtLowerFramerate   = ${expectedTimeAtLowerFramerate}\n` +
                              `  expectedTimeAtCurrentFramerate = ${expectedTimeAtCurrentFramerate}\n` +
@@ -172,7 +172,7 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime) {
             // We have headroom and should increase the graphics rate
             // back towards full framerate.
             newG = G - 1;
-            _systemPrint(`Raised graphics update to ${60 / newG} Hz.\n` +
+            $systemPrint(`Raised graphics update to ${60 / newG} Hz.\n` +
                          `  minAchievableTime = ${minAchievableTime}\n` +
                          `  expectedTimeAtLowerFramerate   = ${expectedTimeAtLowerFramerate}\n` +
                          `  expectedTimeAtCurrentFramerate = ${expectedTimeAtCurrentFramerate}\n` +

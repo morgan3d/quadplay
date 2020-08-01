@@ -10,6 +10,7 @@
   - Numbers with bare leading or trailing decimal
   - NaN, Infinity, -Infinity
   - Hexadecimal numbers
+  - JavaScript undefined
   - Optional unquoted object keys using [A-Za-z_0-9]+ characters only
 
   See also ../tools/betterjson.py for the Python version
@@ -64,7 +65,7 @@ const WorkJSON = (function () {
 const doubleQuoteProtection = String.fromCharCode(0xE000);
 const protectionBlockStart = 0xE010;
 
-const NaNSymbol = '\uE001', InfinitySymbol = '\uE002', NegInfinitySymbol = '\uE003';
+const NaNSymbol = '\uE001', InfinitySymbol = '\uE002', NegInfinitySymbol = '\uE003', UndefinedSymbol = '\uE004';
 
 
 return {
@@ -99,6 +100,7 @@ return {
         function betterReplacer(key, value) {
             if (replacer) { value = replacer(key, value); }
 
+            if (typeof value === 'undefined') { return UndefinedSymbol; }
             if ((typeof value === 'number') && isNaN(value)) { return NaNSymbol; }
             
             switch (value) {
@@ -110,7 +112,7 @@ return {
 
         // Restore the constants
         let json = JSON.stringify(value, betterReplacer, space);
-        json = json.replace(/"\uE001"/g, 'NaN').replace(/"\uE002"/g, 'Infinity').replace(/"\uE003"/g, '-Infinity');
+        json = json.replace(/"\uE001"/g, 'NaN').replace(/"\uE002"/g, 'Infinity').replace(/"\uE003"/g, '-Infinity').replace(/"\uE004"/g, 'undefined');
         return json;
     },
     
@@ -121,6 +123,7 @@ return {
             case NaNSymbol:         value = NaN; break;
             case InfinitySymbol:    value = Infinity; break;
             case NegInfinitySymbol: value = -Infinity; break;
+            case UndefinedSymbol:   value = undefined; break;
             }
             if (reviver) { value = reviver(key, value); }
             return value;

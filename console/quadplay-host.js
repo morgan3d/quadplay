@@ -7,7 +7,7 @@
    Global arrays for abstracting hardware memory copies of spritesheet
    and font data. Indices into these are is used as "pointers" when
    communicating with the virtual GPU. These are mapped to
-   QRuntime._spritesheetArray and QRuntime._fontArray. Each asset has
+   QRuntime._spritesheetArray and QRuntime.$fontArray. Each asset has
    a _index[0] field describing its index in this array.
 */
 let spritesheetArray = [];
@@ -114,19 +114,19 @@ function device_control(cmd) {
             let value = (arguments[2] ? true : false);
             switch (arguments[1]) {
             case "entity_bounds":
-                QRuntime._showEntityBoundsEnabled = document.getElementById('showEntityBoundsEnabled').checked = value;
+                QRuntime.$showEntityBoundsEnabled = document.getElementById('showEntityBoundsEnabled').checked = value;
                 break;
             case "physics":
-                QRuntime._showPhysicsEnabled = document.getElementById('showPhysicsEnabled').checked = value;
+                QRuntime.$showPhysicsEnabled = document.getElementById('showPhysicsEnabled').checked = value;
                 break;
             case "debug_print":
-                QRuntime._debugPrintEnabled = document.getElementById('debugPrintEnabled').checked = value;
+                QRuntime.$debugPrintEnabled = document.getElementById('debugPrintEnabled').checked = value;
                 break;
             case "assert":
-                QRuntime._assertEnabled = document.getElementById('assertEnabled').checked = value;
+                QRuntime.$assertEnabled = document.getElementById('assertEnabled').checked = value;
                 break;
             case "debug_watch":
-                QRuntime._debugWatchEnabled = document.getElementById('debugWatchEnabled').checked = value;
+                QRuntime.$debugWatchEnabled = document.getElementById('debugWatchEnabled').checked = value;
                 break;
             default:
                 throw new Error('Unsupported flagname passed to device_control("setDebugFlag", flagname, value): "' + arguments[1] + '"');
@@ -138,19 +138,19 @@ function device_control(cmd) {
         {
             switch (arguments[1]) {
             case "entity_bounds":
-                return QRuntime._showEntityBoundsEnabled;
+                return QRuntime.$showEntityBoundsEnabled;
                 break;
             case "physics":
-                return QRuntime._showPhysicsEnabled;
+                return QRuntime.$showPhysicsEnabled;
                 break;
             case "debug_print":
-                return QRuntime._debugPrintEnabled;
+                return QRuntime.$debugPrintEnabled;
                 break;
             case "assert":
-                return QRuntime._assertEnabled;
+                return QRuntime.$assertEnabled;
                 break;
             case "debug_watch":
-                return QRuntime._debugWatchEnabled;
+                return QRuntime.$debugWatchEnabled;
                 break;
             default:
                 throw new Error('Unsupported flagname passed to device_control("get_debug_flag", flagname): "' + arguments[1] + '"');
@@ -204,6 +204,40 @@ function device_control(cmd) {
 
     case "console.dir":
         console.dir(...Array.prototype.slice.call(arguments, 1));
+        break;
+
+    case "save":
+        if (useIDE && isQuadserver) {
+            const filename = arguments[1];
+            const value = arguments[2];
+            const callback = arguments[3];
+            if (typeof filename === 'string' && filename.indexOf('/') === -1 && filename.indexOf('\\') === -1 && filename.endsWith('.json')) {
+                try {
+                    const jsonString = WorkJSON.stringify(value);
+                    serverWriteFile(makeURLRelativeToGame(filename), 'utf8', jsonString, callback ? function() { callback(value, filename); } : undefined);
+                } catch (e) {
+                    // Fail silently
+                    console.log(e);
+                }
+            }
+        }
+        break;
+
+    case "load":
+        if (useIDE && isQuadserver) {
+            const filename = arguments[1];
+            const callback = arguments[2];
+            if (typeof filename === 'string' && filename.indexOf('/') === -1 && filename.indexOf('\\') === -1 && filename.endsWith('.json') && callback) {
+                LoadManager.fetchOne({forceReload: true}, makeURLRelativeToGame(filename), 'json', null, function (json) {
+                    try {
+                        callback(json, filename);
+                    } catch (e) {
+                        // Fail silently
+                        console.log(e);
+                    }
+                });
+            } // if legal filename
+        }
         break;
     }
 }
@@ -330,7 +364,7 @@ function processPreviewRecording() {
 
                 for (let dy = 0; dy <= 1; ++dy) {
                     for (let dx = 0; dx <= 1; ++dx) {
-                        const src = QRuntime._screen[(x*2 + dx) + (y*2 + dy) * 384];
+                        const src = QRuntime.$screen[(x*2 + dx) + (y*2 + dy) * 384];
                         r += (src >>> 8) & 0xf;
                         g += (src >>> 4) & 0xf;
                         b += src & 0xf;
@@ -464,7 +498,7 @@ emulatorKeyboardInput.addEventListener('keyup', onEmulatorKeyUp, false);
 /** Returns the ascii code of this character */
 function ascii(x) { return x.charCodeAt(0); }
 
-/** Used by _submitFrame() to map axes and buttons to event key codes when sampling the keyboard controller */
+/** Used by $submitFrame() to map axes and buttons to event key codes when sampling the keyboard controller */
 const keyMap = [{'-x':['KeyA', 'ArrowLeft'], '+x':['KeyD', 'ArrowRight'], '-y':['KeyW', 'ArrowUp'], '+y':['KeyS', 'ArrowDown'], a:['KeyB', 'Space'],  b:['KeyH', 'Enter'],  c:['KeyV', 'KeyV'],     d:['KeyG', 'KeyG'],          e:['ShiftLeft', 'ShiftLeft'], f:['KeyC', 'ShiftRight'],  q:['Digit1', 'KeyQ'],   p:['Digit4', 'KeyP']},
                 {'-x':['KeyJ', 'KeyJ'],      '+x':['KeyL', 'KeyL'],       '-y':['KeyI', 'KeyI'],    '+y':['KeyK', 'KeyK'],     a:['Slash', 'Slash'], b:['Quote', 'Quote'], c:['Period', 'Period'], d:['Semicolon', 'Semicolon'], e:['KeyN','KeyN'],            f:['AltRight', 'AltLeft'], q:['Digit7', 'Digit7'], p:['Digit0', 'Digit0']}];
       
@@ -794,7 +828,7 @@ function debug_print(...args) {
         }
     }
     
-    _outputAppend(escapeHTMLEntities(s) + '\n');
+    $outputAppend(escapeHTMLEntities(s) + '\n');
 }
 
 
@@ -806,13 +840,13 @@ function assert(x, m) {
 }
 
 // Allows HTML, forces the system style
-function _systemPrint(m, style) {
-    _outputAppend('<i' + (style ? ' style="' + style + '">' : '>') + escapeHTMLEntities(m) + '</i>\n');
+function $systemPrint(m, style) {
+    $outputAppend('<i' + (style ? ' style="' + style + '">' : '>') + escapeHTMLEntities(m) + '</i>\n');
 }
 
 
 // Allows HTML
-function _outputAppend(m) {    
+function $outputAppend(m) {    
     if (m !== '') {
         // Remove tags and then restore HTML entities
         console.log(m.replace(/<.+?>/g, '').replace(/&quot;/g,'"').replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
@@ -842,16 +876,16 @@ function submitFrame() {
     // Update the image
     ctx.msImageSmoothingEnabled = ctx.webkitImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
 
-    const _postFX = QRuntime._postFX;
-    const hasPostFX = (_postFX.opacity < 1) || (_postFX.color.a > 0) || (_postFX.angle !== 0) ||
-          (_postFX.pos.x !== 0) || (_postFX.pos.y !== 0) ||
-          (_postFX.scale.x !== 1) || (_postFX.scale.y !== 1) ||
-          (_postFX.blendMode !== 'source-over');
+    const $postFX = QRuntime.$postFX;
+    const hasPostFX = ($postFX.opacity < 1) || ($postFX.color.a > 0) || ($postFX.angle !== 0) ||
+          ($postFX.pos.x !== 0) || ($postFX.pos.y !== 0) ||
+          ($postFX.scale.x !== 1) || ($postFX.scale.y !== 1) ||
+          ($postFX.blendMode !== 'source-over');
 
     {
         // Convert 16-bit to 32-bit
         const dst32 = updateImageData32;
-        const src32 = QRuntime._screen32;
+        const src32 = QRuntime.$screen32;
         const N = src32.length;
         for (let s = 0, d = 0; s < N; ++s) {
             // Read two 16-bit pixels at once
@@ -879,26 +913,26 @@ function submitFrame() {
         // and other platforms where context graphics can perform nearest-neighbor interpolation but CSS scaling cannot.
         const updateCTX = updateImage.getContext('2d', {alpha: false});
         updateCTX.putImageData(updateImageData, 0, 0);
-        if (_postFX.color.a > 0) {
-            updateCTX.fillStyle = rgbaToCSSFillStyle(_postFX.color);
-            updateCTX.globalCompositeOperation = _postFX.blendMode;
+        if ($postFX.color.a > 0) {
+            updateCTX.fillStyle = rgbaToCSSFillStyle($postFX.color);
+            updateCTX.globalCompositeOperation = $postFX.blendMode;
             updateCTX.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
         }
 
         ctx.save();
-        if (_postFX.background.a > 0) {
-            if ((_postFX.background.r === 0) && (_postFX.background.g === 0) && (_postFX.background.b === 0) && (_postFX.background.a === 0)) {
+        if ($postFX.background.a > 0) {
+            if (($postFX.background.r === 0) && ($postFX.background.g === 0) && ($postFX.background.b === 0) && ($postFX.background.a === 0)) {
                 ctx.clearRect(0, 0, emulatorScreen.width, emulatorScreen.height);
             } else {
-                ctx.fillStyle = rgbaToCSSFillStyle(_postFX.background);
+                ctx.fillStyle = rgbaToCSSFillStyle($postFX.background);
                 ctx.fillRect(0, 0, emulatorScreen.width, emulatorScreen.height);
             }
         }
-        ctx.globalAlpha = _postFX.opacity;
-        ctx.translate((_postFX.pos.x / SCREEN_WIDTH + 0.5) * emulatorScreen.width,
-                      (_postFX.pos.y / SCREEN_HEIGHT + 0.5) * emulatorScreen.height); 
-        ctx.rotate(-_postFX.angle);
-        ctx.scale(_postFX.scale.x, _postFX.scale.y);
+        ctx.globalAlpha = $postFX.opacity;
+        ctx.translate(($postFX.pos.x / SCREEN_WIDTH + 0.5) * emulatorScreen.width,
+                      ($postFX.pos.y / SCREEN_HEIGHT + 0.5) * emulatorScreen.height); 
+        ctx.rotate(-$postFX.angle);
+        ctx.scale($postFX.scale.x, $postFX.scale.y);
         ctx.translate(-emulatorScreen.width / 2, -emulatorScreen.height / 2); 
         ctx.drawImage(updateImage,
                       0, 0, SCREEN_WIDTH, SCREEN_HEIGHT,
@@ -966,14 +1000,14 @@ function updateInput() {
 	const altRealGamepad = ((player === 1) && ! realGamepad) ? gamepadArray[gamepadOrderMap[0]] : undefined,
 	      altPrevRealGamepad = ((player === 1) && ! realGamepad) ? prevRealGamepadState[gamepadOrderMap[0]] : undefined;
 
-        if (realGamepad && (realGamepad.id !== pad._id)) {
+        if (realGamepad && (realGamepad.id !== pad.$id)) {
             // The gamepad just connected or changed. Update the control scheme.
-            pad._id = realGamepad.id;
+            pad.$id = realGamepad.id;
             pad.type = detectControllerType(realGamepad.id);
             pad.prompt = controlSchemeTable[pad.type];
-        } else if (! realGamepad && (pad._id !== '') && (pad._id !== 'mobile')) {
+        } else if (! realGamepad && (pad.$id !== '') && (pad.$id !== 'mobile')) {
             // Gamepad was just disconnected. Update the control scheme.
-            pad._id = isMobile ? 'mobile' : '';
+            pad.$id = isMobile ? 'mobile' : '';
             pad.type = defaultControlType(player);
             pad.prompt = controlSchemeTable[pad.type];
         }
@@ -981,9 +1015,9 @@ function updateInput() {
         // Axes
         for (let a = 0; a < axes.length; ++a) {
             const axis = axes[a];
-            const analogAxis = '_analog' + AXES[a];
+            const analogAxis = '$analog' + AXES[a];
             const pos = '+' + axis, neg = '-' + axis;
-            const old = pad['_' + axis];
+            const old = pad['$' + axis];
             const scale = 1;
 
             if (map) {
@@ -991,27 +1025,27 @@ function updateInput() {
                 const n0 = map[neg][0], n1 = map[neg][1], p0 = map[pos][0], p1 = map[pos][1];
 
                 // Current state
-                pad['_' + axis] = (((emulatorKeyState[n0] || emulatorKeyState[n1]) ? -1 : 0) +
+                pad['$' + axis] = (((emulatorKeyState[n0] || emulatorKeyState[n1]) ? -1 : 0) +
                                    ((emulatorKeyState[p0] || emulatorKeyState[p1]) ? +1 : 0)) * scale;
 
                 // Just pressed
-                pad['_' + axis + axis] = (((emulatorKeyJustPressed[n0] || emulatorKeyJustPressed[n1]) ? -1 : 0) +
+                pad['$' + axis + axis] = (((emulatorKeyJustPressed[n0] || emulatorKeyJustPressed[n1]) ? -1 : 0) +
                                           ((emulatorKeyJustPressed[p0] || emulatorKeyJustPressed[p1]) ? +1 : 0)) * scale;
             } else {
                 // Nothing currently pressed
-                pad['_' + axis] = pad['_' + axis + axis] = 0;
+                pad['$' + axis] = pad['$' + axis + axis] = 0;
             }
 
             // Reset both digital and analog axes
-            pad[analogAxis] = pad['_' + axis];
+            pad[analogAxis] = pad['$' + axis];
 
             if (realGamepad && (realGamepad.axes[a] !== 0)) {
-                pad['_' + axis] = realGamepad.axes[a] * scale;
+                pad['$' + axis] = realGamepad.axes[a] * scale;
                 pad[analogAxis] = realGamepad.analogAxes[a] * scale;
             }
 
             if (realGamepad && (prevRealGamepad.axes[a] !== realGamepad.axes[a])) {
-                pad['_' + axis + axis] = realGamepad.axes[a] * scale;
+                pad['$' + axis + axis] = realGamepad.axes[a] * scale;
             }
 
             if ((player === 1) && ! realGamepad && gamepadArray[gamepadOrderMap[0]]) {
@@ -1019,20 +1053,20 @@ function updateInput() {
                 // Alias controller[0] right stick (axes 2 + 3) 
                 // to controller[1] d-pad (axes 0 + 1) for "dual stick" controls                
                 if (otherPad.axes[a + 2] !== 0) {
-                    pad['_' + axis] = otherPad.axes[a + 2] * scale;
+                    pad['$' + axis] = otherPad.axes[a + 2] * scale;
                     pad[analogAxis] = otherPad.analogAxes[a + 2] * scale;
                 }
                 if (otherPad.axes[a + 2] !== otherPad.axes[a + 2]) {
-                    pad['_' + axis + axis] = otherPad.axes[a + 2] * scale;
+                    pad['$' + axis + axis] = otherPad.axes[a + 2] * scale;
                 }
             } // dual-stick
 
-            pad['_d' + axis] = pad['_' + axis] - old;
+            pad['$d' + axis] = pad['$' + axis] - old;
         }
 
         for (let b = 0; b < buttons.length; ++b) {
             const button = buttons[b];
-            const prefix = button === 'p' ? '_' : '';
+            const prefix = button === 'p' ? '$' : '';
             
             if (map) {
                 // Keyboard
@@ -1061,16 +1095,16 @@ function updateInput() {
             }
         }
 
-        let oldAngle = pad._angle;
-        if ((pad._y !== 0) || (pad._x !== 0)) {
-            pad._angle = Math.atan2(-pad._y, pad._x);
+        let oldAngle = pad.$angle;
+        if ((pad.$y !== 0) || (pad.$x !== 0)) {
+            pad.$angle = Math.atan2(-pad.$y, pad.$x);
         }
 
-        if ((pad._y === pad._dy && pad._x === pad._dx) || (pad._y === 0 && pad._x === 0)) {
-            pad._dangle = 0;
+        if ((pad.$y === pad.$dy && pad.$x === pad.$dx) || (pad.$y === 0 && pad.$x === 0)) {
+            pad.$dangle = 0;
         } else {
             // JavaScript operator % is a floating-point operation
-            pad._dangle = ((3 * Math.PI + pad._angle - oldAngle) % (2 * Math.PI)) - Math.PI;
+            pad.$dangle = ((3 * Math.PI + pad.$angle - oldAngle) % (2 * Math.PI)) - Math.PI;
         }
     }
     

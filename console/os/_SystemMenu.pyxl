@@ -23,13 +23,13 @@ let old_background
 let max_choice_width
 let line_height
 
-let font = _font9
-if SCREEN_SIZE.y <= 64: font = _font5
-else if SCREEN_SIZE.y <= 180: font = _font8
+let font = $font9
+if SCREEN_SIZE.y <= 64: font = $font5
+else if SCREEN_SIZE.y <= 180: font = $font8
 
 
 def close(callback):
-   pop_mode(callback)
+    pop_mode(callback)
    
 
 def choose():
@@ -55,7 +55,7 @@ def game_credits():
       
 enter
 ────────────────────────────────────────────────────────────────────────
-_pauseAllSounds()
+$pauseAllSounds()
 choice_index = 0
 
 old_transform = get_transform()
@@ -66,14 +66,14 @@ old_background = get_background()
 reset_post_effects()
 set_clip(xy(0, 0), SCREEN_SIZE, -2047, 4096)
 // Force the clipping range beyond what the API normally allows
-_clipZ2 = 2049
+$clipZ2 = 2049
 
 
 choice_array = [{text: "Resume Game", callback: ∅, confirm: false},
                // Insert custom menu choices after "Resume"
-               ..._customPauseMenuOptions]
+               ...$customPauseMenuOptions]
 
-if size(_customPauseMenuOptions) < 3 or SCREEN_SIZE.y > 64:
+if size($customPauseMenuOptions) < 3 or SCREEN_SIZE.y > 64:
    // Only add the credits option if there is room
    push(choice_array, {text: "Game Credits", callback: game_credits, confirm: false})
 
@@ -89,15 +89,13 @@ if SCREEN_SIZE.y <= 64: ++line_height
 
 for c in choice_array: max_choice_width = max(max_choice_width, text_width(font, c.text))
 
-
-
 leave
 ────────────────────────────────────────────────────────────────────────
 set_transform(old_transform)
 set_clip(old_clip)
 set_post_effects(old_post_effects)
 set_background(old_background)
-_resumeAllSounds()
+$resumeAllSounds()
 
 
 pop_mode(callback) from _ConfirmDialog
@@ -116,18 +114,18 @@ frame
 ────────────────────────────────────────────────────────────────────────
 if mode_frames > fade_in_frames + slide_in_frames + 2:
    for control in gamepad_array:
-      if control.qq or control._pp:
-         play_sound(_cancelUISound)
+      if control.qq or control.$pp:
+         play_sound($cancelUISound)
          close(∅)
       else if control.aa or control.bb:
-         play_sound(_acceptUISound)
+         play_sound($acceptUISound)
          choose()
       else if control.yy:
          const prev = choice_index
          choice_index = clamp(choice_index + control.yy, 0, size(choice_array) - 1)
-         play_sound(if prev == choice_index then _denyUISound else _moveUISound)
+         play_sound(if prev == choice_index then $denyUISound else $moveUISound)
 
-if mode_frames == fade_in_frames: play_sound(_openUISound)
+if mode_frames == fade_in_frames: play_sound($openUISound)
 
 // Draw the paused game shadowed
 reset_transform()

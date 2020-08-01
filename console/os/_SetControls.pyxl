@@ -17,7 +17,7 @@ const prompt_color            = #4DF
 const selected_color          = #f
 const unselected_color        = #b
 
-const controllerSpritesheet = if SCREEN_SIZE.y >= 224 then _controllerSpritesheet44 else _controllerSpritesheet22
+const controllerSpritesheet = if SCREEN_SIZE.y >= 224 then $controllerSpritesheet44 else $controllerSpritesheet22
 const controllerTypeArray = ["Quadplay", "Xbox", "Xbox360", "Keyboard", "Kbd_Alt", "Kbd_P1", "Kbd_P2", "PS5", "PS4", "PS3", "SNES", "SwitchPro", "JoyCon_R", "JoyCon_L", "Zero", "HOTAS", "X_Arcade", "Arcade", "Arcade_X", "Arcade_PS", "Stadia", "GPD_Win", "SN30_Pro", "PiBoy_DMG"];
 
 // Tweak layout for square aspect ratios
@@ -61,17 +61,17 @@ else: // 384
    shiftSpriteY = -24
 
 
-let font = _font9
-if SCREEN_SIZE.y <= 64: font = _font5
-else if SCREEN_SIZE.y <= 180: font = _font8
+let font = $font9
+if SCREEN_SIZE.y <= 64: font = $font5
+else if SCREEN_SIZE.y <= 180: font = $font8
 
 let controlsFont = font
-if SCREEN_SIZE.y <= 64: font = _font5
-else if SCREEN_SIZE.y <= 180: controlsFont = _font6
+if SCREEN_SIZE.y <= 64: font = $font5
+else if SCREEN_SIZE.y <= 180: controlsFont = $font6
 
-let choiceFont = _font9
-if SCREEN_SIZE.y <= 64 or SCREEN_SIZE.x <= 128: choiceFont = _font5
-else if SCREEN_SIZE.y <= 180: choiceFont = _font8
+let choiceFont = $font9
+if SCREEN_SIZE.y <= 64 or SCREEN_SIZE.x <= 128: choiceFont = $font5
+else if SCREEN_SIZE.y <= 180: choiceFont = $font8
 
 // For layout
 let scale = 100%
@@ -127,7 +127,7 @@ for p < 4:
    const control = gamepad_array[p]
 
    // Allow any controller to quit
-   if control._pp or control.qq:
+   if control.$pp or control.qq:
       pop_mode() because "Pressed P or Q"
 
 

@@ -19,9 +19,9 @@ const sz = xy(0, 0)
 const choiceArray = ["No", "Yes"]
 let choiceIndex
 
-let font = _font9
-if SCREEN_SIZE.y <= 64: font = _font5
-else if SCREEN_SIZE.y <= 112: font = _font8
+let font = $font9
+if SCREEN_SIZE.y <= 64: font = $font5
+else if SCREEN_SIZE.y <= 112: font = $font8
 
 
 enter(choice)
@@ -31,7 +31,7 @@ message = if is_string(choice.confirm) then choice.confirm else ""
 callback = choice.callback
 
 choiceIndex = 0
-play_sound(_openUISound)
+play_sound($openUISound)
 
 sz.x = mid(SCREEN_SIZE.x - 2, 150% * max(text_width(font, title), text_width(font, message)), SCREEN_SIZE.x / 2)
 sz.y = font.line_height * (5 + (if message == "" then 0 else 3))
@@ -52,18 +52,18 @@ if SCREEN_SIZE.y >= 112: draw_rect(½ SCREEN_SIZE, windowSize + 6, ∅, #0001)
 
 if mode_frames > max(15, openFrames):
    for control in gamepad_array:
-      if control.qq or control._pp or (control.aa and choiceIndex == 0):
+      if control.qq or control.$pp or (control.aa and choiceIndex == 0):
          // Cancel
-         play_sound(_cancelUISound)
+         play_sound($cancelUISound)
          pop_mode(∅)
-      else if control.aa:
+      else if control.aa: // must be choiceIndex == 1
          // Accept option
-         play_sound(_acceptUISound)
+         play_sound($acceptUISound)
          pop_mode(callback)
       else if control.xx:
          const prev = choiceIndex
          choiceIndex = clamp(choiceIndex + control.xx, 0, 1)
-         play_sound(if prev == choiceIndex then _denyUISound else _moveUISound)
+         play_sound(if prev == choiceIndex then $denyUISound else $moveUISound)
 
          
 if mode_frames > openFrames:

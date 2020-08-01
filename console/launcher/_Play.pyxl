@@ -245,7 +245,7 @@ local:
       y += draw_text({font:mediumFont, text:"Score", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
 
 for pad in gamepad_array:
-   if pad.aa or pad.qq or pad._pp:
+   if pad.aa or pad.qq or pad.$pp:
       def callback():
          launch_game(gameArray[gameIndex].url)
          

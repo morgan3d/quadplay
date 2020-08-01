@@ -123,16 +123,16 @@ function processWithHeader(test) {
     }
     
     for (let i = 0; i < varArray.length; ++i) {
-        result[0] += `, ${varDescriptorArray[i]} = _Object.getOwnPropertyDescriptor(${obj}, '${varArray[i]}')`;
+        result[0] += `, ${varDescriptorArray[i]} = $Object.getOwnPropertyDescriptor(${obj}, '${varArray[i]}')`;
     }
 
     result[0] += ';';
 
     for (let i = 0; i < varArray.length; ++i) {
-        result[0] += ` if (! ${varDescriptorArray[i]}) { _error("No '${varArray[i]}' property on object in this with statement")};`;
+        result[0] += ` if (! ${varDescriptorArray[i]}) { $error("No '${varArray[i]}' property on object in this with statement")};`;
     }
     
-    result[0] += `_Object.defineProperties(${obj}, {` +
+    result[0] += `$Object.defineProperties(${obj}, {` +
         varArray.reduce(function(prev, vari) { return prev + `${vari}: {configurable: true, get() { return ${vari}; }, set(${v}) { ${vari} = ${v}; }}, `; }, '') +
         '}); try {';
     
@@ -140,7 +140,7 @@ function processWithHeader(test) {
     result[1] = '} finally { ';
 
     for (let i = 0; i < varArray.length; ++i) {
-        result[1] += `if (${varDescriptorArray[i]}.get) _Object.defineProperty(${obj}, '${varArray[i]}', ${varDescriptorArray[i]}); else delete ${obj}.${varArray[i]}; ${obj}.${varArray[i]} = ${varArray[i]}; `;
+        result[1] += `if (${varDescriptorArray[i]}.get) $Object.defineProperty(${obj}, '${varArray[i]}', ${varDescriptorArray[i]}); else delete ${obj}.${varArray[i]}; ${obj}.${varArray[i]} = ${varArray[i]}; `;
     }
     result[1] += '}}';
     
@@ -193,16 +193,16 @@ function processForTest(test) {
         // The '==' on the next line is converted to a === by the remaining compiler pass
         return [`{const ${container} = ${containerExpr}; ` +
                 `const ${is_obj} = is_object(${container}); ` +
-                `_checkContainer(${container}); ` +
+                `$checkContainer(${container}); ` +
                 `try { ` +
-                `  let ${key_array} = ${is_obj} ? _Object.keys(${container}) : ${container}; ` +
-                `  _iteratorCount.set(${container}, (_iteratorCount.get(${container}) || 0) + 1); ` +
+                `  let ${key_array} = ${is_obj} ? $Object.keys(${container}) : ${container}; ` +
+                `  $iteratorCount.set(${container}, ($iteratorCount.get(${container}) || 0) + 1); ` +
                 `  for (let ${index} = 0; ${index} < ${key_array}.length; ++${index}) { ` +
                 `    let ${key} = ${is_obj} ? ${key_array}[${index}] : ${index}; ` +
                 `    if (${is_obj} && (${key}[0] == '_')) { continue; }; ` +
                 `    let ${value} = ${container}[${key}]; ${before} `,
                 after +
-                `} finally { _iteratorCount.set(${container}, _iteratorCount.get(${container}) - 1); }}`];
+                `} finally { $iteratorCount.set(${container}, $iteratorCount.get(${container}) - 1); }}`];
     } else {
         before = '{';
     }
@@ -229,7 +229,7 @@ function processForTest(test) {
         
         initExpr = test.substring(0, j).trim();
         if (op === '<') {
-            initExpr = '_Math.floor(' + initExpr + ') + 1';
+            initExpr = '$Math.floor(' + initExpr + ') + 1';
         }
 
         op = (test[k] === '≤') ? '<=' : '<';
@@ -346,8 +346,8 @@ function processLine(line, inFunction) {
         let end = nextInstance(rest, ':');
         if (end === -1) { throw 'Missing : after single-line "' + type + '".'; }
 
-        return before + 'try { _pushGraphicsState(); ' +
-            processLine(rest.substring(end + 1), inFunction) + '; } finally { _popGraphicsState(); }';
+        return before + 'try { $pushGraphicsState(); ' +
+            processLine(rest.substring(end + 1), inFunction) + '; } finally { $popGraphicsState(); }';
     
     } else if (match = line.match(/^(\s*)(let|const)\s+(.*)/)) {
 
@@ -366,7 +366,7 @@ function processLine(line, inFunction) {
         let closeIndex = findMatchingParen(rest, 0, +1);
 
         let watchExpr = rest.substring(1, closeIndex - 1);
-        return before + '(_debugWatchEnabled && _debug_watch("' + watchExpr.replace(/"/g, '\"') + '", ' + watchExpr + ')); ' + processLine(rest.substring(closeIndex + 1), inFunction);
+        return before + '($debugWatchEnabled && $debug_watch("' + watchExpr.replace(/"/g, '\"') + '", ' + watchExpr + ')); ' + processLine(rest.substring(closeIndex + 1), inFunction);
         
     } else {
         // Recursively process the next expression. 
@@ -553,14 +553,14 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode) {
             
             lineArray[i] = prefix + 'const ' + name + ' = (function(' + args + ') { ' + maybeYieldFunction;
             if (modifier === 'preserving_transform') {
-                lineArray[i] += 'try { _pushGraphicsState();';
+                lineArray[i] += 'try { $pushGraphicsState();';
             } else if (modifier !== '') {
                 throw makeError('Illegal function modifier: ' + modifier, i);
             }
             i = end;
 
             if (modifier === 'preserving_transform') {
-                lineArray[i] += '} finally { _popGraphicsState(); }';
+                lineArray[i] += '} finally { $popGraphicsState(); }';
             }
             lineArray[i] += '});';
             
@@ -590,9 +590,9 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode) {
             // PRESERVING TRANSFORM
             
             let prefix = match[1];
-            lineArray[i] = prefix + 'try { _pushGraphicsState()';
+            lineArray[i] = prefix + 'try { $pushGraphicsState()';
             i = processBlock(lineArray, i + 1, inFunction, internalMode) - 1;
-            lineArray[i] += '} finally { _popGraphicsState(); }';
+            lineArray[i] += '} finally { $popGraphicsState(); }';
 
         } else if (match = lineArray[i].match(/^(\s*)for\s*(\b[^:]+)[ \t]*:[ \t]*$/)) {
             // FOR
@@ -1076,7 +1076,7 @@ function pyxlToJS(src, noYield, internalMode) {
     src = src.replace(/∞|\binfinity\b/g,  ' (Infinity) ');
     src = src.replace(/\bnan\b/g,         ' (NaN) ');
     src = src.replace(/∅|\bnil\b/g,       ' (undefined) ');
-    src = src.replace(/π|\bpi\b/g,        ' (_Math.PI) ');
+    src = src.replace(/π|\bpi\b/g,        ' ($Math.PI) ');
     src = src.replace(/ε|\bepsilon\b/g,   ' (1e-6) ');
     src = src.replace(/ξ/g,               ' random() ');
 
@@ -1093,10 +1093,10 @@ function pyxlToJS(src, noYield, internalMode) {
     });
 
     // Debug statements
-    src = src.replace(/\bassert\b/g, '_assertEnabled && assert');
-    src = src.replace(/\btodo[ \t]*\(/g, '_todoEnabled && _todo(');
-    src = src.replace(/\btodo\b/g, '_todoEnabled && _todo()');
-    src = src.replace(/\bdebug_print[ \t]*\(\b/g, '_debugPrintEnabled && debug_print(');
+    src = src.replace(/\bassert\b/g, '$assertEnabled && assert');
+    src = src.replace(/\btodo[ \t]*\(/g, '$todoEnabled && $todo(');
+    src = src.replace(/\btodo\b/g, '$todoEnabled && $todo()');
+    src = src.replace(/\bdebug_print[ \t]*\(\b/g, '$debugPrintEnabled && debug_print(');
 
     // DEFAULT operators. We replace these with (the unused in pyxlscript) '=='
     // operator, which has similar precedence, and then use vectorify
@@ -1147,7 +1147,7 @@ function compile(gameSource, fileContents, isOS) {
     
     // Protect certain variables by shadowing them, since programs
     // that overwrite (or read!) them could cause problems.
-    let compiledProgram = 'const _Object = {}.constructor; let navigator, parent, Object, Array, String, Number, location, document, window, print, Math, RegExp, Date; \n';
+    let compiledProgram = 'const $Object = {}.constructor; let navigator, parent, Object, Array, String, Number, location, document, window, print, Math, RegExp, Date, console; \n';
     if (gameSource.json.y_up) {
         compiledProgram += 'set_transform(xy(0, SCREEN_SIZE.y), xy(1, -1), 0, 1);\n;';
     }
@@ -1180,7 +1180,7 @@ function compile(gameSource, fileContents, isOS) {
         
         // If true, this is an internal mode that is allowed to access
         // "_" private variables.
-        const internalMode = mode.name[0] === '_';
+        const internalMode = mode.name[0] === '_' || mode.name[0] === '$';
 
         // Eliminate \r on Windows
         const file = fileContents[mode.url] + '\n';
@@ -1222,7 +1222,7 @@ function compile(gameSource, fileContents, isOS) {
                 if (name === 'pop_mode') {
                     // Generate the section
                     const otherMode = from.replace(/^from[\t ]*/,'');
-                    if (otherMode[0] === '_' && ! (internalMode || isOS)) { throw {url:mode.url, lineNumber:line, message:'Illegal mode name in pop_mode() from section: "' + otherMode + '"'}; }
+                    if ((otherMode[0] === '_' || otherMode[0] === '$') && ! (internalMode || isOS)) { throw {url:mode.url, lineNumber:line, message:'Illegal mode name in pop_mode() from section: "' + otherMode + '"'}; }
                     name = name + 'From' + otherMode;
                     sectionTable[name] = {pyxlCode: '', args: '()', jsCode: '', offset: 0};
                 }
@@ -1253,12 +1253,12 @@ function compile(gameSource, fileContents, isOS) {
 
                 const match = name.match(/^pop_modeFrom(.*)$/);
                 if (match) {
-                    pop_modeBindings += `, _${name}:_${name}`;
+                    pop_modeBindings += `, $${name}:$${name}`;
                     wrappedPopModeFromCode += `
 
 // pop_mode from ${match[1]}
 ${sectionSeparator}
-function _${name}${section.args} {
+function $${name}${section.args} {
 ${section.jsCode}
 }
 
@@ -1281,34 +1281,34 @@ ${sectionTable.init.jsCode}
 
 // enter
 ${sectionSeparator}
-function _enter${sectionTable.enter.args} {
+function $enter${sectionTable.enter.args} {
 ${sectionTable.enter.jsCode}
 }
 
 // leave
 ${sectionSeparator}
-function _leave() {
+function $leave() {
 ${sectionTable.leave.jsCode}
 }
 ${wrappedPopModeFromCode}
 
 // system menu
 ${sectionSeparator}
-function _pop_modeFrom_SystemMenu(callback) {
+function $pop_modeFrom_SystemMenu(callback) {
    if (callback) { callback(); }
 }
 
 // frame
 ${sectionSeparator}
-const _frame = (function*() { 
+const $frame = (function*() { 
 let __yieldCounter = 0; while (true) { try {
-if ((_gameMode._name[0] !== '_') && (gamepad_array[0]._pp || gamepad_array[1]._pp || gamepad_array[2]._pp || gamepad_array[3]._pp)) { push_mode(_SystemMenu); }
-_processFrameHooks();
+if (($gameMode._name[0] !== '_') && (gamepad_array[0].$pp || gamepad_array[1].$pp || gamepad_array[2].$pp || gamepad_array[3].$pp)) { push_mode(_SystemMenu); }
+$processFrameHooks();
 ${sectionTable.frame.jsCode}
-_show(); } catch (ex) { if (! ex.nextMode) throw ex; else _updateInput(); } yield; }
+$show(); } catch (ex) { if (! ex.nextMode) throw ex; else $updateInput(); } yield; }
 })();
 
-return _Object.freeze({_enter:_enter, _frame:_frame, _pop_modeFrom_SystemMenu:_pop_modeFrom_SystemMenu, _leave:_leave${pop_modeBindings}, _name:'${mode.name}'});
+return $Object.freeze({$enter:$enter, $frame:$frame, $pop_modeFrom_SystemMenu:$pop_modeFrom_SystemMenu, $leave:$leave${pop_modeBindings}, _name:'${mode.name}'});
 })();
 
 `;
@@ -1320,7 +1320,7 @@ return _Object.freeze({_enter:_enter, _frame:_frame, _pop_modeFrom_SystemMenu:_p
     compiledProgram += 'try { set_mode(' + gameSource.json.start_mode + '); } catch (e) { if (! e.nextMode) { throw e; } }\n\n';
 
     // Main loop
-    compiledProgram += '// Main loop\nwhile (true) { _gameMode._frame.next(); yield; };\n\n'
+    compiledProgram += '// Main loop\nwhile (true) { $gameMode.$frame.next(); yield; };\n\n'
 
     compiledProgram = "'use strict';/*@\"resetAnimation\"*/ \n" + resetAnimationSource + separator + compiledProgram;
 
@@ -1329,7 +1329,7 @@ return _Object.freeze({_enter:_enter, _frame:_frame, _pop_modeFrom_SystemMenu:_p
     if (isSafari) {
         const lines = compiledProgram.split('\n');
         // Put after "use strict"
-        lines[0] += '_currentLineNumber=1;';
+        lines[0] += '$currentLineNumber=1;';
 
         // Other lines
         for (let i = 1; i < lines.length; ++i) {
@@ -1340,7 +1340,7 @@ return _Object.freeze({_enter:_enter, _frame:_frame, _pop_modeFrom_SystemMenu:_p
             // for them
             if (! /^\s*(else|\]|\)|\}|\/\/|$)/.test(lines[i]) &&
                 ! /[\(,\[]$/.test(lines[i - 1])) {
-                lines[i] = '_currentLineNumber=' + (i+1) + ';' + lines[i];
+                lines[i] = '$currentLineNumber=' + (i+1) + ';' + lines[i];
             }
         }
         compiledProgram = lines.join('\n');
@@ -1359,11 +1359,11 @@ const resetAnimationSource = `
 ///////////////////////////////////////////////////////////////////////////////////
 // Reset animation
 
-if (_numBootAnimationFrames > 0) {
+if ($numBootAnimationFrames > 0) {
    // flash at start
    for (let i = 0; i < 13; ++i) {
      set_background(gray(max(0, 0.75 - i / 12))); 
-     _show(); yield;
+     $show(); yield;
    }
 
    // Warm the jit by hitting all of the key sprite cases and randomizing parameters so that
@@ -1371,25 +1371,25 @@ if (_numBootAnimationFrames > 0) {
 
    for (let i = 0; i < 150; ++i) {
      // Alpha cases (the regular nontransformed alpha case is handled automatically by drawing the visible logo)
-     draw_sprite({sprite: _quadplayLogoSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
+     draw_sprite({sprite: $quadplayLogoSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
         opacity: random(), z: random() - 100, angle: random(), scale: {x: random(), y: random()}, override_color: rgba(random(), random(), random(), random())});
-     draw_sprite({sprite: _quadplayLogoSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
+     draw_sprite({sprite: $quadplayLogoSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
         opacity: random(), z: random() - 100});
 
      // No-alpha cases (the regular nontransformed alpha case is handled automatically by drawing the visible logo)
-     draw_sprite({sprite: _opaqueSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
+     draw_sprite({sprite: $opaqueSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
         opacity: random(), z: random() - 100, angle: random(), scale: {x: random(), y: random()}, override_color: rgba(random(), random(), random(), random())});
-     draw_sprite({sprite: _opaqueSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
+     draw_sprite({sprite: $opaqueSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
         opacity: random(), z: random() - 100});
-     draw_sprite({sprite: _opaqueSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()), z: random() - 100});
+     draw_sprite({sprite: $opaqueSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()), z: random() - 100});
    }
 
    // Hide the warmup sprites
    draw_rect({x: SCREEN_SIZE.x * 0.5, y: SCREEN_SIZE.y * 0.5}, {x: 100, y: 100}, rgb(0,0,0), undefined, -1);
 
 
-   const fade = min(96, _numBootAnimationFrames / 2);
-   for (let k = 0; k < _numBootAnimationFrames; ++k) {
+   const fade = min(96, $numBootAnimationFrames / 2);
+   for (let k = 0; k < $numBootAnimationFrames; ++k) {
       set_background(gray(0));
       const gradient = [rgb(1, 0.7333333333333333, 0.8666666666666667), rgb(1, 0.6666666666666666, 0.8), rgb(1, 0.26666666666666666, 0.5333333333333333), rgb(1, 0.26666666666666666, 0.5333333333333333), rgb(1, 0.26666666666666666, 0.5333333333333333), rgb(0.9333333333333333, 0.3333333333333333, 0.6), rgb(0.8666666666666667, 0.3333333333333333, 0.6), rgb(0.8, 0.4, 0.6666666666666666), rgb(0.6666666666666666, 0.4666666666666667, 0.7333333333333333), rgb(0.6, 0.4666666666666667, 0.7333333333333333), rgb(0.4666666666666667, 0.5333333333333333, 0.7333333333333333), rgb(0.4, 0.6, 0.8), rgb(0.3333333333333333, 0.6, 0.8), rgb(0.26666666666666666, 0.6666666666666666, 0.8666666666666667), rgb(0.6, 0.7333333333333333, 0.8666666666666667), rgb(0.8, 0.8666666666666667, 0.9333333333333333)];
       const N = size(gradient);
@@ -1398,32 +1398,32 @@ if (_numBootAnimationFrames > 0) {
       let v = 0;
       if (k < fade) { 
          v = k / fade;
-      } else if (k < _numBootAnimationFrames - fade) {
+      } else if (k < $numBootAnimationFrames - fade) {
          v = 1;
       } else {
-         v = (_numBootAnimationFrames - k) / fade;
+         v = ($numBootAnimationFrames - k) / fade;
       }
 
-      const vDot = _Math.max(0, v - 0.2) / (1.0 - 0.2);
+      const vDot = $Math.max(0, v - 0.2) / (1.0 - 0.2);
 
       // dots
-      const w = _SCREEN_WIDTH >> 1, h = _SCREEN_HEIGHT >> 1;
+      const w = $SCREEN_WIDTH >> 1, h = $SCREEN_HEIGHT >> 1;
       const tmp = {r: 0, g: 0, b: 0};
       for (let i = 0; i < 16000; ++i) {
          const x = random(), y = random();
-         const c = gradient[_Math.min((y * (N - 1) + 3 * random()) >> 0, N - 1)];
+         const c = gradient[$Math.min((y * (N - 1) + 3 * random()) >> 0, N - 1)];
          RGB_MUL(c, vDot, tmp);
-         draw_point(xy(_Math.floor(w * x) * 2, _Math.floor(h * y) * 2), tmp);
+         draw_point(xy($Math.floor(w * x) * 2, $Math.floor(h * y) * 2), tmp);
       }
 
-      draw_sprite({sprite: _quadplayLogoSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + 0.5, SCREEN_SIZE.y * 0.5 + 0.5), opacity: _Math.min(1, 2 * v)})
+      draw_sprite({sprite: $quadplayLogoSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + 0.5, SCREEN_SIZE.y * 0.5 + 0.5), opacity: $Math.min(1, 2 * v)})
 
-      _show(); yield;
+      $show(); yield;
    }
 
    // Black frames
    for (let i = 0; i < fade / 2; ++i) {
-      _show(); yield;
+      $show(); yield;
    }
    mode_frames = game_frames = 0;
 }

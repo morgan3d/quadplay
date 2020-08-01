@@ -2,44 +2,44 @@
 
 'use strict';
 
-function _show() {
+function $show() {
 
     // Check whether this frame will be shown or not, if running below
     // frame rate and pruning graphics.  Use mode_frames instead of
     // game_frames to ensure that frame 0 is always rendered for a mode.
-    if (mode_frames % _graphicsPeriod === 0) {
+    if (mode_frames % $graphicsPeriod === 0) {
         const startTime = performance.now();
         
         // clear the screen
-        if (_background.spritesheet) {
+        if ($background.spritesheet) {
             // Image background
-            _screen.set(_background.spritesheet._uint16Data);
+            $screen.set($background.spritesheet._uint16Data);
         } else {
             // Color background (force alpha = 1)
-            let c = (_colorToUint16(_background) >>> 0) | 0xf000;
-            _screen.fill(c, 0, _screen.length);
+            let c = (_colorToUint16($background) >>> 0) | 0xf000;
+            $screen.fill(c, 0, $screen.length);
         }
         
         // Sort
-        _graphicsCommandList.sort(_zSort);
+        $graphicsCommandList.sort($zSort);
         
         // Eval draw list
-        for (let i = 0; i < _graphicsCommandList.length; ++i) {
-            const cmd = _graphicsCommandList[i];
-            _executeTable[cmd.opcode](cmd);
+        for (let i = 0; i < $graphicsCommandList.length; ++i) {
+            const cmd = $graphicsCommandList[i];
+            $executeTable[cmd.opcode](cmd);
         }
     
-        _submitFrame();
-        _graphicsTime = performance.now() - startTime;
+        $submitFrame();
+        $graphicsTime = performance.now() - startTime;
     }
     
-    _requestInput();
+    $requestInput();
     
     // Save for replays
-    _previousGraphicsCommandList = _graphicsCommandList;
+    $previousGraphicsCommandList = $graphicsCommandList;
     
     // Clear draw list (regardless of whether it is actually drawn)
-    _graphicsCommandList = [];
+    $graphicsCommandList = [];
 
     ++game_frames;
     ++mode_frames;
@@ -48,18 +48,18 @@ function _show() {
 
 /** Updates the z value with an epsilon and stores the current set_clipping region */
 function _addGraphicsCommand(cmd) {
-    cmd.clipX1 = _clipX1;
-    cmd.clipY1 = _clipY1;
-    cmd.clipX2 = _clipX2;
-    cmd.clipY2 = _clipY2;
+    cmd.clipX1 = $clipX1;
+    cmd.clipY1 = $clipY1;
+    cmd.clipX2 = $clipX2;
+    cmd.clipY2 = $clipY2;
 
     // Offset subsequent commands to get a unique z value for each,
     // and stable sort ordering. The offset value must be orders of
     // magnitude less than the quadplay epsilon value to avoid
     // confusion for programmers with z ordering.
-    cmd.z     += _graphicsCommandList.length * Math.sign(_scaleZ) * 1e-10;
+    cmd.z     += $graphicsCommandList.length * $Math.sign($scaleZ) * 1e-10;
     
-    _graphicsCommandList.push(cmd);
+    $graphicsCommandList.push(cmd);
 }
 
 
@@ -68,72 +68,72 @@ function _addGraphicsCommand(cmd) {
     processor (which includes all current Intel, AMD, ARM, Raspberry
     Pi processors by default). DataView can be used to make an
     endian-independent version if required. */
-function _pset(x, y, color, clipX1, clipY1, clipX2, clipY2) {
+function $pset(x, y, color, clipX1, clipY1, clipX2, clipY2) {
     // nano pixels have integer centers, so we must round instead of just truncating.
     // Otherwise -0.7, which is offscreen, would become 0 and be visible.
     //
     // "i >>> 0" converts from signed to unsigned int, which forces negative values to be large
     // and lets us early-out sooner in the tests.
-    const i = Math.round(x) >>> 0;
-    const j = Math.round(y) >>> 0;
+    const i = $Math.round(x) >>> 0;
+    const j = $Math.round(y) >>> 0;
 
     if ((i <= clipX2) && (j <= clipY2) && (i >= clipX1) && (y >= clipY1)) {
-        const offset = i + j * _SCREEN_WIDTH;
+        const offset = i + j * $SCREEN_WIDTH;
 
         // Must be unsigned shift to avoid sign extension
         const a15 = color >>> 12;
 
         if (a15 === 0xf) {
             // No blending
-            _screen[offset] = color;
+            $screen[offset] = color;
         } else if (a15 !== 0) {
             // Blend
 
             // No need to force to unsigned int because the alpha channel of the output is always 0xff
             const a = a15 * (1 / 15);
-            let back = _screen[offset] >>> 0;
+            let back = $screen[offset] >>> 0;
             let result = 0xF000;
             result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5 * 0x100) & 0x0F00;
             result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5 * 0x010) & 0x00F0;
             result |= ((back & 0x000F) * (1 - a) + (color & 0x000F) * a + 0.5) & 0x000F;
-            _screen[offset] = result;
+            $screen[offset] = result;
         }
     }
 }
 
 /** Assumes x2 >= x1 and that color is RGBA. Does not assume that x1 and x2 or y are
     on screen. */
-function _hline(x1, y, x2, color, clipX1, clipY1, clipX2, clipY2) {
-    x1 = Math.round(x1) | 0;
-    x2 = Math.round(x2) | 0;
-    y  = Math.round(y) | 0;
+function $hline(x1, y, x2, color, clipX1, clipY1, clipX2, clipY2) {
+    x1 = $Math.round(x1) | 0;
+    x2 = $Math.round(x2) | 0;
+    y  = $Math.round(y) | 0;
 
     if ((x2 >= clipX1) && (x1 <= clipX2) && (y >= clipY1) && (y <= clipY2)) {
         // Some part is on screen
 
         // Don't draw past the edge of the screen
-        x1 = Math.max(x1, clipX1) | 0;
-        x2 = Math.min(x2, clipX2) | 0;
+        x1 = $Math.max(x1, clipX1) | 0;
+        x2 = $Math.min(x2, clipX2) | 0;
         
         let a15 = (color >>> 12) & 0xf;
         if (a15 === 0xf) {
             // Overwrite
-            _screen.fill(color, x1 + (y * _SCREEN_WIDTH), x2 + (y * _SCREEN_WIDTH) + 1);
+            $screen.fill(color, x1 + (y * $SCREEN_WIDTH), x2 + (y * $SCREEN_WIDTH) + 1);
         } else if (a15 !== 0) {
-            // Blend (see comments in _pset)
+            // Blend (see comments in $pset)
             const a = a15 * (1 / 15);
             const inva = 1 - a;
             const r = (color & 0xF00) * a + 0.5 * 0x100;
             const g = (color & 0x0F0) * a + 0.5 * 0x010;
             const b = (color & 0x00F) * a + 0.5;
 
-            for (let x = x1, offset = (x1 + y * _SCREEN_WIDTH) | 0; x <= x2; ++x, ++offset) {
-                let back = _screen[offset] >>> 0;
+            for (let x = x1, offset = (x1 + y * $SCREEN_WIDTH) | 0; x <= x2; ++x, ++offset) {
+                let back = $screen[offset] >>> 0;
                 let result = 0xF000 >>> 0;
                 result |= ((back & 0x0F00) * inva + r) & 0x0F00;
                 result |= ((back & 0x00F0) * inva + g) & 0x00F0;
                 result |= ((back & 0x000F) * inva + b) & 0x000F;
-                _screen[offset] = result;
+                $screen[offset] = result;
             }
         }
     }
@@ -142,41 +142,41 @@ function _hline(x1, y, x2, color, clipX1, clipY1, clipX2, clipY2) {
 
 /** Assumes y2 >= y1 and that color is RGBA. Does not assume that y1 and y2 or x are
     on screen */
-function _vline(x, y1, y2, color, clipX1, clipY1, clipX2, clipY2) {
-    x  = Math.round(x) | 0;
-    y1 = Math.round(y1) | 0;
-    y2 = Math.round(y2) | 0;
+function $vline(x, y1, y2, color, clipX1, clipY1, clipX2, clipY2) {
+    x  = $Math.round(x) | 0;
+    y1 = $Math.round(y1) | 0;
+    y2 = $Math.round(y2) | 0;
     
     if ((y2 >= clipY1) && (y1 <= clipY2) && (x >= clipX1) && (x <= clipX2)) {
-        y1 = Math.max(clipY1, y1);
-        y2 = Math.min(clipY2, y2);
+        y1 = $Math.max(clipY1, y1);
+        y2 = $Math.min(clipY2, y2);
 
         let a15 = color >>> 12;
         if (a15 === 0xf) {
-            for (let y = y1, offset = y1 * _SCREEN_WIDTH + x; y <= y2; ++y, offset += _SCREEN_WIDTH) {
-                _screen[offset] = color;
+            for (let y = y1, offset = y1 * $SCREEN_WIDTH + x; y <= y2; ++y, offset += $SCREEN_WIDTH) {
+                $screen[offset] = color;
             }
         } else if (a15 !== 0) {
-            // Blend (see comments in _pset)
+            // Blend (see comments in $pset)
             const a = a15 * (1 / 15);
             const inva = 1 - a;
             const r = (color & 0x0F00) * a + 0.5 * 0x100;
             const g = (color & 0x00F0) * a + 0.5 * 0x010;
             const b = (color & 0x000F) * a + 0.5;
-            for (let y = y1, offset = y1 * _SCREEN_WIDTH + x; y <= y2; ++y, offset += _SCREEN_WIDTH) {
-                let back = _screen[offset] >>> 0;
+            for (let y = y1, offset = y1 * $SCREEN_WIDTH + x; y <= y2; ++y, offset += $SCREEN_WIDTH) {
+                let back = $screen[offset] >>> 0;
                 let result = 0xF000;
                 result |= ((back & 0x0F00) * inva + r) & 0x0F00;
                 result |= ((back & 0x00F0) * inva + g) & 0x00F0;
                 result |= ((back & 0x000F) * inva + b) & 0x000F;
-                _screen[offset] = result;
+                $screen[offset] = result;
             }
         }
     }
 }
 
 
-function _executeCIR(cmd) {
+function $executeCIR(cmd) {
     const outline = cmd.outline, color = cmd.color,
           x = cmd.x, y = cmd.y, radius = cmd.radius;
     
@@ -197,10 +197,10 @@ function _executeCIR(cmd) {
             // Center
             if (ox !== oy) {
                 // Bottom
-                _hline(x - ox, y + oy, x + ox, color, clipX1, clipY1, clipX2, clipY2);
+                $hline(x - ox, y + oy, x + ox, color, clipX1, clipY1, clipX2, clipY2);
                 
                 // Top
-                if (oy > 0) { _hline(x - ox, y - oy, x + ox, color, clipX1, clipY1, clipX2, clipY2); }
+                if (oy > 0) { $hline(x - ox, y - oy, x + ox, color, clipX1, clipY1, clipX2, clipY2); }
             }
                 
             let old = oy;
@@ -215,8 +215,8 @@ function _executeCIR(cmd) {
             
             if (err > -4) {
                 // Caps
-                _hline(x - old, y + ox, x + old, color, clipX1, clipY1, clipX2, clipY2);
-                _hline(x - old, y - ox, x + old, color, clipX1, clipY1, clipX2, clipY2);
+                $hline(x - old, y + ox, x + old, color, clipX1, clipY1, clipX2, clipY2);
+                $hline(x - old, y - ox, x + old, color, clipX1, clipY1, clipX2, clipY2);
                 --ox;
                 dx += 2;
                 err += dx - radius * 2;
@@ -236,28 +236,28 @@ function _executeCIR(cmd) {
         while (ox >= oy) {
             if (ox !== oy) {
                 // Bottom center
-                _pset(x - ox, y + oy, outline, clipX1, clipY1, clipX2, clipY2);
-                _pset(x + ox, y + oy, outline, clipX1, clipY1, clipX2, clipY2);
+                $pset(x - ox, y + oy, outline, clipX1, clipY1, clipX2, clipY2);
+                $pset(x + ox, y + oy, outline, clipX1, clipY1, clipX2, clipY2);
 
                 if (oy > 0) {
                     // Top center
-                    _pset(x - ox, y - oy, outline, clipX1, clipY1, clipX2, clipY2);
-                    _pset(x + ox, y - oy, outline, clipX1, clipY1, clipX2, clipY2);
+                    $pset(x - ox, y - oy, outline, clipX1, clipY1, clipX2, clipY2);
+                    $pset(x + ox, y - oy, outline, clipX1, clipY1, clipX2, clipY2);
                 }
             }
 
             // Bottom cap
-            _pset(x - oy, y + ox, outline, clipX1, clipY1, clipX2, clipY2);
+            $pset(x - oy, y + ox, outline, clipX1, clipY1, clipX2, clipY2);
 
             // Top cap
-            _pset(x - oy, y - ox, outline, clipX1, clipY1, clipX2, clipY2);
+            $pset(x - oy, y - ox, outline, clipX1, clipY1, clipX2, clipY2);
             
             if (oy > 0) {
                 // Bottom cap
-                _pset(x + oy, y + ox, outline, clipX1, clipY1, clipX2, clipY2);
+                $pset(x + oy, y + ox, outline, clipX1, clipY1, clipX2, clipY2);
                 
                 // Top cap
-                _pset(x + oy, y - ox, outline, clipX1, clipY1, clipX2, clipY2);
+                $pset(x + oy, y - ox, outline, clipX1, clipY1, clipX2, clipY2);
             }
             
 
@@ -277,7 +277,7 @@ function _executeCIR(cmd) {
 }
 
 
-function _executeREC(cmd) {
+function $executeREC(cmd) {
     const outline = cmd.outline, fill = cmd.fill,
           clipX1 = cmd.clipX1, clipY1 = cmd.clipY1,
           clipX2 = cmd.clipX2, clipY2 = cmd.clipY2;
@@ -285,10 +285,10 @@ function _executeREC(cmd) {
     let x1 = cmd.x1, x2 = cmd.x2, y1 = cmd.y1, y2 = cmd.y2;
 
     if ((outline !== fill) && (outline > 0xFFF)) {
-        _hline(x1, y1, x2, outline, clipX1, clipY1, clipX2, clipY2);
-        _hline(x1, y2, x2, outline, clipX1, clipY1, clipX2, clipY2);
-        _vline(x1, y1 + 1, y2 - 1, outline, clipX1, clipY1, clipX2, clipY2);
-        _vline(x2, y1 + 1, y2 - 1, outline, clipX1, clipY1, clipX2, clipY2);
+        $hline(x1, y1, x2, outline, clipX1, clipY1, clipX2, clipY2);
+        $hline(x1, y2, x2, outline, clipX1, clipY1, clipX2, clipY2);
+        $vline(x1, y1 + 1, y2 - 1, outline, clipX1, clipY1, clipX2, clipY2);
+        $vline(x2, y1 + 1, y2 - 1, outline, clipX1, clipY1, clipX2, clipY2);
         x1 += 1; y1 += 1; x2 -= 1; y2 -= 1;
     }
 
@@ -296,37 +296,37 @@ function _executeREC(cmd) {
         
         // Snap to integer and set_clip to screen. We don't need to
         // round because we know that the rect is visible.
-        x1 = Math.max((x1 + 0.5) | 0, clipX1);
-        x2 = Math.min((x2 + 0.5) | 0, clipX2);
-        y1 = Math.max((y1 + 0.5) | 0, clipY1);
-        y2 = Math.min((y2 + 0.5) | 0, clipY2);
+        x1 = $Math.max((x1 + 0.5) | 0, clipX1);
+        x2 = $Math.min((x2 + 0.5) | 0, clipX2);
+        y1 = $Math.max((y1 + 0.5) | 0, clipY1);
+        y2 = $Math.min((y2 + 0.5) | 0, clipY2);
 
         // Blend spans
-        for (let y = y1, i = y1 * _SCREEN_WIDTH; y <= y2; ++y, i += _SCREEN_WIDTH) {
-            _hline(x1, y, x2, fill, clipX1, clipY1, clipX2, clipY2);
+        for (let y = y1, i = y1 * $SCREEN_WIDTH; y <= y2; ++y, i += $SCREEN_WIDTH) {
+            $hline(x1, y, x2, fill, clipX1, clipY1, clipX2, clipY2);
         }
     }
 }
 
 
-function _executeLIN(cmd) {
-    _line(cmd.x1, cmd.y1, cmd.x2, cmd.y2, cmd.color, cmd.clipX1, cmd.clipY1, cmd.clipX2, cmd.clipY2, cmd.open1, cmd.open2);
+function $executeLIN(cmd) {
+    $line(cmd.x1, cmd.y1, cmd.x2, cmd.y2, cmd.color, cmd.clipX1, cmd.clipY1, cmd.clipX2, cmd.clipY2, cmd.open1, cmd.open2);
 }
 
 
-function _line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2, open1, open2) {
+function $line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2, open1, open2) {
     if (y1 === y2) {
         // Horizontal perf optimization/avoid divide by zero
-        const dx = _Math.sign(x2 - x1)
+        const dx = $Math.sign(x2 - x1)
         if (open1) { x1 += dx; }
         if (open2) { x2 -= dx; }
-        _hline(Math.min(x1, x2), y1, Math.max(x1, x2), color, clipX1, clipY1, clipX2, clipY2);
+        $hline($Math.min(x1, x2), y1, $Math.max(x1, x2), color, clipX1, clipY1, clipX2, clipY2);
     } else if (x1 === x2) {
         // Vertical perf optimization
-        const dy = _Math.sign(y2 - y1)
+        const dy = $Math.sign(y2 - y1)
         if (open1) { y1 += dy; }
         if (open2) { y2 -= dy; }
-        _vline(x1, Math.min(y1, y2), Math.max(y1, y2), color, clipX1, clipY1, clipX2, clipY2);
+        $vline(x1, $Math.min(y1, y2), $Math.max(y1, y2), color, clipX1, clipY1, clipX2, clipY2);
     } else {
         // General case via DDA
 
@@ -352,15 +352,15 @@ function _line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2, open1, ope
             if (open2) { --x2; /* y2 is unused */ } 
 
             // Adjust for x1 being clipped
-            const step = Math.max(clipX1, x1) - x1;
+            const step = $Math.max(clipX1, x1) - x1;
             x1 += step; y1 += m * step;
 
             // Adjust for x2 being clipped (y2 is unused, so ignore it)
-            x2 = Math.min(x2, clipX2);
+            x2 = $Math.min(x2, clipX2);
 
             x1 |= 0; x2 |= 0;
             for (let x = x1, y = y1; x <= x2; ++x, y += m) {
-                _pset(x, y, color, clipX1, clipY1, clipX2, clipY2);
+                $pset(x, y, color, clipX1, clipY1, clipX2, clipY2);
             } // for x
         } else { // Vertical
             // Compute the inverted slope
@@ -370,12 +370,12 @@ function _line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2, open1, ope
             if (open2) { --y2; x2 -= m; } 
             
             // Crop vertically:
-            const step = Math.max(clipY1, y1) - y1;
+            const step = $Math.max(clipY1, y1) - y1;
             x1 += step * m; y1 += step;
-            y2 = Math.min(y2, clipY2);
+            y2 = $Math.min(y2, clipY2);
             y1 |= 0; y2 |= 0;
             for (let y = y1, x = x1; y <= y2; ++y, x += m) {
-                _pset(x, y, color, clipX1, clipY1, clipX2, clipY2);
+                $pset(x, y, color, clipX1, clipY1, clipX2, clipY2);
             } // for y
             
         } // if more horizontal
@@ -383,7 +383,7 @@ function _line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2, open1, ope
 }
 
 
-function _executePIX(cmd) {
+function $executePIX(cmd) {
     // Series of points that have already been clipped
     // and converted to integers.
     
@@ -398,25 +398,25 @@ function _executePIX(cmd) {
 
         if (a15 === 0xf) {
             // No blending
-            _screen[offset] = color;
+            $screen[offset] = color;
         } else if (a15 !== 0) {
             // Blend
 
             // No need to force to unsigned int because the alpha channel of the output is always 0xff
             
             const a = a15 * (1 / 15);
-            let back = _screen[offset];
+            let back = $screen[offset];
             let result = 0xF000;
             result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5 * 0x0100) & 0x0F00;
             result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5 * 0x0010) & 0x00F0;
             result |= ((back & 0x000F) * (1 - a) + (color & 0x000F) * a + 0.5) & 0x000F;
-            _screen[offset] = result;
+            $screen[offset] = result;
         }
     }
 }
 
 
-function _executeSPR(metaCmd) {
+function $executeSPR(metaCmd) {
     // Note that these are always integers, which we consider
     // pixel centers.
     const clipX1 = metaCmd.clipX1, clipY1 = metaCmd.clipY1,
@@ -474,7 +474,7 @@ function _executeSPR(metaCmd) {
         const DX = cmd.x, DY = cmd.y,
               SX = srcX1 + cmd.sizeX * 0.5, SY = srcY1 + cmd.sizeY * 0.5;
 
-        const cos = Math.cos(cmd.angle), sin = Math.sin(cmd.angle);
+        const cos = $Math.cos(cmd.angle), sin = $Math.sin(cmd.angle);
         const fx = cmd.scaleX, fy = cmd.scaleY;
 
         const A = cos/fx, B = -sin/fx, C = sin/fy, D = cos/fy;
@@ -496,21 +496,21 @@ function _executeSPR(metaCmd) {
 
                 // Transform from texture space to pixel space
                 let tmp = E * (srcX - SX) + G * (srcY - SY) + DX;
-                dstX1 = Math.min(tmp, dstX1); dstX2 = Math.max(tmp, dstX2);
+                dstX1 = $Math.min(tmp, dstX1); dstX2 = $Math.max(tmp, dstX2);
                 
                 tmp     = F * (srcX - SX) + H * (srcY - SY) + DY;
-                dstY1 = Math.min(tmp, dstY1); dstY2 = Math.max(tmp, dstY2);
+                dstY1 = $Math.min(tmp, dstY1); dstY2 = $Math.max(tmp, dstY2);
             }
         }
 
         // Round the bounding box using the draw_rect rules for inclusive integer
         // bounds with open top and left edges at pixel center samples.
-        dstX1 = Math.round(dstX1); dstY1 = Math.round(dstY1);
-        dstX2 = Math.floor(dstX2 - 0.5); dstY2 = Math.floor(dstY2 - 0.5);
+        dstX1 = $Math.round(dstX1); dstY1 = $Math.round(dstY1);
+        dstX2 = $Math.floor(dstX2 - 0.5); dstY2 = $Math.floor(dstY2 - 0.5);
 
         // Restrict to the clipping region
-        dstX1 = Math.max(dstX1, clipX1); dstY1 = Math.max(dstY1, clipY1);
-        dstX2 = Math.min(dstX2, clipX2); dstY2 = Math.min(dstY2, clipY2);
+        dstX1 = $Math.max(dstX1, clipX1); dstY1 = $Math.max(dstY1, clipY1);
+        dstX2 = $Math.min(dstX2, clipX2); dstY2 = $Math.min(dstY2, clipY2);
 
         // Iterate over *output* pixel centers in this region. Because the
         // transformed texel centers won't usually land exactly on pixel
@@ -523,12 +523,12 @@ function _executeSPR(metaCmd) {
 
         console.assert(cmd.spritesheetIndex !== undefined &&
                        cmd.spritesheetIndex >= 0 &&
-                       cmd.spritesheetIndex < _spritesheetArray.length);
+                       cmd.spritesheetIndex < $spritesheetArray.length);
         // May be reassigned below when using flipped X values
-        let srcData = _spritesheetArray[cmd.spritesheetIndex]._uint16Data;
+        let srcData = $spritesheetArray[cmd.spritesheetIndex]._uint16Data;
         const srcDataWidth = srcData.width >>> 0;
-        if ((Math.abs(Math.abs(A) - 1) < 1e-10) && (Math.abs(B) < 1e-10) &&
-            (Math.abs(C) < 1e-10) && (Math.abs(Math.abs(D) - 1) < 1e-10) &&
+        if (($Math.abs($Math.abs(A) - 1) < 1e-10) && ($Math.abs(B) < 1e-10) &&
+            ($Math.abs(C) < 1e-10) && ($Math.abs($Math.abs(D) - 1) < 1e-10) &&
             (! override_color)) {
 
             // Simple case; x and y-axis uniform scale, no rotation, and no alpha
@@ -543,16 +543,16 @@ function _executeSPR(metaCmd) {
             if (width >= 1) {
                 const srcY = ((dstY1 + 0.4999 - DY) * D + SY) | 0;
                 let srcOffset = ((((dstX1 + 0.4999 - DX) + SX) | 0) + srcY * srcDataWidth) | 0;
-                let dstOffset = (dstX1 + dstY1 * _SCREEN_WIDTH) | 0;
+                let dstOffset = (dstX1 + dstY1 * $SCREEN_WIDTH) | 0;
                 const srcStep = (srcDataWidth * D) | 0;
 
                 if (A < 0) {
                     // Use the flipped version
                     srcOffset = (srcOffset + srcDataWidth - 2 * SX) | 0;
-                    srcData = _spritesheetArray[cmd.spritesheetIndex]._uint16DataFlippedX;
+                    srcData = $spritesheetArray[cmd.spritesheetIndex]._uint16DataFlippedX;
                 }
                 
-                if ((! cmd.hasAlpha) && (Math.abs(opacity - 1) < 1e-10)) {
+                if ((! cmd.hasAlpha) && ($Math.abs(opacity - 1) < 1e-10)) {
                     // Memcpy case
                     for (let dstY = dstY1; dstY <= dstY2; ++dstY) {
                         // This TypedArray.set call saves about 3.5 ms/frame
@@ -561,13 +561,13 @@ function _executeSPR(metaCmd) {
                         // even for the general case, so this isn't as
                         // necessary on those browsers...but it doesn't hurt.
                         
-                        // console.assert(dstOffset + width <= _screen.length, `dstX1=${dstX1}, dstX2 = ${dstX2}, _screen.length = ${_screen.length}, width = ${width}, dstOffset = ${dstOffset}, dstOffset % _SCREEN_WIDTH = ${dstOffset % _SCREEN_WIDTH}, dstY = ${dstY}, dstY2 = ${dstY2}`);
+                        // console.assert(dstOffset + width <= $screen.length, `dstX1=${dstX1}, dstX2 = ${dstX2}, $screen.length = ${$screen.length}, width = ${width}, dstOffset = ${dstOffset}, dstOffset % $SCREEN_WIDTH = ${dstOffset % $SCREEN_WIDTH}, dstY = ${dstY}, dstY2 = ${dstY2}`);
                         // console.assert(srcOffset + width <= srcData.length);
-                        _screen.set(srcData.subarray(srcOffset, srcOffset + width), dstOffset);
+                        $screen.set(srcData.subarray(srcOffset, srcOffset + width), dstOffset);
                         
                         // Putting this increment at the bottom slightly
                         // improves Safari performance
-                        dstOffset = (dstOffset + _SCREEN_WIDTH) | 0;
+                        dstOffset = (dstOffset + $SCREEN_WIDTH) | 0;
                         srcOffset = (srcOffset + srcStep) | 0;
                     } // dstY
                 } else {
@@ -590,21 +590,21 @@ function _executeSPR(metaCmd) {
 
                                 if (a15 === 0xf) {
                                     // 100% alpha, no blend needed
-                                    _screen[dstOffset + i] = (color | 0xF000) >>> 0;
+                                    $screen[dstOffset + i] = (color | 0xF000) >>> 0;
                                 } else if (a15 !== 0) {
                                     // Fractional alpha
                                 
                                     // No need to force to unsigned int because the alpha channel of
                                     // the output is always 0xff
                                     const a = a15 * (1 / 15);
-                                    const back = _screen[dstOffset + i] >>> 0;
+                                    const back = $screen[dstOffset + i] >>> 0;
                                     
                                     let result = 0xF000 >>> 0;
                                     result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5 * 0x100) & 0x0F00;
                                     result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5 * 0x010) & 0x00F0;
                                     result |= ((back & 0x000F) * (1 - a) + (color & 0x000F) * a + 0.5) & 0x000F;
                                 
-                                    _screen[dstOffset + i] = result;
+                                    $screen[dstOffset + i] = result;
                                 }
                             } // alpha > 0
                         } // column
@@ -612,12 +612,12 @@ function _executeSPR(metaCmd) {
                         // Putting this increment at the bottom slightly
                         // improves Safari performance. Casting to integer
                         // MASSIVELY improves Safari performance.
-                        dstOffset = (dstOffset + _SCREEN_WIDTH) | 0;
+                        dstOffset = (dstOffset + $SCREEN_WIDTH) | 0;
                         srcOffset = (srcOffset + srcStep) | 0;
                     } // row
                 } // needs alpha
             } // width >= 1
-        } else if (! override_color && (! cmd.hasAlpha) && (Math.abs(opacity - 1) < 1e-10)) {
+        } else if (! override_color && (! cmd.hasAlpha) && ($Math.abs(opacity - 1) < 1e-10)) {
             // No blending case with rotation and scale
             dstY1 |= 0; dstY2 |= 0;
             for (let dstY = dstY1; dstY <= dstY2; ++dstY) {
@@ -627,7 +627,7 @@ function _executeSPR(metaCmd) {
                 const xterms = (dstY + 0.4999 - DY) * B + SX + (0.4999 - DX) * A;
                 const yterms = (dstY + 0.4999 - DY) * D + SY + (0.4999 - DX) * C;
                 
-                let dstOffset = dstX1 + dstY * _SCREEN_WIDTH;
+                let dstOffset = dstX1 + dstY * $SCREEN_WIDTH;
                 
                 for (let dstX = dstX1; dstX <= dstX2; ++dstX, ++dstOffset) {
                     const srcX = (dstX * A + xterms) | 0;
@@ -635,7 +635,7 @@ function _executeSPR(metaCmd) {
 
                     if ((srcX >= srcX1) && (srcX <= srcX2) && (srcY >= srcY1) && (srcY <= srcY2)) {
                         // Inside the source sprite
-                        _screen[dstOffset] = srcData[srcX + srcY * srcDataWidth];
+                        $screen[dstOffset] = srcData[srcX + srcY * srcDataWidth];
                     } // clamp to source bounds
                 } // dstX
             } // dstY
@@ -664,7 +664,7 @@ function _executeSPR(metaCmd) {
                 const xterms = (dstY + 0.4999 - DY) * B + SX + (0.4999 - DX) * A;
                 const yterms = (dstY + 0.4999 - DY) * D + SY + (0.4999 - DX) * C;
                 
-                let dstOffset = (dstX1 + dstY * _SCREEN_WIDTH) | 0;
+                let dstOffset = (dstX1 + dstY * $SCREEN_WIDTH) | 0;
                 
                 for (let dstX = dstX1; dstX <= dstX2; ++dstX, ++dstOffset) {
                     const srcX = (dstX * A + xterms) | 0;
@@ -683,7 +683,7 @@ function _executeSPR(metaCmd) {
                             color = ((alpha4 << 12) | (color & 0xFFF)) >>> 0;
                         }
                         
-                        // the following is an inlining of: _pset(dstX, dstY, color, clipX1, clipY1, clipX2, clipY2);
+                        // the following is an inlining of: $pset(dstX, dstY, color, clipX1, clipY1, clipX2, clipY2);
                         
                         // Must be unsigned shift to avoid sign extension
                         const a15 = color >>> 12;
@@ -714,20 +714,20 @@ function _executeSPR(metaCmd) {
 
                             if (a15 === 0xf) {
                                 // 100% alpha
-                                _screen[dstOffset] = color;
+                                $screen[dstOffset] = color;
                             } else if (a15 != 0) {
                                 // Fractional alpha
                                 
                                 // No need to force to unsigned int because the alpha channel of the output is always 0xff
                                 const a = a15 * (1 / 15);
-                                const back = _screen[dstOffset];
+                                const back = $screen[dstOffset];
                                 let result = 0xF000;
                                 
                                 result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5 * 0x100) & 0x0F00;
                                 result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5 * 0x010) & 0x00F0;
                                 result |= ((back & 0x000F) * (1 - a) + (color & 0x000F) * a + 0.5) & 0x000F;
                                 
-                                _screen[dstOffset] = result;
+                                $screen[dstOffset] = result;
                             }
                         }
                     } // clamp to source bounds
@@ -738,13 +738,13 @@ function _executeSPR(metaCmd) {
 }
 
 
-function _executeTXT(cmd) {
+function $executeTXT(cmd) {
     const height = cmd.height, width = cmd.width, color = cmd.color,
           str = cmd.str
     let   outline = cmd.outline, shadow = cmd.shadow;
     const clipX1 = cmd.clipX1, clipY1 = cmd.clipY1,
           clipX2 = cmd.clipX2, clipY2 = cmd.clipY2;
-    const font = _fontArray[cmd.fontIndex];
+    const font = $fontArray[cmd.fontIndex];
     const data = font._data.data;
     const fontWidth = font._data.width;
 
@@ -757,7 +757,7 @@ function _executeTXT(cmd) {
         // Disable color and re-issue the command to draw shadow and outline
         // before drawing the main text.
         cmd.color = 0;
-        _executeTXT(cmd);
+        $executeTXT(cmd);
 
         // Pass through, disabling outline and shadow that were
         // already processed.
@@ -766,12 +766,12 @@ function _executeTXT(cmd) {
     
     for (let c = 0; c < str.length; ++c) {
         // Remap the character to those in the font sheet
-        const chr = _fontMap[str[c]] || ' ';
+        const chr = $fontMap[str[c]] || ' ';
         const bounds = font._bounds[chr];
 
         x += bounds.pre;
         if (chr !== ' ') {
-            const tileY = Math.floor(bounds.y1 / font._charHeight) * font._charHeight;
+            const tileY = $Math.floor(bounds.y1 / font._charHeight) * font._charHeight;
             const charWidth  = bounds.x2 - bounds.x1 + 1;
             const charHeight = bounds.y2 - bounds.y1 + 1;
 
@@ -779,7 +779,7 @@ function _executeTXT(cmd) {
             for (let j = 0, dstY = y + bounds.y1 - tileY + bounds.yOffset; j < charHeight; ++j, ++dstY) {
                 // On screen in Y?
                 if (((dstY >>> 0) <= clipY2) && (dstY >= clipY1)) {
-                    for (let i = 0, dstX = x, dstIndex = x + (dstY * _SCREEN_WIDTH), srcIndex = bounds.x1 + (bounds.y1 + j) * fontWidth;
+                    for (let i = 0, dstX = x, dstIndex = x + (dstY * $SCREEN_WIDTH), srcIndex = bounds.x1 + (bounds.y1 + j) * fontWidth;
                          i < charWidth;
                          ++i, ++dstX, ++dstIndex, ++srcIndex) {
                         
@@ -804,9 +804,9 @@ function _executeTXT(cmd) {
                                 v = shadow;
                             }
 
-                            // Could inline _pset code for performance and insert dstIndex. There
+                            // Could inline $pset code for performance and insert dstIndex. There
                             // is not any apparent performance difference on Chrome, however
-                            if (v) { _pset(dstX, dstY, v, clipX1, clipY1, clipX2, clipY2); }
+                            if (v) { $pset(dstX, dstY, v, clipX1, clipY1, clipX2, clipY2); }
                         }
                     } // for i
                 } // on screen y
@@ -821,7 +821,7 @@ function _executeTXT(cmd) {
 
 
 // Convex polygon rendering
-function _executePLY(cmd) {
+function $executePLY(cmd) {
     const clipX1 = cmd.clipX1, clipY1 = cmd.clipY1,
           clipX2 = cmd.clipX2, clipY2 = cmd.clipY2;
     const points = cmd.points;
@@ -865,8 +865,8 @@ function _executePLY(cmd) {
 
         // Intentionally left as a float to avoid int->float
         // conversion within the inner loop
-        y0 = Math.max(clipY1, Math.floor(y0));
-        y1 = Math.min(clipY2, Math.floor(y1));
+        y0 = $Math.max(clipY1, $Math.floor(y0));
+        y1 = $Math.min(clipY2, $Math.floor(y1));
         for (let y = y0; y <= y1; ++y) {
             
             // For this scanline, intersect the edge lines of the triangle.
@@ -881,42 +881,42 @@ function _executePLY(cmd) {
                 const dy = y - edgeY;
                 if ((dy >= 0) && (dy <= edgeHeight)) {
                     const x = edgeX + dy * slope;
-                    x0 = Math.min(x0, x);
-                    x1 = Math.max(x, x1);
+                    x0 = $Math.min(x0, x);
+                    x1 = $Math.max(x, x1);
                 }
             }
 
             // If there was a nonzero line length, draw it
             if (x0 + shift <= x1 - shift) {
-                _hline(x0 + shift, y, x1 - shift, color, clipX1, clipY1, clipX2, clipY2);
+                $hline(x0 + shift, y, x1 - shift, color, clipX1, clipY1, clipX2, clipY2);
             }
         }
     }
 
     if ((outline & 0xf000) && (outline !== color)) {
         for (let p = 0; p < points.length - 3; p += 2) {
-            _line(points[p], points[p + 1], points[p + 2], points[p + 3], outline, clipX1, clipY1, clipX2, clipY2, false, true);
+            $line(points[p], points[p + 1], points[p + 2], points[p + 3], outline, clipX1, clipY1, clipX2, clipY2, false, true);
         }
         {
             // Wraparound to close the polygon
             const p = points.length - 3;
-            _line(points[p], points[p + 1], points[p + 2], points[p + 3], outline, clipX1, clipY1, clipX2, clipY2, false, true);
+            $line(points[p], points[p + 1], points[p + 2], points[p + 3], outline, clipX1, clipY1, clipX2, clipY2, false, true);
         }
     }
 }
 
 
-var _executeTable = Object.freeze({
-    REC : _executeREC,
-    CIR : _executeCIR,
-    SPR : _executeSPR,
-    PIX : _executePIX,
-    TXT : _executeTXT,
-    LIN : _executeLIN,
-    PLY : _executePLY
+var $executeTable = Object.freeze({
+    REC : $executeREC,
+    CIR : $executeCIR,
+    SPR : $executeSPR,
+    PIX : $executePIX,
+    TXT : $executeTXT,
+    LIN : $executeLIN,
+    PLY : $executePLY
 
     // Future:
-    // CLT : _executeCLT  // [Gouraud] color triangle
-    // SPT : _executeSPT  // Sprite-textured triangle
-    // CST : _executeCST  // Sprite * color
+    // CLT : $executeCLT  // [Gouraud] color triangle
+    // SPT : $executeSPT  // Sprite-textured triangle
+    // CST : $executeCST  // Sprite * color
 });

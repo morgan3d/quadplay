@@ -16,13 +16,13 @@ let old_clip
 let old_post_effects
 let old_background
 
-let sectionFont = _font9
-if SCREEN_SIZE.y <= 64: sectionFont = _font5
-else if SCREEN_SIZE.y <= 128: sectionFont = _font8
+let sectionFont = $font9
+if SCREEN_SIZE.y <= 64: sectionFont = $font5
+else if SCREEN_SIZE.y <= 128: sectionFont = $font8
 
-let bodyFont = _font6
-if SCREEN_SIZE.y <= 64: sectionFont = _font3
-else if SCREEN_SIZE.y <= 128: sectionFont = _font5
+let bodyFont = $font6
+if SCREEN_SIZE.y <= 64: sectionFont = $font3
+else if SCREEN_SIZE.y <= 128: sectionFont = $font5
 
 
 enter
@@ -50,7 +50,7 @@ frame
 ────────────────────────────────────────────────────────────────────────
 
 if any_button_press():
-   play_sound(_cancelUISound)
+   play_sound($cancelUISound)
    pop_mode()
 
 const creditsScroll = max(mode_frames - 70, 0)

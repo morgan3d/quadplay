@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.07.28.00'
+const version  = '2020.08.01.16'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -22,6 +22,19 @@ const postToken = getQueryString('token');
 // the bottom of this script with a list of available applications on
 // this machine.
 let serverConfig = {};
+
+// Ends in a slash
+function getGamePath() {
+    let gamePath = gameSource.jsonURL.replace(/\\/g, '/');
+    if (gamePath.startsWith(location.origin)) {
+        gamePath = gamePath.substring(location.origin.length);
+    }
+    return gamePath.replace(/\/[^/]+\.game\.json$/, '\/');
+}
+
+function makeURLRelativeToGame(filename) {
+    return getGamePath() + filename;
+}
 
 //////////////////////////////////////////////////////////////////////////////////
 // UI setup
@@ -1136,7 +1149,7 @@ function restartProgram(numBootAnimationFrames) {
         // that it sees those variables.
         try {
             coroutine = QRuntime._makeCoroutine(compiledProgram);
-            QRuntime._numBootAnimationFrames = numBootAnimationFrames;
+            QRuntime.$numBootAnimationFrames = numBootAnimationFrames;
             lastAnimationRequest = requestAnimationFrame(mainLoopStep);
             emulatorKeyboardInput.focus();
         } catch (e) {
@@ -1375,7 +1388,7 @@ function onDocumentKeyDown(event) {
             if (editableProject) {
                 takeLabelImage();
             } else {
-                _systemPrint('Cannot create a label image because this project is not editable.');
+                $systemPrint('Cannot create a label image because this project is not editable.');
             }
         } else {
             downloadScreenshot();
@@ -1388,7 +1401,7 @@ function onDocumentKeyDown(event) {
                 if (editableProject) {
                     startPreviewRecording();
                 } else {
-                    _systemPrint('Cannot create a preview sequence because this project is not editable.');
+                    $systemPrint('Cannot create a preview sequence because this project is not editable.');
                 }
             }
         } else {
@@ -1656,7 +1669,6 @@ function onProjectSelect(target, type, object) {
         // Find the underlying gameSource.asset key for this asset so
         // that we can fetch it again if needed
         let assetName;
-        console.dir(object);
         for (const k in gameSource.assets) {
             const asset = gameSource.assets[k];
             if (asset === object) {
@@ -2537,7 +2549,7 @@ function createProjectWindow(gameSource) {
             const assetName = keys[i];
 
             // Hide system assets
-            if (assetName[0] === '_') { continue; }
+            if (assetName[0] === '$') { continue; }
 
             const asset = gameSource.assets[assetName];
             let type = asset._jsonURL.match(/\.([^.]+)\.json$/i);
@@ -2803,7 +2815,7 @@ function setErrorStatus(e) {
     e = escapeHTMLEntities(e);
     error.innerHTML = e;
     if (e !== '') {
-        _outputAppend('\n<span style="color:#f55">' + e + '<span>\n');
+        $outputAppend('\n<span style="color:#f55">' + e + '<span>\n');
     }
 }
 
@@ -2850,7 +2862,7 @@ function jsToPSError(error) {
                 // the name of the offending function.
                 for (let i = 1; i < stack.length; ++i) {
                     if (stack[i].indexOf('quadplay-runtime.js') === -1) {
-                        lineNumber = QRuntime._currentLineNumber + 2;
+                        lineNumber = QRuntime.$currentLineNumber + 2;
                         //return {url:'(unknown)', lineNumber:'(unknown)', message: stack[i] + ': ' + error};
                     }
                 }
@@ -3076,7 +3088,7 @@ function mainLoopStep() {
         if ((QRuntime.mode_frames - 1) % QRuntime._graphicsPeriod === 0) {
             // Only display if the graphics period has just ended, otherwise the display would
             // be zero most of the time
-            debugDrawCallsDisplay.innerHTML = '' + QRuntime._previousGraphicsCommandList.length;
+            debugDrawCallsDisplay.innerHTML = '' + QRuntime.$previousGraphicsCommandList.length;
         }
     }
 
@@ -3089,22 +3101,22 @@ function mainLoopStep() {
         pane.innerHTML = s + '</table>';
     }
 
-    if (QRuntime._gameMode) {
-        if (QRuntime._modeStack.length) {
+    if (QRuntime.$gameMode) {
+        if (QRuntime.$modeStack.length) {
             let s = '';
-            for (let i = 0; i < QRuntime._modeStack.length; ++i) {
-                s += QRuntime._modeStack[i]._name + ' → ';
+            for (let i = 0; i < QRuntime.$modeStack.length; ++i) {
+                s += QRuntime.$modeStack[i]._name + ' → ';
             }
-            debugModeDisplay.innerHTML = s + QRuntime._gameMode._name;
+            debugModeDisplay.innerHTML = s + QRuntime.$gameMode._name;
         } else {
-            debugModeDisplay.innerHTML = QRuntime._gameMode._name;
+            debugModeDisplay.innerHTML = QRuntime.$gameMode._name;
         }
     } else {
         debugModeDisplay.innerHTML = '∅';
     }
 
-    if (QRuntime._prevMode) {
-        debugPreviousModeDisplay.innerHTML = QRuntime._prevMode._name;
+    if (QRuntime.$prevMode) {
+        debugPreviousModeDisplay.innerHTML = QRuntime.$prevMode._name;
     } else {
         debugPreviousModeDisplay.innerHTML = '∅';
     }
@@ -3147,80 +3159,78 @@ function reloadRuntime(oncomplete) {
     QRuntime.document.open();
     QRuntime.document.write("<script src='quadplay-runtime-cpu.js' async charset='utf-8'> </script> <script src='quadplay-runtime-gpu.js' async charset='utf-8'> </script>");
     QRuntime.onload = function () {
-        QRuntime._SCREEN_WIDTH  = SCREEN_WIDTH;
-        QRuntime._SCREEN_HEIGHT = SCREEN_HEIGHT;
+        QRuntime.$SCREEN_WIDTH  = SCREEN_WIDTH;
+        QRuntime.$SCREEN_HEIGHT = SCREEN_HEIGHT;
         QRuntime.reset_clip();
 
         // Aliased views
-        QRuntime._screen = new Uint16Array(SCREEN_WIDTH * SCREEN_HEIGHT);
-        QRuntime._screen32 = new Uint32Array(QRuntime._screen.buffer);
+        QRuntime.$screen = new Uint16Array(SCREEN_WIDTH * SCREEN_HEIGHT);
+        QRuntime.$screen32 = new Uint32Array(QRuntime.$screen.buffer);
 
         // Remove any base URL that appears to include the quadplay URL
-        const _gameURL = gameSource ? (gameSource.jsonURL || '').replace(location.href.replace(/\?.*/, ''), '') : '';
-        QRuntime._window = window;
-        QRuntime._gameURL = _gameURL;
-        QRuntime._debugPrintEnabled = document.getElementById('debugPrintEnabled').checked;
-        QRuntime._assertEnabled = document.getElementById('assertEnabled').checked;
-        QRuntime._todoEnabled = document.getElementById('todoEnabled').checked;
-        QRuntime._debugWatchEnabled = document.getElementById('debugWatchEnabled').checked;
-        QRuntime._showEntityBoundsEnabled = document.getElementById('showEntityBoundsEnabled').checked;
-        QRuntime._showPhysicsEnabled = document.getElementById('showPhysicsEnabled').checked;
-        QRuntime._debug_watch    = debug_watch;
-        QRuntime._fontMap       = fontMap;
-        QRuntime._parse         = _parse;
-        QRuntime._submitFrame   = submitFrame;
-        QRuntime._requestInput  = requestInput;
-        QRuntime._updateInput   = updateInput;
-        QRuntime._systemPrint   = _systemPrint;
-        QRuntime._outputAppend  = _outputAppend;
-        QRuntime._parseHexColor = parseHexColor;
-        QRuntime._Physics       = Matter;
-        QRuntime._spritesheetArray = spritesheetArray;
-        QRuntime._fontArray     = fontArray;
+        QRuntime.$window = window;
+        QRuntime.$gameURL = gameSource ? (gameSource.jsonURL || '').replace(location.href.replace(/\?.*/, ''), '') : '';
+        QRuntime.$debugPrintEnabled  = document.getElementById('debugPrintEnabled').checked;
+        QRuntime.$assertEnabled      = document.getElementById('assertEnabled').checked;
+        QRuntime.$todoEnabled        = document.getElementById('todoEnabled').checked;
+        QRuntime.$debugWatchEnabled  = document.getElementById('debugWatchEnabled').checked;
+        QRuntime.$showEntityBoundsEnabled = document.getElementById('showEntityBoundsEnabled').checked;
+        QRuntime.$showPhysicsEnabled = document.getElementById('showPhysicsEnabled').checked;
+        QRuntime.$debug_watch        = debug_watch;
+        QRuntime.$fontMap            = fontMap;
+        QRuntime.$parse              = $parse;
+        QRuntime.$submitFrame        = submitFrame;
+        QRuntime.$requestInput       = requestInput;
+        QRuntime.$updateInput        = updateInput;
+        QRuntime.$systemPrint        = $systemPrint;
+        QRuntime.$parseHexColor      = parseHexColor;
+        QRuntime.$Physics            = Matter;
+        QRuntime.$spritesheetArray   = spritesheetArray;
+        QRuntime.$fontArray          = fontArray;
+        QRuntime.$pauseAllSounds     = pauseAllSounds;
+        QRuntime.$resumeAllSounds    = resumeAllSounds;
         QRuntime.makeEuroSmoothValue = makeEuroSmoothValue;
-        QRuntime._pauseAllSounds = pauseAllSounds;
-        QRuntime._resumeAllSounds = resumeAllSounds;
 
         // Accessors for touch and gamepads
         const padXGetter = {
             enumerable: true,
             get: function () {
-                return this._x * QRuntime._scaleX;
+                return this.$x * QRuntime.$scaleX;
             }
         };
 
         const dxGetter = {
             enumerable: true,
             get: function () {
-                return this._dx * QRuntime._scaleX;
+                return this.$dx * QRuntime.$scaleX;
             }
         };
         
         const padXXGetter = {
             enumerable: true,
             get: function () {
-                return this._xx * QRuntime._scaleX;
+                return this.$xx * QRuntime.$scaleX;
             }
         };
         
         const padYGetter = {
             enumerable: true,
             get: function () {
-                return this._y * QRuntime._scaleY;
+                return this.$y * QRuntime.$scaleY;
             }
         };
         
         const dyGetter = {
             enumerable: true,
             get: function () {
-                return this._dy * QRuntime._scaleY;
+                return this.$dy * QRuntime.$scaleY;
             }
         };
         
         const padYYGetter = {
             enumerable: true,
             get: function () {
-                return this._yy * QRuntime._scaleY;
+                return this.$yy * QRuntime.$scaleY;
             }
         };
         
@@ -3241,7 +3251,7 @@ function reloadRuntime(oncomplete) {
         const angleGetter = {
             enumerable: true,
             get: function () {
-                let a = (this._angle * QRuntime._scaleY + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+                let a = (this.$angle * QRuntime.$scaleY + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
                 if (Math.abs(a + Math.PI) < 1e-10) { a = Math.PI; }
                 return a;
             }
@@ -3250,7 +3260,7 @@ function reloadRuntime(oncomplete) {
         const dangleGetter = {
             enumerable: true,
             get: function () {
-                let a = (this._dangle * QRuntime._scaleY + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+                let a = (this.$dangle * QRuntime.$scaleY + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
                 if (Math.abs(a + Math.PI) < 1e-10) { a = Math.PI; }
                 return a;
             }
@@ -3273,25 +3283,25 @@ function reloadRuntime(oncomplete) {
         Object.defineProperty(QRuntime.touch, 'x', {
             enumerable: true,
             get: function () {
-                return (this.screen_x - QRuntime._offsetX) / QRuntime._scaleX;
+                return (this.screen_x - QRuntime.$offsetX) / QRuntime.$scaleX;
             }
         });
         Object.defineProperty(QRuntime.touch, 'y', {
             enumerable: true,
             get: function () {
-                return (this.screen_y - QRuntime._offsetY) / QRuntime._scaleY;
+                return (this.screen_y - QRuntime.$offsetY) / QRuntime.$scaleY;
             }
         });
         Object.defineProperty(QRuntime.touch, 'dx', {
             enumerable: true,
             get: function () {
-                return this.screen_dx / QRuntime._scaleX;
+                return this.screen_dx / QRuntime.$scaleX;
             }
         });
         Object.defineProperty(QRuntime.touch, 'dy', {
             enumerable: true,
             get: function () {
-                return this.screen_dy / QRuntime._scaleY;
+                return this.screen_dy / QRuntime.$scaleY;
             }
         });
         Object.defineProperty(QRuntime.touch, 'screen_xy', {
@@ -3320,19 +3330,19 @@ function reloadRuntime(oncomplete) {
             }
             
             const pad = {
-                _x: 0, _dx: 0, _xx: 0,
-                _y: 0, _dy: 0, _yy: 0, 
-                _angle:0, _dangle:0,
-                a:0, b:0, c:0, d:0, e:0, f:0, _p:0, q:0,
-                aa:0, bb:0, cc:0, dd:0, ee:0, ff:0, _pp:0, qq:0,
-                pressed_a:0, pressed_b:0, pressed_c:0, pressed_d:0, pressed_e: 0, pressed_f:0, _pressed_p:0, pressed_q:0,
-                released_a:0, released_b:0, released_c:0, released_d:0, released_e:0, released_f:0, _released_p:0, released_q:0,
+                $x: 0, $dx: 0, $xx: 0,
+                $y: 0, $dy: 0, $yy: 0, 
+                $angle:0, $dangle:0,
+                a:0, b:0, c:0, d:0, e:0, f:0, $p:0, q:0,
+                aa:0, bb:0, cc:0, dd:0, ee:0, ff:0, $pp:0, qq:0,
+                pressed_a:0, pressed_b:0, pressed_c:0, pressed_d:0, pressed_e: 0, pressed_f:0, $pressed_p:0, pressed_q:0,
+                released_a:0, released_b:0, released_c:0, released_d:0, released_e:0, released_f:0, $released_p:0, released_q:0,
                 index: p,
                 type: controlBindings.type,
                 prompt: controlSchemeTable[controlBindings.type],
-                _id: controlBindings.id, 
-                _analogX: 0,
-                _analogY: 0,
+                $id: controlBindings.id, 
+                $analogX: 0,
+                $analogY: 0,
                 _name: `gamepad_array[${p}]`
             };
             Object.defineProperty(pad, 'x', padXGetter);
@@ -3352,7 +3362,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.debug_print     = debug_print;
         QRuntime.assert          = assert;
         QRuntime.device_control  = device_control;
-        QRuntime._play_sound      = play_sound;
+        QRuntime.$play_sound     = play_sound;
         QRuntime.stop_audio      = stop_audio;
         QRuntime.resume_audio    = resume_audio;
         QRuntime.set_volume      = set_volume;
@@ -3450,7 +3460,7 @@ function frozenDeepClone(src, alreadySeen) {
             let clone = Object.create(null);
             alreadySeen.set(src, clone);
             for (let key in src) {
-                if (key[0] === '_') {
+                if (key[0] === '_' || key[0] === '$') {
                     throw 'Illegal constant field name: "' + key + '"';
                 }
                 clone[key] = frozenDeepClone(src[key], alreadySeen);
@@ -3480,7 +3490,7 @@ function makeConstants(environment, constants, CREDITS) {
 
     let hasReferences = false;
     for (const key in constants) {
-        if (key[0] === '_') {
+        if (key[0] === '_' || key[0] === '$') {
             throw 'Illegal constant field name: "' + key + '"';
         }
         const value = constants[key];

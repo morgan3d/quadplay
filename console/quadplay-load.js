@@ -1542,7 +1542,7 @@ function loadFailureCallback(reason, url) {
 
 
 function loadWarningCallback(reason, url) {
-    _outputAppend(url + ': ' + reason + '\n');
+    $outputAppend(url + ': ' + reason + '\n');
 }
 
 
@@ -1630,7 +1630,7 @@ function regexIndexOf(text, re, i) {
 
 
 /** Parse the JSON value starting at character i. Also used by the runtime as QRuntime.parse(str) */
-function _parse(source, i) {
+function $parse(source, i) {
     i = i || 0;
     if (typeof source !== 'string') {
         throw new Error('parse() requires a string as an agument');
@@ -1655,7 +1655,7 @@ function _parse(source, i) {
             while (' \t\n'.indexOf(source[i]) !== -1) { ++i; }
             const a = [];
             while ((i < source.length) && (source[i] !== ']')) {                
-                const child = _parse(source, i);
+                const child = $parse(source, i);
 
                 if (child.result === '…') {
                     // This is a recursive array
@@ -1683,7 +1683,7 @@ function _parse(source, i) {
                 let key;
                 if (source[i] === '"') {
                     // The key is in quotes
-                    const temp = _parse(source, i);
+                    const temp = $parse(source, i);
                     key = temp.result;
                     i = temp.next;
                 } else {
@@ -1703,7 +1703,7 @@ function _parse(source, i) {
                 while (': \t\n'.indexOf(source[i]) !== -1) { ++i; }
 
                 // Read the value
-                const value = _parse(source, i);
+                const value = $parse(source, i);
                 t[key] = value.result;
                 i = value.next;
                 // Consume the trailing space and comma
@@ -1811,7 +1811,7 @@ function evalJSONGameConstant(json) {
         if (typeof json.value === 'number') {
             return json.value;
         } else {
-            return _parse(json.value.trim()).result;
+            return $parse(json.value.trim()).result;
         }
         break;
         

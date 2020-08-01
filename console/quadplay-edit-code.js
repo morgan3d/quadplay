@@ -1,5 +1,5 @@
 "use strict";
-// Parts of the IDE that are for editing source files using ace.js, vs. simply running and debugging
+// Parts of the IDE that are for editing source and JSON files using ace.js
 
 // How long to wait for new input before saving, to avoid
 // constant disk churn
@@ -481,7 +481,7 @@ function createCodeEditorSession(url, bodyText, assetName) {
     session.setUseWrapMode(false);
     
     if (! session.aux.readOnly) {
-        const delaySeconds = session.aux.url.endsWith('.json') ? ASSET_EDITOR_SAVE_DELAY_SECONDS : CODE_EDITOR_SAVE_DELAY_SECONDS;
+        const delaySeconds = session.aux.fileType === 'json' ? ASSET_EDITOR_SAVE_DELAY_SECONDS : CODE_EDITOR_SAVE_DELAY_SECONDS;
         
         // onchange handler
         session.on('change', function (delta) {
@@ -534,37 +534,46 @@ function createCodeEditorSession(url, bodyText, assetName) {
 
                     // Update the file contents and cache immediately
                     let contents = session.getValue();
-                    const value = url.endsWith('.json') ? WorkJSON.parse(contents) : contents;
-                    fileContents[url] = value;
+                    let value = null;
+
+                    try {
+                        value = url.endsWith('.json') ? WorkJSON.parse(contents) : contents;
+                        fileContents[url] = value;
+                    } catch (e) {
+                        console.log('Saved but did not reload ' + url + ' because it cannot parse correctly in the current state.');
+                    }
 
                     // If this is present in a cache, delete it
                     delete assetCache[url];
 
-                    console.log('purging', url, 'from caches');
-                    
                     const filename = urlToFilename(url);
                     serverWriteFile(filename, 'utf8', contents, function () {
-                        if (! url.endsWith('.json') && ! url.endsWith('.pyxl')) {
-                            // This must be a doc; update the preview pane, preserving
-                            // the scroll position if possible.
-                            showGameDoc(url, true);
-                        } else if (url.endsWith('.sprite.json')) {
-                            // Reload the game to pick up the new sprite, and then
-                            // reselect
-                            loadGameIntoIDE(window.gameURL, function () {
-                                // (for a spritesheet in a map, it has a dot in it)
-                                const assetName = session.aux.assetName;
-                                if (assetName.indexOf('.') !== -1) {
-                                    // Spritesheet within a map
-                                    onProjectSelect(document.getElementById('projectAsset_' + assetName), 'asset', gameSource.assets[assetName.replace(/\..*$/, '')].spritesheet_table[assetName.replace(/^.*\./, '')]);
-                                } else {
-                                    onProjectSelect(document.getElementById('projectAsset_' + assetName), 'asset', gameSource.assets[assetName]);
-                                }
-                            }, true);
-                            
-                        } else if (url.endsWith('.game.json')) {
-                            // Reload the game
-                            loadGameIntoIDE(window.gameURL, null, true);
+
+                        // If JSON, see if the current contents can
+                        // parse before trying to reload anything
+                        if (session.aux.fileType !== 'json' || value !== null) {
+                            if (session.aux.fileType !== 'json' && session.aux.fileType !== 'pyxl') {
+                                // This must be a doc; update the preview pane, preserving
+                                // the scroll position if possible.
+                                //showGameDoc(url, true);
+                            } else if (url.endsWith('.sprite.json')) {
+                                // Reload the game to pick up the new sprite, and then
+                                // reselect
+                                loadGameIntoIDE(window.gameURL, function () {
+                                    // (for a spritesheet in a map, it has a dot in it)
+                                    const assetName = session.aux.assetName;
+                                    if (assetName.indexOf('.') !== -1) {
+                                        // Spritesheet within a map
+                                        onProjectSelect(document.getElementById('projectAsset_' + assetName), 'asset', gameSource.assets[assetName.replace(/\..*$/, '')].spritesheet_table[assetName.replace(/^.*\./, '')]);
+                                    } else {
+                                        onProjectSelect(document.getElementById('projectAsset_' + assetName), 'asset', gameSource.assets[assetName]);
+                                    }
+                                }, true);
+                                
+                            } else if (url.endsWith('.game.json')) {
+                                // Reload the game
+                                loadGameIntoIDE(window.gameURL, null, true);
+                            }
                         }
                         
                         --savesPending;
