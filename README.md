@@ -11,8 +11,10 @@ is now in public beta.
 Platforms
 ========================================================
 
-Create and play games on any laptop, desktop, tablet, or phone. Or, build your own programmable arcade machine
-from a Raspberry Pi, Tegra, or old computer:
+Create and play games on any laptop, desktop, tablet, or phone. Or,
+build your own programmable arcade machine from a Raspberry Pi, Tegra,
+or old computer. Here are some of the many supported quadplay
+platforms:
 
 <img src="doc/laptop.jpg" height=180> <img src="doc/phone.jpg" height=180> <img src="doc/rpi-arcade.jpg" height=180> <img src="doc/arcade.jpg" height=180> <img src="doc/xarcade-arcade.jpg" height=180> <img src="doc/nano-arcade.jpg" height=180>
 
@@ -21,7 +23,7 @@ Features
 ========================================================
 
 - Create games on Windows, macOS, Linux
-- Play your games in any web browser on laptop, desktop, tablet, phone, Raspberry Pi 4, or Jetson Nano
+- Play your games in any modern web browser on a laptop, desktop, tablet, phone, Raspberry Pi 4, or Jetson Nano
 - 60 fps @ 384 x 224 pixels = 12:7 aspect ≈ 16:9.3
 - 4096 sRGB (4:4:4) colors
 - Four players with virtual controls for D-pad and eight buttons
@@ -32,7 +34,7 @@ Features
 - Native 2.5D graphics with z-order
 - 9.4 MB of total sprite memory
 - Up to 64 sprite and font sheets of up to 1024x1024
-- Optional 384 x 224, 192 x 112, 128 x 128, and [64 x 64](https://itch.io/jam/lowrezjam-2019) screen modes
+- Optional 384 x 224, 320 x 180, 192 x 112, 128 x 128, and [64 x 64](https://itch.io/jam/lowrezjam-2019) screen modes
 - Free and open source
 
 
@@ -57,7 +59,7 @@ _Required_:
 _Optional_:
 
 - A **code editor** such as [VS Code](https://code.visualstudio.com/), Emacs, or VIM. Use Python mode for PyxlScript or install our provided editor extensions
-- A TMX map editor such as [Tiled](https://www.mapeditor.org/)
+- A TMX map editor such as [Tiled](https://www.mapeditor.org/) or [TileKit](https://rxi.itch.io/tilekit)
 - A sprite and font pixel editor such as [Piskel](https://www.piskelapp.com/) or [GrafX2](http://pulkomandy.tk/projects/GrafX2/downloads?order=version&desc=1)
 - A [SFX generator](https://www.bfxr.net/) and audio editor such as [Audacity](https://www.audacityteam.org/)
 - An account on the [forums](http://quadplay.freeforums.net)
