@@ -3819,6 +3819,8 @@ window.addEventListener("gamepaddisconnected", function(e) {
 
 window.addEventListener('resize', onResize, false);
 
+document.getElementById('maximalUIButton').addEventListener('click', requestFullScreen);
+
 // Ace's default "go to line" dialog is confusing, so
 // we replace it with our friendlier one.
 aceEditor.commands.addCommand({

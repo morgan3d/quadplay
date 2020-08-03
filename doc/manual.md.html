@@ -4787,6 +4787,9 @@ Sounds
 ![`quad://sounds/loop-select.sound.json`](../sounds/loop-select.mp3)  ![`quad://sounds/loop-metal.sound.json`](../sounds/loop-metal.mp3)
 ![`quad://sounds/loop-puzzle.sound.json`](../sounds/loop-puzzle.mp3) ![`quad://sounds/loop-triumphant.sound.json`](../sounds/loop-triumphant.mp3)
 ![`quad://sounds/loop-dark-thriller.sound.json`](../sounds/loop-dark-thriller.mp3) ![`quad://sounds/loop-chilltech.sound.json`](../sounds/loop-chilltech.mp3)
+![`quad://sounds/loop-prometheus.sound.json`](../sounds/loop-prometheus.mp3) ![`quad://sounds/loop-forest.sound.json`](../sounds/loop-forest.mp3)
+![`quad://sounds/loop-escalator.sound.json`](../sounds/loop-escalator.mp3) ![`quad://sounds/loop-beat.sound.json`](../sounds/loop-beat.mp3)
+![`quad://sounds/loop-wind.sound.json`](../sounds/loop-wind.mp3)
 
 
 ### Coin
@@ -6887,8 +6890,9 @@ I expect most people will use quadplay✜ on phones, laptops, and desktops
 as a _virtual_ console. But, if you have some maker experience you can make a
 _real_ quadplay✜ console.
 
-When you're color coding a full four-player setup, the standard quadplay✜ arcade
-player colors and order is P3 Yellow, P1 Magenta ("pink"), P2 Cyan ("blue"), P3 Lime ("green"):
+When you're color coding a full four-player setup, the standard
+quadplay✜ arcade player colors and order is P3 Yellow, P1 Magenta
+("pink"), P2 Cyan ("blue"), P3 Lime ("green"):
 
 <center><big>
 <span style="color:#ffe84d; margin-right:30px">*P3*</span>
@@ -7651,7 +7655,12 @@ Changes for both the specification and implementation in each release.
 - New `powerup-11` sound
 - New `shoot-11` sound
 - New `shoot-12` sound
-- Added 320x180 support for targeting Switch, PiBoy, 720p, 1080p, and 1440p
+- New `loop-prometheus` sound
+- New `loop-forest` sound
+- New `loop-escalator` sound
+- New `loop-beat` sound
+- New `loop-wind` sound
+- Added  320x180 support for targeting Switch, PiBoy, 720p, 1080p, and 1440p
 - Added support for TileKit
 - Packed `suchet-12` font characters more tightly to conserve memory
 - Incompatible changes: 
@@ -7679,6 +7688,7 @@ Changes for both the specification and implementation in each release.
   the spritesheet if none is specified
 - Fonts now only count as 1/2 pixels towards the sprite pixel limit because they are
   compressed
+- The fullscreen layout button now returns to full screen if tapped when already selected
 - IDE code editor now highlights compile-time error lines in red
 - Editor divider pane layout now persists over reload
 - Added Dualshock4 controller to the officially tested list
