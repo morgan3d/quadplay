@@ -980,7 +980,8 @@ mixed keyboard and physical controller play.
 </center>
 
 <br>
-Physical controllers give the best experience. We have tested:
+Physical controllers give the best experience. We have successfully tested
+the following, and most are autodetected by quadplay:
 
 <table width=100%>
 <tr valign=top>
@@ -1003,8 +1004,16 @@ Physical controllers give the best experience. We have tested:
 <tr><td> <br> </td></tr>
 <tr valign=top>
 <td width=33%>![](xarcade-dual.jpg style="image-rendering:auto")<br>[X-Arcade Dual](https://shop.xgaming.com/collections/arcade-joysticks/products/x-arcade-dual-joystick-usb-included)</td>
+<td width=33%>![](genesis.jpg style="image-rendering:auto")<br>[retro bit Sega Genesis](http://retro-bit.com/sega-collaboration)</td>
+<td width=33%>![](m30.jpg style="image-rendering:auto")<br>[8bitdo M30 2.4G](https://www.8bitdo.com/m30/)</td>
 </tr>
+<tr><td> <br> </td></tr>
+<tr valign=top>
+<td width=33%>![](dualshock4.jpg style="image-rendering:auto")<br>[PlayStation DualShock 4 Wireless Controller](https://www.playstation.com/en-us/explore/accessories/gaming-controllers/dualshock-4/)</td>
 </table>
+
+When trying to get a new controller working, first use https://html5gamepad.com/
+to verify that your OS and web browser can see it. Then use the controller with quadplay.
 
 8BitDo controllers work in wired, wireless, and
 [XPad](https://support.8bitdo.com/xpad.html) mode. They seem most reliable on Windows and Linux.
@@ -1018,12 +1027,17 @@ On macOS, Xbox wired controllers require a free,
 do not work on Mac. Different controllers work with different browsers on macOS. For example,
 Xbox 360 controllers work well with Chrome and the Nintendo SNES controller works with Safari.
 
-PlayStation, Stadia, and [Logitech](https://www.logitechg.com/en-ca/products/gamepads/f310-gamepad.html) controllers
-as well as various fightstick arcade controllers are intended to work but I have not tested them.
+On macOS PS4 controllers work in Bluetooth mode (Xbox wireless controllers may also work in
+Bluetooth mode). Press the PS and SHARE buttons simultaneously
+to pair. If you have any problems, delete `/Library/Preferences/com.apple.Bluetooth.plist`,
+shut down and then start (do not warm reboot) and then re-pair.
+
+Stadia and [Logitech](https://www.logitechg.com/en-ca/products/gamepads/f310-gamepad.html) controllers
+are intended to work but I have not tested them.
 Please let me know if you are using them successfully.
 
 All browsers have controller support, but Chrome seems to support the
-most different controllers and the rumble feature.
+most different controllers reliably on all platforms.
 
 
 Input       | Player 1 Key| Player 2 Key| Xbox       | Playstation| SNES   | Switch Pro
@@ -3645,7 +3659,7 @@ endpoints and borders.
   `draw_sprite({sprite: wizard, pos: xy(100, 100), z: 2})`.
   Values default according to the positional argument version.
 
-`draw_sprite(sprite, pos, angle default 0°, scale default xy(100%, 100%), opacity default 100%, z default 0, override_color default rgba(0,0,0,0), blend default "lerp")`
+`draw_sprite(sprite, pos, angle default 0°, scale default xy(100%, 100%), opacity default 100%, z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp")`
 : Draw sprite `sprite` with its center at `pos`. `pos` must have at
   least `x` and `y` fields. The sprite appears at `z` in the z-order
   (defaults to 0). The `scale` parameter must be nil (which is treated
@@ -4794,7 +4808,8 @@ Sounds
 ![`quad://sounds/shoot-04.sound.json`](../sounds/shoot-04.mp3) ![`quad://sounds/shoot-05.sound.json`](../sounds/shoot-05.mp3)
 ![`quad://sounds/shoot-06.sound.json`](../sounds/shoot-06.mp3) ![`quad://sounds/shoot-07.sound.json`](../sounds/shoot-07.mp3)
 ![`quad://sounds/shoot-08.sound.json`](../sounds/shoot-08.mp3) ![`quad://sounds/shoot-09.sound.json`](../sounds/shoot-09.mp3)
-![`quad://sounds/shoot-10.sound.json`](../sounds/shoot-10.mp3)
+![`quad://sounds/shoot-10.sound.json`](../sounds/shoot-10.mp3) ![`quad://sounds/shoot-11.sound.json`](../sounds/shoot-11.mp3)
+![`quad://sounds/shoot-12.sound.json`](../sounds/shoot-12.mp3)
 
 ### Explode
 
@@ -7617,7 +7632,7 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-2020 July TBD: Beta update 47
+2020 August TBD: Beta update 47
 
 - New Planet Generator 2.5D procedural content example
 - New `scoreboard-5` font
@@ -7625,6 +7640,8 @@ Changes for both the specification and implementation in each release.
 - New `sparks-00` through `sparks-04` sounds
 - New `explode-10` sound
 - New `powerup-11` sound
+- New `shoot-11` sound
+- New `shoot-12` sound
 - Added 320x180 support for targeting Switch, PiBoy, 720p, 1080p, and 1440p
 - Added support for TileKit
 - Packed `suchet-12` font characters more tightly to conserve memory
@@ -7655,6 +7672,9 @@ Changes for both the specification and implementation in each release.
   compressed
 - IDE code editor now highlights compile-time error lines in red
 - Editor divider pane layout now persists over reload
+- Added Dualshock4 controller to the officially tested list
+- Added support for the [8bitdo M30](https://www.8bitdo.com/m30/) SEGA Genesis style controller
+- Added support for the Raphnet adapter and SEGA Genesis and Mega Drive retro bit controllers
 - Added `device_control()` `"load"` and `"save"` commands for JSON files
 - Added `touch.screen_x`, `touch.screen_y`, `touch.screen_xy`, `touch.screen_dx`, `touch.screen_dy`,
   and `touch.screen_dxy` accessors for screen-space (instead of camera-space) positions
@@ -7663,6 +7683,8 @@ Changes for both the specification and implementation in each release.
 - Added `{br}` line break markup
 - Added `ABS()` intrinsic
 - Added `sprite.animation` property
+- Added Sega Genesis and Mega Drive controller support
+- Added `ⓩ` character to fonts
 - Added `design` document template for New Doc menu
 - Added named argument version of `draw_corner_rect()`
 - Added `table` constants that use external CSV files
@@ -7691,6 +7713,7 @@ Changes for both the specification and implementation in each release.
 - `clone()` and `deep_clone()` on _constants_ now clones the value
   and makes it mutable, while on _assets_ (other than maps) and built-in objects 
   returns the original object.
+
 
 2020 July 10: Beta update 46
 

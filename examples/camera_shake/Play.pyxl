@@ -13,20 +13,14 @@ let btn_map = {
 frame
 ────────────────────────────────────────────────────────────────────────
 // animate the camera
-cam_update_frame(xy(0,0))
+cam_update_frame(xy(0, 0))
 set_camera(CAMERA)
 
-let sprite = astronaut.idle[0]
-if joy.x:
-   flip.x = joy.x
-   sprite = astronaut.run[⌊mode_frames / 10⌋ mod 2]
-   pos.x = loop(pos.x + joy.x, SCREEN_SIZE.x)
 for key in keys(btn_map):
     if gamepad_array[0]["released_" + key]:
         cam_add_shake(btn_map[key])
 
-// Sky
-set_background(rgb(20%, 50%, 80%))
+set_background(SKY_COLOR)
 
 // text
 let btn_text = [
@@ -49,23 +43,20 @@ preserving_transform:
     draw_text(
         font,
         join(btn_text, "\n"),
-        xy(SCREEN_SIZE.x/2, 10),
+        xy(½ SCREEN_SIZE.x, 10),
         text_color,
-        nil,
-        nil,
+        ∅,
+        ∅,
         "center",
         "top",
     )
 
 // Ground
 draw_corner_rect(
-    xy(-SCREEN_SIZE.x/2, 140), 
-    xy(4*SCREEN_SIZE.x, 4*SCREEN_SIZE.y - 139), 
-    #DDD
+    xy(-½ SCREEN_SIZE.x, 140), 
+    xy(4 SCREEN_SIZE.x, 4 SCREEN_SIZE.y - 139), 
+    GROUND_COLOR
 )
 
-// Shadow
-draw_line(pos + xy(-4, 8), pos + xy(+4, 8), rgba(0, 0, 0, 20%))
-
 // Alien
-draw_sprite(sprite, pos, 0, flip)
+draw_sprite(mage_sprite[0][0], pos, 0, 300%)

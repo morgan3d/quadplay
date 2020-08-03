@@ -63,7 +63,7 @@ function reset_post_effects() {
     $postFX = {
         background: {r:0, g:0, b:0, a:0},
         color: {r:0, g:0, b:0, a:0},
-        blendMode: "source-over",
+        blend_mode: "source-over",
         pixelate: 0,
         scale: {x: 1, y: 1},
         angle: 0,
@@ -93,15 +93,15 @@ function set_post_effects(args) {
         $postFX.color.a = (args.color.a !== undefined) ? args.color.a : 1;
     }
 
-    switch (args.blendMode) {
+    switch (args.blend_mode) {
     case undefined: break;
     case 'source-over':
     case 'hue':
     case 'multiply':
     case 'difference':
-        $postFX.blendMode = args.blendMode;
+        $postFX.blend_mode = args.blend_mode;
         break;
-    default: throw new Error('Illegal blendMode for post effects: "' + args.blendMode + '"');
+    default: throw new Error('Illegal blend_mode for post effects: "' + args.blend_mode + '"');
     }
 
     if (args.scale !== undefined) {
@@ -2124,14 +2124,14 @@ function transform_ss_z_to_cs_z(ss_z) {
 
 function transform_ws_to_cs(ws_point, ws_z) {
     const cs_z = (ws_z || 0) - $camera.z;
-    const mag = _zoom(cs_z);
+    const mag = $zoom(cs_z);
     const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
     const x = ws_point.x - $camera.x, y = ws_point.y - $camera.y;
     return {x: x * C + y * S, y: y * C - x * S};
 }
 
 function transform_cs_to_ws(cs_point, cs_z) {
-    const mag = 1 / _zoom(cs_z);
+    const mag = 1 / $zoom(cs_z);
     const C = $Math.cos(-$camera.angle) * mag, S = $Math.sin(-$camera.angle * rotation_sign()) * mag;
     
     const x = cs_point.x - $camera.x, y = cs_point.y - $camera.y;
@@ -3607,7 +3607,7 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
         const z = (min_layer * map.z_scale + map.z_offset + z_shift) - $camera.z;
         
         // Transform the arguments to account for the camera
-        const mag = _zoom(z);
+        const mag = $zoom(z);
         const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
         const x = pos.x - $camera.x, y = pos.y - $camera.y;
         pos = {x: x * C + y * S, y: y * C - x * S};
@@ -3826,9 +3826,9 @@ function draw_color_tri(A, B, C, color_A, color_B, color_C, pos, angle, scale, z
         A = A.A;
     }
 
-    color_A = _colorToUint16(color_A);
-    color_B = _colorToUint16(color_B);
-    color_C = _colorToUint16(color_C);
+    color_A = $colorToUint16(color_A);
+    color_B = $colorToUint16(color_B);
+    color_C = $colorToUint16(color_C);
 
     // TODO: transform to screen space
     // TODO: clip empty triangles
@@ -3872,7 +3872,7 @@ function draw_disk(pos, radius, color, outline, z) {
     z = (z || 0) - $camera.z;
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
-        const mag = _zoom(z);
+        const mag = $zoom(z);
         const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
         const x = pos.x - $camera.x, y = pos.y - $camera.y;
         pos = {x: x * C + y * S, y: y * C - x * S};
@@ -3891,8 +3891,8 @@ function draw_disk(pos, radius, color, outline, z) {
         return;
     }
 
-    color   = _colorToUint16(color);
-    outline = _colorToUint16(outline);
+    color   = $colorToUint16(color);
+    outline = $colorToUint16(outline);
 
     _addGraphicsCommand({
         opcode: 'CIR',
@@ -3905,15 +3905,16 @@ function draw_disk(pos, radius, color, outline, z) {
     });
 }
 
-
-function _colorToUint16(color) {
+/** Converts {r,g,b}, {r,g,b,a}, {h,s,v}, or {h,s,v,a} to a packed Uint16 of the
+    form 0xABGR */
+function $colorToUint16(color) {
     if (color === undefined) { return 0; }
     
     const a = color.a;
     
     let c = 0xF000 >>> 0;
     if (a !== undefined) {
-        // >>> 0 ensures uint32
+        // >>> 0 ensures uint32 storage
         c = ((($clamp(a, 0, 1) * 15 + 0.5) & 0xf) << 12) >>> 0;
     }
 
@@ -4048,7 +4049,7 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         if (scale === undefined) { scale = {x:1, y:1}; }
         // Transform the arguments to account for the camera
-        const mag = _zoom(z);
+        const mag = $zoom(z);
         const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
         
         if (! pos) { pos = {x: 0, y: 0}; }
@@ -4097,8 +4098,8 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
 
     z = z * $scaleZ + $offsetZ;
     
-    fill   = _colorToUint16(fill);
-    border = _colorToUint16(border);
+    fill   = $colorToUint16(fill);
+    border = $colorToUint16(border);
 
     // Culling/all transparent optimization
     if ((minx > $clipX2 + 0.5) || (miny > $clipY2 + 0.5) || (z < $clipZ1 - 0.5) ||
@@ -4143,7 +4144,7 @@ function draw_corner_rect(corner, size, fill, outline, z) {
     }
 
     if ($camera.zoom !== 1) {
-        const m = _zoom(z);
+        const m = $zoom(z);
         corner = {x: corner.x * m, y: corner.y * m};
         size = {x: size.x * m, y: size.y * m};
     }
@@ -4153,8 +4154,8 @@ function draw_corner_rect(corner, size, fill, outline, z) {
     let x2 = (corner.x + size.x + skx) * $scaleX + $offsetX, y2 = (corner.y + size.y + sky) * $scaleY + $offsetY;
     z = z * $scaleZ + $offsetZ;
 
-    fill = _colorToUint16(fill);
-    outline = _colorToUint16(outline);
+    fill = $colorToUint16(fill);
+    outline = $colorToUint16(outline);
 
     // Sort coordinates
     let t1 = $Math.min(x1, x2), t2 = $Math.max(x1, x2);
@@ -4189,7 +4190,7 @@ function draw_corner_rect(corner, size, fill, outline, z) {
 }
 
 // Compute the zoom for this z value for the current camera
-function _zoom(z) {
+function $zoom(z) {
     return typeof $camera.zoom === 'number' ? $camera.zoom : $camera.zoom(z);
 }
 
@@ -4205,7 +4206,7 @@ function draw_line(A, B, color, z, width) {
     
     if (width === undefined) { width = 1; }
 
-    if (width * _zoom((z || 0) - $camera.z) >= 1.5) {
+    if (width * $zoom((z || 0) - $camera.z) >= 1.5) {
         // Draw a polygon instead of a thin line, as this will
         // be more than one pixel wide in screen space.
         let delta_x = B.y - A.y, delta_y = A.x - B.x;
@@ -4226,7 +4227,7 @@ function draw_line(A, B, color, z, width) {
     
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
-        const mag = _zoom(z);
+        const mag = $zoom(z);
         const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
         let x = A.x - $camera.x, y = A.y - $camera.y;
         A = {x: x * C + y * S, y: y * C - x * S};
@@ -4240,7 +4241,7 @@ function draw_line(A, B, color, z, width) {
     let x2 = (B.x + skx) * $scaleX + $offsetX, y2 = (B.y + sky) * $scaleY + $offsetY;
     z = z * $scaleZ + $offsetZ
 
-    color = _colorToUint16(color);
+    color = $colorToUint16(color);
 
     // Offscreen culling optimization
     if (! (color & 0xf000) ||
@@ -4300,13 +4301,13 @@ function draw_point(pos, color, z) {
         // Many points with the same z value are often drawn right
         // after each other.  Aggregate these (preserving their
         // ordering) for faster sorting and rendering.
-        prevCommand.data.push((x + y * $SCREEN_WIDTH) >>> 0, _colorToUint16(color)); 
+        prevCommand.data.push((x + y * $SCREEN_WIDTH) >>> 0, $colorToUint16(color)); 
     } else {
         _addGraphicsCommand({
             z: z,
             baseZ: z,
             opcode: 'PIX',
-            data: [(x + y * $SCREEN_WIDTH) >>> 0, _colorToUint16(color)]
+            data: [(x + y * $SCREEN_WIDTH) >>> 0, $colorToUint16(color)]
         });
     }
 }
@@ -4421,7 +4422,7 @@ function $parseMarkupHelper(str, startIndex, stateChanges) {
             case 'gray': value = {h:param[0]}; break;
             }
         }
-        newState[prop] = _colorToUint16(value);
+        newState[prop] = $colorToUint16(value);
         return '';
     });
 
@@ -4440,7 +4441,7 @@ function $parseMarkupHelper(str, startIndex, stateChanges) {
             }
 
             if (prop !== 'font') {
-                v = _colorToUint16(v);
+                v = $colorToUint16(v);
             }
             
             newState[prop] = v;
@@ -4778,9 +4779,9 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
     
     const stateChanges = [{
         font:       font,
-        color:      _colorToUint16(color),
-        shadow:     _colorToUint16(shadow),
-        outline:    _colorToUint16(outline),
+        color:      $colorToUint16(color),
+        shadow:     $colorToUint16(shadow),
+        outline:    $colorToUint16(outline),
         startIndex: 0,
         endIndex:   str.length - 1
     }];
@@ -5030,7 +5031,7 @@ function _maybeApplyPivot(pos, pivot, angle, scale) {
 }
 
 
-function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, blend) {
+function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, override_blend) {
     // Skip graphics this frame
     if (mode_frames % $graphicsPeriod !== 0) { return; }
 
@@ -5042,11 +5043,11 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, blend) 
         angle = spr.angle;
         pos = spr.pos;
         override_color = spr.override_color;
-        blend = spr.blend;
+        override_blend = spr.override_blend;
         spr = spr.sprite;
     }
 
-    const multiply = blend === 'multiply';
+    const multiply = override_blend === 'multiply';
 
     if (opacity <= 0) { return; }
 
@@ -5066,7 +5067,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, blend) 
 
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
-        const mag = _zoom(z);
+        const mag = $zoom(z);
         const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
         const x = pos.x - $camera.x, y = pos.y - $camera.y;
         pos = {x: x * C + y * S, y: y * C - x * S};
@@ -5111,7 +5112,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, blend) 
     if (override_color) {
         // have to clone and convert to RGB space
         override_color = rgba(override_color);
-    }    
+    }
 
     $console.assert(spr.spritesheet._index[0] < $spritesheetArray.length);
 

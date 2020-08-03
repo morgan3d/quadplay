@@ -780,8 +780,7 @@ function getImageData4Bit(image, region, full32bitoutput) {
     // Used by scalepix
     if (full32bitoutput) { return data; }
     
-    // Quantize (more efficient to process four bytes at once!)
-    // Converts R8G8B8A8 to R4G4B4A4-equivalent by copying high bits to low bits.
+    // Quantize
     const N = data.length;
 
     const result = new Uint16Array(N);
@@ -1254,9 +1253,9 @@ function loadMap(name, json, mapJSONUrl) {
         onLoadFileStart(tmxURL);
         onLoadFileComplete(tmxURL);
 
-        // Make sure that the underlying spritesheets are up to date
+        // Make sure that the underlying spritesheets are up to date if they have been loaded
         const spritesheet = map.spritesheet;
-        if (spritesheetArray.indexOf(spritesheet) === -1) {
+        if (spritesheet && (spritesheetArray.indexOf(spritesheet) === -1)) {
             // Change the index
             spritesheet._index[0] = spritesheetArray.length;
             spritesheetArray.push(spritesheet);

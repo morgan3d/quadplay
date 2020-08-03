@@ -16,7 +16,7 @@ function $show() {
             $screen.set($background.spritesheet._uint16Data);
         } else {
             // Color background (force alpha = 1)
-            let c = (_colorToUint16($background) >>> 0) | 0xf000;
+            let c = ($colorToUint16($background) >>> 0) | 0xf000;
             $screen.fill(c, 0, $screen.length);
         }
         
@@ -64,7 +64,7 @@ function _addGraphicsCommand(cmd) {
 
 
 
-/** Color is 32-bit RGBA. This implementation assumes a little-endian
+/** Color is 16-bit ABGR4. This implementation assumes a little-endian
     processor (which includes all current Intel, AMD, ARM, Raspberry
     Pi processors by default). DataView can be used to make an
     endian-independent version if required. */
@@ -101,7 +101,7 @@ function $pset(x, y, color, clipX1, clipY1, clipX2, clipY2) {
     }
 }
 
-/** Assumes x2 >= x1 and that color is RGBA. Does not assume that x1 and x2 or y are
+/** Assumes x2 >= x1 and that color is ABGR4. Does not assume that x1 and x2 or y are
     on screen. */
 function $hline(x1, y, x2, color, clipX1, clipY1, clipX2, clipY2) {
     x1 = $Math.round(x1) | 0;
@@ -123,16 +123,16 @@ function $hline(x1, y, x2, color, clipX1, clipY1, clipX2, clipY2) {
             // Blend (see comments in $pset)
             const a = a15 * (1 / 15);
             const inva = 1 - a;
-            const r = (color & 0xF00) * a + 0.5 * 0x100;
+            const b = (color & 0xF00) * a + 0.5 * 0x100;
             const g = (color & 0x0F0) * a + 0.5 * 0x010;
-            const b = (color & 0x00F) * a + 0.5;
+            const r = (color & 0x00F) * a + 0.5;
 
             for (let x = x1, offset = (x1 + y * $SCREEN_WIDTH) | 0; x <= x2; ++x, ++offset) {
                 let back = $screen[offset] >>> 0;
                 let result = 0xF000 >>> 0;
-                result |= ((back & 0x0F00) * inva + r) & 0x0F00;
+                result |= ((back & 0x0F00) * inva + b) & 0x0F00;
                 result |= ((back & 0x00F0) * inva + g) & 0x00F0;
-                result |= ((back & 0x000F) * inva + b) & 0x000F;
+                result |= ((back & 0x000F) * inva + r) & 0x000F;
                 $screen[offset] = result;
             }
         }
@@ -140,7 +140,7 @@ function $hline(x1, y, x2, color, clipX1, clipY1, clipX2, clipY2) {
 }
 
 
-/** Assumes y2 >= y1 and that color is RGBA. Does not assume that y1 and y2 or x are
+/** Assumes y2 >= y1 and that color is ABGR4. Does not assume that y1 and y2 or x are
     on screen */
 function $vline(x, y1, y2, color, clipX1, clipY1, clipX2, clipY2) {
     x  = $Math.round(x) | 0;
@@ -160,15 +160,15 @@ function $vline(x, y1, y2, color, clipX1, clipY1, clipX2, clipY2) {
             // Blend (see comments in $pset)
             const a = a15 * (1 / 15);
             const inva = 1 - a;
-            const r = (color & 0x0F00) * a + 0.5 * 0x100;
+            const b = (color & 0x0F00) * a + 0.5 * 0x100;
             const g = (color & 0x00F0) * a + 0.5 * 0x010;
-            const b = (color & 0x000F) * a + 0.5;
+            const r = (color & 0x000F) * a + 0.5;
             for (let y = y1, offset = y1 * $SCREEN_WIDTH + x; y <= y2; ++y, offset += $SCREEN_WIDTH) {
                 let back = $screen[offset] >>> 0;
                 let result = 0xF000;
-                result |= ((back & 0x0F00) * inva + r) & 0x0F00;
+                result |= ((back & 0x0F00) * inva + b) & 0x0F00;
                 result |= ((back & 0x00F0) * inva + g) & 0x00F0;
-                result |= ((back & 0x000F) * inva + b) & 0x000F;
+                result |= ((back & 0x000F) * inva + r) & 0x000F;
                 $screen[offset] = result;
             }
         }
@@ -403,7 +403,6 @@ function $executePIX(cmd) {
             // Blend
 
             // No need to force to unsigned int because the alpha channel of the output is always 0xff
-            
             const a = a15 * (1 / 15);
             let back = $screen[offset];
             let result = 0xF000;
@@ -643,18 +642,17 @@ function $executeSPR(metaCmd) {
         } else {
             // General case.
             // Extract the common terms of blending into the override color
-            const override = override_color ? _colorToUint16(override_color) : 0;
+            const override = override_color ? $colorToUint16(override_color) : 0;
             const override_a = 1 - (override >>> 12) * (1 / 15);
-
-            const override_mode = cmd.multiply ? 3 : ((override_a === 1) ? 0 : (override_a === 0) ? 2 : 1);
-            const override_r = (override & 0x0F00) * (1 - override_a) + 0.5;
+            const override_mode = (override_color && cmd.multiply) ? 3 : ((override_a === 1) ? 0 : (override_a === 0) ? 2 : 1);
+            const override_b = (override & 0x0F00) * (1 - override_a) + 0.5;
             const override_g = (override & 0x00F0) * (1 - override_a) + 0.5;
-            const override_b = (override & 0x000F) * (1 - override_a) + 0.5;
+            const override_r = (override & 0x000F) * (1 - override_a) + 0.5;
 
             // Float versions
-            const override_fr = ((override >> 8) & 0xf) * (1 / 255);
-            const override_fg = ((override >> 4) & 0xf) * (1 / 255);
-            const override_fb = (override & 0xf) * (1 / 255);
+            const override_fb = ((override >> 8) & 0xf) * (1 / 15);
+            const override_fg = ((override >> 4) & 0xf) * (1 / 15);
+            const override_fr = (override & 0xf) * (1 / 15);
             
             dstY1 |= 0; dstY2 |= 0;
             for (let dstY = dstY1; dstY <= dstY2; ++dstY) {
@@ -697,19 +695,19 @@ function $executeSPR(metaCmd) {
                                 // Blend
                                 const src = color;
                                 color &= 0xF000;
-                                color |= (override_r + (src & 0x0F00) * override_a) & 0x0F00;
+                                color |= (override_b + (src & 0x0F00) * override_a) & 0x0F00;
                                 color |= (override_g + (src & 0x00F0) * override_a) & 0x00F0;
-                                color |= (override_b + (src & 0x000F) * override_a) & 0x000F;
+                                color |= (override_r + (src & 0x000F) * override_a) & 0x000F;
                             } else if (override_mode === 2) {
                                 // Completely overwrite
                                 color = (color & 0xF000) | (override & 0xFFF);
-                            } else {
+                            } else { // mode 3
                                 // Multiply
                                 const src = color;
                                 color &= 0xF000;
-                                color |= (override_fr * (src & 0x0F00) + (0.5 * 0x100)) & 0x0F00;
-                                color |= (override_fg * (src & 0x00F0) + (0.5 * 0x10)) & 0x00F0;
-                                color |= (override_fb * (src & 0x000F) + 0.5) & 0x000F;
+                                color |= (override_fb * (src & 0x0F00) + (0.5 * 0x100)) & 0x0F00;
+                                color |= (override_fg * (src & 0x00F0) + (0.5 * 0x010)) & 0x00F0;
+                                color |= (override_fr * (src & 0x000F) +  0.5)          & 0x000F;
                             }
 
                             if (a15 === 0xf) {

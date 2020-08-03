@@ -5,7 +5,7 @@
     },
     "competitive": false,
     "constants": {
-        "ANIMATE_IN_TIME" : {
+        "ANIMATE_IN_TIME": {
             "help": "amount of 60hz frames to animate in and out for",
             "type": "number",
             "value": 30
@@ -21,7 +21,7 @@
             "value": "SEQUENCE DEMO"
         },
         "BANNER_BG": {
-            "help" : "background color of text banner",
+            "help": "background color of text banner",
             "type": "rgb",
             "value": {
                 "b": {
@@ -40,14 +40,14 @@
         }
     },
     "cooperative": false,
-    "copyright": "\u00a92020 Your Name Here",
+    "copyright": "©2020 Stephan Steinbach",
     "description": "Demo of using sequence()",
-    "developer": "Your Name Here",
+    "developer": "Stephan Steinbach",
     "docs": [
         "todo.md"
     ],
     "highscores": false,
-    "license": "CC0/Public Domain (Replace with your own license)",
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
     "max_players": 1,
     "min_players": 1,
     "modes": [
@@ -58,6 +58,6 @@
     "scripts": [
         "turn_transition_lib.pyxl"
     ],
-    "title": "sequence_demo",
-    "version": 0.0
+    "title": "Sequence Demo",
+    "version": 0
 }

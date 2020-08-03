@@ -18,8 +18,8 @@
         },
         {
             "url": "quad://examples/camera_shake/",
-            "title": "camera_shake",
-            "description": "Description of your game in about 100 characters."
+            "title": "Camera Shake",
+            "description": "Example of tunable full-screen camera shake"
         },
         {
             "url": "quad://examples/dual-stick/",
@@ -59,7 +59,7 @@
         {
             "url": "quad://examples/physics/",
             "title": "Physics Example",
-            "description": ""
+            "description": "Using the built-in quadplay physics support for vehicles, characters, switches, springs, and moving platforms."
         },
         {
             "url": "quad://examples/planetgen/",
@@ -83,7 +83,7 @@
         },
         {
             "url": "quad://examples/sequence_demo/",
-            "title": "sequence_demo",
+            "title": "Sequence Demo",
             "description": "Demo of using sequence()"
         },
         {
@@ -94,7 +94,7 @@
         {
             "url": "quad://examples/sproing/",
             "title": "Squash and Stretch Example",
-            "description": "Description of your game in about 100 characters."
+            "description": "Asymmetric sprite scaling for animation of single sprites"
         },
         {
             "url": "quad://examples/starter/",

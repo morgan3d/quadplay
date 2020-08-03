@@ -72,6 +72,8 @@ function detectControllerType(id) {
             type = 'Zero';
         } else if (/hotas/i.test(id)) {
             type = 'HOTAS';
+        } else if (id === 'DB9 to USB v2.0 (Vendor: 289b Product: 004a)') {
+            type = 'Genesis';
         } else {
             type = 'Quadplay';
         }
@@ -505,7 +507,8 @@ const keyMap = [{'-x':['KeyA', 'ArrowLeft'], '+x':['KeyD', 'ArrowRight'], '-y':[
 let prevRealGamepadState = [];
 
 // Maps names of gamepads to arrays for mapping standard buttons
-// to that gamepad's buttons. gamepadButtonRemap[canonicalButton] = actualButton
+// to that gamepad's buttons. gamepadButtonRemap[canonicalButton] = actualButton (what
+// html5gamepad.com returns when that button is pressed)
 //
 // Standard mapping https://www.w3.org/TR/gamepad/standard_gamepad.svg
 const gamepadButtonRemap = {
@@ -523,7 +526,8 @@ const gamepadButtonRemap = {
     '57e-2017-SNES Controller': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 12, 13, 14, 15],
     'SNES Controller (Vendor: 057e Product: 2017)': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 12, 13, 14, 15],
 
-    // This is how the X-Arcade controller reports under macOS
+    // Raphnet adapter with the retro bit SEGA Genesis and Mega Drive controllers
+    'DB9 to USB v2.0 (Vendor: 289b Product: 004a)': [0, 1, 4, 5, 4, 2, 8, 9, 7, 3, 10, 11, 12, 13, 14, 15, 16]
 };
 
 const gamepadAxisRemap = {
@@ -880,7 +884,7 @@ function submitFrame() {
     const hasPostFX = ($postFX.opacity < 1) || ($postFX.color.a > 0) || ($postFX.angle !== 0) ||
           ($postFX.pos.x !== 0) || ($postFX.pos.y !== 0) ||
           ($postFX.scale.x !== 1) || ($postFX.scale.y !== 1) ||
-          ($postFX.blendMode !== 'source-over');
+          ($postFX.blend_mode !== 'source-over');
 
     {
         // Convert 16-bit to 32-bit
@@ -891,13 +895,14 @@ function submitFrame() {
             // Read two 16-bit pixels at once
             let src = src32[s];
             
-            // Turn into two 32-bit pixels. Only process RGB, as the alpha channel is
-            // overwritten
-            let A = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
-            dst32[d] = 0xff000000 | A | (A << 4); ++d; src = src >> 16;
+            // Turn into two 32-bit pixels as ABGR -> FFBBGGRR. Only
+            // read color channels, as the alpha channel is overwritten with fully
+            // opaque.
+            let C = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
+            dst32[d] = 0xff000000 | C | (C << 4); ++d; src = src >> 16;
             
-            A = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
-            dst32[d] = 0xff000000 | A | (A << 4); ++d;
+            C = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
+            dst32[d] = 0xff000000 | C | (C << 4); ++d;
         }
     }
     
@@ -915,7 +920,7 @@ function submitFrame() {
         updateCTX.putImageData(updateImageData, 0, 0);
         if ($postFX.color.a > 0) {
             updateCTX.fillStyle = rgbaToCSSFillStyle($postFX.color);
-            updateCTX.globalCompositeOperation = $postFX.blendMode;
+            updateCTX.globalCompositeOperation = $postFX.blend_mode;
             updateCTX.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
         }
 

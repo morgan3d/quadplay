@@ -1,8 +1,8 @@
 {
-    "title": "camera_shake",
-    "developer": "Your Name Here",
-    "copyright": "\u00a92020 Your Name Here",
-    "license": "CC0/Public Domain (Replace with your own license)",
+    "title": "Camera Shake",
+    "developer": "Stephan Steinbach",
+    "copyright": "©2020 Stephan Steinbach",
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
     "packages": [],
     "scripts": [
         "camera_shake.pyxl"
@@ -16,16 +16,16 @@
     ],
     "assets": {
         "font": "quad://fonts/deja-8.font.json",
-        "astronaut": "quad://sprites/kenney-alien-yellow-16x32.sprite.json"
+        "mage_sprite": "quad://sprites/dawnlike-mage-16x16.sprite.json"
     },
-    "version": 0.0,
+    "version": 0,
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
     "competitive": false,
     "achievements": false,
     "highscores": false,
-    "description": "Description of your game in about 100 characters.",
+    "description": "Example of tunable full-screen camera shake",
     "constants": {
         "text_color": {
             "type": "rgb",
@@ -42,6 +42,22 @@
                     "type": "number",
                     "value": 1
                 }
+            }
+        },
+        "SKY_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": 0.16,
+                "g": 0.14,
+                "b": 0.17
+            }
+        },
+        "GROUND_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": 0.26,
+                "g": 0.43,
+                "b": 0.28
             }
         }
     }

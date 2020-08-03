@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.08.01.16'
+const version  = '2020.08.02.21'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -847,6 +847,21 @@ const controlSchemeTable = {
         '(f)': '⒭',
         '(q)': '⊲',
         '(p)': '⊳',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
+
+    Genesis: {
+        '(a)': 'ⓐ',
+        '(b)': 'ⓑ',
+        '(c)': 'ⓧ',
+        '(d)': 'ⓨ',
+        '(e)': 'ⓒ',
+        '(f)': 'ⓩ',
+        '(q)': 'ҕ',
+        '(p)': 'ﯼ',
         '[^]': '⍐',
         '[<]': '⍇',
         '[v]': '⍗',
@@ -3163,7 +3178,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.$SCREEN_HEIGHT = SCREEN_HEIGHT;
         QRuntime.reset_clip();
 
-        // Aliased views
+        // Aliased views in ABGR4 format
         QRuntime.$screen = new Uint16Array(SCREEN_WIDTH * SCREEN_HEIGHT);
         QRuntime.$screen32 = new Uint32Array(QRuntime.$screen.buffer);
 

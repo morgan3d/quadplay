@@ -555,7 +555,7 @@ function createCodeEditorSession(url, bodyText, assetName) {
                             if (session.aux.fileType !== 'json' && session.aux.fileType !== 'pyxl') {
                                 // This must be a doc; update the preview pane, preserving
                                 // the scroll position if possible.
-                                //showGameDoc(url, true);
+                                showGameDoc(url, true);
                             } else if (url.endsWith('.sprite.json')) {
                                 // Reload the game to pick up the new sprite, and then
                                 // reselect

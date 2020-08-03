@@ -1,17 +1,24 @@
 {
-    "title":      "Physics Example",
-    "developer":  "Casual Effects",
-    "copyright":  "©2020 Morgan McGuire",
-    "license":    "CC0/Public Domain",
-
-    "packages":   [],
-    "scripts":    [],
-    "modes":      ["Play"],
+    "title": "Physics Example",
+    "developer": "Casual Effects",
+    "copyright": "©2020 Morgan McGuire",
+    "license": "CC0/Public Domain",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play"
+    ],
     "start_mode": "Play",
-    "docs":       [],
-    "y_up":     true,
-    "assets":     {
+    "docs": [],
+    "y_up": true,
+    "assets": {
         "font": "quad://fonts/scoreboard-7.font.json"
-    }
-
+    },
+    "description": "Using the built-in quadplay physics support for vehicles, characters, switches, springs, and moving platforms.",
+    "cooperative": false,
+    "competitive": false,
+    "highscores": false,
+    "achievements": false,
+    "min_players": 1,
+    "max_players": 1
 }
