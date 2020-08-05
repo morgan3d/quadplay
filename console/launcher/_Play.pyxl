@@ -109,7 +109,7 @@ const gameArray = [{
 {
    title: "Beyond Control",
    developer: "Casual Effects",
-   url: "quad://games/across_the_lake",
+   url: "quad://games/beyond_control",
    version:      1.0,
    description:  "Program your broken robots to race through the ruins.",
    min_players:   1,
