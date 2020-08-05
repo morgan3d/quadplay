@@ -645,7 +645,7 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode) {
     return i;
 }
 
-// The identifier pattern is also used in quadplay-runtime.js _removeMarkup() and must be kept in sync
+// The identifier pattern is also used in quadplay-runtime.js $removeMarkup() and must be kept in sync
 const identifierPattern = '[Δ]?(?:[A-Za-z][A-Za-z_0-9]*|[αβγΔδζηθιλμρσϕφχψτωΩ][_0-9]*(?:_[A-Za-z_0-9]*)?)';
 const identifierRegex = RegExp(identifierPattern);
 
@@ -1112,7 +1112,8 @@ function pyxlToJS(src, noYield, internalMode) {
         src = vectorify(src, {
             assignmentReturnsUndefined: true,
             scalarEscapes: true,
-            equalsCallback: vectorify.nullishRewriter
+            equalsCallback: vectorify.nullishRewriter,
+            operatorPrefix: '$'
         });
     } catch (e) {
         console.log(src);

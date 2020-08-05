@@ -4677,6 +4677,7 @@ Sprites
 ![`quad://sprites/controllers-64x44.sprite.json`](../sprites/controllers-64x44.png)
 ![`quad://sprites/controllers-32x22.sprite.json`](../sprites/controllers-32x22.png)
 ![`quad://sprites/explosion-realistic-128x128.sprite.json`](../sprites/explosion-realistic-128x128.png)
+![`quad://sprites/beast-soldier-32x32.sprite.json`](../sprites/beast-soldier-32x32.png)
 
 
 Fonts
@@ -6623,6 +6624,11 @@ x⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁺ ⁻ ⁽ ⁾ yᵃ ᵝ ⁱ ʲ ᵏ ⁿ �
 `````````````````````````````````````````````````````
 [Superscripts. These are legal math in code and can be used in strings.]
 
+````````````````````````````````````````````````````` none big
+₀ ₁ ₂ ₃ ₄ ₅ ₆ ₇ ₈ ₉ ₊ ₋ ₍ ₎ ₐ ᵦ ᵢ ⱼ ₓ ₖ ᵤ ₙ
+`````````````````````````````````````````````````````
+[Subscript symbols, usable only in strings]
+
 
 ````````````````````````````````````````````````````` none big
 A B Γ Δ E Z H Θ I K Λ M N Ξ O Π P Σ T Φ X Ψ Ω
@@ -6649,18 +6655,22 @@ A B Γ Δ E Z H Θ I K Λ M N Ξ O Π P Σ T Φ X Ψ Ω
 
 
 ````````````````````````````````````````````````````` none big
-¥ € £ ¬ ≈ ⊗ ⊕ ⊖ … ∫ ± 
-« » ¿ ★ × ⊢ ∙ ○ ● ◻ ◼ △ ▲ ▼ ◀ ▶ ✓ ♠ ♥ ♣ ♦ §
-↑ ↓ ← → ↖ ↗ ↙ ↘ ⓐ ⓑ ⓒ ⓓ ⓔ ⓕ ⓟ ⓠ ⓧ ⓨ Ⓞ ⍍ ▣ ⧉ ☰
-⍐ ⍇ ⍗ ⍈ ❖ ✜ ♆ ©  Ⓦ Ⓐ Ⓢ Ⓓ
+¥ € £ § × ⊢ ¬ ≈ ⊗ ⊕ ⊖ ∫ ± 
+« » ¿ ★ … ∙ ○ ● ◻ ◼ △ ▲ ▼ ◀ ▶ ✓ ♠ ♥ ♣ ♦ 
+↑ ↓ ← → ↖ ↗ ↙ ↘ ❖ ✜ ♆ ©
 `````````````````````````````````````````````````````
 [Others]
 
 
 ````````````````````````````````````````````````````` none big
-₀ ₁ ₂ ₃ ₄ ₅ ₆ ₇ ₈ ₉ ₊ ₋ ₍ ₎ ₐ ᵦ ᵢ ⱼ ₓ ₖ ᵤ ₙ
+ⓐ ⓑ ⓒ ⓓ ⓔ ⓕ ⓟ ⓠ ⓥ ⓧ ⓨ ⓩ
+⍐ ⍇ ⍗ ⍈ Ⓦ Ⓐ Ⓢ Ⓓ Ⓘ Ⓙ Ⓚ Ⓛ 
+① ② ③ ④ ⑤ ⑥ ⑦ ⑧ ⑨ ⓪ ⊖⊕
+Ⓞ ⍍ ▣ ⧉ ☰
 `````````````````````````````````````````````````````
-[Subscript symbols]
+[Button prompts. Device-aware and full button prompts
+are available via the `prompt` field of `gamepad_array[]` elements]
+
 
 Note that the superscripts `ᵈᵉʰᵐᵒʳˢᵗ` are legal in text strings but
 not as code. These are present specfically to support ordinals such as
@@ -7660,6 +7670,7 @@ Changes for both the specification and implementation in each release.
 - New `loop-escalator` sound
 - New `loop-beat` sound
 - New `loop-wind` sound
+- New `beast-soldier-32x32` spritesheet
 - Added  320x180 support for targeting Switch, PiBoy, 720p, 1080p, and 1440p
 - Added support for TileKit
 - Packed `suchet-12` font characters more tightly to conserve memory
@@ -7688,6 +7699,7 @@ Changes for both the specification and implementation in each release.
   the spritesheet if none is specified
 - Fonts now only count as 1/2 pixels towards the sprite pixel limit because they are
   compressed
+- Internally renamed variables and files for easier refactoring and future PyxlScript features
 - The fullscreen layout button now returns to full screen if tapped when already selected
 - IDE code editor now highlights compile-time error lines in red
 - Editor divider pane layout now persists over reload
@@ -7703,7 +7715,7 @@ Changes for both the specification and implementation in each release.
 - Added `ABS()` intrinsic
 - Added `sprite.animation` property
 - Added Sega Genesis and Mega Drive controller support
-- Added `ⓩ` character to fonts
+- Added `⑤ ⑥ ⓩ` characters to font mapping and all fonts
 - Added `design` document template for New Doc menu
 - Added named argument version of `draw_corner_rect()`
 - Added `table` constants that use external CSV files

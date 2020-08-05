@@ -210,8 +210,15 @@ function none_eq(first, ...args) {
     return s;
 }
 
-// Morgan McGuire's MScale2X algorithm, derived from Scale2X/EPX
-// and designed to avoid rounding square corners, especially on text.
+// Characters for making diagrams:
+//
+// Ⓐ Ⓑ Ⓒ Ⓓ Ⓔ Ⓕ Ⓖ Ⓗ Ⓘ Ⓟ Ⓠ Ⓡ Ⓢ
+// 🅰 🅱 🅲 🅳 🅴 🅵 🅶 🅷 🅸 🅿 🆀 🆁 🆂
+// 🄰 🄱 🄲 🄳 🄴 🄵 🄶 🄷 🄸 🄿 🅀 🅁 🅂
+
+// Morgan McGuire and Mara Gagiu's MScale2X algorithm, derived from
+// Scale2X/EPX and designed to avoid rounding square corners,
+// especially on text.
 function runMScale2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
     const [isBinary, src] = makeSpecialSrcGet(srcBuffer, srcWidth, srcHeight);
 
@@ -229,13 +236,14 @@ function runMScale2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
 
     for (let srcY = 0; srcY < srcHeight; ++srcY) {
         for (let srcX = 0; srcX < srcWidth; ++srcX) {
-            // Reads a *rotated* 3x3 window, plus one extra element on each axis during 2:1 processing
+            // Reads a *rotated* 3x3 window, plus one extra element
+            // on each axis during 2:1 processing
             //
             //    .
             //    P
-            //   ABC
-            // .QDEFR.
-            //   GHI
+            //   ABC            J  K
+            // .QDEFR.   --> 
+            //   GHI            L  M
             //    S
             //    .
             const A = src(srcX - 1, srcY - 1),  B = src(srcX    , srcY - 1),  C = src(srcX + 1, srcY - 1);
@@ -282,14 +290,15 @@ function runMScale2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
             // The 3rd clause seeks to preserve square corners by considering
             // the center value before rounding.
             //
-            // (The fourth clause just disables the rule in cases
-            // where it would do nothing, in order to make it easier
-            // to see which pixels are really affected when debugging
-            // and visualizing--it can be removed for performance).
-            /* ◤ */ if ((D === B && D !== H && D !== F)  &&  (Ea < Da || Il >= Dl || E !== I)  &&  any_eq(E, A,B,C,G)) J = D;
-            /* ◥ */ if ((B === F && B !== D && B !== H)  &&  (Ea < Ba || Gl >= Bl || E !== G)  &&  any_eq(E, A,C,F,I)) K = B;
-            /* ◣ */ if ((H === D && H !== F && H !== B)  &&  (Ea < Ha || Cl >= Hl || E !== C)  &&  any_eq(E, A,D,G,I)) L = H;
-            /* ◢ */ if ((F === H && F !== B && F !== D)  &&  (Ea < Fa || Al >= Fl || E !== A)  &&  any_eq(E, C,G,H,I)) M = F;
+            // The 4th clause just disables the rule in cases where it
+            // would do nothing, in order to make it easier to see
+            // which pixels are really affected when debugging and
+            // visualizing--it can be removed for performance.
+
+            /* ◤ */ if ((D === B && D !== H && D !== F)  &&  (Ea < Da || Il >= Dl || E !== I)  &&  any_eq(E, A,C,G)) J = D;
+            /* ◥ */ if ((B === F && B !== D && B !== H)  &&  (Ea < Ba || Gl >= Bl || E !== G)  &&  any_eq(E, A,C,I)) K = B;
+            /* ◣ */ if ((H === D && H !== F && H !== B)  &&  (Ea < Ha || Cl >= Hl || E !== C)  &&  any_eq(E, A,G,I)) L = H;
+            /* ◢ */ if ((F === H && F !== B && F !== D)  &&  (Ea < Fa || Al >= Fl || E !== A)  &&  any_eq(E, C,G,I)) M = F;
             
             // Clean up disconnected line intersections. First clause recognizes being on the inside of a
             // diagonal corner. Second clause ensures that the pattern is not a notch at the edge of a
@@ -320,7 +329,7 @@ function runMScale2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
             
             //////////////////////////////////////////////////////////////////////////////////
             // If the center is not an isolated, non-transparent pixel
-            // color, then do further neighborhood peaking to identify
+            // color, then do further neighborhood peeking to identify
             // 2:1 and 1:2 slopes of constant color.
             if (Ea === 0 || any_eq(E, A,B,C,D,F,G,H,I)) {
                 // In each test, the first clause disables the test on
@@ -328,38 +337,105 @@ function runMScale2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
                 // already has the surrounding color, or the
                 // surrounding color is transparent.
                 //
-                // The second clause verfies that the line is
-                // thin. The third clause looks for a positive slope
-                // on the line (either 2:1 or 1:2)
-                //
-                // The 4th and 5th clauses are reflections of the
-                // pattern from the previous two in order to handle
-                // negative slopes.
+                // The second and third clauses are parallel that
+                // handle the left and right sides of a slope. Within
+                // them, the first subclause identifies the 2:1 slope edge
+                // of a consistent color. Look at this to see what the
+                // pattern is for the entire clause.
 
-                // TODO: Exclude cases where corner filtering has
-                // already happened, or maybe apply the tie breaker
-                // rules so that we don't need to run on just thin
-                // lines.
+                // The second subclause identifies that there is
+                // a pixel against a background different from it, and
+                // that E is part of that background.
+                //
+                // The third subclause is the biasing to break
+                // symmetry.  It verifies that E is "background" by
+                // having lower alpha than the foreground being
+                // different from its diagonal neighbor, or lower
+                // luminance.  The luminance doesn't favor black or
+                // white lines; it is to distinguish positive and
+                // negative space so that only one side of a line will
+                // be antialiased.
 
                 // Above a 2:1 slope or -2:1 slope   ◢ ◣
                 if ((Ha !== 0) &&
-                    ((none_eq(H, D,B,A,E,I)  &&  all_eq(H, G,F,R)) ||
-                     (none_eq(H, F,B,C,E,G)  &&  all_eq(H, I,D,Q)))) L = M = H;
+                    
+                    //     P 
+                    //   Ⓐ B C .
+                    // Q D 🄴 🅵 🆁
+                    //   🅶 🅷 I
+                    //     S
+                    ((all_eq(H, G,F,R)  &&  none_eq(H, D,B,A,E,C,src(srcX+2, srcY-1))  &&
+                      (Ha > Ea || Hl < Al || E !== A || H !== I)) ||
+                     
+                    //     P 
+                    // . A B Ⓒ
+                    // 🆀 🅳 🄴 F R
+                    //   G 🅷 🅸
+                    //     S
+                     (all_eq(H, I,D,Q)  &&  none_eq(H, F,B,C,E,A,src(srcX-2, srcY-1))  &&
+                      (Ha > Ea || Hl < Cl || E !== C || H !== G))))
+                    L = M = H;
 
                 // Below a 2:1 (◤) or -2:1 (◥) slope (reflect the above 2:1 patterns vertically)  
                 if ((Ba !== 0) &&
-                    ((none_eq(B, D,H,G,E,C)  &&  all_eq(B, A,F,R)) ||
-                     (none_eq(B, F,H,I,E,A)  &&  all_eq(B, C,D,Q)))) J = K = B;
+                    
+                    //     P 
+                    //   🅰 🅱 C
+                    // Q D 🄴 🅵 🆁
+                    //   Ⓖ H I .
+                    //     S
+                    ((all_eq(B, A,F,R)  &&  none_eq(B, D,H,G,E,I,src(srcX+2, srcY+1))  &&
+                      (Ba > Ea || Bl < Gl || E !== G || B !== C)) ||
+                     
+                    //     P 
+                    //   A 🅱 🅲
+                    // 🆀 🅳 🄴 F R
+                    // . G H Ⓘ 
+                    //     S
+                     (all_eq(B, C,D,Q)  &&  none_eq(B, F,H,I,E,G,src(srcX-2, srcY+1))  &&
+                      (Ba > Ea || Bl < Il || E !== I || B !== A))))
+                    J = K = B;
 
                 // Left of a 1:2 (/) slope or -1:2 (\) slope (transpose the above 2:1 patterns)
                 if ((Fa !== 0) &&
-                    ((none_eq(F, B,D,A,E,I)  &&  all_eq(F, C,H,S)) ||
-                     (none_eq(F, H,D,G,E,C)  &&  all_eq(F, I,B,P)))) K = M = F;
+                    
+                    //     P     
+                    //   Ⓐ B 🅲   
+                    // Q D 🄴 🅵 R 
+                    //   G 🅷 I   
+                    //   . 🆂     
+                    ((all_eq(F, C,H,S)  &&  none_eq(F, B,D,A,E,G,src(srcX-1, srcY+2))  &&
+                      (Fa > Ea || Fl < Al || E !== A || F !== I)) ||
+                     
+                     //   . 🅿
+                     //   A 🅱 C
+                     // Q D 🄴 🅵 R
+                     //   Ⓖ H 🅸
+                     //     S
+                     (all_eq(F, I,B,P)  &&  none_eq(F, H,D,G,E,A,src(srcX-1, srcY-2))  &&
+                      (Fa > Ea || Fl < Gl || E !== G || F !== C))))
+                    K = M = F;
 
-                // Right of a 1:2 (/) or -1:2 (\) slope (reflect the left 1:2 patterns horizontally)
+                // Right of a -1:2 (\) or -1:2 (/) slope (reflect the left 1:2 patterns horizontally)
                 if ((Da !== 0) &&
-                    ((none_eq(D, B,F,C,E,G)  &&  all_eq(D, A,H,S)) ||
-                     (none_eq(D, H,F,I,E,A)  &&  all_eq(D, G,B,P)))) J = L = D;
+                    
+                    //     P
+                    //   🅰 B Ⓒ
+                    // Q 🅳 🄴 F R
+                    //   G 🅷 I
+                    //     🆂 .
+                    ((all_eq(D, A,H,S)  &&  none_eq(D, B,F,C,E,I,src(srcX+1, srcY+2))  &&
+                      (Da > Ea || Dl < Cl || E !== C || D !== G)) ||
+                     
+                     //     🅿 .
+                     //   A 🅱 C
+                     // Q 🅳 🄴 F R
+                     //   🅶 H Ⓘ
+                     //     S
+                     (all_eq(D, G,B,P)  &&  none_eq(D, H,F,I,E,C,src(srcX+1, srcY-2))  &&
+                      (Da > Ea || Dl < Il || E !== I || D !== A))))
+                    J = L = D;
+
             } // not a single pixel
             
             // Write output (force transparent back to black for binary images)
@@ -672,7 +748,7 @@ function onDragOver(event) { event.preventDefault(); }
     </center>
     <hr>
     <p>
-    The <a href="https://www.scale2x.it/scale2xandepx">"Scale2X/EPX"</a> was created by both Eric Johnston and Andrea Mazzoleni implemented independently.
+    The "Scale2X/EPX" algorithm was independently invented by both Eric Johnston and Andrea Mazzoleni.
     It works with transparency and does a good job of retaining sharpness by only using colors from the original palette.
     The drawbacks are that it rounds all 90 degree corners, rounds the sharp points of triangles, is inconsistent on both 1:1 and 2:1 slope edges,
     creates disconnected line intersections, and doesn't work well at

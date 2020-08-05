@@ -7,7 +7,7 @@
    Global arrays for abstracting hardware memory copies of spritesheet
    and font data. Indices into these are is used as "pointers" when
    communicating with the virtual GPU. These are mapped to
-   QRuntime._spritesheetArray and QRuntime.$fontArray. Each asset has
+   QRuntime.$spritesheetArray and QRuntime.$fontArray. Each asset has
    a _index[0] field describing its index in this array.
 */
 let spritesheetArray = [];
@@ -164,7 +164,7 @@ function device_control(cmd) {
         {
             const i = clamp(parseInt(arguments[1]), 0, 3);
             const pad = QRuntime.gamepad_array[i];
-            return Object.freeze({x: pad._analogX * QRuntime._scaleX, y: pad._analogY * QRuntime._scaleY});
+            return Object.freeze({x: pad._analogX * QRuntime.$scaleX, y: pad._analogY * QRuntime.$scaleY});
             break;
         }
 
@@ -172,12 +172,12 @@ function device_control(cmd) {
         {
             const mask = mouse.buttons;
             const xy = Object.freeze({
-                x: mouse.screen_x * QRuntime._scaleX + QRuntime._offsetX,
-                y: mouse.screen_y * QRuntime._scaleY + QRuntime._offsetY});
+                x: mouse.screen_x * QRuntime.$scaleX + QRuntime.$offsetX,
+                y: mouse.screen_y * QRuntime.$scaleY + QRuntime.$offsetY});
 
             const dxy = Object.freeze({
-                x: (mouse.screen_x - mouse.screen_x_prev) * QRuntime._scaleX,
-                y: (mouse.screen_x - mouse.screen_y_prev) * QRuntime._scaleY});
+                x: (mouse.screen_x - mouse.screen_x_prev) * QRuntime.$scaleX,
+                y: (mouse.screen_x - mouse.screen_y_prev) * QRuntime.$scaleY});
             
             return Object.freeze({
                 x: xy.x,
@@ -344,7 +344,7 @@ const PREVIEW_FRAMES_Y = 10;
 function startPreviewRecording() {
     if (! previewRecording) {
         // Force 20 fps
-        QRuntime._graphicsPeriod = 3;
+        QRuntime.$graphicsPeriod = 3;
         previewRecording = new Uint32Array(192 * 112 * PREVIEW_FRAMES_X * PREVIEW_FRAMES_Y);
         previewRecordingFrame = 0;
     }
@@ -874,7 +874,7 @@ function rgbaToCSSFillStyle(color) {
     return `rgba(${color.r*255}, ${color.g*255}, ${color.b*255}, ${color.a})`;
 }
 
-// Invoked from QRuntime._show(). May not actually be invoked every
+// Invoked from QRuntime.$show(). May not actually be invoked every
 // frame if running below framerate.
 function submitFrame() {
     // Update the image

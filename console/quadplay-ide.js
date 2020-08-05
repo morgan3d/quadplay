@@ -1163,7 +1163,7 @@ function restartProgram(numBootAnimationFrames) {
         // Create the main loop function in the QRuntime environment so
         // that it sees those variables.
         try {
-            coroutine = QRuntime._makeCoroutine(compiledProgram);
+            coroutine = QRuntime.$makeCoroutine(compiledProgram);
             QRuntime.$numBootAnimationFrames = numBootAnimationFrames;
             lastAnimationRequest = requestAnimationFrame(mainLoopStep);
             emulatorKeyboardInput.focus();
@@ -1497,6 +1497,7 @@ function onDocumentKeyDown(event) {
 }
 
 
+ace.config.set('basePath', 'ace/');
 const jsCode = document.getElementById('jsCode') && ace.edit(document.getElementById('jsCode'));
 const editorStatusBar = document.getElementById('editorStatusBar');
 const aceEditor = ace.edit('ace');
@@ -1965,9 +1966,9 @@ function linesIntersect(A, C, B, D) {
     // Simplified from https://github.com/pgkelley4/line-segments-intersect/blob/master/js/line-segments-intersect.js
     // by ignoring the parallel cases
     
-    const dA = QRuntime._sub(C, A);
-    const dB = QRuntime._sub(D, B);
-    const diff = QRuntime._sub(B, A);
+    const dA = QRuntime.$sub(C, A);
+    const dB = QRuntime.$sub(D, B);
+    const diff = QRuntime.$sub(B, A);
 
     const numerator = QRuntime.cross(diff, dA);
     const denominator = QRuntime.cross(dA, dB);
@@ -2385,8 +2386,8 @@ function visualizeGame(gameEditor, url, game) {
     
     const baseURL = url.replace(/\/[^\/]*$/, '');
     s += '<tr valign="top">';
-    s += '<td>Label&nbsp;Icons</td><td style="text-align:left">128px&nbsp;&times;&nbsp;128px<br><img alt="label128.png" src="' + baseURL + '/label128.png" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:128px; height:128px"></td>';
-    s += '<td></td><td style="text-align:left">64px&nbsp;&times;&nbsp;64px<br><img alt="label64.png" src="' + baseURL + '/label64.png" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:64px; height:64px"></td>';
+    s += '<td>Label&nbsp;Icons</td><td style="text-align:left">128px&nbsp;&times;&nbsp;128px<br><img alt="label128.png" src="' + baseURL + '/label128.png?" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:128px; height:128px"></td>';
+    s += '<td></td><td style="text-align:left">64px&nbsp;&times;&nbsp;64px<br><img alt="label64.png" src="' + baseURL + '/label64.png?" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:64px; height:64px"></td>';
     s += '</tr>\n<tr><td></td><td colspan=3><i>Press Shift+F6 in game to create <code>label64.png</code> and <code>label128.png</code> templates.</i></td></tr><tr><td><br/><br/></td></tr>\n';
     s += '</table>';
     gameEditor.innerHTML = s;
@@ -2995,9 +2996,9 @@ function mainLoopStep() {
         // one, so that the time for processing the step does not create a
         // delay.
         //
-        // Do not account for QRuntime._graphicsPeriod here. Always
+        // Do not account for QRuntime.$graphicsPeriod here. Always
         // try to run at 60 Hz for input processing and game
-        // execution, and drop graphics processing in QRuntime._show()
+        // execution, and drop graphics processing in QRuntime.$show()
         // some of the time.
         lastAnimationRequest = setTimeout(mainLoopStep, Math.floor(1000 / targetFramerate - 1));
     }
@@ -3006,10 +3007,10 @@ function mainLoopStep() {
     debugWatchTable = {};
 
     // Physics time may be spread over multiple QRuntime.physics_simulate() calls,
-    // but graphics is always a single QRuntime._show() call. Graphics time may
+    // but graphics is always a single QRuntime.$show() call. Graphics time may
     // be zero on any individual call.
-    QRuntime._physicsTimeTotal = 0;
-    QRuntime._graphicsTime = 0;
+    QRuntime.$physicsTimeTotal = 0;
+    QRuntime.$graphicsTime = 0;
 
     // Run the "infinite" loop for a while, maxing out at just under 1/60 of a second or when
     // the program explicitly requests a refresh or keyboard update via _show(). Note that
@@ -3020,9 +3021,9 @@ function mainLoopStep() {
 
     profiler.startFrame();
     // Run until the end of the game's natural main loop excution, the
-    // game invokes QRuntime._show(), or the user ends the
+    // game invokes QRuntime.$show(), or the user ends the
     // program. The game may suppress its own graphics computation
-    // inside QRuntime._show() if it is running too slowly.
+    // inside QRuntime.$show() if it is running too slowly.
     try {
         // Worst-case timeout in milliseconds (to yield 10 fps)
         // to keep the browser responsive if the game is in a long
@@ -3071,7 +3072,7 @@ function mainLoopStep() {
     }
 
     // The frame has ended
-    profiler.endFrame(QRuntime._physicsTimeTotal, QRuntime._graphicsTime);
+    profiler.endFrame(QRuntime.$physicsTimeTotal, QRuntime.$graphicsTime);
 
     if ((uiMode === 'Test') || (uiMode === 'IDE') || (uiMode === 'WideIDE')) {
         const frame = profiler.smoothFrameTime.get();
@@ -3080,7 +3081,7 @@ function mainLoopStep() {
 
         // Show the time that graphics *would* be taking if
         // it wasn't for the frame rate scaler
-        const graphics = profiler.smoothGraphicsTime.get() * QRuntime._graphicsPeriod;
+        const graphics = profiler.smoothGraphicsTime.get() * QRuntime.$graphicsPeriod;
         const compute = logic + physics + graphics;
         
         if (profiler.debuggingProfiler) { updateTimeDisplay(frame, 'Interval'); }
@@ -3090,17 +3091,17 @@ function mainLoopStep() {
         updateTimeDisplay(graphics, 'GPU');
 
         let color = 'unset';
-        if (QRuntime._graphicsPeriod === 2) {
+        if (QRuntime.$graphicsPeriod === 2) {
             color = '#fe4';
-        } else if (QRuntime._graphicsPeriod > 2) {
+        } else if (QRuntime.$graphicsPeriod > 2) {
             color = '#f30';
         }
 
         debugFrameRateDisplay.style.color = debugFramePeriodDisplay.style.color = color;
-        debugFrameRateDisplay.innerHTML = '' + Math.round(60 / QRuntime._graphicsPeriod) + '&#8239;Hz';
-        debugFramePeriodDisplay.innerHTML = '(' + ('1½⅓¼⅕⅙'[QRuntime._graphicsPeriod - 1]) + '×)';
+        debugFrameRateDisplay.innerHTML = '' + Math.round(60 / QRuntime.$graphicsPeriod) + '&#8239;Hz';
+        debugFramePeriodDisplay.innerHTML = '(' + ('1½⅓¼⅕⅙'[QRuntime.$graphicsPeriod - 1]) + '×)';
 
-        if ((QRuntime.mode_frames - 1) % QRuntime._graphicsPeriod === 0) {
+        if ((QRuntime.mode_frames - 1) % QRuntime.$graphicsPeriod === 0) {
             // Only display if the graphics period has just ended, otherwise the display would
             // be zero most of the time
             debugDrawCallsDisplay.innerHTML = '' + QRuntime.$previousGraphicsCommandList.length;
@@ -3140,7 +3141,7 @@ function mainLoopStep() {
     debugGameFramesDisplay.innerHTML = '' + QRuntime.game_frames;
 
     // Update to the profiler's new model of the graphics period
-    QRuntime._graphicsPeriod = profiler.graphicsPeriod;
+    QRuntime.$graphicsPeriod = profiler.graphicsPeriod;
 
     if (targetFramerate < PLAY_FRAMERATE) {
         // Force the profiler to avoid resetting the

@@ -47,7 +47,7 @@ function $show() {
 
 
 /** Updates the z value with an epsilon and stores the current set_clipping region */
-function _addGraphicsCommand(cmd) {
+function $addGraphicsCommand(cmd) {
     cmd.clipX1 = $clipX1;
     cmd.clipY1 = $clipY1;
     cmd.clipX2 = $clipX2;
@@ -812,7 +812,7 @@ function $executeTXT(cmd) {
             
         } // character in font
 
-        x += (bounds.x2 - bounds.x1 + 1) + _postGlyphSpace(str, c, font) - font._borderSize * 2 + bounds.post;
+        x += (bounds.x2 - bounds.x1 + 1) + $postGlyphSpace(str, c, font) - font._borderSize * 2 + bounds.post;
         
     } // for each character
 }

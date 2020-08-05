@@ -6,7 +6,8 @@
 
     "packages":   [],
     "scripts":    [],
-    "modes":      ["_Play*", "_SlideOut", "_Message"],
+    "start_mode": "_Play",
+    "modes":      ["_Play", "_SlideOut", "_Message"],
     "assets":     {
         "largeFont":  "quad://fonts/deja-15.font.json",
         "mediumFont": "quad://fonts/deja-9.font.json",
