@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.2.1" orientation="hexagonal" renderorder="left-down" width="14" height="11" tilewidth="32" tileheight="48" infinite="0" hexsidelength="0" staggeraxis="y" staggerindex="odd" nextlayerid="7" nextobjectid="1">
+ <properties>
+  <property name="sound" value="loop_forest_sound"/>
+  <property name="title" value="[R00] Can You Tell A Green Field"/>
+ </properties>
+ <tileset firstgid="1" name="hex-32x32" tilewidth="32" tileheight="32" tilecount="99" columns="9">
+  <image source="hex-32x32.png" width="288" height="352"/>
+ </tileset>
+ <layer id="5" name="Tile Layer 1" width="14" height="11">
+  <data encoding="csv">
+0,56,57,12,56,57,57,57,56,56,57,56,56,0,
+57,28,28,28,28,28,28,28,30,28,28,19,56,0,
+57,28,28,28,28,28,30,28,28,28,28,58,55,57,
+56,28,30,28,28,28,28,28,30,28,28,21,57,0,
+57,19,21,30,28,28,28,28,28,28,28,28,55,57,
+57,37,30,28,28,30,28,30,28,28,30,59,56,0,
+57,29,58,30,28,28,28,28,28,28,21,11,55,57,
+56,29,30,28,28,28,28,28,30,59,19,58,57,0,
+57,28,29,28,28,28,30,28,29,29,29,29,55,57,
+57,28,29,29,29,29,29,29,30,28,28,19,56,0,
+0,56,57,57,56,57,57,57,56,56,57,56,57,0
+</data>
+ </layer>
+</map>

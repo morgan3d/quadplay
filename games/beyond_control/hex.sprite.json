@@ -1,0 +1,245 @@
+{
+    "url": "hex-32x32.png",
+    "sprite_size": {
+        "x": 32,
+        "y": 32
+    },
+    "license": "Copyright 2020 Morgan McGuire, CC BY 3.0",
+    "default_frames": 10,
+    "names": {
+        "battle_endzone": {
+            "start": {
+                "x": 4,
+                "y": 8
+            },
+            "is_endzone": true,
+            "end": {
+                "x": 7,
+                "y": 8
+            },
+            "frames": [
+                6,
+                6,
+                6,
+                240
+            ]
+        },
+        "water": {
+            "start": {
+                "x": 0,
+                "y": 5
+            },
+            "end": {
+                "x": 2,
+                "y": 5
+            },
+            "frames": 30,
+            "is_wet": true,
+            "can_freeze": true,
+            "extrapolate": "oscillate"
+        },
+        "embers": {
+            "x": 3,
+            "y": 7
+        },
+        "fire": {
+            "start": {
+                "x": 0,
+                "y": 7
+            },
+            "end": {
+                "x": 2,
+                "y": 7
+            },
+            "frames": 9,
+            "is_hot": true,
+            "can_extinguish": true,
+            "extrapolate": "loop"
+        },
+        "ice": {
+            "start": {
+                "x": 0,
+                "y": 8
+            },
+            "end": {
+                "x": 3,
+                "y": 8
+            },
+            "frames": [
+                5,
+                5,
+                5,
+                240
+            ],
+            "is_ice": true,
+            "can_melt": true,
+            "extrapolate": "loop"
+        },
+        "pit": {
+            "x": 0,
+            "y": 1,
+            "is_pit": true
+        },
+        "wall": {
+            "x": 2,
+            "y": 1,
+            "blocks_movement": true
+        },
+        "broken_truck": {
+            "x": 4,
+            "y": 7,
+            "blocks_movement": true
+        },
+        "brick_ruin": {
+            "x": 5,
+            "y": 7,
+            "blocks_movement": true
+        },
+        "overgrown_wall_0": {
+            "x": 1,
+            "y": 6,
+            "blocks_movement": true
+        },
+        "overgrown_wall_1": {
+            "x": 2,
+            "y": 6,
+            "blocks_movement": true
+        },
+        "spawn": {
+            "x": 0,
+            "y": 6,
+            "is_spawn": true
+        },
+        "tree": {
+            "x": 2,
+            "y": 3,
+            "can_burn": true,
+            "blocks_movement": true
+        },
+        "northwest": {
+            "start": {
+                "x": 3,
+                "y": 0
+            },
+            "end": {
+                "x": 6,
+                "y": 0
+            },
+            "extrapolate": "loop",
+            "is_conveyor": true,
+            "frames": 90,
+            "direction": {
+                "type": "object",
+                "value": {
+                    "x": -1,
+                    "y": 1
+                }
+            }
+        },
+        "west": {
+            "start": {
+                "x": 3,
+                "y": 1
+            },
+            "end": {
+                "x": 6,
+                "y": 1
+            },
+            "extrapolate": "loop",
+            "is_conveyor": true,
+            "direction": {
+                "type": "object",
+                "value": {
+                    "x": -1,
+                    "y": 0
+                }
+            },
+            "frames": 90
+        },
+        "southwest": {
+            "start": {
+                "x": 3,
+                "y": 2
+            },
+            "end": {
+                "x": 6,
+                "y": 2
+            },
+            "extrapolate": "loop",
+            "is_conveyor": true,
+            "frames": 90,
+            "direction": {
+                "type": "object",
+                "value": {
+                    "x": 0,
+                    "y": -1
+                }
+            }
+        },
+        "northeast": {
+            "start": {
+                "x": 3,
+                "y": 3
+            },
+            "end": {
+                "x": 6,
+                "y": 3
+            },
+            "extrapolate": "loop",
+            "is_conveyor": true,
+            "frames": 90,
+            "direction": {
+                "type": "object",
+                "value": {
+                    "x": 0,
+                    "y": 1
+                }
+            }
+        },
+        "east": {
+            "start": {
+                "x": 3,
+                "y": 4
+            },
+            "end": {
+                "x": 6,
+                "y": 4
+            },
+            "extrapolate": "loop",
+            "is_conveyor": true,
+            "frames": 90,
+            "direction": {
+                "type": "object",
+                "value": {
+                    "x": 1,
+                    "y": 0
+                }
+            }
+        },
+        "southeast": {
+            "start": {
+                "x": 3,
+                "y": 5
+            },
+            "end": {
+                "x": 6,
+                "y": 5
+            },
+            "frames": 90,
+            "extrapolate": "loop",
+            "is_conveyor": true,
+            "direction": {
+                "type": "object",
+                "value": {
+                    "x": 1,
+                    "y": -1
+                }
+            }
+        },
+        "finish_line": {
+            "x": 0,
+            "y": 4,
+            "is_finish_line": true
+        }
+    }
+}

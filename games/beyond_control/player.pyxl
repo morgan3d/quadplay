@@ -1,0 +1,563 @@
+const player_array = []
+
+// Set by Play.enter
+let hand_size
+
+// For now, everyone in the player_array
+// is also in the entity_array
+const entity_array = []
+
+
+/** Compute the blinking color of the cursor. Used for the game UI and on menus */
+def cursor_color():
+    return if mode_frames mod CURSOR_BLINK_FRAMES < ½ CURSOR_BLINK_FRAMES then CURSOR_COLOR_BRIGHT else CURSOR_COLOR_DARK
+
+
+/** Used by both in-game and menu UI, hence the defaults */
+def play_blip_sound(index, pos default 0%):
+    play_sound(ASSETS["player_" + index + "_blip_sound"], false, 15%, pos)
+    
+    
+def play_accept_sound(index, pos default 0%):
+    play_sound(ASSETS["player_" + index + "_accept_sound"], false, 25%, pos)
+    
+
+/** Colors the spawn hex for each player */
+def player_draw_spawn(player):    
+    const pos = transform_hex_to_ws(player.spawn_hex_pos)
+    draw_poly(spawn_poly, player.color, ∅, pos, ∅, ∅, MAP_Z + ε)
+    
+
+/** Turns the current player_array back into a player_info array that can
+    be used to re-trigger spawning. */
+def make_player_info():
+    const player_info = []
+    for difficulty, gamepad in player in player_array:
+        push(player_info, {index: gamepad.index, difficulty: difficulty})
+    return player_info        
+
+
+
+def make_player(hex_pos, index, difficulty):
+    assert(difficulty ≥ 0 and difficulty ≤ DIFFICULTY_MAX)
+    
+    const player = make_entity({
+        gamepad: gamepad_array[index],
+        
+        color: rgba(rgb(80% get_sprite_pixel_color(robot_sprite[index][0], ½ robot_sprite.sprite_size)), 100%),
+
+        // Start with the simple case of all directions
+        action_array: [],
+        
+        // For each action. Can be on, off, or used for modifiers
+        // and available, or used for regular actions
+        status_array: [],
+        modifier_stack: [],
+        choice: 0,
+        
+        // Percentage. Used in battle mode
+        progress: 0%,
+        
+        // Tries to avoid overlap in layouts
+        ui_offset: xy(0, 0),
+        
+        ui_at_edge: false,
+        
+        // Count of respawns on this map. Used to
+        // detect when a teleport has happened and
+        // existing frame hooks should abort
+        epoch: 0,
+        
+        // How many times has the hand been restocked.
+        // Affects the help display
+        restock_count: 0,
+        
+        // 0-100%, cancels hot
+        wet: 0%,
+        
+        // 0-100%, cancels wet
+        hot: 0%,
+
+        // Set when animating with a vapor system
+        // for scoring and teleporting
+        animation_sprite: ∅,
+                
+        // Higher is harder
+        difficulty: difficulty,
+        
+        // Stored for emergency teleporting
+        spawn_hex_pos: xy(hex_pos), 
+        
+        // Set to false during special events, like teleporting
+        enabled: true,
+        
+        // Instructions that have been compiled and
+        // are waiting for this player's turn to execute.
+        // The instructions are MOV (which is interruptible),
+        // ROT+, and ROT-
+        instruction_queue: [],
+        
+        // The current hex angle, which can be animated
+        // and may not be on an axis
+        hex_angle: 0°,
+        
+        // The axis-aligned hex angle that the player will have
+        // when the instruction_queue is completed
+        future_hex_angle: 0°,
+        
+        // An animated version of future_hex_angle that targets
+        // 45° angles, for UI visualization of the FORWARD action
+        forward_arrow_angle: 0°,
+        
+        angle: 0°, 
+        
+        // Where the player will be when any currently-playing animation
+        // finishes. This is used for testing map actions
+        end_turn_hex_pos: xy(hex_pos),
+        
+        pos: transform_hex_to_ws(hex_pos),
+        
+        scale: xy(⅓, ⅓),
+        sprite: robot_sprite[index][0],
+        hex_pos: xy(hex_pos)
+    })
+    
+    reset_player(player)
+    
+    return player
+    
+    
+    
+/** An initial set of actions for quickly leaving spawn */
+def reset_player(player):
+    // Vector to the center of the map. Decrease vertical distance
+    // for these purposes since we're usually trying to get out of
+    // a corner (even more than the hex scaling already does).
+    const ω = direction(transform_hex_to_ws(MAP_CENTER_HEX) - transform_hex_to_ws(player.spawn_hex_pos))
+    const θ = nearest_hex_angle(atan(ω))
+
+    ++player.epoch
+    player.enabled = true
+    
+    player.hot = 0%
+    player.wet = 0%
+    
+    player.ui_offset = xy(0, 0)
+    player.hex_pos = xy(player.spawn_hex_pos)
+    player.end_turn_hex_pos = xy(player.spawn_hex_pos)
+    player.pos = transform_hex_to_ws(player.hex_pos)
+
+    player.hex_angle = θ
+    player.future_hex_angle = θ
+    player.forward_arrow_angle = round(θ, 45°)
+    player.angle = hex_angle_to_ws_angle(θ)
+    
+    resize(player.instruction_queue, 0)
+    
+    with action_array, status_array in player:
+        resize(action_array, 0)
+        resize(status_array, 0)
+        
+        for a < hand_size:
+            let action = array_value(move_action_pool, a, "loop")
+            const v = xy(cos(action.angle), sin(action.angle))
+
+            // Give players a nicer set of starting moves in battle or
+            // if at low difficulty
+            if ((player.difficulty < 2 or game_type == GAME_TYPE.BATTLE) and hex_distance(player.spawn_hex_pos, MAP_CENTER_HEX) > 4) and dot(v, ω) < 0:
+                // This direction is opposite the center of the map.
+                // Override it with the inverse direction. In the move_action_pool,
+                // opposite directions are 3 elements apart.
+                action = array_value(move_action_pool, a + 3, "loop")                
+            
+            push(action_array, action)
+            push(status_array, "available")
+    
+        // In battle mode, always spawn with a weapon
+        if game_type == GAME_TYPE.BATTLE:
+            action_array[TOOL_REGISTER] = random_value(tool_action_pool)
+            status_array[TOOL_REGISTER] = "off"   
+
+            
+
+def maybe_restock_actions(player):
+    with status_array, action_array in player:
+        // If any action is available, do not restock
+        for status in status_array:
+            if status == "available": return
+    
+        ++player.restock_count
+        
+        // Restock
+        if player.difficulty < 2:            
+            // At least four directions
+            for 2 ≤ i < hand_size:
+                action_array[i] = random_value(move_action_pool)
+                if player.difficulty == 1:
+                    for 2 ≤ j < i:
+                        // Roll again to reduce the chance of duplicates (no guarantee)
+                        // Level 0 duplicates are OK because it always has a -1 to reverse
+                        // a bad one
+                        if action_array[i] == action_array[j]:
+                           action_array[i] = random_value(move_action_pool)
+                           break
+
+                status_array[i] = "available"
+            
+            // Two modifiers
+            if player.difficulty == 0:
+                // Hardcoded
+                action_array[0] = action_sprite.zero
+                action_array[1] = action_sprite.reverse
+            
+            else: // Difficulty 1
+                // Random
+                action_array[0] = random_value(modifier_action_pool)
+                action_array[1] = random_value(modifier_action_pool)
+            
+            for i < 2: status_array[i] = "off"
+
+        else: // Difficulty 2, 3, & 4
+            
+            let num_moves = random_integer(3, hand_size - 1)
+            if player.difficulty < 3:
+                // Guarantee two modifiers
+                num_moves = max(num_moves, hand_size - 2)
+            
+            for hand_size - num_moves ≤ i < hand_size:
+                action_array[i] = random_value(if player.difficulty == 2 then move_action_pool else hard_move_action_pool)
+                status_array[i] = "available"
+
+            for i < hand_size - num_moves:
+                action_array[i] = random_value(if player.difficulty == 4 then hard_modifier_action_pool else modifier_action_pool)
+                status_array[i] = "off"
+
+        if game_type ≠ GAME_TYPE.RACE:
+            // Ensure there is always at least one -1 modifier in the first two
+            // registers when not in race mode. We can't check the ENTIRE array
+            // because the modifier may land on a blocked register.
+            let has_reverse = false
+            for a < 2: has_reverse = has_reverse or action_array[a] == action_sprite.reverse            
+            if not has_reverse:
+                // Force the first one to be a reverse
+                action_array[0] = action_sprite.reverse
+                status_array[0] = "off"
+            
+            // Shift everything above over by one (to avoid having to offset the logic)
+            // and then insert the tool at the front.
+            assert(TOOL_REGISTER == 0, "Restock code assumes tools in slot 0")
+            
+            // Add a tool in the first slot
+            pop(action_array); pop(status_array)
+            push_front(action_array, random_value(tool_action_pool))
+            push_front(status_array, "off")
+
+
+
+def player_process_input(player):
+    with status_array, action_array, gamepad, choice in player:
+        choice = loop(choice + gamepad.xx, 0, hand_size)
+                
+        // Move cursor
+        if gamepad.xx: play_blip_sound(gamepad.index, player.pos)
+        
+        // Move UI
+        if gamepad.dd: player.ui_at_edge = not player.ui_at_edge
+        
+        // Acivate register
+        if gamepad.aa:
+            const status = status_array[choice]
+            let ok = true
+            if status ≠ "locked":
+                const action = action_array[choice]
+                if action.is_modifier:
+                    if status == "on":
+                        // Toggle "off"
+                        status_array[choice] = "off"
+                    else if status == "off":
+                        // Toggle "on"
+                        status_array[choice] = "on"
+                    else:
+                        // Ignore "used" 
+                        ok = false
+                else if status == "available":
+                    // Apply and consume the modifiers
+                    let speed_modifier = 1
+                    let angle_modifier = 0
+                    let post_queue = []
+                    for status at s in status_array:
+                        if status == "on":
+                            const modifier = action_array[s]
+                            speed_modifier *= modifier.speed default 1
+                            angle_modifier += modifier.turn default 0
+                            if modifier.is_spray: push(post_queue, {op: "SPRAY", type: modifier})
+                            status_array[s] = "used"
+                    
+                    // Consume the action
+                    status_array[choice] = "used"
+                    compile_action(player, action, speed_modifier, angle_modifier, post_queue)
+            else:
+                ok = false
+                
+            if ok: play_accept_sound(gamepad.index, player.pos)
+
+
+
+/** Teleport and scoring animation */
+def player_spawn_animation_sprites(player):
+    if (not player.animation_sprite or
+        (player.animation_sprite == star_sprite[0][0] and
+         mode_frames mod 6 ≠ 0)):
+         return
+   
+    const vapor = {
+        sprite: player.animation_sprite, 
+        pos: player.pos + xy(random_truncated_gaussian(0, 8, 12), random(0, -6)),
+        frames: 27 }    
+        
+    if player.animation_sprite == star_sprite[0][0]:
+        // Score
+        vapor.override_color = if ξ < 50% then 150% player.color else ∅
+        const ui_width = ICON_SPACING.x * hand_size + 1
+        vapor.vel = random(0.5, 1.5) * direction(player.pos + player.ui_offset + xy((player.progress - ½) * ui_width, 8) - vapor.pos)
+    else:
+        // Teleport
+        vapor.override_color = hsv(ξ, random(0%, 40%), 100%)
+        vapor.pos.y += random(-9, 15)
+        vapor.grow_frames = 10
+        
+    spawn_vapor(vapor)               
+    
+
+
+def player_spawn_smoke(player):
+    const U = xy(cos(player.angle), sin(player.angle))
+    const V = perp(U)
+    spawn_vapor({pos: player.pos - 12 U + random(-6, 6) * V, 
+                 vel: ¼ (random(-1, 1) * V - U), 
+                 sprite: smoke_sprite[0][0],
+                 override_color: gray(random(50%, 100%)),
+                 frames: 40,
+                 initial_scale: 25%,
+                 grow_frames: 10,
+                 fade_frames: 10})
+
+
+
+def player_update(player):
+    // Animate even when disabled
+    player_spawn_animation_sprites(player)
+    
+    if not player.enabled: return
+
+    // Compute worldspace from hex
+    player.angle = hex_angle_to_ws_angle(player.hex_angle)
+    player.pos = transform_hex_to_ws(player.hex_pos)
+    
+    if mode_frames mod 3 == 0: player_spawn_smoke(player)
+    
+    // Visualize the hex in front of the player:
+    // draw_sprite(map_get_sprite_by_hex(map, player.hex_pos + hex_direction_from_hex_angle(player.hex_angle)), player.pos, ∅, 50%)
+    player_process_input(player)
+    
+    // Does the player need new actions?
+    maybe_restock_actions(player)
+    
+    player_update_ui_offset(player)
+    player_draw_ui(player)
+    
+    with pos, angle, sprite, animation_sprite in player:
+
+        const map_sprite = map_get_sprite_by_hex(map, player.hex_pos)
+        
+        const player_pos = clone(pos)
+        let scale = player.scale
+        let override_color = #0000
+        if map_sprite.is_wet:
+            player_pos.y -= 1 + cos(mode_frames / 25)
+            scale = 85% scale
+            override_color = #0AF5            
+        else if map_sprite.is_hot:
+            player_pos.y += ⌊(mode_frames / 10) mod 2⌋
+            override_color = lerp(#F509, #FF48, oscillate(mode_frames / 10))
+        
+        // Player drop shadow (does not bob)
+        draw_sprite(sprite, pos + xy(2, -3), angle, scale, 40%, ENTITY_Z - ½, #004)
+        
+        // Player sprite
+        draw_sprite(sprite, player_pos, angle, scale, ∅, ENTITY_Z, override_color)
+        
+        // Busy indicator
+        if size(player.instruction_queue) > 0:
+            draw_disk(player_pos - 6 xy(cos angle, sin angle), 3.5, if mode_frames mod 16 > 8 then #440 else #FF0, #333, ENTITY_Z + ε)
+    
+
+
+def player_update_ui_offset(player):
+    const ui_width = ICON_SPACING.x * hand_size + 1
+    
+    // The y offset is based on whether the robot is on the top or bottom of the screen.
+    // It does not adjust for other players
+    let y_sign = sign_nonzero(player.ui_offset.y)
+    if player.pos.y > 90% SCREEN_SIZE.y:
+        // Move the UI below if the player is near the top of the screen
+        y_sign = -1
+    else if player.pos.y < 15% SCREEN_SIZE.y:
+        // Player is near the bottom of the screen: force UI above
+        y_sign = 1
+    else if player.hex_angle ≥ 20° and player.hex_angle ≤ 160°:
+        // Player is moving up the screen
+        y_sign = -1
+    else if player.hex_angle ≤ -20° and player.hex_angle ≥ -160° or player.hex_angle ≥ 200° and player.hex_angle ≤ 340°:
+        // Player is moving down the screen
+        y_sign = 1
+    
+    const distance = if game_type == GAME_TYPE.BATTLE then 24 else 18
+    player.ui_offset.y += 2 sign(distance * y_sign - player.ui_offset.y)
+    
+    // Reset if ridiculously large
+    if |player.ui_offset.x| > 80: player.ui_offset.x = 0
+    
+    // Iterate twice for stability
+    for i < 2:
+        // Shrink the current offset if there are no other constraints
+        if |player.ui_offset.x| > 1:
+            player.ui_offset.x -= ½ sign(player.ui_offset.x)
+        
+        // Move UI away from other players' UI
+        for other in player_array:
+            if other ≠ player:
+                const ui_pos = player.pos + player.ui_offset
+                let Δx = 0
+                if |ui_pos.y - other.pos.y - other.ui_offset.y| < 16:
+                    // UIs may overlap
+                    Δx = ui_pos.x - other.pos.x - other.ui_offset.x
+                    if |Δx| ≥ ui_width + 8: Δx = 0
+                else if |ui_pos.y - other.pos.y| < 24:
+                    // Player's UI may overlap other's robot
+                    Δx = ui_pos.x - other.pos.x
+                    if |Δx| ≥ ½ (ui_width + 32): Δx = 0
+                player.ui_offset.x += sign(Δx)
+                
+    // Keep on screen
+    player.ui_offset.x = clamp(player.pos.x + player.ui_offset.x, 20 + ½ ui_width, SCREEN_SIZE.x + 12 - ½ ui_width) - player.pos.x    
+
+
+
+def player_draw_ui(player) preserving_transform:
+    const ui_width = ICON_SPACING.x * hand_size + 1
+    
+    set_transform(∅, ∅, UI_Z)
+    
+    const translucent_player_color = clone(player.color)
+    translucent_player_color.a = 50%
+    
+    let ui_center = player.pos + player.ui_offset   
+    if player.ui_at_edge:
+        ui_center = xy(69 + 92 player_position[player.gamepad.index], 14)
+    else:
+        // Line connecting the robot to its control panel (with drop shadow)
+        const connect_point = ui_center - xy(0, ½ sign(player.ui_offset.y) * (action_sprite.sprite_size.y + 3))
+        draw_line(player.pos, connect_point, player.color)
+        draw_line(player.pos + xy(1, -1), connect_point + xy(1, -1), #0006)
+
+    // Window    
+    draw_rect(ui_center, xy(ui_width, action_sprite.sprite_size.y + 2) + 2, translucent_player_color, player.color)
+
+    // Progress bar in battlezone
+    if game_type == GAME_TYPE.BATTLE:
+        const corner = ui_center + xy(-½ ui_width, ½ action_sprite.sprite_size.y + 1)
+        draw_corner_rect(corner + xy(ui_width * player.progress, 0), xy(ui_width * (100% - player.progress), 3), 50% rgb(player.color))
+        draw_corner_rect(corner, xy(ui_width * player.progress, 3), 
+                    (if player.animation_sprite == star_sprite[0][0] and mode_frames mod 30 < 15 then #fff else 150% player.color))
+        // Border
+        draw_line(corner + xy(0, 4), corner + xy(ui_width, 4), player.color)
+        draw_line(corner + xy(-1, 4), corner + xy(-1, 2), player.color)
+        draw_line(corner + xy(ui_width, 4), corner + xy(ui_width, 2), player.color)
+    
+    // Help text
+    if HELP_ENABLED and player.restock_count < size(HELP_TEXT):
+        // Shift at the very edge of the screen so that the default kbd controls
+        // of [SPACE] are still visible
+        const x_shift = if ui_center.x < 64 then 12 else (if ui_center.x > 350 then -12 else 0)
+        draw_text(small_font, replace(HELP_TEXT[player.restock_count], player.gamepad.prompt), 
+            ui_center + xy(x_shift, 10), #FFF, #0007, player_color, "center", "bottom", UI_Z + 1)
+            
+    const ui_origin = ui_center + xy(-½ ICON_SPACING.x * (hand_size - 1), 0)
+        
+    // Cursor shadow
+    let ui_pos = ui_origin + xy(ICON_SPACING.x * player.choice, 0)
+    draw_rect(ui_pos + UI_SHADOW_OFFSET, action_sprite.sprite_size + 2, ∅, #0004)
+    
+    // Cursor
+    draw_rect(ui_pos, action_sprite.sprite_size + 2, #FFF9, cursor_color())    
+
+    local:
+        // Animate the forward angle
+        const Δϕ = loop(round(player.future_hex_angle, 45°) - player.forward_arrow_angle, -180°, 180°)
+        if |Δϕ| > 1°: 
+            player.forward_arrow_angle += sign(Δϕ) FORWARD_ARROW_SPIN
+        else:
+            player.forward_arrow_angle = round(player.forward_arrow_angle, 45°)
+
+    for action at a in player.action_array:
+        let sprite = if action.animation then action.animation.frame(mode_frames) else action
+        
+        const status = player.status_array[a]
+        const unused = status ≠ "used"
+        
+        let scale    = ∅ 
+        let θ        = 0°            
+        const α      = if unused then 100% else 30%
+        let color    = if unused then #0000 else #000F
+                    
+        if sprite == action_sprite.forward:
+            // Draw the "forward" instruction
+            // arrow appropriately rotated to the direction
+            // that it will indicate, and replace it with
+            // the larger version for more attractive sampling.
+            // Map 60° angles to 45° ones via rounding so that
+            // they graphically match the hand-drawn arrows.
+            sprite = rainbow_arrow_sprite[0][0]
+            θ = player.forward_arrow_angle
+            scale = xy(⅓, ⅓) 
+
+        ui_pos = ui_origin + ICON_SPACING * xy(a, 0)
+        if status == "on":
+            // Enabled modifier
+            ui_pos.y += 5
+            color = #FF05        
+        
+        if unused and status ≠ "locked":
+            // Action shadow
+            draw_sprite(sprite, ui_pos + UI_SHADOW_OFFSET, θ, scale, 25% α, ∅, #000)
+            
+        // Action
+        draw_sprite(sprite, ui_pos, θ, scale, α, ∅, color)
+
+
+
+/** Used for teleport */
+def player_emergency_teleport(player):  
+    // Incrementing the epoch will cause any pending
+    // sequences or frame hooks
+    // to be ignored
+    ++player.epoch
+    player.enabled = false
+
+    // Updated position needed for the sprite animation
+    player.pos = transform_hex_to_ws(player.spawn_hex_pos)
+    
+    // Wipe all registers and restock. Will
+    // also reset angles
+    def appear(): reset_player(player)
+    def stop_animation(): player.animation_sprite = ∅
+    
+    // Start the animation immediately, but delay 
+    // the robot appearing. Follow up with ending the
+    // animation
+    player.animation_sprite = teleport_sprite[0][0]
+    play_sound(teleport_sound, ∅, ∅, player.pos, 80%)
+    sequence({frames: 40}, appear, {frames: 40}, stop_animation)
+    
+

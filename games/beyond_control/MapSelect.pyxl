@@ -1,0 +1,22 @@
+MapSelect
+════════════════════════════════════════════════════════════════════════
+let player_info
+
+
+enter(in_player_info)
+────────────────────────────────────────────────────────────────────────
+set_background(title_sprite[0][0])
+player_info = in_player_info
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+draw_rect(xy(½ SCREEN_SIZE.x, 66), xy(SCREEN_SIZE.x, 60), #0009)
+set_mode(Play, player_info) because "Selected"
+
+for info in player_info:
+    const gamepad = gamepad_array[info.index]
+    if gamepad.bb:
+        set_mode(GameSelect, player_info) because "Cancel"
+    else if gamepad.aa:
+        set_mode(Play, player_info) because "Selected"

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.2.1" orientation="hexagonal" renderorder="left-down" width="14" height="11" tilewidth="32" tileheight="48" infinite="0" hexsidelength="0" staggeraxis="y" staggerindex="odd" nextlayerid="7" nextobjectid="1">
+ <properties>
+  <property name="sound" value="loop_beat_sound"/>
+  <property name="title" value="[B02] Fire and Ice"/>
+ </properties>
+ <tileset firstgid="1" name="hex-32x32" tilewidth="32" tileheight="32" tilecount="99" columns="9">
+  <image source="hex-32x32.png" width="288" height="352"/>
+ </tileset>
+ <layer id="5" name="Tile Layer 1" width="14" height="11">
+  <data encoding="csv">
+0,12,12,12,12,12,12,12,12,12,12,12,12,0,
+12,55,1,1,1,49,49,22,1,1,1,55,12,0,
+12,1,49,1,1,1,64,73,1,1,1,22,1,12,
+12,1,40,40,40,64,1,73,13,13,13,1,12,0,
+12,1,1,1,1,64,77,77,73,40,1,1,1,12,
+12,40,1,12,64,77,77,77,64,12,1,13,12,0,
+12,1,1,1,13,73,77,77,64,1,1,1,1,12,
+12,1,40,40,40,73,1,64,13,13,13,1,12,0,
+12,1,31,1,1,1,73,64,1,1,1,4,1,12,
+12,55,1,1,1,31,4,4,1,1,1,55,12,0,
+0,12,12,12,12,12,12,12,12,12,12,12,12,0
+</data>
+ </layer>
+</map>

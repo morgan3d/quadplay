@@ -1,0 +1,95 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+def quit_map():
+    set_mode(GameSelect, make_player_info()) because "Quit map"
+
+
+// True on the first frame, to play the intro sequence
+let need_intro
+
+
+enter(player_info, in_game_type)
+────────────────────────────────────────────────────────────────────────
+ 
+// Assume the global map was set before Play was entered
+set_pause_menu({text: "Leave map", confirm: true, callback: quit_map})
+stop_audio(background_audio)
+background_audio = play_sound(ASSETS[map_source.sound default "loop_beat_sound"], true, 35%)
+
+
+set_background(#000)
+set_transform(xy(-16, SCREEN_SIZE.y + 8), xy(1, -1))
+set_random_seed(local_time().millisecond)
+
+// Must do before spawning as it affects the initial loadout
+game_type = in_game_type
+
+hand_size = if game_type == GAME_TYPE.RACE then RACE_HAND_SIZE else BATTLE_HAND_SIZE
+
+// Randomize spawn order
+shuffle(player_info)
+
+// So that single player spawns change
+const spawn_index_shift = random_integer(0, 3)
+
+// Spawn locations
+map = clone(map_source)
+
+// In hex
+const spawn_array = get_spawn_array(map)
+
+// Spawn players and add them to the entity array
+resize(player_array, 0)
+resize(entity_array, 0)
+for info at spawn_index in player_info:
+    push(entity_array, push(player_array, make_player(array_value(spawn_array, spawn_index + spawn_index_shift, "loop"), info.index, info.difficulty)))
+
+// Remove unused spawns
+for size(player_info) ≤ spawn_index < size(spawn_array):
+    const spawn_hex = array_value(spawn_array, spawn_index + spawn_index_shift, "loop")
+    map_set_sprite_by_hex(map, spawn_hex, map.spritesheet[0][0])
+
+
+// Every time this entity takes a turn, the round_number
+// increments.
+entity_array[0].is_start_entity = true
+round_number = 0
+need_intro = not DEBUG
+
+resize(vapor_array, 0)
+resize(particle_array, 0)
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+set_transform(xy(0, SCREEN_SIZE.y), xy(1, -1))
+set_pause_menu()
+stop_audio(background_audio)
+resize(particle_array, 0)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+if need_intro:
+    need_intro = false
+    push_mode(CompetitiveIntro)
+
+// debug_watch(transform_ws_to_hex(touch.xy))
+draw_hex_map(map)
+iterate(player_array, player_draw_spawn)
+draw_rainbow_screen_border()
+
+iterate(player_array, player_update)
+iterate(vapor_array, vapor_update)
+
+// Process the next instruction for each player
+if mode_frames mod INSTRUCTION_FRAMES == 0:
+    process_turn()
+
+update_and_draw_particles()
+
+// Pragma for IDE:
+// set_mode(CompetitiveWin, entity) because "Reach finish in RACE"
+// set_mode(CompetitiveWin, entity) because "100% progress in BATTLE"
+

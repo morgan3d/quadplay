@@ -1,0 +1,82 @@
+// Sprite-based particle system, named "vapor"
+// to avoid confusion with the pixel particle system.
+
+
+const vapor_array = []
+
+/** All arguments are in world space */
+def spawn_vapor(
+    sprite,
+    pos,    
+    vel default xy(0, 0),
+    angle default 0°,
+    frames default 120,
+    delay_frames default 0,
+    initial_scale default 0%,
+    max_scale default 100%,
+    grow_frames default 5,
+    fade_frames default 5,
+    z default VAPOR_Z,
+    override_color default ∅,
+    override_blend default "multiply"):
+        
+    if sprite.sprite and not pos:
+        // Keyword version
+        const args = sprite
+        return spawn_vapor(args.sprite, args.pos, args.vel, args.angle, args.frames, 
+            args.delay_frames, args.initial_scale, args.max_scale, args.grow_frames, args.fade_frames, 
+            args.z, args.override_color, args.override_blend)
+    
+    push(vapor_array, {
+            sprite: sprite,
+            pos: xy(pos),
+            vel: xy(vel),
+            angle: angle,
+            z: z,
+            current_frame: -delay_frames, 
+            frames: frames,
+            initial_scale: initial_scale,
+            max_scale: max_scale,
+            grow_frames: grow_frames,
+            fade_frames: fade_frames,
+            override_color: clone(override_color),
+            override_blend: override_blend
+        })
+
+
+
+/** Range = 0 is the start hex, Range = 1 is adjacent to it */
+def spawn_vapor_jet(sprite, pos, player_angle, range, max_speed, can_rotate):
+    const look = xy(cos player_angle, sin player_angle)
+    
+    for i < 100:
+        const scale = random(25%, 100%)²
+        const angle = player_angle + random_truncated_gaussian(0°, 18°, 15°)
+        const speed = random(½ max_speed, max_speed)
+        spawn_vapor(
+            sprite,    // sprite
+            pos + look * 8,  // pos
+            xy(cos angle, sin angle) * speed, // vel
+            (if can_rotate then angle else 0°),    // angle
+            scale * max(range - 1, 0) / speed, // frames
+            random_integer(0, INSTRUCTION_FRAMES), // delay
+            10%,                // initial scale
+            scale,              // max scale
+            5,                  // grow
+            5)   // fade
+            
+
+
+def vapor_update(vapor):
+    ++vapor.current_frame
+    if vapor.current_frame < 0: return iterate.CONTINUE
+    const frames_left = SUB(vapor.frames, vapor.current_frame)
+    if frames_left ≤ 0: return iterate.REMOVE    
+
+    XY_ADD_XY(vapor.pos, vapor.vel, vapor.pos)
+
+    vapor.opacity = CLAMP(DIV(frames_left, vapor.fade_frames), 0%, 100%)
+    vapor.scale = LERP(vapor.initial_scale, vapor.max_scale, min(100%, DIV(vapor.current_frame, vapor.grow_frames)))
+    draw_sprite(vapor)
+    
+    

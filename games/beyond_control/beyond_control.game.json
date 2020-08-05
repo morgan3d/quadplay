@@ -1,0 +1,274 @@
+{
+    "title": "Beyond Control",
+    "developer": "Casual Effects",
+    "copyright": "©2020 Morgan McGuire",
+    "license": "Open source under the BSD 3-Clause license https://opensource.org/licenses/BSD-3-Clause",
+    "packages": [],
+    "scripts": [
+        "hex_grid.pyxl",
+        "global.pyxl",
+        "player.pyxl",
+        "action.pyxl",
+        "vapor.pyxl",
+        "quad://scripts/particle.pyxl"
+    ],
+    "modes": [
+        "Title",
+        "GameSelect",
+        "Play",
+        "CompetitiveWin",
+        "CompetitiveIntro"
+    ],
+    "start_mode": "Title",
+    "docs": [
+        "https://morgan3d.github.io/articles/2020-08-20-beyond-control/index.html"
+    ],
+    "assets": {
+        "font": "quad://fonts/robot-9.font.json",
+        "small_font": "quad://fonts/scoreboard-6.font.json",
+        "action_sprite": "action.sprite.json",
+        "hex_sprite": "hex.sprite.json",
+        "robot_sprite": "robot.sprite.json",
+        "title_sprite": "title.sprite.json",
+        "wet_sound": "quad://sounds/splash-00.sound.json",
+        "hot_sound": "quad://sounds/explode-10.sound.json",
+        "rainbow_arrow_sprite": "rainbow_arrow.sprite.json",
+        "giant_font": "quad://fonts/robot-18.font.json",
+        "race_00_map": "race_00.map.json",
+        "race_01_map": "race_01.map.json",
+        "race_02_map": "race_02.map.json",
+        "race_03_map": "race_03.map.json",
+        "race_04_map": "race_04.map.json",
+        "race_05_map": "race_05.map.json",
+        "motor_sound": "quad://sounds/engine-00.sound.json",
+        "hit_sound": "quad://sounds/hit-02.sound.json",
+        "player_0_blip_sound": "quad://sounds/blip-04.sound.json",
+        "player_0_accept_sound": "quad://sounds/blip-01.sound.json",
+        "player_1_blip_sound": "quad://sounds/blip-06.sound.json",
+        "player_1_accept_sound": "quad://sounds/blip-01.sound.json",
+        "player_2_blip_sound": "quad://sounds/blip-07.sound.json",
+        "player_2_accept_sound": "quad://sounds/blip-01.sound.json",
+        "player_3_blip_sound": "quad://sounds/blip-15.sound.json",
+        "player_3_accept_sound": "quad://sounds/blip-01.sound.json",
+        "title_music": "quad://sounds/loop-chilltech.sound.json",
+        "sparks_00_sound": "quad://sounds/sparks-00.sound.json",
+        "race_06_map": "race_06.map.json",
+        "race_07_map": "race_07.map.json",
+        "falling_sound": "quad://sounds/powerup-11.sound.json",
+        "vfx_sprite": "vfx.sprite.json",
+        "battle_02_map": "battle_02.map.json",
+        "battle_01_map": "battle_01.map.json",
+        "race_08_map": "race_08.map.json",
+        "battle_00_map": "battle_00.map.json",
+        "battle_03_map": "battle_03.map.json",
+        "battle_04_map": "battle_04.map.json",
+        "battle_05_map": "battle_05.map.json",
+        "star_sprite": "star-13x13.sprite.json",
+        "score_sound": "quad://sounds/coin-03.sound.json",
+        "spray_freeze_sound": "quad://sounds/shoot-11.sound.json",
+        "spray_burn_sound": "quad://sounds/shoot-12.sound.json",
+        "teleport_sprite": "teleport.sprite.json",
+        "smoke_sprite": "smoke.sprite.json",
+        "loop_escalator_sound": "quad://sounds/loop-escalator.sound.json",
+        "loop_prometheus_sound": "quad://sounds/loop-prometheus.sound.json",
+        "loop_forest_sound": "quad://sounds/loop-forest.sound.json",
+        "loop_beat_sound": "quad://sounds/loop-beat.sound.json",
+        "loop_wind_sound": "quad://sounds/loop-wind.sound.json",
+        "teleport_sound": "quad://sounds/wild-01.sound.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 4,
+    "cooperative": true,
+    "competitive": true,
+    "achievements": false,
+    "highscores": false,
+    "description": "Program your broken robots to race through the ruins.",
+    "constants": {
+        "TITLE_SPARK_POS_ARRAY": {
+            "type": "table",
+            "transpose": "true",
+            "column_type": "array",
+            "url": "TITLE_SPARK_POS_ARRAY.csv"
+        },
+        "ICON_SPACING": {
+            "type": "xy",
+            "value": {
+                "x": 12,
+                "y": 6
+            },
+            "nudge": {
+                "x": "+1",
+                "y": "+1"
+            },
+            "description": "Distance between icon centers"
+        },
+        "player_position": {
+            "type": "array",
+            "value": [
+                1, 2, 0, 3
+            ],
+            "description": "Maps player index to on-screen order of players."
+        },
+        "spawn_poly": {
+            "type": "raw",
+            "value": [{x:7.361215932167729, y:3.680607966083864}, {x:5.204748896376251e-16, y:7.361215932167729}, {x:-7.3612159321677275, y:3.680607966083867}, {x:-7.36121593216773, y:-3.6806079660838624}, {x:-1.5614246689128753e-15, y:-7.361215932167729}, {x:7.361215932167726, y:-3.6806079660838678}],
+            "description": "The inset geometry for the player spawn point. Computed by:\n\nfor i < 6: const θ = 30° + 60° i; push(spawn_poly, 8.5 xy(cos θ, cos(30°) * sin θ))\n\n The extra cos(30°) accounts for the 32x32 pixel tile hex scaling." 
+        },
+        "UI_SHADOW_OFFSET": {
+            "type": "xy",
+            "value": {
+                "x": 1,
+                "y": -1
+            },
+            "nudge": {
+                "x": "+1",
+                "y": "+1"
+            }
+        },
+        "INSTRUCTION_FRAMES": {
+            "type": "number",
+            "value": 30,
+            "description": "Duration to complete an action"
+        },
+        "CURSOR_COLOR_BRIGHT": {
+            "type": "rgb",
+            "value": {
+                "r": 0.88,
+                "g": 0.85,
+                "b": 0.62
+            }
+        },
+        "CURSOR_COLOR_DARK": {
+            "type": "rgb",
+            "value": {
+                "r": 0.68,
+                "g": 0.66,
+                "b": 0.52
+            }
+        },
+        "CURSOR_BLINK_FRAMES": {
+            "type": "number",
+            "value": 50
+        },
+        "GAME_TYPE": {
+            "type": "raw",
+            "value": {
+                "RACE": [
+                    "RACE"
+                ],
+                "BATTLE": [
+                    "BATTLE"
+                ],
+                "QUEST": [
+                    "QUEST"
+                ]
+            },
+            "description": "Enumeration used for game_type"
+        },
+        "UI_Z": {
+            "type": "number",
+            "value": 20
+        },
+        "HELP_TEXT": {
+            "type": "array",
+            "value": [
+                "[<][>]: choose (a): use",
+                "(d): change UI"
+            ]
+        },
+        "HELP_ENABLED": {
+            "type": "boolean",
+            "value": false
+        },
+        "NUM_PLAYERS": {
+            "type": "number",
+            "value": 3
+        },
+        "DIFFICULTY_MAX": {
+            "type": "number",
+            "value": 4
+        },
+        "DEBUG": {
+            "type": "boolean",
+            "value": false
+        },
+        "TITLE_SCRIM_COLOR": {
+            "type": "rgba",
+            "value": {
+                "r": 0,
+                "g": 0,
+                "b": 0,
+                "a": 0.47
+            }
+        },
+        "MAP_CENTER_HEX": {
+            "type": "xy",
+            "value": {
+                "x": 4,
+                "y": 5
+            },
+            "description": "Hex coordinates of the center of the map.",
+            "nudge": {
+                "x": "+1",
+                "y": "+1"
+            }
+        },
+        "FORWARD_ARROW_SPIN": {
+            "type": "number",
+            "value": 0.08726646259971647,
+            "description": "Degrees per frame for the visualization of the forward arrow animation"
+        },
+        "TITLE_BLINK_RATE": {
+            "type": "number",
+            "value": 0.0839,
+            "description": "Radians per frame to match the music beat"
+        },
+        "BANNER_ANIMATION_FRAMES": {
+            "type": "number",
+            "value": 30,
+            "description": "Frame count for intro and win animation banners"
+        },
+        "COMPETITIVE_INTRO_FRAMES": {
+            "type": "number",
+            "value": 180
+        },
+        "ENTITY_Z": {
+            "type": "number",
+            "value": 10,
+            "description": "Z value for player robots"
+        },
+        "MAP_Z": {
+            "type": "number",
+            "value": 0
+        },
+        "VAPOR_Z": {
+            "type": "number",
+            "value": 15
+        },
+        "SPRAY_RANGE": {
+            "type": "number",
+            "value": 4,
+            "description": "Distance in hex of max linear effect of spray. 0 = start hex, 1 = adjacent, etc."
+        },
+        "RACE_HAND_SIZE": {
+            "type": "number",
+            "value": 6,
+            "description": "Number of actions in the hand to choose from"
+        },
+        "BATTLE_HAND_SIZE": {
+            "type": "number",
+            "value": 7
+        },
+        "TOOL_REGISTER": {
+            "type": "number",
+            "value": 0,
+            "description": "The index of the spray tool in battle mode"
+        },
+        "ENDZONE_PROGRESS_PER_MOVE": {
+            "type": "number",
+            "value": 0.05
+        }
+    },
+    "y_up": true
+}

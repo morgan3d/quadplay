@@ -1,0 +1,477 @@
+// Actions and instructions. These are in a fixed order
+// that other parts of the program rely on.
+
+
+// move_action_pool + forward
+const hard_move_action_pool = [action_sprite.forward]
+
+// modifier_action_pool + rotation
+const hard_modifier_action_pool = []
+
+// just the move actions
+const move_action_pool = []
+
+// just the modifiers
+const modifier_action_pool = []
+
+const tool_action_pool = [action_sprite.burn, action_sprite.freeze]
+
+
+for name in ["northeast", "east", "southeast", "southwest", "west", "northwest"]:
+    push(move_action_pool, action_sprite[name])
+    push(hard_move_action_pool, action_sprite[name])
+
+for name in ["double", "reverse", "zero"]:
+    push(modifier_action_pool, action_sprite[name])
+    push(hard_modifier_action_pool, action_sprite[name])
+    
+for name in ["counterclockwise", "clockwise"]:
+    push(hard_modifier_action_pool, action_sprite[name])
+
+
+// How many rounds (complete cycles of turns) have been played?
+let round_number = 0
+
+
+// Convert actions to instructions. The modifier
+// is the repeat multiplier for MOV instructions
+def compile_action(player, action, speed_modifier, angle_modifier, post_queue):
+    // Fire weapons first AND last
+    extend(player.instruction_queue, post_queue)
+    
+    if action.angle ≠ ∅:
+        // Absolute motion, may generate rotation
+        compile_move_action(player, action, speed_modifier, angle_modifier)
+    else if action == action_sprite.forward:
+        compile_forward_action(player, speed_modifier, angle_modifier)
+        
+    extend(player.instruction_queue, post_queue)
+
+
+
+def compile_forward_action(player, speed_modifier, angle_modifier):
+    player.future_hex_angle = angle_loop(player.future_hex_angle + 60° angle_modifier)
+    
+    // Rotate from the current direction, which is the same
+    // as rotating the rainbow arrow
+    for i < |angle_modifier|:
+        push(player.instruction_queue, {op: "ROT", sign: sign(angle_modifier)})
+
+    // Relative motion
+    for i < |speed_modifier|:
+        push(player.instruction_queue, {op: "MOV", sign: sign(speed_modifier)})
+
+
+
+def compile_move_action(player, action, speed_modifier, angle_modifier):
+    // Rotate if needed
+    const θ = angle_loop(action.angle + 60° angle_modifier)
+    const Δθ = angle_loop(θ - player.future_hex_angle)
+    for i < round(|Δθ| / 60°):
+        push(player.instruction_queue, {op: "ROT", sign: sign(Δθ)})
+        
+    // Translate, possibly repeated
+    for i < |speed_modifier|:
+        push(player.instruction_queue, {op: "MOV", sign: sign(speed_modifier)})
+
+    // Rotations cannot be interrupted, so they will
+    // be accomplished. We can immediately assume that the
+    // end of the queue leaves us at the correct angle.
+    player.future_hex_angle = θ
+
+
+
+def execute_instruction(entity, instruction):
+    
+    // Spark out on intentional actions
+    if instruction.op ≠ "COV": entity_make_spark(entity)
+    
+    // Track the original epoch for delayed instructions
+    // to prevent continuing motion after respawn
+    const epoch = entity.epoch
+    
+    // Clean up the angle and position at the end of animation 
+    // to correct for incremental error
+    def snap():
+        if entity.motor_audio:
+            stop_audio(entity.motor_audio)
+            entity.motor_audio = ∅
+        
+        if entity.epoch ≠ epoch: return sequence.BREAK
+        
+        entity.hex_angle = angle_loop(nearest_hex_angle(entity.hex_angle))
+        entity.hex_pos = nearest_hex(entity.hex_pos)
+            
+    // Callback
+    def snap_and_score():
+        if snap() == sequence.BREAK: return sequence.BREAK
+        
+        const handicap = max(100%, 250% - 50% entity.difficulty)        
+        entity.progress += handicap * ENDZONE_PROGRESS_PER_MOVE
+        entity.animation_sprite = star_sprite[0][0]
+        def sound(): play_sound(score_sound, false, 50%, entity.pos)
+        
+        sound()
+        for i < 4 (handicap - 100%): delay(sound, 15)
+
+        def turn_off_animation(): entity.animation_sprite = ∅
+        delay(turn_off_animation, 25)
+        
+        if entity.progress ≥ 100%: set_mode(CompetitiveWin, entity) because "100% BATTLE progress"
+            
+    
+    if instruction.op == "SPRAY":
+        process_spray_instruction(instruction, entity)        
+    
+    if instruction.op == "ROT" or instruction.op == "MOV":
+        entity.motor_audio = play_sound(motor_sound, false, 100%, entity.pos, 75% + 25% entity.gamepad.index)
+
+    if instruction.op == "ROT":
+        // Rotate
+        const spin = 60° * instruction.sign / INSTRUCTION_FRAMES
+        def rotate(τ): 
+            if entity.epoch ≠ epoch: return sequence.BREAK
+            entity.hex_angle += spin
+        add_frame_hook(rotate, snap, INSTRUCTION_FRAMES)     
+        
+    else if instruction.op == "MOV" or instruction.op == "CON":
+        // Move forward
+        const dir = if instruction.op == "MOV" then round(hex_direction_from_hex_angle(entity.hex_angle)) * instruction.sign else instruction.direction
+        const vel = dir / INSTRUCTION_FRAMES
+        const target_coord = entity.hex_pos + dir
+
+        const target_sprite = map_get_sprite_by_hex(map, target_coord)
+        
+        let movement_blocked = target_sprite and target_sprite.blocks_movement
+        let score = target_sprite and (game_type == GAME_TYPE.BATTLE) and target_sprite.is_endzone
+        
+        // Check for collision with other players
+        for other in entity_array:
+            if other ≠ entity and hex_distance(other.hex_pos, target_coord) < ½:
+                movement_blocked = true
+        
+        def translate_forward(τ): 
+            if entity.epoch ≠ epoch: return sequence.BREAK
+            entity.hex_pos += vel
+            
+        def translate_backward(τ):
+            if entity.epoch ≠ epoch: return sequence.BREAK
+            entity.hex_pos -= vel
+        
+        if movement_blocked:
+            // Go a little way and then back out
+            sequence(
+                {callback: translate_forward,  frames: ¼ INSTRUCTION_FRAMES},
+                {callback: translate_backward, frames: ¼ INSTRUCTION_FRAMES},
+                snap)
+            def hit(): play_sound(hit_sound, false, 100%, entity.pos)
+            delay(hit, ¼ INSTRUCTION_FRAMES - 3)
+        else:
+            entity.end_turn_hex_pos = target_coord
+            add_frame_hook(translate_forward, if score then snap_and_score else snap, INSTRUCTION_FRAMES)     
+
+
+
+def process_spray_instruction(instruction, entity):
+    // Iterate through the map tiles affected, stopping
+    // if a blocker is hit.
+    
+    // Get the primary direction of spray
+    const dir = round(hex_direction_from_hex_angle(entity.hex_angle))
+    // The two "perpendicular" axes for spreading the cone
+    const axis_array = [round(hex_direction_from_hex_angle(entity.hex_angle - 60°)), round(hex_direction_from_hex_angle(entity.hex_angle + 60°))]
+    
+    // Get the start hex, and clone it for mutation
+    let hex = nearest_hex(entity.hex_pos) + dir
+    
+    // See how far we can shoot uninterrupted
+    let range = 1
+    while range ≤ SPRAY_RANGE:
+        const sprite = map_get_sprite_by_hex(map, hex)
+        // Check for spray range
+        if range > 2 and range < SPRAY_RANGE:
+            // Fan out into a T
+            for i < 2:
+                const offset_hex = hex + axis_array[i]
+                process_spray_on_tile(instruction.type, map_get_sprite_by_hex(map, offset_hex), offset_hex, 8 range)
+        
+        process_spray_on_tile(instruction.type, sprite, hex, 8 range)
+        
+        if sprite and sprite.blocks_movement: break
+                        
+        hex += dir
+        ++range
+            
+    // Range is the distance that we *stopped* at,
+    // so the visual range should be a bit further to show 
+    // the blocker being hit
+    const visual_range = 32 clamp(range + ¼, ½, SPRAY_RANGE)
+    if instruction.type == action_sprite.burn:
+        const audio = play_sound(spray_burn_sound, ∅, ∅, entity.pos)
+        def stop(): stop_audio(audio)
+        delay(stop, 60)
+        spawn_vapor_jet(vfx_sprite.burn, entity.pos, entity.angle, visual_range, 3, true)
+    else:
+        play_sound(spray_freeze_sound, ∅, ∅, entity.pos)
+        spawn_vapor_jet(vfx_sprite.freeze, entity.pos, entity.angle, visual_range, 3, false)
+
+
+
+def process_spray_on_tile(type, sprite, hex, frame_delay):
+    if not sprite: return
+    let replace_sprite
+    
+    // See if any entity is on this tile
+    for entity in entity_array:
+        if hex_distance(entity.hex_pos, hex) < ½:
+            def teleport(): player_emergency_teleport(entity)
+            delay(teleport, frame_delay + ¼ INSTRUCTION_FRAMES)
+    
+    if type == action_sprite.burn:
+        if sprite.can_burn:
+            replace_sprite = map.spritesheet.fire[0]
+        else if sprite.can_melt:
+            replace_sprite = map.spritesheet.water[0]
+    else: // action_sprite.freeze
+        if sprite.can_extinguish:
+            replace_sprite = map.spritesheet.embers
+        else if sprite.can_freeze:
+            replace_sprite = map.spritesheet.ice[0]
+    
+    // Perform the replacement
+    if replace_sprite:
+        // Capture a copy of the position for the callback
+        const replace_hex = xy(hex)
+        def callback(): map_set_sprite_by_hex(map, replace_hex, replace_sprite)
+        //  Delay the map tile change effect until the spray reaches it
+        delay(callback, frame_delay)
+
+
+
+/** Moves the first value to the end */
+def cycle_queue(queue):
+    push(queue, pop_front(queue))
+
+
+/** Called from process_turn to process map effects */
+def after_turn(entity):
+    if entity.is_start_entity: ++round_number
+    if not entity.enabled: return
+
+    // Note that future_hex_angle may not match
+    // hex_angle here even if the instruction queue
+    // is empty, because there is a delay on the animation
+    // of hex_angle
+    
+    // What the entity is on right now, during animation
+    const current_map_sprite = map_get_sprite_by_hex(map, entity.hex_pos)
+    
+    // Restock the weapon slot periodically
+    if (game_type ≠ GAME_TYPE.RACE and
+        round_number mod 16 == 7 and
+        entity.status_array[TOOL_REGISTER] == "used"):
+            
+        entity.action_array[TOOL_REGISTER] = random_value(tool_action_pool)
+        entity.status_array[TOOL_REGISTER] = "off"
+        
+
+    // What the entity will be on at the end of the turn
+    const end_map_sprite = map_get_sprite_by_hex(map, entity.end_turn_hex_pos)
+    
+    if game_type == GAME_TYPE.RACE and current_map_sprite.is_finish_line and entity.gamepad ≠ ∅:
+        set_mode(CompetitiveWin, entity) because "Reach RACE finish"
+    
+    // Wait until we're fully on the pit, rather than halfway as
+    // for water
+    if current_map_sprite.is_pit and hex_distance(entity.hex_pos, nearest_hex(entity.hex_pos)) < 0.1:
+        entity_fall_down_pit(entity)
+
+    // Simulate water and fire
+    process_environment_damage(entity, current_map_sprite, end_map_sprite, "wet", "hot", 5)
+    process_environment_damage(entity, current_map_sprite, end_map_sprite, "hot", "wet", 3)
+                
+    // Process conveyor effects once every four rounds so that
+    // players have a chance to drive off of them
+    if round_number mod 4 == 0 and end_map_sprite.is_conveyor and (entity.instruction_queue[0] default {}).op ≠ "CON":
+        // On a conveyor, and not already about to be moved by a conveyor. 
+        // Inject the conveyor belt shift instruction. Do not change the future_hex_angle
+        // because conveyor belts never rotate
+        push_front(entity.instruction_queue, {op: "CON", direction: end_map_sprite.direction})
+
+
+
+/** Call to disable this entity in preparation for a destruction animation */
+def entity_begin_destruction(entity):
+    entity.enabled = false
+    // Wipe the instruction queue on destruction, and reset things
+    // dependent on the instruction queue
+    entity.hex_angle = 60° random_integer(0, 5)
+    entity.future_hex_angle = entity.hex_angle
+    resize(entity.instruction_queue, 0)
+    
+    
+
+def entity_fall_down_pit(entity):
+    entity_begin_destruction(entity)    
+    
+    let angle = entity.angle
+    let scale = ⅓
+    let opacity = 100%
+    
+    def plummet():
+        angle += 2°
+        scale *= 99%
+        opacity *= 98%
+        draw_sprite(entity.sprite, entity.pos, angle, scale, opacity, ENTITY_Z - ε)
+        
+    let seq_array = [{
+        callback: plummet,
+        frames: 60
+    }]
+    
+    play_sound(falling_sound, false, 100%, entity.pos)
+    
+    if entity.gamepad:         
+        // This is a player, so respawn,
+        // which creates its own animation
+        def teleport(): player_emergency_teleport(entity)
+        push(seq_array, teleport)        
+        
+    sequence(...seq_array)
+
+
+
+/** last_register_index is the first register to lock if encountering
+    this type of environment. This is called every turn, adjusting the
+    hot/wet-ness and locks...not just on a fire or water tile. */
+def process_environment_damage(entity, current_map_sprite, end_map_sprite, type, opposite_type, last_register_index):
+    assert(entity)
+    assert(entity.status_array)
+    assert(last_register_index ≥ 0)
+    assert(last_register_index < hand_size)
+    const environment_recovery_rate = if entity.difficulty ≥ 3 then 5% else 10%
+    
+    if current_map_sprite["is_" + type] and entity[type] < 20%:
+        // Trigger the splash/flame sound early, before actually
+        // entering the water or fire, so that it lines up
+        def start_sound(): play_sound(ASSETS[type + "_sound"], false, 130%, entity.pos)            
+        delay(start_sound, 10)    
+
+    if current_map_sprite["is_" + type]:
+        // Get damaged. It will immediately decrease to 100%.
+        // Cancel the opposite type of effect by setting it so low 
+        // that it will be immediately cancelled on the next turn.
+        entity[opposite_type] = 1%
+        entity[type] = 110%
+
+    if entity[type] > 0%:
+        // Cool down
+        entity[type] = max(0%, entity[type] - environment_recovery_rate)
+        
+        // Can be 0, 1, or 2
+        let num_locked = ceil(entity[type] / 30%)
+        if entity.difficulty == 0:
+            num_locked = min(num_locked, 1)
+        
+        with action_array, status_array in entity:
+            for i < 2:
+                const a = last_register_index - i
+                if i < num_locked:
+                    // Lock this register
+                    action_array[a] = action_sprite[type][0]
+                    status_array[a] = "locked"
+                else if status_array[a] == "locked":
+                    // Unlock this register and mark it used
+                    action_array[a] = action_sprite.zero
+                    status_array[a] = "used"
+
+
+
+/** Process the next turn for all entities */
+def process_turn():    
+    // Loop until someone takes a turn, or all entities
+    // are considered
+    let cycles = 0
+    while cycles < size(entity_array):
+        const first = entity_array[0]
+        cycle_queue(entity_array); ++cycles
+        
+        if size(first.instruction_queue) == 0:
+            after_turn(first)
+        else:
+            // Found an entity that is eligible to go. 
+            const array = [first]
+            
+            // See who else can run their turn simultaneously without interfering.
+            // Note that the array has already been cycled once
+            // by the time we reach this point
+            while cycles < size(entity_array):
+                if not can_interfere_array(entity_array[0], array):
+                    if size(entity_array[0].instruction_queue) > 0:
+                        // Add to the array
+                        push(array, entity_array[0])
+                    // Keep looking
+                    cycle_queue(entity_array); ++cycles
+                else:
+                    // Stop the inner loop here, as 
+                    // we've found a conflict
+                    break
+
+            for entity in array:
+                const instruction = pop_front(entity.instruction_queue)            
+                execute_instruction(entity, instruction)
+                after_turn(entity)
+            
+            // Stop iterating because we've processed everyone
+            // eligible to execute
+            break
+
+    
+
+/** Returns true if it is possible for this entity to interfere with
+    any of the others in this array */
+def can_interfere_array(entity, array):
+    assert(is_array(array))
+    for other in array:
+         if can_interfere(entity, other):
+             return true
+    return false
+     
+  
+  
+/** Returns true if it is possible for these entities to interfere with each other by executing
+    their next instruction */
+def can_interfere(A, B):
+    assert(A and B and not is_array(B))
+    const instruction_A = A.instruction_queue[0]
+    const instruction_B = B.instruction_queue[0]
+    
+    const distance = hex_distance(A.hex_pos, B.hex_pos)
+    
+    // No interference unless both are close by and trying to move 
+    // simultaneously (this is conservative...we could actually check if
+    // they're likely to hit)
+    return ((instruction_A and instruction_B) and 
+    
+            // Moving near each other
+            (((instruction_A.op == "MOV" or instruction_A.op == "CON") and
+             (instruction_B.op == "MOV" or instruction_B.op == "CON") and 
+             distance < 2) or 
+             
+             // Firing near each other
+            ((instruction_A.op == "SPRAY" or instruction_B.op == "SPRAY") and
+             distance ≤ SPRAY_RANGE) or
+             
+            (instruction_A.op == "SPRAY" and instruction_B.op == "SPRAY" and
+             distance ≤ 2 SPRAY_RANGE)))
+  
+ 
+ 
+def entity_make_spark(player):
+    const pos = player.pos + 12 random_on_circle()    
+    play_sound(sparks_00_sound, false, random(15%, 45%), pos, random(75%, 180%))
+        
+    for i < 50:
+        spawn_particle(pos, random(0.1, 0.75) * random_on_circle(), lerp(#FFF, #FE0, ξ²) * random(50%, 100%), VAPOR_Z, random(25, 75))
+
+   

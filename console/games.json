@@ -145,8 +145,13 @@
         },
         {
             "url": "quad://games/beat_the_gobblins/",
-            "title": "BEAT THE GOBBLINS",
-            "description": "An evil wizzard has trapped you on top of their tower and summoned hordes of angry bombgobblins.  Intense score chasing action game.  Good luck!"
+            "title": "Beat The Gobblins",
+            "description": "The evil Wizzard has trapped you on top of their tower and summoned hordes of angry Bombgobblins. Intense score chasing action. Good luck!"
+        },
+        {
+            "url": "quad://games/beyond_control/",
+            "title": "Beyond Control",
+            "description": "Program your broken robots to race through the ruins."
         },
         {
             "url": "quad://games/icetime/",

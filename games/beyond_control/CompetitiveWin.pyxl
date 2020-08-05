@@ -1,0 +1,66 @@
+CompetitiveGameOver
+════════════════════════════════════════════════════════════════════════
+
+let winner
+let choice
+
+
+enter(in_winner)
+────────────────────────────────────────────────────────────────────────
+play_background_sound(title_music)
+winner = in_winner
+
+// Draw on top of everything
+set_transform(xy(0, 0), xy(1, 1), 200)
+
+choice = 0
+
+              
+frame
+────────────────────────────────────────────────────────────────────────
+draw_previous_mode()
+
+const α = min(mode_frames / BANNER_ANIMATION_FRAMES, 100%)
+
+draw_animated_banner(150% winner.color, α)
+
+draw_sprite(winner.sprite, xy(70, ½ SCREEN_SIZE.y), 1° mode_frames, ∅, α)
+if α == 100%:
+    const x = 245
+    draw_text(giant_font, "P" + (winner.gamepad.index + 1) + " WINS", xy(x, 90), #FFF, #000, 150% winner.color, "center", "center")
+
+    // Pretend that the rounds involve entirely simultaneous turns
+    // to make times between multiplayer games comparable
+    const time = round_number * INSTRUCTION_FRAMES / 60
+    draw_text(small_font, map.title + " in " + format_number(time, "oldstopwatch"), xy(x, 109), #FFF, #000, ∅, "center", "center")
+
+    if mode_frames > BANNER_ANIMATION_FRAMES + 60:
+        for text at c in ["REMATCH", "NEW MAP", "DONE"]:
+            const selected = c == choice
+            const star = if selected then "★" else ""
+            const pos = xy(x + 75 (c - 1), 132)
+            
+            if selected: draw_rect(pos, xy(80, 16), #444, cursor_color())
+
+            draw_text(font, star + text + star, 
+                pos, 
+                if selected then #FFF else #CCC,
+                #000, 
+                if selected then winner.color else ∅,
+                "center", "center")
+
+        for gamepad in player in player_array:
+            choice = clamp(choice + gamepad.xx, 0, 2)
+            if gamepad.aa:
+                if choice == 0:
+                    set_mode(Play, make_player_info(), game_type) because "Rematch"
+                else if choice == 1:
+                    set_mode(GameSelect, make_player_info()) because "New Map"
+                else:
+                    set_mode(Title) because "Done"
+    
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+reset_transform()

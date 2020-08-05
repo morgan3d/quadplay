@@ -1,0 +1,145 @@
+GameSelect
+════════════════════════════════════════════════════════════════════════
+
+// Passed from Title
+let player_info
+
+let game_choice
+
+// Index of the chosen map
+let map_choice
+
+// How far the map listing has scrolled
+let map_scroll
+
+let selecting_map = false
+
+const game_array = [
+    {
+        title: "RACE",
+        type: GAME_TYPE.RACE,
+        description: "Be the first to the flag"
+    },
+    {
+        title: "BATTLE",
+        type: GAME_TYPE.BATTLE,
+        description: "Hold the star tiles the longest"
+    }
+    /*,
+    {
+        title: "QUEST",
+        type: GAME_TYPE.QUEST,
+        description: "Cooperative adventure"
+    }*/]
+    
+
+
+enter(in_player_info)
+────────────────────────────────────────────────────────────────────────
+set_background(title_sprite[0][0])
+set_transform(xy(0, SCREEN_SIZE.y), xy(1, -1))
+
+player_info = in_player_info
+
+if get_previous_mode() == Title:
+    // Not returning from Play, so reset everything
+    game_choice = load_local("game_choice") default 0
+    selecting_map = false
+    map_choice = 0
+    map_scroll = 0
+    
+play_background_sound(title_music)
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+draw_rect(xy(½ SCREEN_SIZE.x, 94), xy(SCREEN_SIZE.x, 40), TITLE_SCRIM_COLOR)
+
+// Draw games
+for game at g in game_array:        
+    const selected = (g == game_choice)  
+
+    // Don't draw at all during map selection
+    if selecting_map and not selected: continue
+    
+    const pos = xy((g + 1) * SCREEN_SIZE.x / (1 + size(game_array)), 100)
+    const star = if selected then "★" else ""
+    draw_text(font, star + game.title + star, pos, if selected then #FFF else #CCC, #000, if selected then #0D2 else #777, "center", "center", 10)
+    if selected:
+        draw_text(small_font, game.description, pos + xy(0, -15), #EEE, #000, ∅, "center", "center")
+        // Cursor
+        if not selecting_map:
+            draw_rect(pos, xy(80, 16), #444, cursor_color())
+            
+
+
+const map_array = if game_choice == 0 then map_table.race else map_table.battle
+
+// Draw maps
+if selecting_map:
+    // Dark scrim
+    draw_rect(xy(½ SCREEN_SIZE.x, 44), xy(SCREEN_SIZE.x, 60), TITLE_SCRIM_COLOR)
+    
+    // Maps
+    for m < 4:
+        const map = map_array[m + map_scroll]
+        preserving_transform:
+            set_transform(xy(72 + 80 m, SCREEN_SIZE.y - 48), xy(1, -1))
+            
+            // Cursor         
+            if map_choice == m + map_scroll:
+                draw_rect(xy(0, 0), xy(64, 48), #444, cursor_color())
+                
+            // Force the map to be tiny and centered on the origin
+            set_camera(xy(32 * 6.5, 24 * 5), ∅, ⅛)
+            draw_hex_map(map, false)
+    
+    // Show indicators of more content
+    if map_scroll > 0:
+        draw_text(giant_font, "<", xy(10, 42), #CCC)
+    if map_scroll < size(map_array) - 4:
+        draw_text(giant_font, ">", xy(SCREEN_SIZE.x - 20, 42), #CCC)
+        
+    draw_text(font, map_array[map_choice].title, xy(½ SCREEN_SIZE.x, 7), #FFF, #000, ∅, "center")
+            
+
+// Input
+for info in player_info:
+    const gamepad = gamepad_array[info.index]
+    if selecting_map:
+        // Selecting map
+        if gamepad.bb:
+            selecting_map = false
+        else if gamepad.aa:
+            play_accept_sound(gamepad.index)
+            map_source = map_array[map_choice]
+            set_mode(Play, player_info, game_array[game_choice].type) because "Selected"
+        else:
+            if gamepad.xx: play_blip_sound(gamepad.index)
+            map_choice = clamp(map_choice + gamepad.xx, 0, size(map_array) - 1)
+            while map_choice - map_scroll > 3:
+                ++map_scroll
+            while map_choice - map_scroll < 0:
+                --map_scroll
+    else:
+        // Selecting game
+        if gamepad.bb:
+            set_mode(Title) because "Cancel"
+        else if gamepad.aa:
+            play_accept_sound(gamepad.index)
+            save_local("game_choice", game_choice)
+            selecting_map = true
+            if game_choice == 1:
+                // Quest has no map selection.
+                // If quest were implemented, it would
+                // be launched here.
+            
+        else:
+            game_choice = clamp(game_choice + gamepad.xx, 0, size(game_array) - 1)
+            if gamepad.xx: play_blip_sound(gamepad.index)
+            
+            
+
+

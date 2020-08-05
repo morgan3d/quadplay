@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.2.1" orientation="hexagonal" renderorder="left-down" width="14" height="11" tilewidth="32" tileheight="48" infinite="0" hexsidelength="0" staggeraxis="y" staggerindex="odd" nextlayerid="7" nextobjectid="1">
+ <properties>
+  <property name="sound" value="loop_forest_sound"/>
+  <property name="title" value="[B01] River Raid "/>
+ </properties>
+ <tileset firstgid="1" name="hex-32x32" tilewidth="32" tileheight="32" tilecount="99" columns="9">
+  <image source="hex-32x32.png" width="288" height="352"/>
+ </tileset>
+ <layer id="5" name="Tile Layer 1" width="14" height="11">
+  <data encoding="csv">
+0,57,57,57,57,57,12,57,57,12,12,57,12,0,
+57,55,28,30,55,28,30,28,55,30,28,55,12,0,
+57,46,46,46,46,46,46,46,46,46,46,46,46,12,
+56,49,22,30,49,22,46,49,22,30,49,22,12,0,
+56,28,49,30,30,49,46,46,22,30,30,22,28,12,
+57,28,49,28,28,49,46,22,28,28,22,28,12,0,
+57,28,28,49,30,30,46,46,30,30,22,28,28,12,
+56,28,46,46,46,46,78,46,46,46,46,28,56,0,
+57,28,46,30,30,28,77,77,28,30,30,46,28,57,
+57,46,30,28,77,77,77,77,77,28,30,46,12,0,
+0,56,12,12,57,12,12,12,56,12,12,57,12,0
+</data>
+ </layer>
+</map>

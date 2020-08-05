@@ -1,0 +1,85 @@
+const map_table = {
+    race: [race_00_map, race_01_map, race_02_map, race_03_map, race_04_map, race_05_map, race_06_map, race_07_map, race_08_map],
+    battle: [battle_00_map,battle_01_map, battle_02_map, battle_03_map, battle_04_map, battle_05_map]
+}
+
+/** Active map for the game, preserved so that it can be cloned again
+    for a rematch */
+let map_source
+
+/** Clone of map for the game */
+let map
+
+/** Set by Play. Types are in GAME_TYPE constant */
+let game_type
+
+/** Returns the hex positions of the spawns as an array */
+def get_spawn_array(map):
+    const spawn_array = []
+    assert(map)
+    for x < size(map):
+        for y < size(map[x]):
+            if (map[x][y] default {}).is_spawn:
+                push(spawn_array, transform_map_coord_to_hex(xy(x, y)))
+
+    assert(size(spawn_array) == 4, "Wrong number of spawns. size(spawn_array) = " + size(spawn_array))
+    return spawn_array
+    
+
+let background_audio
+
+def play_background_sound(sound, volume default 100%):
+    if not background_audio or background_audio.sound ≠ sound:
+        stop_audio(background_audio)
+        background_audio = play_sound(sound, true, volume)
+
+
+def draw_rainbow_screen_border() preserving_transform:
+    const ky = 32
+    set_transform(xy(0, 0), xy(1, 1))
+
+    // Blue
+    draw_line(xy(0, ky), xy(0, SCREEN_SIZE.y - ky - 1), #7da5ff)
+    
+    // Purple
+    draw_line(xy(0, 0), xy(0, ky - 1), #b879ff)
+    draw_line(xy(1, 0), xy(½ SCREEN_SIZE.x - 1, 0), #b879ff)
+
+    // Red
+    draw_line(xy(½ SCREEN_SIZE.x, 0), xy(SCREEN_SIZE.x - 2, 0), #ff595a)
+    draw_line(xy(SCREEN_SIZE.x - 1, 0), xy(SCREEN_SIZE.x - 1, ky -1), #ff595a)
+
+    // Orange
+    draw_line(xy(SCREEN_SIZE.x - 1, ky), xy(SCREEN_SIZE.x - 1, SCREEN_SIZE.y - ky), #f9a55b)
+
+    // Yellow
+    draw_line(xy(SCREEN_SIZE.x - 1, SCREEN_SIZE.y - ky - 1), SCREEN_SIZE - 1, #f7e656)
+    draw_line(xy(SCREEN_SIZE.x - 2, SCREEN_SIZE.y - 1), xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 1), #f7e656)
+
+    // Green
+    draw_line(xy(½ SCREEN_SIZE.x - 1, SCREEN_SIZE.y - 1), xy(0, SCREEN_SIZE.y - 1), #67f550)
+    draw_line(xy(0, SCREEN_SIZE.y - 2), xy(0, SCREEN_SIZE.y - ky), #67f550)
+    
+
+
+/** Used for intro and win animations */
+def draw_animated_banner(color, α) preserving_transform:
+    // Draw on top of everything
+    set_transform(xy(0, 0), xy(1, 1), 200)
+    
+    // Faded area
+    draw_rect(½ SCREEN_SIZE, xy(SCREEN_SIZE.x, ½ SCREEN_SIZE.y), rgba(0, 0, 0, 60% α))
+    
+    // Top line
+    local:
+        const x = SCREEN_SIZE.x * α
+        draw_rect(xy(x - ½ SCREEN_SIZE.x, ¼ SCREEN_SIZE.y), xy(SCREEN_SIZE.x + 2, 10), color, #FFF)
+    
+        // Bottom line
+        const pos = xy(1.5 SCREEN_SIZE.x - x, ¾ SCREEN_SIZE.y)
+        draw_rect(pos, xy(SCREEN_SIZE.x + 2, 10), color, #FFF)
+        draw_line(pos + xy(-½ SCREEN_SIZE.x, 5), pos + xy(+½ SCREEN_SIZE.x, 5), #000)
+
+
+def angle_loop(angle):
+    return loop(angle, -180°, 180°)

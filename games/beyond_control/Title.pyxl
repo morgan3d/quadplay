@@ -1,0 +1,101 @@
+Title
+════════════════════════════════════════════════════════════════════════
+
+// 0 = "out", 1 = "choose difficulty", 2 = "ready"
+const player_status = [0, 0, 0, 0]
+
+// 0-3
+const player_difficulty = load_local("player_difficulty") default [1, 1, 1, 1]
+
+
+enter()
+────────────────────────────────────────────────────────────────────────
+play_background_sound(title_music)
+resize(particle_array, 0)
+
+set_background(title_sprite[0][0])
+
+if get_previous_mode() == GameSelect:
+    // Un-ready everyone
+    for status at p in player_status:
+        if status == 2: player_status[p] = 1
+
+
+if DEBUG:
+    map_source = battle_00_map
+    set_mode(Play, [{index:0, difficulty:4}], GAME_TYPE.BATTLE) because "DEBUG quickstart"
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+let someone_ready = false
+let someone_choosing = false
+const player_info = []
+
+draw_rect(xy(½ SCREEN_SIZE.x, 66), xy(SCREEN_SIZE.x, 97), TITLE_SCRIM_COLOR)
+
+for p < 4:
+    const sprite = robot_sprite[p][0]
+    const gamepad = gamepad_array[p]
+    const color = get_sprite_pixel_color(sprite, ½ sprite.size)
+
+    player_status[p] = clamp(player_status[p] + gamepad.aa - gamepad.bb, 0, 2)
+    if gamepad.aa: play_accept_sound(gamepad.index)
+
+    let α = 100%
+    
+    let message = "P" + (p + 1)
+    if player_status[p] == 0: // Sign in
+        // Blink in beat with the title music
+        message = "{font: giant_font " + message + "}{br}Press (a)"
+        α = lerp(25%, 100%, ½ (1 + cos(TITLE_BLINK_RATE * mode_frames + 90° p)))
+            
+    else if player_status[p] == 1: // Choose difficulty
+        message += " Difficulty:{br}" + "[<] " 
+        for i ≤ player_difficulty[p]:
+            message += "●"
+        for player_difficulty[p] < i ≤ DIFFICULTY_MAX:
+            message += "○"
+        message += " [>]"
+        player_difficulty[p] = clamp(player_difficulty[p] + gamepad.xx, 0, DIFFICULTY_MAX)
+        if gamepad.xx: play_blip_sound(gamepad.index)
+        message += "{br}(a) when ready"
+        someone_choosing = true
+        
+    else if player_status[p] == 2: // Ready
+        someone_ready = true
+        message += (" READY{br}" + 
+                    "←↖↗→↘↙"[⌊mode_frames / 20⌋ mod 6] +
+                    "{br}(b) to cancel")
+                    
+        // Accumulate a compact array of player data. This is only
+        // needed on the frame where the game begins
+        push(player_info, {index: p, difficulty: player_difficulty[p]})
+
+    
+    draw_text(font, replace(message, gamepad.prompt), 
+        xy((player_position[p] + ½) * ¼ SCREEN_SIZE.x, 65),
+        rgba(1, 1, 1, α), rgba(0, 0, 0, α), 
+        color * rgba(1, 1, 1, α), "center", "center", ∅, ∅, ∅, true)
+
+if someone_ready and not someone_choosing:
+    save_local("player_difficulty", player_difficulty)
+    set_mode(GameSelect, player_info) because "All ready"
+
+
+preserving_transform:
+    set_transform(xy(1, 1), xy(1, 1))
+    
+    // Shed sparks approximately on the beat
+    if mode_frames mod 37 == 0 and (ξ < 20% or mode_frames < 70):
+        const pos = random_value(TITLE_SPARK_POS_ARRAY)
+        
+        // Don't play during the very beginning of the title music
+        if mode_frames > 30:
+            play_sound(sparks_00_sound, false, random(15%, 45%), pos, random(75%, 180%))
+            
+        for i < 20:
+            spawn_particle(pos, xy(0, random(0.05, 0.60)) + 0.20 random_on_circle(), lerp(#FFF, #FE0, ξ²) * random(50%, 100%), -1, random(25, 150))
+    
+    update_and_draw_particles()

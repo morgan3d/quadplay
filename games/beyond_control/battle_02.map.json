@@ -1,0 +1,9 @@
+{
+    "url": "battle_02.tmx",
+    "license": "By Morgan McGuire 2020. Public Domain/CC0",
+    "sprite_url": "hex.sprite.json",
+    "y_up": true,
+    "sprite_url_table": {
+        "<default>": "hex.sprite.json"
+    }
+}

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.2.1" orientation="hexagonal" renderorder="left-down" width="14" height="11" tilewidth="32" tileheight="48" infinite="0" hexsidelength="0" staggeraxis="y" staggerindex="odd" nextlayerid="7" nextobjectid="1">
+ <properties>
+  <property name="sound" value="loop_wind_sound"/>
+  <property name="title" value="[B03] Where the Pavement Ends"/>
+ </properties>
+ <tileset firstgid="1" name="hex-32x32" tilewidth="32" tileheight="32" tilecount="99" columns="9">
+  <image source="hex-32x32.png" width="288" height="352"/>
+ </tileset>
+ <layer id="5" name="Tile Layer 1" width="14" height="11">
+  <data encoding="csv">
+0,12,12,12,12,12,12,12,12,12,12,12,12,0,
+12,55,29,29,29,29,29,61,29,60,20,2,12,0,
+12,29,29,40,40,40,40,12,29,61,12,2,20,12,
+12,29,12,29,61,29,29,60,29,77,20,10,12,0,
+12,55,29,29,29,31,12,40,61,77,77,11,11,12,
+12,29,61,40,40,12,29,29,77,77,77,11,12,0,
+12,55,29,29,61,49,12,40,60,77,77,11,11,12,
+12,29,12,29,29,29,61,29,20,77,61,10,12,0,
+12,29,29,40,40,40,40,12,29,60,12,11,11,12,
+12,55,29,29,29,61,29,60,29,60,20,61,12,0,
+0,12,12,12,12,12,12,12,12,12,12,12,12,0
+</data>
+ </layer>
+</map>

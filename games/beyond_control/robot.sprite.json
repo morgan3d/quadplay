@@ -1,0 +1,9 @@
+{
+    "url": "robot-72x72.png",
+    "sprite_size": {
+        "x": 72,
+        "y": 72
+    },
+    "license": "Copyright 2020 Morgan McGuire, CC BY 3.0",
+    "default_frames": 1,
+}

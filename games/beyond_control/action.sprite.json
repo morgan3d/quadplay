@@ -1,0 +1,131 @@
+{
+    "url": "action.png",
+    "sprite_size": {
+        "x": 11,
+        "y": 10
+    },
+    "license": "Copyright 2020 Morgan McGuire, CC BY 3.0",
+    "gutter": 1,
+    "transpose": false,
+    "default_frames": 1,
+    "names": {
+        "northwest": {
+            "x": 0,
+            "y": 0,
+            "angle": {
+                "type": "number",
+                "value": "120deg"
+            }
+        },
+        "northeast": {
+            "x": 1,
+            "y": 0,
+            "angle": {
+                "type": "number",
+                "value": "60deg"
+            }
+        },
+        "west": {
+            "x": 0,
+            "y": 1,
+            "angle": {
+                "type": "number",
+                "value": "180deg"
+            }
+        },
+        "east": {
+            "x": 1,
+            "y": 1,
+            "angle": {
+                "type": "number",
+                "value": "0deg"
+            }
+        },
+        "southwest": {
+            "x": 0,
+            "y": 2,
+            "angle": {
+                "type": "number",
+                "value": "240deg"
+            }
+        },
+        "southeast": {
+            "x": 1,
+            "y": 2,
+            "angle": {
+                "type": "number",
+                "value": "300deg"
+            }
+        },
+        "double": {
+            "x": 2,
+            "y": 0,
+            "is_modifier": true,
+            "speed": 2
+        },
+        "zero": {
+            "x": 2,
+            "y": 2,
+            "is_modifier": true,
+            "speed": 0
+        },
+        "reverse": {
+            "x": 2,
+            "y": 1,
+            "is_modifier": true,
+            "speed": -1
+        },
+        "wet": {
+            "start": {
+                "x": 3,
+                "y": 0
+            },
+            "end": {
+                "y": 1,
+                "x": 3
+            },
+            "frames": 30,
+            "extrapolate": "loop"
+        },
+        "hot": {
+            "start": {
+                "x": 3,
+                "y": 2
+            },
+            "end": {
+                "y": 3,
+                "x": 3
+            },
+            "frames": 30,
+            "extrapolate": "loop"
+        },
+        "forward": {
+            "x": 0,
+            "y": 3
+        },
+        "counterclockwise": {
+            "x": 1,
+            "y": 3,
+            "is_modifier": true,
+            "turn": 1
+        },
+        "clockwise": {
+            "x": 2,
+            "y": 3,
+            "is_modifier": true,
+            "turn": -1
+        },
+        "burn": {
+            "x": 0,
+            "y": 4,
+            "is_modifier": true,
+            "is_spray": true
+        },
+        "freeze": {
+            "x": 1,
+            "y": 4,
+            "is_modifier": true,
+            "is_spray": true
+        }
+    }
+}

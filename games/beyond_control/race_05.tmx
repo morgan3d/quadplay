@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.2.1" orientation="hexagonal" renderorder="left-down" width="14" height="11" tilewidth="32" tileheight="48" infinite="0" hexsidelength="0" staggeraxis="y" staggerindex="odd" nextlayerid="7" nextobjectid="1">
+ <properties>
+  <property name="sound" value="loop_beat_sound"/>
+  <property name="title" value="[R05] Ring of Fire"/>
+ </properties>
+ <tileset firstgid="1" name="hex-32x32" tilewidth="32" tileheight="32" tilecount="99" columns="9">
+  <image source="hex-32x32.png" width="288" height="352"/>
+ </tileset>
+ <layer id="5" name="Tile Layer 1" width="14" height="11">
+  <data encoding="csv">
+0,57,57,57,57,57,12,57,57,12,57,12,56,0,
+57,59,4,29,29,29,22,13,13,13,60,37,12,0,
+57,55,29,4,29,64,64,64,64,29,4,29,29,12,
+56,61,29,4,64,57,29,31,64,56,4,29,57,0,
+56,55,29,29,64,10,29,31,29,64,29,4,29,57,
+57,13,13,64,40,40,61,40,56,64,10,60,56,0,
+57,55,29,29,64,10,29,49,29,64,29,22,29,12,
+56,60,29,22,64,56,29,49,64,57,22,29,57,0,
+57,55,29,22,29,64,64,64,64,29,22,29,29,12,
+57,58,22,29,29,29,4,13,13,13,20,37,56,0,
+0,56,12,12,57,12,57,12,56,57,56,56,57,0
+</data>
+ </layer>
+</map>

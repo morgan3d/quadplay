@@ -6,11 +6,11 @@ const gameArray = [{
    developer: "CasualEffects",
    url: "quad://games/quadpaddle",
    description: "Blast bricks as a team from all four sides, grabbing powerups and racking up points.",
-   version: 0.5,
-   cooperative: true,
-   competitive: false,
-   min_players: 1,
-   max_players: 4,
+   version:      0.5,
+   cooperative:  true,
+   competitive:  false,
+   min_players:  1,
+   max_players:  4,
    achievements: false,
    builtin:      true,
    highscores:   false,
@@ -23,11 +23,11 @@ const gameArray = [{
    developer: "CasualEffects",
    url: "quad://games/serpitron",
    description: "Grow your serpent without crashing into obstacles or yourself. With rats, shotguns, blizzards, cities, & pyramids.",
-   version: 0.5,
-   cooperative: false,
-   competitive: true,
-   min_players: 1,
-   max_players: 4,
+   version:      1.5,
+   cooperative:  false,
+   competitive:  true,
+   min_players:  1,
+   max_players:  4,
    achievements: false,
    builtin:      true,
    highscores:   false,
@@ -40,13 +40,13 @@ const gameArray = [{
    developer: "CasualEffects",
    url: "quad://games/icetime",
    description: "2 vs. 2 ice hockey with teams, player stats., faceoffs, passing…and a Zamboni.",
-   version: 0.5,
-   cooperative: true,
-   competitive: true,
-   min_players: 1,
-   max_players: 4,
+   version:      1.0,
+   cooperative:  true,
+   competitive:  true,
+   min_players:  1,
+   max_players:  4,
    achievements: false,
-   highscores: false,
+   highscores:   false,
    builtin:      true,
    label: itlabel[0][0],
    preview: itpreview
@@ -58,7 +58,7 @@ const gameArray = [{
    developer: "Stephan Steinbach",
    url: "quad://games/beat_the_gobblins",
    
-   version:      1.0,
+   version:      1.1,
    description:  "An evil wizzard has trapped you on top of their tower and summoned hordes of angry bombgobblins. Good luck!",
    min_players:   1,
    max_players:   1,
@@ -83,7 +83,7 @@ const gameArray = [{
    cooperative:  false,
    competitive:  true,
    achievements: false,
-   highscores:   true,
+   highscores:   false,
    builtin:      true,
    label:        rplabel[0][0],
    preview:      rppreview
@@ -104,6 +104,23 @@ const gameArray = [{
    builtin:      true,
    label:        allabel[0][0],
    preview:      alpreview
+},
+                   
+{
+   title: "Beyond Control",
+   developer: "Casual Effects",
+   url: "quad://games/across_the_lake",
+   version:      1.0,
+   description:  "Program your broken robots to race through the ruins.",
+   min_players:   1,
+   max_players:   4,
+   cooperative:  false,
+   competitive:  true,
+   achievements: false,
+   highscores:   false,
+   builtin:      true,
+   label:        bclabel[0][0],
+   preview:      bcpreview
 }
 ]
 
@@ -242,7 +259,7 @@ local:
 
    if game.highscores:
       drawIcon(icons.highscores, xy(sideX, y)).y
-      y += draw_text({font:mediumFont, text:"Score", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
+      y += draw_text({font:mediumFont, text:"Highscore", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
 
 for pad in gamepad_array:
    if pad.aa or pad.qq or pad.$pp:

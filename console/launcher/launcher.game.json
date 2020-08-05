@@ -32,8 +32,10 @@
         "bgpreview":  "bgpreview.sprite.json",
 
         "allabel":    "allabel.sprite.json",
-        "alpreview":  "alpreview.sprite.json"
+        "alpreview":  "alpreview.sprite.json",
 
+        "bclabel":    "bclabel.sprite.json",
+        "bcpreview":  "bcpreview.sprite.json"
     },
 
     "constants":  {

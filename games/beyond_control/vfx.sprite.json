@@ -1,0 +1,18 @@
+{
+    "url": "vfx.png",
+    "license": "Copyright 2020 Morgan McGuire, CC BY 3.0",
+    "sprite_size": {
+        "x": 24,
+        "y": 24
+    },
+    "names": {
+        "burn": {
+            "x": 0,
+            "y": 0
+        },
+        "freeze": {
+            "x": 1,
+            "y": 0
+        }
+    }
+}

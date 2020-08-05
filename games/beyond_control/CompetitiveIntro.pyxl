@@ -1,0 +1,39 @@
+CompetitiveIntro
+════════════════════════════════════════════════════════════════════════
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+// Draw the regular screen without players
+draw_hex_map(map)
+iterate(player_array, player_draw_spawn)
+draw_rainbow_screen_border()
+
+// Transition fraction
+const α = min(mode_frames / BANNER_ANIMATION_FRAMES, 
+              100%, 
+              (COMPETITIVE_INTRO_FRAMES - mode_frames) / BANNER_ANIMATION_FRAMES)
+
+draw_animated_banner(#DDD, α)
+    
+// Draw the robots dropping into place
+if mode_frames ≥ BANNER_ANIMATION_FRAMES:
+    preserving_transform:
+        // Fully visible time fraction
+        const τ = clamp((mode_frames - 3 BANNER_ANIMATION_FRAMES) / (COMPETITIVE_INTRO_FRAMES - 4 BANNER_ANIMATION_FRAMES), 0%, 100%)
+        set_transform(xy(0, 0), xy(1, 1), 200)
+        
+        for player in player_array:
+            const p = player.gamepad.index
+            
+            const start_pos = xy((player_position[p] + ½) * ¼ SCREEN_SIZE.x, ½ SCREEN_SIZE.y)
+            const end_pos = player.pos * xy(1, -1) + xy(-16, SCREEN_SIZE.y + 8)            
+            const pos = lerp(start_pos, end_pos, τ)
+            draw_text(giant_font, "P" + (p + 1), start_pos, #FFF, #000, 150% player.color, "center", "center")
+            draw_sprite(player.sprite, pos, player.angle, lerp(100%, ⅓, τ))
+
+    
+if mode_frames == COMPETITIVE_INTRO_FRAMES:
+    pop_mode() because "Intro complete"
+    

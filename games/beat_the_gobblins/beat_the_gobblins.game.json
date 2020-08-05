@@ -229,7 +229,7 @@
     },
     "cooperative": false,
     "copyright": "©2019 Stephan Steinbach",
-    "description": "An evil wizzard has trapped you on top of their tower and summoned hordes of angry bombgobblins.  Intense score chasing action game.  Good luck!",
+    "description": "The evil Wizzard has trapped you on top of their tower and summoned hordes of angry Bombgobblins. Intense score chasing action. Good luck!",
     "developer": "Stephan Steinbach",
     "y_up": false,
     "highscores": true,
@@ -250,6 +250,6 @@
         "debug.pyxl",
         "btw_lib.pyxl"
     ],
-    "title": "BEAT THE GOBBLINS",
+    "title": "Beat The Gobblins",
     "version": 1
 }

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.2.1" orientation="hexagonal" renderorder="left-down" width="14" height="11" tilewidth="32" tileheight="48" infinite="0" hexsidelength="0" staggeraxis="y" staggerindex="odd" nextlayerid="7" nextobjectid="1">
+ <properties>
+  <property name="sound" value="loop_beat_sound"/>
+  <property name="title" value="[R03] Swamped"/>
+ </properties>
+ <tileset firstgid="1" name="hex-32x32" tilewidth="32" tileheight="32" tilecount="99" columns="9">
+  <image source="hex-32x32.png" width="288" height="352"/>
+ </tileset>
+ <layer id="5" name="Tile Layer 1" width="14" height="11">
+  <data encoding="csv">
+0,56,57,57,56,57,56,57,56,56,57,57,56,0,
+56,28,28,28,30,59,13,13,28,28,19,2,12,0,
+56,28,28,29,46,28,28,28,58,21,12,20,55,12,
+57,60,68,46,30,28,59,19,19,20,20,2,12,0,
+56,2,28,50,46,28,46,12,40,40,40,2,55,12,
+56,37,28,40,10,12,19,19,20,13,13,20,12,0,
+56,28,11,31,20,28,46,46,40,40,40,19,55,12,
+12,29,69,28,56,46,59,19,19,2,20,2,12,0,
+12,29,29,28,28,46,11,2,11,11,12,2,55,12,
+12,29,29,29,57,46,13,13,20,11,20,11,12,0,
+0,12,12,12,12,12,12,12,12,12,12,12,12,0
+</data>
+ </layer>
+</map>

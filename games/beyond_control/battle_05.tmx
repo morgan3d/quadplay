@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.2.1" orientation="hexagonal" renderorder="left-down" width="14" height="11" tilewidth="32" tileheight="48" infinite="0" hexsidelength="0" staggeraxis="y" staggerindex="odd" nextlayerid="7" nextobjectid="1">
+ <properties>
+  <property name="sound" value="loop_prometheus_sound"/>
+  <property name="title" value="[B05] Greenland"/>
+ </properties>
+ <tileset firstgid="1" name="hex-32x32" tilewidth="32" tileheight="32" tilecount="99" columns="9">
+  <image source="hex-32x32.png" width="288" height="352"/>
+ </tileset>
+ <layer id="5" name="Tile Layer 1" width="14" height="11">
+  <data encoding="csv">
+0,12,57,57,12,12,56,57,57,56,57,56,12,0,
+57,55,61,73,73,73,73,73,73,73,21,55,56,0,
+12,61,60,73,73,73,30,30,73,73,73,58,58,56,
+56,20,12,73,30,28,28,28,30,73,12,21,57,0,
+12,49,73,73,73,28,77,77,28,73,73,73,22,12,
+57,40,40,40,28,77,57,77,28,13,13,13,56,0,
+12,31,73,73,73,28,77,77,28,73,73,73,4,56,
+56,20,12,73,30,28,28,28,30,73,12,20,57,0,
+56,60,61,73,73,73,30,30,73,73,73,19,59,12,
+57,55,61,73,73,73,73,73,73,73,21,55,12,0,
+0,12,12,57,12,57,56,57,12,12,12,56,56,0
+</data>
+ </layer>
+</map>
