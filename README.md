@@ -51,21 +51,22 @@ the following freely-available software.
 
 _Required_:
 
-- [**This SDK**](https://github.com/morgan3d/quadplay/archive/master.zip)
+- [**This SDK**](https://github.com/morgan3d/quadplay/archive/master.zip), which includes the IDE and assets
 - [**Python 3.8**](https://www.python.org/downloads/)
 - A **modern web browser** such as Chrome, Edge, Safari, or Firefox
 - [**The manual**](https://morgan3d.github.io/quadplay/doc/manual.md.html)
 
 _Optional_:
 
-- A **code editor** such as [VS Code](https://code.visualstudio.com/), Emacs, or VIM. Use Python mode for PyxlScript or install our provided editor extensions
+- A **code editor** such as [VS Code](https://code.visualstudio.com/), Emacs, or VIM. Use Python mode or install our provided PyxlScript editor extensions
 - A TMX map editor such as [Tiled](https://www.mapeditor.org/) or [TileKit](https://rxi.itch.io/tilekit)
 - A sprite and font pixel editor such as [Piskel](https://www.piskelapp.com/) or [GrafX2](http://pulkomandy.tk/projects/GrafX2/downloads?order=version&desc=1)
 - A [SFX generator](https://www.bfxr.net/) and audio editor such as [Audacity](https://www.audacityteam.org/)
 - An account on the [forums](http://quadplay.freeforums.net)
 - Follow development online at [@CasualEffects](https://twitter.com/CasualEffects)
 
-See the manual for a getting started guide, the change log, road map, and beta notes.
+See the manual for a getting started guide, the change log, road map,
+and beta notes.
 
 
 License
@@ -75,12 +76,17 @@ The quadplay✜ runtime, compiler, and emulator are licensed as
 [LGPL3](https://www.gnu.org/licenses/lgpl-3.0.en.html). 
 
 You can create closed-source games with it and distribute your games
-however you want, including commercially. If you modify the runtime
-library, compiler, or emulator, then you must redistribute your
-changes to those under the LGPL3 with your game as open source.
+however you want, including commercially. 
 
-Portions of the IDE are under different open source licenses (BSD,
-MIT, and public domain).
+If you modify the runtime library, compiler, or emulator, then you
+must redistribute those changes to those under the LGPL3.
+
+Portions of the IDE are under different, less-restrictive
+open source licenses (BSD, MIT, and public domain).
+
+Quadplay automatically adds assets and library licenses to your
+game's credits screen. You don't have to do any work to satisfy
+attribution clauses from open source liceses.
 
 All sounds, sprites, and games distributed with quadplay✜ are Creative
 Commons licensed. The copyright and license on each of those is in 
