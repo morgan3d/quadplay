@@ -1,0 +1,135 @@
+// This module implements the ui for the interactive demo app
+////////////////////////////////////////////////////////////////////////////////
+
+// @{ Constants
+
+// for cycling through options in the ui
+let profile_index = 0
+const labels = keys(ACCELERATION_PROFILES)
+
+// for display purposes, color of each profile
+const PROFILE_COLOR_MAP = {
+    celeste: rgb(0.557, 0.835, 0.894),
+    new_super_mario_brothers: rgb(0.859, 0.145, 0.004),
+    megaman11: rgb(0.086, 0.322, 0.847),
+    super_meat_boy: rgb(0.729, 0, 0.004),
+    sonic_mania: rgb(0.012, 0.145, 0.667), 
+}
+
+// state tracking
+let DRAW_MBLUR = false
+let last_joy = xy(0,0)
+let frames_joy = xy(0,0)
+let x_zone = "still"
+// @}
+
+// @{ test object that gets moved around
+let box = make_entity(
+    {
+        pos:SCREEN_SIZE/2,
+        size:xy(10, 10),
+        shape:"rect",
+        x_accel: make_accelerator_from_profile(labels[profile_index]),
+    }
+)
+// @}
+
+
+def draw_ui():
+    // debug text
+    const num_fmt = ".00"
+    let text = []
+
+    // draw instructions
+    push(text, "ACCELERATION DEMO")
+    push(text, replace("use [^]/[v] to switch games", gamepad_array[0].prompt))
+    push(text, replace("use [<]/[>] to move the block", gamepad_array[0].prompt))
+    push(text, replace(
+            "(a): toggle motion blur (current: " + DRAW_MBLUR + ")",
+            gamepad_array[0].prompt
+        )
+    )
+    push(text, "small changes make a big difference in feel!")
+    draw_text(
+        font,
+        join(text, "\n"),
+        xy(4, 3),
+        rgb(0.8, 0.8, 0.8),
+        rgb(0.2, 0.2, 0.2),
+        nil,
+        "left",
+        "top"
+    )
+
+    remove_all(text)
+
+    // draw data text
+    push(text, "DATA:")
+    push(text, "Profile: " + labels[profile_index])
+    push(
+        text,
+        "accel/decel frames: " + unparse(box.x_accel.num_frames_attack) 
+        + "/" + unparse(box.x_accel.num_frames_release)
+    )
+    push(
+        text,
+        "current x vel/max: " + format_number(box.vel.x, num_fmt) 
+        + " / " + format_number(box.x_accel.max_velocity, num_fmt)
+    )
+    push(
+        text,
+        "sign(joy.x): " + unparse(sign(joy.x)) 
+        + " / zone: " + x_zone 
+        + " / frames: " + unparse(frames_joy.x + 1)
+    )
+
+    let current = xy(4, SCREEN_SIZE.y - 3)
+    reverse(text)
+    for line in text:
+        let bbox = draw_text(
+            font,
+            line,
+            current,
+            rgb(0.8, 0.8, 0.8),  // text color
+            rgb(0.2,0.2,0.2),    // shadow
+            nil,                 // outline
+            "left",              // x-align
+            "bottom"             // y-align
+        )
+        current -= xy(0, bbox.y)
+
+def update_demo_ui(last_vel):
+    // detect which part of the curve we're in, for logging and labelling
+    if sign(joy.x) != 0:
+        x_zone = "attack"
+        if sign(joy.x) > 0:
+            x_zone += "+"
+        else:
+            x_zone += "-"
+    else if(x_zone) != "still":
+        x_zone = "release"
+
+    if find(x_zone, "attack") == 0 and frames_joy.x > box.x_accel.num_frames_attack:
+        x_zone = "sustain"
+    if x_zone == "release" and frames_joy.x > box.x_accel.num_frames_release:
+        x_zone = "still"
+
+    // cycle through ACCELERATION_PROFILES
+    let new_profile_index = loop(profile_index + joy.yy, size(labels))
+    if new_profile_index != profile_index:
+        box.x_accel = make_accelerator_from_profile(
+            labels[new_profile_index],
+            box.vel.x
+        )
+        profile_index = new_profile_index
+
+    // track how long we've been in that part of the curve
+    if sign(joy.x) == last_joy.x:
+        if last_vel.x != box.vel.x:
+            frames_joy.x += 1
+    else:
+        frames_joy.x = 0
+    last_joy.x = sign(joy.x)
+
+    if joy.aa:
+        DRAW_MBLUR = not DRAW_MBLUR

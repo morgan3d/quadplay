@@ -713,6 +713,37 @@ function serverWriteFile(filename, encoding, contents, callback, errorCallback) 
 }
 
 
+function serverDeleteFile(url, callback, errorCallback) {
+    console.assert(locallyHosted());
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("DELETE", url, true);
+
+    // Send the proper header information along with the request
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    
+    xhr.onreadystatechange = function() {
+        if (this.readyState === XMLHttpRequest.DONE) {
+            // Request finished. Do processing here.
+            const jsonResponse = WorkJSON.parse(xhr.response);
+            if ((this.status >= 200) && (this.status <= 299)) {
+                if (callback) {
+                    // Give the server a little more time to catch up
+                    // if it is writing to disk and needs to flush or
+                    // such before invoking the callback.
+                    setTimeout(function () { callback(jsonResponse, this.status); }, 150);
+                }
+            } else if (errorCallback) {
+                errorCallback(jsonResponse, this.status);
+            }
+        }
+    }
+    
+    xhr.send(JSON.stringify({token: postToken}));
+}
+
+
+
 /** Write a set of files and invoke the callback when they have all completed */
 function serverWriteFiles(array, callback, errorCallback) {
     let complete = 0;
@@ -1229,6 +1260,9 @@ function onRemoveScript(scriptURL) {
 
 
 function showScriptContextMenu(scriptURL) {
+    if (! gameSource.scripts) { return; }
+
+    console.assert(scriptURL);
     const id = 'ScriptItem_' + scriptURL;
     const filename = urlFilename(scriptURL);
     const builtIn = isBuiltIn(scriptURL);
@@ -1245,7 +1279,6 @@ function showScriptContextMenu(scriptURL) {
         s += `<div onmousedown="onMoveScript('${scriptURL}', +1)"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&darr;</span>Execute later</div>`
     }
     if (! builtIn) {
-        // TODO:
         s += `<div onmousedown="onRenameScript('${scriptURL}')">Rename&hellip;</div>`
     }
     s += `<div onmousedown="onRemoveScript('${scriptURL}')"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&times;</span>Remove ${filename}</div>`
@@ -1259,12 +1292,43 @@ function onRenameScript(scriptURL) {
     const filename = urlFilename(scriptURL);
 
     let newName;
+
     while (true) {
         newName = window.prompt("New name for script '" + filename + "'", filename);
         if (! newName || newName === '') { return; }
 
-        alert('(Sorry) TODO: Implement script renaming');
 
-        // TODO: Reload project
+        // Remove extension
+        newName = newName.replace(/\.[^\.]+$/, '');
+        
+        // Mangle and add extension
+        newName = newName.replace(/(^_|[^_0-9A-Za-z])/g, '') + '.pyxl';
+        
+        // Check for conflict
+        if (gameSource.json.scripts[newName]) {
+            window.alert("There is already another script named '" + newName + "'");
+        } else {
+            break;
+        }
     }
+        
+    // Change the name in the gameSource.json
+    const index = gameSource.json.scripts.indexOf(filename);
+
+    console.assert(index !== -1);
+    gameSource.json.scripts.splice(index, 1, newName);
+
+    function saveAndReloadProject() {
+        console.log(gameSource.jsonURL);
+        console.assert(gameSource.jsonURL);
+        console.assert(window.gameURL);
+        serverSaveGameJSON(function () {
+            loadGameIntoIDE(window.gameURL, deleteOldFile, true);
+        });
+    }
+    
+    function deleteOldFile() { serverDeleteFile(scriptURL); }
+
+    // Save script as the new name
+    serverWriteFile(makeURLRelativeToGame(newName), 'utf8', fileContents[scriptURL], saveAndReloadProject);
 }

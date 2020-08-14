@@ -1,4 +1,4 @@
-_Play
+$Play
 ════════════════════════════════════════════════════════════════════════
 
 const gameArray = [{
@@ -266,7 +266,7 @@ for pad in gamepad_array:
       def callback():
          launch_game(gameArray[gameIndex].url)
          
-      set_mode(_SlideOut, callback) because "Player selected game"
+      set_mode($SlideOut, callback) because "Player selected game"
       
    // Animate scrolling
    if joy.yy:

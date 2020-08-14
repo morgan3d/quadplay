@@ -69,9 +69,9 @@ const NaNSymbol = '\uE001', InfinitySymbol = '\uE002', NegInfinitySymbol = '\uE0
 
 
 return {
-    /** Returns the new string and a map */
-    protectQuotedStrings: function protectQuotedStrings(src) {
-        const protectionMap = [];
+    /** Returns the new string and a map. If a map is provided, then it is extended. */
+    protectQuotedStrings: function protectQuotedStrings(src, protectionMap) {
+        protectionMap = protectionMap || [];
 
         // Hide escaped quotes that would confuse the following regexp
         src = src.replace(/\\\\"/g, doubleQuoteProtection);

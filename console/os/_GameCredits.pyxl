@@ -1,4 +1,4 @@
-_GameCredits
+$GameCredits
 ════════════════════════════════════════════════════════════════════════
 
 const window_background_color = #135
@@ -65,14 +65,6 @@ for type in creditOrder:
    y += draw_text(sectionFont, s + (if type == "Game" or type == "Code" or type == "Quadplay" then "" else "s"), xy(SCREEN_SIZE.x / 2, y), text_color, text_shadow_color, nil, 0, 2).y
    
    for line in CREDITS[lowercase(type)]:
-      y += draw_text(bodyFont, line, xy(SCREEN_SIZE.x / 2, y), text_color, nil, nil, 0, 2, 0, SCREEN_SIZE.x).y + 10
-      
+       y += draw_text(bodyFont, line, xy(SCREEN_SIZE.x / 2, y), text_color, nil, nil, "center", "top", 0, SCREEN_SIZE.x).y + 10
    y += 20
-
-   
-   
-   
-//for control in gamepad_array:
-
-// TODO
 

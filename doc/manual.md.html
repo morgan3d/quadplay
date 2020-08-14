@@ -15,12 +15,13 @@
 
 <img src="ide.png" style="image-rendering: auto; width:75%; border-radius: 0 0 4px 4px; box-shadow: 1px 5px 7px rgba(0,0,0,.20); margin-bottom: 28px; margin-top:20px"></center>
 
-> "Imagine a fantasy timeline 1989, where modern video game mechanics,
+> "Imagine a fantasy timeline in which modern video game mechanics,
 > scripting languages, data structures, and AI all developed before
-> the internet and 3D graphics. The quadplay✜ is a virtual predecessor of
-> Nintendo64 and PlayStation so friendly that anyone can make their
-> own beautiful game in a few days, which supports play as creative and deep as 2020
-> indie titles."
+> mainstream online gaming and 3D graphics. 
+> The quadplay✜ console is a virtual predecessor of
+> Nintendo64 and PlayStation. It is so friendly that anyone can make their
+> own beautiful game in a few days, yet supports play as creative and deep as current
+> indie titles. It is the union of 2020 development power and 1989 output constraints."
 
 The
 [**<span style="font-size: 95%; font-family: quadplay">quadplay✜</span>**](../console/quadplay.html?IDE=1)
@@ -423,6 +424,11 @@ rendering with a simple text-heavy UI section.
 
 </td></tr><tr><td>![](../examples/boids/label128.png)</td><td>
 [Boids Example](../console/quadplay.html?game=quad://examples/boids&IDE=1) implements the famous ["boids" flocking algorithm](https://en.wikipedia.org/wiki/Boids).
+
+</td></tr><tr><td>![](../examples/clouds/label128.png)</td><td>
+[Clouds Example](../console/quadplay.html?game=quad://examples/clouds&IDE=1) demonstrates per-pixel graphics and multi-octave `noise()` functions. The virtual
+GPU is fast enough to process one point per pixel, but this technique is not recommended in general because the computations to produce the points
+tend to be too slow, even if this simple.
 
 </td></tr><tr><td>![](../examples/physics/label128.png)</td><td>
 [Physics Example](../console/quadplay.html?game=quad://examples/physics&IDE=1) shows all of the features of the
@@ -1629,13 +1635,13 @@ Array
 `reversed(array)`
 : Returns a shallow, reversed clone of the array, O(size(array))
 
-`random_value(array)`
+`random_value(array, random default random)`
 : Return a random element of the array.
 
-`shuffle(array)`
+`shuffle(array, random default random)`
 : Randomizes the array in place using using Knuth-Fisher-Yates in O(n) time. Returns nothing to avoid confusion with `shuffled()`.
 
-`shuffled(array)`
+`shuffled(array, random default random)`
 : Returns a shallow, shuffled clone of the array, O(size(array))
 
 `size(array)`
@@ -1822,7 +1828,7 @@ Random Values
   seed and internal state. See also `set_random_seed()`.
 
 `random()`
-: `random(0, 1)`
+: `random(0, 1)`. Same as the `ξ` operator.
 
 `random(lo, hi)`
 : Random real number between `lo` and `hi`, excluding `hi`. See also the `ξ` operator, the no-argument version
@@ -1852,9 +1858,9 @@ Random Values
 : Returns a Gaussian distributed random number within `radius` of
   the mean. See also `random_gaussian()`.
 
-`set_random_seed(seed)`
+`set_random_seed(seed default local_time().millisecond)`
 : Reset the default random number generator, `random()`, using an optional seed.
-  A common choice is `set_random_seed(local_time().millisecond)`.
+  To match the default random number generator, use a seed of `0`.
   See also `make_random()`.
 
 
@@ -2125,29 +2131,29 @@ Math
 : The sum of the squares of the arguments, which must all be numbers.
   Same as `magnitude_squared([x, y, ...])`.
 
-`make_spline(timeArray, valueArray, order = 3, extrapolate = "stall")`
+`make_spline(time_array, value_array, order = 3, extrapolate = "stall")`
 : Returns a function mapping numbers to values by piecewise polynomial
   interpolation. The value array must have types for which `*` and `+`
-  operate (which includes numbers, `xy()`, `xyz()`, `rgb()`, and
-  `rgba()` values, and arrays of numbers), and all elements must have
-  the same type. The spline is always interpolating. The `timeArray`
+  operate (which includes numbers, all objects, `xy()`, `xyz()`, `rgb()`, and
+  `rgba()` values), and all elements of the `value_array` must have
+  the same type. The spline is always interpolating. The `time_array`
   and `valueArray` must have the same length.
 
   `order`:
-  - `0` = nearest neighbor
-  - `1` = linear (polyline)
-  - `3` = cubic (Catmull-Rom) spline
+  - `0` = nearest-neighbor interpolation
+  - `1` = linear (polyline) interpolation
+  - `3` = cubic (Catmull-Rom) spline interpolation
 
   `extrapolate`:
-  - `"loop"` = cyclic. The `timeArray` must have one more element than the `valueArray`.
+  - `"loop"` = cyclic. The `time_array` must have one more element than the `value_array`.
      That final value is the looped time that matches the start time. Similar to OpenGL
-     REPEAT mode for textures.
-  - `"clamp"` = hold the final value. Similar to OpenGL CLAMP texture mode.
+     `GL_REPEAT` mode for textures.
+  - `"clamp"` = hold the final value. Similar to OpenGL `GL_CLAMP` texture mode.
   - `"stall"` = interpolate to additional control points that match the final value.
      Unlike clamping, for a cubic curve this will ensure that the velocity smoothly
-     guides into zero rather than creating a sharp corner.
+     ramps to zero rather than creating a sharp corner.
   - `"oscillate"` = treat like looping with twice the period, reversing direction.
-    This is similar to OpenGL MIRROR texture mode.
+    This is similar to OpenGL `GL_MIRROR` texture mode.
   - `"continue"` = continue the curve with the trend of the final control points
 
 `max(a, b, ...)`
@@ -4315,6 +4321,9 @@ debug_graphics and debug_print("Running iteration" + i)
   Debug print statements can be completely disabled from the Output
   window, which causes them to consume no processing time.
 
+  In the output pane, click on the output to go to the line that
+  produced it in the code editor.
+
 `debug_watch(expr)`
 : Make the expression appear along with its value at the time that
   `debug_watch` executs in the Watch pane of the debugger. If there are
@@ -4322,6 +4331,9 @@ debug_graphics and debug_print("Running iteration" + i)
   collapsed and only the last to execute each frame will be
   shown. This is *not* a function. It is a special syntax. You may not
   pass the `debug_watch` command as if it were a function.
+  
+  In the watch pane, click on the expression to go to the line that
+  contains it in the code editor.
 
 
 `draw_bounds(e, color default gray(60%), recurse default true)`
@@ -4898,12 +4910,20 @@ Sounds
 ![`quad://sounds/sparks-04.sound.json`](../sounds/sparks-04.mp3)
 
 
-Project File
+Project Files
 =============================================================================================
 
 When importing assets using the IDE as JSON or raw PNG, MP3, or TMX
 files, the subdirectories `journal`, `screenshots`, `metadata`,
 `backlot` and `graveyard` are excluded.
+
+!!!
+    quadplay✜ supports the extended [WorkJSON](https://github.com/morgan3d/workjson) format, which permits C++ style comments, hexadecimal numbers,
+    IEEE 754 constants, raw decimals, leading plus signs, trailing commas,
+    and multiline backquote JavaScript strings within JSON files for convenience when
+    editing and debugging. This is not legal in strict JSON and
+    may be incompatible with other tools. 
+
 
 Game JSON
 ---------------------------------------------------------------------------------------------
@@ -4917,13 +4937,6 @@ interface in the IDE, except for the game constants. The only way
 to modify constants in the current release is through an external
 editor directly changing the `.game.json` file. Future releases
 will provide a user interface for simple constants.
-
-!!!
-    quadplay✜ permits C++ style comments, hexadecimal numbers,
-    IEEE 754 constants, raw decimals, leading plus signs, trailing commas,
-    and multiline backquote JavaScript strings within JSON files for convenience when
-    editing and debugging. This is not legal in strict JSON and
-    may be incompatible with other tools. 
 
 An example project is below, annotated with comments explaining the
 options. Project files should have the double extension `.game.json`.
@@ -5058,7 +5071,7 @@ You can create these images however you wish, including manually
 drawing them. The IDE has some tools to automate the process.
 
 You can create the `label128.png` and `label64.png` images by pressing
-*Shift+F6* while your game is playing (). It will capture a 128x128
+*Shift+F6* while your game is playing. It will capture a 128x128
 region from the center of the screen and resize it using bilinear
 interpolation to create the 64x64 image, and then save them with the
 appropriate filenames in the game's directory. Edit and compress these
@@ -5084,8 +5097,7 @@ but still have metadata embedded in the game itself and use raw data
 instead of media formats.
 
 
-Constants
----------------------------------------------------------------------------------------------
+### Constants
 
 Unlike constants declared in code, the constants in the `.game.json`
 file appear in the IDE in the project list and have GUI editors. They
@@ -5324,6 +5336,58 @@ cannot be embedded within other constants. This is required in order
 to separate the asynchronous loading from constant evaluation in the
 implementation and to ensure that GUI editors can be built effectively
 for objects and arrays.
+
+
+Debug JSON
+---------------------------------------------------------------------------------------------
+
+When working with multiple developers on a game, it is often useful to
+have slightly different settings for each developer. For example,
+one developer may want a `DEBUG_GRAPHICS` constant set to `true`
+while the usual value is false. Or the gameplay programmer may experiment
+with different player velocity than what is in the main game branch.
+
+One way to accomplish this is to explicitly use the built-in
+`IDE_USER` constant described in the Debugging section. Another solution
+is to use a `.debug.json` file.
+
+A debug JSON file must be in the same directory as the `.game.json`
+file and use the same basename. For example, if your game is
+`space.game.json`, then the debug file is `debug.game.json`. 
+
+Typically you will _not_ add the debug file to version control, so
+that each developer may have their own. No `.debug.json` file is
+required, and if one is present it will be ignored unless running
+on a quadplay server using the IDE.
+
+The `.debug.json` format is:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ json
+{
+    "start_mode": "Init",
+    "start_mode_enabled": true,
+    
+    "constants" : {
+        // Constants in the same format as in the .game.json.
+        
+        "player_speed": {
+            "type": "number",
+            "value": "3", 
+
+            // If false, then this debug value is
+            // disabled in the IDE but remembered for later
+            // enabling.
+            "enabled": true
+        }
+    }
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `start_mode` overrides the `.game.json` start mode, if it is present.
+
+The constants override the equivalent constants from the `.game.json`
+file (unless they are not enabled). Extra constants specified only
+in the `.debug.json` file are ignored; they are not mapped at runtime.
 
 
 Sprite JSON
@@ -5888,10 +5952,10 @@ These are reserved tokens that cannot be used as variable names. Some
 of them are keywords or built-in syntax, and some of them do nothing
 now but are reserved for future use.
 
-`ADD`, `and`, `arguments`, `args`, `as`, `async`, `at`, `auto`, `await`,
+`ADD`, `and`, `arguments`, `args`, `as`, `async`, `at`, `auto`, `await`, `assert`,
 `because`, `begin`, `bitand`, `bitnot`, `bitor`, `bitashl`, `bitshl`, `bitshr`, `break`,
 `catch`, `class`, `const`, `cont`, `coroutine`, `continue`, `constructor`,
-`deg`, `do`, `delete`, `def`, `default`, `DIV`,
+`deg`, `do`, `delete`, `def`, `default`, `DIV`, `debug_watch`, `debug_print`,
 `elif`, `end`, `extern`, `enum`,
 `final`, `finally`, `for`, `from`, `freeze`, `function`,
 `get`, `global`, `go`, `goto`,
@@ -5904,7 +5968,7 @@ now but are reserved for future use.
 `public`, `private`, `protected`, `prototype`, `package`, `preserve`, `preserving_transform`,
 `quit_game`,
 `ret`, `return`, `reset_game`, `require`, `requires`,
-`seal`, `set`, `show`, `static`, `strict`, `SUB`, `swap`,
+`seal`, `set`, `show`, `static`, `strict`, `SUB`, `swap`, `SOURCE_LOCATION`, `SCREEN_SIZE`,
 `to`, `todo`, `to_string`, `then`, `try`, `throw`, `template`, `touch`,
 `until`, `use`, `using`, `unless`,
 `var`,
@@ -6269,6 +6333,9 @@ Symbol         | ASCII           | Value
                | `SCREEN_SIZE`   | the size of the screen in pixels, defaults to `xy(384, 224)`
                | `CONSTANTS`     | an object mapping all game-specific constants to their values
                | `ASSETS`        | an object mapping all game-specific assets to their values
+               | `SOURCE_LOCATION` | an object that has fields `{url:, filename:, line_number:}` from its location in the source code
+               
+               
 
 
 Loops and Flow Control
@@ -7672,7 +7739,9 @@ Changes for both the specification and implementation in each release.
 
 2020 August TBD: Beta update 47
 
-- New Planet Generator 2.5D procedural content example
+- New built-in game "Beyond Control"
+- New example Planet Generator for 2.5D procedural content
+- New example "Clouds" of per-pixel graphics
 - New `scoreboard-5` font
 - New `splash-00` sound
 - New `sparks-00` through `sparks-04` sounds
@@ -7686,10 +7755,16 @@ Changes for both the specification and implementation in each release.
 - New `loop-beat` sound
 - New `loop-wind` sound
 - New `beast-soldier-32x32` spritesheet
-- New built-in game "Beyond Control"
+- New dots, stripes, wood, and carbon console wraps
+- Added `.debug.game` layer (see the Debug JSON section)
+- `debug_watch()` now allows multiple identical expressions at different locations
+- `debug_watch()` and `debug_print()` output are now hyperlinks to the source location
+  that produced them
 - Added  320x180 support for targeting Switch, PiBoy, 720p, 1080p, and 1440p
 - Added support for TileKit
 - Packed `suchet-12` font characters more tightly to conserve memory
+- Optimized rendering of successive rectangles using the same `z` value
+- Optimized the 2D `noise()` function variant (now runs in 3/4 the time)
 - Incompatible changes: 
   - Made the order of arguments for `draw_tri()` consistent
     with other drawing functions
@@ -7701,9 +7776,14 @@ Changes for both the specification and implementation in each release.
   (the old version is accepted as a synonym for backwards compatibility at the moment)
 - The sprite viewer in the IDE now autoscales for tall sprites
 - `stop_audio()` now allows the argument to be `nil`
+- Added `SOURCE_LOCATION` zero-argument operator
+- `set_random_seed()` now defaults to a random seed based on the time
+- `random_value()`, `shuffle()`, and `shuffled()` now take an optional
+  random number generator argument
 - IDE can now create new sound assets
 - IDE can now change the order of execution of scripts
-- IDE can now remove scripts
+- IDE can now remove scripts (removed scripts are not deleted on disk)
+- IDE can now rename scripts
 - `gamepad_array[]` elements now print as their name instead of properties
 - Increased the contrast of the text in ghost mode
 - Reordered quick links on the top of the manual
@@ -7754,6 +7834,7 @@ Changes for both the specification and implementation in each release.
 - Fixed gutters on sprites
 - Fixed broken images in Markdeep design documents after edits
 - Fixed incorrect image scaling when embedded in itch.io at 1080p
+- Fixed a bug that prevented `debug_watch()` on values containing string literals
 - Fixed IDE edits to asset JSON files not persisting after load
 - Fixed incorrect line numbers when using `default` expressions
 - Fixed 3-space indenting in .game.json files

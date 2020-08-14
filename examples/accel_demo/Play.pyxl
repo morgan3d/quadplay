@@ -1,229 +1,56 @@
 init
 ───────────────────────────────────────────────────────────
+// nothing 
+//
+// see accel_lib.pyxl for accel implementation and demo.pyxl for demo app
+// implementation
+// 
+// the TL;DR is that there is a box entity that gets moved around.  its 
+// accelerator gets initialized with:
+// box.x_accel = make_accelerator_from_profile("celeste")
 
-// test object
-let box = make_entity(
-    {
-        pos:SCREEN_SIZE/2,
-        size:xy(10, 10),
-        shape:"rect",
-    }
-)
-
-// DATA
-// ------------------------
-// from GMTK: https://www.patreon.com/posts/why-does-celeste-28582857
-// vel is in 1080p pixels / s
-const PROFILES = {
-    celeste: {
-        max_vel: 5,
-        num_frames_attack: 6,
-        num_frames_release: 3,
-        col: rgb(0.557, 0.835, 0.894),
-    },
-    new_super_mario_brothers: {
-        max_vel: 8,
-        num_frames_attack: 28,  
-        num_frames_release: 28,
-        col: rgb(0.859, 0.145, 0.004),
-    },
-    megaman11: {
-        max_vel:4,
-        num_frames_attack:1,
-        num_frames_release:1,
-        col: rgb(0.086, 0.322, 0.847),
-    },
-    super_meat_boy: {
-        max_vel:13.0,
-        num_frames_attack:27,
-        num_frames_release:2,
-        col: rgb(0.729, 0, 0.004),
-    },
-    sonic_mania: {
-        max_vel: 30,
-        num_frames_attack:115,
-        num_frames_release: 120,
-        col: rgb(0.012, 0.145, 0.667), 
-    }
-}
-
-let profile_index = 0
-const labels = keys(PROFILES)
-
-// ADSR parameters
-let max_velocity = 10.6
-let num_frames_attack = 6
-let num_frames_release = 3
-
-// compute real constants
-let accel_attack = max_velocity/num_frames_attack
-let accel_release = max_velocity/num_frames_release
-let accel_opp_attack = accel_release + accel_attack
-
-def set_profile(profname):
-    max_velocity = (PROFILES[profname].max_vel * SCREEN_SIZE.x) / 1080.0
-    num_frames_attack = PROFILES[profname].num_frames_attack
-    num_frames_release = PROFILES[profname].num_frames_release
-    accel_attack = max_velocity/num_frames_attack
-    accel_release = max_velocity/num_frames_release
-    accel_opp_attack = accel_release + accel_attack
-
-set_profile(labels[profile_index])
-
-// @{a lso just for labelling
-let last_joy = xy(0,0)
-let frames_joy = xy(0,0)
-let x_zone = "still"
-// @}
-
-// function that performs the acceleration
-def accel(
-        vel,
-        joy_comp,
-        acc_attack,
-        acc_release,
-        acc_opp_attack,
-        max_vel_comp
-):
-    let vel_sign = sign(vel)
-    let joy_sign = sign(joy_comp)
-
-    if joy_sign != 0:
-        let should_accel = abs(vel) < max_vel_comp
-        if (
-                (
-                    vel_sign == 0 
-                    or vel_sign == joy_sign
-                ) 
-                and should_accel
-        ):
-            vel += joy_sign * acc_attack
-        else if should_accel:
-            vel += joy_sign * acc_opp_attack
-        else:
-            vel = joy_sign * max_vel_comp
-
-    else:
-        vel += -1*vel_sign*acc_release
-
-        if abs(vel) < acc_release/2:
-            vel = 0
-
-    return vel
-
-def draw_ui():
-    // debug text
-    const num_fmt = ".00"
-    let text = []
-
-    // draw instructions
-    push(text, "ACCELERATION DEMO")
-    push(text, replace("use [^]/[v] to switch games", gamepad_array[0].prompt))
-    push(text, replace("use [<]/[>] to move the block", gamepad_array[0].prompt))
-    push(text, "small changes make a big difference in feel!")
-    draw_text(
-        font,
-        join(text, "\n"),
-        xy(4, 3),
-        rgb(0.8, 0.8, 0.8),
-        rgb(0.2, 0.2, 0.2),
-        nil,
-        "left",
-        "top"
-    )
-
-    remove_all(text)
-
-    // draw data text
-    push(text, "DATA:")
-    push(text, "Profile: " + labels[profile_index])
-    push(
-        text,
-        "accel/decel frames: " + unparse(num_frames_attack) 
-        + "/" + unparse(num_frames_release)
-    )
-    push(
-        text,
-        "current x vel/max: " + format_number(box.vel.x, num_fmt) 
-        + " / " + format_number(max_velocity, num_fmt)
-    )
-    push(
-        text,
-        "sign(joy.x): " + unparse(sign(joy.x)) 
-        + " / zone: " + x_zone 
-        + " / frames: " + unparse(frames_joy.x)
-    )
-
-    let current = xy(4, SCREEN_SIZE.y - 3)
-    // draw_disk(current, 5, rgb(1,0,0))
-    // draw_text(
-    //     font,
-    //     join(text, "\n"),
-    //     current,
-    //     rgb(0.8, 0.8, 0.8),  // text color
-    //     rgb(0.2,0.2,0.2),    // shadow
-    //     nil,                 // outline
-    //     "left",              // x-align
-    //     "bottom"             // y-align
-    // )
-    reverse(text)
-    for line in text:
-        let bbox = draw_text(
-            font,
-            line,
-            current,
-            rgb(0.8, 0.8, 0.8),  // text color
-            rgb(0.2,0.2,0.2),    // shadow
-            nil,                 // outline
-            "left",              // x-align
-            "bottom"             // y-align
-        )
-        current -= xy(0, bbox.y)
 
 frame
 ───────────────────────────────────────────────────────────
-// detect which part of the curve we're in, for logging and labelling
-if sign(joy.x) != 0:
-    x_zone = "attack"
-    if sign(joy.x) > 0:
-        x_zone += "+"
-    else:
-        x_zone += "-"
-else if(x_zone) != "still":
-    x_zone = "release"
 
-if find(x_zone, "attack") == 0 and frames_joy.x > num_frames_attack:
-    x_zone = "sustain"
-if x_zone == "release" and frames_joy.x > num_frames_release:
-    x_zone = "still"
-
+// book keeping for the ui
 let last_vel = clone(box.vel)
-box.vel.x = accel(
-    box.vel.x,
-    joy.x,
-    accel_attack,
-    accel_release,
-    accel_opp_attack,
-    max_velocity
-)
 
-// cycle through profiles
-profile_index = loop(profile_index + joy.yy, size(labels))
-set_profile(labels[profile_index])
+// actually do the acceleration!
+// if you're looking at integrating this into your game, this is the line to 
+// look at, the rest is updating UI data
+//---------------------------------------------------
+box.vel.x = accelerator_update(box.x_accel, joy.x)
+//---------------------------------------------------
 
-// track how long we've been in that part of the curve
-if sign(joy.x) == last_joy.x:
-    if last_vel.x != box.vel.x:
-        frames_joy.x += 1
-else:
-    frames_joy.x = 0
-last_joy.x = sign(joy.x)
-
-
-entity_simulate(box)
-box.pos.x = loop(box.pos.x, SCREEN_SIZE.x)
-
-// the character
-draw_rect(box.pos, box.size, PROFILES[labels[profile_index]].col)
+// tracking for the mblur case
+let last_p = clone(box.pos)
 
 draw_ui()
+
+// handle the integration of velocity to position
+entity_simulate(box)
+
+let next_p = clone(box.pos)
+
+// for cycling around the screen
+box.pos.x = loop(box.pos.x, SCREEN_SIZE.x)
+
+update_demo_ui(last_vel)
+
+// draw the "character"
+if DRAW_MBLUR:
+    // @TODO: make this wrap correctly
+    // @TODO: have more than 1 frame of MBLUR
+    draw_corner_rect(
+        last_p - box.size/2,
+        abs(next_p - last_p) + box.size,
+        PROFILE_COLOR_MAP[labels[profile_index]]
+    )
+else:
+    draw_rect(
+        box.pos,
+        box.size,
+        PROFILE_COLOR_MAP[labels[profile_index]]
+    )
+

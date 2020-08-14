@@ -167,11 +167,6 @@ div#header {
     height: 0px;
 }
 
-/** Do not change this selector without changing quadplay-ide.js setColorScheme() */
-#header a, .menu a {
-    color: #e61b9d !important;
-    text-decoration: none;
-}
 
 .MaximalUI .idePart, .EmulatorUI .idePart, .TestUI .idePart {
     /* Using hidden alone leaves a border on screen. */
@@ -179,8 +174,10 @@ div#header {
     visibility: hidden;
 }
 
-a {
-    color:#e61b9d !important;
+/** Do not change this selector without changing quadplay-ide.js setColorScheme() */
+a, #header a, .menu a {
+    color: #e61b9d !important;
+    text-decoration: none;
 }
 
 #adblockWarning {
@@ -1054,6 +1051,7 @@ body.kiosk div#logo, body.GhostUI div#logo, body.MaximalUI div#logo {
     inset -1px -6px 7px 2px rgba(0,0,0,0.7);
     
     border:           0.5px outset #888;
+    image-rendering: pixelated;
 }
 
 
@@ -1378,6 +1376,7 @@ svg.modeGraph text.edgeLabel {
     .emulator .emulatorBackground {
         border-radius: 20px;
     }
+    
     .EmulatorUI .emulator .emulatorBackground:before {
         border-radius: 18px;
         top:4px;

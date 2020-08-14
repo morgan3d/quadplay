@@ -1,0 +1,44 @@
+{
+    "title": "Clouds",
+    "developer": "Casual Effects",
+    "copyright": "©2020 Morgan McGuire",
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play"
+    ],
+    "docs": [],
+    "assets": {},
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "Example of noise functions and draw_point",
+    "constants": {
+        "CLOUD_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": 1,
+                "g": 1,
+                "b": 1
+            }
+        },
+        "BACKGROUND_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": 0,
+                "g": 0.48,
+                "b": 0.87
+            }
+        }
+    },
+    "screen_size": {
+        "x": 192,
+        "y": 112
+    },
+    "start_mode": "Play"
+}

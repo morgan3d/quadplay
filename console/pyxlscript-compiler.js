@@ -251,7 +251,7 @@ function processForTest(test) {
    1. Process the line up to the first ';' or single-line block body
    2. Process the rest recursively
 */
-function processLine(line, inFunction) {
+function processLine(line, inFunction, stringProtectionMap) {
     let next = '';
     let separatorIndex = line.indexOf(';')
     if (separatorIndex > 0) {
@@ -282,7 +282,7 @@ function processLine(line, inFunction) {
 
             args = processDefaultArgSyntax(args)
 
-            body = processLine(body, true);
+            body = processLine(body, true, stringProtectionMap);
             // Wrapping the function definition in parens can trigger heuristics in Chromium
             // at top level that improve compilation (likely not useful for dynamically generated code, but potentially
             // helpful when exporting to static HTML)
@@ -336,7 +336,7 @@ function processLine(line, inFunction) {
                 break;
             }
             return before + prefix + ((type === 'while' || type === 'for') ? (inFunction ? maybeYieldFunction : maybeYieldGlobal) : '') +
-                processLine(rest.substring(end + 1), inFunction) + '; ' + suffix;
+                processLine(rest.substring(end + 1), inFunction, stringProtectionMap) + '; ' + suffix;
             
         } // if control flow block
     } else if (match = line.match(/^(\s*)(preserving_transform\s*:)(.*)/)) {
@@ -347,7 +347,7 @@ function processLine(line, inFunction) {
         if (end === -1) { throw 'Missing : after single-line "' + type + '".'; }
 
         return before + 'try { $pushGraphicsState(); ' +
-            processLine(rest.substring(end + 1), inFunction) + '; } finally { $popGraphicsState(); }';
+            processLine(rest.substring(end + 1), inFunction, stringProtectionMap) + '; } finally { $popGraphicsState(); }';
     
     } else if (match = line.match(/^(\s*)(let|const)\s+(.*)/)) {
 
@@ -357,7 +357,7 @@ function processLine(line, inFunction) {
         let rest   = match[3];
 
         if ((type === 'let') || (type === 'const')) {
-            return before + type + ' ' + rest + ((next !== '') ? '; ' + processLine(next, inFunction) : ';');
+            return before + type + ' ' + rest + ((next !== '') ? '; ' + processLine(next, inFunction, stringProtectionMap) : ';');
         }
 
     } else if (match = line.match(/^(\s*)(debug_watch)\s*(\(.+)/)) {
@@ -366,11 +366,16 @@ function processLine(line, inFunction) {
         let closeIndex = findMatchingParen(rest, 0, +1);
 
         let watchExpr = rest.substring(1, closeIndex - 1);
-        return before + '($debugWatchEnabled && $debug_watch("' + watchExpr.replace(/"/g, '\"') + '", ' + watchExpr + ')); ' + processLine(rest.substring(closeIndex + 1), inFunction);
+        
+        // The strings inside of watchExpr are protected, so we have
+        // to unprotect, escape quotes, and then reprotect them to make it safe.
+        let message = unprotectQuotedStrings(watchExpr, stringProtectionMap).replace(/"/g, '\\"');
+        message = protectQuotedStrings('"' + message + '"', stringProtectionMap)[0];
+        return before + '($debugWatchEnabled && $debug_watch(SOURCE_LOCATION, ' + message + ', ' + watchExpr + ')); ' + processLine(rest.substring(closeIndex + 1), inFunction, stringProtectionMap);
         
     } else {
         // Recursively process the next expression. 
-        return line + '; ' + processLine(next, inFunction);
+        return line + '; ' + processLine(next, inFunction, stringProtectionMap);
     }
 }
 
@@ -436,7 +441,7 @@ function processDefaultArgSyntax(args) {
  1. Iteratively process lines in the current block, using processLine on each
  2. Recursively process sub-blocks
 */
-function processBlock(lineArray, startLineIndex, inFunction, internalMode) {
+function processBlock(lineArray, startLineIndex, inFunction, internalMode, stringProtectionMap) {
     // Indentation of the previous block. Only used for indentation error checking
     let prevBlockIndent = 0;
     
@@ -538,7 +543,7 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode) {
         let match;
         if (singleLine) {
             try {
-                lineArray[i] = processLine(lineArray[i], inFunction);
+                lineArray[i] = processLine(lineArray[i], inFunction, stringProtectionMap);
             } catch (e) {
                 throw makeError(e, i);
             }
@@ -546,7 +551,7 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode) {
         } else if (match = lineArray[i].match(RegExp('^(\\s*)def\\s+(' + identifierPattern + ')\\s*\\((.*)\\)[ \t]*([a-zA-Z_]*)[ \t]*:\\s*$'))) {
             // DEF
             let prefix = match[1], name = match[2], args = match[3] || '', modifier = match[4] || '';
-            let end = processBlock(lineArray, i + 1, true, internalMode) - 1;
+            let end = processBlock(lineArray, i + 1, true, internalMode, stringProtectionMap) - 1;
 
             // Rewrite args for default values
             args = processDefaultArgSyntax(args);
@@ -575,7 +580,7 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode) {
                 throw makeError(e, i);
             }
             lineArray[i] = prefix + result[0];
-            i = processBlock(lineArray, i + 1, inFunction, internalMode) - 1;
+            i = processBlock(lineArray, i + 1, inFunction, internalMode, stringProtectionMap) - 1;
             lineArray[i] += result[1];
 
         } else if (match = lineArray[i].match(/^(\s*)local[ \t]*:[ \t]*$/)) {
@@ -583,7 +588,7 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode) {
             
             let prefix = match[1];
             lineArray[i] = prefix + '{';
-            i = processBlock(lineArray, i + 1, inFunction, internalMode) - 1;
+            i = processBlock(lineArray, i + 1, inFunction, internalMode, stringProtectionMap) - 1;
             lineArray[i] += '}';
 
         } else if (match = lineArray[i].match(/^(\s*)preserving_transform[ \t]*:[ \t]*$/)) {
@@ -591,7 +596,7 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode) {
             
             let prefix = match[1];
             lineArray[i] = prefix + 'try { $pushGraphicsState()';
-            i = processBlock(lineArray, i + 1, inFunction, internalMode) - 1;
+            i = processBlock(lineArray, i + 1, inFunction, internalMode, stringProtectionMap) - 1;
             lineArray[i] += '} finally { $popGraphicsState(); }';
 
         } else if (match = lineArray[i].match(/^(\s*)for\s*(\b[^:]+)[ \t]*:[ \t]*$/)) {
@@ -605,7 +610,7 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode) {
                 throw makeError(e, i);
             }
             lineArray[i] = prefix + forPart[0] + (inFunction ? maybeYieldFunction : maybeYieldGlobal);
-            i = processBlock(lineArray, i + 1, inFunction, internalMode) - 1;
+            i = processBlock(lineArray, i + 1, inFunction, internalMode, stringProtectionMap) - 1;
             lineArray[i] += forPart[1];
             
         } else if (match = lineArray[i].match(/^(\s*)(if|else[\t ]+if)(\b.*):\s*$/)) {
@@ -613,14 +618,14 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode) {
 
             let old = i;
             lineArray[i] = match[1] + (/^\s*else[\t ]+if/.test(match[2]) ? 'else ' : '') + 'if (' + match[3].trim() + ') {';
-            i = processBlock(lineArray, i + 1, inFunction, internalMode) - 1;
+            i = processBlock(lineArray, i + 1, inFunction, internalMode, stringProtectionMap) - 1;
             lineArray[i] += '}';
             
         } else if (match = lineArray[i].match(/^(\s*else)\s*:\s*$/)) {
             // ELSE
             
             lineArray[i] = match[1] + ' {';
-            i = processBlock(lineArray, i + 1, inFunction, internalMode) - 1;
+            i = processBlock(lineArray, i + 1, inFunction, internalMode, stringProtectionMap) - 1;
             lineArray[i] += '}';
             
         } else if (match = lineArray[i].match(/^(\s*)(while|until)(\b.*)\s*:\s*$/)) {
@@ -632,7 +637,7 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode) {
             }
 
             lineArray[i] = match[1] + 'while (' + test + ') { ' + (inFunction ? maybeYieldFunction : maybeYieldGlobal);
-            i = processBlock(lineArray, i + 1, inFunction, internalMode) - 1;
+            i = processBlock(lineArray, i + 1, inFunction, internalMode, stringProtectionMap) - 1;
             lineArray[i] += '}';
 
         } else {
@@ -831,7 +836,7 @@ function pyxlToJS(src, noYield, internalMode) {
 
     let pack = protectQuotedStrings(src);
     src = pack[0];
-    let protectionMap = pack[1];
+    let stringProtectionMap = pack[1];
 
     // Remove multi-line comments, which cause problems with the indentation and end-of-line metrics
     src = src.replace(/\/\*([\s\S]*?)\*\//g, function(match, contents) {
@@ -957,7 +962,7 @@ function pyxlToJS(src, noYield, internalMode) {
     // Handle scopes and block statement translations
     {
         const lineArray = src.split('\n');
-        processBlock(lineArray, 0, noYield, internalMode);
+        processBlock(lineArray, 0, noYield, internalMode, stringProtectionMap);
         src = lineArray.join('\n');
     }
 
@@ -1096,7 +1101,7 @@ function pyxlToJS(src, noYield, internalMode) {
     src = src.replace(/\bassert\b/g, '$assertEnabled && assert');
     src = src.replace(/\btodo[ \t]*\(/g, '$todoEnabled && $todo(');
     src = src.replace(/\btodo\b/g, '$todoEnabled && $todo()');
-    src = src.replace(/\bdebug_print[ \t]*\(\b/g, '$debugPrintEnabled && debug_print(');
+    src = src.replace(/\bdebug_print[ \t]*\(/g, '$debugPrintEnabled && debug_print(SOURCE_LOCATION, ');
 
     // DEFAULT operators. We replace these with (the unused in pyxlscript) '=='
     // operator, which has similar precedence, and then use vectorify
@@ -1126,9 +1131,9 @@ function pyxlToJS(src, noYield, internalMode) {
     src = src.replace(/;[ \t]*;/g, ';');
     src = src.replace(/(\S)[ \t]{2,}/g, '$1 ');
     src = src.replace(/_add\(__yieldCounter, 1\)/g, '__yieldCounter + 1');
-    src = unprotectQuotedStrings(src, protectionMap);
+    src = unprotectQuotedStrings(src, stringProtectionMap);
 
-    // Print source for debugging
+    // Print output code for debugging the compiler
     // if (! internalMode) { console.log(src); }
     return src;
 }
@@ -1165,22 +1170,22 @@ function compile(gameSource, fileContents, isOS) {
             } catch (e) {
                 throw {url:url, lineNumber:e.lineNumber, message: e.message.replace('Unexpected token ===', 'Unexpected token ==')};
             }
-            compiledProgram += '/*@"' + url + '"*/\n' + jsCode + separator;
+            compiledProgram += '/*ට"' + url + '"*/\n' + jsCode + separator;
         }
     }
     
     const doubleLineChars = '=═⚌';
-    const splitRegex = RegExp(String.raw`(?:^|\n)[ \t]*(init|enter|frame|leave|pop_mode|[_A-Z]${identifierPattern})[ \t]*(\([^\n\)]*\))?[\t ]*(\bfrom[ \t]+[_A-Za-z][A-Za-z_0-9]*)?\n((?:-|─|—|━|⎯|=|═|⚌){5,})[ \t]*\n`);
+    const splitRegex = RegExp(String.raw`(?:^|\n)[ \t]*(init|enter|frame|leave|pop_mode|[\$_A-Z]${identifierPattern})[ \t]*(\([^\n\)]*\))?[\t ]*(\bfrom[ \t]+[\$_A-Za-z][\$A-Za-z_0-9]*)?\n((?:-|─|—|━|⎯|=|═|⚌){5,})[ \t]*\n`);
 
     // Compile each mode
     for (let i = 0; i < gameSource.modes.length; ++i) {
 
         // Trust the mode to have the correct name in the gameSource
-        // data structure, but remove the "*" that marks the startup mode..
+        // data structure.
         const mode = gameSource.modes[i];
         
         // If true, this is an internal mode that is allowed to access
-        // "_" private variables.
+        // "$" (and legacy "_") private variables.
         const internalMode = mode.name[0] === '_' || mode.name[0] === '$';
 
         // Eliminate \r on Windows
@@ -1250,7 +1255,7 @@ function compile(gameSource, fileContents, isOS) {
                 } catch (e) {
                     throw {url:mode.url, lineNumber:e.lineNumber + section.offset, message:e.message};
                 }
-                section.jsCode = `/*@"${mode.url}":${section.offset}*/\n` + section.jsCode;
+                section.jsCode = `/*ට"${mode.url}":${section.offset}*/\n` + section.jsCode;
 
                 const match = name.match(/^pop_modeFrom(.*)$/);
                 if (match) {
@@ -1295,7 +1300,7 @@ ${wrappedPopModeFromCode}
 
 // system menu
 ${sectionSeparator}
-function $pop_modeFrom_SystemMenu(callback) {
+function $pop_modeFrom$SystemMenu(callback) {
    if (callback) { callback(); }
 }
 
@@ -1303,13 +1308,13 @@ function $pop_modeFrom_SystemMenu(callback) {
 ${sectionSeparator}
 const $frame = (function*() { 
 let __yieldCounter = 0; while (true) { try {
-if (($gameMode._name[0] !== '_') && (gamepad_array[0].$pp || gamepad_array[1].$pp || gamepad_array[2].$pp || gamepad_array[3].$pp)) { push_mode(_SystemMenu); }
+if (($gameMode._name[0] !== '_') && (gamepad_array[0].$pp || gamepad_array[1].$pp || gamepad_array[2].$pp || gamepad_array[3].$pp)) { push_mode($SystemMenu); }
 $processFrameHooks();
 ${sectionTable.frame.jsCode}
 $show(); } catch (ex) { if (! ex.nextMode) throw ex; else $updateInput(); } yield; }
 })();
 
-return $Object.freeze({$enter:$enter, $frame:$frame, $pop_modeFrom_SystemMenu:$pop_modeFrom_SystemMenu, $leave:$leave${pop_modeBindings}, _name:'${mode.name}'});
+return $Object.freeze({$enter:$enter, $frame:$frame, $pop_modeFrom$SystemMenu:$pop_modeFrom$SystemMenu, $leave:$leave${pop_modeBindings}, _name:'${mode.name}'});
 })();
 
 `;
@@ -1318,27 +1323,54 @@ return $Object.freeze({$enter:$enter, $frame:$frame, $pop_modeFrom_SystemMenu:$p
     } // for each mode
     
     // Set the initial mode
-    compiledProgram += 'try { set_mode(' + gameSource.json.start_mode + '); } catch (e) { if (! e.nextMode) { throw e; } }\n\n';
+    const start_mode = (gameSource.debug && gameSource.debug.start_mode_enabled && gameSource.debug.start_mode) || gameSource.json.start_mode
+    compiledProgram += 'try { set_mode(' + start_mode + '); } catch (e) { if (! e.nextMode) { throw e; } }\n\n';
 
     // Main loop
     compiledProgram += '// Main loop\nwhile (true) { $gameMode.$frame.next(); yield; };\n\n'
 
-    compiledProgram = "'use strict';/*@\"resetAnimation\"*/ \n" + resetAnimationSource + separator + compiledProgram;
+    compiledProgram = "'use strict';/*ට\"resetAnimation\"*/ \n" + resetAnimationSource + separator + compiledProgram;
 
-    // Inject line number on Safari
+    // Process SOURCE_LOCATION and inject line numbers on Safari
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    if (isSafari) {
+    if (isSafari || compiledProgram.indexOf('SOURCE_LOCATION') !== -1) {
         const lines = compiledProgram.split('\n');
         // Put after "use strict"
-        lines[0] += '$currentLineNumber=1;';
+        if (isSafari) { lines[0] += '$currentLineNumber=1;'; }
+
+        let currentURL = '';
+        let currentFilename = '';
+        let currentLineNumber = 0;
+
+        const baseURL = gameSource.jsonURL.replace(/\/[^\/]+$/, '/');
 
         // Other lines
         for (let i = 1; i < lines.length; ++i) {
+            // Detect changes of file
+            const directive = parseCompilerLineDirective(lines[i]);
+            if (directive) {
+                currentURL = directive.url;
+                currentLineNumber = directive.lineNumber;
+                if (currentURL.startsWith(baseURL)) {
+                    currentFilename = currentURL.substring(baseURL.length);
+                } else {
+                    currentFilename = currentURL;
+                }
+            } else {
+                ++currentLineNumber;
+            }
+
+            // Replace SOURCE_LOCATION if not inside a string
+            if (lines[i].indexOf('SOURCE_LOCATION') !== -1) {
+                let tmp = protectQuotedStrings(lines[i]);
+                lines[i] = unprotectQuotedStrings(tmp[0].replace(/\bSOURCE_LOCATION\b/g, `($Object.freeze({url: "${currentURL}", filename: "${currentFilename}", line_number: ${currentLineNumber}}))`), tmp[1]);
+            }
+
             // There are some weird cases where string split seems to
-            // break in the middle of expressions, perhaps because
-            // of unusual characters in the source file that turn into \n
-            // under unicode rules. Detect these cases and don't insert line numbers
-            // for them
+            // break in the middle of expressions, perhaps because of
+            // unusual characters in the source file that turn into \n
+            // under unicode rules. Detect these cases and don't
+            // insert line numbers for them.
             if (! /^\s*(else|\]|\)|\}|\/\/|$)/.test(lines[i]) &&
                 ! /[\(,\[]$/.test(lines[i - 1])) {
                 lines[i] = '$currentLineNumber=' + (i+1) + ';' + lines[i];
@@ -1349,6 +1381,32 @@ return $Object.freeze({$enter:$enter, $frame:$frame, $pop_modeFrom_SystemMenu:$p
 
     // console.log(compiledProgram);
     return compiledProgram;
+}
+
+
+
+/** Returns {url:, lineNumber:} or undefined if this is not a line directive */
+function parseCompilerLineDirective(line) {
+    const urlCharIndex = line.indexOf('/*ට');
+    if (urlCharIndex === -1) { return undefined; }
+    
+    let endCharIndex = line.indexOf('*/', urlCharIndex + 1);
+    let url = line.substring(urlCharIndex + 4, endCharIndex);
+    endCharIndex = url.lastIndexOf(':');
+    const quoteIndex = url.lastIndexOf('"');
+    let offset = 0;
+
+    let lineNumber = 0;
+    if ((endCharIndex !== -1) && (quoteIndex < endCharIndex)) {
+        // of the form "url":line
+        lineNumber = parseInt(url.substring(endCharIndex + 1));
+        url = url.substring(0, endCharIndex);
+    }
+    if (url[url.length - 1] === '"') {
+        url = url.substring(0, url.length - 1);
+    }
+
+    return {url: url, lineNumber: lineNumber};
 }
 
 

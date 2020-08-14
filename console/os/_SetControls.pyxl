@@ -1,4 +1,4 @@
-_SetControls
+$SetControls
 ════════════════════════════════════════════════════════════════════════
 
 // This code handles all screen sizes. Most use the same layout

@@ -1,4 +1,4 @@
-_SetControls64
+$SetControls64
 ════════════════════════════════════════════════════════════════════════
 // Choose the active player
 
@@ -53,7 +53,7 @@ if mode_frames > open_frames:
          if choiceIndex == size(choiceArray) - 1:
             pop_mode()
          else:
-            push_mode(_SetControls, choiceIndex)
+            push_mode($SetControls, choiceIndex)
       else if control.yy:
          const prev = choiceIndex
          choiceIndex = clamp(choiceIndex + control.yy, 0, size(choiceArray) - 1)

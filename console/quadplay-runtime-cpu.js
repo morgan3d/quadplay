@@ -398,13 +398,13 @@ function size(x) {
 }
 
 
-function random_value(t) {
+function random_value(t, rng) {
     const T = typeof t;
     if (Array.isArray(t) || (T === 'string')) {
-        return t[random_integer(t.length - 1)];
+        return t[random_integer(0, t.length - 1, rng)];
     } else if (T === 'object') {
         const k = Object.keys(t);
-        return t[k[random_integer(k.length - 1)]];
+        return t[k[random_integer(0, k.length - 1, rng)]];
     } else {
         return undefined;
     }
@@ -1494,7 +1494,7 @@ function hash(x, y) {
 
 function $lerp(a, b, t) { return a * (1 - t) + b * t; }
 
-// Fast 1D "hash" used by noise()
+// Fast 1D numerical "hash" used by noise()
 function $nhash1(n) { n = $Math.sin(n) * 1e4; return n - $Math.floor(n); }
 
 // bicubic fbm value noise
@@ -1516,48 +1516,70 @@ function noise(octaves, x, y, z) {
     z = z || 0;
 
     let temp = $Math.round(octaves);
-    if (octaves - k > 1e-10) {
+    if (octaves - temp > 1e-10) {
         // Catch the common case where the order of arguments was swapped
         // by recognizing fractions in the octave value
         throw new Error("noise(octaves, x, y, z) must take an integer number of octaves");
     } else {
-        octaves = temp | 0;
+        octaves = temp >>> 0;
     }
 
-    // Maximum value is 1/2 + 1/4 + 1/8 ... from the straight summation
-    // The max is always pow(2,-octaves) less than 1.
-    // So, divide by (1-pow(2,-octaves))
     octaves = $Math.max(1, octaves);
-
     
-    var v = 0, k = 1 / (1 - $Math.pow(2, -octaves));
-
-    var stepx = 110, stepy = 241, stepz = 171;
+    // Maximum value is 1/2 + 1/4 + 1/8 ... from the straight summation.
+    // The max is always pow(2, -octaves) less than 1.
+    // So, divide each term by (1-pow(2,-octaves)) as well as
+    // its octave scaling.
+    let v = 0, k = 1 / (1 - $Math.pow(2, -octaves));
     
-    for (; octaves > 0; --octaves) {
-        
-        var ix = $Math.floor(x), iy = $Math.floor(y), iz = $Math.floor(z);
-        var fx = x - ix,        fy = y - iy,        fz = z - iz;
- 
-        // For performance, compute the base input to a 1D hash from the integer part of the argument and the 
-        // incremental change to the 1D based on the 3D -> 1D wrapping
-        var n = ix * stepx + iy * stepy + iz * stepz;
+    const stepx = 110, stepy = 241, stepz = 171;
 
-        var ux = fx * fx * (3 - 2 * fx),
-            uy = fy * fy * (3 - 2 * fy),
-            uz = fz * fz * (3 - 2 * fz);
+    if ($Math.abs(z - $Math.floor(z)) > 1e-8) {
+        // Full 3D
+    
+        for (; octaves > 0; --octaves) {        
+            const ix = $Math.floor(x), iy = $Math.floor(y), iz = $Math.floor(z);
+            const fx = x - ix,         fy = y - iy,         fz = z - iz;
+            
+            // For performance, compute the base input to a 1D hash
+            // from the integer part of the argument and the
+            // incremental change to the 1D based on the 3D -> 1D
+            // wrapping
+            const n = ix * stepx + iy * stepy + iz * stepz;
+            
+            const ux = fx * fx * (3 - 2 * fx),
+                  uy = fy * fy * (3 - 2 * fy),
+                  uz = fz * fz * (3 - 2 * fz);
+            
+            v += ($lerp($lerp($lerp($nhash1(n), $nhash1(n + stepx), ux),
+                              $lerp($nhash1(n + stepy), $nhash1(n + stepx + stepy), ux), uy),
+                        $lerp($lerp($nhash1(n + stepz), $nhash1(n + stepx + stepz), ux),
+                              $lerp($nhash1(n + stepy + stepz), $nhash1(n + stepx + stepy + stepz), ux), uy), uz) - 0.5) * k;
+            
+            // Grab successive octaves from very different parts of
+            // the space, and double the frequency
+            x += x + 109;
+            y += y + 31;
+            z += z + 57;
+            k *= 0.5;
+        }
+    } else {
+        // Optimized 2D, where the z terms will all be zero. See above for implementation comments.
+        for (; octaves > 0; --octaves) {        
+            const ix = $Math.floor(x), iy = $Math.floor(y);
+            const fx = x - ix,         fy = y - iy;
+            const n = ix * stepx + iy * stepy;
+            
+            const ux = fx * fx * (3 - fx - fx),
+                  uy = fy * fy * (3 - fy - fy);
 
-        v += ($lerp($lerp($lerp($nhash1(n), $nhash1(n + stepx), ux),
-                          $lerp($nhash1(n + stepy), $nhash1(n + stepx + stepy), ux), uy),
-                    $lerp($lerp($nhash1(n + stepz), $nhash1(n + stepx + stepz), ux),
-                          $lerp($nhash1(n + stepy + stepz), $nhash1(n + stepx + stepy + stepz), ux), uy), uz) - 0.5) * k;
+            v += ($lerp($lerp($nhash1(n),         $nhash1(n + stepx),         ux),
+                        $lerp($nhash1(n + stepy), $nhash1(n + stepx + stepy), ux), uy) - 0.5) * k;
 
-        // Grab successive octaves from very different parts of the space, and
-        // double the frequency
-        x = 2 * x + 109;
-        y = 2 * y + 31;
-        z = 2 * z + 57;
-        k *= 0.5;
+            x += x + 109;
+            y += y + 31;
+            k *= 0.5;
+        }
     }
     
     return v;
@@ -4119,6 +4141,8 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
 
 
 function draw_corner_rect(corner, size, fill, outline, z) {
+    // Skip graphics this frame
+    if (mode_frames % $graphicsPeriod !== 0) { return; }
 
     if (corner.corner) {
         if (size !== undefined) {
@@ -4177,17 +4201,34 @@ function draw_corner_rect(corner, size, fill, outline, z) {
         return;
     }
 
-    $addGraphicsCommand({
-        z: z,
-        opcode: 'REC',
-        x1: x1,
-        y1: y1,
-        x2: x2,
-        y2: y2,
-        fill: fill,
-        outline: outline
-    });
+    const prevCommand = $graphicsCommandList[$graphicsCommandList.length - 1];
+    if (prevCommand && (prevCommand.baseZ === z) && (prevCommand.opcode === 'REC')) {
+        // Aggregate into the previous command
+        prevCommand.data.push({
+            x1: x1,
+            y1: y1,
+            x2: x2,
+            y2: y2,
+            fill: fill,
+            outline: outline
+        })
+    } else {
+        $addGraphicsCommand({
+            z: z,
+            baseZ: z,
+            opcode: 'REC',
+            data: [{
+                x1: x1,
+                y1: y1,
+                x2: x2,
+                y2: y2,
+                fill: fill,
+                outline: outline
+            }]
+        });
+    }
 }
+
 
 // Compute the zoom for this z value for the current camera
 function $zoom(z) {
@@ -6152,7 +6193,11 @@ function $makeRng(seed) {
     var state0U = 5662365, state0L = 20000, state1U = 30000, state1L = 4095;
 
     function set_random_seed(seed) {
-        if (seed === undefined || seed === 0) { seed = 4.7499362e+13; }
+        if (seed === undefined) {
+            seed = local_time().millisecond;
+        } else if (seed === 0) {
+            seed = 4.7499362e+13;
+        }
         if (seed < 2**16) { seed += seed * 1.3529423483002e15; }
         state0U = $Math.abs(seed / 2**24) >>> 0;
 
@@ -6165,9 +6210,7 @@ function $makeRng(seed) {
         //$console.log(seed, state0U, state0L, state1U, state1L)
     }
 
-    if (seed !== undefined) {
-        set_random_seed(seed);
-    }
+    set_random_seed(seed);
 
     function random(lo, hi) {
         // uint64_t s1 = s[0]
@@ -6239,7 +6282,7 @@ function $makeRng(seed) {
     return [random, set_random_seed];
 }
         
-var [random, set_random_seed] = $makeRng();
+var [random, set_random_seed] = $makeRng(0);
 
 function make_random(seed) {
     var [random, set_random_seed] = $makeRng(seed || (local_time().millisecond() * 1e6));
@@ -6256,7 +6299,6 @@ function random_integer(lo, hi, rng) {
         lo = 0;        
     }
     rng = rng || random;
-    var n = hi - lo + 1;
     return $Math.min(hi, floor(rng(lo, hi + 1)));
 }
 
@@ -6840,7 +6882,7 @@ function format_number(n, fmt) {
 }
 
 
-function shuffle(array) {
+function shuffle(array, rng) {
     if (! Array.isArray(array)) {
         throw new Error('The argument to shuffle() must be an array');
     }
@@ -6848,7 +6890,7 @@ function shuffle(array) {
     // While there remain elements to shuffle...
     for (let i = array.length - 1; i > 0; --i) {
         // Pick a remaining element...
-        let j = random_integer(i - 1);
+        let j = random_integer(0, i - 1, rng);
         
         // ...and swap it with the current element.
         const temp = array[i];
@@ -6890,15 +6932,15 @@ function join(array, separator, lastSeparator, lastIfTwoSeparator, empty) {
 }
 
 
-function shuffled(a) {
+function shuffled(a, rng) {
     if (Array.isArray(a)) {
         const c = clone(a);
-        shuffle(c);
+        shuffle(c, rng);
         return c;
     } else {
         // String case
         const c = split(a);
-        shuffle(c);
+        shuffle(c, rng);
         return join(c);
     }
 }

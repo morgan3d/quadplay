@@ -3,7 +3,7 @@
     "examples": [
         {
             "url": "quad://examples/accel_demo/",
-            "title": "Acceleration Curve Example",
+            "title": "Acceleration Library Demo",
             "description": ""
         },
         {
@@ -20,6 +20,11 @@
             "url": "quad://examples/camera_shake/",
             "title": "Camera Shake",
             "description": "Example of tunable full-screen camera shake"
+        },
+        {
+            "url": "quad://examples/clouds/",
+            "title": "Clouds",
+            "description": "Example of noise functions and draw_point"
         },
         {
             "url": "quad://examples/dual-stick/",

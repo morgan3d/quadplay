@@ -149,6 +149,8 @@ LoadManager.prototype.markRequestCompleted = function (url, message, success) {
    \param postProcess(rawData, url) function
    \param callback(data, rawData, url, postProcess)
    \param errorCallback(reason, url) optional. Invoked on failure if some other load has not already failed.
+          If the errorCallback returns a non-falsey value, then this is not treated as a global error and the 
+          rest of loading continues. Otherwise loading ends immediately.
    \param warningCallback() optional.
    \param forceReload Boolean, optional. Defaults to LoadManage.forceReload
 
@@ -186,7 +188,7 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
             if (LM.status === 'failure') { return; }
 
             try {
-                // Run all post processing and callbacks
+                // Run all post processing and success callbacks
                 for (let [p, v] of rawEntry.post) {
                     v.value = p ? p(rawEntry.raw, rawEntry.url) : rawEntry.raw;
                     
@@ -199,6 +201,7 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
                 rawEntry.status = 'success';
                 LM.markRequestCompleted(rawEntry.url, '', true);
             } catch (e) {
+                // The load succeeded, but a callback has failed
                 console.dir(e);
                 rawEntry.failureMessage = '' + e;
                 onLoadFailure();
@@ -210,14 +213,22 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
             if (LM.status === 'failure') { return; }
             rawEntry.status = 'failure';
 
+            let atLeastOne = false;
+            let allTrue = true;
             // Run all failure callbacks
             for (let [p, v] of rawEntry.post) {
                 for (let c of v.errorCallbackArray) {
-                    if (c) { c(rawEntry.failureMessage, rawEntry.url); }
-                }
+                    if (c) {
+                        atLeastOne = true;
+                        allTrue = c(rawEntry.failureMessage, rawEntry.url) && allTrue;
+                    }
+                } // for each callback
             }
 
-            LM.markRequestCompleted(rawEntry.url, rawEntry.failureMessage, false);
+            // Do we treat this as a 'success'?
+            const considerSuccess = atLeastOne && allTrue;
+            
+            LM.markRequestCompleted(rawEntry.url, rawEntry.failureMessage, considerSuccess);
         }        
 
         // Safari slows down badly when it must handle too many async requests
@@ -285,6 +296,7 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
                                 rawEntry.raw = LM.parseJSON(xhr.response, url, warningCallback);
                                 onLoadSuccess();
                             } catch (e) {
+                                // Parsing failed
                                 rawEntry.failureMessage = '' + e;
                                 rawEntry.failureMessage = rawEntry.failureMessage.replace(/position (\d*)/, function (match, pos) {
                                     const chr = parseInt(pos);

@@ -156,7 +156,9 @@ function afterLoadGame(gameURL, callback, errorCallback) {
     
     // Wipe the file data for the IDE
     fileContents = {};
-    gameSource = {};
+    gameSource = {
+        debug: {}
+    };
 
     // Wipe the virtual GPU memory
     spritesheetArray = [];
@@ -174,6 +176,23 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         spritePixelsByURL: {},
         soundKilobytesByURL: {}
     };
+
+    const debugURL = gameURL.replace(/\.game\.json$/, '.debug.json');
+
+    if (locallyHosted(gameURL) && useIDE && isQuadserver && ! isBuiltIn(gameURL)) {
+        loadManager.fetch(
+            debugURL, 'json', null,
+            function (debugJSON) {
+                // Store the debugJSON contents
+                gameSource.debug = debugJSON;
+            },
+            function () {
+                // Tell the LoadManager that this is an acceptable failure
+                // and continue.
+                return true;
+            }
+        );
+    }
 
     loadManager.fetch(gameURL, 'json', null, function (gameJSON) {
         if (! Array.isArray(gameJSON.modes)) { throw new Error('The modes parameter is not an array'); }
@@ -266,8 +285,9 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             let numStartModes = 0;
             for (let i = 0; i < gameJSON.modes.length; ++i) {
                 const modeURL = makeURLAbsolute(gameURL, gameJSON.modes[i] + '.pyxl');
-                // Remove any URL prefix
-                const name = gameJSON.modes[i].replace(/^.*\//, '');
+                // Remove any URL prefix and change leading underscore to $ on the name
+                // (we don't use $ in the actual URL because it confuses a lot of shells)
+                const name = gameJSON.modes[i].replace(/^.*\//, '').replace(/(^|\/)_([^\/]+)$/, '$1$$$2');
                 if (name === gameJSON.start_mode) {
                     ++numStartModes;
                 }

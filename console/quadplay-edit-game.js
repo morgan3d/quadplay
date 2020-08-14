@@ -64,6 +64,29 @@ function onProjectInitialModeChange(newStartModeName) {
 }
 
 
+// If the argument is the empty string, then disable the override
+function onProjectDebugInitialModeChange(newStartModeName) {
+    if (! gameSource.debug) { gameSource.debug = {}; }
+    
+    if (newStartModeName === '') {
+        // Remove
+        gameSource.debug.start_mode_enabled = false;
+    } else {
+        gameSource.debug.start_mode = newStartModeName;
+        gameSource.debug.start_mode_enabled = true;
+    }
+    
+    serverSaveDebugJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
+}
+
+
+function onDebugInitialModeOverrideChange(checkbox) {
+    const dropdown = document.getElementById('debugOverrideInitialMode');
+    dropdown.disabled = ! checkbox.checked;
+    onProjectDebugInitialModeChange(checkbox.checked ? dropdown.value : '');
+}
+
+
 function capitalize(key) {
     return key[0].toUpperCase() + key.substring(1);
 }
@@ -109,11 +132,21 @@ function serverScheduleSaveGameJSON(delaySeconds) {
 /* Save the current .game.json file, which has
    presumably been modified by the caller */
 function serverSaveGameJSON(callback) {
+    console.assert(gameSource.jsonURL);
     const gameFilename = urlToFilename(gameSource.jsonURL);
     console.assert(gameFilename.endsWith('.game.json'));
  
     const gameContents = WorkJSON.stringify(gameSource.json, undefined, 4);
     serverWriteFile(gameFilename, 'utf8', gameContents, callback);
+}
+
+
+function serverSaveDebugJSON(callback) {
+    console.assert(gameSource.jsonURL);
+    const debugFilename = urlToFilename(gameSource.jsonURL).replace(/\.game\.json$/, '.debug.json');
+ 
+    const debugContents = WorkJSON.stringify(gameSource.debug || {}, undefined, 4);
+    serverWriteFile(debugFilename, 'utf8', debugContents, callback);
 }
 
 

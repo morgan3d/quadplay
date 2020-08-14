@@ -138,32 +138,63 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         # Prevent directory listing
         self.send_error(404, 'No permission to list directory')
         return None
-        
-    # Used for the IDE to write files. Currently disabled on the IDE side
-    def do_POST(self):
+
+    # Returns False on security error
+    def prepare_mutating_request(self):
         if args.host:
-           print('Refused POST command while running with --host')
-           return
+           print('Refused POST/DELETE command while running with --host')
+           return False
         
         if self.client_address[0] != '127.0.0.1':
-           print('Refused POST command from non-local address', self.client_address[0])
-           return
-        
-        #print('\n\nReceived POST from ', self.client_address[0], '\n\n')
-
+           print('Refused POST/DELETE command from non-local address', self.client_address[0])
+           return False
+       
         content_len = int(self.headers['Content-Length'])
         object = json.loads(self.rfile.read(content_len))
+
+        request_token = object['token']
+        if request_token != token:
+            print('WARNING: Ignored request without proper token (expected ', token, '/ received ', request_token, ')')
+            response = json.dumps('Bad token', separators = (',', ':'));
+            self.send_response(401)
+            self.send_header('Content-type', 'text/json')
+            self.send_header('Content-length', len(response))
+            self.end_headers()
+            self.wfile.write(response.encode('utf8'))
+            return False
+
+        return object
+    
+    
+    def do_DELETE(self):
+        object = self.prepare_mutating_request()
+        if not object: return
+        path_parts = self.path.split('?')
+        webpath = os.path.normpath(path_parts[0]).replace('\\', '/')
+        print('DELETE ' + webpath)
+
+        os.remove(webpath)
+        
+        response = json.dumps('OK', separators = (',', ':'));
+        self.send_response(200)
+        self.send_header('Content-type', 'text/json')
+        self.send_header('Content-length', len(response))
+        self.end_headers()
+        self.wfile.write(response.encode('utf8'))
+        
+    
+    # Used for the IDE to write files. Currently disabled on the IDE side
+    def do_POST(self):
+        #print('\n\nReceived POST from ', self.client_address[0], '\n\n')
+
+        object = self.prepare_mutating_request()
+        if not object: return
+
         command = object['command']
-        post_token = object['token']
         
         response_obj = None
         code = 201
-        if post_token != token:
-            print('WARNING: Ignored ', command, ' request without proper token (expected ', token, '/ received ', post_token, ')')
-            response_obj = 'Bad token'
-            code = 401
-            
-        elif command == 'write_file':
+        if command == 'write_file':
             filename = remove_leading_slash(object['filename'])
             encoding = object['encoding']
             contents = object['contents']

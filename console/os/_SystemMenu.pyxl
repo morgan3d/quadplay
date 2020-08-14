@@ -1,4 +1,4 @@
-_SystemMenu
+$SystemMenu
 ════════════════════════════════════════════════════════════════════════
 
 const window_background_color = #135
@@ -36,20 +36,20 @@ def choose():
    const choice = choice_array[choice_index]
 
    if choice.confirm:
-      push_mode(_ConfirmDialog, choice)
+      push_mode($ConfirmDialog, choice)
    else:
       close(choice.callback)
 
       
 def set_controls():
    if SCREEN_SIZE.x == 64:
-      push_mode(_SetControls64)
+      push_mode($SetControls64)
    else:
-      push_mode(_SetControls)
+      push_mode($SetControls)
 
 
 def game_credits():
-   push_mode(_GameCredits)
+   push_mode($GameCredits)
 
 
       
@@ -98,13 +98,13 @@ set_background(old_background)
 $resumeAllSounds()
 
 
-pop_mode(callback) from _ConfirmDialog
+pop_mode(callback) from $ConfirmDialog
 ────────────────────────────────────────────────────────────────────────
 // Return with the callback
 if callback: close(callback)
 
 
-pop_mode() from _GameCredits
+pop_mode() from $GameCredits
 ────────────────────────────────────────────────────────────────────────
 // Return to the main game
 pop_mode()
@@ -141,7 +141,6 @@ draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(14%, 14%, 14%, 80% clamp((mode_fram
 // Our last menu item is designed to be the longest, so use that
 // to estimate width
 const window_size = round(xy(max_choice_width + 1.5 font.line_height, SCREEN_SIZE.y + 2))
-debug_watch(font.line_height);
 
 // Animate sliding in of window
 set_transform(xy(1 + SCREEN_SIZE.x - window_size.x * (50% - clamp(1 - (mode_frames - fade_in_frames) / slide_in_frames, 0%, 100%)), SCREEN_SIZE.y / 2), xy(1, 1), 2048.5, 1)

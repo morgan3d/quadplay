@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.08.02.21'
+const version  = '2020.08.12.00'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -157,7 +157,7 @@ function setGamepadOrderMap(map) {
 }
 
 
-let colorScheme = 'pink';
+let colorScheme = 'dots';
 function setColorScheme(scheme) {
     colorScheme = scheme;
     document.getElementById(scheme + 'ColorScheme').checked = 1;
@@ -171,11 +171,16 @@ function setColorScheme(scheme) {
     }
     if (! stylesheet) { return; }
 
-    // Default to pink scheme
+    // Default to dots scheme
     let hrefColor = '#e61b9d';
-    let emulatorColor = '#ff4488';
+    let emulatorColor = "url('wrap-dots.png') 50% 50% / cover";
 
     switch (scheme) {
+    case 'pink':
+        hrefColor = '#e61b9d';
+        emulatorColor = '#ff4488';
+        break;
+
     case 'black':
         hrefColor = '#0af';
         emulatorColor = '#090909';
@@ -205,19 +210,39 @@ function setColorScheme(scheme) {
         hrefColor = '#0af';
         emulatorColor = '#1074b6';
         break;
+
+    case 'dots':
+        hrefColor = '#e61b9d';
+        emulatorColor = "url('wrap-dots.png') 50% 50% / cover";
+        break;
+        
+    case 'stripes':
+        hrefColor = '#da0200';
+        emulatorColor = "url('wrap-stripes.png') 50% 50% / cover";
+        break;
+
+    case 'wood':
+        hrefColor = '#cb7f49';
+        emulatorColor = "url('wrap-wood.jpg') 50% 50% / cover";
+        break;
+        
+    case 'carbon':
+        hrefColor = '#0af';
+        emulatorColor = "url('wrap-carbon.png') 50% 50% / cover";
+        break;
     }
     
     // Find the relevant rules and remove them
     for (let i = 0; i < stylesheet.cssRules.length; ++i) {
         const rule = stylesheet.cssRules[i];
-        if ((rule.selectorText === '#header a, .menu a') ||
+        if ((rule.selectorText === 'a, #header a, .menu a') ||
             (rule.selectorText === '.emulator .emulatorBackground' && rule.style.background !== '')) {
             stylesheet.deleteRule(i);
             --i;
         }
     }
     // Replacement rules
-    stylesheet.insertRule(`#header a, .menu a { color: ${hrefColor} !important; text-decoration: none; }`, 0);
+    stylesheet.insertRule(`a, #header a, .menu a { color: ${hrefColor} !important; text-decoration: none; }`, 0);
     stylesheet.insertRule(`.emulator .emulatorBackground { background: ${emulatorColor}; ! important}`, 0);
     localStorage.setItem('colorScheme', colorScheme);
 }
@@ -584,8 +609,9 @@ function download(url, name) {
 
 
 /** True if the game is running on the same server as the quadplay console */
-function locallyHosted() {
-    return gameURL.startsWith('quad://') || gameURL.startsWith(location.origin) || ! /^([A-Za-z]){3,6}:\/\//.test(gameURL);
+function locallyHosted(url) {
+    url = url || gameURL;
+    return url.startsWith('quad://') || url.startsWith(location.origin) || ! /^([A-Za-z]){3,6}:\/\//.test(url);
 }
 
     
@@ -669,7 +695,11 @@ function onPlayButton(slow, isLaunchGame, args) {
                 if (e.message === 'Unexpected token :') {
                     e.message += ', possible due to a missing { on a previous line';
                 }
-
+                if (! e.url) {
+                    // This is probably an internal quadplay error
+                    console.log(e);
+                    return;
+                }
                 setErrorStatus(shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message);
                 editorGotoFileLine(e.url, e.lineNumber, undefined, true);
             }
@@ -2031,7 +2061,7 @@ function visualizeModes(modeEditor) {
     for (let m = 0; m < gameSource.modes.length; ++m) {
         const mode = gameSource.modes[m];
         // Skip system modes
-        if (mode.name[0] === '_') { continue; }
+        if (mode.name[0] === '$') { continue; }
 
         const isStart = (gameSource.json.start_mode === mode.name);
         const node = {name: mode.name, label: mode.name, edgeArray:[], isStart:isStart};
@@ -2058,7 +2088,7 @@ function visualizeModes(modeEditor) {
         const mode = gameSource.modes[m];
         const name = mode.name.replace(/^.*\/|\*/g, '');
         // Skip system modes
-        if (name[0] === '_') { continue; }
+        if (name[0] === '$') { continue; }
         const code = fileContents[mode.url];
 
         const edgeArray = nodeTable[name].edgeArray;
@@ -2343,8 +2373,18 @@ function visualizeGame(gameEditor, url, game) {
         s += '<tr valign="top"><td>Start&nbsp;Mode</td><td colspan=3><select style="width:390px" onchange="onProjectInitialModeChange(this.value)">\n';
         for (let i = 0; i < gameSource.modes.length; ++i) {
             const mode = gameSource.modes[i];
-            if (! mode.name.startsWith('quad://console/os/_') && ! mode.name.startsWith('_')) {
+            if (! mode.name.startsWith('quad://console/os/_') && ! mode.name.startsWith('$')) {
                 s += `<option value=${mode.name} ${mode.name === gameSource.json.start_mode ? 'selected' : ''}>${mode.name}</option>\n`;
+            }
+        }
+        s += '</select></td></tr>\n';
+
+        const overrideInitialMode = gameSource.debug && gameSource.debug.start_mode_enabled && gameSource.debug.start_mode;
+        s += `<tr valign="top"><td></td><td><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${overrideInitialMode ? 'checked' : ''} onchange="onDebugInitialModeOverrideChange(this)">Debug&nbsp;Override</label></td><td colspan=2"><select id="debugOverrideInitialMode" style="width:222px; top:-2px" ${overrideInitialMode ? '' : 'disabled'} onchange="onProjectDebugInitialModeChange(this.value)">\n`;
+        for (let i = 0; i < gameSource.modes.length; ++i) {
+            const mode = gameSource.modes[i];
+            if (! mode.name.startsWith('quad://console/os/_') && ! mode.name.startsWith('$')) {
+                s += `<option value=${mode.name} ${mode.name === gameSource.debug.start_mode ? 'selected' : ''}>${mode.name}</option>\n`;
             }
         }
         s += '</select></td></tr>\n';
@@ -2502,7 +2542,7 @@ function createProjectWindow(gameSource) {
     for (let i = 0; i < gameSource.modes.length; ++i) {
         const mode = gameSource.modes[i];
         // Hide system modes
-        if (/^.*\/_|^_/.test(mode.name)) { continue; }
+        if (/^.*\/_|^_|^\$/.test(mode.name)) { continue; }
         const badge = isBuiltIn(mode.url) ? 'builtin' : (isRemote(mode.url) ? 'remote' : '');
         const contextMenu = editableProject ? `oncontextmenu="showModeContextMenu(gameSource.modes[${i}])"` : '';
         s += `<li ${contextMenu} class="clickable ${badge}" onclick="onProjectSelect(event.target, 'mode', gameSource.modes[${i}])" title="${mode.url}" id="ModeItem_${mode.name}"><code>${mode.name}${mode.name === gameSource.json.start_mode ? '*' : ''}</code></li>\n`;
@@ -2853,8 +2893,14 @@ const outputDisplayPane = document.getElementById('outputDisplayPane');
 // Maps expression strings to values
 let debugWatchTable = {};
 
-function debug_watch(expr, value) {
-    debugWatchTable[expr] = QRuntime.unparse(value);
+function debug_watch(location, expression, value) {
+    // The value must be unparsed here, since it can be mutated after
+    // this function returns.
+    debugWatchTable[location.url + ':' + location.line_number] = {
+        location: location,
+        expression: expression,
+        value: QRuntime.unparse(value)
+    };
 }
 
 
@@ -2922,31 +2968,17 @@ function jsToPSError(error) {
     let urlLineIndex, urlCharIndex = -1;
 
     for (urlLineIndex = Math.min(Math.max(0, lineNumber - 1), lineArray.length - 1); (urlLineIndex >= 0) && (urlCharIndex === -1); --urlLineIndex) {
-        urlCharIndex = lineArray[urlLineIndex].indexOf('/*@"');
+        urlCharIndex = lineArray[urlLineIndex].indexOf('/*ට"');
     }
 
     // Always overshoots by one
     ++urlLineIndex;
-    let endCharIndex = lineArray[urlLineIndex].indexOf('*/', urlCharIndex + 1);
 
-    let url = lineArray[urlLineIndex].substring(urlCharIndex + 4, endCharIndex);
-    // Strip the line offset
-    endCharIndex = url.lastIndexOf(':');
-    const quoteIndex = url.lastIndexOf('"');
-    let offset = 0;
-
-    if ((endCharIndex !== -1) && (quoteIndex < endCharIndex)) {
-        // of the form "url":line
-        offset = parseInt(url.substring(endCharIndex + 1));
-        url = url.substring(0, endCharIndex);
-    }
-    if (url[url.length - 1] === '"') {
-        url = url.substring(0, url.length - 1);
-    }
-
-    return {url: url, lineNumber: lineNumber - urlLineIndex - 3 + offset, message: error.message.replace(/\bundefined\b/g, 'nil')};
-}
+    const result = parseCompilerLineDirective(lineArray[urlLineIndex]);
     
+    return {url: result.url, lineNumber: lineNumber - urlLineIndex - 3 + result.lineNumber, message: error.message.replace(/\bundefined\b/g, 'nil')};
+}
+
 
 function updateTimeDisplay(time, name) {
     const td = document.getElementById('debug' + name + 'TimeDisplay');
@@ -3111,8 +3143,15 @@ function mainLoopStep() {
     if (debugWatchEnabled && emulatorMode === 'play') {
         const pane = document.getElementById('debugWatchDisplayPane');
         let s = '<table width=100% style="border-collapse: collapse" >'
-        for (let expr in debugWatchTable) {
-            s += `<tr valign=top><td width=50%>${expr}</td><td>${debugWatchTable[expr]}</td></tr>`;
+        for (let id in debugWatchTable) {
+            const watch = debugWatchTable[id];
+            let tooltip = watch.location.url.replace(/^.*\//, '');
+            if (/[A-Z]/.test(tooltip[0])) {
+                // For modes, remove the extension
+                tooltip = tooltip.replace(/\.pyxl$/, '');
+            }
+            tooltip += ':' + watch.location.line_number;
+            s += `<tr valign=top><td width=50% title="${tooltip}" style="cursor:pointer" onclick="editorGotoFileLine('${watch.location.url}', ${watch.location.line_number}, undefined, false)">${watch.expression}</td><td>${watch.value}</td></tr>`;
         }
         pane.innerHTML = s + '</table>';
     }
@@ -3745,7 +3784,6 @@ function loadGameIntoIDE(url, callback, loadFast) {
                 s += `<button style="margin-top: 5px; font-size: 80%" onclick="navigator.clipboard.writeText('${summary}')">Copy Summary</button>`;
             }
 
-
             const resourceArray = [
                 {name: 'Code Memory',   prop: 'sourceStatements', units: 'Statements', scale:1, suffix:''},
                 {name: 'Sprite Memory', prop: 'spritePixels',     units: 'Pixels', scale: 1/1024, suffix: 'k'}//,
@@ -3977,7 +4015,7 @@ if (getQueryString('kiosk') === '1') {
 }
 setErrorStatus('');
 setCodeEditorFontSize(parseFloat(localStorage.getItem('codeEditorFontSize') || '14'));
-setColorScheme(localStorage.getItem('colorScheme') || 'pink');
+setColorScheme(localStorage.getItem('colorScheme') || 'dots');
 {
     let tmp = gamepadOrderMap = (localStorage.getItem('gamepadOrderMap') || '0123').split('');
     for (let i = 0; i < tmp.length; ++i) {

@@ -821,7 +821,7 @@ function resumeAllSounds() {
 
 // Escapes HTML
 // Injected as debug_print in QRuntime
-function debug_print(...args) {
+function debug_print(location, ...args) {
     let s = '';
     for (let i = 0; i < args.length; ++i) {
         let m = args[i]
@@ -832,7 +832,7 @@ function debug_print(...args) {
         }
     }
     
-    $outputAppend(escapeHTMLEntities(s) + '\n');
+    $outputAppend(escapeHTMLEntities(s) + '\n', location);
 }
 
 
@@ -849,8 +849,8 @@ function $systemPrint(m, style) {
 }
 
 
-// Allows HTML
-function $outputAppend(m) {    
+// Allows HTML. location may be undefined
+function $outputAppend(m, location) {    
     if (m !== '') {
         // Remove tags and then restore HTML entities
         console.log(m.replace(/<.+?>/g, '').replace(/&quot;/g,'"').replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
@@ -862,6 +862,18 @@ function $outputAppend(m) {
                 outputDisplayPane.removeChild(outputDisplayPane.firstChild);
             }
         }
+        
+        if (location) {
+            let tooltip = location.url.replace(/^.*\//, '');
+            if (/[A-Z]/.test(tooltip[0])) {
+                // For modes, remove the extension
+                tooltip = tooltip.replace(/\.pyxl$/, '');
+            }
+            tooltip += ':' + location.line_number;
+            
+            m = `<span style="cursor:pointer" title="${tooltip}" onclick="editorGotoFileLine('${location.url}', ${location.line_number}, undefined, false)">${m}</span>`;
+        }
+        
         outputDisplayPane.insertAdjacentHTML('beforeend', m);
         
         // Scroll to bottom
