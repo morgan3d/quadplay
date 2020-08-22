@@ -40,6 +40,7 @@ function showConstantEditor(index) {
     const constantEditor = document.getElementById('constantEditor');
     const c = gameSource.constants[index];
     const json = gameSource.json.constants[index];
+    const debugJSON = (gameSource.debug.constants ? gameSource.debug.constants[index] : undefined)
     const type = json.type || typeof c;
 
     let html = '';
@@ -143,6 +144,13 @@ function showConstantEditor(index) {
     if (json.description && json.description !== '') {
         html = '<p><i>' + json.description + '</i></p>' + html;
     }
+
+    const debugEnabled = debugJSON !== undefined && debugJSON.enabled;
+    // TODO: Create callbacks
+    html += `<div style="width:100%; border: 1px solid; border-radius: 4px; padding: 2px; margin-top:10px"><input type="checkbox" ${debugEnabled ? 'checked' : ''}>Debug&nbsp;Override</input>`;
+    html += `<div id="${index}_debug_div" ${debugEnabled ? '' : 'disabled'}>`;
+    // TODO: Put the control here
+    html += '</div></div>';
     
     constantEditor.innerHTML = html;
     constantEditor.style.visibility = 'visible';

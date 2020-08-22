@@ -253,10 +253,15 @@ function runMScale2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
             const P = src(srcX, srcY - 2),  Q = src(srcX - 2, srcY),
                   R = src(srcX + 2, srcY),  S = src(srcX, srcY + 2);
 
-            // Default to nearest neighbor, with all four outputs
-            // equal to the input.
+            // Default output to nearest neighbor interpolation, with
+            // all four outputs equal to the center input pixel.
             let J = E, K = E,
                 L = E, M = E;
+
+            // Skip constant centers and just nearest-neighbor them.
+            // This gives a good speedup on spritesheets with lots of
+            // padding and full screen images with large skies.
+            if ((A ^ E) | (B ^ E) | (C ^ E) | (D ^ E) | (F ^ E) | (G ^ E) | (H ^ E) | (I ^ E) !== 0) {
 
             // (Note that we don't need this many, since in the cases where they are applied,
             // we can substitute via equality tests)            
@@ -437,7 +442,7 @@ function runMScale2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
                     J = L = D;
 
             } // not a single pixel
-            
+            }
             // Write output (force transparent back to black for binary images)
             if (isBinary) {
                 J = J ? J : BLACK; K = K ? K : BLACK;

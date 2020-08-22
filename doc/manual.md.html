@@ -3700,7 +3700,7 @@ endpoints and borders.
   
   
 
-`draw_sprite_corner_rect(sprite, corner, size, z ( = 0))`
+`draw_sprite_corner_rect(sprite, corner, size, z default 0)`
 : Draw a rectangle enclosing points `corner` and `corner+size`
   filled with `sprite` tiled as needed (and aligned to the
   center), and surrounded by the neighbors of `sprite`
@@ -4705,6 +4705,7 @@ Sprites
 ![`quad://sprites/controllers-32x22.sprite.json`](../sprites/controllers-32x22.png)
 ![`quad://sprites/explosion-realistic-128x128.sprite.json`](../sprites/explosion-realistic-128x128.png)
 ![`quad://sprites/beast-soldier-32x32.sprite.json`](../sprites/beast-soldier-32x32.png)
+![`quad://sprites/shapes-32x32.sprite.json`](../sprites/shapes-32x32.png)
 
 
 Fonts
@@ -6991,7 +6992,11 @@ quadplay✜ arcade player colors and order is P3 Yellow, P1 Magenta
 <span style="color:#ff49aa; margin-right:30px">*P1*</span>
 <span style="color:#00aaff; margin-right:30px">*P2*</span>
 <span style="color:#4ffb4b">*P4*</span>
-</big></center>
+</big>
+<br>
+
+`const COLOR_ARRAY = [#f5a, #0af, #fe5, #5f5]`
+</center>
 
 #### Nano or Pi 4
 
@@ -7755,6 +7760,7 @@ Changes for both the specification and implementation in each release.
 - New `loop-beat` sound
 - New `loop-wind` sound
 - New `beast-soldier-32x32` spritesheet
+- New `shapes-32x32` spritesheet
 - New dots, stripes, wood, and carbon console wraps
 - Added `.debug.game` layer (see the Debug JSON section)
 - `debug_watch()` now allows multiple identical expressions at different locations
@@ -7832,6 +7838,7 @@ Changes for both the specification and implementation in each release.
 - Fixed constant editor vector vertical nudge value to default sign based on `y_up` setting
 - Fixed sprite editor not updating after JSON edits
 - Fixed gutters on sprites
+- Fixed initial `entity.size` to be based on scale for rectangular shaped entities that have initial sprites
 - Fixed broken images in Markdeep design documents after edits
 - Fixed incorrect image scaling when embedded in itch.io at 1080p
 - Fixed a bug that prevented `debug_watch()` on values containing string literals

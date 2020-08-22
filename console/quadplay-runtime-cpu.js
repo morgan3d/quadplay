@@ -1985,7 +1985,7 @@ function make_entity(e, childTable) {
     if (r.size === undefined) {
         if (r.sprite) {
             if (r.shape === 'rect') {
-                r.size = clone(r.sprite.size);
+                r.size = {x: r.sprite.size.x * r.scale.x, y: r.sprite.size.y * r.scale.y};
             } else if (r.shape === 'disk') {
                 const x = min_component(r.sprite.size) * r.scale.x;
                 r.size = xy(x, x);
@@ -2360,30 +2360,30 @@ function $physicsUpdateContact(physics, contact, pair) {
         contact.point1 = undefined;
     }
     contact.depth = pair.collision.depth;
-    contact._lastRealContactFrame = physics._frame;
+    contact._lastRealContactFrame = physics.$frame;
 }
 
 
 function make_physics(options) {
     const engine = $Physics.Engine.create();
     const physics = Object.seal({
-        _name:                 "physics" + ($physicsContextIndex++),
-        _engine:               engine,
-        _contactCallbackArray: [],
-        _newContactArray:      [], // for firing callbacks and visualization. wiped every frame
+        $name:                 "physics" + ($physicsContextIndex++),
+        $engine:               engine,
+        $contactCallbackArray: [],
+        $newContactArray:      [], // for firing callbacks and visualization. wiped every frame
 
-        _frame:                0,
+        $frame:                0,
         
-        // _brokenContactQueue[0] is an array of contacts that broke _brokenContactQueue.length - 1
+        // $brokenContactQueue[0] is an array of contacts that broke $brokenContactQueue.length - 1
         // frames ago (but may have been reestablished). Add empty arrays to this queue to maintain
         // old contacts for more frames so that bouncing/sliding contact feels more robust.
-        _brokenContactQueue:   [[], [], [], []],
+        $brokenContactQueue:   [[], [], [], []],
         
         // Maps bodies to maps of bodies to contacts.
-        _entityContactMap:     new Map(), 
+        $entityContactMap:     new Map(), 
 
         // All entities in this physics context
-        _entityArray:          []})
+        $entityArray:          []})
     
     options = options || {}
    
@@ -2419,11 +2419,11 @@ function make_physics(options) {
             const activeContacts = pair.activeContacts;
 
             // Create the map entries if they do not already exist
-            let mapA = physics._entityContactMap.get(pair.bodyA);
-            if (mapA === undefined) { physics._entityContactMap.set(pair.bodyA, mapA = new Map()); }
+            let mapA = physics.$entityContactMap.get(pair.bodyA);
+            if (mapA === undefined) { physics.$entityContactMap.set(pair.bodyA, mapA = new Map()); }
 
-            let mapB = physics._entityContactMap.get(pair.bodyB);
-            if (mapB === undefined) { physics._entityContactMap.set(pair.bodyB, mapB = new Map()); }
+            let mapB = physics.$entityContactMap.get(pair.bodyB);
+            if (mapB === undefined) { physics.$entityContactMap.set(pair.bodyB, mapB = new Map()); }
             
             let contact = mapA.get(pair.bodyB);
             
@@ -2441,14 +2441,14 @@ function make_physics(options) {
                 }
 
                 // For use in collision callbacks
-                physics._newContactArray.push(contact);
+                physics.$newContactArray.push(contact);
 
                 // For use in queries
                 mapA.set(pair.bodyB, contact);
                 mapB.set(pair.bodyA, contact);
 
                 // for debugging collisions
-                //$console.log(physics._frame + ' +begin ' + contact.entityA.name + " & " + contact.entityB.name);
+                //$console.log(physics.$frame + ' +begin ' + contact.entityA.name + " & " + contact.entityB.name);
             } else {
                 $console.assert(mapB.get(pair.bodyA), 'Internal error: Mismatched contact pair in physics simulation');
                 // ...else: this contact already exists and is in the maps because it was recently active.
@@ -2456,11 +2456,11 @@ function make_physics(options) {
                 // event will not be called by Matter.js
 
                 // for debugging collisions
-                //$console.log(physics._frame + ' resume ' + contact.entityA.name + " & " + contact.entityB.name);
+                //$console.log(physics.$frame + ' resume ' + contact.entityA.name + " & " + contact.entityB.name);
                 $physicsUpdateContact(physics, contact, pair);
             }
             
-            contact._lastRealContactFrame = physics._frame;                
+            contact._lastRealContactFrame = physics.$frame;                
         }
     });
 
@@ -2471,7 +2471,7 @@ function make_physics(options) {
 
             // We could fetch from A and then B or B and then A. Both give the same
             // result.
-            const contact = physics._entityContactMap.get(pair.bodyA).get(pair.bodyB);
+            const contact = physics.$entityContactMap.get(pair.bodyA).get(pair.bodyB);
 
             if (! contact) {
                 // Something went wrong and matter.js has just updated us about a
@@ -2480,7 +2480,7 @@ function make_physics(options) {
             }
             
             // for debugging collisions
-            // $console.log(physics._frame + ' active ' + contact.entityA.name + " & " + contact.entityB.name);
+            // $console.log(physics.$frame + ' active ' + contact.entityA.name + " & " + contact.entityB.name);
             $physicsUpdateContact(physics, contact, pair);
         }
     });
@@ -2488,7 +2488,7 @@ function make_physics(options) {
     $Physics.Events.on(engine, 'collisionEnd', function (event) {
         // Schedule collisions for removal
         const pairs = event.pairs;
-        const removeArray = last_value(physics._brokenContactQueue);
+        const removeArray = last_value(physics.$brokenContactQueue);
         for (let i = 0; i < pairs.length; ++i) {
             const pair = pairs[i];
 
@@ -2498,7 +2498,7 @@ function make_physics(options) {
             }
             
             // Find the contact (it may have already been removed)
-            const contact = physics._entityContactMap.get(pair.bodyA).get(pair.bodyB);
+            const contact = physics.$entityContactMap.get(pair.bodyA).get(pair.bodyB);
 
             // If not already removed
             if (contact) {
@@ -2507,7 +2507,7 @@ function make_physics(options) {
                 // then maybe end the contact immediately
 
                 // for debugging collisions
-                //$console.log(physics._frame + ' (brk)  ' + contact.entityA.name + " & " + contact.entityB.name);
+                //$console.log(physics.$frame + ' (brk)  ' + contact.entityA.name + " & " + contact.entityB.name);
                 
                 // Schedule the contact for removal. It can gain a reprieve if is updated
                 // before it hits the front of the queue.
@@ -2522,12 +2522,12 @@ function make_physics(options) {
 
 function physics_add_entity(physics, entity) {
     if (! physics) { $error("physics context cannot be nil"); }
-    if (! physics._engine) { $error("First argument to physics_add_entity() must be a physics context."); }
+    if (! physics.$engine) { $error("First argument to physics_add_entity() must be a physics context."); }
     if (entity.$body) { $error("This entity is already in a physics context"); }
     if (entity.density <= 0) { $error("The entity in physics_add_entity() must have nonzero density"); }
 
-    push(physics._entityArray, entity);
-    const engine = physics._engine;
+    push(physics.$entityArray, entity);
+    const engine = physics.$engine;
    
     const params = {isStatic: entity.density === Infinity};
 
@@ -2559,13 +2559,13 @@ function physics_add_entity(physics, entity) {
 function physics_remove_all(physics) {
     // Remove all (removing mutates the
     // array, so we have to clone it first!)
-    const originalArray = clone(physics._entityArray);
+    const originalArray = clone(physics.$entityArray);
     for (let a = 0; a < originalArray.length; ++a) {
         physics_remove_entity(physics, originalArray[a]);
     }
     
     // Shouldn't be needed, but make sure everything is really gone
-    $Physics.Composite.clear(physics._engine.world, false, true);
+    $Physics.Composite.clear(physics.$engine.world, false, true);
 }
 
 
@@ -2582,7 +2582,7 @@ function physics_remove_entity(physics, entity) {
     // case where the bodies are no longer present
 
     // New contacts:
-    const newContactArray = physics._newContactArray;
+    const newContactArray = physics.$newContactArray;
     for (let c = 0; c < newContactArray.length; ++c) {
         const contact = newContactArray[c];
         if (contact.entityA === entity || contact.entityB === entity) {
@@ -2595,20 +2595,20 @@ function physics_remove_entity(physics, entity) {
 
     // Maintained contacts:
     const body = entity.$body;
-    const map = physics._entityContactMap.get(body);
+    const map = physics.$entityContactMap.get(body);
     if (map) {
         for (const otherBody of map.keys()) {
             // Remove the reverse pointers
-            const otherMap = physics._entityContactMap.get(otherBody);
+            const otherMap = physics.$entityContactMap.get(otherBody);
             otherMap.delete(body);
         }
         // Remove the entire map for body, so that
         // body can be garbage collected
-        physics._entityContactMap.delete(body);
+        physics.$entityContactMap.delete(body);
     }
     
-    $Physics.World.remove(physics._engine.world, body, true);
-    fast_remove_value(physics._entityArray, entity);
+    $Physics.World.remove(physics.$engine.world, body, true);
+    fast_remove_value(physics.$entityArray, entity);
     entity.$body = undefined;
     entity._attachmentArray = undefined;
 }
@@ -2720,11 +2720,11 @@ function physics_simulate(physics, stepFrames) {
     const startTime = performance.now();
           
     if (stepFrames === undefined) { stepFrames = 1; }
-    const engine = physics._engine;
+    const engine = physics.$engine;
 
     // $console.log('--------------- timestamp: ' + physics.timing.timestamp);
     
-    physics._newContactArray = [];
+    physics.$newContactArray = [];
 
     const bodies = $Physics.Composite.allBodies(engine.world);
     for (let b = 0; b < bodies.length; ++b) {
@@ -2776,24 +2776,24 @@ function physics_simulate(physics, stepFrames) {
     // Remove old contacts that were never reestablished
 
     // advance the queue
-    const maybeBrokenContactList = physics._brokenContactQueue.shift(1);
-    physics._brokenContactQueue.push([]);
+    const maybeBrokenContactList = physics.$brokenContactQueue.shift(1);
+    physics.$brokenContactQueue.push([]);
     
     for (let c = 0; c < maybeBrokenContactList.length; ++c) {
         const contact = maybeBrokenContactList[c];
         // See if contact was reestablished within the lifetime of the queue:
-        if (contact._lastRealContactFrame <= physics._frame - physics._brokenContactQueue.length) {
+        if (contact._lastRealContactFrame <= physics.$frame - physics.$brokenContactQueue.length) {
             // Contact was not reestablished in time, so remove it
             const bodyA = contact.entityA.$body, bodyB = contact.entityB.$body;
 
             // For debugging collisions:
-            // $console.log(physics._frame + ' - end  ' + contact.entityA.name + " & " + contact.entityB.name + '\n\n');
+            // $console.log(physics.$frame + ' - end  ' + contact.entityA.name + " & " + contact.entityB.name + '\n\n');
 
             // Remove the contact both ways
-            const mapA = physics._entityContactMap.get(bodyA);
+            const mapA = physics.$entityContactMap.get(bodyA);
             if (mapA) { mapA.delete(bodyB); }
             
-            const mapB = physics._entityContactMap.get(bodyB);
+            const mapB = physics.$entityContactMap.get(bodyB);
             if (mapB) { mapB.delete(bodyA); }
         }
     }
@@ -2804,7 +2804,7 @@ function physics_simulate(physics, stepFrames) {
 
     // Fire event handlers for new contacts
     for (const event of physics.$contactCallbackArray.values()) {
-        for (const contact of physics._newContactArray.values()) {
+        for (const contact of physics.$newContactArray.values()) {
 
             if ((((contact.entityA.contact_category_mask & event.contact_mask) |
                   (contact.entityB.contact_category_mask & event.contact_mask)) !== 0) &&
@@ -2825,7 +2825,7 @@ function physics_simulate(physics, stepFrames) {
         } // event
     } // contact
 
-    ++physics._frame;
+    ++physics.$frame;
 
     const endTime = performance.now();
     $physicsTimeTotal += endTime - startTime;
@@ -2858,12 +2858,12 @@ function $physics_entity_contacts(physics, entity, region, normal, mask, sensors
     if (mask === 0) { throw new Error('physics_entity_contacts() with mask = 0 will never return anything.'); }
     if (! entity) { throw new Error('physics_entity_contacts() must have a non-nil entity'); }
 
-    const engine = physics._engine;
+    const engine = physics.$engine;
     sensors = sensors || 'exclude';
 
     // Look at all contacts for this entity
     const body = entity.$body;
-    const map = physics._entityContactMap.get(body);
+    const map = physics.$entityContactMap.get(body);
     const result = earlyOut ? false : [];
 
     if (map === undefined) {
@@ -2992,7 +2992,7 @@ function physics_detach(physics, attachment) {
 
     // Remove the composite, which will destroy all of the Matter.js elements
     // that comprise this constraint
-    $Physics.Composite.remove(physics._engine.world, attachment._composite, true);
+    $Physics.Composite.remove(physics.$engine.world, attachment._composite, true);
 }
 
 
@@ -3002,7 +3002,7 @@ function physics_attach(physics, type, param) {
     if (! param.entityB.$body) { throw new Error("entityB has not been added to the physics context"); }
     if (param.entityB.density === Infinity) { throw new Error("entityB must have finite density"); }
 
-    physics = physics._engine;
+    physics = physics.$engine;
 
     // Object that will be returned
     const attachment = {
@@ -3270,7 +3270,7 @@ function draw_physics(physics) {
     const secretColor  = rgb(1, 0, 0);
     const zOffset = 0.01;
 
-    const engine       = physics._engine;
+    const engine       = physics.$engine;
     
     const bodies = $Physics.Composite.allBodies(engine.world);
     for (let b = 0; b < bodies.length; ++b) {
@@ -3384,7 +3384,7 @@ function draw_physics(physics) {
     // most of them may not be active.
 
     const contactBox = xy(3, 3);
-    for (const [body0, map] of physics._entityContactMap) {
+    for (const [body0, map] of physics.$entityContactMap) {
         for (const [body1, contact] of map) {
             // Draw each only once, for the body with the lower ID
             if (body0.id < body1.id) {
@@ -3396,8 +3396,8 @@ function draw_physics(physics) {
     }
 
     const newContactBox = xy(7, 7);
-    for (let c = 0; c < physics._newContactArray.length; ++c) {
-        const contact = physics._newContactArray[c];
+    for (let c = 0; c < physics.$newContactArray.length; ++c) {
+        const contact = physics.$newContactArray[c];
         const z = $Math.max(contact.entityA.z, contact.entityB.z) + zOffset;
 
         // Size based on penetration

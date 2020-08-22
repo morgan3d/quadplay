@@ -7,6 +7,15 @@
 let profile_index = 0
 const labels = keys(ACCELERATION_PROFILES)
 
+let CURRENT_SPRITE_SIZE_INDEX = 0
+const SPRITE_SIZES = [
+    xy(8,8),
+    xy(16,16),
+    xy(32,32),
+    xy(64, 64),
+    xy(96, 96),
+]
+
 // for display purposes, color of each profile
 const PROFILE_COLOR_MAP = {
     celeste: rgb(0.557, 0.835, 0.894),
@@ -27,7 +36,7 @@ let x_zone = "still"
 let box = make_entity(
     {
         pos:SCREEN_SIZE/2,
-        size:xy(10, 10),
+        size:SPRITE_SIZES[CURRENT_SPRITE_SIZE_INDEX],
         shape:"rect",
         x_accel: make_accelerator_from_profile(labels[profile_index]),
     }
@@ -46,6 +55,14 @@ def draw_ui():
     push(text, replace("use [<]/[>] to move the block", gamepad_array[0].prompt))
     push(text, replace(
             "(a): toggle motion blur (current: " + DRAW_MBLUR + ")",
+            gamepad_array[0].prompt
+        )
+    )
+    push(
+        text,
+        replace(
+            "(b): sprite size (current: " 
+            + unparse(SPRITE_SIZES[CURRENT_SPRITE_SIZE_INDEX]) + ")",
             gamepad_array[0].prompt
         )
     )
@@ -133,3 +150,10 @@ def update_demo_ui(last_vel):
 
     if joy.aa:
         DRAW_MBLUR = not DRAW_MBLUR
+
+    if joy.bb:
+        CURRENT_SPRITE_SIZE_INDEX = loop(
+            CURRENT_SPRITE_SIZE_INDEX+1,
+            size(SPRITE_SIZES)
+        )
+        box.size = clone(SPRITE_SIZES[CURRENT_SPRITE_SIZE_INDEX])
