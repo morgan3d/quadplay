@@ -101,7 +101,7 @@ function set_post_effects(args) {
     case 'difference':
         $postFX.blend_mode = args.blend_mode;
         break;
-    default: throw new Error('Illegal blend_mode for post effects: "' + args.blend_mode + '"');
+    default: $error('Illegal blend_mode for post effects: "' + args.blend_mode + '"');
     }
 
     if (args.scale !== undefined) {
@@ -128,26 +128,38 @@ function set_post_effects(args) {
 }
 
 
-function delay(callback, frames) {
-    return add_frame_hook(undefined, callback, frames || 0);
+function delay(callback, frames, data) {
+    return add_frame_hook(undefined, callback, frames || 0, undefined, data);
 }
 
 
 function sequence(...seq) {
     // Is there any work?
     if (seq.length === 0) { return; }
+
+    if (Array.isArray(seq[0])) {
+        $error("sequence() does not accept an array argument. Use sequence(...array) instead.");
+    }
     
     let totalLifetime = 0;
-    let queue = [];
+    const queue = [];
     
     for (let i = 0; i < seq.length; ++i) {
-        if (typeof seq[i] === 'function' || seq === undefined) {
+        const entry = seq[i];
+        if (typeof entry === 'function' || entry === undefined) {
             ++totalLifetime;
-            queue.push({callback: seq[i], frames: 1})
+            queue.push({callback: entry, frames: 1, end_callback: undefined, data: undefined})
         } else {
-            const frames = $Math.max(1, $Math.round(seq[i].frames || 1));
-            totalLifetime += frames;
-            queue.push({callback: seq[i].callback, frames: frames})
+            if (typeof entry !== 'number' && typeof entry !== 'object') {
+                $error("Illegal sequence entry. Must be a function, nil, number, or object");
+            }
+            
+            let frames = (typeof entry === 'number') ? entry : entry.frames;
+            frames = (frames <= 0.5) ? 0 : $Math.max(1, $Math.round(frames || 1));
+            if (frames > 0) {
+                queue.push({callback: entry.callback, end_callback: entry.end_callback, frames: frames, data: entry.data})
+                totalLifetime += frames;
+            }
         }
     }
     
@@ -161,12 +173,16 @@ function sequence(...seq) {
         const step = queue[0];
         
         if (step.callback) {
-            const result = step.callback(step.frames - currentFrame - 1, step.frames);
+            const result = step.callback(step.frames - currentFrame - 1, step.frames, step.data);
             if (result === sequence.BREAK) {
                 remove_frame_hook(hook);
                 return;
             } else if (result === sequence.NEXT) {
                 // Immediately advance
+                if (step.end_callback && (step.end_callback(step.data) === sequence.BREAK)) {
+                    remove_frame_hook(hook);
+                    return;
+                }
                 pop_front(queue);
                 currentFrame = 0;
                 return;
@@ -175,6 +191,10 @@ function sequence(...seq) {
         ++currentFrame;
 
         if (currentFrame >= step.frames) {
+            if (step.end_callback && (step.end_callback(step.data) === sequence.BREAK)) {
+                remove_frame_hook(hook);
+                return;
+            }
             pop_front(queue);
             currentFrame = 0;
         }
@@ -190,10 +210,10 @@ sequence.BREAK = ["BREAK"];
 
 
 
-function add_frame_hook(callback, endCallback, frames, mode) {
+function add_frame_hook(callback, endCallback, frames, mode, data) {
     if (mode === undefined) { mode = get_mode(); }
     if (isNaN(frames)) { $error("NaN frames on add_frame_hook()"); }
-    const hook = {$callback:callback, $endCallback:endCallback, $mode:mode, $frames:frames, $maxFrames:frames};
+    const hook = {$callback:callback, $endCallback:endCallback, $mode:mode, $frames:frames, $maxFrames:frames, $data:data};
     $frameHooks.push(hook);
     return hook;
 }
@@ -220,7 +240,7 @@ function $processFrameHooks() {
         const hook = $frameHooks[i];
         if ((hook.$mode === undefined) || (hook.$mode === $gameMode)) {
             --hook.$frames;
-            const r = hook.$callback ? hook.$callback(hook.$frames, hook.$maxFrames) : 0;
+            const r = hook.$callback ? hook.$callback(hook.$frames, hook.$maxFrames, hook.$data) : 0;
 
             // Remove the callback *before* it executes so that if
             // a set_mode happens within the callback it does not re-trigger
@@ -232,7 +252,7 @@ function $processFrameHooks() {
             
             if (! r && (hook.$frames <= 0)) {
                 // End hook
-                if (hook.$endCallback) { hook.$endCallback(); }
+                if (hook.$endCallback) { hook.$endCallback(hook.$data); }
             }
 
         }
@@ -253,7 +273,7 @@ function last_value(s) {
 
 function last_key(s) {
     if (! Array.isArray(s) || typeof s === 'string') {
-        throw new Error('Argument to last_key() must be a string or array');
+        $error('Argument to last_key() must be a string or array');
     }
     return size(s) - 1;
 }
@@ -279,15 +299,15 @@ function find(a, x, s) {
 
 
 function insert(array, i, ...args) {
-    if (! Array.isArray(array)) { throw new Error('insert(array, index, value) requires an array argument'); }
-    if (typeof i !== 'number') { throw new Error('insert(array, index, value) requires a numeric index'); }
+    if (! Array.isArray(array)) { $error('insert(array, index, value) requires an array argument'); }
+    if (typeof i !== 'number') { $error('insert(array, index, value) requires a numeric index'); }
     array.splice(i, 0, ...args)
     return array[i];
 }
 
 
 function push(array, ...args) {
-    if (! Array.isArray(array)) { throw new Error('push() requires an array argument'); }
+    if (! Array.isArray(array)) { $error('push() requires an array argument'); }
     if ($iteratorCount.get(array)) {
         $error('Cannot push() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
     }
@@ -297,7 +317,7 @@ function push(array, ...args) {
 
 
 function push_front(array, ...args) {
-    if (! Array.isArray(array)) { throw new Error('push_front() requires an array argument'); }
+    if (! Array.isArray(array)) { $error('push_front() requires an array argument'); }
     if ($iteratorCount.get(array)) {
         $error('Cannot push_front() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
     }
@@ -307,7 +327,7 @@ function push_front(array, ...args) {
 
 
 function pop_front(array) {
-    if (! Array.isArray(array)) { throw new Error('pop_front() requires an array argument'); }
+    if (! Array.isArray(array)) { $error('pop_front() requires an array argument'); }
     if ($iteratorCount.get(array)) {
         $error('Cannot pop_front() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
     }
@@ -542,7 +562,7 @@ Object.freeze(iterate);
 
 
 function reverse(array) {
-    if (! Array.isArray(array)) { throw new Error('reverse() takes an array as the argument'); }
+    if (! Array.isArray(array)) { $error('reverse() takes an array as the argument'); }
     array.reverse();
 }
 
@@ -566,7 +586,7 @@ function extend(a, b) {
     }
     if (Array.isArray(a)) {
         if (! Array.isArray(b)) {
-            throw new Error('Both arguments to extend(a, b) must have the same type. Invoked with one array and one non-array.');
+            $error('Both arguments to extend(a, b) must have the same type. Invoked with one array and one non-array.');
         }
 
         const oldLen = a.length;
@@ -577,7 +597,7 @@ function extend(a, b) {
         }
     } else {
         if (Array.isArray(b)) {
-            throw new Error('Both arguments to extend(a, b) must have the same type. Invoked with one object and one array.');
+            $error('Both arguments to extend(a, b) must have the same type. Invoked with one object and one array.');
         }
         // Object
         for (let k in b) {
@@ -590,13 +610,13 @@ function extend(a, b) {
 function array_value(animation, frame, extrapolate) {
     if (! Array.isArray(animation) && (typeof animation !== 'string')) {
         if (animation === undefined || animation === null) {
-            throw new Error('Passed nil to array_value()');
+            $error('Passed nil to array_value()');
         } else {
-            throw new Error('The first argument to array_value() must be an array or string (was ' + unparse(animation)+ ')');
+            $error('The first argument to array_value() must be an array or string (was ' + unparse(animation)+ ')');
         }
     }
     
-    frame = floor(frame);
+    frame = $Math.floor(frame);
     switch (extrapolate || animation.extrapolate || 'clamp') {
     case 'oscillate':
         frame = oscillate(frame, animation.length - 1);
@@ -617,19 +637,19 @@ function array_value(animation, frame, extrapolate) {
 function concatenate(a, b) {
     if (Array.isArray(a)) {
         if (! Array.isArray(b)) {
-            throw new Error('Both arguments to concatenate(a, b) must have the same type. Invoked with one array and one non-array.');
+            $error('Both arguments to concatenate(a, b) must have the same type. Invoked with one array and one non-array.');
         }
         a = clone(a);
         extend(a, b);
         return a;
     } else if (is_string(a)) {
         if (! is_string(b)) {
-            throw new Error('Both arguments to concatenate(a, b) must have the same type. Invoked with one string and one non-string.');
+            $error('Both arguments to concatenate(a, b) must have the same type. Invoked with one string and one non-string.');
         }
         return a + b;
     } else {
         if (Array.isArray(b)) {
-            throw new Error('Both arguments to concatenate(a, b) must have the same type. Invoked with one object and one array.');
+            $error('Both arguments to concatenate(a, b) must have the same type. Invoked with one object and one array.');
         }
         a = clone(a);
         extend(a, b);
@@ -686,14 +706,14 @@ function replace(s, src, dst) {
     const ESCAPABLES = /([\/\,\!\\\^\$\{\}\[\]\(\)\.\*\+\?\|\<\>\-\&])/g;
     
     if (typeof s !== 'string') {
-        throw new Error('The first argument to replace() must be a string');
+        $error('The first argument to replace() must be a string');
     }
     
     if (s === '' || src === '') { return s; }
 
     if (typeof src === 'object') {
         if (dst !== undefined) {
-            throw new Error("replace(string, object) requires exactly two arguments");
+            $error("replace(string, object) requires exactly two arguments");
         }
         
         // Generate the replacement regexp that will find all target
@@ -715,7 +735,7 @@ function replace(s, src, dst) {
     } else {
         // String replace
         if (dst === undefined || src === undefined) {
-            throw new Error("Use replace(string, object) or replace(string, string, string)");
+            $error("Use replace(string, object) or replace(string, string, string)");
         }
         if (typeof src !== 'string') { src = unparse(src); }
         if (typeof dst !== 'string') { dst = unparse(dst); }
@@ -735,7 +755,7 @@ function slice(a, s, e) {
     } else if (is_string(a)) {
         return a.substr(s, e);
     } else {
-        throw new Error('slice() requires an array or string argument.');
+        $error('slice() requires an array or string argument.');
     }
 }
 
@@ -745,15 +765,15 @@ function slice(a, s, e) {
 
 function make_spline(timeSrc, controlSrc, order, extrapolate) {
     // Argument checking
-    if (controlSrc.length < 2) { throw new Error('Must specify at least two control points'); }
+    if (controlSrc.length < 2) { $error('Must specify at least two control points'); }
     if (order === undefined) { order = 3; }
     if (extrapolate === undefined) { extrapolate = 'stall'; }
     if (find(['stall', 'loop', 'clamp', 'continue', 'oscillate'], extrapolate) === undefined) {
-        throw new Error('extrapolate argument to make_spline must be "stall", "loop", "clamp", or "continue"');
+        $error('extrapolate argument to make_spline must be "stall", "loop", "clamp", or "continue"');
     }
     
     order = $Math.round(order);
-    if (order === 2 || order < 0 || order > 3) { throw new Error('order must be 0, 1, or 3'); }
+    if (order === 2 || order < 0 || order > 3) { $error('order must be 0, 1, or 3'); }
 
     // Clone the arrays
     const time = [], control = [];
@@ -761,19 +781,19 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
     for (let i = 0; i < timeSrc.length; ++i) {
         time[i] = timeSrc[i];
         if ((i > 0) && (time[i] <= time[i - 1])) {
-            throw new Error('times must increase through the array');
+            $error('times must increase through the array');
         }
         control[i] = clone(controlSrc[i]);
     }
 
     if (extrapolate === 'loop') {
         if (time.length !== controlSrc.length + 1) {
-            throw new Error('There must be one more time than value to use "loop" extrapolation');
+            $error('There must be one more time than value to use "loop" extrapolation');
         }
         // Duplicate the last control point, which was previously null
         control[control.length - 1] = clone(control[0]);
     } else if (timeSrc.length !== controlSrc.length) {
-        throw new Error('time and value arrays must have the same size');
+        $error('time and value arrays must have the same size');
     }   
 
     if (extrapolate === 'oscillate') {
@@ -808,12 +828,12 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
         let t, c;
 
         if (extrapolate === 'loop') {
-            c = control[floor(loop(i, N))];
+            c = control[$Math.floor(loop(i, N))];
             if (i < 0) {
                 // Wrapped around bottom
 
                 // Number of times we wrapped around the cyclic array
-                const wraps = floor((N + 1 - i) / N);
+                const wraps = $Math.floor((N + 1 - i) / N);
                 const j = (i + wraps * N) % N;
                 t = time[j] - wraps * duration;
 
@@ -825,7 +845,7 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
                 // Wrapped around top
 
                 // Number of times we wrapped around the cyclic array
-                const wraps = floor(i / N);
+                const wraps = $Math.floor(i / N);
                 const j = i % N;
                 t = time[j] + wraps * duration;
             }
@@ -871,9 +891,9 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
 
 
     /** Derived from the G3D Innovation Engine (https://casual-effects.com/g3d).
-        Assumes that time[0] <= s < time[N - 1] + time[0].  called by compute_index. Returns {i, u} */
+        Assumes that time[0] <= s < time[N - 1].  called by compute_index. Returns {i, u} */
     function computeIndexInBounds(s) {
-        $console.assert((s < time[N - 1] + time[0]) && (time[0] <= s));
+        $console.assert((s < time[N - 1]) && (time[0] <= s));
         const t0 = time[0];
         const tn = time[N - 1];
 
@@ -883,7 +903,7 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
         }
 
         // Guess a linear start index
-        let i = floor((N - 1) * (s - t0) / (tn - t0));
+        let i = $Math.floor((N - 1) * (s - t0) / (tn - t0));
     
         // Inclusive bounds for binary search
         let hi = N - 1;
@@ -892,7 +912,7 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
         while ((time[i] > s) || ((i < time.length - 1) && (time[i + 1] <= s))) {
             if (hi <= lo) {
                 $console.log(lo, hi, i, s);
-                throw new Error('Infinite loop?');
+                $error('Infinite loop?');
             }
 
             if (time[i] > s) {
@@ -983,6 +1003,7 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
                 // distribution (which gives O(1) for uniform spacing)
                 // and then binary search to handle the general case
                 // efficiently.
+
                 return computeIndexInBounds(s);
                 
             } // if in bounds
@@ -1158,10 +1179,10 @@ function set_camera(pos, angle, zoom, z) {
     if (zoom === undefined) { zoom = 1; }
 
     if (typeof zoom !== 'number' && typeof zoom !== 'function') {
-        throw new Error('zoom argument to set_camera() must be a number or function');
+        $error('zoom argument to set_camera() must be a number or function');
     }
     if (typeof zoom === 'number' && (zoom <= 0 || !(zoom < Infinity))) {
-        throw new Error('zoom argument to set_camera() must be positive and finite');
+        $error('zoom argument to set_camera() must be positive and finite');
     }
     $camera.x = pos.x;
     $camera.y = pos.y;
@@ -1213,7 +1234,7 @@ function compose_transform(pos, dir, addZ, scaleZ, skew) {
     }
     let addX, addY, scaleX, scaleY, skewXZ, skewYZ;
     if (pos !== undefined) {
-        if (is_number(pos)) { throw new Error("pos argument to compose_transform() must be an xy() or nil"); }
+        if (is_number(pos)) { $error("pos argument to compose_transform() must be an xy() or nil"); }
         addX = pos.x; addY = pos.y;
     }
     if (dir !== undefined) { scaleX = dir.x; scaleY = dir.y; }
@@ -1265,7 +1286,7 @@ function compose_transform(pos, dir, addZ, scaleZ, skew) {
 
 
 function set_transform(pos, dir, addZ, scaleZ, skew) {
-    if (arguments.length === 0) { throw new Error("set_transform() called with no arguments"); }
+    if (arguments.length === 0) { $error("set_transform() called with no arguments"); }
     if (is_object(pos) && (('pos' in pos) || ('dir' in pos) || ('z' in pos) || ('skew' in pos))) {
         // Argument version
         return set_transform(pos.pos, pos.dir, pos.z, pos.skew);
@@ -1273,7 +1294,7 @@ function set_transform(pos, dir, addZ, scaleZ, skew) {
 
     let addX, addY, scaleX, scaleY, skewXZ, skewYZ;
     if (pos !== undefined) {
-        if (is_number(pos)) { throw new Error("pos argument to set_transform() must be an xy() or nil"); }
+        if (is_number(pos)) { $error("pos argument to set_transform() must be an xy() or nil"); }
         addX = pos.x; addY = pos.y;
     }
     if (dir !== undefined) { scaleX = dir.x; scaleY = dir.y; }
@@ -1309,11 +1330,11 @@ function intersect_clip(pos, size, z1, z_size) {
 
     let x1, y1, dx, dy, dz;
     if (pos !== undefined) {
-        if (is_number(pos)) { throw new Error('pos argument to set_clip() must be an xy() or nil'); }
+        if (is_number(pos)) { $error('pos argument to set_clip() must be an xy() or nil'); }
         x1 = pos.x; y1 = pos.y;
     }
     if (size !== undefined) {
-        if (is_number(size)) { throw new Error('size argument to set_clip() must be an xy() or nil'); }
+        if (is_number(size)) { $error('size argument to set_clip() must be an xy() or nil'); }
         dx = size.x; dy = size.y;
     }
     
@@ -1375,11 +1396,11 @@ function set_clip(pos, size, z1, dz) {
     
     let x1, y1, dx, dy;
     if (pos !== undefined) {
-        if (is_number(pos)) { throw new Error('pos argument to set_clip() must be an xy() or nil'); }
+        if (is_number(pos)) { $error('pos argument to set_clip() must be an xy() or nil'); }
         x1 = pos.x; y1 = pos.y;
     }
     if (size !== undefined) {
-        if (is_number(size)) { throw new Error('size argument to set_clip() must be an xy() or nil'); }
+        if (is_number(size)) { $error('size argument to set_clip() must be an xy() or nil'); }
         dx = size.x; dy = size.y;
     }
     
@@ -1519,7 +1540,7 @@ function noise(octaves, x, y, z) {
     if (octaves - temp > 1e-10) {
         // Catch the common case where the order of arguments was swapped
         // by recognizing fractions in the octave value
-        throw new Error("noise(octaves, x, y, z) must take an integer number of octaves");
+        $error("noise(octaves, x, y, z) must take an integer number of octaves");
     } else {
         octaves = temp >>> 0;
     }
@@ -1606,9 +1627,9 @@ function $error(msg) {
 
 function $todo(msg) {
     if (msg === undefined) {
-        throw new Error("Unimplemented");
+        $error("Unimplemented");
     } else {
-        throw new Error("Unimplemented: " + $unparse(msg));
+        $error("Unimplemented: " + $unparse(msg));
     }
 }
 
@@ -1676,7 +1697,7 @@ function xyz(x, y, z) {
         }
     }
     if (Array.isArray(x)) { return {x:x[0], y:x[1], z:x[2]}; }
-    if (arguments.length !== 3) { throw new Error('xyz() requires exactly three arguments'); }
+    if (arguments.length !== 3) { $error('xyz() requires exactly three arguments'); }
     return {x:x, y:y, z:z};
 }
 
@@ -1723,7 +1744,7 @@ function gray(r) {
 
 
 function rgb(r, g, b) {
-    if (arguments.length !== 3 && arguments.length !== 1) { throw new Error('rgb() requires exactly one or three arguments or one hsv value'); }
+    if (arguments.length !== 3 && arguments.length !== 1) { $error('rgb() requires exactly one or three arguments or one hsv value'); }
 
     if (r.h !== undefined) {
         // Convert HSV --> RGB
@@ -1873,22 +1894,22 @@ function $square(x) { return x * x; }
 // Entity functions
 
 function transform_es_to_sprite_space(entity, coord) {
-    if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { throw new Error("Requires both an entity and a coordinate"); }
+    if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { $error("Requires both an entity and a coordinate"); }
     return xy(coord.x * $scaleX + entity.sprite.size.x * 0.5,
               coord.y * $scaleY + entity.sprite.size.y * 0.5);
 }
 
 
 function transform_sprite_space_to_es(entity, coord) {
-    if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { throw new Error("Requires both an entity and a coordinate"); }
-    if (! entity.sprite) { throw new Error('Called transform_sprite_space_to_es() on an entity with no sprite property.'); }
+    if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { $error("Requires both an entity and a coordinate"); }
+    if (! entity.sprite) { $error('Called transform_sprite_space_to_es() on an entity with no sprite property.'); }
     return xy((coord.x - entity.sprite.size.x * 0.5) / $scaleX,
               (coord.y - entity.sprite.size.y * 0.5) / $scaleY);
 }
 
 
 function draw_entity(e, recurse) {
-    if (e === undefined) { throw new Error("nil entity in draw_entity()"); }
+    if (e === undefined) { $error("nil entity in draw_entity()"); }
     if (recurse === undefined) { recurse = true; }
 
     if ($showEntityBoundsEnabled) {
@@ -1931,7 +1952,7 @@ function make_entity(e, childTable) {
     const r = Object.assign({}, e || {});    
 
     if (e.shape && (e.shape !== 'rect') && (e.shape !== 'disk')) {
-        throw new Error('Illegal shape for entity: "' + e.shape + '"');
+        $error('Illegal shape for entity: "' + e.shape + '"');
     }
 
     // Clone vector components
@@ -1990,7 +2011,7 @@ function make_entity(e, childTable) {
                 const x = min_component(r.sprite.size) * r.scale.x;
                 r.size = xy(x, x);
                 if (r.scale.x !== r.scale.y) {
-                    throw new Error('Cannot have different scale factors for x and y on a "disk" shaped entity.');
+                    $error('Cannot have different scale factors for x and y on a "disk" shaped entity.');
                 }
             }
         } else {
@@ -2031,11 +2052,11 @@ function make_entity(e, childTable) {
         for (let name in childTable) {
             const child = childTable[name];
             if (! $isEntity(child)) {
-                throw new Error('The child named "' + name + '" in the childTable passed to make_entity is not itself an entity');
+                $error('The child named "' + name + '" in the childTable passed to make_entity is not itself an entity');
             }
             
             if (r[name] !== undefined) {
-                throw new Error('make_entity() cannot add a child named "' + name +
+                $error('make_entity() cannot add a child named "' + name +
                                 '" because that is already a property of the entity {' + Object.keys(r) + '}');
             }
             r[name] = child;
@@ -2075,11 +2096,11 @@ function entity_remove_all(parent) {
     for (let i = 0; i < parent.child_array.length; ++i) {
         const child = parent.child_array[i];
         if (parent !== child.parent) {
-            throw new Error('Tried to remove a child from the wrong parent')
+            $error('Tried to remove a child from the wrong parent')
         }
         remove_values(child.parent.child_array, child);
         if (parent.child_array[i] === child) {
-            throw new Error('Tried to remove a child that did not have a pointer back to its parent');
+            $error('Tried to remove a child that did not have a pointer back to its parent');
         }
     }
 }
@@ -2089,10 +2110,10 @@ function entity_remove_child(parent, child) {
     if (! child) { return child; }
     
     if (child.parent) {
-        if (parent !== child.parent) { throw new Error('Tried to remove a child from the wrong parent'); }
+        if (parent !== child.parent) { $error('Tried to remove a child from the wrong parent'); }
         remove_values(parent.child_array, child);
     } else if (parent.child_array.indexOf(child) !== -1) {
-        throw new Error('Tried to remove a child that did not have a pointer back to its parent');
+        $error('Tried to remove a child that did not have a pointer back to its parent');
     }
     
     child.parent = undefined;
@@ -2162,13 +2183,13 @@ function transform_cs_to_ws(cs_point, cs_z) {
 }
 
 function transform_ws_to_es(entity, coord) {
-    if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { throw new Error("Requires both an entity and a coordinate"); }
+    if (! entity || entity.pos === undefined |! coord || coord.x === undefined) { $error("Requires both an entity and a coordinate"); }
     return transform_to(entity.pos, entity.angle, entity.scale, coord);
 }
 
 
 function transform_es_to_ws(entity, coord) {
-    if (! coord || coord.x === undefined) { throw new Error("transform_es_to_ws() requires both an entity and a coordinate"); }
+    if (! coord || coord.x === undefined) { $error("transform_es_to_ws() requires both an entity and a coordinate"); }
     return transform_from(entity.pos, entity.angle, entity.scale, coord);
 }
 
@@ -2196,7 +2217,7 @@ function transform_to_parent(child, pos) {
 // Recursively update all properties of the children
 function entity_update_children(parent) {
     if (parent === undefined || parent.pos === undefined) {
-        throw new Error('entity_update_children requires an entity argument')
+        $error('entity_update_children requires an entity argument')
     }
 
     if (typeof parent.scale !== 'object') { $error('The scale of the parent entity must be an xy().'); }
@@ -2541,7 +2562,7 @@ function physics_add_entity(physics, entity) {
         break;
 
     default:
-        throw new Error('Unsupported entity shape for physics_add_entity(): "' + entity.shape + '"');
+        $error('Unsupported entity shape for physics_add_entity(): "' + entity.shape + '"');
     }
 
     entity.$body.collisionFilter.group = -entity.contact_group;
@@ -2833,7 +2854,7 @@ function physics_simulate(physics, stepFrames) {
 
 
 function physics_add_contact_callback(physics, callback, min_depth, max_depth, contact_mask, sensors) {
-    if (contact_mask === 0) { throw new Error('A contact callback with contact_mask = 0 will never run.'); }
+    if (contact_mask === 0) { $error('A contact callback with contact_mask = 0 will never run.'); }
 
     physics.$contactCallbackArray.push({
         callback:      callback,
@@ -2855,8 +2876,8 @@ function physics_entity_contacts(physics, entity, region, normal, mask, sensors)
 
 function $physics_entity_contacts(physics, entity, region, normal, mask, sensors, earlyOut) {
     if (mask === undefined) { mask = 0xffffffff; }
-    if (mask === 0) { throw new Error('physics_entity_contacts() with mask = 0 will never return anything.'); }
-    if (! entity) { throw new Error('physics_entity_contacts() must have a non-nil entity'); }
+    if (mask === 0) { $error('physics_entity_contacts() with mask = 0 will never return anything.'); }
+    if (! entity) { $error('physics_entity_contacts() must have a non-nil entity'); }
 
     const engine = physics.$engine;
     sensors = sensors || 'exclude';
@@ -2997,10 +3018,10 @@ function physics_detach(physics, attachment) {
 
 
 function physics_attach(physics, type, param) {
-    if (param.entityA && ! param.entityA.$body) { throw new Error("entityA has not been added to the physics context"); }
-    if (! param.entityB) { throw new Error("entityB must not be nil"); }
-    if (! param.entityB.$body) { throw new Error("entityB has not been added to the physics context"); }
-    if (param.entityB.density === Infinity) { throw new Error("entityB must have finite density"); }
+    if (param.entityA && ! param.entityA.$body) { $error("entityA has not been added to the physics context"); }
+    if (! param.entityB) { $error("entityB must not be nil"); }
+    if (! param.entityB.$body) { $error("entityB has not been added to the physics context"); }
+    if (param.entityB.density === Infinity) { $error("entityB must have finite density"); }
 
     physics = physics.$engine;
 
@@ -3014,7 +3035,7 @@ function physics_attach(physics, type, param) {
     if (type === 'weld') {
         // Satisfy the initial angle constraint. Do this before computing
         // positions
-        if (param.length !== undefined) { throw new Error('Weld attachments do not accept a length parameter'); }
+        if (param.length !== undefined) { $error('Weld attachments do not accept a length parameter'); }
         if (param.angle !== undefined) {
             param.entityB.angle = param.angle + (param.entityA ? param.entityA.angle : 0);
             $bodyUpdateFromEntity(attachment.entityB.$body);
@@ -3103,7 +3124,7 @@ function physics_attach(physics, type, param) {
             attachment.angle = param.angle || 0;
             // We *could* make this work against an arbitrary entity, but for now
             // constrain to the world for simplicity
-            if (param.entityA) { throw new Error('A "gyro" attachment requires that entityA = nil'); }
+            if (param.entityA) { $error('A "gyro" attachment requires that entityA = nil'); }
             push(physics.customAttachments, attachment);
         }
         break;
@@ -3155,7 +3176,7 @@ function physics_attach(physics, type, param) {
             $Physics.Composite.add(attachment._composite, constraint);
             
             if (attachment.type === 'weld') {
-                if (! param.entityA) { throw new Error('Entities may not be welded to the world.'); }
+                if (! param.entityA) { $error('Entities may not be welded to the world.'); }
 
                 // Connect back with double-constraints to go through
                 // an intermediate "weld body" object.  The weld body
@@ -3242,7 +3263,7 @@ function physics_attach(physics, type, param) {
         break;
         
     default:
-        throw new Error('Attachment type "' + type + '" not supported');
+        $error('Attachment type "' + type + '" not supported');
     }
 
     
@@ -3520,14 +3541,14 @@ function get_map_pixel_color(map, map_coord, layer, replacement_array) {
 
 
 function get_map_pixel_color_by_ws_coord(map, ws_coord, ws_z, replacement_array) {
-    if (! map.spritesheet_table) { throw new Error('The first argument to get_map_pixel_color_by_draw_coord() must be a map'); }
+    if (! map.spritesheet_table) { $error('The first argument to get_map_pixel_color_by_draw_coord() must be a map'); }
     const layer = (((ws_z || 0) - $offsetZ) / $scaleZ - map.z_offset) / map.z_scale;
     return get_map_pixel_color(map, transform_ws_to_map_space(map, ws_coord), layer, replacement_array);
 }
 
     
 function get_map_sprite(map, map_coord, layer, replacement_array) {
-    if (! map.spritesheet_table) { throw new Error('The first argument to get_map_sprite() must be a map'); }
+    if (! map.spritesheet_table) { $error('The first argument to get_map_sprite() must be a map'); }
     layer = $Math.floor(layer || 0) | 0;
     let mx = $Math.floor(map_coord.x);
     let my = $Math.floor(map_coord.y);
@@ -3638,8 +3659,8 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
     }
 
     if (replacements !== undefined) {
-        if (! Array.isArray(replacements)) { throw new Error('The replacements for draw_map() must be an array'); }
-        if (replacements.length & 1 !== 0) { throw new Error('There must be an even number of elements in the replacements array'); }
+        if (! Array.isArray(replacements)) { $error('The replacements for draw_map() must be an array'); }
+        if (replacements.length & 1 !== 0) { $error('There must be an even number of elements in the replacements array'); }
         // Convert to a map for efficiency (we need to copy anyway)
         const array = replacements;
         replacements = new Map();
@@ -4357,7 +4378,7 @@ function draw_point(pos, color, z) {
 function text_width(font, str, markup) {
     if (str === '') { return 0; }
     if (str === undefined) {
-        throw new Error('text_width() requires a valid string as the second argument');
+        $error('text_width() requires a valid string as the second argument');
     }
 
     let formatArray = [{font: font, color: 0, shadow: 0, outline: 0, startIndex: 0}];
@@ -4418,7 +4439,7 @@ function $parseMarkupHelper(str, startIndex, stateChanges) {
         end = $Math.min(op, cl);
         
         if (end >= str.length) {
-            throw new Error('Unbalanced {} in draw_text() with markup');
+            $error('Unbalanced {} in draw_text() with markup');
         }
         
         if (str[end - 1] !== '\\') {
@@ -4474,11 +4495,11 @@ function $parseMarkupHelper(str, startIndex, stateChanges) {
         text = markup.replace(/^\s*(font|color|shadow|outline)\s*:\s*([Δ]?(?:[_A-Za-z][A-Za-z_0-9]*|[αβγΔδζηθιλμρσϕφχψτωΩ][_0-9]*(?:_[A-Za-z_0-9]*)?))\s+/, function (match, prop, value) {
             const v = window[value];
             if (v === undefined) {
-                throw new Error('Global constant ' + value + ' used in draw_text markup is undefined.');
+                $error('Global constant ' + value + ' used in draw_text markup is undefined.');
             } else if (prop === 'font' && v._type !== 'font') {
-                throw new Error('Global constant ' + value + ' is not a font'); 
+                $error('Global constant ' + value + ' is not a font'); 
             } else if (prop !== 'font' && value.r === undefined && value.h === undefined) {
-                throw new Error('Global constant ' + value + ' is not a color');
+                $error('Global constant ' + value + ' is not a color');
             }
 
             if (prop !== 'font') {
@@ -4795,11 +4816,11 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
     }
 
     if (font === undefined || font._url === undefined) {
-        throw new Error('draw_text() requires a font as the first argument');
+        $error('draw_text() requires a font as the first argument');
     }
     
     if (pos === undefined) {
-        throw new Error('draw_text() requires a pos');
+        $error('draw_text() requires a pos');
     }
 
     if (typeof str !== 'string') {
@@ -4895,7 +4916,7 @@ function $clamp(x, L, H) {
 
 function get_sprite_pixel_color(spr, pos, result) {
     if (! (spr && spr.spritesheet)) {
-        throw new Error('Called get_sprite_pixel_color() on an object that was not a sprite asset. (' + unparse(spr) + ')');
+        $error('Called get_sprite_pixel_color() on an object that was not a sprite asset. (' + unparse(spr) + ')');
     }
 
     const x = $Math.floor((spr.scale.x > 0) ? pos.x : (spr.size.x - 1 - pos.x));
@@ -4925,7 +4946,7 @@ function get_sprite_pixel_color(spr, pos, result) {
 
 function draw_sprite_corner_rect(CC, corner, size, z) {
     if (! (CC && CC.spritesheet)) {
-        throw new Error('Called draw_sprite_corner_rect() on an object that was not a sprite asset. (' + unparse(CC) + ')');
+        $error('Called draw_sprite_corner_rect() on an object that was not a sprite asset. (' + unparse(CC) + ')');
     }
 
     z = z || 0;
@@ -5098,7 +5119,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
     }
 
     if (! (spr && spr.spritesheet)) {
-        throw new Error('Called draw_sprite() on an object that was not a sprite asset. (' + unparse(spr) + ')');
+        $error('Called draw_sprite() on an object that was not a sprite asset. (' + unparse(spr) + ')');
     }
     
     z = (z || 0) - $camera.z;
@@ -5213,7 +5234,7 @@ function oscillate(x, lo, hi) {
         lo = 0;
     }
 
-    if (hi <= lo) { throw new Error("oscillate(x, lo, hi) must have hi > lo"); }
+    if (hi <= lo) { $error("oscillate(x, lo, hi) must have hi > lo"); }
     x -= lo;
     hi -= lo;
     
@@ -5284,7 +5305,7 @@ function set_background(c) {
 
     if (c.spritesheet && (c.spritesheet.size.x !== $SCREEN_WIDTH || c.spritesheet.size.y !== $SCREEN_HEIGHT ||
                           c.size.x !== $SCREEN_WIDTH || c.size.y !== $SCREEN_HEIGHT)) {
-        throw new Error('The sprite and its spritesheet for set_background() must be exactly the screen size.')
+        $error('The sprite and its spritesheet for set_background() must be exactly the screen size.')
     }
     
     $background = c;
@@ -5312,7 +5333,7 @@ function $toFrame(entity, v, out) {
 
 function draw_bounds(entity, color, recurse) {
     if (! entity.pos) {
-        throw new Error('draw_entityBounds() must be called on an object with at least a pos property');
+        $error('draw_entityBounds() must be called on an object with at least a pos property');
     }
     
     if (recurse === undefined) { recurse = true; }
@@ -5837,8 +5858,8 @@ var overlaps = (function() {
     }
 
     return function(A, B, recurse) {
-        if (A === undefined) { throw new Error('First argument to overlaps() must not be nil'); }
-        if (B === undefined) { throw new Error('Second argument to overlaps() must not be nil'); }
+        if (A === undefined) { $error('First argument to overlaps() must not be nil'); }
+        if (B === undefined) { $error('Second argument to overlaps() must not be nil'); }
         
         if (((recurse === undefined) || recurse) &&
             ((A.child_array && (A.child_array.length > 0)) ||
@@ -6145,7 +6166,7 @@ function random_within_circle(rng) {
         P.y = rng(-1, 1);
         m = P.x * P.x + P.y * P.y;
     } while (m > 1);
-    m = 1 / m;
+    m = 1 / $Math.sqrt(m);
     P.x *= m; P.y *= m;
     return P;
 }
@@ -6272,7 +6293,7 @@ function $makeRng(seed) {
             if (lo === undefined) {
                 return r;
             } else {
-                throw new Error("Use random() or random(lo, hi). A single argument is not supported.");
+                $error("Use random() or random(lo, hi). A single argument is not supported.");
             }
         } else {
             return r * (hi - lo) + lo;
@@ -6292,7 +6313,7 @@ function make_random(seed) {
 function random_integer(lo, hi, rng) {
     if (hi === undefined) {
         if (lo === undefined) {
-            throw new Error("random_integer(lo, hi, random = random) requires at least two arguments.");
+            $error("random_integer(lo, hi, random = random) requires at least two arguments.");
         }
         // Backwards compatibility
         hi = lo;
@@ -6689,17 +6710,17 @@ function deep_clone(a) {
 
 function copy(s, d) {
     if (Array.isArray(s)) {
-        if (! Array.isArray(d)) { throw new Error("Destination must be an array"); }
+        if (! Array.isArray(d)) { $error("Destination must be an array"); }
         d.length = s.length;
         for (let i = 0; i < s.length; ++i) {
             d[i] = s[i];
         }
         return d;
     } else if (typeof s === 'object') {
-        if (typeof d !== 'object') { throw new Error("Destination must be an object"); }
+        if (typeof d !== 'object') { $error("Destination must be an object"); }
         return $Object.assign(d, s);
     } else {
-        throw new Error("Not an array or object");
+        $error("Not an array or object");
     }
 }
 
@@ -6771,8 +6792,8 @@ var $ordinal = $Object.freeze(['zeroth', 'first', 'second', 'third', 'fourth', '
                                'seventeenth', 'eighteenth', 'ninteenth', 'twentieth']);
                   
 function format_number(n, fmt) {
-    if (fmt !== undefined && ! is_string(fmt)) { throw new Error('The format argument to format_number must be a string'); }
-    if (! is_number(n)) { throw new Error('The number argument to format_number must be a number'); }
+    if (fmt !== undefined && ! is_string(fmt)) { $error('The format argument to format_number must be a string'); }
+    if (! is_number(n)) { $error('The number argument to format_number must be a number'); }
     switch (fmt) {
     case 'percent':
     case '%':
@@ -6884,7 +6905,7 @@ function format_number(n, fmt) {
 
 function shuffle(array, rng) {
     if (! Array.isArray(array)) {
-        throw new Error('The argument to shuffle() must be an array');
+        $error('The argument to shuffle() must be an array');
     }
     
     // While there remain elements to shuffle...
@@ -7558,7 +7579,7 @@ function $XYZ_to_LAsBs(color) {
     const y = $XYZ_to_LAsBs_one_channel(color.y);
     const z = $XYZ_to_LAsBs_one_channel(color.z * (1 / 1.08883));
 
-    // if (116 * y - 16 < 0) throw new Error('Invalid input for XYZ');
+    // if (116 * y - 16 < 0) $error('Invalid input for XYZ');
     const result = {
         l: $Math.max(0, 116 * y - 16),
         as: 500 * (x - y),
@@ -7646,7 +7667,7 @@ function lerp(a, b, t, t_min, t_max) {
     }
     
     // Test if these are numbers quickly using the presence of the toFixed method
-    if (! t.toFixed) { throw new Error("The third argument to lerp must be a number"); }
+    if (! t.toFixed) { $error("The third argument to lerp must be a number"); }
     if (a.toFixed && b.toFixed) {
         return a + (b - a) * t;
     } else {
@@ -7656,7 +7677,7 @@ function lerp(a, b, t, t_min, t_max) {
             // The type checking is expensive but is much faster than not doing it.
             const ca = $Object.keys(a).length;
             const cb = $Object.keys(b).length;
-            if (ca !== cb) { throw new Error("The arguments to lerp must have the same number of elements"); }
+            if (ca !== cb) { $error("The arguments to lerp must have the same number of elements"); }
 
             // xy()
             if (ca === 2 &&
@@ -7838,7 +7859,7 @@ $PriorityQueue.prototype.update = function(element, newCost) {
     const i = this.elementArray.indexOf(element);
 
     if (i === -1) {
-        throw new Error("" + element + " is not in the PriorityQueue");
+        $error("" + element + " is not in the PriorityQueue");
     }
 
     this.costArray[i] = newCost;
@@ -7848,7 +7869,7 @@ $PriorityQueue.prototype.update = function(element, newCost) {
 /** Removes the minimum cost element and returns it */
 $PriorityQueue.prototype.removeMin = function() {
     if (this.elementArray.length === 0) {
-        throw new Error("PriorityQueue is empty");
+        $error("PriorityQueue is empty");
     }
     
     let j = 0;
@@ -7902,11 +7923,11 @@ function save_local(key, value) {
     } else {
         const v = unparse(value);
         if (v.length > 2048) {
-            throw new Error('Cannot store_local() a value that is greater than 2048 characters after unparse()');
+            $error('Cannot store_local() a value that is greater than 2048 characters after unparse()');
         }
         table[key] = v;
         if ($Object.keys(table).length > 128) {
-            throw new Error('Cannot store_local() more than 128 separate keys.');
+            $error('Cannot store_local() more than 128 separate keys.');
         }
     }
 
@@ -8141,7 +8162,7 @@ function reset_game() {
 
 
 function pop_mode(...args) {
-    if ($modeStack.length === 0) { throw new Error('Cannot pop_mode() from a mode entered by set_mode()'); }
+    if ($modeStack.length === 0) { $error('Cannot pop_mode() from a mode entered by set_mode()'); }
 
     // Run the leave callback on the current mode
     var old = $gameMode;
@@ -8222,7 +8243,7 @@ function $verifyLegalMode(mode) {
             throw 1;
         }
     } catch (e) {
-        throw new Error('Not a valid mode: ' + unparse(mode));
+        $error('Not a valid mode: ' + unparse(mode));
     }
 }
 

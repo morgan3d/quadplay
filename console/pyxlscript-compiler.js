@@ -188,21 +188,23 @@ function processForTest(test) {
               is_obj = gensym('is_obj'),
               index = gensym('index'),
               key_array = gensym('key_array'),
+              is_mutable = gensym('is_mutable'),
               containerExpr = match[2].trim();
 
         // The '==' on the next line is converted to a === by the remaining compiler pass
         return [`{const ${container} = ${containerExpr}; ` +
                 `const ${is_obj} = is_object(${container}); ` +
                 `$checkContainer(${container}); ` +
+                `const ${is_mutable} = ! $Object.isFrozen(${container}) && ! $Object.isSealed(${container}); ` +
                 `try { ` +
                 `  let ${key_array} = ${is_obj} ? $Object.keys(${container}) : ${container}; ` +
-                `  $iteratorCount.set(${container}, ($iteratorCount.get(${container}) || 0) + 1); ` +
+                `  if (${is_mutable}) { $iteratorCount.set(${container}, ($iteratorCount.get(${container}) || 0) + 1); } ` +
                 `  for (let ${index} = 0; ${index} < ${key_array}.length; ++${index}) { ` +
                 `    let ${key} = ${is_obj} ? ${key_array}[${index}] : ${index}; ` +
                 `    if (${is_obj} && (${key}[0] == '_')) { continue; }; ` +
                 `    let ${value} = ${container}[${key}]; ${before} `,
                 after +
-                `} finally { $iteratorCount.set(${container}, $iteratorCount.get(${container}) - 1); }}`];
+                `} finally { if (${is_mutable}) { $iteratorCount.set(${container}, $iteratorCount.get(${container}) - 1); }}}`];
     } else {
         before = '{';
     }

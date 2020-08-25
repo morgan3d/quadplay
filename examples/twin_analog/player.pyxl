@@ -11,6 +11,7 @@ const player = make_entity({
          orient_with_parent: false,
          z_in_parent: 1,
          side: -1,
+         scale: xy(80%, 200%),
          sprite: player_gun_sprite[0][0]
       }),
       
@@ -34,13 +35,14 @@ def direction_to_angle(v):
 // Return the analog stick, with fallback to
 // the dpad/keyboard
 def analog_stick(index):
-   const THRESHOLD = 10%
-   const stick = device_control("get_analog_axes", index)
-   const dpad = gamepad_array[index].xy
-   const result = xy(0, 0)
-   for axis in "xy":
-      result[axis] = if (|stick[axis]| > THRESHOLD) then stick[axis] else dpad[axis]
-   return result
+    const THRESHOLD = 10%
+    const stick = device_control("get_analog_axes", index)
+    const dpad = gamepad_array[index].xy
+    const result = xy(0, 0)
+    for axis in "xy":
+        // If the analog stick is not in use, also allow the D-pad to override
+        result[axis] = if (‖stick‖ > THRESHOLD) then stick[axis] else dpad[axis]
+    return result
    
 
 def simulate_player():
@@ -91,10 +93,11 @@ def simulate_player():
          }))
       
 
-def simulate_player_bullets():
-   for pos, vel, life in bullet in player_bullet_array:
-      if life > 0:
-         --life
-         pos += vel
-      else:
-         fast_remove_value(player_bullet_array, bullet)
+def update_player_bullet(bullet):
+    with pos, vel, life in bullet:
+        if life > 0:
+            --life
+            pos += vel
+            draw_entity(bullet)
+        else:
+            return iterate.REMOVE

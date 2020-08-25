@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.08.22.06'
+const version  = '2020.08.25.11'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -1194,7 +1194,7 @@ function restartProgram(numBootAnimationFrames) {
         // that it sees those variables.
         try {
             coroutine = QRuntime.$makeCoroutine(compiledProgram);
-            QRuntime.$numBootAnimationFrames = numBootAnimationFrames;
+            QRuntime.$numBootAnimationFrames = numBootAnimationFrames; 
             lastAnimationRequest = requestAnimationFrame(mainLoopStep);
             emulatorKeyboardInput.focus();
         } catch (e) {
@@ -3394,8 +3394,8 @@ function reloadRuntime(oncomplete) {
                 released_a:0, released_b:0, released_c:0, released_d:0, released_e:0, released_f:0, $released_p:0, released_q:0,
                 index: p,
                 type: controlBindings.type,
-                prompt: controlSchemeTable[controlBindings.type],
-                $id: controlBindings.id, 
+                prompt: Object.freeze(Object.assign({'##': '' + (p + 1)}, controlSchemeTable[controlBindings.type])),
+                $id: controlBindings.id,
                 $analogX: 0,
                 $analogY: 0,
                 _name: `gamepad_array[${p}]`

@@ -90,8 +90,7 @@ function setPadType(p, type) {
 
     const control = QRuntime.gamepad_array[p]
     control.type = type;
-    control.prompt = prompt;
-
+    control.prompt = Object.freeze(Object.assign({'##': '' + (p + 1)}, prompt));
     const id = control._id;
     if (id && id !== '' && !/^keyboard|^kbd_/i.test(type)) {
         // Update the autodetection table based on what we just learned from this user
@@ -164,7 +163,7 @@ function device_control(cmd) {
         {
             const i = clamp(parseInt(arguments[1]), 0, 3);
             const pad = QRuntime.gamepad_array[i];
-            return Object.freeze({x: pad._analogX * QRuntime.$scaleX, y: pad._analogY * QRuntime.$scaleY});
+            return Object.freeze({x: pad.$analogX * QRuntime.$scaleX, y: pad.$analogY * QRuntime.$scaleY});
             break;
         }
 
@@ -1021,12 +1020,12 @@ function updateInput() {
             // The gamepad just connected or changed. Update the control scheme.
             pad.$id = realGamepad.id;
             pad.type = detectControllerType(realGamepad.id);
-            pad.prompt = controlSchemeTable[pad.type];
+            pad.prompt = Object.freeze(Object.assign({'##' : '' + (player + 1)}, controlSchemeTable[pad.type]));
         } else if (! realGamepad && (pad.$id !== '') && (pad.$id !== 'mobile')) {
             // Gamepad was just disconnected. Update the control scheme.
             pad.$id = isMobile ? 'mobile' : '';
             pad.type = defaultControlType(player);
-            pad.prompt = controlSchemeTable[pad.type];
+            pad.prompt = Object.freeze(Object.assign({'##' : '' + (player + 1)}, controlSchemeTable[pad.type]));
         }
         
         // Axes
