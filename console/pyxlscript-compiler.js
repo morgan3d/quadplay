@@ -1310,7 +1310,7 @@ function $pop_modeFrom$SystemMenu(callback) {
 ${sectionSeparator}
 const $frame = (function*() { 
 let __yieldCounter = 0; while (true) { try {
-if (($gameMode._name[0] !== '_') && (gamepad_array[0].$pp || gamepad_array[1].$pp || gamepad_array[2].$pp || gamepad_array[3].$pp)) { push_mode($SystemMenu); }
+if (($gameMode._name[0] !== '$') && (gamepad_array[0].$pp || gamepad_array[1].$pp || gamepad_array[2].$pp || gamepad_array[3].$pp)) { push_mode($SystemMenu); }
 $processFrameHooks();
 ${sectionTable.frame.jsCode}
 $show(); } catch (ex) { if (! ex.nextMode) throw ex; else $updateInput(); } yield; }
