@@ -38,7 +38,7 @@ def analog_stick(index):
    const stick = device_control("get_analog_axes", index)
    const dpad = gamepad_array[index].xy
    const result = xy(0, 0)
-   for axis in "xy":
+   for axis in ["x", "y"]:
       result[axis] = if (|stick[axis]| > THRESHOLD) then stick[axis] else dpad[axis]
    return result
    
@@ -92,7 +92,7 @@ def simulate_player():
       
 
 def simulate_player_bullets():
-   for pos, vel, life in bullet in player_bullet_array:
+   for pos, vel, life in bullet in clone(player_bullet_array):
       if life > 0:
          --life
          pos += vel
