@@ -22,5 +22,5 @@ if mode_frames < introFrames:
 else:
    // Animation complete
    reset_post_effects()
-   set_mode(_Message, onDone)
+   set_mode($Message, onDone)
 
