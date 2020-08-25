@@ -106,8 +106,8 @@
         "chess_bishop":    {"x": 2, "y": 9},
         "chess_queen":     {"x": 3, "y": 9},
         "chess_king":      {"x": 4, "y": 9},
-        "chess_pawn":      {"x": 5, "y": 9}
-        "cloud":           {"x": 8, "y": 9},
+        "chess_pawn":      {"x": 5, "y": 9},
+        "cloud":           {"x": 8, "y": 9}
     },
     "license": "By Morgan McGuire 2020, released into the Public Domain/CC0"
 }
