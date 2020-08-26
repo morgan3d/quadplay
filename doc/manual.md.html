@@ -4427,7 +4427,8 @@ Raw Device Access
     <tr valign=top><td> `"set_pad_type", index, "type"` </td><td> Set `gamepad_array[index].type` and the corresponding prompts. There is no "get" version because you can read the property directly from the gamepad object.</td></tr>
     <tr valign=top><td> `"get_analog_axes", index`      </td><td> Return an `xy()` of the analog axis values for `gamepad_array[index]`, without D-pad snapping.
                                                        Needed for accessing Atari paddles, car pedals, steering wheels, and flight stick throttles in
-                                                       a meaningful way.</td></tr>
+                                                       a meaningful way. There is currently no way to read the D-pad directly (it will be overriden by the analog axis if moved)
+                                                       or to read the analog triggers or other axes.</td></tr>
     <tr valign=top><td> `"get_mouse_state"`             </td><td> Return `{x:number, y:number, dx:number, dy:number, xy:xy(...), dxy:xy(...), button_array:[...]}` for the current mouse position and buttons. Each element of
                                                        `button_array` is 0 or 1. There are at least two buttons, but may be more.</td></tr>
     <tr valign=top><td> `"set_debug_flag", flagname, bool`</td><td> Set the enabled state of an IDE debugging flag. The flagnames are 
@@ -7854,6 +7855,7 @@ Changes for both the specification and implementation in each release.
 - Fixed recursive `push_mode()` and `pop_mode()` not preserving `draw_previous_mode()` state
 - Fixed `export.py` script to set read file permissions on the contents of the zipfile
 - Fixed constant editor vector vertical nudge value to default sign based on `y_up` setting
+- Fixed analog axis snapping when near 8-direction points
 - Fixed sprite editor not updating after JSON edits
 - Fixed gutters on sprites
 - Fixed initial `entity.size` to be based on scale for rectangular shaped entities that have initial sprites

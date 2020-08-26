@@ -1055,7 +1055,7 @@ function updateInput() {
             // Reset both digital and analog axes
             pad[analogAxis] = pad['$' + axis];
 
-            if (realGamepad && (realGamepad.axes[a] !== 0)) {
+            if (realGamepad) {
                 pad['$' + axis] = realGamepad.axes[a] * scale;
                 pad[analogAxis] = realGamepad.analogAxes[a] * scale;
             }
@@ -1070,6 +1070,8 @@ function updateInput() {
                 // to controller[1] d-pad (axes 0 + 1) for "dual stick" controls                
                 if (otherPad.axes[a + 2] !== 0) {
                     pad['$' + axis] = otherPad.axes[a + 2] * scale;
+                }
+                if (Math.abs(otherPad.analogAxes[a + 2]) > 0.005) {
                     pad[analogAxis] = otherPad.analogAxes[a + 2] * scale;
                 }
                 if (otherPad.axes[a + 2] !== otherPad.axes[a + 2]) {
