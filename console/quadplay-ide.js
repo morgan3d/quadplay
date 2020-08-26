@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.08.25.11'
+const version  = '2020.08.26.11'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -2369,6 +2369,7 @@ function visualizeGame(gameEditor, url, game) {
     }
     s += '</td></tr>\n';
 
+    s+= '<tr><td>&nbsp;</td></tr>\n';
     if (editableProject) {
         s += '<tr valign="top"><td>Start&nbsp;Mode</td><td colspan=3><select style="width:390px" onchange="onProjectInitialModeChange(this.value)">\n';
         for (let i = 0; i < gameSource.modes.length; ++i) {
@@ -2409,6 +2410,8 @@ function visualizeGame(gameEditor, url, game) {
     }
     s += `<tr valign="top"><td></td><td colspan=3><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.y_up ? 'checked' : ''} onchange="onProjectYUpChange(this)">Y-Axis = Up</label></td></tr>\n`;
 
+    s+= '<tr><td>&nbsp;</td></tr>\n';
+    s += `<tr valign="top"><td>Controls</td><td colspan=4><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.dual_dpad ? 'checked' : ''} onchange="onProjectDualDPadChange(this)">Dual D-Pad</label></td></tr>\n`;
     s+= '<tr><td>&nbsp;</td></tr>\n';
     
     s += `<tr valign="top"><td>Description<br><span id="projectDescriptionLength">(${(game.description || '').length}/100 chars)</span> </td><td colspan=3><textarea ${disabled} style="width:384px; padding: 3px; margin-bottom:-3px; font-family: Helvetica, Arial; font-size:12px" rows=2 id="projectDescription" onchange="onProjectMetadataChanged(this)" oninput="document.getElementById('projectDescriptionLength').innerHTML = '(' + this.value.length + '/100 chars)'">${game.description || ''}</textarea>`;
@@ -3396,8 +3399,7 @@ function reloadRuntime(oncomplete) {
                 type: controlBindings.type,
                 prompt: Object.freeze(Object.assign({'##': '' + (p + 1)}, controlSchemeTable[controlBindings.type])),
                 $id: controlBindings.id,
-                $analogX: 0,
-                $analogY: 0,
+                $analog: [0, 0, 0, 0],
                 _name: `gamepad_array[${p}]`
             };
             Object.defineProperty(pad, 'x', padXGetter);

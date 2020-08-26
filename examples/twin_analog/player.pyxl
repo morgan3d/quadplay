@@ -36,7 +36,7 @@ def direction_to_angle(v):
 // the dpad/keyboard
 def analog_stick(index):
     const THRESHOLD = 10%
-    const stick = device_control("get_analog_axes", index)
+    const stick = device_control("get_analog_axes", 0, index)
     const dpad = gamepad_array[index].xy
     const result = xy(0, 0)
     for axis in "xy":

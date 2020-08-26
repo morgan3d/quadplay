@@ -161,9 +161,10 @@ function device_control(cmd) {
         
     case "get_analog_axes":
         {
-            const i = clamp(parseInt(arguments[1]), 0, 3);
-            const pad = QRuntime.gamepad_array[i];
-            return Object.freeze({x: pad.$analogX * QRuntime.$scaleX, y: pad.$analogY * QRuntime.$scaleY});
+            const player = clamp(parseInt(arguments[1] || 0), 0, 3);
+            const stick = clamp(parseInt(arguments[2] || 0), 0, 1);
+            const pad = QRuntime.gamepad_array[player];
+            return Object.freeze({x: pad.$analog[2 * stick] * QRuntime.$scaleX, y: pad.$analog[2 * stick + 1] * QRuntime.$scaleY});
             break;
         }
 
@@ -1027,6 +1028,11 @@ function updateInput() {
             pad.type = defaultControlType(player);
             pad.prompt = Object.freeze(Object.assign({'##' : '' + (player + 1)}, controlSchemeTable[pad.type]));
         }
+
+        // Analog controls
+        for (let a = 0; a < 4; ++a) {
+            pad.$analog[a] = realGamepad ? realGamepad.analogAxes[a] : 0;
+        }
         
         // Axes
         for (let a = 0; a < axes.length; ++a) {
@@ -1034,7 +1040,6 @@ function updateInput() {
             const analogAxis = '$analog' + AXES[a];
             const pos = '+' + axis, neg = '-' + axis;
             const old = pad['$' + axis];
-            const scale = 1;
 
             if (map) {
                 // Keyboard controls
@@ -1042,40 +1047,36 @@ function updateInput() {
 
                 // Current state
                 pad['$' + axis] = (((emulatorKeyState[n0] || emulatorKeyState[n1]) ? -1 : 0) +
-                                   ((emulatorKeyState[p0] || emulatorKeyState[p1]) ? +1 : 0)) * scale;
+                                   ((emulatorKeyState[p0] || emulatorKeyState[p1]) ? +1 : 0));
 
                 // Just pressed
                 pad['$' + axis + axis] = (((emulatorKeyJustPressed[n0] || emulatorKeyJustPressed[n1]) ? -1 : 0) +
-                                          ((emulatorKeyJustPressed[p0] || emulatorKeyJustPressed[p1]) ? +1 : 0)) * scale;
+                                          ((emulatorKeyJustPressed[p0] || emulatorKeyJustPressed[p1]) ? +1 : 0));
             } else {
                 // Nothing currently pressed
                 pad['$' + axis] = pad['$' + axis + axis] = 0;
             }
 
             // Reset both digital and analog axes
-            pad[analogAxis] = pad['$' + axis];
+            pad['$' + axis];
 
             if (realGamepad) {
-                pad['$' + axis] = realGamepad.axes[a] * scale;
-                pad[analogAxis] = realGamepad.analogAxes[a] * scale;
+                pad['$' + axis] = realGamepad.axes[a];
             }
 
             if (realGamepad && (prevRealGamepad.axes[a] !== realGamepad.axes[a])) {
-                pad['$' + axis + axis] = realGamepad.axes[a] * scale;
+                pad['$' + axis + axis] = realGamepad.axes[a];
             }
 
-            if ((player === 1) && ! realGamepad && gamepadArray[gamepadOrderMap[0]]) {
+            if (gameSource.json.dual_dpad && (player === 1) && gamepadArray[gamepadOrderMap[0]]) {
                 const otherPad = gamepadArray[gamepadOrderMap[0]];
-                // Alias controller[0] right stick (axes 2 + 3) 
+                // Alias controller[0] right stick (axes 2 + 3)
                 // to controller[1] d-pad (axes 0 + 1) for "dual stick" controls                
                 if (otherPad.axes[a + 2] !== 0) {
-                    pad['$' + axis] = otherPad.axes[a + 2] * scale;
-                }
-                if (Math.abs(otherPad.analogAxes[a + 2]) > 0.005) {
-                    pad[analogAxis] = otherPad.analogAxes[a + 2] * scale;
+                    pad['$' + axis] = otherPad.axes[a + 2];
                 }
                 if (otherPad.axes[a + 2] !== otherPad.axes[a + 2]) {
-                    pad['$' + axis + axis] = otherPad.axes[a + 2] * scale;
+                    pad['$' + axis + axis] = otherPad.axes[a + 2];
                 }
             } // dual-stick
 

@@ -41,6 +41,12 @@ function onProjectYUpChange(target) {
 }
 
 
+function onProjectDualDPadChange(target) {
+    gameSource.json.dual_dpad = (target.checked === true);
+    serverSaveGameJSON();
+}
+
+
 function onProjectScreenSizeChange(target) {
     const res = JSON.parse(target.value);
     gameSource.json.screen_size = res;

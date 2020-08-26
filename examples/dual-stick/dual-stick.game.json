@@ -1,5 +1,5 @@
 {
-    "title": "Dual Stick Example",
+    "title": "Dual D-Pad Example",
     "developer": "CasualEffects",
     "copyright": "©2019 Morgan McGuire",
     "license": "Available under the BSD License https://opensource.org/licenses/BSD-2-Clause",
@@ -21,7 +21,15 @@
     },
     "y_up": false,
     "screen_size": {
-        "x": 320,
-        "y": 180
-    }
+        "x": 384,
+        "y": 224
+    },
+    "dual_dpad": true,
+    "description": "",
+    "cooperative": false,
+    "competitive": false,
+    "highscores": false,
+    "achievements": false,
+    "min_players": 1,
+    "max_players": 1
 }

@@ -4007,6 +4007,10 @@ function draw_rect(pos, size, fill, border, angle, z) {
         size = pos.size;
         pos = pos.pos;
     }
+
+    if (typeof size !== 'object' || size.x === undefined || size.y === undefined) {
+        $error("The size argument to draw_rect() must be an xy() or have x and y properties.");
+    }
     
     angle = loop(angle || 0, -$Math.PI, $Math.PI);
 
