@@ -1,0 +1,112 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+const entity_array = []
+
+def random_pos(): return xy(random(0, SCREEN_SIZE.x), random(0, SCREEN_SIZE.y))
+def random_vel(): return ½ random_on_circle()
+
+// Callback for updating an entity and drawing it
+def process(entity):
+    if entity.animation:
+        entity.sprite = entity.animation.frame(mode_frames)
+
+    entity_simulate(entity)
+
+    // Keep on screen
+    for axis in "xy":
+        if entity.pos[axis] < 0: entity.vel[axis]= |entity.vel[axis]|
+        if entity.pos[axis] ≥ SCREEN_SIZE[axis]: entity.vel[axis] = -|entity.vel[axis]|
+    
+    entity_update_children(entity)
+    draw_entity(entity)
+    if (not device_control("get_debug_flag", "entity_bounds")):
+        draw_bounds(entity)
+
+push(entity_array, make_entity({
+    name:           "Meeple",
+    sprite:         shapes_sprite.meeple,
+    sprite_override_color: rgb(1, 0.5, 0.5),
+    pos:            random_vel(),
+    vel:            xy(1, 0.5),
+    drag:           0,
+    process:        process
+    }))
+
+
+def process_dynamic_text(entity):
+    // Update the clock
+    entity.text = format_number(mode_frames / 60, "stopwatch")
+    entity.size.x = text_width(entity.font, entity.text)    
+    entity.size.y = entity.font.line_height - 3
+    process(entity)
+
+push(entity_array, make_entity({
+    name:           "Dynamic Text",
+    pos:            random_pos(),
+    vel:            random_vel(),
+    drag:           0,
+    process:        process_dynamic_text,
+    font:           robot_18_font,
+    text_outline:   rgb(0, 0, 0),
+    text_shadow:    rgba(0, 0, 0, 30%),
+    text_color:     rgb(1, 1, 0.2)
+    }))
+
+
+push(entity_array, make_entity({
+    name:           "Static Text",
+    sprite:         text_sprite[0][0],
+    pos:            random_pos(),
+    vel:            random_vel(),
+    spin:           1°,
+    drag:           0,
+    process:        process
+    }))
+    
+    
+push(entity_array, make_entity({
+    name:           "Disk",
+    sprite:         shapes_sprite.disk,
+    pos:            random_pos(),
+    vel:            random_vel(),
+    shape:          "disk",
+    drag:           0,
+    sprite_override_color: rgb(0, 0, 0.8),
+    process:        process
+    }))
+
+    
+push(entity_array, make_entity({
+    name:           "Entity Pivot",
+    sprite:         shapes_sprite.arrow,
+    pos:            random_pos(),
+    vel:            random_vel(),
+    pivot:          xy(-16, 0),
+    spin:           -1°,
+    drag:           0,
+    sprite_override_color: rgb(0.2, 1, 0.3),
+    process:        process
+    }))
+
+
+push(entity_array, make_entity({
+    name:           "Animated",
+    animation:      ninja_white_sprite.swim,
+    sprite:         ninja_white_sprite.swim[0],
+    pos:            random_pos(),
+    vel:            random_vel(),
+    spin:           -½°,
+    drag:           0,
+    size:           xy(20, 14),
+    scale:          xy(200%, 200%),
+    process:        process
+    }))
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+set_background(rgb(40%, 60%, 80%))
+draw_text(font, CREDITS.title, xy(½ SCREEN_SIZE.x, 10), text_color, ∅, ∅, 0, 0)
+iterate(entity_array, "process")

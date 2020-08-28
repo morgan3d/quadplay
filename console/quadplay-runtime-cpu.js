@@ -1921,7 +1921,7 @@ function draw_entity(e, recurse) {
         // memory allocation
         const oldX = $offsetX, oldY = $offsetY;
         $offsetX += e.offset.x * $scaleX; $offsetY += e.offset.y * $scaleY;
-        draw_sprite(e.sprite, e.pos, e.angle, e.scale, e.opacity, e.z, e.sprite_override_color);
+        draw_sprite(e.sprite, e.pos, e.angle, e.scale, e.opacity, e.z, e.sprite_override_color, undefined, e.pivot);
         $offsetX = oldX; $offsetY = oldY;
     }
 
@@ -1932,10 +1932,10 @@ function draw_entity(e, recurse) {
         }
     }
 
-    if (e.labelFont && e.labelText) {
+    if (e.font && e.text) {
         const oldX = $offsetX, oldY = $offsetY;
-        $offsetX += (e.offset.x + e.text_offset.x) * $scaleX; $offsetY += (e.offset.y + e.text_offset.y) * $scaleY;
-        draw_text(e.font, e.text, e.pos, e.text_color, e.text_shadow, e.text_outline, e.text_x_align, e.text_y_align, e.z);
+        $offsetX += (e.offset.x + (e.text_offset ? e.text_offset.x : 0)) * $scaleX; $offsetY += (e.offset.y + (e.text_offset ? e.text_offset.y : 0)) * $scaleY;
+        draw_text(e.font, e.text, e.pos, e.text_color || rgb(1, 1, 1), e.text_shadow, e.text_outline, e.text_x_align, e.text_y_align, e.z);
         $offsetX = oldX; $offsetY = oldY;
     }
 }
@@ -1983,6 +1983,9 @@ function make_entity(e, childTable) {
     r.z = r.z || 0;
 
     r.physics_sleep_state = r.physics_sleep_state || 'awake';
+
+    r.text_x_align = r.text_x_align || "center";
+    r.text_y_align = r.text_y_align || "center";
 
     r.contact_group = r.contact_group || 0;
     r.contact_category_mask = (r.contact_category_mask === undefined) ? 1 : r.contact_category_mask;
@@ -5097,7 +5100,7 @@ function $maybeApplyPivot(pos, pivot, angle, scale) {
 }
 
 
-function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, override_blend) {
+function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, override_blend, pivot) {
     // Skip graphics this frame
     if (mode_frames % $graphicsPeriod !== 0) { return; }
 
@@ -5110,6 +5113,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
         pos = spr.pos;
         override_color = spr.override_color;
         override_blend = spr.override_blend;
+        pivot = spr.pivot;
         spr = spr.sprite;
     }
 
@@ -5129,7 +5133,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
     z = (z || 0) - $camera.z;
     angle = angle || 0;
 
-    pos = $maybeApplyPivot(pos, spr.pivot, angle, scale);
+    pos = $maybeApplyPivot(pos, pivot, angle, scale);
 
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
@@ -5337,7 +5341,7 @@ function $toFrame(entity, v, out) {
 
 function draw_bounds(entity, color, recurse) {
     if (! entity.pos) {
-        $error('draw_entityBounds() must be called on an object with at least a pos property');
+        $error('draw_bounds() must be called on an object with at least a pos property');
     }
     
     if (recurse === undefined) { recurse = true; }

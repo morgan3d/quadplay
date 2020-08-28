@@ -2888,12 +2888,11 @@ The basic entity properties and defaults are:
 : Visibility on the interval 0 to 1. Defaults to 1.
 
 `entity.pivot`
-: Point on the sprite that is mapped to the center of the entity for
-  collision detection bounds and child reference frames. _Does not affect rendering_.
-  Defaults to the pivot form the intial
-  sprite, or `xy(0, 0)` if there was no sprite. If you change the
-  `entity.sprite`, then you may want to also change the `entity.pivot`
-  at the same time. See also `entity.offset` for transient effects.
+: Point on the sprite that is mapped to the center of the entity.
+  Defaults to the pivot form the intial sprite, or `xy(0, 0)` if there
+  was no sprite. If you change the `entity.sprite`, then you may want
+  to also change the `entity.pivot` at the same time. See also
+  `entity.offset` for transient effects.
 
 `entity.pos`
 : The world space `xy()` position of the center of the entity. Defaults to (0,0).
@@ -3664,7 +3663,7 @@ endpoints and borders.
   `draw_sprite({sprite: wizard, pos: xy(100, 100), z: 2})`.
   Values default according to the positional argument version.
 
-`draw_sprite(sprite, pos, angle default 0°, scale default xy(100%, 100%), opacity default 100%, z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp")`
+`draw_sprite(sprite, pos, angle default 0°, scale default xy(100%, 100%), opacity default 100%, z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp", pivot default sprite.pivot)`
 : Draw sprite `sprite` with its center at `pos`. `pos` must have at
   least `x` and `y` fields. The sprite appears at `z` in the z-order
   (defaults to 0). The `scale` parameter must be nil (which is treated
@@ -3681,8 +3680,6 @@ endpoints and borders.
   of the result is always the sprite's original alpha value. Useful for simulating lighting,
   turning a sprite into a shadow silhouette, or flashing a sprite a different color
   to indicate hits or invincibility.
-  
-  
 
 `draw_sprite_corner_rect(sprite, corner, size, z default 0)`
 : Draw a rectangle enclosing points `corner` and `corner+size`
@@ -3839,7 +3836,6 @@ endpoints and borders.
 ![Text styling options](text-style.png width=500%)
 
 
-
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 set_background(#FFF)
 
@@ -3857,6 +3853,22 @@ draw_text(goodNeighbors, "Offset Shadow", xy(83, 182), #0A0)
 [Tricks with text styling]
 
 ![Tricks with text styling](text-tricks.png width=200%)
+
+
+               ------------------------------------
+
+Font assets have the following properties:
+
+`font.line_height`
+:  Vertical spacing between baselines in multiline text. Advance the `y`
+   coordinate of a position by this much if explicitly rendering multiline
+   text (you can also just put newlines in the text or use the `wrap_width`
+   argument for automatic multiline).
+   
+   The `line_height` is not the vertical bounds of all characters. Some
+   characters may exceed the spacing because they have especially high
+   accents or ascenders or low hooks and descenders.
+
 
 
 ### Post Effects
@@ -7770,9 +7782,6 @@ Changes for both the specification and implementation in each release.
 - New `beast-soldier-32x32` spritesheet
 - New `shapes-32x32` spritesheet
 - New dots, stripes, wood, and carbon console vinyl wraps
-- Incompatible change: games must now opt in with a game.json setting for
-  the P1 right stick to override the P2 D-pad for "dual D-pad" input in single-player
-  games.
 - Added `gamepad.prompt["##"]` for a replacement string for the player number
 - Added `.debug.game` layer (see the Debug JSON section)
 - `debug_watch()` now allows multiple identical expressions at different locations
@@ -7789,6 +7798,11 @@ Changes for both the specification and implementation in each release.
     with other drawing functions
   - `local_time().daySecond` --> `local_time().day_second`
   - `xz_to_xyz()` now swizzles `z` -> `y`
+  - Games must now opt in with a game.json `dual_dpad` setting for
+    the P1 right stick to override the P2 D-pad for dual digital stick input in single-player
+    games
+  - The `entity.pivot` now affects rendering as well as collision detection,
+    overriding the sprite's pivot (it defaults to the sprite's pivot)
 - The start mode is now specified with `start_mode` in the game JSON file instead of
   an asterisk
 - `sequence()` now accepts bare numbers indicating frames to skip

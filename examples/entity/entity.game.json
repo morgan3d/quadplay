@@ -1,0 +1,48 @@
+{
+    "title": "Entity Example",
+    "developer": "Casual Effects",
+    "copyright": "©2020 Morgan McGuire",
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "font": "quad://fonts/deja-8.font.json",
+        "shapes_sprite": "quad://sprites/shapes-32x32.sprite.json",
+        "robot_18_font": "quad://fonts/robot-18.font.json",
+        "text_sprite": "text.sprite.json",
+        "ninja_white_sprite": "quad://sprites/ninja-white-32x32.sprite.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "Examples of different ways of drawing and simulating entities.",
+    "constants": {
+        "text_color": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": 1
+                },
+                "g": {
+                    "type": "number",
+                    "value": 1
+                },
+                "b": {
+                    "type": "number",
+                    "value": 1
+                }
+            }
+        }
+    },
+    "y_up": true
+}

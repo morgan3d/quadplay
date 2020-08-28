@@ -32,6 +32,11 @@
             "description": ""
         },
         {
+            "url": "quad://examples/entity/",
+            "title": "Entity Example",
+            "description": "Examples of different ways of drawing and simulating entities."
+        },
+        {
             "url": "quad://examples/fluid/",
             "title": "Fluid Example",
             "description": "Cellular automata fluid simulation."
