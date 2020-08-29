@@ -432,6 +432,10 @@ rendering with a simple text-heavy UI section.
 GPU is fast enough to process one point per pixel, but this technique is not recommended in general because the computations to produce the points
 tend to be too slow, even if this simple.
 
+</td></tr><tr><td>![](../examples/entity/label128.png)</td><td>
+[Clouds Example](../console/quadplay.html?game=quad://examples/enity&IDE=1) 
+Shows different ways of constructing entities with text and sprites.
+
 </td></tr><tr><td>![](../examples/physics/label128.png)</td><td>
 [Physics Example](../console/quadplay.html?game=quad://examples/physics&IDE=1) shows all of the features of the
 physics engine, including the debugging visualization.
@@ -5411,6 +5415,7 @@ file (unless they are not enabled). Extra constants specified only
 in the `.debug.json` file are ignored; they are not mapped at runtime.
 
 
+
 Sprite JSON
 ---------------------------------------------------------------------------------------------
 
@@ -7762,11 +7767,12 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-2020 August TBD: Beta update 47
+2020 September 4: Beta update 47
 
 - New built-in game "Beyond Control"
-- New example Planet Generator for 2.5D procedural content
+- New example "Planet Generator" for 2.5D procedural content
 - New example "Clouds" of per-pixel graphics
+- New example "Entity" of different entity features
 - New `scoreboard-5` font
 - New `splash-00` sound
 - New `sparks-00` through `sparks-04` sounds
@@ -7787,7 +7793,7 @@ Changes for both the specification and implementation in each release.
 - `debug_watch()` now allows multiple identical expressions at different locations
 - `debug_watch()` and `debug_print()` output are now hyperlinks to the source location
   that produced them
-- Added  320x180 support for targeting Switch, PiBoy, 720p, 1080p, and 1440p
+- Added 320x180 support for targeting Switch, PiBoy, 720p, 1080p, and 1440p
 - Added support for TileKit
 - Added optional stick index argument to `device_control("get_analog_axes", ...)`
 - Packed `suchet-12` font characters more tightly to conserve memory

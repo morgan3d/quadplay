@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.08.28.10'
+const version  = '2020.08.29.12'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -116,7 +116,7 @@ function debugOptionClick(event) {
         const outputDisplayPane = document.getElementById('outputDisplayPane');
         outputDisplayPane.style.whiteSpace = element.checked ? 'pre-wrap' : 'pre';
     } else if (element.id !== 'automathEnabled' && element.id !== 'restartOnFocusEnabled') {
-        QRuntime['_' + element.id] = element.checked;
+        QRuntime['$' + element.id] = element.checked;
     }
     saveIDEState();
 }

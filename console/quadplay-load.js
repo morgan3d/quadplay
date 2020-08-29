@@ -379,12 +379,12 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                     if (/\.json$/.test(constantURL)) {
                         loadManager.fetch(constantURL, 'json', nullToUndefined, function (data) {
                             gameSource.constants[c] = data;
-                        });
+                        }, undefined, undefined, true);
                     } else if (/\.yml$/.test(constantURL)) {
                         loadManager.fetch(constantURL, 'text', null, function (yaml) {
                             const json = jsyaml.safeLoad(yaml);
                             gameSource.constants[c] = nullToUndefined(json);
-                        });
+                        }, undefined, undefined, true);
                     } else {
                         throw 'Unsupported file format for ' + definition.url;
                     }

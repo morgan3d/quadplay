@@ -102,7 +102,39 @@ push(entity_array, make_entity({
     scale:          xy(200%, 200%),
     process:        process
     }))
+    
+    
+def process_airplane(entity):
+    // Face along velocity
+    entity.angle = atan(entity.vel) * rotation_sign()
+    process(entity)
+    
+    // Draw shadow. This could also be a child entity
+    // with an offset, but then it would affect collision
+    // bounds
+    draw_sprite(entity.sprite, entity.pos + xy(5, -25),
+        entity.angle, entity.scale, 20%, ε, #000)
+    
+push(entity_array, make_entity({
+    name:           "Facing & Shadowed",
+    sprite:         shapes_sprite.airplane,
+    pos:            random_pos(),
+    vel:            3 random_vel(),
+    drag:           0,
+    z:              30,
+    process:        process_airplane
+    }))
 
+
+push(entity_array, make_entity({
+    name:           "Facing & Shadowed",
+    sprite:         shapes_sprite.airplane,
+    pos:            random_pos(),
+    vel:            3 random_vel(),
+    drag:           0,
+    z:              30,
+    process:        process_airplane
+    }))
 
 frame
 ────────────────────────────────────────────────────────────────────────
