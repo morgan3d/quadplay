@@ -85,6 +85,7 @@
         "tower":           {"x": 9, "y": 5},
         "tent":            {"x": 10, "y": 5},
         "gem":             {"x": 11, "y": 5},
+        "diagonal_maze":   {"x": 12, "y": 5},
 
         "track":                 {"x": 0, "y": 6},
         "track_end":             {"x": 1, "y": 6},
@@ -97,6 +98,7 @@
         "train_engine":          {"x": 8, "y": 6},
         "boxcar_top":            {"x": 9, "y": 6},
         "train_engine_top":      {"x": 10, "y": 6},
+        "random_dot":            {"x": 12, "y": 7},
         
         "rocket":          {"x": 0, "y": 7},
         "airplane":        {"x": 1, "y": 7},
@@ -110,6 +112,7 @@
         "racecar":         {"x": 9, "y": 7},
         "tractor":         {"x": 10, "y": 7},
         "balloon":         {"x": 11, "y": 7},
+        "random_square":   {"x": 12, "y": 7},
         
         "meeple":          {"x": 0, "y": 8},
         "fish":            {"x": 1, "y": 8},
@@ -123,6 +126,7 @@
         "lion":            {"x": 9, "y": 8},
         "dog":             {"x": 10, "y": 8},
         "cat":             {"x": 11, "y": 8},
+        "lava_lamp":       {"x": 12, "y": 8},
 
         "chess_rook":      {"x": 0, "y": 9},
         "chess_knight":    {"x": 1, "y": 9},
@@ -136,6 +140,7 @@
         "detailed_sloop":  {"x": 9, "y": 9},
         "detailed_galleon":{"x": 10, "y": 9},
         "celtic_knot":     {"x": 11, "y": 9},
+        "wood_grain":      {"x": 12, "y": 9},
 
         "checkerboard":    {"x": 0, "y": 10},
         "stripes":         {"x": 1, "y": 10},
@@ -149,6 +154,7 @@
         "diagonal_brick":  {"x": 9, "y": 10},
         "tread":           {"x": 10, "y": 10},
         "cobblestone":     {"x": 11, "y": 10},
+        "caustic":         {"x": 12, "y": 10},
 
         "fir_tree":        {"x": 0, "y": 11},
         "bare_tree":       {"x": 1, "y": 11},
@@ -159,7 +165,8 @@
         "banana":          {"x": 6, "y": 11},
         "carrot":          {"x": 7, "y": 11},
         "mushroom":        {"x": 8, "y": 11},
-        "flask":           {"x": 11, "y": 11}
+        "flask":           {"x": 11, "y": 11},
+        "dunes":           {"x": 12, "y": 11},
 
         "flying_dragon":   {"x": 0, "y": 12},
         "dragon":          {"x": 1, "y": 12},
