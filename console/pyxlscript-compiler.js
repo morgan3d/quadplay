@@ -1261,6 +1261,9 @@ function compile(gameSource, fileContents, isOS) {
 
                 const match = name.match(/^pop_modeFrom(.*)$/);
                 if (match) {
+                    // There is intentionally a double $ in the code below,
+                    // because the second $ is for escaping to the JavaScript
+                    // formatted string.
                     pop_modeBindings += `, $${name}:$${name}`;
                     wrappedPopModeFromCode += `
 
@@ -1316,7 +1319,7 @@ ${sectionTable.frame.jsCode}
 $show(); } catch (ex) { if (! ex.nextMode) throw ex; else $updateInput(); } yield; }
 })();
 
-return $Object.freeze({$enter:$enter, $frame:$frame, $pop_modeFrom$SystemMenu:$pop_modeFrom$SystemMenu, $leave:$leave${pop_modeBindings}, _name:'${mode.name}'});
+return $Object.freeze({$enter:$enter, $frame:$frame, $pop_modeFrom$SystemMenu:$pop_modeFrom$SystemMenu ${pop_modeBindings}, $leave:$leave, _name:'${mode.name}'});
 })();
 
 `;

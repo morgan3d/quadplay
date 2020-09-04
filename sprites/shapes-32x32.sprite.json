@@ -14,8 +14,10 @@
         "house":    {"x": 5, "y": 0},
         "hexagon":  {"x": 6, "y": 0},
         "pointy_hexagon": {"x": 7, "y": 0},
+        "octagon": {"x": 9, "y": 0},
         "capsule": {"x": 8, "y": 0},
         "half_square": {"x": 10, "y": 0},
+        "barb": {"x": 11, "y": 0},
         
         "open_square": {"x": 0, "y": 1},
         "open_disk": {"x": 1, "y": 1},
@@ -24,12 +26,13 @@
         "star": {"x": 3, "y": 1},
         "star5": {"x": 3, "y": 1},
         "star6": {"x": 4, "y": 1},
-        "X": {"x": 5, "y": 1},
-        "full_X": {"x": 6, "y": 1},
-        "plus": {"x": 7, "y": 1},
+        "star8": {"x": 5, "y": 4},
+        "X": {"x": 6, "y": 1},
+        "full_X": {"x": 7, "y": 1},
         "bullet": {"x": 8, "y": 1},
         "cone": {"x": 9, "y": 1},
         "teardrop": {"x": 10, "y": 1},
+        "chevron": {"x": 11, "y": 1},
         
         "diagonal_corner": {"x": 0, "y": 2},
         "convex_corner": {"x": 1, "y": 2},
@@ -42,18 +45,20 @@
         "half_arrow": {"x": 8, "y": 2},
         "hull": {"x": 9, "y": 2},
         "hook": {"x": 10, "y": 2},
+        "breaking_wave": {"x": 11, "y": 2},
 
         "crescent": {"x": 0, "y": 3},
         "negative_disk": {"x": 1, "y": 3},
         "concave_corner": {"x": 2, "y": 3},
         "trapezoid": {"x": 3, "y": 3},
-        "wedge": {"x": 4, "y": 3},
+        "plus": {"x": 4, "y": 3},
         "film": {"x": 5, "y": 3},
         "diamond": {"x": 6, "y": 3},
         "heart": {"x": 7, "y": 3},
         "half_heart": {"x": 8, "y": 3},
         "shield": {"x": 9, "y": 3},
         "half_shield": {"x": 10, "y": 3},
+        "fin": {"x": 11, "y": 3},
 
         "eye": {"x": 0, "y": 4},
         "coin": {"x": 1, "y": 4},
@@ -66,6 +71,7 @@
         "cloud": {"x": 8, "y": 4},
         "keyhole": {"x": 9, "y": 4},
         "half_disk": {"x": 10, "y": 4},
+        "wheel": {"x": 11, "y": 4},
 
         "straight":        {"x": 0, "y": 5},
         "end":             {"x": 1, "y": 5},
@@ -78,6 +84,7 @@
         "castle":          {"x": 8, "y": 5},
         "tower":           {"x": 9, "y": 5},
         "tent":            {"x": 10, "y": 5},
+        "gem":             {"x": 11, "y": 5},
 
         "track":                 {"x": 0, "y": 6},
         "track_end":             {"x": 1, "y": 6},
@@ -94,12 +101,15 @@
         "rocket":          {"x": 0, "y": 7},
         "airplane":        {"x": 1, "y": 7},
         "car":             {"x": 2, "y": 7},
-        "yacht":           {"x": 5, "y": 7},
-        "ship":            {"x": 6, "y": 7},
+        "starfighter":     {"x": 3, "y": 7},
+        "jetfighter":      {"x": 4, "y": 7},
+        "sloop":           {"x": 5, "y": 7},
+        "galleon":         {"x": 6, "y": 7},
         "motorboat":       {"x": 7, "y": 7},
         "submarine":       {"x": 8, "y": 7},
         "racecar":         {"x": 9, "y": 7},
         "tractor":         {"x": 10, "y": 7},
+        "balloon":         {"x": 11, "y": 7},
         
         "meeple":          {"x": 0, "y": 8},
         "fish":            {"x": 1, "y": 8},
@@ -112,6 +122,7 @@
         "rabbit":          {"x": 8, "y": 8},
         "lion":            {"x": 9, "y": 8},
         "dog":             {"x": 10, "y": 8},
+        "cat":             {"x": 11, "y": 8},
 
         "chess_rook":      {"x": 0, "y": 9},
         "chess_knight":    {"x": 1, "y": 9},
@@ -123,7 +134,8 @@
         "anchor":          {"x": 7, "y": 9},
         "teapot":          {"x": 8, "y": 9},
         "detailed_sloop":  {"x": 9, "y": 9},
-        "detailed_ship":   {"x": 10, "y": 9},
+        "detailed_galleon":{"x": 10, "y": 9},
+        "celtic_knot":     {"x": 11, "y": 9},
 
         "checkerboard":    {"x": 0, "y": 10},
         "stripes":         {"x": 1, "y": 10},
@@ -136,6 +148,7 @@
         "brick":           {"x": 8, "y": 10},
         "diagonal_brick":  {"x": 9, "y": 10},
         "tread":           {"x": 10, "y": 10},
+        "cobblestone":     {"x": 11, "y": 10},
 
         "fir_tree":        {"x": 0, "y": 11},
         "bare_tree":       {"x": 1, "y": 11},
@@ -145,6 +158,8 @@
         "cherry":          {"x": 5, "y": 11},
         "banana":          {"x": 6, "y": 11},
         "carrot":          {"x": 7, "y": 11},
+        "mushroom":        {"x": 8, "y": 11},
+        "flask":           {"x": 11, "y": 11}
 
         "flying_dragon":   {"x": 0, "y": 12},
         "dragon":          {"x": 1, "y": 12},
@@ -152,7 +167,12 @@
         "butterfly":       {"x": 3, "y": 12},
         "rearing_horse":   {"x": 4, "y": 12},
         "detailed_fish":   {"x": 5, "y": 12},
-        "dolphin":         {"x": 6, "y": 12}
+        "dolphin":         {"x": 6, "y": 12},
+        "bee":             {"x": 7, "y": 12},
+        "hawk":            {"x": 8, "y": 12},
+        "hawk_attack":     {"x": 9, "y": 12},
+        "lizzard":         {"x": 11, "y": 12},
+        "microscope":      {"x": 11, "y": 12}
 },
     "license": "By Morgan McGuire 2020, released into the Public Domain/CC0"
 }

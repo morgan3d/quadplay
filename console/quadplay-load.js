@@ -728,7 +728,7 @@ function loadFont(name, json, jsonURL) {
 function computeResourceStats(gameSource) {
     const alreadyCounted = new Map();
     for (let key in gameSource.assets) {
-        if (key[0] !== '_') {
+        if (key[0] !== '$') {
             const asset = gameSource.assets[key];
             if (! alreadyCounted.has(asset)) {
                 alreadyCounted.set(asset, true);

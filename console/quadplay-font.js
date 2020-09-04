@@ -158,7 +158,7 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
     // Maps characters to tight bounding boxes in the srcMask
     let bounds = {};
 
-    font._spacing = spacing;
+    font.spacing = spacing;
     font._borderSize = borderSize;
     font._shadowSize = shadowSize;
 
@@ -230,6 +230,7 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
     // bitmap, including padding for individual fonts.
     _charWidth += 2 * borderSize;
     font._charHeight = (tightY2 - tightY1 + 1) + 2 * borderSize + shadowSize;
+    font.glyph_size = {x: font._charWidth - 2 * borderSize, y: font._charHeight - 2 * borderSize - shadowSize};
     
     // Baseline is the distance from the top of each box to
     // the text baseline.  Adjust the baseline for the new

@@ -510,7 +510,8 @@ div.disabled span.label, div.disabled:active span.label {
 }
 
 .WideIDEUI #editorFrame {
-    left: 0px;
+    /* Reserve space for the rollout */
+    left: 5px;
     /* Sized for large screens */
     right: 769px;
 }
@@ -691,7 +692,7 @@ code, .code {
     height: 100%;
 }
 
-.project {
+.project, .WideIDEUI .project:hover {
     position: absolute;
     top: 0px;
     left: 0px;
@@ -702,11 +703,38 @@ code, .code {
     overflow: hidden;
     /* Prevent breaking between bullet and text when inheritted */
     white-space: nowrap;
+    padding-left: 0px;
 }
 
+/* Animate transitions of the project panel in WideIDE mode */
 .WideIDEUI .project {
-    width: 140px;
+    /* Slide in and out */
+    transition: 0.2s;
+    transition-timing-function: width ease-in-out;
+
+    /* Rise over the rest of the IDE when in wide mode */
+    z-index: 11;
 }
+
+/* Look like a bar when not rolled out */
+.WideIDEUI .project:not(:hover) {
+    width: 5px;
+    background: #888;
+    cursor: ew-resize;
+}
+
+/* Hide the contents when not rolled out */
+.WideIDEUI .project:not(:hover) .hideScrollBars {
+    visibility: hidden;
+}
+
+/* Drop shadow when rolled out */
+.WideIDEUI .project:hover {
+    box-shadow:
+      0px 0px 1px #000,
+      0px 3px 10px rgba(0,0,0,55%)
+}
+    
 
 .project li {
     /* Make selections actually span the content */

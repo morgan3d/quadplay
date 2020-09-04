@@ -753,7 +753,7 @@ function $executeTXT(cmd) {
 
     let x = cmd.x, y = cmd.y;
 
-    if ((font._spacing.x === 0) && (outline & 0xF000) && (color & 0xF000)) {
+    if ((font.spacing.x === 0) && (outline & 0xF000) && (color & 0xF000)) {
         // Script font with outline and color. Draw in two passes so that
         // the connectors are not broken by outlines.
         

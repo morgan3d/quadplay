@@ -129,8 +129,8 @@
                          {x:s, y:2 * s}, srcMask);
 
                 if (font._charHeight < 12) {
-                    font._spacing.y = 2;
-                    font._spacing.x = 1;
+                    font.spacing.y = 2;
+                    font.spacing.x = 1;
                 }
                 console.dir(font);
                 {
@@ -255,7 +255,7 @@ span.height${maxHeight} { background: #ff4; padding: 0 1px; color: #000}
     "url":           "somefile.png",
     "license":       "by somebody",
     "char_size":      {"x": ${destImageData.width / FONT_COLS}, "y": ${destImageData.height / FONT_ROWS}},
-    "letter_spacing": {"x": ${font._spacing.x}, "y": ${font._spacing.y}},
+    "letter_spacing": {"x": ${font.spacing.x}, "y": ${font.spacing.y}},
     "baseline":      ${baseline}
 }
 `;

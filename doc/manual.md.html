@@ -1842,9 +1842,10 @@ Random Values
 `random_sign(random default random)`
 : Returns +1 or -1 with equal probability.
 
-`random_truncated_gaussian(mean, stddev, radius, random default random)`
+`random_truncated_gaussian(mean, stddev, radius default (2 * stddev), random default random)`
 : Returns a Gaussian distributed random number within `radius` of
-  the mean. See also `random_gaussian()`.
+  the mean. The default radius corresponds to about 96% of the total probability
+  of the distribution and avoids very long tails. See also `random_gaussian()`.
 
 `set_random_seed(seed default local_time().millisecond)`
 : Reset the default random number generator, `random()`, using an optional seed.
@@ -2574,8 +2575,7 @@ The screen space graphics coordinate system is:
 - z increasing from -2047 at the back to 2048 at the front
 
 Integer coordinates correspond to the top-left corner of a pixel.
-Pixel centers are therefore at integers plus ½ and the top-left 
-pixel center s (½, ½).
+Pixel centers are at integers plus ½. The top-left pixel center is (½, ½).
 
 Drawing commands sample at pixel centers. The pixel ownership rules
 are bottom and right, so a primitive that has a top or left boundary
@@ -3684,6 +3684,9 @@ endpoints and borders.
   of the result is always the sprite's original alpha value. Useful for simulating lighting,
   turning a sprite into a shadow silhouette, or flashing a sprite a different color
   to indicate hits or invincibility.
+  
+  The `pivot` is in the sprite's coordinate system relative to its center, so it is 
+  affected by the `angle` and `scale`.
 
 `draw_sprite_corner_rect(sprite, corner, size, z default 0)`
 : Draw a rectangle enclosing points `corner` and `corner+size`
@@ -3873,6 +3876,19 @@ Font assets have the following properties:
    characters may exceed the spacing because they have especially high
    accents or ascenders or low hooks and descenders.
 
+`font.spacing`
+: `xy()` spacing between characters vertically and horizontally.
+
+`font.glyph_size`
+: `xy()` width and height that will bound all characters in this font, 
+  not including border or shadow. The `font.char_size.y` is usually
+  less than `font.line_height`, which only considers the typically highest
+  and lowest characters in English.
+
+
+Good bounds for centered text are `xy(text_width(font, text), font.line_height)`.
+Some accents or descenders for exceptional cases
+may stick out of these bounds vertically. 
 
 
 ### Post Effects
@@ -7796,6 +7812,7 @@ Changes for both the specification and implementation in each release.
 - Added 320x180 support for targeting Switch, PiBoy, 720p, 1080p, and 1440p
 - Added support for TileKit
 - Added optional stick index argument to `device_control("get_analog_axes", ...)`
+- Added `font.spacing` and `font.glyph_size`
 - Packed `suchet-12` font characters more tightly to conserve memory
 - Optimized rendering of successive rectangles using the same `z` value
 - Optimized the 2D `noise()` function variant (now runs in 3/4 the time)
@@ -7813,6 +7830,7 @@ Changes for both the specification and implementation in each release.
   an asterisk
 - `sequence()` now accepts bare numbers indicating frames to skip
 - `sequence()` now supports an `end_callback`
+- Made the default radius for `random_truncated_gaussian()` 2.5 standard deviations
 - Changed the `region` of a sprite JSON file to take `"corner"` instead of `"pos"`
   (the old version is accepted as a synonym for backwards compatibility at the moment)
 - The sprite viewer in the IDE now autoscales for tall sprites
@@ -7825,6 +7843,7 @@ Changes for both the specification and implementation in each release.
 - IDE can now change the order of execution of scripts
 - IDE can now remove scripts (removed scripts are not deleted on disk)
 - IDE can now rename scripts
+- IDE project window now rolls out on hover in debug mode
 - `gamepad_array[]` elements now print as their name instead of properties
 - Increased the contrast of the text in ghost mode
 - Reordered quick links on the top of the manual

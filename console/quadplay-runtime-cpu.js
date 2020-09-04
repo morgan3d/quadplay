@@ -4384,6 +4384,9 @@ function draw_point(pos, color, z) {
 
 function text_width(font, str, markup) {
     if (str === '') { return 0; }
+    if (font === undefined || font._type !== 'font') {
+        $error('The first argument to text_width() must be a font.');
+    }
     if (str === undefined) {
         $error('text_width() requires a valid string as the second argument');
     }
@@ -4394,7 +4397,7 @@ function text_width(font, str, markup) {
     }
 
     // Don't add space after the last letter
-    let width = -font._spacing.x;
+    let width = -font.spacing.x;
     
     // Add the variable widths of the letters. Don't count the border
     // against the letter width.
@@ -4586,10 +4589,10 @@ function $parseMarkup(str, stateChanges) {
 
 // Used for font rendering. Returns the font spacing, unless it is zero. In the zero case, the function
 // tests for symbols (which include superscripts and subscripts, as well as the space character) that
-// require spacing around them even if the font specifies font._spacing.x === 0.
+// require spacing around them even if the font specifies font.spacing.x === 0.
 function $postGlyphSpace(str, i, font) {
-    if (font._spacing.x !== 0 || i >= str.length) {
-        return font._spacing.x;
+    if (font.spacing.x !== 0 || i >= str.length) {
+        return font.spacing.x;
     } else {
         const symbolRegex = /[^A-Za-z0-9_αβγδεζηθικλμνξ§πρστυϕχψωςşğÆÀÁÂÃÄÅÇÈÉÊËÌÍÎÏØÒÓÔÕÖŒÑẞÙÚÛÜБДæàáâãäåçèéêëìíîïøòóôõöœñßùúûüбгдЖЗИЙЛПЦЧШЩЭЮЯЪЫЬжзийлпцчшщэюяъыьΓΔмнкΘΛΞΠİΣℵΦΨΩŞĞ]/;
         // test() will not fail on undefined or NaN, so ok to not safeguard the string conversions
@@ -4642,7 +4645,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
                                           x_align, y_align, z, wrap_width, text_size - cur.length, referenceFont);
             firstLineBounds.x = $Math.max(firstLineBounds.x, restBounds.x);
             if (restBounds.y > 0) {
-                firstLineBounds.y += referenceFont._spacing.y + restBounds.y;
+                firstLineBounds.y += referenceFont.spacing.y + restBounds.y;
             }
             return firstLineBounds;
         }
@@ -4655,7 +4658,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
         width += delta;
 
         // Word wrapping
-        if ((wrap_width !== undefined) && (wrap_width > 0) && (width > wrap_width - format.font._spacing.x)) {
+        if ((wrap_width !== undefined) && (wrap_width > 0) && (width > wrap_width - format.font.spacing.x)) {
             // Perform word wrap, we've exceeded the available width
             // Search backwards for a place to break.
             const breakChars = ' \n\t,.!:/\\)]}\'"|`-+=*…\?¿¡';
@@ -4693,7 +4696,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
                                           x_align, y_align, z, wrap_width, text_size - cur.length - (next.length - nnext.length), referenceFont);
             firstLineBounds.x = $Math.max(firstLineBounds.x, restBounds.x);
             if (restBounds.y > 0) {
-                firstLineBounds.y += referenceFont._spacing.y + restBounds.y;
+                firstLineBounds.y += referenceFont.spacing.y + restBounds.y;
             }
             return firstLineBounds;
         }
@@ -4711,8 +4714,8 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
     }
 
     // Don't add space after the very last letter
-    width -= format.font._spacing.x;
-    format.width -= format.font._spacing.x;
+    width -= format.font.spacing.x;
+    format.width -= format.font.spacing.x;
 
     z = z || 0;
     const skx = (z * $skewXZ), sky = (z * $skewYZ);
@@ -5133,6 +5136,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
     z = (z || 0) - $camera.z;
     angle = angle || 0;
 
+    pivot = pivot || spr.pivot;
     pos = $maybeApplyPivot(pos, pivot, angle, scale);
 
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
@@ -5999,6 +6003,7 @@ function any_button_release(gamepad) {
 
 function random_truncated_gaussian(mean, std, radius, rng) {
     rng = rng || random;
+    if (radius === undefined) { radius = 2.5 * std; }
     var g = 0;
     do {
         g = random_gaussian(mean, std, rng);
@@ -7675,7 +7680,7 @@ function lerp(a, b, t, t_min, t_max) {
     }
     
     // Test if these are numbers quickly using the presence of the toFixed method
-    if (! t.toFixed) { $error("The third argument to lerp must be a number"); }
+    if (t === undefined || ! t.toFixed) { $error("The third argument to lerp must be a number"); }
     if (a.toFixed && b.toFixed) {
         return a + (b - a) * t;
     } else {
