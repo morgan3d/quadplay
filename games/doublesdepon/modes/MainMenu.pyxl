@@ -1,0 +1,72 @@
+MainMenu
+════════════════════════════════════════════════════════════════════════
+
+const logoPos = xy(SCREEN_SIZE.x / 2 + 2, SCREEN_SIZE.y / 2 - 32)
+
+def GoToControllerOrder():
+    if get_mode() == ControllerOrder:
+        return
+    push_mode(ControllerOrder)
+
+set_pause_menu(
+    {text: "Controller Order", callback: GoToControllerOrder},
+    {text: "Reset Hi Scores", callback: ResetHiScores, confirm: true})
+
+const iconOffsets = [
+    [-1, 12, 13, 11, 14, 15],
+    [-1, -1, 10, 11, 10],
+    [-1, -1, -1, -1, -1, 10, 11, 16, 17],
+    [12, 13, 11, 10],
+    [-1, -1, 12, 13, 11, 16, 17],
+]
+
+const iconPixelOffsets = [
+    0,
+    0,
+    -1,
+    2,
+    0,
+]
+
+def MainMenuItemCallback(mode, index, arg):
+    if mode == MenuItemCallbackMode.MEASURE:
+        return arg + 4
+    else if mode == MenuItemCallbackMode.DRAW:
+        const workPos = clone(arg) + xy(iconPixelOffsets[index], 0)
+        const v = iconOffsets[index]
+        for offset in v:
+            if offset >= 0:
+                draw_sprite(menuBackdrop_sprite[0][offset], workPos, 
+                        0, nil, 1, ZLayers.OVER)
+            workPos.x += 8
+
+const menu = Menu(["DOUBLES", "SINGLES", "SOLO", "CANADIAN", "COSOLO"], 0, MainMenuItemCallback)
+const menuPos = xy(
+        SCREEN_SIZE.x / 2 - MenuGetPixelSize(menu).x / 2, 118)
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+set_background(gray(0.18))
+g_lastWinSide = nil
+
+frame
+────────────────────────────────────────────────────────────────────────
+GlobalsStep()
+
+DrawWallpaper()
+
+draw_sprite(logo_sprite[0][0], logoPos)
+draw_sprite(logoWaves_sprite[floor((mode_frames mod 48) / 2)][0], logoPos)
+
+
+MenuDraw(menu, menuPos)
+// do not track input on the first frame as restarting from the system
+// menu will reset joystate in Input.pyxl and register the button press as
+// a new press
+if mode_frames:
+    for i < 4:
+        if MenuStep(menu, i) == 1:
+            g_gameMode = MenuGetIndex(menu)
+            set_mode(SelectMenu)
+

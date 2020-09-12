@@ -1,0 +1,67 @@
+def LinkedPool(size_, createFnc_, ...createArgs):
+    const pool = {
+        store : [],
+        unused : nil,
+        first : nil,
+        last : nil,
+    }
+
+    let prev = nil
+    for i < size_:
+        const entry = push(pool.store, createFnc_(...createArgs))
+        entry.next_ = nil
+        entry.prev_ = prev
+        if prev:
+            prev.next_ = entry
+        prev = entry
+
+    pool.unused = pool.store[0]
+
+    return pool
+
+def LinkedPoolAppend(pool):
+
+    const entry = pool.unused
+    pool.unused = entry.next_
+    entry.next_ = nil
+
+    if pool.last:
+        pool.last.next_ = entry
+    entry.prev_ = pool.last
+
+    pool.last = entry
+
+    if not pool.first:
+        pool.first = entry
+
+    return entry
+
+def LinkedPoolRemove(pool, entry):
+
+    // we are not the pool first
+    if entry.prev_:
+        entry.prev_.next_ = entry.next_
+    else:
+        pool.first = entry.next_
+
+    // not the pool last
+    if entry.next_:
+        entry.next_.prev_ = entry.prev_
+    else:
+        pool.last = entry.prev_
+
+    entry.prev_ = nil
+
+    entry.next_ = pool.unused
+    pool.unused.prev_ = entry
+    pool.unused = entry
+
+def LinkedPoolDestroy(pool):
+    for entry in pool.store:
+        entry.prev_ = nil
+        entry.next_ = nil
+
+    remove_all(pool.store)
+    pool.first = nil
+    pool.last = nil
+    pool.unused = nil

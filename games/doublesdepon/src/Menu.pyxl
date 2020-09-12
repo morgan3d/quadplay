@@ -1,0 +1,160 @@
+
+
+const MenuBackdropFrames = {
+    NW : 0,
+    N : 1,
+    NE : 2,
+    W : 3,
+    SE : 4,
+    S : 5,
+    SW : 6,
+    E : 7,
+    C : 8,
+    CURSOR : 9,
+    // TODO, remainder
+}
+
+const MenuBackdropCenterColor = get_sprite_pixel_color(
+        menuBackdrop_sprite[0][MenuBackdropFrames.C], xy(0, 0))
+
+def MenuBackdropDraw(pos, tileWidth, tileHeight, z = 0, a = 1):
+    const F = MenuBackdropFrames
+
+    draw_sprite(menuBackdrop_sprite[0][F.NW], pos,
+             0, nil, a, z)
+
+    draw_sprite(menuBackdrop_sprite[0][F.NE],
+            pos + xy(8 * (tileWidth - 1), 0), 0, nil, a, z)
+
+    draw_sprite(menuBackdrop_sprite[0][F.SW], pos + xy(0, 8 * (tileHeight - 1)),
+             0, nil, a, z)
+
+    draw_sprite(menuBackdrop_sprite[0][F.SE],
+            pos + xy(8 * (tileWidth - 1), 8 * (tileHeight - 1)), 0, nil, a, z)
+
+    local:
+        const workPos = pos + xy(8, 0)
+        const workPos2 = workPos + xy(0, 8 * (tileHeight - 1))
+        for x < tileWidth - 2:
+            draw_sprite(menuBackdrop_sprite[0][F.N], workPos,
+                    0, nil, a, z)
+
+            for y < tileHeight - 2:
+                draw_sprite(menuBackdrop_sprite[0][F.C],
+                        workPos + xy(0, (y + 1) * 8), 0, nil, a, z)
+
+            workPos.x += 8
+            draw_sprite(menuBackdrop_sprite[0][F.S], workPos2,
+                    0, nil, a, z)
+            workPos2.x += 8
+
+
+
+
+
+    local:
+        const workPos = pos + xy(0, 8)
+        const workPos2 = workPos + xy(8 * (tileWidth - 1), 0)
+        for x < tileHeight - 2:
+            draw_sprite(menuBackdrop_sprite[0][F.E], workPos,
+                    0, nil, a, z)
+            workPos.y += 8
+            draw_sprite(menuBackdrop_sprite[0][F.W], workPos2,
+                    0, nil, a, z)
+            workPos2.y += 8
+
+    //let c = MenuBackdropCenterColor
+    //if a != 1:
+    //    c = clone(c)
+    //    c.a = a
+    //draw_rect(pos + xy(tileWidth * 4, tileHeight * 4),
+    //        xy((tileWidth - 2) * 8, (tileHeight - 2) * 8),
+    //                c, nil, 0, z)
+
+
+// TODO, optional tile padding
+
+const MenuItemCallbackMode = {
+    MEASURE : "MEASURE",
+    DRAW : "DRAW",
+}
+
+def Menu(labelNames_, selectedIndex_ = 0, itemCallback_ = nil):
+    const menu = {
+        labelNames : labelNames_,
+        selectedIndex : selectedIndex_,
+        itemCallback : itemCallback_,
+    }
+
+    let maxLength = 0
+    for labelName at i in labelNames_:
+        let tileWidth = size(labelName)
+        if itemCallback_:
+            tileWidth = itemCallback_(
+                    MenuItemCallbackMode.MEASURE, i, tileWidth)
+
+        maxLength = max(tileWidth, maxLength)
+
+    menu.maxLabelLength = maxLength
+
+    return menu
+
+def MenuGetTileSize(menu):
+    return xy(menu.maxLabelLength + 4, size(menu.labelNames) * 2 + 1)
+
+def MenuGetPixelSize(menu):
+    return MenuGetTileSize(menu) * xy(8, 8)
+
+def MenuDraw(menu, pos, z = 0, onlySelected = false):
+    const tileSize = MenuGetTileSize(menu)
+    MenuBackdropDraw(pos, tileSize.x, tileSize.y, z, if onlySelected then 0.75 else 1)
+
+    const workPos = pos + xy(16, 8)
+    let i = 0
+    for labelName in menu.labelNames:
+        
+        if not onlySelected or i == menu.selectedIndex:
+            const nextPos = DrawStandardText(workPos, labelName, z)
+            if menu.itemCallback:
+                menu.itemCallback(MenuItemCallbackMode.DRAW, i, nextPos)
+
+        if not onlySelected and i == menu.selectedIndex:
+            draw_sprite(menuBackdrop_sprite[0][MenuBackdropFrames.CURSOR],
+                    workPos - xy(8, 0), 0, nil, 1, z)
+        ++i
+
+        workPos.y += 16
+
+def MenuStep(menu, joyIdx):
+    if menu.selectedIndex and JoyNewPress(joyIdx, JoyStateKeys.UP):
+        --menu.selectedIndex
+        play_sound(cursor_sound)
+    else if (menu.selectedIndex < size(menu.labelNames) - 1
+            and JoyNewPress(joyIdx, JoyStateKeys.DOWN)):
+        ++menu.selectedIndex
+        play_sound(cursor_sound)
+    else if JoyNewPress(joyIdx, JoyStateKeys.YES):
+        play_sound(swap_sound)
+        return 1
+    else if JoyNewPress(joyIdx, JoyStateKeys.NO):
+        return -1
+
+    return nil
+
+def MenuGetIndex(menu):
+    return menu.selectedIndex
+
+def MenuSetIndex(menu, idx):
+    menu.selectedIndex = idx
+
+
+
+MenuStep.Cancel = -1
+
+
+
+
+
+
+
+

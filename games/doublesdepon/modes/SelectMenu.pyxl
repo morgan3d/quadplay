@@ -1,0 +1,355 @@
+SelectMenu
+════════════════════════════════════════════════════════════════════════
+
+
+
+
+def DrawPlayerBadge(pos, idx, blackWhite, redBlue, opacity default 1):
+    draw_sprite({
+        sprite: selectCursors_sprite[2 + idx * 2 + blackWhite][0],
+        pos: pos,
+        z: 1,
+        opacity: opacity,
+        })
+
+    if redBlue == nil:
+        return
+
+    draw_rect({
+        pos: pos - xy(0, 10),
+        size: xy(7, 4),
+        color: (if redBlue then Palette.BLUE.MID else Palette.RED.MID),
+        outline: (if redBlue then Palette.BLUE.DARK else Palette.RED.DARK),
+        })
+
+
+const levelY = 172
+const levelHeight = 32
+
+
+
+def DrawLevelSelect(pos, index, dim, pal):
+    draw_rect(pos + dim / 2, dim, pal.MID, pal.DARK)
+    draw_rect(pos + dim / 2 + xy(-2, 4), xy(43, 4), gray(0))
+
+    LevelThermometerDraw(LevelThermometer(pos + dim / 2 - xy(25, 10), index, 0))
+
+
+let readyCount = nil
+
+/*
+const TOP_ROW = [
+    {
+        name : "JOLIET",
+        pal : PaletteList[0],
+    },
+    {
+        name : "OMAHA",
+        pal : PaletteList[1],
+    },
+    {
+        name : "WICHITA",
+        pal : PaletteList[2],
+    },
+    {
+        name : "AKRON",
+        pal : PaletteList[3],
+    },
+]
+
+const BOT_ROW = [
+    {
+        name : "DAYTON",
+        pal : PaletteList[4],
+    },
+    {
+        name : "MUNCIE",
+        pal : PaletteList[5],
+    },
+    {
+        name : "PEORIA",
+        pal : PaletteList[6],
+    },
+    {
+        name : "GARY",
+        pal : PaletteList[7],
+    },
+]
+*/
+
+
+
+
+const LEFT = 40
+const SPACING = 86
+const TOP = 30
+const BOT = 106
+
+const menuDepths = []
+
+def TotalMenuDepths():
+    let total = 0
+    for v in menuDepths:
+        total += v
+    return total
+
+def PlayCommitSound():
+    SfxPop(TotalMenuDepths())
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+remove_all(menuDepths)
+for i < size(GameConfigs[g_gameMode].cursors):
+    push(menuDepths, 0)
+
+
+readyCount = nil
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+GlobalsStep()
+DrawWallpaper()
+
+const config = GameConfigs[g_gameMode]
+
+draw_text({
+    font: name_font,
+    text: config.label,
+    pos: xy(4, 8),
+    color: gray(0.5),
+})
+
+
+
+for i < 4:
+    const entry1 = Characters[i]
+    DrawPortait(xy(LEFT + i * SPACING, TOP), entry1.name, entry1.pal, i)
+
+    const entry2 = Characters[i + 4]
+    DrawPortait(xy(LEFT + i * SPACING, BOT), entry2.name, entry2.pal, i + 4)
+
+
+
+for joyIdx in config.cursors:
+
+
+    const menuDepth = menuDepths[joyIdx]
+
+    const animOffset = (
+            if menuDepth == 0 and (mode_frames + joyIdx * 8) mod 32 > 15 then 1
+            else 0)
+
+    if readyCount == nil:
+        if menuDepth == 0:
+            if (JoyNewPress(joyIdx, JoyStateKeys.UP)
+                    or JoyNewPress(joyIdx, JoyStateKeys.DOWN)):
+                if SelectedCharacters[joyIdx] > 3:
+                    SelectedCharacters[joyIdx] -= 4
+                else:
+                    SelectedCharacters[joyIdx] += 4
+                play_sound(cursor_sound)
+            else if JoyNewPress(joyIdx, JoyStateKeys.LEFT):
+                if SelectedCharacters[joyIdx] == 0:
+                    SelectedCharacters[joyIdx] = 7
+                else:
+                    SelectedCharacters[joyIdx] -= 1
+                play_sound(cursor_sound)
+            else if JoyNewPress(joyIdx, JoyStateKeys.RIGHT):
+                SelectedCharacters[joyIdx] = (SelectedCharacters[joyIdx] + 1) mod 8
+                play_sound(cursor_sound)
+            else if JoyNewPress(joyIdx, JoyStateKeys.YES):
+                ++menuDepths[joyIdx]
+                PlayCommitSound()
+
+            if JoyNewPress(joyIdx, JoyStateKeys.NO):
+                let goBack = true
+                for menuDepth in menuDepths:
+                    if menuDepth:
+                        goBack = false
+                        break
+                if goBack:
+                    set_mode(MainMenu)
+                    PlayCommitSound()
+
+        else if menuDepth == 1:
+            const levelIdx = if joyIdx >= size(config.joyIdxs[0]) then 1 else 0
+
+            if JoyNewPress(joyIdx, JoyStateKeys.NO):
+                --menuDepths[joyIdx]
+                PlayCommitSound()
+
+            if JoyNewPress(joyIdx, JoyStateKeys.YES):
+                ++menuDepths[joyIdx]
+                PlayCommitSound()
+
+            if JoyNewPress(joyIdx, JoyStateKeys.LEFT):
+                Level[levelIdx] = max(0, Level[levelIdx] - 1)
+                play_sound(cursor_sound)
+
+            if JoyNewPress(joyIdx, JoyStateKeys.RIGHT):
+                Level[levelIdx] = min(9, Level[levelIdx] + 1)
+                play_sound(cursor_sound)
+
+
+
+
+        else if menuDepth == 2:
+            if JoyNewPress(joyIdx, JoyStateKeys.NO):
+                --menuDepths[joyIdx]
+                PlayCommitSound()
+
+
+    const charIdx = SelectedCharacters[joyIdx]
+
+    const pos = xy(
+        LEFT + SPACING * (charIdx mod 4),
+        if charIdx > 3 then BOT else TOP
+    )
+
+    const colorOffset = if size(config.cursors) < 2 then 0 else (joyIdx mod 2)
+
+    let whichTeam = nil
+
+    if size(config.joyIdxs) > 1:
+        whichTeam = if joyIdx >= size(config.joyIdxs[0]) then true else false
+
+    if menuDepth == 0:
+        draw_sprite({
+            sprite: selectCursors_sprite[0 + colorOffset][0],
+            pos : pos - xy(4, 0) + xy(-animOffset, -animOffset),
+            z : animOffset + 1,
+        })
+
+        draw_sprite({
+            sprite: selectCursors_sprite[0 + colorOffset][0],
+            pos: pos + xy(44, 0) + xy(animOffset, -animOffset),
+            scale: xy(-1, 1),
+            z : animOffset + 1,
+        })
+
+        draw_sprite({
+            sprite: selectCursors_sprite[0 + colorOffset][0],
+            pos: pos + xy(-4, 56) + xy(-animOffset, -animOffset),
+            scale: xy(1, -1),
+            z : animOffset + 1,
+        })
+
+        draw_sprite({
+            sprite: selectCursors_sprite[0 + colorOffset][0],
+            pos: pos + xy(44, 56) + xy(animOffset, -animOffset),
+            scale: xy(-1, -1),
+            z : animOffset + 1,
+        })
+
+
+    DrawPlayerBadge(pos + xy(5 + joyIdx * 10, -4 - animOffset * 2), joyIdx, colorOffset,
+            whichTeam, if menuDepth > 0 then 7/15.0 else 1)
+
+    const readyBadgePos = xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y - 7) + xy(if whichTeam then 18 else -20, 0)
+
+
+    if size(config.joyIdxs[0]) > 1:
+        if whichTeam:
+            if joyIdx == 3:
+                readyBadgePos.x += 9
+        else:
+            if joyIdx == 0:
+                readyBadgePos.x -= 9
+
+    draw_sprite({
+        sprite: selectCursors_sprite[14][0],
+        pos: readyBadgePos,
+        opacity: 7/15.0,
+    })
+
+    if menuDepth == 1:
+        const animOffset = (if (menuDepth == 1 and mode_frames + joyIdx * 8) mod 32 > 15 then 1
+                else 0)
+
+        const pos = xy(0 + 8, levelY + 12 + animOffset * 2)
+        
+
+        if joyIdx >= size(config.joyIdxs[0]):
+            pos.x += SCREEN_SIZE.x / 2
+
+        pos.x += (joyIdx mod size(config.joyIdxs[0])) * 10
+
+        DrawPlayerBadge(pos, joyIdx, colorOffset, whichTeam)
+
+
+
+    if menuDepth > 1:
+        if readyCount == nil or (mode_frames mod 8) > 3:
+            DrawPlayerBadge(readyBadgePos, joyIdx, colorOffset)
+
+
+draw_corner_rect({
+    corner: xy(-1, levelY - 1),
+    size: xy(SCREEN_SIZE.x + 1, levelHeight + 2),
+    color: rgba(0, 0, 0, 7/15.0),
+    outline: gray(0.25),
+})
+
+
+if size(menuDepths) == 1:
+    if menuDepths[0]:
+        DrawLevelSelect(xy(0, levelY), 0, xy(SCREEN_SIZE.x, levelHeight) , Palette.RED)
+else:
+    let drawLeft = false
+    let drawRight = false
+    for depth at i in menuDepths:
+        if depth:
+            // XXX, using i assumes they are in order (which is true for now)
+            if i >= size(config.joyIdxs[0]):
+                drawRight = true
+            else:
+                drawLeft = true
+
+    if drawLeft:
+
+        DrawLevelSelect(xy(0, levelY), 0, xy(SCREEN_SIZE.x / size(config.joyIdxs),
+                levelHeight) , Palette.RED)
+
+    if drawRight:
+        DrawLevelSelect(xy(SCREEN_SIZE.x / 2, levelY), 1,
+                xy(SCREEN_SIZE.x / 2, levelHeight) , Palette.BLUE)
+
+
+draw_text({
+        font: name_font,
+        text: "READY",
+        pos: xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y - 10),
+        color: (if readyCount == nil or (mode_frames mod 8) > 3 then gray(0.35) else gray(1)),
+        x_align: "center",
+        y_align: "center",
+        shadow: gray(0),
+    })
+
+
+if readyCount == nil:
+    let ready = true
+    for menuDepth in menuDepths:
+        if menuDepth < 2:
+            ready = false
+            break
+
+    if REQUIRE_ONLY_ONE_COMMIT:
+        for menuDepth in menuDepths:
+            if menuDepth >= 2:
+                ready = true
+
+
+    if ready:
+        readyCount = 60
+else:
+    --readyCount
+    if readyCount <= 0:
+        set_mode(GameStart)
+
+
+
+
+

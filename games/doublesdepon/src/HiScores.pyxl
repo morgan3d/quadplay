@@ -1,0 +1,122 @@
+
+const HiScoreColumnPositions = {
+    LEVEL: 1,
+    TIME: 29,
+    SCORE: 60,
+}
+
+
+const HiScoresWidth = 120
+
+def DrawScores(pos_, label, values, activeIdx):
+    const pos = clone(pos_)
+    draw_text({
+        font: name_font,
+        text: label,
+        pos: pos,
+        color: gray(1),
+        x_align: "left",
+        y_align: "bottom",
+        shadow: gray(0),
+    })
+
+
+    draw_corner_rect(pos + xy(-1, 1), xy(HiScoresWidth, 9), Palette.WHITE.MID, gray(0))
+
+    draw_text({
+        font: smallLabel_font,
+        text: "LEVEL",
+        pos: pos + xy(HiScoreColumnPositions.LEVEL, 2),
+        color: gray(0),
+        x_align: "left",
+        y_align: "top",
+    })
+
+    draw_text({
+        font: smallLabel_font,
+        text: "TIME",
+        pos: pos + xy(HiScoreColumnPositions.TIME, 2),
+        color: gray(0),
+        x_align: "left",
+        y_align: "top",
+    })
+
+
+    draw_text({
+        font: smallLabel_font,
+        text: "SCORE",
+        pos: pos + xy(HiScoreColumnPositions.SCORE, 2),
+        color: gray(0),
+        x_align: "left",
+        y_align: "top",
+    })
+
+
+    preserving_transform:
+        set_transform({z: 1})
+        const fullY = 8 + 13 * size(values)
+        draw_line(pos + xy(HiScoreColumnPositions.TIME - 2, 1),
+                pos + xy(HiScoreColumnPositions.TIME - 2, fullY), gray(0))
+        draw_line(pos + xy(HiScoreColumnPositions.SCORE - 2, 1),
+                pos + xy(HiScoreColumnPositions.SCORE - 2, fullY), gray(0))
+
+
+    pos.y += 8
+    for entry at levelIdx in values:
+        draw_corner_rect(pos + xy(-1, 1), xy(HiScoresWidth, 14),
+                if levelIdx == activeIdx then Palette.RED.MID else Palette.BLACK.MID,
+                gray(0))
+
+        const isActive = levelIdx == activeIdx
+
+        const color = if isActive then gray(1) else Palette.BLACK.LIGHT
+        const shadow = if isActive then gray(0) else nil
+
+        draw_text({
+            font: name_font,
+            text: format_number(levelIdx + 1, "0"),
+            pos: pos + xy(HiScoreColumnPositions.TIME / 2 - 2, 4),
+            color: color,
+            x_align: "center",
+            y_align: "top",
+            shadow: shadow,
+        })
+
+        let timeText = "-"
+
+        if entry.minutes or entry.seconds:
+            timeText = format_number(entry.minutes, "00") + ":" + format_number(entry.seconds, "00")
+
+        draw_text({
+            font: name_font,
+            text: timeText,
+            pos: pos + xy(HiScoreColumnPositions.TIME - 2, 4) + xy((HiScoreColumnPositions.SCORE - HiScoreColumnPositions.TIME) / 2, 0),
+            color: color,
+            x_align: "center",
+            y_align: "top",
+            shadow: shadow,
+        })
+
+
+        draw_text({
+            font: name_font,
+            text: (if entry.score then entry.score else "-"),
+            pos: pos + xy(HiScoresWidth - 10, 4),
+            color: color,
+            x_align: "right",
+            y_align: "top",
+            shadow: shadow,
+        })
+
+
+
+
+        //DrawStandardText(pos + xy(3, 4), format_number(levelIdx + 1, "0"))
+
+        pos.y += 13
+
+
+
+
+
+

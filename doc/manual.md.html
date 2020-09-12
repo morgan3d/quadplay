@@ -268,6 +268,18 @@ press the Run button (F5) to start the game.
 - Coordinates with +Y pointing down
 
 ----------------------------
+  <center><img src="../games/doublesdepon/label128.png" width=128px style="border:0"></center>
+
+<div class="preview pixel" style="background-image:url('../games/doublesdepon/preview.png')"></div>
+[Doubles de Pon](../console/quadplay.html?game=quad://games/doublesdepon&IDE=1) is 1-4 player action puzzle matching game:
+
+- Custom music
+- High scores
+- Menus and character selection
+- Multiple play modes
+- Complex animation "juice"
+
+----------------------------
 
   <center><img src="../games/across_the_lake/title_text.png" width=320px style="border:0"></center>
 
@@ -2810,12 +2822,25 @@ a `start` field in the .sprite.json file.
   Flipped sprites are created on spritesheet load but can only be accessed
   through the non-flipped sprites. Note that `s.y_flipped.y_flipped == s`.
 
+`sprite.rotated_90`
+: Counter-clockwise 90 degree rotated version of the sprite. The bounds may be different 
+  if the sprite is not square.
+
+`sprite.rotated_180`
+: Counter-clockwise 180 degree rotated version of the sprite. The bounds may be different 
+  if the sprite is not square. Note that `s.x_flipped.y_flipped == s.rotated_180 == s.y_flipped.x_flipped == s.rotated_90.rotated_90`.
+
+`sprite.rotated_270`
+: Counter-clockwise 270 degree/clockwise 90 degree rotated version of the sprite. The bounds may be different 
+  if the sprite is not square. Note that `s.x_flipped.y_flipped.rotated_90 == s.rotated_270`.
+
 `sprite.scale`
 : An `xy()` value that is `xy(1,1)` for sprites extracted directly from
   the spritesheet and may be +1 or -1 in each axis for flipped sprites.
 
 `sprite.size`
-: `xy()` dimensions of the sprite in pixels.
+: `xy()` dimensions of the sprite in pixels. Note that for a rotated sprite,
+  `sprite.size` is not the same as `sprite.spritesheet.sprite_size`.
 
 `sprite.spritesheet`
 : From which this sprite is taken.
@@ -3625,6 +3650,15 @@ endpoints and borders.
 `draw_disk(pos, r, color, outline default ∅, z default 0)`
 : Draw a circle or filled disk centered at (`pos.x`, `pos.y`)
   with radius `r` and z-order `z`.
+  
+  Choose the radius to be a half-integer, such as 3.5, and place
+  the position at a half-integer if you want it to be centered on a pixel.
+  
+  Guarantees:
+   - zero self-overdraw within the circle (important when using alpha)
+   - zero overdraw between the circle outline and filled interior disk
+   - disk exactly inscribes the containing rectangle 
+   - the total number of pixels covered will not change size under subpixel translation if the circle radius is an integer or half-integer
 
 `draw_line(args)`
 : Named argument version of `draw_line()`.
@@ -4024,17 +4058,31 @@ indices. The map's z-axis corresponds to layers.
   values from `edgeCost`. Sprites that are not specified in the array
   cost 1 to traverse, and it costs `infinity` to leave the map bounds.
 
-`get_map_pixel_color(map, map_coord, layer default 0, replacement_array default ∅)`
+`get_map_pixel_color(map, map_coord, min_layer default -infinity, max_layer_exclusive default +infinity,replacement_array default ∅, result default ∅, invert_sprite_y default false)`
 : Returns the color of the pixel in `map` at the corresponding
-  `map_coord` and `round(layer)`. Returns `nil` for out of
-  bounds values and empty sprites. See also
+  `map_coord` and all layers between `min_layer` and `max_layer_exclusive`.
+  If an `rgba()` value `result` is provided, then that object is mutated and returned to
+  avoid memory allocation.
+  
+  Returns `nil` for out of bounds values and empty sprites if `result` is not specified, and
+  sets `result.a = 0` in those cases if it is present. See also
   `get_map_pixel_color_by_ws_coord()`.
+  
+  If `invert_sprite_y` is true, then individual sprites pixels are
+  read upside down. This is needed in rare cases where the transform's
+  y direction was changed between when the map itself was drawn and when
+  the pixel was read.
 
-`get_map_pixel_color_by_ws_coord(map, ws_coord, ws_z default 0, replacement_array default ∅)`
-: Returns the pixel color in `map` at the corresponding `draw_coord`
-  and `ws_z` using `transform_ws_to_map_space()`. The result is guaranteed
-  to match what was drawn by `draw_map()`. Returns `nil` for out of
-  bounds values and empty sprites. See also `get_map_pixel_color()`.
+`get_map_pixel_color_by_ws_coord(map, ws_coord, ws_z_min default -infinity, ws_z_max_exclusive default +infinity, replacement_array default ∅, result default nil)`
+: Returns the pixel color in `map` at the corresponding `ws_coord`
+  by compositing all layers between `ws_z_min` and `ws_z_max_exclusive`. The result is guaranteed
+  to match what was drawn by `draw_map()`. If `result` is specified, that `rgba()`
+  value is mutated and returned instead of allocating a new color.
+  
+  Returns `nil` for out of bounds values and empty sprites, or a result with `result.a = 0`
+  if `result` is specified.
+  
+  See also `get_map_pixel_color()`.
 
 `get_map_sprite(map, map_coord, layer default 0, replacement_array default ∅)`
 : Returns the sprite in `map` at the corresponding `map_coord` and
@@ -5732,12 +5780,6 @@ in files ending with `.tmx`. Only the following properties are currently support
 - For a Hexagonal map, set the map tile size to be 1.5x larger along the "pointy" direction (e.g., 32x48 for a 32x32 hex with points up and down)
 
 When accessing a Hexagonal map in memory, even rows should be rendered offset by 1/2 a tile width.
-
-Flipped sprites (horizontal, vertical, and both) in TMX maps are
-supported. 
-
-*Rotated sprites are not supported*.  Note that 180 degree rotation
-can be achieved by flipping both horizontally and vertically.
 
 ![Tiled program options for creating a new map.](tiled-new-map.png width=50% style="image-rendering:auto")
 
@@ -7782,6 +7824,34 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 September 12: Beta update 48
+
+- New game, _Doubles de Pon_
+- Added `sprite.rotated_90`, `sprite.rotated_180`, and `sprite.rotated_270`
+- Added robot to `shapes-32x32x.sprite.json`
+- Added correct sprite size to `beast-soldier-32x32.sprite.json`
+- Added `invert_sprite_y` optional argument to `get_map_pixel_color()`
+- TMX maps now support rotation as well as flips
+- Disk, circle, text, and rectangle centering are now all aligned for subpixel
+  offsets
+- IDE now shows the current filename at the top of the code editor
+- Context menu now keeps IDE rollout project view visible in debug layout
+- Optimized the performance of `rgba()` colors for `draw_point()` about 20%
+- Fixed `draw_text()` not returning a value in skipped frames
+- Fixed `noise()` for the 3D case
+- Fixed HSV color preview
+- `get_map_pixel_color()` now accepts an output value to avoid memory allocation
+- Fixed wrapping `draw_map()` under simultaneous transform scale and camera 
+  rotation transformations
+- Incompatible changes:
+   - `get_map_pixel_color()` now accepts a range of layers and composites all values
+     read across them
+- Known bugs:
+   - HSV color preview not 100% accurate
+   - `get_map_pixel_color()` uses wrong coordinates outside of primary bounds for wrapping maps
+   - `draw_map()` not visible outside of central 3x3 repetitions for wrapping maps
+
 
 2020 September 4: Beta update 47
 

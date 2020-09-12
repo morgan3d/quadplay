@@ -1,0 +1,10 @@
+{
+    "url": "dashboard.png",
+    "sprite_size": {
+        "x": 64,
+        "y": 64
+    },
+    "license": "©2020 Steve LaVietes. Available under the CC BY 3.0 license https://creativecommons.org/licenses/by/3.0/",
+    "gutter": 0,
+    "default_frames": 1
+}

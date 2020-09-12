@@ -175,8 +175,9 @@ function setCodeEditorSessionMode(session, mode) {
 
 // assetName may be undefined
 function setCodeEditorSession(url, assetName) {
-    if (aceEditor.session.errorMarker) { aceEditor.session.removeMarker(aceEditor.session.errorMarker); }
     console.assert(url);
+    setEditorTitle(url);
+    if (aceEditor.session.errorMarker) { aceEditor.session.removeMarker(aceEditor.session.errorMarker); }
     const contents = fileContents[url] || '';
     const session = codeEditorSessionMap.get(url) || createCodeEditorSession(url, contents, assetName);
     aceEditor.setSession(session);
@@ -1236,7 +1237,7 @@ function showModeContextMenu(mode) {
     }
 
     customContextMenu.innerHTML = s;
-    showContextMenu();
+    showContextMenu('project');
 }
 
 
@@ -1284,7 +1285,7 @@ function showScriptContextMenu(scriptURL) {
     s += `<div onmousedown="onRemoveScript('${scriptURL}')"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&times;</span>Remove ${filename}</div>`
 
     customContextMenu.innerHTML = s;
-    showContextMenu();
+    showContextMenu('project');
 }
 
 

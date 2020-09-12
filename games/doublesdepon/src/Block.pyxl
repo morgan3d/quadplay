@@ -1,0 +1,219 @@
+// Scripts, variables, and constants here are visible to all modes
+
+const BlockState = {
+    IDLE : 0,
+    SWAPPING : 1,
+    MATCHING : 2,
+    COYOTE : 3,
+    POSTCLEARHOLD : 4,
+    GARBAGE : 5,
+    GARBAGEMATCHING : 6,
+}
+
+const BlockType = {
+    NONE : 0,
+    RED : 1,
+    GREEN : 2,
+    AQUA : 3,
+    MAGENTA : 4,
+    YELLOW : 5,
+    BLUE : 6,
+    BANG : 7.
+}
+
+const BlockFrame = {
+    STATIC : 0,
+    IDLE : 7,
+    FLASH : 1,
+    CLEAR : 2,
+    SQUASH : 3,
+    UP1 : 4,
+    UP2 : 5,
+    DARK : 6,
+}
+
+const BounceFrames = [
+    BlockFrame.IDLE,
+    BlockFrame.UP1,
+    BlockFrame.UP1,
+    BlockFrame.UP1,
+    BlockFrame.UP2,
+    BlockFrame.UP2,
+    BlockFrame.UP2,
+    BlockFrame.SQUASH,
+    BlockFrame.SQUASH,
+    BlockFrame.SQUASH,
+    BlockFrame.IDLE,
+]
+
+const SquashFrames = [
+    BlockFrame.SQUASH,
+    BlockFrame.STATIC,
+    BlockFrame.UP1,
+    BlockFrame.UP2,
+    BlockFrame.UP1,
+    BlockFrame.STATIC,
+]
+
+const BlockConstants = {
+    BOUNCEFRAMECOUNT : 10,
+    COYOTEHANGTIME : 12,
+    CHAINRESETCOUNT : 7,
+}
+
+const GarbageType = {}
+const GarbageSprites = {}
+local:
+    let x = 8
+    for name in [
+            "CLEAR",
+            "CLEARFLASH",
+            "NSW",
+            "NS",
+            "NES",
+            "NW",
+            "N",
+            "NE",
+            "SW",
+            "S",
+            "ES",
+            "W",
+            "C",
+            "E",
+            "FACE_C_NS",
+            "FACE_L_NS",
+            "FACE_R_NS",
+            "FACE_T_N",
+            "FACE_B_S",
+            "FACE_TL_N",
+            "FACE_TR_N",
+            "FACE_BL_S",
+            "FACE_BR_S",
+            "FACE_C",
+            "FACE_TL",
+            "FACE_TR",
+            "FACE_BL",
+            "FACE_BR",
+            "FACE_T",
+            "FACE_B",
+            "FACE_L",
+            "FACE_R",
+            "METAL_L",
+            "METAL_C",
+            "METAL_R"]:
+        GarbageType[name] = x
+        GarbageSprites[x] = blocks_sprite[
+                if (x - 8) > 22 then 9 else 8][(x - 8) mod 23]
+        ++x
+
+
+const GarbageBlinkRemaps = {}
+GarbageBlinkRemaps[GarbageType.FACE_C_NS]  = 0
+GarbageBlinkRemaps[GarbageType.FACE_L_NS]  = 1
+GarbageBlinkRemaps[GarbageType.FACE_R_NS]  = 2
+GarbageBlinkRemaps[GarbageType.FACE_T_N]  = 3
+GarbageBlinkRemaps[GarbageType.FACE_TL_N]  = 4
+GarbageBlinkRemaps[GarbageType.FACE_TR_N]  = 5
+GarbageBlinkRemaps[GarbageType.FACE_C]  = 6
+GarbageBlinkRemaps[GarbageType.FACE_TL]  = 7
+GarbageBlinkRemaps[GarbageType.FACE_TR]  = 8
+GarbageBlinkRemaps[GarbageType.FACE_T]  = 9
+GarbageBlinkRemaps[GarbageType.FACE_L ] = 10
+GarbageBlinkRemaps[GarbageType.FACE_R ] = 11
+
+
+//---- 
+
+def Block():
+    return BlockReset({})
+
+def BlockReset(block):
+
+    block.type = BlockType.NONE
+    block.state = BlockState.IDLE
+    
+    block.count = 0
+    block.count2 = 0
+    block.fallFrame = 0
+    block.chain = 0
+    
+    block.fallenOnce = false
+    block.garbageX = 0
+    block.garbageY = 0
+    block.garbageWidth = 0
+    block.garbageHeight = 0
+
+    block.match = nil
+
+    return block
+
+//---- 
+
+def BlockDraw(block, pos, spriteFrame=0, force=false, override_color=nil):
+    if block.type == BlockType.NONE:
+        return
+    
+    if block.state == BlockState.SWAPPING:
+        if not force:
+            return
+
+    if block.state == BlockState.GARBAGE:
+        assert(block.type >= GarbageType.CLEAR)
+
+        let spr = GarbageSprites[block.type]
+        if mode_frames mod 120 < 4:
+            const remap = GarbageBlinkRemaps[block.type]
+
+            if remap != nil:
+                spr = blocks_sprite[10][remap]
+        draw_sprite(spr, pos)
+
+        return
+
+    let blockFrame = BlockFrame.IDLE
+
+    if block.state == BlockState.GARBAGEMATCHING:
+        let useType = nil
+        if block.count < MatchConstants.FLASHFRAMES:
+            if block.count mod 2:
+                useType = GarbageType.CLEAR
+            else:
+                useType = GarbageType.CLEARFLASH
+        else if block.count < block.count2:
+            useType = GarbageType.CLEAR
+
+        if useType:
+            draw_sprite(GarbageSprites[useType], pos)
+            return
+
+        // otherwise draw as normal
+        blockFrame = 0
+
+    let useOverrideColor = nil
+
+    if block.state == BlockState.MATCHING:
+        blockFrame = 0
+        if block.count < MatchConstants.FLASHFRAMES:
+            if block.count mod 2:
+                blockFrame = BlockFrame.FLASH
+        else if block.count < block.count2:
+            blockFrame = BlockFrame.CLEAR
+        else:
+            return
+    else:
+        if blockFrame == BlockFrame.IDLE:
+            if block.count > 0:
+                blockFrame = BounceFrames[block.count]
+            else if block.type < BlockType.BANG or spriteFrame < 0:
+                blockFrame += spriteFrame
+            else:
+                blockFrame = 0
+
+            useOverrideColor = override_color
+
+    draw_sprite({
+        sprite: blocks_sprite[block.type - 1][blockFrame],
+        pos: pos,
+        override_color: useOverrideColor,
+    })
+

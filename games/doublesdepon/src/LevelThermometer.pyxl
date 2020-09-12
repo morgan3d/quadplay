@@ -1,0 +1,61 @@
+def LevelThermometer(pos, index, joyIdx):
+    return {
+        pos : pos,
+        index : index,
+        joyIdx : joyIdx,
+    }
+
+def LevelThermometerDraw(therm, z = 0):
+    const workPos = clone(therm.pos)
+
+    let offset = 6
+    def draw():
+        draw_sprite(levelThermometer_sprite[offset][0],
+                workPos, 0, nil, 1, z)
+
+    workPos.x += 10
+    for i < 4:
+        draw()
+        ++offset
+        workPos.x += 8
+
+    extend(workPos, therm.pos)
+    workPos.y += 10
+    
+
+    offset = 0
+    draw()
+
+    const value = Level[therm.index]
+
+    workPos.x += 8
+    for i < 4:
+        const testValue = i * 2 + 1
+
+        if testValue == value:
+            offset = 2
+        else if testValue < value:
+            offset = 3
+        else:
+            offset = 1
+
+        draw()
+
+        workPos.x += 8
+
+    if value > 8:
+        offset = 5
+    else:
+        offset = 4
+
+    draw()
+
+def LevelThermometerStep(therm):
+    if Level[therm.index] and JoyNewPress(therm.joyIdx, JoyStateKeys.LEFT):
+        --Level[therm.index]
+        play_sound(cursor_sound)
+
+    if (Level[therm.index] < 9
+            and JoyNewPress(therm.joyIdx, JoyStateKeys.RIGHT)):
+        ++Level[therm.index]
+        play_sound(cursor_sound)

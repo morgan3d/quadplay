@@ -15,6 +15,7 @@ function htmlColorChannel4Bit(value) {
     return value;
 }
 
+
 /** Rounds to the nearest rgba/hsva 4-bit color and returns a CSS string */
 function htmlColor4Bit(value) {
     if (value.r !== undefined) {
@@ -25,12 +26,31 @@ function htmlColor4Bit(value) {
             // RGB
             return `rgb(${htmlColorChannel4Bit(value.r)}, ${htmlColorChannel4Bit(value.g)}, ${htmlColorChannel4Bit(value.b)})`;
         }
-    } else if (value.a !== undefined) {
-        // HSVA
-        return `hsva(${htmlColorChannel4Bit(value.h)}, ${htmlColorChannel4Bit(value.s)}, ${htmlColorChannel4Bit(value.v)}, ${htmlColorChannel4Bit(value.a) / 255})`;
     } else {
-        // HSV
-        return `hsv(${htmlColorChannel4Bit(value.h)}, ${htmlColorChannel4Bit(value.s)}, ${htmlColorChannel4Bit(value.v)})`;
+        // HSVA or HSV
+        
+        // https://en.wikipedia.org/wiki/HSL_and_HSV#HSV_to_HSL
+        const H = htmlColorChannel4Bit(value.h) * 360 / 255;
+        let   S = htmlColorChannel4Bit(value.s) / 255;
+        const V = htmlColorChannel4Bit(value.v) / 255;
+
+        let L = V * (1 - S / 2);
+        if (L === 0 || L === 1) {
+            S = 0;
+        } else {
+            S = (V - L) / Math.min(L, 1 - L);
+        }
+
+        S *= 100;
+        L *= 100;
+        
+        if (value.a !== undefined) {
+            // HSVA
+            return `hsla(${H}, ${S}%, ${L}%, ${htmlColorChannel4Bit(value.a) / 255})`;
+        } else {
+            // HSV
+            return `hsl(${H}, ${S}%, ${L}%)`;
+        }
     }
 }
 
@@ -451,5 +471,5 @@ function showConstantContextMenu(constantName) {
         <div onmousedown="onRenameConstant('${constantName}')">Rename&hellip;</div>
         <div onmousedown="onEditConstantDescription('${constantName}')">Edit Description&hellip;</div>
         <hr><div onmousedown="onRemoveConstant('${constantName}')""><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&times;</span>Remove '${constantName}'</div>`;
-    showContextMenu();
+    showContextMenu('project');
 }

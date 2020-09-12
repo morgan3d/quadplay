@@ -1,0 +1,217 @@
+
+const ZLayers = {
+    BASE : 0,
+    CURSORUP : 1,
+    MASK : 2,
+    OVER : 3,
+}
+
+const GameMode = {
+    DOUBLES : 0,
+    SINGLES : 1,
+    SOLO : 2,
+    CANADIAN : 3,
+    COOP : 4,
+}
+
+const GameConfigs = {}
+
+GameConfigs[GameMode.DOUBLES] = {
+    cursors: [0, 1, 2, 3],
+    widths: [8, 8],
+    cursorsPerBoard: [2, 2],
+    joyIdxs: [[0, 1], [2, 3]],
+    label: "DOUBLES",
+}
+
+GameConfigs[GameMode.SINGLES] = {
+    cursors: [0, 1],
+    widths: [6, 6],
+    cursorsPerBoard: [1, 1],
+    joyIdxs: [[0], [1]],
+    label: "SINGLES",
+}
+
+GameConfigs[GameMode.SOLO] = {
+    cursors: [0],
+    widths: [6],
+    cursorsPerBoard: [1],
+    joyIdxs: [[0]],
+    label: "SOLO",
+}
+
+GameConfigs[GameMode.CANADIAN] = {
+    cursors: [0, 1, 2],
+    widths: [8, 6],
+    cursorsPerBoard: [2, 1],
+    joyIdxs: [[0, 1], [2]],
+    label: "CANADIAN DOUBLES",
+}
+
+GameConfigs[GameMode.COOP] = {
+    cursors: [0, 1],
+    widths: [8],
+    cursorsPerBoard: [2],
+    joyIdxs: [[0, 1]],
+    label: "COSOLO",
+}
+
+
+let HiScores = {}
+
+def InitHighScores():
+    HiScores = {}
+    const hiScoreModes = [GameMode.SOLO, GameMode.COOP]
+    for mode in hiScoreModes:
+        HiScores[mode] = []
+        for i < 10:
+            push(HiScores[mode], {
+                    minutes: 0,
+                    seconds: 0,
+                    score: 0,
+                })
+
+
+def ResetHiScores():
+    InitHighScores()
+    SaveHiScores()
+
+const HiScoresKey = "HISCORES"
+def LoadHiScores():
+    const loaded = load_local(HiScoresKey)
+    if loaded:
+        HiScores = loaded
+
+def SaveHiScores():
+    save_local(HiScoresKey, HiScores)
+
+
+InitHighScores()
+LoadHiScores()
+
+
+
+let g_gameMode = GameMode.DOUBLES
+
+const SelectedCharacters = [0, 3, 4, 7]
+
+let g_lastWinSide = nil
+
+//----
+
+
+let g_frameNum = 2
+let g_frameNumPrev = 1
+
+def GlobalsStep():
+    JoyUpdate()
+    g_frameNumPrev = g_frameNum
+    g_frameNum = (g_frameNum + 1) mod 65536
+
+
+const Wins = [0, 0]
+const Level = [4, 4]
+let Boards = []
+
+
+const g_clock = Clock()
+const g_clockPos = xy(SCREEN_SIZE.x / 2 - 18, 2)
+
+const Palette = {
+    WHITE : {
+        DARK: rgba(0.7, 0.7, 0.7, 1),
+        MID: rgba(0.8, 0.8, 0.8, 1),
+        LIGHT: rgba(0.9, 0.9, 0.9, 1),
+    },
+    BLACK : {
+        DARK: gray(0.2),
+        MID: gray(0.3),
+        LIGHT: gray(0.4),
+    },
+}
+
+for name at i in [
+        "RED",
+        "GREEN",
+        "AQUA",
+        "MAGENTA",
+        "YELLOW",
+        "BLUE",
+        ]:
+    Palette[name] = {
+        DARK : get_sprite_pixel_color(
+                blocksPalette_sprite[0][0], xy(i * 3, 0)),
+        MID : get_sprite_pixel_color(
+                blocksPalette_sprite[0][0], xy(i * 3 + 1, 0)),
+        LIGHT : get_sprite_pixel_color(
+                blocksPalette_sprite[0][0], xy(i * 3 + 2, 0)),
+    }
+
+const PaletteList = [
+    Palette.RED,
+    Palette.GREEN,
+    Palette.AQUA,
+    Palette.BLUE,
+    Palette.WHITE,
+    Palette.MAGENTA,
+    Palette.BLACK,
+    Palette.YELLOW,
+]
+
+local:
+    // generate background colors for pattern tiles
+    def pdOver(a, b, t):
+        return rgba(
+            b.r * (1 - t) + a.r * t,
+            b.g * (1 - t) + a.g * t,
+            b.b * (1 - t) + a.b * t,
+            1)
+    for p in PaletteList:
+        if p == Palette.BLACK:
+            p.BG = p.MID
+            p.FG = p.LIGHT
+            p.BG_LIGHT = p.DARK
+            p.FG_LIGHT = p.MID
+        else:
+            const mixAmt = 7/15.0
+            p.BG = pdOver(p.MID, rgba(0.4, 0.4, 0.4, 1.0), mixAmt)
+            p.FG = pdOver(p.LIGHT, p.BG, mixAmt)
+            p.BG_LIGHT = p.MID
+            p.FG_LIGHT = p.LIGHT
+
+
+
+const Characters = [
+    {
+        name : "JOLIET",
+        pal : PaletteList[0],
+    },
+    {
+        name : "OMAHA",
+        pal : PaletteList[1],
+    },
+    {
+        name : "WICHITA",
+        pal : PaletteList[2],
+    },
+    {
+        name : "AKRON",
+        pal : PaletteList[3],
+    },
+    {
+        name : "DAYTON",
+        pal : PaletteList[4],
+    },
+    {
+        name : "MUNCIE",
+        pal : PaletteList[5],
+    },
+    {
+        name : "PEORIA",
+        pal : PaletteList[6],
+    },
+    {
+        name : "GARY",
+        pal : PaletteList[7],
+    },
+]

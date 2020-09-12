@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.09.04.12'
+const version  = '2020.09.12.18'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -1867,10 +1867,17 @@ function setIFrameScroll(iframe, x, y) {
     html.scrollTop = y;
 }
 
+function setEditorTitle(url) {
+    const editorTitle = document.getElementById('editorTitle');
+    editorTitle.innerHTML = url.replace(/^.*\//, '').replace(/[<>&]/g, '');
+    editorTitle.title = url;
+}
+
 /* Updates the preview pane of the doc editor. If useFileContents is true,
    use fileContents[url] when not undefined instead of actually reloading. */
 function showGameDoc(url, useFileContents) {
     const docEditor = document.getElementById('docEditor');
+    setEditorTitle(url);
 
     const preserveScroll = (docEditor.lastURL === url);
     docEditor.lastURL = url;
@@ -3884,7 +3891,19 @@ document.addEventListener('contextmenu', function (event) {
 }, {capture: true});
 
 
-function showContextMenu() {
+// parent is an element or the id of one that is the control keeping the context
+// menu open. This is used to make rollouts sticky while menus are live
+function showContextMenu(parent) {
+    if (typeof parent === 'string') {
+        parent = document.getElementById(parent);
+    }
+
+    if (! parent) {
+        parent = document.getElementsByTagName('body')[0];
+    }
+
+    parent.appendChild(customContextMenu);
+    
     customContextMenu.style.left = event.pageX + 'px';
     customContextMenu.style.top = Math.min(event.pageY, window.innerHeight - 200) + 'px';
     customContextMenu.style.visibility = 'visible';

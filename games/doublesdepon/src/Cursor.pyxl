@@ -1,0 +1,363 @@
+const CursorState = {
+    IDLE : 0,
+    SWAPPING : 1,
+}
+const CursorConstants = {
+    REPEATPAUSE : 16,
+    SWAPFRAMECOUNT : 3,
+}
+
+const PendingSwapFrames = [
+    -1, -1, 0, 0, 1, 1, 0, 0,
+]
+
+//----
+
+def Cursor(cursorIdx_ = 0, joyIdx_ = 0, phaseOffset_ = 0):
+    const cursor = {
+        state : CursorState.IDLE,
+        count : 0,
+
+        posX : 0,
+        posY : 0,
+        
+        cursorIdx : cursorIdx_,
+        joyIdx : joyIdx_,
+
+        phaseCount : 0,
+        phaseOffset : phaseOffset_,
+
+        repeatPause : 0,
+        repeatCount : 0,
+
+        bumpX : 0,
+        bumpY : 0,
+        
+        drawLabel : false,
+    }
+    return cursor
+
+//----
+
+def CursorStep(cursor, board, otherCursor=nil):
+    cursor.phaseCount = (cursor.phaseCount + 1) mod 32
+
+    cursor.bumpX = 0
+    cursor.bumpY = 0
+
+    if cursor.state == CursorState.SWAPPING:
+        cursor.count += 1
+        
+        if cursor.count < CursorConstants.SWAPFRAMECOUNT:
+            cursor.count += 1
+        else:
+            // swapping is done
+            cursor.state = CursorState.IDLE
+
+            const row = BoardGetRow(board, cursor.posY)
+
+            const block1 = row[BoardGetHorzIndex(board, cursor.posX)]
+            const block2 = row[BoardGetHorzIndex(board, cursor.posX + 1)]
+            const blockType = block1.type
+            block1.type = block2.type
+            block2.type = blockType
+
+            block1.state = BlockState.IDLE
+            block2.state = BlockState.IDLE
+            block1.chain = 0
+            block2.chain = 0
+
+            CursorCheckForCoyote(cursor, board, 0)
+            CursorCheckForCoyote(cursor, board, 1)
+
+            // allow d-pad actions pressed prior to swap complete
+            // to register as new presses
+            JoyResetLast(cursor.joyIdx, JoyStateKeys.UP)
+            JoyResetLast(cursor.joyIdx, JoyStateKeys.DOWN)
+            JoyResetLast(cursor.joyIdx, JoyStateKeys.LEFT)
+            JoyResetLast(cursor.joyIdx, JoyStateKeys.RIGHT)
+
+        return
+
+    if JoyNewPress(cursor.joyIdx, JoyStateKeys.SWAP):
+        const row = BoardGetRow(board, cursor.posY)
+        const block1 = row[BoardGetHorzIndex(board, cursor.posX)]
+        const block2 = row[BoardGetHorzIndex(board, cursor.posX + 1)]
+        
+        if (StateIsSwappable_(block1.state) 
+                and StateIsSwappable_(block2.state)
+                and (CursorHasBlock(cursor, block1, board, 0)
+                        or CursorHasBlock(cursor, block2, board, 1))
+                and (CursorCanSwap(cursor, block1, board, 0)
+                        and CursorCanSwap(cursor, block2, board, 1))
+                ):
+            cursor.count = 0
+            cursor.state = CursorState.SWAPPING
+
+            block1.state = BlockState.SWAPPING
+            block2.state = BlockState.SWAPPING
+
+            // TODO sfx swap
+
+            play_sound(swap_sound)
+            return
+        else:
+            // so we can press and hold to slide
+            JoyResetLast(cursor.joyIdx, JoyStateKeys.SWAP)
+            // shake if a swap is pending
+            if (
+                    (CursorHasBlock(cursor, block1, board, 0)
+                        and StateIsSwappable_(block1.state)
+                        and CursorCanSwap(cursor, block1, board, 0))
+                            or
+                    (CursorHasBlock(cursor, block2, board, 1)
+                        and StateIsSwappable_(block2.state)
+                        and CursorCanSwap(cursor, block2, board, 1))
+                    ):
+                cursor.bumpX = PendingSwapFrames[g_frameNum mod 8]
+
+    let playSound = false
+    const dx = if otherCursor then abs(cursor.posX - otherCursor.posX) else 0
+
+    if (cursor.posY and JoyPress(cursor.joyIdx, JoyStateKeys.UP)):
+        if JoyNewPress(cursor.joyIdx, JoyStateKeys.UP):
+            cursor.repeatPause = 0
+            cursor.repeatCount = 0
+
+        if cursor.repeatPause == 0:
+            if (not otherCursor) or (cursor.posY - 1 != otherCursor.posY) or dx > 1:
+                playSound = true
+                if cursor.repeatCount == 0:
+                    cursor.repeatCount = 1
+                    cursor.repeatPause = CursorConstants.REPEATPAUSE
+                else:
+                    cursor.repeatPause = 0
+                    if cursor.phaseCount mod 2:
+                        playSound = false
+                if cursor.posY == 1 and board.raiseOffset > 3:
+                    playSound = false
+                else:
+                    cursor.posY -= 1
+            else:
+                cursor.bumpY = 2
+        else:
+            cursor.repeatPause -= 1
+
+    if (cursor.posY < board.sizeY - 2 and JoyPress(cursor.joyIdx, JoyStateKeys.DOWN)):
+        if JoyNewPress(cursor.joyIdx, JoyStateKeys.DOWN):
+            cursor.repeatPause = 0
+            cursor.repeatCount = 0
+
+        if cursor.repeatPause == 0:
+            if (not otherCursor) or (cursor.posY + 1 != otherCursor.posY) or dx > 1:
+                playSound = true
+                if cursor.repeatCount == 0:
+                    cursor.repeatCount = 1
+                    cursor.repeatPause = CursorConstants.REPEATPAUSE
+                else:
+                    cursor.repeatPause = 0
+                    if cursor.phaseCount mod 2:
+                        playSound = false
+
+                cursor.posY += 1
+            else:
+                cursor.bumpY = -2
+        else:
+            cursor.repeatPause -= 1
+
+    if ((ALLOW_CURSOR_WRAP or cursor.posX) > 0 and JoyPress(cursor.joyIdx, JoyStateKeys.LEFT)):
+        let isNewPress = false
+        if JoyNewPress(cursor.joyIdx, JoyStateKeys.LEFT):
+            cursor.repeatPause = 0
+            cursor.repeatCount = 0
+            isNewPress = true
+
+        if cursor.posX or isNewPress:
+            if cursor.repeatPause == 0:
+                if ((not otherCursor) or (cursor.posY != otherCursor.posY)
+                            or cursor.posX - 1 != otherCursor.posX + 1):
+                    playSound = true
+                    if cursor.repeatCount == 0:
+                        cursor.repeatCount = 1
+                        cursor.repeatPause = CursorConstants.REPEATPAUSE
+                    else:
+                        cursor.repeatPause = 0
+                        if cursor.phaseCount mod 2:
+                            playSound = false
+
+                    cursor.posX -= 1
+                    if cursor.posX < 0:
+                        cursor.posX = board.sizeX - 1
+                else:
+                    cursor.bumpX = 2
+            else:
+                cursor.repeatPause -= 1
+
+    if ((ALLOW_CURSOR_WRAP or cursor.posX < board.sizeX - 2) and JoyPress(cursor.joyIdx, JoyStateKeys.RIGHT)):
+        let isNewPress = false
+        if JoyNewPress(cursor.joyIdx, JoyStateKeys.RIGHT):
+            cursor.repeatPause = 0
+            cursor.repeatCount = 0
+            isNewPress = true
+
+        if isNewPress or cursor.posX < board.sizeX - 2:
+            if cursor.repeatPause == 0:
+                if ((not otherCursor) or (cursor.posY != otherCursor.posY)
+                            or cursor.posX + 1 != otherCursor.posX - 1):
+                    playSound = true
+                    if cursor.repeatCount == 0:
+                        cursor.repeatCount = 1
+                        cursor.repeatPause = CursorConstants.REPEATPAUSE
+                    else:
+                        cursor.repeatPause = 0
+                        if cursor.phaseCount mod 2:
+                            playSound = false
+
+                    cursor.posX += 1
+                    cursor.posX = cursor.posX mod board.sizeX
+                else:
+                    cursor.bumpX = -2
+            else:
+                cursor.repeatPause -= 1
+
+    if playSound:
+        play_sound(cursor_sound)
+
+
+//----
+
+def CursorDraw(cursor, pos, board=nil):
+    let spriteFrame = cursor.cursorIdx * 3
+
+    const blockPos = pos + xy(cursor.posX * 16, cursor.posY * 16)
+    const cursorPos = blockPos + xy(-4, -4) + xy(cursor.bumpX, cursor.bumpY)
+
+    let cursorPosWrap = nil
+    if board and cursor.posX >= board.sizeX - 1:
+        const blockPosWrap = pos + xy(-16, cursor.posY * 16)
+        cursorPosWrap = blockPosWrap + xy(-4, -4) + xy(cursor.bumpX, cursor.bumpY)
+
+    let z = ZLayers.CURSORUP
+
+    let frameOffset = 0
+
+    with phaseCount, phaseOffset in cursor:
+        if ((phaseCount + phaseOffset) mod 32) > 15:
+            spriteFrame += 1
+            frameOffset = 1
+            z = ZLayers.BASE
+    if cursor.state == CursorState.SWAPPING:
+        //spriteFrame += 1
+
+        if board:
+            const row = BoardGetRow(board, cursor.posY)
+            const block1 = row[BoardGetHorzIndex(board, cursor.posX)]
+            const block2 = row[BoardGetHorzIndex(board, cursor.posX + 1)]
+
+            BlockDraw(block1, blockPos + xy(cursor.count * 4, 0), 0, true)
+            BlockDraw(block2, blockPos + xy(16 - cursor.count * 4, 0), 0, true)
+
+
+    let alpha = 1
+    if get_mode() == GameStart:
+        alpha = mode_frames / 180.0
+
+
+
+    draw_sprite(cursor_sprite[if DISPLAY_THICK_CURSOR then 1 + THICK_CURSOR_VARIANT else 0][
+                spriteFrame],  cursorPos, 0, nil, alpha, z)
+
+    if cursorPosWrap:
+        draw_sprite(cursor_sprite[if DISPLAY_THICK_CURSOR then 1 + THICK_CURSOR_VARIANT else 0][
+                spriteFrame],  cursorPosWrap, 0, nil, alpha, z)
+
+    if cursor.drawLabel:
+        cursorPos.x += 20
+        if cursor.joyIdx mod 2:
+            cursorPos.y += 24
+            cursorPos.y -= frameOffset
+        else:
+            cursorPos.y += frameOffset
+
+        draw_sprite(selectCursors_sprite[cursor.joyIdx + 10][0], cursorPos, 0, nil, alpha, z)
+
+        if cursorPosWrap:
+            // TODO, remove duplication
+            cursorPosWrap.x += 20
+            if cursor.joyIdx mod 2:
+                cursorPosWrap.y += 24
+                cursorPosWrap.y -= frameOffset
+            else:
+                cursorPosWrap.y += frameOffset
+            draw_sprite(selectCursors_sprite[cursor.joyIdx + 10][0], cursorPosWrap, 0, nil, alpha, z)
+
+
+
+
+
+//----
+
+def BoardGetHorzIndex(board, idx):
+    return idx mod board.sizeX
+
+
+def CursorCheckForCoyote(cursor, board, idx):
+    const blockIdx = BoardGetHorzIndex(board, cursor.posX + idx)
+    const block = BoardGetRow(board, cursor.posY)[blockIdx]
+    if block.type:
+        // check below
+        if cursor.posY < board.sizeY - 2:
+            const belowBlock = BoardGetRow(
+                    board, cursor.posY + 1)[blockIdx]
+            if not belowBlock.type:
+                belowBlock.state = BlockState.COYOTE
+                belowBlock.count = BlockConstants.COYOTEHANGTIME
+        block.count = 0
+    else:
+        // check above
+        if cursor.posY:
+            const aboveBlock = BoardGetRow(
+                    board, cursor.posY - 1)[blockIdx]
+            if aboveBlock.type:
+                block.state = BlockState.COYOTE
+                block.count = BlockConstants.COYOTEHANGTIME
+
+//----
+
+def CursorHasBlock(cursor, block, board, idx):
+    if not block.type:
+        return false
+
+    if cursor.posY > 10:
+        return true
+
+    if not BoardGetRow(board, cursor.posY + 1)[BoardGetHorzIndex(board, cursor.posX + idx)].type:
+        return false
+
+    return true
+
+def CursorCanSwap(cursor, block, board, idx):
+    if not block.type:
+        return true
+
+    if cursor.posY > 10:
+        return true
+
+    if not BoardGetRow(board, cursor.posY + 1)[BoardGetHorzIndex(board, cursor.posX + idx)].type:
+        return false
+
+    return true
+
+def StateIsSwappable_(state):
+    return state == BlockState.IDLE or state == BlockState.POSTCLEARHOLD
+
+
+
+
+
+
+
+
+
+
+

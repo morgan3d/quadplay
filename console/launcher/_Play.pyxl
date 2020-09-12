@@ -19,6 +19,23 @@ const gameArray = [{
 },
 
 {
+   title: "Doubles de Pon",
+   developer: "Steve LaVietes",
+   url: "quad://games/doublesdepon",
+   description: "Action puzzle game for one to four players.",
+   version:      1.0,
+   cooperative:  true,
+   competitive:  true,
+   min_players:  1,
+   max_players:  4,
+   achievements: false,
+   builtin:      true,
+   highscores:   true,
+   label: dplabel[0][0],
+   preview: dppreview
+},
+
+{
    title: "Serpitron",
    developer: "CasualEffects",
    url: "quad://games/serpitron",
@@ -90,23 +107,6 @@ const gameArray = [{
 },
 
 {
-   title: "Across the Lake",
-   developer: "The Steinbachers",
-   url: "quad://games/across_the_lake",
-   version:      1.0,
-   description:  "You are a stone, skipping across the lake in this endless skipper.",
-   min_players:   1,
-   max_players:   1,
-   cooperative:  false,
-   competitive:  false,
-   achievements: false,
-   highscores:   false,
-   builtin:      true,
-   label:        allabel[0][0],
-   preview:      alpreview
-},
-                   
-{
    title: "Beyond Control",
    developer: "Casual Effects",
    url: "quad://games/beyond_control",
@@ -121,8 +121,24 @@ const gameArray = [{
    builtin:      true,
    label:        bclabel[0][0],
    preview:      bcpreview
-}
-]
+},
+
+{
+   title: "Across the Lake",
+   developer: "The Steinbachers",
+   url: "quad://games/across_the_lake",
+   version:      1.0,
+   description:  "You are a stone, skipping across the lake in this endless skipper.",
+   min_players:   1,
+   max_players:   1,
+   cooperative:  false,
+   competitive:  false,
+   achievements: false,
+   highscores:   false,
+   builtin:      true,
+   label:        allabel[0][0],
+   preview:      alpreview
+}]
 
 const backgroundColor = #135
 const promptColor = #4DF

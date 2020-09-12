@@ -1,4 +1,5 @@
 {
     "url": "beast-soldier-32x32.png",
-    "license": "Copyright 2018 surt, https://opengameart.org/content/beast-soldier, licensed under the CC-BY 4.0"
+    "license": "Copyright 2018 surt, https://opengameart.org/content/beast-soldier, licensed under the CC-BY 4.0",
+    "sprite_size": {"x": 32, "y": 32}
 }

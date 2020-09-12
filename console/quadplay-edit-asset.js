@@ -362,5 +362,5 @@ function showAssetContextMenu(assetName) {
         <div onmousedown="onRenameAsset('${assetName}')">Rename&hellip;</div>` +
         externalCmds + 
         `<hr><div onmousedown="onRemoveAsset('${assetName}')"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&times;</span>Remove '${assetName}'</div>`;
-    showContextMenu();
+    showContextMenu('project');
 }

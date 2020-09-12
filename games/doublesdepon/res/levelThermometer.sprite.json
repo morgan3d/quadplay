@@ -1,0 +1,12 @@
+{
+    "url": "levelThermometer.png",
+    "sprite_size": {
+        "x": 8,
+        "y": 8
+    },
+    "license": "©2020 Steve LaVietes. Available under the CC BY 3.0 license https://creativecommons.org/licenses/by/3.0/",
+    "gutter": 0,
+    "transpose": true,
+    "default_frames": 1,
+    "pivot" : {"x" : 0, "y" : 0}
+}

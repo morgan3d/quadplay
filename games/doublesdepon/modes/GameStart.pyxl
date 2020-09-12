@@ -1,0 +1,78 @@
+GameStart
+════════════════════════════════════════════════════════════════════════
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+set_random_seed(local_time().millisecond)
+const seed = local_time().millisecond
+
+remove_all(Boards)
+
+const config = GameConfigs[g_gameMode]
+
+
+let boardWidth = config.widths[0]
+
+
+push(Boards, Board(boardWidth, xy(14, 28), config.cursorsPerBoard[0],
+        0, seed, config.joyIdxs[0]))
+
+if size(config.widths) > 1:
+    boardWidth = config.widths[1]
+    push(Boards, Board(boardWidth, xy(384 - 14 - boardWidth * 16, 28),
+            config.cursorsPerBoard[1], 1, seed, config.joyIdxs[1]))
+
+    Boards[0].otherBoard = Boards[1]
+    Boards[1].otherBoard = Boards[0]
+
+
+for board in Boards:
+    BoardFill(board, 5)
+    if board.sizeX > 6:
+        if board.boardIdx:
+            board.pos.x += 4
+        else:
+            board.pos.x -= 4
+
+
+
+ClockReset(g_clock)
+
+
+if g_lastWinSide == nil or g_lastWinSide >= size(config.joyIdxs):
+    const musicChoices = []
+    for board in Boards:
+        push(musicChoices, board.bgIndex)
+    CurrentSongIdx = random_value(musicChoices)
+else:
+    CurrentSongIdx = Boards[g_lastWinSide].bgIndex
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+if not DO_COUNT_IN:
+    set_mode(Play)
+
+GlobalsStep()
+
+
+DashboardDraw()
+
+for board in Boards:
+    BoardStep(board)
+    BoardDraw(board)
+
+if mode_frames mod 60 == 0:
+    play_sound(cursor_sound)
+
+if mode_frames >= 180:
+    set_mode(Play)
+else:
+    const alpha = 1.0 - ((mode_frames mod 60) / 59.0)
+    const spr = countInNumbers_sprite[floor(mode_frames / 60)][0]
+    for board in Boards:
+        draw_sprite(spr, BoardGetCenter(board), 0, nil, alpha)
+

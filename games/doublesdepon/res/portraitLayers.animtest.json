@@ -1,0 +1,485 @@
+{ "frames": [
+   {
+    "filename": "portraitLayers.animtest #idle.aseprite",
+    "frame": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #blink.aseprite",
+    "frame": { "x": 0, "y": 36, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #concern 0.aseprite",
+    "frame": { "x": 0, "y": 72, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #concern 1.aseprite",
+    "frame": { "x": 40, "y": 72, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #glee 0.aseprite",
+    "frame": { "x": 0, "y": 108, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #glee 1.aseprite",
+    "frame": { "x": 40, "y": 108, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #idle.aseprite",
+    "frame": { "x": 0, "y": 144, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #blink.aseprite",
+    "frame": { "x": 0, "y": 180, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #concern 0.aseprite",
+    "frame": { "x": 0, "y": 216, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #concern 1.aseprite",
+    "frame": { "x": 40, "y": 216, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #glee 0.aseprite",
+    "frame": { "x": 0, "y": 252, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #glee 1.aseprite",
+    "frame": { "x": 40, "y": 252, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #idle.aseprite",
+    "frame": { "x": 0, "y": 288, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #blink.aseprite",
+    "frame": { "x": 0, "y": 324, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #concern 0.aseprite",
+    "frame": { "x": 0, "y": 360, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #concern 1.aseprite",
+    "frame": { "x": 40, "y": 360, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #glee 0.aseprite",
+    "frame": { "x": 0, "y": 396, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #glee 1.aseprite",
+    "frame": { "x": 40, "y": 396, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #idle.aseprite",
+    "frame": { "x": 0, "y": 432, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #blink.aseprite",
+    "frame": { "x": 0, "y": 468, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #concern 0.aseprite",
+    "frame": { "x": 0, "y": 504, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #concern 1.aseprite",
+    "frame": { "x": 40, "y": 504, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #glee 0.aseprite",
+    "frame": { "x": 0, "y": 540, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #glee 1.aseprite",
+    "frame": { "x": 40, "y": 540, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #idle.aseprite",
+    "frame": { "x": 0, "y": 576, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #blink.aseprite",
+    "frame": { "x": 0, "y": 612, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #concern 0.aseprite",
+    "frame": { "x": 0, "y": 648, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #concern 1.aseprite",
+    "frame": { "x": 40, "y": 648, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #glee 0.aseprite",
+    "frame": { "x": 0, "y": 684, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #glee 1.aseprite",
+    "frame": { "x": 40, "y": 684, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #idle.aseprite",
+    "frame": { "x": 0, "y": 720, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #blink.aseprite",
+    "frame": { "x": 0, "y": 756, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #concern 0.aseprite",
+    "frame": { "x": 0, "y": 792, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #concern 1.aseprite",
+    "frame": { "x": 40, "y": 792, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #glee 0.aseprite",
+    "frame": { "x": 0, "y": 828, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #glee 1.aseprite",
+    "frame": { "x": 40, "y": 828, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #idle.aseprite",
+    "frame": { "x": 0, "y": 864, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #blink.aseprite",
+    "frame": { "x": 0, "y": 900, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #concern 0.aseprite",
+    "frame": { "x": 0, "y": 936, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #concern 1.aseprite",
+    "frame": { "x": 40, "y": 936, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #glee 0.aseprite",
+    "frame": { "x": 0, "y": 972, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #glee 1.aseprite",
+    "frame": { "x": 40, "y": 972, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #idle.aseprite",
+    "frame": { "x": 0, "y": 1008, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #blink.aseprite",
+    "frame": { "x": 0, "y": 1044, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #concern 0.aseprite",
+    "frame": { "x": 0, "y": 1080, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #concern 1.aseprite",
+    "frame": { "x": 40, "y": 1080, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #glee 0.aseprite",
+    "frame": { "x": 0, "y": 1116, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   },
+   {
+    "filename": "portraitLayers.animtest #glee 1.aseprite",
+    "frame": { "x": 40, "y": 1116, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 500
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.21",
+  "image": "portraitLayers.animtest.png",
+  "format": "RGBA8888",
+  "size": { "w": 80, "h": 1152 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "joilet", "from": 0, "to": 5, "direction": "forward" },
+   { "name": "idle", "from": 0, "to": 0, "direction": "forward" },
+   { "name": "blink", "from": 1, "to": 1, "direction": "forward" },
+   { "name": "concern", "from": 2, "to": 3, "direction": "forward" },
+   { "name": "glee", "from": 4, "to": 5, "direction": "forward" },
+   { "name": "omaha", "from": 6, "to": 11, "direction": "forward" },
+   { "name": "idle", "from": 6, "to": 6, "direction": "forward" },
+   { "name": "blink", "from": 7, "to": 7, "direction": "forward" },
+   { "name": "concern", "from": 8, "to": 9, "direction": "forward" },
+   { "name": "glee", "from": 10, "to": 11, "direction": "forward" },
+   { "name": "witchita", "from": 12, "to": 17, "direction": "forward" },
+   { "name": "idle", "from": 12, "to": 12, "direction": "forward" },
+   { "name": "blink", "from": 13, "to": 13, "direction": "forward" },
+   { "name": "concern", "from": 14, "to": 15, "direction": "forward" },
+   { "name": "glee", "from": 16, "to": 17, "direction": "forward" },
+   { "name": "akron", "from": 18, "to": 23, "direction": "forward" },
+   { "name": "idle", "from": 18, "to": 18, "direction": "forward" },
+   { "name": "blink", "from": 19, "to": 19, "direction": "forward" },
+   { "name": "concern", "from": 20, "to": 21, "direction": "forward" },
+   { "name": "glee", "from": 22, "to": 23, "direction": "forward" },
+   { "name": "dayton", "from": 24, "to": 29, "direction": "forward" },
+   { "name": "idle", "from": 24, "to": 24, "direction": "forward" },
+   { "name": "blink", "from": 25, "to": 25, "direction": "forward" },
+   { "name": "concern", "from": 26, "to": 27, "direction": "forward" },
+   { "name": "glee", "from": 28, "to": 29, "direction": "forward" },
+   { "name": "muncie", "from": 30, "to": 35, "direction": "forward" },
+   { "name": "idle", "from": 30, "to": 30, "direction": "forward" },
+   { "name": "blink", "from": 31, "to": 31, "direction": "forward" },
+   { "name": "concern", "from": 32, "to": 33, "direction": "forward" },
+   { "name": "glee", "from": 34, "to": 35, "direction": "forward" },
+   { "name": "peoria", "from": 36, "to": 41, "direction": "forward" },
+   { "name": "idle", "from": 36, "to": 36, "direction": "forward" },
+   { "name": "blink", "from": 37, "to": 37, "direction": "forward" },
+   { "name": "concern", "from": 38, "to": 39, "direction": "forward" },
+   { "name": "glee", "from": 40, "to": 41, "direction": "forward" },
+   { "name": "gary", "from": 42, "to": 47, "direction": "forward" },
+   { "name": "idle", "from": 42, "to": 42, "direction": "forward" },
+   { "name": "blink", "from": 43, "to": 43, "direction": "forward" },
+   { "name": "concern", "from": 44, "to": 45, "direction": "forward" },
+   { "name": "glee", "from": 46, "to": 47, "direction": "forward" }
+  ]
+ }
+}

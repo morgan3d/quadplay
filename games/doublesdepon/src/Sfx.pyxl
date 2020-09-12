@@ -1,0 +1,34 @@
+
+const PopSounds = [
+    pop1_sound,
+    pop2_sound,
+    pop3_sound,
+    pop4_sound,
+    pop5_sound,
+    pop6_sound,
+    pop7_sound,
+    pop8_sound,
+    pop9_sound,
+    pop10_sound,
+    pop11_sound,
+    pop12_sound,
+    pop13_sound,
+    pop14_sound,
+    pop15_sound,
+]
+
+
+def SfxPop(value):
+    play_sound(PopSounds[min(14, value)])
+
+
+const MatchSounds = [
+    match1_sound,
+    match2_sound,
+    match3_sound,
+    match4_sound,
+    match5_sound,
+]
+
+def SfxMatch(value):
+    play_sound(MatchSounds[min(4, value - 1)])

@@ -8,7 +8,7 @@
     "scripts":    [],
     "modes":      ["Play"],
     "start_mode": "Play",
-    "docs":       ["todo.md"],
+    "docs":       [],
     "assets":     {
         "font": "quad://fonts/deja-8.font.json",
         "astronaut": "quad://sprites/kenney-alien-yellow-16x32.sprite.json"

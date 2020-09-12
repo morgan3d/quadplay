@@ -1,0 +1,111 @@
+ControllerOrder
+════════════════════════════════════════════════════════════════════════
+
+const usedInputs = []
+const unusedInputs = []
+
+def DrawControllerIndex(dstIdx, joyIdx, isUsed):
+    
+
+    const center = xy(64 + dstIdx * 80, 90)
+    const col = if isUsed then gray(1) else gray(0.25)
+    
+    draw_rect(center, xy(64, 64), nil, col)
+
+    draw_text({
+        font: name_font,
+        text: (joyIdx + 1),
+        pos: center,
+        color: col,
+        x_align: "center",
+        y_align: "center",
+        shadow: (if isUsed then gray(0) else nil),
+    })
+
+    
+
+
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+remove_all(usedInputs)
+remove_all(unusedInputs)
+extend(unusedInputs, JoyIdxMapping_)
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+draw_previous_mode()
+
+preserving_transform:
+    set_transform({z: 20})
+
+
+    draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(0.0, 0.0, 0.0, 0.8))
+
+    const aPrompts = {}
+    const bPrompts = {}
+    const dPrompts = {}
+    for i < 4:
+        aPrompts[replace("(a)", gamepad_array[i].prompt)] = true
+        bPrompts[replace("(b)", gamepad_array[i].prompt)] = true
+        dPrompts[replace("(d)", gamepad_array[i].prompt)] = true
+
+    draw_text(name_font, "CONTROLLER ORDER" , xy(10, 10), gray(1), gray(0))
+
+    draw_text(name_font,
+            join(["press ", join(keys(aPrompts), ", " , " or "), " to select"])
+                , xy(10, 180), gray(1), gray(0))
+    draw_text(name_font,
+            join(["press ", join(keys(bPrompts), ", " , " or "), " to finish"])
+                , xy(10, 192), gray(1), gray(0))
+    draw_text(name_font,
+            join(["press ", join(keys(dPrompts), ", " , " or "), " to reset"])
+                , xy(10, 204), gray(1), gray(0))
+
+
+    const justUsed = []
+    for idx in unusedInputs:
+        if gamepad_array[idx].aa:
+            push(usedInputs, idx)
+            push(justUsed, idx)
+
+    for idx in justUsed:
+        remove_values(unusedInputs, idx)
+
+
+    // drawing
+    let count = 0
+    for idx in usedInputs:
+        DrawControllerIndex(count, idx, true)
+        ++count
+
+    for idx in unusedInputs:
+        DrawControllerIndex(count, idx, false)
+        ++count
+
+    // reset or finish
+    for i < 4:
+        if gamepad_array[i].dd:
+            remove_all(usedInputs)
+            remove_all(unusedInputs)
+            extend(unusedInputs, [0, 1, 2, 3])
+        else if gamepad_array[i].bb:
+            remove_all(JoyIdxMapping_)
+            extend(JoyIdxMapping_, usedInputs)
+            extend(JoyIdxMapping_, unusedInputs)
+
+
+            for j < 4:
+                JoyActivateLast(j, JoyStateKeys.NO)
+
+            pop_mode()
+
+
+
+
+
+
+

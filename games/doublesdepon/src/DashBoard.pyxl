@@ -1,0 +1,226 @@
+
+
+const levelColor1_ = get_sprite_pixel_color(
+        dashboard_sprite[0][0], xy(6, 57))
+
+const levelColor2_ = get_sprite_pixel_color(
+        dashboard_sprite[0][0], xy(6, 58))
+
+
+
+
+
+
+def DashboardDraw():
+    if size(Boards) == 1:
+        const board = Boards[0]
+
+        const pos = xy(board.pos.x + board.sizeX * 16 + 44, 66)
+        draw_sprite(dashboardSolo_sprite[0][0], pos)
+
+        ClockDraw(g_clock, pos + xy(-18, -30))
+
+        DrawStandardText(pos + xy(-20, -9),
+                format_number(Boards[0].score, "00000"))
+
+        DrawStandardText(pos + xy(-27, 12),
+                format_number(61 - Boards[0].autoRaiseSpeed, "0"))
+
+        const startX = pos.x + 9
+
+        const endX = startX + Level[0] * 2 - 1
+        const y = pos.y + 15
+        draw_line(xy(startX, y), xy(endX, y),
+                levelColor1_)
+        draw_line(xy(startX, y + 1), xy(endX, y + 1),
+                levelColor2_)
+
+        for i < Level[0] + 1: 
+            const x = startX - 1 + i * 2
+            draw_line(xy(x, y), xy(x, y + 1), levelColor2_)
+
+
+
+    else:
+        const pos = xy(SCREEN_SIZE.x / 2, 180)
+        draw_sprite(dashboard_sprite[0][0], pos)
+
+        ClockDraw(g_clock, xy(g_clockPos.x, pos.y - 20))
+
+
+        let winIndex = nil
+        if get_mode() == GameEnd and mode_frames < 18:
+            for b at i in Boards:
+                if b.state == GameState.WON:
+                    winIndex = i
+
+        for win at i in Wins:
+            const winStr = format_number(min(999, win), "0")
+            const centerX = pos.x - 16 + i * 32
+            DrawStandardText(xy(centerX - size(winStr) * 4, pos.y + 2), winStr)
+
+            if winIndex != nil and i == winIndex:
+                const center = xy(centerX, pos.y + 2)
+
+                draw_disk(xy(centerX, pos.y + 6) + xy(mode_frames, mode_frames),
+                        4, gray(1), false, ZLayers.OVER)
+                draw_disk(xy(centerX, pos.y + 6) + xy(-mode_frames, mode_frames),
+                        4, gray(1), false, ZLayers.OVER)
+                draw_disk(xy(centerX, pos.y + 6) + xy(mode_frames, -mode_frames),
+                        4, gray(1), false, ZLayers.OVER)
+                draw_disk(xy(centerX, pos.y + 6) + xy(-mode_frames, -mode_frames),
+                        4, gray(1), false, ZLayers.OVER)
+                
+
+        for level at i in Level:
+            const startX = pos.x - 32 + i * 32 + 6 + (if i mod 2 then -1 else 0)
+
+            const endX = startX + (level + 1) * 2 - 2
+            const y = pos.y + 25
+            draw_line(xy(startX, y), xy(endX, y),
+                    levelColor1_)
+            draw_line(xy(startX, y + 1), xy(endX, y + 1),
+                    levelColor2_)
+
+            for i < level + 1: 
+                const x = startX + 1 + i * 2
+                draw_line(xy(x, y), xy(x, y + 1), levelColor2_)
+
+
+def DrawChromeBorder(pos, tilesSize, bg = nil, z = 0):
+    const backSize = tilesSize * xy(8, 8) + xy(0, 8)
+    
+    if bg:
+        const center = xy(pos.x + backSize.x / 2, pos.y + backSize.y / 2)
+        draw_rect(center, backSize, bg)
+
+    draw_sprite(chromeBorders_sprite[0][4], pos + xy(-8, 0), 0, nil, 1.0, z)
+    draw_sprite(chromeBorders_sprite[0][5], pos + xy(tilesSize.x * 8, 0),
+            0, nil, 1.0, z)
+    draw_sprite(chromeBorders_sprite[0][6], pos + xy(-8, tilesSize.y * 8),
+            0, nil, 1.0, z)
+    draw_sprite(chromeBorders_sprite[0][7], pos + xy(tilesSize.x * 8, tilesSize.y * 8),
+            0, nil, 1.0, z)
+
+    const workPos = clone(pos)
+    const workPosBottom = xy(pos.x, pos.y + tilesSize.y * 8)
+    for x < tilesSize.x:
+        draw_sprite(chromeBorders_sprite[0][8], workPos, 0, nil, 1.0, z)
+        draw_sprite(chromeBorders_sprite[0][9], workPosBottom, 0, nil, 1.0, z)
+        workPos.x += 8
+        workPosBottom.x += 8
+
+    for y < tilesSize.y - 1:
+        draw_sprite(chromeBorders_sprite[0][12], pos + xy(-8, y * 8 + 8),
+                0, nil, 1.0, z)
+        draw_sprite(chromeBorders_sprite[0][13], pos + xy(backSize.x, y * 8 + 8),
+            0, nil, 1.0, z)
+
+
+def DrawPortait(pos, name, pal, idx, flip = false, frame = 0):
+    DrawChromeBorder(pos, xy(5, 6), gray(0.5))
+    
+    draw_rect(pos + xy(20, 22), xy(42, 38), pal.MID, gray(0))
+    draw_rect(pos + xy(20, 22), xy(40, 36), nil, pal.DARK)
+
+
+    draw_text({
+        font: name_font,
+        text: name,
+        pos: pos + xy(20, 46),
+        color: gray(1),
+        x_align: "center",
+        y_align: "center",
+        shadow: gray(0.25),
+    })
+
+    const scale = xy(1, 1)
+    const adjX = xy(0, 0)
+
+    const shadowOffset = xy(3, 0)
+
+    if flip:
+        scale.x = -1
+        adjX.x = 40
+        shadowOffset.x *= -1
+
+    draw_sprite({
+        sprite: portraitLayers_sprite[idx][frame],
+        pos: pos + xy(0, 4) + adjX + shadowOffset,
+        override_color: pal.DARK,
+        scale: scale,
+        })
+
+
+    draw_sprite({
+        sprite: portraitLayers_sprite[idx][frame],
+        pos: pos + xy(0, 4) + adjX,
+        scale: scale,
+    })
+
+def DrawNarrowPortait(pos, name, pal, idx, flip = false, frame = 0, drawNote = false):
+    const scale = xy(1, 1)
+    const adjX = xy(0, 0)
+    const shadowOffset = xy(3, 0)
+
+    if flip:
+        scale.x = -1
+        adjX.x = 36
+        shadowOffset.x *= -1
+
+    DrawChromeBorder(pos, xy(4, 4), gray(0.5))
+
+    draw_corner_rect(pos + xy(0, 4), xy(32, 32), pal.MID, pal.DARK)
+    set_clip(pos + xy(0, 4), xy(32, 32))
+
+    draw_sprite({
+        sprite: portraitLayers_sprite[idx][frame],
+        pos: pos  + adjX + shadowOffset,
+        override_color: pal.DARK,
+        scale: scale,
+        })
+
+    draw_sprite({
+        sprite: portraitLayers_sprite[idx][frame],
+        pos: pos + adjX,
+        scale: scale,
+    })
+
+    reset_clip()
+
+    if drawNote:
+        const notePos = pos + xy(0, 22)
+        if flip:
+            notePos.x -= 3
+        else:
+            notePos.x += 19
+
+        draw_sprite({
+            sprite: blocks_sprite[6][18],
+            pos: notePos,
+            override_color: pal.DARK,
+        })
+
+        draw_sprite({
+            sprite: blocks_sprite[6][17],
+            pos: notePos,
+        })
+
+
+
+
+def DrawWallpaper():
+    for y < 6:
+        for x < 5:
+            draw_sprite(wallpaper_sprite[0][0], xy(
+                x * 128 - (game_frames mod 128),
+                (y - 1) * 64 + (game_frames mod 64)))
+
+
+
+
+
+
+
+
+

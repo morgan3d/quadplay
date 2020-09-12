@@ -164,6 +164,11 @@
             "description": "Program your broken robots to race through the ruins."
         },
         {
+            "url": "quad://games/doublesdepon/",
+            "title": "Doubles de Pon",
+            "description": "Swapping puzzle game"
+        },
+        {
             "url": "quad://games/icetime/",
             "title": "Ice Time",
             "description": "2 vs. 2 ice hockey with teams, player stats., faceoffs, passing\u2026and a Zamboni."

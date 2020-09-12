@@ -1555,7 +1555,7 @@ function noise(octaves, x, y, z) {
     
     const stepx = 110, stepy = 241, stepz = 171;
 
-    if ($Math.abs(z - $Math.floor(z)) > 1e-8) {
+    if ($Math.abs(z) > 1e-8) {
         // Full 3D
     
         for (; octaves > 0; --octaves) {        
@@ -3496,68 +3496,213 @@ function transform_from(pos, angle, scale, coord) {
 }
 
 
-function get_map_pixel_color(map, map_coord, layer, replacement_array) {
-    layer = $Math.floor(layer || 0);
-    let mx = $Math.floor(map_coord.x);
-    let my = $Math.floor(map_coord.y);
+function get_map_pixel_color(map, map_coord, min_layer, max_layer_exclusive, replacement_array, result, invert_sprite_y) {
+    if (min_layer === undefined) {
+        min_layer = 0;
+    }
 
-    if (map.wrap_x) { mx = loop(mx, map.size.x); }
-    if (map.wrap_y) { my = loop(my, map.size.y); }
+    if (max_layer_exclusive === undefined) {
+        max_layer_exclusive = map.layer.length >>> 0;
+    }
 
-    if ((layer >= 0) && (layer < map.layer.length) &&
-        (mx >= 0) && (my >= 0) &&
-        (mx < map.size.x) && (my < map.size.y)) {
-        // In bounds
-        
-        let sprite = map.layer[layer][mx][my];
-        if (sprite) {
-            if (replacement_array) {
-                for (let i = 0; i < replacement_array.length; i += 2) {
-                    if (replacement_array[i] === sprite) {
-                        sprite = replacement_array[i + 1];
-                        break;
-                    }
-                }
-            }
-            
-            // Map coord (0, 0) is the corner of the corner sprite.
-            const ssX = sprite.size.x, ssY = sprite.size.y;
-            const spriteCoord = {x:$clamp($Math.floor((map_coord.x - mx) * ssX), 0, ssX - 1),
-                                 y:$clamp($Math.floor((map_coord.y - my) * ssY), 0, ssY - 1)};
+    min_layer = $Math.ceil(min_layer) >>> 0;
+    max_layer_exclusive = max_layer_exclusive >>> 0;
 
-            // Account for the automatic flipping that occurs to sprites when rendering
-            if ($scaleY < 0) {
-                spriteCoord.y = ssY - 1 - spriteCoord.y;
-            }
-            
-            if ($scaleX < 0) {
-                spriteCoord.x = ssX - 1 - spriteCoord.x;
-            }
-            
-            return get_sprite_pixel_color(sprite, spriteCoord);
+    if ((max_layer_exclusive <= 0) || (min_layer >= map.layer.length)) {
+        // Nothing to do
+        if (result) {
+            result.a = 0;
+            return result;
+        } else {
+            return undefined;
         }
     }
 
-    // Out of bounds or no sprite
-    return undefined;
+    if (invert_sprite_y === undefined) {
+        invert_sprite_y = false;
+    }
+
+    // The caller needs to be able to distinguish between
+    // out of bounds/no sprite and a sprite with alpha = 0,
+    // so we have to have an explicit undefined option for
+    // the return value.
+    const had_result = result;
+    result = result || {r:0, g:0, b:0, a:0};
+    const pixel = $get_map_pixel_color(map, map_coord.x, map_coord.y, min_layer, max_layer_exclusive, replacement_array, result, invert_sprite_y);
+    if (pixel === -1) {
+        if (had_result) {
+            return result;
+        } else {
+            return undefined;
+        }
+    }
+
+    if (pixel === -2) {
+        return result;
+    } else {
+        // Unpack
+        result.a = ((pixel >>> 12) & 0xf) * (1 / 15);
+        result.b = ((pixel >>> 8) & 0xf) * (1 / 15);
+        result.g = ((pixel >>> 4) & 0xf) * (1 / 15);
+        result.r = (pixel & 0xf) * (1 / 15);
+        return result;
+    }
 }
 
 
-function get_map_pixel_color_by_ws_coord(map, ws_coord, ws_z, replacement_array) {
+// Return value:
+//  -1:        out of bounds
+//  -2:        value in result
+//  otherwise: value is a uint16 in the return value
+function $get_map_pixel_color(map, map_coord_x, map_coord_y, min_layer, max_layer_exclusive, replacement_array, result, invert_sprite_y) {
+    // Integer version of the map coordinate
+    let mx = $Math.floor(map_coord_x), my = $Math.floor(map_coord_y);
+
+    const map_size_x = map.size.x, map_size_y = map.size.y;
+    
+    // Inlined $loop() on mx and my
+    if (map.wrap_x && (mx < 0 || mx >= map_size_x)) { mx -= $Math.floor(mx / map_size_x) * map_size_x; }
+    if (map.wrap_y && (my < 0 || my >= map_size_y)) { my -= $Math.floor(my / map_size_y) * map_size_y; }
+
+    // Was any surface hit?
+    let hit = false;
+
+    // Result value temporarily encoded in scalars to avoid dereference costs
+    let result_a = 0, result_b = 0, result_g = 0, result_r = 0;
+
+    if ((mx >= 0) && (my >= 0) && (mx < map_size_x) && (my < map_size_y)) {
+        // In bounds
+        mx |= 0; my |= 0;
+
+        // Map coord (0, 0) is the *corner* of the corner sprite
+        const ssX = (map.sprite_size.x >>> 0) - 1, ssY = (map.sprite_size.y >>> 0) - 1;
+        let spriteCoordX = $clamp(((map_coord_x - mx) * (ssX + 1)) | 0, 0, ssX);
+        let spriteCoordY = $clamp(((map_coord_y - my) * (ssY + 1)) | 0, 0, ssY);
+
+        // Account for the automatic flipping that occurs to sprites when rendering
+        if (($scaleY < 0) !== invert_sprite_y) { spriteCoordY = ssY - spriteCoordY; }
+        if ($scaleX < 0) { spriteCoordX = ssX - spriteCoordX; }
+
+        // Iterate from the top down, compositing
+        const layer_array = map.layer;
+        for (let layer = max_layer_exclusive - 1; layer >= min_layer; --layer) {
+            let sprite = layer_array[layer][mx][my];
+            if (sprite) {
+                if (replacement_array) {
+                    for (let i = 0; i < replacement_array.length; i += 2) {
+                        if (replacement_array[i] === sprite) {
+                            sprite = replacement_array[i + 1];
+                            break;
+                        }
+                    }
+                    if (! sprite) { continue; }
+                }
+
+                // Manually inlined and streamlined code from
+                // get_sprite_pixel_color, which saves about 2 ms when
+                // sampling every pixel on screen. Coordinate
+                // computation needs to be done per-sprite because
+                // they may be flipped. It is slightly faster (probably because of
+                // cache coherence) to flip the X coordinate than to read from
+                // the flipped X image data
+                const x = ((sprite.scale.x > 0) ? spriteCoordX : (ssX - spriteCoordX)) >>> 0;
+                const y = ((sprite.scale.y > 0) ? spriteCoordY : (ssY - spriteCoordY)) >>> 0;
+
+                const data = sprite._spritesheet._uint16Data;
+                const pixel = data[((sprite._x >>> 0) + x) + ((sprite._y >>> 0) + y) * (data.width >>> 0)] >>> 0;
+
+                const alpha16 = pixel & 0xF000;
+                if (result_a === 0 && alpha16 === 0xF000) {
+                    // Common case: we've hit a fully opaque value on
+                    // the first non-transparent one. Do not convert
+                    // to rgba() because this may be called from the
+                    // inner loop of draw_map_horizontal_span(). The
+                    // caller will handle the case where they need to
+                    // convert.
+                    return pixel;
+                } else if (alpha16 !== 0) {
+
+                    // Unpack and switch to premultiplied
+                    const layer_color_a = ((pixel >>> 12) & 0xf) * (1 / 15);
+                    const k = (1 / 15) * layer_color_a;
+                    const layer_color_b = ((pixel >>> 8) & 0xf) * k;
+                    const layer_color_g = ((pixel >>> 4) & 0xf) * k;
+                    const layer_color_r = (pixel & 0xf) * k;
+
+                    // Composite layer_color *under* the current result,
+                    // since we're working top down
+                    if (result_a === 0) {
+                        // First non-transparent value, just override
+                        result_r = layer_color_r;
+                        result_g = layer_color_g;
+                        result_b = layer_color_b;
+                        result_a = layer_color_a;
+                    } else {
+                        // Composite in premultiplied color space
+                        const k = 1 - result_a;
+                        result_r += layer_color_r * k;
+                        result_g += layer_color_g * k;
+                        result_b += layer_color_b * k;
+                        result_a += layer_color_a * k;
+                    }
+
+                    // Fully saturated after compositing
+                    if (result_a >= 0.995) {
+                        // No need to convert *back* from premultiplied because a ~= 1
+                        result.r = result_r;
+                        result.g = result_g;
+                        result.b = result_b;
+                        result.a = result_a;
+                        return -2;
+                    }
+                    hit = true;
+                    
+                } // sprite
+            } // layer
+        }
+    }
+
+    // Composited or never hit any sprite
+    
+    if (hit) {
+        // Convert back from premultiplied, if needed
+        result.a = result_a;
+        if (result_a > 0 && result_a < 0.995) {
+            const inv_a = 1 / result_a;
+            result.r = result_r * inv_a;
+            result.g = result_g * inv_a;
+            result.b = result_b * inv_a;
+        } else {
+            // No need to convert
+            result.r = result_r;
+            result.g = result_g;
+            result.b = result_b;
+        }
+        // Composited
+        return -2;
+    } else {
+        // Out of bounds
+        result.r = result.g = result.b = result.a = 0;
+        return -1;
+    }
+}
+
+
+function get_map_pixel_color_by_ws_coord(map, ws_coord, ws_z, replacement_array, result) {
     if (! map.spritesheet_table) { $error('The first argument to get_map_pixel_color_by_draw_coord() must be a map'); }
     const layer = (((ws_z || 0) - $offsetZ) / $scaleZ - map.z_offset) / map.z_scale;
-    return get_map_pixel_color(map, transform_ws_to_map_space(map, ws_coord), layer, replacement_array);
+    return get_map_pixel_color(map, transform_ws_to_map_space(map, ws_coord), layer, replacement_array, result);
 }
 
-    
+
 function get_map_sprite(map, map_coord, layer, replacement_array) {
     if (! map.spritesheet_table) { $error('The first argument to get_map_sprite() must be a map'); }
     layer = $Math.floor(layer || 0) | 0;
     let mx = $Math.floor(map_coord.x);
     let my = $Math.floor(map_coord.y);
 
-    if (map.wrap_x) { mx = loop(mx, map.size.x); }
-    if (map.wrap_y) { my = loop(my, map.size.y); }
+    if (map.wrap_x) { mx = $loop(mx, 0, map.size.x); }
+    if (map.wrap_y) { my = $loop(my, 0, map.size.y); }
     
     if ((layer >= 0) && (layer < map.layer.length) &&
         (mx >= 0) && (my >= 0) &&
@@ -3682,7 +3827,7 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
     const spriteSizeX = map.sprite_size.x;
     const spriteSizeY = map.sprite_size.y;
     
-    // Handle map wrapping with a 4x4 grid
+    // Handle map wrapping with a 3x3 grid
     const oldDrawOffsetX = $offsetX, oldDrawOffsetY = $offsetY;
     for (let shiftY = -1; shiftY <= +1; ++shiftY) {
         if (! map.wrap_y && shiftY !== 0) { continue; }
@@ -3693,8 +3838,8 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
             // Shift amount for this instance of the tiled map
             const mapSpaceOffset = xy(map.size.x * map.sprite_size.x * shiftX,
                                       map.size.y * map.sprite_size.y * shiftY);
-            $offsetX = oldDrawOffsetX + drawU.x * mapSpaceOffset.x + drawV.x * mapSpaceOffset.y;
-            $offsetY = oldDrawOffsetY + drawU.y * mapSpaceOffset.x + drawV.y * mapSpaceOffset.y;
+            $offsetX = oldDrawOffsetX + $scaleX * (drawU.x * mapSpaceOffset.x + drawV.x * mapSpaceOffset.y);
+            $offsetY = oldDrawOffsetY + $scaleY * (drawU.y * mapSpaceOffset.x + drawV.y * mapSpaceOffset.y);
             
             // Take the screen-space clip coordinates to draw coords.
             // This does nothing if there is no offset or scale
@@ -3805,7 +3950,7 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                         }
 
                         data.push({
-                            spritesheetIndex: sprite.spritesheet._index[0],
+                            spritesheetIndex: sprite._spritesheet._index[0],
                             cornerX:  sprite._x,
                             cornerY:  sprite._y,
                             sizeX:    sprite.size.x,
@@ -3928,8 +4073,6 @@ function draw_disk(pos, radius, color, outline, z) {
     const skx = (z * $skewXZ), sky = (z * $skewYZ);
     let x = (pos.x + skx) * $scaleX + $offsetX, y = (pos.y + sky) * $scaleY + $offsetY;
     z = z * $scaleZ + $offsetZ;
-    
-    radius = (radius + 0.5) | 0;
 
     // Culling optimization
     if ((x - radius > $clipX2 + 0.5) || (y - radius > $clipY2 + 0.5) || (z > $clipZ2 + 0.5) ||
@@ -3951,19 +4094,24 @@ function draw_disk(pos, radius, color, outline, z) {
     });
 }
 
+
 /** Converts {r,g,b}, {r,g,b,a}, {h,s,v}, or {h,s,v,a} to a packed Uint16 of the
-    form 0xABGR */
+    form 0xABGR.
+    
+    Performance of this routine is critical, so it is kept
+    very short to encourage inlining with the less-common case in a helper to encourage inlining of this 
+ */
 function $colorToUint16(color) {
     if (color === undefined) { return 0; }
-    
-    const a = color.a;
-    
-    let c = 0xF000 >>> 0;
-    if (a !== undefined) {
-        // >>> 0 ensures uint32 storage
-        c = ((($clamp(a, 0, 1) * 15 + 0.5) & 0xf) << 12) >>> 0;
-    }
+    const color_a = color.a;
+    const color_r = color.r;
+    const c = (color_a === undefined) ? 0xF000 : (((($clamp(color_a, 0, 1) * 15 + 0.5) & 0xf) << 12) >>> 0);
+    if (color_r === undefined) { return $hsvaToUint16(color, c); }
+    return (c | (($clamp(color.b, 0, 1) * 15 + 0.5) << 8) | (($clamp(color.g, 0, 1) * 15 + 0.5) << 4) | ($clamp(color_r, 0, 1) * 15 + 0.5)) >>> 0;
+}
 
+
+function $hsvaToUint16(color, c) {
     let r = 0, g = 0, b = 0, h = color.h;
 
     if (h !== undefined) {
@@ -3980,24 +4128,9 @@ function $colorToUint16(color) {
 
         k = (1 + 6 * h) % 6;
         b = v - v * s * $Math.max(0, $Math.min(k, 4 - k, 1));
-        
-        /*
-        r = v * (1 + s - s * $clamp($Math.abs($fract(h +  1 ) * 6 - 3) - 1, 0, 1));
-        g = v * (1 + s - s * $clamp($Math.abs($fract(h + 2/3) * 6 - 3) - 1, 0, 1));
-        b = v * (1 + s - s * $clamp($Math.abs($fract(h + 1/3) * 6 - 3) - 1, 0, 1));
-        */
-        
-    } else {
-        r = $clamp(color.r, 0, 1);
-        g = $clamp(color.g, 0, 1);
-        b = $clamp(color.b, 0, 1);
     }
 
-    if (r !== undefined) {
-        return (c | ((b * 15 + 0.5) << 8) | ((g * 15 + 0.5) << 4) | (r * 15 + 0.5)) >>> 0;
-    } else {
-        return 0xFFFF >>> 0;
-    }
+    return (c | ((b * 15 + 0.5) << 8) | ((g * 15 + 0.5) << 4) | (r * 15 + 0.5)) >>> 0;
 }
 
 
@@ -4333,15 +4466,151 @@ function draw_line(A, B, color, z, width) {
 }
 
 
-function draw_point(pos, color, z) {
-    // Skip graphics this frame
-    if (mode_frames % $graphicsPeriod !== 0) { return; }
 
+function draw_map_horizontal_span(start, width, map, map_coord0, map_coord1, min_layer, max_layer_exclusive, replacement_array, z, override_color, override_blend, invert_sprite_y) {
+    override_blend = override_blend || "lerp";
+
+    if (min_layer === undefined) {
+        min_layer = 0;
+    }
+
+    if (max_layer_exclusive === undefined) {
+        max_layer_exclusive = map.layer.length >>> 0;
+    }
+
+    min_layer = $Math.ceil(min_layer) >>> 0;
+    max_layer_exclusive = max_layer_exclusive >>> 0;
+
+    if ((max_layer_exclusive <= 0) || (min_layer >= map.layer.length)) {
+        // Nothing to do
+        return;
+    }
+    
+    // Transform and clip
+    z = (z || 0) - $camera.z;
+
+    if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
+        // Transform the arguments to account for the camera
+        const mag = (typeof $camera.zoom === 'number') ? $camera.zoom : $camera.zoom(z);
+        const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
+        const x = start.x - $camera.x, y = start.y - $camera.y;
+        start = {x: x * C + y * S, y: y * C - x * S};
+        width *= mag;
+    }
+    
+    const skx = z * $skewXZ, sky = z * $skewYZ;
+    let x = (start.x + skx) * $scaleX + $offsetX, y = (start.y + sky) * $scaleY + $offsetY;
+    z = z * $scaleZ + $offsetZ;
+    
+    x = $Math.floor(x) >>> 0; y = $Math.floor(y) >>> 0;
+    width = $Math.round(width);
+
+    // Completely clipped
+    if ((z < $clipZ1 - 0.5) || (z >= $clipZ2 + 0.5) ||
+        (x > $clipX2) || (x + width < $clipX1) ||
+        (y < $clipY1) || (y > $clipY2)) {
+        return;
+    }
+
+    // Compute derivatives before clipping width
+    let map_point_x = map_coord0.x;
+    let map_point_y = map_coord0.y;
+    let step_x = (map_coord1.x - map_coord0.x) / width
+    let step_y = (map_coord1.y - map_coord0.y) / width;
+
+    // Clip left
+    if (x < $clipX1) {
+        const dx = $clipX1 - x;
+        x = $clipX1 >>> 0;
+        map_point_x += step_x * dx;
+        map_point_y += step_y * dx;
+        width -= dx;
+    }
+
+    // Clip right
+    if (x + width > $clipX2) {
+        const dx = x + width - $clipX2;
+        width -= dx;
+    }
+
+    width = width >>> 0;
+
+    const color = {r:0, g:0, b:0, a:0};
+    
+    if (override_color === undefined) {
+        override_blend = false;
+    } else {
+        override_blend = override_blend || "lerp";
+        override_color = rgba(override_color);
+    }
+
+    // Preallocate the point array for the graphics command
+    const color_data = new Uint32Array(2 * width);
+
+    if (invert_sprite_y === undefined) {
+        invert_sprite_y = $scaleY < 0;
+    }
+    
+    // Draw the scanline. Because it has constant camera-space z, the 
+    // texture coordinate ("read_point") interpolates linearly
+    // under perspective projection.
+    for (let i = 0, pixel_index = (x + y * $SCREEN_WIDTH) >>> 0, ci = 0;
+         i < width;
+         ++i, ++pixel_index, ci += 2, map_point_x += step_x, map_point_y += step_y) {
+
+        // Call the low-level version, which avoids conversion to rgba() in the common case.
+        // Nearly all of the time of this routine (including the actual drawing) is spent in
+        // the following call.
+        
+        const pixel_value = $get_map_pixel_color(map, map_point_x, map_point_y, min_layer, max_layer_exclusive, replacement_array, color, invert_sprite_y);
+        
+        // For debugging vs. the optimized $get_map_pixel_color
+        //const pixel_value = -2; get_map_pixel_color(map, xy(map_point_x, map_point_y), min_layer, max_layer_exclusive, replacement_array, color, invert_sprite_y);
+
+        if (override_blend) {
+            if (pixel_value >= 0) {
+                // Compute color from pixel, as it is not present yet
+                // because $get_pixel_color() used an optimized path.
+                color.a = ((pixel_value >>> 12) & 0xf) * (1 / 15);
+                color.b = ((pixel_value >>> 8) & 0xf) * (1 / 15);
+                color.g = ((pixel_value >>> 4) & 0xf) * (1 / 15);
+                color.r = (pixel_value & 0xf) * (1 / 15);
+            }
+            pixel_value = -2;
+            
+            if (override_blend === "lerp") {
+                RGB_LERP(color, override_color, override_color.a, color);
+            } else { // Multiply
+                RGB_MUL_RGB(color, override_color, color);
+            }
+        }
+
+        color_data[ci] = pixel_index;
+        color_data[ci + 1] = pixel_value >= 0 ? pixel_value : (pixel_value === -1 ? 0 : $colorToUint16(color));
+    } // for i
+
+    $addGraphicsCommand({
+        z: z,
+        baseZ: z,
+        opcode: 'PIX',
+        data: color_data})
+}
+
+
+function draw_point(pos, color, z) {
+    // Not worth the fp64 modulo to check if graphics is being skipped
+    // this frame
+    
     if (pos.pos) {
         z = pos.z;
         color = pos.color;
         pos = pos.pos;
     }
+
+    color = $colorToUint16(color);
+
+    // Completely transparent, nothing to render!
+    if (color & 0xF000 === 0) { return; }
     
     z = (z || 0) - $camera.z;
 
@@ -4357,7 +4626,7 @@ function draw_point(pos, color, z) {
     let x = (pos.x + skx) * $scaleX + $offsetX, y = (pos.y + sky) * $scaleY + $offsetY;
     z = z * $scaleZ + $offsetZ;
     
-    x = $Math.floor(x); y = $Math.floor(y);
+    x = $Math.floor(x) >>> 0; y = $Math.floor(y) >>> 0;
     
     if ((z < $clipZ1 - 0.5) || (z >= $clipZ2 + 0.5) ||
         (x < $clipX1) || (x > $clipX2) ||
@@ -4370,13 +4639,13 @@ function draw_point(pos, color, z) {
         // Many points with the same z value are often drawn right
         // after each other.  Aggregate these (preserving their
         // ordering) for faster sorting and rendering.
-        prevCommand.data.push((x + y * $SCREEN_WIDTH) >>> 0, $colorToUint16(color)); 
+        prevCommand.data.push((x + y * ($SCREEN_WIDTH >>> 0)) >>> 0, color); 
     } else {
         $addGraphicsCommand({
             z: z,
             baseZ: z,
             opcode: 'PIX',
-            data: [(x + y * $SCREEN_WIDTH) >>> 0, $colorToUint16(color)]
+            data: [(x + y * ($SCREEN_WIDTH >>> 0)) >>> 0, color]
         });
     }
 }
@@ -4724,8 +4993,9 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
 
     const height = referenceFont._charHeight;
 
-    // Force alignment to retain relative integer pixel alignment
-    x -= $Math.round(width * (1 + x_align) * 0.5);
+    // Force alignment to retain relative integer pixel alignment.
+    // The - 0.4999 is to align with rectangle and disk centering rules.
+    x = $Math.round(x - width * (1 + x_align) * 0.5);
 
     // Move back to account for the border and shadow padding
     if (x_align !== +1) { --x; }
@@ -4806,8 +5076,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
 
 /** Processes formatting and invokes $draw_text() */
 function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, wrap_width, text_size, markup) {
-    // Skip graphics this frame
-    if (mode_frames % $graphicsPeriod !== 0) { return; }
+    // Cannot skip in off frames because it has a return value
     
     if (font && font.font) {
         // Keyword version
@@ -4919,18 +5188,19 @@ function $clone(a) {
 }
 
 
+// Slightly faster than $Math.max($Math.min(x, H), L) on Chrome
 function $clamp(x, L, H) {
-    return $Math.max($Math.min(x, H), L);
+    return (x < L) ? L : (x > H) ? H : x;
 }
 
 
 function get_sprite_pixel_color(spr, pos, result) {
-    if (! (spr && spr.spritesheet)) {
+    if (! (spr && spr._spritesheet)) {
         $error('Called get_sprite_pixel_color() on an object that was not a sprite asset. (' + unparse(spr) + ')');
     }
 
-    const x = $Math.floor((spr.scale.x > 0) ? pos.x : (spr.size.x - 1 - pos.x));
-    const y = $Math.floor((spr.scale.y > 0) ? pos.y : (spr.size.y - 1 - pos.y));
+    const x = $Math.floor((spr.scale.x > 0) ? pos.x : (spr.size.x - 1 - pos.x)) >>> 0;
+    const y = $Math.floor((spr.scale.y > 0) ? pos.y : (spr.size.y - 1 - pos.y)) >>> 0;
     
     if ((x < 0) || (x >= spr.size.x) || (y < 0) || (y >= spr.size.y)) {
         if (result) {
@@ -4939,8 +5209,8 @@ function get_sprite_pixel_color(spr, pos, result) {
             return undefined;
         }
     } else {
-        const sheet = spr.spritesheet;
-        const pixel = sheet._uint16Data[(spr._x + x) + (spr._y + y) * sheet._uint16Data.width];
+        const data = spr._spritesheet._uint16Data;
+        const pixel = data[((spr._x >>> 0) + x) + ((spr._y >>> 0) + y) * (data.width >>> 0)] >>> 0;
 
         result = result || {r:0, g:0, b:0, a:0};
         
@@ -4955,7 +5225,7 @@ function get_sprite_pixel_color(spr, pos, result) {
 
 
 function draw_sprite_corner_rect(CC, corner, size, z) {
-    if (! (CC && CC.spritesheet)) {
+    if (! (CC && CC._spritesheet)) {
         $error('Called draw_sprite_corner_rect() on an object that was not a sprite asset. (' + unparse(CC) + ')');
     }
 
@@ -5003,16 +5273,16 @@ function draw_sprite_corner_rect(CC, corner, size, z) {
     } $popGraphicsState();
     
     // Generate relative sprites
-    const LT = CC.spritesheet[$Math.max(0, CC._tileX - 1)][$Math.max(0, CC._tileY - 1)];
-    const CT = CC.spritesheet[$Math.max(0, CC._tileX    )][$Math.max(0, CC._tileY - 1)];
-    const RT = CC.spritesheet[$Math.max(0, CC._tileX + 1)][$Math.max(0, CC._tileY - 1)];
+    const LT = CC._spritesheet[$Math.max(0, CC._tileX - 1)][$Math.max(0, CC._tileY - 1)];
+    const CT = CC._spritesheet[$Math.max(0, CC._tileX    )][$Math.max(0, CC._tileY - 1)];
+    const RT = CC._spritesheet[$Math.max(0, CC._tileX + 1)][$Math.max(0, CC._tileY - 1)];
 
-    const LC = CC.spritesheet[$Math.max(0, CC._tileX - 1)][$Math.max(0, CC._tileY    )];
-    const RC = CC.spritesheet[$Math.max(0, CC._tileX + 1)][$Math.max(0, CC._tileY    )];
+    const LC = CC._spritesheet[$Math.max(0, CC._tileX - 1)][$Math.max(0, CC._tileY    )];
+    const RC = CC._spritesheet[$Math.max(0, CC._tileX + 1)][$Math.max(0, CC._tileY    )];
 
-    const LB = CC.spritesheet[$Math.max(0, CC._tileX - 1)][$Math.max(0, CC._tileY + 1)];
-    const CB = CC.spritesheet[$Math.max(0, CC._tileX    )][$Math.max(0, CC._tileY + 1)];
-    const RB = CC.spritesheet[$Math.max(0, CC._tileX + 1)][$Math.max(0, CC._tileY + 1)];
+    const LB = CC._spritesheet[$Math.max(0, CC._tileX - 1)][$Math.max(0, CC._tileY + 1)];
+    const CB = CC._spritesheet[$Math.max(0, CC._tileX    )][$Math.max(0, CC._tileY + 1)];
+    const RB = CC._spritesheet[$Math.max(0, CC._tileX + 1)][$Math.max(0, CC._tileY + 1)];
 
     // Centers of the sprites on these edges
     const left   = ((x1 - CC.size.x * 0.5) - $offsetX) / $scaleX - 0.5;
@@ -5129,7 +5399,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
         spr = spr[0][0];
     }
 
-    if (! (spr && spr.spritesheet)) {
+    if (! (spr && spr._spritesheet)) {
         $error('Called draw_sprite() on an object that was not a sprite asset. (' + unparse(spr) + ')');
     }
     
@@ -5188,10 +5458,10 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
         override_color = rgba(override_color);
     }
 
-    $console.assert(spr.spritesheet._index[0] < $spritesheetArray.length);
+    $console.assert(spr._spritesheet._index[0] < $spritesheetArray.length);
 
     const sprElt = {
-        spritesheetIndex:  spr.spritesheet._index[0],
+        spritesheetIndex:  spr._spritesheet._index[0],
         cornerX:       spr._x,
         cornerY:       spr._y,
         sizeX:         spr.size.x,
@@ -5315,8 +5585,8 @@ function set_background(c) {
         c = c[0][0];
     }
 
-    if (c.spritesheet && (c.spritesheet.size.x !== $SCREEN_WIDTH || c.spritesheet.size.y !== $SCREEN_HEIGHT ||
-                          c.size.x !== $SCREEN_WIDTH || c.size.y !== $SCREEN_HEIGHT)) {
+    if (c._spritesheet && (c._spritesheet.size.x !== $SCREEN_WIDTH || c._spritesheet.size.y !== $SCREEN_HEIGHT ||
+                           c.size.x !== $SCREEN_WIDTH || c.size.y !== $SCREEN_HEIGHT)) {
         $error('The sprite and its spritesheet for set_background() must be exactly the screen size.')
     }
     
@@ -8109,9 +8379,6 @@ function $makeCoroutine(code) {
 //                 Software rendering implementation of the Host API                  //
 ////////////////////////////////////////////////////////////////////////////////////////
 
-/** Used by show() */
-function $zSort(a, b) { return a.z - b.z; }
-
 function get_mode() {
     return $gameMode;
 }
@@ -8282,4 +8549,3 @@ function local_time() {
         timezone:    d.getTimezoneOffset()
     };
 }
-

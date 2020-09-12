@@ -1,0 +1,39 @@
+def Clock():
+    return ClockReset({})
+
+def ClockReset(clock):
+    extend(clock, {
+        ticks : 0,
+        seconds : 0,
+        minutes : 0,
+    })
+    return clock
+
+def ClockStep(clock):
+    if get_mode() != Play:
+        return
+
+    ++clock.ticks
+    if clock.ticks == 60:
+        clock.ticks = 0
+        ++clock.seconds
+        if clock.seconds == 60:
+            clock.seconds = 0
+            ++clock.minutes
+
+def ClockDraw(clock, pos, z = ZLayers.OVER):
+    const workPos = clone(pos)
+
+    DrawStandardText(workPos,
+            format_number(min(99, clock.minutes), "00"), z)
+
+    workPos.x += 14
+    DrawStandardText(workPos, ":", z)
+
+    workPos.x += 6
+
+    DrawStandardText(workPos,
+            format_number(clock.seconds, "00"), z)
+
+
+

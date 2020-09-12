@@ -1,0 +1,100 @@
+
+
+let introAudio = nil
+let mainAudio = nil
+let panicAudio = nil
+
+let CurrentSongIdx = 0
+
+const Songs = [
+    {
+        main : plunkyMain_sound,
+        intro : plunkyIntro_sound,
+        panic : plunkyPanic_sound,
+    },
+    {
+        main : bubbly_sound,
+        panic : bubblyPanic_sound,
+    },
+    {
+        main : creamy_sound,
+        panic : creamyPanic_sound,
+    },
+    {
+        main : minty_sound,
+        panic : mintyPanic_sound,
+    },
+    {
+        main : salty_sound,
+        panic : saltyPanic_sound,
+    },
+    {
+        main : savory_sound,
+        panic : savoryPanic_sound,
+    },
+    {
+        main : tangy_sound,
+        panic : tangyPanic_sound,
+    },
+    {
+        main : tart_sound,
+        panic : tartPanic_sound,
+    },
+]
+
+
+
+
+
+def MusicClear():
+    if introAudio:
+        stop_audio(introAudio)
+        introAudio = nil
+
+    if mainAudio:
+        stop_audio(mainAudio)
+        mainAudio = nil
+
+    if panicAudio:
+        stop_audio(panicAudio)
+        panicAudio = nil
+
+
+def MusicBegin():
+    MusicClear()
+    if Songs[CurrentSongIdx].intro:
+        introAudio = play_sound(Songs[CurrentSongIdx].intro)
+    else:
+        mainAudio = play_sound(Songs[CurrentSongIdx].main, true)
+
+def MusicStep():
+    if introAudio:
+        if get_audio_status(introAudio).state == "ENDED":
+            introAudio = nil
+            mainAudio = play_sound(plunkyMain_sound, true)
+
+def MusicSetPanic(state):
+    if state:
+        if introAudio:
+            stop_audio(introAudio)
+            introAudio = nil
+
+        if mainAudio:
+            stop_audio(mainAudio)
+
+        panicAudio = play_sound(Songs[CurrentSongIdx].panic, true)
+
+    else:
+        if panicAudio:
+            stop_audio(panicAudio)
+            panicAudio = nil
+
+        if introAudio:
+            stop_audio(introAudio)
+            introAudio = nil
+
+        if mainAudio:
+            resume_audio(mainAudio)
+        else:
+            mainAudio = play_sound(Songs[CurrentSongIdx].main, true)
+

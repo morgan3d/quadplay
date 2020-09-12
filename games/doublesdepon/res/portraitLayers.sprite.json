@@ -1,0 +1,13 @@
+{
+    "url": "portraitLayers.png",
+    "sprite_size": {
+        "x": 40,
+        "y": 36
+    },
+    "license": "©2020 Steve LaVietes. Available under the CC BY 3.0 license https://creativecommons.org/licenses/by/3.0/",
+    "gutter": 0,
+    
+    "default_frames": 1,
+    "transpose": true,
+    "pivot" : {"x" : 0, "y" : 0}
+}

@@ -1,0 +1,172 @@
+{
+    "title": "Doubles de Pon",
+    "developer": "Steve LaVietes",
+    "copyright": "©2020 Steve LaVietes",
+    "license": "Available under the CC BY 3.0 license https://creativecommons.org/licenses/by/3.0/",
+    "packages": [],
+    "scripts": [
+        "src/Block.pyxl",
+        "src/Bubble.pyxl",
+        "src/Board.pyxl",
+        "src/Clock.pyxl",
+        "src/Cursor.pyxl",
+        "src/DashBoard.pyxl",
+        "src/Garbage.pyxl",
+        "src/Globals.pyxl",
+        "src/HiScores.pyxl",
+        "src/Input.pyxl",
+        "src/LevelThermometer.pyxl",
+        "src/LinkedPool.pyxl",
+        "src/MatchesAndGravity.pyxl",
+        "src/Menu.pyxl",
+        "src/Music.pyxl",
+        "src/Sfx.pyxl",
+        "src/Text.pyxl"
+    ],
+    "modes": [
+        "modes/ControllerOrder",
+        "modes/GameStart",
+        "modes/Play",
+        "modes/GameEnd",
+        "modes/MainMenu",
+        "modes/SelectMenu"
+    ],
+    "start_mode": "MainMenu",
+    "docs": [
+        "todo.md"
+    ],
+    "assets": {
+        "blocks_sprite": "res/blocks.sprite.json",
+        "blocksPalette_sprite": "res/blocksPalette.sprite.json",
+        "chromeBorders_sprite": "res/chromeBorders.sprite.json",
+        "cursor_sprite": "res/cursor.sprite.json",
+        "countInNumbers_sprite": "res/countInNumbers.sprite.json",
+        "dashboard_sprite": "res/dashboard.sprite.json",
+        "dashboardSolo_sprite": "res/dashboardSolo.sprite.json",
+        "levelThermometer_sprite": "res/levelThermometer.sprite.json",
+        "menuBackdrop_sprite": "res/menuBackdrop.sprite.json",
+        "portraitLayers_sprite": "res/portraitLayers.sprite.json",
+        
+        "selectCursors_sprite": "res/selectCursors.sprite.json",
+        "standardFont_sprite": "res/standardFont.sprite.json",
+        "wallpaper_sprite": "res/wallpaper.sprite.json",
+        "winLose_sprite": "res/winLose.sprite.json",
+        "logo_sprite": "res/logo.sprite.json",
+        "logoWaves_sprite": "res/logoWaves.sprite.json",
+        "pulseBg_sprite": "res/pulseBg.sprite.json",
+        "pop1_sound": "snd/pop1.sound.json",
+        "pop2_sound": "snd/pop2.sound.json",
+        "pop3_sound": "snd/pop3.sound.json",
+        "pop4_sound": "snd/pop4.sound.json",
+        "pop5_sound": "snd/pop5.sound.json",
+        "pop6_sound": "snd/pop6.sound.json",
+        "pop7_sound": "snd/pop7.sound.json",
+        "pop8_sound": "snd/pop8.sound.json",
+        "pop9_sound": "snd/pop9.sound.json",
+        "pop10_sound": "snd/pop10.sound.json",
+        "pop11_sound": "snd/pop11.sound.json",
+        "pop12_sound": "snd/pop12.sound.json",
+        "pop13_sound": "snd/pop13.sound.json",
+        "pop14_sound": "snd/pop14.sound.json",
+        "pop15_sound": "snd/pop15.sound.json",
+        "cursor_sound": "snd/cursor.sound.json",
+        "drop_sound": "snd/drop.sound.json",
+        "swap_sound": "snd/swap.sound.json",
+        "match1_sound": "snd/match1.sound.json",
+        "match2_sound": "snd/match2.sound.json",
+        "match3_sound": "snd/match3.sound.json",
+        "match4_sound": "snd/match4.sound.json",
+        "match5_sound": "snd/match5.sound.json",
+        "end_sound": "snd/end.sound.json",
+        "plunkyIntro_sound": "snd/plunkyIntro.sound.json",
+        "plunkyMain_sound": "snd/plunkyMain.sound.json",
+        "plunkyPanic_sound": "snd/plunkyPanic.sound.json",
+        "bubbly_sound": "snd/bubbly.sound.json",
+        "bubblyPanic_sound": "snd/bubblyPanic.sound.json",
+        "creamy_sound": "snd/creamy.sound.json",
+        "creamyPanic_sound": "snd/creamyPanic.sound.json",
+        "minty_sound": "snd/minty.sound.json",
+        "mintyPanic_sound": "snd/mintyPanic.sound.json",
+        "salty_sound": "snd/salty.sound.json",
+        "saltyPanic_sound": "snd/saltyPanic.sound.json",
+        "savory_sound": "snd/savory.sound.json",
+        "savoryPanic_sound": "snd/savoryPanic.sound.json",
+        "tangy_sound": "snd/tangy.sound.json",
+        "tangyPanic_sound": "snd/tangyPanic.sound.json",
+        "tart_sound": "snd/tart.sound.json",
+        "tartPanic_sound": "snd/tartPanic.sound.json",
+        "name_font": "quad://fonts/scoreboard-6.font.json",
+        "smallLabel_font": "res/smallLabel-5.font.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 4,
+    "cooperative": true,
+    "competitive": true,
+    "achievements": false,
+    "highscores": false,
+    "description": "Swapping puzzle game",
+    "constants": {
+        "text_color": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": 1
+                },
+                "g": {
+                    "type": "number",
+                    "value": 1
+                },
+                "b": {
+                    "type": "number",
+                    "value": 1
+                }
+            }
+        },
+        "DO_COUNT_IN": {
+            "type": "boolean",
+            "value": true,
+            "description": "where the game starts immediately"
+        },
+        "REQUIRE_ONLY_ONE_COMMIT": {
+            "type": "boolean",
+            "value": false,
+            "description": "for testing doubles, require only one player to commit"
+        },
+        "ALLOW_CURSOR_OVERLAP": {
+            "type": "boolean",
+            "value": true,
+            "description": "if enabled, doubles cursors can overlap one another"
+        },
+        "ALLOW_CURSOR_WRAP": {
+            "type": "boolean",
+            "value": true,
+            "description": "if enabled, cursors can horizontally wrap for movement and swapping"
+        },
+        "DISPLAY_DOUBLES_CURSOR_LABEL": {
+            "type": "boolean",
+            "value": true,
+            "description": "if enabled, doubles cursors have a distinguishing label"
+        },
+        "DISPLAY_THICK_CURSOR": {
+            "type": "boolean",
+            "value": true,
+            "description": "if enabled, cursors are thicker"
+        },
+        "THICK_CURSOR_VARIANT": {
+            "type": "number",
+            "value": 0,
+            "description": "try different thick cursor variations (0 or 1 so far)"
+        },
+        "DEBUG_GARBAGE": {
+            "type": "boolean",
+            "value": false,
+            "description": "q key drops garbage for testing"
+        }
+    },
+    "screen_size": {
+        "x": 384,
+        "y": 224
+    }
+}

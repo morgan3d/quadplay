@@ -1,0 +1,393 @@
+
+def Garbage(width_, height_, metal_=false):
+    return {
+        width : width_,
+        height : height_,
+        forceX : -1,
+        count : 0,
+        metal : metal_,
+    }
+
+def BoardAppendGarbage(board, width, height, waitDur, metal=false):
+    const garbage = push(
+            board.pendingGarbage, Garbage(width, height, metal))
+    garbage.count = waitDur
+    return garbage
+
+def BoardPrependPendingGarbage(board, width, height, forceX = -1):
+    const garbage = insert(
+            board.pendingGarbage, 0, Garbage(width, height, false))
+    garbage.forceX = forceX
+
+    return garbage
+
+
+def BoardProcessPendingGarbage(board):
+    def p(garbage):
+        if garbage.count:
+            garbage.count -= 1
+            return iterate.BREAK
+
+        if garbage.forceX > -1:
+            const row = BoardGetRow(board, 0)
+            for i < garbage.width:
+                const block = row[i + garbage.forceX]
+                if block.type or block.state:
+                    return iterate.BREAK
+
+            BoardAddGarbage(board, garbage.forceX,
+                    0, garbage.width, garbage.height)
+
+            board.pendingGarbageOffset = 20
+
+            return iterate.REMOVE
+        else if BoardDropGarbageIfSpaceAllows(
+                board, garbage.width, garbage.height, garbage.metal):
+
+            board.pendingGarbageOffset = 20
+            return iterate.REMOVE
+        else:
+            return iterate.BREAK
+
+    iterate(board.pendingGarbage, p)
+
+def BoardDropGarbageIfSpaceAllows(board, width, height, metal=false):
+    // TODO
+    const possibleSpots = []
+    let runLen = 0
+
+    // TODO, metal
+
+    const row = BoardGetRow(board, 0)
+
+    for x < board.sizeX:
+        const block = row[x]
+        if not block.type and not block.state:
+            ++runLen
+        else:
+            runLen = 0
+
+        if runLen >= width:
+            push(possibleSpots, x - (width - 1))
+
+    if size(possibleSpots) == 0:
+        return false
+
+    BoardAddGarbage(board, possibleSpots[
+            random_integer(0, size(possibleSpots) - 1)], 0,
+                    width, height, metal)
+
+    return true
+
+
+
+def BoardAddGarbage(board, left, bottom, width, height, metal=false):
+    for i < height:
+        if not BoardAddGarbageRow(board, left, bottom, width, height, i, metal):
+            return
+
+def BoardAddGarbageRow(board, left, bottom, width, height, rowIndex, metal=false):
+    if bottom - rowIndex < 0:
+        return false
+
+    const rowY = bottom - rowIndex
+    const row = BoardGetRow(board, rowY)
+
+    let leftType = nil
+    let midType = nil
+    let rightType = nil
+
+    if metal:
+        leftType = GarbageType.METAL_L
+        midType = GarbageType.METAL_C
+        rightType = GarbageType.METAL_R
+    else if rowIndex == 0: // bottom
+        if height == 1:
+            // TODO metal garbage
+            leftType = GarbageType.NSW
+            midType = GarbageType.NS
+            rightType = GarbageType.NES
+        else:
+            leftType = GarbageType.SW
+            midType = GarbageType.S
+            rightType = GarbageType.ES
+    else if rowIndex == height - 1: //top
+        leftType = GarbageType.NW
+        midType = GarbageType.N
+        rightType = GarbageType.NE
+    else:
+        leftType = GarbageType.W
+        midType = GarbageType.C
+        rightType = GarbageType.E
+
+    def SetFields_(B, T, X, Y):
+        B.state = BlockState.GARBAGE
+        B.fallenOnce = false
+        B.type = T
+        B.count = 0
+        B.count2 = 0
+        B.garbageWidth = width
+        B.garbageHeight = height
+        B.garbageX = X
+        B.garbageY = Y
+
+
+    SetFields_(row[left], leftType, 0, rowIndex)
+    SetFields_(row[left + width - 1], rightType, width - 1, rowIndex)
+    for i < width - 2:
+        SetFields_(row[left + i + 1], midType, i + 1, rowIndex)
+
+    // no faces on metal
+    if metal:
+        return true
+
+
+    const oddY = height mod 2
+    const centerY = bottom - floor((height / 2)) + (if oddY then 0 else 1)
+
+    if centerY == rowY:
+        const centerX = left + floor((width - 1) / 2)
+        const oddX = width mod 2
+
+        if oddY:
+            if height == 1:
+                if oddX:
+                    row[centerX].type = GarbageType.FACE_C_NS
+                else:
+                    row[centerX].type = GarbageType.FACE_L_NS
+                    row[centerX + 1].type = GarbageType.FACE_R_NS
+            else:
+                if oddX:
+                    row[centerX].type = GarbageType.FACE_C
+                else:
+                    row[centerX].type = GarbageType.FACE_L
+                    row[centerX + 1].type = GarbageType.FACE_R
+        else:
+            // even Y, on the bottom faces
+            if height == 2:
+                if oddX:
+
+                    row[centerX].type = GarbageType.FACE_B_S
+                else:
+
+                    row[centerX].type = GarbageType.FACE_BL_S
+                    row[centerX + 1].type = GarbageType.FACE_BR_S
+            else:
+                if oddX:
+
+                    row[centerX].type = GarbageType.FACE_B
+                else:
+
+                    row[centerX].type = GarbageType.FACE_BL
+                    row[centerX + 1].type = GarbageType.FACE_BR
+    else if (not oddY) and centerY - 1 == rowY:
+        const centerX = left + floor((width - 1) / 2)
+        const oddX = width mod 2
+
+        if height == 2:
+            if oddX:
+                row[centerX].type = GarbageType.FACE_T_N
+            else:
+                row[centerX].type = GarbageType.FACE_TL_N
+                row[centerX + 1].type = GarbageType.FACE_TR_N
+        else:
+            if oddX:
+                row[centerX].type = GarbageType.FACE_T
+            else:
+                row[centerX].type = GarbageType.FACE_TL
+                row[centerX + 1].type = GarbageType.FACE_TR
+
+    return true
+
+
+let g_breakGarbageDepth_ = 0
+const BREAKGARBAGERECURSIONLIMIT = 5
+
+def IsMetal(block):
+    return block.type >= GarbageType.METAL_L
+
+
+def BoardBreakGarbage(board, x_, y_, baseDuration, chain_, seqIdxStart):
+    let block = BoardGetRow(board, y_)[x_]
+
+    if block.state != BlockState.GARBAGE:
+        return 0
+
+    const chain = max(block.chain, chain_)
+
+    // find origin
+    const x = x_ - block.garbageX
+    let y = y_ + block.garbageY
+
+    block = BoardGetRow(board, y)[x]
+
+    if block.state != BlockState.GARBAGE:
+        return 0
+
+    if g_breakGarbageDepth_ > BREAKGARBAGERECURSIONLIMIT:
+        return 0
+
+    ++g_breakGarbageDepth_
+
+    // set first to prevent it from matching back to us
+    block.state = BlockState.GARBAGEMATCHING; 
+
+    const width = block.garbageWidth
+    let height = block.garbageHeight
+
+    // trim off the top if we are not fully on screen
+    // y 0, height = 1
+    // y = 0, height = 2
+    // y = 1, height = 3
+    if y + 1 < height:
+        const extraRows = height - (y + 1)
+        height -= extraRows
+        BoardPrependPendingGarbage(board, width, extraRows, x)
+
+    const numBlocks = width * height
+
+    const widthMax = board.sizeX - 1
+    const heightMax = height - 1
+
+    const dur = baseDuration + (numBlocks * MatchConstants.POPOFFSET)
+    let pad = baseDuration
+
+    let maxDur = dur
+
+    let seqIdx = seqIdxStart[0]
+    seqIdxStart[0] += numBlocks
+
+    const isMetal = IsMetal(block)
+    let record = nil
+
+
+
+    for i < height:
+        if y < 0:
+            break
+
+        let rx = x + width - 1
+        block = BoardGetRow(board, y)[rx]
+
+        // check left
+        if x:
+            const leftBlock = BoardGetRow(board, y)[x - 1]
+            if (leftBlock.state == BlockState.GARBAGE
+                    and isMetal == IsMetal(leftBlock)):
+                const maxDurTmp = BoardBreakGarbage(
+                        board, x - 1, y, dur, chain, seqIdxStart)
+                maxDur = max(maxDur, maxDurTmp)
+
+        // check right
+        if rx < widthMax:
+            const rightBlock = BoardGetRow(board, y)[rx + 1]
+            if (rightBlock.state == BlockState.GARBAGE
+                    and isMetal == IsMetal(rightBlock)):
+                const maxDurTmp = BoardBreakGarbage(
+                        board, rx + 1, y, dur, chain, seqIdxStart)
+                maxDur = max(maxDur, maxDurTmp)
+
+
+
+        for j < width:
+            block = BoardGetRow(board, y)[rx]
+            // check down
+            if i == 0 and y < 11:
+                const testBlock = BoardGetRow(board, y + 1)[rx]
+                if (testBlock.state == BlockState.GARBAGE
+                        and isMetal == IsMetal(testBlock)):
+                    const maxDurTmp = BoardBreakGarbage(
+                            board, rx, y + 1, dur, chain, seqIdxStart)
+                    maxDur = max(maxDur, maxDurTmp)
+
+            // check up
+            if y and i == heightMax:
+                const testBlock = BoardGetRow(board, y - 1)[rx]
+                if (testBlock.state == BlockState.GARBAGE
+                        and isMetal == IsMetal(testBlock)):
+                    const maxDurTmp = BoardBreakGarbage(
+                            board, rx, y - 1, dur, chain, seqIdxStart)
+                    maxDur = max(maxDur, maxDurTmp)
+
+            record = BoardAppendMatchRecord(board, record, rx, y)
+            record.dur = dur
+            record.chain = chain
+            record.seqIdx = seqIdx
+            ++seqIdx
+            block.match = record
+            block.state = BlockState.GARBAGEMATCHING
+            // TODO, run prevention?
+            block.type = random_integer(1, board.blockTypeCount)
+            block.count = 0
+            block.count2 = pad
+
+            pad += MatchConstants.POPOFFSET
+            --rx
+            
+
+        --y
+
+
+    if maxDur > dur:
+        while record:
+            record.dur = maxDur
+            record = record.seqPrev
+
+    --g_breakGarbageDepth_
+
+    return maxDur
+
+
+
+def BoardDrawPendingGarbage(board):
+    if board.pendingGarbageOffset:
+        board.pendingGarbageOffset -= 2
+
+    if not size(board.pendingGarbage):
+        return
+
+    const screenY = board.pos.y - 22
+    let screenX = board.pos.x
+
+    const offsetX = if board.boardIdx then 20 else -20
+
+    
+
+    if offsetX < 0:
+        screenX = screenX + (board.sizeX * 16) - 16
+        screenX -= board.pendingGarbageOffset
+    else:
+        screenX += board.pendingGarbageOffset
+
+
+    for entry in board.pendingGarbage:
+        
+        let offset = 0
+        
+        if entry.metal:
+            offset = 10
+        else if entry.height == 1:
+            offset = min(entry.width - 3, 5)
+        else:
+            offset = min(entry.height, 6) - 2 + 5
+
+        // TODO, validate possible overflow
+        // if (not blocks_sprite[9][12 + offset]):
+        //     debug_print("offset", offset, "width", entry.width, "height", entry.height)
+        // assert(blocks_sprite[9][12 + offset], entry.height)
+
+        offset = min(max(0, offset), 10)
+
+        draw_sprite(blocks_sprite[9][12 + offset],
+                xy(screenX, screenY), 0, nil, 1, 2)
+
+
+        screenX += offsetX
+
+
+
+
+
+
+
+

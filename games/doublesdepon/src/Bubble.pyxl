@@ -1,0 +1,350 @@
+
+const BubbleType = {
+    COMBO : 0,
+    CHAIN : 1,
+}
+
+const BubbleDir = {
+    LEFT : 0,
+    RIGHT : 1,
+}
+
+//----------------------------------------------------------------------------
+
+def Bubble():
+    return BubbleReset({})
+
+def BubbleReset(bubble):
+
+    bubble.type = BubbleType.COMBO
+    bubble.pos = xy(0, 0)
+    bubble.prevPos = xy(0, 0)
+    bubble.value = 0
+    bubble.count = 0
+    bubble.dir = BubbleDir.LEFT
+
+    bubble.garbageTarget = nil
+    bubble.garbageLevel = 1
+    bubble.garbageMult = 1
+    bubble.delta = nil
+    bubble.metal = false
+
+    return bubble
+
+//----------------------------------------------------------------------------
+
+def BubbleStep(bubble, pool):
+    extend(bubble.prevPos, bubble.pos)
+
+    ++bubble.count
+
+    if bubble.count == BubbleConstants.BUBBLETIME:
+        if bubble.garbageTarget == nil:
+            BubbleDeliverGarbage(bubble)
+            LinkedPoolRemove(pool, bubble)
+            return
+        else:
+            if size(Boards) == 1:
+                bubble.dir = BubbleDir.RIGHT
+            else if bubble.garbageTarget.boardIdx:
+                bubble.dir = BubbleDir.RIGHT
+            else:
+                bubble.dir = BubbleDir.LEFT
+
+    if bubble.count >= BubbleConstants.BUBBLETIME:
+        if bubble.count >= BubbleConstants.BUBBLEGARBAGETIME:
+            
+            if bubble.count == BubbleConstants.BUBBLEGARBAGETIME + 12:
+                BubbleDeliverGarbage(bubble)
+                LinkedPoolRemove(pool, bubble)
+            return
+        else if bubble.count >= BubbleConstants.BUBBLEWINDUPTIME:
+            // TODO, consider bubble.dir
+
+            if not bubble.delta:
+                // calculate delta
+                
+                let dst = nil
+
+                if size(Boards) == 1:
+                    const board = Boards[bubble.garbageTarget]
+                    dst = clone(board.pos)
+                    dst.x += board.sizeX * 16
+                    dst.x += 36
+                    dst.y += 24
+                else:
+                    dst = xy(
+                        bubble.garbageTarget.pos.x,
+                        bubble.garbageTarget.pos.y - 18
+                    )
+
+                    if bubble.dir == BubbleDir.LEFT:
+                        dst.x += bubble.garbageTarget.sizeX * 16 - 16
+
+                const d = (
+                    BubbleConstants.BUBBLEGARBAGETIME
+                            - BubbleConstants.BUBBLEWINDUPTIME)
+
+                bubble.delta = (dst - bubble.pos) / xy(d, d)
+
+            // apply delta
+            bubble.pos.x += bubble.delta.x
+            bubble.pos.y += bubble.delta.y
+            return
+
+    bubble.pos.y -= BubbleConstants.YOFFSETS[bubble.count]
+
+    if bubble.dir == BubbleDir.RIGHT:
+        bubble.pos.x += BubbleConstants.XOFFSETS[bubble.count]
+    else:
+        bubble.pos.x -= BubbleConstants.XOFFSETS[bubble.count]
+
+
+//----------------------------------------------------------------------------
+
+
+const kBubbleOrbitS = sin(π / 4.0)
+const kBubbleOrbitC = cos(π / 4.0)
+
+def BubbleDraw(bubble):
+
+    // XXX testing orbiting elements around garbage send
+    if bubble.count and bubble.garbageTarget != nil:
+        const trailMult = 5
+        const trailSteps = 10
+        for i < trailSteps:
+            
+            const nt =  (1.0 - (i / (trailSteps - 1)))
+            const count = (bubble.count - nt * trailMult);
+
+            const t = count / 4
+            const s = sin(t)
+            const c = cos(t)
+
+            const l = smoothstep(
+                BubbleConstants.BUBBLETIME - 10,
+                BubbleConstants.BUBBLETIME + 10,
+                count) * 24
+
+            const moonPos = xy(
+                (- (-l * s)) / 2,
+                -l * c,
+            )
+
+            const rotMoonPos = xy(
+                moonPos.x * kBubbleOrbitC - moonPos.y * kBubbleOrbitS,
+                moonPos.y * kBubbleOrbitS + moonPos.x * kBubbleOrbitS
+            )
+
+            const bPos = (bubble.pos - (bubble.pos - bubble.prevPos)
+                    * xy(nt * trailMult, nt * trailMult))
+
+            const r = smoothstep(0, trailSteps - 1, i) * 2 + 2
+
+            draw_disk(bPos + rotMoonPos + xy(8,8),
+                    r, rgba(1, 1, 1, nt), nil, ZLayers.OVER)
+
+            draw_disk(bPos + (rotMoonPos * xy(-1, 1)) + xy(8,8),
+                    r, rgba(1, 1, 1, nt), nil, ZLayers.OVER)
+
+    if bubble.count < BubbleConstants.BUBBLETIME:
+
+        if bubble.garbageTarget != nil:
+
+            for i < 6:
+                const a = i * (π / 3) * (bubble.count / 30.0)
+                const s = sin(a)
+                const c = cos(a)
+
+                const p1 = xy(0,
+                        (BubbleConstants.BUBBLETIME - bubble.count) * 1.5)
+
+                const p2 = xy(
+                    p1.x * c - p1.y * s,
+                    p1.x * s + p1.y * c)
+
+                draw_disk(bubble.pos + xy(8, 8) + p2,
+                        4, gray(1), gray(0), ZLayers.OVER)
+
+
+        let sprite = nil
+
+        if bubble.metal:
+            sprite = blocks_sprite[BubbleConstants.SPRITEROW][17]
+        else if bubble.type == BubbleType.COMBO:
+            sprite = blocks_sprite[BubbleConstants.SPRITEROW][
+                    BubbleConstants.COMBOSPRITECOL + bubble.value - 4]
+        else:
+            sprite = blocks_sprite[BubbleConstants.SPRITEROW][
+                    BubbleConstants.CHAINSPRITECOL + bubble.value - 2]
+        
+        draw_sprite(sprite, bubble.pos, 0, nil, 1, ZLayers.OVER)
+
+    else:
+        const offset = BubbleConstants.SENDFRAMES[
+                (bubble.count - BubbleConstants.BUBBLETIME) mod 36]
+        draw_sprite(blocks_sprite[6][7 + offset] ,
+                bubble.pos, 0, nil, 1, ZLayers.OVER)
+
+//----------------------------------------------------------------------------
+
+def BubbleDeliverGarbage(bubble):
+    if bubble.garbageTarget == nil:
+        return
+
+    if bubble.metal:
+        for i < bubble.garbageLevel:
+            if size(Boards) == 1:
+                const board = Boards[bubble.garbageTarget]
+                board.score += board.sizeX * 3
+            else:
+                BoardAppendGarbage(bubble.garbageTarget,
+                        bubble.garbageTarget.sizeX, 1,
+                                if not i then 60 else 0, true)
+
+        bubble.garbageTarget = nil
+        return
+
+    let garbageTotal = bubble.garbageLevel
+    if garbageTotal < 10:
+        --garbageTotal
+
+    garbageTotal *= bubble.garbageMult
+
+
+    if size(Boards) == 1:
+        Boards[bubble.garbageTarget].score += garbageTotal
+
+        bubble.garbageTarget = nil
+        return
+
+    const width = bubble.garbageTarget.sizeX
+
+    //garbageTotal = 15 //XXX
+
+    if garbageTotal <= width:
+        BoardAppendGarbage(bubble.garbageTarget, garbageTotal, 1, 60)
+    else:
+        let remainder = garbageTotal mod width
+
+        if remainder == 0 or remainder >= 3:
+            BoardAppendGarbage(bubble.garbageTarget,
+                    width, floor(garbageTotal / width), 60)
+            if remainder:
+                BoardAppendGarbage(bubble.garbageTarget,
+                        remainder, 1, 0)
+        else:
+            let duration = 60
+            let trimmedTotal = garbageTotal - 3
+
+            while trimmedTotal > 0:
+                if trimmedTotal < width:
+                    BoardAppendGarbage(bubble.garbageTarget,
+                            trimmedTotal, 1, duration)
+                    break
+                else:
+                    BoardAppendGarbage(bubble.garbageTarget,
+                            width, 1, duration)
+                    trimmedTotal -= width
+
+                duration = 0
+
+            BoardAppendGarbage(bubble.garbageTarget,
+                        3, 1, duration)
+
+    bubble.garbageTarget = nil
+
+
+
+//----------------------------------------------------------------------------
+
+const BubbleConstants = {
+    BUBBLETIME : 40,
+    BUBBLEWINDUPTIME : 69,
+    BUBBLEGARBAGETIME : 85, // was 77
+
+    DRAWZ : 2,
+
+    SPRITEROW : 7,
+    COMBOSPRITECOL : 0,
+    CHAINSPRITECOL : 8,
+
+    YOFFSETS : [
+        1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+        4, // circle back
+        -3,
+        -2,
+        -1,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        3,
+        3,
+        3,
+        3,
+        3,
+    ],
+
+    XOFFSETS : [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        -4,
+        -4,
+        -3,
+        -3,
+        -2,
+        -2,
+        -2,
+        -2,
+        -1,
+        -1,
+        -1,
+        -1,
+        0,
+        -1,
+        0,
+        0,
+        -1,
+        0,
+        -1,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        4,
+    ],
+
+    SENDFRAMES : [
+        0, 0, 1, 1, 0, 0, 1, 1,
+        2, 2, 3, 3, 4, 4, 5, 5,
+        4, 4, 3, 3, 4, 4, 5, 5,
+        6, 6, 7, 7, 8, 8, 9, 9,
+        9, 8, 8, 7, 7, 7, 6, 6,
+        6
+    ],
+
+}
+

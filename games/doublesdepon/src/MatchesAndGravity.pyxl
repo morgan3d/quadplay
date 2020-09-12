@@ -1,0 +1,577 @@
+
+const MatchConstants = {
+    FLASHFRAMES : 45,
+    FACEFRAMES : 26,
+    FLASHANDFACEFRAMES : 71,
+    POPOFFSET : 9,
+    POSTCLEARHOLDFRAMES : 3,
+}
+
+const ShakeFramesSmall = [
+    0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1,
+]
+
+const ShakeFramesLarge = [
+    0, 1, 0, 1, 0, 1, 0, 1,
+    0, 1, 0, 1, 0, 1, 0, 0,
+    1, 0, 0, 1, 0, 0, 1, 1,
+    0, 0, 1, 1, 0, 0, 1, 1,
+    1, 0, 2, 3, 3, 3, 2, 1,
+    1, 1, 4, 5, 6, 6, 6, 5,
+    4, 2, 2, 2, 6, 9, 10, 11,
+    11, 11, 11, 10, 8, 5,
+]
+
+//----------------------------------------------------------------------------
+
+def MatchRecord():
+    const record = {
+        x : 0,
+        y : 0,
+        dur : 0,
+        chain : 0,
+        puffCount : 255,
+
+        seqIdx : 0,
+        seqNext : nil,
+        seqPrev : nil,
+    }
+    return record
+
+def BoardAppendMatchRecord(board, seqPrev, x, y):
+    //debug_print("append", x, y)
+    const record = LinkedPoolAppend(board.matchPool)
+
+    record.seqPrev = seqPrev
+    if seqPrev:
+        seqPrev.seqNext = record
+    record.seqNext = nil
+    
+    record.x = x
+    record.y = y
+    record.dur = 0
+    record.chain = 0
+    record.puffCount = 255
+    record.seqIdx = 0
+
+    return record
+
+def BoardFreeMatchRecord(board, record):
+    //debug_print("remove", record.x, record.y)
+    LinkedPoolRemove(board.matchPool, record)
+    record.seqPrev = nil
+    record.seqNext = nil
+    return
+
+
+
+def BoardCheckHorzRun_(board, s, x, y, row):
+    if s.horzRun.length < 3:
+        return
+    const dur = MatchConstants.FLASHANDFACEFRAMES + (
+            s.horzRun.length * MatchConstants.POPOFFSET)
+    let pad = MatchConstants.FLASHANDFACEFRAMES
+
+    let rx = x - s.horzRun.length
+    let chainMax = 0
+
+    if s.horzRun.type == BlockType.BANG:
+        s.newMatchMetalCount += s.horzRun.length
+
+    let record = nil
+    for r < s.horzRun.length:
+        const block = row[rx]
+
+        block.state = BlockState.MATCHING
+        block.count = 0
+        block.count2 = pad
+
+        record = BoardAppendMatchRecord(board, record, rx, y)
+        block.match = record
+        if not r:
+            push(s.newMatchStarts, record)
+
+        record.seqIdx = r
+        record.dur = dur
+        chainMax = max(chainMax, block.chain + 1)
+        record.chain = chainMax
+        s.newMatchCount += 1
+
+        s.newMatchMinX = min(s.newMatchMinX, rx)
+        s.newMatchMinY = min(s.newMatchMinY, y)
+
+        pad += MatchConstants.POPOFFSET
+        rx += 1
+
+    if chainMax > 1:
+        while record:
+            record.chain = chainMax
+            record = record.seqPrev
+
+    s.newMatchChainMax = max(s.newMatchChainMax, chainMax)
+
+def BoardCheckVertRun_(board, s, x, y):
+    const runLen = s.vertRuns[x].length
+    if runLen < 3:
+        return
+
+    const runType = s.vertRuns[x].type
+
+    const runLenDur = runLen * MatchConstants.POPOFFSET
+    let dur = MatchConstants.FLASHANDFACEFRAMES + runLenDur
+    let pad = MatchConstants.FLASHANDFACEFRAMES;
+    
+    let prevRecord = nil
+    let firstRecord = nil
+    let chainMax = 0
+    let crossChainMax = 0
+    let runOffset = 0
+
+    let ry = y
+
+    for r < runLen:
+        const runBlock = BoardGetRow(board, ry)[x]
+        if not firstRecord and runBlock.match:
+            assert(runBlock.type == runType)
+
+            let crossFirst = runBlock.match
+            firstRecord = crossFirst // XXX, is runBlock.match in MD
+
+            while crossFirst.seqPrev:
+                crossFirst = crossFirst.seqPrev
+
+            pad = crossFirst.dur
+            dur = crossFirst.dur + runLenDur
+
+            if not crossFirst.seqNext:
+                ++runOffset
+                crossFirst.dur = dur
+                prevRecord = crossFirst
+            else:
+                while crossFirst.seqNext:
+                    ++runOffset
+                    crossFirst.dur = dur
+                    crossFirst = crossFirst.seqNext
+                ++runOffset
+                crossFirst.dur = dur
+                crossChainMax = crossFirst.chain
+                prevRecord = crossFirst
+        else:
+            chainMax = max(chainMax, runBlock.chain + 1)
+        ++ry
+
+
+    assert(pad != 0)
+    const includesHorz = firstRecord != nil
+    chainMax = max(chainMax, crossChainMax)
+
+
+    // upgrade the horzontal matches with this increased vertical chain
+    if firstRecord and chainMax > crossChainMax:
+        while firstRecord:
+            firstRecord.chain = chainMax
+            firstRecord = firstRecord.seqNext
+
+    ry = y
+    for r < runLen:
+        const runBlock = BoardGetRow(board, ry)[x]
+
+        if runBlock.state != BlockState.MATCHING:
+            runBlock.state = BlockState.MATCHING
+            runBlock.count = 0
+            runBlock.count2 = pad
+
+            //debug_print("R", runBlock.count2, x, ry)
+
+            prevRecord = BoardAppendMatchRecord(board, prevRecord, x, ry)
+            prevRecord.seqIdx = runOffset + r
+
+            if not r and not includesHorz:
+                push(s.newMatchStarts, prevRecord)
+
+            runBlock.match = prevRecord
+            prevRecord.dur = dur
+            prevRecord.chain = chainMax
+            
+            s.newMatchCount += 1
+
+            if runType == BlockType.BANG:
+                ++s.newMatchMetalCount
+
+            s.newMatchMinX = min(s.newMatchMinX, x)
+            s.newMatchMinY = min(s.newMatchMinY, ry)
+        else:
+            //debug_print("NM", x, ry)
+
+        ++ry
+        pad += MatchConstants.POPOFFSET
+
+    s.newMatchChainMax = max(s.newMatchChainMax, chainMax)
+
+// ---------------------------------------------------------------------------
+
+def BoardProcessGravityAndMatches(board):
+    let previousRow = nil
+
+    board.horzRun.type = 0
+    board.horzRun.length = 0
+    for vertRun in board.vertRuns:
+        vertRun.type = 0
+        vertRun.length = 0
+
+    const state = {
+        newMatchCount : 0,
+        newMatchChainMax : 0,
+        newMatchMinX : board.sizeX,
+        newMatchMinY : board.sizeY,
+        newMatchMetalCount : 0,
+        horzRun : board.horzRun,
+        vertRuns : board.vertRuns,
+        newMatchStarts : []
+    }
+
+    const horzRun = board.horzRun
+    const vertRuns = board.vertRuns
+
+    let garbageFallArea = 0
+
+    let playDropSound = false
+
+    let y = board.sizeY - 2
+    while y >= 0:
+        const row = BoardGetRow(board, y)
+        horzRun.type = 0
+        horzRun.length = 0
+
+        for x < board.sizeX:
+            const block = row[x]
+
+            if (block.state == BlockState.COYOTE
+                    or block.state == BlockState.POSTCLEARHOLD):
+                --block.count
+                if block.count <= 0:
+                    block.state = BlockState.IDLE
+                    block.count = 0
+            
+            if block.type and not block.state:
+                
+                // gravity test
+                if previousRow:
+                    const belowBlock = previousRow[x]
+                    if not belowBlock.state and not belowBlock.type:
+                        belowBlock.type = block.type
+                        belowBlock.fallFrame = g_frameNum
+                        belowBlock.count = 0
+                        belowBlock.chain = block.chain
+
+                        block.type = 0
+                        block.count = 0
+                        block.chain = 0
+
+                        horzRun.type = 0
+                        horzRun.length = 0
+                        continue
+
+                if block.fallFrame == g_frameNumPrev:
+                    block.count = BlockConstants.BOUNCEFRAMECOUNT
+                    // TODO, sfx drop
+
+                    playDropSound = true
+
+                else: // not falling
+                    if block.count:
+                        --block.count
+
+                    if block.count == BlockConstants.CHAINRESETCOUNT:
+                        block.chain = 0
+
+                if BlockConstants.BOUNCEFRAMECOUNT - block.count < 2:
+                    BoardCheckHorzRun_(board, state, x, y, row)
+                    horzRun.type = 0
+                    horzRun.length = 1
+
+                    BoardCheckVertRun_(board, state, x, y + 1)
+                    vertRuns[x].type = 0
+                    vertRuns[x].length = 1
+
+
+                else:
+                    if horzRun.type == block.type:
+                        horzRun.length += 1
+                    else:
+                        BoardCheckHorzRun_(board, state, x, y, row)
+                        horzRun.type = block.type
+                        horzRun.length = 1
+
+                    // TODO, BoardCheckVertRun_
+                    if vertRuns[x].type == block.type:
+                        ++vertRuns[x].length
+                        if y == 0:
+                            BoardCheckVertRun_(board, state, x, 0)
+                    else:
+                        BoardCheckVertRun_(board, state, x, y + 1)
+                        vertRuns[x].type = block.type
+                        vertRuns[x].length = 1
+
+            else:
+                BoardCheckHorzRun_(board, state, x, y, row)
+                horzRun.type = 0
+                horzRun.length = 0
+
+                BoardCheckVertRun_(board, state, x, y + 1)
+                vertRuns[x].type = 0
+                vertRuns[x].length = 0
+
+                // TODO debug
+                if (previousRow
+                        and block.state == BlockState.GARBAGE
+                        and block.garbageX == 0):
+                    let clearBelow = true
+                    for i < block.garbageWidth:
+                        const belowBlock = previousRow[x + i]
+                        if belowBlock.type or belowBlock.state:
+                            clearBelow = false
+                            break
+
+                    if clearBelow:
+                        for i < block.garbageWidth:
+                            const fallingBlock = row[x + i]
+                            fallingBlock.fallFrame = g_frameNum
+                            extend(previousRow[x + i], fallingBlock)
+                            BlockReset(fallingBlock)
+                            
+
+                        const belowBlock = previousRow[x]
+                        if (y == 0 and belowBlock.garbageY
+                                < belowBlock.garbageHeight - 1):
+                            BoardAddGarbageRow(board,
+                                    x,
+                                    belowBlock.garbageY + 1,
+                                    belowBlock.garbageWidth,
+                                    belowBlock.garbageHeight,
+                                    belowBlock.garbageY + 1)
+                    else:
+                        if block.fallFrame == g_frameNumPrev:
+                            // TODO SfxDrop
+                            playDropSound = true
+                        else if not block.garbageY and not block.fallenOnce:
+                            block.fallenOnce = true
+                            garbageFallArea += block.garbageWidth * block.garbageHeight
+
+        BoardCheckHorzRun_(board, state, board.sizeX, y, row)
+        previousRow = row
+        --y
+
+    if playDropSound:
+        play_sound(drop_sound)
+
+    if garbageFallArea:
+        if garbageFallArea > 4:
+            board.shakeData = ShakeFramesLarge
+        else:
+            board.shakeData = ShakeFramesSmall
+        
+        board.shakeCount = size(board.shakeData)
+
+
+
+    const boardScreenPos = BoardGetScreenPos(board)
+
+    for record in state.newMatchStarts:
+        while record:
+            const seqNext = record.seqNext
+            record.seqPrev = nil
+            record.seqNext = nil
+
+
+
+            const x = record.x
+            const y = record.y
+
+            const block = BoardGetRow(board, y)[x]
+            const w = board.sizeX - 1
+
+            let seqIdxStart = [0]
+
+            // check left
+            if x:
+                if BoardGetRow(board, y)[x - 1].state == BlockState.GARBAGE:
+                    BoardBreakGarbage(board,
+                            x - 1, y, record.dur, record.chain, seqIdxStart)
+
+            // check right
+            if x < w:
+                if BoardGetRow(board, y)[x + 1].state == BlockState.GARBAGE:
+                    BoardBreakGarbage(board,
+                            x + 1, y, record.dur, record.chain, seqIdxStart)
+
+            // check up
+            if y:
+                if BoardGetRow(board, y - 1)[x].state == BlockState.GARBAGE:
+                    BoardBreakGarbage(board,
+                            x, y - 1, record.dur, record.chain, seqIdxStart)
+
+
+            if y < 11:
+                if BoardGetRow(board, y + 1)[x].state == BlockState.GARBAGE:
+                    BoardBreakGarbage(board,
+                            x, y + 1, record.dur, record.chain, seqIdxStart)
+
+
+
+
+            // TODO, check for adjacent garbage
+            record = seqNext
+
+    if state.newMatchCount:
+        //debug_print("match count: ",
+        //        state.newMatchCount, "x", state.newMatchChainMax)
+
+        let holdTotal = 0
+
+        let bubble = nil
+        
+        if state.newMatchMetalCount >= 3:
+            // debug_print("METAL COUNT", state.newMatchMetalCount)
+            bubble = BubbleReset(LinkedPoolAppend(board.bubblePool))
+            bubble.type = BubbleType.COMBO
+            bubble.pos.x = board.pos.x + state.newMatchMinX * 16
+            bubble.pos.y = boardScreenPos.y + state.newMatchMinY * 16
+            bubble.value = 4
+
+            bubble.garbageTarget = if board.otherBoard then board.otherBoard else board.boardIdx
+            bubble.garbageLevel = state.newMatchMetalCount - 2
+            bubble.garbageMult = 1
+            bubble.metal = true
+
+            if board.otherBoard:
+                holdTotal = board.otherBoard.sizeX * bubble.garbageLevel
+            else:
+                holdTotal = board.sizeX * bubble.garbageLevel
+
+            SfxMatch(state.newMatchMetalCount - 2)
+
+            bubble = nil
+
+            // TODO, add to autoRaiseHold
+
+            // TODO, sfx match
+            state.newMatchCount -= state.newMatchMetalCount
+            if not state.newMatchCount:
+                state.newMatchChainMax = 0
+
+        if state.newMatchCount > 3:
+            bubble = BubbleReset(LinkedPoolAppend(board.bubblePool))
+            bubble.type = BubbleType.COMBO
+            bubble.pos.x = board.pos.x + state.newMatchMinX * 16
+            bubble.pos.y = boardScreenPos.y + state.newMatchMinY * 16
+            bubble.value = min(state.newMatchCount, 11)
+
+            holdTotal = state.newMatchCount - 1;
+
+        if state.newMatchChainMax > 1:
+            const comboBubble = bubble
+            bubble = BubbleReset(LinkedPoolAppend(board.bubblePool))
+            bubble.type = BubbleType.CHAIN
+            bubble.value = min(state.newMatchChainMax, 10)
+
+            if comboBubble:
+                bubble.pos.x = comboBubble.pos.x
+                bubble.pos.y = comboBubble.pos.y - 16
+            else:
+                bubble.pos.x = board.pos.x + state.newMatchMinX * 16
+                bubble.pos.y = boardScreenPos.y + state.newMatchMinY * 16
+
+            if not holdTotal:
+                holdTotal = 2
+
+            holdTotal *= state.newMatchChainMax
+
+        if bubble:
+            // TODO, sfxmatch
+            bubble.garbageTarget = if board.otherBoard then board.otherBoard else board.boardIdx
+            
+
+            bubble.garbageLevel = state.newMatchCount
+            bubble.garbageMult = state.newMatchChainMax
+
+            SfxMatch(state.newMatchChainMax)
+
+
+        if holdTotal:
+            board.autoRaiseHold += holdTotal * board.autoRaiseHoldMult
+
+
+
+
+
+
+
+
+    let test = 0
+    let record = board.matchPool.first
+    while record:
+        test += 1
+        const nextRecord = record.next_
+        
+        if record.dur > 0:
+            const block = BoardGetRow(board, record.y)[record.x]
+            assert(block.match == record)
+            block.count += 1
+            if block.count >= record.dur:
+
+                record.dur = 0
+                block.match = nil
+                block.count = MatchConstants.POSTCLEARHOLDFRAMES
+                block.count2 = 0
+
+                if block.state == BlockState.MATCHING:
+                    block.state = BlockState.POSTCLEARHOLD
+                    block.type = 0
+                    block.chain = 0
+
+                    // walk up and max chain between record and BlockState
+                    let i = record.y - 1
+                    while i >= 0:
+                        const walkBlock = BoardGetRow(board, i)[record.x]
+                        if not walkBlock.type or (
+                                walkBlock.state != BlockState.IDLE
+                                and walkBlock.state != BlockState.GARBAGE):
+                            break
+
+                        walkBlock.chain = max(record.chain, walkBlock.chain)
+                        i -= 1
+                else if block.state == BlockState.GARBAGEMATCHING:
+                    block.state = BlockState.POSTCLEARHOLD
+                    block.chain = max(block.chain, record.chain)
+                    block.fallFrame = g_frameNumPrev // for bounce
+
+
+            else if block.count == block.count2:
+                record.puffCount = 0
+                SfxPop(record.seqIdx)
+
+        if record.puffCount != 255:
+            if record.puffCount >= 18:
+                if not record.dur:
+                    BoardFreeMatchRecord(board, record)
+            else:
+                record.puffCount += 1
+
+        record = nextRecord
+
+    /*
+    draw_text(font, test, board.pos, rgb(1, 0, 0))
+    local:
+        let test = 0
+        let record = board.matchPool.last
+        while record:
+            test += 1
+            record = record.prev_ //record.prevRecord
+
+        draw_text(font, test, board.pos + xy(0, 10), rgb(1, 0, 0))
+    */
+
+
+
+

@@ -200,7 +200,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         if (typeof gameJSON.assets !== 'object') { throw 'The assets parameter is not an object in ' + gameURL; }
 
         for (const assetName in gameJSON.assets) {
-            if (assetName[0] === '_') { throw 'Illegal asset name: "' + assetName + '"'; }
+            if (assetName[0] === '$') { throw 'Illegal asset name: "' + assetName + '"'; }
         }
 
         // Store the original value, unmodified, so that it
@@ -847,6 +847,10 @@ function loadSpritesheet(name, json, jsonURL, callback) {
             // Change the index
             spritesheet._index[0] = spritesheetArray.length;
             spritesheetArray.push(spritesheet);
+
+            const transposedSpritesheet = spritesheet[0][0].rotated_90._spritesheet;
+            transposedSpritesheet._index[0] = spritesheetArray.length;
+            spritesheetArray.push(transposedSpritesheet);
         }
 
         console.assert(spritesheetArray.indexOf(spritesheet) === spritesheet._index[0]);
@@ -888,7 +892,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
     // load so that the per-reload cache can hold it. The _index is an
     // array so that the spritesheet can be frozen but the index
     // rewritten.
-    assetCache[jsonURL] = spritesheet = Object.assign([], {
+    spritesheet = Object.assign([], {
         _name: name,
         _type: 'spritesheet',
         _uint16Data: null,
@@ -907,11 +911,27 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         sprite_size: json.sprite_size ? Object.freeze({x: json.sprite_size.x, y: json.sprite_size.y}) : undefined
     });
 
+    assetCache[jsonURL] = spritesheet;
+    
     spritesheetArray.push(spritesheet);
     console.assert(spritesheetArray.indexOf(spritesheet) === spritesheet._index[0]);
+    
+
+    const transposedSpritesheet = Object.assign([], {
+        _name: 'transposed_' + name,
+        _type: 'spritesheet',
+        _uint16Data: null,
+        _uint16DataFlippedX : null,
+        _gutter: (json.gutter || 0),
+        _index: [spritesheetArray.length],
+        // If unspecified, load the sprite size later
+        sprite_size: json.sprite_size ? Object.freeze({x: json.sprite_size.y, y: json.sprite_size.x}) : undefined
+    });
+    spritesheetArray.push(transposedSpritesheet);
 
     // Pivots
     const sspivot = json.pivot ? Object.freeze({x: json.pivot.x - json.sprite_size.x / 2, y: json.pivot.y - json.sprite_size.y / 2}) : Object.freeze({x: 0, y: 0});
+    const transposedPivot = Object.freeze({x: sspivot.y, y: sspivot.x});
     
     // Offsets used for scale flipping
     const PP = Object.freeze({x: 1, y: 1});
@@ -934,8 +954,10 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         }
 
         if (! spritesheet.sprite_size) {
-            // Apply the default size of the whole image
+            // Apply the default size of the whole image if the sprite size is not
+            // specified
             spritesheet.sprite_size = Object.freeze({x: image.width, y: image.height});
+            transposedSpritesheet.sprite_size = Object.freeze({x: image.height, y: image.width});
         }
 
         // Save these for the editor in the IDE
@@ -957,6 +979,26 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         onLoadFileComplete(pngURL);
         const data = dataPair[0];
 
+        // Compute the transposedSpritesheet uint16 data
+        transposedSpritesheet._uint16Data = new Uint16Array(data.length);
+        transposedSpritesheet._uint16Data.width = data.height;
+        transposedSpritesheet._uint16Data.height = data.width;
+        
+        transposedSpritesheet._uint16DataFlippedX = new Uint16Array(data.length);
+        transposedSpritesheet._uint16DataFlippedX.width = data.height;
+        transposedSpritesheet._uint16DataFlippedX.height = data.width;
+        
+        for (let y = 0; y < data.width; ++y) {
+            for (let x = 0; x < data.height; ++x) {
+                const i = x + y * data.height;
+                const j = (data.height - 1 - x) + y * data.height;
+                const k = x * data.width + y;
+                transposedSpritesheet._uint16Data[i] =
+                    transposedSpritesheet._uint16DataFlippedX[j] =
+                    data[k];
+            }
+        }
+
         spritesheet._uint16Data = data;
         spritesheet._uint16DataFlippedX = dataPair[1];
         
@@ -965,6 +1007,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         
         const boundingRadius = Math.hypot(spritesheet.sprite_size.x, spritesheet.sprite_size.y);
         spritesheet.size = {x: data.width, y: data.height};
+        transposedSpritesheet.size = {x: spritesheet.size.y, y: spritesheet.size.x};
 
         const sheetDefaultframes = Math.max(json.default_frames || 1, 0.25);
         
@@ -978,6 +1021,11 @@ function loadSpritesheet(name, json, jsonURL, callback) {
             throw new Error('Spritesheet ' + jsonURL + ' has a sprite_size that is larger than the entire spritesheet.');
         }
 
+        transposedSpritesheet.length = rows;
+        for (let y = 0; y < rows; ++y) {
+            transposedSpritesheet[y] = new Array(cols);
+        }
+        
         for (let x = 0; x < cols; ++x) {
             spritesheet[x] = [];
             
@@ -1014,6 +1062,9 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     _hasAlpha:         hasAlpha,
                     _requiresBlending: hasFractionalAlpha,
                     _name:             spritesheet._name + '[' + u + '][' + v + ']',
+                    // Actual spritesheet for rendering
+                    _spritesheet:      spritesheet,
+                    // Source spritesheet for game logic
                     spritesheet:       spritesheet,
                     tile_index:        Object.freeze({x:u, y:v}),
                     id:                lastSpriteID,
@@ -1023,9 +1074,37 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     pivot:             sspivot,
                     frames:            sheetDefaultframes
                 };
-                lastSpriteID += 3;
 
                 spritesheet[x][y] = sprite;
+
+                const transposedSprite = {
+                    _type:             'sprite',
+                    _boundingRadius:   boundingRadius,
+
+                    // Sprite index
+                    _tileX:            sprite._tileY,
+                    _tileY:            sprite._tileX,
+
+                    // Pixel coord in tile
+                    _x:                sprite._y,
+                    _y:                sprite._x,
+                    
+                    _hasAlpha:         sprite.hasAlpha,
+                    _requiresBlending: sprite.hasFractionalAlpha,
+                    _name:             sprite._name + '.rotated_90.x_flipped',
+                    _spritesheet:      transposedSpritesheet,
+                    spritesheet:       spritesheet,
+                    tile_index:        sprite.tile_index,
+                    id:                lastSpriteID,
+                    orientation_id:    lastSpriteID + 3,
+                    size:              transposedSpritesheet.sprite_size,
+                    scale:             PP,
+                    pivot:             transposedPivot,
+                    frames:            sheetDefaultframes
+                };
+                transposedSpritesheet[y][x] = transposedSprite;
+                
+                lastSpriteID += 6;
             }
             
             Object.freeze(spritesheet[x]);
@@ -1038,7 +1117,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
             }
 
             // Excluded from the default property list
-            const builtInProperties = ['', 'id', 'frames', 'x', 'y', 'x_flipped', 'y_flipped', 'scale', 'size', 'pivot', 'spritesheet', 'tile_index', 'start', 'end'];
+            const builtInProperties = ['', 'id', 'frames', 'x', 'y', 'x_flipped', 'y_flipped', 'rotated_90', 'rotated_180', 'rotated_270', 'scale', 'size', 'pivot', 'spritesheet', 'tile_index', 'start', 'end'];
             
             for (let anim in json.names) {
                 const data = json.names[anim];
@@ -1052,7 +1131,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
 
                 const otherProperties = {};
                 for (const key in data) {
-                    if (key[0] !== '_' && builtInProperties.indexOf(key) === -1) {
+                    if (key[0] !== '$' && key[0] !== '_' && builtInProperties.indexOf(key) === -1) {
                         try {
                             otherProperties[key] = evalJSONGameConstant(data[key]);
                         } catch (e) {
@@ -1157,36 +1236,86 @@ function loadSpritesheet(name, json, jsonURL, callback) {
             }
         }
 
-        // Create flipped versions and freeze
+        // Create flipped and rotated versions and then freeze all sprites
         for (let x = 0; x < spritesheet.length; ++x) {
             for (let y = 0; y < spritesheet[x].length; ++y) {
                 const sprite = spritesheet[x][y];
+                const transposedSprite = transposedSpritesheet[y][x];
                 
                 // Construct the flipped versions and freeze all
                 sprite.x_flipped = Object.assign({x_flipped:sprite}, sprite);
                 sprite.x_flipped.scale = NP;
                 sprite.x_flipped.orientation_id += 1;
-                sprite.x_flipped.name += '.x_flipped';
+                sprite.x_flipped._name += '.x_flipped';
 
                 sprite.y_flipped = Object.assign({y_flipped:sprite}, sprite);
                 sprite.y_flipped.orientation_id += 2;
                 sprite.y_flipped.scale = PN;
-                sprite.y_flipped.name += '.x_flipped';
+                sprite.y_flipped._name += '.y_flipped';
                 
                 sprite.x_flipped.y_flipped = sprite.y_flipped.x_flipped = Object.assign({}, sprite);
                 sprite.y_flipped.x_flipped.scale = NN;
                 sprite.y_flipped.x_flipped.orientation_id += 3;
-                sprite.x_flipped.y_flipped.name += '.x_flipped.y_flipped';
+                sprite.x_flipped.y_flipped._name += '.x_flipped.y_flipped';
+                
+                transposedSprite.x_flipped = Object.assign({x_flipped: transposedSprite}, transposedSprite);
+                transposedSprite.x_flipped.scale = NP;
+                transposedSprite.x_flipped.orientation_id += 1;
+                transposedSprite.x_flipped._name = transposedSprite._name.replace(/\.x_flipped$/, '');
 
-                Object.freeze(sprite.x_flipped);
-                Object.freeze(sprite.y_flipped);
-                Object.freeze(sprite.y_flipped.x_flipped);
-                Object.freeze(sprite);
+                transposedSprite.y_flipped = Object.assign({y_flipped: transposedSprite}, transposedSprite);
+                transposedSprite.y_flipped.orientation_id += 2;
+                transposedSprite.y_flipped.scale = PN;
+                transposedSprite.y_flipped._name += '.y_flipped';
+                
+                transposedSprite.x_flipped.y_flipped = transposedSprite.y_flipped.x_flipped = Object.assign({}, transposedSprite);
+                transposedSprite.y_flipped.x_flipped.scale = NN;
+                transposedSprite.y_flipped.x_flipped.orientation_id += 3;
+                transposedSprite.x_flipped.y_flipped.name += transposedSprite._name.replace(/\.x_flipped$/, '.y_flipped');
+
+                sprite.rotated_90 = transposedSprite.x_flipped;
+                sprite.x_flipped.rotated_90 = transposedSprite.x_flipped.y_flipped;
+                sprite.y_flipped.rotated_90 = transposedSprite;
+                sprite.x_flipped.y_flipped.rotated_90 = transposedSprite.y_flipped;
+
+                transposedSprite.rotated_90 = sprite.x_flipped;
+                transposedSprite.x_flipped.rotated_90 = sprite.x_flipped.y_flipped;
+                transposedSprite.y_flipped.rotated_90 = sprite;
+                transposedSprite.x_flipped.y_flipped.rotated_90 = sprite.y_flipped;
+
+                const all = [sprite, transposedSprite];
+
+                // Expand the permutations into an array for the final
+                // steps, working backwards so that we can stay in the
+                // same array
+                for (let i = all.length - 1; i >= 0; --i) {
+                    const s = all[i];
+                    all.push(s.x_flipped, s.y_flipped, s.y_flipped.x_flipped);
+                }
+
+                for (let i = all.length - 1; i >= 0; --i) {
+                    // Generate 180 deg and 270 degree rotation
+                    // pointers to the existing sprites
+                    const s = all[i];
+                    s.rotated_180 = s.x_flipped.y_flipped;
+                    s.rotated_270 = s.rotated_180.rotated_90;
+
+                    // Verify that all transform elements are set on this sprite
+                    console.assert(s.x_flipped);
+                    console.assert(s.y_flipped);
+                    console.assert(s.x_flipped.y_flipped);
+                    console.assert(s.y_flipped.x_flipped);
+                    console.assert(s.rotated_90);
+                    console.assert(s.rotated_180);
+                    console.assert(s.rotated_270);
+                    
+                    Object.freeze(s);
+                } // i
             }
         }
 
-        // Store into the cache
         Object.freeze(spritesheet);
+        Object.freeze(transposedSpritesheet);
         
         if (callback) { callback(spritesheet); }
     }, loadFailureCallback, loadWarningCallback, forceReload);
@@ -1429,9 +1558,10 @@ function loadMap(name, json, mapJSONUrl) {
                 for (let x = 0; x < map.size.x; ++x, ++i) {
                     const gid = data[i];
                     
-                    // See https://doc.mapeditor.org/en/stable/reference/tmx-map-format/#layer
+                    // See https://doc.mapeditor.org/en/stable/reference/tmx-map-format/#tile-flipping
                     const tileFlipX = (gid & 0x80000000) !== 0;
                     const tileFlipY = (gid & 0x40000000) !== 0;
+                    const tileFlipD = (gid & 0x20000000) !== 0;
                     const tmxIndex  = (gid & 0x0fffffff) - 1;
                     
                     if (tmxIndex >= 0) {
@@ -1440,10 +1570,11 @@ function loadMap(name, json, mapJSONUrl) {
                         
                         let sprite = map.spritesheet[sx][sy];
                         
+                        if (tileFlipD) { sprite = sprite.rotated_90.x_flipped; }
                         if (tileFlipX) { sprite = sprite.x_flipped; }
-                        
                         if (tileFlipY) { sprite = sprite.y_flipped; }
-                        
+
+                        console.assert(sprite);
                         layer[x][flipY ? map.size.y - 1 - y : y] = sprite;
                     } else {
                         layer[x][flipY ? map.size.y - 1 - y : y] = undefined;

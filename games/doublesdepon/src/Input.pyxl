@@ -1,0 +1,75 @@
+const JoyStateKeys = {
+    UP : 0,
+    DOWN : 1,
+    LEFT : 2,
+    RIGHT : 3,
+    SWAP : 4,
+    RAISE : 5,
+    MENU : 6,
+    YES : 7,
+    NO : 8,
+    HINT: 9,
+}
+
+const JoyStateMapping_ = [
+    [["y", -1]],
+    [["y", 1]],
+    [["x", -1]],
+    [["x", 1]],
+    [["a", 1]],
+    [["b", 1], ["e", 1], ["f", 1]],
+    [["q", 1]],
+    [["a", 1]],
+    [["b", 1]],
+    [["c", 1]],
+]
+
+const JoyIdxMapping_ = [0, 1, 2, 3]
+
+const JoyState_ = []
+const JoyStatePrev_ = []
+local:
+    const template = []
+    for i < size(JoyStateKeys):
+        push(template, false)
+
+    for i < 4:
+        push(JoyState_, clone(template))
+        push(JoyStatePrev_, clone(template))
+
+def JoyUpdate():
+    for i < 4:
+        const idx = JoyIdxMapping_[i]
+        const state = JoyState_[i]
+        const statePrev = JoyStatePrev_[i]
+        for j < size(statePrev):
+            statePrev[j] = state[j]
+
+        for j < size(JoyStateMapping_):
+            state[j] = false
+            for entry in JoyStateMapping_[j]:
+                if gamepad_array[idx][entry[0]] == entry[1]:
+                    state[j] = true
+                    break
+
+def JoyPress(idx, key):
+    return JoyState_[idx][key]
+
+def JoyNewPress(idx, key):
+    return JoyState_[idx][key] and not JoyStatePrev_[idx][key]
+
+def JoyResetLast(idx, key):
+    JoyState_[idx][key] = false
+    JoyStatePrev_[idx][key] = false
+
+def JoyActivateLast(idx, key):
+    JoyState_[idx][key] = true
+    JoyStatePrev_[idx][key] = true
+
+
+
+
+
+
+
+

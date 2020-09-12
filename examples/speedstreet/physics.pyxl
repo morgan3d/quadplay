@@ -60,7 +60,7 @@ def surfacePointUnder(pos, z):
 
    // Coarse search
    for coarseSteps < maxSteps:
-      const color = get_map_pixel_color(cityMap, mapPos, layer)
+      const color = get_map_pixel_color(cityMap, mapPos, layer, layer + 1)
       if color and (color.a > 50%):
          // Hit a solid pixel.
          //
@@ -68,7 +68,7 @@ def surfacePointUnder(pos, z):
          // looking for an empty pixel.
          mapPos.y += pixelMapStepY
          for fineSteps ≤ coarseScale:
-            const color = get_map_pixel_color(cityMap, mapPos, layer)
+            const color = get_map_pixel_color(cityMap, mapPos, layer, layer + 1)
             if not color or (color.a ≤ 50%):
                // Hit an empty pixel
                pixelPos.x = pos.x; pixelPos.y = pos.y - coarseSteps * coarseScale + fineSteps
@@ -91,7 +91,7 @@ def isSolid(pos, z):
    let mapPos = transform_ws_to_map_space(cityMap, pos)
    // Offset the y by z
    mapPos.y += (cityMap.z_scale * (layer - 9) * skewY) / cityMap.sprite_size.y
-   const color = get_map_pixel_color(cityMap, mapPos, layer)
+   const color = get_map_pixel_color(cityMap, mapPos, layer, layer + 1)
    return color and (color.a > 50%)
 
 

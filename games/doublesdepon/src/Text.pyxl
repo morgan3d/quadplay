@@ -1,0 +1,20 @@
+const StandardFontCharOffsets = {}
+
+local:
+    const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!.:"
+    for i < size(chars):
+        StandardFontCharOffsets[chars[i]] = i
+        
+
+def DrawStandardText(pos, text, z = 0):
+    const workPos = clone(pos)
+    for i < size(text):
+        const offset = StandardFontCharOffsets[text[i]]
+        if offset != nil:
+            draw_sprite(standardFont_sprite[offset][0], workPos, 0, nil, 1, z)
+        workPos.x += 8
+
+    return workPos
+
+
+

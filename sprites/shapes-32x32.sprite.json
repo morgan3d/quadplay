@@ -72,6 +72,7 @@
         "keyhole": {"x": 9, "y": 4},
         "half_disk": {"x": 10, "y": 4},
         "wheel": {"x": 11, "y": 4},
+        "robot": {"x": 12, "y": 4},
 
         "straight":        {"x": 0, "y": 5},
         "end":             {"x": 1, "y": 5},
@@ -98,6 +99,7 @@
         "train_engine":          {"x": 8, "y": 6},
         "boxcar_top":            {"x": 9, "y": 6},
         "train_engine_top":      {"x": 10, "y": 6},
+        "gear":                  {"x": 11, "y": 6},
         "random_dot":            {"x": 12, "y": 7},
         
         "rocket":          {"x": 0, "y": 7},

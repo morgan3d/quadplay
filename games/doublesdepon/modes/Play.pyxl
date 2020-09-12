@@ -1,0 +1,46 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+let gameEnd = false
+
+let inPanic = false
+enter
+────────────────────────────────────────────────────────────────────────
+
+gameEnd = false
+
+MusicBegin()
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+GlobalsStep()
+
+MusicStep()
+
+ClockStep(g_clock)
+DashboardDraw()
+
+
+let checkInPanic = false
+
+for board in Boards:
+    BoardStep(board)
+    BoardDraw(board)
+
+    if board.state >= GameState.WON:
+        gameEnd = true
+
+    if board.anyColumnsTopped:
+        checkInPanic = true
+
+if inPanic != checkInPanic:
+    inPanic = checkInPanic
+    MusicSetPanic(inPanic)
+
+
+if gameEnd:
+    MusicClear()
+    set_mode(GameEnd)
+

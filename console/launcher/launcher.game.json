@@ -24,7 +24,10 @@
 
         "qplabel":    "qplabel.sprite.json",
         "qppreview":  "qppreview.sprite.json",
-        
+
+        "dplabel":    "dplabel.sprite.json",
+        "dppreview":  "dppreview.sprite.json",
+
         "splabel":    "splabel.sprite.json",
         "sppreview":  "sppreview.sprite.json",
         

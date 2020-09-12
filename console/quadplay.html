@@ -46,7 +46,7 @@
 
   </head>
 
-  <body>
+  <body id="body">
     <div id="welcome" class="noIDE" onmousedown="onWelcomeTouch()" ontouchstart="onWelcomeTouch()">
       <div style="color: #fff; width: 100%; height: 100%; position: absolute; background: rgba(0, 8, 16, 0.7);">
         <div style="position: absolute; top: 50%; left: 0; width: 100%; overflow: visible">
@@ -185,6 +185,7 @@
             makeButton('<img src="ui-find.png" width=32 style="position:relative; top:-2px;">', `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton');
             makeButton('<img src="ui-goto.png" width=32 style="position:relative; top:-2px;">', `Go to line (${cmd}G)`, 'onCodeEditorGoToLineButton');
           </script>
+          <div style="position: absolute; left: 244px; top: 4px; font-weight: bold" id="editorTitle"></div>
           <div style="position: absolute; right:5px; top:4px; color:#888" id="codeEditorSessionModeDisplay">All changes saved.</div>
         </div>
           
@@ -618,7 +619,7 @@
       </div>
     </div>
 
-    <div id="customContextMenu" style="visibility:hidden; z-index: 15"></div>
+    <div id="customContextMenu" style="visibility:hidden; z-index: 20; position: fixed"></div>
     
     <!-- based on https://github.com/sitexw/BlockAdBlock/blob/master/blockadblock.js -->
     <!--
