@@ -689,6 +689,13 @@ function set_volume(handle, volume) {
     handle._.gainNode.gain.linearRampToValueAtTime(volume, _ch_audioContext.currentTime + audioRampTime);
 }
 
+function set_playback_rate(handle, rate) {
+    if (! (handle && handle._)) {
+        throw new Error("Must call set_volume() on a sound returned from play_sound()");
+    }
+    handle._.playbackRate.value = rate;
+}
+
 
 function set_pan(handle, pan) {
     if (! (handle && handle._)) {
@@ -728,6 +735,7 @@ function get_audio_status(handle) {
     return {
         pitch:    source.pitch,
         volume:   source.volume,
+        playback_rate: source.playbackRate.value,
         pan:      source.pan,
         loop:     source.loop,
         state:    source.state

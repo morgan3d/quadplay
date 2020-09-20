@@ -2286,11 +2286,14 @@ Sound
   -100% is full left, 100% is full right.
 
 `set_pitch(audio, pitch)`
-: Set the pitch of an audio object that is currently playing. 100% is the default pitch from the file.
+: Set the pitch of an audio object that is currently playing without affecting speed. 100% is the default pitch from the file.
   200% is one octave higher, 50% is one octave lower.
 
 `set_volume(audio, volume)`
 : Set the volume of an audio object that is currently playing. 100% is the default volume from the file.
+
+`set_playback_rate(audio, rate)`
+: Set the rate of an audio object that is currently playing, affecting both speed and pitch. 100% is the default rate from the file.
 
 `stop_audio(audio)`
 : Stop playing `audio`, which was created with `play_sound`. Sets the state to `"STOPPED"`.
@@ -4951,7 +4954,9 @@ Sounds
 ![`quad://sounds/loop-dark-thriller.sound.json`](../sounds/loop-dark-thriller.mp3) ![`quad://sounds/loop-chilltech.sound.json`](../sounds/loop-chilltech.mp3)
 ![`quad://sounds/loop-prometheus.sound.json`](../sounds/loop-prometheus.mp3) ![`quad://sounds/loop-forest.sound.json`](../sounds/loop-forest.mp3)
 ![`quad://sounds/loop-escalator.sound.json`](../sounds/loop-escalator.mp3) ![`quad://sounds/loop-beat.sound.json`](../sounds/loop-beat.mp3)
-![`quad://sounds/loop-wind.sound.json`](../sounds/loop-wind.mp3)
+![`quad://sounds/loop-wind.sound.json`](../sounds/loop-wind.mp3) ![`quad://sounds/loop-footsteps.sound.json`](../sounds/loop-footsteps.mp3)
+![`quad://sounds/loop-footsteps-indoor.sound.json`](../sounds/loop-footsteps-indoor.mp3) ![`quad://sounds/loop-footsteps-puddle.sound.json`](../sounds/loop-footsteps-puddle.mp3)
+![`quad://sounds/loop-footsteps-water.sound.json`](../sounds/loop-footsteps-water.mp3) ![`quad://sounds/loop-footsteps-snow.sound.json`](../sounds/loop-footsteps-snow.mp3)
 
 
 ### Coin
@@ -7920,11 +7925,13 @@ Changes for both the specification and implementation in each release.
 - New _Kart_ example of a perspective ground plane
 - New _Warlock 3D_ example of a first person viewpoint
 - New Blasphemer tile set
+- New footsteps sound loops
 - Added `ray_intersect_map()` collision detection routine
 - Added `curved_arrow` and `corner_arrow` to `shapes-32x32.sprite.json`
 - Added subpixel precision support for `mouse.dxy` on `device_control("get_mouse_state")`
 - Added `device_control("set_mouse_lock")`
 - Added `.data.json` files for large assets in arbitrary formats
+- Added `set_playback_rate()` for audio
 - Allowed leading underscores on variable and member names
 - Improved frame rate scaling for low end processors
 - Fixed `mouse.dy` on `device_control("get_mouse_state")` returning incorrect values

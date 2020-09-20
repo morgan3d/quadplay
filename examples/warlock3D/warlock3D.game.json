@@ -16,7 +16,9 @@
         "font": "quad://fonts/deja-5.font.json",
         "dungeon_map": "dungeon.map.json",
         "allagon_sprite": "allagon.sprite.json",
-        "shapes_sprite": "quad://sprites/shapes-32x32.sprite.json"
+        "shapes_sprite": "quad://sprites/shapes-32x32.sprite.json",
+        "loop_castle_sound": "quad://sounds/loop-castle.sound.json",
+        "loop_footsteps_sound": "quad://sounds/loop-footsteps.sound.json"
     },
     "version": 0,
     "min_players": 1,

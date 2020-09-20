@@ -187,7 +187,8 @@ def simulate_view(view, gamepad, gamepad2):
         scale: xy(1, 1),
         vel: fwd * -view.speed.z + perp(fwd) * view.speed.x,
     }
-        
+    
+    const old_pos = xyz(view.pos)
     entity_slide_move_map(proxy, dungeon_map, WALL_LAYER)
     
     view.pos.x = proxy.pos.x; view.pos.z = proxy.pos.y
@@ -196,18 +197,32 @@ def simulate_view(view, gamepad, gamepad2):
         view.pos.y = 32
         view.jump_vel = 0
         if gamepad.aa: view.jump_vel = +2
+        const move = ‖xz(old_pos - view.pos)‖
+        if move > 0.5:
+            if not walk_audio:
+                walk_audio = play_sound(loop_footsteps_sound, true, 200%)
+            set_playback_rate(walk_audio, max(2.8 move / MAX_SPEED, 100%))
+        else:
+            stop_audio(walk_audio)
+            walk_audio = ∅
     else:
+        stop_audio(walk_audio)
+        walk_audio = ∅
         view.pos.y = max(32, view.pos.y + view.jump_vel)
         view.jump_vel -= 0.1
-   
+           
 
 const view = make_view(dungeon_map)
 
 const billboard_pos = xyz(view.pos.x, 28, view.pos.z - 64)
 
+// Holds the walk loop when playing
+let walk_audio = ∅
 
 enter
 ────────────────────────────────────────────────────────────────────────
+
+play_sound(loop_castle_sound, true, 30%)
 
 
 frame
