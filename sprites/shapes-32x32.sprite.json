@@ -46,6 +46,7 @@
         "hull": {"x": 9, "y": 2},
         "hook": {"x": 10, "y": 2},
         "breaking_wave": {"x": 11, "y": 2},
+        "curved_arrow": {"x": 12, "y": 2},
 
         "crescent": {"x": 0, "y": 3},
         "negative_disk": {"x": 1, "y": 3},
@@ -59,7 +60,8 @@
         "shield": {"x": 9, "y": 3},
         "half_shield": {"x": 10, "y": 3},
         "fin": {"x": 11, "y": 3},
-
+        "corner_arrow": {"x": 12, "y": 3},
+        
         "eye": {"x": 0, "y": 4},
         "coin": {"x": 1, "y": 4},
         "A": {"x": 2, "y": 4},

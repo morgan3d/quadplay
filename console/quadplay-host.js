@@ -168,6 +168,16 @@ function device_control(cmd) {
             break;
         }
 
+    case "set_mouse_lock":
+        // The state will be remembered and applied by pause and play buttons
+        usePointerLock = arguments[1] !== false;
+        if (usePointerLock) {
+            maybeGrabPointerLock();
+        } else {
+            releasePointerLock();
+        }
+        break;
+        
     case "get_mouse_state":
         {
             const mask = mouse.buttons;
@@ -176,9 +186,9 @@ function device_control(cmd) {
                 y: mouse.screen_y * QRuntime.$scaleY + QRuntime.$offsetY});
 
             const dxy = Object.freeze({
-                x: (mouse.screen_x - mouse.screen_x_prev) * QRuntime.$scaleX,
-                y: (mouse.screen_x - mouse.screen_y_prev) * QRuntime.$scaleY});
-            
+                x: ((mouse.movement_x === undefined) ? (mouse.screen_x - mouse.screen_x_prev) : mouse.movement_x) * QRuntime.$scaleX,
+                y: ((mouse.movement_y === undefined) ? (mouse.screen_y - mouse.screen_y_prev) : mouse.movement_y) * QRuntime.$scaleY});
+
             return Object.freeze({
                 x: xy.x,
                 y: xy.y,
@@ -993,6 +1003,11 @@ function requestInput() {
 function updateInput() {
     mouse.screen_x_prev = mouse.screen_x;
     mouse.screen_y_prev = mouse.screen_y;
+    if (mouse.movement_x !== undefined && ! mouse.movement) {
+        mouse.movement_x = 0;
+        mouse.movement_y = 0;
+    }
+    mouse.movement = false;
     
     const axes = 'xy', AXES = 'XY', buttons = 'abcdefpq';
 
@@ -1041,6 +1056,9 @@ function updateInput() {
             const pos = '+' + axis, neg = '-' + axis;
             const old = pad['$' + axis];
 
+            // Reset both digital and analog axes
+            pad['$' + axis];
+            
             if (map) {
                 // Keyboard controls
                 const n0 = map[neg][0], n1 = map[neg][1], p0 = map[pos][0], p1 = map[pos][1];
@@ -1057,15 +1075,12 @@ function updateInput() {
                 pad['$' + axis] = pad['$' + axis + axis] = 0;
             }
 
-            // Reset both digital and analog axes
-            pad['$' + axis];
-
             if (realGamepad) {
-                pad['$' + axis] = realGamepad.axes[a];
+                pad['$' + axis] = pad['$' + axis] || realGamepad.axes[a];
             }
 
             if (realGamepad && (prevRealGamepad.axes[a] !== realGamepad.axes[a])) {
-                pad['$' + axis + axis] = realGamepad.axes[a];
+                pad['$' + axis + axis] = pad['$' + axis + axis] || realGamepad.axes[a];
             }
 
             if (gameSource.json.dual_dpad && (player === 1) && gamepadArray[gamepadOrderMap[0]]) {
@@ -1073,13 +1088,14 @@ function updateInput() {
                 // Alias controller[0] right stick (axes 2 + 3)
                 // to controller[1] d-pad (axes 0 + 1) for "dual stick" controls                
                 if (otherPad.axes[a + 2] !== 0) {
-                    pad['$' + axis] = otherPad.axes[a + 2];
+                    pad['$' + axis] = pad['$' + axis] || otherPad.axes[a + 2];
                 }
                 if (otherPad.axes[a + 2] !== otherPad.axes[a + 2]) {
-                    pad['$' + axis + axis] = otherPad.axes[a + 2];
+                    pad['$' + axis + axis] = pad['$' + axis + axis] || otherPad.axes[a + 2];
                 }
             } // dual-stick
 
+            // Derivative
             pad['$d' + axis] = pad['$' + axis] - old;
         }
 
@@ -1341,17 +1357,33 @@ function emulatorScreenEventCoordToQuadplayScreenCoord(event) {
             y: clamp(Math.round(emulatorScreen.height * (event.clientY - rect.top  * zoom) / (rect.height * zoom)), 0, emulatorScreen.height - 1) + 0.5};
 }
 
-const mouse = {screen_x: 0, screen_y: 0, screen_x_prev: 0, screen_y_prev: 0, buttons: 0};
+const mouse = {screen_x: 0, screen_y: 0, screen_x_prev: 0, screen_y_prev: 0, buttons: 0, movement_movement: false};
 
 function updateMouseDevice(event) {
     if (event.target === emulatorScreen) {
         const coord = emulatorScreenEventCoordToQuadplayScreenCoord(event);
         mouse.screen_x = coord.x;
         mouse.screen_y = coord.y;
+
+        if (event.movementX !== undefined) {
+            const rect = emulatorScreen.getBoundingClientRect();
+
+            let zoom = 1;
+            if (isSafari) {
+                zoom = parseFloat(document.getElementById('screenBorder').style.zoom || '1');
+            }
+
+            // Movement events are available on this browser. They are higher precision and
+            // survive pointer lock, so report them instead
+            mouse.movement_x = emulatorScreen.width  * event.movementX / (rect.width  * zoom);
+            mouse.movement_y = emulatorScreen.height * event.movementY / (rect.height * zoom);
+            mouse.movement = true;
+        }
     }
     mouse.buttons = event.buttons;
 }
-        
+
+
 function onMouseDownOrMove(event) {
     updateMouseDevice(event);
     if (event.buttons !== 0) {

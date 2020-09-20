@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.09.12.18'
+const version  = '2020.09.20.03'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -630,6 +630,8 @@ function onStopButton(inReset) {
         saveIDEState();
     }
 
+    usePointerLock = false;
+    releasePointerLock();
     stopAllSounds();
     coroutine = null;
     clearTimeout(lastAnimationRequest);
@@ -659,6 +661,7 @@ function onPlayButton(slow, isLaunchGame, args) {
     
     const newTargetFramerate = slow ? SLOW_FRAMERATE : PLAY_FRAMERATE;
 
+    maybeGrabPointerLock();
     if ((emulatorMode === 'play') && (targetFramerate === newTargetFramerate)) {
         // Already in play mode, just refocus input
         emulatorKeyboardInput.focus();
@@ -1380,10 +1383,25 @@ function onPauseButton() {
     if (emulatorMode === 'play' || emulatorMode === 'step') {
         document.getElementById('pauseButton').checked = 1;
         emulatorMode = 'pause';
+        releasePointerLock();
         pauseAllSounds();
     }
 }
 
+// Changed by device_control, always resets on program start
+let usePointerLock = false;
+
+/** Use pointer lock if indicated */
+function maybeGrabPointerLock() {
+    if (usePointerLock) {
+        emulatorScreen.requestPointerLock();
+    }
+}
+
+/** Release pointer lock if it is held */
+function releasePointerLock() {
+    document.exitPointerLock();
+}
 
 function inModal() { return false; }
 
@@ -1711,7 +1729,7 @@ function onProjectSelect(target, type, object) {
         break;
         
     case 'asset':
-        const url = object._url || object.src;
+        const url = object.$url || object.src;
         // Find the underlying gameSource.asset key for this asset so
         // that we can fetch it again if needed
         let assetName;
@@ -1722,12 +1740,12 @@ function onProjectSelect(target, type, object) {
                 break;
             } else if (asset.spritesheet && asset.spritesheet === object) {
                 // Spritesheet on a map
-                assetName = asset._name + '.spritesheet';
+                assetName = asset.$name + '.spritesheet';
                 break;
             }
         }
         console.assert(assetName, 'Could not find asset name for ' + object);
-        setCodeEditorSession(object._jsonURL, assetName);
+        setCodeEditorSession(object.$jsonURL, assetName);
 
         // Show the code editor and the content pane
         codePlusFrame.style.visibility = 'visible';
@@ -1753,7 +1771,7 @@ function onProjectSelect(target, type, object) {
                 spriteEditor.style.backgroundSize = 'auto 100%';
             }
         
-            if (object._type === 'spritesheet') {
+            if (object.$type === 'spritesheet') {
                 spriteEditor.onmousemove = spriteEditor.onmousedown = function (e) {
                     
                     if (object.size === undefined) {
@@ -1792,7 +1810,7 @@ function onProjectSelect(target, type, object) {
                     spriteEditorHighlight.style.height = Math.floor(scaledSpriteHeight) + 'px';
 
                     let U = X, V = Y;
-                    if (object._json.transpose) { U = Y; V = X; }
+                    if (object.$json.transpose) { U = Y; V = X; }
                     const sprite = object[U] && object[U][V];
 
                     if (sprite) {
@@ -2618,18 +2636,18 @@ function createProjectWindow(gameSource) {
             if (assetName[0] === '$') { continue; }
 
             const asset = gameSource.assets[assetName];
-            let type = asset._jsonURL.match(/\.([^.]+)\.json$/i);
+            let type = asset.$jsonURL.match(/\.([^.]+)\.json$/i);
             if (type) { type = type[1].toLowerCase(); }
 
-            const badge = isBuiltIn(asset._jsonURL) ? 'builtin' : (isRemote(asset._jsonURL) ? 'remote' : '');
+            const badge = isBuiltIn(asset.$jsonURL) ? 'builtin' : (isRemote(asset.$jsonURL) ? 'remote' : '');
                 
             const contextMenu = editableProject ? `oncontextmenu="showAssetContextMenu('${assetName}')"` : '';
-            s += `<li id="projectAsset_${assetName}" ${contextMenu} onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'])" class="clickable ${type} ${badge}" title="${assetName} (${asset._jsonURL})"><code>${assetName}</code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>`;
+            s += `<li id="projectAsset_${assetName}" ${contextMenu} onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'])" class="clickable ${type} ${badge}" title="${assetName} (${asset.$jsonURL})"><code>${assetName}</code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>`;
 
             if (type === 'map') {
                 for (let k in asset.spritesheet_table) {
-                    const badge = isBuiltIn(asset.spritesheet_table[k]._jsonURL) ? 'builtin' : (isRemote(asset.spritesheet_table[k]._jsonURL) ? 'remote' : '');
-                    s += `<ul><li id="projectAsset_${assetName}.${k}" onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'].spritesheet_table['${k}'])" class="clickable sprite ${badge}" title="${k} (${asset.spritesheet_table[k]._jsonURL})"><code>${k}</code></li></ul>\n`;
+                    const badge = isBuiltIn(asset.spritesheet_table[k].$jsonURL) ? 'builtin' : (isRemote(asset.spritesheet_table[k].$jsonURL) ? 'remote' : '');
+                    s += `<ul><li id="projectAsset_${assetName}.${k}" onclick="onProjectSelect(event.target, 'asset', gameSource.assets['${assetName}'].spritesheet_table['${k}'])" class="clickable sprite ${badge}" title="${k} (${asset.spritesheet_table[k].$jsonURL})"><code>${k}</code></li></ul>\n`;
                 }
             }
         } // for each asset
@@ -3125,9 +3143,14 @@ function mainLoopStep() {
         // it wasn't for the frame rate scaler
         const graphics = profiler.smoothGraphicsTime.get() * QRuntime.$graphicsPeriod;
         const compute = logic + physics + graphics;
-        
+        const browser = Math.max(0, frame - compute);
+
+        // Use 18 instead of 16.67 ms as the cutoff for displaying
+        // overhead because there are sometimes very slight roundoffs
+        // due to the timer callback being inexact.
         if (profiler.debuggingProfiler) { updateTimeDisplay(frame, 'Interval'); }
-        updateTimeDisplay(compute, 'Frame');
+        updateTimeDisplay((frame > 18) ? frame : compute, 'Frame');
+        updateTimeDisplay((frame > 17.2) ? browser : 0, 'Browser');
         updateTimeDisplay(logic, 'CPU');
         updateTimeDisplay(physics, 'PPU');
         updateTimeDisplay(graphics, 'GPU');
@@ -3170,33 +3193,34 @@ function mainLoopStep() {
         if (QRuntime.$modeStack.length) {
             let s = '';
             for (let i = 0; i < QRuntime.$modeStack.length; ++i) {
-                s += QRuntime.$modeStack[i]._name + ' → ';
+                s += QRuntime.$modeStack[i].$name + ' → ';
             }
-            debugModeDisplay.innerHTML = s + QRuntime.$gameMode._name;
+            debugModeDisplay.innerHTML = s + QRuntime.$gameMode.$name;
         } else {
-            debugModeDisplay.innerHTML = QRuntime.$gameMode._name;
+            debugModeDisplay.innerHTML = QRuntime.$gameMode.$name;
         }
     } else {
         debugModeDisplay.innerHTML = '∅';
     }
 
     if (QRuntime.$prevMode) {
-        debugPreviousModeDisplay.innerHTML = QRuntime.$prevMode._name;
+        debugPreviousModeDisplay.innerHTML = QRuntime.$prevMode.$name;
     } else {
         debugPreviousModeDisplay.innerHTML = '∅';
     }
     
     debugModeFramesDisplay.innerHTML = '' + QRuntime.mode_frames;
     debugGameFramesDisplay.innerHTML = '' + QRuntime.game_frames;
-
-    // Update to the profiler's new model of the graphics period
-    QRuntime.$graphicsPeriod = profiler.graphicsPeriod;
-
+    
     if (targetFramerate < PLAY_FRAMERATE) {
         // Force the profiler to avoid resetting the
         // graphics rate when in slow mode.
         profiler.reset();
     }
+
+    // Update to the profiler's new model of the graphics period
+    QRuntime.$graphicsPeriod = profiler.graphicsPeriod;
+    QRuntime.$skipGraphics = (QRuntime.mode_frames % QRuntime.$graphicsPeriod) !== 0;
     
     if (emulatorMode === 'step') {
         onPauseButton();
@@ -3407,7 +3431,7 @@ function reloadRuntime(oncomplete) {
                 prompt: Object.freeze(Object.assign({'##': '' + (p + 1)}, controlSchemeTable[controlBindings.type])),
                 $id: controlBindings.id,
                 $analog: [0, 0, 0, 0],
-                _name: `gamepad_array[${p}]`
+                $name: `gamepad_array[${p}]`
             };
             Object.defineProperty(pad, 'x', padXGetter);
             Object.defineProperty(pad, 'dx', dxGetter);
@@ -3449,7 +3473,7 @@ function deep_clone(src, alreadySeen) {
     alreadySeen = alreadySeen || new Map();
     if ((src === null) || (src === undefined)) {
         return undefined;
-    } else if (src && src._type && (src._type !== 'map')) {
+    } else if (src && src.$type && (src.$type !== 'map')) {
         // Immutable asset types, so no need to clone
         return src;
     } else if (alreadySeen.has(src)) {
@@ -3634,9 +3658,15 @@ function makeAssets(environment, assets) {
     const alreadySeen = new Map();
     const ASSET = {};
     for (const assetName in assets) {
-        const assetValue = assets[assetName];
+        let assetValue = assets[assetName];
 
-        if (assetValue._type === 'spritesheet') {
+        if (assetValue.$type === 'data') {
+            // Data assets have a level of indirection that
+            // we must unroll here
+            assetValue = assetValue.value;
+        }
+
+        if (assetValue.$type === 'spritesheet') {
             console.assert(spritesheetArray[assetValue._index[0]] === assetValue,
                            'spritesheet ' + assetName + ' is at the wrong index.');
         }
@@ -3644,12 +3674,13 @@ function makeAssets(environment, assets) {
         // Clone maps because if not in forceReload mode they are
         // shared between runs when the program resets. Everything
         // else is immutable so it doesn't matter.
-        const assetCopy = (assetValue._type === 'map') ? deep_clone(assetValue, alreadySeen) : assetValue;
+        const assetCopy = (assetValue.$type === 'map') ? deep_clone(assetValue, alreadySeen) : assetValue;
         ASSET[assetName] = assetCopy;
         defineImmutableProperty(environment, assetName, assetCopy);
     }
     defineImmutableProperty(environment, 'ASSETS', Object.freeze(ASSET));
 }
+
 
 function updateControllerIcons() {
     const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);

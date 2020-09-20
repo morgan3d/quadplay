@@ -1065,8 +1065,8 @@ function $executePLY(cmd) {
         }
         {
             // Wraparound to close the polygon
-            const p = points.length - 3;
-            $line(points[p], points[p + 1], points[p + 2], points[p + 3], outline, clipX1, clipY1, clipX2, clipY2, false, true);
+            const p = points.length - 2;
+            $line(points[p], points[p + 1], points[0], points[1], outline, clipX1, clipY1, clipX2, clipY2, false, true);
         }
     }
 }

@@ -8,7 +8,7 @@
 ∙ [*Assets*](#built-inassets) ([*Sprites*](#sprites) ∙ [*Fonts*](#fonts) ∙ [*Sounds*](#sounds))
 <br>[Controls](#controls) 
 ∙ [Symbols](#symbols)
-∙ [JSON Formats](#projectfile) 
+∙ [JSON Formats](#projectfiles) 
 ∙ [Language Spec](#pyxlscriptlanguage) 
 ∙ [Network](#network) 
 ∙ [Change Log](#changelog)
@@ -363,6 +363,8 @@ competive game derived from Snake-like games, including [TRON]("https://en.wikip
 - Combinatorial logic
 
 
+
+
 ### Examples
 
 <table class="aligned">
@@ -445,7 +447,7 @@ GPU is fast enough to process one point per pixel, but this technique is not rec
 tend to be too slow, even if this simple.
 
 </td></tr><tr><td>![](../examples/entity/label128.png)</td><td>
-[Clouds Example](../console/quadplay.html?game=quad://examples/enity&IDE=1) 
+[Entity Example](../console/quadplay.html?game=quad://examples/entity&IDE=1) 
 Shows different ways of constructing entities with text and sprites.
 
 </td></tr><tr><td>![](../examples/physics/label128.png)</td><td>
@@ -507,15 +509,28 @@ choreograph series of frame hooks one after the other.
 </td></tr><tr><td>![](../examples/twin_analog/label128.png)</td><td>
 [Twin Analog Example](../console/quadplay.html?game=quad://examples/twin_analog&IDE=1) shows how to use `device_control()` to access
 twin analog sticks and game controller triggers that are not standard on quadplay consoles.
+
+</td></tr><tr><td>![](../examples/kart/label128.png)</td><td>
+[Kart Example](../console/quadplay.html?game=quad://examples/kart&IDE=1) is a perspective camera 
+view with a textured ground plane similar to Space Harrier, Mario Kart, and Pilotwings.
+
+</td></tr><tr><td>![](../examples/warlock3D/label128.png)</td><td>
+[Warlock Example](../console/quadplay.html?game=quad://examples/warlock3D&IDE=1) is 3D first person
+rendering similar to DOOM and Heretic, with shading, textured floors and walls, billboarded
+characters, pitch and yaw, and jumping. It demonstrates retro D-pad + shoulder button strafe, 
+quadplay dual D-pad, conventional dual analog, and mouselook controls.
+
 </td></tr></table>
 
 ### Inspiration
 
 Some games that were not made in quadplay✜, but which fit within the
-restrictions of quadplay and are sources of inspiration for their arcade
-graphics and gameplay:
+restrictions of quadplay and are sources of inspiration for their
+arcade graphics and gameplay follow. We've specifically determined
+that the main technical challenges of each of these can be met on
+quadplay✜.
 
-<div style="columns:2;-webkit-columns:2;-moz-columns:2;column-gap:3em;-webkit-column-gap:3em;-moz-column-gap:3em">
+<div style="columns:3;-webkit-columns:3;-moz-columns:3;column-gap:3em;-webkit-column-gap:3em;-moz-column-gap:3em">
 
 - [Towerfall Ascension](http://www.towerfall-game.com/)
 - [Crawl](https://www.powerhoof.com/crawl/)
@@ -570,6 +585,19 @@ graphics and gameplay:
 - [Chasm](https://bitkidinc.itch.io/chasm)
 - [Eliminator Boat Duel](https://www.youtube.com/watch?v=NM7ZNX0GUBI)
 - [The Eternal Castle](http://www.theeternalcastle.net/)
+- [DOOM]("https://en.wikipedia.org/wiki/Doom_(1993_video_game)")
+- [DOOM II](https://en.wikipedia.org/wiki/Doom_II)
+- [Heretic]("https://en.wikipedia.org/wiki/Heretic_(video_game)")
+- [Dark Forces](https://en.wikipedia.org/wiki/Star_Wars:_Dark_Forces)
+- [Marathon]("https://en.wikipedia.org/wiki/Marathon_(video_game)")
+- [Ultima Underworld](https://en.wikipedia.org/wiki/Ultima_Underworld:_The_Stygian_Abyss)
+- [Loom]("https://en.wikipedia.org/wiki/Loom_(video_game)")
+- [Day of the Tentacle](https://en.wikipedia.org/wiki/Day_of_the_Tentacle)
+- [Pilotwings]("https://en.wikipedia.org/wiki/Pilotwings_(video_game)")
+- [Super Mario Kart](https://en.wikipedia.org/wiki/Super_Mario_Kart)
+- [Sonic Drift](https://en.wikipedia.org/wiki/Sonic_Drift)
+- [F-Zero]("https://en.wikipedia.org/wiki/F-Zero_(video_game)")
+- [Space Harrier](https://en.wikipedia.org/wiki/Space_Harrier)
 
 </div>
 
@@ -847,7 +875,6 @@ PyxlScript:
   - Put your top-level and `_init` code into the top level
   - Put your `_update` and `_draw` combined into the `frame` section
 - Declare variables with `let` and `const` instead of `local`
-- Variable names can't begin with an underscore
 - Arrays start at 0
 - Use `size(x)` instead of `#x`
 - Use `:` between the beginning of a block and its body
@@ -867,7 +894,6 @@ The PyxlScript language feels a lot like Python, with these changes:
 - Use `size(x)` instead of `len(x)`
 - Use `debug_print` instead of `print`
 - Use `for low <= i < high` instead of `for i in range(low, high)`
-- Variable names can't begin with an underscore
 - The `==` operator is pointer equality (Python `is`). Use `equivalent` for object structural equality tests.
 - Variables have block scope instead of function scope
 - Function variables have lexical scope (no `global` statement required)
@@ -895,7 +921,6 @@ The PyxlScript language feels a lot like JavaScript strict mode, with these chan
 - Use PyxlScript `==` in place of JavaScript `===`
 - Use `:` and indentation instead of `{}` for defining blocks
 - Use `def` instead of `function`
-- Variable names can't begin with an underscore
 - No `;` required, except for multiple statements on the same line
 - Use `size(x)` instead of `x.length`
 - Use `for v at k in object:` instead of `for (k in object)`
@@ -3287,46 +3312,52 @@ using the full physics engine.
   See `entity.pivot`, `entity.shape`, etc. for discussion of how those properties
   affect the collision detection.
 
-`ray_intersect(ray, obj)`
+`ray_intersect(ray, entity)`
 : The `ray` object must have `xy()` fields for `origin`, `direction`,
   and an optional number field for `length default infinity`.
   The `ray.direction` will automatically be normalized.
 
-  The `obj` has `shape`, `pos`, `size`, and optional `angle`
+  The `entity` has `shape`, `pos`, `size`, and optional `angle`
   properties (an entity satisfies this, but it doesn't have to be a full
-  entity). If there is a `obj.child_array`, then that is recursively
+  entity). If there is a `entity.child_array`, then that is recursively
   processed and the first intersection encountered is returned.
 
-  Returns the object hit or `nil` if there was no intersection.
+  Returns the entity hit, or `nil` if there was no intersection.
   The `ray.length` is shortened to the hit distance.
 
 `ray_intersect(ray, array)`
 : Returns the first object intersected when calling `ray_intersect(ray, array[i])`
   on each element of the array.
-
-<!--
-`rayIntersectMap(args)`
-: Calls `rayIntersectMap()` with the named arguments.
-
-`rayIntersectMap(ray, map, tileCanBeSolid default get_map_sprite, pixelIsSolid default ∅, layer default 0, replacement_array default [])`
-: The `ray` object must have `xy()` fields for `origin`, `direction`,
+  
+`ray_intersect_map(ray, map, layer, sprite_callback default nil, pixel_callback default nil, replacement_array default [])`
+: The `ray` object must have `xy()` fields for `pos`, `dir`,
   and an optional number field for `length default infinity`.
-  The `ray.direction` will automatically be normalized. The ray is in _draw coordinates_.
+  The `ray.direction` will automatically be normalized.
+  The ray is in _world coordinates_.
+  
+  The return value is the first non-nil return value of
+  `sprite_callback` or `pixel_callback`, or `nil` if the end of the
+  ray is reached.
 
-  Returns the sprite hit or `nil` if there was no intersection.
-  The `ray.length` is shortened to the hit distance.
+  The callback signatures are:
+  
+   - `def sprite_callback(sprite, sprite_pixel_coord, ws_normal, ray, map, ws_distance, ws_coord, map_coord)`
+   - `def pixel_callback(sprite, sprite_pixel_coord, ws_normal, ray, map, ws_distance, ws_coord, map_coord)`
+   
+  Where the `ws_normal` is a unit vector pointing out of the sprite or
+  pixel along the face that was hit.  The `sprite_pixel_coord`,
+  `ws_normal`, `ws_coord`, and `map_coord` are shared by every
+  callback invocation, so make a copy of them if you wish to retain
+  those values after the callback returns.
+  
+  The iterator stops immediately after the first callback returns a
+  non-`nil` value and the `ray.length` is shortened to the hit
+  distance.
 
-  `def tileCanBeSolid(map, P, layer, replacement_array)` returns true
-  if the tile at `P` _in map coords_ can trigger a collision. The
-  callback `pixelIsSolid` is then invoked to find the collision within
-  the tile. The default value returns true for any non-`nil` tile.
-
-  `def pixelIsSolid(map, P, layer, replacement_array)` returns true if the pixel at `P` _in map coords_
-  triggers a collision.  The default value, returns true for all pixels,
-  so that any `tileCanBeSolid() == true` tile immediately stops the ray. See `get_map_pixel_color()`.
-  As an example of a common alternative, `def pixelIsSolid(map, P, L, R): return get_map_pixel_color(map, P, L, R).a > 50%`
-  causes collisions with any 50% opaque pixels.
--->
+  At least one callback must be specified. There is no default sprite
+  callback. The default pixel callback is:
+  
+  `def default_pixel_callback(s, p): return if get_sprite_pixel_color(s, p).a >= 50% then s else nil`
 
 
 ### Engine
@@ -4039,6 +4070,21 @@ indices. The map's z-axis corresponds to layers.
   tile (0, 0).  Using a non-default `angle` and `scale` will
   approximately double the cost of drawing the map.
 
+`draw_map_horizontal_span(start, width, map, map_coord0, map_coord1, min_layer default 0, max_layer_exclusive default +infinity, replacement_array default [], z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp", invert_sprite_y default (get_transform().dir.y < 0))`
+: Draws a horizontal (regardless of the camera) span of constant z with pixel colors taken from the map.
+  This is a key primitive for building fast perspective rendering of horizontal surfaces.  See the
+  Kart example. It can also be used for 2D textured polygon rendering.
+  
+  `start` is an `xy()` value on screen at the left edge of the span. `width` is the
+  width of the span. It will be transformed by the camera, but does not rotate.
+  `map_coord0` is an `xy()` in map coordinates for the source colors, which corresponds
+  to the `start` pixel on screen. `map_coord1` is the end coordinate in map coordinates.
+  
+  `map`, `replacement_array`, `min_layer`, `max_layer_exclusive`, and `invert_sprite_y` 
+  are as for `get_map_pixel_color()`.
+  
+  `override_color` and `override_blend` are as for `draw_sprite()`.
+
 `find_map_path(map, startXY, goalXY, edgeCost, costLayer = 0)`
 : Specialized version of `find_path` for maps. The start and end positions
   are rounded down to the nearest integer map coordinates. The `edgeCost`
@@ -4119,9 +4165,8 @@ indices. The map's z-axis corresponds to layers.
   transformation.
 
 `transform_map_space_to_ws(map, map_coord)`
-: Returns the draw coordinates of `map_coord`. Integer map_coords correspond to the _centers_ of tiles if
- the offset on the map is zero (the default).
-  (Centers will also be fractional _pixels_ for even map tile sizes). See also `transform_ws_to_map_space()`
+: Returns the draw coordinates of `map_coord`. Integer `map_coord`s correspond to the corners of tiles if
+  the offset on the map is zero (the default). See also `transform_ws_to_map_space()`
   and `get_map_pixel_color()`.
   
   To account for a map that is rendered by `draw_map()` with its own `pos`, `angle`, and `scale`, use
@@ -4495,7 +4540,12 @@ Raw Device Access
                                                                    a meaningful way. There is currently no way to read the D-pad directly (it will be overriden by the analog axis if moved)
                                                                    or to read the analog triggers or other axes.</td></tr>
     <tr valign=top><td> `"get_mouse_state"`             </td><td> Return `{x:number, y:number, dx:number, dy:number, xy:xy(...), dxy:xy(...), button_array:[...]}` for the current mouse position and buttons. Each element of
-                                                       `button_array` is 0 or 1. There are at least two buttons, but may be more.</td></tr>
+                                                       `button_array` is 0 or 1. There are at least two buttons, but may be more. The `dx`, `dy`, and `dxy` values may have higher precision than the absolute numbers because they
+                                                       are tracked at subpixel resolution on browsers that support this.</td></tr>
+    <tr valign=top><td> `"set_mouse_lock", bool`       </td><td> Enable or disable mouse lock. Mouse lock hides the OS mouse cursor and prevents the mouse from moving 
+                                                        from the center of the screen, so that it returns only `dxy` values and absolute `xy` values will be fixed. 
+                                                        This is useful for first-person mouselook.</td></tr>
+    
     <tr valign=top><td> `"set_debug_flag", flagname, bool`</td><td> Set the enabled state of an IDE debugging flag. The flagnames are 
                                                        `"entity_bounds"`, `"assert"`, `"debug_print"`, 
                                                         `"debug_watch"`, `"physics"`.</td></tr>
@@ -4517,7 +4567,7 @@ Intrinsics
 
 quadplay✜ can execute about 10,000 vector operations per frame even
 on embedded platforms. This is sufficient to program most mathematical
-routines in a readable way and intrinsics are is not required.
+routines in a readable way and intrinsics are usually not required.
 
 For some _very_ math intensive routines, such as those with thousands
 of particles, it is necessary to run slightly faster at the expense of
@@ -4531,7 +4581,7 @@ versions may be substantially faster than overloaded operators.
 
 Intrinsics are never needed on literal values. `5 + 6` compiles to the
 same code as `ADD(5, 6)`, for example. Intrinsics are not provided for
-exponents, square root, bit shifts, trigonometric, modulo (remainder) 
+exponents, square root, bit shifts, trigonometric, modulo (remainder), 
 and other operations that naturally compile with maximum efficiency.
 
 `ADD(s1, s2)`
@@ -4778,6 +4828,7 @@ Sprites
 ![`quad://sprites/top-runner-32x50.sprite.json`](../sprites/top-runner-32x50.png)
 
 
+
 ### Other
 
 ![`quad://sprites/miniroguelike-8x8.sprite.json`](../sprites/miniroguelike-8x8.png)
@@ -4786,6 +4837,7 @@ Sprites
 ![`quad://sprites/controllers-32x22.sprite.json`](../sprites/controllers-32x22.png)
 ![`quad://sprites/explosion-realistic-128x128.sprite.json`](../sprites/explosion-realistic-128x128.png)
 ![`quad://sprites/beast-soldier-32x32.sprite.json`](../sprites/beast-soldier-32x32.png)
+![`quad://sprites/blasphemer-tiles-64x64.sprite.json`](../sprites/blasphemer-tiles-64x64.png)
 ![`quad://sprites/shapes-32x32.sprite.json`](../sprites/shapes-32x32.png)
 
 
@@ -5136,6 +5188,7 @@ options. Project files should have the double extension `.game.json`.
    // Supported sizes:
    //
    //   384 x 224 (maximum, native, default)
+   //   320 x 200 (VGA),
    //   192 x 112 (half resolution),
    //   128 x 128 (PICO-8),
    //   64 x 64 (lowrezjam and nano JAMMER)
@@ -5797,6 +5850,35 @@ When drawing, layer zero for `draw_map()` corresponds to the lowest layer in Til
 the layer indices increase upwards.
 
 
+Data JSON
+---------------------------------------------------------------------------------------------
+
+The special data asset type allows importing a large amount of data in
+an arbitrary format. It supports PNG, JPG, GIF, CSV, JSON, YAML, and
+XML. Unlike a CSV, JSON, or YAML _constant_, an asset can contain
+metadata, a license, and arbitrary extra fields.
+
+Unlike a sprite, a PNG, JPG, or GIF data asset presents the raw 8-bit per
+pixel data as a 2D array to the program instead of quantizing it to
+4 bits per channel and only supporting PNG.
+
+The data JSON descriptor looks like:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ JavaScript
+{
+    // can be .png, .gif, .jpg, .csv., json, or .yml
+    "url": "heightfield.png",
+    "license": "your license here",
+    
+    // all of the table constant options for if URL is a CSV file
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Images are loaded as `image.color[x][y]` where `color` can be `r`, `g`,
+`b`, or `a`. The values are on the range [0, 255]. Future support may
+extend that range when the input has 16 or 32 bits per channel.
+
+
 PyxlScript Language
 =========================================================================
 
@@ -5960,12 +6042,12 @@ def draw_stuff(a, b, c):
 Variables
 ---------------------------------------------------------------------------
 
-Variable name identifiers consist of an optional upper case delta plus a series of Roman
-letters, or the unambiguous-looking Greek letters `αβγδζηθιλμρσϕχτψωΩ` by themselves, and
-optionally trailing a series of digits. Greek letters may also be trailed by
-an underscore and a series of letters and digits.
+Variable name identifiers consist of an optional leading underscore `_`, 
+optional upper case delta `Δ`,
+a series of Roman letters or one of the unambiguous-looking Greek letters `αβγδζηθιλμρσϕχτψωΩ` by itself, and
+optionally trailing a series of digits and underscores.
 The identifier also must not be a reserved word. No
-underscores or other unicode characters are allowed in identifiers.
+other unicode characters are allowed in identifiers.
 
 Examples of legal identifiers:
 
@@ -5981,6 +6063,7 @@ Y2
 Δx
 θ
 θ_in
+_health
 ~~~~~~~~~~~~~~~~~~~
 
 Variables are declared to the scope of the containing block or
@@ -7554,6 +7637,12 @@ behind them when not using perspective, so you don't have to leave out
 the hidden map tiles for performance when drawing maps. Maps with
 opaque tiles that are not rotated or scaled draw extremely fast.
 
+`draw_map_horizontal_span()` is substantially faster than your own 
+per-pixel rendering using `get_map_pixel_color()` and `draw_point()`.
+It is fastest when using opaque map tiles, a single layer of a map, and
+no override color. The Kart example program intentionally uses a slower 
+case as a stress test.
+
 Built-in math functions are faster than math functions that you write
 to do equivalent operations because they are designed to minimize
 memory allocation internally. The intrinsics are maximum speed
@@ -7824,6 +7913,33 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+
+2020 September 26: Beta update 49
+
+- New _Kart_ example of a perspective ground plane
+- New _Warlock 3D_ example of a first person viewpoint
+- New Blasphemer tile set
+- Added `ray_intersect_map()` collision detection routine
+- Added `curved_arrow` and `corner_arrow` to `shapes-32x32.sprite.json`
+- Added subpixel precision support for `mouse.dxy` on `device_control("get_mouse_state")`
+- Added `device_control("set_mouse_lock")`
+- Added `.data.json` files for large assets in arbitrary formats
+- Allowed leading underscores on variable and member names
+- Improved frame rate scaling for low end processors
+- Fixed `mouse.dy` on `device_control("get_mouse_state")` returning incorrect values
+- Fixed swapped `sprite.rotated_90` and `sprite.rotated_270`
+- Fixed missing transparency for `sprite.rotated_90` and `sprite.rotated_270`
+- Fixed missing edge on outlined polygons, triangles, and rotated rectangles
+- Fixed physical controller overriding keyboard D-pad if activated
+- Fixed polygons, triangles, and rectangles rotating the wrong way under camera transforms
+  when the Y-axis is up
+- Known bugs:
+   - HSV color preview not 100% accurate
+   - `get_map_pixel_color()` uses wrong coordinates outside of primary bounds for wrapping maps
+   - `draw_map()` not visible outside of central 3x3 repetitions for wrapping maps
+   - `ray_intersect_map()` pixel callbacks not implemented 
+
 
 2020 September 12: Beta update 48
 

@@ -57,6 +57,11 @@
             "description": ""
         },
         {
+            "url": "quad://examples/kart/",
+            "title": "Kart",
+            "description": "Perspective textured ground plane example"
+        },
+        {
             "url": "quad://examples/lift_team/",
             "title": "Lift Team Example",
             "description": "Physics example of a player helicoper that can lift another player's mech."
@@ -135,6 +140,11 @@
             "url": "quad://examples/vehicles/",
             "title": "Vehicles",
             "description": "Example of vehicle controls"
+        },
+        {
+            "url": "quad://examples/warlock3D/",
+            "title": "Warlock 3D",
+            "description": "DOOM/Heretic style first person view with d-pad, dual d-pad, dual analog, and mouselook controls"
         },
         {
             "url": "quad://examples/zcar/",

@@ -83,19 +83,19 @@ function processWithHeader(test) {
     // Syntax: with var0[, var1[, ...]] ∊ expr
     //
     //
-    // Maps to (__ variables are gensyms):
+    // Maps to ($_ variables are gensyms):
     //
     //
-    // { let __obj = (expr),
-    //       var0 = __obj.var0, ..., varn = __obj.varn,
-    //       __var0Descriptor = Object.getOwnPropertyDescriptor(__obj, 'var0'), ...;
-    //   Object.defineProperties(__obj, {var0: {configurable:true, get() { return var0; }, set(__v) { var0 = __v; }}, ...});
+    // { let $_obj = (expr),
+    //       var0 = $_obj.var0, ..., varn = $_obj.varn,
+    //       $_var0Descriptor = Object.getOwnPropertyDescriptor($_obj, 'var0'), ...;
+    //   Object.defineProperties($_obj, {var0: {configurable:true, get() { return var0; }, set($_v) { var0 = $_v; }}, ...});
     //   try {
     //
     //      ...
     //
     //   } finally {
-    //       if (__var0Descriptor.get) Object.defineProperty(__obj, 'var0', __var0Descriptor); else delete __obj.var0; __obj.var0 = var0;
+    //       if ($_var0Descriptor.get) Object.defineProperty($_obj, 'var0', $_var0Descriptor); else delete $_obj.var0; $_obj.var0 = var0;
     //       ...
     //  }}
 
@@ -653,7 +653,7 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode, strin
 }
 
 // The identifier pattern is also used in quadplay-runtime.js $removeMarkup() and must be kept in sync
-const identifierPattern = '[Δ]?(?:[A-Za-z][A-Za-z_0-9]*|[αβγΔδζηθιλμρσϕφχψτωΩ][_0-9]*(?:_[A-Za-z_0-9]*)?)';
+const identifierPattern = '_?[Δ]?(?:_?[A-Za-z][A-Za-z_0-9]*|[αβγΔδζηθιλμρσϕφχψτωΩ][_0-9]*(?:_[A-Za-z_0-9]*)?)';
 const identifierRegex = RegExp(identifierPattern);
 
 // for WITH statements
@@ -684,13 +684,13 @@ function processBars(src, sym, fcn) {
 let gensymNum = 0;
 /** Returns a new identifier */
 function gensym(base) {
-    return '__' + (base || '') + (++gensymNum) + '__';
+    return '$_' + (base || '') + (++gensymNum) + '$_';
 }
 
 /** Expression for selective yields to avoid slowing down tight loops. This weird syntax
     of incrementing and then assigning back to what was incremented is to avoid the operator
     overloading triggering a slow increment */
-var maybeYieldGlobal = '';//' {if (!(__yieldCounter = ((++__yieldCounter) & 8191)) { yield; }} ';
+var maybeYieldGlobal = '';//' {if (!($_yieldCounter = ((++$_yieldCounter) & 8191)) { yield; }} ';
 
 /** Expression for 'yield' inside a function, where regular yield is not allowed */
 var maybeYieldFunction = '';
@@ -1009,11 +1009,11 @@ function pyxlToJS(src, noYield, internalMode) {
         // bracketed expression), followed by a variable name.
 
         // Specials and parens case
-        src = src.replace(/([επξ∞½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁾]|\))[ \t]*([\(A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞])/g, '$1 * $2');
+        src = src.replace(/([επξ∞½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁾]|\))[ \t]*([\(_A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞])/g, '$1 * $2');
 
         // Number case (has to rule out a variable name that ends in a
         // number or has a number inside of it)
-        src = src.replace(/([^A-Za-z0-9αβγδζηθιλμρσϕφχτψωΩ_]|^)([0-9\.]*?[0-9])[ \t]*([\(A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞_])/g, '$1$2 * $3');
+        src = src.replace(/([^A-Za-z0-9αβγδζηθιλμρσϕφχτψωΔΩ_]|^)([0-9\.]*?[0-9])[ \t]*([\(A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞_])/g, '$1$2 * $3');
 
         // Fix any instances of text operators that got accentially
         // turned into implicit multiplication. If there are other
@@ -1132,7 +1132,7 @@ function pyxlToJS(src, noYield, internalMode) {
     src = src.replace(/[ \t]*,/g, ',');
     src = src.replace(/;[ \t]*;/g, ';');
     src = src.replace(/(\S)[ \t]{2,}/g, '$1 ');
-    src = src.replace(/_add\(__yieldCounter, 1\)/g, '__yieldCounter + 1');
+    src = src.replace(/_add\($_yieldCounter, 1\)/g, '$_yieldCounter + 1');
     src = unprotectQuotedStrings(src, stringProtectionMap);
 
     // Print output code for debugging the compiler
@@ -1312,14 +1312,14 @@ function $pop_modeFrom$SystemMenu(callback) {
 // frame
 ${sectionSeparator}
 const $frame = (function*() { 
-let __yieldCounter = 0; while (true) { try {
-if (($gameMode._name[0] !== '$') && (gamepad_array[0].$pp || gamepad_array[1].$pp || gamepad_array[2].$pp || gamepad_array[3].$pp)) { push_mode($SystemMenu); }
+let $_yieldCounter = 0; while (true) { try {
+if (($gameMode.$name[0] !== '$') && (gamepad_array[0].$pp || gamepad_array[1].$pp || gamepad_array[2].$pp || gamepad_array[3].$pp)) { push_mode($SystemMenu); }
 $processFrameHooks();
 ${sectionTable.frame.jsCode}
 $show(); } catch (ex) { if (! ex.nextMode) throw ex; else $updateInput(); } yield; }
 })();
 
-return $Object.freeze({$enter:$enter, $frame:$frame, $pop_modeFrom$SystemMenu:$pop_modeFrom$SystemMenu ${pop_modeBindings}, $leave:$leave, _name:'${mode.name}'});
+return $Object.freeze({$enter:$enter, $frame:$frame, $pop_modeFrom$SystemMenu:$pop_modeFrom$SystemMenu ${pop_modeBindings}, $leave:$leave, $name:'${mode.name}'});
 })();
 
 `;

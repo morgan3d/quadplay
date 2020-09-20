@@ -1,0 +1,258 @@
+/*
+This framework shows how to ray cast in the style of DOOM 
+directly from a TMX map. The core technique requires that walls
+are perpendicular to the floor and that shading is based on depth.
+
+It can be adapted in several ways within those limitations:
+
+- Multiple elevations and stairs by clipping the 
+  horizontal spans drawn and tracing multiple layers
+- Walls that are not axis aligned in XZ 
+- Animated doors by explicitly tracing additional "walls" 
+  that rotate or translate
+- Alpha masks on walls (or floors) by continuing the trace
+  when the wall sprite hit has a some non-1 values in its
+  alpha channel
+- Fog, using a white override_color and "lerp" instead 
+  of "multiply"
+
+Many of those need a more sophisticated, non-TMX source map that
+can represent thin and angled walls.
+*/
+
+
+def make_view(map):
+    const view = {
+        // "D-PAD", "DUAL D-PAD", "DUAL ANALOG", "MOUSE"
+        control_scheme: "D-PAD",
+            
+        pos: xyz(½ map.size.x * map.sprite_size.x, 60% map.sprite_size.y, ½ map.size.y * map.sprite_size.y),
+        
+        // Yaw 180° = looking north along the -z axis, increases
+        // to the left
+        yaw: 180°,
+        
+        // Pitch 0° = horizontal, increases tilt up. In this program it is approximated
+        // by shearing instead of tilting the rays
+        pitch: 0°,
+        
+        // For movement collision
+        radius: 16,
+        
+        speed: xz(0, 0),
+        spin: xy(0°, 0°),
+        
+        jump_vel: 0,
+        
+        z_near: -4,
+        z_far: -64 * 5,
+        
+        // Edge to edge. This number must match the size of 
+        // the background image unless it is scaled.
+        horizontal_fov: 90°
+    }
+    
+    view.perspective_constant = -½ SCREEN_SIZE.x / tan(½ view.horizontal_fov)
+    return view
+    
+// Range compression on z values
+const VS_TO_CS_Z = 0.1
+const FLOOR_LAYER = 0
+const WALL_LAYER = 1
+const CEILING_LAYER = 2
+
+
+// Forward vector for the camera
+def ws_forward(view):    
+    // Transform from camera space to world space
+    return xyz(sin(view.yaw), 0, cos(view.yaw))
+
+
+// Returns the world-space ray through the given pixel.
+// Pixel should be an integer + ½ for a pixel center.
+// Assumes that (0, 0) is the center of the screen.
+def ws_eye_ray(view, pixel):
+    // Compute the normalized side of a square at z=-1 based on our 
+    // field of view; the result is negative because of 
+    // our convention to have the image plane on the
+    // negative axis
+    const side = 2 tan(½ view.horizontal_fov) / SCREEN_SIZE.x
+    
+    // Compute the point on the image plane
+    const point = xyz(side * pixel.x, side * pixel.y, -1)
+                      
+    // Convert to a direction
+    let dir = direction(point)
+    
+    // Transform from camera space to world space
+    const c = cos(view.yaw)
+    const s = sin(view.yaw)
+    
+    return {
+        pos: xyz(view.pos),
+        dir: xyz(-c * dir.x - s * dir.z, dir.y, s * dir.x - c * dir.z),
+        t_min: view.z_near / dir.z,
+        t_max: view.z_far / dir.z,
+        
+        // Rate at which moving along the ray moves in camera-space z
+        d_cs_z: dir.z
+    }
+
+
+// Returns the intersection point or ∅ if there is not one
+def ray_horizontal_plane_intersection(ray, y):
+    const t = (y - ray.pos.y) / ray.dir.y
+    
+    // If the above is NaN, these tests will still work correctly
+    if t ≥ ray.t_min and t ≤ ray.t_max:
+        return t
+    else:
+        return ∅
+
+
+// Return the distance darkening factor for a 3D camera-space 
+// z value
+def get_shade(z, shade, mul default 1):
+    const k = mul * clamp(150% + z / 210, 0%, 100%)³
+    shade.r = k; shade.g = k; shade.b = k;
+
+
+def draw_floor_and_ceiling(view, map):
+    const left = xy(½ - ½ SCREEN_SIZE.x, 0)
+    const right = xy(½ SCREEN_SIZE.x - ½, 0)
+    const override_color = rgba(1, 1, 1, 1)
+    
+    const pitch_shear = SCREEN_SIZE.y - get_transform().pos.y
+    for (½ - pitch_shear) ≤ y ≤ pitch_shear + SCREEN_SIZE.y:
+        left.y = y
+        right.y = y
+        
+        const MAP_LAYER = if y < 0 then FLOOR_LAYER else CEILING_LAYER
+        const Y_PLANE = if y < 0 then 0 else map.sprite_size.y
+        
+        // Primary rays through the centers of the pixels at each edge
+        const lt_ray = ws_eye_ray(view, left)
+        const rt_ray = ws_eye_ray(view, right)
+        
+        // Distance along the ray to the ground at the left edge
+        const edge_t = ray_horizontal_plane_intersection(lt_ray, Y_PLANE)
+        
+        // No intersection on this scanline 
+        if edge_t == ∅: continue
+    
+        // Intersection points at left and right edges in map coordinates
+        const min_point = xz_to_xy(lt_ray.pos + lt_ray.dir * edge_t) / map.sprite_size
+        const max_point = xz_to_xy(rt_ray.pos + rt_ray.dir * edge_t) / map.sprite_size
+    
+        // Compute the camera space z of this scanline on the ground
+        // plane
+        const z = lt_ray.d_cs_z * edge_t
+        const cs_z = z * VS_TO_CS_Z
+        
+        // Distance darkening
+        get_shade(z, override_color)
+        if override_color.r < 8%: continue
+        draw_map_horizontal_span(left, SCREEN_SIZE.x, map, min_point, max_point, MAP_LAYER, MAP_LAYER + 1, ∅, cs_z, override_color, "multiply", true)
+
+
+
+def draw_minimap(view, map) preserving_transform:
+    const corner = xy(10, 1)
+    const extent = xy(36, 36)
+    set_transform(corner + ½ extent, xy(1, 1))
+    draw_rect(xy(0, 0), extent + 2, #2, #578, ∅, 101)
+    set_camera({pos: xz_to_xy(view.pos), angle: 180° + view.yaw, zoom: 10%})
+    draw_disk(xz_to_xy(view.pos), view.radius, #ff0, #000, 100)
+    set_clip(corner, extent)
+    draw_map({map: map, min_layer: 0, map_layer: 1, z: 102})
+    
+
+
+def perspective_scale(view, vs_z):
+    return view.perspective_constant / vs_z
+
+
+// Sprite callback for draw_walls
+def wall_intersector(sprite, sprite_pixel_coord, ws_normal, ray, map, distance, ws_coord, map_coord):
+    return {
+        sprite: sprite, 
+        ws_distance: distance,
+        ws_normal3D: xyz(ws_normal.x, 0, ws_normal.y),        
+        x: (if ws_normal.x then sprite_pixel_coord.y else sprite_pixel_coord.x)
+        }
+
+
+def draw_walls(view, map) preserving_transform:
+    const clip_pos = xy(0, 0)
+    const clip_size = xy(1, SCREEN_SIZE.y)
+    const shade = rgb(1, 1, 1)
+    const scale = xy(1, 1)
+    const pixel = xy(0, 0)
+    const sprite_pos = xy(0, 0)
+    
+    set_clip(clip_pos, clip_size)
+    for 0 ≤ x < SCREEN_SIZE.x:
+        pixel.x = x + ½ - ½ SCREEN_SIZE.x
+        
+        // Generate the ray through the pixel center
+        const ray3D = ws_eye_ray(view, pixel)
+        
+        const ray = {
+            origin: xz_to_xy(ray3D.pos),
+            direction: xz_to_xy(ray3D.dir),
+            length: ray3D.t_max
+        }
+
+        const hit = ray_intersect_map(ray, map, WALL_LAYER, wall_intersector, ∅)        
+
+        if hit:
+            // Compute the 3D vs_z and 2D cs_z
+            const vs_z = ray3D.d_cs_z * hit.ws_distance
+            const cs_z = vs_z * VS_TO_CS_Z
+            
+            // Shade by distance and orientation
+            get_shade(vs_z, shade, if hit.ws_normal3D.x then 65% else 100%)
+                        
+            // Compute the vertical scale from vs_z
+            scale.y = perspective_scale(view, vs_z)
+            // Horizontal scale doesn't matter, but 
+            // we make it the same as vertical for simplicity
+            scale.x = scale.y
+            
+            // Draw the sprite strip, using the clipping
+            // region to restrict it to one pixel wide. The sprite
+            // is always centered at y=0 and we don't bother restricting
+            // the clipping region vertically.
+            clip_pos.x = x
+            set_clip(clip_pos)
+            sprite_pos.x = pixel.x + (½ hit.sprite.size.x - hit.x) * scale.x
+            sprite_pos.y = (½ hit.sprite.size.y - view.pos.y) * scale.y
+            draw_sprite(hit.sprite, sprite_pos, 0, scale, 100%, cs_z, shade, "multiply")
+                    
+
+
+def draw_billboard(view, sprite, pos_ws3D):
+    // Transform to camera space
+    const c = cos(view.yaw)
+    const s = sin(view.yaw)
+    const temp = pos_ws3D - view.pos
+    const pos_vs = xyz(-c * temp.x + s * temp.z, temp.y, -s * temp.x - c * temp.z)
+
+    // Frustum cull
+    if pos_vs.z ≥ 0 or pos_vs.z < view.z_far: return
+    
+    const shade = rgb(1, 1, 1)
+    get_shade(pos_vs.z, shade)
+
+    const scale = perspective_scale(view, pos_vs.z)
+    draw_sprite({
+        sprite: sprite,
+        pos: xy(pos_vs) * scale,
+        scale: xy(scale, scale),
+        z: min(0, VS_TO_CS_Z * pos_vs.z + 2),
+        override_blend: "multiply",
+        override_color: shade})
+    
+        
+        
+

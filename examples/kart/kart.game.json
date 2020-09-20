@@ -1,0 +1,42 @@
+{
+    "title": "Kart",
+    "developer": "Casual Effects",
+    "copyright": "©2020 Morgan McGuire",
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [
+    ],
+    "assets": {
+        "world_map": "world.map.json",
+        "mountains_sprite": "mountains.sprite.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "Perspective textured ground plane example",
+    "constants": {
+        "SKY_COLOR": {
+            "type": "hsv",
+            "value": {
+                "h": 0.57,
+                "s": 0.85,
+                "v": 1
+            }
+        },
+        "GROUND_Y": {
+            "type": "number",
+            "value": 0,
+            "description": "3D elevation of the ground plane"
+        }
+    },
+    "y_up": true
+}

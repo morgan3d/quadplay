@@ -253,6 +253,7 @@
           <tr><td>&nbsp;&nbsp;&nbsp;Logic</td><td id="debugCPUTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&#8239;ms</td><td id="debugCPUPercentDisplay" class="right"></td></tr>
           <tr><td>&nbsp;&nbsp;&nbsp;Physics</td><td id="debugPPUTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&#8239;ms</td><td id="debugPPUPercentDisplay" class="right"></td></tr>
           <tr><td>&nbsp;&nbsp;&nbsp;Graphics</td><td id="debugGPUTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&#8239;ms</td><td id="debugGPUPercentDisplay" class="right"></td></tr>
+          <tr><td>&nbsp;&nbsp;&nbsp;Browser</td><td id="debugBrowserTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&#8239;ms</td><td id="debugBrowserPercentDisplay" class="right"></td></tr>
           <tr><td>Graphics primitives</td><td id="debugDrawCallsDisplay" class="right"></td></tr>
           <tr><td><code>get_mode()</code></td><td id="debugModeDisplay" class="code" style="text-align: left" colspan=4></td></tr>
           <tr><td><code>get_previous_mode()</code></td><td class="code" id="debugPreviousModeDisplay" style="text-align: left" colspan=2></td></tr>
@@ -547,6 +548,7 @@
               <option value="sound">Sound</option>
               <option value="font">Font</option>
               <option value="map">Map</option>
+              <option value="data">Data</option>
             </select>
           </p>
           <p>
@@ -580,9 +582,6 @@
           <p>
             <label for="newAssetName">Name&nbsp;&nbsp;</label>
             <input id="newAssetName" type="text" style="font-size: 80%; font-family: Monaco, monospace; width: 260px" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '').replace(/(^_+)|(_sprite$)/g, '');document.getElementById('newAssetCreateButton').disabled = (this.value === '')"></input><span style="font-size: 80%; font-family: Monaco, monospace" id="newAssetSuffix">_sprite</span>
-          </p>
-          <p>
-          <i>In this beta version of quadplay, you will need an external program to edit the asset once it is created.</i>
           </p>
           <button type="button" onclick="hideNewAssetDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span>
           <button type="button" id="newAssetCreateButton" onclick="onNewAssetCreate()">Create</button>
@@ -638,6 +637,12 @@
   <iframe name="QRuntime" style="visibility:hidden"> </iframe>
 
   <script>
+    // Polyfill for Safari and Firefox
+    if (! document.exitPointerLock) {
+        Element.prototype.requestPointerLock = Element.prototype.mozRequestPointerLock || Element.prototype.webkitRequestPointerLock;
+        document.exitPointerLock = document.mozExitPointerLock || document.webkitExitPointerLock;
+    }
+    
     // Polyfill for mobile browsers and IE
     if (String.prototype.trimEnd === undefined) {
         if (String.prototype.trimRight) {

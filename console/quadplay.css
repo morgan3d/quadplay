@@ -831,6 +831,16 @@ code, .code {
     background-image: url('project-badge-lock.png'), url('project-icon-map.png');
 }
 
+.project li.data:before {
+    background-image: none, url('project-icon-data.png');
+}
+.project li.data.remote:before {
+    background-image: url('project-badge-cloud.png'), url('project-icon-data.png');
+}
+.project li.data.builtin:before {
+    background-image: url('project-badge-lock.png'), url('project-icon-data.png');
+}
+
 .project li.font:before {
     background-image: none, url('project-icon-font.png');
 }

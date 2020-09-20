@@ -30,12 +30,18 @@ var $frameHooks = [];
 var game_frames = 0;
 var mode_frames = 0;
 
-// Graphics execute once out of this many frames.  Must be 1 (60 Hz),
-// 2 (30 Hz), 3 (20 Hz), or 4 (15 Hz). This is managed by
-// quadplay-ide.js. Note that game logic always executes at 60 Hz.
+// Graphics execute once out of this many frames.  Must be an integer
+// between 1 (60 Hz), and 6 (10 Hz). This is managed by
+// quadplay-profiler.js. Note that game logic always executes at 60
+// Hz.
 var $graphicsPeriod = 1;
 
-// Time spent in graphics this frame
+// $skipGraphics = (mode_frames % $graphicsPeriod !== 0)
+// Set by quadplay-profiler.js and whenever mode_frames is forced
+// to zero, so that new modes will always draw their first frame.
+var $skipGraphics = false;
+
+// Time spent in graphics this frame, for use by quadplay-profiler.js
 var $graphicsTime = 0;
 
 // Only used on Safari
@@ -261,6 +267,7 @@ function $processFrameHooks() {
 
 
 function draw_previous_mode() {
+    if ($skipGraphics) { return; }
     Array.prototype.push.apply($graphicsCommandList, $previousModeGraphicsCommandList);
 }
 
@@ -2384,7 +2391,7 @@ function $physicsUpdateContact(physics, contact, pair) {
         contact.point1 = undefined;
     }
     contact.depth = pair.collision.depth;
-    contact._lastRealContactFrame = physics.$frame;
+    contact.$lastRealContactFrame = physics.$frame;
 }
 
 
@@ -2484,7 +2491,7 @@ function make_physics(options) {
                 $physicsUpdateContact(physics, contact, pair);
             }
             
-            contact._lastRealContactFrame = physics.$frame;                
+            contact.$lastRealContactFrame = physics.$frame;                
         }
     });
 
@@ -2571,7 +2578,7 @@ function physics_add_entity(physics, entity) {
     entity.$body.collisionFilter.group = -entity.contact_group;
     entity.$body.entity = entity;
     entity.$body.slop = 0.075; // 0.05 is the default. Increase to make large object stacks more stable.
-    entity._attachmentArray = [];
+    entity.$attachmentArray = [];
     $Physics.World.add(engine.world, entity.$body);
 
     $bodyUpdateFromEntity(entity.$body);
@@ -2596,7 +2603,7 @@ function physics_remove_all(physics) {
 function physics_remove_entity(physics, entity) {
     // Remove all attachments (removing mutates the
     // array, so we have to clone it first!)
-    const originalArray = clone(entity._attachmentArray);
+    const originalArray = clone(entity.$attachmentArray);
     for (let a = 0; a < originalArray.length; ++a) {
         physics_detach(physics, originalArray[a]);
     }
@@ -2634,7 +2641,7 @@ function physics_remove_entity(physics, entity) {
     $Physics.World.remove(physics.$engine.world, body, true);
     fast_remove_value(physics.$entityArray, entity);
     entity.$body = undefined;
-    entity._attachmentArray = undefined;
+    entity.$attachmentArray = undefined;
 }
 
    
@@ -2806,7 +2813,7 @@ function physics_simulate(physics, stepFrames) {
     for (let c = 0; c < maybeBrokenContactList.length; ++c) {
         const contact = maybeBrokenContactList[c];
         // See if contact was reestablished within the lifetime of the queue:
-        if (contact._lastRealContactFrame <= physics.$frame - physics.$brokenContactQueue.length) {
+        if (contact.$lastRealContactFrame <= physics.$frame - physics.$brokenContactQueue.length) {
             // Contact was not reestablished in time, so remove it
             const bodyA = contact.entityA.$body, bodyB = contact.entityB.$body;
 
@@ -2984,8 +2991,8 @@ function $physics_entity_contacts(physics, entity, region, normal, mask, sensors
 
 function physics_detach(physics, attachment) {
     // Remove from the entitys
-    fast_remove_value(attachment.entityB._attachmentArray, attachment);
-    if (attachment.entityA) { fast_remove_value(attachment.entityA._attachmentArray, attachment); }
+    fast_remove_value(attachment.entityB.$attachmentArray, attachment);
+    if (attachment.entityA) { fast_remove_value(attachment.entityA.$attachmentArray, attachment); }
 
     // Decrement and remove reference-counted no-collision elements
     const mapA = attachment.entityA.$body.collisionFilter.excludedBodies;
@@ -3016,7 +3023,7 @@ function physics_detach(physics, attachment) {
 
     // Remove the composite, which will destroy all of the Matter.js elements
     // that comprise this constraint
-    $Physics.Composite.remove(physics.$engine.world, attachment._composite, true);
+    $Physics.Composite.remove(physics.$engine.world, attachment.$composite, true);
 }
 
 
@@ -3173,10 +3180,10 @@ function physics_attach(physics, type, param) {
                 }
             }
 
-            attachment._composite = $Physics.Composite.create();
+            attachment.$composite = $Physics.Composite.create();
             const constraint = $Physics.Constraint.create(options);
             constraint.attachment = attachment;
-            $Physics.Composite.add(attachment._composite, constraint);
+            $Physics.Composite.add(attachment.$composite, constraint);
             
             if (attachment.type === 'weld') {
                 if (! param.entityA) { $error('Entities may not be welded to the world.'); }
@@ -3223,10 +3230,10 @@ function physics_attach(physics, type, param) {
                     // Prevent collisions with everything
                     weldBody.collisionFilter.mask = weldBody.collisionFilter.category = 0;
                     // Add the invisible weldBody
-                    $Physics.Composite.add(attachment._composite, weldBody);
+                    $Physics.Composite.add(attachment.$composite, weldBody);
 
                     // B -> Weld
-                    $Physics.Composite.add(attachment._composite, $Physics.Constraint.create({
+                    $Physics.Composite.add(attachment.$composite, $Physics.Constraint.create({
                         bodyA:     param.entityB.$body,
                         pointA:    $objectSub(weldBody.position, param.entityB.$body.position),
                         bodyB:     weldBody,
@@ -3235,7 +3242,7 @@ function physics_attach(physics, type, param) {
                     }));
                     
                     // Weld -> A
-                    $Physics.Composite.add(attachment._composite, $Physics.Constraint.create({
+                    $Physics.Composite.add(attachment.$composite, $Physics.Constraint.create({
                         bodyA:     weldBody,
                         bodyB:     param.entityA.$body, 
                         pointB:    $objectSub(weldBody.position, param.entityA.$body.position),
@@ -3258,10 +3265,10 @@ function physics_attach(physics, type, param) {
             }
 
             // matter.js uses the current positions of the bodies to determine the rest length
-            attachment._composite = $Physics.Composite.create();
+            attachment.$composite = $Physics.Composite.create();
             const constraint = $Physics.Constraint.create(options);
             constraint.attachment = attachment;
-            $Physics.Composite.add(attachment._composite, constraint);
+            $Physics.Composite.add(attachment.$composite, constraint);
         }
         break;
         
@@ -3270,13 +3277,13 @@ function physics_attach(physics, type, param) {
     }
 
     
-    if (attachment._composite) {
+    if (attachment.$composite) {
         // Push the attachment's composite into the world
-        $Physics.Composite.add(physics.world, attachment._composite);
+        $Physics.Composite.add(physics.world, attachment.$composite);
     }
 
-    if (attachment.entityA) { push(attachment.entityA._attachmentArray, attachment); }
-    push(attachment.entityB._attachmentArray, attachment);
+    if (attachment.entityA) { push(attachment.entityA.$attachmentArray, attachment); }
+    push(attachment.entityB.$attachmentArray, attachment);
     
     return Object.freeze(attachment);
 }
@@ -3443,7 +3450,7 @@ function draw_physics(physics) {
 var $pixelSnap = $Math.floor;
 
 function transform_map_layer_to_ws_z(map, layer) {
-    if (! map._type && map._type === 'map') {
+    if (! map.$type && map.$type === 'map') {
         $error('First argument to transform_map_layer_to_ws_z() must be a map');
     }
     return layer * map.z_scale + map.z_offset;
@@ -3451,7 +3458,7 @@ function transform_map_layer_to_ws_z(map, layer) {
 
 
 function transform_ws_z_to_map_layer(map, z) {
-    if (! map._type && map._type === 'map') {
+    if (! map.$type && map.$type === 'map') {
         $error('First argument to transform_draw_z_to_map_layer() must be a map');
     }
     return (z - map.z_offset) / map.z_scale;
@@ -3570,9 +3577,8 @@ function $get_map_pixel_color(map, map_coord_x, map_coord_y, min_layer, max_laye
     // Result value temporarily encoded in scalars to avoid dereference costs
     let result_a = 0, result_b = 0, result_g = 0, result_r = 0;
 
+    // In bounds test
     if ((mx >= 0) && (my >= 0) && (mx < map_size_x) && (my < map_size_y)) {
-        // In bounds
-        mx |= 0; my |= 0;
 
         // Map coord (0, 0) is the *corner* of the corner sprite
         const ssX = (map.sprite_size.x >>> 0) - 1, ssY = (map.sprite_size.y >>> 0) - 1;
@@ -3756,6 +3762,8 @@ function set_map_sprite_by_ws_coord(map, ws_coord, sprite, z) {
 
 
 function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_shift) {
+    if ($skipGraphics) { return; }
+    
     if (! map.layer && map.map && (arguments.length === 1)) {
         // named argument version
         min_layer = map.min_layer;
@@ -4002,7 +4010,8 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
 
 function draw_color_tri(A, B, C, color_A, color_B, color_C, pos, angle, scale, z) {
     // Skip graphics this frame
-    if (mode_frames % $graphicsPeriod !== 0) { return; }
+    if ($skipGraphics) { return; }
+    
     if (A.A) {
         // Object version
         z = A.z;
@@ -4030,7 +4039,7 @@ function draw_color_tri(A, B, C, color_A, color_B, color_C, pos, angle, scale, z
 
 function draw_tri(A, B, C, color, outline, pos, angle, scale, z) {
     // Skip graphics this frame
-    if (mode_frames % $graphicsPeriod !== 0) { return; }
+    if ($skipGraphics) { return; }
     if (A.A) {
         // Object version
         z = A.z;
@@ -4048,8 +4057,7 @@ function draw_tri(A, B, C, color, outline, pos, angle, scale, z) {
 
 
 function draw_disk(pos, radius, color, outline, z) {
-    // Skip graphics this frame
-    if (mode_frames % $graphicsPeriod !== 0) { return; }
+    if ($skipGraphics) { return; }
 
     if (pos.pos) {
         // Object version
@@ -4166,8 +4174,7 @@ function draw_rect(pos, size, fill, border, angle, z) {
 
 
 function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
-    // Skip graphics this frame
-    if (mode_frames % $graphicsPeriod !== 0) { return; }
+    if ($skipGraphics) { return; }
     
     if (vertexArray.vertex_array) {
         z = vertexArray.z;
@@ -4240,7 +4247,7 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
         
         let x = Tx - $camera.x, y = Ty - $camera.y;
         Tx = x * C + y * S; Ty = y * C - x * S;
-        angle -= $camera.angle;
+        angle -= $camera.angle * rotation_sign();
 
         // Update matrix
         Rx = $Math.cos(angle); Ry = $Math.sin(-angle);
@@ -4302,8 +4309,7 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
 
 
 function draw_corner_rect(corner, size, fill, outline, z) {
-    // Skip graphics this frame
-    if (mode_frames % $graphicsPeriod !== 0) { return; }
+    if ($skipGraphics) { return; }
 
     if (corner.corner) {
         if (size !== undefined) {
@@ -4398,6 +4404,8 @@ function $zoom(z) {
 
 
 function draw_line(A, B, color, z, width) {
+    if ($skipGraphics) { return; }
+
     if (A.A) {
         width = A.width;
         z = A.z;
@@ -4468,6 +4476,8 @@ function draw_line(A, B, color, z, width) {
 
 
 function draw_map_horizontal_span(start, width, map, map_coord0, map_coord1, min_layer, max_layer_exclusive, replacement_array, z, override_color, override_blend, invert_sprite_y) {
+    if ($skipGraphics) { return; }
+
     override_blend = override_blend || "lerp";
 
     if (min_layer === undefined) {
@@ -4542,6 +4552,12 @@ function draw_map_horizontal_span(start, width, map, map_coord0, map_coord1, min
     } else {
         override_blend = override_blend || "lerp";
         override_color = rgba(override_color);
+
+        if ((override_blend === "lerp" && override_color.a < 1/32) ||
+            (override_blend === "multiply" && $Math.min(override_color.r, override_color.g, override_color.b) > 0.96)) {
+            // Blending will have no visible effect but will be slow, so disable it
+            override_blend = false;
+        }
     }
 
     // Preallocate the point array for the graphics command
@@ -4561,8 +4577,8 @@ function draw_map_horizontal_span(start, width, map, map_coord0, map_coord1, min
         // Call the low-level version, which avoids conversion to rgba() in the common case.
         // Nearly all of the time of this routine (including the actual drawing) is spent in
         // the following call.
-        
-        const pixel_value = $get_map_pixel_color(map, map_point_x, map_point_y, min_layer, max_layer_exclusive, replacement_array, color, invert_sprite_y);
+
+        let pixel_value = $get_map_pixel_color(map, map_point_x, map_point_y, min_layer, max_layer_exclusive, replacement_array, color, invert_sprite_y);
         
         // For debugging vs. the optimized $get_map_pixel_color
         //const pixel_value = -2; get_map_pixel_color(map, xy(map_point_x, map_point_y), min_layer, max_layer_exclusive, replacement_array, color, invert_sprite_y);
@@ -4598,10 +4614,10 @@ function draw_map_horizontal_span(start, width, map, map_coord0, map_coord1, min
 
 
 function draw_point(pos, color, z) {
-    // Not worth the fp64 modulo to check if graphics is being skipped
-    // this frame
+    if ($skipGraphics) { return; }
     
     if (pos.pos) {
+        // Named argument version
         z = pos.z;
         color = pos.color;
         pos = pos.pos;
@@ -4653,7 +4669,7 @@ function draw_point(pos, color, z) {
 
 function text_width(font, str, markup) {
     if (str === '') { return 0; }
-    if (font === undefined || font._type !== 'font') {
+    if (font === undefined || font.$type !== 'font') {
         $error('The first argument to text_width() must be a font.');
     }
     if (str === undefined) {
@@ -4775,7 +4791,7 @@ function $parseMarkupHelper(str, startIndex, stateChanges) {
             const v = window[value];
             if (v === undefined) {
                 $error('Global constant ' + value + ' used in draw_text markup is undefined.');
-            } else if (prop === 'font' && v._type !== 'font') {
+            } else if (prop === 'font' && v.$type !== 'font') {
                 $error('Global constant ' + value + ' is not a font'); 
             } else if (prop !== 'font' && value.r === undefined && value.h === undefined) {
                 $error('Global constant ' + value + ' is not a color');
@@ -5094,7 +5110,7 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
         font = font.font;
     }
 
-    if (font === undefined || font._url === undefined) {
+    if (font === undefined || font.$url === undefined) {
         $error('draw_text() requires a font as the first argument');
     }
     
@@ -5225,6 +5241,8 @@ function get_sprite_pixel_color(spr, pos, result) {
 
 
 function draw_sprite_corner_rect(CC, corner, size, z) {
+    if ($skipGraphics) { return; }
+    
     if (! (CC && CC._spritesheet)) {
         $error('Called draw_sprite_corner_rect() on an object that was not a sprite asset. (' + unparse(CC) + ')');
     }
@@ -5374,8 +5392,7 @@ function $maybeApplyPivot(pos, pivot, angle, scale) {
 
 
 function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, override_blend, pivot) {
-    // Skip graphics this frame
-    if (mode_frames % $graphicsPeriod !== 0) { return; }
+    if ($skipGraphics) { return; }
 
     if (spr && spr.sprite) {
         // This is the "keyword" version of the function
@@ -5481,7 +5498,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
     /*
     $console.assert(sprElt.spritesheetIndex >= 0 &&
                    sprElt.spritesheetIndex < $spritesheetArray.length,
-                   spr._name + ' has a bad index: ' + sprElt.spritesheetIndex);
+                   spr.$name + ' has a bad index: ' + sprElt.spritesheetIndex);
     */
     
     // Aggregate multiple sprite calls
@@ -5614,6 +5631,8 @@ function $toFrame(entity, v, out) {
 
 
 function draw_bounds(entity, color, recurse) {
+    if ($skipGraphics) { return; }
+    
     if (! entity.pos) {
         $error('draw_bounds() must be called on an object with at least a pos property');
     }
@@ -5819,6 +5838,8 @@ function $makeRayGridIterator(ray, numCells, cellSize) {
         // so that the starting axis is initialized correctly.
         $advanceRayGridIterator(it);
     }
+
+    return it;
 }
 
 
@@ -5838,20 +5859,23 @@ function $advanceRayGridIterator(it) {
 }
 
 
-/*
-function ray_intersectMap(ray, map, tileCanBeSolid, pixelIsSolid, layer, replacement_array) {
-    if (arguments.length === 1 && ray && ray.ray) {
-        pixelIsSolid = ray.pixelIsSolid;
-        tileCanBeSolid = ray.tileCanBeSolid;
-        layer = ray.layer;
-        replacement_array = ray.replacement_array;
-        map = ray.map;
-        ray = ray.ray;
+function $default_ray_map_pixel_callback(sprite, sprite_pixel_coord, ws_normal, ray, map, distance, ws_coord, map_coord) {
+    if (get_sprite_pixel_color(sprite, sprite_pixel_coord).a >= 0.5) {
+        return sprite;
+    } else {
+        return undefined;
     }
+}
 
-    layer = layer || 0;
-    tileCanBeSolid = tileCanBeSolid || get_map_sprite;
-
+function ray_intersect_map(ray, map, layer, sprite_callback, pixel_callback, replacement_array) {
+    if (sprite_callback === undefined && pixel_callback === undefined) {
+        pixel_callback = $default_ray_map_pixel_callback;
+    }
+    
+    if (layer === undefined || layer < 0 || layer >= map.layer.length) {
+        $error('ray_intersect_map() requires the layer to be specified and in bounds for the map');
+    }
+    
     // Default to an infinite ray
     if (ray.length === undefined) {
         ray.length = Infinity;
@@ -5863,43 +5887,60 @@ function ray_intersectMap(ray, map, tileCanBeSolid, pixelIsSolid, layer, replace
         ray.direction.x *= inv; ray.direction.y *= inv;
     }
 
+    const ws_normal = xy(0, 0);
+    const ws_coord = xy(0, 0);
+    const map_coord = xy(0, 0);
+    const pixel_coord = xy(0, 0);
 
-    const normal = xy(0, 0);
-    const point = xy(0, 0);
-    const P = xy(0, 0);
+    const inv_sprite_size_x = 1 / map.sprite_size.x;
+    const inv_sprite_size_y = 1 / map.sprite_size.y;
+
     for (const it = $makeRayGridIterator(ray, map.size, map.sprite_size);
          it.insideGrid && (it.enterDistance < it.ray.length);
          $advanceRayGridIterator(it)) {
         
-        // Draw coord normal along which we entered this cell
-        normal.x = normal.y = 0;
-        normal[it.enterAxis] = -it.step[it.enterAxis];
+        // World-space normal along which we entered this cell
+        ws_normal.x = ws_normal.y = 0;
+        ws_normal[it.enterAxis] = -it.step[it.enterAxis];
 
-        // Draw coord point at which we entered the cell
-        point.x = it.ray.origin.x + it.enterDistance * it.ray.direction.x;
-        point.y = it.ray.origin.y + it.enterDistance * it.ray.direction.y;
+        // World-space point at which we entered the cell
+        ws_coord.x = it.ray.origin.x + it.enterDistance * it.ray.direction.x;
+        ws_coord.y = it.ray.origin.y + it.enterDistance * it.ray.direction.y;
 
         // Bump into the cell and then round
-        P.x = $Math.floor((point.x - normal.x) / map.sprite_size.x);
-        P.y = $Math.floor((point.y - normal.y) / map.sprite_size.y);
-        
-        if (tileCanBeSolid(map, P, layer, replacement_array)) {
+        map_coord.x = $Math.floor((ws_coord.x - ws_normal.x) * inv_sprite_size_x);
+        map_coord.y = $Math.floor((ws_coord.y - ws_normal.y) * inv_sprite_size_y);
 
-            // Return the sprite and modify the ray
-            ray.length = it.enterDistance;
-            return map.layer[layer][P.x][P.y];
+        // Get the sprite
+        const sprite = get_map_sprite(map, map_coord, layer, replacement_array);
+        
+        if (sprite) {
+            pixel_coord.x = $loop(ws_coord.x, 0, map.sprite_size.x);
+            pixel_coord.y = $loop(ws_coord.y, 0, map.sprite_size.y);
             
-            // TODO: March the pixels with a second iterator
-            // if (! pixelIsSolid || pixelIsSolid(map, P, layer, replacement_array)) {
-                // This is a hit
-            // }
+            if (sprite_callback) {
+                const result = sprite_callback(sprite, pixel_coord, ws_normal, it.ray, map, it.enterDistance, ws_coord, map_coord);
+                if (result !== undefined) {
+                    return result;
+                }
+            }
+
+            if (pixel_callback) {
+                // TODO: march
+                /*
+                const result = pixel_callback(sprite, pixel_coord, ws_normal, it.ray, map, it.enterDistance, ws_coord, map_coord);
+                if (result !== undefined) {
+                    return result;
+                }
+                */
+            }
         }
         
     }  // while
 
     return undefined;
 }
-*/
+
 
 function ray_intersect(ray, obj) {
     let hitObj = undefined;
@@ -6881,11 +6922,11 @@ function is_object(a) {
 
 
 function clone(a) {
-    if (! a || (a._type !== undefined && a._type !== 'map')) {
+    if (! a || (a.$type !== undefined && a.$type !== 'map')) {
         // Built-in that is not a map; maps are treated
         // specially as an only partly-immutable asset.
         return a;
-    } else if (a._type === 'map') {
+    } else if (a.$type === 'map') {
         // Maps are a special case, where we want the full layer
         // structure and arrays preserved when cloning, instead of
         // pointers.
@@ -6908,7 +6949,7 @@ function clone(a) {
 // an asset that is a game map, or is a part of a game map, which
 // is a special case for the sealing and finalization rules.
 function $deep_clone(a, map, is_map_asset) {
-    if (! a || (a._type !== undefined && a._type !== 'map')) {
+    if (! a || (a.$type !== undefined && a.$type !== 'map')) {
         // Built-in; return directly instead of cloning since it is
         // immutable (this is based on the assumption that quadplay
         // makes frozen recursive, which it does).
@@ -6924,7 +6965,7 @@ function $deep_clone(a, map, is_map_asset) {
             map.set(a, x = a.slice(0));
 
             if (is_map_asset === undefined) {
-                is_map_asset = (a._type === 'map');
+                is_map_asset = (a.$type === 'map');
             }
 
             // Clone array elements
@@ -6939,8 +6980,8 @@ function $deep_clone(a, map, is_map_asset) {
             for (let i = 0; i < k.length; ++i) {
                 const key = k[i];
                 if (key[0] > '9' || key[0] < '0') {
-                    if ((key === '_name') && (a._name[0] !== '«')) {
-                        x[key] = '«cloned ' + a._name + '»';
+                    if ((key === '$name') && (a.$name[0] !== '«')) {
+                        x[key] = '«cloned ' + a.$name + '»';
                     } else {
                         x[key] = $deep_clone(a[key], map, is_map_asset);
                     }
@@ -6955,7 +6996,7 @@ function $deep_clone(a, map, is_map_asset) {
             return x;
         }
     } else if (typeof a === 'object') {
-        $console.assert(a._type === undefined);
+        $console.assert(a.$type === undefined);
         
         let x = map.get(a);
         if (x !== undefined) {
@@ -6966,17 +7007,17 @@ function $deep_clone(a, map, is_map_asset) {
             const k = $Object.keys(a);
             for (let i = 0; i < k.length; ++i) {
                 const key = k[i];
-                if (key === '_name') {
-                    if (a._name[0] !== '«') {
-                        x._name = '«cloned ' + a._name + '»';
+                if (key === '$name') {
+                    if (a.$name[0] !== '«') {
+                        x.$name = '«cloned ' + a.$name + '»';
                     } else {
-                        x._name = a._name;
+                        x.$name = a.$name;
                     }
                 } else {
                     x[key] = $deep_clone(a[key], map, is_map_asset);
                 }
             }
-            if (a._name && $Object.isSealed(a)) { $Object.seal(x); }
+            if (a.$name && $Object.isSealed(a)) { $Object.seal(x); }
             return x;
         }
     } else {
@@ -7276,9 +7317,9 @@ function unparse(x) {
 
 function $unparse(x, alreadySeen) {
     if (Array.isArray(x)) {
-        if (x._name !== undefined) {
+        if (x.$name !== undefined) {
             // Internal object
-            return x._name;
+            return x.$name;
         } else if (alreadySeen.has(x)) {
             return '[…]';
         }
@@ -7297,9 +7338,9 @@ function $unparse(x, alreadySeen) {
     case 'object':
         if (x === null) {
             return '∅';
-        } else if (x._name !== undefined) {
+        } else if (x.$name !== undefined) {
             // Internal object
-            return x._name;
+            return x.$name;
         } else if (alreadySeen.has(x)) {
             return '{…}';
         } else {
@@ -7310,7 +7351,7 @@ function $unparse(x, alreadySeen) {
             for (let i = 0; i < keys.length; ++i) {
                 const k = keys[i];
                 // Hide quadplay-internal members
-                if (k[0] !== '_' && k[0] !== '$') {
+                if (k[0] !== '$') {
                     // Quote illegal identifiers used as keys
                     const legalIdentifier = /^[Δ]?(?:[A-Za-z][A-Za-z_0-9]*|[αβγδζηθιλμρσϕφχψτωΩ][_0-9]*)$/.test(k);
                     const key = legalIdentifier ? k : ('"' + k + '"');
@@ -8403,6 +8444,7 @@ function push_mode(mode, ...args) {
     $prevModeStack.push($prevMode);
 
     mode_frames = 0;
+    $skipGraphics = false;
     $prevMode = $gameMode;
     $gameMode = mode;
     
@@ -8412,7 +8454,7 @@ function push_mode(mode, ...args) {
     $graphicsCommandList = [];
     $previousGraphicsCommandList = [];
 
-    $systemPrint('Pushing into mode ' + mode._name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
+    $systemPrint('Pushing into mode ' + mode.$name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
 
     // Run the enter callback on the new mode
     $iteratorCount = new WeakMap();
@@ -8453,6 +8495,7 @@ function pop_mode(...args) {
     $previousModeGraphicsCommandList = $previousModeGraphicsCommandListStack.pop();
     $gameMode = $modeStack.pop();
     mode_frames = $mode_framesStack.pop();
+    $skipGraphics = false;
 
     $iteratorCount = new WeakMap();
     old.$leave();
@@ -8460,10 +8503,10 @@ function pop_mode(...args) {
     // Reset the graphics
     $graphicsCommandList = [];
     
-    $systemPrint('Popping back to mode ' + $gameMode._name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
+    $systemPrint('Popping back to mode ' + $gameMode.$name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
 
     // Run the pop_mode event on $gameMode if it exists
-    var eventName = '$pop_modeFrom' + old._name;
+    var eventName = '$pop_modeFrom' + old.$name;
     if ($gameMode[eventName] !== undefined) {
         // repeat here so that the "this" is set correctly to $gameMode
         $iteratorCount = new WeakMap();
@@ -8495,6 +8538,7 @@ function set_mode(mode, ...args) {
     if ($prevMode) { $prevMode.$leave(); }
     
     mode_frames = 0;
+    $skipGraphics = false;
 
     // Save the previous graphics list for draw_previous_mode()
     $previousModeGraphicsCommandList = $previousGraphicsCommandList;
@@ -8503,7 +8547,7 @@ function set_mode(mode, ...args) {
     $graphicsCommandList = [];
     $previousGraphicsCommandList = [];
     
-    $systemPrint('Entering mode ' + mode._name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
+    $systemPrint('Entering mode ' + mode.$name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
     
     // Run the enter callback on the new mode
     $iteratorCount = new WeakMap();

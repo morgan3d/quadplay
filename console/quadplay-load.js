@@ -15,6 +15,7 @@
    - `loadFont`
    - `loadSound`
    - `loadMap`
+   - `loadData`
    - `loadSpritesheet`
 
    Also exports helpers `parseHexColor` and `parseHex`
@@ -350,6 +351,10 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                     case 'map':
                         gameSource.assets[assetName] = loadMap(assetName, json, assetURL);
                         break;
+
+                    case 'data':
+                        gameSource.assets[assetName] = loadData(assetName, json, assetURL);
+                        break;
                         
                     default:
                         console.log('Unrecognized asset type: "' + type + '"');
@@ -391,75 +396,8 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 } else if ((definition.type === 'table') && (definition.url !== undefined)) {
                     // Raw value loaded from a URL
                     const constantURL = makeURLAbsolute(gameURL, definition.url);
-                    loadManager.fetch(constantURL, 'text', null, function (csv) {
-                        // Parse cells
-                        let grid = parseCSV(csv, definition.trim !== false);
-
-                        // By parseCSV returns row-major data and
-                        // tables in quadplay default to column major,
-                        // so transpose the CSV parse oppositely to
-                        // the transpose flag.
-                        if (! definition.transpose) {
-                            grid = transposeGrid(grid);
-                        }
-
-                        const row_type = (definition.transpose ? definition.column_type : definition.row_type) || 'object';
-                        const col_type = (definition.transpose ? definition.row_type : definition.column_type) || 'object';
-
-                        if (definition.ignore_first_row || (definition.ignore_first_column && definition.transpose)) {
-                            // Remove the first row of each column
-                            for (let x = 0; x < grid.length; ++x) {
-                                grid[x].shift();
-                            }
-                        }
-
-                        if (definition.ignore_first_column || (definition.ignore_first_row && definition.transpose)) {
-                            // Remove the first column
-                            grid.shift();
-                        }
-
-                        // Parse table
-                        let data;
-
-                        if ((col_type === 'array') && (row_type === 'array')) {
-                            // This is the data structure that we already have
-                            // in memory
-                            data = grid;
-                        } else {
-                            if (row_type === 'object') {
-                                data = {};
-                                if (col_type === 'object') {
-                                    // Object of objects
-                                    for (let c = 1; c < grid.length; ++c) {
-                                        const dst = data[grid[c][0]] = {};
-                                        const src = grid[c];
-                                        for (let r = 1; r < grid[0].length; ++r) {
-                                            dst[grid[0][r]] = src[r];
-                                        }
-                                    } // for each column (key)
-                                    
-                                } else { // row_type == 'array'
-
-                                    // Object of arrays. The first row contains the object property names
-                                    for (let c = 0; c < grid.length; ++c) {
-                                        data[grid[c][0]] = grid[c].slice(1);
-                                    } // for each column (key)
-                                }
-                            } else {
-                                // Array of objects. The first column contains the object property names
-                                data = new Array(grid.length - 1);
-                                for (let c = 0; c < data.length; ++c) {
-                                    const src = grid[c + 1];
-                                    const dst = data[c] = {};
-                                    for (let r = 0; r < src.length; ++r) {
-                                        dst[grid[0][r]] = grid[c + 1][r];
-                                    } // for row
-                                } // for col
-                            } // array of objects
-                        }
-                        
-                        gameSource.constants[c] = data;
-                    });
+                    loadCSV(constantURL, definition, gameSource.constants, c);
+                    
                 } else if (definition.type === 'reference') {
                     // Defer
                     hasReferences = true;
@@ -599,6 +537,7 @@ function computeAssetCredits(gameSource) {
         sprite: [],
         sound: [],
         code: [],
+        data: [],
         quadplay: []
     };
 
@@ -630,22 +569,22 @@ function computeAssetCredits(gameSource) {
     for (let a in gameSource.assets) {
         const asset = gameSource.assets[a];
         console.assert(asset, 'Asset ' + a + ' is not in gameSource.assets');
-        const json = asset._json;
+        const json = asset.$json;
         
-        let type = asset._jsonURL.match(/\.([^.]+)\.json$/i);
+        let type = asset.$jsonURL.match(/\.([^.]+)\.json$/i);
         if (type) { type = type[1].toLowerCase(); }
 
         if (json.license && CREDITS[type]) {
-            addCredit(type, asset._jsonURL, json.license);
+            addCredit(type, asset.$jsonURL, json.license);
         }
 
         if (type === 'map') {
             // Process the spritesheets
             for (let k in asset.spritesheet_table) {
                 const spritesheet = asset.spritesheet_table[k];
-                const json = spritesheet._json;
+                const json = spritesheet.$json;
                 if (json.license) {
-                    addCredit('sprite', spritesheet._jsonURL, json.license);
+                    addCredit('sprite', spritesheet.$jsonURL, json.license);
                 }
             }
         }
@@ -699,11 +638,11 @@ function loadFont(name, json, jsonURL) {
 
     // Load from disk and create a new object, and then store in the cache
     assetCache[jsonURL] = font = {
-        _name:     name,
-        _type:     'font',
-        _url:      pngURL,
-        _json:     json,
-        _jsonURL:  jsonURL,
+        $name:     name,
+        $type:     'font',
+        $url:      pngURL,
+        $json:     json,
+        $jsonURL:  jsonURL,
         _index:    [fontArray.length]
     };
 
@@ -732,7 +671,7 @@ function computeResourceStats(gameSource) {
             const asset = gameSource.assets[key];
             if (! alreadyCounted.has(asset)) {
                 alreadyCounted.set(asset, true);
-                switch (asset._type) {
+                switch (asset.$type) {
                 case 'font': case 'spritesheet':
                     recordSpriteStats(asset);
                     break;
@@ -819,20 +758,112 @@ function getImageData4Bit(image, region, full32bitoutput) {
 
 // Handles fonts as well
 function recordSpriteStats(spritesheet) {
-    if (spritesheet._name[0] === '_') { return; }
+    if (spritesheet.$name[0] === '_') { return; }
     const data = (spritesheet._uint16Data || spritesheet._data);
     let count = data.width * data.height;
     
-    if (spritesheet._type === 'font') {
+    if (spritesheet.$type === 'font') {
         // Fonts count half as much because they are 8-bit
         count = Math.ceil(count / 2) >>> 0;
     }
     resourceStats.spritePixels += count;
-    resourceStats.spritePixelsByURL[spritesheet._url] = count;
+    resourceStats.spritePixelsByURL[spritesheet.$url] = count;
     
     ++resourceStats.spritesheets;
     resourceStats.maxSpritesheetWidth = Math.max(resourceStats.maxSpritesheetWidth, data.width);
     resourceStats.maxSpritesheetHeight = Math.max(resourceStats.maxSpritesheetHeight, data.height);
+}
+
+
+function loadData(name, json, jsonURL) {
+    const dataURL = makeURLAbsolute(jsonURL, json.url);
+
+    const forceReload = computeForceReloadFlag(dataURL);
+
+    // No caching for data.
+
+    const dataType = dataURL.split('.').pop().toLowerCase();
+
+    // We construct a holder for the value, so that something can be
+    // returned immediately. data.value is the actual element. This is
+    // unlike all other assets, which are the asset itself.
+    const data = {
+        value: undefined,
+        $type: 'data',
+        $json: json,
+        $jsonURL: jsonURL
+    };
+    
+    if (dataType === 'png' || dataType === 'jpg' || dataType === 'gif') {
+        // Image
+        data.value = Object.freeze({$name: name, $type: 'data', r:[], g:[], b:[], a:[]});
+        loadManager.fetch(dataURL, 'image', null, function (image) {
+            onLoadFileComplete(dataURL);
+
+            const imageData = getImageData(image);
+            const channel = "rgba";
+            for (let c = 0; c < 4; ++c) {
+                const C = channel[c];
+                data.value[C].length = imageData.width;
+                for (let x = 0; x < imageData.width; ++x) {
+                    const array = data.value[C][x] = new Uint8Array(imageData.height);
+                    for (let y = 0; y < imageData.height; ++y) {
+                        array[y] = imageData.data[(x + y * imageData.width) * 4 + c];
+                    }
+                    // Cannot freeze typed arrays because they are only
+                    // views on the underlying buffer. Freeze the buffer
+                    // instead.
+                    Object.freeze(array.buffer);
+                }
+                Object.freeze(data.value[C]);
+            } // for each channel
+            Object.freeze(data.value);
+            Object.freeze(data);
+        }, loadFailureCallback, loadWarningCallback, forceReload);
+    } else if (dataType === 'csv') {
+        // CSV
+        loadCSV(dataURL, json, data, 'value', function () {
+            data.value.$name = name;
+            data.value.$type = 'data';
+            deepFreeze(data.value);
+        });
+    } else if (dataType === 'json') {
+        // JSON
+        loadManager.fetch(dataURL, 'json', nullToUndefined, function (value) {
+            data.value = value;
+            data.value.$name = name;
+            data.value.$type = 'data';
+            deepFreeze(data.value);
+        }, undefined, undefined, true);
+    } else if (dataType === 'yml') {
+        loadManager.fetch(dataURL, 'text', null, function (yaml) {
+            const json = jsyaml.safeLoad(yaml);
+            data.value = nullToUndefined(json);
+            data.value.$name = name;
+            data.value.$type = 'data';
+            deepFreeze(data.value);
+        }, undefined, undefined, true);
+    } else {
+        throw new Error(dataType + ' is not a valid data asset type.');
+    }
+
+    return data;
+}
+
+
+function deepFreeze(value) {
+    if (! Object.isFrozen(value)) {
+        if (Array.isArray(value)) {
+            for (let i = 0; i < value.length; ++i) {
+                deepFreeze(value[i]);
+            }
+        } else if (typeof value === 'object') {
+            for (let k in value) {
+                Object.freeze(value[k]);
+            }
+        }
+        Object.freeze(value);
+    }
 }
 
 
@@ -893,19 +924,19 @@ function loadSpritesheet(name, json, jsonURL, callback) {
     // array so that the spritesheet can be frozen but the index
     // rewritten.
     spritesheet = Object.assign([], {
-        _name: name,
-        _type: 'spritesheet',
+        $name: name,
+        $type: 'spritesheet',
         _uint16Data: null,
         _uint16DataFlippedX : null,
-        _url: pngURL,
+        $url: pngURL,
         _sourceURL: (json.source_url && json.source_url !== '') ? makeURLAbsolute(jsonURL, json.source_url) : null,
         // Before the region is applied. Used by the IDE
         _sourceSize: {x: 0, y: 0},
         // Used by the IDE
         _region: null,
         _gutter: (json.gutter || 0),
-        _json: json,
-        _jsonURL: jsonURL,
+        $json: json,
+        $jsonURL: jsonURL,
         _index: [spritesheetArray.length],
         // If unspecified, load the sprite size later
         sprite_size: json.sprite_size ? Object.freeze({x: json.sprite_size.x, y: json.sprite_size.y}) : undefined
@@ -916,10 +947,9 @@ function loadSpritesheet(name, json, jsonURL, callback) {
     spritesheetArray.push(spritesheet);
     console.assert(spritesheetArray.indexOf(spritesheet) === spritesheet._index[0]);
     
-
     const transposedSpritesheet = Object.assign([], {
-        _name: 'transposed_' + name,
-        _type: 'spritesheet',
+        $name: 'transposed_' + name,
+        $type: 'spritesheet',
         _uint16Data: null,
         _uint16DataFlippedX : null,
         _gutter: (json.gutter || 0),
@@ -1053,7 +1083,8 @@ function loadSpritesheet(name, json, jsonURL, callback) {
 
                 // Create the actual sprite
                 const sprite = {
-                    _type:             'sprite',
+                    $type:             'sprite',
+                    $name:             spritesheet.$name + '[' + u + '][' + v + ']',
                     _tileX:            u,
                     _tileY:            v,
                     _boundingRadius:   boundingRadius,
@@ -1061,7 +1092,6 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     _y:                v * (spritesheet.sprite_size.y + spritesheet._gutter),
                     _hasAlpha:         hasAlpha,
                     _requiresBlending: hasFractionalAlpha,
-                    _name:             spritesheet._name + '[' + u + '][' + v + ']',
                     // Actual spritesheet for rendering
                     _spritesheet:      spritesheet,
                     // Source spritesheet for game logic
@@ -1078,7 +1108,8 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 spritesheet[x][y] = sprite;
 
                 const transposedSprite = {
-                    _type:             'sprite',
+                    $type:             'sprite',
+                    $name:             sprite.$name + '.rotated_270.x_flipped',
                     _boundingRadius:   boundingRadius,
 
                     // Sprite index
@@ -1088,10 +1119,9 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     // Pixel coord in tile
                     _x:                sprite._y,
                     _y:                sprite._x,
-                    
-                    _hasAlpha:         sprite.hasAlpha,
-                    _requiresBlending: sprite.hasFractionalAlpha,
-                    _name:             sprite._name + '.rotated_90.x_flipped',
+
+                    _hasAlpha:         sprite._hasAlpha,
+                    _requiresBlending: sprite._hasFractionalAlpha,
                     _spritesheet:      transposedSpritesheet,
                     spritesheet:       spritesheet,
                     tile_index:        sprite.tile_index,
@@ -1102,6 +1132,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     pivot:             transposedPivot,
                     frames:            sheetDefaultframes
                 };
+
                 transposedSpritesheet[y][x] = transposedSprite;
                 
                 lastSpriteID += 6;
@@ -1156,7 +1187,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     sprite._animationIndex = undefined;
 
                     // Rename
-                    sprite._name = spritesheet._name + '.' + anim;
+                    sprite.$name = spritesheet.$name + '.' + anim;
 
                 } else {
                 
@@ -1195,7 +1226,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                             const sprite = spritesheet[u][v];
                             sprite._animationName = anim;
                             sprite._animationIndex = i;
-                            sprite._name = spritesheet._name + '.' + anim + '[' + i + ']';
+                            sprite.$name = spritesheet.$name + '.' + anim + '[' + i + ']';
                             sprite.pivot = pivot;
                             sprite.frames = Math.max(0.25, frames[Math.min(i, frames.length - 1)]);
                             sprite.animation = animation;
@@ -1246,42 +1277,42 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 sprite.x_flipped = Object.assign({x_flipped:sprite}, sprite);
                 sprite.x_flipped.scale = NP;
                 sprite.x_flipped.orientation_id += 1;
-                sprite.x_flipped._name += '.x_flipped';
+                sprite.x_flipped.$name += '.x_flipped';
 
                 sprite.y_flipped = Object.assign({y_flipped:sprite}, sprite);
                 sprite.y_flipped.orientation_id += 2;
                 sprite.y_flipped.scale = PN;
-                sprite.y_flipped._name += '.y_flipped';
+                sprite.y_flipped.$name += '.y_flipped';
                 
                 sprite.x_flipped.y_flipped = sprite.y_flipped.x_flipped = Object.assign({}, sprite);
                 sprite.y_flipped.x_flipped.scale = NN;
                 sprite.y_flipped.x_flipped.orientation_id += 3;
-                sprite.x_flipped.y_flipped._name += '.x_flipped.y_flipped';
+                sprite.x_flipped.y_flipped.$name += '.x_flipped.y_flipped';
                 
                 transposedSprite.x_flipped = Object.assign({x_flipped: transposedSprite}, transposedSprite);
                 transposedSprite.x_flipped.scale = NP;
                 transposedSprite.x_flipped.orientation_id += 1;
-                transposedSprite.x_flipped._name = transposedSprite._name.replace(/\.x_flipped$/, '');
+                transposedSprite.x_flipped.$name = transposedSprite.$name.replace(/\.x_flipped$/, '');
 
                 transposedSprite.y_flipped = Object.assign({y_flipped: transposedSprite}, transposedSprite);
                 transposedSprite.y_flipped.orientation_id += 2;
                 transposedSprite.y_flipped.scale = PN;
-                transposedSprite.y_flipped._name += '.y_flipped';
+                transposedSprite.y_flipped.$name += '.y_flipped';
                 
                 transposedSprite.x_flipped.y_flipped = transposedSprite.y_flipped.x_flipped = Object.assign({}, transposedSprite);
                 transposedSprite.y_flipped.x_flipped.scale = NN;
                 transposedSprite.y_flipped.x_flipped.orientation_id += 3;
-                transposedSprite.x_flipped.y_flipped.name += transposedSprite._name.replace(/\.x_flipped$/, '.y_flipped');
+                transposedSprite.x_flipped.y_flipped.name += transposedSprite.$name.replace(/\.x_flipped$/, '.y_flipped');
 
-                sprite.rotated_90 = transposedSprite.x_flipped;
-                sprite.x_flipped.rotated_90 = transposedSprite.x_flipped.y_flipped;
-                sprite.y_flipped.rotated_90 = transposedSprite;
-                sprite.x_flipped.y_flipped.rotated_90 = transposedSprite.y_flipped;
+                sprite.rotated_270 = transposedSprite.x_flipped;
+                sprite.x_flipped.rotated_270 = transposedSprite.x_flipped.y_flipped;
+                sprite.y_flipped.rotated_270 = transposedSprite;
+                sprite.x_flipped.y_flipped.rotated_270 = transposedSprite.y_flipped;
 
-                transposedSprite.rotated_90 = sprite.x_flipped;
-                transposedSprite.x_flipped.rotated_90 = sprite.x_flipped.y_flipped;
-                transposedSprite.y_flipped.rotated_90 = sprite;
-                transposedSprite.x_flipped.y_flipped.rotated_90 = sprite.y_flipped;
+                transposedSprite.rotated_270 = sprite.x_flipped;
+                transposedSprite.x_flipped.rotated_270 = sprite.x_flipped.y_flipped;
+                transposedSprite.y_flipped.rotated_270 = sprite;
+                transposedSprite.x_flipped.y_flipped.rotated_270 = sprite.y_flipped;
 
                 const all = [sprite, transposedSprite];
 
@@ -1298,7 +1329,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     // pointers to the existing sprites
                     const s = all[i];
                     s.rotated_180 = s.x_flipped.y_flipped;
-                    s.rotated_270 = s.rotated_180.rotated_90;
+                    s.rotated_90 = s.rotated_180.rotated_270;
 
                     // Verify that all transform elements are set on this sprite
                     console.assert(s.x_flipped);
@@ -1329,7 +1360,7 @@ function recordSoundStats(sound) {
         ++resourceStats.sounds;
         const count = Math.ceil(4 * sound.buffer.numberOfChannels * sound.buffer.length / 1024);
         resourceStats.soundKilobytes += count;
-        resourceStats.soundKilobytesByURL[sound._url] = count;
+        resourceStats.soundKilobytesByURL[sound.$url] = count;
     }
 }
 
@@ -1354,10 +1385,10 @@ function loadSound(name, json, jsonURL) {
         source: null,
         buffer: null,
         frames: 0,
-        _url: mp3URL,
-        _type: 'sound',
-        _json: json,
-        _jsonURL: jsonURL});
+        $url: mp3URL,
+        $type: 'sound',
+        $json: json,
+        $jsonURL: jsonURL});
 
     onLoadFileStart(mp3URL);
     loadManager.fetch(mp3URL, 'arraybuffer', null, function (arraybuffer) {
@@ -1414,13 +1445,13 @@ function loadMap(name, json, mapJSONUrl) {
     }
     
     assetCache[mapJSONUrl] = map = Object.assign([], {
-        _name:   name,
-        _type:   'map',
-        _url:    tmxURL,
+        $name:   name,
+        $type:   'map',
+        $url:    tmxURL,
         _offset: Object.freeze(json.offset ? {x:json.offset.x, y:json.offset.y} : {x:0, y:0}),
         _flipYOnLoad: json.y_up || false,
-        _json:   json,
-        _jsonURL: mapJSONUrl,
+        $json:   json,
+        $jsonURL: mapJSONUrl,
         z_offset: json.z_offset || 0,
         z_scale: (json.z_scale !== undefined ? json.z_scale : 1),
         layer:  [],
@@ -2160,4 +2191,81 @@ function parseCSV(strData, trim) {
     }
     
     return data;
+}
+
+/** Used by both constants and assets to load and parse a CSV file.
+    Stores the result into outputObject[outputField] and then 
+    invokes callback() if it is specified.
+ */
+function loadCSV(csvURL, definition, outputObject, outputField, callback) {
+    loadManager.fetch(csvURL, 'text', null, function (csv) {
+        // Parse cells
+        let grid = parseCSV(csv, definition.trim !== false);
+
+        // By parseCSV returns row-major data and
+        // tables in quadplay default to column major,
+        // so transpose the CSV parse oppositely to
+        // the transpose flag.
+        if (! definition.transpose) {
+            grid = transposeGrid(grid);
+        }
+
+        const row_type = (definition.transpose ? definition.column_type : definition.row_type) || 'object';
+        const col_type = (definition.transpose ? definition.row_type : definition.column_type) || 'object';
+
+        if (definition.ignore_first_row || (definition.ignore_first_column && definition.transpose)) {
+            // Remove the first row of each column
+            for (let x = 0; x < grid.length; ++x) {
+                grid[x].shift();
+            }
+        }
+        
+        if (definition.ignore_first_column || (definition.ignore_first_row && definition.transpose)) {
+            // Remove the first column
+            grid.shift();
+        }
+        
+        // Parse table
+        let data;
+        
+        if ((col_type === 'array') && (row_type === 'array')) {
+            // This is the data structure that we already have
+            // in memory
+            data = grid;
+        } else {
+            if (row_type === 'object') {
+                data = {};
+                if (col_type === 'object') {
+                    // Object of objects
+                    for (let c = 1; c < grid.length; ++c) {
+                        const dst = data[grid[c][0]] = {};
+                        const src = grid[c];
+                        for (let r = 1; r < grid[0].length; ++r) {
+                            dst[grid[0][r]] = src[r];
+                        }
+                    } // for each column (key)
+                    
+                } else { // row_type == 'array'
+                    
+                    // Object of arrays. The first row contains the object property names
+                    for (let c = 0; c < grid.length; ++c) {
+                        data[grid[c][0]] = grid[c].slice(1);
+                    } // for each column (key)
+                }
+            } else {
+                // Array of objects. The first column contains the object property names
+                data = new Array(grid.length - 1);
+                for (let c = 0; c < data.length; ++c) {
+                    const src = grid[c + 1];
+                    const dst = data[c] = {};
+                    for (let r = 0; r < src.length; ++r) {
+                        dst[grid[0][r]] = grid[c + 1][r];
+                    } // for row
+                } // for col
+            } // array of objects
+        }
+
+        outputObject[outputField] = data;
+        if (callback) { callback(); }
+    });
 }

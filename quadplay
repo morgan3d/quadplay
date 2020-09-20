@@ -318,7 +318,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                     exclude_table[remove_leading_slash(aux_path) + f] = True
 
                 # Search (quad_path | aux_path) + type + 's/*.' + type + '.json'
-                asset_type_array = ['font', 'sprite', 'sound', 'map']
+                asset_type_array = ['font', 'sprite', 'sound', 'map', 'data']
                 for t in asset_type_array:
                     # Get the json files from the game directory
                     response_obj[t] = glob.glob(remove_leading_slash(aux_path + '**/*.' + t + '.json'), recursive=True)
@@ -333,7 +333,10 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
 
                 for t in asset_type_array:
                     # Get raw files
-                    raw_files = glob.glob(remove_leading_slash(aux_path + '**/*.' + raw_extension[t]), recursive=True)
+                    if t != 'data':
+                        raw_files = glob.glob(remove_leading_slash(aux_path + '**/*.' + raw_extension[t]), recursive=True)
+                    else:
+                        raw_files = []
 
                     # Remove from raw_files anything that is in exclude_table
                     raw_files = [f for f in raw_files if not f in exclude_table]

@@ -1,0 +1,54 @@
+{
+    "title": "Warlock 3D",
+    "developer": "Casual Effects",
+    "copyright": "©2020 Morgan McGuire",
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+    "packages": [],
+    "scripts": [
+        "raycast.pyxl"
+    ],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "font": "quad://fonts/deja-5.font.json",
+        "dungeon_map": "dungeon.map.json",
+        "allagon_sprite": "allagon.sprite.json",
+        "shapes_sprite": "quad://sprites/shapes-32x32.sprite.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "DOOM/Heretic style first person view with d-pad, dual d-pad, dual analog, and mouselook controls",
+    "constants": {
+        "text_color": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": 1
+                },
+                "g": {
+                    "type": "number",
+                    "value": 1
+                },
+                "b": {
+                    "type": "number",
+                    "value": 1
+                }
+            }
+        }
+    },
+    "y_up": true,
+    "screen_size": {
+        "x": 192,
+        "y": 112
+    },
+    "dual_dpad": true
+}

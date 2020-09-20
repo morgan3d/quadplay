@@ -321,7 +321,7 @@ function onRemoveAsset(key) {
 
 function onOpenAssetExternally(appName, assetName) {
     // Assumes that the asset was local and not built-in
-    const url = gameSource.assets[assetName]._sourceURL || gameSource.assets[assetName]._url;
+    const url = gameSource.assets[assetName]._sourceURL || gameSource.assets[assetName].$url;
     const filename = serverConfig.rootPath + urlToFilename(url);
     postToServer({command: 'open',
                   app: appName,
@@ -335,7 +335,7 @@ function showAssetContextMenu(assetName) {
 
     let externalCmds = '';
     if (gameSource.assets) {
-        const url = gameSource.assets[assetName]._sourceURL || gameSource.assets[assetName]._url;
+        const url = gameSource.assets[assetName]._sourceURL || gameSource.assets[assetName].$url;
         if (! isRemote(url) && !isBuiltIn(url)) {
             if (serverConfig.hasFinder) {
                 externalCmds += `<div onmousedown="onOpenAssetExternally('<finder>', '${assetName}')">Show in ${isApple ? 'Finder' : 'Explorer'}</div>`;

@@ -1,0 +1,8 @@
+{
+    "url": "dungeon.tmx",
+    "sprite_url": "quad://sprites/blasphemer-tiles-64x64.sprite.json",
+    "y_up": true,
+    "sprite_url_table": {
+        "<default>": "quad://sprites/blasphemer-tiles-64x64.sprite.json"
+    }
+}

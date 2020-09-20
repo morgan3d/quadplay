@@ -102,7 +102,9 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime) {
         const N = this.framesThisInterval;
         const frameTime = (intervalEndTime - this.intervalStartTime) / N;
         
-        // Compute the best estimate of real time spent on each operation
+        // Compute the best estimate of real time spent on each operation.
+        // The graphics time is the actual time spent there, which takes
+        // the reduced refresh rate into account.
         const graphicsTime = this.graphicsAccumTime / N;
         const physicsTime = this.physicsAccumTime / N;
         const logicTime = Math.max(this.logicAccumTime / N, 0);
@@ -122,14 +124,18 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime) {
     
     if (this.framesThisInterval === 1) {
         // End of the first frame. Change to a useful measurement
-        // interval.
-        this.framesThisInterval = 10;
+        // interval. Note that there will be some roundoff for
+        // the cost of graphics based on the interval since it
+        // isn't running every frame. Use 15 so that we see
+        // no roundoff effects at 15, 30, 60 Hz but are still very
+        // responsive at lower framerates.
+        this.framesThisInterval = 15;
     } else if (intervalEndTime - this.lastGraphicsPeriodChangeTime >= 1000) {
         // End of the interval and at a reasonable time at which to evaluate the
         // interval length and graphics period.
 
         const maxG = 6;
-        // Graphics periods: 
+        // Graphics periods:
         //   1 -> 60 Hz
         //   2 -> 30 Hz
         //   3 -> 20 Hz
@@ -146,38 +152,69 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime) {
         // Estimates of the best frame time we might hit if graphicsPeriod changes 
         const minAchievableTime    = logicTime + physicsTime + graphicsTime * G / maxG;
         const expectedTimeAtLowerFramerate   = logicTime + physicsTime + graphicsTime * G / (G + 1);
-        const expectedTimeAtCurrentFramerate = logicTime + physicsTime + graphicsTime * G;
+        const expectedTimeAtCurrentFramerate = logicTime + physicsTime + graphicsTime;
         const expectedTimeAtHigherFramerate  = logicTime + physicsTime + graphicsTime * G / Math.max(G - 1, 0.5);
         let newG = G;
 
         // Sometimes the JIT runs or another scheduling event occurs and the actual time
-        // is way out of sync with the expected time. Do not change the framerate in this case
-        if ((frameTime > 18.5) && (frameTime < 2 * expectedTimeAtCurrentFramerate)) {
-            // Not making frame rate, and we've been in the current
-            // mode for what we expected to be one second worth of
-            // frames.
-            if (((minAchievableTime <= 16) ||
-                 (minAchievableTime < frameTime * 0.6)) && (G < maxG) && (QRuntime.mode_frames > 60 / G)) {
+        // is way out of sync with the expected time. Do not drop the framerate in this case.
+        if (
+            // Not making frame rate
+            (frameTime > 17.5) &&
+                
+            // and our timing estimates seem valid (i.e., the JIT didn't just run or something weird
+            // that might throw off timing)
+            (frameTime < 2 * expectedTimeAtCurrentFramerate)) {
+            
+            if (
+                // The best we can possibly by graphics scaling 
+                //((minAchievableTime <= 16.5) || (minAchievableTime < frameTime * 0.6))  &&
+
+                // Not at the lowest frame rate yet
+                (G < maxG) &&
+
+                // We've been in the current mode for what we expected
+                // to be one second worth of frames, so this is
+                // probably steady state.
+                (QRuntime.mode_frames > 60 / G)) {
+
                 // It is worth lowering the graphics rate, as it
                 // should help us hit frame rate
                 newG = G + 1;
-                $systemPrint(`Lowered graphics update to ${60 / newG} Hz.\n` +
-                             `  minAchievableTime = ${minAchievableTime}\n` +
-                             `  expectedTimeAtLowerFramerate   = ${expectedTimeAtLowerFramerate}\n` +
-                             `  expectedTimeAtCurrentFramerate = ${expectedTimeAtCurrentFramerate}\n` +
-                             `  expectedTimeAtHigherFramerate  = ${expectedTimeAtHigherFramerate}\n` +
-                             `  actualTimeAtCurrentFramerate   = ${frameTime}`, 'color:#F43');
+                $systemPrint(`\nLowered graphics update from ${60 / G} to ${60 / newG} Hz because:\n` +
+                             `  minAchievableTime = ${minAchievableTime.toFixed(2)}\n` +
+                             `  expectedTimeAtLowerFramerate   = ${expectedTimeAtLowerFramerate.toFixed(2)}\n` +
+                             `  expectedTimeAtCurrentFramerate = ${expectedTimeAtCurrentFramerate.toFixed(2)}\n` +
+                             `  expectedTimeAtHigherFramerate  = ${expectedTimeAtHigherFramerate.toFixed(2)}\n` +
+                             `  actualTimeAtCurrentFramerate   = ${frameTime.toFixed(2)}`, 'color:#F43');
             }
-        } else if ((G > 1) && (expectedTimeAtHigherFramerate < 16)) {
+        } else if (
+
+            // Not at the highest graphics frame rate
+            (G > 1) &&
+
+            // We're plausibly performing well (being pretty liberal about it due to odd performance
+            // numbers on low end machines when using infrequent timers)
+            (frameTime < 30) &&
+            
+            // Increasing frame rate should still keep us under the limit
+            (expectedTimeAtHigherFramerate < 16.6) &&
+                
+            // Even given the error in our current estimates, the new frame rate
+            // should still be pretty close to 60 Hz. Sometimes on RPi the actual
+            // frame time reports low, and then when we change rate it is able
+            // to catch up, so be very liberal here on timing
+            (expectedTimeAtHigherFramerate * Math.min(1.0, frameTime / expectedTimeAtCurrentFramerate) < 25)) {
+                       
             // We have headroom and should increase the graphics rate
             // back towards full framerate.
             newG = G - 1;
-            $systemPrint(`Raised graphics update to ${60 / newG} Hz.\n` +
-                         `  minAchievableTime = ${minAchievableTime}\n` +
-                         `  expectedTimeAtLowerFramerate   = ${expectedTimeAtLowerFramerate}\n` +
-                         `  expectedTimeAtCurrentFramerate = ${expectedTimeAtCurrentFramerate}\n` +
-                         `  expectedTimeAtHigherFramerate  = ${expectedTimeAtHigherFramerate}\n` +
-                         `  actualTimeAtCurrentFramerate   = ${frameTime}`, 'color:#1E8');
+            $systemPrint(`\nRaised graphics update from ${60 / G} to ${60 / newG} Hz because:\n` +
+                         `  minAchievableTime = ${minAchievableTime.toFixed(2)}\n` +
+                         `  expectedTimeAtLowerFramerate   = ${expectedTimeAtLowerFramerate.toFixed(2)}\n` +
+                         `  expectedTimeAtCurrentFramerate = ${expectedTimeAtCurrentFramerate.toFixed(2)}\n` +
+                         `  expectedTimeAtHigherFramerate  = ${expectedTimeAtHigherFramerate.toFixed(2)}\n` +
+                         `  actualTimeAtCurrentFramerate   = ${frameTime.toFixed(2)}`, 'color:#1E8');
         }
         
         if (newG !== G) {

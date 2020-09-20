@@ -1,0 +1,151 @@
+Play
+════════════════════════════════════════════════════════════════════════
+// 3D world space is measured in map sprite pixel units for this
+// program
+
+const view = {
+    pos: xyz(½ world_map.size.x * world_map.sprite_size.x, 16, ½ world_map.size.y * world_map.sprite_size.y),
+    
+    // Yaw increases from 0° at the +z axis clockwise towards the x axis.
+    // Start looking "north", which is -z
+    yaw: 180°,
+    
+    speed: 0,
+    spin: 0°,
+    
+    z_near: -1,
+    z_far: -64 * 32,
+    
+    // Edge to edge. This number must match the size of 
+    // the background image unless it is scaled.
+    horizontal_fov: 36°
+}
+
+
+// Forward vector for the camera
+def ws_forward(view):    
+    // Transform from camera space to world space
+    return xyz(sin(view.yaw), 0, cos(view.yaw))
+
+
+// Returns the world-space ray through the given pixel.
+// Pixel should be an integer + ½ for a pixel center.
+// Assumes that (0, 0) is the center of the screen.
+def ws_eye_ray(view, pixel):
+    // Compute the normalized side of a square at z=-1 based on our 
+    // field of view; the result is negative because of 
+    // our convention to have the image plane on the
+    // negative axis
+    const side = 2 tan(½ view.horizontal_fov) / SCREEN_SIZE.x
+    
+    // Compute the point on the image plane
+    const point = xyz(side * pixel.x, side * pixel.y, -1)
+                      
+    // Convert to a direction
+    let dir = direction(point)
+    
+    // Transform from camera space to world space
+    const c = cos(view.yaw)
+    const s = sin(view.yaw)
+    
+    return {
+        pos: xyz(view.pos),
+        dir: xyz(-c * dir.x - s * dir.z, dir.y, s * dir.x - c * dir.z),
+        t_min: view.z_near / dir.z,
+        t_max: view.z_far / dir.z,
+        
+        // Rate at which moving along the ray moves in camera-space z
+        d_cs_z: dir.z
+    }
+
+
+// Returns the intersection point or ∅ if there is not one
+def ray_horizontal_plane_intersection(ray, y):
+    const t = (y - ray.pos.y) / ray.dir.y
+    
+    // If the above is NaN, these tests will still work correctly
+    if t ≥ ray.t_min and t ≤ ray.t_max:
+        return t
+    else:
+        return ∅
+
+
+def draw_background(view):
+    const background_width = mountains_sprite.sprite_size.x
+    for i < 4:
+        const x = i * background_width + view.yaw * SCREEN_SIZE.x / view.horizontal_fov
+        draw_sprite({
+            sprite: mountains_sprite, 
+            pos: xy(loop(x, -background_width, 3 background_width), 22), 
+            z:-2047})
+            
+
+def draw_perspective_ground(view, map):
+    const left = xy(½ - ½ SCREEN_SIZE.x, 0)
+    const right = xy(½ SCREEN_SIZE.x - ½, 0)
+    for (½ - ½ SCREEN_SIZE.y) ≤ y ≤ 0:
+        left.y = y
+        right.y = y
+        
+        // Primary rays through the centers of the pixels at each edge
+        const lt_ray = ws_eye_ray(view, left)
+        const rt_ray = ws_eye_ray(view, right)
+        
+        // Distance along the ray to the ground at the left edge
+        const edge_t = ray_horizontal_plane_intersection(lt_ray, GROUND_Y)
+        
+        // No intersection on this scanline 
+        if edge_t == ∅: continue
+    
+        // Intersection points at left and right edges in map coordinates
+        const min_point = xz_to_xy(lt_ray.pos + lt_ray.dir * edge_t) / map.sprite_size
+        const max_point = xz_to_xy(rt_ray.pos + rt_ray.dir * edge_t) / map.sprite_size
+    
+        // Compute the camera space z of this scanline on the ground
+        // plane
+        const cs_z = lt_ray.d_cs_z * edge_t * 0.1
+        
+        draw_map_horizontal_span(left, SCREEN_SIZE.x, map, min_point, max_point, ∅, ∅, ∅, cs_z, ∅, ∅, true)
+
+
+
+def draw_minimap(map) preserving_transform:
+    const corner = xy(5, 5)
+    const extent = xy(64, 48)
+    set_transform(corner + ½ extent, xy(1, 1))
+    draw_rect(xy(0, 0), extent + 2, rgba(SKY_COLOR, 50%), #578, ∅, 101)
+    draw_disk(xy(0, 0), 2, #ff0, #000, 100)
+    set_camera({pos: xz_to_xy(view.pos), angle: 180° + view.yaw, zoom: ⅛})
+    set_clip(corner, extent)
+    draw_map(map)
+
+
+
+def simulate_view(view, gamepad):
+    view.spin = lerp(view.spin, -1° gamepad.x, 25%)
+    view.speed = lerp(view.speed, 3 (gamepad.y or gamepad.a), 10%)
+    
+    view.yaw += view.spin
+    view.pos += ws_forward(view) * view.speed
+   
+    
+    
+enter
+────────────────────────────────────────────────────────────────────────
+
+// Put (0, 0) in the center of the screen
+set_transform(½ SCREEN_SIZE)
+set_background(SKY_COLOR)
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+simulate_view(view, gamepad_array[0])
+
+draw_background(view)
+draw_perspective_ground(view, world_map)
+
+draw_minimap(world_map)
+

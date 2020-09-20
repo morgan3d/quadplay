@@ -9,7 +9,7 @@ const prompt_color            = #4DF
 const selected_color          = #f
 const unselected_color        = #b
 
-const creditOrder = ["Game", "Sprite", "Font", "Sound", "Code", "Quadplay"]
+const creditOrder = ["Game", "Sprite", "Font", "Sound", "Data", "Code", "Quadplay"]
 
 let old_transform
 let old_clip
