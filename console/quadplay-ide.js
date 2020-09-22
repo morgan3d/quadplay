@@ -2586,7 +2586,8 @@ function createProjectWindow(gameSource) {
         for (let i = 0; i < gameSource.docs.length; ++i) {
             const doc = gameSource.docs[i];
             const badge = isBuiltIn(doc) ? 'builtin' : (isRemote(doc) ? 'remote' : '');
-            s += `<li class="clickable ${badge}" id="DocItem_${doc.replace(/[^A-Za-z0-9-_+\/]/g, '_')}" onclick="onProjectSelect(event.target, 'doc', gameSource.docs[${i}])" title="${doc}"><code>${doc.replace(/^.*\//, '')}</code></li>\n`;
+            const contextMenu = editableProject ? `oncontextmenu="showDocContextMenu('${doc}')" ` : '';
+            s += `<li class="clickable ${badge}" ${contextMenu} id="DocItem_${doc}" onclick="onProjectSelect(event.target, 'doc', '${doc}')" title="${doc}"><code>${doc.replace(/^.*\//, '')}</code></li>\n`;
         }
     }
     if (editableProject) {

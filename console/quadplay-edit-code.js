@@ -1001,8 +1001,7 @@ function onNewDocCreate() {
                                  for (let i = 0; i < gameSource.docs.length; ++i) {
                                      if (gameSource.docs[i].name === name) {
                                          // Found the match
-                                         const id = doc.replace(/[^A-Za-z0-9-_+\/]/g, '_');
-                                         onProjectSelect(document.getElementById('DocItem_' + id), 'doc', gameSource.docs[i]);
+                                         onProjectSelect(document.getElementById('DocItem_' + doc), 'doc', gameSource.docs[i]);
                                          return;
                                      }
                                  }
@@ -1236,8 +1235,29 @@ function showModeContextMenu(mode) {
         s += `<div onmousedown="onProjectInitialModeChange('${mode.name}')">Set As Start Mode</div>`
     }
 
+    s += `<hr><div onmousedown="onRemoveMode('${mode.name}')"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&times;</span>Remove ${mode.name}</div>`
+
     customContextMenu.innerHTML = s;
     showContextMenu('project');
+}
+
+
+function onRemoveMode(modeName) {
+        
+    const index = gameSource.json.modes.indexOf(modeName);
+    console.assert(index !== -1);
+    gameSource.json.modes.splice(index, 1);
+
+    if (modeName === gameSource.json.start_mode) {
+        // Choose another mode
+        if (gameSource.json.modes.length > 0) {
+            gameSource.json.start_mode = gameSource.json.modes[0];
+        } else {
+            gameSource.json.start_mode = '';
+        }
+    }
+    
+    serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
 }
 
 
@@ -1282,7 +1302,7 @@ function showScriptContextMenu(scriptURL) {
     if (! builtIn) {
         s += `<div onmousedown="onRenameScript('${scriptURL}')">Rename&hellip;</div>`
     }
-    s += `<div onmousedown="onRemoveScript('${scriptURL}')"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&times;</span>Remove ${filename}</div>`
+    s += `<hr><div onmousedown="onRemoveScript('${scriptURL}')"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&times;</span>Remove ${filename}</div>`
 
     customContextMenu.innerHTML = s;
     showContextMenu('project');
@@ -1333,3 +1353,46 @@ function onRenameScript(scriptURL) {
     // Save script as the new name
     serverWriteFile(makeURLRelativeToGame(newName), 'utf8', fileContents[scriptURL], saveAndReloadProject);
 }
+
+
+/////////////////////////////////////////////////////////////////////////
+
+function showDocContextMenu(docURL) {
+    if (! gameSource.docs) { return; }
+
+    console.assert(docURL);
+    const id = 'DocItem_' + docURL;
+    const filename = urlFilename(docURL);
+    const builtIn = isBuiltIn(docURL);
+
+    const index = gameSource.docs.indexOf(docURL);
+    console.assert(index !== -1);
+    
+    let s = `<div onmousedown="onProjectSelect(document.getElementById('${id}'), 'doc', '${docURL}'])">${builtIn ? 'View' : 'Edit'}</div>`;
+    /*
+    if (index > 0) {
+        s += `<div onmousedown="onMoveScript('${scriptURL}', -1)"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&uarr;</span>Execute earlier</div>`
+    }
+
+    if (index < gameSource.scripts.length - 1) {
+        s += `<div onmousedown="onMoveScript('${scriptURL}', +1)"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&darr;</span>Execute later</div>`
+    }
+    if (! builtIn) {
+        s += `<div onmousedown="onRenameScript('${scriptURL}')">Rename&hellip;</div>`
+    }
+    */
+    s += `<hr><div onmousedown="onRemoveDoc('${docURL}')"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&times;</span>Remove ${filename}</div>`
+
+    customContextMenu.innerHTML = s;
+    showContextMenu('project');
+}
+
+
+function onRemoveDoc(docURL) {
+    const index = gameSource.docs.indexOf(docURL);
+    console.assert(index !== -1);
+    gameSource.json.docs.splice(index, 1);
+    serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
+}
+
+
