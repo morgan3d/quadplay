@@ -3332,7 +3332,7 @@ using the full physics engine.
 : Returns the first object intersected when calling `ray_intersect(ray, array[i])`
   on each element of the array.
   
-`ray_intersect_map(ray, map, layer, sprite_callback default nil, pixel_callback default nil, replacement_array default [])`
+`ray_intersect_map(ray, map, layer, sprite_callback default nil, pixel_callback default nil, replacement_array default [], run_callback_on_nil_sprites default false)`
 : The `ray` object must have `xy()` fields for `pos`, `dir`,
   and an optional number field for `length default infinity`.
   The `ray.direction` will automatically be normalized.
@@ -3358,10 +3358,11 @@ using the full physics engine.
   distance.
 
   At least one callback must be specified. There is no default sprite
-  callback. The default pixel callback is:
+  callback. The default pixel callback is equivalent to:
   
   `def default_pixel_callback(s, p): return if get_sprite_pixel_color(s, p).a >= 50% then s else nil`
 
+  Does not respect wrapping.
 
 ### Engine
 
@@ -4022,14 +4023,14 @@ to mutate the asset.
 
 `map.wrap_x`
 : If true, the map wraps horizontally. Array access does not automatically
-  wrap, but function such as `draw_map()`, `find_map_path()`, and `get_map_pixel_color()`
-  will implement wrapping.
+  wrap, but functions such as `get_map_sprite()`, `find_map_path()`, and `get_map_pixel_color()`
+  will implement wrapping. See details on each map function to see how it supports wrapping.
 
 `map.wrap_y`
 : If true, the map wraps vertically. Array access does not automatically
-  wrap, but function such as `draw_map()`, `find_map_path()`, and `get_map_pixel_color()`
-  will implement wrapping.
-
+  wrap, but functions such as `get_map_sprite()`, `find_map_path()`, and `get_map_pixel_color()`
+  will implement wrapping. See details on each map function to see how it supports wrapping.
+  
 `map.z_offset`
 : Amount to add to each layer index when computing a z value for rendering.
   `layer = (z - map.z_offset) / map.z_scale`; `z = layer * map.z_scale + map.z_offset`.
@@ -4072,6 +4073,11 @@ indices. The map's z-axis corresponds to layers.
   it was a giant object, with the origin centered at the center of
   tile (0, 0).  Using a non-default `angle` and `scale` will
   approximately double the cost of drawing the map.
+  
+  For wrapping maps, the map is rendered 9x (at very little
+  performance penalty). It does not tile infinitely.
+  If the game explicitly relocates the camera when it has moved
+  off of the end of the map, then it will _appear_ infinite in game.
 
 `draw_map_horizontal_span(start, width, map, map_coord0, map_coord1, min_layer default 0, max_layer_exclusive default +infinity, replacement_array default [], z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp", invert_sprite_y default (get_transform().dir.y < 0))`
 : Draws a horizontal (regardless of the camera) span of constant z with pixel colors taken from the map.
@@ -4087,6 +4093,8 @@ indices. The map's z-axis corresponds to layers.
   are as for `get_map_pixel_color()`.
   
   `override_color` and `override_blend` are as for `draw_sprite()`.
+  
+  Respects the wrapping and wraps infinitely.
 
 `find_map_path(map, startXY, goalXY, edgeCost, costLayer = 0)`
 : Specialized version of `find_path` for maps. The start and end positions
@@ -4131,24 +4139,30 @@ indices. The map's z-axis corresponds to layers.
   Returns `nil` for out of bounds values and empty sprites, or a result with `result.a = 0`
   if `result` is specified.
   
+  Respects the wrapping and can wrap infinitely.
+  
   See also `get_map_pixel_color()`.
 
 `get_map_sprite(map, map_coord, layer default 0, replacement_array default ∅)`
 : Returns the sprite in `map` at the corresponding `map_coord` and
   `layer` using rounding. Returns `nil` for out of bounds values. See
-  also `get_map_sprite_by_ws_coord()`.
+  also `get_map_sprite_by_ws_coord()`. Respects the wrapping and can wrap
+  infinitely.
 
 `get_map_sprite_by_ws_coord(map, ws_coord, ws_z default 0, replacement_array default ∅)`
 : Returns the sprite in `map` at the corresponding `draw_coord` and
   `ws_z` using `transform_ws_to_map_space()` and rounding to compute the
   coordinates. Returns `nil` for out of bounds values. See also
-  `get_map_sprite()`.
+  `get_map_sprite()`. Respects the wrapping and can wrap
+  infinitely.
 
 `set_map_sprite(map, map_coord, sprite, layer default 0)`
 : Sets the corresponding map sprite. Does nothing if `map_coord` is out of bounds.
+  Respects the wrapping and can wrap infinitely.
 
 `set_map_sprite_by_ws_coord(map, ws_point, sprite, ws_z default 0)`
 : Sets the corresponding map sprite. Does nothing if `ws_point` is out of bounds.
+  Respects the wrapping and can wrap infinitely.
 
 `transform_ws_to_map_space(map, ws_point)`
 : Returns the _fractional_ map coordinates of `ws_point`.  See also
@@ -5782,7 +5796,6 @@ different map objects in memory because maps are mutable.  The
 spritesheets that they load will be shared if they come from the same
 sprite.json files.
 
-
 The map JSON descriptor looks like:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ JavaScript
@@ -5853,6 +5866,7 @@ and Linux mapping program.
 
 When drawing, layer zero for `draw_map()` corresponds to the lowest layer in Tiled and
 the layer indices increase upwards.
+
 
 
 Data JSON
@@ -7934,6 +7948,7 @@ Changes for both the specification and implementation in each release.
 - Added `set_playback_rate()` for audio
 - Allowed leading underscores on variable and member names
 - Improved frame rate scaling for low end processors
+- Tuned built-in Controls pixel layout for every resolution
 - Fixed `mouse.dy` on `device_control("get_mouse_state")` returning incorrect values
 - Fixed swapped `sprite.rotated_90` and `sprite.rotated_270`
 - Fixed missing transparency for `sprite.rotated_90` and `sprite.rotated_270`
@@ -7941,10 +7956,9 @@ Changes for both the specification and implementation in each release.
 - Fixed physical controller overriding keyboard D-pad if activated
 - Fixed polygons, triangles, and rectangles rotating the wrong way under camera transforms
   when the Y-axis is up
+- Fixed `get_map_pixel_color()` on tiling maps
 - Known bugs:
    - HSV color preview not 100% accurate
-   - `get_map_pixel_color()` uses wrong coordinates outside of primary bounds for wrapping maps
-   - `draw_map()` not visible outside of central 3x3 repetitions for wrapping maps
    - `ray_intersect_map()` pixel callbacks not implemented 
 
 

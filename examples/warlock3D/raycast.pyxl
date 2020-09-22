@@ -162,7 +162,7 @@ def draw_minimap(view, map) preserving_transform:
     set_transform(corner + ½ extent, xy(1, 1))
     draw_rect(xy(0, 0), extent + 2, #2, #578, ∅, 101)
     set_camera({pos: xz_to_xy(view.pos), angle: 180° + view.yaw, zoom: 10%})
-    draw_disk(xz_to_xy(view.pos), view.radius, #ff0, #000, 100)
+    draw_disk(xz_to_xy(view.pos), view.radius, #ff0, #000, 105)
     set_clip(corner, extent)
     draw_map({map: map, min_layer: 0, map_layer: 1, z: 102})
     

@@ -2,7 +2,7 @@
 "use strict";
 
 // Set to false when working on quadplay itself
-const deployed = true;
+const deployed = false;
 const version  = '2020.09.20.15'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay

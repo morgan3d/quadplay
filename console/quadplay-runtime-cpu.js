@@ -3535,6 +3535,8 @@ function get_map_pixel_color(map, map_coord, min_layer, max_layer_exclusive, rep
     // the return value.
     const had_result = result;
     result = result || {r:0, g:0, b:0, a:0};
+
+    
     const pixel = $get_map_pixel_color(map, map_coord.x, map_coord.y, min_layer, max_layer_exclusive, replacement_array, result, invert_sprite_y);
     if (pixel === -1) {
         if (had_result) {
@@ -3558,19 +3560,23 @@ function get_map_pixel_color(map, map_coord, min_layer, max_layer_exclusive, rep
 
 
 // Return value:
-//  -1:        out of bounds
+//  -1:        out of bounds or no sprite
 //  -2:        value in result
 //  otherwise: value is a uint16 in the return value
 function $get_map_pixel_color(map, map_coord_x, map_coord_y, min_layer, max_layer_exclusive, replacement_array, result, invert_sprite_y) {
-    // Integer version of the map coordinate
-    let mx = $Math.floor(map_coord_x), my = $Math.floor(map_coord_y);
-
     const map_size_x = map.size.x, map_size_y = map.size.y;
     
-    // Inlined $loop() on mx and my
-    if (map.wrap_x && (mx < 0 || mx >= map_size_x)) { mx -= $Math.floor(mx / map_size_x) * map_size_x; }
-    if (map.wrap_y && (my < 0 || my >= map_size_y)) { my -= $Math.floor(my / map_size_y) * map_size_y; }
+    // Inlined $loop()
+    if (map.wrap_x && (map_coord_x < 0 || map_coord_x >= map_size_x)) {
+        map_coord_x -= $Math.floor(map_coord_x / map_size_x) * map_size_x;
+    }
+    if (map.wrap_y && (map_coord_y < 0 || map_coord_y >= map_size_y)) {
+        map_coord_y -= $Math.floor(map_coord_y / map_size_y) * map_size_y;
+    }
 
+    // Integer version of the map coordinate
+    const mx = $Math.floor(map_coord_x), my = $Math.floor(map_coord_y);
+    
     // Was any surface hit?
     let hit = false;
 
@@ -3687,7 +3693,7 @@ function $get_map_pixel_color(map, map_coord_x, map_coord_y, min_layer, max_laye
         // Composited
         return -2;
     } else {
-        // Out of bounds
+        // Out of bounds or no sprite
         result.r = result.g = result.b = result.a = 0;
         return -1;
     }
@@ -4579,10 +4585,13 @@ function draw_map_horizontal_span(start, width, map, map_coord0, map_coord1, min
         // the following call.
 
         let pixel_value = $get_map_pixel_color(map, map_point_x, map_point_y, min_layer, max_layer_exclusive, replacement_array, color, invert_sprite_y);
+
+        // Record whether it was a total miss before pixel_value is mutated
+        const no_sprite = pixel_value === -1;
         
         // For debugging vs. the optimized $get_map_pixel_color
-        //const pixel_value = -2; get_map_pixel_color(map, xy(map_point_x, map_point_y), min_layer, max_layer_exclusive, replacement_array, color, invert_sprite_y);
-
+        //const pixel_value = -1; get_map_pixel_color(map, xy(map_point_x, map_point_y), min_layer, max_layer_exclusive, replacement_array, color, invert_sprite_y);
+        
         if (override_blend) {
             if (pixel_value >= 0) {
                 // Compute color from pixel, as it is not present yet
@@ -4599,10 +4608,39 @@ function draw_map_horizontal_span(start, width, map, map_coord0, map_coord1, min
             } else { // Multiply
                 RGB_MUL_RGB(color, override_color, color);
             }
+        } else if (pixel_value === -1) {
+            // Total miss
+            pixel_value = 0;
         }
 
-        color_data[ci] = pixel_index;
-        color_data[ci + 1] = pixel_value >= 0 ? pixel_value : (pixel_value === -1 ? 0 : $colorToUint16(color));
+        if (no_sprite) {
+            // Skip ahead to the next map cell because this one is
+            // empty, running the iterator in a tight loop. This is a
+            // 15% net performance improvement for rendering sparse
+            // hallway floors.
+            
+            if (pixel_value < 0) {
+                // Was blended (wouldn't be here if override didn't happen)
+                pixel_value = $colorToUint16(color);
+            }
+            
+            const mx = $Math.floor(map_point_x), my = $Math.floor(map_point_y);
+
+            for (; (i < width) && (mx === $Math.floor(map_point_x)) && (my === $Math.floor(map_point_y));
+                 ++i, ++pixel_index, ci += 2, map_point_x += step_x, map_point_y += step_y) {
+
+                color_data[ci] = pixel_index;
+                color_data[ci + 1] = pixel_value;
+            }
+            
+            // The iterator will necessarily go one step too far, so
+            // back everything up before the master iterator hits
+            --i, --pixel_index, ci -= 2, map_point_x -= step_x, map_point_y -= step_y;
+        } else {
+            // Normal case
+            color_data[ci] = pixel_index;
+            color_data[ci + 1] = pixel_value >= 0 ? pixel_value : $colorToUint16(color);
+        } // no sprite
     } // for i
 
     $addGraphicsCommand({
@@ -5215,8 +5253,8 @@ function get_sprite_pixel_color(spr, pos, result) {
         $error('Called get_sprite_pixel_color() on an object that was not a sprite asset. (' + unparse(spr) + ')');
     }
 
-    const x = $Math.floor((spr.scale.x > 0) ? pos.x : (spr.size.x - 1 - pos.x)) >>> 0;
-    const y = $Math.floor((spr.scale.y > 0) ? pos.y : (spr.size.y - 1 - pos.y)) >>> 0;
+    const x = ((spr.scale.x > 0) ? pos.x : (spr.size.x - 1 - pos.x)) | 0;
+    const y = ((spr.scale.y > 0) ? pos.y : (spr.size.y - 1 - pos.y)) | 0;
     
     if ((x < 0) || (x >= spr.size.x) || (y < 0) || (y >= spr.size.y)) {
         if (result) {
@@ -5860,14 +5898,21 @@ function $advanceRayGridIterator(it) {
 
 
 function $default_ray_map_pixel_callback(sprite, sprite_pixel_coord, ws_normal, ray, map, distance, ws_coord, map_coord) {
-    if (get_sprite_pixel_color(sprite, sprite_pixel_coord).a >= 0.5) {
+    // Inlined optimization of: if (get_sprite_pixel_color(sprite, sprite_pixel_coord).a >= 0.5) {
+    const x = ((sprite.scale.x > 0) ? sprite_pixel_coord.x : (sprite.size.x - 1 - sprite_pixel_coord.x)) | 0;
+    const y = ((sprite.scale.y > 0) ? sprite_pixel_coord.y : (sprite.size.y - 1 - sprite_pixel_coord.y)) | 0;
+    const data = sprite._spritesheet._uint16Data;
+    const pixel = data[((sprite._x >>> 0) + x) + ((sprite._y >>> 0) + y) * (data.width >>> 0)] >>> 0;
+
+    if (((pixel >>> 12) & 0xf) >= 8) {
         return sprite;
     } else {
         return undefined;
     }
 }
 
-function ray_intersect_map(ray, map, layer, sprite_callback, pixel_callback, replacement_array) {
+
+function ray_intersect_map(ray, map, layer, sprite_callback, pixel_callback, replacement_array, run_callback_on_empty_sprites) {
     if (sprite_callback === undefined && pixel_callback === undefined) {
         pixel_callback = $default_ray_map_pixel_callback;
     }
@@ -5914,7 +5959,7 @@ function ray_intersect_map(ray, map, layer, sprite_callback, pixel_callback, rep
         // Get the sprite
         const sprite = get_map_sprite(map, map_coord, layer, replacement_array);
         
-        if (sprite) {
+        if (sprite || run_callback_on_empty_sprites) {
             pixel_coord.x = $loop(ws_coord.x, 0, map.sprite_size.x);
             pixel_coord.y = $loop(ws_coord.y, 0, map.sprite_size.y);
             
@@ -5925,7 +5970,7 @@ function ray_intersect_map(ray, map, layer, sprite_callback, pixel_callback, rep
                 }
             }
 
-            if (pixel_callback) {
+            if (sprite && pixel_callback) {
                 // TODO: march
                 /*
                 const result = pixel_callback(sprite, pixel_coord, ws_normal, it.ray, map, it.enterDistance, ws_coord, map_coord);
