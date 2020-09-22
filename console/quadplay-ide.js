@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = false;
-const version  = '2020.09.20.15'
+const version  = '2020.09.21.23'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;

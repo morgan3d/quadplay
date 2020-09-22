@@ -181,12 +181,15 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime) {
                 // It is worth lowering the graphics rate, as it
                 // should help us hit frame rate
                 newG = G + 1;
+
+                if (! deployed) {
                 $systemPrint(`\nLowered graphics update from ${60 / G} to ${60 / newG} Hz because:\n` +
                              `  minAchievableTime = ${minAchievableTime.toFixed(2)}\n` +
                              `  expectedTimeAtLowerFramerate   = ${expectedTimeAtLowerFramerate.toFixed(2)}\n` +
                              `  expectedTimeAtCurrentFramerate = ${expectedTimeAtCurrentFramerate.toFixed(2)}\n` +
                              `  expectedTimeAtHigherFramerate  = ${expectedTimeAtHigherFramerate.toFixed(2)}\n` +
                              `  actualTimeAtCurrentFramerate   = ${frameTime.toFixed(2)}`, 'color:#F43');
+                }
             }
         } else if (
 
@@ -209,12 +212,15 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime) {
             // We have headroom and should increase the graphics rate
             // back towards full framerate.
             newG = G - 1;
+
+            if (! deployed) {
             $systemPrint(`\nRaised graphics update from ${60 / G} to ${60 / newG} Hz because:\n` +
                          `  minAchievableTime = ${minAchievableTime.toFixed(2)}\n` +
                          `  expectedTimeAtLowerFramerate   = ${expectedTimeAtLowerFramerate.toFixed(2)}\n` +
                          `  expectedTimeAtCurrentFramerate = ${expectedTimeAtCurrentFramerate.toFixed(2)}\n` +
                          `  expectedTimeAtHigherFramerate  = ${expectedTimeAtHigherFramerate.toFixed(2)}\n` +
                          `  actualTimeAtCurrentFramerate   = ${frameTime.toFixed(2)}`, 'color:#1E8');
+            }
         }
         
         if (newG !== G) {

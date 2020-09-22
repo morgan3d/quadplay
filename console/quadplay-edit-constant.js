@@ -18,39 +18,18 @@ function htmlColorChannel4Bit(value) {
 
 /** Rounds to the nearest rgba/hsva 4-bit color and returns a CSS string */
 function htmlColor4Bit(value) {
-    if (value.r !== undefined) {
-        if (value.a !== undefined) {
-            // RGBA
-            return `rgba(${htmlColorChannel4Bit(value.r)}, ${htmlColorChannel4Bit(value.g)}, ${htmlColorChannel4Bit(value.b)}, ${htmlColorChannel4Bit(value.a) / 255})`;
-        } else {
-            // RGB
-            return `rgb(${htmlColorChannel4Bit(value.r)}, ${htmlColorChannel4Bit(value.g)}, ${htmlColorChannel4Bit(value.b)})`;
-        }
+    if (value.h !== undefined) {
+        // Convert to RGB
+        value = QRuntime.rgba(value);
+    }
+
+    
+    if (value.a !== undefined) {
+        // RGBA
+        return `rgba(${htmlColorChannel4Bit(value.r)}, ${htmlColorChannel4Bit(value.g)}, ${htmlColorChannel4Bit(value.b)}, ${htmlColorChannel4Bit(value.a) / 255})`;
     } else {
-        // HSVA or HSV
-        
-        // https://en.wikipedia.org/wiki/HSL_and_HSV#HSV_to_HSL
-        const H = htmlColorChannel4Bit(value.h) * 360 / 255;
-        let   S = htmlColorChannel4Bit(value.s) / 255;
-        const V = htmlColorChannel4Bit(value.v) / 255;
-
-        let L = V * (1 - S / 2);
-        if (L === 0 || L === 1) {
-            S = 0;
-        } else {
-            S = (V - L) / Math.min(L, 1 - L);
-        }
-
-        S *= 100;
-        L *= 100;
-        
-        if (value.a !== undefined) {
-            // HSVA
-            return `hsla(${H}, ${S}%, ${L}%, ${htmlColorChannel4Bit(value.a) / 255})`;
-        } else {
-            // HSV
-            return `hsl(${H}, ${S}%, ${L}%)`;
-        }
+        // RGB
+        return `rgb(${htmlColorChannel4Bit(value.r)}, ${htmlColorChannel4Bit(value.g)}, ${htmlColorChannel4Bit(value.b)})`;
     }
 }
 
