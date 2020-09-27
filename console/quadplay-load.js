@@ -369,7 +369,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         } // Assets
 
         // Constants:
-        gameSource.constants = loadConstants(gameJSON.constants, gameURL);
+        gameSource.constants = loadConstants(gameJSON.constants, gameURL, gameJSON);
 
         // Docs: Load the names, but do not load the documents themselves.
         gameSource.docs = [];
@@ -399,7 +399,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
    Returns a table of evaluated constants. If constantsJson is undefined,
    that table is empty.
 */
-function loadConstants(constantsJson, gameURL) {
+function loadConstants(constantsJson, gameURL, gameJSON) {
     if (! constantsJson) { return {}; }
 
     const result = {};
