@@ -4481,9 +4481,21 @@ function draw_line(A, B, color, z, width) {
 
 
 
-function draw_map_horizontal_span(start, width, map, map_coord0, map_coord1, min_layer, max_layer_exclusive, replacement_array, z, override_color, override_blend, invert_sprite_y) {
+function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_layer_exclusive, replacement_array, z, override_color, override_blend, invert_sprite_y) {
     if ($skipGraphics) { return; }
 
+    // TODO: Remove when height spans are permitted
+    if (size.y !== 0) {
+        _error('draw_map_span() size must be zero along the y axis');
+    }
+
+    if (size.x !== 0 && size.y !== 0) {
+        _error('draw_map_span() size must be zero along at most one dimension');
+    }
+    if (size.x < 0 || size.y < 0) {
+        _error('draw_map_span() size must be nonnegative');
+    }
+    
     override_blend = override_blend || "lerp";
 
     if (min_layer === undefined) {
@@ -4511,7 +4523,8 @@ function draw_map_horizontal_span(start, width, map, map_coord0, map_coord1, min
         const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
         const x = start.x - $camera.x, y = start.y - $camera.y;
         start = {x: x * C + y * S, y: y * C - x * S};
-        width *= mag;
+        size.x *= mag;
+        size.y *= mag;
     }
     
     const skx = z * $skewXZ, sky = z * $skewYZ;
@@ -4519,14 +4532,17 @@ function draw_map_horizontal_span(start, width, map, map_coord0, map_coord1, min
     z = z * $scaleZ + $offsetZ;
     
     x = $Math.floor(x) >>> 0; y = $Math.floor(y) >>> 0;
-    width = $Math.round(width);
+    let width = $Math.round(size.x);
+    const height = $Math.round(size.y);
 
     // Completely clipped
     if ((z < $clipZ1 - 0.5) || (z >= $clipZ2 + 0.5) ||
         (x > $clipX2) || (x + width < $clipX1) ||
-        (y < $clipY1) || (y > $clipY2)) {
+        (y < $clipY1) || (y + height > $clipY2)) {
         return;
     }
+
+    // TODO: Support both width and height for clipping below
 
     // Compute derivatives before clipping width
     let map_point_x = map_coord0.x;
@@ -4566,19 +4582,35 @@ function draw_map_horizontal_span(start, width, map, map_coord0, map_coord1, min
         }
     }
 
-    // Preallocate the point array for the graphics command
-    const color_data = new Uint32Array(2 * width);
+    // Preallocate the point array for the graphics command. Using a
+    // typed array seems to reduce garbage collection substantially,
+    // even though it doesn't actually affect the average cost of the
+    // writes or reads.
+    // Allocate the worst case, which is a series of runs of length 1.
+    const color_data = new Uint16Array(2 * width);
+    
+    // Actually used elements (we always use the first element)
+    let color_data_length = 1 >>> 0;
 
     if (invert_sprite_y === undefined) {
         invert_sprite_y = $scaleY < 0;
     }
+
+    // Index in color_data where there the run (block) began
+    let run_start_index = 0;
+
+    // AND of all of the pixel_values for this run.
+    // Only the alpha channel is actually used.
+    let run_mask    = 0xffff;
+    let run_is_skip = false;
+    let run_length  = 0;
     
     // Draw the scanline. Because it has constant camera-space z, the 
     // texture coordinate ("read_point") interpolates linearly
     // under perspective projection.
-    for (let i = 0, pixel_index = (x + y * $SCREEN_WIDTH) >>> 0, ci = 0;
+    for (let i = 0;
          i < width;
-         ++i, ++pixel_index, ci += 2, map_point_x += step_x, map_point_y += step_y) {
+         ++i, map_point_x += step_x, map_point_y += step_y) {
 
         // Call the low-level version, which avoids conversion to rgba() in the common case.
         // Nearly all of the time of this routine (including the actual drawing) is spent in
@@ -4586,67 +4618,94 @@ function draw_map_horizontal_span(start, width, map, map_coord0, map_coord1, min
 
         let pixel_value = $get_map_pixel_color(map, map_point_x, map_point_y, min_layer, max_layer_exclusive, replacement_array, color, invert_sprite_y);
 
-        // Record whether it was a total miss before pixel_value is mutated
-        const no_sprite = pixel_value === -1;
-        
-        // For debugging vs. the optimized $get_map_pixel_color
-        //const pixel_value = -1; get_map_pixel_color(map, xy(map_point_x, map_point_y), min_layer, max_layer_exclusive, replacement_array, color, invert_sprite_y);
-        
-        if (override_blend) {
-            if (pixel_value >= 0) {
-                // Compute color from pixel, as it is not present yet
-                // because $get_pixel_color() used an optimized path.
-                color.a = ((pixel_value >>> 12) & 0xf) * (1 / 15);
-                color.b = ((pixel_value >>> 8) & 0xf) * (1 / 15);
-                color.g = ((pixel_value >>> 4) & 0xf) * (1 / 15);
-                color.r = (pixel_value & 0xf) * (1 / 15);
+        if (pixel_value === -1) {
+            if (! run_is_skip) {
+                if (i > 0) {
+                    // Complete the previous run
+                    color_data[run_start_index] =
+                        (run_length << 2) |
+                        (((run_mask & 0xf000) === 0xf000) ? 1 : 0);
+                    run_length = 0;
+                    // Consume a new element
+                    run_start_index = color_data_length++;
+                }
+                run_is_skip = true;
             }
-            pixel_value = -2;
             
-            if (override_blend === "lerp") {
-                RGB_LERP(color, override_color, override_color.a, color);
-            } else { // Multiply
-                RGB_MUL_RGB(color, override_color, color);
-            }
-        } else if (pixel_value === -1) {
-            // Total miss
-            pixel_value = 0;
-        }
-
-        if (no_sprite) {
             // Skip ahead to the next map cell because this one is
-            // empty, running the iterator in a tight loop. This is a
-            // 15% net performance improvement for rendering sparse
-            // hallway floors.
-            
-            if (pixel_value < 0) {
-                // Was blended (wouldn't be here if override didn't happen)
-                pixel_value = $colorToUint16(color);
-            }
-            
+            // empty. This is a 15% net performance improvement for
+            // rendering sparse hallway floors.
             const mx = $Math.floor(map_point_x), my = $Math.floor(map_point_y);
 
+            // Just skip without even writing, since everything is transparent
+            const before = i;
             for (; (i < width) && (mx === $Math.floor(map_point_x)) && (my === $Math.floor(map_point_y));
-                 ++i, ++pixel_index, ci += 2, map_point_x += step_x, map_point_y += step_y) {
-
-                color_data[ci] = pixel_index;
-                color_data[ci + 1] = pixel_value;
+                 ++i, map_point_x += step_x, map_point_y += step_y) {
             }
-            
             // The iterator will necessarily go one step too far, so
             // back everything up before the master iterator hits
-            --i, --pixel_index, ci -= 2, map_point_x -= step_x, map_point_y -= step_y;
+            --i; map_point_x -= step_x; map_point_y -= step_y;
+
+            // We're now at the end of this map cell
+            run_length += i - before;            
+            
         } else {
-            // Normal case
-            color_data[ci] = pixel_index;
-            color_data[ci + 1] = pixel_value >= 0 ? pixel_value : $colorToUint16(color);
-        } // no sprite
+            // Not in a skip. End the previous run if it was a skip
+            if (run_is_skip) {
+                color_data[run_start_index] = (run_length << 2) | 0x2;
+                run_length = 0;
+                run_is_skip = false;
+                run_mask = 0xffff;
+                // Consume a new element
+                run_start_index = color_data_length++;
+            }
+
+            if (override_blend) {
+                if (pixel_value >= 0) {
+                    // Compute color from pixel, as it is not present yet
+                    // because $get_pixel_color() used an optimized path.
+                    color.a = ((pixel_value >>> 12) & 0xf) * (1 / 15);
+                    color.b = ((pixel_value >>> 8) & 0xf) * (1 / 15);
+                    color.g = ((pixel_value >>> 4) & 0xf) * (1 / 15);
+                    color.r = (pixel_value & 0xf) * (1 / 15);
+                    pixel_value = -2;
+                }
+                
+                // The following surprisingly seem to cost almost
+                // nothing, so we do not optimize them to do
+                // everything in fixed point.
+                if (override_blend === "lerp") {
+                    RGB_LERP(color, override_color, override_color.a, color);
+                } else { // Multiply
+                    RGB_MUL_RGB(color, override_color, color);
+                }
+            }
+            
+            // -2 = value in color
+            pixel_value = pixel_value < 0 ? $colorToUint16(color) : pixel_value;
+
+            run_mask &= pixel_value;
+            color_data[color_data_length++] = pixel_value;
+            ++run_length;    
+        } // if sprite present
     } // for i
+
+    // End the last run
+    if (run_is_skip) {
+        color_data[run_start_index] = (run_length << 2) | 0x2;
+    } else {
+        color_data[run_start_index] = (run_length << 2) | (((run_mask & 0xf000) === 0xf000) ? 1 : 0);
+    }
 
     $addGraphicsCommand({
         z: z,
         baseZ: z,
-        opcode: 'PIX',
+        opcode: 'SPN',
+        x: x,
+        y: y,
+        dx: 1,
+        dy: 0,
+        data_length: color_data_length,
         data: color_data})
 }
 
@@ -5789,8 +5848,8 @@ function $makeRayGridIterator(ray, numCells, cellSize) {
     /*
     if (gridOriginIndex.x !== 0 || gridOriginIndex.y !== 0) {
         // Change to the grid's reference frame
-        ray.origin.x -= gridOrigin.x;
-        ray.origin.y -= gridOrigin.y;
+        ray.pos.x -= gridOrigin.x;
+        ray.pos.y -= gridOrigin.y;
     }
 */
 
@@ -5799,7 +5858,7 @@ function $makeRayGridIterator(ray, numCells, cellSize) {
 
     let startsOutside = false;
     let inside = false;
-    let startLocation = xy(ray.origin);
+    let startLocation = xy(ray.pos);
     
     ///////////////////////////////
 
@@ -5808,18 +5867,18 @@ function $makeRayGridIterator(ray, numCells, cellSize) {
         // intersects the grid.
         
         // From Listing 1 of "A Ray-Box Intersection Algorithm and Efficient Dynamic Voxel Rendering", jcgt 2018
-        const t0 = xy(-ray.origin.x / ray.direction.x, -ray.origin.y / ray.direction.y);
-        const t1 = xy((numCells.x * cellSize.x - ray.origin.x) / ray.direction.x,
-                      (numCells.y * cellSize.y - ray.origin.y) / ray.direction.y);
+        const t0 = xy(-ray.pos.x / ray.dir.x, -ray.pos.y / ray.dir.y);
+        const t1 = xy((numCells.x * cellSize.x - ray.pos.x) / ray.dir.x,
+                      (numCells.y * cellSize.y - ray.pos.y) / ray.dir.y);
         const tmin = min(t0, t1), tmax = max(t0, t1);
         const passesThroughGrid = $Math.max(tmin.x, tmin.y) <= $Math.min(tmax.x, tmax.y);
         
         if (passesThroughGrid) {
             // Back up slightly so that we immediately hit the start location.
-            it.enterDistance = $Math.hypot(it.ray.origin.x - startLocation.x,
-                                          it.ray.origin.y - startLocation.y) - 0.0001;
-            startLocation = xy(it.ray.origin.x + it.ray.direction.x * it.enterDistance,
-                               it.ray.origin.y + it.ray.direction.y * it.enterDistance);
+            it.enterDistance = $Math.hypot(it.ray.pos.x - startLocation.x,
+                                          it.ray.pos.y - startLocation.y) - 0.0001;
+            startLocation = xy(it.ray.pos.x + it.ray.dir.x * it.enterDistance,
+                               it.ray.pos.y + it.ray.dir.y * it.enterDistance);
             startsOutside = true;
         } else {
             // The ray never hits the grid
@@ -5835,8 +5894,8 @@ function $makeRayGridIterator(ray, numCells, cellSize) {
         const a = axisArray[i];
         
         it.index[a]  = $Math.floor(startLocation[a] / cellSize[a]);
-        it.tDelta[a] = $Math.abs(cellSize[a] / it.ray.direction[a]);
-        it.step[a]   = $Math.sign(it.ray.direction[a]);
+        it.tDelta[a] = $Math.abs(cellSize[a] / it.ray.dir[a]);
+        it.step[a]   = $Math.sign(it.ray.dir[a]);
 
         // Distance to the edge fo the cell along the ray direction
         let d = startLocation[a] - it.index[a] * cellSize[a];
@@ -5852,8 +5911,8 @@ function $makeRayGridIterator(ray, numCells, cellSize) {
         }
         $console.assert(d >= 0 && d <= cellSize[a]);
 
-        if (it.ray.direction[a] !== 0) {
-            it.exitDistance[a] = d / $Math.abs(it.ray.direction[a]) + it.enterDistance;
+        if (it.ray.dir[a] !== 0) {
+            it.exitDistance[a] = d / $Math.abs(it.ray.dir[a]) + it.enterDistance;
         } else {
             // Ray is parallel to this partition axis.
             // Avoid dividing by zero, which could be NaN if d === 0
@@ -5928,8 +5987,8 @@ function ray_intersect_map(ray, map, layer, sprite_callback, pixel_callback, rep
 
     // Normalize the direction
     {
-        const inv = 1 / $Math.hypot(ray.direction.x, ray.direction.y);
-        ray.direction.x *= inv; ray.direction.y *= inv;
+        const inv = 1 / $Math.hypot(ray.dir.x, ray.dir.y);
+        ray.dir.x *= inv; ray.dir.y *= inv;
     }
 
     const ws_normal = xy(0, 0);
@@ -5949,8 +6008,8 @@ function ray_intersect_map(ray, map, layer, sprite_callback, pixel_callback, rep
         ws_normal[it.enterAxis] = -it.step[it.enterAxis];
 
         // World-space point at which we entered the cell
-        ws_coord.x = it.ray.origin.x + it.enterDistance * it.ray.direction.x;
-        ws_coord.y = it.ray.origin.y + it.enterDistance * it.ray.direction.y;
+        ws_coord.x = it.ray.pos.x + it.enterDistance * it.ray.dir.x;
+        ws_coord.y = it.ray.pos.y + it.enterDistance * it.ray.dir.y;
 
         // Bump into the cell and then round
         map_coord.x = $Math.floor((ws_coord.x - ws_normal.x) * inv_sprite_size_x);
@@ -6008,12 +6067,12 @@ function ray_intersect(ray, obj) {
     
     if (obj.size) {
         // Normalize the direction
-        let inv = 1 / $Math.hypot(ray.direction.x, ray.direction.y);
-        ray.direction.x *= inv; ray.direction.y *= inv;
+        let inv = 1 / $Math.hypot(ray.dir.x, ray.dir.y);
+        ray.dir.x *= inv; ray.dir.y *= inv;
         
         if (obj.shape === 'disk') {
             // ray-disk (https://www.geometrictools.com/Documentation/IntersectionLine2Circle2.pdf)
-            let dx = ray.origin.x - pos.x, dy = ray.origin.y - pos.y;
+            let dx = ray.pos.x - pos.x, dy = ray.pos.y - pos.y;
             if (dx * dx + dy * dy * 4 <= $Math.abs(obj.size.x * obj.size.y * scaleX * scaleY)) {
                 // Origin is inside the disk, so instant hit and no need
                 // to look at children
@@ -6021,7 +6080,7 @@ function ray_intersect(ray, obj) {
                 return obj;
             } else {
                 // Origin is outside of the disk.
-                const b = ray.direction.x * dx + ray.direction.y * dy
+                const b = ray.dir.x * dx + ray.dir.y * dy
                 const discrim = b*b - (dx*dx + dy*dy - 0.25 * obj.size.x * obj.size.y * scaleX * scaleY);
                 if (discrim >= 0) {
                     const a = $Math.sqrt(discrim);
@@ -6041,8 +6100,8 @@ function ray_intersect(ray, obj) {
             }
         } else {
             // Move to the box's translational frame
-            let toriginX = ray.origin.x - pos.x;
-            let toriginY = ray.origin.y - pos.y;
+            let toriginX = ray.pos.x - pos.x;
+            let toriginY = ray.pos.y - pos.y;
             
             // Take the ray into the box's rotational frame
             const angle = (obj.angle || 0) * rotation_sign();
@@ -6051,8 +6110,8 @@ function ray_intersect(ray, obj) {
             const originX = toriginX * c + toriginY * s;
             const originY =-toriginX * s + toriginY * c;
 
-            const directionX = ray.direction.x * c + ray.direction.y * s;
-            const directionY =-ray.direction.x * s + ray.direction.y * c;
+            const directionX = ray.dir.x * c + ray.dir.y * s;
+            const directionY =-ray.dir.x * s + ray.dir.y * c;
 
             const radX = obj.size.x * 0.5 * scaleX;
             const radY = obj.size.y * 0.5 * scaleY;
@@ -7576,6 +7635,43 @@ function CLAMP(a, lo, hi) {
 function LERP(a, b, t) {
     return $lerp(a, b, t);
 }
+
+function XY_DIRECTION(v1, v2) {
+    let mag = $Math.hypot(v1.x, v1.y);
+    if (mag < 0.0000001) {
+        v2.x = v2.y = 0;
+    } else {
+        mag = 1 / mag;
+        v2.x = v1.x * mag;
+        v2.y = v1.y * mag;
+    }
+}
+
+
+function XZ_DIRECTION(v1, v2) {
+    let mag = $Math.hypot(v1.x, v1.z);
+    if (mag < 0.0000001) {
+        v2.x = v2.z = 0;
+    } else {
+        mag = 1 / mag;
+        v2.x = v1.x * mag;
+        v2.z = v1.z * mag;
+    }
+}
+
+
+function XYZ_DIRECTION(v1, v2) {
+    let mag = $Math.hypot(v1.x, v1.y, v1.z);
+    if (mag < 0.0000001) {
+        v2.x = v2.y = v2.z = 0;
+    } else {
+        mag = 1 / mag;
+        v2.x = v1.x * mag;
+        v2.y = v1.y * mag;
+        v2.z = v1.z * mag;
+    }
+}
+
 
 function XYZ_ADD_XYZ(v1, v2, r) {
     r.x = v1.x + v2.x;

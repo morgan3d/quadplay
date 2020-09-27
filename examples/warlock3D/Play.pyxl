@@ -32,87 +32,6 @@ def draw_controls(control_scheme, gamepad, gamepad2) preserving_transform:
     draw_text({font:font, text:replace("{color: #FFF Jump}{br}(a)", gamepad.prompt), color:TEXT_COLOR, x_align: "center", y_align: "center", pos:xy(40, 11), markup: true})
 
 
-// Moves the entity.pos along entity.vel, sliding it along
-// the nonempty sprites in map[layer].
-def entity_slide_move_map(entity, map, layer) preserving_transform:
-    // Map cells have integer coordinates at their centers
-    const half_cell = ½ map.sprite_size
-
-    // Bounds on everywhere the entity could be in map coordinates.
-    // Because integers are map cell centers
-    const map_lo = ⌊transform_ws_to_map_space(map, entity.pos - ½ entity.size + min(entity.vel, xy(0, 0)))⌋
-    const map_hi = ⌊transform_ws_to_map_space(map, entity.pos + ½ entity.size + max(entity.vel, xy(0, 0)))⌋
-
-    // The mathematically elegant way to solve this problem is to 
-    // sweep the disk through collision with all nearby edges in
-    // the map. To perform the swept disk, convert each edge into a
-    // capsule and collide a ray with it. The capsule itself is in
-    // turn two disks with an oriented line segment between them
-    // (since the other side of the capsule cannot be hit).
-    //
-    // However, for the specific case of walls that are only axis
-    // aligned and small velocities, we can simply test moving in each
-    // axis independently and collide with walls as if they were entities    
-
-
-    // Debug visualization on the minimap   
-    if false:
-        const corner = xy(10, 1)
-        const extent = xy(36, 36)
-        set_transform(corner + ½ extent, xy(1, 1))
-        set_camera({pos: xz_to_xy(view.pos), angle: 180° + view.yaw, zoom: ¼})
-
-    
-    // Every tile that we could possibly hit
-    const wall_array = []
-    for map_lo.x ≤ map_x ≤ map_hi.x:
-        for map_lo.y ≤ map_y ≤ map_hi.y:
-            if map.layer[layer][map_x][map_y]:
-                // Create an entity at the location of this wall
-                
-                // Integer map coords are at the corners, so place
-                // the wall entity centered by offsetting the map coord
-                const wall = {
-                    shape: "rect",
-                    size: map.sprite_size,
-                    scale: xy(1, 1),
-                    pivot: xy(0, 0),
-                    angle: 0°,
-                    pos: transform_map_space_to_ws(map, xy(map_x, map_y) + ½)
-                }
-
-                // Debug visualization on the minimap   
-                if false:
-                    draw_sprite(map.layer[layer][map_x][map_y], wall.pos, ∅, ∅, ∅, 300, #F00C)
-        
-                // Ignore this wall if it is already creating
-                // a collision and velocity is trying to move away 
-                // from it so that we can escape
-                if dot(wall.pos - entity.pos, entity.vel) ≤ 0 or not overlaps(wall, entity):
-                    push(wall_array, wall)
-
-
-    if size(wall_array) == 0:
-        // Nothing to hit (a common case)
-        entity.pos += entity.vel
-        return
-    
-    // If we expected large velocities
-    // compared to the size of the map cells, then
-    // we would alternate between axes in smaller steps
-    // and on failure would binary search for the largest
-    // successful step. Given that this game example moves
-    // slowly compared to the sizes, we just take one large
-    // step
-    for axis in "xy":
-        const old = entity.pos[axis]
-        entity.pos[axis] += entity.vel[axis]
-        for wall in wall_array:
-            if overlaps(entity, wall):
-                // Fail! Undo. 
-                entity.pos[axis] = old
-                break
-
         
 def threshold(src, threshold):
     if is_number(src):
@@ -233,7 +152,7 @@ set_transform(½ SCREEN_SIZE + xy(0, -view.pitch * 2/1°))
 
 draw_floor_and_ceiling(view, dungeon_map)
 draw_walls(view, dungeon_map)
-draw_billboard(view, allagon_sprite[0][0], billboard_pos)
+draw_billboard(view, allagon_sprite[0][0], billboard_pos, 50%)
 
 draw_minimap(view, dungeon_map)
 draw_controls(view.control_scheme, gamepad_array[0], gamepad_array[1])

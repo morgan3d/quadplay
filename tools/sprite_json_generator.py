@@ -200,7 +200,7 @@ def _extract_from_aseprite_json(aseprite_json):
             "start": _frame(tag_data["from"], aseprite_data, size, name),
             "end": _frame(tag_data["to"], aseprite_data, size, name),
             "extrapolate": extrp_map.get(tag_data["direction"], "clamp"),
-            "duration": _extract_durations(
+            "frames": _extract_durations(
                 tag_data["from"],
                 tag_data["to"],
                 aseprite_data

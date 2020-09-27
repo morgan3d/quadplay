@@ -9,7 +9,7 @@ const view = {
     // Yaw increases from 0° at the +z axis clockwise towards the x axis.
     // Start looking "north", which is -z
     yaw: 180°,
-    
+        
     speed: 0,
     spin: 0°,
     
@@ -83,6 +83,10 @@ def draw_background(view):
 def draw_perspective_ground(view, map):
     const left = xy(½ - ½ SCREEN_SIZE.x, 0)
     const right = xy(½ SCREEN_SIZE.x - ½, 0)
+    const span_size = xy(SCREEN_SIZE.x, 0)
+    
+    const offset = 128 xyz(sin(view.yaw), 0, cos(view.yaw))
+    view.pos -= offset
     for (½ - ½ SCREEN_SIZE.y) ≤ y ≤ 0:
         left.y = y
         right.y = y
@@ -105,7 +109,8 @@ def draw_perspective_ground(view, map):
         // plane
         const cs_z = lt_ray.d_cs_z * edge_t * 0.1
         
-        draw_map_horizontal_span(left, SCREEN_SIZE.x, map, min_point, max_point, ∅, ∅, ∅, cs_z, ∅, ∅, true)
+        draw_map_span(left, span_size, map, min_point, max_point, ∅, ∅, ∅, cs_z, ∅, ∅, true)
+    view.pos += offset
 
 
 
@@ -122,8 +127,12 @@ def draw_minimap(map) preserving_transform:
 
 
 def simulate_view(view, gamepad):
-    view.spin = lerp(view.spin, -1° gamepad.x, 25%)
-    view.speed = lerp(view.speed, 3 (gamepad.y or gamepad.a), 10%)
+    const MAX_SPEED = 3
+    const MAX_TURN = 1°
+    view.spin = lerp(view.spin, -MAX_TURN * gamepad.x, 10% max(|view.speed| / MAX_SPEED, 0))
+    view.speed = lerp(view.speed, MAX_SPEED * (gamepad.y or gamepad.a), 8%)
+    if |view.speed| < 20 ε: view.speed = 0
+    view.spin = sign(view.spin) * min(|view.spin|, MAX_TURN * max(|view.speed| / MAX_SPEED, 0))
     
     view.yaw += view.spin
     view.pos += ws_forward(view) * view.speed
@@ -146,6 +155,11 @@ simulate_view(view, gamepad_array[0])
 
 draw_background(view)
 draw_perspective_ground(view, world_map)
+
+local:
+    const u = round(lerp(0, size(car_sprite) - 2,|view.spin / 1°|))
+    const flip = if u > 0 and view.spin < 0 then +1 else -1
+    draw_sprite(car_sprite[u][0], xy(0, -54), ∅, xy(flip, 1))
 
 draw_minimap(world_map)
 

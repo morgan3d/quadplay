@@ -105,9 +105,16 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime) {
         // Compute the best estimate of real time spent on each operation.
         // The graphics time is the actual time spent there, which takes
         // the reduced refresh rate into account.
-        const graphicsTime = this.graphicsAccumTime / N;
-        const physicsTime = this.physicsAccumTime / N;
-        const logicTime = Math.max(this.logicAccumTime / N, 0);
+        let graphicsTime = this.graphicsAccumTime / N;
+        let physicsTime = this.physicsAccumTime / N;
+        let logicTime = Math.max(this.logicAccumTime / N, 0);
+
+        // Assume that at least 15% of the logic time is actually
+        // graphics draw call setup, so that the profiler can estimate
+        // the impact of reducing the refresh rate and avoiding that
+        // overhead. We have no way to measure this precisely in JavaScript.
+        graphicsTime += logicTime * 0.15;
+        logicTime *= 0.85;
         
         this.smoothLogicTime.update(logicTime, N);
         this.smoothPhysicsTime.update(physicsTime, N);

@@ -9,11 +9,11 @@
         "Play"
     ],
     "start_mode": "Play",
-    "docs": [
-    ],
+    "docs": [],
     "assets": {
         "world_map": "world.map.json",
-        "mountains_sprite": "mountains.sprite.json"
+        "mountains_sprite": "mountains.sprite.json",
+        "car_sprite": "car.sprite.json"
     },
     "version": 0,
     "min_players": 1,
@@ -38,5 +38,9 @@
             "description": "3D elevation of the ground plane"
         }
     },
-    "y_up": true
+    "y_up": true,
+    "screen_size": {
+        "x": 320,
+        "y": 180
+    }
 }

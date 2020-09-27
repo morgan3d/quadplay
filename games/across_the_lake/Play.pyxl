@@ -20,4 +20,3 @@ update_camera(skippy_position + xy(14 * skippy_velocity.x, 0))
 draw_game()
 draw_title_ui()
 
-debug_watch(floor(cam_pos.x))

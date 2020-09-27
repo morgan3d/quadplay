@@ -246,10 +246,10 @@
         <center><b style="color:#888">Runtime</b></center>
         <hr>
         <br/>
-        <table style="margin-left: -2px; width: 100%">
+        <table style="margin-left: -2px; width: 100%; border-collapse: collapse">
           <tr><td width=200>Refresh rate</td><td id="debugFrameRateDisplay" class="right"></td><td></td><td></td><td class="right" id="debugFramePeriodDisplay">(1×)</td></tr>
           <tr id="debugIntervalTimeRow"><td width>Frame interval</td><td id="debugIntervalTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&nbsp;ms</td><td id="debugIntervalPercentDisplay" class="right"></td></tr>
-          <tr><td>Frame time</td><td id="debugFrameTimeDisplay" class="right" style="border-bottom: 1px solid"></td><td style="border-bottom: 1px solid">/</td><td class="right"  style="border-bottom: 1px solid">16.7&#8239;ms</td><td id="debugFramePercentDisplay" class="right" style="border-bottom: 1px solid"></td></tr>
+          <tr><td>Frame time</td><td id="debugFrameTimeDisplay" class="right" style="border-bottom: 1px solid" width=50></td><td style="border-bottom: 1px solid">/</td><td class="right"  style="border-bottom: 1px solid">16.7&#8239;ms</td><td id="debugFramePercentDisplay" class="right" style="border-bottom: 1px solid" width=50></td></tr>
           <tr><td>&nbsp;&nbsp;&nbsp;Logic</td><td id="debugCPUTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&#8239;ms</td><td id="debugCPUPercentDisplay" class="right"></td></tr>
           <tr><td>&nbsp;&nbsp;&nbsp;Physics</td><td id="debugPPUTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&#8239;ms</td><td id="debugPPUPercentDisplay" class="right"></td></tr>
           <tr><td>&nbsp;&nbsp;&nbsp;Graphics</td><td id="debugGPUTimeDisplay" class="right"></td><td>/</td><td class="right">16.7&#8239;ms</td><td id="debugGPUPercentDisplay" class="right"></td></tr>
@@ -455,7 +455,7 @@
                 </td>
               </tr>
             </table>
-            <div style="text-align:left; margin-left: 50px; column-width: 100px; margin-top:20px">
+            <div style="text-align:left; margin-left: 20px; column-width: 140px; margin-top:20px">
               <input type="radio" name="newConstantType" value="string"  id="newConstantTypeString" checked><label for="newConstantTypeString">String</label>
               <br/><input type="radio" name="newConstantType" value="number"  id="newConstantTypeNumber"><label for="newConstantTypeNumber">Number</label>
               <br/><input type="radio" name="newConstantType" value="boolean" id="newConstantTypeBoolean"><label for="newConstantTypeBoolean">Boolean</label>
@@ -467,16 +467,17 @@
               <br/><input type="radio" name="newConstantType" value="rgba" id="newConstantTypeRGBA"><label for="newConstantTypeRGBA"><code>rgba()</code></label>
               <br/><input type="radio" name="newConstantType" value="hsv" id="newConstantTypeHSV"><label for="newConstantTypeHSV"><code>hsv()</code></label>
               <br/><input type="radio" name="newConstantType" value="hsva" id="newConstantTypeHSVA"><label for="newConstantTypeHSVA"><code>hsva()</code></label>
-              <br/><input type="radio" name="newConstantType" value="object" id="newConstantTypeObject" disabled><label for="newConstantTypeObject">Object</label>
-              <br/><input type="radio" name="newConstantType" value="array" id="newConstantTypeArray" disabled><label for="newConstantTypeArray">Array</label>
-              <br/><input type="radio" name="newConstantType" value="raw" id="newConstantTypeRaw" disabled><label for="newConstantTypeRaw">JSON/YAML</label>
-              <br/><input type="radio" name="newConstantType" value="reference" id="newConstantTypeReference" disabled><label for="newConstantTypeReference">Reference</label>
+              <br/><input type="radio" name="newConstantType" value="object" id="newConstantTypeObject" disabled><label style="color:#aaa" for="newConstantTypeObject">Object</label>
+              <br/><input type="radio" name="newConstantType" value="array" id="newConstantTypeArray" disabled><label style="color:#aaa" for="newConstantTypeArray">Array</label>
+              <br/><input type="radio" name="newConstantType" value="raw" id="newConstantTypeRaw" disabled><label style="color:#aaa" for="newConstantTypeRaw">Raw&nbsp;JSON/YAML</label>
+              <br/><input type="radio" name="newConstantType" value="table" id="newConstantTypeTable" disabled><label style="color:#aaa" for="newConstantTypeRaw">CSV Table</label>
+              <br/><input type="radio" name="newConstantType" value="reference" id="newConstantTypeReference" disabled><label style="color:#aaa" for="newConstantTypeReference">Reference</label>
             </div>
           </p>
           <button type="button" onclick="hideNewConstantDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span><button type="button" id="newConstantCreateButton" onclick="onNewConstantCreate()">Create</button>
           <p>
-          <i style="font-size:80%">The disabled constant types can be created by modifying the <code>.game.json</code> file in an external
-            editor in this version of quadplay.</i>
+            <i style="font-size:80%">In this version of quadplay✜, the disabled constant types can only be created by modifying the <code>.game.json</code> file on the main
+              project page or in an external editor.</i>
           </p>
         </center>
       </div>
@@ -575,8 +576,9 @@
             <select id="newAssetType" style="width:320px" onchange="onNewAssetTypeChange()">
               <option value="sprite">Sprite</option>
               <option value="sound">Sound</option>
-              <!--  <option value="font">Font</option>
-                   <option value="map">Map</option> -->
+              <option disabled value="font">Font</option>
+              <option disabled value="map">Map</option>
+              <option disabled value="data">Data</option>
             </select>
           </p>
           <p>

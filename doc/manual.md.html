@@ -3316,9 +3316,9 @@ using the full physics engine.
   affect the collision detection.
 
 `ray_intersect(ray, entity)`
-: The `ray` object must have `xy()` fields for `origin`, `direction`,
+: The `ray` object must have `xy()` fields for `pos`, `dir`,
   and an optional number field for `length default infinity`.
-  The `ray.direction` will automatically be normalized.
+  The `ray.dir` will automatically be normalized.
 
   The `entity` has `shape`, `pos`, `size`, and optional `angle`
   properties (an entity satisfies this, but it doesn't have to be a full
@@ -3362,7 +3362,11 @@ using the full physics engine.
   
   `def default_pixel_callback(s, p): return if get_sprite_pixel_color(s, p).a >= 50% then s else nil`
 
-  Does not respect wrapping.
+  Does not respect map wrapping.
+  
+  _The pixel callback is not supported in this release. It will be implemented soon._
+  
+  
 
 ### Engine
 
@@ -4079,15 +4083,18 @@ indices. The map's z-axis corresponds to layers.
   If the game explicitly relocates the camera when it has moved
   off of the end of the map, then it will _appear_ infinite in game.
 
-`draw_map_horizontal_span(start, width, map, map_coord0, map_coord1, min_layer default 0, max_layer_exclusive default +infinity, replacement_array default [], z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp", invert_sprite_y default (get_transform().dir.y < 0))`
-: Draws a horizontal (regardless of the camera) span of constant z with pixel colors taken from the map.
+`draw_map_span(start, size, map, map_coord0, map_coord1, min_layer default 0, max_layer_exclusive default +infinity, replacement_array default [], z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp", invert_sprite_y default (get_transform().dir.y < 0))`
+: Draws a perfectly horizontal (regardless of the camera) span of constant z with pixel colors taken from the map.
   This is a key primitive for building fast perspective rendering of horizontal surfaces.  See the
-  Kart example. It can also be used for 2D textured polygon rendering.
+  Kart and Warlock 3D examples. It can also be used for 2D textured polygon rendering.
   
-  `start` is an `xy()` value on screen at the left edge of the span. `width` is the
-  width of the span. It will be transformed by the camera, but does not rotate.
-  `map_coord0` is an `xy()` in map coordinates for the source colors, which corresponds
-  to the `start` pixel on screen. `map_coord1` is the end coordinate in map coordinates.
+  `start` is an `xy()` value on screen at the left edge of the
+  span. `size` is the extent of the span, which must be 0 along the
+  `y` axis (vertical spans are reserved for future expansion). 
+  The span will be transformed by the camera, but does not rotate.
+  `map_coord0` is an `xy()` in map coordinates for the source colors,
+  which corresponds to the `start` pixel on screen. `map_coord1` is
+  the end coordinate in map coordinates.
   
   `map`, `replacement_array`, `min_layer`, `max_layer_exclusive`, and `invert_sprite_y` 
   are as for `get_map_pixel_color()`.
@@ -4702,6 +4709,9 @@ and other operations that naturally compile with maximum efficiency.
 `XY_DIV(srcxy1, srcs2, dstxy)`
 : Vector-scalar quotient.
 
+`XY_DIRECTION(srcxy, dstxy)`
+: Normalize vector (or zero vector).
+
 `XY_DOT_XY(srcxy1, srcxy2)`
 : Returns the scalar result.
 
@@ -4726,6 +4736,9 @@ and other operations that naturally compile with maximum efficiency.
 `XZ_DIV(srcxz1, srcs2, dstxz)`
 : Vector-scalar quotient.
 
+`XZ_DIRECTION(srcxz, dstxz)`
+: Normalize vector (or zero vector).
+
 `XZ_DOT_XZ(srcxz1, srcxz2)`
 : Returns the scalar result.
 
@@ -4746,6 +4759,9 @@ and other operations that naturally compile with maximum efficiency.
 
 `XYZ_DIV(srcxyz1, srcs2, dstxyz)`
 : Vector-scalar quotient.
+
+`XYZ_DIRECTION(srcxyz, dstxyz)`
+: Normalize vector (or zero vector).
 
 `XYZ_DOT_XYZ(srcxyz1, srcxyz2)`
 : Returns the scalar result.
@@ -7658,7 +7674,7 @@ behind them when not using perspective, so you don't have to leave out
 the hidden map tiles for performance when drawing maps. Maps with
 opaque tiles that are not rotated or scaled draw extremely fast.
 
-`draw_map_horizontal_span()` is substantially faster than your own 
+`draw_map_span()` is substantially faster than your own 
 per-pixel rendering using `get_map_pixel_color()` and `draw_point()`.
 It is fastest when using opaque map tiles, a single layer of a map, and
 no override color. The Kart example program intentionally uses a slower 
@@ -7936,7 +7952,7 @@ Change Log
 Changes for both the specification and implementation in each release.
 
 
-2020 September 26: Beta update 49
+2020 September 27: Beta update 49
 
 - New _Kart_ example of a perspective ground plane
 - New _Warlock 3D_ example of a first person viewpoint
@@ -7950,6 +7966,7 @@ Changes for both the specification and implementation in each release.
 - Added `device_control("set_mouse_lock")`
 - Added `.data.json` files for large assets in arbitrary formats
 - Added `set_playback_rate()` for audio
+- Added `draw_map_span()`
 - Added IDE context menu option to remove a mode from the game
 - Added IDE context menu option to remove a document from the game
 - Allowed leading underscores on variable and member names
@@ -7963,8 +7980,7 @@ Changes for both the specification and implementation in each release.
 - Fixed polygons, triangles, and rectangles rotating the wrong way under camera transforms
   when the Y-axis is up
 - Fixed `get_map_pixel_color()` on tiling maps
-- Known bugs:
-   - `ray_intersect_map()` pixel callbacks not implemented 
+- Incompatible change: `ray.origin` --> `ray.pos`, `ray.direction` --> `ray.dir`
 
 
 2020 September 12: Beta update 48

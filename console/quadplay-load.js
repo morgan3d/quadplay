@@ -369,83 +369,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         } // Assets
 
         // Constants:
-        gameSource.constants = {};
-        if (gameJSON.constants) {
-            // Sort constants alphabetically
-            const keys = Object.keys(gameJSON.constants);
-            keys.sort();
-            let hasReferences = false;
-            for (let i = 0; i < keys.length; ++i) {
-                const c = keys[i];
-                const definition = gameJSON.constants[c];
-                if ((definition.type === 'raw') && (definition.url !== undefined)) {
-                    // Raw value loaded from a URL
-                    const constantURL = makeURLAbsolute(gameURL, definition.url);
-                    if (/\.json$/.test(constantURL)) {
-                        loadManager.fetch(constantURL, 'json', nullToUndefined, function (data) {
-                            gameSource.constants[c] = data;
-                        }, undefined, undefined, true);
-                    } else if (/\.yml$/.test(constantURL)) {
-                        loadManager.fetch(constantURL, 'text', null, function (yaml) {
-                            const json = jsyaml.safeLoad(yaml);
-                            gameSource.constants[c] = nullToUndefined(json);
-                        }, undefined, undefined, true);
-                    } else {
-                        throw 'Unsupported file format for ' + definition.url;
-                    }
-                } else if ((definition.type === 'table') && (definition.url !== undefined)) {
-                    // Raw value loaded from a URL
-                    const constantURL = makeURLAbsolute(gameURL, definition.url);
-                    loadCSV(constantURL, definition, gameSource.constants, c);
-                    
-                } else if (definition.type === 'reference') {
-                    // Defer
-                    hasReferences = true;
-                } else {
-                    // Inline value
-                    gameSource.constants[c] = evalJSONGameConstant(definition);
-                }
-            }
-
-            // Now evaluate references
-            if (hasReferences) {
-                for (let i = 0; i < keys.length; ++i) {
-                    const c = keys[i];
-                    let definition = gameJSON.constants[c];
-                    if (definition.type === 'reference') {
-                        // Recursively evaluate references until an actual
-                        // value is encountered.
-                        let id = undefined;
-                        const alreadySeen = new Map();
-                        alreadySeen.set(c, true);
-                        let path = c;
-                        do {
-                            id = definition.value;
-                            path += ' → ' + id;
-                            if (alreadySeen.has(id)) {
-                                throw 'Cycle in reference chain: ' + path;
-                            }
-                            definition = gameJSON.constants[id];
-                        } while (definition && definition.type === 'reference');
-
-                        // Check the JSON for the assets, not the source---assets haven't
-                        // yet loaded as they are asynchronous
-                        if ((id in gameSource.constants) || (id in gameJSON.assets)) {
-                            // Store the *original* reference, which
-                            // will be re-traversed per call at
-                            // runtime to ensure that changes are
-                            // consistent when debugging (this is not
-                            // the fastest choice...we could instead
-                            // make the debugger re-evalue the full
-                            // constant chain for all forward and backward references).
-                            gameSource.constants[c] = new GlobalReference(gameJSON.constants[c].value);
-                        } else {
-                            throw 'Unresolved reference: ' + path;
-                        }
-                    }
-                }
-            } // has references
-        }
+        gameSource.constants = loadConstants(gameJSON.constants, gameURL);
 
         // Docs: Load the names, but do not load the documents themselves.
         gameSource.docs = [];
@@ -466,6 +390,95 @@ function afterLoadGame(gameURL, callback, errorCallback) {
     }, loadFailureCallback, loadWarningCallback, computeForceReloadFlag(gameURL));
 
     loadManager.end();
+}
+
+
+/* Constants json is the table of constants as loaded directly from
+   game.json or debug.json.
+
+   Returns a table of evaluated constants. If constantsJson is undefined,
+   that table is empty.
+*/
+function loadConstants(constantsJson, gameURL) {
+    if (! constantsJson) { return {}; }
+
+    const result = {};
+    
+    // Sort constants alphabetically
+    const keys = Object.keys(constantsJson);
+    keys.sort();
+    let hasReferences = false;
+    for (let i = 0; i < keys.length; ++i) {
+        const c = keys[i];
+        const definition = constantsJson[c];
+        if ((definition.type === 'raw') && (definition.url !== undefined)) {
+            // Raw value loaded from a URL
+            const constantURL = makeURLAbsolute(gameURL, definition.url);
+            if (/\.json$/.test(constantURL)) {
+                loadManager.fetch(constantURL, 'json', nullToUndefined, function (data) {
+                    result[c] = data;
+                }, undefined, undefined, true);
+            } else if (/\.yml$/.test(constantURL)) {
+                loadManager.fetch(constantURL, 'text', null, function (yaml) {
+                    const json = jsyaml.safeLoad(yaml);
+                    result[c] = nullToUndefined(json);
+                }, undefined, undefined, true);
+            } else {
+                throw 'Unsupported file format for ' + definition.url;
+            }
+        } else if ((definition.type === 'table') && (definition.url !== undefined)) {
+            // Raw value loaded from a URL
+            const constantURL = makeURLAbsolute(gameURL, definition.url);
+            loadCSV(constantURL, definition, gameSource.constants, c);
+        } else if (definition.type === 'reference') {
+            // Defer
+            hasReferences = true;
+        } else {
+            // Inline value
+            result[c] = evalJSONGameConstant(definition);
+        }
+    }
+
+    // Now evaluate references
+    if (hasReferences) {
+        for (let i = 0; i < keys.length; ++i) {
+            const c = keys[i];
+            let definition = constantsJson[c];
+            if (definition.type === 'reference') {
+                // Recursively evaluate references until an actual
+                // value is encountered.
+                let id = undefined;
+                const alreadySeen = new Map();
+                alreadySeen.set(c, true);
+                let path = c;
+                do {
+                    id = definition.value;
+                    path += ' → ' + id;
+                    if (alreadySeen.has(id)) {
+                        throw 'Cycle in reference chain: ' + path;
+                    }
+                    definition = constantsJson[id];
+                } while (definition && definition.type === 'reference');
+
+                // Check the JSON for the assets, not the source---assets haven't
+                // yet loaded as they are asynchronous
+                if ((id in result) || (id in gameJSON.assets)) {
+                    // Store the *original* reference, which
+                    // will be re-traversed per call at
+                    // runtime to ensure that changes are
+                    // consistent when debugging (this is not
+                    // the fastest choice...we could instead
+                    // make the debugger re-evalue the full
+                    // constant chain for all forward and backward references).
+                    result[c] = new GlobalReference(constantsJson[c].value);
+                } else {
+                    throw 'Unresolved reference: ' + path;
+                }
+            }
+        }
+    } // has references
+
+    return result;
 }
 
 
