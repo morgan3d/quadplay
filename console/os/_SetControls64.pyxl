@@ -18,12 +18,29 @@ const line_height = round(110% font.line_height) + 1
 let choiceArray = ["P1", "P2", "P3", "P4", "Done"]
 let choiceIndex
 
+let old_transform
+let old_clip
+let old_post_effects
+let old_background
 
 
 enter
 ────────────────────────────────────────────────────────────────────────
 choiceIndex = 0
+old_background = get_background()
+old_transform = get_transform()
+old_clip = get_clip()
+old_post_effects = get_post_effects()
+reset_post_effects()
 
+
+leave
+────────────────────────────────────────────────────────────────────────
+
+set_transform(old_transform)
+set_clip(old_clip)
+set_post_effects(old_post_effects)
+set_background(old_background)
 
 
 frame

@@ -186,6 +186,8 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             function (debugJSON) {
                 // Store the debugJSON contents
                 gameSource.debug = debugJSON;
+
+                // TODO: Parse constants
             },
             function () {
                 // Tell the LoadManager that this is an acceptable failure
@@ -399,7 +401,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
    Returns a table of evaluated constants. If constantsJson is undefined,
    that table is empty.
 */
-function loadConstants(constantsJson, gameURL, gameJSON) {
+function loadConstants(constantsJson, gameURL, gameJSON, isDebugLayer) {
     if (! constantsJson) { return {}; }
 
     const result = {};
@@ -412,6 +414,10 @@ function loadConstants(constantsJson, gameURL, gameJSON) {
         const c = keys[i];
         const definition = constantsJson[c];
         if ((definition.type === 'raw') && (definition.url !== undefined)) {
+            if (isDebugLayer) {
+                throw 'raw url constants not supported in debug.json (' + c + ')';
+            }
+            
             // Raw value loaded from a URL
             const constantURL = makeURLAbsolute(gameURL, definition.url);
             if (/\.json$/.test(constantURL)) {
@@ -427,6 +433,9 @@ function loadConstants(constantsJson, gameURL, gameJSON) {
                 throw 'Unsupported file format for ' + definition.url;
             }
         } else if ((definition.type === 'table') && (definition.url !== undefined)) {
+            if (isDebugLayer) {
+                throw 'table url constants not supported in debug.json (' + c + ')';
+            }
             // Raw value loaded from a URL
             const constantURL = makeURLAbsolute(gameURL, definition.url);
             loadCSV(constantURL, definition, gameSource.constants, c);
@@ -439,6 +448,7 @@ function loadConstants(constantsJson, gameURL, gameJSON) {
         }
     }
 
+    
     // Now evaluate references
     if (hasReferences) {
         for (let i = 0; i < keys.length; ++i) {

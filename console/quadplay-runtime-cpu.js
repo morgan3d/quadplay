@@ -1212,7 +1212,7 @@ function get_transform() {
     return {pos:  xy($offsetX, $offsetY),
             dir:  xy($scaleX, $scaleY),
             z:    $offsetZ,
-            zDir: $scaleZ,
+            z_dir: $scaleZ,
             skew: xy($skewXZ, $skewYZ)
            };
 }
@@ -1294,9 +1294,9 @@ function compose_transform(pos, dir, addZ, scaleZ, skew) {
 
 function set_transform(pos, dir, addZ, scaleZ, skew) {
     if (arguments.length === 0) { $error("set_transform() called with no arguments"); }
-    if (is_object(pos) && (('pos' in pos) || ('dir' in pos) || ('z' in pos) || ('skew' in pos))) {
+    if (is_object(pos) && (('pos' in pos) || ('dir' in pos) || ('z' in pos) || ('z_dir' in pos) || ('skew' in pos))) {
         // Argument version
-        return set_transform(pos.pos, pos.dir, pos.z, pos.skew);
+        return set_transform(pos.pos, pos.dir, pos.z, pos.z_dir, pos.skew);
     }
 
     let addX, addY, scaleX, scaleY, skewXZ, skewYZ;

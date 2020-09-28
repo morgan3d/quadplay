@@ -98,27 +98,36 @@ for p < 4: push(playerName, "P" + (p + 1) + ": ")
 // The player to show controls for. Only used at 64x64
 let activeIndex = nil
 
-let oldBackground
+
+let old_transform
+let old_clip
+let old_post_effects
+let old_background
+
 
 
 enter(p)
 ────────────────────────────────────────────────────────────────────────
 activeIndex = p
-oldBackground = get_background()
-set_clip(xy(0, 0), SCREEN_SIZE, -2047, 4096)
-reset_transform()
+
+old_background = get_background()
+old_transform = get_transform()
+old_clip = get_clip()
+old_post_effects = get_post_effects()
+reset_post_effects()
+set_background(window_background_color)
 
 
 leave
 ────────────────────────────────────────────────────────────────────────
-set_background(oldBackground)
-
+set_transform(old_transform)
+set_clip(old_clip)
+set_post_effects(old_post_effects)
+set_background(old_background)
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
-
-set_background(window_background_color)
 
 // "Press P when done"
 if SCREEN_SIZE.x == 64:

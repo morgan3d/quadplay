@@ -29,6 +29,7 @@ else if SCREEN_SIZE.y <= 180: font = $font8
 
 
 def close(callback):
+    debug_print("Running close in SystemMenu")
     pop_mode(callback)
    
 
@@ -88,6 +89,7 @@ line_height = round(110% font.line_height)
 if SCREEN_SIZE.y <= 64: ++line_height
 
 for c in choice_array: max_choice_width = max(max_choice_width, text_width(font, c.text))
+
 
 leave
 ────────────────────────────────────────────────────────────────────────

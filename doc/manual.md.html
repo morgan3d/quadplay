@@ -5209,7 +5209,9 @@ options. Project files should have the double extension `.game.json`.
           "upgrades": {"type": "array", "value": [10, 7, 3, 1]},
           "hp": 50,
           "inventory": {"type": "object", "value": {"food": 4, "sword": "a sword"}}}},
-          
+
+      "start_role": {"type": "reference", "value": "knight"},
+
       "numbers": {"type": "array", "value": [
         {"type": "number", "value": "10"},
         {"type": "number", "value": "infinity"}]},
@@ -5568,6 +5570,9 @@ The constants override the equivalent constants from the `.game.json`
 file (unless they are not enabled). Extra constants specified only
 in the `.debug.json` file are ignored; they are not mapped at runtime.
 
+Constant types that require external data are not supported in the `debug.json`
+file. These are `raw` constants loaded from a JSON or YAML url,
+and `table` constants loaded from a CSV url.
 
 
 Sprite JSON
@@ -7950,6 +7955,12 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 October TBD: Beta update 50
+
+- Fixed `z_dir` not being properly set or read by the argument object
+  versions of `set_transform()` and `get_transform()`
+- Fixed system pause menu at 64x64 not restoring clip and transform
 
 
 2020 September 27: Beta update 49
