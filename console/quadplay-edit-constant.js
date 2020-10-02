@@ -37,41 +37,75 @@ function htmlColor4Bit(value) {
 /* Called from onProjectSelect() */
 function showConstantEditor(index) {
     const constantEditor = document.getElementById('constantEditor');
-    const c = gameSource.constants[index];
+    const value = gameSource.constants[index];
     const json = gameSource.json.constants[index];
-    const debugJSON = (gameSource.debug.constants ? gameSource.debug.constants[index] : undefined)
-    const type = json.type || typeof c;
+    const debugJSON = (gameSource.debug.json && gameSource.debug.json.constants ? gameSource.debug.json.constants[index] : undefined)
 
     let html = '';
+        
+    const constantName = index;
+    const controlName = index;
+    const debugControlName = '$debug_' + index;
 
+    html += makeConstantEditorControlHTML(constantName, controlName, json, value, false);
+    
+    if (json.description && json.description !== '') {
+        html = '<p><i>' + json.description + '</i></p>' + html;
+    }
+
+    const debugEnabled = debugJSON !== undefined && debugJSON.enabled;
+    html += `<br/><br/><label><input type="checkbox" style="margin-left:24px" autocomplete="false" ${debugEnabled ? 'checked' : ''} onchange="onConstantEditorDebugOverrideChange(gameSource, '${constantName}', this)">Debug&nbsp;Override</label>`;
+    if (debugEnabled) {
+        html += '<div style="margin-left:24px; margin-top:4px; width:100%; border: 1px #E0BD33 solid; border-radius: 4px; padding: 2px; padding-top:6px; padding-bottom: 5px; background: #444">';
+        html += `<div id="${controlName}_debug_div" ${debugEnabled ? '' : 'disabled'}>`;
+       
+        if (gameSource.debug.constants && gameSource.debug.constants[constantName]) {
+            let debugValue = gameSource.debug.constants[constantName];
+            if (debugValue.type !== undefined) {
+                // Not a raw value
+                debugValue = debugValue.value;
+            }
+            html += makeConstantEditorControlHTML(constantName, debugControlName, gameSource.debug.json.constants[constantName], debugValue, true);
+        }
+        html += '</div></div>';
+    }
+    
+    constantEditor.innerHTML = html;
+    constantEditor.style.visibility = 'visible';
+}
+
+
+function makeConstantEditorControlHTML(constantName, controlName, json, value, isDebugLayer) {
+    let html = '';
+    const type = json.type || typeof value;
     const disabled = editableProject ? '' : 'disabled';
     if (type === 'string') {
-        html += `${index} = "<textarea style="vertical-align:top; margin-left:1px; margin-right:2px;" autocomplete="false" ${disabled} onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.value, this.value)" rows=4 cols=40>${c}</textarea>"`;
-    } else if (c === undefined || c === null) {
-        html += index + ' = <code>∅</code>';
+        html += `${constantName} = "<textarea style="vertical-align:top; margin-left:1px; margin-right:2px;" autocomplete="false" ${disabled} onchange="onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.value, this.value)" rows=4 cols=40>${value}</textarea>"`;
+    } else if (value === undefined || value === null) {
+        html += constantName + ' = <code>∅</code>';
     } else if (type === 'number') {
-        const value = (typeof json === 'number') ? c : json.value;
-        html += `${index} = <input style="width:100px; text-align: right" type="text" onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', $parse(this.value, 0).result, this.value)" autocomplete="false" ${disabled} value="${value}">`;
+        const numValue = (typeof json === 'number') ? value : json.value;
+        html += `${constantName} = <input style="width:100px; text-align: right" type="text" onchange="onConstantEditorValueChange(gameSource, QRuntime, '${constantName}', $parse(this.value, 0).result, this.value)" autocomplete="false" ${disabled} value="${numValue}">`;
         html += '<br/><br/><i>All PyxlScript number formats supported. For example, <code>10, -3, 1.5, 2pi, 90deg, 90°, -∞, π, ½</code></i>';
     } else if (type === 'boolean') {
-        html += `<input type="checkbox" autocomplete="false" onchange="onConstantEditorValueChange(gameSource, QRuntime, '${index}', this.checked, this.checked)" ${disabled} ${c ? 'checked' : ''}> ${index}`;
+        html += `<input type="checkbox" autocomplete="false" onchange="onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.checked, this.checked)" ${disabled} ${value ? 'checked' : ''}> ${constantName}`;
     } else if (type === 'xy' || type === 'xz' || type === 'xyz' ||
                type === 'rgb' || type === 'rgba' ||
                type === 'hsv' || type === 'hsva') {
 
         const fields = type;
         
-        const onchange = `onConstantEditorVectorValueChange(gameSource, QRuntime, '${index}', '${fields}', event)`;
+        const onchange = `onConstantEditorVectorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', '${fields}', event)`;
 
-        html += `${index} = {<table style="margin-left:10px">`;
+        html += `${constantName} = {<table style="margin-left:10px">`;
 
         // Preserve the unparsed json formatting if available
         for (let i = 0; i < fields.length; ++i) {
             const element = fields[i];
             
             // Start with the already-parsed value as a backup
-            let value = json.value[element].type ? json.value[element].value : c[element];
-            html += `<tr><td>${element}:</td><td style="white-space: nowrap"><input id="constantEditor_${index}_${element}" onchange="${onchange}" style="width:80px; text-align: right; margin-left: 1px; margin-right: 1px" type="text" autocomplete="false" ${disabled} value="${value}">`;
+            let elementValue = json.value[element].type ? json.value[element].value : value[element];
+            html += `<tr><td>${element}:</td><td style="white-space: nowrap"><input id="constantEditor_${controlName}_${element}" onchange="${onchange}" style="width:80px; text-align: right; margin-left: 1px; margin-right: 1px" type="text" autocomplete="false" ${disabled} value="${elementValue}">`;
             html +=  (i < fields.length - 1) ? ', ' : '';
             html += '</td></tr>';
         }
@@ -83,7 +117,7 @@ function showConstantEditor(index) {
             // Position editor
             
             // The arrow characters here must be kept in sync with onConstantEditorVectorNudge
-            const buttonParams = ` style="width:24px; height:24px; font-weight: bold; font-family: sans-serif" onclick="onConstantEditorVectorNudge('constantEditor_${index}', '${type}', this.innerText)"`;
+            const buttonParams = ` style="width:24px; height:24px; font-weight: bold; font-family: sans-serif" onclick="onConstantEditorVectorNudge(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, 'constantEditor_${controlName}', '${type}', this.innerText)"`;
             editor = `<table style="border-collapse:collapse"><tr><td></td><td><button ${buttonParams} title="+${type[1]}">↑</button></td><td>` + (type.length === 3 ? `<button ${buttonParams} title="-z">↗</button>` : '') + `</td></tr>` +
                 `<tr><td><button ${buttonParams} title="-x">←</button></td><td></td><td><button ${buttonParams} title="+x">→</button></td></tr>` +
                 `<tr><td>` + (type.length === 3 ? `<button ${buttonParams} title="+z">↙</button>` : '') + `</td><td><button ${buttonParams} title="-${type[1]}">↓</button></td><td></td></tr></table>`;
@@ -100,14 +134,14 @@ function showConstantEditor(index) {
             
             for (let i = 0; i < fields.length; ++i) {
                 const element = fields[i];
-                metaEditor += `<tr><td>Δ${element}</td><td><input id="constantEditor_${index}_nudge_${element}" type="text" value="${json.nudge[element]}" onchange="${onchange}" style="width:32px; text-align:right"></input></td></tr>`;
+                metaEditor += `<tr><td>Δ${element}</td><td><input id="constantEditor_${controlName}_nudge_${element}" type="text" value="${json.nudge[element]}" onchange="${onchange}" style="width:32px; text-align:right"></input></td></tr>`;
             }
             metaEditor += '</table>';
         } else if (type === 'rgb' || type === 'rgba' || type === 'hsv' || type === 'hsva') {
             // Color editor
 
             // Display color
-            editor = `<br><div style="border-radius: 4px; border: 1px solid #000; width: 64px; height: 64px; overflow: hidden" class="checkerboard"><div id="constantEditor_${index}_preview" style="background: ${htmlColor4Bit(c)}; width: 64px; height: 64px"> </div></div>`;
+            editor = `<br><div style="border-radius: 4px; border: 1px solid #000; width: 64px; height: 64px; overflow: hidden" class="checkerboard"><div id="constantEditor_${controlName}_preview" style="background: ${htmlColor4Bit(value)}; width: 64px; height: 64px"> </div></div>`;
             
             // Sliders
             if (editableProject) {
@@ -117,7 +151,7 @@ function showConstantEditor(index) {
                 editor = '<br><table>';
                 for (let i = 0; i < fields.length; ++i) {
                     const element = fields[i];
-                    editor += `<tr><td><input id="constantEditor_${index}_slider_${element}" type="range" oninput="onConstantEditorVectorSliderChange('constantEditor_${index}', '${type}', '${element}', this.value / 255)" style="height: 1em" min="0" max="255" value="${255 * c[element]}"></input></td></tr>`;
+                    editor += `<tr><td><input id="constantEditor_${controlName}_slider_${element}" type="range" oninput="onConstantEditorVectorSliderChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, 'constantEditor_${controlName}', '${type}', '${element}', this.value / 255)" style="height: 1em" min="0" max="255" value="${255 * value[element]}"></input></td></tr>`;
                 }
                 editor += '</table>';
             }
@@ -128,42 +162,79 @@ function showConstantEditor(index) {
             html = '<table style="border-collapse: collapse"><tr valign="top"><td>' + html + '</td><td style="padding-left: 10px">' + editor + '</td><td>' + metaEditor + '</td></tr></table>';
         }
     } else if (type === 'reference') {
-        html += index + ' → ' + json.value;
+        html += constantName + ' → ' + json.value;
     } else {
         // Object or array (including built-in objects)
-        const L = Object.keys(c).length;
-        const s = QRuntime.unparse(c);
+        const L = Object.keys(value).length;
+        const s = QRuntime.unparse(value);
         if (s.length > 16) {
-            html += index + ' = <table>' + visualizeConstant(c, '') + '</table>';
+            html += constantName + ' = <table>' + visualizeConstant(value, '') + '</table>';
         } else {
-            html += index + ' = ' + escapeHTMLEntities(s);
+            html += constantName + ' = ' + escapeHTMLEntities(s);
         }
     }
-
-    if (json.description && json.description !== '') {
-        html = '<p><i>' + json.description + '</i></p>' + html;
-    }
-
-    const debugEnabled = debugJSON !== undefined && debugJSON.enabled;
-    // TODO: Create callbacks
-    html += `<div style="width:100%; border: 1px solid; border-radius: 4px; padding: 2px; margin-top:10px"><input type="checkbox" ${debugEnabled ? 'checked' : ''}>Debug&nbsp;Override</input>`;
-    html += `<div id="${index}_debug_div" ${debugEnabled ? '' : 'disabled'}>`;
-    // TODO: Put the control here
-    html += '</div></div>';
-    
-    constantEditor.innerHTML = html;
-    constantEditor.style.visibility = 'visible';
+    return html;
 }
 
 
-function onConstantEditorVectorSliderChange(idPrefix, type, field, value) {
-    const textBox = document.getElementById(idPrefix + '_' + field);
+function onConstantEditorDebugOverrideChange(gameSource, name, checkbox) {
+    // Ensure that the constant exists in the json
+    let created = false;
+    if (! gameSource.debug.json) {
+        gameSource.debug.json = {};
+        created = true;
+    }
+    
+    if (! gameSource.debug.json.constants) {
+        gameSource.debug.json.constants = {};
+        created = true;
+    }
+    
+    if (! gameSource.debug.json.constants[name]) {
+        // Copy from the non-debug version
+        gameSource.debug.json.constants[name] = deep_clone(gameSource.json.constants[name]);
+        if (gameSource.debug.json.constants[name].type === 'reference') {
+            gameSource.debug.constants[name] = new GlobalReferenceDefinition(name, gameSource.debug.json.constants[name]);
+        } else {
+            gameSource.debug.constants[name] = evalJSONGameConstant(gameSource.debug.json.constants[name]);
+        }
+        created = true;
+    }
+
+    if (typeof gameSource.debug.json.constants[name] !== 'object') {
+        // Wrap raw constants
+        const value = gameSource.debug.json.constants[name];
+        if (value === undefined || value === null) {
+            gameSource.debug.json.constants[name] = {type: 'nil'};
+        } else {
+            gameSource.debug.json.constants[name] = {type: typeof value,
+                                                     value: value};
+        }
+        created = true;
+    }
+    
+    gameSource.debug.json.constants[name].enabled = checkbox.checked;
+    serverSaveDebugJSON(function () {
+        // Recreate the UI
+        showConstantEditor(name);
+    });
+
+    // if the game is running, update the live constant
+    if (emulatorMode !== 'stop') {
+        redefineConstantByName(QRuntime, name);
+    }
+}
+
+
+function onConstantEditorVectorSliderChange(gameLayer, controlName, type, field, value) {
+    const textBox = document.getElementById(controlName + '_' + field);
     textBox.value = Math.round(100 * value) + '%';
     textBox.onchange();
 }
 
+
 /** Called when a direction button is pressed on a vector editor */
-function onConstantEditorVectorNudge(idPrefix, type, direction) {
+function onConstantEditorVectorNudge(gameLayer, controlName, type, direction) {
     let field = '';
     let sign = 1;
     
@@ -178,8 +249,8 @@ function onConstantEditorVectorNudge(idPrefix, type, direction) {
     case '↙': field = type[2]; break;
     }
 
-    const textBox = document.getElementById(idPrefix + '_' + field);
-    const nudgeBox = document.getElementById(idPrefix + '_nudge_' + field);
+    const textBox = document.getElementById(controlName + '_' + field);
+    const nudgeBox = document.getElementById(controlName + '_nudge_' + field);
     const step = $parse(nudgeBox.value).result;
     const newValue = $parse(textBox.value).result + step * sign;
     textBox.value = newValue;
@@ -190,9 +261,8 @@ function onConstantEditorVectorNudge(idPrefix, type, direction) {
     single-letter fields or an array of multi-letter ones.
 
     If the event is undefined, then this was programmatically invoked. */
-function onConstantEditorVectorValueChange(sourceObj, environment, key, fields, event) {
-    
-    const json  = sourceObj.json.constants[key];
+function onConstantEditorVectorValueChange(gameLayer, environment, controlName, key, fields, event) {
+    const json = gameLayer.json.constants[key];
     console.assert(json !== undefined);
     for (let f = 0; f < fields.length; ++f) {
         const element = fields[f];
@@ -203,46 +273,44 @@ function onConstantEditorVectorValueChange(sourceObj, environment, key, fields, 
         if (! json.value[element].type) { json.value[element] = {type: 'number', value: undefined}; }
 
         // Update value
-        json.value[element].value = document.getElementById('constantEditor_' + key + '_' + element).value;
+        json.value[element].value = document.getElementById('constantEditor_' + controlName + '_' + element).value;
 
         if (json.nudge) {
-            json.nudge[element] = document.getElementById('constantEditor_' + key + '_nudge_' + element).value;
+            json.nudge[element] = document.getElementById('constantEditor_' + controlName + '_nudge_' + element).value;
         }
     }
 
     const value = evalJSONGameConstant(json);
 
     // Update the color preview
-    const type = sourceObj.json.constants[key].type;
+    const type = json.type;
     if (type === 'rgb' || type === 'rgba' ||
         type === 'hsv' || type === 'hsva') {
-        const preview = document.getElementById('constantEditor_' + key + '_preview');
+        const preview = document.getElementById('constantEditor_' + controlName + '_preview');
         preview.style.background = htmlColor4Bit(value);
 
         // Update sliders
         for (let i = 0; i < type.length; ++i) {
             const field = type[i];
-            const slider = document.getElementById('constantEditor_' + key + '_slider_' + field);
+            const slider = document.getElementById('constantEditor_' + controlName + '_slider_' + field);
             slider.value = value[field] * 255;
         }
     }
     
     // Pass down to the generic value change handler
-    onConstantEditorValueChange(sourceObj, environment, key, value, json.value, null);
+    onConstantEditorValueChange(gameLayer, environment, controlName, key, value, json.value, null);
 }
 
 
 /** Value is the numeric value to assign. jsonValue is what to store in the .value
     field of the game.json file. */
-function onConstantEditorValueChange(sourceObj, environment, key, value, jsonValue) {
-    const json = sourceObj.json.constants;
-
+function onConstantEditorValueChange(gameLayer, environment, controlName, key, value, jsonValue) {
     // Update pre-evaluated objects
-    sourceObj.constants[key] = value;
+    gameLayer.constants[key] = value;
     
     // Update gameSource.json.constants
-    if (typeof json[key] === 'object') {
-        const obj = json[key];
+    if (typeof gameLayer.json.constants[key] === 'object') {
+        const obj = gameLayer.json.constants[key];
         console.assert(obj.type !== 'raw');
         obj.value = value;
     } else {
@@ -252,31 +320,34 @@ function onConstantEditorValueChange(sourceObj, environment, key, value, jsonVal
         case 'number':
         case 'string':
         case 'boolean':
-            json[key] = {type: typeof value, value: jsonValue};
+            gameLayer.json.constants[key] = {type: typeof value, value: jsonValue};
             break;
             
         case 'object':
             console.assert(value === null);
             // Fall through
         case 'undefined':
-            json[key] = {type: 'nil'};
+            gameLayer.json.constants[key] = {type: 'nil'};
             break;
 
         default:
             // A more complex object
-            json[key].value = jsonValue;
+            gameLayer.json.constants[key].value = jsonValue;
             break;
         }
     }
     
     // Set a timer to save the game.json
-    if (sourceObj === gameSource) {
+    if (gameLayer === gameSource) {
         serverScheduleSaveGameJSON(CONSTANT_EDITOR_SAVE_DELAY);
+    } else if (gameLayer === gameSource.debug) {
+        // There is no save delay implemented for the debug layer currently
+        serverSaveDebugJSON();
     }
     
     // if the game is running, update the live constant
     if (emulatorMode !== 'stop') {
-        redefineConstant(environment, key, value);
+        redefineConstantByName(environment, key);
     }
 }
 

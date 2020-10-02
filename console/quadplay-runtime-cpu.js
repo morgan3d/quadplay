@@ -355,8 +355,16 @@ function $defaultComparator(a, b) {
     return (a < b) ? -1 : (a > b) ? 1 : 0;
 }
 
+
 function $defaultReverseComparator(b, a) {
     return (a < b) ? -1 : (a > b) ? 1 : 0;
+}
+
+
+function sorted(array, k, reverse) {
+    array = clone(array);
+    sort(array, k, reverse);
+    return array;
 }
 
 
@@ -4486,14 +4494,14 @@ function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_
 
     // TODO: Remove when height spans are permitted
     if (size.y !== 0) {
-        _error('draw_map_span() size must be zero along the y axis');
+        $error('draw_map_span() size must be zero along the y axis');
     }
 
     if (size.x !== 0 && size.y !== 0) {
-        _error('draw_map_span() size must be zero along at most one dimension');
+        $error('draw_map_span() size must be zero along at most one dimension');
     }
     if (size.x < 0 || size.y < 0) {
-        _error('draw_map_span() size must be nonnegative');
+        $error('draw_map_span() size must be nonnegative');
     }
     
     override_blend = override_blend || "lerp";
@@ -8220,18 +8228,21 @@ function pow(a, b) {
 //
 //
 
-function find_map_path(map, start, goal, edgeCost, costLayer) {
+function find_map_path(map, start, goal, edgeCost, costLayer, use_sprite_id) {
+    if (use_sprite_id === undefined) { use_sprite_id = true; }
+    
     if (is_array(edgeCost)) {
         // Create an edgeTable
         const edgeTable = new Map();
         for (let i = 0; i < edgeCost.length; i += 2) {
-            edgeTable.set(edgeCost[i], edgeCost[i + 1]);
+            edgeTable.set(use_sprite_id ? edgeCost[i].id : edgeCost[i], edgeCost[i + 1]);
         }
         
         edgeCost = function (A, B, m) {
-            if (B === undefined) { return infinity; }
-            const c = edgeTable.get(B);
-            return (c === undefined) ? 1 : c;
+            const sprite = get_map_sprite(map, B, costLayer);
+            if (sprite === undefined) { return 1; }
+            const cost = edgeTable.get(use_sprite_id ? sprite.id : sprite);
+            return (cost === undefined) ? 1 : cost;
         };
     }
 
@@ -8484,8 +8495,13 @@ function find_path(start, goal, costEstimator, edgeCost, getNeighbors, nodeToID,
 
         // Last node on the shortest path
         const P = shortest.last;
+
+        const node_id = nodeToID(P, map);
+        if (node_id === undefined) {
+            $error('node_to_id() returned nil in find_path()');
+        }
         
-        if (nodeToID(P, map) === goalID) {
+        if (node_id === goalID) {
             // We're done.  Generate the path to the goal by retracing steps
             const path = [goal];
 
@@ -8505,8 +8521,11 @@ function find_path(start, goal, costEstimator, edgeCost, getNeighbors, nodeToID,
             const N = neighbors[i];
             if (N === undefined) { $error('get_neighbors() returned an array containing nil node in find_path().'); }
             const id = nodeToID(N, map);
+            if (id === undefined) {
+                $error('node_to_id() returned nil in find_path()');
+            }
             const cost = edgeCost(P, N, map);
-            if (typeof cost !== 'number') { $error('edge_cost() must return a number. Received: ' + unparse(cost)); }
+            if (typeof cost !== 'number' || cost < 0) { $error('edge_cost() must return a non-negative number. Received: ' + unparse(cost)); }
             
             if (cost < Infinity) {
                 const newCostFromStart = shortest.costFromStart + cost;

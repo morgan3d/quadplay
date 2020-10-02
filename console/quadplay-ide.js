@@ -1186,7 +1186,7 @@ function restartProgram(numBootAnimationFrames) {
             // Inject the constants into the runtime space. Define
             // assets first so that references can point to them.
             makeAssets(QRuntime, gameSource.assets);
-            makeConstants(QRuntime, gameSource.constants, gameSource.CREDITS);
+            makeConstants(QRuntime, gameSource.constants, gameSource.debug.constants || {}, gameSource.CREDITS);
         } catch (e) {
             // Compile-time error
             onStopButton();
@@ -1678,13 +1678,11 @@ function onProjectSelect(target, type, object) {
                 setCodeEditorSession(object);
             } else {
                 // Load and set the contents
-                const loadManager = new LoadManager({forceReload: true});
-                loadManager.fetch(object, 'text', null, function (doc) {
+                LoadManager.fetchOne({forceReload: true}, object, 'text', null, function (doc) {
                     fileContents[object] = doc;
                     setCodeEditorDividerFromLocalStorage();
                     setCodeEditorSession(object);
                 });
-                loadManager.end();
             }
         }
         return;
@@ -2405,12 +2403,12 @@ function visualizeGame(gameEditor, url, game) {
         }
         s += '</select></td></tr>\n';
 
-        const overrideInitialMode = gameSource.debug && gameSource.debug.start_mode_enabled && gameSource.debug.start_mode;
+        const overrideInitialMode = gameSource.debug.json && gameSource.debug.json.start_mode_enabled && gameSource.debug.json.start_mode;
         s += `<tr valign="top"><td></td><td><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${overrideInitialMode ? 'checked' : ''} onchange="onDebugInitialModeOverrideChange(this)">Debug&nbsp;Override</label></td><td colspan=2"><select id="debugOverrideInitialMode" style="width:222px; top:-2px" ${overrideInitialMode ? '' : 'disabled'} onchange="onProjectDebugInitialModeChange(this.value)">\n`;
         for (let i = 0; i < gameSource.modes.length; ++i) {
             const mode = gameSource.modes[i];
             if (! mode.name.startsWith('quad://console/os/_') && ! mode.name.startsWith('$')) {
-                s += `<option value=${mode.name} ${mode.name === gameSource.debug.start_mode ? 'selected' : ''}>${mode.name}</option>\n`;
+                s += `<option value=${mode.name} ${(gameSource.debug.json && (mode.name === gameSource.debug.json.start_mode)) ? 'selected' : ''}>${mode.name}</option>\n`;
             }
         }
         s += '</select></td></tr>\n';
@@ -2968,7 +2966,6 @@ function jsToPSError(error) {
             }
         }
     }
-    
 
     if (! lineNumber && error.lineNumber) {
         // Safari
@@ -3005,7 +3002,8 @@ function jsToPSError(error) {
 
     const result = parseCompilerLineDirective(lineArray[urlLineIndex]);
     
-    return {url: result.url, lineNumber: lineNumber - urlLineIndex - 3 + result.lineNumber, message: error.message.replace(/\bundefined\b/g, 'nil')};
+    return {url: result.url, lineNumber: lineNumber - urlLineIndex - 3 + result.lineNumber,
+            message: error.message.replace(/\bundefined\b/g, 'nil').replace(/&&/g, 'and').replace(/\|\|/g, 'or').replace(/===/g, '==').replace(/!==/g, '!=')};
 }
 
 
@@ -3562,9 +3560,10 @@ function frozenDeepClone(src, alreadySeen) {
     } // switch
 }
 
+
 /** Environment is the object to create the constants on (the QRuntime
     iFrame, or the object at that is a package). */
-function makeConstants(environment, constants, CREDITS) {
+function makeConstants(environment, constants, debugConstants, CREDITS) {
     const alreadySeen = new Map();
 
     // Create the CONSTANTS object on the environment
@@ -3578,33 +3577,30 @@ function makeConstants(environment, constants, CREDITS) {
     const IDE_USER = (isQuadserver && useIDE && serverConfig && serverConfig.IDE_USER) || 'anonymous';
     redefineConstant(environment, 'IDE_USER', IDE_USER, alreadySeen);
 
-    let hasReferences = false;
     for (const key in constants) {
-        if (key[0] === '_' || key[0] === '$') {
-            throw 'Illegal constant field name: "' + key + '"';
-        }
-        const value = constants[key];
+        if (key[0] === '$') { throw 'Illegal constant field name: "' + key + '"'; }
 
-        if (value instanceof GlobalReference) {
-            hasReferences = true;
-        } else {
-            redefineConstant(environment, key, value, alreadySeen);
-        }
+        redefineConstantByName(environment, key, alreadySeen);
     }
-
-    if (hasReferences) {
-        for (const key in constants) {
-            const value = constants[key];
-            if (value instanceof GlobalReference) {
-                redefineReference(environment, key, value.identifier);
-            }
-        }
-    }
-
     
     // Cannot seal CONSTANTS because that would make the properties non-configurable,
     // which would prevent redefining them during debugging.
     Object.preventExtensions(CONSTANTS);
+}
+
+
+/** Used by editors as well as when building the runtime. Already seen is used for
+    cloning. It can be undefined. */
+function redefineConstantByName(environment, key, alreadySeenMap) {
+    const value =
+          (gameSource.debug.constants[key] && gameSource.debug.json.constants[key].enabled) ?
+          gameSource.debug.constants[key] :
+          gameSource.constants[key];
+    if (value instanceof GlobalReferenceDefinition) {
+        redefineReference(environment, key, value.resolve().identifier);
+    } else {
+        redefineConstant(environment, key, value, alreadySeenMap);
+    }
 }
 
 
@@ -3633,13 +3629,11 @@ function redefineReference(environment, key, identifier) {
         enumerable: true,
         configurable: true,
         get: function () {
-            // Look up the value, potentially recursively, based on
-            // the identifier
             return environment[identifier];
         }
     };
-    console.log('binding ' + key + ' -> ' + identifier);
-    console.dir(identifier);
+    //console.log('binding ' + key + ' → ' + identifier);
+    //console.dir(identifier);
     Object.defineProperty(environment, key, descriptor);
     Object.defineProperty(environment.CONSTANTS, key, descriptor);
 }

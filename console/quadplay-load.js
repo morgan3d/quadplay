@@ -28,8 +28,58 @@ let loadManager = null;
 let lastSpriteID = 0;
 
 // Type used as the value of a constant that references
-// another constant or asset
+// another constant or asset. References are stored with
+// this level of indirection so that they do not need to
+// be re-evaluated when they reference a primitive value
+// that is changed in the debugger.
 function GlobalReference(name) { this.identifier = name; }
+function GlobalReferenceDefinition(name, definition) { this.identifier = name; this.definition = definition; }
+
+// Given a reference definition and name, recursively resolves it using
+// both the .game.json and .debug.json data as needed.
+GlobalReferenceDefinition.prototype.resolve = function () {
+    // Recursively evaluate references until an actual value is
+    // encountered.
+    const alreadySeen = new Map();
+    
+    let id = this.identifier;
+    let definition = this.definition
+    alreadySeen.set(id, true);
+    let path = id;
+    while (definition && definition.type === 'reference') {
+        id = definition.value;
+        path += ' → ' + id;
+        if (alreadySeen.has(id)) {
+            throw 'Cycle in reference chain: ' + path;
+        }
+
+        definition = undefined;
+        // See if the debug layer is shadowing
+        if (gameSource.debug && gameSource.debug.constants) {
+            definition = gameSource.debug.constants[id];
+            if (! definition || ! definition.enabled) {
+                definition = undefined;
+            }
+        }
+
+        if (! definition) {
+            // If the debug layer did not shadow this. Go to the
+            // regular constant layer.
+            definition = gameSource.json.constants[id];
+        }
+    }
+
+    // We now have the ID of the other constant (or asset) at the end
+    // of the chain that we are supposed to reference.  Whether the
+    // actual value is itself overriden in the debug layer is resolved
+    // at runtime.
+    if ((id in gameSource.json.constants) || (id in gameSource.json.assets)) {
+        return new GlobalReference(id);
+    } else {
+        throw 'Unresolved reference: ' + path;
+    }
+};
+
 
 function onLoadFileStart(url) {
     // console.log('Fetching "' + url + '"');
@@ -158,7 +208,10 @@ function afterLoadGame(gameURL, callback, errorCallback) {
     // Wipe the file data for the IDE
     fileContents = {};
     gameSource = {
-        debug: {}
+        debug: {
+            // Has field 'json' if a debug.json exists
+            constants: {}
+        }
     };
 
     // Wipe the virtual GPU memory
@@ -185,9 +238,13 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             debugURL, 'json', null,
             function (debugJSON) {
                 // Store the debugJSON contents
-                gameSource.debug = debugJSON;
-
-                // TODO: Parse constants
+                gameSource.debug.json = debugJSON;
+                gameSource.debug.constants = {};
+                try {
+                    gameSource.debug.constants = loadConstants(gameSource.debug.json.constants, gameURL, true);
+                } catch (e) {
+                    throw debugURL + ': ' + e;
+                }
             },
             function () {
                 // Tell the LoadManager that this is an acceptable failure
@@ -371,7 +428,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         } // Assets
 
         // Constants:
-        gameSource.constants = loadConstants(gameJSON.constants, gameURL, gameJSON);
+        gameSource.constants = loadConstants(gameJSON.constants, gameURL);
 
         // Docs: Load the names, but do not load the documents themselves.
         gameSource.docs = [];
@@ -401,7 +458,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
    Returns a table of evaluated constants. If constantsJson is undefined,
    that table is empty.
 */
-function loadConstants(constantsJson, gameURL, gameJSON, isDebugLayer) {
+function loadConstants(constantsJson, gameURL, isDebugLayer) {
     if (! constantsJson) { return {}; }
 
     const result = {};
@@ -440,53 +497,14 @@ function loadConstants(constantsJson, gameURL, gameJSON, isDebugLayer) {
             const constantURL = makeURLAbsolute(gameURL, definition.url);
             loadCSV(constantURL, definition, gameSource.constants, c);
         } else if (definition.type === 'reference') {
-            // Defer
-            hasReferences = true;
+            // Defer evaluation until binding time or another
+            // constant is edited in the IDE.
+            result[c] = new GlobalReferenceDefinition(c, definition);
         } else {
             // Inline value
             result[c] = evalJSONGameConstant(definition);
         }
     }
-
-    
-    // Now evaluate references
-    if (hasReferences) {
-        for (let i = 0; i < keys.length; ++i) {
-            const c = keys[i];
-            let definition = constantsJson[c];
-            if (definition.type === 'reference') {
-                // Recursively evaluate references until an actual
-                // value is encountered.
-                let id = undefined;
-                const alreadySeen = new Map();
-                alreadySeen.set(c, true);
-                let path = c;
-                do {
-                    id = definition.value;
-                    path += ' → ' + id;
-                    if (alreadySeen.has(id)) {
-                        throw 'Cycle in reference chain: ' + path;
-                    }
-                    definition = constantsJson[id];
-                } while (definition && definition.type === 'reference');
-
-                // Check the JSON for the assets, not the source---assets haven't
-                // yet loaded as they are asynchronous
-                if ((id in result) || (id in gameJSON.assets)) {
-                    // Store the *original* reference, which
-                    // will be re-traversed per call at
-                    // runtime to ensure that changes are
-                    // consistent when debugging (this is not
-                    // the fastest choice...we could instead
-                    // make the debugger re-evalue the full
-                    // constant chain for all forward and backward references).
-                    result[c] = new GlobalReference(constantsJson[c].value);
-                } else {
-                    throw 'Unresolved reference: ' + path;
-                }
-            }
-        }
-    } // has references
 
     return result;
 }
@@ -1127,6 +1145,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     pivot:             sspivot,
                     frames:            sheetDefaultframes
                 };
+                sprite.base = sprite;
 
                 spritesheet[x][y] = sprite;
 
@@ -1153,7 +1172,8 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     size:              transposedSpritesheet.sprite_size,
                     scale:             PP,
                     pivot:             transposedPivot,
-                    frames:            sheetDefaultframes
+                    frames:            sheetDefaultframes,
+                    base:              sprite
                 };
 
                 transposedSpritesheet[y][x] = transposedSprite;
@@ -1989,13 +2009,13 @@ function $parse(source, i) {
 }
 
 
-/** Evaluate a constant value from JSON. Used only while loading. */
+/** Evaluate a constant value from a JSON definition. Used only while loading. */
 function evalJSONGameConstant(json) {
     if (typeof json === 'number' || typeof json === 'string' || typeof json === 'boolean') {
         // Raw values
         return json;
     }
-    
+
     switch (json.type) {
     case 'nil':
         return undefined;
@@ -2110,7 +2130,7 @@ function evalJSONGameConstant(json) {
         }
 
     default:
-        throw 'Unrecognized data type: "' + json.type + '"';
+        throw 'Unrecognized data type: "' + json.type + '" in constant definition ' + JSON.stringify(json);
     }
 }
 

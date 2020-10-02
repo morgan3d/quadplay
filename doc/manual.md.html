@@ -1677,7 +1677,7 @@ Array
   optional `e` (exclusive, defaults to length).
 
 `sort(array, k, reverse default false)`
-: Sort the array from least to greatest. If `k` is a string, then
+: Sort the array from least to greatest in place. If `k` is a string, then
   elements of the array are assumed to be objects and are sorted by
   that key. If `k` is a number, then elements of the array are assumed
   to be other arrays or strings and are sorted by that index. If `k`
@@ -1695,6 +1695,10 @@ Array
   If `reverse` is true, then the array is sorted in reverse order
   from greatest to least.
 
+`sorted(array, k, reverse default false)`
+: Clone the array, sort it, and return the sorted array. See `sort()`
+  for details.
+  
 
 String
 ---------------------------------------------------------
@@ -2825,30 +2829,26 @@ a `start` field in the .sprite.json file.
 : If the sprite is in an animation (a multi-frame named array from a `sprite.json` file),
   this is the array that contains it.
 
-`sprite.id`
-: Unique integer identifying this sprite by spritesheet and tile_index, but 
-  excluding orientation.  This may change every time
-  the program is run.
-
-`sprite.orientation_id`
-: Unique integer identifying this sprite, including orientation. This may change every time
-  the program is run. The flipped versions of a sprite have _different_
-  IDs. To tell if two sprites are the same except for flipping, use `sprite.id`.
+`sprite.base`
+: The original spritesheet sprite on which this one is based. For
+  example `sprite.rotated_90.base === sprite`. Can be used to determine
+  the relative orientation of a transformed sprite from a map.
 
 `sprite.frames`
 : Number of 1/60-second (≈ 16.7 ms) game frames to hold this sprite during animation.
   Set by the spritesheet's `default_frames`, the animation's `default_frames`,
   or the animation's per-sprite `frames` array.
 
-`sprite.x_flipped`
-: The corresponding derived sprite that is this sprite flipped horizontally.
-  Flipped sprites are created on spritesheet load but can only be accessed
-  through the non-flipped sprites. Note that `s.x_flipped.x_flipped == s`.
+`sprite.id`
+: Unique integer identifying this sprite by spritesheet and
+  tile_index, but excluding orientation. This may change every time
+  the program is run.
 
-`sprite.y_flipped`
-: The corresponding derived sprite that is this sprite flipped vertically.
-  Flipped sprites are created on spritesheet load but can only be accessed
-  through the non-flipped sprites. Note that `s.y_flipped.y_flipped == s`.
+`sprite.orientation_id`
+: Unique integer identifying this sprite, including orientation. This
+  may change every time the program is run. The flipped versions of a
+  sprite have _different_ IDs. To tell if two sprites are the same
+  except for flipping and rotation, use `sprite.id` instead.
 
 `sprite.rotated_90`
 : Counter-clockwise 90 degree rotated version of the sprite. The bounds may be different 
@@ -2863,8 +2863,9 @@ a `start` field in the .sprite.json file.
   if the sprite is not square. Note that `s.x_flipped.y_flipped.rotated_90 == s.rotated_270`.
 
 `sprite.scale`
-: An `xy()` value that is `xy(1,1)` for sprites extracted directly from
-  the spritesheet and may be +1 or -1 in each axis for flipped sprites.
+: An `xy()` value that is `xy(1, 1)` for sprites extracted directly
+  from the spritesheet and may be +1 or -1 in each axis for flipped
+  sprites.
 
 `sprite.size`
 : `xy()` dimensions of the sprite in pixels. Note that for a rotated sprite,
@@ -2875,6 +2876,16 @@ a `start` field in the .sprite.json file.
 
 `sprite.tile_index`
 : Integer `xy()` index of the sprite in its spritesheet.
+
+`sprite.x_flipped`
+: The corresponding derived sprite that is this sprite flipped horizontally.
+  Flipped sprites are created on spritesheet load but can only be accessed
+  through the non-flipped sprites. Note that `s.x_flipped.x_flipped == s`.
+
+`sprite.y_flipped`
+: The corresponding derived sprite that is this sprite flipped vertically.
+  Flipped sprites are created on spritesheet load but can only be accessed
+  through the non-flipped sprites. Note that `s.y_flipped.y_flipped == s`.
 
 Any properties attached to a named sprite or animation in the `sprite.json` file also
 appear as properties of the sprite (and its flipped variations).
@@ -4103,24 +4114,28 @@ indices. The map's z-axis corresponds to layers.
   
   Respects the wrapping and wraps infinitely.
 
-`find_map_path(map, startXY, goalXY, edgeCost, costLayer = 0)`
+`find_map_path(map, start_xy, goal_xy, edge_cost, cost_layer = 0, use_sprite_id = true)`
 : Specialized version of `find_path` for maps. The start and end positions
-  are rounded down to the nearest integer map coordinates. The `edgeCost`
+  are rounded down to the nearest integer map coordinates. The `edge_cost`
   is either a function or an array. The function returns an array of
   map coordinates to visit or `nil` if no traversable path exists.
 
-  The function version is `def edgeCost(A, B, map)`. It returns the
+  The function version is `def edge_cost(A, B, map)`. It returns the
   cost of traversing from `A` to `B` in the map, where each is an
   `xy()`. That cost should always be nonnegative. It should be 1 for a
   typical edge, `infinity` for an edge that is not traversable, and
   higher or lower than 1 for edges of varying difficulty such as
   walking through rough terrain or downhill.
 
-  The array version of `edgeCost` is an array of pairs of the form
+  The array version of `edge_cost` is an array of pairs of the form
   `[sprite0, cost0, sprite1, cost1, ...]`. Each cost corresponds to
-  entering that sprite on `map.layer[costLayer]`. These are the `B`
-  values from `edgeCost`. Sprites that are not specified in the array
+  entering that sprite on `map.layer[cost_layer]`. These are the `B`
+  values from `edge_cost`. Empty map cells and sprites that are not specified in the array
   cost 1 to traverse, and it costs `infinity` to leave the map bounds.
+  Sprites are matched by their `sprite.id` if `use_sprite_id` is true,
+  otherwise they must exactly match, including orientation.
+  
+  Supports map wrapping.
 
 `get_map_pixel_color(map, map_coord, min_layer default -infinity, max_layer_exclusive default +infinity,replacement_array default ∅, result default ∅, invert_sprite_y default false)`
 : Returns the color of the pixel in `map` at the corresponding
@@ -7956,8 +7971,12 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-2020 October TBD: Beta update 50
+2020 October 2: Beta update 50
 
+- Added `sprite.base` pointer
+- Added `sorted()` functional sort
+- Added a `.gitignore` to new projects by default
+- Fully implemented debug.json files and IDE support for Debug Override
 - Fixed `z_dir` not being properly set or read by the argument object
   versions of `set_transform()` and `get_transform()`
 - Fixed system pause menu at 64x64 not restoring clip and transform

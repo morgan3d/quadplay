@@ -72,14 +72,14 @@ function onProjectInitialModeChange(newStartModeName) {
 
 // If the argument is the empty string, then disable the override
 function onProjectDebugInitialModeChange(newStartModeName) {
-    if (! gameSource.debug) { gameSource.debug = {}; }
+    if (! gameSource.debug.json) { gameSource.debug.json = {}; }
     
     if (newStartModeName === '') {
         // Remove
-        gameSource.debug.start_mode_enabled = false;
+        gameSource.debug.json.start_mode_enabled = false;
     } else {
-        gameSource.debug.start_mode = newStartModeName;
-        gameSource.debug.start_mode_enabled = true;
+        gameSource.debug.json.start_mode = newStartModeName;
+        gameSource.debug.json.start_mode_enabled = true;
     }
     
     serverSaveDebugJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
@@ -151,7 +151,7 @@ function serverSaveDebugJSON(callback) {
     console.assert(gameSource.jsonURL);
     const debugFilename = urlToFilename(gameSource.jsonURL).replace(/\.game\.json$/, '.debug.json');
  
-    const debugContents = WorkJSON.stringify(gameSource.debug || {}, undefined, 4);
+    const debugContents = WorkJSON.stringify(gameSource.debug.json || {}, undefined, 4);
     serverWriteFile(debugFilename, 'utf8', debugContents, callback);
 }
 
