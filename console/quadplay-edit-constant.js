@@ -85,7 +85,7 @@ function makeConstantEditorControlHTML(constantName, controlName, json, value, i
         html += constantName + ' = <code>∅</code>';
     } else if (type === 'number') {
         const numValue = (typeof json === 'number') ? value : json.value;
-        html += `${constantName} = <input style="width:100px; text-align: right" type="text" onchange="onConstantEditorValueChange(gameSource, QRuntime, '${constantName}', $parse(this.value, 0).result, this.value)" autocomplete="false" ${disabled} value="${numValue}">`;
+        html += `${constantName} = <input style="width:100px; text-align: right" type="text" onchange="onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', $parse(this.value, 0).result, this.value)" autocomplete="false" ${disabled} value="${numValue}">`;
         html += '<br/><br/><i>All PyxlScript number formats supported. For example, <code>10, -3, 1.5, 2pi, 90deg, 90°, -∞, π, ½</code></i>';
     } else if (type === 'boolean') {
         html += `<input type="checkbox" autocomplete="false" onchange="onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.checked, this.checked)" ${disabled} ${value ? 'checked' : ''}> ${constantName}`;

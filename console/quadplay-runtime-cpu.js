@@ -4022,6 +4022,7 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
 }
 
 
+/*
 function draw_color_tri(A, B, C, color_A, color_B, color_C, pos, angle, scale, z) {
     // Skip graphics this frame
     if ($skipGraphics) { return; }
@@ -4048,7 +4049,7 @@ function draw_color_tri(A, B, C, color_A, color_B, color_C, pos, angle, scale, z
     // TODO: clip empty triangles
     // TODO: add graphics command
 }
-
+*/
 
 
 function draw_tri(A, B, C, color, outline, pos, angle, scale, z) {
