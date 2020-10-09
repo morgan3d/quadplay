@@ -12,6 +12,7 @@
         "largeFont":  "quad://fonts/deja-15.font.json",
         "mediumFont": "quad://fonts/deja-9.font.json",
         "smallFont":  "quad://fonts/deja-7.font.json",
+        "quadplayFont": "quad://fonts/weaver-10.font.json",
         "icons":      "icons.sprite.json",
         "boop":       "boop.sound.json",
         "pauseMessageSprite": "quad://console/os/pause-message.sprite.json",

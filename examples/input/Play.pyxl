@@ -1,0 +1,139 @@
+Play
+════════════════════════════════════════════════════════════════════════
+/*
+This program is useful for understanding the button layout
+and touch, analog, and mouse input.
+
+The code reads the buttons in unusual ways in order to
+abstract the rendering. See other examples for how to incorporate
+input more typically into your programs.
+*/
+
+const OFF_COLOR = [#f5a, #0af, #3e5, #fd3]
+const PRESSED_COLOR = #FFF
+
+let last_touch_pos
+let last_touch_frame
+
+def draw_button(i, gamepad, jp, b, pos):
+    const pressed = gamepad[b]
+    const outlineColor = if jp[b + b] > mode_frames - 10 then #0 else ∅
+    const offset = if pressed then 1 else 0
+    draw_disk(pos + offset, 10, if pressed then PRESSED_COLOR else OFF_COLOR[i], outlineColor)
+    draw_text({text: b, font: font, pos: pos + offset + xy(0, 2), x_align: "center", y_align: "center", color: #000})
+    draw_disk(pos + SHADOW_OFFSET, 10, SHADOW_COLOR, ∅, -1)
+    
+
+
+def draw_small_button(i, gamepad, jp, b, pos):
+    const pressed = gamepad[b]
+    const offset = if pressed then 1 else 0
+    draw_rect(pos + SHADOW_OFFSET / 2, xy(6, 14), SHADOW_COLOR, ∅, ∅, -1)
+    draw_rect(pos + offset, xy(6, 14), if pressed then PRESSED_COLOR else OFF_COLOR[i], ∅, ∅)
+    draw_text({text: b, font: small_font, pos: pos - xy(0, 12), x_align: "center", y_align: "center", color: #0}) 
+
+
+
+def draw_shoulder_button(i, gamepad, jp, b, pos, side):
+    const color = if gamepad[b] then PRESSED_COLOR else OFF_COLOR[i]
+    const outline = #0
+    draw_disk(pos + xy(-gamepad[b] * side, gamepad[b] + 11), 24, color, outline, -3)
+    draw_text({text: b, font: small_font, pos: pos + xy(8 side, 3), x_align: "center", y_align: "center", color: #0}) 
+
+
+
+// Maps buttons to the frame at which they were pressed
+const justPressed = [{aa:-100, bb:-100, cc:-100, dd:-100, ee:-100, ff:-100, qq:-100},
+                     {aa:-100, bb:-100, cc:-100, dd:-100, ee:-100, ff:-100, qq:-100},
+                     {aa:-100, bb:-100, cc:-100, dd:-100, ee:-100, ff:-100, qq:-100},
+                     {aa:-100, bb:-100, cc:-100, dd:-100, ee:-100, ff:-100, qq:-100}]
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+set_background(#4)
+
+for i < 4:
+    preserving_transform:
+        const transform_offset = ½ xy(i mod 2, ⌊½ i⌋) * SCREEN_SIZE
+        set_transform(transform_offset)
+        const gamepad = gamepad_array[i]
+        const p = gamepad
+        const jp = justPressed[i]
+        
+        // Track the just-pressed state
+        for b in jp: if p[b]: jp[b] = mode_frames
+        
+        const player_color = OFF_COLOR[i]
+        
+        draw_disk(xy(40, 60), 40, CONTROLLER_COLOR, #0, -2)
+        draw_disk(xy(152, 60), 40, CONTROLLER_COLOR, #0, -2)
+        draw_corner_rect(xy(45, 20), xy(105, 70), CONTROLLER_COLOR, ∅, -2)
+        draw_disk(xy(152, 60), 36, ACCENT_COLOR, ∅, -2)
+        draw_line(xy(45, 19), xy(150, 19), #0)
+        draw_line(xy(65, 90), xy(125, 90), #0)
+        draw_disk(xy(40, 60), 36, ACCENT_COLOR, ∅, -2)
+        draw_disk(xy(40, 60), 30, CONTROLLER_COLOR, ∅, -2)
+        draw_corner_rect(xy(45, 23), xy(104, 6), ACCENT_COLOR, ∅, -2)
+        draw_corner_rect(xy(64, 81), xy(65, 6), ACCENT_COLOR, ∅, -2)
+        draw_corner_rect(xy(45, 29), xy(31, 52), CONTROLLER_COLOR, ∅, -2)
+        
+        draw_text({text: "gamepad_array[" + i + "]", font: code_font, pos: xy(60, 14), color: #f})
+        draw_text({text: "quadplay✜", font: font, pos: xy(95, 37), color: ACCENT_COLOR, x_align: "center"})
+        
+        draw_button(i, p, jp, "d", xy(152, 42))
+        draw_button(i, p, jp, "c", xy(134, 60))	
+        draw_button(i, p, jp, "b", xy(170, 60))	
+        draw_button(i, p, jp, "a", xy(152, 78))
+        draw_shoulder_button(i, p, jp, "e", xy(35, 30), -1)	
+        draw_shoulder_button(i, p, jp, "f", xy(158, 30), +1)
+        
+        draw_small_button(i, p, jp, "p", xy(106, 60))	
+        draw_small_button(i, p, jp, "q", xy(85,  60))
+        
+        // D-pad
+        draw_rect(xy(40, 60) + SHADOW_OFFSET, xy(16, 45), SHADOW_COLOR, ∅, ∅, -1)
+        draw_rect(xy(40, 60) + SHADOW_OFFSET, xy(45, 16), SHADOW_COLOR, ∅, ∅, -1)
+        draw_rect(xy(40, 60), xy(16, 16), player_color)
+        for axis in "xy":
+            for dir in [-1, +1]:
+                const offset = xy(0, 0)
+                offset[axis] = dir
+                const pressed = gamepad[axis] * dir > 0
+                draw_rect(xy(40, 60) + 15 offset, xy(16, 16), if pressed then PRESSED_COLOR else player_color, player_color)
+
+        // Round D-pad corners
+        draw_point(xy(32, 37), CONTROLLER_COLOR)
+        draw_point(xy(47, 37), CONTROLLER_COLOR)
+        draw_point(xy(32, 82), CONTROLLER_COLOR)
+        draw_point(xy(47, 82), 90% CONTROLLER_COLOR)        
+        draw_point(xy(17, 67), CONTROLLER_COLOR)
+        draw_point(xy(17, 52), CONTROLLER_COLOR)
+        draw_point(xy(62, 67), 90% CONTROLLER_COLOR)
+        draw_point(xy(62, 52), CONTROLLER_COLOR)
+        
+        draw_text(small_font, format_number(p.angle, "deg"), xy(41, 62), if i > 1 then #0 else #f, ∅, ∅, "center", "center")
+      
+        for s < 2:
+            const analog = 10 device_control("get_analog_axes", i, s)
+            const center = xy(81 + 28 s, 81)
+            draw_line(center, center + analog, #4)
+            draw_disk(center + analog, 3, #4)
+
+        //draw_text(small_font, format_number(p.angle, "degrees"), xy(40, 60) + offset, #f, nil, nil, "center", "center")
+        //draw_text(small_font, format_number(p.dangle, "deg"), xy(94, 70), #f, nil, nil, "center", "center")
+
+
+const mouse = device_control("get_mouse_state")
+draw_rect(mouse.xy, xy(8, 8), #FFF, #000)
+draw_line(mouse.xy, mouse.xy + 10 mouse.dxy, #F00)
+
+if touch.a: last_touch_pos = xy(touch.x, touch.y)
+if touch.aa: last_touch_frame = mode_frames
+   
+if last_touch_pos:
+    const recent = last_touch_frame > mode_frames - 10
+    draw_disk(last_touch_pos,
+             (if recent then 10 else 6),
+             (if touch.a then #F else ∅),
+             (if recent then #0 else (if touch.a then ∅ else #A)))

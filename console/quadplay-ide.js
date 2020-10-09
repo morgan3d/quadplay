@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.10.02.09'
+const version  = '2020.10.09.01'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -22,6 +22,12 @@ const postToken = getQueryString('token');
 // the bottom of this script with a list of available applications on
 // this machine.
 let serverConfig = {};
+
+// Chrome and Safari both have a bug that drops nearest neighbor
+// interpolation when transform: scale() is used, but preserve it
+// for the nonstandard zoom(). Firefox and Edge (even though it uses
+// Chromium!) do not have this bug.
+const hasBrowserScaleBug = isSafari;
 
 // Ends in a slash
 function getGamePath() {
@@ -429,7 +435,7 @@ function onResize() {
         }
 
         if (scale !== 1) {
-            if (isSafari) {
+            if (hasBrowserScaleBug) {
                 screenBorder.style.zoom = '' + scale;
                 if (uiMode === 'WideIDE') {
                     screenBorder.style.left = (-5 / scale) + 'px';
@@ -475,7 +481,7 @@ function onResize() {
 
             let zoom = 1;
 
-            if (isSafari) {
+            if (hasBrowserScaleBug) {
                 // On Safari, CSS scaling overrides the crisp image rendering.
                 // We have to zoom instead (zoom acts differently on other browsers,
                 // so we don't use zoom on all platforms).
@@ -3278,6 +3284,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.$pauseAllSounds     = pauseAllSounds;
         QRuntime.$resumeAllSounds    = resumeAllSounds;
         QRuntime.makeEuroSmoothValue = makeEuroSmoothValue;
+        QRuntime.$navigator          = navigator;
 
         // Accessors for touch and gamepads
         const padXGetter = {

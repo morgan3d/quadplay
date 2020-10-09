@@ -9,14 +9,14 @@ Play
 const sampleArray = [
    {
       // All letters
-      text: "SPHINX OF BLACK QUARTZ, JUDGE MY VOW! Pack My Box With Five Dozen Liquor Jugs. I saw 17,000 + 3.1415926: (800) 867-5309 sphinx of black quartz, judge my vow. \"Hello, World?\" Don't go; fish this fall cleft waffle fluid 451°",
+      text: "SPHINX OF BLACK QUARTZ, JUDGE MY VOW! Pack My Box With Five Dozen Liquor Jugs. I saw 17,000 + 3.1415926: (800) 867-5309 sphinx of black quartz, judge my vow. \"Hello, World?\" Don't go; fish this fall cleft waffle fluid 451°. ₀∫¹ πˣ dx ≈ ⌊½β⌋. #9 @ 4pm ↑↓←→↖↗↙↘⍐⍇⍗⍈\nABΓΔEZHΘIKΛMNΞOΠPΣTYΦXΨΩ\nαβγδεζηθικλμνξoπρστυϕχψω",
       color: #f,
       background: #052
    },
 
    {
       // Game prompts and info
-      text: replace("Press (a) to fire. [^] ACCELERATE (e)(c) Combo Block  © 2020 Casual✜ ¥100 $37 | ammo: ∞ [HEALTH] D&D. Consoleᵗᵐ  4♥ « Ready! » 24%", joy.prompt),
+      text: replace("Press (a) to fire. [^] ACCELERATE. (e)(c) Combo Block  ©2020 quadplay✜ ¥100 $37 | ammo: ∞ [HEALTH] D&D. Consoleᵗᵐ  4♥ « Ready! » 24%. ", joy.prompt) + "Hello ⓐⓑⓒⓓⓔⓕⓖⓗⓝⓟⓠⓥⓧⓨⓩ World: ⦸⬙⬗⬖⬘Ⓞ⍍▣⧉☰⒧⒭ⓛⓡ⊖⊕\nNumbers: ①②③④⑤⑥⑦⑧⑨⓪.\nDirections: ⓌⒶⓈⒹⒾⒿⓀⓁ⍐⍇⍗⍈",
       color: #fe4,
       outline: #3,
       background: #33b

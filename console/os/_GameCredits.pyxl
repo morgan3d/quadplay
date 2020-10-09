@@ -21,9 +21,11 @@ if SCREEN_SIZE.y <= 64: sectionFont = $font5
 else if SCREEN_SIZE.y <= 128: sectionFont = $font8
 
 let bodyFont = $font6
-if SCREEN_SIZE.y <= 64: sectionFont = $font3
-else if SCREEN_SIZE.y <= 128: sectionFont = $font5
+if SCREEN_SIZE.y <= 64: bodyFont = $font3
+else if SCREEN_SIZE.y <= 128: bodyFont = $font5
 
+
+const scroll_speed = 0.5 ceil((SCREEN_SIZE.y / 224)^2)
 
 enter
 ────────────────────────────────────────────────────────────────────────
@@ -53,7 +55,7 @@ if any_button_press():
    play_sound($cancelUISound)
    pop_mode()
 
-const creditsScroll = max(mode_frames - 70, 0)
+const creditsScroll = max(mode_frames - 70, 0) * scroll_speed
 set_transform(xy(0, -creditsScroll))
 
 draw_text(sectionFont, CREDITS.title, xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 3), text_color, text_shadow_color, text_shadow_color, 0, 0)
@@ -61,10 +63,12 @@ draw_text(bodyFont, "by " + CREDITS.developer, xy(SCREEN_SIZE.x / 2, SCREEN_SIZE
 
 let y = SCREEN_SIZE.y + 15
 for type in creditOrder:
-   const s = if type == "Quadplay" then "quadplay✜" else type
-   y += draw_text(sectionFont, s + (if type == "Game" or type == "Code" or type == "Quadplay" then "" else "s"), xy(SCREEN_SIZE.x / 2, y), text_color, text_shadow_color, nil, 0, 2).y
+    if size(CREDITS[lowercase(type)]) > 0:
+        const s = if type == "Quadplay" then "quadplay✜" else type
+        y += draw_text(sectionFont, s + (if type == "Game" or type == "Code" or type == "Quadplay" or type == "Data" then "" else "s"), xy(SCREEN_SIZE.x / 2, y), text_color, text_shadow_color, nil, 0, 2).y
    
-   for line in CREDITS[lowercase(type)]:
-       y += draw_text(bodyFont, line, xy(SCREEN_SIZE.x / 2, y), text_color, nil, nil, "center", "top", 0, SCREEN_SIZE.x).y + 10
-   y += 20
+        for line in CREDITS[lowercase(type)]:
+            y += draw_text(bodyFont, line, xy(SCREEN_SIZE.x / 2, y), text_color, nil, nil, "center", "top", 0, SCREEN_SIZE.x).y + 10
+            
+        y += 20
 

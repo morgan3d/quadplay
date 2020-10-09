@@ -179,7 +179,8 @@ else if game_frames == intro_frames:
 set_background(backgroundColor)
 draw_corner_rect(xy(0, 0), xy(384, 15), #2)
 draw_line(xy(0, 16), xy(384, 16), #f)
-draw_text({font: mediumFont, text:"quadplay✜ games", pos: xy(SCREEN_SIZE.x / 2, 11), color: selectedColor, shadow: shadowColor, x_align: "center"})
+draw_text({font: quadplayFont, text:"quadplay✜ games", pos: xy(SCREEN_SIZE.x / 2, 11), color: selectedColor, shadow: shadowColor, x_align: "center"})
+//draw_text({font: smallFont, text:$navigator.userAgent + "||" + $navigator.platform, pos: xy(SCREEN_SIZE.x / 2, 11), color: selectedColor, shadow: shadowColor, x_align: "center", wrap_width: SCREEN_SIZE.x})
 
 
 

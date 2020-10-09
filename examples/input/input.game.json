@@ -1,0 +1,55 @@
+{
+    "title": "Input",
+    "developer": "Casual Effects",
+    "copyright": "©2019 Morgan McGuire",
+    "license": "CC0/Public Domain",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play"
+    ],
+    "assets": {
+        "small_font": "quad://fonts/weaver-6.font.json",
+        "font": "quad://fonts/weaver-7.font.json",
+        "code_font": "quad://fonts/deja-8.font.json"
+    },
+    "start_mode": "Play",
+    "constants": {
+        "SHADOW_COLOR": {
+            "type": "rgba",
+            "value": {
+                "r": 0,
+                "g": 0,
+                "b": 0,
+                "a": 0.08
+            }
+        },
+        "SHADOW_OFFSET": {
+            "type": "xy",
+            "value": {
+                "x": 1,
+                "y": 3
+            },
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            }
+        },
+        "CONTROLLER_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": 0.78,
+                "g": 0.78,
+                "b": 0.78
+            }
+        },
+        "ACCENT_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": 0.6,
+                "g": 0.6,
+                "b": 0.66
+            }
+        }
+    }
+}

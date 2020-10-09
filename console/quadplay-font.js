@@ -32,7 +32,7 @@ abcdefghijklmnopqrstuvwxyz←→<>◀▶
 αβγδεζηθικλμνξ§πρστυϕχψωςşğ⌊⌋⌈⌉"
 ÆÀÁÂÃÄÅÇÈÉÊËÌÍÎÏØÒÓÔÕÖŒÑẞÙÚÛÜБ✓Д
 æàáâãäåçèéêëìíîïøòóôõöœñßùúûüбгд
-ЖЗИЙЛПЦЧШЩЭЮЯЪЫЬ±⊗↖↗  ⓔ⦸ⓝⓗ○●◻◼△▲
+ЖЗИЙЛПЦЧШЩЭЮЯЪЫЬ±⊗↖↗в ⓔ⦸ⓝⓗ○●◻◼△▲
 жзийлпцчшщэюяъыь∫❖↙↘…‖ʸᶻⓩ⑤⑥♠♥♣♦✜
 ⓐⓑⓒⓓⓕⓖⓟⓠⓥⓧⓨ⬙⬗⬖⬘Ⓞ⍍▣⧉☰⒧⒭①②③④⑦⑧⑨⓪⊖⊕
 ␣Ɛ⏎ҕﯼડƠ⇥
@@ -107,6 +107,7 @@ const FONT_ROWS = Math.floor((fontChars.length + 1) / (FONT_COLS + 1)) + 2;
                      'xх',
                      'XΧХ',
                      'ΦФ',
+                     'ϕф',
                      'ΓГ',
                      'ZΖ',
                      '∙•',
@@ -129,7 +130,7 @@ const FONT_ROWS = Math.floor((fontChars.length + 1) / (FONT_COLS + 1)) + 2;
     
     for (let i = 0; i < aliases.length; ++i) {
         const a = aliases[i];
-        console.assert(fontMap[a[0]] !== undefined); // All targets in map
+        console.assert(fontMap[a[0]] !== undefined, a[0]); // All targets in map
         for (let j = 1; j < a.length; ++j) {
             console.assert(j !== a[0]); // No duplicates!
             fontMap[a[j]] = a[0];

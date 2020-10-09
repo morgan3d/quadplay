@@ -49,9 +49,12 @@ html {
     /* On Safari, the following works around blurring when resizing images
        where their PARENT has a transform on it. */
     transform: scale(1);
+    backface-visibility: hidden;
+    /* I've seen the following recommended, but on Chrome on Windows
+       it causes significiant blur at certain integer scales
     filter: blur(0px);
     -webkit-filter: blur(0);
-    backface-visibility: hidden;
+    */
 }
 
 #spriteEditor {

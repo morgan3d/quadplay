@@ -8,8 +8,8 @@
     "start_mode": "Play",
     "modes":      ["Play"],
     "assets":     {
-        //        "font": "quad://fonts/thompson-8.font.json"
-                "font": "quad://fonts/robot-9.font.json"
+        "font": "quad://fonts/weaver-7.font.json"
+        //"font": "quad://fonts/robot-9.font.json"
     }
 
 }

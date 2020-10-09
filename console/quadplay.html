@@ -32,10 +32,11 @@
          id = id || title.toLowerCase();
          document.write('<div class="button" title="' + title + '" style="' + (style || '') + '" onmousedown="event.stopPropagation()"><label><input id="' + id + 'Button" autocomplete="off" type="checkbox" onclick="onToggle(this)"><span class="label">' + labelHTML + '</span></label></div>');
       }
-      
-    // Is the browser running on an Apple platform?
+
+    // When embedded into a binary app, Safari changes its userAgent string.
+    const isUIWebView = ! /chrome|firefox|safari|edge/i.test(navigator.userAgent) && /applewebkit/i.test(navigator.userAgent);  
     const isApple = /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent) || isUIWebView;
     const isMobile = window.matchMedia("only screen and (max-width: 480px)").matches || window.orientation || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     // Keys
