@@ -967,7 +967,16 @@ code, .code {
     top: 0px;
 }
 
-.project li.new {
+.project li.import:before {
+    content: '⇲';
+    font-weight: 900;
+    background-image: none;
+    position: relative;
+    left: 6px;
+    top: 0px;
+}
+
+.project li.new, .project li.import {
     margin-top: 2px;
     margin-left: -2px;
     color: #888;
@@ -1425,3 +1434,32 @@ svg.modeGraph text.edgeLabel {
         right:4px;
     }
 }
+
+/* Combobox ************************************************************/
+/* Based on https://jsfiddle.net/pu7cndLv/1/ */
+
+.select-editable {
+    display: inline-block;
+    position: relative;
+    top: -14px;
+    width: 200px;
+}
+
+.select-editable > * {
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    outline: none;
+}
+
+.select-editable select {
+    width: 100%;
+}
+
+.select-editable input {
+    width: calc(100% - 20px);
+    margin: 1px;
+    border: none;
+    text-overflow: ellipsis;
+} 

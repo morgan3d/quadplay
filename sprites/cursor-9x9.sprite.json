@@ -1,0 +1,125 @@
+{
+    "url": "cursor-9x9.png",
+    "license": "© 2020 Morgan McGuire. Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/",
+    "sprite_size": {"x":9, "y":9},
+    "names": {
+        "arrow": {
+            "x": 0,
+            "y": 0,
+            "pivot": {"x": 1.5, "y": 1.5}
+        },
+        "short_arrow": {
+            "x": 1, "y": 0,
+            "pivot": {"x": 1.5, "y": 1.5}
+        },
+        "chevron": {
+            "x": 2,
+            "y": 0,
+            "pivot": {"x": 1.5, "y": 1.5}
+        },
+        "crosshair": {"x": 3, "y": 0},
+        "large_reticle": {"x": 4, "y": 0},
+        "medium_reticle": {"x": 5, "y": 0},
+        "tri_reticle": {"x": 6, "y": 0},
+        "small_reticle": {"x": 7, "y": 0},
+        "text": {
+            "x": 8,
+            "y": 0,
+            "pivot": {"x": 3.5, "y": 4.5}
+        },
+        "hourglass": {
+            "x": 9,
+            "y": 0,
+            "pivot": {"x": 3.5, "y": 4.5}
+        },
+        "x": {"x": 10, "y": 0},
+        "no": {"x": 11, "y": 0},
+        "resize_vertical": {
+            "x": 12,
+            "y": 0,
+            "pivot": {"x": 3.5, "y": 4.5}
+        },
+        "resize_diagonal": {
+            "x": 13,
+            "y": 0,
+            "pivot": {"x": 3.5, "y": 3.5}
+        },
+        "hand_point": {
+            "x": 14,
+            "y": 0,
+            "pivot": {"x": 3.5, "y": 1.5}
+        },
+        "hand_open": {"x": 15, "y": 0},
+        "hand_fist": {"x": 16, "y": 0},
+        "hand_point_closed": {
+            "x": 17,
+            "y": 0,
+            "pivot": {"x": 1.5, "y": 3.5}
+        },
+        "wrench": {"x": 18, "y": 0},
+        "hammer": {"x": 19, "y": 0},
+        "magnify": {"x": 20, "y": 0},
+        "sword": {"x": 21, "y": 0},
+        "wand": {"x": 22, "y": 0},
+        "eye": {"x": 23, "y": 0},
+        "talk": {"x": 24, "y": 0},
+        "crosshair_dot": {"x": 25, "y": 0},
+
+        "arrow_outline": {
+            "x": 0,
+            "y": 1,
+            "pivot": {"x": 1.5, "y": 1.5}
+        },
+        "short_arrow_outline": {
+            "x": 1,
+            "y": 1,
+            "pivot": {"x": 1.5, "y": 1.5}
+        },
+        "chevron_outline": {
+            "x": 2,
+            "y": 1,
+            "pivot": {"x": 1.5, "y": 1.5}
+        },
+        "crosshair_outline": {"x": 3, "y": 1},
+        "large_reticle_outline": {"x": 4, "y": 1},
+        "medium_reticle_outline": {"x": 5, "y": 1},
+        "tri_reticle_outline": {"x": 6, "y": 1},
+        "small_reticle_outline": {"x": 7, "y": 1},
+        "text_outline": {
+            "x": 8, "y": 1,
+            "pivot": {"x": 3.5, "y": 4.5}
+        },
+        "hourglass_outline": {
+            "x": 9, "y":1,
+            "pivot": {"x": 3.5, "y": 4.5}
+        },
+        "x_outline": {"x": 10, "y": 1},
+        "no_outline": {"x": 11, "y": 1},
+        "resize_vertical_outline": {
+            "x": 12, "y": 1,
+            "pivot": {"x": 3.5, "y": 4.5}
+        },
+        "resize_diagonal_outline": {
+            "x": 13, "y": 1,
+            "pivot": {"x": 3.5, "y": 3.5}
+        },
+        "hand_point_outline": {
+            "x": 14, "y": 1,
+            "pivot": {"x": 3.5, "y": 1.5}
+        },
+        "hand_open_outline": {"x": 15, "y": 1},
+        "hand_fist_outline": {"x": 16, "y": 1},
+        "hand_point_closed_outline": {
+            "x": 17, "y": 1,
+            "pivot": {"x": 1.5, "y": 3.5}
+        },
+        "wrench_outline": {"x": 18, "y": 1},
+        "hammer_outline": {"x": 19, "y": 1},
+        "magnify_outline": {"x": 20, "y": 1},
+        "sword_outline": {"x": 21, "y": 1},
+        "wand_outline": {"x": 22, "y": 1},
+        "eye_outline": {"x": 23, "y": 1},
+        "talk_outline": {"x": 24, "y": 1},
+        "crosshair_dot_outline": {"x": 25, "y": 1},
+    }
+}

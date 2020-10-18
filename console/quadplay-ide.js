@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.10.09.01'
+const version  = '2020.10.18.18'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -1192,7 +1192,7 @@ function restartProgram(numBootAnimationFrames) {
             // Inject the constants into the runtime space. Define
             // assets first so that references can point to them.
             makeAssets(QRuntime, gameSource.assets);
-            makeConstants(QRuntime, gameSource.constants, gameSource.debug.constants || {}, gameSource.CREDITS);
+            makeConstants(QRuntime, gameSource.constants, gameSource.CREDITS);
         } catch (e) {
             // Compile-time error
             onStopButton();
@@ -1402,11 +1402,13 @@ function maybeGrabPointerLock() {
     if (usePointerLock) {
         emulatorScreen.requestPointerLock();
     }
+    document.getElementById('screen').style.cursor = runtime_cursor;
 }
 
 /** Release pointer lock if it is held */
 function releasePointerLock() {
     document.exitPointerLock();
+    document.getElementById('screen').style.cursor = 'crosshair';
 }
 
 function inModal() { return false; }
@@ -2565,7 +2567,8 @@ function createProjectWindow(gameSource) {
         s += `<li class="clickable ${badge}" ${contextMenu} onclick="onProjectSelect(event.target, 'script', '${script}')" title="${script}" id="ScriptItem_${script}">${urlFilename(script)}</li>\n`;
     }
     if (editableProject) {
-        s += '<li class="clickable new" onclick="showNewScriptDialog()"><i>New script…</i></li>';
+        s += '<li class="clickable import" onclick="showImportScriptDialog()"><i>Import existing script…</i></li>';
+        s += '<li class="clickable new" onclick="showNewScriptDialog()"><i>Create new script…</i></li>';
     }
     s += '</ul>';
     
@@ -2580,7 +2583,8 @@ function createProjectWindow(gameSource) {
         s += `<li ${contextMenu} class="clickable ${badge}" onclick="onProjectSelect(event.target, 'mode', gameSource.modes[${i}])" title="${mode.url}" id="ModeItem_${mode.name}"><code>${mode.name}${mode.name === gameSource.json.start_mode ? '*' : ''}</code></li>\n`;
     }
     if (editableProject) {
-        s += '<li class="clickable new" onclick="showNewModeDialog()"><i>New mode…</i></li>';
+        s += '<li class="clickable import" onclick="showImportModeDialog()"><i>Import existing mode…</i></li>';
+        s += '<li class="clickable new" onclick="showNewModeDialog()"><i>Create new mode…</i></li>';
     }
     s += '</ul>';
 
@@ -2595,7 +2599,8 @@ function createProjectWindow(gameSource) {
         }
     }
     if (editableProject) {
-        s += '<li class="clickable new" onclick="showNewDocDialog()"><i>New doc…</i></li>';
+        s += '<li class="clickable import" onclick="showImportDocDialog()"><i>Import existing doc…</i></li>';
+        s += '<li class="clickable new" onclick="showNewDocDialog()"><i>Create new doc…</i></li>';
     }
     s += '</ul>';
     
@@ -2659,7 +2664,7 @@ function createProjectWindow(gameSource) {
     }
     
     if (editableProject) {
-        s += '<li class="clickable new" onclick="showAddAssetDialog()"><i>Import existing asset…</i></li>';
+        s += '<li class="clickable import" onclick="showAddAssetDialog()"><i>Import existing asset…</i></li>';
         s += '<li class="clickable new" onclick="showNewAssetDialog()"><i>Create new asset…</i></li>';
     }
     s += '</ul>';
@@ -3111,7 +3116,12 @@ function mainLoopStep() {
         }
 
         // Reset the touch input state for next frame
-        QRuntime.touch.pressed_a = QRuntime.touch.released_a = QRuntime.touch.aa = false;
+        if (refreshPending) {
+            if (mouse.movement_x !== undefined) {
+                mouse.movement_x = mouse.movement_y = 0;
+            }
+            QRuntime.touch.pressed_a = QRuntime.touch.released_a = QRuntime.touch.aa = false;
+        }
 
     } catch (e) {
         if (e.reset_game === 1) {
@@ -3250,6 +3260,7 @@ let refreshPending = false;
 let updateKeyboardPending = false;
 
 function reloadRuntime(oncomplete) {
+    runtime_cursor = 'crosshair';
     QRuntime.document.open();
     QRuntime.document.write("<script src='quadplay-runtime-cpu.js' async charset='utf-8'> </script> <script src='quadplay-runtime-gpu.js' async charset='utf-8'> </script>");
     QRuntime.onload = function () {
@@ -3570,7 +3581,7 @@ function frozenDeepClone(src, alreadySeen) {
 
 /** Environment is the object to create the constants on (the QRuntime
     iFrame, or the object at that is a package). */
-function makeConstants(environment, constants, debugConstants, CREDITS) {
+function makeConstants(environment, constants, CREDITS) {
     const alreadySeen = new Map();
 
     // Create the CONSTANTS object on the environment
@@ -3586,26 +3597,38 @@ function makeConstants(environment, constants, debugConstants, CREDITS) {
 
     for (const key in constants) {
         if (key[0] === '$') { throw 'Illegal constant field name: "' + key + '"'; }
-
-        redefineConstantByName(environment, key, alreadySeen);
+        redefineConstantByName(environment, key, alreadySeen, false);
     }
-    
+
+    // Process references second so that they can point to named sprites
+    // after the spritesheets have been resolved
+    for (const key in constants) {
+        redefineConstantByName(environment, key, alreadySeen, true);
+    }
+
     // Cannot seal CONSTANTS because that would make the properties non-configurable,
     // which would prevent redefining them during debugging.
     Object.preventExtensions(CONSTANTS);
 }
 
 
-/** Used by editors as well as when building the runtime. Already seen is used for
-    cloning. It can be undefined. */
-function redefineConstantByName(environment, key, alreadySeenMap) {
+/** Used by editors as well as when building the runtime. 
+
+    alreadySeenMap is used for cloning. It can be undefined. 
+
+    referencePass can be true (only process references), false (only process nonreferences),
+    or undefined (process all)    
+*/
+function redefineConstantByName(environment, key, alreadySeenMap, referencePass) {
     const value =
           (gameSource.debug.constants[key] && gameSource.debug.json.constants[key].enabled) ?
           gameSource.debug.constants[key] :
           gameSource.constants[key];
     if (value instanceof GlobalReferenceDefinition) {
-        redefineReference(environment, key, value.resolve().identifier);
-    } else {
+        if (referencePass !== false) {
+            redefineReference(environment, key, value.resolve());
+        }
+    } else if (referencePass !== true) {
         redefineConstant(environment, key, value, alreadySeenMap);
     }
 }
@@ -3631,15 +3654,20 @@ function defineImmutableProperty(object, key, value) {
 
 /** Called by makeConstant to extend the QRuntime environment or redefine values
     within it that are pointers. */
-function redefineReference(environment, key, identifier) {
+function redefineReference(environment, key, globalReference) {
     const descriptor = {
         enumerable: true,
         configurable: true,
-        get: function () {
-            return environment[identifier];
-        }
+        get: globalReference.property !== '' ?
+            function () {
+                return environment[globalReference.identifier][globalReference.property];
+            } :
+            function () {
+                return environment[globalReference.identifier];
+            }
     };
-    //console.log('binding ' + key + ' → ' + identifier);
+    console.assert(key !== globalReference.identifier);
+    //console.log('binding ' + key + ' → ' + globalReference.identifier);
     //console.dir(identifier);
     Object.defineProperty(environment, key, descriptor);
     Object.defineProperty(environment.CONSTANTS, key, descriptor);
@@ -3973,6 +4001,29 @@ window.addEventListener('focus', function() {
         }
     }
 }, false);
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Callback for editable dropdown box (combobox). See the quadplay-edit-constant.js reference
+// constant editor in makeConstantEditorControlHTML() for an example.
+
+// Happens on loss of focus
+function combobox_textbox_onchange(textbox) {
+    const dropdown = textbox.previousElementSibling;
+
+    for (let i = 1; i < dropdown.options.length; ++i) {
+        if (dropdown.options[i].value === textbox.value) {
+            dropdown.selectedIndex = i;
+            // Erase the old custom value
+            dropdown.options[0].value = dropdown.options[0].innerHTML = '';
+            return;
+        }
+    }
+
+    // Set the custom value
+    dropdown.selectedIndex = 0;
+    dropdown.options[0].value = dropdown.options[0].innerHTML = textbox.value;
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

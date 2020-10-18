@@ -23,10 +23,19 @@
 # 
 #    - The special quad_path + `/console/_assets.json` "file" gives a listing
 #      of all assets in the specified directory and the quadplay built-in directories.
+#      This combines raw and json packaged assets.
+#
+#    - The special quad_path + `/console/_scripts.json` "file" gives a listing
+#      of all .pyxl files in the specified directory and the quadplay built-in scripts
+#      directory.
+#
+#    - The special quad_path + `/console/_docs.json` "file" gives a listing
+#      of all .md, .html, and .pdf files in the specified directory.
 #
 #    - The special quad_path + `/console/games.json` file gives a listing
 #      of all games in subdirectories of examples/, games/, and my_quadplay/
-#      (not recursive)
+#      (not recursive). This is backed by an actual file when not using a quadplay
+#      server.
 #
 #    - The special quad_path + `/console/_quadserver.json` "file" describes
 #      the available external applications, which are a subset of console/external-applications.json
@@ -80,6 +89,8 @@ server_root_path = None
 # Magic path that the browser will use to communicate that it wants an asset listing
 # or game listing for import in IDE mode
 asset_query_webpath = None
+script_query_webpath = None
+doc_query_webpath = None
 game_query_webpath = None
 config_query_webpath = None
 
@@ -141,6 +152,9 @@ def load_json(filename):
 # See https://github.com/python/cpython/blob/master/Lib/http/server.py for
 # the base class implementation and internal methods
 class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
+    # Directories that should be excluded from filesystem searches
+    special_dir_regex = re.compile('(^|/)(journal|screenshots|metadata|backlot|graveyard)/', re.IGNORECASE)
+            
     def list_directory(self, path):
         # Prevent directory listing
         self.send_error(404, 'No permission to list directory')
@@ -277,6 +291,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
 
               
     def do_GET(self):
+        
         # Remove the query and collapse any ..
         path_parts = self.path.split('?')
         webpath = os.path.normpath(path_parts[0]).replace('\\', '/')
@@ -290,11 +305,10 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         if webpath != '/favicon.ico' and not any([webpath.startswith(prefix) for prefix in webpath_allowlist]):
             self.send_error(404, 'Illegal webpath: ' + webpath)
 
-        if webpath == config_query_webpath or webpath == asset_query_webpath or webpath == game_query_webpath:
+        if webpath == config_query_webpath or webpath == asset_query_webpath or webpath == game_query_webpath or webpath == doc_query_webpath or webpath == script_query_webpath:
             response_obj = {}
             if webpath == config_query_webpath:
-                if not args.kiosk:
-                    response_obj['IDE_USER'] = os.environ['USERNAME' if isWindows else 'USER']
+                if not args.kiosk: response_obj['IDE_USER'] = os.environ['USERNAME' if isWindows else 'USER']
                 response_obj['rootPath'] = server_root_path
                 response_obj['hasFinder'] = isWindows or isMacOS
 
@@ -310,9 +324,50 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                                 applications.append({'name': app['name'], 'path': path, 'types': app['types']})
                                 break
                             
+            elif webpath == script_query_webpath:
+                aux_path = query[query.index('=') + 1:]
+
+                # Security: check if aux_path has a prefix in webpath_allowlist
+                if not any([aux_path.startswith(prefix) for prefix in webpath_allowlist]):
+                    self.send_error(404, 'Illegal path: ' + aux_path)
+
+                # List the pyxl files
+                response_obj = glob.glob(remove_leading_slash(aux_path + '**/*.pyxl'), recursive=True)
+
+                # Remove anything in a magic directory
+                response_obj = [f for f in response_obj if not self.special_dir_regex.search(f)]
+                
+                # Sort all files
+                response_obj.sort()
+
+                # List additional files from the built-in scripts folder
+                response_obj += ['quad://' + f[len(quad_path):] for f in sorted(glob.glob(quad_path + 'scripts/*.pyxl'))]
                     
+                # Fix slashes on windows
+                if isWindows: response_obj = [f.replace('\\', '/') for f in response_obj]
+
+            elif webpath == doc_query_webpath:
+                aux_path = query[query.index('=') + 1:]
+
+                # Security: check if aux_path has a prefix in webpath_allowlist
+                if not any([aux_path.startswith(prefix) for prefix in webpath_allowlist]):
+                    self.send_error(404, 'Illegal path: ' + aux_path)
+
+                # List the files
+                response_obj = glob.glob(remove_leading_slash(aux_path + '**/*.html'), recursive=True)
+                response_obj += glob.glob(remove_leading_slash(aux_path + '**/*.md'), recursive=True)
+                response_obj += glob.glob(remove_leading_slash(aux_path + '**/*.pdf'), recursive=True)
+                response_obj += glob.glob(remove_leading_slash(aux_path + '**/*.txt'), recursive=True)
+
+                # Do not remove anything magic directory files; we want journals and such
+                
+                # Sort all files
+                response_obj.sort()
+                    
+                # Fix slashes on windows
+                if isWindows: response_obj = [f.replace('\\', '/') for f in response_obj]
+                
             elif webpath == asset_query_webpath:
-                print('query', query)
                 aux_path = query[query.index('=') + 1:]
 
                 # Security: check if aux_path has a prefix in webpath_allowlist
@@ -337,7 +392,6 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                         if 'url' in tmp: exclude_table[remove_leading_slash(aux_path) + tmp['url']] = True
 
                 raw_extension = {'sprite': 'png', 'font': 'png', 'sound': 'mp3', 'map':'tmx'}
-                special_dir_regex = re.compile('(^|/)(journal|screenshots|metadata|backlot|graveyard)/', re.IGNORECASE)
 
                 for t in asset_type_array:
                     # Get raw files
@@ -353,7 +407,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                     response_obj[t] = sorted(response_obj[t] + raw_files)
 
                     # Remove anything in a magic directory
-                    response_obj[t] = [f for f in response_obj[t] if not special_dir_regex.search(f)]
+                    response_obj[t] = [f for f in response_obj[t] if not self.special_dir_regex.search(f)]
 
                     # Get the json files from the quadplay directory,
                     # sort, and append them to the list
@@ -362,8 +416,9 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                     # Fix slashes on windows
                     if isWindows: response_obj[t] = [f.replace('\\', '/') for f in response_obj[t]]
 
-            else: # game list query
-                
+            elif webpath == game_query_webpath:
+
+                # Detect games with the same name as the folder
                 redundant_pattern = re.compile(r'(?P<name>/[^/]+)(?P=name)\.game\.json$')
                 set = {'examples' : quad_path + 'examples',
                        'builtins' : quad_path + 'games',
@@ -537,8 +592,10 @@ asset_query_webpath = webpath_allowlist[0]
 if len(asset_query_webpath) > 0 and asset_query_webpath[-1] == '/': asset_query_webpath = asset_query_webpath[:-1]
 game_query_webpath = asset_query_webpath + '/console/games.json'
 config_query_webpath = asset_query_webpath + '/console/_config.json'
-asset_query_webpath += '/console/_assets.json'
+script_query_webpath = asset_query_webpath + '/console/_scripts.json'
+doc_query_webpath = asset_query_webpath + '/console/_docs.json'
 quad_path = remove_leading_slash(webpath_allowlist[0])
+asset_query_webpath += '/console/_assets.json'
 
 if False:
     # Debug paths
@@ -546,6 +603,8 @@ if False:
     print("quad_path            = '" + quad_path + "'")
     print("my_games_path        = '" + my_games_path + "'")
     print("asset_query_webpath  = '" + asset_query_webpath + "'")
+    print("script_query_webpath = '" + script_query_webpath + "'")
+    print("doc_query_webpath    = '" + doc_query_webpath + "'")
     print("game_query_webpath   = '" + game_query_webpath + "'")
     print("config_query_webpath = '" + config_query_webpath + "'")
     print('webpath_allowlist    = ', webpath_allowlist, '\n')

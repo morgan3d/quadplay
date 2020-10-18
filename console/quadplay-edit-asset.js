@@ -8,7 +8,8 @@ function showAddAssetDialog() {
     text.value = '';
     text.focus();
 
-    const assetListURL = location.origin + getQuadPath() + 'console/_assets.json?gamePath=' + getGamePath();
+    let gamePath = getGamePath();
+    const assetListURL = location.origin + getQuadPath() + 'console/_assets.json?gamePath=' + gamePath;
     
     // Fetch the asset list
     LoadManager.fetchOne({forceReload: true}, assetListURL, 'json', null, function (json) {
@@ -18,11 +19,6 @@ function showAddAssetDialog() {
         // or subdirectory of it. We do not do this on the server side
         // because we may later allow developers to have their own asset directories
         // separate from games, and the existing protocol allows that.
-
-        let gamePath = gameSource.jsonURL.replace(/[^\/]+\.game\.json$/g, '');
-        if (gamePath.startsWith(location.origin)) {
-            gamePath = gamePath.substring(location.origin.length);
-        }
         if (gamePath.length > 0 && gamePath[0] === '/') {
             gamePath = gamePath.substring(1);
         }

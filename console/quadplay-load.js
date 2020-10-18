@@ -31,15 +31,17 @@ let lastSpriteID = 0;
 // another constant or asset. References are stored with
 // this level of indirection so that they do not need to
 // be re-evaluated when they reference a primitive value
-// that is changed in the debugger.
-function GlobalReference(name) { this.identifier = name; }
+// that is changed in the debugger. The property may be ''.
+function GlobalReference(name, property) { this.identifier = name; this.property = property; }
 function GlobalReferenceDefinition(name, definition) { this.identifier = name; this.definition = definition; }
 
 // Given a reference definition and name, recursively resolves it using
 // both the .game.json and .debug.json data as needed.
 GlobalReferenceDefinition.prototype.resolve = function () {
+    
     // Recursively evaluate references until an actual value is
-    // encountered.
+    // encountered. Indirect the final value, but flatten the chain so
+    // that it is not traversed for every dereference.
     const alreadySeen = new Map();
     
     let id = this.identifier;
@@ -73,8 +75,11 @@ GlobalReferenceDefinition.prototype.resolve = function () {
     // of the chain that we are supposed to reference.  Whether the
     // actual value is itself overriden in the debug layer is resolved
     // at runtime.
-    if ((id in gameSource.json.constants) || (id in gameSource.json.assets)) {
-        return new GlobalReference(id);
+    const object_name = id.replace(/\..+$/, '');
+    const property_name = id.indexOf('.') !== -1 ? id.replace(/^[^\.]+\./, '') : '';
+    if ((id in gameSource.json.constants) || (object_name in gameSource.json.assets) ||
+        ((object_name in gameSource.json.assets) && (property_name in gameSource.assets[property_name]))) {
+        return new GlobalReference(object_name, property_name);
     } else {
         throw 'Unresolved reference: ' + path;
     }
@@ -250,7 +255,9 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 // Tell the LoadManager that this is an acceptable failure
                 // and continue.
                 return true;
-            }
+            },
+            null,
+            true // force reload always
         );
     }
 
@@ -446,7 +453,11 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             }
         } // if docs
         
-    }, loadFailureCallback, loadWarningCallback, computeForceReloadFlag(gameURL));
+    },
+      loadFailureCallback,
+      loadWarningCallback,
+      // Always force reload; otherwise constants can get screwed up
+      true);//computeForceReloadFlag(gameURL));
 
     loadManager.end();
 }
@@ -497,8 +508,7 @@ function loadConstants(constantsJson, gameURL, isDebugLayer) {
             const constantURL = makeURLAbsolute(gameURL, definition.url);
             loadCSV(constantURL, definition, gameSource.constants, c);
         } else if (definition.type === 'reference') {
-            // Defer evaluation until binding time or another
-            // constant is edited in the IDE.
+            // Defer evaluation until binding time.
             result[c] = new GlobalReferenceDefinition(c, definition);
         } else {
             // Inline value

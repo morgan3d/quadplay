@@ -866,6 +866,165 @@ function hideNewModeDialog() {
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+function showImportModeDialog() {
+    document.getElementById('importModeDialog').classList.remove('hidden');
+    let gamePath = getGamePath();
+    const codeListURL = location.origin + getQuadPath() + 'console/_scripts.json?gamePath=' + gamePath;
+    document.getElementById('importModeImportButton').disabled = true;
+    
+    // Fetch the mode list
+    LoadManager.fetchOne({forceReload: true}, codeListURL, 'json', null, function (json) {
+        // Strip the path to the current game off scripts in the same dir
+        // or subdirectory of it. We do not do this on the server side
+        // because we may later allow developers to have their own asset directories
+        // separate from games, and the existing protocol allows that.
+        if (gamePath.length > 0 && gamePath[0] === '/') {
+            gamePath = gamePath.substring(1);
+        }
+
+        for (let i = 0; i < json.length; ++i) {
+            const url = json[i];
+            if (url.startsWith(gamePath)) {
+                json[i] = url.substring(gamePath.length);
+            }
+
+            // Remove scripts
+            if (! /(^|\/)[A-Z][^\/]*$/.test(json[i])) {
+                json.splice(i, 1);
+                --i;
+            }
+        }
+        
+        // Create the initial display
+        let s = '<ol id="importModeListOL" class="select-list">\n';
+        for (let i = 0; i < json.length; ++i) {
+            const file = json[i];
+
+            // Disable if already in the project
+            const disable = (gameSource.json.modes.indexOf(file) !== -1);
+            
+            const path = (file.indexOf('/') === -1) ? '' : file.replace(/\/[^\/]+$/, '/');
+            const rest = file.replace(/^.*\//, '');
+            const base = rest.replace(/\..+?$/, '');
+            const ext  = rest.replace(/^[^\.]+/, '');
+            s += `<li ${disable ? '' : 'onclick="onImportModeListSelect(this)"'}>${path}<b style="color:#000">${base}</b></li>\n`;
+        }
+        s += '</ol>';
+
+        document.getElementById('importModeList').innerHTML = s;
+    });
+
+}
+
+
+function hideImportModeDialog() {
+    document.getElementById('importModeDialog').classList.add('hidden');
+}
+
+
+function onImportModeImport() {
+    const url = document.getElementById('importModeListOL').selected;
+    gameSource.json.modes.push(url);
+    hideImportScriptDialog();
+    serverSaveGameJSON(function () {
+        loadGameIntoIDE(window.gameURL, undefined, true);
+    });
+}
+
+
+function onImportModeListSelect(target) {
+    const list = document.getElementById('importModeListOL');
+    for (let i = 0; i < list.children.length; ++i) {
+        list.children[i].classList.remove('selected');
+    }
+    target.classList.add('selected');
+    list.selected = target.innerText;
+
+    document.getElementById('importModeImportButton').disabled = false;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+function showImportScriptDialog() {
+    document.getElementById('importScriptDialog').classList.remove('hidden');
+    let gamePath = getGamePath();
+    const assetListURL = location.origin + getQuadPath() + 'console/_scripts.json?gamePath=' + gamePath;
+    document.getElementById('importScriptImportButton').disabled = true;
+    
+    // Fetch the script list
+    LoadManager.fetchOne({forceReload: true}, assetListURL, 'json', null, function (json) {
+        // Strip the path to the current game off scripts in the same dir
+        // or subdirectory of it. We do not do this on the server side
+        // because we may later allow developers to have their own asset directories
+        // separate from games, and the existing protocol allows that.
+        if (gamePath.length > 0 && gamePath[0] === '/') {
+            gamePath = gamePath.substring(1);
+        }
+
+        for (let i = 0; i < json.length; ++i) {
+            const url = json[i];
+            if (url.startsWith(gamePath)) {
+                json[i] = url.substring(gamePath.length);
+            }
+
+            // Remove modes
+            if (/(^|\/)[A-Z][^\/]*$/.test(json[i])) {
+                json.splice(i, 1);
+                --i;
+            }
+        }
+        
+        // Create the initial display
+        let s = '<ol id="importScriptListOL" class="select-list">\n';
+        for (let i = 0; i < json.length; ++i) {
+            const file = json[i];
+
+            // Disable if already in the project
+            const disable = (gameSource.json.scripts.indexOf(file) !== -1);
+            
+            const path = (file.indexOf('/') === -1) ? '' : file.replace(/\/[^\/]+$/, '/');
+            const rest = file.replace(/^.*\//, '');
+            const base = rest.replace(/\..+?$/, '');
+            const ext  = rest.replace(/^[^\.]+/, '');
+            s += `<li ${disable ? '' : 'onclick="onImportScriptListSelect(this)"'}>${path}<b style="color:#000">${base}</b>${ext}</li>\n`;
+        }
+        s += '</ol>';
+
+        document.getElementById('importScriptList').innerHTML = s;
+    });
+
+}
+
+
+function hideImportScriptDialog() {
+    document.getElementById('importScriptDialog').classList.add('hidden');
+}
+
+
+function onImportScriptImport() {
+    const url = document.getElementById('importScriptListOL').selected;
+    gameSource.json.scripts.push(url);
+    hideImportScriptDialog();
+    serverSaveGameJSON(function () {
+        loadGameIntoIDE(window.gameURL, undefined, true);
+    });
+}
+
+
+function onImportScriptListSelect(target) {
+    const list = document.getElementById('importScriptListOL');
+    for (let i = 0; i < list.children.length; ++i) {
+        list.children[i].classList.remove('selected');
+    }
+    target.classList.add('selected');
+    list.selected = target.innerText;
+
+    document.getElementById('importScriptImportButton').disabled = false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
 function showNewScriptDialog() {
     document.getElementById('newScriptDialog').classList.remove('hidden');
     document.getElementById('newScriptCreateButton').disabled = true;
@@ -898,29 +1057,20 @@ function onNewScriptCreate() {
     }
 
     // Name is OK, create the script
-
     // Canonicalize slashes and remove the game.json
-    let gamePath = gameSource.jsonURL.replace(/\\/g, '/');
-    if (gamePath.startsWith(location.origin)) {
-        gamePath = gamePath.substring(location.origin.length);
+    let gameFilename = gameSource.jsonURL.replace(/\\/g, '/');
+    if (gameFilename.startsWith(location.origin)) {
+        gameFilename = gameFilename.substring(location.origin.length);
     }
-
-    const gameFilename = gamePath;
     console.assert(gameFilename.endsWith('.game.json'));
 
-    // Construct the game.json contents
-    const gameJSON = gameSource.json;
-
-    // Add the new mode
-    gameJSON.scripts.push(name);
+    // Add the new script
+    gameSource.json.scripts.push(name);
 
     // Convert to a string
-    const gameContents = WorkJSON.stringify(gameJSON, undefined, 4);
+    const gameContents = WorkJSON.stringify(gameSource.json, undefined, 4);
 
-    let scriptFilename = gamePath.replace(/\/[^/]+\.game\.json$/, '\/');
-    if (! scriptFilename.endsWith('/')) { scriptFilename += '/'; }
-
-    scriptFilename += name;
+    let scriptFilename = getGamePath() + name;
 
     // Write the file and then reload
     serverWriteFiles([{filename: scriptFilename, contents: '// Scripts, variables, and constants here are visible to all modes\n', encoding: 'utf8'},
@@ -962,15 +1112,13 @@ function onNewDocCreate() {
     const templateName = document.getElementById('newDocTemplate').value;
 
     // Canonicalize slashes and remove the game.json
-    let gamePath = gameSource.jsonURL.replace(/\\/g, '/');
-    if (gamePath.startsWith(location.origin)) {
-        gamePath = gamePath.substring(location.origin.length);
+    let gameFilename = gameSource.jsonURL.replace(/\\/g, '/');
+    if (gameFilename.startsWith(location.origin)) {
+        gameFilename = gameFilename.substring(location.origin.length);
     }
-    const gameFilename = gamePath;
     console.assert(gameFilename.endsWith('.game.json'));
-    gamePath = gamePath.replace(/\/[^/]+\.game\.json$/, '\/');
     
-    const docFilename = gamePath + name + format;
+    const docFilename = getGamePath() + name + format;
 
     // Load the template and then callback to save
     const templateFilename = makeURLAbsolute('', 'quad://console/templates/' + templateName + format);
@@ -1031,6 +1179,75 @@ function longestCommonPathPrefix(A, B) {
     while (i >= 0 && A[i] !== '/') { --i; }
     if (i < 0) { return ''; }
     return A.substring(0, i + 1);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+function showImportDocDialog() {
+    document.getElementById('importDocDialog').classList.remove('hidden');
+    let gamePath = getGamePath();
+    const docListURL = location.origin + getQuadPath() + 'console/_docs.json?gamePath=' + gamePath;
+    document.getElementById('importDocImportButton').disabled = true;
+    
+    // Fetch the doc list
+    LoadManager.fetchOne({forceReload: true}, docListURL, 'json', null, function (json) {
+        // Strip the path to the current game off docs in the same dir
+        // or subdirectory of it.
+        if (gamePath.length > 0 && gamePath[0] === '/') {
+            gamePath = gamePath.substring(1);
+        }
+
+        for (let i = 0; i < json.length; ++i) {
+            const url = json[i];
+            if (url.startsWith(gamePath)) {
+                json[i] = url.substring(gamePath.length);
+            }
+        }
+        
+        // Create the display
+        let s = '<ol id="importDocListOL" class="select-list">\n';
+        for (let i = 0; i < json.length; ++i) {
+            const file = json[i];
+
+            // Disable if already in the project
+            const disable = (gameSource.json.docs.indexOf(file) !== -1);
+            
+            const path = (file.indexOf('/') === -1) ? '' : file.replace(/\/[^\/]+$/, '/');
+            const rest = file.replace(/^.*\//, '');
+            const base = rest.replace(/\..+?$/, '');
+            const ext  = rest.replace(/^[^\.]+/, '');
+            s += `<li ${disable ? '' : 'onclick="onImportDocListSelect(this)"'}>${path}<b style="color:#000">${base}</b>${ext}</li>\n`;
+        }
+        s += '</ol>';
+
+        document.getElementById('importDocList').innerHTML = s;
+    });
+}
+
+
+function hideImportDocDialog() {
+    document.getElementById('importDocDialog').classList.add('hidden');
+}
+
+
+function onImportDocImport() {
+    const url = document.getElementById('importDocListOL').selected;
+    gameSource.json.docs.push(url);
+    hideImportDocDialog();
+    serverSaveGameJSON(function () {
+        loadGameIntoIDE(window.gameURL, undefined, true);
+    });
+}
+
+
+function onImportDocListSelect(target) {
+    const list = document.getElementById('importDocListOL');
+    for (let i = 0; i < list.children.length; ++i) {
+        list.children[i].classList.remove('selected');
+    }
+    target.classList.add('selected');
+    list.selected = target.innerText;
+    document.getElementById('importDocImportButton').disabled = false;
 }
 
 

@@ -504,7 +504,9 @@ choreograph series of frame hooks one after the other.
 [Planet Generator](../console/quadplay.html?game=quad://examples/planetgen&IDE=1) uses built-in assets to create random 3D planets with moons, stars, atmosphere, and rings.
 
 </td></tr><tr><td>![](../examples/input/label128.png)</td><td>
-[Input Demo](../console/quadplay.html?game=quad://examples/input&IDE=1) is a demonstration and test of the full input API. It uses the cross-platform controllers and touch as well as the extended analog stick and mouse APIs.
+[Input Example](../console/quadplay.html?game=quad://examples/input&IDE=1) is a demonstration and test
+of the full input API. It uses the cross-platform controllers and touch as well as the extended analog 
+stick and mouse APIs. Shows how to completely hide the OS mouse cursor with `device_control("set_mouse_cursor", "none")`.
 
 </td></tr><tr><td>![](../examples/touch/label128.png)</td><td>
 [Touch Example](../console/quadplay.html?game=quad://examples/touch&IDE=1) uses the mouse/touch API.
@@ -677,7 +679,7 @@ also called a finite automata or flow chart. Your program is a state machine wit
     do this for all programs, but it can usually do a good job. When
     the automatic algorithm misses a link, you can give it a hint
     using a commented out `set_mode()` call in your mode file.  For
-    example, <code style="white-space: nowrap">// set_mode(GameOver) because "0 lives"</code>
+    example, <span style="white-space: nowrap">`// set_mode(GameOver) because "0 lives"`</span>
     will add a link from the current mode to the `GameOver` mode.
 
 The syntax of a mode with multiple sections is similar to [Markdown](https://en.wikipedia.org/wiki/Markdown) format:
@@ -4587,6 +4589,9 @@ Raw Device Access
     <tr valign=top><td> `"set_mouse_lock", bool`       </td><td> Enable or disable mouse lock. Mouse lock hides the OS mouse cursor and prevents the mouse from moving 
                                                         from the center of the screen, so that it returns only `dxy` values and absolute `xy` values will be fixed. 
                                                         This is useful for first-person mouselook.</td></tr>
+    <tr valign=top><td> `"set_mouse_cursor", name`     </td><td>Change the OS mouse cursor to any [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS/cursor) cursor. The default is `"crosshair"`. Note that the OS 
+                                                        cursor is at a different resolution than quadplay, so you may want to set to `"none"` and draw your own cursor from a sprite. The OS cursor has 1-4 frames less lag
+                                                        than a game-drawn cursor, however.</td></tr>
     
     <tr valign=top><td> `"set_debug_flag", flagname, bool`</td><td> Set the enabled state of an IDE debugging flag. The flagnames are 
                                                        `"entity_bounds"`, `"assert"`, `"debug_print"`, 
@@ -4892,6 +4897,7 @@ Sprites
 ![`quad://sprites/freedoom-tiles-64x64.sprite.json`](../sprites/freedoom-tiles-64x64.png)
 ![`quad://sprites/mc-pixel-perfection-16x16.sprite.json`](../sprites/mc-pixel-perfection-16x16.png)
 ![`quad://sprites/shapes-32x32.sprite.json`](../sprites/shapes-32x32.png)
+![`quad://sprites/cursor-9x9.sprite.json`](../sprites/shapes-9x9.png)
 
 
 Fonts
@@ -4942,6 +4948,8 @@ Fonts
 ![`quad://fonts/wright-8.font.json`](../fonts/wright-8.png)
 
 ![`quad://fonts/deja-8.font.json`](../fonts/deja-8.png)
+
+![`quad://fonts/weaver-7.font.json`](../fonts/weaver-7.png)
 
 ![`quad://fonts/pryce-7.font.json`](../fonts/pryce-7.png)
 
@@ -5344,9 +5352,11 @@ The available constants types are:
 - `array`
 - `table`
 - `reference`
-  - The value of a reference is the name of another constant or asset. These
+  - The value of a reference is the name of another constant, asset, or named
+    sprite of the form `sprite_asset_name.sprite_name`. These
     can be recursive, but obviously cannot form a cycle. References must be 
-    defined at top level and not nested inside an array or object.
+    defined at top level and not nested inside an array or object. 
+    
 
 ### `table` Constants
 
@@ -6956,13 +6966,13 @@ A B Γ Δ E Z H Θ I K Λ M N Ξ O Π P Σ T Φ X Ψ Ω
 
 
 ````````````````````````````````````````````````````` none big
-ς ş ğ İ Ş Ğ υ г ¡ м н к Ñ ñ б Б Œ œ ℵ
+ς ş ğ İ Ş Ğ υ г ¡ м н к в Ñ ñ б Б Œ œ ℵ ϕ
 Æ À Á Â Ã Ä Å Ç È É Ê Ë Ì Í Î Ï Ø Ò Ó Ô Õ Ö
 æ à á â ã ä å ç è é ê ë ì í î ï ø ò ó ô õ ö
 Д Ж З И Й Л П Ц Ч Ш Щ Э Ю Я Ъ Ы Ь ẞ Ù Ú Û Ü
 д ж з и й л п ц ч ш щ э ю я ъ ы ь ß ù ú û ü 
 `````````````````````````````````````````````````````
-[Accented and Cyrillic characters]
+[Accented and Russian characters]
 
 
 ````````````````````````````````````````````````````` none big
@@ -7976,10 +7986,24 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
+2020 October 18: Beta update 52
+
+- New `cursor-9x9.sprite.json` spritesheet
+- New `weaver-7.font.json` font
+- Reference constants may now point to named sprites
+- Added IDE GUI editor for reference constants
+- Added `device_control("set_mouse_cursor", name)`
+- Added "Import existing script" dialog
+- Added "Import existing mode" dialog
+- Added "Import existing doc" dialog
+- Fixed `false` boolean constants not appearing in the GUI for the debug layer
+- Fixed mouse and touch movement deltas to work correctly on high framerate displays
+
+
 2020 October 9: Beta update 51
 
 - New Input example program
-- New Weaver-10 font
+- New `weaver-10.font.json` font
 - Added Russian Cyrillic character "в" to fonts
 - Improved credits scrolling speed and fonts
 - Improved pixel sharpness on Chrome Windows and macOS at certain pixel ratios.

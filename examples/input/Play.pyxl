@@ -20,7 +20,7 @@ def draw_button(i, gamepad, jp, b, pos):
     const outlineColor = if jp[b + b] > mode_frames - 10 then #0 else ∅
     const offset = if pressed then 1 else 0
     draw_disk(pos + offset, 10, if pressed then PRESSED_COLOR else OFF_COLOR[i], outlineColor)
-    draw_text({text: b, font: font, pos: pos + offset + xy(0, 2), x_align: "center", y_align: "center", color: #000})
+    draw_text({text: b, font: font, pos: pos + offset + xy(0, 1), x_align: "center", y_align: "center", color: #000})
     draw_disk(pos + SHADOW_OFFSET, 10, SHADOW_COLOR, ∅, -1)
     
 
@@ -47,6 +47,11 @@ const justPressed = [{aa:-100, bb:-100, cc:-100, dd:-100, ee:-100, ff:-100, qq:-
                      {aa:-100, bb:-100, cc:-100, dd:-100, ee:-100, ff:-100, qq:-100},
                      {aa:-100, bb:-100, cc:-100, dd:-100, ee:-100, ff:-100, qq:-100},
                      {aa:-100, bb:-100, cc:-100, dd:-100, ee:-100, ff:-100, qq:-100}]
+
+enter
+────────────────────────────────────────────────────────────────────────
+device_control("set_mouse_cursor", "none")
+
 
 frame
 ────────────────────────────────────────────────────────────────────────
@@ -125,8 +130,10 @@ for i < 4:
 
 
 const mouse = device_control("get_mouse_state")
-draw_rect(mouse.xy, xy(8, 8), #FFF, #000)
-draw_line(mouse.xy, mouse.xy + 10 mouse.dxy, #F00)
+draw_sprite({sprite: CURSOR_SPRITE, pos: mouse.xy + xy(2, 3), override_color: #000f, opacity: 15%})
+draw_sprite(CURSOR_SPRITE, mouse.xy)
+// Motion vector:
+//draw_line(mouse.xy, mouse.xy + 10 mouse.dxy, #F00)
 
 if touch.a: last_touch_pos = xy(touch.x, touch.y)
 if touch.aa: last_touch_frame = mode_frames

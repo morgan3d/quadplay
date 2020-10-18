@@ -53,13 +53,14 @@ function showConstantEditor(index) {
         html = '<p><i>' + json.description + '</i></p>' + html;
     }
 
-    const debugEnabled = debugJSON !== undefined && debugJSON.enabled;
-    html += `<br/><br/><label><input type="checkbox" style="margin-left:24px" autocomplete="false" ${debugEnabled ? 'checked' : ''} onchange="onConstantEditorDebugOverrideChange(gameSource, '${constantName}', this)">Debug&nbsp;Override</label>`;
+    const debugEnabled = debugJSON && debugJSON.enabled;
+    const indent = 0;
+    html += `<br/><br/><label><input type="checkbox" style="margin-left:${indent + 4}px" autocomplete="false" ${debugEnabled ? 'checked' : ''} onchange="onConstantEditorDebugOverrideChange(gameSource, '${constantName}', this)">Debug&nbsp;Override</label>`;
     if (debugEnabled) {
-        html += '<div style="margin-left:24px; margin-top:4px; width:100%; border: 1px #E0BD33 solid; border-radius: 4px; padding: 2px; padding-top:6px; padding-bottom: 5px; background: #444">';
+        html += `<div style="margin-left:${indent - 3}px; margin-top:4px; width:100%; border: 1px #E0BD33 solid; border-radius: 4px; padding: 2px; padding-top:6px; padding-bottom: 5px; background: #444">`;
         html += `<div id="${controlName}_debug_div" ${debugEnabled ? '' : 'disabled'}>`;
        
-        if (gameSource.debug.constants && gameSource.debug.constants[constantName]) {
+        if (gameSource.debug.constants && (gameSource.debug.constants[constantName] !== undefined)) {
             let debugValue = gameSource.debug.constants[constantName];
             if (debugValue.type !== undefined) {
                 // Not a raw value
@@ -162,7 +163,29 @@ function makeConstantEditorControlHTML(constantName, controlName, json, value, i
             html = '<table style="border-collapse: collapse"><tr valign="top"><td>' + html + '</td><td style="padding-left: 10px">' + editor + '</td><td>' + metaEditor + '</td></tr></table>';
         }
     } else if (type === 'reference') {
-        html += constantName + ' → ' + json.value;
+        html += `${constantName} → <div class="select-editable"><select onchange="this.nextElementSibling.value=this.value; onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.value, this.value)"><option value=""></option>`;
+
+        // Make sorted lists of all constants followed by all assets
+        let sources = gameSource.json.constants;
+        for (let j = 0; j < 2; ++j) {
+            let list = [];
+            for (let key in sources) {
+                if (key !== constantName) {
+                    list.push(key);
+                }
+            }
+            
+            list.sort();
+            
+            for (let i = 0; i < list.length; ++i) {
+                const key = list[i];
+                html += `<option value="${key}" ${key === json.value ? 'selected="selected"' : ''}>${key}</option>`;
+            }
+            
+            sources = gameSource.json.assets;
+        }
+
+        html += `</select><input type="text" onchange="combobox_textbox_onchange(this); onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.value, this.value)" value="${json.value}" /></div>`;
     } else {
         // Object or array (including built-in objects)
         const L = Object.keys(value).length;
@@ -305,10 +328,7 @@ function onConstantEditorVectorValueChange(gameLayer, environment, controlName, 
 /** Value is the numeric value to assign. jsonValue is what to store in the .value
     field of the game.json file. */
 function onConstantEditorValueChange(gameLayer, environment, controlName, key, value, jsonValue) {
-    // Update pre-evaluated objects
-    gameLayer.constants[key] = value;
-    
-    // Update gameSource.json.constants
+    // Update gameLayer.json.constants
     if (typeof gameLayer.json.constants[key] === 'object') {
         const obj = gameLayer.json.constants[key];
         console.assert(obj.type !== 'raw');
@@ -336,6 +356,14 @@ function onConstantEditorValueChange(gameLayer, environment, controlName, key, v
             break;
         }
     }
+
+    // Update pre-evaluated objects
+    if (gameLayer.json.constants[key].type === 'reference') {
+        gameLayer.constants[key] = new GlobalReferenceDefinition(key, gameLayer.json.constants[key]);
+    } else {
+        gameLayer.constants[key] = value;
+    }
+    
     
     // Set a timer to save the game.json
     if (gameLayer === gameSource) {

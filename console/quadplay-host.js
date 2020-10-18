@@ -13,6 +13,8 @@
 let spritesheetArray = [];
 let fontArray = [];
 
+let runtime_cursor = 'crosshair';
+
 if (window.location.toString().startsWith("file://")) {
     alert('quadplay cannot run from a local filesystem. It requires a web server (which may be local...see the manual)');
     throw new Error();
@@ -168,6 +170,13 @@ function device_control(cmd) {
             break;
         }
 
+    case "set_mouse_cursor":
+        {
+            runtime_cursor = QRuntime.unparse(arguments[1]).replace(/[^_a-z]/g, '');
+            document.getElementById('screen').style.cursor = runtime_cursor;
+            break;
+        }
+        
     case "set_mouse_lock":
         // The state will be remembered and applied by pause and play buttons
         usePointerLock = arguments[1] !== false;
@@ -1011,11 +1020,13 @@ function requestInput() {
 function updateInput() {
     mouse.screen_x_prev = mouse.screen_x;
     mouse.screen_y_prev = mouse.screen_y;
+    /*
     if (mouse.movement_x !== undefined && ! mouse.movement) {
         mouse.movement_x = 0;
         mouse.movement_y = 0;
     }
     mouse.movement = false;
+    */
     
     const axes = 'xy', AXES = 'XY', buttons = 'abcdefpq';
 
@@ -1381,10 +1392,17 @@ function updateMouseDevice(event) {
                 zoom = parseFloat(document.getElementById('screenBorder').style.zoom || '1');
             }
 
+            if (mouse.movement_x === undefined) {
+                mouse.movement_x = mouse.movement_y = 0;
+            }
+
             // Movement events are available on this browser. They are higher precision and
-            // survive pointer lock, so report them instead
-            mouse.movement_x = emulatorScreen.width  * event.movementX / (rect.width  * zoom);
-            mouse.movement_y = emulatorScreen.height * event.movementY / (rect.height * zoom);
+            // survive pointer lock, so report them instead. These must be ACCUMULATED because
+            // they arrive at the monitor's refresh rate, not the game's refresh rate. On
+            // high framerate monitors we need to know the total of all mouse events. These
+            // are zeroed again in the main game loop.            
+            mouse.movement_x += emulatorScreen.width  * event.movementX / (rect.width  * zoom);
+            mouse.movement_y += emulatorScreen.height * event.movementY / (rect.height * zoom);
             mouse.movement = true;
         }
     }
