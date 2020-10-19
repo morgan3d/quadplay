@@ -1,5 +1,5 @@
 The **quadplay✜** fantasy console by [CasualEffects](https://casual-effects.com)
-is now in public beta.
+is now in public beta for creating and playing video games.
 
 - [Play games online](https://morgan3d.github.io/quadplay/console/quadplay.html?kiosk=1)
 - [Download the console](https://github.com/morgan3d/quadplay/archive/master.zip)
@@ -7,6 +7,7 @@ is now in public beta.
 - [Read the manual](https://morgan3d.github.io/quadplay/doc/manual.md.html)
 
 ![](doc/emulator.png)
+
 
 Platforms
 ========================================================
@@ -42,9 +43,8 @@ Join the Beta
 ========================================================
 
 This beta version is fully functional and has already been used to ship jam games.
-You can use an external editor (like VSCode) or the browser-based development environment.
-To enable some features, you may have to edit a line of a text file in a separate editor (even Notepad)
-right now. Soon, all core features will be supported directly in the browser.
+You can use an external editor (like VSCode) or simply work entirely within
+the provided the browser-based development environment.
 
 To get started, you'll need Windows, macOS, or Linux and 
 the following freely-available software.
@@ -79,14 +79,14 @@ You can create closed-source games with it and distribute your games
 however you want, including commercially. 
 
 If you modify the runtime library, compiler, or emulator, then you
-must redistribute those changes to those under the LGPL3.
+must redistribute those changes under the LGPL3.
 
 Portions of the IDE are under different, less-restrictive
 open source licenses (BSD, MIT, and public domain).
 
-Quadplay automatically adds assets and library licenses to your
+Quadplay automatically adds asset and library licenses to your
 game's credits screen. You don't have to do any work to satisfy
-attribution clauses from open source liceses.
+attribution clauses from open source or Creative Commons licenses.
 
 All sounds, sprites, and games distributed with quadplay✜ are Creative
 Commons licensed. The copyright and license on each of those is in 
