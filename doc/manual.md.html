@@ -1297,6 +1297,7 @@ the following properties:
 Property           | Values   | Meaning
 -------------------|----------|----------------------------------
 `index`            | 0,1,2,3  | Index of this gamepad in `pad` array
+`player_color`     | rgb      | Color identifying this player (not the color of the gamepad itself)
 `x`                | -1,0,+1  | Current D-pad value on the _x_-axis (+1 = right)
 `xx`               | -1,0,+1  | Direction that was just pressed this frame on the _x_-axis
 `dx`               | -2 to +2 | Change in direction this frame on the _x_-axis
@@ -5017,6 +5018,7 @@ Sounds
 ![`quad://sounds/loop-wind.sound.json`](../sounds/loop-wind.mp3) ![`quad://sounds/loop-footsteps.sound.json`](../sounds/loop-footsteps.mp3)
 ![`quad://sounds/loop-footsteps-indoor.sound.json`](../sounds/loop-footsteps-indoor.mp3) ![`quad://sounds/loop-footsteps-puddle.sound.json`](../sounds/loop-footsteps-puddle.mp3)
 ![`quad://sounds/loop-footsteps-water.sound.json`](../sounds/loop-footsteps-water.mp3) ![`quad://sounds/loop-footsteps-snow.sound.json`](../sounds/loop-footsteps-snow.mp3)
+![`quad://sounds/loop-departure.sound.json`](../sounds/loop-departure.mp3)
 
 
 ### Coin
@@ -5099,7 +5101,10 @@ Sounds
 
 ### Splash
 
-![`quad://sounds/splash-00.sound.json`](../sounds/splash-00.mp3)
+![`quad://sounds/splash-00.sound.json`](../sounds/splash-00.mp3) ![`quad://sounds/splash-01.sound.json`](../sounds/splash-01.mp3)
+![`quad://sounds/splash-02.sound.json`](../sounds/splash-02.mp3) ![`quad://sounds/splash-03.sound.json`](../sounds/splash-03.mp3)
+![`quad://sounds/splash-04.sound.json`](../sounds/splash-04.mp3) ![`quad://sounds/splash-05.sound.json`](../sounds/splash-05.mp3)
+![`quad://sounds/splash-06.sound.json`](../sounds/splash-06.mp3)
 
 
 ### Sparks
@@ -7221,19 +7226,21 @@ I expect most people will use quadplay✜ on phones, laptops, and desktops
 as a _virtual_ console. But, if you have some maker experience you can make a
 _real_ quadplay✜ console.
 
-When you're color coding a full four-player setup, the standard
-quadplay✜ arcade player colors and order is P3 Yellow, P1 Magenta
-("pink"), P2 Cyan ("blue"), P3 Lime ("green"):
+When you're color coding the physical controls for a full four-player setup, the standard
+quadplay✜ arcade player colors and physical layout order is: P3 Yellow, P1 Magenta
+("pink"), P2 Cyan ("blue"), P3 Lime ("green"). Graphically:
 
-<center><big>
-<span style="color:#ffe84d; margin-right:30px">*P3*</span>
-<span style="color:#ff49aa; margin-right:30px">*P1*</span>
-<span style="color:#00aaff; margin-right:30px">*P2*</span>
-<span style="color:#4ffb4b">*P4*</span>
-</big>
-<br>
-
-`const COLOR_ARRAY = [#f5a, #0af, #fe5, #5f5]`
+<center>
+<table style="font-size:200%; font-weight:bold; width:300px; text-align:center; margin: 15px; border-collapse: separate; border: 2px solid #000; padding: 8px; background: #333">
+<tr valign="center"><td colspan=4 style="border: 2px solid; border-radius:8px; background: #000; height: 200px">SCREEN</td></tr>
+<tr>
+<td style="color:#fe5">*P3*<span style="font-size:50%"><br>#fe5</span></td>
+<td style="color:#f5a">*P1*<span style="font-size:50%"><br>#f5a</span></td>
+<td style="color:#0af">*P2*<span style="font-size:50%"><br>#0af</span></td>
+<td style="color:#5f5">*P4*<span style="font-size:50%"><br>#5f5</span></td>
+</tr>
+<tr><td colspan=4 style="border-top: 2px solid #000"><br><br></td></tr>
+</table>
 </center>
 
 #### Nano or Pi 4
@@ -7872,8 +7879,8 @@ Credits
 ====================================================================================
 
 quadplay✜ was created by Morgan McGuire. Stephan Steinbach provided
-extensive testing and design feedback, and Mauricio Vives proofread
-the manual.
+extensive testing and design feedback, Josh Minor helped with the
+networking design, and Mauricio Vives proofread the manual.
 
 The quadplay✜ console's influences include Atari 2600, Commodore VIC-20, APL,
 Python, [PICO-8](https://www.lexaloffle.com/pico-8.php),
@@ -7882,7 +7889,9 @@ Python, [PICO-8](https://www.lexaloffle.com/pico-8.php),
 [codeheart.js](https://casual-effects.com/codeheart/) and
 [the nano JAMMER](https://morgan3d.github.io/nano).
 
-The quadplay✜ IDE and compiler are copyright 2019-2020 Morgan McGuire, including:
+The quadplay✜ IDE and compiler are copyright 2019-2020 Morgan McGuire. They are licensed under the
+[LGPL 3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html), but may be relicensed in the future.
+This includes the contents of:
 
 - [`quadplay.html`](../console/quadplay.html)
 - [`quadplay.css`](../console/quadplay.css)
@@ -7891,6 +7900,7 @@ The quadplay✜ IDE and compiler are copyright 2019-2020 Morgan McGuire, includi
 - [`quadplay-runtime-gpu.js`](../console/quadplay-runtime-gpu.js)
 - [`quadplay-profiler.js`](../console/quadplay-profiler.js)
 - [`quadplay-host.js`](../console/quadplay-host.js)
+- [`quadplay-network.js`](../console/quadplay-network.js)
 - [`quadplay-ide.js`](../console/quadplay-ide.js)
 - [`quadplay-edit-asset.js`](../console/quadplay-edit-asset.js)
 - [`quadplay-edit-code.js`](../console/quadplay-edit-code.js)
@@ -7899,8 +7909,7 @@ The quadplay✜ IDE and compiler are copyright 2019-2020 Morgan McGuire, includi
 - [`quadplay-font.js`](../console/quadplay-font.js)
 - [`quadplay-load.js`](../console/quadplay-load.js)
 
-and excluding the content described below. The IDE and compiler are licensed under the
-[LGPL 3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html), but may be relicensed in the future.
+and excludes the content described below. 
 
 The Vim mode is by [Stephan Steinbach](https://twitter.com/stephan_gfx).
 
@@ -7985,6 +7994,15 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 October TBD: Beta update 53
+
+- Added `gamepad_array[i].color`
+- Added `splash-01.sound.json`, `splash-02.sound.json`, `splash-03.sound.json`,
+  `splash-04.sound.json`, `splash-05.sound.json`, `splash-06.sound.json`
+- Added `loop-departure.sound.json`
+- Import Existing Asset dialog now supports keyword filtering
+- Improved sound preview in IDE with full pause, volume, and scrub controls
 
 2020 October 18: Beta update 52
 

@@ -201,13 +201,7 @@
             </div>
           </div>
           <div id="soundEditor">
-            <div style="position: absolute; top:50%; left: 50%; margin-top: -10px; margin-left: -40px; width:80px; height: 50px" onmousedown="event.stopPropagation()" class="button" onclick="play_sound(soundEditorCurrentSound)" title="Play Sound">
-              <label>
-                <span class="label">
-                  <img src="sound-icon.png" width=14>
-                </span>
-              </label>
-            </div>
+            <audio controls style="position: absolute; top:50%; left: 50%; margin-top: -10px; margin-left: -150px; width:300px; outline: none !important"></audio>
           </div>
         </div>
 
@@ -582,30 +576,50 @@
     </div>
 
     <div id="addAssetDialog" class="modal hidden">
-      <div class="dialog" style="top:10px; width: 400px">
+      <div class="dialog" style="margin-top: 10vh; width: 410px">
         <center>
           <b>Import Existing Asset</b>
-          <p>
-            <label for="addAssetType">Type&nbsp;&nbsp;</label>
-            <select id="addAssetType" style="width:320px" onchange="onAddAssetTypeChange()">
-              <option value="sprite">Sprite</option>
-              <option value="sound">Sound</option>
-              <option value="font">Font</option>
-              <option value="map">Map</option>
-              <option value="data">Data</option>
-            </select>
-          </p>
-          <p>
-            <div id="addAssetList" style="width:380px; height: 300px; background: #fff; border-radius: 2px; overflow: scroll scroll; color: #888; text-align: left; font-size: 80%; font-family: Monaco, monospace">
-            </div>
-          </p>
-          <p>
-            <label for="addAssetName">Name&nbsp;&nbsp;</label>
-            <input id="addAssetName" type="text" style="font-size: 80%; font-family: Monaco, monospace; width: 320px" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '').replace(/^_+/, '');document.getElementById('addAssetAddButton').disabled = (this.value === '' || !addAssetFiles.selected)"></input>
-          </p>
+          <table style="width: 100%; margin-top: 10px">
+            <tr>
+              <td width="60px">
+                <label for="addAssetType">Type&nbsp;&nbsp;</label>
+              </td>
+              <td>
+                <select id="addAssetType" style="width: 100%" onchange="onAddAssetTypeChange()">
+                  <option value="sprite">Sprite</option>
+                  <option value="sound">Sound</option>
+                  <option value="font">Font</option>
+                  <option value="map">Map</option>
+                  <option value="data">Data</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                Filter
+              </td>
+              <td>
+                <input id="addAssetFilter" type="text" style="width: 100%" oninput="onAddAssetFilterChange()"></input>
+              </td>
+            </tr>
+            <tr>
+              <td colspan=2 style="text-align:center; padding-top: 10px; padding-bottom: 10px">
+                <div id="addAssetList" style="width:100%; height: 300px; background: #fff; border-radius: 2px; overflow: scroll scroll; color: #888; text-align: left; font-size: 80%; font-family: Monaco, monospace">
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <label for="addAssetName">Name&nbsp;&nbsp;</label>
+              </td>
+              <td>
+                <input id="addAssetName" type="text" style="font-size: 80%; font-family: Monaco, monospace; width: 100%" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '').replace(/^_+/, '');document.getElementById('addAssetAddButton').disabled = (this.value === '' || !addAssetFiles.selected)"></input>
+              </td>
+            </tr>
+          </table>
           <br/>
-          <button type="button" onclick="hideAddAssetDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span>
-          <button type="button" id="addAssetAddButton" onclick="onAddAssetAdd()">Add</button>
+          <button type="button" style="width: 80px" onclick="hideAddAssetDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span>
+          <button type="button" style="width: 80px" id="addAssetAddButton" onclick="onAddAssetAdd()">Add</button>
         </center>
       </div>
     </div>
@@ -733,5 +747,6 @@
   <script defer src="quadplay-edit-game.js?" charset="utf-8"></script>
   <script defer src="quadplay-edit-asset.js?" charset="utf-8"></script>
   <script defer src="quadplay-edit-constant.js?" charset="utf-8"></script>
+  <script defer src="quadplay-network.js?" charset="utf-8"></script>
   <script defer src="quadplay-ide.js?" charset="utf-8"></script>
 </html>

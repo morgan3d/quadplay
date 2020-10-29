@@ -1875,6 +1875,7 @@ function onProjectSelect(target, type, object) {
         } else if (/\.mp3$/i.test(url)) {
             soundEditor.style.visibility = 'visible';
             soundEditorCurrentSound = object;
+            document.querySelector('#soundEditor audio').src = object.$url;
         } else if (/\.tmx$/i.test(url)) {
             visualizeMap(object);
             mapEditor.style.visibility = 'visible';
@@ -3425,6 +3426,8 @@ function reloadRuntime(oncomplete) {
         Object.seal(QRuntime.touch);
         
         QRuntime.gamepad_array = Object.seal([0,0,0,0]);
+        const COLOR_ARRAY = ['f5a', '0af', 'fe5', '5f5'];
+
         for (let p = 0; p < 4; ++p) {
             const type = 'Quadplay';
 
@@ -3434,7 +3437,8 @@ function reloadRuntime(oncomplete) {
             if (! controlBindings) {
                 controlBindings = {id: isMobile ? 'mobile' : '', type: defaultControlType(p)};
             }
-            
+
+            const player_color = parseHexColor(COLOR_ARRAY[p]);
             const pad = {
                 $x: 0, $dx: 0, $xx: 0,
                 $y: 0, $dy: 0, $yy: 0, 
@@ -3444,6 +3448,7 @@ function reloadRuntime(oncomplete) {
                 pressed_a:0, pressed_b:0, pressed_c:0, pressed_d:0, pressed_e: 0, pressed_f:0, $pressed_p:0, pressed_q:0,
                 released_a:0, released_b:0, released_c:0, released_d:0, released_e:0, released_f:0, $released_p:0, released_q:0,
                 index: p,
+                player_color: Object.freeze({r:player_color.r, g:player_color.g, b:player_color.b}),
                 type: controlBindings.type,
                 prompt: Object.freeze(Object.assign({'##': '' + (p + 1)}, controlSchemeTable[controlBindings.type])),
                 $id: controlBindings.id,

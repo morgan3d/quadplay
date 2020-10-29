@@ -384,6 +384,10 @@ b.projectTitle.remote:before {
     box-shadow:    0px 4px 15px 0px rgba(0, 0, 0, 0.4);
 }
 
+input, select, textarea {
+    box-sizing: border-box;
+}
+
 /* Slightly round all text boxes on Chrome*/
 input[type=text], input[type=number], textarea {
     border-radius: 2px;

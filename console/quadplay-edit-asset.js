@@ -4,6 +4,7 @@ let addAssetFiles = null;
 function showAddAssetDialog() {
     document.getElementById('addAssetDialog').classList.remove('hidden');
     document.getElementById('addAssetAddButton').disabled = true;
+    document.getElementById('addAssetFilter').value = '';
     const text = document.getElementById('addAssetName');
     text.value = '';
     text.focus();
@@ -60,9 +61,21 @@ function onAddAssetTypeChange() {
     const list = document.getElementById('addAssetList');
     list.innerHTML = s;
 
+    onAddAssetFilterChange();
+
     addAssetFiles.selected = null;
     // Recreating the list destroys any selection
     document.getElementById('addAssetAddButton').disabled = true;
+}
+
+
+function onAddAssetFilterChange() {
+    const filter = document.getElementById('addAssetFilter').value.trim().toLowerCase();
+    const list = document.querySelectorAll('#addAssetListOL li');
+    for (let i = 0; i < list.length; ++i) {
+        const element = list[i];
+        element.style.display = (filter === '') || (element.innerText.toLowerCase().indexOf(filter) !== -1) ? '' : 'none';
+    }
 }
 
 
