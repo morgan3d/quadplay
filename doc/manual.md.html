@@ -1980,7 +1980,7 @@ Vector
 
 Most of the math functions and operators defined for numbers also
 operate component-wise on vectors represented as structures or arrays.
-For example, `clamp()`, `min()`, `loop()`, `+`, `/`, etc.
+For example, `clamp()`, `min()`, `+`, `/`, etc.
 
 The following vector operations can be applied to any array or object,
 including `xy()` and `rgb()` values, except where specific key names are mentioned:
@@ -2279,7 +2279,7 @@ Sound
 : Object version of `play_sound()`, allowing keyword argument style call.
   Values default according to the positional argument version.
 
-`play_sound(sound, loop default false, volume default 100%, pan default 0%, pitch default 100%, time default 0)`
+`play_sound(sound, loop default false, volume default 100%, pan default 0%, pitch default 100%, time default 0, rate default 100%, stopped default false)`
 : Play `sound`, which must have been loaded as an asset. The time
   is in seconds. Full pan left is `-100%` and full pan right is `100%`.
   Returns an audio object that can be used with `stop_audio()`.
@@ -2287,13 +2287,21 @@ Sound
   If `pan` is an `xy()` value, it is interpreted as a world space point
   and the pan is computed based on the fraction of the screen
   under the current transformation and camera.
+  
+  If `stopped` is true, the sound initially starts in the `"STOPPED"` mode
+  and can be restarted with `resume_audio()`. Useful for setting up loops
+  that do not play immediately.
 
 `resume_audio(audio)`
 : Resume a sound previously stopped with `stop_audio()`. Sets the state to `"PLAYING"`.
 
 `set_pan(audio, pan)`
 : Set the pan of an audio object that is currently playing. 0% is centered.
-  -100% is full left, 100% is full right.
+  -100% is full left, 100% is full right. 
+  
+  If `pan` is an `xy()` value, it is interpreted as a world space point
+  and the pan is computed based on the fraction of the screen
+  under the current transformation and camera.
 
 `set_pitch(audio, pitch)`
 : Set the pitch of an audio object that is currently playing without affecting speed. 100% is the default pitch from the file.
@@ -4998,8 +5006,9 @@ Sounds
 ![`quad://sounds/music-vice.sound.json`](../sounds/music-vice.mp3)  ![`quad://sounds/music-saturday.sound.json`](../sounds/music-saturday.mp3)
 ![`quad://sounds/music-brawl.sound.json`](../sounds/music-brawl.mp3) ![`quad://sounds/music-credits.sound.json`](../sounds/music-credits.mp3)
 ![`quad://sounds/music-days.sound.json`](../sounds/music-days.mp3)   ![`quad://sounds/music-viper.sound.json`](../sounds/music-viper.mp3)
+![`quad://sounds/music-royal.sound.json`](../sounds/music-royal.mp3) ![`quad://sounds/music-sonata.sound.json`](../sounds/music-sonata.mp3)
 
-### Loops
+### Music Loops
 
 ![`quad://sounds/loop-arcade.sound.json`](../sounds/loop-arcade.mp3) ![`quad://sounds/loop-mega.sound.json`](../sounds/loop-mega.mp3)
 ![`quad://sounds/loop-edm.sound.json`](../sounds/loop-edm.mp3) ![`quad://sounds/loop-munster.sound.json`](../sounds/loop-munster.mp3)
@@ -5014,11 +5023,7 @@ Sounds
 ![`quad://sounds/loop-puzzle.sound.json`](../sounds/loop-puzzle.mp3) ![`quad://sounds/loop-triumphant.sound.json`](../sounds/loop-triumphant.mp3)
 ![`quad://sounds/loop-dark-thriller.sound.json`](../sounds/loop-dark-thriller.mp3) ![`quad://sounds/loop-chilltech.sound.json`](../sounds/loop-chilltech.mp3)
 ![`quad://sounds/loop-prometheus.sound.json`](../sounds/loop-prometheus.mp3) ![`quad://sounds/loop-forest.sound.json`](../sounds/loop-forest.mp3)
-![`quad://sounds/loop-escalator.sound.json`](../sounds/loop-escalator.mp3) ![`quad://sounds/loop-beat.sound.json`](../sounds/loop-beat.mp3)
-![`quad://sounds/loop-wind.sound.json`](../sounds/loop-wind.mp3) ![`quad://sounds/loop-footsteps.sound.json`](../sounds/loop-footsteps.mp3)
-![`quad://sounds/loop-footsteps-indoor.sound.json`](../sounds/loop-footsteps-indoor.mp3) ![`quad://sounds/loop-footsteps-puddle.sound.json`](../sounds/loop-footsteps-puddle.mp3)
-![`quad://sounds/loop-footsteps-water.sound.json`](../sounds/loop-footsteps-water.mp3) ![`quad://sounds/loop-footsteps-snow.sound.json`](../sounds/loop-footsteps-snow.mp3)
-![`quad://sounds/loop-departure.sound.json`](../sounds/loop-departure.mp3)
+![`quad://sounds/loop-beat.sound.json`](../sounds/loop-beat.mp3) ![`quad://sounds/loop-departure.sound.json`](../sounds/loop-departure.mp3)
 
 
 ### Coin
@@ -5029,9 +5034,15 @@ Sounds
 ![`quad://sounds/coin-06.sound.json`](../sounds/coin-06.mp3) ![`quad://sounds/coin-07.sound.json`](../sounds/coin-07.mp3)
 ![`quad://sounds/coin-08.sound.json`](../sounds/coin-08.mp3) ![`quad://sounds/coin-09.sound.json`](../sounds/coin-09.mp3)
 
-### Engine Loops
+### Effect Loops
 
 ![`quad://sounds/engine-00.sound.json`](../sounds/engine-00.mp3) ![`quad://sounds/engine-01.sound.json`](../sounds/engine-01.mp3)
+![`quad://sounds/loop-escalator.sound.json`](../sounds/loop-escalator.mp3)  ![`quad://sounds/loop-winch.sound.json`](../sounds/loop-winch.mp3) 
+![`quad://sounds/loop-wind.sound.json`](../sounds/loop-wind.mp3) ![`quad://sounds/loop-footsteps.sound.json`](../sounds/loop-footsteps.mp3)
+![`quad://sounds/loop-footsteps-indoor.sound.json`](../sounds/loop-footsteps-indoor.mp3) ![`quad://sounds/loop-footsteps-puddle.sound.json`](../sounds/loop-footsteps-puddle.mp3)
+![`quad://sounds/loop-footsteps-water.sound.json`](../sounds/loop-footsteps-water.mp3) ![`quad://sounds/loop-footsteps-snow.sound.json`](../sounds/loop-footsteps-snow.mp3)
+![`quad://sounds/loop-spin.sound.json`](../sounds/loop-spin.mp3)
+
 
 ### Shoot
 
@@ -5098,13 +5109,17 @@ Sounds
 ![`quad://sounds/wild-06.sound.json`](../sounds/wild-06.mp3) ![`quad://sounds/wild-07.sound.json`](../sounds/wild-07.mp3)
 ![`quad://sounds/wild-08.sound.json`](../sounds/wild-08.mp3) ![`quad://sounds/wild-09.sound.json`](../sounds/wild-09.mp3)
 
+### Attack
+
+![`quad://sounds/attack-00.sound.json`](../sounds/attack-00.mp3)
 
 ### Splash
 
 ![`quad://sounds/splash-00.sound.json`](../sounds/splash-00.mp3) ![`quad://sounds/splash-01.sound.json`](../sounds/splash-01.mp3)
 ![`quad://sounds/splash-02.sound.json`](../sounds/splash-02.mp3) ![`quad://sounds/splash-03.sound.json`](../sounds/splash-03.mp3)
 ![`quad://sounds/splash-04.sound.json`](../sounds/splash-04.mp3) ![`quad://sounds/splash-05.sound.json`](../sounds/splash-05.mp3)
-![`quad://sounds/splash-06.sound.json`](../sounds/splash-06.mp3)
+![`quad://sounds/splash-06.sound.json`](../sounds/splash-06.mp3) ![`quad://sounds/splash-07.sound.json`](../sounds/splash-07.mp3)
+![`quad://sounds/splash-08.sound.json`](../sounds/splash-08.mp3) ![`quad://sounds/splash-08.sound.json`](../sounds/splash-09.mp3)
 
 
 ### Sparks
@@ -7995,12 +8010,18 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-2020 October TBD: Beta update 53
+2020 October 31: Beta update 53
 
 - Added `gamepad_array[i].color`
 - Added `splash-01.sound.json`, `splash-02.sound.json`, `splash-03.sound.json`,
-  `splash-04.sound.json`, `splash-05.sound.json`, `splash-06.sound.json`
+  `splash-04.sound.json`, `splash-05.sound.json`, `splash-06.sound.json`, 
+  `splash-07.sound.json`, `splash-08.sound.json`, `splash-09.sound.json`
+- Added `attack-00.sound.json`
 - Added `loop-departure.sound.json`
+- Added `loop-winch.sound.json` and `loop-spin.sound.json`
+- Added `music-royal.sound.json` and `music-sonata.sound.json`
+- `play_sound()` now takes optional `rate` and `stopped` arguments
+- `set_pan()` can now take an `xy()` for the pan position
 - Import Existing Asset dialog now supports keyword filtering
 - Improved sound preview in IDE with full pause, volume, and scrub controls
 

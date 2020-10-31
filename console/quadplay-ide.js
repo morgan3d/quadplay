@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.10.18.18'
+const version  = '2020.10.31.02'
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -3478,7 +3478,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.set_volume      = set_volume;
         QRuntime.set_playback_rate = set_playback_rate;
         QRuntime.set_pitch       = set_pitch;
-        QRuntime.set_pan         = set_pan;
+        QRuntime.$set_pan        = set_pan;
         QRuntime.get_audio_status= get_audio_status;
         QRuntime.debug_pause     = onPauseButton;
         

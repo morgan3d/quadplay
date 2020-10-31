@@ -632,13 +632,13 @@ function soundSourceOnEnded() {
 }
 
 
-function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volume, pitch, pan) {
+function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volume, pitch, pan, rate, stopped) {
+    if (stopped === undefined) { stopped = false; }
     pan = Math.min(1, Math.max(-1, pan))
     
     // A new source must be created every time that the sound is played
     const source = _ch_audioContext.createBufferSource();
     source.buffer = audioClip.buffer;
-    source.state = 'PLAYING';
 
     if (_ch_audioContext.createStereoPanner) {
         source.panNode = _ch_audioContext.createStereoPanner();
@@ -671,6 +671,8 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
     source.volume = volume;
     source.pan = pan;
     source.startTimeMs = Date.now() - startPositionMs;
+    source.playbackRate.value = rate;
+    source.rate = rate;
 
     if (source.detune) {
         // Doesn't work on Safari
@@ -682,6 +684,10 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
     handle.audioClip = audioClip;
 
     source.start(0, (startPositionMs % (source.buffer.duration * 1000)) / 1000);
+    if (stopped) {
+        source.stop();
+        source.state = 'STOPPED';
+    }
 
     return handle;
 }
@@ -698,10 +704,12 @@ function set_volume(handle, volume) {
     handle._.gainNode.gain.linearRampToValueAtTime(volume, _ch_audioContext.currentTime + audioRampTime);
 }
 
+
 function set_playback_rate(handle, rate) {
     if (! (handle && handle._)) {
         throw new Error("Must call set_volume() on a sound returned from play_sound()");
     }
+    handle._.rate = rate;
     handle._.playbackRate.value = rate;
 }
 
@@ -753,7 +761,7 @@ function get_audio_status(handle) {
 
 
 // Exported to QRuntime
-function play_sound(audioClip, loop, volume, pan, pitch, time) {
+function play_sound(audioClip, loop, volume, pan, pitch, time, rate, stopped) {
     if (! audioClip || ! audioClip.source) {
         console.log(audioClip);
         throw new Error('play_sound() requires a sound asset');
@@ -778,8 +786,10 @@ function play_sound(audioClip, loop, volume, pan, pitch, time) {
         throw new Error('pan cannot be NaN for play_sound()');
     }
 
+    rate = rate || 1;
+
     if (audioClip.loaded) {
-        return internalSoundSourcePlay({_:null}, audioClip, time * 1000, loop, volume, pitch, pan);
+        return internalSoundSourcePlay({_:null}, audioClip, time * 1000, loop, volume, pitch, pan, rate, stopped);
     } else {
         return undefined;
     }
@@ -792,8 +802,8 @@ function resume_audio(handle) {
         throw new Error("resume_audio() takes one argument that is the handle returned from play_sound()");
     }
     if (handle._.resumePositionMs) {
-        // Actually paused
-        internalSoundSourcePlay(handle, handle._.audioClip, handle._.resumePositionMs, handle._.loop, handle._.volume, handle._.pitch, handle._.pan);
+        // Actually was paused/stopped, so we need to restart
+        internalSoundSourcePlay(handle, handle._.audioClip, handle._.resumePositionMs, handle._.loop, handle._.volume, handle._.pitch, handle._.pan, handle._.rate);
     }
 }
 
@@ -839,7 +849,7 @@ function stopAllSounds() {
 function resumeAllSounds() {
     for (const handle of pausedSoundHandleArray) {
         // Have to recreate, since no way to restart 
-        internalSoundSourcePlay(handle, handle._.audioClip, handle._.resumePositionMs, handle._.loop, handle._.volume, handle._.pitch, handle._.pan);
+        internalSoundSourcePlay(handle, handle._.audioClip, handle._.resumePositionMs, handle._.loop, handle._.volume, handle._.pitch, handle._.pan, handle._.rate);
     }
     pausedSoundHandleArray.length = 0;
 }

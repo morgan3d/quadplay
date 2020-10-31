@@ -8412,7 +8412,7 @@ function save_local(key, value) {
 }
 
 
-function play_sound(sound, loop, volume, pan, pitch, time) {
+function play_sound(sound, loop, volume, pan, pitch, time, rate, stopped) {
     if (sound.sound && (arguments.length === 1)) {
         // Object version
         loop    = sound.loop;
@@ -8420,18 +8420,30 @@ function play_sound(sound, loop, volume, pan, pitch, time) {
         pan     = sound.pan;
         pitch   = sound.pitch;
         time    = sound.time;
+        rate    = sound.rate;
+        stopped = sound.stopped;
         sound   = sound.sound;
     }
 
     if (pan && pan.x !== undefined && pan.y !== undefined) {
         // Positional sound
-        pan = transform_cs_to_ss(transform_ws_to_cs(pan))
-        pan = $clamp((2 * pan.x / SCREEN_SIZE.x) - 1, -1, 1)
+        pan = transform_cs_to_ss(transform_ws_to_cs(pan));
+        pan = $clamp((2 * pan.x / SCREEN_SIZE.x) - 1, -1, 1);
     }
 
-    return $play_sound(sound, loop, volume, pan, pitch, time);    
+    return $play_sound(sound, loop, volume, pan, pitch, time, rate, stopped);
 }
 
+
+function set_pan(audio, pan) {
+    if (pan && pan.x !== undefined && pan.y !== undefined) {
+        // Positional sound
+        pan = transform_cs_to_ss(transform_ws_to_cs(pan));
+        pan = $clamp((2 * pan.x / SCREEN_SIZE.x) - 1, -1, 1);
+    }
+    
+    $set_pan(audio, pan);
+}
 
 /**
    Finds a good path from start to goal using the A* algorithm, and
