@@ -303,7 +303,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
 
         # Security: Check if path has a prefix in webpath_allowlist
         if webpath != '/favicon.ico' and not any([webpath.startswith(prefix) for prefix in webpath_allowlist]):
-            self.send_error(404, 'Illegal webpath: ' + webpath)
+            self.send_error(404, 'Illegal path: ' + webpath)
 
         if webpath == config_query_webpath or webpath == asset_query_webpath or webpath == game_query_webpath or webpath == doc_query_webpath or webpath == script_query_webpath:
             response_obj = {}
@@ -326,7 +326,6 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                             
             elif webpath == script_query_webpath:
                 aux_path = query[query.index('=') + 1:]
-
                 # Security: check if aux_path has a prefix in webpath_allowlist
                 if not any([aux_path.startswith(prefix) for prefix in webpath_allowlist]):
                     self.send_error(404, 'Illegal path: ' + aux_path)

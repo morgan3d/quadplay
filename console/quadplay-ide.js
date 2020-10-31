@@ -35,7 +35,9 @@ function getGamePath() {
     if (gamePath.startsWith(location.origin)) {
         gamePath = gamePath.substring(location.origin.length);
     }
-    return gamePath.replace(/\/[^/]+\.game\.json$/, '\/');
+
+    // Remove the .game.json and on Windows remove a leading slash
+    return gamePath.replace(/\/[^/]+\.game\.json$/, '\/').replace(/^\/([a-zA-Z]:\/)/, '$1');
 }
 
 function makeURLRelativeToGame(filename) {
