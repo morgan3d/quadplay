@@ -1,0 +1,20 @@
+{
+    "name": "quadplay",
+    "keywords": ["ide", "python", "javascript", "compiler", "fantasy console", "retro", "game", "graphics"],
+    "homepage": "https://github.com/morgan3d/quadplay",
+    "license": "LGPL 3",
+    "author": {
+        "name": "Morgan McGuire",
+        "url": "https://casual-effects.com"
+    },
+    "funding": {
+        "type": "individual",
+        "url": "https://github.com/sponsors/morgan3d"
+    },
+    "browser": "quadplay",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/morgan3d/quadplay.git"
+    },
+    "dependencies": {}
+}
