@@ -16,5 +16,8 @@
         "type": "git",
         "url": "https://github.com/morgan3d/quadplay.git"
     },
-    "dependencies": {}
+    "dependencies": {
+        "gif": "https://github.com/jnordberg/gif.js",
+        "qrencode": "https://github.com/davidshimjs/qrcodejs" 
+    }
 }
