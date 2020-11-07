@@ -1,0 +1,274 @@
+$ControllerOrder
+════════════════════════════════════════════════════════════════════════
+
+const window_background_color = #135
+const window_border_color     = #fff
+const text_color              = #fff
+const text_shadow_color       = #0006
+const prompt_color            = #4DF
+const selected_color          = #f
+const unselected_color        = #b
+
+const DISABLED_GAMEPAD        = 9
+
+let font = $font9
+if SCREEN_SIZE.y <= 64: font = $font5
+else if SCREEN_SIZE.y <= 180: font = $font8
+
+let small_font = $font6
+if SCREEN_SIZE.y <= 64: small_font = $font5
+
+let old_transform
+let old_clip
+let old_post_effects
+let old_background
+
+let current_index = 0
+
+// gamepad_array[p] = realgamepad[gamepadOrderMap[p]]
+let gamepadOrderMap = [0, 1, 2, 3]
+
+def done():
+    // Apply the remapping
+    $setGamepadOrderMap(gamepadOrderMap)
+    pop_mode()
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+old_background = get_background()
+old_transform = get_transform()
+old_clip = get_clip()
+old_post_effects = get_post_effects()
+reset_post_effects()
+set_background(window_background_color)
+
+// Reset the mapping immediately so that
+// all physical gamepads are available
+gamepadOrderMap = [0, 1, 2, 3]
+$setGamepadOrderMap(gamepadOrderMap)
+play_sound($openUISound)
+current_index = 0
+
+    
+leave
+────────────────────────────────────────────────────────────────────────
+set_transform(old_transform)
+set_clip(old_clip)
+set_post_effects(old_post_effects)
+set_background(old_background)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+const bright      = (1 + cos(mode_frames / 9)) / 2
+const color       = lerp(gamepad_array[min(current_index, 3)].player_color, #fff, 50% bright)
+const outline     = rgba(1, 1, 1, 25% bright)
+
+// Current order:
+for p < 4:
+    let entry = ""
+    let spacing = 38
+    if SCREEN_SIZE.x == 128:
+        spacing = 32
+    else if SCREEN_SIZE.x == 64:
+        spacing = 16
+        
+    const x = SCREEN_SIZE.x / 2 + spacing * ((p bitshr 1) + 0.5) * 2 ((p bitand 1) - 0.5)
+    
+    if gamepadOrderMap[p] == 9:
+        // Unmapped
+        entry += "∅"
+        if p < 2:
+            // Show the backup keyboard control
+            const type = (if p == 0 then "Kbd_P1" else "Kbd_P2")
+            draw_sprite({
+                sprite: $controllerSpritesheet22[type],
+                pos: xy(x, SCREEN_SIZE.y - 29),
+                override_color: #0004
+            })
+        
+    else:
+        // Mapped
+        entry += gamepadOrderMap[p] + 1
+        if SCREEN_SIZE.x > 64:
+            if current_index > p:
+                // Show the actual controller
+                draw_sprite({
+                    sprite: $controllerSpritesheet22[gamepad_array[gamepadOrderMap[p]].type],
+                    pos: xy(x, SCREEN_SIZE.y - 29),
+                    override_color: #0004
+                })
+            else if current_index <= p:
+                // Show a generic controller silhouette
+                draw_sprite({
+                    sprite: $controllerSpritesheet22.Xbox,
+                    pos: xy(x, SCREEN_SIZE.y - 29),
+                    override_color: #023,
+                    z: 0.1,
+                    scale: 80%
+                })
+                if current_index == p:
+                    // Silhouette border
+                    for -1 <= dx <= +1:
+                        for -1 <= dy <= +1:
+                            if dx != 0 or dy != 0:
+                                draw_sprite({
+                                    sprite: $controllerSpritesheet22.Xbox,
+                                    pos: xy(x + dx, SCREEN_SIZE.y - 29 + dy),
+                                    override_color: 80% color,
+                                    scale: 80%
+                                })
+                                
+                    // This is the active controller. Show a flashing question mark
+                    // to indicate that it is being set
+                    draw_text({
+                        font: font,
+                        text: "?",
+                        pos: xy(x, SCREEN_SIZE.y - 31),
+                        color: color,
+                        outline: outline,
+                        shadow: text_shadow_color,
+                        x_align: "center",
+                        y_align: "center",
+                        z: 0.1
+                    })
+                                
+    // Also show the keyboard for the first two players if they
+    // are not duplicates
+    if p < 2 and SCREEN_SIZE.y > 64:
+        if gamepadOrderMap[p] != DISABLED_GAMEPAD and (not starts_with(gamepad_array[gamepadOrderMap[p]].type, "Kbd_") or current_index <= p):
+            const type = (if p == 0 then "Kbd_P1" else "Kbd_P2")
+            draw_text({
+                font: small_font,
+                text: "&",
+                pos: xy(x, SCREEN_SIZE.y - 20),
+                color: (if p == current_index then #f else #b),
+                x_align: "center",
+                y_align: "center"
+            })
+            draw_sprite({
+                sprite: $controllerSpritesheet22[type],
+                pos: xy(x, SCREEN_SIZE.y - 8),
+                override_color: (if p == current_index then nil else #0004)
+            })
+
+            
+    entry += "→" + (if SCREEN_SIZE.x > 64 then "P" else "") + (p + 1)
+
+    draw_text({
+        font: font,
+        text: entry,
+        pos: xy(x, SCREEN_SIZE.y - (if SCREEN_SIZE.y == 64 then 1 else 40)),
+        color: (if p == current_index then #f else #b),
+        shadow: (if p == current_index then text_shadow_color else nil),
+        x_align: "center",
+        y_align: "bottom"
+    })
+
+if current_index < 4:
+    const pos = SCREEN_SIZE / 2 + xy(0, (if SCREEN_SIZE.y == 64 then 3 else (-font.line_height - 3)))
+        
+    local:
+        const color = #023
+        const scale = (if SCREEN_SIZE.y >= 180 then 2 else 1)
+        const height = 3 font.line_height * scale + 2
+        const width = 4 font.line_height * scale
+        const radius = 4
+
+        // TV shape
+        draw_disk(pos + xy(-width / 2, -height/2 + radius), radius, color)
+        draw_disk(pos + xy(+width / 2, -height/2 + radius), radius, color)
+        draw_disk(pos + xy(-width / 2, +height/2 - radius), radius, color)
+        draw_disk(pos + xy(+width / 2, +height/2 - radius), radius, color)
+        draw_rect(pos, xy(width + 2 radius, height - radius), color)
+        draw_rect(pos + xy(0, -height/2 + radius / 2 - 1), xy(width, radius/2), color)
+        draw_rect(pos + xy(0, +height/2 - radius / 2 + 1), xy(width, radius/2), color)
+
+        draw_text({
+            font: font,
+            text: "Player " + (current_index + 1),
+            pos: pos - xy(0, font.line_height - 3),
+            color: gamepad_array[current_index].player_color,
+            x_align: "center",
+            y_align: "center"
+        })
+
+    pos.y += font.line_height
+
+    local:
+        // Main prompt:
+
+        // Other buttons: "/␣/⬙" + (if SCREEN_SIZE.x > 64 then "/ⓧ" else "")
+        draw_text({
+            font: font,
+            text: "Press ⓐ",
+            pos: pos - xy(0, font.line_height - 2),
+            color: color,
+            outline: outline,
+            shadow: text_shadow_color,
+            x_align: "center",
+            y_align: "top"
+        })
+
+    // Exception prompts:
+    draw_text({
+        font: small_font,
+        text: "Skip P" + (current_index + 1) + ": ⓠ" +
+        (if SCREEN_SIZE.x > 64 then "/ડ/⧉" else "") + "/ҕ\n" +
+        "Reset all: ⓟ" + (if SCREEN_SIZE.x > 64 then "/Ơ/☰" else "") + "/ﯼ",
+        pos: xy(SCREEN_SIZE.x / 2, 1),
+        color: #023,
+        x_align: "center", y_align: "top"
+    })
+
+
+    for gamepad in gamepad_array:
+        if gamepad.$pp:
+            // Show reset values and exit
+            play_sound($acceptUISound)
+            gamepadOrderMap = [0, 1, 2, 3]
+            delay(done, 30)
+
+        // Actually accept any button, even though the prompt says "A". Do not
+        // allow E or F buttons because one is the "option" key on the Mac that
+        // is ambiguous with the Options button on a PS4 controller
+        if gamepad.aa or gamepad.bb or gamepad.cc or gamepad.dd or gamepad.qq:
+            if gamepad.qq:
+                // Skip this player
+                play_sound($acceptUISound)
+                gamepadOrderMap[current_index] = DISABLED_GAMEPAD
+                ++current_index
+            else:
+                // Ensure that a real gamepad button was pressed by snooping
+                // the underlying data structure. This ensures that the keyboard
+                // is not being used
+                const realgamepad = $getIdealGamepads()[gamepad.index] default {buttons:[0,0,0,0]}
+                if (realgamepad.buttons[0] or
+                    realgamepad.buttons[1] or
+                    realgamepad.buttons[2] or
+                    realgamepad.buttons[3]):
+                
+                    // Do not allow an already-mapped controller
+                    let already_used = false
+                    for i < current_index:
+                        if gamepadOrderMap[i] == gamepad.index:
+                            already_used = true
+                            // Already in use
+                            play_sound($denyUISound)
+                            break
+
+                    if not already_used:
+                        play_sound($acceptUISound)
+                        // Update the remapping
+                        gamepadOrderMap[current_index] = gamepad.index
+                        ++current_index
+                else:
+                    // Cannot use keyboard
+                    play_sound($denyUISound)
+                        
+            // Both cases of advancing the index
+            if current_index == size(gamepad_array):
+                // Wait a moment before exiting
+                delay(done, 60)
+    

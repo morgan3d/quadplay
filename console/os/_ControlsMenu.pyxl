@@ -1,0 +1,180 @@
+$ControlsMenu
+════════════════════════════════════════════════════════════════════════
+// TODO: Show the remap info on the controls menu as well for sizes > 64 high
+
+const window_background_color = #135
+const window_border_color     = #fff
+const text_color              = #fff
+const text_shadow_color       = #0006
+const prompt_color            = #4DF
+const selected_color          = #f
+const unselected_color        = #b
+
+const open_frames             = 15
+
+let font = $font9
+if SCREEN_SIZE.y <= 64: font = $font5
+else if SCREEN_SIZE.y <= 180: font = $font8
+
+const line_height = round(110% font.line_height) + 1
+
+const choiceArray = (if SCREEN_SIZE.y == 64 then ["P1 Buttons", "P2 Buttons", "P3 Buttons", "P4 Buttons", "Gamepad Order", "Done"] else ["Button Labels", "Gamepad Order", "Done"])
+let choiceIndex
+
+let old_transform
+let old_clip
+let old_post_effects
+let old_background
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+choiceIndex = 0
+old_background = get_background()
+old_transform = get_transform()
+old_clip = get_clip()
+old_post_effects = get_post_effects()
+reset_post_effects()
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+
+set_transform(old_transform)
+set_clip(old_clip)
+set_post_effects(old_post_effects)
+set_background(old_background)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+draw_previous_mode()
+// Force the clipping range beyond what the API normally allows
+$clipZ2 = 2049
+set_transform(xy(0, 0), xy(1, 1), 2048.6, 1)
+draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(14%, 14%, 14%, 80%))
+
+const windowSize = (SCREEN_SIZE + 2) * clamp((mode_frames + 1) / open_frames, 0%, 100%)
+//round(xy(6 font.line_height, 2 + (2 + size(choiceArray)) * font.line_height) * clamp((mode_frames + 1) / open_frames, 0%, 100%))
+draw_rect(½ SCREEN_SIZE, windowSize, window_background_color, window_border_color)
+
+if mode_frames > open_frames:
+   // Process input. Let any controller
+   // manipulate the result, since we might
+   // have gotten to this screen using a different
+   // controller than the active one.
+   for control in gamepad_array:
+      if control.qq or control.$pp:
+         // Do NOT use "bb", which maps to enter on the keyboard
+         // and may make players think they are executing a command
+         play_sound($cancelUISound)
+         pop_mode()
+      else if control.aa:
+         play_sound($acceptUISound)
+         if choiceIndex == size(choiceArray) - 1:
+            // Done
+            pop_mode()
+         else if choiceIndex == size(choiceArray) - 2:
+            // Change controller order
+            push_mode($ControllerOrder)
+         else if SCREEN_SIZE.y == 64:
+            // Specific player's controls
+            push_mode($SetControls, choiceIndex)
+         else:
+            // Everyone's controls
+            push_mode($SetControls)
+      else if control.yy:
+         const prev = choiceIndex
+         choiceIndex = clamp(choiceIndex + control.yy, 0, size(choiceArray) - 1)
+         play_sound(if prev == choiceIndex then $denyUISound else $moveUISound)
+
+   // Show the options
+   let y = floor(0.5 (SCREEN_SIZE.y - (size(choiceArray) - 0.5) * font.line_height)) - 1
+   if SCREEN_SIZE.y == 112 or SCREEN_SIZE.y == 128: y -= 20
+   
+   for i < size(choiceArray):
+      const active      = choiceIndex == i
+      const bright      = (1 + cos(mode_frames / 9)) / 2
+      const color       = if active then lerp(prompt_color, #fff, 50% bright) else unselected_color
+      const outline     = if active then rgba(1,1,1, 25% bright) else nil
+      const yOffset     = if active then -1 else 0
+      const shadow      = if active then 50% text_shadow_color else text_shadow_color
+      
+      const x           = floor(0.5 SCREEN_SIZE.x - (if SCREEN_SIZE.y == 64 then 20 else 3 font.line_height - 10))
+      const text        = choiceArray[i]
+      draw_text(font, text, xy(x, y + 1), shadow, nil, nil, "left", "center")
+      draw_text(font, text, xy(x, y + yOffset), color, nil, outline, "left", "center")
+   
+      if active:
+         draw_text(font, "✜", xy(x - 40% line_height + 1, y + 1), shadow, nil, nil, "right", "center")
+         draw_text(font, "✜", xy(x - 40% line_height + 1, y + yOffset), color, nil, outline, "right", "center")
+         
+      y += line_height
+
+
+if SCREEN_SIZE.y > 64 and mode_frames > open_frames:
+    // Show the current mappings. This code
+    // is based on _ControllerOrder's rendering
+    // so that the transition is seamless
+
+    const map = $localStorage.getItem("gamepadOrderMap") default "0123"
+    
+    for p < 4:
+        let entry = ""
+        let spacing = 38
+        if SCREEN_SIZE.x == 128:
+            spacing = 32
+        else if SCREEN_SIZE.x == 64:
+            spacing = 16
+        
+        const x = SCREEN_SIZE.x / 2 + spacing * ((p bitshr 1) + 0.5) * 2 ((p bitand 1) - 0.5)
+    
+        if map[p] == "9":
+            // Unmapped
+            entry += "∅"
+            if p < 2:
+                // Show the backup keyboard control
+                const type = (if p == 0 then "Kbd_P1" else "Kbd_P2")
+                draw_sprite($controllerSpritesheet22[type], xy(x, SCREEN_SIZE.y - 29))
+            else:
+                // Show a generic controller silhouette for this
+                // missing controller
+                draw_sprite({
+                    sprite: $controllerSpritesheet22.Xbox,
+                    pos: xy(x, SCREEN_SIZE.y - 29),
+                    override_color: #023,
+                    z: 0.1,
+                    scale: 80%
+                })
+        
+        else: // Mapped
+            entry += parse(map[p]) + 1
+            // Show the controller
+            draw_sprite($controllerSpritesheet22[gamepad_array[p].type], xy(x, SCREEN_SIZE.y - 29))
+                
+            // Also show the keyboard for the first two players if they
+            // are not duplicates
+            if p < 2 and not starts_with(gamepad_array[p].type, "Kbd_"):
+                const type = (if p == 0 then "Kbd_P1" else "Kbd_P2")
+                draw_text({
+                    font: $font6,
+                    text: "&",
+                    pos: xy(x, SCREEN_SIZE.y - 20),
+                    color: #f,
+                    x_align: "center",
+                    y_align: "center"
+                })
+                draw_sprite($controllerSpritesheet22[type], xy(x, SCREEN_SIZE.y - 8))
+            
+        entry += "→P" + (p + 1)
+
+        draw_text({
+            font: font,
+            text: entry,
+            pos: xy(x, SCREEN_SIZE.y - 40),
+            color: #f,
+            x_align: "center",
+            y_align: "bottom"
+        })
+
