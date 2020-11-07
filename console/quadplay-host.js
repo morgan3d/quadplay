@@ -638,7 +638,7 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
     
     // A new source must be created every time that the sound is played
     const source = _ch_audioContext.createBufferSource();
-    source.buffer = audioClip.buffer;
+    source.buffer = audioClip.$buffer;
 
     if (_ch_audioContext.createStereoPanner) {
         source.panNode = _ch_audioContext.createStereoPanner();
@@ -666,22 +666,18 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
     
     source.handle = handle;
     source.audioClip = audioClip;
-    source.loop = loop;
-    source.pitch = pitch;
-    source.volume = volume;
-    source.pan = pan;
     source.startTimeMs = Date.now() - startPositionMs;
-    source.playbackRate.value = rate;
-    source.rate = rate;
-
-    if (source.detune) {
-        // Doesn't work on Safari
-        source.detune.setValueAtTime((pitch - 1) * 1200, _ch_audioContext.currentTime);
-    }
-
+    source.loop = loop;
+   
     activeSoundHandleMap.set(handle, true);
     handle._ = source;
+    
     handle.audioClip = audioClip;
+
+    set_playback_rate(handle, rate);
+    set_pitch(handle, pitch);
+    set_volume(handle, volume);
+    set_pan(handle, pan);
 
     source.start(0, (startPositionMs % (source.buffer.duration * 1000)) / 1000);
     if (stopped) {
@@ -701,6 +697,7 @@ function set_volume(handle, volume) {
         throw new Error("Must call set_volume() on a sound returned from play_sound()");
     }
     handle._.volume = volume;
+    volume *= handle._.audioClip.$base_volume;
     handle._.gainNode.gain.linearRampToValueAtTime(volume, _ch_audioContext.currentTime + audioRampTime);
 }
 
@@ -710,6 +707,7 @@ function set_playback_rate(handle, rate) {
         throw new Error("Must call set_volume() on a sound returned from play_sound()");
     }
     handle._.rate = rate;
+    rate *= handle._.audioClip.$base_rate;
     handle._.playbackRate.value = rate;
 }
 
@@ -721,6 +719,9 @@ function set_pan(handle, pan) {
     pan = Math.min(1, Math.max(-1, pan))
 
     handle._.pan = pan;
+    
+    pan += handle._.audioClip.$base_pan;
+    pan = Math.min(1, Math.max(-1, pan))
     if (handle._.panNode.pan) {
         handle._.panNode.pan.linearRampToValueAtTime(pan, _ch_audioContext.currentTime + audioRampTime);
     } else {
@@ -735,6 +736,7 @@ function set_pitch(handle, pitch) {
         throw new Error("Must call set_pitch() on a sound returned from play_sound()");
     }
     handle._.pitch = pitch;
+    pitch *= handle._.audioClip.$base_pitch;
     if (handle._.detune) {
         // Doesn't work on Safari
         handle._.detune.linearRampToValueAtTime((pitch - 1) * 1200, _ch_audioContext.currentTime + audioRampTime);
@@ -752,7 +754,7 @@ function get_audio_status(handle) {
     return {
         pitch:    source.pitch,
         volume:   source.volume,
-        playback_rate: source.playbackRate.value,
+        playback_rate: source.rate,
         pan:      source.pan,
         loop:     source.loop,
         state:    source.state
@@ -762,7 +764,7 @@ function get_audio_status(handle) {
 
 // Exported to QRuntime
 function play_sound(audioClip, loop, volume, pan, pitch, time, rate, stopped) {
-    if (! audioClip || ! audioClip.source) {
+    if (! audioClip || ! audioClip.$source) {
         console.log(audioClip);
         throw new Error('play_sound() requires a sound asset');
     }

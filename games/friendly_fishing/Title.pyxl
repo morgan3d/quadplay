@@ -1,0 +1,128 @@
+Title
+════════════════════════════════════════════════════════════════════════
+
+const DAY_NAME = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+// Formatting functions
+def format_fish(value): return ⌊value⌋ + " fish"
+def format_heaviest(value): return format_number(value, "0.0") + " kg"
+def format_total_mass(value): return format_number(value, "0.0") + " kg total"
+def format_longest(value): return format_number(value, "0") + " cm"
+
+const format_record_table = {
+    fish:       format_fish, 
+    heaviest:   format_heaviest,
+    longest:    format_longest,
+    total_mass: format_total_mass
+}
+
+// High scores
+let records
+
+// Used for tracking which record to show
+const field_name_array = ["fish", "heaviest", "longest", "total_mass"]
+
+def cycle_array(a): push(a, pop_front(a))
+
+// Start with a random offset
+for i < ⌊4 ξ⌋:
+    cycle_array(field_name_array)
+
+
+/* Converts absolute_milliseconds to a human-friendly day name */
+def date_to_day(date):
+    const now = local_time()
+    const end_of_today = now.absolute_milliseconds - (1000 now.day_second) + (MILLISECONDS_PER_DAY - 1) 
+    const days_ago = ⌊(end_of_today - date) / MILLISECONDS_PER_DAY⌋
+    if days_ago == 0:
+        const minutes_ago = (now.absolute_milliseconds - date) / (1000 * 60)
+        if minutes_ago < 2:
+            return {day: "Just Now", color:#faa}
+        if minutes_ago < 45:
+            return {day: "" + ⌊minutes_ago⌋ + " Min Ago", color:#ff2}
+        if minutes_ago < 90:
+            return {day:"Last Hour", color:#ff2}
+        else:
+            return {day:"Today", color:#ff2}
+    else if days_ago == 1:
+        return {day:"Yesterday", color: #eee}
+    else if days_ago < 7:
+        return {day:array_value(DAY_NAME, now.weekday - days_ago, "loop"), color: #eee}
+    else:
+        return {day:"Long Ago", color: #7ad}
+   
+   
+ 
+def draw_records():     
+    const current_field = field_name_array[0]
+    const record_array = records[current_field]
+    const format = format_record_table[current_field]
+    
+    const τ = mode_frames mod RECORD_DISPLAY_FRAMES
+    
+    draw_text({font: large_font, text: "Recent Records", pos: xy(½ SCREEN_SIZE.x, 150), color: #FFF, outline: OUTLINE_COLOR, x_align: "center"})
+    for i < min(size(record_array), MAX_DISPLAYED_SCORES, τ / 20):
+        const y = 120 - 16i
+        const record = record_array[i]
+        const result = date_to_day(record.date)
+        draw_text({font: font, pos: xy(54, y), text: record.name, color:result.color, outline:OUTLINE_COLOR, x_align:"left"})
+        draw_text({font: font, pos: xy(245, y), text: format(record.value), color:result.color, outline:OUTLINE_COLOR, x_align:"right"})
+        draw_text({font: font, pos: xy(328, y), text: result.day, color:result.color, outline:OUTLINE_COLOR, x_align:"right"})
+    
+
+enter
+────────────────────────────────────────────────────────────────────────
+// This event runs when the mode is entered via set_mode() or push_mode().
+set_background(LAKE_COLOR)
+
+// Always start with this song
+stop_audio(background_audio)
+background_audio = play_sound({sound: BACKGROUND_MUSIC_ARRAY[0], volume: BACKGROUND_MUSIC_VOLUME, rate: BACKGROUND_MUSIC_RATE})
+
+const dummy_record = {name:"MMM", value: 1, date: 0}
+records = load_local("recent_best_data") default {
+        fish:[dummy_record],
+        heaviest:[dummy_record],
+        longest:[dummy_record],
+        total_mass:[dummy_record]
+    }
+
+// For any category with too many saved scores, discard [from display]
+// the older ones. Then, sort by decreasing value
+for array at category in records:
+    sort(array, "date", true)
+    resize(array, min(size(array), MAX_DISPLAYED_SCORES))
+    sort(array, "value", true)
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+draw_grass()
+
+// Title
+draw_text({
+    font: large_font, 
+    text: "FRIENDLY FISHING", 
+    pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 24), 
+    color: 150% GROUND_COLOR,
+    shadow: 85% GROUND_COLOR,
+    outline: 85% GROUND_COLOR,
+    x_align: "center",
+    y_align: "center"})
+
+draw_text({font: font, text: "Casual Effects Presents", pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 1), 
+    x_align: "center", y_align: "top", color: 150% GROUND_COLOR})
+    
+// Rotate through the records
+if mode_frames mod RECORD_DISPLAY_FRAMES == 0: cycle_array(field_name_array)
+    
+// Show high scores
+draw_records()    
+    
+// Show prompt
+draw_text({font: font, text: "Press Any Button", pos: xy(½ SCREEN_SIZE.x, 1), 
+    x_align: "center", y_align: "bottom", color: #18A * oscillate(1% mode_frames, 60%, 100%)})
+    
+if mode_frames > 15 and any_button_release():
+    set_mode(Play) because "any_button_release()"

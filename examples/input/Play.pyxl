@@ -9,7 +9,7 @@ abstract the rendering. See other examples for how to incorporate
 input more typically into your programs.
 */
 
-const OFF_COLOR = [#f5a, #0af, #3e5, #fd3]
+const OFF_COLOR = [#f5a, #0af, #fd3, #3e5]
 const PRESSED_COLOR = #FFF
 
 let last_touch_pos

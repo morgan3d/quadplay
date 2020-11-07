@@ -1,0 +1,95 @@
+const POND_CENTER = ½ SCREEN_SIZE - xy(0, 16)
+const BACKGROUND_MUSIC_ARRAY = [background0_sound, background1_sound, background2_sound]
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
+
+
+// Remaining time for lines to be out, in frames * players 
+let line_frames_left = 0
+let fish_caught = 0
+let heaviest_fish = 0
+let longest_fish = 0
+let total_mass = 0
+
+let background_audio
+
+// Used by the Play mode to know if instructions should
+// be shown
+let show_instructions = true
+
+// Convert an angle to a unit vector
+def dir(θ): return xy(cos θ, rotation_sign() * sin θ)
+    
+
+def spawn_ripple(pos, max_opacity default 100%):
+    // Clone
+    pos = xy(pos)
+    def draw(frames_left, total_frames):
+        for i ≤ 4:      
+            const τ = 100% - frames_left / total_frames
+            const radius = (τ + 5%) * max((50 - 10 i), 0)
+            const α = sqrt(max((100% - τ) * (i + 4) / 8 - 5% (4 - i), 0))
+            draw_disk(pos, radius, ∅, rgba(RIPPLE_COLOR, 50% max_opacity * α + 7%))
+            
+    sequence({callback: draw, frames: 260})
+
+
+
+def draw_wiggle_line(start, end, amplitude, frequency, color, z default 0, width default 1):
+    if amplitude < ε:
+        draw_line(start, end, color, z, width)
+    else:
+        const len = magnitude(end - start)
+        const normal = perp(direction(end - start))
+        const N = ⌈len / 5⌉
+        let B = start
+        for 0 < i ≤ N:
+            let A = B
+            const τ = i / N
+            // Weight envelope for wiggle
+            const w = sqrt(1 - |2 τ - 1|)
+            B = lerp(start, end, τ) - (w * amplitude * sin(τ * len * frequency)) * normal
+            draw_line(A, B, color, z, width)
+
+
+/* Slightly inset from the actual screen bounds, which
+   also conveniently forms a rectangle */
+def in_bounds(pos):
+    return pos.y < SCREEN_SIZE.y - 48 and pos.y > 16 and pos.x > 16 and pos.x < SCREEN_SIZE.x - 16
+
+
+def draw_grass():
+    draw_sprite(shapes_sprite.concave_corner, xy(32, 32), 180°, 200%, ∅, 0, GROUND_COLOR)
+    draw_sprite(shapes_sprite.concave_corner, xy(SCREEN_SIZE.x - 32, 32), -90°, 200%, ∅, 0, GROUND_COLOR)
+    draw_sprite(shapes_sprite.concave_corner, xy(32, SCREEN_SIZE.y - 64), 90°, 200%, ∅, 0, GROUND_COLOR)
+    draw_sprite(shapes_sprite.concave_corner, xy(SCREEN_SIZE.x - 32, SCREEN_SIZE.y - 64), 0°, 200%, ∅, 0, GROUND_COLOR)
+    draw_corner_rect(xy(0, SCREEN_SIZE.y - 32), xy(SCREEN_SIZE.x, 32), GROUND_COLOR)
+
+    if get_audio_status(background_audio).state ≠ "PLAYING":
+        background_audio = play_sound({sound: random_value(BACKGROUND_MUSIC_ARRAY), volume: BACKGROUND_MUSIC_VOLUME, rate: BACKGROUND_MUSIC_RATE})
+    
+
+
+def draw_hud():   
+    // Title
+    draw_text({
+        font: large_font, 
+        text: "FRIENDLY FISHING", 
+        pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 24), 
+        color: 135% GROUND_COLOR,
+        x_align: "center",
+        y_align: "center"})
+
+    // Stats
+    draw_text({
+        font: font, 
+        text: (format_number(max(line_frames_left / 60, 0), "oldstopwatch") + "   |   " +
+               "Fish: " + fish_caught + "   " +
+               "Max: "  + round(longest_fish) + "cm   " +
+               "Max: "  + format_number(heaviest_fish, ".0") + "kg   " +
+               "Total: " + format_number(total_mass, ".0") + "kg"), 
+        pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 8), 
+        color: 65% GROUND_COLOR,
+        x_align: "center",
+        y_align: "center"})   
+    
+    

@@ -296,7 +296,8 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             'quad://console/os/_ConfirmDialog',
             'quad://console/os/_GameCredits',
             'quad://console/os/_SetControls',
-            'quad://console/os/_SetControls64'
+            'quad://console/os/_ControlsMenu',
+            'quad://console/os/_ControllerOrder'
         );
 
         // Any changes here must also be updated in the os_dependencies variable in tools/export.py
@@ -1355,7 +1356,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 transposedSprite.x_flipped.y_flipped = transposedSprite.y_flipped.x_flipped = Object.assign({}, transposedSprite);
                 transposedSprite.y_flipped.x_flipped.scale = NN;
                 transposedSprite.y_flipped.x_flipped.orientation_id += 3;
-                transposedSprite.x_flipped.y_flipped.name += transposedSprite.$name.replace(/\.x_flipped$/, '.y_flipped');
+                transposedSprite.x_flipped.y_flipped.$name += transposedSprite.$name.replace(/\.x_flipped$/, '.y_flipped');
 
                 sprite.rotated_270 = transposedSprite.x_flipped;
                 sprite.x_flipped.rotated_270 = transposedSprite.x_flipped.y_flipped;
@@ -1409,9 +1410,9 @@ function loadSpritesheet(name, json, jsonURL, callback) {
 
 
 function recordSoundStats(sound) {
-    if (sound.name[0] !== '_') {
+    if (sound.$name[0] !== '_') {
         ++resourceStats.sounds;
-        const count = Math.ceil(4 * sound.buffer.numberOfChannels * sound.buffer.length / 1024);
+        const count = Math.ceil(4 * sound.$buffer.numberOfChannels * sound.$buffer.length / 1024);
         resourceStats.soundKilobytes += count;
         resourceStats.soundKilobytesByURL[sound.$url] = count;
     }
@@ -1432,12 +1433,16 @@ function loadSound(name, json, jsonURL) {
     const forceReload = computeForceReloadFlag(mp3URL);
 
     assetCache[jsonURL] = sound = Object.seal({
-        src: mp3URL,
-        name: name,
         loaded: false,
-        source: null,
-        buffer: null,
         frames: 0,
+        $name: name,
+        $src: mp3URL,
+        $source: null,
+        $buffer: null,
+        $base_pan: clamp(json.pan || 0, 0, 1),
+        $base_volume: clamp(json.volume || 1, 0, 100),
+        $base_rate: clamp(json.rate || 1, 0, 100),
+        $base_pitch: clamp(json.pitch || 1, 0, 100),
         $url: mp3URL,
         $type: 'sound',
         $json: json,
@@ -1454,14 +1459,14 @@ function loadSound(name, json, jsonURL) {
                 // https://github.com/WebAudio/web-audio-api/issues/1175
                 arraybuffer.slice(0),
                 function onSuccess(buffer) {
-                    sound.buffer = buffer;
+                    sound.$buffer = buffer;
                     sound.loaded = true;
 
-                    // Create a buffer, which primes this sound for playing
-                    // without delay later.
-                    sound.source = _ch_audioContext.createBufferSource();
-                    sound.source.buffer = sound.buffer;
-                    sound.frames = sound.source.buffer.duration * 60;
+                    // Create a buffer source, which primes this sound
+                    // for playing without delay later.
+                    sound.$source = _ch_audioContext.createBufferSource();
+                    sound.$source.buffer = sound.$buffer;
+                    sound.frames = sound.$source.buffer.duration * 60;
                     onLoadFileComplete(json.url);
                     loadManager.markRequestCompleted(json.url, '', true);
                 },

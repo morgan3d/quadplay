@@ -124,6 +124,23 @@ const gameArray = [{
 },
 
 {
+   title: "Friendly Fishing",
+   developer: "Casual Effects",
+   url: "quad://games/friendly_fishing",
+   version:      1.0,
+   description:  "Join your friends for a relaxing afternoon of fishing and you just might top the lake records.",
+   min_players:   1,
+   max_players:   4,
+   cooperative:  true,
+   competitive:  false,
+   achievements: false,
+   highscores:   true,
+   builtin:      true,
+   label:        fflabel[0][0],
+   preview:      ffpreview
+},
+                   
+{
    title: "Across the Lake",
    developer: "The Steinbachers",
    url: "quad://games/across_the_lake",
@@ -286,7 +303,7 @@ for pad in gamepad_array:
       set_mode($SlideOut, callback) because "Player selected game"
       
    // Animate scrolling
-   if joy.yy:
+   if pad.yy:
       const Δy = 3 pad.yy
       play_sound(boop, false, 300%)
       def shift(): gameShift += Δy

@@ -29,7 +29,6 @@ else if SCREEN_SIZE.y <= 180: font = $font8
 
 
 def close(callback):
-    debug_print("Running close in SystemMenu")
     pop_mode(callback)
    
 
@@ -43,10 +42,7 @@ def choose():
 
       
 def set_controls():
-   if SCREEN_SIZE.x == 64:
-      push_mode($SetControls64)
-   else:
-      push_mode($SetControls)
+   push_mode($ControlsMenu)
 
 
 def game_credits():
@@ -79,7 +75,7 @@ if size($customPauseMenuOptions) < 3 or SCREEN_SIZE.y > 64:
    push(choice_array, {text: "Game Credits", callback: game_credits, confirm: false})
 
 push(choice_array,
-     {text: "Set Controls", callback: set_controls, confirm: false},
+     {text: "Controllers", callback: set_controls, confirm: false},
      {text: "Restart Game", callback: reset_game, confirm: true},
      {text: "Quit to System", callback: quit_game, confirm: true})
 

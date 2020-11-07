@@ -1,0 +1,510 @@
+// draw_text default arguments for multiple calls
+const PROMPT_PARAMS = {
+    font: font,
+    color: PROMPT_COLOR,
+    x_align: "center",
+    y_align: "center",
+    z: 0.1
+}
+
+const player_array = []
+
+
+def make_player(gamepad_index):
+    // Default quadplay cyan is too light against the lake.
+    const color = (if gamepad_index == 1 then #07f else 120% * gamepad_array[gamepad_index].player_color)
+    
+    // Orientation of the player relative to the center of
+    // the screen
+    const face = xy(1 - 2 (gamepad_index ∩ 1), 1 - 2 (gamepad_index bitshr 1))
+    const pos = -½ face * (SCREEN_SIZE - xy(28, 72)) + ½ SCREEN_SIZE - xy(0, 16);
+    
+    return make_entity({
+        pos: pos,
+        sprite: shapes_sprite.meeple,
+        gamepad: gamepad_array[gamepad_index],
+        sprite_override_color: color,
+        z: 1,
+        scale: ¾ xy(1, 1),
+        face: face,
+        fish_caught: 0,
+        
+        // Weighted VIP status
+        value: 0,
+        
+        emotion_hook: ∅,
+
+        // Callback function
+        action: not_playing,
+
+        reel_in_audio: play_sound({sound: reel_in_sound, volume: 120%, pan: pos, loop: true, stopped: true}),
+        reel_out_audio: play_sound({sound: fly_sound, pan: pos, volume: 550%, loop: true, stopped: true}),
+        
+        // Frame hook for calling untap().
+        // retained here so that it can be cancelled
+        // to continue a tap
+        untap_hook: ∅,
+        
+        // True for a few frames if the player has tapped (a)
+        tap: false,
+        
+        aim_angle: 90° face.y - 60° face.x * face.y,
+        
+        hand_pos: xy(0, 0),
+        base_pos: xy(0, 0),
+        tip_pos: xy(0, 0),
+        line_pos: xy(0, 0),
+        bobber_pos: xy(0, 0),
+        rod_angle: ROD_ANGLE_MIN,
+        
+        // Could be changed to create different
+        // handicaps and feels for each player
+        rod_length: 36,
+        
+        // Current tension in the line
+        tension: NORMAL_TENSION,
+        
+        // How long this player's tap pulls for
+        tap_frames: 14,
+        
+        // Last time (a) was pressed.
+        // When a fish is on the line, this is
+        // used to distinguish the first press
+        // from repeated tapping.
+        last_press_mode_frame: -100,
+        
+        // When there is a fish on the hook, it is moved
+        // from the general fish array to here
+        fish: ∅ 
+        })
+
+
+/* Plays the sprite for a certain number of frames,
+   replacing an existing one if present. */
+def player_show_emotion(player, sprite):
+    def draw():
+        draw_sprite({
+            sprite: sprite, 
+            pos: player.pos + xy(14 player.face.x, 23),
+            scale: xy(player.face.x, 1),
+            z: 4,
+            override_color: player.sprite_override_color,
+            override_blend: "multiply"})        
+
+    // Replace any previous emotion    
+    remove_frame_hook(player.emotion_hook) 
+    player.emotion_hook = sequence({callback: draw, frames: EMOTION_FRAMES})
+    
+
+/* Special action used before the player has entered
+   the game */
+def not_playing(player):
+    if mode_frames > 10 and (any_button_release(player.gamepad) or player.gamepad.xx or player.gamepad.yy):
+        play_sound({sound: join_sound, pan:player.pos})
+        show_instructions = false
+        player.action = player_aim
+        player_show_emotion(player, emotion_sprite.happy[0])
+
+    
+    draw_text(font,
+        replace(JOIN_TEXT, player.gamepad.prompt),
+        player.pos - 8 player.face,
+        rgba(player.sprite_override_color, 75%),
+        ∅,
+        OUTLINE_COLOR,
+        -player.face.x,
+        "center")
+        
+        
+
+def rod_update(rod, player):
+    with action, face, pos, hand_pos, base_pos, tip_pos, bobber_pos, line_pos, rod_angle, rod_length in player:
+        const axis = dir(rod_angle) * xy(face.x, 1)
+        hand_pos = pos + xy(10 face.x, 0)
+        tip_pos = hand_pos + (rod_length - 8) * axis
+        base_pos = hand_pos - 8 axis
+        
+        // Dangle the line when not fishing
+        if action == player_aim or action == player_cast:
+            line_pos = tip_pos + xy(0, -18)
+            bobber_pos = tip_pos + xy(0, -6)
+        else:
+            bobber_pos = xy(line_pos)
+
+
+
+def draw_player(player):
+    // Shadow
+    draw_sprite(player.sprite, player.pos - xy(0, 16), ∅, player.scale * xy(1, -½), 20%, 0, #000)
+    
+    // Outline
+    for -1 ≤ dx ≤ +1:
+        for -1 ≤ dy ≤ +1:
+            if dx == 0 and dy == 0: continue
+            draw_sprite({
+                sprite: player.sprite, 
+                pos: player.pos + xy(dx, dy),
+                scale: player.scale,
+                z: player.z,
+                override_color: OUTLINE_COLOR})
+    
+    // Rod.
+    // Draw bent when under tension. Use bent_tip both
+    // as the variable for building the curve and the final
+    // value
+    let bent_tip = player.base_pos
+    const N = 4
+    const bend = 6 player.face.x * max((player.tension - NORMAL_TENSION) / (100% - NORMAL_TENSION), 0)²
+    for i ≤ 4:
+        const prev = bent_tip
+        const α = i / N
+        bent_tip = lerp(player.base_pos, player.tip_pos, α) + xy(1, -1) * α³ bend
+        draw_line(prev, bent_tip, OUTLINE_COLOR, player.z - ε, 4)
+        draw_line(prev, bent_tip, player.sprite_override_color, player.z, 2)
+    draw_rect(bent_tip, xy(2, 2), player.sprite_override_color, OUTLINE_COLOR, player.z - ε)
+            
+    // Fishing line shadow (no wiggle)
+    draw_line(bent_tip - xy(16 player.face.x, 32), player.line_pos, #0001, 0)
+    
+    // Fishing line    
+    if player.tension > NORMAL_TENSION:
+        assert(HIGH_TENSION > NORMAL_TENSION)
+        if player.tension ≥ 95% HIGH_TENSION:
+            todo("Play high tension buzz sound")
+            // Flash red on yellow and white on other colors
+            const FLASH_COLOR = if player.gamepad.index == 2 then #b00 else #fff
+            const line_color = lerp(player.sprite_override_color, FLASH_COLOR, oscillate((player.tension - 40%)² * mode_frames / 3))
+            const midpoint = lerp(player.line_pos, bent_tip, 50%) + random_within_circle() * 4 (player.tension - HIGH_TENSION) / (100% - HIGH_TENSION)
+            draw_line(player.line_pos, midpoint, line_color, 0.9);
+            draw_line(midpoint, bent_tip, line_color, 0.9)            
+        else:
+            draw_line(player.line_pos, bent_tip, player.sprite_override_color, 0.9)
+    else:
+        const wiggle = max((NORMAL_TENSION - player.tension) / NORMAL_TENSION, 0%) * (min(‖player.tip_pos - player.line_pos‖ / 14, 18) + 2 cos(0.03 mode_frames))
+        draw_wiggle_line(player.line_pos, bent_tip, wiggle, 0.1, player.sprite_override_color, 0.9)
+    
+    draw_disk(player.bobber_pos, 3, player.sprite_override_color, OUTLINE_COLOR, 0.9)
+    
+    // Player
+    draw_entity(player)
+
+
+
+def player_update(player):
+    rod_update(player.rod, player)
+    
+    if player.action == not_playing:
+        // Special case, don't even draw the player
+        player.action(player)
+        return
+
+    draw_player(player)
+
+    if player.fish_caught < 2 and player.fish:
+        // Show warnings for new players
+        let message
+        if player.tension ≥ 105% HIGH_TENSION and player.fish.energy > 50%:
+            message = "Too tight!\nRelease (a)"
+        else if player.tension < 30% NORMAL_TENSION:
+            message = "Too loose!\nHold (a)"
+        else if player.tension ≥ 95% NORMAL_TENSION and player.tension ≤ 110% HIGH_TENSION and player.fish.energy * ‖player.fish.scale‖ < 30%:
+            message = "Tap (a) to reel in"
+        
+        if message:
+            draw_text({
+                text: replace(message, player.gamepad.prompt),
+                pos:  lerp(player.line_pos, player.tip_pos, 50%),
+                color: player.sprite_override_color,
+                outline: #0,
+                font: font,
+                z: 10,
+                x_align: "center"})
+
+    
+    // Fish's simulation
+    if player.fish: fish_fight(player.fish, player)
+        
+    if player.action: player.action(player)
+
+
+
+/* player.action while aiming */
+def player_aim(player):
+    // Don't allow aiming/casting in overtime
+    if line_frames_left ≤ 0: return
+     
+    const dir_to_center = direction((½ SCREEN_SIZE - xy(0, 16) - player.pos) / SCREEN_SIZE)
+    const Δθ = AIM_RATE * sign(dot(perp(player.face), player.gamepad.xy))
+    if dot(dir_to_center, dir(player.aim_angle + Δθ)) > 0.8:
+        player.aim_angle += Δθ
+        
+    const axis = dir(player.aim_angle)
+    const arrow_pos = player.hand_pos + 20 axis
+    const offset = perp(axis)
+    draw_sprite(arrow_sprite, arrow_pos, player.aim_angle, xy(50%, 50%), PROMPT_COLOR.a, 0.1)
+    
+    draw_text(extended(PROMPT_PARAMS, {
+        text: player.gamepad.prompt["(b)"], 
+        pos: arrow_pos + 32 axis}))
+
+    draw_text(extended(PROMPT_PARAMS, {
+        text: player.gamepad.prompt[if player.face.x < 0 then "[>]" else "[<]"], 
+        pos: player.pos + xy(-4, 32) * player.face}))
+        
+    draw_text(extended(PROMPT_PARAMS, {
+        text: player.gamepad.prompt[if player.face.x > 0 then "[>]" else "[<]"], 
+        pos: player.pos + xy(32, -8) * player.face}))
+        
+    if player.gamepad.bb:
+        player.pull_back_audio = play_sound({sound: pull_back_sound, volume: 50%, pan: player.pos, rate: 50%})
+        player.action = player_cast
+        player.rod_angle = ROD_ANGLE_MIN
+    
+    
+    
+/* player.action when setting the power */
+def player_cast(player):
+    player.rod_angle += 1.5° 
+    
+    const axis = dir(player.aim_angle)
+    const arrow_pos = player.pos + 22 axis
+    
+    draw_text(extended(PROMPT_PARAMS, {
+        text: player.gamepad.prompt["(b)"], 
+        pos: arrow_pos + 26 axis, 
+        color: RELEASE_PROMPT_COLOR}))
+    
+    if player.rod_angle ≥ ROD_ANGLE_MAX or not player.gamepad.b:
+        // Limit cast to an arc containing the water
+        const max_power = 20% |axis.y| + 80% |axis.x|
+        const power = lerp(20%, min(100%, max_power), ((player.rod_angle - ROD_ANGLE_MIN) / (ROD_ANGLE_MAX - ROD_ANGLE_MIN))²)
+        
+        def cast(): player.rod_angle = max(ROD_ANGLE_MIN, player.rod_angle - CAST_RATE)
+        def s2(): 
+            set_volume(player.reel_out_audio, 500%)
+            resume_audio(player.reel_out_audio)
+        
+        def fly(frames_left, total_frames):
+            const α = 100% - frames_left / total_frames
+            player.line_pos = lerp(player.tip_pos, player.pos + power * 375 axis, α)
+                        
+            // Land in water. For P3 and P4, we have to let the cast
+            // clear their initial land so we prevent a hit for the first 10 frames
+            if frames_left == 0 or (not in_bounds(player.line_pos) and frames_left < total_frames - 10):
+                stop_audio(player.reel_out_audio)
+                spawn_ripple(player.line_pos)
+                play_sound({sound: line_splash_sound, volume: 500%, pan: player.line_pos})
+                maybe_attract_fish(player.line_pos)
+                player.action = player_reel
+                
+                if DEBUG_FIGHT: catch_fish(player, pop(fish_array))
+                    
+                return sequence.BREAK                
+
+        // Delay the sound start a bit
+        def s1(): play_sound({sound: cast_sound, pan: player.pos, pitch: (player.rod_angle - ROD_ANGLE_MIN) / 90°, volume: (player.rod_angle - ROD_ANGLE_MIN) / 120°})
+        delay(s1, 5)
+        delay(s2, 10)
+        
+        // End pull back sound
+        stop_audio(player.pull_back_audio)
+        player.pull_back_audio = ∅ 
+
+        sequence(
+            {callback: cast,
+             frames: ⌈(player.rod_angle - ROD_ANGLE_MIN) / CAST_RATE⌉},
+            {callback: fly,
+             frames: 21})
+        
+        player.action = ∅
+        player.tension = ½ NORMAL_TENSION
+        player.line_pos = xy(player.tip_pos) - 24 axis
+
+
+    
+
+def untap(player):
+    if get_audio_status(player.reel_in_audio).state == "PLAYING":
+        stop_audio(player.reel_in_audio)
+    player.tap = false
+    if player.untap_hook: remove_frame_hook(player.untap_hook)
+    player.untap_hook = ∅
+
+
+
+/* player.action when the line has been cast and is sitting out or
+   being reeled in, with or without a fish on it. */
+def player_reel(player):
+    draw_text(extended(PROMPT_PARAMS, {
+        color: (if player.gamepad.a then RELEASE_PROMPT_COLOR else PROMPT_COLOR),
+        text: player.gamepad.prompt["(a)"], 
+        pos: player.pos + xy(32, -8) * player.face}))
+    
+    // Test for a button press before handling the tap to minimize latency.
+    // When there is no fish, pressing (a) immediately taps and reels in
+    // the line. When there is a fish, the first press outside of a tap just holds
+    // the line. Autoreel when FAR into overtime
+    if player.gamepad.aa or (line_frames_left < -60*8 and ξ < 5%):
+        if (not player.fish or (player.fish and player.last_press_mode_frame > mode_frames - player.tap_frames * 2)):
+            player.tap = true
+            if get_audio_status(player.reel_in_audio).state ≠ "PLAYING":
+                resume_audio(player.reel_in_audio)
+            spawn_ripple(player.line_pos, 35%)
+            if player.untap_hook: remove_frame_hook(player.untap_hook)
+            player.untap_hook = delay(untap, player.tap_frames, player)
+            if not player.fish:
+                // Attract fish to the moving lure
+                maybe_attract_fish(player.line_pos, 50%)
+        player.last_press_mode_frame = mode_frames
+        
+        
+    // Raise the rod when tapped or held. This happens to additionally
+    // tighen the line when fighting a fish.
+    player.rod_angle = lerp(player.rod_angle, ROD_ANGLE_MIN + (if player.gamepad.a or player.tap then 7° else 0) * (if player.fish then 160% else 100%), 30%)
+    
+    if player.tap:
+
+        const vec = player.line_pos - player.tip_pos
+        // Reel in per tap
+        const distance = ‖vec‖ - REEL_DISTANCE * (if player.fish then 1 else 1.5)
+        player.line_pos = distance * direction(vec) + player.tip_pos
+        
+        // Increase tension towards normal tension if pulling in with no fish
+        if not player.fish:
+            player.tension = min(player.tension + 0.75%, NORMAL_TENSION) 
+        
+        // If reeled in all of the way, animate the hook returning
+        if distance < 12:
+            player_reeled_in_fully(player)
+    else: // not tap
+        if not player.fish and not player.gamepad.a and player.tension > 75% NORMAL_TENSION:
+            // Gradually relax the line a bit
+            player.tension -= 0.05%
+        
+        def maybe_catch(fish):
+            if (fish.z > 80% MIN_LAKE_Z) and (‖fish.head_pos - player.line_pos‖ < 6):
+                // Catch!
+                catch_fish(player, fish)
+                return iterate.REMOVE_AND_BREAK
+                    
+        // See if any fish are interested. Only get interested
+        // in a static line, to prevent the player from just driving
+        // the line around to cover more area
+        if not player.fish: iterate(fish_array, maybe_catch)
+
+
+
+/* Called when reeled in and need to reset to aiming */
+def player_reeled_in_fully(player):
+    stop_audio(player.reel_out_audio)
+    // Remember the fish caught (if there is one)
+    const fish = player.fish
+    
+    player.action = ∅
+    player.fish = ∅
+    untap(player)            
+    
+    def snap_anim(frames_left): player.line_pos = lerp(player.line_pos, player.tip_pos - xy(0, 20), 9%)        
+    def done_anim(): player_resume_aim(player)
+    
+    // Build the animation sequence, starting
+    // with retrieving the line
+    let seq = [{callback: snap_anim, frames: 15}]
+
+    // If there was a fish caught, create additional animation
+    if fish:
+        // Landed the fish
+        // Adjust units to make sense for large mouth bass
+        const mass = fish.size.x * fish.size.y / 21
+        const length = ⌊fish.size.x * 140%⌋
+        
+        // Increment the player's contribution
+        // towards their ranking on the team
+        player.value += mass + length + 50
+        
+        ++fish_caught
+        ++player.fish_caught
+        
+        // Delay the emotion
+        def s():
+            player_show_emotion(player, emotion_sprite.happy[if mass > 15 then 1 else 0])
+            play_sound({sound: (if mass > 15 then very_happy_sound else happy_sound), pan: player.pos})
+        delay(s, 15)
+        
+        def play_score_sound(): play_sound({sound: score_sound, pan: player.pos})
+        
+        def show_text_callback(frames_left, total_frames, data):
+            const end_pos = xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 10)
+            const start_pos = player.pos + player.face * xy(72, 16)
+            const τ = smootherstep(0, 1, min(100%, frames_left / (¼ total_frames)))
+            draw_text({
+                font: large_font,
+                pos: lerp(end_pos, start_pos, τ),
+                color: rgba(rgb(fish.sprite_override_color), sqrt(τ)), 
+                outline: rgba(1, 1, 1, 60% sqrt(τ)),
+                z: 200,
+                text: data, 
+                x_align: "center", 
+                y_align: "center"})
+
+        let str = format_number(mass, ".0") + "kg"
+        if mass ≥ heaviest_fish: str = "★" + str + "★"
+        push(seq, play_score_sound, {callback: show_text_callback, frames: ANIMATE_SCORE_FRAMES, data: str})        
+        heaviest_fish = max(heaviest_fish, mass)
+        total_mass += mass
+        
+        str = format_number(length, "0") + "cm"
+        if length ≥ longest_fish: str = "★" + str + "★"
+        push(seq, play_score_sound, {callback: show_text_callback, frames: ANIMATE_SCORE_FRAMES, data: str})
+        longest_fish = max(longest_fish, length)
+        
+        // Spawn new bottom fish as a replacement
+        push(fish_array, make_fish(∅, MIN_LAKE_Z))
+
+        // Draw the dangling fish
+        def draw_fish_callback():
+            for -1 ≤ Δx ≤ +1:
+                for -1 ≤ Δy ≤ +1:
+                    if Δx ≠ 0 or Δy ≠ 0:
+                        // Outline
+                        draw_sprite({
+                            sprite: fish.sprite, 
+                            angle: 90°,
+                            scale: fish.scale, 
+                            override_color: #000,
+                            z: 3,
+                            pos: player.tip_pos + xy(0, -½ fish.size.x * fish.scale.x - 12) + xy(Δx, Δy)})
+                    else:
+                        // Body
+                        draw_sprite({
+                            sprite: fish.sprite, 
+                            angle: 90°,
+                            scale: fish.scale, 
+                            override_color: fish.sprite_override_color,
+                            z: 4,
+                            pos: player.tip_pos + xy(0, -½ fish.size.x * fish.scale.x - 12)})
+
+            // Shadow
+            draw_sprite({
+                sprite: fish.sprite, 
+                angle: 90°,
+                scale: fish.scale * xy(-½, 1), 
+                override_color: #000,
+                opacity: 20%,
+                z: 0.5,
+                pos: player.tip_pos + xy(0, -40)})
+                
+        add_frame_hook(draw_fish_callback, ∅, 2 ANIMATE_SCORE_FRAMES)
+    
+    push(seq, done_anim)
+    sequence(...seq)
+
+
+
+/* Restore the player to aiming (default) mode */
+def player_resume_aim(player):
+    player.action = player_aim
+    player.tension = NORMAL_TENSION
+    player.line_pos = player.tip_pos - xy(0, 20)
+    rod_update(player.rod, player)
+

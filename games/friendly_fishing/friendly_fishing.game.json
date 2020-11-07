@@ -1,0 +1,200 @@
+{
+    "title": "Friendly Fishing",
+    "developer": "Casual Effects",
+    "copyright": "©2020 Morgan McGuire",
+    "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
+    "packages": [],
+    "scripts": [
+        "global.pyxl",
+        "player.pyxl",
+        "fish.pyxl"
+    ],
+    "modes": [
+        "Title",
+        "Play",
+        "NewHighScore"
+    ],
+    "start_mode": "Title",
+    "docs": [],
+    "assets": {
+        "shapes_sprite": "quad://sprites/shapes-32x32.sprite.json",
+        "large_font": "quad://fonts/broderick-14.font.json",
+        "font": "quad://fonts/broderick-7.font.json",
+        "line_break_sound": "quad://sounds/hit-09.sound.json",
+        "fish_escape_sound": "quad://sounds/splash-05.sound.json",
+        "sad_player_sound": "quad://sounds/wild-07.sound.json",
+        "catch_fish_sound": "quad://sounds/jump-04.sound.json",
+        "arrow_sprite": "arrow.sprite.json",
+        "emotion_sprite": "emotion-25x23.sprite.json",
+        "background0_sound": "quad://sounds/loop-sanctuary.sound.json",
+        "background1_sound": "quad://sounds/loop-town.sound.json",
+        "background2_sound": "quad://sounds/loop-departure.sound.json",
+        "angry_player_sound": "quad://sounds/hit-06.sound.json",
+        "reel_in_sound": "quad://sounds/loop-winch.sound.json",
+        "line_splash_sound": "quad://sounds/splash-08.sound.json",
+        "fly_sound": "quad://sounds/loop-spin.sound.json",
+        "cast_sound": "quad://sounds/attack-00.sound.json",
+        "pull_back_sound": "quad://sounds/powerup-00.sound.json",
+        "join_sound": "quad://sounds/powerup-03.sound.json",
+        "happy_sound": "quad://sounds/coin-00.sound.json",
+        "very_happy_sound": "quad://sounds/coin-09.sound.json",
+        "thrash_sound": "quad://sounds/splash-00.sound.json",
+        "score_sound": "quad://sounds/coin-01.sound.json"
+    },
+    "version": 0.1,
+    "min_players": 1,
+    "max_players": 4,
+    "cooperative": true,
+    "competitive": false,
+    "achievements": false,
+    "highscores": true,
+    "description": "Join your friends for a relaxing afternoon of fishing and you just might top the lake records.",
+    "constants": {
+        "LAKE_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": 0.2,
+                "g": 0.75,
+                "b": 1
+            }
+        },
+        "MIN_LAKE_Z": {
+            "type": "number",
+            "value": -20
+        },
+        "GROUND_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": 0.16,
+                "g": 0.66,
+                "b": 0.03
+            }
+        },
+        "OUTLINE_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": 0.28,
+                "g": 0.28,
+                "b": 0.28
+            }
+        },
+        "INSTRUCTION_TEXT": {
+            "type": "string",
+            "value": "1. Aim: [<][>]\n2. Cast: Hold & release (b)\n3. Reel in: Tap (a)\n4. Hold: (a)"
+        },
+        "ROD_ANGLE_MIN": {
+            "type": "number",
+            "value": 0.9599310885968813
+        },
+        "ROD_ANGLE_MAX": {
+            "type": "number",
+            "value": 2.792526803190927
+        },
+        "CAST_RATE": {
+            "type": "number",
+            "value": 0.12,
+            "description": "Angle per frame"
+        },
+        "RIPPLE_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": 1,
+                "g": 1,
+                "b": 1
+            }
+        },
+        "AIM_RATE": {
+            "type": "number",
+            "value": 0.011,
+            "description": "Angle per frame"
+        },
+        "RELEASE_PROMPT_COLOR": {
+            "type": "rgba",
+            "value": {
+                "r": 0,
+                "g": 0,
+                "b": 0,
+                "a": 0.71
+            },
+            "description": "Color of buttons currently held down"
+        },
+        "PROMPT_COLOR": {
+            "type": "rgba",
+            "value": {
+                "r": 1,
+                "g": 1,
+                "b": 1,
+                "a": 0.71
+            }
+        },
+        "JOIN_TEXT": {
+            "type": "string",
+            "value": "P## press\n(a) to play"
+        },
+        "HIGH_TENSION": {
+            "type": "number",
+            "value": 0.75,
+            "description": "Threshold at which line tension is dangerous and the line could snap"
+        },
+        "NORMAL_TENSION": {
+            "type": "number",
+            "value": 0.5,
+            "description": "Default tension for a straight line. The tension can go below this and the line will be wiggly."
+        },
+        "REEL_DISTANCE": {
+            "type": "number",
+            "value": 0.4,
+            "description": "Amount of line to reel in each frame"
+        },
+        "DEBUG_FIGHT": {
+            "type": "boolean",
+            "value": false,
+            "description": "Set to true in the debug layer for forcing instant catch to debug the fight mode"
+        },
+        "ANIMATE_SCORE_FRAMES": {
+            "type": "number",
+            "value": 120
+        },
+        "MAX_SAVED_SCORES": {
+            "type": "number",
+            "value": 10,
+            "description": "Maximum number of saved scores. Each entry takes about 30 bytes and (4 * MAX_SAVED_SCORES) bytes must fit within the 2048 bytes per key of quadplay storage."
+        },
+        "LETTER_SET": {
+            "type": "string",
+            "value": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ♠♥♣♦★",
+            "description": "All letters allowed in names"
+        },
+        "RECORD_DISPLAY_FRAMES": {
+            "type": "number",
+            "value": 400,
+            "description": "Time to display records on the splash screen"
+        },
+        "MAX_DISPLAYED_SCORES": {
+            "type": "number",
+            "value": 5,
+            "description": "Number of visible scores on the start page (less than the MAX_SAVED_SCORES that are stored)"
+        },
+        "GAME_TIME_MINUTES": {
+            "type": "number",
+            "value": 4
+        },
+        "BACKGROUND_MUSIC_VOLUME": {
+            "type": "number",
+            "value": 0.9
+        },
+        "BACKGROUND_MUSIC_RATE": {
+            "type": "number",
+            "value": 0.7
+        },
+        "EMOTION_FRAMES": {
+            "type": "number",
+            "value": 200
+        }
+    },
+    "y_up": true,
+    "screen_size": {
+        "x": 384,
+        "y": 224
+    }
+}

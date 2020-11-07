@@ -1,0 +1,116 @@
+NewHighScore
+════════════════════════════════════════════════════════════════════════
+
+let recent_best_data
+let new_data
+
+enter(in_recent, in_new)
+────────────────────────────────────────────────────────────────────────
+recent_best_data = in_recent
+new_data = in_new
+
+set_background(LAKE_COLOR)
+
+// Resume rest position
+for player in player_array:
+    if player.action ≠ not_playing:
+        player.active_letter = 0
+        player.name = load_local("player" + player.gamepad.index + "_name") default "MMM"
+        player_resume_aim(player)
+        debug_print(player.value)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+if not background_audio or get_audio_status(background_audio).state ≠ "PLAYING":
+    background_audio = play_sound({sound: random_value(BACKGROUND_MUSIC_ARRAY), volume: 65%})
+    
+draw_grass()
+draw_hud()
+
+let num_played = 0
+let num_done = 0
+const blink = #fff * oscillate(0.5% mode_frames, 80%, 100%)
+for player in player_array:
+    if player.action ≠ not_playing:
+        ++num_played        
+        draw_player(player)
+        
+        // Let any pending presses end
+        if mode_frames > 45:
+            const gamepad = player.gamepad
+            
+            if gamepad.aa and player.active_letter < 3 and player.name ≠ "   ":
+                ++player.active_letter 
+            else if gamepad.bb and player.active_letter > 0:
+                --player.active_letter
+                            
+            if player.active_letter < 3:
+                if player.active_letter > 0: draw_text({text: player.gamepad.prompt["(b)"], font: font, x_align: "right", y_align: "center", pos: player.pos + xy(80 player.face.x - 28, 8 player.face.y), color: #fff})
+                draw_text({text: player.gamepad.prompt["(a)"], font: font, x_align: "left", y_align: "center", pos: player.pos + xy(80 player.face.x + 28, 8 player.face.y), color: #fff})
+
+                if gamepad.yy:
+                    // Change the letter
+                    let letter_index = find(LETTER_SET, player.name[player.active_letter])
+                    letter_index = loop(letter_index - gamepad.yy, 0, size(LETTER_SET) - 1)
+                    player.name = slice(player.name, 0, player.active_letter) + LETTER_SET[letter_index] + slice(player.name, player.active_letter + 1)
+            else:
+                ++num_done
+                
+            for i < 3:
+                const pos = player.pos + xy(80 player.face.x + 16 (i - 1), 8 player.face.y)
+                if player.active_letter == i:
+                    draw_text({text: player.gamepad.prompt["[^]"], font: font, x_align: "center", y_align: "bottom", pos: pos + xy(0, 8), color: blink})
+                    draw_text({text: player.gamepad.prompt["[v]"], font: font, x_align: "center", y_align: "top", pos: pos - xy(0, 7), color: blink})
+                draw_text({text: player.name[i], font: large_font, x_align: "center", y_align: "center", pos: pos, color: player.sprite_override_color, outline: (if i == player.active_letter then blink else OUTLINE_COLOR)})
+
+
+draw_text({text: "NEW WEEKLY RECORD{br}GOOD JOB, FRIEND" + (if num_played > 1 then "S!" else "!") + "{br}Please enter your initials",
+    font: large_font,
+    color: #FFF,
+    outline: OUTLINE_COLOR,
+    shadow: #0008,
+    x_align: "center",
+    y_align: "center",
+    markup: true,
+    pos: ½ SCREEN_SIZE - xy(0, 16)
+})
+
+
+if num_done == num_played:
+    
+    // Sort player names by decreasing in-game contribution
+    let name_array = []
+    for player in player_array:
+        if player.action ≠ not_playing: 
+            push(name_array, player)
+            save_local("player" + player.gamepad.index + "_name", player.name)
+    
+    sort(name_array, "value", true)
+
+    // Extract the full name
+    for i < size(name_array): name_array[i] = trim_spaces(name_array[i].name)
+    const full_name = join(name_array, "+")
+
+    // Update the high score list    
+    const too_old = new_data.date - 7 MILLISECONDS_PER_DAY
+    for array at field in recent_best_data:
+        if new_data[field + "_high"]:
+            // Add to this field
+            push(array, {
+                name: full_name,
+                value: new_data[field],
+                date: new_data.date
+            })
+        
+            // Sort by value
+            sort(array, "value", true)
+            
+            // Remove anything from the bottom that is too old
+            while size(array) > MAX_SAVED_SCORES and last_value(array).date < too_old:
+                pop(array)
+                
+    // Save the new high scores
+    save_local("recent_best_data", recent_best_data)
+    set_mode(Title, "Names entered")
+

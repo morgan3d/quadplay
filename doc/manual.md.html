@@ -44,15 +44,16 @@ debugger, and profiler.
 - 4096 sRGB (4:4:4) colors
 - Native 2.5D graphics
 - A* pathfinding AI
-- 2D physics
-- 2D sound with pitch, volume, and unlimited voices
+- 2D rigid body, joint, and motor physics
+- 2D positional audio with pitch, volume, and rate
 - 10.5 MB of total sprite memory
 - Max 128 sprite and font sheets, max size 1024x1024
 - Order-independent 16-level transparency
 - 4 players with SNES/PS1/Saturn-style controllers D-pad + 8-button gamepads
 - Touch screen/mouse input
-- Optional 320x180, 192 x 112, 128 x 128, and 64 x 64 screen modes, 
-  analog sticks, and dual D-pads
+- Optional 320 x 180, 192 x 112, 128 x 128, and 64 x 64 screen modes, 
+  analog sticks, triggers, and dual D-pads
+- 262 kB offline save data per game
 
 **Software Features**
 
@@ -294,6 +295,21 @@ based on skipping stones over a lake in the evening.
 - Procedural content
 - Fake reflections
 - Parallax and pseudo 3D
+
+----------------------------
+
+  <center>Friendly Fishing</center>
+
+<div class="preview pixel" style="background-image:url('../games/friendly_fishing/preview.png')"></div>
+[across the lake](../console/quadplay.html?game=quad://games/friendly_fishing&IDE=1) 
+Join your friends for a relaxing afternoon of fishing and you just might top the lake records.
+
+- Animation using `sequence()` and `delay()`
+- The built-in shapes spritesheet
+- Complex high-score system
+- Use of `z` as depth
+- Color `make_spline()`
+- Tap, hold, and press button processing
 
 ----------------------------
 
@@ -1789,10 +1805,15 @@ String
 `starts_with(string, target)`
 : Returns true if `string` begins with the substring `target`. See also `ends_with()`.
 
-`unparse(x)`
+`trim_spaces(string)`
+: Returns a new string that is the original with whitespace removed
+  from the start and end.
+
+`unparse(x, terse default false)`
 : Returns code that is equivalent to producing data object `x`, if it is not a
   recursive object or array or a function. Note that strings will have quotes
-  around them in the resulting string.
+  around them in the resulting string. If `terse` is `true`, then no spaces
+  will be inserted after separators.
 
 `uppercase(s)`
 : Returns the upper case version of the string.
@@ -3979,7 +4000,7 @@ Font assets have the following properties:
 
 `font.glyph_size`
 : `xy()` width and height that will bound all characters in this font, 
-  not including border or shadow. The `font.char_size.y` is usually
+  not including border or shadow. The `font.glyph_size.y` is usually
   less than `font.line_height`, which only considers the typically highest
   and lowest characters in English.
 
@@ -4344,6 +4365,7 @@ unaffected.
   - `weekday` 0-6, where 0 = Sunday
   - `day_second` seconds since midnight, including a fractional part
   - `timezone` minutes from UTC
+  - `absolute_milliseconds` Milliseconds since 1970-01-01 in UTC
 
   See `format_number()` for the various clock formatting options for numbers in seconds,
   and `now()` for a high-precision timer.
@@ -4556,11 +4578,11 @@ and persistent worlds.
   then `∅` is returned.
 
 `save_local(key, value)`
-: The value will be serialized to a string with `unparse()` and then
+: The value will be serialized to a string with `unparse(value, true)` and then
   stored associated with `key` and the URL of the game. Save a value
-  of `∅` to delete the key. There is a maximum size of 2048
+  of `∅` to delete the key. There is a maximum size of 4096
   characters for the unparsed value for each key and a maximum size of
-  128 keys per application. There is no way for two different games to
+  64 keys per application. There is no way for two different games to
   read each other's values.
 
 
@@ -4586,7 +4608,7 @@ Raw Device Access
     <tr valign=top><td> `"take_screenshot"`             </td><td> Take a screenshot and download it to the local disk. </td></tr>
     <tr valign=top><td> `"take_label_image"`            </td><td> Capture the center of the image and save it to disk, overwriting the label128 and label64 images (only works when running in the IDE on an editable project). </td></tr>
     <tr valign=top><td> `"set_pad_type", index, "type"` </td><td> Set `gamepad_array[index].type` and the corresponding prompts. There is no "get" version because you can read the property directly from the gamepad object.</td></tr>
-    <tr valign=top><td> `"get_analog_axes", player_index default 0, stick_index default 0`</td>
+    <tr valign=top><td> `"get_analog_axes",` `player_index default 0,` `stick_index default 0`</td>
                                                               <td> Return an `xy()` of the analog axis values for `gamepad_array[player_index]`, without D-pad snapping and unlocking reading of the
                                                                    values beyond the first stick.
                                                                    Needed for accessing Atari paddles, car pedals, steering wheels, and flight stick throttles in
@@ -4602,12 +4624,12 @@ Raw Device Access
                                                         cursor is at a different resolution than quadplay, so you may want to set to `"none"` and draw your own cursor from a sprite. The OS cursor has 1-4 frames less lag
                                                         than a game-drawn cursor, however.</td></tr>
     
-    <tr valign=top><td> `"set_debug_flag", flagname, bool`</td><td> Set the enabled state of an IDE debugging flag. The flagnames are 
+    <tr valign=top><td> `"set_debug_flag", flagname, bool` </td><td> Set the enabled state of an IDE debugging flag. The flagnames are 
                                                        `"entity_bounds"`, `"assert"`, `"debug_print"`, 
                                                         `"debug_watch"`, `"physics"`.</td></tr>
     <tr valign=top><td> `"get_debug_flag", flagname`    </td><td> Return the state of an IDE debugging flag.</td></tr>
     <tr valign=top><td> `"console.dir", ...`            </td><td> Execute `console.dir(...)` if running in a web browser.</td></tr>
-    <tr valign=top><td> `"save", filename, value, callback`</td><td> Serializes `value` to JSON using WorkJSON extensions and writes to `filename` on disk in the same directory as the game.json file. `filename` cannot contain slashes
+    <tr valign=top><td> `"save", filename, value, callback` </td><td> Serializes `value` to JSON using WorkJSON extensions and writes to `filename` on disk in the same directory as the game.json file. `filename` cannot contain slashes
                                                          and must end in `.json`. 
                                                          This is intended for creating development
                                                          tools within quadplay itself, for example, level editors, NPC ghost tracks, and demo sequences. 
@@ -5850,6 +5872,18 @@ The sound JSON descriptor looks like:
 {
     "url": "boom.mp3",
 
+    // Optional base pan offset on [-1, 1]
+    "pan": 0,
+    
+    // Optional base volume multiplier
+    "volume": 1,
+    
+    // Optional base rate multipler
+    "rate": 1,
+    
+    // Optional base pitch multiplier
+    "pitch": 1,
+    
     // Optional license and copyright
     "license": "Released into the public domain by Edouard Gauthier"
 }
@@ -7266,9 +7300,10 @@ or monitor. [Jetson Nano](https://developer.nvidia.com/embedded/jetson-nano-deve
 and [Raspberry Pi 4](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/) cost less than $100 and can
 power such a box using Linux and Chromium. Both will hit 60 Hz for most games, and can easily run at
 30 Hz for all games (quadplay✜ handles framerate scaling for you seamlessly,
-so you won't even notice most of the time). Jetson Nano is more expensive but has the advantage of a 
-more powerful processor. Raspberry Pi 3B+ can run _some_ quadplay games, but will underperform
-on those with sophisticated graphics.
+so you won't even notice most of the time). 
+
+The [Rasberry Pi 400](https://www.raspberrypi.org/products/raspberry-pi-400/) is a complete computer
+for only $70 that can run quadplay✜ and plug directly into a television or monitor.
 
 ![Quadplay mini-console built by Morgan McGuire from a Jetson Nano with a 3D-printed case, USB Xbox 360 controller, and small external monitor.](nano-arcade.jpg width=50%)
 
@@ -7282,7 +7317,8 @@ only play their own games.
 
 ![Self-contained quadplay console built by Morgan McGuire from a Raspberry Pi and standard screen case, with Bluetooth controllers.](rpi-arcade.jpg  style="image-rendering:none" width=50%)
 
-My Raspberry Pi 4 software configuration from the default Raspbian install is simply:
+My Raspberry Pi 4 software configuration from the default Raspberry Pi
+OS instalation is simply:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
 sudo apt install chromium
@@ -7291,24 +7327,23 @@ sudo update-alternatives --config x-www-browser
 # + choose /usr/bin/chromium
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-#### NUC
-An Intel NUC is a much more expensive device for powering a mini console,
-but has a lot more graphics power than an embedded processor and will
-comfortably run all games at 60 Hz.
+A Jetson Xavier, Intel NUC, or old PC/Mac is a more expensive device
+for powering a mini console, but has a lot more graphics power than an
+embedded processor and will comfortably run all games at 60 Hz.
 
 #### Cabinets
-You can also build a quadplay✜ arcade cabinet. This can be done with
-some carpentry and any low-cost PC and display, or by purchasing some (expensive!)
-pre-built arcade cabinets.
 
-There are a lot of
-physical
+A quadplay✜ arcade cabinet can be built with some carpentry and any
+low-cost PC and display, or by purchasing some (expensive!) pre-built
+arcade cabinets.
+
+There are a lot of physical
 [arcade controllers](https://shop.xgaming.com/products/x-arcade-dual-joystick-usb-included)
 available at reasonable prices for building out the controls without
-needing any custom electronics. Note that quadplay✜ supports (but does not require) a touch screen 
-or mouse, which will not be available on a normal cabinet setup. One alternative is to
-use a small trackpad mounted on top of the joystick controller. 
+needing any custom electronics. Note that quadplay✜ supports (but does
+not require) a touch screen or mouse, which will not be available on a
+normal cabinet setup. One alternative is to use a small trackpad
+mounted on top of the joystick controller.
 
 ![Arcade station built by Morgan McGuire running quadplay on a 2012 MacBook with an X-Arcade Dual controller.](xarcade-arcade.jpg style="image-rendering:none" width=50%)
 
@@ -7317,7 +7352,8 @@ use a small trackpad mounted on top of the joystick controller.
 
 For arcade configurations, the order of the physical controllers in
 the `gamepad_array[]` matters because they are at fixed locations. The default
-order of controllers is set by the operating system. From the Controls tab of the
+order of controllers is set by the operating system. From the Controllers screen of
+the in-game pause menu or the Controls tab of the
 IDE's debugger, you can bring up the quadplay dialog to change this order.
 
 When building your own controller, ensure that it maps correctly using the online tool at 
@@ -7340,9 +7376,8 @@ D-pad <big>⍗</big>   | button 13
 D-pad <big>⍇</big>   | button 14
 D-pad <big>⍈</big>   | button 15
 
-The D-pad is not typically provided for an arcade setup. quadplay✜
-automatically maps the analog stick into D-pad inputs as well
-as providing analog access under `device_control()`.
+quadplay✜ automatically maps the analog stick into D-pad inputs as
+well as providing analog access under `device_control()`.
 
 The ⓔ button should be placed where it can
 be easily held while using the main buttons and stick, for example, 
@@ -7354,11 +7389,9 @@ keyboard controls place these buttons _lower_ than on a gamepad, so that they
 are in reach of the pinkies for eas of holding down. They are not "shoulder"
 buttons, even though that is the best location for them on a physical controller.
 
-
-If building a physical cabinet or handheld _without_
-on-screen mobile controls, I recommend using a 1280x720,
-1600x900, or 1920x1200 display to efficiently fill the screen with
-integer pixel scaling.
+If building a physical cabinet or handheld, I recommend using a
+1280x720, 1600x900, or 1920x1200 display to efficiently fill the
+screen with integer pixel scaling.
 
 Some exact ratios when using quadplay's maximum 384x224 resolution are:
 
@@ -7385,11 +7418,10 @@ quadplay✜ works on all Mac, Windows, and Linux devices, so any computer you bu
 a dedicated device for playing or making games. For a _handheld_ form factor there
 are a few options.
 
-We've tested on the GPD Win 2 and it runs quadplay✜ well. Its successor is not yet available
-but should also work well, in a slightly larger form factor:
+We've tested on the GPD Win 2 and GPD Win Max. Both run quadplay✜ well:
 
- - 1280x720 [GPD Win 2](http://gpd.hk/gdpwin2), Windows and Linux = full-res quadplay✜ 3x scaling
  - 1280x800 [GPD Win Max](http://gpd.hk/gpdwinmax), Windows and Linux = full-res quadplay✜ 3x scaling
+ - 1280x720 [GPD Win 2](http://gpd.hk/gdpwin2), Windows and Linux = full-res quadplay✜ 3x scaling
 
 Some other physical handhelds that may be capable of running quadplay✜
 games when/if released include:
@@ -7561,10 +7593,9 @@ Deploying Games
 ====================================================================================
 
 Your games can be played on any major web browser on desktop/laptop,
-phone, tablet, or embedded processor such as Jetson Nano or Raspberry
-Pi. You can also distribute them as phone or desktop apps. You may
-charge money for your games and may distribute them as closed
-source.
+phone, tablet, or embedded processor such as Raspberry Pi. You can
+also distribute them as phone or desktop apps. You may charge money
+for your games and may distribute them as closed source.
 
 It is your responsibility to satisfy copyright law and any licensing
 fees or royalties for content that you use when you distribute your
@@ -8009,6 +8040,24 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 November 7: Beta update 54
+
+- New _Friendly Fishing_ built-in game
+- `add_frame_hook()`, `delay()`, `sequence()`, and `remove_frame_hook()` are
+  now safe to execute from within another hook
+- Controller order remapping now available from the in-game pause menu
+- `.sound.json` files can now specify a base pitch, pan, rate, and volume
+  adjustment
+- Added `lightning` to `shapes-32x32.sprite.json`
+- Added `local_time().absolute_milliseconds`
+- Added `trim_spaces()`
+- `unparse()` now takes an optional `terse` argument to eliminate spaces
+  after separators
+- `save_local()` now uses terse unparsing
+- Changed `save_local()` limitation to 4096 characters for 64 keys
+- Any player can now select the built-in game in the launcher
+- Fixed stopwatch/oldstopwatch negative time formatting in `format_number()`
 
 2020 October 31: Beta update 53
 

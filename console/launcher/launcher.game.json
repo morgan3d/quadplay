@@ -39,7 +39,10 @@
         "alpreview":  "alpreview.sprite.json",
 
         "bclabel":    "bclabel.sprite.json",
-        "bcpreview":  "bcpreview.sprite.json"
+        "bcpreview":  "bcpreview.sprite.json",
+        
+        "fflabel":    "fflabel.sprite.json",
+        "ffpreview":  "ffpreview.sprite.json"
     },
 
     "constants":  {

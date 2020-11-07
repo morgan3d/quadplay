@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.10.31.02'
+const version  = '2020.11.07.14';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -148,6 +148,16 @@ let gamepadOrderMap = [0, 1, 2, 3];
 function setGamepadOrderMap(map) {
     const pane = document.getElementById('gamepadIndexPane');
 
+    if (map[0] === DISABLED_GAMEPAD &&
+        map[1] === DISABLED_GAMEPAD &&
+        map[2] === DISABLED_GAMEPAD &&
+        map[3] === DISABLED_GAMEPAD) {
+        // Unmapping all gamepads is pointless and will
+        // leave no way back without a keyboard, so if
+        // all are unmapped, force the default mapping.
+        map = [0, 1, 2, 3];
+    }
+
     let s = '';
     if (map[0] === 0 && map[1] === 1 && map[2] === 2 && map[3] === 3) {
         // Default configuration
@@ -160,7 +170,7 @@ function setGamepadOrderMap(map) {
         }
     }
     pane.innerHTML = s + ' <a title="Change gamepad order" onclick="showReorderGamepadsDialog(); return false" href="#">Click to change</a>';
-    gamepadOrderMap = map;
+    gamepadOrderMap = map.slice();
     localStorage.setItem('gamepadOrderMap', gamepadOrderMap.join(''));
 }
 
@@ -3300,6 +3310,11 @@ function reloadRuntime(oncomplete) {
         QRuntime.makeEuroSmoothValue = makeEuroSmoothValue;
         QRuntime.$navigator          = navigator;
 
+        // For use by the controller remapping
+        QRuntime.$localStorage       = localStorage;
+        QRuntime.$getIdealGamepads   = getIdealGamepads;
+        QRuntime.$setGamepadOrderMap = setGamepadOrderMap;
+
         // Accessors for touch and gamepads
         const padXGetter = {
             enumerable: true,
@@ -4145,3 +4160,6 @@ reloadRuntime();
 LoadManager.fetchOne({}, location.origin + getQuadPath() + 'console/_config.json', 'json', null, function (json) {
     serverConfig = json;
 });
+
+// Make the browser aware that we want gamepads
+navigator.getGamepads();

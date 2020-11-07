@@ -1,0 +1,285 @@
+const fish_array = []
+
+// The pivot on the fish moves from the center
+// when free to the head when caught.
+
+def random_fish_target():
+    return random_within_square() * xy(45%, 35%) * SCREEN_SIZE + POND_CENTER
+
+
+
+def make_fish(size default ξ, z default random(MIN_LAKE_Z, -0.5)):
+    // More small than large fish
+    const scale = 1.25 max(20%, size⁴) * xy(100%, random(50%, 100%))
+    const θ = random(0, 360°)
+    const hsv_color = hsv(random(-25%, 70%), 90%, 100%)
+    const color = rgb(hsv_color)
+    const below_surface_color = lerp(color, 30% LAKE_COLOR, 30%)
+    
+    const deep_fish_color = hsv(LAKE_COLOR)
+    deep_fish_color.v = hsv(below_surface_color).v
+    
+    return make_entity({
+        pos: random_fish_target(),
+        sprite: shapes_sprite.fish,
+        scale: scale,
+        angle: θ,
+        // Fish lose energy when fighting
+        energy: 100%,
+        vel: dir(θ) * random_truncated_gaussian(5%, 2%, 4%),
+        target: random_fish_target(),
+        drag: 0,
+        spin: 0°,
+        text_offset: xy(0, ⅔ max_component(scale * shapes_sprite.sprite_size)),
+        // Only used when the fish is not caught
+        head_pos: xy(0, 0),
+        color_spline: make_spline(
+            [MIN_LAKE_Z, 30% MIN_LAKE_Z, 0, 0.08],
+            [LAKE_COLOR, rgb(deep_fish_color), below_surface_color, color],
+            1, "clamp"),
+        z: z,
+        z_vel: random(if z == MIN_LAKE_Z then 0.01 else -0.02, 0.02)
+        })
+
+
+
+// Changes the fish's orientation and line position 
+// so that the fish can pivot about the head. The fish
+// must be removed from the fish_array by the caller.
+def catch_fish(player, fish):
+    player.fish = fish
+    play_sound({sound: catch_fish_sound, pan:fish.pos})
+    fish.spin = 0
+    player.line_pos = xy(fish.head_pos)
+    fish.pivot = transform_ws_to_es(fish, fish.head_pos)
+    fish.pos = xy(fish.head_pos)
+    
+    
+
+// Changes the fish back to pivoting around its center
+// and puts it back into the fish_array.
+// Resets the player's tap status.
+def free_fish(player, fish):
+    push(fish_array, fish)
+    player.fish = ∅
+    untap(player)
+    // Recover
+    fish.energy = max(fish.energy, 25%)
+    fish.head_pos = xy(fish.pos)
+    fish.pos -= ‖35% fish.size.x‖ dir(fish.angle)
+    fish.pivot = xy(0, 0)
+    fish.z_vel = -0.02
+    fish.vel = direction(fish.vel) * random_truncated_gaussian(5%, 2%, 4%)
+    
+    
+
+// Randomly attracts fish in fish_array towards this 
+// location if they are nearby
+def maybe_attract_fish(location, strength default 100%):
+    def attract(fish):
+        const distance = ‖location - fish.head_pos‖ + 10
+        if 200 ξ * strength > distance:
+            // Attracted
+            fish.z_vel = |fish.z_vel|
+            fish.target = location + 20 random_within_circle()
+            
+    iterate(fish_array, attract)
+    
+
+
+// Common code for fish_update and fish_fight       
+def fish_simulate(fish):
+    entity_simulate(fish)
+    
+    with pos, angle, z, z_vel in fish:
+        if not in_bounds(pos) or not in_bounds(transform_es_to_ws(fish, xy(-16, 0))):
+            angle = lerp_angle(angle, atan(POND_CENTER - pos) * rotation_sign(), 20%)
+            
+        z += z_vel
+        if z ≥ 0:
+            // Surfaced. Ripple and dive
+            z = -ε
+            z_vel = -|z_vel|
+            spawn_ripple(pos + dir(angle) * 40% fish.size.x, 30%)
+        else if z < MIN_LAKE_Z:
+            // Bounce off bottom
+            z = MIN_LAKE_Z
+            z_vel = |z_vel|
+            
+        fish.sprite_override_color = fish.color_spline(z)
+
+       
+/* Called for free fish */
+def fish_update(fish):
+    with target, pos, spin, vel, angle, z, z_vel in fish:
+        // Choose a new target when close
+        if ‖target - pos‖ < 10: target = random_fish_target()
+
+        // Turn towards the target
+        const θ = atan(target - pos)
+        const Δθ = loop(θ - angle, -180°, 180°)
+        spin = min(¼°, |Δθ|) * sign(Δθ) 
+        
+        if ξ < 0.1%: z_vel = random(-0.02, 0.02)       
+        
+        fish.energy = min(fish.energy + 0.1%, 100%)
+                
+        fish.vel = dir(fish.angle) * ‖fish.vel‖
+        fish_simulate(fish)
+        draw_entity(fish)
+        
+        fish.head_pos = pos + (35% fish.size.x) * dir(angle)
+        // Debugging head position
+        //draw_disk(fish.head_pos, 2, #f00)
+
+
+
+/* Called by the player when a fish is on the line.
+
+   Moves the fish. If it moved beyond the line length,
+   and the line is held, increase the tension. 
+   
+   If the tension is at least normal, snaps
+   the fish position to an arc around the player.
+ */
+def fish_fight(fish, player):
+    const line_held = player.tap or player.gamepad.a
+
+    if player.tension ≥ NORMAL_TENSION:
+        // Rise when the line is tight
+        if fish.z < 2% MIN_LAKE_Z:
+            fish.z_vel = 0.05
+        else:
+            // Stop at the surface
+            fish.z_vel = 0
+    
+    if player.tension < lerp(NORMAL_TENSION, HIGH_TENSION, 50%):
+        // Try to turn towards the target when under moderate tension
+        fish.angle = lerp_angle(fish.angle, atan(fish.target - fish.pos) * rotation_sign(), min(8% * fish.energy, 2%))
+    else:
+        // Force the fish to turn towards the player
+        fish.angle = lerp_angle(fish.angle, atan(player.tip_pos - fish.pos) * rotation_sign(), 5% * (100% - fish.energy))
+        
+    // Change target occasionally, usually away from the player
+    if ξ < 0.3% or not fish.target or dot(fish.target - fish.pos, player.tip_pos - fish.pos) > 0:
+        // Choose a new target that is also in bounds
+        fish.target = xy(0, 0)
+        while not in_bounds(fish.target):
+            fish.target = fish.pos + 50 (30% direction(fish.pos - player.tip_pos) + random_on_circle())
+    
+
+    if DEBUG_FIGHT: draw_disk(fish.target, 5, #F00, #FF0, 10)
+
+    // Thrash
+    if ξ < 5% + 60% fish.energy: 
+        if ξ < 10%:
+            spawn_ripple(fish.pos, random(20%, 60%))        
+            play_sound({sound: thrash_sound, volume: random(20%, 100%) * fish.energy * ‖fish.scale‖²,  pitch: random(80%, 150%), pan: fish.pos})
+        fish.angle += random(-15°, 15°)
+        
+    // Bigger fish are stronger
+    const strength = ‖fish.scale‖ * fish.energy
+        
+    fish.vel = dir(fish.angle) * strength 
+
+    fish_simulate(fish)
+    
+    // Adjust tension based on distance and whether the 
+    // line is held. The distance can change because the fish
+    // moves or because the player shortens the line.
+    const old_len = ‖player.line_pos - player.tip_pos‖
+    const new_len = ‖fish.pos - player.tip_pos‖
+    let Δtension = clamp(3% (new_len - old_len), -1%, 8%)
+    if not line_held:
+        // If the player isn't holding the line, do not
+        // increase tension
+        if player.tension > NORMAL_TENSION:
+            Δtension = min(Δtension, -0.7%)
+        else:            
+            Δtension = min(Δtension, -0.075%)
+    else if player.tension < HIGH_TENSION:
+        // Don't let the tension slack too quickly
+        Δtension = max(Δtension, -0.1%)
+    
+    if (dot(direction(fish.vel), direction(fish.pos - player.tip_pos)) > 0.5 or Δtension < -0.6%) and not line_held:
+        set_volume(player.reel_out_audio, 100%)
+        resume_audio(player.reel_out_audio)
+    else:
+        stop_audio(player.reel_out_audio)
+        
+    if player.tension > NORMAL_TENSION and Δtension > 0:
+        // Scale the tension by the fish's strength, so
+        // that a very tired fish is easy to reel in
+        Δtension *= strength
+    
+    if Δtension > 0.5% and ξ < 0.08%:
+        spawn_ripple(fish.pos, random(20%, 60%))
+
+    player.tension = clamp(player.tension + Δtension, 0%, 100%)
+    
+    // Tire the fish out
+    fish.energy = max(fish.energy - 0.3% max(player.tension - NORMAL_TENSION, 0) * clamp(3 - 2 ‖fish.scale‖, 1.0, 3.0), 2%)
+
+    if player.tension ≥ NORMAL_TENSION:
+        // Snap the fish mouth to the line, constraining it
+        // to a circle
+        fish.pos = direction(fish.pos - player.tip_pos) * old_len + player.tip_pos
+            
+        
+    // Snap the line to the fish mouth
+    player.line_pos = xy(fish.pos)
+    
+    draw_entity(fish)
+    const outline_color = lerp(LAKE_COLOR, player.sprite_override_color, 70%)    
+    
+    fish_draw_outline(fish, outline_color)
+    
+    local:
+        const width = round(20 ‖fish.scale‖)
+        const corner = round(fish.pos + fish.text_offset - xy(½ width, 0))
+        draw_sprite({sprite: shapes_sprite.lightning, scale: 28%, pos: corner + xy(-4, 2)})
+        draw_corner_rect(corner, xy(width + 2, 4), ∅, outline_color)
+        draw_corner_rect(corner + 1, xy(20 strength, 2), #fff)
+    
+    // Break under high tension, but don't break the line very close to the player
+    if ξ < (player.tension - HIGH_TENSION) / (64 HIGH_TENSION) and min(‖fish.pos, player.tip_pos‖, ‖fish.pos, player.pos‖) > 64:
+        todo("Animate line breaking")
+        // Tension is too high, break the line!
+        play_sound({sound: line_break_sound, pan: player.pos})
+
+        def s():
+            player_show_emotion(player, random_value(emotion_sprite.angry))
+            play_sound({sound: angry_player_sound, pan: player.pos})
+        delay(s, 15)
+
+        stop_audio(player.reel_out_audio)
+        player_resume_aim(player)
+        free_fish(player, fish)
+        spawn_ripple(fish.pos, 50%)
+    else if ξ < 2% (35% NORMAL_TENSION - player.tension):
+        // Tension is too low, let the fish escape! (Leave the line out)
+        stop_audio(player.reel_out_audio)
+        
+        def s():
+            player_show_emotion(player, random_value(emotion_sprite.sad))
+            play_sound({sound: sad_player_sound, pan: player.pos})
+        delay(s, 15)
+        
+        free_fish(player, fish)
+        play_sound({sound: fish_escape_sound, pan: fish.pos})
+        // Snap back a little
+        const offset = player.line_pos - player.tip_pos
+        player.line_pos = direction(offset) * 95% ‖offset‖ + player.tip_pos
+        spawn_ripple(player.line_pos, 30%)
+
+
+// Draw an outline on the fish with the player's color
+def fish_draw_outline(fish, outline_color):
+    for -1 ≤ Δx ≤ +1:
+        for -1 ≤ Δy ≤ +1:
+            if Δx ≠ 0 or Δy ≠ 0:
+                draw_sprite(fish.sprite, fish.pos + xy(Δx, Δy),
+                     fish.angle, fish.scale, 100%, fish.z - ε, 
+                     outline_color, ∅, fish.pivot)
+    
+    

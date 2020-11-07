@@ -33,6 +33,7 @@
         "cone": {"x": 9, "y": 1},
         "teardrop": {"x": 10, "y": 1},
         "chevron": {"x": 11, "y": 1},
+        "lightning": {"x": 12, "y": 1},
         
         "diagonal_corner": {"x": 0, "y": 2},
         "convex_corner": {"x": 1, "y": 2},
@@ -182,7 +183,7 @@
         "bee":             {"x": 7, "y": 12},
         "hawk":            {"x": 8, "y": 12},
         "hawk_attack":     {"x": 9, "y": 12},
-        "lizzard":         {"x": 11, "y": 12},
+        "lizard":          {"x": 11, "y": 12},
         "microscope":      {"x": 11, "y": 12}
 },
     "license": "By Morgan McGuire 2020, released into the Public Domain/CC0"

@@ -184,6 +184,11 @@
             "description": "Swapping puzzle game"
         },
         {
+            "url": "quad://games/friendly_fishing/",
+            "title": "Friendly Fishing",
+            "description": "Join your friends for a relaxing afternoon of fishing and you just might top the lake records."
+        },
+        {
             "url": "quad://games/icetime/",
             "title": "Ice Time",
             "description": "2 vs. 2 ice hockey with teams, player stats., faceoffs, passing\u2026and a Zamboni."

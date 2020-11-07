@@ -1,0 +1,16 @@
+{
+    "url": "emotion-25x23.png",
+    "sprite_size": {
+        "x": 25,
+        "y": 23
+    },
+    "license": "by Morgan McGuire 2020. Released into the Public Domain",
+    "names": {
+        "happy": {"start": {"x": 0, "y": 0},
+                  "end": {"y": 1}},
+        "angry": {"start": {"x": 1, "y": 0},
+                  "end": {"y": 1}},
+        "sad": {"start": {"x": 2, "y": 0},
+                "end": {"y": 1}}
+    }
+}
