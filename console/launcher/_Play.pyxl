@@ -157,12 +157,22 @@ const gameArray = [{
    preview:      alpreview
 }]
 
-const backgroundColor = #135
-const promptColor = #4DF
+const background_color = #135
+const prompt_color = #4DF
 const promptFont = mediumFont
-const shadowColor = #0006
+const text_shadow_color = #0006
 const selectedColor = #f
 const unselectedColor = #9
+
+const TAB_WIDTH = 90
+
+const tab_array = [
+    {title: "Games"},
+    {title: "Online"},
+    {title: "System"}
+]
+
+let tab_index
 
 // Pixel scrolling
 let gameShift = 0
@@ -176,148 +186,287 @@ def drawIcon(icon, pos):
    return xy(icon.size.x + 2, icon.size.y + 2)
 
 
+def set_tab_index(t):
+    const old = tab_index
+    tab_index = t
+    if old == 2:
+        // System/controls tab
+        pop_mode()
+    else if tab_index == 2:
+        push_mode($ControlsMenu, manage_tabs)
+
+        
+/* Draw the tab labels on top and handle horizontal input. This is common code
+   across all tabs*/
+def manage_tabs():
+    for pad in gamepad_array:
+        if (pad.ee or pad.xx < 0) and tab_index > 0: set_tab_index(tab_index - 1)
+        if (pad.ff or pad.xx > 0) and tab_index < size(tab_array) - 1: set_tab_index(tab_index + 1)
+        
+    draw_corner_rect(xy(0, 0), xy(384, 16), #2)
+    draw_line(xy(0, 16), xy(384, 16), #f)
+
+    for tab at t in tab_array:
+        const active = t == tab_index
+        const pos = xy(TAB_WIDTH * t + (SCREEN_SIZE.x - TAB_WIDTH * (size(tab_array) - 1)) / 2, if active then 8 else 9)
+        const z = (if active then 1 else 0)
+
+        // Tab background
+        draw_rect(pos, xy(TAB_WIDTH + 1, if active then 17 else 16), if active then background_color else text_shadow_color, #F, nil, z)
+
+        // Tab label
+        draw_text({
+            font: mediumFont,
+            text: tab.title,
+            pos: pos,
+            color: (if active then selectedColor else unselectedColor),
+            shadow: text_shadow_color,
+            x_align: "center",
+            y_align: "center",
+            z: z
+        })
+    
+        if t == tab_index + 1:
+            draw_text({font: mediumFont, text: joy.prompt["[>]"], pos: pos + xy(8 - TAB_WIDTH / 2, 0), color: prompt_color, shadow: text_shadow_color, x_align: "center", y_align: "center", z: z})
+        else if t == tab_index - 1:
+            draw_text({font: mediumFont, text: joy.prompt["[<]"], pos: pos - xy(8 - TAB_WIDTH / 2, 0), color: prompt_color, shadow: text_shadow_color, x_align: "center", y_align: "center", z: z})
+
+        // Erase the bottom of the tab
+        if active:
+            draw_line(pos + xy(1 - TAB_WIDTH / 2, 8), pos + xy(+TAB_WIDTH / 2 - 1, 8), background_color, 1)
+
+
+
+def manage_games_tab():
+    // Blinking active choice
+    const bright             = (1 + cos(mode_frames / 9)) / 2
+    const active_color       = lerp(prompt_color, #fff, 50% bright)
+    const active_outline     = rgba(1,1,1, 25% bright)
+    const active_shadow      = 50% text_shadow_color
+
+    draw_text({font: mediumFont, text:joy.prompt["⍐"], pos: xy(1, 28), color: prompt_color, shadow: text_shadow_color})
+    draw_text({font: mediumFont, text:joy.prompt["⍗"], pos: xy(1, 220), color: prompt_color, shadow: text_shadow_color})
+
+    const boxVerticalSpacing = 75
+
+    preserving_transform:
+        set_clip(xy(12, 20), xy(64, 201))
+        for gameIndex - 2 <= g <= gameIndex + 2:
+            const game = array_value(gameArray, g, "loop")
+            const pos = xy(44, boxVerticalSpacing * g + 64/2 + 19 - gameShift - (gameIndex - 1) * boxVerticalSpacing)
+            draw_sprite({sprite: game.label, pos: pos})
+            draw_line(pos + xy(1-64/2, 64/2), pos + xy(64/2-2, 64/2), text_shadow_color)
+
+    // Highlight selected game
+    draw_corner_rect(xy(11, 93), xy(66, 66), nil, #f)
+    draw_corner_rect(xy(10, 92), xy(68, 68), nil, #d)
+   
+    const game = gameArray[gameIndex]
+    const t = floor((mode_frames - modeFrameShift) / 3) mod 60
+    const x = 99
+    const pos = xy(x + 384/4, 224/4 + 66)
+    draw_sprite({sprite: game.preview[t mod 6][floor(t / 6)], pos: pos})
+    draw_line(pos + xy(1-384/4, 224/4), pos + xy(384/4-2, 224/4), text_shadow_color)
+    draw_line(pos + xy(2-384/4, 224/4 + 1), pos + xy(384/4-3, 224/4 + 1), text_shadow_color / 2)
+    draw_text({font:largeFont, text:game.title, pos:xy(x, 40), color:selectedColor, shadow:text_shadow_color, x_align:"left"})
+    draw_text({font:mediumFont, text:"by " + game.developer, pos:xy(x, 56), color:selectedColor, shadow:text_shadow_color, x_align:"left"})
+    draw_text({font:smallFont, text:game.url, pos:xy(x, 220), color:unselectedColor, x_align:"left"})
+    draw_text({font:smallFont, text:game.description, pos:xy(x, 193), color:selectedColor, x_align:"left", wrap_width: 280})
+
+    const sideX = 295
+    const wordX = sideX + 27
+    draw_text({font:promptFont, text:joy.prompt["ⓟ"] + "  PLAY", pos:xy(sideX + 7, 74),
+               color:active_color, shadow: active_shadow, outline: active_outline, x_align:"left"})
+    if not game.builtin: draw_text({font:promptFont, text:joy.prompt["ⓓ"] + "  FORGET", pos:xy(sideX + 7, 88), color:prompt_color, shadow:text_shadow_color, x_align:"left"})
+
+    // Icons
+    let y = 112
+    if game.max_players == 0 or game.min_players == 0 and game.max_players == nil:
+        draw_text({font:mediumFont, text:"Animation", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
+        drawIcon(icons.players[0], xy(sideX, y)).y
+        y += 15
+    else if game.min_players != nil and game.max_players != nil:
+        let lo = clamp(min(game.min_players, game.max_players), 1, 5)
+        let hi = clamp(max(game.min_players, game.max_players), 1, 5)
+        if lo != hi:
+            drawIcon(icons.players[lo], xy(sideX, y))
+            draw_line(xy(sideX + 21, y - 4), xy(sideX + 28, y - 4), selectedColor)
+            drawIcon(icons.players[hi], xy(sideX + 29, y)).y
+        else:
+            drawIcon(icons.players[lo], xy(sideX, y))
+            draw_text({font:mediumFont, text:"" + lo + "-Player", pos:xy(wordX, y), color:selectedColor, x_align:"left"})
+        y += 15
+    else if game.min_players != nil or game.max_players != nil:
+        // Only one specified
+        const lo = if game.min_players != nil then game.min_players else game.max_players
+        drawIcon(icons.players[clamp(lo, 1, 5)], xy(sideX, y))
+        draw_text({font:mediumFont, text:"" + lo + "-Player", pos:xy(wordX, y), color:selectedColor, x_align:"left"})
+        y += 15
+
+    if game.cooperative:
+        drawIcon(icons.cooperative, xy(sideX, y)).y
+        y += draw_text({font:mediumFont, text:"Cooperate", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
+
+    if game.competitive:
+        drawIcon(icons.competitive, xy(sideX, y)).y
+        y += draw_text({font:mediumFont, text:"Compete", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
+      
+    if game.achievements:
+        drawIcon(icons.achievements, xy(sideX, y)).y
+        y += draw_text({font:mediumFont, text:"Achieve", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
+
+    if game.highscores:
+        drawIcon(icons.highscores, xy(sideX, y)).y
+        y += draw_text({font:mediumFont, text:"Highscore", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
+
+    for pad in gamepad_array:
+        if pad.aa or pad.qq or pad.$pp:
+            def callback(): launch_game(gameArray[gameIndex].url)
+            set_mode($SlideOut, callback) because "Player selected game"
+
+        // Animate scrolling
+        if pad.yy:
+            const Δy = 3 pad.yy
+            play_sound(boop, false, 300%)
+            def shift(): gameShift += Δy
+            add_frame_hook(shift, nil, boxVerticalSpacing / 3)
+
+    // Change games
+    if gameShift >= boxVerticalSpacing:
+        gameShift -= boxVerticalSpacing
+        modeFrameShift = mode_frames - 1
+        ++gameIndex
+    else if gameShift <= -boxVerticalSpacing:
+        gameShift += boxVerticalSpacing
+        --gameIndex
+        modeFrameShift = mode_frames - 1
+
+    gameIndex = loop(gameIndex, gameArray.length)
+
+
+    
+let online_choice_index = 0
+    
+def manage_online_tab():
+    if $getIsOffline():
+        draw_text({
+            text: "This release does not support online multiplayer. Coming soon...",
+            //text: "quadplay✜ is running in offline mode\n\nRelaunch without the --offline argument\nto enable online multiplayer play.",
+            font: mediumFont,
+            pos: xy(SCREEN_SIZE.x / 2, 80),
+            color: #f,
+            shadow: text_shadow_color,
+            x_align: "center"
+        })
+        return
+    
+    // Blinking active choice
+    const bright             = (1 + cos(mode_frames / 9)) / 2
+    const active_color       = lerp(prompt_color, #fff, 50% bright)
+    const active_outline     = rgba(1,1,1, 25% bright)
+    const active_shadow      = 50% text_shadow_color
+
+    let choice_array;
+
+    if $getIsHosting():
+        choice_array = ["Copy Host Code", "Change Host Code", "Stop Hosting"]
+        draw_text({
+            text: "You are currently hosting as:",
+            font: mediumFont,
+            pos: xy(SCREEN_SIZE.x / 2, 40),
+            color: #f,
+            shadow: text_shadow_color,
+            markup: true,
+            x_align: "center"
+        })
+        draw_text({
+            text: "\"" + $netIDToSentence($getMyHostNetID()) + "\"",
+            font: largeFont,
+            pos: xy(SCREEN_SIZE.x / 2, 70),
+            color: #f,
+            shadow: text_shadow_color,
+            markup: true,
+            x_align: "center"
+        })
+    else:
+        choice_array = ["Visit A New Host", "Visit ???? ???? ???? ???? ???? ????", "Visit ???? ???? ???? ???? ???? ????", "Visit ???? ???? ???? ???? ???? ????", "Start Hosting"]
+
+        
+    let pos = xy(if $getIsHosting() then 140 else 90, SCREEN_SIZE.y - 50 - size(choice_array) * 18)
+    for choice at i in choice_array:
+        const active = (i == online_choice_index)
+
+        draw_text({
+            font: $font9,
+            text: choice,
+            pos: pos + (if active then xy(0, 2) else xy(0, 1)),
+            color: (if active then active_shadow else text_shadow_color),
+            x_align: "left"})
+        
+        draw_text({
+            font: $font9, text: choice, pos: pos,
+            color: (if active then active_color else #b),
+            outline: (if active then active_outline else nil),
+            x_align: "left"
+        })
+
+        if active:
+            draw_text({font: $font9, text: "✜",
+                       pos: pos + (if active then xy(-8, 2) else xy(-8, 1)),
+                       color: (if active then active_shadow else text_shadow_color),
+                       x_align: "right"})
+            draw_text({font: $font9, text: "✜", pos: pos - xy(8, 0),
+                       color: (if active then active_color else #b),
+                       outline: (if active then active_outline else nil),
+                       x_align: "right"})
+            
+        pos.y += 18
+        if i == size(choice_array) - 2 and not $getIsHosting():
+            // Divider line
+            draw_line(pos + xy(0, -10), pos + xy(210, -10), #b)
+            pos.y += 8
+
+            
+    for gamepad in gamepad_array:
+        online_choice_index = clamp(online_choice_index + gamepad.yy, 0, size(choice_array) - 1)
+        if gamepad.aa:
+            const choice = choice_array[online_choice_index]
+            if choice == "Change Host Code":
+                $changeMyHostNetID()
+            else if choice == "Stop Hosting":
+                $stopHosting()
+                online_choice_index = 0
+            else if choice == "Start Hosting":
+                $startHosting()
+                online_choice_index = 0
+            
+
+    
+enter
+────────────────────────────────────────────────────────────────────────
+tab_index = 0
+online_choice_index = 0
+
 frame
 ────────────────────────────────────────────────────────────────────────
-
 const intro_frames = 20
 if game_frames < intro_frames:
-   // Fade and slide in
-   const α = 1 - min(1, (game_frames + 1) / (intro_frames + 1))
-   
-   set_post_effects({
-      background: #000,
-      pos:        xy(α * SCREEN_SIZE.x, 0),
-      color:      rgba(0, 0, 0, α)
-   })
+    // Fade and slide in
+    const α = 1 - min(1, (game_frames + 1) / (intro_frames + 1))
+    
+    set_post_effects({
+        background: #000,
+        pos:        xy(α * SCREEN_SIZE.x, 0),
+        color:      rgba(0, 0, 0, α)
+    })
    
 else if game_frames == intro_frames:
-   reset_post_effects()
+    reset_post_effects()
    
-set_background(backgroundColor)
-draw_corner_rect(xy(0, 0), xy(384, 15), #2)
-draw_line(xy(0, 16), xy(384, 16), #f)
-draw_text({font: quadplayFont, text:"quadplay✜ games", pos: xy(SCREEN_SIZE.x / 2, 11), color: selectedColor, shadow: shadowColor, x_align: "center"})
-//draw_text({font: smallFont, text:$navigator.userAgent + "||" + $navigator.platform, pos: xy(SCREEN_SIZE.x / 2, 11), color: selectedColor, shadow: shadowColor, x_align: "center", wrap_width: SCREEN_SIZE.x})
+set_background(background_color)
+manage_tabs()
 
-
-
-/*
-// Disable these features until we're ready for it
-
-draw_corner_rect(xy(0,0), xy(90, 15), #2)
-draw_corner_rect(xy(155,0), xy(230, 15), #2)
-
-draw_text({font: mediumFont, text:joy.prompt["⍇"], pos: xy(70,12), color: promptColor, shadow: shadowColor})
-draw_text({font: mediumFont, text:"LIBRARY", pos: xy(99,12), color: selectedColor, shadow: shadowColor})
-draw_text({font: mediumFont, text:"DISCOVER", pos: xy(180,12), color: unselectedColor, shadow: shadowColor})
-draw_text({font: mediumFont, text:"URL", pos: xy(260,12), color: unselectedColor, shadow: shadowColor})
-draw_text({font: mediumFont, text:joy.prompt["⍈"], pos: xy(300,12), color: promptColor, shadow: shadowColor})
-
-draw_line(xy(0, 16), xy(90, 16), #f)
-draw_line(xy(90, 16), xy(90, 1), #f)
-draw_line(xy(91, 0), xy(154, 0), #f)
-draw_line(xy(155, 1), xy(155, 16), #f)
-draw_line(xy(155, 16), xy(384, 16), #f)
-*/
-
-draw_text({font: mediumFont, text:joy.prompt["⍐"], pos: xy(1, 28), color: promptColor, shadow: shadowColor})
-draw_text({font: mediumFont, text:joy.prompt["⍗"], pos: xy(1, 220), color: promptColor, shadow: shadowColor})
-
-const boxVerticalSpacing = 75
-
-set_clip(xy(12, 20), xy(64, 201))
-for gameIndex - 2 <= g <= gameIndex + 2:
-   const game = array_value(gameArray, g, "loop")
-   const pos = xy(44, boxVerticalSpacing * g + 64/2 + 19 - gameShift - (gameIndex - 1) * boxVerticalSpacing)
-   draw_sprite({sprite: game.label, pos: pos})
-   draw_line(pos + xy(1-64/2, 64/2), pos + xy(64/2-2, 64/2), shadowColor)
-reset_clip()
-
-// Highlight selected game
-draw_corner_rect(xy(11, 93), xy(66, 66), nil, #f)
-draw_corner_rect(xy(10, 92), xy(68, 68), nil, #d)
-   
-local:
-   const game = gameArray[gameIndex]
-   const t = floor((mode_frames - modeFrameShift) / 3) mod 60
-   const x = 99
-   const pos = xy(x + 384/4, 224/4 + 66)
-   draw_sprite({sprite: game.preview[t mod 6][floor(t / 6)], pos: pos})
-   draw_line(pos + xy(1-384/4, 224/4), pos + xy(384/4-2, 224/4), shadowColor)
-   draw_line(pos + xy(2-384/4, 224/4 + 1), pos + xy(384/4-3, 224/4 + 1), shadowColor / 2)
-   draw_text({font:largeFont, text:game.title, pos:xy(x, 40), color:selectedColor, shadow:shadowColor, x_align:"left"})
-   draw_text({font:mediumFont, text:"by " + game.developer, pos:xy(x, 56), color:selectedColor, shadow:shadowColor, x_align:"left"})
-   draw_text({font:smallFont, text:game.url, pos:xy(x, 220), color:unselectedColor, x_align:"left"})
-   draw_text({font:smallFont, text:game.description, pos:xy(x, 193), color:selectedColor, x_align:"left", wrap_width: 280})
-
-   const sideX = 295
-   const wordX = sideX + 27
-   draw_text({font:promptFont, text:joy.prompt["ⓟ"] + "  PLAY", pos:xy(sideX + 7, 74), color:promptColor, shadow:shadowColor, x_align:"left"})
-   if not game.builtin: draw_text({font:promptFont, text:joy.prompt["ⓓ"] + "  FORGET", pos:xy(sideX + 7, 88), color:promptColor, shadow:shadowColor, x_align:"left"})
-
-   // Icons
-   let y = 112
-   if game.max_players == 0 or game.min_players == 0 and game.max_players == nil:
-      draw_text({font:mediumFont, text:"Animation", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
-      drawIcon(icons.players[0], xy(sideX, y)).y
-      y += 15
-   else if game.min_players != nil and game.max_players != nil:
-      let lo = clamp(min(game.min_players, game.max_players), 1, 5)
-      let hi = clamp(max(game.min_players, game.max_players), 1, 5)
-      if lo != hi:
-         drawIcon(icons.players[lo], xy(sideX, y))
-         draw_line(xy(sideX + 21, y - 4), xy(sideX + 28, y - 4), selectedColor)
-         drawIcon(icons.players[hi], xy(sideX + 29, y)).y
-      else:
-         drawIcon(icons.players[lo], xy(sideX, y))
-         draw_text({font:mediumFont, text:"" + lo + "-Player", pos:xy(wordX, y), color:selectedColor, x_align:"left"})
-      y += 15
-   else if game.min_players != nil or game.max_players != nil:
-      // Only one specified
-      let lo = if game.min_players != nil then game.min_players else game.max_players
-      drawIcon(icons.players[clamp(lo, 1, 5)], xy(sideX, y))
-      draw_text({font:mediumFont, text:"" + lo + "-Player", pos:xy(wordX, y), color:selectedColor, x_align:"left"})
-      y += 15
-
-   if game.cooperative:
-      drawIcon(icons.cooperative, xy(sideX, y)).y
-      y += draw_text({font:mediumFont, text:"Cooperate", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
-
-   if game.competitive:
-      drawIcon(icons.competitive, xy(sideX, y)).y
-      y += draw_text({font:mediumFont, text:"Compete", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
-      
-   if game.achievements:
-      drawIcon(icons.achievements, xy(sideX, y)).y
-      y += draw_text({font:mediumFont, text:"Achieve", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
-
-   if game.highscores:
-      drawIcon(icons.highscores, xy(sideX, y)).y
-      y += draw_text({font:mediumFont, text:"Highscore", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
-
-for pad in gamepad_array:
-   if pad.aa or pad.qq or pad.$pp:
-      def callback():
-         launch_game(gameArray[gameIndex].url)
-         
-      set_mode($SlideOut, callback) because "Player selected game"
-      
-   // Animate scrolling
-   if pad.yy:
-      const Δy = 3 pad.yy
-      play_sound(boop, false, 300%)
-      def shift(): gameShift += Δy
-      add_frame_hook(shift, nil, boxVerticalSpacing / 3)
-
-// Change games
-if gameShift >= boxVerticalSpacing:
-   gameShift -= boxVerticalSpacing
-   modeFrameShift = mode_frames - 1
-   ++gameIndex
-else if gameShift <= -boxVerticalSpacing:
-   gameShift += boxVerticalSpacing
-   --gameIndex
-   modeFrameShift = mode_frames - 1
-
-gameIndex = loop(gameIndex, gameArray.length)
-   
+if tab_index == 0:
+    manage_games_tab()
+else if tab_index == 1:
+    manage_online_tab()

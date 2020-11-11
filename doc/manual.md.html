@@ -140,10 +140,10 @@ quadplay C:\Users\MYNAME\my_quadplay\space
 
 # Load your game and allow mobile clients to connect by scanning
 # the QR code displayed in the IDE (Mac and Linux)
-quadplay --host ~/my_quadplay/space
+quadplay --serve ~/my_quadplay/space
 
 # ... Windows
-quadplay --host C:\Users\MYNAME\my_quadplay\space
+quadplay --serve C:\Users\MYNAME\my_quadplay\space
 
 # Load a game from the web (their server must support CORS)
 quadplay https://morgan3d.github.io/somegame/foo.game.json
@@ -298,10 +298,10 @@ based on skipping stones over a lake in the evening.
 
 ----------------------------
 
-  <center>Friendly Fishing</center>
+  <center><big>Friendly Fishing</big></center>
 
 <div class="preview pixel" style="background-image:url('../games/friendly_fishing/preview.png')"></div>
-[across the lake](../console/quadplay.html?game=quad://games/friendly_fishing&IDE=1) 
+[Friendly Fishing](../console/quadplay.html?game=quad://games/friendly_fishing&IDE=1) 
 Join your friends for a relaxing afternoon of fishing and you just might top the lake records.
 
 - Animation using `sequence()` and `delay()`
@@ -7562,10 +7562,10 @@ Mobile Development
 The quadplay IDE allows you to easily test your game on a mobile device while 
 developing from a laptop or desktop computer. 
 
-First, launch the `quadplay` script on your computer with the `--host` flag. For example, 
+First, launch the `quadplay` script on your computer with the `--serve` flag. For example, 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
-quadplay --host games/quadpaddle/
+quadplay --serve games/quadpaddle/
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 (Use your own game, not the `quadpaddle` sample, of course).
@@ -7882,7 +7882,7 @@ through for 1.0. The highlights of this are, in priority order:
   [x] Graphics
   [x] Physics
   [x] AI
-[x] Six full sample games
+[x] Nine full sample games
 [x] Export to:
   [x] web page
   [x] github pages
@@ -7898,12 +7898,12 @@ through for 1.0. The highlights of this are, in priority order:
 [x] Aseprite, Photoshop, Krita, and Tiled external editor support
 [x] 50% virtual GPU graphics speedup over the alpha
 [x] Load tables of data from CSV files
+[ ] Shared-screen network multiplayer
 
 
 Post 1.0
 --------------------------------------------------------------
 
-[ ] Shared-screen network multiplayer
 [ ] Python not required
 [ ] Export to:
   [ ] macOS binary
@@ -7967,6 +7967,9 @@ Dekker.
 
 QR code support via [qrcodejs](https://github.com/davidshimjs/qrcodejs) (c) 2012 [@davidshimjs](https://twitter.com/davidshimjs) used under
 the [MIT license](https://raw.githubusercontent.com/davidshimjs/qrcodejs/master/LICENSE).
+
+[PeerJS](https://peerjs.com/) is Copyright 2015 Michelle Bu and Eric Zhang. It is
+used under the MIT license.
 
 The random number generator is derived from
 [an implementation](https://github.com/AndreasMadsen/xorshift/blob/master/xorshift.js)
@@ -8040,6 +8043,26 @@ Change Log
 =====================================================================================
 
 Changes for both the specification and implementation in each release.
+
+2020 November TBD: Beta update 55
+
+- When running outside of the IDE (with or without kiosk mode), quadplay will
+  now sleep after two minutes of no activity to conserve power
+- Kiosk mode now allows access to the "my_quadplay" folder
+- Changed the `quadplay` script `--host` argument to `--serve` to disambiguate
+  from remote play hosting
+- Added `quadplay --offline` to disable new online multiplayer features
+- Launcher now shows diagnostic system data
+- Added Kiosk Mode to the IDE Console menu to avoid requiring URL editing
+- `quadplay --kiosk` at the command line now launches in fullscreen mode
+  directly on macOS and Windows when using Edge or Chromium. On other platforms
+  it requires a click to enter fullscreen.
+- Disabled caching of quadplay internal OS code to ensure that upgrades
+  do not require a hard reload from users
+- Fixed `draw_text()` markup with both `{br}` (or double newline) and format
+  specifiers dropping content after the line break
+- Added PeerJS to the distribution
+
 
 2020 November 7: Beta update 54
 

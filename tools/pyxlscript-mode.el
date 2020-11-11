@@ -44,7 +44,7 @@
 
 
   ;; Syntax highlighting
-  (let ((keyword-exp (regexp-opt '("assert" "todo" "debug_pause" "debug_print" "debug_watch" "with" "let" "const" "mod" "local" "preserving_transform" "for" "in" "while" "until" "if" "then" "else" "push_mode" "reset_game" "set_mode" "return" "def" "break" "continue" "default" "bitand" "bitnot" "bitor" "bitxor" "bitnot" "bitshl" "bitshr" "because" "quit_game" "launch_game") 'symbols))
+  (let ((keyword-exp (regexp-opt '("at" "assert" "todo" "debug_pause" "debug_print" "debug_watch" "with" "let" "const" "mod" "local" "preserving_transform" "for" "in" "while" "until" "if" "then" "else" "push_mode" "reset_game" "set_mode" "return" "def" "break" "continue" "default" "bitand" "bitnot" "bitor" "bitxor" "bitnot" "bitshl" "bitshr" "because" "quit_game" "launch_game") 'symbols))
         (literal-exp (regexp-opt '("deg" "true" "false" "nan" "SCREEN_SIZE" "pi" "epsilon" "infinity" "nil") 'symbols))
         (event-exp   (regexp-opt '("enter" "leave" "frame") 'symbols))
         (builtin-exp (regexp-opt '("ray_intersect" "draw_bounds" "draw_disk" "reset_clip" "set_camera" "reset_camera" "get_camera" "reset_transform" "set_clip" "draw_line" "draw_sprite_corner_rect" "intersect_clip" "draw_point" "draw_corner_rect" "draw_rect" "get_background" "set_background" "text_width" "get_sprite_pixel_color" "draw_sprite" "draw_text" "draw_tri" "draw_poly" "get_transform" "get_clip" "rotation_sign" "sign_nonzero" "set_transform" "xy" "xz_to_xyz" "xy_to_xyz" "xz" "xyz"

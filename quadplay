@@ -106,7 +106,7 @@ isMacOS = (platform.system() == 'Darwin')
 # ask it to POST
 token = None
 
-# Ensure that slashes and case are consistent when on windows, and make absolute
+# Ensure that slashes and case are consistent when on Windows, and make absolute
 def canonicalize_path(path): return os.path.normcase(os.path.abspath(path)).replace('\\', '/')
 
 # Where the user's games are stored. Will be made relative to the CWD later
@@ -162,8 +162,8 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
 
     # Returns False on security error
     def prepare_mutating_request(self):
-        if args.host:
-           print('Refused POST/DELETE command while running with --host')
+        if args.serve:
+           print('Refused POST/DELETE command while running with --serve')
            return False
         
         if self.client_address[0] != '127.0.0.1':
@@ -243,7 +243,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 if isMacOS:
                     cmd = 'open -R "' + filename + '"'
                 else:
-                    cmd = 'start "' + os.path.dirname(filename) + '"'
+                    cmd = 'start "" "' + os.path.dirname(filename) + '"'
             elif isMacOS:
                 cmd = 'open -a "' + app + '" "' + filename + '"'
                 
@@ -504,10 +504,10 @@ def parse_args():
     )
     
     parser.add_argument(
-        '--host',
+        '--serve',
         action='store_true',
         default=False,
-        help='hosting mode - allow other machines to connect to this one to play on mobile devices'
+        help='serving mode - allow other machines to connect to this one to develop on mobile devices'
     )
     
     parser.add_argument(
@@ -527,7 +527,14 @@ def parse_args():
         default=False,
         help='kiosk mode - launch full screen and without the IDE'
     )
-    
+
+    parser.add_argument(
+        '--offline',
+        action='store_true',
+        default=False,
+        help='Prevent online multiplayer as both host and guest'
+    )
+
     parser.add_argument(
         "-p",
         "--port",
@@ -574,15 +581,12 @@ quad_path = canonicalize_path(os.path.dirname(__file__))
 # Compute the serving paths
 game_path = canonicalize_path(args.gamepath)
 if game_path.endswith('.game.json'): game_path = os.path.dirname(game_path)
-webpath_allowlist = [quad_path, game_path]
-
-if not args.kiosk: webpath_allowlist.append(my_games_path)
+webpath_allowlist = [quad_path, game_path, my_games_path]
        
 # Common ancestor
 server_root_path = os.path.dirname(os.path.commonprefix([os.path.join(p, '') for p in webpath_allowlist]))
 
 # Strip the common prefix
-# HERE
 webpath_allowlist = [platform_www_abspath(p) for p in webpath_allowlist]
 my_games_path = remove_leading_slash(my_games_path[len(server_root_path):])
 
@@ -608,7 +612,8 @@ if False:
     print("config_query_webpath = '" + config_query_webpath + "'")
     print('webpath_allowlist    = ', webpath_allowlist, '\n')
     sys.exit()
-# SSL support doesn't work yet due to self-signed certificates
+
+# SSL support doesn't work yet due to self-signed certificate problems
 useSSL = False
 
 # Runs in a different process
@@ -629,7 +634,7 @@ def launchServer(post_token):
     try:
         # '' = 0.0.0.0 = all local IP addresses, needed for
         # supporting devices other than just localhost
-        server_address = ('' if args.host else 'localhost', args.port)
+        server_address = ('' if args.serve else 'localhost', args.port)
         httpd = QuadplayHTTPServer(server_address, QuadplayHTTPRequestHandler)
 
         if useSSL:
@@ -669,7 +674,7 @@ def main():
        atexit.register(set_normal_term)
 
     myip = '127.0.0.1'
-    if args.host:
+    if args.serve:
         try:
             print('Getting IP address...')
             myip = ''
@@ -705,6 +710,9 @@ def main():
         url += '&mode=Maximal&kiosk=1'
     else: 
         url += '&IDE=1'
+
+    if args.offline:
+        url += '&offline=1'
         
     print('_________________________________________________________________________\n')
 
@@ -719,7 +727,7 @@ def main():
 
     print('\nServing from:\n\n   ' + url + '\n')
                  
-    if args.host:
+    if args.serve:
         # Do not support POST in host mode
         print('\nYour firewall may need to be configured to load on other devices.\n')
     else:
@@ -747,14 +755,18 @@ def main():
     print('\n**Press any key to terminate the server when done**\n')
     time.sleep(2)
 
+    # The --start-fullscreen argument works for Edge and Chrome on
+    # Windows and macOS. There is no direct command line way to launch
+    # Safari or Firefox in fullscreen mode, or to launch in fullscreen
+    # using xdg-open on Linux.
     if isWindows:
         # Require NO surrounding quotes on Windows for it to interpret the URL.
         # Must escape & as ^&.
-        os.system('start ' + url.replace('&', '^&'))
+        os.system('start "quadplay" "' + url.replace('&', '^&') + '"' + (' --start-fullscreen' if args.kiosk else ''))
     elif isMacOS:
         # Require quotes on Unix systems so that bash does not interpret &
         # as a shell option to run in another thread
-        os.system('open "' + url + '"')
+        os.system('open "' + url + '" ' + (' --args --start-fullscreen' if args.kiosk else ''))
     else:
         os.system('xdg-open "' + url + '"')
 

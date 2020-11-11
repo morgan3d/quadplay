@@ -375,7 +375,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                     modeCode = modeCode.replace(/\r/g, '');
                     addCodeToSourceStats(modeCode, mode.url);
                     fileContents[mode.url] = modeCode;
-                }, null, null, computeForceReloadFlag(mode.url));
+                }, null, null, true);// Always force reload computeForceReloadFlag(mode.url));
             }
         }
 

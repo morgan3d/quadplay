@@ -4894,6 +4894,9 @@ function $parseMarkupHelper(str, startIndex, stateChanges) {
     });
 
     if (! wasColor) {
+        // The argument is not a color literal. It should be an identifier,
+        // so parse it in the same way as the compiler
+        //
         // The identifier regexp here is copied from
         // pyxlscript-compiler.js identifierPattern and must be kept
         // in sync.
@@ -4935,7 +4938,7 @@ function $parseMarkupHelper(str, startIndex, stateChanges) {
     if (after !== '') {
         str += $parseMarkupHelper(after, restoreState.startIndex, stateChanges);
     }
-    
+
     return str;
 }
 
@@ -4944,7 +4947,6 @@ function $parseMarkup(str, stateChanges) {
     // First instance.
     
     // Remove single newlines, temporarily protecting paragraph breaks.
-    // This is intended to 
     str = str.replace(/ *\n{2,}/g, '¶');
     str = str.replace(/ *\n/g, ' ');
     str = str.replace(/¶/g, '\n\n');
@@ -4998,7 +5000,9 @@ function $postGlyphSpace(str, i, font) {
 
 /** Helper for draw_text() that operates after markup formatting has been processed. 
     offsetIndex is the amount to add to the indices in formatArray to account for
-    the str having been shortened already. */
+    the str having been shortened already. 
+
+*/
 function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_align, z, wrap_width, text_size, referenceFont) {
     $console.assert(typeof str === 'string');
     $console.assert(Array.isArray(formatArray));
@@ -5006,8 +5010,8 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
     $console.assert(typeof pos === 'object' && pos.x !== undefined);
 
     let format;
-
-    if (offsetIndex < formatArray[formatIndex].startIndex || offsetIndex > formatArray[formatIndex].endIndex) {
+    if ((offsetIndex < formatArray[formatIndex].startIndex) ||
+        (offsetIndex > formatArray[formatIndex].endIndex)) {
         // Empty, just return newline
         return {x:0, y:referenceFont._charHeight};
     }
@@ -5030,14 +5034,17 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
             const cur = str.substring(0, c).trimEnd();
             const firstLineBounds = $draw_text(startingOffsetIndex, startingFormatIndex, cur, formatArray, pos, x_align, y_align, z, wrap_width, text_size, referenceFont);
 
-            // Update formatIndex
+            ++offsetIndex;
+            // Update formatIndex if needed as well
             while ((offsetIndex < formatArray[formatIndex].startIndex) || (offsetIndex > formatArray[formatIndex].endIndex)) { ++formatIndex; }
             format = undefined;
 
             $console.assert(formatIndex < formatArray.length);
-            
-            const restBounds = $draw_text(offsetIndex + 1, formatIndex, str.substring(c + 1), formatArray, {x:pos.x, y:pos.y + referenceFont.line_height / $scaleY},
-                                          x_align, y_align, z, wrap_width, text_size - cur.length, referenceFont);
+
+            const restBounds = $draw_text(
+                offsetIndex, formatIndex, str.substring(c + 1),
+                formatArray, {x:pos.x, y:pos.y + referenceFont.line_height / $scaleY},
+                x_align, y_align, z, wrap_width, text_size - c - 1, referenceFont);
             firstLineBounds.x = $Math.max(firstLineBounds.x, restBounds.x);
             if (restBounds.y > 0) {
                 firstLineBounds.y += referenceFont.spacing.y + restBounds.y;
@@ -5148,12 +5155,13 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
         (z > $clipZ2 + 0.5) || (z < $clipZ1 - 0.5)) {
         // Cull when off-screen
     } else {
-        // Break by formatting, re-traversing the formatting array.
+        // Break by formatting and then retraverse the formatting array.
         // Reset to the original formatIndex, since it was previously
         // incremented while traversing the string to compute width.
         offsetIndex = startingOffsetIndex;
         formatIndex = startingFormatIndex;
         format = formatArray[formatIndex];
+
         str = str.substring(0, text_size);
 
         while ((str.length > 0) && (formatIndex < formatArray.length)) {

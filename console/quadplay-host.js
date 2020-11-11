@@ -298,6 +298,7 @@ function makeFilename(s) {
 function onEmulatorKeyDown(event) {
     event.stopPropagation();
     event.preventDefault();
+    wake();
 
     // On browsers that support it, ignore
     // synthetic repeat events
@@ -1053,6 +1054,7 @@ function updateInput() {
     const gamepadArray = getIdealGamepads();
 
     // Sample the keys
+    let anyInteraction = false;
     for (let player = 0; player < 4; ++player) {
         const reordered_player = gamepadOrderMap[player];
         const map = keyMap[player], pad = QRuntime.gamepad_array[player],
@@ -1128,7 +1130,9 @@ function updateInput() {
 
             // Derivative
             pad['$d' + axis] = pad['$' + axis] - old;
+            anyInteraction = anyInteraction || (pad['$d' + axis] !== 0);
         }
+
 
         for (let b = 0; b < buttons.length; ++b) {
             const button = buttons[b];
@@ -1159,6 +1163,8 @@ function updateInput() {
             if (! isPressed && wasPressed) {
                 pad[prefix + 'released_' + button] = 1;
             }
+
+            anyInteraction = anyInteraction || (pad[prefix + button] !== 0);
         }
 
         let oldAngle = pad.$angle;
@@ -1183,6 +1189,8 @@ function updateInput() {
             prevRealGamepadState[i] = gamepadArray[i];
         }
     }
+
+    if (anyInteraction) { updateLastInteractionTime(); }
 
     // Reset the just-pressed state
     emulatorKeyJustPressed = {};
@@ -1220,7 +1228,11 @@ function inElement(event, element) {
     }
 }
 
+
 function onTouchStartOrMove(event) {
+    wake();
+    updateLastInteractionTime();
+
     for (let i = 0; i < event.changedTouches.length; ++i) {
         const touch = event.changedTouches[i];
         let tracker = activeTouchTracker[touch.identifier];
@@ -1424,7 +1436,13 @@ function updateMouseDevice(event) {
 
 function onMouseDownOrMove(event) {
     updateMouseDevice(event);
+    // Allow mouse movement to prevent sleep, but not to wake
+    updateLastInteractionTime();
+    
     if (event.buttons !== 0) {
+        // Do not wake on mouse movement, only buttons
+        wake();
+
         // Synthesize a fake touch event (which will then get turned
         // into a fake key event!)
         fakeMouseEvent.changedTouches[0].clientX = event.clientX;
@@ -1447,7 +1465,9 @@ function onMouseUpOrMove(event) {
     return onTouchEndOrCancel(fakeMouseEvent);
 }
 
-{
+
+/* quadplay-host is loaded before quadplay-ide, so we put this initialization in a callback. */
+function initializeHost() {
     // Prevent hitches for touch event handling on Android Chrome
     // https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#Improving_scrolling_performance_with_passive_listeners
     const options = {passive: false, capture: true};

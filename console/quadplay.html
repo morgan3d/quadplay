@@ -43,17 +43,34 @@
     const cmd = isApple ? '⌘' : '^';
     const alt = '⎇';
     const shift = '⇧';
+
     </script>
 
   </head>
 
   <body id="body">
+    <video id="guestVideo" playsinline autoplay oncontextmenu="event.preventDefault()" onmousedown="window.focus()"> </video>
+    <div id="guestVideoCover"> </div>
     <div id="welcome" class="noIDE" onmousedown="onWelcomeTouch()" ontouchstart="onWelcomeTouch()">
-      <div style="color: #fff; width: 100%; height: 100%; position: absolute; background: rgba(0, 8, 16, 0.7);">
+      <div style="color: #fff; width: 100%; height: 100%; position: absolute; background: rgba(0, 8, 16, 0.7)">
         <div style="position: absolute; top: 50%; left: 0; width: 100%; overflow: visible">
           <div style="position: absolute; top: -150px; text-align: center; font-size: 26px; font-weight: 100; line-height: 130%; width: 100%; text-shadow: 1px 3px 7px #000">
             <b>Press a gamepad button</b>,
             <br>keyboard key, or the icon below
+            <br>
+            <svg height="220" width="220" style="display:inline-block; margin-top:20px; transform: scale(0.8, 0.8)">
+              <circle cx="110" cy="110" r="102" stroke="white" stroke-width="14" fill="none"/>
+              <polygon points="72,39 72,181 188,110" stroke-linejoin="round" stroke-width="7" style="fill:white;stroke:white"/>
+            </svg> 
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="sleep" class="noIDE" onmousedown="wake()" ontouchstart="wake()" onkeydown="wake()" style="visibility:hidden">
+      <div style="color: #fff; width: 100%; height: 100%; position: absolute; background: rgba(0, 8, 16, 0.7)">
+        <div style="position: absolute; top: 50%; left: 0; width: 100%; overflow: visible">
+          <div style="position: absolute; top: -150px; text-align: center; font-size: 26px; font-weight: 100; line-height: 130%; width: 100%; text-shadow: 1px 3px 7px #000">
+            <b>Sleeping. Press to wake.</b>
             <br>
             <svg height="220" width="220" style="display:inline-block; margin-top:20px; transform: scale(0.8, 0.8)">
               <circle cx="110" cy="110" r="102" stroke="white" stroke-width="14" fill="none"/>
@@ -78,6 +95,8 @@
       <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('stripes')" id="stripesColorScheme" autocomplete="off">Stripes</label>
       <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('wood')" id="woodColorScheme" autocomplete="off">Wood</label>
       <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('carbon')" id="carbonColorScheme" autocomplete="off">Carbon</label>
+      <hr>
+      <div><a onclick="enterKioskMode()">Kiosk Mode</a></div>
       <hr>
       <div class="IDEOnly"><a onclick="window.open('../doc/controls.html', '', 'width=400,height=500')" title="Show keyboard and gamepad controls in a popup window">Controls</a></div>
       <div class="noIDE"><a href="../doc/manual.md.html" title="Use quadplay to make your own games like this">Create Games</a></div>
@@ -233,7 +252,7 @@
       <label for="controlTab" class="ide unselectable">Controls</label>
       
       <input id="hostTab" type="radio" name="tabs">
-      <label for="hostTab" class="ide unselectable">Host</label>
+      <label for="hostTab" class="ide unselectable">Serve</label>
 
       <pane id="todoPane" class="ide" style="overflow-y:auto;overflow-x:hidden"></pane>
 
@@ -379,7 +398,7 @@
       <center><input type="button" id="emulatorKeyboardInput" style="z-index:-10;position:fixed;width:10px;margin:auto;top:-30px"></center>
       <div id="screenBorder" class="screenBorder">
         <canvas id="screen" width=384 height=224 class="pixelate"></canvas>
-        
+
         <!-- Shows file loading progress during boot -->
         <div id="bootScreen" class="pixelate"></div>
         
@@ -722,22 +741,23 @@
   
   <!-- Third-party code. Those not maintained as part of this project are 
        named ".ejs" to make searching only quadplay internal files easier -->
-  <script defer src="gif.ejs" async="async"></script>
+  <script async src="gif.ejs"></script>
   <script defer src="qrcode.min.ejs"></script>
   <script defer src="ace/ace.ejs"></script>
   <script defer src="js-yaml.min.ejs"></script>
   <script defer src="vectorify.ejs" charset="utf-8"></script>
   <script defer src="dagre.min.ejs"></script>
   <script defer src="decomp.min.ejs"></script>
-  <script defer src="matter.min.ejs"></script>
-  <script defer src="matter-extensions.js"></script>
+  <script async src="matter.min.ejs"></script>
+  <script async src="matter-extensions.js"></script>
+  <script async src="peerjs.min.ejs"></script>
   <script defer src="WorkJSON.js"></script>
   <script defer src="LoadManager.js"></script>
   <script defer src="filters.js"></script>
 
   <!-- quadplay implementation -->
   <!-- force reload, as these are changing often during the beta -->
-  <script defer src="os/dependencies.py" charset="utf-8" type="text/javascript"></script>
+  <script defer src="os/dependencies.py?" charset="utf-8" type="text/javascript"></script>
   <script defer src="pyxlscript-compiler.js?" charset="utf-8"></script>
   <script defer src="quadplay-host.js?" charset="utf-8"></script>
   <script defer src="quadplay-font.js?" charset="utf-8"></script>

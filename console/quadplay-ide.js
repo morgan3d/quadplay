@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.11.07.14';
+const version  = '2020.11.09.14';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -28,6 +28,11 @@ let serverConfig = {};
 // for the nonstandard zoom(). Firefox and Edge (even though it uses
 // Chromium!) do not have this bug.
 const hasBrowserScaleBug = isSafari;
+
+
+function enterKioskMode() {
+    location = location.origin + location.pathname + "?kiosk=1";
+}
 
 // Ends in a slash
 function getGamePath() {
@@ -55,7 +60,7 @@ function makeURLRelativeToGame(filename) {
 }
 
 const fastReload = getQueryString('fastReload') === '1';
-
+const isOffline = (getQueryString('offline') === '1') || false;
 const useIDE = (getQueryString('IDE') === '1') || false;
 {
     const c = document.getElementsByClassName(useIDE ? 'noIDE' : 'IDEOnly');
@@ -79,6 +84,24 @@ const BOOT_ANIMATION = Object.freeze({
     SHORT:    32,
     REGULAR: 220
 });
+
+/* Date.now() for the last time user input was seen. This is used to
+   automatically pause quadplay when inactive in kiosk mode to reduce
+   processor load on systems that do not suspend themselves such as
+   Raspberry Pi. */
+let lastInteractionTime = Date.now();
+
+/* 2 min delay before sleeping in non-IDE mode */
+const IDLE_PAUSE_TIME_MILLISECONDS = 1000 * 60 * 2;
+
+/* We have to poll relatively quickly while sleeping because there
+   is no way to detect a button that was quickly pressed and released
+   within the interval. I could not press and release faster than 1/20s,
+   so this is my compromise between shutting down as much as possible and
+   being responsive.  */
+const SLEEP_POLL_INTERVAL_MILLISECONDS = 1000 / 20;
+function updateLastInteractionTime() { lastInteractionTime = Date.now(); }
+
 
 let SCREEN_WIDTH = 384, SCREEN_HEIGHT = 224;
 let gameSource;
@@ -405,7 +428,7 @@ function setUIMode(d, noAutoPlay) {
     setTimeout(onResize, 100);
 
     // Reset keyboard focus
-    emulatorKeyboardInput.focus();
+    emulatorKeyboardInput.focus({preventScroll:true});
 
     // Ace doesn't notice CSS changes. This explicit resize is needed
     // to ensure that the editor can fully scroll horizontally
@@ -641,6 +664,8 @@ function onRestartButton() {
 
 let lastAnimationRequest = 0;
 function onStopButton(inReset) {
+    stopHosting();
+    
     if (! inReset) {
         document.getElementById('stopButton').checked = 1;
         setControlEnable('pause', false);
@@ -660,6 +685,51 @@ function onSlowButton() {
     onPlayButton(true);
 }
 
+function wake() {
+    if (! useIDE && (emulatorMode === 'pause')) {
+        document.getElementById('sleep').style.visibility = 'hidden';
+        onPlayButton();
+        
+        // The set focus doesn't work without this delay for some reason
+        setTimeout(function() { emulatorKeyboardInput.focus({preventScroll:true}); });
+        
+        // sleep.pollHandler will be removed by onPlayButton()
+    }
+}
+
+/* Invoked via setTimeout to poll for gamepad input while sleeping*/
+function sleepPollCallback() {
+    if (emulatorMode !== 'play') {
+        // Still paused
+        const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
+        for (let i = 0; i < gamepads.length; ++i) {
+            const gamepad = gamepads[i];
+            if (! gamepad || ! gamepad.connected) { continue; }
+            for (let b = 0; b < gamepad.buttons.length; ++b) {
+                const button = gamepad.buttons[b];
+                if (((typeof button === 'object') && button.pressed) ||
+                    (button >= 0.5)) {
+                    wake();
+                    return;
+                } // button pressed
+            } // for each button
+        } // for each gamepad
+
+        // Continue polling
+        sleep.pollHandler = setTimeout(sleepPollCallback, SLEEP_POLL_INTERVAL_MILLISECONDS);
+    } else {
+        sleep.pollHandler = undefined;
+    }
+}
+
+/* sleep.pollHandler is the gamepad polling event while sleeping */
+function sleep() {
+    document.getElementById('sleep').style.visibility = 'visible';
+    onPauseButton();
+    // Begin gamepad polling
+    sleepPollCallback();
+}
+
 // Used to detect when we're waiting for a save to complete
 let alreadyInPlayButtonAttempt = false;
 
@@ -669,7 +739,15 @@ let alreadyInPlayButtonAttempt = false;
 // args = array of arguments to pass to the new program
 function onPlayButton(slow, isLaunchGame, args) {
     if (isSafari && ! isMobile) { unlockAudio(); }
+    emulatorKeyboardInput.focus({preventScroll:true});
 
+    stopHosting();
+    if (sleep.pollHandler) {
+        clearTimeout(sleep.pollHandler);
+        sleep.pollHandler = undefined;
+    } 
+    updateLastInteractionTime();
+    
     if (uiMode === 'Editor') {
         // There is nothing useful to see in Editor mode
         // when playing, so switch the emulator to IDE
@@ -682,7 +760,7 @@ function onPlayButton(slow, isLaunchGame, args) {
     maybeGrabPointerLock();
     if ((emulatorMode === 'play') && (targetFramerate === newTargetFramerate)) {
         // Already in play mode, just refocus input
-        emulatorKeyboardInput.focus();
+        emulatorKeyboardInput.focus({preventScroll:true});
         return;
     }
 
@@ -740,7 +818,7 @@ function onPlayButton(slow, isLaunchGame, args) {
             
         } else {
             lastAnimationRequest = requestAnimationFrame(mainLoopStep);
-            emulatorKeyboardInput.focus();
+            emulatorKeyboardInput.focus({preventScroll:true});
         }
         
         saveIDEState();
@@ -749,7 +827,7 @@ function onPlayButton(slow, isLaunchGame, args) {
 
     if (emulatorMode === 'stop') {
         // Reload the program
-        if (loadManager.status !== 'complete' && loadManager.status !== 'failure') {
+        if (loadManager && loadManager.status !== 'complete' && loadManager.status !== 'failure') {
             console.log('Load already in progress...');
         } else {
             console.log('\n');
@@ -793,7 +871,7 @@ function onPlayButton(slow, isLaunchGame, args) {
         // Was just paused
         resumeAllSounds();
         doPlay();
-        emulatorKeyboardInput.focus();
+        emulatorKeyboardInput.focus({preventScroll:true});
     }
 
 }
@@ -1217,7 +1295,7 @@ function restartProgram(numBootAnimationFrames) {
             coroutine = QRuntime.$makeCoroutine(compiledProgram);
             QRuntime.$numBootAnimationFrames = numBootAnimationFrames; 
             lastAnimationRequest = requestAnimationFrame(mainLoopStep);
-            emulatorKeyboardInput.focus();
+            emulatorKeyboardInput.focus({preventScroll:true});
         } catch (e) {
             // "Link"-time or run-time on a script error
             onError(e);
@@ -1366,6 +1444,7 @@ function closeDropdowns() {
     }
 }
 
+
 window.onclick = function(event) {
     /*
     // Hide modal dialogs
@@ -1377,7 +1456,6 @@ window.onclick = function(event) {
     // Hide dropdown menus
     closeDropdowns();
 } 
-
 
 
 function onStepButton() {
@@ -1441,6 +1519,8 @@ function onDocumentKeyDown(event) {
         event.preventDefault();
         return;
     }
+
+    wake();
 
     switch (event.which || event.keyCode) {
     case 187: // ^= ("^+") = zoom in
@@ -3071,6 +3151,11 @@ function onCopyPerformanceSummary() {
 function mainLoopStep() {
     // Keep the callback chain going
     if (emulatorMode === 'play') {
+        if (! useIDE && (Date.now() - lastInteractionTime > IDLE_PAUSE_TIME_MILLISECONDS)) {
+            sleep();
+            return;
+        }
+        
         // We intentionally don't use requestAnimationFrame. It can go
         // above 60 Hz and require explicit throttling on high-refresh
         // displays. And when the game is falling below frame rate, we
@@ -3083,7 +3168,7 @@ function mainLoopStep() {
         // try to run at 60 Hz for input processing and game
         // execution, and drop graphics processing in QRuntime.$show()
         // some of the time.
-        lastAnimationRequest = setTimeout(mainLoopStep, Math.floor(1000 / targetFramerate - 1));
+        lastAnimationRequest = setTimeout(mainLoopStep, Math.floor(1000 / targetFramerate - 1));      
     }
 
     // Erase the table every frame
@@ -3309,6 +3394,18 @@ function reloadRuntime(oncomplete) {
         QRuntime.$resumeAllSounds    = resumeAllSounds;
         QRuntime.makeEuroSmoothValue = makeEuroSmoothValue;
         QRuntime.$navigator          = navigator;
+        QRuntime.$version            = version;
+        QRuntime.$sleep = useIDE ? null : sleep;
+
+        // For use by the online component
+        QRuntime.$netIDToWords       = netIDToWords;
+        QRuntime.$netIDToSentence    = netIDToSentence;
+        QRuntime.$changeMyHostNetID  = changeMyHostNetID;
+        QRuntime.$getMyHostNetID     = getMyHostNetID;
+        QRuntime.$getIsHosting       = getIsHosting;
+        QRuntime.$startHosting       = startHosting;
+        QRuntime.$stopHosting        = stopHosting;
+        QRuntime.$getIsOffline       = getIsOffline;
 
         // For use by the controller remapping
         QRuntime.$localStorage       = localStorage;
@@ -3507,6 +3604,10 @@ function reloadRuntime(oncomplete) {
 
 
 ///////////////////////////////////////////////////////////////////////
+function capitalize(s) {
+    return s.length === 0 ? "" : s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 
 // Used to clone constants. Assets do not need to be cloned.
 function deep_clone(src, alreadySeen) {
@@ -3833,7 +3934,7 @@ function loadGameIntoIDE(url, callback, loadFast) {
 
             if (/^http:\/\/(127\.0\.0\.1|localhost):/.test(serverURL)) {
                 document.getElementById('serverURL').innerHTML =
-                    '<p>Your local server is in secure mode and has disabled hosting.</p><p>Exit the quadplay script and run it with <code style="white-space:nowrap">quadplay --host</code> to allow hosting games for mobile devices from this machine.</p>';
+                    '<p>Your local server is in secure mode and has disabled serving to mobile and other devices.</p><p>Exit the quadplay script and run it with <code style="white-space:nowrap">quadplay --serve</code> to allow serving games for mobile devices from this machine for development.</p>';
                 document.getElementById('serverQRCode').style.visibility = 'hidden';
                 document.getElementById('serverQRMessage').style.visibility = 'hidden';
             } else {
@@ -4141,6 +4242,8 @@ if (getQueryString('kiosk') === '1') {
     }
     setUIMode(newMode, false);
 }
+
+initializeHost();
 setErrorStatus('');
 setCodeEditorFontSize(parseFloat(localStorage.getItem('codeEditorFontSize') || '14'));
 setColorScheme(localStorage.getItem('colorScheme') || 'dots');

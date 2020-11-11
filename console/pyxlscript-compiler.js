@@ -1123,7 +1123,7 @@ function pyxlToJS(src, noYield, internalMode) {
             operatorPrefix: '$'
         });
     } catch (e) {
-        console.log(src);
+        console.log(unprotectQuotedStrings(src, stringProtectionMap));
         throw e;
     }
 

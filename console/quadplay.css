@@ -264,7 +264,7 @@ b.projectTitle.remote:before {
 
 /*****************************************************/
 
-#welcome {
+#welcome, #sleep {
     z-index: 101;
     visibility: visible;
     position: absolute;
@@ -1196,6 +1196,26 @@ body.EmulatorUI .virtualController {
     transform-origin: top left;
     font-smooth: never;
     -webkit-font-smoothing: none;
+}
+
+#guestVideo, #guestVideoCover {
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 256px;
+    height: 128px;
+    transform-origin: top left;
+}
+#guestVideoCover {
+    /* Match background */
+    background: #331c2a;
+    z-index: -10;
+}
+#guestVideo {
+    z-index: -11;
+    background: #F00;
 }
 
 canvas#screen {
