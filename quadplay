@@ -760,9 +760,7 @@ def main():
     # Safari or Firefox in fullscreen mode, or to launch in fullscreen
     # using xdg-open on Linux.
     if isWindows:
-        # Require NO surrounding quotes on Windows for it to interpret the URL.
-        # Must escape & as ^&.
-        os.system('start "quadplay" "' + url.replace('&', '^&') + '"' + (' --start-fullscreen' if args.kiosk else ''))
+        os.system('start "quadplay" "' + url + '"' + (' --start-fullscreen' if args.kiosk else ''))
     elif isMacOS:
         # Require quotes on Unix systems so that bash does not interpret &
         # as a shell option to run in another thread
