@@ -12,13 +12,7 @@ const MAX_ONLINE_NAME_LENGTH = 7;
 // period in JavaScript is 4ms)
 const ONLINE_INPUT_PERIOD = Math.floor(1000 / 120);
 
-const PEER_CONFIG = false ? {} : {
-    debug: 0,
-    host: "peer.pixelverse.org",
-    port: 9001,
-    path: '/remoteplay',
-    key: 'remoteplay'
-};
+const PEER_CONFIG = {};
 
 /*
  There is no consistent way to detect a closed WebRTC connection
