@@ -140,7 +140,7 @@ function processWithHeader(test) {
     result[1] = '} finally { ';
 
     for (let i = 0; i < varArray.length; ++i) {
-        result[1] += `if (${varDescriptorArray[i]}.get) $Object.defineProperty(${obj}, '${varArray[i]}', ${varDescriptorArray[i]}); else delete ${obj}.${varArray[i]}; ${obj}.${varArray[i]} = ${varArray[i]}; `;
+        result[1] += `if (${varDescriptorArray[i]}.get) { $Object.defineProperty(${obj}, '${varArray[i]}', ${varDescriptorArray[i]}); } else { delete ${obj}.${varArray[i]}; } ${obj}.${varArray[i]} = ${varArray[i]}; `;
     }
     result[1] += '}}';
     
@@ -550,7 +550,7 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode, strin
                 throw makeError(e, i);
             }
             
-        } else if (match = lineArray[i].match(RegExp('^(\\s*)def\\s+(' + identifierPattern + ')\\s*\\((.*)\\)[ \t]*([a-zA-Z_]*)[ \t]*:\\s*$'))) {
+        } else if (match = lineArray[i].match(RegExp('^(\\s*)def\\s+(\\$?' + identifierPattern + ')\\s*\\((.*)\\)[ \t]*([a-zA-Z_]*)[ \t]*:\\s*$'))) {
             // DEF
             let prefix = match[1], name = match[2], args = match[3] || '', modifier = match[4] || '';
             let end = processBlock(lineArray, i + 1, true, internalMode, stringProtectionMap) - 1;
@@ -1009,11 +1009,11 @@ function pyxlToJS(src, noYield, internalMode) {
         // bracketed expression), followed by a variable name.
 
         // Specials and parens case
-        src = src.replace(/([επξ∞½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁾]|\))[ \t]*([\(_A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞])/g, '$1 * $2');
+        src = src.replace(/([επξ∞½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁾]|\))[ \t]*([\$\(_A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞])/g, '$1 * $2');
 
         // Number case (has to rule out a variable name that ends in a
         // number or has a number inside of it)
-        src = src.replace(/([^A-Za-z0-9αβγδζηθιλμρσϕφχτψωΔΩ_]|^)([0-9\.]*?[0-9])[ \t]*([\(A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞_])/g, '$1$2 * $3');
+        src = src.replace(/([^\$A-Za-z0-9αβγδζηθιλμρσϕφχτψωΔΩ_]|^)([0-9\.]*?[0-9])[ \t]*([\$\(A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞_])/g, '$1$2 * $3');
 
         // Fix any instances of text operators that got accentially
         // turned into implicit multiplication. If there are other

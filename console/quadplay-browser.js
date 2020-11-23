@@ -1,5 +1,8 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License */
-// Web software host implementation of the runtime back end
+
+// Web software host implementation of the runtime back end for quadplay. This
+// contains all of the routines that are browser specific for the runtime and
+// could be replaced with a node.js or native version.
 
 "use strict";
 
@@ -23,7 +26,7 @@ if (window.location.toString().startsWith("file://")) {
 // The gif recording object, if in a recording
 let gifRecording = null;
 
-let _ch_audioContext;
+let audioContext;
 
 // Table mapping controller IDs that we've seen to what non-keyboard
 // device was set on them 
@@ -269,10 +272,10 @@ console.assert(window.AudioContext);
 let volumeLevel = parseFloat(localStorage.getItem('volumeLevel') || '1');
 document.getElementById('volumeSlider').value = Math.round(volumeLevel * 100);
 try {
-    _ch_audioContext = new AudioContext();
-    _ch_audioContext.gainNode = _ch_audioContext.createGain();
-    _ch_audioContext.gainNode.gain.value = 0.2 * volumeLevel;
-    _ch_audioContext.gainNode.connect(_ch_audioContext.destination);
+    audioContext = new AudioContext();
+    audioContext.gainNode = audioContext.createGain();
+    audioContext.gainNode.gain.value = 0.2 * volumeLevel;
+    audioContext.gainNode.connect(audioContext.destination);
 } catch(e) {
     console.log(e);
 }
@@ -280,7 +283,7 @@ try {
 function onVolumeChange() {
     volumeLevel = parseInt(document.getElementById('volumeSlider').value) / 100;
     localStorage.setItem('volumeLevel', '' + volumeLevel);
-    _ch_audioContext.gainNode.gain.value = 0.2 * volumeLevel;
+    audioContext.gainNode.gain.value = 0.2 * volumeLevel;
 }
 
 /************** Emulator event handling ******************************/
@@ -638,23 +641,23 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
     pan = Math.min(1, Math.max(-1, pan))
     
     // A new source must be created every time that the sound is played
-    const source = _ch_audioContext.createBufferSource();
+    const source = audioContext.createBufferSource();
     source.buffer = audioClip.$buffer;
 
-    if (_ch_audioContext.createStereoPanner) {
-        source.panNode = _ch_audioContext.createStereoPanner();
-        source.panNode.pan.setValueAtTime(pan, _ch_audioContext.currentTime);
+    if (audioContext.createStereoPanner) {
+        source.panNode = audioContext.createStereoPanner();
+        source.panNode.pan.setValueAtTime(pan, audioContext.currentTime);
     } else {
-        source.panNode = _ch_audioContext.createPanner();
+        source.panNode = audioContext.createPanner();
         source.panNode.panningModel = 'equalpower';
         source.panNode.setPosition(pan, 0, 1 - Math.abs(pan));
     }
-    source.gainNode = _ch_audioContext.createGain();
-    source.gainNode.gain.setValueAtTime(volume, _ch_audioContext.currentTime);
+    source.gainNode = audioContext.createGain();
+    source.gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
 
     source.connect(source.panNode);
     source.panNode.connect(source.gainNode);
-    source.gainNode.connect(_ch_audioContext.gainNode);
+    source.gainNode.connect(audioContext.gainNode);
     
     source.onended = soundSourceOnEnded;
     source.state = 'PLAYING';
@@ -699,7 +702,7 @@ function set_volume(handle, volume) {
     }
     handle._.volume = volume;
     volume *= handle._.audioClip.$base_volume;
-    handle._.gainNode.gain.linearRampToValueAtTime(volume, _ch_audioContext.currentTime + audioRampTime);
+    handle._.gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + audioRampTime);
 }
 
 
@@ -724,7 +727,7 @@ function set_pan(handle, pan) {
     pan += handle._.audioClip.$base_pan;
     pan = Math.min(1, Math.max(-1, pan))
     if (handle._.panNode.pan) {
-        handle._.panNode.pan.linearRampToValueAtTime(pan, _ch_audioContext.currentTime + audioRampTime);
+        handle._.panNode.pan.linearRampToValueAtTime(pan, audioContext.currentTime + audioRampTime);
     } else {
         // Safari fallback
         handle._.panNode.setPosition(pan, 0, 1 - Math.abs(pan));
@@ -740,7 +743,7 @@ function set_pitch(handle, pitch) {
     pitch *= handle._.audioClip.$base_pitch;
     if (handle._.detune) {
         // Doesn't work on Safari
-        handle._.detune.linearRampToValueAtTime((pitch - 1) * 1200, _ch_audioContext.currentTime + audioRampTime);
+        handle._.detune.linearRampToValueAtTime((pitch - 1) * 1200, audioContext.currentTime + audioRampTime);
     }
 }
 
@@ -926,12 +929,11 @@ function rgbaToCSSFillStyle(color) {
     return `rgba(${color.r*255}, ${color.g*255}, ${color.b*255}, ${color.a})`;
 }
 
-// Invoked from QRuntime.$show(). May not actually be invoked every
+
+// Invoked as QRuntime.$submitFrame(). May not actually be invoked every
 // frame if running below framerate.
 function submitFrame() {
     // Update the image
-    ctx.msImageSmoothingEnabled = ctx.webkitImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
-
     const $postFX = QRuntime.$postFX;
     const hasPostFX = ($postFX.opacity < 1) || ($postFX.color.a > 0) || ($postFX.angle !== 0) ||
           ($postFX.pos.x !== 0) || ($postFX.pos.y !== 0) ||
@@ -961,9 +963,13 @@ function submitFrame() {
     if (previewRecording) {
         processPreviewRecording();
     }
-    
-    if (! hasPostFX && ! gifRecording && (emulatorScreen.width === SCREEN_WIDTH && emulatorScreen.height === SCREEN_HEIGHT)) {
-        // Directly upload to the screen. Fast path when there are no PostFX
+
+    if ((! isHosting || isFirefox || isSafari) && ! hasPostFX && ! gifRecording && (emulatorScreen.width === SCREEN_WIDTH && emulatorScreen.height === SCREEN_HEIGHT)) {
+        // Directly upload to the screen. Fast path when there are no PostFX.
+        //
+        // Chromium (Chrome & Edge) have a bug where we can't get a video stream
+        // from the direct putImageData, so they are excluded from this path when
+        // hosting.
         ctx.putImageData(updateImageData, 0, 0);
     } else {
         // Put on an intermediate image and then stretch. This path is for postFX and supporting Safari
@@ -997,6 +1003,20 @@ function submitFrame() {
         ctx.restore();
     }
 
+    /*
+    // Random graphics for debugging
+    ctx.fillStyle = '#FF0';
+    for (let i = 0; i < 2; ++i) {
+        ctx.fillRect(Math.floor(Math.random() * 364), Math.floor(Math.random() * 204), 20, 20);
+        ctx.fillStyle = '#04F';
+    }
+    */
+    
+    // Send the frame if this machine is an online host
+    if (isHosting && hostVideoTrack && hostVideoTrack.requestFrame) {
+        hostVideoTrack.requestFrame();
+    }
+    
     if (gifRecording) {
         // Only record alternating frames to reduce file size
         if (gifRecording.frameNum & 1) {
@@ -1019,7 +1039,7 @@ function submitFrame() {
             gifRecording = null;
         }
     }
-    
+
     refreshPending = true;
 }
 
@@ -1060,6 +1080,47 @@ function updateInput() {
         const map = keyMap[player], pad = QRuntime.gamepad_array[player],
               realGamepad = gamepadArray[reordered_player], prevRealGamepad = prevRealGamepadState[reordered_player];
 
+        // Network player
+        if (pad.$is_guest) {
+            const latest = pad.$guest_latest_state;
+            if (! latest) { return; }
+
+            // Digital axes
+            for (let i = 0; i < axes.length; ++i) {
+                const axis = axes[i];
+                const oldv = pad['$' + axis];
+                const newv  = latest['$' + axis];
+                
+                pad['$d' + axis] = newv - oldv;
+                pad['$' + axis + axis] = (newv !== oldv) ? newv : 0;
+                pad['$' + axis] = newv;
+            }
+
+            // Analog axes
+            for (let a = 0; a < pad.$analog.length; ++a) {
+                pad.$analog[a] = latest.$analog[a];
+            }
+
+            // Buttons
+            for (let b = 0; b < buttons.length; ++b) {
+                const button = buttons[b];
+                const prefix = button === 'p' ? '$' : '';
+                const BUT = prefix + button;
+                const oldv = pad[prefix + button];
+                const newv = latest[prefix + button];
+
+                pad[prefix + button + button] = pad[prefix + 'pressed_' + button] = (newv >= 0.5) && (oldv < 0.5) ? 1 : 0;
+                pad[prefix + 'released_' + button] = (newv < 0.5) && (oldv >= 0.5) ? 1 : 0;
+                pad[prefix + button] = newv;
+            }
+
+            pad.$id = latest.$id;
+            pad.prompt = latest.prompt;
+            pad.type = latest.$type;
+            
+            continue;
+        }
+        
         // Have player 0 physical alt controls set player 1 virtual buttons only
         // if there is no second controller physically present
 	const altRealGamepad = ((player === 1) && ! realGamepad) ? gamepadArray[gamepadOrderMap[0]] : undefined,
@@ -1085,13 +1146,9 @@ function updateInput() {
         // Axes
         for (let a = 0; a < axes.length; ++a) {
             const axis = axes[a];
-            const analogAxis = '$analog' + AXES[a];
             const pos = '+' + axis, neg = '-' + axis;
             const old = pad['$' + axis];
 
-            // Reset both digital and analog axes
-            pad['$' + axis];
-            
             if (map) {
                 // Keyboard controls
                 const n0 = map[neg][0], n1 = map[neg][1], p0 = map[pos][0], p1 = map[pos][1];
@@ -1151,7 +1208,7 @@ function updateInput() {
             const i = buttonIndex[b], j = altButtonIndex[b];
             const isPressed  = realGamepad && (realGamepad.buttons[i] || realGamepad.buttons[j]);
 	    
-	    const wasPressed = prevRealGamepad && (prevRealGamepad.buttons[i] || prevRealGamepad.buttons[j]);
+            const wasPressed = prevRealGamepad && (prevRealGamepad.buttons[i] || prevRealGamepad.buttons[j]);
 	    
             if (isPressed) { pad[prefix + button] = 1; }
 	    
@@ -1166,8 +1223,12 @@ function updateInput() {
 
             anyInteraction = anyInteraction || (pad[prefix + button] !== 0);
         }
+    }
 
-        let oldAngle = pad.$angle;
+    // Update angles for all players (local and remote)
+    for (let player = 0; player < 4; ++player) {
+        const pad = QRuntime.gamepad_array[player];
+        const oldAngle = pad.$angle;
         if ((pad.$y !== 0) || (pad.$x !== 0)) {
             pad.$angle = Math.atan2(-pad.$y, pad.$x);
         }
@@ -1467,7 +1528,7 @@ function onMouseUpOrMove(event) {
 
 
 /* quadplay-host is loaded before quadplay-ide, so we put this initialization in a callback. */
-function initializeHost() {
+function initializeBrowserEmulator() {
     // Prevent hitches for touch event handling on Android Chrome
     // https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#Improving_scrolling_performance_with_passive_listeners
     const options = {passive: false, capture: true};

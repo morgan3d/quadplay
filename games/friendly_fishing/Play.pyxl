@@ -60,13 +60,9 @@ line_frames_left = GAME_TIME_MINUTES * 60 * 60
 
 resize(fish_array, 0)
 
-// Ensure at least two big fish on the bottom
-push(fish_array, make_fish(75% + 30% ξ², MIN_LAKE_Z))
-push(fish_array, make_fish(80% + 30% ξ², MIN_LAKE_Z))
-
 // Create a few more, but not too many fish total
 // so that players don't spam cast
-for i < 5: push(fish_array, make_fish())
+for i < 8: push(fish_array, make_fish())
 set_background(LAKE_COLOR)
 
 

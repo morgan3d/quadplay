@@ -458,9 +458,13 @@ def player_reeled_in_fully(player):
         push(seq, play_score_sound, {callback: show_text_callback, frames: ANIMATE_SCORE_FRAMES, data: str})
         longest_fish = max(longest_fish, length)
         
-        // Spawn new bottom fish as a replacement
-        push(fish_array, make_fish(∅, MIN_LAKE_Z))
-
+        // Spawn new bottom fish as a replacement. If it is the 2nd or 4th fish,
+        // guarantee that it will be large
+        local:
+            const new_size = if fish_caught == 2 or fish_caught == 4 then 80% + 30% ξ² else ∅
+            push(fish_array, make_fish(new_size, MIN_LAKE_Z))
+        
+        
         // Draw the dangling fish
         def draw_fish_callback():
             for -1 ≤ Δx ≤ +1:

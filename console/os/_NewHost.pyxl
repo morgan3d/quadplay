@@ -1,0 +1,168 @@
+$NewHost
+════════════════════════════════════════════════════════════════════════
+let selected_column_index = 0
+let word_array
+
+def draw_window(tau):
+    // Dark scrim
+    draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(0, 0, 0, 40% tau))
+
+    // Drop shadow
+    draw_rect(SCREEN_SIZE / 2 + xy(0, 35% SCREEN_SIZE.y * tau + 1), xy(69% SCREEN_SIZE.x * tau, 2), #012)
+    
+    // Window
+    draw_rect(SCREEN_SIZE / 2, 70% SCREEN_SIZE * tau, $system_window_background, #fff)
+
+
+    
+def draw_controls():
+    draw_text({text: "Enter Host Code", pos: xy(SCREEN_SIZE.x/2, 50), font: $font9, color: #fff, x_align: "center"})
+    draw_text({text: "(The host must share this with you)", pos: xy(SCREEN_SIZE.x/2, 60), font: $font6, color: #b, x_align: "center"})
+
+    const COLUMN_SPACING = 40
+    for column < 6:
+        const x = SCREEN_SIZE.x / 2 + (column - 2.5) * COLUMN_SPACING
+        const y = 105
+        const selected = (column == selected_column_index)
+        const word_index = word_array[column]
+        
+        const width = $draw_system_menu_text({
+            text: capitalize($NET_ID_WORD_TABLE[column][word_index]),
+            pos: xy(x, y),
+            x_align: "center",
+            y_align: "center"
+        }, selected).x
+
+        if selected:
+            draw_rect(xy(x, y), xy(COLUMN_SPACING, 18), nil, #fff)
+
+            if word_index > 0:
+                $draw_system_menu_text({text: "▲", pos: xy(x, y - 16), x_align: "center", y_align: "center"}, true)
+            if word_index < size($NET_ID_WORD_TABLE[0]) - 1:
+                $draw_system_menu_text({text: "▼", pos: xy(x, y + 16), x_align: "center", y_align: "center"}, true)
+            
+        else if (column bitand 1) and (column != 5):
+            $draw_system_menu_text({
+                text: ",",
+                pos: xy(x + width / 2 + 1, y),
+                x_align: "left",
+                y_align: "center"
+            })
+
+    draw_text({
+        font: $font9,
+        text: replace("(q) Cancel", joy.prompt),
+        pos: xy(100, 155),
+        color: $system_prompt_color,
+        shadow: $system_prompt_shadow
+    })
+
+    draw_text({
+        font: $font9,
+        text: replace("(p) Visit Host", joy.prompt),
+        pos: xy(210, 155),
+        color: $system_prompt_color,
+        shadow: $system_prompt_shadow
+    })
+
+    draw_text({
+        font: $font9,
+        text: replace("(d) Paste From Clipboard", joy.prompt),
+        pos: xy(SCREEN_SIZE.x / 2, 180),
+        x_align: "center",
+        color: $system_prompt_color,
+        shadow: $system_prompt_shadow
+    })
+
+
+
+def capitalize(s):
+    return if size(s) == 0 then "" else uppercase(s[0]) + slice(s, 1)
+
+
+
+def set_from_sentence(sentence):
+    // Parse the code into words
+    const src = split(replace(lowercase(sentence), {",": " ", "\n": " ", ".": " "}), " ", " ")
+    let array = []
+    for word in src:
+        word = trim_spaces(word)
+        if word != "": push(array, word)
+        
+        // Set the indices
+        for column < min(6, size(array)):
+            const index = find($NET_ID_WORD_TABLE[column], array[column])
+            if index != nil: word_array[column] = index
+
+
+            
+def handle_paste():
+    const same_mode = get_mode()
+
+    // Callback
+    def ok(sentence):
+        // Make sure that the user hasn't changed to a different
+        // mode
+        if get_mode() == same_mode:
+            $showPopupMessage("Pasted " + sentence)
+            set_from_sentence(sentence)
+               
+            
+    def fail(): $showPopupMessage("Error: could not access the clipboard")
+
+    $pasteFromClipboard(ok, fail)
+
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+selected_column_index = 0
+word_array = [16, 16, 16, 16, 16, 16]
+
+// Default to the most recent host
+const recent_host_array = parse($localStorage.getItem("recent_host_array") or "[]")
+if size(recent_host_array) > 0:
+    // Use this machinery for robustness to misparsing
+    set_from_sentence($netIDToSentence(recent_host_array[0].code))
+
+    
+
+frame
+────────────────────────────────────────────────────────────────────────
+draw_previous_mode()
+
+preserving_transform:
+    set_transform(nil, nil, 2)
+
+    // Animate zoom
+    const intro_frames = 10
+    const tau = min(100%, mode_frames / intro_frames)
+
+    draw_window(tau)
+    if tau == 100%:
+        draw_controls()
+        for gamepad in gamepad_array:
+            if (gamepad.xx > 0 or gamepad.aa or gamepad.ff) and selected_column_index < 5:
+                ++selected_column_index
+            else if (gamepad.xx < 0 or gamepad.bb or gamepad.ee) and selected_column_index > 0:
+                --selected_column_index
+
+            if gamepad.yy < 0 and word_array[selected_column_index] > 0:
+                --word_array[selected_column_index]
+            if gamepad.yy > 0 and word_array[selected_column_index] < size($NET_ID_WORD_TABLE[0]) - 1:
+                ++word_array[selected_column_index]
+
+            // Quit
+            if gamepad.qq: pop_mode()
+
+            // Paste
+            if gamepad.cc or gamepad.dd: handle_paste()
+
+            // Visit
+            if gamepad.$pp:
+                // Return the host name list to the caller
+                let word_list = []
+                for index at column in word_array:
+                    push(word_list, $NET_ID_WORD_TABLE[column][index])
+                    
+                pop_mode($wordsToNetID(word_list))

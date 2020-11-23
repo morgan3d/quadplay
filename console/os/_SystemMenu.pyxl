@@ -1,13 +1,8 @@
 $SystemMenu
 ════════════════════════════════════════════════════════════════════════
 
-const window_background_color = #135
-const window_border_color     = #fff
 const text_color              = #fff
-const text_shadow_color       = #0006
-const prompt_color            = #4DF
 const selected_color          = #f
-const unselected_color        = #b
 
 const fade_in_frames          = 10
 const slide_in_frames         = 9
@@ -33,20 +28,23 @@ def close(callback):
    
 
 def choose():
-   const choice = choice_array[choice_index]
+    const choice = choice_array[choice_index]
 
-   if choice.confirm:
-      push_mode($ConfirmDialog, choice)
-   else:
-      close(choice.callback)
+    if choice.confirm:
+        push_mode($ConfirmDialog, choice)
+    else:
+        close(choice.callback)
 
-      
+def show_online_menu():
+    push_mode($OnlineMenu)
+
+    
 def set_controls():
-   push_mode($ControlsMenu)
+    push_mode($ControlsMenu)
 
 
 def game_credits():
-   push_mode($GameCredits)
+    push_mode($GameCredits)
 
 
       
@@ -74,8 +72,11 @@ if size($customPauseMenuOptions) < 3 or SCREEN_SIZE.y > 64:
    // Only add the credits option if there is room
    push(choice_array, {text: "Game Credits", callback: game_credits, confirm: false})
 
+push(choice_array, {text: "Controllers", callback: set_controls, confirm: false})
+
+if not $getIsOffline(): push(choice_array, {text: "Online Play", callback: show_online_menu})
+
 push(choice_array,
-     {text: "Controllers", callback: set_controls, confirm: false},
      {text: "Restart Game", callback: reset_game, confirm: true},
      {text: "Quit to System", callback: quit_game, confirm: true})
 
@@ -151,7 +152,7 @@ local:
    draw_line(P + xy(1 - s, 1), P + xy(s - 1, 1), rgba(0, 0, 0, 15%))
 
 // Window
-draw_rect(xy(0, 0), window_size, window_background_color, window_border_color)
+draw_rect(xy(0, 0), window_size, $system_window_background, $system_window_border)
 
 let y = -line_height * (size(choice_array) - 1) / 2
 
@@ -159,10 +160,10 @@ let y = -line_height * (size(choice_array) - 1) / 2
 for i < size(choice_array):
    const active      = choice_index == i
    const bright      = (1 + cos(mode_frames / 9)) / 2
-   const color       = if active then lerp(prompt_color, #fff, 50% bright) else unselected_color
+   const color       = if active then lerp($system_prompt_color, #fff, 50% bright) else $system_unselected_color
    const outline     = if active then rgba(1, 1, 1, 25% bright) else ∅
    const yOffset     = if active then -1 else 0
-   const shadow      = if active then 50% text_shadow_color else text_shadow_color
+   const shadow      = if active then 50% $system_prompt_shadow else $system_prompt_shadow
 
    const x           = -(max_choice_width - 0.6 line_height + 1) / 2
    const text        = choice_array[i].text

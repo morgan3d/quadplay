@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.11.09.14';
+const version  = '2020.11.22.21';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -60,7 +60,7 @@ function makeURLRelativeToGame(filename) {
 }
 
 const fastReload = getQueryString('fastReload') === '1';
-const isOffline = (getQueryString('offline') === '1') || false;
+const isOffline = true;//(getQueryString('offline') === '1') || false;
 const useIDE = (getQueryString('IDE') === '1') || false;
 {
     const c = document.getElementsByClassName(useIDE ? 'noIDE' : 'IDEOnly');
@@ -350,12 +350,12 @@ function unlockAudio() {
     // https://paulbakaus.com/tutorials/html5/web-audio-on-ios/
     
     // create empty buffer
-    var buffer = _ch_audioContext.createBuffer(1, 1, 22050);
-    var source = _ch_audioContext.createBufferSource();
+    var buffer = audioContext.createBuffer(1, 1, 22050);
+    var source = audioContext.createBufferSource();
     source.buffer = buffer;
     
     // connect to output (your speakers)
-    source.connect(_ch_audioContext.destination);
+    source.connect(audioContext.destination);
     
     // play the file
     if (source.noteOn) {
@@ -634,6 +634,9 @@ let ctx = emulatorScreen.getContext("2d",
                                         desynchronized: false
                                     });
 
+ctx.msImageSmoothingEnabled = ctx.webkitImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
+
+
 function onHelp(event) { window.open('doc/specification.md.html', '_blank'); }
 
 function download(url, name) {
@@ -663,8 +666,11 @@ function onRestartButton() {
 
 
 let lastAnimationRequest = 0;
-function onStopButton(inReset) {
-    stopHosting();
+function onStopButton(inReset, preserveNetwork) {
+    if (! preserveNetwork) {
+        stopHosting();
+        stopGuesting(true);
+    }
     
     if (! inReset) {
         document.getElementById('stopButton').checked = 1;
@@ -681,9 +687,11 @@ function onStopButton(inReset) {
     ctx.clearRect(0, 0, emulatorScreen.width, emulatorScreen.height);
 }
 
+
 function onSlowButton() {
     onPlayButton(true);
 }
+
 
 function wake() {
     if (! useIDE && (emulatorMode === 'pause')) {
@@ -696,6 +704,7 @@ function wake() {
         // sleep.pollHandler will be removed by onPlayButton()
     }
 }
+
 
 /* Invoked via setTimeout to poll for gamepad input while sleeping*/
 function sleepPollCallback() {
@@ -741,7 +750,9 @@ function onPlayButton(slow, isLaunchGame, args) {
     if (isSafari && ! isMobile) { unlockAudio(); }
     emulatorKeyboardInput.focus({preventScroll:true});
 
-    stopHosting();
+    // Stop guesting, if currently a gust, but do not stop hosting.
+    stopGuesting(true);
+    
     if (sleep.pollHandler) {
         clearTimeout(sleep.pollHandler);
         sleep.pollHandler = undefined;
@@ -774,7 +785,7 @@ function onPlayButton(slow, isLaunchGame, args) {
         }
         document.getElementById('playButton').checked = 1;
         setControlEnable('pause', true);
-        _ch_audioContext.resume();
+        audioContext.resume();
     
         setErrorStatus('');
         emulatorMode = 'play';
@@ -2594,7 +2605,7 @@ function visualizeMap(map) {
                     const yReduce = reduce * sprite.scale.y;
                     for (let y = 0; y < dstTileY; ++y) {
                         for (let x = 0; x < dstTileX; ++x) {
-                            const srcOffset = (sprite._x + x * xReduce + xShift) + (sprite._y + y * yReduce + yShift) * srcData.width;
+                            const srcOffset = (sprite.$x + x * xReduce + xShift) + (sprite.$y + y * yReduce + yShift) * srcData.width;
                             const dstOffset = (x + mapX * dstTileX) + (y + mapY * dstTileY) * dstImageData.width;
                             const srcValue = srcData[srcOffset];
                             if ((srcValue >>> 12) > 7) { // Alpha test
@@ -2655,9 +2666,11 @@ function createProjectWindow(gameSource) {
     s += '<ul class="scripts">';
     for (let i = 0; i < gameSource.scripts.length; ++i) {
         const script = gameSource.scripts[i];
-        const badge = isBuiltIn(script) ? 'builtin' : (isRemote(script) ? 'remote' : '');
-        const contextMenu = editableProject ? `oncontextmenu="showScriptContextMenu('${script}')" ` : '';
-        s += `<li class="clickable ${badge}" ${contextMenu} onclick="onProjectSelect(event.target, 'script', '${script}')" title="${script}" id="ScriptItem_${script}">${urlFilename(script)}</li>\n`;
+        if (! /\/console\/(os|launcher)\/_[A-Za-z0-9_]+\.pyxl$/.test(script)) {
+            const badge = isBuiltIn(script) ? 'builtin' : (isRemote(script) ? 'remote' : '');
+            const contextMenu = editableProject ? `oncontextmenu="showScriptContextMenu('${script}')" ` : '';
+            s += `<li class="clickable ${badge}" ${contextMenu} onclick="onProjectSelect(event.target, 'script', '${script}')" title="${script}" id="ScriptItem_${script}">${urlFilename(script)}</li>\n`;
+        }
     }
     if (editableProject) {
         s += '<li class="clickable import" onclick="showImportScriptDialog()"><i>Import existing script…</i></li>';
@@ -2810,6 +2823,8 @@ if (jsCode) {
     jsCode.getSession().setUseWrapMode(true);
 }
 
+/* This image is only used for compositing and GIF recording. In the normal
+   fast path, we draw directly to the screen Canvas and do not use this one. */
 let updateImage = document.createElement('canvas');
 
 // updateImageData.data is a Uint8Clamped RGBA buffer
@@ -3131,7 +3146,7 @@ function updateTimeDisplay(time, name) {
 
 
 function goToLauncher() {
-    onStopButton();
+    onStopButton(false, true);
     loadGameIntoIDE(launcherURL, function () {
         onResize();
         // Prevent the boot animation
@@ -3395,17 +3410,27 @@ function reloadRuntime(oncomplete) {
         QRuntime.makeEuroSmoothValue = makeEuroSmoothValue;
         QRuntime.$navigator          = navigator;
         QRuntime.$version            = version;
+        QRuntime.$prompt             = prompt;
         QRuntime.$sleep = useIDE ? null : sleep;
 
         // For use by the online component
+        QRuntime.$wordsToNetID       = wordsToNetID;
         QRuntime.$netIDToWords       = netIDToWords;
         QRuntime.$netIDToSentence    = netIDToSentence;
+        QRuntime.$netIDToString      = netIDToString;
         QRuntime.$changeMyHostNetID  = changeMyHostNetID;
         QRuntime.$getMyHostNetID     = getMyHostNetID;
+        QRuntime.$getMyOnlineName    = getMyOnlineName;
+        QRuntime.$setMyOnlineName    = setMyOnlineName;
         QRuntime.$getIsHosting       = getIsHosting;
         QRuntime.$startHosting       = startHosting;
         QRuntime.$stopHosting        = stopHosting;
+        QRuntime.$startGuesting      = startGuesting;
         QRuntime.$getIsOffline       = getIsOffline;
+        QRuntime.$copyToClipboard    = copyToClipboard;
+        QRuntime.$pasteFromClipboard = pasteFromClipboard;
+        QRuntime.$NET_ID_WORD_TABLE  = NET_ID_WORD_TABLE;
+        QRuntime.$showPopupMessage   = showPopupMessage;
 
         // For use by the controller remapping
         QRuntime.$localStorage       = localStorage;
@@ -3488,7 +3513,6 @@ function reloadRuntime(oncomplete) {
         };
         
         QRuntime.touch = {
-            _x: 0, _y: 0, _dx: 0, _dy: 0,
             screen_x: 0,
             screen_y: 0,
             screen_dx: 0,
@@ -3554,8 +3578,15 @@ function reloadRuntime(oncomplete) {
 
             const player_color = parseHexColor(COLOR_ARRAY[p]);
             const pad = {
+                // If this gamepad is currently a guest, then
+                // it is not updated from local controls
+                $is_guest: false,
+
+                // Set from network updates
+                $guest_latest_state: null,
+                
                 $x: 0, $dx: 0, $xx: 0,
-                $y: 0, $dy: 0, $yy: 0, 
+                $y: 0, $dy: 0, $yy: 0,
                 $angle:0, $dangle:0,
                 a:0, b:0, c:0, d:0, e:0, f:0, $p:0, q:0,
                 aa:0, bb:0, cc:0, dd:0, ee:0, ff:0, $pp:0, qq:0,
@@ -3900,7 +3931,7 @@ function loadGameIntoIDE(url, callback, loadFast) {
         removeAllCodeEditorSessions();
     }
     
-    if (emulatorMode !== 'stop') { onStopButton(); }
+    if (emulatorMode !== 'stop') { onStopButton(false, true); }
 
     const isLauncher = /(^quad:\/\/console\/|\/launcher\.game\.json$)/.test(url);
     if (! isLauncher && ! loadFast) {
@@ -3934,7 +3965,7 @@ function loadGameIntoIDE(url, callback, loadFast) {
 
             if (/^http:\/\/(127\.0\.0\.1|localhost):/.test(serverURL)) {
                 document.getElementById('serverURL').innerHTML =
-                    '<p>Your local server is in secure mode and has disabled serving to mobile and other devices.</p><p>Exit the quadplay script and run it with <code style="white-space:nowrap">quadplay --serve</code> to allow serving games for mobile devices from this machine for development.</p>';
+                    '<p>Your local server is in secure mode and has disabled serving.</p><p>Restart the server script with <code style="white-space:nowrap">quadplay --serve</code> to allow serving games for mobile devices from this machine for development.</p>';
                 document.getElementById('serverQRCode').style.visibility = 'hidden';
                 document.getElementById('serverQRMessage').style.visibility = 'hidden';
             } else {
@@ -4076,6 +4107,46 @@ document.addEventListener('contextmenu', function (event) {
 }, {capture: true});
 
 
+function showPopupMessage(msgHTML) {
+    const element = document.getElementById('popupMessage');
+    element.innerHTML = msgHTML;
+    element.classList.add('show');
+    setTimeout(
+        function () { element.classList.remove('show'); },
+        
+        // This timeout value has to be the sum of the times
+        // in the quadplay.css #popupMessage.show animation
+        // property
+        3500);
+}
+
+/* When calling from quadplay, note that the callback can happen at any point,
+   even if the mode has changed.  */
+async function copyToClipboard(text, successCallback, failureCallback) {
+    try {
+        await navigator.clipboard.writeText(text);
+        if (successCallback) { successCallback(); }
+    } catch (err) {
+        if (failureCallback) { failureCallback(); }
+        console.error('Failed to copy: ', err);
+    }
+}
+
+
+/* When calling from quadplay, note that the callback can happen at any point,
+   even if the mode has changed. */
+async function pasteFromClipboard(successCallback, failureCallback) {
+    console.assert(successCallback);
+    try {
+        const text = await navigator.clipboard.readText();
+        successCallback(text);
+    } catch (err) {
+        if (failureCallback) { failureCallback(); }
+        console.warn('Failed to read clipboard contents: ', err);
+    }
+}
+
+
 // parent is an element or the id of one that is the control keeping the context
 // menu open. This is used to make rollouts sticky while menus are live
 function showContextMenu(parent) {
@@ -4151,11 +4222,9 @@ function combobox_textbox_onchange(textbox) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Load state
-backgroundPauseEnabled = localStorage.getItem('backgroundPauseEnabled');
-if (backgroundPauseEnabled === undefined || backgroundPauseEnabled === null) {
-    // Default to true
-    backgroundPauseEnabled = true;
-}
+
+// Default to true
+backgroundPauseEnabled = (localStorage.getItem('backgroundPauseEnabled') !== 'false');
 
 if (! localStorage.getItem('debugPrintEnabled')) {
     // Default to true
@@ -4220,6 +4289,7 @@ document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanc
     }
 }
 
+
 document.getElementById('backgroundPauseCheckbox').checked = backgroundPauseEnabled || false;
 
 if (getQueryString('kiosk') === '1') {
@@ -4243,7 +4313,7 @@ if (getQueryString('kiosk') === '1') {
     setUIMode(newMode, false);
 }
 
-initializeHost();
+initializeBrowserEmulator();
 setErrorStatus('');
 setCodeEditorFontSize(parseFloat(localStorage.getItem('codeEditorFontSize') || '14'));
 setColorScheme(localStorage.getItem('colorScheme') || 'dots');
@@ -4266,3 +4336,5 @@ LoadManager.fetchOne({}, location.origin + getQuadPath() + 'console/_config.json
 
 // Make the browser aware that we want gamepads
 navigator.getGamepads();
+
+//setTimeout(startHosting, 4000);

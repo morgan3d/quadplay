@@ -1,0 +1,27 @@
+const $system_window_background = #135
+const $system_window_border     = #fff
+const $system_prompt_color      = #4DF
+const $system_prompt_shadow     = #0006
+
+const $system_selected_color    = $system_prompt_color
+const $system_unselected_color  = #b
+
+const $online_name_length       = 7
+const $max_recent_hosts         = 3
+
+/* Draws text with the extended drop shadow and pulsing for menus */
+def $draw_system_menu_text(args, selected):
+    // Used for pulsing selected values
+    const bright = 0.5 (1 + cos(mode_frames / 9))
+
+    draw_text(extended(args, {
+        font: args.font default $font9,
+        pos: args.pos + (if selected then xy(0, 2) else xy(0, 1)),
+        color: (if selected then 50% $system_prompt_shadow else $system_prompt_shadow)
+    }))
+    
+    return draw_text(extended(args, {
+        font: args.font default $font9,
+        color: (if selected then lerp($system_selected_color, #fff, 50% bright) else $system_unselected_color),
+        outline: (if selected then rgba(1, 1, 1, 25% bright) else nil)
+    }))

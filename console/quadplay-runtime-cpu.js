@@ -768,7 +768,7 @@ function slice(a, s, e) {
     if (Array.isArray(a)) {
         return a.slice(s, e);
     } else if (is_string(a)) {
-        return a.substr(s, e);
+        return a.substring(s, e);
     } else {
         $error('slice() requires an array or string argument.');
     }
@@ -1481,7 +1481,7 @@ function atan(y, x) {
 var $screen;
 
 
-/** List of graphics commands to be sorted and then executed by show(). */
+/** List of graphics commands to be sorted and then executed by $submitFrame(). */
 var $previousGraphicsCommandList = [];
 var $graphicsCommandList = [];
 var $background = Object.seal({r:0,g:0,b:0,a:1});
@@ -3632,8 +3632,8 @@ function $get_map_pixel_color(map, map_coord_x, map_coord_y, min_layer, max_laye
                 const x = ((sprite.scale.x > 0) ? spriteCoordX : (ssX - spriteCoordX)) >>> 0;
                 const y = ((sprite.scale.y > 0) ? spriteCoordY : (ssY - spriteCoordY)) >>> 0;
 
-                const data = sprite._spritesheet._uint16Data;
-                const pixel = data[((sprite._x >>> 0) + x) + ((sprite._y >>> 0) + y) * (data.width >>> 0)] >>> 0;
+                const data = sprite.$spritesheet._uint16Data;
+                const pixel = data[((sprite.$x >>> 0) + x) + ((sprite.$y >>> 0) + y) * (data.width >>> 0)] >>> 0;
 
                 const alpha16 = pixel & 0xF000;
                 if (result_a === 0 && alpha16 === 0xF000) {
@@ -3976,22 +3976,22 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                         }
 
                         data.push({
-                            spritesheetIndex: sprite._spritesheet._index[0],
-                            cornerX:  sprite._x,
-                            cornerY:  sprite._y,
+                            spritesheetIndex: sprite.$spritesheet._index[0],
+                            cornerX:  sprite.$x,
+                            cornerY:  sprite.$y,
                             sizeX:    sprite.size.x,
                             sizeY:    sprite.size.y,
                             angle:    angle,
                             scaleX:   scale.x * sprite.scale.x,
                             scaleY:   scale.y * sprite.scale.y,
-                            hasAlpha: sprite._hasAlpha,
+                            hasAlpha: sprite.$hasAlpha,
                             opacity:  1,
                             override_color: undefined,
                             x:        screenX,
                             y:        screenY
                         }); // push
                         
-                        if (! sprite._hasAlpha) {
+                        if (! sprite.$hasAlpha) {
                             // No need to process other layers, since this sprite
                             // occludes everything under it.
                             break;
@@ -5335,7 +5335,7 @@ function $clamp(x, L, H) {
 
 
 function get_sprite_pixel_color(spr, pos, result) {
-    if (! (spr && spr._spritesheet)) {
+    if (! (spr && spr.$spritesheet)) {
         $error('Called get_sprite_pixel_color() on an object that was not a sprite asset. (' + unparse(spr) + ')');
     }
 
@@ -5349,8 +5349,8 @@ function get_sprite_pixel_color(spr, pos, result) {
             return undefined;
         }
     } else {
-        const data = spr._spritesheet._uint16Data;
-        const pixel = data[((spr._x >>> 0) + x) + ((spr._y >>> 0) + y) * (data.width >>> 0)] >>> 0;
+        const data = spr.$spritesheet._uint16Data;
+        const pixel = data[((spr.$x >>> 0) + x) + ((spr.$y >>> 0) + y) * (data.width >>> 0)] >>> 0;
 
         result = result || {r:0, g:0, b:0, a:0};
         
@@ -5367,7 +5367,7 @@ function get_sprite_pixel_color(spr, pos, result) {
 function draw_sprite_corner_rect(CC, corner, size, z) {
     if ($skipGraphics) { return; }
     
-    if (! (CC && CC._spritesheet)) {
+    if (! (CC && CC.$spritesheet)) {
         $error('Called draw_sprite_corner_rect() on an object that was not a sprite asset. (' + unparse(CC) + ')');
     }
 
@@ -5415,16 +5415,16 @@ function draw_sprite_corner_rect(CC, corner, size, z) {
     } $popGraphicsState();
     
     // Generate relative sprites
-    const LT = CC._spritesheet[$Math.max(0, CC._tileX - 1)][$Math.max(0, CC._tileY - 1)];
-    const CT = CC._spritesheet[$Math.max(0, CC._tileX    )][$Math.max(0, CC._tileY - 1)];
-    const RT = CC._spritesheet[$Math.max(0, CC._tileX + 1)][$Math.max(0, CC._tileY - 1)];
+    const LT = CC.$spritesheet[$Math.max(0, CC.$tileX - 1)][$Math.max(0, CC.$tileY - 1)];
+    const CT = CC.$spritesheet[$Math.max(0, CC.$tileX    )][$Math.max(0, CC.$tileY - 1)];
+    const RT = CC.$spritesheet[$Math.max(0, CC.$tileX + 1)][$Math.max(0, CC.$tileY - 1)];
 
-    const LC = CC._spritesheet[$Math.max(0, CC._tileX - 1)][$Math.max(0, CC._tileY    )];
-    const RC = CC._spritesheet[$Math.max(0, CC._tileX + 1)][$Math.max(0, CC._tileY    )];
+    const LC = CC.$spritesheet[$Math.max(0, CC.$tileX - 1)][$Math.max(0, CC.$tileY    )];
+    const RC = CC.$spritesheet[$Math.max(0, CC.$tileX + 1)][$Math.max(0, CC.$tileY    )];
 
-    const LB = CC._spritesheet[$Math.max(0, CC._tileX - 1)][$Math.max(0, CC._tileY + 1)];
-    const CB = CC._spritesheet[$Math.max(0, CC._tileX    )][$Math.max(0, CC._tileY + 1)];
-    const RB = CC._spritesheet[$Math.max(0, CC._tileX + 1)][$Math.max(0, CC._tileY + 1)];
+    const LB = CC.$spritesheet[$Math.max(0, CC.$tileX - 1)][$Math.max(0, CC.$tileY + 1)];
+    const CB = CC.$spritesheet[$Math.max(0, CC.$tileX    )][$Math.max(0, CC.$tileY + 1)];
+    const RB = CC.$spritesheet[$Math.max(0, CC.$tileX + 1)][$Math.max(0, CC.$tileY + 1)];
 
     // Centers of the sprites on these edges
     const left   = ((x1 - CC.size.x * 0.5) - $offsetX) / $scaleX - 0.5;
@@ -5540,7 +5540,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
         spr = spr[0][0];
     }
 
-    if (! (spr && spr._spritesheet)) {
+    if (! (spr && spr.$spritesheet)) {
         $error('Called draw_sprite() on an object that was not a sprite asset. (' + unparse(spr) + ')');
     }
     
@@ -5582,7 +5582,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
     scaleX *= spr.scale.x; scaleY *= spr.scale.y;
     
     opacity = $Math.max(0, $Math.min(1, (opacity === undefined) ? 1 : opacity));
-    const radius = spr._boundingRadius * $Math.max($Math.abs(scaleX), $Math.abs(scaleY));
+    const radius = spr.$boundingRadius * $Math.max($Math.abs(scaleX), $Math.abs(scaleY));
 
     if ((opacity <= 0) || (x + radius < $clipX1 - 0.5) || (y + radius < $clipY1 - 0.5) ||
         (x >= $clipX2 + radius + 0.5) || (y >= $clipY2 + radius + 0.5) ||
@@ -5599,19 +5599,19 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
         override_color = rgba(override_color);
     }
 
-    $console.assert(spr._spritesheet._index[0] < $spritesheetArray.length);
+    $console.assert(spr.$spritesheet._index[0] < $spritesheetArray.length);
 
     const sprElt = {
-        spritesheetIndex:  spr._spritesheet._index[0],
-        cornerX:       spr._x,
-        cornerY:       spr._y,
+        spritesheetIndex:  spr.$spritesheet._index[0],
+        cornerX:       spr.$x,
+        cornerY:       spr.$y,
         sizeX:         spr.size.x,
         sizeY:         spr.size.y,
         
         angle:         (angle || 0),
         scaleX:        scaleX,
         scaleY:        scaleY,
-        hasAlpha:      spr._hasAlpha,
+        hasAlpha:      spr.$hasAlpha,
         opacity:       opacity,
         override_color: override_color,
         multiply:      multiply,
@@ -5726,7 +5726,7 @@ function set_background(c) {
         c = c[0][0];
     }
 
-    if (c._spritesheet && (c._spritesheet.size.x !== $SCREEN_WIDTH || c._spritesheet.size.y !== $SCREEN_HEIGHT ||
+    if (c.$spritesheet && (c.$spritesheet.size.x !== $SCREEN_WIDTH || c.$spritesheet.size.y !== $SCREEN_HEIGHT ||
                            c.size.x !== $SCREEN_WIDTH || c.size.y !== $SCREEN_HEIGHT)) {
         $error('The sprite and its spritesheet for set_background() must be exactly the screen size.')
     }
@@ -5987,8 +5987,8 @@ function $default_ray_map_pixel_callback(sprite, sprite_pixel_coord, ws_normal, 
     // Inlined optimization of: if (get_sprite_pixel_color(sprite, sprite_pixel_coord).a >= 0.5) {
     const x = ((sprite.scale.x > 0) ? sprite_pixel_coord.x : (sprite.size.x - 1 - sprite_pixel_coord.x)) | 0;
     const y = ((sprite.scale.y > 0) ? sprite_pixel_coord.y : (sprite.size.y - 1 - sprite_pixel_coord.y)) | 0;
-    const data = sprite._spritesheet._uint16Data;
-    const pixel = data[((sprite._x >>> 0) + x) + ((sprite._y >>> 0) + y) * (data.width >>> 0)] >>> 0;
+    const data = sprite.$spritesheet._uint16Data;
+    const pixel = data[((sprite.$x >>> 0) + x) + ((sprite.$y >>> 0) + y) * (data.width >>> 0)] >>> 0;
 
     if (((pixel >>> 12) & 0xf) >= 8) {
         return sprite;

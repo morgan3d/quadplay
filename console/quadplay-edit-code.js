@@ -1387,11 +1387,15 @@ function updateTodoList() {
     
     for (let i = 0; i < gameSource.scripts.length; ++i) {
         const url = gameSource.scripts[i];
-        processFile('script', url.replace(/^.*\//, ''), url);
+        // Do not save internal quadplay scripts
+        if (! /(^|\/)_[A-Za-z0-9]+\.pyxl$/.test(url[0])) {
+            processFile('script', url.replace(/^.*\//, ''), url);
+        }
     }
     
     for (let i = 0; i < gameSource.modes.length; ++i) {
         const mode = gameSource.modes[i];
+        // Do not save internal quadplay modes
         if (mode.name[0] !== '_') {
             processFile('mode', mode.name.replace('*', ''), mode.url);
         }

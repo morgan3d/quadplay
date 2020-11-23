@@ -37,6 +37,7 @@
     const isUIWebView = ! /chrome|firefox|safari|edge/i.test(navigator.userAgent) && /applewebkit/i.test(navigator.userAgent);  
     const isApple = /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent) || isUIWebView;
+    const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
     const isMobile = window.matchMedia("only screen and (max-width: 480px)").matches || window.orientation || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     // Keys
@@ -82,7 +83,7 @@
     </div>
     <div id="consoleMenu" class="unselectable dropdown">
       <label for="volumeSlider" style="padding-left: 6px; position: relative; top:-2px"><img src="ui-speaker.png" width=12 height=12></label><input id="volumeSlider" style="width:100px; position: relative; margin-left:0px; left: 2px" type="range" min="0" max="200" oninput="onVolumeChange()" onchange="onVolumeChange()"></input>
-      <br/><label><input id="backgroundPauseCheckbox" type="checkbox" title="Pause the game when not in focus" checked onclick="onBackgroundPauseClick(event)" autocomplete="off">Auto-pause</label>
+      <br/><label><input id="backgroundPauseCheckbox" type="checkbox" title="Pause the game when not in focus" onclick="onBackgroundPauseClick(event)" autocomplete="off">Auto-pause</label>
       <hr>
       <label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('pink')" type="radio" id="pinkColorScheme" checked autocomplete="off">Pink</label>
       <br/><label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('orange')" type="radio" id="orangeColorScheme" autocomplete="off">Orange</label>
@@ -160,14 +161,17 @@
         &nbsp;&nbsp;&nbsp;
 
         <span class="IDEOnly">
-        <script>
-          makeButton('<img src="button-reload.png" width=32 style="position:relative; top:-2px">', `Reload and Play (^R)`, 'onRestartButton', 'restartButton');
-          makeRadio('<img src="button-stop.png" width=32 style="position:relative; top:-2px">', 'stopButton', true, `title="Stop (${shift}F5)"`, 'controls');
-          makeRadio('<img src="button-pause.png" width=32 style="position:relative; top:-2px">', 'pauseButton', false, `title="Pause (${cmd}P)"`, 'controls');
-          makeRadio('<img src="button-step.png" width=32 style="position:relative; top:-2px">', 'stepButton', false, 'title="Step (F10)"', 'controls');
-          makeRadio('<img src="button-slow.png" width=32 style="position:relative; top:-2px">', 'slowButton', false, 'title="Play Slow"', 'controls');
-          makeRadio('<img src="button-play.png" width=32 style="position:relative; top:-2px">', 'playButton', false, 'title="Run (F5)"', 'controls');
-        </script>
+            <!--
+            <button onclick="startHosting()">TEST</button>
+            -->
+            <script>
+              makeButton('<img src="button-reload.png" width=32 style="position:relative; top:-2px">', `Reload and Play (^R)`, 'onRestartButton', 'restartButton');
+              makeRadio('<img src="button-stop.png" width=32 style="position:relative; top:-2px">', 'stopButton', true, `title="Stop (${shift}F5)"`, 'controls');
+              makeRadio('<img src="button-pause.png" width=32 style="position:relative; top:-2px">', 'pauseButton', false, `title="Pause (${cmd}P)"`, 'controls');
+              makeRadio('<img src="button-step.png" width=32 style="position:relative; top:-2px">', 'stepButton', false, 'title="Step (F10)"', 'controls');
+              makeRadio('<img src="button-slow.png" width=32 style="position:relative; top:-2px">', 'slowButton', false, 'title="Play Slow"', 'controls');
+              makeRadio('<img src="button-play.png" width=32 style="position:relative; top:-2px">', 'playButton', false, 'title="Run (F5)"', 'controls');
+            </script>
         </span>
         
         &nbsp;&nbsp;&nbsp;
@@ -251,8 +255,8 @@
       <input id="controlTab" type="radio" name="tabs">
       <label for="controlTab" class="ide unselectable">Controls</label>
       
-      <input id="hostTab" type="radio" name="tabs">
-      <label for="hostTab" class="ide unselectable">Serve</label>
+      <input id="serverTab" type="radio" name="tabs">
+      <label for="serverTab" class="ide unselectable">Serve</label>
 
       <pane id="todoPane" class="ide" style="overflow-y:auto;overflow-x:hidden"></pane>
 
@@ -335,7 +339,7 @@
         </div>
       </pane>
 
-      <pane id="hostPane" class="ide" style="color:#999; overflow:hidden">
+      <pane id="serverPane" class="ide" style="color:#999; overflow:hidden">
         <div class="hideScrollBars" style="text-align:center">
           <div id="serverURL">?.?.?.?</div>
           <style>
@@ -362,6 +366,8 @@
           <img src="logo.png" style="width:15%; max-width:108px; min-width:64px">
         </div>
       </div>
+    
+
       <div class="virtualController" id="leftControls">
         <img id="KeyShiftbutton" src="controller-e.png" style="position: absolute; left:21px; top:-138px; transform: none" width="75px" class="emulatorButton virtualController">
         <div style="background-image: url('controller-dpad.png'); background-size: cover; left:0px; top:-50%; position: absolute; width: 120px; height: 120px" id="minimalDPad">
@@ -380,7 +386,7 @@
       <div class="virtualController" id="rightControls">
         <img id="KeyFbutton" src="controller-f.png" style="position: absolute; left:-98px; top:-140px; transform: none" width="75px" class="emulatorButton virtualController">
         <div style="background-image: url('controller-buttons.png'); background-size: cover; position: absolute; right:0px; top:-50%; width: 120px; height: 120px" id="minimalButtons">
-          <!-- these id names allow quadplay-host.js to know what button was pressed -->
+          <!-- these id names allow quadplay-browser.js to know what button was pressed -->
           <div id="KeyGbutton" class="emulatorButton" style="left: 33px; top:-2px; width:52px; height:52px; transform: rotate(45deg)"> </div>
           <div id="KeyVbutton" class="emulatorButton" style="left: -3px; top:31px; width:52px; height:52px; transform: rotate(45deg)"> </div>
           <div id="KeyHbutton" class="emulatorButton" style="left: 69px; top:31px; width:52px; height:52px; transform: rotate(45deg)"> </div>
@@ -397,14 +403,15 @@
            pop up keyboards on mobile and accent options when holding a key.-->
       <center><input type="button" id="emulatorKeyboardInput" style="z-index:-10;position:fixed;width:10px;margin:auto;top:-30px"></center>
       <div id="screenBorder" class="screenBorder">
-        <canvas id="screen" width=384 height=224 class="pixelate"></canvas>
-
+        <canvas id="screen" width="384" height="224" class="pixelate" crossOrigin="anonymous"></canvas>
         <!-- Shows file loading progress during boot -->
         <div id="bootScreen" class="pixelate"></div>
         
         <!-- Shows instructions for reaching pause and controls during boot -->
         <div id="pauseMessage" class="pixelate"></div>
       </div>
+
+      <div id="popupMessage"> </div>
     </div>
 
     <div id="error" class="ide"> </div>
@@ -736,7 +743,6 @@
    // regardless of script load order
    const bootScreen = document.getElementById('bootScreen');
    const emulatorScreen = document.getElementById('screen');
-    
   </script>
   
   <!-- Third-party code. Those not maintained as part of this project are 
@@ -748,8 +754,8 @@
   <script defer src="vectorify.ejs" charset="utf-8"></script>
   <script defer src="dagre.min.ejs"></script>
   <script defer src="decomp.min.ejs"></script>
-  <script async src="matter.min.ejs"></script>
-  <script async src="matter-extensions.js"></script>
+  <script defer src="matter.min.ejs"></script>
+  <script defer src="matter-extensions.js"></script>
   <script async src="peerjs.min.ejs"></script>
   <script defer src="WorkJSON.js"></script>
   <script defer src="LoadManager.js"></script>

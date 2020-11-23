@@ -1204,18 +1204,19 @@ body.EmulatorUI .virtualController {
     position: absolute;
     top: 0px;
     left: 0px;
-    width: 256px;
-    height: 128px;
+    width: 384px;
+    height: 224px;
     transform-origin: top left;
 }
+
 #guestVideoCover {
     /* Match background */
     background: #331c2a;
     z-index: -10;
 }
-#guestVideo {
-    z-index: -11;
-    background: #F00;
+
+.MaximalUI #guestVideo {
+    background: #000;
 }
 
 canvas#screen {
@@ -1271,6 +1272,45 @@ canvas#screen {
 #controlPane table td + td, #controlPane table th + th {
     border-left: 1px solid #888;
     padding: 1px 4px;
+}
+
+/* For transient messages at the HTML level from a quadplay program.
+   Currently used only for clipboard copy feedback. */
+#popupMessage {
+    visibility: hidden;
+    background: #fff;
+    color: #000;
+    position: absolute;
+    top: 0px;
+    width: 500px;
+    left: 50%;
+    margin-left:-250px;
+    text-align: center;
+    padding: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
+    border: 1px solid #000;
+    border-radius: 0px 0px 4px 4px;
+    z-index: 30;
+    box-shadow: 0px 4px 15px 0px rgba(0, 0, 0, 0.6);
+}
+
+#popupMessage.show {
+    visibility: visible;
+
+    /* These times have to be kept in sync with showPopupMessage()'s
+       setTimeout value in quadplay-ide.js */
+    animation: fadein 0.5s, fadeout 0.5s 2.5s;
+}
+
+@keyframes fadein {
+    from {top: -40px; opacity: 0;}
+    to {top: 0px; opacity: 1;}
+}
+
+@keyframes fadeout {
+    from {top: 0px; opacity: 1;}
+    to {top: -40px; opacity: 0;}
 }
 
 
@@ -1348,7 +1388,7 @@ tabbox #controlTab:checked ~ #controlPane,
 tabbox #todoTab:checked ~ #todoPane,
 tabbox #outputTab:checked ~ #outputPane,
 tabbox #watchTab:checked ~ #watchPane,
-tabbox #hostTab:checked ~ #hostPane {
+tabbox #serverTab:checked ~ #serverPane {
     display: block;
 }
 

@@ -6,7 +6,7 @@ const gameArray = [{
    developer: "CasualEffects",
    url: "quad://games/quadpaddle",
    description: "Blast bricks as a team from all four sides, grabbing powerups and racking up points.",
-   version:      0.5,
+   version:      1.0,
    cooperative:  true,
    competitive:  false,
    min_players:  1,
@@ -74,7 +74,6 @@ const gameArray = [{
    title: "Beat The Gobblins",
    developer: "Stephan Steinbach",
    url: "quad://games/beat_the_gobblins",
-   
    version:      1.1,
    description:  "An evil wizzard has trapped you on top of their tower and summoned hordes of angry bombgobblins. Good luck!",
    min_players:   1,
@@ -92,7 +91,6 @@ const gameArray = [{
    title: "R. P. S.",
    developer: "Casual Effects",
    url: "quad://games/rps",
-   
    version:      1.0,
    description:  "Rock-paper-scissors battle royale.",
    min_players:   1,
@@ -157,14 +155,12 @@ const gameArray = [{
    preview:      alpreview
 }]
 
-const background_color = #135
-const prompt_color = #4DF
+
 const promptFont = mediumFont
-const text_shadow_color = #0006
 const selectedColor = #f
-const unselectedColor = #9
 
 const TAB_WIDTH = 90
+
 
 const tab_array = [
     {title: "Games"},
@@ -177,8 +173,8 @@ let tab_index
 // Pixel scrolling
 let gameShift = 0
 let gameIndex = 0
-
 let modeFrameShift = 0
+
 
 def drawIcon(icon, pos):
    assert(icon != nil)
@@ -186,18 +182,33 @@ def drawIcon(icon, pos):
    return xy(icon.size.x + 2, icon.size.y + 2)
 
 
+/* Called from manage_tabs. In order to transition state fluidly through them,
+   the tabs push new modes on top of the others going from left to right. */
 def set_tab_index(t):
     const old = tab_index
     tab_index = t
-    if old == 2:
-        // System/controls tab
-        pop_mode()
+    if tab_index == 0:
+        if old == 1:
+            pop_mode()
+    else if tab_index == 1:
+        if old == 0:
+            // Switch to the quadplay-OS level tab, giving it
+            // the manage_tabs callback as a helper for drawing
+            // the top tab bar
+            push_mode($OnlineMenu, manage_tabs)
+        else:
+            // Pop back from the system menu into the online mode
+            pop_mode()
+        
     else if tab_index == 2:
+        // Switch to the quadplay-OS level tab, giving it
+        // the manage_tabs callback as a helper for drawing
+        // the top tab bar
         push_mode($ControlsMenu, manage_tabs)
 
         
 /* Draw the tab labels on top and handle horizontal input. This is common code
-   across all tabs*/
+   across all tabs */
 def manage_tabs():
     for pad in gamepad_array:
         if (pad.ee or pad.xx < 0) and tab_index > 0: set_tab_index(tab_index - 1)
@@ -212,40 +223,40 @@ def manage_tabs():
         const z = (if active then 1 else 0)
 
         // Tab background
-        draw_rect(pos, xy(TAB_WIDTH + 1, if active then 17 else 16), if active then background_color else text_shadow_color, #F, nil, z)
+        draw_rect(pos, xy(TAB_WIDTH + 1, if active then 17 else 16), if active then $system_window_background else $system_prompt_shadow, #F, nil, z)
 
         // Tab label
         draw_text({
             font: mediumFont,
             text: tab.title,
             pos: pos,
-            color: (if active then selectedColor else unselectedColor),
-            shadow: text_shadow_color,
+            color: (if active then selectedColor else $system_unselected_color),
+            shadow: $system_prompt_shadow,
             x_align: "center",
             y_align: "center",
             z: z
         })
     
         if t == tab_index + 1:
-            draw_text({font: mediumFont, text: joy.prompt["[>]"], pos: pos + xy(8 - TAB_WIDTH / 2, 0), color: prompt_color, shadow: text_shadow_color, x_align: "center", y_align: "center", z: z})
+            draw_text({font: mediumFont, text: joy.prompt["[>]"], pos: pos + xy(8 - TAB_WIDTH / 2, 0), color: $system_prompt_color, shadow: $system_prompt_shadow, x_align: "center", y_align: "center", z: z})
         else if t == tab_index - 1:
-            draw_text({font: mediumFont, text: joy.prompt["[<]"], pos: pos - xy(8 - TAB_WIDTH / 2, 0), color: prompt_color, shadow: text_shadow_color, x_align: "center", y_align: "center", z: z})
+            draw_text({font: mediumFont, text: joy.prompt["[<]"], pos: pos - xy(8 - TAB_WIDTH / 2, 0), color: $system_prompt_color, shadow: $system_prompt_shadow, x_align: "center", y_align: "center", z: z})
 
         // Erase the bottom of the tab
         if active:
-            draw_line(pos + xy(1 - TAB_WIDTH / 2, 8), pos + xy(+TAB_WIDTH / 2 - 1, 8), background_color, 1)
+            draw_line(pos + xy(1 - TAB_WIDTH / 2, 8), pos + xy(+TAB_WIDTH / 2 - 1, 8), $system_window_background, 1)
 
 
 
 def manage_games_tab():
     // Blinking active choice
     const bright             = (1 + cos(mode_frames / 9)) / 2
-    const active_color       = lerp(prompt_color, #fff, 50% bright)
+    const active_color       = lerp($system_prompt_color, #fff, 50% bright)
     const active_outline     = rgba(1,1,1, 25% bright)
-    const active_shadow      = 50% text_shadow_color
+    const active_shadow      = 50% $system_prompt_shadow
 
-    draw_text({font: mediumFont, text:joy.prompt["⍐"], pos: xy(1, 28), color: prompt_color, shadow: text_shadow_color})
-    draw_text({font: mediumFont, text:joy.prompt["⍗"], pos: xy(1, 220), color: prompt_color, shadow: text_shadow_color})
+    draw_text({font: mediumFont, text:joy.prompt["⍐"], pos: xy(1, 28), color: $system_prompt_color, shadow: $system_prompt_shadow})
+    draw_text({font: mediumFont, text:joy.prompt["⍗"], pos: xy(1, 220), color: $system_prompt_color, shadow: $system_prompt_shadow})
 
     const boxVerticalSpacing = 75
 
@@ -255,7 +266,7 @@ def manage_games_tab():
             const game = array_value(gameArray, g, "loop")
             const pos = xy(44, boxVerticalSpacing * g + 64/2 + 19 - gameShift - (gameIndex - 1) * boxVerticalSpacing)
             draw_sprite({sprite: game.label, pos: pos})
-            draw_line(pos + xy(1-64/2, 64/2), pos + xy(64/2-2, 64/2), text_shadow_color)
+            draw_line(pos + xy(1-64/2, 64/2), pos + xy(64/2-2, 64/2), $system_prompt_shadow)
 
     // Highlight selected game
     draw_corner_rect(xy(11, 93), xy(66, 66), nil, #f)
@@ -266,18 +277,18 @@ def manage_games_tab():
     const x = 99
     const pos = xy(x + 384/4, 224/4 + 66)
     draw_sprite({sprite: game.preview[t mod 6][floor(t / 6)], pos: pos})
-    draw_line(pos + xy(1-384/4, 224/4), pos + xy(384/4-2, 224/4), text_shadow_color)
-    draw_line(pos + xy(2-384/4, 224/4 + 1), pos + xy(384/4-3, 224/4 + 1), text_shadow_color / 2)
-    draw_text({font:largeFont, text:game.title, pos:xy(x, 40), color:selectedColor, shadow:text_shadow_color, x_align:"left"})
-    draw_text({font:mediumFont, text:"by " + game.developer, pos:xy(x, 56), color:selectedColor, shadow:text_shadow_color, x_align:"left"})
-    draw_text({font:smallFont, text:game.url, pos:xy(x, 220), color:unselectedColor, x_align:"left"})
+    draw_line(pos + xy(1-384/4, 224/4), pos + xy(384/4-2, 224/4), $system_prompt_shadow)
+    draw_line(pos + xy(2-384/4, 224/4 + 1), pos + xy(384/4-3, 224/4 + 1), $system_prompt_shadow / 2)
+    draw_text({font:largeFont, text:game.title, pos:xy(x, 40), color:selectedColor, shadow:$system_prompt_shadow, x_align:"left"})
+    draw_text({font:mediumFont, text:"by " + game.developer, pos:xy(x, 56), color:selectedColor, shadow:$system_prompt_shadow, x_align:"left"})
+    draw_text({font:smallFont, text:game.url, pos:xy(x, 220), color:$system_unselected_color, x_align:"left"})
     draw_text({font:smallFont, text:game.description, pos:xy(x, 193), color:selectedColor, x_align:"left", wrap_width: 280})
 
     const sideX = 295
     const wordX = sideX + 27
     draw_text({font:promptFont, text:joy.prompt["ⓟ"] + "  PLAY", pos:xy(sideX + 7, 74),
                color:active_color, shadow: active_shadow, outline: active_outline, x_align:"left"})
-    if not game.builtin: draw_text({font:promptFont, text:joy.prompt["ⓓ"] + "  FORGET", pos:xy(sideX + 7, 88), color:prompt_color, shadow:text_shadow_color, x_align:"left"})
+    if not game.builtin: draw_text({font:promptFont, text:joy.prompt["ⓓ"] + "  FORGET", pos:xy(sideX + 7, 88), color:$system_prompt_color, shadow:$system_prompt_shadow, x_align:"left"})
 
     // Icons
     let y = 112
@@ -321,7 +332,8 @@ def manage_games_tab():
 
     for pad in gamepad_array:
         if pad.aa or pad.qq or pad.$pp:
-            def callback(): launch_game(gameArray[gameIndex].url)
+            def callback():
+                launch_game(gameArray[gameIndex].url)
             set_mode($SlideOut, callback) because "Player selected game"
 
         // Animate scrolling
@@ -342,110 +354,15 @@ def manage_games_tab():
         modeFrameShift = mode_frames - 1
 
     gameIndex = loop(gameIndex, gameArray.length)
-
-
-    
-let online_choice_index = 0
-    
-def manage_online_tab():
-    if $getIsOffline():
-        draw_text({
-            text: "This release does not support online multiplayer. Coming soon...",
-            //text: "quadplay✜ is running in offline mode\n\nRelaunch without the --offline argument\nto enable online multiplayer play.",
-            font: mediumFont,
-            pos: xy(SCREEN_SIZE.x / 2, 80),
-            color: #f,
-            shadow: text_shadow_color,
-            x_align: "center"
-        })
-        return
-    
-    // Blinking active choice
-    const bright             = (1 + cos(mode_frames / 9)) / 2
-    const active_color       = lerp(prompt_color, #fff, 50% bright)
-    const active_outline     = rgba(1,1,1, 25% bright)
-    const active_shadow      = 50% text_shadow_color
-
-    let choice_array;
-
-    if $getIsHosting():
-        choice_array = ["Copy Host Code", "Change Host Code", "Stop Hosting"]
-        draw_text({
-            text: "You are currently hosting as:",
-            font: mediumFont,
-            pos: xy(SCREEN_SIZE.x / 2, 40),
-            color: #f,
-            shadow: text_shadow_color,
-            markup: true,
-            x_align: "center"
-        })
-        draw_text({
-            text: "\"" + $netIDToSentence($getMyHostNetID()) + "\"",
-            font: largeFont,
-            pos: xy(SCREEN_SIZE.x / 2, 70),
-            color: #f,
-            shadow: text_shadow_color,
-            markup: true,
-            x_align: "center"
-        })
-    else:
-        choice_array = ["Visit A New Host", "Visit ???? ???? ???? ???? ???? ????", "Visit ???? ???? ???? ???? ???? ????", "Visit ???? ???? ???? ???? ???? ????", "Start Hosting"]
-
-        
-    let pos = xy(if $getIsHosting() then 140 else 90, SCREEN_SIZE.y - 50 - size(choice_array) * 18)
-    for choice at i in choice_array:
-        const active = (i == online_choice_index)
-
-        draw_text({
-            font: $font9,
-            text: choice,
-            pos: pos + (if active then xy(0, 2) else xy(0, 1)),
-            color: (if active then active_shadow else text_shadow_color),
-            x_align: "left"})
-        
-        draw_text({
-            font: $font9, text: choice, pos: pos,
-            color: (if active then active_color else #b),
-            outline: (if active then active_outline else nil),
-            x_align: "left"
-        })
-
-        if active:
-            draw_text({font: $font9, text: "✜",
-                       pos: pos + (if active then xy(-8, 2) else xy(-8, 1)),
-                       color: (if active then active_shadow else text_shadow_color),
-                       x_align: "right"})
-            draw_text({font: $font9, text: "✜", pos: pos - xy(8, 0),
-                       color: (if active then active_color else #b),
-                       outline: (if active then active_outline else nil),
-                       x_align: "right"})
-            
-        pos.y += 18
-        if i == size(choice_array) - 2 and not $getIsHosting():
-            // Divider line
-            draw_line(pos + xy(0, -10), pos + xy(210, -10), #b)
-            pos.y += 8
-
-            
-    for gamepad in gamepad_array:
-        online_choice_index = clamp(online_choice_index + gamepad.yy, 0, size(choice_array) - 1)
-        if gamepad.aa:
-            const choice = choice_array[online_choice_index]
-            if choice == "Change Host Code":
-                $changeMyHostNetID()
-            else if choice == "Stop Hosting":
-                $stopHosting()
-                online_choice_index = 0
-            else if choice == "Start Hosting":
-                $startHosting()
-                online_choice_index = 0
+  
             
 
     
 enter
 ────────────────────────────────────────────────────────────────────────
 tab_index = 0
-online_choice_index = 0
+
+
 
 frame
 ────────────────────────────────────────────────────────────────────────
@@ -463,10 +380,8 @@ if game_frames < intro_frames:
 else if game_frames == intro_frames:
     reset_post_effects()
    
-set_background(background_color)
+set_background($system_window_background)
 manage_tabs()
+manage_games_tab()
 
-if tab_index == 0:
-    manage_games_tab()
-else if tab_index == 1:
-    manage_online_tab()
+// The other cases are their own modes

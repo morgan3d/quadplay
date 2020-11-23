@@ -1,0 +1,213 @@
+$OnlineMenu
+════════════════════════════════════════════════════════════════════════
+// For animation timing
+const open_frames             = 15
+
+let online_choice_index = nil
+
+let old_transform
+let old_clip
+let old_post_effects
+let old_background
+
+// Callback function when used by the system menu
+let manage_tabs
+
+const largeFont  = $font15
+const mediumFont = $font9
+const smallFont  = $font6
+
+def manage_online_tab():
+    if $getIsOffline():
+        draw_text({
+            // Message for use in intermediate releases:
+            text: "This release does not support online multiplayer. Coming soon...",
+            //text: "quadplay✜ is running in offline mode\n\nRelaunch without the --offline argument\nto enable online multiplayer play.",
+            font: mediumFont,
+            pos: xy(SCREEN_SIZE.x / 2, 80),
+            color: #f,
+            shadow: $system_prompt_shadow,
+            x_align: "center"
+        })
+        return
+    
+    // Blinking active choice
+    const bright             = (1 + cos(mode_frames / 9)) / 2
+    const active_color       = lerp($system_prompt_color, #fff, 50% bright)
+    const active_outline     = rgba(1,1,1, 25% bright)
+    const active_shadow      = 50% $system_prompt_shadow
+
+    let choice_array;
+
+    if $getIsHosting():
+        choice_array = ["Copy Host Code", "Change Host Code", "Stop Hosting"]
+        draw_text({
+            text: "You are currently hosting at:",
+            font: mediumFont,
+            pos: xy(SCREEN_SIZE.x / 2, 40),
+            color: #f,
+            shadow: $system_prompt_shadow,
+            markup: true,
+            x_align: "center"
+        })
+        draw_text({
+            text: "\"" + $netIDToSentence($getMyHostNetID()) + "\"",
+            font: largeFont,
+            pos: xy(SCREEN_SIZE.x / 2, 70),
+            color: #f,
+            shadow: $system_prompt_shadow,
+            markup: true,
+            x_align: "center"
+        })
+    else:
+        // Construct the host array every time through the rendering to
+        // minimize stored state (and bugs)
+        choice_array = ["Visit A New Host"]
+        const recent_host_array = parse($localStorage.getItem("recent_host_array") or "[]")
+        for i < min(size(recent_host_array), $max_recent_hosts):
+            push(choice_array, "Visit " + $netIDToString(recent_host_array[i].code, recent_host_array[i].name))
+        push(choice_array, "Change Online Name (" + uppercase($getMyOnlineName()) + ")")
+        push(choice_array, "Start Hosting")
+
+    if not manage_tabs:
+        // If not running in the launcher, show "done" as an option on each menu
+        push(choice_array, "Done")
+
+        
+    if online_choice_index == nil:
+        // Uninitialized
+
+        // Use "or" instead of "default" because localStorage returns null instead
+        // of undefined
+        if parse($localStorage.getItem("last_hosted") or "false"):
+            online_choice_index = size(choice_array) - 1
+            // Skip the "done"
+            if not manage_tabs: --online_choice_index
+        else if starts_with(choice_array[1], "Visit"):
+            // Default to the last host used, if there is one
+            online_choice_index = 1
+        else:
+            online_choice_index = 0
+
+    let pos = xy(70, SCREEN_SIZE.y - 50 - size(choice_array) * 18) + (if $getIsHosting() then xy(70, 0) else xy(0, 0))
+    for choice at i in choice_array:
+        // Don't show lines if working off the pause menu or hosting
+        if i >= size(choice_array) - 2 and not $getIsHosting() and manage_tabs:
+            // Divider line
+            pos.y += 6
+            draw_line(pos + xy(0, -15), pos + xy(234, -15), #b)
+
+        const active = (i == online_choice_index)
+
+        if active: $draw_system_menu_text({text: "✜", pos: pos + xy(-8, 0), x_align: "right"}, true)
+        $draw_system_menu_text({text: choice, pos: pos}, active)
+            
+        pos.y += 18
+
+            
+    for gamepad in gamepad_array:
+        online_choice_index = clamp(online_choice_index + gamepad.yy, 0, size(choice_array) - 1)
+        if gamepad.aa:
+            const choice = choice_array[online_choice_index]
+            if choice == "Change Host Code":
+                $changeMyHostNetID()
+            else if choice == "Copy Host Code":
+                def ok(): $showPopupMessage("Copied your host code to the clipboard")
+                def fail(): $showPopupMessage("Error: could not access the clipboard")
+                $copyToClipboard($netIDToSentence($getMyHostNetID()), ok, fail)
+            else if choice == "Visit A New Host":
+                push_mode($NewHost)
+            else if starts_with(choice, "Change Online Name"):
+                const name = $prompt("New online name", $getMyOnlineName())
+                if name and name != "": $setMyOnlineName(name)
+            else if starts_with(choice, "Visit "):
+                // Visit a previously known host
+                let sentence = slice(choice, size("Visit "))
+
+                const start = find(sentence, "(")
+                if start != nil:
+                    // Remove the name and parens
+                    sentence = slice(sentence, start + 1, size(sentence) - 1)
+
+                // Parse and clean the sentence
+                const src = split(replace(lowercase(sentence), {",": " ", "\n": " ", ".": " "}), " ", " ")
+                remove_values(src, "")
+                let array = []
+                for i < 6:
+                    const word = trim_spaces(src[i] default "")
+                    const index = find($NET_ID_WORD_TABLE[size(array)], word)
+                    push(array, if index != nil then word else $NET_ID_WORD_TABLE[size(array)][0])
+
+                // Trigger guesting
+                $startGuesting($wordsToNetID(array))
+                
+            else if choice == "Stop Hosting":
+                $stopHosting()
+                online_choice_index = 0
+            else if choice == "Start Hosting":
+                $startHosting()
+                online_choice_index = 0
+            else if choice == "Done":
+                pop_mode()
+
+
+// If manage_tabs_callback is not empty, then this is being called
+// from the launcher instead of the pause menu
+enter(manage_tabs_callback)
+────────────────────────────────────────────────────────────────────────
+online_choice_index = nil
+old_background = get_background()
+old_transform = get_transform()
+old_clip = get_clip()
+old_post_effects = get_post_effects()
+reset_post_effects()
+manage_tabs = manage_tabs_callback
+
+
+pop_mode(hostNetID) from $NewHost
+────────────────────────────────────────────────────────────────────────
+if hostNetID: $startGuesting(hostNetID)
+
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+
+set_transform(old_transform)
+set_clip(old_clip)
+set_post_effects(old_post_effects)
+set_background(old_background)
+
+
+
+pop_mode(hostNetID) from $NewHost
+────────────────────────────────────────────────────────────────────────
+if hostNetID: $startGuesting(hostNetID)
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+if manage_tabs:
+    manage_tabs()
+else:
+    draw_previous_mode()
+    // Force the clipping range beyond what the API normally allows
+    $clipZ2 = 2049
+    set_transform(xy(0, 0), xy(1, 1), 2048.6, 1)
+    draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(14%, 14%, 14%, 80%))
+
+    const windowSize = (SCREEN_SIZE + 2) * (if manage_tabs then 1 else clamp((mode_frames + 1) / open_frames, 0%, 100%))
+    //round(xy(6 font.line_height, 2 + (2 + size(choiceArray)) * font.line_height) * clamp((mode_frames + 1) / open_frames, 0%, 100%))
+    draw_rect(½ SCREEN_SIZE, windowSize, $system_window_background, $system_window_border)
+    
+
+if manage_tabs or mode_frames > open_frames:
+   // Process input. Let any controller
+   // manipulate the result, since we might
+   // have gotten to this screen using a different
+   // controller than the active one.
+
+    
+ manage_online_tab()

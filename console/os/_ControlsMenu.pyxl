@@ -1,10 +1,6 @@
 $ControlsMenu
 ════════════════════════════════════════════════════════════════════════
-const window_background_color = #135
-const window_border_color     = #fff
 const text_color              = #fff
-const text_shadow_color       = #0006
-const prompt_color            = #4DF
 const selected_color          = #f
 const unselected_color        = #b
 
@@ -76,7 +72,7 @@ else:
 
     const windowSize = (SCREEN_SIZE + 2) * (if manage_tabs then 1 else clamp((mode_frames + 1) / open_frames, 0%, 100%))
     //round(xy(6 font.line_height, 2 + (2 + size(choiceArray)) * font.line_height) * clamp((mode_frames + 1) / open_frames, 0%, 100%))
-    draw_rect(½ SCREEN_SIZE, windowSize, window_background_color, window_border_color)
+    draw_rect(½ SCREEN_SIZE, windowSize, $system_window_background, $system_window_border)
     
 
 if manage_tabs or mode_frames > open_frames:
@@ -115,16 +111,16 @@ if manage_tabs or mode_frames > open_frames:
            
    // Show the options
    let y = floor(0.5 (SCREEN_SIZE.y - (size(choiceArray) - 0.5) * font.line_height)) - 1
-   if manage_tabs: y += 10
+   if manage_tabs: y += 20
    if SCREEN_SIZE.y == 112 or SCREEN_SIZE.y == 128: y -= 20
    
    for i < size(choiceArray):
       const active      = choiceIndex == i
       const bright      = (1 + cos(mode_frames / 9)) / 2
-      const color       = if active then lerp(prompt_color, #fff, 50% bright) else unselected_color
+      const color       = if active then lerp($system_prompt_color, #fff, 50% bright) else unselected_color
       const outline     = if active then rgba(1,1,1, 25% bright) else nil
       const yOffset     = if active then -1 else 0
-      const shadow      = if active then 50% text_shadow_color else text_shadow_color
+      const shadow      = if active then 50% $system_prompt_shadow else $system_prompt_shadow
       
       const x           = floor(0.5 SCREEN_SIZE.x - (if SCREEN_SIZE.y == 64 then 20 else 3 font.line_height - 10))
       const text        = choiceArray[i]
@@ -141,7 +137,11 @@ if manage_tabs:
     // Also show system info on the top
     const gamepads = if $navigator.getGamepads then $navigator.getGamepads() else (if $navigator.webkitGetGamepads then $navigator.webkitGetGamepads else [])
     let text = "quadplay✜ " + $version + " © 2020 Morgan McGuire\n\n"
-    text += $navigator.userAgent
+
+    // Keep the userAgent length reasonable
+    const userAgent = $navigator.userAgent
+    if size(userAgent) > 140: userAgent = slice(userAgent, 0, 139) + "…"
+    text += userAgent
 
     // The gamepads array is not a proper Array, so pyxlscript
     // can't use an array iterator on it
@@ -151,7 +151,7 @@ if manage_tabs:
         text += (i + 1) + ": "
         text += if g then g.id else "∅"
 
-    text += "\n" + $getMyHostNetID()
+    text += "\n" + $getMyHostNetID() + " " + uppercase($getMyOnlineName())
     
     draw_text({
         text: text,

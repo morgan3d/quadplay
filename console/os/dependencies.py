@@ -5,6 +5,7 @@ os_dependencies = {
    "$font6":              "quad://fonts/deja-6.font.json",
    "$font8":              "quad://fonts/deja-8.font.json",
    "$font9":              "quad://fonts/deja-9.font.json",
+   "$font15":             "quad://fonts/deja-15.font.json",
    "$moveUISound":        "quad://sounds/blip-04.sound.json",
    "$acceptUISound":      "quad://sounds/jump-08.sound.json",
    "$openUISound":        "quad://sounds/powerup-03.sound.json",

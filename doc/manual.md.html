@@ -58,7 +58,7 @@ debugger, and profiler.
 **Software Features**
 
 - Export to your own website, itch.io, github pages, or download
-- Games run on web, mobile, desktop, tablet, Jetson Nano, and Raspberry Pi 4
+- Games run on web, mobile, desktop, tablet, Jetson Nano, Raspberry Pi 4/400
 - Free for commercial, personal, and educational use
 - Friendly and powerful PyxlScript Python-like scripting language
 - Run locally and offline using Python + web browser
@@ -3329,8 +3329,9 @@ intersections.
   integrators.
 
   Does not perform collision detection or response, or enforce attachment
-  constraints. You do not need to call `entity_simulate()` if you are
-  already using `physics_simulate()`.
+  constraints. Do not call `entity_simulate()` if you are
+  already using `physics_simulate()` and the entity is in the
+  physics object. Doing so will double-simulate the object.
 
 `make_contact_group()`
 : Creates a unique value for an `entity.contact_group`.
@@ -3574,7 +3575,10 @@ to start colliding with each other.
 `physics_simulate(physics, frames default 1)`
 : Simulate physics for this many frames, treating all forces and torques
   as constant over that period. Automatically calls `entity_update_children()`
-  on all entities in the context. See also `entity_simulate()`.
+  on all entities in the context.
+
+  Do not call `entity_simulate()` on objects that are in the
+  physics world or they will be double simulated.
 
 
 Graphics
@@ -5232,6 +5236,40 @@ options. Project files should have the double extension `.game.json`.
   },
 
   "version":      1.0,
+
+  "credits" : {
+       // This is for major developer credits to appear 
+       // in a large font at the top.
+       "main": [ "left", "right", ... ],
+       
+       // For code licenses, e.g., "wfc.pyxl" : "Copyright 2018 that dude"
+       // Assets are automatically handled from their own .json files. The
+       // credits renderer can aggregate files that share licenses when
+       // presenting them.
+       "code": { "file or element": "license", ...}, 
+       
+       // e.g., "Dedicated to Wolfgang. Thanks to Fran for the catering."
+       "extra": "" 
+  },
+  
+  // Defined for build scripts, but not used directly by the IDE or
+  // automatic credits in the current version of quadplay
+  "links": {
+       "game" : {
+             // Main website for the game
+             "www": "https://game...",
+             
+             // Arbitrary platforms
+             "twitter": "@game...",
+             "facebook": "...",
+             "instagram": "..."
+       },
+       
+       // Same as above
+       "developer" : ...
+       }
+  },
+
 
   // Properties affecting your game description in the launcher program:
   "min_players":   1,
@@ -7327,6 +7365,9 @@ sudo update-alternatives --config x-www-browser
 # + choose /usr/bin/chromium
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+For the Raspberry Pi 400 (the model built into a keyboard), I also 
+[overclock to 2 GHz](https://www.raspberrypi-spy.co.uk/2020/11/overclocking-the-raspberry-pi-400/).
+
 A Jetson Xavier, Intel NUC, or old PC/Mac is a more expensive device
 for powering a mini console, but has a lot more graphics power than an
 embedded processor and will comfortably run all games at 60 Hz.
@@ -7945,12 +7986,12 @@ This includes the contents of:
 - [`quadplay-runtime-cpu.js`](../console/quadplay-runtime-cpu.js)
 - [`quadplay-runtime-gpu.js`](../console/quadplay-runtime-gpu.js)
 - [`quadplay-profiler.js`](../console/quadplay-profiler.js)
-- [`quadplay-host.js`](../console/quadplay-host.js)
+- [`quadplay-browser.js`](../console/quadplay-browser.js)
 - [`quadplay-network.js`](../console/quadplay-network.js)
 - [`quadplay-ide.js`](../console/quadplay-ide.js)
 - [`quadplay-edit-asset.js`](../console/quadplay-edit-asset.js)
 - [`quadplay-edit-code.js`](../console/quadplay-edit-code.js)
-- [`quadplay-edit-game.js`](../console/quadplay-edit-code.js)
+- [`quadplay-edit-game.js`](../console/quadplay-edit-game.js)
 - [`quadplay-edit-constant.js`](../console/quadplay-edit-constant.js)
 - [`quadplay-font.js`](../console/quadplay-font.js)
 - [`quadplay-load.js`](../console/quadplay-load.js)
@@ -8046,22 +8087,30 @@ Changes for both the specification and implementation in each release.
 
 2020 November TBD: Beta update 55
 
-- When running outside of the IDE (with or without kiosk mode), quadplay will
-  now sleep after two minutes of no activity to conserve power
-- Kiosk mode now allows access to the "my_quadplay" folder
+- Tuned Friendly Fishing to spawn only small fish at the start of the game
+  to ease players in, and then guarantee larger fish later
+- Added `credits` and `links` sections to the `game.json` files
+- Added remote play infrastructure in the Online tab of the launcher
+  and bundled PeerJS for connecting
 - Changed the `quadplay` script `--host` argument to `--serve` to disambiguate
   from remote play hosting
 - Added `quadplay --offline` to disable new online multiplayer features
+- When running outside of the IDE (with or without kiosk mode), quadplay will
+  now sleep after two minutes of no activity to conserve power
 - Launcher now shows diagnostic system data
 - Added Kiosk Mode to the IDE Console menu to avoid requiring URL editing
+- Kiosk mode now allows access to the "my_quadplay" folder
 - `quadplay --kiosk` at the command line now launches in fullscreen mode
   directly on macOS and Windows when using Edge or Chromium. On other platforms
   it requires a click to enter fullscreen.
-- Disabled caching of quadplay internal OS code to ensure that upgrades
+- Disabled caching of quadplay internal OS code to ensure that platform upgrades
   do not require a hard reload from users
+- Added PeerJS to the distribution
+- Fixed `slice()` on strings to implement end index as specified
 - Fixed `draw_text()` markup with both `{br}` (or double newline) and format
   specifiers dropping content after the line break
-- Added PeerJS to the distribution
+- Fixed Auto-Pause state not being stored between sessions
+- Fixed CSV loading for constants (was broken by debug.json layer in the previous release)
 
 
 2020 November 7: Beta update 54

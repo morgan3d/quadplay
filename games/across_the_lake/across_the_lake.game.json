@@ -1,7 +1,7 @@
 {
     "title": "Across the Lake",
-    "developer": "Steinbach, McGuire, Cole, and Lavietes",
-    "copyright": "©2020 Steinbach, McGuire, Cole, and Lavietes",
+    "developer": "The Steinbachers",
+    "copyright": "©2020 Steinbach, McGuire, Cole, and LaVietes",
     "license": "Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/",
     "scripts": [
         "skippy.pyxl",
@@ -14,6 +14,14 @@
         "Title",
         "GameOver"
     ],
+    "credits": {
+        "main": [
+            "Stephan Steinbach", "game", 
+            "Morgan McGuire", "art", 
+            "Forrester Cole", "physics", 
+            "Steve LaVietes", "sound"
+        ]
+    },
     "start_mode": "Title",
     "docs": [
         {

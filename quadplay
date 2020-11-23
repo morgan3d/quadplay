@@ -61,7 +61,7 @@ exit 2
 # Shell commands end here
 # Python script follows
 
-import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs, glob, shutil, re, base64, random
+import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs, glob, shutil, re, base64, random, getpass
 
 # Import workjson, which is in the tools directory and we do not have
 # an __init__.py file because we keep the main quadplay directory
@@ -706,6 +706,9 @@ def main():
     if not quad_path or quad_path[0] != '/': url += '/'
     url += os.path.join(quad_path, 'console/quadplay.html?fastReload=1&token=' + token)
 
+    # Sanitized username
+    url += '&name=' + re.compile('[^A-Za-z0-9_]').sub('', getpass.getuser())
+    
     if args.kiosk:
         url += '&mode=Maximal&kiosk=1'
     else: 

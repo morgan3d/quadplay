@@ -190,7 +190,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
     
     loadManager = new LoadManager({
         callback: function () {
-            computeAssetCredits(gameSource);
+            computeCredits(gameSource);
             computeResourceStats(gameSource);
             if (callback) { callback(); }
         },
@@ -246,7 +246,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 gameSource.debug.json = debugJSON;
                 gameSource.debug.constants = {};
                 try {
-                    gameSource.debug.constants = loadConstants(gameSource.debug.json.constants, gameURL, true);
+                    loadConstants(gameSource.debug.json.constants, gameURL, true, gameSource.debug.constants);
                 } catch (e) {
                     throw debugURL + ': ' + e;
                 }
@@ -290,14 +290,19 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         gameJSON = deep_clone(gameJSON);
         gameSource.extendedJSON = gameJSON;
         
-        // Inject OS script dependencies
+        // Inject OS support
+        gameJSON.scripts.push(
+            'quad://console/os/_ui.pyxl'
+        );
         gameJSON.modes.push(
             'quad://console/os/_SystemMenu',
             'quad://console/os/_ConfirmDialog',
             'quad://console/os/_GameCredits',
             'quad://console/os/_SetControls',
             'quad://console/os/_ControlsMenu',
-            'quad://console/os/_ControllerOrder'
+            'quad://console/os/_ControllerOrder',
+            'quad://console/os/_NewHost',
+            'quad://console/os/_OnlineMenu'
         );
 
         // Any changes here must also be updated in the os_dependencies variable in tools/export.py
@@ -436,7 +441,8 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         } // Assets
 
         // Constants:
-        gameSource.constants = loadConstants(gameJSON.constants, gameURL);
+        gameSource.constants = {};
+        loadConstants(gameJSON.constants, gameURL, false, gameSource.constants);
 
         // Docs: Load the names, but do not load the documents themselves.
         gameSource.docs = [];
@@ -470,11 +476,9 @@ function afterLoadGame(gameURL, callback, errorCallback) {
    Returns a table of evaluated constants. If constantsJson is undefined,
    that table is empty.
 */
-function loadConstants(constantsJson, gameURL, isDebugLayer) {
-    if (! constantsJson) { return {}; }
+function loadConstants(constantsJson, gameURL, isDebugLayer, result) {
+    if (! constantsJson) { return; }
 
-    const result = {};
-    
     // Sort constants alphabetically
     const keys = Object.keys(constantsJson);
     keys.sort();
@@ -516,8 +520,6 @@ function loadConstants(constantsJson, gameURL, isDebugLayer) {
             result[c] = evalJSONGameConstant(definition);
         }
     }
-
-    return result;
 }
 
 
@@ -571,8 +573,8 @@ function animationFrame(f) {
 }
 
 
-/** Computes gameSource.CREDITS from gameSource, mutating it */
-function computeAssetCredits(gameSource) {
+/** Computes gameSource.CREDITS from gameSource, mutating it. */
+function computeCredits(gameSource) {
     function canonicalizeLicense(license) {
         // Remove space after copyright and always just use the symbol
         license = license.replace(/(?:\(c\)|copyright|©)\s*(?=\d)/gi, '©');
@@ -616,6 +618,17 @@ function computeAssetCredits(gameSource) {
             cache[type].set(license, []);
         }
         cache[type].get(license).push(urlFile(assetURL).replace(/\.[^\.]+\.json$/, ''));
+    }
+
+    if (gameSource.json.credits) {
+        CREDITS.main = gameSource.json.credits.main;
+        CREDITS.extra = gameSource.json.credits.extra;
+        
+        // Code
+        const codeCredits = gameSource.json.credits.code;
+        for (let url in codeCredits) {
+            addCredit('code', url, codeCredits[url]);
+        }
     }
     
     for (let a in gameSource.assets) {
@@ -931,7 +944,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
             spritesheet._index[0] = spritesheetArray.length;
             spritesheetArray.push(spritesheet);
 
-            const transposedSpritesheet = spritesheet[0][0].rotated_90._spritesheet;
+            const transposedSpritesheet = spritesheet[0][0].rotated_90.$spritesheet;
             transposedSpritesheet._index[0] = spritesheetArray.length;
             spritesheetArray.push(transposedSpritesheet);
         }
@@ -1137,15 +1150,15 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 const sprite = {
                     $type:             'sprite',
                     $name:             spritesheet.$name + '[' + u + '][' + v + ']',
-                    _tileX:            u,
-                    _tileY:            v,
-                    _boundingRadius:   boundingRadius,
-                    _x:                u * (spritesheet.sprite_size.x + spritesheet._gutter),
-                    _y:                v * (spritesheet.sprite_size.y + spritesheet._gutter),
-                    _hasAlpha:         hasAlpha,
-                    _requiresBlending: hasFractionalAlpha,
+                    $tileX:            u,
+                    $tileY:            v,
+                    $boundingRadius:   boundingRadius,
+                    $x:                u * (spritesheet.sprite_size.x + spritesheet._gutter),
+                    $y:                v * (spritesheet.sprite_size.y + spritesheet._gutter),
+                    $hasAlpha:         hasAlpha,
+                    $requiresBlending: hasFractionalAlpha,
                     // Actual spritesheet for rendering
-                    _spritesheet:      spritesheet,
+                    $spritesheet:      spritesheet,
                     // Source spritesheet for game logic
                     spritesheet:       spritesheet,
                     tile_index:        Object.freeze({x:u, y:v}),
@@ -1163,19 +1176,19 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 const transposedSprite = {
                     $type:             'sprite',
                     $name:             sprite.$name + '.rotated_270.x_flipped',
-                    _boundingRadius:   boundingRadius,
+                    $boundingRadius:   boundingRadius,
 
                     // Sprite index
-                    _tileX:            sprite._tileY,
-                    _tileY:            sprite._tileX,
+                    $tileX:            sprite.$tileY,
+                    $tileY:            sprite.$tileX,
 
                     // Pixel coord in tile
-                    _x:                sprite._y,
-                    _y:                sprite._x,
+                    $x:                sprite.$y,
+                    $y:                sprite.$x,
 
-                    _hasAlpha:         sprite._hasAlpha,
-                    _requiresBlending: sprite._hasFractionalAlpha,
-                    _spritesheet:      transposedSpritesheet,
+                    $hasAlpha:         sprite.$hasAlpha,
+                    $requiresBlending: sprite.$requiresBlending,
+                    $spritesheet:      transposedSpritesheet,
                     spritesheet:       spritesheet,
                     tile_index:        sprite.tile_index,
                     id:                lastSpriteID,
@@ -1454,7 +1467,7 @@ function loadSound(name, json, jsonURL) {
         ++loadManager.pendingRequests;
 
         try {
-            _ch_audioContext.decodeAudioData(
+            audioContext.decodeAudioData(
                 // The need for slice is some Chrome multithreading issue
                 // https://github.com/WebAudio/web-audio-api/issues/1175
                 arraybuffer.slice(0),
@@ -1464,7 +1477,7 @@ function loadSound(name, json, jsonURL) {
 
                     // Create a buffer source, which primes this sound
                     // for playing without delay later.
-                    sound.$source = _ch_audioContext.createBufferSource();
+                    sound.$source = audioContext.createBufferSource();
                     sound.$source.buffer = sound.$buffer;
                     sound.frames = sound.$source.buffer.duration * 60;
                     onLoadFileComplete(json.url);
@@ -2256,6 +2269,7 @@ function parseCSV(strData, trim) {
     invokes callback() if it is specified.
  */
 function loadCSV(csvURL, definition, outputObject, outputField, callback) {
+    console.assert(outputObject);
     loadManager.fetch(csvURL, 'text', null, function (csv) {
         // Parse cells
         let grid = parseCSV(csv, definition.trim !== false);
