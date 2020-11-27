@@ -81,7 +81,7 @@ if manage_tabs or mode_frames > open_frames:
    // have gotten to this screen using a different
    // controller than the active one.
    for control in gamepad_array:
-       if control.qq or control.$pp:
+       if not manage_tabs and (control.qq or control.$pp):
            // Do NOT use "bb", which maps to enter on the keyboard
            // and may make players think they are executing a command
            play_sound($cancelUISound)
