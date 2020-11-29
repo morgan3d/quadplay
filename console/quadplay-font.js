@@ -150,8 +150,8 @@ function isDigit(c) {
 /** 
     Given an object, an xy() spacing, and a [binary as 0 and 255
     values] Uint8Array augmented with width and height fields, packs
-    the font characters tightly and creates fields including _data and
-    _bounds.
+    the font characters tightly and creates fields including $data and
+    $bounds.
 
     Used by loadFont() in quadplay-load.js and by fontpack.html.
 */
@@ -160,8 +160,8 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
     let bounds = {};
 
     font.spacing = spacing;
-    font._borderSize = borderSize;
-    font._shadowSize = shadowSize;
+    font.$borderSize = borderSize;
+    font.$shadowSize = shadowSize;
 
     // Compute tightest vertical bounding box across all characters
     let tightY1 = Infinity, tightY2 = -Infinity;
@@ -230,21 +230,21 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
     // in the packed, padded image.  Allocate the final
     // bitmap, including padding for individual fonts.
     _charWidth += 2 * borderSize;
-    font._charHeight = (tightY2 - tightY1 + 1) + 2 * borderSize + shadowSize;
-    font.glyph_size = {x: font._charWidth - 2 * borderSize, y: font._charHeight - 2 * borderSize - shadowSize};
+    font.$charHeight = (tightY2 - tightY1 + 1) + 2 * borderSize + shadowSize;
+    font.glyph_size = {x: font.$charWidth - 2 * borderSize, y: font.$charHeight - 2 * borderSize - shadowSize};
     
     // Baseline is the distance from the top of each box to
     // the text baseline.  Adjust the baseline for the new
     // tight packing and the border padding
-    font._baseline = baseline - tightY1 + borderSize;
+    font.$baseline = baseline - tightY1 + borderSize;
 
     // Extract each character
-    const colorMask        = array2DUint8(_charWidth * 4, font._charHeight);
-    const borderMask       = array2DUint8(_charWidth * 4, font._charHeight);
-    const shadowMask       = array2DUint8(_charWidth * 4, font._charHeight);
-    const shadowBorderMask = array2DUint8(_charWidth * 4, font._charHeight);
-    font._data = array2DUint8(_charWidth * FONT_COLS, font._charHeight * FONT_ROWS);
-    font._bounds = {};
+    const colorMask        = array2DUint8(_charWidth * 4, font.$charHeight);
+    const borderMask       = array2DUint8(_charWidth * 4, font.$charHeight);
+    const shadowMask       = array2DUint8(_charWidth * 4, font.$charHeight);
+    const shadowBorderMask = array2DUint8(_charWidth * 4, font.$charHeight);
+    font.$data = array2DUint8(_charWidth * FONT_COLS, font.$charHeight * FONT_ROWS);
+    font.$bounds = {};
 
     for (let charY = 0; charY < FONT_ROWS; ++charY) {
         const charScale = (charY < FONT_ROWS - 2) ? 1 : 4;
@@ -311,13 +311,13 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
                 
                 ////////////////////////////////////////////////////////////////
                 // Write to the packed bitmap
-                console.assert(font._charHeight === colorMask.height);
+                console.assert(font.$charHeight === colorMask.height);
 
                 // For testing
                 // if (chr === '∫') array2DPrint(borderMask);
-                for (let srcY = 0; srcY < font._charHeight; ++srcY) {
+                for (let srcY = 0; srcY < font.$charHeight; ++srcY) {
                     //let tst = ''; // For testing
-                    const dstY = font._charHeight * charY + srcY;
+                    const dstY = font.$charHeight * charY + srcY;
 
                     for (let srcX = 0; srcX < _charWidth * charScale; ++srcX) {
                         const dstX = _charWidth * charScale * charX + srcX;
@@ -338,13 +338,13 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
                         }
                         
                         //if (chr === '∫') { tst += (mask < 10 ? '0' : '') + mask + ' '; } // For testing
-                        array2DSet(font._data, dstX, dstY, mask);
+                        array2DSet(font.$data, dstX, dstY, mask);
                     } // srcX
                     //if (chr === '∫') { console.log(tst); }  // For testing
                 } // srcY
                 
                 // Compute the bounds of this character as an absolute position on the final image
-                const tileX = _charWidth * charX * charScale, tileY = font._charHeight * charY, srcTileY = char_size.y * charY;
+                const tileX = _charWidth * charX * charScale, tileY = font.$charHeight * charY, srcTileY = char_size.y * charY;
 
                 let pre = 0, post = 0;
                 if (isDigit(chr)) {
@@ -357,7 +357,7 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
                     //console.log(chr, pre, post);
                 }
 
-                font._bounds[chr] = {
+                font.$bounds[chr] = {
                     x1: tileX,
                     x2: tileX + srcBounds.x2 - srcBounds.x1 + 2 * borderSize,
                     y1: tileY + (srcBounds.y1 - srcTileY - tightY1),
@@ -379,14 +379,14 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
         let thickestBounds = null, thickestWidth = 0;
         for (let i = 0; i < candidates.length; ++i) {
             const c = candidates[i];
-            const bounds = font._bounds[c];
+            const bounds = font.$bounds[c];
             const width = bounds.x2 - bounds.x1 + 1;
             if (width > thickestWidth) {
                 thickestWidth = width;
                 thickestBounds = bounds;
             }
         }
-        font._bounds[' '] = font._bounds['\t'] = thickestBounds;
+        font.$bounds[' '] = font.$bounds['\t'] = thickestBounds;
     }
         
     // Compute subscripts
@@ -402,9 +402,9 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
         for (let i = 0; i < subscript.length; ++i) {
             const sub = subscript[i];
             const sup = superscript[i];
-            const b = Object.assign({}, font._bounds[sup]);
+            const b = Object.assign({}, font.$bounds[sup]);
             b.yOffset = subscriptOffset;
-            font._bounds[sub] = Object.freeze(b);
+            font.$bounds[sub] = Object.freeze(b);
         }
     }
 }

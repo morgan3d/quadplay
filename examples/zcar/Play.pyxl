@@ -12,8 +12,8 @@ transformed_array.extrapolate = "loop"
 // Scale the input mesh and preallocate the
 // transformed array
 for v in mesh.vertex_array:
-   v *= 0.052
-   push(transformed_array, xyz(0, 0, 0))
+    v *= 0.052
+    push(transformed_array, xyz(0, 0, 0))
 
 
 frame
@@ -21,9 +21,9 @@ frame
 
 ////////////// User Input
 if mode_frames < 20:
-   Δθ = xy(2°, -½°)
+    Δθ = xy(2°, -½°)
 else:
-   Δθ = clamp(0.92 Δθ - 0.2° joy.xy, xy(-1.2°, -1.2°), xy(1.2°, 1.2°))
+    Δθ = clamp(0.92 Δθ - 0.2° joy.xy, xy(-1.2°, -1.2°), xy(1.2°, 1.2°))
 
 θ = clamp(θ + Δθ, xy(-∞, -30°), xy(∞, 30°))  
 
@@ -35,33 +35,33 @@ set_post_effects({background: #0000, opacity: 70%})
 draw_sprite({sprite: vignette, pos: ½ SCREEN_SIZE, z: 1024})
 
 preserving_transform:
-   set_transform(½ SCREEN_SIZE + xy(0, 25), xy(1, -1))
+    set_transform(½ SCREEN_SIZE + xy(0, 25), xy(1, -1))
    
-   // Transform all vertices
-   const rot = matmul_3x3(pitch_matrix(θ.y), yaw_matrix(θ.x))
-   for v < size(mesh.vertex_array):
-      transform_3D(rot, mesh.vertex_array[v], transformed_array[v])
+    // Transform all vertices
+    const rot = matmul_3x3(pitch_matrix(θ.y), yaw_matrix(θ.x))
+    for v < size(mesh.vertex_array):
+        transform_3D(rot, mesh.vertex_array[v], transformed_array[v])
    
-   // Draw all lines
-   for i < ½ size(mesh.line_array):
-      const A = transformed_array[mesh.line_array[2 i]]
-      const B = transformed_array[mesh.line_array[2 i + 1]]
+    // Draw all lines
+    for i < ½ size(mesh.line_array):
+        const A = transformed_array[mesh.line_array[2 i]]
+        const B = transformed_array[mesh.line_array[2 i + 1]]
    
-      const z = ½ (A.z + B.z)
-      const brightness = clamp(0.005 (z + 150), 15%, 100%)
+        const z = ½ (A.z + B.z)
+        const brightness = clamp(0.005 (z + 150), 15%, 100%)
       
-      // Antialias by drawing a fat, dim version in
-      // the distance for the brighter lines
-      if z > 0: draw_line(A, B, lerp(BACKGROUND_COLOR, LINE_COLOR, ½ brightness), z - 300, 2)
-      draw_line(A, B, lerp(BACKGROUND_COLOR, LINE_COLOR, brightness), z, 1)
+        // Antialias by drawing a fat, dim version in
+        // the distance for the brighter lines
+        if z > 0: draw_line(A, B, lerp(BACKGROUND_COLOR, LINE_COLOR, ½ brightness), z - 300, 2)
+        draw_line(A, B, lerp(BACKGROUND_COLOR, LINE_COLOR, brightness), z, 1)
 
 
 // Text scroll for flavor
 for i < 19:
-   const V = array_value(transformed_array, i - mode_frames)
-   draw_text(computer_font,
-      format_number(V.x, "0.000") + " " +
-      format_number(V.y, "0.000") + " " +
-      format_number(V.z, "0.000"),
-      xy(0, 2 + 12 i), TEXT_COLOR,
-      ∅, ∅, ∅, ∅, -100)
+    const V = array_value(transformed_array, i - mode_frames)
+    draw_text(computer_font,
+        format_number(V.x, "0.000") + " " +
+        format_number(V.y, "0.000") + " " +
+        format_number(V.z, "0.000"),
+        xy(0, 2 + 12 i), TEXT_COLOR,
+        ∅, ∅, ∅, ∅, -100)

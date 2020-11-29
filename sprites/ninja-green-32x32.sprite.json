@@ -1,0 +1,23 @@
+{
+    "url":          "ninja-green-32x32.png",
+    "sprite_size":   {"x": 32, "y": 32},
+    "gutter":       0,
+    "transpose":    false,
+    "default_frames": 5,
+    "names":        {
+        "idle":     {"start": {"x": 0, "y": 0}, "end": {"y": 3}},
+        "run":      {"start": {"x": 1, "y": 0}, "end": {"y": 3}},
+        "jumpUp":   {"start": {"x": 2, "y": 0}},
+        "jumpDown": {"start": {"x": 2, "y": 1}},
+        "land":     {"start": {"x": 2, "y": 2}, "frames": 16},
+        "attack":   {"start": {"x": 3, "y": 0}, "end": {"y": 3}, "extrapolate": "clamp"},
+        "swim":     {"start": {"x": 4, "y": 0}, "end": {"y": 3}},
+        "hurt":     {"start": {"x": 5, "y": 0}},
+        "duck":     {"start": {"x": 5, "y": 1}},
+        "parachute":{"x": 5, "y": 2, "frames": 1},
+        "dead":     {"start": {"x": 5, "y": 3}},
+        "climb":    {"start": {"x": 6, "y": 0}, "end": {"y": 3}},
+        "crawl":    {"start": {"x": 7, "y": 0}, "end": {"y": 3}}
+    },
+    "license" :     "By Morgan McGuire 2018 derived from DezrasDragons https://opengameart.org/content/ninja-animated, in the Public Domain/CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0"
+}

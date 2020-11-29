@@ -93,11 +93,11 @@ function setPadType(p, type) {
     if (p === undefined || p < 0 || p > 3) { throw new Error('"setPadType" must be used with an index from 0 to 3'); }
     if (! prompt) { throw new Error('"setPadType" must be used with one of the legal types, such as "Quadplay" or "PS4" (received "' + type + '")'); }
 
-    const control = QRuntime.gamepad_array[p]
-    control.type = type;
-    control.prompt = Object.freeze(Object.assign({'##': '' + (p + 1)}, prompt));
-    const id = control._id;
-    if (id && id !== '' && !/^keyboard|^kbd_/i.test(type)) {
+    const gamepad = QRuntime.gamepad_array[p]
+    gamepad.type = type;
+    gamepad.prompt = Object.freeze(Object.assign({'##': '' + (p + 1)}, prompt));
+    const id = gamepad.$id;
+    if (id && !/^keyboard|^kbd_/i.test(type)) {
         // Update the autodetection table based on what we just learned from this user
         controllerTypeTable[id] = type;
         localStorage.setItem('controllerTypeTable', JSON.stringify(controllerTypeTable));
@@ -1053,13 +1053,6 @@ function requestInput() {
 function updateInput() {
     mouse.screen_x_prev = mouse.screen_x;
     mouse.screen_y_prev = mouse.screen_y;
-    /*
-    if (mouse.movement_x !== undefined && ! mouse.movement) {
-        mouse.movement_x = 0;
-        mouse.movement_y = 0;
-    }
-    mouse.movement = false;
-    */
     
     const axes = 'xy', AXES = 'XY', buttons = 'abcdefpq';
 

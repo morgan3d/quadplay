@@ -332,9 +332,15 @@ def manage_games_tab():
 
     for pad in gamepad_array:
         if pad.aa or pad.qq or pad.$pp:
-            def callback():
-                launch_game(gameArray[gameIndex].url)
-            set_mode($SlideOut, callback) because "Player selected game"
+            const game = gameArray[gameIndex]
+            if (game.title == "Ice Time") and $getIsHosting():
+                // TODO: Online. Remove when resolution restrictions are lifted
+                $showPopupMessage(game.title + " cannot run while hosting in this release")
+            else:
+                def callback():
+                    launch_game(game.url)
+                
+                set_mode($SlideOut, callback) because "Player selected game"
 
         // Animate scrolling
         if pad.yy:

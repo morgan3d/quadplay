@@ -12,7 +12,12 @@ const MAX_ONLINE_NAME_LENGTH = 7;
 // period in JavaScript is 4ms)
 const ONLINE_INPUT_PERIOD = Math.floor(1000 / 120);
 
-const PEER_CONFIG = {};
+const PEER_CONFIG = false ? {} : {
+    debug: 0,
+    host: "quadplay-peer.us-3.evennode.com", port: 80,
+    path: '/quadplay',
+    key: 'peerjs'
+};
 
 /*
  There is no consistent way to detect a closed WebRTC connection
@@ -258,11 +263,31 @@ function startHosting() {
 
     // The peer must be created RIGHT before open is registered,
     // otherwise we could miss it.
-    myPeer = new Peer(myHostNetID, PEER_CONFIG);
+    try {
+        myPeer = new Peer(myHostNetID, PEER_CONFIG);
+    } catch (e) {
+        console.log(e);
+        peerErrorHandler(e);
+        stopHosting();
+        return;
+    }
 
-    myPeer.on('error', peerErrorHandler);
+    myPeer.on('error', function (err) {
+        peerErrorHandler(err);
+        stopHosting();
+    });
+
+    let isOpen = false;
+
+    myPeer.on('disconnected', function () {
+        if (! isOpen) {
+            showPopupMessage('Sorry, could not connect for hosting.');
+            stopHosting();
+        }
+    });
     
     myPeer.on('open', function(id) {
+        isOpen = true;
         console.log('host peer opened with id ' + id);
 
         // The guest calls us on the data channel

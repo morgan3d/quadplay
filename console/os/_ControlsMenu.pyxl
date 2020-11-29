@@ -22,6 +22,11 @@ let old_background
 
 let manage_tabs
 
+def clamp_string(s, max_size):
+    return if (size(s) < max_size) then s else (slice(s, 0, max_size - 1) + "…")
+    
+
+
 // If manage_tabs_callback is not empty, then this is being called
 // from the launcher instead of the pause menu
 enter(manage_tabs_callback)
@@ -138,25 +143,22 @@ if manage_tabs:
     const gamepads = if $navigator.getGamepads then $navigator.getGamepads() else (if $navigator.webkitGetGamepads then $navigator.webkitGetGamepads else [])
     let text = "quadplay✜ " + $version + " © 2020 Morgan McGuire\n\n"
 
-    // Keep the userAgent length reasonable
-    const userAgent = $navigator.userAgent
-    if size(userAgent) > 140: userAgent = slice(userAgent, 0, 139) + "…"
-    text += userAgent
+    text += clamp_string($navigator.userAgent, 140)
 
     // The gamepads array is not a proper Array, so pyxlscript
     // can't use an array iterator on it
-    for i < gamepads.length:
+    for i < size(gamepads):
         const g = gamepads[i]
         text += if i == 0 then "\n\n" else ", "
         text += (i + 1) + ": "
-        text += if g then g.id else "∅"
+        text += if g then clamp_string(g.id, 32) else "∅"
 
     text += "\n" + $getMyHostNetID() + " " + uppercase($getMyOnlineName())
     
     draw_text({
         text: text,
         font:$font6, pos: xy(32, 24), color: #f, x_align: "left", y_align: "top",
-        wrap_width: 384 - 32*2
+        wrap_width: 384 - 32 * 2
     })
       
 if SCREEN_SIZE.y > 64 and (mode_frames > open_frames or manage_tabs):

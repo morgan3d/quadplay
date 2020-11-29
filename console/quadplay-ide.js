@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.11.22.21';
+const version  = '2020.11.28.20';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -60,7 +60,7 @@ function makeURLRelativeToGame(filename) {
 }
 
 const fastReload = getQueryString('fastReload') === '1';
-const isOffline = true;//(getQueryString('offline') === '1') || false;
+const isOffline = (getQueryString('offline') === '1') || false;
 const useIDE = (getQueryString('IDE') === '1') || false;
 {
     const c = document.getElementsByClassName(useIDE ? 'noIDE' : 'IDEOnly');
@@ -161,11 +161,12 @@ function setCodeEditorFontSize(f) {
 }
 
 
-// Controls the mapping order used by quadplay-host for gamepads. Can
-// be changed as an advanced feature, intended for arcade setups.
-// gamepad_array[i] = real_pad[gamepadOrderMap[i]].
-// Set to DISABLED_GAMEPAD for 'skip'. Each element must be a single-digit number
-// for the serialization code to work correctly.
+// Controls the mapping order used by quadplay-host for gamepads. Can be
+// changed from the IDE or the in-game system menu.
+//
+// gamepad_array[i] = real_pad[gamepadOrderMap[i]].  Set to
+// DISABLED_GAMEPAD for 'skip'. Each element must be a single-digit
+// number for the serialization code to work correctly.
 const DISABLED_GAMEPAD = 9;
 let gamepadOrderMap = [0, 1, 2, 3];
 function setGamepadOrderMap(map) {
@@ -1891,8 +1892,8 @@ function onProjectSelect(target, type, object) {
 
                     // The spritesheet fits along the longer axis
                     const scale = (object.size.x > object.size.y) ?
-                          (editorBounds.width / object._sourceSize.x) :
-                          (editorBounds.height / object._sourceSize.y);
+                          (editorBounds.width / object.$sourceSize.x) :
+                          (editorBounds.height / object.$sourceSize.y);
                     
                     const mouseX = e.clientX - editorBounds.left;
                     const mouseY = e.clientY - editorBounds.top;
@@ -1900,14 +1901,14 @@ function onProjectSelect(target, type, object) {
                     const scaledSpriteWidth = object.sprite_size.x * scale;
                     const scaledSpriteHeight = object.sprite_size.y * scale;
 
-                    const scaledSpriteStrideWidth = (object.sprite_size.x + object._gutter) * scale;
-                    const scaledSpriteStrideHeight = (object.sprite_size.y + object._gutter) * scale;
+                    const scaledSpriteStrideWidth = (object.sprite_size.x + object.$gutter) * scale;
+                    const scaledSpriteStrideHeight = (object.sprite_size.y + object.$gutter) * scale;
 
                     spriteEditorPivot.style.fontSize = Math.round(clamp(Math.min(scaledSpriteWidth, scaledSpriteHeight) * 0.18, 5, 25)) + 'px';
 
                     // Offset for the sprite region within the PNG
-                    const scaledCornerX = object._sourceRegion.corner.x * scale;
-                    const scaledCornerY = object._sourceRegion.corner.y * scale;
+                    const scaledCornerX = object.$sourceRegion.corner.x * scale;
+                    const scaledCornerY = object.$sourceRegion.corner.y * scale;
 
                     // Integer spritesheet index (before transpose)
                     let X = Math.floor((mouseX - scaledCornerX) / scaledSpriteStrideWidth);
@@ -1929,11 +1930,11 @@ function onProjectSelect(target, type, object) {
                         spriteEditorPivot.style.top = Math.floor(scale * (sprite.pivot.y + sprite.size.y / 2) - spriteEditorPivot.offsetHeight / 2) + 'px';
                             
                         let str = `${assetName}[${U}][${V}]`;
-                        if (sprite._animationName) {
-                            str += `<br>${assetName}.${sprite._animationName}`
-                            if (sprite._animationIndex !== undefined) {
-                                const animation = object[sprite._animationName];
-                                str += `[${sprite._animationIndex}]<br>extrapolate: "${animation.extrapolate || 'clamp'}"`;
+                        if (sprite.$animationName) {
+                            str += `<br>${assetName}.${sprite.$animationName}`
+                            if (sprite.$animationIndex !== undefined) {
+                                const animation = object[sprite.$animationName];
+                                str += `[${sprite.$animationIndex}]<br>extrapolate: "${animation.extrapolate || 'clamp'}"`;
                             }
                         }
 
@@ -2594,11 +2595,11 @@ function visualizeMap(map) {
     for (let mapZ = 0; mapZ < depth; ++mapZ) {
         const z = map.zScale < 0 ? depth - mapZ - 1 : mapZ;
         for (let mapY = 0; mapY < height; ++mapY) {
-            const y = map._flipYOnLoad ? height - mapY - 1 : mapY;
+            const y = map.$flipYOnLoad ? height - mapY - 1 : mapY;
             for (let mapX = 0; mapX < width; ++mapX) {
                 const sprite = map.layer[z][mapX][y];
                 if (sprite) {
-                    const srcData = sprite.spritesheet._uint16Data;
+                    const srcData = sprite.spritesheet.$uint16Data;
                     const xShift = (sprite.scale.x === -1) ? (sprite.size.x - 1) : 0;
                     const yShift = (sprite.scale.y === -1) ? (sprite.size.y - 1) : 0;
                     const xReduce = reduce * sprite.scale.x;
@@ -3411,7 +3412,8 @@ function reloadRuntime(oncomplete) {
         QRuntime.$navigator          = navigator;
         QRuntime.$version            = version;
         QRuntime.$prompt             = prompt;
-        QRuntime.$sleep = useIDE ? null : sleep;
+        QRuntime.$sleep              = useIDE ? null : sleep;
+        QRuntime.$Object.prototype.toString = Object.prototype.toString;
 
         // For use by the online component
         QRuntime.$wordsToNetID       = wordsToNetID;
@@ -3834,7 +3836,7 @@ function makeAssets(environment, assets) {
 
     // Check the spritesheet array for consistency
     for (let i = 0; i < spritesheetArray.length; ++i) {
-        console.assert(spritesheetArray[i]._index[0] == i,
+        console.assert(spritesheetArray[i].$index[0] == i,
                        'spritesheetArray[' + i + '] has the wrong index'); 
     }
     
@@ -3852,7 +3854,7 @@ function makeAssets(environment, assets) {
         }
 
         if (assetValue.$type === 'spritesheet') {
-            console.assert(spritesheetArray[assetValue._index[0]] === assetValue,
+            console.assert(spritesheetArray[assetValue.$index[0]] === assetValue,
                            'spritesheet ' + assetName + ' is at the wrong index.');
         }
         
@@ -4117,7 +4119,7 @@ function showPopupMessage(msgHTML) {
         // This timeout value has to be the sum of the times
         // in the quadplay.css #popupMessage.show animation
         // property
-        3500);
+        4500);
 }
 
 /* When calling from quadplay, note that the callback can happen at any point,

@@ -43,6 +43,7 @@ def threshold(src, threshold):
     return dst
     
 
+
 def simulate_view(view, gamepad, gamepad2):
     if gamepad.qq: 
         if view.control_scheme == "D-PAD":
@@ -138,6 +139,8 @@ const billboard_pos = xyz(view.pos.x, 28, view.pos.z - 64)
 // Holds the walk loop when playing
 let walk_audio = ∅
 
+
+
 enter
 ────────────────────────────────────────────────────────────────────────
 
@@ -145,6 +148,8 @@ play_sound(loop_castle_sound, true, 30%)
 view.yaw = 5
 view.pos.x = 843
 view.pos.z = 532
+
+
 
 frame
 ────────────────────────────────────────────────────────────────────────

@@ -58,7 +58,6 @@ var is_NaN = Number.isNaN;
 // detect when they are illegally being mutated.
 var $iteratorCount = new WeakMap();
 
-
 function $checkContainer(container) {
     if (! Array.isArray(container) && (typeof container !== 'string') && (typeof container !== 'object')) {
         $error('The container used with a for...in loop must be an object, string, or array.');
@@ -374,7 +373,7 @@ function sort(array, k, reverse) {
     if (compare === undefined) {
         if (typeof array[0] === 'object') {
             // Find the first property, alphabetically
-            const keys = Object.keys();
+            const keys = keys(array[0]);
             keys.sort();
             k = keys[0];
             if (reverse) {
@@ -425,7 +424,17 @@ function size(x) {
         if (tx === 'string') {
             return x.length;
         } else if (tx === 'object') {
-            return Object.keys(x).length;
+            const k = Object.keys(x);
+            if (x.$name || x.$type) {
+                // Hide any $ prefixes from this built-in object
+                let c = 0;
+                for (let i = 0; i < k.length; ++i) {
+                    if (k[i] !== '$') { ++c; }
+                }
+                return c;
+            } else {
+                return k.length;
+            }
         } else {
             return 0;
         }
@@ -438,8 +447,13 @@ function random_value(t, rng) {
     if (Array.isArray(t) || (T === 'string')) {
         return t[random_integer(0, t.length - 1, rng)];
     } else if (T === 'object') {
-        const k = Object.keys(t);
-        return t[k[random_integer(0, k.length - 1, rng)]];
+        const k = keys(t);
+
+        if (k.length === 0) {
+            return undefined;
+        } else {
+            return t[k[random_integer(0, k.length - 1, rng)]];
+        }
     } else {
         return undefined;
     }
@@ -691,7 +705,19 @@ function fast_remove_key(t, i) {
 
 
 function keys(t) {
-    return Object.keys(t);
+    const k = $Object.keys(t);
+    
+    if (t.$name || t.$type) {
+        // Remove hidden properties
+        for (let i = k.length - 1; i >= 0; --i) {
+            if (k[i][0] === '$') {
+                k[i] = k[k.length - 1];
+                --k.length;
+            }
+        }
+    }
+
+    return k;
 }
 
 function values(t) {
@@ -2079,7 +2105,7 @@ function make_entity(e, childTable) {
             
             if (r[name] !== undefined) {
                 $error('make_entity() cannot add a child named "' + name +
-                                '" because that is already a property of the entity {' + Object.keys(r) + '}');
+                       '" because that is already a property of the entity {' + keys(r) + '}');
             }
             r[name] = child;
             if (child.name === 'Anonymous') {
@@ -2860,9 +2886,9 @@ function physics_simulate(physics, stepFrames) {
                     entityA: contact.entityA,
                     entityB: contact.entityB,
                     normal:  xy(contact.normal),
+                    depth:   contact.depth,
                     point0:  xy(contact.point0),
-                    point1:  clone(contact.point1),
-
+                    point1:  contact.point1 ? xy(contact.point1) : undefined,
                 });
             }
         } // event
@@ -3478,14 +3504,14 @@ function transform_ws_z_to_map_layer(map, z) {
 
 
 function transform_map_space_to_ws(map, map_coord) {
-    return xy(map_coord.x * map.sprite_size.x + map._offset.x,
-              map_coord.y * map.sprite_size.y + map._offset.y);
+    return xy(map_coord.x * map.sprite_size.x + map.$offset.x,
+              map_coord.y * map.sprite_size.y + map.$offset.y);
 }
 
 
 function transform_ws_to_map_space(map, ws_coord) {
-    return xy((ws_coord.x - map._offset.x) / map.sprite_size.x,
-              (ws_coord.y - map._offset.y) / map.sprite_size.y);
+    return xy((ws_coord.x - map.$offset.x) / map.sprite_size.x,
+              (ws_coord.y - map.$offset.y) / map.sprite_size.y);
 }
 
 
@@ -3577,7 +3603,6 @@ function get_map_pixel_color(map, map_coord, min_layer, max_layer_exclusive, rep
 //  otherwise: value is a uint16 in the return value
 function $get_map_pixel_color(map, map_coord_x, map_coord_y, min_layer, max_layer_exclusive, replacement_array, result, invert_sprite_y) {
     const map_size_x = map.size.x, map_size_y = map.size.y;
-    
     // Inlined $loop()
     if (map.wrap_x && (map_coord_x < 0 || map_coord_x >= map_size_x)) {
         map_coord_x -= $Math.floor(map_coord_x / map_size_x) * map_size_x;
@@ -3587,7 +3612,7 @@ function $get_map_pixel_color(map, map_coord_x, map_coord_y, min_layer, max_laye
     }
 
     // Integer version of the map coordinate
-    const mx = $Math.floor(map_coord_x), my = $Math.floor(map_coord_y);
+    const mx = $Math.floor(map_coord_x) | 0, my = $Math.floor(map_coord_y) | 0;
     
     // Was any surface hit?
     let hit = false;
@@ -3604,8 +3629,8 @@ function $get_map_pixel_color(map, map_coord_x, map_coord_y, min_layer, max_laye
         let spriteCoordY = $clamp(((map_coord_y - my) * (ssY + 1)) | 0, 0, ssY);
 
         // Account for the automatic flipping that occurs to sprites when rendering
-        if (($scaleY < 0) !== invert_sprite_y) { spriteCoordY = ssY - spriteCoordY; }
-        if ($scaleX < 0) { spriteCoordX = ssX - spriteCoordX; }
+        if (($scaleY < 0) !== invert_sprite_y) { spriteCoordY = (ssY - spriteCoordY) | 0; }
+        if ($scaleX < 0) { spriteCoordX = (ssX - spriteCoordX) | 0; }
 
         // Iterate from the top down, compositing
         const layer_array = map.layer;
@@ -3632,11 +3657,11 @@ function $get_map_pixel_color(map, map_coord_x, map_coord_y, min_layer, max_laye
                 const x = ((sprite.scale.x > 0) ? spriteCoordX : (ssX - spriteCoordX)) >>> 0;
                 const y = ((sprite.scale.y > 0) ? spriteCoordY : (ssY - spriteCoordY)) >>> 0;
 
-                const data = sprite.$spritesheet._uint16Data;
+                const data = sprite.$spritesheet.$uint16Data;
                 const pixel = data[((sprite.$x >>> 0) + x) + ((sprite.$y >>> 0) + y) * (data.width >>> 0)] >>> 0;
 
                 const alpha16 = pixel & 0xF000;
-                if (result_a === 0 && alpha16 === 0xF000) {
+                if ((result_a === 0) && (alpha16 === 0xF000)) {
                     // Common case: we've hit a fully opaque value on
                     // the first non-transparent one. Do not convert
                     // to rgba() because this may be called from the
@@ -3934,8 +3959,8 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                     // Compute the screen coordinates. Sprites are
                     // rendered from centers, so offset each by 1/2
                     // the tile size.
-                    const x = (mapX + 0.5) * map.sprite_size.x + map._offset.x;
-                    const y = (mapY + 0.5) * map.sprite_size.y + map._offset.y;
+                    const x = (mapX + 0.5) * map.sprite_size.x + map.$offset.x;
+                    const y = (mapY + 0.5) * map.sprite_size.y + map.$offset.y;
                     
                     const screenX = (drawU.x * x + drawV.x * y + pos.x) * $scaleX + $offsetX;
                     const screenY = (drawU.y * x + drawV.y * y + pos.y) * $scaleY + $offsetY;
@@ -3976,7 +4001,7 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                         }
 
                         data.push({
-                            spritesheetIndex: sprite.$spritesheet._index[0],
+                            spritesheetIndex: sprite.$spritesheet.$index[0],
                             cornerX:  sprite.$x,
                             cornerY:  sprite.$y,
                             sizeX:    sprite.size.x,
@@ -4617,7 +4642,7 @@ function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_
     let run_mask    = 0xffff;
     let run_is_skip = false;
     let run_length  = 0;
-    
+
     // Draw the scanline. Because it has constant camera-space z, the 
     // texture coordinate ("read_point") interpolates linearly
     // under perspective projection.
@@ -4804,8 +4829,8 @@ function text_width(font, str, markup) {
 
     for (let c = 0; c < str.length; ++c) {
         const chr = $fontMap[str[c]] || ' ';
-        const bounds = font._bounds[chr];
-        width += (bounds.x2 - bounds.x1 + 1) + $postGlyphSpace(str, c, format.font) - font._borderSize * 2 + bounds.pre + bounds.post;
+        const bounds = font.$bounds[chr];
+        width += (bounds.x2 - bounds.x1 + 1) + $postGlyphSpace(str, c, format.font) - font.$borderSize * 2 + bounds.pre + bounds.post;
         
         if (offsetIndex === formatArray[formatIndex].endIndex) {
             // Advance to the next format
@@ -5013,7 +5038,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
     if ((offsetIndex < formatArray[formatIndex].startIndex) ||
         (offsetIndex > formatArray[formatIndex].endIndex)) {
         // Empty, just return newline
-        return {x:0, y:referenceFont._charHeight};
+        return {x:0, y:referenceFont.$charHeight};
     }
     
     // Identify the starting format. This snippet is repeated throughout the function.
@@ -5053,9 +5078,9 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
         }
         
         const chr = $fontMap[str[c]] || ' ';
-        const bounds = format.font._bounds[chr];
+        const bounds = format.font.$bounds[chr];
 
-        const delta = (bounds.x2 - bounds.x1 + 1) + $postGlyphSpace(str, c, format.font) - format.font._borderSize * 2 + bounds.pre + bounds.post;
+        const delta = (bounds.x2 - bounds.x1 + 1) + $postGlyphSpace(str, c, format.font) - format.font.$borderSize * 2 + bounds.pre + bounds.post;
         currentWidth += delta;
         width += delta;
 
@@ -5124,7 +5149,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
     let x = (pos.x + skx) * $scaleX + $offsetX, y = (pos.y + sky) * $scaleY + $offsetY;
     z = z * $scaleZ + $offsetZ;
 
-    const height = referenceFont._charHeight;
+    const height = referenceFont.$charHeight;
 
     // Force alignment to retain relative integer pixel alignment.
     // The - 0.4999 is to align with rectangle and disk centering rules.
@@ -5134,15 +5159,15 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
     if (x_align !== +1) { --x; }
 
     switch (y_align) {
-    case -1: y -= referenceFont._borderSize; break; // Align to the top of the bounds
+    case -1: y -= referenceFont.$borderSize; break; // Align to the top of the bounds
     case  0:
         // Middle. Center on a '2', which tends to have a typical height 
-        const bounds = referenceFont._bounds['2'];
-        const tileY = $Math.floor(bounds.y1 / referenceFont._charHeight) * referenceFont._charHeight;
+        const bounds = referenceFont.$bounds['2'];
+        const tileY = $Math.floor(bounds.y1 / referenceFont.$charHeight) * referenceFont.$charHeight;
         y -= $Math.round((bounds.y1 + bounds.y2) / 2) - tileY;
         break;
-    case  1: y -= referenceFont._baseline; break; // baseline
-    case  2: y -= (referenceFont._charHeight - referenceFont._borderSize * 2 - referenceFont._shadowSize); break; // bottom of bounds
+    case  1: y -= referenceFont.$baseline; break; // baseline
+    case  2: y -= (referenceFont.$charHeight - referenceFont.$borderSize * 2 - referenceFont.$shadowSize); break; // bottom of bounds
     }
 
 
@@ -5169,13 +5194,13 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
             // shortened throughout this loop.
     
             // Adjust for the baseline relative to the reference font
-            const dy = format.font._baseline - referenceFont._baseline;
+            const dy = format.font.$baseline - referenceFont.$baseline;
 
             const endIndex = format.endIndex - offsetIndex;
             $addGraphicsCommand({
                 opcode:  'TXT',
                 str:     str.substring(0, endIndex + 1),
-                fontIndex: format.font._index[0],
+                fontIndex: format.font.$index[0],
                 x:       x,
                 y:       y - dy,
                 z:       z,
@@ -5349,7 +5374,7 @@ function get_sprite_pixel_color(spr, pos, result) {
             return undefined;
         }
     } else {
-        const data = spr.$spritesheet._uint16Data;
+        const data = spr.$spritesheet.$uint16Data;
         const pixel = data[((spr.$x >>> 0) + x) + ((spr.$y >>> 0) + y) * (data.width >>> 0)] >>> 0;
 
         result = result || {r:0, g:0, b:0, a:0};
@@ -5599,10 +5624,10 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
         override_color = rgba(override_color);
     }
 
-    $console.assert(spr.$spritesheet._index[0] < $spritesheetArray.length);
+    $console.assert(spr.$spritesheet.$index[0] < $spritesheetArray.length);
 
     const sprElt = {
-        spritesheetIndex:  spr.$spritesheet._index[0],
+        spritesheetIndex:  spr.$spritesheet.$index[0],
         cornerX:       spr.$x,
         cornerY:       spr.$y,
         sizeX:         spr.size.x,
@@ -5987,7 +6012,7 @@ function $default_ray_map_pixel_callback(sprite, sprite_pixel_coord, ws_normal, 
     // Inlined optimization of: if (get_sprite_pixel_color(sprite, sprite_pixel_coord).a >= 0.5) {
     const x = ((sprite.scale.x > 0) ? sprite_pixel_coord.x : (sprite.size.x - 1 - sprite_pixel_coord.x)) | 0;
     const y = ((sprite.scale.y > 0) ? sprite_pixel_coord.y : (sprite.size.y - 1 - sprite_pixel_coord.y)) | 0;
-    const data = sprite.$spritesheet._uint16Data;
+    const data = sprite.$spritesheet.$uint16Data;
     const pixel = data[((sprite.$x >>> 0) + x) + ((sprite.$y >>> 0) + y) * (data.width >>> 0)] >>> 0;
 
     if (((pixel >>> 12) & 0xf) >= 8) {
@@ -6787,14 +6812,40 @@ function $mutate(obj, key, op, val) {
 
 //////////////////////////////////////////////////////////////////////////////
 
+function $stringify(b) {
+    if (b === undefined) {
+        return '∅';
+    } else if (b === Infinity) {
+        return '∞';
+    } else if (b === -Infinity) {
+        return '-∞';
+    } else {
+        return b;
+    }
+
+    return b;
+}
+
+
 // Note that add includes concatenation
 function $add(a, b) {
     // Keep short to encourage inlining
-    return ((typeof a === 'object') && (a !== null)) ? $objectAdd(a, b) : a + b;
+    const t = typeof a;
+    return ((t === 'object') && (a !== null)) ?
+        $objectAdd(a, b) :
+        (t === 'string') ?
+        a + $stringify(b) :
+        a + b;
 }
 
+
 function $addMutate(a, b) {
-    return ((typeof a === 'object') && (a !== null)) ? $objectAddMutate(a, b) : a += b;
+    const t = typeof a;
+    return ((t === 'object') && (a !== null)) ?
+        $objectAddMutate(a, b) :
+        (t === 'string') ?
+        a += $stringify(b) :
+        a += b;
 }
 
 function $objectAdd(a, b) {

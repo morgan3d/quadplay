@@ -9,7 +9,7 @@ String.prototype.rtrim = function() {
     return this.replace(/\s+$/, '');
 }
 
-/** Assumes that str[i]=='('. Returns the index of the
+/** Assumes that str[i]==='('. Returns the index of the
     matching close ')', assuming that parens are balanced
     and there are no quoted strings or incorrectly
     nested other grouping characters. */
@@ -197,7 +197,7 @@ function processForTest(test) {
                 `$checkContainer(${container}); ` +
                 `const ${is_mutable} = ! $Object.isFrozen(${container}) && ! $Object.isSealed(${container}); ` +
                 `try { ` +
-                `  let ${key_array} = ${is_obj} ? $Object.keys(${container}) : ${container}; ` +
+                `  let ${key_array} = ${is_obj} ? keys(${container}) : ${container}; ` +
                 `  if (${is_mutable}) { $iteratorCount.set(${container}, ($iteratorCount.get(${container}) || 0) + 1); } ` +
                 `  for (let ${index} = 0; ${index} < ${key_array}.length; ++${index}) { ` +
                 `    let ${key} = ${is_obj} ? ${key_array}[${index}] : ${index}; ` +

@@ -21,8 +21,20 @@ def manage_online_tab():
     if $getIsOffline():
         draw_text({
             // Message for use in intermediate releases:
-            text: "This release does not support online multiplayer. Coming soon...",
-            //text: "quadplay✜ is running in offline mode\n\nRelaunch without the --offline argument\nto enable online multiplayer play.",
+            //text: "This release does not support online multiplayer. Coming soon...",
+            text: "quadplay✜ is running in offline mode\n\nRelaunch without the --offline argument\nto enable online multiplayer play.",
+            font: mediumFont,
+            pos: xy(SCREEN_SIZE.x / 2, 80),
+            color: #f,
+            shadow: $system_prompt_shadow,
+            x_align: "center"
+        })
+        return
+    else if SCREEN_SIZE.x != 384 or SCREEN_SIZE.y != 224: // TODO: Online
+        draw_text({
+            // Message for use in intermediate releases:
+            //text: "This release does not support online multiplayer. Coming soon...",
+            text: "Only 384x224 resolution games support\nonline play in this release.",
             font: mediumFont,
             pos: xy(SCREEN_SIZE.x / 2, 80),
             color: #f,

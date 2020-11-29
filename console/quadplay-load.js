@@ -27,6 +27,16 @@ let loadManager = null;
 
 let lastSpriteID = 0;
 
+{
+    // Objects created by quadplay-load.js aren't
+    // QRuntime.Object but are window.Object, so
+    // we must override toString for them here.
+    const $toString = Object.prototype.toString;
+    Object.prototype.toString = function () {
+        return (this && this.$name) || $toString.call(this);
+    };
+}
+
 // Type used as the value of a constant that references
 // another constant or asset. References are stored with
 // this level of indirection so that they do not need to
@@ -689,10 +699,10 @@ function loadFont(name, json, jsonURL) {
     if (font) {
         // Make sure the index is updated when pulling from the cache
         if (fontArray.indexOf(font) === -1) {
-            font._index[0] = fontArray.length;
+            font.$index[0] = fontArray.length;
             fontArray.push(font);
         } else {
-            console.assert(fontArray.indexOf(font) === font._index[0]);
+            console.assert(fontArray.indexOf(font) === font.$index[0]);
         }
 
         // Print faux loading messages
@@ -708,7 +718,7 @@ function loadFont(name, json, jsonURL) {
         $url:      pngURL,
         $json:     json,
         $jsonURL:  jsonURL,
-        _index:    [fontArray.length]
+        $index:    [fontArray.length]
     };
 
     fontArray.push(font);
@@ -824,7 +834,7 @@ function getImageData4Bit(image, region, full32bitoutput) {
 // Handles fonts as well
 function recordSpriteStats(spritesheet) {
     if (spritesheet.$name[0] === '_') { return; }
-    const data = (spritesheet._uint16Data || spritesheet._data);
+    const data = (spritesheet.$uint16Data || spritesheet.$data);
     let count = data.width * data.height;
     
     if (spritesheet.$type === 'font') {
@@ -941,15 +951,15 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         // For built-in sprites it could have been wiped.
         if (spritesheetArray.indexOf(spritesheet) === -1) {
             // Change the index
-            spritesheet._index[0] = spritesheetArray.length;
+            spritesheet.$index[0] = spritesheetArray.length;
             spritesheetArray.push(spritesheet);
 
             const transposedSpritesheet = spritesheet[0][0].rotated_90.$spritesheet;
-            transposedSpritesheet._index[0] = spritesheetArray.length;
+            transposedSpritesheet.$index[0] = spritesheetArray.length;
             spritesheetArray.push(transposedSpritesheet);
         }
 
-        console.assert(spritesheetArray.indexOf(spritesheet) === spritesheet._index[0]);
+        console.assert(spritesheetArray.indexOf(spritesheet) === spritesheet.$index[0]);
 
         onLoadFileStart(pngURL);
         onLoadFileComplete(pngURL);
@@ -985,24 +995,22 @@ function loadSpritesheet(name, json, jsonURL, callback) {
 
     // These fields have underscores so that they can't be accessed
     // from pyxlscript. Create the object before launching the async
-    // load so that the per-reload cache can hold it. The _index is an
+    // load so that the per-reload cache can hold it. The $index is an
     // array so that the spritesheet can be frozen but the index
     // rewritten.
     spritesheet = Object.assign([], {
         $name: name,
         $type: 'spritesheet',
-        _uint16Data: null,
-        _uint16DataFlippedX : null,
+        $uint16Data: null,
+        $uint16DataFlippedX : null,
         $url: pngURL,
-        _sourceURL: (json.source_url && json.source_url !== '') ? makeURLAbsolute(jsonURL, json.source_url) : null,
+        $sourceURL: (json.source_url && json.source_url !== '') ? makeURLAbsolute(jsonURL, json.source_url) : null,
         // Before the region is applied. Used by the IDE
-        _sourceSize: {x: 0, y: 0},
-        // Used by the IDE
-        _region: null,
-        _gutter: (json.gutter || 0),
+        $sourceSize: {x: 0, y: 0},
+        $gutter: (json.gutter || 0),
         $json: json,
         $jsonURL: jsonURL,
-        _index: [spritesheetArray.length],
+        $index: [spritesheetArray.length],
         // If unspecified, load the sprite size later
         sprite_size: json.sprite_size ? Object.freeze({x: json.sprite_size.x, y: json.sprite_size.y}) : undefined
     });
@@ -1010,15 +1018,15 @@ function loadSpritesheet(name, json, jsonURL, callback) {
     assetCache[jsonURL] = spritesheet;
     
     spritesheetArray.push(spritesheet);
-    console.assert(spritesheetArray.indexOf(spritesheet) === spritesheet._index[0]);
+    console.assert(spritesheetArray.indexOf(spritesheet) === spritesheet.$index[0]);
     
     const transposedSpritesheet = Object.assign([], {
         $name: 'transposed_' + name,
         $type: 'spritesheet',
-        _uint16Data: null,
-        _uint16DataFlippedX : null,
-        _gutter: (json.gutter || 0),
-        _index: [spritesheetArray.length],
+        $uint16Data: null,
+        $uint16DataFlippedX : null,
+        $gutter: (json.gutter || 0),
+        $index: [spritesheetArray.length],
         // If unspecified, load the sprite size later
         sprite_size: json.sprite_size ? Object.freeze({x: json.sprite_size.y, y: json.sprite_size.x}) : undefined
     });
@@ -1056,8 +1064,8 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         }
 
         // Save these for the editor in the IDE
-        spritesheet._sourceSize.x = image.width;
-        spritesheet._sourceSize.y = image.height;
+        spritesheet.$sourceSize.x = image.width;
+        spritesheet.$sourceSize.y = image.height;
         
         // Update the region now that we know the image size
         region.corner.x = Math.min(Math.max(0, region.corner.x), image.width);
@@ -1075,30 +1083,30 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         const data = dataPair[0];
 
         // Compute the transposedSpritesheet uint16 data
-        transposedSpritesheet._uint16Data = new Uint16Array(data.length);
-        transposedSpritesheet._uint16Data.width = data.height;
-        transposedSpritesheet._uint16Data.height = data.width;
+        transposedSpritesheet.$uint16Data = new Uint16Array(data.length);
+        transposedSpritesheet.$uint16Data.width = data.height;
+        transposedSpritesheet.$uint16Data.height = data.width;
         
-        transposedSpritesheet._uint16DataFlippedX = new Uint16Array(data.length);
-        transposedSpritesheet._uint16DataFlippedX.width = data.height;
-        transposedSpritesheet._uint16DataFlippedX.height = data.width;
+        transposedSpritesheet.$uint16DataFlippedX = new Uint16Array(data.length);
+        transposedSpritesheet.$uint16DataFlippedX.width = data.height;
+        transposedSpritesheet.$uint16DataFlippedX.height = data.width;
         
         for (let y = 0; y < data.width; ++y) {
             for (let x = 0; x < data.height; ++x) {
                 const i = x + y * data.height;
                 const j = (data.height - 1 - x) + y * data.height;
                 const k = x * data.width + y;
-                transposedSpritesheet._uint16Data[i] =
-                    transposedSpritesheet._uint16DataFlippedX[j] =
+                transposedSpritesheet.$uint16Data[i] =
+                    transposedSpritesheet.$uint16DataFlippedX[j] =
                     data[k];
             }
         }
 
-        spritesheet._uint16Data = data;
-        spritesheet._uint16DataFlippedX = dataPair[1];
+        spritesheet.$uint16Data = data;
+        spritesheet.$uint16DataFlippedX = dataPair[1];
         
         // Store the region for the editor
-        spritesheet._sourceRegion = region;
+        spritesheet.$sourceRegion = region;
         
         const boundingRadius = Math.hypot(spritesheet.sprite_size.x, spritesheet.sprite_size.y);
         spritesheet.size = {x: data.width, y: data.height};
@@ -1107,8 +1115,8 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         const sheetDefaultframes = Math.max(json.default_frames || 1, 0.25);
         
         // Create the default grid mapping (may be swapped on the following line)
-        let rows = Math.floor((data.height + spritesheet._gutter) / (spritesheet.sprite_size.y + spritesheet._gutter));
-        let cols = Math.floor((data.width  + spritesheet._gutter) / (spritesheet.sprite_size.x + spritesheet._gutter));
+        let rows = Math.floor((data.height + spritesheet.$gutter) / (spritesheet.sprite_size.y + spritesheet.$gutter));
+        let cols = Math.floor((data.width  + spritesheet.$gutter) / (spritesheet.sprite_size.x + spritesheet.$gutter));
 
         if (json.transpose) { let temp = rows; rows = cols; cols = temp; }
 
@@ -1132,7 +1140,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 let hasFractionalAlpha = false;
                 outerloop:
                 for (let j = 0; j < spritesheet.sprite_size.y; ++j) {
-                    let index = (v * (spritesheet.sprite_size.y + spritesheet._gutter) + j) * data.width + u * (spritesheet.sprite_size.x + spritesheet._gutter);
+                    let index = (v * (spritesheet.sprite_size.y + spritesheet.$gutter) + j) * data.width + u * (spritesheet.sprite_size.x + spritesheet.$gutter);
                     for (let i = 0; i < spritesheet.sprite_size.x; ++i, ++index) {
                         const alpha15 = (data[index] >>> 12) & 0xf;
                         if (alpha15 < 0xf) {
@@ -1153,8 +1161,8 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     $tileX:            u,
                     $tileY:            v,
                     $boundingRadius:   boundingRadius,
-                    $x:                u * (spritesheet.sprite_size.x + spritesheet._gutter),
-                    $y:                v * (spritesheet.sprite_size.y + spritesheet._gutter),
+                    $x:                u * (spritesheet.sprite_size.x + spritesheet.$gutter),
+                    $y:                v * (spritesheet.sprite_size.y + spritesheet.$gutter),
                     $hasAlpha:         hasAlpha,
                     $requiresBlending: hasFractionalAlpha,
                     // Actual spritesheet for rendering
@@ -1250,8 +1258,8 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     // Copy other properties
                     Object.assign(sprite, otherProperties);
                     sprite.frames = animDefaultframes;
-                    sprite._animationName = anim;
-                    sprite._animationIndex = undefined;
+                    sprite.$animationName = anim;
+                    sprite.$animationIndex = undefined;
 
                     // Rename
                     sprite.$name = spritesheet.$name + '.' + anim;
@@ -1291,8 +1299,8 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                             }
 
                             const sprite = spritesheet[u][v];
-                            sprite._animationName = anim;
-                            sprite._animationIndex = i;
+                            sprite.$animationName = anim;
+                            sprite.$animationIndex = i;
                             sprite.$name = spritesheet.$name + '.' + anim + '[' + i + ']';
                             sprite.pivot = pivot;
                             sprite.frames = Math.max(0.25, frames[Math.min(i, frames.length - 1)]);
@@ -1508,7 +1516,7 @@ function loadMap(name, json, mapJSONUrl) {
         const spritesheet = map.spritesheet;
         if (spritesheet && (spritesheetArray.indexOf(spritesheet) === -1)) {
             // Change the index
-            spritesheet._index[0] = spritesheetArray.length;
+            spritesheet.$index[0] = spritesheetArray.length;
             spritesheetArray.push(spritesheet);
         }
 
@@ -1519,8 +1527,8 @@ function loadMap(name, json, mapJSONUrl) {
         $name:   name,
         $type:   'map',
         $url:    tmxURL,
-        _offset: Object.freeze(json.offset ? {x:json.offset.x, y:json.offset.y} : {x:0, y:0}),
-        _flipYOnLoad: json.y_up || false,
+        $offset: Object.freeze(json.offset ? {x:json.offset.x, y:json.offset.y} : {x:0, y:0}),
+        $flipYOnLoad: json.y_up || false,
         $json:   json,
         $jsonURL: mapJSONUrl,
         z_offset: json.z_offset || 0,

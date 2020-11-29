@@ -18,7 +18,7 @@ function $show() {
         // clear the screen
         if ($background.spritesheet) {
             // Image background
-            $screen.set($background.spritesheet._uint16Data);
+            $screen.set($background.spritesheet.$uint16Data);
         } else {
             // Color background (force alpha = 1)
             let c = ($colorToUint16($background) >>> 0) | 0xf000;
@@ -74,15 +74,15 @@ function $addGraphicsCommand(cmd) {
     Pi processors by default). DataView can be used to make an
     endian-independent version if required. */
 function $pset(x, y, color, clipX1, clipY1, clipX2, clipY2) {
-    // nano pixels have integer centers, so we must round instead of just truncating.
-    // Otherwise -0.7, which is offscreen, would become 0 and be visible.
+    // quadplay pixels have integer centers, so we must round instead of just truncating.
+    // Otherwise, for example, -0.7, which is offscreen, would become 0 and be visible.
     //
     // "i >>> 0" converts from signed to unsigned int, which forces negative values to be large
     // and lets us early-out sooner in the tests.
     const i = $Math.round(x) >>> 0;
     const j = $Math.round(y) >>> 0;
 
-    if ((i <= clipX2) && (j <= clipY2) && (i >= clipX1) && (y >= clipY1)) {
+    if ((i <= clipX2) && (j <= clipY2) && (i >= clipX1) && (j >= clipY1)) {
         const offset = i + j * $SCREEN_WIDTH;
 
         // Must be unsigned shift to avoid sign extension
@@ -527,9 +527,20 @@ function $line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2, open1, ope
             x2 = $Math.min(x2, clipX2);
 
             x1 |= 0; x2 |= 0;
-            for (let x = x1, y = y1; x <= x2; ++x, y += m) {
-                $pset(x, y, color, clipX1, clipY1, clipX2, clipY2);
-            } // for x
+
+            if (color & 0xf000 === 0xf000) {
+                // No blending
+                for (let x = x1, y = y1; x <= x2; ++x, y += m) {
+                    const j = $Math.round(y) >>> 0;
+                    if ((j <= clipY2) && (j >= clipY1)) {
+                        $screen[x + j * $SCREEN_WIDTH | 0] = color;
+                    }
+                }
+            } else {
+                for (let x = x1, y = y1; x <= x2; ++x, y += m) {
+                    $pset(x, y, color, clipX1, clipY1, clipX2, clipY2);
+                } // for x
+            }
         } else { // Vertical
             // Compute the inverted slope
             const m = dx / dy;
@@ -542,9 +553,20 @@ function $line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2, open1, ope
             x1 += step * m; y1 += step;
             y2 = $Math.min(y2, clipY2);
             y1 |= 0; y2 |= 0;
-            for (let y = y1, x = x1; y <= y2; ++y, x += m) {
-                $pset(x, y, color, clipX1, clipY1, clipX2, clipY2);
-            } // for y
+
+            if (color & 0xf000 === 0xf000) {
+                // No blending
+                for (let y = y1, base = (y1 * $SCREEN_WIDTH) | 0, x = x1; y <= y2; ++y, base += $SCREEN_WIDTH | 0, x += m) {
+                    const i = $Math.round(x) >>> 0;
+                    if ((i <= clipX2) && (i >= clipX1)) {
+                        $screen[base + i] = color;
+                    }
+                } // for y
+            } else {
+                for (let y = y1, x = x1; y <= y2; ++y, x += m) {
+                    $pset(x, y, color, clipX1, clipY1, clipX2, clipY2);
+                } // for y
+            }
             
         } // if more horizontal
     } // if diagonal
@@ -773,7 +795,7 @@ function $executeSPR(metaCmd) {
                        cmd.spritesheetIndex >= 0 &&
                        cmd.spritesheetIndex < $spritesheetArray.length);
         // May be reassigned below when using flipped X values
-        let srcData = $spritesheetArray[cmd.spritesheetIndex]._uint16Data;
+        let srcData = $spritesheetArray[cmd.spritesheetIndex].$uint16Data;
         const srcDataWidth = srcData.width >>> 0;
         if (($Math.abs($Math.abs(A) - 1) < 1e-10) && ($Math.abs(B) < 1e-10) &&
             ($Math.abs(C) < 1e-10) && ($Math.abs($Math.abs(D) - 1) < 1e-10) &&
@@ -797,7 +819,7 @@ function $executeSPR(metaCmd) {
                 if (A < 0) {
                     // Use the flipped version
                     srcOffset = (srcOffset + srcDataWidth - 2 * SX) | 0;
-                    srcData = $spritesheetArray[cmd.spritesheetIndex]._uint16DataFlippedX;
+                    srcData = $spritesheetArray[cmd.spritesheetIndex].$uint16DataFlippedX;
                 }
                 
                 if ((! cmd.hasAlpha) && ($Math.abs(opacity - 1) < 1e-10)) {
@@ -992,8 +1014,8 @@ function $executeTXT(cmd) {
     const clipX1 = cmd.clipX1, clipY1 = cmd.clipY1,
           clipX2 = cmd.clipX2, clipY2 = cmd.clipY2;
     const font = $fontArray[cmd.fontIndex];
-    const data = font._data.data;
-    const fontWidth = font._data.width;
+    const data = font.$data.data;
+    const fontWidth = font.$data.width;
 
     let x = cmd.x, y = cmd.y;
 
@@ -1014,11 +1036,11 @@ function $executeTXT(cmd) {
     for (let c = 0; c < str.length; ++c) {
         // Remap the character to those in the font sheet
         const chr = $fontMap[str[c]] || ' ';
-        const bounds = font._bounds[chr];
+        const bounds = font.$bounds[chr];
 
         x += bounds.pre;
         if (chr !== ' ') {
-            const tileY = $Math.floor(bounds.y1 / font._charHeight) * font._charHeight;
+            const tileY = $Math.floor(bounds.y1 / font.$charHeight) * font.$charHeight;
             const charWidth  = bounds.x2 - bounds.x1 + 1;
             const charHeight = bounds.y2 - bounds.y1 + 1;
 
@@ -1061,7 +1083,7 @@ function $executeTXT(cmd) {
             
         } // character in font
 
-        x += (bounds.x2 - bounds.x1 + 1) + $postGlyphSpace(str, c, font) - font._borderSize * 2 + bounds.post;
+        x += (bounds.x2 - bounds.x1 + 1) + $postGlyphSpace(str, c, font) - font.$borderSize * 2 + bounds.post;
         
     } // for each character
 }

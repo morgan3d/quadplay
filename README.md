@@ -28,6 +28,7 @@ Features
 - 60 fps @ 384 x 224 pixels = 12:7 aspect ≈ 16:9.3
 - 4096 sRGB (4:4:4) colors
 - Four players with virtual controls for D-pad and eight buttons
+- Local and safe remote shared-screen multiplayer
 - Supports Xbox, Playstation, SNES, Stadia, Switch, 8bitdo, touch screen, and other controllers
 - Hundreds of built-in sprites, sounds, and fonts
 - Program in PyxlScript, a friendly Python-like language
@@ -38,16 +39,20 @@ Features
 - Optional 384 x 224, 320 x 180, 192 x 112, 128 x 128, and [64 x 64](https://itch.io/jam/lowrezjam-2019) screen modes
 - Free and open source
 
+Online play is powered by [EvenNode](https://www.evennode.com/) and
+[PeerJS](https://peerjs.com/).
+
 
 Join the Beta
 ========================================================
 
-This beta version is fully functional and has already been used to ship jam games.
-You can use an external editor (like VSCode) or simply work entirely within
-the provided the browser-based development environment.
+This beta version is fully functional and has already been used to
+ship jam games.  You can use an external editor (like VSCode) or
+simply work entirely within the provided the browser-based development
+environment.
 
-To get started, you'll need Windows, macOS, or Linux and 
-the following freely-available software.
+To get started, you'll need Windows, macOS, Linux, or Raspberry Pi OS
+and the following freely-available software.
 
 _Required_:
 

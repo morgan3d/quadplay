@@ -128,7 +128,7 @@
                          {x:tileWidth, y:tileHeight},
                          {x:s, y:2 * s}, srcMask);
 
-                if (font._charHeight < 12) {
+                if (font.$charHeight < 12) {
                     font.spacing.y = 2;
                     font.spacing.x = 1;
                 }
@@ -137,11 +137,11 @@
                     let info = document.getElementById('data');
                     let s = '';
                     let maxWidth = -Infinity, maxWidthChar = '', maxHeight = -Infinity, maxHeightchar = '';
-                    for (const k in font._bounds) {
+                    for (const k in font.$bounds) {
                         if (k !== '\t') {
                             const special = fontSpecials[k];
                             
-                            const b = font._bounds[k];
+                            const b = font.$bounds[k];
                             const w = b.x2 - b.x1 + 1;
                             const h = b.y2 - b.y1 + 1;
 
@@ -167,11 +167,11 @@
                     }
                     
                     {
-                        const b = font._bounds[maxHeightChar];
+                        const b = font.$bounds[maxHeightChar];
                         s = `Tallest: "<span class="letter">${maxHeightChar}</span>": ${b.x2 - b.x1 + 1} × <span class="height${maxHeight}">${maxHeight}</span>\n` + s;
                     }
                     {
-                        const b = font._bounds[maxWidthChar];
+                        const b = font.$bounds[maxWidthChar];
                         s = `Widest: "<span class="letter">${maxWidthChar}</span>": <span class="width${maxWidth}">${maxWidth}</span> × ${b.y2 - b.y1 + 1}\n` + s;
                     }
 
@@ -189,7 +189,7 @@ span.height${maxHeight} { background: #ff4; padding: 0 1px; color: #000}
                     {
                         const candidates = 'dDIl';
                         for (let i = 0; i < candidates.length; ++i) {
-                            const bounds = font._bounds[candidates[i]];
+                            const bounds = font.$bounds[candidates[i]];
                             pxSize = Math.min(pxSize, bounds.y2 - bounds.y1 + 1);
                         }
                     }
@@ -199,11 +199,11 @@ span.height${maxHeight} { background: #ff4; padding: 0 1px; color: #000}
                         const candidates = 'ELZBabo';
                         baseline = Infinity;
                         for (let i = 0; i < candidates.length; ++i) {
-                            const bounds = font._bounds[candidates[i]];
-                            baseline = Math.min(baseline, bounds.y2 - Math.floor(bounds.y2 / font._charHeight) * font._charHeight);
+                            const bounds = font.$bounds[candidates[i]];
+                            baseline = Math.min(baseline, bounds.y2 - Math.floor(bounds.y2 / font.$charHeight) * font.$charHeight);
                         }
                     }
-                    console.assert(font._data.height / FONT_ROWS === font._charHeight);
+                    console.assert(font.$data.height / FONT_ROWS === font.$charHeight);
                     
                     document.getElementById('pngfilename').innerHTML = filename + '-' + pxSize + '.png';
                     document.getElementById('jsonfilename').innerHTML = filename + '-' + pxSize + '.font.json';
@@ -211,12 +211,12 @@ span.height${maxHeight} { background: #ff4; padding: 0 1px; color: #000}
 
                 // Convert back to an image
                 let canvas = document.createElement('canvas');
-                canvas.width = font._data.width;
-                canvas.height = font._data.height;
+                canvas.width = font.$data.width;
+                canvas.height = font.$data.height;
 
                 let ctx = canvas.getContext('2d');
-                let destImageData = ctx.createImageData(font._data.width, font._data.height);
-                let packedData = font._data.data;
+                let destImageData = ctx.createImageData(font.$data.width, font.$data.height);
+                let packedData = font.$data.data;
 
                 for (let i = 0; i < packedData.length; ++i) {
                     // Color

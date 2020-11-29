@@ -237,7 +237,6 @@ def draw_walls(view, map) preserving_transform:
     
         const hit = ray_intersect_map(ray2D, map, WALL_LAYER, wall_intersector, ∅)        
 
-//        ++pixel.x
         if hit:
             // Compute the 3D vs_z and 2D cs_z
             const vs_z = MUL(ray3D.d_cs_z, hit.ws_distance)

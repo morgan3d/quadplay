@@ -1300,7 +1300,7 @@ canvas#screen {
 
     /* These times have to be kept in sync with showPopupMessage()'s
        setTimeout value in quadplay-ide.js */
-    animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    animation: fadein 0.5s, fadeout 0.5s 3.5s;
 }
 
 @keyframes fadein {

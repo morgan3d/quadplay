@@ -74,7 +74,8 @@ if size($customPauseMenuOptions) < 3 or SCREEN_SIZE.y > 64:
 
 push(choice_array, {text: "Controllers", callback: set_controls, confirm: false})
 
-if not $getIsOffline(): push(choice_array, {text: "Online Play", callback: show_online_menu})
+// TODO: Online Remove the screen size constraint when other resolutions are supported
+if not $getIsOffline() and SCREEN_SIZE.x == 384: push(choice_array, {text: "Online Play", callback: show_online_menu})
 
 push(choice_array,
      {text: "Restart Game", callback: reset_game, confirm: true},

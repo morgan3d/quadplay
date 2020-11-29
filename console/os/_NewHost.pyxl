@@ -132,7 +132,10 @@ frame
 draw_previous_mode()
 
 preserving_transform:
-    set_transform(nil, nil, 2)
+    // Force the clipping range beyond what the API normally allows
+    $clipZ2 = 2049
+    set_transform(xy(0, 0), xy(1, 1), 2048.6, 1)
+    draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(14%, 14%, 14%, 80%))
 
     // Animate zoom
     const intro_frames = 10

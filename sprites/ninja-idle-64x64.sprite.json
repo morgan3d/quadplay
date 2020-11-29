@@ -11,7 +11,8 @@
         "blue":     {"start": {"x": 3, "y": 0}, "end": {"y": 2}, "extrapolate": "oscillate"},
         "white":    {"start": {"x": 4, "y": 0}, "end": {"y": 2}, "extrapolate": "oscillate"},
         "purple":   {"start": {"x": 5, "y": 0}, "end": {"y": 2}, "extrapolate": "oscillate"},
-        "black":    {"start": {"x": 6, "y": 0}, "end": {"y": 2}, "extrapolate": "oscillate"}
+        "black":    {"start": {"x": 6, "y": 0}, "end": {"y": 2}, "extrapolate": "oscillate"},
+        "green":    {"start": {"x": 7, "y": 0}, "end": {"y": 2}, "extrapolate": "oscillate"}
     },
     "license" :     "By Morgan McGuire 2020 derived from DezrasDragons https://opengameart.org/content/ninja-animated, in the Public Domain/CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0"
 }
