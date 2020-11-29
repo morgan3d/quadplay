@@ -1013,8 +1013,12 @@ function submitFrame() {
     */
     
     // Send the frame if this machine is an online host
-    if (isHosting && hostVideoTrack && hostVideoTrack.requestFrame) {
-        hostVideoTrack.requestFrame();
+    
+    if (isHosting && hostVideoStream) {
+        const track = hostVideoStream.getVideoTracks()[0];
+        if (track.requestFrame) {
+            track.requestFrame();
+        }
     }
     
     if (gifRecording) {

@@ -7,6 +7,10 @@ let myOnlineName;
 const NET_ID_PREFIX = 'qp000';
 const MAX_ONLINE_NAME_LENGTH = 7;
 
+// Method used for data serialization by PeerJS for control data.
+// Useful options are 'binary' and 'json'. Both seem to work fine.
+const SERIALIZATION = 'binary';
+
 // Run the input at twice the frame rate to try and
 // reduce input latency for the server. (Minimum timer
 // period in JavaScript is 4ms)
@@ -230,7 +234,6 @@ function peerErrorHandler(err) {
         msg += ' The peer server is too popular right now. Try again in a little while.';
     }
     console.log(msg);
-    //document.getElementById('urlbox').innerHTML = `Sorry. <span style="color:red">${msg}</span>`;
 }
 
 
@@ -245,20 +248,31 @@ function startHosting() {
     // explicitly to 0 seems to improve Safari guests. On Firefox,
     // requestFrame() doesn't work on the host so we have to allow
     // auto streaming.
-    let screenStream = document.getElementById('screen').captureStream(isFirefox ? undefined : 0);
-    hostVideoTrack = screenStream.getVideoTracks()[0];
+    hostVideoStream = document.getElementById('screen').captureStream(isFirefox ? undefined : 0);
+    
+    // Latencies are expressed in seconds
+    hostVideoStream.getVideoTracks()[0].applyConstraints({
+        latency: {min: 0, ideal: 0.015, max: 0.100},
+        framerate: {max: 60, ideal: 60, min: 30}
+    });
 
     hostAudioDestination = audioContext.createMediaStreamDestination();
     audioContext.gainNode.connect(hostAudioDestination);
-    hostAudioTrack = hostAudioDestination.stream.getAudioTracks()[0];
-    screenStream = new MediaStream([hostVideoTrack, hostAudioTrack]);
-
+    /*
+    // Applying any of the following generates an OverconstrainedError
+    hostAudioDestination.stream.getAudioTracks()[0].applyConstraints({
+        latency: {min: 0, ideal: 0.016},
+        channelCount: {min: 1, ideal: 2},
+        sampleSize: {min: 4, ideal: 8}
+    });
+    */
+    
     if (! deployed) {
         // Local monitor when debugging
         const videoElement = document.getElementById('guestVideo');
         videoElement.style.zIndex = 100;
         videoElement.style.visibility = 'visible';
-        videoElement.srcObject = screenStream;
+        videoElement.srcObject = hostVideoStream;
     }
 
     // The peer must be created RIGHT before open is registered,
@@ -295,7 +309,8 @@ function startHosting() {
             console.log('data connection to guest established');
 
             console.log('calling the guest back with the stream');
-            const mediaConnection = myPeer.call(dataConnection.peer, screenStream);
+            const videoConnection = myPeer.call(dataConnection.peer, hostVideoStream);
+            const audioConnection = myPeer.call(dataConnection.peer, hostAudioDestination.stream);
 
             // Find an available player index
             let player_index = 1;
@@ -316,6 +331,9 @@ function startHosting() {
 
             // Preven the local input from overriding remote input
             QRuntime.gamepad_array[player_index].$is_guest = true;
+
+            // Add to connected guest array
+            connectedGuestArray.push({player_index: player_index, dataConnection: dataConnection});
             
             // Register keepAlive
             keepAlive(dataConnection, undefined, function (dataConnection) {
@@ -372,17 +390,13 @@ function startHosting() {
 
     
 function stopHosting() {
-    if (hostVideoTrack) {
-        hostVideoTrack.stop();
-        hostVideoTrack = null;
-    }
-
-    if (hostAudioTrack) {
-        hostAudioTrack.stop();
-        hostAudioTrack = null;
+    if (hostVideoStream) {
+        hostVideoStream.getVideoTracks()[0].stop();
+        hostVideoStream = null;
     }
 
     if (hostAudioDestination) {
+        hostAudioDestination.stream.getAudioTracks()[0].stop();
         audioContext.gainNode.disconnect(hostAudioDestination);
         hostAudioDestination = null;
     }
@@ -487,48 +501,78 @@ function startGuesting(hostNetID) {
     myPeer.on('error', peerErrorHandler);
     
     myPeer.on('open', function (id) {
-        let alreadyAddedThisCall = false;
+            
+        // PeerJS has a bug where the 'stream' event handler is
+        // called once per track instead of once per stream. We're
+        // connecting streams with a single track so that doesn't
+        // arise, but we keep checking anyway in case the behavior
+        // is different in the future.
+        let alreadyAddedVideo = false;
+        let alreadyAddedAudio = false;
 
-        // PeerJS cannot initiate a call without a media stream, so the
+        // PeerJS cannot initiate a call without a MediaStream, so the
         // client can't initiate the call. Instead, we have the client
         // initiate a data connection and then the host calls *back*
-        // with the media stream.
+        // with the MmediaStream.
+        //
+        // Synchronizing the audio and video creates a lot of latency
+        // from the audio, so we have the host call back with two
+        // independent streams for them.
         
         // When the host calls us back
         myPeer.on('call', function (mediaConnection) {
             console.log('host called back');
 
-            // Answer the call but provide no media stream
+            // Answer the call but provide no MediaStream since no
+            // media is streaming back.
             mediaConnection.answer(null);
-            
             mediaConnection.on(
                 'stream',
                 function (hostStream) {
-                    if (! alreadyAddedThisCall) {
-                        alreadyAddedThisCall = true;
-                        console.log('host answered');
+                    const isVideo = hostStream.getVideoTracks().length > 0;
+
+                    if (isVideo) {
+                        if (! alreadyAddedVideo) {
+                            alreadyAddedVideo = true;
+                            console.log('host answered with video');
+                            
+                            hostStream.addEventListener('addtrack', function (event) {
+                                if (event.track.kind !== 'video') { return; }
+                                // The track's width and height are not available
+                                // here, so wait
+                                setTimeout(function () {
+                                    const settings = hostStream.getVideoTracks()[0].getSettings();
+                                    console.log(`incoming video is ${settings.width} x ${settings.height}`);
+                                    if (settings.width) {
+                                        videoWidth = settings.width;
+                                        videoHeight = settings.height;
+                                    }
+                                }, 1000);
+                            });
+                            
+                            videoElement.srcObject = hostStream;
+                            
+                            // Start the callback chain
+                            drawVideo();
+                            inputInterval = setInterval(sampleInput, ONLINE_INPUT_PERIOD);
+                        } else {
+                            console.log('rejected duplicate video call');
+                        }
+                    } else if (! alreadyAddedAudio) {
+                        alreadyAddedAudio = true;
+                        console.log('host answered with audio');
+                        document.getElementById('guestAudio').srcObject = hostStream;
+
+                        // Chrome has a bug where we have to connect
+                        // the stream to an audio element; we can't
+                        // wire it directly into the AudioContext.
+                        //
+                        // https://bugs.chromium.org/p/chromium/issues/detail?id=933677
+                        // guestAudioSourceNode = audioContext.createMediaStreamSource(hostStream);
+                        // guestAudioSourceNode.connect(audioContext.destination);
                         
-                        hostStream.addEventListener('addtrack', function (event) {
-                            if (event.track.kind !== 'video') { return; }
-                            // The track's width and height are not available
-                            // here, so wait
-                            setTimeout(function () {
-                                const settings = hostStream.getVideoTracks()[0].getSettings();
-                                console.log(`incoming video is ${settings.width} x ${settings.height}`);
-                                if (settings.width) {
-                                    videoWidth = settings.width;
-                                    videoHeight = settings.height;
-                                }
-                            }, 1000);
-                        });
-                        
-                        videoElement.srcObject = hostStream;
-                        
-                        // Start the callback chain
-                        drawVideo();
-                        inputInterval = setInterval(sampleInput, ONLINE_INPUT_PERIOD);
                     } else {
-                        console.log('rejected duplicate call');
+                        console.log('rejected duplicate audio call');
                     }
                 },
                 
@@ -541,7 +585,7 @@ function startGuesting(hostNetID) {
         
         console.log('connect data to host');
         // This will trigger the host to call back with a mediaConnection as well
-        dataConnection = myPeer.connect(hostNetID, {reliable: false, serialization: 'json', metadata: {name: myOnlineName}});
+        dataConnection = myPeer.connect(hostNetID, {reliable: false, serialization: SERIALIZATION, metadata: {name: myOnlineName}});
         function connectHandler(message) {
             if (message.type !== 'CONNECT') { return false;}
             
@@ -590,10 +634,14 @@ function startGuesting(hostNetID) {
 /* noResume = true is used by quadplay's IDE when the actual stop
    button is pressed */
 function stopGuesting(noResume) {
-    if (isGuesting && myPeer) {
-        console.log('stopGuesting()');
-        myPeer.destroy();
-        myPeer = null;
+    if (isGuesting) {
+        document.getElementById('guestAudio').srcObject = null;
+        document.getElementById('guestVideo').srcObject = null;
+        if (myPeer) {
+            console.log('stopGuesting()');
+            myPeer.destroy();
+            myPeer = null;
+        }
     }
     isGuesting = false;
     
@@ -606,15 +654,29 @@ function stopGuesting(noResume) {
     }
 }
 
+/** Send a message to all guests on their dataConnections */
+function sendToAllGuests(message) {
+    console.assert(isHosting);
+    for (let g = 0; g < connectedGuestArray.length; ++g) {
+        const guest = connectedGuestArray[g];
+        console.log('sending to guest');
+        guest.dataConnection.send(message);
+    }
+}
+
 
 /* Is this machine currently hosting online play? */
 let isHosting = false;
 let isGuesting = false;
 
 /* Used on the host side to requestFrame() on the host side */
-let hostVideoTrack = null;
-let hostAudioTrack = null;
+let hostVideoStream = null;
+
+/* On the host. The stream is hostAudioDestination.stream */
 let hostAudioDestination = null;
+
+/* The audio on the guest */
+let guestAudioSourceNode = null;
 
 let myPeer = null;
 
