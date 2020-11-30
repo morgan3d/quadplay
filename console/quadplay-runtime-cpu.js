@@ -1504,6 +1504,14 @@ function atan(y, x) {
     return $Math.atan2(y.y, y.x);
 }
 
+function angle_to_xy(angle) {
+    return {x: $Math.cos(angle), y: rotation_sign() * $Math.sin(angle)};
+}
+
+function xy_to_angle(v) {
+    return rotation_sign() * $Math.atan2(v.y, v.x);
+}
+
 var $screen;
 
 
@@ -1791,6 +1799,12 @@ function gray(r) {
 function rgb(r, g, b) {
     if (arguments.length !== 3 && arguments.length !== 1) { $error('rgb() requires exactly one or three arguments or one hsv value'); }
 
+    if (Array.isArray(r)) {
+        b = r[2];
+        g = r[1];
+        r = r[0];
+    }
+    
     if (r.h !== undefined) {
         // Convert HSV --> RGB
         const h = $loop(r.h, 0, 1), s = $clamp(r.s, 0, 1), v = $clamp(r.v, 0, 1);
@@ -1823,6 +1837,13 @@ function rgb(r, g, b) {
 
 
 function rgba(r, g, b, a) {
+    if (Array.isArray(r)) {
+        a = r[3];
+        b = r[2];
+        g = r[1];
+        r = r[0];
+    }
+   
     if (r.h !== undefined) {
         // Convert to RGB
         const c = rgb(r);
@@ -1852,6 +1873,12 @@ function rgba(r, g, b, a) {
 
 
 function hsv(h, s, v) {
+    if (Array.isArray(h)) {
+        v = h[2];
+        s = h[1];
+        h = h[0];
+    }
+    
     if (h.r !== undefined) {
         // Convert RGB -> HSV
         const r = $clamp(h.r, 0, 1), g = $clamp(h.g, 0, 1), b = $clamp(h.b, 0, 1);
@@ -1892,6 +1919,13 @@ function hsv(h, s, v) {
 
 
 function hsva(h, s, v, a) {
+    if (Array.isArray(h)) {
+        a = h[3];
+        v = h[2];
+        s = h[1];
+        h = h[0];
+    }
+    
     if (h.r !== undefined) {
         const c = hsv(h);
         c.a = (h.a !== undefined) ? h.a : 1;

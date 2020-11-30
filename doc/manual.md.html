@@ -2006,8 +2006,11 @@ For example, `clamp()`, `min()`, `+`, `/`, etc.
 The following vector operations can be applied to any array or object,
 including `xy()` and `rgb()` values, except where specific key names are mentioned:
 
+`angle_to_xy(angle)`
+: Returns `xy(cos angle, rotation_sign() * sin angle)`
+
 `atan(vec2)`
-: Returns `atan(vec2.y, vec2.x)`.
+: Returns `atan(vec2.y, vec2.x)`. See also `xy_to_angle()`
 
 `cross(a, b)`
 : Return the vector cross product of two arrays of length three each or two vectors with
@@ -2041,6 +2044,9 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 `perp(v)`
 : Returns a vector perpendicular to `v` by rotating it 90 degrees:
   `xy(-v.y, v.x)`, for `xy()` and 2-element array vectors only.
+
+`xy_to_angle(xy)`
+: Returns `rotation_sign() * atan(xy)`.
 
 `xy(x, y)`
 : Create the object with `x` and `y` properties.
@@ -3618,8 +3624,14 @@ of gamut ones) can be represented using these types.
 `hsva(hsva)`
 : Clone the `hsva` object, stripping other properties.
 
+`hsva(array)`
+: Reinterpret the array elements as an `hsva`
+
 `hsv(hsv)`
 : Clone the `hsv` object, stripping other properties (such as an `a` channel).
+
+`hsv(array)`
+: Reinterpret the array elements as an `hsv`
 
 `hsv(h, s, v)`
 : Returns an object with field `h` _wrapped_ to [0, 1], and fields `s` and `v` clamped to [0, 1].
@@ -3638,6 +3650,9 @@ of gamut ones) can be represented using these types.
 `rgb(rgb)`
 : Clone the `rgb` value (stripping other properties, such as an `a` property).
 
+`rgb(array)`
+: Reinterpret the array elements as an `rgb`
+
 `rgb(r, g, b)`
 : Create a structure with properties `r`, `g`, and `b` clamped to [0, 1].
 
@@ -3649,6 +3664,9 @@ of gamut ones) can be represented using these types.
 
 `rgba(rgba)`
 : Clone the `rgba` value, stripping other properties.
+
+`rgba(array)`
+: Reinterpret the array elements as an `rgba`
 
 `rgba(r, g, b, a default 1)`
 : Create a structure with properties `r`, `g`, `b`, and `a` clamped to [0, 1].
@@ -8107,6 +8125,8 @@ Changes for both the specification and implementation in each release.
 
 - Eliminated most lag in online multiplayer by working around
   various browser bugs
+- Added `xy_to_angle()` and `angle_to_xy()`
+- Added `rgb(array)`, `rgba(array)`, `hsv(array)`, and `hsva(array)`
 
 2020 November 28: Beta update 56
 
