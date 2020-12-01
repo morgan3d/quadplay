@@ -16,7 +16,13 @@ const SERIALIZATION = 'binary';
 // period in JavaScript is 4ms)
 const ONLINE_INPUT_PERIOD = Math.floor(1000 / 120);
 
-const PEER_CONFIG = false ? {} : {
+// When the page is served under https, the websockets must also use
+// wss. The browser will not let us disable security on the sockets,
+// and github will not let us disable security on the web page. Use
+// the quadplay server when on http (which does not support wss yet)
+// and the default PeerJS server when on https.
+
+const PEER_CONFIG = (location.protocol === 'https') ? {} : {
     debug: 0,
     host: "quadplay-peer.us-3.evennode.com", port: 80,
     path: '/quadplay',
