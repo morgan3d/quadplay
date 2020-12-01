@@ -19,6 +19,7 @@ const ONLINE_INPUT_PERIOD = Math.floor(1000 / 120);
 const PEER_CONFIG = false ? {} : {
     debug: 0,
     host: "quadplay-peer.us-3.evennode.com", port: 80,
+    secure: false,
     path: '/quadplay',
     key: 'peerjs'
 };
