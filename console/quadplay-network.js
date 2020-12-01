@@ -16,7 +16,7 @@ const SERIALIZATION = 'binary';
 // period in JavaScript is 4ms)
 const ONLINE_INPUT_PERIOD = Math.floor(1000 / 120);
 
-const PEER_CONFIG = false ? {} : {
+const PEER_CONFIG = true ? {} : {
     debug: 0,
     host: "quadplay-peer.us-3.evennode.com", port: 80,
     secure: false,
