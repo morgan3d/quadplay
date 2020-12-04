@@ -1127,12 +1127,12 @@ function onNewDocCreate() {
         if (format === '.md.html') {
             // for .md.html files, compute a relative path to Markdeep
             const quadPath = getQuadPath();
-            const basePath = longestCommonPathPrefix(gamePath, quadPath);
+            const basePath = longestCommonPathPrefix(getGamePath(), quadPath);
 
             console.assert(! /\b\.?\.\//.test(basePath), "Assumed no ../");
 
             // Construct the relative path to the quad:// root
-            const relPath = '../'.repeat(gamePath.substring(basePath.length).split('/').length - 1);
+            const relPath = '../'.repeat(getGamePath().substring(basePath.length).split('/').length - 1);
 
             templateBody = templateBody.replace(/src="doc\/markdeep\.min\.js"/g, 'src="' + relPath + 'doc/markdeep.min.js"');
         }

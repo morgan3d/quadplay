@@ -47,6 +47,11 @@
             "description": ""
         },
         {
+            "url": "quad://examples/gridmove/",
+            "title": "Grid Movement",
+            "description": "PAC-MAN style movement with smooth interpolation and anticipatory turns"
+        },
+        {
             "url": "quad://examples/helloworld/",
             "title": "Hello World",
             "description": ""

@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.11.29.18';
+const version  = '2020.12.04.18';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -3566,7 +3566,7 @@ function reloadRuntime(oncomplete) {
         Object.seal(QRuntime.touch);
         
         QRuntime.gamepad_array = Object.seal([0,0,0,0]);
-        const COLOR_ARRAY = ['f5a', '0af', 'fe5', '5f5'];
+        const COLOR_ARRAY = ['f5a', '0af', 'ed3', '4e4'];
 
         for (let p = 0; p < 4; ++p) {
             const type = 'Quadplay';

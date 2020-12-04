@@ -1536,7 +1536,8 @@ function loadMap(name, json, mapJSONUrl) {
         layer:  [],
         spritesheet_table:Object.create(null),
         sprite_size: Object.freeze({x:0, y:0}),
-        size:        Object.freeze({x: 0, y: 0}),
+        size:        Object.freeze({x:0, y:0}),
+        size_pixels: Object.freeze({x:0, y:0}),
         wrap_x:      json.wrap_x || false,
         wrap_y:      json.wrap_y || false
     });
@@ -1642,7 +1643,7 @@ function loadMap(name, json, mapJSONUrl) {
         if ((map.spritesheet.size.x !== size.x) || (map.spritesheet.size.y !== size.y)) {
             throw `Sprite sheet size (${map.spritesheet.size.x}, ${map.spritesheet.size.y}) does not match what the map expected, (${size.x}, ${size.y}).`;
         }
-        
+
         const layerList = Array.from(xml.getElementsByTagName('layer'));
         const layerData = layerList.map(function (layer) {
             map.size = Object.freeze({x: parseInt(layer.getAttribute('width')),
@@ -1680,10 +1681,10 @@ function loadMap(name, json, mapJSONUrl) {
                         
                         let sprite = map.spritesheet[sx][sy];
                         
-                        if (tileFlipD) { sprite = sprite.rotated_90.x_flipped; }
+                        if (tileFlipD) { sprite = sprite.rotated_90.y_flipped; }
                         if (tileFlipX) { sprite = sprite.x_flipped; }
                         if (tileFlipY) { sprite = sprite.y_flipped; }
-
+ 
                         console.assert(sprite);
                         layer[x][flipY ? map.size.y - 1 - y : y] = sprite;
                     } else {
@@ -1698,6 +1699,8 @@ function loadMap(name, json, mapJSONUrl) {
             }
             
         } // L
+
+        map.size_pixels = Object.freeze({x:map.size.x * map.sprite_size.x, y:map.size.y * map.sprite_size.y});
         
         // Don't allow the array of arrays to be changed (just the individual elements)
         Object.freeze(map.layer);

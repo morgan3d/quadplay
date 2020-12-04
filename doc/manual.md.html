@@ -507,6 +507,11 @@ Shows how to use the sequence function to create a transition effect, which is
 factored out into an easy to drop in library.  The sequence function lets 
 choreograph series of frame hooks one after the other.
 
+</td></tr><tr><td>![](../examples/gridmove/label128.png)</td><td>
+[Grid Movement](../console/quadplay.html?game=quad://examples/gridmove&IDE=1)
+Atari style grid movement with smooth interpolation and wrapping,
+similar to PAC-MAN, Centipede, etc.
+
 </td></tr><tr><td>![](../examples/speedstreet/label128.png)</td><td>
 [Speed Street](../console/quadplay.html?game=quad://examples/speedstreet&IDE=1) is the setup for a four-player competitive racing game inspired by [_Excitebike_](https://en.wikipedia.org/wiki/Excitebike) and Tony Hawk games, using:
 
@@ -4087,6 +4092,9 @@ to mutate the asset.
 `map.size`
 : `xy()` size in map coordinates (not pixels).
 
+`map.size_pixels`
+: `xy()` size in pixels.
+
 `map.spritesheet_table`
 : A table mapping TMX tile set names to spritesheets for this map.
 
@@ -4154,7 +4162,7 @@ indices. The map's z-axis corresponds to layers.
   If the game explicitly relocates the camera when it has moved
   off of the end of the map, then it will _appear_ infinite in game.
 
-`draw_map_span(start, size, map, map_coord0, map_coord1, min_layer default 0, max_layer_exclusive default +infinity, replacement_array default [], z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp", invert_sprite_y default (get_transform().dir.y < 0))`
+`draw_map_span(start, size, map, map_coord0, map_coord1, min_layer default 0, max_layer_exclusive default +infinity, replacement_array default [], z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp", invert_sprite_y default (get_transform().dir.y < 0), quality default 100%)`
 : Draws a perfectly horizontal (regardless of the camera) span of constant z with pixel colors taken from the map.
   This is a key primitive for building fast perspective rendering of horizontal surfaces.  See the
   Kart and Warlock 3D examples. It can also be used for 2D textured polygon rendering.
@@ -4171,6 +4179,10 @@ indices. The map's z-axis corresponds to layers.
   are as for `get_map_pixel_color()`.
   
   `override_color` and `override_blend` are as for `draw_sprite()`.
+  
+  `quality` is a number between 0% and 100% that affects the texture mapping precision.
+  The implementation details may change in the future. In the current implementation,
+  any value below 50% samples at half resolution.
   
   Respects the wrapping and wraps infinitely.
 
@@ -7343,10 +7355,10 @@ quadplay✜ arcade player colors and physical layout order is: P3 Yellow, P1 Mag
 <table style="font-size:200%; font-weight:bold; width:300px; text-align:center; margin: 15px; border-collapse: separate; border: 2px solid #000; padding: 8px; background: #333">
 <tr valign="center"><td colspan=4 style="border: 2px solid; border-radius:8px; background: #000; height: 200px">SCREEN</td></tr>
 <tr>
-<td style="color:#fe5">*P3*<span style="font-size:50%"><br>#fe5</span></td>
+<td style="color:#fd3">*P3*<span style="font-size:50%"><br>#fd3</span></td>
 <td style="color:#f5a">*P1*<span style="font-size:50%"><br>#f5a</span></td>
 <td style="color:#0af">*P2*<span style="font-size:50%"><br>#0af</span></td>
-<td style="color:#5f5">*P4*<span style="font-size:50%"><br>#5f5</span></td>
+<td style="color:#4e4">*P4*<span style="font-size:50%"><br>#4e4</span></td>
 </tr>
 <tr><td colspan=4 style="border-top: 2px solid #000"><br><br></td></tr>
 </table>
@@ -8121,12 +8133,25 @@ Change Log
 
 Changes for both the specification and implementation in each release.
 
-2020 December TBD: Beta update 57
+2020 December 4: Beta update 57
 
+- New "gridmove" sample of PAC-MAN style movement and maps
 - Eliminated most lag in online multiplayer by working around
   various browser bugs
 - Added `xy_to_angle()` and `angle_to_xy()`
 - Added `rgb(array)`, `rgba(array)`, `hsv(array)`, and `hsva(array)`
+- Improved error messages for `xy()` constructor
+- Added clipping region support for Warlock3D `raycast.pyxl` routines
+- 15% speedup for Warlock3D demo through clipping, reduced floor quality, and
+  micro-optimizations
+- Added `map.size_pixels`
+- Added variable quality option for `draw_map_span()`
+- Darkened and saturated the player 3 yellow and player 4 lime colors to better match
+  the brightness P1 and P2
+- Fixed `map.z_offset` being ignored by `get_map_sprite_by_ws_coord()`
+- Fixed diagonal flipped sprites in TMX maps
+- Fixed new doc create not working
+- Fixed crash in physics example from `contact.point1` being `{}` instead of `nil`
 
 2020 November 28: Beta update 56
 

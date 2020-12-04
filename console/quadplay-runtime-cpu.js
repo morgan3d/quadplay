@@ -1688,17 +1688,25 @@ function $todo(msg) {
 
 
 function xy(x, y) {
-    if (x === undefined) {
-        $error('nil or no argument to xy()');
+    if (x === undefined || x === null) {
+        if (arguments.length > 0) {
+            $error('no argument to xy()');
+        } else {
+            $error('nil argument to xy()');
+        }
     }
     
     if (x.x !== undefined) {
         if (y !== undefined) { $error('xy(number, number), xy(xy), xy(xyz), or xy(array) are the only legal options'); }
+        // Vector clone or stripping
         return {x:x.x, y:x.y};
     }
     if (Array.isArray(x)) { return {x:x[0], y:x[1]}; }
+    if (typeof x !== 'number') { $error('The first argument to xy(x, y) must be a number (was ' + unparse(x) + ')'); }
+    if (typeof y !== 'number') { $error('The second argument to xy(x, y) must be a number (was ' + unparse(y) + ')'); }
     if (arguments.length !== 2) { $error('xy() cannot take ' + arguments.length + ' arguments.'); }
-    if (typeof y !== 'number') { $error('The second argument to xy(x, y) must be a number'); }
+
+    // Common case, after all of the special and error cases have been considered
     return {x:x, y:y};
 }
 
@@ -2539,7 +2547,7 @@ function make_physics(options) {
                     entityB: pair.bodyB.entity,
                     normal:  {x: pair.collision.normal.x, y: pair.collision.normal.y},
                     point0:  {x: activeContacts[0].vertex.x, y: activeContacts[0].vertex.y},
-                    point1:  (activeContacts.length === 1) ? {} : {x: activeContacts[1].vertex.x, y: activeContacts[1].vertex.y},
+                    point1:  (activeContacts.length === 1) ? undefined : {x: activeContacts[1].vertex.x, y: activeContacts[1].vertex.y},
                     depth:   pair.collision.depth
                 }
 
@@ -3827,7 +3835,7 @@ function set_map_sprite(map, map_coord, sprite, layer) {
 
 
 function get_map_sprite_by_ws_coord(map, ws_coord, ws_z, replacement_array) {
-    const layer = ((ws_z || 0) - $offsetZ) / ($scaleZ * map.z_scale);
+    const layer = ((ws_z || 0) - $offsetZ - map.z_offset) / ($scaleZ * map.z_scale);
     return get_map_sprite(map, transform_ws_to_map_space(map, ws_coord), layer, replacement_array);
 }
 
@@ -4553,8 +4561,9 @@ function draw_line(A, B, color, z, width) {
 
 
 
-function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_layer_exclusive, replacement_array, z, override_color, override_blend, invert_sprite_y) {
+function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_layer_exclusive, replacement_array, z, override_color, override_blend, invert_sprite_y, quality) {
     if ($skipGraphics) { return; }
+    if (quality === undefined) { quality = 1.0; }
 
     // TODO: Remove when height spans are permitted
     if (size.y !== 0) {
@@ -4677,6 +4686,9 @@ function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_
     let run_is_skip = false;
     let run_length  = 0;
 
+    const low_res = quality <= 0.5;
+    let prev_read = -1;
+    
     // Draw the scanline. Because it has constant camera-space z, the 
     // texture coordinate ("read_point") interpolates linearly
     // under perspective projection.
@@ -4684,11 +4696,22 @@ function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_
          i < width;
          ++i, map_point_x += step_x, map_point_y += step_y) {
 
-        // Call the low-level version, which avoids conversion to rgba() in the common case.
-        // Nearly all of the time of this routine (including the actual drawing) is spent in
-        // the following call.
+        let pixel_value;
 
-        let pixel_value = $get_map_pixel_color(map, map_point_x, map_point_y, min_layer, max_layer_exclusive, replacement_array, color, invert_sprite_y);
+        if (low_res && (i & 1) === 0 && (prev_read !== -1)) {
+            // Reuse the previous value to avoid the most expensive
+            // part, which is the get_map_pixel_color() call. This could
+            // be exploited further by having the actual runs be encoded
+            // at half resolution, reducing the data transfer and storage
+            // and making the RIGHT edges more consistent.
+            pixel_value = prev_read;
+        } else {
+            // Call the low-level version, which avoids conversion to rgba() in the common case.
+            // Nearly all of the time of this routine (including the actual drawing) is spent in
+            // the following call.
+            pixel_value = $get_map_pixel_color(map, map_point_x, map_point_y, min_layer, max_layer_exclusive, replacement_array, color, invert_sprite_y);
+            prev_read = pixel_value;
+        }
 
         if (pixel_value === -1) {
             if (! run_is_skip) {

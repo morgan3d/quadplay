@@ -905,8 +905,8 @@ function $outputAppend(m, location) {
                 outputDisplayPane.removeChild(outputDisplayPane.firstChild);
             }
         }
-        
-        if (location) {
+
+        if (location && location.url) {
             let tooltip = location.url.replace(/^.*\//, '');
             if (/[A-Z]/.test(tooltip[0])) {
                 // For modes, remove the extension
