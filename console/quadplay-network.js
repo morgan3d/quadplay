@@ -22,7 +22,7 @@ const ONLINE_INPUT_PERIOD = Math.floor(1000 / 120);
 // the quadplay server when on http (which does not support wss yet)
 // and the default PeerJS server when on https.
 
-const PEER_CONFIG = (location.protocol === 'https') ? {
+const PEER_CONFIG = (location.protocol === 'https:') ? {
     host: "peer.pixelverse.org",
     port: 9001,
     path: '/remoteplay',
