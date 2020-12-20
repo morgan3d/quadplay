@@ -49,8 +49,8 @@ function nextInstance(str, c, j, d) {
 
     j = j || 0;
     
-    const count = {'(': 0, '{':0, '[':0};
-    const match = {')': '(', '}':'{', ']':'['};
+    const count = {'(':0,   '{':0,   '[':0};
+    const match = {')':'(', '}':'{', ']':'['};
     let stack = 0;
     while (j < str.length) {
         const x = str[j];
@@ -68,7 +68,6 @@ function nextInstance(str, c, j, d) {
         }
         ++j;
     }
-
     return -1;
 }
 
@@ -503,10 +502,6 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode, strin
             throw makeError('Numbers may not begin with a leading zero', i);
         }
 
-        if (lineArray[i].indexOf('%') !== -1) {
-            throw makeError('% may only appear at the end of a number (did you intend to use the "mod" operator?)', i);
-        }
-
         const illegal = lineArray[i].match(/\b(===|!==|toString|try|switch|this|delete|null|arguments|undefined|use|using|yield|prototype|var|new|auto|as|instanceof|typeof|\$|class)\b/) ||
               lineArray[i].match(/('|!(?!=))/) || // Single quote
               (! internalMode && lineArray[i].match(/\b[_\$]\S*?\b/)); // Underscores or dollar signs
@@ -825,6 +820,58 @@ function countRegexOccurences(string, regex) {
 }
 
 
+function protectObjectSpread(src) {
+    // Because the current version of the esprima parser does not
+    // support the spread operator on objects (due to a bug), we
+    // temporarily hide the spread operator inside `{}` by the
+    // transformation:
+    //
+    // {a, ...b, c} --> {a, ⏓:b, c}
+    //
+    // Note that at this point in the program, all object literals
+    // have been reduced to single-line expressions, which limits how
+    // far we have to search, and quoted strings are already
+    // protected.
+
+    const close = {'(':')', '{':'}', '[':']'};
+    return src.replace(/(\{.*)\.\.\./g, function (match, prefix) {
+        // Verify that the match does not contain unmatched [], (), {}
+        // between the curly brace and the ellipsis. If it does, then
+        // the ellipsis is not intended for the object expansion and
+        // is an array ellipis that should be unmodified.
+        //
+        // Search backwards through the prefix. If the stack is empty
+        // and we hit {, then we're in an object. Any other case assume
+        // is an array.
+        for (let i = prefix.length - 1, stack = []; i >= 0; --i) {
+            const c = prefix[i];
+            if ((stack.length === 0) && (c === '{')) {
+                // Was an object
+                return prefix + "'⏓':";
+            }
+
+            switch (c) {
+            case ')': case '}': case ']': stack.push(c); break;
+                
+            case '(': case '[': case '{':
+                if (stack.pop() !== close[c]) {
+                    // Unbalanced brackets. Was not an object
+                    return match;
+                }
+            }
+        }
+
+        // Will reach here for illegal statements, e.g., "{}..."
+        return match;
+    });
+}
+
+function unprotectObjectSpread(src) {
+    // 
+    return src.replace(/'⏓':/g, '...');
+}
+
+
 /** Compiles pyxlscript -> JavaScript. Processes the body of a section. Use compile() to compile
     an entire project. There is no standalone mode compiler. */
 function pyxlToJS(src, noYield, internalMode) {
@@ -855,15 +902,6 @@ function pyxlToJS(src, noYield, internalMode) {
     // Pull 'because' on a new line up to the previous line
     src = src.replace(/\)[\t ]*((?:\n[\t ]*)+)[ \t]*because[ \t]+("[^\n"]")/g, ') because $2$1');
 
-    // Numbers ending in percent. This regex is dangerous because it
-    // does not distinguish variables ending with a number from standalone
-    // number tokens.
-    src = src.replace(/(\d+(?:\.\d*)?|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒])%/g, '($1 * 0.01)');
-
-    // Numbers ending in degrees. Does not distinguish variables ending
-    // in a number from standalone number tokens.
-    src = src.replace(/(\d+|\d\.\d*|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒])(°|[ ]*deg\b)/g, '($1 * .017453292519943295)');
-
     // Switch FOR loops (will be switched back later)
     src = src.replace(/<=/g, '≤');
     src = src.replace(/>=/g, '≥');
@@ -891,7 +929,6 @@ function pyxlToJS(src, noYield, internalMode) {
                 while (line[reasonBeginPos] !== '"') { ++reasonBeginPos; }
                 let reasonEndPos = reasonBeginPos + 1;
                 while (line[reasonEndPos] !== '"') { ++reasonEndPos; }
-                
                 
                 // Look backwards for the paren
                 let callEndPos = becausePos - 1;
@@ -1001,6 +1038,10 @@ function pyxlToJS(src, noYield, internalMode) {
                           return pre + ' (' + parseInt(num, 2) + ') ' + post;
                       });
 
+    // #deg -> #°, so that it will not be detected as implicit multiplication
+    // by a variable beginning with "deg"
+    src = src.replace(/(\d+|\d\.\d*|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒])([ ]*deg\b)/g, '$1°');
+    
     // Process implicit multiplication twice, so that it can happen within exponents
     for (let i = 0; i < 2; ++i) {
         // Implicit multiplication. Must be before operations that may
@@ -1008,12 +1049,15 @@ function pyxlToJS(src, noYield, internalMode) {
         // unclear. Regexp is: a (number, parenthetical expression, or
         // bracketed expression), followed by a variable name.
 
-        // Specials and parens case
-        src = src.replace(/([επξ∞½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁾]|\))[ \t]*([\$\(_A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞])/g, '$1 * $2');
+        // Specials (allow parens on the 2nd expression)
+        src = src.replace(/([επξ∞½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁾])[ \t]*([\$\(_A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞])/g, '$1 * $2');
+
+        // Parens (do *not* allow parens on the 2nd expression)
+        src = src.replace(/(\))[ \t]*([\$_A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞])/g, '$1 * $2');
 
         // Number case (has to rule out a variable name that ends in a
         // number or has a number inside of it)
-        src = src.replace(/([^\$A-Za-z0-9αβγδζηθιλμρσϕφχτψωΔΩ_]|^)([0-9\.]*?[0-9])[ \t]*([\$\(A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞_])/g, '$1$2 * $3');
+        src = src.replace(/([^\$A-Za-z0-9αβγδζηθιλμρσϕφχτψωΔΩ_]|^)([0-9\.]*?[0-9])(%|°)?[ \t]*([\$\(A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞_])/g, '$1$2$3 * $4');
 
         // Fix any instances of text operators that got accentially
         // turned into implicit multiplication. If there are other
@@ -1024,9 +1068,6 @@ function pyxlToJS(src, noYield, internalMode) {
         // expression to compile those as if they were FOR statements.
         src = src.replace(/\*[\t ]*(default|xor|or|and|not|mod|bitxor|bitand|bitor|bitnot|bitnot|bitshr|bitshl|for|with)(\b|\d|$)/g, ' $1$2');
 
-        // Replace fractions
-        src = src.replace(/[½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒]/g, function (match) { return fraction[match]; });
-        
         // Replace exponents
         src = src.replace(/([⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁽⁾][⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁽⁾ ]*)/g, '^($1)');
         src = src.replace(/[⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣᵏʸᶻᵘⁿ⁽⁾]/g, function (match) { return superscriptToNormal[match]; });
@@ -1034,12 +1075,23 @@ function pyxlToJS(src, noYield, internalMode) {
         // Replace subscripts
         //src = src.replace(/([₊₋₀₁₂₃₄₅₆₇₈₉ₐᵦᵢⱼₓₖᵤₙ₍₎][₊₋₀₁₂₃₄₅₆₇₈₉ₐᵦᵢⱼₓₖᵤₙ₍₎ ]*)/g, '[($1)]');
         //src = src.replace(/[₊₋₀₁₂₃₄₅₆₇₈₉ₐᵦᵢⱼₓₖᵤₙ₍₎]/g, function (match) { return subscriptToNormal[match]; });
-
-        // Back-to-back parens. Note that floor, ceiling, and abs have already been mapped to
-        // ().
-        src = src.replace(/\)[ \t]*\(/, ') * (');
     }
 
+    // Numbers ending in percent. This regex is dangerous because it
+    // does not distinguish variables ending with a number from standalone
+    // number tokens. Process AFTER implicit multiplication so that the inserted
+    // parentheses do not disable multiplication
+    src = src.replace(/(\d+(?:\.\d*)?|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒])%/g, '($1 * 0.01)');
+
+    // Numbers ending in degrees. Does not distinguish variables ending
+    // in a number from standalone number tokens. Process AFTER implicit multiplication so that the inserted
+    // parentheses do not disable multiplication
+    src = src.replace(/(\d+|\d\.\d*|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒])°/g, '($1 * .017453292519943295)');
+
+    // Replace fractions after implicit multiplication, so that the parentheses do not 
+    // confuse it. Do this AFTER degrees and percentages, so that we can have fractional ones
+    src = src.replace(/[½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒]/g, function (match) { return fraction[match]; });
+    
     // SIN, COS, TAN with a single argument and no parentheses. Must be processed after implicit
     // multiplication so that, e.g., 2 cos θ parses correctly with regard to the \\b
     src = src.replace(RegExp('\\b(cos|sin|tan)[ \\t]*([επΔξ]|[ \\t]+' + identifierPattern + ')', 'g'), '$1($2)');
@@ -1115,6 +1167,8 @@ function pyxlToJS(src, noYield, internalMode) {
     // Do this immediately before vectorify, which will restore these.
     src = src.replace(/\bdefault\b/g, '==');
 
+    src = protectObjectSpread(src);
+
     try {
         src = vectorify(src, {
             assignmentReturnsUndefined: true,
@@ -1127,6 +1181,10 @@ function pyxlToJS(src, noYield, internalMode) {
         throw e;
     }
 
+    // Restore the spread operator for objects
+    src = unprotectObjectSpread(src);
+
+
     // Cleanup formatting
     src = src.replace(/,[ \t]+/g, ', ');
     src = src.replace(/[ \t]*,/g, ',');
@@ -1136,7 +1194,7 @@ function pyxlToJS(src, noYield, internalMode) {
     src = unprotectQuotedStrings(src, stringProtectionMap);
 
     // Print output code for debugging the compiler
-    // if (! internalMode) { console.log(src); }
+    //if (! internalMode) { console.log(src); }
     return src;
 }
 

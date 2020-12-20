@@ -676,7 +676,7 @@
     </div>
 
     <div id="openGameDialog" class="modal hidden">
-      <div class="dialog" style="top:10px; width: 400px">
+      <div class="dialog" style="margin-top: 80px; width: 400px">
         <center>
           <b>Open Game</b>
           <p>
@@ -697,7 +697,9 @@
             <div id="openGameList" style="width:380px; height: 300px; background: #fff; border-radius: 2px; overflow: scroll scroll; color: #888; text-align: left; font-size: 80%; font-family: Monaco, monospace">
             </div>
           </p>
-          <br/>
+          <p>
+          <label><input type="checkbox" id="autoplayOnLoad">Autoplay</label>
+          </p>
           <button type="button" onclick="hideOpenGameDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span>
           <button type="button" id="openGameOpenButton" onclick="onOpenGameOpen()">Open</button>
         </center>

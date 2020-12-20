@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.12.04.18';
+const version  = '2020.12.20.09';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -294,8 +294,9 @@ function setColorScheme(scheme) {
 let onWelcomeScreen = ! useIDE;
 
 /* 
-   Force users in auto-play modes to interact in order to enable the audio engine and
-   full-screen on mobile (where it is harder to hit the small full-screen button).
+   Force users in auto-play modes to interact in order to enable the
+   audio engine and full-screen on mobile (where it is harder to hit
+   the small full-screen button).
  */
 function onWelcomeTouch() {
     onWelcomeScreen = false;
@@ -695,7 +696,8 @@ function onSlowButton() {
 
 
 function wake() {
-    if (! useIDE && (emulatorMode === 'pause')) {
+    // Wake if asleep (we might be in pause mode because we're a guest, too)
+    if (! useIDE && (emulatorMode === 'pause') && (document.getElementById('sleep').style.visibility === 'visible')) {
         document.getElementById('sleep').style.visibility = 'hidden';
         onPlayButton();
         
@@ -842,7 +844,6 @@ function onPlayButton(slow, isLaunchGame, args) {
         if (loadManager && loadManager.status !== 'complete' && loadManager.status !== 'failure') {
             console.log('Load already in progress...');
         } else {
-            console.log('\n');
             if (useIDE && ! isLaunchGame) {
                 if (savesPending === 0) {
                     // Force a reload of the game
@@ -1300,7 +1301,7 @@ function restartProgram(numBootAnimationFrames) {
             onStopButton();
             setErrorStatus(e);
         }
-        
+
         // Create the main loop function in the QRuntime environment so
         // that it sees those variables.
         try {
@@ -2491,7 +2492,9 @@ function visualizeGame(gameEditor, url, game) {
 
     if (editableProject) {
         const filename = serverConfig.rootPath + urlToFilename(url);
-        const path = filename.replace(/\/[^.\/\\]+?\.game\.json$/, '');
+        // The second regexp removes the leading slash on windows
+        let path = filename.replace(/\/[^.\/\\]+?\.game\.json$/, '').replace(/^\/([a-zA-Z]:\/)/, '$1');
+        if (path.length > 0 && path[path.length - 1] !== '/') { path += '/'; }
         s += `<tr valign="top"><td>Folder</td><td colspan=3><a onclick="onOpenFolder('${path}')" style="cursor:pointer">${path}</a></td></tr>\n`;
     }
     
@@ -2517,7 +2520,7 @@ function visualizeGame(gameEditor, url, game) {
         s += '</select></td></tr>\n';
 
         const overrideInitialMode = gameSource.debug.json && gameSource.debug.json.start_mode_enabled && gameSource.debug.json.start_mode;
-        s += `<tr valign="top"><td></td><td><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${overrideInitialMode ? 'checked' : ''} onchange="onDebugInitialModeOverrideChange(this)">Debug&nbsp;Override</label></td><td colspan=2"><select id="debugOverrideInitialMode" style="width:222px; top:-2px" ${overrideInitialMode ? '' : 'disabled'} onchange="onProjectDebugInitialModeChange(this.value)">\n`;
+        s += `<tr valign="top"><td></td><td><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${overrideInitialMode ? 'checked' : ''} onchange="onDebugInitialModeOverrideChange(this)">Debug&nbsp;Override</label></td><td colspan=2"><select id="debugOverrideInitialMode" style="width:205px; top:-2px" ${overrideInitialMode ? '' : 'disabled'} onchange="onProjectDebugInitialModeChange(this.value)">\n`;
         for (let i = 0; i < gameSource.modes.length; ++i) {
             const mode = gameSource.modes[i];
             if (! mode.name.startsWith('quad://console/os/_') && ! mode.name.startsWith('$')) {
@@ -2561,7 +2564,15 @@ function visualizeGame(gameEditor, url, game) {
     s += '</td></tr>\n';
     s += `<tr><td></td><td><input type="number" min="1" max="8" ${disabled} onchange="onProjectMetadataChanged(this)" id="projectMinPlayers" value="${game.min_players || 1}"></input> - <input type="number" min="1" max="8" ${disabled} onchange="onProjectMetadataChanged(this)" id="projectMaxPlayers" value=${game.max_players || 1}></input> Players</td></tr>\n`;
 
-    s+= '<tr><td>&nbsp;</td></tr>\n';
+    s += '<tr><td>&nbsp;</td></tr>\n';
+
+    s += `<tr valign="top"><td>Screenshot&nbsp;Tag</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="screenshotTag" value="${game.screenshot_tag.replace(/"/g, '\\"')}"></td></tr>\n`;
+    if (editableProject) {
+        const overrideTag = gameSource.debug.json && gameSource.debug.json.screenshot_tag_enabled;
+        s += `<tr><td></td><td><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${overrideTag ? 'checked' : ''} onchange="onDebugScreenshotTagOverrideChange(this)">Debug&nbsp;Override</label></td><td colspan=2><input type="text" autocomplete="false" style="width:198px" ${overrideTag ? '' : 'disabled'} ${disabled} onchange="onProjectMetadataChanged()" id="debugScreenshotTag" value="${(game.debug && game.debug.json && game.debug.json.screenshot_tag !== undefined) ? game.debug.json.screenshot_tag.replace(/"/g, '\\"') : ''}"></td></tr>`;
+    }
+    s += '<tr><td>&nbsp;</td></tr>\n';
+        
     
     const baseURL = url.replace(/\/[^\/]*$/, '');
     s += '<tr valign="top">';
@@ -2800,14 +2811,19 @@ function makeGoodFilename(text) {
 
 
 // Supports quad:// urls, relative files, etc.
-function loadGameFromUrl(game_url) {
+function loadGameFromUrl(game_url, autoplay) {
     // Our URL, with the game removed
     let url = location.href.replace(/(\?(?:.+&)?)game=[^&]+(?=&|$)/, '$1');
     if (url.indexOf('?') === -1) { url += '?'; }
     if (url[url.length - 1] !== '&') { url += '&'; }
+    url = url.replace(/autoplay=./g, '');
     url = url.replace(/&&/g, '&');
     
     url += 'game=' + game_url;
+
+    if (autoplay) {
+        url += '&autoplay=1';
+    }
     
     // Go to this location now to load the new game
     location = url;
@@ -2992,7 +3008,20 @@ function onOpenGameTypeChange() {
 /* Called from the "Open" button */
 function onOpenGameOpen() {
     onStopButton();
-    loadGameFromUrl(openGameFiles.selected);
+    
+    const autoplay = document.getElementById('autoplayOnLoad').checked;
+    loadGameFromUrl(openGameFiles.selected, autoplay);
+
+    // Loading the game directly would be faster, however it
+    // would also leave the URL forcing the previous game, which
+    // will make reloading the page confusingly change games.
+    /*
+    loadGameIntoIDE(openGameFiles.selected, function () {
+        hideOpenGameDialog();
+        if (autoplay) {
+            onPlayButton(false, true);
+        }
+    });*/
 }
 
 
@@ -3038,7 +3067,7 @@ const outputPane = document.getElementById('outputPane');
 const outputDisplayPane = document.getElementById('outputDisplayPane');
 
 // Maps expression strings to values
-let debugWatchTable = {};
+let debugWatchTable = {changed: false};
 
 function debug_watch(location, expression, value) {
     // The value must be unparsed here, since it can be mutated after
@@ -3048,6 +3077,7 @@ function debug_watch(location, expression, value) {
         expression: expression,
         value: QRuntime.unparse(value)
     };
+    debugWatchTable.changed = true;
 }
 
 
@@ -3184,7 +3214,7 @@ function mainLoopStep() {
         // try to run at 60 Hz for input processing and game
         // execution, and drop graphics processing in QRuntime.$show()
         // some of the time.
-        lastAnimationRequest = setTimeout(mainLoopStep, Math.floor(1000 / targetFramerate - 1));      
+        lastAnimationRequest = setTimeout(mainLoopStep, Math.floor(1000 / targetFramerate - 1));
     }
 
     // Erase the table every frame
@@ -3302,10 +3332,11 @@ function mainLoopStep() {
         }
     }
 
-    if (debugWatchEnabled && emulatorMode === 'play') {
+    if (debugWatchEnabled && ((emulatorMode === 'play') || debugWatchTable.changed)) {
         const pane = document.getElementById('debugWatchDisplayPane');
         let s = '<table width=100% style="border-collapse: collapse" >'
         for (let id in debugWatchTable) {
+            if (id === 'changed') { continue; }
             const watch = debugWatchTable[id];
             let tooltip = watch.location.url.replace(/^.*\//, '');
             if (/[A-Z]/.test(tooltip[0])) {
@@ -3316,6 +3347,7 @@ function mainLoopStep() {
             s += `<tr valign=top><td width=50% title="${tooltip}" style="cursor:pointer" onclick="editorGotoFileLine('${watch.location.url}', ${watch.location.line_number}, undefined, false)">${watch.expression}</td><td>${watch.value}</td></tr>`;
         }
         pane.innerHTML = s + '</table>';
+        debugWatchTable.changed = false;
     }
 
     if (QRuntime.$gameMode) {
@@ -3598,6 +3630,8 @@ function reloadRuntime(oncomplete) {
                 player_color: Object.freeze({r:player_color.r, g:player_color.g, b:player_color.b}),
                 type: controlBindings.type,
                 prompt: Object.freeze(Object.assign({'##': '' + (p + 1)}, controlSchemeTable[controlBindings.type])),
+
+                // May be the empty string
                 $id: controlBindings.id,
                 $analog: [0, 0, 0, 0],
                 $name: `gamepad_array[${p}]`
@@ -3836,7 +3870,7 @@ function makeAssets(environment, assets) {
 
     // Check the spritesheet array for consistency
     for (let i = 0; i < spritesheetArray.length; ++i) {
-        console.assert(spritesheetArray[i].$index[0] == i,
+        console.assert(spritesheetArray[i].$index[0] === i,
                        'spritesheetArray[' + i + '] has the wrong index'); 
     }
     
@@ -3857,7 +3891,25 @@ function makeAssets(environment, assets) {
             console.assert(spritesheetArray[assetValue.$index[0]] === assetValue,
                            'spritesheet ' + assetName + ' is at the wrong index.');
         }
-        
+
+        /*
+        // Expensive assertions for debugging
+        if (assetValue.$type === 'map') {
+            console.assert(spritesheetArray[assetValue.spritesheet.$index[0]] === assetValue.spritesheet,
+                           'map ' + assetName + ' spritesheet has the wrong index ' + assetValue.spritesheet.$index[0] +
+                           ', should be ' + spritesheetArray.indexOf(assetValue.spritesheet));
+            // Test all map sprites
+            for (let x = 0; x < assetValue.length; ++x) {
+                for (let y = 0; y < assetValue[x].length; ++y) {
+                    const sprite = assetValue[x][y];
+                    if (sprite) {
+                        console.assert(sprite.rotated_270.$spritesheet.$index[0] < spritesheetArray.length,
+                                      '$spritesheet.$index[0] out of bounds');
+                    }
+                }
+            }
+        }
+        */
         // Clone maps because if not in forceReload mode they are
         // shared between runs when the program resets. Everything
         // else is immutable so it doesn't matter.
@@ -4287,6 +4339,11 @@ document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanc
     if (useIDE || (url !== 'quad://console/launcher')) {
         loadGameIntoIDE(url, function () {
             onProjectSelect(null, 'game', gameSource.jsonURL);
+
+            // Used for the open dialog's autoplay checkbox
+            if (getQueryString('autoplay') === '1') {
+                onPlayButton(false, true);
+            }
         });
     }
 }
@@ -4338,5 +4395,3 @@ LoadManager.fetchOne({}, location.origin + getQuadPath() + 'console/_config.json
 
 // Make the browser aware that we want gamepads
 navigator.getGamepads();
-
-//setTimeout(startHosting, 4000);

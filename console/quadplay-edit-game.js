@@ -30,6 +30,14 @@ function onProjectMetadataChanged(projectLicense) {
     gameSource.json.max_players = Math.max(mn, mx);
     document.getElementById('projectMinPlayers').value = gameSource.json.min_players;
     document.getElementById('projectMaxPlayers').value = gameSource.json.max_players;
+
+    gameSource.json.screenshot_tag = document.getElementById('screenshotTag').value;
+
+    if (editableProject && gameSource.debug && gameSource.debug.json && gameSource.debug.json.screenshot_tag_enabled) {
+        gameSource.debug.json.screenshot_tag = document.getElementById('debugScreenshotTag').value;
+        console.log('saving debug');
+        serverSaveDebugJSON();
+    }
     
     serverSaveGameJSON(titleChanged ? function () { loadGameIntoIDE(window.gameURL, null, true); } : undefined);
 }
@@ -90,6 +98,16 @@ function onDebugInitialModeOverrideChange(checkbox) {
     const dropdown = document.getElementById('debugOverrideInitialMode');
     dropdown.disabled = ! checkbox.checked;
     onProjectDebugInitialModeChange(checkbox.checked ? dropdown.value : '');
+}
+
+
+function onDebugScreenshotTagOverrideChange(checkbox) {
+    const control = document.getElementById('debugScreenshotTag');
+    control.disabled = ! checkbox.checked;
+    if (gameSource.debug === undefined) { gameSource.debug = {}; }
+    if (gameSource.debug.json === undefined) { gameSource.debug.json = {}; }
+    gameSource.debug.json.screenshot_tag_enabled = checkbox.checked;
+    onProjectMetadataChanged();
 }
 
 

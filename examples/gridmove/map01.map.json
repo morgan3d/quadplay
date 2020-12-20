@@ -1,0 +1,14 @@
+{
+    "url": "map01.tmx",
+    "license": "By Morgan McGuire 2020. Released into the Public DomainCC0",
+    "offset": {
+        "x": -4,
+        "y": -4
+    },
+    "wrap_x": true,
+    "wrap_y": true,
+    "z_offset": -2,
+    "sprite_url_table": {
+        "grid-tiles-8x8": "grid-tiles-8x8.sprite.json"
+    }
+}

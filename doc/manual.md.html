@@ -11,7 +11,7 @@
 ∙ [JSON Formats](#projectfiles) 
 ∙ [Language Spec](#pyxlscriptlanguage) 
 ∙ [Network](#network) 
-∙ [Change Log](#changelog)
+∙ [Change Log](changelog.md.html)
 
 <img src="ide.png" style="image-rendering: auto; width:75%; border-radius: 0 0 4px 4px; box-shadow: 1px 5px 7px rgba(0,0,0,.20); margin-bottom: 28px; margin-top:20px"></center>
 
@@ -558,7 +558,7 @@ quadplay✜.
 
 <div style="columns:3;-webkit-columns:3;-moz-columns:3;column-gap:3em;-webkit-column-gap:3em;-moz-column-gap:3em">
 
-- [Towerfall Ascension](http://www.towerfall-game.com/)
+- [TowerFall Ascension](http://www.towerfall-game.com/)
 - [Crawl](https://www.powerhoof.com/crawl/)
 - [Nuclear Throne](http://nuclearthrone.com/)
 - [Celeste](http://www.celestegame.com/)
@@ -1242,7 +1242,7 @@ previous work, here are the resolutions of classic and retro machines:
  - 480x270 Hyperlight Drifter
  - 400x240 Playdate, 2DS, 3DS
  - 384x224 quadplay✜
- - 320x240 "240p", Towerfall
+ - 320x240 "240p", TowerFall
  - 320x180 Celeste and other Switch pixel art games
  - 320x200 VGA, including Amiga 500 and Commodore 64
  - 280x192 Apple II
@@ -1837,6 +1837,7 @@ Object
 `extended(object1, object2)`
 : Create a new object that is the union of `object1` and `object2`,
   where `object2` keys override in the case of collisions.
+  This is the same as using the spread operator, `{...object1, ...object2}`.
   See also `extend()`.
 
 `extend(object1, object2)`
@@ -1972,27 +1973,27 @@ Random Values
 `random_gaussian3D()`
 : Same as `random_gaussian3D(xy(0, 0), xy(1, 1), random)`.
 
-`random_gaussian3D(mean, stddev, random = random)`
+`random_gaussian3D(mean, stddev, random default random)`
 : Returns a Gaussian distributed random point on the distribution
   with the given mean and standard deviation. The mean and standard
   deviation may each be scalar or `xyz()` values.
   See also `random_gaussian()`, `random_truncated_gaussian3D()`.
 
-`random_on_cube(random = random)`
+`random_on_cube(random default random)`
 : A random point on the _surface_ of the cube from `(-1, -1, -1)` to `(1, 1, 1)`.
 
-`random_on_sphere(random = random)`
+`random_on_sphere(random default random)`
 : Returns a uniformly distributed `xyz()` on the [hollow] sphere with center `(0, 0, 0)` with radius 1. Useful for
   random directions in 3D. See also `random_within_sphere()` and `random_on_circle()`.
 
-`random_within_cube(random = random)`
+`random_within_cube(random default random)`
 : A random point inside the cube from `(-1, -1, -1)` to `(1, 1, 1)`.
 
-`random_within_sphere(random = random)`
+`random_within_sphere(random default random)`
 : Returns a uniformly distributed `xyz()` within the unit sphere, that is, the ball with center `(0, 0, 0)` and radius 1.
   Useful for random offsets within a sphere. See also `random_on_sphere()`.
 
-`random_truncated_gaussian3D(mean, stddev, radius, random = random)`
+`random_truncated_gaussian3D(mean, stddev, radius, random default random)`
 : Returns a Gaussian distributed random point within `radius`
   of `mean`. The `mean` and `stddev` may be scalars or `xyz()`s.
   If `radius` is a number, the truncation region is a disk. If
@@ -2012,7 +2013,8 @@ The following vector operations can be applied to any array or object,
 including `xy()` and `rgb()` values, except where specific key names are mentioned:
 
 `angle_to_xy(angle)`
-: Returns `xy(cos angle, rotation_sign() * sin angle)`
+: Returns `xy(cos angle, rotation_sign() * sin angle)`,
+  snapping to integer axes if within 10<sup>-12</sup>
 
 `atan(vec2)`
 : Returns `atan(vec2.y, vec2.x)`. See also `xy_to_angle()`
@@ -2166,10 +2168,14 @@ Math
 
 `lerp(a, b, t)`
 : Returns `a + (b - a) * t`. See also `smoothstep()` and `smootherstep()`.
-  See also `perceptual_lerp_color()`.
+  See also `perceptual_lerp_color()`. See also `lerp_angle()` and
+  the 5-argument version for remapping ranges.
 
 `lerp(a, b, t, t_min, t_max)`
-: Returns `a + (b - a) * ((t - t_min) / (t_max - t_min))`.
+: Returns `a + (b - a) * ((t - t_min) / (t_max - t_min))`,
+  linearly interpolating to remap/rescale the range of `t` from
+  [`t_min`, `t_max`] to [`a`, `b`]. The 3-argument `lerp()`
+  performs `lerp(a, b, t, 0, 1)`.
 
 `lerp_angle(a, b, t)`
 : Linear interpolation between angles `a` and `b` by `t`, taking wrapping
@@ -3607,6 +3613,25 @@ range 0 to 1 for each channel.  Although the screen and GPU operate in
 4-bit per channel mode, arbitrary colors (including negative and out
 of gamut ones) can be represented using these types.
 
+Quadplay internally stores 16-bit per pixel colors in the sRGB color
+space for sprites and the framebuffer. Drawing commands accept
+floating point sRGBA or HSVA colors, where all fields are on the range
+0-1. HSL is not directly supported, but can be converted to and from 
+HSV using:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+def hsl_to_hsv(src):
+    const S = src.s * min(src.l, 1 - src.l)
+    const V = S + src.l
+    return hsv(src.h, 2 S / max(V, ε), V)
+
+def hsv_to_hsl(src):
+    const L = src.v * (1 - ½ src.s)
+    const S = if (L ≤ 0 or L ≥ 1) then 0 else (src.v - L) / min(L, 1 - L) 
+    return {h:src.h, s:S, l:L}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 `gray(n)`
 : Returns `rgb(n, n, n)`, with `n` clamped to the range 0 to 1.
 
@@ -3701,11 +3726,12 @@ equivalent to `gray(0.8039)`.
 The quadplay✜ uses 4:4:4:4 RGBA color, for a total of 4096 different colors and
 16 levels of transparency including fully-transparent.
 
-It can draw perfect 16-shade gradients of red, green, blue, yellow, magenta, cyan, and gray,
-where the darkest shade of each of those is black.
+It can draw perfect 16-shade gradients of red, green, blue, yellow,
+magenta, cyan, and gray, where the darkest shade of each of those is
+black.
 
-Blending is based on z-order, not draw order, and is always the Porter-Duff
-over-compositing rule:
+Blending into the screen is based on z-order, not draw order, and
+is always the Porter-Duff over-compositing rule:
 
  `result.r = back.r * (1 - front.a) + front.r * front.a`
 
@@ -3722,8 +3748,9 @@ or `h`, `s`, and `v` fields, and an optional `a` field. All color
 channels are on the range 0-1 and snapped to discrete
 values. Additional fields in color objects are ignored.
 
-Many routines accept both a "fill" color for the interior and a "border" color for the
-perimeter.  Set either to transparent (`nil`) to efficiently disable that portion of rendering.
+Many routines accept both a "fill" color for the interior and a
+"border" color for the perimeter.  Set either to transparent (`nil`)
+to efficiently disable that portion of rendering.
 
 The `nil` value is transparent.
 
@@ -3826,7 +3853,7 @@ endpoints and borders.
   `set_transform` scaling.
 
   If it is not `nil`, the `override_color` blends with the red, green, and blue
-  values read from each pixel of the sprite. The default blend mode is "lerp",
+  values read from each pixel of the sprite. The default blend mode is `"lerp"`,
   which interpolates between the sprite color and the `override_color` based on
   `override_color.a`. The other blend operation supported is `"multiply"`, which multiplies
   the `r`, `g`, `b` values and ignores the `override_color.a`. The alpha value
@@ -4250,6 +4277,36 @@ indices. The map's z-axis corresponds to layers.
   `get_map_sprite()`. Respects the wrapping and can wrap
   infinitely.
 
+`map_generate_maze(args)`
+: Replace a layer of the map with a maze, resizing the maze slightly
+  if needed to fit the proper number of cells for the options
+  specified.
+   - `map: map`
+   - `layer: number default 0`
+   - `hall: {thickness: integer default 1, sprite: sprite default nil} default {}`. 
+       Description of the passageways. The `sprite` should be from `map.spritesheet` or `nil`.
+       `thickness` is measured in map cells.
+   - `wall: {thickness: integer default 1, sprite: sprite default map.spritesheet[0][0]} default {}`. Description of the dividers between passageways and inaccessible aeas. Same options as for `hall`.
+   - `horizontal: {border: number default 1, loop: boolean default false, symmetric: boolean default false} default {}`.
+     The border is the number of wall layers around the outside of the map.
+   - `vertical` same options as `horizontal`
+   - `shortcuts: number default 0%`. Amount of additional hall connections beyond a 
+     continous labryinth path.
+   - `straightness: number default 0%`. Preference for long straight hals vs. twisty
+     ones.
+   - `coverage: number default 100%`. Amount of the map layer
+     reachable by halls. The remainder is wall.
+   - `dead_end_array: array default []`. If provided, then 
+     this array will be filled with the `xy()` map coordinates of dead-end
+     passageways, which are good locations for spawn points or building rooms.
+   - `random: function default random`. Random number generator to use.
+
+`map_resize(map, width, height, layers default size(map.layer))`
+: Resizes the map in place. Newly revealed values will be `nil`.
+  Maps should only be resized using this function. There is no guarantee
+  that the individual arrays will be preserved--they may be reallocated
+  and copied. Do not hold pointers into the map across `map_resize()` calls.
+
 `set_map_sprite(map, map_coord, sprite, layer default 0)`
 : Sets the corresponding map sprite. Does nothing if `map_coord` is out of bounds.
   Respects the wrapping and can wrap infinitely.
@@ -4635,7 +4692,8 @@ Raw Device Access
   All `device_control()` commands may change in future releases and 
   may fail silently on any given platform or when not using the IDE.
 
-  <style>table.nested td:first-child {padding-right: 25px; white-space: nowrap;} 
+  <style>table.nested td:first-child {margin-right: 25px; padding-left: 22px; text-indent: -22px}
+         table.nested td code {white-space: nowrap} 
          table.nested th {border-bottom: 1px solid} </style>
   <table class="nested">
     <tr><th> Parameters                      </th><th> Effect </th></tr>
@@ -4645,13 +4703,15 @@ Raw Device Access
     <tr valign=top><td> `"take_screenshot"`             </td><td> Take a screenshot and download it to the local disk. </td></tr>
     <tr valign=top><td> `"take_label_image"`            </td><td> Capture the center of the image and save it to disk, overwriting the label128 and label64 images (only works when running in the IDE on an editable project). </td></tr>
     <tr valign=top><td> `"set_pad_type", index, "type"` </td><td> Set `gamepad_array[index].type` and the corresponding prompts. There is no "get" version because you can read the property directly from the gamepad object.</td></tr>
-    <tr valign=top><td> `"get_analog_axes",` `player_index default 0,` `stick_index default 0`</td>
+    <tr valign=top><td> `"get_analog_axes",`
+    `player_index default 0,`
+    `stick_index default 0`</td>
                                                               <td> Return an `xy()` of the analog axis values for `gamepad_array[player_index]`, without D-pad snapping and unlocking reading of the
                                                                    values beyond the first stick.
                                                                    Needed for accessing Atari paddles, car pedals, steering wheels, and flight stick throttles in
                                                                    a meaningful way. There is currently no way to read the D-pad directly (it will be overriden by the analog axis if moved)
                                                                    or to read the analog triggers or other axes.</td></tr>
-    <tr valign=top><td> `"get_mouse_state"`             </td><td> Return `{x:number, y:number, dx:number, dy:number, xy:xy(...), dxy:xy(...), button_array:[...]}` for the current mouse position and buttons. Each element of
+    <tr valign=top><td> `"get_mouse_state"`             </td><td> Return `{x:number, y:number, ` `dx:number, dy:number, ` `xy:xy(...), dxy:xy(...), ` `button_array:[...]}` for the current mouse position and buttons. Each element of
                                                        `button_array` is 0 or 1. There are at least two buttons, but may be more. The `dx`, `dy`, and `dxy` values may have higher precision than the absolute numbers because they
                                                        are tracked at subpixel resolution on browsers that support this.</td></tr>
     <tr valign=top><td> `"set_mouse_lock", bool`       </td><td> Enable or disable mouse lock. Mouse lock hides the OS mouse cursor and prevents the mouse from moving 
@@ -5269,6 +5329,9 @@ options. Project files should have the double extension `.game.json`.
      "overworld": "overworld.map.json"
   },
 
+  // The text added after the date to screenshot filenames
+  "screenshot_tag": "Your Game",
+  
   "version":      1.0,
 
   "credits" : {
@@ -5747,20 +5810,29 @@ The sprite sheet JSON descriptor looks like:
     // Default value for sprite.frames, the number of 1/60-second frames
     // to play a sprite during animation.
     "default_frames": 1,
+    
+    // Optional table mapping color value strings to strings.
+    // These must be exactly (4-bit) #RGB values; they cannot have
+    // alpha or use the 8-bit form #RRGGBB. They are applied to the source
+    // image after loading to recolor it. Alpha values are preserved.
+    "palette_swap": {
+        "#F00": "#0F0",
+        "#DD0": "#C0D"
+    },
 
     // Optional. Applies to pre-transpose coordinates. Each becomes
     // an array on the spritesheet with the extrapolate field set.
     // A name cannot be 'sprite_size' or any other spritesheet field.
     //
-    // If an xy() is specified, creates a single sprite.
+    // If an object with "x" and "y" properties is specified, creates a single sprite.
     //
     // If an object is specified, creates an array of sprites.
     //
     // If `extrapolate` is unspecified, defaults to looping.
     // `extrapolate` options are "loop", "oscillate", and "clamp"
     //
-    // Each object may have its own `defaultFrames` that overrides the
-    // spritesheet's defaultFrames, as well as a `frames` array with
+    // Each object may have its own `default_frames` that overrides the
+    // spritesheet's default_frames, as well as a `frames` array with
     // one element per sprite in the animation.
     //
     // `end` defaults to `start`, and each field of `end` defaults
@@ -6463,7 +6535,7 @@ ASCII    | Unicode | Meaning
 `{}`     |         | object constructor (follows JavaScript syntax)
 `.`      |         | object property
 `()`     |         | grouping or function call
-`...`    | `…`     | spread operator for arrays
+`...`    | `…`     | spread operator for arrays and objects
 `bitand` |`∩`      | bitwise AND (bit set intersection)
          |`∩=`     | mutating bitwise AND
 `bitor`  |`∪`      | bitwise OR (bit set union)
@@ -6585,18 +6657,15 @@ when the order of operations is unambiguous. For example, `cos a` ==> `cos(a)`, 
 they may not be invoked in this form when a high-precedence operator follows the argument. Those
 operators are `.`, `[`, and exponentiation.
 
-Because back-to-back parentheses are interpreted as implicit multiplication, functions that
-are returned from other functions, determined by parenthesized expressions, or stored in
-objects cannot be invoked using the `()` syntax. Instead, use the `call` function:
+Note that the `call()` function can in most cases be replaced simply with the function
+expression followed by arguments:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
-// Illegal:
-x = (a and abs or cos)(θ)
+x = (if a then abs else cos)(θ)
 y = tbl["myfunc"](3, 4)
 z = f(a)(b)
 
-// Legal:
-x = call(a and abs or cos, θ)
+x = call(if a then abs else cos, θ)
 y = call(tbl["myfunc"], 3, 4)
 z = call(f(a), b)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -6655,7 +6724,11 @@ Multiplication is implicit wherever a number is immediately followed by a parent
 expression or variable (including a function call). This also ocurrs when any exponent
 appears immediately preceeding a parenthesized expression or variable, and where two
 parenthesized expressions are back to back. For example,
-`2x`, `x²y`, `3(x+y)`, `(y+2)(x+1)`.
+`2x`, `x²y`, `3(x+y)`, `(2 + x) y`. 
+
+Implicit multiplication will not occur if the expression on the left of the pair 
+ends in any bracket: `| ) ] ⌋ ⌉ ‖` and the expression on the right also begins with a bracket.
+For example, `(x + 1) (x + 2)` and `|y| x` are syntax errors, not implicit products.
 
 Implicit multiplication can be used within exponents.
 
@@ -6663,7 +6736,8 @@ Implicit multiplication can be used within exponents.
 ### Spread Operator
 
 The spread operator (`…` or `...`) allows defining and calling
-functions with a variable number of arguments. It is the same as
+functions with a variable number of arguments and creating a merged
+version of objects or arrays. It is the same as
 `*rest` in Python and `...rest` in JavaScript.
 
 In a function declaration it designates the final argument as an array of all further arguments.
@@ -6677,6 +6751,17 @@ been entered inline. So, `bar(…a)` calls a function with all of the arguments 
 `[1, 2, …a, 10]` creates an array that begins with 1 and 2, then has all of the elements of `a`,
 followed by the number 10.
 
+For objects, `{a:1, b:2, …rest}` creates the object `{a:1, b:2}` and then
+creates a new extended version in which the properties of `rest` are added,
+overriding any with the same name in the original object (as with the `extended()` function).
+This is helpful for the case of calling a function with an args object:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+const text_args = {color: #FFF, x_align: "center", font: roman_font}
+
+draw_text({text: "Hello", pos: xy(10, 100), …text_args})
+draw_text({text: "World", pos: xy(10, 120), …text_args})
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 ### Built-in Objects
@@ -8128,1285 +8213,12 @@ bundled together with a script.
 
 
 
-Change Log
-=====================================================================================
-
-Changes for both the specification and implementation in each release.
-
-2020 December 4: Beta update 57
-
-- New "gridmove" sample of PAC-MAN style movement and maps
-- Eliminated most lag in online multiplayer by working around
-  various browser bugs
-- Added `xy_to_angle()` and `angle_to_xy()`
-- Added `rgb(array)`, `rgba(array)`, `hsv(array)`, and `hsva(array)`
-- Improved error messages for `xy()` constructor
-- Added clipping region support for Warlock3D `raycast.pyxl` routines
-- 15% speedup for Warlock3D demo through clipping, reduced floor quality, and
-  micro-optimizations
-- Added `map.size_pixels`
-- Added variable quality option for `draw_map_span()`
-- Darkened and saturated the player 3 yellow and player 4 lime colors to better match
-  the brightness P1 and P2
-- Fixed `map.z_offset` being ignored by `get_map_sprite_by_ws_coord()`
-- Fixed diagonal flipped sprites in TMX maps
-- Fixed new doc create not working
-- Fixed crash in physics example from `contact.point1` being `{}` instead of `nil`
-
-2020 November 28: Beta update 56
-
-- Enabled online play beta support. Latency is likely to be
-  high for some games and computers in this initial release.
-- `size(object)`, `random_value(object)`, `keys(object)`, and
-  `for value at key in object` now correctly
-  ignore internal properties of built-in quadplay objects and assets
-- Added `ninja-green-32x32.sprite.json` and adjusted pink, blue, and yellow
-  ninjas to match the quadplay controller colors
-- Removed the `age` property from the physics collision callback documentation
-  (it was never implemented)
-- Implemented the `depth` property of collision callbacsk
-- String coercion by concatenation of assets will now produce the asset name
-- String coercion by concatenation of `nil`, `infinity`, and `-infinity` will
-  now produce the corresponding symbol
-- Improved opaque, thin-line rendering performance by 15%
-- Fixed pressing P on the System tab of the launcher leading to a crash
-- Fixed custom controller types being lost after page reload
-- Fixed subsection numbering in the manual under Firefox
-
-2020 November 22: Beta update 55
-
-- Tuned Friendly Fishing to spawn only small fish at the start of the game
-  to ease players in, and then guarantee larger fish later
-- Added `credits` and `links` sections to the `game.json` files
-- Added remote play infrastructure in the Online tab of the launcher
-  and bundled PeerJS for connecting
-- Changed the `quadplay` script `--host` argument to `--serve` to disambiguate
-  from remote play hosting
-- Added `quadplay --offline` to disable new online multiplayer features
-- When running outside of the IDE (with or without kiosk mode), quadplay will
-  now sleep after two minutes of no activity to conserve power
-- Launcher now shows diagnostic system data
-- Added Kiosk Mode to the IDE Console menu to avoid requiring URL editing
-- Kiosk mode now allows access to the "my_quadplay" folder
-- `quadplay --kiosk` at the command line now launches in fullscreen mode
-  directly on macOS and Windows when using Edge or Chromium. On other platforms
-  it requires a click to enter fullscreen.
-- Disabled caching of quadplay internal OS code to ensure that platform upgrades
-  do not require a hard reload from users
-- Added PeerJS to the distribution
-- Fixed `slice()` on strings to implement end index as specified
-- Fixed `draw_text()` markup with both `{br}` (or double newline) and format
-  specifiers dropping content after the line break
-- Fixed Auto-Pause state not being stored between sessions
-- Fixed CSV loading for constants (was broken by debug.json layer in the previous release)
-
-
-2020 November 7: Beta update 54
-
-- New _Friendly Fishing_ built-in game
-- `add_frame_hook()`, `delay()`, `sequence()`, and `remove_frame_hook()` are
-  now safe to execute from within another hook
-- Controller order remapping now available from the in-game pause menu
-- `.sound.json` files can now specify a base pitch, pan, rate, and volume
-  adjustment
-- Added `lightning` to `shapes-32x32.sprite.json`
-- Added `local_time().absolute_milliseconds`
-- Added `trim_spaces()`
-- `unparse()` now takes an optional `terse` argument to eliminate spaces
-  after separators
-- `save_local()` now uses terse unparsing
-- Changed `save_local()` limitation to 4096 characters for 64 keys
-- Any player can now select the built-in game in the launcher
-- Fixed stopwatch/oldstopwatch negative time formatting in `format_number()`
-
-2020 October 31: Beta update 53
-
-- Added `gamepad_array[i].color`
-- Added `splash-01.sound.json`, `splash-02.sound.json`, `splash-03.sound.json`,
-  `splash-04.sound.json`, `splash-05.sound.json`, `splash-06.sound.json`, 
-  `splash-07.sound.json`, `splash-08.sound.json`, `splash-09.sound.json`
-- Added `attack-00.sound.json`
-- Added `loop-departure.sound.json`
-- Added `loop-winch.sound.json` and `loop-spin.sound.json`
-- Added `music-royal.sound.json` and `music-sonata.sound.json`
-- `play_sound()` now takes optional `rate` and `stopped` arguments
-- `set_pan()` can now take an `xy()` for the pan position
-- Import Existing Asset dialog now supports keyword filtering
-- Improved sound preview in IDE with full pause, volume, and scrub controls
-
-2020 October 18: Beta update 52
-
-- New `cursor-9x9.sprite.json` spritesheet
-- New `weaver-7.font.json` font
-- Reference constants may now point to named sprites
-- Added IDE GUI editor for reference constants
-- Added `device_control("set_mouse_cursor", name)`
-- Added "Import existing script" dialog
-- Added "Import existing mode" dialog
-- Added "Import existing doc" dialog
-- Fixed `false` boolean constants not appearing in the GUI for the debug layer
-- Fixed mouse and touch movement deltas to work correctly on high framerate displays
-
-
-2020 October 9: Beta update 51
-
-- New Input example program
-- New `weaver-10.font.json` font
-- Added Russian Cyrillic character "в" to fonts
-- Improved credits scrolling speed and fonts
-- Improved pixel sharpness on Chrome Windows and macOS at certain pixel ratios.
-  All browser and OS combinations are now pixel-perfect at all scales.
-
-2020 October 2: Beta update 50
-
-- Added `sprite.base` pointer
-- Added `sorted()` functional sort
-- Added a `.gitignore` to new projects by default
-- Fully implemented debug.json files and IDE support for Debug Override
-- Fixed `z_dir` not being properly set or read by the argument object
-  versions of `set_transform()` and `get_transform()`
-- Fixed system pause menu at 64x64 not restoring clip and transform
-
-
-2020 September 27: Beta update 49
-
-- New _Kart_ example of a perspective ground plane
-- New _Warlock 3D_ example of a first person viewpoint
-- New Blasphemer tile set
-- New Freedoom tile set
-- New Minecraft Pixel Perfection tile set
-- New footsteps sound loops
-- Added `ray_intersect_map()` collision detection routine
-- Added `curved_arrow` and `corner_arrow` to `shapes-32x32.sprite.json`
-- Added subpixel precision support for `mouse.dxy` on `device_control("get_mouse_state")`
-- Added `device_control("set_mouse_lock")`
-- Added `.data.json` files for large assets in arbitrary formats
-- Added `set_playback_rate()` for audio
-- Added `draw_map_span()`
-- Added IDE context menu option to remove a mode from the game
-- Added IDE context menu option to remove a document from the game
-- Allowed leading underscores on variable and member names
-- Improved frame rate scaling for low end processors
-- Tuned built-in Controls pixel layout for every resolution
-- Fixed `mouse.dy` on `device_control("get_mouse_state")` returning incorrect values
-- Fixed swapped `sprite.rotated_90` and `sprite.rotated_270`
-- Fixed missing transparency for `sprite.rotated_90` and `sprite.rotated_270`
-- Fixed missing edge on outlined polygons, triangles, and rotated rectangles
-- Fixed physical controller overriding keyboard D-pad if activated
-- Fixed polygons, triangles, and rectangles rotating the wrong way under camera transforms
-  when the Y-axis is up
-- Fixed `get_map_pixel_color()` on tiling maps
-- Incompatible change: `ray.origin` --> `ray.pos`, `ray.direction` --> `ray.dir`
-
-
-2020 September 12: Beta update 48
-
-- New game, _Doubles de Pon_
-- Added `sprite.rotated_90`, `sprite.rotated_180`, and `sprite.rotated_270`
-- Added robot to `shapes-32x32x.sprite.json`
-- Added correct sprite size to `beast-soldier-32x32.sprite.json`
-- Added `invert_sprite_y` optional argument to `get_map_pixel_color()`
-- TMX maps now support rotation as well as flips
-- Disk, circle, text, and rectangle centering are now all aligned for subpixel
-  offsets
-- IDE now shows the current filename at the top of the code editor
-- Context menu now keeps IDE rollout project view visible in debug layout
-- Optimized the performance of `rgba()` colors for `draw_point()` about 20%
-- Fixed `draw_text()` not returning a value in skipped frames
-- Fixed `noise()` for the 3D case
-- Fixed HSV color preview
-- `get_map_pixel_color()` now accepts an output value to avoid memory allocation
-- Fixed wrapping `draw_map()` under simultaneous transform scale and camera 
-  rotation transformations
-- Incompatible changes:
-   - `get_map_pixel_color()` now accepts a range of layers and composites all values
-     read across them
-- Known bugs:
-   - HSV color preview not 100% accurate
-   - `get_map_pixel_color()` uses wrong coordinates outside of primary bounds for wrapping maps
-   - `draw_map()` not visible outside of central 3x3 repetitions for wrapping maps
-
-
-2020 September 4: Beta update 47
-
-- New built-in game "Beyond Control"
-- New example "Planet Generator" for 2.5D procedural content
-- New example "Clouds" of per-pixel graphics
-- New example "Entity" of different entity features
-- New `scoreboard-5` font
-- New `splash-00` sound
-- New `sparks-00` through `sparks-04` sounds
-- New `explode-10` sound
-- New `powerup-11` sound
-- New `shoot-11` sound
-- New `shoot-12` sound
-- New `loop-prometheus` sound
-- New `loop-forest` sound
-- New `loop-escalator` sound
-- New `loop-beat` sound
-- New `loop-wind` sound
-- New `beast-soldier-32x32` spritesheet
-- New `shapes-32x32` spritesheet
-- New dots, stripes, wood, and carbon console vinyl wraps
-- Added `gamepad.prompt["##"]` for a replacement string for the player number
-- Added `.debug.game` layer (see the Debug JSON section)
-- `debug_watch()` now allows multiple identical expressions at different locations
-- `debug_watch()` and `debug_print()` output are now hyperlinks to the source location
-  that produced them
-- Added 320x180 support for targeting Switch, PiBoy, 720p, 1080p, and 1440p
-- Added support for TileKit
-- Added optional stick index argument to `device_control("get_analog_axes", ...)`
-- Added `font.spacing` and `font.glyph_size`
-- Packed `suchet-12` font characters more tightly to conserve memory
-- Optimized rendering of successive rectangles using the same `z` value
-- Optimized the 2D `noise()` function variant (now runs in 3/4 the time)
-- Incompatible changes: 
-  - Made the order of arguments for `draw_tri()` consistent
-    with other drawing functions
-  - `local_time().daySecond` --> `local_time().day_second`
-  - `xz_to_xyz()` now swizzles `z` -> `y`
-  - Games must now opt in with a game.json `dual_dpad` setting for
-    the P1 right stick to override the P2 D-pad for dual digital stick input in single-player
-    games
-  - The `entity.pivot` now affects rendering as well as collision detection,
-    overriding the sprite's pivot (it defaults to the sprite's pivot)
-- The start mode is now specified with `start_mode` in the game JSON file instead of
-  an asterisk
-- `sequence()` now accepts bare numbers indicating frames to skip
-- `sequence()` now supports an `end_callback`
-- Made the default radius for `random_truncated_gaussian()` 2.5 standard deviations
-- Changed the `region` of a sprite JSON file to take `"corner"` instead of `"pos"`
-  (the old version is accepted as a synonym for backwards compatibility at the moment)
-- The sprite viewer in the IDE now autoscales for tall sprites
-- `stop_audio()` now allows the argument to be `nil`
-- Added `SOURCE_LOCATION` zero-argument operator
-- `set_random_seed()` now defaults to a random seed based on the time
-- `random_value()`, `shuffle()`, and `shuffled()` now take an optional
-  random number generator argument
-- IDE can now create new sound assets
-- IDE can now change the order of execution of scripts
-- IDE can now remove scripts (removed scripts are not deleted on disk)
-- IDE can now rename scripts
-- IDE project window now rolls out on hover in debug mode
-- `gamepad_array[]` elements now print as their name instead of properties
-- Increased the contrast of the text in ghost mode
-- Reordered quick links on the top of the manual
-- Rewrote the Project File section of the manual to clarify the asset vs. constant distinction
-- Increased the contrast on the sprite editor info data
-- The Import Asset dialog will now automatically default to a useful variable name
-- The Import Asset dialog can now import raw PNG, TMX, and MP3 files
-- Sprite JSON files now default to assuming a single sprite that is the size of
-  the spritesheet if none is specified
-- Fonts now only count as 1/2 pixels towards the sprite pixel limit because they are
-  compressed
-- Internally renamed variables and files for easier refactoring and future PyxlScript features
-- The fullscreen layout button now returns to full screen if tapped when already selected
-- IDE code editor now highlights compile-time error lines in red
-- Editor divider pane layout now persists over reload
-- Added Dualshock4 controller to the officially tested list
-- Added support for the [8bitdo M30](https://www.8bitdo.com/m30/) SEGA Genesis style controller
-- Added support for the Raphnet adapter and SEGA Genesis and Mega Drive retro bit controllers
-- Added `device_control()` `"load"` and `"save"` commands for JSON files
-- Added `touch.screen_x`, `touch.screen_y`, `touch.screen_xy`, `touch.screen_dx`, `touch.screen_dy`,
-  and `touch.screen_dxy` accessors for screen-space (instead of camera-space) positions
-- Added `rgba(rgb, a)`, `rgba(hsv, a)`, `xyz(xy, z)`, `xyz(xz, y)`, `hsva(hsv, a)`, `hsva(rgb, a)`
-- Added `transform_ws_to_ss()` and `transform_ss_to_ws()`
-- Added `{br}` line break markup
-- Added `ABS()` intrinsic
-- Added `sprite.animation` property
-- Added Sega Genesis and Mega Drive controller support
-- Added `⑤ ⑥ ⓩ` characters to font mapping and all fonts
-- Added `design` document template for New Doc menu
-- Added named argument version of `draw_corner_rect()`
-- Added `table` constants that use external CSV files
-- Added `"multiply"` blend mode for `draw_sprite()`, useful for colored lighting
-- Added support for transposed spritesheets in the IDE sprite viewer
-- Added support for regions in the IDE sprite viewer
-- Added a global volume control on the Console menu
-- Added buttons to copy stats summaries from the Stats pane
-- Added `X_Arcade` controller icon and mapping for the [X-Arcade](https://shop.xgaming.com/) USB controller
-- Added `PiBoy` controller icon and mapping for the [PiBoy DMG](https://www.experimentalpi.com/PiBoy-DMG--Assembled_p_16.html)
-- Added `device_control("console.dir", ...)` for web browser console access
-- Fixed new game filename shortener to keep the beginning instead of the end of names
-- Fixed iterator container-mutation check when changing modes
-- Fixed `draw_sprite()` API links in the manual
-- Fixed `touch.xy` coordinates under translation transformations
-- Fixed recursive `push_mode()` and `pop_mode()` not preserving `draw_previous_mode()` state
-- Fixed `export.py` script to set read file permissions on the contents of the zipfile
-- Fixed constant editor vector vertical nudge value to default sign based on `y_up` setting
-- Fixed analog axis snapping when near 8-direction points
-- Fixed sprite editor not updating after JSON edits
-- Fixed gutters on sprites
-- Fixed initial `entity.size` to be based on scale for rectangular shaped entities that have initial sprites
-- Fixed broken images in Markdeep design documents after edits
-- Fixed incorrect image scaling when embedded in itch.io at 1080p
-- Fixed a bug that prevented `debug_watch()` on values containing string literals
-- Fixed IDE edits to asset JSON files not persisting after load
-- Fixed incorrect line numbers when using `default` expressions
-- Fixed 3-space indenting in .game.json files
-- Fixed internal assertion failure for `make_spline()` with negative time values
-- `clone()` and `deep_clone()` on _constants_ now clones the value
-  and makes it mutable, while on _assets_ (other than maps) and built-in objects 
-  returns the original object.
-
-
-2020 July 10: Beta update 46
-
-- New font: `hauer-12`
-- New font: `robot-18`
-- IDE code editor now highlights run-time error lines in red
-- Color constant editor preview now shows the exact 16-bit color
-- Color constant editor preview now visualizes alpha channel
-- Made `local:` and `preserving_transform:` lines free versus total source statement limit
-- Added `gamepad_array[]` reordering dialog to support arcade configurations. 
-  Access this from the Controls tab of the debugger.
-- Added a breakdown of code size by file in the Stats window of the debugger.
-- Added a breakdown of sprite pixels by file in the Stats window of the debugger.
-- Fixed macOS quadplay script when quadplay and the home directory are on different volumes.
-- Fixed the bottom line not appearing on the editor on some browsers
-- Fixed binding on the animation example ninja duck key
-- Fixed `text_width()` being too small by one space between letters
-- Fixed a physics system crash on rare contact breaking situation
-- Fixed an API upgrade bug on object removal in Serpitron during showdowns
-- Fixed the mode graph clipping on the bottom
-- Made the mode graph scrollable
-
-2020 July 3: Beta update 45
-
-- Made function definition lines, `todo()`, and `assert()` 
-  free versus the total source statement limit
-- Optimized `debug_print()` to make it practical to print large amounts of data
-- The `confirm` argument to `set_pause_menu()` can now be a string that specifies
-  additional message text
-- Made assets print in `debug_print()` and `debug_watch()` as their variable name
-- Assets with the same source URL are now guaranteed to produce live objects that
-  are `==` to each other, except for maps, which are guaranteed to be `!=` because
-  they are mutable
-- Made `clone()` and `deep_clone()` work properly on assets and constants
-- The `pan` argument to `play_sound()` can now be an `xy()` value for positional sound
-- Updated X-Arcade instructions to reflect the latest 9.14 firmware
-- Changed physical modern console controller mapping so that triggers are aliases for
-  shoulders (previously P1's triggers were P2's A and B buttons)
-- Added `map.spritesheet` convenience helper
-- Added support for arbitrary properties on sprites in the `sprite.json`
-- Added `kenney-cartography-64x64.sprite.json`
-- Added `sprite.orientation_id` to distinguish unique orientations
-- Added `any_button_release()`
-- Added `explode-12.sound.json`
-- Added `spawn_particles_from_map_ws_coord()` to `scripts/particle.pyxl`
-- Optimized in-IDE game start time
-- The `export.py` script now ignores temporary and backup files
-- The `export.py` script now makes all output files world readable
-- Fixed a slight blue bias in alpha blending
-- Fixed alpha blending on sprites that are transposed at load
-- Fixed map coordinate documentation to match the practice, which is that
-  map coordinates are at tile _corners_ if there is no `offset` on the map.
-- Fixed too-aggressive caching of map loading from IDE
-- Fixed `draw_map()` case using named arguments for `replacement_array`
-- Fixed `transform_map_space_to_ws()` and `transform_ws_to_map_space()` to map 
-  integer map coordinates to the centers of map tiles, as specified in the manual
-- Fixed constant references to assets
-- Fixed RPG demo crash
-- Fixed vehicle demo button prompts
-
-
-2020 June 23: Beta update 44
-
-- Incompatible change: `draw_text()` multiline `y_align = "center"` and 
-  `y_align = "bottom"` now adjust to the entire text block and not the first
-  line
-- Incompatible change: Renamed 
-  `##-Coin.sound.json` to `coin-##.sound.json`,
-  `##-Shoot.sound.json` to `shoot-##.sound.json`, 
-  `##-Jump.sound.json` to `jump-##.sound.json`,
-  `##-Explode.sound.json` to `explode-##.sound.json`,
-  `##-Powerup.sound.json` to `powerup-##.sound.json`,
-  `##-Hit.sound.json` to `hit-##.sound.json`,
-  `##-Wild.sound.json` to `wild-##.sound.json`
-- New font: `suchet-12`
-- Support for custom properties on TMX maps
-- Auto-generated TODO lists in the IDE from `todo()` statements in code
-- Errors will now open the appropriate file and line in the IDE
-- Changed document editor layout to show 50% preview and 50% source editor
-- Load a new script faster after creation
-- Active debugger tab persists over reloading
-- System pause menu now pauses game sound effects
-- Syntax highlighting in the IDE for `parse()` and `random_within_cube()`
-- Added Shift+F6 hotkey for label generation
-- Added a context menu for modes in the project view of the IDE
-- Added `sequence.BREAK` and `sequence.NEXT` options
-- Added five-argument version of `lerp()`
-- Added `LERP()` intrinsic
-- Added `starts_with()` and `ends_with()` functions for strings
-- Added "go to line" command (Ctrl-G/⌘-G) for the IDE
-- Added `engine-00.sound.json` and `engine-01.sound.json`
-- Fixed Windows paths in URLs
-- Fixed Add Existing Asset... on Windows
-- Fixed rectangle alpha blending
-- Fixed `random_within_sphere()` crashing
-- Fixed asset json editor changes being overwritten by caches
-- Fixed alpha channel of screenshots
-- Fixed emulator alignment on Safari
-- Fixed constant parsing for `pi` in game.json files
-- Fixed map preview rendering (was broken by the previous update)
-- Fixed scalepix tool (was broken by the previous update)
-- Fixed new game-level constants reverting to zero on Chrome
-- Fixed project asset/constant scrolling to allow full variable
-  names to be seen
-- Fixed automath sometimes leaving the cursor off by one character
-
-2020 June 14: Beta update 43
-
-- Incompatible change: it is now illegal to mutate the container being iterated over
-  by a `for...in` loop. Use `for x in clone(container):` as a workaround if you need
-  mutation, which is still relatively fast.
-- Incompatible change: `+ - / * += -= /= *=` operators are now illegal to use on arrays (they 
-  are still overloaded for objects)
-- Incompatible change: `for` loops now evaluate the upper bound only once, before the loop body begins
-- Incompatible change: renamed `Blip*.sound.json` to `blip*.sound.json`
-- Temporary Network Multiplayer workaround solution (to be replaced with a more straightforward 
-  method at release)
-- Changed screenshot filename format to international date format to sort correctly
-- Added IDE option to restart a paused game automatically when focus switching back to the browser
-  from an external editor or other tab
-- Optimized nonrotated opaque sprite drawing by up to 2x and halved memory usage by reducing 
-  GPU implementation to true 16 bit
-- Optimized Safari sprite drawing using forced integer coordinates for up to 4x performance
-  increases in specific cases
-- Optimized rotated and scaled opaque sprite drawing by 10% by handling this case separate
-  from tinting, alpha test, and opacity
-- Optimized thick line rendering by reducing virtual CPU Logic overhead
-- Optimized default `for` and `for...in` loops under the new semantics
-- Scripts loaded from `quad://scripts/` no longer count against the total program size
-- The game.json file is now directly editable in the IDE
-- Errors now report the filename with the URL truncated if it matches the game URL
-- The game.json structure for docs stores only raw URLs now, not metadata
-- Made the project pane wider to make it easier to see long variable names
-- Disabled browser navigation hotkeys to prevent accidentally leaving
-  the IDE
-- Disabled Chrome browser two-finger back gesture to prevent accidentally leaving
-  games or the IDE
-- Added syntax highlighting to inline code in the manual
-- Added `IDE_USER` constant
-- Added `iterate()` function
-- Added `lerp_angle()`
-- Added `perceptual_lerp_color()`
-- Added `examples/perceptual_color`
-- Added `explode-11.sound.json`
-- Added `xy`, `dx`, `dy`, and `dxy` values to `device_control("get_mouse_state")`
-- Added syntax highlighting for `touch` in the IDE
-- Added syntax highlighting for the type-testing functions `is_array()`, `is_object()`, etc. in the IDE
-- `for` loops now test for illegal containers
-- Added mouse support to the fluid simulation demo
-- Added more error checking to entity functions
-- Added `todo()` debugging statement
-- Added `"reference"` constant type 
-- Added `scripts/particle.pyxl` reusable script
-- Added `sounds/shoot-10.sound.json`
-- Tooltips in the project listing of the IDE now show the full names of variables and scripts
-  as well as URLs and descriptions
-- Improved error checking for `find_path()`
-- Made the Debug mode use a 1.5x scale emulator on displays of 1600 pixels wide or less
-  (factoring in pixel doubling for retina displays) and 2.0x scaling at higher resolutions
-- Linked the game folder display in the IDE to opening the folder on disk
-- Fixed missing clamping of RGB colors outside the 0-1 range during rendering
-- Fixed HSV to and from RGB conversion
-- Fixed line number errors for programs with long lines
-- Fixed the bottom rows of the code editor being cropped
-- Fixed automath operating on non-pyxl files
-- Renamed `get_map_sprite_by_draw_coord()` --> `get_map_sprite_by_ws_coord()`
-- Renamed `get_map_pixel_color_by_draw_coord()` --> `get_map_pixel_color_by_ws_coord()`
-
-
-2020 May 23: Beta update 42
-
-- Incompatible change: Removed subscripts as array indices. They are still valid characters for strings.
-- Incompatible change: renamed "sound" --> "audio" and "audio clip" --> "sound" in the API
-- Made `Delta` autocorrect to `Δ` without requiring a following space in the IDE
-- Made rename and add asset/constant update faster
-- Search and Replace in the editor now triggers autosave
-- IDE open dialog now includes game descriptions and icons
-- P1's right stick and triggers no longer provide input to P2 unless P2 does not
-  have a physical controller
-- New sound `loop-chilltech.sound.json`
-- New sound `music-vice.sound.json`
-- RPS game now times out after about 15 seconds when a player hasn't chosen
-- Serpitron game now has shorter showdown levels in 2-player games
-- Moved the code editor below the map/sprite/font view in the IDE
-- Added Vaporwave 3D example program
-- Added "New Asset..." dialog in the IDE for creating new sprites
-- Added `source_url` field for sprites to support export processesqu
-- Added autocorrect support for additional capital Greek letters `ΓΔΘΛΞΠΣΦΨΩ`
-- Added `transform_es_to_es()`
-- Added right-click menu for music assets
-- Added new Twin Analog stick example for dual stick shooters
-- Added `Arcade` (quadplay native), `Arcade_X` (Xbox labels), and `Arcade_PS` (PlayStation labels) controller
-  options
-- Added X-Arcade controller information to the manual
-- Added buttons (as well as D-pad) choices for RPS game to better conceal player movements on an arcade controller
-- Renamed map transformation functions to `transform_ws_to_map_space()`, `transform_map_space_to_ws()`, `transform_ws_z_to_map_layer()`,
-  and `transform_map_layer_to_ws_z()`
-- Changed default tab/indentation size to four spaces to reduce conflicts with Python editors
-- The quantize tool now allows toggling the "dither" option after dropping the image
-- Made quantize tool display using nearest neighbor interpolation
-- Improved Safari performance by warming the sprite blitter JIT during the quadplay logo screen
-- Improved Safari performance for Beat the Gobblins by eliminating large alpha-masked sprites
-- Improved Safari performance by removing explicit nearest-neighbor upscaling and using CSS zoom
-- Improved Safari load time on dual-core processors by spreading out asynchronous requests in time
-- Improved `lerp()` and `clamp()` performance
-- Fixed compilation of fractional degrees and percentages
-- Fixed map occlusion culling (was showing empty tiles)
-- Fixed loading quad:// games from the command line
-- Fixed blurring on Safari by using CSS zoom instead of CSS scale on that platform and adjusting layout
-  to compensate
-- Fixed Safari mouse and touch event scaling
-- Fixed Debug UI layout not allowing full horizontal scrolling of the editor
-- Fixed button prompt alignment in Broderick-7 font
-
-2020 May 8: Beta update 41
-
-- Added named argument versions of all drawing routines
-- The new game's title now appears in the game and JSON when creating a new game in the IDE
-- IDE now automatically reloads externally changed files from disk when it regains focus
-- Faster saves on constant changes in the IDE
-- Added "Show in Finder/Explorer" for assets in the IDE
-- Added "Open with..." support for Photoshop, Krita, Aseprite, GIMP, Audacity, and Tiled in the IDE
-- Avoided IDE touching unchanged source files on disk to improve external editor interop
-- Added top runner sprites to complete the Action Spy set
-- Added support in the `quadplay` script for Windows systems with multiple drives
-- Added 'y' and 'z' superscript characters to fonts and the compiler (there are no
-  subscripts for these because they do not appear in Unicode)
-- Documented backdoor mouse support via `device_control()`
-- Changed the mouse cursor to a crosshair over the emulator screen
-- Fixed relative paths when creating a new game from the IDE
-- Fixed `animation.frames`, which was completely broken in the previous release
-- Supported hierarchical directory structure under `~/my_quadplay/`
-- Implemented "automath" autocorrect-style typing of Unicode symbols in the text editor
-- Assets now appear in consistent alphabetical order in the project view of the IDE
-- New "Z-Car" wireframe 3D example
-
-
-2020 May 1: Beta update 40
-
-- Added `set_camera()` and `get_camera()` and global camera support
-  to all drawing functions for camera rotation, translation, and zoom
-- Added occlusion culling optimizations to `draw_map()` for eliminating
-  completely covered tiles
-- New sportscar sprites
-- New attack helicopter ("chopper") sprites
-- New tank sprites
-- New road tile sprites
-- New suchet-9 font
-- Removed browser context menu from most UI surfaces (it is still
-  present on links and text boxes)
-- Constants can now be deleted from a project
-- Assets can now be renamed in a project
-- Added `pos`, `angle`, and `scale` arguments to `draw_map()`
-- Implemented z clipping for `draw_map()`
-- Added `examples/vehicles` sample
-- Renamed "draw" space to "world" space and introduced "camera" space
-- Removed screen-space touch events
-- Changed all `device_control()` arguments to snake case
-- map.json `z_scale` is now permitted to be 0
-- Increased the built-in epsilon value by 10x and decreased the 
-  sprite draw call order-preserving offset by 1000x to ensure that epsilons
-  can override sprite draw call order
-- Made Ctrl/Cmd-S do nothing, to avoid accidentally saving the browser page
-  when using the IDE (since the game autosaves)
-- Fixed map preview rendering of flipped sprites
-- Fixed `set_clip()` with `pos = nil`
-- Added autocorrect for math symbols option to the Tools menu
-
-2020 Apr 25: Beta update 39
-
-- Added ⓔ and ⓕ buttons, which are mapped to shoulder buttons on physical controllers
-- Added a new playable game, "Across the Lake"
-- New games can now be created from the browser based IDE using "New Game..."
-- Games can now be loaded from the browser based IDE using "Open Game..."
-- Changed `lifetime` and `duration` arguments to various APIs to `frames` for consistency
-  with the sprite and other settings, and to match the name "frame hook"
-- Fixed Ctrl/Command+C not copying in the IDE
-- Added an Animation section for sprites
-- Added `animation.frame()` for accessing animations by game frames instead of sprite index
-- Added button prompts to all fonts
-- *Incompatible change*: Renamed `"flip_y"` to `"y_up"` in .map.json and .game.json files
-- Fixed editor making relative URLs inside .sprite.json and other asset files absolute
-- The IDE now uses `$HOME/my_quadplay` as the root for new games
-- `any_button_press()` now responds to any `touch` as well
-- Increased the QR code size in the host tab to make it easier to scan
-- Changed the way that the width of the white space character is computed for
-  fonts. It now uses the largest width of the `"il¹;["` characters
-- 2x performance optimization for alpha blending large sprites with no rotation or
-  scale
-- Added `get_sound_status()` function
-- The IDE now puts badges on constants that are uneditable because the .game.json file is 
-  on a remote server or built-in
-- `quadplay` script no longer prints all internal messages
-- Changed default startup UI layout to `Emulator` for non-IDE mobile, `Maximal` for non-IDE 
-  desktop, and `IDE` if running in IDE mode
-
-2020 Apr 17: Beta update 38
-
-- Kiosk mode now completely fills the screen, removing all quadplay UI
-- Pressing play or reload now saves all documents immediately
-- Prevented frame rate changes during the first 1000 ms of a new mode
-  to allow the JIT to catch up
-- Ghost mode for livestreaming the development environment
-- Pressing Play now restores keyboard focus to the game
-- Added touch example program
-- Added arrows for nudging vector constants in the IDE
-- Added sliders for color constants in the IDE
-- Fixed syntax highlighting for `with`, `entity_add_child`, and `entity_remove_child`
-- Improved frame rate scaling to avoid dropping to 30 Hz during transient browser hitches
-- Changed the player 1 keyboard mapping to B,H,V,G for the main buttons
-  to make room for new virtual "shoulder" buttons
-- Changed mapping of game reload to Ctrl+R on Safari to prevent browser reload of the
-  page, and clarified all hotkeys with improved tooltips.
-- Added PS5 controller mappings and graphics
-- Optimized sequential rendering of multiple sprites with the same `z` value
-  and clipping region
-- Argument object version of `draw_map()`
-- `draw_map()` now accepts optional `pos`, `scale`, and `angle` arguments
-- Recorded GIFs now download in the same way as recorded PNGs
-- Added generalized `transform_to()` and `transform_from()` routines for points
-- Added support for Xbox Series X controller
-- Added a second row of 4x wide glyphs to the font format
-- Redrew all fonts with new glyphs for ⓔ, <big>⦸</big>, ⓝ, ⓗ, alt, left shift, right shift, and tab
-
-2020 Apr 11: Beta update 37
-
-- New wide-screen "Debug" UI layout option with 2x scale emulator
-- Undo and redo hot keys and buttons in the code editor
-- Changed case color names
-- Added new orange and white case color options
-- Tuned gold case color
-- Improved case layout for small sizes
-- Can now edit string, number, `xy()`, `xz()`, `xyz()`, 
-  `hsv()`, `hsva()`, `rgb()`, `rgba()`, and boolean
-  constant values in the IDE while the game is running
-- Added unique icons for different constant types in the IDE
-- Dialog for creating new constant values
-- Made `replace(string, object)` operate on all values simultaneously
-- Fixed IDE syntax higlighting for boolean operators
-- `draw_line()` now accepts a width argument
-- New wright-8 font
-- New deja-7 font
-- New deja-6 font
-- New deja-5 font
-- New deja-4 font
-- New deja-3 font
-- "Sproing" and "Camera Zoom" examples
-- Constants now have a `description` documentation field that appears in the IDE
-  and as tooltips
-- Updated markdown and [Markdeep](https://casual-effects.com/markdeep) processing to version 1.10
-- Created more room for the code editor in Debug view
-
-
-2020 Mar 30: Beta update 36
-
-- Syntax highlighting for intrinsics in Emacs and the IDE
-- Documented the autoscaler resolutions
-- Optimized IDE load time using `defer`
-- Optimized game load time using `async` and separate CPU and GPU scripts
-- Renamed `ASSET_CREDITS` --> `CREDITS`
-- Moved the console credits out of the `CREDITS.code` section and into
-  their own `quadplay` section
-- Made four-way ball splits in Quadpaddle example game
-- When launching without the IDE, always go full screen
-- Document editor now preserves scroll position when updating
-- Document editor now forces cache override
-- Added paddle shield powerup in Quadpaddle example game
-- Added `entity_remove_all()` to syntax highlighting
-- Added `miniroguelike-8x8.sprite.json`
-- Added the Network section of the manual
-- Added the advanced Physical Consoles section
-- Added `examples/roguelike`
-- Added `--kiosk` mode for the `quadplay` script
-- Fixed recursive `overlaps()` on entitys with children
-- Fixed spritesheets for maps not showing in the project viewer
-
-
-2020 Mar 25: Beta update 35
-
-- Editing for sprite, font, map, and sound metadata directly in the IDE
-- Fix for the `quadplay` script when launched with an explicit `.game.json` file
-- Built-in assets cannot be modified and are shown with lock badges on their icons
-- Remote assets cannot be modified and are shown with cloud badges on their icons
-- Disabled reloading while the editor is saving
-- Can change the initial mode from the IDE
-- All four gamepads are now enabled in the launcher for navigating to a game
-- Patches for the sprite editor UI
-
-
-2020 Mar 18: Beta update 34
-
-- New wide editor UI IDE view mode
-- Maximal UI now enters full-screen mode even when the IDE is enabled
-- Editing is enabled for modes and scripts in the IDE
-- Code editor font size is now adjustable
-- Can now create new modes and scripts in the IDE
-- Can now edit screen resolution and flip y-axis in the IDE
-- Can now change the game license in the IDE
-- Can now change the game title, copyright, and developer in the IDE
-- Game description and metadata are now visible and editable in the IDE
-- Added SN30 Pro controller settings
-- Added more explicit dual-stick and shoulder/trigger control documentation
-- `draw_text()` shadows now apply after outlines, so they are on the outside
-- Per-tab editor state for undo/redo, selection, and cursor position
-
-
-2020 Mar 7: Beta update 33
-
-- Added `CONSTANTS` and `ASSETS` objects
-- Added `default`, a "nullish-coalescing" operator for creating default values
-- Added R. P. S. game
-- Syntax highlighting for `#RGB` colors in emacs
-
-
-2020 Mar 5: Beta update 32
-
-- Added long text button prompts for SPACE, ENTER, RETURN, SELECT, START, 
-  SHARE, and OPTIONS to fontgen
-- Converted the scalepix tool to dark mode
-- Optimized set controls OS dialog layout for all screen sizes
-- `font.lineHeight` -> `font.line_height`, `font.charSize` -> `font.char_size`, `font.letterSpacing` -> `font.letter_spacing`
-- Renamed `draw_text()` arguments `wrapWidth` -> `wrap_width` and `textSize` -> `text_size`
-- Added auto-generated asset credits screen on pause menu
-- Added .game.json constant types for `xz`, `hsv`, and `hsva`
-- Included time in screenshot filenames
-- Added joint `def-preserving_transform` block to reduce indentation
-- Added the Unmatched Push and Pop Mode section explaining complex mode transitions
-- Renamed `assetCredits` -> `ASSET_CREDITS`
-- Added serifs to Broderick font capital I variants
-- Made touching the screen in IDE mode not trigger button presses
-
-
-2020 Feb 24: Beta update 31
-
-- Removed context menu from emulator to make touch screens more responsive
-- Fixed virtual controller responsiveness on Android Chrome
-- Sharpened boot screen text on Safari
-- Fixed `gamepad_array[i].angle` to follow the current Y-axis scaling
-  and match `draw_sprite()` angle
-- Changed the internal font image layout and added explicit keycaps 
-  characters to all fonts for all buttons used in controller and 
-  keyboard mappings to distinguish them from regular letters
-- Added `bitnot` text operator as a synonym for `~`
-- `collision_` --> `contact_` in the API to reduce unique terms
-- Switched all GUI tools to dark mode styling
-- quantize tool now allows dropping the image anywhere on the page
-- Improved fontgen button prompt draft characters
-
-
-2020 Feb 17: Beta update 30
-
-- Fixed Beat the Gobblins trying to write to read-only properites
-- Fixed confirmation dialog crash in OS reset menu
-- Reduced the number of rats in Serpitron
-- Reduced number of buildings on urban levels in Serpitron
-- quadplay internal server now does not return directory listings, to increase security
-- quadplay script now works from any directory for games in any directory
-- `quadplay --host` now launches faster on macOS
-- Optimized manual loading time by removing mathjax
-
-
-2020 Feb 16: Beta update 29
-
-- Changed the gamepads to define the direction of `x`, `y`, `dx`, `dy`, `xx`, and `yy`
-  based on the current transformation at the time that they are accessed
-- Reduced number of rats in single-player Serpitron
-- Reduced the coffee speed in Serpitron
-- Changed `spriteUrlTable` --> `sprite_url_table` in map format
-- Fixed single-player snake hitting itself on the donut level in Serpitron
-- Fixed SpeedStreet loading crash introduced in the previous beta
-- Fixed `map.wrap_y` and `map.wrap_x`, which were broken by the camel case to snake case conversion
-  in a previous beta
-- Fixed caching where multiple json files reference the same sound or image
-- Fixed several bugs in the RPG example
-- Optimized game launch time and memory utilization by eliminating 
-  in-memory backup copies of immutable assets
-
-
-2020 Feb 15: Beta update 28
-
-- Added optional `gamepad` argument to `any_button_press()`
-- Made controls menu option more visible in standalone game mode
-- Changed all fields of map to use snake case
-- Added `--zipfile` argument to `export.py` to streamline itch.io distribution of games
-- Made `export.py` runnable from any directory
-- Made `export.py` default to a standalone export
-- Added Beat the Gobblins game by Stephan Steinbach
-- Fixed IDE visualiztion of modes to support `push_mode` and `set_mode` with arguments
-- Added the `touch` API (no draw transform support in this implementation)
-- Added `xy` and `dxy` properties to `gamepad_array` elements
-- Improved the startup play icon for mobile using svg
-
-
-2020 Feb 6: Beta update 27
-
-- Added `xyz_to_rgb()` and `rgb_to_xyz()`
-- Added `xy_to_xz()` and `xz_to_xy()`
-- Added `xy_to_xyz()` and `xz_to_xyz()`
-- Added `MAT2x2_MATMUL_XY()` and `MAT2x2_MATMUL_XZ()`
-- Fixed outlines breaking up letters on script fonts
-- Removed the home button from the UI, as the in-game OS menu now handles this
-- Forced immediate interaction in autoplay mode to unlock fullscreen and audio context
-  features in various browsers
-- Removed quadplay branding on the mobile welcome screen and removed 
-  escape to OS from standalone games to emphasize the game's own branding
-- Allowed keyboard and gamepad input to activate a standalone game from the
-  welcome screen
-
-
-2020 Feb 2: Beta update 26
-
-- Added `examples/highscore` example
-- Added `xz()` for convenience when working with top down coordinate systems,
-  and corresponding intrinsics
-- Browser tab label is now the game title
-- Significant copyediting of the manual by Mauricio Vives
-- Changed the definition of `override_color` alpha for `draw_sprite()`
-- Added `array_value()` support for strings
-- Fixed Emacs syntax highlighting matching keywords that appear within variable names
-- Fixed multiple bugs in `tools/export.py` and supported games not in the quadplay
-  directory tree
-- Fixed `flip_y` for maps
-- Fixed `save_local` and `load_local`
-- Fixed `join()` default separators
-- Fixed `parse()` for nested objects within arrays
-
-
-2020 Jan 29: Beta update 25
-
-- Converted the entire API from camelCase to snake_case to improve readability
-  and more closely resemble Python and Lua
-- Replaced all instances of `rnd` with `random` and `int` with `integer` in the API
-- `random_int()` -> `random_integer()`
-- `srand()` -> `set_random_seed()`
-- `pad[]` -> `gamepad_array[]`
-- Removed most scroll bars from the IDE on Windows
-- Clicking on gamepad icon now displays the name of the gamepads in the IDE
-- Added `hauer-6` font asset
-- Added `cruise-7` font asset
-- Added `connelly-7` font asset
-- Added `thompson-8` font asset
-- Increased vertical spacing on `cga-7`, `deja-8`, and `cpc-14` fonts
-- `draw_text()` now returns a tighter vertical bounding box
-- Added kerning for script fonts
-- Added `examples/fontpreview` example
-
-2020 Jan 25: Beta update 24
-
-- Added `physics_entity_has_contacts()` for optimized contact tests
-- Fixed `physics_remove_all()` crash
-- Increased physics broken contact forgiveness queue length to four
-  frames to better maintain ground contact for sliding objects
-- Fixed sustained physics contacts for fast moving objects not updating position properly
-- Fixed `"Game start"` argument being passed to the start mode's `enter` event section
-- Added `tools/export.py` tool
-- Made `tools/quaddepend.py` able to launch directly as a script on macOS and Linux
-- Renamed internal BetterJSON library to WorkJSON
-- Centered ninja sprites
-- Added detection for 8BitDo SN30, SF30, and Zero 2 controllers
-- Redesigned the internals of the virtual sprite and font hardware memory system
-
-
-2020 Jan 18: Beta update 23
-
-- Redesigned profiler output in the "Stats" IDE tab to show
-  game logic, physics, and graphics time separately
-- Rewrote framerate scaling to maintain the best possible motion
-  appearance independent of framerate
-- Optimized memory management for physics attachments by reference
-  counting and weak pointers
-- No longer count quadplay OS resources against the game's limit
-- Corrected the emulator screen position to remain centered during resizing
-- Added more information on physical controllers
-- Improved manual document layout on mobile phones in portrait mode
-- Added `ninja-pink-32x32.sprite.json`
-- Added `ninja-idle-64x64.sprite.json`
-- Adjusted ninja colors
-
-
-2020 Jan 14: Beta update 22
-
-- Implemented game frame rate throttling to 60 Hz on high refresh rate monitors
-- Fixed keyboard event handling when the game is not making framerate
-- Restored forum link in the IDE
-- Added `.nojekyll` and `_config.yml` files for proper hosting of quadplay system
-  filenames that begin with underscores on github.io
-- Improved button prompt glyphs and vertical spacing in the nano-4, nano-5, scoreboard-6, scoreboard-7, and deja-8 fonts
-- Fixed controls menu for games with y = up
-
-
-2020 Jan 13: Beta update 21
-
-- Added support for Switch Pro, JoyCon, PlayStation 3, Xbox360, and Stadia controllers
-- Replaced with `◅ ▻` with `◀ ▶` in fonts
-- Added `▼` to fonts (all four cardinal solid arrows are now represented)
-- Added a system pause and configuration menu bound to the ⓟ/Start button
-- Added a startup message for standalone games notifying players of the system
-  menu button
-- Added the <big>⊖</big> symbol to all fonts
-- Removed the ⓟ gamepad button from game access space
-- Added an event section for `pop_mode`, which can be overloaded for the mode
-  being returned from
-- Added `quaddepend.py` script for printing dependencies of a game file
-- Changed quadplay script default to rejecting external connections and made the
-  argument to enable mobile support `--host`, replacing the previous `--secure` mode
-- Showed sprite pivots in the sprite viewer
-- Added `entity.is_sensor` property
-- Added 64x44 controller spritesheet
-- Separated emulator settings out of the Tools menu into a new Console menu
-- Added [scalepix✜](../tools/scalepix.html) tool for upscaling sprites and fonts
-- Changed the `gamepad_array[].prompt` to be a mapping for use with `replace()` instead
-  of raw constants and updated example programs to use it
-- Documented the HOTAS `gamepad_array[].type`
-- Added more error checking for `xy()` to catch common typos
-- Added eight new blip UI sound effects
-- Fixed `reset_game()` running the game at double speed
-- Fixed `game_frames` and `mode_frames` starting at 60
-- Redesigned boot and startup animations
-- Restored `examples/text` program that was broken by the previous update
-- Added `get_background()`
-
-
-2020 Jan 3: Beta update 20
-
-- Renamed `addEntityChild()` to `entity_add_child()`
-- Renamed `removeEntityChild()` to `entity_remove_child()`
-- Renamed `updateEntityChildren()` to `entity_update_children()`
-- Renamed `physicsStepEntity()` to `entity_simulate()`
-- Renamed `drawRect()` to `drawCornerRect()`
-- Renamed `draw_spriteRect()` to `draw_spriteCornerRect()`
-- Made `entity_simulate()` use `entity.drag` and invoke `entity_update_children()`
-- Added hardware physics support. See the Physics section for the API
-- Added physics debugging to the IDE
-- Added [physics example](../console/quadplay.html?game=quad://examples/physics&IDE=1)
-- Added `oscillate(x, lo, hi)` and deprecated `oscillate(x, m)`
-- Added `entity_remove_all()`
-- Allowed more flexible JSON syntax for data files
-- Added BetterJSON.js to credits
-- Added optional `pos`, `scale`, and `angle` arguments to `draw_tri()`
-- Added `drawRect()` that is centered and takes an optional `angle` argument
-- Added `drawPloy()` for drawing convex polygons
-- Documented that `draw_tri()` ignores winding order
-- Updated `tools/pyxlscript-mode.el` emacs syntax highlighting for new APIs
-- Fixed `tools/pyxlscript-mode.el` emacs syntax highlighting of color literals, negative numbers, and `size` properties
-- Optimized `overlaps(region, point)` test
-- Changed default entity name from `"Anonymous"` to `"entity"` + unique ID
-- [fontpack✜](../tools/fontpack.html) now allows dropping the source PNG anywhere on screen
-
-
-2019 Dec 30: Beta update 19
-
-- Added the Inspiration section
-- Added support for per-name (i.e., per-animation) pivots on spritesheets
-- Added `"setDebugFlag"` and `"getDebugFlag"` commands for controlling the IDE
-  via `device_control()`
-- Added preview images in the Built-In Games section of the manual
-- Added [poly-decomp.js](https://github.com/schteppe/poly-decomp.js) to dependencies
-- Made `require`, `requires`, `default`, `otherwise`, and `swap` into reserved words
-- Restored the instruction manual tab title to "manual✜" to make it easier to see
-  in the same browser hosting the IDE
-- Fixed audio on Safari desktop browser
-- Removed `entity.acc` and `entity.twist` properties
-- New properties for physics: `entity.friction`, `entity.stiction_factor`,
-  `entity.restitution`, `entity.drag`, `entity.contact_category_mask`, `entity.contact_group`,
-  and `entity.contact_hit_mask`
-- Added `entity_apply_force()` and `entity_apply_impulse()`
-- Added `magnitude_squared()` function
-
-
-2019 Dec 25: Beta update 18
-
-- Added Deploying Games section
-- Added [Serpitron](../console/quadplay.html?game=quad://games/serpitron&IDE=1) sample game
-- Removed `extendPostEffects()` and reverted definition of `set_post_effects()` to match beta 16
-- Added `compose_transform()`
-- Renamed `addFrameSequence()` to `sequence()`
-- Added `entity.pivot` and spritesheet pivots
-- Fixed Chrome and Safari blank region on the bottom of the IDE
-- Made deja-9 font glyph widths more consistent
-- Raised mid-glyph bar for capitals 1px on deja-8 font
-
-
-2019 Dec 14: Beta update 17
-
-- Fixed `get_clip()` off-by-one error
-- Changed `intersect_clip()` to follow the argument conventions of `set_clip()`
-- Fixed `draw_text()` using the incorrect vertical clipping region
-- Added `last_value()` and `last_key()` for arrays and strings
-- Made `floor()` and `ceil()` variants that take a rounding precision
-- Added `fast_remove_value()`
-- Fixed misalignment of `-` character and enlarged the `+` character in the broderick-7 font
-- Added `delay()` and `addFrameSequence()`
-- Added options for open-ended line segments in `drawLine()` to support
-  drawing polylines and curves with transparency
-- Fixed `set_post_effects()` background color crashing the emulator
-- Made Modes slightly wider in the visualization graph to accomodate longer mode names
-- Fixed a bug in the parsing of `because` statements that contained parentheses
-- Added support for type `"object"` in game JSON constants
-- Added `broderick-14` font
-- Made `loop()` work on vectors
-- Made `noise()` work on vectors
-- Added `extendPostEffects()` and `get_post_effects()`
-- Fixed `set_post_effects()` not resetting to defaults first
-- Added optional `reverse` argument to `sort()`
-- Increased analog stick dead zone to 40% to avoid accidental cross-axis input
-
-
-2019 Dec 1: Beta update 16
-
-- Added support for `"array"` constant types in `.game.json` files
-- Added `--secure` option to the quadplay script to prevent other machines from connecting
-  to the local webserver
-- `draw_text()` markup is now implemented
-- `text_width()` now supports markup
-- Added `duration` and `period` to spritesheet animation arrays
-- Upgraded the `quadplay` script to use a multithreaded server when Python 3.7 or later
-  is available
-- Fixed a 1-pixel overdraw in `drawSpriteRect()`
-- Made `push_front()` and `push()` return a pushed value
-- Overloaded `atan(xy)`
-- Added `insert()`
-- Fixed a parser error on `for` loops that have extra parentheses surrounding the test
-- Made documents appear at 80% scale when viewed in the IDE
-- Upgraded to Markdeep 1.07 for markdown processing
-- Changed the default markdown style sheet to have less vertical spacing and use a sans serif font
-- Fixed a bug in `push_mode()` when arguments are provided
-- Fixed handling newlines in JSON multiline strings across various OS conventions
-
-
-2019 Nov 24: Beta update 15
-
-- JSON files may now contain multiline strings using backquote: <code>`...`</code>
-- `sprite.json` files now support per-sprite animation frame timing
-- Updated the ninja sprites with
-  animation durations and the `examples/animation` code demonstrating how to use it at runtime
-- Made the `quadplay` command line script shut down more gracefully on key press
-- Added per-sprite info viewer in the IDE
-- Added slow play button for debugging animations and interaction
-- Added the specification for `markup` on `draw_text()` (but not the implementation)
-- Improved the shape and line spacing for the `roman-8` font
-- Added `replace()` for strings
-- Added optional last, pair, and empty separators for `join()`
-- Added [Text](../console/quadplay.html?game=quad://examples/text&IDE=1) example
-
-
-2019 Nov 17: Beta update 14
-
-- Added `fool-9.font.json`
-- Added `make_random()`
-- Added `random_integer(lo, hi)` and deprecated `random_integer(n)`
-- Added `random(lo, hi)` overload
-- Added optional `random()` function argument to `randomBall()`, `randomSquare()`, etc.
-- Renamed `randomBall()` --> `random_within_sphere()`,
-  `randomSquare()` --> `random_within_square()`,
-  `randomDisk()` --> `random_within_circle()`,
-  `randomSphere()` --> `random_on_sphere()`
-- Added `random_gaussian()`, `random_gaussian2D()`, `random_gaussian3D()`,
-  `random_truncated_gaussian()`, `random_truncated_gaussian2D()`, random_truncated_gaussian3D()`,
-  `random_on_cube()`, `random_within_cube()`, `random_intege(rlo, hi, random)`, `random_sign()`, `random_on_square()`
-
-2019 Oct 4: Beta update 13
-
-- Fixed RPG demo broken sprite paths
-- Fixed Boids demo broken sprite paths
-
-2019 Oct 1: Beta update 12
-
-- Added optional `region` to Sprite JSON files
-- Increased video RAM by 1 MB, for a total of 10.5 MB
-- Increased error checking for Sprite JSON files to detect typos
-- Increased robustness to load-time errors
-- Added `SIGN()` intrinsic
-- Made `sign()` work on vectors
-- Caught CORS errors on sprite loading and reported to GUI
-- Internal objects now `debug_print()` and `unparse()` as `«type objname»` instead of just `objname`
-- Fixed `forceReload=1` breaking map loading
-- Implemented pivots for sprites and entities (currently not exposed in the API)
-
-
-2019 August 30: Beta update 11
-
-- Added `ordinal` and `ordinalabbrev` to `format_number()`
-- Fixed implementation errors with `Runtime` naming clash on Firefox
-- Faster reload (no longer force reloading of `quad://` assets when locally hosting)
-- Documented `quadplay.html` arguments
-- Restored `get_transform()` to the API
-- Fixed `"oscillate"` extrapolate mode crash for `array_value()`
-
-
-2019 August 25: Beta update 10
-
-- Added support for `docs` in the `game.json` file using Markdeep, Markdown,
-  HTML, and text format. Good for game design docs, TODO lists, and game manuals
-- Added support for Ctrl+G as an alternative GIF recording keystroke
-- Added `MIN()` and `MAX()` intrinsics
-- Fixed `opacity == 0` on `draw_sprite()` to draw nothing instead of full opacity
-- Added `randomBall()` and `randomSphere()`
-- Changed sprite.json name for a single `xy()` to be a sprite instead of an animation
-
-
-2019 August 17: Beta update 9
-
-- Added `nanob-3.font.json` (like nano-3, but with thinner L and I characters)
-- Patch for emulator view resizing for new dimensions on slower browsers
-- Added `device_control()` `"getAnalogAxes"` command
-- Renamed `index.html` to `quadplay.html` for improved itch.io compatibility
-
-
-2019 August 16: Beta update 8
-
-- Allowed `for` and `with` variable lists to be split across multiple lines
-- Added `nano-3.font.json`
-- Added `space-planet.sprite.json`, `space-atmosphere.sprite.json`, `space-moon.sprite.json`, and `space-ring.sprite.json`
-- Made the JSON parser report line numbers instead of character positions for errors
-- Added `get_clip()` for returning the current clipping region
-- Added `device_control()` support for setting the prompt characters for controllers
-
-
-2019 August 12: Beta update 7
-
-- Added two-argument version of `round()`
-- Added Linux button mapping for the 8bitdo SNES30 controller
-- Added the spread operator for variable number of arguments
-- Fixed arguments to `enter`
-- Added `…¿¡?` to the characters at which `draw_text()` can word wrap
-- Increased GIF recording pixel size for 64x64 games
-- Fixed compilation of repeated `if`...`then` on a single line
-- Added support for Thrustmaster Flight Hotas X
-- Added new intrinsics `MAT3x4_MATMUL_XYZW()`, `MAT3x4_MATMUL_XYZ()`, `MAT3x3_MATMUL_XYZ()`
-- Added `explosion-realistic-128x128.sprite.json`
-- Fixed `quadplay` script not launching the correct game on Windows
-- Added overloaded `xy()` and `xyz()` for arrays
-- Increased sprite sheet limit from 64 to 128 (no increase in total memory, however)
-
-
-2019 August 8: Beta update 6
-
-- Added `scoreboard-6.font.json`
-- Added `nano-4.font.json`
-- Fixed `XY_MUL()` intrinsic
-- Fixed `set_transform()` documentation to match current API
-- Added three argument version of `loop()`
-- Allowed `draw_text()` word-wrapping to search further back for a good break point
-- Reduced boot loader font size for smaller screens
-- Added `text_size` argument to `draw_text()`
-- Added units documentation to `entity` physics properties
-- Added space (`␣`) and return (`⏎`) button characters to fonts
-- Added alternative keyboard and 8Bitdo Zero controller to `controllers-32x22.png`
-- Added `gamepad_array[i].prompt.type`
-- Fixed compilation of `if...then...else` on lines with other control flow
-- Fixed asset credits leading "by" lacking a trailing space
-
-
-2019 August 2: Beta update 5
-
-- Required a space for `sin`, `cos`, `tan` automatic parenthesis insertion
-- Added Ice Time to the manual
-- Added label images for all example programs
-
-
-2019 August 1: Beta update 4
-
-- Fixed self-overdraw in disk and circle rendering
-- `direction()` now returns a non-unit vector if the input is less than 10<sup>-10</sup>
-- Added [Fluid simulation](../console/quadplay.html?game=quad://examples/fluid&IDE=1) example program
-- Added `octant-17.font.json`
-- Added `CLAMP()`, `RGBA_LERP()` and `RGB_LERP()`
-- Fixed compilation bug with Greek letter identifiers
-- Made underscore-"subscripted" Greek letters legal identifiers. For example: <code>θ_interior</code>, <code>μ_p</code>
-
-
-2019 July 17: Beta update 3
-
-- Added syntax highlighting in emacs for `bitand`, `bitor`, and `bitxor`
-- Documented `log()`, `log2()`, and `log10()`
-- Added optional `result` argument for `get_sprite_pixel_color()` to reduce memory allocation
-- Made `at`, `because`, `reset_game`, `launch_game`, and `quit_game` into reserved words
-- *Incompatible change*: Changed how the note/reason works for `push_mode`, `pop_mode`, `set_mode`, `launch_game`, `quit_game`, and `reset_game`.
-  The syntax now uses the `because` keyword after the complete expression instead of including the note as an argument.
-- `enter` can now take optional arguments, which are provided by `set_mode()` or `push_mode()`
-- Added `deep_clone()`
-- 10% performance optimization for adjacent `drawPoint()` calls
-- Added the Intrinsics section
-
-
-2019 July 13: Beta update 2
-
-- Added `loop-dark-thriller.mp3` audio clip
-- Fixed `mget` --> `get_map_sprite()` in manual
-- Fixed Unicode characters not appearing correctly on the ad blocker warning page
-- Added `remove_all()`
-- Made IDE mode not automatically full-screen the emulator
-- Added specifically-stylized versions of `ⓧ`, `ⓨ`, `Ⓞ`, `⍍`, `▣`,`⧉`, `☰`, `ⓕ` to fonts for use as button prompts for specific controllers
-- Fixed `override_color` in `draw_sprite()`
-- Added `controllers-32x22.sprite.json`
-- Added `prompt` field to `pad` instances/`joy` variable for button prompts
-- Fixed missing `tan()` function in implementation
-- Fixed screen alignment on resolution change when games are run from the launcher
-
-
-2019 July 5: Beta update 1
-
-- Vim editor plugin (Stephan)
-- Visual Studio Code plugin (Josef)
-- Linked API references in the manual to their detailed documentation
-- Fixed links in code font to still be colored blue
-- Corrected definition of `reversed(string)`
-
-
-2019 July 4: Public Beta
-
-- Removed `extend_transform()`, `get_clip()`, and `get_transform()` from the beta release
-- Specified metadata for launcher
-- Moved programmatic GIF and screenshot recording to `device_control()`.
-- Allowed trailing commas and comments in JSON
-- Increased size of `deja-9` font button characters
-- Changed `pyx` to `pyxl`
-- Added graphics frame scaling for slower devices
-- Added QR codes for easily launching on mobile devices
-- Added `local_time()`
-- Added support for inserting padding with `fontpack.html`
-- Added named-argument versions of `set_transform()` and `set_clip()`
-- Changed the arguments of `set_transform()` to more closely match other graphics commands
-- Changed the arguments of `set_clip()` to more closely match `drawRect()`
-- Rerendered emulator case
-- Improved touch regions for mobile emulator
-- Added `games/icetime` complete sample game
-- Changed assignment and mutating operators to no longer return a value
-- Added `examples/animation`
-- Added `array_value()` animation support
-- Added mapping for 8bitdo SNES30 controller
-- Added animated ninja sprites
-- Mapped trigger and shoulder buttons from player 1's modern game controller to
-  `gamepad_array[1]` ABCD buttons. It is now possible to create twin-stick games with all
-  10 buttons
-
-
-2019 May 1: Public API Preview
-
-
-2018 July 1: Private Alpha
-
 <link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../console/favicon-32x32.png">
 <link rel="shortcut icon" href="../console/favicon.ico">
 
 
 <script>
-// Not used as Markdeep has added this feature internally
-function pyxlScriptHighlight() {
-    var elementList = document.getElementsByTagName('code');
-    for (var e = 0; e < elementList.length; ++e) {
-        var element = elementList[e];
-        if (element.parentNode.tag !== 'pre') {
-            element.innerHTML = hljs.highlight('PyxlScript', element.innerText, true).value;
-        }
-    }
-}
 markdeepOptions = {tocStyle:'long', definitionStyle:'long', linkAPIDefinitions: true, inlineCodeLang: 'PyxlScript'};</script>
 <link rel="stylesheet" href="slate.css">
 <style>

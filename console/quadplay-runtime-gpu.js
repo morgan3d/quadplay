@@ -791,9 +791,13 @@ function $executeSPR(metaCmd) {
         // rotation or scale (we'll end up rounding the actual destination
         // pixels later and stepping in integer increments anyway).
 
-        console.assert(cmd.spritesheetIndex !== undefined &&
-                       cmd.spritesheetIndex >= 0 &&
-                       cmd.spritesheetIndex < $spritesheetArray.length);
+        if (cmd.spritesheetIndex >= $spritesheetArray.length) {
+            $console.log('GPU', cmd);
+        }
+        $console.assert(cmd.spritesheetIndex !== undefined &&
+                        cmd.spritesheetIndex >= 0 &&
+                        cmd.spritesheetIndex < $spritesheetArray.length,
+                        'spritesheetIndex out of bounds:', cmd.spritesheetIndex);
         // May be reassigned below when using flipped X values
         let srcData = $spritesheetArray[cmd.spritesheetIndex].$uint16Data;
         const srcDataWidth = srcData.width >>> 0;

@@ -4,7 +4,9 @@
     "copyright": "©2020 Stephan Steinbach",
     "license": "CC0/Public Domain",
     "packages": [],
-    "scripts": [],
+    "scripts": [
+        "bounce_lib.pyxl"
+    ],
     "modes": [
         "Play"
     ],

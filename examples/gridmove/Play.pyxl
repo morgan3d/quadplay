@@ -1,0 +1,100 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+// The cell size in pixels, for improving code readability
+const GRID = 8
+
+const map = map01
+const player_array = []
+
+for p < 2:
+    push(player_array, make_entity({
+        sprite: tank_sprite[0][p],
+        pos: GRID * xy(10 + 3p, 11),
+        gamepad: gamepad_array[p],
+        vel: xy(1, 0),
+        next_vel: xy(1, 0),
+        speed: 1
+        }))
+        
+    
+def draw_game() preserving_transform:
+    const map_pixels = map.size * map.sprite_size
+    set_clip(xy(0, 0), map_pixels)
+    draw_map(map)
+    // Draw players wrapped around
+    for -1 ≤ Δx ≤ +1:
+        for -1 ≤ Δy ≤ +1:
+            preserving_transform:
+                compose_transform(xy(Δx, Δy) * map_pixels)
+                iterate(player_array, draw_entity)
+
+
+def at_cell_center(entity):
+    // Is this as close as we'll get to the center?    
+    const distance = |entity.pos - round(entity.pos, GRID)|
+    return max(distance.x, distance.y) < entity.speed
+    
+    // Fast version for integer positions:
+    // If all of the lower bits of both x and y
+    // are zero, then we're at a cell center
+    // return ((entity.pos.x ∪ entity.pos.y) ∩ 7) == 0
+
+
+// gets the value of the map cell from a world-space coordinate
+def map_sprite(pos, vel default xy(0, 0)):
+    return get_map_sprite(map, round(pos / GRID + sign(vel)), 1)
+
+
+// Version of lerp() where t can be a vector
+def vec_lerp(a, b, t):
+    return (b - a) * t + a
+    
+
+def player_simulate(player):
+    with next_vel, vel, pos, gamepad, angle, speed in player:
+        // Record desired upcoming turns. Assign a new
+        // value each time so that the cell-center code
+        // doesn't have to clone at every intersection
+        if gamepad.xx: next_vel = xy(gamepad.x * speed, 0)
+        if gamepad.yy: next_vel = xy(0, gamepad.y * speed)
+        
+        const center = at_cell_center(player)
+        
+        // Change velocity when allowed
+        if ((center or (‖vel + next_vel‖ < ε)) and  // intersection or reverse
+            not map_sprite(pos, next_vel) and       // not blocked
+            ‖vel - next_vel‖ > ε):                  // changed
+            vel = next_vel
+            
+            // Snap to a pixel on the axis that we're not moving along
+            // to prevent error from accumulating
+            pos = vec_lerp(round(pos), pos, |sign(next_vel)|)
+            
+            if ‖vel‖ > ε: angle = xy_to_angle(vel)
+
+        // See if the move is possible, but only stop on centers
+        if center and map_sprite(pos, vel):
+            // Hit wall. Stop moving
+            vel = xy(0, 0)
+        else:
+            // Clear to move, wrapping around
+            pos = loop(pos + vel, map.size_pixels)
+            
+
+def draw_hud():
+    draw_corner_rect(xy(map.size_pixels.x, 0), xy(SCREEN_SIZE.x - map.size_pixels.x, SCREEN_SIZE.y), #444) 
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+// Offset by ½ a grid square so that we can use 
+// integer coordinates for the centers of grids.
+preserving_transform:
+    set_transform(0.5 xy(GRID, GRID))
+    iterate(player_array, player_simulate)
+    draw_game()
+
+draw_hud()

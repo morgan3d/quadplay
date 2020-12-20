@@ -296,9 +296,17 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             }
         }
 
+        // Upgrade
+        if (gameJSON.screenshot_tag === undefined) {
+            gameJSON.screenshot_tag = gameJSON.title;
+        }
+
         // Clone for the extended version actually loaded
         gameJSON = deep_clone(gameJSON);
         gameSource.extendedJSON = gameJSON;
+
+        if (! gameJSON.scripts) { gameJSON.scripts = []; }
+        if (! gameJSON.modes) { gameJSON.modess = []; }
         
         // Inject OS support
         gameJSON.scripts.push(
@@ -318,7 +326,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         // Any changes here must also be updated in the os_dependencies variable in tools/export.py
         gameJSON.assets = Object.assign(gameJSON.assets, os_dependencies);
         //////////////////////////////////////////////////////////////////////////////////////////////
-        
+
         gameSource.jsonURL = gameURL;
         if (gameJSON.screen_size === undefined) {
             gameJSON.screen_size = {x: 384, y:224};
@@ -416,7 +424,6 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                     // assetURL is the asset json file
                     // json.url is the png, mp3, etc. referenced by the file
                     fileContents[assetURL] = json;
-
                     switch (type) {
                     case 'font':
                         gameSource.assets[assetName] = loadFont(assetName, json, assetURL);
@@ -643,6 +650,7 @@ function computeCredits(gameSource) {
     
     for (let a in gameSource.assets) {
         const asset = gameSource.assets[a];
+
         console.assert(asset, 'Asset ' + a + ' is not in gameSource.assets');
         const json = asset.$json;
         
@@ -655,8 +663,13 @@ function computeCredits(gameSource) {
 
         if (type === 'map') {
             // Process the spritesheets
-            for (let k in asset.spritesheet_table) {
+            for (let k in asset.spritesheet_table) {                
                 const spritesheet = asset.spritesheet_table[k];
+
+                console.assert(spritesheet.$index[0] === spritesheetArray.indexOf(spritesheet));
+                console.assert(spritesheet[0][0].rotated_270.$spritesheet.$index[0] === spritesheetArray.indexOf(spritesheet[0][0].rotated_270.$spritesheet),
+                               'bad rotated spritesheet index after loading');
+                
                 const json = spritesheet.$json;
                 if (json.license) {
                     addCredit('sprite', spritesheet.$jsonURL, json.license);
@@ -770,10 +783,52 @@ function computeResourceStats(gameSource) {
     }
 }
 
-/** Extracts the image data and returns two RGBA4 arrays as [Uint16Array, Uint16Array],
-    where the second is flipped horizontally. Region is an optional crop region. */
-function getImageData4BitAndFlip(image, region) {
+
+/** Extracts the image data and returns two RGBA4 arrays as
+    [Uint16Array, Uint16Array], where the second is flipped
+    horizontally. Region is an optional crop region.
+    
+    Options are optional additional preprocessing. The only
+    currently-supported option is `palette_swap`.
+*/
+function getImageData4BitAndFlip(image, region, options) {
     const data = getImageData4Bit(image, region);
+
+    if (options && options.palette_swap) {
+        // Build the lookup table with 2^12 = 4096 entries. Start by
+        // mapping every RGB color to itself
+        const palette = new Uint16Array(4096);
+        for (let i = 0; i < 4096; ++i) {
+            palette[i] = i;
+        }
+
+        // Now override the individual colors
+        for (const src in options.palette_swap) {
+            const dst = options.palette_swap[src];
+            // Parse src and dst
+            if (src[0] !== '#' || dst[0] !== '#' || src.length !== 4 || dst.length !== 4) { throw 'palette_swap colors must have the form "#RGB" in hexadecimal'; }
+
+            // Remove leading zeros
+            let src_int = (src === '#000') ? 0 : parseInt(src.substring(1).replace(/^0*/, ''), 16);
+            // Byte reorder
+            src_int = ((src_int & 0xF) << 8) | (src_int & 0x0F0) | (src_int >> 8);
+            
+            let dst_int = (dst === '#000') ? 0 : parseInt(dst.substring(1).replace(/^0*/, ''), 16);
+            dst_int = ((dst_int & 0xF) << 8) | (dst_int & 0x0F0) | (dst_int >> 8);
+
+            // Store the value
+            palette[src_int] = dst_int;
+        }
+        
+        // Replace all values in place, preserving alpha.
+        // Most will be unchanged.
+        for (let i = 0; i < data.length; ++i) {
+            const c = data[i];
+            //if (c !== 0) { console.log(c.toString(16)); }
+            data[i] = (c & 0xF000) | (palette[c & 0xFFF]);
+        }
+    }
+    
     const flipped = new Uint16Array(data.length);
     flipped.width = data.width;
     flipped.height = data.height;
@@ -950,7 +1005,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         // Make sure the index is updated when pulling from the cache.
         // For built-in sprites it could have been wiped.
         if (spritesheetArray.indexOf(spritesheet) === -1) {
-            // Change the index
+            // Change the index            
             spritesheet.$index[0] = spritesheetArray.length;
             spritesheetArray.push(spritesheet);
 
@@ -1010,13 +1065,14 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         $gutter: (json.gutter || 0),
         $json: json,
         $jsonURL: jsonURL,
+
+        // Index into spritesheetArray of the $spritesheet for each sprite
         $index: [spritesheetArray.length],
         // If unspecified, load the sprite size later
         sprite_size: json.sprite_size ? Object.freeze({x: json.sprite_size.x, y: json.sprite_size.y}) : undefined
     });
 
-    assetCache[jsonURL] = spritesheet;
-    
+    assetCache[jsonURL] = spritesheet;   
     spritesheetArray.push(spritesheet);
     console.assert(spritesheetArray.indexOf(spritesheet) === spritesheet.$index[0]);
     
@@ -1029,12 +1085,8 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         $index: [spritesheetArray.length],
         // If unspecified, load the sprite size later
         sprite_size: json.sprite_size ? Object.freeze({x: json.sprite_size.y, y: json.sprite_size.x}) : undefined
-    });
+    });    
     spritesheetArray.push(transposedSpritesheet);
-
-    // Pivots
-    const sspivot = json.pivot ? Object.freeze({x: json.pivot.x - json.sprite_size.x / 2, y: json.pivot.y - json.sprite_size.y / 2}) : Object.freeze({x: 0, y: 0});
-    const transposedPivot = Object.freeze({x: sspivot.y, y: sspivot.x});
     
     // Offsets used for scale flipping
     const PP = Object.freeze({x: 1, y: 1});
@@ -1074,10 +1126,13 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         if (region.size === undefined) { region.size = {x: Infinity, y: Infinity}; }
         region.size.x = Math.min(image.width - region.corner.x, region.size.x);
         region.size.y = Math.min(image.height - region.corner.y, region.size.y);
-        
-        return getImageData4BitAndFlip(image, region);
+
+        return getImageData4BitAndFlip(image, region, json);
     };
-    
+
+    // The underlying PNG may be read from cache, but the value from
+    // the preprocessor will not be read from cache because there is a
+    // different preprocessing function for each call.
     loadManager.fetch(pngURL, 'image', preprocessor, function (dataPair, image, url) {
         onLoadFileComplete(pngURL);
         const data = dataPair[0];
@@ -1112,6 +1167,10 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         spritesheet.size = {x: data.width, y: data.height};
         transposedSpritesheet.size = {x: spritesheet.size.y, y: spritesheet.size.x};
 
+        // Pivots (compute after sprite size is known)
+        const sspivot = json.pivot ? Object.freeze({x: json.pivot.x - spritesheet.sprite_size.x / 2, y: json.pivot.y - spritesheet.sprite_size.y / 2}) : Object.freeze({x: 0, y: 0});
+        const transposedPivot = Object.freeze({x: sspivot.y, y: sspivot.x});
+        
         const sheetDefaultframes = Math.max(json.default_frames || 1, 0.25);
         
         // Create the default grid mapping (may be swapped on the following line)
@@ -1246,6 +1305,10 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     }
                 }
                 
+                const pivot = (data.pivot === undefined) ?
+                      sspivot :
+                      Object.freeze({x: data.pivot.x - json.sprite_size.x / 2, y: data.pivot.y - json.sprite_size.y / 2});
+                
                 // Apply defaults
                 if (data.x !== undefined) {
                     // Named sprite, no animation
@@ -1260,6 +1323,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     sprite.frames = animDefaultframes;
                     sprite.$animationName = anim;
                     sprite.$animationIndex = undefined;
+                    sprite.pivot = pivot;
 
                     // Rename
                     sprite.$name = spritesheet.$name + '.' + anim;
@@ -1275,12 +1339,9 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     if (data.start.x !== data.end.x && data.start.y !== data.end.y) {
                         throw new Error('Animation frames must be in a horizontal or vertical line for animation "' + anim + '"');
                     }
-                    
-                    let pivot = sspivot;
-                    if (data.pivot !== undefined) {
-                        pivot = Object.freeze({x: data.pivot.x - json.sprite_size.x / 2, y: data.pivot.y - json.sprite_size.y / 2});
-                    }
+
                     const animation = spritesheet[anim] = [];
+                    
                     const extrapolate = data.extrapolate || 'loop';
                     animation.extrapolate = extrapolate;
                     animation.frame = animationFrame;
@@ -1347,6 +1408,8 @@ function loadSpritesheet(name, json, jsonURL, callback) {
             for (let y = 0; y < spritesheet[x].length; ++y) {
                 const sprite = spritesheet[x][y];
                 const transposedSprite = transposedSpritesheet[y][x];
+
+                // TODO: Transposed pivots
                 
                 // Construct the flipped versions and freeze all
                 sprite.x_flipped = Object.assign({x_flipped:sprite}, sprite);
@@ -1422,6 +1485,12 @@ function loadSpritesheet(name, json, jsonURL, callback) {
 
         Object.freeze(spritesheet);
         Object.freeze(transposedSpritesheet);
+
+        console.assert(spritesheet.$index[0] === spritesheetArray.indexOf(spritesheet));
+        console.assert(transposedSpritesheet.$index[0] === spritesheetArray.indexOf(transposedSpritesheet));
+
+        console.assert(spritesheet[0][0].rotated_270.$spritesheet.$index[0] === spritesheetArray.indexOf(spritesheet[0][0].rotated_270.$spritesheet),
+                       'bad spritesheet index during loading');
         
         if (callback) { callback(spritesheet); }
     }, loadFailureCallback, loadWarningCallback, forceReload);
@@ -1515,9 +1584,19 @@ function loadMap(name, json, mapJSONUrl) {
         // Make sure that the underlying spritesheets are up to date if they have been loaded
         const spritesheet = map.spritesheet;
         if (spritesheet && (spritesheetArray.indexOf(spritesheet) === -1)) {
-            // Change the index
+            // Change the index and re-insert
             spritesheet.$index[0] = spritesheetArray.length;
             spritesheetArray.push(spritesheet);
+
+            const transposedSpritesheet = spritesheet[0][0].rotated_270.$spritesheet;
+            transposedSpritesheet.$index[0] = spritesheetArray.length;
+            spritesheetArray.push(transposedSpritesheet);
+
+            console.assert(map.spritesheet[0][0].$spritesheet.$index[0] === spritesheetArray.indexOf(map.spritesheet[0][0].$spritesheet),
+                           'bad spritesheet index during map re-indexing');
+            console.assert(map.spritesheet[0][0].rotated_270.$spritesheet.$index[0] === spritesheetArray.indexOf(map.spritesheet[0][0].rotated_270.$spritesheet),
+                           'bad rotated spritesheet index during map re-indexing');
+            
         }
 
         return map;
@@ -1630,6 +1709,9 @@ function loadMap(name, json, mapJSONUrl) {
         }
         
         map.spritesheet_table[spritesheetName] = map.spritesheet;
+
+        console.assert(map.spritesheet.$index[0] === spritesheetArray.indexOf(map.spritesheet));
+        console.assert(map.spritesheet[0][0].rotated_270.spritesheet.$index[0] === spritesheetArray.indexOf(map.spritesheet[0][0].rotated_270.spritesheet));
         
         let image = xml.getElementsByTagName('image')[0];
         const size = {x: parseInt(image.getAttribute('width')),
@@ -1685,6 +1767,9 @@ function loadMap(name, json, mapJSONUrl) {
                         if (tileFlipX) { sprite = sprite.x_flipped; }
                         if (tileFlipY) { sprite = sprite.y_flipped; }
  
+                        console.assert(sprite.$spritesheet.$index[0] === spritesheetArray.indexOf(sprite.$spritesheet),
+                                       'bad spritesheet index during map loading');
+        
                         console.assert(sprite);
                         layer[x][flipY ? map.size.y - 1 - y : y] = sprite;
                     } else {
@@ -1693,23 +1778,28 @@ function loadMap(name, json, mapJSONUrl) {
                 } // x
             } // y
             
-            // Prevent the arrays themselves from being reassigned
-            for (let x = 0; x < map.size.x; ++x) {
-                Object.preventExtensions(Object.seal(layer[x]));                
-            }
+            // Prevent the arrays themselves from being reassigned. Disabled
+            // to allow map resizing
+            //for (let x = 0; x < map.size.x; ++x) {
+            //    Object.preventExtensions(Object.seal(layer[x]));                
+            //}
             
         } // L
 
         map.size_pixels = Object.freeze({x:map.size.x * map.sprite_size.x, y:map.size.y * map.sprite_size.y});
-        
+
+        console.assert(map.spritesheet[0][0].rotated_270.$spritesheet.$index[0] === spritesheetArray.indexOf(map.spritesheet[0][0].rotated_270.$spritesheet),
+                       'bad rotated spritesheet index during map loading');
+
         // Don't allow the array of arrays to be changed (just the individual elements)
-        Object.freeze(map.layer);
+        // Disabled to allow map resizing
+        //Object.freeze(map.layer);
     };
 
     // Start the process by loading the spritesheet data. We first have to load
     // the JSON for the spritesheet itself, which loadSpritesheet() expects to be
     // already processed
-    onLoadFileStart(spritesheetUrl);   
+    onLoadFileStart(spritesheetUrl);
     loadManager.fetch(spritesheetUrl, 'json', null, loadSpritesheetJSONCallback,
                       loadFailureCallback, loadWarningCallback);
     

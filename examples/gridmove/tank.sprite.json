@@ -1,0 +1,12 @@
+{
+    "url": "tank.png",
+    "license": "TODO",
+    "pivot": {
+        "x": 8,
+        "y": 8
+    },
+    "sprite_size": {
+        "x": 20,
+        "y": 16
+    }
+}

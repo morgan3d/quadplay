@@ -22,7 +22,12 @@ const ONLINE_INPUT_PERIOD = Math.floor(1000 / 120);
 // the quadplay server when on http (which does not support wss yet)
 // and the default PeerJS server when on https.
 
-const PEER_CONFIG = (location.protocol === 'https') ? {} : {
+const PEER_CONFIG = (location.protocol === 'https:') ?
+// Use {} for the default PeerJS server, which supports wss:
+{} :
+
+// Sponsored Evennode server
+{
     debug: 0,
     host: "quadplay-peer.us-3.evennode.com", port: 80,
     path: '/quadplay',
@@ -471,7 +476,7 @@ function startGuesting(hostNetID) {
 
     // Absolute properties to send. Everything else is reconstructed
     // in the host's updateInput() call.
-    const GAMEPAD_PROPERTY_ARRAY = ['$x', '$y', 'a', 'b', 'c', 'd', 'e', 'f', '$p', 'q', '$analog', 'type', 'prompt', 'id'];
+    const GAMEPAD_PROPERTY_ARRAY = ['$x', '$y', 'a', 'b', 'c', 'd', 'e', 'f', '$p', 'q', '$analog', 'type', '$id'];
     const inputObject = {};
 
     // Use the interval timer here to get the most regular timing possible
@@ -650,6 +655,7 @@ function stopGuesting(noResume) {
         }
     }
     isGuesting = false;
+
     
     // Shut down the streaming and resume quadplay. Fortunately...
     // quadplay's state was paused in the place where it should

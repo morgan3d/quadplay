@@ -816,6 +816,10 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
     if (find(['stall', 'loop', 'clamp', 'continue', 'oscillate'], extrapolate) === undefined) {
         $error('extrapolate argument to make_spline must be "stall", "loop", "clamp", or "continue"');
     }
+
+    if (controlSrc.length < 4 && order === 3) {
+        $error('order 3 splines require at least 4 control points.');
+    }
     
     order = $Math.round(order);
     if (order === 2 || order < 0 || order > 3) { $error('order must be 0, 1, or 3'); }
@@ -855,7 +859,6 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
     // Number of control points, not included a potentially duplicated
     // one at the end to make wrapping math easier.
     const N = control.length - (extrapolate === 'loop' ? 1 : 0);
-
 
     // Time covered by all of the intervals between control points,
     // including the wrap one in loop mode. 
@@ -1504,8 +1507,22 @@ function atan(y, x) {
     return $Math.atan2(y.y, y.x);
 }
 
+
+/* If x is very close to an integer, make it the integer */
+function $snap_epsilons_to_integer(x) {
+    const int_x = $Math.round(x)
+    if ((x !== int_x) && ($Math.abs(x - int_x) < 1e-12)) {
+        return int_x;
+    } else {
+        return x;
+    }
+}
+
 function angle_to_xy(angle) {
-    return {x: $Math.cos(angle), y: rotation_sign() * $Math.sin(angle)};
+    return {
+        x: $snap_epsilons_to_integer($Math.cos(angle)),
+        y: $snap_epsilons_to_integer(rotation_sign() * $Math.sin(angle))
+    };
 }
 
 function xy_to_angle(v) {
@@ -3570,6 +3587,7 @@ function transform_to(pos, angle, scale, coord) {
               (x * Xy + y * Yy) / scale.y);
 }
 
+
 function transform_from(pos, angle, scale, coord) {
     const a = angle * -rotation_sign();
     const C = $Math.cos(a);
@@ -3581,6 +3599,515 @@ function transform_from(pos, angle, scale, coord) {
     const x = coord.x * scale.x, y = coord.y * scale.y;
     return xy(x * Xx + y * Xy + pos.x, x * Yx + y * Yy + pos.y);
 }
+
+
+function map_resize(map, w, h, layers) {
+    if (layers === undefined) {
+        layers = map.layer.length;
+    }
+
+    if (w === undefined) {
+        $error('Width must be specified for map_resize()');
+    }
+    
+    if (h === undefined) {
+        $error('Height must be specified for map_resize()');
+    }
+
+    // Vertical
+    if (h != map.size.y) {
+        // Shrink
+        for (let L = 0; L < map.layer.length; ++L) {
+            for (let x = 0; x < map.size.x; ++x) {
+                map.layer[L][x].length = h;
+            }
+        }
+        map.size = Object.freeze({x: map.size.x, y: h});
+    }
+
+    // Horizontal
+    if (w < map.size.x) {
+        // Shrink
+        for (let L = 0; L < map.layer.length; ++L) {
+            map.layer[L].length = w;
+        }
+        map.size = Object.freeze({x: w, y: map.size.y});
+    } else if (w > map.size.x) {
+        // Grow
+        map.size = Object.freeze({x: w, y: map.size.y});
+        for (let L = 0; L < map.layer.length; ++L) {
+            for (let x = map.layer[L].length; x < w; ++x) {
+                map.layer[L].push(new Array(map.size.y));
+            }
+        }
+    }
+
+    if (w < map.size.x) {
+        // Shrink
+        for (let L = 0; L < map.layer.length; ++L) {
+            map.layer[L].length = w;
+        }
+        map.size = Object.freeze({x: w, y: map.size.y});
+    } else if (w > map.size.x) {
+        // Grow
+        map.size = Object.freeze({x: w, y: map.size.y});
+        for (let L = 0; L < map.layer.length; ++L) {
+            for (let x = map.layer[L].length; x < w; ++x) {
+                map.layer[L].push(new Array(map.size.y));
+            }
+        }
+    }
+    
+    if (layers < map.layer.length) {
+        // Shrink
+        map.layer.length = layers;
+    } else if (layers > map.layer.length) {
+        // Allocate new layers
+        for (let L = map.layer.length - 1; L < layers; ++L) {
+            map.layer.push(new Array(TODO));
+        }
+    }
+
+    map.size_pixels = Object.freeze({x:map.size.x * map.sprite_size.x, y:map.size.y * map.sprite_size.y});
+}
+
+
+function map_generate_maze(args) {
+    const map = args.map;
+    if (!map || map.$type !== 'map') {
+        $error('map_generate_maze() requires a map property on the argument');
+    }
+
+    const hallThickness = {thickness: 1, ...(args.hall || {})}.thickness;
+    const wallThickness = {thickness: 1, ...(args.wall || {})}.thickness;
+    
+    const s = 2 / (hallThickness + wallThickness);
+    const maze = $make_maze(
+        $Math.ceil(map.size.x * s),
+        $Math.ceil(map.size.y * s),
+        {border: 1, symmetric: false, loop: false, ...(args.horizontal || {})},
+        {border: 1, symmetric: false, loop: false, ...(args.vertical   || {})},
+        args.straightness || 0,
+        args.shortcuts || 0,
+        (args.coverage === undefined) ? 1 : args.coverage,
+        args.dead_end_array || [],
+        hallThickness,
+        wallThickness,
+        args.random || random);
+
+    // Resize the map
+    const layer = args.layer || 0;
+    map_resize(map, maze.length, maze[0].length);
+
+    const hall_sprite = args.hall ? args.hall.sprite : undefined;
+    const wall_sprite = args.wall ? args.wall.sprite : map.spritesheet[0][0];
+
+    if (hall_sprite === undefined && wall_sprite === undefined) {
+        $error('Either hall.sprite or wall.sprite must be defined for map_generate_maze()');
+    }
+    
+    // Copy over the elements
+    //let str = '';
+    for (let y = 0; y < map.size.y; ++y) {
+        for (let x = 0; x < map.size.x; ++x) {
+            map.layer[layer][x][y] = maze[x][y] ? wall_sprite : hall_sprite;
+            //str += maze[x][y] ? '*' : ' ';
+        }
+        //str += '\n';
+    }
+    //$console.log(str);
+}
+
+
+function $make_maze(w, h, horizontal, vertical, straightness, imperfect, fill, deadEndArray, hallWidth, wallWidth, random) {
+    const hSymmetry = horizontal.symmetric !== false;
+    const hBorder   = horizontal.border === undefined ? 1 : horizontal.border;
+    // Ignore wrapping unless the border and symmetry are also set; in
+    // that case, generate without wrapping and poke holes in the
+    // border
+    const hWrap     = (horizontal.loop !== false) && !(hSymmetry && hBorder);
+    
+    const vSymmetry = vertical.symmetric !== false;
+    const vBorder   = vertical.border === undefined ? 1 : vertical.border;
+    const vWrap     = (vertical.loop !== false) && !(vSymmetry && vBorder);
+    
+    const SOLID = 255, RESERVED = 127, EMPTY = 0;
+    const floor = $Math.floor;
+          
+    function randomInt(x) { return floor(random() * x); }
+
+    // Knuth-Fisher-Yates shuffle of an Array
+    function shuffle(a) { for (let i = a.length - 1; i > 0; --i) { let j = randomInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; } }
+
+    // Argument cleanup
+    if (deadEndArray === undefined) { deadEndArray = []; }
+    w = floor(w || 32);
+    h = floor(h || w);
+
+    // Account for edges that will later be stripped
+    if (! hBorder) {
+        ++w;
+        if (! hWrap) { ++w; }
+    }
+    
+    if (! vBorder) {
+        ++h;
+        if (! vWrap) { ++h; }
+    }
+    
+    imperfect = $Math.min(1, $Math.max(0, imperfect || 0));
+    if (fill === undefined) { fill = 1; }
+    let reserveProb = (1 - $Math.min($Math.max(0, fill * 0.9 + 0.1), 1))**1.6;
+
+    if (hWrap) {
+        if (hSymmetry) {
+            // Must be a multiple of 4 offset by 2
+            // for mirror symmetry
+            w = $Math.round((w - 2) / 4) * 4 + 2;
+        } else {
+            // Ensure even size
+            w += w & 1; 
+        }
+    } else {
+        // Ensure odd size
+        w += ~(w & 1);
+    }
+
+    if (vWrap) {
+        if (vSymmetry) {
+            h = $Math.round((h - 2) / 4) * 4 + 2;
+        } else {
+            h += h & 1;
+        }
+
+    } else {
+        h += ~(h & 1);
+    }
+
+    // Allocate and initialize to solid
+    let maze = new Array(w);
+    for (let x = 0; x < w; ++x) {
+        maze[x] = new Array(h).fill(SOLID);
+    }
+
+    // Reserve some regions
+    if (reserveProb > 0) {
+        for (let x = 1; x < w; x += 2) {
+            for (let y = 1, m = maze[x]; y < h; y += 2) {
+                if (random() < reserveProb) { m[y] = RESERVED; }
+            } // y
+        } // x
+    }
+
+    // Carve hallways recursively, starting at the center
+    let stack = [{x: floor(w / 4) * 2 - 1, y: floor(h / 4) * 2 - 1, step: {x: 0, y: 0}}];
+    deadEndArray.push(stack[0]);
+    let directions = [{x:-1, y:0}, {x:1, y:0}, {x:0, y:1}, {x:0, y:-1}];
+
+    // Don't start reserving until a path of at least this length has been carved
+    let ignoreReserved = $Math.max(w, h);
+
+    function unexplored(x, y) {
+        let c = maze[x][y];
+        return (c === SOLID) || ((c === RESERVED) && (ignoreReserved > 0));
+    }
+
+    const hBorderOffset = hWrap ? 0 : 1;
+    const vBorderOffset = vWrap ? 0 : 1;
+
+    function set(x, y, value) {
+        x = (x + w) % w;
+        y = (y + h) % h;
+
+        maze[x][y] = value;
+        
+        const u = w - x - hBorderOffset;
+        const v = h - y - vBorderOffset
+        if (hSymmetry) {
+            if (u < w) {
+                maze[u][y] = value;
+                if (vSymmetry) {
+                    maze[u][v] = value;
+                }
+            }
+        }
+        
+        if (vSymmetry && v < h) {
+            maze[x][v] = value;
+        }                
+    }
+    
+    while (stack.length) {
+        const cur = stack.pop();
+
+        // Unvisited?
+        if (unexplored(cur.x, cur.y)) {
+
+            // Mark visited
+            set(cur.x, cur.y, EMPTY);
+
+            // Carve the wall back towards the source
+            set(cur.x - cur.step.x, cur.y - cur.step.y, EMPTY);
+            
+            --ignoreReserved;
+
+            // Fisher-Yates shuffle directions
+            shuffle(directions);
+
+            // Prioritize a straight line. Note that cur.step is a
+            // pointer to one of the directions, so we can use pointer
+            // equality to find it.
+            if (random() < straightness) {
+                for (let i = 0; i < 4; ++i) {
+                    if (directions[i] === cur.step) {
+                        // Swap with the last
+                        directions[i] = directions[3];
+                        directions[3] = cur.step;
+                        break;
+                    }
+                }
+            }
+            
+            // Push neighbors if not visited
+            let deadEnd = true;
+            for (let i = 0; i < 4; ++i) {
+                const step = directions[i];
+                let x = cur.x + step.x * 2;
+                let y = cur.y + step.y * 2;
+                
+                if (hWrap) { x = (x + w) % w; }
+                if (vWrap) { y = (y + h) % h; }
+                
+                if ((x >= 0) && (y >= 0) && (x < w) && (y < h) && unexplored(x, y)) {
+                    // In bounds and not visited
+                    stack.push({x:x, y:y, step:step});
+                    deadEnd = false;
+                }
+            } // for each direction
+            
+            if (deadEnd) { deadEndArray.push(cur); }
+        } // if unvisited
+    } // while unvisited
+
+    
+    if (imperfect > 0) {
+        // Boundary
+        const hBdry = hWrap ? 0 : 1;
+        const vBdry = vWrap ? 0 : 1;
+
+        // Removes the wall at (x, y) if at least one neighbor is also
+        // empty
+        function remove(x, y) {
+            let a = maze[x][(y + 1) % h], b = maze[x][(y - 1 + h) % h],
+                c = maze[(x + 1) % w][y], d = maze[(x - 1 + w) % w][y];
+            if ($Math.min(a, b, c, d) === EMPTY) {
+                set(x, y, EMPTY);
+            }
+        }
+        
+        // Remove some random walls, preserving the edges if not wrapping.
+        for (let i = $Math.ceil(imperfect * w * h / 3); i > 0; --i) {
+            remove(randomInt(w * 0.5 - hBdry * 2) * 2 + 1,         randomInt(h * 0.5 - vBdry * 2) * 2 + vBdry * 2);
+            remove(randomInt(w * 0.5 - hBdry * 2) * 2 + hBdry * 2, randomInt(h * 0.5 - vBdry * 2) * 2 + 1);
+        }
+        
+        // Reconnect single-wall islands
+        for (let y = 0; y < h; y += 2) {
+            for (let x = 0; x < w; x += 2) {
+                let a = maze[x][(y + 1) % h], b = maze[x][(y - 1 + h) % h],
+                    c = maze[(x + 1) % w][y], d = maze[(x - 1 + w) % w][y];
+                
+                if (a === EMPTY && b === EMPTY && c === EMPTY && d === EMPTY) {
+                    // This is an island. Restore one adjacent wall at random
+                    let dir = directions[randomInt(4)];
+                    set(x + dir.x, y + dir.y, SOLID);
+                }
+            } // x
+        } // y
+    }
+
+    // Unreserve everything
+    if (reserveProb > 0) {
+        for (let x = 1; x < w; x += 2) {
+            for (let y = 1, m = maze[x]; y < h; y += 2) {
+                if (m[y] === RESERVED) { m[y] = SOLID; }
+            } // y
+        } // x
+    } // reserveProb
+
+    if (horizontal.loop && (horizontal.border === undefined ? 1 : horizontal.border) && horizontal.symmetric) {
+        // Poke some holes in the border. The regular generator
+        // doesn't handle this case elegantly
+        // Decrease probability with straightness, increase with
+        // imperfection
+        const prob = 0.025 + 0.25 * (1 - straightness**2 * (1 - imperfect)) + 0.5 * imperfect;
+        for (let y = 1; y < maze[0].length; y += 2) {
+
+            // Do not create a passage into a wall or immediately below another
+            if ((maze[1][y] === EMPTY) &&
+                (maze[0][y - 2] !== EMPTY) && 
+                (random() < prob)) {
+                maze[0][y] = EMPTY;
+                maze[maze.length - 1][y] = EMPTY;
+            }
+        }
+    }
+
+    if (vertical.loop && (vertical.border === undefined ? 1 : vertical.border) && vertical.symmetric) {
+        const prob = 0.05 + 0.15 * (1 - straightness * (1 - imperfect)) + 0.5 * imperfect;
+        for (let x = 1; x < maze.length; x += 2) {
+
+            // Do not create a passage into a wall or immediately beside another
+            if ((maze[x][1] === EMPTY) &&
+                (x < 2 || maze[x - 2][0] !== EMPTY) && 
+                (random() < prob)) {
+                maze[x][0] = EMPTY;
+                maze[x][maze[0].length - 1] = EMPTY;
+            }
+        }
+    }
+    
+    // Horizontal borders
+    if (! hWrap && ! hBorder) {
+        // Remove border
+        maze.shift();
+        maze.pop();
+        
+        // Correct the dead ends for the new coordinates
+        for (let i = 0; i < deadEndArray.length; ++i) {
+            --deadEndArray[i].x;
+        }
+    } else if (hBorder && hWrap && ! hSymmetry) {
+        // Duplicate the left edge on the right
+        maze.push([...maze[0]]);
+
+        // Duplicate dead ends
+        for (let i = 0; i < deadEndArray.length; ++i) {
+            if (deadEndArray[i].x === 0) {
+                deadEndArray.push({x: maze.length - 1, y: deadEndArray[i].y})
+            }
+        }
+    } else if (hSymmetry && hWrap) {
+        // Remove the left wall and hall columns; the wall will
+        // be a solid edge and the hall is the same as
+        // the rightmost one
+        maze.shift();
+        maze.shift();
+
+        // Correct the dead ends for the new coordinates
+        for (let i = 0; i < deadEndArray.length; ++i) {
+            deadEndArray[i].x -= 2;
+        }
+    }
+
+
+    // Vertical borders
+    if (vBorder && vWrap && ! vSymmetry) {
+        // Duplicate the top edge on the bottom
+        for (let x = 0; x < maze.length; ++x) {
+            maze[x].push(maze[x][0]);
+        }
+        
+        //  Duplicate dead ends
+        for (let i = 0; i < deadEndArray.length; ++i) {
+            if (deadEndArray[i].y === 0) {
+                deadEndArray.push({x: deadEndArray[i].x, y: maze[0].length - 1})
+            }
+        }
+    } else if (! vWrap && ! vBorder) {
+        // Remove border
+        for (let x = 0; x < maze.length; ++x) {
+            maze[x].shift();
+            maze[x].pop();
+        }
+        
+        // Correct the dead ends for the new coordinates
+        for (let i = 0; i < deadEndArray.length; ++i) {
+            --deadEndArray[i].y;
+        }
+    } else if (vSymmetry && vWrap) {
+        // Remove the top wall and top columns; the wall will
+        // be a solid edge and the hall is the same as
+        // the bottom one
+        for (let x = 0; x < maze.length; ++x) {
+            maze[x].shift();
+            maze[x].shift();
+        }
+
+        // Correct the dead ends for the new coordinates
+        for (let i = 0; i < deadEndArray.length; ++i) {
+            deadEndArray[i].y -= 2;
+        }
+    }
+
+    // Remove out of bounds dead ends after the border has been adjusted
+    for (let i = 0; i < deadEndArray.length; ++i) {
+        if (deadEndArray[i].x < 0 || deadEndArray[i].y < 0) {
+            deadEndArray[i] = deadEndArray[deadEndArray.length - 1];
+            deadEndArray.pop();
+            --i;
+        }
+    }
+
+    // Expand hall and wall width
+    if ((hallWidth > 1) || (wallWidth > 1)) {
+        const width = maze.length, height = maze[0].length;
+        const old = maze;
+        maze = [];
+        
+        // Stripping the border alters the phase of the edges
+        const xPhase = ! hBorder && ! hWrap ? 1 : 0;
+        const yPhase = ! vBorder && ! vWrap ? 1 : 0;
+    
+        for (let x = 0; x < width; ++x) {
+            for (let src = old[x], i = (((x + xPhase) & 1) ? hallWidth : wallWidth); i > 0; --i) {
+                let dst = [];
+                for (let y = 0; y < height; ++y) {
+                    for (let c = src[y], j = (((y + yPhase) & 1) ? hallWidth : wallWidth); j > 0; --j) {
+                        dst.push(c);
+                    } // j
+                } // y
+                maze.push(dst);
+            } // i
+        } // x
+        
+        // Adjust deadEndArray
+        for (let i = 0; i < deadEndArray.length; ++i) {
+            const c = deadEndArray[i];
+            c.x = (c.x >> 1) * (wallWidth + hallWidth) + (1 - xPhase) * wallWidth + hallWidth / 2;
+            c.y = (c.y >> 1) * (wallWidth + hallWidth) + (1 - yPhase) * wallWidth + hallWidth / 2;
+        }
+    }
+
+    if (horizontal.border > 1) {
+        // Increase the border thickness by duplication
+        for (let i = 0; i < horizontal.border - 1; ++i) {
+            maze.unshift([...maze[0]]);
+            maze.push([...maze[maze.length - 1]]);
+        }
+        
+        // Adjust deadEndArray
+        for (let i = 0; i < deadEndArray.length; ++i) {
+            deadEndArray[i].x += (horizontal.border - 1) * wallWidth;
+        }
+    }
+
+    if (vertical.border > 1) {
+        for (let i = 0; i < vertical.border - 1; ++i) {
+            for (let x = 0; x < maze.length; ++x) {
+                maze[x].unshift(maze[x][0]);
+                maze[x].push(maze[x][maze[x].length - 1]);
+            }
+        }
+
+        for (let i = 0; i < deadEndArray.length; ++i) {
+            deadEndArray[i].y += (vertical.border - 1) * wallWidth;
+        }
+    }
+
+    return maze;
+}
+
 
 
 function get_map_pixel_color(map, map_coord, min_layer, max_layer_exclusive, replacement_array, result, invert_sprite_y) {
@@ -4042,7 +4569,7 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                             if (sprite === undefined) { continue; }
                         }
 
-                        data.push({
+                        const sprElt = {
                             spritesheetIndex: sprite.$spritesheet.$index[0],
                             cornerX:  sprite.$x,
                             cornerY:  sprite.$y,
@@ -4056,7 +4583,16 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                             override_color: undefined,
                             x:        screenX,
                             y:        screenY
-                        }); // push
+                        };
+
+                        /*
+                        // Expensive assertion disabled
+                        $console.assert(sprElt.spritesheetIndex >= 0 &&
+                                        sprElt.spritesheetIndex < $spritesheetArray.length,
+                                        sprite.$name + ' sprite has a bad index: ' + sprElt.spritesheetIndex);
+                        */
+
+                        data.push(sprElt);
                         
                         if (! sprite.$hasAlpha) {
                             // No need to process other layers, since this sprite
@@ -4073,7 +4609,7 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                 const data = layerSpriteArrays[i];
                 const baseZ = layerZ[i];
                 
-                // Push the command if there were sprites.
+                // Push the command, if there were sprites.
                 // Note that the z will be offset based on the order
                 // of submission even if all baseZ values are the same.
                 if (data && data.length > 0) {
@@ -5681,8 +6217,6 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
         override_color = rgba(override_color);
     }
 
-    $console.assert(spr.$spritesheet.$index[0] < $spritesheetArray.length);
-
     const sprElt = {
         spritesheetIndex:  spr.$spritesheet.$index[0],
         cornerX:       spr.$x,
@@ -5701,12 +6235,9 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
         y:             y
     };
 
-    /*
     $console.assert(sprElt.spritesheetIndex >= 0 &&
-                   sprElt.spritesheetIndex < $spritesheetArray.length,
-                   spr.$name + ' has a bad index: ' + sprElt.spritesheetIndex);
-    */
-    
+                    sprElt.spritesheetIndex < $spritesheetArray.length,                    
+                    spr.$name + ' has a bad index: ' + sprElt.spritesheetIndex);
     // Aggregate multiple sprite calls
     const prevCommand = $graphicsCommandList[$graphicsCommandList.length - 1];
     if (prevCommand && (prevCommand.baseZ === z) && (prevCommand.opcode === 'SPR') &&
@@ -6703,8 +7234,6 @@ function random_within_circle(rng) {
         P.y = rng(-1, 1);
         m = P.x * P.x + P.y * P.y;
     } while (m > 1);
-    m = 1 / $Math.sqrt(m);
-    P.x *= m; P.y *= m;
     return P;
 }
 
@@ -6719,8 +7248,6 @@ function random_within_sphere(rng) {
         P.z = rng(-1, 1);
         m = P.x * P.x + P.y * P.y + P.z * P.z;
     } while (m > 1);
-    m = 1 / m;
-    P.x *= m; P.y *= m; P.z *= m;
     return P;
 }
 
@@ -7538,9 +8065,7 @@ function reversed(a) {
         return c;
     } else {
         // String case
-        const c = split(a);
-        reverse(c);
-        return join(c);
+        return a.split().reverse().join('');
     }
 }
 

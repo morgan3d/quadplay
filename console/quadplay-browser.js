@@ -325,7 +325,8 @@ function onEmulatorKeyDown(event) {
 function makeDateFilename() {
     const now = new Date();
     const dateString = now.getFullYear() + '-' + twoDigit(now.getMonth() + 1) + '-' + twoDigit(now.getDate()) + '_' + twoDigit(now.getHours()) + 'h' + twoDigit(now.getMinutes());
-    return makeFilename(gameSource.CREDITS.title + '_' + dateString);
+    const tag = ((gameSource.debug && gameSource.debug.json && gameSource.debug.json.screenshot_tag_enabled) ? gameSource.debug.json.screenshot_tag : gameSource.json.screenshot_tag).trim();
+    return makeFilename(dateString + (tag === '' ? '' : '_') + tag);
 }
 
 
@@ -1113,7 +1114,10 @@ function updateInput() {
 
             pad.$id = latest.$id;
             pad.prompt = latest.prompt;
-            pad.type = latest.$type;
+            if (latest.type !== pad.type) {
+                pad.type = latest.type;
+                pad.prompt = Object.freeze(Object.assign({'##' : '' + (player + 1)}, controlSchemeTable[pad.type]));
+            }
             
             continue;
         }

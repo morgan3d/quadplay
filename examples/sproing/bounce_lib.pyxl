@@ -1,0 +1,154 @@
+// BOUNCE LIBRARY
+///////////////////////////////////////////////////////////////////////////////
+// This library is a simple implementation of a spring a la Tyriq Plummer.
+// Twitter: @fourbitfriday
+// Specifically implementing techniques from this video: [1]
+//
+// What is it useful for?  Bouncey animation like making a squashy stretchy
+// thing.
+//
+// The basic idea is that you have some value that has a specified target value. 
+// If nothing else happens, it sits at that target value.  You can then specify
+// a new current displaced position for that value, and it will springily return
+// to the rest value.
+//
+// Usage
+// -----
+//  - call `make_bouncer` or `make_bouncer_from_profile` (more on profiles
+//    later).  These functions return a `bouncer`
+//  - you can then call `update_bouncer()` to evaluate the bouncer.  It will
+//    return the current "position" of the bouncer.
+//  - To set the position to something new, you can use the
+//    `displace_bouncer()` function.
+//  - This model is driven off the following values, either specified in the
+//    profile or provided to `make_bouncer` as arguments:
+//      - vel_restore: the speed at which it returns to its rest value
+//      - vel_damp: the amount that the speed is dampened each step
+//      - sigma: the amount below which the values are clamped to their rest
+//               values
+//
+// Example
+// -------
+// 
+// For an example of how to use this library, see the `Play.pyxl' in this game.
+//
+// Profiles
+// --------
+// 
+// The library comes pre-stocked with a profile that is derived.  You can add
+// your own by adding entries (or overriding entries) of the `BOUNCER_PROFILES`
+// dictionary.
+//
+// GOOD LUCK!
+//
+// References:
+// -----------
+// [1] "Atgtha's Squash and Stretch and Lengthdir Magic", by Plummer, Tyriq.
+//      Published on Twitch.tv 4/2020: https://www.twitch.tv/videos/576377070
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+// @{ Data
+// --------
+const BOUNCER_PROFILES = {
+    "_BUILTIN": {
+        vel_restore: 0.05,
+        vel_damp: 0.9,
+        sigma: 0.1,
+    }
+}
+// @}
+
+// @{ constructors
+def make_bouncer(
+        // the speed at which it returns to its rest value
+        vel_restore,
+
+        // the amount that the speed is dampened each step
+        vel_damp,
+
+        // the amount below which the values are clamped to their rest values
+        sigma,
+
+        // target/rest value
+        rest_value default 1,
+
+        // to seed a new bouncer with a different profile
+        current_pos default 1,
+        current_vel default 0,
+
+):
+    return {
+        current_pos: current_pos,
+        current_vel: current_vel,
+        rest_value: rest_value,
+        prev_pos: current_pos,
+        vel_restore: vel_restore,
+        vel_damp: vel_damp,
+        sigma: sigma
+    }
+
+def make_bouncer_from_profile(
+        prof_name,
+        rest_value default 1,
+        current_pos default 1,
+        current_vel default 0
+):
+    let prof_data = BOUNCER_PROFILES[prof_name]
+
+    return make_bouncer(
+        prof_data.vel_restore,
+        prof_data.vel_damp,
+        prof_data.sigma,
+        rest_value,
+        current_pos,
+        current_vel
+    )
+// @}
+
+// @{ update function
+def update_bouncer(bouncer):
+    bouncer.prev_pos = bouncer.current_pos
+    bouncer.current_pos += bouncer.current_vel
+    bouncer.current_vel *= bouncer.vel_damp
+
+    let sign_from_prev = sign(bouncer.rest_value-bouncer.prev_pos)
+    let sign_from_current = sign(bouncer.rest_value-bouncer.current_pos)
+    
+    if (
+            (sign_from_prev != sign_from_current) 
+            and abs(bouncer.current_vel) < bouncer.sigma
+    ):
+        bouncer.current_vel = 0
+        bouncer.current_pos = bouncer.rest_value
+
+    // broken
+    // if bouncer.current_pos != bouncer.rest_value:
+    //     bouncer.current_vel += (
+    //         (sign_from_current and 1 or -1) * bouncer.vel_restore
+    //     )
+
+    // works
+    if bouncer.current_pos > bouncer.rest_value:
+        bouncer.current_vel -= bouncer.vel_restore
+    else if bouncer.current_pos < bouncer.rest_value:
+        bouncer.current_vel += bouncer.vel_restore
+
+    return bouncer.current_pos
+// @}    
+
+// @{ displace - set the position of the spring
+def displace_bouncer(
+        bouncer,
+        current_pos,
+        // note that this defaults to the current velocity of the bouncer
+        // NOT 0
+        current_vel default nil
+):
+    bouncer.current_pos = current_pos
+
+    if current_vel != nil:
+        bouncer.current_vel = current_vel
+
+    return current_pos
+// @}

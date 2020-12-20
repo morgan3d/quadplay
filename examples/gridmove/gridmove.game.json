@@ -1,0 +1,27 @@
+{
+    "title": "Grid Movement",
+    "developer": "Casual Effects",
+    "copyright": "By Morgan McGuire 2020",
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "map01": "map01.map.json",
+        "tank_sprite": "tank.sprite.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "PAC-MAN style movement with smooth interpolation and anticipatory turns",
+    "constants": {},
+    "y_up": false
+}
