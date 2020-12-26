@@ -3,6 +3,13 @@ $NewHost
 let selected_column_index = 0
 let word_array
 
+
+const REPEAT_DELAY = 35
+const REPEAT_FREQUENCY = 6
+
+// mode_frames time at which the Y axis last changed
+let last_y_change = 0
+
 def draw_window(tau):
     // Dark scrim
     draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(0, 0, 0, 40% tau))
@@ -116,6 +123,7 @@ def handle_paste():
 
 enter
 ────────────────────────────────────────────────────────────────────────
+last_y_change = mode_frames
 selected_column_index = 0
 word_array = [16, 16, 16, 16, 16, 16]
 
@@ -150,10 +158,13 @@ preserving_transform:
             else if (gamepad.xx < 0 or gamepad.bb or gamepad.ee) and selected_column_index > 0:
                 --selected_column_index
 
-            if gamepad.yy < 0 and word_array[selected_column_index] > 0:
+            const is_repeat_frame = (last_y_change < mode_frames - REPEAT_DELAY) and (mode_frames mod REPEAT_FREQUENCY == 0)
+            if (gamepad.yy < 0 or (gamepad.y < 0 and is_repeat_frame)) and word_array[selected_column_index] > 0:
                 --word_array[selected_column_index]
-            if gamepad.yy > 0 and word_array[selected_column_index] < size($NET_ID_WORD_TABLE[0]) - 1:
+            if (gamepad.yy > 0 or (gamepad.y > 0 and is_repeat_frame)) and word_array[selected_column_index] < size($NET_ID_WORD_TABLE[0]) - 1:
                 ++word_array[selected_column_index]
+
+            if |gamepad.yy|: last_y_change = mode_frames
 
             // Quit
             if gamepad.qq: pop_mode()
