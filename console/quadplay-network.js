@@ -430,6 +430,13 @@ function startGuesting(hostNetID) {
 
     // Pause quadplay's regular loop to allow streaming to take over
     onPauseButton();
+
+    // Make the pause button look like the play button while we're
+    // in guest mode.
+    document.querySelector('#pauseButtonContainer .buttonIcon').style.backgroundImage = 'url("button-play.png")';
+    document.getElementById('stepButtonContainer').style.visibility = 
+        document.getElementById('slowButtonContainer').style.visibility = 
+        document.getElementById('playButtonContainer').style.visibility = 'hidden';
     
     const videoElement = document.getElementById('guestVideo');
 
@@ -509,10 +516,13 @@ function startGuesting(hostNetID) {
         }
     }
     
-    myPeer.on('error', peerErrorHandler);
+    myPeer.on('error',
+              function (err) {
+                  stopGuesting();
+                  peerErrorHandler(err);
+              });
     
     myPeer.on('open', function (id) {
-            
         // PeerJS has a bug where the 'stream' event handler is
         // called once per track instead of once per stream. We're
         // connecting streams with a single track so that doesn't
@@ -646,6 +656,11 @@ function startGuesting(hostNetID) {
    button is pressed */
 function stopGuesting(noResume) {
     if (isGuesting) {
+        document.querySelector('#pauseButtonContainer .buttonIcon').style.backgroundImage = 'url("button-pause.png")';
+        document.getElementById('stepButtonContainer').style.visibility = 
+            document.getElementById('slowButtonContainer').style.visibility = 
+            document.getElementById('playButtonContainer').style.visibility = 'visible';
+        
         document.getElementById('guestAudio').srcObject = null;
         document.getElementById('guestVideo').srcObject = null;
         if (myPeer) {

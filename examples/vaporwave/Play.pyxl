@@ -1,14 +1,14 @@
 Play
 ===================================================================
 
-set_transform(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y * 0.63))
-set_background(backgroundColor)
 
 enter
 -------------------------------------------------------------------
 
+set_transform(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y * 0.63))
+set_background(backgroundColor)
 play_sound({sound:music, loop:true, volume:200%})
-
+set_post_effects({bloom: 80%})
 
 frame
 -------------------------------------------------------------------
@@ -59,18 +59,6 @@ camera.x = 0.3 hovertank.pos.x
 camera.y = 0.6 grid
    
 const deltaZ = hovertank.vel.z
-      
-// Move the games
-let uiY = 70
-/*
-for game in gameArray:
-   game.pos.z += deltaZ
-   
-   // See if we've collided
-   if |hovertank.pos.z - game.pos.z| < 5 and |hovertank.pos.x - game.pos.x| < 20:
-      // Hit this game
-      launch_game(game.url)
-  */
   
 // Move the mesh
 for quad in mesh:
@@ -96,11 +84,11 @@ draw_corner_rect(xy(-½ SCREEN_SIZE.x, -3), xy(SCREEN_SIZE.x, -SCREEN_SIZE.y * 0
 //draw_text({font:font, text:hovertank.yaw / 1deg, pos:xy(0,0), color: #f, z: 1000})
 
 // Sky gradient
-for i <= 10:
+for i ≤ 20:
    draw_line(xy(-½ SCREEN_SIZE.x, 2i + 1), xy(½ SCREEN_SIZE.x, 2i + 1),
-            lerp(lerp(#aaa, #b36, min(⅕i, 1)²), backgroundColor, (i / 10)²))
+            lerp(lerp(#aaa, #b36, min(i / 10, 1)²), backgroundColor, (i / 20)²))
    draw_line(xy(-½ SCREEN_SIZE.x, 2i + 2), xy(½ SCREEN_SIZE.x, 2i + 2),
-            lerp(#b36, backgroundColor, i / 10))
+            lerp(#b36, backgroundColor, i / 20))
 
 
 drawHovertank(hovertank)

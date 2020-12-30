@@ -88,11 +88,6 @@ html {
     height: 100%;
 }
 
-canvas {
-    /* Attempt to trick canvas into using hardware acceleration for the blit */
-    transform: translate3d(0,0,0);
-}
-
 #pauseMessage {
     position: absolute;
     left: 12.5%;
@@ -284,34 +279,6 @@ b.projectTitle.remote:before {
 
 /*****************************************************/
 
-#uiModeMenuButton {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    z-index: 21;
-    width: 30px;
-    height: 25px;
-    text-shadow:      rgba(0,0,0,0.7) 0 0 4px;
-
-    background-image: url('gear.png');
-    background-size: 50%;
-    background-repeat: no-repeat;
-    background-position: center;
-}
-
-#uiModeMenu {
-    position:     absolute;
-    z-index:      41;
-    top:          23px;
-    left:         0px;
-    background:   #FFF;
-    padding-top:  5px;
-    color:        #000;
-    visibility:   hidden;
-    border:       1px solid #000;
-    box-shadow:   0px 4px 15px 0px rgba(0, 0, 0, 0.4);
-}
-
 .dropdown {
     position: absolute;
     z-index: 41;
@@ -486,7 +453,38 @@ input[type=text], input[type=number], textarea {
     boder-bottom:     none;
 }
 
-.button:active img, .button input:checked + span.label img {
+.button div.buttonIcon {
+    display: inline-block;
+    position:relative;
+    top:-2px;
+    background-position: center;
+    background-size: contain;
+    width:32px; height:16px    
+}
+
+#stopButtonContainer .buttonIcon {
+    background-image: url('button-stop.png');
+}
+
+#pauseButtonContainer .buttonIcon {
+    background-image: url('button-pause.png');
+}
+
+#stepButtonContainer .buttonIcon {
+    background-image: url('button-step.png');
+}
+
+#slowButtonContainer .buttonIcon {
+    background-image: url('button-slow.png');
+}
+
+#playButtonContainer .buttonIcon {
+    background-image: url('button-play.png');
+}
+
+/* Invert the icon color from black to white when selected on a button */
+.button:active img, .button input:checked + span.label img,
+.button:active div.buttonIcon, .button input:checked + span.label div.buttonIcon {
     filter: invert(100%);
 }
 
@@ -1219,12 +1217,27 @@ body.EmulatorUI .virtualController {
     background: #000;
 }
 
-canvas#screen {
+canvas#screen, canvas#screenOverlay {
     background: #000;
     z-index: 30;
     cursor: crosshair;
     /* Force hardware acceleration */
     transform: scale(1) translateZ(0) !important;
+    /* Attempt to trick canvas into using hardware acceleration for the blit 
+    transform: translate3d(0,0,0);*/
+}
+
+canvas#screenOverlay {
+    position: absolute;
+    top: 0px;
+    left:0px;
+    visibility: hidden;
+
+    /* Bloom effect */
+    mix-blend-mode: screen;
+    filter: brightness(63%) contrast(6) blur(2px);
+    background: transparent;
+    z-index: 31;
 }
 
 #logo {

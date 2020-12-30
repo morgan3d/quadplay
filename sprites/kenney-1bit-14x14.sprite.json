@@ -1,0 +1,7 @@
+{
+    "url": "kenney-1bit-14x14.png",
+    "sprite_size" : {"x": 14, "y": 14},
+    "gutter": {"x": 2, "y": 2},
+    "region": {"corner": {"x": 1, "y": 1}},
+    "license" : "By Kenney.nl 2018 https://www.kenney.nl/assets/bit-pack, in the Public Domain/CC0 1.0"
+}

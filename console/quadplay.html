@@ -166,12 +166,12 @@
             <button onclick="startHosting()">TEST</button>
             -->
             <script>
-              makeButton('<img src="button-reload.png" width=32 style="position:relative; top:-2px">', `Reload and Play (^R)`, 'onRestartButton', 'restartButton');
-              makeRadio('<img src="button-stop.png" width=32 style="position:relative; top:-2px">', 'stopButton', true, `title="Stop (${shift}F5)"`, 'controls');
-              makeRadio('<img src="button-pause.png" width=32 style="position:relative; top:-2px">', 'pauseButton', false, `title="Pause (${cmd}P)"`, 'controls');
-              makeRadio('<img src="button-step.png" width=32 style="position:relative; top:-2px">', 'stepButton', false, 'title="Step (F10)"', 'controls');
-              makeRadio('<img src="button-slow.png" width=32 style="position:relative; top:-2px">', 'slowButton', false, 'title="Play Slow"', 'controls');
-              makeRadio('<img src="button-play.png" width=32 style="position:relative; top:-2px">', 'playButton', false, 'title="Run (F5)"', 'controls');
+              makeButton('<div class="buttonIcon" style="background-image: url(\'button-reload.png\')"></div>', `Reload and Play (^R)`, 'onRestartButton', 'restartButton');
+              makeRadio('<div class="buttonIcon"></div>', 'stopButton', true, `title="Stop (${shift}F5)"`, 'controls');
+              makeRadio('<div class="buttonIcon"></div>', 'pauseButton', false, `title="Pause (${cmd}P)"`, 'controls');
+              makeRadio('<div class="buttonIcon"></div>', 'stepButton', false, 'title="Step (F10)"', 'controls');
+              makeRadio('<div class="buttonIcon"></div>', 'slowButton', false, 'title="Play Slow"', 'controls');
+              makeRadio('<div class="buttonIcon"></div>', 'playButton', false, 'title="Run (F5)"', 'controls');
             </script>
         </span>
         
@@ -405,6 +405,7 @@
       <center><input type="button" id="emulatorKeyboardInput" style="z-index:-10;position:fixed;width:10px;margin:auto;top:-30px"></center>
       <div id="screenBorder" class="screenBorder">
         <canvas id="screen" width="384" height="224" class="pixelate" crossOrigin="anonymous"></canvas>
+        <canvas id="screenOverlay" width="384" height="224" class="pixelate" crossOrigin="anonymous"></canvas>
         <!-- Shows file loading progress during boot -->
         <div id="bootScreen" class="pixelate"></div>
         
@@ -746,6 +747,7 @@
    // regardless of script load order
    const bootScreen = document.getElementById('bootScreen');
    const emulatorScreen = document.getElementById('screen');
+   const overlayScreen = document.getElementById('screenOverlay');
   </script>
   
   <!-- Third-party code. Those not maintained as part of this project are 

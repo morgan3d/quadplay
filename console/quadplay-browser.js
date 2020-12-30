@@ -176,7 +176,7 @@ function device_control(cmd) {
     case "set_mouse_cursor":
         {
             runtime_cursor = QRuntime.unparse(arguments[1]).replace(/[^_a-z]/g, '');
-            document.getElementById('screen').style.cursor = runtime_cursor;
+            emulatorScreen.style.cursor = overlayScreen.style.cursor = runtime_cursor;
             break;
         }
         
@@ -444,10 +444,10 @@ function processPreviewRecording() {
         // Copy over data to a canvas
         const img = document.createElement('canvas');
         img.width = 192 * PREVIEW_FRAMES_X; img.height = 112 * PREVIEW_FRAMES_Y;
-        const ctx = img.getContext('2d');
-        const data = ctx.createImageData(img.width, img.height);
+        const imgCTX = img.getContext('2d');
+        const data = imgCTX.createImageData(img.width, img.height);
         new Uint32Array(data.data.buffer).set(previewRecording);
-        ctx.putImageData(data, 0, 0);
+        imgCTX.putImageData(data, 0, 0);
 
         // Display the result
         // Download the result
@@ -1004,6 +1004,15 @@ function submitFrame() {
         ctx.restore();
     }
 
+    if ($postFX.bloom > 0) {
+        overlayScreen.style.visibility = 'visible';
+        const b = Math.pow($postFX.bloom, 1.5);
+        overlayScreen.style.filter = `brightness(${0.45 + b * (1 - 0.45)}) contrast(3) blur(2.5px)` + ($postFX.bloom > 0.5 ? ` brightness(${0.75 * $postFX.bloom + 0.5})`: '');
+        overlayCTX.drawImage(emulatorScreen, 0, 0);
+    } else {
+        overlayScreen.style.visibility = 'hidden';
+    }
+
     /*
     // Random graphics for debugging
     ctx.fillStyle = '#FF0';
@@ -1299,10 +1308,10 @@ function onTouchStartOrMove(event) {
         const touch = event.changedTouches[i];
         let tracker = activeTouchTracker[touch.identifier];
 
-        if (event.target === emulatorScreen) {
+        if (event.target === emulatorScreen || event.target === overlayScreen) {
             const screen_coord = emulatorScreenEventCoordToQuadplayScreenCoord(touch);
 
-            if (! tracker || tracker.lastTarget !== emulatorScreen) {
+            if (! tracker || tracker.lastTarget !== emulatorScreen || tracker.lastTarget !== overlayScreen) {
                 // New touch
                 QRuntime.touch.aa = true;
                 QRuntime.touch.pressed_a = true;
@@ -1319,7 +1328,7 @@ function onTouchStartOrMove(event) {
             QRuntime.touch.screen_y = screen_coord.y;
         }
 
-        if (tracker && (tracker.lastTarget === emulatorScreen) && (event.target !== emulatorScreen)) {
+        if (tracker && (tracker.lastTarget === emulatorScreen || tracker.lastTarget === overlayScreen) && (event.target !== emulatorScreen && event.target !== overlayScreen)) {
             // Lost contact with screen
             QRuntime.touch.a = false;
             QRuntime.touch.released_a = true;
@@ -1336,7 +1345,7 @@ function onTouchStartOrMove(event) {
 
     onTouchesChanged(event);
 
-    if ((event.target === emulatorScreen) || (event.target.className === 'emulatorButton')) {
+    if ((event.target === emulatorScreen || event.target === overlayScreen) || (event.target.className === 'emulatorButton')) {
         // Prevent default browser handling on virtual controller buttons
         event.preventDefault();
         event.stopPropagation();
@@ -1356,7 +1365,7 @@ function onTouchEndOrCancel(event) {
         // The tracker *should* be found, but check defensively
         // against weird event delivery
         if (tracker) {
-            if (tracker.lastTarget === emulatorScreen) {
+            if (tracker.lastTarget === emulatorScreen || tracker.lastTarget === overlayScreen) {
                 // Lost contact with screen
                 QRuntime.touch.a = false;
                 QRuntime.touch.released_a = true;
@@ -1465,7 +1474,7 @@ function emulatorScreenEventCoordToQuadplayScreenCoord(event) {
 const mouse = {screen_x: 0, screen_y: 0, screen_x_prev: 0, screen_y_prev: 0, buttons: 0, movement_movement: false};
 
 function updateMouseDevice(event) {
-    if (event.target === emulatorScreen) {
+    if (event.target === emulatorScreen || event.target === overlayScreen) {
         const coord = emulatorScreenEventCoordToQuadplayScreenCoord(event);
         mouse.screen_x = coord.x;
         mouse.screen_y = coord.y;

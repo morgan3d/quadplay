@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.12.26.16';
+const version  = '2020.12.30.01';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -463,7 +463,8 @@ function onResize() {
     case 'IDE':
         // Revert to defaults. This has to be done during resize
         // instead of setUIMode() to have any effect.
-        emulatorScreen.removeAttribute('style');
+        //emulatorScreen.removeAttribute('style');
+        //overlayScreen.removeAttribute('style');
         screenBorder.removeAttribute('style');
         document.getElementById('debugger').removeAttribute('style');
         if (SCREEN_WIDTH <= 384/2 && SCREEN_HEIGHT <= 224/2) {
@@ -618,7 +619,7 @@ function onMenuButton(event) {
 
 // Disable context menu popup on touch events for the game screen or virtual
 // controller buttons because they should be processed solely by the emulator
-emulatorScreen.oncontextmenu = function (event) { event.preventDefault(); event.stopPropagation(); };
+emulatorScreen.oncontextmenu = overlayScreen.oncontextmenu = function (event) { event.preventDefault(); event.stopPropagation(); };
 {
     const classes = ['emulator', 'emulatorBackground', 'emulatorButton', 'virtualController', 'screenBorder'];
     for (let c = 0; c < classes.length; ++c) {
@@ -629,12 +630,11 @@ emulatorScreen.oncontextmenu = function (event) { event.preventDefault(); event.
     }
 }
 
-// Do not set desynchronized:true. Doing so makes Chrome run about 12% slower as of version 75.
-let ctx = emulatorScreen.getContext("2d",
-                                    {
-                                        alpha: false,
-                                        desynchronized: false
-                                    });
+// Do not set desynchronized:true. Doing so makes Chrome run about 12% slower as of version 87.
+const ctxOptions = {alpha: false, desynchronized: false};
+const ctx = emulatorScreen.getContext("2d", ctxOptions);
+
+const overlayCTX = overlayScreen.getContext("2d", ctxOptions);
 
 ctx.msImageSmoothingEnabled = ctx.webkitImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
 
@@ -687,6 +687,7 @@ function onStopButton(inReset, preserveNetwork) {
     coroutine = null;
     clearTimeout(lastAnimationRequest);
     ctx.clearRect(0, 0, emulatorScreen.width, emulatorScreen.height);
+    overlayCTX.clearRect(0, 0, emulatorScreen.width, emulatorScreen.height);
 }
 
 
@@ -1505,13 +1506,15 @@ function maybeGrabPointerLock() {
     if (usePointerLock) {
         emulatorScreen.requestPointerLock();
     }
-    document.getElementById('screen').style.cursor = runtime_cursor;
+    emulatorScreen.style.cursor = runtime_cursor;
+    overlayScreen.style.cursor = runtime_cursor;
 }
 
 /** Release pointer lock if it is held */
 function releasePointerLock() {
     document.exitPointerLock();
-    document.getElementById('screen').style.cursor = 'crosshair';
+    emulatorScreen.style.cursor = 'crosshair';
+    overlayScreen.style.cursor = 'crosshair';
 }
 
 function inModal() { return false; }
@@ -2855,6 +2858,8 @@ function setFramebufferSize(w, h) {
     SCREEN_HEIGHT = h;
     emulatorScreen.width = w;
     emulatorScreen.height = h;
+    overlayScreen.width = w;
+    overlayScreen.height = h;
 
     updateImage.width  = w;
     updateImage.height = h;
@@ -4395,3 +4400,4 @@ LoadManager.fetchOne({}, location.origin + getQuadPath() + 'console/_config.json
 
 // Make the browser aware that we want gamepads
 navigator.getGamepads();
+

@@ -39,7 +39,7 @@
             "type": "rgb",
             "value": {
                 "r": 1,
-                "g": 0.71,
+                "g": 0.67,
                 "b": 0
             }
         },
@@ -50,11 +50,16 @@
                 "g": 0.26,
                 "b": 0
             }
+        },
+        "BLOOM": {
+            "type": "number",
+            "value": 0.8
         }
     },
     "screen_size": {
         "x": 384,
         "y": 224
     },
-    "y_up": false
+    "y_up": false,
+    "screenshot_tag": "Z-Car"
 }
