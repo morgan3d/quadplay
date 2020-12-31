@@ -161,7 +161,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Origin', '*')
 
         # Required to enable high precision timer in Firefox and Chrome:
-        self.send_header('Cross-Origin-Embedder-Policy', 'equire-corp')
+        self.send_header('Cross-Origin-Embedder-Policy', 'require-corp')
         self.send_header('Cross-Origin-Opener-Policy', 'same-origin')
 
         # Try to reduce overcaching

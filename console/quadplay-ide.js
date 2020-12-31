@@ -3299,7 +3299,11 @@ function mainLoopStep() {
     // The frame has ended
     profiler.endFrame(QRuntime.$physicsTimeTotal, QRuntime.$graphicsTime, QRuntime.$logicToGraphicsTimeShift);
 
-    if ((uiMode === 'Test') || (uiMode === 'IDE') || (uiMode === 'WideIDE')) {
+    const debuggerVisible = (uiMode === 'Test') || (uiMode === 'IDE') || (uiMode === 'WideIDE');
+    
+    // Only update the profiler display periodically, because doing so
+    // takes about 2ms of frame time on a midrange modern computer.
+    if (debuggerVisible && ((QRuntime.mode_frames - 1) % (8 * QRuntime.$graphicsPeriod) === 0)) {
         const frame = profiler.smoothFrameTime.get();
         const logic = profiler.smoothLogicTime.get();
         const physics = profiler.smoothPhysicsTime.get();
@@ -3331,16 +3335,13 @@ function mainLoopStep() {
         debugFrameRateDisplay.innerHTML = '' + Math.round(60 / QRuntime.$graphicsPeriod) + '&#8239;Hz';
         debugFramePeriodDisplay.innerHTML = '(' + ('1½⅓¼⅕⅙'[QRuntime.$graphicsPeriod - 1]) + '×)';
 
-        if ((QRuntime.mode_frames - 1) % QRuntime.$graphicsPeriod === 0) {
-            // Only display if the graphics period has just ended, otherwise the display would
-            // be zero most of the time
-            debugDrawCallsDisplay.innerHTML = '' + QRuntime.$previousGraphicsCommandList.length;
-        }
+        // Only display if the graphics period has just ended, otherwise the display would
+        // be zero most of the time
+        debugDrawCallsDisplay.innerHTML = '' + QRuntime.$previousGraphicsCommandList.length;        
     }
 
     if (debugWatchEnabled && ((emulatorMode === 'play') || debugWatchTable.changed)) {
-        const pane = document.getElementById('debugWatchDisplayPane');
-        let s = '<table width=100% style="border-collapse: collapse" >'
+        let s = '';
         for (let id in debugWatchTable) {
             if (id === 'changed') { continue; }
             const watch = debugWatchTable[id];
@@ -3352,32 +3353,38 @@ function mainLoopStep() {
             tooltip += ':' + watch.location.line_number;
             s += `<tr valign=top><td width=50% title="${tooltip}" style="cursor:pointer" onclick="editorGotoFileLine('${watch.location.url}', ${watch.location.line_number}, undefined, false)">${watch.expression}</td><td>${watch.value}</td></tr>`;
         }
-        pane.innerHTML = s + '</table>';
+        
+        if (s !== '') {
+            const pane = document.getElementById('debugWatchDisplayPane');
+            pane.innerHTML = '<table width=100% style="border-collapse: collapse">' + s + '</table>';
+        }
         debugWatchTable.changed = false;
     }
 
-    if (QRuntime.$gameMode) {
-        if (QRuntime.$modeStack.length) {
-            let s = '';
-            for (let i = 0; i < QRuntime.$modeStack.length; ++i) {
-                s += QRuntime.$modeStack[i].$name + ' → ';
+    if (debuggerVisible) {
+        if (QRuntime.$gameMode) {
+            if (QRuntime.$modeStack.length) {
+                let s = '';
+                for (let i = 0; i < QRuntime.$modeStack.length; ++i) {
+                    s += QRuntime.$modeStack[i].$name + ' → ';
+                }
+                debugModeDisplay.innerHTML = s + QRuntime.$gameMode.$name;
+            } else {
+                debugModeDisplay.innerHTML = QRuntime.$gameMode.$name;
             }
-            debugModeDisplay.innerHTML = s + QRuntime.$gameMode.$name;
         } else {
-            debugModeDisplay.innerHTML = QRuntime.$gameMode.$name;
+            debugModeDisplay.innerHTML = '∅';
         }
-    } else {
-        debugModeDisplay.innerHTML = '∅';
-    }
-
-    if (QRuntime.$prevMode) {
-        debugPreviousModeDisplay.innerHTML = QRuntime.$prevMode.$name;
-    } else {
-        debugPreviousModeDisplay.innerHTML = '∅';
-    }
+        
+        if (QRuntime.$prevMode) {
+            debugPreviousModeDisplay.innerHTML = QRuntime.$prevMode.$name;
+        } else {
+            debugPreviousModeDisplay.innerHTML = '∅';
+        }
     
-    debugModeFramesDisplay.innerHTML = '' + QRuntime.mode_frames;
-    debugGameFramesDisplay.innerHTML = '' + QRuntime.game_frames;
+        debugModeFramesDisplay.innerHTML = '' + QRuntime.mode_frames;
+        debugGameFramesDisplay.innerHTML = '' + QRuntime.game_frames;
+    }
     
     if (targetFramerate < PLAY_FRAMERATE) {
         // Force the profiler to avoid resetting the

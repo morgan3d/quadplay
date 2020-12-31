@@ -7914,6 +7914,10 @@ for readability instead of performance. However, at some point you'll
 probably hit the performance limits and want to optimize at least some
 of the program. Here's where to focus your efforts.
 
+The emulator is fastest in Full Screen or Touch Screen mode. This
+eliminates the extra IDE content and avoids several milliseconds per
+frame of updates required for those.
+
 To avoid input lag, process game pad input _before_ rendering and
 simulation each frame. This allows the players' input to affect the
 current frame instead of being delayed one frame. Game pads (and browsers)

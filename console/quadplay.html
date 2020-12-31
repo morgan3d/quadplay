@@ -56,7 +56,7 @@
     <video id="guestVideo" playsinline autoplay oncontextmenu="event.preventDefault()" onmousedown="window.focus()"> </video>
     <audio id="guestAudio" autoplay style="visibility: hidden"></audio>
     <div id="guestVideoCover"> </div>
-    <div id="welcome" class="noIDE" onmousedown="onWelcomeTouch()" ontouchstart="onWelcomeTouch()">
+    <div id="welcome" class="noIDE" onmousedown="window.onWelcomeTouch && onWelcomeTouch()" ontouchstart="onWelcomeTouch()">
       <div style="color: #fff; width: 100%; height: 100%; position: absolute; background: rgba(0, 8, 16, 0.7)">
         <div style="position: absolute; top: 50%; left: 0; width: 100%; overflow: visible">
           <div style="position: absolute; top: -150px; text-align: center; font-size: 26px; font-weight: 100; line-height: 130%; width: 100%; text-shadow: 1px 3px 7px #000">
