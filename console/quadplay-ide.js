@@ -3193,7 +3193,7 @@ function goToLauncher() {
 
 function onCopyPerformanceSummary() {
     let summary = `Framerate ${debugFrameRateDisplay.textContent} ${debugFramePeriodDisplay.textContent}; `;
-    summary += `${debugFrameTimeDisplay.textContent} Total = ${debugCPUTimeDisplay.textContent} CPU + ${debugPPUTimeDisplay.textContent} Phys + ${debugGPUTimeDisplay.textContent} GPU`;
+    summary += `${debugFrameTimeDisplay.textContent} Total = ${debugCPUTimeDisplay.textContent} CPU + ${debugPPUTimeDisplay.textContent} Phys + ${debugGPUTimeDisplay.textContent} GPU + ${debugBrowserTimeDisplay.textContent} ${browserName}`;
     navigator.clipboard.writeText(summary);
 }
 
@@ -3230,6 +3230,7 @@ function mainLoopStep() {
     // be zero on any individual call.
     QRuntime.$physicsTimeTotal = 0;
     QRuntime.$graphicsTime = 0;
+    QRuntime.$logicToGraphicsTimeShift = 0;
 
     // Run the "infinite" loop for a while, maxing out at just under 1/60 of a second or when
     // the program explicitly requests a refresh or keyboard update via _show(). Note that
@@ -3296,7 +3297,7 @@ function mainLoopStep() {
     }
 
     // The frame has ended
-    profiler.endFrame(QRuntime.$physicsTimeTotal, QRuntime.$graphicsTime);
+    profiler.endFrame(QRuntime.$physicsTimeTotal, QRuntime.$graphicsTime, QRuntime.$logicToGraphicsTimeShift);
 
     if ((uiMode === 'Test') || (uiMode === 'IDE') || (uiMode === 'WideIDE')) {
         const frame = profiler.smoothFrameTime.get();

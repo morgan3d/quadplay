@@ -1213,7 +1213,7 @@ function compile(gameSource, fileContents, isOS) {
     
     // Protect certain variables by shadowing them, since programs
     // that overwrite (or read!) them could cause problems.
-    let compiledProgram = 'const $Object = {}.constructor; let navigator, parent, Object, Array, String, Number, location, document, window, print, Math, RegExp, Date, console, localStorage; \n';
+    let compiledProgram = 'const $Object = {}.constructor; let navigator, parent, Object, Array, String, Number, location, document, window, print, Math, RegExp, Date, console, localStorage, performance; \n';
     if (gameSource.json.y_up) {
         compiledProgram += 'set_transform(xy(0, SCREEN_SIZE.y), xy(1, -1), 0, 1);\n;';
     }

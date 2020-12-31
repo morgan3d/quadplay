@@ -37,8 +37,11 @@
     const isUIWebView = ! /chrome|firefox|safari|edge/i.test(navigator.userAgent) && /applewebkit/i.test(navigator.userAgent);  
     const isApple = /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent) || isUIWebView;
+    const isEdge = /Edg\//.test(navigator.userAgent);
+    const isChrome = /chrom/i.test(navigator.userAgent) && window.chrome && !isEdge;
     const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
     const isMobile = window.matchMedia("only screen and (max-width: 480px)").matches || window.orientation || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const browserName = isSafari ? 'Safari' : isFirefox ? 'Firefox' : isChrome ? 'Chrome' : isEdge ? 'Edge' : 'Browser';
 
     // Keys
     const cmd = isApple ? '⌘' : '^';

@@ -154,12 +154,27 @@ def load_json(filename):
 class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
     # Directories that should be excluded from filesystem searches
     special_dir_regex = re.compile('(^|/)(journal|screenshots|metadata|backlot|graveyard)/', re.IGNORECASE)
-            
+
+    # Add custom headers
+    def end_headers(self):
+        # CORS:
+        self.send_header('Access-Control-Allow-Origin', '*')
+
+        # Required to enable high precision timer in Firefox and Chrome:
+        self.send_header('Cross-Origin-Embedder-Policy', 'equire-corp')
+        self.send_header('Cross-Origin-Opener-Policy', 'same-origin')
+
+        # Try to reduce overcaching
+        self.send_header('Cache-Control', 'must-revalidate')
+        SimpleHTTPRequestHandler.end_headers(self)
+
+        
     def list_directory(self, path):
         # Prevent directory listing
         self.send_error(404, 'No permission to list directory')
         return None
 
+    
     # Returns False on security error
     def prepare_mutating_request(self):
         if args.serve:

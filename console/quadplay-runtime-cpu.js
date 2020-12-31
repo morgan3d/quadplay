@@ -11,6 +11,7 @@
 var $Object = Object;
 var $console = console;
 var $Math = Math;
+var $performance = performance;
 
 var $gameMode = undefined, $prevMode = undefined;
 var $numBootAnimationFrames = 120;
@@ -43,6 +44,9 @@ var $skipGraphics = false;
 
 // Time spent in graphics this frame, for use by quadplay-profiler.js
 var $graphicsTime = 0;
+
+// Time to move from the logic accounting to the graphics accounting
+var $logicToGraphicsTimeShift = 0;
 
 // Only used on Safari
 var $currentLineNumber = 0;
@@ -2849,7 +2853,7 @@ function $bodyUpdateFromEntity(body) {
 
       
 function physics_simulate(physics, stepFrames) {
-    const startTime = performance.now();
+    const startTime = $performance.now();
           
     if (stepFrames === undefined) { stepFrames = 1; }
     const engine = physics.$engine;
@@ -2959,7 +2963,7 @@ function physics_simulate(physics, stepFrames) {
 
     ++physics.$frame;
 
-    const endTime = performance.now();
+    const endTime = $performance.now();
     $physicsTimeTotal += endTime - startTime;
 }
 
@@ -5103,6 +5107,7 @@ function draw_line(A, B, color, z, width) {
 
 function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_layer_exclusive, replacement_array, z, override_color, override_blend, invert_sprite_y, quality) {
     if ($skipGraphics) { return; }
+
     if (quality === undefined) { quality = 1.0; }
 
     // TODO: Remove when height spans are permitted
@@ -5163,6 +5168,17 @@ function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_
         return;
     }
 
+    // The time for this call is mostly spent in the draw call
+    // submission, not the execution. So, time the submission and move
+    // that time from the "logic" to the "graphics" profiler. Due to
+    // the limited precision of browser timing the measured time will
+    // frequently be zero, but this call is made about 100x per frame
+    // in most implementations for floor or ceiling rendering, so
+    // it will occasionally catch the timer ticking over and be right
+    // on average.
+
+    const startTime = $performance.now();
+    
     // TODO: Support both width and height for clipping below
 
     // Compute derivatives before clipping width
@@ -5342,6 +5358,8 @@ function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_
         dy: 0,
         data_length: color_data_length,
         data: color_data})
+
+    $logicToGraphicsTimeShift += $performance.now() - startTime;
 }
 
 
@@ -9402,7 +9420,7 @@ function $verifyLegalMode(mode) {
 
 
 function now() {
-    return performance.now() * 0.001;
+    return $performance.now() * 0.001;
 }
 
 

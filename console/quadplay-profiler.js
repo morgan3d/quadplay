@@ -83,14 +83,13 @@ Profiler.prototype.reset = function() {
 };
 
 
-Profiler.prototype.endFrame = function(physicsTime, graphicsTime) {
+Profiler.prototype.endFrame = function(physicsTime, graphicsTime, logicToGraphicsTimeShift) {
     ++this.framesSinceIntervalStart;
     const grossComputeTime = this.now() - this.currentFrameStartTime;
     this.physicsAccumTime += physicsTime;
-    this.graphicsAccumTime += graphicsTime;
-    this.logicAccumTime += grossComputeTime - physicsTime - graphicsTime;
+    this.graphicsAccumTime += graphicsTime + logicToGraphicsTimeShift;
+    this.logicAccumTime += grossComputeTime - physicsTime - graphicsTime - logicToGraphicsTimeShift;
 
-    
     if (this.framesSinceIntervalStart < this.framesThisInterval) {
         // Not at the end of the interval
         return;
@@ -108,13 +107,14 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime) {
         let graphicsTime = this.graphicsAccumTime / N;
         let physicsTime = this.physicsAccumTime / N;
         let logicTime = Math.max(this.logicAccumTime / N, 0);
-
-        // Assume that at least 15% of the logic time is actually
+        
+        // Assume that at least 10% of the logic time is actually
         // graphics draw call setup, so that the profiler can estimate
         // the impact of reducing the refresh rate and avoiding that
-        // overhead. We have no way to measure this precisely in JavaScript.
-        graphicsTime += logicTime * 0.15;
-        logicTime *= 0.85;
+        // overhead. We have no way to measure this precisely in
+        // JavaScript.
+        graphicsTime += logicTime * 0.10;
+        logicTime *= 0.90;
         
         this.smoothLogicTime.update(logicTime, N);
         this.smoothPhysicsTime.update(physicsTime, N);
@@ -157,7 +157,7 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime) {
         const G            = this.graphicsPeriod;
 
         // Estimates of the best frame time we might hit if graphicsPeriod changes 
-        const minAchievableTime    = logicTime + physicsTime + graphicsTime * G / maxG;
+        const minAchievableTime              = logicTime + physicsTime + graphicsTime * G / maxG;
         const expectedTimeAtLowerFramerate   = logicTime + physicsTime + graphicsTime * G / (G + 1);
         const expectedTimeAtCurrentFramerate = logicTime + physicsTime + graphicsTime;
         const expectedTimeAtHigherFramerate  = logicTime + physicsTime + graphicsTime * G / Math.max(G - 1, 0.5);

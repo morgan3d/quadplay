@@ -35,7 +35,7 @@ function $show() {
         }
     
         $submitFrame();
-        $graphicsTime = performance.now() - startTime;
+        $graphicsTime = $performance.now() - startTime;
     }
     
     $requestInput();
