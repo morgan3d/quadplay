@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2020.12.30.01';
+const version  = '2021.01.01.00';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -436,6 +436,10 @@ function setUIMode(d, noAutoPlay) {
     // to ensure that the editor can fully scroll horizontally
     // in 'wide' mode
     setTimeout(function() { aceEditor.resize(); });
+
+    // Force a debugger update so that the stats are correct
+    // when switching back to it
+    updateDebugger();
 }
 
 
@@ -3299,47 +3303,66 @@ function mainLoopStep() {
     // The frame has ended
     profiler.endFrame(QRuntime.$physicsTimeTotal, QRuntime.$graphicsTime, QRuntime.$logicToGraphicsTimeShift);
 
-    const debuggerVisible = (uiMode === 'Test') || (uiMode === 'IDE') || (uiMode === 'WideIDE');
-    
     // Only update the profiler display periodically, because doing so
     // takes about 2ms of frame time on a midrange modern computer.
-    if (debuggerVisible && ((QRuntime.mode_frames - 1) % (8 * QRuntime.$graphicsPeriod) === 0)) {
-        const frame = profiler.smoothFrameTime.get();
-        const logic = profiler.smoothLogicTime.get();
-        const physics = profiler.smoothPhysicsTime.get();
-
-        // Show the time that graphics *would* be taking if
-        // it wasn't for the frame rate scaler
-        const graphics = profiler.smoothGraphicsTime.get() * QRuntime.$graphicsPeriod;
-        const compute = logic + physics + graphics;
-        const browser = Math.max(0, frame - compute);
-
-        // Use 18 instead of 16.67 ms as the cutoff for displaying
-        // overhead because there are sometimes very slight roundoffs
-        // due to the timer callback being inexact.
-        if (profiler.debuggingProfiler) { updateTimeDisplay(frame, 'Interval'); }
-        updateTimeDisplay((frame > 18) ? frame : compute, 'Frame');
-        updateTimeDisplay((frame > 17.2) ? browser : 0, 'Browser');
-        updateTimeDisplay(logic, 'CPU');
-        updateTimeDisplay(physics, 'PPU');
-        updateTimeDisplay(graphics, 'GPU');
-
-        let color = 'unset';
-        if (QRuntime.$graphicsPeriod === 2) {
-            color = '#fe4';
-        } else if (QRuntime.$graphicsPeriod > 2) {
-            color = '#f30';
-        }
-
-        debugFrameRateDisplay.style.color = debugFramePeriodDisplay.style.color = color;
-        debugFrameRateDisplay.innerHTML = '' + Math.round(60 / QRuntime.$graphicsPeriod) + '&#8239;Hz';
-        debugFramePeriodDisplay.innerHTML = '(' + ('1½⅓¼⅕⅙'[QRuntime.$graphicsPeriod - 1]) + '×)';
-
-        // Only display if the graphics period has just ended, otherwise the display would
-        // be zero most of the time
-        debugDrawCallsDisplay.innerHTML = '' + QRuntime.$previousGraphicsCommandList.length;        
+    if (((uiMode === 'Test') || (uiMode === 'IDE') || (uiMode === 'WideIDE')) &&
+        ((QRuntime.mode_frames - 1) % (8 * QRuntime.$graphicsPeriod) === 0)) {
+        updateDebugger();
+    }
+    
+    if (targetFramerate < PLAY_FRAMERATE) {
+        // Force the profiler to avoid resetting the
+        // graphics rate when in slow mode.
+        profiler.reset();
     }
 
+    // Update to the profiler's new model of the graphics period
+    QRuntime.$graphicsPeriod = profiler.graphicsPeriod;
+    QRuntime.$skipGraphics = (QRuntime.mode_frames % QRuntime.$graphicsPeriod) !== 0;
+    
+    if (emulatorMode === 'step') {
+        onPauseButton();
+    }
+}
+
+
+function updateDebugger() {
+    
+    const frame = profiler.smoothFrameTime.get();
+    const logic = profiler.smoothLogicTime.get();
+    const physics = profiler.smoothPhysicsTime.get();
+    
+    // Show the time that graphics *would* be taking if
+    // it wasn't for the frame rate scaler
+    const graphics = profiler.smoothGraphicsTime.get() * QRuntime.$graphicsPeriod;
+    const compute = logic + physics + graphics;
+    const browser = Math.max(0, frame - compute);
+    
+    // Use 18 instead of 16.67 ms as the cutoff for displaying
+    // overhead because there are sometimes very slight roundoffs
+    // due to the timer callback being inexact.
+    if (profiler.debuggingProfiler) { updateTimeDisplay(frame, 'Interval'); }
+    updateTimeDisplay((frame > 18) ? frame : compute, 'Frame');
+    updateTimeDisplay((frame > 17.2) ? browser : 0, 'Browser');
+    updateTimeDisplay(logic, 'CPU');
+    updateTimeDisplay(physics, 'PPU');
+    updateTimeDisplay(graphics, 'GPU');
+    
+    let color = 'unset';
+    if (QRuntime.$graphicsPeriod === 2) {
+        color = '#fe4';
+    } else if (QRuntime.$graphicsPeriod > 2) {
+        color = '#f30';
+    }
+    
+    debugFrameRateDisplay.style.color = debugFramePeriodDisplay.style.color = color;
+    debugFrameRateDisplay.innerHTML = '' + Math.round(60 / QRuntime.$graphicsPeriod) + '&#8239;Hz';
+    debugFramePeriodDisplay.innerHTML = '(' + ('1½⅓¼⅕⅙'[QRuntime.$graphicsPeriod - 1]) + '×)';
+    
+    // Only display if the graphics period has just ended, otherwise the display would
+    // be zero most of the time
+    debugDrawCallsDisplay.innerHTML = '' + QRuntime.$previousGraphicsCommandList.length;        
+    
     if (debugWatchEnabled && ((emulatorMode === 'play') || debugWatchTable.changed)) {
         let s = '';
         for (let id in debugWatchTable) {
@@ -3361,46 +3384,29 @@ function mainLoopStep() {
         debugWatchTable.changed = false;
     }
 
-    if (debuggerVisible) {
-        if (QRuntime.$gameMode) {
-            if (QRuntime.$modeStack.length) {
-                let s = '';
-                for (let i = 0; i < QRuntime.$modeStack.length; ++i) {
-                    s += QRuntime.$modeStack[i].$name + ' → ';
-                }
-                debugModeDisplay.innerHTML = s + QRuntime.$gameMode.$name;
-            } else {
-                debugModeDisplay.innerHTML = QRuntime.$gameMode.$name;
+    if (QRuntime.$gameMode) {
+        if (QRuntime.$modeStack.length) {
+            let s = '';
+            for (let i = 0; i < QRuntime.$modeStack.length; ++i) {
+                s += QRuntime.$modeStack[i].$name + ' → ';
             }
+            debugModeDisplay.innerHTML = s + QRuntime.$gameMode.$name;
         } else {
-            debugModeDisplay.innerHTML = '∅';
+            debugModeDisplay.innerHTML = QRuntime.$gameMode.$name;
         }
-        
-        if (QRuntime.$prevMode) {
-            debugPreviousModeDisplay.innerHTML = QRuntime.$prevMode.$name;
-        } else {
-            debugPreviousModeDisplay.innerHTML = '∅';
-        }
-    
-        debugModeFramesDisplay.innerHTML = '' + QRuntime.mode_frames;
-        debugGameFramesDisplay.innerHTML = '' + QRuntime.game_frames;
+    } else {
+        debugModeDisplay.innerHTML = '∅';
     }
     
-    if (targetFramerate < PLAY_FRAMERATE) {
-        // Force the profiler to avoid resetting the
-        // graphics rate when in slow mode.
-        profiler.reset();
+    if (QRuntime.$prevMode) {
+        debugPreviousModeDisplay.innerHTML = QRuntime.$prevMode.$name;
+    } else {
+        debugPreviousModeDisplay.innerHTML = '∅';
     }
-
-    // Update to the profiler's new model of the graphics period
-    QRuntime.$graphicsPeriod = profiler.graphicsPeriod;
-    QRuntime.$skipGraphics = (QRuntime.mode_frames % QRuntime.$graphicsPeriod) !== 0;
     
-    if (emulatorMode === 'step') {
-        onPauseButton();
-    }
+    debugModeFramesDisplay.innerHTML = '' + QRuntime.mode_frames;
+    debugGameFramesDisplay.innerHTML = '' + QRuntime.game_frames;
 }
-
 
 /* Print only the filename base when it is the same as the game base */
 function shortURL(url) {
@@ -3965,7 +3971,7 @@ const qrcode = new QRCode('serverQRCode',
                           });
 
 const BOOT_INFO = `<span style="color:#ec5588">quadplay✜ ${version}</span>
-<span style="color:#937ab7">© 2020 Morgan McGuire</span>
+<span style="color:#937ab7">© 2019-2021 Morgan McGuire</span>
 <span style="color:#5ea9d8">Licensed under LGPL 3.0</span>
 <span style="color:#859ca6">https://casual-effects.com</span>
 

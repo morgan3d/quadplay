@@ -694,11 +694,11 @@ function computeCredits(gameSource) {
     }
     
     // The quadplay runtime. We only need to credit code that is in the runtime, not the compiler or IDE.
-    CREDITS.quadplay.push('quadplay✜ ©2019-2020 Morgan McGuire, used under the LGPL 3.0 license');
+    CREDITS.quadplay.push('quadplay✜ ©2019-2021 Morgan McGuire, used under the LGPL 3.0 license');
     CREDITS.quadplay.push('gif.js ©2013 Johan Nordberg, used under the MIT license, with additional programming by Kevin Weiner, Thibault Imbert, and Anthony Dekker');
     CREDITS.quadplay.push('xorshift implementation ©2014 Andreas Madsen and Emil Bay, used under the MIT license');
-    CREDITS.quadplay.push('LoadManager.js ©2019 Morgan McGuire, used under the BSD license');
-    CREDITS.quadplay.push('WorkJSON.js ©2020 Morgan McGuire, used under the MIT license');
+    CREDITS.quadplay.push('LoadManager.js ©2018-2020 Morgan McGuire, used under the BSD license');
+    CREDITS.quadplay.push('WorkJSON.js ©2020-2021 Morgan McGuire, used under the MIT license');
     CREDITS.quadplay.push('js-yaml ©2011-2015 Vitaly Puzrin, used under the MIT license');
     CREDITS.quadplay.push('matter.js © Liam Brummitt and others, used under the MIT license');
     CREDITS.quadplay.push('poly-decomp.js ©2013 Stefan Hedman, used under the MIT license');
