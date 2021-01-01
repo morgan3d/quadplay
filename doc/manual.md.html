@@ -6157,8 +6157,9 @@ PyxlScript Language
 Numbers
 -------------------------------------------------------------------------
 
-Numbers are stored internally as double-precision (64-bit) IEEE floating point
-values. Integer operators truncate the decimal places of their arguments.
+Numbers are stored internally as double-precision (64-bit) IEEE
+floating point values. Integer operators truncate the decimal places
+of their arguments.
 
 The first 2^53=9007199254740992 contiguous positive integers are
 exactly representable. The largest finite representable number is
@@ -6166,7 +6167,7 @@ about 1.7977x10^308. There are about seventeen decimal digits of
 precision on arbitrary numbers. `NaN` and positive and negative infinity
 are also exactly representable.
 
-Finite numeric literals contain an optional single plus or minus sign and one of:
+Finite decimal numeric literals contain an optional single plus or minus sign and one of:
 
 - a series of digits, followed by an optional decimal point and a series of digits
 - a decimal point followed by a series of digits
@@ -6176,6 +6177,12 @@ Two optional suffixes are permitted:
 
 - Percent `%` divides the number by 100
 - Degrees `deg` or `°` multiplies the number by `π/180`
+
+There are no _literals_ for not-a-number or infinity. See the Built-In Objects section
+for the constant bindings that produce these values.
+
+Hexadecimal constants are `0x` followed by series of digits 0-F or 0-f. Binary
+constants are `0b` followed by a series of 0s and 1s.
 
 Examples of legal numeric literals:
 
@@ -6191,11 +6198,12 @@ Examples of legal numeric literals:
 15% // 0.15
 90° // ½π
 45deg // ¼π
+0xFF0DC
+0b11000101
 ~~~~~~~~~~~~~~
 
-No hexadecimal, octal, binary, or exponential notation are
-supported. Trailing decimal points are not allowed. For example, `0.`
-is illegal.
+No octal or exponential float notation are supported. Trailing decimal
+points are not allowed. For example, `0.` is illegal.
 
 
 Booleans
@@ -8022,21 +8030,21 @@ jams, and to learn/teach programming.
 
 The soul of quadplay as a console is described by:
 
-- Four players with a shared screen
+- Up to four players with a shared screen
 - Minimal time from launch to main play
 - 1985 output limitations, 2020 development power
 
 The overarching design principles of the quadplay IDE and language are:
 
-- Keep small game development friendly and fun
+- *Make small game development friendly and fun*
 - Limitations that:
    - Allow games to run effectively on a wide range of displays,
      processors, and input devices without any per-platform work
    - Focus developers on gameplay and innovation
    - Help developers prevent scope creep
-- Allow expert users to bypass limitations to customize for a specific
+- Allow developers to bypass limitations to customize for a specific
   platform or game
-- Support working where developers choose:
+- Support working wherever developers choose:
    - Entirely in a browser
    - Primarily in external tools
    - Or any combination!
@@ -8047,14 +8055,15 @@ The overarching design principles of the quadplay IDE and language are:
 There's a long feature list and a short bug list that I'm working
 through for 1.0. The highlights of this are, in priority order:
 
-[x] Development on macOS, Windows, Ubuntu Linux, and Raspbian
-[x] Playing on phones, tablets, desktop, laptop, 
-    homebrew arcades, Raspberry Pi, Jetson Nano, PiBoy DMG
+[x] Development on macOS, Windows, Ubuntu Linux, and Raspberry Pi OS
+[x] Playing on phone, tablet, desktop, laptop, netbook,
+    homebrew arcades, Raspberry Pi, and Jetson Nano
 [x] Gamepads
   [x] 8BitDo
   [x] Switch JoyCons
   [x] X-Arcade
   [x] Xbox and PlayStation
+  [x] Touch screen
   [ ] PiBoy DMG
 [x] APIs
   [x] Graphics
@@ -8065,7 +8074,6 @@ through for 1.0. The highlights of this are, in priority order:
   [x] web page
   [x] github pages
   [x] itch.io (browser)
-  [x] macOS/Windows/Linux download (browser)
 [ ] Built-in IDE
   [x] Code editor
   [x] Project editor

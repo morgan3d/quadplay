@@ -3361,7 +3361,9 @@ function updateDebugger() {
     
     // Only display if the graphics period has just ended, otherwise the display would
     // be zero most of the time
-    debugDrawCallsDisplay.innerHTML = '' + QRuntime.$previousGraphicsCommandList.length;        
+    if (window.QRuntime && QRuntime.$previousGraphicsCommandList) {
+        debugDrawCallsDisplay.innerHTML = '' + QRuntime.$previousGraphicsCommandList.length;
+    }
     
     if (debugWatchEnabled && ((emulatorMode === 'play') || debugWatchTable.changed)) {
         let s = '';
