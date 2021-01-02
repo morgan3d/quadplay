@@ -192,7 +192,8 @@ They can be anywhere on your system.
 
 Every time you push the Run button (F5) or Reload button (Ctrl+R) in
 the emulator within the web browser, it will reload your code and
-assets from disk.
+assets from disk. So, you can mix an external editor with the built-in
+IDE without worrying about synchronization.
 
 You can use the built-in assets from the developer kit, existing ones
 from sites like [OpenGameArt.org](http://opengameart.org) and
@@ -3789,9 +3790,9 @@ endpoints and borders.
 `draw_disk(args)`
 : Object version of `draw_disk()`.
 
-`draw_disk(pos, r, color, outline default ∅, z default 0)`
+`draw_disk(pos, radius, color, outline default ∅, z default 0)`
 : Draw a circle or filled disk centered at (`pos.x`, `pos.y`)
-  with radius `r` and z-order `z`.
+  with radius `radius` and z-order `z`.
   
   Choose the radius to be a half-integer, such as 3.5, and place
   the position at a half-integer if you want it to be centered on a pixel.
@@ -7459,7 +7460,12 @@ quadplay✜ arcade player colors and physical layout order is: P3 Yellow, P1 Mag
 </table>
 </center>
 
-#### Nano or Pi 4
+#### Nano or Raspberry Pi
+
+The
+[Rasberry Pi 400](https://www.raspberrypi.org/products/raspberry-pi-400/)
+is a complete computer for only $70 that can run quadplay✜ and plug
+directly into a television or monitor.
 
 With a 3D-printed case and some Bluetooth or wired game controllers,
 you can build your own quadplay✜ retro mini console to connect to a TV
@@ -7469,8 +7475,6 @@ power such a box using Linux and Chromium. Both will hit 60 Hz for most games, a
 30 Hz for all games (quadplay✜ handles framerate scaling for you seamlessly,
 so you won't even notice most of the time). 
 
-The [Rasberry Pi 400](https://www.raspberrypi.org/products/raspberry-pi-400/) is a complete computer
-for only $70 that can run quadplay✜ and plug directly into a television or monitor.
 
 ![Quadplay mini-console built by Morgan McGuire from a Jetson Nano with a 3D-printed case, USB Xbox 360 controller, and small external monitor.](nano-arcade.jpg width=50%)
 
@@ -7596,9 +7600,9 @@ We've tested on the GPD Win 2 and GPD Win Max. Both run quadplay✜ well:
 Some other physical handhelds that may be capable of running quadplay✜
 games when/if released include:
 
- - 480x320 [Odroid-Go Advance Black](https://liliputing.com/2020/05/the-new-odroid-go-advance-adds-wifi-and-more-buttons-linux-handheld-game-console.html), Linux = full-res quadplay✜ 1x scaling; poor fit
+ - 1280x720 [GPD Win 3](https://www.gpd.hk/gpdwin3)
  - 1280x720 [DragonBox Pyra](https://pyra-handheld.com/boards/pages/pyra/), Linux = full-res quadplay✜ 3x scaling
- - 1280x720 GPD Win 3
+ - 480x320 [Odroid-Go Advance Black](https://liliputing.com/2020/05/the-new-odroid-go-advance-adds-wifi-and-more-buttons-linux-handheld-game-console.html), Linux = full-res quadplay✜ 1x scaling; poor fit
  - 1280x800 Aya Neo
  - 1920x1080 Smach Z
  - 1920x1200 Alienware UFO
@@ -7788,10 +7792,35 @@ quadplay✜ is all Open Source (even though it permits you to use it with your
 own closed-source came). See the Credits section for more information.
 
 
+itch.io
+------------------------------------------------------------------------------------
+
+Deploying to [itch.io](https://itch.io/) as a Browser Game allows you to create a self
+contained online game that others can buy from you, or play for free if you choose.
+
+The steps are:
+
+1. Run `python3 path-to-quadplay/tools/export.py` inside the directory containing
+   your `game.json` file (or run `python3 tools/export.py -g path-to-your-game` from anywhere).
+2. Log into the itch.io website and create a new game entry with the following settings:
+  - Classification: Games
+  - Kind of project: HTML
+  - Mobile friendly: Yes
+  - Automatically start on page load: Yes
+  - How should your project be run in your page?: Click to launch fullscreen
+  - Orientation: Landscape
+  - Visibility: Public
+3. In the Uploads section on the itch.io game page, upload the zipfile generated in step 1.
+
+To update your game or upgrade the underlying quadplay✜ distribution,
+repeat the process of creating the zipfile and then upload it as a
+replacement for the original file.
+
+
 GitHub
 ------------------------------------------------------------------------------------
 
-### From your development repo
+### Combined develop and deployment repo
 
 This is the easiest method to deploy your game. It also allows you to
 continuously update the game as well as gain the benefit of
@@ -7806,7 +7835,7 @@ Assume that your GitHub account is named `USER` and your repo is named `REPO`.
 
 To deploy, go to the settings page for your repo on GitHub. For example,
 https://github.com/USER/REPO/settings. In the section titled "GitHub Pages"
-on the settings page, select "Master Branch" from the Source dropdown.
+on the settings page, select "master" or "main" from the Source section dropdown.
 
 The URL to play your game is then:
 
@@ -7822,7 +7851,7 @@ document.write(`<pre class="listing tilde"><code>&amp;lt;meta http-equiv="refres
 People visiting the URL https://USER.github.io/REPO will then be redirected to the correct page.
 
 
-### From another repo
+### Separate repos
 
 To keep your development repository private or just separate from the deployment one,
 create a second repository on GitHub.
@@ -7839,32 +7868,6 @@ and not depend on the quadplay repo at runtime, just add the `--standalone` argu
 This will generate an `index.html` file as well as copying all dependencies.
 
 
-
-itch.io
-------------------------------------------------------------------------------------
-
-Deploying to [itch.io](https://itch.io/) as a Browser Game allows you to create a self
-contained online game that others can buy from you, or play for free if you choose.
-It is slightly more complicated to update than on GitHub because you must make a release
-file and upload it explicitly.
-
-The steps are:
-
-1. Run `python3 path-to-quadplay/tools/export.py` inside the directory containing
-   your `game.json` file, or `python3 tools/export.py -g path-to-your-game`.
-2. Log into the itch.io website and create a new game entry with the following settings:
-  - Classification: Games
-  - Kind of project: HTML
-  - Mobile friendly: Yes
-  - Automatically start on page load: Yes
-  - How should your project be run in your page?: Click to launch fullscreen
-  - Orientation: Landscape
-  - Visibility: Public
-3. In the Uploads section on the itch.io game page, upload the zipfile generated in step 1.
-
-To update your game or upgrade the underlying quadplay✜ distribution,
-you must repeat the process of creating the zipfile and then upload it
-as a replacement for the original file.
 
 
 Web Server

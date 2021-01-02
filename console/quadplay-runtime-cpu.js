@@ -4698,6 +4698,10 @@ function draw_disk(pos, radius, color, outline, z) {
         pos = pos.pos;
     }
 
+    if (radius === undefined) {
+        $error('draw_disk() requires a non-nil radius')
+    }
+
     z = (z || 0) - $camera.z;
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
