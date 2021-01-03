@@ -2265,7 +2265,7 @@ function transform_ss_to_ws(ss_point, ss_z) {
 
 function transform_ws_to_ss(ws_point, ws_z) {
     ws_z = ws_z || 0;
-    const cs_z = transform_ws_z_to_cs_z(ws_z);
+    const cs_z = ws_z - $camera.z; 
     return transform_cs_to_ss(transform_ws_to_cs(ws_point, ws_z), cs_z);
 }
 
@@ -2293,8 +2293,8 @@ function transform_cs_to_ws(cs_point, cs_z) {
     const C = $Math.cos(-$camera.angle) * mag, S = $Math.sin(-$camera.angle * rotation_sign()) * mag;
     
     const x = cs_point.x - $camera.x, y = cs_point.y - $camera.y;
-    return {x: cs_point.x * C + cs_point.y * S + $camera.y,
-            y: cs_point.y * C - cs_point.x * S + $camera.x};
+    return {x: cs_point.x * C + cs_point.y * S + $camera.x,
+            y: cs_point.y * C - cs_point.x * S + $camera.y};
 }
 
 function transform_ws_to_es(entity, coord) {
