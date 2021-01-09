@@ -1,0 +1,79 @@
+def polar_to_xy(angle):
+    return xy(cos(angle), sin(angle) * rotation_sign())
+
+const CLOUD_PARALLAX_MAP = {
+    0:  7/8,
+    1:  1/2,
+    2: -0.2
+}
+const CLOUD_Z_MAP = {
+    0: 99,
+    1: 99,
+    2: 99,
+}
+
+const RAIN_STREAKS = 800
+const RAIN_OFFSETS = []
+for i < RAIN_STREAKS:
+    RAIN_OFFSETS[i] = random_integer(60)
+
+const RAIN_COLORS = [
+    DARK_COLOR,
+    DARK_COLOR,
+    TEXT_COLOR,
+]
+
+const SPLASHES_PER_FRAME = 1
+const SPLASHES = []
+
+def delete_splash(spl):
+    fast_remove_value(SPLASHES, spl)
+    
+const Z_OFF = SCREEN_SIZE.y / 2
+const RAIN_ANGLE_INC = 180deg / RAIN_STREAKS
+const RAY_ORIGIN = xy(0, 1.5 * SCREEN_SIZE.y)
+// const RAY_ORIGIN = xy(-1.0 * SCREEN_SIZE.x, SCREEN_SIZE.y/2)
+
+def draw_rain():
+    // // add splashes every ten frames
+    // if mode_frames mod 10 == 0:
+    //     const pos = random_loc_in_play_area()
+    //     push(SPLASHES, make_anim_entity({
+    //             name: "splash",
+    //             pos: pos,
+    //             z: pos.y + Z_OFF
+    //         },
+    //         splashSprite.splash,
+    //         delete_splash
+    //     ))
+
+    let angle = 0deg
+    let cam = xy(0,0)
+    const PARALLAXES = [
+        cam * CLOUD_PARALLAX_MAP[0],
+        cam * CLOUD_PARALLAX_MAP[1],
+        cam * CLOUD_PARALLAX_MAP[2],
+    ]
+
+    const MAX_LEN_FACT = 1.5 SCREEN_SIZE.x
+    const rain_z = CLOUD_Z_MAP[2]
+    for i < RAIN_STREAKS:
+        const length = i mod 3
+
+        angle += RAIN_ANGLE_INC
+        const dir_vec = polar_to_xy(angle)
+
+        const amount_along_line = 1 - ((mode_frames + RAIN_OFFSETS[i]) mod 60) / 60
+        const ray_start = RAY_ORIGIN + MAX_LEN_FACT * amount_along_line * dir_vec
+        const ray_end = ray_start + 10 dir_vec
+        
+        draw_line(
+            ray_start,
+            ray_end,
+            RAIN_COLORS[length],
+            rain_z,
+            1.5
+        )
+
+    for spl in SPLASHES:
+        draw_sprite(spl)

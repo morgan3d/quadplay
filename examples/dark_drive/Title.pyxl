@@ -1,0 +1,153 @@
+Title
+════════════════════════════════════════════════════════════════════════
+const TITLE_TEXT = [
+    "A DARK DRIVE",
+    "ON A STORMY NIGHT",
+    "IN AN UNRELIABLE CAR",
+]
+
+const CREDIT_TEXT = [
+    "a",
+    "small",
+    "game by",
+    "ed luong",
+    "nick porcino",
+    "stephan steinbach",
+
+]
+
+let high_score = nil
+
+const INTRO_LENGTH = 170
+
+let OVERLAY_ALPHA = 1.0
+let FLASH = false
+
+def lerp_alpha_toward(start, target):
+    def func(frames_left, total_frames):
+        OVERLAY_ALPHA = lerp(start, target, 1-(frames_left/total_frames))
+    return func
+
+def no_op():
+    // thats it
+
+def set_flash_on():
+    OVERLAY_ALPHA = 1.0
+    let wait = random_value([5, 7, 10])
+    debug_print("waiting before turning back on: " + wait)
+    sequence(
+        {callback: lerp_alpha_toward(0.0, 1.0), frames: 3},
+        {callback: no_op, frames: wait},
+        set_flash_off
+    )
+
+def set_flash_off():
+    OVERLAY_ALPHA = 0.0
+    let wait = random_value([25, 65, 77, 170, 105])
+    debug_print("waiting before turning back off: " + wait)
+    sequence(
+        {callback: lerp_alpha_toward(1.0, 0.0), frames: 5},
+        {callback: no_op, frames: wait},
+        set_flash_on
+    )
+
+
+let next_thunder = nil
+let thunder_handle = nil
+
+def play_thunder():
+    thunder_handle = play_sound(thunder_snd, false, 100%)
+    next_thunder = mode_frames + random_value([770, 1000, 1300])
+
+def play_audio_intro():
+    play_sound(cardoor_open_and_close_snd, false, 400%)
+    play_sound(ambience_loop_snd, true, 55%)
+    play_sound(rain_loop_snd, true, 40%)
+    play_thunder()
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+sequence(
+    play_audio_intro,
+    {callback: lerp_alpha_toward(1.0, 0.0), frames:60},
+    {callback: no_op, frames:60},
+    set_flash_on,
+)
+high_score = load_local("bestscore")
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_transform(SCREEN_SIZE/2)
+
+let credits = clone(CREDIT_TEXT)
+let score = ""
+if high_score != nil:
+    score = "best score: " + format_number(high_score, " 0") + " ft"
+push(credits, score)
+
+
+if joy.d and mode_frames > INTRO_LENGTH:
+    reset_transform()
+    set_mode(Play)
+
+set_background(DARK_COLOR)
+
+if mode_frames > 42:
+    draw_text(
+        bigfont,
+        join(TITLE_TEXT, "\n"),
+        xy(0, -2.2*SCREEN_SIZE.y/5),
+        TEXT_COLOR,
+        nil,
+        nil,
+        "center",
+        "top"
+    )
+
+if mode_frames > INTRO_LENGTH:
+    draw_text(
+        font,
+        join(CREDIT_TEXT, "\n"),
+        xy(0, 0),
+        TEXT_COLOR,
+        nil,
+        nil,
+        "center",
+        "top"
+    )
+
+    let blink_color = TEXT_COLOR
+    if ((mode_frames + 65) mod 120) < 60:
+        blink_color = LIGHT_COLOR
+
+    draw_text(
+        font,
+        replace("press (d) to continue", gamepad_array[0].prompt),
+        xy(0, 0.5 SCREEN_SIZE.y - 30),
+        blink_color,
+        nil,
+        nil,
+        "center",
+        "top"
+    )
+
+draw_rain()
+
+draw_rect(
+    xy(0,0),
+    SCREEN_SIZE,
+    rgba(
+        DARK_COLOR.r,
+        DARK_COLOR.g,
+        DARK_COLOR.b,
+        OVERLAY_ALPHA
+    ),
+    nil,
+    nil,
+    200
+)
+debug_watch(OVERLAY_ALPHA)
+
+if thunder_handle == nil or mode_frames == next_thunder:
+    play_thunder()

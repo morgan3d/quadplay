@@ -1,0 +1,40 @@
+{ "frames": [
+   {
+    "filename": "border 0.aseprite",
+    "frame": { "x": 0, "y": 0, "w": 384, "h": 224 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 384, "h": 224 },
+    "sourceSize": { "w": 384, "h": 224 },
+    "duration": 250
+   },
+   {
+    "filename": "border 1.aseprite",
+    "frame": { "x": 384, "y": 0, "w": 384, "h": 224 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 384, "h": 224 },
+    "sourceSize": { "w": 384, "h": 224 },
+    "duration": 250
+   },
+   {
+    "filename": "border 2.aseprite",
+    "frame": { "x": 768, "y": 0, "w": 384, "h": 224 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 384, "h": 224 },
+    "sourceSize": { "w": 384, "h": 224 },
+    "duration": 250
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.25",
+  "image": "border.png",
+  "format": "I8",
+  "size": { "w": 1152, "h": 224 },
+  "scale": "1",
+  "frameTags": [
+  ]
+ }
+}

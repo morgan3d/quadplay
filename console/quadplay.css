@@ -1062,7 +1062,7 @@ body.kiosk div#logo, body.GhostUI div#logo, body.MaximalUI div#logo {
     left: -5px;
 }
 
-.EditorUI div.emulator, .EditorUI div#emulatorFrame, .EditorUI div.screenBorder, .EditorUI #bootScreen, .EditorUI #pauseMessage {
+.EditorUI div.emulator, .EditorUI div#emulatorFrame, .EditorUI div.screenBorder, .EditorUI #bootScreen, .EditorUI #pauseMessage, .EditorUI canvas {
     visibility: hidden !important;
 }
 
@@ -1213,7 +1213,7 @@ body.EmulatorUI .virtualController {
     z-index: -10;
 }
 
-.MaximalUI #guestVideo {
+.GhostUI #guestVideoCover, .MaximalUI #guestVideoCover {
     background: #000;
 }
 

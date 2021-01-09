@@ -1,0 +1,166 @@
+const DEBUG_LIGHTS_ON = false
+
+const mud = [  mud1Sprite[0][0],  mud2Sprite[0][0],  mud3Sprite[0][0],  mud4Sprite[0][0],  mud5Sprite[0][0] ]
+
+
+def draw_game():
+    set_transform({
+        pos: cam_pos,
+    })
+
+    // blink lights.
+    if DEBUG_LIGHTS_ON or (car.headlights and not flicker_lights_off):
+        // Sky
+        set_background(DARK_COLOR)
+
+        let idx = 0
+
+        // Ground
+        // Draw the hazards
+        for hazard in hazards:
+            with pos, size in hazard:
+                draw_rect(pos, size, #222)
+                if car.headlights and pos.x > car.pos.x + 0.75 CAR_WIDTH: 
+                    draw_sprite({sprite: mud[idx], pos: pos-xy(0.5 size.x, 0), scale:xy(1, 0.5), z: 99})
+            idx = (idx + 1) mod 5
+
+        // Draw the car
+        draw_car()
+
+        // Draw the hazards
+        for hazard in hazards:
+            with pos, size in hazard:
+                draw_rect(pos, size, #222)
+                if car.headlights and pos.x > car.pos.x + 0.75 CAR_WIDTH: 
+                    draw_sprite({sprite: obstaclesSprite[0][0], pos: pos-xy(0.5 size.x, 0), z: 99})
+
+        if 1:
+            draw_darkness(car.pos + car.engine_jitter, car.angle + 90°, 100)
+    else:
+        set_background(DARK_COLOR)
+        if chase_started or car.num_light_failures:
+            let chase_remaining = 1 - chase_distance/1000
+            let lose_x = chase_remaining * car.pos.x
+            draw_sprite({
+                sprite: demogorgonSprite[0][0], 
+                pos: xy(lose_x, 0.5 SCREEN_SIZE.y + 30), 
+                scale:xy(0.75, 0.75), 
+                z: 102
+            })
+
+    draw_chase(101)
+
+    preserving_transform:
+        set_transform(xy(SCREEN_SIZE.x/2, SCREEN_SIZE.y))
+        if car.headlights:
+            draw_rain()
+
+
+def draw_car():
+    if (car.angle < -0.07):
+        draw_sprite({sprite: car3Sprite[0][0], pos: car.pos + car.engine_jitter, angle:car.angle, scale:xy(1,1), z: 101})
+    else if (car.angle > 0.08):
+        draw_sprite({sprite: car4Sprite[0][0], pos: car.pos + car.engine_jitter, angle:car.angle, scale:xy(1,1), z: 101})
+    else:
+        draw_sprite({sprite: car2Sprite[0][0], pos: car.pos + car.engine_jitter, angle:car.angle, scale:xy(1,1), z: 101})
+
+    const brake_light_w = 2
+    let tail_lights_color = #000
+    if car.state == "on":
+        tail_lights_color = perceptual_lerp_color(
+            #fcc,
+            #f00, 
+            car.brake_pedal.amount)
+
+    draw_rect({
+        pos: car.pos -xy(0.5 (CAR_WIDTH + brake_light_w), 0),
+        size: xy(brake_light_w, CAR_HEIGHT), 
+        color: tail_lights_color,
+    })
+
+    if car.headlights:
+        const headlight_w = 5
+        draw_rect({
+            pos: car.pos + xy(0.5 (CAR_WIDTH + headlight_w), 0), 
+            size: xy(headlight_w, CAR_HEIGHT), 
+            color: #ff0,
+        })
+
+
+def draw_darkness(pos, angle, z default 1000):
+    const darkness_color = 0.5 * DARK_COLOR
+    const front_of_car = 30
+    const width_of_car = 7
+    const front_dim = 15
+    const side_dim = 8
+    const beam_width_at_apex = 140
+    const scale = xy(100%, 100%)
+    const dim = rgba(DARK_COLOR.r, DARK_COLOR.g, DARK_COLOR.b, 30%)
+    // behind the car
+    draw_poly([xy(400, front_of_car), 
+              xy(-400, front_of_car), 
+              xy(-400, -400), 
+              xy(400, -400)], darkness_color, ∅,
+              pos, angle, scale, z)
+    // front dim
+    draw_poly([xy(width_of_car, front_of_car), 
+              xy(-width_of_car, front_of_car), 
+              xy(-width_of_car - 20, front_of_car + front_dim + 1), 
+              xy(width_of_car + 20, front_of_car + front_dim + 1)], dim, ∅,
+              pos, angle, scale, z)
+    // right mask
+    draw_poly([xy(width_of_car, front_of_car), 
+              xy(400, front_of_car), 
+              xy(400, 400), 
+              xy(width_of_car + beam_width_at_apex, 400)], darkness_color, ∅,
+              pos, angle, scale, z)
+    // right dim
+    draw_poly([xy(width_of_car - side_dim + 4, front_of_car + front_dim + 2), 
+               xy(width_of_car + 20,             front_of_car + front_dim + 2), 
+               xy(width_of_car + beam_width_at_apex + 10, 400), 
+               xy(width_of_car + beam_width_at_apex, 400)], dim, ∅,
+               pos, angle, scale, z)
+    // left mask
+    draw_poly([xy(-width_of_car, front_of_car), 
+              xy(-400, front_of_car), 
+              xy(-400, 400), 
+              xy(-width_of_car - beam_width_at_apex, 400)], darkness_color, ∅,
+              pos, angle, scale, z)
+    // left dim
+    draw_poly([xy(-width_of_car + side_dim - 5, front_of_car + front_dim + 2), 
+               xy(-width_of_car + side_dim - 20, front_of_car + front_dim + 2), 
+               xy(-width_of_car - beam_width_at_apex - 10, 400), 
+               xy(-width_of_car - beam_width_at_apex, 400)], dim, ∅,
+               pos, angle, scale, z)
+    // cone
+    draw_tri(xy(-width_of_car + 5, front_of_car),
+             xy(width_of_car - 5, front_of_car),
+             xy(0, front_of_car + 60),
+             #000, ∅,
+             pos, angle, scale, z)
+
+def draw_chase(z default 1000):
+    let chase_remaining = 1 - chase_distance/1000
+    let lose_x = chase_remaining * car.pos.x - 30
+
+    let chase_color = rgba(20%, 0, 0, 50%)
+    draw_corner_rect(
+        xy(0, -300),
+        xy(lose_x, SCREEN_SIZE.y+600),
+        chase_color,
+        nil,
+        z
+    )
+
+    let prev_x = lose_x
+    let grad_w = 15
+    for i < 3:
+        draw_corner_rect(
+            xy(prev_x, -300),
+            xy(grad_w, SCREEN_SIZE.y+600),
+            chase_color - rgba(0, 0, 0, 0.1*(i+1)),
+            nil,
+            z
+        )
+        prev_x += grad_w
+

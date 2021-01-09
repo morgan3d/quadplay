@@ -1,0 +1,66 @@
+End
+════════════════════════════════════════════════════════════════════════
+
+const GAME_OVER_INTRO_LENGTH = 170
+let lose_reason = "Game Over"
+let lose_snd_handle = nil
+let high_score = nil
+
+enter(why)
+────────────────────────────────────────────────────────────────────────
+
+lose_reason = why
+if engine_idle_sound_handle:
+    stop_audio(engine_idle_sound_handle)
+
+if lose_reason == "Crashed":
+    lose_snd_handle = play_sound(crash_snd)
+
+if lose_reason == "You got caught":
+    lose_snd_handle = play_sound(caught_snd)
+
+high_score = load_local("bestscore")
+if traveled_distance/10 > high_score or high_score == nil:
+    save_local("bestscore", traveled_distance/10)
+    high_score = traveled_distance/10
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_transform(SCREEN_SIZE/2)
+set_background(DARK_COLOR)
+
+draw_text(
+    bigfont,
+    join(
+        [
+            lose_reason,
+            format_number(traveled_distance/10, " 0") + " ft",
+            "best: " + format_number(high_score, " 0") + " ft",
+        ],
+        "\n"
+    ),
+    xy(0, -2.2*SCREEN_SIZE.y/5),
+    TEXT_COLOR,
+    nil,
+    nil,
+    "center",
+    "top"
+)
+
+if mode_frames > GAME_OVER_INTRO_LENGTH:
+    draw_text(
+        font,
+        join([
+            "Press any button to try again",
+        ], "\n"),
+        xy(0, 0),
+        TEXT_COLOR,
+        nil,
+        nil,
+        "center",
+        "top"
+    )
+    if any_button_press():
+        set_mode(Play)
+
+draw_rain()

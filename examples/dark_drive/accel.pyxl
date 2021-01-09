@@ -1,0 +1,161 @@
+// DATA
+// ------------------------
+// from GMTK: https://www.patreon.com/posts/why-does-celeste-28582857
+// vel is in 1080p pixels / s
+const ACCEL_PROFILES = {
+    adsr: {
+        max_vel: 10.6,
+        num_frames_attack: 6,
+        num_frames_release: 3,
+        col: rgb(0.125, 0.500, 0.755),
+    },
+    celeste: {
+        max_vel: 5,
+        num_frames_attack: 6,
+        num_frames_release: 3,
+        col: rgb(0.557, 0.835, 0.894),
+    },
+    new_super_mario_brothers: {
+        max_vel: 8,
+        num_frames_attack: 28,  
+        num_frames_release: 28,
+        col: rgb(0.859, 0.145, 0.004),
+    },
+    megaman11: {
+        max_vel:4,
+        num_frames_attack:1,
+        num_frames_release:1,
+        col: rgb(0.086, 0.322, 0.847),
+    },
+    super_meat_boy: {
+        max_vel:13.0,
+        num_frames_attack:27,
+        num_frames_release:2,
+        col: rgb(0.729, 0, 0.004),
+    },
+    sonic_mania: {
+        max_vel: 30,
+        num_frames_attack:115,
+        num_frames_release: 120,
+        col: rgb(0.012, 0.145, 0.667), 
+    },
+    car_speed: {
+        max_vel: 20,
+        num_frames_attack:115,
+        num_frames_release: 120,
+        col: rgb(0.012, 0.145, 0.667), 
+    },
+    car_steer: {
+        max_vel:pi/2,
+        num_frames_attack:28.0,
+        num_frames_release:28.0,
+        col: rgb(0.729, 0, 0.004),
+    },
+}
+
+def accel_is_valid_profile(profileName):
+    return find(keys(ACCEL_PROFILES), profileName) != 0
+
+// function that performs the acceleration
+def accel(
+        vel,
+        joy_comp,
+        acc_attack,
+        acc_release,
+        acc_opp_attack,
+        max_vel_comp
+):
+    let vel_sign = sign(vel)
+    let joy_sign = sign(joy_comp)
+
+    if joy_sign != 0:
+        let should_accel = abs(vel) < max_vel_comp
+        if (
+                (
+                    vel_sign == 0 
+                    or vel_sign == joy_sign
+                ) 
+                and should_accel
+        ):
+            vel += joy_sign * acc_attack
+        else if should_accel:
+            vel += joy_sign * acc_opp_attack
+        else:
+            vel = joy_sign * max_vel_comp
+
+    else:
+        vel += -1*vel_sign*acc_release
+
+        if abs(vel) < acc_release/2:
+            vel = 0
+
+    return vel
+
+def accel_init_ent(ent, profname):
+    const prof = ACCEL_PROFILES[profname]
+    let max_velocity = (prof.max_vel * SCREEN_SIZE.x) / 1080.0
+    let num_frames_attack = prof.num_frames_attack
+    let num_frames_release = prof.num_frames_release
+
+    let attack = max_velocity/num_frames_attack
+    let release = max_velocity/num_frames_release
+    let opp_attack = release + attack
+
+    ent.accel_data = {
+        max_vel: max_velocity,
+        attack: attack,
+        release: release,
+        opp_attack: opp_attack,
+
+        // just for debug but might be useful later?
+        num_frames_attack: num_frames_attack,
+        num_frames_release: num_frames_release,
+        last_joy:xy(0,0),
+        frames_joy: xy(0,0),
+        x_zone: "still",
+    }
+    
+
+def accel_update_frame(ent, joyInput):
+    let accel_data = ent.accel_data
+
+    // detect which part of the curve we're in, for logging and labelling
+    if sign(joyInput.x) != 0:
+        accel_data.x_zone = "attack"
+        if sign(joyInput.x) > 0:
+            accel_data.x_zone += "+"
+        else:
+            accel_data.x_zone += "-"
+    else if accel_data.x_zone != "still":
+        accel_data.x_zone = "release"
+
+    if find(accel_data.x_zone, "attack") == 0 and accel_data.frames_joy.x > accel_data.num_frames_attack:
+        accel_data.x_zone = "sustain"
+    if accel_data.x_zone == "release" and accel_data.frames_joy.x > accel_data.num_frames_release:
+        accel_data.x_zone = "still"
+
+    let last_vel = clone(ent.vel)
+    ent.vel.x = accel(
+        ent.vel.x,
+        joyInput.x,
+        accel_data.attack,
+        accel_data.release,
+        accel_data.opp_attack,
+        accel_data.max_vel,
+    )
+
+    // track how long we've been in that part of the curve
+    if sign(joyInput.x) == accel_data.last_joy.x:
+        if last_vel.x != ent.vel.x:
+            accel_data.frames_joy.x += 1
+    else:
+        accel_data.frames_joy.x = 0
+
+    accel_data.last_joy.x = sign(joyInput.x)
+
+
+def empty_accel(amount default 0.0, vel default xy(0,0)):
+    return {
+        amount: 0.0,
+        vel: xy(0,0),
+    }

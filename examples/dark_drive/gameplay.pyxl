@@ -1,0 +1,411 @@
+// these constants are just sort of made up for now.  
+const ROAD_Y = 70
+
+const CAR_WIDTH = 60
+const CAR_HEIGHT = 30
+const CAR_MIN_Y = ROAD_Y + CAR_HEIGHT
+const CAR_MAX_Y = SCREEN_SIZE.y - CAR_HEIGHT
+
+const IDLE_SPEED = 0.01
+const PEDAL_SPEED = 0.50
+const BRAKE_POWER = 0.35
+const FRICTION = 0.045
+
+const TOP_SPEED = 6
+
+const GAS_PEDAL_ACCEL_PROFILE = "super_meat_boy"
+const BRAKE_PEDAL_ACCEL_PROFILE = "celeste"
+const STEERING_ACCEL_PROFILE = "super_meat_boy"
+
+const NUM_HAZARDS = 5
+const NUM_HAZARD_BUCKETS = 5
+
+const CHASE_SPEED = 0.5
+
+let cam_pos = nil 
+let traveled_distance = nil
+let chase_started = nil
+let chase_distance = nil
+
+let car = nil
+let hazards = nil
+let flicker_lights_off = false
+let frames_to_turn_on_engine = nil
+let last_health = nil
+let intro_instructions_step = nil
+
+const INSTR_STEER = 0
+const INSTR_GAS = 1
+const INSTR_LIGHTS = 2
+const INSTR_BRAKES = 3
+const INSTR_KEYS = 4
+
+const INSTR_DRAW_BLINK = 2
+
+let instr_draw = []
+
+def reset_gameplay():
+    reset_audio()
+
+    cam_pos = xy(0, 0)
+    traveled_distance = 0
+    chase_distance = 1000
+    chase_started = false
+    last_health = -1
+    instr_draw = [0, 0, 0, 0, 0]
+
+    instr_draw[INSTR_KEYS] = INSTR_DRAW_BLINK
+    intro_instructions_step = 0
+
+    car = {
+        pos: xy(70, 150),
+        size: xy(CAR_WIDTH, CAR_HEIGHT),
+        angle: 0,
+        shape: "rect",
+
+        sprite: car1Sprite[0][0],
+
+        engine_jitter: xy(0, 0),
+
+        has_been_started: false,
+        has_failed_lights: false,
+        has_fixed_light_failure: false,
+        num_light_failures: 0,
+
+        state: "off",
+        // state: "on",
+        steer_state: "normal",
+        slide_timer: 0,
+        headlights: 0.0,
+        speed: 0,
+        tires_angle: 0,
+        health: 3,
+
+        // other ideas: mud, fuel, battery
+
+        // where is the ignition key currently.
+        key_position: 0,
+
+        // how many frames has the ignition key been turned for
+        key_currently_turning: false,
+        key_turned_frames: 0,
+
+        // is the headlight knob on/off
+        headlight_knob: false,
+
+        // how many times do you need to flip back and forth to re-enable
+        // lights.
+        headlight_flips: 1,
+        headlight_remaining_frames: 700,
+
+        // amount here is [-1, 1] to represent maximum steering "up" (-1) or
+        // "down" (1).
+        steering_wheel: {
+            amount: 0.0,
+            vel: xy(0, 0)
+        },
+
+        // foot position on gas pedal.  [0, 1], where 1 means full throttle
+        gas_pedal: {
+            amount: 0.0,
+            vel: xy(0, 0)
+        },
+
+        // foot position on brake pedal.  [0, 1], where 1 means full brake.
+        brake_pedal: {
+            amount: 0.0,
+            vel: xy(0, 0)
+        },
+    }
+
+    accel_init_ent(car.steering_wheel, STEERING_ACCEL_PROFILE)
+    accel_init_ent(car.gas_pedal, GAS_PEDAL_ACCEL_PROFILE)
+    accel_init_ent(car.brake_pedal, BRAKE_PEDAL_ACCEL_PROFILE)
+
+    hazards = []
+    let hazard_buckets = []
+    for i < NUM_HAZARDS:
+        hazard_buckets.push(i)
+
+    shuffle(hazard_buckets)
+
+    for i < NUM_HAZARDS:
+        let hazard = {
+            pos: xy((1+0.5i)*SCREEN_SIZE.x, 0),
+            size: xy(10, 10),
+            shape: "rect",
+        }
+        reset_hazard(hazard, hazard_buckets[i])
+        hazards.push(hazard)
+
+    frames_to_turn_on_engine = 30
+
+
+def reset_hazard(hazard, bucket):
+    hazard.hit = false
+    // make this some random thing?
+    const y_bucket_size = (CAR_MAX_Y - CAR_MIN_Y) / NUM_HAZARD_BUCKETS
+    hazard.pos.y = CAR_MIN_Y + (bucket mod NUM_HAZARD_BUCKETS)*y_bucket_size + random_integer(y_bucket_size)
+
+def update_gameplay():
+    update_camera(car.pos)
+
+    // Is the game over?
+    if chase_distance <= 0:
+        set_mode(End, "You got caught")
+
+    let collided_hazards = get_collided_hazards()
+    if size(collided_hazards):
+        cam_add_shake(10)
+        car.health -= 1
+        for hazard in collided_hazards:
+            hazard.hit = true
+
+    // Is our car broken?
+    if car.health <= 0:
+        set_mode(End, "Crashed")
+
+    if car.has_been_started and car.has_fixed_light_failure and not chase_started:
+        delay(start_the_chase)
+
+    // process user input
+    let user_key_turned = joy.d
+    let user_key_released = joy.released_d
+    let user_toggle_lights = joy.bb
+    let user_gas_pedal = joy.a
+    let user_brake_pedal = joy.c
+    let user_wheel = joy.y
+
+    // translate inputs into the car state.
+
+    if user_key_turned:
+        car.key_currently_turning = true
+        car.key_turned_frames += 1
+        //if car.brake_pedal.amount > 0.5 and car.gas_pedal.amount < 0.1:
+        //    car.key_turned_frames += 1
+        //else:
+        //    car.key_turned_frames = 0
+    else if user_key_released:
+        car.key_currently_turning = false
+        if car.key_position:
+            // don't let user turn car back off.  the sound cues are wrong.
+            //car.state = "off"
+            //car.key_position = 0
+            //frames_to_turn_on_engine = 30 // rand?
+        else:
+            if car.key_turned_frames >= frames_to_turn_on_engine:
+                car.state = "on"
+                car.has_been_started = true
+                instr_draw[INSTR_KEYS] = 0
+                car.key_position = 1
+                car.key_turned_frames = 0
+            else:
+                car.state = "off"
+                car.key_turned_frames = 0
+
+    let jitter = xy(0, 0)
+    if car.state == "on" or (car.key_turned_frames mod 30 > 20):
+        jitter += xy(random(), random()) - 0.5
+        jitter *= 2
+        car.engine_jitter = jitter
+
+    if car.state == "on":
+        if intro_instructions_step == 0:
+            delay(show_engine_on_instructions, 2*60)
+            intro_instructions_step += 1
+
+    if intro_instructions_step == 2:
+        if not car.headlights:
+            instr_draw[INSTR_LIGHTS] = 2
+        intro_instructions_step = 3
+
+    if intro_instructions_step == 3:
+        if car.headlights:
+            instr_draw[INSTR_LIGHTS] = 1
+            intro_instructions_step = 4
+
+    if user_toggle_lights:
+        play_sound({
+            sound:light_snd, 
+            volume:30%
+        })
+        car.headlight_knob = not car.headlight_knob
+        if car.headlight_knob:
+            if car.headlight_remaining_frames > 0:
+                car.headlights = 1.0
+            else:
+                car.headlight_flips -= 1
+        else:
+            car.headlights = 0.0
+
+        if car.headlight_flips <= 0:
+            car.headlight_remaining_frames = 500 + 100 random_value([3, 4, 5])
+            car.headlight_flips = random_value([1, 1, 1, 2])
+            instr_draw[INSTR_LIGHTS] = 1
+            car.headlights = 1.0
+            if car.has_been_started:
+                car.has_fixed_light_failure = true
+
+    if car.headlights:
+        car.headlight_remaining_frames -= 1
+
+        if car.headlight_remaining_frames <= 0:
+            if car.has_been_started:
+                car.num_light_failures += 1
+            car.headlight_remaining_frames = 0
+            car.headlights = 0.0
+            instr_draw[INSTR_LIGHTS] = 2
+        else if car.headlight_remaining_frames <= 200:
+            if not flicker_lights_off and random() < 0.1:
+                sequence(enable_flicker_lights_off,
+                    {callback: no_op, frames:30},
+                    disable_flicker_lights_off,
+                )
+
+    pedal_update(car.gas_pedal, user_gas_pedal)
+    pedal_update(car.brake_pedal, user_brake_pedal)
+    steering_update(car.steering_wheel, user_wheel)
+
+    // now update the car based on the car state.
+    let x_travel = 0
+    let y_travel = 0
+    if car.state == "on":
+        // driving code
+        if car.steer_state != "slide":
+            let speed_increment = car.gas_pedal.amount * PEDAL_SPEED
+            if car.brake_pedal.amount < 0.3 and car.speed < IDLE_SPEED:
+                speed_increment += IDLE_SPEED
+            car.speed = car.speed + speed_increment
+
+        steer_car()
+
+        if car.steer_state == "slide":
+            x_travel = car.speed
+        else:
+            x_travel = cos(car.tires_angle) * car.speed
+            //x_travel = car.speed
+            y_travel = -sin(car.tires_angle) * car.speed
+
+    // apply brakes.. 
+    // TODO brakes should be way more powerful than gas.
+    car.speed *= 1.0 - BRAKE_POWER * car.brake_pedal.amount
+
+    // apply friction
+    if car.steer_state == "slide":
+        car.speed *= 1.0 - (0.95 * FRICTION)
+    else:
+        car.speed *= 1.0 - FRICTION
+
+    car.speed = clamp(car.speed, 0, TOP_SPEED)
+
+    car.pos.y += y_travel
+    traveled_distance += x_travel
+    // if you're almost at TOP_SPEED, you're gaining distance.
+    if chase_started:
+        chase_distance += CHASE_SPEED * (x_travel - TOP_SPEED + 1)
+
+    // update the hazards
+    for hazard in hazards:
+        hazard.pos.x -= x_travel
+
+        // if hazard off screen.. for now add it back on screen.
+        if hazard.pos.x < 0:
+            hazard.pos.x += (NUM_HAZARDS * 0.5) SCREEN_SIZE.x
+            reset_hazard(hazard, random_integer(NUM_HAZARD_BUCKETS))
+
+    // collide with the guard rails.
+    car.pos.y = clamp(car.pos.y, CAR_MIN_Y, CAR_MAX_Y)
+
+
+def pedal_update(pedal_obj, is_pedal_down):
+    // this is using the "accel" which is an accel curve for 2d platformers so
+    // it naturally updates something called "vel.x".  we just transfer that
+    // value to our "amount".
+    let accelInputX = if is_pedal_down then 1 else 0
+    accel_update_frame(pedal_obj, {x: accelInputX})
+    pedal_obj.amount = pedal_obj.vel.x / pedal_obj.accel_data.max_vel
+
+
+def steering_update(steering_obj, wheel_input):
+    // this is using the "accel" which is an accel curve for 2d platformers so
+    // it naturally updates something called "vel.x".  we just transfer that
+    // value to our "amount".
+    accel_update_frame(steering_obj, {x: wheel_input})
+    steering_obj.amount = steering_obj.vel.x / steering_obj.accel_data.max_vel
+
+
+def get_collided_hazards():
+    let ret = []
+    for hazard in hazards:
+        if not hazard.hit and overlaps(car, hazard):
+            ret.push(hazard)
+    return ret
+
+
+def steer_car():
+   car.slide_timer -= 1
+   car.slide_timer = max(car.slide_timer, 0)
+
+   if car.slide_timer == 0:
+       car.steer_state = "normal"
+
+   // the faster you go and the more you turn the wheel, the more likely you are to slide.
+   if abs(car.steering_wheel.amount) > (1 - 0.85 (car.speed - 1) / TOP_SPEED):
+       car.steer_state = "slide"
+       car.slide_timer = 15
+
+   if car.steer_state == "slide":
+        return 
+
+    // note angle is ccw, so -steering -> +angle
+   car.tires_angle = - 0.49 π car.steering_wheel.amount 
+
+   car.angle = lerp_angle(car.angle, 0.35 car.tires_angle, 0.50 car.speed / TOP_SPEED)
+
+// @{ camera shake system
+const DEBUG_CAM_SHAKE = false
+let cam_shake_mag = 0
+const CAM_SHAKE_MAX = 20
+const CAM_SHAKE_DECAY = 0.2
+
+def cam_add_shake(intensity):
+    cam_shake_mag += intensity
+    cam_shake_mag = min(CAM_SHAKE_MAX, cam_shake_mag)
+    DEBUG_CAM_SHAKE and debug_print(
+        "Adding camera shake: " + intensity 
+        + ", cam shake is: " + cam_shake_mag
+    )
+
+def update_camera(target):
+    const offset_target = xy(target.x - 70, - target.y + 150)
+    cam_pos = lerp(cam_pos, offset_target, 0.09)
+
+    // layer in the camera shake
+    let cam_shake_displacement = cam_shake_mag * random_direction2D()
+    if cam_shake_mag >= 1:
+        // let the magnitude decay every frame
+        cam_shake_mag = lerp(cam_shake_mag, 0, CAM_SHAKE_DECAY)
+    else:
+        cam_shake_mag = 0
+    cam_pos += cam_shake_displacement
+// @}
+
+def no_op():
+    // no-op
+
+def enable_flicker_lights_off():
+    flicker_lights_off = true
+
+def disable_flicker_lights_off():
+    flicker_lights_off = false
+
+def start_the_chase():
+    chase_started = true
+
+
+def show_engine_on_instructions():
+    // weird place to do this, but whatever.
+    instr_draw[INSTR_STEER] = 1
+    instr_draw[INSTR_GAS] = 1
+    instr_draw[INSTR_BRAKES] = 1
+    intro_instructions_step = 2

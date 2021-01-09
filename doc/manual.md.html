@@ -463,6 +463,11 @@ rendering with a simple text-heavy UI section.
 GPU is fast enough to process one point per pixel, but this technique is not recommended in general because the computations to produce the points
 tend to be too slow, even if this simple.
 
+</td></tr><tr><td>![](../examples/dark_drive/label128.png)</td><td>
+[A Dark Drive](../console/quadplay.html?game=quad://examples/dark_drive&IDE=1) 
+A simple horror game jam project using polygon drawing to create darkness
+around car headlights.
+
 </td></tr><tr><td>![](../examples/entity/label128.png)</td><td>
 [Entity Example](../console/quadplay.html?game=quad://examples/entity&IDE=1) 
 Shows different ways of constructing entities with text and sprites.
@@ -546,6 +551,10 @@ view with a textured ground plane similar to Space Harrier, Mario Kart, and Pilo
 rendering similar to DOOM and Heretic, with shading, textured floors and walls, billboarded
 characters, pitch and yaw, and jumping. It demonstrates retro D-pad + shoulder button strafe, 
 quadplay dual D-pad, conventional dual analog, and mouselook controls.
+
+</td></tr><tr><td>![](../examples/word_game/label128.png)</td><td>
+[Word Game](../console/quadplay.html?game=quad://examples/word_game&IDE=1) 
+Playful use of text and animated level transitions.
 
 </td></tr></table>
 
@@ -2547,6 +2556,12 @@ The transformation routines are:
 `transform_ws_to_ss(ws_point, ws_z default 0)`
 : Transform `ws_point` from world space through camera space to screen space.
 
+`transform_ws_z_to_cs_z(ws_z)`
+: Make `ws_z` relative to the camera.
+
+`transform_cs_z_to_ws_z(cs_z)`
+: Make `cs_z` absolute in world space.
+
 `transform_ws_to_cs(ws_point, ws_z default 0)`
 : Transform world space `ws_point` to camera space. There is no
   transformation function for `cs_z` value because you can 
@@ -4285,6 +4300,7 @@ indices. The map's z-axis corresponds to layers.
 : Replace a layer of the map with a maze, resizing the maze slightly
   if needed to fit the proper number of cells for the options
   specified.
+  
    - `map: map`
    - `layer: number default 0`
    - `hall: {thickness: integer default 1, sprite: sprite default nil} default {}`. 
@@ -4292,7 +4308,9 @@ indices. The map's z-axis corresponds to layers.
        `thickness` is measured in map cells.
    - `wall: {thickness: integer default 1, sprite: sprite default map.spritesheet[0][0]} default {}`. Description of the dividers between passageways and inaccessible aeas. Same options as for `hall`.
    - `horizontal: {border: number default 1, loop: boolean default false, symmetric: boolean default false} default {}`.
-     The border is the number of wall layers around the outside of the map.
+      The border is the number of walls (not cells) around the outside of the map. Because
+      the wall layers can themselves cover more than one cell, the border can be a fractional
+      value to create partial walls on the exterior.
    - `vertical` same options as `horizontal`
    - `shortcuts: number default 0%`. Amount of additional hall connections beyond a 
      continous labryinth path.
@@ -8067,7 +8085,6 @@ through for 1.0. The highlights of this are, in priority order:
   [x] X-Arcade
   [x] Xbox and PlayStation
   [x] Touch screen
-  [ ] PiBoy DMG
 [x] APIs
   [x] Graphics
   [x] Physics
@@ -8093,22 +8110,25 @@ through for 1.0. The highlights of this are, in priority order:
 Post 1.0
 --------------------------------------------------------------
 
-[ ] Python not required for IDE
+[ ] PiBoy DMG support
+[ ] Standalone IDE program (Python and browser not required)
+  [ ] macOS
+  [ ] Windows
 [ ] Export to:
   [ ] macOS binary executable
   [ ] Windows binary executable
 [ ] Extended constant editor
-[ ] Font editor
 [ ] More AI routines
    [ ] Shadowing/line of sight
-   [ ] Board game logic
-   [ ] Maze and level generation
+   [ ] Board game logic (negascout)
+   [x] Maze generation
+[ ] Font editor
 [ ] Perfect outlined-disk and outlined-triangle blending
 [ ] Polyline rendering without double-blending endpoints
 [ ] Watertight rasterization of triangle meshes
 [ ] Watertight rasterization of polylines
 [ ] Watertight rotated sprite and map rasterization
-[ ] Edit your game in the IDE and save to Google Drive
+[ ] Save to Google Drive for online IDE
 
 
 Credits

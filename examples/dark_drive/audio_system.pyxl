@@ -1,0 +1,77 @@
+let engine_idle_sound_handle = nil
+let car_slide_sound_handle = nil
+let key_sound_handle = nil
+let engine_start_sound_handle = nil
+let chase_loop_handle = nil
+
+def start_idle():
+    if car.state == "on":
+        engine_idle_sound_handle = play_sound(idle_loop_snd, true, 300%)
+
+def reset_audio():
+    if chase_loop_handle:
+        stop_audio(chase_loop_handle)
+        chase_loop_handle = nil
+    if engine_idle_sound_handle:
+        stop_audio(engine_idle_sound_handle)
+        engine_idle_sound_handle = nil
+    if car_slide_sound_handle:
+        stop_audio(car_slide_sound_handle)
+        car_slide_sound_handle = nil
+    if key_sound_handle:
+        stop_audio(key_sound_handle)
+        key_sound_handle = nil
+    if engine_start_sound_handle:
+        stop_audio(engine_start_sound_handle)
+        engine_start_sound_handle = nil
+    if chase_loop_handle:
+        stop_audio(chase_loop_handle)
+        chase_loop_handle = nil
+
+def update_audio():
+    if car.has_been_started:
+        if chase_started:
+            if not chase_loop_handle:
+                chase_loop_handle = play_sound(chase_loop_snd, true, 30%)
+            let chase_vol = clamp(1 - chase_distance / 1000, 0, 1)
+            set_volume(chase_loop_handle, chase_vol)
+
+    if last_health != car.health:
+        if car.health < last_health:
+            play_sound(damage_snd)
+        last_health = car.health
+
+    if car.state == "on":
+        if engine_start_sound_handle == nil and engine_idle_sound_handle == nil:
+            engine_start_sound_handle = play_sound(car_start_snd, false, 500%)
+            delay(start_idle, 7*60)
+
+    if car.state == "off":
+        if engine_idle_sound_handle:
+            stop_audio(engine_idle_sound_handle)
+            engine_idle_sound_handle = nil
+            engine_start_sound_handle = nil
+        if car.key_turned_frames > 0:
+            if key_sound_handle == nil:
+                debug_print("starting")
+                // key_sound_handle = play_sound(key_turning_snd, 800%, true)
+                key_sound_handle = play_sound(key_turning_snd, true, 300%)
+
+    if (
+            key_sound_handle 
+            and (
+                (car.state == "off" and car.key_turned_frames <= 0) 
+                or (car.state == "on")
+            )
+    ):
+        stop_audio(key_sound_handle)
+        key_sound_handle = nil
+
+    if car.steer_state == "slide":
+        if car_slide_sound_handle == nil:
+            car_slide_sound_handle = play_sound(skid_snd, false, 50%)
+    else:
+        if car_slide_sound_handle != nil:
+            stop_audio(car_slide_sound_handle)
+            car_slide_sound_handle = nil
+

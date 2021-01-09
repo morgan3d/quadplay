@@ -1,0 +1,93 @@
+{
+    "achievements": false,
+    "assets": {
+        "borderSprite": "border.sprite.json",
+        "font": "smw-7.font.json",
+        "bgm_loop": "quad://sounds/loop-puzzle.sound.json"
+    },
+    "competitive": false,
+    "constants": {
+        "text_color": {
+            "type": "rgb",
+            "value": {
+                "b": {
+                    "type": "number",
+                    "value": 1
+                },
+                "g": {
+                    "type": "number",
+                    "value": 1
+                },
+                "r": {
+                    "type": "number",
+                    "value": 1
+                }
+            }
+        },
+        "LEVELS": {
+            "type": "raw",
+            "url": "levels.yml"
+        },
+        "DEBUG_SHOW_KEYHOLE_TARGETS": {
+            "type": "boolean",
+            "value": "false"
+        },
+        "TEXT_COLOR": {
+            "type": "rgb",
+            "value": {
+                "b": {
+                    "type": "number",
+                    "value": 1
+                },
+                "g": {
+                    "type": "number",
+                    "value": 1
+                },
+                "r": {
+                    "type": "number",
+                    "value": 1
+                }
+            }
+        },
+        "shadow_color": {
+            "type": "rgb",
+            "value": {
+                "b": {
+                    "type": "number",
+                    "value": 0.2 
+                },
+                "g": {
+                    "type": "number",
+                    "value": 0.2
+                },
+                "r": {
+                    "type": "number",
+                    "value": 0.2
+                }
+            }
+        }
+    },
+    "cooperative": false,
+    "copyright": "\u00a92020 Stephan Steinbach",
+    "description": "A game about words",
+    "developer": "Stephan Steinbach",
+    "docs": [
+    ],
+    "highscores": false,
+    "license": "MIT",
+    "max_players": 1,
+    "min_players": 1,
+    "modes": [
+        "Play",
+        "Intro"
+    ],
+    "packages": [],
+    "scripts": [
+        "keyhole_transition.pyxl",
+        "accel_lib.pyxl",
+        "constants.pyxl"
+    ],
+    "start_mode": "Intro",
+    "title": "word_game",
+    "version": 1.0
+}

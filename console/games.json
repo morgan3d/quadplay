@@ -27,6 +27,11 @@
             "description": "Example of noise functions and draw_point"
         },
         {
+            "url": "quad://examples/dark_drive/",
+            "title": "A Dark Drive",
+            "description": "A moody drive on a dark rainy night."
+        },
+        {
             "url": "quad://examples/dual-stick/",
             "title": "Dual D-Pad Example",
             "description": ""
@@ -155,6 +160,11 @@
             "url": "quad://examples/warlock3D/",
             "title": "Warlock 3D",
             "description": "DOOM/Heretic style first person view with d-pad, dual d-pad, dual analog, and mouselook controls"
+        },
+        {
+            "url": "quad://examples/word_game/",
+            "title": "word_game",
+            "description": "A game about words"
         },
         {
             "url": "quad://examples/zcar/",

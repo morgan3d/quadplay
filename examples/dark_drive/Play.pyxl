@@ -1,0 +1,68 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+// debug text
+def draw_debug_text(lines, pos):
+    let text_pos = xy(pos)
+    for line in lines:
+        draw_text({
+            font: font, 
+            text: line, 
+            pos: text_pos, 
+            color: #999,
+            z: 200})
+        text_pos.y += 12
+
+enter
+────────────────────────────────────────────────────────────────────────
+reset_gameplay()
+
+frame
+────────────────────────────────────────────────────────────────────────
+update_gameplay()
+update_audio()
+draw_game()
+
+reset_transform()
+
+if 0:
+    draw_debug_text([
+        "state: " + car.state,
+        "gas: " + format_number(car.gas_pedal.amount, ".00"),
+        "brake: " + format_number(car.brake_pedal.amount, ".00"),
+        "wheel: " + format_number(car.steering_wheel.amount, ".00"),
+        "speed: " + format_number(car.speed, ".00"),
+    ], xy(10, 15))
+
+    draw_debug_text([
+        "ign_fr: " + max(frames_to_turn_on_engine - car.key_turned_frames, 0),
+        "lights: " + car.headlight_knob,
+        "light_fail: " + car.headlight_remaining_frames + " " + car.headlight_flips,
+        "steer: " + car.steer_state + " " + car.slide_timer,
+        "health: " + car.health + " dist: " + format_number(traveled_distance, " 0"),
+        "chase: " + format_number(chase_distance, " 0"),
+    ], xy(75, 15))
+
+if 1:
+    const instructions = [
+        "↑↓ ", "STEER",
+        "(a) ", "GAS",
+        "(b) ", "LIGHTS",
+        "(c) ", "BRAKES",
+        "(d) ", "KEYS (hold)",
+    ]
+    let text_pos = xy(0.75 SCREEN_SIZE.x, 15)
+    for i < size(instructions) / 2:
+        if instr_draw[i]:
+            let instr_color = TEXT_COLOR
+            if instr_draw[i] == INSTR_DRAW_BLINK and mode_frames mod 120 < 60:
+                instr_color = LIGHT_COLOR
+            else:
+                instr_color = TEXT_COLOR
+            draw_text({
+                font: font,
+                text: replace(instructions[2i], gamepad_array[0].prompt) + instructions[2i+1],
+                pos: text_pos,
+                color: instr_color,
+                z: 200})
+        text_pos.y += 12

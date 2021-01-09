@@ -17,7 +17,7 @@ var PyxlScriptHighlightRules = function() {
             "trim_spaces|slice|set_pause_menu|iterate|fast_remove_key|find|keys|remove_key|substring|shuffle|shuffled|sort|resize|push|pop|pop_front|push_front|fast_remove_value|remove_values|remove_all|gamepad_array|touch|joy|round|floor|ceil|todo|debug_pause|debug_print|" +
             "loop|set_playback_rate|set_pitch|set_volume|set_pan|set_loop|remove_frame_hooks_by_mode|" +
             "is_string|is_function|is_NaN|is_object|is_nil|is_boolean|is_number|is_array|type|rgb_to_xyz|axis_aligned_draw_box|" +
-            "load_local|save_local|transform_map_layer_to_ws_z|transform_ws_z_to_map_layer|transform_map_space_to_ws|transform_ws_to_map_space|transform_cs_to_ss|transform_ss_to_cs|transform_cs_to_ws|transform_ws_to_cs|transform_es_to_ws|transform_ws_to_ws|transform_to_parent|transform_to_child|" +
+            "load_local|save_local|transform_map_layer_to_ws_z|transform_ws_z_to_map_layer|transform_map_space_to_ws|transform_ws_to_map_space|transform_cs_to_ss|transform_cs_z_to_ws_z|transform_ws_z_to_cs_z|transform_ss_to_cs|transform_cs_to_ws|transform_ws_to_cs|transform_es_to_ws|transform_ws_to_ws|transform_to_parent|transform_to_child|" +
             "ABS|ADD|DIV|MAD|MUL|SUB|MAX|MIN|SIGN|CLAMP|LERP|" +
             "RGB_ADD_RGB|RGB_SUB_RGB|RGB_MUL_RGB|RGB_DIV_RGB|RGB_MUL|RGB_DIV|RGB_DOT_RGB|RGB_LERP|" +
             "RGBA_ADD_RGBA|RGBA_SUB_RGBA|RGBA_MUL_RGBA|RGBA_DIV_RGBA|RGBA_MUL|RGBA_DIV|RGBA_DOT_RGBA|RGBA_LERP|" +

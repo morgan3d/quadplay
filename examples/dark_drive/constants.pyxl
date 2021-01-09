@@ -1,0 +1,3 @@
+const DARK_COLOR = rgb(5%, 5%, 5%)
+const TEXT_COLOR = 4*DARK_COLOR
+const LIGHT_COLOR = 4*TEXT_COLOR

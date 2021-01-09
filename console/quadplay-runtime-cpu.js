@@ -2265,15 +2265,21 @@ function transform_ss_to_ws(ss_point, ss_z) {
 
 function transform_ws_to_ss(ws_point, ws_z) {
     ws_z = ws_z || 0;
-    const cs_z = ws_z - $camera.z; 
-    return transform_cs_to_ss(transform_ws_to_cs(ws_point, ws_z), cs_z);
+    return transform_cs_to_ss(transform_ws_to_cs(ws_point, ws_z),
+                              transform_ws_z_to_cs_z(ws_z));
 }
 
+function transform_ws_z_to_cs_z(ws_z) {
+    return ws_z - $camera.z;
+}
+
+function transform_cs_z_to_ws_z(cs_z) {
+    return cs_z + $camera.z;
+}
 
 function transform_cs_z_to_ss_z(cs_z) {
     return cs_z * $scaleZ + $offsetZ;
 }
-
 
 function transform_ss_z_to_cs_z(ss_z) {
     return (ss_z - $offsetZ) / $scaleZ;
@@ -3686,15 +3692,17 @@ function map_generate_maze(args) {
         $error('map_generate_maze() requires a map property on the argument');
     }
 
-    const hallThickness = {thickness: 1, ...(args.hall || {})}.thickness;
-    const wallThickness = {thickness: 1, ...(args.wall || {})}.thickness;
+    const hallThickness = $Math.ceil({thickness: 1, ...(args.hall || {})}.thickness);
+    const wallThickness = $Math.ceil({thickness: 1, ...(args.wall || {})}.thickness);
+    const horizontal    = {border: 1, symmetric: false, loop: false, ...(args.horizontal || {})};
+    const vertical      = {border: 1, symmetric: false, loop: false, ...(args.vertical   || {})};  
     
     const s = 2 / (hallThickness + wallThickness);
     const maze = $make_maze(
-        $Math.ceil(map.size.x * s),
-        $Math.ceil(map.size.y * s),
-        {border: 1, symmetric: false, loop: false, ...(args.horizontal || {})},
-        {border: 1, symmetric: false, loop: false, ...(args.vertical   || {})},
+        $Math.ceil((map.size.x - horizontal.border * wallThickness + (horizontal.loop ? 0 : 1 + wallThickness)) * s),
+        $Math.ceil((map.size.y -   vertical.border * wallThickness + (vertical.loop ? 0 : 1 + wallThickness)) * s),
+        horizontal,
+        vertical,
         args.straightness || 0,
         args.shortcuts || 0,
         (args.coverage === undefined) ? 1 : args.coverage,
@@ -3749,8 +3757,6 @@ function $make_maze(w, h, horizontal, vertical, straightness, imperfect, fill, d
 
     // Argument cleanup
     if (deadEndArray === undefined) { deadEndArray = []; }
-    w = floor(w || 32);
-    h = floor(h || w);
 
     // Account for edges that will later be stripped
     if (! hBorder) {
@@ -4087,29 +4093,41 @@ function $make_maze(w, h, horizontal, vertical, straightness, imperfect, fill, d
         }
     }
 
-    if (horizontal.border > 1) {
-        // Increase the border thickness by duplication
-        for (let i = 0; i < horizontal.border - 1; ++i) {
-            maze.unshift([...maze[0]]);
-            maze.push([...maze[maze.length - 1]]);
-        }
-        
-        // Adjust deadEndArray
-        for (let i = 0; i < deadEndArray.length; ++i) {
-            deadEndArray[i].x += (horizontal.border - 1) * wallWidth;
+    // May be negative! 
+    const hPad = $Math.round((hBorder - 1) * wallWidth);
+    
+    // Increase the border thickness by duplication
+    for (let i = 0; i < hPad; ++i) {
+        maze.unshift([...maze[0]]);
+        maze.push([...maze[maze.length - 1]]);
+    }
+
+    // Decrease border thickness by trimming
+    for (let i = 0; i < -hPad; ++i) {
+        maze.shift();
+        maze.pop();
+    }
+
+    const vPad = $Math.round((vBorder - 1) * wallWidth);
+    for (let i = 0; i < vPad; ++i) {
+        for (let x = 0; x < maze.length; ++x) {
+            maze[x].unshift(maze[x][0]);
+            maze[x].push(maze[x][maze[x].length - 1]);
         }
     }
 
-    if (vertical.border > 1) {
-        for (let i = 0; i < vertical.border - 1; ++i) {
-            for (let x = 0; x < maze.length; ++x) {
-                maze[x].unshift(maze[x][0]);
-                maze[x].push(maze[x][maze[x].length - 1]);
-            }
+    for (let i = 0; i < -vPad; ++i) {
+        for (let x = 0; x < maze.length; ++x) {
+            maze[x].shift();
+            maze[x].pop();
         }
+    }
 
+    // Adjust deadEndArray
+    if (hPad !== 0 || vPad !== 0) {
         for (let i = 0; i < deadEndArray.length; ++i) {
-            deadEndArray[i].y += (vertical.border - 1) * wallWidth;
+            deadEndArray[i].x += hPad;
+            deadEndArray[i].y += vPad;
         }
     }
 
@@ -5680,8 +5698,15 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
 
             ++offsetIndex;
             // Update formatIndex if needed as well
-            while ((offsetIndex < formatArray[formatIndex].startIndex) || (offsetIndex > formatArray[formatIndex].endIndex)) { ++formatIndex; }
-            format = undefined;
+            while ((offsetIndex < formatArray[formatIndex].startIndex) ||
+                   (offsetIndex > formatArray[formatIndex].endIndex)) {
+                ++formatIndex;
+                
+                if (formatIndex >= formatArray.length) {
+                    // Nothing left
+                    return firstLineBounds;
+                }
+            }
 
             $console.assert(formatIndex < formatArray.length);
 
@@ -5933,10 +5958,10 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
             $console.log(str.substring(stateChanges[i].startIndex, stateChanges[i].endIndex + 1), stateChanges[i]);
         }
     }
-*/
+    */
 
     // Track draw calls generated by $draw_text
-    const first$graphics_command_index = $graphicsCommandList.length;
+    const first_graphics_command_index = $graphicsCommandList.length;
     const bounds = $draw_text(0, 0, str, stateChanges, pos, x_align, y_align, z, wrap_width, text_size, font);
 
     if ((bounds.y > font.line_height) && (y_align === 0 || y_align === 2)) {
@@ -5951,7 +5976,7 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
         
         // Multiline needing vertical adjustment. Go back to the issued
         // draw calls and shift them vertically as required.
-        for (let i = first$graphics_command_index; i < $graphicsCommandList.length; ++i) {
+        for (let i = first_graphics_command_index; i < $graphicsCommandList.length; ++i) {
             $graphicsCommandList[i].y += y_shift;
         }
     }

@@ -1,0 +1,337 @@
+init
+────────────────────────────────────────────────────────────────────────
+// just a fun report
+debug_print("[WORD GAME] total number of levels: " + size(LEVELS.levels))
+debug_print("repeat: " + LEVELS.repeat_level)
+const THROW_TIME = 15
+let INPUT_LOCKED = false
+
+// @{ acceleration library stuff
+ACCELERATION_PROFILES["you_prof"] = {
+    max_velocity: 3.2,
+    num_frames_attack: 5,
+    num_frames_release: 5,
+}
+// @}
+
+const COLOR_TABLE = {
+    "dark" : rgb(0.4, 0.4, 0.4),
+    "red" : rgb(0.8, 0, 0),
+}
+
+def draw_screen_border():
+    preserving_transform:
+        reset_transform()
+        draw_sprite(
+            {
+                sprite: borderSprite,
+                pos: SCREEN_SIZE/2,
+                z: 100
+            }
+        )
+        draw_text(
+            font,
+            "a word game\nby @stephan_gfx",
+            xy(15, SCREEN_SIZE.y - 25),
+            rgb(0.2, 0.2, 0.2),
+        )
+
+def lock_input():
+    INPUT_LOCKED = true
+
+def unlock_input():
+    INPUT_LOCKED = false
+
+// @{ rules
+def make_player_moves(target):
+    def move(mover):
+        if INPUT_LOCKED:
+            return
+
+        accelerator_update(mover.x_accel, gamepad_array[0].x)
+        accelerator_update(mover.y_accel, gamepad_array[0].y)
+
+        const old_pos = mover.target.pos
+        mover.target.pos = xy(
+            mover.x_accel.current_velocity,
+            mover.y_accel.current_velocity
+        ) + old_pos
+
+        for ent in blockers:
+            if ent != mover.target and overlaps(ent, mover.target):
+                // collision event
+                mover.x_accel.current_velocity = 0
+                mover.y_accel.current_velocity = 0
+                mover.target.pos = old_pos
+                return
+
+    return {
+        target: entities[target],
+        update: move,
+
+        // acceleration managers
+        x_accel: make_accelerator_from_profile("you_prof"),
+        y_accel: make_accelerator_from_profile("you_prof"),
+    }
+
+def make_level_ends_on_touch(target, ...entities_that_end_level):
+    let listen_for_entities = []
+    for ent in entities_that_end_level:
+        assert(entities[ent] != nil, "couldn't find goal obj: " + ent)
+        push(listen_for_entities, entities[ent])
+
+    def end(rule):
+        for ent in clone(listen_for_entities):
+            if overlaps(ent, rule.target) and ent != rule.target:
+                level_advance()
+
+    return {
+        target: entities[target],
+        update: end,
+
+        listen_for_entities: listen_for_entities,
+    }
+
+def make_blocks_player(...targets):
+    for target in targets:
+        assert(entities[target] != nil, "invalid blocker: " + target)
+        push(blockers, entities[target])
+
+def make_throws(target):
+    def thrower_update(rule):
+        for ent in entities:
+            if (
+                    ent != rule.target 
+                    and overlaps(ent, rule.target)
+                    and ent.being_thrown != true
+            ):
+                let start_pos = clone(ent.pos)
+                def move_throw(framesleft, total_frames):
+                    // @TODO: juicier movement please
+                    // @TODO: dust kick when you touch it and start the throw
+                    // @TODO: "shadow" word under as the throw animates
+                    ent.pos = lerp(
+                        start_pos,
+                        rule.target.pos + xy(0, 60),
+                        smootherstep(
+                            0,
+                            1,
+                            1-framesleft/total_frames
+                        )
+                    )
+
+                add_frame_hook(move_throw, nil, THROW_TIME)
+
+
+    return {
+        target: entities[target],
+        update: thrower_update,
+    }
+
+const KEYHOLE_SMALL_SIZE = 15
+def level_advance():
+    if INPUT_LOCKED:
+        return
+    lock_input()
+
+    def you_flourish(frames_left, total_frames):
+        // wiggle
+        let amount = frames_left/total_frames
+        const k = 0.1
+        const k2 = 0.8
+        let off = 3* amount * xy(
+            0.5* cos(mode_frames * k),
+            cos(mode_frames * k2)
+        )
+        entities["YOU"].offset = off
+
+        // text color
+        let col = lerp(
+            rgb(0, 0, 0),
+            rgb(0, 0, 1),
+            smootherstep(0, 1, frames_left/total_frames)
+        )
+        debug_watch(col)
+        entities["YOU"].text_outline = col
+
+    add_frame_hook(you_flourish, nil, 30)
+
+    def advance():
+        if not (LEVELS["repeat_level"] == true):
+            current_level = loop(current_level+1, size(LEVELS.levels))
+        reset_level(current_level)
+        keyhole_rndr(0)
+
+    def keyhole_rndr(radius, amount):
+        const center = SCREEN_SIZE/2 + entities["YOU"].pos
+        const eased_amount = smoothstep(0, 1, amount)
+        let center_animated = lerp(center, SCREEN_SIZE/2, eased_amount)
+
+        render_keyhole(
+            center,
+            radius,
+            rgb(0.2, 0.2,0.2),
+            100,
+            0
+        )
+
+    def keyhole_rndr_full():
+        keyhole_rndr(0)
+
+    def keyhole_rndr_small():
+        keyhole_rndr(KEYHOLE_SMALL_SIZE, 0)
+
+    def keyhole_in_to_small(frames_left, total_frames):
+        let amount = smootherstep(0, 1, frames_left/total_frames)
+        keyhole_rndr(lerp(KEYHOLE_SMALL_SIZE, MAX_KEYHOLE_SIZE, amount), amount)
+
+    def keyhole_in_small_to_none(frames_left, total_frames):
+        let amount = smootherstep(0, 1, frames_left/total_frames)
+        keyhole_rndr(lerp(0, KEYHOLE_SMALL_SIZE, amount), 0)
+
+    def keyhole_out_none_to_small(frames_left, total_frames):
+        let amount = smootherstep(0, 1, 1-frames_left/total_frames)
+        keyhole_rndr(lerp(0, KEYHOLE_SMALL_SIZE, amount), 0)
+
+    def keyhole_out_small_out(frames_left, total_frames):
+        let amount = smootherstep(0, 1, 1-frames_left/total_frames)
+        keyhole_rndr(lerp(KEYHOLE_SMALL_SIZE, MAX_KEYHOLE_SIZE, amount), amount)
+
+    sequence(
+        {callback: keyhole_in_to_small, frames: 35},
+        {callback: keyhole_rndr_small, frames: 50},
+        {callback: keyhole_in_small_to_none, frames: 15},
+        advance,
+        {callback: keyhole_rndr_full, frames: 30},
+        {callback: keyhole_out_none_to_small, frames: 15},
+        {callback: keyhole_rndr_small, frames: 50},
+        {callback: keyhole_out_small_out, frames: 35},
+        unlock_input,
+    )
+// @}
+
+const RULE_TABLE = {
+    "player_moves": make_player_moves,
+    "level_ends_on_touch": make_level_ends_on_touch,
+    "blocks_player": make_blocks_player,
+    "throws": make_throws,
+}
+
+// game state
+let current_level = LEVELS.start_level
+let current_level_data = nil
+
+// level state
+const entities = {}
+const rules = []
+
+// things that the player can't move through
+const blockers = []
+
+def make_text_entity(entities, ent):
+    let text = replace(ent[1], gamepad_array[0].prompt)
+    let pos = xy(ent[2])
+    let shadow = nil
+    if size(ent) > 2:
+        shadow = COLOR_TABLE[ent[3]]
+
+    let text_length = text_width(font, ent[1])
+    let text_height = font.line_height - 2
+
+    entities[text] = make_entity(
+        {
+            shape: "rect",
+            size: xy(text_length, text_height),
+            text: text,
+            pos: pos,
+            font: font,
+            text_color: TEXT_COLOR,
+            text_shadow: shadow,
+        }
+    )
+
+def make_rect_entity(entities, ent):
+    let name = ent[1]
+    let pos = ent[2]
+    let dim = ent[3]
+    let outline = nil
+    if size(ent) > 3 and ent[4]:
+        outline = rgb(1,1,1)
+
+    entities[name] = make_entity(
+        {
+            shape: "rect",
+            size: xy(dim),
+            pos: xy(pos),
+            color: rgb(1, 1, 0),
+            outline: outline,
+        }
+    )
+
+def reset_level(level_num):
+    current_level_data = clone(LEVELS.levels[level_num])
+
+    // reset the level state
+    remove_all(entities)
+    remove_all(rules)
+    remove_all(blockers)
+
+    // build the entity list
+    for ent in current_level_data.entities:
+        if ent[0] == "text":
+            make_text_entity(entities, ent)
+        if ent[0] == "rect":
+            make_rect_entity(entities, ent)
+
+    // build the rule list
+    for rule in current_level_data.rules:
+        let rule_ptr = RULE_TABLE[rule[0]]
+        assert(rule_ptr != nil, "No such rule: " + rule[0])
+        let rule_obj = rule_ptr(...slice(rule, 1))
+
+        // not every rule gets checked every frame
+        if rule_obj != nil:
+            push(rules, rule_obj)
+
+enter
+────────────────────────────────────────────────────────────────────────
+reset_level(current_level)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_transform(SCREEN_SIZE/2)
+set_background(rgba(0,0,0,1))
+
+// text entity debug code
+// @{
+// let text = "GOAL"
+// let text_length = text_width(font, text)
+// let text_height = font.line_height - 2
+// let ent = make_entity(
+//     {
+//         shape: "rect",
+//         size: xy(text_length, text_height),
+//         text: text,
+//         pos: xy(0, 0),
+//         font: font,
+//         text_color: rgb(1,1,1),
+//         text_shadow: rgb(0.2, 0.2, 0.2),
+//         angle: 45 deg,
+//     }
+// )
+// draw_entity(ent)
+// @}
+
+// update
+debug_watch(INPUT_LOCKED)
+for rule in clone(rules):
+    rule.update(rule)
+
+// draw
+for ent in entities:
+    draw_entity(ent)
+    if ent.outline:
+        draw_rect(ent.pos, ent.size, nil, ent.outline)
+
+draw_screen_border()

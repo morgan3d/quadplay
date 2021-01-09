@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.01.01.00';
+const version  = '2021.01.09.10';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -811,7 +811,7 @@ function onPlayButton(slow, isLaunchGame, args) {
             } catch (e) {
                 e.message = e.message.replace(/^line \d+: /i, '');
                 if (e.message === 'Unexpected token :') {
-                    e.message += ', possible due to a missing { on a previous line';
+                    e.message += ', probably due to a missing comma or { nearby';
                 }
                 if (! e.url) {
                     // This is probably an internal quadplay error
@@ -3306,11 +3306,14 @@ function mainLoopStep() {
     // Only update the profiler display periodically, because doing so
     // takes about 2ms of frame time on a midrange modern computer.
     if (((uiMode === 'Test') || (uiMode === 'IDE') || (uiMode === 'WideIDE')) &&
-        ((QRuntime.mode_frames - 1) % (8 * QRuntime.$graphicsPeriod) === 0)) {
+        
+        (((QRuntime.mode_frames - 1) % (8 * QRuntime.$graphicsPeriod) === 0) ||
+         (targetFramerate < PLAY_FRAMERATE) ||
+         (emulatorMode === 'step'))) {
         updateDebugger();
     }
     
-    if (targetFramerate < PLAY_FRAMERATE) {
+    if (targetFramerate < PLAY_FRAMERATE || emulatorMode === 'step') {
         // Force the profiler to avoid resetting the
         // graphics rate when in slow mode.
         profiler.reset();

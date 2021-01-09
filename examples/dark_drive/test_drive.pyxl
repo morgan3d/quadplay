@@ -1,0 +1,111 @@
+init
+────────────────────────────────────────────────────────────────────────
+
+let car_pos = xy(0,0)
+let car_speed = 0
+let car_angle = 0
+cam_pos = xy(0,0)
+
+def draw_test_car():
+    draw_rect(car_pos, xy(60, 30), nil, rgb(1,1,1), input.angle.vel.x)
+
+def test_update_camera(target):
+    cam_pos = lerp(cam_pos, target, 0.11)
+
+
+let input = {
+    gas_pedal : empty_accel(),
+    brake_pedal: empty_accel(),
+    steer_dir : empty_accel(),
+    speed: empty_accel(),
+    angle: empty_accel(),
+}
+
+accel_init_ent(input.gas_pedal, "celeste")
+accel_init_ent(input.brake_pedal, "celeste")
+accel_init_ent(input.speed, "car_speed")
+accel_init_ent(input.angle, "car_steer")
+accel_init_ent(input.steer_dir, "new_super_mario_brothers")
+
+def test_update_input(input):
+    // update the pedals
+    pedal_update(input.gas_pedal, gamepad_array[0].a)
+    pedal_update(input.brake_pedal, gamepad_array[0].c)
+    accel_update_frame(input.steer_dir, gamepad_array[0])
+
+
+
+def test_update_car(input):
+    // update the values
+    accel_update_frame(
+        input.angle,
+        xy(-input.steer_dir.vel.x, 0)
+    ) 
+
+    // pedal_update(input.speed, input.gas_pedal.amount)
+    accel_update_frame(
+        input.speed,
+        xy(input.gas_pedal.amount, 0)
+    ) 
+    input.speed.vel.x *= (1-input.brake_pedal.amount)
+
+    car_pos += xy(input.speed.vel.x, 0)
+    debug_watch(input.speed.vel.x)
+    debug_watch(input.gas_pedal.amount)
+    debug_watch(input.brake_pedal.amount)
+    debug_watch(input.steer_dir.amount)
+    debug_watch(input.angle.vel.x)
+    false and todo("input")
+
+const LEAD_AMOUNT = 180
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+test_update_input(input)
+test_update_car(input)
+
+let cam_offset = (input.speed.vel.x/input.speed.accel_data.max_vel)*LEAD_AMOUNT
+debug_watch(cam_offset)
+test_update_camera(car_pos + xy(cam_offset, 0))
+debug_watch(cam_pos)
+set_transform(-cam_pos + SCREEN_SIZE/2)
+
+draw_test_car()
+
+let debug_text = [
+    "gas: " + input.gas_pedal.amount,
+    "brake: " + input.brake_pedal.amount,
+    "speed: " + input.speed.amount,
+    "angle: " + input.angle.amount,
+]
+
+let control_text = [
+    "(a) - gas",
+    "(c) - brake",
+    "[<][>] - steer",
+]
+
+reset_transform()
+
+draw_text(
+    font,
+    replace(join(control_text, "\n"), gamepad_array[0].prompt),
+    xy(SCREEN_SIZE.x, 0),
+    rgb(1,1,1),
+    nil,
+    nil,
+    "right",
+    "top"
+)
+
+draw_text(
+    font,
+    join(debug_text, "\n"),
+    xy(0,0),
+    rgb(1,1,1),
+    nil,
+    nil,
+    "left",
+    "top"
+)

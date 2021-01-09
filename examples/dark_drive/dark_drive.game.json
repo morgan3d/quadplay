@@ -1,0 +1,62 @@
+{
+    "achievements": false,
+    "assets": {
+        "ambience_loop_snd": "sounds/ambience_loop.sound.json",
+        "bigfont": "quad://fonts/deja-15.font.json",
+        "car1Sprite": "sprites/car1.sprite.json",
+        "car2Sprite": "sprites/car2.sprite.json",
+        "car3Sprite": "sprites/car3.sprite.json",
+        "car4Sprite": "sprites/car4.sprite.json",
+        "car_start_snd": "sounds/car_start.sound.json",
+        "cardoor_open_and_close_snd": "sounds/cardoor_open_and_close.sound.json",
+        "caught_snd": "quad://sounds/wild-01.sound.json",
+        "chase_loop_snd": "quad://sounds/loop-dark-thriller.sound.json",
+        "crash_snd": "quad://sounds/explode-08.sound.json",
+        "damage_snd": "quad://sounds/hit-00.sound.json",
+        "demogorgonSprite": "sprites/demogorgon.sprite.json",
+        "font": "quad://fonts/deja-8.font.json",
+        "frogs_crickets_snd": "sounds/frogs_crickets.sound.json",
+        "idle_loop_snd": "sounds/idle_loop.sound.json",
+        "key_turning_snd": "sounds/key_turning.sound.json",
+        "light_snd": "quad://sounds/hit-07.sound.json",
+        "mud1Sprite": "sprites/mud1.sprite.json",
+        "mud2Sprite": "sprites/mud2.sprite.json",
+        "mud3Sprite": "sprites/mud3.sprite.json",
+        "mud4Sprite": "sprites/mud4.sprite.json",
+        "mud5Sprite": "sprites/mud5.sprite.json",
+        "obstaclesSprite": "sprites/obstacles.sprite.json",
+        "rain_loop_snd": "sounds/rain_loop.sound.json",
+        "skid_snd": "sounds/skid.sound.json",
+        "thunder_snd": "sounds/thunder.sound.json"
+    },
+    "competitive": false,
+    "constants": {
+    },
+    "cooperative": false,
+    "copyright": "\u00a92020 Ed Luong, Nick Porcino, Stephan Steinbach",
+    "description": "A moody drive on a dark rainy night.",
+    "developer": "Ed Luong, Nick Porcino, Stephan Steinbach",
+    "docs": [
+    ],
+    "highscores": false,
+    "license": "MIT",
+    "max_players": 1,
+    "min_players": 1,
+    "modes": [
+        "Title*",
+        "Play",
+        "test_drive",
+        "End"
+    ],
+    "packages": [],
+    "scripts": [
+        "accel.pyxl",
+        "draw.pyxl",
+        "constants.pyxl",
+        "rain_lib.pyxl",
+        "audio_system.pyxl",
+        "gameplay.pyxl"
+    ],
+    "title": "A Dark Drive",
+    "version": 1.0
+}
