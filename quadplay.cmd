@@ -5,6 +5,7 @@ where.exe "py.exe"
 if %ERRORLEVEL% EQU 0 (
     @py -3 quadplay %*
 ) else (
+    @rem Python 3 is called "python" on Windows(!)
     @python quadplay %*
 )
 
