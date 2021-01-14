@@ -272,7 +272,16 @@ console.assert(window.AudioContext);
 let volumeLevel = parseFloat(localStorage.getItem('volumeLevel') || '1');
 document.getElementById('volumeSlider').value = Math.round(volumeLevel * 100);
 try {
-    audioContext = new AudioContext();
+    audioContext = new AudioContext({
+        latencyHint: 'interactive',
+
+        // Sounds significantly above 11 kHz are quite unpleasant
+        // and are generally not even audible to adults.
+        // Halve memory consumption by dropping the audio rate
+        // of the entire audio context. (http://www.noiseaddicts.com/2009/03/can-you-hear-this-hearing-test/)
+        sampleRate: 22050
+        /*44100*/
+    });
     audioContext.gainNode = audioContext.createGain();
     audioContext.gainNode.gain.value = 0.2 * volumeLevel;
     audioContext.gainNode.connect(audioContext.destination);
@@ -628,7 +637,7 @@ let emulatorButtonState = {};
 
 /** All sound sources that are playing */
 const activeSoundHandleMap = new Map();
-const pausedSoundHandleArray = [];
+//const pausedSoundHandleArray = [];
 
 function soundSourceOnEnded() {
     this.state = 'ENDED';
@@ -834,31 +843,39 @@ function stop_audio(handle) {
 
 
 function pauseAllSounds() {
+    /*
     // We can't save the iterator itself because that doesn't keep the
     // sounds alive, so we store a duplicate array.
     pausedSoundHandleArray.length = 0;
     for (const handle of activeSoundHandleMap.keys()) {
         pausedSoundHandleArray.push(handle);
         try { handle._.stop(); } catch (e) {}
-    }
+    }*/
+    audioContext.suspend();
 }
 
 
 function stopAllSounds() {
-    pausedSoundHandleArray.length = 0;
+    //pausedSoundHandleArray.length = 0;
     for (const handle of activeSoundHandleMap.keys()) {
         try { handle._.stop(); } catch (e) {}
     }
     activeSoundHandleMap.clear();
+
+    // Resume in case we were paused
+    audioContext.resume();
 }
 
 
 function resumeAllSounds() {
+    audioContext.resume();
+    /*
     for (const handle of pausedSoundHandleArray) {
         // Have to recreate, since no way to restart 
         internalSoundSourcePlay(handle, handle._.audioClip, handle._.resumePositionMs, handle._.loop, handle._.volume, handle._.pitch, handle._.pan, handle._.rate);
     }
     pausedSoundHandleArray.length = 0;
+    */
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

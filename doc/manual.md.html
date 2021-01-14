@@ -43,7 +43,7 @@ debugger, and profiler.
 - 60 fps, with autoscaling on low-end machines
 - 4096 sRGB (4:4:4) colors
 - Native 2.5D graphics
-- A* pathfinding AI
+- Pathfinding AI
 - 2D rigid body, joint, and motor physics
 - 2D positional audio with pitch, volume, and rate
 - 10.5 MB of total sprite memory
@@ -57,15 +57,15 @@ debugger, and profiler.
 
 **Software Features**
 
-- Export to your own website, itch.io, github pages, or download
+- Export to your own website, itch.io, or github pages
 - Games run on web, mobile, desktop, tablet, Jetson Nano, Raspberry Pi 4/400
 - Free for commercial, personal, and educational use
 - Friendly and powerful PyxlScript Python-like scripting language
 - Run locally and offline using Python + web browser
 - Hundreds of built-in Creative Commons assets
-- Full commandline, external editor, and external art tool support for power users
+- Full command line, external editor, and external art tool support for power users
 - Open source: use online, fork, or run locally
-- Import PNG, MP3, TMX, JSON, YAML, and CSV data
+- Runtime PNG, MP3, TMX, JSON, YAML, and CSV data formats
 
 **API**
 
@@ -3038,7 +3038,7 @@ The basic entity properties and defaults are:
 : The world space `xy()` scaling applied before translation and rotation. See `draw_sprite()`.
   Defaults to (1, 1). This can be used to grow, stretch, or flip the entity.
   If `entity.shape == "disk"`, then the scale must have the same magnitude
-  in both x and y.
+  in both x and y. The scale may be zero or negative along either axis.
 
 `entity.shape`
 : A string that is `disk` or `rect`. Defaults to `rect`. A `disk` entity
@@ -3335,8 +3335,7 @@ intersections.
   Has units of mass * pixels^2.
 
 `entity_mass(entity)`
-: Scalar mass equal to the bounds area in pixels specified by the
-  `entity.shape` and `entity.size` times the `entity.density`.
+: Scalar mass equal to `entity_area()` times the `entity.density` `default 1`.
   Returns generic mass units.
 
 `entity_move(entity, pos default entity.pos, angle default entity.angle)`
@@ -8259,13 +8258,15 @@ bundled together with a script.
 markdeepOptions = {tocStyle:'long', definitionStyle:'long', linkAPIDefinitions: true, inlineCodeLang: 'PyxlScript'};</script>
 <link rel="stylesheet" href="slate.css">
 <style>
-@font-face { font-family: quadplay; src: url(Audiowide-Regular.ttf) }
+@font-face { font-family: quadplay; src: url(../console/Audiowide-Regular.ttf) }
 .big {font-size: 150%; font-family: "Lucida Console", Monaco, monospace; line-height: 150%}
 em.asterisk { font-style: normal; font-weight: bold; }
 .md div.title { font-family: quadplay; font-size: 40px}
 .md div.title, .md div.subtitle {text-align: center}
 img { image-rendering: -moz-crisp-edges; image-rendering: pixelated; border: 1px solid #666}
-.md .hljs-built_in {font-weight: bold; color: inherit}
+.md .hljs-built_in {font-weight: bold; color: #f7a8fd}
+.md .hljs-keyword {font-weight: bold; color: #a1aefe}
+.md .hljs-title {font-weight: bold; color: #FFF}
 .md div.listingcaption {margin: 5px 0 15px}
 .md .longToc {
 font-size: 80%;
@@ -8274,7 +8275,7 @@ width: 200px;
 body {
 left: 230px;
 }
-.md .longTOC a, .md .longTOC code, .md a:link, .md a:visited, .md a:link code, .md a:visited code, a code .hljs-keyword, a code .hljs-selector-tag {
+.md .longTOC a, .md .longTOC code, .md a:link, .md a:visited, .md a:link code, .md a:visited code, a code .hljs-keyword, a code .hljs-built_in, a code .hljs-selector-tag {
 color: #80bfff !important;
 }
 table.aligned tr {

@@ -6,6 +6,18 @@
 Changes for both the specification and implementation in each release
 of [quadplay✜](manual.md.html).
 
+2021 January TBD: Beta update 61
+===================================
+
+- Made Windows 10 `quadplay` script robust to the Windows `python.exe` shim using `py.exe`
+- Slightly reduced CPU usage for audio when paused
+- Halved audio memory consumption and audio bandwidth for online play
+  by reducing internal audio mixing to 22 kHz
+- Changed manual syntax highlight colors to match the IDE
+- Increased usage of the quadplay font in the IDE
+- Fixed syntax highlighting in the manual for functions with digits in the name
+- Fixed the use of global color constants in `draw_text()` markup
+
 
 2021 January 9: Beta update 60
 ===================================
@@ -1400,7 +1412,7 @@ of [quadplay✜](manual.md.html).
 markdeepOptions = {tocStyle:'none', definitionStyle:'long', linkAPIDefinitions: true, inlineCodeLang: 'PyxlScript'};</script>
 <link rel="stylesheet" href="slate.css">
 <style>
-@font-face { font-family: quadplay; src: url(Audiowide-Regular.ttf) }
+@font-face { font-family: quadplay; src: url(../console/Audiowide-Regular.ttf) }
 .big {font-size: 150%; font-family: "Lucida Console", Monaco, monospace; line-height: 150%}
 em.asterisk { font-style: normal; font-weight: bold; }
 .md div.title { font-family: quadplay; font-size: 40px}

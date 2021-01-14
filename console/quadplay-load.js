@@ -1545,9 +1545,11 @@ function loadSound(name, json, jsonURL) {
 
         try {
             audioContext.decodeAudioData(
-                // The need for slice is some Chrome multithreading issue
+                // The need for this apparently useless slice() is to
+                // work around a Chrome multithreading bug
                 // https://github.com/WebAudio/web-audio-api/issues/1175
                 arraybuffer.slice(0),
+                
                 function onSuccess(buffer) {
                     sound.$buffer = buffer;
                     sound.loaded = true;
@@ -1560,6 +1562,7 @@ function loadSound(name, json, jsonURL) {
                     onLoadFileComplete(json.url);
                     loadManager.markRequestCompleted(json.url, '', true);
                 },
+                
                 function onFailure() {
                     loadManager.markRequestCompleted(mp3URL, 'unknown error', false);
                 });

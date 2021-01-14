@@ -4043,7 +4043,7 @@ function loadGameIntoIDE(url, callback, loadFast) {
 
             if (/^http:\/\/(127\.0\.0\.1|localhost):/.test(serverURL)) {
                 document.getElementById('serverURL').innerHTML =
-                    '<p>Your local server is in secure mode and has disabled serving.</p><p>Restart the server script with <code style="white-space:nowrap">quadplay --serve</code> to allow serving games for mobile devices from this machine for development.</p>';
+                    '<p>Your quadplay✜ is in secure mode and has disabled mobile serving.</p><p>Restart the command-line program using <code style="white-space:nowrap">quadplay --serve</code> to allow serving games for mobile devices from this machine for development.</p>';
                 document.getElementById('serverQRCode').style.visibility = 'hidden';
                 document.getElementById('serverQRMessage').style.visibility = 'hidden';
             } else {
@@ -4069,7 +4069,7 @@ function loadGameIntoIDE(url, callback, loadFast) {
             const resourcePane = document.getElementById('resourcePane');
 
             let s = `
-<br/><center><b style="color:#888">Resource Limits</b></center>
+<br/><center><b style="color:#888; font-family:quadplay; font-size: 125%">Resource Limits</b></center>
 <hr>
 <br/>
 <table style="margin-left: -2px; width: 100%">
@@ -4094,7 +4094,7 @@ function loadGameIntoIDE(url, callback, loadFast) {
             ];
 
             for (const resource of resourceArray) {
-                s += `<br/><center><b style="color:#888">${resource.name}</b></center><hr><br/>`;
+                s += `<br/><center><b style="color:#888; font-family:quadplay; font-size: 125%">${resource.name}</b></center><hr><br/>`;
                 const entryArray = Object.entries(resourceStats[resource.prop + 'ByURL']);
                 
                 // Sort by length

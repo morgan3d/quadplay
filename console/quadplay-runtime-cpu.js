@@ -5563,12 +5563,12 @@ function $parseMarkupHelper(str, startIndex, stateChanges) {
         // pyxlscript-compiler.js identifierPattern and must be kept
         // in sync.
         text = markup.replace(/^\s*(font|color|shadow|outline)\s*:\s*([Δ]?(?:[_A-Za-z][A-Za-z_0-9]*|[αβγΔδζηθιλμρσϕφχψτωΩ][_0-9]*(?:_[A-Za-z_0-9]*)?))\s+/, function (match, prop, value) {
-            const v = window[value];
+            let v = window[value];
             if (v === undefined) {
                 $error('Global constant ' + value + ' used in draw_text markup is undefined.');
             } else if (prop === 'font' && v.$type !== 'font') {
                 $error('Global constant ' + value + ' is not a font'); 
-            } else if (prop !== 'font' && value.r === undefined && value.h === undefined) {
+            } else if (prop !== 'font' && v.r === undefined && v.h === undefined) {
                 $error('Global constant ' + value + ' is not a color');
             }
 
@@ -6867,8 +6867,8 @@ function entity_mass(entity) {
 
 
 function entity_area(entity) {
-    const scaleX = entity.scale ? entity.scale.x : 1;
-    const scaleY = entity.scale ? entity.scale.y : 1;
+    const scaleX = entity.scale !== undefined ? entity.scale.x : 1;
+    const scaleY = entity.scale !== undefined ? entity.scale.y : 1;
 
     if (entity.size === undefined) {
         return 0;

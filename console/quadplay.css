@@ -15,6 +15,18 @@ html {
     src: url("PxPlus_AmstradPC1512-2y.ttf");
 }
 
+@font-face {
+    font-family: quadplay;
+    src: url(Audiowide-Regular.ttf)
+}
+
+.title {
+    font-weight: bold;
+    font-family: quadplay;
+    font-size: 110%;
+}
+
+
 #docEditor {
     background:#fff;
 }
@@ -150,7 +162,8 @@ div#header {
     right:0;
     left:0;
     height: 20px;
-    font-size: 11px;
+    font-size: 14px;
+    font-family: quadplay;
     background: #000;
     color:#ccc;
     text-align: center;
@@ -667,6 +680,11 @@ code, .code {
     background: #331c2a;
     border-left: 1px solid #888;
     z-index:  10;
+}
+
+#debugger > label {
+    font-family: quadplay;
+    font-size: 13px;
 }
 
 .WideIDEUI #debugger {

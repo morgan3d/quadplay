@@ -104,9 +104,9 @@
       <div><a onclick="enterKioskMode()">Kiosk Mode</a></div>
       <hr>
       <div class="IDEOnly"><a onclick="window.open('../doc/controls.html', '', 'width=400,height=500')" title="Show keyboard and gamepad controls in a popup window">Controls</a></div>
-      <div class="noIDE"><a href="../doc/manual.md.html" title="Use quadplay to make your own games like this">Create Games</a></div>
-      <div><a href="http://quadplay.freeforums.net/" target="_blank" title="The online quadplay community">Forums</a></div>
-      <div><a href="https://casual-effects.com" target="_blank" title="Website for the quadplay creator">CasualEffects</a></div>
+      <div class="noIDE"><a href="../doc/manual.md.html" title="Use quadplay✜ to make your own games like this">Create Games</a></div>
+      <div><a href="http://quadplay.freeforums.net/" target="_blank" title="The online quadplay✜ community">Forums</a></div>
+      <div><a href="https://casual-effects.com" target="_blank" title="Website for the quadplay✜ creator">CasualEffects</a></div>
     </div>
 
     <div id="toolsMenu" class="unselectable dropdown IDEOnly">
@@ -128,7 +128,7 @@
     </div>
 
     <div id="header" class="unselectable">
-      <div style="position: absolute; left: 8px; top: 5px; font-size: 110%">
+      <div style="position: absolute; left: 8px; top: 3px">
         <span class="IDEOnly">
           <a style="cursor:pointer" onclick="onMenuButton(event)" id="toolsMenuButton">Tools</a>
           &nbsp;&nbsp; &middot; &nbsp;&nbsp;
@@ -151,7 +151,7 @@
         <!-- <span id="adblockWarning"></span> -->
       </div>
 
-      <div style="background: #000; border-top: 3px solid #000; top: 0px; display: inline-block; position: absolute; right: 8px">
+      <div style="background: #000; border-top: 3px solid #000; top: 0px; display: inline-block; position: absolute; right: 8px; font-size: 10px">
         <div style="display:inline-block; padding-left: 10px;" onclick="showGamepads()">
           <div style="width:48px; margin-top: -4px">
             <div class="controllerAbsent" id="controllerIcon0" title="Connect a controller and press a button"></div>
@@ -260,12 +260,12 @@
       <label for="controlTab" class="ide unselectable">Controls</label>
       
       <input id="serverTab" type="radio" name="tabs">
-      <label for="serverTab" class="ide unselectable">Serve</label>
+      <label for="serverTab" class="ide unselectable">Mobile</label>
 
       <pane id="todoPane" class="ide" style="overflow-y:auto;overflow-x:hidden"></pane>
 
       <pane id="performancePane" class="ide" style="overflow-y:auto;overflow-x:hidden">
-        <center><b style="color:#888">Runtime</b></center>
+        <center><b style="color:#888; font-family:quadplay; font-size: 125%">Runtime</b></center>
         <hr>
         <br/>
         <table style="margin-left: -2px; width: 100%; border-collapse: collapse">
@@ -301,13 +301,13 @@
           <br/>
           <img src="gamepad.png" style="width:80%; margin-bottom:10px">
           <table style="text-align: center; border-collapse: collapse">
-            <tr style="border-bottom: 1px solid #888"><th style="padding-right:4px">quadplay</th><th>Player 1 Key</th><th>Player 2 Key</th><th>Xbox</th><th>PS4</th><th>SNES</th></tr>
+            <tr style="border-bottom: 1px solid #888"><th style="padding-right:4px">quadplay✜</th><th>Player 1 Key</th><th>Player 2 Key</th><th>Xbox</th><th>PS4</th><th>SNES</th></tr>
             <tr><td>▲         </td><td> W or ↑      </td><td> I           </td><td> ▲          </td><td> ▲       </td><td> ▲</td></tr>
             <tr><td>◀         </td><td> A or ←      </td><td> J           </td><td> ◀          </td><td> ◀       </td><td> ◀</td></tr>
             <tr><td>▼         </td><td> S or ↓      </td><td> K           </td><td> ▼          </td><td> ▼       </td><td> ▼</td></tr>
             <tr><td>▶         </td><td> D or →      </td><td> L           </td><td> ▶          </td><td> ▶       </td><td> ▶</td></tr>
             <tr><td>ⓐ         </td><td> V or space  </td><td> / or ?      </td><td> Ⓐ          </td><td style="font-size:90%">╳</td><td> Ⓑ</td></tr>
-            <tr><td>ⓑ         </td><td> G or enter  </td><td> ' or "      </td><td> Ⓑ          </td><td> ◯       </td><td> Ⓐ</td></tr>
+            <tr><td>ⓑ         </td><td> G or enter  </td><td> ' or &quot; </td><td> Ⓑ          </td><td> ◯       </td><td> Ⓐ</td></tr>
             <tr><td>ⓒ         </td><td> C           </td><td> . or &gt;   </td><td> Ⓧ          </td><td> ▢       </td><td> Ⓨ</td></tr>
             <tr><td>ⓓ         </td><td> F           </td><td> : or ;      </td><td> Ⓨ          </td><td style="font-size:120%"> △</td><td> Ⓧ</td></tr>
             <tr><td>ⓔ         </td><td> L.shift     </td><td> R.shift     </td><td> LB         </td><td> L1       </td><td> L</td></tr>
@@ -338,7 +338,7 @@
           <div style="position: absolute; top:1px; left:0; right:0; padding-left:5px; border-bottom: solid 1px #888; height:20px">
             <input type="checkbox" id="debugWatchEnabled" onclick="debugOptionClick(event)" checked/><label for="debugWatchEnabled">Enable <code>debug_watch()</code></label>
           </div>
-          <div id="debugWatchDisplayPane" style="position: absolute; top: 21px; bottom:0; left:-1px; right:-1px; font-family: monospace; white-space: pre-wrap; overflow:scroll; overflow-wrap:break-word; background: #222">
+          <div id="debugWatchDisplayPane" style="position: absolute; top: 22px; bottom:0; left:-1px; right:-1px; font-family: monospace; white-space: pre-wrap; overflow:scroll; overflow-wrap:break-word; background: #222">
           </div>
         </div>
       </pane>
@@ -426,7 +426,7 @@
     <div id="newModeDialog" class="modal hidden">
       <div class="dialog" style="top:40vh; width: 300px">
         <center>
-          <b>Create New Mode</b>
+          <span class="title">Create New Mode</span>
           <p>
             <br/>
             <label for="newModeName">Name&nbsp;&nbsp;</label>
@@ -442,7 +442,7 @@
     <div id="importModeDialog" class="modal hidden">
       <div class="dialog" style="top:40vh; width: 400px">
         <center>
-          <b>Import Existing Mode</b>
+          <span class="title">Import Existing Mode</span>
           <p>
           <p>
             <div id="importModeList" style="width:380px; height: 300px; background: #fff; border-radius: 2px; overflow: scroll scroll; color: #888; text-align: left; font-size: 80%; font-family: Monaco, monospace">
@@ -456,7 +456,7 @@
     <div id="reorderGamepadsDialog" class="modal hidden">
       <div class="dialog" style="top:40vh; width: 300px">
         <center>
-          <b>Reorder Gamepads</b>
+          <span class="title">Reorder Gamepads</span>
           <p>
           <div id="reorderGamepadsMessage" style="text-align: left">
           </div>
@@ -474,7 +474,7 @@
     <div id="newConstantDialog" class="modal hidden">
       <div class="dialog" style="top:40vh; width: 360px">
         <center>
-          <b>Add New Constant</b>
+          <span class="title">Add New Constant</span>
           <p>
             <br/>
             <table style="border-collapse:collapse">
@@ -526,7 +526,7 @@
     <div id="newScriptDialog" class="modal hidden">
       <div class="dialog" style="top:40vh; width: 300px">
         <center>
-          <b>Create New Script</b>
+          <span class="title">Create New Script</span>
           <p>
             <br/>
             <label for="newScriptName">Filename&nbsp;&nbsp;</label>
@@ -542,7 +542,7 @@
     <div id="importScriptDialog" class="modal hidden">
       <div class="dialog" style="top:40vh; width: 400px">
         <center>
-          <b>Import Existing Script</b>
+          <span class="title">Import Existing Script</span>
           <p>
           <p>
             <div id="importScriptList" style="width:380px; height: 300px; background: #fff; border-radius: 2px; overflow: scroll scroll; color: #888; text-align: left; font-size: 80%; font-family: Monaco, monospace">
@@ -556,7 +556,7 @@
     <div id="newDocDialog" class="modal hidden">
       <div class="dialog" style="top:40vh; width: 500px">
         <center>
-          <b>Create New Doc</b>
+          <span class="title">Create New Doc</span>
           <p>
             <table>
               <tr>
@@ -595,7 +595,7 @@
     <div id="importDocDialog" class="modal hidden">
       <div class="dialog" style="top:40vh; width: 400px">
         <center>
-          <b>Import Existing Doc</b>
+          <span class="title">Import Existing Doc</span>
           <p>
           <p>
             <div id="importDocList" style="width:380px; height: 300px; background: #fff; border-radius: 2px; overflow: scroll scroll; color: #888; text-align: left; font-size: 80%; font-family: Monaco, monospace">
@@ -609,7 +609,7 @@
     <div id="addAssetDialog" class="modal hidden">
       <div class="dialog" style="margin-top: 10vh; width: 410px">
         <center>
-          <b>Import Existing Asset</b>
+          <span class="title">Import Existing Asset</span>
           <table style="width: 100%; margin-top: 10px">
             <tr>
               <td width="60px">
@@ -658,7 +658,7 @@
     <div id="newAssetDialog" class="modal hidden">
       <div class="dialog" style="top:10px; width: 400px">
         <center>
-          <b>Create New Asset</b>
+          <span class="title">Create New Asset</span>
           <p>
             <label for="newAssetType">Type&nbsp;&nbsp;</label>
             <select id="newAssetType" style="width:320px" onchange="onNewAssetTypeChange()">
@@ -682,7 +682,7 @@
     <div id="openGameDialog" class="modal hidden">
       <div class="dialog" style="margin-top: 80px; width: 400px">
         <center>
-          <b>Open Game</b>
+          <span class="title">Open Game</span>
           <p>
             <label for="openGameType">Type&nbsp;&nbsp;</label>
             <select id="openGameType" style="width:320px" onchange="onOpenGameTypeChange()">
@@ -754,7 +754,7 @@
   </script>
   
   <!-- Third-party code. Those not maintained as part of this project are 
-       named ".ejs" to make searching only quadplay internal files easier -->
+       named ".ejs" to make searching only quadplay✜ internal files easier -->
   <script async src="gif.ejs"></script>
   <script defer src="qrcode.min.ejs"></script>
   <script defer src="ace/ace.ejs"></script>
@@ -769,7 +769,7 @@
   <script defer src="LoadManager.js"></script>
   <script defer src="filters.js"></script>
 
-  <!-- quadplay implementation -->
+  <!-- quadplay✜ implementation -->
   <!-- force reload, as these are changing often during the beta -->
   <script defer src="os/dependencies.py?" charset="utf-8" type="text/javascript"></script>
   <script defer src="pyxlscript-compiler.js?" charset="utf-8"></script>
