@@ -6,7 +6,7 @@
 Changes for both the specification and implementation in each release
 of [quadplay✜](manual.md.html).
 
-2021 January TBD: Beta update 61
+2021 January 16: Beta update 61
 ===================================
 
 - Made Windows 10 `quadplay` script robust to the Windows `python.exe` shim using `py.exe`
@@ -15,6 +15,14 @@ of [quadplay✜](manual.md.html).
   by reducing internal audio mixing to 22 kHz
 - Changed manual syntax highlight colors to match the IDE
 - Increased usage of the quadplay font in the IDE
+- Persisted autoload checkbox on Open Game dialog between sessions
+- Added "Rename Mode" context menu
+- Protected internal state of audio clips
+- Required parentheses for `todo()`
+- Fixed parsing of hexadecimal or binary constants separated by a single character
+- Fixed `resume_audio()`
+- Fixed `todo()` in todo-as-error mode
+- Fixed GIF recording on Firefox
 - Fixed syntax highlighting in the manual for functions with digits in the name
 - Fixed the use of global color constants in `draw_text()` markup
 
@@ -1398,9 +1406,32 @@ of [quadplay✜](manual.md.html).
 =======================================
 
 
+2019 March 20: Renamed to Quadplay
+=======================================
+
+After NVIDIA announced the Jetson Nano product, the
+"nano JAMMER 2" console is renamed to avoid confusion.
+
+I selected name "quadplay" with public and alpha-developer
+input.
+
+
 2018 July 1: Private Alpha
 =======================================
 
+Testing begins with an experienced set of retro coder and PICO8
+developers.
+
+2018 December 1: Scaling
+=======================================
+
+Forked and began scaling nano JAMMER up from a Tweet-jam console to
+a full game jam and education fantasy console.
+
+See the original [nano JAMMER](https://morgan3d.github.io/nano/doc/specification.md.html#changelog)
+change log for public development on the early parts of this project,
+and the [codeheart.js](https://casual-effects.com/codeheart/) project
+from which the nano JAMMER codebase originally forked.
 
 
 <link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">

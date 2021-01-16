@@ -663,6 +663,7 @@ function postToServer(payload, callback, errorCallback) {
 
 /* Convert a URL to a local filename suitable for use with serverWriteFile() */
 function urlToFilename(url) {
+    console.assert(url !== undefined);
     url = url.replace(/\\/g, '/');
     
     if (url.startsWith(location.origin + '/')) {
@@ -685,6 +686,8 @@ function urlToFilename(url) {
    use WorkJSON.stringify. */
 function serverWriteFile(filename, encoding, contents, callback, errorCallback) {
     console.assert(encoding === 'utf8' || encoding === 'binary');
+    console.assert(contents !== undefined);
+    console.assert(! /^http[s]:\/\//.test(filename), 'serverWriteFile() expects a filename, not a URL');
     
     if (typeof contents !== 'string') {
         console.assert(contents.byteLength !== undefined && encoding === 'binary');
@@ -714,7 +717,7 @@ function serverWriteFile(filename, encoding, contents, callback, errorCallback) 
 }
 
 
-function serverDeleteFile(url, callback, errorCallback) {
+function serverDeleteURL(url, callback, errorCallback) {
     console.assert(locallyHosted());
 
     const xhr = new XMLHttpRequest();
@@ -726,7 +729,8 @@ function serverDeleteFile(url, callback, errorCallback) {
     xhr.onreadystatechange = function() {
         if (this.readyState === XMLHttpRequest.DONE) {
             // Request finished. Do processing here.
-            const jsonResponse = WorkJSON.parse(xhr.response);
+            console.log(xhr.response);
+            const jsonResponse = /^[ \t\n]*$/.test(xhr.response) ? undefined : WorkJSON.parse(xhr.response);
             if ((this.status >= 200) && (this.status <= 299)) {
                 if (callback) {
                     // Give the server a little more time to catch up
@@ -1455,6 +1459,11 @@ function showModeContextMenu(mode) {
     if (mode.name !== gameSource.json.start_mode) {
         s += `<div onmousedown="onProjectInitialModeChange('${mode.name}')">Set As Start Mode</div>`
     }
+    
+    const builtIn = isBuiltIn(makeURLRelativeToGame(mode.name + '.pyxl'));
+    if (! builtIn) {
+        s += `<div onmousedown="onRenameMode('${mode.name}')">Rename&hellip;</div>`
+    }
 
     s += `<hr><div onmousedown="onRemoveMode('${mode.name}')"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&times;</span>Remove ${mode.name}</div>`
 
@@ -1479,6 +1488,56 @@ function onRemoveMode(modeName) {
     }
     
     serverSaveGameJSON(function () { loadGameIntoIDE(window.gameURL, null, true); });
+}
+
+
+function onRenameMode(modeName) {    
+    let newName;
+
+    while (true) {
+        newName = window.prompt("New name for mode '" + modeName + "'", modeName);
+        if (! newName || newName === '') { return; }
+
+        // Remove extension
+        newName = newName.replace(/\.[^\.]+$/, '');
+        
+        // Check for conflict
+        if (/^[^a-zA-Z_]/.test(newName) || /[^a-zA-Z0-9_]/.test(newName)) {
+            window.alert("'" + newName + "' is not a legal mode name");
+        } if (gameSource.json.modes.indexOf[newName]) {
+            window.alert("There is already another mode named '" + newName + "'");
+        } else {
+            break;
+        }
+    }
+    
+    // Change the name in the gameSource.json
+    {
+        const index = gameSource.json.modes.indexOf(modeName);
+        console.assert(index !== -1, 'Could not find mode ' + modeName);
+        gameSource.json.modes[index] = newName;
+    }
+    
+    if (modeName === gameSource.json.start_mode) {
+        gameSource.json.start_mode = newName;
+    }
+
+    const oldURL = makeURLAbsolute(gameSource.jsonURL, modeName + '.pyxl');
+    function deleteOldFile() { serverDeleteURL(oldURL); }
+
+    
+    function saveAndReloadProject() {
+        console.log(gameSource.jsonURL);
+        console.assert(gameSource.jsonURL);
+        console.assert(window.gameURL);
+        serverSaveGameJSON(function () {
+            loadGameIntoIDE(window.gameURL, deleteOldFile, true);
+        });
+    }
+
+    // Save mode under the new name, renaming the file
+    const code = fileContents[oldURL].replace(new RegExp(`(^|\n)${modeName}[ \t]*(?=\n===|\n═══)`), '$1' + newName);
+    serverWriteFile(urlToFilename(makeURLRelativeToGame(newName + '.pyxl')), 'utf8', code, saveAndReloadProject);
 }
 
 
@@ -1539,7 +1598,6 @@ function onRenameScript(scriptURL) {
         newName = window.prompt("New name for script '" + filename + "'", filename);
         if (! newName || newName === '') { return; }
 
-
         // Remove extension
         newName = newName.replace(/\.[^\.]+$/, '');
         
@@ -1547,7 +1605,7 @@ function onRenameScript(scriptURL) {
         newName = newName.replace(/(^_|[^_0-9A-Za-z])/g, '') + '.pyxl';
         
         // Check for conflict
-        if (gameSource.json.scripts[newName]) {
+        if (gameSource.json.scripts.indexOf(newName) !== -1) {
             window.alert("There is already another script named '" + newName + "'");
         } else {
             break;
@@ -1560,6 +1618,10 @@ function onRenameScript(scriptURL) {
     console.assert(index !== -1);
     gameSource.json.scripts.splice(index, 1, newName);
 
+    function deleteOldFile() {
+        serverDeleteURL(makeURLAbsolute(gameSource.jsonURL, scriptURL));
+    }
+
     function saveAndReloadProject() {
         console.log(gameSource.jsonURL);
         console.assert(gameSource.jsonURL);
@@ -1569,10 +1631,8 @@ function onRenameScript(scriptURL) {
         });
     }
     
-    function deleteOldFile() { serverDeleteFile(scriptURL); }
-
     // Save script as the new name
-    serverWriteFile(makeURLRelativeToGame(newName), 'utf8', fileContents[scriptURL], saveAndReloadProject);
+    serverWriteFile(urlToFilename(makeURLRelativeToGame(newName)), 'utf8', fileContents[scriptURL], saveAndReloadProject);
 }
 
 

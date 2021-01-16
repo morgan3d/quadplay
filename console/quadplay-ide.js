@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.01.09.10';
+const version  = '2021.01.16.10';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -1700,7 +1700,8 @@ function saveIDEState() {
         'debugWatchEnabled': document.getElementById('debugWatchEnabled').checked,
         'debugPrintEnabled': document.getElementById('debugPrintEnabled').checked,
         'restartOnFocusEnabled': document.getElementById('restartOnFocusEnabled').checked,
-        'codeEditorFontSize': '' + codeEditorFontSize
+        'codeEditorFontSize': '' + codeEditorFontSize,
+        'autoplayOnLoad': document.getElementById('autoplayOnLoad').checked
     };
 
     // Find the selected debugger tab
@@ -3017,8 +3018,8 @@ function onOpenGameTypeChange() {
 /* Called from the "Open" button */
 function onOpenGameOpen() {
     onStopButton();
-    
     const autoplay = document.getElementById('autoplayOnLoad').checked;
+    hideOpenGameDialog();
     loadGameFromUrl(openGameFiles.selected, autoplay);
 
     // Loading the game directly would be faster, however it
@@ -3026,7 +3027,6 @@ function onOpenGameOpen() {
     // will make reloading the page confusingly change games.
     /*
     loadGameIntoIDE(openGameFiles.selected, function () {
-        hideOpenGameDialog();
         if (autoplay) {
             onPlayButton(false, true);
         }
@@ -3046,6 +3046,7 @@ function onOpenGameListSelect(target, url) {
 
 
 function hideOpenGameDialog() {
+    saveIDEState();
     document.getElementById('openGameDialog').classList.add('hidden');
     openGameFiles = null;
 }
@@ -4334,10 +4335,15 @@ if (! localStorage.getItem('debugWatchEnabled')) {
     localStorage.setItem('debugWatchEnabled', 'true')
 }
 
+if (! localStorage.getItem('autoplayOnLoad')) {
+    // Default to true
+    localStorage.setItem('autoplayOnLoad', 'true')
+}
+
 document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanceTab').checked = true;
 
 {
-    const optionNames = ['showPhysicsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'todoEnabled', 'automathEnabled', 'debugPrintEnabled', 'debugWatchEnabled', 'restartOnFocusEnabled'];
+    const optionNames = ['showPhysicsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'todoEnabled', 'automathEnabled', 'debugPrintEnabled', 'debugWatchEnabled', 'restartOnFocusEnabled', 'autoplayOnLoad'];
     for (let i = 0; i < optionNames.length; ++i) {
         const name = optionNames[i];
         const value = JSON.parse(localStorage.getItem(name) || 'false');

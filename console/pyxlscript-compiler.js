@@ -1029,15 +1029,15 @@ function pyxlToJS(src, noYield, internalMode) {
     src = processBars(src, '‖', 'magnitude');
 
     // Convert hexadecimal and binary so that it is not interpreted as implicit multiplication of 0 * x
-    src = src.replace(/([^A-Za-z0-9αβγδζηθιλμρσϕφχτψωΩ_]|^)0x([A-Fa-f0-9]+)([^A-Za-z0-9αβγδζηθιλμρσϕφχτψωΩ_]|$)/g,
-                      function (match, pre, num, post) {
-                          return pre + ' (' + parseInt(num, 16) + ') ' + post;
+    src = src.replace(/([^A-Za-z0-9αβγδζηθιλμρσϕφχτψωΩ_]|^)0x([A-Fa-f0-9]+)/g,
+                      function (match, pre, num) {
+                          return pre + ' (' + parseInt(num, 16) + ') ';
                       });
-    src = src.replace(/([^A-Za-z0-9αβγδζηθιλμρσϕφχτψωΩ_]|^)0b([01]+)([^A-Za-z0-9αβγδζηθιλμρσϕφχτψωΩ_]|$)/g,
-                      function (match, pre, num, post) {
-                          return pre + ' (' + parseInt(num, 2) + ') ' + post;
+    src = src.replace(/([^A-Za-z0-9αβγδζηθιλμρσϕφχτψωΩ_]|^)0b([01]+)/g,
+                      function (match, pre, num) {
+                          return pre + ' (' + parseInt(num, 2) + ') ';
                       });
-
+     
     // #deg -> #°, so that it will not be detected as implicit multiplication
     // by a variable beginning with "deg"
     src = src.replace(/(\d+|\d\.\d*|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒])([ ]*deg\b)/g, '$1°');
@@ -1154,7 +1154,6 @@ function pyxlToJS(src, noYield, internalMode) {
     // Debug statements
     src = src.replace(/\bassert\b/g, '$assertEnabled && assert');
     src = src.replace(/\btodo[ \t]*\(/g, '$todoEnabled && $todo(');
-    src = src.replace(/\btodo\b/g, '$todoEnabled && $todo()');
     src = src.replace(/\bdebug_print[ \t]*\(/g, '$debugPrintEnabled && debug_print(SOURCE_LOCATION, ');
 
     // DEFAULT operators. We replace these with (the unused in pyxlscript) '=='

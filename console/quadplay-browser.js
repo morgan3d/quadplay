@@ -637,7 +637,6 @@ let emulatorButtonState = {};
 
 /** All sound sources that are playing */
 const activeSoundHandleMap = new Map();
-//const pausedSoundHandleArray = [];
 
 function soundSourceOnEnded() {
     this.state = 'ENDED';
@@ -673,7 +672,7 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
     source.state = 'PLAYING';
     
     if (! source.start) {
-        // Backwards compatibility
+        // Backwards compatibility, needed on Safari
         source.start = source.noteOn;
         source.stop  = source.noteOff;
     }
@@ -684,7 +683,7 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
     source.loop = loop;
    
     activeSoundHandleMap.set(handle, true);
-    handle._ = source;
+    handle.$source = source;
     
     handle.audioClip = audioClip;
 
@@ -707,63 +706,63 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
 const audioRampTime = 1 / 60;
 
 function set_volume(handle, volume) {
-    if (! (handle && handle._)) {
+    if (! (handle && handle.$source)) {
         throw new Error("Must call set_volume() on a sound returned from play_sound()");
     }
-    handle._.volume = volume;
-    volume *= handle._.audioClip.$base_volume;
-    handle._.gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + audioRampTime);
+    handle.$source.volume = volume;
+    volume *= handle.$source.audioClip.$base_volume;
+    handle.$source.gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + audioRampTime);
 }
 
 
 function set_playback_rate(handle, rate) {
-    if (! (handle && handle._)) {
+    if (! (handle && handle.$source)) {
         throw new Error("Must call set_volume() on a sound returned from play_sound()");
     }
-    handle._.rate = rate;
-    rate *= handle._.audioClip.$base_rate;
-    handle._.playbackRate.value = rate;
+    handle.$source.rate = rate;
+    rate *= handle.$source.audioClip.$base_rate;
+    handle.$source.playbackRate.value = rate;
 }
 
 
 function set_pan(handle, pan) {
-    if (! (handle && handle._)) {
+    if (! (handle && handle.$source)) {
         throw new Error("Must call set_pan() on a sound returned from play_sound()");
     }
     pan = Math.min(1, Math.max(-1, pan))
 
-    handle._.pan = pan;
+    handle.$source.pan = pan;
     
-    pan += handle._.audioClip.$base_pan;
+    pan += handle.$source.audioClip.$base_pan;
     pan = Math.min(1, Math.max(-1, pan))
-    if (handle._.panNode.pan) {
-        handle._.panNode.pan.linearRampToValueAtTime(pan, audioContext.currentTime + audioRampTime);
+    if (handle.$source.panNode.pan) {
+        handle.$source.panNode.pan.linearRampToValueAtTime(pan, audioContext.currentTime + audioRampTime);
     } else {
         // Safari fallback
-        handle._.panNode.setPosition(pan, 0, 1 - Math.abs(pan));
+        handle.$source.panNode.setPosition(pan, 0, 1 - Math.abs(pan));
     }
 }
 
 
 function set_pitch(handle, pitch) {
-    if (! (handle && handle._)) {
+    if (! (handle && handle.$source)) {
         throw new Error("Must call set_pitch() on a sound returned from play_sound()");
     }
-    handle._.pitch = pitch;
-    pitch *= handle._.audioClip.$base_pitch;
-    if (handle._.detune) {
+    handle.$source.pitch = pitch;
+    pitch *= handle.$source.audioClip.$base_pitch;
+    if (handle.$source.detune) {
         // Doesn't work on Safari
-        handle._.detune.linearRampToValueAtTime((pitch - 1) * 1200, audioContext.currentTime + audioRampTime);
+        handle.$source.detune.linearRampToValueAtTime((pitch - 1) * 1200, audioContext.currentTime + audioRampTime);
     }
 }
 
 
 function get_audio_status(handle) {
-    if (! (handle && handle._)) {
+    if (! (handle && handle.$source)) {
         throw new Error("Must call get_sound_status() on a sound returned from play_sound()");
     }
 
-    const source = handle._;
+    const source = handle.$source;
     
     return {
         pitch:    source.pitch,
@@ -814,12 +813,13 @@ function play_sound(audioClip, loop, volume, pan, pitch, time, rate, stopped) {
 
 // Exported to QRuntime
 function resume_audio(handle) {
-    if (! (handle && handle._ && handle._.stop)) {
+    if (! (handle && handle.$source && handle.$source.stop)) {
         throw new Error("resume_audio() takes one argument that is the handle returned from play_sound()");
     }
-    if (handle._.resumePositionMs) {
+    
+    if (handle.$source.state === 'STOPPED') {
         // Actually was paused/stopped, so we need to restart
-        internalSoundSourcePlay(handle, handle._.audioClip, handle._.resumePositionMs, handle._.loop, handle._.volume, handle._.pitch, handle._.pan, handle._.rate);
+        internalSoundSourcePlay(handle, handle.$source.audioClip, handle.$source.resumePositionMs, handle.$source.loop, handle.$source.volume, handle.$source.pitch, handle.$source.pan, handle.$source.rate);
     }
 }
 
@@ -829,13 +829,14 @@ function stop_audio(handle) {
     // Intentionally fail silently
     if (handle === undefined) { return; }
     
-    if (! (handle && handle._ && handle._.stop)) {
+    if (! (handle && handle.$source && handle.$source.stop)) {
         throw new Error("stop_audio() takes one argument that is the handle returned from play_sound()");
     }
     
     try {
-        handle._.state = 'STOPPED';
-        handle._.stop();
+        handle.$source.state = 'STOPPED';
+        handle.$source.resumePositionMs = Date.now() - handle.$source.startTimeMs;
+        handle.$source.stop();
     } catch (e) {
         // Ignore invalid state error if loading has not succeeded yet
     }
@@ -843,39 +844,23 @@ function stop_audio(handle) {
 
 
 function pauseAllSounds() {
-    /*
-    // We can't save the iterator itself because that doesn't keep the
-    // sounds alive, so we store a duplicate array.
-    pausedSoundHandleArray.length = 0;
-    for (const handle of activeSoundHandleMap.keys()) {
-        pausedSoundHandleArray.push(handle);
-        try { handle._.stop(); } catch (e) {}
-    }*/
     audioContext.suspend();
 }
 
 
 function stopAllSounds() {
-    //pausedSoundHandleArray.length = 0;
-    for (const handle of activeSoundHandleMap.keys()) {
-        try { handle._.stop(); } catch (e) {}
-    }
-    activeSoundHandleMap.clear();
-
     // Resume in case we were paused
     audioContext.resume();
+
+    for (const handle of activeSoundHandleMap.keys()) {
+        try { handle.$source.stop(); } catch (e) {}
+    }
+    activeSoundHandleMap.clear();
 }
 
 
 function resumeAllSounds() {
     audioContext.resume();
-    /*
-    for (const handle of pausedSoundHandleArray) {
-        // Have to recreate, since no way to restart 
-        internalSoundSourcePlay(handle, handle._.audioClip, handle._.resumePositionMs, handle._.loop, handle._.volume, handle._.pitch, handle._.pan, handle._.rate);
-    }
-    pausedSoundHandleArray.length = 0;
-    */
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
