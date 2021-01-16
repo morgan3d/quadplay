@@ -190,9 +190,14 @@ function clearAssetCache() {
     }
 }
 
+let inGameLoad = false;
 
 // Loads the game and then runs the callback() or errorCallback()
 function afterLoadGame(gameURL, callback, errorCallback) {
+    console.assert(! inGameLoad, 'Reentrant call to afterLoadGame()!');
+    //console.log('Starting game load');
+    inGameLoad = true;
+
     // Use a random starting ID so that programmers who don't read the
     // manual won't assume it will be the same for each run and start
     // hardcoding constants that future implementation changes may break.
@@ -202,9 +207,15 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         callback: function () {
             computeCredits(gameSource);
             computeResourceStats(gameSource);
+            //console.log('Done game load\n\n');
+            inGameLoad = false;
             if (callback) { callback(); }
         },
-        errorCallback: errorCallback,
+        errorCallback: function (...args) {
+            inGameLoad = false;
+            //console.log('Done game load (error)\n\n');
+            errorCallback(...args);
+        },
         jsonParser: 'permissive',
         forceReload: false});
 
@@ -480,8 +491,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
     },
       loadFailureCallback,
       loadWarningCallback,
-      // Always force reload; otherwise constants can get screwed up
-      true);//computeForceReloadFlag(gameURL));
+      true);
 
     loadManager.end();
 }

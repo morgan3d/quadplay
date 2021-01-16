@@ -642,6 +642,12 @@ function soundSourceOnEnded() {
     this.state = 'ENDED';
     this.resumePositionMs = Date.now() - this.startTimeMs;
     activeSoundHandleMap.delete(this.handle);
+
+    // The specification is not clear on whether we must disconnect
+    // the nodes or not when the sound ends.
+    this.gainNode.disconnect();
+    this.panNode.disconnect();
+    this.disconnect();
 }
 
 

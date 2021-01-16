@@ -157,17 +157,17 @@ function serverScheduleSaveGameJSON(delaySeconds) {
    presumably been modified by the caller */
 function serverSaveGameJSON(callback) {
     console.assert(gameSource.jsonURL);
-    const gameFilename = urlToFilename(gameSource.jsonURL);
-    console.assert(gameFilename.endsWith('.game.json'));
+    const webpath = urlToLocalWebPath(gameSource.jsonURL);
+    console.assert(webpath.endsWith('.game.json'));
  
     const gameContents = WorkJSON.stringify(gameSource.json, undefined, 4);
-    serverWriteFile(gameFilename, 'utf8', gameContents, callback);
+    serverWriteFile(webpath, 'utf8', gameContents, callback);
 }
 
 
 function serverSaveDebugJSON(callback) {
     console.assert(gameSource.jsonURL);
-    const debugFilename = urlToFilename(gameSource.jsonURL).replace(/\.game\.json$/, '.debug.json');
+    const debugFilename = urlToLocalWebPath(gameSource.jsonURL).replace(/\.game\.json$/, '.debug.json');
  
     const debugContents = WorkJSON.stringify(gameSource.debug.json || {}, undefined, 4);
     serverWriteFile(debugFilename, 'utf8', debugContents, callback);

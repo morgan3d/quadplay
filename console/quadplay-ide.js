@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.01.16.10';
+const version  = '2021.01.16.17';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -2499,7 +2499,7 @@ function visualizeGame(gameEditor, url, game) {
     s += '<tr valign="top"><td>Path</td><td colspan=3>' + url + '</td></tr>\n';
 
     if (editableProject) {
-        const filename = serverConfig.rootPath + urlToFilename(url);
+        const filename = serverConfig.rootPath + urlToLocalWebPath(url);
         // The second regexp removes the leading slash on windows
         let path = filename.replace(/\/[^.\/\\]+?\.game\.json$/, '').replace(/^\/([a-zA-Z]:\/)/, '$1');
         if (path.length > 0 && path[path.length - 1] !== '/') { path += '/'; }
@@ -3018,8 +3018,8 @@ function onOpenGameTypeChange() {
 /* Called from the "Open" button */
 function onOpenGameOpen() {
     onStopButton();
+    saveIDEState();
     const autoplay = document.getElementById('autoplayOnLoad').checked;
-    hideOpenGameDialog();
     loadGameFromUrl(openGameFiles.selected, autoplay);
 
     // Loading the game directly would be faster, however it
@@ -4263,6 +4263,11 @@ window.addEventListener('focus', function() {
     // Quadplay development; avoid autoreloading because
     // it makes debugging the compiler and IDE difficult
     if (! AUTO_RELOAD_ON_FOCUS) { return; }
+
+    if (inGameLoad) {
+        console.log('Suppressed re-entrant game load triggered by focus event');
+        return;
+    }
 
     if (editableProject && useIDE && isQuadserver) {
         if (document.getElementById('restartOnFocusEnabled').checked) {

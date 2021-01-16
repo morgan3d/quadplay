@@ -155,6 +155,14 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
     # Directories that should be excluded from filesystem searches
     special_dir_regex = re.compile('(^|/)(journal|screenshots|metadata|backlot|graveyard)/', re.IGNORECASE)
 
+    # Files that can be written or deleted by the IDE
+    mutable_file_regex = re.compile(r'\.(json|xml|pyxl|png|pdf|yml|yaml|html|txt|md|tmx|mp3)$')
+
+    # Files that should not print error messages to the script's terminal if not
+    # found (there is no way to stop these from printing errors to the browser's
+    # console).
+    silent_404_file_regex = re.compile(r'(\.debug\.json|(^|/)label(64|128)\.png|favicon\.png)$')
+
     # Add custom headers
     def end_headers(self):
         # CORS:
@@ -207,19 +215,27 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         if not object: return
         path_parts = self.path.split('?')
         webpath = os.path.normpath(path_parts[0]).replace('\\', '/')
-        print('DELETE ' + webpath)
 
-        os.remove(webpath)
+        print('DELETE', webpath) # TODO Remove
+        code = 200
+        filename = remove_leading_slash(webpath)
+        if not re.search(self.mutable_file_regex, filename) or not any([webpath.startswith(prefix) for prefix in webpath_allowlist]):
+            print('WARNING: Ignored illegal request to delete file', filename)
+            response_obj = 'Illegal'
+            code = 401
+        else:
+            print('deleted file', filename)
+            os.remove(filename)
         
         response = json.dumps('OK', separators = (',', ':'));
-        self.send_response(200)
+        self.send_response(code)
         self.send_header('Content-type', 'text/json')
         self.send_header('Content-length', len(response))
         self.end_headers()
         self.wfile.write(response.encode('utf8'))
         
     
-    # Used for the IDE to write files. Currently disabled on the IDE side
+    # Used for the IDE to write files
     def do_POST(self):
         #print('\n\nReceived POST from ', self.client_address[0], '\n\n')
 
@@ -231,12 +247,12 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         response_obj = None
         code = 201
         if command == 'write_file':
-            filename = remove_leading_slash(object['filename'])
+            webpath = object['url']
+            filename = remove_leading_slash(webpath)
             encoding = object['encoding']
             contents = object['contents']
-            if not re.search(re.compile(r'\.(json|pyxl|png|html|txt|md|tmx|mp3)$'), filename):
-                print('Wrote', encoding, 'file', filename)
-                print('WARNING: Ignored request to write illegal file', filename)
+            if not re.search(self.mutable_file_regex, filename) or not any([webpath.startswith(prefix) for prefix in webpath_allowlist]):
+                print('WARNING: Ignored illegal request to write file', filename)
                 response_obj = 'Illegal'
                 code = 401
             else:
@@ -473,7 +489,15 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             self.send_header('Content-length', len(response))
             self.end_headers()
             self.wfile.write(response.encode('utf8'))
+        elif re.search(self.silent_404_file_regex, webpath) and not os.path.exists(remove_leading_slash(webpath)):
+            # Check to see if this file does not exist. If it does
+            # not, return the 404 error but do not print to the terminal
+            self.send_response(404)
+            self.send_header('Content-type', 'text/json')
+            self.send_header('Content-length', 0)
+            self.end_headers()
         else:
+            # Serve the file
             f = self.send_head()
             if f:
                try:

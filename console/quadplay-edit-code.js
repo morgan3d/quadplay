@@ -547,7 +547,7 @@ function createCodeEditorSession(url, bodyText, assetName) {
                     // If this is present in a cache, delete it
                     delete assetCache[url];
 
-                    const filename = urlToFilename(url);
+                    const filename = urlToLocalWebPath(url);
                     serverWriteFile(filename, 'utf8', contents, function () {
 
                         // If JSON, see if the current contents can
@@ -642,17 +642,14 @@ function postToServer(payload, callback, errorCallback) {
     
     xhr.onreadystatechange = function() {
         if (this.readyState === XMLHttpRequest.DONE) {
-            // Request finished. Do processing here.
-            const jsonResponse = WorkJSON.parse(xhr.response);
-            if ((this.status >= 200) && (this.status <= 299)) {
-                if (callback) {
-                    // Give the server a little more time to catch up
-                    // if it is writing to disk and needs to flush or
-                    // such before invoking the callback.
-                    setTimeout(function () { callback(jsonResponse, this.status); }, 150);
-                }
-            } else if (errorCallback) {
-                errorCallback(jsonResponse, this.status);
+            // Request finished. Do callback processing here.
+            const fcn = ((this.status >= 200) && (this.status <= 299)) ?
+                  callback :
+                  errorCallback;
+
+            // Run the callback if there is one
+            if (fcn) {
+                fcn(WorkJSON.parse(xhr.response), this.status);
             }
         }
     }
@@ -661,8 +658,8 @@ function postToServer(payload, callback, errorCallback) {
 }
 
 
-/* Convert a URL to a local filename suitable for use with serverWriteFile() */
-function urlToFilename(url) {
+/* Convert a URL to a local webpath suitable for use with serverWriteFile() */
+function urlToLocalWebPath(url) {
     console.assert(url !== undefined);
     url = url.replace(/\\/g, '/');
     
@@ -684,10 +681,10 @@ function urlToFilename(url) {
 
    The contents may be a string or arraybuffer. To convert JSON to a string,
    use WorkJSON.stringify. */
-function serverWriteFile(filename, encoding, contents, callback, errorCallback) {
+function serverWriteFile(webpath, encoding, contents, callback, errorCallback) {
     console.assert(encoding === 'utf8' || encoding === 'binary');
     console.assert(contents !== undefined);
-    console.assert(! /^http[s]:\/\//.test(filename), 'serverWriteFile() expects a filename, not a URL');
+    console.assert(! /^http[s]:\/\//.test(webpath), 'serverWriteFile() expects a local webpath, not a URL');
     
     if (typeof contents !== 'string') {
         console.assert(contents.byteLength !== undefined && encoding === 'binary');
@@ -706,20 +703,21 @@ function serverWriteFile(filename, encoding, contents, callback, errorCallback) 
 
     postToServer({
         command: 'write_file',
-        filename: filename,
+        url: webpath,
         encoding: encoding,
         contents: contents
     }, callback, errorCallback);
 
-    if (filename.endsWith('.pyxl')) {
+    if (webpath.endsWith('.pyxl')) {
         updateTodoList();
     }
 }
 
 
-function serverDeleteURL(url, callback, errorCallback) {
+function serverDeleteFile(url, callback, errorCallback) {
     console.assert(locallyHosted());
 
+    console.log('Deleting', url);
     const xhr = new XMLHttpRequest();
     xhr.open("DELETE", url, true);
 
@@ -729,7 +727,6 @@ function serverDeleteURL(url, callback, errorCallback) {
     xhr.onreadystatechange = function() {
         if (this.readyState === XMLHttpRequest.DONE) {
             // Request finished. Do processing here.
-            console.log(xhr.response);
             const jsonResponse = /^[ \t\n]*$/.test(xhr.response) ? undefined : WorkJSON.parse(xhr.response);
             if ((this.status >= 200) && (this.status <= 299)) {
                 if (callback) {
@@ -1523,7 +1520,7 @@ function onRenameMode(modeName) {
     }
 
     const oldURL = makeURLAbsolute(gameSource.jsonURL, modeName + '.pyxl');
-    function deleteOldFile() { serverDeleteURL(oldURL); }
+    function deleteOldFile() { serverDeleteFile(oldURL); }
 
     
     function saveAndReloadProject() {
@@ -1537,7 +1534,7 @@ function onRenameMode(modeName) {
 
     // Save mode under the new name, renaming the file
     const code = fileContents[oldURL].replace(new RegExp(`(^|\n)${modeName}[ \t]*(?=\n===|\n═══)`), '$1' + newName);
-    serverWriteFile(urlToFilename(makeURLRelativeToGame(newName + '.pyxl')), 'utf8', code, saveAndReloadProject);
+    serverWriteFile(urlToLocalWebPath(makeURLRelativeToGame(newName + '.pyxl')), 'utf8', code, saveAndReloadProject);
 }
 
 
@@ -1618,21 +1615,25 @@ function onRenameScript(scriptURL) {
     console.assert(index !== -1);
     gameSource.json.scripts.splice(index, 1, newName);
 
+    // Callback sequence is:
+    //
+    // save script as the new name ->
+    //   save the game.json ->
+    //     reload the game ->
+    //       delete the old file
+    
     function deleteOldFile() {
-        serverDeleteURL(makeURLAbsolute(gameSource.jsonURL, scriptURL));
+        serverDeleteFile(makeURLAbsolute(gameSource.jsonURL, scriptURL));
     }
 
     function saveAndReloadProject() {
-        console.log(gameSource.jsonURL);
         console.assert(gameSource.jsonURL);
-        console.assert(window.gameURL);
         serverSaveGameJSON(function () {
             loadGameIntoIDE(window.gameURL, deleteOldFile, true);
         });
     }
     
-    // Save script as the new name
-    serverWriteFile(urlToFilename(makeURLRelativeToGame(newName)), 'utf8', fileContents[scriptURL], saveAndReloadProject);
+    serverWriteFile(urlToLocalWebPath(makeURLRelativeToGame(newName)), 'utf8', fileContents[scriptURL], saveAndReloadProject);
 }
 
 

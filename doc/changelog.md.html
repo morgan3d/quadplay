@@ -10,18 +10,22 @@ of [quadplay✜](manual.md.html).
 ===================================
 
 - Made Windows 10 `quadplay` script robust to the Windows `python.exe` shim using `py.exe`
-- Slightly reduced CPU usage for audio when paused
-- Halved audio memory consumption and audio bandwidth for online play
-  by reducing internal audio mixing to 22 kHz
 - Changed manual syntax highlight colors to match the IDE
 - Increased usage of the quadplay font in the IDE
 - Persisted autoload checkbox on Open Game dialog between sessions
 - Added "Rename Mode" context menu
+- Made the `quadplay` command line script not print terminal 404 errors for missing
+  files that are optional, such as `.debug.json` files
 - Protected internal state of audio clips
 - Required parentheses for `todo()`
+- Slightly reduced CPU usage for audio when paused
+- Halved audio memory consumption and audio bandwidth for online play
+  by reducing internal audio mixing to 22 kHz
+- Optimized audio processing
 - Fixed parsing of hexadecimal or binary constants separated by a single character
 - Fixed `resume_audio()`
 - Fixed `todo()` in todo-as-error mode
+- Fixed in-IDE script renaming to remove the old version
 - Fixed GIF recording on Firefox
 - Fixed syntax highlighting in the manual for functions with digits in the name
 - Fixed the use of global color constants in `draw_text()` markup
