@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.01.16.17';
+const version  = '2021.01.17.00';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -1333,7 +1333,18 @@ function onError(e) {
     e = jsToPSError(e);
 
     // Try to compute a short URL
-    setErrorStatus(shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message);
+    setErrorStatus((e.fcn !== '?' ? e.fcn + ' at ' : '') + shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message);
+    if (e.stack && e.stack.length > 0) {
+        for (let i = 0; i < e.stack.length; ++i) {
+            const entry = e.stack[i];
+            if (entry.url) {
+                $outputAppend(`<span style="color:#f55">  from ${entry.fcn} at ${shortURL(entry.url)} line ${entry.lineNumber}<span>\n`);
+            } else {
+                // Safari case, no line numbers
+                $outputAppend(`<span style="color:#f55">  from ${entry.fcn}<span>\n`);
+            }
+        }
+    }
     editorGotoFileLine(e.url, e.lineNumber, undefined, true);
 }
 
@@ -3100,26 +3111,84 @@ function jsToPSError(error) {
            
     // Firefox
     let lineNumber = error.lineNumber;
+    let resultFcn = '?';
+    let resultStack = [];
 
-    // Find the first place in the user program that the problem occurred (Firefox and Chrome)
+    const lineArray = compiledProgram.split('\n');
+    
+    // Find the first place in the user program that the problem
+    // occurred.
     if (error.stack) {
         const stack = error.stack.split('\n');
-        if ((stack.length > 0) && ! /GeneratorFunction|anonymous/.test(stack[0])) {
+        if (stack.length > 0) {
             if (isSafari) {
                 // Safari doesn't give line numbers inside generated
-                // code except for the top of the stack. At least find
-                // the name of the offending function.
-                for (let i = 1; i < stack.length; ++i) {
-                    if (stack[i].indexOf('quadplay-runtime.js') === -1) {
+                // code except for the top of the stack.
+                for (let i = 0; i < stack.length; ++i) {
+                    if (stack[i].indexOf('quadplay-runtime-') === -1) {
+                        // This is the beginning of the user call stack
                         lineNumber = QRuntime.$currentLineNumber + 2;
-                        //return {url:'(unknown)', lineNumber:'(unknown)', message: stack[i] + ': ' + error};
+
+                        let first = true;
+                        while ((i < stack.length) &&
+                               stack[i] !== '' &&
+                               stack[i] !== 'anonymous' &&
+                               stack[i].indexOf('[native') === -1) {
+                            if (first) {
+                                resultFcn = stack[i] + '()';
+                                first = false;
+                            } else {
+                                resultStack.push({fcn:stack[i] + '()'});
+                            }
+                            ++i;
+                        }
+                        break;
                     }
                 }
             } else {
-                for (let i = 1; i < stack.length; ++i) {
+                // Entry 0 in the "stack" is actually the error message on Chromium
+                // browsers
+                if (isEdge || isChrome) { stack.shift(); }
+
+                // Search for the first user-space error
+                for (let i = 0; i < stack.length; ++i) {
                     const match = stack[i].match(/(?:GeneratorFunction|<anonymous>):(\d+):/);
+
                     if (match) {
+                        // Found a user-space error
                         lineNumber = parseInt(match[1]);
+
+                        // Parse the function name
+                        resultFcn = stack[i].match(/^(?:[ \t]*(?:at[ \t]+)?)([^\.\n \n\(\):@\/]+)/);
+                        resultFcn = resultFcn ? resultFcn[1] : '?';
+                        if (resultFcn === 'anonymous' || resultFcn === 'eval') { resultFcn = '?'; }
+                        if (resultFcn !== '?') { resultFcn += '()'; }
+
+                        // Read from here until the top of the user stack
+                        ++i;
+                        while (i < stack.length) {
+                            const match = stack[i].match(/(?:GeneratorFunction|<anonymous>):(\d+):/);
+                            if (! match) { break; }
+
+                            // Parse the function name
+                            let fcn = stack[i].match(/^(?:[ \t]*(?:at[ \t]+)?)([^\.\n \n\(\):@\/]+)/);
+                            fcn = fcn ? fcn[1] : '?';
+                            let done = false;
+                            if (fcn === 'anonymous' || fcn === 'eval') {
+                                fcn = '?';
+                                done = true;
+                            }
+
+                            if (fcn !== '?') { fcn += '()'; }
+
+                            // Convert line numbers
+                            const stackEntry = jsToPyxlLineNumber(parseInt(match[1]), lineArray);
+
+                            resultStack.push({url: stackEntry.url, lineNumber: stackEntry.lineNumber, fcn: fcn});
+                            if (done) { break; }
+                            ++i;
+                        }
+                        
                         break;
                     }
                 }
@@ -3140,15 +3209,30 @@ function jsToPSError(error) {
         }
     }
 
-    if (error.stack && (error.stack.indexOf('<anonymous>') === -1) && (error.stack.indexOf('GeneratorFunction') === -1) && (error.stack.indexOf('quadplay-runtime.js') !== -1)) {
-        return {url:'(unknown)', lineNumber: '(unknown)', message: '' + error};
+    if ((error.stack &&
+        (error.stack.indexOf('<anonymous>') === -1) &&
+         (error.stack.indexOf('GeneratorFunction') === -1) &&
+         (error.stack.indexOf('quadplay-runtime.js') !== -1)) ||
+        ! lineNumber) {
+        return {url:'(unknown)', lineNumber: '(unknown)', message: '' + error, stack: resultStack, fcn: resultFcn};
     }
 
-    if (! lineNumber) {
-        return {url: '(unknown)', lineNumber: '(unknown)', message:'' + error};
-    }
-    
-    const lineArray = compiledProgram.split('\n');
+    const result = jsToPyxlLineNumber(lineNumber, lineArray);
+
+    return {
+        url: result.url,
+        lineNumber: result.lineNumber,
+        fcn: resultFcn,
+        message: error.message.replace(/\bundefined\b/g, 'nil').replace(/&&/g, 'and').replace(/\|\|/g, 'or').replace(/===/g, '==').replace(/!==/g, '!='),
+        stack: resultStack
+    };
+}
+
+
+/* Returns {url: string, lineNumber: number}. Used for translating error messages. */
+function jsToPyxlLineNumber(lineNumber, lineArray) {
+    // If the line array was not precomputed
+    lineArray = lineArray || compiledProgram.split('\n');
 
     // Look backwards from error.lineNumber for '/*@"'
     let urlLineIndex, urlCharIndex = -1;
@@ -3161,9 +3245,8 @@ function jsToPSError(error) {
     ++urlLineIndex;
 
     const result = parseCompilerLineDirective(lineArray[urlLineIndex]);
-    
-    return {url: result.url, lineNumber: lineNumber - urlLineIndex - 3 + result.lineNumber,
-            message: error.message.replace(/\bundefined\b/g, 'nil').replace(/&&/g, 'and').replace(/\|\|/g, 'or').replace(/===/g, '==').replace(/!==/g, '!=')};
+
+    return {url: result.url, lineNumber: lineNumber - urlLineIndex - 3 + result.lineNumber};
 }
 
 

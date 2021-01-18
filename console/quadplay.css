@@ -685,6 +685,9 @@ code, .code {
 #debugger > label {
     font-family: quadplay;
     font-size: 13px;
+    min-width: 58px;
+    padding-left: 2px;
+    padding-right: 2px;
 }
 
 .WideIDEUI #debugger {
