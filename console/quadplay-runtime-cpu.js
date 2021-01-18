@@ -8922,7 +8922,7 @@ function pow(a, b) {
         for (let key in b) c[key] = $Math.pow(a, b[key]);
         return $Object.isFrozen(a) ? $Object.freeze(c) : c;
     } else {
-        return $Math.ceil(a, b);
+        return $Math.pow(a, b);
     }
 }
 
