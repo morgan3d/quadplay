@@ -1176,7 +1176,7 @@ function pyxlToJS(src, noYield, internalMode) {
             operatorPrefix: '$'
         });
     } catch (e) {
-        console.log(unprotectQuotedStrings(src, stringProtectionMap));
+        //console.log(unprotectQuotedStrings(src, stringProtectionMap));
         throw e;
     }
 

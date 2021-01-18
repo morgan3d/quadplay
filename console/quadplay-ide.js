@@ -3108,7 +3108,7 @@ function debug_watch(location, expression, value) {
  */
 function jsToPSError(error) {
     console.log(error);
-           
+    
     // Firefox
     let lineNumber = error.lineNumber;
     let resultFcn = '?';

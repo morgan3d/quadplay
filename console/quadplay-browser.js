@@ -638,9 +638,12 @@ let emulatorButtonState = {};
 /** All sound sources that are playing */
 const activeSoundHandleMap = new Map();
 
+/** Called for both hitting the end naturally and stop_audio() */
 function soundSourceOnEnded() {
-    this.state = 'ENDED';
-    this.resumePositionMs = Date.now() - this.startTimeMs;
+    if (this.state === 'PLAYING') {
+        this.state = 'ENDED';
+        this.resumePositionMs = audioContext.currentTime * 1000 - this.startTimeMs;
+    }
     activeSoundHandleMap.delete(this.handle);
 
     // The specification is not clear on whether we must disconnect
@@ -655,7 +658,6 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
     if (stopped === undefined) { stopped = false; }
     pan = Math.min(1, Math.max(-1, pan))
     
-    // A new source must be created every time that the sound is played
     const source = audioContext.createBufferSource();
     source.buffer = audioClip.$buffer;
 
@@ -685,7 +687,7 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
     
     source.handle = handle;
     source.audioClip = audioClip;
-    source.startTimeMs = Date.now() - startPositionMs;
+    source.startTimeMs = audioContext.currentTime * 1000 - startPositionMs;
     source.loop = loop;
    
     activeSoundHandleMap.set(handle, true);
@@ -769,14 +771,24 @@ function get_audio_status(handle) {
     }
 
     const source = handle.$source;
-    
+
+    let frame;
+    if (source.state === 'PLAYING') {
+        frame = audioContext.currentTime * 1000 - source.startTimeMs;
+    } else {
+        frame = source.resumePositionMs;
+    }
+    // Convert to 60 fps
+    frame = Math.round(frame * 60 / 1000);
+        
     return {
         pitch:    source.pitch,
         volume:   source.volume,
         playback_rate: source.rate,
         pan:      source.pan,
         loop:     source.loop,
-        state:    source.state
+        state:    source.state,
+        frame:    frame
     }
 }
 
@@ -823,8 +835,10 @@ function resume_audio(handle) {
         throw new Error("resume_audio() takes one argument that is the handle returned from play_sound()");
     }
     
-    if (handle.$source.state === 'STOPPED') {
-        // Actually was paused/stopped, so we need to restart
+    if (handle.$source.state !== 'PLAYING') {
+        // A new source must be created every time that the sound is
+        // played or resumed. There is no way to pause a source in the
+        // current WebAudio API.
         internalSoundSourcePlay(handle, handle.$source.audioClip, handle.$source.resumePositionMs, handle.$source.loop, handle.$source.volume, handle.$source.pitch, handle.$source.pan, handle.$source.rate);
     }
 }
@@ -839,9 +853,9 @@ function stop_audio(handle) {
         throw new Error("stop_audio() takes one argument that is the handle returned from play_sound()");
     }
     
-    try {
+    try { 
         handle.$source.state = 'STOPPED';
-        handle.$source.resumePositionMs = Date.now() - handle.$source.startTimeMs;
+        handle.$source.resumePositionMs = audioContext.currentTime * 1000 - handle.$source.startTimeMs;
         handle.$source.stop();
     } catch (e) {
         // Ignore invalid state error if loading has not succeeded yet
