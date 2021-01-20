@@ -1,0 +1,100 @@
+{
+    "title": "Piano",
+    "developer": "Casual Effects",
+    "copyright": "©2021 Morgan McGuire",
+    "license": "Public Domain",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "font": "quad://fonts/deja-8.font.json",
+        "title_font": "quad://fonts/weaver-10.font.json",
+        "bossa_nova_sound": "bossa_nova.sound.json",
+        "synth_sound": "synth.sound.json"
+    },
+    "version": 1,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "Example of play_sound() and pitch.",
+    "constants": {
+        "KEY_WIDTH": {
+            "type": "number",
+            "value": 30
+        },
+        "KEY_HEIGHT": {
+            "type": "number",
+            "value": 110
+        },
+        "NUM_WHITE_KEYS": {
+            "type": "number",
+            "value": 15
+        },
+        "BODY_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": 0.89,
+                "g": 0.26,
+                "b": 0.15
+            }
+        },
+        "SPEAKER_POS": {
+            "type": "xy",
+            "value": {
+                "x": 330,
+                "y": 46
+            },
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            }
+        },
+        "SPEAKER_RADIUS": {
+            "type": "number",
+            "value": 40
+        },
+        "BLACK_PLASTIC": {
+            "type": "rgb",
+            "value": {
+                "r": 0.1,
+                "g": 0.1,
+                "b": 0.1
+            }
+        },
+        "OFF_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": 0.64,
+                "g": 0.5,
+                "b": 0.37
+            }
+        },
+        "ON_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": 0.24,
+                "g": 0.27,
+                "b": 0.38
+            }
+        },
+        "LABEL_POS": {
+            "type": "xy",
+            "value": {
+                "x": 26,
+                "y": 27
+            },
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            }
+        }
+    },
+    "screenshot_tag": "Piano"
+}

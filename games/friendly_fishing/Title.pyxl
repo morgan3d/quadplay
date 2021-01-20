@@ -77,7 +77,7 @@ set_background(LAKE_COLOR)
 
 // Always start with this song
 stop_audio(background_audio)
-background_audio = play_sound({sound: BACKGROUND_MUSIC_ARRAY[0], volume: BACKGROUND_MUSIC_VOLUME, rate: BACKGROUND_MUSIC_RATE})
+background_audio = play_sound({sound: BACKGROUND_MUSIC_ARRAY[0], volume: BACKGROUND_MUSIC_VOLUME, playback_rate: BACKGROUND_MUSIC_RATE})
 
 const dummy_record = {name:"MMM", value: 1, date: 0}
 records = load_local("recent_best_data") default {

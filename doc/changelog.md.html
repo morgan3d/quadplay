@@ -9,14 +9,24 @@ of [quadplay✜](manual.md.html).
 2021 January TBD: Beta update 62
 ===================================
 
+- New "Piano" synth demo of using the audio `pitch` feature
+- Audio pause/resume and timestamps are now more accurate
 - Errors now print call stacks to the Output debug pane.
   (Safari cannot print line numbers or URLs in call stacks;
    all other browsers contain full data)
 - Added `frame` property to the return value of `get_audio_status()`
+  to aid in synchronizing visuals with audio
+- Updated the itch.io exporter documentation to the latest itch.io
+  user interface
+- Reverted the itch.io exporter to using Maximal mode instead of kiosk mode
+  so that players on mobile don't get stuck without controls
 - Renamed the default branch for the github quadplay repository to
   `main`
 - Fixed Safari debugger pane layout
-- Fixed `pow()` on two numbers
+- Fixed `stop_audio()` setting the state to `ENDED`
+- Fixed `pow()` on two numbers actually computing `ceil()`
+- Fixed `play_sound()` argument `rate` to `playback_rate` to match
+  state queries.
 
 
 2021 January 16: Beta update 61

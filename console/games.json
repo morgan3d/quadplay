@@ -92,6 +92,11 @@
             "description": "Using the built-in quadplay physics support for vehicles, characters, switches, springs, and moving platforms."
         },
         {
+            "url": "quad://examples/piano/",
+            "title": "Piano",
+            "description": "Example of play_sound() and pitch."
+        },
+        {
             "url": "quad://examples/planetgen/",
             "title": "Planet Generator",
             "description": "Random planet generator with moons, atmosphere, and rings"

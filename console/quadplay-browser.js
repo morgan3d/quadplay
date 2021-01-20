@@ -642,11 +642,11 @@ const activeSoundHandleMap = new Map();
 function soundSourceOnEnded() {
     if (this.state === 'PLAYING') {
         this.state = 'ENDED';
-        this.resumePositionMs = audioContext.currentTime * 1000 - this.startTimeMs;
+        this.resumePositionMs = this.audioContext.currentTime * 1000 - this.startTimeMs;
     }
     activeSoundHandleMap.delete(this.handle);
 
-    // The specification is not clear on whether we must disconnect
+    // The specification is unclear on whether we must disconnect
     // the nodes or not when the sound ends.
     this.gainNode.disconnect();
     this.panNode.disconnect();
@@ -692,6 +692,9 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
    
     activeSoundHandleMap.set(handle, true);
     handle.$source = source;
+
+    // Needed because AudioNode.context is undefined in the onEnded callback
+    handle.$source.audioContext = audioContext;
     
     handle.audioClip = audioClip;
 
@@ -703,6 +706,7 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
     source.start(0, (startPositionMs % (source.buffer.duration * 1000)) / 1000);
     if (stopped) {
         source.stop();
+        source.resumePositionMs = source.startTimeMs;
         source.state = 'STOPPED';
     }
 
@@ -719,7 +723,7 @@ function set_volume(handle, volume) {
     }
     handle.$source.volume = volume;
     volume *= handle.$source.audioClip.$base_volume;
-    handle.$source.gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + audioRampTime);
+    handle.$source.gainNode.gain.linearRampToValueAtTime(volume, handle.$source.context.currentTime + audioRampTime);
 }
 
 
@@ -744,7 +748,7 @@ function set_pan(handle, pan) {
     pan += handle.$source.audioClip.$base_pan;
     pan = Math.min(1, Math.max(-1, pan))
     if (handle.$source.panNode.pan) {
-        handle.$source.panNode.pan.linearRampToValueAtTime(pan, audioContext.currentTime + audioRampTime);
+        handle.$source.panNode.pan.linearRampToValueAtTime(pan, handle.$source.context.currentTime + audioRampTime);
     } else {
         // Safari fallback
         handle.$source.panNode.setPosition(pan, 0, 1 - Math.abs(pan));
@@ -760,7 +764,7 @@ function set_pitch(handle, pitch) {
     pitch *= handle.$source.audioClip.$base_pitch;
     if (handle.$source.detune) {
         // Doesn't work on Safari
-        handle.$source.detune.linearRampToValueAtTime((pitch - 1) * 1200, audioContext.currentTime + audioRampTime);
+        handle.$source.detune.linearRampToValueAtTime((pitch - 1) * 1200, handle.$source.context.currentTime + audioRampTime);
     }
 }
 
@@ -774,7 +778,7 @@ function get_audio_status(handle) {
 
     let frame;
     if (source.state === 'PLAYING') {
-        frame = audioContext.currentTime * 1000 - source.startTimeMs;
+        frame = source.context.currentTime * 1000 - source.startTimeMs;
     } else {
         frame = source.resumePositionMs;
     }
@@ -855,7 +859,7 @@ function stop_audio(handle) {
     
     try { 
         handle.$source.state = 'STOPPED';
-        handle.$source.resumePositionMs = audioContext.currentTime * 1000 - handle.$source.startTimeMs;
+        handle.$source.resumePositionMs = handle.$source.audioContext.currentTime * 1000 - handle.$source.startTimeMs;
         handle.$source.stop();
     } catch (e) {
         // Ignore invalid state error if loading has not succeeded yet

@@ -66,7 +66,7 @@ def generate_standalone(args, out_path, game_path, game_title):
     <link rel="icon" type="image/png" sizes="32x32" href="console/favicon-32x32.png">
   </head>
   <body style="margin: 0; background: #000; position: absolute; top: 0; bottom: 0; left: 0; right: 0">
-    <iframe src="console/quadplay.html?fastReload=1&kiosk=1&game={game_path}" style="width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; border: none"></iframe>
+    <iframe src="console/quadplay.html?fastReload=1&mode=maximal&game={game_path}" style="width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; border: none"></iframe>
   </body>
 </html>
 """

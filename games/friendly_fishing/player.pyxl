@@ -256,7 +256,7 @@ def player_aim(player):
         pos: player.pos + xy(32, -8) * player.face}))
         
     if player.gamepad.bb:
-        player.pull_back_audio = play_sound({sound: pull_back_sound, volume: 50%, pan: player.pos, rate: 50%})
+        player.pull_back_audio = play_sound({sound: pull_back_sound, volume: 50%, pan: player.pos, playback_rate: 50%})
         player.action = player_cast
         player.rod_angle = ROD_ANGLE_MIN
     

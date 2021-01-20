@@ -518,6 +518,11 @@ choreograph series of frame hooks one after the other.
 Atari style grid movement with smooth interpolation and wrapping,
 similar to PAC-MAN, Centipede, etc.
 
+</td></tr><tr><td>![](../examples/piano/label128.png)</td><td>
+[Piano](../console/quadplay.html?game=quad://examples/piano&IDE=1)
+Using `pitch` with `play_sound()` to adjust frequency,
+and data-driven input testing.
+
 </td></tr><tr><td>![](../examples/speedstreet/label128.png)</td><td>
 [Speed Street](../console/quadplay.html?game=quad://examples/speedstreet&IDE=1) is the setup for a four-player competitive racing game inspired by [_Excitebike_](https://en.wikipedia.org/wiki/Excitebike) and Tony Hawk games, using:
 
@@ -2320,14 +2325,26 @@ Sound
 ---------------------------------------------------------
 
 `get_audio_status(audio)`
-: Returns an object describing the current properties of this audio object.
-  The `state` property will have the value `"PLAYING"`, `"STOPPED"`, or `"ENDED"`
+: Returns an object describing the current properties of this audio object:
+  - `pitch`
+  - `volume`
+  - `playback_rate`
+  - `pan`
+  - `loop`
+  - `state`: `"PLAYING"`, `"STOPPED"`, or `"ENDED"`
+  - `frame`: Time since the start of the sound, measured in 1/60 second
+    frames. This is useful for synchronizing visuals with audio. 
+    Audio follows a more strict clock than the mode's frame
+    event, the `mode_frames` value, and the `game_frames` values, which 
+    run in 1/60 second increments but may drift slightly due to computational
+    demands. Graphics are time scaled, so the visual frames may be independent
+    of both the audio clock and the frame events.
 
 `play_sound(args)`
 : Object version of `play_sound()`, allowing keyword argument style call.
   Values default according to the positional argument version.
 
-`play_sound(sound, loop default false, volume default 100%, pan default 0%, pitch default 100%, time default 0, rate default 100%, stopped default false)`
+`play_sound(sound, loop default false, volume default 100%, pan default 0%, pitch default 100%, time default 0, playback_rate default 100%, stopped default false)`
 : Play `sound`, which must have been loaded as an asset. The time
   is in seconds. Full pan left is `-100%` and full pan right is `100%`.
   Returns an audio object that can be used with `stop_audio()`.
@@ -4376,8 +4393,8 @@ When drawing, use `z` arguments to ensure that drawn objects overlap
 in the desired order regardless of the order in which drawing executes.
 
 `add_frame_hook(callback, end_callback, frames, run_in_mode default get_mode(), data default nil)`
-: Register a `callback` function to run every frame for the given number of 
-  `frames`.  The return value of `add_frame_hook()` is a hook that can be
+: Register a `callback` function to run at the end of the "frame" event for the given number of 
+  `frames`. The return value of `add_frame_hook()` is a hook that can be
   passed to `remove_frame_hook()`.
 
   - `callback`: `def callback(framesleft, total_frames, data)`, runs every frame. `framesleft`
@@ -4385,7 +4402,7 @@ in the desired order regardless of the order in which drawing executes.
     This argument may be `nil`. If the callback returns `true`, the hook
     is removed without running the `end_callback`, otherwise it keeps running.
   - `end_callback`: `def end_callback(data)`, runs on the last frame. Can be `nil`.
-  - `frames`: Number of frames to run for. May be `inf`.
+  - `frames`: Number of frame events to run for. May be `infinity`.
   - `run_in_mode`: Only execute while the game is in this mode. Use `nil` to
     run in every mode.
 
@@ -7399,7 +7416,7 @@ Command-Line Tools
   `https://morgan3d.github.io/quadplay` or standalone by embedding a full copy of
   the emulator. Run the script with `--help` to see the arguments.
 
-  Run as `tools/export.py ...` or `python3 tools/export.py ...`
+  Run as `tools/export.py ...` on Linux and macOS, or `py tools/export.py ...` on Windows
   from the main quadplay directory. This script itself depends on `tools/quaddepend.py`.
 
 [`sprite_json_generator.py`](../tools/sprite_json_generator.py)
@@ -7814,16 +7831,19 @@ contained online game that others can buy from you, or play for free if you choo
 
 The steps are:
 
-1. Run `python3 path-to-quadplay/tools/export.py` inside the directory containing
-   your `game.json` file (or run `python3 tools/export.py -g path-to-your-game` from anywhere).
+1. On Windows, run `py -3 path-to-quadplay\tools\export.py` inside the directory containing
+   your `game.json` file. 
+   On macOS and Linux, use `python3 path-to-quadplay/tools/export.py`.
+   (or run `python3 tools/export.py -g path-to-your-game` from any directory).
 2. Log into the itch.io website and create a new game entry with the following settings:
   - Classification: Games
   - Kind of project: HTML
-  - Mobile friendly: Yes
-  - Automatically start on page load: Yes
-  - How should your project be run in your page?: Click to launch fullscreen
-  - Orientation: Landscape
-  - Visibility: Public
+  - Embed Options:
+     - How should your project be run in your page?: Click to launch fullscreen
+     - Mobile friendly: Yes
+        - Orientation: Landscape
+     - Automatically start on page load: Yes
+  - Visibility & Access: Public
 3. In the Uploads section on the itch.io game page, upload the zipfile generated in step 1.
 
 To update your game or upgrade the underlying quadplay✜ distribution,
@@ -7874,7 +7894,11 @@ Clone both to your local machine and at the command line, enter the _development
 and run 
 
 `````````````````````````````````````````````````````````````
+# macOS and Linux:
 python3 tools/export.py -o ../PUBLIC_REPO path/to/game
+
+# Windows:
+py -3 tools\export.py -o ..\PUBLIC_REPO path\to\game
 `````````````````````````````````````````````````````````````
 
 You can then add and commit the public repo. If you want your game to be standalone

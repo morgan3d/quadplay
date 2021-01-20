@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.01.17.00';
+const version  = '2021.01.20.13';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -419,7 +419,7 @@ function setUIMode(d, noAutoPlay) {
                              'Test'     : 'testUIButton',
                              'Maximal'  : 'maximalUIButton',
                              'Editor'   : 'editorUIButton',
-                             'Ghost'    : 'ghostUIButton'}[uiMode]).checked = 1;
+                             'Ghost'    : 'ghostUIButton'}[uiMode] || 'maximalUIButton').checked = 1;
 
     if ((uiMode === 'Maximal') || ((uiMode === 'Emulator') && ! useIDE)) {
         requestFullScreen();

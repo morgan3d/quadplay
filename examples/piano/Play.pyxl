@@ -1,0 +1,155 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+// The notes C4...C5 on an equal tempered scale
+const key_array = [
+    {label: "[<]", input: "x", on: -1, freq: 261.63},
+    {label: "[^]", input: "y", on: -1, freq: 293.66},
+    {label: "[v]", input: "y", on: +1, freq: 329.63},
+    {label: "[>]", input: "x", on: +1, freq: 349.23},
+    {label: "(c)", input: "c", on:  1, freq: 392.00},
+    {label: "(d)", input: "d", on:  1, freq: 440.00},
+    {label: "(a)", input: "a", on:  1, freq: 493.88},
+    {label: "(b)", input: "b", on:  1, freq: 523.25}]
+
+const button_poly =[xy(-14, -8), xy(-14, 12), xy(14, 12), xy(14, -12), xy(-10, -12)]
+
+
+def draw_knob(pos, angle):
+    // Shadow
+    draw_disk(pos + xy(2, 4), 14, 85% BODY_COLOR)
+    
+    // 3D shading
+    draw_disk(pos, 14, BLACK_PLASTIC)
+    draw_disk(pos - 0.5, 14, ∅, 200% BLACK_PLASTIC)
+    draw_disk(pos + 0.5, 14, 50% BLACK_PLASTIC)
+    
+    // Knob
+    draw_disk(pos, 13, BLACK_PLASTIC)
+    
+    // Line
+    draw_line(pos, pos + angle_to_xy(angle) * 13, #CCC, ∅, 2)
+
+
+
+def draw_button(pos, color):
+    // Shadow
+    draw_poly(button_poly, 85% BODY_COLOR, ∅, pos + xy(2, 2))
+    
+    // 3D shading
+    draw_poly(button_poly, lerp(color, #FFF, 50%), ∅, pos - 1)
+    draw_poly(button_poly, lerp(color, #000, 30%), ∅, pos + 1)
+    
+    // Button
+    draw_poly(button_poly, color, ∅, pos)
+
+
+let bossa_nova 
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+set_transform(½ SCREEN_SIZE + xy(0, 40))
+set_background(BODY_COLOR)
+bossa_nova = play_sound({sound: bossa_nova_sound, loop: true, stopped: true})
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+const gamepad = gamepad_array[0]
+for j < NUM_WHITE_KEYS:
+    const i = j - 4
+    const x = KEY_WIDTH * (j - ½ NUM_WHITE_KEYS)
+
+    // White key 3D shading
+    draw_line(xy(x - ½ KEY_WIDTH, -½ KEY_HEIGHT), xy(x - ½ KEY_WIDTH, ½ KEY_HEIGHT - 1), #FFF)
+    draw_line(xy(x - ½ KEY_WIDTH, -½ KEY_HEIGHT), xy(x + ½ KEY_WIDTH - 2, -½ KEY_HEIGHT), #FFF)
+    draw_line(xy(x + ½ KEY_WIDTH - 2, -½ KEY_HEIGHT + 1), xy(x + ½ KEY_WIDTH - 2, ½ KEY_HEIGHT - 1), #DDD)
+    draw_line(xy(x - ½ KEY_WIDTH - 1, -½ KEY_HEIGHT), xy(x - ½ KEY_WIDTH - 1, ½ KEY_HEIGHT - 1), #000)
+    
+    const n = loop(i, 7)
+    if n ≠ 2 and n ≠ 6:
+        const bx = x + ½ KEY_WIDTH
+        const by = -20% KEY_HEIGHT
+        // Black key
+        draw_rect(xy(bx, by), xy(60% KEY_WIDTH - 2, ⅔ KEY_HEIGHT), BLACK_PLASTIC, ∅, ∅, 1)
+
+        // 3D shading
+        draw_line(xy(bx - 30% KEY_WIDTH, by - ⅓ KEY_HEIGHT), xy(bx - 30% KEY_WIDTH, by + ⅓ KEY_HEIGHT - 1), #555, 1)
+        draw_line(xy(bx + 30% KEY_WIDTH - 2, by - ⅓ KEY_HEIGHT + 1), xy(bx + 30% KEY_WIDTH - 2, by + ⅓ KEY_HEIGHT - 1), #111, 1)
+        draw_line(xy(bx - 30% KEY_WIDTH, by - ⅓ KEY_HEIGHT), xy(bx + 30% KEY_WIDTH - 2, by - ⅓ KEY_HEIGHT), #555, 1)
+        
+    // Label
+    if i ≥ 0 and i < size(key_array):
+        const key = key_array[i]
+        
+        draw_text({
+            font: font, 
+            text: gamepad.prompt[key.label], 
+            pos: xy(x - 1, ½ KEY_HEIGHT - 8),
+            color: (if gamepad[key.input] == key.on then ON_COLOR else OFF_COLOR),
+            y_align: "bottom", 
+            x_align: "center"})
+            
+        if gamepad[key.input + key.input] == key.on:
+            play_sound({sound: synth_sound, pitch: key.freq / key_array[0].freq})
+
+// Bossa nova button
+if gamepad.qq:
+    if get_audio_status(bossa_nova).state == "PLAYING":
+        stop_audio(bossa_nova)
+    else:
+        resume_audio(bossa_nova)
+        
+
+preserving_transform:
+    reset_transform()
+
+    // White keys
+    draw_corner_rect(xy(0, 97), xy(SCREEN_SIZE.x, KEY_HEIGHT), #EEE, ∅, -1)
+
+    // White keys shadow    
+    draw_corner_rect(xy(0, 207), xy(SCREEN_SIZE.x, 3), 85% BODY_COLOR, ∅, -1)
+
+    // Label
+    draw_text({font: title_font, text: "quadplay✜ SK-1", pos: LABEL_POS, color: #FFF})
+    draw_corner_rect(LABEL_POS + xy(0, 9), xy(121, 4), #FFF)
+
+    // 3D shading
+    local:
+        const SHADOWED = 88% BODY_COLOR
+        const LIT = lerp(BODY_COLOR, #FFF, 15%)
+        draw_line(xy(22, 8), xy(272, 8), SHADOWED)
+        draw_line(xy(12, 18), xy(22, 8), SHADOWED)
+        draw_line(xy(12, 18), xy(12, 82), SHADOWED)
+        draw_line(xy(12, 83), xy(272, 83), LIT)
+        draw_line(xy(272, 82), xy(272, 9), LIT)
+
+    // Knobs
+    for i < 3:
+        draw_knob(xy(LABEL_POS.x + 12 + 47i, 62), 42° + 30° * i)
+        
+    // Buttons
+    for i < 2:
+        for j < 2:
+            draw_button(xy(200 + 40i, 30 + 32j), #EE0)
+
+    draw_text({
+        font: font, 
+        text: gamepad.prompt["(q)"], 
+        pos: xy(200, 62), 
+        color: (if gamepad.q then ON_COLOR else OFF_COLOR), 
+        x_align: "center", 
+        y_align: "center"})
+    
+    // Speaker and grille
+    draw_rect(SPEAKER_POS, xy(2, 2) * SPEAKER_RADIUS, #000)
+    draw_disk(SPEAKER_POS, SPEAKER_RADIUS, #122)
+    draw_disk(SPEAKER_POS, 30% SPEAKER_RADIUS, #000)
+    draw_disk(SPEAKER_POS, 25% SPEAKER_RADIUS, #222)
+    
+    for -4 ≤ i ≤ 4:
+        draw_rect(SPEAKER_POS + xy(0, 10 i), xy(2 SPEAKER_RADIUS, 4), BODY_COLOR)
+
+

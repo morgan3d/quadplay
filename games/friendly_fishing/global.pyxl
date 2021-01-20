@@ -65,7 +65,7 @@ def draw_grass():
     draw_corner_rect(xy(0, SCREEN_SIZE.y - 32), xy(SCREEN_SIZE.x, 32), GROUND_COLOR)
 
     if get_audio_status(background_audio).state ≠ "PLAYING":
-        background_audio = play_sound({sound: random_value(BACKGROUND_MUSIC_ARRAY), volume: BACKGROUND_MUSIC_VOLUME, rate: BACKGROUND_MUSIC_RATE})
+        background_audio = play_sound({sound: random_value(BACKGROUND_MUSIC_ARRAY), volume: BACKGROUND_MUSIC_VOLUME, playback_rate: BACKGROUND_MUSIC_RATE})
     
 
 
