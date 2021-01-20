@@ -3,14 +3,14 @@ Play
 
 // The notes C4...C5 on an equal tempered scale
 const key_array = [
-    {label: "[<]", input: "x", on: -1, freq: 261.63},
-    {label: "[^]", input: "y", on: -1, freq: 293.66},
-    {label: "[v]", input: "y", on: +1, freq: 329.63},
-    {label: "[>]", input: "x", on: +1, freq: 349.23},
-    {label: "(c)", input: "c", on:  1, freq: 392.00},
-    {label: "(d)", input: "d", on:  1, freq: 440.00},
-    {label: "(a)", input: "a", on:  1, freq: 493.88},
-    {label: "(b)", input: "b", on:  1, freq: 523.25}]
+    {label: "[<]", input: "x", on: -1, freq: 261.63, audio: ∅},
+    {label: "[^]", input: "y", on: -1, freq: 293.66, audio: ∅},
+    {label: "[v]", input: "y", on: +1, freq: 329.63, audio: ∅},
+    {label: "[>]", input: "x", on: +1, freq: 349.23, audio: ∅},
+    {label: "(c)", input: "c", on:  1, freq: 392.00, audio: ∅},
+    {label: "(d)", input: "d", on:  1, freq: 440.00, audio: ∅},
+    {label: "(a)", input: "a", on:  1, freq: 493.88, audio: ∅},
+    {label: "(b)", input: "b", on:  1, freq: 523.25, audio: ∅}]
 
 const button_poly =[xy(-14, -8), xy(-14, 12), xy(14, 12), xy(14, -12), xy(-10, -12)]
 
@@ -93,7 +93,13 @@ for j < NUM_WHITE_KEYS:
             x_align: "center"})
             
         if gamepad[key.input + key.input] == key.on:
-            play_sound({sound: synth_sound, pitch: key.freq / key_array[0].freq})
+            // Start playing
+            if key.audio: stop_audio(key.audio)
+            key.audio = play_sound({sound: synth_sound, pitch: key.freq / key_array[0].freq})
+        else if not gamepad[key.input] and key.audio:
+            // Stop playing
+            stop_audio(key.audio)
+            key.audio = ∅
 
 // Bossa nova button
 if gamepad.qq:
