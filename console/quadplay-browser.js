@@ -756,6 +756,7 @@ function set_pan(handle, pan) {
 }
 
 
+let warnedAboutPitch = false;
 function set_pitch(handle, pitch) {
     if (! (handle && handle.$source)) {
         throw new Error("Must call set_pitch() on a sound returned from play_sound()");
@@ -763,8 +764,18 @@ function set_pitch(handle, pitch) {
     handle.$source.pitch = pitch;
     pitch *= handle.$source.audioClip.$base_pitch;
     if (handle.$source.detune) {
-        // Doesn't work on Safari
-        handle.$source.detune.linearRampToValueAtTime((pitch - 1) * 1200, handle.$source.context.currentTime + audioRampTime);
+        // The detune argument is in cents:
+        //
+        // c = 1200 * log2 (f2 / f1)
+        // c = 1200 * log2(pitch)
+        handle.$source.detune.linearRampToValueAtTime(Math.log2(pitch) * 1200, handle.$source.context.currentTime + audioRampTime);
+    } else if (! warnedAboutPitch) {
+        if (isSafari) {
+            showPopupMessage('Safari does not support pitch changes.');
+        } else {
+            showPopupMessage('This browser does not support pitch changes.');
+        }
+        warnedAboutPitch = true;
     }
 }
 

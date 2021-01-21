@@ -2369,8 +2369,12 @@ Sound
   under the current transformation and camera.
 
 `set_pitch(audio, pitch)`
-: Set the pitch of an audio object that is currently playing without affecting speed. 100% is the default pitch from the file.
-  200% is one octave higher, 50% is one octave lower.
+: Set the pitch (in relative Hz) of an audio object that is currently playing without
+  affecting speed. 100% is the default pitch from the file.  200% is
+  one octave higher, 50% is one octave lower.
+  
+  To instead set the pitch in musical cents where 100 cents = 1
+  semitone = 1 half-step, use: `set_pitch(audio, 2^(cents / 1200))`.
 
 `set_volume(audio, volume)`
 : Set the volume of an audio object that is currently playing. 100% is the default volume from the file.
