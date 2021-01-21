@@ -1744,7 +1744,8 @@ function showGamepads() {
 
     s += ']';
     s = s.replace('", ]', '"]');
-    alert(s);
+    console.log(s);
+    window.open('controls.html', '', 'width=400,height=500');
 }
 
 
