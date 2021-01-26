@@ -89,7 +89,7 @@ To get started you only need:
 
 - [The quadplay✜ development kit](https://github.com/morgan3d/quadplay/archive/master.zip)
 - [Python 3.8](https://www.python.org/)
-- A modern web browser ([_Chrome_](https://www.google.com/chrome/), [_Firefox_](https://www.mozilla.org/en-US/firefox/new/), [_Edge_](https://www.microsoft.com/en-us/edge), or _Safari_)
+- A modern web browser ([_Chrome_](https://www.google.com/chrome/), [_Edge_](https://www.microsoft.com/en-us/edge), [_Firefox_](https://www.mozilla.org/en-US/firefox/new/), or _Safari_)
 
 For the quadplay✜ development kit, just download, unzip, and then copy
 the files wherever you would like on your computer. There is no
@@ -144,6 +144,9 @@ quadplay --serve ~/my_quadplay/space
 
 # ... Windows
 quadplay --serve C:\Users\MYNAME\my_quadplay\space
+
+# Launch quadplay as a standalone game kiosk
+quadplay --kiosk
 
 # Load a game from the web (their server must support CORS)
 quadplay https://morgan3d.github.io/somegame/foo.game.json
@@ -2332,8 +2335,9 @@ Sound
   - `pan`
   - `loop`
   - `state`: `"PLAYING"`, `"STOPPED"`, or `"ENDED"`
-  - `frame`: Time since the start of the sound, measured in 1/60 second
-    frames. This is useful for synchronizing visuals with audio. 
+  - `sound`: the sound being played in this audio clip
+  - `now`: Time since the start of the sound, measured seconds
+     This is useful for synchronizing visuals with audio. 
     Audio follows a more strict clock than the mode's frame
     event, the `mode_frames` value, and the `game_frames` values, which 
     run in 1/60 second increments but may drift slightly due to computational

@@ -659,6 +659,7 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
     pan = Math.min(1, Math.max(-1, pan))
     
     const source = audioContext.createBufferSource();
+    source.sound = audioClip;
     source.buffer = audioClip.$buffer;
 
     if (audioContext.createStereoPanner) {
@@ -793,16 +794,21 @@ function get_audio_status(handle) {
     } else {
         frame = source.resumePositionMs;
     }
+    const now = frame / 1000;
     // Convert to 60 fps
     frame = Math.round(frame * 60 / 1000);
         
     return {
+        sound:    source.sound,
         pitch:    source.pitch,
         volume:   source.volume,
         playback_rate: source.rate,
         pan:      source.pan,
         loop:     source.loop,
         state:    source.state,
+        now:      now,
+
+        // Deprecated:
         frame:    frame
     }
 }

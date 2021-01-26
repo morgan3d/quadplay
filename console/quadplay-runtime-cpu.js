@@ -9330,7 +9330,9 @@ function push_mode(mode, ...args) {
     $graphicsCommandList = [];
     $previousGraphicsCommandList = [];
 
-    $systemPrint('Pushing into mode ' + mode.$name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
+    if (mode.$name[0] !== '$') {
+        $systemPrint('Pushing into mode ' + mode.$name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
+    }
 
     // Run the enter callback on the new mode
     $iteratorCount = new WeakMap();
@@ -9363,7 +9365,7 @@ function pop_mode(...args) {
     if ($modeStack.length === 0) { $error('Cannot pop_mode() from a mode entered by set_mode()'); }
 
     // Run the leave callback on the current mode
-    var old = $gameMode;
+    let old = $gameMode;
     $prevMode = $prevModeStack.pop();
 
     // Pop the stacks
@@ -9379,10 +9381,12 @@ function pop_mode(...args) {
     // Reset the graphics
     $graphicsCommandList = [];
     
-    $systemPrint('Popping back to mode ' + $gameMode.$name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
+    if ($gameMode.$name[0] !== '$') {
+        $systemPrint('Popping back to mode ' + $gameMode.$name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
+    }
 
     // Run the pop_mode event on $gameMode if it exists
-    var eventName = '$pop_modeFrom' + old.$name;
+    let eventName = '$pop_modeFrom' + old.$name;
     if ($gameMode[eventName] !== undefined) {
         // repeat here so that the "this" is set correctly to $gameMode
         $iteratorCount = new WeakMap();
@@ -9422,8 +9426,10 @@ function set_mode(mode, ...args) {
     // Reset the graphics
     $graphicsCommandList = [];
     $previousGraphicsCommandList = [];
-    
-    $systemPrint('Entering mode ' + mode.$name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
+
+    if (mode.$name[0] !== '$') {
+        $systemPrint('Entering mode ' + mode.$name + ($lastBecause ? ' because "' + $lastBecause + '"' : ''));
+    }
     
     // Run the enter callback on the new mode
     $iteratorCount = new WeakMap();

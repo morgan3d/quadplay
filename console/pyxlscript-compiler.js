@@ -502,12 +502,12 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode, strin
             throw makeError('Numbers may not begin with a leading zero', i);
         }
 
-        const illegal = lineArray[i].match(/\b(===|!==|toString|try|switch|this|delete|null|arguments|undefined|use|using|yield|prototype|var|new|auto|as|instanceof|typeof|\$|class)\b/) ||
-              lineArray[i].match(/('|!(?!=))/) || // Single quote
+        const illegal = lineArray[i].match(/\b(===|!==|&&|&=|\|=|&|toString|try|switch|this|delete|null|arguments|undefined|use|using|yield|prototype|var|new|auto|as|instanceof|typeof|\$|class)\b/) ||
+              lineArray[i].match(/('|&(?![=&])|!(?!=))/) || // Single quote, single &, single !
               (! internalMode && lineArray[i].match(/\b[_\$]\S*?\b/)); // Underscores or dollar signs
         
         if (illegal) {
-            const alternative = {"'":'"', '!==':'!=', '!':'not', 'var':'let', 'null':'nil', '===':'=='};
+            const alternative = {'|=':'∪=" or "bitor', '&&':'and', '&=':'∩=" or "bitand', '&':'∩" or "bitand', "'":'"', '!==':'!=', '!':'not', 'var':'let', 'null':'nil', '===':'=='};
             let msg = 'Illegal symbol "' + illegal[0] + '"';
             if (illegal[0] in alternative) {
                 msg += ' (maybe you meant "' + alternative[illegal[0]] + '")';
@@ -699,7 +699,6 @@ const protectQuotedStrings = WorkJSON.protectQuotedStrings;
     but it allows the rest of the parser to operate strictly on single-line
     expressions and control flow. 
 
-
     Also compact lines that terminate in a ",", which can result from a multiline
     FOR or WITH statement
 */
@@ -867,7 +866,6 @@ function protectObjectSpread(src) {
 }
 
 function unprotectObjectSpread(src) {
-    // 
     return src.replace(/'⏓':/g, '...');
 }
 
@@ -967,28 +965,47 @@ function pyxlToJS(src, noYield, internalMode) {
     // ALTERNATE" --> "TEST ? CONSEQUENT : ALTERNATE" before "if"
     // statements are parsed.
 
-    // IF that is not at the start of a line or a block (preceeded by
-    // "\n" or ":") is replaced with an open paren. There are no
-    // negative lookbehinds in JavaScript, so we have to structure an
-    // explicit test.
-    { // Allow multiple IF...THEN on a single line by processing repeatedly
+    // IF that is not at the start of a line or a block is replaced
+    // with an open paren. There are no negative lookbehinds in
+    // JavaScript, so we have to structure an explicit test.
+    { 
+        const STACKED_IF_SYMBOL = '\uE071';
         let found = true
+        // Allow multiple IF...THEN on a single line by processing repeatedly
         while (found) {
             found = false;
-            src = src.replace(/^([ \t]*\S[^\n]*?(?:[A-Za-z0-9_αβγΔδζηθιλμρσϕφχψτωΩ][ \t]|[\^=\-\+\*/><,\[{\(][ \t]*))if\b/gm,
-                              function (match, prefix) {
-                                  if (/else[ \t]*$/.test(prefix)) {
-                                      // This was an ELSE IF, leave alone
-                                      return match;
-                                  } else {
-                                      found = true;
-                                      // Functional IF, replace
-                                      return prefix + '(';
-                                  }
-                              });
-        }
-    }
-    
+            src = src.replace(
+                    /^([ \t]*\S[^\n]*?(?:[A-Za-z0-9_αβγΔδζηθιλμρσϕφχψτωΩ][ \t]|[:\^=\-\+\*/><,\[{\(][ \t]*))if\b/gm,
+                function (match, prefix) {
+                    if (/else[ \t]*$/.test(prefix)) {
+                        // This was an ELSE IF. Leave it alone
+                        return match;
+                    }
+
+                    // If the prefix ends with a colon, then we need to distinguish
+                    // the function IF from a stacked IF statement:
+                    //
+                    //   def foo(x): if x: bar()
+                    //
+                    //   x = {a: if b then 3 else 2}            
+                    //
+                    // Functional IF has more '{' than '}' in the prefix. When we encounter
+                    // a non-functional IF, temporarily replace it so as to not trigger the
+                    // same regex again
+                    if (/:[ \t]$/.test(prefix) && (prefix.split('{').length <= prefix.split('}').length)) {
+                        return prefix + STACKED_IF_SYMBOL;
+                    } else {
+                        found = true;
+                        // Functional IF, replace
+                        return prefix + '(';
+                    }
+                });
+        } // while
+
+        // Restore the temporarily hidden stacked IFs
+        src = src.replace(/\uE071/g, 'if');
+    } // IF
+
     // THEN
     src = src.replace(/\bthen\b/g, ') ? (');
     
@@ -996,7 +1013,6 @@ function pyxlToJS(src, noYield, internalMode) {
     // conditional operators require parentheses to make this parse
     // unambiguously)
     src = src.replace(/\belse[ \t]+(?!:|if)/g, ') : ');
-    
     
     // Handle scopes and block statement translations
     {
