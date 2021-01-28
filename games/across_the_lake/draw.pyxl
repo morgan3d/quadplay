@@ -203,7 +203,7 @@ def draw_game() preserving_transform:
    if cam_pos.x > current_segment.end_x:
       // Find the next segment
       for segment in segments:
-         if cam_pos.x > segment.start_x && cam_pos.x <= segment.end_x:
+         if cam_pos.x > segment.start_x and cam_pos.x <= segment.end_x:
             current_segment = segment
             background_change_start_frame = game_frames
             next_background = segment.background
