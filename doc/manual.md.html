@@ -1517,7 +1517,8 @@ Modes
   Any arguments after the `Mode` are passed to the `enter` section.
 
 `quit_game()`
-: Quit the game and exit to the IDE or the launcher. Note that games do not
+: Quit the game and exit to the IDE or the launcher, or close the tab depending on
+  what the `quit` HTML query parameter was set to. Note that games do not
   form a stack. Quitting a game returns to the built-in quadplay✜ launcher or
   IDE, and not the game that launched it.
 
@@ -3210,6 +3211,30 @@ See also the Physics section for relevant functions.
   `(A.contact_category_mask bitand B.contact_hit_mask) and (B.contact_category_mask bitand A.contact_hit_mask)`.
   Defaults to 1. Does not affect `overlaps()`.
 
+  Think of the category mask as where you set bits to indicate what
+  the entity *is* and the hit mask as what other entities it collides
+  with. A collision only occurs if both entities agree that they can
+  collide with each other. 
+  
+  For example, you could define `GRASS = 0b001`, `ROCK = 0b010`, and
+  `SHEEP = 0b100`. Setting `sheep.contact_hit_mask = ROCK bitor
+  SHEEP`, `rock.contact_hit_mask = ROCK bitor GRASS bitor SHEEP`, and
+  `grass.contact_hit_mask = ROCK bitor GRASS` would enable sheep to
+  pass through grass but not rocks or other sheep, and have all
+  combinations of rocks and grass collide with each other.
+  
+  Note that masks can be set independently (and asymmetrically, so
+  that A wants to collide with B but B doesn't want to collide with
+  a). That is because an entity may be in multiple categories
+  (example: `HELICOPTER = VEHICLE bitor AIRBORNE bitor ENEMY bitor
+  FAST`), and have mutliple hit masks, rather than the category being
+  1:1 with the entity type.
+  
+  The masks have no impact on performance during collision detection,
+  but there is a limit of 32 categories. See also
+  `entity.contact_group`.
+  
+
 `entity.is_sensor`
 : If `true`, collisions will occur with this entity as usual but will not cause motion to change
   as a result, like a ghost. Default is `false`. This is useful for detecting triggers such as a character
@@ -3226,6 +3251,12 @@ See also the Physics section for relevant functions.
 : An integer index of a group of other entities that this one should not collide with, regardless
   of the `contact_hit_mask` or `contact_category_mask`. Zero means no group at all. Defaults to 0.
   Does not affect `overlaps()`.
+  
+  This is useful for putting all of the parts of a multi-part object into
+  a single group to prevent self-collisions. For example, with a rope constructed as a chain of boxes
+  or a car with wheels. Unlike an `entity.contact_category_mask`, an object can only be 
+  in a single group. However, there is no limit on the number of contact groups that can
+  be used in the game, while there is a limit of 32 categories.
 
 `entity.contact_hit_mask`
 : See `entity.contact_category_mask`. Defaults to `0xffffffff`. Does not affect `overlaps()`.
@@ -7467,11 +7498,29 @@ HTML query arguments:
 : URL of a game to load, which can be relative to the `quadplay` script.
 
 `mode`
-: Initial mode to display: `Maximal`, `Emulator`, `IDE`, or `Test`
+: Initial mode to display: `Maximal`, `Emulator`, `IDE`, `Test`, `WideIDE`, `Editor`, or `Ghost`.
+  The default is `IDE` when running the IDE and otherwise `Maximal` for non-touch screens
+  and `Emulator` for touch screens.
 
 `kiosk`
 : If `1`, hide the entire menu bar. Cannot be set with `IDE`
 
+`quit`
+: What the "quit to system" menu option in the pause menu and the `quit_game()` function do:
+  - `launcher`: Return to the launcher or IDE. This is forced
+     when `IDE=1`. Default when `game` is not specified.
+  - `close`: Close the browser tab or standalone app. Default
+     when `game` is specified and `IDE=0` and `kiosk=0`. Unless the
+     page was opened by JavaScript from another page, browsers
+     prohibit closing the tab from code and this will instead
+     set the page to blank.
+  - `none`: Do not offer a quit option to the player. Default when
+    `game` is specified and `kiosk=1`
+  - `reload`: Reload the iframe or tab that the game is in, 
+     sending it back to the welcome screen. This value prevents
+     the game from launching in fullscreen until the first press,
+     which is good for games embedded in a page and is the way
+     that exported web games are configured.
 
 Physical Consoles
 ---------------------------------------------------------------------------------------------
@@ -7834,25 +7883,27 @@ own closed-source came). See the Credits section for more information.
 itch.io
 ------------------------------------------------------------------------------------
 
-Deploying to [itch.io](https://itch.io/) as a Browser Game allows you to create a self
-contained online game that others can buy from you, or play for free if you choose.
+Deploying to [itch.io](https://itch.io/) as a Browser Game allows you
+to create a self contained online game that others can buy from you,
+or play for free if you choose.
 
 The steps are:
 
 1. On Windows, run `py -3 path-to-quadplay\tools\export.py` inside the directory containing
-   your `game.json` file. 
-   On macOS and Linux, use `python3 path-to-quadplay/tools/export.py`.
-   (or run `python3 tools/export.py -g path-to-your-game` from any directory).
-2. Log into the itch.io website and create a new game entry with the following settings:
+   your `game.json` file. On macOS and Linux, use `path-to-quadplay/tools/export.py`.
+2. Click on [https://itch.io/game/new](https://itch.io/game/new) and enter the following settings:
+  - Title: _your game name_
+  - Project URL: _your game name_
   - Classification: Games
   - Kind of project: HTML
   - Embed Options:
-     - How should your project be run in your page?: Click to launch fullscreen
+     - How should your project be run in your page?: Embed in page, Manually set size
      - Mobile friendly: Yes
         - Orientation: Landscape
-     - Automatically start on page load: Yes
+     - Automatically start on page load
   - Visibility & Access: Public
 3. In the Uploads section on the itch.io game page, upload the zipfile generated in step 1.
+4. Check "This file will be played in the browser"
 
 To update your game or upgrade the underlying quadplay✜ distribution,
 repeat the process of creating the zipfile and then upload it as a
@@ -7881,7 +7932,7 @@ on the settings page, select "master" or "main" from the Source section dropdown
 
 The URL to play your game is then:
 
-`https://morgan3d.github.io/quadplay/console/quadplay.html?game=https://USER.github.io/REPO&mode=Maximal&kiosk=1`.
+`https://morgan3d.github.io/quadplay/console/quadplay.html?game=https://USER.github.io/REPO&mode=Maximal`.
 
 If you'd like to make a friendlier URL, then you can also create an `index.html` file
 in the root of your repo with the contents:
@@ -7903,7 +7954,7 @@ and run
 
 `````````````````````````````````````````````````````````````
 # macOS and Linux:
-python3 tools/export.py -o ../PUBLIC_REPO path/to/game
+tools/export.py -o ../PUBLIC_REPO path/to/game
 
 # Windows:
 py -3 tools\export.py -o ..\PUBLIC_REPO path\to\game
@@ -7929,8 +7980,9 @@ directory, run just upload your own game files to the server. The URL for your g
 https://morgan3d.github.io/quadplay/console/quadplay.html?game=https://myserver.com/mygame
 
 To deploy a complete package that is independent of the current
-version of quadplay✜, run `python3 tools/export.py -o path/to/output -g path/to/game`
-and then upload your files from the output directory. 
+version of quadplay✜, run `tools/export.py -o path/to/output path/to/game` on
+macOS or Linus and `py -3 tools\export.py -o path\to\output path\to\game` on Windows.
+Then, upload your files from the output directory. 
 
 Your URL will be just https://myserver.com/mygame.
 

@@ -66,7 +66,7 @@ def generate_standalone(args, out_path, game_path, game_title):
     <link rel="icon" type="image/png" sizes="32x32" href="console/favicon-32x32.png">
   </head>
   <body style="margin: 0; background: #000; position: absolute; top: 0; bottom: 0; left: 0; right: 0">
-    <iframe src="console/quadplay.html?fastReload=1&mode=Maximal&game={game_path}" style="width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; border: none"></iframe>
+    <iframe src="console/quadplay.html?fastReload=1&game={game_path}&quit=reload" style="width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; border: none" allow="fullscreen *; autoplay" msallowfullscreen="true" allowfullscreen="true" webkitallowfullscreen="true"></iframe>
   </body>
 </html>
 """
@@ -91,7 +91,7 @@ def generate_remote(args, out_path, game_path, game_title):
     <script>
       document.write('<iframe src="https://morgan3d.github.io/quadplay/console/quadplay.html#fastReload=1&game=' + 
           (location + '').replace(/\/[^/]*$/, '/') + 
-          '{game_path}&mode=Maximal" style="width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; border: none"></iframe>');
+          '{game_path}&quit=reload" style="width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; border: none" allow="fullscreen *; autoplay" msallowfullscreen="true" allowfullscreen="true" webkitallowfullscreen="true"></iframe>');
     </script>
   </body>
 </html>
@@ -104,8 +104,11 @@ def generate_remote(args, out_path, game_path, game_title):
 
    
 def export(args):
-   if args.gamepath:
-      args.gamepath = os.path.abspath(args.gamepath[0])
+   if args.game:
+      args.gamepath = os.path.abspath(args.game)
+   elif args.gamepath:
+      # Deprecated version 
+      args.gamepath = os.path.abspath(args.gamepath)
    else:
       args.gamepath = os.getcwd()
       
@@ -121,12 +124,11 @@ def export(args):
       sys.exit(-3)
       
    if not args.outpath and not args.zipfile:
-      args.zipfile = [os.path.basename(game_path).replace('.game.json', '.zip')]
+      args.zipfile = os.path.basename(game_path).replace('.game.json', '.zip')
    
    out_path = args.outpath
 
    if args.zipfile:
-      args.zipfile = args.zipfile[0]
       # Make a temporary output. This will be deleted automatically
       # by python when tempdir goes out of scope at the end of export()
       tempdir = tempfile.TemporaryDirectory()
@@ -157,10 +159,11 @@ def export(args):
       # until Python 3.8 and the dependencies create the console dir
       if args.dry_run:
          print('cp -r ' + os.path.join(args.quadpath, 'console') + ' ' + os.path.join(out_path, ''))
+         print('rm -rf ' + os.path.join(out_path, 'console/launcher') + ' ' + os.path.join(out_path, 'console/templates'))
       else:
          shutil.copytree(os.path.join(args.quadpath, 'console'),
                          os.path.join(out_path, 'console'),
-                         ignore = shutil.ignore_patterns('.DS_Store', '*~', '#*', '*.pyc', '__pycache__'))
+                         ignore = shutil.ignore_patterns('.DS_Store', '*~', '#*', '*.pyc', '__pycache__', 'launcher', 'templates'))
       
       generate_standalone(args, out_path, out_url, game_title)
    else:
@@ -225,10 +228,11 @@ def export(args):
 
 if __name__== '__main__':
    parser = argparse.ArgumentParser(description='Export a distributable static HTML game from a game.json game file.\n\n' + 'Example: tools/export.py -g games/serpitron', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-   parser.add_argument('-g', '--gamepath', nargs=1, help='the path to the game.json file from the current directory, or the path to the directory containing it if the directory and file have the same basename. For the current version of this script, the game must be in a subdirectory of the quadplay directory. This will be generalized later.')
-   parser.add_argument('-o', '--outpath', nargs=1, help='output to this directory instead of a zipfile. Relative to the current directory')
-   parser.add_argument('-z', '--zipfile', nargs=1, help='name of the zipfile, relative to the current directory. Defaults to the game name if unspecified')
-   parser.add_argument('--noquad', action='store_true', default=False, help='reduce the export size by making it reference the public quadplay distribution instead of embedding it')
+   parser.add_argument('game', action='store', help='the path to the game.json file from the current directory, or the path to the directory containing it if the directory and file have the same basename.')
+   parser.add_argument('-g', '--gamepath', help='obsolete argument. Specify the game as a positional argument instead')
+   parser.add_argument('-o', '--outpath', help='output to this directory instead of a zipfile. Relative to the current directory.')
+   parser.add_argument('-z', '--zipfile', help='name of the zipfile, relative to the current directory. Defaults to the game name if unspecified.')
+   parser.add_argument('--noquad', action='store_true', default=False, help='reduce the export size by making referencing the public quadplay distribution instead of embedding it.')
    parser.add_argument('--dry-run', '-n', action='store_true', default=False, help='print the files that would be created but do not touch the filesystem.')
 
    args = parser.parse_args()

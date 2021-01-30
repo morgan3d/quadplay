@@ -78,8 +78,12 @@ push(choice_array, {text: "Controllers", callback: set_controls, confirm: false}
 if not $getIsOffline() and SCREEN_SIZE.x == 384: push(choice_array, {text: "Online Play", callback: show_online_menu})
 
 push(choice_array,
-     {text: "Restart Game", callback: reset_game, confirm: true},
-     {text: "Quit to System", callback: quit_game, confirm: true})
+     {text: "Restart Game", callback: reset_game, confirm: true})
+
+if $quit_action != "none":
+    push(choice_array,
+         {text: (if $quit_action == "launcher" then "Quit to quadplay✜" else "Quit to System"),
+          callback: quit_game, confirm: true})
 
 max_choice_width = 0
 

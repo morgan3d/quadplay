@@ -1031,6 +1031,7 @@ function $executeTXT(cmd) {
         // before drawing the main text.
         cmd.color = 0;
         $executeTXT(cmd);
+        cmd.color = color;
 
         // Pass through, disabling outline and shadow that were
         // already processed.

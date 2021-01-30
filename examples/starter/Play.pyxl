@@ -4,6 +4,14 @@ Play
 let pos = xy(½ SCREEN_SIZE.x, 132)
 let flip = xy(1, 1)
 
+const ball = make_entity({
+    pos: xy(45, 140),
+    scale: xy(50%, 50%),
+    sprite_override_color: rgb(0.5, 0.0, 1.0),
+    sprite: shapes.circle,
+    acc: xy(0, 0.1),
+    vel: xy(0, -5)
+})
 
 frame
 ────────────────────────────────────────────────────────────────────────
@@ -15,8 +23,8 @@ if joy.x:
    pos.x = loop(pos.x + joy.x, SCREEN_SIZE.x)
 
 // Sky
-set_background(rgb(20%, 50%, 80%))
-draw_text(font, CREDITS.title, xy(½ SCREEN_SIZE.x, 10), text_color, ∅, ∅, 0, 0)
+set_background(rgb(20%, 60%, 90%))
+draw_text(font, CREDITS.title, xy(½ SCREEN_SIZE.x, 10), TEXT_COLOR, ∅, ∅, 0, 0)
 
 // Ground
 draw_corner_rect(xy(0, 140), xy(SCREEN_SIZE.x, SCREEN_SIZE.y - 139), #DDD)
@@ -26,3 +34,14 @@ draw_line(pos + xy(-4, 8), pos + xy(+4, 8), rgba(0, 0, 0, 20%))
 
 // Alien
 draw_sprite(sprite, pos, 0, flip)
+
+// Ball
+with vel, acc, pos in ball:
+    vel += acc
+    entity_simulate(ball)
+    const h = ½ ball.size.y * ball.scale.y
+    if pos.y + h > 140:
+        pos.y = 140 - h
+        vel.y = -5
+        
+draw_entity(ball)

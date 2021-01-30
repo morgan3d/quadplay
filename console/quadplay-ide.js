@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.01.25.17';
+const version  = '2021.01.29.00';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -86,7 +86,7 @@ const BOOT_ANIMATION = Object.freeze({
 });
 
 /* Date.now() for the last time user input was seen. This is used to
-   automatically pause quadplay when inactive in kiosk mode to reduce
+   automatically pause quadplay when inactive to reduce
    processor load on systems that do not suspend themselves such as
    Raspberry Pi. */
 let lastInteractionTime = Date.now();
@@ -298,7 +298,9 @@ let onWelcomeScreen = ! useIDE;
    audio engine and full-screen on mobile (where it is harder to hit
    the small full-screen button).
  */
-function onWelcomeTouch() {
+function onWelcomeTouch(hasTouchScreen) {
+    hasTouchScreen = hasTouchScreen || isMobile;
+   
     onWelcomeScreen = false;
     const welcome = document.getElementById('welcome');
     welcome.style.zIndex = -100;
@@ -307,7 +309,11 @@ function onWelcomeTouch() {
 
     unlockAudio();
     
-    if (! useIDE || isMobile) {
+    if (uiMode === 'Maximal' && ! useIDE && hasTouchScreen) {
+        // This device probably requires on-screen controls.
+        // Setting the UI mode forces fullscreen as well.
+        setUIMode('Emulator');
+    } else if (! useIDE || hasTouchScreen) {
         requestFullScreen();
     }
 
@@ -393,7 +399,7 @@ function onBackgroundPauseClick(event) {
 }
 
 
-function setUIMode(d, noAutoPlay) {
+function setUIMode(d, noFullscreen) {
     if (! useIDE && (d === 'IDE' || d === 'WideIDE' || d === 'Ghost' || d === 'Editor' || d === 'Test')) {
         // When in dedicated play, no-IDE mode and the UI was
         // previously set to UI, fall back to the emulator.
@@ -421,7 +427,7 @@ function setUIMode(d, noAutoPlay) {
                              'Editor'   : 'editorUIButton',
                              'Ghost'    : 'ghostUIButton'}[uiMode] || 'maximalUIButton').checked = 1;
 
-    if ((uiMode === 'Maximal') || ((uiMode === 'Emulator') && ! useIDE)) {
+    if (((uiMode === 'Maximal') || ((uiMode === 'Emulator') && ! useIDE)) && ! noFullscreen) {
         requestFullScreen();
     }
 
@@ -771,7 +777,7 @@ function onPlayButton(slow, isLaunchGame, args) {
         // There is nothing useful to see in Editor mode
         // when playing, so switch the emulator to IDE
         // mode.
-        setUIMode('IDE', false);
+        setUIMode('IDE');
     }
     
     const newTargetFramerate = slow ? SLOW_FRAMERATE : PLAY_FRAMERATE;
@@ -1712,7 +1718,8 @@ function saveIDEState() {
         'debugPrintEnabled': document.getElementById('debugPrintEnabled').checked,
         'restartOnFocusEnabled': document.getElementById('restartOnFocusEnabled').checked,
         'codeEditorFontSize': '' + codeEditorFontSize,
-        'autoplayOnLoad': document.getElementById('autoplayOnLoad').checked
+        'autoplayOnLoad': document.getElementById('autoplayOnLoad').checked,
+        'onScreenHUDEnabled': document.getElementById('onScreenHUDEnabled').checked
     };
 
     // Find the selected debugger tab
@@ -2948,19 +2955,19 @@ function onRadio() {
 
     // UI Layout
     if (pressed('emulatorUI') && (uiMode !== 'Emulator')) {
-        setUIMode('Emulator', false);
+        setUIMode('Emulator');
     } else if (pressed('testUI') && (uiMode !== 'Test')) {
-        setUIMode('Test', false);
+        setUIMode('Test');
     } else if (pressed('IDEUI') && (uiMode !== 'IDE')) {
-        setUIMode('IDE', false);
+        setUIMode('IDE');
     } else if (pressed('wideIDEUI') && (uiMode !== 'WideIDE')) {
-        setUIMode('WideIDE', false);
+        setUIMode('WideIDE');
     } else if (pressed('maximalUI') && (uiMode !== 'Maximal')) {
-        setUIMode('Maximal', false);
+        setUIMode('Maximal');
     } else if (pressed('editorUI') && (uiMode !== 'Editor')) {
-        setUIMode('Editor', false);
+        setUIMode('Editor');
     } else if (pressed('ghostUI') && (uiMode !== 'Ghost')) {
-        setUIMode('Ghost', false);
+        setUIMode('Ghost');
     }
 
     saveIDEState();
@@ -3078,6 +3085,7 @@ setControlEnable('pause', false);
 let coroutine = null;
 let emwaFrameTime = 0;
 const debugFrameRateDisplay = document.getElementById('debugFrameRateDisplay');
+const debugGraphicsFPS = document.getElementById('debugGraphicsFPS');
 const debugActualFrameRateDisplay = document.getElementById('debugActualFrameRateDisplay');
 const debugFramePeriodDisplay = document.getElementById('debugFramePeriodDisplay');
 const debugDrawCallsDisplay = document.getElementById('debugDrawCallsDisplay');
@@ -3282,7 +3290,7 @@ function goToLauncher() {
 
 function onCopyPerformanceSummary() {
     let summary = `Framerate ${debugFrameRateDisplay.textContent} ${debugFramePeriodDisplay.textContent}; `;
-    summary += `${debugFrameTimeDisplay.textContent} Total = ${debugCPUTimeDisplay.textContent} CPU + ${debugPPUTimeDisplay.textContent} Phys + ${debugGPUTimeDisplay.textContent} GPU + ${debugBrowserTimeDisplay.textContent} ${browserName}`;
+    summary += `${debugFrameTimeDisplay.textContent} Total = ${debugCPUTimeDisplay.textContent} CPU + ${debugGPUTimeDisplay.textContent} GPU + ${debugPPUTimeDisplay.textContent} Phys + ${debugBrowserTimeDisplay.textContent} ${browserName}`;
     navigator.clipboard.writeText(summary);
 }
 
@@ -3370,9 +3378,33 @@ function mainLoopStep() {
             return;
         } else if (e.quit_game === 1) {
             if (useIDE) {
+                // Ignore the quit setting and always stop when in the IDE
                 onStopButton();
-            } else {
-                goToLauncher();
+            } else switch (quitAction) {
+                case 'none': {
+                    console.log('Ignoring quit_game() received when quit=none');
+                    return;
+                }
+                
+                case 'close': {
+                    // JavaScript can't close a tab unless JavaScript opened it
+                    // to begin with, so this is the best that we can do outside
+                    // of a standalone binary.
+                    try { window.top.close(); } catch (ignore) {}
+                    try { window.close(); } catch (ignore) {}
+                    try { document.exitFullscreen(); } catch (ignore) {}
+                    window.location = 'about:blank';
+                    return;
+                }
+                
+                case 'reload': {
+                    try { document.exitFullscreen(); } catch (ignore) {}
+                    location = location;
+                    return;
+                }
+                
+                default:// 'launcher'
+                    goToLauncher();
             }
         } else if (e.launch_game !== undefined) {
             loadGameIntoIDE(e.launch_game, function () {
@@ -3390,12 +3422,12 @@ function mainLoopStep() {
 
     // Only update the profiler display periodically, because doing so
     // takes about 2ms of frame time on a midrange modern computer.
-    if (((uiMode === 'Test') || (uiMode === 'IDE') || (uiMode === 'WideIDE')) &&
-        
-        (((QRuntime.mode_frames - 1) % (8 * QRuntime.$graphicsPeriod) === 0) ||
+    if (useIDE && (((QRuntime.mode_frames - 1) % (8 * QRuntime.$graphicsPeriod) === 0) ||
          (targetFramerate < PLAY_FRAMERATE) ||
          (emulatorMode === 'step'))) {
-        updateDebugger();
+
+        const showHTML = (uiMode === 'Test') || (uiMode === 'IDE') || (uiMode === 'WideIDE');
+        updateDebugger(showHTML);
     }
     
     if (targetFramerate < PLAY_FRAMERATE || emulatorMode === 'step') {
@@ -3414,8 +3446,10 @@ function mainLoopStep() {
 }
 
 
-function updateDebugger() {
-    
+// Used when the on-screen profiler is enabled
+let onScreenHUDDisplay = {time: {frame:0, logic:0, physics:0, graphics:0, browser:0, refresh:0}};
+
+function updateDebugger(showHTML) {
     const frame = profiler.smoothFrameTime.get();
     const logic = profiler.smoothLogicTime.get();
     const physics = profiler.smoothPhysicsTime.get();
@@ -3429,22 +3463,38 @@ function updateDebugger() {
     // Use 18 instead of 16.67 ms as the cutoff for displaying
     // overhead because there are sometimes very slight roundoffs
     // due to the timer callback being inexact.
-    if (profiler.debuggingProfiler) { updateTimeDisplay(frame, 'Interval'); }
-    updateTimeDisplay((frame > 18) ? frame : compute, 'Frame');
-    updateTimeDisplay((frame > 17.2) ? browser : 0, 'Browser');
+    
+    onScreenHUDDisplay.time.frame = (frame > 18) ? frame : compute;
+    onScreenHUDDisplay.time.browser = (frame > 17.2) ? browser : 0;
+    onScreenHUDDisplay.time.logic = logic;
+    onScreenHUDDisplay.time.physics = physics;
+    onScreenHUDDisplay.time.graphics = graphics;
+    onScreenHUDDisplay.time.refresh = Math.round(60 / QRuntime.$graphicsPeriod);
+
+    if (! showHTML) {
+        // Only update the on-screen profiler values
+        return;
+    }
+    
+    updateTimeDisplay(onScreenHUDDisplay.time.frame, 'Frame');
+    updateTimeDisplay(onScreenHUDDisplay.time.browser, 'Browser');
     updateTimeDisplay(logic, 'CPU');
     updateTimeDisplay(physics, 'PPU');
     updateTimeDisplay(graphics, 'GPU');
-    
+
+    if (profiler.debuggingProfiler) { updateTimeDisplay(frame, 'Interval'); }
+
     let color = 'unset';
     if (QRuntime.$graphicsPeriod === 2) {
         color = '#fe4';
     } else if (QRuntime.$graphicsPeriod > 2) {
         color = '#f30';
     }
-    
+
     debugFrameRateDisplay.style.color = debugFramePeriodDisplay.style.color = color;
-    debugFrameRateDisplay.innerHTML = '' + Math.round(60 / QRuntime.$graphicsPeriod) + '&#8239;Hz';
+    const fps = '' + Math.round(60 / QRuntime.$graphicsPeriod);
+    debugFrameRateDisplay.innerHTML = fps + '&#8239;Hz';
+    debugGraphicsFPS.innerHTML = fps;
     debugFramePeriodDisplay.innerHTML = '(' + ('1½⅓¼⅕⅙'[QRuntime.$graphicsPeriod - 1]) + '×)';
     
     // Only display if the graphics period has just ended, otherwise the display would
@@ -3523,6 +3573,8 @@ function reloadRuntime(oncomplete) {
         QRuntime.$SCREEN_HEIGHT = SCREEN_HEIGHT;
         QRuntime.reset_clip();
 
+        QRuntime.$quit_action = quitAction;
+
         // Aliased views in ABGR4 format
         QRuntime.$screen = new Uint16Array(SCREEN_WIDTH * SCREEN_HEIGHT);
         QRuntime.$screen32 = new Uint32Array(QRuntime.$screen.buffer);
@@ -3530,12 +3582,13 @@ function reloadRuntime(oncomplete) {
         // Remove any base URL that appears to include the quadplay URL
         QRuntime.$window = window;
         QRuntime.$gameURL = gameSource ? (gameSource.jsonURL || '').replace(location.href.replace(/\?.*/, ''), '') : '';
-        QRuntime.$debugPrintEnabled  = document.getElementById('debugPrintEnabled').checked;
-        QRuntime.$assertEnabled      = document.getElementById('assertEnabled').checked;
-        QRuntime.$todoEnabled        = document.getElementById('todoEnabled').checked;
-        QRuntime.$debugWatchEnabled  = document.getElementById('debugWatchEnabled').checked;
-        QRuntime.$showEntityBoundsEnabled = document.getElementById('showEntityBoundsEnabled').checked;
-        QRuntime.$showPhysicsEnabled = document.getElementById('showPhysicsEnabled').checked;
+        QRuntime.$debugPrintEnabled  = document.getElementById('debugPrintEnabled').checked && useIDE;
+        QRuntime.$assertEnabled      = document.getElementById('assertEnabled').checked && useIDE;
+        QRuntime.$todoEnabled        = document.getElementById('todoEnabled').checked && useIDE;
+        QRuntime.$debugWatchEnabled  = document.getElementById('debugWatchEnabled').checked && useIDE;
+        QRuntime.$showEntityBoundsEnabled = document.getElementById('showEntityBoundsEnabled').checked && useIDE;
+        QRuntime.$showPhysicsEnabled = document.getElementById('showPhysicsEnabled').checked && useIDE;
+        QRuntime.$onScreenHUDEnabled = document.getElementById('onScreenHUDEnabled').checked && useIDE;
         QRuntime.$debug_watch        = debug_watch;
         QRuntime.$fontMap            = fontMap;
         QRuntime.$parse              = $parse;
@@ -4414,9 +4467,14 @@ if (! localStorage.getItem('automathEnabled')) {
     localStorage.setItem('automathEnabled', 'true')
 }
 
-if (! localStorage.getItem('restartOnFocusEnabled')) {
+if (localStorage.getItem('restartOnFocusEnabled') === null) {
     // Default to false
     localStorage.setItem('restartOnFocusEnabled', 'false')
+}
+
+if (localStorage.getItem('onScreenHUDEnabled') === null) {
+    // Default to false
+    localStorage.setItem('onScreenHUDEnabled', 'false')
 }
 
 if (! localStorage.getItem('debugWatchEnabled')) {
@@ -4432,7 +4490,7 @@ if (! localStorage.getItem('autoplayOnLoad')) {
 document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanceTab').checked = true;
 
 {
-    const optionNames = ['showPhysicsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'todoEnabled', 'automathEnabled', 'debugPrintEnabled', 'debugWatchEnabled', 'restartOnFocusEnabled', 'autoplayOnLoad'];
+    const optionNames = ['showPhysicsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'todoEnabled', 'automathEnabled', 'debugPrintEnabled', 'debugWatchEnabled', 'restartOnFocusEnabled', 'autoplayOnLoad', 'onScreenHUDEnabled'];
     for (let i = 0; i < optionNames.length; ++i) {
         const name = optionNames[i];
         const value = JSON.parse(localStorage.getItem(name) || 'false');
@@ -4447,7 +4505,13 @@ document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanc
 {
     let url = getQueryString('game');
 
-    url = url || launcherURL;
+    if (! url) {
+        if (useIDE) {
+            url = 'quad://examples/animation';
+        } else {
+            url = launcherURL;
+        }
+    }
 
     // If the url doesn't have a prefix and doesn't begin with a slash or 
     // drive letter, assume that it is relative to the quadplay script in the parent dir.
@@ -4472,9 +4536,10 @@ document.getElementById('backgroundPauseCheckbox').checked = backgroundPauseEnab
 
 if (getQueryString('kiosk') === '1') {
     // Hide the console menu and mode buttons
-    document.getElementsByTagName('body')[0].classList.add('kiosk');
-    setUIMode('Maximal', false);
+    document.getElementById('body').classList.add('kiosk');
+    setUIMode('Maximal');
 } else {
+    document.getElementById('body').classList.remove('kiosk');
     let newMode = getQueryString('mode');
     if (! newMode) {
         if (useIDE) {
@@ -4488,7 +4553,10 @@ if (getQueryString('kiosk') === '1') {
             newMode = isMobile ? 'Emulator' : 'Maximal';
         }
     }
-    setUIMode(newMode, false);
+
+    // Embedded games that reload on quit start without fullscreen
+    // so that the first touch launches them.
+    setUIMode(newMode, getQueryString('quit') === 'reload');
 }
 
 initializeBrowserEmulator();
@@ -4515,3 +4583,36 @@ LoadManager.fetchOne({}, location.origin + getQuadPath() + 'console/_config.json
 // Make the browser aware that we want gamepads
 navigator.getGamepads();
 
+const quitAction = (function() {
+    if (useIDE) {
+        // When the IDE is on, always quit to the IDE
+        return 'launcher';
+    }
+    
+    const q = getQueryString('quit');
+    
+    // Explicit value
+    if (q) {
+        if (/^(close|none|reload|launcher)$/.test(q)) {
+            return q;
+        } else {
+            alert('Illegal setting for HTML query parameter: quit=' + q);
+            // Fall through to a default
+        }
+    }
+
+    const kiosk = getQueryString('kiosk') || '0';
+    
+    if (getQueryString('game')) {
+        if (kiosk === '0') {
+            // Running a single game in the browser
+            return 'close';
+        } else {
+            // Running a single game as a kiosk
+            return 'none';
+        }
+    } else {
+        // Running the launcher in a browser
+        return 'launcher';
+    }
+})();

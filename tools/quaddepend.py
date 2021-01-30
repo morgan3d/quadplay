@@ -145,7 +145,7 @@ def quaddepend(args):
 
    for c in game_data.get('constants', {}).values():
       if isinstance(c, dict):
-         if (c.get('type', '') == 'raw') and ('url' in c):
+         if (c.get('type', '') == 'raw' or c.get('type', '') == 'table') and ('url' in c):
             _depend(c['url'], args, basepath)
    
 
