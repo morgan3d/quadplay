@@ -72,7 +72,16 @@
         </div>
       </div>
     </div>
-    <div id="sleep" class="noIDE" onmousedown="wake()" ontouchstart="wake()" onkeydown="wake()" style="visibility:hidden">
+
+    <!-- Blocks interaction during initial load for exported games, before 'welcome' is visible -->
+    <div id="pageLoadingScreen" onmousedown="event.stopPropagation()" onkeydown="event.stopPropagation()" ontouchstart="event.stopPropagation()" style="background:none; z-index: 102; visibility: visible">
+      <div style="color: #fff; width: 100%; height: 19px; position: absolute; background: rgba(0, 8, 16, 0.85); text-align: center; color: #fff; padding-top: 4px; font-family: quadplay">
+        LOADING <div class="spin" style="display:inline-block">✜</div>
+      </div>
+    </div>
+
+    <!-- Blocks interaction when quadplay is sleeping -->
+    <div id="sleep" class="noIDE" onmousedown="wake()" ontouchstart="wake()" onkeydown="wake()">
       <div style="color: #fff; width: 100%; height: 100%; position: absolute; background: rgba(0, 8, 16, 0.7)">
         <div style="position: absolute; top: 50%; left: 0; width: 100%; overflow: visible">
           <div style="position: absolute; top: -150px; text-align: center; font-size: 26px; font-weight: 100; line-height: 130%; width: 100%; text-shadow: 1px 3px 7px #000">
@@ -414,7 +423,8 @@
         <!-- Shows file loading progress during boot -->
         <div id="bootScreen" class="pixelate"></div>
         
-        <!-- Shows instructions for reaching pause and controls during boot -->
+        <!-- Shows instructions for reaching pause and controls during boot. This is designed to look like
+             it is rendered by quadplay but is really an image -->
         <div id="pauseMessage" class="pixelate"></div>
       </div>
 

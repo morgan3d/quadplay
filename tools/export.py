@@ -62,11 +62,12 @@ def generate_standalone(args, out_path, game_path, game_title):
   <head>
     <title>{game_title}</title>
     <meta charset="utf-8">
+    <link rel="icon" href="console/favicon.ico">
     <link rel="icon" type="image/png" sizes="64x64" href="console/favicon-64x64.png">
     <link rel="icon" type="image/png" sizes="32x32" href="console/favicon-32x32.png">
   </head>
   <body style="margin: 0; background: #000; position: absolute; top: 0; bottom: 0; left: 0; right: 0">
-    <iframe src="console/quadplay.html?fastReload=1&game={game_path}&quit=reload" style="width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; border: none" allow="fullscreen *; autoplay" msallowfullscreen="true" allowfullscreen="true" webkitallowfullscreen="true"></iframe>
+    <iframe src="console/quadplay.html?fastReload=1&game={game_path}&quit=reload" style="width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; border: none" allow="gamepad; fullscreen *; autoplay" msallowfullscreen="true" allowfullscreen="true" webkitallowfullscreen="true"></iframe>
   </body>
 </html>
 """
@@ -84,6 +85,7 @@ def generate_remote(args, out_path, game_path, game_title):
   <head>
     <title>{game_title}</title>
     <meta charset="utf-8"/>
+    <link rel="icon" href="https://morgan3d.github.io/quadplay/console/favicon.ico">
     <link rel="icon" type="image/png" sizes="64x64" href="https://morgan3d.github.io/quadplay/console/favicon-64x64.png">
     <link rel="icon" type="image/png" sizes="32x32" href="https://morgan3d.github.io/quadplay/console/favicon-32x32.png">
   </head>
@@ -91,7 +93,7 @@ def generate_remote(args, out_path, game_path, game_title):
     <script>
       document.write('<iframe src="https://morgan3d.github.io/quadplay/console/quadplay.html#fastReload=1&game=' + 
           (location + '').replace(/\/[^/]*$/, '/') + 
-          '{game_path}&quit=reload" style="width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; border: none" allow="fullscreen *; autoplay" msallowfullscreen="true" allowfullscreen="true" webkitallowfullscreen="true"></iframe>');
+          '{game_path}&quit=reload" style="width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; border: none" allow="gamepad; fullscreen *; autoplay" msallowfullscreen="true" allowfullscreen="true" webkitallowfullscreen="true"></iframe>');
     </script>
   </body>
 </html>

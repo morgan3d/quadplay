@@ -7,14 +7,16 @@ Changes for both the specification and implementation in each release
 of [quadplay✜](manual.md.html).
 
 
-2021 January TBD: Beta update 63
+2021 January 31: Beta update 63
 ===================================
 
+- Optimized loading time of itch.io exported games
 - Added shapes examples to the starter example code/initial project
 - Added optional low overhead on-screen profiling HUD
 - Removed launcher and template files from exported games to reduce file count
 - Games in Maximal mode outside of the IDE automatically switch to Emulator mode
   now on mobile to present touch controls
+- New loading message/animation when games launch
 - Running `quadplay` or launching the IDE with no arguments now loads the
   animation example instead of the quadplay game OS launcher
 - `export.py` now takes the game path as a positional argument (no `-g` any more)
@@ -22,6 +24,8 @@ of [quadplay✜](manual.md.html).
 - Fixed IDE interface flashing when kiosk or exported games
 - Fixed `table` constants now are marked as dependencies when exporting
 - Fixed tooltips on toggle menu items only showing above the checkbox
+- Fixed being able to start games before loading completes
+
 
 2021 January 25: Beta update 62
 ===================================

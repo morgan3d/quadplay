@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.01.29.00';
+const version  = '2021.01.31.00';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -289,8 +289,8 @@ function setColorScheme(scheme) {
     localStorage.setItem('colorScheme', colorScheme);
 }
 
-// Used for the event handlers to efficiently
-// know whether to trigger onWelcomeTouch()
+/* Used for the welcome element's event handlers to efficiently know
+   whether to trigger onWelcomeTouch() */
 let onWelcomeScreen = ! useIDE;
 
 /* 
@@ -319,7 +319,7 @@ function onWelcomeTouch(hasTouchScreen) {
 
     let url = getQueryString('game')
 
-    const showPause = url;
+    const showPause = (url !== null) && ! useIDE;
     
     url = url || launcherURL;
     // If the url doesn't have a prefix and doesn't begin with a slash,
@@ -327,27 +327,25 @@ function onWelcomeTouch(hasTouchScreen) {
     if (! (/^(.{3,}:\/\/|[\\/])/).test(url)) {
         url = '../' + url;
     }
-    loadGameIntoIDE(url, function () {
-        if (showPause) {
-            // Show the pause message before loading when running a
-            // standalone game (not in IDE, not loading the launcher)
-            const pauseMessage = document.getElementById('pauseMessage');
-            pauseMessage.style.zIndex = 120;
-            pauseMessage.style.visibility = 'visible';
-            pauseMessage.style.opacity = 1;
-            setTimeout(function () {
-                pauseMessage.style.opacity = 0;
-                setTimeout(function() {
-                    pauseMessage.style.visibility = 'hidden';
-                    pauseMessage.style.zIndex = 0;
-                    onPlayButton();
-                }, 200);
-            }, 3000);
-        } else {
-            // Loading launcher
-            onPlayButton();
-        }
-    });
+
+    if (showPause) {
+        // Show the pause message before loading when running a
+        // standalone game (not in IDE, not loading the launcher)
+        const pauseMessage = document.getElementById('pauseMessage');
+        pauseMessage.style.zIndex = 120;
+        pauseMessage.style.visibility = 'visible';
+        pauseMessage.style.opacity = 1;
+        setTimeout(function () {
+            pauseMessage.style.opacity = 0;
+            setTimeout(function() {
+                pauseMessage.style.visibility = 'hidden';
+                pauseMessage.style.zIndex = 0;
+                onPlayButton();
+            }, 200);
+        }, 3000);
+    } else {
+        onPlayButton();
+    }
 }
 
 
@@ -648,9 +646,6 @@ const overlayCTX = overlayScreen.getContext("2d", ctxOptions);
 
 ctx.msImageSmoothingEnabled = ctx.webkitImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
 
-
-function onHelp(event) { window.open('doc/specification.md.html', '_blank'); }
-
 function download(url, name) {
     var a = document.createElement("a");
     a.href = url;
@@ -758,13 +753,16 @@ let alreadyInPlayButtonAttempt = false;
 
 // Allows a framerate to be specified so that the slow button can re-use the logic.
 //
+// slow = run at slow framerate (used for *every* slow step as well)
 // isLaunchGame = "has this been triggered by QRuntime.launch_game()"
 // args = array of arguments to pass to the new program
 function onPlayButton(slow, isLaunchGame, args) {
     if (isSafari && ! isMobile) { unlockAudio(); }
     emulatorKeyboardInput.focus({preventScroll:true});
 
-    // Stop guesting, if currently a gust, but do not stop hosting.
+    // Stop guesting, if currently a guest, but do not stop hosting.
+    // This can't come up when single stepping or in slow mode, which
+    // are disabled for guests.
     stopGuesting(true);
     
     if (sleep.pollHandler) {
@@ -774,9 +772,9 @@ function onPlayButton(slow, isLaunchGame, args) {
     updateLastInteractionTime();
     
     if (uiMode === 'Editor') {
-        // There is nothing useful to see in Editor mode
-        // when playing, so switch the emulator to IDE
-        // mode.
+        // There is nothing useful to see in Editor mode when playing,
+        // so switch to IDE mode, which is the closest one that
+        // contains an emulator view.
         setUIMode('IDE');
     }
     
@@ -809,6 +807,7 @@ function onPlayButton(slow, isLaunchGame, args) {
         previewRecording = null;
         
         if (! coroutine) {
+            // Game has not been compiled yet
             outputDisplayPane.innerHTML = '';
             compiledProgram = '';
             try {
@@ -829,10 +828,8 @@ function onPlayButton(slow, isLaunchGame, args) {
             }
             
             if (compiledProgram) {
-                // if (! deployed && useIDE) { console.log(compiledProgram); }
-                
-                // Ready to execute. Reload the runtime and compile and launch
-                // this code within it.
+                // Compilation succeeded. Ready to execute. Reload the
+                // runtime and compile and launch this code within it.
                 programNumLines = compiledProgram.split('\n').length;
 
                 restartProgram(isLaunchGame ? BOOT_ANIMATION.NONE : useIDE ? BOOT_ANIMATION.SHORT : BOOT_ANIMATION.REGULAR);
@@ -842,53 +839,55 @@ function onPlayButton(slow, isLaunchGame, args) {
             }
             
         } else {
+            // The game was already compiled, so just resume the loop
             lastAnimationRequest = requestAnimationFrame(mainLoopStep);
             emulatorKeyboardInput.focus({preventScroll:true});
         }
         
         saveIDEState();
-    }
+    } // End of the doPlay callback used below
+    
 
 
     if (emulatorMode === 'stop') {
         // Reload the program
         if (loadManager && loadManager.status !== 'complete' && loadManager.status !== 'failure') {
             console.log('Load already in progress...');
-        } else {
-            if (useIDE && ! isLaunchGame) {
-                if (savesPending === 0) {
-                    // Force a reload of the game
-                    loadGameIntoIDE(window.gameURL, doPlay, false);
-                } else {
-                    onStopButton();
-                    if (pendingSaveCallbacks.length > 0 || ! alreadyInPlayButtonAttempt) {
-                        // Some saves haven't even been attempted.
-                        //
-                        // Force the saves to occur right now and then
-                        // try running again shortly afterward.
-                        runPendingSaveCallbacksImmediately();
-                        
-                        // Now reschedule pressing this button soon,
-                        // after the saves complete. It might fail
-                        // again, of course...in that case, we'll end
-                        // up in the error message.
-                        alreadyInPlayButtonAttempt = true;
-                        setTimeout(function () {
-                            try {
-                                onPlayButton(slow, isLaunchGame, args);
-                            } finally {
-                                alreadyInPlayButtonAttempt = false;
-                            }
-                        }, 300);
-                    } else {
-                        setErrorStatus('Cannot reload while saving. Try again in a second.');
-                    }
-                }
+        } else if (useIDE && ! isLaunchGame) {
+            if (savesPending === 0) {
+                // Force a reload of the game
+                console.log('Reloading in case of external changes.')
+                loadGameIntoIDE(window.gameURL, doPlay, false);
             } else {
-                // Just play the game, no reload required because
-                // we are in user mode.
-                doPlay();
+                onStopButton();
+                if (pendingSaveCallbacks.length > 0 || ! alreadyInPlayButtonAttempt) {
+                    // Some saves haven't even been attempted.
+                    //
+                    // Force the saves to occur right now and then
+                    // try running again shortly afterward.
+                    runPendingSaveCallbacksImmediately();
+                    
+                    // Now reschedule pressing this button soon,
+                    // after the saves complete. It might fail
+                    // again, of course...in that case, we'll end
+                    // up in the error message.
+                    alreadyInPlayButtonAttempt = true;
+                    setTimeout(function () {
+                        try {
+                            onPlayButton(slow, isLaunchGame, args);
+                        } finally {
+                            alreadyInPlayButtonAttempt = false;
+                        }
+                    }, 300);
+                } else {
+                    setErrorStatus('Cannot reload while saving. Try again in a second.');
+                }
             }
+        } else { // Not in IDE regular edit mode
+            
+            // Just play the game, no reload required because
+            // we are in user mode.
+            doPlay();
         }
     } else {
         console.assert(emulatorMode === 'step' || emulatorMode === 'pause');
@@ -897,7 +896,6 @@ function onPlayButton(slow, isLaunchGame, args) {
         doPlay();
         emulatorKeyboardInput.focus({preventScroll:true});
     }
-
 }
 
 const controlSchemeTable = {
@@ -3280,6 +3278,7 @@ function updateTimeDisplay(time, name) {
 
 function goToLauncher() {
     onStopButton(false, true);
+    console.log('Loading to go to the launcher.');
     loadGameIntoIDE(launcherURL, function () {
         onResize();
         // Prevent the boot animation
@@ -3407,6 +3406,7 @@ function mainLoopStep() {
                     goToLauncher();
             }
         } else if (e.launch_game !== undefined) {
+            console.log('Loading because launch_game() was called.');
             loadGameIntoIDE(e.launch_game, function () {
                 onResize();
                 onPlayButton(false, true, e.args);
@@ -4286,8 +4286,18 @@ function loadGameIntoIDE(url, callback, loadFast) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // See also more event handlers for the emulator in quadplay-host.js
 
+let gamepadButtonPressedWhilePageLoading = false;
 window.addEventListener("gamepadconnected", function(e) {
-    if (onWelcomeScreen) { onWelcomeTouch(); }
+    // Runs when the first gamepad button is pressed or when a
+    // second gamepad connects.
+    if (onWelcomeScreen) {
+        if (document.getElementById('pageLoadingScreen')) {
+            // Delay starting until load completes
+            gamepadButtonPressedWhilePageLoading = true;
+        } else {
+            onWelcomeTouch();
+        }
+    }
     updateControllerIcons();
     console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.", e.gamepad.index, e.gamepad.id, e.gamepad.buttons.length, e.gamepad.axes.length);
 });
@@ -4412,6 +4422,7 @@ window.addEventListener('focus', function() {
         } else if (emulatorMode === 'stop') {
             // Regained focus while stopped and in the IDE. Reload in case
             // anything changed on disk
+            console.log('Reloading because the browser regained focus in the IDE.');x
             loadGameIntoIDE(window.gameURL, null, true);
         }
     }
@@ -4507,8 +4518,10 @@ document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanc
 
     if (! url) {
         if (useIDE) {
+            // Default game in IDE
             url = 'quad://examples/animation';
         } else {
+            // Load the launcher if no game is specified outside of the IDE
             url = launcherURL;
         }
     }
@@ -4519,16 +4532,38 @@ document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanc
         url = '../' + url;
     }
 
-    if (useIDE || (url !== 'quad://console/launcher')) {
-        loadGameIntoIDE(url, function () {
+    console.log('Loading because of initial page load.');
+    loadGameIntoIDE(url, function () {
+        const pageLoadingScreen = document.getElementById('pageLoadingScreen');
+        if (pageLoadingScreen) {
+            if (! useIDE) {
+                // Done loading outside of the IDE.  Now show the
+                // welcome screen. The pageLoadingScreen prevented
+                // players from launching the game before loading
+                // completed. The welcome screen forces an interaction
+                // to lift browser restrictions.
+                document.getElementById('welcome').style.visibility = 'visible';
+                
+                if (gamepadButtonPressedWhilePageLoading) {
+                    // Immediately push the welcome button if the player already
+                    // pressed a gamepad button
+                    onWelcomeTouch();
+                }
+            }
+            
+            // Remove the loading screen permanently now that page loading has completed
+            pageLoadingScreen.remove();
+        }
+        
+        if (useIDE) {
             onProjectSelect(null, 'game', gameSource.jsonURL);
-
+            
             // Used for the open dialog's autoplay checkbox
             if (getQueryString('autoplay') === '1') {
                 onPlayButton(false, true);
             }
-        });
-    }
+        } // use IDE
+    });
 }
 
 
@@ -4575,14 +4610,16 @@ onResize();
 setFramebufferSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 reloadRuntime();
 
-// Get the configuration
+// Get the configuration if running on a quadplay server
 LoadManager.fetchOne({}, location.origin + getQuadPath() + 'console/_config.json', 'json', null, function (json) {
     serverConfig = json;
 });
 
-// Make the browser aware that we want gamepads
+// Make the browser aware that we want gamepads as early as possible
 navigator.getGamepads();
 
+// Assign the action for QRuntime.quit_game() used by the in-game
+// pause menu quit option
 const quitAction = (function() {
     if (useIDE) {
         // When the IDE is on, always quit to the IDE

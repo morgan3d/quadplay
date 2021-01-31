@@ -250,31 +250,46 @@ b.projectTitle.remote:before {
     /* border: 1px solid #ff0;*/
 }
 
-
-.blink {
-    animation: blink 1s linear infinite;
-    -webkit-animation: blink 1s linear infinite;
+.spin {
+    animation: spin 5000ms linear infinite;
+    -webkit-animation: spin 5000ms linear infinite;
 }
 
-@-webkit-keyframes blinker {
+@keyframes spin {
+    from {
+        transform:rotate(0deg);
+    }
+    to {
+        transform:rotate(360deg);
+    }
+}
+
+
+@-webkit-keyframes blink {
     from {opacity: 1.0;}
     to {opacity: 0.0;}
 }
 
 .blink {
     text-decoration: blink;
-    -webkit-animation-name: blinker;
+    -webkit-animation-name: blink;
     -webkit-animation-duration: 0.6s;
     -webkit-animation-iteration-count:infinite;
     -webkit-animation-timing-function:ease-in-out;
     -webkit-animation-direction: alternate;
+    
+    animation-name: blink;
+    animation-duration: 0.6s;
+    animation-iteration-count:infinite;
+    animation-timing-function:ease-in-out;
+    animation-direction: alternate;
 }
 
 /*****************************************************/
 
-#welcome, #sleep {
+#welcome, #sleep, #pageLoadingScreen {
     z-index: 101;
-    visibility: visible;
+    visibility: hidden;
     position: absolute;
     top: 0px;
     left: 0px;
