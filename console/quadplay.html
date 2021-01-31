@@ -193,7 +193,7 @@
         
         <script>
           makeRadio('<img src="ui-fullscreen.png"  width=32 style="position:relative; top:-2px">', 'maximalUIButton',  false, 'title="Full Screen"',  'ui');
-          makeRadio('<img src="ui-touchscreen.png" width=32 style="position:relative; top:-2px">', 'emulatorUIButton', false, 'title="Touch Screen"', 'ui');
+          makeRadio(`<img src="${getQueryString('IDE') === '1' ? 'ui-touchscreen.png' : 'ui-touchscreen-fullscreen.png'}" width=32 style="position:relative; top:-2px">`, 'emulatorUIButton', false, 'title="Touch Screen"', 'ui');
         </script>
         <span class="IDEOnly" style="margin-left:-3px">
         <script>
