@@ -386,6 +386,11 @@ function requestFullScreen() {
             body.msRequestFullscreen();
         }
     } catch (e) {}
+
+    try {
+        // Capture the escape key (https://web.dev/keyboard-lock/)
+        navigator.keyboard.lock();
+    } catch (e) {}
 }
 
 let backgroundPauseEnabled = true;
@@ -1669,13 +1674,17 @@ function onDocumentKeyDown(event) {
         break;
 
     case 27: // Esc
-        if (customContextMenu.style.visibility === 'visible') {
-            customContextMenu.style.visibility = 'hidden';
-            event.stopPropagation();
+        if (useIDE) {
+            if (customContextMenu.style.visibility === 'visible') {
+                customContextMenu.style.visibility = 'hidden';
+                event.stopPropagation();
+                event.preventDefault();
+            }
+        } else {
             event.preventDefault();
+            event.stopImmediatePropagation();
         }
         break;
-
     }
 }
 

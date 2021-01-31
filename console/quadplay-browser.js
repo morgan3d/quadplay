@@ -317,8 +317,8 @@ function onEmulatorKeyDown(event) {
     if (event.repeat) { return; }
 
     const key = event.code;
-    if ((key === 'KeyP') && (event.ctrlKey || event.metaKey)) {
-        // Ctrl+P
+    if (useIDE && ((key === 'KeyP') && (event.ctrlKey || event.metaKey))) {
+        // Ctrl+P is pause the IDE, not in-game pause
         onPauseButton();
         return;
     }
@@ -534,7 +534,7 @@ emulatorKeyboardInput.addEventListener('keyup', onEmulatorKeyUp, false);
 function ascii(x) { return x.charCodeAt(0); }
 
 /** Used by $submitFrame() to map axes and buttons to event key codes when sampling the keyboard controller */
-const keyMap = [{'-x':['KeyA', 'ArrowLeft'], '+x':['KeyD', 'ArrowRight'], '-y':['KeyW', 'ArrowUp'], '+y':['KeyS', 'ArrowDown'], a:['KeyB', 'Space'],  b:['KeyH', 'Enter'],  c:['KeyV', 'KeyV'],     d:['KeyG', 'KeyG'],          e:['ShiftLeft', 'ShiftLeft'], f:['KeyC', 'ShiftRight'],  q:['Digit1', 'KeyQ'],   p:['Digit4', 'KeyP']},
+const keyMap = [{'-x':['KeyA', 'ArrowLeft'], '+x':['KeyD', 'ArrowRight'], '-y':['KeyW', 'ArrowUp'], '+y':['KeyS', 'ArrowDown'], a:['KeyB', 'Space'],  b:['KeyH', 'Enter'],  c:['KeyV', 'KeyV'],     d:['KeyG', 'KeyG'],          e:['ShiftLeft', 'ShiftLeft'], f:['KeyC', 'ShiftRight'],  q:['Digit1', 'KeyQ'],   p:['Digit4', 'KeyP', 'Escape']},
                 {'-x':['KeyJ', 'KeyJ'],      '+x':['KeyL', 'KeyL'],       '-y':['KeyI', 'KeyI'],    '+y':['KeyK', 'KeyK'],     a:['Slash', 'Slash'], b:['Quote', 'Quote'], c:['Period', 'Period'], d:['Semicolon', 'Semicolon'], e:['KeyN','KeyN'],            f:['AltRight', 'AltLeft'], q:['Digit7', 'Digit7'], p:['Digit0', 'Digit0']}];
       
 let prevRealGamepadState = [];
@@ -906,8 +906,8 @@ function resumeAllSounds() {
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-// Escapes HTML
 // Injected as debug_print in QRuntime
+// Escapes HTML
 function debug_print(location, ...args) {
     let s = '';
     for (let i = 0; i < args.length; ++i) {
@@ -1288,11 +1288,11 @@ function updateInput() {
             const prefix = button === 'p' ? '$' : '';
             
             if (map) {
-                // Keyboard
-                const b0 = map[button][0], b1 = map[button][1];
-                pad[prefix + button] = (emulatorKeyState[b0] || emulatorKeyState[b1]) ? 1 : 0;
-                pad[prefix + button + button] = pad[prefix + 'pressed_' + button] = (emulatorKeyJustPressed[b0] || emulatorKeyJustPressed[b1]) ? 1 : 0;
-                pad[prefix + 'released_' + button] = (emulatorKeyJustReleased[b0] || emulatorKeyJustReleased[b1]) ? 1 : 0;
+                // Keyboard (only P1's P button has three codes)
+                const b0 = map[button][0], b1 = map[button][1], b2 = map[button][2];
+                pad[prefix + button] = (emulatorKeyState[b0] || emulatorKeyState[b1] || emulatorKeyState[b2]) ? 1 : 0;
+                pad[prefix + button + button] = pad[prefix + 'pressed_' + button] = (emulatorKeyJustPressed[b0] || emulatorKeyJustPressed[b1] || emulatorKeyJustPressed[b2]) ? 1 : 0;
+                pad[prefix + 'released_' + button] = (emulatorKeyJustReleased[b0] || emulatorKeyJustReleased[b1] || emulatorKeyJustReleased[b2]) ? 1 : 0;
             } else {
                 pad[prefix + button] = pad[prefix + button + button] = pad[prefix + 'released_' + button] = pad[prefix + 'pressed_' + button] = 0;
             }
