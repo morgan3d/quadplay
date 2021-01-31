@@ -1,7 +1,7 @@
 The **quadplay✜** fantasy console by [CasualEffects](https://casual-effects.com)
 is now in public beta for creating and playing video games.
 
-- [Play games online](https://morgan3d.github.io/quadplay/console/quadplay.html?kiosk=1&mode=Maximal)
+- [Play games online](https://morgan3d.github.io/quadplay/console/quadplay.html?)
 - [Download the console](https://github.com/morgan3d/quadplay/archive/master.zip)
 - [Preview the web IDE](https://morgan3d.github.io/quadplay/console/quadplay.html?IDE=1&game=quad://games/quadpaddle)
 - [Read the manual](https://morgan3d.github.io/quadplay/doc/manual.md.html)
