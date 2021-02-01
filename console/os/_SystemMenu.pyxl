@@ -81,8 +81,14 @@ push(choice_array,
      {text: "Restart Game", callback: reset_game, confirm: true})
 
 if $quit_action != "none":
+    let target = "System"
+    if $quit_action == "launcher":
+        target = "quadplay✜"
+    else if $quit_action == "reload":
+        target = "Browser"
+    
     push(choice_array,
-         {text: (if $quit_action == "launcher" then "Quit to quadplay✜" else "Quit to System"),
+         {text: "Quit to " + target,
           callback: quit_game, confirm: true})
 
 max_choice_width = 0

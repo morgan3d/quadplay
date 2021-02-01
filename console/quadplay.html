@@ -40,7 +40,11 @@
     const isEdge = /Edg\//.test(navigator.userAgent);
     const isChrome = /chrom/i.test(navigator.userAgent) && window.chrome && !isEdge;
     const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-    const isMobile = window.matchMedia("only screen and (max-width: 480px)").matches || window.orientation || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    // Does not include `window.matchMedia("only screen and (max-width: 480px)").matches`
+    // because that triggers on desktop on itch.io when "smartphone" is selected as a viable
+    // input method
+    const isMobile = window.orientation || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.screen && window.screen.orientation && window.screen.orientation.type === 'portrait-primary') || ((navigator.maxTouchPoints || 0) > 0);
     const browserName = isSafari ? 'Safari' : isFirefox ? 'Firefox' : isChrome ? 'Chrome' : isEdge ? 'Edge' : 'Browser';
 
     // Keys
@@ -193,7 +197,15 @@
         
         <script>
           makeRadio('<img src="ui-fullscreen.png"  width=32 style="position:relative; top:-2px">', 'maximalUIButton',  false, 'title="Full Screen"',  'ui');
+          if (isMobile) {
+              // Move the buttons away from the corner, which may be curved on mobile
+              document.write(`<div style="display: inline-block; width: 8px"></div>`);
+          }
           makeRadio(`<img src="${getQueryString('IDE') === '1' ? 'ui-touchscreen.png' : 'ui-touchscreen-fullscreen.png'}" width=32 style="position:relative; top:-2px">`, 'emulatorUIButton', false, 'title="Touch Screen"', 'ui');
+          if (isMobile) {
+              // Move the buttons away from the corner, which may be curved on mobile
+              document.write(`<div style="display: inline-block; width: 40px"></div>`);
+          }
         </script>
         <span class="IDEOnly" style="margin-left:-3px">
         <script>
