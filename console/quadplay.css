@@ -1512,10 +1512,6 @@ svg.modeGraph text.edgeLabel {
     #KeyFbutton {
         left: -80px !important;
     }
-    
-    #KeyQbutton, #KeyPbutton {
-        top:  -20px !important;
-    }
 
     #logo {
         top: unset;
@@ -1523,11 +1519,13 @@ svg.modeGraph text.edgeLabel {
     }
 
     #KeyQbutton {
-        left: 155px !important;
+        left: 41px !important;
+        top:  -160px !important;
     }
 
     #KeyPbutton {
-        left: -200px !important;
+        right: 45px !important;
+        top:  -160px !important;
     }
     
     .emulator .emulatorBackground {
