@@ -415,6 +415,24 @@ input[type=text], input[type=number], textarea {
 
 /*****************************************************/
 
+div.debugOverride {
+    margin-top:4px;
+    width:100%;
+    border: 1px #E0BD33 solid;
+    border-radius: 4px;
+    padding: 2px;
+    padding-top:6px;
+    padding-bottom: 5px;
+    background: #444
+}
+
+/* CSS :disabled doesn't work on DIVs as a pseudoselector, so we have a "disabled" class as well*/
+div.debugOverride.disabled {
+    display: none;
+}
+
+/*****************************************************/
+
 /* Hide the actual input control */
 .button input {
     display:          none;
@@ -994,6 +1012,16 @@ code, .code {
 }
 .project .constants li.object.builtin:before {
     background-image: url('project-badge-lock.png'), url('project-icon-object.png');
+}
+
+.project .constants li.reference:before {
+    background-image: none, url('project-icon-reference.png');
+}
+.project .constants li.reference.remote:before {
+    background-image: url('project-badge-cloud.png'), url('project-icon-reference.png');
+}
+.project .constants li.reference.builtin:before {
+    background-image: url('project-badge-lock.png'), url('project-icon-reference.png');
 }
 
 /* New menu */

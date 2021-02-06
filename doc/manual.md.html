@@ -533,7 +533,7 @@ and data-driven input testing.
 - Simple custom physics
 - Orthographic 2.5D graphics
 - Coordinates with +Y pointing up
-- `sprite_override_color`
+- `override_color`
 
 </td></tr><tr><td>![](../examples/planetgen/label128.png)</td><td>
 [Planet Generator](../console/quadplay.html?game=quad://examples/planetgen&IDE=1) uses built-in assets to create random 3D planets with moons, stars, atmosphere, and rings.
@@ -1766,11 +1766,11 @@ String
 `find(string, x, i default 0)`
 : Find the index of the substring whose value is `x`, starting at
   optional index `i` (default 0).  Returns `∅` if not found. O(n)
-  time.
+  time in the length of the string.
 
-`format_number(n, fmt)`
-: Produces a string from number `n` in one of the following formats. Input times are in seconds.
-  Each is followed by an example output.
+`format_number(n, format)`
+: Produces a string from number `n` in one of the following formats.
+  Each is followed by an example output. When `n` is a time, it is in seconds.
 
    - `"percent"`: 30%
    - `"commas"` (comma thousand separators): 1,000,000
@@ -2283,8 +2283,9 @@ Math
 `round(x)`
 : Return the nearest integer value of `x`. Half-integers round towards positive infinity.
 
-`round(x, u)`
-: Return the nearest value of `x` quantized to `u`: `round(x, u) == round(x * u) / u`.
+`round(x, q)`
+: Return the nearest value of `x` quantized to `q`. 
+  If `q` is zero then no rounding occurs. Otherwise, `round(x, q) == round(x * q) / q`.
 
 `sign(x)`
 : Sign of `x`. Returns -1 if `x` is less than zero, -0 if `x` is -0,
@@ -3079,7 +3080,7 @@ The basic entity properties and defaults are:
 `entity.sprite`
 : A sprite from a sprite sheet. Can be `nil`.
 
-`entity.sprite_override_color`
+`entity.override_color`
 : Blends over the color of the sprite with this color (only works
   if there is a sprite). See `draw_sprite()` for details. Defaults to `nil`.
 
@@ -3917,11 +3918,11 @@ endpoints and borders.
 `draw_sprite(sprite, pos, angle default 0°, scale default xy(100%, 100%), opacity default 100%, z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp", pivot default sprite.pivot)`
 : Draw sprite `sprite` with its center at `pos`. `pos` must have at
   least `x` and `y` fields. The sprite appears at `z` in the z-order
-  (defaults to 0). The `scale` parameter must be nil (which is treated
-  as `xy(1,1)`), a number that is not zero, or an `xy()` with nonzero fields.  Scale is applied before the sprite is
-  rotated.  Sprites are not flipped or scaled by `set_transform`
-  values, but the rotation and center are affected by the
-  `set_transform` scaling.
+  (defaults to 0). If specified, the `scale` parameter must be a
+  number that is not zero, or an `xy()` with nonzero fields.  Scale is
+  applied before the sprite is rotated.  Sprites are not flipped or
+  scaled by `set_transform` values, but the rotation and center are
+  affected by the `set_transform` scaling.
 
   If it is not `nil`, the `override_color` blends with the red, green, and blue
   values read from each pixel of the sprite. The default blend mode is `"lerp"`,
@@ -5606,7 +5607,22 @@ The available constants types are:
     sprite of the form `sprite_asset_name.sprite_name`. These
     can be recursive, but obviously cannot form a cycle. References must be 
     defined at top level and not nested inside an array or object. 
-    
+
+### `number` Constants
+
+Number contants may have the following additional parameters
+for controlling the IDE:
+
+- `min`: Smallest value (inclusive)
+- `max`: Smallest value (inclusive)
+- `quantum`: Values are rounded to `round(value, quantum)`
+- `scale`: Must be `"linear"` if specified
+- `format`: Values are shown in the IDE using `format_number(value, format)`
+
+In the current build, these additional properties can only be specified
+by manually editing the JSON file. Future versions of quadplay will contain
+a metadata property editor in the IDE.
+
 
 ### `table` Constants
 

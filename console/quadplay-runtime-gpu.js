@@ -747,7 +747,7 @@ function $executeSPR(metaCmd) {
         const cos = $Math.cos(cmd.angle), sin = $Math.sin(cmd.angle);
         const fx = cmd.scaleX, fy = cmd.scaleY;
 
-        const A = cos/fx, B = -sin/fx, C = sin/fy, D = cos/fy;
+        const A = cos/fx, B = -sin/fx, C =  sin/fy, D = cos/fy;
         const E = cos*fx, F =  sin*fx, G = -sin*fy, H = cos*fy;
         const I = DX - SX*E - SY*G, J = DY - SX*F - SY*H;
 

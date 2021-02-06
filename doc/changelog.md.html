@@ -10,12 +10,28 @@ of [quadplay✜](manual.md.html).
 2021 February TBD: Beta update 64
 ===================================
 
-- Made ESC act as in-game pause when not in the IDE (hold to leave fullscreen)
+- *Incompatible change*: Changed `entity.sprite_override_color` --> `entity.override_color`
+  and `entity.sprite_override_blend` --> `entity.override_blend` properties to match the
+  `draw_sprite()` arguments better.
+- Clicking on "Constants" in the IDE now shows a pane of all constants at once
+  for easy editing
+- Added optional sliders, rounding, and formatting for numeric constants in the IDE
+- Made the ESC key act as in-game pause when not in the IDE (hold to leave fullscreen)
 - The mobile controls icon now includes a fullscreen indicator when not
   in the IDE
+- Constant documentation in the IDE now uses comment syntax highlighting
+- Made boolean constants in the IDE better match the formatting of other constants
 - Made mobile device detection more conservative
 - Made the screen layout buttons easier to touch on mobile
+- Documented JSON metadata for `number` constants
+- Fixed reference constants using the object icon in the project view
+- Fixed constant editor layout of colors with very long variable names
+- Fixed `round(x, 0)` to produce no rounding rather than rounding to an integer
 - Fixed P and Q buttons overlapping in portrait mode on thin phones
+- Fixed crash on blizzard levels in Serpitron game due to API change
+- Fixed blurry map preview
+- Fixed the constant editor not scrolling
+- Fixed incorrect rotated and scaled sprites in map preview
 
 
 2021 January 31: Beta update 63

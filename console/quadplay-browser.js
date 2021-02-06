@@ -661,6 +661,8 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
     const source = audioContext.createBufferSource();
     source.sound = audioClip;
     source.buffer = audioClip.$buffer;
+    // Needed because AudioNode.context is undefined in the onEnded callback
+    source.audioContext = audioContext;
 
     if (audioContext.createStereoPanner) {
         source.panNode = audioContext.createStereoPanner();
@@ -692,11 +694,7 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
     source.loop = loop;
    
     activeSoundHandleMap.set(handle, true);
-    handle.$source = source;
-
-    // Needed because AudioNode.context is undefined in the onEnded callback
-    handle.$source.audioContext = audioContext;
-    
+    handle.$source = source;    
     handle.audioClip = audioClip;
 
     set_playback_rate(handle, rate);
@@ -715,12 +713,16 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
 }
 
 
-// In seconds
+// In seconds; lerp all parameter changes over 1 frame to seem
+// smoother and support continuous variation.
 const audioRampTime = 1 / 60;
 
 function set_volume(handle, volume) {
     if (! (handle && handle.$source)) {
         throw new Error("Must call set_volume() on a sound returned from play_sound()");
+    }
+    if (typeof volume !== 'number' || isNaN(volume) || ! isFinite(volume)) {
+        throw new Error("The volume must be a finite number (got " + volume + ")");
     }
     handle.$source.volume = volume;
     volume *= handle.$source.audioClip.$base_volume;
@@ -742,6 +744,9 @@ function set_pan(handle, pan) {
     if (! (handle && handle.$source)) {
         throw new Error("Must call set_pan() on a sound returned from play_sound()");
     }
+    if (typeof pan !== 'number' || isNaN(pan) || ! isFinite(pan)) {
+        throw new Error("The pan must be a finite number (got " + pan + ")");
+    }
     pan = Math.min(1, Math.max(-1, pan))
 
     handle.$source.pan = pan;
@@ -761,6 +766,9 @@ let warnedAboutPitch = false;
 function set_pitch(handle, pitch) {
     if (! (handle && handle.$source)) {
         throw new Error("Must call set_pitch() on a sound returned from play_sound()");
+    }
+    if (typeof pitch !== 'number' || isNaN(pitch) || ! isFinite(pitch) || pitch <= 0) {
+        throw new Error("The pitch must be a positive finite number (got " + pitch + ")");
     }
     handle.$source.pitch = pitch;
     pitch *= handle.$source.audioClip.$base_pitch;
@@ -788,15 +796,13 @@ function get_audio_status(handle) {
 
     const source = handle.$source;
 
-    let frame;
+    let now = 0;
     if (source.state === 'PLAYING') {
-        frame = source.context.currentTime * 1000 - source.startTimeMs;
+        now = source.context.currentTime * 1000 - source.startTimeMs;
     } else {
-        frame = source.resumePositionMs;
+        now = source.resumePositionMs;
     }
-    const now = frame / 1000;
-    // Convert to 60 fps
-    frame = Math.round(frame * 60 / 1000);
+    now *= 0.001;
         
     return {
         sound:    source.sound,
@@ -806,10 +812,7 @@ function get_audio_status(handle) {
         pan:      source.pan,
         loop:     source.loop,
         state:    source.state,
-        now:      now,
-
-        // Deprecated:
-        frame:    frame
+        now:      now
     }
 }
 

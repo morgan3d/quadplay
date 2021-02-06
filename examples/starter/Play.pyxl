@@ -7,7 +7,7 @@ let flip = xy(1, 1)
 const ball = make_entity({
     pos: xy(45, 140),
     scale: xy(50%, 50%),
-    sprite_override_color: rgb(0.5, 0.0, 1.0),
+    override_color: rgb(0.5, 0.0, 1.0),
     sprite: shapes.circle,
     acc: xy(0, 0.1),
     vel: xy(0, -5)

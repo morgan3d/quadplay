@@ -62,7 +62,7 @@ for player in player_array:
                 if player.active_letter == i:
                     draw_text({text: player.gamepad.prompt["[^]"], font: font, x_align: "center", y_align: "bottom", pos: pos + xy(0, 8), color: blink})
                     draw_text({text: player.gamepad.prompt["[v]"], font: font, x_align: "center", y_align: "top", pos: pos - xy(0, 7), color: blink})
-                draw_text({text: player.name[i], font: large_font, x_align: "center", y_align: "center", pos: pos, color: player.sprite_override_color, outline: (if i == player.active_letter then blink else OUTLINE_COLOR)})
+                draw_text({text: player.name[i], font: large_font, x_align: "center", y_align: "center", pos: pos, color: player.override_color, outline: (if i == player.active_letter then blink else OUTLINE_COLOR)})
 
 
 draw_text({text: "NEW WEEKLY RECORD{br}GOOD JOB, FRIEND" + (if num_played > 1 then "S!" else "!") + "{br}Please enter your initials",

@@ -1134,7 +1134,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         region.corner.y = Math.min(Math.max(0, region.corner.y), image.height);
         
         if (region.size === undefined) { region.size = {x: Infinity, y: Infinity}; }
-        region.size.x = Math.min(image.width - region.corner.x, region.size.x);
+        region.size.x = Math.min(image.width  - region.corner.x, region.size.x);
         region.size.y = Math.min(image.height - region.corner.y, region.size.y);
 
         return getImageData4BitAndFlip(image, region, json);

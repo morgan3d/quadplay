@@ -2033,7 +2033,7 @@ function draw_entity(e, recurse) {
         // memory allocation
         const oldX = $offsetX, oldY = $offsetY;
         $offsetX += e.offset.x * $scaleX; $offsetY += e.offset.y * $scaleY;
-        draw_sprite(e.sprite, e.pos, e.angle, e.scale, e.opacity, e.z, e.sprite_override_color, undefined, e.pivot);
+        draw_sprite(e.sprite, e.pos, e.angle, e.scale, e.opacity, e.z, e.override_color, undefined, e.pivot);
         $offsetX = oldX; $offsetY = oldY;
     }
 
@@ -2083,7 +2083,7 @@ function make_entity(e, childTable) {
     r.twist = r.twist || 0;
     r.torque = r.torque || 0;
     
-    r.sprite_override_color = clone(r.sprite_override_color);
+    r.override_color = clone(r.override_color);
     
     r.scale = r.scale ? clone(r.scale) : xy(1, 1);
     r.offset = r.offset ? clone(r.offset) : xy(0, 0);
@@ -2158,7 +2158,12 @@ function make_entity(e, childTable) {
     r.offset_in_parent = r.offset_in_parent ? clone(r.offset_in_parent) : xy(0, 0);
     r.scale_in_parent = r.scale_in_parent ? clone(r.scale_in_parent) : xy(1, 1);
 
-    if (typeof r.scale !== 'object') { $error('The scale of an entity must be an xy().'); }
+    if (typeof r.scale === 'number') {
+        r.scale = {x: r.scale, y: r.scale};
+    }
+    if (typeof r.scale !== 'object') {
+        $error('The scale of an entity must be a number or xy().');
+    }
     if (isNaN(r.angle)) { $error('NaN angle on entity'); }
     if (isNaN(r.z)) { $error('NaN z on entity'); }
     
@@ -7660,14 +7665,23 @@ function ceil(a, u) {
 
 function round(a, unit) {
     if (typeof a === 'object') {
-        unit = unit || 1;
-        const invUnit = 1 / unit;
-        const c = a.constructor ? a.constructor() : $Object.create(null);
-        for (let key in a) c[key] = $Math.round(a[key] * invUnit) * unit;
-        return c;
-    } else if (unit) {
-        return $Math.round(a / unit) * unit;
-    } else  {
+        if (unit === 0) {
+            return clone(a);
+        } else {
+            const c = a.constructor ? a.constructor() : $Object.create(null);
+            unit = unit || 1;
+            const invUnit = 1 / unit;
+            for (let key in a) c[key] = $Math.round(a[key] * invUnit) * unit;
+            return c;
+        }
+    } else if (unit !== undefined) {
+        if (unit === 0) {
+            // No rounding
+            return a;
+        } else {
+            return $Math.round(a / unit) * unit;
+        }
+    } else {
         return $Math.round(a);
     }
 }

@@ -5,9 +5,9 @@ let camera = {pos: xy(0, 0)}
 
 set_transform(xy(0, SCREEN_SIZE.y - 1), xy(1, -1), 0, 1, xy(0, skewY))
 
-// Recursively set the sprite_override_color. Used for blink
+// Recursively set the override_color. Used for blink
 def setOverrideColor(entity, color):
-   entity.sprite_override_color = color
+   entity.override_color = color
    for child in entity.child_array: setOverrideColor(child, color)
    
 

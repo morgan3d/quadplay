@@ -106,7 +106,7 @@ def fish_simulate(fish):
             z = MIN_LAKE_Z
             z_vel = |z_vel|
             
-        fish.sprite_override_color = fish.color_spline(z)
+        fish.override_color = fish.color_spline(z)
 
        
 /* Called for free fish */
@@ -230,7 +230,7 @@ def fish_fight(fish, player):
     player.line_pos = xy(fish.pos)
     
     draw_entity(fish)
-    const outline_color = lerp(LAKE_COLOR, player.sprite_override_color, 70%)    
+    const outline_color = lerp(LAKE_COLOR, player.override_color, 70%)    
     
     fish_draw_outline(fish, outline_color)
     

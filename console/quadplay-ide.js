@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.01.31.11';
+const version  = '2021.02.05.06';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -1765,7 +1765,10 @@ function showGamepads() {
 
 let soundEditorCurrentSound = null;
 
-/** Called when a project tree control element is clicked */
+/** Called when a project tree control element is clicked.
+
+    For the overview Mode and Constants page, the object is undefined.
+ */
 function onProjectSelect(target, type, object) {
     // Hide all editors
     const editorFrame = document.getElementById('editorFrame');
@@ -1856,6 +1859,7 @@ function onProjectSelect(target, type, object) {
 
     switch (type) {
     case 'constant':
+        // object may be undefined
         showConstantEditor(object);
         break;
         
@@ -2623,17 +2627,18 @@ function visualizeMap(map) {
     const height = map[0].length;
     const depth  = map.layer.length;
 
+    // Scale to fit on screen
     const maxDim = Math.max(width * map.sprite_size.x, height * map.sprite_size.y);
-    
     const reduce = (maxDim > 4096) ? 4 : (maxDim > 2048) ? 3 : (maxDim > 1024) ? 2 : 1;
 
+    // Size of destination tiles
     const dstTileX = Math.max(1, Math.floor(map.sprite_size.x / reduce));
     const dstTileY = Math.max(1, Math.floor(map.sprite_size.y / reduce));
 
-    const canvas = document.getElementById('mapDisplayCanvas');
-    canvas.width = width * dstTileX;
+    const canvas  = document.getElementById('mapDisplayCanvas');
+    canvas.width  = width  * dstTileX;
     canvas.height = height * dstTileY;
-    const mapCtx = canvas.getContext('2d');
+    const mapCtx  = canvas.getContext('2d');
 
     const dstImageData = mapCtx.createImageData(width * dstTileX, height * dstTileY);
     const dstData = new Uint32Array(dstImageData.data.buffer);
@@ -2644,7 +2649,7 @@ function visualizeMap(map) {
             for (let mapX = 0; mapX < width; ++mapX) {
                 const sprite = map.layer[z][mapX][y];
                 if (sprite) {
-                    const srcData = sprite.spritesheet.$uint16Data;
+                    const srcData = sprite.$spritesheet.$uint16Data;
                     const xShift = (sprite.scale.x === -1) ? (sprite.size.x - 1) : 0;
                     const yShift = (sprite.scale.y === -1) ? (sprite.size.y - 1) : 0;
                     const xReduce = reduce * sprite.scale.x;
@@ -2724,7 +2729,7 @@ function createProjectWindow(gameSource) {
     }
     s += '</ul>';
     
-    s += '— <i class="clickable" onclick="onProjectSelect(event.target, \'mode\', undefined)">Modes</i>\n';
+    s += '— <i class="clickable" onclick="onProjectSelect(event.target, \'mode\', undefined)" title="View mode diagram">Modes</i>\n';
     s += '<ul class="modes">';
     for (let i = 0; i < gameSource.modes.length; ++i) {
         const mode = gameSource.modes[i];
@@ -2756,7 +2761,7 @@ function createProjectWindow(gameSource) {
     }
     s += '</ul>';
     
-    s += '— <i>Constants</i>\n';
+    s += '— <i class="clickable" onclick="onProjectSelect(event.target, \'constant\', undefined)" title="View all constants">Constants</i>\n';
     s += '<ul class="constants">';
     {
         const keys = Object.keys(gameSource.extendedJSON.constants || {});
@@ -2774,6 +2779,7 @@ function createProjectWindow(gameSource) {
                   (json.type && (json.type === 'xy' || json.type === 'xz')) ? 'vec2D' :
                   (json.type && json.type === 'xyz') ? 'vec3D' :
                   (json.type && (json.type === 'rgba' || json.type === 'rgb' || json.type === 'hsva' || json.type === 'hsv')) ? 'color' :
+                  (json.type && json.type === 'reference') ? 'reference' :
                   (typeof v);
             const contextMenu = editableProject ? `oncontextmenu="showConstantContextMenu('${c}')"` : '';
             // Pad with enough space to extend into the hidden scrollbar area
@@ -4431,7 +4437,7 @@ window.addEventListener('focus', function() {
         } else if (emulatorMode === 'stop') {
             // Regained focus while stopped and in the IDE. Reload in case
             // anything changed on disk
-            console.log('Reloading because the browser regained focus in the IDE.');x
+            console.log('Reloading because the browser regained focus in the IDE.');
             loadGameIntoIDE(window.gameURL, null, true);
         }
     }

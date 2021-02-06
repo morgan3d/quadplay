@@ -23,7 +23,7 @@ def make_player(gamepad_index):
         pos: pos,
         sprite: shapes_sprite.meeple,
         gamepad: gamepad_array[gamepad_index],
-        sprite_override_color: color,
+        override_color: color,
         z: 1,
         scale: ¾ xy(1, 1),
         face: face,
@@ -88,7 +88,7 @@ def player_show_emotion(player, sprite):
             pos: player.pos + xy(14 player.face.x, 23),
             scale: xy(player.face.x, 1),
             z: 4,
-            override_color: player.sprite_override_color,
+            override_color: player.override_color,
             override_blend: "multiply"})        
 
     // Replace any previous emotion    
@@ -109,7 +109,7 @@ def not_playing(player):
     draw_text(font,
         replace(JOIN_TEXT, player.gamepad.prompt),
         player.pos - 8 player.face,
-        rgba(player.sprite_override_color, 75%),
+        rgba(player.override_color, 75%),
         ∅,
         OUTLINE_COLOR,
         -player.face.x,
@@ -160,8 +160,8 @@ def draw_player(player):
         const α = i / N
         bent_tip = lerp(player.base_pos, player.tip_pos, α) + xy(1, -1) * α³ bend
         draw_line(prev, bent_tip, OUTLINE_COLOR, player.z - ε, 4)
-        draw_line(prev, bent_tip, player.sprite_override_color, player.z, 2)
-    draw_rect(bent_tip, xy(2, 2), player.sprite_override_color, OUTLINE_COLOR, player.z - ε)
+        draw_line(prev, bent_tip, player.override_color, player.z, 2)
+    draw_rect(bent_tip, xy(2, 2), player.override_color, OUTLINE_COLOR, player.z - ε)
             
     // Fishing line shadow (no wiggle)
     draw_line(bent_tip - xy(16 player.face.x, 32), player.line_pos, #0001, 0)
@@ -173,17 +173,17 @@ def draw_player(player):
             todo("Play high tension buzz sound")
             // Flash red on yellow and white on other colors
             const FLASH_COLOR = if player.gamepad.index == 2 then #b00 else #fff
-            const line_color = lerp(player.sprite_override_color, FLASH_COLOR, oscillate((player.tension - 40%)² * mode_frames / 3))
+            const line_color = lerp(player.override_color, FLASH_COLOR, oscillate((player.tension - 40%)² * mode_frames / 3))
             const midpoint = lerp(player.line_pos, bent_tip, 50%) + random_within_circle() * 4 (player.tension - HIGH_TENSION) / (100% - HIGH_TENSION)
             draw_line(player.line_pos, midpoint, line_color, 0.9);
             draw_line(midpoint, bent_tip, line_color, 0.9)            
         else:
-            draw_line(player.line_pos, bent_tip, player.sprite_override_color, 0.9)
+            draw_line(player.line_pos, bent_tip, player.override_color, 0.9)
     else:
         const wiggle = max((NORMAL_TENSION - player.tension) / NORMAL_TENSION, 0%) * (min(‖player.tip_pos - player.line_pos‖ / 14, 18) + 2 cos(0.03 mode_frames))
-        draw_wiggle_line(player.line_pos, bent_tip, wiggle, 0.1, player.sprite_override_color, 0.9)
+        draw_wiggle_line(player.line_pos, bent_tip, wiggle, 0.1, player.override_color, 0.9)
     
-    draw_disk(player.bobber_pos, 3, player.sprite_override_color, OUTLINE_COLOR, 0.9)
+    draw_disk(player.bobber_pos, 3, player.override_color, OUTLINE_COLOR, 0.9)
     
     // Player
     draw_entity(player)
@@ -214,7 +214,7 @@ def player_update(player):
             draw_text({
                 text: replace(message, player.gamepad.prompt),
                 pos:  lerp(player.line_pos, player.tip_pos, 50%),
-                color: player.sprite_override_color,
+                color: player.override_color,
                 outline: #0,
                 font: font,
                 z: 10,
@@ -302,7 +302,7 @@ def player_cast(player):
                 return sequence.BREAK                
 
         // Delay the sound start a bit
-        def s1(): play_sound({sound: cast_sound, pan: player.pos, pitch: (player.rod_angle - ROD_ANGLE_MIN) / 90°, volume: (player.rod_angle - ROD_ANGLE_MIN) / 120°})
+        def s1(): play_sound({sound: cast_sound, pan: player.pos, pitch: max(0.1, (player.rod_angle - ROD_ANGLE_MIN) / 90°), volume: (player.rod_angle - ROD_ANGLE_MIN) / 120°})
         delay(s1, 5)
         delay(s2, 10)
         
@@ -440,7 +440,7 @@ def player_reeled_in_fully(player):
             draw_text({
                 font: large_font,
                 pos: lerp(end_pos, start_pos, τ),
-                color: rgba(rgb(fish.sprite_override_color), sqrt(τ)), 
+                color: rgba(rgb(fish.override_color), sqrt(τ)), 
                 outline: rgba(1, 1, 1, 60% sqrt(τ)),
                 z: 200,
                 text: data, 
@@ -484,7 +484,7 @@ def player_reeled_in_fully(player):
                             sprite: fish.sprite, 
                             angle: 90°,
                             scale: fish.scale, 
-                            override_color: fish.sprite_override_color,
+                            override_color: fish.override_color,
                             z: 4,
                             pos: player.tip_pos + xy(0, -½ fish.size.x * fish.scale.x - 12)})
 

@@ -225,7 +225,7 @@
     
     <div id="editorFrame" class="ide idePart">
       <div id="modeEditor" style="position:absolute; top:0px; left:0; visibility:hidden"> </div>
-      <div id="constantEditor" style="position:absolute; top:0; left:0; padding: 10px; visibility:hidden"></div>
+      <div id="constantEditor" style="position:absolute; top:0; left:0; right: 0; bottom: 0; overflow: scroll; padding: 10px; visibility:hidden"></div>
       <div id="codePlusFrame" onmouseup="onCodeEditorDividerDragEnd()" onmousemove="onCodeEditorDividerDrag(event)">
         <div class="toolbar">
           <script>
@@ -243,7 +243,7 @@
         <div id="codeEditorContentFrame">
           <div id="gameEditor" style="padding: 10px; overflow: scroll; visibility:hidden"> </div>
           <div id="docEditor"> </div>
-          <div id="mapEditor"><canvas id="mapDisplayCanvas" style="border:1px solid #ccc"></canvas></div>
+          <div id="mapEditor"><canvas id="mapDisplayCanvas" style="border:1px solid #ccc" class="pixelate"></canvas></div>
           <div id="spriteEditor" class="pixelate">
             <div id="spriteEditorHighlight" style="position:absolute; width: 100px; height: 50px; border: 1px solid #0f0; color: #0f0; overflow: visible; box-shadow: 0px 1px 4px #000">
               <div id="spriteEditorPivot" style="line-height: 30px; height: 30px">☩</div>
