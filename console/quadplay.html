@@ -522,7 +522,11 @@
             <div style="text-align:left; margin-left: 20px; column-width: 140px; margin-top:20px">
               <input type="radio" name="newConstantType" value="string"  id="newConstantTypeString" selected="selected"><label for="newConstantTypeString">String</label>
               <br/><input type="radio" name="newConstantType" value="number"  id="newConstantTypeNumber"><label for="newConstantTypeNumber">Number</label>
-              <br/><input type="radio" name="newConstantType" value="boolean" id="newConstantTypeBoolean"><label for="newConstantTypeBoolean">Boolean</label>
+              <table style="padding-left:25px">
+                <tr><td>min</td><td><input id="newConstantNumberMin" type="text" style="width: 75px; font-size: 80%; font-family: Monaco, monospace"></input></td></tr>
+                <tr><td>max</td><td><input id="newConstantNumberMax" type="text" style="width: 75px; font-size: 80%; font-family: Monaco, monospace"></input></td></tr>
+              </table>
+              <input type="radio" name="newConstantType" value="boolean" id="newConstantTypeBoolean"><label for="newConstantTypeBoolean">Boolean</label>
               <br/><input type="radio" name="newConstantType" value="nil" id="newConstantTypeNil"><label for="newConstantTypeNil">Nil</label>
               <br/><input type="radio" name="newConstantType" value="xy" id="newConstantTypeXY"><label for="newConstantTypeXY"><code>xy()</code></label>
               <br/><input type="radio" name="newConstantType" value="xz" id="newConstantTypeXZ"><label for="newConstantTypeXZ"><code>xz()</code></label>

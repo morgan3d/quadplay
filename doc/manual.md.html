@@ -57,7 +57,7 @@ debugger, and profiler.
 
 **Software Features**
 
-- Export to your own website, itch.io, or github pages
+- [Export](#deployinggames) to your own website, itch.io, or github pages
 - Games run on web, mobile, desktop, tablet, Jetson Nano, Raspberry Pi 4/400
 - Free for commercial, personal, and educational use
 - Friendly and powerful PyxlScript Python-like scripting language
@@ -865,10 +865,10 @@ Graphics in PyxlScript are similar to other 2D rendering APIs. You can
 set the background color, draw basic shapes and text, and render
 sprites with some features such as flipping and rotation.  There's
 special support for drawing whole tile maps as well.  All drawing
-commands support an [_alpha_ channel](https://en.wikipedia.org/wiki/Alpha_compositing) for transparency.
+commands support an [*alpha channel*](https://en.wikipedia.org/wiki/Alpha_compositing) for transparency.
 
 What is special about the 2.5D graphics in PyxlScript is that each
-drawing command has an associated _z-order_. If two commands are at the same z-order,
+drawing command has an associated *z-order*. If two commands are at the same z-order,
 then whichever comes second will draw on top of the other one. Commands that have explicit,
 different z-order values will render from low to high values.
 
@@ -6076,8 +6076,8 @@ putting a copyright statement directly on the font itself.
 Fonts count 1/2 as much towards the spritesheet pixel limit because they
 are internally compressed to 8 bits per pixel. They still count fully 
 towards the maximum spritesheet dimensions. Because a font is
-32x26 glyphs, this means that the largest `char_size` can be
-is 24x29 pixels if the `shadow_size` is one pixel.
+32x14 glyphs, this means that the largest `char_size` can be
+is 29x70 pixels when the `shadow_size` is one pixel.
 
 Fonts enforce uniform width on all full-size digits 0..9 so that
 numbers print in aligned columns. Avoid drawing fonts with one digit

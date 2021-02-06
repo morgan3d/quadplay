@@ -498,12 +498,15 @@ function showNewConstantDialog() {
     text.value = "";
     text.focus();
 
+    document.getElementById('newConstantNumberMin').value = '-infinity';
+    document.getElementById('newConstantNumberMax').value = '+infinity';
+    
     // Only make reference types valid if there is already some other
     // asset or constant to refer to.
     document.getElementById('newConstantTypeReference').disabled = 
         (Object.keys(gameSource.json.constants).length === 0 && Object.keys(gameSource.json.assets).length === 0);
 
-    document.getElementById('newConstantDescription').value = "";
+    document.getElementById('newConstantDescription').value = '';
 }
 
 
@@ -571,17 +574,58 @@ function onNewConstantCreate() {
         }
     }
 
-    gameSource.constants[key] = value;
-    if (! gameSource.json.constants) {
-        gameSource.json.constants = {};
-    }
-
     const obj = {type: type, value: value};
     const description = document.getElementById('newConstantDescription').value;
     if (description !== '') {
         obj.description = description;
     }
+
+    if (type === 'number') {
+        const minValText = document.getElementById('newConstantNumberMin').value.trim();
+        const maxValText = document.getElementById('newConstantNumberMax').value.trim();
+        
+        let minVal = $parse(minValText).result;
+        let maxVal = $parse(maxValText).result;
+
+        // Legal and nontrivial
+        if (! isNaN(minVal) && typeof minVal === 'number' &&
+            ! isNaN(maxVal) && typeof maxVal === 'number' &&
+            (Math.max(minVal, maxVal) < Infinity || Math.min(minVal, maxVal) > -Infinity)) {
+
+            if (maxVal < minVal) { const temp = minVal; minVal = maxVal; maxVal = temp; }
+
+            // Clamp the initial value to the specified range
+            obj.value = value = clamp(obj.value, minVal, maxVal);
+
+            // Save minVal
+            if (/^[+-0-9.]+$/.test(minValText)) {
+                obj.min = minVal;
+            } else {
+                obj.min = {type: 'number', value: minValText};
+            }
+
+            // Save maxVal
+            if (/^[+-0-9.]+$/.test(maxValText)) {
+                obj.max = maxVal;
+            } else {
+                obj.max = {type: 'number', value: maxValText};
+            }
+
+            // Make these discoverable by
+            // adding them to the saved object
+            obj.format = "";
+            obj.quantum = 0;
+
+        } // if min and max val are well formed and not the full range
+    } // if number
+    
     gameSource.json.constants[key] = obj;
+    
+    gameSource.constants[key] = value;
+    if (! gameSource.json.constants) {
+        gameSource.json.constants = {};
+    }
+
 
     // Reload
     serverSaveGameJSON(function () {
