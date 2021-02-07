@@ -24,13 +24,55 @@ Games
 
 Full
 --------------------------------------------------------
-These full games are included for playing. They also provide source
-code as learning resource.
+These full games are included for playing, with source
+code.
 
 <img src="games/across_the_lake/label128.png"> <img src="games/icetime/label128.png"> <img src="games/beat_the_gobblins/label128.png"> <img src="games/friendly_fishing/label128.png"> <img src="games/quadpaddle/label128.png"> <img src="games/doublesdepon/label128.png"> <img src="games/rps/label128.png"> <img src="games/serpitron/label128.png">
 
+
 Examples
 --------------------------------------------------------
+These short example programs demonstrate specific quadplay
+features and programming techniques.
+
+<img src="examples/accel_demo/label128.png">
+<img src="examples/animation/label128.png">
+<img src="examples/boids/label128.png">
+<img src="examples/camera_shake/label128.png">
+<img src="examples/camera_zoom/label128.png">
+<img src="examples/clouds/label128.png">
+<img src="examples/dark_drive/label128.png">
+<img src="examples/dual-stick/label128.png">
+<img src="examples/entity/label128.png">
+<img src="examples/fluid/label128.png">
+<img src="examples/fontpreview/label128.png">
+<img src="examples/gridmove/label128.png">
+<img src="examples/helloworld/label128.png">
+<img src="examples/highscore/label128.png">
+<img src="examples/input/label128.png">
+<img src="examples/kart/label128.png">
+<img src="examples/lift_team/label128.png">
+<img src="examples/perceptual_color/label128.png">
+<img src="examples/physics/label128.png">
+<img src="examples/piano/label128.png">
+<img src="examples/planetgen/label128.png">
+<img src="examples/robot/label128.png">
+<img src="examples/roguelike/label128.png">
+<img src="examples/rpg/label128.png">
+<img src="examples/sequence_demo/label128.png">
+<img src="examples/speedstreet/label128.png">
+<img src="examples/sproing/label128.png">
+<img src="examples/starter/label128.png">
+<img src="examples/text/label128.png">
+<img src="examples/touch/label128.png">
+<img src="examples/track_mouse/label128.png">
+<img src="examples/twin_analog/label128.png">
+<img src="examples/vaporwave/label128.png">
+<img src="examples/vehicles/label128.png">
+<img src="examples/warlock3D/label128.png">
+<img src="examples/word_game/label128.png">
+<img src="examples/zcar/label128.png">
+<img src="examples/zoom/label128.png">
 
 
 Features
