@@ -27,7 +27,7 @@ Full
 These full games are included for playing. They also provide source
 code as learning resource.
 
-<img src="games/across_the_lake/label128.png"> <img src="games/beat_the_gobblins/label128.png"> <img src="games/doublesdepon/label128.png"> <img src="games/friendly_fishing/label128.png"> <img src="games/icetime/label128.png"> <img src="games/quadpaddle/label128.png"> <img src="games/rps/label128.png"> <img src="games/serpitron/label128.png">
+<img src="games/across_the_lake/label128.png"> <img src="games/icetime/label128.png"> <img src="games/beat_the_gobblins/label128.png"> <img src="games/friendly_fishing/label128.png"> <img src="games/quadpaddle/label128.png"> <img src="games/doublesdepon/label128.png"> <img src="games/rps/label128.png"> <img src="games/serpitron/label128.png">
 
 Examples
 --------------------------------------------------------
