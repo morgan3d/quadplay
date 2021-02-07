@@ -17,7 +17,7 @@ build your own programmable arcade machine from a Raspberry Pi, Tegra,
 or old computer. Here are some of the many supported quadplay
 platforms:
 
-<img src="doc/laptop.jpg" height=180> <img src="doc/desktop.jpg" height=180> <img src="doc/phone.jpg" height=180> <img src="doc/rpi-arcade.jpg" height=180> <img src="doc/arcade.jpg" height=180> <img src="doc/xarcade-arcade.jpg" height=180> <img src="doc/nano-arcade.jpg" height=180> <img src="doc/quad-arcade.jpg" height=180>
+<img src="doc/laptop.jpg" height=180> <img src="doc/desktop.jpg" height=180> <img src="doc/phone.jpg" height=180> <img src="doc/rpi-arcade.jpg" height=180> <img src="doc/arcade.jpg" height=180> <img src="doc/xarcade-arcade.jpg" height=180> <img src="doc/nano-arcade.jpg" height=180> <img src="doc/quad-arcade.jpg" height=180> <img src="doc/gpd-win.jpg" height=180>
 
 
 Features

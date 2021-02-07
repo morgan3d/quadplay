@@ -34,7 +34,7 @@ rotateToTarget(tank.turret, gamepad_array[1].angle, 5°)
 
 with pos, angle in tank:
    const dir = xy(cos angle, rotation_sign() * sin angle)
-   pos =  loop(pos + speed * dir, xy(-32, -32), SCREEN_SIZE + 32)
+   pos =  loop(pos + SPEED * dir, xy(-32, -32), SCREEN_SIZE + 32)
 
    const normal = perp(dir)
    if mode_frames mod 8 == 0:

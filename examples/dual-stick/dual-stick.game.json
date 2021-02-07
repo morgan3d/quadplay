@@ -14,9 +14,11 @@
         "tankSprite": "tank.sprite.json"
     },
     "constants": {
-        "speed": {
+        "SPEED": {
             "type": "number",
-            "value": 0.5
+            "value": 0.5,
+            "min": 0.1,
+            "max": 5
         }
     },
     "y_up": false,
@@ -31,5 +33,6 @@
     "highscores": false,
     "achievements": false,
     "min_players": 1,
-    "max_players": 1
+    "max_players": 1,
+    "screenshot_tag": "Dual D-Pad Example"
 }

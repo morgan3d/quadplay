@@ -53,7 +53,10 @@
         },
         "BLOOM": {
             "type": "number",
-            "value": 0.8
+            "value": "80%",
+            "min": 0,
+            "max": 1,
+            "format": "%"
         }
     },
     "screen_size": {

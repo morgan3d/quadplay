@@ -25,24 +25,7 @@
     "achievements": false,
     "highscores": false,
     "description": "Examples of different ways of drawing and simulating entities.",
-    "constants": {
-        "text_color": {
-            "type": "rgb",
-            "value": {
-                "r": {
-                    "type": "number",
-                    "value": 1
-                },
-                "g": {
-                    "type": "number",
-                    "value": 1
-                },
-                "b": {
-                    "type": "number",
-                    "value": 1
-                }
-            }
-        }
-    },
-    "y_up": true
+    "constants": {},
+    "y_up": true,
+    "screenshot_tag": "Entity Example"
 }

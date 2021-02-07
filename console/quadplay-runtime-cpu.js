@@ -8037,19 +8037,30 @@ function format_number(n, fmt) {
         return '' + n;
         
     default:
-        {
-            const match = fmt.match(/^( *)(0*)(\.0+)?$/);
+        {            
+            const match = fmt.match(/^( *)(0*)(\.0+)?(°|deg|degree|degrees|%)?$/);
             if (match) {
                 const spaceNum = match[1].length;
                 const intNum = match[2].length;
                 const fracNum = match[3] ? $Math.max(match[3].length - 1, 0) : 0;
+                let suffix = match[4];
 
+                if (suffix === 'deg' || suffix === 'degrees' || suffix === 'degree' || suffix === '') {
+                    suffix = '°';
+                    n *= 180 / $Math.PI;
+                } else if (suffix === '%') {
+                    n *= 100;
+                }
+                
                 let s = $Math.abs(n).toFixed(fracNum);
 
                 let i = (fracNum === 0) ? s.length : s.indexOf('.');
                 while (i < intNum) { s = '0' + s; ++i; }
                 while (i < intNum + spaceNum) { s = ' ' + s; ++i; }
                 if (n < 0) { s = '-' + s; }
+
+                if (suffix) { s += suffix; }
+                
                 return s;
             } else {
                 return '' + n;

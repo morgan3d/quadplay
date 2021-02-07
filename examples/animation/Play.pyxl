@@ -2,9 +2,9 @@ Play
 ════════════════════════════════════════════════════════════════════════
 
 const ninja = make_entity({
-    pos:            xy(½ SCREEN_SIZE.x, groundY),
-    spritesheet:    ninjaSprite,
-    sprite:         ninjaSprite.idle[0],
+    pos:            xy(½ SCREEN_SIZE.x, GROUND_Y),
+    spritesheet:    ninja_spritesheet,
+    sprite:         ninja_spritesheet.idle[0],
     animation:      "idle",
     
     // Current animation frame
@@ -16,8 +16,8 @@ const ninja = make_entity({
     z:              1,
     weaponIndex:    0,
     weaponArray:    [
-        make_entity({spritesheet: swordSprite}),
-        make_entity({spritesheet: bowSprite}),
+        make_entity({spritesheet: sword_spritesheet}),
+        make_entity({spritesheet: bow_spritesheet}),
         ∅
     ]
 })
@@ -49,7 +49,7 @@ with pos, vel, force, scale, spriteIndex, spriteFrame, animation, spritesheet, s
         spriteFrame = 0
         // Fire the arrow on the third frame of the bow attack animation
         if weaponIndex == 1 and animation == "attack" and spriteIndex == 2:
-            push(arrowArray, {pos: pos + xy(scale.x * arrowLength, 0),
+            push(arrowArray, {pos: pos + xy(scale.x * ARROW_LENGTH, 0),
                               vel: xy(3 scale.x, 0) })
 
 
@@ -59,7 +59,7 @@ with pos, vel, force, scale, spriteIndex, spriteFrame, animation, spritesheet, s
     else if gamepad.x and animation ≠ "land":
         // Running
         scale.x = gamepad.x
-        vel.x = gamepad.x * runSpeed
+        vel.x = gamepad.x * RUN_SPEED
         nextAnimation = if gamepad.y > 0 then "crawl" else "run"
     else: // Not running
         vel.x *= 70%
@@ -67,23 +67,23 @@ with pos, vel, force, scale, spriteIndex, spriteFrame, animation, spritesheet, s
       
 
     // Clamp to ground and set landing pose
-    if ((find(animation, "jump") ≠ ∅ and pos.y ≥ groundY) or
+    if ((find(animation, "jump") ≠ ∅ and pos.y ≥ GROUND_Y) or
         (animation == "land" and spriteIndex < size(spritesheet[animation]))):
         nextAnimation = "land"
       
-    if pos.y > groundY: pos.y = groundY; vel.y = 0
+    if pos.y > GROUND_Y: pos.y = GROUND_Y; vel.y = 0
    
-    if pos.y == groundY:
+    if pos.y == GROUND_Y:
         if animation ≠ "land" and nextAnimation ≠ "land" and animation ≠ "attack":
             // On ground, we can jump and attack
-            if gamepad.aa: vel.y = -jumpSpeed
+            if gamepad.aa: vel.y = -JUMP_SPEED
             if gamepad.bb: nextAnimation = "attack"
     else:
         // Above ground
-        force.y = gravity * entity_mass(ninja)
+        force.y = GRAVITY * entity_mass(ninja)
       
     // Jumping animation
-    if pos.y < groundY:
+    if pos.y < GROUND_Y:
         nextAnimation = if vel.y < ½ then "jumpUp" else "jumpDown"
       
     // Change animation
@@ -115,33 +115,33 @@ entity_update_children(ninja)
 
 
 for arrow in arrowArray:
-    if arrow.pos.x < -arrowLength or arrow.pos.x > SCREEN_SIZE.x + arrowLength:
+    if arrow.pos.x < -ARROW_LENGTH or arrow.pos.x > SCREEN_SIZE.x + ARROW_LENGTH:
         remove_values(arrow, arrowArray)
     else:
         arrow.pos.x += arrow.vel.x
-        draw_line(arrow.pos, arrow.pos + xy(arrowLength * sign(arrow.vel.x), 0), #0)
+        draw_line(arrow.pos, arrow.pos + xy(ARROW_LENGTH * sign(arrow.vel.x), 0), #0)
 
 // Sky
 set_background(rgb(20%, 50%, 80%))
 draw_text(font, CREDITS.title, xy(½ SCREEN_SIZE.x, 20), #FFF, ∅, ∅, 0, 0)
 
 // Ground
-draw_corner_rect(xy(0, groundY + 8), xy(SCREEN_SIZE.x, SCREEN_SIZE.y - (groundY + 8)), #DDD)
+draw_corner_rect(xy(0, GROUND_Y + 8), xy(SCREEN_SIZE.x, SCREEN_SIZE.y - (GROUND_Y + 8)), #DDD)
 
 // Show instructions
 local:
-    let pos = xy(12, groundY + 19)
+    let pos = xy(12, GROUND_Y + 19)
     for i < ½ size(instructions):
         draw_text(instructionFont, replace(instructions[2i], gamepad.prompt), pos, #7)
         pos.y += draw_text(instructionFont, instructions[2i + 1], pos + xy(30, 0), #7).y
         if pos.y > SCREEN_SIZE.y - 10:
             pos.x += 97
-            pos.y = groundY + 19
+            pos.y = GROUND_Y + 19
 
 // Ninja
 draw_entity(ninja)
 
 // Shadow
 with x in ninja.pos:
-    draw_line(xy(x - 7, groundY + 8), xy(x + 7, groundY + 8), rgba(0, 0, 0, 20%), ninja.z - 0.1)
-    draw_line(xy(x - 5, groundY + 9), xy(x + 5, groundY + 9), rgba(0, 0, 0, 15%), ninja.z - 0.1)
+    draw_line(xy(x - 7, GROUND_Y + 8), xy(x + 7, GROUND_Y + 8), rgba(0, 0, 0, 20%), ninja.z - 0.1)
+    draw_line(xy(x - 5, GROUND_Y + 9), xy(x + 5, GROUND_Y + 9), rgba(0, 0, 0, 15%), ninja.z - 0.1)

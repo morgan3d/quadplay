@@ -415,6 +415,20 @@ input[type=text], input[type=number], textarea {
 
 /*****************************************************/
 
+div.oneConstantEditor label.debugOverrideCheckbox {
+    visibility:hidden
+}
+
+div.oneConstantEditor:hover label.debugOverrideCheckbox {
+    visibility:visible
+}
+
+span.constantName {
+    min-width:95px;
+    display: inline-block;
+    font-weight: bold;
+}
+
 div.debugOverride {
     margin-top:4px;
     width:100%;
