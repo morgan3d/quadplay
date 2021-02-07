@@ -24,10 +24,10 @@ Games
 
 Full
 --------------------------------------------------------
-These full games are included for playing, with source
-code.
+These full games are included, with source
+code. Click to play:
 
-[<img src="games/across_the_lake/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/across_the_lake) <img src="games/icetime/label128.png"> <img src="games/beat_the_gobblins/label128.png"> <img src="games/friendly_fishing/label128.png"> <img src="games/quadpaddle/label128.png"> <img src="games/doublesdepon/label128.png"> <img src="games/rps/label128.png"> <img src="games/serpitron/label128.png">
+[<img src="games/across_the_lake/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/across_the_lake) [<img src="games/icetime/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/icetime) [<img src="games/beat_the_gobblins/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/beat_the_gobblins) [<img src="games/friendly_fishing/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/friendly_fishing) [<img src="games/quadpaddle/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/quadpaddle) [<img src="games/doublesdepon/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/doublesdepon) [<img src="games/rps/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/rps) [<img src="games/serpitron/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/serpitron)
 
 
 Examples
