@@ -19,6 +19,19 @@ platforms:
 
 <img src="doc/laptop.jpg" height=180> <img src="doc/desktop.jpg" height=180> <img src="doc/phone.jpg" height=180> <img src="doc/rpi-arcade.jpg" height=180> <img src="doc/arcade.jpg" height=180> <img src="doc/xarcade-arcade.jpg" height=180> <img src="doc/nano-arcade.jpg" height=180> <img src="doc/quad-arcade.jpg" height=180> <img src="doc/gpd-win.jpg" height=180>
 
+Games
+========================================================
+
+Full
+--------------------------------------------------------
+These full games are included for playing. They also provide source
+code as learning resource.
+
+<img src="games/across_the_lake/label128.png"> <img src="games/beat_the_gobblins/label128.png"> <img src="games/doublesdepon/label128.png"> <img src="games/friendly_fishing/label128.png"> <img src="games/icetime/label128.png"> <img src="games/quadpaddle/label128.png"> <img src="games/rps/label128.png"> <img src="games/serpitron/label128.png">
+
+Examples
+--------------------------------------------------------
+
 
 Features
 ========================================================
