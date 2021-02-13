@@ -1,0 +1,54 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+const POINT_GRID_SIZE = xy(50, 50)
+
+const POINTS = []
+for x < POINT_GRID_SIZE.x:
+    for y < POINT_GRID_SIZE.y:
+        const k = noise(3, x / 15, y / 15)
+        push(
+            POINTS,
+            make_entity(
+                {
+                    pos: SPACING *  xy(
+                        xy(x, y) - (POINT_GRID_SIZE - 1) / 2
+                    ),
+                    sprite: shapes_sprite.octagon,
+                    override_color: hsv(1 + k, 0.5, 1.0),
+                    name: "POINT_" + x + "_" + y,
+                    grid: xy(x, y)
+                }
+            )
+        )
+
+
+const CAMERA = {
+    pos: xy(0, 0),
+    angle: 0,
+    zoom: 0.5
+}
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+// Lower right text
+draw_text(font, "CAMERA.zoom: " + 
+    format_number(CAMERA.zoom, "0.00"), SCREEN_SIZE - 10, ACCENT_COLOR, nil, OUTLINE_COLOR, "right", "bottom", 1)
+
+preserving_transform:
+    // Center indicator
+    set_transform(SCREEN_SIZE / 2)
+    draw_disk(xyz(0, 0, 0), 10, nil, ACCENT_COLOR, 1)
+    draw_disk(xyz(0, 0, 0), 3, ACCENT_COLOR, OUTLINE_COLOR, 1)
+    draw_text(font, "screen center", xy(0, 12), ACCENT_COLOR, nil, OUTLINE_COLOR, "center", "top", 1)
+    
+    CAMERA.pos.x = clamp(CAMERA.pos.x + 5 gamepad_array[0].x, -1000, 1000)
+    CAMERA.zoom = clamp(CAMERA.zoom * pow(0.98, gamepad_array[0].y), 0.2, 10)
+
+    set_camera(CAMERA)
+
+    for point in POINTS:
+        draw_point(point.pos, point.override_color)
+        draw_sprite(point)

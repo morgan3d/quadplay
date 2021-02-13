@@ -1,0 +1,80 @@
+{
+    "achievements": false,
+    "assets": {
+        "font": "quad://fonts/deja-8.font.json",
+        "shapes_sprite": "quad://sprites/shapes-32x32.sprite.json"
+    },
+    "competitive": false,
+    "constants": {
+        "ACCENT_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "51%"
+                }
+            }
+        },
+        "OUTLINE_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "0%"
+                }
+            }
+        },
+        "SPACING": {
+            "type": "number",
+            "value": "50",
+            "min": {
+                "type": "number",
+                "value": "10"
+            },
+            "max": {
+                "type": "number",
+                "value": "200"
+            },
+            "format": "",
+            "quantum": 0
+        }
+    },
+    "cooperative": false,
+    "copyright": "©2021 Stephan Steinbach",
+    "description": "Using 2D zoom to move the camera in and out.",
+    "developer": "Stephan Steinbach",
+    "docs": [],
+    "highscores": false,
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+    "max_players": 1,
+    "min_players": 1,
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "packages": [],
+    "scripts": [],
+    "title": "Zoom 2D",
+    "version": 0,
+    "screen_size": {
+        "x": 384,
+        "y": 224
+    },
+    "screenshot_tag": "Zoom"
+}
