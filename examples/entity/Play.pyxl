@@ -140,5 +140,5 @@ frame
 ────────────────────────────────────────────────────────────────────────
 
 set_background(rgb(40%, 60%, 80%))
-draw_text(font, CREDITS.title, xy(½ SCREEN_SIZE.x, 10), text_color, ∅, ∅, 0, 0)
+draw_text(font, CREDITS.title, xy(½ SCREEN_SIZE.x, 10), #fff, ∅, ∅, 0, 0)
 iterate(entity_array, "process")

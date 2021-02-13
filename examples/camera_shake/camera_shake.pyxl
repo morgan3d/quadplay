@@ -50,6 +50,7 @@ def cam_update_frame(goal_pos, clamp_bounds_min, clamp_bounds_max):
         CAMERA.shake_mag = 0
     CAMERA.pos = CAMERA.pos + 0.1 * (goal - CAMERA.pos) + cam_shake_displacement
 
+
 def cam_add_shake(intensity):
     CAMERA.shake_mag += intensity
     CAMERA.shake_mag = min(CAM_SHAKE_MAX, CAMERA.shake_mag)

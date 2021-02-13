@@ -12,10 +12,12 @@ for x < POINT_GRID_SIZE.x:
             POINTS,
             make_entity(
                 {
-                    pos: SPACING * (xy(x, y) - (POINT_GRID_SIZE - 1) / 2),
+                    pos: xyz(
+                        SPACING * (xy(x, y) - (POINT_GRID_SIZE - 1) / 2),
+                        0
+                    ),
                     radius: POINT_RADIUS,
                     color: rgb(1,1,1),
-                    z: 0,
                     name: "POINT_" + unparse(x) + "_" + unparse(y),
                     grid: xy(x,y),
                 }
@@ -23,25 +25,27 @@ for x < POINT_GRID_SIZE.x:
         )
 
 def perspective_zoom(cs_z):
-   const clip_z = 6.5
-   return clip_z / (clip_z - cs_z)
+    const clip_z = 6.5
+    return clip_z / (clip_z - cs_z)
 
-const CAMERA = make_entity({
-   pos: xy(0, 0),
-   angle: 0,
-   z: 10,
-   zoom: perspective_zoom
-})
+const CAMERA = make_entity(
+    {
+        pos: xy(0, 0),
+        angle: 0,
+        zoom: perspective_zoom,
+        z: 10
+    }
+)
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
-reset_transform()
 
+// lower right text
 draw_text(
     font,
     "CAMERA.z: " + unparse(CAMERA.z),
-    SCREEN_SIZE - xy(10, 10),
+    xyz(SCREEN_SIZE - xy(10, 10), 0),
     rgb(0,1,0),
     nil,
     rgb(0,0,0),
@@ -49,24 +53,25 @@ draw_text(
     "bottom"
 )
 
-set_transform(½ SCREEN_SIZE)
-draw_disk(xy(0, 0), 10, ∅, rgb(0,1,0))
-draw_disk(xy(0, 0), 3, rgb(0,1,0), rgb(0,0,0))
-draw_text(
-    font,
-    "screen center",
-    xy(0, 12),
-    rgb(0,1,0),
-    ∅,
-    rgb(0,0,0),
-    "center",
-    "top"
-)
-
-CAMERA.z += gamepad_array[0].y
-
 preserving_transform:
+    // center indicator
+    set_transform(SCREEN_SIZE / 2)
+    draw_disk(xyz(0, 0, 0), 10, nil, rgb(0,1,0))
+    draw_disk(xyz(0, 0, 0), 3, rgb(0,1,0), rgb(0,0,0))
+    draw_text(
+        font,
+        "screen center",
+        xyz(0, 12, 0),
+        rgb(0,1,0),
+        nil,
+        rgb(0,0,0),
+        "center",
+        "top"
+    )
+    
+    CAMERA.z += gamepad_array[0].y
+
     set_camera(CAMERA)
 
     for point in POINTS:
-        draw_disk(point.pos, point.radius, point.color)
+        draw_disk(point)

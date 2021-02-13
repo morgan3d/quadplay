@@ -1593,8 +1593,33 @@ function hash(x, y) {
 
 function $lerp(a, b, t) { return a * (1 - t) + b * t; }
 
+// Unoptimized:
+//function $nhash1(n) { n = $Math.sin(n) * 1e4; return n - $Math.floor(n); }
+
 // Fast 1D numerical "hash" used by noise()
-function $nhash1(n) { n = $Math.sin(n) * 1e4; return n - $Math.floor(n); }
+function $nhash1(x) {
+    x %= 6.28318531;
+
+    let s = 1.27323954 * x;
+    const k = 0.405284735 * x * x;
+    if (x < 0) s += k; else s -= k;
+
+    // At this point, s is a fast, bad approximation of sin(x)
+
+    /*
+    // Correction factor (if we wanted more precision; costs another 10%)
+    const c = 0.225 * (s * s + s);
+    if (s < 0) s -= c; else s += c;
+    */
+
+    // At this point, s is a fast, good approximation of sin(x)
+
+    // Extract the lower decimal places, which are approximately
+    // uniformly distributed and on the range [0, 1)
+    s *= 1e4;
+    return s - $Math.floor(s);
+}
+
 
 // bicubic fbm value noise
 // from https://www.shadertoy.com/view/4dS3Wd
@@ -1629,7 +1654,9 @@ function noise(octaves, x, y, z) {
     // The max is always pow(2, -octaves) less than 1.
     // So, divide each term by (1-pow(2,-octaves)) as well as
     // its octave scaling.
-    let v = 0, k = 1 / (1 - $Math.pow(2, -octaves));
+    //
+    // UNoptimized: k = 1 / (1 - $Math.pow(2, -octaves));
+    let v = 0, k = 1 / (1 - 1 / (1 << octaves));
     
     const stepx = 110, stepy = 241, stepz = 171;
 
@@ -1664,9 +1691,11 @@ function noise(octaves, x, y, z) {
         }
     } else {
         // Optimized 2D, where the z terms will all be zero. See above for implementation comments.
-        for (; octaves > 0; --octaves) {        
+        x = Math.fround(x);
+        y = Math.fround(y);
+        for (; octaves > 0; --octaves) {     
             const ix = $Math.floor(x), iy = $Math.floor(y);
-            const fx = x - ix,         fy = y - iy;
+            const fx = x - ix, fy = y - iy;
             const n = ix * stepx + iy * stepy;
             
             const ux = fx * fx * (3 - fx - fx),
@@ -2393,24 +2422,29 @@ function entity_simulate(entity, dt) {
     }
     const imass = 1 / mass;
     const iinertia = 1 / entity_inertia(entity, mass);
-    const acc = entity.acc, vel = entity.vel, pos = entity.pos;
-
-    // Overwrite
-    const accX = entity.force.x * imass;
-    const accY = entity.force.y * imass;
+    const vel = entity.vel, pos = entity.pos, force = entity.force;
 
     // Drag should fall off with the time step to remain constant
     // as the time step varies (in the absence of acceleration)
     const k = $Math.pow(1 - entity.drag, dt);
     
     // Integrate
-    vel.x *= k;
-    vel.y *= k;
-    vel.x += accX * dt;
-    vel.y += accY * dt;
-
+    const accX = force.x * imass;
+    vel.x = vel.x * k + accX * dt;
     pos.x += vel.x * dt;
+    force.x = 0;
+
+    const accY = force.y * imass;
+    vel.y = vel.y * k + accY * dt;
     pos.y += vel.y * dt;
+    force.y = 0;
+
+    if (pos.z !== undefined) {
+        const accZ = (force.z || 0) * imass;
+        vel.z = (vel.z || 0) * k + accZ * dt;
+        pos.z += vel.z * dt;
+        force.z = 0;
+    }
 
     const twist = entity.torque * iinertia;
 
@@ -2421,7 +2455,6 @@ function entity_simulate(entity, dt) {
 
     // Zero for next step
     entity.torque = 0;
-    entity.force.x = entity.force.y = 0;
 
     entity_update_children(entity);
 }
@@ -3621,21 +3654,17 @@ function transform_from(pos, angle, scale, coord) {
 
 
 function map_resize(map, w, h, layers) {
-    if (layers === undefined) {
-        layers = map.layer.length;
-    }
+    if (layers === undefined) { layers = map.layer.length; }
+    if (w === undefined) { w = map.size.x; }
+    if (h === undefined) { h = map.size.y; }
 
-    if (w === undefined) {
-        $error('Width must be specified for map_resize()');
-    }
-    
-    if (h === undefined) {
-        $error('Height must be specified for map_resize()');
-    }
+    // The code below uses map.size as the current size of the map and
+    // w, h as the final destination size so that the individual
+    // horizontal, vertical, and layer blocks could be reordered.
 
     // Vertical
     if (h != map.size.y) {
-        // Shrink
+        // Shrink or grow
         for (let L = 0; L < map.layer.length; ++L) {
             for (let x = 0; x < map.size.x; ++x) {
                 map.layer[L][x].length = h;
@@ -3661,31 +3690,24 @@ function map_resize(map, w, h, layers) {
         }
     }
 
-    if (w < map.size.x) {
-        // Shrink
-        for (let L = 0; L < map.layer.length; ++L) {
-            map.layer[L].length = w;
-        }
-        map.size = Object.freeze({x: w, y: map.size.y});
-    } else if (w > map.size.x) {
-        // Grow
-        map.size = Object.freeze({x: w, y: map.size.y});
-        for (let L = 0; L < map.layer.length; ++L) {
-            for (let x = map.layer[L].length; x < w; ++x) {
-                map.layer[L].push(new Array(map.size.y));
-            }
-        }
-    }
-    
+    // Note that map == map.layer[0]
     if (layers < map.layer.length) {
         // Shrink
         map.layer.length = layers;
     } else if (layers > map.layer.length) {
-        // Allocate new layers
-        for (let L = map.layer.length - 1; L < layers; ++L) {
-            map.layer.push(new Array(TODO));
+        // Grow
+        for (let L = map.layer.length; L < layers; ++L) {
+            map.layer.push(new Array(map.size.x));
+            for (let x = 0; x < map.size.x; ++x) {
+                map.layer[L][x] = new Array(map.size.y);
+            }
         }
     }
+
+    $console.assert(map.layer[0] === map);
+    $console.assert(map.layer.length === layers, "Inconsistent number of layers");
+    $console.assert(map.layer[map.layer.length - 1].length === map.size.x, "Inconsistent size in X");
+    $console.assert(map.layer[map.layer.length - 1][0].length === map.size.y, "Inconsistent size in Y");
 
     map.size_pixels = Object.freeze({x:map.size.x * map.sprite_size.x, y:map.size.y * map.sprite_size.y});
 }
@@ -4440,16 +4462,21 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
 
     if (scale === undefined) { scale = xy(1, 1); }
 
+    if (z_shift === undefined) {
+        z_shift = pos.z;
+    }
     z_shift = z_shift || 0;
+    let z_pos = (pos.z === undefined) ? z_shift : pos.z;
+    let z_order = z_shift;
 
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Use the z-value from the lowest layer for perspective. If the zoom is a
         // function, then draw_map() guarantees that there is only one
         // layer at a time!
-        const z = (min_layer * map.z_scale + map.z_offset + z_shift) - $camera.z;
+        const z = (min_layer * map.z_scale + map.z_offset + z_pos) - $camera.z;
         
         // Transform the arguments to account for the camera
-        const mag = $zoom(z);
+        const mag = $zoom(z_pos);
         const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
         const x = pos.x - $camera.x, y = pos.y - $camera.y;
         pos = {x: x * C + y * S, y: y * C - x * S};
@@ -4532,15 +4559,17 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
             
             const numLayers = max_layer - min_layer + 1;
             const layerSpriteArrays = [];
-            const layerZ = [];
+            const layerZOrder = [];
             layerSpriteArrays.length = numLayers;
-            layerZ.length = numLayers;
+            layerZOrder.length = numLayers;
             for (let L = min_layer; L <= max_layer; ++L) {
                 const layer = map.layer[L];
                 const i = L - min_layer;
                 
-                const baseZ = layerZ[i] = (L * map.z_scale + map.z_offset + z_shift - $camera.z) * $scaleZ + $offsetZ;
-                if (baseZ >= $clipZ1 && baseZ <= $clipZ2) {
+                layerZOrder[i] = (L * map.z_scale + map.z_offset + z_order - $camera.z) * $scaleZ + $offsetZ;
+                
+                const layer_z_pos = (L * map.z_scale + map.z_offset + z_pos - $camera.z) * $scaleZ + $offsetZ;
+                if (layer_z_pos >= $clipZ1 && layer_z_pos <= $clipZ2) {
                     layerSpriteArrays[i] = [];
                 } 
             }
@@ -4575,7 +4604,6 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                     // Process layers from the top down, so that we can occlusion cull
                     for (let L = max_layer; L >= min_layer; --L) {
                         const i = L - min_layer;
-                        const baseZ = layerZ[i];
                         
                         // Sprite calls in this layer
                         const data = layerSpriteArrays[i];
@@ -4638,7 +4666,7 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
             for (let i = 0; i < numLayers; ++i) {
                 // Sprite calls in this layer
                 const data = layerSpriteArrays[i];
-                const baseZ = layerZ[i];
+                const baseZOrder = layerZOrder[i];
                 
                 // Push the command, if there were sprites.
                 // Note that the z will be offset based on the order
@@ -4646,8 +4674,8 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                 if (data && data.length > 0) {
                     $addGraphicsCommand({
                         opcode: 'SPR',
-                        baseZ:  baseZ,
-                        z:      baseZ,
+                        baseZ:  baseZOrder,
+                        z:      baseZOrder,
                         data:   data
                     });
                 }
@@ -4725,23 +4753,32 @@ function draw_disk(pos, radius, color, outline, z) {
         $error('draw_disk() requires a non-nil radius')
     }
 
-    z = (z || 0) - $camera.z;
+    let z_order = z;
+    if (z_order === undefined) { z_order = pos.z; }
+    if (z_order === undefined) { z_order = 0; }
+    let z_pos = pos.z;
+    if (z_pos === undefined) { z_pos = z_order; }
+
+    z_order -= $camera.z;
+    z_pos -= $camera.z;
+    
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
-        const mag = $zoom(z);
+        const mag = $zoom(z_pos);
         const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
         const x = pos.x - $camera.x, y = pos.y - $camera.y;
         pos = {x: x * C + y * S, y: y * C - x * S};
         radius *= mag;
     }
     
-    const skx = (z * $skewXZ), sky = (z * $skewYZ);
+    const skx = (z_pos * $skewXZ), sky = (z_pos * $skewYZ);
     let x = (pos.x + skx) * $scaleX + $offsetX, y = (pos.y + sky) * $scaleY + $offsetY;
-    z = z * $scaleZ + $offsetZ;
+    z_pos = z_pos * $scaleZ + $offsetZ;
+    z_order = z_order * $scaleZ + $offsetZ;
 
     // Culling optimization
-    if ((x - radius > $clipX2 + 0.5) || (y - radius > $clipY2 + 0.5) || (z > $clipZ2 + 0.5) ||
-        (x + radius < $clipX1 - 0.5) || (y + radius < $clipY1 - 0.5) || (z < $clipZ1 - 0.5)) {
+    if ((x - radius > $clipX2 + 0.5) || (y - radius > $clipY2 + 0.5) || (z_pos > $clipZ2 + 0.5) ||
+        (x + radius < $clipX1 - 0.5) || (y + radius < $clipY1 - 0.5) || (z_pos < $clipZ1 - 0.5)) {
         return;
     }
 
@@ -4752,7 +4789,7 @@ function draw_disk(pos, radius, color, outline, z) {
         opcode: 'CIR',
         x: x,
         y: y,
-        z: z,
+        z: z_order,
         radius: radius,
         color: color,
         outline: outline
@@ -4818,12 +4855,12 @@ function draw_rect(pos, size, fill, border, angle, z) {
     const rx = size.x * 0.5, ry = size.y * 0.5;
     if (($camera.angle === 0) && ($Math.min($Math.abs(angle), $Math.abs(angle - $Math.PI), $Math.abs(angle + $Math.PI)) < 1e-10)) {
         // Use the corner rect case for speed
-        draw_corner_rect(xy(pos.x - rx, pos.y - ry), size, fill, border, z);
+        draw_corner_rect({x:pos.x - rx, y:pos.y - ry, z:pos.z}, size, fill, border, z);
     } else if (($camera.angle === 0) && ($Math.min($Math.abs(angle - $Math.PI * 0.5), $Math.abs(angle + $Math.PI * 0.5)) < 1e-10)) {
         // Use the corner rect case for speed, rotated 90 degrees
-        draw_corner_rect(xy(pos.x - ry, pos.y - rx), xy(size.y, size.x), fill, border, z);
+        draw_corner_rect({x:pos.x - ry, y:pos.y - rx, z:pos.z}, {x:size.y, y:size.x}, fill, border, z);
     } else {
-        const vertexArray = [xy(-rx, -ry), xy(rx, -ry), xy(rx, ry), xy(-rx, ry)];
+        const vertexArray = [{x:-rx, y:-ry}, {x:rx, y:-ry}, {x:rx, y:ry}, {x:-rx, y:ry}];
         // Undo the camera angle transformation, since draw_poly will apply it again
         draw_poly(vertexArray, fill, border, pos, angle, undefined, z);
     }
@@ -4850,12 +4887,15 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
     let Sx = 1, Sy = 1;
 
     if (scale !== undefined) {
-        if (typeof scale === 'object') { Sx = scale.x; Sy = scale.y;
-        } else { Sx = Sy = scale; }
+        if (typeof scale === 'object') {
+            Sx = scale.x; Sy = scale.y;
+        } else {
+            Sx = Sy = scale;
+        }
     }
 
-    let Tx = 0, Ty = 0;
-    if (pos) { Tx = pos.x; Ty = pos.y; }
+    let Tx = 0, Ty = 0, pos_z;
+    if (pos) { Tx = pos.x; Ty = pos.y; pos_z = pos.z}
 
     switch (vertexArray.length) {
     case 0: return;
@@ -4863,7 +4903,7 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
     case 1:
         {
             let p = vertexArray[0];
-            if (pos) { p = {x: Tx + p.x, y: Ty + p.y}; }
+            if (pos) { p = {x: Tx + p.x, y: Ty + p.y, z: pos.z}; }
             if (border) {
                 draw_point(p, border, z);
             } else if (fill) {
@@ -4878,9 +4918,11 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
             let q = vertexArray[1];
             if (pos || angle || (scale && scale !== 1)) {
                 p = {x: Tx + p.x * Sx * Rx + p.y * Sy * Ry,
-                     y: Ty + p.y * Sy * Rx - p.x * Sx * Ry};
+                     y: Ty + p.y * Sy * Rx - p.x * Sx * Ry,
+                     z: pos_z};
                 q = {x: Tx + q.x * Sx * Rx + q.y * Sy * Ry,
-                     y: Ty + q.y * Sy * Rx - q.x * Sx * Ry};
+                     y: Ty + q.y * Sy * Rx - q.x * Sx * Ry,
+                     z: pos_z};
             }
 
             if (border) {
@@ -4892,11 +4934,18 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
         return;
     }
 
-    z = (z || 0) - $camera.z;
+    if (z === undefined) { z = pos_z; }
+    if (z === undefined) { z = 0; }
+
+    // For the draw call ordering
+    let z_order = z - $camera.z;
+    // For transformation and scale
+    let z_pos = (pos_z === undefined) ? z : (pos_z - $camera.z);
+    
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         if (scale === undefined) { scale = {x:1, y:1}; }
         // Transform the arguments to account for the camera
-        const mag = $zoom(z);
+        const mag = $zoom(z_pos);
         const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
         
         if (! pos) { pos = {x: 0, y: 0}; }
@@ -4911,7 +4960,7 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
         Sx *= mag; Sy *= mag;
     }
 
-    const skx = z * $skewXZ, sky = z * $skewYZ;
+    const skx = z_pos * $skewXZ, sky = z_pos * $skewYZ;
 
     // Preallocate the output array
     const N = vertexArray.length;
@@ -4943,7 +4992,9 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
         points[p]     = Px;                points[p + 1] = Py;
     }
 
-    z = z * $scaleZ + $offsetZ;
+    // For clipping
+    z_pos = z_pos * $scaleZ + $offsetZ;
+    z_order = z_order * $scaleZ + $offsetZ;
     
     fill   = $colorToUint16(fill);
     border = $colorToUint16(border);
@@ -4958,7 +5009,7 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
     $addGraphicsCommand({
         opcode: 'PLY',
         points: points,
-        z: z,
+        z: z_order,
         color: fill,
         outline: border
     });
@@ -4981,11 +5032,13 @@ function draw_corner_rect(corner, size, fill, outline, z) {
     
     if ($Math.abs($camera.angle) >= 1e-10) {
         // Draw using a polygon because it is rotated
-        draw_rect({x: corner.x + size.x * 0.5, y: corner.y + size.y * 0.5}, size, fill, outline, 0, z);
+        draw_rect({x: corner.x + size.x * 0.5, y: corner.y + size.y * 0.5, z: corner.z}, size, fill, outline, 0, z);
         return;
     }
 
+    if (z === undefined) { z = corner.z; }
     z = (z || 0) - $camera.z;
+    let z_order = (corner.z === undefined) ? z : (corner.z - $camera.z);
 
     if (($camera.x !== 0) || ($camera.y !== 0)) {
         corner = {x: corner.x - $camera.x, y: corner.y - $camera.y};
@@ -5001,6 +5054,7 @@ function draw_corner_rect(corner, size, fill, outline, z) {
     let x1 = (corner.x + skx) * $scaleX + $offsetX, y1 = (corner.y + sky) * $scaleY + $offsetY;
     let x2 = (corner.x + size.x + skx) * $scaleX + $offsetX, y2 = (corner.y + size.y + sky) * $scaleY + $offsetY;
     z = z * $scaleZ + $offsetZ;
+    z_order = z_order * $scaleZ + $offsetZ;
 
     fill = $colorToUint16(fill);
     outline = $colorToUint16(outline);
@@ -5026,7 +5080,7 @@ function draw_corner_rect(corner, size, fill, outline, z) {
     }
 
     const prevCommand = $graphicsCommandList[$graphicsCommandList.length - 1];
-    if (prevCommand && (prevCommand.baseZ === z) && (prevCommand.opcode === 'REC')) {
+    if (prevCommand && (prevCommand.baseZ === z_order) && (prevCommand.opcode === 'REC')) {
         // Aggregate into the previous command
         prevCommand.data.push({
             x1: x1,
@@ -5038,8 +5092,8 @@ function draw_corner_rect(corner, size, fill, outline, z) {
         })
     } else {
         $addGraphicsCommand({
-            z: z,
-            baseZ: z,
+            z: z_order,
+            baseZ: z_order,
             opcode: 'REC',
             data: [{
                 x1: x1,
@@ -5073,7 +5127,17 @@ function draw_line(A, B, color, z, width) {
     
     if (width === undefined) { width = 1; }
 
-    if (width * $zoom((z || 0) - $camera.z) >= 1.5) {
+    let z_pos = A.z;
+    let z_order = z;
+    
+    if (z_order === undefined) { z_order = z_pos; }
+    if (z_order === undefined) { z_order = 0; }
+    if (z_pos === undefined) { z_pos = z_order; }
+
+    z_pos -= $camera.z;
+    z_order -= $camera.z;
+    
+    if (width * $zoom(z_pos) >= 1.5) {
         // Draw a polygon instead of a thin line, as this will
         // be more than one pixel wide in screen space.
         let delta_x = B.y - A.y, delta_y = A.x - B.x;
@@ -5086,15 +5150,13 @@ function draw_line(A, B, color, z, width) {
              {x:A.x + delta_x, y:A.y + delta_y},
              {x:B.x + delta_x, y:B.y + delta_y},
              {x:B.x - delta_x, y:B.y - delta_y}],
-            color, undefined, undefined, undefined, undefined, z);
+            color, undefined, (A.z !== undefined) ? {x: 0, y: 0, z: A.z} : undefined, undefined, undefined, z);
         return;
     }
     
-    z = (z || 0) - $camera.z;
-    
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
-        const mag = $zoom(z);
+        const mag = $zoom(z_pos);
         const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
         let x = A.x - $camera.x, y = A.y - $camera.y;
         A = {x: x * C + y * S, y: y * C - x * S};
@@ -5103,17 +5165,18 @@ function draw_line(A, B, color, z, width) {
         width *= mag;
     }
     
-    const skx = (z * $skewXZ), sky = (z * $skewYZ);
+    const skx = (z_pos * $skewXZ), sky = (z_pos * $skewYZ);
     let x1 = (A.x + skx) * $scaleX + $offsetX, y1 = (A.y + sky) * $scaleY + $offsetY;
     let x2 = (B.x + skx) * $scaleX + $offsetX, y2 = (B.y + sky) * $scaleY + $offsetY;
-    z = z * $scaleZ + $offsetZ
+    z_pos = z_pos * $scaleZ + $offsetZ;
+    z_order = z_order * $scaleZ + $offsetZ;
 
     color = $colorToUint16(color);
 
     // Offscreen culling optimization
     if (! (color & 0xf000) ||
-        ($Math.min(x1, x2) > $clipX2 + 0.5) || ($Math.max(x1, x2) < $clipX1 - 0.5) || (z < $clipZ1 - 0.5) ||
-        ($Math.min(y1, y2) > $clipY2 + 0.5) || ($Math.max(y1, y2) < $clipY1 - 0.5) || (z > $clipZ2 + 0.5)) {
+        ($Math.min(x1, x2) > $clipX2 + 0.5) || ($Math.max(x1, x2) < $clipX1 - 0.5) || (z_pos < $clipZ1 - 0.5) ||
+        ($Math.min(y1, y2) > $clipY2 + 0.5) || ($Math.max(y1, y2) < $clipY1 - 0.5) || (z_pos > $clipZ2 + 0.5)) {
         return;
     }
 
@@ -5123,7 +5186,7 @@ function draw_line(A, B, color, z, width) {
         x2: x2,
         y1: y1,
         y2: y2,
-        z: z,
+        z: z_order,
         color: color,
         open1: false,
         open2: false
@@ -5166,10 +5229,13 @@ function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_
         // Nothing to do
         return;
     }
-    
-    // Transform and clip
-    z = (z || 0) - $camera.z;
 
+    let z_order = z, z_pos = start.z;
+    if (z_order === undefined) { z_order = z_pos || 0; }
+    if (z_pos === undefined) { z_pos = z_order; }
+    z_pos -= $camera.z;
+    z_order -= $camera.z;
+    
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
         const mag = (typeof $camera.zoom === 'number') ? $camera.zoom : $camera.zoom(z);
@@ -5180,16 +5246,17 @@ function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_
         size.y *= mag;
     }
     
-    const skx = z * $skewXZ, sky = z * $skewYZ;
+    const skx = z_pos * $skewXZ, sky = z_pos * $skewYZ;
     let x = (start.x + skx) * $scaleX + $offsetX, y = (start.y + sky) * $scaleY + $offsetY;
-    z = z * $scaleZ + $offsetZ;
+    z_pos = z_pos * $scaleZ + $offsetZ;
+    z_order = z_order * $scaleZ + $offsetZ;
     
     x = $Math.floor(x) >>> 0; y = $Math.floor(y) >>> 0;
     let width = $Math.round(size.x);
     const height = $Math.round(size.y);
 
     // Completely clipped
-    if ((z < $clipZ1 - 0.5) || (z >= $clipZ2 + 0.5) ||
+    if ((z_pos < $clipZ1 - 0.5) || (z_pos >= $clipZ2 + 0.5) ||
         (x > $clipX2) || (x + width < $clipX1) ||
         (y < $clipY1) || (y + height > $clipY2)) {
         return;
@@ -5376,8 +5443,8 @@ function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_
     }
 
     $addGraphicsCommand({
-        z: z,
-        baseZ: z,
+        z: z_order,
+        baseZ: z_order,
         opcode: 'SPN',
         x: x,
         y: y,
@@ -5404,8 +5471,10 @@ function draw_point(pos, color, z) {
 
     // Completely transparent, nothing to render!
     if (color & 0xF000 === 0) { return; }
-    
+
+    if (z === undefined) { z = pos.z }
     z = (z || 0) - $camera.z;
+    let z_order = (pos.z === undefined) ? z : (pos.z - $camera.z);
 
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
@@ -5418,6 +5487,7 @@ function draw_point(pos, color, z) {
     const skx = z * $skewXZ, sky = z * $skewYZ;
     let x = (pos.x + skx) * $scaleX + $offsetX, y = (pos.y + sky) * $scaleY + $offsetY;
     z = z * $scaleZ + $offsetZ;
+    z_order = z_order * $scaleZ + $offsetZ;
     
     x = $Math.floor(x) >>> 0; y = $Math.floor(y) >>> 0;
     
@@ -5428,15 +5498,15 @@ function draw_point(pos, color, z) {
     }
 
     const prevCommand = $graphicsCommandList[$graphicsCommandList.length - 1];
-    if (prevCommand && (prevCommand.baseZ === z) && (prevCommand.opcode === 'PIX')) {
+    if (prevCommand && (prevCommand.baseZ === z_order) && (prevCommand.opcode === 'PIX')) {
         // Many points with the same z value are often drawn right
         // after each other.  Aggregate these (preserving their
         // ordering) for faster sorting and rendering.
         prevCommand.data.push((x + y * ($SCREEN_WIDTH >>> 0)) >>> 0, color); 
     } else {
         $addGraphicsCommand({
-            z: z,
-            baseZ: z,
+            z: z_order,
+            baseZ: z_order,
             opcode: 'PIX',
             data: [(x + y * ($SCREEN_WIDTH >>> 0)) >>> 0, color]
         });
@@ -5670,7 +5740,7 @@ function $postGlyphSpace(str, i, font) {
     the str having been shortened already. 
 
 */
-function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_align, z, wrap_width, text_size, referenceFont) {
+function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_align, y_align, z_order, wrap_width, text_size, referenceFont) {
     $console.assert(typeof str === 'string');
     $console.assert(Array.isArray(formatArray));
     $console.assert(formatIndex < formatArray.length);
@@ -5699,7 +5769,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
         if (str[c] === '\n') {
             // Newline, process by breaking and recursively continuing
             const cur = str.substring(0, c).trimEnd();
-            const firstLineBounds = $draw_text(startingOffsetIndex, startingFormatIndex, cur, formatArray, pos, x_align, y_align, z, wrap_width, text_size, referenceFont);
+            const firstLineBounds = $draw_text(startingOffsetIndex, startingFormatIndex, cur, formatArray, pos, z_pos, x_align, y_align, z_order, wrap_width, text_size, referenceFont);
 
             ++offsetIndex;
             // Update formatIndex if needed as well
@@ -5718,7 +5788,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
             const restBounds = $draw_text(
                 offsetIndex, formatIndex, str.substring(c + 1),
                 formatArray, {x:pos.x, y:pos.y + referenceFont.line_height / $scaleY},
-                x_align, y_align, z, wrap_width, text_size - c - 1, referenceFont);
+                z_pos, x_align, y_align, z_order, wrap_width, text_size - c - 1, referenceFont);
             firstLineBounds.x = $Math.max(firstLineBounds.x, restBounds.x);
             if (restBounds.y > 0) {
                 firstLineBounds.y += referenceFont.spacing.y + restBounds.y;
@@ -5752,7 +5822,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
             }
 
             const cur = str.substring(0, breakIndex);          
-            const firstLineBounds = $draw_text(startingOffsetIndex, startingFormatIndex, cur.trimEnd(), formatArray, pos, x_align, y_align, z, undefined, text_size, referenceFont);
+            const firstLineBounds = $draw_text(startingOffsetIndex, startingFormatIndex, cur.trimEnd(), formatArray, pos, z_pos, x_align, y_align, z_order, undefined, text_size, referenceFont);
             
             // Now draw the rest
             const next = str.substring(breakIndex);
@@ -5768,8 +5838,8 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
             format = undefined;
 
             $console.assert(offsetIndex >= formatArray[formatIndex].startIndex && offsetIndex <= formatArray[formatIndex].endIndex);
-            const restBounds = $draw_text(offsetIndex, formatIndex, nnext, formatArray, {x:pos.x, y:pos.y + referenceFont.line_height / $scaleY},
-                                          x_align, y_align, z, wrap_width, text_size - cur.length - (next.length - nnext.length), referenceFont);
+            const restBounds = $draw_text(offsetIndex, formatIndex, nnext, formatArray, {x:pos.x, y:pos.y + referenceFont.line_height / $scaleY}, z_pos,
+                                          x_align, y_align, z_order, wrap_width, text_size - cur.length - (next.length - nnext.length), referenceFont);
             firstLineBounds.x = $Math.max(firstLineBounds.x, restBounds.x);
             if (restBounds.y > 0) {
                 firstLineBounds.y += referenceFont.spacing.y + restBounds.y;
@@ -5793,10 +5863,10 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
     width -= format.font.spacing.x;
     format.width -= format.font.spacing.x;
 
-    z = z || 0;
-    const skx = (z * $skewXZ), sky = (z * $skewYZ);
+    const skx = (z_pos * $skewXZ), sky = (z_pos * $skewYZ);
     let x = (pos.x + skx) * $scaleX + $offsetX, y = (pos.y + sky) * $scaleY + $offsetY;
-    z = z * $scaleZ + $offsetZ;
+    z_pos = z_pos * $scaleZ + $offsetZ;
+    z_order = z_order * $scaleZ + $offsetZ;
 
     const height = referenceFont.$charHeight;
 
@@ -5826,7 +5896,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
     y = $Math.round(y) | 0;
 
     if ((x > $clipX2) || (y > $clipY2) || (y + height < $clipY1) || (x + width < $clipX1) ||
-        (z > $clipZ2 + 0.5) || (z < $clipZ1 - 0.5)) {
+        (z_pos > $clipZ2 + 0.5) || (z_pos < $clipZ1 - 0.5)) {
         // Cull when off-screen
     } else {
         // Break by formatting and then retraverse the formatting array.
@@ -5852,7 +5922,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, x_align, y_
                 fontIndex: format.font.$index[0],
                 x:       x,
                 y:       y - dy,
-                z:       z,
+                z:       z_order,
                 color:   format.color,
                 outline: format.outline,
                 shadow:  format.shadow,
@@ -5916,7 +5986,11 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
     
     if (str === '') { return {x:0, y:0}; }
 
-    z = (z || 0) - $camera.z;
+    let z_order = z, z_pos = pos.z;
+    if (z_order === undefined) { z_order = z_pos || 0; }
+    if (z_pos === undefined) { z_pos = z_order; }
+    z_pos -= $camera.z;
+    z_order -= $camera.z;
 
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
@@ -5967,7 +6041,7 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
 
     // Track draw calls generated by $draw_text
     const first_graphics_command_index = $graphicsCommandList.length;
-    const bounds = $draw_text(0, 0, str, stateChanges, pos, x_align, y_align, z, wrap_width, text_size, font);
+    const bounds = $draw_text(0, 0, str, stateChanges, pos, z_pos, x_align, y_align, z_order, wrap_width, text_size, font);
 
     if ((bounds.y > font.line_height) && (y_align === 0 || y_align === 2)) {
         let y_shift = 0;
@@ -6045,11 +6119,20 @@ function draw_sprite_corner_rect(CC, corner, size, z) {
         $error('Called draw_sprite_corner_rect() on an object that was not a sprite asset. (' + unparse(CC) + ')');
     }
 
-    z = z || 0;
-    const skx = (z * $skewXZ), sky = (z * $skewYZ);
+    let z_order = z, z_pos = corner.z;
+    if (z_order === undefined) { z_order = z_pos || 0; }
+    if (z_pos === undefined) { z_pos = z_order; }
+    z_pos -= $camera.z;
+    // Not used after here
+    //z_order -= $camera.z;
+    
+    const skx = (z_pos * $skewXZ), sky = (z_pos * $skewYZ);
     let x1 = (corner.x + skx) * $scaleX + $offsetX, y1 = (corner.y + sky) * $scaleY + $offsetY;
     let x2 = (corner.x + size.x + skx) * $scaleX + $offsetX, y2 = (corner.y + size.y + sky) * $scaleY + $offsetY;
-    z = z * $scaleZ + $offsetZ;
+
+    // Not used after here
+    //z_pos = z_pos * $scaleZ + $offsetZ;
+    //z_order = z_order * $scaleZ + $offsetZ;
 
     // Sort coordinates
     let t1 = $Math.min(x1, x2), t2 = $Math.max(x1, x2);
@@ -6072,7 +6155,7 @@ function draw_sprite_corner_rect(CC, corner, size, z) {
     const numTilesY = 1 + $Math.ceil((y2 - y1 + 1) / (2 * CC.size.y) - 0.49) * 2;
     
     // Iterate over center box, clipping at its edges
-    const spriteCenter = xy(0,0);
+    const spriteCenter = {x:0, y:0, z:corner.z};
     $pushGraphicsState(); {
         intersect_clip(xy(x1, y1), xy(x2 - x1 + 1, y2 - y1 + 1));
         
@@ -6185,7 +6268,8 @@ function $maybeApplyPivot(pos, pivot, angle, scale) {
     const C = $Math.cos(angle);
     const S = $Math.sin(angle) * -rotation_sign();
     return {x: pos.x - (deltaX * C + S * deltaY),
-            y: pos.y - (deltaY * C - S * deltaX)};
+            y: pos.y - (deltaY * C - S * deltaX),
+            z: pos.z};
 }
 
 
@@ -6205,6 +6289,8 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
         spr = spr.sprite;
     }
 
+    if (! pos) { $error("pos must not be nil for draw_sprite()"); }
+
     const multiply = override_blend === 'multiply';
 
     if (opacity <= 0) { return; }
@@ -6218,7 +6304,12 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
         $error('Called draw_sprite() on an object that was not a sprite asset. (' + unparse(spr) + ')');
     }
     
-    z = (z || 0) - $camera.z;
+    let z_order = z, z_pos = pos.z;
+    if (z_order === undefined) { z_order = z_pos || 0; }
+    if (z_pos === undefined) { z_pos = z_order; }
+    z_pos -= $camera.z;
+    z_order -= $camera.z;
+
     angle = angle || 0;
 
     pivot = pivot || spr.pivot;
@@ -6226,7 +6317,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
 
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
-        const mag = $zoom(z);
+        const mag = $zoom(z_pos);
         const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
         const x = pos.x - $camera.x, y = pos.y - $camera.y;
         pos = {x: x * C + y * S, y: y * C - x * S};
@@ -6239,10 +6330,11 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
         scale = {x: scale.x * mag, y: scale.y * mag};
     }
     
-    const skx = z * $skewXZ, sky = z * $skewYZ;
+    const skx = z_pos * $skewXZ, sky = z_pos * $skewYZ;
     const x = (pos.x + skx) * $scaleX + $offsetX;
     const y = (pos.y + sky) * $scaleY + $offsetY;
-    z = z * $scaleZ + $offsetZ;
+    z_pos = z_pos * $scaleZ + $offsetZ;
+    z_order = z_order * $scaleZ + $offsetZ;
 
     let scaleX = 1, scaleY = 1;
     if ((scale !== 0) && (typeof scale === 'number')) {
@@ -6260,7 +6352,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
 
     if ((opacity <= 0) || (x + radius < $clipX1 - 0.5) || (y + radius < $clipY1 - 0.5) ||
         (x >= $clipX2 + radius + 0.5) || (y >= $clipY2 + radius + 0.5) ||
-        (z < $clipZ1 - 0.5) || (z >= $clipZ2 + 0.5)) {
+        (z_pos < $clipZ1 - 0.5) || (z_pos >= $clipZ2 + 0.5)) {
         return;
     }
 
@@ -6296,7 +6388,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
                     spr.$name + ' has a bad index: ' + sprElt.spritesheetIndex);
     // Aggregate multiple sprite calls
     const prevCommand = $graphicsCommandList[$graphicsCommandList.length - 1];
-    if (prevCommand && (prevCommand.baseZ === z) && (prevCommand.opcode === 'SPR') &&
+    if (prevCommand && (prevCommand.baseZ === z_order) && (prevCommand.opcode === 'SPR') &&
         (prevCommand.clipX1 === $clipX1) && (prevCommand.clipX2 === $clipX2) &&
         (prevCommand.clipY1 === $clipY1) && (prevCommand.clipY2 === $clipY2)) {
         // Modify the existing command to reduce sorting demands for scenes
@@ -6306,10 +6398,10 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
         $addGraphicsCommand({
             opcode:       'SPR',
             // Comparison z for detecting runs of sprites
-            baseZ:         z,
+            baseZ:         z_order,
 
             // Sorting Z
-            z:             z,
+            z:             z_order,
             data: [sprElt]});
     }
 }
@@ -6431,32 +6523,33 @@ function draw_bounds(entity, color, recurse) {
     }
     
     if (recurse === undefined) { recurse = true; }
-    color = color || rgb(0.6, 0.6, 0.6);
+    color = color || {r:0.6, g:0.6, b:0.6};
     const angle = (entity.angle || 0) * rotation_sign();
     const scale = entity.scale || {x:1, y:1};
 
-    const pos = $maybeApplyPivot(entity.pos, entity.pivot, entity.angle, scale);
+    let pos = $maybeApplyPivot(entity.pos, entity.pivot, entity.angle, scale);
+    
     
     // Bounds:
-    const z = entity.z + 0.01;
+    const z_order = entity.z + 0.01;
     if ((entity.shape === 'disk') && entity.size) {
-        draw_disk(pos, entity.size.x * 0.5 * scale.x, undefined, color, z)
+        draw_disk(pos, entity.size.x * 0.5 * scale.x, undefined, color, z_order)
     } else if (entity.size) {
         const u = {x: $Math.cos(angle) * 0.5, y: $Math.sin(angle) * 0.5};
         const v = {x: -u.y, y: u.x};
         u.x *= entity.size.x * scale.x; u.y *= entity.size.x * scale.x;
         v.x *= entity.size.y * scale.y; v.y *= entity.size.y * scale.y;
 
-        const A = {x: pos.x - u.x - v.x, y: pos.y - u.y - v.y};
-        const B = {x: pos.x + u.x - v.x, y: pos.y + u.y - v.y};
-        const C = {x: pos.x + u.x + v.x, y: pos.y + u.y + v.y};
-        const D = {x: pos.x - u.x + v.x, y: pos.y - u.y + v.y};
-        draw_line(A, B, color, z);
-        draw_line(B, C, color, z);
-        draw_line(C, D, color, z);
-        draw_line(D, A, color, z);
+        const A = {x: pos.x - u.x - v.x, y: pos.y - u.y - v.y, z: entity.pos.z};
+        const B = {x: pos.x + u.x - v.x, y: pos.y + u.y - v.y, z: entity.pos.z};
+        const C = {x: pos.x + u.x + v.x, y: pos.y + u.y + v.y, z: entity.pos.z};
+        const D = {x: pos.x - u.x + v.x, y: pos.y - u.y + v.y, z: entity.pos.z};
+        draw_line(A, B, color, z_order);
+        draw_line(B, C, color, z_order);
+        draw_line(C, D, color, z_order);
+        draw_line(D, A, color, z_order);
     } else {
-        draw_point(pos, color, z);
+        draw_point(pos, color, z_order);
     }
 
     // Axes
@@ -6467,11 +6560,11 @@ function draw_bounds(entity, color, recurse) {
         v.x *= scale.y; v.y *= scale.y;
 
         // Do not apply the pivot to the axes
-        const B = {x: entity.pos.x + u.x, y: entity.pos.y + u.y};
-        const C = {x: entity.pos.x + v.x, y: entity.pos.y + v.y};
+        const B = {x: entity.pos.x + u.x, y: entity.pos.y + u.y, z: entity.pos.z};
+        const C = {x: entity.pos.x + v.x, y: entity.pos.y + v.y, z: entity.pos.z};
         
-        draw_line(entity.pos, B, rgb(1,0,0), z);
-        draw_line(entity.pos, C, rgb(0,1,0), z);
+        draw_line(entity.pos, B, {r:1, g:0, b:0}, z_order);
+        draw_line(entity.pos, C, {r:0, g:1, b:0}, z_order);
     }
 
     if (entity.child_array && recurse) {

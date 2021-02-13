@@ -1328,15 +1328,22 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     }
 
                     const sprite = spritesheet[anim] = spritesheet[u][v];
-                    // Copy other properties
-                    Object.assign(sprite, otherProperties);
-                    sprite.frames = animDefaultframes;
-                    sprite.$animationName = anim;
-                    sprite.$animationIndex = undefined;
-                    sprite.pivot = pivot;
 
-                    // Rename
-                    sprite.$name = spritesheet.$name + '.' + anim;
+                    let s = sprite;
+                    for (let repeat = 0; repeat < 2; ++repeat) {
+                        // Copy other properties
+                        Object.assign(s, otherProperties);
+                        s.frames = animDefaultframes;
+                        s.$animationName = anim;
+                        s.$animationIndex = undefined;
+                        s.pivot = pivot;
+
+                        // Rename
+                        s.$name = spritesheet.$name + '.' + anim;
+
+                        // Repeat for the transposed sprite
+                        s = transposedSpritesheet[v][u];
+                    }
 
                 } else {
                 
@@ -1370,14 +1377,18 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                             }
 
                             const sprite = spritesheet[u][v];
-                            sprite.$animationName = anim;
-                            sprite.$animationIndex = i;
-                            sprite.$name = spritesheet.$name + '.' + anim + '[' + i + ']';
-                            sprite.pivot = pivot;
-                            sprite.frames = Math.max(0.25, frames[Math.min(i, frames.length - 1)]);
-                            sprite.animation = animation;
-                            // Copy other properties
-                            Object.assign(sprite, otherProperties);
+
+                            for (let repeat = 0, s = sprite; repeat < 2; ++repeat) {
+                                s.$animationName = anim;
+                                s.$animationIndex = i;
+                                s.$name = spritesheet.$name + '.' + anim + '[' + i + ']';
+                                s.pivot = pivot;
+                                s.frames = Math.max(0.25, frames[Math.min(i, frames.length - 1)]);
+                                s.animation = animation;
+                                // Copy other properties
+                                Object.assign(s, otherProperties);
+                                s = transposedSpritesheet[v][u];
+                            }
 
                             animation.push(sprite);
                         }

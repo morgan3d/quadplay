@@ -1015,8 +1015,12 @@ function submitFrame() {
         onScreenDrawBarGraph('Frame:', onScreenHUDDisplay.time.frame, 0xFA5F, 0);
         onScreenDrawBarGraph('  60fps Logic:', onScreenHUDDisplay.time.logic, 0xFFA0, 1);
         onScreenDrawBarGraph('  ' + onScreenHUDDisplay.time.refresh + 'fps Graphics:', onScreenHUDDisplay.time.graphics, 0xF0D0, 2);
-        onScreenDrawBarGraph('  60fps Physics:', onScreenHUDDisplay.time.physics, 0xF0AF, 3);
-        onScreenDrawBarGraph('  Browser:', onScreenHUDDisplay.time.browser, 0xFAAA, 4);
+        if (onScreenHUDDisplay.time.physics > 0) {
+            onScreenDrawBarGraph('  60fps Physics:', onScreenHUDDisplay.time.physics, 0xF0AF, 3);
+        }
+        if (onScreenHUDDisplay.time.browser > 0) {
+            onScreenDrawBarGraph('  Browser:', onScreenHUDDisplay.time.browser, 0xFAAA, 4);
+        }
     }
     
     // Update the image
@@ -1283,9 +1287,9 @@ function updateInput() {
             // Derivative
             pad['$d' + axis] = pad['$' + axis] - old;
             anyInteraction = anyInteraction || (pad['$d' + axis] !== 0);
-        }
 
-
+        } // axes
+        
         for (let b = 0; b < buttons.length; ++b) {
             const button = buttons[b];
             const prefix = button === 'p' ? '$' : '';

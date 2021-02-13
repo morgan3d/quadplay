@@ -12,6 +12,26 @@ of [quadplay✜](manual.md.html).
 - `format_number()` can now accept a degrees or percent suffix
 - Code polish on the Animation and Z-Car examples
 - Improved the constant editor GUI layout
+- Removed zero time categories from the on-screen performance HUD
+- Made `noise()` about 40% faster
+- All draw calls now allow a separate `pos.z` or equivalent value
+  for transform skew and camera zoom that is separate from
+  the `z` value used for occlusion order. By default `pos.z = z`
+  and `z = pos.z` if only one is specified, so the new behavior is backwards
+  compatible.
+- `entity_simulate()` now supports 3D velocity and force
+- `map_resize()` now has more default parameters
+- Clarified the difference between `a`, `aa`, and `a_released` for all buttons
+  in the manual
+- Documented the Z-Axis under Coordinate Systems
+- Fixed missing syntax highlighting for map helper functions
+- Fixed `map_resize()` for an increasing number of layers
+- Fixed Animation example referencing incorrect font
+- Fixed `draw_sprite()` for scale between 0.99999999999999 and 1.00000000000001
+- Fixed game-specific sprite properties not appearing on `rotated_90` and
+  `rotated_270` versions
+- Fixed games without a developer or title crashing the IDE on load
+
 
 2021 February 6: Beta update 64
 ===================================

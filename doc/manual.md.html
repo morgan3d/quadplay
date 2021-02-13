@@ -1337,43 +1337,68 @@ Property           | Values   | Meaning
 -------------------|----------|----------------------------------
 `index`            | 0,1,2,3  | Index of this gamepad in `pad` array
 `player_color`     | rgb      | Color identifying this player (not the color of the gamepad itself)
-`x`                | -1,0,+1  | Current D-pad value on the _x_-axis (+1 = right)
-`xx`               | -1,0,+1  | Direction that was just pressed this frame on the _x_-axis
-`dx`               | -2 to +2 | Change in direction this frame on the _x_-axis
-`y`                | -1,0,+1  | Current D-pad value on the _y_-axis (+1 = backward)
-`yy`               | -1,0,+1  | Direction that was just pressed this frame on the _y_-axis
-`dy`               | -2 to +2 | Change in direction this frame on the _y_-axis
+`x`                | -1,0,+1  | D-pad value on the _x_-axis at the start of the current frame frame
+`xx`               | -1,0,+1  | If the D-pad moved from the center to a side on the _x_-axis at any time between the previous and current frame, this is the side that it moved to. When it hit both extremes, the last one is returned.
+`dx`               | -2,-1,0,+1,+2 | Change in value of `x` between the previous and current frames on the _x_-axis
+`y`                | -1,0,+1  | D-pad value on the _y_-axis at the start of the current frame
+`yy`               | -1,0,+1  | If the D-pad moved from the center to a side on the _y_-axis at any time between the previous and current frame, this is the side that it moved to.  When it hit both extremes, the last one is returned.
+`dy`               | -2,-1,0,+1,+2 | Change in value of `y` between the previous and current frames
 `xy`               | xy       | `xy(x, y)` for the gamepad
 `dxy`              | xy       | `xy(dx, dy)` for the gamepad
 `angle`            | -π to +π | `rotation_sign() * atan(y, x)` if both are not zero, otherwise the last angle
 `dangle`           | -π to +π | Change in `angle` this frame
-`a`                | 0 or 1   | 1 if the ⓐ button is currently pressed
-`aa` or `pressed_a`| 0 or 1   | 1 if the ⓐ button was just pressed this frame
-`released_a`       | 0 or 1   | 1 if the ⓐ button was just released this frame
-`b`                | 0 or 1   | 1 if the ⓑ button is currently pressed
-`bb` or `pressed_b`| 0 or 1   | 1 if the ⓑ button was just pressed this frame
-`released_b`       | 0 or 1   | 1 if the ⓑ button was just released this frame
-`c`                | 0 or 1   | 1 if the ⓒ button is currently pressed
-`cc` or `pressed_c`| 0 or 1   | 1 if the ⓒ button was just pressed this frame
-`released_c`       | 0 or 1   | 1 if the ⓒ button was just released this frame
-`d`                | 0 or 1   | 1 if the ⓓ button is currently pressed
-`dd` or `pressed_d`| 0 or 1   | 1 if the ⓓ button was just pressed this frame
-`released_d`       | 0 or 1   | 1 if the ⓓ button was just released this frame
-`e`                | 0 or 1   | 1 if the ⓔ button is currently pressed
-`ee` or `pressed_e`| 0 or 1   | 1 if the ⓔ button was just pressed this frame
-`released_e`       | 0 or 1   | 1 if the ⓔ button was just released this frame
-`f`                | 0 or 1   | 1 if the ⓕ button is currently pressed
-`ff` or `pressed_e`| 0 or 1   | 1 if the ⓕ button was just pressed this frame
-`released_f`       | 0 or 1   | 1 if the ⓕ button was just released this frame
-`q`                | 0 or 1   | 1 if the ⓠ button is currently pressed
-`qq` or `pressed_q`| 0 or 1   | 1 if the ⓠ button was just pressed this frame
-`released_q`       | 0 or 1   | 1 if the ⓠ button was just released this frame
+`a`                | 0 or 1   | 1 if the ⓐ button was held down at the start of the current frame
+`aa` or `pressed_a`| 0 or 1   | 1 if the ⓐ button went from up to down at least once since the previous frame
+`released_a`       | 0 or 1   | 1 if the ⓐ button went from down to up at least once since the previous frame
+`b`                | 0 or 1   | 1 if the ⓑ button was held down at the start of the current frame
+`bb` or `pressed_b`| 0 or 1   | 1 if the ⓑ button went from up to down at least once since the previous frame
+`released_b`       | 0 or 1   | 1 if the ⓑ button went from down to up at least once since the previous frame
+`c`                | 0 or 1   | 1 if the ⓒ button was held down at the start of the current frame
+`cc` or `pressed_c`| 0 or 1   | 1 if the ⓒ button went from up to down at least once since the previous frame
+`released_c`       | 0 or 1   | 1 if the ⓒ button went from down to up at least once since the previous frame
+`d`                | 0 or 1   | 1 if the ⓓ button was held down at the start of the current frame
+`dd` or `pressed_d`| 0 or 1   | 1 if the ⓓ button went from up to down at least once since the previous frame
+`released_d`       | 0 or 1   | 1 if the ⓓ button went from down to up at least once since the previous frame
+`e`                | 0 or 1   | 1 if the ⓔ button was held down at the start of the current frame
+`ee` or `pressed_e`| 0 or 1   | 1 if the ⓔ button went from up to down at least once since the previous frame
+`released_e`       | 0 or 1   | 1 if the ⓔ button went from down to up at least once since the previous frame
+`f`                | 0 or 1   | 1 if the ⓕ button was held down at the start of the current frame
+`ff` or `pressed_e`| 0 or 1   | 1 if the ⓕ button went from up to down at least once since the previous frame
+`released_f`       | 0 or 1   | 1 if the ⓕ button went from down to up at least once since the previous frame
+`q`                | 0 or 1   | 1 if the ⓠ button was held down at the start of the current frame
+`qq` or `pressed_q`| 0 or 1   | 1 if the ⓠ button went from up to down at least once since the previous frame
+`released_q`       | 0 or 1   | 1 if the ⓠ button went from down to up at least once since the previous frame
 `prompt`           | `{...}`  | An object mapping button names to text prompts (see below)
 
+Use the single-letter properties for temporally continuous inputs such
+as aiming or charging and double-letter properties for discrete inputs
+such as firing or accepting.
+
+If a button is pressed and released very quickly, then `a` could be 0
+for two frames in a row, because at the time that the frame runs it
+will be in the released state. However, `aa` will be 1 for a frame in
+that case, so that the button press will not be missed. (Due to
+technical limitations of web browsers, there is a very small chance
+that `aa` will not capture a button press that is less than 1/60s on a
+physical gamepads.  Our testing determined that fastest most people
+and gamepads can switch is about 1/45s, which is under this threshold.
+The gamepad will always capture button presses on keyboard.)
+
+The `xx` and `yy` values record the last change in value from zero
+between frames.  It is theoretically possible for the D-pad to move so
+fast that it encounters along the x-axis values of 0, -1, 0, 1, 0 in
+that order between frames. If this is the case, then the `xx` property
+will only record the last non-zero that was switched to. So, this
+scenario would yield `x=0`, `xx=+1`, and `dx=0`. (On a physical
+gamepad, any given value that is held for less than 1/60s could be
+missed. Again, this is extremely unlikely because of the timescales
+involved.)
+
 The axes are affected by the current transformation _at the time that
-they are read by your program_, as set by `set_transform()`. Reading the same property twice
-with a transform change in between can change the sign of the value. The
-angles are always clockwise in screen space.
+they are read by your program_, as set by `set_transform()`. Reading
+the same property twice with a transform change in between can change
+the sign of the value. The angles are always clockwise in screen
+space.
 
 
 `any_button_press(gamepad_or_touch default ∅)`
@@ -1403,7 +1428,7 @@ create strings for showing controls and button prompts to players with
 `draw_text()`.  It maps `"ⓐ"`, `"ⓑ"`, `"ⓒ"`, `"ⓓ"`, `"ⓔ"`,`"ⓕ"`, `"ⓟ"`, `"ⓠ"`,
 `"⍐"`, `"⍗"`, `"⍇"`, and `"⍈"` as well as ASCII aliases `"(a)"`,
 `"(b)"`, `"(c)"`, `"(d)"`, `"(e)"`, `"(f)"`,`"(p)"`, `"(q")`, `"[^]"`, `"[v]"`,
-`'[&lt;]"`, and `"[&gt;]"` to strings of text. It maps `"##"` to the 1-based player number.
+`"[&lt;]"`, and `"[&gt;]"` to strings of text. It maps `"##"` to the 1-based player number.
 These can be used to describe
 controls to players in a way mapped to the physical controller they
 are currently using instead of the quadplay✜ native controls
@@ -1604,11 +1629,12 @@ Array
 
 `clone(array)`
 : Return a shallow clone of `array`. Pointer structures are preserved and loops
-  are OK. Built-in objects such as spritesheets and functions are not cloned.
+  are OK. Immutable objects such as spritesheets and functions are not cloned.
 
 `deep_clone(array)`
 : Return a deep clone of `array`. Pointer structures are preserved and loops
-  are OK. Built-in objects such as spritesheets and functions are not cloned.
+  are OK. Immutable objects such as spritesheets and functions are not deep cloned.
+  Maps are the only asset that can be deep cloned.
 
 `extended(array1, array2)`
 : Create a new array that contains all elements of `array1` followed by all elements of `array2`.
@@ -1791,6 +1817,7 @@ String
 
   The suffixes `°`, `degrees`, `deg`, and `%` can be added to the `0` forms to
   force the rounding to occur after to conversion to degree measure or percentage.
+  For example, `format_number(0.8123, "0.0%")` produces `"81.2%"`.
 
 `last_key(string)`
 : Returns `size(string) - 1`.
@@ -2403,7 +2430,7 @@ Sound
 Coordinates
 -----------------------------------------------------------
 
-The quadplay default *screen space* coordinate system is:
+The quadplay default coordinate system is:
 
 ************************************************************
 *  2048 (out of the screen)
@@ -2421,19 +2448,29 @@ The quadplay default *screen space* coordinate system is:
 *        *------------------------*
 *   SCREEN_SIZE.y
 ***********************************************************
-[Figure [coords]: Screen space coordinate system.]
+[Figure [coords]: Default quadplay coordinate system.]
+
+The z-axis is used for 3D perspective via the `camera.zoom`, 
+isometric 3D via `transform.skew`, and for z-ordering so that closer
+objects occlude more distant ones in z. The z-ordering can be separated
+from the perspective and isometric aspect for certain special effects
+when desired.
+
+If you use default values of the camera, transform, and `y_up`, and do
+not use child entities, then the coordinate systems referred to as 
+*world space* and *camera space* match the
+*screen space* coordinate system and you can ignore the rest of this section.
+
+Advanced users can use the transform and camera to produce separate
+world space, camera space, and screen space coordinate systems from
+this default.
 
 Almost all standard library functions take arguments in world space.
 This includes drawing routines, intersection routines, and the properties
-of entities without parents. The functions that don't use screen space
-are obvious, since what they do requires another space.
+of entities without parents. The functions that don't use world space
+are obvious, since what they do requires another space. 
 
-If you use default values of the camera, transform, and `y_up`, and do
-not use child entities, then world space and camera space match the
-screen space coordinate system and you can ignore the rest of this section.
-
-Advanced users can leverage the full set of coordinate systems for the
-standard library, which are:
+The full set of coordinate systems supported by the standard library are:
 
 - *screen* space (ss)
 - *world* space (ws)
@@ -2443,8 +2480,8 @@ standard library, which are:
 - *map* space - indices of sprites in a map
 <!-- - *spritesheet* space - indices of sprites in a spritesheet -->
 
-Entities can also form hierarchies using the `entity.child_array`. The first four coordinate
-systems are related by:
+Entities can also form hierarchies using the `entity.child_array`. The
+first four coordinate systems are related by:
 
 <style>
 table.coord {
@@ -2862,6 +2899,30 @@ Sprite coordinates are used by `get_sprite_pixel_color()`. These are integers
 with (0,0) on the top left of the sprite and (`sprite.size.x` - 1, `sprite.size.y` - 1)
 on the lower right.
 
+### The Z-Axis
+
+All drawing commands take one or more position values, color and other
+parameters, and a `z` value.
+
+The value `z default pos.z default 0` is used for z-order occlusion (or the equivalent specified 
+default for the few drawing functions that have a position named other than `pos`).
+
+The value `pos.z default z default 0` is used for clipping, camera zoom, and transform skew. 
+
+Note that because of the defaults, if only one of `pos.z` and `z` is specified, that one value is then used for 
+all z-axis properties. For example, in the common case `pos` is an `xy()` value, so it has no `pos.z`
+and the `z` parameter will be used.
+
+In rare cases it is useful to specify different values for `pos.z` and `z`. For example,
+with volumetric shadows you can draw a drop shadow
+that has the projection of the perspective of plane (`pos.z=0`) but is drawn 
+with a higher occlusion order (`z = 10`),
+so that the shadow is cast onto other objects.
+
+Another example is for performance. Drawing many sprites sequentially with different `pos.z` values 
+produces correct skew and zoom for them, while and forcing their `z` to the same value 
+will cause the individual draw calls can be aggregated for better performance.
+
 
 ### Spritesheet Indices
 
@@ -3018,7 +3079,9 @@ built-in properties in the future: `density` and `friction`.
   any properties not specified. This is forward compatible to any
   extended properties that might be added in future versions, however,
   those properties might conflict with any that you add on your
-  own. The built-in entity properties are all cloned if specified. All
+  own. The built-in entity properties are all cloned if specified, preserving
+  types (for example, if `pos` is an `xyz()` instead of an `xy()`, the extra
+  property is retained). All
   other properties of `obj` are copied over but not cloned.
 
   If the `childTable` second argument is provided (note that this is not
@@ -3408,22 +3471,27 @@ intersections.
   scripted set-piece animations, and elevators.
 
 `entity_simulate(entity, t default 1)`
-: Computes `acc = force/mass; twist = torque/inertia` and
+: Modifies
   `vel *= 1 - drag; spin *= 1 - drag`.  Then,
-  integrates `acc` into `vel` into `pos` and `twist` into `spin` into
+  integrates `force/mass` into `vel` into `pos` and `torque/inertia` into `spin` into
   `angle`. Finally, resets `force` and `torque` to zero and
-  invokes `entityUpdateChilren()`.
+  invokes `entityUpdateChilren()`. 
+  All changes are by mutation, so the `pos`, `acc`, `vel`, and `force`
+  point to the same objects afterward.
+  Translation operates in 2D or 3D, depending on the type of
+  `entity.pos`. Rotation is always 2D.
 
   Uses a forward Euler (1st order Runge-Kutta) integrator over
   duration `t` measured in frames. This tends to be a more stable
   method for small, discrete time steps than the analytic quadratic
   solution and avoids the need for additional data of higher-order
   integrators.
-
+  
   Does not perform collision detection or response, or enforce attachment
   constraints. Do not call `entity_simulate()` if you are
   already using `physics_simulate()` and the entity is in the
   physics object. Doing so will double-simulate the object.
+  
 
 `make_contact_group()`
 : Creates a unique value for an `entity.contact_group`.
@@ -3840,7 +3908,7 @@ endpoints and borders.
 `draw_poly(args)`
 : Named argument version of `draw_poly()`.
 
-`draw_poly(vertex_array, color, outline = (nil), pos default xy(0, 0), angle default 0, scale default xy(1, 1), z default 0)`
+`draw_poly(vertex_array, color, outline = (nil), pos default xy(0, 0), angle default 0, scale default xy(1, 1), z default pos.z default 0)`
 : Draws the _convex_ polygon defined by the `vertex_array`, first scaling by `scale`, rotating by `angle`,
   and then translating by `pos`. The polygon may have any winding direction. The outcome of the drawn result
   is undefined and may change across platforms if the polygon is not convex (but there will never be an error).
@@ -3848,7 +3916,7 @@ endpoints and borders.
 `draw_corner_rect(args)`
 : Named argument version of `draw_corner_rect()`.
 
-`draw_corner_rect(corner, size, color, outline default ∅, z default 0)`
+`draw_corner_rect(corner, size, color, outline default ∅, z default corner.z default 0)`
 : Draw a rectangle covering all of the pixel centers between `corner`
   and `corner + size`. This is primarily for UI window drawing.
   `size` may be negative.
@@ -3864,7 +3932,7 @@ endpoints and borders.
 `draw_disk(args)`
 : Object version of `draw_disk()`.
 
-`draw_disk(pos, radius, color, outline default ∅, z default 0)`
+`draw_disk(pos, radius, color, outline default ∅, z default pos.z default 0)`
 : Draw a circle or filled disk centered at (`pos.x`, `pos.y`)
   with radius `radius` and z-order `z`.
   
@@ -3880,7 +3948,7 @@ endpoints and borders.
 `draw_line(args)`
 : Named argument version of `draw_line()`.
 
-`draw_line(A, B, color, z default 0, width default 1)`
+`draw_line(A, B, color, z default A.z default 0, width default 1)`
 : Draw a 1-pixel line from (`A.x`, `A.y`) to (`B.x`, `B.y`) using z-order `z`.
   When using the default transformation, put the endpoints at half-pixel
   positions for the best alignment with the pixel grid.
@@ -3888,7 +3956,7 @@ endpoints and borders.
 `draw_point(args)`
 : Named argument version of `draw_point()`.
 
-`draw_point(pos, color, z default 0)`
+`draw_point(pos, color, z default pos.z default 0)`
 : Set the color of pixel (`pos.x`, `pos.y`) to color `color` with z-order `z`.
   A series of `draw_point` calls with the same `z` value are about twice as
   fast as ones with mixed `z` values or intermixed with other draw calls.
@@ -3906,7 +3974,7 @@ endpoints and borders.
 `draw_rect(args)`
 : Named argument version of `draw_rect()`.
 
-`draw_rect(pos, size, color, outline default ∅, angle default 0, z default 0)`
+`draw_rect(pos, size, color, outline default ∅, angle default 0, z default pos.z default 0)`
 : Draws the rectangle _centered_ at `pos` with the given `size` and `angle`.
   No `scale` argument is provided because it is easy for the caller to
   explicitly multiply `size` by `scale`.
@@ -3918,7 +3986,7 @@ endpoints and borders.
   `draw_sprite({sprite: wizard, pos: xy(100, 100), z: 2})`.
   Values default according to the positional argument version.
 
-`draw_sprite(sprite, pos, angle default 0°, scale default xy(100%, 100%), opacity default 100%, z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp", pivot default sprite.pivot)`
+`draw_sprite(sprite, pos, angle default 0°, scale default xy(100%, 100%), opacity default 100%, z default pos.z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp", pivot default sprite.pivot)`
 : Draw sprite `sprite` with its center at `pos`. `pos` must have at
   least `x` and `y` fields. The sprite appears at `z` in the z-order
   (defaults to 0). If specified, the `scale` parameter must be a
@@ -3927,17 +3995,22 @@ endpoints and borders.
   scaled by `set_transform` values, but the rotation and center are
   affected by the `set_transform` scaling.
 
-  If it is not `nil`, the `override_color` blends with the red, green, and blue
-  values read from each pixel of the sprite. The default blend mode is `"lerp"`,
-  which interpolates between the sprite color and the `override_color` based on
-  `override_color.a`. The other blend operation supported is `"multiply"`, which multiplies
-  the `r`, `g`, `b` values and ignores the `override_color.a`. The alpha value
-  of the result is always the sprite's original alpha value. Useful for simulating lighting,
-  turning a sprite into a shadow silhouette, or flashing a sprite a different color
-  to indicate hits or invincibility.
+  If it is not `nil`, the `override_color` blends with the red, green,
+  and blue values read from each pixel of the sprite. The default
+  blend mode is `"lerp"`, which interpolates between the sprite color
+  and the `override_color` based on `override_color.a`. The other
+  blend operation supported is `"multiply"`, which multiplies the `r`,
+  `g`, `b` values and ignores the `override_color.a`. The alpha value
+  of the result is always the sprite's original alpha value. Useful
+  for simulating lighting, turning a sprite into a shadow silhouette,
+  or flashing a sprite a different color to indicate hits or
+  invincibility.
   
-  The `pivot` is in the sprite's coordinate system relative to its center, so it is 
-  affected by the `angle` and `scale`.
+  The `pivot` is in the sprite's coordinate system relative to its
+  center, so it is affected by the `angle` and `scale`.
+  
+  The `z` value is used for ordering. The value `pos.z default z`
+  is used for camera zoom perspective and transform skew.
 
 `draw_sprite_corner_rect(sprite, corner, size, z default 0)`
 : Draw a rectangle enclosing points `corner` and `corner+size`
@@ -3959,7 +4032,7 @@ endpoints and borders.
   `draw_text({text: "Fire!", pos: xy(100, 100), x_align:"left", z: 2})`.
   Values default according to the positional argument version.
 
-`draw_text(font, text, pos, color default ∅, shadow default ∅, outline default ∅, x_align default "left", y_align default "baseline", z default 0, wrap_width default ∅, text_size default size(text), markup default false)`
+`draw_text(font, text, pos, color default ∅, shadow default ∅, outline default ∅, x_align default "left", y_align default "baseline", z default pos.z default 0, wrap_width default ∅, text_size default size(text), markup default false)`
 : Print string `text` relative to `pos`. Returns an `xy()` size of the
   bounding box, excluding shadows and outline. This bounding box is
   conservative in height and accounts for the highest ascender and
@@ -4017,7 +4090,7 @@ endpoints and borders.
 `draw_tri(args)`
 : Named argument version of `draw_tri()`.
 
-`draw_tri(A, B, C, color, outline default ∅, pos default xy(0, 0), scale default xy(1, 1), angle default 0, z default 0)`
+`draw_tri(A, B, C, color, outline default ∅, pos default xy(0, 0), scale default xy(1, 1), angle default 0, z default pos.z default 0)`
 : Scale `A`, `B`, and `C` by `scale`, rotate them around the origin by `angle`, translate
   by `pos`, and then draw the triangle. The `pos` argument is not first because in many
   cases this is called with draw-space vertices and no translation. The triangle may have
@@ -4240,7 +4313,7 @@ indices. The map's z-axis corresponds to layers.
 `draw_map(args)`
 : Draw the map using the named argument object.
 
-`draw_map(map, min_layer default 0, max_layer default length(map.layer), replacement_array default ∅, pos default xy(0, 0), angle default 0, scale default xy(1, 1), z default 0)`
+`draw_map(map, min_layer default 0, max_layer default length(map.layer), replacement_array default ∅, pos default xy(0, 0), angle default 0, scale default xy(1, 1), z default pos.z default 0)`
 : Draws the map with the current transform.  If there is no transform,
   the map is drawn with the first tile's center at (0, 0), which means
   that the tile will be half off the screen.  If specified, `min_layer`
@@ -4253,7 +4326,7 @@ indices. The map's z-axis corresponds to layers.
   sprite in the map. It will be replaced during drawing with the
   corresponding `to` value. The `to` values may also be `nil`.
 
-  The if specified in the source `.json` file, the map will wrap
+  If specified in the source `.json` file, the map will wrap
   appropriately horizontally or vertically when drawn, if it is large
   enough to covers at least 1/3 of the current clipping area.
   
@@ -4266,16 +4339,21 @@ indices. The map's z-axis corresponds to layers.
   performance penalty). It does not tile infinitely.
   If the game explicitly relocates the camera when it has moved
   off of the end of the map, then it will _appear_ infinite in game.
+  
+  The `z` value is used for z ordering. The value `(pos.z default z)`
+  is used for transform skew and perspective camera zoom. The `map.z_scale`
+  and `map.z_offset` affect both.
 
-`draw_map_span(start, size, map, map_coord0, map_coord1, min_layer default 0, max_layer_exclusive default +infinity, replacement_array default [], z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp", invert_sprite_y default (get_transform().dir.y < 0), quality default 100%)`
+`draw_map_span(start, size, map, map_coord0, map_coord1, min_layer default 0, max_layer_exclusive default +infinity, replacement_array default [], z default start.z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp", invert_sprite_y default (get_transform().dir.y < 0), quality default 100%)`
 : Draws a perfectly horizontal (regardless of the camera) span of constant z with pixel colors taken from the map.
   This is a key primitive for building fast perspective rendering of horizontal surfaces.  See the
   Kart and Warlock 3D examples. It can also be used for 2D textured polygon rendering.
   
-  `start` is an `xy()` value on screen at the left edge of the
+  `start` is an `xy()` or `xyz()` value on screen at the left edge of the
   span. `size` is the extent of the span, which must be 0 along the
   `y` axis (vertical spans are reserved for future expansion). 
-  The span will be transformed by the camera, but does not rotate.
+  The span will be transformed by the `camera.pos`, but does not rotate with
+  the `camera.angle`.
   `map_coord0` is an `xy()` in map coordinates for the source colors,
   which corresponds to the `start` pixel on screen. `map_coord1` is
   the end coordinate in map coordinates.
@@ -4382,11 +4460,12 @@ indices. The map's z-axis corresponds to layers.
      passageways, which are good locations for spawn points or building rooms.
    - `random: function default random`. Random number generator to use.
 
-`map_resize(map, width, height, layers default size(map.layer))`
+`map_resize(map, width default map.size.x, height default map.size.y, layers default size(map.layer))`
 : Resizes the map in place. Newly revealed values will be `nil`.
-  Maps should only be resized using this function. There is no guarantee
-  that the individual arrays will be preserved--they may be reallocated
-  and copied. Do not hold pointers into the map across `map_resize()` calls.
+  Maps should only be resized using this function instead . There is no guarantee
+  that the individual arrays themselves will be preserved--they may be reallocated
+  and copied, although the values will be preserved. So, do not hold pointers into 
+  the map across `map_resize()` calls.
 
 `set_map_sprite(map, map_coord, sprite, layer default 0)`
 : Sets the corresponding map sprite. Does nothing if `map_coord` is out of bounds.

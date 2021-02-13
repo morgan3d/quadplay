@@ -1,9 +1,6 @@
 init
 ────────────────────────────────────────────────────────────────────────
-let pos = xy(SCREEN_SIZE.x/2, 132)
-let flip = xy(1, 1)
-
-let btn_map = {
+const btn_map = {
     "a": 2,
     "b": 5,
     "c": 10,
@@ -12,10 +9,6 @@ let btn_map = {
 
 frame
 ────────────────────────────────────────────────────────────────────────
-// animate the camera
-cam_update_frame(xy(0, 0))
-set_camera(CAMERA)
-
 for key in keys(btn_map):
     if gamepad_array[0]["released_" + key]:
         cam_add_shake(btn_map[key])
@@ -28,35 +21,24 @@ let btn_text = [
     "current shake: " + format_number(CAMERA.shake_mag, ".00"),
     "add shake:"
 ]
+
 for key in keys(btn_map):
-    push(
-        btn_text,
-        replace(
-            "(" + key + "): " + btn_map[key],
-            gamepad_array[0].prompt
-        )
-    )
+    push(btn_text,
+         replace("(" + key + "): " + btn_map[key],
+                gamepad_array[0].prompt))
 
-// title text
+draw_text(font, join(btn_text, "\n"), xy(½ SCREEN_SIZE.x, 10), TEXT_COLOR, ∅, ∅, "center", "top")
+
 preserving_transform:
-    set_camera()
-    draw_text(
-        font,
-        join(btn_text, "\n"),
-        xy(½ SCREEN_SIZE.x, 10),
-        text_color,
-        ∅,
-        ∅,
-        "center",
-        "top",
-    )
-
-// Ground
-draw_corner_rect(
-    xy(-½ SCREEN_SIZE.x, 140), 
-    xy(4 SCREEN_SIZE.x, 4 SCREEN_SIZE.y - 139), 
-    GROUND_COLOR
-)
-
-// Alien
-draw_sprite(mage_sprite[0][0], pos, 0, 300%)
+    // animate the camera
+    cam_update_frame(xy(0, 0))
+    set_camera(CAMERA)
+    
+    // Ground
+    draw_corner_rect(
+        xy(-½ SCREEN_SIZE.x, 140), 
+        xy(4 SCREEN_SIZE.x, 4 SCREEN_SIZE.y - 139), 
+        GROUND_COLOR)
+    
+    // Alien
+    draw_sprite(mage_sprite[0][0], xy(½ SCREEN_SIZE.x, 132), ∅, 300%)

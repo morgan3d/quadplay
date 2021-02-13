@@ -744,8 +744,12 @@ function $executeSPR(metaCmd) {
         const DX = cmd.x, DY = cmd.y,
               SX = srcX1 + cmd.sizeX * 0.5, SY = srcY1 + cmd.sizeY * 0.5;
 
-        const cos = $Math.cos(cmd.angle), sin = $Math.sin(cmd.angle);
-        const fx = cmd.scaleX, fy = cmd.scaleY;
+        // Snap nearly 0 or 1 values to perfect to avoid
+        // falling into awkward roundoff cases
+        const angle = ($Math.abs(cmd.angle) < 1e-8) ? 0 : cmd.angle;
+        const cos = $Math.cos(angle), sin = $Math.sin(angle);
+        const fx = $Math.abs(cmd.scaleX - 1) < 1e-8 ? 1 : cmd.scaleX,
+              fy = $Math.abs(cmd.scaleY - 1) < 1e-8 ? 1 : cmd.scaleY;
 
         const A = cos/fx, B = -sin/fx, C =  sin/fy, D = cos/fy;
         const E = cos*fx, F =  sin*fx, G = -sin*fy, H = cos*fy;
@@ -815,10 +819,10 @@ function $executeSPR(metaCmd) {
 
             const width = (dstX2 - dstX1 + 1) | 0;
             if (width >= 1) {
-                const srcY = ((dstY1 + 0.4999 - DY) * D + SY) | 0;
+                const srcY = ((dstY1 + 0.4999 - DY) * $Math.sign(D) + SY) | 0;
                 let srcOffset = ((((dstX1 + 0.4999 - DX) + SX) | 0) + srcY * srcDataWidth) | 0;
                 let dstOffset = (dstX1 + dstY1 * $SCREEN_WIDTH) | 0;
-                const srcStep = (srcDataWidth * D) | 0;
+                const srcStep = (srcDataWidth * $Math.sign(D)) | 0;
 
                 if (A < 0) {
                     // Use the flipped version
