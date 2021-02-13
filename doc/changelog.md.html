@@ -9,6 +9,7 @@ of [quadplay✜](manual.md.html).
 2021 February TBD: Beta update 65
 ===================================
 
+- New Zoom 2D and Zoom 3D camera examples
 - `format_number()` can now accept a degrees or percent suffix
 - Code polish on the Animation and Z-Car examples
 - Improved the constant editor GUI layout
@@ -23,6 +24,7 @@ of [quadplay✜](manual.md.html).
 - `map_resize()` now has more default parameters
 - Clarified the difference between `a`, `aa`, and `a_released` for all buttons
   in the manual
+- `set_camera()`...`get_camera()` will now preserve the type of `camera.pos` as `xy()` or `xyz()`
 - Documented the Z-Axis under Coordinate Systems
 - Fixed missing syntax highlighting for map helper functions
 - Fixed `map_resize()` for an increasing number of layers
@@ -31,6 +33,9 @@ of [quadplay✜](manual.md.html).
 - Fixed game-specific sprite properties not appearing on `rotated_90` and
   `rotated_270` versions
 - Fixed games without a developer or title crashing the IDE on load
+- Fixed `draw_text()` with `y_align: "bottom"` culling text incorrectly
+- Fixed `format_number()` adding negative signs after space padding
+- Fixed `make_entity` default size initialization
 
 
 2021 February 6: Beta update 64

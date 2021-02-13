@@ -1,9 +1,103 @@
 {
     "assets": {
+        "shapes_sprite": "quad://sprites/shapes-32x32.sprite.json"
     },
     "constants": {
+        "IDEAL_DISTANCE": {
+            "type": "number",
+            "value": "76.735",
+            "min": {
+                "type": "number",
+                "value": "1"
+            },
+            "max": {
+                "type": "number",
+                "value": "100"
+            },
+            "format": "",
+            "quantum": 0
+        },
+        "NUM_BOIDS": {
+            "type": "number",
+            "value": "30",
+            "min": {
+                "type": "number",
+                "value": "1"
+            },
+            "max": {
+                "type": "number",
+                "value": "100"
+            },
+            "format": "",
+            "quantum": 0
+        },
+        "NUM_ITERATIONS": {
+            "type": "number",
+            "value": 1,
+            "min": {
+                "type": "number",
+                "value": "1"
+            },
+            "max": {
+                "type": "number",
+                "value": "10"
+            },
+            "format": "",
+            "quantum": 0
+        },
+        "ATTRACTOR_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "87%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "27%"
+                }
+            }
+        },
+        "BACKGROUND_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "34%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "72%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "100%"
+                }
+            }
+        },
+        "BOID_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "49%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "28%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "0%"
+                }
+            }
+        }
     },
-    "copyright": "\u00a92019 Stephan Steinbach",
+    "copyright": "©2019 Stephan Steinbach",
     "developer": "Stephan Steinbach",
     "license": "CC0/Public Domain",
     "start_mode": "Boids",
@@ -11,7 +105,14 @@
         "Boids"
     ],
     "packages": [],
-    "scripts": [
-    ],
-    "title": "Boids Example"
+    "scripts": [],
+    "title": "Boids Example",
+    "screenshot_tag": "Boids Example",
+    "description": "Implementation of Craig Reynolds's flocking algorithm",
+    "cooperative": false,
+    "competitive": false,
+    "highscores": false,
+    "achievements": false,
+    "min_players": 1,
+    "max_players": 1
 }

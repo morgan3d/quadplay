@@ -14,8 +14,8 @@
         "house":    {"x": 5, "y": 0},
         "hexagon":  {"x": 6, "y": 0},
         "pointy_hexagon": {"x": 7, "y": 0},
-        "octagon": {"x": 9, "y": 0},
-        "capsule": {"x": 8, "y": 0},
+        "octagon": {"x": 8, "y": 0},
+        "capsule": {"x": 9, "y": 0},
         "half_square": {"x": 10, "y": 0},
         "barb": {"x": 11, "y": 0},
         

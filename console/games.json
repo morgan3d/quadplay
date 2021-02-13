@@ -2,11 +2,6 @@
     "mine": [],
     "examples": [
         {
-            "url": "quad://examples/accel_demo/",
-            "title": "Acceleration Library Demo",
-            "description": ""
-        },
-        {
             "url": "quad://examples/animation/",
             "title": "Animation Example",
             "description": ""
@@ -14,7 +9,7 @@
         {
             "url": "quad://examples/boids/",
             "title": "Boids Example",
-            "description": ""
+            "description": "Implementation of Craig Reynolds's flocking algorithm"
         },
         {
             "url": "quad://examples/camera_shake/",
@@ -34,6 +29,11 @@
         {
             "url": "quad://examples/dual-stick/",
             "title": "Dual D-Pad Example",
+            "description": ""
+        },
+        {
+            "url": "quad://examples/dynamic_accel/accel_demo.game.json",
+            "title": "Dynamic Acceleration Library Demo",
             "description": ""
         },
         {
@@ -178,8 +178,13 @@
         },
         {
             "url": "quad://examples/zoom/",
-            "title": "Zoom",
-            "description": "Very simple camera example with a grid of points"
+            "title": "Zoom 3D",
+            "description": "Using 3D perspective projection to move the camera in and out."
+        },
+        {
+            "url": "quad://examples/zoom2D/",
+            "title": "Zoom 2D",
+            "description": "Using 2D zoom to move the camera in and out."
         }
     ],
     "builtins": [

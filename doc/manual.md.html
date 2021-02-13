@@ -455,8 +455,8 @@ with gravity and pressure.
 [Roguelike Example](../console/quadplay.html?game=quad://examples/roguelike&IDE=1) uses the roguelike sprite set for tilemap
 rendering with a simple text-heavy UI section.
 
-</td></tr><tr><td>![](../examples/accel_demo/label128.png)</td><td>
-[Acceleration Curve Example](../console/quadplay.html?game=quad://examples/accel_demo&IDE=1) is a simple demonstration of how various acceleration curves feel, changing only three constants: top speed, acceleration time and deceleration time. Up and down change the constants to fit different games.
+</td></tr><tr><td>![](../examples/dynamic_accel/label128.png)</td><td>
+[Dynamic Acceleration Example](../console/quadplay.html?game=quad://examples/dynamic_accel&IDE=1) is a simple demonstration of how various acceleration curves feel, changing only three constants: top speed, acceleration time and deceleration time. Up and down change the constants to fit different games.
 
 </td></tr><tr><td>![](../examples/boids/label128.png)</td><td>
 [Boids Example](../console/quadplay.html?game=quad://examples/boids&IDE=1) implements the famous ["boids" flocking algorithm](https://en.wikipedia.org/wiki/Boids).
@@ -563,6 +563,14 @@ quadplay dual D-pad, conventional dual analog, and mouselook controls.
 </td></tr><tr><td>![](../examples/word_game/label128.png)</td><td>
 [Word Game](../console/quadplay.html?game=quad://examples/word_game&IDE=1) 
 Playful use of text and animated level transitions.
+
+</td></tr><tr><td>![](../examples/zoom2D/label128.png)</td><td>
+[Zoom 2D](../console/quadplay.html?game=quad://examples/zoom2D&IDE=1) 
+Simplified example of 2D zoom using `set_camera()`.
+
+</td></tr><tr><td>![](../examples/zoom/label128.png)</td><td>
+[Zoom 3D](../console/quadplay.html?game=quad://examples/zoom&IDE=1) 
+Simplified example of 3D perspective zoom using `set_camera()`. See also the Vehicle example.
 
 </td></tr></table>
 
@@ -3124,7 +3132,7 @@ The basic entity properties and defaults are:
   `entity.offset` for transient effects.
 
 `entity.pos`
-: The world space `xy()` position of the center of the entity. Defaults to (0,0).
+: The world space `xy()` or `xyz()` position of the center of the entity. Defaults to `xy(0,0)`.
   See also `entity.pos_in_parent`, `entity.offset`, and `entity_update_children()`.
 
 `entity.scale`
@@ -3151,7 +3159,10 @@ The basic entity properties and defaults are:
   if there is a sprite). See `draw_sprite()` for details. Defaults to `nil`.
 
 `entity.z`
-: z-order position (a number). Defaults to zero.
+: z-order position (a number). Defaults to zero, unless `entity.pos` is an
+  `xyz()` value, in which case this is left as nil so that the `entity.pos.z`
+  value can override. Setting both `entity.pos.z` and `entity.z` allows separating
+  the z-order for rendering.
 
 
 Examples of creating an entity with different shapes:
@@ -3238,7 +3249,7 @@ order to simplify conversion factors.
 See also the Physics section for relevant functions.
 
 `entity.force`
-: `xy()` linear force. Defaults to (0, 0).
+: `xy()` or `xyz()` linear force. Defaults to `xy(0, 0)`.
   Has units of mass * pixels / frame^2 by default.
   Typical forces are on the scale 1-10.
 
@@ -3258,7 +3269,7 @@ See also the Physics section for relevant functions.
   are on the scale 1-10.
 
 `entity.vel`
-: `xy()` linear velocity. Defaults to (0, 0).
+: `xy()` or `xyz()` linear velocity. Defaults to `xy(0, 0)`.
   Has units of pixels/frame by default.
 
 `entity.physics_sleep_state`
@@ -3400,8 +3411,8 @@ The hierarchy properties are:
   and `parent.offset`.
 
 `entity.pos_in_parent`
-: `xy()` position value relative to the parent, in parent space. There is no way to opt out of this property being
-  applied recursively. Defaults to (0, 0).
+: `xy()` or `xyz()` position value relative to the parent, in parent space. There is no way to opt out of this property being
+  applied recursively. Defaults to `xyz(0, 0)`.
 
 `entity.orient_with_parent`
 : If true, `entity_update_children()` will override this entity's angle and scale with
@@ -3740,8 +3751,13 @@ to start colliding with each other.
   as constant over that period. Automatically calls `entity_update_children()`
   on all entities in the context.
 
+  Unlike `entity_simulate()`, `physics_simulate()` does not simulate z
+  velocity or force, however, it preserves those values if they are
+  specified using an `xyz()` `pos`, `vel`, and `force()`.
+
   Do not call `entity_simulate()` on objects that are in the
   physics world or they will be double simulated.
+  
 
 
 Graphics
@@ -4048,15 +4064,15 @@ endpoints and borders.
   without flipping, rotation, or scaling, no matter what the transform
   or camera are.
 
-  x-alignment of `-1` or `"left"` = left,
-  `0` or `"center"` = center, `+1` or `"right"` = right,
-  y-alignment of `-1` or `"top"` = top, `0` or `"center"` = center,
-  `1` or `"baseline"` = baseline, `2` or `"bottom"` = bottom.
+  x-alignment of `-1` or `"left"` = left, `0` or `"center"` = center,
+  `+1` or `"right"` = right, y-alignment of `-1` or `"top"` = top, `0`
+  or `"center"` = center, `1` or `"baseline"` = baseline of the first
+  line of text, `2` or `"bottom"` = bottom of the block of text.
 
-  `font` must be loaded from the assets.  Color,
-  shadow, and outline default to transparent. Any non-transparent
-  outline causes the shadow to move below both the outline and main color.
-  Returns the line height (including spacing) for the next line.  
+  `font` must be loaded from the assets.  Color, shadow, and outline
+  default to transparent. Any non-transparent outline causes the
+  shadow to move below both the outline and main color.  Returns the
+  line height (including spacing) for the next line.
   
   If `wrap_width` is specified, breaks the text at the maximum width
   and renders multiple lines. Each line is offset by the font's
@@ -4083,14 +4099,14 @@ endpoints and borders.
   and expressions are not permitted in the values. 
   
   To insert a regular brace within markup, use a slash escape, which
-  must be typed in a string using a double slash: `\\{` or `\\}`.
+  must be typed in a string using a double slash: `"\\{"` or `"\\}"`.
   
-  To insert a single linebreak within markup, use `{br}`.
+  To insert a single linebreak within markup, use `"{br}"`.
 
 `draw_tri(args)`
 : Named argument version of `draw_tri()`.
 
-`draw_tri(A, B, C, color, outline default ∅, pos default xy(0, 0), scale default xy(1, 1), angle default 0, z default pos.z default 0)`
+`draw_tri(A, B, C, color, outline default ∅, pos default xy(0, 0), angle default 0, scale default xy(1, 1), z default pos.z default 0)`
 : Scale `A`, `B`, and `C` by `scale`, rotate them around the origin by `angle`, translate
   by `pos`, and then draw the triangle. The `pos` argument is not first because in many
   cases this is called with draw-space vertices and no translation. The triangle may have

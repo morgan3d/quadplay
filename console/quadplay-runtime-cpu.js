@@ -1177,7 +1177,10 @@ var $camera = {
     y:     0,
     z:     0,
     angle: 0,
-    zoom:  1
+    zoom:  1,
+
+    // Used for tracking whether get_camera() should return a 2D or 3D pos.z
+    has_pos_z: false
 };
 
 var $graphicsStateStack = [];
@@ -1242,7 +1245,16 @@ function set_camera(pos, angle, zoom, z) {
     }
     $camera.x = pos.x;
     $camera.y = pos.y;
-    $camera.z = z || 0;
+
+    if (pos.z !== undefined && z !== undefined && pos.z !== z) {
+        $error('Cannot have different z and pos.z values on a camera');
+    }
+    
+    if (z === undefined) { z = pos.z; }
+    if (z === undefined) { z = 0; }
+    $camera.has_pos_z = (pos.z !== undefined);
+
+    $camera.z = z;
     $camera.angle = angle || 0;
     $camera.zoom = zoom;
 }
@@ -1250,7 +1262,7 @@ function set_camera(pos, angle, zoom, z) {
 
 function get_camera() {
     return {
-        pos: xy($camera.x, $camera.y),
+        pos: $camera.has_pos_z ? xy($camera.x, $camera.y, $camera.z) : xy($camera.x, $camera.y),
         angle: $camera.angle,
         zoom: $camera.zoom,
         z: $camera.z
@@ -1534,7 +1546,11 @@ function angle_to_xy(angle) {
 }
 
 function xy_to_angle(v) {
-    return rotation_sign() * $Math.atan2(v.y, v.x);
+    if ($Math.abs(v.x) < 1e-10 && $Math.abs(v.y) < 1e-10) {
+        return 0;
+    } else {
+        return rotation_sign() * $Math.atan2(v.y, v.x);
+    }
 }
 
 var $screen;
@@ -2121,7 +2137,11 @@ function make_entity(e, childTable) {
     r.name = r.name || ('entity' + ($entityID++));
     r.shape = r.shape || 'rect';
     r.sprite = r.sprite || undefined;
-    r.z = r.z || 0;
+    if (r.pos.z === undefined) {
+        // Only set r.z if r.pos.z is undefined or
+        // r.z is explicitly set.
+        r.z = r.z || 0;
+    }
 
     r.physics_sleep_state = r.physics_sleep_state || 'awake';
 
@@ -2147,6 +2167,13 @@ function make_entity(e, childTable) {
         r.opacity = 1;
     }
     
+    if (typeof r.scale === 'number') {
+        r.scale = {x: r.scale, y: r.scale};
+    }
+    if (typeof r.scale !== 'object') {
+        $error('The scale of an entity must be a number or xy().');
+    }
+    
     if (r.size === undefined) {
         if (r.sprite) {
             if (r.shape === 'rect') {
@@ -2165,6 +2192,9 @@ function make_entity(e, childTable) {
     } else {
         r.size = clone(r.size);
     }
+
+    if (is_NaN(r.size.x)) { $error('NaN entity.size.x'); }
+    if (is_NaN(r.size.y)) { $error('NaN entity.size.y'); }
 
     if (r.pivot === undefined) {
         if (r.sprite) {
@@ -2187,14 +2217,8 @@ function make_entity(e, childTable) {
     r.offset_in_parent = r.offset_in_parent ? clone(r.offset_in_parent) : xy(0, 0);
     r.scale_in_parent = r.scale_in_parent ? clone(r.scale_in_parent) : xy(1, 1);
 
-    if (typeof r.scale === 'number') {
-        r.scale = {x: r.scale, y: r.scale};
-    }
-    if (typeof r.scale !== 'object') {
-        $error('The scale of an entity must be a number or xy().');
-    }
     if (isNaN(r.angle)) { $error('NaN angle on entity'); }
-    if (isNaN(r.z)) { $error('NaN z on entity'); }
+    if (r.z !== undefined && isNaN(r.z)) { $error('NaN z on entity'); }
     
     // Construct named children
     if (childTable) {
@@ -2377,7 +2401,7 @@ function entity_update_children(parent) {
 
     if (typeof parent.scale !== 'object') { $error('The scale of the parent entity must be an xy().'); }
     if (isNaN(parent.angle)) { $error('NaN angle on parent entity'); }
-    if (isNaN(parent.z)) { $error('NaN z on parent entity'); }
+    if (parent.z !== undefined && isNaN(parent.z)) { $error('NaN z on parent entity'); }
     
     const N = parent.child_array.length;
     const rotSign = $Math.sign(parent.scale.x * parent.scale.y);
@@ -2395,7 +2419,19 @@ function entity_update_children(parent) {
        
         child.pos.x = (c * child.pos_in_parent.x - s * child.pos_in_parent.y) * parent.scale.x + parent.pos.x;
         child.pos.y = (s * child.pos_in_parent.x + c * child.pos_in_parent.y) * parent.scale.y + parent.pos.y;
-        child.z = parent.z + child.z_in_parent;
+        if (child.pos.z !== undefined) {
+            if (parent.pos.z === undefined) {
+                $error("Child entity has xyz() pos and parent has xy() pos");
+            }
+            child.pos.z = child.pos_in_parent.z + parent.pos.z;
+        }
+        
+        if (child.z_in_parent !== undefined) {
+            if (parent.z === undefined) {
+                $error("Child entity has z but parent.z = nil");
+            }
+            child.z = parent.z + child.z_in_parent;
+        }
 
         if (child.offset_with_parent) {
             child.offset.x = (c * child.offset_in_parent.x - s * child.offset_in_parent.y) * parent.scale.x + parent.offset.x;
@@ -2408,6 +2444,9 @@ function entity_update_children(parent) {
 
 
 function entity_simulate(entity, dt) {
+    if (isNaN(entity.spin)) { $error('NaN entity.spin'); }
+    if (isNaN(entity.torque)) { $error('NaN entity.torque'); }
+
     // Assume this computation takes 0.01 ms. We have no way to time it
     // properly, but this at least gives some feedback in the profiler
     // if it is being called continuously.
@@ -2417,9 +2456,7 @@ function entity_simulate(entity, dt) {
     if (entity.density === Infinity) { return; }
     
     const mass = entity_mass(entity);
-    if (mass <= 0) {
-        $error('Mass must be positive in entity_simulate()');
-    }
+    if (mass <= 0) { $error('Mass must be positive in entity_simulate()'); }
     const imass = 1 / mass;
     const iinertia = 1 / entity_inertia(entity, mass);
     const vel = entity.vel, pos = entity.pos, force = entity.force;
@@ -4879,10 +4916,10 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
         fill = vertexArray.color;
         vertexArray = vertexArray.vertex_array;
     }
-    
+
     angle = (angle || 0) * rotation_sign();
     let Rx = $Math.cos(angle), Ry = $Math.sin(-angle);
-
+    
     // Clean up transformation arguments
     let Sx = 1, Sy = 1;
 
@@ -4941,15 +4978,14 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
     let z_order = z - $camera.z;
     // For transformation and scale
     let z_pos = (pos_z === undefined) ? z : (pos_z - $camera.z);
-    
+
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
-        if (scale === undefined) { scale = {x:1, y:1}; }
         // Transform the arguments to account for the camera
         const mag = $zoom(z_pos);
-        const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
+        const C = $Math.cos($camera.angle) * mag,
+              S = $Math.sin($camera.angle * rotation_sign()) * mag;
         
         if (! pos) { pos = {x: 0, y: 0}; }
-        if (typeof scale === undefined) { scale = {x: 1, y: 1}; }
         
         let x = Tx - $camera.x, y = Ty - $camera.y;
         Tx = x * C + y * S; Ty = y * C - x * S;
@@ -4965,7 +5001,7 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
     // Preallocate the output array
     const N = vertexArray.length;
     const points = []; points.length = N * 2;
-    
+
     // Compute the net transformation
     let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
     for (let v = 0, p = 0; v < N; ++v, p += 2) {
@@ -5895,9 +5931,13 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
     x = $Math.round(x) | 0;
     y = $Math.round(y) | 0;
 
-    if ((x > $clipX2) || (y > $clipY2) || (y + height < $clipY1) || (x + width < $clipX1) ||
-        (z_pos > $clipZ2 + 0.5) || (z_pos < $clipZ1 - 0.5)) {
-        // Cull when off-screen
+    if ((x > $clipX2) || (x + width < $clipX1) ||
+        (z_pos > $clipZ2 + 0.5) || (z_pos < $clipZ1 - 0.5) ||
+        (y_align !== 2 && (y > $clipY2) || (y + height < $clipY1))) {
+        // Cull when off-screen. Culling is disabled for "bottom" aligned
+        // text because the implementation generatse a draw call and then
+        // adjust the vertical position, so culling cannot happen during draw call
+        // generation.
     } else {
         // Break by formatting and then retraverse the formatting array.
         // Reset to the original formatIndex, since it was previously
@@ -6950,6 +6990,12 @@ function entity_inertia(entity, mass) {
     // rect: 1/12 * m * (w^2 + h^2)
     // disk: m * (w/2)^2
     if (mass === undefined) { mass = entity_mass(entity); }
+
+    if (mass === 0) { $error('entity.mass == 0 while computing moment of inertia'); }
+    if (scaleX === 0) { $error('entity.scale.x == 0 while computing moment of inertia'); }
+    if (is_NaN(scaleX)) { $error('NaN entity.scale.x while computing moment of inertia'); }
+    if (entity.size.x === 0) { $error('entity.size.x == 0 while computing moment of inertia'); }
+    if (is_NaN(entity.size.x)) { $error('NaN entity.size.x while computing moment of inertia'); }
     
     if (entity.shape === 'rect') {
         return mass * ($square(entity.size.x * scaleX) + $square(entity.size.y * scaleY)) * (1 / 12);
@@ -8133,7 +8179,7 @@ function format_number(n, fmt) {
         {            
             const match = fmt.match(/^( *)(0*)(\.0+)?(°|deg|degree|degrees|%)?$/);
             if (match) {
-                const spaceNum = match[1].length;
+                let spaceNum = match[1].length;
                 const intNum = match[2].length;
                 const fracNum = match[3] ? $Math.max(match[3].length - 1, 0) : 0;
                 let suffix = match[4];
@@ -8149,8 +8195,11 @@ function format_number(n, fmt) {
 
                 let i = (fracNum === 0) ? s.length : s.indexOf('.');
                 while (i < intNum) { s = '0' + s; ++i; }
+
+                // Inject sign
+                if (n < 0) { s = '-' + s; --spaceNum; }
+                
                 while (i < intNum + spaceNum) { s = ' ' + s; ++i; }
-                if (n < 0) { s = '-' + s; }
 
                 if (suffix) { s += suffix; }
                 

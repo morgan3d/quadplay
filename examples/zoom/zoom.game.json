@@ -1,13 +1,80 @@
 {
     "achievements": false,
     "assets": {
-        "font": "quad://fonts/deja-8.font.json"
+        "font": "quad://fonts/deja-8.font.json",
+        "shapes_sprite": "quad://sprites/shapes-32x32.sprite.json"
     },
     "competitive": false,
-    "constants": {},
+    "constants": {
+        "ACCENT_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "0%"
+                }
+            }
+        },
+        "OUTLINE_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "0%"
+                }
+            }
+        },
+        "SPACING": {
+            "type": "number",
+            "value": "50",
+            "min": {
+                "type": "number",
+                "value": "10"
+            },
+            "max": {
+                "type": "number",
+                "value": "200"
+            },
+            "format": "",
+            "quantum": 0
+        },
+        "POINT_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "100%"
+                }
+            }
+        }
+    },
     "cooperative": false,
     "copyright": "©2020 Stephan Steinbach",
-    "description": "Very simple camera example with a grid of points",
+    "description": "Using 3D perspective projection to move the camera in and out.",
     "developer": "Stephan Steinbach",
     "docs": [],
     "highscores": false,
@@ -20,10 +87,11 @@
     "start_mode": "Play",
     "packages": [],
     "scripts": [],
-    "title": "Zoom",
+    "title": "Zoom 3D",
     "version": 0,
     "screen_size": {
         "x": 384,
         "y": 224
-    }
+    },
+    "screenshot_tag": "Zoom"
 }
