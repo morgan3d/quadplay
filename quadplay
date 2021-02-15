@@ -418,10 +418,13 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
 
                     # Look in each of the files for the URLs of raw files to exclude
                     for file in response_obj[t]:
-                        tmp = load_json(file)
-                        if 'url' in tmp: exclude_table[remove_leading_slash(aux_path) + tmp['url']] = True
+                        try:
+                            tmp = load_json(file)
+                            if 'url' in tmp: exclude_table[remove_leading_slash(aux_path) + tmp['url']] = True
+                        except:
+                            print('Warning: Could not parse ' + file)
 
-                raw_extension = {'sprite': 'png', 'font': 'png', 'sound': 'mp3', 'map':'tmx'}
+                raw_extension = {'sprite': 'png', 'font': 'png', 'sound': 'mp3', 'map': 'tmx'}
 
                 for t in asset_type_array:
                     # Get raw files

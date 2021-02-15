@@ -1,11 +1,11 @@
 {
-    "url":          "sprite-32x32.png",
+    "url":          "TODO: url",
 
     // psd, aseprite, etc. that the "url" png image was exported from
     //"source_url":   ""
     
     "sprite_size":  {"x": 32, "y": 32},
-    "license":      "TODO: Insert License",
+    "license":      "TODO: license",
     
     "gutter":       0,
     "transpose":    false,

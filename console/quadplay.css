@@ -549,8 +549,7 @@ div.debugOverride.disabled {
 }
 
 div.disabled span.label, div.disabled:active span.label {
-    background:       #DDD;
-    color:            #AAA;
+    background:       #BBB;
     transform:        none;
     box-shadow:       1px 2px 2px 0px rgba(0, 0, 0, 0.15);
 }
@@ -1534,6 +1533,10 @@ svg.modeGraph text.edgeLabel {
         width: 578px;
         top: 386px;
     }
+}
+
+button.license {
+    font-size: 85%;
 }
 
 

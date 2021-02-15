@@ -8,10 +8,10 @@
 
     "y_up": true,
 
-    "wrap_x": true,
+    "loop_x": true,
 
     // Optional. Default = false.
-    "wrap_y": false,
+    "loop_y": false,
 
     "z_scale": 1,
 

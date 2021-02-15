@@ -6,10 +6,14 @@
 Changes for both the specification and implementation in each release
 of [quadplay✜](manual.md.html).
 
-2021 February TBD: Beta update 65
+2021 February 15: Beta update 65
 ===================================
 
+- New easy map asset creation in the IDE
 - New Zoom 2D and Zoom 3D camera examples
+- The Create Asset dialog now provides license templates
+- *Incompatible change*: `wrap_x` and `wrap_y` for maps are now
+  `loop_x` and `loop_y` for API consistency
 - `format_number()` can now accept a degrees or percent suffix
 - Code polish on the Animation and Z-Car examples
 - Improved the constant editor GUI layout
@@ -36,6 +40,7 @@ of [quadplay✜](manual.md.html).
 - Fixed `draw_text()` with `y_align: "bottom"` culling text incorrectly
 - Fixed `format_number()` adding negative signs after space padding
 - Fixed `make_entity` default size initialization
+- Fixed asset import dialog empty when corrupt json files are in the game folder
 
 
 2021 February 6: Beta update 64

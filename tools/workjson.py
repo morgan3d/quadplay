@@ -129,9 +129,9 @@ def loads(text, cls=None, object_hook=None, parse_float=None, parse_int=None,
    def comment_replace(match):
       return re.sub(r'[^\n]', '', match[0])
    
-   text = re.sub(r'\/\*(.|\n)*\*\//', comment_replace, text)
+   text = re.sub(r'\/\*(.|\n)*\*\/', comment_replace, text)
 
-   # Remove singleline comments
+   # Remove single line comments
    text = re.sub(r'\/\/.*\n', '\n', text)
 
    # Remove trailing commas

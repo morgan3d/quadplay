@@ -1,5 +1,5 @@
 {
     "url": "world.tmx",
     "sprite_url_table": {"dawnlike-level-16x16": "quad://sprites/dawnlike-level-16x16.sprite.json"},
-    "wrap_y": true
+    "loop_y": true
 }

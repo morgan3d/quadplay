@@ -9,13 +9,23 @@ function showAddAssetDialog() {
     text.value = '';
     text.focus();
 
+    fetchAssetTable(function(table) {
+        addAssetFiles = table;
+
+        // Create the initial display
+        onAddAssetTypeChange();
+    });
+}
+
+
+/** Requests the list of all assets from the server and then runs
+    callback(table) on a table mapping asset types to arrays of URLS) */
+function fetchAssetTable(callback) {
     let gamePath = getGamePath();
     const assetListURL = location.origin + getQuadPath() + 'console/_assets.json?gamePath=' + gamePath;
     
     // Fetch the asset list
     LoadManager.fetchOne({forceReload: true}, assetListURL, 'json', null, function (json) {
-        addAssetFiles = json;
-
         // Strip the path to the current game off assets in the same dir
         // or subdirectory of it. We do not do this on the server side
         // because we may later allow developers to have their own asset directories
@@ -24,8 +34,8 @@ function showAddAssetDialog() {
             gamePath = gamePath.substring(1);
         }
         
-        for (const key in addAssetFiles) {
-            const array = addAssetFiles[key];
+        for (const key in json) {
+            const array = json[key];
             for (let i = 0; i < array.length; ++i) {
                 const url = array[i];
                 if (url.startsWith(gamePath)) {
@@ -34,8 +44,7 @@ function showAddAssetDialog() {
             }
         }
 
-        // Create the initial display
-        onAddAssetTypeChange();
+        callback(json);
     });
 }
 
@@ -197,11 +206,35 @@ function showNewAssetDialog() {
     const text = document.getElementById('newAssetName');
     text.value = '';
     text.focus();
+    onNewAssetTypeChange();
+
+    // Remove previous spritesheet options for the map
+    const spritesheetDropdown = document.getElementById('newAssetMapSpritesheet');
+    spritesheetDropdown.innerHTML = '';
+    
+    fetchAssetTable(function(table) {
+        const array = table.sprite;
+        let s = '';
+        for (let i = 0; i < array.length; ++i) {
+            const url = array[i];
+            // Do not show raw PNGs as potential map spritesheets. There
+            // are too many issues with not having metadata for them.
+            if (! url.endsWith('.png')) {
+                s += `<option>${url}</option>`;
+            }
+        }
+        spritesheetDropdown.innerHTML = s;
+    });
 }
+
 
 function onNewAssetTypeChange() {
     const type = document.getElementById('newAssetType').value.toLowerCase();
     document.getElementById('newAssetSuffix').innerHTML = '_' + type;
+    document.getElementById('newAssetMapOptions').style.display = (type === 'map' ? 'block' : 'none');
+    if (type === 'map') {
+        document.getElementById('newAssetMapYUp').checked = gameSource.json.y_up;
+    }
 }
 
 
@@ -210,6 +243,17 @@ function onNewAssetCreate() {
     const nameBox = document.getElementById('newAssetName');
     const fileName = nameBox.value;
     const assetName = fileName + '_' + type;
+
+    const assetCreator = document.getElementById('newAssetCreator').value.trim();
+    const assetLicense = document.getElementById('newAssetLicense').value.trim();
+
+    let license = '' + new Date().getFullYear();
+    if (/cc0|public domain/i.test(assetLicense)) {
+        license = 'By ' + assetCreator + ' ' + license;
+    } else {
+        license = '©' + license + ' ' + assetCreator;
+    }
+    license += '. ' + assetLicense;
 
     // Warn on overwrite
     if ((gameSource.json.assets[assetName] !== undefined) &&
@@ -221,15 +265,86 @@ function onNewAssetCreate() {
     // Add the new name to the game
     gameSource.json.assets[assetName] = fileName + '.' + type + '.json';
 
-    let gamePath = getGamePath();
+    const gamePath = getGamePath();
+    const dataType = {'sprite': 'png', 'map': 'tmx', 'sound': 'mp3', 'font': 'png'};
+    const templateJSONParameters = {
+        license: license,
+        url: fileName + '.' + dataType[type]
+    };
 
     switch (type) {
     case 'sprite':
-        createNewAssetFromTemplate(assetName, gamePath, fileName, type, 'png', 'sprite-32x32');
+        createNewAssetFromTemplate(assetName, gamePath, fileName, type, 'png', templateJSONParameters);
         break;
 
     case 'sound':
-        createNewAssetFromTemplate(assetName, gamePath, fileName, type, 'mp3', 'sound');
+        createNewAssetFromTemplate(assetName, gamePath, fileName, type, 'mp3', templateJSONParameters);
+        break;
+
+    case 'map':
+        const spritesheetURL = document.getElementById('newAssetMapSpritesheet').value;
+        
+        function makeMap(pngURL, spriteJSON, spriteImage) {
+            console.assert(spriteJSON);
+            console.assert(spriteImage);
+            
+            // Needed for both the TMX and json
+            const width   = clamp(readIntFromControl('newAssetMapWidth', 16), 1, 8192);
+            const height  = clamp(readIntFromControl('newAssetMapHeight', 16), 1, 8192);
+            const layers  = clamp(readIntFromControl('newAssetMapLayers', 1), 1, 8192);
+            const yUp     = document.getElementById('newAssetMapYUp').checked;
+            const zOffset = readNumberFromControl('newAssetMapZ0', 0);
+            const zScale  = readNumberFromControl('newAssetMapZScale', 1);
+            
+            templateJSONParameters.loop_x = document.getElementById('newAssetMapLoopX').checked;
+            templateJSONParameters.loop_y = document.getElementById('newAssetMapLoopY').checked;
+            templateJSONParameters.z_offset = zOffset;
+            templateJSONParameters.z_scale = zScale;
+            templateJSONParameters.y_up = yUp;
+            templateJSONParameters.sprite_url = templateJSONParameters.sprite_url2 = spritesheetURL;
+            const spriteSize = spriteJSON.sprite_size || {x: spriteImage.width, y: spriteImage.height};
+            
+            if (document.getElementById('newAssetMapCenter').checked) {
+                templateJSONParameters.offset_x = spriteSize.x * width / 2;
+                templateJSONParameters.offset_y = spriteSize.y * height / 2;
+            } else {
+                templateJSONParameters.offset_x = templateJSONParameters.offset_y = 0;
+            }
+            
+            const tmxContents = generateTMX(spritesheetURL, pngURL, spriteJSON, spriteSize.x, spriteSize.y, width, height, layers, spriteImage.width, spriteImage.height);
+            createNewAssetFromTemplate(assetName, gamePath, fileName, type, 'tmx', templateJSONParameters, tmxContents);
+        } // makeMap
+
+        const loadOptions = {jsonParser: 'permissive'};
+
+        LoadManager.fetchOne(
+            loadOptions,
+            makeURLAbsolute(window.gameURL, spritesheetURL),
+            'json',
+            undefined,
+            function (json, raw, url) {
+
+                // The PNG's URL is initially relative to the spritesheet, not the
+                // game. Adjust it to be relative to the game. This will be used
+                // to make a local file path for the TMX.
+                let pngURL = json.url;
+                if (! /^[a-z]+:\/\//.test(pngURL) && (spritesheetURL.indexOf('/') !== -1)) {
+                    pngURL = spritesheetURL.replace(/\/[^/]+$/, '/') + pngURL;
+                }
+                
+                LoadManager.fetchOne(
+                    loadOptions,
+                    makeURLAbsolute(url, json.url),
+                    'image',
+                    undefined,
+                    function (image) {
+                        makeMap(pngURL, json, image);
+                    },
+                    function (error) { alert(error + ' while loading spritesheet png for map from ' + pngURL); },
+                    undefined, true);
+            },
+            function (error) { alert(error + ' while loading spritesheet json for map from ' + spritesheetURL); },
+            undefined, true);
         break;
     }
 
@@ -237,10 +352,122 @@ function onNewAssetCreate() {
 }
 
 
+/* Returns a string that is the contents of a TMX map file. */
+function generateTMX(spritesheetURL, pngURL, spritesheetJSON, tilewidth, tileheight, layerwidth, layerheight, numlayers, spritesheetwidth, spritesheetheight) {
+    const spritesheetName = spritesheetURL.replace(/^.*\/([^/]+)\.sprite\.json$/, '$1').replace(/.sprite.json$/, '');
+    
+    // Path to the PNG. The input is already an absolute URL
+    // We need to make the spritesheetPath into a file system path
+    // that is relative to the current game or the quadplay install.
+    let pngPath = pngURL;
 
-function createNewAssetFromTemplate(assetName, gamePath, fileName, type, binaryType, templateName) {
+    // This is an absolute URL. We need to make it into a filesystem path.
+    // (if it was an http:// URL there is simply nothing we can do, so let
+    // it pass through broken)
+    if (pngPath.startsWith('quad://')) {
+        // Quadplay path. Find the relative path from the game to the
+        // quadplay install on this machine. This is machine specific
+        // (that's a problem with TMX!), but still likely to be robust
+        // than an absolute path. A design alternative would be to
+        // force copying the spritesheet into the game directory. Note
+        // that the relative path in the TMX only matters for editing
+        // the TMX; the game can be played and the game edited without
+        // touching the TMX file even if this path is wrong on another
+        // machine.
+
+        // pngURL is initially relative to quadpath.  We need to make
+        // it relative to mapPath.
+        const mapPath = gameURL.replace(/^[a-z]+:\/\/[^/]+\//, '/').replace(/\/[^/]+$/, '/');
+
+        // Make a file system path relative to the web server's root
+        pngPath = pngPath.replace(/^quad:\/\//, getQuadPath());
+
+        // Remove the longest common subpath of pngURL and mapPath
+        let pngPathArray = pngPath.split('/');
+        let mapPathArray = mapPath.split('/');
+        console.assert(pngPathArray[0] === '' && mapPathArray[0] === '', 'Both paths must start with /');
+
+        // The pngPathArray contains at least one different element:
+        // the final filename, so there's no need to check about going
+        // off the end of the array.
+        while (pngPathArray[0] === mapPathArray[0]) {
+            pngPathArray.shift();
+            mapPathArray.shift();
+        }
+
+        // For each remaining unique element in mapPathArray, go up
+        // one directory to reach that common subpath root
+        pngPath = pngPathArray.join('/');
+        for (let i = 0; i < mapPathArray.length - 1; ++i) {
+            pngPath = '../' + pngPath;
+        }
+    }
+
+    const tilecount = Math.floor(spritesheetwidth / tilewidth) * Math.floor(spritesheetheight / tileheight);
+    const columns = Math.floor(spritesheetwidth / tilewidth);
+    
+    let data =
+`<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.4" tiledversion="1.4.3" orientation="orthogonal" renderorder="left-down" width="${layerwidth}" height="${layerheight}" tilewidth="${tilewidth}" tileheight="${tileheight}" infinite="0" nextlayerid="${numlayers + 1}" nextobjectid="1">
+ <tileset firstgid="1" name="${spritesheetName}" tilewidth="${tilewidth}" tileheight="${tileheight}" tilecount="${tilecount}" columns="${columns}">
+  <image source="${pngPath}" width="${spritesheetwidth}" height="${spritesheetheight}"/>
+ </tileset>
+`;
+
+    for (let L = 0; L < numlayers; ++L) {
+        data += `<layer id="${L + 1}" name="Tile Layer ${L + 1}" width="${layerwidth}" height="${layerheight}"><data encoding="csv">\n`;
+        for (let y = 0; y < layerheight; ++y) {
+            for (let x = 0; x < layerwidth; ++x) {
+                data += '0,';
+            }
+            if (y === layerheight - 1) {
+                // Remove the trailing ,
+                data = data.substring(0, data.length - 1);
+            }
+            data += '\n';
+        }
+        data += '</data></layer>\n';
+    }
+
+    data += '</map>\n';
+    return data;
+}
+    
+
+function readNumberFromControl(controlName, defaultValue) {
+    const a = parseFloat(document.getElementById(controlName).value)
+    if (! isFinite(a)) {
+        return defaultValue === undefined ? 0 : defaultValue;
+    } else {
+        return a;
+    }
+}
+
+
+
+function readIntFromControl(controlName, defaultValue) {
+    const a = parseInt(document.getElementById(controlName).value)
+    if (! isFinite(a)) {
+        return defaultValue === undefined ? 0 : defaultValue;
+    } else {
+        return Math.round(a);
+    }
+}
+
+/* 
+   templateParameters is a table. Each key triggers a SINGLE
+   replacement in the template of "TODO: key" -> JSON.stringify(value).
+
+   The url property of the template is always replaced, based on the
+   assetName.
+
+   If assetData is specified, it is used as the contents of the data
+   file (rather than copying a binary file loaded from disk). This is
+   how TMX maps are generated.
+*/
+function createNewAssetFromTemplate(assetName, gamePath, fileName, type, dataType, templateJSONParameters, assetData) {
+    const templateName = type;
     let assetJSONText;
-    let assetBits;
     
     // Create from the template and write to disk
     // Load the template JSON and PNG
@@ -249,7 +476,7 @@ function createNewAssetFromTemplate(assetName, gamePath, fileName, type, binaryT
             // Copy the template
             serverWriteFiles(
                 [{filename: gamePath + fileName + '.' + type + '.json', contents: assetJSONText, encoding: 'utf8'},
-                 {filename: gamePath + fileName + '.' + binaryType, contents: assetBits, encoding: 'binary'}],
+                 {filename: gamePath + fileName + '.' + dataType, contents: assetData, encoding: (typeof assetData === 'string' ? 'utf8' : 'binary')}],
                 function () {
                     // Save the game
                     serverSaveGameJSON(function () {
@@ -266,13 +493,20 @@ function createNewAssetFromTemplate(assetName, gamePath, fileName, type, binaryT
     });
 
     // Load the data
-    templateLoadManager.fetch(makeURLAbsolute('', 'quad://console/templates/' + templateName + '.' + type + '.json'), 'text', null, function (data) {
-        assetJSONText = data.replace('"' + templateName + '.' + binaryType + '"', '"' + fileName + '.' + binaryType + '"');
+    templateLoadManager.fetch(makeURLAbsolute('', 'quad://console/templates/' + templateName + '.' + type + '.json'), 'text', null, function (templateJSONString) {
+        assetJSONText = templateJSONString;
+        for (let key in templateJSONParameters) {
+            const value = templateJSONParameters[key];
+            assetJSONText = assetJSONText.replace('"TODO: ' + key + '"', JSON.stringify(value));
+        }
     });
-    
-    templateLoadManager.fetch(makeURLAbsolute('', 'quad://console/templates/' + templateName + '.' + binaryType), 'arraybuffer', null, function (data) {
-        assetBits = data;
-    });
+
+    if (assetData === undefined) {
+        // Load the data from disk
+        templateLoadManager.fetch(makeURLAbsolute('', 'quad://console/templates/' + templateName + '.' + dataType), 'arraybuffer', null, function (data) {
+            assetData = data;
+        });
+    }
 
     templateLoadManager.end();
 }

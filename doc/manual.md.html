@@ -1378,9 +1378,11 @@ Property           | Values   | Meaning
 `released_q`       | 0 or 1   | 1 if the ⓠ button went from down to up at least once since the previous frame
 `prompt`           | `{...}`  | An object mapping button names to text prompts (see below)
 
-Use the single-letter properties for temporally continuous inputs such
-as aiming or charging and double-letter properties for discrete inputs
-such as firing or accepting.
+!!! 
+    Use the single-letter gamepad properties (`x`, `a`) for
+    temporally continuous inputs such as aiming or charging. Use
+    double-letter properties (`xx`, `aa`) for discrete inputs such as
+    firing or choosing a menu option.
 
 If a button is pressed and released very quickly, then `a` could be 0
 for two frames in a row, because at the time that the frame runs it
@@ -4298,12 +4300,12 @@ to mutate the asset.
 `map.sprite_size`
 : The `xy()` size of source sprites in pixels.
 
-`map.wrap_x`
+`map.loop_x`
 : If true, the map wraps horizontally. Array access does not automatically
   wrap, but functions such as `get_map_sprite()`, `find_map_path()`, and `get_map_pixel_color()`
   will implement wrapping. See details on each map function to see how it supports wrapping.
 
-`map.wrap_y`
+`map.loop_y`
 : If true, the map wraps vertically. Array access does not automatically
   wrap, but functions such as `get_map_sprite()`, `find_map_path()`, and `get_map_pixel_color()`
   will implement wrapping. See details on each map function to see how it supports wrapping.
@@ -6229,8 +6231,15 @@ to the same object, which is immutable.
 Map JSON
 ---------------------------------------------------------------------------------------------
 
+The easy way to create a map is within the IDE using the "Create new
+asset..." option in the project. Select asset type Map and set the map
+options as you wish. Once the map is added to the project, right-click
+on the map in the project to open it in Tiled for editing.
+
+![Map creation dialog in the quadplay IDE](new-map-dialog width=50% style="image-rendering:auto")
+
 Multiple maps loaded from the same map.json file will produce
-different map objects in memory because maps are mutable.  The
+different map objects in memory because maps are mutable. The
 spritesheets that they load will be shared if they come from the same
 sprite.json files.
 
@@ -6254,10 +6263,10 @@ The map JSON descriptor looks like:
     "y_up": false,
 
     // Optional. Default = false.
-    "wrap_x": false,
+    "loop_x": false,
 
     // Optional. Default = false.
-    "wrap_y": false,
+    "loop_y": false,
 
     // Optional. Default is 1.0. This is the z difference
     // between layers when rendering. Can be negative to

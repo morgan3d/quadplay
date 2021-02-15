@@ -5,8 +5,8 @@
         "x": -4,
         "y": -4
     },
-    "wrap_x": true,
-    "wrap_y": true,
+    "loop_x": true,
+    "loop_y": true,
     "z_offset": -2,
     "sprite_url_table": {
         "grid-tiles-8x8": "grid-tiles-8x8.sprite.json"

@@ -6,6 +6,6 @@
     },
     "y_up": false,
     "z_scale": 0,
-    "wrap_x": false,
-    "wrap_y": false
+    "loop_x": false,
+    "loop_y": false
 }

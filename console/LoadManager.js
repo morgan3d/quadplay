@@ -31,7 +31,7 @@
 
   Open Source under the BSD-2-Clause License:
 
-  Copyright 2018-2020 Morgan McGuire, https://casual-effects.com
+  Copyright 2018-2021 Morgan McGuire, https://casual-effects.com
 
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions

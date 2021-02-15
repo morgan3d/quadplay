@@ -1641,8 +1641,8 @@ function loadMap(name, json, mapJSONUrl) {
         sprite_size: Object.freeze({x:0, y:0}),
         size:        Object.freeze({x:0, y:0}),
         size_pixels: Object.freeze({x:0, y:0}),
-        wrap_x:      json.wrap_x || false,
-        wrap_y:      json.wrap_y || false
+        loop_x:      json.loop_x || false,
+        loop_y:      json.loop_y || false
     });
 
     // Map loading proceeds in three steps:

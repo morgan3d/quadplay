@@ -1,0 +1,39 @@
+{
+    "url": "TODO: url",
+
+    // Optional. Shift the map by this amount in pixels for all coordinate
+    // transformations and rendering. Default = (0,0), which puts integer
+    // map coordinates at the corners of tiles.
+    "offset": {"x": "TODO: offset_x", "y": "TODO: offset_y"},
+
+    // z value of the first layer. Optional, default = 0
+    "z_offset": "TODO: z_offset",
+
+    // Optional. Default = false. If true, flip the map
+    // vertically during load so that (0,0) is the bottom
+    // of the TMX map instead of the top.
+    "y_up": "TODO: y_up",
+
+    // Optional. Default = false.
+    "loop_x": "TODO: loop_x",
+
+    // Optional. Default = false.
+    "loop_y": "TODO: loop_y",
+
+    // Optional. Default is 1.0. This is the z difference
+    // between layers when rendering. Can be negative to
+    // reverse layering direction.
+    "z_scale": "TODO: z_scale",
+
+    // Optional license and copyright
+    "license": "TODO: license",
+
+    // Optional if the map only uses one spritesheet
+    "sprite_url": "TODO: sprite_url",
+
+    // If no sprite_url is specified, then an entire table
+    // mapping each spritesheet referenced in the map to a sprite file
+    "sprite_url_table": {
+      "tiles":   "TODO: sprite_url2"
+    }
+}

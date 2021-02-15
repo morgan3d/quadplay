@@ -4263,10 +4263,10 @@ function get_map_pixel_color(map, map_coord, min_layer, max_layer_exclusive, rep
 function $get_map_pixel_color(map, map_coord_x, map_coord_y, min_layer, max_layer_exclusive, replacement_array, result, invert_sprite_y) {
     const map_size_x = map.size.x, map_size_y = map.size.y;
     // Inlined $loop()
-    if (map.wrap_x && (map_coord_x < 0 || map_coord_x >= map_size_x)) {
+    if (map.loop_x && (map_coord_x < 0 || map_coord_x >= map_size_x)) {
         map_coord_x -= $Math.floor(map_coord_x / map_size_x) * map_size_x;
     }
-    if (map.wrap_y && (map_coord_y < 0 || map_coord_y >= map_size_y)) {
+    if (map.loop_y && (map_coord_y < 0 || map_coord_y >= map_size_y)) {
         map_coord_y -= $Math.floor(map_coord_y / map_size_y) * map_size_y;
     }
 
@@ -4409,8 +4409,8 @@ function get_map_sprite(map, map_coord, layer, replacement_array) {
     let mx = $Math.floor(map_coord.x);
     let my = $Math.floor(map_coord.y);
 
-    if (map.wrap_x) { mx = $loop(mx, 0, map.size.x); }
-    if (map.wrap_y) { my = $loop(my, 0, map.size.y); }
+    if (map.loop_x) { mx = $loop(mx, 0, map.size.x); }
+    if (map.loop_y) { my = $loop(my, 0, map.size.y); }
     
     if ((layer >= 0) && (layer < map.layer.length) &&
         (mx >= 0) && (my >= 0) &&
@@ -4439,8 +4439,8 @@ function set_map_sprite(map, map_coord, sprite, layer) {
     let mx = $Math.floor(map_coord.x);
     let my = $Math.floor(map_coord.y);
 
-    if (map.wrap_x) { mx = loop(mx, map.size.x); }
-    if (map.wrap_y) { my = loop(my, map.size.y); }
+    if (map.loop_x) { mx = loop(mx, map.size.x); }
+    if (map.loop_y) { my = loop(my, map.size.y); }
 
     if ((layer >= 0) && (layer < map.layer.length) &&
         (mx >= 0) && (my >= 0) &&
@@ -4545,10 +4545,10 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
     // Handle map wrapping with a 3x3 grid
     const oldDrawOffsetX = $offsetX, oldDrawOffsetY = $offsetY;
     for (let shiftY = -1; shiftY <= +1; ++shiftY) {
-        if (! map.wrap_y && shiftY !== 0) { continue; }
+        if (! map.loop_y && shiftY !== 0) { continue; }
         
         for (let shiftX = -1; shiftX <= +1; ++shiftX) {
-            if (! map.wrap_x && shiftX !== 0) { continue; }
+            if (! map.loop_x && shiftX !== 0) { continue; }
 
             // Shift amount for this instance of the tiled map
             const mapSpaceOffset = xy(map.size.x * map.sprite_size.x * shiftX,
@@ -4717,8 +4717,8 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                     });
                 }
             } // for each layer
-        } // wrap_x
-    } // wrap_y
+        } // loop_x
+    } // loop_y
 
     $offsetX = oldDrawOffsetX;
     $offsetY = oldDrawOffsetY;
@@ -9120,8 +9120,8 @@ function find_map_path(map, start, goal, edgeCost, costLayer, use_sprite_id) {
     function estimatePathCost(A, B, m) {
         let dx = $Math.abs(A.x - B.x);
         let dy = $Math.abs(A.y - B.y);
-        if (map.wrap_x) { dx = $Math.min(dx, map.size.x - 1 - dx); }
-        if (map.wrap_y) { dy = $Math.min(dy, map.size.y - 1 - dy); }
+        if (map.loop_x) { dx = $Math.min(dx, map.size.x - 1 - dx); }
+        if (map.loop_y) { dy = $Math.min(dy, map.size.y - 1 - dy); }
         return dx + dy;
     }
 
@@ -9129,25 +9129,25 @@ function find_map_path(map, start, goal, edgeCost, costLayer, use_sprite_id) {
         const neighbors = [];
         if (node.x > 0) {
             neighbors.push({x:node.x - 1, y:node.y});
-        } else if (map.wrap_x) {
+        } else if (map.loop_x) {
             neighbors.push({x:map.size.x - 1, y:node.y});
         }
 
         if (node.x < map.size.x - 1) {
             neighbors.push({x:node.x + 1, y:node.y});
-        } else if (map.wrap_x) {
+        } else if (map.loop_x) {
             neighbors.push({x:0, y:node.y});
         }
 
         if (node.y > 0) {
             neighbors.push({x:node.x, y:node.y - 1});
-        } else if (map.wrap_y) {
+        } else if (map.loop_y) {
             neighbors.push({x:node.x, y:map.size.y - 1});
         }
 
         if (node.y < map.size.y + 1 - 1) {
             neighbors.push({x:node.x, y:node.y + 1});
-        } else if (map.wrap_y) {
+        } else if (map.loop_y) {
             neighbors.push({x:node.x, y:0});
         }
         

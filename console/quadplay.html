@@ -24,8 +24,8 @@
          document.write('<div ' + (id ? 'id="' + id + 'Container" ' : '') + ' onmousedown="event.stopPropagation()" class="button" onclick="if (event.target.parentElement.parentElement.enabled !== false) ' + (onclick || '') + '(event)" title="' + (title || label) + '"><label><span class="label" ' + (id ? 'id="' + id + 'Label"' : '') + '>' + label + '</span></label></div>');
       }
     
-      function makeRadio(labelHTML, id, selected, attribs, groupID) {
-         document.write('<div id="' + id + 'Container" class="button" ' + (attribs || '') + '><label><input type="radio" name="' + groupID + '" id="' + id + '" onclick="(event.target.enabled !== false) ? onRadio() : (event.target.checked = false)" autocomplete="off" value="1" ' + (selected ? 'checked="1"' : '') + '><span class="label">' + labelHTML + '</span></label></div>');
+      function makeRadio(labelHTML, id, selected, attribs, groupID, disabled) {
+         document.write('<div id="' + id + 'Container" class="button ' + (disabled?'disabled':'')+ '" ' + (attribs || '') + '><label><input type="radio" name="' + groupID + '" id="' + id + '" onclick="(event.target.enabled !== false) ? onRadio() : (event.target.checked = false)" autocomplete="off" value="1" ' + (selected ? 'checked' : '') + (disabled?' disabled':'') + '><span class="label">' + labelHTML + '</span></label></div>');
       }
 
       function makeToggle(labelHTML, style, title, id) {
@@ -100,7 +100,7 @@
       </div>
     </div>
     <div id="consoleMenu" class="unselectable dropdown">
-      <label for="volumeSlider" style="padding-left: 6px; position: relative; top:-2px"><img src="ui-speaker.png" width=12 height=12></label><input id="volumeSlider" style="width:100px; position: relative; margin-left:0px; left: 2px" type="range" min="0" max="200" oninput="onVolumeChange()" onchange="onVolumeChange()"></input>
+      <label for="volumeSlider" style="padding-left: 6px; position: relative; top:-2px"><img src="ui-speaker.png" width=12 height=12></label><input id="volumeSlider" style="width:100px; position: relative; margin-left:0px; left: 2px" type="range" min="0" max="200" oninput="onVolumeChange()" onchange="onVolumeChange()">
       <br/><label><input id="backgroundPauseCheckbox" type="checkbox" title="Pause the game when not in focus" onclick="onBackgroundPauseClick(event)" autocomplete="off">Auto-pause</label>
       <hr>
       <label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('pink')" type="radio" id="pinkColorScheme" checked autocomplete="off">Pink</label>
@@ -454,7 +454,7 @@
           <p>
             <br/>
             <label for="newModeName">Name&nbsp;&nbsp;</label>
-            <input id="newModeName" type="text" style="font-size: 80%; font-family: Monaco, monospace" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '');document.getElementById('newModeCreateButton').disabled = (this.value === '')"></input>
+            <input id="newModeName" type="text" style="font-size: 80%; font-family: Monaco, monospace" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '');document.getElementById('newModeCreateButton').disabled = (this.value === '')">
             <br/>
             <br/>
           </p>
@@ -507,7 +507,7 @@
                   <label for="newConstantName">Name</label>
                 </td>
                 <td>
-                  <input id="newConstantName" type="text" style="margin-bottom: 2px; width: 270px; font-size: 80%; font-family: Monaco, monospace" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '');document.getElementById('newConstantCreateButton').disabled = (this.value === '')"></input>
+                  <input id="newConstantName" type="text" style="margin-bottom: 2px; width: 270px; font-size: 80%; font-family: Monaco, monospace" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '');document.getElementById('newConstantCreateButton').disabled = (this.value === '')">
                 </td>
               </tr>
               <tr valign="top">
@@ -523,8 +523,8 @@
               <input type="radio" name="newConstantType" value="string"  id="newConstantTypeString" selected="selected"><label for="newConstantTypeString">String</label>
               <br/><input type="radio" name="newConstantType" value="number"  id="newConstantTypeNumber"><label for="newConstantTypeNumber">Number</label>
               <table style="padding-left:25px">
-                <tr><td>min</td><td><input id="newConstantNumberMin" type="text" style="width: 75px; font-size: 80%; font-family: Monaco, monospace"></input></td></tr>
-                <tr><td>max</td><td><input id="newConstantNumberMax" type="text" style="width: 75px; font-size: 80%; font-family: Monaco, monospace"></input></td></tr>
+                <tr><td>min</td><td><input id="newConstantNumberMin" type="text" style="width: 75px; font-size: 80%; font-family: Monaco, monospace"></td></tr>
+                <tr><td>max</td><td><input id="newConstantNumberMax" type="text" style="width: 75px; font-size: 80%; font-family: Monaco, monospace"></td></tr>
               </table>
               <input type="radio" name="newConstantType" value="boolean" id="newConstantTypeBoolean"><label for="newConstantTypeBoolean">Boolean</label>
               <br/><input type="radio" name="newConstantType" value="nil" id="newConstantTypeNil"><label for="newConstantTypeNil">Nil</label>
@@ -684,29 +684,110 @@
     </div>
 
     <div id="newAssetDialog" class="modal hidden">
-      <div class="dialog" style="top:10px; width: 400px">
+      <div class="dialog" style="top:10px; width: 485px; border-collapse: separate; border-spacing: 0px 10px">
         <center>
           <span class="title">Create New Asset</span>
-          <p>
-            <label for="newAssetType">Type&nbsp;&nbsp;</label>
-            <select id="newAssetType" style="width:320px" onchange="onNewAssetTypeChange()">
-              <option value="sprite">Sprite</option>
-              <option value="sound">Sound</option>
-              <option disabled value="font">Font</option>
-              <option disabled value="map">Map</option>
-              <option disabled value="data">Data</option>
-            </select>
-          </p>
-          <p>
-            <label for="newAssetName">Name&nbsp;&nbsp;</label>
-            <input id="newAssetName" type="text" style="font-size: 80%; font-family: Monaco, monospace; width: 260px" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '').replace(/(^_+)|(_sprite$)/g, '');document.getElementById('newAssetCreateButton').disabled = (this.value === '')"></input><span style="font-size: 80%; font-family: Monaco, monospace" id="newAssetSuffix">_sprite</span>
-          </p>
+        </center>
+        <table style="margin-top: 20px">
+          <tr>
+            <td width="100px">
+              <label for="newAssetType">Type</label>
+            </td>
+            <td>
+              <select id="newAssetType" style="width:370px" onchange="onNewAssetTypeChange()">
+                <option value="sprite">Sprite</option>
+                <option value="sound">Sound</option>
+                <option disabled value="font">Font</option>
+                <option value="map">Map</option>
+                <option disabled value="data">Data</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label for="newAssetName">Asset&nbsp;Name</label>
+            </td>
+            <td>
+              <input id="newAssetName" type="text" style="font-size: 80%; font-family: Monaco, monospace; width: 230px" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '').replace(/(^_+)|(_sprite$)/g, '');document.getElementById('newAssetCreateButton').disabled = (this.value === '')"></input><span style="font-size: 80%; font-family: Monaco, monospace" id="newAssetSuffix">_sprite</span>
+            </td>
+          </tr>
+          <tr>
+            <td width="100px">Creator</td>
+            <td colspan=3><input id="newAssetCreator" type="text" style="width: 370px" value="Your Name"></td>
+          </tr>
+          <tr>
+            <td>License</td>
+            <td colspan=3><input id="newAssetLicense" type="text" style="width: 370px" value="Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/"></td>
+          </tr>
+          <tr>
+            <td>
+            </td>
+            <td colspan=3>
+              <button onclick="document.getElementById('newAssetLicense').value='All rights reserved'" class="license" title="No-one else can use your asset.">All Rights Reserved</button><!-- <button>CC BY-NC-ND</button><button>CC BY-NC-SA</button><button>CC BY-ND</button><button>CC BY-NC</button>--><button onclick="document.getElementById('newAssetLicense').value='Licensed as CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/'" class="license" title="Others who use your asset must credit you and share their changes.">CC BY-SA</button><button  onclick="document.getElementById('newAssetLicense').value='Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/'" class="license" title="Others who use your asset must credit it.">CC BY</button><button  onclick="document.getElementById('newAssetLicense').value='In the Public Domain/Licensed as CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/'" title="Others can freely use the asset as if they made it themselves." class="license">Public Domain</button>
+            </td>
+          </tr>
+        </table>
+        <table id="newAssetMapOptions">
+          <tr>
+            <td width="100px">
+              Spritesheet
+            </td>
+            <td colspan=3><select id="newAssetMapSpritesheet" style="width: 370px"></select></td>
+          </tr>
+          <tr>
+            <td>Orientation</td>
+            <td colspan=3>
+              <script>
+                makeRadio('<span style="font-size:200%; position: relative; top: -13px">■</span>', 'newAssetMapOrientationSquare', true, 'title="Orthographic"', 'newAssetMapOrientation');
+                makeRadio('<span style="font-size:175%; position: relative; top: -14px">⬥</span>', 'newAssetMapOrientationRotatedSquare', false, 'title="Isometric"', 'newAssetMapOrientation', 'disabled');
+                makeRadio('<div style="display: inline-block; position: relative; top: -12px; left: 2px; font-size:225%; transform: rotate(90deg)">♦</div>', 'newAssetMapOrientationDiamond', false, 'title="Isometric" disabled', 'newAssetMapOrientation', 'disabled');
+                makeRadio('<span style="font-size: 140%; position: relative; top: -10px">⬢</span>', 'newAssetMapOrientationPointyHex', false, 'title="Pointy-top hex"', 'newAssetMapOrientation', 'disabled');
+                makeRadio('<span style="font-size: 140%; position: relative; top: -10px">⬣</span>', 'newAssetMapOrientationFlatHex', false, 'title="Flat-top hex"', 'newAssetMapOrientation', 'disabled');
+              </script>
+            </td>
+          </tr>
+          <tr>
+            <td>Map Size</td>
+            <td colspan=3>
+              <input id="newAssetMapWidth" type="number" style="width: 75px; text-align: right" value=16 min=1>
+              &times; 
+              <input id="newAssetMapHeight" type="number" style="width: 75px; text-align: right" value=16 min=1> Tiles
+
+              <input id="newAssetMapLayers" type="number" style="margin-left: 30px; width: 75px; text-align: right" value=1 min=1 max=256> Layers
+            </td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>
+              <label style="margin-left:-3px"><input type="checkbox" id="newAssetMapLoopX">Loop X</label>
+            </td>
+            <td colspan=2>
+              <label style="margin-left:-3px"><input type="checkbox" id="newAssetMapLoopY">Loop Y</label>
+            </td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>
+              <label style="margin-left:-3px"><input id="newAssetMapYUp" type="checkbox">Y-axis = up</label>
+            </td>
+            <td colspan=2>
+              <label style="margin-left:-3px"><input id="newAssetMapCenter" type="checkbox">Origin in center</label>
+            </td>
+          </tr>
+          <tr>
+            <td>Z of Layer 0</td>
+            <td width="160px"><input id="newAssetMapZ0" type="number" value="0" style="width: 75px; text-align: right"></td>
+            <td width="100px">Z Increment</td>
+            <td><input id="newAssetMapZScale" type="number" value="1" style="width: 75px; text-align: right"></td>
+          </tr>
+        </table>
+        <center style="margin-top:20px">
           <button type="button" onclick="hideNewAssetDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span>
           <button type="button" id="newAssetCreateButton" onclick="onNewAssetCreate()">Create</button>
         </center>
       </div>
     </div>
-
+    
     <div id="openGameDialog" class="modal hidden">
       <div class="dialog" style="margin-top: 80px; width: 400px">
         <center>
