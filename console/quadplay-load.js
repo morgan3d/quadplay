@@ -1223,9 +1223,17 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     }
                 }
 
+                let centerColor;
+                {
+                    const x = u * (spritesheet.sprite_size.x + spritesheet.$gutter) + Math.floor(spritesheet.sprite_size.x / 2);
+                    const y = v * (spritesheet.sprite_size.y + spritesheet.$gutter) + Math.floor(spritesheet.sprite_size.y / 2);
+                    centerColor = data[x + y * data.width];
+                }
+
                 // Create the actual sprite
                 const sprite = {
                     $type:             'sprite',
+                    $color:            centerColor,
                     $name:             spritesheet.$name + '[' + u + '][' + v + ']',
                     $tileX:            u,
                     $tileY:            v,
@@ -1252,6 +1260,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
 
                 const transposedSprite = {
                     $type:             'sprite',
+                    $color:            centerColor,
                     $name:             sprite.$name + '.rotated_270.x_flipped',
                     $boundingRadius:   boundingRadius,
 

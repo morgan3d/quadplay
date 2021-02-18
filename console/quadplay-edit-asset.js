@@ -403,11 +403,10 @@ function generateTMX(spritesheetURL, pngURL, spritesheetJSON, tilewidth, tilehei
         }
     }
 
-    const tilecount = Math.floor(spritesheetwidth / tilewidth) * Math.floor(spritesheetheight / tileheight);
     const columns = Math.floor(spritesheetwidth / tilewidth);
+    const tilecount = columns * Math.floor(spritesheetheight / tileheight);
     
-    let data =
-`<?xml version="1.0" encoding="UTF-8"?>
+    let data = `<?xml version="1.0" encoding="UTF-8"?>
 <map version="1.4" tiledversion="1.4.3" orientation="orthogonal" renderorder="left-down" width="${layerwidth}" height="${layerheight}" tilewidth="${tilewidth}" tileheight="${tileheight}" infinite="0" nextlayerid="${numlayers + 1}" nextobjectid="1">
  <tileset firstgid="1" name="${spritesheetName}" tilewidth="${tilewidth}" tileheight="${tileheight}" tilecount="${tilecount}" columns="${columns}">
   <image source="${pngPath}" width="${spritesheetwidth}" height="${spritesheetheight}"/>
@@ -420,10 +419,8 @@ function generateTMX(spritesheetURL, pngURL, spritesheetJSON, tilewidth, tilehei
             for (let x = 0; x < layerwidth; ++x) {
                 data += '0,';
             }
-            if (y === layerheight - 1) {
-                // Remove the trailing ,
-                data = data.substring(0, data.length - 1);
-            }
+            // Remove the trailing ,
+            if (y === layerheight - 1) { data = data.substring(0, data.length - 1); }
             data += '\n';
         }
         data += '</data></layer>\n';

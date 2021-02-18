@@ -1,28 +1,22 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-
+// Use the first column as the palette
+const palette = palette_sprite[0]
 
 frame
 ────────────────────────────────────────────────────────────────────────
 
-// Preallocated to save performance in the inner loop
+// Preallocated to save allocation in the inner loop
 const pos = xy(0, 0)
-const color = rgb(0, 0, 0)
-
-// Constants
-const C = CLOUD_COLOR
-const B = BACKGROUND_COLOR
 
 for y < SCREEN_SIZE.y:
     pos.y = y
-    const YY = 0.05 (y + mode_frames)
+    const YY = 0.05 (y - mode_frames)
     
     for x < SCREEN_SIZE.x:
         pos.x = x
         
-        // Use math intrinsics for performance in the
-        // inner loop
-        const k = MAD(noise(4, MUL(0.05, x), YY), 0.7, 0.5)
-        RGB_LERP(B, C, k, color)
-        draw_point(pos, color)
+        // Use math intrinsics for inner loop performance
+        const k = MAD(noise(4, MUL(0.05, x), YY), 21.7, 15.5)
+        draw_point(pos, palette[CLAMP(⌊k⌋, 0, 31)])

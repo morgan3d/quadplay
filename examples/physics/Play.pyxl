@@ -207,4 +207,4 @@ iterate(particleArray, particleUpdate);
 // would not need this), and disable the IDE's option for
 // physics debugging.
 draw_physics(physics)
-device_control("setDebugFlag", "physics", false)
+device_control("set_debug_flag", "physics", false)

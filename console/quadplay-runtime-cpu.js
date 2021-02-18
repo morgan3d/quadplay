@@ -1882,7 +1882,7 @@ function rgb(r, g, b) {
         g = r[1];
         r = r[0];
     }
-    
+
     if (r.h !== undefined) {
         // Convert HSV --> RGB
         const h = $loop(r.h, 0, 1), s = $clamp(r.s, 0, 1), v = $clamp(r.v, 0, 1);
@@ -1898,12 +1898,14 @@ function rgb(r, g, b) {
         r = v * (1 - s + s * $clamp($Math.abs($fract(h +  1 ) * 6 - 3) - 1, 0, 1));
         g = v * (1 - s + s * $clamp($Math.abs($fract(h + 2/3) * 6 - 3) - 1, 0, 1));
         b = v * (1 - s + s * $clamp($Math.abs($fract(h + 1/3) * 6 - 3) - 1, 0, 1));
-*/
+        */
     } else if (r.r !== undefined) {
         // Clone
         g = r.g;
         b = r.b;
         r = r.r;
+    } else if (r.$color !== undefined) {
+        return rgb(rgba(r.$color));
     } else {
         r = $clamp(r, 0, 1);
         g = $clamp(g, 0, 1);
@@ -1939,6 +1941,12 @@ function rgba(r, g, b, a) {
         g = r.g;
         b = r.b;
         r = r.r;
+    } else if (r.$color !== undefined) {
+        const c = r.$color;
+        r = (c & 0xf) * (1 / 15);
+        g = ((c >> 4) & 0xf) * (1 / 15);
+        b = ((c >> 8) & 0xf) * (1 / 15);
+        a = ((c >>> 12) & 0xf) * (1 / 15);
     } else {
         r = $clamp(r, 0, 1);
         g = $clamp(g, 0, 1);
@@ -1985,11 +1993,13 @@ function hsv(h, s, v) {
             h /= 6;
             if (h < 0) { h += 1; }
         }
-    } else if (h.h) {
+    } else if (h.h !== undefined) {
         // Clone hsv or hsva -> hsv
         v = h.v;
         s = h.s;
         h = h.h;
+    } else if (h.$color) {
+        return hsv(rgb(h));
     }
 
     return {h:h, s:s, v:v};
@@ -2014,6 +2024,8 @@ function hsva(h, s, v, a) {
         v = h.v;
         s = h.s;
         h = h.h;
+    } else if (h.$color !== undefined) {
+        return hsva(rgba(r));
     }
     
     return {h:h, s:s, v:v, a:a};
@@ -2100,7 +2112,7 @@ function draw_entity(e, recurse) {
 
 // Not public because it isn't a very good test yet.
 function $isEntity(e) {
-    return e.shape && e.pos && e.vel && e.acc;
+    return e.shape && e.pos && e.vel && e.force;
 }
 
 
@@ -2112,11 +2124,11 @@ function make_entity(e, childTable) {
         $error('Illegal shape for entity: "' + e.shape + '"');
     }
 
-    // Clone vector components
+    // Clone vector components. If pos is an xyz(), use xyz() for other
+    // terms
     r.pos = r.pos ? clone(r.pos) : xy(0, 0);
-    r.vel = r.vel ? clone(r.vel) : xy(0, 0);
-    r.acc = r.acc ? clone(r.acc) : xy(0, 0);
-    r.force = r.force ? clone(r.force) : xy(0, 0);
+    r.vel = r.vel ? clone(r.vel) : $mul(clone(r.pos), 0);
+    r.force = r.force ? clone(r.force) : $mul(clone(r.pos), 0);
 
     r.restitution = (r.restitution === undefined) ? 0.1 : r.restitution;
     r.friction    = (r.friction === undefined) ? 0.15 : r.friction;
@@ -2125,7 +2137,6 @@ function make_entity(e, childTable) {
 
     r.angle = r.angle || 0;
     r.spin = r.spin || 0;
-    r.twist = r.twist || 0;
     r.torque = r.torque || 0;
     
     r.override_color = clone(r.override_color);
@@ -4511,9 +4522,9 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
         // function, then draw_map() guarantees that there is only one
         // layer at a time!
         const z = (min_layer * map.z_scale + map.z_offset + z_pos) - $camera.z;
-        
+
         // Transform the arguments to account for the camera
-        const mag = $zoom(z_pos);
+        const mag = $zoom(z);
         const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
         const x = pos.x - $camera.x, y = pos.y - $camera.y;
         pos = {x: x * C + y * S, y: y * C - x * S};
@@ -4842,8 +4853,8 @@ function draw_disk(pos, radius, color, outline, z) {
  */
 function $colorToUint16(color) {
     if (color === undefined) { return 0; }
-    const color_a = color.a;
-    const color_r = color.r;
+    if (color.$color) { return color.$color; }
+    const color_a = color.a, color_r = color.r;
     const c = (color_a === undefined) ? 0xF000 : (((($clamp(color_a, 0, 1) * 15 + 0.5) & 0xf) << 12) >>> 0);
     if (color_r === undefined) { return $hsvaToUint16(color, c); }
     return (c | (($clamp(color.b, 0, 1) * 15 + 0.5) << 8) | (($clamp(color.g, 0, 1) * 15 + 0.5) << 4) | ($clamp(color_r, 0, 1) * 15 + 0.5)) >>> 0;
@@ -5508,8 +5519,13 @@ function draw_point(pos, color, z) {
     // Completely transparent, nothing to render!
     if (color & 0xF000 === 0) { return; }
 
-    if (z === undefined) { z = pos.z }
-    z = (z || 0) - $camera.z;
+    if (z === undefined) {
+        z = pos.z;
+        if (z === undefined) {
+            z = 0;
+        }
+    }
+    z -= $camera.z;
     let z_order = (pos.z === undefined) ? z : (pos.z - $camera.z);
 
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {

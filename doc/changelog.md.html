@@ -6,6 +6,20 @@
 Changes for both the specification and implementation in each release
 of [quadplay✜](manual.md.html).
 
+2021 February TBD: Beta update 66
+===================================
+
+- Made the "pixel shader" style Clouds example 
+  15% faster using sprites as colors
+- `make_entity()` now creates default `vel` and `force` as
+  `xyz()` if `entity.pos` is an `xyz()`
+- Removed vestigial `acc` (acceleration) and `twist` (angular acceleration)
+  properties on entity, since they are subsumed by `force` and `torque`
+- All drawing routines can now accept sprites as colors to enable
+  image palettes
+- Fixed `draw_map()` 3D perspective 
+
+
 2021 February 15: Beta update 65
 ===================================
 

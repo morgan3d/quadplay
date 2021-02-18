@@ -88,7 +88,7 @@ Welcome to the quadplay✜ public beta!
 To get started you only need:
 
 - [The quadplay✜ development kit](https://github.com/morgan3d/quadplay/archive/master.zip)
-- [Python 3.8](https://www.python.org/)
+- [Python 3.9](https://www.python.org/)
 - A modern web browser ([_Chrome_](https://www.google.com/chrome/), [_Edge_](https://www.microsoft.com/en-us/edge), [_Firefox_](https://www.mozilla.org/en-US/firefox/new/), or _Safari_)
 
 For the quadplay✜ development kit, just download, unzip, and then copy
@@ -3774,6 +3774,14 @@ range 0 to 1 for each channel.  Although the screen and GPU operate in
 4-bit per channel mode, arbitrary colors (including negative and out
 of gamut ones) can be represented using these types.
 
+All drawing routines accept an `rgb()`, `rgba()`, `hsv()`, `hsva()`,
+or a sprite as a color. When a sprite is passed, the center pixel
+of the sprite is used. Sprites as colors are the fastest, which
+is useful for significant numbers of `draw_point()` calls. See the
+[Clouds](../console/quadplay.html?game=quad://examples/clouds&IDE=1)
+example program. The performance difference is negligible for other
+drawing routines.
+
 Quadplay internally stores 16-bit per pixel colors in the sRGB color
 space for sprites and the framebuffer. Drawing commands accept
 floating point sRGBA or HSVA colors, where all fields are on the range
@@ -3818,6 +3826,9 @@ def hsv_to_hsl(src):
 `hsva(array)`
 : Reinterpret the array elements as an `hsva`
 
+`hsva(sprite)`
+: Returns the hsva value of the center pixel of the sprite.
+
 `hsv(hsv)`
 : Clone the `hsv` object, stripping other properties (such as an `a` channel).
 
@@ -3828,6 +3839,9 @@ def hsv_to_hsl(src):
 : Returns an object with field `h` _wrapped_ to [0, 1], and fields `s` and `v` clamped to [0, 1].
   `h=0` and `h=1` are red, `h=1/3` is green, and `h=2/3` is blue, with values inbetween
   interpolated.
+
+`hsv(sprite)`
+: Returns the hsv value of the center pixel of the sprite.
 
 `perceptual_lerp_color(c1, c2, t)`
 : Both `c1` and `c2` must have the same type: `hsv()`, `hsva()`, `rgb()`, or `rgba()`.
@@ -3846,6 +3860,9 @@ def hsv_to_hsl(src):
 
 `rgb(r, g, b)`
 : Create a structure with properties `r`, `g`, and `b` clamped to [0, 1].
+
+`rgb(sprite)`
+: Returns the rgb value of the center pixel of the sprite.
 
 `rgb_to_xyz(c)`
 : Returns `{x: c.r, y: c.g, z: c.b}`.
@@ -3867,6 +3884,9 @@ def hsv_to_hsl(src):
 
 `rgba(hsv, a default 1)`
 : Convert the `hsv` result to rgb and add an `a` property.
+
+`rgba(sprite)`
+: Returns the rgb value of the center pixel of the sprite.
 
 
 Colors can also be constructed using the syntax of HTML hexadecimal colors (which are also
