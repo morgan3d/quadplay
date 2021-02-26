@@ -1,0 +1,9 @@
+{
+    "url": "firetruck-60x26.png",
+    "sprite_size": {
+        "x": 60,
+        "y": 26
+    },
+    "tools": "Converted using https://drububu.com/miscellaneous/voxelizer and https://www.leshylabs.com/apps/sstool/",
+    "license": "Voxel model Copyright 2014 Mike Judge, @mikelovesrobots. Licensed as CC-BY 4.0 https://github.com/mikelovesrobots/mmmm"
+}

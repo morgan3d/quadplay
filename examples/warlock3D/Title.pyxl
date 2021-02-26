@@ -1,0 +1,30 @@
+Title
+════════════════════════════════════════════════════════════════════════
+
+const title_sprite = if SCREEN_SIZE.x ≤ 192 then title_192_sprite[0][0] else title_384_sprite[0][0]
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+if not DEBUG:
+    play_sound(loop_castle_sound, true, 30%)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+draw_sprite(title_sprite, ½ SCREEN_SIZE, 0°, SCREEN_SIZE / title_sprite.size)
+draw_text({
+    font: font, 
+    text: replace("Press (a)", joy.prompt),
+    pos: xy(½ SCREEN_SIZE.x, 15),
+    color: if mode_frames mod 40 < 20 then #FE0 else #C90,
+    outline: #000,
+    shadow: #000,
+    x_align: "center"
+    })
+    
+if any_button_press() or DEBUG:
+    // In debug mode, immediately go into the game
+    set_mode(Play, "Button press")

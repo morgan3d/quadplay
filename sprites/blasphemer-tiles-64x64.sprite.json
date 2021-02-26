@@ -2,4 +2,12 @@
     "url": "blasphemer-tiles-64x64.png",
     "license": "©2016 Contributors to the Blasphemer project, used under the BSD license https://github.com/Blasphemer/blasphemer",
     "sprite_size": {"x":64, "y":64},
+    "names": {
+        "player_spawn" : {"x": 6, "y": 11, "player_spawn": true},
+        "zombie_spawn" : {"x": 7, "y": 11, "monster_spawn": true},
+        "beholder_spawn" : {"x": 8, "y": 11, "monster_spawn": true},
+        "demon_spawn" : {"x": 9, "y": 11, "monster_spawn": true},
+        "sword_item" : {"x": 12, "y": 11, "item": true},
+        "potion_item" : {"x": 13, "y": 11, "item": true}
+    }
 }

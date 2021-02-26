@@ -140,7 +140,13 @@
       <div><a href="../tools/fontgen.html" target="_blank">fontgen✜</a></div>
       <div><a href="../tools/fontpack.html" target="_blank">fontpack✜</a></div>
       <div><a href="../tools/scalepix.html" target="_blank">scalepix✜</a></div>
-    </div>
+      <script>
+        // Firefox can't close a window by itself
+        if (! isFirefox) {
+           document.write(`<hr><div><a onclick="window.close()">${isApple ? 'Quit' : 'Exit'} quadplay✜</a></div>`);
+        }
+      </script>
+      </div>
 
     <div id="header" class="unselectable">
       <div style="position: absolute; left: 8px; top: 3px">

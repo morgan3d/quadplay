@@ -1,0 +1,11 @@
+{
+    "url": "city.tmx",
+    "license": "Public Domain",
+    "sprite_url": "tiles.sprite.json",
+    "y_up": true,
+    "z_scale": 8,
+    "offset": {
+        "x": -800,
+        "y": -640
+    }
+}

@@ -1,0 +1,30 @@
+/* Setup and simulation for the follow camera */
+
+/* Make this constant larger to increase the parallax effect.
+   It isn't exposed as a quadplay constant because it needs to be
+   evaluated very quickly in the perspective_zoom function thousands
+   of times per frame. */
+const PERSPECTIVE = 1 + (0.0063 * 192 / SCREEN_SIZE.x)
+
+
+/* Used by the camera for 3D perspective and creating parallax */
+def perspective_zoom(z):
+    return MUL(camera.base_zoom, pow(PERSPECTIVE, z))
+
+
+const camera = {
+    pos: xy(0, 0), 
+    pitch: 30°,
+    angle: 0°, 
+    z: 0,
+    base_zoom: 75% * SCREEN_SIZE.x / 384,
+    zoom: perspective_zoom
+}
+
+
+/* Turn the camera to match the player orientation and follow the player */
+def camera_update():
+    camera.pos = xy(player.pos)
+    
+    const Δθ = loop(player.angle - 90° - camera.angle, -180°, 180°)
+    camera.angle += sign(Δθ) * min(|Δθ|³, 0.75°)

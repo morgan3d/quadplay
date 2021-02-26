@@ -1,0 +1,87 @@
+{
+    "url": "tiles-64x64.png",
+    "sprite_size": {
+        "x": 64,
+        "y": 64
+    },
+    "names": {
+        "tree_top": {
+            "x": 3,
+            "y": 0
+        },
+        "tree_shadow": {
+            "x": 3,
+            "y": 1
+        },
+        "grass": {
+            "x": 1,
+            "y": 0,
+            "is_grass": true
+        },
+        "blue_roof": {
+            "x": 2,
+            "y": 1,
+            "is_roof": true
+        },
+        "brick_wall": {
+            "x": 2,
+            "y": 0,
+            "is_wall": true
+        },
+        "yellow_wall": {
+            "x": 4,
+            "y": 0,
+            "is_wall": true
+        },
+        "asphalt_roof": {
+            "x": 4,
+            "y": 1,
+            "is_roof": true
+        },
+        "shadow_50_sharp": {
+            "x": 0,
+            "y": 2,
+            "is_shadow": true
+        },
+        "shadow_50": {
+            "x": 1,
+            "y": 2,
+            "is_shadow": true
+        },
+        "shadow_25": {
+            "x": 2,
+            "y": 2,
+            "is_shadow": true
+        },
+        "shadow_75_cut": {
+            "x": 3,
+            "y": 2,
+            "is_shadow": true
+        },
+        "shadow_100_cut": {
+            "x": 4,
+            "y": 2,
+            "is_shadow": true
+        },
+        "shadow_100": {
+            "x": 0,
+            "y": 3,
+            "is_shadow": true
+        },
+        "shadow_75": {
+            "x": 1,
+            "y": 3,
+            "is_shadow": true
+        },
+        "shadow_75_sharp": {
+            "x": 2,
+            "y": 3,
+            "is_shadow": true
+        },
+        "shadow_50_checker": {
+            "x": 3,
+            "y": 3,
+            "is_shadow": true
+        }
+    }
+}

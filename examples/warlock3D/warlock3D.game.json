@@ -5,12 +5,14 @@
     "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
     "packages": [],
     "scripts": [
-        "raycast.pyxl"
+        "raycast.pyxl",
+        "controls.pyxl"
     ],
     "modes": [
-        "Play"
+        "Play",
+        "Title"
     ],
-    "start_mode": "Play",
+    "start_mode": "Title",
     "docs": [],
     "assets": {
         "font": "quad://fonts/deja-5.font.json",
@@ -18,7 +20,10 @@
         "allagon_sprite": "allagon.sprite.json",
         "shapes_sprite": "quad://sprites/shapes-32x32.sprite.json",
         "loop_castle_sound": "quad://sounds/loop-castle.sound.json",
-        "loop_footsteps_sound": "quad://sounds/loop-footsteps.sound.json"
+        "loop_footsteps_sound": "quad://sounds/loop-footsteps.sound.json",
+        "title_192_sprite": "title-192x112.sprite.json",
+        "title_384_sprite": "title-384x224.sprite.json",
+        "potion_sprite": "potion.sprite.json"
     },
     "version": 0,
     "min_players": 1,
@@ -27,24 +32,39 @@
     "competitive": false,
     "achievements": false,
     "highscores": false,
-    "description": "DOOM/Heretic style first person view with d-pad, dual d-pad, dual analog, and mouselook controls",
+    "description": "DOOM/Heretic/Wizardry style first person view with d-pad, dual d-pad, dual analog, and mouselook controls",
     "constants": {
-        "text_color": {
-            "type": "rgb",
-            "value": {
-                "r": {
-                    "type": "number",
-                    "value": 1
-                },
-                "g": {
-                    "type": "number",
-                    "value": 1
-                },
-                "b": {
-                    "type": "number",
-                    "value": 1
-                }
-            }
+        "DEBUG": {
+            "type": "boolean",
+            "value": false,
+            "description": "Turn on in the Debug Override to disable background music."
+        },
+        "VIEW_TILE_DISTANCE": {
+            "type": "number",
+            "value": "4.5",
+            "description": "How far the player can see, measured in map tiles",
+            "min": {
+                "type": "number",
+                "value": "0.5"
+            },
+            "max": {
+                "type": "number",
+                "value": "20"
+            },
+            "format": "",
+            "quantum": 0
+        },
+        "LETTERBOX_HEIGHT": {
+            "type": "number",
+            "value": "7",
+            "description": "Letterbox to reduce the number of pixels drawn or save space for a UI.",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "32"
+            },
+            "format": "",
+            "quantum": 0
         }
     },
     "y_up": true,
@@ -52,5 +72,6 @@
         "x": 192,
         "y": 112
     },
-    "dual_dpad": true
+    "dual_dpad": true,
+    "screenshot_tag": "Warlock 3D"
 }

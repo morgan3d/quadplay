@@ -573,9 +573,48 @@ div.disabled span.label, div.disabled:active span.label {
     bottom:           0px;
 }
 
+.project, .WideIDEUI .project:hover {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 195px;
+    bottom: 0px;
+    font-size: 14px;
+    /* Scroll bars are provided by the child, and hidden by fixed sizing*/
+    overflow: hidden;
+    /* Prevent breaking between bullet and text when inheritted */
+    white-space: nowrap;
+    padding-left: 0px;
+}
+
+/** Wide IDE shows the project view on large screens */
+@media screen and (max-device-width: 3600px) {
+    .WideIDEUI #editorFrame {
+        /* Reserve space for the rollout */
+        left: 5px;    
+    }
+    
+    /* Drop shadow when rolled out */
+    .WideIDEUI .project:hover {
+        box-shadow:
+        0px 0px 1px #000,
+        0px 3px 10px rgba(0,0,0,55%)
+    }
+
+    /* Look like a bar when not rolled out */
+    .WideIDEUI .project:not(:hover) {
+        width: 5px;
+        background: #888;
+        cursor: ew-resize;
+    }
+
+    /* Hide the contents when not rolled out */
+    .WideIDEUI .project:not(:hover) .hideScrollBars {
+        visibility: hidden;
+    }
+}
+
 .WideIDEUI #editorFrame {
-    /* Reserve space for the rollout */
-    left: 5px;
     /* Sized for large screens */
     right: 769px;
 }
@@ -764,20 +803,6 @@ code, .code {
     height: 100%;
 }
 
-.project, .WideIDEUI .project:hover {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    width: 195px;
-    bottom: 0px;
-    font-size: 14px;
-    /* Scroll bars are provided by the child, and hidden by fixed sizing*/
-    overflow: hidden;
-    /* Prevent breaking between bullet and text when inheritted */
-    white-space: nowrap;
-    padding-left: 0px;
-}
-
 /* Animate transitions of the project panel in WideIDE mode */
 .WideIDEUI .project {
     /* Slide in and out */
@@ -788,25 +813,6 @@ code, .code {
     z-index: 11;
 }
 
-/* Look like a bar when not rolled out */
-.WideIDEUI .project:not(:hover) {
-    width: 5px;
-    background: #888;
-    cursor: ew-resize;
-}
-
-/* Hide the contents when not rolled out */
-.WideIDEUI .project:not(:hover) .hideScrollBars {
-    visibility: hidden;
-}
-
-/* Drop shadow when rolled out */
-.WideIDEUI .project:hover {
-    box-shadow:
-      0px 0px 1px #000,
-      0px 3px 10px rgba(0,0,0,55%)
-}
-    
 
 .project li {
     /* Make selections actually span the content */
@@ -1515,7 +1521,6 @@ svg.modeGraph text.edgeLabel {
     border: solid 1px #888;
     padding-left: 5px;
 }
-
 
 
 /** Wide IDE is 1.5x instead of 2x on smaller screens */

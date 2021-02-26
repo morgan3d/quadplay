@@ -1,0 +1,232 @@
+/* Code that runs only on level start for generating the 
+   shadows of buildings in the map. */
+
+
+/* Shadows based on the top layer of
+   map. These are drawn with the position
+   of the ground but the z-order of map.layer[2]
+   so that they cast onto all lower objects. */
+let shadow_map
+
+
+/* Mapping from local roof patterns to shadows.
+   The tile to contain the shadow is at the lower left.
+   
+   Each tile is | if it contains a wall and roof and '
+   if it has just a roof (for overpasses).
+   
+   There are 3 possible states for the upper-left three
+   tiles and 2 possible states for the lower-left tile
+   (because we don't cast shadows under walls), so there
+   are 3*3*3*2 = 54 total combinations of patterns, but
+   many fewer unique shadow configurations.
+   
+   The patterns in the table below are organized by counting
+   in ternary with a binary final digit, where 0=" ",
+   1="'", and 2="|", but this has no impact on the logic.
+*/
+const SHADOW_PATTERN_TABLE = {}
+
+// Used to construct SHADOW_PATTERN_TABLE
+const SHADOW_PATTERN_ARRAY = [
+    "  " +
+    "  ",   ∅, 
+
+    "  " +
+    " '",   city_map.spritesheet.shadow_25.rotated_180,   
+    
+    "  " +
+    "' ",   city_map.spritesheet.shadow_50.y_flipped,
+    
+    "  " +
+    "''",   city_map.spritesheet.shadow_50.y_flipped,
+    
+    "  " +
+    "| ",   city_map.spritesheet.shadow_50_sharp.rotated_90.y_flipped,
+
+    "  " +
+    "|'",   city_map.spritesheet.shadow_75_sharp,
+    
+    ///////////////////////////////////////////////////
+    " '" + 
+    "  ",   city_map.spritesheet.shadow_25.x_flipped,
+    
+    " '" + 
+    " '",   city_map.spritesheet.shadow_50.rotated_270,
+    
+    " '" + 
+    "' ",   city_map.spritesheet.shadow_50_checker,
+    
+    " '" + 
+    "''",   city_map.spritesheet.shadow_75.rotated_180,
+    
+    " '" + 
+    "| ",   city_map.spritesheet.shadow_75_cut,
+
+    " '" + 
+    "|'",   city_map.spritesheet.shadow_100_cut,
+    
+    ///////////////////////////////////////////////////
+    " |" + 
+    "  ",   city_map.spritesheet.shadow_50_sharp,
+
+    " |" + 
+    " '",   city_map.spritesheet.shadow_75_sharp.x_flipped.rotated_90,
+    
+    " |" + 
+    "' ",   city_map.spritesheet.shadow_75_cut.x_flipped.rotated_90,
+
+    " |" + 
+    "''",   city_map.spritesheet.shadow_75_sharp.x_flipped,
+    
+    " |" + 
+    "| ",   city_map.spritesheet.shadow_75,
+    
+    " |" + 
+    "|'",   city_map.spritesheet.shadow_100,
+
+    ///////////////////////////////////////////////////
+
+    "' " + 
+    "  ",   city_map.spritesheet.shadow_25,
+
+    "' " + 
+    " '",   city_map.spritesheet.shadow_50_checker.x_flipped,
+    
+    "' " + 
+    "' ",   city_map.spritesheet.shadow_50.rotated_90,
+    
+    "' " + 
+    "''",   city_map.spritesheet.shadow_75.rotated_90,
+    
+    "' " + 
+    "| ",   city_map.spritesheet.shadow_50.rotated_90,
+    
+    "' " + 
+    "|'",   city_map.spritesheet.shadow_75.rotated_90,
+    
+    ///////////////////////////////////////////////////
+    
+    "''" + 
+    "  ",   city_map.spritesheet.shadow_50,
+    
+    "''" + 
+    " '",   city_map.spritesheet.shadow_75.x_flipped,
+    
+    "''" + 
+    "' ",   city_map.spritesheet.shadow_75,
+    
+    "''" + 
+    "''",   city_map.spritesheet.shadow_100,
+    
+    "''" + 
+    "| ",   city_map.spritesheet.shadow_75,
+    
+    "''" + 
+    "|'",   city_map.spritesheet.shadow_100,
+    
+    ///////////////////////////////////////////////////
+    
+    "'|" + 
+    "  ",   city_map.spritesheet.shadow_50,
+    
+    "'|" + 
+    " '",   city_map.spritesheet.shadow_75.x_flipped,
+    
+    "'|" + 
+    "' ",   city_map.spritesheet.shadow_75,
+    
+    "'|" + 
+    "''",   city_map.spritesheet.shadow_100,
+    
+    "'|" + 
+    "| ",   city_map.spritesheet.shadow_75,
+    
+    "'|" + 
+    "|'",   city_map.spritesheet.shadow_100,
+    
+    ///////////////////////////////////////////////////
+    
+    "| " + 
+    "  ",   city_map.spritesheet.shadow_25,
+    
+    "| " + 
+    " '",   city_map.spritesheet.shadow_50_checker.x_flipped,
+    
+    "| " + 
+    "' ",   city_map.spritesheet.shadow_50.rotated_90,
+    
+    "| " + 
+    "''",   city_map.spritesheet.shadow_75.rotated_90,
+    
+    "| " + 
+    "| ",   city_map.spritesheet.shadow_50.rotated_90,
+    
+    "| " + 
+    "|'",   city_map.spritesheet.shadow_75.rotated_90,
+    
+    ///////////////////////////////////////////////////
+    
+    "|'" + 
+    "  ",   city_map.spritesheet.shadow_50,
+    
+    "|'" + 
+    " '",   city_map.spritesheet.shadow_75.x_flipped,
+
+    "|'" + 
+    "' ",   city_map.spritesheet.shadow_75,
+    
+    "|'" + 
+    "''",   city_map.spritesheet.shadow_100,
+    
+    "|'" + 
+    "| ",   city_map.spritesheet.shadow_75,
+    
+    "|'" + 
+    "|'",   city_map.spritesheet.shadow_100,
+    
+    ///////////////////////////////////////////////////
+    
+    "||" + 
+    "  ",   city_map.spritesheet.shadow_50,
+    
+    "||" + 
+    " '",   city_map.spritesheet.shadow_75.x_flipped,
+    
+    "||" + 
+    "' ",   city_map.spritesheet.shadow_75,
+    
+    "||" + 
+    "''",   city_map.spritesheet.shadow_100,
+    
+    "||" + 
+    "| ",   city_map.spritesheet.shadow_75,
+    
+    "||" + 
+    "|'",   city_map.spritesheet.shadow_100
+]
+
+// Initialize the table
+for i < ½ size(SHADOW_PATTERN_ARRAY):
+    SHADOW_PATTERN_TABLE[SHADOW_PATTERN_ARRAY[2i]] = SHADOW_PATTERN_ARRAY[2i + 1]
+
+
+/* Returns:
+
+   - " " for pure ground tiles/empty
+   - "|" for walls (with roof)
+   - "'" for roof without wall (bridge)
+   
+   Used for computing map shadows. */
+def template_map_roof_symbol(template_map, x, y):
+    const ground = get_map_sprite(template_map, xy(x, y), 0)
+    const roof = get_map_sprite(template_map, xy(x, y), 1)
+    if ground and ground.is_wall:
+        assert(roof and roof.is_roof, "Wall without roof")
+        return "|"
+    else if roof:
+        assert(roof.is_roof, "Roof was not flagged")
+        return "'"
+    else:
+        return " "
+        

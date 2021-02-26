@@ -1,0 +1,83 @@
+Play
+════════════════════════════════════════════════════════════════════════
+/*
+Coordinate system:
+
+  x = right (east)
+  y = up (north)
+  z = out of screen (elevation)
+
+The camera for this game uses both isometric 
+z-skew via set_transform() for "pitch"
+and perspective via set_camera().
+*/
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+set_map(city_map)
+
+
+// Plant some trees   
+for i < 200:
+    const pos = 1000 random_within_square()
+    const sprite = get_map_sprite_by_ws_coord(map, pos)
+    if not sprite or sprite.is_grass:
+        push(tree_array, xyz(pos, 15))
+        physics_add_entity(physics, make_entity({shape: "disk", size: xy(6, 6), pos: pos, density: ∞}))
+
+
+// Make some actors
+for i < 60:
+    let spritesheet = firetruck_sprite
+    if ξ < 30%:
+        spritesheet = blue_car_sprite
+    else if ξ < 50%: 
+        spritesheet = sedan_sprite
+    push(entity_array, make_entity({
+        pos: 1000 random_within_square(),
+        spritesheet: spritesheet,
+        sprite: spritesheet[0][6],
+        angle: random(0, 360°),
+        
+        // Make NPC cars light so that crashing into them
+        // is more fun
+        density: 0.5,
+        drag: 0.03
+    }))
+
+push(entity_array, player)
+
+for entity in entity_array:
+    physics_add_entity(physics, entity)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+player.angle -= 0.6° joy.x * rotation_sign() * ‖player.vel‖ * sign(dot(player.vel, angle_to_xy(player.angle)))
+const move = 0.35 joy.a - 0.15 joy.b
+if move:
+    player.force += xy(angle_to_xy(player.angle) * move)
+
+
+draw_text({
+    font: font,
+    text: replace("(a) Accelerate\n(b) Brake / Back\n[<][>] Steer", joy.prompt), 
+    pos: xy(10, SCREEN_SIZE.y - 15), 
+    color: #f92,
+    outline: #000,
+    shadow: #000,
+    z: 100})
+
+// Set the transform before physics simulation so that
+// quadplay can automatically visualize the physics world
+preserving_transform:
+    set_transform(xy(½, ¾) * SCREEN_SIZE, xy(1, -1), ∅, ∅, xy(0, camera.pitch * camera.base_zoom))
+    set_camera(camera)
+
+    physics_simulate(physics)
+    camera_update()
+    
+    draw_world()
+

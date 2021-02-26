@@ -1,0 +1,48 @@
+/* Management of the dynamic objects in the world
+   including the player's avatar/car */
+
+const physics = make_physics({gravity: xy(0, 0), allowSleeping: false})
+
+// pos.z is the bottom center of the sprite
+def draw_entity3D(entity):
+    
+    const spritesheet = entity.spritesheet
+    const angle = entity.angle
+    
+    // Clone and force to 3D on the ground plane so that 
+    // we can mutate the position within the inner loop
+    const pos3D = xyz(entity.pos.x, entity.pos.y, 0)
+    
+    const rows = size(spritesheet[0])
+    const cols = size(spritesheet)
+    
+    // Average depth
+    const z_order = pos3D.z + ½ (rows * cols)
+    
+    // Shadow. Put this at the position of the base for projection
+    // but 1/2 the height for z_order so that it shadows nearby lower objects.
+    // Draw before the sprite so that it can't shadow itself.
+    draw_rect(pos3D + xyz(SHADOW_DIR * max(z_order - 4, 2), 0), 90% spritesheet.sprite_size, #0004, ∅, angle, z_order)
+    
+    // Hard-coding single row spritesheets doesn't save measurable time.
+    // Grouping to a single z value saves about 10%, but gives incorrect
+    // occlusion between sprites.
+    for j < rows:
+        for i < cols:
+            draw_sprite(spritesheet[i][j], pos3D, angle, ∅, ∅, z_order)
+            ++pos3D.z
+
+
+const entity_array = []
+
+const player = make_entity({
+    angle: 90°,
+    pos: xy(-238, 235),
+    spritesheet: sedan_sprite,
+    sprite: sedan_sprite[0][6],
+    drag: 0.09
+})
+
+
+const tree_array = []
+

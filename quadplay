@@ -21,23 +21,23 @@
 #    - Are limited to the quadplay directory, the directory passed on the
 #      command line, and $HOME/my_game
 # 
-#    - The special quad_path + `/console/_assets.json` "file" gives a listing
+#    - The special quad_filepath + `/console/_assets.json` "file" gives a listing
 #      of all assets in the specified directory and the quadplay built-in directories.
 #      This combines raw and json packaged assets.
 #
-#    - The special quad_path + `/console/_scripts.json` "file" gives a listing
+#    - The special quad_filepath + `/console/_scripts.json` "file" gives a listing
 #      of all .pyxl files in the specified directory and the quadplay built-in scripts
 #      directory.
 #
-#    - The special quad_path + `/console/_docs.json` "file" gives a listing
+#    - The special quad_filepath + `/console/_docs.json` "file" gives a listing
 #      of all .md, .html, and .pdf files in the specified directory.
 #
-#    - The special quad_path + `/console/games.json` file gives a listing
+#    - The special quad_filepath + `/console/games.json` file gives a listing
 #      of all games in subdirectories of examples/, games/, and my_quadplay/
 #      (not recursive). This is backed by an actual file when not using a quadplay
 #      server.
 #
-#    - The special quad_path + `/console/_quadserver.json` "file" describes
+#    - The special quad_filepath + `/console/_quadserver.json` "file" describes
 #      the available external applications, which are a subset of console/external-applications.json
 #
 # A "path" in this code is a file-system path, where '/' means the filesystem true root
@@ -60,13 +60,9 @@ exit 2
 # Previous line is bilingual: it ends a comment in Python, and is a no-op in shell
 # Shell commands end here
 # Python script follows
+import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs, glob, shutil, re, base64, random, getpass, inspect, subprocess
 
-import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs, glob, shutil, re, base64, random, getpass
-
-# Import workjson, which is in the tools directory and we do not have
-# an __init__.py file because we keep the main quadplay directory
-# clean of dependencies.
-sys.path.append(os.path.join(os.path.dirname(__file__), 'tools'))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'console'))
 import workjson
 
 # Catch a common mistake. This binary file should be large if LFS is present:
@@ -83,8 +79,8 @@ __doc__ = "Quadplay Fantasy Console launcher script."
 
 version = str(sys.version_info.major) + '.' + str(sys.version_info.minor)
 
-# Largest common prefix of quad_path and game_path. Root for web serving
-server_root_path = None
+# Largest common prefix of quad_filepath and game_filepath. Root for web serving
+server_root_filepath = None
 
 # Magic path that the browser will use to communicate that it wants an asset listing
 # or game listing for import in IDE mode
@@ -94,29 +90,30 @@ doc_query_webpath = None
 game_query_webpath = None
 config_query_webpath = None
 
-# Subdirectories of server_root_path that are permitted for http access.
-# These are relative to server_root_path and contain a leading slash because
+# Subdirectories of server_root_filepath that are permitted for http access.
+# These are relative to server_root_filepath and contain a leading slash because
 # they are url subpaths relative to quad://
 webpath_allowlist = None
 
 isWindows = (platform.system() == 'Windows')
-isMacOS = (platform.system() == 'Darwin')
+isMacOS   = (platform.system() == 'Darwin')
+isLinux   = (platform.system() == 'Linux')
 
 # Authentication token, used to ensure that only browsers launched by this server can
 # ask it to POST
 token = None
 
 # Ensure that slashes and case are consistent when on Windows, and make absolute
-def canonicalize_path(path): return os.path.normcase(os.path.abspath(path)).replace('\\', '/')
+def canonicalize_filepath(path): return os.path.normcase(os.path.abspath(path)).replace('\\', '/')
 
 # Where the user's games are stored. Will be made relative to the CWD later
-my_games_path = canonicalize_path(os.path.join(os.path.expanduser('~'), 'my_quadplay'))
+my_games_filepath = canonicalize_filepath(os.path.join(os.path.expanduser('~'), 'my_quadplay'))
 
-if not os.path.exists(my_games_path):
+if not os.path.exists(my_games_filepath):
     # Create the games path and put a .gitignore in it if there isn't
     # one already
-    os.makedirs(my_games_path)
-    shutil.copyfile('.gitignore', os.path.join(my_games_path, '.gitignore'))
+    os.makedirs(my_games_filepath)
+    shutil.copyfile('.gitignore', os.path.join(my_games_filepath, '.gitignore'))
 
 
 def remove_leading_slash(path): return path[1:] if len(path) > 0 and path[0] == '/' else path
@@ -145,7 +142,11 @@ except ImportError:
 def load_json(filename):
     with open(filename, 'rt', encoding='utf8') as f:
         return workjson.loads(f.read())
-        
+
+
+# Returns a string of the line number that calls this function
+def this_line_number(): return str(inspect.currentframe().f_back.f_lineno)
+
 # Handles serving from multiple directories. Overrides the default restriction to
 # the CWD with its own security allowlist.
 #
@@ -179,7 +180,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         
     def list_directory(self, path):
         # Prevent directory listing
-        self.send_error(404, 'No permission to list directory')
+        self.send_error(404, 'No permission to list directory (' + this_line_number() + ')')
         return None
 
     
@@ -216,11 +217,11 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         path_parts = self.path.split('?')
         webpath = os.path.normpath(path_parts[0]).replace('\\', '/')
 
-        print('DELETE', webpath) # TODO Remove
+        print('DELETE', webpath)
         code = 200
         filename = remove_leading_slash(webpath)
         if not re.search(self.mutable_file_regex, filename) or not any([webpath.startswith(prefix) for prefix in webpath_allowlist]):
-            print('WARNING: Ignored illegal request to delete file', filename)
+            print('WARNING: Ignored illegal request to delete file (' + this_line_number() + ')', filename)
             response_obj = 'Illegal'
             code = 401
         else:
@@ -252,7 +253,9 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             encoding = object['encoding']
             contents = object['contents']
             if not re.search(self.mutable_file_regex, filename) or not any([webpath.startswith(prefix) for prefix in webpath_allowlist]):
-                print('WARNING: Ignored illegal request to write file', filename)
+                print('WARNING: Ignored illegal request to write file (' + this_line_number() + ')', filename)
+                if not re.search(self.mutable_file_regex, filename): print('  Legal file regex is', self.mutable_file_regex)
+                if not any([webpath.startswith(prefix) for prefix in webpath_allowlist]): print('  Web path allow list is', webpath_allowlist)
                 response_obj = 'Illegal'
                 code = 401
             else:
@@ -285,8 +288,8 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             dir_name = object['dir_name']
             game_name = object['game_name']
 
-            dst_path = my_games_path + '/' + dir_name
-            starter_path = os.path.join(quad_path, 'examples/starter')
+            dst_path = my_games_filepath + '/' + dir_name
+            starter_path = os.path.join(quad_filepath, 'examples/starter')
             
             print('Created game', dir_name, 'at', dst_path)
             
@@ -309,7 +312,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 
                 for filename in ['label64.png', 'label128.png', 'Play.pyxl']:
                     shutil.copyfile(os.path.join(starter_path, filename), os.path.join(dst_path, filename))
-                shutil.copyfile(os.path.join(quad_path, '.gitignore'), os.path.join(dst_path, '.gitignore'))
+                shutil.copyfile(os.path.join(quad_filepath, '.gitignore'), os.path.join(dst_path, '.gitignore'))
 
                 response_obj = {'game': '/' + dst_path + '/'}
 
@@ -320,33 +323,31 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(response.encode('utf8'))
 
-              
-    def do_GET(self):
-        
+    def do_GET(self):        
         # Remove the query and collapse any ..
         path_parts = self.path.split('?')
         webpath = os.path.normpath(path_parts[0]).replace('\\', '/')
         query = path_parts[1] if len(path_parts) > 1 else ''
-        if isWindows and len(webpath) > 3 and webpath[2] == ':' and webpath[0] == '/':
-            # On Windows, remove a leading slash if there is a drive letter
-            webpath = webpath[1:]
-            self.path = self.path[1:]
 
         # Security: Check if path has a prefix in webpath_allowlist
         if webpath != '/favicon.ico' and not any([webpath.startswith(prefix) for prefix in webpath_allowlist]):
-            self.send_error(404, 'Illegal path: ' + webpath)
+            self.send_error(404, 'Illegal webpath (' + this_line_number() + '): ' + webpath)
+            return
 
-        if webpath == config_query_webpath or webpath == asset_query_webpath or webpath == game_query_webpath or webpath == doc_query_webpath or webpath == script_query_webpath:
+        filepath = remove_leading_slash(webpath)
+        self.path = filepath
+
+        if webpath in [config_query_webpath, asset_query_webpath, game_query_webpath, doc_query_webpath, script_query_webpath]:
             response_obj = {}
             if webpath == config_query_webpath:
                 if not args.kiosk: response_obj['IDE_USER'] = os.environ['USERNAME' if isWindows else 'USER']
-                response_obj['rootPath'] = server_root_path
+                response_obj['rootPath'] = server_root_filepath
                 response_obj['hasFinder'] = isWindows or isMacOS
 
                 if isWindows or isMacOS:
                     applications = []
                     response_obj['applications'] = applications
-                    potential_applications = load_json(os.path.join(quad_path, 'console/external-applications.json'))['Windows' if isWindows else 'macOS']
+                    potential_applications = load_json(os.path.join(quad_filepath, 'console/external-applications.json'))['Windows' if isWindows else 'macOS']
                     for app in potential_applications:
                         for path in app['paths']:
                             path = os.path.expandvars(os.path.expanduser(path))
@@ -356,13 +357,15 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                                 break
                             
             elif webpath == script_query_webpath:
-                aux_path = query[query.index('=') + 1:]
-                # Security: check if aux_path has a prefix in webpath_allowlist
-                if not any([aux_path.startswith(prefix) for prefix in webpath_allowlist]):
-                    self.send_error(404, 'Illegal path: ' + aux_path)
+                aux_webpath = query[query.index('=') + 1:]
+                # Security: check if aux_webpath has a prefix in webpath_allowlist
+                if not any([aux_webpath.startswith(prefix) for prefix in webpath_allowlist]):
+                    self.send_error(404, 'Illegal webpath (' + this_line_number() + '): ' + aux_webpath)
+                    return
 
                 # List the pyxl files
-                response_obj = glob.glob(remove_leading_slash(aux_path + '**/*.pyxl'), recursive=True)
+                aux_filepath = remove_leading_slash(aux_webpath)
+                response_obj = glob.glob(aux_filepath + '**/*.pyxl', recursive=True)
 
                 # Remove anything in a magic directory
                 response_obj = [f for f in response_obj if not self.special_dir_regex.search(f)]
@@ -371,25 +374,27 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 response_obj.sort()
 
                 # List additional files from the built-in scripts folder
-                response_obj += ['quad://' + f[len(quad_path):] for f in sorted(glob.glob(quad_path + 'scripts/*.pyxl'))]
+                response_obj += ['quad://' + f[len(quad_filepath):] for f in sorted(glob.glob(quad_filepath + 'scripts/*.pyxl'))]
                     
                 # Fix slashes on windows
                 if isWindows: response_obj = [f.replace('\\', '/') for f in response_obj]
 
             elif webpath == doc_query_webpath:
-                aux_path = query[query.index('=') + 1:]
+                aux_webpath = query[query.index('=') + 1:]
 
-                # Security: check if aux_path has a prefix in webpath_allowlist
-                if not any([aux_path.startswith(prefix) for prefix in webpath_allowlist]):
-                    self.send_error(404, 'Illegal path: ' + aux_path)
+                # Security: check if aux_webpath has a prefix in webpath_allowlist
+                if not any([aux_webpath.startswith(prefix) for prefix in webpath_allowlist]):
+                    self.send_error(404, 'Illegal webpath: (' + this_line_number() + ')' + aux_webpath)
+                    return
 
+                aux_filepath = remove_leading_slash(aux_webpath)
                 # List the files
-                response_obj = glob.glob(remove_leading_slash(aux_path + '**/*.html'), recursive=True)
-                response_obj += glob.glob(remove_leading_slash(aux_path + '**/*.md'), recursive=True)
-                response_obj += glob.glob(remove_leading_slash(aux_path + '**/*.pdf'), recursive=True)
-                response_obj += glob.glob(remove_leading_slash(aux_path + '**/*.txt'), recursive=True)
+                response_obj =  glob.glob(aux_filepath + '**/*.html', recursive=True)
+                response_obj += glob.glob(aux_filepath + '**/*.md',   recursive=True)
+                response_obj += glob.glob(aux_filepath + '**/*.pdf',  recursive=True)
+                response_obj += glob.glob(aux_filepath + '**/*.txt',  recursive=True)
 
-                # Do not remove anything magic directory files; we want journals and such
+                # Do not remove any magic directory files; we want journals and such in this list
                 
                 # Sort all files
                 response_obj.sort()
@@ -398,29 +403,30 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 if isWindows: response_obj = [f.replace('\\', '/') for f in response_obj]
                 
             elif webpath == asset_query_webpath:
-                aux_path = query[query.index('=') + 1:]
+                aux_webpath = query[query.index('=') + 1:]
 
-                # Security: check if aux_path has a prefix in webpath_allowlist
-                if not any([aux_path.startswith(prefix) for prefix in webpath_allowlist]):
-                    self.send_error(404, 'Illegal path: ' + aux_path)
+                # Security: check if aux_webpath has a prefix in webpath_allowlist
+                if not any([aux_webpath.startswith(prefix) for prefix in webpath_allowlist]):
+                    self.send_error(404, 'Illegal webpath: (' + this_line_number() + ')' + aux_webpath)
+                    return
                 
                 # Raw files to exclude because they are already in use. Exclude
                 # the files from quadplay's own metadata automatically.
                 exclude_table = {}
                 for f in ['label64.png', 'label128.png', 'preview.png']:
-                    exclude_table[remove_leading_slash(aux_path) + f] = True
+                    exclude_table[remove_leading_slash(aux_webpath) + f] = True
 
-                # Search (quad_path | aux_path) + type + 's/*.' + type + '.json'
+                # Search (quad_filepath | aux_webpath) + type + 's/*.' + type + '.json'
                 asset_type_array = ['font', 'sprite', 'sound', 'map', 'data']
                 for t in asset_type_array:
                     # Get the json files from the game directory
-                    response_obj[t] = glob.glob(remove_leading_slash(aux_path + '**/*.' + t + '.json'), recursive=True)
+                    response_obj[t] = glob.glob(remove_leading_slash(aux_webpath + '**/*.' + t + '.json'), recursive=True)
 
                     # Look in each of the files for the URLs of raw files to exclude
                     for file in response_obj[t]:
                         try:
                             tmp = load_json(file)
-                            if 'url' in tmp: exclude_table[remove_leading_slash(aux_path) + tmp['url']] = True
+                            if 'url' in tmp: exclude_table[remove_leading_slash(aux_webpath) + tmp['url']] = True
                         except:
                             print('Warning: Could not parse ' + file)
 
@@ -429,7 +435,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 for t in asset_type_array:
                     # Get raw files
                     if t != 'data':
-                        raw_files = glob.glob(remove_leading_slash(aux_path + '**/*.' + raw_extension[t]), recursive=True)
+                        raw_files = glob.glob(remove_leading_slash(aux_webpath + '**/*.' + raw_extension[t]), recursive=True)
                     else:
                         raw_files = []
 
@@ -444,7 +450,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
 
                     # Get the json files from the quadplay directory,
                     # sort, and append them to the list
-                    response_obj[t] += ['quad://' + f[len(quad_path):] for f in sorted(glob.glob(quad_path + t + 's/*.' + t + '.json'))]
+                    response_obj[t] += ['quad://' + f[len(quad_filepath):] for f in sorted(glob.glob(quad_filepath + t + 's/*.' + t + '.json'))]
                     
                     # Fix slashes on windows
                     if isWindows: response_obj[t] = [f.replace('\\', '/') for f in response_obj[t]]
@@ -453,14 +459,14 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
 
                 # Detect games with the same name as the folder
                 redundant_pattern = re.compile(r'(?P<name>/[^/]+)(?P=name)\.game\.json$')
-                set = {'examples' : quad_path + 'examples',
-                       'builtins' : quad_path + 'games',
-                       'mine'     : my_games_path}
+                set = {'examples' : quad_filepath + 'examples',
+                       'builtins' : quad_filepath + 'games',
+                       'mine'     : my_games_filepath}
 
                 # For alpha testers and internal development
-                if os.path.exists(quad_path + '_alpha'):
-                    set['alpha'] = quad_path + '_alpha'
-                    set['tests'] = quad_path + '_tests'
+                if os.path.exists(quad_filepath + '_alpha'):
+                    set['alpha'] = quad_filepath + '_alpha'
+                    set['tests'] = quad_filepath + '_tests'
                     
                 for key, path in set.items():
                     # Do not change case on Windows (because this will be part of the json file that is read
@@ -474,7 +480,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                             entry['url'] = '/' + entry['url']
                         else:
                             # Shorten built-ins to quad://
-                            entry['url'] = 'quad://' + path[len(quad_path):]
+                            entry['url'] = 'quad://' + path[len(quad_filepath):]
 
                         # Shorten games with redundant names to just the directory
                         entry['url'] = redundant_pattern.sub(r'\1/', entry['url'])
@@ -492,7 +498,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             self.send_header('Content-length', len(response))
             self.end_headers()
             self.wfile.write(response.encode('utf8'))
-        elif re.search(self.silent_404_file_regex, webpath) and not os.path.exists(remove_leading_slash(webpath)):
+        elif re.search(self.silent_404_file_regex, webpath) and not os.path.exists(filepath):
             # Check to see if this file does not exist. If it does
             # not, return the 404 error but do not print to the terminal
             self.send_response(404)
@@ -506,7 +512,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                try:
                    self.copyfile(f, self.wfile)
                except BrokenPipeError:
-                   print('Broken pipe while loading', webpath)
+                   print('Broken pipe while loading', filepath)
                finally:
                    f.close()
 
@@ -526,9 +532,9 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         if path == '/favicon.ico':
             # Browsers sometimes ask for this. Send them to the quadplay
             # directory instead
-            return quad_path + '/console/favicon.ico'
+            return quad_filepath + '/console/favicon.ico'
 
-        elif isWindows and server_root_path == '':
+        elif isWindows and server_root_filepath == '':
             # Need the whole path, since the "cwd" is wrong
             return self.path.split('?')[0]
         else:
@@ -550,6 +556,13 @@ def parse_args():
         action='store_true',
         default=False,
         help='serving mode - allow other machines to connect to this one to develop on mobile devices'
+    )
+
+    parser.add_argument(
+        '--browser',
+        action='store_true',
+        default=False,
+        help='Force quadplay to open a regular browser tab instead of a native app window on platforms with Chrome or Edge'
     )
     
     parser.add_argument(
@@ -596,18 +609,19 @@ if isWindows and args.gamepath:
         args.gamepath = args.gamepath[0].upper() + args.gamepath[1:]
 
         
-# Makes a path relative to the server_root_path, and thus "absolute"
+# Makes a path relative to the server_root_filepath, and thus "absolute"
 # for the web server root (not for the filesystem)
 def platform_www_abspath(p):
     if isWindows:
-        p = p[len(server_root_path):]
+        p = p[len(server_root_filepath):]
         if not p.endswith('.game.json'): p = os.path.join(p, '')
         t = os.path.normcase(p).replace('\\', '/')
-        if len(t) > 1 and t[1] != ':' and t[0] != '/': t = '/' + t
+        #if len(t) > 1 and t[1] != ':' and t[0] != '/': t = '/' + t
+        if t[0] != '/': t = '/' + t
         return t
     else:
-        if server_root_path != '/':
-            p = p[len(server_root_path)+1:]
+        if server_root_filepath != '/':
+            p = p[len(server_root_filepath)+1:]
             
         if p == '':
             return ''
@@ -618,19 +632,19 @@ def platform_www_abspath(p):
 
     
 # Process paths at top level so that they can be inherited by ThreadingHTTPServer
-quad_path = canonicalize_path(os.path.dirname(__file__))
+quad_filepath = canonicalize_filepath(os.path.dirname(__file__))
 
 # Compute the serving paths
-game_path = canonicalize_path(args.gamepath)
-if game_path.endswith('.game.json'): game_path = os.path.dirname(game_path)
-webpath_allowlist = [quad_path, game_path, my_games_path]
+game_filepath = canonicalize_filepath(args.gamepath)
+if game_filepath.endswith('.game.json'): game_filepath = os.path.dirname(game_filepath)
+webpath_allowlist = [quad_filepath, game_filepath, my_games_filepath]
        
 # Common ancestor
-server_root_path = os.path.dirname(os.path.commonprefix([os.path.join(p, '') for p in webpath_allowlist]))
+server_root_filepath = os.path.dirname(os.path.commonprefix([os.path.join(p, '') for p in webpath_allowlist]))
 
 # Strip the common prefix
 webpath_allowlist = [platform_www_abspath(p) for p in webpath_allowlist]
-my_games_path = remove_leading_slash(my_games_path[len(server_root_path):])
+my_games_filepath = remove_leading_slash(my_games_filepath[len(server_root_filepath):])
 
 # Remove trailing slash
 asset_query_webpath = webpath_allowlist[0]
@@ -639,20 +653,20 @@ game_query_webpath = asset_query_webpath + '/console/games.json'
 config_query_webpath = asset_query_webpath + '/console/_config.json'
 script_query_webpath = asset_query_webpath + '/console/_scripts.json'
 doc_query_webpath = asset_query_webpath + '/console/_docs.json'
-quad_path = remove_leading_slash(webpath_allowlist[0])
+quad_filepath = remove_leading_slash(webpath_allowlist[0])
 asset_query_webpath += '/console/_assets.json'
 
 if False:
     # Debug paths
-    print("\nserver_root_path   = '" + server_root_path + "'")
-    print("quad_path            = '" + quad_path + "'")
-    print("my_games_path        = '" + my_games_path + "'")
-    print("asset_query_webpath  = '" + asset_query_webpath + "'")
-    print("script_query_webpath = '" + script_query_webpath + "'")
-    print("doc_query_webpath    = '" + doc_query_webpath + "'")
-    print("game_query_webpath   = '" + game_query_webpath + "'")
-    print("config_query_webpath = '" + config_query_webpath + "'")
-    print('webpath_allowlist    = ', webpath_allowlist, '\n')
+    print("\nserver_root_filepath   = '" + server_root_filepath + "'")
+    print("quad_filepath          = '" + quad_filepath + "'")
+    print("my_games_filepath      = '" + my_games_filepath + "'")
+    print("asset_query_webpath    = '" + asset_query_webpath + "'")
+    print("script_query_webpath   = '" + script_query_webpath + "'")
+    print("doc_query_webpath      = '" + doc_query_webpath + "'")
+    print("game_query_webpath     = '" + game_query_webpath + "'")
+    print("config_query_webpath   = '" + config_query_webpath + "'")
+    print('webpath_allowlist      = ', webpath_allowlist, '\n')
     sys.exit()
 
 # SSL support doesn't work yet due to self-signed certificate problems
@@ -660,7 +674,7 @@ useSSL = False
 
 # Runs in a different process
 def launchServer(post_token):
-    global httpd, args, server_root_path, token
+    global httpd, args, server_root_filepath, token
 
     # Assign back to the global token. We have to do this because
     # Python reinitializes all globals
@@ -670,8 +684,8 @@ def launchServer(post_token):
     # is the filesystem root and we're on windows where that cannot
     # be the cwd
     old_path = os.getcwd()
-    if not isWindows or server_root_path != '':
-        os.chdir(server_root_path)
+    if not isWindows or server_root_filepath != '':
+        os.chdir(server_root_filepath)
     
     try:
         # '' = 0.0.0.0 = all local IP addresses, needed for
@@ -694,7 +708,7 @@ def launchServer(post_token):
 
         
 def main():
-    global webpath_allowlist, server_root_path, token
+    global webpath_allowlist, server_root_filepath, token
 
     token = "%0.7X" % random.randrange(0, 0x10000000)
 
@@ -745,8 +759,8 @@ def main():
                     myip = '127.0.0.1'
 
     url = 'http' + ('s' if useSSL else '')+ '://' + myip + ':' + str(args.port)
-    if not quad_path or quad_path[0] != '/': url += '/'
-    url += os.path.join(quad_path, 'console/quadplay.html?fastReload=1&token=' + token)
+    if not quad_filepath or quad_filepath[0] != '/': url += '/'
+    url += os.path.join(quad_filepath, 'console/quadplay.html?fastReload=1&token=' + token)
 
     # Sanitized username
     url += '&name=' + re.compile('[^A-Za-z0-9_]').sub('', getpass.getuser())
@@ -779,9 +793,9 @@ def main():
         url += '&quadserver=1'
     
     # Run from the quadplay path
-    print('   quad://  = ' + os.path.join(server_root_path, quad_path))
-    print('   My games = ' + os.path.join(server_root_path, my_games_path) + '/')
-    print('   cwd      = ' + remove_trailing_slash(server_root_path) + '/\n')
+    print('   quad://  = ' + os.path.join(server_root_filepath, quad_filepath))
+    print('   My games = ' + os.path.join(server_root_filepath, my_games_filepath) + '/')
+    print('   cwd      = ' + remove_trailing_slash(server_root_filepath) + '/\n')
     
 
     # Platform independent keyboard key press detection
@@ -797,25 +811,92 @@ def main():
     serverThread = multiprocessing.Process(target=launchServer, args=[token])
     print('Starting local server thread...')
     serverThread.start()
-    print('\n**Press any key to terminate the server when done**\n')
     time.sleep(2)
 
+    browser_filepath = None
+    
+    
+    # Try to find Edge, then Chromium if they exist because those
+    # are the fastest quadplay browsers and support extra kiosk
+    # features.
+    if isWindows:
+        import winreg
+        for p in ['MSEdgeHTM', 'ChromeHTML']:
+            try:
+                # Chrome
+                command = winreg.QueryValueEx(winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, p + "\\shell\\open\\command", 0, winreg.KEY_READ), "")[0]
+                browser_filepath = re.search("\"(.*?)\"", command).group(1)
+                if os.path.exists(browser_filepath):
+                    break
+                else:
+                    browser_filepath = None
+            except:
+                pass
+    else:
+        if isMacOS:
+            browser_list = ['/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome']
+        else: # Linux
+            browser_list = ['/usr/bin/chromium-browser']
+            
+        for p in browser_list:
+            if os.path.exists(p):
+                browser_filepath = p
+                break
+        
+    # Require quotes around URLs so that the shell does not interpret
+    # "&" in a URL as a shell option to run in another thread
+    #
     # The --start-fullscreen argument works for Edge and Chrome on
     # Windows and macOS. There is no direct command line way to launch
     # Safari or Firefox in fullscreen mode, or to launch in fullscreen
     # using xdg-open on Linux.
+    
+    browser_command = ''
+    
+    # Monitor the browser and close the server when it exits
+    auto_close_server = False
+
     if isWindows:
-        os.system('start "quadplay" "' + url + '"' + (' --start-fullscreen' if args.kiosk else ''))
+        if browser_filepath and not args.browser:
+            # Use Chrome/Edge if available, in order to
+            # present more as a native app.  On recent Windows 10, we can
+            # count on Edge being present. 
+            #
+            # Because of the way that windows CMD
+            # processes quotes in the command line, it is necessary to put double
+            # quotes around the ENTIRE line as well as around the individual arguments when using os.system(), but not
+            # for subprocess.call()
+            # https://superuser.com/questions/238810/problem-with-quotes-around-file-names-in-windows-command-shell
+            browser_command = '"' + browser_filepath + '" -app="' + url + '" --no-user-gesture-required' + (' --start-fullscreen' if args.kiosk else '')
+            auto_close_server = True
+        else:
+            browser_command = 'start "quadplay" "' + url + '"' + (' --start-fullscreen' if args.kiosk else '')
     elif isMacOS:
-        # Require quotes on Unix systems so that bash does not interpret &
-        # as a shell option to run in another thread
-        os.system('open "' + url + '" ' + (' --args --start-fullscreen' if args.kiosk else ''))
+        if browser_filepath and not args.browser:
+            auto_close_server = True
+            browser_command = '"' + browser_filepath + '" --no-user-gesture-required -app="' + url + '" ' + (' --start-fullscreen' if args.kiosk else '')
+        else:
+            browser_command = 'open "' + url + '" ' + (' --args --start-fullscreen' if args.kiosk else '')
+    else: # Linux
+        if browser_filepath and not args.browser:
+            # Note that on linux we have to force a fake user data directory to prevent
+            # the chromium script from sharing an existing session, which would cause the
+            # call() below to not block: https://askubuntu.com/questions/35392/how-to-launch-a-new-instance-of-google-chrome-from-the-command-line
+            browser_command = browser_filepath + ' -app="' + url + '" --user-data-dir=' + os.path.join(os.path.expanduser('~'), 'my_quadplay') + ' --no-user-gesture-required' + (' --start-fullscreen' if args.kiosk else '')
+            auto_close_server = True
+        else:
+            browser_command = 'xdg-open "' + url + '"'
+
+    if auto_close_server:
+        # The shell argument is required to keep call() from
+        # interpreting the arguments as part of the command to run
+        subprocess.call(browser_command, shell=True, stderr=subprocess.DEVNULL)
     else:
-        os.system('xdg-open "' + url + '"')
-
-    while not kbhit():
-        time.sleep(0.25)
-
+        os.system(browser_command)
+        # Wait for key stroke
+        print('\n**Press any key to terminate the server when done**\n')
+        while not kbhit(): time.sleep(0.25)
+    
     print('\nShutting down...')
 
     # Attempt to gracefully shut down

@@ -2623,7 +2623,10 @@ function make_physics(options) {
     }
       
     engine.world.gravity.scale = 0.001; // default 0.001
-    engine.enableSleeping = (options.allowSleeping !== false);
+    engine.enableSleeping = true;
+    if (options.allow_sleeping === false || options.allowSleeping === false) {
+        engine.enableSleeping = false;
+    }
 
     // Higher improves compression under large stacks or
     // small objects.  Too high causes instability.
@@ -5248,12 +5251,12 @@ function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_
     if (quality === undefined) { quality = 1.0; }
 
     // TODO: Remove when height spans are permitted
-    if (size.y !== 0) {
-        $error('draw_map_span() size must be zero along the y axis');
+    if (size.y > 1) {
+        $error('draw_map_span() size must be 1 or 0 along the y axis');
     }
 
-    if (size.x !== 0 && size.y !== 0) {
-        $error('draw_map_span() size must be zero along at most one dimension');
+    if (size.x > 1 && size.y > 1) {
+        $error('draw_map_span() size must be zero or 1 along at most one dimension');
     }
     if (size.x < 0 || size.y < 0) {
         $error('draw_map_span() size must be nonnegative');
@@ -5338,8 +5341,8 @@ function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_
     }
 
     // Clip right
-    if (x + width > $clipX2) {
-        const dx = x + width - $clipX2;
+    if (x + width - 1 > $clipX2) {
+        const dx = x + width - 1 - $clipX2;
         width -= dx;
     }
 
@@ -6696,7 +6699,7 @@ function $makeRayGridIterator(ray, numCells, cellSize) {
         ray.pos.x -= gridOrigin.x;
         ray.pos.y -= gridOrigin.y;
     }
-*/
+    */
 
     //////////////////////////////////////////////////////////////////////
     // See if the ray begins inside the box

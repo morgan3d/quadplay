@@ -1,0 +1,99 @@
+/* Code to generate the map and render the world. 
+   See also shadow_map.pyxl. */
+
+
+/* The map, automatically generated from a floor
+   plan by set_map() */
+let map
+
+/* Turn the map template into a multi-layer map, add
+   shadows, and create physics collision objects. */
+def set_map(template_map):
+    map = deep_clone(template_map)
+    map_resize(map, ∅, ∅, 4)
+
+    // Create the shadow map from the template just
+    // because we need *some* map of that size and 
+    // spritesheet; all elements will be replaced
+    shadow_map = deep_clone(template_map)
+    map_resize(shadow_map, ∅, ∅, 1)
+        
+    const template_ground_layer = template_map.layer[0]
+    const template_roof_layer   = template_map.layer[1]
+    
+    const GROUND = 0
+    const ROOF = 3
+    
+    // Move layer 1 (roofs) to layer 3
+    for x < map.size.x:
+        for y < map.size.y:
+            // Original
+            const ground = template_ground_layer[x][y]
+            const roof   = template_roof_layer[x][y]
+                    
+            if roof:
+                // No shadows on roof
+                shadow_map[x][y] = ∅
+                
+                map.layer[ROOF][x][y] = roof
+                // Erase the old layer 1
+                map.layer[1][x][y] = ∅
+                
+                if ground.is_wall:
+                    // Solid wall for intermediate layers
+                    for GROUND < L < ROOF:
+                        map.layer[L][x][y] = ground
+                else:
+                    // Overhang bridge (guess the sprite)
+                    map.layer[ROOF - 1][x][y] = map.spritesheet.brick_wall                    
+
+            if ground and ground.is_wall: // Walls
+                // Do not cast shadows on walls themselves
+                shadow_map[x][y] = ∅
+                
+                // Create a collision object
+                physics_add_entity(physics, make_entity({shape: "rect", size: map.sprite_size, pos: transform_map_space_to_ws(map, xy(x, y) + ½), density: ∞}))
+                
+            else:
+                // Not a wall. See if we need to receive a shadow
+                const local_pattern = (
+                    template_map_roof_symbol(template_map, x - 1, y + 1) +
+                    template_map_roof_symbol(template_map, x    , y + 1) +
+                    template_map_roof_symbol(template_map, x - 1, y    ) +
+                    (if roof then "'" else " "))
+                     
+                shadow_map[x][y] = SHADOW_PATTERN_TABLE[local_pattern]                
+    
+
+
+def draw_world():
+
+    if device_control("get_debug_flag", "physics"):
+        // When debugging physics, do not draw the map, so 
+        // that it is easier to see collision objects
+        set_background(#222)
+    else:
+        set_background(#CCC)
+        draw_map(map)
+    
+    // Draw map shadows with the projection of the ground layer
+    // and the z-order of most of the way up the wall, so that
+    // they shadow vehicles and sidewalk objects by lie on the ground.
+    draw_map({map: shadow_map, pos: xyz(0, 0, 0), z: 16})
+    
+    // Trees:
+    const tree_top_sprite = map.spritesheet.tree_top
+    const tree_shadow_sprite = map.spritesheet.tree_shadow
+    for tree in tree_array:
+        draw_sprite(tree_top_sprite, tree)
+        
+    for tree in tree_array:
+        draw_sprite({sprite: tree_shadow_sprite, pos: xyz(tree.x + 10 SHADOW_DIR.x, tree.y + 10 SHADOW_DIR.y, 0), z: tree.z - 1})
+    
+    // Entities:
+    for entity in entity_array:
+        // Very coarse culling
+        if ‖xy(entity.pos) - camera.pos‖ < 90% SCREEN_SIZE.x:
+            draw_entity3D(entity)
+        
+    

@@ -71,7 +71,7 @@ function showConstantEditor(choice) {
 
             if (! compact) { entryHTML += '<br/>'; }
             
-            entryHTML += `<label style="color:#bbb" class="debugOverrideCheckbox"><input type="checkbox" style="margin-left:${indent + 1}px; position: relative; top: 2px" autocomplete="false" ${debugEnabled ? 'checked' : ''} onchange="onConstantEditorDebugOverrideChange(gameSource, '${constantName}', this)">Debug&nbsp;Override</label>`;
+            entryHTML += `<label style="color:#bbb" class="${compact ? 'debugOverrideCheckbox' : ''}"><input type="checkbox" style="margin-left:${indent + 1}px; position: relative; top: 2px" autocomplete="false" ${debugEnabled ? 'checked' : ''} onchange="onConstantEditorDebugOverrideChange(gameSource, '${constantName}', this)">Debug&nbsp;Override</label>`;
             entryHTML += `<div class="debugOverride ${debugEnabled ? '' : 'disabled'}" id="constantEditor_${controlName}_debug_div" ${debugEnabled ? '' : 'disabled'} style="margin-left:${indent - 3}px">`;
             
             if (gameSource.debug.constants && gameSource.debug.constants[constantName] !== undefined) {

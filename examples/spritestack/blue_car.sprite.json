@@ -1,0 +1,15 @@
+{
+    "url": "sedan-34x16.png",
+    "sprite_size": {
+        "x": 34,
+        "y": 16
+    },
+    "palette_swap": {
+        "#f92": "#29e",
+        "#e81": "#17e",
+        "#d70": "#06e",
+        "#ddd": "#29e"
+    },
+    "tools": "Converted using https://drububu.com/miscellaneous/voxelizer and https://www.leshylabs.com/apps/sstool/",
+    "license": "Voxel model Copyright 2014 Mike Judge, @mikelovesrobots. Licensed as CC-BY 4.0 https://github.com/mikelovesrobots/mmmm"
+}

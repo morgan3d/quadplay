@@ -1,0 +1,145 @@
+
+def draw_controls(control_scheme, gamepad, gamepad2) preserving_transform:
+    set_transform(xy(28, SCREEN_SIZE.y - 25), xy(1, 1), 200)
+    const TEXT_COLOR = #DBBC
+    
+    draw_text(font, control_scheme + "\n" + gamepad.prompt["(q)"] + " to Change", xy(0, -24), TEXT_COLOR, ∅, ∅, "center", "bottom")
+    
+    draw_sprite(shapes_sprite.arrow.rotated_90, xy(0, -6), ∅, 30%)
+    draw_text(font, gamepad.prompt["[^]"], xy(0, -12), TEXT_COLOR, ∅, ∅, "center", "bottom")
+
+    const turn_right = if control_scheme == "D-PAD" then gamepad.prompt["[>]"] else (if control_scheme == "MOUSE" then "Mouse" else gamepad2.prompt["[>]"])
+    draw_sprite(shapes_sprite.curved_arrow, xy(12, -6), ∅, 30%)
+    draw_text(font, turn_right, xy(9, -12), TEXT_COLOR, ∅, ∅, "left", "bottom")
+    
+    const turn_left = if control_scheme == "D-PAD" then gamepad.prompt["[<]"] else  (if control_scheme == "MOUSE" then "Mouse" else gamepad2.prompt["[<]"])
+    draw_sprite(shapes_sprite.curved_arrow.x_flipped, xy(-12, -6), ∅, 30%)
+    draw_text(font, turn_left, xy(-10, -12), TEXT_COLOR, ∅, ∅, "right", "bottom")
+    
+    const strafe_left = gamepad.prompt[if control_scheme == "D-PAD" then "(e)" else "[<]"]
+    draw_sprite(shapes_sprite.arrow.rotated_180, xy(-12, 6), ∅, 30%)
+    draw_text(font, strafe_left, xy(-9, 11), TEXT_COLOR, ∅, ∅, "right", "top")
+    
+    const strafe_right = gamepad.prompt[if control_scheme == "D-PAD" then "(f)" else "[>]"]
+    draw_sprite(shapes_sprite.arrow, xy(12, 6), ∅, 30%)
+    draw_text(font, strafe_right, xy(8, 11), TEXT_COLOR, ∅, ∅, "left", "top")
+
+    draw_sprite(shapes_sprite.arrow.rotated_270, xy(0, 6), ∅, 30%)
+    draw_text(font, gamepad.prompt["[v]"], xy(0, 11), TEXT_COLOR, ∅, ∅, "center", "top")
+    
+    draw_text({font:font, text:replace("{color: #FFF Jump}{br}(a)", gamepad.prompt), color:TEXT_COLOR, x_align: "center", y_align: "center", pos:xy(40, 11), markup: true})
+
+
+        
+def threshold(src, threshold):
+    if is_number(src):
+        return if |src| > threshold then (src - threshold) / (100% - threshold) else 0
+        
+    const dst = {}
+    for val at key in src:
+        dst[key] = if |val| > threshold then (val - threshold) / (100% - threshold) else 0
+    return dst
+    
+
+
+def simulate_view(view, gamepad, gamepad2):
+    // Precomputed value to avoid a division operation
+    // in the inner loop
+    view.z_fog_constant = 1.219 / view.far
+    
+    // Common constants for raster and ray casting
+    view.perspective_constant = ½ view.viewport.size.x / tan(½ view.horizontal_fov)
+    
+    assert(view.near ≥ 0)
+    assert(view.far > view.near)
+    assert(view.z_fog_constant > 0)
+    assert(view.perspective_constant > 0)
+    
+    if gamepad.qq: 
+        if view.control_scheme == "D-PAD":
+            view.control_scheme = "DUAL D-PAD"
+        else if view.control_scheme == "DUAL D-PAD":
+            view.control_scheme = "DUAL ANALOG"
+        else if view.control_scheme == "DUAL ANALOG":
+            view.control_scheme = "MOUSE"
+            device_control("set_mouse_lock", true)
+        else: // MOUSE
+            device_control("set_mouse_lock", false)
+            view.control_scheme = "D-PAD"
+
+    // Rotation
+    let rotate = xy(gamepad.x, 0)
+    if view.control_scheme == "DUAL D-PAD":
+        rotate = gamepad2.xy
+    else if view.control_scheme == "MOUSE":
+        // 75% is mouse sensitivity
+        rotate = 75% device_control("get_mouse_state").dxy
+    else if view.control_scheme == "DUAL ANALOG":
+        rotate = threshold(device_control("get_analog_axes", 0, 1), 15%)
+    
+    
+    // No hysteresis on mouse for sharper control
+    view.spin  = lerp(view.spin, -1.6° rotate, if view.control_scheme == "MOUSE" then 100% else 25%)
+    view.pitch = clamp(view.pitch + view.spin.y, -30°, +30°)
+    view.yaw  += view.spin.x
+    
+    const MAX_SPEED      = 1.8
+    const STRAFE_SPEED   = 80% MAX_SPEED
+    const FORWARD_SPEED  = MAX_SPEED
+    const BACKWARD_SPEED = 60% MAX_SPEED
+        
+    // x = strafe, -z = forward
+    let strafe = gamepad.x
+    let walk  = -gamepad.y
+    if view.control_scheme == "D-PAD":
+        strafe = (gamepad.f - gamepad.e)
+    else if view.control_scheme == "DUAL ANALOG":
+        const stick = threshold(device_control("get_analog_axes", 0, 0), 20%)
+        strafe = stick.x
+        walk = -stick.y
+    
+    let desired_vs_vel = xy(-STRAFE_SPEED * strafe, walk * (if walk < 0 then FORWARD_SPEED else BACKWARD_SPEED))
+    
+    desired_vs_vel = direction(desired_vs_vel) * min(‖desired_vs_vel‖, MAX_SPEED)
+    
+    // Adjust [view space] desired speed smoothly
+    view.speed = lerp(view.speed, desired_vs_vel, 20%)  
+
+    const fwd = ws_forward(view)
+    
+    // Used for tracking distance travelled
+    const old_pos = xyz(view.pos)
+    
+    // Make a temporary 2D entity to use the slide move helper
+    const proxy = {
+        size: xy(2 view.radius, 2 view.radius),
+        shape: "disk",
+        pos: xy(view.pos),
+        pivot: xy(0, 0),
+        angle: 0°,
+        scale: xy(1, 1),
+        vel: perp(fwd) * view.speed.x - fwd * view.speed.y,
+    }
+    
+    entity_slide_move_map(proxy, dungeon_map, WALL_LAYER)   
+    view.pos.x = proxy.pos.x
+    view.pos.y = proxy.pos.y
+    
+    if view.pos.z ≤ 32 and view.jump_vel ≤ 0:
+        view.pos.z = 32
+        view.jump_vel = 0
+        if gamepad.aa: view.jump_vel = +2
+        const move = ‖xy(old_pos - view.pos)‖
+        if move > 0.5:
+            if not view.walk_audio:
+                view.walk_audio = play_sound(loop_footsteps_sound, true, 200%)
+            set_playback_rate(view.walk_audio, max(2.8 move / MAX_SPEED, 100%))
+        else:
+            stop_audio(view.walk_audio)
+            view.walk_audio = ∅
+    else:
+        stop_audio(view.walk_audio)
+        view.walk_audio = ∅
+        view.pos.z = max(32, view.pos.z + view.jump_vel)
+        view.jump_vel -= 0.1
+           

@@ -6,18 +6,40 @@
 Changes for both the specification and implementation in each release
 of [quadplay✜](manual.md.html).
 
-2021 February TBD: Beta update 66
+2021 February 25: Beta update 66
 ===================================
 
+- New Spritestack 2.5D car demo in the style of Grand Theft Auto
 - Made the "pixel shader" style Clouds example 
   15% faster using sprites as colors
+- The Debug UI mode with the large game screen now always shows the
+  project list on large displays. It still auto-hides the list to 
+  conserve space on smaller displays. 
+- Added a quit menu item to the Tools menu when not in kiosk mode (not supported on Firefox)
+- The IDE now looks like a native app instead of
+  a browser app when run on a platform with Chrome or Edge installed.
+  Use `--browser` on the quadplay command line script to force loading
+  in a regular browser tab
+- On Windows, the `quadplay.cmd` script can now be run directly by
+  double clicking, and will close the server automatically
 - `make_entity()` now creates default `vel` and `force` as
   `xyz()` if `entity.pos` is an `xyz()`
 - Removed vestigial `acc` (acceleration) and `twist` (angular acceleration)
   properties on entity, since they are subsumed by `force` and `torque`
 - All drawing routines can now accept sprites as colors to enable
   image palettes
-- Fixed `draw_map()` 3D perspective 
+- Added a title screen to the Warlock 3D example
+- Added map-based spawning to the Warlock 3D example
+- Changed the Warlock 3D example to use the map 2.5D coordinate system
+- Web server now includes the script line number on security warnings
+  to distinguish the source of identical warnings
+- Kiosk mode on macOS with Chrome or Edge installed looks more like
+  a native app and is harder to users to escape
+- Fixed web server printing exception trace on security warnings
+- Fixed physics `allowSleeping` --> `allow_sleeping`
+- Fixed `draw_map()` 3D perspective
+- Fixed not being able to save .debug.json files on Windows when quadplay
+  is installed on a different drive than the home directory
 
 
 2021 February 15: Beta update 65

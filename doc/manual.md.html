@@ -95,9 +95,9 @@ For the quadplay✜ development kit, just download, unzip, and then copy
 the files wherever you would like on your computer. There is no
 installer or configuration required.
 
-To make a game, run the `quadplay` script at the command line. When it
-opens your browser, select the "Tools" menu from inside the quadplay
-development environment and then the "New Game" option. Look at the
+To make a game, double click `quadplay.cmd` on Windows, or run the `quadplay`
+script at the command line on any operating system. Select the "Tools" menu from
+inside the quadplay development environment and then the "New Game" option. Look at the
 Built-In Games section for more examples.
 
 If you've worked with other scripting languages, then you may want to
@@ -525,6 +525,10 @@ similar to PAC-MAN, Centipede, etc.
 [Piano](../console/quadplay.html?game=quad://examples/piano&IDE=1)
 Using `pitch` with `play_sound()` to adjust frequency,
 and data-driven input testing.
+
+</td></tr><tr><td>![](../examples/spritestack/label128.png)</td><td>
+[Spritestack](../console/quadplay.html?game=quad://examples/spritestack&IDE=1)
+is a little engine for Grand Theft Auto 2.5D rendering and physics of a 2D game using sprite stacking and camera perspective.
 
 </td></tr><tr><td>![](../examples/speedstreet/label128.png)</td><td>
 [Speed Street](../console/quadplay.html?game=quad://examples/speedstreet&IDE=1) is the setup for a four-player competitive racing game inspired by [_Excitebike_](https://en.wikipedia.org/wiki/Excitebike) and Tony Hawk games, using:
@@ -3020,16 +3024,23 @@ a `start` field in the .sprite.json file.
   except for flipping and rotation, use `sprite.id` instead.
 
 `sprite.rotated_90`
-: Counter-clockwise 90 degree rotated version of the sprite. The bounds may be different 
-  if the sprite is not square.
+: Counter-clockwise 90 degree rotated version of the sprite. The
+  bounds may be different if the sprite is not square. This is not
+  affected by the up direction of a map or game because it is always
+  counter-clockwise in the spritesheet.
 
 `sprite.rotated_180`
-: Counter-clockwise 180 degree rotated version of the sprite. The bounds may be different 
-  if the sprite is not square. Note that `s.x_flipped.y_flipped == s.rotated_180 == s.y_flipped.x_flipped == s.rotated_90.rotated_90`.
+: Counter-clockwise 180 degree rotated version of the sprite. The
+  bounds may be different if the sprite is not square. Note that
+  `s.x_flipped.y_flipped == s.rotated_180 == s.y_flipped.x_flipped == s.rotated_90.rotated_90`.
+  This is not affected by the up direction of a map or game because it is always
+  counter-clockwise in the spritesheet.
 
 `sprite.rotated_270`
 : Counter-clockwise 270 degree/clockwise 90 degree rotated version of the sprite. The bounds may be different 
   if the sprite is not square. Note that `s.x_flipped.y_flipped.rotated_90 == s.rotated_270`.
+  This is not affected by the up direction of a map or game because it is always
+  counter-clockwise in the spritesheet.
 
 `sprite.scale`
 : An `xy()` value that is `xy(1, 1)` for sprites extracted directly
@@ -3624,7 +3635,7 @@ to start colliding with each other.
   - `gravity default xy(0, -up_y())`: Default gravitational acceleration on all objects.
     Set to `xy(0,0)` and explicitly apply gravity if your game is not set on a planetary
     surface or requires excluding most objects from gravity.
-  - `allowSleeping default true`: Allow simple rigid bodies to fall "asleep" and stop simulating
+  - `allow_sleeping default true`: Allow simple rigid bodies to fall "asleep" and stop simulating
     until touched. This dramatically increases simulation performance, however some entities
     will fail to properly waken when the object supporting them is removed and can remain
     floating in the air.
@@ -8095,7 +8106,7 @@ To keep your development repository private or just separate from the deployment
 create a second repository on GitHub.
 
 Clone both to your local machine and at the command line, enter the _development_ repo
-and run 
+and run: 
 
 `````````````````````````````````````````````````````````````
 # macOS and Linux:
