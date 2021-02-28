@@ -120,7 +120,7 @@ function makeConstantEditorControlHTML(constantName, controlName, json, value, i
 
         // Parse and clean up min and max bounds
         let minVal = json.min !== undefined ? evalJSONGameConstant(json.min) : -Infinity;
-        let maxVal = json.max !== undefined ? evalJSONGameConstant(json.max) : -Infinity;
+        let maxVal = json.max !== undefined ? evalJSONGameConstant(json.max) : Infinity;
         if (typeof minVal !== 'number') { minVal = -Infinity; }
         if (typeof maxVal !== 'number') { maxVal = Infinity; }
         if (minVal > maxVal) { let temp = minVal; minVal = maxVal; maxVal = temp; }
@@ -144,7 +144,7 @@ function makeConstantEditorControlHTML(constantName, controlName, json, value, i
               `{ const v = clamp(QRuntime.round($parse(this.value, 0).result, ${quantum}), ${minVal}, ${maxVal}); ` +
               `const f = QRuntime.format_number(v, '${format}'); this.value = f; ` +
               `onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', v, f); ` +
-              `const slider = constantEditor_${controlName}_slider; ` +
+              `const slider = document.getElementById('constantEditor_${controlName}_slider'); ` +
 
               // The maxVal - minVal will be NaN if one is infinity, but then this code will never execute, either!
               `if (slider) { slider.value = 1000 * (v - ${minVal}) / (${maxVal - minVal}); }}`;
