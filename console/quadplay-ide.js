@@ -1878,6 +1878,7 @@ function onProjectSelect(target, type, object) {
         break;
         
     case 'asset':
+        console.assert(object);
         const url = object.$url || object.src;
         // Find the underlying gameSource.asset key for this asset so
         // that we can fetch it again if needed
@@ -1979,7 +1980,7 @@ function onProjectSelect(target, type, object) {
 
                         str += `<br>frames: ${sprite.frames}`;
                         spriteEditorInfo.innerHTML = str;
-                        
+
                         if (mouseX > editorBounds.width / 2) {
                             // Move the info to be right aligned to keep it visible
                             spriteEditorInfo.style.float = 'right';

@@ -41,13 +41,12 @@
     const isChrome = /chrom/i.test(navigator.userAgent) && window.chrome && !isEdge;
     const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
 
-    // Does not include `window.matchMedia("only screen and (max-width: 480px)").matches`
-    // because that triggers on desktop on itch.io when "smartphone" is selected as a viable
-    // input method
+    // Does not include the commonly recommended test `window.matchMedia("only screen and (max-width: 480px)").matches`
+    // because that triggers on desktop on itch.io when "smartphone" is selected as a viable input method
     const isMobile = window.orientation || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.screen && window.screen.orientation && window.screen.orientation.type === 'portrait-primary') || ((navigator.maxTouchPoints || 0) > 0);
     const browserName = isSafari ? 'Safari' : isFirefox ? 'Firefox' : isChrome ? 'Chrome' : isEdge ? 'Edge' : 'Browser';
 
-    // Keys
+    // Keyboard prompts for modifers
     const cmd = isApple ? '⌘' : '^';
     const alt = '⎇';
     const shift = '⇧';
@@ -253,7 +252,7 @@
           <div id="spriteEditor" class="pixelate">
             <div id="spriteEditorHighlight" style="position:absolute; width: 100px; height: 50px; border: 1px solid #0f0; color: #0f0; overflow: visible; box-shadow: 0px 1px 4px #000">
               <div id="spriteEditorPivot" style="line-height: 30px; height: 30px">☩</div>
-              <div id="spriteEditorInfo" style="white-space: nowrap; text-shadow: 0px 1px 4px #000, 0px 0px 2px #000, 0px 0px 3px #000"></div>
+              <div id="spriteEditorInfo" style="white-space: nowrap; display: table; text-shadow: 0px 1px 4px #000, 0px 0px 2px #000, 0px 0px 3px #000"></div>
             </div>
           </div>
           <div id="soundEditor">
@@ -738,27 +737,27 @@
             <td width="100px">
               Spritesheet
             </td>
-            <td colspan=3><select id="newAssetMapSpritesheet" style="width: 370px"></select></td>
+            <td colspan=3><select id="newAssetMapSpritesheet" style="width: 370px" onchange="{ const json = document.getElementById('newAssetMapCloneSpriteJson'), png = document.getElementById('newAssetMapCloneSpritePng'); if (/(^\.\.|:)/.test(this.value)) { json.disabled = false; png.disabled = ! json.checked;} else { json.disabled = png.disabled = true; }}"></select></td>
           </tr>
           <tr>
             <td></td>
             <td>
-              <label style="margin-left:-3px"><input type="checkbox" checked>Clone&nbsp;<code>sprite.json</code></label></td>
+              <label style="margin-left:-4px"><input id="newAssetMapCloneSpriteJson" type="checkbox" checked onchange="document.getElementById('newAssetMapCloneSpritePng').disabled = ! this.checked; if (! this.checked) { document.getElementById('newAssetMapCloneSpritePng').checked = false; }">Clone&nbsp;<code>sprite.json</code></label></td>
             </td>
             <td colspan=2>
-              <label style="margin-left:-3px"><input type="checkbox">Clone <code>png</code></label>
+              <label style="margin-left:-3px"><input id="newAssetMapCloneSpritePng" type="checkbox">Clone <code>png</code></label>
             </td>
           </tr>
-                 
-          <tr>
+          <tr><td></td></tr>                 
+          <tr valign="top">
             <td>Orientation</td>
-            <td colspan=3>
+            <td colspan=3 style="padding-top: 3px">
               <script>
-                makeRadio('<span style="font-size:200%; position: relative; top: -13px">■</span>', 'newAssetMapOrientationSquare', true, 'title="Orthographic"', 'newAssetMapOrientation');
-                makeRadio('<span style="font-size:175%; position: relative; top: -14px">⬥</span>', 'newAssetMapOrientationRotatedSquare', false, 'title="Isometric"', 'newAssetMapOrientation', 'disabled');
-                makeRadio('<div style="display: inline-block; position: relative; top: -12px; left: 2px; font-size:225%; transform: rotate(90deg)">♦</div>', 'newAssetMapOrientationDiamond', false, 'title="Isometric" disabled', 'newAssetMapOrientation', 'disabled');
-                makeRadio('<span style="font-size: 140%; position: relative; top: -10px">⬢</span>', 'newAssetMapOrientationPointyHex', false, 'title="Pointy-top hex"', 'newAssetMapOrientation', 'disabled');
-                makeRadio('<span style="font-size: 140%; position: relative; top: -10px">⬣</span>', 'newAssetMapOrientationFlatHex', false, 'title="Flat-top hex"', 'newAssetMapOrientation', 'disabled');
+                makeRadio('<span style="font-size:200%; position: relative; top: -13px">■</span>', 'newAssetMapOrientationSquare', true, 'title="Orthographic" style="position: relative; left:-3px"', 'newAssetMapOrientation');
+                makeRadio('<span style="font-size:175%; position: relative; top: -14px">⬥</span>', 'newAssetMapOrientationRotatedSquare', false, 'title="Isometric" style="position: relative; left:-3px"', 'newAssetMapOrientation', 'disabled');
+                makeRadio('<div style="display: inline-block; position: relative; top: -12px; left: 2px; font-size:225%; transform: rotate(90deg)">♦</div>', 'newAssetMapOrientationDiamond', false, 'title="Perspective isometric" disabled style="position: relative; left:-3px"', 'newAssetMapOrientation', 'disabled');
+                makeRadio('<span style="font-size: 140%; position: relative; top: -10px">⬢</span>', 'newAssetMapOrientationPointyHex', false, 'title="Pointy-top hex" style="position: relative; left:-3px"', 'newAssetMapOrientation', 'disabled');
+                makeRadio('<span style="font-size: 140%; position: relative; top: -10px">⬣</span>', 'newAssetMapOrientationFlatHex', false, 'title="Flat-top hex" style="position: relative; left:-3px"', 'newAssetMapOrientation', 'disabled');
               </script>
             </td>
           </tr>
@@ -775,7 +774,7 @@
           <tr>
             <td></td>
             <td>
-              <label style="margin-left:-3px"><input type="checkbox" id="newAssetMapLoopX">Loop X</label>
+              <label style="margin-left:-4px"><input type="checkbox" id="newAssetMapLoopX">Loop X</label>
             </td>
             <td colspan=2>
               <label style="margin-left:-3px"><input type="checkbox" id="newAssetMapLoopY">Loop Y</label>
@@ -784,7 +783,7 @@
           <tr>
             <td></td>
             <td>
-              <label style="margin-left:-3px"><input id="newAssetMapYUp" type="checkbox">Y-axis = up</label>
+              <label style="margin-left:-4px"><input id="newAssetMapYUp" type="checkbox">Y-axis = up</label>
             </td>
             <td colspan=2>
               <label style="margin-left:-3px"><input id="newAssetMapCenter" type="checkbox">Origin in center</label>

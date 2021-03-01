@@ -98,17 +98,18 @@ function removeAllCodeEditorSessions() {
 }
 
 
-/* Update all sessions from fileContents after load, and destroy
-   any that no longer are needed. */
+/* Update all sessions from fileContents after load, and destroy any
+   that no longer are needed. */
 function updateAllCodeEditorSessions() {
     codeEditorSessionMap.forEach(function (session, url) {
         const newText = fileContents[url];
         if (newText === undefined) {
-            // No longer in use by the code editor...but may be still in the project if it is a doc
+            // The file is no longer in use by the code editor...but
+            // may be still in the project if it is a doc
             for (let i = 0; i < gameSource.docs.length; ++i) {
                 if (gameSource.docs[i] === url) {
-                    // This document is still in the project, so reload the document and
-                    // abort removal.
+                    // This document is still in the project, so
+                    // reload the document and abort removal.
                     LoadManager.fetchOne({forceReload: true}, url, 'text', null, function (doc) {
                         fileContents[url] = doc;
                         updateCodeEditorSession(url, doc);
@@ -565,12 +566,23 @@ function createCodeEditorSession(url, bodyText, assetName) {
                                 loadGameIntoIDE(window.gameURL, function () {
                                     // (for a spritesheet in a map, it has a dot in it)
                                     const assetName = session.aux.assetName;
+
+                                    let spritesheet;
                                     if (assetName.indexOf('.') !== -1) {
                                         // Spritesheet within a map
-                                        onProjectSelect(document.getElementById('projectAsset_' + assetName), 'asset', gameSource.assets[assetName.replace(/\..*$/, '')].spritesheet_table[assetName.replace(/^.*\./, '')]);
+                                        const map = gameSource.assets[assetName.replace(/\..*$/, '')];
+                                        const spritesheetName = assetName.replace(/^.*\./, '');
+                                        if (spritesheetName === 'spritesheet') {
+                                            spritesheet = map.spritesheet;
+                                        } else {
+                                            spritesheet = map.spritesheet_table[spritesheetName];
+                                        }
+                                        console.assert(spritesheet);
                                     } else {
-                                        onProjectSelect(document.getElementById('projectAsset_' + assetName), 'asset', gameSource.assets[assetName]);
+                                        spritesheet = gameSource.assets[assetName];
+                                        console.assert(spritesheet);
                                     }
+                                    onProjectSelect(document.getElementById('projectAsset_' + assetName), 'asset', spritesheet);
                                 }, true);
                                 
                             } else if (url.endsWith('.game.json')) {

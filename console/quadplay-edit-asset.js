@@ -220,10 +220,11 @@ function showNewAssetDialog() {
             // Do not show raw PNGs as potential map spritesheets. There
             // are too many issues with not having metadata for them.
             if (! url.endsWith('.png')) {
-                s += `<option>${url}</option>`;
+                s += `<option value="${url}">${url}</option>`;
             }
         }
         spritesheetDropdown.innerHTML = s;
+        spritesheetDropdown.dispatchEvent(new Event('change'));
     });
 }
 
@@ -283,8 +284,8 @@ function onNewAssetCreate() {
 
     case 'map':
         const spritesheetURL = document.getElementById('newAssetMapSpritesheet').value;
-        
-        function makeMap(pngURL, spriteJSON, spriteImage) {
+
+        function makeMap(pngURL, spriteJSON, spriteImage, spritesheetURL) {
             console.assert(spriteJSON);
             console.assert(spriteImage);
             
@@ -316,6 +317,9 @@ function onNewAssetCreate() {
         } // makeMap
 
         const loadOptions = {jsonParser: 'permissive'};
+        const cloneSpriteJson = document.getElementById('newAssetMapCloneSpriteJson').checked;
+        const cloneSpritePng = document.getElementById('newAssetMapCloneSpritePng').checked && cloneSpriteJson;
+                        
 
         LoadManager.fetchOne(
             loadOptions,
@@ -338,7 +342,35 @@ function onNewAssetCreate() {
                     'image',
                     undefined,
                     function (image) {
-                        makeMap(pngURL, json, image);
+
+                        // TODO: Clone sprite and JSON if required before triggering the map creation
+                        if (cloneSpriteJson) {
+                            if (cloneSpritePng) {
+                                const newPngURL = pngURL.replace(/^.*\//, '');
+                                
+                                // Copy the PNG
+                                LoadManager.fetchOne(loadOptions, makeURLAbsolute(url, pngURL), 'arraybuffer', null, function (data) {
+                                    serverWriteFile(gamePath + newPngURL, 'binary', data);
+                                });
+                                
+                                pngURL = newPngURL;
+                                json.url = pngURL;
+                            } else {
+                                // Fully qualify the pngURL, since we're about
+                                // to move the json file's URL
+                                pngURL = makeURLAbsolute(gameSource.jsonURL, makeURLAbsolute(url, pngURL));
+                            }
+
+                            // Write the modified json
+                            url = url.replace(/^.*\//, '');
+                            serverWriteFile(gamePath + url, 'utf8',
+                                            WorkJSON.stringify(json, undefined, 4),
+                                            function () {
+                                                makeMap(pngURL, json, image, url);
+                                            }, null);
+                        } else {
+                            makeMap(pngURL, json, image, url);
+                        }
                     },
                     function (error) { alert(error + ' while loading spritesheet png for map from ' + pngURL); },
                     undefined, true);
