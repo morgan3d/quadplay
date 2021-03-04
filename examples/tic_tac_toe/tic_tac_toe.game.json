@@ -1,0 +1,143 @@
+{
+    "title": "Tic Tac Toe",
+    "developer": "@CasualEffects",
+    "copyright": "©2021 Morgan McGuire",
+    "license": "CC0/Public Domain",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play",
+        "GameOver"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "shapes": "quad://sprites/shapes-32x32.sprite.json",
+        "font": "quad://fonts/broderick-14.font.json",
+        "bad_sound": "quad://sounds/hit-08.sound.json",
+        "x_sound": "quad://sounds/coin-01.sound.json",
+        "o_sound": "quad://sounds/coin-03.sound.json",
+        "move_sound": "quad://sounds/blip-08.sound.json"
+    },
+    "version": 1,
+    "min_players": 2,
+    "max_players": 2,
+    "cooperative": false,
+    "competitive": true,
+    "achievements": false,
+    "highscores": false,
+    "description": "Example of supporting gamepad, touch, and mouse (hover) input on a grid and turn-based play.",
+    "constants": {
+        "BACKGROUND_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "13%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "35%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "0%"
+                }
+            }
+        },
+        "BOX_SIDE": {
+            "type": "number",
+            "value": "64",
+            "min": {
+                "type": "number",
+                "value": "8"
+            },
+            "max": {
+                "type": "number",
+                "value": "128"
+            },
+            "format": "",
+            "quantum": 1
+        },
+        "BOX_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "100%"
+                }
+            }
+        },
+        "BOX_OUTLINE": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "0%"
+                }
+            }
+        },
+        "BOX_SPACING": {
+            "type": "number",
+            "value": "8",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "32"
+            },
+            "format": "",
+            "quantum": 1
+        },
+        "X_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "60%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "32%"
+                }
+            }
+        },
+        "O_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "36%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "76%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "100%"
+                }
+            }
+        }
+    },
+    "screenshot_tag": "Tic Tac Toe"
+}

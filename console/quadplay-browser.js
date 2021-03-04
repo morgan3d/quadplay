@@ -194,8 +194,8 @@ function device_control(cmd) {
         {
             const mask = mouse.buttons;
             const xy = Object.freeze({
-                x: mouse.screen_x * QRuntime.$scaleX + QRuntime.$offsetX,
-                y: mouse.screen_y * QRuntime.$scaleY + QRuntime.$offsetY});
+                x: (mouse.screen_x - QRuntime.$offsetX) / QRuntime.$scaleX,
+                y: (mouse.screen_y - QRuntime.$offsetY) / QRuntime.$scaleY});
 
             const dxy = Object.freeze({
                 x: ((mouse.movement_x === undefined) ? (mouse.screen_x - mouse.screen_x_prev) : mouse.movement_x) * QRuntime.$scaleX,

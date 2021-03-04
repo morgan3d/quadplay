@@ -550,6 +550,11 @@ stick and mouse APIs. Shows how to completely hide the OS mouse cursor with `dev
 </td></tr><tr><td>![](../examples/touch/label128.png)</td><td>
 [Touch Example](../console/quadplay.html?game=quad://examples/touch&IDE=1) uses the mouse/touch API.
 
+</td></tr><tr><td>![](../examples/tic_tac_toe/label128.png)</td><td>
+[Tic Tac Toe](../console/quadplay.html?game=quad://examples/tic_tac_toe&IDE=1) shows how to take turns,
+and mix `gamepad_array`, `touch`, and `device_control("get_mouse_state")` to support
+mouseover/hover, touch screen, and gamepads in a single game user interface.
+
 </td></tr><tr><td>![](../examples/twin_analog/label128.png)</td><td>
 [Twin Analog Example](../console/quadplay.html?game=quad://examples/twin_analog&IDE=1) shows how to use `device_control()` to access
 twin analog sticks and game controller triggers that are not standard on quadplay consoles.
@@ -956,6 +961,7 @@ The PyxlScript language feels a lot like Python, with these changes:
 - No integer division (use `floor`)
 - No comparison operator chaining
 - Use `keys(obj)` and `values(obj)` instead of `obj.keys()` and `obj.values()` (although you almost never need either due to the `for` loop syntax)
+- Use `for value at key in obj:` instead of `for key, value in obj.items():`
 - Use `iterate()` instead of `map()`, `filter()`, or list comprehensions
 - Use `x = if t then a else b` for Python `x = a if t else b`
 - Use `true`, `false`, `nil` instead of `True`, `False`, `None`
@@ -3536,8 +3542,9 @@ using the full physics engine.
   `offset` and `z` for entities. Each of `A` and `B` can be any of:
 
    - an entity from `make_entity()`
-   - any object with `pos` and optional `shape`, `angle`, `pivot`, and `size` properties
-   - an `xy()` point
+   - an `xy()` point 
+   - any object with `pos`, and optional `shape`, `angle`, `pivot`, and `size` properties
+   - any object with `x` and `y` fields, which will be treated as a point
 
   If `recurse` is true (the default), compares `A` and all of its children
   against `B` and all of its children. This is quadratic in the number of
@@ -3875,6 +3882,9 @@ def hsv_to_hsl(src):
 `rgb(sprite)`
 : Returns the rgb value of the center pixel of the sprite.
 
+`rgb(string)`
+: Returns the rgb value of hex-constant string such as "#F03".
+
 `rgb_to_xyz(c)`
 : Returns `{x: c.r, y: c.g, z: c.b}`.
 
@@ -3895,6 +3905,9 @@ def hsv_to_hsl(src):
 
 `rgba(hsv, a default 1)`
 : Convert the `hsv` result to rgb and add an `a` property.
+
+`rgba(string)`
+: Returns the rgba value of hex-constant string such as "#F03"
 
 `rgba(sprite)`
 : Returns the rgb value of the center pixel of the sprite.

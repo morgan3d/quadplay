@@ -1,0 +1,142 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+const board = [
+    [∅, ∅, ∅], 
+    [∅, ∅, ∅],
+    [∅, ∅, ∅]]
+
+const player_array = [∅, ∅]
+
+// Index into player_array
+let turn
+
+def screen_to_board(pos):
+    return round(pos / (BOX_SIDE + BOX_SPACING)) + 1
+
+
+def board_to_screen(board_pos):
+    return (board_pos - 1) * (BOX_SIDE + BOX_SPACING)
+
+    
+def in_bounds(board_pos):
+    return (min(board_pos.x, board_pos.y) ≥ 0 and
+            max(board_pos.x, board_pos.y) ≤ 2)
+
+
+/* Returns true if someone has won */
+def three_in_a_row(board):
+    // Rows and columns
+    for i < 3:
+        if ((board[i][0] ≠ ∅ and board[i][0] == board[i][1] and board[i][0] == board[i][2]) or
+            (board[0][i] ≠ ∅ and board[0][i] == board[1][i] and board[0][i] == board[2][i])):
+                return true
+    
+    // Diagonals
+    if (board[1][1] ≠ ∅ and 
+        ((board[1][1] == board[0][0] and board[1][1] == board[2][2]) or
+         (board[1][1] == board[2][0] and board[1][1] == board[0][2]))):
+        return true
+    else:
+        return false
+        
+            
+    
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+for x < 3:
+    for y < 3:
+        board[x][y] = ∅
+
+player_array[0] = {sprite: shapes.X, color: X_COLOR, cursor: xy(1, 1), gamepad: gamepad_array[0], commit_sound: x_sound}
+player_array[1] = {sprite: shapes.ring, color: O_COLOR, cursor: xy(1, 1), gamepad: gamepad_array[1], commit_sound: o_sound}
+
+turn = 0
+
+set_background(BACKGROUND_COLOR)
+set_transform(½ SCREEN_SIZE)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+for x < 3:
+    for y < 3:
+        const pos = board_to_screen(xy(x, y))
+        draw_rect(pos, xy(BOX_SIDE, BOX_SIDE), BOX_COLOR, BOX_OUTLINE)
+
+        const player = board[x][y]
+        if player:
+            draw_sprite({
+                sprite: player.sprite, 
+                pos: pos,
+                override_color: player.color
+            })
+
+// Current player
+const player = player_array[turn]
+
+// Mouse. Not available on all platforms
+const mouse = device_control("get_mouse_state")
+
+with commit_sound, cursor, color, gamepad in player:
+    for i < 3:
+        draw_rect(board_to_screen(cursor), xy(1, 1) * (BOX_SIDE - 4 - i), ∅, color)
+
+    // Show the controls
+    draw_text({
+        font: font,
+        text: replace("[^]\n[<]  [>]\n[v]\n(a)", gamepad.prompt),
+        x_align: "center",
+        pos: xy((½ SCREEN_SIZE.x - 40) * (2 * turn - 1), -20),
+        color: color,
+        outline: BOX_OUTLINE
+    })
+    
+    // Move with gamepad
+    if gamepad.xx or gamepad.yy:
+        const old_cursor = cursor
+        cursor = clamp(cursor + xy(gamepad.xx, gamepad.yy), xy(0, 0), xy(2, 2))
+        play_sound(if equivalent(old_cursor, cursor) then bad_sound else move_sound, false, 80%)
+
+    let commit = gamepad.aa or gamepad.bb or gamepad.cc or gamepad.dd
+    
+    // Hover support for platforms with a mouse
+    if mouse.dx or mouse.dy:
+        const temp = screen_to_board(mouse.xy)
+        device_control("set_mouse_cursor", "crosshair") 
+        if in_bounds(temp):
+            cursor = temp
+            if board[cursor.x][cursor.y] == ∅:
+                // Selectable
+                device_control("set_mouse_cursor", "pointer")                
+
+    // Touch screen support
+    if touch.aa:
+        const temp = screen_to_board(touch.xy)
+        if in_bounds(temp):
+            cursor = temp
+            commit = true
+            // Move the *other* player's cursor to match
+            player_array[1 - turn].cursor = xy(temp)
+        else:
+            play_sound(bad_sound)
+
+    // Commit move
+    if commit:
+        if board[cursor.x][cursor.y] == ∅:
+            board[cursor.x][cursor.y] = player
+            
+            // Look for a win
+            if three_in_a_row(board):
+                set_mode(GameOver, turn) because "Three in a row"
+            
+            turn = 1 - turn
+            play_sound(commit_sound)
+            device_control("set_mouse_cursor", "crosshair") 
+        else:
+            play_sound(bad_sound)
+
+    

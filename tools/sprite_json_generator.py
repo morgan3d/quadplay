@@ -258,7 +258,7 @@ def make_sprite(
 
     blob.update(
         {
-            "url": filepath,
+            "url": os.path.relpath(filepath, os.path.dirname(outpath)),
             "sprite_size": {'x': size[0], 'y': size[1]},
             "license": license
         }
@@ -293,7 +293,9 @@ def make_sprite(
             "pass the the game in.\n".format(game)
         )
 
-    game_data.setdefault('assets', {})[basename + "Sprite"] = outpath
+    sprite_asset_name = basename + "_sprite"
+
+    game_data.setdefault('assets', {})[sprite_asset_name] = outpath
 
     with open(game, 'w') as fo:
         fo.write(
@@ -303,7 +305,7 @@ def make_sprite(
                 indent=4, separators=(",", ": ")
             )
         )
-    print("Added '{}' to '{}'".format(basename + "Sprite", game))
+    print("Added '{}' to '{}'".format(sprite_asset_name, game))
 
 
 def _extract_sprites(from_game):

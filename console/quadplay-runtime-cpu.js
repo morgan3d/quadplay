@@ -1906,6 +1906,8 @@ function rgb(r, g, b) {
         r = r.r;
     } else if (r.$color !== undefined) {
         return rgb(rgba(r.$color));
+    } else if (typeof r === 'string' && r[0] === '#') {
+        return rgb($parseHexColor(r.substring(1)));
     } else {
         r = $clamp(r, 0, 1);
         g = $clamp(g, 0, 1);
@@ -1947,6 +1949,8 @@ function rgba(r, g, b, a) {
         g = ((c >> 4) & 0xf) * (1 / 15);
         b = ((c >> 8) & 0xf) * (1 / 15);
         a = ((c >>> 12) & 0xf) * (1 / 15);
+    } else if (typeof r === 'string' && r[0] === '#') {
+        return rgba($parseHexColor(r.substring(1)));
     } else {
         r = $clamp(r, 0, 1);
         g = $clamp(g, 0, 1);
