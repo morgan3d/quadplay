@@ -2,19 +2,44 @@ GameOver
 ════════════════════════════════════════════════════════════════════════
 
 let winner
+let board
+const color_array = [X_COLOR, O_COLOR]
 
-
-enter(turn)
+enter(turn, final_board)
 ────────────────────────────────────────────────────────────────────────
 winner = turn
-
+board = final_board
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
-todo("Display")
-draw_previous_mode()
-if any_button_press():
+draw_board(board)
+
+// Show the controls
+for i < 2:
+    draw_text({
+        font: font,
+        text: "Press\nAny\nButton",
+        x_align: "center",
+        pos: xy((½ SCREEN_SIZE.x - 40) * (2 i - 1), -20),
+        color: color_array[i],
+        outline: BOX_OUTLINE
+    })
+
+draw_rect(xy(0, 0), xy(210, 25), #0006)
+
+draw_text({
+    font: font,
+    text: (if winner == 0 then "X WINS" else "O WINS"),
+    x_align: "center",
+    y_align: "center",
+    pos: xy(0, 0),
+    color: color_array[winner],
+    outline: BOX_OUTLINE,
+    shadow: BOX_OUTLINE
+})
+    
+if any_button_press() and mode_frames > 20:
     set_mode(Play) because "Any button"
 
 

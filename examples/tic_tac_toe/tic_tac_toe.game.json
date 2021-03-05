@@ -4,7 +4,9 @@
     "copyright": "©2021 Morgan McGuire",
     "license": "CC0/Public Domain",
     "packages": [],
-    "scripts": [],
+    "scripts": [
+        "board.pyxl"
+    ],
     "modes": [
         "Play",
         "GameOver"

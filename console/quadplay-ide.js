@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.03.04.12';
+const version  = '2021.03.05.01';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -3310,6 +3310,15 @@ function onCopyPerformanceSummary() {
 }
 
 
+// Reset the touch input state for next frame
+function resetTouchInput() {
+    if (mouse.movement_x !== undefined) {
+        mouse.movement_x = mouse.movement_y = 0;
+    }
+    QRuntime.touch.pressed_a = QRuntime.touch.released_a = QRuntime.touch.aa = false;
+}
+
+
 // Invoked by requestAnimationFrame() or setTimeout. 
 function mainLoopStep() {
     // Keep the callback chain going
@@ -3377,12 +3386,9 @@ function mainLoopStep() {
             }
         }
 
-        // Reset the touch input state for next frame
+        // Based on events, so has to happen outside of the loop
         if (refreshPending) {
-            if (mouse.movement_x !== undefined) {
-                mouse.movement_x = mouse.movement_y = 0;
-            }
-            QRuntime.touch.pressed_a = QRuntime.touch.released_a = QRuntime.touch.aa = false;
+            resetTouchInput();
         }
 
     } catch (e) {
@@ -3611,6 +3617,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.$submitFrame        = submitFrame;
         QRuntime.$requestInput       = requestInput;
         QRuntime.$updateInput        = updateInput;
+        QRuntime.$resetTouchInput    = resetTouchInput;
         QRuntime.$systemPrint        = $systemPrint;
         QRuntime.$parseHexColor      = parseHexColor;
         QRuntime.$Physics            = Matter;

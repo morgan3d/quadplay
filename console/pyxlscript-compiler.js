@@ -1389,7 +1389,7 @@ let $_yieldCounter = 0; while (true) { try {
 if (($gameMode.$name[0] !== '$') && (gamepad_array[0].$pp || gamepad_array[1].$pp || gamepad_array[2].$pp || gamepad_array[3].$pp)) { push_mode($SystemMenu); }
 $processFrameHooks();
 ${sectionTable.frame.jsCode}
-$show(); } catch (ex) { if (! ex.nextMode) throw ex; else $updateInput(); } yield; }
+$show(); } catch (ex) { if (! ex.nextMode) throw ex; else { $resetTouchInput(); $updateInput(); }} yield; }
 })();
 
 return $Object.freeze({$enter:$enter, $frame:$frame, $pop_modeFrom$SystemMenu:$pop_modeFrom$SystemMenu ${pop_modeBindings}, $leave:$leave, $name:'${mode.name}'});
@@ -1401,7 +1401,7 @@ return $Object.freeze({$enter:$enter, $frame:$frame, $pop_modeFrom$SystemMenu:$p
     } // for each mode
     
     // Set the initial mode
-    const start_mode = (gameSource.debug && gameSource.debug.start_mode_enabled && gameSource.debug.start_mode) || gameSource.json.start_mode
+    const start_mode = (gameSource.debug && gameSource.debug.json && gameSource.debug.json.start_mode_enabled && gameSource.debug.json.start_mode) || gameSource.json.start_mode
     compiledProgram += 'try { set_mode(' + start_mode + '); } catch (e) { if (! e.nextMode) { throw e; } }\n\n';
 
     // Main loop
