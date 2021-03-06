@@ -1692,7 +1692,8 @@ Array
 
    If `callback` is a string, iterate then calls `array[i][callback](array[i])`
    on each element.  If `callback` is a function, it instead calls `callback(array[i])`
-   on each element.
+   on each element. It is common to define a local function immediately before the
+   `iterate()` call for use as the callback.
    
    Return values from the called function have the following effects:
 
@@ -4594,6 +4595,8 @@ in the desired order regardless of the order in which drawing executes.
 
 `delay(callback, delay_frames default 0, data default nil)`
 : Same as `add_frame_hook(nil, callback, delay_frames, nil, data)`.
+  It is often convenient to use a local function defined immediately
+  before the `delay()` as the `callback`.
 
 `remove_frame_hook(hook)`
 : Remove this frame hook immediately, without executing its `end_callback`.
@@ -6512,9 +6515,10 @@ debug_print(keyArray(t))
 Functions
 ---------------------------------------------------------------------------
 
-Functions are first-class values. They can be passed to and returned from other functions,
-stored in data structures, and bound to variables. Declare functions with `def` and
-return values from them with `return`. Separate the argument list from the body with `:`.
+Functions are first-class values. They can be passed to and returned
+from other functions, stored in data structures, and bound to
+variables. Declare functions with `def` and return values from them
+with `return`. Separate the argument list from the body with `:`.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 // Multi-line function block
@@ -6528,8 +6532,31 @@ def foo(x): x += 1; return 2 x
 text(foo(3))
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Functions create a local scope for their variables and are lexically
+scoped (as in JavaScript) for free variables.
+
+Local functions can be declared anywhere a statement can appear, and
+local function definitions are efficient. It is common practice to
+declare little callbacks right before they are used, as in:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+
+def destroy(entity):
+
+   play_sound(explosion_sound)
+   spawn_particles(entity.pos)
+   
+   def cleanup(): remove_values(entity_array, entity)
+   delay(cleanup, 20)
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some API functions that use callbacks are `iterate()`, `delay()`,
+`sequence()`, `add_frame_hook()`, `set_pause_menu()`, `ray_intersect_map()`,
+and `physics_add_contact_callback()`.
+
 There is no way to declare an anonymous function or use a function
-definition as an expression.
+definition as an expression. 
 
 If a function body takes too long to execute, then the interpreter
 may terminate the program to prevent the game from becoming
@@ -6538,21 +6565,21 @@ unresponsive.
 To call a function returned from an expression that ends in
 parentheses, use the `call` function.
 
-To avoid having to indent the entire function body twice for the 
-common case of preserving a transform, a joint `def-preserving_transform` statement is
-available:
+To avoid having to indent the entire function body twice for the
+common case of preserving a transform, a joint
+`def-preserving_transform` statement is available:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 def draw_stuff(a, b, c) preserving_transform:
-   set_transform(...)
-   ...
+    set_transform(...)
+    ...
 
 // is the same as:
 
 def draw_stuff(a, b, c):
-   preserving_transform:
-      set_transform(...)
-      ...
+    preserving_transform:
+        set_transform(...)
+        ...
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
