@@ -623,7 +623,7 @@ function startGuesting(hostNetID) {
             }
             recent_host_array.unshift({code: hostNetID, name: message.name});
             recent_host_array.length = Math.min(recent_host_array.length, 3);
-            localStorage.setItem('recent_host_array', QRuntime.unparse(recent_host_array, true));
+            localStorage.setItem('recent_host_array', QRuntime.unparse(recent_host_array, 0));
             
             showPopupMessage('You are visiting ' + netIDToString(dataConnection.peer, message.name) + '<br>as P' + (message.player_index + 1) + ' ' + myOnlineName.toUpperCase());
             

@@ -9370,7 +9370,7 @@ function save_local(key, value) {
     if (value === undefined) {
         delete table[key];
     } else {
-        const v = unparse(value, true);
+        const v = unparse(value, 0);
         if (v.length > 4096) {
             $error('Cannot store_local() a value that is greater than 4096 characters after unparse()');
         }
