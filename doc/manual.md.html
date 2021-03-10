@@ -122,7 +122,10 @@ examples that are included and try modifying your own copies of them.
 
 Launch your program in the emulator and debugger from the command line
 on Windows CMD, macOS Terminal, or a Linux terminal with the `quadplay`
-command in the root of the SDK. Here are some examples:
+command in the root of the SDK. Or, double-click on `quadplay.vbs` on 
+Windows.
+
+Here are some examples:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
 # Run the emulator and IDE. You can use Open Game from the Tools
@@ -152,6 +155,9 @@ quadplay --kiosk
 quadplay https://morgan3d.github.io/somegame/foo.game.json
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+For more advanced controls and to make the quadplay local server
+visible, you can run `tools/quadplay-server` instead.
+
 These examples assume that your directory structure is:
 
 *****************************************************************************
@@ -168,6 +174,7 @@ These examples assume that your directory structure is:
 *   📂 quadplay
 *   |
 *   +-- 📄 quadplay
+*   +-- 📄 quadplay.vbs
 *   |
 *   +-- 📂 fonts
 *   |   |
@@ -1706,7 +1713,7 @@ Array
    It is illegal for the callback to modify the array itself during iteration.
 
 `join(array, separator default "", lastSeparator default separator, pairSeparator default lastSeparator, empty default "")`
-: Joins the elements of the array into a string. Each element converted to a string with `unparse()` if it is not already a string.
+: Joins the elements of the array into a string. Each element `x` converted to a string with `unparse(x, 1)` if it is not already a string.
   The optional `lastSeparator` allows the final join to use a special case.
   The optional `pairSeparator` is a special separator used for arrays of length two.
   For example `join(inventory, ", ", ", and ", " and ", "nothing")`.
@@ -1884,11 +1891,29 @@ String
 : Returns a new string that is the original with whitespace removed
   from the start and end.
 
-`unparse(x, terse default false)`
-: Returns code that is equivalent to producing data object `x`, if it is not a
-  recursive object or array or a function. Note that strings will have quotes
-  around them in the resulting string. If `terse` is `true`, then no spaces
-  will be inserted after separators.
+`unparse(x, level default 1)`
+: Returns code that is equivalent to producing data object `x`, if it
+  is not a recursive object or array or a function. Note that
+  unparsing a string will add quotes around the contents. 
+  
+  The values of `level` are:
+  
+  0 = Compact as possible. No whitespace at all. Used internally for
+      `save_local()`
+
+  1 = Readable single line, with spaces after ":" and ",". Default and used
+      internally for string coercion.
+  
+  2 = Containers with more than four elements or which contain
+      other containers have newlines and indentation after "[{,".
+      "]" and "}" on the line with the previous element.
+      
+  3 = Containers with more than four elements or which contain other
+      containers have newlines and indentation after "[{,".  "]" and
+      "}" on their own lines. Used internally by `debug_print()`.
+      
+  4 = Newlines and indentation after all "[{,}]" except for empty
+      containers
 
 `uppercase(s)`
 : Returns the upper case version of the string.
@@ -4833,14 +4858,14 @@ debug_graphics and debug_print("Running iteration" + i)
 
 `debug_print(x, ...)`
 : If `x` is a string, directly prints it to the Output window, otherwise
-  prints `unparse(x)` to the Output window. When multiple arguments
+  prints `unparse(x, 3)` to the Output window. When multiple arguments
   are provided they are processed individually with spaces between them.
   Debug print statements can be completely disabled from the Output
   window, which causes them to consume no processing time.
 
   In the output pane, click on the output to go to the line that
   produced it in the code editor.
-
+  
 `debug_watch(expr)`
 : Make the expression appear along with its value at the time that
   `debug_watch` executs in the Watch pane of the debugger. If there are
@@ -4851,7 +4876,6 @@ debug_graphics and debug_print("Running iteration" + i)
   
   In the watch pane, click on the expression to go to the line that
   contains it in the code editor.
-
 
 `draw_bounds(e, color default gray(60%), recurse default true)`
 : Render a debugging view of the bounds of an entity or other object `e`

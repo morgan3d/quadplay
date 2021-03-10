@@ -127,6 +127,11 @@
             "description": "How fast can you go? Tear through the road course pulling tricks off jumps and fighting to be the leader of the pack."
         },
         {
+            "url": "quad://examples/spritestack/",
+            "title": "Spritestack",
+            "description": "Little engine for Grand Theft Auto 2.5D rendering and physics of a 2D game using sprite stacking and camera perspective."
+        },
+        {
             "url": "quad://examples/sproing/",
             "title": "Squash and Stretch Example",
             "description": "Asymmetric sprite scaling for animation of single sprites"
@@ -140,6 +145,11 @@
             "url": "quad://examples/text/",
             "title": "Text Example",
             "description": ""
+        },
+        {
+            "url": "quad://examples/tic_tac_toe/",
+            "title": "Tic Tac Toe",
+            "description": "Example of supporting gamepad, touch, and mouse (hover) input on a grid and turn-based play."
         },
         {
             "url": "quad://examples/touch/",
@@ -164,7 +174,7 @@
         {
             "url": "quad://examples/warlock3D/",
             "title": "Warlock 3D",
-            "description": "DOOM/Heretic style first person view with d-pad, dual d-pad, dual analog, and mouselook controls"
+            "description": "DOOM/Heretic/Wizardry style first person view with d-pad, dual d-pad, dual analog, and mouselook controls"
         },
         {
             "url": "quad://examples/word_game/",

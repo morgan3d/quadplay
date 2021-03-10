@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Find a suitable Python interpreter
+for cmd in python3 python python2 ; do
+   command -v > /dev/null $cmd && exec $cmd "$(dirname $0)/quadplay-server.py" "$@"
+done
+
+echo "The quadplay local script requires Python 3.7 or newer to be installed on your system." >2
+
+exit 2

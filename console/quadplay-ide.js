@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.03.05.01';
+const version  = '2021.03.10.00';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -31,6 +31,7 @@ const hasBrowserScaleBug = isSafari;
 
 
 function enterKioskMode() {
+    inPageReload = true;
     location = location.origin + location.pathname + "?kiosk=1";
 }
 
@@ -2866,6 +2867,9 @@ function loadGameFromUrl(game_url, autoplay) {
         url += '&autoplay=1';
     }
     
+    // Disable the unload handler
+    inPageReload = true;
+
     // Go to this location now to load the new game
     location = url;
 }
@@ -3419,6 +3423,7 @@ function mainLoopStep() {
                 }
                 
                 case 'reload': {
+                    inPageReload = true;
                     try { document.exitFullscreen(); } catch (ignore) {}
                     location = location;
                     return;
@@ -4640,6 +4645,30 @@ LoadManager.fetchOne({}, location.origin + getQuadPath() + 'console/_config.json
 
 // Make the browser aware that we want gamepads as early as possible
 navigator.getGamepads();
+
+/* Called from the quit menu item. Forces closing the server for a nativeapp,
+   which macOS can't detect because the Chromium browser doesn't close on that
+   platform when the last tab closes. */
+function closeClient() {
+    if (getQueryString('nativeapp') === '1' && isQuadserver) {
+        postToServer({command: 'quit'});
+        setTimeout(function () { window.close(); });
+    } else {
+        window.close();
+    }
+}
+
+// Set to true when intentionally loading a new game to keep nativeapp
+// from closing the server when it loads a new game
+let inPageReload = false;
+if (getQueryString('nativeapp') === '1' && isQuadserver) {
+    // Tell the server to quit when the browser does
+    window.addEventListener('beforeunload', function () {
+        if (! inPageReload) {
+            postToServer({command: 'quit'});
+        }
+    })
+}
 
 // Assign the action for QRuntime.quit_game() used by the in-game
 // pause menu quit option

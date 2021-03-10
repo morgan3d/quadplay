@@ -7,9 +7,18 @@ Changes for both the specification and implementation in each release
 of [quadplay✜](manual.md.html).
 
 
-2021 March TBD: Beta update 67
+2021 March 10: Beta update 67
 ===================================
 
+- *Incompatible changes*:
+  - Running `quadplay` at the command line, or on Windows
+    double-clicking `quadplay.vbs` will now run quadplay in the style
+    of a native app. It requires Python and Edge or Chrome/Chromium to
+    be installed.
+  - The previous behavior of `quadplay --browser` is now provided by
+    running `tools/quadplay-server`.
+  - `unparse()` now supports five levels of pretty printing instead of the
+    single `terse` value
 - Create map dialog now supports cloning the spritesheet used for tiles
 - `rgb()` and `rgba()` now accept hex strings
 - New Tic Tac Toe example demonstrating gamepad, mouse/hover, and touch
@@ -17,6 +26,10 @@ of [quadplay✜](manual.md.html).
 - Improved documentation of local functions
 - F6 PNG screenshot and F8 GIF recording labels on the menu bar are now
   active as buttons
+- Made `unparse(x, 0)` remove spaces from arrays for better
+  compression
+- Added spaces after `:` in `unparse(x, level)` for level greater than zero
+  for better readability
 - Fixed `device_control("get_mouse_state")` for translated coordinates
 - Fixed constants without a range clamping to -Infinity in the IDE
 - Fixed sprite info not visible on left edge
@@ -26,6 +39,7 @@ of [quadplay✜](manual.md.html).
   `set_mode()`, `push_mode()`, or `pop_mode()`
 - Fixed `start_mode` override enable for debug layer
 - Fixed mode diagram cutting off the bottom-most arc sometimes
+- Fixed loading a new game closing the IDE in nativeapp mode
 
 
 

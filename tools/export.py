@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- python -*-
 
-import argparse, sys, os, types, shutil, tempfile, stat
+import argparse, sys, os, types, shutil, tempfile, stat, workjson
 from quaddepend import quaddepend, depend_asset
 
 # This implementation needs f-strings from Python 3.6
@@ -9,9 +9,7 @@ if (sys.version_info[0] < 3) or (sys.version_info[0] == 3 and sys.version_info[1
 
 # Add the quadplay OS dependencies.py and workjson.py
 sys.path.append(os.path.join(os.path.dirname(__file__), '../console/os'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '../console'))
 from dependencies import os_dependencies
-import workjson
 
 # Returns a list of dependencies and the
 # title of the game as a tuple

@@ -649,7 +649,7 @@ function array_value(animation, frame, extrapolate) {
         if (animation === undefined || animation === null) {
             $error('Passed nil to array_value()');
         } else {
-            $error('The first argument to array_value() must be an array or string (was ' + unparse(animation)+ ')');
+            $error('The first argument to array_value() must be an array or string (was ' + unparse(animation) + ')');
         }
     }
     
@@ -8103,6 +8103,7 @@ function $padZero(n) {
 }
 
 
+
 var $ordinal = $Object.freeze(['zeroth', 'first', 'second', 'third', 'fourth', 'fifth',
                                'sixth', 'seventh', 'eighth', 'ninth', 'tenth', 'eleventh',
                                'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteenth',
@@ -8316,12 +8317,25 @@ function parse(source) {
 }
 
 
-function unparse(x, terse) {
-    return $unparse(x, new Map(), terse);
+function unparse(x, level) {
+    if (level === undefined) { level = 1; }
+
+    const colon = level === 0 ? ':' : ': ';
+    const closingBraceOnNewLine = level >= 3;
+    const inlineShortContainers = level < 4;
+
+    return $unparse(x, new Map(), colon, closingBraceOnNewLine, inlineShortContainers, level === 0, '');
 }
 
 
-function $unparse(x, alreadySeen, terse) {
+function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
+                  inlineShortContainers, terse, indent) {
+    
+    const INCREASE_INDENT = '    ';
+
+    // Support rgba() as a single line
+    const MAX_INLINE_CONTAINER_LENGTH = 4;
+    
     if (Array.isArray(x)) {
         if (x.$name !== undefined) {
             // Internal object
@@ -8330,13 +8344,42 @@ function $unparse(x, alreadySeen, terse) {
             return '[…]';
         }
         alreadySeen.set(x, true);
-        if (x.length === 0) { return "[]"; }
  
-        let s = '[';
-        for (let i = 0; i < x.length; ++i) {
-            s += $unparse(x[i], alreadySeen, terse) + ', ';
+        let s = '';
+        let first = true;
+
+        // Test for nested containers
+        let inline = x.length <= MAX_INLINE_CONTAINER_LENGTH && inlineShortContainers;
+        if (inline) {
+            for (let i = 0; i < x.length; ++i) {
+                if (Array.isArray(x[i]) || typeof x[i] === 'object') {
+                    // Do not inline because there are nested containers
+                    inline = false;
+                    break;
+                }
+            }
         }
-        return s.substring(0, s.length - 2) + ']';
+
+        const childIndent = INCREASE_INDENT + indent;
+        for (let i = 0; i < x.length; ++i) {
+            if (first) {
+                if (! inline) {
+                    s += '\n' + childIndent;
+                }
+                first = false;
+            } else if (inline) {
+                s += terse ? ',' : ', ';
+            } else {
+                s += ',\n' + childIndent;
+            }
+            s += $unparse(x[i], alreadySeen, colon, closingBraceOnNewLine, inlineShortContainers, terse, childIndent);
+        }
+
+        if (x.length > 0 && closingBraceOnNewLine && ! inline) {
+            s += '\n' + indent;
+        }
+        
+        return '[' + s + ']';
     }
 
     
@@ -8352,8 +8395,28 @@ function $unparse(x, alreadySeen, terse) {
         } else {
             alreadySeen.set(x, true);
             
-            let s = '{';
+            let s = '';
             const keys = $Object.keys(x);
+            let first = true;
+
+            let numPublicKeys = 0;
+            let inline = inlineShortContainers;
+            
+            for (let i = 0; i < keys.length; ++i) {
+                const k = keys[i];
+                if (k !== '$') {
+                    ++numPublicKeys;
+                    const v = x[k];
+                    if (numPublicKeys > MAX_INLINE_CONTAINER_LENGTH ||
+                        Array.isArray(v) ||
+                        typeof v === 'object') {
+                        // Too large or recursive value
+                        inline = false;
+                    }
+                }
+            }
+
+            const childIndent = INCREASE_INDENT + indent;
             for (let i = 0; i < keys.length; ++i) {
                 const k = keys[i];
                 // Hide quadplay-internal members
@@ -8361,12 +8424,28 @@ function $unparse(x, alreadySeen, terse) {
                     // Quote illegal identifiers used as keys
                     const legalIdentifier = /^[Δ]?(?:[A-Za-z][A-Za-z_0-9]*|[αβγδζηθιλμρσϕφχψτωΩ][_0-9]*)$/.test(k);
                     const key = legalIdentifier ? k : ('"' + k + '"');
-                    s += key + ':' + $unparse(x[k], alreadySeen) + (terse ? ',' : ', ');
+
+                    if (first) {
+                        if (! inline) {
+                            s += '\n' + childIndent;
+                        }
+                        first = false;
+                    } else if (inline) {
+                        // Separator
+                        s += (terse ? ',' : ', ');
+                    } else {
+                        s += ',\n' + childIndent;
+                    }
+                    
+                    s += key + colon + $unparse(x[k], alreadySeen, colon, closingBraceOnNewLine, inlineShortContainers, terse, childIndent);
                 }
             }
 
-            // Remove the final ', '
-            return s.substring(0, s.length - (terse ? 1 : 2)) + '}';
+            if (numPublicKeys > 0 && closingBraceOnNewLine && ! inline) {
+                s += '\n' + indent;
+            }
+            
+            return '{' + s + '}';
         }
 
     case 'boolean':

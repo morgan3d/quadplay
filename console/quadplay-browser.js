@@ -915,7 +915,7 @@ function debug_print(location, ...args) {
     let s = '';
     for (let i = 0; i < args.length; ++i) {
         let m = args[i]
-        if (typeof m !== 'string') { m = QRuntime.unparse(m); }
+        if (typeof m !== 'string') { m = QRuntime.unparse(m, 3); }
         s += m;
         if (i < args.length - 1) {
             s += ' ';
