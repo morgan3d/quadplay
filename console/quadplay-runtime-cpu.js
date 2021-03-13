@@ -8307,7 +8307,7 @@ function reversed(a) {
         return c;
     } else {
         // String case
-        return a.split().reverse().join('');
+        return a.split('').reverse().join('');
     }
 }
 
@@ -9540,12 +9540,6 @@ function find_path(start, goal, costEstimator, edgeCost, getNeighbors, nodeToID,
     // There was no path from start to goal
     return undefined;
 }
-
-
-
-///////////////////////////////////////////////////////////////////////////////
-
-// Filter functions
 
 
 

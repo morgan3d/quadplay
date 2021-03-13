@@ -310,6 +310,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
 
                 # Change the title
                 game_json['title'] = game_name
+                game_json['screenshot_tag'] = game_name
 
                 # Save the new game
                 with open(os.path.join(dst_path, dir_name + '.game.json'), 'wt', encoding='utf8') as f:

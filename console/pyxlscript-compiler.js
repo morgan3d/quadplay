@@ -1189,16 +1189,19 @@ function pyxlToJS(src, noYield, internalMode) {
             assignmentReturnsUndefined: true,
             scalarEscapes: true,
             equalsCallback: vectorify.nullishRewriter,
-            operatorPrefix: '$'
+            operatorPrefix: '$',
+            throwErrors: true
         });
     } catch (e) {
+        // Many compile-time errors are caught here, including missing
+        // comma in object literal.
+        
         //console.log(unprotectQuotedStrings(src, stringProtectionMap));
         throw e;
     }
 
     // Restore the spread operator for objects
     src = unprotectObjectSpread(src);
-
 
     // Cleanup formatting
     src = src.replace(/,[ \t]+/g, ', ');
@@ -1241,7 +1244,7 @@ function compile(gameSource, fileContents, isOS) {
             const pyxlCode = fileContents[url];
             let jsCode;
             try {
-                jsCode = pyxlToJS(pyxlCode, true);
+                jsCode = pyxlToJS(pyxlCode, true, /console\/os\/[^/]+\.pyxl$/.test(url));
             } catch (e) {
                 throw {url:url, lineNumber:e.lineNumber, message: e.message.replace('Unexpected token ===', 'Unexpected token ==')};
             }

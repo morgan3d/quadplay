@@ -1755,10 +1755,12 @@ Array
 : Change the length of the array. O(size(array) + n) time if growing, O(1) if shrinking.
 
 `reverse(array)`
-: Reverses the array in place, O(size(array)). Returns nothing to avoid confusion with `reversed()`.
+: Reverses the array in place, O(size(array)). 
+  Returns nothing to avoid confusion with `reversed()`.
 
 `reversed(array)`
 : Returns a shallow, reversed clone of the array, O(size(array))
+  See also `reversed(string)`.
 
 `random_value(array, random default random)`
 : Return a random element of the array.
@@ -7096,17 +7098,18 @@ The flow control statements are:
   - `if` conditional with optional `else` and `else if` clauses
   - `while` loop
   - `until` loop
-  - `for` loop and `for...in` loop, both with optional `with` expansion.
-     _See also the `iterate()` function_.
+  - `for` loop
+  - `for-in` loop. _See also the `iterate()` function_.
+  - `for-with` loop
   - `break` and `continue` within loops
   - `preserving_transform` and `local`, which do not have branching flow
     but do create local scopes
   - `def`, which creates a local scope for a function but does not execute
     immediately
 - Modes:
-  - `set_mode(ModeName)` to switch game modes. The note is optional.
+  - `set_mode(ModeName)` to switch game modes
   - `push_mode(ModeName)` and `pop_mode()` to temporarily
-   enter a mode game mode. The notes are optional.
+     enter a mode game mode
 - Game:
   - `reset_game()` to reset all state and restart the game.
   - `quit_game()` to end the current game and return to the launcher.
@@ -7123,10 +7126,34 @@ single space per nested block.
 
 For flow control purposes, the empty string, 0, and `∅` are false.  All other objects (including empty data structures) are true.
 
-Within any loop, `continue` skips to the next iteration of the loop and `break` exits the loop.
-
 Multi-line `if` statements may be followed by `else:` and `else if ...:` clauses. These must always be
 multi-line.
+
+Single-line `for`, `if`, `while`, and `until` are permitted. There can be multiple
+single-line expressions on the same line. No `else` is permitted with single-line `if`.
+
+In any loop, `break` immediately terminates the tightest enclosing loop
+and `continue` immediately begins the next iteration of the tightest
+enclosing loop.
+
+`while` and `until` loops evaluate the condition at the top of the loop for every
+iteration.
+
+The `until` loop is a `while` loop with an inverted test:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
+until x == "end":
+  x = find_next(x, data)
+
+
+// Is the same as:
+while x != "end":
+  x = find_next(x, data)
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+### `for` Loop
 
 Numeric `for` loops increment by 1 each iteration and always count up. The loop variable must
 be on the left-side of a single comparison loop expression or the center of a multi-comparison
@@ -7144,22 +7171,53 @@ for i < 3
 for f in array: debug_print(f())
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-that the value will reflect the time of the capture. This avoids many common bugs when using
-first class functions with loops.
+that the value will reflect the time of the capture. This avoids many
+common bugs when using first class functions with loops.
+
+
+`for` loops evaluate the bounds once, before the first iteration.
+
+The Java/C++ equivalents of `for`-loop conditions are:
+
+quadplay✜             | Java/C++
+----------------------|------------------------
+`for i ≤ k`           | `for (i = 0; i <= k; ++i)`
+`for i &lt; k`        | `for (i = 0; i &lt; k; ++i)`
+`for 4 ≤ i &lt; k`    | `for (i = 4; i &lt; k; ++i)`
+`for 4 &lt; i &lt; k` | `for (i = 5; i &lt; k; ++i)`
+
+
+The comparison operators in a `for` loop declaration are an overloaded
+syntax for comparison operators (just as many languages overload the
+`=` operator for `for` loops).  They have the lowest precedence. For
+example, `for i&lt;a||b` is equivalent to `for i&lt;(a||b)`.  To use
+regular comparison operators within `for` loop preamble, you *must*
+use parentheses to make the parsing unambiguous, for example, `for i
+&lt; (a &lt; b)`.
+
+
+### `for-in` Loop
 
 Container iteration `for` loops iterate over the keys of a object, the
 characters of a string, or the elements of an array. 
 
-`while` loops evaluate the condition at the top of the loop for every
-iteration.
+The main variations of a `for-in` loop are:
 
-`for` loops evaluate the bounds once, before the first iteration.
+- `for value in array:`
+- `for value in object:`
+- `for char in string:`
+- `for value at index in array:`
+- `for char at index in string:`
+- `for value at key in object:`
 
-`for...in` loops evaluate the container expression once, before the
+The value variable is bound with `let`, so assignment to the value
+variable is legal but will not affect the underlying value in the array.
+
+`for-in` loops evaluate the container expression once, before the
 first iteration.
 
 It is illegal (and will usually result in an error) to add or remove
-values from the container of a `for...in` loop. This semantic avoids
+values from the container of a `for-in` loop. This semantic avoids
 confusing situations for the programmer and is necessary for
 performance optimizations in the iterator implementation. Changing
 the order of values is legal, but discouraged because the iterator
@@ -7172,33 +7230,16 @@ fairly fast in PyxlScript. Or, use the syntax
 `let i = 0; while i < size(container): let x = container[i] ... ++i` and account for the
 index and size changes in your own iteration.
 
-The main variations of a `for...in` loop are:
-
-- `for value in array:`
-- `for value in object:`
-- `for char in string:`
-- `for value at index in array:`
-- `for char at index in string:`
-- `for value at key in object:`
-
-The value variable is bound with `let`, so assignment to the value
-variable is legal but will not affect the underlying value in the array.
-
-In any loop, `break` immediately terminates the tightest enclosing loop
-and `continue` immediately begins the next iteration of the tightest
-enclosing loop.
-
-The Java/C++ equivalents of `for`-loop conditions are:
+The Java/C++ equivalents of `for-in`-loop conditions are:
 
 quadplay✜             | Java/C++
 ----------------------|------------------------
-`for i ≤ k`           | `for (i = 0; i <= k; ++i)`
-`for i &lt; k`        | `for (i = 0; i &lt; k; ++i)`
-`for 4 ≤ i &lt; k`    | `for (i = 4; i &lt; k; ++i)`
-`for 4 &lt; i &lt; k` | `for (i = 5; i &lt; k; ++i)`
 `for x ∈ S`           | `for (x : S)`
 
-You can pack a `for` and `with` statement together by chaining `∈`
+
+### `for-with` Loop
+
+You can combine a `for` and `with` statement together by chaining `∈`
 expressions, in what is called a `for`-`with` loop. The properties
 exposed by the `with` are references to the actual values and can be
 mutated directly.
@@ -7216,20 +7257,12 @@ for point ∈ set:
       ...
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The `for`-loop variable (in this case, `point`) cannot be the same as any of the `with`
-variables (in this case, `x` and `y`).
+The `for`-loop variable (in this case, `point`) cannot be the same as
+any of the `with` variables (in this case, `x` and `y`).
 
-The comparison operators in a `for` loop declaration are an overloaded syntax for comparison
-operators (just as many languages overload the `=` operator for `for` loops).  They have
-the lowest precedence. For example, `for i&lt;a||b` is equivalent to `for i&lt;(a||b)`.
-To use regular comparison operators within `for` loop preamble, you *must* use parentheses to
-make the parsing unambiguous, for example, `for i &lt; (a &lt; b)`.
 
-Single-line `for`, `if`, `while`, and `until` are permitted. There can be multiple
-single-line expressions on the same line. No `else` is permitted with single-line `if`.
-
-The variable list in a `for`-`with` or `with` expression can be split across multiple
-lines by breaking after commas:
+The variable list in a `for`-`with` or `with` expression can be split
+across multiple lines by breaking after commas:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 for health, power,
@@ -7238,18 +7271,6 @@ for health, power,
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-The `until` loop is a `while` loop with an inverted test:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
-until x == "end":
-  x = find_next(x, data)
-
-
-// Is the same as:
-while x != "end":
-  x = find_next(x, data)
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ### Examples
 
