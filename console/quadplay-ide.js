@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.03.13.11';
+const version  = '2021.03.14.11';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -1535,7 +1535,7 @@ function maybeGrabPointerLock() {
     overlayScreen.style.cursor = runtime_cursor;
 }
 
-/** Release pointer lock if it is held */
+/** Release pointer lock if it is held, without changing usePointerLock */
 function releasePointerLock() {
     document.exitPointerLock();
     emulatorScreen.style.cursor = 'crosshair';
@@ -3710,6 +3710,21 @@ function reloadRuntime(oncomplete) {
                 return {x: this.x, y: this.y}
             }
         };
+        
+        const hoverGetter = {
+            enumerable: true,
+            get: function () {
+                if (mouse.movement_x || (mouse.screen_x !== mouse.screen_x_prev) ||
+                    mouse.movement_y || (mouse.screen_y !== mouse.screen_y_prev)) {
+                    return {
+                        x: (mouse.screen_x - QRuntime.$offsetX) / QRuntime.$scaleX,
+                        y: (mouse.screen_y - QRuntime.$offsetY) / QRuntime.$scaleY
+                    };
+                } else {
+                    return {x: NaN, y: NaN};
+                }
+            }
+        };
 
         const dxyGetter = {
             enumerable: true,
@@ -3785,6 +3800,7 @@ function reloadRuntime(oncomplete) {
                 return {x: this.screen_dx, y: this.screen_dy}
             }
         });
+        Object.defineProperty(QRuntime.touch, 'hover', hoverGetter);
         Object.seal(QRuntime.touch);
         
         QRuntime.gamepad_array = Object.seal([0,0,0,0]);

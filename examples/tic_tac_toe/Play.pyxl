@@ -59,7 +59,8 @@ with commit_sound, cursor, color, gamepad in player:
 
     let commit = gamepad.aa or gamepad.bb or gamepad.cc or gamepad.dd
     
-    // Hover support for platforms with a mouse
+    // Hover support for platforms with a mouse. See also touch.hover
+    // and cursor-9x9.sprite.json
     if mouse.dx or mouse.dy:
         const temp = screen_to_board(mouse.xy)
         device_control("set_mouse_cursor", "crosshair") 

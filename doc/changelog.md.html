@@ -10,9 +10,16 @@ of [quadplay✜](manual.md.html).
 2021 March TBD: Beta update 68
 ===================================
 
-- Improved parse error line reporting
+- Added `touch.hover`
+- Touch and mouse support for the system pause menu
+- Pause menu now saves and restores mouse lock and cursor
+- Added `cursor` and `lock` properties to `device_control("get_mouse_state")`
+- Improved parser error line reporting
 - Fixed new game not having the correct screenshot tag
 - Fixed `reversed(string)`
+- *Incompatible Changes*:
+  - `draw_text()` now returns the full rectangular bounds instead of just
+    the dimensions of the drawn text
 
 
 2021 March 10: Beta update 67

@@ -5,8 +5,8 @@ preserving_transform:
 
    let y = SCREEN_SIZE.y
    for type in ["Game", "Sprite", "Font", "Sound", "Code"]:
-      y += draw_text(font, type, xy(0, y + 20), #f, gray(30%), gray(10%), 0, 2).y + 20
+      y += draw_text(font, type, xy(0, y + 20), #f, gray(30%), gray(10%), 0, 2).size.y + 20
       for line in CREDITS[lowercase(type)]:
-         y += draw_text(smallFont, line, xy(0, y), gray(20%), ∅, ∅, 0, 2, 0, SCREEN_SIZE.x).y + 10
+         y += draw_text(smallFont, line, xy(0, y), gray(20%), ∅, ∅, 0, 2, 0, SCREEN_SIZE.x).size.y + 10
       
 if any_button_press() or mode_frames > 15 * 60: reset_game("any_button_press()")

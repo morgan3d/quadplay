@@ -170,16 +170,16 @@ for bike ∊ bikeArray:
    with description, points, minimumPoints in bike.currentTrick:
       if points >= minimumPoints:
          // Locked in trick that is still scoring
-         uiPos.y += draw_text(trickFont, description + " (" + points + ") +", uiPos, #fff, #000, bike.darkColor, x_align, "baseline", uiZ).y
+         uiPos.y += draw_text(trickFont, description + " (" + points + ") +", uiPos, #fff, #000, bike.darkColor, x_align, "baseline", uiZ).size.y
       else if points > 0 and (size(bike.combo) > 0):
          // Scoring potential points, but not yet over the threshold to lock in
          // and no combo is in progress
-         uiPos.y += draw_text(trickFont, description + " …", uiPos, #fff, #000, bike.darkColor, x_align, "baseline", uiZ).y
+         uiPos.y += draw_text(trickFont, description + " …", uiPos, #fff, #000, bike.darkColor, x_align, "baseline", uiZ).size.y
 
    // list in reverse order
    uiPos.y += 7 (size(bike.combo) - 1)
    for description, points in trick in bike.combo:
-      uiPos.y -= draw_text(trickFont, description + " (" + points + ") + ", uiPos, #ddd, ∅, bike.darkColor, x_align, "baseline", uiZ).y
+      uiPos.y -= draw_text(trickFont, description + " (" + points + ") + ", uiPos, #ddd, ∅, bike.darkColor, x_align, "baseline", uiZ).size.y
 
 
 
@@ -191,12 +191,12 @@ preserving_transform:
    for bike in bikeArray:
       const uiDir = 1 - 2 ⌊½ bike.playerIndex⌋
       const uiPos = xy(44, 10) + xy(bike.playerIndex mod 2, ⌊½ bike.playerIndex⌋) * (SCREEN_SIZE - xy(50, 14))
-      uiPos.y += (draw_text(font, format_number(round(bike.score), "commas"), uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).y + 1) * uiDir
-      uiPos.y += (draw_text(hudFont, "+ " + format_number(bike.scoreModifier - 1, "percent"), uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).y + 1) * uiDir
+      uiPos.y += (draw_text(font, format_number(round(bike.score), "commas"), uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).size.y + 1) * uiDir
+      uiPos.y += (draw_text(hudFont, "+ " + format_number(bike.scoreModifier - 1, "percent"), uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).size.y + 1) * uiDir
 
       if debugTricks and false:
-         uiPos.y += draw_text(font, "Front: " + bike.recentFrontWheelContact, uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).y * uiDir
-         uiPos.y += draw_text(font, "Rear: " + bike.recentRearWheelContact, uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).y * uiDir
+         uiPos.y += draw_text(font, "Front: " + bike.recentFrontWheelContact, uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).size.y * uiDir
+         uiPos.y += draw_text(font, "Rear: " + bike.recentRearWheelContact, uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).size.y * uiDir
 
       
 

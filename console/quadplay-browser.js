@@ -208,6 +208,8 @@ function device_control(cmd) {
                 dy: dxy.y,
                 xy: xy,
                 dxy: dxy,
+                lock: usePointerLock,
+                cursor: overlayScreen.style.cursor,
                 button_array: Object.freeze([
                     (mask & 1),
                     (mask & 2) >> 1,

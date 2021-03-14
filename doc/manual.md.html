@@ -1502,6 +1502,7 @@ Property                 | Type     | Meaning
 `touch.screen_dy`        | number   | Change in `screen_y` since the previous frame
 `touch.screen_xy`        | xy       | `xy(touch.screen_x, touch.screen_y)` for the touch
 `touch.screen_dxy`       | xy       | `xy(touch.screen_dx, touch.screen_dy)` for the touch
+`touch.hover`            | xy       | If the device supports hovering _and_ the hover moved this frame, the camera-space position of the hover. Otherwise `xy(nan, nan)`.
 
 The `x` and `y` values are in camera-space coordinates using the current transform.
 Change or reset the transform to read them in a different coordinate system, or use
@@ -2521,8 +2522,8 @@ are obvious, since what they do requires another space.
 The full set of coordinate systems supported by the standard library are:
 
 - *screen* space (ss)
-- *world* space (ws)
 - *camera* space (cs)
+- *world* space (ws)
 - *entity* space (es) 
 - *sprite* space - pixels within in a sprite
 - *map* space - indices of sprites in a map
@@ -4123,15 +4124,24 @@ endpoints and borders.
   Values default according to the positional argument version.
 
 `draw_text(font, text, pos, color default ∅, shadow default ∅, outline default ∅, x_align default "left", y_align default "baseline", z default pos.z default 0, wrap_width default ∅, text_size default size(text), markup default false)`
-: Print string `text` relative to `pos`. Returns an `xy()` size of the
-  bounding box, excluding shadows and outline. This bounding box is
+: Print string `text` relative to `pos`. 
+
+  Returns a camera-space bounding box that is clipped to the current
+  clipping region. It has fields `{pos: xy(), size: xy(), z:z}` that
+  contains the text but not shadows and outlines. This bounding box is
   conservative in height and accounts for the highest ascender and
-  accent and lowest descender.  It is tight in width and tailored to
-  the exact characters. The bounding box also does not include the
-  spacing that should be added between consecutive lines. Use
-  `font.line_height` to know how far to place separate lines
+  accent and lowest descender. `overlaps(bounds, touch)` is convenient
+  for recognizing when the player has touched the text. The bounds are
+  tight in width and tailored to the exact characters. The bounding
+  box also does not include the spacing that should be added between
+  consecutive lines. The `pos` property will have `nan` values if the
+  bounds are entirely clipped. _In future versions, there may be more
+  fields on the bounding box object to identify the location of markup
+  sections._
+  
+  Use `font.line_height` to know how far to place separate lines
   vertically or simply use strings with `"\n"` characters in them to
-  print multiple lines. _This return value will change in a future implementation._
+  print multiple lines.
   
   The positioning of text will follow the transform and camera, but
   individual letters always draw upright and 1:1 pixel perfect,
@@ -4959,7 +4969,7 @@ Raw Device Access
                                                                    Needed for accessing Atari paddles, car pedals, steering wheels, and flight stick throttles in
                                                                    a meaningful way. There is currently no way to read the D-pad directly (it will be overriden by the analog axis if moved)
                                                                    or to read the analog triggers or other axes.</td></tr>
-    <tr valign=top><td> `"get_mouse_state"`             </td><td> Return `{x:number, y:number, ` `dx:number, dy:number, ` `xy:xy(...), dxy:xy(...), ` `button_array:[...]}` for the current mouse position and buttons. Each element of
+    <tr valign=top><td> `"get_mouse_state"`             </td><td> Return `{x:number, y:number, ` `dx:number, dy:number, ` `xy:xy(...), dxy:xy(...), ` `button_array:[...],` `cursor:string, lock:boolean}` for the current mouse position and buttons. Each element of
                                                        `button_array` is 0 or 1. There are at least two buttons, but may be more. The `dx`, `dy`, and `dxy` values may have higher precision than the absolute numbers because they
                                                        are tracked at subpixel resolution on browsers that support this.</td></tr>
     <tr valign=top><td> `"set_mouse_lock", bool`       </td><td> Enable or disable mouse lock. Mouse lock hides the OS mouse cursor and prevents the mouse from moving 

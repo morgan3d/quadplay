@@ -36,8 +36,8 @@ def drawSide(teamIndex):
 
       // Player stats
       y += 7
-      y += draw_text({font: tinyFont, text: player.mass + " kg  " + format_number(player.acceleration * 1.7 / 0.06, "0.0") + " m", color: infoColor, pos:xy(x + 47, y)}).y
-      y += draw_text({font: tinyFont, text: format_number(29.5 player.maxSpeed + player.acceleration / 0.06, " 0") + " kph", color: infoColor, pos:xy(x + 47, y)}).y
+      y += draw_text({font: tinyFont, text: player.mass + " kg  " + format_number(player.acceleration * 1.7 / 0.06, "0.0") + " m", color: infoColor, pos:xy(x + 47, y)}).size.y
+      y += draw_text({font: tinyFont, text: format_number(29.5 player.maxSpeed + player.acceleration / 0.06, " 0") + " kph", color: infoColor, pos:xy(x + 47, y)}).size.y
 
    if allAI:
       team.ready = true

@@ -121,7 +121,7 @@ def draw_title_text(str, offset, alpha_key, z default 0):
             y_align: "center",
             z: z,
         }
-    )
+    ).size
 
 let bounds = draw_title_text("A GAME about WORDS", xy(0,0), "title_1")
 let for_bounds = draw_title_text("and    ", xy(0, bounds.y+2), "title_2")
@@ -134,7 +134,7 @@ for_bounds.x -= draw_text(
     nil,
     0,
     0
-).x
+).size.x
 
 draw_title_text(
     "YOU", xy(for_bounds.x, bounds.y + 2) + YOU_POS_OFFSET + wiggle,

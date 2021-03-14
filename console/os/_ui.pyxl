@@ -24,4 +24,4 @@ def $draw_system_menu_text(args, selected):
         font: args.font default $font9,
         color: (if selected then lerp($system_selected_color, #fff, 50% bright) else $system_unselected_color),
         outline: (if selected then rgba(1, 1, 1, 25% bright) else nil)
-    }))
+    })).size

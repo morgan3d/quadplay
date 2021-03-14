@@ -53,7 +53,7 @@ for s < size(snakeArray):
    if hat: draw_sprite(hat, xy(x, y + dy - 5 scale), 0, scale)
       
    draw_text({font: font, text: format_number(s + 1, "ordinalabbrev"), pos: xy(150, y), color: snake.text_color, outline: snake.color, y_align:"center"})
-   y += draw_text({font: font, text: format_number(snake.score, "commas"), pos: xy(270, y), color: snake.text_color, outline: snake.color, x_align:"right", y_align:"center"}).y + 10
+   y += draw_text({font: font, text: format_number(snake.score, "commas"), pos: xy(270, y), color: snake.text_color, outline: snake.color, x_align:"right", y_align:"center"}).size.y + 10
 
 
 if mode_frames > 120 and any_button_press():

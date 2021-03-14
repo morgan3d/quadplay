@@ -12,8 +12,8 @@ else if SCREEN_SIZE.y <= 180: font = $font8
 
 const line_height = round(110% font.line_height) + 1
 
-let choiceArray
-let choiceIndex
+let choice_array
+let choice_index
 
 let old_transform
 let old_clip
@@ -26,12 +26,28 @@ def clamp_string(s, max_size):
     return if (size(s) < max_size) then s else (slice(s, 0, max_size - 1) + "…")
     
 
+def choose():
+    play_sound($acceptUISound)
+    if choice_array[choice_index] == "Done":
+        pop_mode()
+    else if choice_array[choice_index] == "Sleep":
+        $sleep()               
+    else if ends_with(choice_array[choice_index], "Order"):
+        // Change controller order
+        push_mode($ControllerOrder)
+    else if SCREEN_SIZE.y == 64:
+        // Specific player's controls
+        push_mode($SetControls, choice_index)
+    else:
+        // Everyone's controls
+        push_mode($SetControls)
+
 
 // If manage_tabs_callback is not empty, then this is being called
 // from the launcher instead of the pause menu
 enter(manage_tabs_callback)
 ────────────────────────────────────────────────────────────────────────
-choiceIndex = 0
+choice_index = 0
 old_background = get_background()
 old_transform = get_transform()
 old_clip = get_clip()
@@ -41,18 +57,18 @@ manage_tabs = manage_tabs_callback
 
 if SCREEN_SIZE.y == 64:
     // At low resolution, ask which controller to set
-    choiceArray = ["P1 Buttons", "P2 Buttons", "P3 Buttons", "P4 Buttons", "Gamepad Order"]
+    choice_array = ["P1 Buttons", "P2 Buttons", "P3 Buttons", "P4 Buttons", "Gamepad Order"]
 else:
-    choiceArray = ["Button Labels", "Gamepad Order"]
+    choice_array = ["Button Labels", "Gamepad Order"]
 
 if manage_tabs:
     // In the launcher, show other options
-    if $sleep: push(choiceArray, "Sleep")
+    if $sleep: push(choice_array, "Sleep")
 else:
     // If not running in the launcher, show "done" as an option
-    push(choiceArray, "Done")
+    push(choice_array, "Done")
 
-    
+   
 leave
 ────────────────────────────────────────────────────────────────────────
 
@@ -76,7 +92,7 @@ else:
     draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(14%, 14%, 14%, 80%))
 
     const windowSize = (SCREEN_SIZE + 2) * (if manage_tabs then 1 else clamp((mode_frames + 1) / open_frames, 0%, 100%))
-    //round(xy(6 font.line_height, 2 + (2 + size(choiceArray)) * font.line_height) * clamp((mode_frames + 1) / open_frames, 0%, 100%))
+    //round(xy(6 font.line_height, 2 + (2 + size(choice_array)) * font.line_height) * clamp((mode_frames + 1) / open_frames, 0%, 100%))
     draw_rect(½ SCREEN_SIZE, windowSize, $system_window_background, $system_window_border)
     
 
@@ -94,33 +110,19 @@ if manage_tabs or mode_frames > open_frames:
        else if control.aa and not control.released_a:
            // Needed to check for simultaneous press and release
            // to avoid re-executing sleep on wake from the A button.
-           
-           play_sound($acceptUISound)
-           if choiceArray[choiceIndex] == "Done":
-               pop_mode()
-           else if choiceArray[choiceIndex] == "Sleep":
-               $sleep()               
-           else if ends_with(choiceArray[choiceIndex], "Order"):
-               // Change controller order
-               push_mode($ControllerOrder)
-           else if SCREEN_SIZE.y == 64:
-               // Specific player's controls
-               push_mode($SetControls, choiceIndex)
-           else:
-               // Everyone's controls
-               push_mode($SetControls)
+           choose()
        else if control.yy:
-           const prev = choiceIndex
-           choiceIndex = clamp(choiceIndex + control.yy, 0, size(choiceArray) - 1)
-           play_sound(if prev == choiceIndex then $denyUISound else $moveUISound)
+           const prev = choice_index
+           choice_index = clamp(choice_index + control.yy, 0, size(choice_array) - 1)
+           play_sound(if prev == choice_index then $denyUISound else $moveUISound)
            
    // Show the options
-   let y = floor(0.5 (SCREEN_SIZE.y - (size(choiceArray) - 0.5) * font.line_height)) - 1
+   let y = floor(0.5 (SCREEN_SIZE.y - (size(choice_array) - 0.5) * font.line_height)) - 1
    if manage_tabs: y += 20
    if SCREEN_SIZE.y == 112 or SCREEN_SIZE.y == 128: y -= 20
    
-   for i < size(choiceArray):
-      const active      = choiceIndex == i
+   for i < size(choice_array):
+      const active      = choice_index == i
       const bright      = (1 + cos(mode_frames / 9)) / 2
       const color       = if active then lerp($system_prompt_color, #fff, 50% bright) else unselected_color
       const outline     = if active then rgba(1,1,1, 25% bright) else nil
@@ -128,9 +130,17 @@ if manage_tabs or mode_frames > open_frames:
       const shadow      = if active then 50% $system_prompt_shadow else $system_prompt_shadow
       
       const x           = floor(0.5 SCREEN_SIZE.x - (if SCREEN_SIZE.y == 64 then 20 else 3 font.line_height - 10))
-      const text        = choiceArray[i]
+      const text        = choice_array[i]
       draw_text(font, text, xy(x, y + 1), shadow, nil, nil, "left", "center")
-      draw_text(font, text, xy(x, y + yOffset), color, nil, outline, "left", "center")
+      const bounds = draw_text(font, text, xy(x, y + yOffset), color, nil, outline, "left", "center")
+      // Make active on mouse hover
+      if overlaps(touch.hover, bounds) and choice_index != i:
+          choice_index = i
+          play_sound($moveUISound)
+          
+      // Touch selection
+      if touch.aa and overlaps(touch, bounds):
+          choose()
    
       if active:
          draw_text(font, "✜", xy(x - 40% line_height + 1, y + 1), shadow, nil, nil, "right", "center")
@@ -138,6 +148,7 @@ if manage_tabs or mode_frames > open_frames:
          
       y += line_height
 
+      
 if manage_tabs:
     // Also show system info on the top
     const gamepads = if $navigator.getGamepads then $navigator.getGamepads() else (if $navigator.webkitGetGamepads then $navigator.webkitGetGamepads else [])

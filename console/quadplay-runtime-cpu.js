@@ -4892,6 +4892,10 @@ function $hsvaToUint16(color, c) {
 
 
 function draw_rect(pos, size, fill, border, angle, z) {
+    if (pos === undefined) {
+        $error('draw_rect() called on nil');
+    }
+    
     if (pos.pos) {
         z = pos.z;
         angle = pos.angle;
@@ -5809,7 +5813,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
     if ((offsetIndex < formatArray[formatIndex].startIndex) ||
         (offsetIndex > formatArray[formatIndex].endIndex)) {
         // Empty, just return newline
-        return {x:0, y:referenceFont.$charHeight};
+        return {size: {x:0, y:referenceFont.$charHeight}}; // TODO: pos
     }
     
     // Identify the starting format. This snippet is repeated throughout the function.
@@ -5848,9 +5852,10 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
                 offsetIndex, formatIndex, str.substring(c + 1),
                 formatArray, {x:pos.x, y:pos.y + referenceFont.line_height / $scaleY},
                 z_pos, x_align, y_align, z_order, wrap_width, text_size - c - 1, referenceFont);
-            firstLineBounds.x = $Math.max(firstLineBounds.x, restBounds.x);
-            if (restBounds.y > 0) {
-                firstLineBounds.y += referenceFont.spacing.y + restBounds.y;
+            // TODO: pos
+            firstLineBounds.size.x = $Math.max(firstLineBounds.size.x, restBounds.size.x);
+            if (restBounds.size.y > 0) {
+                firstLineBounds.size.y += referenceFont.spacing.y + restBounds.size.y;
             }
             return firstLineBounds;
         }
@@ -5899,9 +5904,11 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
             $console.assert(offsetIndex >= formatArray[formatIndex].startIndex && offsetIndex <= formatArray[formatIndex].endIndex);
             const restBounds = $draw_text(offsetIndex, formatIndex, nnext, formatArray, {x:pos.x, y:pos.y + referenceFont.line_height / $scaleY}, z_pos,
                                           x_align, y_align, z_order, wrap_width, text_size - cur.length - (next.length - nnext.length), referenceFont);
-            firstLineBounds.x = $Math.max(firstLineBounds.x, restBounds.x);
-            if (restBounds.y > 0) {
-                firstLineBounds.y += referenceFont.spacing.y + restBounds.y;
+
+            // TODO: pos
+            firstLineBounds.size.x = $Math.max(firstLineBounds.size.x, restBounds.size.x);
+            if (restBounds.size.y > 0) {
+                firstLineBounds.size.y += referenceFont.spacing.y + restBounds.size.y;
             }
             return firstLineBounds;
         }
@@ -6011,7 +6018,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
     // The height in memory is inflated by 3 for the outline on top
     // and shadow and outline on the bottom. Return the tight
     // bound on the characters themselves.
-    return {x: width, y: height - 3};
+    return {size: {x: width, y: height - 3}};
 }
 
 
@@ -6106,15 +6113,38 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
     const first_graphics_command_index = $graphicsCommandList.length;
     const bounds = $draw_text(0, 0, str, stateChanges, pos, z_pos, x_align, y_align, z_order, wrap_width, text_size, font);
 
-    if ((bounds.y > font.line_height) && (y_align === 0 || y_align === 2)) {
+    if (first_graphics_command_index === $graphicsCommandList.length) {
+        // Drew nothing!
+        return {pos: {x: NaN, y:NaN}, size: {x: NaN, y:NaN}};
+    }
+
+    // Compute bounds in screen space
+    {
+        let i = first_graphics_command_index;
+        bounds.pos = {x: $graphicsCommandList[i].x, y: $graphicsCommandList[i].y};
+        ++i;
+        while (i < $graphicsCommandList.length) {
+            bounds.pos.x = $Math.min(bounds.pos.x, $graphicsCommandList[i].x);
+            bounds.pos.y = $Math.min(bounds.pos.y, $graphicsCommandList[i].y);
+            ++i;
+        }
+        
+        // Move to the center
+        bounds.pos.x += 0.5 * bounds.size.x + 0.5;
+        bounds.pos.y += 0.5 * bounds.size.y + 0.5;
+    }
+    bounds.z = z_order;
+
+    if ((bounds.size.y > font.line_height) && (y_align === 0 || y_align === 2)) {
         let y_shift = 0;
         if (y_align === 0) {
             // Center
-            y_shift = font.line_height / 2 - bounds.y / 2;
+            y_shift = 0.5 * (font.line_height - bounds.size.y);
         } else {
             // Bottom
-            y_shift = font.line_height - bounds.y;
+            y_shift = font.line_height - bounds.size.y;
         }
+        bounds.pos.y += y_shift;
         
         // Multiline needing vertical adjustment. Go back to the issued
         // draw calls and shift them vertically as required.
@@ -6122,7 +6152,27 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
             $graphicsCommandList[i].y += y_shift;
         }
     }
+    
+    // Enforce the clipping region on the bounds
+    {
+        let minX = $Math.max(bounds.pos.x - 0.5 * bounds.size.x, $clipX1);
+        let maxX = $Math.min(bounds.pos.x + 0.5 * bounds.size.x, $clipX2);
+        let minY = $Math.max(bounds.pos.y - 0.5 * bounds.size.y, $clipY1);
+        let maxY = $Math.min(bounds.pos.y + 0.5 * bounds.size.y, $clipY2);
 
+        bounds.pos.x = 0.5 * (maxX + minX);
+        bounds.size.x = maxX - minX;
+        bounds.pos.y = 0.5 * (maxY + minY);
+        bounds.size.y = maxY - minY;
+        if (bounds.size.x <= 0 || bounds.size.y <= 0) {
+            bounds.size.x = bounds.size.y = bounds.pos.x = bounds.pos.y = NaN;
+        }
+    }
+    
+    // Convert screen space pos to camera space
+    bounds.pos.x = (bounds.pos.x - $offsetX) / $scaleX - bounds.z * $skewXZ;
+    bounds.pos.y = (bounds.pos.y - $offsetY) / $scaleY - bounds.z * $skewYZ;
+    
     return bounds;
 }
 

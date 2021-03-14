@@ -112,7 +112,7 @@ def draw_ui():
             nil,                 // outline
             "left",              // x-align
             "bottom"             // y-align
-        )
+        ).size
         current -= xy(0, bbox.y)
 
 def update_demo_ui(last_vel):

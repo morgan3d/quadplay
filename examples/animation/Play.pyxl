@@ -133,7 +133,7 @@ local:
     let pos = xy(12, GROUND_Y + 19)
     for i < ½ size(instructions):
         draw_text(instruction_font, replace(instructions[2i], gamepad.prompt), pos, #7)
-        pos.y += draw_text(instruction_font, instructions[2i + 1], pos + xy(30, 0), #7).y
+        pos.y += draw_text(instruction_font, instructions[2i + 1], pos + xy(30, 0), #7).size.y
         if pos.y > SCREEN_SIZE.y - 10:
             pos.x += 97
             pos.y = GROUND_Y + 19

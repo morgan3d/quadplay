@@ -107,7 +107,7 @@ def draw_ui_text(
             y_align: y_align,
             z:100
         }
-    )
+    ).size
 
 
 def draw_gameover_ui(distance, skip_count, total_travelled, fade=1):

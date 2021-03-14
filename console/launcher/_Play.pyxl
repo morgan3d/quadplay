@@ -316,19 +316,19 @@ def manage_games_tab():
 
     if game.cooperative:
         drawIcon(icons.cooperative, xy(sideX, y)).y
-        y += draw_text({font:mediumFont, text:"Cooperate", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
+        y += draw_text({font:mediumFont, text:"Cooperate", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).size.y
 
     if game.competitive:
         drawIcon(icons.competitive, xy(sideX, y)).y
-        y += draw_text({font:mediumFont, text:"Compete", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
+        y += draw_text({font:mediumFont, text:"Compete", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).size.y
       
     if game.achievements:
         drawIcon(icons.achievements, xy(sideX, y)).y
-        y += draw_text({font:mediumFont, text:"Achieve", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
+        y += draw_text({font:mediumFont, text:"Achieve", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).size.y
 
     if game.highscores:
         drawIcon(icons.highscores, xy(sideX, y)).y
-        y += draw_text({font:mediumFont, text:"Highscore", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
+        y += draw_text({font:mediumFont, text:"Highscore", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).size.y
 
     for pad in gamepad_array:
         if pad.aa or pad.qq or pad.$pp:

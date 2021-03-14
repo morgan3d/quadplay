@@ -9,15 +9,15 @@ const promptColor           = #4DF
 const selectedColor         = #f
 const unselectedColor       = #b
 
-const openFrames            = 8
+const OPEN_FRAMES            = 8
 
 let title
 let message
 let callback
 const sz = xy(0, 0)
 
-const choiceArray = ["No", "Yes"]
-let choiceIndex
+const choice_array = ["No", "Yes"]
+let choice_index
 
 let font = $font9
 if SCREEN_SIZE.y <= 64: font = $font5
@@ -30,7 +30,7 @@ title = choice.text
 message = if is_string(choice.confirm) then choice.confirm else ""
 callback = choice.callback
 
-choiceIndex = 0
+choice_index = 0
 play_sound($openUISound)
 
 sz.x = mid(SCREEN_SIZE.x - 2, 150% * max(text_width(font, title), text_width(font, message)), SCREEN_SIZE.x / 2)
@@ -42,7 +42,7 @@ frame
 draw_previous_mode()
 set_transform(xy(0, 0), xy(1, 1), 2048.6, 1)
 
-const windowSize = round(sz * clamp((mode_frames + 1) / openFrames, 0%, 100%))
+const windowSize = round(sz * clamp((mode_frames + 1) / OPEN_FRAMES, 0%, 100%))
 draw_rect(½ SCREEN_SIZE, windowSize, windowBackgroundColor, windowBorderColor)
 
 // Window ambient occlusion
@@ -50,36 +50,52 @@ draw_rect(½ SCREEN_SIZE, windowSize + 2, ∅, #0007)
 draw_rect(½ SCREEN_SIZE, windowSize + 4, ∅, #0003)
 if SCREEN_SIZE.y >= 112: draw_rect(½ SCREEN_SIZE, windowSize + 6, ∅, #0001)
 
-if mode_frames > max(15, openFrames):
+if mode_frames > max(15, OPEN_FRAMES):
    for control in gamepad_array:
-      if control.qq or control.$pp or (control.aa and choiceIndex == 0):
+      if control.qq or control.$pp or (control.aa and choice_index == 0):
          // Cancel
          play_sound($cancelUISound)
          pop_mode(∅)
-      else if control.aa: // must be choiceIndex == 1
+      else if control.aa: // must be choice_index == 1
          // Accept option
          play_sound($acceptUISound)
          pop_mode(callback)
       else if control.xx:
-         const prev = choiceIndex
-         choiceIndex = clamp(choiceIndex + control.xx, 0, 1)
-         play_sound(if prev == choiceIndex then $denyUISound else $moveUISound)
+         const prev = choice_index
+         choice_index = clamp(choice_index + control.xx, 0, 1)
+         play_sound(if prev == choice_index then $denyUISound else $moveUISound)
 
          
-if mode_frames > openFrames:
-   draw_text({font: font, text: title + "?", pos: ½ SCREEN_SIZE + xy(0, - ½ windowSize.y + 150% font.line_height), color: text_color, shadow:text_shadow_color, x_align: "center", y_align: "center"})
+if mode_frames > OPEN_FRAMES:
+    draw_text({font: font, text: title + "?", pos: ½ SCREEN_SIZE + xy(0, - ½ windowSize.y + 150% font.line_height), color: text_color, shadow:text_shadow_color, x_align: "center", y_align: "center"})
 
-   if message != "":
-       draw_text({font: font, text: message, pos: ½ SCREEN_SIZE, color: text_color, x_align: "center", y_align: "center", wrap_width: 90% windowSize.x})
+    if message != "":
+        draw_text({font: font, text: message, pos: ½ SCREEN_SIZE, color: text_color, x_align: "center", y_align: "center", wrap_width: 90% windowSize.x})
 
-   for i < 2:
-      const active      = choiceIndex == i
-      const bright      = ½ (1 + cos(mode_frames / 9))
-      const color       = if active then lerp(promptColor, #fff, 50% bright) else unselectedColor
-      const outline     = if active then rgba(1,1,1, 25% bright) else ∅
-      const offset      = xy(0, if active then -1 else 0)
-      const shadow      = if active then text_shadow_color * 50% else text_shadow_color
-      const pos         = ½ SCREEN_SIZE + xy((2i - 1) * ⅕ windowSize.x, ½ windowSize.y - 150% font.line_height)
+    for i < 2:
+        const active      = choice_index == i
+        const bright      = ½ (1 + cos(mode_frames / 9))
+        const color       = if active then lerp(promptColor, #fff, 50% bright) else unselectedColor
+        const outline     = if active then rgba(1,1,1, 25% bright) else ∅
+        const offset      = xy(0, if active then -1 else 0)
+        const shadow      = if active then text_shadow_color * 50% else text_shadow_color
+        const pos         = ½ SCREEN_SIZE + xy((2i - 1) * ⅕ windowSize.x, ½ windowSize.y - 150% font.line_height)
       
-      draw_text({font: font, text: choiceArray[i], pos: pos + xy(0, 1), color: shadow, x_align: "center", y_align: "center"})
-      draw_text({font: font, text: choiceArray[i], pos: pos + offset, color: color, outline: outline, x_align: "center", y_align:"center"})
+        draw_text({font: font, text: choice_array[i], pos: pos + xy(0, 1), color: shadow, x_align: "center", y_align: "center"})
+        const bounds = draw_text({font: font, text: choice_array[i], pos: pos + offset, color: color, outline: outline, x_align: "center", y_align:"center"})
+      
+        // Make active on mouse hover
+        if overlaps(touch.hover, bounds) and choice_index != i:
+            choice_index = i
+            play_sound($moveUISound)
+       
+        // Touch selection
+        if touch.aa and overlaps(touch, bounds):
+            if choice_index == 0:
+                // Cancel
+                play_sound($cancelUISound)
+                pop_mode(∅)
+            else:
+                // Accept
+                play_sound($acceptUISound)
+                pop_mode(callback)
