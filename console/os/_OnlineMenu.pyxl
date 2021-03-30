@@ -101,6 +101,7 @@ def manage_online_tab():
         else:
             online_choice_index = 0
 
+    let touch_current_choice = false
     let pos = xy(70, SCREEN_SIZE.y - 50 - size(choice_array) * 18) + (if $getIsHosting() then xy(70, 0) else xy(0, 0))
     for choice at i in choice_array:
         // Don't show lines if working off the pause menu or hosting
@@ -112,14 +113,21 @@ def manage_online_tab():
         const active = (i == online_choice_index)
 
         if active: $draw_system_menu_text({text: "✜", pos: pos + xy(-8, 0), x_align: "right"}, true)
-        $draw_system_menu_text({text: choice, pos: pos}, active)
+        const bounds = $draw_system_menu_text({text: choice, pos: pos}, active)
+        if overlaps(touch.hover, bounds) and online_choice_index != i:
+            online_choice_index = i
+            play_sound($moveUISound)
+
+        // Touch selection
+        if touch.aa and overlaps(touch, bounds):
+            touch_current_choice = true
             
         pos.y += 18
 
             
     for gamepad in gamepad_array:
         online_choice_index = clamp(online_choice_index + gamepad.yy, 0, size(choice_array) - 1)
-        if gamepad.aa:
+        if gamepad.aa or touch_current_choice:
             const choice = choice_array[online_choice_index]
             if choice == "Change Host Code":
                 $changeMyHostNetID()

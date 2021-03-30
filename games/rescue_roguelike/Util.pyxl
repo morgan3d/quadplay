@@ -1,0 +1,128 @@
+// compute a color palette based on sampling the pixel values from a palette 
+// image.  Colors_YAML is a dictionary mapping color name to pixel coordinate,
+// stored in a yaml file.
+const COLORS = {}
+for coordinate at name in Colors_YAML:
+    COLORS[name] = get_sprite_pixel_color(
+        // the sprite to sample
+        palette_sprite[0][0],
+        // pixel coordinate to sample
+        xy(coordinate)
+    )
+
+def eq(a, b):
+    return (a == b) or (a and b and equivalent(a, b))
+
+def eq_recursive(a, b):
+    const type_a = type(a)
+    if type_a != type(b):
+        return false
+
+    // scalar values should have been caught by the above
+    if (type_a == "boolean" or type_a == "function" or type_a == "nil" or type_a == "number" or type_a == "string"):
+        return a == b
+
+    if type_a == "array":
+        if size(a) != size(b):
+            return false
+        for i < size(a):
+            if not eq_recursive(a[i], b[i]):
+                return false
+
+    if type_a == "object":
+        if not equivalent(sorted(keys(a)), sorted(keys(b))):
+            return false
+
+        for v at k in a:
+            if not eq_recursive(v, b[k]):
+                return false
+
+    return true
+
+def x_or_y(v):
+    let ret = xy(v)
+    if ret.x and ret.y:
+        ret.y = 0
+    return ret
+
+def which_edge(val, lo, hi):
+    if val ≤ lo:
+        return -1
+    if val ≥ hi:
+        return 1
+    return 0
+
+def manhattan(v):
+    return abs(v.x) + abs(v.y)
+
+// when loading from yaml, sometimes you may always have certain values that
+// want to be xy() values for known keys.
+def replace_known_keys(d, xy_keys):
+    for xy_key in xy_keys:
+        let v = d[xy_key]
+        if v != nil:
+            d[xy_key] = xy(v)
+
+    // recurse
+    for value at key in d:
+        if is_object(value):
+            replace_known_keys(value, xy_keys)
+        if is_array(value):
+            for elem in value:
+                replace_known_keys(elem, xy_keys)
+    return d
+                
+// returns true if x is between lo or hi (inclusive)
+def is_between(x, lo, hi):
+    return x ≥ lo and x ≤ hi
+
+// returns true if coord is on standard grid of grid_size    
+def is_on_board(grid_size, coord):
+    return is_between(coord.x, 0, grid_size.x-1) and is_between(coord.y, 0, grid_size.y-1)
+
+// returns all coords that will be reached from coord in direction dir (not including coord).
+def get_coords_in_dir(grid_size, coord, dir):
+    let ret = []
+    // if we're going nowhere, we can't reach anything
+    if dir.x == 0 and dir.y == 0:
+        return ret
+        
+    let curr_coord = coord + dir
+    while is_on_board(grid_size, curr_coord):
+        push(ret, xy(curr_coord))
+        curr_coord += dir
+    return ret
+    
+def to_coord(grid_size, i):
+    return xy(i % grid_size.x, ⌊i / grid_size.x⌋)
+    
+def to_index(grid_size, coord):
+    return coord.y * grid_size.x + coord.x % grid_size.x
+
+// Removes values from arr if fn(elem, i) is true.
+// Order of the array remain in-tact
+// Returns the removed values.
+def split_if(arr, fn):
+    const ret = []
+    const indices_to_remove = []
+    for elem at i in arr:
+        if fn(elem, i):
+            push(indices_to_remove, i)
+            push(ret, elem)
+
+    const num_to_remove = size(indices_to_remove)
+    for i < num_to_remove:
+        remove_key(arr, pop(indices_to_remove))
+    return ret
+
+def replace_char(str, index, new_char):
+    return slice(str, 0, index) + new_char + slice(str, index+1)
+
+def compare(a, b):
+    if a == b:
+        return 0
+    if a > b or b == ∅:
+        return 1
+    if b > a or a == ∅:
+        return -1
+    assert(false)

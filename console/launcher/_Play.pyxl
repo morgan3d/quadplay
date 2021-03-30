@@ -88,6 +88,23 @@ const gameArray = [{
 },
 
 {
+   title: "Rescue Roguelike",
+   developer: "Steinbach, Luong, and Patrick",
+   url: "quad://games/rescue_roguelike",
+   description: "Turn-based tactical adventure.",
+   version:      0.9,
+   cooperative:  false,
+   competitive:  false,
+   min_players:  1,
+   max_players:  1,
+   achievements: false,
+   highscores:   false,
+   builtin:      true,
+   label: rrlabel[0][0],
+   preview: rrpreview
+},
+
+{
    title: "R. P. S.",
    developer: "Casual Effects",
    url: "quad://games/rps",
@@ -182,8 +199,9 @@ def drawIcon(icon, pos):
    return xy(icon.size.x + 2, icon.size.y + 2)
 
 
-/* Called from manage_tabs. In order to transition state fluidly through them,
-   the tabs push new modes on top of the others going from left to right. */
+/* Called from manage_tabs. In order to transition state fluidly
+   through them, the tabs push new modes on top of the others 
+   going from left to right. */
 def set_tab_index(t):
     const old = tab_index
     tab_index = t
@@ -223,7 +241,8 @@ def manage_tabs():
         const z = (if active then 1 else 0)
 
         // Tab background
-        draw_rect(pos, xy(TAB_WIDTH + 1, if active then 17 else 16), if active then $system_window_background else $system_prompt_shadow, #F, nil, z)
+        const tab_size = xy(TAB_WIDTH + 1, if active then 17 else 16)
+        draw_rect(pos, tab_size, if active then $system_window_background else $system_prompt_shadow, #F, nil, z)
 
         // Tab label
         draw_text({
@@ -236,6 +255,12 @@ def manage_tabs():
             y_align: "center",
             z: z
         })
+        
+        // Make active on mouse hover
+        if overlaps(touch, {pos: pos, size: tab_size}) and tab_index != t:
+            // TODO: Cannot directly change the tab index because
+            // of push/pop mode; they are designed to only change sequentially
+            //set_tab_index(t)
     
         if t == tab_index + 1:
             draw_text({font: mediumFont, text: joy.prompt["[>]"], pos: pos + xy(8 - TAB_WIDTH / 2, 0), color: $system_prompt_color, shadow: $system_prompt_shadow, x_align: "center", y_align: "center", z: z})
@@ -286,7 +311,7 @@ def manage_games_tab():
 
     const sideX = 295
     const wordX = sideX + 27
-    draw_text({font:promptFont, text:joy.prompt["ⓟ"] + "  PLAY", pos:xy(sideX + 7, 74),
+    draw_text({font:promptFont, text:joy.prompt["(a)"] + "  PLAY", pos:xy(sideX + 7, 74),
                color:active_color, shadow: active_shadow, outline: active_outline, x_align:"left"})
     if not game.builtin: draw_text({font:promptFont, text:joy.prompt["ⓓ"] + "  FORGET", pos:xy(sideX + 7, 88), color:$system_prompt_color, shadow:$system_prompt_shadow, x_align:"left"})
 
@@ -331,7 +356,7 @@ def manage_games_tab():
         y += draw_text({font:mediumFont, text:"Highscore", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).size.y
 
     for pad in gamepad_array:
-        if pad.aa or pad.qq or pad.$pp:
+        if pad.aa or pad.qq:
             const game = gameArray[gameIndex]
             if (game.title == "Ice Time") and $getIsHosting():
                 // TODO: Online. Remove when resolution restrictions are lifted

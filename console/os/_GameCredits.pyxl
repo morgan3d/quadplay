@@ -18,8 +18,15 @@ let bodyFont = $font6
 if SCREEN_SIZE.y <= 64: bodyFont = $font3
 else if SCREEN_SIZE.y <= 128: bodyFont = $font5
 
-
 const scroll_speed = 0.5 ceil((SCREEN_SIZE.y / 224)^2)
+
+def max_not_nan(a, b):
+    if is_NaN(a):
+        return b
+    else if is_NaN(b):
+        return a
+    else:
+        return max(a, b)
 
 enter
 ────────────────────────────────────────────────────────────────────────
@@ -63,23 +70,24 @@ if CREDITS.main and size(CREDITS.main) > 1:
     for i < floor(0.5 size(CREDITS.main)):
         const left = CREDITS.main[2i]
         const right = CREDITS.main[2i + 1]
-        const left_height  = draw_text(sectionFont, left,  xy((0.5 - 0.04) * SCREEN_SIZE.x, y), text_color, $system_prompt_shadow, nil, "right", "top", nil, MAX_WIDTH).size.y
-        const right_height = draw_text(sectionFont, right, xy((0.5 + 0.04) * SCREEN_SIZE.x, y), text_color, $system_prompt_shadow, nil, "left", "top", nil, MAX_WIDTH).size.y
+        const left_height  = draw_text(sectionFont, left,  xy((0.5 - 0.04) * SCREEN_SIZE.x, y), text_color, $system_prompt_shadow, nil, "right", "top", nil, MAX_WIDTH).height
+        const right_height = draw_text(sectionFont, right, xy((0.5 + 0.04) * SCREEN_SIZE.x, y), text_color, $system_prompt_shadow, nil, "left", "top", nil, MAX_WIDTH).height
         y += max(left_height, right_height) + 10
 
     y += SCREEN_SIZE.y / 2 + 20
 
-    
+
+debug_print("-----------------")
 for type in creditOrder:
     if size(CREDITS[lowercase(type)]) > 0:
         const s = if type == "Quadplay" then "quadplay✜" else type
-        y += draw_text(sectionFont, s + (if type == "Game" or type == "Code" or type == "Quadplay" or type == "Data" then "" else "s"), xy(SCREEN_SIZE.x / 2, y), text_color, $system_prompt_shadow, nil, 0, 2).size.y
+        y += draw_text(sectionFont, s + (if type == "Game" or type == "Code" or type == "Quadplay" or type == "Data" then "" else "s"), xy(SCREEN_SIZE.x / 2, y), text_color, $system_prompt_shadow, nil, 0, 2).height
    
         for line in CREDITS[lowercase(type)]:
-            y += draw_text(bodyFont, line, xy(SCREEN_SIZE.x / 2, y), text_color, nil, nil, "center", "top", 0, SCREEN_SIZE.x).size.y + 10
+            y += draw_text(bodyFont, line, xy(SCREEN_SIZE.x / 2, y), text_color, nil, nil, "center", "top", 0, SCREEN_SIZE.x).height + 10
             
         y += 20
 
 if CREDITS.extra:
     y += 40
-    y += draw_text(bodyFont, CREDITS.extra, xy(0.04 SCREEN_SIZE.x, y), text_color, nil, nil, "left", "top", 0, (1 - 0.08) * SCREEN_SIZE.x).size.y + 10
+    y += draw_text(bodyFont, CREDITS.extra, xy(0.04 SCREEN_SIZE.x, y), text_color, nil, nil, "left", "top", 0, (1 - 0.08) * SCREEN_SIZE.x).height + 10

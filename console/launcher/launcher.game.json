@@ -20,6 +20,9 @@
         "rplabel":    "rplabel.sprite.json",
         "rppreview":  "rppreview.sprite.json",
 
+        "rrlabel":    "rrlabel.sprite.json",
+        "rrpreview":  "rrpreview.sprite.json",
+        
         "itlabel":    "itlabel.sprite.json",
         "itpreview":  "itpreview.sprite.json",
 

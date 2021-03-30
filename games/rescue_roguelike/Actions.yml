@@ -1,0 +1,75 @@
+ActionPrototype: &ActionPrototype
+  help: "This is a short descriptive string of what happens."
+  points: 0
+  dialog: []
+
+# Scratchpad of spells that could be cool
+River:
+  <<: *ActionPrototype
+  help: "Make a river from the top of the board to the selected tile."
+
+Mountain:
+  <<: *ActionPrototype
+  help: >-
+    Raise a mountain under the tile.  Requires {color: #ffc0cb POINTS} rescues
+    to cast.
+  points: 2
+
+Gale:
+  <<: *ActionPrototype
+  help: "Push all enemy tiles north one square"
+
+Protect:
+  <<: *ActionPrototype
+  help: "Shield a tile"
+
+Combustion:
+  <<: *ActionPrototype
+  help: "A forest tile bursts into flame, along with neighbor tiles"
+
+Pyroclasm:
+  <<: *ActionPrototype
+  help: "Explode a fire to do damage and spread to neighbor tiles"
+
+Downpour:
+  <<: *ActionPrototype
+  help: "Put out fires and dampen ground without fires."
+
+Backdraft:
+  <<: *ActionPrototype
+  help: "Pull nearby units into selected fire tile."
+
+Push:
+  <<: *ActionPrototype
+  help: "{color: #ff0 Pushes} without dealing damage."
+  range: [1, 1]
+  knockback: 1
+
+Heal:
+  <<: *ActionPrototype
+  help: "{color: #ff0 Heals} to recover {color: #004d72 1} health.  Requires {color: #ffc0cb POINTS} point to cast."
+  points: 1
+
+Fireball:
+  <<: *ActionPrototype
+  help: "Casts a {color: #ff0 fireball} that sets fire to a square and the 4 adjacent squares.  Requires {color: #ffc0cb POINTS} point to cast."
+  points: 3
+
+gun:
+  <<: *ActionPrototype
+  label: Shoot
+  help: "Shoots a projectile that also knocks back."
+  dialog:
+      - Pew! Pew!
+melee:
+  <<: *ActionPrototype
+  label: Strike
+  help: "Hits nearby and knocks back."
+  dialog:
+      - Take that!
+grenade:
+  <<: *ActionPrototype
+  label: Launch
+  help: "Launches a projectile and knocks back on impact."
+  dialog:
+      - Fire in the hole!

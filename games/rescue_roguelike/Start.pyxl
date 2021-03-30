@@ -1,0 +1,169 @@
+Start
+════════════════════════════════════════════════════════════════════════
+let ts
+let next_gen_time
+let initial_objects
+let object_elements
+let new_elements
+let objects_that_need_elements
+let initial_enemies
+let did_initial_template
+
+def draw_start(turn_state):
+    draw_battle_bg(turn_state)
+    draw_battle_board(turn_state)
+    // draw_game_info(turn_state)
+
+    preserving_transform:
+        compose_transform({
+            pos: BATTLE_GRID_OFFSET,
+        })
+
+        for object_element in object_elements:
+            draw_grid_object(object_element, nil, "")
+
+def random_tile(range):
+    let x_range = [range[0][0], range[1][0]]
+    let y_range = [range[0][1], range[1][1]]
+    let random_coord = xy(
+        random_integer(x_range[0], x_range[1]),
+        random_integer(y_range[0], y_range[1])
+    )
+    return random_coord
+
+
+def is_valid_tile_for_spawning(ts, coord):
+    const spec = get_tile_spec_at(ts, coord)
+
+    assert(spec, "nil spec")
+
+    // make sure that the tile is walkable
+    if (spec.blocks_movement_of != "nothing"):
+        return false
+
+    // make sure there isn't already something on that tile
+    const objs = get_grid_objects_at(ts, coord)
+    if size(objs) > 0:
+        return false
+
+    return true
+
+def spawn_player_on_board(ts, unit_to_spawn, coord):
+    unit_to_spawn.coord = coord
+    debug_print("spawning", unit_to_spawn.id, "at", coord)
+    push(ts.objects, unit_to_spawn)
+    let elem = create_element_for_obj(
+        unit_to_spawn, ObjectSpecs_YAML[unit_to_spawn.obj_type]
+    )
+    assert(
+        elem.draw_data.entity.sprite != nil,
+        "no sprite on initial generation"
+    )
+    return elem
+
+// turn this off for a reproducible start condition
+if NEW_RANDOM_SEED_EACH_STARTUP:
+    set_random_seed()
+
+const FADE_IN_FRAMES = 60
+let curr_fade
+    
+enter(ts_)
+────────────────────────────────────────────────────────────────────────
+// This event runs when the mode is entered via set_mode() or push_mode().
+device_control("set_mouse_cursor", "none")
+ts = ts_
+initial_objects = []
+if not ts:
+    debug_print("[Start] Loading: ", StartBattleName)
+    ts = create_turn_state_from_yml(CONSTANTS[StartBattleName])
+next_gen_time = 15
+object_elements = []
+new_elements = []
+objects_that_need_elements = []
+if ts.battle_type == "game_over":
+    initial_enemies = []
+else:
+    initial_enemies = clone(
+        random_value(WorldTemplates_YAML.enemies.initial_enemies)
+    )
+
+curr_fade = 0
+did_initial_template = false
+
+if ts.bgm != nil:
+    play_resume_bgm(ts)
+
+frame
+────────────────────────────────────────────────────────────────────────
+// This event runs 60 times per second. Game logic, simulation, user input, and drawing all go here.
+
+preserving_transform:
+    reset_transform()
+    draw_corner_rect(
+        xy(0, 0),
+        SCREEN_SIZE,
+        rgba(0,0,0,1-curr_fade/FADE_IN_FRAMES),
+        nil,
+        500
+    )
+    curr_fade += 1
+
+if mode_frames > next_gen_time:
+    if needs_more_tiles(ts):
+        let template_type = "beginning"
+        if did_initial_template:
+            template_type = "middle"
+        else:
+            did_initial_template = true
+
+        // the basic board generation
+        extend(new_elements, generate_more_tiles(ts, template_type))
+        assert(ts.tiles, "nil tiles")
+    else if size(ts.units_to_spawn) > 0:
+        // player units
+        let candidate_coord = random_tile(
+            ts.units_to_spawn[0].range_to_spawn_in
+        )
+        let candidate_spec = get_tile_spec_at(ts, candidate_coord)
+        assert(candidate_spec, "nil candidate_spec coord:" + candidate_coord)
+
+        if is_valid_tile_for_spawning(ts, candidate_coord):
+            let new_unit_spec = pop_front(ts.units_to_spawn)
+            let elem = spawn_player_on_board(ts, new_unit_spec, candidate_coord)
+            // push directly into elements
+            push(object_elements, elem)
+    else if size(initial_enemies) > 0:
+        // spawn the initial set of enemies
+        let candidate_coord = random_tile(
+            WorldTemplates_YAML.enemies.initial_range
+        )
+        let candidate_spec = get_tile_spec_at(ts, candidate_coord)
+        if (is_valid_tile_for_spawning(ts, candidate_coord)):
+            let next_unit_kind = pop(initial_enemies)
+            let result = new_enemy_of_type(
+                next_unit_kind,
+                candidate_coord,
+                size(initial_enemies)
+            )
+            let next_enemy = result[0]
+            let elem = result[1]
+            assert(next_enemy)
+            assert(next_enemy.obj_type)
+            assert(elem)
+            push(ts.objects, next_enemy)
+            push(object_elements, elem)
+    else if size(new_elements) > 0:
+        push(object_elements, pop_front(new_elements))
+    else:
+        // start the game for real
+        set_mode(CPUTurn, ts, object_elements)
+
+    next_gen_time = mode_frames + FRAMES_BETWEEN_GEN
+
+
+draw_start(ts)
+
+leave
+────────────────────────────────────────────────────────────────────────
+// This event runs just before leaving for another mode by set_mode() or pop_mode().

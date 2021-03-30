@@ -1,0 +1,580 @@
+// these functions return arrays.  The intent is to gather these and then
+// add call sequence(…)
+
+
+def seq_bump_obj(obj, next_coord):
+    def bump_frame(frames_left, total_frames, data):
+        const t = smoothstep(total_frames, 0, frames_left)
+        const δ = 1-2*abs(t - 0.5)
+        data.obj.draw_data.entity.pos = lerp(xy(0, 0), data.offset_target, δ)
+        
+    def bump_end(data):
+        //data.obj.entity.animation = "idle"
+
+    const dir = next_coord - obj.state.coord
+    let bump_data = {
+        obj: obj,
+        offset_target: ⅙ dir * GRID_SIZE,
+    }
+    return[{
+        callback: bump_frame,
+        end_callback: bump_end,
+        frames: FRAMES_BUMP,
+        data: bump_data,
+    },]
+
+def seq_display_msg(text, timeout):
+    debug_print("MESSAGE: ", text)
+    def display_msg_frame(frames_left, total_frames, data):
+        const t = smoothstep(total_frames, 0, frames_left)
+        const is_rolling = abs(data.roll) > 0
+        const win_corner= xy(10, 10)
+        let roll_amount = 1
+        if data.roll > 0:
+            roll_amount = t
+        else if data.roll < 0:
+            roll_amount = 1-t
+        const win_size = xy(100, 40) * xy(1, roll_amount)
+        const br = win_corner + win_size
+
+        // background
+        draw_corner_rect({
+            corner: win_corner,
+            size: win_size,
+            color: COLORS.menu_bg,
+            shadow: COLORS.menu_highlight,
+            outline: nil,
+            z: 2
+        })
+
+        const padding = 5
+        set_clip({
+            pos: win_corner + padding,
+            size: win_size - 2*padding,
+        })
+
+        // text
+        draw_text({
+            font: font,
+            text: data.text,
+            pos: win_corner + xy(10, 17),
+            color: COLORS.text,
+            shadow: COLORS.menu_highlight,
+            z: 2.1,
+        })
+        reset_clip()
+    return [
+        {
+            callback: display_msg_frame,
+            frames: 10,
+            data: {
+                text: text,
+                roll: 1,       
+            },
+        },
+        {
+            callback: display_msg_frame,
+            frames: timeout,
+            data: {
+                text: text,
+                roll: 0,       
+            },
+        },
+        {
+            callback: display_msg_frame,
+            frames: 10,
+            data: {
+                text: text,
+                roll: -1,       
+            },
+        },
+    ]
+    
+def seq_modal_display(text, gamepad):
+    def modal_display_frame(frames_left, total_frames, data):
+
+        const waiting_for_user = total_frames == ∞ 
+        const t = if waiting_for_user then 1 else smoothstep(total_frames, 0, frames_left)
+        
+        const win_corner= xy(10, 10)
+        const roll_amount = if data.roll_up then 1-t else t
+        const win_size = xy(100, 100) * xy(1, roll_amount)
+        const br = win_corner + win_size
+        draw_corner_rect({
+            corner: win_corner,
+            size: win_size,
+            color: #333,
+            z: 2
+        })
+        set_clip({
+            pos: win_corner,
+            size: win_size,
+        })
+        draw_text({
+            font: font,
+            text: data.text,
+            pos: win_corner + xy(10, 17),
+            color: #fff,
+            z: 2.1,
+        })
+        if waiting_for_user:
+            draw_text({
+                font: font,
+                text: replace("(b)", gamepad.prompt),
+                pos: br - xy(12, 7) + xy(0, sin(mode_frames / 6)),
+                color: #fff,
+                z: 2.1,
+            })
+        reset_clip()
+        
+        if waiting_for_user:
+            if data.gamepad.b:
+                return sequence.NEXT
+                
+    return [
+        {
+            callback: modal_display_frame,
+            frames: 10,
+            data: {
+                roll_up: false,
+                text: text,
+            },
+        },
+        {
+            callback: modal_display_frame,
+            frames: ∞,
+            data: {
+                gamepad: gamepad,
+                text: text,
+            },
+        },
+        {
+            callback: modal_display_frame,
+            frames: 10,
+            data: {
+                roll_up: true,
+                text: text,
+            },
+        },
+    ]
+
+def seq_slide_element(elem, start_coord):
+    const path_len = magnitude(start_coord - elem.state.coord)
+    const offset_start = (start_coord - elem.state.coord)*GRID_CELL_SIZE
+    elem.draw_data.entity.pos = clone(offset_start)
+    
+    def slide_frame(frames_left, total_frames, data):
+        const t = smoothstep(total_frames, 0, frames_left)
+        data.elem.draw_data.entity.pos = lerp(data.offset_start, xy(0, 0), t)
+            
+    let slide_data = {
+        elem: elem,
+        offset_start: offset_start,
+    }
+    
+    return [
+        {
+            callback: slide_frame,
+            frames: path_len * FRAMES_PER_CELL_MOVE,
+            data: slide_data,
+        },
+    ]
+
+def seq_slide_along_path(elem, path):
+    if size(path) == 0:
+        return []
+
+    assert(eq(elem.state.coord, last_value(path)))
+
+    const path_len = size(path) - 1
+    const start_coord = path[0]
+
+    let offset_path = []
+    for i < size(path):
+        push(offset_path, (path[i] - elem.state.coord) * GRID_CELL_SIZE)
+
+    elem.draw_data.entity.pos = clone(offset_path[0])
+    
+    def slide_frame(frames_left, total_frames, data):
+        const path_t = smoothstep(total_frames, 0, frames_left)
+
+        const x = path_t * path_len
+        const beg = floor(x)
+        const end = ceil(x)
+        const path_segment_t = x - beg
+        data.elem.draw_data.entity.pos = lerp(
+            data.offset_path[beg], data.offset_path[end], path_segment_t)
+            
+    let slide_data = {
+        elem: elem,
+        offset_path: offset_path,
+    }
+    
+    return [
+        {
+            callback: slide_frame,
+            frames: path_len * FRAMES_PER_CELL_MOVE,
+            data: slide_data,
+        },
+    ]
+
+// this doesn't really work.. maybe this should be a mode?
+def seq_menu(text, options, gamepad, input_fn_stack, callback):
+    def call_callback():
+        callback(options[0])
+        return sequence.NEXT
+
+    return [...seq_modal_display(text, gamepad),
+        {end_callback: call_callback, },
+    ]
+    
+def seq_for_exec_log(object_elements, exec_log):
+    todo("these should all happen simultaneously")
+    let ret = []
+    for entry in exec_log:
+        const t = entry.type
+        if t == "moved":
+            extend(ret, seq_for_moved(object_elements, entry))
+        else if t == "attacked":
+            extend(ret, seq_for_attacked(object_elements, entry))
+        else if t == "added_object":
+            extend(ret, seq_for_added_object(object_elements, entry))
+        else if t == "acted":
+            extend(ret, seq_for_acted(object_elements, entry))
+        else if t == "picked_up":
+            extend(ret, seq_for_picked_up(object_elements, entry))
+        else if t == "received_damage":
+            extend(ret, seq_for_received_damage(object_elements, entry))
+        else if t == "received_health":
+            extend(ret, seq_for_received_health(object_elements, entry))
+        else if t == "knocked_back":
+            extend(ret, seq_for_knocked_back(object_elements, entry))
+        else if t == "moved_map":
+            extend(ret, seq_for_moved_map(object_elements, entry))
+        else if t == "died":
+            extend(ret, seq_for_died(object_elements, entry))
+        else if t == "dodged":
+            extend(ret, seq_display_msg("dodged dead rescue damage.", 20))
+        else if t == "spent_points":
+            todo("seq for spent points..")
+        else if t == "warped":
+            extend(ret, seq_for_warp(object_elements, entry))
+        else:
+            assert(false, "Unknown execlog: " + t)
+    return ret
+
+def get_object_element_by_id(object_elements, id):
+    for object_element in object_elements:
+        if object_element.state.id == id:
+            return object_element
+    return ∅ 
+    
+def seq_for_moved(object_elements, moved_log):
+    const obj = moved_log.obj
+    const obj_elem = get_object_element_by_id(object_elements, obj.id)
+    return seq_slide_along_path(obj_elem, moved_log.path)
+    
+def seq_for_attacked(object_elements, attack_log):
+    const attacker = attack_log.attacker
+    const text = get_dialog_for_action(attack_log.action)
+    return seq_for_obj_dialog_bubble(attacker, text)
+
+def seq_for_acted(object_elements, action_log):
+    const obj = action_log.obj
+    const text = get_dialog_for_action(action_log.action)
+    return seq_for_obj_dialog_bubble(obj, text)
+
+def seq_for_obj_dialog_bubble(obj, text, timeout):
+    const coord = obj.coord
+    if not timeout:
+        timeout = FRAMES_DIALOG * max(size(text) / 10, 1)
+
+    def dialog_bubble_frame(frames_left, total_frames, data):
+        const obj_coord = data.obj.coord
+        const bounce = (sin(mode_frames / DIALOG_BOUNCE.x)+1) * xy(0, DIALOG_BOUNCE.y)
+        const text_pos = coord * GRID_CELL_SIZE + DIALOG_OFFSET + map_draw_offset + bounce
+
+        const t = smoothstep(total_frames, 0, frames_left)
+        const is_rolling = abs(data.roll) > 0
+        let roll_amount = 1
+        if data.roll > 0:
+            roll_amount = t
+        else if data.roll < 0:
+            roll_amount = 1-t
+
+        const padding = DIALOG_PADDING
+        // text
+        let text_draw_size = draw_text({ 
+            font: dialog_font,
+            text: data.text,
+            pos: text_pos,
+            wrap_width: DIALOG_WIDTH_WRAP,
+            color: #222,
+            shadow: #b7dae7,
+            z: Z_DIALOG + 0.1,
+            x_align: "left",
+            y_align: "center",
+        })
+
+        if text_draw_size.size:
+            text_draw_size = text_draw_size.size
+
+        // background
+        draw_rounded_corner_rect({
+            corner: text_pos - xy(0, 0.5 * text_draw_size.y) - padding,
+            size: text_draw_size + 2*padding - 1,
+            color: DIALOG_BG_COLOR,
+            shadow: COLORS.menu_highlight,
+            outline: #000,
+            radius: 3,
+            z: Z_DIALOG,
+        })
+
+    return [
+        {
+            callback: dialog_bubble_frame,
+            frames: timeout,
+            data: {
+                obj: obj,
+                text: text,
+                roll: 0,       
+            },
+        },
+    ]
+
+def seq_for_received_damage(object_elements, received_damage_log):
+    const obj = received_damage_log.obj
+    const damage_amount = received_damage_log.damage_amount
+    const hit_dir = sign(received_damage_log.hit_dir)
+
+    def received_damage_frame(frames_left, total_frames, data):
+        const t = smoothstep(total_frames, 0, frames_left)
+        const δ = 1-2*abs(t - 0.5)
+        data.elem.draw_data.entity.pos = lerp(xy(0, 0), data.bump_screen_vector, δ)
+
+        // blink effect
+        //if floor(0.33 * frames_left) % 3 != 1:
+        //    data.elem.draw_data.entity.override_color = #fff
+        //else:
+        //    data.elem.draw_data.entity.override_color = nil
+
+    def received_damage_done(data):
+        //data.elem.draw_data.entity.override_color = nil
+
+    def received_damage_float_frame(frames_left, total_frames, data):
+        const t = smoothstep(total_frames, 0, frames_left)
+        const pos = lerp(data.text_start_pos, data.text_end_pos, t)
+        draw_text({
+            font: received_health_font,
+            text: "-" + data.damage_amount,
+            color: #fff,
+            outline: #f00,
+            pos: pos,
+            z: Z_PICKUP + 0.1,
+        })
+
+    const start_pos = obj.coord * GRID_CELL_SIZE + BATTLE_GRID_OFFSET + map_draw_offset
+    const elem = find_element_by_id(object_elements, obj.id)
+    return [{
+        callback: received_damage_frame,
+        end_callback: received_damage_done,
+        frames: FRAMES_RECEIVED_DAMAGE,
+        data: {
+            elem: elem,
+            bump_screen_vector: 3*hit_dir,
+        }, 
+    }, {
+        callback: received_damage_float_frame, 
+        frames: FRAMES_RECEIVED_HEALTH, 
+        data: {
+            damage_amount: damage_amount,
+            text_start_pos: start_pos,
+            text_end_pos: start_pos + xy(0, -0.5 *GRID_CELL_SIZE.y),
+        }
+    }, ]
+
+def seq_for_knocked_back(object_elements, knocked_back_log):
+    // because of how our animations are, they go sequentially.  which also
+    // means the "damaged" thing goes first.  The character is already
+    // displaced at this point.  I think if we made it so that everything ran
+    // at the same time, this could possibly work.
+
+    // for now, we don't really need the animation.
+    return []
+
+    const obj = knocked_back_log.obj
+    const elem = find_element_by_id(object_elements, obj.id)
+    const offset_start = (knocked_back_log.prev_coord - obj.coord)*GRID_CELL_SIZE
+    debug_print(offset_start)
+
+    def knockback_frame(frames_left, total_frames, data):
+        const t = smoothstep(total_frames, 0, frames_left)
+        data.elem.draw_data.entity.pos = lerp(data.offset_start, xy(0, 0), t)
+
+    return [
+        {
+            callback: knockback_frame,
+            frames: FRAMES_KNOCKBACK,
+            data: {
+                elem: elem,
+                offset_start: offset_start,
+            }
+        },
+    ]
+
+def seq_for_moved_map(object_elements, moved_map_log):
+    map_draw_offset.y = moved_map_log.map_offset_delta * GRID_CELL_SIZE.y
+
+    let rescue_indicators = []
+    for obj in moved_map_log.expired_objects:
+        const rescue_points = get_rescue_points_for_expired_object(obj)
+        if rescue_points > 0:
+            push(rescue_indicators, {
+                rescue_points: rescue_points,
+                screen_pos: obj.coord*GRID_CELL_SIZE + BATTLE_GRID_OFFSET + map_draw_offset,
+            })
+
+    const rescue_indicator_end = GAME_INFO_BOX_OFFSET - xy(0, 5)
+
+    def moved_map_frame(frames_left, total_frames, data):
+        const t = smoothstep(total_frames, 0, frames_left)
+        map_draw_offset.y = lerp(data.total_offset, 0, t)
+        for rescue_indicator in data.rescue_indicators:
+            draw_text({
+                font: rescue_font,
+                text: "+" + rescue_indicator.rescue_points,
+                color: #fff,
+                outline: COLORS.green_bright,
+                pos: rescue_indicator.screen_pos,
+                z: Z_FLOATING_RESCUE_POINTS,
+            })
+            rescue_indicator.screen_pos += 0.15*(rescue_indicator_end - rescue_indicator.screen_pos)
+
+
+    def moved_map_done(data):
+        for obj in data.expired_objects:
+            remove_element_by_id(object_elements, obj.id)
+        map_draw_offset.y = 0
+
+    return [{
+        callback: moved_map_frame,
+        data: {
+            total_offset: map_draw_offset.y,
+            expired_objects: moved_map_log.expired_objects,
+            rescue_indicators: rescue_indicators,
+        },
+        frames: FRAMES_MOVE_MAP,
+        end_callback: moved_map_done,
+    }]
+
+def seq_for_died(object_elements, died_log):
+    def died_frame(frames_left, total_frames, data):
+        const elem = data.obj_element
+        const t = smoothstep(total_frames, 0, frames_left)
+        elem.draw_data.entity.opacity = 1-t
+
+    def died_done(data):
+        remove_values(data.object_elements, data.obj_element)
+
+    return [{
+        callback: died_frame,
+        frames: FRAMES_DEATH_FLOAT,
+        end_callback: died_done,
+        data: {
+            object_elements: object_elements,
+            obj_element: find_element_by_id(object_elements, died_log.obj.id),
+        }
+    }]
+
+def seq_for_picked_up(object_elements, picked_up_log):
+    const pickup_float_offset = (if picked_up_log.floating_offset 
+                                 then xy(picked_up_log.floating_offset)
+                                 else xy(0, 0))
+    def picked_up_frame(frames_left, total_frames, data):
+        const elem = data.obj_element
+        const t = smoothstep(total_frames, 0, frames_left)
+        elem.draw_data.entity.pos = lerp(elem.draw_data.entity.pos, 
+                                         data.target_pos, t)
+        elem.draw_data.entity.opacity = 1-t
+
+    def picked_up_done(data):
+        remove_values(data.object_elements, data.obj_element)
+
+    const elem = find_element_by_id(object_elements, picked_up_log.obj.id)
+    elem.draw_data.entity.z = Z_PICKUP
+
+    return [{
+        callback: picked_up_frame,
+        frames: FRAMES_PICKUP,
+        end_callback: picked_up_done,
+        data: {
+            object_elements: object_elements,
+            obj_element: elem,
+            target_pos: pickup_float_offset,
+        }
+    }]
+
+
+def seq_for_received_health(object_elements, received_health_log):
+    def received_health_frame(frames_left, total_frames, data):
+        const t = smoothstep(total_frames, 0, frames_left)
+        const pos = lerp(data.start_pos, data.end_pos, t)
+        draw_text({
+            font: received_health_font,
+            text: "+" + data.heal_amount,
+            color: #c0ebff,
+            outline: #004d72,
+            pos: pos,
+            z: Z_PICKUP + 0.1,
+        })
+
+    def received_health_done(data):
+        return
+
+    const obj = received_health_log.obj
+    const start_pos = obj.coord * GRID_CELL_SIZE + BATTLE_GRID_OFFSET + map_draw_offset
+    return [{
+        callback: received_health_frame,
+        frames: FRAMES_RECEIVED_HEALTH,
+        end_callback: received_health_done,
+        data: {
+            heal_amount: received_health_log.heal_amount,
+            start_pos: start_pos,
+            end_pos: start_pos + xy(0, -0.5 *GRID_CELL_SIZE.y),
+            object_elements: object_elements,
+            obj_element: find_element_by_id(object_elements, obj.id),
+        }
+    }]
+
+def seq_for_warp(object_elements, warp_log):
+    const dest_mode = warp_log.dest_mode
+
+    if dest_mode == "Start":
+        set_mode(Start, nil)
+    else:
+        const obj = warp_log.obj
+        return seq_for_obj_dialog_bubble(obj, 
+            "Cave says it goes to.. " + dest_mode + "...?")
+
+def seq_for_added_object(object_elements, added_object_log):
+    const obj = added_object_log.added_obj
+    const element = create_element_for_obj(obj)
+    push(object_elements, element)
+
+    const start_pos = xy(0, -10)
+    element.draw_data.entity.pos = start_pos
+
+    def fall_onto_frame(frames_left, total_frames, data):
+        const t = smoothstep(total_frames, 0, frames_left)
+        const pos = lerp(data.start_pos, xy(0, 0), t)
+        data.obj_element.draw_data.entity.pos = pos
+
+    return [{
+            callback: fall_onto_frame,
+            frames: FRAMES_ADDED_OBJECT,
+            data: {
+                start_pos: start_pos,
+                obj_element: element,
+            },
+        },
+    ]

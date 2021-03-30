@@ -38,7 +38,7 @@ def draw_controls():
             pos: xy(x, y),
             x_align: "center",
             y_align: "center"
-        }, selected).x
+        }, selected).size.x
 
         if selected:
             draw_rect(xy(x, y), xy(COLUMN_SPACING, 18), nil, #fff)

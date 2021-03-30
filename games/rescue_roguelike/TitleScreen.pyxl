@@ -1,0 +1,64 @@
+GameOver
+════════════════════════════════════════════════════════════════════════
+// Put local state for the mode here.  Declare variables with let, constants with const, and functions with def.
+
+let turn_state
+
+def draw_title_screen():
+    // draw_battle_bg()
+    let text = "GAME OVER{br}"
+    text += get_game_over_text(turn_state)
+    const z = 1
+    let rect = draw_text({
+        font: font,
+        text: text,
+        wrap_width: GAMEOVER_TEXT_BOX_SIZE.x - 2*GAMEOVER_PADDING.x,
+        pos: xy(0.5 SCREEN_SIZE.x - 0.5 GAMEOVER_TEXT_BOX_SIZE.x, GAMEOVER_TEXT_BOX_SIZE.y),
+        markup: true,
+        color: COLORS.text,
+        y_align: "top",
+        z: z + 0.1
+    })
+
+    draw_rounded_corner_rect({
+        corner: xy(0.5 SCREEN_SIZE.x - 0.5 GAMEOVER_TEXT_BOX_SIZE.x, GAMEOVER_TEXT_BOX_SIZE.y) - GAMEOVER_PADDING,
+        size: rect + 2 * GAMEOVER_PADDING,
+        color: GAMEOVER_TEXT_BG,
+        outline: GAMEOVER_TEXT_BG_BORDER,
+        z: z,
+    })
+
+def handle_input():
+    const button_size = GAMEOVER_BUTTON_SIZE
+    const bottom_padding = 10
+    let try_again = button_state({
+        corner: xy(0.5 SCREEN_SIZE.x - 0.5 button_size.x, SCREEN_SIZE.y - button_size.y - bottom_padding),
+        size: button_size,
+        text: "Try Again",
+    })
+    if try_again.clicked:
+        set_mode(Start)
+    
+enter(turn_state_)
+────────────────────────────────────────────────────────────────────────
+// This event runs when the mode is entered via set_mode() or push_mode().
+turn_state = turn_state_
+
+let title_turn_state = create_turn_state_from_yml(TitleScreen_YAML)
+debug_print(title_turn_state)
+const the_sign = get_object_by_id(title_turn_state, "sign0")
+stop_bgm()
+set_mode(Start, title_turn_state)
+
+frame
+────────────────────────────────────────────────────────────────────────
+update_cursor_hover()
+
+handle_input()
+draw_title_screen()
+
+update_curr_drag()
+
+leave
+────────────────────────────────────────────────────────────────────────
+// This event runs just before leaving for another mode by set_mode() or pop_mode().

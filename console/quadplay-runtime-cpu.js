@@ -55,7 +55,9 @@ var $mode_framesStack = [];
 
 var $postFX;
 
+// Deprecated
 var is_NaN = Number.isNaN;
+var is_nan = Number.isNaN;
 
 // Maps container objects to the count of how many iterators
 // they are currently used within, so that the runtime can
@@ -225,7 +227,7 @@ sequence.BREAK = ["BREAK"];
 
 function add_frame_hook(callback, endCallback, frames, mode, data) {
     if (mode === undefined) { mode = get_mode(); }
-    if (isNaN(frames)) { $error("NaN frames on add_frame_hook()"); }
+    if (is_nan(frames)) { $error("nan frames on add_frame_hook()"); }
     const hook = {$callback:callback, $endCallback:endCallback, $mode:mode, $frames:frames, $maxFrames:frames, $data:data};
     $frameHooks.push(hook);
     return hook;
@@ -2208,8 +2210,8 @@ function make_entity(e, childTable) {
         r.size = clone(r.size);
     }
 
-    if (is_NaN(r.size.x)) { $error('NaN entity.size.x'); }
-    if (is_NaN(r.size.y)) { $error('NaN entity.size.y'); }
+    if (is_nan(r.size.x)) { $error('nan entity.size.x'); }
+    if (is_nan(r.size.y)) { $error('nan entity.size.y'); }
 
     if (r.pivot === undefined) {
         if (r.sprite) {
@@ -2232,8 +2234,8 @@ function make_entity(e, childTable) {
     r.offset_in_parent = r.offset_in_parent ? clone(r.offset_in_parent) : xy(0, 0);
     r.scale_in_parent = r.scale_in_parent ? clone(r.scale_in_parent) : xy(1, 1);
 
-    if (isNaN(r.angle)) { $error('NaN angle on entity'); }
-    if (r.z !== undefined && isNaN(r.z)) { $error('NaN z on entity'); }
+    if (is_nan(r.angle)) { $error('nan angle on entity'); }
+    if (r.z !== undefined && is_nan(r.z)) { $error('nan z on entity'); }
     
     // Construct named children
     if (childTable) {
@@ -2415,8 +2417,8 @@ function entity_update_children(parent) {
     }
 
     if (typeof parent.scale !== 'object') { $error('The scale of the parent entity must be an xy().'); }
-    if (isNaN(parent.angle)) { $error('NaN angle on parent entity'); }
-    if (parent.z !== undefined && isNaN(parent.z)) { $error('NaN z on parent entity'); }
+    if (is_nan(parent.angle)) { $error('nan angle on parent entity'); }
+    if (parent.z !== undefined && is_nan(parent.z)) { $error('nan z on parent entity'); }
     
     const N = parent.child_array.length;
     const rotSign = $Math.sign(parent.scale.x * parent.scale.y);
@@ -2459,8 +2461,8 @@ function entity_update_children(parent) {
 
 
 function entity_simulate(entity, dt) {
-    if (isNaN(entity.spin)) { $error('NaN entity.spin'); }
-    if (isNaN(entity.torque)) { $error('NaN entity.torque'); }
+    if (is_nan(entity.spin)) { $error('nan entity.spin'); }
+    if (is_nan(entity.torque)) { $error('nan entity.torque'); }
 
     // Assume this computation takes 0.01 ms. We have no way to time it
     // properly, but this at least gives some feedback in the profiler
@@ -6054,8 +6056,6 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
         str = unparse(str);
     }
     
-    if (str === '') { return {x:0, y:0}; }
-
     let z_order = z, z_pos = pos.z;
     if (z_order === undefined) { z_order = z_pos || 0; }
     if (z_pos === undefined) { z_pos = z_order; }
@@ -6069,6 +6069,8 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
         const x = pos.x - $camera.x, y = pos.y - $camera.y;
         pos = {x: x * C + y * S, y: y * C - x * S};
     }
+
+    if (str === '') { return {pos: {x:pos.x, y:pos.y}, size: {x: 0, y: 0}, height:0, z:z_order}; }
     
     const stateChanges = [{
         font:       font,
@@ -6115,7 +6117,7 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
 
     if (first_graphics_command_index === $graphicsCommandList.length) {
         // Drew nothing!
-        return {pos: {x: NaN, y:NaN}, size: {x: NaN, y:NaN}};
+        return {pos:{x:pos.x, y:pos.y}, size:{x:0, y:0}, height:bounds.size.y, z:z_order};
     }
 
     // Compute bounds in screen space
@@ -6152,6 +6154,9 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
             $graphicsCommandList[i].y += y_shift;
         }
     }
+
+    // Preserve the height for layout
+    bounds.height = bounds.size.y;
     
     // Enforce the clipping region on the bounds
     {
@@ -7066,9 +7071,9 @@ function entity_inertia(entity, mass) {
 
     if (mass === 0) { $error('entity.mass == 0 while computing moment of inertia'); }
     if (scaleX === 0) { $error('entity.scale.x == 0 while computing moment of inertia'); }
-    if (is_NaN(scaleX)) { $error('NaN entity.scale.x while computing moment of inertia'); }
+    if (is_nan(scaleX)) { $error('NaN entity.scale.x while computing moment of inertia'); }
     if (entity.size.x === 0) { $error('entity.size.x == 0 while computing moment of inertia'); }
-    if (is_NaN(entity.size.x)) { $error('NaN entity.size.x while computing moment of inertia'); }
+    if (is_nan(entity.size.x)) { $error('NaN entity.size.x while computing moment of inertia'); }
     
     if (entity.shape === 'rect') {
         return mass * ($square(entity.size.x * scaleX) + $square(entity.size.y * scaleY)) * (1 / 12);
@@ -9410,7 +9415,9 @@ function load_local(key, default_value) {
 
 
 function save_local(key, value) {
-    let table = $window.localStorage.getItem('GAME_STATE_' + $gameURL);
+    
+    let table = $getLocalStorage('GAME_STATE_' + $gameURL);
+    
     if (table) {
         table = JSON.parse(table);
     } else {
@@ -9430,7 +9437,7 @@ function save_local(key, value) {
         }
     }
 
-    $window.localStorage.setItem('GAME_STATE_' + $gameURL, JSON.stringify(table));
+    $setLocalStorage('GAME_STATE_' + $gameURL, JSON.stringify(table));
 }
 
 

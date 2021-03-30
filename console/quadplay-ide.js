@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.03.14.11';
+const version  = '2021.03.30.01';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -3636,6 +3636,16 @@ function reloadRuntime(oncomplete) {
         QRuntime.$prompt             = prompt;
         QRuntime.$sleep              = useIDE ? null : sleep;
         QRuntime.$Object.prototype.toString = Object.prototype.toString;
+
+        if (isQuadserver) {
+            // Persist to disk
+            // TODO
+            QRuntime.$getLocalStorage    = function (key) { return localStorage.getItem(key); };
+            QRuntime.$setLocalStorage    = function (key, value) { return localStorage.setItem(key, value); };
+        } else {
+            QRuntime.$getLocalStorage    = function (key) { return localStorage.getItem(key); };
+            QRuntime.$setLocalStorage    = function (key, value) { return localStorage.setItem(key, value); };
+        }
 
         // For use by the online component
         QRuntime.$wordsToNetID       = wordsToNetID;

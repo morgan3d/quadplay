@@ -1,0 +1,30 @@
+TestBattle
+════════════════════════════════════════════════════════════════════════
+
+enter
+────────────────────────────────────────────────────────────────────────
+// This event runs when the mode is entered via set_mode() or push_mode().
+device_control("set_mouse_cursor", "none")
+
+debug_print("TEST BATTLE")
+// Put local state for the mode here.  Declare variables with let, constants with const, and functions with def.
+def create_turn_state_from_yml(battle_yml):
+    let ts = deep_clone(battle_yml.turn_state)
+    replace_known_keys(ts, ["coord", "attack_vector", ])
+    ts.tiles = load_tiles_from_string(ts.tiles)
+    return ts    
+
+debug_print("Loading: ", TestBattleName)
+let ts = create_turn_state_from_yml(CONSTANTS[TestBattleName])
+
+set_mode(PlayerTurn, ts)
+
+frame
+────────────────────────────────────────────────────────────────────────
+// This event runs 60 times per second. Game logic, simulation, user input, and drawing all go here.
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+// This event runs just before leaving for another mode by set_mode() or pop_mode().
+

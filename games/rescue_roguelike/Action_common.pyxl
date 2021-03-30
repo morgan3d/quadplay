@@ -1,0 +1,29 @@
+// Any common functionality used by the actions can go here.
+
+// Actions need a compute_trajectory_for_<action> function.
+//
+// A trajectory is an object that describes the result of an attack.  Each one
+// is specific to the attack type and each will return different data.
+// These are primarily used for visualization of the attacks and also used by
+// the BattleSystem to execute the attack.
+// They should all at least return:
+// - "hit_objects"
+// - "hit_coords"
+// - "start_coord"
+// - "vector"
+// - "knockback" dirs
+
+// Returns a trajectory that accepts all.
+def compute_trajectory_any_coord(turn_state, unit, unit_spec, attack_coord):
+    return {
+        action_type: "",
+        knockback_dir: [],
+        start_coord: unit.coord,
+        hit_objects: [],
+        hit_coords: [],
+        vector: attack_coord - unit.coord,
+    }
+
+// Actions need an execute_<action> function
+//
+// This is used by the BattleSystem to modify the turn_state.

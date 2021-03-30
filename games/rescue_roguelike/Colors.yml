@@ -1,0 +1,22 @@
+# pixels to sample for colors
+text: [220, 424]
+menu_highlight: [178, 390]
+menu_bg: [184, 444]
+menu_border: [162, 432]
+bg: [0, 0]
+
+# some highlight colors
+green_bright: [522, 188]
+green_mid: [500, 172]
+green_dark: [500, 152]
+
+yellow_bright: [588, 56]
+yellow_mid: [570, 42]
+yellow_dark: [556, 48]
+
+red_bright: [570, 106]
+red_mid: [560, 86]
+red_dark: [530, 90]
+
+blue_bright: [580, 150]
+blue_mid: [580, 170] 

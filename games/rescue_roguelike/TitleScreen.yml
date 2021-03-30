@@ -1,0 +1,138 @@
+# could have special text for other scenarios
+# this supports:
+# - NUM_TURNS
+# - NUM_ROWS (though, these may be the same)
+# - NUM_SAVED
+text: >-
+    You managed to save {color: #f00 NUM_SAVED} villagers.
+
+text_saved_one: >-
+    You saved one lucky villager.
+
+
+text_saved_none: >-
+    You managed to not save anyone.
+
+# this is the turn state that will show an empty level with a sign post
+turn_state:
+    battle_type: "game_over"
+    bg_image: title_sprite
+    bgm: 
+      asset: fanfare_snd
+      loop: false
+      volume: 0.5
+    show_ui: false
+    show_title: false
+
+    # for tiles, all white space will get removed.
+    tiles: |
+        V V V V V V V V
+        V V V V V V V V
+        V V V V V V V V
+        V V V V V V V V
+        V V V V V V V V
+        V V V V V V V V
+        V . . . . . . V
+        V V V V V V V V
+    map_offset:
+        0
+    turn_num: 0
+    points: 0
+    expired_objects: []
+    dead_objects: []
+    objects: 
+        - id: "hero"
+          coord: [1, 6]
+          team: "player"
+          obj_type: "tutorial_move_only"
+          health: 3
+          loadout:
+        - id: "sign0"
+          coord: [2, 6]
+          obj_type: "sign"
+          name: Instructions 1/4
+          description: >-
+              Each turn, {color: #0f0 move} Percy and friends.  Do not fall
+              off the top of the map!
+        - id: "sign1"
+          coord: [3, 6]
+          obj_type: "sign"
+          name: Instructions 2/4
+          description: >-
+              Each hero can {color: #ff0 attack} once per turn.
+              End your turn when you are done.
+        - id: "sign2"
+          coord: [4, 6]
+          obj_type: "sign"
+          name: Instructions 3/4
+          description: >-
+              Saved {color: #ffc0cb villagers} will grant you {color: #ffc0cb points}.
+              These can be used to perform {color: #ff0 special actions}.
+        - id: "sign3"
+          coord: [5, 6]
+          obj_type: "sign"
+          name: Instructions 4/4
+          description: >-
+              Losing a villager will deal your characters {color: #f00 1} damage.
+        - id: "cave_to_battle"
+          coord: [6, 6]
+          obj_type: "cave"
+          name: "Start a new game"
+          description: >-
+             Drag Percy here to start.
+
+
+             Good luck!  
+
+# this is for testing.
+test_turn_state:
+    # for tiles, all white space will get removed.
+    tiles: |
+        . . . ~ . . . .
+        . . . ~ . . . .
+        . . . ~ . . . .
+        . . . M . . . .
+        . . . M . . . .
+        . . . M . . . .
+        . . . ~ . . . .
+        . . . ~ . . . .
+        . . . ~ . . . .
+        . . . ~ . . . .
+        . . . ~ . . . .
+        . . . ~ . . . .
+        . . . ~ . . . .
+    map_offset:
+        2
+    turn_num: 2
+    points: 10
+    expired_objects: 
+        - id: "help1"
+          coord: [1, 0]
+          obj_type: "help_thing"
+          num_coords_moved_this_turn: 0
+          performed_action_this_turn: false
+          # really?
+          team: "player"
+          health: 1
+          expired_at_map_offset: 0
+          expired_at_turn: 0
+    dead_objects: []
+    objects:
+        - id: "heart1"
+          coord: [2, 5]
+          obj_type: "heart"
+        - id: "fire1"
+          coord: [0, 5]
+          obj_type: "fire"
+
+        # enemies
+        - id: "baddie0"
+          coord: [5, 4]
+          obj_type: "baddie_shooter"
+          num_coords_moved_this_turn: 0
+          performed_action_this_turn: false
+          team: "enemy"
+          health: 1
+          next_attack: 
+            attack_order: 1
+            attack_vector: [-1, 0]

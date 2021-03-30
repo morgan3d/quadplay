@@ -1,0 +1,117 @@
+// generic dispatch
+def compute_pending_steps_for_action(
+        action_name,
+        unit,
+        unit_spec,
+        action_coord
+):
+    const action_vector = action_coord - unit.coord
+    return [
+        {
+            type: "action",
+
+            // payload
+            action: {
+                name: action_name,
+                unit: unit,
+                spec: unit_spec,
+                vector: action_vector,
+                target: action_coord,
+            }
+        }
+    ]
+
+def execute_action(turn_state, step, exec_result):
+    assert(step.action)
+    assert(step.action.name)
+    assert(
+        ACTIONS[step.action.name],
+        "'" + step.action.name + "' not in " + keys(ACTIONS)
+    )
+    assert(ACTIONS[step.action.name].exec)
+    const required_points = get_points_required_by_action(step.action.name)
+    const prev_points = turn_state.points
+    turn_state.points = max(turn_state.points - required_points, 0)
+    const spent_points = prev_points - turn_state.points
+    if spent_points > 0:
+        push(exec_result.exec_log, {
+            type: "spent_points",
+            spent_points: spent_points
+        })
+
+    let result = ACTIONS[step.action.name].exec(turn_state, step, exec_result)
+    if result:
+        step.action.unit.performed_action_this_turn = true
+    return result
+
+def get_points_required_by_action(action):
+    const action_spec = Actions_YAML[action]    
+    assert(action_spec, "Missing action spec for " + action)
+    return action_spec.points
+
+def get_alt_text_for_action(action):
+    const action_spec = Actions_YAML[action]
+    const text = (if action_spec 
+            then action_spec.help
+            else "")
+    let subst = {
+        POINTS: if action_spec.points then action_spec.points else 0,
+    }
+    return replace(text, subst)
+
+def get_label_text_for_action(action):
+    const action_spec = Actions_YAML[action]
+    return (if action_spec and action_spec.label
+            then action_spec.label
+            else action)
+
+def get_dialog_for_action(action):
+    const action_spec = Actions_YAML[action]
+    if size(action_spec.dialog):
+        return random_value(action_spec.dialog)
+    return uppercase(action)
+
+def compute_trajectory_for_action(action, turn_state, unit, unit_spec, coord):
+    const compute_trajectory_fn = ACTIONS[action].compute_trajectory
+    return compute_trajectory_fn(turn_state, unit, unit_spec, coord)
+
+def compute_mask_for_action(action, turn_state, unit, unit_spec):
+    const compute_trajectory_fn = ACTIONS[action].compute_trajectory
+    let mask = compute_empty_mask(turn_state)
+    for i < size(mask):
+        const coord = to_coord(BATTLE_GRID_SIZE, i)
+        if coord.y < BATTLE_GRID_SIZE.y - NUM_INVALID_ROWS_FROM_BOTTOM:
+            mask[i] = compute_trajectory_fn(turn_state, unit, unit_spec, coord) != nil
+
+    return mask
+
+const ACTIONS = {
+    "gun": {
+        exec: execute_gun,
+        compute_trajectory: compute_trajectory_for_gun,
+    },
+    "melee": {
+        exec: execute_melee,
+        compute_trajectory: compute_trajectory_for_melee,
+    },
+    "grenade": {
+        exec: execute_grenade,
+        compute_trajectory: compute_trajectory_for_grenade,
+    },
+    "Mountain": {
+        exec: execute_mountain,
+        compute_trajectory: compute_trajectory_for_mountain,
+    },
+    "Push": {
+        exec: execute_Push,
+        compute_trajectory: compute_trajectory_for_Push,
+    },
+    "Heal": {
+        exec: execute_Heal,
+        compute_trajectory: compute_trajectory_for_Heal,
+    },
+    "Fireball": {
+        exec: execute_Fireball,
+        compute_trajectory: compute_trajectory_for_Fireball,
+    }
+}

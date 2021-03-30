@@ -1,0 +1,104 @@
+# this is the configuration for a test battle
+turn_state:
+    show_ui: true
+    # for tiles, all white space will get removed.
+    tiles: |
+        ~ ~ ~ ~ ~ ~ ~ ~
+        M M M M . M . .
+        . . . . . M . .
+        . f . . . . . .
+        . f v . . . . .
+        . . . . . . . ~
+        . . . . . . ~ ~
+        . . . . . . ~ ~
+        . . . . f ~ ~ ~
+        . . . . M ~ ~ ~
+        . . . f M ~ ~ ~
+        . . . f ~ ~ ~ ~
+        . . . ~ ~ ~ ~ ~
+    map_offset:
+        0
+    turn_num: 0
+    points: 10
+    expired_objects: []
+    dead_objects: []
+    objects:
+        # players
+        - id: "adam"
+          coord: [2, 2]
+          obj_type: "player_a"
+          num_coords_moved_this_turn: 0
+          performed_action_this_turn: false
+          team: "player"
+          health: 3
+          loadout:
+              - Heal
+              - Fireball
+        - id: "bob"
+          coord: [5, 3]
+          obj_type: "player_b"
+          num_coords_moved_this_turn: 0
+          performed_action_this_turn: false
+          team: "player"
+          health: 3
+          loadout:
+              - Fireball
+        - id: "charles"
+          coord: [7, 2]
+          obj_type: "player_c"
+          num_coords_moved_this_turn: 0
+          performed_action_this_turn: false
+          team: "player"
+          health: 3
+        # help things
+        - id: "help0"
+          coord: [0, 6]
+          obj_type: "help_thing_boy"
+          num_coords_moved_this_turn: 0
+          performed_action_this_turn: false
+          team: "player"
+          health: 1
+        - id: "help1"
+          coord: [6, 5]
+          obj_type: "help_thing_lady"
+          num_coords_moved_this_turn: 0
+          performed_action_this_turn: false
+          team: "player"
+          health: 1
+        # non-enemy objects
+        - id: "diamond0"
+          coord: [1, 1]
+          obj_type: "diamond"
+          health: 10
+          num_coords_moved_this_turn: 0
+          performed_action_this_turn: false
+          team: "player"
+        - id: "mountain0"
+          coord: [1, 7]
+          obj_type: "mountain_a"
+          num_coords_moved_this_turn: 0
+          performed_action_this_turn: false
+          health: 3
+          team: ""
+
+        # enemies
+        - id: "baddie0"
+          coord: [3, 6]
+          obj_type: "baddie_shooter"
+          num_coords_moved_this_turn: 0
+          performed_action_this_turn: false
+          team: "enemy"
+          health: 3
+          next_attack: 
+            attack_order: 1
+            attack_vector: [-1, 0]
+        - id: "baddie1"
+          coord: [5, 5]
+          obj_type: "baddie_grenade"
+          num_coords_moved_this_turn: 0
+          performed_action_this_turn: false
+          team: "enemy"
+          health: 4
+          next_attack: 
+            attack_order: 2
+            attack_vector: [4, 0]

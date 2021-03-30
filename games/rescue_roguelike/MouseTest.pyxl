@@ -1,0 +1,238 @@
+MouseTest
+════════════════════════════════════════════════════════════════════════
+// Put local state for the mode here.  Declare variables with let, constants with const, and functions with def.
+
+
+let gamepad = gamepad_array[0]
+
+let units = [ 
+{
+    name: "a",
+    coord: xy(1,1), 
+}, {
+    name: "b",
+    coord: xy(2,2), 
+}, {
+    name: "c",
+    coord: xy(3,3)}
+,]
+
+def screen_to_grid_coord(screen_pos):
+    return floor((screen_pos - BATTLE_GRID_OFFSET) / GRID_CELL_SIZE)
+
+def grid_coord_to_screen(coord):
+    return coord * GRID_CELL_SIZE + BATTLE_GRID_OFFSET
+
+
+def update_cursor_hover_with_gamepad(gamepad):
+    update_cursor_hover()
+    
+    if gamepad.xx or gamepad.yy:
+        // what to do if it's off board?
+        cursor_hover = grid_coord_to_screen(
+            screen_to_grid_coord(cursor_hover) 
+            + x_or_y(xy(gamepad.xx, gamepad.yy)))
+
+
+def update_curr_drag_with_b(gamepad):
+    update_curr_drag()
+    
+    if gamepad.bb:
+        curr_drag = {
+            start_frame: mode_frames,
+            start_pos: cursor_hover,
+        }
+    if gamepad.released_b:
+        curr_drag = ∅
+
+    
+def is_click_with_b():
+    if not (curr_drag and curr_drag.start_frame ≥ mode_frames - FRAMES_LONG_PRESS):
+        return false
+    
+    let release_pos = ∅
+    if touch.released_a:
+        release_pos = touch.xy
+    if gamepad.released_b:
+        release_pos = cursor_hover
+        
+    return release_pos and ‖release_pos - curr_drag.start_pos‖ < TOUCH_CLICK_RADIUS
+
+
+let interaction_state = {
+    selected_unit: ∅,
+    attacking: false,
+}
+def handle_input(gamepad):
+    const long_press = is_long_press()    
+    const click = is_click_with_b()
+    const long_press_ended = long_press and (touch.released_a or gamepad.released_b)
+    const confirm = click or long_press_ended
+    
+    const toggle_attack = gamepad.ff or button_clicked({
+        corner: xy(255, 155),
+        size: xy(50, 20),
+        text: "Attack",
+    })
+    
+    if toggle_attack:
+        if interaction_state.selected_unit:
+            interaction_state.attacking = not interaction_state.attacking
+        return
+    
+    const on_grid = is_on_board(BATTLE_GRID_SIZE, 
+        screen_to_grid_coord(cursor_hover))
+    if on_grid and long_press:
+        const start_drag_coord = screen_to_grid_coord(curr_drag.start_pos)
+        const unit_at_coord = get_unit_at_coord(start_drag_coord)
+        interaction_state.selected_unit = unit_at_coord
+        
+    if on_grid and confirm:
+        let reset_selection = false
+        const cursor_hover_coord = screen_to_grid_coord(cursor_hover)
+        if interaction_state.selected_unit:
+            const unit_at_coord = get_unit_at_coord(cursor_hover_coord)
+            if unit_at_coord:
+                interaction_state.selected_unit = unit_at_coord
+            else:
+                if interaction_state.attacking:
+                    reset_selection = true
+                else:
+                    let is_valid_move = manhattan(interaction_state.selected_unit.coord - cursor_hover_coord) < 4
+                    if is_valid_move:
+                        interaction_state.selected_unit.coord = xy(cursor_hover_coord)
+                    else:
+                        reset_selection = true
+        
+        else:    
+            const unit_at_coord = get_unit_at_coord(cursor_hover_coord)
+            interaction_state.selected_unit = unit_at_coord
+                
+        if reset_selection:
+            interaction_state.selected_unit = ∅
+            interaction_state.attacking = false
+
+
+    debug_watch(interaction_state)
+
+
+def get_unit_at_coord(coord):
+    for unit in units:
+        if eq(coord, unit.coord):
+            return unit
+    return ∅
+    
+def draw_state() preserving_transform:
+
+    const cursor_hover_coord = screen_to_grid_coord(cursor_hover)
+
+    compose_transform({
+        pos: BATTLE_GRID_OFFSET,
+    })
+    for i < BATTLE_GRID_SIZE.x * BATTLE_GRID_SIZE.y:
+        const coord = to_coord(BATTLE_GRID_SIZE, i)
+        preserving_transform:
+            compose_transform({
+                pos: coord * GRID_CELL_SIZE
+            })
+            
+            let outline_color = #aaa
+            if cursor_hover_coord and eq(coord, cursor_hover_coord):
+                outline_color = #f00
+            if (interaction_state.selected_unit  
+                and eq(interaction_state.selected_unit.coord,
+                    coord)):
+                outline_color = #0f0
+            
+            let fill_color = rgba(100%, 100%, 100%, 0)
+            for unit in units:
+                if eq(coord, unit.coord):
+                    fill_color = #00f
+            
+            draw_corner_rect({
+                corner: xy(0, 0),
+                size: GRID_CELL_SIZE,
+                outline: outline_color,
+                color: fill_color,
+            })
+            
+    for unit in units:
+        preserving_transform:
+            compose_transform({
+                pos: unit.coord * GRID_CELL_SIZE
+            })
+            draw_text({
+                font: font,
+                text: unit.name,
+                pos: ½ GRID_CELL_SIZE,
+                color: #fff,
+                x_align: "center",
+                y_align: "center",
+            })
+    
+    // ghost
+    const is_dragging_move = false
+    if is_dragging_move:
+        const unit = interaction_state.selected_unit
+        preserving_transform:
+            compose_transform({
+                pos: cursor_hover_coord * GRID_CELL_SIZE
+            })
+            
+            const fill_color = #66f
+            draw_corner_rect({
+                corner: xy(0, 0),
+                size: GRID_CELL_SIZE,
+                color: fill_color,
+                z: -1.0,
+            })
+    
+    const text_pos = xy(½ SCREEN_SIZE.x, 10)
+    const sel_unit = (if interaction_state.selected_unit then
+        interaction_state.selected_unit.name else
+        "∅")
+    const cursor_hover_output = if cursor_hover_coord then cursor_hover_coord else xy(-1, -1)
+    const mode = interaction_state.mode
+    const attacking = interaction_state.attacking
+    draw_lines_of_text([
+        "hello world",
+        "selected: " + sel_unit,
+        replace("hover: X Y", {
+            X: cursor_hover_output.x,
+            Y: cursor_hover_output.y,
+        }),
+        "mode: " + mode,
+        "attack: " + attacking,
+    ], {
+        font: font,
+        pos: text_pos,
+        color: #fff,
+    })
+    
+    if is_on_board(BATTLE_GRID_SIZE, cursor_hover_coord):
+        draw_line({
+            A: text_pos,
+            B: (cursor_hover_coord + xy(1, 0)) * GRID_CELL_SIZE,
+            color: #fff,
+        })
+    
+
+enter
+────────────────────────────────────────────────────────────────────────
+// This event runs when the mode is entered via set_mode() or push_mode().
+device_control("set_mouse_cursor", "none")
+set_background(COLORS.bg)
+
+frame
+────────────────────────────────────────────────────────────────────────
+// This event runs 60 times per second. Game logic, simulation, user input, and drawing all go here.
+update_cursor_hover_with_gamepad(gamepad)
+handle_input(gamepad)
+draw_state()
+
+update_curr_drag_with_b(gamepad)
+
+leave
+────────────────────────────────────────────────────────────────────────
+// This event runs just before leaving for another mode by set_mode() or pop_mode().
+

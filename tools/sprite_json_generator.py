@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """ Generate the reference .sprite.json for quadplay sprites. """
 
@@ -26,8 +26,8 @@ def parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
-        "-F",
-        "--Force",
+        "-f",
+        "--force",
         action="store_true",
         default=False,
         help="Overwrite any existing files."
@@ -98,7 +98,12 @@ def parse_args():
         help="If specified, only update this file."
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    if args.size:
+        args.size = {"x": args.size[0], "y": args.size[1]}
+
+    return args
 
 
 # @{ utilities for reading from aseprite data
@@ -111,12 +116,11 @@ def _frame(fnum, top_data, size, name):
         if name not in top_data["frames"][fnum]["filename"]:
             raise NotImplementedError
     except (IndexError, NotImplementedError):
-        import ipdb
-        ipdb.set_trace()
+        __import__("ipdb").set_trace()
 
     return {
-        "x": pixel_coordinate["x"]/size[0],
-        "y": pixel_coordinate["y"]/size[1]
+        "x": pixel_coordinate["x"]/size["x"],
+        "y": pixel_coordinate["y"]/size["y"]
     }
 
 
@@ -185,7 +189,7 @@ def _extract_from_aseprite_json(aseprite_json):
                 )
             )
 
-    size = (width, height)
+    size = {"x": width, "y": height}
 
     name_map = {}
     tag_map = aseprite_data["meta"].get("frameTags", {})
@@ -237,16 +241,21 @@ def make_sprite(
             "'--force' argument.".format(outpath)
         )
 
+    # if the user specifies size on the commandline, don't change it in the
+    # future
+    locked_size = size is not None
+
     extra_data = {}
     if aseprite_json and os.path.exists(aseprite_json):
         print("Using aseprite json file: '{}'".format(aseprite_json))
-        size, extra_data = _extract_from_aseprite_json(aseprite_json)
+        ase_size, extra_data = _extract_from_aseprite_json(aseprite_json)
+
+        if not locked_size:
+            size = ase_size
 
     if not size:
         im = Image.open(filepath)
-        size = im.size
-    else:
-        size = (size[0], size[1])
+        size = {"x": im.size[0], "y": im.size[1]}
 
     # read in the base data to preserve attributes that aseprite doesn't
     # preserve, like "pivot".  Hopefully over time Aseprite will allow adding
@@ -259,8 +268,9 @@ def make_sprite(
     blob.update(
         {
             "url": os.path.relpath(filepath, os.path.dirname(outpath)),
-            "sprite_size": {'x': size[0], 'y': size[1]},
-            "license": license
+            "sprite_size": size,
+            "license": license,
+            "locked_size": locked_size,
         }
     )
 
@@ -320,8 +330,16 @@ def _extract_sprites(from_game):
             asset_data = json.loads(fi.read())
 
         aseprite_data = asset_data.get("aseprite_json")
+        dirname = os.path.dirname(asset_url)
+        size = None
+        if asset_data.get("locked_size"):
+            size = asset_data.get("sprite_size")
         if asset_data["url"].endswith(".png"):
-            yield (asset_data["url"], aseprite_data)
+            yield (
+                os.path.join(dirname, asset_data["url"]),
+                aseprite_data,
+                size
+            )
 
 
 def main():
@@ -330,25 +348,25 @@ def main():
 
     if args.update:
         sprites_to_process = _extract_sprites(args.game)
-        args.Force = True
+        args.force = True
 
         if args.filepath:
             sprites_to_process = [
-                (fp, asp) for (fp, asp) in sprites_to_process
+                (fp, asp, sz) for (fp, asp, sz) in sprites_to_process
                 if fp == args.filepath
             ]
     else:
-        sprites_to_process = [(args.filepath, args.aseprite)]
+        sprites_to_process = [(args.filepath, args.aseprite, None)]
 
-    for fp, asp_path in sprites_to_process:
+    for fp, asp_path, size in sprites_to_process:
         print("processing: {}".format(fp))
         make_sprite(
             fp,
-            args.size,
+            size if size is not None else args.size,
             args.license,
             args.game,
             asp_path,
-            args.Force
+            args.force
         )
 
 

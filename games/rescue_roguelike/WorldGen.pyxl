@@ -1,0 +1,290 @@
+def is_valid_tile_for_spawning(ts, coord, new_rows default []):
+    if size(new_rows) == 0:
+        const spec = get_tile_spec_at(ts, coord)
+
+        assert(spec, "nil spec at coord:" + unparse(coord))
+
+        // make sure that the tile is walkable
+        if (spec.blocks_movement_of != "nothing"):
+            // debug_print(coord, "invalid because", "blocks movement")
+            return false
+    else if find([".", "f"], new_rows[coord.y][coord.x]) == nil:
+        // debug_print(coord, "invalid because", "not . or f, is ", new_rows[coord.y][coord.x])
+        return false
+
+    // make sure there isn't already something on that tile
+    const objs = get_grid_objects_at(ts, coord)
+    if size(objs) > 0:
+        // debug_print(coord, "invalid because", "something there", objs)
+        return false
+
+    return true
+
+def flip_row(row):
+    let result = ""
+    for c in row:
+        result = c + result
+    return result
+
+def flip_template(rows):
+    let result = []
+    for row in rows:
+        push(result, flip_row(row))
+    return result
+
+def add_forests(rows):
+    let result = []
+    for row in rows:
+        let line_with_forest = ""
+        for tile in row:
+            if (
+                    tile == "." 
+                    and random() < WorldTemplates_YAML.chance_of_forest
+            ):
+                line_with_forest += "f"
+            else:
+                line_with_forest += tile
+        push(result, line_with_forest)
+    return result
+
+def new_enemy_of_type(typename, coord, index):
+    debug_print(replace("making: T at (X, Y)", {"T":typename, "X":coord.x, "Y":coord.y}))
+    const obj_spec = ObjectSpecs_YAML[typename]
+    let new_enemy = {
+        id: replace(
+            "baddie_initial_T_F_N",
+            {
+                T: typename,
+                F: game_frames,
+                N: index
+            }
+        ),
+        obj_type: typename,
+        coord: coord, // gets 
+        health: obj_spec.max_health,
+        team: "enemy",
+        num_coords_moved_this_turn: 0,
+    }
+    // debug_print("made : ", new_enemy)
+    let elem = create_element_for_obj(new_enemy, obj_spec)
+    // debug_print("spec: ", elem)
+
+    return [new_enemy, elem]
+
+
+
+def new_help_at(coord, index):
+    const typename = random_value(["help_thing", "help_thing_lady", "help_thing_boy", ])
+    const obj_spec = ObjectSpecs_YAML[typename]
+
+    let new_thing = {
+        id: replace(
+            "help_initial_T_F_N",
+            {
+                T: typename,
+                F: game_frames,
+                N: index,
+            }
+        ),
+        obj_type: typename,
+        coord: coord,
+        health: obj_spec.max_health,
+        team: "player",
+    }
+
+    return new_thing
+
+def sanitized(template_string):
+    let result = []
+    let rows = split(replace(template_string, {" ": ""}), "\n")
+    for row in rows:
+        if row != "":
+            push(result, row)
+    return result
+
+def add_monsters(
+        turn_state,
+        tile_rows,
+        row_range,
+        template_type,
+        taken_coordinates
+):
+    let start_row_world = compute_num_rows(turn_state)
+    debug_print("row_range: ", row_range, "offset", start_row_world)
+    let new_objects = []
+
+    let num_rows = row_range[1] - row_range[0]
+
+    // only spawn in the glue for the beginning rows
+    let coords = []
+    let offset_coordinates = []
+    for row_range[0] <= y < row_range[1]:
+        // don't spawn in the edges
+        for 0< x < BATTLE_GRID_SIZE.x - 1:
+            let candidate = xy(x, y)
+            let offset_candidate = xy(x, y+start_row_world)
+            if (
+                    is_valid_tile_for_spawning(turn_state, candidate, tile_rows)
+                    // wasn't already used by a help
+                    and find(taken_coordinates, offset_candidate) == nil
+            ):
+                push(coords, candidate)
+                push(offset_coordinates, offset_candidate)
+
+    coords = shuffled(coords)
+    offset_coordinates = shuffled(offset_coordinates)
+    debug_print("valid coordinates: "+ unparse(offset_coordinates))
+
+    let already_placed = []
+
+    const enemies_per_row = random_value(
+        WorldTemplates_YAML.enemies.enemies_per_row[template_type]
+    )
+
+    debug_print("enemies_per_row " + enemies_per_row + " ENEMIES!")
+    debug_print("rows that have enemies", num_rows)
+    let num_enemies = floor(enemies_per_row * num_rows)
+    debug_print("ADDING " + num_enemies + " ENEMIES!")
+
+    // shouldn't spawn so many enemies that there aren't at least 2 empty
+    // spaces / row
+    num_enemies = min(num_enemies, size(offset_coordinates) - 2 * num_rows)
+
+    debug_print("adjusted number of enemies: ", num_enemies)
+
+    for i < num_enemies:
+        const obj_type = random_value(
+            WorldTemplates_YAML.enemies.sets[template_type]
+        )
+
+        // shouldn't ever loop
+        let coord = array_value(offset_coordinates, i, "loop")
+        let tries = 0
+        if find(already_placed, coord) != nil:
+            debug_print("already placed: " +unparse(coord))
+            continue
+        push(already_placed, coord)
+
+        // place it into the destination row (not the new rows)
+        let enemy = new_enemy_of_type(obj_type, coord, i)
+        let en_obj = enemy[0]
+        debug_print("placing: ", coord)
+        push(new_objects, en_obj)
+    debug_print("added " + size(new_objects) + " monsters succesfully")
+
+    return new_objects
+
+def add_helps(new_rows, rownum):
+    let rows = []
+    let objects = []
+    let rownum_off = 0
+    let index = 0
+    for row in new_rows:
+        let clean_row = replace(row, {"h": "."})
+        push(rows, clean_row)
+
+        for i < size(row):
+            let ch = row[i]
+            if ch == "h":
+                let coord = xy(i, rownum + rownum_off)
+                let help_obj = new_help_at(coord, index)
+                debug_print("adding help at", coord)
+                push(objects, help_obj)
+                index += 1
+        rownum_off += 1
+
+    return {
+        rows: rows,
+        objects: objects,
+    }
+
+def generate_new_rows_for_turn_state(
+        turn_state,
+        template_type default "glue"
+):
+    debug_print("generating block of type: ", template_type)
+
+    // based on the current turn_state, generate a new row.  
+    // this could generate multiple rows.
+    // 
+    // This does not actually modify the turn_state.  The caller is 
+    // responsible for doing that.
+    //
+    // TODO: do this generation progressively via hashes rather than randomly
+    let new_rows = []
+
+    if template_type != "glue":
+        // grabbing a big template block
+        new_rows = sanitized(
+            random_value(WorldTemplates_YAML.level_templates[template_type])
+        )
+    debug_print("big template block:")
+    debug_print(new_rows)
+
+    let num_block_rows = size(new_rows)
+    let num_glue_blocks = random_value(WorldTemplates_YAML.glue_lines)
+    debug_print("rows to add of glue:" , num_glue_blocks)
+    for i < num_glue_blocks:
+        let new_row = sanitized(
+            random_value(WorldTemplates_YAML.level_templates.glue)
+        )
+        debug_print(new_row)
+        extend(new_rows, new_row)
+
+    let num_glue_rows = size(new_rows) - num_block_rows
+
+    new_rows = add_forests(new_rows)
+
+    // mirror the row
+    if random() < WorldTemplates_YAML.chance_to_mirror_row:
+        new_rows = flip_template(new_rows)
+
+    // @TODO: flip templates along y as well
+
+    // spawn the HELPs
+    let new_objects = []
+    const add_helps_result = add_helps(new_rows, compute_num_rows(turn_state))
+    new_rows = add_helps_result.rows
+    extend(new_objects, add_helps_result.objects)
+
+    let taken_coordinates = []
+    for thing in add_helps_result.objects:
+        push(taken_coordinates, thing.coord)
+
+    let monster_row_range = [0, size(new_rows)]
+    if template_type == "beginning":
+        // beginning tiles have specific sets of monsters, only spawn on the
+        // glue rows following the initial template block
+        monster_row_range = [size(new_rows) - num_glue_rows, size(new_rows)]
+
+    extend(
+        new_objects,
+        add_monsters(
+            turn_state,
+            new_rows,
+            monster_row_range,
+            template_type,
+            taken_coordinates
+        )
+    )
+    debug_print("added: " + size(new_objects) + " monsters")
+
+    return {
+        new_tiles: join(new_rows, ""),
+        new_objects: new_objects,
+    }
+
+
+// checks if turn_state needs more tiles.
+def generate_more_tiles(turn_state, template_type default "middle"):
+    const new_rows_info = generate_new_rows_for_turn_state(
+        turn_state,
+        template_type
+    )
+    turn_state.tiles += new_rows_info.new_tiles
+    extend(turn_state.objects, new_rows_info.new_objects)
+
+    let result_elements = []
+    for obj in new_rows_info.new_objects:
+        push(result_elements, create_element_for_obj(obj))
+    return result_elements

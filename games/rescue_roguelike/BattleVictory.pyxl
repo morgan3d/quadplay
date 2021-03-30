@@ -1,0 +1,26 @@
+BattleVictory
+════════════════════════════════════════════════════════════════════════
+// Put local state for the mode here.  Declare variables with let, constants with const, and functions with def.
+let turn_state = ∅
+
+enter(turn_state_)
+────────────────────────────────────────────────────────────────────────
+// This event runs when the mode is entered via set_mode() or push_mode().
+
+turn_state = turn_state_
+
+frame
+────────────────────────────────────────────────────────────────────────
+// This event runs 60 times per second. Game logic, simulation, user input, and drawing all go here.
+draw_text({
+    font: font,
+    text: "victory in " + turn_state.turn_num,
+    pos: xy(50, 50),
+    color: #fff,
+})
+  
+
+leave
+────────────────────────────────────────────────────────────────────────
+// This event runs just before leaving for another mode by set_mode() or pop_mode().
+

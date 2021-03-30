@@ -1,0 +1,107 @@
+turn_state:
+    # for tiles, all white space will get removed.
+    tiles: |
+        . . . ~ . . . .
+        . . . ~ . . . .
+        . . . ~ . . . .
+        . . . M . . . .
+        . . . M . . . .
+        . . . M . . . .
+        . . . ~ . . . .
+        . . . ~ . . . .
+        . . . ~ . . . .
+    map_offset:
+        0
+    turn_num: 0
+    points: 10
+    expired_objects: []
+    dead_objects: []
+    objects:
+        - id: "adam"
+          coord: [1, 5]
+          obj_type: "player_a"
+          num_coords_moved_this_turn: 0
+          attacked_this_turn: false
+          team: "player"
+          health: 0
+          loadout:
+              - Push
+              - Mountain
+              - Heal
+        - id: "bob"
+          coord: [1, 4]
+          obj_type: "player_b"
+          num_coords_moved_this_turn: 0
+          attacked_this_turn: false
+          team: "player"
+          health: 0
+        - id: "charles"
+          coord: [1, 3]
+          obj_type: "player_c"
+          num_coords_moved_this_turn: 0
+          attacked_this_turn: false
+          team: "player"
+          health: 0
+        - id: "sign0"
+          coord: [1, 3]
+          obj_type: "sign"
+          description: >-
+              Do you see the sign?
+
+        - id: "help1"
+          coord: [1, 0]
+          obj_type: "help_thing"
+          num_coords_moved_this_turn: 0
+          performed_action_this_turn: false
+          # really?
+          team: "player"
+          health: 1
+
+        - id: "heart1"
+          coord: [2, 5]
+          obj_type: "heart"
+        - id: "fire1"
+          coord: [0, 5]
+          obj_type: "fire"
+
+        # enemies
+        - id: "baddie0"
+          coord: [5, 4]
+          obj_type: "baddie_shooter"
+          num_coords_moved_this_turn: 0
+          performed_action_this_turn: false
+          team: "enemy"
+          health: 1
+          next_attack: 
+            attack_order: 1
+            attack_vector: [-1, 0]
+        - id: "baddie1"
+          coord: [5, 3]
+          obj_type: "scout"
+          num_coords_moved_this_turn: 0
+          performed_action_this_turn: false
+          team: "enemy"
+          health: 1
+          next_attack: 
+            attack_order: 1
+            attack_vector: [-1, 0]
+        - id: "baddie2"
+          coord: [5, 2]
+          obj_type: "baddie_grenade"
+          num_coords_moved_this_turn: 0
+          performed_action_this_turn: false
+          team: "enemy"
+          health: 1
+          next_attack: 
+            attack_order: 1
+            attack_vector: [-1, 0]
+        - id: "baddie3"
+          coord: [5, 1]
+          obj_type: "walker"
+          num_coords_moved_this_turn: 0
+          performed_action_this_turn: false
+          team: "enemy"
+          health: 1
+          next_attack: 
+            attack_order: 1
+            attack_vector: [-1, 0]

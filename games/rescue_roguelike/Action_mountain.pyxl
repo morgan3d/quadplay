@@ -1,0 +1,13 @@
+def execute_mountain(turn_state, step, exec_result):
+    change_tile_type_at_coord(turn_state, step.action.target, "M")
+    push(exec_result.exec_log, {
+        type: "acted",
+        action: step.action.name,
+        obj: step.action.unit,
+    })
+    return true
+
+def compute_trajectory_for_mountain(turn_state, unit, unit_spec, attack_coord):
+    if get_tile_ch_at(turn_state, attack_coord) == "M":
+        return nil
+    return compute_trajectory_any_coord(turn_state, unit, unit_spec, attack_coord)

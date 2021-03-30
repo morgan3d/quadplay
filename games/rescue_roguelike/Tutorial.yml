@@ -1,0 +1,44 @@
+# could have multiple in this file
+turn_state:
+    tutorial_level: 0
+
+    # for tiles, all white space will get removed.
+    tiles: |
+        ~ ~ ~ ~ ~ ~ ~ ~
+        . . . . . . . .
+        M M M M M M M .
+        . . . . . . . .
+        . M M M M M M M
+        . . . . . . . .
+        M M M M M M M .
+        . . . . . . . .
+        . M M M M M M M
+        . . . . . . . .
+        M M M M M M M .
+        . . . . . . . .
+        . M M M M M M M
+        . . . . . . . .
+    map_offset:
+        0
+    turn_num: 0
+    points: 0
+    expired_objects: []
+    dead_objects: []
+    objects: 
+        - id: "hero"
+          coord: [0, 1]
+          team: "player"
+          obj_type: "tutorial_move_only"
+          health: 3
+          loadout:
+        - id: "sign0"
+          coord: [7, 1]
+          obj_type: "sign"
+          description: >-
+              Hello and {color: #ff0 welcome}.
+
+        - id: "cave_to_battle"
+          coord: [7, 3]
+          obj_type: "cave"
+          descrption: >-
+              Go off to battle.

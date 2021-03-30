@@ -1,0 +1,123 @@
+ShowEnemyAttacks
+════════════════════════════════════════════════════════════════════════
+
+let turn_state = ∅
+let gamepad = gamepad_array[0]
+
+let object_elements = []
+let current_unit_element = ∅ 
+
+const PHASES = [
+    {name: "Environment", },
+    {name: "EnemyAttacks", },
+    {name: "MoveTiles", },
+]
+
+let units_to_execute_attack = []
+let unit_index = 0
+let phase_frame = 0
+let pending_steps = []
+let animating = false
+
+def compare_units_by_next_attack_order(a, b):
+    return a.next_attack.attack_order - b.next_attack.attack_order
+
+def has_work():
+    return unit_index < size(units_to_execute_attack) + 1
+
+def do_work():
+    // place holder for doing some actual animation in the future.
+    phase_frame += 1
+    
+    if phase_frame == 1:
+        if unit_index < size(units_to_execute_attack):
+            const attacker = units_to_execute_attack[unit_index]
+            current_unit_element = get_object_element_by_id(object_elements, attacker.id)
+            if attacker.next_attack:
+                const next_attack = attacker.next_attack
+                const attack_vector = next_attack.attack_vector
+                const attacker_spec = ObjectSpecs_YAML[attacker.obj_type]
+                const enemy_attack_action = attacker_spec.attack.kind
+                pending_steps = compute_pending_steps_for_action(
+                    enemy_attack_action,
+                    attacker,
+                    attacker_spec,
+                    attacker.coord + attack_vector,
+                )
+        else:
+            current_unit_element = nil
+            if should_move_map(turn_state):
+                pending_steps = [{
+                    type: "move_map",
+                }]
+
+    if animating:
+        return
+    else:
+        if not is_player_alive(turn_state):
+            set_mode(GameOver, turn_state)
+
+        if size(pending_steps) > 0:
+            animating = true
+            def end_animation():
+                animating = false
+            let exec_result = execute_pending_steps(turn_state, pending_steps)
+            sequence(…seq_for_exec_log(object_elements, exec_result.exec_log),
+            {
+                frames: 2,
+                end_callback: end_animation,
+            })
+            pending_steps = exec_result.next_pending_steps
+        else:
+            phase_frame = 0
+            unit_index += 1
+        
+def show_enemy_attacks_draw():
+    draw_battle_bg(turn_state)
+    draw_battle_board(turn_state)
+    draw_game_info(turn_state)
+
+    preserving_transform:
+        compose_transform({
+            pos: BATTLE_GRID_OFFSET,
+        })
+
+        for object_element in object_elements:
+            draw_grid_object(object_element, current_unit_element, "enemy")
+            draw_trajectory_for_next_attack(turn_state, object_element)
+   
+
+enter(turn_state_, object_elements_)
+────────────────────────────────────────────────────────────────────────
+// This event runs when the mode is entered via set_mode() or push_mode().
+turn_state = turn_state_
+object_elements = object_elements_
+
+remove_all(units_to_execute_attack)
+current_unit_element = ∅
+for obj in turn_state.objects:
+    const has_attack = obj.health > 0 and obj.next_attack
+    if has_attack:
+        push(units_to_execute_attack, obj)
+sort(units_to_execute_attack, compare_units_by_next_attack_order)
+
+phase_frame = 0
+unit_index = 0
+animating = false
+
+frame
+────────────────────────────────────────────────────────────────────────
+update_cursor_hover()
+// This event runs 60 times per second. Game logic, simulation, user input, and drawing all go here.
+if has_work():
+    do_work()
+else:
+    set_mode(CPUTurn, turn_state, object_elements)
+
+show_enemy_attacks_draw()
+update_curr_drag()
+
+leave
+────────────────────────────────────────────────────────────────────────
+// This event runs just before leaving for another mode by set_mode() or pop_mode().
+

@@ -1,0 +1,35 @@
+let bgm_music = nil
+let bgm_music_asset_name = nil
+
+def play_resume_bgm(turn_state):
+    debug_print("starting music", turn_state.bgm)
+    if (
+            bgm_music_asset_name == nil
+            or bgm_music_asset_name != turn_state.bgm.asset
+    ):
+        bgm_music_asset_name = ASSETS[turn_state.bgm.asset]
+        if bgm_music:
+            stop_bgm()
+
+        bgm_music = nil
+    if bgm_music == nil:
+
+        let volume = 1.0
+        if turn_state.bgm and turn_state.bgm.volume != nil:
+            volume = turn_state.bgm.volume
+
+        
+        // first time playing the sound
+        bgm_music = play_sound(
+            {
+                sound: bgm_music_asset_name,
+                loop: turn_state.bgm.loop,
+                volume: volume,
+            }
+        )
+    else:
+        // otherwise resume
+        resume_audio(bgm_music)
+
+def stop_bgm():
+    stop_audio(bgm_music)

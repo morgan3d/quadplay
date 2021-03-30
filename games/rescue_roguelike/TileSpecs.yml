@@ -1,0 +1,97 @@
+legend:
+  .: floor
+  f: forest
+  v: village
+  M: mountain
+  "~": water
+  V: void
+
+terrain: &terrain
+  # @{ field ideas
+  # can be: [everything, nothing, ground]
+  blocks_movement_of: nothing
+
+  blocks_projectiles: false
+
+  can_be_pushed_onto: true
+  # by default, enemies ignore terrain
+  enemy_target_score: -100
+  sprite_name: nil
+  # COLORS[value] to get an RGB from the palette
+  fallback_color: green_mid
+
+  description: >-
+      Description for the tile.
+  # @}
+
+  # currently uses the spritesheet floor_tiles
+  sprite:
+    sheet: Tiles_sprite
+    coord: [0, 0]
+
+floor:
+  <<: *terrain
+  name: Floor
+  description:  # intentionally left blank.
+
+forest:
+  <<: *terrain
+  name: Forest
+  fallback_color: green_dark
+  sprite:
+    sheet: Tiles_sprite
+    coord: [0, 3]
+  description: >-
+      Some trees huddled together.
+
+village:
+  <<: *terrain
+  name: Village
+  fallback_color: green_dark
+  sprite:
+    sheet: Tiles_sprite
+    coord: [0, 4]
+
+  description: >-
+      A normally quiet village.
+
+mountain:
+  <<: *terrain
+  name: Mountain
+  blocks_movement_of: all
+  blocks_projectiles: true
+  can_be_pushed_onto: false
+  fallback_color: red_dark
+  sprite:
+    sheet: Tiles_sprite
+    coord: [0, 2]
+
+  description: >-
+      Too steep to {color: #0f0 walk} or
+      fire {color: #ff0 projectiles} through.
+      Deals {color: #f00 1} damage if knocked into.
+
+water:
+  <<: *terrain
+  name: Water
+  fallback_color: blue_mid
+  blocks_movement_of: ground
+  sprite:
+    sheet: Tiles_sprite
+    coord: [0, 1]
+
+  description: >-
+      Careful, you'll {color: #f00 drown} if you fall in.
+
+void:
+  <<: *terrain
+  name: "A GAME BY:"
+  description: |
+    Ed Luong &{br}Stephan Steinbach
+    Art/Snd: Ian Patrick
+    Quadplay Engine: Morgan McGuire
+  fallback_color: black
+  blocks_movement_of: all
+  sprite:
+    sheet: Tiles_sprite
+    coord: [0, 7]

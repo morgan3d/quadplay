@@ -1,0 +1,330 @@
+attack_kinds:
+  - gun
+  - artillery
+  - melee
+  - spell
+
+gun_attack: &gun_attack
+  kind: gun
+  damage: 1
+  range: [1, 8]
+  pattern: single
+  knockback: 1
+  effect: nil
+
+melee_attack: &melee_attack
+  <<: *gun_attack
+  kind: melee
+  damage: 1
+  range: [1, 1]
+
+strong_melee_attack:  &strong_melee_attack
+  <<: *melee_attack
+  damage: 2
+
+grenade_attack: &grenade_attack
+  <<: *gun_attack
+  kind: grenade
+  damage: 1
+  range: [3, 8]
+
+# description of all of our objects
+default: &object_prototype
+    max_health: 3
+    is_unit: true
+    stationary: false
+
+    # flat just means that other things can walk on it.
+    lies_flat: false
+
+    description: >-
+        Some {color:#f00 description} for this object.
+
+    movement:
+      range: 3
+      kind: walk
+
+    hittable:
+      health: 3
+      armor: 0
+      enemy_target_score: -100
+
+    attack: *gun_attack
+    can_be_hit: true
+    rescue_points: 0
+
+pickup: &pickup_protoype
+    max_health: 1
+    is_unit: false
+    stationary: false
+    description: >-
+        Description for a pickup.
+    can_be_hit: true
+    rescue_points: 0
+
+# friendly units
+
+# bucket enemy units
+enemy: &enemy_prototype
+  <<: *object_prototype
+
+  max_health: 4
+
+  attack:
+    kind: "gun"
+    range: 3
+    splash: |
+      . . .
+      x o x
+      . . .
+
+  movement:
+    range: 3
+    kind: walk
+
+# terrain
+
+
+# player units
+player_a: 
+    <<: *object_prototype
+    name: Percy the Bard
+    spritesheet: "Percy-The-Bard-32_sprite"
+    sprite_offset_xy: [0, -8]
+    movement:
+        range: 4
+        kind: "walk"
+    attack: *gun_attack
+
+    description: >-
+        {color: #ff0 Shoots} arrows from lute, dealing {color: #f00 ATTACK_DAMAGE}.
+
+player_b:
+    <<: *object_prototype
+    name: Blythe the Shepherdess
+    spritesheet: "Blythe_sprite"
+    sprite_offset_xy: [0, -8]
+    movement:
+        range: 4
+        kind: "walk"
+    attack: *grenade_attack
+
+    description: >-
+        {color: #ff0 Launches} rocks with her crook, dealing {color: #f00 ATTACK_DAMAGE} and knocking back nearby.
+player_c:
+    <<: *object_prototype
+    name: Mortimer the Blacksmith
+    spritesheet: "Mortimer_sprite"
+    sprite_offset_xy: [0, -8]
+    attack: *strong_melee_attack
+    movement:
+        range: 5
+        kind: "walk"
+
+    description: >-
+        {color: #ff0 Strikes} foes with his hammer, dealing {color: #f00 ATTACK_DAMAGE} damage.
+
+tutorial_move_only: 
+    <<: *object_prototype
+    name: Percy the Bard
+    spritesheet: "Percy-The-Bard-32_sprite"
+    sprite_offset_xy: [0, -8]
+    movement:
+        range: .inf
+        kind: "walk"
+    attack: null
+    description: >-
+        {color: #0f0 Drag} me.
+
+recruit:
+    <<: *object_prototype
+    name: Recruit
+    spritesheet: "alien_red_sprite"
+    sprite_size_xy: [0.5, 0.5]
+    max_health: 1
+    attack: 
+      <<: *gun_attack
+      # just knockback
+      damage: 0
+    movement:
+      range: 3
+      kind: "walk"
+
+# enemies
+scout:
+    <<: *object_prototype
+    name: Scout
+    max_health: 2
+    spritesheet: "Goblin-Soldier-32_sprite"
+    sprite_offset_xy: [0, -8]
+    attack: *melee_attack
+    movement:
+      range: 5
+    description:
+        "{color: #ff0 Strikes} for {color: #f00 ATTACK_DAMAGE} damage."
+
+
+baddie_shooter:
+    <<: *object_prototype
+    name: Fuselier
+    spritesheet: "Goblin-Fuselier-32_sprite"
+    sprite_offset_xy: [0, -8]
+    attack: *gun_attack
+    movement:
+      range: 3
+
+    description:
+        "{color: #ff0 Shoots} a projectile for {color: #f00 ATTACK_DAMAGE} damage."
+
+
+baddie_grenade:
+    <<: *object_prototype
+    name: Occupant
+    spritesheet: "Occupant-32_sprite"
+    sprite_offset_xy: [0, -8]
+    attack: *grenade_attack
+
+    description:
+        "{color: #ff0 Launches} a projectile for {color: #f00 ATTACK_DAMAGE} damage."
+walker:
+    <<: *object_prototype
+    name: Goblin
+    spritesheet: "goblin_sprite"
+    sprite_size_xy: [0.5, 0.5]
+    sprite_offset_xy: [0, -8]
+    attack: *grenade_attack
+    movement:
+        range: 4
+        kind: "walk"
+
+# other objects
+diamond:
+    <<: *object_prototype
+    name: Diamond
+    spritesheet: "blocks_sprite"
+    sprite_offset: [3, 8]
+    max_health: 2
+    is_unit: false
+    stationary: false
+
+help_proto: &help_thing_prototype
+    <<: *object_prototype
+    name: Villager
+    spritesheet: "Villager_OldMan_sprite"
+    sprite_offset_xy: [0, -8]
+    max_health: 1
+    is_unit: false
+    stationary: false
+    rescue_points: 1
+    description: >-
+        Saving me will gift you {color: #ffc0cb 1} point.
+        If I die, all your characters take {color: #f00 1} damage.
+
+    on_death:
+        type: "hurt_player_units"
+        damage: 1
+        chance: 1
+
+    on_under_threat:
+        dialog:
+            frames: 60
+            text:
+                - "Help!"
+                - "Save me!"
+
+
+help_thing:
+    <<: *help_thing_prototype
+
+help_thing_lady:
+    <<: *help_thing_prototype
+    spritesheet: "Villager_Lady_sprite"
+    sprite_offset_xy: [0, -8]
+
+help_thing_boy:
+    <<: *help_thing_prototype
+    spritesheet: "Villager_Boy_sprite"
+    sprite_offset_xy: [0, -8]
+
+mountain_a:
+    <<: *object_prototype
+    name: Mountain
+    spritesheet: "blocks_sprite"
+    sprite_offset: [22, 2]
+    max_health: 3
+    is_unit: false
+    stationary: false
+
+# place holder for a dead unit
+# mostly used for ghost drawing
+dead_unit:
+    <<: *object_prototype
+    name: Dead
+    spritesheet: "dead_unit_sprite"
+    max_health: 0
+    is_unit: true
+    description: >-
+        Dead.
+
+heart:
+    <<: *pickup_protoype
+    name: Heart
+    spritesheet: "blocks_sprite"
+    sprite_offset: [14, 9]
+    sprite_z: 0.1
+    description: >-
+        Heals unit 1 health.
+
+    on_pickup:
+        type: heal_unit
+        heal_amount: 1
+        floating_offset: [0, -5]
+
+fire:
+    <<: *pickup_protoype
+    name: Fire
+    spritesheet: "fire_sprite"
+    sprite_offset_xy: [0, -5]
+    sprite_size_xy: [0.5, 0.5]
+    sprite_z: 0.1
+    description: >-
+        Deals {color: #f00 1} damage when walked on.
+
+    on_pickup:
+        type: damage_unit
+        damage_amount: 1
+        floating_offset: [0, -5]
+
+sign:
+    <<: *object_prototype
+    name: Sign
+    lies_flat: true
+    spritesheet: "blocks_sprite"
+    sprite_offset: [15, 7]
+    sprite_offset_xy: [0, -16]
+    sprite_z: -0.01
+    max_health: .inf
+    is_unit: false
+    stationary: true
+    description: >-
+        An empty sign.
+    can_be_hit: false
+    rescue_points: 0
+
+cave:
+    <<: *object_prototype
+    name: Cave
+    lies_flat: true
+    spritesheet: "blocks_sprite"
+    sprite_offset: [19, 6]
+    sprite_offset_xy: [0, -16]
+    sprite_z: -0.01
+    max_health: .inf
+    is_unit: false
+    stationary: true
+    description: >-
+        A cave to nowhere.
+    can_be_hit: true
+    rescue_points: 0
+    on_pickup:
+        type: warp

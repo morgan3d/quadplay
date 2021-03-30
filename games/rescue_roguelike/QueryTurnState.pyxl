@@ -1,0 +1,307 @@
+// Primarily helper functions for reasoning about objects on the grid with
+// respect to the game rules.
+//
+// These functions do not modify turn_state
+
+def create_turn_state_from_yml(battle_yml):
+    let ts = deep_clone(battle_yml.turn_state)
+    replace_known_keys(ts, ["coord", "attack_vector", ])
+    ts.tiles = load_tiles_from_string(ts.tiles)
+    return ts    
+
+let unique_obj_id = 0
+def create_unique_object_id():
+    unique_obj_id += 1
+    return "UNIQUE_" + unique_obj_id
+
+def create_object(obj_id, coord, obj_type):
+    return {
+        id: obj_id,
+        coord: coord,
+        obj_type: obj_type,
+    }
+
+
+def get_object_by_id(turn_state, id):
+    for obj in turn_state.objects:
+        if obj.id == id:
+            return obj
+    return nil
+
+def get_dead_object_by_id(turn_state, id):
+    if turn_state.dead_objects:
+        for obj in turn_state.dead_objects:
+            if obj.id == id:
+                return obj
+    return nil
+
+def get_grid_objects_at(turn_state, coord):
+    let ret = []
+    for obj in turn_state.objects:
+        if eq(obj.coord, coord):
+            push(ret, obj)
+    return ret
+
+def get_all_alive_units(turn_state):
+    let ret = []
+    for obj in turn_state.objects:
+        if is_unit_alive(obj):
+            push(ret, obj)
+    return ret
+
+def get_all_player_alive_units(turn_state):
+    let ret = []
+    for obj in get_all_alive_units(turn_state):
+        if obj.team == "player":
+            push(ret, obj)
+    return ret
+
+def get_all_alive_objects(turn_state):
+    let ret = []
+    for obj in turn_state.objects:
+        if is_alive(obj):
+            push(ret, obj)
+    return ret
+
+def get_tile_ch_at(turn_state, coord):
+    const map_offset = turn_state.map_offset
+    return turn_state.tiles[to_index(BATTLE_GRID_SIZE, coord + xy(0, map_offset))]
+
+def get_tile_spec_at(turn_state, coord):
+    const tile_ch = get_tile_ch_at(turn_state, coord)
+    return TILE_CH_TO_SPEC[tile_ch]
+
+def is_player_alive(turn_state):
+    return size(get_all_player_alive_units(turn_state)) > 0
+    
+
+def is_enemy_alive(turn_state):
+    for obj in turn_state.objects:
+        if obj.team == "enemy" and is_unit_alive(obj):
+            return true
+    return false
+    
+def compute_path_to_coord(turn_state, obj, obj_spec, coord):
+    const remaining_range = obj_spec.movement.range - obj.num_coords_moved_this_turn
+
+    if manhattan(obj.coord - coord) > remaining_range:
+        return nil
+
+    def edge_cost(a, b):
+        if not can_unit_spec_travel_onto(turn_state, obj_spec, b):
+            return ∞
+        return 1
+
+    const path = find_map_path({size: BATTLE_GRID_SIZE}, obj.coord, coord, edge_cost)
+    const moves = size(path) - 1
+    if moves > 0 and moves <= remaining_range:
+        return path
+    return nil
+       
+def unit_has_path_to(turn_state, unit, unit_spec, coord):
+    const path = compute_path_to_coord(turn_state, unit, unit_spec, coord)
+    return path and size(path) > 1
+
+def can_unit_move(turn_state, unit_obj, unit_spec):
+    return (unit_obj and 
+            is_unit_alive(unit_obj) and
+            unit_obj.num_coords_moved_this_turn < unit_spec.movement.range and 
+            unit_obj.coord.y < BATTLE_GRID_SIZE.y - NUM_INVALID_ROWS_FROM_BOTTOM and
+            not unit_obj.performed_action_this_turn)
+
+def can_unit_spec_travel_onto(turn_state, obj_spec, coord):
+    if not is_on_board(get_turn_tiles_board(turn_state), coord):
+        return false
+
+    // do not allow paths to go through the "invalid" rows.
+    if coord.y >= BATTLE_GRID_SIZE.y - NUM_INVALID_ROWS_FROM_BOTTOM:
+        return false
+
+    // this checks if the unit can willingly move onto coord
+    for obj in get_grid_objects_at(turn_state, coord):
+        if not (get_pickup_for_obj(obj) or does_object_lie_flat(obj)):
+            return false
+
+    const tile_spec = get_tile_spec_at(turn_state, coord)
+    if not tile_spec:
+        return false
+
+    // this checks if the unit can willingly move onto the tilespec
+    return can_object_survive_on_tile_spec(obj_spec, tile_spec)
+
+def is_unit(obj):
+    if not obj:
+        return false
+
+    const obj_spec = ObjectSpecs_YAML[obj.obj_type]
+    return obj_spec.is_unit
+
+def can_object_be_hit(turn_state, obj):
+    const obj_spec = ObjectSpecs_YAML[obj.obj_type]
+    assert(obj_spec)
+    return obj_spec.can_be_hit and (is_alive(obj) or 
+                                    (is_dead(obj) and obj.can_be_hit_when_dead))
+
+def can_object_be_pushed(turn_state, obj, obj_spec):
+    return not obj_spec.stationary
+
+def can_be_pushed_onto(turn_state, coord):
+    const x = coord.x == 5 and coord.y == 6
+    if not is_on_board(get_turn_tiles_board(turn_state), coord):
+        if x:
+            debug_print("1")
+        return false
+        
+    // TODO
+    for obj in get_grid_objects_at(turn_state, coord):
+        if not (get_pickup_for_obj(obj) or does_object_lie_flat(obj)):
+            if x:
+                debug_print("2")
+            return false
+        
+    const tile_spec = get_tile_spec_at(turn_state, coord)
+    assert(tile_spec, "nil tile spec")
+    if x:
+        debug_print(tile_spec)
+    return tile_spec.can_be_pushed_onto
+
+
+def compute_empty_mask(turn_state):
+    let mask = []
+    for i < BATTLE_GRID_SIZE.x * BATTLE_GRID_SIZE.y:
+        push(mask, false)
+    return mask
+
+def compute_move_mask(turn_state, unit, unit_spec):
+    let mask = compute_empty_mask(turn_state)
+    for i < size(mask):
+        const coord = to_coord(BATTLE_GRID_SIZE, i)
+        mask[i] = (
+            coord.y < BATTLE_GRID_SIZE.y - NUM_INVALID_ROWS_FROM_BOTTOM
+            and unit_has_path_to(turn_state, unit, unit_spec, coord)) 
+
+    return mask
+
+def get_actions_for_player(unit):
+    if not unit:
+        return []
+
+    let actions = []
+    let spec = ObjectSpecs_YAML[unit.obj_type]
+    if spec.attack:
+        let kind = spec.attack.kind
+        push(actions, spec.attack.kind)
+    if unit.loadout != nil:
+        extend(actions, unit.loadout)
+    return actions
+
+def can_object_survive_on_tile_spec(obj_spec, tile_spec):
+    if not tile_spec:
+        return false
+
+    if not obj_spec.movement:
+        return true
+        
+    const blocks_movement_of = tile_spec.blocks_movement_of 
+    if blocks_movement_of == "all":
+        return false
+
+    if obj_spec.movement.kind == "walk":
+        return blocks_movement_of != "ground"
+
+    return blocks_movement_of == "nothing"
+
+def is_alive(unit):
+    return is_number(unit.health) and unit.health > 0
+    
+def is_unit_alive(unit):
+    return is_unit(unit) and is_alive(unit)
+
+def is_dead(obj):
+    return is_number(obj.health) and obj.health <= 0
+
+def is_unit_dead(unit):
+    return is_unit(unit) and is_dead(unit)
+
+def should_move_map(turn_state):
+    // for now, just check that we have more rows.
+    // other things (i.e. maybe a boss?) may stop the map from moving
+    return not needs_more_tiles(turn_state)
+
+// i think we should just store this on the turn_state and update it.
+def get_rescue_points(turn_state):
+    return turn_state.points
+
+def get_rescue_points_for_expired_object(expired_obj):
+    if (expired_obj.team == "player" and not is_dead(expired_obj)):
+        // for now, this is determined by the obj spec
+        const obj_spec = ObjectSpecs_YAML[expired_obj.obj_type]
+        assert(obj_spec)
+        return obj_spec.rescue_points
+    return 0
+
+def get_turn_tiles_board(turn_state):
+    return xy(BATTLE_GRID_SIZE.x,
+              compute_num_rows(turn_state) - turn_state.map_offset)
+
+def any_player_units_can_act(turn_state):
+    for player_unit in get_all_player_alive_units(turn_state):
+        if not player_unit.performed_action_this_turn:
+            return true
+    return false
+
+def get_pickup_for_obj(obj):
+    const obj_spec = ObjectSpecs_YAML[obj.obj_type]
+    return obj_spec.on_pickup
+
+def get_enemy_units_sorted_by_next_attack_order(turn_state):
+    let ret = []
+    for unit in get_all_alive_units(turn_state):
+        if unit.team == "enemy" and unit.next_attack:
+            push(ret, unit)
+
+    def sort_action_order(a, b):
+        return compare(a.next_attack.attack_order, b.next_attack.attack_order)
+    return sorted(ret, sort_action_order)
+
+def can_unit_element_perform_action(turn_state, unit_obj, action):
+    return (is_unit_alive(unit_obj) 
+            and not unit_obj.performed_action_this_turn
+            and get_rescue_points(turn_state) >= get_points_required_by_action(action))
+
+def get_alt_text_for_obj(obj):
+    let text = ""
+    const obj_spec = ObjectSpecs_YAML[obj.obj_type]
+    assert(obj_spec)
+    let name = "No Name"
+    if obj.name:
+        name = obj.name 
+    else if obj_spec.name:
+        name = obj_spec.name 
+    else:
+        name = obj.id
+
+    let subst = {}
+    if obj_spec.is_unit:
+        if obj_spec.attack:
+            subst.ATTACK_DAMAGE = obj_spec.attack.damage
+
+    let description = ""
+    if obj.description:
+        description = obj.description
+    else if obj_spec.description:
+        description = obj_spec.description
+
+    if size(description) > 0:
+        text += header_text(uppercase(name) + "{br}")
+        if size(subst):
+            text += replace(description, subst) + "{br}"
+        else:
+            text += description + "{br}"
+
+    return text
+
+def does_object_lie_flat(obj):
+    const obj_spec = ObjectSpecs_YAML[obj.obj_type]
+    assert(obj_spec)
+    return obj_spec.lies_flat

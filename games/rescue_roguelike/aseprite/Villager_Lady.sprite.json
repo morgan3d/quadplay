@@ -1,0 +1,1 @@
+{"aseprite_json": "aseprite/Villager_Lady.json", "license": "Copyright 2021 Ed Luong https://twitter.com/mrawde Licensed as CC BY 3.0", "locked_size": false, "names": {"idle": {"end": {"x": 0.0, "y": 0.0}, "extrapolate": "clamp", "frames": [6.0], "start": {"x": 0.0, "y": 0.0}}}, "sprite_size": {"x": 32, "y": 32}, "url": "Villager_Lady.png"}

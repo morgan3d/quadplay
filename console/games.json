@@ -234,6 +234,11 @@
             "description": "Blast bricks as a team from all four sides, grabbing powerups and racking up points."
         },
         {
+            "url": "quad://games/rescue_roguelike/",
+            "title": "Rescue Roguelike",
+            "description": "Turn-based tactical adventure"
+        },
+        {
             "url": "quad://games/rps/",
             "title": "R.P.S.",
             "description": "Rock-paper-scissors battle royale."

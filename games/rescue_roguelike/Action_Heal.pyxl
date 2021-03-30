@@ -1,0 +1,24 @@
+def execute_Heal(turn_state, step, exec_result):
+    const heart_obj = create_object("heart"+create_unique_object_id(),
+                                    step.action.target,
+                                    "heart")
+    push(turn_state.objects, heart_obj)
+
+    push(exec_result.exec_log, {
+        type: "acted",
+        action: step.action.name,
+        obj: step.action.unit,
+    })
+    push(exec_result.exec_log, {
+        type: "added_object",
+        action: step.action.name,
+        obj: step.action.unit,
+        added_obj: heart_obj,
+    })
+    return true
+
+def compute_trajectory_for_Heal(turn_state, unit, unit_spec, action_coord):
+    for obj in get_grid_objects_at(turn_state, action_coord):
+        if is_unit_alive(obj):
+            return compute_trajectory_any_coord(turn_state, unit, unit_spec, action_coord)
+    return nil

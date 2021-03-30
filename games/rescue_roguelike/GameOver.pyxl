@@ -1,0 +1,94 @@
+GameOver
+════════════════════════════════════════════════════════════════════════
+// Put local state for the mode here.  Declare variables with let, constants with const, and functions with def.
+
+let turn_state
+
+def draw_game_over():
+    draw_battle_bg(turn_state)
+    let text = "GAME OVER{br}"
+    text += get_game_over_text(turn_state)
+    const z = 1
+    let text_size = draw_text({
+        font: font,
+        text: text,
+        wrap_width: GAMEOVER_TEXT_BOX_SIZE.x - 2*GAMEOVER_PADDING.x,
+        pos: xy(0.5 SCREEN_SIZE.x - 0.5 GAMEOVER_TEXT_BOX_SIZE.x, GAMEOVER_TEXT_BOX_SIZE.y),
+        markup: true,
+        color: COLORS.text,
+        y_align: "top",
+        z: z + 0.1
+    })
+
+    if text_size.size:
+        text_size = text_size.size
+
+    draw_rounded_corner_rect({
+        corner: xy(0.5 SCREEN_SIZE.x - 0.5 GAMEOVER_TEXT_BOX_SIZE.x, GAMEOVER_TEXT_BOX_SIZE.y) - GAMEOVER_PADDING,
+        size: text_size + 2 * GAMEOVER_PADDING,
+        color: GAMEOVER_TEXT_BG,
+        outline: GAMEOVER_TEXT_BG_BORDER,
+        z: z,
+    })
+
+def handle_input():
+    const button_size = GAMEOVER_BUTTON_SIZE
+    const bottom_padding = 10
+    let try_again = button_state({
+        corner: xy(0.5 SCREEN_SIZE.x - 0.5 button_size.x, SCREEN_SIZE.y - button_size.y - bottom_padding),
+        size: button_size,
+        text: "Try Again",
+    })
+    if try_again.clicked:
+        set_mode(Start)
+
+def get_num_villagers_saved(turn_state):
+    let num_villagers_saved = 0
+    for obj in turn_state.expired_objects:
+        num_villagers_saved += get_rescue_points_for_expired_object(obj)
+    return num_villagers_saved
+    
+def get_game_over_text(turn_state):
+    const num_villagers_saved = get_num_villagers_saved(turn_state)
+    let subst = {
+        "\n": "{br}",
+        "NUM_TURNS": turn_state.turn_num,
+        "NUM_ROWS": turn_state.map_offset,
+        "NUM_SAVED": num_villagers_saved,
+    }
+       
+    let text = ""
+    if num_villagers_saved == 0:
+        text += replace(GameOver_YAML.text_saved_none, subst)
+    else if num_villagers_saved == 1:
+        text += replace(GameOver_YAML.text_saved_one, subst)
+    else:
+        text += replace(GameOver_YAML.text, subst)
+    return text
+
+
+enter(turn_state_)
+────────────────────────────────────────────────────────────────────────
+// This event runs when the mode is entered via set_mode() or push_mode().
+turn_state = turn_state_
+
+let sign_text = get_game_over_text(turn_state)
+let game_over_turn_state = create_turn_state_from_yml(GameOver_YAML)
+debug_print(game_over_turn_state)
+const the_sign = get_object_by_id(game_over_turn_state, "sign0")
+the_sign.name = "Game Over"
+the_sign.description = sign_text
+set_mode(Start, game_over_turn_state)
+
+frame
+────────────────────────────────────────────────────────────────────────
+update_cursor_hover()
+
+handle_input()
+draw_game_over()
+
+update_curr_drag()
+
+leave
+────────────────────────────────────────────────────────────────────────
+// This event runs just before leaving for another mode by set_mode() or pop_mode().

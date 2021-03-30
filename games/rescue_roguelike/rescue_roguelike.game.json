@@ -1,0 +1,1097 @@
+{
+    "achievements": false,
+    "assets": {
+        "ActionIcons_sprite": "aseprite/ActionIcons.sprite.json",
+        "ActionTrajectory_sprite": "aseprite/ActionTrajectory.sprite.json",
+        "Blythe_sprite": "aseprite/Blythe.sprite.json",
+        "Goblin-Fuselier-32_sprite": "sprites/Goblin-Fuselier-32.sprite.json",
+        "Goblin-Soldier-32_sprite": "sprites/Goblin-Soldier-32.sprite.json",
+        "Mortimer_sprite": "aseprite/Mortimer.sprite.json",
+        "Occupant-32_sprite": "sprites/Occupant-32.sprite.json",
+        "Percy-The-Bard-32_sprite": "sprites/Percy-The-Bard-32.sprite.json",
+        "Tiles_sprite": "aseprite/Tiles.sprite.json",
+        "Villager_Boy_sprite": "aseprite/Villager_Boy.sprite.json",
+        "Villager_Lady_sprite": "aseprite/Villager_Lady.sprite.json",
+        "Villager_OldMan_sprite": "aseprite/Villager_OldMan.sprite.json",
+        "blocks_sprite": "quad://sprites/kenney-blocks-16x16.sprite.json",
+        "dead_unit_sprite": "aseprite/dead_unit.sprite.json",
+        "deatch_cue_snd": "snd/deatch_cue.sound.json",
+        "deja_5_font": "quad://fonts/deja-5.font.json",
+        "dungeoncore_theme_snd": "snd/dungeoncore_theme.sound.json",
+        "fanfare_snd": "snd/fanfare.sound.json",
+        "fire_sprite": "sprites/fire.sprite.json",
+        "floor_tiles": "quad://sprites/kenney-ui-16x16.sprite.json",
+        "font": "quad://fonts/deja-8.font.json",
+        "game_over_sprite": "sprites/game_over.sprite.json",
+        "goblin_sprite": "sprites/goblin.sprite.json",
+        "inspector_font": "quad://fonts/deja-7.font.json",
+        "inspector_header_font": "quad://fonts/deja-5.font.json",
+        "jabberwock_sprite": "sprites/jabberwock.sprite.json",
+        "occupant_sprite": "sprites/occupant.sprite.json",
+        "palette_sprite": "ref/palette.sprite.json",
+        "shapes": "quad://sprites/shapes-32x32.sprite.json",
+        "title_sprite": "sprites/title.sprite.json"
+    },
+    "competitive": false,
+    "constants": {
+        "ATTACK_ORDER_BADGE_OFFSET": {
+            "description": "offset for attack order badge",
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "27"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "24"
+                }
+            }
+        },
+        "ATTACK_ORDER_UI_OFFSET": {
+            "description": "offset for the attack order hover area",
+            "nudge": {
+                "x": "+10",
+                "y": "-10"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "352"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "116"
+                }
+            }
+        },
+        "ATTACK_ORDER_UI_RADIUS": {
+            "description": "radius for the UI attack order badge",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "20"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "6"
+        },
+        "Actions_YAML": {
+            "type": "raw",
+            "url": "Actions.yml"
+        },
+        "BATTLE_GRID_OFFSET": {
+            "description": "This is the screen offset for the whole grid.",
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "25"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "25"
+                }
+            }
+        },
+        "BATTLE_GRID_SIZE": {
+            "description": "Number of cells on game board.",
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "8"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "8"
+                }
+            }
+        },
+        "BasicBattle_YAML": {
+            "type": "raw",
+            "url": "BasicBattle.yml"
+        },
+        "COLOR_AVAILABLE_ACTION": {
+            "description": "outline for things that are \"active\"",
+            "type": "rgba",
+            "value": {
+                "a": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "80%"
+                },
+                "r": {
+                    "type": "number",
+                    "value": "91%"
+                }
+            }
+        },
+        "COLOR_DISABLED_ACTION_BG": {
+            "description": "Color for a disabled action",
+            "type": "rgba",
+            "value": {
+                "a": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "28%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "28%"
+                },
+                "r": {
+                    "type": "number",
+                    "value": "28%"
+                }
+            }
+        },
+        "COLOR_DISABLED_ACTION_TEXT": {
+            "description": "text for disabled action",
+            "type": "rgba",
+            "value": {
+                "a": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "36%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "36%"
+                },
+                "r": {
+                    "type": "number",
+                    "value": "36%"
+                }
+            }
+        },
+        "COLOR_INSPECTOR_HOVER_HEADER": {
+            "description": "header color",
+            "type": "rgba",
+            "value": {
+                "a": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "44%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "72%"
+                },
+                "r": {
+                    "type": "number",
+                    "value": "88%"
+                }
+            }
+        },
+        "COLOR_RESCUE": {
+            "description": "color for rescue",
+            "type": "rgba",
+            "value": {
+                "a": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "80%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "75%"
+                },
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                }
+            }
+        },
+        "COLOR_SELECTED_UNIT": {
+            "description": "Color around selected unit.",
+            "type": "rgba",
+            "value": {
+                "a": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                }
+            }
+        },
+        "COLOR_WALK_PATH": {
+            "type": "rgba",
+            "value": {
+                "a": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "3%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "66%"
+                },
+                "r": {
+                    "type": "number",
+                    "value": "31%"
+                }
+            }
+        },
+        "CURSOR_OFFSET": {
+            "description": "offset for the cursor",
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "4"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "4"
+                }
+            }
+        },
+        "Colors_YAML": {
+            "type": "raw",
+            "url": "Colors.yml"
+        },
+        "DIALOG_BG_COLOR": {
+            "type": "rgb",
+            "value": {
+                "b": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                }
+            }
+        },
+        "DIALOG_BOUNCE": {
+            "description": "x-axis is how fast\ny-axis is amplitude",
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "12"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "1"
+                }
+            }
+        },
+        "DIALOG_OFFSET": {
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "35"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "9"
+                }
+            }
+        },
+        "DIALOG_PADDING": {
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "10"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "3"
+        },
+        "DIALOG_WIDTH_WRAP": {
+            "description": "how wide dialog window should be",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "300"
+            },
+            "min": {
+                "type": "number",
+                "value": "10"
+            },
+            "quantum": 0,
+            "type": "number",
+            "value": "37.55"
+        },
+        "DRAW_REGION_LABELS": {
+            "description": "Draw the 'safe' and 'next' labels on the top and bottom of the map",
+            "type": "boolean",
+            "value": true
+        },
+        "FRAMES_ADDED_OBJECT": {
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "60"
+            },
+            "min": {
+                "type": "number",
+                "value": "1"
+            },
+            "quantum": 0,
+            "type": "number",
+            "value": "12"
+        },
+        "FRAMES_BETWEEN_GEN": {
+            "description": "Number of frames between generation events when starting the game.",
+            "type": "number",
+            "value": "0"
+        },
+        "FRAMES_BUMP": {
+            "description": "Number of frames for a \"bump\" animation",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "60"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "12"
+        },
+        "FRAMES_CURSOR_SLIDE": {
+            "description": "Number of frames for the cursor to slide",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "60"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "10"
+        },
+        "FRAMES_DEATH_FLOAT": {
+            "description": "How many frames is the death animation",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "100"
+            },
+            "min": 1,
+            "quantum": 0,
+            "type": "number",
+            "value": "15"
+        },
+        "FRAMES_DIALOG": {
+            "description": "frames per ~10 characters of text.",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "60"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "30"
+        },
+        "FRAMES_KNOCKBACK": {
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "120"
+            },
+            "min": {
+                "type": "number",
+                "value": "1"
+            },
+            "quantum": 0,
+            "type": "number",
+            "value": "12"
+        },
+        "FRAMES_LONG_PRESS": {
+            "description": "Number of frames to register a click-hold (long press)",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "200"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "12"
+        },
+        "FRAMES_MOVE_MAP": {
+            "description": "How many frames to slide the map.",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "300"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "30"
+        },
+        "FRAMES_PER_CELL_MOVE": {
+            "description": "How many frames for a unit to move one cell",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "60"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "5"
+        },
+        "FRAMES_PICKUP": {
+            "description": "how many frames for the pickup animation",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "20"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "10"
+        },
+        "FRAMES_RECEIVED_DAMAGE": {
+            "description": "how many frames for receiving damage animation",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "30"
+            },
+            "min": {
+                "type": "number",
+                "value": "1"
+            },
+            "quantum": 0,
+            "type": "number",
+            "value": "10"
+        },
+        "FRAMES_RECEIVED_HEALTH": {
+            "description": "frames for received health floating",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "30"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "30"
+        },
+        "GAMEOVER_BUTTON_SIZE": {
+            "description": "size of buttons on game over page",
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "58"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "24"
+                }
+            }
+        },
+        "GAMEOVER_PADDING": {
+            "description": "padding",
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "12"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "10"
+                }
+            }
+        },
+        "GAMEOVER_TEXT_BG": {
+            "type": "rgba",
+            "value": {
+                "a": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "10%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "10%"
+                },
+                "r": {
+                    "type": "number",
+                    "value": "10%"
+                }
+            }
+        },
+        "GAMEOVER_TEXT_BG_BORDER": {
+            "type": "rgba",
+            "value": {
+                "a": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "r": {
+                    "type": "number",
+                    "value": "0%"
+                }
+            }
+        },
+        "GAMEOVER_TEXT_BOX_SIZE": {
+            "nudge": {
+                "x": "+10",
+                "y": "-10"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "110"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "60"
+                }
+            }
+        },
+        "GAME_BUTTON_BAR_BUTTON_SIZE": {
+            "description": "size of the buttons (including border, etc)",
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "32"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "32"
+                }
+            }
+        },
+        "GAME_BUTTON_BAR_MARGIN": {
+            "description": "padding between buttons on button bar.",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "10"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "5"
+        },
+        "GAME_BUTTON_BAR_OFFSET": {
+            "description": "Offset for the button bar that contains undo and next move.",
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "270"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "110"
+                }
+            }
+        },
+        "GAME_INFO_BOX_OFFSET": {
+            "description": "this box contains things like the number of people saved.",
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "341"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "11"
+                }
+            }
+        },
+        "GRID_CELL_SIZE": {
+            "description": "Number of pixels for each cell",
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "32"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "28"
+                }
+            }
+        },
+        "GameOver_YAML": {
+            "type": "raw",
+            "url": "GameOver.yml"
+        },
+        "HEALTH_BAR_SIZE_HINT": {
+            "description": "target size for the health bars",
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "20"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "4"
+                }
+            }
+        },
+        "INSPECTOR_HOVER_OFFSET": {
+            "description": "Offset for the hover inspector",
+            "nudge": {
+                "x": "10",
+                "y": "-5"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "270"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "145"
+                }
+            }
+        },
+        "INSPECTOR_HOVER_PADDING": {
+            "description": "padding for the inspector",
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "6"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "4"
+                }
+            }
+        },
+        "INSPECTOR_HOVER_SIZE": {
+            "description": "size for the hover inspector",
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "111"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "76"
+                }
+            }
+        },
+        "NEW_RANDOM_SEED_EACH_STARTUP": {
+            "description": "Change the random seed each startup (turn off to debug a particular level)",
+            "type": "boolean",
+            "value": true
+        },
+        "NUM_INVALID_ROWS_FROM_BOTTOM": {
+            "description": "These are rows at the bottom of the grid that the user cannot directly interact with.",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "2"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "1"
+        },
+        "ObjectSpecs_YAML": {
+            "type": "raw",
+            "url": "ObjectSpecs.yml"
+        },
+        "PATH_WIDTH": {
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "32"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "6"
+        },
+        "PLAYER_BUTTON_BAR_BUTTON_MARGIN": {
+            "description": "margin around the player action buttons",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "10"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "4"
+        },
+        "PLAYER_BUTTON_BAR_BUTTON_SIZE": {
+            "description": "Size of the buttons for player actions",
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "69"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "25"
+                }
+            }
+        },
+        "PLAYER_BUTTON_BAR_OFFSET": {
+            "description": "offset for the player buttons",
+            "nudge": {
+                "x": "1",
+                "y": "-1"
+            },
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "266"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "19"
+                }
+            }
+        },
+        "PLAYER_CHANGE_TRACKER": {
+            "description": "We have an optimization to only update certain data if things have changed.",
+            "type": "boolean",
+            "value": true
+        },
+        "StartBattleName": {
+            "description": "This is the constant that the \"Start\" mode loads.",
+            "type": "string",
+            "value": "WorldTemplates_YAML"
+        },
+        "TOUCH_CLICK_RADIUS": {
+            "description": "How many pixels can a click move around and still register as a click.",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "10"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "5"
+        },
+        "TestBattleName": {
+            "type": "string",
+            "value": "TestBattle_YAML"
+        },
+        "TestBattle_YAML": {
+            "type": "raw",
+            "url": "TestBattle.yml"
+        },
+        "TestUnitBattle_YAML": {
+            "type": "raw",
+            "url": "TestUnitBattle.yml"
+        },
+        "TileSpecs_YAML": {
+            "type": "raw",
+            "url": "TileSpecs.yml"
+        },
+        "TitleScreen_YAML": {
+            "type": "raw",
+            "url": "TitleScreen.yml"
+        },
+        "Tutorial_YAML": {
+            "type": "raw",
+            "url": "Tutorial.yml"
+        },
+        "WorldTemplates_YAML": {
+            "type": "raw",
+            "url": "WorldTemplates.yml"
+        },
+        "Z_ATTACK_ORDER_OFFSET": {
+            "description": "offset for attack order",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "1"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "0.9"
+        },
+        "Z_BOARD_BORDER": {
+            "description": "border around the grid",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "500"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "0"
+        },
+        "Z_COORD_DIVIDER": {
+            "description": "things should draw coord.y/Z_COORD_DIVIER",
+            "type": "number",
+            "value": "16"
+        },
+        "Z_DIALOG": {
+            "description": "offset for dialog boxes",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "10"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "2"
+        },
+        "Z_FLOATING_RESCUE_POINTS": {
+            "description": "z for the rescue indicators that float",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "10"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "2"
+        },
+        "Z_FOG_OF_WAR": {
+            "description": "fog of war z",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "+infinity"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "2"
+        },
+        "Z_GRID_OVERLAY_OFFSET": {
+            "description": "z offset (before dividing) for things that sit on the grid",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "1"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "0.5"
+        },
+        "Z_PICKUP": {
+            "description": "z to set when picking up",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "10"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "2"
+        },
+        "Z_REGION_LABELS": {
+            "description": "for the safe/next labels",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "+infinity"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "2"
+        },
+        "Z_TRAJECTORY_OFFSET": {
+            "description": "this is is added to the z (before the divisor).  should probably be greater than the overlay offset",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "1"
+            },
+            "min": 0,
+            "type": "number",
+            "value": "0.8"
+        },
+        "Z_UNIT_SPRITE_OFFSET": {
+            "description": "Added to the sprite's z (before dividing)",
+            "format": "",
+            "max": {
+                "type": "number",
+                "value": "1"
+            },
+            "min": 0,
+            "quantum": 0,
+            "type": "number",
+            "value": "0.9"
+        }
+    },
+    "cooperative": false,
+    "copyright": "\u00a92021 Stephan Steinbach, Ed Luong, and Ian Patrick",
+    "description": "Turn-based tactical adventure",
+    "developer": "Stephan Steinbach, Ed Luong, and Ian Patrick",
+    "docs": [
+        "todo.edluong.md",
+        "todo.stephan.md",
+        "Overview.md.html"
+    ],
+    "highscores": false,
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+    "max_players": 1,
+    "min_players": 1,
+    "modes": [
+        "Start",
+        "GameOver",
+        "PlayerTurn",
+        "CPUTurn",
+        "BattleVictory",
+        "PaletteTest",
+        "ShowEnemyAttacks",
+        "MouseTest",
+        "TestBattle",
+        "TitleScreen"
+    ],
+    "packages": [],
+    "screenshot_tag": "rescue_roguelike",
+    "scripts": [
+        "Util.pyxl",
+        "DrawUtil.pyxl",
+        "UiUtil.pyxl",
+        "Sequences.pyxl",
+        "Board.pyxl",
+        "BattleSystem.pyxl",
+        "QueryTurnState.pyxl",
+        "EvaluateTurnState.pyxl",
+        "BattleDraw.pyxl",
+        "WorldGen.pyxl",
+        "Action_common.pyxl",
+        "Action_gun.pyxl",
+        "Action_grenade.pyxl",
+        "Action_mountain.pyxl",
+        "Action_melee.pyxl",
+        "Action_Push.pyxl",
+        "Action_Heal.pyxl",
+        "Action_Fireball.pyxl",
+        "Actions.pyxl",
+        "BattleMusic.pyxl"
+    ],
+    "start_mode": "TitleScreen",
+    "title": "Rescue Roguelike",
+    "version": 1
+}

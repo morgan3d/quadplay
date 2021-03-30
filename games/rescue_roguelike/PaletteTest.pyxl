@@ -1,0 +1,48 @@
+frame
+────────────────────────────────────────────────────────────────────────
+
+set_background(COLORS.bg)
+
+let center = xy(20, SCREEN_SIZE.y - (size(COLORS) * 13))
+for col at key in COLORS:
+    draw_rect(center, xy(10, 10), col)
+    draw_text(
+        font,
+        key,
+        center + xy(15, 0),
+        COLORS.text,
+        nil,
+        nil,
+        "left",
+        "center"
+    )
+    center += xy(0, 13)
+
+// fake menu
+draw_rect(
+    SCREEN_SIZE/2,
+    xy(60, 30),
+    COLORS.menu_bg,
+    COLORS.menu_border,
+)
+
+draw_text(
+    font,
+    "Test Text",
+    SCREEN_SIZE/2,
+    COLORS.text,
+    COLORS.menu_highlight,
+    nil,
+    "center",
+    "center"
+)
+
+debug_watch((occupant_sprite[0][0].size))
+
+let root = xy(SCREEN_SIZE.x - 60, SCREEN_SIZE.y - occupant_sprite[0][0].size.y*3 + 20)
+for spr in [occupant_sprite, goblin_sprite, jabberwock_sprite]:
+    draw_sprite(
+        spr,
+        root,
+    )
+    root += xy(0, occupant_sprite[0][0].size.y)

@@ -1,0 +1,27 @@
+{ "frames": [
+   {
+    "filename": "ActionIcons.aseprite",
+    "frame": { "x": 0, "y": 0, "w": 16, "h": 128 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 128 },
+    "sourceSize": { "w": 16, "h": 128 },
+    "duration": 100
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.25",
+  "image": "ActionIcons.png",
+  "format": "RGBA8888",
+  "size": { "w": 16, "h": 128 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "layers": [
+   { "name": "Layer 1", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
+}

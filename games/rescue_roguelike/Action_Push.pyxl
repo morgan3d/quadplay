@@ -1,0 +1,73 @@
+const PUSH_ACTION = Actions_YAML.Push
+
+// Push is very similar to melee
+def compute_trajectory_for_Push(turn_state, unit, unit_spec, attack_coord):
+    // can only attack in cardinal directions
+    const attack_vector = attack_coord - unit.coord
+    if not eq(attack_vector, x_or_y(attack_vector)):
+        return nil
+
+    const action_range = PUSH_ACTION.range
+    const attack_dist = manhattan(attack_vector) 
+    // cannot push self
+    if attack_dist < action_range[0] or attack_dist > action_range[1]:
+        return nil
+
+    let hit_objects = []
+    let hit_coords = []
+    let attack_dir = sign(x_or_y(attack_vector))
+    for action_range[0] <= i <= action_range[1]:
+        const attacked_coord = unit.coord + i*attack_dir
+        if is_on_board(get_turn_tiles_board(turn_state), attacked_coord):
+            push(hit_coords, attacked_coord)
+
+        for attacked_obj in get_grid_objects_at(turn_state, attacked_coord):
+            push(hit_objects, attacked_obj)
+
+    let knockback_dirs = []
+    if unit_spec.attack.knockback > 0:
+        push(knockback_dirs, attack_dir)
+
+    return {
+        action_type: "Push",
+        knockback_dirs: knockback_dirs,
+        start_coord: unit.coord,
+        hit_objects: [],
+        hit_coords: hit_coords,
+        vector: attack_vector
+    }
+
+def execute_Push(turn_state, step, exec_result):
+    const attacker_obj = step.action.unit
+    const attacker_spec = step.action.spec
+    const attack_vector = step.action.vector
+    const attack_coord = attacker_obj.coord + attack_vector
+    if attacker_obj.health <= 0:
+        // dead objects cannot attack.
+        return
+
+    const push_trajectory = compute_trajectory_for_Push(
+        turn_state, attacker_obj, attacker_spec, attack_coord)
+    if not push_trajectory:
+        return false
+
+    const trajectory_coord = (
+        push_trajectory.start_coord + push_trajectory.vector
+    )
+
+    push(exec_result.exec_log, {
+        type: "acted",
+        action: step.action.name,
+        obj: step.action.unit,
+    })
+
+    // if something was hit & the weapon has knockback
+    for knockback_dir in push_trajectory.knockback_dirs:
+        // we hit something so knockback on the hit square.
+        push(exec_result.next_pending_steps, {
+            type: "knockback",
+            coord: trajectory_coord,
+            dir: PUSH_ACTION.knockback * knockback_dir,
+        })
+
+    return true

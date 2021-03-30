@@ -1,0 +1,38 @@
+// logic for the board / tiles.
+// we store the board in the turn_state as a single string
+// we expect it to be 64 characters.
+
+const LOADED_TILE_SPECS_YAML = replace_known_keys(deep_clone(TileSpecs_YAML), ["coord",])
+
+def load_tiles_from_string(s):
+    const legend =LOADED_TILE_SPECS_YAML.legend
+    let ret = ""
+    for ch in s:
+        if legend[ch]:
+            ret += ch
+    
+    return ret
+
+def pretty_print_tiles(tiles):
+    let ret = ""
+    for ch at i in tiles:
+        ret += ch
+        if (((i + 1) % BATTLE_GRID_SIZE.x) == 0 
+                and (i ≠ size(tiles) - 1)):
+            ret += "\n"
+        else:
+            ret += " "
+    return ret
+    
+def load_legend():
+    let ret = {}
+    for tile_spec_name at ch in LOADED_TILE_SPECS_YAML.legend:
+        const tile_spec =  LOADED_TILE_SPECS_YAML[tile_spec_name]
+        assert(tile_spec, replace("legend[CH] has invalid value VALUE", {
+            CH: ch,
+            VALUE: tile_spec_name,
+        }))
+        ret[ch] = tile_spec
+    return ret
+    
+const TILE_CH_TO_SPEC = load_legend()

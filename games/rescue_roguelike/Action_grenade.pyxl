@@ -1,0 +1,72 @@
+
+// Grenade attacks will be valid if they are in bounds.
+def compute_trajectory_for_grenade(turn_state, unit, unit_spec, attack_coord):
+    // can only grenade in cardinal directions
+    const attack_vector = attack_coord - unit.coord
+    if not eq(attack_vector, x_or_y(attack_vector)):
+        return nil
+
+    const attack_dist = manhattan(attack_vector) 
+    const attack_range = unit_spec.attack.range
+    if attack_dist < attack_range[0] or attack_dist > attack_range[1]:
+        return nil
+
+    const attacked_coord = unit.coord + attack_vector
+    if not is_on_board(get_turn_tiles_board(turn_state), attacked_coord):
+        return nil
+
+    // TODO incorporate splash?
+    let hit_objects = []
+    for attacked_obj in get_grid_objects_at(turn_state, attacked_coord):
+        push(hit_objects, attacked_obj)
+
+    let hit_coords = [attacked_coord]
+    return {
+        action_type: "grenade",
+        start_coord: unit.coord,
+        hit_objects: hit_objects,
+        hit_coords: hit_coords,
+        knockback_dirs: [xy(-1, 0), xy(1, 0), xy(0, 1), xy(0, -1)],
+        vector: attacked_coord - unit.coord
+    }
+
+def execute_grenade(turn_state, step, exec_result):
+    const attacker_obj = step.action.unit
+    const attacker_spec = step.action.spec
+    const attack_vector = step.action.vector
+    const attack_coord = attacker_obj.coord + attack_vector
+
+    if attacker_obj.health <= 0:
+        // dead objects cannot attack.
+        return false
+
+    const grenade_trajectory = compute_trajectory_for_grenade(
+        turn_state, attacker_obj, attacker_spec, attack_coord)
+    if not grenade_trajectory:
+        return false
+
+    let attacked_exec_log = {
+        type: "attacked",
+        attacker: attacker_obj,
+        action: "grenade",
+        start: xy(attacker_obj.coord),
+        trajectory_coord: ∅,
+    }
+    push(exec_result.exec_log, attacked_exec_log)
+    for attacked_obj in grenade_trajectory.hit_objects:
+        push(exec_result.next_pending_steps, {
+            type: "hit",
+            defender: attacked_obj,
+            attacker: attacker_obj,
+            attacker_spec: attacker_spec,
+            attack_vector: attack_vector,
+        })
+
+    for push_dir in [xy(-1, 0), xy(1, 0), xy(0, -1), xy(0, 1)]:
+        push(exec_result.next_pending_steps, {
+            type: "knockback",
+            coord: attack_coord + push_dir,
+            dir: push_dir,
+        })
+    return true
+    

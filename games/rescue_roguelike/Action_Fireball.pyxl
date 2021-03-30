@@ -1,0 +1,36 @@
+def execute_Fireball(turn_state, step, exec_result):
+    push(exec_result.exec_log, {
+        type: "acted",
+        action: step.action.name,
+        obj: step.action.unit,
+    })
+
+    const action_coord = step.action.target
+    const fire_obj = create_object("fire"+create_unique_object_id(),
+                                   action_coord,
+                                    "fire")
+    push(turn_state.objects, fire_obj)
+    push(exec_result.exec_log, {
+        type: "added_object",
+        action: step.action.name,
+        obj: step.action.unit,
+        added_obj: fire_obj,
+    })
+
+    for d in [xy(0, -1), xy(-1, 0), xy(0, 1), xy(1, 0)]:
+        const neighbor_coord = action_coord + d
+        if is_on_board(BATTLE_GRID_SIZE, neighbor_coord):
+            const neighbor_fire_obj = create_object("fire"+create_unique_object_id(),
+                                                    neighbor_coord, 
+                                                    "fire")
+            push(turn_state.objects, neighbor_fire_obj)
+            push(exec_result.exec_log, {
+                type: "added_object",
+                action: step.action.name,
+                obj: step.action.unit,
+                added_obj: neighbor_fire_obj,
+            })
+    return true
+
+def compute_trajectory_for_Fireball(turn_state, unit, unit_spec, action_coord):
+    return compute_trajectory_any_coord(turn_state, unit, unit_spec, action_coord)

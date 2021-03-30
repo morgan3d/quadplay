@@ -1,0 +1,80 @@
+def draw_lines_of_text(lines, args):
+    args = clone(args)
+    args.y_align = "top"
+    for line in lines:
+        args.text = line
+        draw_text(args)
+        args.pos.y += font.line_height
+
+def draw_corner_rect_styled(args):
+    draw_corner_rect({
+        corner: args.corner,
+        size: args.size,
+        color: if args.color then args.color else COLORS.menu_bg,
+        outline: if args.outline then args.outline else COLORS.menu_border,
+    })
+    
+def draw_rounded_corner_rect(args):
+    const radius = if args.radius then args.radius else 3
+
+    if args.size.x < 2*radius or args.size.y < 2*radius:
+        return
+
+    // tl
+    let circle_tl = args.corner + radius
+    let circle_br = args.corner + args.size - radius
+
+    // draw the 4 circles
+    let disk_args = deep_clone(args)
+    disk_args.pos = circle_tl
+    disk_args.radius = radius
+    draw_disk(disk_args)
+    disk_args.pos = xy(circle_br.x, circle_tl.y)
+    draw_disk(disk_args)
+    disk_args.pos = circle_br
+    draw_disk(disk_args)
+    disk_args.pos = xy(circle_tl.x, circle_br.y)
+    draw_disk(disk_args)
+
+    let rect_args = deep_clone(args)
+    rect_args.outline = nil
+    rect_args.corner.x += radius
+    rect_args.size.x -= 2*radius
+    draw_corner_rect(rect_args)
+
+    rect_args = deep_clone(args)
+    rect_args.outline = nil
+    rect_args.corner.y += radius
+    rect_args.size.y -= 2*radius
+    draw_corner_rect(rect_args)
+
+    if args.outline:
+        draw_line({
+            A: xy(args.corner.x+radius, args.corner.y),
+            B: xy(args.corner.x + args.size.x - radius, args.corner.y),
+            color: args.outline,
+            z: args.z,
+        })
+        draw_line({
+            A: xy(args.corner.x+radius, args.corner.y+args.size.y),
+            B: xy(args.corner.x + args.size.x - radius, args.corner.y+args.size.y),
+            color: args.outline,
+            z: args.z,
+        })
+        draw_line({
+            A: xy(args.corner.x, args.corner.y + radius),
+            B: xy(args.corner.x, args.corner.y + args.size.y - radius),
+            color: args.outline,
+            z: args.z,
+        })
+        draw_line({
+            A: xy(args.corner.x + args.size.x, args.corner.y + radius),
+            B: xy(args.corner.x + args.size.x, args.corner.y + args.size.y - radius),
+            color: args.outline,
+            z: args.z,
+        })
+
+def header_text(str):
+    return replace("{color: COLOR_INSPECTOR_HOVER_HEADER {font: inspector_header_font TEXT}}", {
+        TEXT: str,
+    })

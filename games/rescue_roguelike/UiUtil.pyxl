@@ -1,0 +1,147 @@
+let curr_drag = ∅ 
+let cursor_hover = xy(0, 0)
+
+def update_cursor_hover():
+    const mouse = device_control("get_mouse_state")
+    let cursor_args = {
+        sprite: shapes[11][1], 
+        pos: mouse.xy + CURSOR_OFFSET, 
+        scale: 0.35, 
+        angle: 135°,
+        override_color: COLORS.yellow_bright,
+        z:2,
+    }
+    // shadow
+    let cursor_shadow_args = clone(cursor_args)
+    cursor_shadow_args.pos = cursor_shadow_args.pos + xy(0, 2)
+    cursor_shadow_args.override_color = #111
+    draw_sprite(cursor_shadow_args)
+
+    // cursor
+    draw_sprite(cursor_args)
+
+    if mouse.dx or mouse.dy:
+        cursor_hover = mouse.xy
+
+
+def update_curr_drag():
+    if touch.pressed_a and not curr_drag:
+        curr_drag = {
+            start_frame: mode_frames,
+            start_pos: touch.xy,
+        }
+    
+    if touch.released_a:
+        curr_drag = ∅
+    
+
+def is_click():
+    if not (curr_drag and curr_drag.start_frame ≥ mode_frames - FRAMES_LONG_PRESS):
+        return false
+    
+    let release_pos = ∅
+    if touch.released_a:
+        release_pos = touch.xy
+        
+    return release_pos and ‖release_pos - curr_drag.start_pos‖ < TOUCH_CLICK_RADIUS
+
+def is_long_press():
+    return curr_drag and curr_drag.start_frame < mode_frames - FRAMES_LONG_PRESS
+    
+def is_in_corner_box(pos, corner_box):
+    const tl = corner_box.corner
+    const br = corner_box.corner + corner_box.size
+    return (is_between(pos.x, tl.x, br.x)
+        and is_between(pos.y, tl.y, br.y))
+
+// draws a button.
+// returns true if the button was clicked
+def button_clicked(args):
+    const state = button_state(args)
+    return state.clicked
+    
+// Draws a button.  returns a dict with:
+// .hover   - true if mouse is over
+// .active  - true if currently pressed
+// .clicked - true if "clicked" this frame
+// .text    - if drawing an icon, this is the text that goes along with it
+def button_state(args):
+    const disabled = args.disabled
+    const hover = is_in_corner_box(cursor_hover, args)
+    const long_press = is_long_press()
+    const long_press_ended = long_press and touch.released_a
+    const long_press_started_here = (long_press and is_in_corner_box(curr_drag.start_pos, args))
+    const active = not disabled and ((hover and touch.a) or long_press_started_here)
+    preserving_transform:
+        if active:
+            compose_transform({
+                pos: xy(0, 1),
+            })
+        
+        let button_outline = (if args.outline 
+                              then args.outline 
+                              else COLORS.menu_border)
+
+        let fill_color = COLORS.menu_bg
+        if disabled:
+            fill_color = COLOR_DISABLED_ACTION_BG
+        if hover: 
+            fill_color = perceptual_lerp_color(fill_color, rgba(1, 1, 1, fill_color.a), 5%)
+        draw_corner_rect_styled({
+            corner: args.corner,
+            size: args.size,
+            color: fill_color,
+            outline: button_outline
+        })
+
+        let text_color = COLORS.text
+        if disabled:
+            text_color = COLOR_DISABLED_ACTION_TEXT
+
+        const sprite = args.sprite
+        if sprite:
+            const sprite_scale = 1
+            const sprite_pos = args.corner + xy(½ args.size.x, ½ args.sprite.size.y + 3)
+            draw_sprite({
+                sprite: sprite,
+                pos: sprite_pos + xy(0, 1),
+                scale: sprite_scale,
+                override_color: COLORS.menu_highlight,
+            })
+            draw_sprite({
+                sprite: sprite,
+                pos: sprite_pos,
+                scale: sprite_scale,
+                override_color: COLORS.text,
+            })
+            draw_text({
+                font: deja_5_font,
+                text: args.text,
+                pos: args.corner + xy(½,1)*args.size + xy(0, -4),
+                color: text_color,
+                shadow: COLORS.menu_highlight,
+                outline: if disabled then nil else COLORS.menu_border,
+                x_align: "center",
+                y_align: "bottom",
+            })
+        else:
+            const text_pos = args.corner + ½ args.size
+            draw_text({
+                font: font,
+                text: args.text,
+                pos: text_pos,
+                color: text_color,
+                shadow: COLORS.menu_highlight,
+                outline: if disabled then nil else button_outline,
+                x_align: "center",
+                y_align: "center",
+            })
+    
+    return {
+        hover: hover,
+        clicked: hover and (is_click() or (long_press_ended and long_press_started_here)),
+        active: active,
+        text: args.text,
+        alt: args.alt,
+    }
+

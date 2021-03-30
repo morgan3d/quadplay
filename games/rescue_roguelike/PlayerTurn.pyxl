@@ -1,0 +1,1007 @@
+PlayerTurn
+════════════════════════════════════════════════════════════════════════
+
+let turn_state = ∅   
+let turn_state_undo_stack
+
+let player_input_fn_stack = []
+
+// This is cleared every frame.  any of the update functions can extend this.
+// if at the end of the frame this is non-empty, this will start a sequence
+// where input is blocked until all sequences are finished.
+let blocking_seq = []
+
+// We store things as "elements", which is an aggregate of:
+//   .state     // pointer into the turn_state
+//   .spec      // pointer into the ObjectSpecs
+//   .draw_data // object managed by the draw system.
+let object_elements = []
+   
+// This dictionary keeps tracks of what may have changed per frame.
+// it is reset every frame.  Things can add keys into it so that the update
+// functions know whether or not to run.
+let change_tracker = {}
+
+let gamepad = gamepad_array[0]
+
+let player_cursor_coord_on_grid
+
+let player_did_reset = false
+let player_ended_turn = false
+let player_is_aiming_move = false
+let player_is_aiming_action = false
+let player_current_unit_element = ∅
+let player_cursor_mask = [ ]
+for y < BATTLE_GRID_SIZE.y:
+    for x < BATTLE_GRID_SIZE.x:
+        push(player_cursor_mask, false)
+
+// This is a trajectory object that can be drawn that shows the action that the
+// player is currently aiming.
+let player_trajectory
+
+// we compute the enemy trajectories and store them rather than computing while
+// drawing.  this is so that we draw things like "threatened" squares and also
+// semi-efficiently figure out something to do on hover.
+let enemy_trajectories
+
+let under_threat_map
+
+// tracks if the user wants to show the attack order or not
+let player_show_attack_order = false
+
+// this is the order of enemy units
+let enemies_in_attack_order
+
+// this will show the result of the player action.  it can be drawn in a
+// "ghosted" manner
+let player_action_result_ghost
+
+// These are buttons.  Each key will be a dictionary that stores:
+// .hover
+// .clicked
+// .active
+let ui_buttons = {}
+
+let inspector_hover_text
+
+let pending_steps
+
+// we need to keep track of this so that after the pending actions are done, we
+// save the state to lock in the "undo" turn state.
+let pending_player_action = false
+
+def screen_to_grid_coord(screen_pos):
+    return floor((screen_pos + ½ GRID_CELL_SIZE - BATTLE_GRID_OFFSET) / GRID_CELL_SIZE)
+
+def grid_coord_to_screen(coord):
+    return coord * GRID_CELL_SIZE + BATTLE_GRID_OFFSET - ½ GRID_CELL_SIZE
+
+def set_player_cursor_coord_on_grid(coord):
+    change_tracker.cursor_coord_changed = (change_tracker.cursor_coord_changed or 
+                                           not eq(player_cursor_coord_on_grid, coord))
+    player_cursor_coord_on_grid = coord
+
+def update_cursor_hover_with_gamepad(gamepad):
+    update_cursor_hover()
+    
+    if gamepad.xx or gamepad.yy:
+        // snap to board
+        cursor_hover = grid_coord_to_screen(
+            clamp(screen_to_grid_coord(cursor_hover) + x_or_y(xy(gamepad.xx, gamepad.yy)),
+                xy(0, 0),
+                BATTLE_GRID_SIZE -1)
+            )
+
+    const cursor_coord_now = screen_to_grid_coord(cursor_hover)
+    set_player_cursor_coord_on_grid(if is_on_board(get_turn_tiles_board(turn_state), cursor_coord_now)
+                                    then cursor_coord_now
+                                    else nil)
+
+
+def update_curr_drag_with_gamepad(gamepad):
+    update_curr_drag()
+    
+    if gamepad.bb:
+        curr_drag = {
+            start_frame: mode_frames,
+            start_pos: cursor_hover,
+        }
+    if gamepad.released_b:
+        curr_drag = ∅
+
+    
+def is_click_with_b():
+    if not (curr_drag and curr_drag.start_frame ≥ mode_frames - FRAMES_LONG_PRESS):
+        return false
+    
+    let release_pos = ∅
+    if touch.released_a:
+        release_pos = touch.xy
+    if gamepad.released_b:
+        release_pos = cursor_hover
+        
+    return release_pos and ‖release_pos - curr_drag.start_pos‖ < TOUCH_CLICK_RADIUS
+
+
+def get_player_unit_elements():
+    let ret = []
+    for element in object_elements:
+        if is_element_a_player_unit(element):
+            push(ret, element)
+    return ret
+    
+    
+def get_player_unit_element_at_coord(coord):
+    for unit_element in get_player_unit_elements():
+        if eq(unit_element.state.coord, coord):
+            return unit_element
+    return ∅
+
+
+def get_non_player_unit_elements():
+    let ret = []
+    for element in object_elements:
+        if not is_element_a_player_unit(element):
+            push(ret, element)
+    return ret
+
+def is_element_a_player_unit(element):
+    return (element and 
+            element.spec.is_unit and 
+            element.state.team == "player")
+
+def set_player_unit_element(unit_element):
+    change_tracker.current_unit_element_changed = (change_tracker.current_unit_element_changed or
+        not eq(player_current_unit_element, unit_element))
+    player_current_unit_element = unit_element
+    if not player_current_unit_element:
+        set_player_is_aiming_move(false)
+        set_player_is_aiming_action(nil)
+
+def set_player_is_aiming_move(is_aiming_move):
+    change_tracker.action_changed = (change_tracker.action_changed or
+        not eq(player_is_aiming_move, is_aiming_move))
+    player_is_aiming_move = is_aiming_move
+
+def set_player_is_aiming_action(is_aiming_action):
+    change_tracker.action_changed = (change_tracker.action_changed or
+        not eq(player_is_aiming_action, is_aiming_action))
+    player_is_aiming_action = is_aiming_action
+    if is_aiming_action:
+        inspector_hover_text = get_alt_text_for_action(is_aiming_action)
+
+
+def reset_turn(turn_state_to_copy):
+    if not turn_state_to_copy:
+        return
+
+    turn_state = deep_clone(turn_state_to_copy)
+    player_did_reset = true
+    change_tracker = {}
+    set_player_is_aiming_move(false)
+    set_player_is_aiming_action(nil)
+    player_current_unit_element = ∅
+    remove_all(object_elements)
+    for obj in turn_state.objects:
+
+        const object_element = create_element_for_obj(obj)
+
+        push(object_elements, object_element)
+    player_input_fn_stack = [player_input_idle]
+
+def player_turn_update():
+    update_ui_buttons()
+
+    const fn = last_value(player_input_fn_stack)
+    if fn:
+        fn(gamepad)
+        
+    set_player_is_aiming_move(not player_is_aiming_action and 
+        player_current_unit_element and
+        can_unit_move(turn_state, 
+                      player_current_unit_element.state, 
+                      player_current_unit_element.spec))
+
+    // check to see if the aiming action state needs to be cleared
+    if (
+            player_is_aiming_action == nil
+            or not can_unit_element_perform_action(
+                turn_state,
+                player_current_unit_element.state, 
+                player_is_aiming_action)
+    ):
+        set_player_is_aiming_action(nil)
+
+    update_cursor_mask(player_current_unit_element)
+    update_action_overlay(player_current_unit_element)
+    update_enemy_trajectories()
+    update_enemy_attack_order()
+    update_hover_inspector()
+
+    update_under_threat()
+    iterate(object_elements, update_anim)
+    if player_action_result_ghost:
+        if player_action_result_ghost.object_elements:
+            iterate(player_action_result_ghost.object_elements, update_anim)
+
+
+def compute_hover():
+    let ret = {}
+    for v at k in ui_buttons:
+        if v.hover:
+            ret[k] = v
+    return ret
+
+
+def update_ui_buttons():
+    let prev_hover = compute_hover()
+
+    ui_buttons = { }
+    let button_corner = xy(GAME_BUTTON_BAR_OFFSET)
+    const padding = GAME_BUTTON_BAR_MARGIN
+    const icon_button_size = GAME_BUTTON_BAR_BUTTON_SIZE
+    if turn_state.show_ui:
+        const undo_available = can_undo()
+        ui_buttons.undo_move = button_state({
+            sprite: ActionIcons_sprite[0][0],
+            corner: button_corner,
+            size: icon_button_size,
+            disabled: not undo_available, 
+            text:replace("Undo (q)", gamepad.prompt),
+            alt:replace("Undo your last move for this turn.", gamepad.prompt),
+        })
+    else:
+        ui_buttons.undo_move = {
+            clicked: false,
+        }
+    button_corner += xy(icon_button_size.x + padding, 0)
+
+    let outline = (if any_player_units_can_act(turn_state) 
+                   then nil
+                   else COLOR_AVAILABLE_ACTION)
+
+    if turn_state.show_ui:
+        ui_buttons.end_turn = button_state({
+            sprite: ActionIcons_sprite[0][1],
+            corner: button_corner,
+            size: icon_button_size,
+            text: replace("End (c)", gamepad.prompt),
+            alt: replace("Finish your turn.", gamepad.prompt),
+            outline: outline,
+        })
+    else:
+        ui_buttons.end_turn = {
+            clicked: false,
+        }
+        
+    button_corner += xy(icon_button_size.x + padding, 0)
+
+    let player_button_offset = xy(PLAYER_BUTTON_BAR_OFFSET)
+    player_button_offset += PLAYER_BUTTON_BAR_BUTTON_MARGIN
+    let top_button_corner = clone(player_button_offset)
+    if player_current_unit_element:
+        draw_text({
+            pos: player_button_offset + xy(2, -3),
+            font: deja_5_font,
+            text: replace("Actions (d)", gamepad.prompt),
+            color: COLORS.text,
+            outline: COLORS.menu_highlight,
+            y_align: "bottom",
+        })
+
+        for action in get_actions_for_player(player_current_unit_element.state):
+            let is_selected = (player_is_aiming_action == action)
+
+            const label = get_label_text_for_action(action)
+            const alt_text = get_alt_text_for_action(action)
+
+            const disabled = not can_unit_element_perform_action(
+                turn_state, player_current_unit_element.state, action)
+            const outline = (if not disabled and is_selected
+                             then COLORS.red_bright
+                             else nil)
+            ui_buttons[action] = button_state({
+                corner: player_button_offset,
+                size: PLAYER_BUTTON_BAR_BUTTON_SIZE,
+                text: label,
+                alt: alt_text,
+                outline: outline,
+                disabled: disabled, 
+            })
+            player_button_offset += xy(0, PLAYER_BUTTON_BAR_BUTTON_SIZE.y + PLAYER_BUTTON_BAR_BUTTON_MARGIN)
+
+    let bottom_of_unit_buttons = player_button_offset - xy(0, PLAYER_BUTTON_BAR_BUTTON_MARGIN)
+
+    // draw a box around the parts of the ui that have to do with the currently
+    // selected unit
+    if player_current_unit_element:
+        let label_text = player_current_unit_element.state.id
+        if player_is_aiming_action != nil:
+            label_text += ": " + player_is_aiming_action
+
+        // label
+        /*
+        draw_text(
+            font,
+            label_text,
+            top_button_corner - xy(0, 7),
+            COLORS.text,
+            COLORS.menu_bg,
+            nil,
+            "left",
+            "bottom"
+        )
+        */
+
+        /*
+        let start = top_button_corner - PLAYER_BUTTON_BAR_BUTTON_MARGIN
+        draw_corner_rect(
+            start, 
+            xy(PLAYER_BUTTON_BAR_BUTTON_SIZE.x + 2*PLAYER_BUTTON_BAR_BUTTON_MARGIN, 
+               (bottom_of_unit_buttons - start).y + PLAYER_BUTTON_BAR_BUTTON_MARGIN),
+            COLORS.menu_highlight,
+            COLORS.menu_border,
+            -1
+        )
+        */
+
+    change_tracker.ui_button_hover_changed = (change_tracker.ui_button_hover_changed or 
+                                              not eq_recursive(prev_hover, compute_hover()))
+
+    if turn_state.show_ui:
+        const show_attack_order_corner_box = {
+            corner: ATTACK_ORDER_UI_OFFSET,
+            size: 2 * ATTACK_ORDER_UI_RADIUS * xy(1, 1),
+        }
+        draw_attack_order_badge(show_attack_order_corner_box, "1..")
+        const text_pos = show_attack_order_corner_box.corner + show_attack_order_corner_box.size * xy(0.5, 1) + xy(0, deja_5_font.line_height)
+        draw_text({
+            font: deja_5_font,
+            pos: text_pos,
+            text: replace("(e)", gamepad.prompt),
+            x_align: "center",
+            color: COLORS.text,
+            outline: COLORS.menu_border,
+        })
+        player_show_attack_order = is_in_corner_box(cursor_hover, show_attack_order_corner_box)
+
+def draw_attack_order_badge(corner_box, text):
+    const box_mid_point = corner_box.corner + 0.5 * corner_box.size
+    draw_disk({
+        pos: box_mid_point,
+        radius: ATTACK_ORDER_UI_RADIUS,
+        color: COLORS.blue_mid,
+        outline: #aaf,
+    })
+    draw_text({
+        font: attack_order_font,
+        pos: box_mid_point,
+        text: text,
+        color: COLORS.yellow_bright,
+        outline: COLORS.yellow_mid,
+        shadow: #000,
+        x_align: "center",
+        y_align: "center",
+    })
+
+def update_cursor_mask(unit_element):
+    if PLAYER_CHANGE_TRACKER and not (
+            change_tracker.turn_state_changed or
+            change_tracker.current_unit_element_changed or
+            change_tracker.action_changed):
+        // early out if nothing interesting happened.
+        return
+
+    if player_is_aiming_action != nil:
+        player_cursor_mask = compute_mask_for_action(player_is_aiming_action, turn_state, unit_element.state, unit_element.spec)
+
+    else if player_is_aiming_move:
+        // not sure what we really want to do there.  the "mask" for a valid
+        // attack vector is actually smaller, but we might want to allow
+        // players to click on the unit they're trying to attack.  I think we
+        // could special case the interaction logic here.
+        player_cursor_mask = compute_move_mask(
+            turn_state,
+            unit_element.state,
+            unit_element.spec
+        )
+    else:
+        player_cursor_mask = compute_empty_mask(turn_state)
+
+def update_action_overlay():
+    if PLAYER_CHANGE_TRACKER and not (
+            change_tracker.turn_state_changed or
+            change_tracker.current_unit_element_changed or
+            change_tracker.cursor_coord_changed or
+            change_tracker.action_changed):
+        return
+
+    player_trajectory = nil
+    player_action_result_ghost = {}
+    if player_current_unit_element:
+        const cursor_in_cursor_mask = (player_cursor_coord_on_grid and
+                                       player_cursor_mask[to_index(BATTLE_GRID_SIZE, player_cursor_coord_on_grid)])
+        if cursor_in_cursor_mask:
+            let ghost_turn_state = deep_clone(turn_state)
+            let ghost_unit_obj = get_object_by_id(ghost_turn_state, player_current_unit_element.state.id)
+
+            let ghost_pending_steps = []
+            if player_is_aiming_move:
+                ghost_pending_steps = compute_pending_steps_for_move(
+                    ghost_unit_obj, 
+                    player_current_unit_element.spec, 
+                    player_cursor_coord_on_grid)
+            else if player_is_aiming_action:
+                ghost_pending_steps = compute_pending_steps_for_action(
+                    player_is_aiming_action,
+                    ghost_unit_obj, 
+                    player_current_unit_element.spec, 
+                    player_cursor_coord_on_grid)
+                player_trajectory = compute_trajectory_for_action(
+                    player_is_aiming_action,
+                    turn_state, 
+                    player_current_unit_element.state, 
+                    player_current_unit_element.spec, 
+                    player_cursor_coord_on_grid)
+
+            if size(ghost_pending_steps) > 0:
+                execute_pending_steps_until_done(ghost_turn_state, ghost_pending_steps)
+                player_action_result_ghost.turn_state = ghost_turn_state
+
+                let ghost_obj_elements = []
+                for orig_obj in turn_state.objects:
+                    const ghost_obj = get_object_by_id(ghost_turn_state, orig_obj.id)
+                    // only add ghost elements for things that have changed.
+                    if not ghost_obj:
+                        const dead_ghost_obj = get_dead_object_by_id(ghost_turn_state, orig_obj.id)
+                        if dead_ghost_obj:
+                            push(ghost_obj_elements, create_dead_element_for_obj(dead_ghost_obj))
+                    else if not eq_recursive(ghost_obj, orig_obj):
+                        push(ghost_obj_elements, create_element_for_obj(ghost_obj))
+                player_action_result_ghost.object_elements = ghost_obj_elements
+
+    else:
+        // do nothing
+
+def update_enemy_trajectories():
+    if PLAYER_CHANGE_TRACKER and not (
+            change_tracker.turn_state_changed or
+            not enemy_trajectories):
+        return
+
+    enemy_trajectories = []
+    for unit_element in get_non_player_unit_elements():
+        if is_unit_alive(unit_element.state) and unit_element.state.next_attack:
+            const attack_vector = unit_element.state.next_attack.attack_vector
+            const attack_coord = unit_element.state.coord + attack_vector
+            const enemy_attack_action = unit_element.spec.attack.kind
+            const attack_trajectory = compute_trajectory_for_action(
+                enemy_attack_action, 
+                turn_state, 
+                unit_element.state, 
+                unit_element.spec, 
+                attack_coord)
+            if attack_trajectory:
+                push(enemy_trajectories, attack_trajectory)
+
+    under_threat_map = {}
+    for enemy_trajectory in enemy_trajectories:
+        for hit_coord in enemy_trajectory.hit_coords:
+            const hit_i = to_index(BATTLE_GRID_SIZE, hit_coord)
+            if not under_threat_map[hit_i]:
+                let under_threat_things = []
+                for obj_at_coord in get_grid_objects_at(turn_state, hit_coord):
+                    const obj_spec = ObjectSpecs_YAML[obj_at_coord.obj_type]
+                    if obj_spec.on_under_threat:
+                        let under_threat_thing = deep_clone(obj_spec.on_under_threat)
+                        under_threat_thing.element = find_element_by_id(object_elements, 
+                                                                        obj_at_coord.id)
+                        push(under_threat_things, under_threat_thing)
+                under_threat_map[hit_i] = under_threat_things
+
+def update_enemy_attack_order():
+    if PLAYER_CHANGE_TRACKER and not (
+            change_tracker.turn_state_changed or
+            not enemies_in_attack_order):
+        return
+
+    enemies_in_attack_order = get_enemy_units_sorted_by_next_attack_order(turn_state)
+
+// this updates the contents of the "hover inspector"
+def update_hover_inspector():
+    if PLAYER_CHANGE_TRACKER and not (
+            change_tracker.ui_button_hover_changed or
+            change_tracker.turn_state_changed or
+            change_tracker.cursor_coord_changed or
+            not inspector_hover_text):
+        return
+
+    inspector_hover_text = compute_inspector_hover_lines()
+
+def compute_inspector_hover_lines():
+    let text = ""
+
+    if player_show_attack_order:
+        text += "Show the order of enemy attacks.{br}"
+
+    for button at key in ui_buttons:
+        if button.hover:
+            const button_text = button.text
+            const button_alt = button.alt
+            text += header_text(uppercase(button_text) + "{br}")
+            if button_alt != button_text:
+                text += button_alt + "{br}"
+            return text
+
+    if player_cursor_coord_on_grid:
+        for obj in get_grid_objects_at(turn_state, player_cursor_coord_on_grid):
+            text += get_alt_text_for_obj(obj)
+
+        const tile_spec = get_tile_spec_at(turn_state, player_cursor_coord_on_grid)
+        const tile_name = if tile_spec then tile_spec.name else "unknown"
+        const tile_desc = if tile_spec then tile_spec.description else ""
+        if size(tile_desc) > 0:
+            text += header_text(uppercase(tile_name) + "{br}")
+            text += tile_desc + "{br}"
+    return text
+
+def player_input_none(gamepad):
+    // do nothing
+ 
+
+def player_input_idle(gamepad):
+    remove_all(blocking_seq)
+    
+    if size(pending_steps) > 0:
+        let exec_result = execute_pending_steps(turn_state, pending_steps)
+        let exec_log = exec_result.exec_log
+        pending_steps = exec_result.next_pending_steps
+        extend(blocking_seq, seq_for_exec_log(object_elements, exec_result.exec_log))
+        change_tracker.turn_state_changed = true
+    else:
+        if pending_player_action:
+            pending_player_action = false
+           
+            push(turn_state_undo_stack, deep_clone(turn_state))
+            
+        if not is_player_alive(turn_state):
+            set_mode(GameOver, turn_state)
+
+        if not is_enemy_alive(turn_state):
+            todo("whats the actual end condition")
+            if false:
+                set_mode(BattleVictory, turn_state)
+
+        if player_ended_turn:
+            set_mode(ShowEnemyAttacks, turn_state, object_elements)
+    
+        handle_player_input(gamepad)
+        
+    if blocking_seq:
+        push(player_input_fn_stack, player_input_none)
+        let player_input_fn_stack_ = player_input_fn_stack
+        def reset_to_idle():
+            pop(player_input_fn_stack_)
+        
+        sequence(...blocking_seq, {           
+            end_callback: reset_to_idle,
+        })
+
+def get_availble_actions_for_current():
+    if not player_current_unit_element:
+        return []
+
+    let available = []
+    for action in get_actions_for_player(player_current_unit_element.state):
+        if can_unit_element_perform_action(
+                turn_state, player_current_unit_element.state, action):
+            push(available, action)
+    return available
+
+def get_first_available_action():
+    const available = get_availble_actions_for_current()
+    if not size(available):
+        return nil
+    return available[0]
+
+def get_next_availble_action():
+    const available = get_availble_actions_for_current()
+    if not size(available):
+        return nil
+
+    let idx = find(available, player_is_aiming_action)
+    if idx == nil:
+        return nil
+    return array_value(available, idx+1, "loop")
+
+def handle_player_input(gamepad):
+    const long_press = is_long_press()    
+    const click = is_click_with_b()
+    const long_press_ended = long_press and (touch.released_a or gamepad.released_b)
+    const confirm = click or long_press_ended
+    const cancel = gamepad.aa
+   
+    let player_button_clicked = nil
+    if player_current_unit_element:
+        for action in get_actions_for_player(player_current_unit_element.state):
+            const button_state = ui_buttons[action]
+            assert(button_state)
+            if button_state.clicked:
+                player_button_clicked = action
+
+    const menu_mode = not turn_state.show_ui
+
+    const cycle_action = gamepad.dd
+    const toggle_action = player_button_clicked != nil
+
+    // weird button.  oh well
+    player_show_attack_order = not menu_mode and (player_show_attack_order or gamepad.e)
+    const undo_move = not menu_mode and (gamepad.qq or ui_buttons.undo_move.clicked)
+    const end_turn = not menu_mode and (gamepad.cc or ui_buttons.end_turn.clicked)
+
+    if cancel:
+        set_player_unit_element(∅)
+        return
+
+    if toggle_action:
+        // just toggle.  this will get validated later.
+        if (player_is_aiming_action == player_button_clicked):
+            set_player_is_aiming_action(nil)
+        else:
+            set_player_is_aiming_action(player_button_clicked)
+        return
+
+    if cycle_action:
+        if player_is_aiming_action:
+            set_player_is_aiming_action(get_next_availble_action())
+        else:
+            set_player_is_aiming_action(get_first_available_action())
+        return
+    
+    if undo_move:
+        const last_value_on_stack = last_value(turn_state_undo_stack)
+        const keep_last_value_on_stack = (size(turn_state_undo_stack) == 1 or 
+                not eq_recursive(turn_state, last_value_on_stack))
+
+        if not keep_last_value_on_stack:
+            pop(turn_state_undo_stack)
+
+        extend(blocking_seq, [
+            {
+                end_callback: reset_turn,
+                data: last_value(turn_state_undo_stack),
+            }
+        ])
+        return
+  
+    if end_turn:
+        player_ended_turn = true
+        return
+
+    if player_cursor_coord_on_grid and long_press:
+        const start_drag_coord = screen_to_grid_coord(curr_drag.start_pos)
+        // WBN if we could make it float
+        set_player_unit_element(get_player_unit_element_at_coord(start_drag_coord))
+    
+    if player_cursor_coord_on_grid and confirm:
+        const selected_coord = player_cursor_coord_on_grid
+
+        let clear_selection = false
+        
+        // handle a click
+        // if we're attacking, then 
+        if player_current_unit_element:
+            if player_is_aiming_action != nil:
+                // @TODO: need to set the mask correctly
+                const valid_action = player_cursor_mask[
+                    to_index(BATTLE_GRID_SIZE, selected_coord)
+                ]
+                if valid_action:
+                    do_action(
+                        player_is_aiming_action,
+                        player_current_unit_element,
+                        selected_coord,
+                    )
+                else:
+                    // clicked somewhere can't attack.  reset the selection
+                    clear_selection = true
+            else:
+                const unit_element_at_coord = get_player_unit_element_at_coord(selected_coord)
+                if unit_element_at_coord:
+                    set_player_unit_element(if is_element_a_player_unit(unit_element_at_coord) 
+                                            then unit_element_at_coord 
+                                            else nil)
+                else if player_is_aiming_move:
+                    const valid_move = player_cursor_mask[to_index(BATTLE_GRID_SIZE, selected_coord)]
+                    if valid_move:
+                        do_move(player_current_unit_element, selected_coord)
+                    else:
+                        // clicked somewhere we cannot move
+                        clear_selection = true
+        else:
+            set_player_unit_element(get_player_unit_element_at_coord(selected_coord))      
+        
+        if clear_selection:
+            set_player_unit_element(∅)
+
+   
+    
+def seq_slide_cursor(obj, prev_coord):
+    const offset_start = (prev_coord - obj.coord)*GRID_CELL_SIZE
+    obj.entity.pos = clone(offset_start)
+    
+    def slide_frame(frames_left, total_frames, data):
+        const t = smoothstep(total_frames, 0, frames_left)
+        data.obj.entity.pos = lerp(data.offset_start, xy(0, 0), t)
+        
+    let slide_data = {
+        obj: obj,
+        offset_start: offset_start,
+    }
+    return [
+        {
+            callback: slide_frame,
+            frames: FRAMES_CURSOR_SLIDE,
+            data: slide_data,
+        },
+    ]
+ 
+
+def seq_bump_cursor(cursor, next_coord):
+    def bump_frame(frames_left, total_frames, data):
+        const t = smoothstep(total_frames, 0, frames_left)
+        const δ = 1-2*abs(t - 0.5)
+        data.cursor.entity.pos = lerp(xy(0, 0), data.offset_target, δ)
+        
+    def bump_end(data):
+        //data.obj.entity.animation = "idle"
+
+    const dir = next_coord - cursor.coord
+    let bump_data = {
+        cursor: cursor,
+        offset_target: ⅙ dir * GRID_CELL_SIZE,
+    }
+    return[{
+        callback: bump_frame,
+        end_callback: bump_end,
+        frames: FRAMES_BUMP,
+        data: bump_data,
+    },]
+
+def do_action(action_name, unit_element, action_coord):
+    extend(
+        pending_steps,
+        compute_pending_steps_for_action(
+            action_name,
+            unit_element.state,
+            unit_element.spec, 
+            clone(action_coord),
+        )
+    )
+    let new_step = pending_steps[size(pending_steps)-1]
+    pending_player_action = true
+
+def compute_pending_steps_for_move(unit, unit_spec, move_coord):
+    return [ {
+        type: "move",
+        obj: unit,
+        obj_spec: unit_spec,
+        target_coord: move_coord,
+    }, ]
+
+def do_move(unit_element, move_coord):
+    extend(pending_steps, compute_pending_steps_for_move(
+        unit_element.state, 
+        unit_element.spec, 
+        move_coord))
+
+def update_under_threat():
+    for under_threat_things at i_coord_str in under_threat_map:
+        for under_threat_thing in under_threat_things:
+            const object_element = under_threat_thing.element
+            if object_element.draw_data.on_threat_cooldown == nil:
+                object_element.draw_data.on_threat_cooldown = infinity
+
+                def start_cooldown(data):
+                    data.elem_draw_data.on_threat_cooldown = data.cooldown_frames
+
+                const help_me_text = random_value(under_threat_thing.dialog.text)
+                const help_me_timeout = max(size(help_me_text) / 10, 1) * FRAMES_DIALOG * 2
+                sequence(...seq_for_obj_dialog_bubble(object_element.state, 
+                                                      help_me_text, 
+                                                      help_me_timeout), 
+                         {
+                             frames: 1,
+                             end_callback: start_cooldown, 
+                             data: {
+                                 elem_draw_data: object_element.draw_data,
+                                 cooldown_frames: random_integer(
+                                     under_threat_thing.dialog.frames,
+                                     2*under_threat_thing.dialog.frames),
+                             }
+                         },)
+            else:
+                object_element.draw_data.on_threat_cooldown -= 1
+                if object_element.draw_data.on_threat_cooldown < 0:
+                    object_element.draw_data.on_threat_cooldown = nil
+
+def update_anim(object_element):
+    const e = object_element.draw_data.entity
+    if e.spritesheet and e.animation and size(e.spritesheet) > 1:
+        const sprite_frame = ⌊mode_frames / 12⌋
+        e.sprite = array_value(e.spritesheet[e.animation], sprite_frame)       
+
+def player_turn_draw():
+    draw_battle_bg(turn_state)
+    draw_battle_board(turn_state)
+    draw_game_info(turn_state)
+
+    preserving_transform:
+        compose_transform({
+            pos: BATTLE_GRID_OFFSET,
+        })
+
+        draw_grid_overlay()
+
+        for object_element in object_elements:
+            draw_grid_object(object_element, player_current_unit_element, "player")
+
+        // draw any ghost objects.  For now, we just have it blink.
+        const ghost_blink = player_is_aiming_move or (⌊mode_frames / 16⌋ % 4) != 1
+        if ghost_blink:
+            if player_action_result_ghost and player_action_result_ghost.object_elements:
+                // this ends up being more distracting on move so we only do
+                // the "current" for action
+                let ghost_current = nil
+                if player_is_aiming_action:
+                    ghost_current = find_element_by_id(
+                        player_action_result_ghost.object_elements, 
+                        player_current_unit_element.state.id) 
+
+                for object_element in player_action_result_ghost.object_elements:
+                    draw_grid_object(object_element, ghost_current)
+                    if object_element.state.team == "enemy":
+                        draw_trajectory_for_next_attack(turn_state, object_element)
+        
+    if player_show_attack_order:
+        draw_enemy_attack_order()
+
+    draw_inspector()
+
+def draw_grid_overlay():
+    const cursor_hover_coord = player_cursor_coord_on_grid
+
+    if player_is_aiming_move or player_is_aiming_action:
+        draw_cursor_mask(player_cursor_mask)
+        if cursor_hover_coord and player_cursor_mask[to_index(BATTLE_GRID_SIZE, cursor_hover_coord)]:
+            if player_is_aiming_move:
+                let path = compute_path_to_coord(turn_state, 
+                                                 player_current_unit_element.state, 
+                                                 player_current_unit_element.spec, 
+                                                 cursor_hover_coord)
+                draw_path(path)
+        
+    draw_attack_trajectory(player_trajectory, true)
+
+    for enemy_trajectory in enemy_trajectories:
+        draw_attack_trajectory(enemy_trajectory, false)
+        draw_cells_under_threat(turn_state, enemy_trajectory.hit_coords)
+
+    if cursor_hover_coord:
+        let outline_color = COLORS.yellow_bright
+        draw_cursor(cursor_hover_coord, outline_color)
+
+
+def draw_cursor_mask(cursor_mask):
+    let mask_color = #000
+    if player_is_aiming_move:
+        mask_color = COLORS.green_bright
+        mask_color.a = 50%
+    else if player_is_aiming_action:
+        mask_color = COLORS.red_bright
+        mask_color.a = 50%
+    for v at i in cursor_mask:
+        if v:
+            const coord = to_coord(BATTLE_GRID_SIZE, i)
+            preserving_transform:
+                compose_transform({
+                    pos: coord * GRID_CELL_SIZE,
+                    z: coord.y / Z_COORD_DIVIDER,
+                })
+                draw_corner_rect({
+                    corner: xy(0, 0) - ½ GRID_CELL_SIZE,
+                    size: GRID_CELL_SIZE,
+                    outline: mask_color,
+                    color: rgba(mask_color, 10%),
+                })
+        
+def draw_enemy_attack_order():
+    for enemy at i in enemies_in_attack_order:
+        const num = i + 1
+        const coord = enemy.coord
+        preserving_transform:
+            compose_transform({
+                pos: coord * GRID_CELL_SIZE,
+                z: (coord.y + Z_ATTACK_ORDER_OFFSET) / Z_COORD_DIVIDER,
+            })
+
+            draw_attack_order_badge({
+                corner: ATTACK_ORDER_BADGE_OFFSET,
+                size: 2*ceil(0.85 * attack_order_font.line_height),
+            }, num)
+
+def draw_inspector():
+    draw_corner_rect_styled({
+        corner: INSPECTOR_HOVER_OFFSET,
+        size: INSPECTOR_HOVER_SIZE,
+    })
+
+    let padding = INSPECTOR_HOVER_PADDING
+    const text_pos = INSPECTOR_HOVER_OFFSET + padding
+    const text_size = INSPECTOR_HOVER_SIZE - 2*padding
+    set_clip({
+        pos: text_pos,
+        size: text_size,
+    })
+
+    draw_text({
+        font: inspector_font,
+        pos: text_pos,
+        text: inspector_hover_text,
+        color: COLORS.text,
+        y_align: "top",
+        wrap_width: text_size.x,
+        markup: true,
+    })
+
+    reset_clip()
+
+def can_undo():
+    return size(turn_state_undo_stack) > 0
+
+enter(state)
+────────────────────────────────────────────────────────────────────────
+// This event runs when the mode is entered via set_mode() or push_mode().
+player_ended_turn = false
+player_input_fn_stack = []
+debug_print("MAP STATE AT LOAD: ")
+debug_print(pretty_print_tiles(state.tiles))
+
+// when starting a PlayerTurn, all of our units get to move
+begin_player_turn(state)
+
+turn_state_undo_stack = []
+push(turn_state_undo_stack, deep_clone(state))
+reset_turn(last_value(turn_state_undo_stack))
+pending_steps = []
+change_tracker = nil
+inspector_hover_text = nil
+under_threat_map = {}
+player_show_attack_order = false
+
+frame
+────────────────────────────────────────────────────────────────────────
+if player_did_reset or not change_tracker:
+    // If this is the first time we're in the frame, just flag that the
+    // turn_state_changed so that we'll recompute things.
+    change_tracker = {
+        turn_state_changed: true,
+    }
+
+    push(pending_steps, {type: "check_state", })
+    player_did_reset = false
+else:
+    remove_all(change_tracker)
+
+update_cursor_hover_with_gamepad(gamepad)
+
+player_turn_update()
+player_turn_draw()
+
+update_curr_drag_with_gamepad(gamepad)
+
+leave
+────────────────────────────────────────────────────────────────────────
+// This event runs just before leaving for another mode by set_mode() or pop_mode().
+

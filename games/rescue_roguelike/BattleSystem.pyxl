@@ -1,0 +1,318 @@
+// These functions implement much of the game logic and things that deal turn_state.
+// Unless the function begins with "get", the function may modify turn_state.  
+// Be sure to copy it before calling if you do not want it modified.
+
+// This implements the proper initialization of the player turn.  This should be called
+// durint PlayerTurn.enter(…)
+def begin_player_turn(turn_state):
+    turn_state.turn_num++
+
+    // all units have not moved or attacked at the beginning of the turn.
+    for obj in turn_state.objects:
+        const obj_spec = ObjectSpecs_YAML[obj.obj_type]
+        assert(obj_spec)
+
+        if obj_spec.is_unit:
+            obj.num_coords_moved_this_turn = 0
+            obj.performed_action_this_turn = false
+
+def begin_enemy_turn(turn_state):
+    for obj in turn_state.objects:
+        const obj_spec = ObjectSpecs_YAML[obj.obj_type]
+        assert(obj_spec)
+        
+        if obj_spec.is_unit and obj.team == "enemy":
+            obj.num_coords_moved_this_turn = 0
+            obj.performed_action_this_turn = false
+            obj.next_attack = ∅
+
+
+// Executes pending steps and then keeps going until all are done.
+// This is useful for the CPU evaluation where it is not interested in any of the
+// states.
+def execute_pending_steps_until_done(turn_state, pending_steps):
+    while size(pending_steps) > 0:
+        let exec_result = execute_pending_steps(turn_state, pending_steps)
+        pending_steps = exec_result.next_pending_steps
+
+// Resolves all pending steps.  
+//
+// Returns a list of ExecutionResults which describe what happened to which objects.
+// turn_state.pending_steps may contain new steps that need to be resolved.
+def execute_pending_steps(turn_state, pending_steps):
+    let exec_result = {
+        // objects that describe what happened
+        exec_log: [],
+        
+        next_pending_steps: [],
+    }
+
+    const was_check_state = size(pending_steps) == 1 and pending_steps[0].type == "check_state"
+    let needs_check_state = false
+
+    for step in pending_steps:
+        if step.type == "check_state":
+            execute_check_state(turn_state, step, exec_result)
+            // if anything happened, schedule another round of checks
+            if size(exec_result.exec_log) > 0:
+                needs_check_state = true
+        else if step.type == "move":
+            execute_move(turn_state, step, exec_result)
+        else if step.type == "action":
+            execute_action(turn_state, step, exec_result)
+        else if step.type == "hit":
+            execute_hit(turn_state, step, exec_result)
+        else if step.type == "knockback":
+            execute_knockback(turn_state, step, exec_result)
+        else if step.type == "bump":
+            execute_bump(turn_state, step, exec_result)
+        else if step.type == "move_map":
+            execute_move_map(turn_state, step, exec_result)
+        else if step.type == "hurt_player_units":
+            execute_hurt_player_units(turn_state, step, exec_result)
+        else if step.type == "heal_unit":
+            execute_heal_unit(turn_state, step, exec_result)
+        else if step.type == "damage_unit":
+            execute_damage_unit(turn_state, step, exec_result)
+        else if step.type == "warp":
+            execute_warp(turn_state, step, exec_result)
+        else:
+            assert(false, "unknown step type: " + step)
+    
+    // this isn't the sentinnel, so if we have no pending steps, we push a
+    // "check_state" pending_step
+    needs_check_state = needs_check_state or (not was_check_state and size(exec_result.next_pending_steps) == 0)
+    if needs_check_state:
+        push(exec_result.next_pending_steps, {
+            type: "check_state",
+        })
+    return exec_result
+
+def execute_check_state(turn_state, step, exec_result):
+    // first, see if any units are dead.
+    def check_unit_dead(obj):
+        if is_dead(obj):
+            return true
+
+        if is_on_board(get_turn_tiles_board(turn_state), obj.coord):
+            const obj_spec = ObjectSpecs_YAML[obj.obj_type]
+            const tile_spec = get_tile_spec_at(turn_state, obj.coord)
+            assert(obj_spec)
+            if not can_object_survive_on_tile_spec(obj_spec, tile_spec):
+                return true
+
+        return false
+
+    let dead_objects = split_if(turn_state.objects, check_unit_dead)
+    extend(turn_state.dead_objects, dead_objects)
+    for obj in dead_objects:
+        obj.health_at_death = obj.health
+        obj.health = 0
+        obj.next_attack = nil
+        obj.died_at_map_offset = turn_state.map_offset
+        obj.died_at_turn = turn_state.turn_num
+        push(exec_result.exec_log, {
+            type: "died",
+            obj: obj,
+        })
+
+        const obj_spec = ObjectSpecs_YAML[obj.obj_type]
+        if obj_spec.on_death:
+            // also, what do we do for the ghost in this case.. or enemy evaluation?
+            if obj_spec.on_death.chance == nil or random() <= obj_spec.on_death.chance:
+                push(exec_result.next_pending_steps, obj_spec.on_death)
+            else:
+                todo("how do we indicate this to the user?  maybe it's too confusing to have a chance..")
+                push(exec_result.exec_log, {
+                    type: "dodged",
+                })
+
+    for alive_obj in get_all_alive_objects(turn_state):
+        const objects_to_pickup = split_if(get_grid_objects_at(turn_state, alive_obj.coord), get_pickup_for_obj)
+        for obj_to_pickup in objects_to_pickup:
+            let picked_up_log = deep_clone(get_pickup_for_obj(obj_to_pickup))
+            picked_up_log.obj = obj_to_pickup
+            picked_up_log.type = "picked_up"
+            push(exec_result.exec_log, picked_up_log)
+
+            remove_values(turn_state.objects, obj_to_pickup)
+            let on_pickup = deep_clone(get_pickup_for_obj(obj_to_pickup))
+            on_pickup.obj = obj_to_pickup
+            on_pickup.receiver_obj = alive_obj
+            push(exec_result.next_pending_steps, on_pickup)
+    // can apply other rules here if needed.
+
+    
+def execute_move(turn_state, step, exec_result):
+    const obj = step.obj
+    const obj_spec = step.obj_spec
+    const target_coord = step.target_coord
+    const path = compute_path_to_coord(turn_state, obj, obj_spec, target_coord)
+    if path:
+        obj.coord = target_coord
+        obj.num_coords_moved_this_turn += (size(path) - 1)
+        push(exec_result.exec_log, {
+            type: "moved",
+            obj: obj,
+            obj_spec: obj_spec,
+            path: path,
+        })
+
+def execute_hit(turn_state, step, exec_result):
+    const defender = step.defender
+    const attacker = step.attacker
+    const attacker_spec = step.attacker_spec
+    const attack_vector = step.attack_vector
+    const attack_damage = attacker_spec.attack.damage
+    debug_print(attack_damage)
+    assert(
+        attack_damage != nil,
+        (
+            "unit : " + attacker.id 
+            + " of type " + attacker.obj_type 
+            + " dealt nil damage"
+        )
+    )
+    if defender.health < ∞:
+        assert(
+            defender.health != nil and defender.health != NaN,
+            "unit: " + defender.id + " has nil or NaN health"
+        )
+        const prev_health = defender.health
+        defender.health = max(defender.health - attack_damage, 0)
+        if prev_health ≠ defender.health:
+            push(exec_result.exec_log, {
+                type: "received_damage",
+                obj: defender,
+                damage_amount: prev_health - defender.health,
+                prev_health: prev_health,
+                hit_dir: attack_vector,
+            })
+
+def execute_knockback(turn_state, step, exec_result):
+    const pushed_into_obj_damage = 1
+
+    // this should return if we lost health due to this
+    // resolve pushes
+    const push_coord = step.coord
+    const push_dir = step.dir
+    for pushed_obj in get_grid_objects_at(turn_state, push_coord):
+        const pushed_obj_spec = ObjectSpecs_YAML[pushed_obj.obj_type]
+        if can_object_be_pushed(turn_state, pushed_obj, pushed_obj_spec):
+            const pushed_to_coord = push_coord + push_dir
+            if can_be_pushed_onto(turn_state, pushed_to_coord):
+                const prev_coord = pushed_obj.coord
+                pushed_obj.coord = pushed_to_coord
+                push(exec_result.exec_log, {
+                    type: "knocked_back",
+                    obj: pushed_obj,
+                    prev_coord: prev_coord,
+                    hit_dir: push_dir,
+                })
+
+            else:
+                if pushed_obj.health < ∞:
+                    const prev_health = pushed_obj.health
+                    pushed_obj.health = max(pushed_obj.health - pushed_into_obj_damage, 0)
+                    if prev_health ≠ pushed_obj.health:
+                        push(exec_result.exec_log, {
+                            type: "received_damage",
+                            obj: pushed_obj,
+                            damage_amount: prev_health - pushed_obj.health,
+                            hit_dir: push_dir,
+                        })                         
+
+def execute_bump(turn_state, step, exec_result):
+    // nothing happens.  just log it.
+    const obj = step.obj
+    const dir = step.dir
+    push(exec_result.exec_log, {
+        type: "bumped",
+        obj: obj,
+        bump_dir: dir,
+    })     
+
+def execute_move_map(turn_state, step, exec_result):
+
+    // when do we check for units that may have fallen off and died?
+    const prev_map_offset = turn_state.map_offset
+    const map_offset_delta = 1
+    turn_state.map_offset += map_offset_delta
+    for obj in turn_state.objects:
+        obj.coord.y -= map_offset_delta
+
+    def objects_off_map(obj):
+        return obj.coord.y < 0
+
+    const expired_objects = split_if(turn_state.objects, objects_off_map)
+    for obj in expired_objects:
+        turn_state.points += get_rescue_points_for_expired_object(obj)
+        debug_print(replace("ID on turn TURN at map offset OFFSET ", {
+            ID: obj.id,
+            TURN: turn_state.turn_num,
+            OFFSET: prev_map_offset,
+        }))
+        obj.expired_at_map_offset = prev_map_offset
+        obj.expired_at_turn = turn_state.turn_num
+    extend(turn_state.expired_objects, expired_objects)
+    push(exec_result.exec_log, {
+        type: "moved_map",
+        map_offset_delta: map_offset_delta,
+        expired_objects: expired_objects,
+    })
+
+def change_tile_type_at_coord(turn_state, coord, new_type_char):
+    turn_state.tiles = replace_char(
+        turn_state.tiles,
+        turn_state.map_offset * BATTLE_GRID_SIZE.x + to_index(BATTLE_GRID_SIZE, coord),
+        new_type_char
+    )
+
+def execute_hurt_player_units(turn_state, step, exec_result):
+    const damage = step.damage
+    // randomly roll
+    for player_unit in get_all_player_alive_units(turn_state):
+        // uh, should we cap this as once per turn?
+        const prev_health = player_unit.health
+        player_unit.health = max(player_unit.health - damage, 0)
+        if prev_health ≠ player_unit.health:
+            push(exec_result.exec_log, {
+                type: "received_damage",
+                obj: player_unit,
+                damage_amount: prev_health - player_unit.health,
+                hit_dir: xy(1, 0),
+            })                         
+
+def execute_heal_unit(turn_state, step, exec_result):
+    const heal_amount = step.heal_amount
+    const receiver_obj = step.receiver_obj
+    if is_unit_alive(receiver_obj):
+        receiver_obj.health += 1
+        push(exec_result.exec_log, {
+            type: "received_health",
+            heal_amount: heal_amount,
+            obj: receiver_obj,
+        })                         
+
+def execute_damage_unit(turn_state, step, exec_result):
+    const receiver_obj = step.receiver_obj
+    const damage_amount = step.damage_amount
+    const prev_health = receiver_obj.health
+    if is_alive(receiver_obj):
+        receiver_obj.health = max(receiver_obj.health-1, 0)
+        push(exec_result.exec_log, {
+            type: "received_damage",
+            damage_amount: prev_health - receiver_obj.health,
+            obj: receiver_obj,
+            hit_dir: xy(0, -1),
+        })                         
+
+def execute_warp(turn_state, step, exec_result):
+    const receiver_obj = step.receiver_obj
+    // note, we don't actually do anything to the turn state here.
+    // warp is handled specially.
+    push(exec_result.exec_log, {
+        type: "warped",
+        dest_mode: "Start",
+        obj: receiver_obj,
+    })    

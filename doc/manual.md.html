@@ -378,6 +378,7 @@ competive game derived from Snake-like games, including [TRON]("https://en.wikip
 
 
 ----------------------------
+
   <center><img src="../games/rps/label128.png" width=128px style="border:0"></center>
 
 <div class="preview pixel" style="background-image:url('../games/rps/preview.png')"></div>
@@ -388,6 +389,19 @@ competive game derived from Snake-like games, including [TRON]("https://en.wikip
 - Timed sound effects
 - Private choices in multiplayer
 - Combinatorial logic
+
+----------------------------
+
+  <center><img src="../games/rescue_roguelike/sprites/title.png" width="300px" style="border:0"></center>
+
+<div class="preview pixel" style="background-image:url('../games/rescue_roguelike/preview.png')"></div>
+[Rescue Roguelike](../console/quadplay.html?game=quad://games/rescue_roguelike&IDE=1) is a tactical turn-based
+adventure game inspired by Into the Breach and Rogue:
+
+- Constants
+- Touch and mouse interaction
+- Aseprite sprites
+- Extensive data-driven design with external YAML files
 
 
 
@@ -1620,11 +1634,11 @@ Types
 `is_nil(value)`
 : Returns true for `nil` and false for all other types.
 
-`is_NaN(value)`
+`is_nan(value)`
 : Returns true for the floating point not-a-number value
-  `NaN` and false for all other values.
-  Note that you cannot test for `NaN` using `==` due to
-  floating point NaN rules.
+  `nan` and false for all other values.
+  Note that you cannot test for `nan` using `==` due to
+  floating point nan rules.
 
 `is_number(value)`
 : Returns true for numbers and false for all other types.
@@ -4127,16 +4141,18 @@ endpoints and borders.
 : Print string `text` relative to `pos`. 
 
   Returns a camera-space bounding box that is clipped to the current
-  clipping region. It has fields `{pos: xy(), size: xy(), z:z}` that
-  contains the text but not shadows and outlines. This bounding box is
-  conservative in height and accounts for the highest ascender and
-  accent and lowest descender. `overlaps(bounds, touch)` is convenient
-  for recognizing when the player has touched the text. The bounds are
-  tight in width and tailored to the exact characters. The bounding
-  box also does not include the spacing that should be added between
-  consecutive lines. The `pos` property will have `nan` values if the
-  bounds are entirely clipped. _In future versions, there may be more
-  fields on the bounding box object to identify the location of markup
+  clipping region. It has fields `{pos: xy(), size: xy(), height:h,
+  z:z}` that contains the text but not shadows and outlines. This
+  bounding box is conservative in height and accounts for the highest
+  ascender and accent and lowest descender. The `height` is the
+  vertical size before clipping, which is useful for
+  layout. `overlaps(bounds, touch)` is convenient for recognizing when
+  the player has touched the text. The bounds are tight in width and
+  tailored to the exact characters. The bounding box also does not
+  include the spacing that should be added between consecutive
+  lines. The `pos` property will have `nan` values if the bounds are
+  entirely clipped. _In future versions, there may be more fields on
+  the bounding box object to identify the location of markup
   sections._
   
   Use `font.line_height` to know how far to place separate lines
@@ -5760,7 +5776,7 @@ The available constants types are:
 - `number`
   - Decimal number, with optional double quotes
   - Unicode fraction in double quotes
-  - `"NaN"`
+  - `"nan"`
   - `"infinity"`, `"-infinity"`, `"∞"`, `"-∞"`
   - Number ending in `deg`, `°`, or `%`, all in double quotes
   - `"π"`
@@ -5860,7 +5876,7 @@ empty                    |  (empty) string
 `infinity`               |  number (`infinity`)
 `-infinity`              |  number (`-infinity`)
 `nil`, `null`            |  `nil`
-`NaN`                    |  `NaN`
+`nan`                    |  `nan`
 number ending in `deg`   |  number (in radians, same as native quadplay constants)
 
 
@@ -6441,7 +6457,7 @@ of their arguments.
 The first 2^53=9007199254740992 contiguous positive integers are
 exactly representable. The largest finite representable number is
 about 1.7977x10^308. There are about seventeen decimal digits of
-precision on arbitrary numbers. `NaN` and positive and negative infinity
+precision on arbitrary numbers. `nan` and positive and negative infinity
 are also exactly representable.
 
 Finite decimal numeric literals contain an optional single plus or minus sign and one of:
@@ -6710,7 +6726,7 @@ now but are reserved for future use.
 `has`,
 `if`, `in`, `implements`, `inherits`, `include`, `import`, `interface`,
 `launch_game`, `let`, `local`,
-`NaN`, `new`, `nil`, `nonlocal`, `not`, `null`,
+`nan`, `NaN`, `new`, `nil`, `nonlocal`, `not`, `null`,
 `main`, `MAD`, `mod`, `module`, `mode`, `MUL`,
 `or`, `otherwise`,
 `public`, `private`, `protected`, `prototype`, `package`, `preserve`, `preserving_transform`,

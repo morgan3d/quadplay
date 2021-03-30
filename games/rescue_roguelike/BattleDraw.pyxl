@@ -1,0 +1,485 @@
+// a little gross that we are doing this.
+let map_draw_offset = xy(0, 0)
+
+const attack_order_font = deja_5_font
+const rescue_font = deja_5_font
+const received_health_font = deja_5_font
+const dialog_font = deja_5_font
+
+def create_element_for_obj(obj):
+    const obj_spec = ObjectSpecs_YAML[obj.obj_type]
+    assert(obj_spec)
+
+    return create_element_for_obj_with_spec(obj, obj_spec)
+
+def create_dead_element_for_obj(obj):
+    const obj_spec = ObjectSpecs_YAML[obj.obj_type]
+    assert(obj_spec)
+
+    let ret = create_element_for_obj_with_spec(obj, ObjectSpecs_YAML.dead_unit)
+    ret.old_spec = obj_spec
+    return ret
+
+def create_element_for_obj_with_spec(obj, obj_spec):
+    let object_element = {
+        state: obj, // pointer into turn_state
+        spec: obj_spec, // should be constant for this battle
+        draw_data: {
+            entity: make_entity({}),
+        },
+    }
+
+    let draw_data = object_element.draw_data
+    
+    todo("very weird spot for all of this")
+    let spritesheet = ASSETS[obj_spec.spritesheet]
+    if obj_spec.sprite_offset:
+        const sprite = spritesheet[obj_spec.sprite_offset[0]][obj_spec.sprite_offset[1]]
+        draw_data.entity.sprite = sprite
+    else:
+        draw_data.entity.spritesheet = spritesheet
+        if size(spritesheet) > 1:
+            draw_data.entity.animation = "idle"
+        else:
+            draw_data.entity.sprite = spritesheet
+
+    if obj_spec.sprite_size_xy != nil:
+        draw_data.entity.scale = xy(obj_spec.sprite_size_xy)
+    if obj_spec.sprite_offset_xy != nil:
+        draw_data.entity.offset = xy(obj_spec.sprite_offset_xy)
+    if obj_spec.sprite_z != nil:
+        draw_data.entity.z = obj_spec.sprite_z
+
+    update_anim(object_element)
+    return object_element
+
+def find_element_by_id(object_elements, id):
+    for obj_elem in object_elements:
+        if obj_elem.state.id == id:
+            return obj_elem
+    return nil
+
+def remove_element_by_id(object_elements, id):
+    def matches_id(obj_elem):
+        return obj_elem.state.id == id
+    split_if(object_elements, matches_id)
+
+def draw_battle_bg(turn_state):
+    set_background(COLORS.bg)
+
+    if turn_state.show_title:
+        draw_text(
+            {
+                pos: xy(SCREEN_SIZE.x/2, 20),
+                font: font,
+                text: "RESCUE ROGUELIKE",
+                color: COLORS.text,
+                shadow: COLORS.menu_highlight,
+                outline: COLORS.menu_bg,
+                x_align: "center",
+                y_align: "top",
+                z: 10,
+            }
+        )
+
+    if turn_state.bg_image != nil:
+        preserving_transform:
+            reset_transform()
+            draw_sprite(
+                {
+                    pos: SCREEN_SIZE/2, 
+                    sprite: ASSETS[turn_state.bg_image]
+                }
+            )
+
+def draw_battle_board(turn_state) preserving_transform:
+    debug_watch(pretty_print_tiles(turn_state.tiles))
+    debug_watch(turn_state.map_offset)
+    debug_watch(compute_num_rows(turn_state))
+
+    const tiles = turn_state.tiles
+    compose_transform({
+        pos: BATTLE_GRID_OFFSET,
+    })
+
+    for -1 <= y < BATTLE_GRID_SIZE.y:
+        for x < BATTLE_GRID_SIZE.x:
+            const cell_coord = xy(x, y)
+            preserving_transform:
+                compose_transform({
+                    pos: cell_coord * GRID_CELL_SIZE + map_draw_offset,
+                    z: cell_coord.y / Z_COORD_DIVIDER,
+                })
+                const tile_spec = get_tile_spec_at(turn_state, cell_coord)
+                if tile_spec:
+                    const sprite_offset = tile_spec.sprite.coord
+                    const sprite_sheet = ASSETS[tile_spec.sprite.sheet]
+                    draw_sprite({
+                        pos: xy(0, 0),
+                        sprite: sprite_sheet[sprite_offset.x][sprite_offset.y],
+                    })
+
+    if turn_state.show_ui == false:
+        return
+
+    // draw the fog of war
+    preserving_transform:
+        reset_transform()
+
+        const FOG_GRADATIONS = 6
+        let corner = xy(8, SCREEN_SIZE.y - GRID_CELL_SIZE.y)
+        let total_size = GRID_CELL_SIZE.y
+        const fog_size = xy(GRID_CELL_SIZE.x*BATTLE_GRID_SIZE.x, total_size/FOG_GRADATIONS) + xy(2, 0)
+
+        for fog_info in [[corner, false], [xy(8, 15 - GRID_CELL_SIZE.y), true]]: 
+            let corner = fog_info[0]
+            let invert = fog_info[1]
+            for i < FOG_GRADATIONS:
+                let alpha = i/FOG_GRADATIONS
+                if invert:
+                    alpha = 1-alpha
+                draw_corner_rect(
+                    {
+                        corner: corner,
+                        size: fog_size,
+                        color: rgba(0,0,0,alpha),
+                        z: Z_FOG_OF_WAR,
+                    }
+                )
+                corner += xy(0, fog_size.y)
+
+        // draw a board border
+        draw_corner_rect(
+            {
+                corner: xy(8, 9),
+                size: GRID_CELL_SIZE*xy(BATTLE_GRID_SIZE.x, BATTLE_GRID_SIZE.y - 1) + xy(2, 2),
+                outline: COLORS.menu_border,
+                z: Z_BOARD_BORDER,
+            }
+        )
+
+        if (DRAW_REGION_LABELS):
+            const num_labels = 2
+            const left_edge = xy(9, 9 + 3 + GRID_CELL_SIZE.y *(BATTLE_GRID_SIZE.y - 1))
+            const length = GRID_CELL_SIZE.x * BATTLE_GRID_SIZE.x
+            for i <= num_labels:
+                let x_align = "center"
+                let off = 0
+                if i == 0:
+                    x_align = "left"
+                if i == num_labels:
+                    off = -1
+                    x_align = "right"
+                // next labels
+                draw_text(
+                    {
+                        font: deja_5_font,
+                        pos: left_edge + xy(i*length/num_labels + off, 0),
+                        text: "↓ next ↓",
+                        color: COLORS.text,
+                        outline: COLORS.menu_border,
+                        x_align: x_align,
+                        y_align: "top",
+                        z: Z_REGION_LABELS,
+                    }
+                )
+
+                draw_text(
+                    {
+                        font: deja_5_font,
+                        pos: xy(left_edge.x, 7) + xy(i*length/num_labels + off, 0),
+                        text: "↑ safe ↑",
+                        color: COLORS.text,
+                        outline: COLORS.menu_border,
+                        x_align: x_align,
+                        y_align: "bottom",
+                        z: Z_REGION_LABELS,
+                    }
+                )
+
+
+def draw_grid_object(object_element, current_element, current_team):
+    const is_current = object_element == current_element
+
+    const bounce = if is_current then sin(mode_frames/3) else 0
+    const obj_coord = object_element.state.coord
+    assert(obj_coord != nil, "obj_coord is nil for "+ unparse(object_element))
+    preserving_transform:
+        compose_transform({
+            pos: obj_coord * GRID_CELL_SIZE + map_draw_offset,
+            z: (obj_coord.y + Z_UNIT_SPRITE_OFFSET) / Z_COORD_DIVIDER,
+        })
+        const e = object_element.draw_data.entity
+
+        preserving_transform:
+            compose_transform({
+                pos: xy(0, bounce),
+                z: e.pos.y / (GRID_CELL_SIZE.y * Z_COORD_DIVIDER),
+            })
+
+            let outline_color = nil
+            if is_current:
+                outline_color = COLOR_SELECTED_UNIT
+            else if is_unit_alive(object_element.state):
+                if (object_element.state.team == current_team
+                        and not object_element.state.performed_action_this_turn):
+                    outline_color = COLOR_AVAILABLE_ACTION
+                else if (current_team == "player" and object_element.state.team == "enemy"):
+                    outline_color = #f00
+            else if (current_team == "player" and object_element.spec.rescue_points):
+                outline_color = COLOR_RESCUE
+
+            if outline_color:
+                // xxx this doesn't work with the current sprite setup.
+                // we'll have to make sure they don't have the offset stuff.
+                draw_outline_for_entity(e, outline_color)
+
+
+            draw_entity(e)
+
+        if object_element.state.health:
+            const obj_spec = object_element.spec
+            const max_health = max(obj_spec.max_health, object_element.state.health)
+            const padding = 1
+
+            // this width includes padding
+            const health_box_width = ⌈(HEALTH_BAR_SIZE_HINT.x-(max_health+1)*padding)/max_health⌉
+            const health_bar_size = xy(health_box_width*max_health+padding, HEALTH_BAR_SIZE_HINT.y)
+            const health_bar_corner_offset = xy(0, -½ e.sprite.size.y * e.scale.y + e.offset.y) - health_bar_size*xy(½, 1)
+            draw_corner_rect({
+                corner: e.pos + health_bar_corner_offset,
+                size: health_bar_size,
+                color: #aaa,
+            })
+            // this includes padding
+            for i < object_element.state.health:
+                draw_corner_rect({
+                    corner: e.pos + health_bar_corner_offset + padding+ i*health_box_width*xy(1, 0),
+                    size: xy(health_box_width, health_bar_size.y) - padding*xy(1,2),
+                    color: #3f3,
+                })   
+        
+    //if is_current:
+    //    draw_cursor(obj_coord, COLOR_SELECTED_UNIT)
+
+def draw_outline_for_entity(e, outline_color):
+    for -1 <= dx <= 1:
+        for -1 <= dy <= 1:
+            if dx != 0 or dy != 0:
+                preserving_transform:
+                    compose_transform({
+                        pos: xy(dx, dy) + e.offset,
+                    })
+                    draw_sprite({
+                        sprite: e.sprite,
+                        pos: e.pos,
+                        scale: e.scale,
+                        override_color: outline_color
+                    })
+                
+
+def draw_trajectory_for_next_attack(turn_state, unit_element):
+    if unit_element.state.next_attack:
+        const attack_vector = unit_element.state.next_attack.attack_vector
+        const attack_start_coord = unit_element.state.coord
+        const attack_end_coord = attack_start_coord + attack_vector
+        const next_attack_action = unit_element.spec.attack.kind
+        draw_attack_trajectory(compute_trajectory_for_action(
+            next_attack_action, 
+            turn_state, unit_element.state, unit_element.spec, attack_end_coord))
+
+
+def draw_path(path):
+    if size(path) < 2:
+        return
+    
+    let last = path[0]
+
+    const radius = if PATH_WIDTH > 2 then 0.5 * PATH_WIDTH else 0
+    if radius:
+        draw_disk({
+            pos: last * GRID_CELL_SIZE + map_draw_offset,
+            color: COLOR_WALK_PATH,
+            radius: radius,
+            z: (last.y + Z_GRID_OVERLAY_OFFSET) / Z_COORD_DIVIDER,
+        })
+
+    for 0 < i < size(path):
+        let curr = path[i]
+        if radius:
+            draw_disk({
+                pos: curr * GRID_CELL_SIZE + map_draw_offset,
+                color: COLOR_WALK_PATH,
+                radius: radius,
+                z: (max(last.y, curr.y) + Z_GRID_OVERLAY_OFFSET) / Z_COORD_DIVIDER,
+            })
+        draw_line({
+            A: last * GRID_CELL_SIZE + map_draw_offset,
+            B: curr * GRID_CELL_SIZE + map_draw_offset,
+            color: COLOR_WALK_PATH,
+            width: PATH_WIDTH,
+            z: (max(last.y, curr.y) + Z_GRID_OVERLAY_OFFSET) / Z_COORD_DIVIDER,
+        })
+        last = curr
+
+def draw_cursor(coord, color) preserving_transform:
+    compose_transform({
+        pos: coord * GRID_CELL_SIZE + map_draw_offset,
+    })
+
+    // we draw this as 4 segments so we can get z.
+    const tl = xyz(-½ (GRID_CELL_SIZE) - 1, (coord.y-1) / Z_COORD_DIVIDER)
+    const br = xyz( ½ (GRID_CELL_SIZE) - 1, (coord.y  ) / Z_COORD_DIVIDER)
+   
+    const bl = xyz(tl.x, br.y, br.z)
+    const tr = xyz(br.x, tl.y, tl.z)
+
+    const segments = [ {a: tl, b: tr},
+            {a: tr, b: br},
+            {a: br, b: bl},
+            {a: bl, b: tl}, ]
+    for segment in segments:
+        draw_line({
+            A: segment.a,
+            B: segment.b,
+            z: max(segment.a.z, segment.b.z),
+            width: 1,
+            color: color
+        })
+
+def draw_attack_trajectory(trajectory, show_knockback):
+    if not trajectory:
+        return
+
+    const attack_vector = trajectory.vector
+    const attack_start_coord = trajectory.start_coord
+    const attack_end_coord = attack_start_coord + attack_vector
+
+    const attack_start_screen_xyz = xyz(attack_start_coord * GRID_CELL_SIZE + map_draw_offset,
+                                        (attack_start_coord.y+Z_GRID_OVERLAY_OFFSET) / Z_COORD_DIVIDER)
+    const attack_end_screen_xyz = xyz(attack_end_coord * GRID_CELL_SIZE + map_draw_offset,
+                                      (attack_end_coord.y+Z_GRID_OVERLAY_OFFSET) / Z_COORD_DIVIDER)
+
+    // this is not great.
+    const N = magnitude(attack_vector) * 3
+    for i < N:
+        const a = lerp(attack_start_screen_xyz, attack_end_screen_xyz, i / N)
+        const b = lerp(attack_start_screen_xyz, attack_end_screen_xyz, (i + 0.49) / N)
+
+        draw_disk({
+            pos: b,
+            radius: 2,
+            color: COLORS.red_bright,
+            z: b.z ,
+        })
+
+    draw_disk({
+        pos: attack_end_screen_xyz,
+        radius: 5,
+        color: COLORS.red_bright,
+        z: attack_end_screen_xyz.z,
+    })
+
+    const sprite_middle_offset = ATTACK_TRAJECTORY_SPRITE[trajectory.action_type]
+    if sprite_middle_offset:
+        const attack_dir = sign(attack_vector)
+        const sprite_idx = sprite_middle_offset + attack_dir
+        const offset = 0.02 * sin(mode_frames / 6)
+        const sprite_draw_coord = attack_start_coord + (1 + offset) * attack_dir
+        draw_sprite({
+            sprite: ActionTrajectory_sprite[sprite_idx.x][sprite_idx.y],
+            pos: sprite_draw_coord * GRID_CELL_SIZE + map_draw_offset,
+            z: (sprite_draw_coord.y + Z_TRAJECTORY_OFFSET) / Z_COORD_DIVIDER
+        })
+
+    if show_knockback and trajectory.knockback_dirs:
+        const offset = sin(mode_frames / 12)
+        const knockback_dirs = trajectory.knockback_dirs
+        const knockback_middle_offset = xy(1, 10)
+        for knockback_dir in knockback_dirs:
+            const sprite_idx = knockback_middle_offset + sign(knockback_dir)
+            const sprite_draw_coord = attack_start_coord + attack_vector + knockback_dir
+            draw_sprite({
+                sprite: ActionTrajectory_sprite[sprite_idx.x][sprite_idx.y],
+                pos: sprite_draw_coord * GRID_CELL_SIZE + offset*knockback_dir + map_draw_offset,
+                z: (sprite_draw_coord.y + Z_TRAJECTORY_OFFSET) / Z_COORD_DIVIDER
+            })
+
+
+const ATTACK_TRAJECTORY_SPRITE = {
+    "melee": xy(1, 1),
+    "grenade": xy(1, 4),
+    "gun": xy(1, 7),
+}
+
+def draw_cells_under_threat(turn_state, cells_under_threat) preserving_transform:
+    for coord in cells_under_threat:
+        compose_transform({
+            pos: coord * GRID_CELL_SIZE + map_draw_offset,
+        })
+
+        const color = #f00
+        const tl = xy(0, 0) - ½ GRID_CELL_SIZE
+        const br = tl + GRID_CELL_SIZE-2
+        const z = (coord.y + Z_GRID_OVERLAY_OFFSET) / Z_COORD_DIVIDER
+        draw_corner_rect({
+            corner: tl,
+            size: br - tl + 1,
+            outline: color,
+            color: rgba(color, 30%),
+            z: z,
+        })
+
+        // this draws an X but that seems to suggest the move is not valid.
+        if 0:
+            draw_line({
+                A: tl,
+                B: br,
+                color: color,
+                z: z,
+            })
+
+            const tr = xy(br.x, tl.y)
+            const bl = xy(tl.x, br.y)
+            draw_line({
+                A: tr,
+                B: bl,
+                color: color,
+                z: z,
+            })
+
+def draw_game_info(turn_state):
+    if not turn_state.show_ui:
+        return
+
+    const rescued_text = get_rescue_points(turn_state)
+    // draw stuff in the right corner:
+    draw_text({
+        font: deja_5_font,
+        text: "RESCUED: " + rescued_text,
+        color: COLOR_RESCUE,
+        outline: COLORS.menu_highlight,
+        pos: GAME_INFO_BOX_OFFSET,
+        x_align: "left",
+        y_align: "top",
+    })
+
+    draw_text(
+        {
+            font: deja_5_font,
+            text: "7DRL 2021 / ROGUELIKE RESCUE",
+            color: COLORS.text,
+            outline: COLORS.menu_highlight,
+            // pos: xy(12,1),
+            pos: GAME_INFO_BOX_OFFSET - xy(68, 3),
+            x_align: "left",
+            y_align: "bottom",
+        }
+    )
+
+
+def update_anim(object_element):
+    const e = object_element.draw_data.entity
+    if e.spritesheet and e.animation and size(e.spritesheet) > 1:
+        const sprite_frame = ⌊mode_frames / 12⌋
+        e.sprite = array_value(e.spritesheet[e.animation], sprite_frame)       

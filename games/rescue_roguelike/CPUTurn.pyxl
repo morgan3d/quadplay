@@ -1,0 +1,306 @@
+CPUTurn
+════════════════════════════════════════════════════════════════════════
+
+const NUM_CELLS = BATTLE_GRID_SIZE.x * BATTLE_GRID_SIZE.y
+
+// This mode operates per-unit and then operates in phases.  Phases are broken down into 
+// tasks, each which do a little bit of work.  They'll be invoked as:
+//
+// do_phase(unit, phase_name, task_id)
+//
+// Each frame, we may execute multiple tasks.  this is specified by total_tasks and tasks_per_frame.
+// If not specified, we will just call do_phase and see the return value.  
+// True means it should move on to the next phase.
+const PHASES = [
+    // Initialize the data for this unit.
+    {name: "Init"}, 
+
+    // Evaluates the turnstate. 
+    // We evaluate moving, and then attacking in all cardinal directions
+    // for many attacks, only one will make sense.
+    //
+    // This will maintain a list of the top NUM_CANDIDATE_MOVES that is has evaluated.
+    {
+        name: "Evaluate", 
+        total_tasks: NUM_CELLS, 
+        tasks_per_frame: 4*NUM_CELLS,
+    }, 
+
+    // We randomly pick from the candidate moves that are remaining.
+    {name: "Finalize"}, 
+]
+
+// We store the "real" turn_state that we will be editing and handing back.
+let turn_state = ∅
+
+// As we progress through the units, this turn_state contains the moves that
+// the enemy has already performed.
+let turn_state_with_enemy_moves = ∅
+
+const ENEMY_TEAM = "enemy"
+
+// How many candidate moves to keep.  Given how we sample from this, a larger number here
+// means this will pick worse moves on average.
+const NUM_CANDIDATE_MOVES = 5
+
+let object_elements = []
+let current_unit_element = ∅ 
+
+let units_needing_moves = []
+let unit_index = 0
+let phase_index = 0
+let phase_task_id = 0
+let phase_data = {}
+
+const gamepad = gamepad_array[0]
+
+
+def object_is_unit(obj):
+    const obj_spec = ObjectSpecs_YAML[obj.obj_type]
+    return obj_spec and obj_spec.is_unit
+
+def get_team_units_that_are_in_play(turn_state, team):
+    let ret = []
+    for obj in turn_state.objects:
+        // only schedule units that are in the field fo play.
+        if (obj.team == team and 
+            object_is_unit(obj) and 
+            is_unit_alive(obj) and
+            (obj.coord.y < BATTLE_GRID_SIZE.y - NUM_INVALID_ROWS_FROM_BOTTOM)):
+            push(ret, obj)
+    return ret
+
+def has_work_remaining():
+    return unit_index < size(units_needing_moves)
+
+def do_work():
+    const phase = PHASES[phase_index]
+    const phase_name = phase.name
+
+    // do phase with unit, and phase_task_id
+    const unit = array_value(units_needing_moves,unit_index)
+    let phase_done = false
+    if phase.total_tasks:
+        const phase_task_id_stop = min(phase.total_tasks, phase_task_id + phase.tasks_per_frame)
+        for phase_task_id <= task_offset < phase_task_id_stop:
+            do_phase(unit, phase_name, phase_task_id+task_offset)
+    
+        phase_task_id = phase_task_id_stop
+        phase_done = phase_task_id >= phase.total_tasks
+    else:
+        phase_done = do_phase(unit, phase_name, phase_task_id)
+        phase_task_id++
+    
+    if phase_done:
+        phase_task_id = 0
+        phase_index += 1
+
+    if phase_index >= size(PHASES):
+        phase_index = 0
+        unit_index += 1
+
+def generate_move_and_attack(task_id):
+    const move_and_attack_index = to_coord(xy(NUM_CELLS, 1), task_id)
+    const move_coord = to_coord(BATTLE_GRID_SIZE, move_and_attack_index.x)
+    
+    const attack_index = move_and_attack_index.y
+    let attack_vector = xy(0, 0)
+    if attack_index < BATTLE_GRID_SIZE.x:
+        attack_vector.x = attack_index
+    else:
+        attack_vector.y = attack_index - BATTLE_GRID_SIZE.x
+
+    return {
+        move_coord: move_coord, 
+        attack_vector: attack_vector
+    }
+
+def compute_dir_vectors():
+    let ret = []
+    for x < BATTLE_GRID_SIZE.x:
+        push(ret, xy(x, 0))
+    for y < BATTLE_GRID_SIZE.x:
+        push(ret, xy(0, y))
+    return ret
+
+const GRID_DIRECTIONAL_VECTORS = compute_dir_vectors()
+
+def do_phase(unit, phase_name, task_id):
+    if phase_name == "Init":
+        phase_data = {
+            candidates: [],
+            unit_spec: ObjectSpecs_YAML[unit.obj_type],
+            selected_candidate: ∅,
+            animating: false,
+            pending_steps: [],
+        }
+        current_unit_element = get_object_element_by_id(object_elements, unit.id)
+        return true
+
+    if phase_name == "Evaluate":
+        // generate a move
+        const move_coord = to_coord(BATTLE_GRID_SIZE, task_id)
+        let unit_spec = phase_data.unit_spec
+        if not is_candidate_move(turn_state, unit, unit_spec, move_coord):
+            return
+
+        // this is a no-op
+        let best_candidate_for_move = nil
+        for v in GRID_DIRECTIONAL_VECTORS:
+            let attack_vector = nil
+
+            if v.x == 0 and v.y == 0:
+                // this is a "no-op" attack
+            else:
+                let attack_coord = move_coord + v
+                attack_coord.x = attack_coord.x % BATTLE_GRID_SIZE.x
+                attack_coord.y = attack_coord.y % BATTLE_GRID_SIZE.y
+                attack_vector = attack_coord - move_coord
+                if not is_candidate_attack_vector(turn_state, 
+                                              unit, 
+                                              unit_spec,
+                                              move_coord,
+                                              attack_vector):
+                    continue
+            
+            const eval_turn_state = get_state_after_move_and_attack(turn_state, 
+                unit, move_coord, attack_vector)
+
+            const score = evaluate_turn_state(eval_turn_state, ENEMY_TEAM)
+            let this_candidate = {
+                move_coord: move_coord,
+                attack_vector: attack_vector,
+                score: score,
+                turn_state: eval_turn_state,
+            }
+            if (not best_candidate_for_move 
+                    or this_candidate.score > best_candidate_for_move.score):
+                best_candidate_for_move = this_candidate
+
+        if best_candidate_for_move:
+            let candidates = phase_data.candidates
+            push(candidates, best_candidate_for_move)
+            sort(candidates, "score")
+
+            // get rid of the worst score
+            while size(candidates) > NUM_CANDIDATE_MOVES:
+                pop_front(candidates)
+
+    if phase_name == "Finalize":
+        if task_id == 0:
+            let candidates = phase_data.candidates
+            let unit_spec = phase_data.unit_spec
+
+            if size(candidates):
+                const selected_candidate = array_value(
+                    candidates, 
+                    random_integer(0, size(candidates)-1))
+                    
+                if unit.id == "baddie_initial_baddie_shooter_33_3":
+                    debug_print(candidates)
+                phase_data.selected_candidate = selected_candidate
+                phase_data.pending_steps = [{
+                    type: "move",
+                    obj: unit,
+                    obj_spec: unit_spec,
+                    target_coord: selected_candidate.move_coord,
+                }]
+            else:
+                unit.next_attack = {}
+        else:
+            if phase_data.animating:
+                return false
+            else:
+                if size(phase_data.pending_steps) > 0:
+                    let exec_result = execute_pending_steps(turn_state, phase_data.pending_steps)
+                    phase_data.animating = true
+                    def set_animating_done():
+                        phase_data.animating = false
+                        const attack_vector = phase_data.selected_candidate.attack_vector
+                        if attack_vector:
+                            unit.next_attack = {
+                                attack_order: unit_index,
+                                attack_vector: xy(phase_data.selected_candidate.attack_vector),
+                            }
+                        else:
+                            unit.next_attack = nil
+
+                    phase_data.pending_steps = exec_result.next_pending_steps    
+                    sequence(…seq_for_exec_log(object_elements, exec_result.exec_log),
+                    {
+                        end_callback: set_animating_done
+                    })
+                else:
+                    return true
+                
+            
+                    
+def cpu_turn_draw():
+    draw_battle_bg(turn_state)
+    draw_battle_board(turn_state)
+    draw_game_info(turn_state)
+
+    preserving_transform:
+        compose_transform({
+            pos: BATTLE_GRID_OFFSET,
+        })
+
+        for object_element in object_elements:
+            draw_grid_object(object_element, current_unit_element, "enemy")
+            draw_trajectory_for_next_attack(turn_state, object_element)
+        
+
+def prompt_before_leaving_mode():
+    return true
+
+    // if we wanted to show some confirmation, we could do it like below.
+    let button_corner = BATTLE_GRID_OFFSET + BATTLE_GRID_SIZE * GRID_CELL_SIZE * xy(1, 0) + xy(10, 0)
+    const button_size = xy(55, 20)
+    const next_button_pressed = button_clicked({
+        corner: button_corner,
+        size: button_size,
+        text: "Ready",
+    })
+    return gamepad.bb or next_button_pressed
+
+enter(turn_state_, object_elements_)
+────────────────────────────────────────────────────────────────────────
+// This event runs when the mode is entered via set_mode() or push_mode().
+turn_state = turn_state_
+object_elements = object_elements_
+
+current_unit_element = ∅
+
+begin_enemy_turn(turn_state)
+
+// make a copy of the state so we can edit it.
+turn_state_with_enemy_moves = deep_clone(turn_state)
+
+// for each enemy unit that is alive.  First, we shuffle the order of our units.
+units_needing_moves = shuffled(get_team_units_that_are_in_play(turn_state, ENEMY_TEAM))
+unit_index = 0
+phase_index = 0
+phase_task_id = 0
+
+frame
+────────────────────────────────────────────────────────────────────────
+// This event runs 60 times per second. Game logic, simulation, user input, and drawing all go here.
+
+update_cursor_hover()
+
+if has_work_remaining():
+    do_work()
+else:
+    if needs_more_tiles(turn_state):
+        extend(object_elements, generate_more_tiles(turn_state))
+    else:
+        if prompt_before_leaving_mode():
+            set_mode(PlayerTurn, turn_state, object_elements)
+
+cpu_turn_draw()
+update_curr_drag()
+
+leave
+────────────────────────────────────────────────────────────────────────
+// This event runs just before leaving for another mode by set_mode() or pop_mode().
+
