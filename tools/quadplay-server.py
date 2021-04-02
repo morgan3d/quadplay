@@ -872,6 +872,7 @@ def main():
     
     # Monitor the browser and close the server when it exits
     auto_close_server = False
+    auto_close_with_client = True
 
     if isWindows:
         if browser_filepath and args.nativeapp:
@@ -888,6 +889,11 @@ def main():
             # https://superuser.com/questions/238810/problem-with-quotes-around-file-names-in-windows-command-shell
             browser_command = '"' + browser_filepath + '" -app="' + url + '" --no-user-gesture-required' + (' --start-fullscreen' if args.kiosk else '')
             auto_close_server = True
+
+            # If another browser process is already running (on Edge Chromium, at least), then
+            # the client process may terminate instantly because it is a zygote. Require an explicit 
+            # close message in this case, which quadplay will send to the server.
+            auto_close_with_client = False
         else:
             browser_command = 'start "quadplay" "' + url + '"' + (' --start-fullscreen' if args.kiosk else '')
     elif isMacOS:
@@ -912,13 +918,13 @@ def main():
         # macOS.
         maybe_print('Launching IDE via ' + browser_command)
         client = subprocess.Popen(shlex.split(browser_command), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL if args.quiet else None)
-        while client.poll() == None and serverThread.is_alive():
+        while (not auto_close_with_client or client.poll() == None) and serverThread.is_alive():
             time.sleep(0.2)
 
-        if not serverThread.is_alive():
-            maybe_print('Server thread auto terminated')
-        else:
+        if serverThread.is_alive():
             maybe_print('Client IDE process auto terminated')
+        else:
+            maybe_print('Server thread auto terminated')
         
         # Kill the client if it didn't already terminate
         client.terminate()
