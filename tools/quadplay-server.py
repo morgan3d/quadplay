@@ -263,7 +263,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             # detect the browser closing, so this is only essential on
             # macOS where the menu option closes the TAB but leaves
             # the browser process still running.
-            maybe_print('QUIT')
+            print('QUIT')
 
             # Hard exit, rather than raising an exception. Needed
             # because of threads
@@ -831,6 +831,10 @@ def main():
     serverThread.start()
     time.sleep(1.5)
 
+    if not serverThread.is_alive():
+        print('Could not start quadplay server.')
+        sys.exit(2)
+
     browser_filepath = None
     
     # Try to find Edge, then Chromium if they exist because those
@@ -851,7 +855,7 @@ def main():
                 pass
     else:
         if isMacOS:
-            browser_list = ['/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome']
+            browser_list = ['/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser']
         else: # Linux
             browser_list = ['/usr/bin/chromium-browser']
             
@@ -906,6 +910,8 @@ def main():
         else:
             browser_command = 'xdg-open "' + url + '"'
 
+
+    
     if auto_close_server:
         # Block until the client terminates, but do so in a way that
         # we can interrupt if the server self-terminates first on
