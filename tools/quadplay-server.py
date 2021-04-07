@@ -842,7 +842,7 @@ def main():
     # features.
     if isWindows:
         import winreg
-        for p in ['MSEdgeHTM', 'ChromeHTML']:
+        for p in ['MSEdgeHTM', 'ChromeHTML', 'BraveHTML']:
             try:
                 # Chrome
                 command = winreg.QueryValueEx(winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, p + "\\shell\\open\\command", 0, winreg.KEY_READ), "")[0]
