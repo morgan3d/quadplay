@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.04.07.00';
+const version  = '2021.04.14.07';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -2851,32 +2851,7 @@ function makeGoodFilename(text) {
     return filename.toLowerCase();
 }
 
-
-// Supports quad:// urls, relative files, etc.
-function loadGameFromUrl(game_url, autoplay) {
-    // Our URL, with the game removed
-    let url = location.href.replace(/(\?(?:.+&)?)game=[^&]+(?=&|$)/, '$1');
-    if (url.indexOf('?') === -1) { url += '?'; }
-    if (url[url.length - 1] !== '&') { url += '&'; }
-    url = url.replace(/autoplay=./g, '');
-    url = url.replace(/&&/g, '&');
-    
-    url += 'game=' + game_url;
-
-    if (autoplay) {
-        url += '&autoplay=1';
-    }
-    
-    // Disable the unload handler
-    inPageReload = true;
-
-    // Go to this location now to load the new game
-    location = url;
-}
-
-
 window.gameURL = '';
-
 
 if (jsCode) {
     jsCode.getSession().setUseWorker(false);
@@ -3057,17 +3032,30 @@ function onOpenGameOpen() {
     onStopButton();
     saveIDEState();
     const autoplay = document.getElementById('autoplayOnLoad').checked;
-    loadGameFromUrl(openGameFiles.selected, autoplay);
 
-    // Loading the game directly would be faster, however it
-    // would also leave the URL forcing the previous game, which
-    // will make reloading the page confusingly change games.
-    /*
-    loadGameIntoIDE(openGameFiles.selected, function () {
+    const game_url = openGameFiles.selected;
+    
+    loadGameIntoIDE(game_url, function () {
+        hideOpenGameDialog();
+        
+        let url = location.href.replace(/(\?(?:.+&)?)game=[^&]+(?=&|$)/, '$1');
+        if (url.indexOf('?') === -1) { url += '?'; }
+        if (url[url.length - 1] !== '&') { url += '&'; }
+        url = url.replace(/autoplay=./g, '');
+        url = url.replace(/&&/g, '&');
+        url += 'game=' + game_url;
+        
+        if (autoplay) {
+            url += '&autoplay=1';
+        }
+
+        // Update the URL so that reload and bookmarking work
+        history.replaceState({}, 'quadplay', url);
+        
         if (autoplay) {
             onPlayButton(false, true);
         }
-    });*/
+    });
 }
 
 
@@ -3635,7 +3623,9 @@ function reloadRuntime(oncomplete) {
         QRuntime.$version            = version;
         QRuntime.$prompt             = prompt;
         QRuntime.$sleep              = useIDE ? null : sleep;
-        QRuntime.$Object.prototype.toString = Object.prototype.toString;
+        QRuntime.$Object.prototype.toString = function () {
+            return (this && this.$name) || QRuntime.unparse(this);
+        };
 
         if (isQuadserver) {
             // Persist to disk

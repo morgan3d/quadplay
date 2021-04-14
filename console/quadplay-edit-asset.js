@@ -288,7 +288,7 @@ function onNewAssetCreate() {
         function makeMap(pngURL, spriteJSON, spriteImage, spritesheetURL) {
             console.assert(spriteJSON);
             console.assert(spriteImage);
-            
+
             // Needed for both the TMX and json
             const width   = clamp(readIntFromControl('newAssetMapWidth', 16), 1, 8192);
             const height  = clamp(readIntFromControl('newAssetMapHeight', 16), 1, 8192);
@@ -343,7 +343,7 @@ function onNewAssetCreate() {
                     undefined,
                     function (image) {
 
-                        // TODO: Clone sprite and JSON if required before triggering the map creation
+                        // Clone sprite and JSON if required before triggering the map creation
                         if (cloneSpriteJson) {
                             if (cloneSpritePng) {
                                 const newPngURL = pngURL.replace(/^.*\//, '');
@@ -394,9 +394,18 @@ function generateTMX(spritesheetURL, pngURL, spritesheetJSON, tilewidth, tilehei
     let pngPath = pngURL;
 
     // This is an absolute URL. We need to make it into a filesystem path.
-    // (if it was an http:// URL there is simply nothing we can do, so let
-    // it pass through broken)
-    if (pngPath.startsWith('quad://')) {
+
+    const gameRootURL = gameSource.jsonURL.replace(/\/[^\/]*$/, '/');
+    if (pngPath.startsWith(gameRootURL)) {
+        // This is a relative http:// file, so we can simply tell the
+        // TMX that it is relative to the game's own root
+
+        pngPath = pngPath.substring(gameRootURL.length);
+        
+        // (if it was an *external* http:// URL there is simply
+        // nothing we can do, so let it pass through broken)
+
+    } else if (pngPath.startsWith('quad://')) {
         // Quadplay path. Find the relative path from the game to the
         // quadplay install on this machine. This is machine specific
         // (that's a problem with TMX!), but still likely to be robust

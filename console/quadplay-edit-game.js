@@ -198,7 +198,7 @@ function onNewGameClick() {
             },
             function (response, code) {
                 // Success. Load the new game
-                loadGameFromUrl(response.game);
+                loadGameIntoIDE(response.game);
             },
             
             function (resonse, code) {

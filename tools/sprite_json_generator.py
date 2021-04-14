@@ -5,9 +5,7 @@
 import argparse
 import json
 import os
-
-# `pip install pillow`
-from PIL import Image
+import sys
 
 # @TODO: Add a requirements.txt or such to make setting up the virtualenv easy.
 
@@ -102,6 +100,12 @@ def parse_args():
 
     if args.size:
         args.size = {"x": args.size[0], "y": args.size[1]}
+    else:
+        try:
+            import PIL
+        except ImportError:
+            print("Unable to import PIL.  Consider `pip install pillow`.")
+            sys.exit(1)
 
     return args
 
@@ -254,6 +258,7 @@ def make_sprite(
             size = ase_size
 
     if not size:
+        from PIL import Image
         im = Image.open(filepath)
         size = {"x": im.size[0], "y": im.size[1]}
 
