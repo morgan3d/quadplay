@@ -2422,6 +2422,9 @@ Math
 Sound
 ---------------------------------------------------------
 
+The sound object has a single field, `sound.duration`, which is the number
+of seconds that it will play before ending or looping.
+
 `get_audio_status(audio)`
 : Returns an object describing the current properties of this audio object:
   - `pitch`
@@ -2431,7 +2434,7 @@ Sound
   - `loop`
   - `state`: `"PLAYING"`, `"STOPPED"`, or `"ENDED"`
   - `sound`: the sound being played in this audio clip
-  - `now`: Time since the start of the sound, measured seconds
+  - `now`: Time since the start of the sound, measured seconds.
      This is useful for synchronizing visuals with audio. 
     Audio follows a more strict clock than the mode's frame
     event, the `mode_frames` value, and the `game_frames` values, which 

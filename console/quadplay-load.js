@@ -1553,8 +1553,8 @@ function loadSound(name, json, jsonURL) {
     const forceReload = computeForceReloadFlag(mp3URL);
 
     assetCache[jsonURL] = sound = Object.seal({
-        loaded: false,
-        frames: 0,
+        duration: 0,
+        $loaded: false,
         $name: name,
         $src: mp3URL,
         $source: null,
@@ -1582,13 +1582,13 @@ function loadSound(name, json, jsonURL) {
                 
                 function onSuccess(buffer) {
                     sound.$buffer = buffer;
-                    sound.loaded = true;
+                    sound.$loaded = true;
 
                     // Create a buffer source, which primes this sound
                     // for playing without delay later.
                     sound.$source = audioContext.createBufferSource();
                     sound.$source.buffer = sound.$buffer;
-                    sound.frames = sound.$source.buffer.duration * 60;
+                    sound.duration = sound.$source.buffer.duration;
                     onLoadFileComplete(json.url);
                     loadManager.markRequestCompleted(json.url, '', true);
                 },

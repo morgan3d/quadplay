@@ -847,7 +847,7 @@ function play_sound(audioClip, loop, volume, pan, pitch, time, rate, stopped) {
 
     rate = rate || 1;
 
-    if (audioClip.loaded) {
+    if (audioClip.$loaded) {
         return internalSoundSourcePlay({_:null}, audioClip, time * 1000, loop, volume, pitch, pan, rate, stopped);
     } else {
         return undefined;
