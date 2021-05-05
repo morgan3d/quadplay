@@ -202,6 +202,7 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
                 LM.markRequestCompleted(rawEntry.url, '', true);
             } catch (e) {
                 // The load succeeded, but a callback has failed
+                console.trace();
                 console.log(e + ' while loading ' + url);
                 rawEntry.failureMessage = '' + e;
                 onLoadFailure();

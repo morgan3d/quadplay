@@ -197,8 +197,11 @@ function onNewGameClick() {
                 game_name: gameName
             },
             function (response, code) {
-                // Success. Load the new game
-                loadGameIntoIDE(response.game);
+                // Success. Load the new game and reselect the main
+                // page.
+                loadGameIntoIDE(response.game, function () {
+                    onProjectSelect(document.getElementsByClassName('projectTitle')[0], 'game');
+                });
             },
             
             function (resonse, code) {

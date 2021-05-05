@@ -989,8 +989,8 @@ The PyxlScript language feels a lot like Python, with these changes:
 - Use `def foo(a, b, ...rest)` instead of `def foo(a, b, *rest)`
 - Use `foo(a, b, ...rest)` instead of `foo(a, b, *rest)`
 - Use `[...array1, ...array2]` or `extended(array1, array2)` instead of `array1 + array2`
+- Use `{...objA, ...objB}` for Python `listA + listB` or `{**objA, **objB}`
 - Use `extend(a, b)` for Python `objA.update(objB)` and `listA.extend(listB)`
-- Use `extended(a, b)` for Python `listA + listB` or `{**objA, **objB}`
 - Use `extend(array1, array2)` instead of `array1 += array2`
 - Use `def foo(x default y)` instead of `def foo(x = y)`
 - Default function parameters are evaluated once per call instead of once per program,
@@ -1949,7 +1949,7 @@ Object
 `extended(object1, object2)`
 : Create a new object that is the union of `object1` and `object2`,
   where `object2` keys override in the case of collisions.
-  This is the same as using the spread operator, `{...object1, ...object2}`.
+  This is identical to using the spread operator, `{...object1, ...object2}`.
   See also `extend()`.
 
 `extend(object1, object2)`
@@ -7067,14 +7067,14 @@ Implicit multiplication can be used within exponents.
 
 The spread operator (`…` or `...`) allows defining and calling
 functions with a variable number of arguments and creating a merged
-version of objects or arrays. It is the same as
-`*rest` in Python and `...rest` in JavaScript.
+version of objects or arrays. It is the same as `*rest` in Python and
+`...rest` in JavaScript.
 
-In a function declaration it designates the final argument as an array of all further arguments.
-For example, `def foo(a, b, …rest):` takes any number of arguments and maps them to `a`, `b`,
-and then an array `rest` of the remainder.
-For example, `def bar(…args):` takes any number of arguments and maps them all into
-array `args`.
+In a function declaration it designates the final argument as an array
+of all further arguments.  For example, `def foo(a, b, …rest):` takes
+any number of arguments and maps them to `a`, `b`, and then an array
+`rest` of the remainder.  For example, `def bar(…args):` takes any
+number of arguments and maps them all into array `args`.
 
 In a function call or array literal, the spread operator expands an array as if its elements had
 been entered inline. So, `bar(…a)` calls a function with all of the arguments from array `a`.
