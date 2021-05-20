@@ -11,7 +11,22 @@ of [quadplay✜](manual.md.html).
 
 - Increased new game loading speed 2x within IDE
 - Added `sound.duration`
-- Fixed the spread operator for objects
+- Added userdata args to `iterate()`
+- Added sound effect to starter example
+- Added `ching-9` font
+- Added `"all"` modes option to `add_frame_hook()`
+- Exposed new constant number display format and rounding quantum in the IDE
+- Increased `overlaps()` performance for distant objects
+- Calibrated bloom to match between Mac and PC
+- Performance scaler can now disable bloom if not making
+  frame rate
+- Added syntax highlighting in IDE for `smoothstep()` and `smootherstep()`
+- Hid internals of audio clip implementation from game code
+- Fixed runtime error "s is not defined" when using `set_mode() ... because` without indentation 
+- Fixed debug watch table not clearing on game restart
+- Fixed new constant dialog making max number bounds syntax too verbose in `.game.json` files
+- Fixed missing Cyrillic lower-case "т" from fonts
+- Fixed the spread operator for objects in all cases
 - Fixed Import Existing Mode not closing dialog
 - Fixed using sprites as colors not working for transparent black
 - Fixed Create New Asset -> Map producing URLs within the TMX file

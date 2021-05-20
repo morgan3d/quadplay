@@ -656,13 +656,13 @@ function soundSourceOnEnded() {
 }
 
 
-function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volume, pitch, pan, rate, stopped) {
+function internalSoundSourcePlay(handle, sound, startPositionMs, loop, volume, pitch, pan, rate, stopped) {
     if (stopped === undefined) { stopped = false; }
     pan = Math.min(1, Math.max(-1, pan))
     
     const source = audioContext.createBufferSource();
-    source.sound = audioClip;
-    source.buffer = audioClip.$buffer;
+    source.sound = sound;
+    source.buffer = sound.$buffer;
     // Needed because AudioNode.context is undefined in the onEnded callback
     source.audioContext = audioContext;
 
@@ -691,13 +691,13 @@ function internalSoundSourcePlay(handle, audioClip, startPositionMs, loop, volum
     }
     
     source.handle = handle;
-    source.audioClip = audioClip;
+    source.sound = sound;
     source.startTimeMs = audioContext.currentTime * 1000 - startPositionMs;
     source.loop = loop;
    
     activeSoundHandleMap.set(handle, true);
-    handle.$source = source;    
-    handle.audioClip = audioClip;
+    handle.$source = source;
+    handle.sound = sound;
 
     set_playback_rate(handle, rate);
     set_pitch(handle, pitch);
@@ -727,7 +727,7 @@ function set_volume(handle, volume) {
         throw new Error("The volume must be a finite number (got " + volume + ")");
     }
     handle.$source.volume = volume;
-    volume *= handle.$source.audioClip.$base_volume;
+    volume *= handle.$source.sound.$base_volume;
     handle.$source.gainNode.gain.linearRampToValueAtTime(volume, handle.$source.context.currentTime + audioRampTime);
 }
 
@@ -737,7 +737,7 @@ function set_playback_rate(handle, rate) {
         throw new Error("Must call set_volume() on a sound returned from play_sound()");
     }
     handle.$source.rate = rate;
-    rate *= handle.$source.audioClip.$base_rate;
+    rate *= handle.$source.sound.$base_rate;
     handle.$source.playbackRate.value = rate;
 }
 
@@ -753,7 +753,7 @@ function set_pan(handle, pan) {
 
     handle.$source.pan = pan;
     
-    pan += handle.$source.audioClip.$base_pan;
+    pan += handle.$source.sound.$base_pan;
     pan = Math.min(1, Math.max(-1, pan))
     if (handle.$source.panNode.pan) {
         handle.$source.panNode.pan.linearRampToValueAtTime(pan, handle.$source.context.currentTime + audioRampTime);
@@ -773,7 +773,7 @@ function set_pitch(handle, pitch) {
         throw new Error("The pitch must be a positive finite number (got " + pitch + ")");
     }
     handle.$source.pitch = pitch;
-    pitch *= handle.$source.audioClip.$base_pitch;
+    pitch *= handle.$source.sound.$base_pitch;
     if (handle.$source.detune) {
         // The detune argument is in cents:
         //
@@ -820,9 +820,9 @@ function get_audio_status(handle) {
 
 
 // Exported to QRuntime
-function play_sound(audioClip, loop, volume, pan, pitch, time, rate, stopped) {
-    if (! audioClip || ! audioClip.$source) {
-        console.log(audioClip);
+function play_sound(sound, loop, volume, pan, pitch, time, rate, stopped) {
+    if (! sound || ! sound.$source) {
+        console.log(sound);
         throw new Error('play_sound() requires a sound asset');
     }
 
@@ -847,8 +847,8 @@ function play_sound(audioClip, loop, volume, pan, pitch, time, rate, stopped) {
 
     rate = rate || 1;
 
-    if (audioClip.$loaded) {
-        return internalSoundSourcePlay({_:null}, audioClip, time * 1000, loop, volume, pitch, pan, rate, stopped);
+    if (sound.$loaded) {
+        return internalSoundSourcePlay({}, sound, time * 1000, loop, volume, pitch, pan, rate, stopped);
     } else {
         return undefined;
     }
@@ -865,7 +865,7 @@ function resume_audio(handle) {
         // A new source must be created every time that the sound is
         // played or resumed. There is no way to pause a source in the
         // current WebAudio API.
-        internalSoundSourcePlay(handle, handle.$source.audioClip, handle.$source.resumePositionMs, handle.$source.loop, handle.$source.volume, handle.$source.pitch, handle.$source.pan, handle.$source.rate);
+        internalSoundSourcePlay(handle, handle.$source.sound, handle.$source.resumePositionMs, handle.$source.loop, handle.$source.volume, handle.$source.pitch, handle.$source.pan, handle.$source.rate);
     }
 }
 
@@ -1095,9 +1095,11 @@ function submitFrame() {
         ctx.restore();
     }
 
-    if ($postFX.bloom > 0) {
+    if ($postFX.bloom > 0 && allow_bloom) {
         overlayScreen.style.visibility = 'visible';
-        const b = Math.pow($postFX.bloom, 1.5);
+        // Apple devices are gamma corrected and the bloom looks dimmer as a
+        // result, so we boost it
+        const b = Math.pow($postFX.bloom, 1.5) * (isApple ? 1.5 : 1.0);
         overlayScreen.style.filter = `brightness(${0.45 + b * (1 - 0.45)}) contrast(3) blur(2.5px)` + ($postFX.bloom > 0.5 ? ` brightness(${0.75 * $postFX.bloom + 0.5})`: '');
         overlayCTX.drawImage(emulatorScreen, 0, 0);
     } else {

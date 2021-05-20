@@ -1702,17 +1702,17 @@ Array
   Returns `∅` if not found. Uses `==` to compare `x` to array values. Runs in linear time in the length of the list
   from `i`.
 
-`insert(array, i, x,...)`
+`insert(array, i, x, ...)`
 : Inserts the values into the array, starting at index `i` (as in, `array[i] = x` on return)
   and returns the first value inserted. Similar to Python insert and JavaScript splice functions.
 
-`iterate(array, callback)`
+`iterate(array, callback, ...args)`
 : Iterates through array in order using a callback function, with
    optional O(1) order-preserving removal. This is an imperative
    version of map(), filter(), and list comprehension primitives from
    other languages.
 
-   If `callback` is a string, iterate then calls `array[i][callback](array[i])`
+   If `callback` is a string, iterate then calls `array[i][callback](array[i], ...args)`
    on each element.  If `callback` is a function, it instead calls `callback(array[i])`
    on each element. It is common to define a local function immediately before the
    `iterate()` call for use as the callback.
@@ -4644,7 +4644,7 @@ in the desired order regardless of the order in which drawing executes.
     is removed without running the `end_callback`, otherwise it keeps running.
   - `end_callback`: `def end_callback(data)`, runs on the last frame. Can be `nil`.
   - `frames`: Number of frame events to run for. May be `infinity`.
-  - `run_in_mode`: Only execute while the game is in this mode. Use `nil` to
+  - `run_in_mode`: Only execute while the game is in this mode. Use `"all"` to
     run in every mode.
 
   See also `sequence()` and `delay()` for common cases.
@@ -5335,6 +5335,8 @@ Fonts
 ![`quad://fonts/stencil-9.font.json`](../fonts/stencil-9.png)
 
 ![`quad://fonts/robot-9.font.json`](../fonts/robot-9.png)
+
+![`quad://fonts/ching-9.font.json`](../fonts/ching-9.png)
 
 ![`quad://fonts/deja-9.font.json`](../fonts/deja-9.png)
 
@@ -8573,11 +8575,18 @@ It is based on the Amstrad PC1512 BIOS font.
 
 All built-in assets are Creative Commons licensed have complete license and copyright information in the "license" property of the corresponding JSON file.
 
+Logos
+-------------------------------------------------------------------------------------
+
+The following logos may be used for promoting or linking to quadplay✜:
+
+![](logos/quadplay-logo-gradient-round.png) ![](logos/quadplay-logo-gradient.png) ![](logos/quadplay-logo-gray.png)
+
 
 Notes for Beta Testers
 =====================================================================================
 
-IDE will receive major new features throughout and after the beta
+The IDE will receive major new features throughout and after the beta
 phase. This includes editors for sprites and maps.
 
 Expect rasterization alignment rules for triangles to change slightly

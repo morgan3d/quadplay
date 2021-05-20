@@ -506,6 +506,8 @@ function showNewConstantDialog() {
 
     document.getElementById('newConstantNumberMin').value = '-infinity';
     document.getElementById('newConstantNumberMax').value = '+infinity';
+    document.getElementById('newConstantNumberQuantum').value = '0';
+    document.getElementById('newConstantNumberFormat').value = '';
     
     // Only make reference types valid if there is already some other
     // asset or constant to refer to.
@@ -598,31 +600,40 @@ function onNewConstantCreate() {
             ! isNaN(maxVal) && typeof maxVal === 'number' &&
             (Math.max(minVal, maxVal) < Infinity || Math.min(minVal, maxVal) > -Infinity)) {
 
+            // Sort
             if (maxVal < minVal) { const temp = minVal; minVal = maxVal; maxVal = temp; }
 
             // Clamp the initial value to the specified range
             obj.value = value = clamp(obj.value, minVal, maxVal);
 
             // Save minVal
-            if (/^[+-0-9.]+$/.test(minValText)) {
+            if (/^[+\-0-9.]+$/.test(minValText)) {
                 obj.min = minVal;
             } else {
                 obj.min = {type: 'number', value: minValText};
             }
 
             // Save maxVal
-            if (/^[+-0-9.]+$/.test(maxValText)) {
+            if (/^[+\-0-9.]+$/.test(maxValText)) {
                 obj.max = maxVal;
             } else {
                 obj.max = {type: 'number', value: maxValText};
             }
-
-            // Make these discoverable by
-            // adding them to the saved object
-            obj.format = "";
-            obj.quantum = 0;
-
         } // if min and max val are well formed and not the full range
+
+        const formatText = document.getElementById('newConstantNumberFormat').value.trim();
+        const quantumText = document.getElementById('newConstantNumberQuantum').value.trimEnd();
+        // Make these discoverable by
+        // adding them to the saved object
+        obj.format = "";
+        if (/^[+\-0-9.]+$/.test(quantumText)) {
+            obj.quantum = $parse(quantumText).result;
+        } else {
+            obj.quantum = {type: 'number', value: quantumText};
+        }
+
+        obj.format = formatText;
+
     } // if number
     
     gameSource.json.constants[key] = obj;

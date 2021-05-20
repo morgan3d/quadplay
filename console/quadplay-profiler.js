@@ -163,6 +163,12 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime, logicToGraphic
         const expectedTimeAtHigherFramerate  = logicTime + physicsTime + graphicsTime * G / Math.max(G - 1, 0.5);
         let newG = G;
 
+        if (frameTime > 19 && QRuntime.game_frames > 200) {
+            // We're many frames in and can't keep up.  Try disabling
+            // bloom.
+            allow_bloom = false;
+        }
+
         // Sometimes the JIT runs or another scheduling event occurs and the actual time
         // is way out of sync with the expected time. Do not drop the framerate in this case.
         if (

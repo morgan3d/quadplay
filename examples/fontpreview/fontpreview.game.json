@@ -1,15 +1,18 @@
 {
-    "title":      "Font Preview",
-    "developer":  "Casual Effects",
-    "copyright":  "©2020 Morgan McGuire",
-    "license":    "CC0/Public Domain",
-
-    "screen_size": {"x":384, "y":224},
+    "title": "Font Preview",
+    "developer": "Casual Effects",
+    "copyright": "©2020 Morgan McGuire",
+    "license": "CC0/Public Domain",
+    "screen_size": {
+        "x": 384,
+        "y": 224
+    },
     "start_mode": "Play",
-    "modes":      ["Play"],
-    "assets":     {
-        //"font": "quad://fonts/weaver-5.font.json"
-        "font": "quad://fonts/robot-9.font.json"
-    }
-
+    "modes": [
+        "Play"
+    ],
+    "assets": {
+        "font": "quad://fonts/ching-9.font.json"
+    },
+    "screenshot_tag": "Font Preview"
 }

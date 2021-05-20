@@ -41,6 +41,7 @@ with vel, acc, pos in ball:
     entity_simulate(ball)
     const h = ½ ball.size.y * ball.scale.y
     if pos.y + h > 140:
+        play_sound(blip_sound)
         pos.y = 140 - h
         vel.y = -5
         

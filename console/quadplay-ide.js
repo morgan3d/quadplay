@@ -1,9 +1,9 @@
-/* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
+1/* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
 "use strict";
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.05.03.23';
+const version  = '2021.05.18.20';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -29,6 +29,9 @@ let serverConfig = {};
 // Chromium!) do not have this bug.
 const hasBrowserScaleBug = isSafari;
 
+// Disabled by the profiler if not making frame rate, reset
+// on game start.
+let allow_bloom = true;
 
 function enterKioskMode() {
     inPageReload = true;
@@ -808,6 +811,7 @@ function onPlayButton(slow, isLaunchGame, args) {
         setErrorStatus('');
         emulatorMode = 'play';
         profiler.reset();
+        allow_bloom = true;
 
         previewRecordingFrame = 0;
         previewRecording = null;
@@ -1324,6 +1328,8 @@ function restartProgram(numBootAnimationFrames) {
             QRuntime.$numBootAnimationFrames = numBootAnimationFrames; 
             lastAnimationRequest = requestAnimationFrame(mainLoopStep);
             emulatorKeyboardInput.focus({preventScroll:true});
+            updateDebugger(true);
+            
         } catch (e) {
             // "Link"-time or run-time on a script error
             onError(e);
@@ -3037,6 +3043,7 @@ function onOpenGameOpen() {
     
     loadGameIntoIDE(game_url, function () {
         hideOpenGameDialog();
+        onProjectSelect(document.getElementsByClassName('projectTitle')[0], 'game');
         
         let url = location.href.replace(/(\?(?:.+&)?)game=[^&]+(?=&|$)/, '$1');
         if (url.indexOf('?') === -1) { url += '?'; }
@@ -3518,9 +3525,10 @@ function updateDebugger(showHTML) {
         debugDrawCallsDisplay.innerHTML = '' + QRuntime.$previousGraphicsCommandList.length;
     }
     
-    if (debugWatchEnabled && ((emulatorMode === 'play') || debugWatchTable.changed)) {
+    // console.log(QRuntime.game_frames, debugWatchEnabled.checked, emulatorMode, debugWatchTable.changed);
+    if ((QRuntime.game_frames === 0 || debugWatchEnabled.checked) && ((emulatorMode === 'play') || debugWatchTable.changed)) {
         let s = '';
-        for (let id in debugWatchTable) {
+        for (const id in debugWatchTable) {
             if (id === 'changed') { continue; }
             const watch = debugWatchTable[id];
             let tooltip = watch.location.url.replace(/^.*\//, '');
@@ -3532,8 +3540,8 @@ function updateDebugger(showHTML) {
             s += `<tr valign=top><td width=50% title="${tooltip}" style="cursor:pointer" onclick="editorGotoFileLine('${watch.location.url}', ${watch.location.line_number}, undefined, false)">${watch.expression}</td><td>${watch.value}</td></tr>`;
         }
         
-        if (s !== '') {
-            const pane = document.getElementById('debugWatchDisplayPane');
+        const pane = document.getElementById('debugWatchDisplayPane');
+        if (pane.innerHTML !== s) {
             pane.innerHTML = '<table width=100% style="border-collapse: collapse">' + s + '</table>';
         }
         debugWatchTable.changed = false;
@@ -3562,6 +3570,7 @@ function updateDebugger(showHTML) {
     debugModeFramesDisplay.innerHTML = '' + QRuntime.mode_frames;
     debugGameFramesDisplay.innerHTML = '' + QRuntime.game_frames;
 }
+
 
 /* Print only the filename base when it is the same as the game base */
 function shortURL(url) {

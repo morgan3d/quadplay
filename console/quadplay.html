@@ -501,11 +501,10 @@
     </div>
     
     <div id="newConstantDialog" class="modal hidden">
-      <div class="dialog" style="top:40vh; width: 360px">
+      <div class="dialog" style="margin-top:10vh; width: 500px">
         <center>
           <span class="title">Add New Constant</span>
-          <p>
-            <br/>
+          <p style="margin-top: 15px">
             <table style="border-collapse:collapse">
               <tr valign="top">
                 <td>
@@ -524,27 +523,29 @@
                 </td>
               </tr>
             </table>
-            <div style="text-align:left; margin-left: 20px; column-width: 140px; margin-top:20px">
-              <input type="radio" name="newConstantType" value="string"  id="newConstantTypeString" selected="selected"><label for="newConstantTypeString">String</label>
-              <br/><input type="radio" name="newConstantType" value="number"  id="newConstantTypeNumber"><label for="newConstantTypeNumber">Number</label>
-              <table style="padding-left:25px">
-                <tr><td>min</td><td><input id="newConstantNumberMin" type="text" style="width: 75px; font-size: 80%; font-family: Monaco, monospace"></td></tr>
-                <tr><td>max</td><td><input id="newConstantNumberMax" type="text" style="width: 75px; font-size: 80%; font-family: Monaco, monospace"></td></tr>
-              </table>
-              <input type="radio" name="newConstantType" value="boolean" id="newConstantTypeBoolean"><label for="newConstantTypeBoolean">Boolean</label>
-              <br/><input type="radio" name="newConstantType" value="nil" id="newConstantTypeNil"><label for="newConstantTypeNil">Nil</label>
+            <div style="text-align:left; margin-left: -10px; column-width: 140px; margin-top:20px">
+              <input title="Unicode text" type="radio" name="newConstantType" value="string" id="newConstantTypeString" selected="selected"><label for="newConstantTypeString" title="Unicode text">String</label>
+              <br/><input title="True or false" type="radio" name="newConstantType" value="boolean" id="newConstantTypeBoolean"><label title="True or false" for="newConstantTypeBoolean">Boolean</label>
+              <br/><input title="The empty value" type="radio" name="newConstantType" value="nil" id="newConstantTypeNil"><label title="The empty value" for="newConstantTypeNil">Nil</label>
+              <br/><input title="Opaque red-green-blue color" type="radio" name="newConstantType" value="rgb" id="newConstantTypeRGB"><label title="Opaque red-green-blue color" for="newConstantTypeRGB"><code>rgb()</code></label>
+              <br/><input title="Transparent red-green-blue color" type="radio" name="newConstantType" value="rgba" id="newConstantTypeRGBA"><label title="Transparent red-green-blue color" for="newConstantTypeRGBA"><code>rgba()</code></label>
+              <br/><input type="radio" name="newConstantType" value="hsv" id="newConstantTypeHSV"><label for="newConstantTypeHSV"><code>hsv()</code></label>
+              <br/><input type="radio" name="newConstantType" value="hsva" id="newConstantTypeHSVA"><label for="newConstantTypeHSVA"><code>hsva()</code></label>
               <br/><input type="radio" name="newConstantType" value="xy" id="newConstantTypeXY"><label for="newConstantTypeXY"><code>xy()</code></label>
               <br/><input type="radio" name="newConstantType" value="xz" id="newConstantTypeXZ"><label for="newConstantTypeXZ"><code>xz()</code></label>
               <br/><input type="radio" name="newConstantType" value="xyz" id="newConstantTypeXYZ"><label for="newConstantTypeXYZ"><code>xyz()</code></label>
-              <br/><input type="radio" name="newConstantType" value="rgb" id="newConstantTypeRGB"><label for="newConstantTypeRGB"><code>rgb()</code></label>
-              <br/><input type="radio" name="newConstantType" value="rgba" id="newConstantTypeRGBA"><label for="newConstantTypeRGBA"><code>rgba()</code></label>
-              <br/><input type="radio" name="newConstantType" value="hsv" id="newConstantTypeHSV"><label for="newConstantTypeHSV"><code>hsv()</code></label>
-              <br/><input type="radio" name="newConstantType" value="hsva" id="newConstantTypeHSVA"><label for="newConstantTypeHSVA"><code>hsva()</code></label>
-              <br/><input type="radio" name="newConstantType" value="reference" id="newConstantTypeReference"><label style="color:#aaa" for="newConstantTypeReference">Reference</label>
+              <br/><input title="A reference to another constant or asset" type="radio" name="newConstantType" value="reference" id="newConstantTypeReference"><label title="A reference to another constant or asset" style="color:#aaa" for="newConstantTypeReference">Reference</label>
               <br/><input type="radio" name="newConstantType" value="object" id="newConstantTypeObject" disabled><label style="color:#aaa" for="newConstantTypeObject">Object</label>
               <br/><input type="radio" name="newConstantType" value="array" id="newConstantTypeArray" disabled><label style="color:#aaa" for="newConstantTypeArray">Array</label>
               <br/><input type="radio" name="newConstantType" value="raw" id="newConstantTypeRaw" disabled><label style="color:#aaa" for="newConstantTypeRaw">Raw&nbsp;JSON/YAML</label>
               <br/><input type="radio" name="newConstantType" value="table" id="newConstantTypeTable" disabled><label style="color:#aaa" for="newConstantTypeRaw">CSV Table</label>
+              <br/><input type="radio" name="newConstantType" value="number" checked=true id="newConstantTypeNumber"><label for="newConstantTypeNumber">Number</label>
+              <table style="padding-left:25px">
+                <tr title="Smallest value allowed"><td>min</td><td><input id="newConstantNumberMin" type="text" style="width: 75px; font-size: 80%; font-family: Monaco, monospace"></td></tr>
+                <tr title="Largest value allowed"><td>max</td><td><input id="newConstantNumberMax" type="text" style="width: 75px; font-size: 80%; font-family: Monaco, monospace"></td></tr>
+                <tr title="Rounding increment (0 = no rounding, 1 = integer, 0.01 = 1%, etc.)"><td>quantum</td><td><input id="newConstantNumberQuantum" type="text" style="width: 75px; font-size: 80%; font-family: Monaco, monospace"></td></tr>
+                <tr title="Editor display with format_number() options (% = percentage, 0.00 = 2 decimal places, etc.)"><td>format</td><td><input id="newConstantNumberFormat" type="text" style="width: 75px; font-size: 80%; font-family: Monaco, monospace"></td></tr>
+              </table>
             </div>
           </p>
           <button type="button" onclick="hideNewConstantDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span><button type="button" id="newConstantCreateButton" onclick="onNewConstantCreate()">Create</button>

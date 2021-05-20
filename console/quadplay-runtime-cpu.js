@@ -2,9 +2,9 @@
 
 // quadplay runtime and hardware layer.
 //
-// Variables named with a leading underscore are illegal in quadplay/pyxlscript, and
-// will therefore such variables and functions in this file will not be visible to
-// the program.
+// Variables named with a leading $ are illegal in
+// quadplay/pyxlscript, and will therefore such variables and
+// functions in this file will not be visible to the program.
 
 'use strict';
 
@@ -227,6 +227,7 @@ sequence.BREAK = ["BREAK"];
 
 function add_frame_hook(callback, endCallback, frames, mode, data) {
     if (mode === undefined) { mode = get_mode(); }
+    if (mode === "all") { mode = undefined; }
     if (is_nan(frames)) { $error("nan frames on add_frame_hook()"); }
     const hook = {$callback:callback, $endCallback:endCallback, $mode:mode, $frames:frames, $maxFrames:frames, $data:data};
     $frameHooks.push(hook);
@@ -534,7 +535,7 @@ function fast_remove_value(t, value) {
 }
 
 
-function iterate(array, callback) {
+function iterate(array, callback, ...args) {
     if (! is_string(callback) && !is_function(callback)) {
         $error('The callback to iterate() must be a function or string property name');
     }
@@ -555,15 +556,15 @@ function iterate(array, callback) {
             if (done) {
                 ++dst;
             } else {
+                let fcn = callback;
                 if (stringCase) {
-                    const fcn = value[callback];
+                    fcn = value[callback];
                     if (typeof fcn !== 'function') {
                         $error("value does not have callback in iterate()");
                     }
-                    r = fcn(value);
-                } else {
-                    r = callback(value);
                 }
+                
+                r = fcn(value, ...args);
                 
                 if (r === iterate.REMOVE_AND_BREAK) {
                     done = true;
@@ -7198,9 +7199,26 @@ var overlaps = (function() {
     }
 
     return function(A, B, recurse) {
+        // Fast early-out for the common case when the objects are far apart and simple
+        if (A && B && A.pos && B.pos && A.size && B.size &&
+            (recurse === false ||
+             (! A.child_array || A.child_array.length === 0) &&
+             (! B.child_array || B.child_array.length === 0))) {
+
+            // Radius squared
+            let r2 = A.scale ? ($square(A.scale.x * A.size.x) + $square(A.scale.y * A.size.y)) : ($square(A.size.x) + $square(A.size.y));
+            r2 += B.scale ? ($square(B.scale.x * B.size.x) + $square(B.scale.y * B.size.y)) : ($square(B.size.x) + $square(B.size.y));
+            r2 *= 0.25;
+
+            // These objects are trivially far apart, don't bother with more expensive tests
+            if ($square(A.pos.x - B.pos.x) + $square(A.pos.y - B.pos.y) > r2) {
+                return false;
+            }
+        }
+        
         if (A === undefined) { $error('First argument to overlaps() must not be nil'); }
         if (B === undefined) { $error('Second argument to overlaps() must not be nil'); }
-        
+
         if (((recurse === undefined) || recurse) &&
             ((A.child_array && (A.child_array.length > 0)) ||
              (B.child_array && (B.child_array.length > 0)))) {

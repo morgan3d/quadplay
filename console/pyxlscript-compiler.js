@@ -1,6 +1,10 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License */
 "use strict";
 
+/* Set to false if using aun unpatched esprima parser that does not
+   support the spread operator in objects. */
+const PARSER_SUPPORTS_OBJECT_SPREAD = true;
+
 function makeError(msg, srcLine) {
     return {lineNumber: (srcLine + 1), message: msg};
 }
@@ -76,8 +80,8 @@ function nextInstance(str, c, j, d) {
     array of two elements: [0] is the code that goes at the front of
     the block, and [1] is the code that goes at the end.  */
 function processWithHeader(test) {
-    // Cannot create a function because that would break the coroutines used for preemptive
-    // multitasking
+    // Cannot create a function because that would break the
+    // coroutines used for preemptive multitasking.
     //
     // Syntax: with var0[, var1[, ...]] ∊ expr
     //
@@ -417,7 +421,6 @@ function processDefaultArgSyntax(args) {
 
             // Move all of this to accum
             accum += args.substring(0, i); args = args.substring(i);
-            //console.log(accum + '/' + args);
 
             // See if there's a 'default', and convert it if so
             if (args.startsWith('default ')) {
@@ -818,12 +821,11 @@ function countRegexOccurences(string, regex) {
     return (string.match(regex) || []).length;
 }
 
-
+// Not needed for a patched esprima parser
 function protectObjectSpread(src) {
-    // Because the current version of the esprima parser does not
-    // support the spread operator on objects (due to a bug), we
-    // temporarily hide the spread operator inside `{}` by the
-    // transformation:
+    // Because this version of the esprima parser does not support the
+    // spread operator on objects (due to a bug), we temporarily hide
+    // the spread operator inside `{}` by the transformation:
     //
     // {a, ...b, c} --> {a, ⏓:b, c}
     //
@@ -865,6 +867,8 @@ function protectObjectSpread(src) {
     });
 }
 
+
+// Not needed for the patched esprima parser
 function unprotectObjectSpread(src) {
     return src.replace(/'⏓':/g, '...');
 }
@@ -912,19 +916,22 @@ function pyxlToJS(src, noYield, internalMode) {
             let line = lineArray[i];
 
             // Process BECAUSE: `foo(...) because "string"` --> `(because("string"),foo(...))`
-            // There must be no space between the comma and the identifier in order for the next regexp
-            // to fake a negative lookbehind
+            //
+            // There must be no space between the comma and the
+            // identifier in order for the next regexp to fake a
+            // negative lookbehind            
             if (/\)[ \t]*because[ \t]+"/.test(line)) {
                 // We can't process this with a regular expression
                 // because we have to parse recursive matching
                 // parentheses to find the complete expression before
                 // the `because`
-                let becausePos = line.indexOf('because ');
+                const becausePos = line.indexOf('because ');
                 console.assert(becausePos !== -1)
 
                 // Extract the reason
                 let reasonBeginPos = becausePos + 'because '.length;
                 while (line[reasonBeginPos] !== '"') { ++reasonBeginPos; }
+                
                 let reasonEndPos = reasonBeginPos + 1;
                 while (line[reasonEndPos] !== '"') { ++reasonEndPos; }
                 
@@ -937,7 +944,7 @@ function pyxlToJS(src, noYield, internalMode) {
 
                 // Move backwards over the identifier
                 --callBeginPos;
-                while ((callBeginPos > 0) && /[ΔA-Za-z_0-9αβγΔδζηθιλμρσϕφχψτωΩ]/.test(line[callBeginPos])) { --callBeginPos; }
+                while ((callBeginPos >= 0) && /[ΔA-Za-z_0-9αβγΔδζηθιλμρσϕφχψτωΩ]/.test(line[callBeginPos])) { --callBeginPos; }
                 ++callBeginPos;
 
                 lineArray[i] = line = line.substring(0, callBeginPos) + '(because(' + line.substring(reasonBeginPos, reasonEndPos + 1) + '),' +
@@ -1182,7 +1189,9 @@ function pyxlToJS(src, noYield, internalMode) {
     // Do this immediately before vectorify, which will restore these.
     src = src.replace(/\bdefault\b/g, '==');
 
-    src = protectObjectSpread(src);
+    if (! PARSER_SUPPORTS_OBJECT_SPREAD) { 
+        src = protectObjectSpread(src);
+    }
 
     try {
         src = vectorify(src, {
@@ -1200,8 +1209,10 @@ function pyxlToJS(src, noYield, internalMode) {
         throw e;
     }
 
-    // Restore the spread operator for objects
-    src = unprotectObjectSpread(src);
+    if (! PARSER_SUPPORTS_OBJECT_SPREAD) {
+        // Restore the spread operator for objects
+        src = unprotectObjectSpread(src);
+    }
 
     // Cleanup formatting
     src = src.replace(/,[ \t]+/g, ', ');

@@ -127,7 +127,7 @@ offset -= joy.y
 
 let y = offset
 for sample in sampleArray:
-   const h = draw_text(concatenate({font:font, pos:xy(12, y + 5), wrap_width:360, y_align:"top", z:1}, sample)).size.y
+   const h = draw_text(concatenate({font:font, pos:xy(12, y + 5), wrap_width:360, y_align:"top", z:1}, sample)).height
    draw_corner_rect(xy(0, y), xy(SCREEN_SIZE.x, h + 10), sample.background)
    y += h + 10
 
