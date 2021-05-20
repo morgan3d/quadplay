@@ -1,5 +1,5 @@
-The **quadplay✜** fantasy console by [CasualEffects](https://casual-effects.com)
-is now in public beta for creating and playing video games.
+**quadplay✜** is a fantasy console by [CasualEffects](https://casual-effects.com)
+for creating and playing retro-style video games on any device.
 
 - [Play games online](https://morgan3d.github.io/quadplay/console/quadplay.html?)
 - [Download the console](https://github.com/morgan3d/quadplay/archive/main.zip)
