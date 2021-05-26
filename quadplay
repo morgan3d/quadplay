@@ -1,2 +1,11 @@
 #!/bin/sh
 tools/quadplay-server --nativeapp --quiet "$@" &
+if [[ "$@" = *"--help"* ]]
+then
+    # Sleep so that when running with --help the printed usage
+    # message from the async quadplay process appears before
+    # the next prompt.  We could also run synchronously
+    # in this case, but that creates potentially confusing
+    # failures when the arguments conflict.
+    sleep 0.3
+fi

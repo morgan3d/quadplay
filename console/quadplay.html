@@ -46,11 +46,19 @@
     const isMobile = window.orientation || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.screen && window.screen.orientation && window.screen.orientation.type === 'portrait-primary') || ((navigator.maxTouchPoints || 0) > 0);
     const browserName = isSafari ? 'Safari' : isFirefox ? 'Firefox' : isChrome ? 'Chrome' : isEdge ? 'Edge' : 'Browser';
 
+    const useIDE = (getQueryString('IDE') === '1') || false;
+
     // Keyboard prompts for modifers
     const cmd = isApple ? '⌘' : '^';
     const alt = '⎇';
     const shift = '⇧';
 
+    function writeCloseOption() {
+        // Firefox can't close a window by itself
+        if (! isFirefox) {
+            document.write(`<hr><div><a onclick="closeClient()">${isApple ? 'Quit' : 'Exit'} quadplay✜</a></div>`);
+        }
+    }
     </script>
 
   </head>
@@ -114,12 +122,25 @@
       <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('wood')" id="woodColorScheme" autocomplete="off">Wood</label>
       <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('carbon')" id="carbonColorScheme" autocomplete="off">Carbon</label>
       <hr>
-      <div><a onclick="enterKioskMode()">Kiosk Mode</a></div>
+      <div class="IDEOnly"><a onclick="setIDEEnable(0)">Hide Dev Tools (IDE)</a></div>
+      <script>
+        if (isQuadserver) {
+           document.write('<div class="noIDE"><a onclick="setIDEEnable(1)">Show Dev Tools (IDE)</a></div>');
+        }
+      </script>
+      <div><a onclick="enterKioskMode()">Enter Kiosk</a></div>
       <hr>
       <div class="IDEOnly"><a onclick="window.open('../doc/controls.html', '', 'width=400,height=500')" title="Show keyboard and gamepad controls in a popup window">Controls</a></div>
-      <div class="noIDE"><a href="../doc/manual.md.html" title="Use quadplay✜ to make your own games like this">Create Games</a></div>
+      <script>
+        if (! isQuadserver) {
+            document.write('<div class="noIDE"><a href="../doc/manual.md.html" title="Use quadplay✜ to make your own games like this">Create Games</a></div>');
+        }
+      </script>
       <div><a href="http://quadplay.freeforums.net/" target="_blank" title="The online quadplay✜ community">Forums</a></div>
       <div><a href="https://casual-effects.com" target="_blank" title="Website for the quadplay✜ creator">CasualEffects</a></div>
+
+      <script>if (! useIDE) { writeCloseOption(); }</script>
+
     </div>
 
     <div id="toolsMenu" class="unselectable dropdown IDEOnly">
@@ -139,12 +160,7 @@
       <div><a href="../tools/fontgen.html" target="_blank">fontgen✜</a></div>
       <div><a href="../tools/fontpack.html" target="_blank">fontpack✜</a></div>
       <div><a href="../tools/scalepix.html" target="_blank">scalepix✜</a></div>
-      <script>
-        // Firefox can't close a window by itself
-        if (! isFirefox) {
-           document.write(`<hr><div><a onclick="closeClient()">${isApple ? 'Quit' : 'Exit'} quadplay✜</a></div>`);
-        }
-      </script>
+      <script>writeCloseOption();</script>
       </div>
 
     <div id="header" class="unselectable">
@@ -201,12 +217,13 @@
         &nbsp;&nbsp;&nbsp;
         
         <script>
-          makeRadio('<img src="ui-fullscreen.png"  width=32 style="position:relative; top:-2px">', 'maximalUIButton',  false, 'title="Full Screen"',  'ui');
-          if (isMobile) {
-              // Move the buttons away from the corner, which may be curved on mobile
-              document.write(`<div style="display: inline-block; width: 8px"></div>`);
+          if (! isMobile) {
+              // Can't exit fullscreen on mobile!
+              makeRadio('<img src="ui-windowed.png" width=26 style="position:relative; top:-2px">', 'windowedUIButton', false, 'title="Windowed"',  'ui');
           }
-          makeRadio(`<img src="${getQueryString('IDE') === '1' ? 'ui-touchscreen.png' : 'ui-touchscreen-fullscreen.png'}" width=32 style="position:relative; top:-2px">`, 'emulatorUIButton', false, 'title="Touch Screen"', 'ui');
+          makeRadio('<img src="ui-fullscreen.png" width=26 style="position:relative; top:-2px">', 'maximalUIButton', false, 'title="Full Screen"',  'ui');
+          if (isMobile) { document.write(`<div style="display: inline-block; width: 8px"></div>`); }
+          makeRadio(`<img src="${getQueryString('IDE') === '1' ? 'ui-touchscreen.png' : 'ui-touchscreen-fullscreen.png'}" width=26 style="position:relative; top:-2px">`, 'emulatorUIButton', false, 'title="Touch Screen"', 'ui');
           if (isMobile) {
               // Move the buttons away from the corner, which may be curved on mobile
               document.write(`<div style="display: inline-block; width: 40px"></div>`);
@@ -214,11 +231,11 @@
         </script>
         <span class="IDEOnly" style="margin-left:-3px">
         <script>
-          makeRadio('<img src="ui-test.png"     width=32 style="position:relative; top:-2px">', 'testUIButton',     false, 'title="Test"',    'ui');
-          makeRadio('<img src="ui-debug.png"    width=32 style="position:relative; top:-2px">', 'wideIDEUIButton',  false, 'title="Debug"',   'ui');
-          makeRadio('<img src="ui-develop.png"  width=32 style="position:relative; top:-2px">', 'IDEUIButton',      true,  'title="Develop"', 'ui');
-          makeRadio('<img src="ui-edit.png"     width=32 style="position:relative; top:-2px">', 'editorUIButton',   false, 'title="Editor"',  'ui');
-          makeRadio('<img src="ui-ghost.png"    width=32 style="position:relative; top:-2px">', 'ghostUIButton',    false, 'title="Ghost Editor"', 'ui');
+          makeRadio('<img src="ui-test.png"     width=26 style="position:relative; top:-2px">', 'testUIButton',     false, 'title="Test"',    'ui');
+          makeRadio('<img src="ui-debug.png"    width=26 style="position:relative; top:-2px">', 'wideIDEUIButton',  false, 'title="Debug"',   'ui');
+          makeRadio('<img src="ui-develop.png"  width=26 style="position:relative; top:-2px">', 'IDEUIButton',      true,  'title="Develop"', 'ui');
+          makeRadio('<img src="ui-edit.png"     width=26 style="position:relative; top:-2px">', 'editorUIButton',   false, 'title="Edit"',  'ui');
+          makeRadio('<img src="ui-ghost.png"    width=26 style="position:relative; top:-2px">', 'ghostUIButton',    false, 'title="Ghost Edit"', 'ui');
         </script>
         </span>
       </div>
@@ -234,12 +251,12 @@
       <div id="codePlusFrame" onmouseup="onCodeEditorDividerDragEnd()" onmousemove="onCodeEditorDividerDrag(event)">
         <div class="toolbar">
           <script>
-            makeButton('<img src="ui-undo.png" width=32 style="position:relative; top:-2px;">', `Undo (${cmd}Z)`, 'onCodeEditorUndoButton', 'codeEditorUndo');
-            makeButton('<img src="ui-redo.png" width=32 style="position:relative; top:-2px;">', `Redo (${cmd}Y)`, 'onCodeEditorRedoButton', 'codeEditorRedo');
-            makeButton('<img src="ui-smallfont.png" width=32 style="position:relative; top:-2px;">', `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton');
-            makeButton('<img src="ui-bigfont.png" width=32 style="position:relative; top:-2px;">', `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton');
-            makeButton('<img src="ui-find.png" width=32 style="position:relative; top:-2px;">', `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton');
-            makeButton('<img src="ui-goto.png" width=32 style="position:relative; top:-2px;">', `Go to line (${cmd}G)`, 'onCodeEditorGoToLineButton');
+            makeButton('<img src="ui-undo.png" width=26 style="position:relative; top:-2px;">', `Undo (${cmd}Z)`, 'onCodeEditorUndoButton', 'codeEditorUndo');
+            makeButton('<img src="ui-redo.png" width=26 style="position:relative; top:-2px;">', `Redo (${cmd}Y)`, 'onCodeEditorRedoButton', 'codeEditorRedo');
+            makeButton('<img src="ui-smallfont.png" width=26 style="position:relative; top:-2px;">', `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton');
+            makeButton('<img src="ui-bigfont.png" width=26 style="position:relative; top:-2px;">', `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton');
+            makeButton('<img src="ui-find.png" width=26 style="position:relative; top:-2px;">', `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton');
+            makeButton('<img src="ui-goto.png" width=26 style="position:relative; top:-2px;">', `Go to line (${cmd}G)`, 'onCodeEditorGoToLineButton');
           </script>
           <div style="position: absolute; left: 244px; top: 4px; font-weight: bold" id="editorTitle"></div>
           <div style="position: absolute; right:5px; top:4px; color:#888" id="codeEditorSessionModeDisplay">All changes saved.</div>

@@ -263,7 +263,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             # detect the browser closing, so this is only essential on
             # macOS where the menu option closes the TAB but leaves
             # the browser process still running.
-            print('QUIT')
+            print('quadplay has exited')
 
             # Hard exit, rather than raising an exception. Needed
             # because of threads
@@ -568,7 +568,7 @@ def parse_args():
         '--nativeapp',
         action='store_true',
         default=False,
-        help='Attempt to open quadplay as a native app window on platforms with Chrome or Edge.'
+        help='Attempt to open quadplay as a native app window on platforms with Chrome or Edge. Defaults to True for the quadplay script and False for the quadplay-server script.'
     )
 
     parser.add_argument(
@@ -593,7 +593,14 @@ def parse_args():
         '--kiosk',
         action='store_true',
         default=False,
-        help='kiosk mode - launch full screen and without the IDE'
+        help='kiosk mode - launch full screen, without the IDE or other controls'
+    )
+
+    parser.add_argument(
+        '--play',
+        action='store_true',
+        default=False,
+        help='play mode - launch without the IDE'
     )
 
     parser.add_argument(
@@ -613,9 +620,11 @@ def parse_args():
 
     return parser.parse_args()
 
+
 # Args must be initialized to a constant before launchServer is defined
 # because of the way that multiprocess serialization works on ThreadingHTTPServer
 args = parse_args()
+
 if isWindows and args.gamepath:
     # Make drive letters canonical
     if args.gamepath[1] == ':':
@@ -767,7 +776,7 @@ def main():
     
     if args.kiosk:
         url += '&mode=Maximal&kiosk=1'
-    else: 
+    elif not args.play:
         url += '&IDE=1'
 
     if args.offline:

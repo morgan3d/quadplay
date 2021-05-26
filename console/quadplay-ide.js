@@ -1,9 +1,9 @@
-1/* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
+/* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
 "use strict";
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.05.18.20';
+const version  = '2021.05.26.23';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -38,6 +38,12 @@ function enterKioskMode() {
     location = location.origin + location.pathname + "?kiosk=1";
 }
 
+
+function setIDEEnable(value) {
+    inPageReload = true;
+    location = location.href.replace(/([&?])IDE=./g, '$1') + "&IDE=" + (value ? 1 : 0);
+}
+
 // Ends in a slash
 function getGamePath() {
     let gamePath = gameSource.jsonURL.replace(/\\/g, '/');
@@ -65,7 +71,6 @@ function makeURLRelativeToGame(filename) {
 
 const fastReload = getQueryString('fastReload') === '1';
 const isOffline = (getQueryString('offline') === '1') || false;
-const useIDE = (getQueryString('IDE') === '1') || false;
 {
     const c = document.getElementsByClassName(useIDE ? 'noIDE' : 'IDEOnly');
     for (let i = 0; i < c.length; ++i) {
@@ -81,7 +86,7 @@ if (! profiler.debuggingProfiler) {  document.getElementById('debugIntervalTimeR
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// 'WideIDE', 'IDE', 'Test', 'Emulator', 'Editor', 'Maximal', 'Ghost'. See also setUIMode().
+// 'WideIDE', 'IDE', 'Test', 'Emulator', 'Editor', 'Windowed', 'Maximal', 'Ghost'. See also setUIMode().
 let uiMode = 'IDE';
 const BOOT_ANIMATION = Object.freeze({
     NONE:      0,
@@ -313,7 +318,7 @@ function onWelcomeTouch(hasTouchScreen) {
 
     unlockAudio();
     
-    if (uiMode === 'Maximal' && ! useIDE && hasTouchScreen) {
+    if ((uiMode === 'Maximal' || uiMode === 'Windowed') && ! useIDE && hasTouchScreen) {
         // This device probably requires on-screen controls.
         // Setting the UI mode forces fullscreen as well.
         setUIMode('Emulator');
@@ -375,6 +380,8 @@ function unlockAudio() {
     }
 }
 
+//document.addEventListener('fullscreenchange', function (event) {
+//});
 
 function requestFullScreen() {
     // Full-screen the UI. This can fail if not triggered by a user interaction.
@@ -412,6 +419,7 @@ function setUIMode(d, noFullscreen) {
         // previously set to UI, fall back to the emulator.
         d = 'Emulator';
     }
+
     uiMode = d;
     const body = document.getElementsByTagName('body')[0];
 
@@ -423,7 +431,7 @@ function setUIMode(d, noFullscreen) {
     body.classList.remove('EditorUI');
     body.classList.remove('GhostUI');
     body.classList.remove('TestUI');
-    body.classList.add(uiMode + 'UI');
+    body.classList.add((uiMode === 'Windowed' ? 'Maximal' : uiMode) + 'UI');
 
     // Check the appropriate radio button
     document.getElementById({'IDE'      : 'IDEUIButton',
@@ -431,11 +439,20 @@ function setUIMode(d, noFullscreen) {
                              'Emulator' : 'emulatorUIButton',
                              'Test'     : 'testUIButton',
                              'Maximal'  : 'maximalUIButton',
+                             'Windowed' : 'windowedUIButton',
                              'Editor'   : 'editorUIButton',
                              'Ghost'    : 'ghostUIButton'}[uiMode] || 'maximalUIButton').checked = 1;
 
-    if (((uiMode === 'Maximal') || ((uiMode === 'Emulator') && ! useIDE)) && ! noFullscreen) {
+    if (((uiMode === 'Maximal') || ((uiMode === 'Emulator') && ! useIDE)) && ! noFullscreen && ! document.fullscreenElement) {
         requestFullScreen();
+    }
+
+    if (uiMode === 'Windowed' && document.fullscreenElement) {
+        // Undo fullscreen
+        try {
+            document.exitFullscreen();
+        } catch {
+        }
     }
 
     // Need to wait for layout to update before the onResize handler
@@ -564,6 +581,7 @@ function onResize() {
 
     case 'Ghost':
     case 'Maximal':
+    case 'Windowed':
     case 'Test':
         {
             // What is the largest multiple SCREEN_HEIGHT that is less than windowHeightDevicePixels?
@@ -607,7 +625,7 @@ function onResize() {
 
     screenBorder.style.width = SCREEN_WIDTH + 'px';
     screenBorder.style.height = SCREEN_HEIGHT + 'px';
-    if (uiMode === 'Maximal') {
+    if (uiMode === 'Maximal' || uiMode === 'Windowed') {
         screenBorder.style.borderRadius = '0px';
         screenBorder.style.borderWidth  = '0px';
     } else {
@@ -1341,7 +1359,7 @@ function restartProgram(numBootAnimationFrames) {
 
 function onError(e) {
     onStopButton();
-    if (useIDE && (uiMode === 'Emulator' || uiMode === 'Maximal')) {
+    if (useIDE && (uiMode === 'Emulator' || uiMode === 'Maximal' || uiMode === 'Windowed')) {
         // Go to a mode where the error will be visible.
         setUIMode('IDE');
     }
@@ -2963,6 +2981,8 @@ function onRadio() {
         setUIMode('WideIDE');
     } else if (pressed('maximalUI') && (uiMode !== 'Maximal')) {
         setUIMode('Maximal');
+    } else if (pressed('windowedUI') && (uiMode !== 'Windowed')) {
+        setUIMode('Windowed');
     } else if (pressed('editorUI') && (uiMode !== 'Editor')) {
         setUIMode('Editor');
     } else if (pressed('ghostUI') && (uiMode !== 'Ghost')) {
@@ -4625,14 +4645,16 @@ document.getElementById('backgroundPauseCheckbox').checked = backgroundPauseEnab
 if (getQueryString('kiosk') === '1') {
     // Hide the console menu and mode buttons
     document.getElementById('body').classList.add('kiosk');
+    document.getElementById('body').classList.remove('noKiosk');
     setUIMode('Maximal');
 } else {
     document.getElementById('body').classList.remove('kiosk');
+    document.getElementById('body').classList.add('noKiosk');
     let newMode = getQueryString('mode');
     if (! newMode) {
         if (useIDE) {
             newMode = localStorage.getItem('uiMode') || 'IDE';
-            if (newMode === 'Maximal' || 'newMode' === 'Emulator') {
+            if (newMode === 'Maximal' || newMode === 'Windowed' || 'newMode' === 'Emulator') {
                 // Nobody starting in IDE mode wants to be in the emulator,
                 // so override this default
                 newMode = 'IDE';
