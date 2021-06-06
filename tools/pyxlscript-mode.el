@@ -67,7 +67,7 @@
 
                                    "RGBA_ADD_RGBA" "RGBA_SUB_RGBA" "RGBA_MUL_RGBA" "RGBA_DIV_RGBA" "RGBA_MUL" "RGBA_DIV" "RGBA_DOT_RGBA" "RGBA_LERP"
 
-                                   "XY_ADD_XY" "XY_SUB_XY" "XY_MUL_XY" "XY_DIV_XY" "XY_MUL" "XY_DIV" "XY_DOT_XY" "XY_CRS_XY"
+                                   "XY_MAD_S_XY" "XY_MAD_XY" "XY_ADD_XY" "XY_SUB_XY" "XY_MUL_XY" "XY_DIV_XY" "XY_MUL" "XY_DIV" "XY_DOT_XY" "XY_CRS_XY"
 
                                    "XZ_ADD_XZ" "XZ_SUB_XZ" "XZ_MUL_XZ" "XZ_DIV_XZ" "XZ_MUL" "XZ_DIV" "XZ_DOT_XZ"
 

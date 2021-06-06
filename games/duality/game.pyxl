@@ -1,0 +1,249 @@
+/* Distance a player's area needs to extend
+   into the other side to win */
+let win_threshold = 0
+
+/* Set in the Title */
+let computer_skill = computer_skill_normal
+
+/* Parallel array to world. Used for setting world.alarm_audio */
+let alarm_audio_array = []
+
+def make_world(i):
+    const fore = color_array[i]
+    const back = color_array[1 - i]
+    const gravity = 2 i - 1
+    
+    // The "light" world on the left has the bright background and dark features
+    const light = (i == 0)
+    
+    // Create the bricks on the OTHER side (it is their background)
+    // Hexagons are 2:sqrt(3) ratio, about ~1:1.15, ~12:14
+    
+    const brick_array = []
+    const offset = xy(-gravity * (¼ SCREEN_SIZE.x - 1.5 hex_sprite.size.x) - ¼ SCREEN_SIZE.x - ¾ hex_sprite.size.x, -½ SCREEN_SIZE.y - 3)
+    const brick_template = {
+        size: hex_sprite.size,
+        shape: "rect",
+        light: light,
+        z: -1}
+    
+    win_threshold = 0
+    const y_scale = 0.715    
+    for 2 < x < ½ SCREEN_SIZE.x / hex_sprite.size.x:
+        for y ≤ ⌈SCREEN_SIZE.y / hex_sprite.size.y / y_scale⌉:
+            const center = xy(x + ½ (y mod 2) - ½, y_scale * y)
+            const pos = center * hex_sprite.size + offset
+            win_threshold = max(|pos.x|, win_threshold)
+            push(brick_array, {pos: pos, ...brick_template})    
+            
+    win_threshold -= 4
+    
+    const ball_array = []
+    for b < 2:
+        const ball = make_entity({
+            drag: 0,
+            shape: "disk",
+            
+            light: light,
+            size: xy(1, 1) * (2 ball_radius),
+
+            // Set during Title
+            max_speed: 0,
+            
+            // Increments on each hit and resets on a brick bounce,
+            // paddle bounce, brick destruction, or side flip
+            hits: 0,
+            
+            // Start as the center of the A or the selection
+            pos: if i == 0 then xy(-28, 0) else xy(36, -56)})
+        
+        push(ball_array, ball)
+
+    return {
+        gravity: gravity,
+        background: {
+            pos: xy(gravity * (½ SCREEN_SIZE.x), 0),
+            
+            // Larger than the screen for the end-game zoom animation 
+            size: xy(80, 2 SCREEN_SIZE.y),
+            
+            // Don't bother drawing the white background,
+            // as the screen itself is already white
+            color: if light then #0000 else back,
+            z: -1
+        },
+        
+        // Game ends when this reaches the win_threshold distance
+        furthest_brick_distance: -∞,
+        furthest_brick: ∅, 
+        
+        light: light,
+        brick_array: brick_array,
+        ball_array: ball_array,
+        
+        // Winning alarm sound
+        alarm_audio: alarm_audio_array[i],
+        paddle: make_entity({
+            // Title screen position
+            title_pos: xy(62, 0),
+            pos: xy(62, 0),
+            gamepad: gamepad_array[i],
+            computer: false,
+            
+            sound: if i == 0 then paddle_bounce_sound else paddle_bounce_alt_sound,
+            
+            // Game position
+            start_pos: xy((½ SCREEN_SIZE.x - 2.5 hex_sprite.size.x) * gravity, 0),
+            size: xy(8, 48)
+        })
+    }
+
+
+
+/* Draws a short, wide, rounded line */
+def draw_ball_trail(pos, vel, color, outline, z):
+    for i < 8:
+        draw_disk(pos - (40% i) vel, ball_radius, color, outline, z)
+
+
+
+/* Draws a ball trail and its color fringe after a bounce */
+def draw_ball(ball, color, light):
+    // Color fringe
+    if ball.offset.x or ball.offset.y:
+        draw_ball_trail(ball.pos + ball.offset, ball.vel, y_color(ball.pos.x, light), ∅, 0)
+        draw_ball_trail(ball.pos - ball.offset, ball.vel, y_color(-ball.pos.x, light), ∅, 0)
+    
+    draw_ball_trail(ball.pos, ball.vel, color, if debug then #f00 else ∅, 0.1)
+        
+    
+
+def draw_world(world):
+    draw_rect(world.background)
+    
+    with paddle in world:
+        // Paddles are auto-colored so that this code can be reused
+        // for the title animation sequence "I"
+        if paddle.offset.x ≠ 0:
+            draw_rect(paddle.pos + paddle.offset, paddle.size, y_color(paddle.pos.y, world.light))
+            draw_rect(paddle.pos - paddle.offset, paddle.size, y_color(-paddle.pos.y, world.light))
+        draw_rect(paddle.pos, paddle.size, color_array[if paddle.pos.x < 0 then 0 else 1])
+        
+    iterate(world.ball_array, draw_ball, color_array[if world.light then 0 else 1], world.light)
+    
+    // Since the white bricks are the color of the background,
+    // we only draw the black ones.
+    if world.light:
+        const brick_array = world.brick_array
+        for b < size(brick_array):
+            draw_sprite(hex_sprite, brick_array[b].pos, 0°, ∅, ∅, -1)
+        
+    // Draw end-game warnings
+    with gravity, furthest_brick_distance in world:
+        let α = (furthest_brick_distance / win_threshold - 60%) / 40%
+        
+        // Fade out in EndGame
+        if get_mode() == EndGame:
+            α *= 100% - min(100%, mode_frames / 30)
+        
+        if α > 0:
+            resume_audio(world.alarm_audio)
+            set_volume(world.alarm_audio, α²)
+            draw_sprite({
+                sprite: mask_sprite, 
+                pos: xy(½ (mask_sprite.size.x - SCREEN_SIZE.x) * gravity, 0),
+                override_color: perceptual_lerp_color(#508aff, #f835ff, α),
+                // Flip the mask 180° for the right side due to hex grid
+                // alignment and gradient
+                scale: xy(gravity, gravity),
+                opacity: oscillate(game_frames / 15, 15%, clamp(2 α, 25%, 100%)),
+                z: 5}) 
+        else:
+            stop_audio(world.alarm_audio)
+
+
+
+def draw_title(α default 0%):
+    iterate(world_array, draw_world)
+    
+    // Clip to the paddles as a wipe
+    preserving_transform:
+        set_clip(xy(0, 0), xy(world_array[0].paddle.pos.x + ½ SCREEN_SIZE.x, SCREEN_SIZE.y))
+        draw_sprite({sprite: dual_sprite, pos: title_dual_pos, override_color: color_array[1], override_blend: "multiply"})
+        
+        set_clip(xy(world_array[1].paddle.pos.x + ½ SCREEN_SIZE.x, 0), SCREEN_SIZE)
+        draw_sprite({sprite: ty_sprite, pos: title_ty_pos, override_color: color_array[1], override_blend: "multiply"})
+    
+    // Fade text out
+    draw_text({
+        font: title_font, 
+        text: "a quadplay game\nby CasualEffects", 
+        pos: xy(-20, 47), 
+        color: rgba(color_array[0], 100% - α),
+        x_align: "right",
+        y_align: "bottom"})
+        
+    draw_text({
+        font: title_font, 
+        text: "1 player\n1 player hard\n2 player\nexit", 
+        pos: xy(50, -35), 
+        color: rgba(color_array[1], 100% - α),
+        x_align: "left",
+        y_align: "top"})
+
+
+/* Produces a color from a y position (used for ball x position fringe as well) */
+def y_color(y, light):
+    return hsv(y / SCREEN_SIZE.y + ½, 90%, if light then 65% else 100%)
+
+
+
+def paddle_simulate(paddle, world):
+    with pos, vel, drag, gamepad, computer in paddle:
+        
+        if computer:
+            // Auto-set gamepad.y
+            let dir = 0
+            let closest = ∞
+            for ball in world.ball_array:
+                if ball.vel.x * world.gravity > 0 and (pos.x - ball.pos.x) * world.gravity > 0:
+                    // This ball could be caught. Weigh the influence
+                    // more heavily as the ball comes closer.
+                    closest = min(|pos.x - ball.pos.x|, closest)
+                    dir += (ball.pos.y - pos.y) * pow(½ SCREEN_SIZE.x - |pos.x - ball.pos.x|, 0.8 + 0.5 computer_skill)
+
+            // Just go to the center if no ball is close
+            if closest > 64:
+                gamepad.y = if |pos.y| < 90 computer_skill then 0 else -sign(pos.y)
+            else if ξ < 30% computer_skill:
+                // Don't change every single frame
+                gamepad.y = sign(dir)
+                    
+        drag = 15%
+        if gamepad.y:
+            // Accelerate
+            vel.y = gamepad.y * paddle_base_speed
+            drag = 0
+            
+        entity_simulate(paddle, particle_array.time_rate)
+        
+        // Clamp to screen
+        if |pos.y| > ½ (SCREEN_SIZE.y - paddle.size.y) and sign(vel.y) == sign(pos.y):
+            pos.y = sign(pos.y) * (½ (SCREEN_SIZE.y - paddle.size.y))
+            vel.y = 0
+            
+ 
+ 
+/* Turn this brick into particles */   
+def explode_brick(brick):
+    const color = y_color(brick.pos.y, brick.light)
+    for i < particle_density:
+        for -4 ≤ x ≤ +4:
+            for -4 ≤ y ≤ +4:
+                const dir = direction(xy(x, y) + 2 random_direction2D())
+                spawn_particle(brick.pos + xy(x, y) + ½ random_within_square(), dir * particle_max_speed * max(0.1, ξ³), if ξ > particle_color_chance then (if brick.light then #000 else #fff) else color, particle_z, random_integer(¼ particle_frames, particle_frames))
+
+    
+const world_array = []
+let music_audio
+

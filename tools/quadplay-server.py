@@ -776,7 +776,9 @@ def main():
     
     if args.kiosk:
         url += '&mode=Maximal&kiosk=1'
-    elif not args.play:
+    elif args.play:
+        url += '&mode=Windowed'
+    else:
         url += '&IDE=1'
 
     if args.offline:

@@ -36,6 +36,23 @@ const gameArray = [{
 },
 
 {
+   title:        "Duality",
+   developer:    "CasualEffects",
+   url:          "quad://games/duality",
+   description:  "Pong where each player is the negative space of the other.",
+   version:      1.0,
+   cooperative:  false,
+   competitive:  true,
+   min_players:  1,
+   max_players:  2,
+   achievements: false,
+   builtin:      true,
+   highscores:   false,
+   label:        dllabel[0][0],
+   preview:      dlpreview
+},
+
+{
    title: "Serpitron",
    developer: "CasualEffects",
    url: "quad://games/serpitron",

@@ -8791,6 +8791,16 @@ function XY_ADD_XY(v1, v2, r) {
     r.y = v1.y + v2.y;
 }
 
+function XY_MAD_XY_XY(v1, v2, v3, r) {
+    r.x = v1.x * v2.x + v3.x;
+    r.y = v1.y * v2.y + v3.y;
+}
+
+function XY_MAD_S_XY(v1, s, v2, r) {
+    r.x = v1.x * s + v2.x;
+    r.y = v1.y * s + v2.y;
+}
+
 function XY_SUB_XY(v1, v2, r) {
     r.x = v1.x - v2.x;
     r.y = v1.y - v2.y;

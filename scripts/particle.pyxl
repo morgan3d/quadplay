@@ -6,6 +6,9 @@
 
 const particle_array = []
 
+// Change this to make particles move faster or slower globally
+particle_array.time_rate = 100%
+
 // Create a single moving particle and add it to the global array
 def spawn_particle(pos, vel, color, z, frames):
    push(particle_array, {pos: {x:pos.x, y:pos.y}, vel:vel, color: clone(color), z: z, frames: frames})
@@ -128,7 +131,9 @@ def update_and_draw_particles():
     // value, so we preserve the order of the array when removing elements
     // by always copying elements during iteration to close gaps, amortizing
     // the cost of in-order removal.
-   
+
+    const rate = particle_array.time_rate
+    
     const N = size(particle_array)
     
     // Place to copy the next element to
@@ -140,7 +145,7 @@ def update_and_draw_particles():
         const particle = particle_array[src]
         if src > dst: particle_array[dst] = particle
       
-        --particle.frames
+        particle.frames -= rate
         if particle.frames ≥ 0:
             // Fade out near end of life
             if particle.frames < 10:
@@ -148,7 +153,7 @@ def update_and_draw_particles():
     
             // Integrate
             const pos = particle.pos
-            XY_ADD_XY(pos, particle.vel, pos)
+            XY_MAD_S_XY(particle.vel, rate, pos, pos)
             draw_point(pos, particle.color, particle.z)
     
             // Preserve this element

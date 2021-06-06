@@ -1,0 +1,33 @@
+ShowWinner
+════════════════════════════════════════════════════════════════════════
+
+let text_args_array
+
+enter(background, in_text_args_array)
+────────────────────────────────────────────────────────────────────────
+set_background(background)
+text_args_array = in_text_args_array
+particle_array.time_rate = 100%
+set_playback_rate(music_audio, 100%)
+play_sound(end_game_sound, false, 50%)
+play_sound(wipe_sound, false, 50%)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+iterate(text_args_array, draw_text)
+
+// Fade out to gray
+const α = (mode_frames - (show_winner_frames - title_fade_in_frames)) / title_fade_in_frames
+set_post_effects({…get_post_effects(), color: lerp(#888f, #8880, (1 - α)³)})
+
+if mode_frames ≥ show_winner_frames:
+    set_mode(Title) because "Animation complete"
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+set_post_effects({…get_post_effects(), color: #0000})
+particle_array.time_rate = 100%
+set_playback_rate(music_audio, 100%)
+

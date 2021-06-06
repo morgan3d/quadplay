@@ -1,0 +1,335 @@
+{
+    "title": "Duality",
+    "developer": "CasualEffects",
+    "copyright": "©2021 Morgan McGuire",
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+    "packages": [],
+    "scripts": [
+        "quad://scripts/particle.pyxl",
+        "game.pyxl"
+    ],
+    "modes": [
+        "Title",
+        "NewGame",
+        "Play",
+        "EndGame",
+        "ShowWinner"
+    ],
+    "start_mode": "Title",
+    "docs": [],
+    "assets": {
+        "font": "quad://fonts/ching-9.font.json",
+        "music_sound": "quad://sounds/music-vice.sound.json",
+        "brick_bounce_sound": "quad://sounds/hit-08.sound.json",
+        "wall_bounce_sound": "quad://sounds/powerup-09.sound.json",
+        "paddle_bounce_sound": "quad://sounds/powerup-04.sound.json",
+        "hex_sprite": "hex-12x14.sprite.json",
+        "dual_sprite": "dual.sprite.json",
+        "ty_sprite": "ty.sprite.json",
+        "title_font": "spaced-suchet-12.font.json",
+        "charge_up_sound": "quad://sounds/powerup-05.sound.json",
+        "wipe_sound": "quad://sounds/wild-05.sound.json",
+        "mask_sprite": "mask.sprite.json",
+        "alarm_sound": "quad://sounds/powerup-07.sound.json",
+        "end_game_sound": "quad://sounds/wild-08.sound.json",
+        "paddle_bounce_alt_sound": "quad://sounds/jump-09.sound.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 2,
+    "cooperative": false,
+    "competitive": true,
+    "achievements": false,
+    "highscores": false,
+    "description": "Dual-space duel, where each player is in the negative space of the other.",
+    "constants": {
+        "color_array": {
+            "type": "array",
+            "value": [
+                {
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": 0
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": 0
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": 0
+                        }
+                    }
+                },
+                {
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": 0.866
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": 0.866
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": 0.866
+                        }
+                    }
+                }
+            ]
+        },
+        "paddle_base_speed": {
+            "type": "number",
+            "value": "5",
+            "min": {
+                "type": "number",
+                "value": "0.5"
+            },
+            "max": {
+                "type": "number",
+                "value": "10"
+            },
+            "format": "",
+            "quantum": 0
+        },
+        "ball_base_speed": {
+            "type": "number",
+            "value": "4.5",
+            "min": {
+                "type": "number",
+                "value": "1"
+            },
+            "max": {
+                "type": "number",
+                "value": "10"
+            },
+            "format": "",
+            "quantum": 0
+        },
+        "particle_frames": {
+            "type": "number",
+            "value": "90",
+            "description": "Explosion particle lifetime",
+            "min": {
+                "type": "number",
+                "value": "5"
+            },
+            "max": {
+                "type": "number",
+                "value": "120"
+            },
+            "format": "",
+            "quantum": 1
+        },
+        "particle_max_speed": {
+            "type": "number",
+            "value": "1.5",
+            "min": {
+                "type": "number",
+                "value": "0.25"
+            },
+            "max": {
+                "type": "number",
+                "value": "3.0"
+            },
+            "format": "",
+            "quantum": 0
+        },
+        "ball_radius": {
+            "type": "number",
+            "value": "4",
+            "min": {
+                "type": "number",
+                "value": "1"
+            },
+            "max": {
+                "type": "number",
+                "value": "8"
+            },
+            "format": "",
+            "quantum": 0
+        },
+        "particle_density": {
+            "type": "number",
+            "value": "2",
+            "description": "Multiplier on how many particles appear",
+            "min": {
+                "type": "number",
+                "value": "1"
+            },
+            "max": {
+                "type": "number",
+                "value": "5"
+            },
+            "format": "",
+            "quantum": 1
+        },
+        "particle_color_chance": {
+            "type": "number",
+            "value": "85%",
+            "description": "Probability that a particle is colored instead of black or white",
+            "min": 0,
+            "max": 1,
+            "format": "%",
+            "quantum": 0
+        },
+        "title_fade_in_frames": {
+            "type": "number",
+            "value": "20",
+            "description": "Time to fade in the title from gray",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "60"
+            },
+            "format": "",
+            "quantum": 1
+        },
+        "new_game_transition_frames": {
+            "type": "number",
+            "value": "180",
+            "description": "Time to transition from the Title to Play in the NewGame mode",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "240"
+            },
+            "format": "",
+            "quantum": 1
+        },
+        "title_ty_pos": {
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "120"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "0"
+                }
+            },
+            "description": "Position of the letters \"TY\" on the title screen",
+            "nudge": {
+                "x": "+1",
+                "y": "+1"
+            }
+        },
+        "title_dual_pos": {
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "-56"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "0"
+                }
+            },
+            "description": "Position of the letters \"DUAL\" on the title screen.",
+            "nudge": {
+                "x": "+1",
+                "y": "+1"
+            }
+        },
+        "bloom": {
+            "type": "boolean",
+            "value": true
+        },
+        "debug": {
+            "type": "boolean",
+            "value": false,
+            "description": "Enable debugging output and visualization"
+        },
+        "particle_z": {
+            "type": "number",
+            "value": "3",
+            "min": {
+                "type": "number",
+                "value": "-5"
+            },
+            "max": {
+                "type": "number",
+                "value": "5"
+            },
+            "format": "",
+            "quantum": 0
+        },
+        "computer_skill_normal": {
+            "type": "number",
+            "value": "25%",
+            "description": "Difficulty for normal mode as a percentage, higher is better.",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "1"
+            },
+            "format": "%",
+            "quantum": 0
+        },
+        "computer_skill_hard": {
+            "type": "number",
+            "value": "60%",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "1"
+            },
+            "format": "%",
+            "quantum": 0
+        },
+        "color_fringe_distance": {
+            "type": "number",
+            "value": "6",
+            "description": "Maximum color fringe offset",
+            "min": {
+                "type": "number",
+                "value": "1"
+            },
+            "max": {
+                "type": "number",
+                "value": "12"
+            },
+            "format": "",
+            "quantum": 0
+        },
+        "end_animation_frames": {
+            "type": "number",
+            "value": "220",
+            "description": "How long the end animation runs",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "1000"
+            },
+            "format": "",
+            "quantum": 1
+        },
+        "show_winner_frames": {
+            "type": "number",
+            "value": "280",
+            "min": 10,
+            "max": 360,
+            "format": "",
+            "quantum": 0
+        },
+        "max_penetration": {
+            "type": "number",
+            "value": "3.5",
+            "description": "Number of bricks that can be hit before bouncing.",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "10"
+            },
+            "quantum": 0.01
+        }
+    },
+    "screenshot_tag": "Duality",
+    "y_up": true
+}

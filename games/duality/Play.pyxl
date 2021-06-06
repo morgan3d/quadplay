@@ -1,0 +1,128 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+/* Bounce the color offset back to position */
+def recover_color_fringe(remaining_frames, total_frames, entity):
+    entity.offset = color_fringe_distance * direction(entity.offset) * (remaining_frames / total_frames)²
+
+
+def brick_collider(brick, ball, other_brick_array, axis, gravity):
+    // No collision
+    if not overlaps(ball, brick, false): return
+
+    // Decrease penetration chance close to win thresholds
+    const win_closeness = clamp(smoothstep(12%, 60%, |brick.pos.x| / win_threshold), 0%, 100%)
+    
+    ++ball.hits
+    if ball.hits ≥ max_penetration * (100% - win_closeness) + ξ:
+        // Undo the movement, there was a collision
+        with pos, vel, hits in ball:
+            hits = 0
+            play_sound({sound: brick_bounce_sound, pan: pos, volume: 200%})
+            vel[axis] = -vel[axis]; pos[axis] += vel[axis]
+
+    // Spawn particles with hue based on Y, and make them more dense
+    // closer to the paddles
+    explode_brick(brick)
+
+    brick.light = not brick.light
+    push(other_brick_array, brick)
+    return iterate.REMOVE
+
+
+
+/* Also spawns particles from bricks that are about to cause a loss */
+def find_furthest_brick(brick, world):
+    const x = -brick.pos.x * world.gravity
+    if x > world.furthest_brick_distance:
+        world.furthest_brick_distance = x
+        world.furthest_brick = brick
+    
+    // Create particles when in danger of losing
+    const α = (x - 50% win_threshold) / (50% win_threshold)
+    if α > 20% and ξ < α²:
+        const color = color_array[if brick.light then 0 else 1]
+        for i < 3 + 4 α:
+            spawn_particle(brick.pos + 6 random_on_square(), xy(-1.5 (1 + α) world.gravity, 0) + ½ random_direction2D(), color, particle_z, random_integer(¼ particle_frames, ½ particle_frames))
+    
+
+
+def color_fringe_paddle(paddle):
+    paddle.offset.x = 4 sign(paddle.pos.x)
+    add_frame_hook(recover_color_fringe, ∅, 5, ∅, paddle)
+
+            
+            
+def color_fringe_ball(ball):
+    // Make perpendicular offset to velocity
+    ball.offset.x =  4 sign(ball.vel.y)
+    ball.offset.y = -4 sign(ball.vel.x)
+    add_frame_hook(recover_color_fringe, ∅, 5, ∅, ball)
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+for paddle, ball_array, brick_array, gravity in world at i in world_array:
+    const j = 1 - i
+    const other_brick_array = world_array[j].brick_array
+    const other_ball_array = world_array[j].ball_array
+    
+    // Detect a win
+    world.furthest_brick_distance = -∞
+    iterate(other_brick_array, find_furthest_brick, world)    
+    if world.furthest_brick_distance > win_threshold:
+        set_mode(EndGame, i) because "Game Over"
+        
+    
+    for pos, vel, hits in ball in clone(ball_array):
+        // Adjust speed based on position, so that
+        // they are slower near the paddles
+        vel = direction(vel) * ball.max_speed * lerp(100%, 15%, 1.8 |pos.x| / SCREEN_SIZE.x)
+        
+        // Move the ball in y and resolve collisions
+        pos.y += vel.y
+        iterate(brick_array, brick_collider, ball, other_brick_array, "y")
+        
+        // Bounce off top and bottom screen border
+        if |pos.y| > ½ (SCREEN_SIZE.y - ball.size.y) and sign(vel.y) == sign(pos.y):
+            vel.y = -vel.y
+            color_fringe_ball(ball)
+            play_sound({sound: wall_bounce_sound, pan: pos, volume: 10%})
+                        
+        // Move the ball in x and resolve collisions
+        pos.x += vel.x
+        iterate(brick_array, brick_collider, ball, other_brick_array, "x")
+        
+        // Bounce off the paddle
+        if overlaps(paddle, ball) and sign(ball.vel.x) == sign(gravity):
+            vel.x = -vel.x
+            color_fringe_paddle(paddle)
+            color_fringe_ball(ball)
+            hits = 0
+            play_sound({sound: paddle.sound, pan: pos, volume: 50%})
+        
+        // Bounce off the opposite side's final wall
+        if vel.x * gravity < 0 and -pos.x * gravity > ½ SCREEN_SIZE.x:
+            // Bounce off *far* wall (should never happen...this is the endgame)
+            vel.x = |vel.x| gravity
+                
+        // Behind paddle, off screen
+        if |pos.x| > ½ (SCREEN_SIZE.x + ball.size.x) and pos.x * gravity > 0 and vel.x * gravity > 0:
+            // Escape through opposite side
+            pos.x = -pos.x
+            hits = 0
+            push(other_ball_array, ball)
+            fast_remove_value(ball_array, ball)
+    
+    paddle_simulate(paddle, world)
+
+
+iterate(world_array, draw_world)
+
+// Brick debugging code    
+if debug:
+    for w < 2:
+        for brick in world_array[w].brick_array:
+            draw_rect(brick.pos, xy(4, 4), color_array[w], #F00)

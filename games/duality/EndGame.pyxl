@@ -1,0 +1,119 @@
+EndGame
+════════════════════════════════════════════════════════════════════════
+
+let winner_index
+const camera = {pos: xy(0, 0), zoom: 1, target: xy(0, 0)}
+
+def compare_pos_x(a, b):
+    // Permute slightly in Y to make less ordered
+    return (a.pos.x + 2 hash(a.pos.y)) - (b.pos.x + 2 hash(b.pos.y))
+
+
+enter(w)
+────────────────────────────────────────────────────────────────────────
+winner_index = w
+const world = world_array[w]
+
+camera.target = xy(world.furthest_brick.pos)
+
+// Sort the bricks away from the center
+sort(world.brick_array, compare_pos_x, w == 0)
+
+play_sound(end_game_sound)
+
+const color = y_color(world.paddle.pos.y, world.light)
+
+// Explode paddle
+for i < particle_density:
+    for -4 ≤ x ≤ +4:
+        for -8 ≤ y ≤ +8:
+            const dir = direction(xy(x, y) + 2 random_direction2D())
+            spawn_particle(world.paddle.pos + xy(x, 2 y) + ½ random_within_square(), dir * particle_max_speed * max(0.1, ξ³), if ξ > particle_color_chance then (if world.light then #000 else #fff) else color, particle_z, random_integer(¼ particle_frames, particle_frames))
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+// Zoom the camera on the collision point
+const τ = 60% smoothstep(0%, 40%, mode_frames / (end_animation_frames - 1))
+camera.zoom = 1 + 80% τ
+camera.pos = lerp(xy(0, 0), ¼ camera.target, τ)
+set_camera(camera)
+
+// Slow motion and audio
+const rate = 100% - τ
+particle_array.time_rate = rate
+set_playback_rate(music_audio, rate)
+
+// Keep balls and paddles animated during the
+// end game
+for paddle, ball_array in world in world_array:
+    paddle_simulate(paddle, world)
+    for ball in ball_array:
+        ball.pos += ball.vel * rate
+
+
+iterate(world_array, draw_world)
+
+// Blow up remaining tiles
+if mode_frames > 18 and mode_frames < end_animation_frames - particle_frames:
+    const world = world_array[winner_index]
+    const array = world.brick_array
+    
+    if mode_frames mod 4 == 0 and size(array) > 0: 
+        play_sound({sound: brick_bounce_sound, pan: xy(0, 0), volume: random(100%, 200%), playback_rate: τ})
+
+    for i < clamp(⌈4% size(array)⌉, 0, 4):
+        const brick = pop(array)
+        // Increase the particle count
+        for j < 3:
+            explode_brick(brick)
+
+
+// Fade to the winner's color, and then to gray
+const color = color_array[1 - winner_index]
+local:
+    const α = (mode_frames - (end_animation_frames - 2 title_fade_in_frames)) / (2 title_fade_in_frames)
+    if α > 0% and α < 100%:
+        set_post_effects({…get_post_effects(), color: lerp(rgba(color, 100%), rgba(color, 0%), (1 - α)³)})
+
+
+if mode_frames ≥ end_animation_frames:
+    let win_message = "you won!"
+    let lose_message = "good game"
+    
+    if world_array[winner_index].paddle.computer:
+        // 1P lose
+        win_message = ""
+    else if world_array[1 - winner_index].paddle.computer:
+        // 1P win
+        lose_message = ""
+        
+    set_mode(ShowWinner, color, [{
+            color: color_array[winner_index], 
+            font: title_font, 
+            text: win_message,
+            x_align: "center",
+            y_align: "center",
+            z: 2,
+            pos: SCREEN_SIZE * xy(35%, -40%) * world_array[winner_index].gravity,
+        },
+        {
+            color: color_array[winner_index], 
+            font: title_font, 
+            text: lose_message,
+            x_align: "center",
+            y_align: "center",
+            z: 2,
+            pos: SCREEN_SIZE * xy(35%, -40%) * world_array[1 - winner_index].gravity,
+        }]) because "Animation complete"
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+set_post_effects({…get_post_effects(), color: #0000})
+reset_camera()
+resize(particle_array, 0)
+
+for alarm_audio in world in world_array:
+    stop_audio(alarm_audio)
+    

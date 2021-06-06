@@ -45,7 +45,10 @@
         "bcpreview":  "bcpreview.sprite.json",
         
         "fflabel":    "fflabel.sprite.json",
-        "ffpreview":  "ffpreview.sprite.json"
+        "ffpreview":  "ffpreview.sprite.json",
+        
+        "dllabel":    "dllabel.sprite.json",
+        "dlpreview":  "dlpreview.sprite.json"
     },
 
     "constants":  {

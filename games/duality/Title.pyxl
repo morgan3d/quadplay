@@ -1,0 +1,100 @@
+Title
+════════════════════════════════════════════════════════════════════════
+let choice = 0
+let animate_choice = 0
+
+
+def start_game():
+    // Snap to choice
+    for pos, vel in ball in world_array[1].ball_array:
+        pos.y = -46 - 19 choice
+        vel.y = 0
+    
+    if debug: // One ball when debugging
+        resize(world_array[0].ball_array, 1)
+        resize(world_array[1].ball_array, 0)
+    
+    // Configure P2 as a computer player
+    if choice < 2:
+        computer_skill = lerp(computer_skill_normal, computer_skill_hard, choice)
+        
+        with paddle in world_array[1]:
+            paddle.computer = true
+            paddle.gamepad = {x: 0, y: 0}
+            
+    if debug:
+        // Start close to the endgame
+        for i < 280:
+            const brick = pop_front(world_array[0].brick_array)
+            brick.light = not brick.light
+            push(world_array[1].brick_array, brick)
+
+    
+    set_mode(NewGame) because "any_button_press"
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+set_transform(½ SCREEN_SIZE, xy(1, -1))
+set_background(color_array[1])
+
+// Full game load
+if game_frames == 0:
+    add_frame_hook(update_and_draw_particles, ∅, ∅, "all")
+    music_audio = play_sound(music_sound, true, 130%)
+    set_random_seed()
+    alarm_audio_array = [
+        play_sound(alarm_sound, true, 0%, +100%, ∅, ∅, 60%, true),
+        play_sound(alarm_sound, true, 0%, -100%, ∅, ∅, 100%, true)]
+    
+set_post_effects({bloom: if bloom then 40% else 0%, background: #0000, opacity: 38%})
+
+animate_choice = choice
+
+// Reset world
+remove_all(world_array)
+for i < 2:
+    push(world_array, make_world(i))
+    
+    
+
+frame
+────────────────────────────────────────────────────────────────────────
+// User input
+const old_choice = choice
+for gamepad in gamepad_array:
+    choice = clamp(choice - gamepad.yy, 0, 3)
+
+if choice ≠ old_choice:
+    play_sound({sound: paddle_bounce_sound, pitch: 50%, volume: 75%, pan: 30%})
+
+// Animation
+const Δ = choice - animate_choice
+const speed = min(|Δ|, lerp(0.03, 0.12, loop(animate_choice - 0.5, 0, 1)))
+if |Δ| > 0.01:
+    // Ease in and out
+    animate_choice += sign(Δ) * speed
+
+
+for pos, vel in ball in world_array[1].ball_array:
+    pos.y = -46 - 19 animate_choice
+    vel.y = -20 sign(Δ) * speed
+
+draw_title()
+
+if mode_frames < title_fade_in_frames:    
+    // Fade in from gray
+    draw_rect(xy(0, 0), SCREEN_SIZE, lerp(#888f, #8880, (mode_frames / title_fade_in_frames)³), ∅, ∅, 10)
+
+else if any_button_press():
+    if choice == 3:
+        // Exit
+        quit_game()
+    else:
+        start_game()
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+// Lower opacity
+set_post_effects({…get_post_effects(), opacity: 78%})

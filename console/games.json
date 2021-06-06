@@ -219,6 +219,11 @@
             "description": "Swapping puzzle game"
         },
         {
+            "url": "quad://games/duality/",
+            "title": "Duality",
+            "description": "Dual-space duel, where each player is in the negative space of the other."
+        },
+        {
             "url": "quad://games/friendly_fishing/",
             "title": "Friendly Fishing",
             "description": "Join your friends for a relaxing afternoon of fishing and you just might top the lake records."

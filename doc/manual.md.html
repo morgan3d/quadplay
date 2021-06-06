@@ -349,6 +349,18 @@ competive game derived from Snake-like games, including [TRON]("https://en.wikip
 - Persistent data
 - Reflection effects
 
+----------------------------
+  <center><img src="../games/duality/label128.png" width=200px style="border:0"></center>
+
+<div class="preview pixel" style="background-image:url('../games/duality/preview.png')"></div>
+[Ice Time](../console/quadplay.html?game=quad://games/duality&IDE=1) is a one- or two-player 
+game inspired by Pong and Breakout:
+
+- Animations
+- Simulation
+- AI player
+- Post Effects
+- Slow motion
 
 ----------------------------
   <center><img src="../games/beat_the_gobblins/label128.png" width=128px style="border:0"></center>
@@ -5128,6 +5140,12 @@ and other operations that naturally compile with maximum efficiency.
 
 `XY_MUL_XY(srcxy1, srcxy2, dstxy)`
 : Element multiplication.
+
+`XY_MAD_XY(srcxy1, srcxy2, srcxy3, dstxy)`
+: `dstxy = srcxy1 * srcxy2 + srcxy3`
+
+`XY_MAD_SXY(srcxy1, srcs2, srcxy3, dstxy)`
+: `dstxy = srcxy1 * srcs2 + srcxy3`
 
 `XY_DIV_XY(srcxy1, srcxy2, dstxy)`
 : Element division.

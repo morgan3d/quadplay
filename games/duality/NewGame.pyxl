@@ -1,0 +1,75 @@
+NewGame
+════════════════════════════════════════════════════════════════════════
+
+/* Turn a title world into particles as the paddle sweeps by */
+def shred(β, world, sprite, sprite_pos):
+    if β ≤ 0 or β ≥ 100%: return
+
+    const gravity = world.gravity
+    const pos = world.paddle.pos
+    const test = #0000
+
+    const color = hsv(pos.x / (80% SCREEN_SIZE.x) + ½, 90%, if pos.x < 0 then 65% else 100%)
+    for -24 ≤ i ≤ 24:
+        for j < 5:
+            const particle_pos = pos + xy(random(-3, 3), i)
+            get_sprite_pixel_color(sprite, ½ sprite.size - particle_pos + sprite_pos, test)
+            if test.a:
+                spawn_particle(particle_pos, 80% xy(-gravity, random(-1, 1)), color, 3, random_integer(18, 38))
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+const α = mode_frames / new_game_transition_frames
+
+// Move the white paddle to the right
+const β = smoothstep(0, 1, clamp((α - 32%) / 25%, 0%, 100%))
+with pos, start_pos, title_pos in world_array[1].paddle:
+    pos = lerp(title_pos, start_pos, β)
+
+    // Turn the word into particles
+    shred(β, world_array[1], ty_sprite[0][0], title_ty_pos)        
+            
+// Move the black paddle to the left
+const γ = smootherstep(0, 1, clamp((α - 32%) / 35%, 0%, 100%))
+with pos, start_pos, title_pos in world_array[0].paddle:
+    pos = lerp(title_pos, start_pos, γ)
+    shred(γ, world_array[0], dual_sprite[0][0], title_dual_pos)        
+
+draw_title(min(4 α, 100%))
+
+// Paddle movement sound
+if mode_frames == ⌊26% new_game_transition_frames⌋:
+    play_sound(wipe_sound)
+
+// Ball charge up sound
+const charge_frame = new_game_transition_frames - 23
+if mode_frames == charge_frame:
+    play_sound({sound: charge_up_sound, volume: 65%, playback_rate: 125%})
+
+const τ = (mode_frames - charge_frame - 2) / 24
+if τ > 0:
+    for ball_array in world in world_array:
+        for ball in ball_array:
+            ball.offset = (1 + 4τ) random_direction2D()
+
+
+if α ≥ 100%:
+    set_mode(Play) because "Transition Done"
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+// Launch balls
+play_sound(paddle_bounce_sound)
+for ball_array, gravity in world in world_array:
+    for vel, max_speed, offset in ball at b in ball_array:
+        const speed = ball_base_speed * (100% - 30% b)
+        vel = xy(gravity, (2 b - 1) * random(0.8, 1.5)) * speed
+        max_speed = ‖vel‖  
+        offset = xy(0, 0)
+
+// Snap paddles to correct positions    
+for paddle in world in world_array:
+    // Move to initial position
+    paddle.pos = xy(paddle.start_pos)

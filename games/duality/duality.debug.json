@@ -1,0 +1,9 @@
+{
+    "constants": {
+        "debug": {
+            "type": "boolean",
+            "value": true,
+            "enabled": false
+        }
+    }
+}

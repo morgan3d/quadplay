@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.05.26.23';
+const version  = '2021.06.06.15';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -322,7 +322,7 @@ function onWelcomeTouch(hasTouchScreen) {
         // This device probably requires on-screen controls.
         // Setting the UI mode forces fullscreen as well.
         setUIMode('Emulator');
-    } else if (! useIDE || hasTouchScreen) {
+    } else if ((! useIDE && uiMode !== 'Windowed') || hasTouchScreen) {
         requestFullScreen();
     }
 
