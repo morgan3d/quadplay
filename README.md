@@ -27,7 +27,7 @@ Full
 These full games are included, with source
 code. Click to play:
 
-[<img src="games/across_the_lake/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/across_the_lake) [<img src="games/icetime/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/icetime) [<img src="games/beat_the_gobblins/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/beat_the_gobblins) [<img src="games/rescue_roguelike/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/rescue_roguelike) [<img src="games/friendly_fishing/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/friendly_fishing) [<img src="games/quadpaddle/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/quadpaddle) [<img src="games/doublesdepon/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/doublesdepon) [<img src="games/rps/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/rps) [<img src="games/serpitron/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/serpitron)
+[<img src="games/across_the_lake/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/across_the_lake) [<img src="games/duality/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/duality) [<img src="games/icetime/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/icetime) [<img src="games/beat_the_gobblins/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/beat_the_gobblins) [<img src="games/rescue_roguelike/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/rescue_roguelike) [<img src="games/friendly_fishing/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/friendly_fishing) [<img src="games/quadpaddle/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/quadpaddle) [<img src="games/doublesdepon/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/doublesdepon) [<img src="games/rps/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/rps) [<img src="games/serpitron/label128.png">](https://morgan3d.github.io/quadplay/console/quadplay.html?game=games/serpitron)
 
 
 Examples
@@ -75,7 +75,7 @@ _Required_:
 
 - [**This SDK**](https://github.com/morgan3d/quadplay/archive/main.zip), which includes the IDE and assets
 - [**Python 3.8**](https://www.python.org/downloads/)
-- A **modern web browser** such as Chrome, Edge, Safari, or Firefox
+- A **modern web browser** such as Chrome, Edge, Brave, Safari, or Firefox
 - [**The manual**](https://morgan3d.github.io/quadplay/doc/manual.md.html)
 
 _Optional_:
