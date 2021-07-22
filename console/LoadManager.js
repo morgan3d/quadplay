@@ -253,7 +253,7 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
             image.onerror = onLoadFailure;
 
             const sendRequest = function () {
-                image.src = url + (forceReload ? ('?refresh=' + Date.now()) : '');
+                image.src = url + (forceReload && (url.indexOf('?') === -1) ? ('refresh=' + Date.now()) : '');
             };
             
             if (this.pendingRequests > MAX_REQUESTS) {

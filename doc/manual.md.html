@@ -353,7 +353,7 @@ competive game derived from Snake-like games, including [TRON]("https://en.wikip
   <center><img src="../games/duality/label128.png" width=200px style="border:0"></center>
 
 <div class="preview pixel" style="background-image:url('../games/duality/preview.png')"></div>
-[Ice Time](../console/quadplay.html?game=quad://games/duality&IDE=1) is a one- or two-player 
+[Duality](../console/quadplay.html?game=quad://games/duality&IDE=1) is a one- or two-player 
 game inspired by Pong and Breakout:
 
 - Animations
@@ -555,6 +555,9 @@ choreograph series of frame hooks one after the other.
 Atari style grid movement with smooth interpolation and wrapping,
 similar to PAC-MAN, Centipede, etc.
 
+</td></tr><tr><td>![](../examples/cards/label128.png)</td><td>
+[Cards](../console/quadplay.html?game=quad://examples/cards&IDE=1) is an example of creating and manipulating a deck of cards, including `add_frame_hook()` for flipping animations.
+
 </td></tr><tr><td>![](../examples/piano/label128.png)</td><td>
 [Piano](../console/quadplay.html?game=quad://examples/piano&IDE=1)
 Using `pitch` with `play_sound()` to adjust frequency,
@@ -575,6 +578,9 @@ is a little engine for Grand Theft Auto 2.5D rendering and physics of a 2D game 
 
 </td></tr><tr><td>![](../examples/planetgen/label128.png)</td><td>
 [Planet Generator](../console/quadplay.html?game=quad://examples/planetgen&IDE=1) uses built-in assets to create random 3D planets with moons, stars, atmosphere, and rings.
+
+</td></tr><tr><td>![](../examples/change_res/label128.png)</td><td>
+[Change Resolution](../console/quadplay.html?game=quad://examples/change_res&IDE=1) is an example of using `set_screen_size()` to change resolution at runtime.
 
 </td></tr><tr><td>![](../examples/input/label128.png)</td><td>
 [Input Example](../console/quadplay.html?game=quad://examples/input&IDE=1) is a demonstration and test
@@ -1713,7 +1719,7 @@ Array
 `find(array, x, i default 0)`
 : Find the index of the element whose value is `x`, starting at optional index `i` (default 0).
   Returns `∅` if not found. Uses `==` to compare `x` to array values. Runs in linear time in the length of the list
-  from `i`.
+  from `i`. This is called `index_of` or `indexOf` in some other programming languages.
 
 `insert(array, i, x, ...)`
 : Inserts the values into the array, starting at index `i` (as in, `array[i] = x` on return)
@@ -2161,17 +2167,23 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 : Returns true if these vectors have the same size and the elements are
   `==` (does not recursively test if the elements are equivalent).
 
+`find_max_value(v)`
+: Returns the key of the _first_ instance of the largest component, or `nil` if the array or object is empty. See also `max_value()`
+
+`find_min_value(v)`
+: Returns the key of the _first_ instance of the smallest component, or `nil` if the array or object is empty. See also `min_value()`
+
 `magnitude(v)`
 : The square root of the sum of the elements (L2 norm).
 
 `magnitude_squared(v)`
 : The sum of squares of the elements.
 
-`max_component(v)`
-: Largest element.
+`max_value(v)`
+: Largest element. See also `find_max_value()`
 
-`min_component(v)`
-: Smallest element.
+`min_value(v)`
+: Smallest element. See also `find_min_value()`
 
 `perp(v)`
 : Returns a vector perpendicular to `v` by rotating it 90 degrees:
@@ -4380,6 +4392,61 @@ Setting any post effects may slow down rendering slightly.
 : Restore the defaults, which directly composite each frame.
 
 
+### Resolution
+
+`set_screen_size(size, private_screen default false)`
+: Erases the current and previous graphics drawing state, including
+  all drawing commands for the current frame. Resets the clipping
+  region, transform, and camera transform. Switches the screen to the
+  new resolution immediately. It is an error to call with an
+  unsupported resolution.
+  
+  `SCREEN_SIZE` will immediately be bound to a new immutable `xy()`
+  object that has the new resolution.
+  
+  The `private_screen` flag is for implementing per-player private
+  screens for online multiplayer play, at reduced resolution. The
+  screen configuration is the same as splitscreen multiplayer, except
+  that each player can see only their own screen.
+  
+  If `private_screen == false`, then:
+  
+  - the supported resolutions are 384x224, 320x180, 192x112, 128x128,
+    and 64x64
+  - global `PRIVATE_SCREEN = false`
+  
+  
+  If `private_screen == true`, then:
+  
+  - the only supported resolution is 384x224
+  - global `PRIVATE_SCREEN = true`
+  - Only the upper left 1/4 of the screen will be displayed on the
+    local host machine. When playing online, the other 1/4 screens are
+    streamed to P2 (top left), P3 (bottom left), and P4 (bottom right)
+    when connected
+
+!!!
+    When debugging private screen multiplayer, you can temporarily
+    `private_screen` set to `false` to see all players on a single
+    computer. Develop as split-screen multiplayer and then switch
+    to private screens when everything works!
+
+In private screen mode with y increasing upwards, the player with
+index `0 ≤ p < 3` has screen corner at `½ SCREEN_SIZE * xy(p ∩ 1, p >> 1)`.
+
+<center>
+<table style="font-size:200%; border-collapse:separate" cellspacing=0>
+<tr>
+<td style="color:#f5a; border: 3px solid; width:200px"><div style="text-align:left;font-size:50%">(0,0)</div><center>*P1*</center><br></td>
+<td style="color:#0af; border: 3px solid; width:200px"><div style="text-align:left;font-size:50%">(192,0)</div><center>*P2*</center><br></td>
+</tr>
+<tr>
+<td style="color:#fd3; border: 3px solid"><div style="text-align:left;font-size:50%">(0,112)</div><center>*P3*</center><br></td>
+<td style="color:#4e4; border: 3px solid"><div style="text-align:left;font-size:50%">(192,112)</div><center>*P4*</center><br></td>
+</tr>
+</table>
+</center>
+
 Map
 ---------------------------------------------------------------------------
 
@@ -5322,6 +5389,8 @@ Sprites
 ![`quad://sprites/mc-pixel-perfection-16x16.sprite.json`](../sprites/mc-pixel-perfection-16x16.png)
 ![`quad://sprites/shapes-32x32.sprite.json`](../sprites/shapes-32x32.png)
 ![`quad://sprites/cursor-9x9.sprite.json`](../sprites/shapes-9x9.png)
+![`quad://sprites/cards-poker-24x36.sprite.json`](../sprites/cards-poker-24x36.png)
+![`quad://sprites/cards-solitaire-24x36.sprite.json`](../sprites/cards-solitaire-24x36.png)
 
 
 Fonts
@@ -6538,7 +6607,7 @@ Strings
 String literals are enclosed in double quotes (`"..."`). They may not contain newlines or
 double quotes.
 
-To enter a double quotation mark or slash, escape it with a slash: `"\\"` is the `\` character
+To enter a double quotation mark or slash, escape it with a slash: `"\\"` is the <code>\</code> character
 and `"\""` is the `"` character.
 
 The `+` operator performs string concatenation, coercing the right-hand argument if it is not a
@@ -6753,7 +6822,7 @@ now but are reserved for future use.
 `nan`, `NaN`, `new`, `nil`, `nonlocal`, `not`, `null`,
 `main`, `MAD`, `mod`, `module`, `mode`, `MUL`,
 `or`, `otherwise`,
-`public`, `private`, `protected`, `prototype`, `package`, `preserve`, `preserving_transform`,
+`public`, `private`, `PRIVATE_SCREEN`, `protected`, `prototype`, `package`, `preserve`, `preserving_transform`,
 `quit_game`,
 `ret`, `return`, `reset_game`, `require`, `requires`,
 `seal`, `set`, `show`, `static`, `strict`, `SUB`, `swap`, `SOURCE_LOCATION`, `SCREEN_SIZE`,
@@ -7972,13 +8041,14 @@ games. For a _handheld_ form factor there are a few options.
 We've tested on the GPD Win 2, GPD Win Max, and GPD Win 3. All run
 quadplay✜ well:
 
- - 1280x800 [GPD Win Max](http://gpd.hk/gpdwinmax), Windows and Linux = full-res quadplay✜ 3x scaling
- - 1280x720 [GPD Win 3](https://www.gpd.hk/gpdwin3) and [GPD Win 2](http://gpd.hk/gdpwin2), Windows and Linux = full-res quadplay✜ 3x scaling
+ - 1280x800 [GPD Win Max](http://gpd.hk/gpdwinmax), Windows and Linux = full-res quadplay✜ 3x integer or 3.33x scaling, 4x scaling of 320x180 quadplay✜
+ - 1280x720 [GPD Win 3](https://www.gpd.hk/gpdwin3) and [GPD Win 2](http://gpd.hk/gdpwin2), Windows and Linux = full-res quadplay✜ 3x/3.33x scaling, 4x scaling of 320x180 quadplay✜
 
 Some other physical handhelds that may be capable of running quadplay✜
-games when/if released include:
+games when (or if) released include:
 
- - 1280x720 [DragonBox Pyra](https://pyra-handheld.com/boards/pages/pyra/), Linux = full-res quadplay✜ 3x scaling
+ - 1280x800 [SteamDeck](https://www.steamdeck.com/), SteamOS/Linux = full-res quadplay✜ 3x/3.33x scaling, 4x scaling of 320x180 quadplay✜
+ - 1280x720 [DragonBox Pyra](https://pyra-handheld.com/boards/pages/pyra/), Linux = full-res quadplay✜ 3x/3.33x scaling
  - 480x320 [Odroid-Go Advance Black](https://liliputing.com/2020/05/the-new-odroid-go-advance-adds-wifi-and-more-buttons-linux-handheld-game-console.html), Linux = full-res quadplay✜ 1x scaling; poor fit
  - 1280x800 Aya Neo
  - 1920x1080 Smach Z

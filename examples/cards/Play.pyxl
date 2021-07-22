@@ -1,0 +1,30 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+let deck = make_deck(½ SCREEN_SIZE, true, true)
+
+shuffle(deck)
+
+for z, front, sprite, pos, front_sprite, back_sprite in card at i in deck:
+    front = ξ < 80%
+    z = i
+    sprite = if front then front_sprite else back_sprite
+    pos = random_within_square() * 30% SCREEN_SIZE + ½ SCREEN_SIZE
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_background(#2C6)
+
+for card at i in deck:
+    if ξ < 0.15% and not card.frame_hook: animate_flip_card(card)
+    
+    card.pos += xy(noise(1, 0.1 xy(card.pos.y, now() + 10i)), 
+                   noise(1, 0.1 xy(card.pos.x, 10 + now() + 20i)))
+
+    card.pos.x = loop(card.pos.x, -16, SCREEN_SIZE.x + 32)
+    card.pos.y = loop(card.pos.y, -16, SCREEN_SIZE.y + 32)
+    
+    // Shadow
+    draw_rect(⌊card.pos⌋ + xy(1, 2), card.size * card.scale, #0A4, ∅, ∅, -1)
+
+iterate(deck, draw_entity)

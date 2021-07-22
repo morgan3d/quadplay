@@ -1,0 +1,54 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+const resolution_array = [
+    xy(384, 224),
+    xy(320, 180),
+    xy(192, 112),
+    xy(128, 128),
+    xy(64, 64)
+]
+
+let index = 0
+
+def set_index(i):
+    play_sound(blip_sound)
+    index = i
+    set_screen_size(resolution_array[i])
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+set_background(BACKGROUND_COLOR)
+
+draw_map({map: background_map, pos: ½ (SCREEN_SIZE - background_map.size_pixels), z: -2})
+
+const spacing = ⌊160% font.line_height⌋
+let pos = xy(½ SCREEN_SIZE.x, ½ (SCREEN_SIZE.y - spacing * (size(resolution_array) - 1)))
+
+// Shadow behind UI
+draw_rect(½ SCREEN_SIZE, xy(60, 80), #0008)
+
+for size at i in resolution_array:
+    const color = if (index == i) then ACTIVE_TEXT_COLOR else TEXT_COLOR
+    
+    const rect = {pos: pos, size: xy(50, font.line_height + 1)}
+    
+    // Touch UI
+    if overlaps(touch, rect): set_index(i)
+        
+    draw_rect(rect.pos, rect.size, if (index == i) then #ff0 else #660, color)
+    draw_text({
+        font: font,
+        text: size.x + " × " + size.y,
+        pos: pos + xy(0, 1),
+        color: color,
+        x_align: "center",
+        y_align: "center"})
+        
+    pos.y += spacing
+
+// Gamepad UI    
+if gamepad_array[0].yy:
+    set_index(clamp(index + gamepad_array[0].yy, 0, size(resolution_array) - 1))

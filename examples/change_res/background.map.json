@@ -1,0 +1,17 @@
+{
+    "url": "background.tmx",
+    "offset": {
+        "x": 0,
+        "y": 0
+    },
+    "z_offset": 0,
+    "y_up": false,
+    "loop_x": false,
+    "loop_y": false,
+    "z_scale": 1,
+    "license": "By @CasualEffects 2021. In the Public Domain/Licensed as CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/",
+    "sprite_url": "quad://sprites/beast-soldier-32x32.sprite.json",
+    "sprite_url_table": {
+        "<default>": "quad://sprites/beast-soldier-32x32.sprite.json"
+    }
+}

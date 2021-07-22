@@ -113,14 +113,19 @@ def loads(text, cls=None, object_hook=None, parse_float=None, parse_int=None,
    # Convert to strict Unix newlines
    text = text.replace('\r\n', '\n').replace('\r', '\n')
 
-   # Non-escaped empty backquote strings
-   text = re.sub(r'(^|[^\\])``', '', text)
+   # Non-escaped empty backquote or single-quote strings
+   text = re.sub(r"(^|[^\\])(``|'')", '""', text)
 
    # Convert multiline backquote strings to singleline
-   def quote_replace(match):
-      return '"' + match[0].replace('\n', r'\n').replace(r'\`', '`').replace('"', r'\"') + '"'
-         
-   text = re.sub(r'`((?:\s|\S)*?[^\\])`', quote_replace, text)
+   def backquote_replace(match):
+       return '"' + match[1].replace('\n', r'\n').replace(r'\`', '`').replace('"', r'\"') + '"'         
+   text = re.sub(r'`((?:\s|\S)*?[^\\])`', backquote_replace, text)
+
+   # Convert single-quoted strings to double quoted
+   def singlequote_replace(match):
+       print(match[1])
+       return '"' + match[1].replace('"', r'\"') + '"'
+   text = re.sub(r"'(.*?[^\\])'", singlequote_replace, text)
 
    # Re-protect, hiding the newly converted strings
    text, map = _protect_quoted_strings(_unprotect_quoted_strings(text, map))
@@ -171,6 +176,7 @@ def _test():
    assert t1 == _unprotect_quoted_strings(t, m)
 
    print(loads('{foo:"bar"}'))
+   print(loads("{fob:'baz'}"))
 
 
 if __name__== '__main__':

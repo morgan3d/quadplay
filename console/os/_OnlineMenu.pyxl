@@ -3,7 +3,7 @@ $OnlineMenu
 // For animation timing
 const open_frames             = 15
 
-let online_choice_index = nil
+let online_choice_index       = nil
 
 let old_transform
 let old_clip
@@ -13,9 +13,9 @@ let old_background
 // Callback function when used by the system menu
 let manage_tabs
 
-const largeFont  = $font15
-const mediumFont = $font9
-const smallFont  = $font6
+const large_font  = if SCREEN_SIZE.y <= 180 then $font9 else $font15
+const medium_font = if SCREEN_SIZE.y <= 180 then $font8 else $font9
+const small_font = if SCREEN_SIZE.y <= 180 then $font6 else $font8
 
 def manage_online_tab():
     if $getIsOffline():
@@ -23,30 +23,32 @@ def manage_online_tab():
             // Message for use in intermediate releases:
             //text: "This release does not support online multiplayer. Coming soon...",
             text: "quadplay✜ is running in offline mode\n\nRelaunch without the --offline argument\nto enable online multiplayer play.",
-            font: mediumFont,
+            font: medium_font,
             pos: xy(SCREEN_SIZE.x / 2, 80),
             color: #f,
             shadow: $system_prompt_shadow,
             x_align: "center"
         })
         return
-    else if SCREEN_SIZE.x != 384 or SCREEN_SIZE.y != 224: // TODO: Online
+    else if SCREEN_SIZE.x != 384 and SCREEN_SIZE.x != 192:
         draw_text({
             // Message for use in intermediate releases:
-            //text: "This release does not support online multiplayer. Coming soon...",
-            text: "Only 384x224 resolution games support\nonline play in this release.",
-            font: mediumFont,
-            pos: xy(SCREEN_SIZE.x / 2, 80),
+            text: "Only 384x224 and 192x112 resolution games support online play.",
+            font: if SCREEN_SIZE.y <= 180 then $font5 else $font6,
+            pos: xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 2),
             color: #f,
             shadow: $system_prompt_shadow,
-            x_align: "center"
+            x_align: "center",
+            y_align: "center",
+            wrap_width: SCREEN_SIZE.x - 10
         })
+        if any_button_press() and mode_frames > 10: pop_mode()
         return
     
     // Blinking active choice
     const bright             = (1 + cos(mode_frames / 9)) / 2
     const active_color       = lerp($system_prompt_color, #fff, 50% bright)
-    const active_outline     = rgba(1,1,1, 25% bright)
+    const active_outline     = rgba(1, 1, 1, 25% bright)
     const active_shadow      = 50% $system_prompt_shadow
 
     let choice_array;
@@ -55,8 +57,8 @@ def manage_online_tab():
         choice_array = ["Copy Host Code", "Change Host Code", "Stop Hosting"]
         draw_text({
             text: "You are currently hosting at:",
-            font: mediumFont,
-            pos: xy(SCREEN_SIZE.x / 2, 40),
+            font: small_font,
+            pos: xy(SCREEN_SIZE.x / 2, 16% SCREEN_SIZE.y),
             color: #f,
             shadow: $system_prompt_shadow,
             markup: true,
@@ -64,8 +66,8 @@ def manage_online_tab():
         })
         draw_text({
             text: "\"" + $netIDToSentence($getMyHostNetID()) + "\"",
-            font: largeFont,
-            pos: xy(SCREEN_SIZE.x / 2, 70),
+            font: large_font,
+            pos: xy(SCREEN_SIZE.x / 2, 30% SCREEN_SIZE.y),
             color: #f,
             shadow: $system_prompt_shadow,
             markup: true,
@@ -101,10 +103,22 @@ def manage_online_tab():
         else:
             online_choice_index = 0
 
+    // Match _SystemMenu.pyxl
+    let line_height = round(110% medium_font.line_height)
+    if SCREEN_SIZE.y <= 64: ++line_height
+    
     let touch_current_choice = false
-    let pos = xy(70, SCREEN_SIZE.y - 50 - size(choice_array) * 18) + (if $getIsHosting() then xy(70, 0) else xy(0, 0))
+    let pos = xy(SCREEN_SIZE.x / 5, min(48% SCREEN_SIZE.y, 90% SCREEN_SIZE.y - size(choice_array) * line_height))
+    if $getIsHosting():
+        pos.x += 20% SCREEN_SIZE.x
+    else if SCREEN_SIZE.y <= 180:
+        pos.x -= 10% SCREEN_SIZE.x
+               
     for choice at i in choice_array:
-        // Don't show lines if working off the pause menu or hosting
+
+        // Don't show lines if working off the pause menu or hosting. Note that this only
+        // runs at full screen size
+        
         if i >= size(choice_array) - 2 and not $getIsHosting() and manage_tabs:
             // Divider line
             pos.y += 6
@@ -122,7 +136,7 @@ def manage_online_tab():
         if touch.aa and overlaps(touch, bounds):
             touch_current_choice = true
             
-        pos.y += 18
+        pos.y += line_height
 
             
     for gamepad in gamepad_array:
@@ -219,15 +233,12 @@ else:
     draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(14%, 14%, 14%, 80%))
 
     const windowSize = (SCREEN_SIZE + 2) * (if manage_tabs then 1 else clamp((mode_frames + 1) / open_frames, 0%, 100%))
-    //round(xy(6 font.line_height, 2 + (2 + size(choiceArray)) * font.line_height) * clamp((mode_frames + 1) / open_frames, 0%, 100%))
     draw_rect(½ SCREEN_SIZE, windowSize, $system_window_background, $system_window_border)
     
 
 if manage_tabs or mode_frames > open_frames:
-   // Process input. Let any controller
-   // manipulate the result, since we might
-   // have gotten to this screen using a different
-   // controller than the active one.
-
-    
- manage_online_tab()
+    // Process input. Let any controller
+    // manipulate the result, since we might
+    // have gotten to this screen using a different
+    // controller than the active one.
+    manage_online_tab()

@@ -94,8 +94,89 @@ maybe_print = ignore
 # Ensure that slashes and case are consistent when on Windows, and make absolute
 def canonicalize_filepath(path): return os.path.normcase(os.path.abspath(path)).replace('\\', '/')
 
+def parse_args():
+    """ parse arguments out of sys.argv """
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    
+    parser.add_argument(
+        '--serve',
+        action='store_true',
+        default=False,
+        help='serving mode - allow other machines to connect to this one to develop on mobile devices'
+    )
+
+    parser.add_argument(
+        '--nativeapp',
+        action='store_true',
+        default=False,
+        help='Attempt to open quadplay as a native app window on platforms with Chrome or Edge. Defaults to True for the quadplay script and False for the quadplay-server script.'
+    )
+
+    parser.add_argument(
+        '--quiet',
+        action='store_true',
+        default=False,
+        help='Minimize console output, eliminating the console window itself if possible.'
+    )
+
+    parser.add_argument(
+        '--my_quadplay',
+        default='~/my_quadplay',
+        help="Set the path to local games, which defaults to my_quadplay in the current user's home directory."
+    )
+
+    parser.add_argument(
+        'gamepath',
+        type=str,
+        default='',
+        nargs='?',
+        help=(
+            'Game to load.  If not specified, loads default loader scene.'
+            ' Example: examples/accel_demo'
+        )
+    )
+    
+    parser.add_argument(
+        '--kiosk',
+        action='store_true',
+        default=False,
+        help='kiosk mode - launch full screen, without the IDE or other controls'
+    )
+
+    parser.add_argument(
+        '--play',
+        action='store_true',
+        default=False,
+        help='play mode - launch without the IDE'
+    )
+
+    parser.add_argument(
+        '--offline',
+        action='store_true',
+        default=False,
+        help='Prevent online multiplayer as both host and guest'
+    )
+
+    parser.add_argument(
+        "-p",
+        "--port",
+        type=int,
+        default=8000,
+        help="Port to run the server on."
+    )
+
+    return parser.parse_args()
+
+
+# Args must be initialized to a constant before launchServer is defined
+# because of the way that multiprocess serialization works on ThreadingHTTPServer
+args = parse_args()
+
 # Where the user's games are stored. Will be made relative to the CWD later
-my_games_filepath = canonicalize_filepath(os.path.join(os.path.expanduser('~'), 'my_quadplay'))
+my_games_filepath = canonicalize_filepath(os.path.expanduser(args.my_quadplay))
 
 if not os.path.exists(my_games_filepath):
     # Create the games path and put a .gitignore in it if there isn't
@@ -432,12 +513,12 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                     for file in response_obj[t]:
                         try:
                             tmp = load_json(file)
-                            if 'url' in tmp: exclude_table[remove_leading_slash(aux_webpath) + tmp['url']] = True
+                            if 'url' in tmp:
+                                exclude_table[remove_leading_slash(aux_webpath) + tmp['url']] = True
                         except:
                             maybe_print('Warning: Could not parse ' + file)
 
                 raw_extension = {'sprite': 'png', 'font': 'png', 'sound': 'mp3', 'map': 'tmx'}
-
                 for t in asset_type_array:
                     # Get raw files
                     if t != 'data':
@@ -549,81 +630,6 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             result = SimpleHTTPRequestHandler.translate_path(self, path)
             return result
      
-
-def parse_args():
-    """ parse arguments out of sys.argv """
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
-    
-    parser.add_argument(
-        '--serve',
-        action='store_true',
-        default=False,
-        help='serving mode - allow other machines to connect to this one to develop on mobile devices'
-    )
-
-    parser.add_argument(
-        '--nativeapp',
-        action='store_true',
-        default=False,
-        help='Attempt to open quadplay as a native app window on platforms with Chrome or Edge. Defaults to True for the quadplay script and False for the quadplay-server script.'
-    )
-
-    parser.add_argument(
-        '--quiet',
-        action='store_true',
-        default=False,
-        help='Minimize console output, eliminating the console window itself if possible.'
-    )
-
-    parser.add_argument(
-        'gamepath',
-        type=str,
-        default='',
-        nargs='?',
-        help=(
-            'Game to load.  If not specified, loads default loader scene.'
-            ' Example: examples/accel_demo'
-        )
-    )
-    
-    parser.add_argument(
-        '--kiosk',
-        action='store_true',
-        default=False,
-        help='kiosk mode - launch full screen, without the IDE or other controls'
-    )
-
-    parser.add_argument(
-        '--play',
-        action='store_true',
-        default=False,
-        help='play mode - launch without the IDE'
-    )
-
-    parser.add_argument(
-        '--offline',
-        action='store_true',
-        default=False,
-        help='Prevent online multiplayer as both host and guest'
-    )
-
-    parser.add_argument(
-        "-p",
-        "--port",
-        type=int,
-        default=8000,
-        help="Port to run the server on."
-    )
-
-    return parser.parse_args()
-
-
-# Args must be initialized to a constant before launchServer is defined
-# because of the way that multiprocess serialization works on ThreadingHTTPServer
-args = parse_args()
 
 if isWindows and args.gamepath:
     # Make drive letters canonical

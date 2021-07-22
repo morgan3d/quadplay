@@ -1,0 +1,7 @@
+{
+    "url":          "cards-poker-24x36.png",
+    "sprite_size":   {"x": 24, "y": 36},
+    "gutter":       0,
+    "transpose":    false,
+    "license" :     "Copyright 2021 Morgan McGuire. Used under the CC-BY 4.0 license"
+}

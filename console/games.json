@@ -17,6 +17,16 @@
             "description": "Example of tunable full-screen camera shake"
         },
         {
+            "url": "quad://examples/cards/",
+            "title": "Cards",
+            "description": "Example of using a standard playing card deck"
+        },
+        {
+            "url": "quad://examples/change_res/",
+            "title": "Change Resolution",
+            "description": "Changing screen resolution at runtime"
+        },
+        {
             "url": "quad://examples/clouds/",
             "title": "Clouds",
             "description": "Example of noise functions and draw_point"

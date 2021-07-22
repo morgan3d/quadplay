@@ -1,0 +1,80 @@
+{
+    "title": "Change Resolution",
+    "developer": "@CasualEffects",
+    "copyright": "©2021 Morgan McGuire",
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "font": "quad://fonts/deja-5.font.json",
+        "blip_sound": "quad://sounds/blip-04.sound.json",
+        "background_map": "background.map.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "Changing screen resolution at runtime",
+    "constants": {
+        "TEXT_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": 1
+                },
+                "g": {
+                    "type": "number",
+                    "value": 1
+                },
+                "b": {
+                    "type": "number",
+                    "value": 1
+                }
+            }
+        },
+        "BACKGROUND_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "0%"
+                }
+            }
+        },
+        "ACTIVE_TEXT_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "0%"
+                }
+            }
+        }
+    },
+    "screenshot_tag": "ChangeResolution"
+}

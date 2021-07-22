@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.06.06.22';
+const version  = '2021.07.22.07';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -111,8 +111,10 @@ const IDLE_PAUSE_TIME_MILLISECONDS = 1000 * 60 * 2;
 const SLEEP_POLL_INTERVAL_MILLISECONDS = 1000 / 20;
 function updateLastInteractionTime() { lastInteractionTime = Date.now(); }
 
+/* These can change due to launching different games, the in-game
+   set_screen_size() function, or temporarily due to streaming. */ 
+let SCREEN_WIDTH = 384, SCREEN_HEIGHT = 224, PRIVATE_SCREEN = false;
 
-let SCREEN_WIDTH = 384, SCREEN_HEIGHT = 224;
 let gameSource;
 
 // The image being written during preview recording
@@ -2894,9 +2896,14 @@ let updateImageData32;
 
 let error = document.getElementById('error');
 
-function setFramebufferSize(w, h) {
+function setFramebufferSize(w, h, privateScreen) {
+    if (privateScreen === undefined) {
+        privateScreen = PRIVATE_SCREEN;
+    }
+    
     SCREEN_WIDTH = w;
     SCREEN_HEIGHT = h;
+    PRIVATE_SCREEN = privateScreen;
     emulatorScreen.width = w;
     emulatorScreen.height = h;
     overlayScreen.width = w;
@@ -2913,6 +2920,17 @@ function setFramebufferSize(w, h) {
     setTimeout(onResize, 0);
     setTimeout(onResize, 250);
     setTimeout(onResize, 1250);
+
+    if (QRuntime && gameSource && gameSource.constants && (emulatorMode !== 'stop')) {
+        QRuntime.$screen = new Uint16Array(SCREEN_WIDTH * SCREEN_HEIGHT);
+        QRuntime.$screen32 = new Uint32Array(QRuntime.$screen.buffer);
+    
+        // Rebind the constants
+        redefineConstant(QRuntime, 'SCREEN_SIZE', {x:SCREEN_WIDTH, y:SCREEN_HEIGHT});
+        redefineConstant(QRuntime, 'PRIVATE_SCREEN', PRIVATE_SCREEN);
+        QRuntime.$SCREEN_WIDTH  = SCREEN_WIDTH;
+        QRuntime.$SCREEN_HEIGHT = SCREEN_HEIGHT;
+    }
 }
 
 
@@ -3000,7 +3018,7 @@ function showOpenGameDialog() {
     document.getElementById('openGameDialog').classList.remove('hidden');
     document.getElementById('openGameOpenButton').disabled = true;
 
-    const gameListURL = location.origin + getQuadPath() + 'console/games.json?';
+    const gameListURL = location.origin + getQuadPath() + 'console/games.json';
 
     // Fetch the asset list
     LoadManager.fetchOne({forceReload: true}, gameListURL, 'json', null, function (json) {
@@ -3651,6 +3669,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.$navigator          = navigator;
         QRuntime.$version            = version;
         QRuntime.$prompt             = prompt;
+        QRuntime.$setFramebufferSize = setFramebufferSize;
         QRuntime.$sleep              = useIDE ? null : sleep;
         QRuntime.$Object.prototype.toString = function () {
             return (this && this.$name) || QRuntime.unparse(this);
@@ -4015,6 +4034,7 @@ function makeConstants(environment, constants, CREDITS) {
 
     // Now redefine all constants appropriately
     redefineConstant(environment, 'SCREEN_SIZE', {x:SCREEN_WIDTH, y:SCREEN_HEIGHT}, alreadySeen);
+    redefineConstant(environment, 'PRIVATE_SCREEN', false, alreadySeen);
     redefineConstant(environment, 'CREDITS', CREDITS, alreadySeen);
 
     const IDE_USER = (isQuadserver && useIDE && serverConfig && serverConfig.IDE_USER) || 'anonymous';

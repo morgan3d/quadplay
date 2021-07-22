@@ -1562,7 +1562,7 @@ var $screen;
 /** List of graphics commands to be sorted and then executed by $submitFrame(). */
 var $previousGraphicsCommandList = [];
 var $graphicsCommandList = [];
-var $background = Object.seal({r:0,g:0,b:0,a:1});
+var $background = Object.seal({r:0, g:0, b:0, a:1});
 
 var joy = null; // initialized by reloadRuntime()
 var gamepad_array = null; // initialized by reloadRuntime()
@@ -2197,7 +2197,7 @@ function make_entity(e, childTable) {
             if (r.shape === 'rect') {
                 r.size = {x: r.sprite.size.x * r.scale.x, y: r.sprite.size.y * r.scale.y};
             } else if (r.shape === 'disk') {
-                const x = min_component(r.sprite.size) * r.scale.x;
+                const x = min_value(r.sprite.size) * r.scale.x;
                 r.size = xy(x, x);
                 if (r.scale.x !== r.scale.y) {
                     $error('Cannot have different scale factors for x and y on a "disk" shaped entity.');
@@ -6395,6 +6395,8 @@ function $maybeApplyPivot(pos, pivot, angle, scale) {
 function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, override_blend, pivot) {
     if ($skipGraphics) { return; }
 
+    if (spr && spr.pos && ! spr.sprite) { $error('sprite must not be nil for draw_sprite()'); }
+    
     if (spr && spr.sprite) {
         // This is the "keyword" version of the function
         z = spr.z;
@@ -8634,19 +8636,72 @@ function mid(a, b, c) {
     return $minOrMax.apply($Math.mid, arguments);
 }
 
-function max_component(a) {
+function find_max_value(a) {
+    if (Array.isArray) {
+        if (a.length === 0) { return undefined; }
+        let m = a[0], j = 0;
+        for (let i = 1; i < a.length; ++i) {
+            const v = a[i];
+            if (v > m) {
+                m = v;
+                j = i;
+            }
+        }
+        return j;
+    } else {
+        let m = -Infinity, j = undefined;
+        for (const i in a) {
+            const v = a[i];
+            if (v > m) {
+                m = v;
+                j = i;
+            }
+        }        
+        return j;
+    }
+}
+
+function find_min_value(a) {
+    if (Array.isArray) {
+        if (a.length === 0) { return undefined; }
+        let m = a[0], j = 0;
+        for (let i = 1; i < a.length; ++i) {
+            const v = a[i];
+            if (v < m) {
+                m = v;
+                j = i;
+            }
+        }
+        return j;
+    } else {
+        let m = Infinity, j = undefined;
+        for (const i in a) {
+            const v = a[i];
+            if (v < m) {
+                m = v;
+                j = i;
+            }
+        }        
+        return j;
+    }
+}
+
+function max_value(a) {
     if (typeof a === 'number') { return a; }
     let s = -Infinity;
     for (let key in a) s = $Math.max(s, a[key]);
     return s;
 }
 
-function min_component(a) {
+function min_value(a) {
     if (typeof a === 'number') { return a; }
     let s = Infinity;
     for (let key in a) s = $Math.min(s, a[key]);
     return s;
 }
+
+// Backwards compatibility
+var max_component = max_value, min_component = min_value;
 
 function MAX(a, b) {
     return (a > b) ? a : b;
@@ -9643,6 +9698,46 @@ function $makeCoroutine(code) {
 ////////////////////////////////////////////////////////////////////////////////////////
 //                 Software rendering implementation of the Host API                  //
 ////////////////////////////////////////////////////////////////////////////////////////
+
+function set_screen_size(size, private_screens) {
+    if (private_screens) { $error('Private screens are not supported in this beta release') }
+    
+    if (private_screens === undefined) {
+        private_screens = false;
+    }
+
+    let w = $Math.round(size.x) | 0;
+    let h = $Math.round(size.y) | 0;
+
+    // Check for legal resolutions
+    if (private_screens) {
+        if (w !== 384 || h !== 224) {
+            $error('set_screen_size() with private screens must be at 384x224 resolution');
+        }
+    } else if (! ((w === 384 && h === 224) ||
+                  (w === 320 && h === 180) ||
+                  (w === 192 && h === 112) ||
+                  (w === 128 && h === 128) ||
+                  (w ===  64 && h ===  64))) {
+        $error('Illegal resolution for set_screen_size(): xy(' + w + ', ' + h + ')');
+    }
+
+    // Clear the current and previous draw call stack, which
+    // may not be clipped properly to the screen
+    $previousGraphicsCommandList.length = 0;
+    $graphicsCommandList.length = 0;
+
+
+    // Change the frame buffer size and rebind the
+    // SCREEN_SIZE and PRIVATE_SCREEN constants
+    $setFramebufferSize(w, h, private_screens);
+
+    // Reset the transformations
+    reset_camera();
+    reset_transform();
+    reset_clip();
+}
+
 
 function get_mode() {
     return $gameMode;

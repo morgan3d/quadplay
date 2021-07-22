@@ -375,8 +375,8 @@ def manage_games_tab():
     for pad in gamepad_array:
         if pad.aa or pad.qq:
             const game = gameArray[gameIndex]
-            if (game.title == "Ice Time") and $getIsHosting():
-                // TODO: Online. Remove when resolution restrictions are lifted
+            if (game.title == "") and $getIsHosting():
+                // Resolution restriction for games that are not full or half resolution
                 $showPopupMessage(game.title + " cannot run while hosting in this release")
             else:
                 def callback():

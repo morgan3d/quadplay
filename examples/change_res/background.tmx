@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.4" tiledversion="1.4.3" orientation="orthogonal" renderorder="left-down" width="12" height="7" tilewidth="32" tileheight="32" infinite="0" nextlayerid="3" nextobjectid="1">
+ <tileset firstgid="1" name="beast-soldier-32x32" tilewidth="32" tileheight="32" tilecount="1024" columns="32">
+  <image source="../../Projects/quadplay-dev/sprites/beast-soldier-32x32.png" width="1024" height="1024"/>
+ </tileset>
+ <layer id="1" name="Tile Layer 1" width="12" height="7">
+  <data encoding="csv">
+531,404,467,531,461,462,462,531,531,227,172,173,
+499,370,595,595,493,494,494,373,595,268,264,258,
+595,878,882,883,0,789,370,373,0,195,200,201,
+727,728,729,913,820,821,822,0,714,227,232,233,
+759,760,761,723,852,853,758,2147484370,846,851,818,813,
+847,721,846,849,819,720,721,783,812,818,784,843,
+972,814,842,810,747,752,786,747,782,811,971,815
+</data>
+ </layer>
+ <layer id="2" name="Tile Layer 2" width="12" height="7">
+  <data encoding="csv">
+0,0,929,930,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,2147484610,2147484609,0,
+0,0,0,0,897,898,2147484610,2147484609,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+</map>

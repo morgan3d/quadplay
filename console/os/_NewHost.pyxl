@@ -3,9 +3,14 @@ $NewHost
 let selected_column_index = 0
 let word_array
 
-
 const REPEAT_DELAY = 35
 const REPEAT_FREQUENCY = 6
+
+const font       = if SCREEN_SIZE.y <= 180 then $font8 else $font9
+const code_font  = if SCREEN_SIZE.y <= 180 then $font6 else $font9
+const small_font = if SCREEN_SIZE.y <= 180 then $font5 else $font6
+
+const window_scale = if SCREEN_SIZE.y <= 180 then 90% else 70%
 
 // mode_frames time at which the Y axis last changed
 let last_y_change = 0
@@ -15,25 +20,29 @@ def draw_window(tau):
     draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(0, 0, 0, 40% tau))
 
     // Drop shadow
-    draw_rect(SCREEN_SIZE / 2 + xy(0, 35% SCREEN_SIZE.y * tau + 1), xy(69% SCREEN_SIZE.x * tau, 2), #012)
+    draw_rect(SCREEN_SIZE / 2 + xy(0, window_scale * 0.5 * SCREEN_SIZE.y * tau + 1), xy((window_scale - 1%) SCREEN_SIZE.x * tau, 2), #012)
     
     // Window
-    draw_rect(SCREEN_SIZE / 2, 70% SCREEN_SIZE * tau, $system_window_background, #fff)
+    draw_rect(SCREEN_SIZE / 2, window_scale * SCREEN_SIZE * tau, $system_window_background, #fff)
 
 
     
 def draw_controls():
-    draw_text({text: "Enter Host Code", pos: xy(SCREEN_SIZE.x/2, 50), font: $font9, color: #fff, x_align: "center"})
-    draw_text({text: "(The host must share this with you)", pos: xy(SCREEN_SIZE.x/2, 60), font: $font6, color: #b, x_align: "center"})
+    let y = (50% - window_scale / 2) * SCREEN_SIZE.y + 4
+    y += draw_text({text: "Enter Host Code", pos: xy(SCREEN_SIZE.x / 2, y), font: font, color: #fff, x_align: "center", y_align: "top"}).size.y + 1
+    y += draw_text({text: "(The host must share this with you)", pos: xy(SCREEN_SIZE.x / 2, y), font: small_font, color: #b, x_align: "center", y_align: "top"}).size.y
 
-    const COLUMN_SPACING = 40
+    const COLUMN_SPACING = if SCREEN_SIZE.y <= 180 then 28 else 40
+    const BOX_HEIGHT = if SCREEN_SIZE.y <= 180 then 13 else 18
+    y = floor(y + 20% SCREEN_SIZE.y)
+    
     for column < 6:
         const x = SCREEN_SIZE.x / 2 + (column - 2.5) * COLUMN_SPACING
-        const y = 105
         const selected = (column == selected_column_index)
         const word_index = word_array[column]
         
         const width = $draw_system_menu_text({
+            font: code_font,
             text: capitalize($NET_ID_WORD_TABLE[column][word_index]),
             pos: xy(x, y),
             x_align: "center",
@@ -41,42 +50,48 @@ def draw_controls():
         }, selected).size.x
 
         if selected:
-            draw_rect(xy(x, y), xy(COLUMN_SPACING, 18), nil, #fff)
+            draw_rect(xy(x, y), xy(COLUMN_SPACING, BOX_HEIGHT), nil, #fff)
 
             if word_index > 0:
-                $draw_system_menu_text({text: "▲", pos: xy(x, y - 16), x_align: "center", y_align: "center"}, true)
+                $draw_system_menu_text({font: code_font, text: "▲", pos: xy(x, y - (BOX_HEIGHT - 2)), x_align: "center", y_align: "center"}, true)
             if word_index < size($NET_ID_WORD_TABLE[0]) - 1:
-                $draw_system_menu_text({text: "▼", pos: xy(x, y + 16), x_align: "center", y_align: "center"}, true)
+                $draw_system_menu_text({font: code_font, text: "▼", pos: xy(x, y + (BOX_HEIGHT)), x_align: "center", y_align: "center"}, true)
             
         else if (column bitand 1) and (column != 5):
             $draw_system_menu_text({
+                font: code_font,
                 text: ",",
                 pos: xy(x + width / 2 + 1, y),
                 x_align: "left",
                 y_align: "center"
             })
 
+    y = floor(70% SCREEN_SIZE.y)
+    
     draw_text({
-        font: $font9,
+        font: font,
         text: replace("(q) Cancel", joy.prompt),
-        pos: xy(100, 155),
+        pos: xy((50% - 40% window_scale) * SCREEN_SIZE.x, y),
+        x_align: "left",
         color: $system_prompt_color,
         shadow: $system_prompt_shadow
     })
 
     draw_text({
-        font: $font9,
+        font: font,
         text: replace("(p) Visit Host", joy.prompt),
-        pos: xy(210, 155),
+        pos: xy((50% + 40% window_scale) * SCREEN_SIZE.x, y),
+        x_align: "right",
         color: $system_prompt_color,
         shadow: $system_prompt_shadow
     })
 
     draw_text({
-        font: $font9,
+        font: font,
         text: replace("(d) Paste From Clipboard", joy.prompt),
-        pos: xy(SCREEN_SIZE.x / 2, 180),
+        pos: xy(SCREEN_SIZE.x / 2, (50% + window_scale / 2) * SCREEN_SIZE.y - 7),
         x_align: "center",
+        y_align: "bottom",
         color: $system_prompt_color,
         shadow: $system_prompt_shadow
     })
