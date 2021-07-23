@@ -9,6 +9,7 @@ let old_transform
 let old_clip
 let old_post_effects
 let old_background
+let old_mouse
 
 // Callback function when used by the system menu
 let manage_tabs
@@ -189,13 +190,22 @@ def manage_online_tab():
 // from the launcher instead of the pause menu
 enter(manage_tabs_callback)
 ────────────────────────────────────────────────────────────────────────
+$pauseAllSounds()
 online_choice_index = nil
 old_background = get_background()
 old_transform = get_transform()
 old_clip = get_clip()
 old_post_effects = get_post_effects()
+old_mouse = device_control("get_mouse_state")
+device_control("set_mouse_lock", false)
+device_control("set_mouse_cursor", "default")
+
 reset_post_effects()
 manage_tabs = manage_tabs_callback
+
+set_clip(xy(0, 0), SCREEN_SIZE, -2047, 4096)
+// Force the clipping range beyond what the API normally allows
+$clipZ2 = 2049
 
 
 pop_mode(hostNetID) from $NewHost
@@ -211,6 +221,9 @@ set_transform(old_transform)
 set_clip(old_clip)
 set_post_effects(old_post_effects)
 set_background(old_background)
+device_control("set_mouse_lock", old_mouse.lock)
+device_control("set_mouse_cursor", old_mouse.cursor)
+$resumeAllSounds()
 
 
 

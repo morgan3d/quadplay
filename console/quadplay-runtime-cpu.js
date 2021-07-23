@@ -9700,10 +9700,12 @@ function $makeCoroutine(code) {
 ////////////////////////////////////////////////////////////////////////////////////////
 
 function set_screen_size(size, private_screens) {
-    if (private_screens) { $error('Private screens are not supported in this beta release') }
-    
     if (private_screens === undefined) {
         private_screens = false;
+    }
+
+    if (! size || size.x === undefined) {
+        $error('The first argument to set_screen_size() must be an xy()');
     }
 
     let w = $Math.round(size.x) | 0;

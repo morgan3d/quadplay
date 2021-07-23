@@ -1215,7 +1215,6 @@ function updateInput() {
             }
 
             pad.$id = latest.$id;
-            pad.prompt = latest.prompt;
             if (latest.type !== pad.type) {
                 pad.type = latest.type;
                 pad.prompt = Object.freeze(Object.assign({'##' : '' + (player + 1)}, controlSchemeTable[pad.type]));
@@ -1290,7 +1289,11 @@ function updateInput() {
 
             // Derivative
             pad['$d' + axis] = pad['$' + axis] - old;
-            anyInteraction = anyInteraction || (pad['$d' + axis] !== 0);
+            const axisChange = (pad['$d' + axis] !== 0);
+            anyInteraction = anyInteraction || axisChange;
+            if (axisChange && pad.$status === 'absent') {
+                pad.$status = 'present';
+            }
 
         } // axes
         
@@ -1324,7 +1327,11 @@ function updateInput() {
                 pad[prefix + 'released_' + button] = 1;
             }
 
-            anyInteraction = anyInteraction || (pad[prefix + button] !== 0);
+            const buttonChange = (pad[prefix + button] !== 0);
+            anyInteraction = anyInteraction || buttonChange;
+            if (buttonChange && pad.$status === 'absent') {
+                pad.$status = 'present';
+            }
         }
     }
 

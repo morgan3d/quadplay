@@ -254,8 +254,12 @@ function peerErrorHandler(err) {
 
 
 function startHosting() {
-    console.log('startHosting()');
-    localStorage.setItem("last_hosted", "true");
+    QRuntime.gamepad_array[0].$status = 'host';
+    for (let i = 1; i < 4; ++i) {
+        QRuntime.gamepad_array[0].$status = 'absent';
+    }
+    
+    localStorage.setItem('last_hosted', 'true');
     isHosting = true;
     
     // Create the video stream. Setting the frame rate here increases
@@ -346,22 +350,40 @@ function startHosting() {
             // Show a message here on the host
             showPopupMessage(dataConnection.metadata.name.toUpperCase() + ' joined as P' + (player_index + 1));
 
-            // Preven the local input from overriding remote input
+            // Prevent the local input from overriding remote input immediately
             QRuntime.gamepad_array[player_index].$is_guest = true;
 
             // Add to connected guest array
-            connectedGuestArray.push({player_index: player_index, dataConnection: dataConnection});
+            const guest = {
+                player_index: player_index,
+                dataConnection: dataConnection,
+                disconnectCallback: function () {
+                    const gamepad = QRuntime.gamepad_array[player_index];
+
+                    let controlBindings = JSON.parse(localStorage.getItem('pad0' + player_index) || 'null');
+                    if (! controlBindings) {
+                        controlBindings = {id: isMobile ? 'mobile' : '', type: defaultControlType(player_index)};
+                    }
+                    gamepad.$is_guest = false;
+                    gamepad.$status = 'absent';
+                    gamepad.type = controlBindings.type;
+                    gamepad.prompt = Object.freeze(Object.assign({'##': '' + (player_index + 1)}, controlSchemeTable[controlBindings.type]));
+
+                    // Remove from the guest array on disconnect
+                    for (let i = 0; i < connectedGuestArray.length; ++i) {
+                        if (connectedGuestArray[i].dataConnection === dataConnection) {
+                            // This was the guest
+                            connectedGuestArray.splice(i, 1);
+                            break;
+                        }
+                    }
+                }
+            };
+            connectedGuestArray.push(guest);
             
             // Register keepAlive
             keepAlive(dataConnection, undefined, function (dataConnection) {
-                // Remove from the guest array
-                for (let i = 0; i < connectedGuestArray.length; ++i) {
-                    window.QRuntime.gamepad_array[player_index].$is_guest = false;
-                    if (connectedGuestArray.dataConnection === dataConnection) {
-                        connectedGuestArray.splice(i, 1);
-                        break;
-                    }
-                }
+                guest.disconnectCallback();
                 showPopupMessage(dataConnection.metadata.name.toUpperCase() + ' left');
             });
 
@@ -372,15 +394,13 @@ function startHosting() {
                 // (ignore if the game is still loading, so there is
                 // no gamepad_array)
                 
-                // The runtime can be reloaded when a game launches,
-                // so grab the current runtime, not the one captured
-                // by this closure.
-                const array = window.QRuntime.gamepad_array;
+                const array = QRuntime.gamepad_array;
                 if (array) {
                     // updateInput() will update properties from this absolute state
                     // once per frame
                     array[player_index].$guest_latest_state = message.gamepad_array[0];
                     array[player_index].$is_guest = true;
+                    array[player_index].$status = 'guest';
                 } else {
                     console.log('ignored INPUT network message because runtime is reloading');
                 }
@@ -407,6 +427,8 @@ function startHosting() {
 
     
 function stopHosting() {
+    QRuntime.gamepad_array[0].$status = 'absent';
+    
     if (hostVideoStream) {
         hostVideoStream.getVideoTracks()[0].stop();
         hostVideoStream = null;
@@ -419,6 +441,9 @@ function stopHosting() {
     }
 
     if (myPeer && isHosting) {
+        for (let i = 0; i < connectedGuestArray.length; ++i) {
+            connectedGuestArray[i].disconnectCallback();
+        }
         connectedGuestArray.length = 0;
         console.log('stopHosting()');
         myPeer.destroy();

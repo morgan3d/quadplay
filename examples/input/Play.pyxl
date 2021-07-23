@@ -15,6 +15,7 @@ const PRESSED_COLOR = #FFF
 let last_touch_pos
 let last_touch_frame
 
+
 def draw_button(i, gamepad, jp, b, pos):
     const pressed = gamepad[b]
     const outlineColor = if jp[b + b] > mode_frames - 10 then #0 else ∅
@@ -84,6 +85,8 @@ for i < 4:
         draw_corner_rect(xy(45, 29), xy(31, 52), CONTROLLER_COLOR, ∅, -2)
         
         draw_text({text: "gamepad_array[" + i + "]", font: code_font, pos: xy(60, 14), color: #f})
+        draw_text({text: "status: " + gamepad.status, font: code_font, pos: xy(60, 100), color: #f})
+        draw_text({text: "type: " + gamepad.type, font: code_font, pos: xy(60, 110), color: #f})
         draw_text({text: "quadplay✜", font: font, pos: xy(95, 37), color: ACCENT_COLOR, x_align: "center"})
         
         draw_button(i, p, jp, "d", xy(152, 42))

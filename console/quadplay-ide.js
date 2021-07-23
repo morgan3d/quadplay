@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.07.22.07';
+const version  = '2021.07.23.13';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -1307,7 +1307,7 @@ const controlSchemeTable = {
     
 };
 
-// Create aliases
+// Create aliases and freeze all
 for (const name in controlSchemeTable) {
     const scheme = controlSchemeTable[name];
     scheme['ⓐ'] = scheme['(a)'];
@@ -3798,6 +3798,11 @@ function reloadRuntime(oncomplete) {
                 return a;
             }
         };
+
+        const statusGetter = {
+            enumerable: true,
+            get: function() { return this.$status; }
+        };
         
         QRuntime.touch = {
             screen_x: 0,
@@ -3870,6 +3875,8 @@ function reloadRuntime(oncomplete) {
                 // it is not updated from local controls
                 $is_guest: false,
 
+                $status: 'absent',
+
                 // Set from network updates
                 $guest_latest_state: null,
                 
@@ -3900,6 +3907,7 @@ function reloadRuntime(oncomplete) {
             Object.defineProperty(pad, 'dxy', dxyGetter);
             Object.defineProperty(pad, 'angle', angleGetter);
             Object.defineProperty(pad, 'dangle', dangleGetter);
+            Object.defineProperty(pad, 'status', statusGetter);
             QRuntime.gamepad_array[p] = Object.seal(pad);
         }
         QRuntime.joy = QRuntime.gamepad_array[0];

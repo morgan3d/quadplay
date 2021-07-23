@@ -1393,7 +1393,7 @@ the following properties:
 
 Property           | Values   | Meaning
 -------------------|----------|----------------------------------
-`index`            | 0,1,2,3  | Index of this gamepad in `pad` array
+`index`            | 0,1,2,3  | Index of this gamepad in `gamepad_array`. The player name is `"P" + (gamepad.index + 1)`
 `player_color`     | rgb      | Color identifying this player (not the color of the gamepad itself)
 `x`                | -1,0,+1  | D-pad value on the _x_-axis at the start of the current frame frame
 `xx`               | -1,0,+1  | If the D-pad moved from the center to a side on the _x_-axis at any time between the previous and current frame, this is the side that it moved to. When it hit both extremes, the last one is returned.
@@ -1427,6 +1427,8 @@ Property           | Values   | Meaning
 `qq` or `pressed_q`| 0 or 1   | 1 if the ⓠ button went from up to down at least once since the previous frame
 `released_q`       | 0 or 1   | 1 if the ⓠ button went from down to up at least once since the previous frame
 `prompt`           | `{...}`  | An object mapping button names to text prompts (see below)
+`status`           | string   | `"absent"` before any interaction this game on this gamepad. `"present"` if local interaction has occurred and not playing an online game. `"host"` if the host in an online game. `"guest"` if a guest in an online game. Starting or stopping online hosting/guesting resets to `"absent"`.
+`type`             | string   | The type of gamepad, as autodetected based on serial number or overriden by the player
 
 !!! 
     Use the single-letter gamepad properties (`x`, `a`) for
