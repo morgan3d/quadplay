@@ -44,7 +44,7 @@
 #
 # A "webpath" is a URL subpath, where '/' means the server root = filesystem root_path
 
-import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs, glob, shutil, re, base64, random, getpass, inspect, subprocess, workjson, signal, shlex
+import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs, glob, shutil, re, base64, random, getpass, inspect, subprocess, workjson, signal, shlex, tkinter, tkinter.messagebox
 
 #sys.path.append(os.path.join(os.path.dirname(__file__), '../console'))
 #import workjson
@@ -89,10 +89,22 @@ token = None
 
 def ignore(*args): pass
 
+# Assigned in main based on the --quiet flag
 maybe_print = ignore
 
 # Ensure that slashes and case are consistent when on Windows, and make absolute
 def canonicalize_filepath(path): return os.path.normcase(os.path.abspath(path)).replace('\\', '/')
+
+def fatal_error(message):
+    # Initialize the GUI
+    window_root = tkinter.Tk()
+    window_root.withdraw()
+
+    # Message Box
+    print("Quadplay Error: " + message)
+    tkinter.messagebox.showerror("Quadplay Error", message)
+    sys.exit(-1)
+
 
 def parse_args():
     """ parse arguments out of sys.argv """
@@ -177,6 +189,12 @@ args = parse_args()
 
 # Where the user's games are stored. Will be made relative to the CWD later
 my_games_filepath = canonicalize_filepath(os.path.expanduser(args.my_quadplay))
+
+if my_games_filepath.find(" ") != -1:
+    fatal_error("The my_quadplay directory (" + my_games_filepath + ") may not contain spaces in this release. Use the --my_quadplay command line argument to select a path without spaces in the name.")
+
+if len(my_games_filepath) == 0 or (isWindows and (len(my_games_filepath) < 3 or my_games_filepath[1:3] != ':/')) or (not isWindows and (len(my_games_filepath) < 2 or my_games_filepath[0] != '/')):
+    fatal_error("The my_quadplay directory (" + my_games_filepath + ") must be an absolute path.")
 
 if not os.path.exists(my_games_filepath):
     # Create the games path and put a .gitignore in it if there isn't
@@ -415,6 +433,10 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         path_parts = self.path.split('?')
         webpath = os.path.normpath(path_parts[0]).replace('\\', '/')
         query = path_parts[1] if len(path_parts) > 1 else ''
+
+        #print('-----------------------------')
+        #print('GET ' + path_parts[0])
+        #print(' webpath = ' + webpath)
 
         # Security: Check if path has a prefix in webpath_allowlist
         if webpath != '/favicon.ico' and not any([webpath.startswith(prefix) for prefix in webpath_allowlist]):
