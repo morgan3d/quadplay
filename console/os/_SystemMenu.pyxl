@@ -37,6 +37,7 @@ def choose():
     else:
         close(choice.callback)
 
+        
 def show_online_menu():
     push_mode($OnlineMenu)
 

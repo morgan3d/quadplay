@@ -1,0 +1,17 @@
+{
+    "url":          "kenney-alien-pink-16x32.png",
+    "sprite_size":   {"x": 16, "y": 32},
+    "gutter":       0,
+    "transpose":    true,
+    "names":        {
+        "idle":     {"start": {"x": 0, "y": 0}},
+        "use":      {"start": {"x": 0, "y": 1}, "end": {"x": 1, "y": 1}},
+        "crawl":    {"start": {"x": 0, "y": 2}, "end": {"x": 1, "y": 2}},
+        "climb":    {"start": {"x": 0, "y": 3}, "end": {"x": 1, "y": 3}},
+        "jump":     {"start": {"x": 0, "y": 4}},
+        "hurt":     {"start": {"x": 0, "y": 5}},
+        "run":      {"start": {"x": 0, "y": 6}, "end": {"x": 1, "y": 6}},
+        "attack":   {"start": {"x": 0, "y": 7}, "end": {"x": 1, "y": 7}, "extrapolate": "clamp"}
+    },
+    "license" :     "By Kenney.nl and surt 2013, and Morgan McGuire 2021 https://opengameart.org/content/kenney-16x16, in the Public Domain/CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/"
+}

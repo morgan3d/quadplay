@@ -11,10 +11,23 @@ of [quadplay✜](manual.md.html).
 
 - Added `gamepad.status` read-only property for detecting 
   inactive gamepads or connected online players
-- `quadplay.vbs` script on Windows now supports all `quadplay` command-line arguments
-- Fixed `gamepad.type` and `gamepad.prompt` not resetting after a guest disconnects
-- Fixed `gamepad.prompt` being `nil` for guest controllers after they connect
-- Fixed missing cursor and incorrect clipping region for system Online Menu in game
+- `quadplay.vbs` script on Windows now supports all `quadplay`
+  command-line arguments
+- New pink Kenney alien sprite
+- Added explicit popup error messages on missing, relative, or
+  space-containing `my_quadplay` directories
+- Added `disconnect_guest()` for graceful disconnection from within game code
+- Added `start_hosting()` and `HOST_ID` to initiate hosting directly from games (instead of the system menu)
+- Added `stop_hosting()`
+- Added args version of `draw_map_span()`
+- Fixed `gamepad.type` and `gamepad.prompt` not resetting after a
+  guest disconnects
+- Fixed `gamepad.prompt` being `nil` for guest controllers after they
+  connect
+- Fixed missing cursor and incorrect clipping region for system Online
+  Menu in game
+- Fixed back-to-back rectangle draw calls with different clipping regions
+  failing
 
 
 2021 July 22: Beta update 70

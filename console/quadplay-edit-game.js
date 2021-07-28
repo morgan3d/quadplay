@@ -206,7 +206,7 @@ function onNewGameClick() {
             
             function (resonse, code) {
                 // Failure. Warn the user why
-                alert(`Could not create the game "${gameName}" because a similar directory name "${gameDir}" already exists in you my_quadplay folder in your home folder.`);
+                alert(`Could not create the game "${gameName}" because a similar directory name "${gameDir}" already exists in your my_quadplay folder in your home folder.`);
             });
     }
 }

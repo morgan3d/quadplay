@@ -197,10 +197,14 @@ if len(my_games_filepath) == 0 or (isWindows and (len(my_games_filepath) < 3 or 
     fatal_error("The my_quadplay directory (" + my_games_filepath + ") must be an absolute path.")
 
 if not os.path.exists(my_games_filepath):
-    # Create the games path and put a .gitignore in it if there isn't
-    # one already
-    os.makedirs(my_games_filepath)
-    shutil.copyfile('.gitignore', os.path.join(my_games_filepath, '.gitignore'))
+    if my_games_filepath == canonicalize_filepath(os.path.expanduser('~/my_quadplay')):
+        # Create the games path and put a .gitignore in it if there isn't
+        # one already
+        os.makedirs(my_games_filepath)
+        shutil.copyfile('.gitignore', os.path.join(my_games_filepath, '.gitignore'))
+    else:
+        fatal_error("The specified my_quadplay directory (" + my_games_filepath + ") could not be found.")
+
 
 
 def remove_leading_slash(path): return path[1:] if len(path) > 0 and path[0] == '/' else path
@@ -916,6 +920,12 @@ def main():
     # Monitor the browser and close the server when it exits
     auto_close_server = False
 
+    # We must force a fake user data directory to prevent
+    # the chromium script from sharing an existing session, which would cause the
+    # call() below to not block: https://askubuntu.com/questions/35392/how-to-launch-a-new-instance-of-google-chrome-from-the-command-line
+    # This is also intended to keep processes clear of each other when running multiple instances of quadplay.
+    chromium_nativeapp_args = ' --user-data-dir="' + os.path.join(os.path.expanduser('~'), 'my_quadplay') + '" --no-user-gesture-required '
+
     if isWindows:
         if browser_filepath and args.nativeapp:
             # Use Chrome/Edge if available, in order to present more
@@ -929,22 +939,19 @@ def main():
             # subprocess.call():
             #
             # https://superuser.com/questions/238810/problem-with-quotes-around-file-names-in-windows-command-shell
-            browser_command = '"' + browser_filepath + '" -app="' + url + '" --no-user-gesture-required' + (' --start-fullscreen' if args.kiosk else '')
+            browser_command = '"' + browser_filepath + '" -app="' + url + '" ' + chromium_nativeapp_args + (' --start-fullscreen' if args.kiosk else '')
             auto_close_server = True
         else:
             browser_command = 'start "quadplay" "' + url + '"' + (' --start-fullscreen' if args.kiosk else '')
     elif isMacOS:
         if browser_filepath and args.nativeapp:
             auto_close_server = True
-            browser_command = '"' + browser_filepath + '" --no-user-gesture-required -app="' + url + '" ' + (' --start-fullscreen' if args.kiosk else '')
+            browser_command = '"' + browser_filepath + '" ' + chromium_nativeapp_args + ' -app="' + url + '" ' + (' --start-fullscreen' if args.kiosk else '')
         else:
             browser_command = 'open "' + url + '" ' + (' --args --start-fullscreen' if args.kiosk else '')
     else: # Linux
         if browser_filepath and args.nativeapp:
-            # Note that on linux we have to force a fake user data directory to prevent
-            # the chromium script from sharing an existing session, which would cause the
-            # call() below to not block: https://askubuntu.com/questions/35392/how-to-launch-a-new-instance-of-google-chrome-from-the-command-line
-            browser_command = browser_filepath + ' -app="' + url + '" --user-data-dir=' + os.path.join(os.path.expanduser('~'), 'my_quadplay') + ' --no-user-gesture-required' + (' --start-fullscreen' if args.kiosk else '')
+            browser_command = browser_filepath + ' -app="' + url + '" ' + chromium_nativeapp_args + (' --start-fullscreen' if args.kiosk else '')
             auto_close_server = True
         else:
             browser_command = 'xdg-open "' + url + '"'

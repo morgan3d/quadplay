@@ -14,7 +14,6 @@ function $show() {
     // game_frames to ensure that frame 0 is always rendered for a mode.
     if (mode_frames % $graphicsPeriod === 0) {
         const startTime = performance.now();
-        
         // clear the screen
         if ($background.spritesheet) {
             // Image background
@@ -33,7 +32,7 @@ function $show() {
             const cmd = $graphicsCommandList[i];
             $executeTable[cmd.opcode](cmd);
         }
-    
+
         $submitFrame();
         $graphicsTime = $performance.now() - startTime;
     }

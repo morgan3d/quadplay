@@ -1416,6 +1416,8 @@ return $Object.freeze({$enter:$enter, $frame:$frame, $pop_modeFrom$SystemMenu:$p
     
     // Set the initial mode
     const start_mode = (gameSource.debug && gameSource.debug.json && gameSource.debug.json.start_mode_enabled && gameSource.debug.json.start_mode) || gameSource.json.start_mode
+    // Expose to the runtime
+    compiledProgram += 'push_guest_menu_mode.$OnlineMenu = $OnlineMenu; ';
     compiledProgram += 'try { set_mode(' + start_mode + '); } catch (e) { if (! e.nextMode) { throw e; } }\n\n';
 
     // Main loop
@@ -1471,7 +1473,7 @@ return $Object.freeze({$enter:$enter, $frame:$frame, $pop_modeFrom$SystemMenu:$p
         compiledProgram = lines.join('\n');
     }
 
-    // console.log(compiledProgram);
+    //console.log(compiledProgram);
     return compiledProgram;
 }
 

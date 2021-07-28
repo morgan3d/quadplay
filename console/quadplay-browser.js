@@ -1181,7 +1181,7 @@ function updateInput() {
               realGamepad = gamepadArray[reordered_player], prevRealGamepad = prevRealGamepadState[reordered_player];
 
         // Network player
-        if (pad.$is_guest) {
+        if (pad.$status === 'guest') {
             const latest = pad.$guest_latest_state;
             if (! latest) { return; }
 

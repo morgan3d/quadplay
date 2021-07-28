@@ -5141,7 +5141,11 @@ function draw_corner_rect(corner, size, fill, outline, z) {
     }
 
     const prevCommand = $graphicsCommandList[$graphicsCommandList.length - 1];
-    if (prevCommand && (prevCommand.baseZ === z_order) && (prevCommand.opcode === 'REC')) {
+    if (prevCommand &&
+        (prevCommand.baseZ === z_order) &&
+        (prevCommand.opcode === 'REC') &&
+        (prevCommand.clipX1 === $clipX1) && (prevCommand.clipX2 === $clipX2) &&
+        (prevCommand.clipY1 === $clipY1) && (prevCommand.clipY2 === $clipY2)) {
         // Aggregate into the previous command
         prevCommand.data.push({
             x1: x1,
@@ -5255,8 +5259,14 @@ function draw_line(A, B, color, z, width) {
 }
 
 
-
 function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_layer_exclusive, replacement_array, z, override_color, override_blend, invert_sprite_y, quality) {
+    if (arguments.length === 1 && 'x' in start && 'y' in start) {
+        return draw_map_span(start.start, start.size, start.map,
+                             start.map_coord0, start.map_coord1, start.min_layer, start.max_layer_exclusive,
+                             start.replacement_array, start.z, start.override_color, start.override_blend,
+                             start.invert_sprite_y, start.quality);
+    }
+    
     if ($skipGraphics) { return; }
 
     if (quality === undefined) { quality = 1.0; }
@@ -6509,7 +6519,8 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
                     spr.$name + ' has a bad index: ' + sprElt.spritesheetIndex);
     // Aggregate multiple sprite calls
     const prevCommand = $graphicsCommandList[$graphicsCommandList.length - 1];
-    if (prevCommand && (prevCommand.baseZ === z_order) && (prevCommand.opcode === 'SPR') &&
+    if (prevCommand && (prevCommand.baseZ === z_order) &&
+        (prevCommand.opcode === 'SPR') &&
         (prevCommand.clipX1 === $clipX1) && (prevCommand.clipX2 === $clipX2) &&
         (prevCommand.clipY1 === $clipY1) && (prevCommand.clipY2 === $clipY2)) {
         // Modify the existing command to reduce sorting demands for scenes
@@ -9805,6 +9816,11 @@ function reset_game() {
     throw {reset_game:1};
 }
 
+/* Called by games from the runtime to force the local player into the 
+   system menu for online */
+function push_guest_menu_mode() {
+    push_mode(push_guest_menu_mode.$OnlineMenu, undefined, true);
+}
 
 function pop_mode(...args) {
     if ($modeStack.length === 0) { $error('Cannot pop_mode() from a mode entered by set_mode()'); }

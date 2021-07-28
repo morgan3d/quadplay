@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.07.23.15';
+const version  = '2021.07.28.01';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -3629,7 +3629,7 @@ let updateKeyboardPending = false;
 function reloadRuntime(oncomplete) {
     runtime_cursor = 'crosshair';
     QRuntime.document.open();
-    QRuntime.document.write("<script src='quadplay-runtime-cpu.js' async charset='utf-8'> </script> <script src='quadplay-runtime-gpu.js' async charset='utf-8'> </script>");
+    QRuntime.document.write("<!DOCTYPE html><script src='quadplay-runtime-cpu.js' async charset='utf-8'> </script> <script src='quadplay-runtime-gpu.js' async charset='utf-8'> </script>");
     QRuntime.onload = function () {
         QRuntime.$SCREEN_WIDTH  = SCREEN_WIDTH;
         QRuntime.$SCREEN_HEIGHT = SCREEN_HEIGHT;
@@ -3671,6 +3671,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.$prompt             = prompt;
         QRuntime.$setFramebufferSize = setFramebufferSize;
         QRuntime.$sleep              = useIDE ? null : sleep;
+        QRuntime.disconnect_guest    = disconnectGuest;
         QRuntime.$Object.prototype.toString = function () {
             return (this && this.$name) || QRuntime.unparse(this);
         };
@@ -3691,12 +3692,9 @@ function reloadRuntime(oncomplete) {
         QRuntime.$netIDToSentence    = netIDToSentence;
         QRuntime.$netIDToString      = netIDToString;
         QRuntime.$changeMyHostNetID  = changeMyHostNetID;
-        QRuntime.$getMyHostNetID     = getMyHostNetID;
-        QRuntime.$getMyOnlineName    = getMyOnlineName;
         QRuntime.$setMyOnlineName    = setMyOnlineName;
-        QRuntime.$getIsHosting       = getIsHosting;
-        QRuntime.$startHosting       = startHosting;
-        QRuntime.$stopHosting        = stopHosting;
+        QRuntime.start_hosting       = startHosting;
+        QRuntime.stop_hosting        = stopHosting;
         QRuntime.$startGuesting      = startGuesting;
         QRuntime.$getIsOffline       = getIsOffline;
         QRuntime.$copyToClipboard    = copyToClipboard;
@@ -3871,9 +3869,8 @@ function reloadRuntime(oncomplete) {
 
             const player_color = parseHexColor(COLOR_ARRAY[p]);
             const pad = {
-                // If this gamepad is currently a guest, then
-                // it is not updated from local controls
-                $is_guest: false,
+                // Set on connection
+                $guest_name: '',
 
                 $status: 'absent',
 
@@ -3908,6 +3905,16 @@ function reloadRuntime(oncomplete) {
             Object.defineProperty(pad, 'angle', angleGetter);
             Object.defineProperty(pad, 'dangle', dangleGetter);
             Object.defineProperty(pad, 'status', statusGetter);
+            Object.defineProperty(pad, 'online_name', {
+                enumerable: true,
+                get: function () {
+                    if (! isHosting || this.index === 0) {
+                        return myOnlineName;
+                    } else {
+                        return this.$guest_name;
+                    }
+                }
+            });
             QRuntime.gamepad_array[p] = Object.seal(pad);
         }
         QRuntime.joy = QRuntime.gamepad_array[0];

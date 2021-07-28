@@ -7,6 +7,13 @@ let myOnlineName;
 const NET_ID_PREFIX = 'qp000';
 const MAX_ONLINE_NAME_LENGTH = 7;
 
+// Expose as read-only to the runtime
+Object.defineProperty(QRuntime, 'HOST_CODE', {
+    get: function () {
+        return netIDToSentence(myHostNetID);
+    }
+});
+
 /* Method used for data serialization by PeerJS for control data.
    Useful options are 'binary' and 'json'. Both seem to work fine. */
 const SERIALIZATION = 'binary';
@@ -202,12 +209,6 @@ function changeMyHostNetID() {
 }
 
 
-/* For use by the QRuntime */
-function getMyHostNetID() {
-    return myHostNetID;
-}
-
-
 function setMyOnlineName(n) {
     n = n.trim();
     myOnlineName = '';
@@ -228,16 +229,6 @@ function setMyOnlineName(n) {
 }
 
 
-function getMyOnlineName() {
-    return myOnlineName;
-}
-
-
-function getIsHosting() {
-    return isHosting;
-}
-
-
 function getIsOffline() {
     return isOffline;
 }
@@ -252,11 +243,30 @@ function peerErrorHandler(err) {
     console.log(msg);
 }
 
+/* Forcibly remove this guest */
+function disconnectGuest(index) {
+    if (index !== 1 && index !== 2 && index !== 3) { throw 'Can only disconnect guests with index 1, 2, 3'; }
+    
+    if (isHosting && QRuntime.gamepad_array[index].$status === 'guest') {
+        for (let i = 0; i < connectedGuestArray.length; ++i) {
+            const guest = connectedGuestArray[i]
+            if (guest.player_index === index) {
+                showPopupMessage('Disconnected ' + guest.dataConnection.metadata.name.toUpperCase());
+                guest.disconnect();
+                break;
+            }
+        }
+    }
+}
+
 
 function startHosting() {
+    if (isHosting || isOffline) { return; }
+    
     QRuntime.gamepad_array[0].$status = 'host';
+    // Mark the others as absent until they connect as guests
     for (let i = 1; i < 4; ++i) {
-        QRuntime.gamepad_array[0].$status = 'absent';
+        QRuntime.gamepad_array[i].$status = 'absent';
     }
     
     localStorage.setItem('last_hosted', 'true');
@@ -324,6 +334,7 @@ function startHosting() {
     myPeer.on('open', function(id) {
         isOpen = true;
         console.log('host peer opened with id ' + id);
+        showPopupMessage('Now hosting online as ' + myOnlineName.toUpperCase() + ' (' + netIDToSentence(myHostNetID) + ')');
 
         // The guest calls us on the data channel
         myPeer.on('connection', function (dataConnection) {
@@ -351,20 +362,20 @@ function startHosting() {
             showPopupMessage(dataConnection.metadata.name.toUpperCase() + ' joined as P' + (player_index + 1));
 
             // Prevent the local input from overriding remote input immediately
-            QRuntime.gamepad_array[player_index].$is_guest = true;
+            QRuntime.gamepad_array[player_index].$status = 'guest';
+            QRuntime.gamepad_array[player_index].$guest_name = dataConnection.metadata.name;
 
             // Add to connected guest array
             const guest = {
                 player_index: player_index,
                 dataConnection: dataConnection,
-                disconnectCallback: function () {
+                disconnect: function () {
                     const gamepad = QRuntime.gamepad_array[player_index];
 
                     let controlBindings = JSON.parse(localStorage.getItem('pad0' + player_index) || 'null');
                     if (! controlBindings) {
                         controlBindings = {id: isMobile ? 'mobile' : '', type: defaultControlType(player_index)};
                     }
-                    gamepad.$is_guest = false;
                     gamepad.$status = 'absent';
                     gamepad.type = controlBindings.type;
                     gamepad.prompt = Object.freeze(Object.assign({'##': '' + (player_index + 1)}, controlSchemeTable[controlBindings.type]));
@@ -377,13 +388,17 @@ function startHosting() {
                             break;
                         }
                     }
+
+                    dataConnection.close();
+                    videoConnection.close();
+                    audioConnection.close();                
                 }
             };
             connectedGuestArray.push(guest);
             
             // Register keepAlive
             keepAlive(dataConnection, undefined, function (dataConnection) {
-                guest.disconnectCallback();
+                guest.disconnect();
                 showPopupMessage(dataConnection.metadata.name.toUpperCase() + ' left');
             });
 
@@ -399,8 +414,6 @@ function startHosting() {
                     // updateInput() will update properties from this absolute state
                     // once per frame
                     array[player_index].$guest_latest_state = message.gamepad_array[0];
-                    array[player_index].$is_guest = true;
-                    array[player_index].$status = 'guest';
                 } else {
                     console.log('ignored INPUT network message because runtime is reloading');
                 }
@@ -427,6 +440,11 @@ function startHosting() {
 
     
 function stopHosting() {
+    if (isHosting) {
+        showPopupMessage('Stopped hosting online');
+    }
+
+    // Make self absent; guests will be dropped below
     QRuntime.gamepad_array[0].$status = 'absent';
     
     if (hostVideoStream) {
@@ -442,7 +460,7 @@ function stopHosting() {
 
     if (myPeer && isHosting) {
         for (let i = 0; i < connectedGuestArray.length; ++i) {
-            connectedGuestArray[i].disconnectCallback();
+            connectedGuestArray[i].disconnect();
         }
         connectedGuestArray.length = 0;
         console.log('stopHosting()');
