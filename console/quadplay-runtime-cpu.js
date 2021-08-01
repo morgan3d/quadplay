@@ -1394,15 +1394,15 @@ function set_transform(pos, dir, addZ, scaleZ, skew) {
 }
 
 
-function intersect_clip(pos, size, z1, z_size) {
-    if (pos && (pos.pos || pos.size || (pos.z !== undefined) || (pos.z_size !== undefined))) {
-        return intersect_clip(pos.pos, pos.size, pos.z, pos.z_size);
+function intersect_clip(corner, size, z1, z_size) {
+    if (corner && (corner.corner || corner.size || (corner.z !== undefined) || (corner.z_size !== undefined))) {
+        return intersect_clip(corner.corner, corner.size, corner.z, corner.z_size);
     }
 
     let x1, y1, dx, dy, dz;
-    if (pos !== undefined) {
-        if (is_number(pos)) { $error('pos argument to set_clip() must be an xy() or nil'); }
-        x1 = pos.x; y1 = pos.y;
+    if (corner !== undefined) {
+        if (is_number(corner)) { $error('corner argument to set_clip() must be an xy() or nil'); }
+        x1 = corner.x; y1 = corner.y;
     }
     if (size !== undefined) {
         if (is_number(size)) { $error('size argument to set_clip() must be an xy() or nil'); }
@@ -1452,23 +1452,23 @@ function reset_clip() {
 
 function get_clip() {
     return {
-        pos:    {x:$clipX1, y:$clipY1},
-        size:   {x:$clipX2 - $clipX1 + 1, y:$clipY2 - $clipY1 + 1},
-        z:      $clipZ1,
+        corner:  {x:$clipX1, y:$clipY1},
+        size:    {x:$clipX2 - $clipX1 + 1, y:$clipY2 - $clipY1 + 1},
+        z:       $clipZ1,
         z_size:  $clipZ2 - $clipZ1 + 1
     };
 }
 
 
-function set_clip(pos, size, z1, dz) {
-    if (pos && (pos.pos || pos.size || (pos.z !== undefined) || (pos.z_size !== undefined))) {
-        return set_clip(pos.pos, pos.size, pos.z, pos.z_size);
+function set_clip(corner, size, z1, dz) {
+    if (corner && (corner.corner || corner.size || (corner.z !== undefined) || (corner.z_size !== undefined))) {
+        return set_clip(corner.corner, corner.size, corner.z, corner.z_size);
     }
     
     let x1, y1, dx, dy;
-    if (pos !== undefined) {
-        if (is_number(pos)) { $error('pos argument to set_clip() must be an xy() or nil'); }
-        x1 = pos.x; y1 = pos.y;
+    if (corner !== undefined) {
+        if (is_number(corner)) { $error('corner argument to set_clip() must be an xy() or nil'); }
+        x1 = corner.x; y1 = corner.y;
     }
     if (size !== undefined) {
         if (is_number(size)) { $error('size argument to set_clip() must be an xy() or nil'); }
@@ -7127,6 +7127,14 @@ function $cleanupRegion(A) {
         
         // Make a new object with default properties
         A = Object.assign({scale: xy(1, 1), size: xy(0, 0), angle: 0, shape: 'rect'}, A);
+
+        if (A.corner && ! A.pos) {
+            A.pos.x = A.corner.x + A.size.x * A.scale.x;
+            A.pos.y = A.corner.y + A.size.y * A.scale.y;
+            if (A.angle !== 0) {
+                $error('Cannot use angle != 0 with a corner rect in overlaps()');
+            }
+        }
     }
     
     if (A.pivot && (A.pivot.x !== 0 || A.pivot.y !== 0)) {
@@ -9710,9 +9718,9 @@ function $makeCoroutine(code) {
 //                 Software rendering implementation of the Host API                  //
 ////////////////////////////////////////////////////////////////////////////////////////
 
-function set_screen_size(size, private_screens) {
-    if (private_screens === undefined) {
-        private_screens = false;
+function set_screen_size(size, private_views) {
+    if (private_views === undefined) {
+        private_views = false;
     }
 
     if (! size || size.x === undefined) {
@@ -9723,7 +9731,7 @@ function set_screen_size(size, private_screens) {
     let h = $Math.round(size.y) | 0;
 
     // Check for legal resolutions
-    if (private_screens) {
+    if (private_views) {
         if (w !== 384 || h !== 224) {
             $error('set_screen_size() with private screens must be at 384x224 resolution');
         }
@@ -9740,10 +9748,9 @@ function set_screen_size(size, private_screens) {
     $previousGraphicsCommandList.length = 0;
     $graphicsCommandList.length = 0;
 
-
     // Change the frame buffer size and rebind the
-    // SCREEN_SIZE and PRIVATE_SCREEN constants
-    $setFramebufferSize(w, h, private_screens);
+    // resolution constants
+    $setFramebufferSize(w, h, private_views);
 
     // Reset the transformations
     reset_camera();

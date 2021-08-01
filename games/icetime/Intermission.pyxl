@@ -43,7 +43,7 @@ frame
 ───────────────────────────────────────────────────────────────────────────────
 
 set_transform(xy(½ SCREEN_SIZE.x, ½ SCREEN_SIZE.y + 10), xy(1, -1), 0, 1)
-set_clip({pos:xy(0, 20), z:-2048, size:xy(192, 90), z_size:4096})
+set_clip({corner:xy(0, 20), z:-2048, size:xy(192, 90), z_size:4096})
 
 drawScoreboard()
 

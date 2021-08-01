@@ -112,6 +112,11 @@
             "description": "Random planet generator with moons, atmosphere, and rings"
         },
         {
+            "url": "quad://examples/private_view/",
+            "title": "Private View",
+            "description": "Example of using private views for online multiplayer"
+        },
+        {
             "url": "quad://examples/robot/",
             "title": "Robot Example",
             "description": ""

@@ -19,9 +19,7 @@ let old_mouse
 let max_choice_width
 let line_height
 
-let font = $font9
-if SCREEN_SIZE.y <= 64: font = $font5
-else if SCREEN_SIZE.y <= 180: font = $font8
+let font
 
 
 def close(callback):
@@ -65,23 +63,21 @@ old_mouse = device_control("get_mouse_state")
 device_control("set_mouse_lock", false)
 device_control("set_mouse_cursor", "default")
 
-reset_post_effects()
-set_clip(xy(0, 0), SCREEN_SIZE, -2047, 4096)
-// Force the clipping range beyond what the API normally allows
-$clipZ2 = 2049
+font = $system_font()
 
+reset_post_effects()
 
 choice_array = [{text: "Resume Game", callback: ∅, confirm: false},
                // Insert custom menu choices after "Resume"
                ...$customPauseMenuOptions]
 
-if size($customPauseMenuOptions) < 3 or SCREEN_SIZE.y > 64:
+if size($customPauseMenuOptions) < 3 or VIEW_ARRAY[0].size.y > 64:
    // Only add the credits option if there is room
    push(choice_array, {text: "Game Credits", callback: game_credits, confirm: false})
 
 push(choice_array, {text: "Controllers", callback: set_controls, confirm: false})
 
-if not $getIsOffline() and SCREEN_SIZE.x == 384 or SCREEN_SIZE.x == 192:
+if not $getIsOffline() and VIEW_ARRAY[0].size.x == 384 or VIEW_ARRAY[0].size.x == 192:
     push(choice_array, {text: "Online Play", callback: show_online_menu})
 
 push(choice_array, {text: "Restart Game", callback: reset_game, confirm: true})
@@ -100,7 +96,7 @@ if $quit_action != "none":
 max_choice_width = 0
 
 line_height = round(110% font.line_height)
-if SCREEN_SIZE.y <= 64: ++line_height
+if VIEW_ARRAY[0].size.y <= 64: ++line_height
 
 for c in choice_array: max_choice_width = max(max_choice_width, text_width(font, c.text))
 
@@ -154,51 +150,48 @@ draw_previous_mode()
 set_transform(xy(0, 0), xy(1, 1), 2048.5, 1)
 draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(14%, 14%, 14%, 80% clamp((mode_frames + 1) / fade_in_frames, 15%, 100%)))
 
+for view in VIEW_ARRAY:
+    // Force the clipping range beyond what the API normally allows
+    set_clip(view.corner, view.size, -2047, 4096)
+    $clipZ2 = 2049
+    
+    // Our last menu item is designed to be the longest, so use that
+    // to estimate width
+    const window_size = round(xy(max_choice_width + 1.5 font.line_height, view.size.y + 2))
 
-// Our last menu item is designed to be the longest, so use that
-// to estimate width
-const window_size = round(xy(max_choice_width + 1.5 font.line_height, SCREEN_SIZE.y + 2))
+    // Animate sliding in of window
+    set_transform(view.corner + xy(1 + view.size.x - window_size.x * (50% - clamp(1 - (mode_frames - fade_in_frames) / slide_in_frames, 0%, 100%)), view.size.y / 2), xy(1, 1), 2048.5, 1)
 
-// Animate sliding in of window
-set_transform(xy(1 + SCREEN_SIZE.x - window_size.x * (50% - clamp(1 - (mode_frames - fade_in_frames) / slide_in_frames, 0%, 100%)), SCREEN_SIZE.y / 2), xy(1, 1), 2048.5, 1)
+    // Window shadow
+    local:
+        const P = xy(0, window_size.y / 2);
+        const s = window_size.x / 2 - 1
+        draw_line(P + xy(-s, 0), P + xy(s, 0), rgba(0, 0, 0, 40%))
+        draw_line(P + xy(1 - s, 1), P + xy(s - 1, 1), rgba(0, 0, 0, 15%))
 
-// Window shadow
-local:
-   const P = xy(0, window_size.y / 2);
-   const s = window_size.x / 2 - 1
-   draw_line(P + xy(-s, 0), P + xy(s, 0), rgba(0, 0, 0, 40%))
-   draw_line(P + xy(1 - s, 1), P + xy(s - 1, 1), rgba(0, 0, 0, 15%))
+    // Window
+    draw_rect(xy(0, 0), window_size, $system_window_background, $system_window_border)
 
-// Window
-draw_rect(xy(0, 0), window_size, $system_window_background, $system_window_border)
+    let y = -line_height * (size(choice_array) - 1) / 2
 
-let y = -line_height * (size(choice_array) - 1) / 2
+    // Draw options
+    for i < size(choice_array):
+        const active      = choice_index == i
+        const yOffset     = if active then -1 else 0
+        const x           = -(max_choice_width - 0.6 line_height + 1) / 2
+        const text        = choice_array[i].text
 
-// Draw options
-for i < size(choice_array):
-   const active      = choice_index == i
-   const bright      = (1 + cos(mode_frames / 9)) / 2
-   const color       = if active then lerp($system_prompt_color, #fff, 50% bright) else $system_unselected_color
-   const outline     = if active then rgba(1, 1, 1, 25% bright) else ∅
-   const yOffset     = if active then -1 else 0
-   const shadow      = if active then 50% $system_prompt_shadow else $system_prompt_shadow
+        const bounds = $draw_system_menu_text({text: text, pos: xy(x, y + yOffset), y_align: "center"}, active)
 
-   const x           = -(max_choice_width - 0.6 line_height + 1) / 2
-   const text        = choice_array[i].text
-   draw_text(font, text, xy(x, y + 1), shadow, ∅, ∅, "left", "center")
-   const bounds = draw_text(font, text, xy(x, y + yOffset), color, ∅, outline, "left", "center")
-
-   // Make active on mouse hover
-   if overlaps(touch.hover, bounds) and choice_index != i:
-       choice_index = i
-       play_sound($moveUISound)
+        // Make active on mouse hover
+        if overlaps(touch.hover, bounds) and choice_index != i:
+            choice_index = i
+            play_sound($moveUISound)
        
-   // Touch selection
-   if touch.aa and overlaps(touch, bounds):
-       choose()
+        // Touch selection
+        if touch.aa and overlaps(touch, bounds):
+            choose()
    
-   if active:
-      draw_text(font, "✜", xy(x - 40% line_height + 1, y + 1), shadow, ∅, ∅, "right", "center")
-      draw_text(font, "✜", xy(x - 40% line_height + 1, y + yOffset), color, ∅, outline, "right", "center")
+        if active: $draw_system_menu_text({text: "✜", pos: xy(x - 40% line_height + 1, y + yOffset), x_align: "right", y_align: "center"}, true)
       
-   y += line_height
+        y += line_height

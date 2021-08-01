@@ -1,0 +1,79 @@
+Title
+════════════════════════════════════════════════════════════════════════
+
+def create_game():
+    start_hosting()
+    set_mode(Lobby) because "Chose create game"
+
+let choice_index = 0
+
+const choice_array = [
+    {text: "Create Game", callback: create_game},
+    {text: "Join Game", callback: push_guest_menu_mode},
+    {text: "Quit", callback: quit_game}
+]
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+if game_frames == 0:    
+    set_screen_size(xy(384, 224), true)
+
+resize(player_array, 0)
+reset_transform()
+reset_clip()
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+if gamepad_array[0].status == "host":
+    // Player entered host mode via system menu
+    set_mode(Lobby) because "Hosting via system"
+
+
+// Only need to draw player 0. We cannot be on this menu
+// if hosting.
+
+// Set the other 3 views to yello to show where they are when debugging
+set_background(#ff0)
+draw_corner_rect(VIEW_ARRAY[0].corner, VIEW_ARRAY[0].size, #777)
+
+let args = {
+    font: font,
+    pos: ½ VIEW_ARRAY[0].size - xy(20, 0), 
+    color: #d, 
+    shadow: #3,
+    y_align: "center"
+}
+
+draw_text({...args, x_align: "center", pos: xy(½ VIEW_ARRAY[0].size.x, 20), text: "PRIVATE SCREEN EXAMPLE", color: #F, outline: ∅, shadow: #3})
+
+for choice at i in choice_array:
+    const selected = choice_index == i
+        
+    draw_text({
+        ...args,
+        text: choice.text,
+        color: if selected then #000 else args.color,
+        outline: if selected then #ff0 else args.outline,
+        shadow: if selected then ∅ else args.shadow
+    })
+    
+    if selected:
+        draw_text({
+            ...args,
+            pos: args.pos - xy(10, 0),
+            text: ">",
+            color: #000,
+            outline: #ff0,
+            shadow: ∅
+        })
+        
+    args.pos.y += font.line_height
+
+choice_index = clamp(choice_index + gamepad_array[0].yy, 0, size(choice_array) - 1)
+
+if gamepad_array[0].aa:
+    choice_array[choice_index].callback()

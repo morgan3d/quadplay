@@ -49,7 +49,7 @@ def seq_display_msg(text, timeout):
 
         const padding = 5
         set_clip({
-            pos: win_corner + padding,
+            corner: win_corner + padding,
             size: win_size - 2*padding,
         })
 
@@ -107,7 +107,7 @@ def seq_modal_display(text, gamepad):
             z: 2
         })
         set_clip({
-            pos: win_corner,
+            corner: win_corner,
             size: win_size,
         })
         draw_text({

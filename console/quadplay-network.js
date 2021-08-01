@@ -51,8 +51,8 @@ const PEER_CONFIG = (location.protocol === 'https:') ?
  its own parameters for ping rates, but does not appear to use them at
  present on investigating the code.
 */
-const KEEP_ALIVE_INTERVAL_MS = 0.25 * 1000;
-const KEEP_ALIVE_MESSAGE = 'KEEP_ALIVE';
+const KEEP_ALIVE_INTERVAL_MS = 250;
+const KEEP_ALIVE_MESSAGE = {type: 'KEEP_ALIVE'};
 
 /* 
  How many intervals can be missed before we drop connection.  This
@@ -79,10 +79,13 @@ function keepAliveTime() {
  stop hosting.
 */
 function keepAlive(dataConnection, setWarning, dropCallback) {
-    dataConnection.messageHandlerArray = dataConnection.messageHandlerArray || [];
+    dataConnection.messageHandlerTable = dataConnection.messageHandlerTable || {};
     dataConnection.on('data', function (message) {
-        for (let i = 0; i < dataConnection.messageHandlerArray.length; ++i) {
-            if (dataConnection.messageHandlerArray[i](message)) { return; }
+        const callback = dataConnection.messageHandlerTable[message.type];
+        if (callback) {
+            callback(message);
+        } else {
+            console.log('No handler for online message:', message);
         }
     });
 
@@ -93,6 +96,11 @@ function keepAlive(dataConnection, setWarning, dropCallback) {
     const elementID = '_' + dataConnection.peer;
 
     function ping() {
+        if (! dataConnection.open) {
+            console.log('Stopping KEEP_ALIVE callbacks');
+            return;
+        }
+        
         const currentTime = keepAliveTime();
         if (lastTime && (currentTime - lastTime > KEEP_ALIVE_MISSABLE_INTERVALS * KEEP_ALIVE_INTERVAL_MS)) {
             // The other side seems to have dropped connection
@@ -114,10 +122,9 @@ function keepAlive(dataConnection, setWarning, dropCallback) {
         }
     }
 
-    dataConnection.messageHandlerArray.push(function (data) {
-        if (data === KEEP_ALIVE_MESSAGE) { lastTime = keepAliveTime(); return true; }
-        // console.log('received data', data);
-    });
+    dataConnection.messageHandlerTable[KEEP_ALIVE_MESSAGE.type] = function (data) {
+        lastTime = keepAliveTime();
+    };
 
     // Start the endless keepAlive process
     ping(dataConnection);
@@ -243,6 +250,25 @@ function peerErrorHandler(err) {
     console.log(msg);
 }
 
+
+function notifyGuestsOfFramebufferSize() {
+    // Tell the guests about the current private screen flag
+
+    const message = {
+        type: 'FRAMEBUFFER_SIZE',
+        SCREEN_WIDTH: SCREEN_WIDTH,
+        SCREEN_HEIGHT: SCREEN_HEIGHT,
+        PRIVATE_VIEW: PRIVATE_VIEW
+    };
+    
+    for (let i = 0; i < connectedGuestArray.length; ++i) {
+        if (guest.dataConnection.open) {
+            guest.dataConnection.send(message);
+        }
+    }
+}
+
+
 /* Forcibly remove this guest */
 function disconnectGuest(index) {
     if (index !== 1 && index !== 2 && index !== 3) { throw 'Can only disconnect guests with index 1, 2, 3'; }
@@ -252,7 +278,14 @@ function disconnectGuest(index) {
             const guest = connectedGuestArray[i]
             if (guest.player_index === index) {
                 showPopupMessage('Disconnected ' + guest.dataConnection.metadata.name.toUpperCase());
-                guest.disconnect();
+                // Tell the guest to disconnect so that they don't
+                // have to wait for a timeout (the 'close' event does
+                // not work on all browsers!)
+                if (guest.dataConnection.open) {
+                    guest.dataConnection.send({type: 'DISCONNECT'});
+                }
+                
+                setTimeout(function () { guest.disconnect(); });
                 break;
             }
         }
@@ -262,6 +295,7 @@ function disconnectGuest(index) {
 
 function startHosting() {
     if (isHosting || isOffline) { return; }
+    console.log('startHosting()');
     
     QRuntime.gamepad_array[0].$status = 'host';
     // Mark the others as absent until they connect as guests
@@ -283,7 +317,8 @@ function startHosting() {
     // Latencies are expressed in seconds
     hostVideoStream.getVideoTracks()[0].applyConstraints({
         latency: {min: 0, ideal: 0.015, max: 0.100},
-        framerate: {max: 60, ideal: 60, min: 30}
+        frameRate: {max: 60, ideal: 60, min: 30},
+        cursor: {exact: 'always', ideal: 'always'}
     });
 
     hostAudioDestination = audioContext.createMediaStreamDestination();
@@ -368,7 +403,9 @@ function startHosting() {
             // Add to connected guest array
             const guest = {
                 player_index: player_index,
+
                 dataConnection: dataConnection,
+                
                 disconnect: function () {
                     const gamepad = QRuntime.gamepad_array[player_index];
 
@@ -402,9 +439,7 @@ function startHosting() {
                 showPopupMessage(dataConnection.metadata.name.toUpperCase() + ' left');
             });
 
-            dataConnection.messageHandlerArray.push(function (message) {
-                if (message.type !== 'INPUT') { return false; }
-
+            dataConnection.messageHandlerTable.INPUT = function (message) {
                 // Overwrite the local controller for this connection
                 // (ignore if the game is still loading, so there is
                 // no gamepad_array)
@@ -417,12 +452,15 @@ function startHosting() {
                 } else {
                     console.log('ignored INPUT network message because runtime is reloading');
                 }
-                
-                return true;
-            });
+            };
 
             function sendConnectMessage() {
-                dataConnection.send({type: 'CONNECT', name: myOnlineName, player_index: player_index});
+                dataConnection.send({
+                    type: 'CONNECT',
+                    name: myOnlineName,
+                    player_index: player_index,
+                    private_view: PRIVATE_VIEW
+                });
                 console.log('sent connect message');
             }
             
@@ -493,9 +531,11 @@ function startGuesting(hostNetID) {
         // Safari requires this, and it must be called from an event handler
         videoElement.play();
     } else {
-        // On Safari, video will not update unless the video element is in the
-        // DOM and visible, so we hide it behind the canvas instead of hiding
-        // it completely (which is friendlier to the browser compositor).
+        // On Safari, video will not update unless the video element
+        // is in the DOM and visible, so we hide it behind the canvas
+        // instead of hiding it completely (which is friendlier to the
+        // browser compositor). On other platforms we hide it so that
+        // the browser knows it is unused.
         videoElement.style.visibility = 'hidden';
     }        
 
@@ -513,6 +553,7 @@ function startGuesting(hostNetID) {
 
     // For restoring screen resolution on disconnect
     stopGuesting.oldScreenSize = {x: SCREEN_WIDTH, y: SCREEN_HEIGHT};
+    stopGuesting.oldPrivateScreen = PRIVATE_VIEW;
 
     function drawVideo() {
         // Shut down the video rendering when we stop being a guest
@@ -532,14 +573,31 @@ function startGuesting(hostNetID) {
                 
                 videoWidth = settings.width | 0;
                 videoHeight = settings.height | 0;
-                
-                setFramebufferSize(videoWidth, videoHeight);
+
+                // A FRAMEBUFFER_SIZE message should also arrive from
+                // the host, but this forces automatic changes because
+                // the video is asynchronous with the data stream
+                const scale = PRIVATE_VIEW ? 0.5 : 1.0;
+                setFramebufferSize(videoWidth * scale, videoHeight * scale, PRIVATE_VIEW);
             }
-        
-            // Instead of showing the video directly (which will be
-            // bilinearly interpolated), render it to the canvas so that
-            // it is cleaned up by pixelization.
-            ctx.drawImage(videoElement, 0, 0, videoWidth, videoHeight);
+
+            // Instead of showing the video element directly (which
+            // will be bilinearly interpolated), render it to the
+            // canvas so that it is cleaned up by pixelization.
+            if (PRIVATE_VIEW) {
+                // Select the subscreen appropriate for this player.
+                // We stream ALL views to all players so that the host
+                // can run a single video encoder, which is all that
+                // some GPUs support (and since our video is tiny,
+                // this doesn't matter).
+                const w = videoWidth >> 1, h = videoHeight >> 1;
+                const x = w * (myGuestPlayerIndex & 1);
+                const y = h * (myGuestPlayerIndex >> 1);
+                ctx.drawImage(videoElement, x, y, w, h, 0, 0, w, h);
+            } else {
+                // Full screen
+                ctx.drawImage(videoElement, 0, 0, videoWidth, videoHeight);
+            }
         }
         
         // Run right before vsync to eliminate latency between the
@@ -662,38 +720,41 @@ function startGuesting(hostNetID) {
         
         console.log('connect data to host');
         // This will trigger the host to call back with a mediaConnection as well
-        dataConnection = myPeer.connect(hostNetID, {reliable: false, serialization: SERIALIZATION, metadata: {name: myOnlineName}});
-        function connectHandler(message) {
-            if (message.type !== 'CONNECT') { return false;}
+        dataConnection = myPeer.connect(hostNetID, {reliable: true, serialization: SERIALIZATION, metadata: {name: myOnlineName}});
+
+        // Handler for connection message must be registered before the on('data') handler
+        dataConnection.messageHandlerTable = {
+            DISCONNECT: stopGuesting,
+
+            FRAMEBUFFER_SIZE: function (message) {
+                const scale = PRIVATE_VIEW ? 0.5 : 1.0;
+                setFramebufferSize(message.SCREEN_WIDTH * scale, message.SCREEN_HEIGHT * scale, message.PRIVATE_VIEW);
+            },
             
-            console.log('received CONNECT message from host');
+            CONNECT: function(message) {
+                console.log('received CONNECT message from host');
             
-            // Store the host in the recent list on successful connect
-            const recent_host_array = QRuntime.parse(localStorage.getItem('recent_host_array') || '[]');
-            // Remove any previous instance of this ID
-            for (let i = 0; i < recent_host_array.length; ++i) {
-                if (recent_host_array[i].code === hostNetID) {
-                    recent_host_array.splice(i, 1);
-                    break
+                // Store the host in the recent list on successful connect
+                const recent_host_array = QRuntime.parse(localStorage.getItem('recent_host_array') || '[]');
+                // Remove any previous instance of this ID
+                for (let i = 0; i < recent_host_array.length; ++i) {
+                    if (recent_host_array[i].code === hostNetID) {
+                        recent_host_array.splice(i, 1);
+                        break
+                    }
                 }
-            }
-            recent_host_array.unshift({code: hostNetID, name: message.name});
-            recent_host_array.length = Math.min(recent_host_array.length, 3);
-            localStorage.setItem('recent_host_array', QRuntime.unparse(recent_host_array, 0));
+                recent_host_array.unshift({code: hostNetID, name: message.name});
+                recent_host_array.length = Math.min(recent_host_array.length, 3);
+                localStorage.setItem('recent_host_array', QRuntime.unparse(recent_host_array, 0));
+                PRIVATE_VIEW = message.private_view;
+                myGuestPlayerIndex = message.player_index;
+                
+                showPopupMessage('You are visiting ' + netIDToString(dataConnection.peer, message.name) + '<br>as P' + (message.player_index + 1) + ' ' + myOnlineName.toUpperCase());
+                
+                // Remove this message handler since it will never matter again.
+                delete dataConnection.messageHandlerTable.CONNECT;
+            }};
             
-            showPopupMessage('You are visiting ' + netIDToString(dataConnection.peer, message.name) + '<br>as P' + (message.player_index + 1) + ' ' + myOnlineName.toUpperCase());
-            
-            // Remove this message handler since it will never matter again. The
-            // handling loop terminates immediately after we return, so it is safe
-            // to mutate here.
-            QRuntime.remove_values(dataConnection.messageHandlerArray, connectHandler)
-            
-            // Consume message
-            return true;
-        }
-            
-        // Handler for connection message must be registed before the on('data') handler
-        dataConnection.messageHandlerArray = [connectHandler];
         dataConnection.on('open', function () {
             console.log('data connection to host established');
             
@@ -702,7 +763,8 @@ function startGuesting(hostNetID) {
                 setTimeout(stopGuesting);
             });
         });
-        
+
+        dataConnection.on('close', stopGuesting);
 
     }); // myPeer.on('open')
 }
@@ -712,8 +774,8 @@ function startGuesting(hostNetID) {
    button is pressed */
 function stopGuesting(noResume) {
     if (isGuesting) {
-        if (stopGuesting.oldScreenSize.x !== SCREEN_WIDTH || stopGuesting.oldScreenSize.y !== SCREEN_HEIGHT) {
-            setFramebufferSize(stopGuesting.oldScreenSize.x, stopGuesting.oldScreenSize.y);
+        if (stopGuesting.oldScreenSize.x !== SCREEN_WIDTH || stopGuesting.oldScreenSize.y !== SCREEN_HEIGHT || stopGuesting.oldPrivateScreen !== PRIVATE_VIEW) {
+            setFramebufferSize(stopGuesting.oldScreenSize.x, stopGuesting.oldScreenSize.y, stopGuesting.oldPrivateScreen);
         }
         
         document.querySelector('#pauseButtonContainer .buttonIcon').style.backgroundImage = 'url("button-pause.png")';
@@ -730,7 +792,6 @@ function stopGuesting(noResume) {
         }
     }
     isGuesting = false;
-
     
     // Shut down the streaming and resume quadplay. Fortunately...
     // quadplay's state was paused in the place where it should
@@ -764,6 +825,8 @@ let hostAudioDestination = null;
 
 /* The audio on the guest */
 let guestAudioSourceNode = null;
+
+let myGuestPlayerIndex = null;
 
 let myPeer = null;
 

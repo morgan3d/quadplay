@@ -1,0 +1,127 @@
+AwaitGuests
+════════════════════════════════════════════════════════════════════════
+
+def process_input(player):
+    with offset, scale, pos, gamepad in player:
+        // Quit
+        if gamepad.qq:
+            if gamepad.index == 0:
+                // Host
+                stop_hosting()
+                set_mode(Title) because "Host pressed ⓠ"
+            else:
+                // Guest
+                disconnect_guest(gamepad.index)
+                return iterate.REMOVE
+                
+        if gamepad.aa and gamepad.index == 0:
+            // Start the game
+            set_mode(Play) because "Host pressed ⓐ"
+        
+        // Move
+        pos = clamp(pos + ½ gamepad.xy, xy(10, 20), VIEW_ARRAY[0].size - xy(10, 0))
+        if gamepad.x:
+            // Face in the moving direction
+            scale.x = sign(gamepad.x) * |scale.x|
+            
+        // Wiggle when walking
+        if gamepad.x or gamepad.y:
+            const k = cos(40% mode_frames)
+            scale.x = sign(scale.x) * (100% + 10% k)
+            offset.y = -9 - k
+        else:
+            scale.x = sign(scale.x)
+            offset.y = -8    
+
+
+
+def draw_view(view, gamepad) preserving_transform:
+    set_clip(view)
+    set_transform(view.corner)
+    
+    // Find the player in the player_array
+    let player_index = ∅ 
+    for p < size(player_array):
+        if player_array[p].gamepad == gamepad:
+            player_index = p
+    
+    
+    // See if this player just joined
+    if gamepad.status == "guest" and player_index == ∅:
+        // Just joined
+        player_index = size(player_array)
+        push(player_array, make_player(gamepad))
+    else if gamepad.status == "absent" and player_index ≠ nil:
+        // Just left
+        remove_key(player_array, player_index)
+        player_index = ∅
+    
+    
+    let args = {
+        font: font,
+        pos: ½ view.size, 
+        color: #fff,
+        x_align: "center",
+        y_align: "center",
+        z: -2
+    }
+    
+    let control_message
+    let wait_message
+
+    if gamepad.status == "host":
+        // Host info
+        draw_text({...args, text: "Hosting as \"" + HOST_CODE + "\"", pos: xy(args.pos.x, 10), z: 10})
+        if size(player_array) == 1: 
+            wait_message = "Waiting for players to join…"
+        else:
+            wait_message = "Ready!"
+        control_message = "(a) Start Game       (q) Stop Hosting"
+    else:
+        // Background (not needed for P0)
+        draw_corner_rect(xy(0, 0), view.size, lerp(gamepad.player_color, #000, 50%), ∅, -1024)    
+        wait_message = "Waiting for the host to start the game…"
+        control_message = "(q) Quit Host"
+
+    draw_text({...args, text: wait_message, color: 30% gamepad.player_color})
+    draw_text({...args, text: replace(control_message, gamepad.prompt), pos: xy(args.pos.x, VIEW_ARRAY[0].size.y - 10), z: 10})
+
+    
+    for pos in player in player_array:        
+        // Shadow
+        draw_sprite({
+            pos: player.pos,
+            sprite: player.sprite,
+            z: -1,
+            scale: xy(100%, 20%),
+            override_color: #000,
+            opacity: 50%})
+        draw_entity(player)
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+resize(player_array, 0)
+push(player_array, make_player(gamepad_array[0]))
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+if gamepad_array[0].status ≠ "host":
+    set_mode(Title) because "Stopped hosting on system menu"
+
+// Use player 0's color as the background, and then
+// draw each other player's color over their view
+set_background(lerp(gamepad_array[0].player_color, #000, 50%))
+
+iterate(player_array, process_input)
+
+for view at gamepad_index in VIEW_ARRAY:
+    draw_view(view, gamepad_array[gamepad_index])
+
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+// This event runs just before leaving for another mode by set_mode() or pop_mode().
+

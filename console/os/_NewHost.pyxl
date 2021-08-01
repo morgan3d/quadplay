@@ -6,38 +6,38 @@ let word_array
 const REPEAT_DELAY = 35
 const REPEAT_FREQUENCY = 6
 
-const font       = if SCREEN_SIZE.y <= 180 then $font8 else $font9
-const code_font  = if SCREEN_SIZE.y <= 180 then $font6 else $font9
-const small_font = if SCREEN_SIZE.y <= 180 then $font5 else $font6
-
-const window_scale = if SCREEN_SIZE.y <= 180 then 90% else 70%
+let window_scale
 
 // mode_frames time at which the Y axis last changed
 let last_y_change = 0
 
 def draw_window(tau):
     // Dark scrim
-    draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(0, 0, 0, 40% tau))
+    draw_corner_rect(xy(0, 0), VIEW_ARRAY[0].size, rgba(0, 0, 0, 40% tau))
 
     // Drop shadow
-    draw_rect(SCREEN_SIZE / 2 + xy(0, window_scale * 0.5 * SCREEN_SIZE.y * tau + 1), xy((window_scale - 1%) SCREEN_SIZE.x * tau, 2), #012)
+    draw_rect(VIEW_ARRAY[0].size / 2 + xy(0, window_scale * 0.5 * VIEW_ARRAY[0].size.y * tau + 1), xy((window_scale - 1%) VIEW_ARRAY[0].size.x * tau, 2), #012)
     
     // Window
-    draw_rect(SCREEN_SIZE / 2, window_scale * SCREEN_SIZE * tau, $system_window_background, #fff)
+    draw_rect(VIEW_ARRAY[0].size / 2, window_scale * VIEW_ARRAY[0].size * tau, $system_window_background, #fff)
 
 
     
 def draw_controls():
-    let y = (50% - window_scale / 2) * SCREEN_SIZE.y + 4
-    y += draw_text({text: "Enter Host Code", pos: xy(SCREEN_SIZE.x / 2, y), font: font, color: #fff, x_align: "center", y_align: "top"}).size.y + 1
-    y += draw_text({text: "(The host must share this with you)", pos: xy(SCREEN_SIZE.x / 2, y), font: small_font, color: #b, x_align: "center", y_align: "top"}).size.y
+    const font       = if VIEW_ARRAY[0].size.y <= 180 then $font8 else $font9
+    const code_font  = if VIEW_ARRAY[0].size.y <= 180 then $font6 else $font9
+    const small_font = if VIEW_ARRAY[0].size.y <= 180 then $font5 else $font6
+    
+    let y = (50% - window_scale / 2) * VIEW_ARRAY[0].size.y + 4
+    y += draw_text({text: "Enter Host Code", pos: xy(VIEW_ARRAY[0].size.x / 2, y), font: font, color: #fff, x_align: "center", y_align: "top"}).size.y + 1
+    y += draw_text({text: "(The host must share this with you)", pos: xy(VIEW_ARRAY[0].size.x / 2, y), font: small_font, color: #b, x_align: "center", y_align: "top"}).size.y
 
-    const COLUMN_SPACING = if SCREEN_SIZE.y <= 180 then 28 else 40
-    const BOX_HEIGHT = if SCREEN_SIZE.y <= 180 then 13 else 18
-    y = floor(y + 20% SCREEN_SIZE.y)
+    const COLUMN_SPACING = if VIEW_ARRAY[0].size.y <= 180 then 28 else 40
+    const BOX_HEIGHT = if VIEW_ARRAY[0].size.y <= 180 then 13 else 18
+    y = floor(y + 20% VIEW_ARRAY[0].size.y)
     
     for column < 6:
-        const x = SCREEN_SIZE.x / 2 + (column - 2.5) * COLUMN_SPACING
+        const x = VIEW_ARRAY[0].size.x / 2 + (column - 2.5) * COLUMN_SPACING
         const selected = (column == selected_column_index)
         const word_index = word_array[column]
         
@@ -66,12 +66,12 @@ def draw_controls():
                 y_align: "center"
             })
 
-    y = floor(70% SCREEN_SIZE.y)
+    y = floor(70% VIEW_ARRAY[0].size.y)
     
     draw_text({
         font: font,
         text: replace("(q) Cancel", joy.prompt),
-        pos: xy((50% - 40% window_scale) * SCREEN_SIZE.x, y),
+        pos: xy((50% - 40% window_scale) * VIEW_ARRAY[0].size.x, y),
         x_align: "left",
         color: $system_prompt_color,
         shadow: $system_prompt_shadow
@@ -80,7 +80,7 @@ def draw_controls():
     draw_text({
         font: font,
         text: replace("(p) Visit Host", joy.prompt),
-        pos: xy((50% + 40% window_scale) * SCREEN_SIZE.x, y),
+        pos: xy((50% + 40% window_scale) * VIEW_ARRAY[0].size.x, y),
         x_align: "right",
         color: $system_prompt_color,
         shadow: $system_prompt_shadow
@@ -89,7 +89,7 @@ def draw_controls():
     draw_text({
         font: font,
         text: replace("(d) Paste From Clipboard", joy.prompt),
-        pos: xy(SCREEN_SIZE.x / 2, (50% + window_scale / 2) * SCREEN_SIZE.y - 7),
+        pos: xy(VIEW_ARRAY[0].size.x / 2, (50% + window_scale / 2) * VIEW_ARRAY[0].size.y - 7),
         x_align: "center",
         y_align: "bottom",
         color: $system_prompt_color,
@@ -154,19 +154,25 @@ frame
 ────────────────────────────────────────────────────────────────────────
 draw_previous_mode()
 
-preserving_transform:
-    // Force the clipping range beyond what the API normally allows
-    $clipZ2 = 2049
-    set_transform(xy(0, 0), xy(1, 1), 2048.6, 1)
-    draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(14%, 14%, 14%, 80%))
+window_scale = if VIEW_ARRAY[0].size.y <= 180 then 90% else 70%
 
+preserving_transform:
     // Animate zoom
     const intro_frames = 10
     const tau = min(100%, mode_frames / intro_frames)
 
-    draw_window(tau)
+    for view in VIEW_ARRAY:
+        reset_clip()
+        // Force the clipping range beyond what the API normally allows
+        $clipZ2 = 2049
+        set_transform(view.corner, xy(1, 1), 2048.6, 1)
+        draw_corner_rect(xy(0, 0), view.size, rgba(14%, 14%, 14%, 80%))
+
+        draw_window(tau)
+        if tau == 100%: draw_controls()
+
+        
     if tau == 100%:
-        draw_controls()
         for gamepad in gamepad_array:
             if (gamepad.xx > 0 or gamepad.aa or gamepad.ff) and selected_column_index < 5:
                 ++selected_column_index

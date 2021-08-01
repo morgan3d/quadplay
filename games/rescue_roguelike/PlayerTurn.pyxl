@@ -941,7 +941,7 @@ def draw_inspector():
     const text_pos = INSPECTOR_HOVER_OFFSET + padding
     const text_size = INSPECTOR_HOVER_SIZE - 2*padding
     set_clip({
-        pos: text_pos,
+        corner: text_pos,
         size: text_size,
     })
 

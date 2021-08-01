@@ -1,0 +1,20 @@
+Test
+════════════════════════════════════════════════════════════════════════
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+// TODO: Why does this not draw 
+// unless the point is also rendered?
+
+//if game_frames == 1: quit_game()
+
+//debug_print("---------------------")
+for p < 2:
+    const pos = ½ SCREEN_SIZE * xy(p ∩ 1, p >> 1)
+    set_clip(pos, xy(192, 112))
+    
+    draw_corner_rect(pos, xy(192, 112), gamepad_array[p].player_color)
+    //draw_point(pos, #FFF)
+
+

@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.07.28.01';
+const version  = '2021.08.01.02';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -113,7 +113,7 @@ function updateLastInteractionTime() { lastInteractionTime = Date.now(); }
 
 /* These can change due to launching different games, the in-game
    set_screen_size() function, or temporarily due to streaming. */ 
-let SCREEN_WIDTH = 384, SCREEN_HEIGHT = 224, PRIVATE_SCREEN = false;
+let SCREEN_WIDTH = 384, SCREEN_HEIGHT = 224, PRIVATE_VIEW = false;
 
 let gameSource;
 
@@ -499,28 +499,24 @@ function onResize() {
     case 'IDE':
         // Revert to defaults. This has to be done during resize
         // instead of setUIMode() to have any effect.
-        //emulatorScreen.removeAttribute('style');
-        //overlayScreen.removeAttribute('style');
         screenBorder.removeAttribute('style');
         document.getElementById('debugger').removeAttribute('style');
-        if (SCREEN_WIDTH <= 384/2 && SCREEN_HEIGHT <= 224/2) {
+        if (SCREEN_WIDTH <= (384>>1) && SCREEN_HEIGHT <= (224 >> 1)) {
             // Half-resolution games run with pixel doubling
             scale *= 2;
         }
 
-        if (scale !== 1) {
-            if (hasBrowserScaleBug) {
-                screenBorder.style.zoom = '' + scale;
-                if (uiMode === 'WideIDE') {
-                    screenBorder.style.left = (-5 / scale) + 'px';
-                } else {
-                    screenBorder.style.left = (8 / scale) + 'px';
-                }
-                screenBorder.style.top = (18 / scale) + 'px';
+        let zoom = setScreenBorderScale(screenBorder, scale);
+
+        if (hasBrowserScaleBug) {
+            if (uiMode === 'WideIDE') {
+                screenBorder.style.left = (-5 / zoom) + 'px';
             } else {
-                screenBorder.style.transform = 'scale(' + scale + ') translate3d(0,0,0)';
-                screenBorder.style.transformOrigin = 'left top';
+                screenBorder.style.left = (8 / zoom) + 'px';
             }
+            screenBorder.style.top = (18 / zoom) + 'px';
+        } else {
+            screenBorder.style.transformOrigin = 'left top';
         }
         background.removeAttribute('style');
         break;
@@ -553,19 +549,7 @@ function onResize() {
                 background.style.height = height + 'px';
             }
 
-            let zoom = 1;
-
-            if (hasBrowserScaleBug) {
-                // On Safari, CSS scaling overrides the crisp image rendering.
-                // We have to zoom instead (zoom acts differently on other browsers,
-                // so we don't use zoom on all platforms).
-                screenBorder.style.zoom = '' + scale;
-                zoom = scale;
-            } else {
-                // Setting the scale transform triggers really slow rendering on Raspberry Pi unless we
-                // add the "translate3d" hack to trigger hardware acceleration.
-                screenBorder.style.transform = 'scale(' + scale + ') translate3d(0,0,0)';
-            }
+            let zoom = setScreenBorderScale(screenBorder, scale);
             
             screenBorder.style.left = Math.round((windowWidth / zoom - screenBorder.offsetWidth - 1 / zoom) / 2) + 'px';
             if (gbMode) {
@@ -597,20 +581,7 @@ function onResize() {
                 scale = Math.floor(scale * window.devicePixelRatio) / window.devicePixelRatio;
             }
 
-            let zoom = 1;
-            if (isSafari) {
-                // On Safari, CSS scaling overrides the crisp image rendering.
-                // We have to zoom instead (zoom acts differently on other browsers,
-                // so we don't use zoom on all platforms).
-                screenBorder.style.zoom = '' + scale;
-                zoom = scale;
-            } else {
-                // Setting the scale transform causes really slow
-                // rendering on Raspberry Pi unless we add the
-                // "translate3d" hack to trigger hardware
-                // acceleration for the blit.
-                screenBorder.style.transform = 'scale(' + scale + ') translate3d(0,0,0)';
-            }
+            let zoom = setScreenBorderScale(screenBorder, scale);
             
             screenBorder.style.left = Math.round((windowWidth - screenBorder.offsetWidth * zoom - 4) / (2 * zoom)) + 'px';
             if (uiMode === 'Test') {
@@ -625,16 +596,41 @@ function onResize() {
         break;
     }
 
-    screenBorder.style.width = SCREEN_WIDTH + 'px';
-    screenBorder.style.height = SCREEN_HEIGHT + 'px';
+    const hostCrop = (PRIVATE_VIEW && ! isGuesting) ? 0.5 : 1.0;
+    
+    screenBorder.style.width = (SCREEN_WIDTH * hostCrop) + 'px';
+    screenBorder.style.height = (SCREEN_HEIGHT * hostCrop) + 'px';
     if (uiMode === 'Maximal' || uiMode === 'Windowed') {
         screenBorder.style.borderRadius = '0px';
         screenBorder.style.borderWidth  = '0px';
     } else {
-        screenBorder.style.borderRadius = Math.ceil(6 / scale) + 'px';
-        screenBorder.style.borderWidth  = Math.ceil(5 / scale) + 'px';
+        screenBorder.style.borderRadius = Math.ceil(6 * hostCrop / scale) + 'px';
+        screenBorder.style.borderWidth  = Math.ceil(5  * hostCrop / scale) + 'px';
     }
     screenBorder.style.boxShadow = `${1/scale}px ${2/scale}px ${2/scale}px 0px rgba(255,255,255,0.16), ${-1.5/scale}px {-2/scale}px ${2/scale}px 0px rgba(0,0,0,0.19)`;
+}
+
+
+/* Returns the net zoom factor */
+function setScreenBorderScale(screenBorder, scale) {
+    let zoom = 1;
+    if (PRIVATE_VIEW && ! isGuesting) {
+        scale *= 2;
+    }
+    
+    if (hasBrowserScaleBug) {
+        // On Safari, CSS scaling overrides the crisp image rendering.
+        // We have to zoom instead (zoom acts differently on other browsers,
+        // so we don't use zoom on all platforms).
+        screenBorder.style.zoom = '' + scale;
+        zoom = scale;
+    } else {
+        // Setting the scale transform triggers really slow rendering on Raspberry Pi unless we
+        // add the "translate3d" hack to trigger hardware acceleration.
+        screenBorder.style.transform = 'scale(' + scale + ') translate3d(0,0,0)';
+    }
+
+    return zoom;
 }
 
 
@@ -2898,12 +2894,12 @@ let error = document.getElementById('error');
 
 function setFramebufferSize(w, h, privateScreen) {
     if (privateScreen === undefined) {
-        privateScreen = PRIVATE_SCREEN;
+        privateScreen = PRIVATE_VIEW;
     }
     
     SCREEN_WIDTH = w;
     SCREEN_HEIGHT = h;
-    PRIVATE_SCREEN = privateScreen;
+    PRIVATE_VIEW = privateScreen;
     emulatorScreen.width = w;
     emulatorScreen.height = h;
     overlayScreen.width = w;
@@ -2926,10 +2922,11 @@ function setFramebufferSize(w, h, privateScreen) {
         QRuntime.$screen32 = new Uint32Array(QRuntime.$screen.buffer);
     
         // Rebind the constants
-        redefineConstant(QRuntime, 'SCREEN_SIZE', {x:SCREEN_WIDTH, y:SCREEN_HEIGHT});
-        redefineConstant(QRuntime, 'PRIVATE_SCREEN', PRIVATE_SCREEN);
-        QRuntime.$SCREEN_WIDTH  = SCREEN_WIDTH;
-        QRuntime.$SCREEN_HEIGHT = SCREEN_HEIGHT;
+        redefineScreenConstants();
+    }
+
+    if (isHosting) {
+        notifyGuestsOfFramebufferSize();
     }
 }
 
@@ -4038,6 +4035,43 @@ function frozenDeepClone(src, alreadySeen) {
 }
 
 
+/* Sets the QRuntime public and hidden resolution properties */
+function redefineScreenConstants(environment, alreadySeen) {
+    environment = environment || QRuntime;
+    alreadySeen = alreadySeen || new Map();
+
+    const VIEW_ARRAY = [];
+    if (PRIVATE_VIEW) {
+        const VIEW_SIZE = {x: SCREEN_WIDTH >> 1, y: SCREEN_HEIGHT >> 1};
+        for (let view_index = 0; view_index < 4; ++view_index) {
+            VIEW_ARRAY.push({
+                corner: {
+                    x: (view_index & 1)  ? VIEW_SIZE.x : 0,
+                    y: (view_index >> 1) ? VIEW_SIZE.y : 0
+                },
+                size: VIEW_SIZE,
+                shape: 'rect',
+                angle: 0,
+                scale: {x: 1, y: 1}
+            });
+        }
+    } else {
+        VIEW_ARRAY.push({
+            corner: {x: 0, y: 0},
+            size: {x: SCREEN_WIDTH, y: SCREEN_HEIGHT},
+            shape: 'rect',
+            angle: 0,
+            scale: {x: 1, y: 1}
+        });
+    }
+
+    redefineConstant(environment, 'SCREEN_SIZE', {x:SCREEN_WIDTH, y:SCREEN_HEIGHT}, alreadySeen);
+    redefineConstant(environment, 'VIEW_ARRAY', VIEW_ARRAY, alreadySeen);
+    QRuntime.$SCREEN_WIDTH  = SCREEN_WIDTH;
+    QRuntime.$SCREEN_HEIGHT = SCREEN_HEIGHT;
+}
+
+
 /** Environment is the object to create the constants on (the QRuntime
     iFrame, or the object at that is a package). */
 function makeConstants(environment, constants, CREDITS) {
@@ -4048,8 +4082,7 @@ function makeConstants(environment, constants, CREDITS) {
     defineImmutableProperty(environment, 'CONSTANTS', CONSTANTS);
 
     // Now redefine all constants appropriately
-    redefineConstant(environment, 'SCREEN_SIZE', {x:SCREEN_WIDTH, y:SCREEN_HEIGHT}, alreadySeen);
-    redefineConstant(environment, 'PRIVATE_SCREEN', false, alreadySeen);
+    redefineScreenConstants(environment, alreadySeen);
     redefineConstant(environment, 'CREDITS', CREDITS, alreadySeen);
 
     const IDE_USER = (isQuadserver && useIDE && serverConfig && serverConfig.IDE_USER) || 'anonymous';

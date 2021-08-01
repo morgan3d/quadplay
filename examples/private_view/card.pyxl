@@ -1,0 +1,126 @@
+// Scripts, variables, and constants here are visible to all modes
+
+const CARD_SUIT_SYMBOL = {
+    S: "♠",   
+    D: "♦",
+    C: "♣",
+    H: "♥",
+    J: ""
+}
+
+const CARD_SUIT_NAME = {
+    S: "Spades",
+    D: "Diamonds",
+    C: "Clubs",
+    H: "Hearts",
+    J: "Joker"
+}
+
+const CARD_VALUE_NAME = [
+    "Joker",
+    "Ace",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "Jack",    
+    "Queen",
+    "King"
+]
+
+const CARD_VALUE_SHORT_NAME = [
+    "",
+    "A",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "J",    
+    "Q",
+    "K"
+]
+
+def flip_card_callback(framesleft, total_frames, card):
+    const α = |2 framesleft / total_frames - 1|^0.25
+    
+    if framesleft == ⌊½ total_frames⌋:
+        card.front = not card.front
+        card.sprite = if card.front then card.front_sprite else card.back_sprite
+    
+    card.scale.x = α
+    
+    if framesleft == 0:
+        card.frame_hook = ∅
+
+
+def animate_flip_card(card):
+    const FLIP_FRAMES = 24
+    card.scale.x = 100%
+    play_sound(flip_sound, false, random(10%, 30%), card.pos, 150%, ∅, random(50%, 90%))
+    card.frame_hook = add_frame_hook(flip_card_callback, ∅, FLIP_FRAMES, ∅, card)
+
+
+/* Suit is the capital first letter of the name:
+   CHDS or J for joker. Value is 2-10, 1=Ace, 11=Jack, 12=Queen, 13=King
+   Jokers should have value 0 and -1
+   
+   front = true is a face-up card
+   */
+def make_card(pos, value, suit, z default 0, front default false):
+    assert(suit ≠ "J" or (value ≥ -1 and value ≤ 0), "Joker must have value 0")
+    assert(find("SDCHJ", suit) ≠ ∅, "Valid suits are C, H, D, S, and J. (suit = " + suit + ")")
+    assert(suit == "J" or (value ≥ 1 and value ≤ 13), "Valid values are 1-13 or 0 for Jokers")
+
+    const back_sprite = cards_sprite[13][1]
+    let name = CARD_VALUE_NAME[value] + " of " + CARD_SUIT_NAME[suit]
+    let short_name = CARD_VALUE_SHORT_NAME[value] + CARD_SUIT_SYMBOL[suit]        
+    
+    let front_sprite = cards_sprite[clamp(value, 1, 13) - 1][find("SDCH", suit) default 0]
+    
+    if value == 0:
+        name = "Black Joker"
+        short_name = "B Jkr"
+        front_sprite = cards_sprite[13][3]
+    else if value == -1:
+        name = "Red Joker"
+        short_name = "R Jkr"
+        front_sprite = cards_sprite[13][2]
+                    
+    return make_entity({
+        pos: pos,
+        front_sprite: front_sprite,
+        back_sprite: back_sprite,
+        sprite: if front then front_sprite else back_sprite,
+        name: name,
+        short_name: short_name,
+        value: value,
+        suit: suit,
+        front: front,
+        z: z
+    })
+
+
+    
+def make_deck(pos default xy(0, 0), front default false, include_jokers default false):
+    let deck = []
+    
+    if include_jokers:
+        for -1 ≤ value ≤ 0:
+            push(deck, make_card(pos, value, "J", size(deck), front))
+    
+    for suit in "SDCH":
+        for 1 ≤ value ≤ 13:
+            push(deck, make_card(pos, value, suit, size(deck), front))
+    
+    return deck
+        

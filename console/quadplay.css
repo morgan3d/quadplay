@@ -1346,6 +1346,9 @@ canvas#screenOverlay {
     position: absolute;
     display: block;
     background: #000;
+
+    /* Used on the host to hide the other 3 screens */
+    overflow: hidden;
     
     /* Can't put a border-radius on the canvas itself or it causes Chrome
        and Safari to ignore pixelated image rendering */

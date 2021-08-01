@@ -15,37 +15,49 @@ let old_mouse
 // When showing the guest-only menu
 let hide_host_option
 
-// Callback function when used by the system menu
+// Callback function when used by the launcher
 let manage_tabs
 
-const large_font  = if SCREEN_SIZE.y <= 180 then $font9 else $font15
-const medium_font = if SCREEN_SIZE.y <= 180 then $font8 else $font9
-const small_font = if SCREEN_SIZE.y <= 180 then $font6 else $font8
+let large_font
+let medium_font
+let small_font
 
-def manage_online_tab():
+/* Set resolution-based constants. Abstracted here because 
+   manage_online_tab() could be called when not in this mode. */
+def set_fonts():
+    large_font  = if VIEW_ARRAY[0].size.y <= 180 then $font9 else $font15
+    medium_font = if VIEW_ARRAY[0].size.y <= 180 then $font8 else $font9
+    small_font  = if VIEW_ARRAY[0].size.y <= 180 then $font6 else $font8
+    
+    
+def draw_view(view):
+    set_clip(view.corner, view.size, -2047, 4096)
+    $clipZ2 = 2049
+    set_transform(view.corner)
+    
     if $getIsOffline():
         draw_text({
             // Message for use in intermediate releases:
             //text: "This release does not support online multiplayer. Coming soon...",
             text: "quadplay✜ is running in offline mode\n\nRelaunch without the --offline argument\nto enable online multiplayer play.",
             font: medium_font,
-            pos: xy(SCREEN_SIZE.x / 2, 80),
+            pos: xy(0.5 view.size.x, 80),
             color: #f,
             shadow: $system_prompt_shadow,
             x_align: "center"
         })
         return
-    else if SCREEN_SIZE.x != 384 and SCREEN_SIZE.x != 192:
+    else if view.size.x != 384 and view.size.x != 192:
         draw_text({
             // Message for use in intermediate releases:
             text: "Only 384x224 and 192x112 resolution games support online play.",
-            font: if SCREEN_SIZE.y <= 180 then $font5 else $font6,
-            pos: xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 2),
+            font: if view.size.y <= 180 then $font5 else $font6,
+            pos: xy(0.5 view.size.x, 0.5 view.size.y),
             color: #f,
             shadow: $system_prompt_shadow,
             x_align: "center",
             y_align: "center",
-            wrap_width: SCREEN_SIZE.x - 10
+            wrap_width: view.size.x - 10
         })
         if any_button_press() and mode_frames > 10: pop_mode()
         return
@@ -63,7 +75,7 @@ def manage_online_tab():
         draw_text({
             text: "You are currently hosting at:",
             font: small_font,
-            pos: xy(SCREEN_SIZE.x / 2, 16% SCREEN_SIZE.y),
+            pos: xy(view.size.x / 2, 16% view.size.y),
             color: #f,
             shadow: $system_prompt_shadow,
             markup: true,
@@ -72,7 +84,7 @@ def manage_online_tab():
         draw_text({
             text: "\"" + HOST_CODE + "\"",
             font: large_font,
-            pos: xy(SCREEN_SIZE.x / 2, 30% SCREEN_SIZE.y),
+            pos: xy(view.size.x / 2, 30% view.size.y),
             color: #f,
             shadow: $system_prompt_shadow,
             markup: true,
@@ -112,15 +124,18 @@ def manage_online_tab():
 
     // Match _SystemMenu.pyxl
     let line_height = round(110% medium_font.line_height)
-    if SCREEN_SIZE.y <= 64: ++line_height
+    if view.size.y <= 64:
+        ++line_height
+    else if view.size.y <= 128:
+        line_height -= 1
     
     let touch_current_choice = false
-    let pos = xy(SCREEN_SIZE.x / 5, min(48% SCREEN_SIZE.y, 90% SCREEN_SIZE.y - size(choice_array) * line_height))
+    let pos = xy(view.size.x / 5, min(48% view.size.y, 90% view.size.y - size(choice_array) * line_height))
     if gamepad_array[0].status == "host":
-        pos.x += 20% SCREEN_SIZE.x
-    else if SCREEN_SIZE.y <= 180:
-        pos.x -= 10% SCREEN_SIZE.x
-               
+        pos.x += 20% view.size.x
+    else if view.size.y <= 180:
+        pos.x -= 10% view.size.x
+    
     for choice at i in choice_array:
 
         // Don't show lines if working off the pause menu or
@@ -144,8 +159,11 @@ def manage_online_tab():
             touch_current_choice = true
             
         pos.y += line_height
+        
+    return {choice_array: choice_array, touch_current_choice: touch_current_choice}
 
-            
+        
+def manage_online_input(choice_array, touch_current_choice):
     for gamepad in gamepad_array:
         online_choice_index = clamp(online_choice_index + gamepad.yy, 0, size(choice_array) - 1)
         if gamepad.aa or touch_current_choice:
@@ -192,6 +210,7 @@ def manage_online_tab():
                 pop_mode()
 
 
+                
 // If manage_tabs_callback is not empty, then this is being called
 // from the launcher instead of the pause menu
 enter(manage_tabs_callback, _hide_host_option)
@@ -209,9 +228,8 @@ device_control("set_mouse_cursor", "default")
 
 reset_post_effects()
 manage_tabs = manage_tabs_callback
-
-set_clip(xy(0, 0), SCREEN_SIZE, -2047, 4096)
 // Force the clipping range beyond what the API normally allows
+set_clip(xy(0, 0), VIEW_ARRAY[0].size, -2047, 4096)
 $clipZ2 = 2049
 
 
@@ -242,18 +260,22 @@ if hostNetID: $startGuesting(hostNetID)
 
 frame
 ────────────────────────────────────────────────────────────────────────
+set_fonts()
+// Force the clipping range beyond what the API normally allows
+reset_clip()
+$clipZ2 = 2049
+set_transform(xy(0, 0), xy(1, 1), 2048.6, 1)
 
 if manage_tabs:
     manage_tabs()
 else:
     draw_previous_mode()
-    // Force the clipping range beyond what the API normally allows
-    $clipZ2 = 2049
-    set_transform(xy(0, 0), xy(1, 1), 2048.6, 1)
+    // Shadow previous mode
     draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(14%, 14%, 14%, 80%))
-
-    const windowSize = (SCREEN_SIZE + 2) * (if manage_tabs then 1 else clamp((mode_frames + 1) / open_frames, 0%, 100%))
-    draw_rect(½ SCREEN_SIZE, windowSize, $system_window_background, $system_window_border)
+    
+    const windowSize = (VIEW_ARRAY[0].size + 2) * clamp((mode_frames + 1) / open_frames, 0%, 100%)
+    for view in VIEW_ARRAY:
+        draw_rect(½ view.size + view.corner, windowSize, $system_window_background, $system_window_border)
     
 
 if manage_tabs or mode_frames > open_frames:
@@ -261,4 +283,9 @@ if manage_tabs or mode_frames > open_frames:
     // manipulate the result, since we might
     // have gotten to this screen using a different
     // controller than the active one.
-    manage_online_tab()
+    let result
+    for view at view_index in VIEW_ARRAY:
+        const t = draw_view(view)
+        if view_index == 0: result = t
+        
+    manage_online_input(result.choice_array, result.touch_current_choice)

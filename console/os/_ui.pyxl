@@ -9,11 +9,19 @@ const $system_unselected_color  = #b
 const $online_name_length       = 7
 const $max_recent_hosts         = 3
 
+/* Chose the appropriate font for this resolution */
+def $system_font():
+    if VIEW_ARRAY[0].size.y <= 64:
+        return $font5
+    else if VIEW_ARRAY[0].size.y <= 180:
+        return $font8
+    else:
+        return $font9
+    
+
 /* Draws text with the extended drop shadow and pulsing for menus */
 def $draw_system_menu_text(args, selected):
-    let font = $font9
-    if SCREEN_SIZE.y <= 64: font = $font5
-    else if SCREEN_SIZE.y <= 180: font = $font8
+    const font = $system_font()
     
     // Used for pulsing selected values
     const bright = 0.5 (1 + cos(mode_frames / 9))

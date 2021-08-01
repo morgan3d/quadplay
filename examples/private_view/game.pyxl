@@ -1,0 +1,15 @@
+const player_array = []
+
+def make_player(gamepad):
+    return make_entity({
+        pos: (½ random_within_square() + ½) * VIEW_ARRAY[0].size,
+        sprite: ASSETS["player_sprite_" + gamepad.index].run[0],
+        name: gamepad.online_name,
+        text: gamepad.online_name,
+        offset: xy(0, -8),
+        text_color: gamepad.player_color,
+        text_offset: xy(0, -18),
+        font: font,
+        z: 10,
+        gamepad: gamepad
+    })

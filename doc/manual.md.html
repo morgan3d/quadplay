@@ -621,6 +621,12 @@ Simplified example of 2D zoom using `set_camera()`.
 [Zoom 3D](../console/quadplay.html?game=quad://examples/zoom&IDE=1) 
 Simplified example of 3D perspective zoom using `set_camera()`. See also the Vehicle example.
 
+</td></tr><tr><td>![](../examples/private_view/label128.png)</td><td>
+[Private View](../console/quadplay.html?game=quad://examples/private_view&IDE=1) 
+Private view example for online multiplayer using `set_screen_size()` and
+`VIEW_ARRAY`. Also shows how to streamline online game configuration using
+`start_guesting()`, `start_hosting()`, and `HOST_CODE`.
+
 </td></tr></table>
 
 ### Inspiration
@@ -2523,7 +2529,7 @@ of seconds that it will play before ending or looping.
   If `pan` is an `xy()` value, it is interpreted as a world space point
   and the pan is computed based on the fraction of `SCREEN_SIZE`
   under the current transformation and camera. Note that if `set_screen_size()`
-  is used with `private_screens = true`, `xy()` pan values will produce
+  is used with `private_views = true`, `xy()` pan values will produce
   incorrect audio. Set an explicit pan number in that case.
   
   If `stopped` is true, the sound initially starts in the `"STOPPED"` mode
@@ -3660,7 +3666,7 @@ using the full physics engine.
 
    - an entity from `make_entity()`
    - an `xy()` point 
-   - any object with `pos`, and optional `shape`, `angle`, `pivot`, and `size` properties
+   - any object with `pos` or `corner`, and optional `shape`, `angle`, `pivot`, and `size` properties
    - any object with `x` and `y` fields, which will be treated as a point
 
   If `recurse` is true (the default), compares `A` and all of its children
@@ -4303,7 +4309,7 @@ endpoints and borders.
 `intersect_clip(args)`
 : Object version of `intersect_clip()`.
 
-`intersect_clip(pos default ∅, size default ∅, z default ∅, z_size default ∅)`
+`intersect_clip(corner default ∅, size default ∅, z default ∅, z_size default ∅)`
 : Intersect the current clipping region with this new one. Ignores the
   current transformation.
 
@@ -4321,10 +4327,10 @@ endpoints and borders.
 `set_clip(args)`
 : Object version of `set_clip()`.
 
-`set_clip(pos default ∅, size default ∅, z default ∅, z_size default ∅)`
+`set_clip(corner default ∅, size default ∅, z default ∅, z_size default ∅)`
 : Set the clipping region to this corner rectangle in screen
   space. Unspecified and `nil` values retain their current
-  value. `pos` is the upper-left corner.  `pos` and `size` must be
+  value. `corner` is the upper-left corner.  `corner` and `size` must be
   `nil` or `xy()` values.  Coordinates are clamped to the physical
   screen and z to the range [-2047, 2048]. `size` and `z_size` may be
   negative. It is impossible to set a clipping region smaller than
@@ -4415,24 +4421,31 @@ Setting any post effects may slow down rendering slightly.
 : Return the current post effects in a form that can be passed to `set_post_effects()`.
 
 `set_post_effects(args)`
-: The arguments have the following fields, all optional. nil values default to their previous value.
-  Invoke `reset_post_effects()` first for a clean set.
+: The arguments have the following fields, all optional. `nil` values default to their previous value.
+  Invoke `reset_post_effects()` first for a clean set. 
 
-  - `background` is an `rgba()` to draw in the background behind the new frame. The `a` component
-    controls how opaque the background is. Setting `background.a = 0` allows new frames to be blended on
+  - `background` is an `rgba()` to draw in the background behind the
+    new frame. The `a` component controls how opaque the background
+    is. Setting `background.a = 0` allows new frames to be blended on
     top of old ones for a motion blur effect.
-  - `color` is an `rgba()` to combine with the the new frame before it is composited. Setting the `a`
-    to 0 disables the color.
-  - `blend_mode` is one of the following strings: `"source-over"`, `"difference"`, `"hue"`, `"multiply"`
-    describing how the `color` affects the frame.
-  - `scale` is an `xy` for how to stretch the new frame
-  - `angle` is a counter-clockwise angle in radians to rotate the image about its center by
-  - `pos` is an `xy` translation from the center, with +y = down
-  - `opacity` is the amount of opacity to use for the new frame. If `background.a` and `opacity` are
-    both less than 1 then the new and previous frames blend together
-  - `bloom` is the amount of overdrive to use on bright areas of the screen. This may affect performance
-    on slower machines, and bloom is not visible in screenshots or GIFs. The default of `0%` disables
-    the effect, `50%` is a reasonable value, and `100%` is an extreme value.
+  - `color` is an `rgba()` to combine with the the new frame before it
+    is composited. Setting the `a` to 0 disables the color.
+  - `blend_mode` is one of the following strings: `"source-over"`,
+    `"difference"`, `"hue"`, `"multiply"` describing how the `color`
+    affects the frame.
+  - `scale` is an `xy` for how to stretch the new frame.
+  - `angle` is a counter-clockwise angle in radians to rotate the
+    image about its center by.
+  - `pos` is an `xy` translation from the center, with +y = down.
+    Not visible in screenshots or GIFs
+  - `opacity` is the amount of opacity to use for the new frame. If
+    `background.a` and `opacity` are both less than 1 then the new and
+    previous frames blend together
+  - `bloom` is the amount of overdrive to use on bright areas of the
+    screen. This may affect performance on slower machines, and *bloom
+    is not visible in screenshots or GIFs*. The default of `0%`
+    disables the effect, `50%` is a reasonable value, and `100%` is an
+    extreme value.
 
 `reset_post_effects()`
 : Restore the defaults, which directly composite each frame.
@@ -4440,7 +4453,7 @@ Setting any post effects may slow down rendering slightly.
 
 ### Resolution
 
-`set_screen_size(size, private_screen default false)`
+`set_screen_size(size, private_view default false)`
 : Erases the current and previous graphics drawing state, including
   all drawing commands for the current frame. Resets the clipping
   region, transform, and camera transform. Switches the screen to the
@@ -4449,8 +4462,11 @@ Setting any post effects may slow down rendering slightly.
   
   `SCREEN_SIZE` will immediately be bound to a new immutable `xy()`
   object that has the new resolution.
+
+  `VIEW_ARRAY` will immediately be bound to a new immutable
+  array of corner rect objects.
   
-  The `private_screen` flag is for implementing per-player private
+  The `private_view` flag is for implementing per-player private
   screens for online multiplayer play, at reduced resolution. The
   screen configuration is the same as splitscreen multiplayer, except
   that each player can see only their own screen. This is an advanced
@@ -4458,32 +4474,36 @@ Setting any post effects may slow down rendering slightly.
   Quadplay is primarily intended for shared-screen multiplayer and
   private screens are hard to use effectively.
   
-  If `private_screen == false`, then:
+  If `private_view == false`, then:
   
   - the supported resolutions are 384x224, 320x180, 192x112, 128x128,
     and 64x64
-  - global `PRIVATE_SCREEN = false`
+  - global `VIEW_ARRAY[0].size = xy(SCREEN_SIZE)`
   
   
-  If `private_screen == true`, then:
+  If `private_view == true`, then:
   
   - the only supported resolution is 384x224
-  - global `PRIVATE_SCREEN = true`
+  - global `VIEW_ARRAY[0].size = SCREEN_SIZE / 2`
   - Only the upper left 1/4 of the screen will be displayed on the
     local host machine. When playing online, the other 1/4 screens are
     streamed to P2 (top left), P3 (bottom left), and P4 (bottom right)
     when connected
 
-!!!
-    When debugging private screen multiplayer, you can temporarily
-    `private_screen` set to `false` to see all players on a single
-    computer. Develop as split-screen multiplayer and then switch
-    to private screens when everything works!
-
 In private screen mode with y increasing upwards, the player with
 index `0 ≤ p < 3` has screen corner at `½ SCREEN_SIZE * xy(p ∩ 1, p >> 1)`.
 
-In the current API, private screens are _screens_--there is no per-player 
+To set up rendering for private screens, or both private and unified
+screens, use:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Pyxlscript
+for view in VIEW_ARRAY:
+    set_clip(view)
+    set_transform(view.corner)
+    ...
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the current API, private views are for pixels only--there is no per-player 
 private _audio_.
 
 <center>
@@ -6930,19 +6950,19 @@ now but are reserved for future use.
 `elif`, `end`, `extern`, `enum`,
 `final`, `finally`, `for`, `from`, `freeze`, `function`,
 `get`, `global`, `go`, `goto`,
-`has`,
+`has`, `HOST_CODE`,
 `if`, `in`, `implements`, `inherits`, `include`, `import`, `interface`,
 `launch_game`, `let`, `local`,
 `nan`, `NaN`, `new`, `nil`, `nonlocal`, `not`, `null`,
 `main`, `MAD`, `mod`, `module`, `mode`, `MUL`,
 `or`, `otherwise`,
-`public`, `private`, `PRIVATE_SCREEN`, `protected`, `prototype`, `package`, `preserve`, `preserving_transform`,
+`public`, `private`, `protected`, `prototype`, `package`, `preserve`, `preserving_transform`,
 `quit_game`,
 `ret`, `return`, `reset_game`, `require`, `requires`,
 `seal`, `set`, `show`, `static`, `strict`, `SUB`, `swap`, `SOURCE_LOCATION`, `SCREEN_SIZE`,
 `to`, `todo`, `to_string`, `then`, `try`, `throw`, `template`, `touch`,
 `until`, `use`, `using`, `unless`,
-`var`,
+`var`, `VIEW_ARRAY`,
 `while`, `with`, `when`,
 `xor`,
 `yield`.
@@ -7304,8 +7324,11 @@ draw_text({text: "World", pos: xy(10, 120), …text_args})
 
 ### Built-in Objects
 
-The following are built-in constants and special zero-argument operators. They are
-not variable names and thus cannot be redefined. Several have both unicode and ASCII names.
+The following are built-in constants and special zero-argument
+operators. They are not variable names and thus cannot be
+redefined. Several have both unicode and ASCII names.
+
+Literals (replaced by the parser at compile tile):
 
 Symbol         | ASCII           | Value
 ---------------|-----------------|----------------------------------------
@@ -7313,12 +7336,30 @@ Symbol         | ASCII           | Value
 `π`            | `pi`            | `3.141592653589793115997963468544185161590576171875`
 `∞`            | `infinity`      | infinity
                | `nan`           | floating-point "not-a-number" value
-               | `CREDITS`       | object of credit and license statements from assets and code
 `∅`            | `nil`           | ("undefined")
-               | `pad`           | array gamepad of objects
-               | `joy`           | shorthand for `pad₀`
+
+
+The following are lowercase because they contain values that can change
+without game code specifically triggering that:
+
+Symbol         | ASCII           | Value
+---------------|-----------------|----------------------------------------
 `ξ`            | `random()`      | random number on [0, 1), resampled every time the expression is used
-               | `SCREEN_SIZE`   | the size of the screen in pixels, defaults to `xy(384, 224)`
+               | `gamepad_array` | array gamepad of objects
+               | `touch`         | the object for tracking touch and mouse input
+               | `joy`           | shorthand for `gamepad_array[0]` (deprecated)
+
+
+These have values that will not change unless game code specifically
+invokes a routine to change them, such as `set_screen_size()` (or if
+the player uses the system GUI for `HOST_CODE`):
+
+Symbol         | ASCII           | Value
+---------------|-----------------|----------------------------------------
+               | `CREDITS`       | object of credit and license statements from assets and code
+               | `HOST_CODE`     | string that is the code guests can use to connect when hosting
+               | `SCREEN_SIZE`   | the size of the full screen in pixels, defaults to `xy(384, 224)`. See also `VIEW_ARRAY[0].size`
+               | `VIEW_ARRAY`    | array of corner rects for host and each guest's view in private view online multiplayer. See `set_screen_size()`
                | `CONSTANTS`     | an object mapping all game-specific constants to their values
                | `ASSETS`        | an object mapping all game-specific assets to their values
                | `SOURCE_LOCATION` | an object that has fields `{url:, filename:, line_number:}` from its location in the source code
@@ -8506,7 +8547,7 @@ through for 1.0. The highlights of this are, in priority order:
 
 [x] Development on macOS, Windows, Ubuntu Linux, and Raspberry Pi OS
 [x] Playing on phone, tablet, desktop, laptop, netbook,
-    homebrew arcades, Raspberry Pi, and Jetson Nano
+    homebrew arcades, Win GPD X, Raspberry Pi, Jetson Nano, and SteamDeck
 [x] Gamepads
   [x] 8BitDo
   [x] Switch JoyCons
@@ -8532,7 +8573,9 @@ through for 1.0. The highlights of this are, in priority order:
 [x] Aseprite, Photoshop, Krita, and Tiled external editor support
 [x] 50% virtual GPU graphics speedup over the alpha
 [x] Load tables of data from CSV files
-[x] Shared-screen network multiplayer
+[x] Shared-screen local multiplayer
+[x] Shared-screen online multiplayer
+[x] Private-screen online multiplayer
 
 
 Post 1.0
@@ -8665,6 +8708,15 @@ Notes for Beta Testers
 The IDE will receive major new features throughout and after the beta
 phase. This includes editors for sprites and maps.
 
+The private view online multiplayer mode is very new and has several
+known limitations and bugs:
+
+- Screenshots and video will capture all players's screens
+- There is no way to send audio to only some of the players
+- Some of the system menus do not work in private screen mode (credits, controls menu, set controls menu, set controller order)
+- The Test layout scales incorrectly
+- Only 384 x 224 resolution is supported (192x112 per player)
+
 Expect rasterization alignment rules for triangles to change slightly
 in order to better align for subpixel cases. The current map, disk,
 line, and rectangle rendering alignment is final. Sprite alignment is
@@ -8682,7 +8734,6 @@ beta. You can load relative URLs for scripts and assets right now. So,
 the need for packages isn't urgent as you can reuse across projects
 already. What packages will provide are namespaces as well as assets
 bundled together with a script.
-
 
 
 <link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">

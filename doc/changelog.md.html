@@ -14,12 +14,17 @@ of [quadplay✜](manual.md.html).
 - `quadplay.vbs` script on Windows now supports all `quadplay`
   command-line arguments
 - New pink Kenney alien sprite
+- New private view online multiplayer API via `set_screen_size()` and `view_array`
 - Added explicit popup error messages on missing, relative, or
   space-containing `my_quadplay` directories
 - Added `disconnect_guest()` for graceful disconnection from within game code
-- Added `start_hosting()` and `HOST_ID` to initiate hosting directly from games (instead of the system menu)
+- Added `start_hosting()` and `HOST_CODE` to initiate hosting directly from games (instead of the system menu)
 - Added `stop_hosting()`
 - Added args version of `draw_map_span()`
+- Added support for corner rects in `overlaps()`
+- *Incompatible change*: `set_clip()`, `get_clip()`, and
+  `intersect_clip()` argument renamed from `pos` --> `corner` to be
+  consistent with the rest of the API
 - Fixed `gamepad.type` and `gamepad.prompt` not resetting after a
   guest disconnects
 - Fixed `gamepad.prompt` being `nil` for guest controllers after they
@@ -28,6 +33,8 @@ of [quadplay✜](manual.md.html).
   Menu in game
 - Fixed back-to-back rectangle draw calls with different clipping regions
   failing
+- Fixed `gamepad_array` being syntax highlighted as a function instead of a constant
+- Fixed `size` and `loop` being syntax highlighted as functions when used as properties or variables
 
 
 2021 July 22: Beta update 70
