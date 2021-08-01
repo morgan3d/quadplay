@@ -3,7 +3,7 @@
 
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.08.01.02';
+const version  = '2021.08.01.03';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -2928,7 +2928,10 @@ function setFramebufferSize(w, h, privateScreen) {
     if (isHosting) {
         notifyGuestsOfFramebufferSize();
     }
+
+    onResize();
 }
+
 
 
 // Set by compilation
@@ -4343,7 +4346,7 @@ function loadGameIntoIDE(url, callback, loadFast) {
             document.title = gameSource.extendedJSON.title;
             console.log(`Loading complete (${Math.round(performance.now() - startTime)} ms)`);
 
-            setFramebufferSize(gameSource.extendedJSON.screen_size.x, gameSource.extendedJSON.screen_size.y);
+            setFramebufferSize(gameSource.extendedJSON.screen_size.x, gameSource.extendedJSON.screen_size.y, false);
             createProjectWindow(gameSource);
             const resourcePane = document.getElementById('resourcePane');
 
@@ -4750,7 +4753,7 @@ setColorScheme(localStorage.getItem('colorScheme') || 'dots');
 }
 onResize();
 // Set the initial size
-setFramebufferSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+setFramebufferSize(SCREEN_WIDTH, SCREEN_HEIGHT, false);
 reloadRuntime();
 
 // Get the configuration if running on a quadplay server

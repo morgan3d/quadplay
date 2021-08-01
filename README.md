@@ -45,7 +45,7 @@ Features
 - 60 fps @ 384 x 224 pixels = 12:7 aspect ≈ 16:9.3
 - 4096 sRGB (4:4:4) colors
 - Four players with virtual controls for D-pad and eight buttons
-- Local and safe remote shared-screen multiplayer
+- Local and safe online multiplayer
 - Supports Xbox, Playstation, SNES, Stadia, Switch, 8bitdo, touch screen, and other controllers
 - Hundreds of built-in sprites, sounds, and fonts
 - Program in PyxlScript, a friendly Python-like language
