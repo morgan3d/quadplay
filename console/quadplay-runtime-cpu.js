@@ -9732,8 +9732,8 @@ function set_screen_size(size, private_views) {
 
     // Check for legal resolutions
     if (private_views) {
-        if (w !== 384 || h !== 224) {
-            $error('set_screen_size() with private screens must be at 384x224 resolution');
+        if (! ((w === 384 && h === 224) || (w === 128 && h === 128))) {
+            $error('set_screen_size() with private screens must be at 384x224 or 128x128 resolution');
         }
     } else if (! ((w === 384 && h === 224) ||
                   (w === 320 && h === 180) ||

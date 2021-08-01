@@ -966,6 +966,18 @@ The closest relative to frame hooks is JavaScript's `setTimeout()`
 function, although it is much more limited.
 
 
+### Network Multiplayer
+
+All quadplay✜ games automatically support *shared-screen* network
+multiplayer through the built-in system menu's Online options. The
+programming model is identical for local and network games and the
+runtime handles everything for you. There are no explicit
+synchronization messages or connections required per game.
+
+See the Network section of the API for ways that games can customize
+online play. This includes simplifying the user experience for
+creating and joining games and private per-player views.
+
 
 Coming from...
 ------------------------------------------------------------------------------------
@@ -4453,7 +4465,7 @@ Setting any post effects may slow down rendering slightly.
 
 ### Resolution
 
-`set_screen_size(size, private_view default false)`
+`set_screen_size(size, private_views default false)`
 : Erases the current and previous graphics drawing state, including
   all drawing commands for the current frame. Resets the clipping
   region, transform, and camera transform. Switches the screen to the
@@ -4466,7 +4478,7 @@ Setting any post effects may slow down rendering slightly.
   `VIEW_ARRAY` will immediately be bound to a new immutable
   array of corner rect objects.
   
-  The `private_view` flag is for implementing per-player private
+  The `private_views` flag is for implementing per-player private
   screens for online multiplayer play, at reduced resolution. The
   screen configuration is the same as splitscreen multiplayer, except
   that each player can see only their own screen. This is an advanced
@@ -4474,27 +4486,28 @@ Setting any post effects may slow down rendering slightly.
   Quadplay is primarily intended for shared-screen multiplayer and
   private screens are hard to use effectively.
   
-  If `private_view == false`, then:
+  If `private_views == false`, then:
   
   - the supported resolutions are 384x224, 320x180, 192x112, 128x128,
     and 64x64
   - global `VIEW_ARRAY[0].size = xy(SCREEN_SIZE)`
   
   
-  If `private_view == true`, then:
+  If `private_views == true`, then:
   
-  - the only supported resolution is 384x224
+  - the supported resolutions are 384x224 and 128x128
   - global `VIEW_ARRAY[0].size = SCREEN_SIZE / 2`
-  - Only the upper left 1/4 of the screen will be displayed on the
+  - only the upper left 1/4 of the screen will be displayed on the
     local host machine. When playing online, the other 1/4 screens are
     streamed to P2 (top left), P3 (bottom left), and P4 (bottom right)
     when connected
+  - screenshots and video on the host will capture all players's screens
+
 
 In private screen mode with y increasing upwards, the player with
 index `0 ≤ p < 3` has screen corner at `½ SCREEN_SIZE * xy(p ∩ 1, p >> 1)`.
 
-To set up rendering for private screens, or both private and unified
-screens, use:
+To set up rendering for both private views and unified screens, use:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Pyxlscript
 for view in VIEW_ARRAY:
@@ -8711,11 +8724,10 @@ phase. This includes editors for sprites and maps.
 The private view online multiplayer mode is very new and has several
 known limitations and bugs:
 
-- Screenshots and video will capture all players's screens
 - There is no way to send audio to only some of the players
-- Some of the system menus do not work in private screen mode (credits, controls menu, set controls menu, set controller order)
-- The Test layout scales incorrectly
-- Only 384 x 224 resolution is supported (192x112 per player)
+- Some of the system menus do not work in private screen mode 
+  (credits, controls menu, set controls menu, set controller order)
+- Only 384x224 and 128x128 screen resolution are supported (192x112 or 64x64 per player)
 
 Expect rasterization alignment rules for triangles to change slightly
 in order to better align for subpixel cases. The current map, disk,

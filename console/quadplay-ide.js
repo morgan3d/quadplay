@@ -1,9 +1,10 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
 "use strict";
 
+const version  = '2021.08.01.10';
+
 // Set to false when working on quadplay itself
 const deployed = true;
-const version  = '2021.08.01.03';
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -586,7 +587,8 @@ function onResize() {
             screenBorder.style.left = Math.round((windowWidth - screenBorder.offsetWidth * zoom - 4) / (2 * zoom)) + 'px';
             if (uiMode === 'Test') {
                 screenBorder.style.top = '0px';
-                document.getElementById('debugger').style.top = Math.round(scale * screenBorder.offsetHeight + 25) + 'px';
+                const S = (PRIVATE_VIEW && ! isGuesting) ? 2 : 1;
+                document.getElementById('debugger').style.top = Math.round(S * scale * screenBorder.offsetHeight + 25) + 'px';
                 screenBorder.style.transformOrigin = 'center top';
             } else {
                 screenBorder.style.transformOrigin = 'center';

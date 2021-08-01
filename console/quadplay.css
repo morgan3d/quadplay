@@ -1288,6 +1288,7 @@ body.EmulatorUI .virtualController {
     width: 384px;
     height: 224px;
     transform-origin: top left;
+    z-index: -11;
 }
 
 #guestVideoCover {
