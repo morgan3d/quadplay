@@ -1,5 +1,5 @@
 {
-    "title": "Private View",
+    "title": "Private Views",
     "developer": "@CasualEffects",
     "copyright": "©2021 Morgan McGuire",
     "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
@@ -29,8 +29,7 @@
     "achievements": false,
     "highscores": false,
     "description": "Example of using private views for online multiplayer",
-    "constants": {
-    },
+    "constants": {},
     "screenshot_tag": "PrivateView",
     "screen_size": {
         "x": 384,

@@ -110,6 +110,7 @@ set_background(old_background)
 device_control("set_mouse_lock", old_mouse.lock)
 device_control("set_mouse_cursor", old_mouse.cursor)
 $resumeAllSounds()
+$resetEmulatorKeyState()
 
 
 pop_mode(callback) from $ConfirmDialog

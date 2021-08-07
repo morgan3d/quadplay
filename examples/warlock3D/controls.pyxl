@@ -103,7 +103,8 @@ def simulate_view(view, gamepad, gamepad2):
     desired_vs_vel = direction(desired_vs_vel) * min(‖desired_vs_vel‖, MAX_SPEED)
     
     // Adjust [view space] desired speed smoothly
-    view.speed = lerp(view.speed, desired_vs_vel, 20%)  
+    view.speed = desired_vs_vel//lerp(view.speed, desired_vs_vel, 20%)  
+    todo("Reenable lerp")
 
     const fwd = ws_forward(view)
     
@@ -121,7 +122,7 @@ def simulate_view(view, gamepad, gamepad2):
         vel: perp(fwd) * view.speed.x - fwd * view.speed.y,
     }
     
-    entity_slide_move_map(proxy, dungeon_map, WALL_LAYER)   
+    entity_slide_move_map(proxy, dungeon_map, WALL_LAYER, view)
     view.pos.x = proxy.pos.x
     view.pos.y = proxy.pos.y
     

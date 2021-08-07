@@ -1,10 +1,10 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
 "use strict";
 
-const version  = '2021.08.01.10';
+const version  = '2021.08.07.13';
 
 // Set to false when working on quadplay itself
-const deployed = true;
+const deployed = false;
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -1327,6 +1327,7 @@ for (const name in controlSchemeTable) {
 /** Called by reset_game() as well as the play and reload buttons to
     reset all game state and load the game.  */
 function restartProgram(numBootAnimationFrames) {
+    resetEmulatorKeyState();
     reloadRuntime(function () {
         try {
             // Inject the constants into the runtime space. Define
@@ -1362,6 +1363,12 @@ function onError(e) {
     if (useIDE && (uiMode === 'Emulator' || uiMode === 'Maximal' || uiMode === 'Windowed')) {
         // Go to a mode where the error will be visible.
         setUIMode('IDE');
+    }
+
+    if (useIDE && QRuntime.$debugWatchEnabled) {
+        // Flush the debug data so that errors can be debugged
+        // from it
+        updateDebugWatchDisplay();
     }
     
     e = jsToPSError(e);
@@ -1748,6 +1755,7 @@ function saveIDEState() {
         'automathEnabled': document.getElementById('automathEnabled').checked,
         'debugWatchEnabled': document.getElementById('debugWatchEnabled').checked,
         'debugPrintEnabled': document.getElementById('debugPrintEnabled').checked,
+        'printTouchEnabled': document.getElementById('printTouchEnabled').checked,
         'restartOnFocusEnabled': document.getElementById('restartOnFocusEnabled').checked,
         'codeEditorFontSize': '' + codeEditorFontSize,
         'autoplayOnLoad': document.getElementById('autoplayOnLoad').checked,
@@ -3567,24 +3575,7 @@ function updateDebugger(showHTML) {
     
     // console.log(QRuntime.game_frames, debugWatchEnabled.checked, emulatorMode, debugWatchTable.changed);
     if ((QRuntime.game_frames === 0 || debugWatchEnabled.checked) && ((emulatorMode === 'play') || debugWatchTable.changed)) {
-        let s = '';
-        for (const id in debugWatchTable) {
-            if (id === 'changed') { continue; }
-            const watch = debugWatchTable[id];
-            let tooltip = watch.location.url.replace(/^.*\//, '');
-            if (/[A-Z]/.test(tooltip[0])) {
-                // For modes, remove the extension
-                tooltip = tooltip.replace(/\.pyxl$/, '');
-            }
-            tooltip += ':' + watch.location.line_number;
-            s += `<tr valign=top><td width=50% title="${tooltip}" style="cursor:pointer" onclick="editorGotoFileLine('${watch.location.url}', ${watch.location.line_number}, undefined, false)">${watch.expression}</td><td>${watch.value}</td></tr>`;
-        }
-        
-        const pane = document.getElementById('debugWatchDisplayPane');
-        if (pane.innerHTML !== s) {
-            pane.innerHTML = '<table width=100% style="border-collapse: collapse">' + s + '</table>';
-        }
-        debugWatchTable.changed = false;
+        updateDebugWatchDisplay();
     }
 
     if (QRuntime.$gameMode) {
@@ -3611,6 +3602,29 @@ function updateDebugger(showHTML) {
     debugGameFramesDisplay.innerHTML = '' + QRuntime.game_frames;
 }
 
+
+function updateDebugWatchDisplay() {
+    let s = '';
+    
+    for (const id in debugWatchTable) {
+        if (id === 'changed') { continue; }
+        const watch = debugWatchTable[id];
+        let tooltip = watch.location.url.replace(/^.*\//, '');
+        if (/[A-Z]/.test(tooltip[0])) {
+            // For modes, remove the extension
+            tooltip = tooltip.replace(/\.pyxl$/, '');
+        }
+        tooltip += ':' + watch.location.line_number;
+        s += `<tr valign=top><td width=50% title="${tooltip}" style="cursor:pointer" onclick="editorGotoFileLine('${watch.location.url}', ${watch.location.line_number}, undefined, false)">${watch.expression}</td><td>${watch.value}</td></tr>`;
+    }
+    
+    const pane = document.getElementById('debugWatchDisplayPane');
+    if (pane.innerHTML !== s) {
+        pane.innerHTML = '<table width=100% style="border-collapse: collapse">' + s + '</table>';
+    }
+    
+    debugWatchTable.changed = false;
+}
 
 /* Print only the filename base when it is the same as the game base */
 function shortURL(url) {
@@ -3674,6 +3688,8 @@ function reloadRuntime(oncomplete) {
         QRuntime.$setFramebufferSize = setFramebufferSize;
         QRuntime.$sleep              = useIDE ? null : sleep;
         QRuntime.disconnect_guest    = disconnectGuest;
+        QRuntime.$notifyGuestsOfPostEffects = notifyGuestsOfPostEffects;
+        QRuntime.$resetEmulatorKeyState = resetEmulatorKeyState;
         QRuntime.$Object.prototype.toString = function () {
             return (this && this.$name) || QRuntime.unparse(this);
         };
@@ -4553,6 +4569,10 @@ window.addEventListener('blur', function () {
 }, false);
 
 window.addEventListener('focus', function() {
+    // Reset the bloom state; it might have disabled
+    // while defocused due to browser throttling.
+    allow_bloom = true;
+    
     // Quadplay development; avoid autoreloading because
     // it makes debugging the compiler and IDE difficult
     if (! AUTO_RELOAD_ON_FOCUS) { return; }
@@ -4647,7 +4667,7 @@ if (! localStorage.getItem('autoplayOnLoad')) {
 document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanceTab').checked = true;
 
 {
-    const optionNames = ['showPhysicsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'todoEnabled', 'automathEnabled', 'debugPrintEnabled', 'debugWatchEnabled', 'restartOnFocusEnabled', 'autoplayOnLoad', 'onScreenHUDEnabled'];
+    const optionNames = ['showPhysicsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'todoEnabled', 'automathEnabled', 'debugPrintEnabled', 'debugWatchEnabled', 'restartOnFocusEnabled', 'autoplayOnLoad', 'onScreenHUDEnabled', 'printTouchEnabled'];
     for (let i = 0; i < optionNames.length; ++i) {
         const name = optionNames[i];
         const value = JSON.parse(localStorage.getItem(name) || 'false');

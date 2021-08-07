@@ -6,7 +6,7 @@
 Changes for both the specification and implementation in each release
 of [quadplay✜](manual.md.html).
 
-2021 July TBD: Beta update 71
+2021 August 7: Beta update 71
 ===================================
 
 - Added `gamepad.status` read-only property for detecting 
@@ -25,10 +25,20 @@ of [quadplay✜](manual.md.html).
 - *Incompatible change*: `set_clip()`, `get_clip()`, and
   `intersect_clip()` argument renamed from `pos` --> `corner` to be
   consistent with the rest of the API
+- `debug_watch()` now shows intermediate results of a frame when a program
+  error occurs
+- Added debugger option for printing touch screen coordinates
+- Keyboard pressed/released state now resets after program restart and
+  system menus
+- Fixed bloom not working in online multiplayer
+- Fixed Warlock3D player getting stuck on walls
 - Fixed `gamepad.type` and `gamepad.prompt` not resetting after a
   guest disconnects
+- Fixed `overlaps()` incorrectly returning `false` too often due to
+  an overly aggressive bounding box test
 - Fixed `gamepad.prompt` being `nil` for guest controllers after they
   connect
+- Fixed mouse triggering `touch.aa` during mouse movement while held
 - Fixed missing cursor and incorrect clipping region for system Online
   Menu in game
 - Fixed back-to-back rectangle draw calls with different clipping regions

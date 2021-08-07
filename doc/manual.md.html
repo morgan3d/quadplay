@@ -622,7 +622,7 @@ Simplified example of 2D zoom using `set_camera()`.
 Simplified example of 3D perspective zoom using `set_camera()`. See also the Vehicle example.
 
 </td></tr><tr><td>![](../examples/private_view/label128.png)</td><td>
-[Private View](../console/quadplay.html?game=quad://examples/private_view&IDE=1) 
+[Private Views](../console/quadplay.html?game=quad://examples/private_view&IDE=1) 
 Private view example for online multiplayer using `set_screen_size()` and
 `VIEW_ARRAY`. Also shows how to streamline online game configuration using
 `start_guesting()`, `start_hosting()`, and `HOST_CODE`.
@@ -976,7 +976,7 @@ synchronization messages or connections required per game.
 
 See the Network section of the API for ways that games can customize
 online play. This includes simplifying the user experience for
-creating and joining games and private per-player views.
+creating and joining games and *private per-player views*.
 
 
 Coming from...
@@ -1044,8 +1044,8 @@ The PyxlScript language feels a lot like JavaScript strict mode, with these chan
 - No `;` required, except for multiple statements on the same line
 - Use `size(x)` instead of `x.length`
 - Use `for v at k in object:` instead of `for (k in object)`
-- Use `for k in array:` instead of `for (k in array)`
 - Use `for v in array:` instead of `for (v of array)`
+- Use `for k < size(array):` instead of `for (k in array)`
 - It is safe to mutate containers inside iterator loops
 - There are no anonymous functions
 - Function names are not lifted to the containing function's scope
@@ -4433,8 +4433,9 @@ Setting any post effects may slow down rendering slightly.
 : Return the current post effects in a form that can be passed to `set_post_effects()`.
 
 `set_post_effects(args)`
-: The arguments have the following fields, all optional. `nil` values default to their previous value.
-  Invoke `reset_post_effects()` first for a clean set. 
+: The arguments have the following fields, all optional. `nil` values
+  default to their previous value.  Invoke `reset_post_effects()`
+  first for a clean set.
 
   - `background` is an `rgba()` to draw in the background behind the
     new frame. The `a` component controls how opaque the background
@@ -4459,6 +4460,10 @@ Setting any post effects may slow down rendering slightly.
     disables the effect, `50%` is a reasonable value, and `100%` is an
     extreme value.
 
+  `scale`, `angle`, and `pos` are applied to the entire screen, so 
+  do not interact well with multiplayer private views configured via
+  `set_screen_size()`.
+ 
 `reset_post_effects()`
 : Restore the defaults, which directly composite each frame.
 
@@ -4495,7 +4500,7 @@ Setting any post effects may slow down rendering slightly.
   
   If `private_views == true`, then:
   
-  - the supported resolutions are 384x224 and 128x128
+  - the supported resolutions are 384x224 and 128x128 (192x112 and 64x64 player views)
   - global `VIEW_ARRAY[0].size = SCREEN_SIZE / 2`
   - only the upper left 1/4 of the screen will be displayed on the
     local host machine. When playing online, the other 1/4 screens are

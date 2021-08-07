@@ -253,19 +253,22 @@ function peerErrorHandler(err) {
 
 function notifyGuestsOfFramebufferSize() {
     // Tell the guests about the current private screen flag
-
-    const message = {
+    sendToAllGuests({
         type: 'FRAMEBUFFER_SIZE',
         SCREEN_WIDTH: SCREEN_WIDTH,
         SCREEN_HEIGHT: SCREEN_HEIGHT,
         PRIVATE_VIEW: PRIVATE_VIEW
-    };
-    
-    for (let i = 0; i < connectedGuestArray.length; ++i) {
-        if (guest.dataConnection.open) {
-            guest.dataConnection.send(message);
-        }
-    }
+    });
+}
+
+
+function notifyGuestsOfPostEffects() {
+    // The only post-effect applied client side is bloom,
+    // so the others are irrelevant
+    sendToAllGuests({
+        type: 'POST_EFFECTS',
+        bloom: QRuntime.$postFX.bloom
+    });
 }
 
 
@@ -317,8 +320,10 @@ function startHosting() {
     // Latencies are expressed in seconds
     hostVideoStream.getVideoTracks()[0].applyConstraints({
         latency: {min: 0, ideal: 0.015, max: 0.100},
-        frameRate: {max: 60, ideal: 60, min: 30},
+        frameRate: {max: 60, ideal: 60, min: 20},
         cursor: {exact: 'always', ideal: 'always'}
+    }).catch(function (error) {
+        console.log('Suppressed streaming constraint error', error);
     });
 
     hostAudioDestination = audioContext.createMediaStreamDestination();
@@ -459,7 +464,12 @@ function startHosting() {
                     type: 'CONNECT',
                     name: myOnlineName,
                     player_index: player_index,
-                    private_view: PRIVATE_VIEW
+
+                    // Initial state of client graphics.
+                    // Updates will be sent to all guests
+                    // as new messages
+                    private_view: PRIVATE_VIEW,
+                    bloom: QRuntime.$postFX.bloom
                 });
                 console.log('sent connect message');
             }
@@ -554,6 +564,8 @@ function startGuesting(hostNetID) {
     // For restoring screen resolution on disconnect
     stopGuesting.oldScreenSize = {x: SCREEN_WIDTH, y: SCREEN_HEIGHT};
     stopGuesting.oldPrivateScreen = PRIVATE_VIEW;
+    stopGuesting.oldBloom = QRuntime.$postFX.bloom;
+    QRuntime.$postFX.bloom = 0;
 
     function drawVideo() {
         // Shut down the video rendering when we stop being a guest
@@ -598,6 +610,8 @@ function startGuesting(hostNetID) {
                 // Full screen
                 ctx.drawImage(videoElement, 0, 0, videoWidth, videoHeight);
             }
+
+            maybeApplyBloom(QRuntime.$postFX.bloom, true);
         }
         
         // Run right before vsync to eliminate latency between the
@@ -730,6 +744,11 @@ function startGuesting(hostNetID) {
                 const scale = PRIVATE_VIEW ? 0.5 : 1.0;
                 setFramebufferSize(message.SCREEN_WIDTH * scale, message.SCREEN_HEIGHT * scale, message.PRIVATE_VIEW);
             },
+
+            POST_EFFECTS: function (message) {
+                console.log('Received', message);
+                QRuntime.$postFX.bloom = message.bloom;
+            },
             
             CONNECT: function(message) {
                 console.log('received CONNECT message from host');
@@ -747,6 +766,7 @@ function startGuesting(hostNetID) {
                 recent_host_array.length = Math.min(recent_host_array.length, 3);
                 localStorage.setItem('recent_host_array', QRuntime.unparse(recent_host_array, 0));
                 PRIVATE_VIEW = message.private_view;
+                QRuntime.$postFX.bloom = message.bloom;
                 myGuestPlayerIndex = message.player_index;
                 
                 showPopupMessage('You are visiting ' + netIDToString(dataConnection.peer, message.name) + '<br>as P' + (message.player_index + 1) + ' ' + myOnlineName.toUpperCase());
@@ -777,6 +797,8 @@ function stopGuesting(noResume) {
         if (stopGuesting.oldScreenSize.x !== SCREEN_WIDTH || stopGuesting.oldScreenSize.y !== SCREEN_HEIGHT || stopGuesting.oldPrivateScreen !== PRIVATE_VIEW) {
             setFramebufferSize(stopGuesting.oldScreenSize.x, stopGuesting.oldScreenSize.y, stopGuesting.oldPrivateScreen);
         }
+
+        QRuntime.$postFX.bloom = stopGuesting.oldBloom;
         
         document.querySelector('#pauseButtonContainer .buttonIcon').style.backgroundImage = 'url("button-pause.png")';
         document.getElementById('stepButtonContainer').style.visibility = 
@@ -807,8 +829,10 @@ function sendToAllGuests(message) {
     console.assert(isHosting);
     for (let g = 0; g < connectedGuestArray.length; ++g) {
         const guest = connectedGuestArray[g];
-        console.log('sending to guest');
-        guest.dataConnection.send(message);
+        if (guest.dataConnection.open) {
+            console.log('Sending', message);
+            guest.dataConnection.send(message);
+        }
     }
 }
 

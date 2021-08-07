@@ -81,6 +81,12 @@ function reset_post_effects() {
         pos: {x:0, y:0},
         opacity: 1
     };
+
+    // Not bound during the initial load because it is called
+    // immediately to set the initial value.
+    if (gamepad_array && (gamepad_array[0].status === 'host')) {
+        $notifyGuestsOfPostEffects();
+    }
 }
 
 reset_post_effects();
@@ -139,6 +145,10 @@ function set_post_effects(args) {
 
     if (args.bloom !== undefined) {
         $postFX.bloom = clamp(args.bloom, 0, 1);
+    }
+
+    if (gamepad_array && (gamepad_array[0].status === 'host')) {
+        $notifyGuestsOfPostEffects();
     }
 }
 
@@ -7226,13 +7236,18 @@ var overlaps = (function() {
              (! A.child_array || A.child_array.length === 0) &&
              (! B.child_array || B.child_array.length === 0))) {
 
-            // Radius squared
-            let r2 = A.scale ? ($square(A.scale.x * A.size.x) + $square(A.scale.y * A.size.y)) : ($square(A.size.x) + $square(A.size.y));
-            r2 += B.scale ? ($square(B.scale.x * B.size.x) + $square(B.scale.y * B.size.y)) : ($square(B.size.x) + $square(B.size.y));
-            r2 *= 0.25;
+            // Compute a bounding disk based on both object's obj.size bounding box,
+            // and square its radius.
+            let r = A.scale ? ($Math.hypot(A.scale.x * A.size.x, A.scale.y * A.size.y)) : $Math.hypot(A.size.x, A.size.y);
+            r += B.scale ? ($Math.hypot(B.scale.x * B.size.x, B.scale.y * B.size.y)) : $Math.hypot(B.size.x, B.size.y);
+            // r = sqrt((A/2)^2) + sqrt((B/2)^2)
+            // r = sqrt(A^2/4) + sqrt(B^2/4)
+            // r = [sqrt(A^2) + sqrt(B^2)]/2
+            // r = [sqrt(A^2) + sqrt(B^2)]/2
 
             // These objects are trivially far apart, don't bother with more expensive tests
-            if ($square(A.pos.x - B.pos.x) + $square(A.pos.y - B.pos.y) > r2) {
+            if ($square(A.pos.x - B.pos.x) + $square(A.pos.y - B.pos.y) > $square(r * 0.5)) {
+                // console.log('Bounding box reject');
                 return false;
             }
         }
@@ -7259,7 +7274,7 @@ var overlaps = (function() {
         }
 
         A = $cleanupRegion(A); B = $cleanupRegion(B);
-
+        
         // For future use offsetting object B, which is convenient for speculative
         // collision detection but not supported in the current implementation.
         let offsetX = 0, offsetY = 0;
@@ -7302,25 +7317,36 @@ var overlaps = (function() {
             // instead of radii below.
             const P = $toFrame(A, temp2, temp);
             P.x = 2 * $Math.abs(P.x); P.y = 2 * $Math.abs(P.y);
-            
-            if ((P.x > A.size.x * $Math.abs(A.scale.x) + B.size.x * $Math.abs(B.scale.x)) || (P.y > A.size.y * $Math.abs(A.scale.y) + B.size.y * $Math.abs(B.scale.y))) {
+
+            const ADiameterX = A.size.x * $Math.abs(A.scale.x);
+            const ADiameterY = A.size.y * $Math.abs(A.scale.y);
+            const BDiameterX = B.size.x * $Math.abs(B.scale.x);
+            const BDiameterY = BDiameterX; // Because it is a disk!
+
+            // Rect A is at the origin and axis aligned, disk B is at P/2
+            if ((P.x > ADiameterX + BDiameterX) || (P.y > ADiameterY + BDiameterY)) {
                 // Trivially outside by box-box overlap test
+                //console.log('Box-Disk: Trivially outside');
                 return false;
-            } else if ((P.x <= A.size.x * $Math.abs(A.scale.x)) || (P.y <= A.size.y * $Math.abs(A.scale.y))) {
-                // Trivially inside because the center of disk B is
-                // inside the perimeter of box A. Note that we tested
-                // twice the absolute position against twice the
-                // radius.
+            } else if ((P.x <= ADiameterX) || (P.y <= ADiameterY)) {
+                // Trivially inside because the disk B overlaps one of
+                // the edges (or is inside) and is not trivially
+                // outside.  Note that we tested twice the absolute
+                // position against twice the radius. This is an "OR"
+                // instead of "AND" condition because the trivially
+                // outside test already ensured that they could
+                // potentially overlap.
+                //console.log('Box-Disk: Trivially inside');
                 return true;
             } else {
                 // Must be in the "corner" case. Note that these
                 // squared expressions are all implicitly multipled
                 // by four because of the use of diameters instead of
                 // radii.
-
-                temp2.x = A.size.x * $Math.abs(A.scale.x);
-                temp2.y = A.size.y * $Math.abs(A.scale.y);
-                return distanceSquared2D(P, temp2) <= $square(B.size.x * B.scale.x);
+                temp2.x = ADiameterX;
+                temp2.y = ADiameterY;
+                //console.log('Box-Disk: Corner case');
+                return distanceSquared2D(P, temp2) <= $square(BDiameterX);
             }       
             
         } else if ((A.angle === 0) && (B.angle === 0)) {

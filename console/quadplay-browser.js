@@ -305,6 +305,12 @@ let emulatorKeyJustReleased = {};
 const screenshotKey = 117; // F6
 const gifCaptureKey = 119; // F8
 
+function resetEmulatorKeyState() {
+    emulatorKeyState = {};
+    emulatorKeyJustPressed = {};
+    emulatorKeyJustReleased = {};
+}
+
 function makeFilename(s) {
     return s.replace(/\s|:/g, '_').replace(/[^A-Za-z0-9_\.\(\)=\-\+]/g, '').replace(/_+/g, '_');
 }
@@ -1095,16 +1101,7 @@ function submitFrame() {
         ctx.restore();
     }
 
-    if ($postFX.bloom > 0 && allow_bloom) {
-        overlayScreen.style.visibility = 'visible';
-        // Apple devices are gamma corrected and the bloom looks dimmer as a
-        // result, so we boost it
-        const b = Math.pow($postFX.bloom, 1.5) * (isApple ? 1.5 : 1.0);
-        overlayScreen.style.filter = `brightness(${0.45 + b * (1 - 0.45)}) contrast(3) blur(2.5px)` + ($postFX.bloom > 0.5 ? ` brightness(${0.75 * $postFX.bloom + 0.5})`: '');
-        overlayCTX.drawImage(emulatorScreen, 0, 0);
-    } else {
-        overlayScreen.style.visibility = 'hidden';
-    }
+    maybeApplyBloom($postFX.bloom, allow_bloom);
 
     /*
     // Random graphics for debugging
@@ -1148,6 +1145,21 @@ function submitFrame() {
     }
 
     refreshPending = true;
+}
+
+
+/* Used by guesting as well as local rendering */
+function maybeApplyBloom(bloom, enable) {
+    if (bloom > 0 && enable) {
+        overlayScreen.style.visibility = 'visible';
+        // Apple devices are gamma corrected and the bloom looks dimmer as a
+        // result, so we boost it
+        const b = Math.pow(bloom, 1.5) * (isApple ? 1.5 : 1.0);
+        overlayScreen.style.filter = `brightness(${0.45 + b * (1 - 0.45)}) contrast(3) blur(2.5px)` + (bloom > 0.5 ? ` brightness(${0.75 * bloom + 0.5})`: '');
+        overlayCTX.drawImage(emulatorScreen, 0, 0);
+    } else {
+        overlayScreen.style.visibility = 'hidden';
+    }
 }
 
 
@@ -1413,8 +1425,8 @@ function onTouchStartOrMove(event) {
 
             if (! tracker || tracker.lastTarget !== emulatorScreen || tracker.lastTarget !== overlayScreen) {
                 // New touch
-                QRuntime.touch.aa = true;
-                QRuntime.touch.pressed_a = true;
+                QRuntime.touch.aa = ! QRuntime.touch.a;
+                QRuntime.touch.pressed_a = QRuntime.touch.aa;
                 QRuntime.touch.a = true;
                 QRuntime.touch.screen_dx = 0;
                 QRuntime.touch.screen_dy = 0;
@@ -1426,6 +1438,11 @@ function onTouchStartOrMove(event) {
             
             QRuntime.touch.screen_x = screen_coord.x;
             QRuntime.touch.screen_y = screen_coord.y;
+
+            
+            if (QRuntime.touch.aa && document.getElementById('printTouchEnabled').checked) {
+                $systemPrint('touch.screen_xy: xy(' + QRuntime.touch.screen_x + ', ' + QRuntime.touch.screen_y + ')');
+            }
         }
 
         if (tracker && (tracker.lastTarget === emulatorScreen || tracker.lastTarget === overlayScreen) && (event.target !== emulatorScreen && event.target !== overlayScreen)) {

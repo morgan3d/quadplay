@@ -24,7 +24,6 @@ resize(player_array, 0)
 reset_transform()
 reset_clip()
 
-
 frame
 ────────────────────────────────────────────────────────────────────────
 
@@ -48,7 +47,7 @@ let args = {
     y_align: "center"
 }
 
-draw_text({...args, x_align: "center", pos: xy(½ VIEW_ARRAY[0].size.x, 20), text: "PRIVATE SCREEN EXAMPLE", color: #F, outline: ∅, shadow: #3})
+draw_text({...args, x_align: "center", pos: xy(½ VIEW_ARRAY[0].size.x, 20), text: "PRIVATE VIEW EXAMPLE", color: #F, outline: ∅, shadow: #3})
 
 for choice at i in choice_array:
     const selected = choice_index == i
