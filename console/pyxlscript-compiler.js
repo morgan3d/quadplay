@@ -1154,6 +1154,18 @@ function pyxlToJS(src, noYield, internalMode) {
             }
         }
     });
+
+    // Look for % and error out, since it is illegal. Do this before
+    // we replace mod with %. Note that strings and comments are gone
+    // at this point.
+    {
+        const i = src.indexOf('%');
+        if (i !== -1) {
+            const line = (src.substring(0, i).match(/\n/g) || []).length;
+            throw makeError('Illegal standalone %. Maybe you want the "mod" operator?', line);
+        }
+    }
+    
     
     src = src.replace(/∞|\binfinity\b/g,  ' (Infinity) ');
     src = src.replace(/\bnan\b/g,         ' (NaN) ');
