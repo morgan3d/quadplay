@@ -10,15 +10,8 @@ let old_clip
 let old_post_effects
 let old_background
 
-let sectionFont = $font9
-if SCREEN_SIZE.y <= 64: sectionFont = $font5
-else if SCREEN_SIZE.y <= 128: sectionFont = $font8
-
-let bodyFont = $font6
-if SCREEN_SIZE.y <= 64: bodyFont = $font3
-else if SCREEN_SIZE.y <= 128: bodyFont = $font5
-
-const scroll_speed = 0.5 ceil((SCREEN_SIZE.y / 224)^2)
+let sectionFont
+let bodyFont
 
 def max_not_nan(a, b):
     if is_NaN(a):
@@ -36,9 +29,17 @@ old_post_effects = get_post_effects()
 old_background = get_background()
 
 reset_post_effects()
-set_clip(xy(0, 0), SCREEN_SIZE, -2047, 4096)
 reset_transform()
 set_background($system_window_background)
+
+sectionFont = $font9
+if VIEW_ARRAY[0].size.y <= 64: sectionFont = $font5
+else if VIEW_ARRAY[0].size.y <= 128: sectionFont = $font8
+
+bodyFont = $font6
+if VIEW_ARRAY[0].size.y <= 64: bodyFont = $font3
+else if VIEW_ARRAY[0].size.y <= 128: bodyFont = $font5
+
 
 
 leave
@@ -49,45 +50,51 @@ set_post_effects(old_post_effects)
 set_background(old_background)
 
 
+
 frame
 ────────────────────────────────────────────────────────────────────────
+
+const scroll_speed = 0.5 ceil((VIEW_ARRAY[0].size.y / 224)^2)
 
 if any_button_press():
    play_sound($cancelUISound)
    pop_mode()
 
 const creditsScroll = max(mode_frames - 70, 0) * scroll_speed
-set_transform(xy(0, -creditsScroll))
 
-draw_text(sectionFont, CREDITS.title, xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 3), text_color, $system_prompt_shadow, $system_prompt_shadow, 0, 0)
-draw_text(bodyFont, "by " + CREDITS.developer, xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y / 3 + 25), text_color, $system_prompt_shadow, nil, 0, 0)
+for view in VIEW_ARRAY:
+    set_transform(xy(0, -creditsScroll) + view.corner)
+    set_clip(view.corner, view.size, -2047, 4096)
 
-let y = SCREEN_SIZE.y + 15
+    draw_text(sectionFont, CREDITS.title, xy(VIEW_ARRAY[0].size.x / 2, VIEW_ARRAY[0].size.y / 3), text_color, $system_prompt_shadow, $system_prompt_shadow, 0, 0)
+    draw_text(bodyFont, "by " + CREDITS.developer, xy(VIEW_ARRAY[0].size.x / 2, VIEW_ARRAY[0].size.y / 3 + 25), text_color, $system_prompt_shadow, nil, 0, 0)
 
-if CREDITS.main and size(CREDITS.main) > 1:
-    y -= SCREEN_SIZE.y / 2
-    const MAX_WIDTH = (0.5 - 0.08) SCREEN_SIZE.x
-    for i < floor(0.5 size(CREDITS.main)):
-        const left = CREDITS.main[2i]
-        const right = CREDITS.main[2i + 1]
-        const left_height  = draw_text(sectionFont, left,  xy((0.5 - 0.04) * SCREEN_SIZE.x, y), text_color, $system_prompt_shadow, nil, "right", "top", nil, MAX_WIDTH).height
-        const right_height = draw_text(sectionFont, right, xy((0.5 + 0.04) * SCREEN_SIZE.x, y), text_color, $system_prompt_shadow, nil, "left", "top", nil, MAX_WIDTH).height
-        y += max(left_height, right_height) + 10
+    let y = VIEW_ARRAY[0].size.y + 15
+    
+    if CREDITS.main and size(CREDITS.main) > 1:
+        y -= VIEW_ARRAY[0].size.y / 2
+        const MAX_WIDTH = (0.5 - 0.08) VIEW_ARRAY[0].size.x
+        for i < floor(0.5 size(CREDITS.main)):
+            const left = CREDITS.main[2i]
+            const right = CREDITS.main[2i + 1]
+            const left_height  = draw_text(sectionFont, left,  xy((0.5 - 0.04) * VIEW_ARRAY[0].size.x, y), text_color, $system_prompt_shadow, nil, "right", "top", nil, MAX_WIDTH).height
+            const right_height = draw_text(sectionFont, right, xy((0.5 + 0.04) * VIEW_ARRAY[0].size.x, y), text_color, $system_prompt_shadow, nil, "left", "top", nil, MAX_WIDTH).height
+            y += max(left_height, right_height) + 10
 
-    y += SCREEN_SIZE.y / 2 + 20
+        y += VIEW_ARRAY[0].size.y / 2 + 20
 
 
-debug_print("-----------------")
-for type in creditOrder:
-    if size(CREDITS[lowercase(type)]) > 0:
-        const s = if type == "Quadplay" then "quadplay✜" else type
-        y += draw_text(sectionFont, s + (if type == "Game" or type == "Code" or type == "Quadplay" or type == "Data" then "" else "s"), xy(SCREEN_SIZE.x / 2, y), text_color, $system_prompt_shadow, nil, 0, 2).height
+    for type in creditOrder:
+        if size(CREDITS[lowercase(type)]) > 0:
+            const s = if type == "Quadplay" then "quadplay✜" else type
+            y += draw_text(sectionFont, s + (if type == "Game" or type == "Code" or type == "Quadplay" or type == "Data" then "" else "s"), xy(VIEW_ARRAY[0].size.x / 2, y), text_color, $system_prompt_shadow, nil, 0, 2).height
    
-        for line in CREDITS[lowercase(type)]:
-            y += draw_text(bodyFont, line, xy(SCREEN_SIZE.x / 2, y), text_color, nil, nil, "center", "top", 0, SCREEN_SIZE.x).height + 10
+            for line in CREDITS[lowercase(type)]:
+                y += draw_text(bodyFont, line, xy(VIEW_ARRAY[0].size.x / 2, y), text_color, nil, nil, "center", "top", 0, VIEW_ARRAY[0].size.x).height + 10
             
-        y += 20
+            y += 20
 
-if CREDITS.extra:
-    y += 40
-    y += draw_text(bodyFont, CREDITS.extra, xy(0.04 SCREEN_SIZE.x, y), text_color, nil, nil, "left", "top", 0, (1 - 0.08) * SCREEN_SIZE.x).height + 10
+            
+    if CREDITS.extra:
+        y += 40
+        y += draw_text(bodyFont, CREDITS.extra, xy(0.04 VIEW_ARRAY[0].size.x, y), text_color, nil, nil, "left", "top", 0, (1 - 0.08) * VIEW_ARRAY[0].size.x).height + 10

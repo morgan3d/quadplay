@@ -210,7 +210,7 @@ let gameIndex = 0
 let modeFrameShift = 0
 
 
-def drawIcon(icon, pos):
+def draw_icon(icon, pos):
    assert(icon != nil)
    draw_sprite({sprite: icon, pos: pos + xy(3 + icon.size.x / 2, 3 - icon.size.y / 2)})
    return xy(icon.size.x + 2, icon.size.y + 2)
@@ -255,7 +255,7 @@ def manage_tabs():
     for tab at t in tab_array:
         const active = t == tab_index
         const pos = xy(TAB_WIDTH * t + (SCREEN_SIZE.x - TAB_WIDTH * (size(tab_array) - 1)) / 2, if active then 8 else 9)
-        const z = (if active then 1 else 0)
+        const z = 0
 
         // Tab background
         const tab_size = xy(TAB_WIDTH + 1, if active then 17 else 16)
@@ -286,7 +286,7 @@ def manage_tabs():
 
         // Erase the bottom of the tab
         if active:
-            draw_line(pos + xy(1 - TAB_WIDTH / 2, 8), pos + xy(+TAB_WIDTH / 2 - 1, 8), $system_window_background, 1)
+            draw_line(pos + xy(1 - TAB_WIDTH / 2, 8), pos + xy(+TAB_WIDTH / 2 - 1, 8), $system_window_background, z)
 
 
 
@@ -336,40 +336,40 @@ def manage_games_tab():
     let y = 112
     if game.max_players == 0 or game.min_players == 0 and game.max_players == nil:
         draw_text({font:mediumFont, text:"Animation", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
-        drawIcon(icons.players[0], xy(sideX, y)).y
+        draw_icon(icons.players[0], xy(sideX, y)).y
         y += 15
     else if game.min_players != nil and game.max_players != nil:
         let lo = clamp(min(game.min_players, game.max_players), 1, 5)
         let hi = clamp(max(game.min_players, game.max_players), 1, 5)
         if lo != hi:
-            drawIcon(icons.players[lo], xy(sideX, y))
+            draw_icon(icons.players[lo], xy(sideX, y))
             draw_line(xy(sideX + 21, y - 4), xy(sideX + 28, y - 4), selectedColor)
-            drawIcon(icons.players[hi], xy(sideX + 29, y)).y
+            draw_icon(icons.players[hi], xy(sideX + 29, y)).y
         else:
-            drawIcon(icons.players[lo], xy(sideX, y))
+            draw_icon(icons.players[lo], xy(sideX, y))
             draw_text({font:mediumFont, text:"" + lo + "-Player", pos:xy(wordX, y), color:selectedColor, x_align:"left"})
         y += 15
     else if game.min_players != nil or game.max_players != nil:
         // Only one specified
         const lo = if game.min_players != nil then game.min_players else game.max_players
-        drawIcon(icons.players[clamp(lo, 1, 5)], xy(sideX, y))
+        draw_icon(icons.players[clamp(lo, 1, 5)], xy(sideX, y))
         draw_text({font:mediumFont, text:"" + lo + "-Player", pos:xy(wordX, y), color:selectedColor, x_align:"left"})
         y += 15
 
     if game.cooperative:
-        drawIcon(icons.cooperative, xy(sideX, y)).y
+        draw_icon(icons.cooperative, xy(sideX, y)).y
         y += draw_text({font:mediumFont, text:"Cooperate", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).size.y
 
     if game.competitive:
-        drawIcon(icons.competitive, xy(sideX, y)).y
+        draw_icon(icons.competitive, xy(sideX, y)).y
         y += draw_text({font:mediumFont, text:"Compete", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).size.y
       
     if game.achievements:
-        drawIcon(icons.achievements, xy(sideX, y)).y
+        draw_icon(icons.achievements, xy(sideX, y)).y
         y += draw_text({font:mediumFont, text:"Achieve", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).size.y
 
     if game.highscores:
-        drawIcon(icons.highscores, xy(sideX, y)).y
+        draw_icon(icons.highscores, xy(sideX, y)).y
         y += draw_text({font:mediumFont, text:"Highscore", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).size.y
 
     for pad in gamepad_array:

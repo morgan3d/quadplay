@@ -6,12 +6,6 @@ const unselected_color        = #b
 
 const open_frames             = 15
 
-let font = $font9
-if SCREEN_SIZE.y <= 64: font = $font5
-else if SCREEN_SIZE.y <= 180: font = $font8
-
-const line_height = round(110% font.line_height) + 1
-
 let choice_array
 let choice_index
 
@@ -35,7 +29,7 @@ def choose():
     else if ends_with(choice_array[choice_index], "Order"):
         // Change controller order
         push_mode($ControllerOrder)
-    else if SCREEN_SIZE.y == 64:
+    else if VIEW_ARRAY[0].size.y == 64:
         // Specific player's controls
         push_mode($SetControls, choice_index)
     else:
@@ -55,7 +49,7 @@ old_post_effects = get_post_effects()
 reset_post_effects()
 manage_tabs = manage_tabs_callback
 
-if SCREEN_SIZE.y == 64:
+if VIEW_ARRAY[0].size.y == 64:
     // At low resolution, ask which controller to set
     choice_array = ["P1 Buttons", "P2 Buttons", "P3 Buttons", "P4 Buttons", "Gamepad Order"]
 else:
@@ -80,6 +74,11 @@ set_background(old_background)
 
 frame
 ────────────────────────────────────────────────────────────────────────
+let font = $font9
+if VIEW_ARRAY[0].size.y <= 64: font = $font5
+else if VIEW_ARRAY[0].size.y <= 180: font = $font8
+
+const line_height = round(110% font.line_height) + 1
 
 // For use in the system menu
 if manage_tabs:
@@ -87,69 +86,72 @@ if manage_tabs:
 else:
     draw_previous_mode()
     // Force the clipping range beyond what the API normally allows
-    $clipZ2 = 2049
-    set_transform(xy(0, 0), xy(1, 1), 2048.6, 1)
-    draw_corner_rect(xy(0, 0), SCREEN_SIZE, rgba(14%, 14%, 14%, 80%))
-
-    const windowSize = (SCREEN_SIZE + 2) * (if manage_tabs then 1 else clamp((mode_frames + 1) / open_frames, 0%, 100%))
-    //round(xy(6 font.line_height, 2 + (2 + size(choice_array)) * font.line_height) * clamp((mode_frames + 1) / open_frames, 0%, 100%))
-    draw_rect(½ SCREEN_SIZE, windowSize, $system_window_background, $system_window_border)
+    for view in VIEW_ARRAY:
+        $clipZ2 = 2049
+        set_transform(view.corner, xy(1, 1), 2048.6, 1)
+        draw_corner_rect(xy(0, 0), view.size, rgba(14%, 14%, 14%, 80%))
+        const windowSize = (view.size + 2) * (if manage_tabs then 1 else clamp((mode_frames + 1) / open_frames, 0%, 100%))
+        draw_rect(½ view.size, windowSize, $system_window_background, $system_window_border)
     
 
 if manage_tabs or mode_frames > open_frames:
-   // Process input. Let any controller
-   // manipulate the result, since we might
-   // have gotten to this screen using a different
-   // controller than the active one.
-   for control in gamepad_array:
-       if not manage_tabs and (control.qq or control.$pp):
-           // Do NOT use "bb", which maps to enter on the keyboard
-           // and may make players think they are executing a command
-           play_sound($cancelUISound)
-           pop_mode()
-       else if control.aa and not control.released_a:
-           // Needed to check for simultaneous press and release
-           // to avoid re-executing sleep on wake from the A button.
-           choose()
-       else if control.yy:
-           const prev = choice_index
-           choice_index = clamp(choice_index + control.yy, 0, size(choice_array) - 1)
-           play_sound(if prev == choice_index then $denyUISound else $moveUISound)
-           
-   // Show the options
-   let y = floor(0.5 (SCREEN_SIZE.y - (size(choice_array) - 0.5) * font.line_height)) - 1
-   if manage_tabs: y += 20
-   if SCREEN_SIZE.y == 112 or SCREEN_SIZE.y == 128: y -= 20
-   
-   for i < size(choice_array):
-      const active      = choice_index == i
-      const bright      = (1 + cos(mode_frames / 9)) / 2
-      const color       = if active then lerp($system_prompt_color, #fff, 50% bright) else unselected_color
-      const outline     = if active then rgba(1,1,1, 25% bright) else nil
-      const yOffset     = if active then -1 else 0
-      const shadow      = if active then 50% $system_prompt_shadow else $system_prompt_shadow
-      
-      const x           = floor(0.5 SCREEN_SIZE.x - (if SCREEN_SIZE.y == 64 then 20 else 3 font.line_height - 10))
-      const text        = choice_array[i]
-      draw_text(font, text, xy(x, y + 1), shadow, nil, nil, "left", "center")
-      const bounds = draw_text(font, text, xy(x, y + yOffset), color, nil, outline, "left", "center")
-      // Make active on mouse hover
-      if overlaps(touch.hover, bounds) and choice_index != i:
-          choice_index = i
-          play_sound($moveUISound)
-          
-      // Touch selection
-      if touch.aa and overlaps(touch, bounds):
-          choose()
-   
-      if active:
-         draw_text(font, "✜", xy(x - 40% line_height + 1, y + 1), shadow, nil, nil, "right", "center")
-         draw_text(font, "✜", xy(x - 40% line_height + 1, y + yOffset), color, nil, outline, "right", "center")
-         
-      y += line_height
+    // Process input. Let any controller
+    // manipulate the result, since we might
+    // have gotten to this screen using a different
+    // controller than the active one.
+    for control in gamepad_array:
+        if not manage_tabs and (control.qq or control.$pp):
+            // Do NOT use "bb", which maps to enter on the keyboard
+            // and may make players think they are executing a command
+            play_sound($cancelUISound)
+            pop_mode()
+        else if control.aa and not control.released_a:
+            // Needed to check for simultaneous press and release
+            // to avoid re-executing sleep on wake from the A button.
+            choose()
+        else if control.yy:
+            const prev = choice_index
+            choice_index = clamp(choice_index + control.yy, 0, size(choice_array) - 1)
+            play_sound(if prev == choice_index then $denyUISound else $moveUISound)
 
-      
-if manage_tabs:
+
+    for view at view_index in VIEW_ARRAY:
+        set_transform(view.corner, xy(1, 1), 2048.6, 1)
+        // Show the options
+        let y = floor(0.5 (view.size.y - (size(choice_array) - 0.5) * font.line_height)) - 1
+        if manage_tabs: y += 20
+        if view.size.y == 112 or view.size.y == 128: y -= 20
+        
+        for i < size(choice_array):
+            const active      = choice_index == i
+            const bright      = (1 + cos(mode_frames / 9)) / 2
+            const color       = if active then lerp($system_prompt_color, #fff, 50% bright) else unselected_color
+            const outline     = if active then rgba(1,1,1, 25% bright) else nil
+            const yOffset     = if active then -1 else 0
+            const shadow      = if active then 50% $system_prompt_shadow else $system_prompt_shadow
+           
+            const x           = floor(0.5 view.size.x - (if view.size.y == 64 then 20 else 3 font.line_height - 10))
+            const text        = choice_array[i]
+            draw_text(font, text, xy(x, y + 1), shadow, nil, nil, "left", "center")
+            const bounds = draw_text(font, text, xy(x, y + yOffset), color, nil, outline, "left", "center")
+
+            // Make active on mouse hover
+            if overlaps(touch.hover, bounds) and choice_index != i:
+                choice_index = i
+                play_sound($moveUISound)
+               
+            // Touch selection
+            if touch.aa and overlaps(touch, bounds):
+                choose()
+        
+            if active:
+                draw_text(font, "✜", xy(x - 40% line_height + 1, y + 1), shadow, nil, nil, "right", "center")
+                draw_text(font, "✜", xy(x - 40% line_height + 1, y + yOffset), color, nil, outline, "right", "center")
+              
+            y += line_height
+
+
+if manage_tabs: // This path is for the OS and doesn't occur in private view mode
     // Also show system info on the top
     const gamepads = if $navigator.getGamepads then $navigator.getGamepads() else (if $navigator.webkitGetGamepads then $navigator.webkitGetGamepads else [])
     let text = "quadplay✜ " + $version + " © 2020 Morgan McGuire\n\n"
@@ -164,15 +166,15 @@ if manage_tabs:
         text += (i + 1) + ": "
         text += if g then clamp_string(g.id, 32) else "∅"
 
-    text += "\n" + $getMyHostNetID() + " " + uppercase($getMyOnlineName())
+    text += "\n" + HOST_CODE + " | " + uppercase(gamepad_array[0].online_name)
     
     draw_text({
         text: text,
         font:$font6, pos: xy(32, 24), color: #f, x_align: "left", y_align: "top",
         wrap_width: 384 - 32 * 2
     })
-      
-if SCREEN_SIZE.y > 64 and (mode_frames > open_frames or manage_tabs):
+
+if VIEW_ARRAY[0].size.y > 64 and (mode_frames > open_frames or manage_tabs):
     // Show the current mappings. This code
     // is based on _ControllerOrder's rendering
     // so that the transition is seamless
@@ -182,58 +184,60 @@ if SCREEN_SIZE.y > 64 and (mode_frames > open_frames or manage_tabs):
     for p < 4:
         let entry = ""
         let spacing = 38
-        if SCREEN_SIZE.x == 128:
+        if VIEW_ARRAY[0].size.x == 128:
             spacing = 32
-        else if SCREEN_SIZE.x == 64:
+        else if VIEW_ARRAY[0].size.x == 64:
             spacing = 16
         
-        const x = SCREEN_SIZE.x / 2 + spacing * ((p bitshr 1) + 0.5) * 2 ((p bitand 1) - 0.5)
-    
-        if map[p] == "9":
-            // Unmapped
-            entry += "∅"
-            if p < 2:
-                // Show the backup keyboard control
-                const type = (if p == 0 then "Kbd_P1" else "Kbd_P2")
-                draw_sprite($controllerSpritesheet22[type], xy(x, SCREEN_SIZE.y - 29))
-            else:
-                // Show a generic controller silhouette for this
-                // missing controller
-                draw_sprite({
-                    sprite: $controllerSpritesheet22.Xbox,
-                    pos: xy(x, SCREEN_SIZE.y - 29),
-                    override_color: #023,
-                    z: 0.1,
-                    scale: 80%
-                })
-        
-        else: // Mapped
-            entry += parse(map[p]) + 1
-            // Show the controller
-            draw_sprite($controllerSpritesheet22[gamepad_array[p].type], xy(x, SCREEN_SIZE.y - 29))
-                
-            // Also show the keyboard for the first two players if they
-            // are not duplicates
-            if p < 2 and not starts_with(gamepad_array[p].type, "Kbd_"):
-                const type = (if p == 0 then "Kbd_P1" else "Kbd_P2")
-                draw_text({
-                    font: $font6,
-                    text: "&",
-                    pos: xy(x, SCREEN_SIZE.y - 20),
-                    color: #f,
-                    x_align: "center",
-                    y_align: "center"
-                })
-                draw_sprite($controllerSpritesheet22[type], xy(x, SCREEN_SIZE.y - 8))
-            
-        entry += "→P" + (p + 1)
+        const x = VIEW_ARRAY[0].size.x * 0.5 + spacing * ((p bitshr 1) + 0.5) * 2 ((p bitand 1) - 0.5)
 
-        draw_text({
-            font: font,
-            text: entry,
-            pos: xy(x, SCREEN_SIZE.y - 40),
-            color: #f,
-            x_align: "center",
-            y_align: "bottom"
-        })
+        for view in VIEW_ARRAY:
+            set_transform(view.corner, xy(1, 1), 2048.6, 1)
+            if map[p] == "9":
+                // Unmapped
+                entry += "∅"
+                if p < 2:
+                    // Show the backup keyboard control
+                    const type = (if p == 0 then "Kbd_P1" else "Kbd_P2")
+                    draw_sprite($controllerSpritesheet22[type], xy(x, view.size.y - 29))
+                else:
+                    // Show a generic controller silhouette for this
+                    // missing controller
+                    draw_sprite({
+                        sprite: $controllerSpritesheet22.Xbox,
+                        pos: xy(x, view.size.y - 29),
+                        override_color: #023,
+                        z: 0.1,
+                        scale: 80%
+                    })
+            
+            else: // Mapped
+                entry += parse(map[p]) + 1
+                // Show the controller
+                draw_sprite($controllerSpritesheet22[gamepad_array[p].type], xy(x, view.size.y - 29))
+                    
+                // Also show the keyboard for the first two players if they
+                // are not duplicates
+                if p < 2 and not starts_with(gamepad_array[p].type, "Kbd_"):
+                    const type = (if p == 0 then "Kbd_P1" else "Kbd_P2")
+                    draw_text({
+                        font: $font6,
+                        text: "&",
+                        pos: xy(x, view.size.y - 20),
+                        color: #f,
+                        x_align: "center",
+                        y_align: "center"
+                    })
+                    draw_sprite($controllerSpritesheet22[type], xy(x, view.size.y - 8))
+                
+            entry += "→P" + (p + 1)
+    
+            draw_text({
+                font: font,
+                text: entry,
+                pos: xy(x, view.size.y - 40),
+                color: #f,
+                x_align: "center",
+                y_align: "bottom"
+            })
 

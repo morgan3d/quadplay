@@ -17,79 +17,7 @@ const prompt_color            = #4DF
 const selected_color          = #f
 const unselected_color        = #b
 
-const controllerSpritesheet = if SCREEN_SIZE.y >= 224 then $controllerSpritesheet44 else $controllerSpritesheet22
 const controllerTypeArray = ["Quadplay", "Xbox", "Xbox360", "Keyboard", "Kbd_Alt", "Kbd_P1", "Kbd_P2", "PS5", "PS4", "PS3", "SNES", "SwitchPro", "JoyCon_R", "JoyCon_L", "Zero", "HOTAS", "X_Arcade", "Arcade", "Arcade_X", "Arcade_PS", "Stadia", "GPD_Win", "SN30_Pro", "PiBoy_DMG", "Genesis"];
-
-// Tweak layout for square aspect ratios
-let shiftX = 0 // Symmetric text shift from center
-let shiftY = -8 // Vertical offset
-let offsetX = 0 // Asymmetric text shift to left to accomodate large button prompt
-let shiftSpriteY = 0
-let arrowX = 76 // Position of the scroll arrows
-let arrowY = -3
-let titleY = -7
-
-
-if SCREEN_SIZE.x == 64:
-   shiftX = 16
-   offsetX = 14
-   arrowX = 54
-   shiftY = 11
-   arrowY = -shiftY
-   titleY = arrowY
-   shiftSpriteY = -10
-else if SCREEN_SIZE.x == 128:
-   shiftY = 0
-   shiftX = 22
-   offsetX = 12
-   shiftSpriteY = -36
-   arrowY = -12
-   arrowX = 56
-   shiftSpriteY = 0
-   titleY = -16
-else if SCREEN_SIZE.x == 192:
-   arrowY = -8
-   shiftX = -10
-   offsetX = 8
-   shiftY = -6
-   titleY = -8
-   shiftSpriteY = -24
-else if SCREEN_SIZE.x == 320:
-   arrowY = -12
-   shiftX = -10
-   offsetX = 8
-   shiftY = -2
-   titleY = -10
-   shiftSpriteY = -24
-else: // 384
-   arrowX = 62
-   arrowY = -7
-   shiftX = -18
-   shiftSpriteY = -24
-
-
-let font = $font9
-if SCREEN_SIZE.y <= 64: font = $font5
-else if SCREEN_SIZE.y <= 180: font = $font8
-
-let controlsFont = font
-if SCREEN_SIZE.y <= 64: font = $font5
-else if SCREEN_SIZE.y <= 180: controlsFont = $font6
-
-let choiceFont = $font9
-if SCREEN_SIZE.y <= 64: choiceFont = font
-else if SCREEN_SIZE.x == 128: choiceFont = $font5
-else if SCREEN_SIZE.y == 112: choiceFont = $font6
-else if SCREEN_SIZE.y <= 180: choiceFont = $font8
-
-// For layout
-let scale = 100%
-if SCREEN_SIZE.y <= 180:
-    if SCREEN_SIZE.y <= 128:
-        scale = 50%
-    else:
-        scale = 75%
-
 
 const playerName = []
 for p < 4: push(playerName, "P" + (p + 1) + ": ")
@@ -115,6 +43,7 @@ old_transform = get_transform()
 old_clip = get_clip()
 old_post_effects = get_post_effects()
 reset_post_effects()
+reset_transform()
 set_background(window_background_color)
 
 
@@ -129,17 +58,92 @@ set_background(old_background)
 frame
 ────────────────────────────────────────────────────────────────────────
 
+const VIEW_SIZE = VIEW_ARRAY[0].size
+
+// Tweak layout for square aspect ratios
+let shiftX = 0 // Symmetric text shift from center
+let shiftY = -8 // Vertical offset
+let offsetX = 0 // Asymmetric text shift to left to accomodate large button prompt
+let shiftSpriteY = 0
+let arrowX = 76 // Position of the scroll arrows
+let arrowY = -3
+let titleY = -7
+
+if VIEW_SIZE.x == 64:
+   shiftX = 16
+   offsetX = 14
+   arrowX = 54
+   shiftY = 11
+   arrowY = -shiftY
+   titleY = arrowY
+   shiftSpriteY = -10
+else if VIEW_SIZE.x == 128:
+   shiftY = 0
+   shiftX = 22
+   offsetX = 12
+   shiftSpriteY = -36
+   arrowY = -12
+   arrowX = 56
+   shiftSpriteY = 0
+   titleY = -16
+else if VIEW_SIZE.x == 192:
+   arrowY = -8
+   shiftX = -10
+   offsetX = 8
+   shiftY = -6
+   titleY = -8
+   shiftSpriteY = -24
+else if VIEW_SIZE.x == 320:
+   arrowY = -12
+   shiftX = -10
+   offsetX = 8
+   shiftY = -2
+   titleY = -10
+   shiftSpriteY = -24
+else: // 384
+   arrowX = 62
+   arrowY = -7
+   shiftX = -18
+   shiftSpriteY = -24
+
+
+let font = $font9
+if VIEW_SIZE.y <= 64: font = $font5
+else if VIEW_SIZE.y <= 180: font = $font8
+
+let controlsFont = font
+if VIEW_SIZE.y <= 64: font = $font5
+else if VIEW_SIZE.y <= 180: controlsFont = $font6
+
+let choiceFont = $font9
+if VIEW_SIZE.y <= 64: choiceFont = font
+else if VIEW_SIZE.x == 128: choiceFont = $font5
+else if VIEW_SIZE.y == 112: choiceFont = $font6
+else if VIEW_SIZE.y <= 180: choiceFont = $font8
+
+// For layout
+let scale = 100%
+if VIEW_SIZE.y <= 180:
+    if VIEW_SIZE.y <= 128:
+        scale = 50%
+    else:
+        scale = 75%
+
+const controllerSpritesheet = if VIEW_SIZE.y >= 224 then $controllerSpritesheet44 else $controllerSpritesheet22
+
+const gamepad = gamepad_array[0]
+
 // "Press P when done"
-if SCREEN_SIZE.x == 64:
-   const text = "Push " + joy.prompt["(p)"] + " when done"
-   draw_text({font: controlsFont, text: text, pos: xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y - 4), color: #023, x_align: "center", y_align: "center"})
+if VIEW_SIZE.x == 64:
+   const text = "Push " + gamepad.prompt["(p)"] + " when done"
+   draw_text({font: controlsFont, text: text, pos: xy(VIEW_SIZE.x / 2, VIEW_SIZE.y - 4), color: #023, x_align: "center", y_align: "center"})
 else:
-   const text = "Press " + joy.prompt["(p)"] + " when done"
+   const text = "Press " + gamepad.prompt["(p)"] + " when done"
    const W = text_width(controlsFont, text)
-   draw_line(xy(SCREEN_SIZE.x / 2 - 1, 0), xy(SCREEN_SIZE.x / 2 - 1, SCREEN_SIZE.y), #023)
-   draw_line(xy(0, SCREEN_SIZE.y / 2), xy(SCREEN_SIZE.x / 2 - 55% W, SCREEN_SIZE.y / 2), #023)
-   draw_line(xy(SCREEN_SIZE.x / 2 + 55% W, SCREEN_SIZE.y / 2), xy(SCREEN_SIZE.x, SCREEN_SIZE.y / 2), #023)
-   draw_text({font: controlsFont, text: text, pos: SCREEN_SIZE / 2 + xy(0, 0), color: #023, outline: window_background_color, x_align: "center", y_align: "center"})
+   draw_line(xy(0.5 VIEW_SIZE.x - 1, 0), xy(0.5 VIEW_SIZE.x - 1, VIEW_SIZE.y), #023)
+   draw_line(xy(0, 0.5 VIEW_SIZE.y), xy(0.5 VIEW_SIZE.x - 55% W, 0.5 VIEW_SIZE.y), #023)
+   draw_line(xy(0.5 VIEW_SIZE.x + 55% W, 0.5 VIEW_SIZE.y), xy(VIEW_SIZE.x, 0.5 VIEW_SIZE.y), #023)
+   draw_text({font: controlsFont, text: text, pos: 0.5 VIEW_SIZE + xy(0, 0), color: #023, outline: window_background_color, x_align: "center", y_align: "center"})
 
    
 for p < 4:
@@ -171,11 +175,11 @@ for p < 4:
          // Switch the device to the selected controller
          device_control("set_pad_type", p, type)
 
-      if SCREEN_SIZE.x == 64:
+      if VIEW_SIZE.x == 64:
          set_transform(xy(32, shiftY), xy(1, 1))
       else:
-         set_transform(xy((0.5 + (p bitand 1)) * SCREEN_SIZE.x / 2,
-                         (p bitshr 1) * 54% SCREEN_SIZE.y + (26 + shiftY) * scale), xy(1, 1))
+         set_transform(xy((0.5 + (p bitand 1)) * VIEW_SIZE.x / 2,
+                         (p bitshr 1) * 54% VIEW_SIZE.y + (26 + shiftY) * scale), xy(1, 1))
 
       draw_text({font: choiceFont, text: playerName[p] + control.type, shadow: text_shadow_color,
                 pos: xy(0, titleY) * scale, color: text_color, x_align: "center"})

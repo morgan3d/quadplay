@@ -1,7 +1,7 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
 "use strict";
 
-const version  = '2021.08.07.13';
+const version  = '2021.08.10.01';
 
 // Set to false when working on quadplay itself
 const deployed = true;
@@ -587,7 +587,7 @@ function onResize() {
             screenBorder.style.left = Math.round((windowWidth - screenBorder.offsetWidth * zoom - 4) / (2 * zoom)) + 'px';
             if (uiMode === 'Test') {
                 screenBorder.style.top = '0px';
-                const S = (PRIVATE_VIEW && ! isGuesting) ? 2 : 1;
+                const S = (PRIVATE_VIEW && ! isGuesting && ! document.getElementById('showPrivateViewsEnabled').checked) ? 2 : 1;
                 document.getElementById('debugger').style.top = Math.round(S * scale * screenBorder.offsetHeight + 25) + 'px';
                 screenBorder.style.transformOrigin = 'center top';
             } else {
@@ -598,7 +598,7 @@ function onResize() {
         break;
     }
 
-    const hostCrop = (PRIVATE_VIEW && ! isGuesting) ? 0.5 : 1.0;
+    const hostCrop = (PRIVATE_VIEW && ! isGuesting && ! document.getElementById('showPrivateViewsEnabled').checked) ? 0.5 : 1.0;
     
     screenBorder.style.width = (SCREEN_WIDTH * hostCrop) + 'px';
     screenBorder.style.height = (SCREEN_HEIGHT * hostCrop) + 'px';
@@ -616,7 +616,7 @@ function onResize() {
 /* Returns the net zoom factor */
 function setScreenBorderScale(screenBorder, scale) {
     let zoom = 1;
-    if (PRIVATE_VIEW && ! isGuesting) {
+    if (PRIVATE_VIEW && ! isGuesting && ! document.getElementById('showPrivateViewsEnabled').checked) {
         scale *= 2;
     }
     
@@ -1750,6 +1750,7 @@ function saveIDEState() {
         'gamepadOrderMap': gamepadOrderMap.join(''),
         'showPhysicsEnabled': document.getElementById('showPhysicsEnabled').checked,
         'showEntityBoundsEnabled': document.getElementById('showEntityBoundsEnabled').checked,
+        'showPrivateViewsEnabled': document.getElementById('showPrivateViewsEnabled').checked,
         'assertEnabled': document.getElementById('assertEnabled').checked,
         'todoEnabled': document.getElementById('todoEnabled').checked,
         'automathEnabled': document.getElementById('automathEnabled').checked,
@@ -4667,7 +4668,7 @@ if (! localStorage.getItem('autoplayOnLoad')) {
 document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanceTab').checked = true;
 
 {
-    const optionNames = ['showPhysicsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'todoEnabled', 'automathEnabled', 'debugPrintEnabled', 'debugWatchEnabled', 'restartOnFocusEnabled', 'autoplayOnLoad', 'onScreenHUDEnabled', 'printTouchEnabled'];
+    const optionNames = ['showPhysicsEnabled', 'showPrivateViewsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'todoEnabled', 'automathEnabled', 'debugPrintEnabled', 'debugWatchEnabled', 'restartOnFocusEnabled', 'autoplayOnLoad', 'onScreenHUDEnabled', 'printTouchEnabled'];
     for (let i = 0; i < optionNames.length; ++i) {
         const name = optionNames[i];
         const value = JSON.parse(localStorage.getItem(name) || 'false');
