@@ -13,6 +13,16 @@ var $console = console;
 var $Math = Math;
 var $performance = performance;
 
+// If non-nil and matches the current mode, then the Copy Host
+// Code/Copy Host URL buttons are displayed. See also start_hosting()
+var $showCopyButtonsMode = undefined;
+
+// Invoked by the paste host code button
+var $paste_host_code_callback = undefined;
+
+var $feature_768x448 = false;
+var $feature_640x360 = false;
+
 var $gameMode = undefined, $prevMode = undefined;
 var $numBootAnimationFrames = 120;
 
@@ -9758,7 +9768,7 @@ function set_screen_size(size, private_views) {
 
     // Check for legal resolutions
     if (private_views) {
-        if (! ((w === 384 && h === 224) || (w === 128 && h === 128))) {
+        if (! ((w === 768 && h === 448 && $feature_768x448) || (w === 640 && h === 360 && $feature_640x360) || (w === 384 && h === 224) || (w === 128 && h === 128))) {
             $error('set_screen_size() with private screens must be at 384x224 or 128x128 resolution');
         }
     } else if (! ((w === 384 && h === 224) ||
@@ -9827,8 +9837,8 @@ function push_mode(mode, ...args) {
     $iteratorCount = new WeakMap();
     $gameMode.$enter.apply(null, args);
 
+    $updateHostCodeCopyRuntimeDialogVisiblity();
     throw {nextMode: mode};
-
 }
 
 
@@ -9887,6 +9897,7 @@ function pop_mode(...args) {
         $gameMode[eventName](...args);
     }
 
+    $updateHostCodeCopyRuntimeDialogVisiblity();
     throw {nextMode: $gameMode};
 }
 
@@ -9929,6 +9940,7 @@ function set_mode(mode, ...args) {
     $iteratorCount = new WeakMap();
     if ($gameMode.$enter) { $gameMode.$enter.apply(null, args); }
 
+    $updateHostCodeCopyRuntimeDialogVisiblity();
     throw {nextMode: mode};
 }
 

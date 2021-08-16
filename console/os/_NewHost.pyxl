@@ -15,11 +15,13 @@ def draw_window(tau):
     // Dark scrim
     draw_corner_rect(xy(0, 0), VIEW_ARRAY[0].size, rgba(0, 0, 0, 40% tau))
 
+    const window_pos = VIEW_ARRAY[0].size * xy(0.5, 0.45)
+    
     // Drop shadow
-    draw_rect(VIEW_ARRAY[0].size / 2 + xy(0, window_scale * 0.5 * VIEW_ARRAY[0].size.y * tau + 1), xy((window_scale - 1%) VIEW_ARRAY[0].size.x * tau, 2), #012)
+    draw_rect(window_pos + xy(0, window_scale * 0.5 * VIEW_ARRAY[0].size.y * tau + 1), xy((window_scale - 1%) VIEW_ARRAY[0].size.x * tau, 2), #012)
     
     // Window
-    draw_rect(VIEW_ARRAY[0].size / 2, window_scale * VIEW_ARRAY[0].size * tau, $system_window_background, #fff)
+    draw_rect(window_pos, window_scale * VIEW_ARRAY[0].size * tau, $system_window_background, #fff)
 
 
     
@@ -86,26 +88,17 @@ def draw_controls():
         shadow: $system_prompt_shadow
     })
 
-    draw_text({
-        font: font,
-        text: replace("(d) Paste From Clipboard", joy.prompt),
-        pos: xy(VIEW_ARRAY[0].size.x / 2, (50% + window_scale / 2) * VIEW_ARRAY[0].size.y - 7),
-        x_align: "center",
-        y_align: "bottom",
-        color: $system_prompt_color,
-        shadow: $system_prompt_shadow
-    })
 
-
-
+    
 def capitalize(s):
     return if size(s) == 0 then "" else uppercase(s[0]) + slice(s, 1)
 
 
 
 def set_from_sentence(sentence):
-    // Parse the code into words
-    const src = split(replace(lowercase(sentence), {",": " ", "\n": " ", ".": " "}), " ", " ")
+    // Parse the code into words. This works on both the URL encoded version and
+    // the straight host code sentence version
+    const src = split(replace(lowercase(sentence), {"_": " ", ",": " ", "\n": " ", ".": " "}), " ", " ")
     let array = []
     for word in src:
         word = trim_spaces(word)
@@ -115,24 +108,6 @@ def set_from_sentence(sentence):
         for column < min(6, size(array)):
             const index = find($NET_ID_WORD_TABLE[column], array[column])
             if index != nil: word_array[column] = index
-
-
-            
-def handle_paste():
-    const same_mode = get_mode()
-
-    // Callback
-    def ok(sentence):
-        // Make sure that the user hasn't changed to a different
-        // mode
-        if get_mode() == same_mode:
-            $showPopupMessage("Pasted " + sentence)
-            set_from_sentence(sentence)
-               
-            
-    def fail(): $showPopupMessage("Error: could not access the clipboard")
-
-    $pasteFromClipboard(ok, fail)
 
 
 
@@ -148,7 +123,24 @@ if size(recent_host_array) > 0:
     // Use this machinery for robustness to misparsing
     set_from_sentence($netIDToSentence(recent_host_array[0].code))
 
-    
+$setRuntimeDialogVisible("hostCodePaste", true)
+
+
+const same_mode = get_mode()
+def network_paste_callback(sentence):
+    // Make sure that the user hasn't changed to a different
+    // mode
+    if get_mode() == same_mode:
+        $showPopupMessage("Pasted " + sentence)
+        set_from_sentence(sentence)
+$paste_host_code_callback = network_paste_callback
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+$setRuntimeDialogVisible("hostCodePaste", false)
+$paste_host_code_callback = nil
+
 
 frame
 ────────────────────────────────────────────────────────────────────────
@@ -189,9 +181,6 @@ preserving_transform:
 
             // Quit
             if gamepad.qq: pop_mode()
-
-            // Paste
-            if gamepad.cc or gamepad.dd: handle_paste()
 
             // Visit
             if gamepad.$pp:

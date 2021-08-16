@@ -2,7 +2,6 @@ Title
 ════════════════════════════════════════════════════════════════════════
 
 def create_game():
-    start_hosting()
     set_mode(Lobby) because "Chose create game"
 
 let choice_index = 0

@@ -265,6 +265,23 @@ function device_control(cmd) {
             } // if legal filename
         }
         break;
+
+    case "enable_feature":
+        {
+            switch (arguments[1]) {
+            case '768x448,private_views':
+                QRuntime.$feature_768x448 = true;
+                break;
+                
+            case '640x360,private_views':
+                QRuntime.$feature_640x360 = true;
+                break;
+                
+            default:
+                throw new Error('Unknown feature to device_control("enable_feature", feature): "' + arguments[1] + '"');
+            }
+            break;
+        } // enable_feature
     }
 }
 

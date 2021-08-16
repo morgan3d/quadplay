@@ -1,4 +1,4 @@
-AwaitGuests
+Lobby
 ════════════════════════════════════════════════════════════════════════
 
 def process_input(player):
@@ -84,7 +84,7 @@ def draw_view(view, gamepad) preserving_transform:
         control_message = "(q) Quit Host"
 
     draw_text({...args, text: wait_message, color: 30% gamepad.player_color})
-    draw_text({...args, text: replace(control_message, gamepad.prompt), pos: xy(args.pos.x, VIEW_ARRAY[0].size.y - 10), z: 10})
+    draw_text({...args, text: replace(control_message, gamepad.prompt), pos: xy(args.pos.x, VIEW_ARRAY[0].size.y - 30), z: 10})
 
     
     for pos in player in player_array:        
@@ -103,6 +103,7 @@ enter
 ────────────────────────────────────────────────────────────────────────
 resize(player_array, 0)
 push(player_array, make_player(gamepad_array[0]))
+start_hosting()
 
 
 frame
@@ -118,7 +119,6 @@ iterate(player_array, process_input)
 
 for view at gamepad_index in VIEW_ARRAY:
     draw_view(view, gamepad_array[gamepad_index])
-
 
 
 leave

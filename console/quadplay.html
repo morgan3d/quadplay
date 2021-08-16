@@ -47,6 +47,7 @@
     const browserName = isSafari ? 'Safari' : isFirefox ? 'Firefox' : isChrome ? 'Chrome' : isEdge ? 'Edge' : 'Browser';
 
     const useIDE = (getQueryString('IDE') === '1') || false;
+    const nativeapp = (getQueryString('nativeapp') === '1') || false;
 
     // Keyboard prompts for modifers
     const cmd = isApple ? '⌘' : '^';
@@ -463,6 +464,17 @@
         <!-- Shows instructions for reaching pause and controls during boot. This is designed to look like
              it is rendered by quadplay but is really an image -->
         <div id="pauseMessage" class="pixelate"></div>
+
+        <!-- Runtime popup dialogs that require user interaction for permissions (can't run off gamepad polling) -->
+        <div id="hostCodeCopyRuntimeDialog" class="runtimeDialog">Copy <div onclick="onCopyHostCodeButton()">Host&nbsp;Code</div>
+          <script>
+            // Only show the copy URL button if it is likely to be useful
+            if (! location.href.startsWith('http://127.0.0.1:') || useIDE) {
+                document.write('<div onclick="onCopyHostURLButton()">URL</div>');
+            }
+          </script>
+        </div>
+        <div id="hostCodePasteRuntimeDialog" class="runtimeDialog"><div style="width:40px" onclick="onPasteHostCodeButton()">Paste Host Code</div></div>
       </div>
 
       <div id="popupMessage"> </div>

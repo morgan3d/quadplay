@@ -4500,7 +4500,9 @@ Setting any post effects may slow down rendering slightly.
   
   If `private_views == true`, then:
   
-  - the supported resolutions are 384x224 and 128x128 (192x112 and 64x64 player views)
+  - the supported resolutions are 384x224 and 128x128 
+    (corresponding to 192x112 and 64x64 player views)
+    unless other features are enabled with `device_control()`
   - global `VIEW_ARRAY[0].size = SCREEN_SIZE / 2`
   - only the upper left 1/4 of the screen will be displayed on the
     local host machine. When playing online, the other 1/4 screens are
@@ -4517,11 +4519,17 @@ index `0 ≤ p < 3` has screen corner at `½ SCREEN_SIZE * xy(p ∩ 1, p >> 1)`.
 To set up rendering for both private views and unified screens, use:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Pyxlscript
-for view in VIEW_ARRAY:
+for view at view_index in VIEW_ARRAY:
     set_clip(view)
     set_transform(view.corner)
-    ...
+    const gamepad = gamepad_array[view_index]
+    // Your draw code here
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Always draw all views for connected players. All of the code runs on
+the host machine.  Program exactly as if it was split-screen local
+multiplayer, but with the knowledge that each player can only see
+their own screen.
 
 In the current API, private views are for pixels only--there is no per-player 
 private _audio_.
@@ -4529,12 +4537,12 @@ private _audio_.
 <center>
 <table style="font-size:200%; border-collapse:separate" cellspacing=0>
 <tr>
-<td style="color:#f5a; border: 3px solid; width:200px"><div style="text-align:left;font-size:50%">(0,0)</div><center>*P1*</center><br></td>
-<td style="color:#0af; border: 3px solid; width:200px"><div style="text-align:left;font-size:50%">(192,0)</div><center>*P2*</center><br></td>
+<td style="color:#f5a; border: 3px solid; width:200px"><div style="text-align:left;font-size:50%">(0,0)</div><center>*P1*<br><span style="font-size:50%">Host</span></center></td>
+<td style="color:#0af; border: 3px solid; width:200px"><div style="text-align:left;font-size:50%">(192,0)</div><center>*P2*<br><span style="font-size:50%">1st Guest</span></center></td>
 </tr>
 <tr>
-<td style="color:#fd3; border: 3px solid"><div style="text-align:left;font-size:50%">(0,112)</div><center>*P3*</center><br></td>
-<td style="color:#4e4; border: 3px solid"><div style="text-align:left;font-size:50%">(192,112)</div><center>*P4*</center><br></td>
+<td style="color:#fd3; border: 3px solid"><div style="text-align:left;font-size:50%">(0,112)</div><center>*P3*<br><span style="font-size:50%">2nd Guest</span></center></td>
+<td style="color:#4e4; border: 3px solid"><div style="text-align:left;font-size:50%">(192,112)</div><center>*P4*<br><span style="font-size:50%">3rd Guest</span></center></td>
 </tr>
 </table>
 </center>
@@ -5151,11 +5159,17 @@ state synchronization or messages.
 : A string of the six words that are the online ID this host uses. Can
   change at runtime if the player intentionally changes it.
 
-`start_hosting()`
+`start_hosting(show_buttons default true)`
 : Start hosting as soon as possible, if the `--offline` flag was not set.
   Check `HOST_CODE` to display to the players so they know where to tell
-  guests where to connect to. Does nothing if already hosting.
+  guests where to connect to. If already hosting, just changes the state
+  of the button display if the argument has changed.
+  
   Check `gamepad_array[0].status == "host"` to see when hosting has started.
+  
+  If `show_buttons` is true, then the Copy Host Code and Copy Host URL
+  buttons are displayed on the bottom of the screen _in this mode_
+  until the game stops hosting or `start_hosting(false)` is called.
 
 `stop_hosting()`
 : Stop hosting as soon as possible.
@@ -5243,6 +5257,7 @@ Raw Device Access
                                                          save is complete. This will only work with the IDE enabled and a quadplay server.</td></tr>
     <tr valign=top><td> `"load", filename, callback`</td><td>Loads `filename` and (asynchronously) runs the callback with the arguments `value, filename` when
                                                          the load is complete. This will only work with the IDE enabled and a quadplay server.</td></tr>
+    <tr valign=top><td> `"enable_feature", feature`</td><td>Enables the given feature, which is nonstandard and may fail on some devices. The allowed values of `feature` are `"768x448,private_views"` and `"640x360,private_views"`. These enable those resolutions for `set_screen_size()` with `private_views=true`, which is too slow to make framerate on Raspberry Pi and some phones.</td></tr>
   </table>
 
 
@@ -8117,11 +8132,23 @@ My Raspberry Pi 4 software configuration from the default Raspberry Pi
 OS instalation is simply:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
-sudo apt install chromium
+sudo apt install snapd
+sudo reboot
 
-sudo update-alternatives --config x-www-browser
-# + choose /usr/bin/chromium
+# After reboot:
+sudo snap install core
+sudo snap install chromium
+sudo update-alternatives --install /usr/bin/x-www-browser x-www-browser /snap/bin/chromium 200
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is an alternative using the provided Debian package for automatic
+management, but gives an older version of Chromium that is slower:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ bash
+sudo apt install chromium
+sudo update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/chromium-browser
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 For the Raspberry Pi 400 (the model built into a keyboard), I also 
 [overclock to 2 GHz](https://www.raspberrypi-spy.co.uk/2020/11/overclocking-the-raspberry-pi-400/).

@@ -1,7 +1,7 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
 "use strict";
 
-const version  = '2021.08.10.01';
+const version  = '2021.08.16.02';
 
 // Set to false when working on quadplay itself
 const deployed = true;
@@ -329,9 +329,10 @@ function onWelcomeTouch(hasTouchScreen) {
         requestFullScreen();
     }
 
-    let url = getQueryString('game')
-
-    const showPause = (url !== null) && ! useIDE;
+    let url = getQueryString('game');
+    let other_host_code = getQueryString('host');
+    
+    const showPause = (url || other_host_code) && ! useIDE;
     
     url = url || launcherURL;
     // If the url doesn't have a prefix and doesn't begin with a slash,
@@ -340,6 +341,14 @@ function onWelcomeTouch(hasTouchScreen) {
         url = '../' + url;
     }
 
+    // For loading into a game directly
+    const callback = (other_host_code ?
+                      function () {
+                          const otherNetID = wordsToNetID(other_host_code.split(/[_,]/));
+                          startGuesting(otherNetID);
+                      } : undefined);
+        
+    
     if (showPause) {
         // Show the pause message before loading when running a
         // standalone game (not in IDE, not loading the launcher)
@@ -352,11 +361,11 @@ function onWelcomeTouch(hasTouchScreen) {
             setTimeout(function() {
                 pauseMessage.style.visibility = 'hidden';
                 pauseMessage.style.zIndex = 0;
-                onPlayButton();
+                onPlayButton(undefined, undefined, undefined, callback);
             }, 200);
         }, 3000);
     } else {
-        onPlayButton();
+        onPlayButton(undefined, undefined, undefined, callback);
     }
 }
 
@@ -480,6 +489,7 @@ function onResize() {
     const body         = document.getElementsByTagName('body')[0];
     const background   = document.getElementsByClassName('emulatorBackground')[0];
     const screenBorder = document.getElementById('screenBorder');
+    const showPrivateViewsEnabled = document.getElementById('showPrivateViewsEnabled').checked;
 
     const gbMode = window.matchMedia('(orientation: portrait)').matches;
 
@@ -505,6 +515,9 @@ function onResize() {
         if (SCREEN_WIDTH <= (384>>1) && SCREEN_HEIGHT <= (224 >> 1)) {
             // Half-resolution games run with pixel doubling
             scale *= 2;
+        } else if (SCREEN_WIDTH > 384) {
+            // Half scale
+            scale *= 0.5;
         }
 
         let zoom = setScreenBorderScale(screenBorder, scale);
@@ -587,7 +600,7 @@ function onResize() {
             screenBorder.style.left = Math.round((windowWidth - screenBorder.offsetWidth * zoom - 4) / (2 * zoom)) + 'px';
             if (uiMode === 'Test') {
                 screenBorder.style.top = '0px';
-                const S = (PRIVATE_VIEW && ! isGuesting && ! document.getElementById('showPrivateViewsEnabled').checked) ? 2 : 1;
+                const S = (PRIVATE_VIEW && ! isGuesting && ! showPrivateViewsEnabled) ? 2 : 1;
                 document.getElementById('debugger').style.top = Math.round(S * scale * screenBorder.offsetHeight + 25) + 'px';
                 screenBorder.style.transformOrigin = 'center top';
             } else {
@@ -598,7 +611,7 @@ function onResize() {
         break;
     }
 
-    const hostCrop = (PRIVATE_VIEW && ! isGuesting && ! document.getElementById('showPrivateViewsEnabled').checked) ? 0.5 : 1.0;
+    const hostCrop = (PRIVATE_VIEW && ! isGuesting && ! showPrivateViewsEnabled) ? 0.5 : 1.0;
     
     screenBorder.style.width = (SCREEN_WIDTH * hostCrop) + 'px';
     screenBorder.style.height = (SCREEN_HEIGHT * hostCrop) + 'px';
@@ -607,7 +620,7 @@ function onResize() {
         screenBorder.style.borderWidth  = '0px';
     } else {
         screenBorder.style.borderRadius = Math.ceil(6 * hostCrop / scale) + 'px';
-        screenBorder.style.borderWidth  = Math.ceil(5  * hostCrop / scale) + 'px';
+        screenBorder.style.borderWidth  = Math.ceil(5 * hostCrop / scale) + 'px';
     }
     screenBorder.style.boxShadow = `${1/scale}px ${2/scale}px ${2/scale}px 0px rgba(255,255,255,0.16), ${-1.5/scale}px {-2/scale}px ${2/scale}px 0px rgba(0,0,0,0.19)`;
 }
@@ -615,11 +628,13 @@ function onResize() {
 
 /* Returns the net zoom factor */
 function setScreenBorderScale(screenBorder, scale) {
-    let zoom = 1;
-    if (PRIVATE_VIEW && ! isGuesting && ! document.getElementById('showPrivateViewsEnabled').checked) {
+    const showPrivateViewsEnabled = document.getElementById('showPrivateViewsEnabled').checked;
+
+    if (PRIVATE_VIEW && ! isGuesting && ! showPrivateViewsEnabled) {
         scale *= 2;
     }
     
+    let zoom = 1;
     if (hasBrowserScaleBug) {
         // On Safari, CSS scaling overrides the crisp image rendering.
         // We have to zoom instead (zoom acts differently on other browsers,
@@ -692,6 +707,12 @@ function locallyHosted(url) {
     return url.startsWith('quad://') || url.startsWith(location.origin) || ! /^([A-Za-z]){3,6}:\/\//.test(url);
 }
 
+
+function hideAllRuntimeDialogs() {
+    setRuntimeDialogVisible('hostCodeCopy', false);
+    setRuntimeDialogVisible('hostCodePaste', false);
+}
+
     
 function onRestartButton() {
     onStopButton();
@@ -701,6 +722,8 @@ function onRestartButton() {
 
 let lastAnimationRequest = 0;
 function onStopButton(inReset, preserveNetwork) {
+    hideAllRuntimeDialogs();
+    
     if (! preserveNetwork) {
         stopHosting();
         stopGuesting(true);
@@ -783,9 +806,13 @@ let alreadyInPlayButtonAttempt = false;
 // slow = run at slow framerate (used for *every* slow step as well)
 // isLaunchGame = "has this been triggered by QRuntime.launch_game()"
 // args = array of arguments to pass to the new program
-function onPlayButton(slow, isLaunchGame, args) {
+function onPlayButton(slow, isLaunchGame, args, callback) {
     if (isSafari && ! isMobile) { unlockAudio(); }
     emulatorKeyboardInput.focus({preventScroll:true});
+
+    if (! slow) {
+        hideAllRuntimeDialogs();
+    }
 
     // Stop guesting, if currently a guest, but do not stop hosting.
     // This can't come up when single stepping or in slow mode, which
@@ -873,9 +900,10 @@ function onPlayButton(slow, isLaunchGame, args) {
         }
         
         saveIDEState();
+
+        if (callback) { callback(); }
     } // End of the doPlay callback used below
     
-
 
     if (emulatorMode === 'stop') {
         // Reload the program
@@ -3678,6 +3706,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.$systemPrint        = $systemPrint;
         QRuntime.$parseHexColor      = parseHexColor;
         QRuntime.$Physics            = Matter;
+        QRuntime.$updateHostCodeCopyRuntimeDialogVisiblity = updateHostCodeCopyRuntimeDialogVisiblity;
         QRuntime.$spritesheetArray   = spritesheetArray;
         QRuntime.$fontArray          = fontArray;
         QRuntime.$pauseAllSounds     = pauseAllSounds;
@@ -3712,14 +3741,13 @@ function reloadRuntime(oncomplete) {
         QRuntime.$netIDToString      = netIDToString;
         QRuntime.$changeMyHostNetID  = changeMyHostNetID;
         QRuntime.$setMyOnlineName    = setMyOnlineName;
-        QRuntime.start_hosting       = startHosting;
+        QRuntime.start_hosting       = $start_hosting;
         QRuntime.stop_hosting        = stopHosting;
         QRuntime.$startGuesting      = startGuesting;
         QRuntime.$getIsOffline       = getIsOffline;
-        QRuntime.$copyToClipboard    = copyToClipboard;
-        QRuntime.$pasteFromClipboard = pasteFromClipboard;
         QRuntime.$NET_ID_WORD_TABLE  = NET_ID_WORD_TABLE;
         QRuntime.$showPopupMessage   = showPopupMessage;
+        QRuntime.$setRuntimeDialogVisible   = setRuntimeDialogVisible;
 
         // For use by the controller remapping
         QRuntime.$localStorage       = localStorage;
@@ -4496,17 +4524,34 @@ document.addEventListener('contextmenu', function (event) {
 }, {capture: true});
 
 
+/*
+ Shows and hides popup dialogs over the quadplay screen
+
+ string dialog: element name without 'RuntimeDialog'
+ bool v
+*/
+function setRuntimeDialogVisible(dialog, v) {
+    const element = document.getElementById(dialog + 'RuntimeDialog');
+    if (v) {
+        element.classList.add('show');
+    } else {
+        element.classList.remove('show');
+    }
+}
+
+
 function showPopupMessage(msgHTML) {
     const element = document.getElementById('popupMessage');
     element.innerHTML = msgHTML;
     element.classList.add('show');
+
     setTimeout(
         function () { element.classList.remove('show'); },
         
-        // This timeout value has to be the sum of the times
+        // This timeout value has to be slightly less than the sum of the times
         // in the quadplay.css #popupMessage.show animation
         // property
-        4500);
+        4000);
 }
 
 /* When calling from quadplay, note that the callback can happen at any point,
@@ -4680,6 +4725,8 @@ document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanc
     }
 }
 
+
+
 {
     let url = getQueryString('game');
 
@@ -4791,7 +4838,7 @@ navigator.getGamepads();
    which macOS can't detect because the Chromium browser doesn't close on that
    platform when the last tab closes. */
 function closeClient() {
-    if (getQueryString('nativeapp') === '1' && isQuadserver) {
+    if (nativeapp && isQuadserver) {
         postToServer({command: 'quit'});
         setTimeout(function () { window.close(); }, 500);
     } else {
@@ -4802,7 +4849,7 @@ function closeClient() {
 // Set to true when intentionally loading a new game to keep nativeapp
 // from closing the server when it loads a new game
 let inPageReload = false;
-if (getQueryString('nativeapp') === '1' && isQuadserver) {
+if (nativeapp && isQuadserver) {
     // Tell the server to quit when the browser does
     window.addEventListener('beforeunload', function () {
         if (! inPageReload) {

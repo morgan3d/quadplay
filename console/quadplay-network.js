@@ -296,6 +296,33 @@ function disconnectGuest(index) {
 }
 
 
+// Called from $start_hosting and mode changes
+function updateHostCodeCopyRuntimeDialogVisiblity() {
+    let curr = document.getElementById('hostCodeCopyRuntimeDialog').classList.contains('show');
+    let next = ((QRuntime.$gameMode === QRuntime.$showCopyButtonsMode) ||
+                (QRuntime.$gameMode.name === '$OnlineMenu')) && isHosting;
+
+    if (curr !== next) {
+        setRuntimeDialogVisible('hostCodeCopy', next);
+    }
+}
+
+
+// User function wrapping startHosting()
+function $start_hosting(show_buttons) {
+    if (show_buttons || (show_buttons === undefined)) {
+        // Default
+        QRuntime.$showCopyButtonsMode = QRuntime.$gameMode;
+    } else {
+        QRuntime.$showCopyButtonsMode = undefined;
+    }
+    updateHostCodeCopyRuntimeDialogVisiblity();
+    
+    startHosting();
+}
+
+
+// Actually start hosting
 function startHosting() {
     if (isHosting || isOffline) { return; }
     console.log('startHosting()');
@@ -486,7 +513,54 @@ function startHosting() {
     }); // myPeer.on('open')
 }
 
+
+function onCopyHostCodeButton() {
+    copyToClipboard(QRuntime.HOST_CODE);
+    showPopupMessage("Copied host code to clipboard.");
+    emulatorKeyboardInput.focus({preventScroll:true});
+}
+
+
+function onCopyHostURLButton() {
+    // Remove arguments that are 
+    let url = location.href.replace(/(name|IDE|game|autoplay)=[^&]+/g, '').replace(/&&+/g, '&');
+    if (url.indexOf('?') === -1) {
+        url += '?';
+    }
+
+    if (! url.endsWith('?') && ! url.endsWith('&')) {
+        url += '&';
+    }
+
+    // The host argument
+    url += 'host=' + QRuntime.HOST_CODE.replace(/, /g, ',').replace(/ /g, '_');
     
+    copyToClipboard(url);
+    if (location.href.startsWith('http://127.0.0.1:')) {
+        showPopupMessage("Note: URL only usable on this computer.");
+    } else {
+        showPopupMessage("Copied join URL to clipboard.");
+    }
+    emulatorKeyboardInput.focus({preventScroll:true});
+}
+
+
+function onPasteHostCodeButton() {
+    if (QRuntime.$paste_host_code_callback) {
+        navigator.clipboard.readText().then(function (text) {
+            // If the Text is a URL, extract the host code 
+            if (text.startsWith('http') && text.indexOf('host=') !== -1) {
+                text = text.replace(/^.*host=([^&]*).*/, '$1') 
+            }
+            
+            // See _NewHost.pyxl for where this is defined
+            QRuntime.$paste_host_code_callback(text);
+        });
+    }
+    emulatorKeyboardInput.focus({preventScroll:true});
+}
+
+
 function stopHosting() {
     if (isHosting) {
         showPopupMessage('Stopped hosting online');
@@ -575,16 +649,27 @@ function startGuesting(hostNetID) {
             return;
         }
 
-        const settings = videoElement.srcObject.getVideoTracks()[0].getSettings();
-
-        if (settings.width > 0 && settings.height > 0) {
-            if (settings.width !== videoWidth ||
-                settings.height !== videoHeight ||
-                settings.width !== SCREEN_WIDTH ||
-                settings.height !== SCREEN_HEIGHT) {
+        // On FireFox, this is the only way to get them
+        let currentVideoWidth, currentVideoHeight;
+        if (isFirefox) {
+            // Bug in Firefox 91.0 prevents reading from getSettings()
+            currentVideoWidth = videoElement.videoWidth;
+            currentVideoHeight = videoElement.videoHeight;
+        } else {
+            const settings = videoElement.srcObject.getVideoTracks()[0].getSettings();
+            currentVideoWidth = settings.width;
+            currentVideoHeight = settings.height;
+        }
+            
+        //console.log(settings);
+        if (currentVideoWidth > 0 && currentVideoHeight > 0) {
+            if (currentVideoWidth !== videoWidth ||
+                currentVideoHeight !== videoHeight ||
+                currentVideoWidth !== SCREEN_WIDTH ||
+                currentVideoHeight !== SCREEN_HEIGHT) {
                 
-                videoWidth = settings.width | 0;
-                videoHeight = settings.height | 0;
+                videoWidth = currentVideoWidth | 0;
+                videoHeight = currentVideoHeight | 0;
 
                 // A FRAMEBUFFER_SIZE message should also arrive from
                 // the host, but this forces automatic changes because
@@ -690,12 +775,13 @@ function startGuesting(hostNetID) {
             mediaConnection.on(
                 'stream',
                 function (hostStream) {
+                    console.log('host answered...');
                     const isVideo = hostStream.getVideoTracks().length > 0;
 
                     if (isVideo) {
                         if (! alreadyAddedVideo) {
                             alreadyAddedVideo = true;
-                            console.log('host answered with video');
+                            console.log('...with video');
                             // The 'addtrack' callback does not reliably get invoked, so don't use it.
                             // Instead test the video resolution every frame above by polling
                             
@@ -705,11 +791,11 @@ function startGuesting(hostNetID) {
                             drawVideo();
                             inputInterval = setInterval(sampleInput, ONLINE_INPUT_PERIOD);
                         } else {
-                            console.log('rejected duplicate video call');
+                            console.log('...and this guest rejected the duplicate video call');
                         }
                     } else if (! alreadyAddedAudio) {
                         alreadyAddedAudio = true;
-                        console.log('host answered with audio');
+                        console.log('...with audio');
                         document.getElementById('guestAudio').srcObject = hostStream;
 
                         // Chrome has a bug where we have to connect
@@ -721,7 +807,7 @@ function startGuesting(hostNetID) {
                         // guestAudioSourceNode.connect(audioContext.destination);
                         
                     } else {
-                        console.log('rejected duplicate audio call');
+                        console.log('...and this guest rejected the duplicate audio call');
                     }
                 },
                 

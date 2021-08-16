@@ -503,8 +503,8 @@ div.debugOverride.disabled {
     margin-top:      -3px;
 }
 
-.button:active span.label, .button input:checked + span.label {
-    background: rgb(64,150,238);
+.button:active span.label, .button input:checked + span.label, .runtimeDialog div:active {
+    background-color: rgb(64,150,238);
     background: linear-gradient(to bottom, rgba(64,150,238,1) 0%,rgba(96,171,248,1) 56%,rgba(122,188,255,1) 100%);
     
     color:            #fff;
@@ -1374,14 +1374,13 @@ canvas#screenOverlay {
     padding: 1px 4px;
 }
 
-/* For transient messages at the HTML level from a quadplay program.
-   Currently used only for clipboard copy feedback. */
+/* For transient messages at the HTML level from a quadplay program. */
 #popupMessage {
     visibility: hidden;
     background: #fff;
     color: #000;
     position: absolute;
-    top: 0px;
+    top: -40px;
     width: 500px;
     left: 50%;
     margin-left:-250px;
@@ -1393,26 +1392,62 @@ canvas#screenOverlay {
     border-radius: 0px 0px 4px 4px;
     z-index: 30;
     box-shadow: 0px 4px 15px 0px rgba(0, 0, 0, 0.6);
+    opacity: 0;
 }
 
 #popupMessage.show {
     visibility: visible;
+    opacity: 1;
+    top: 0px;
 
     /* These times have to be kept in sync with showPopupMessage()'s
        setTimeout value in quadplay-ide.js */
-    animation: fadein 0.5s, fadeout 0.5s 3.5s;
+    animation: messagefadein 0.5s, messagefadeout 0.5s 3.5s;
 }
 
-@keyframes fadein {
+@keyframes messagefadein {
     from {top: -40px; opacity: 0;}
     to {top: 0px; opacity: 1;}
 }
 
-@keyframes fadeout {
+@keyframes messagefadeout {
     from {top: 0px; opacity: 1;}
     to {top: -40px; opacity: 0;}
 }
 
+.runtimeDialog {
+    visibility: hidden;
+    background: #fff;
+    color: #000;
+    position: absolute;
+    bottom: 0px;
+    height: 12px;
+    left: 0px;
+    right: 0px;
+    text-align: center;
+    border-top: 1px solid #000;
+    z-index: 30;
+    padding-top: 1px;
+    box-shadow: 0px 4px 15px 0px rgba(0, 0, 0, 0.6);
+    font-size: 4.5px;
+}
+
+.runtimeDialog.show {
+    visibility: visible;
+}
+
+.runtimeDialog div {
+    display: inline-block;
+    border: 1px solid #bbb;
+    background-color: #fff;
+    text-align: center;
+    background:linear-gradient(to bottom, rgba(255,255,255,1) 0%,rgba(242,242,242,1) 36%,rgba(242,242,242,1) 90%,rgba(224,224,224,1) 100%);
+    box-shadow: 1px 2px 2px 0px rgb(0 0 0 / 15%);
+    border-radius: 2px;
+    width: 22px;
+    height: 7px;
+    padding-top: 2px;
+}
 
 /*******************************************************************/
 

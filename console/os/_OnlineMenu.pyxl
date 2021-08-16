@@ -71,7 +71,9 @@ def draw_view(view):
     let choice_array;
 
     if gamepad_array[0].status == "host":
-        choice_array = ["Copy Host Code", "Change Host Code", "Stop Hosting"]
+        $setRuntimeDialogVisible("hostCodeCopy", true)
+        
+        choice_array = ["Change Host Code", "Stop Hosting"]
         draw_text({
             text: "You are currently hosting at:",
             font: small_font,
@@ -91,6 +93,7 @@ def draw_view(view):
             x_align: "center"
         })
     else:
+        $setRuntimeDialogVisible("hostCodeCopy", false)
         // Construct the host array every time through the rendering to
         // minimize stored state (and bugs)
         choice_array = ["Visit A New Host"]
@@ -170,10 +173,6 @@ def manage_online_input(choice_array, touch_current_choice):
             const choice = choice_array[online_choice_index]
             if choice == "Change Host Code":
                 $changeMyHostNetID()
-            else if choice == "Copy Host Code":
-                def ok(): $showPopupMessage("Copied your host code to the clipboard")
-                def fail(): $showPopupMessage("Error: could not access the clipboard")
-                $copyToClipboard(HOST_CODE, ok, fail)
             else if choice == "Visit A New Host":
                 push_mode($NewHost)
             else if starts_with(choice, "Change Online Name"):
@@ -241,6 +240,7 @@ if hostNetID: $startGuesting(hostNetID)
 
 leave
 ────────────────────────────────────────────────────────────────────────
+$setRuntimeDialogVisible("hostCodeCopy", false)
 
 set_transform(old_transform)
 set_clip(old_clip)
