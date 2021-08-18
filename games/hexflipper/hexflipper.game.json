@@ -1,0 +1,102 @@
+{
+    "title": "HexFlipper",
+    "developer": "Cort Stratton",
+    "copyright": "©2021 Cort Stratton",
+    "license": "Open source under the BSD 3-Clause license https://opensource.org/licenses/BSD-3-Clause",
+    "packages": [],
+    "scripts": [
+        "hex_grid.pyxl",
+        "music.pyxl",
+        "globals.pyxl",
+        "beats.pyxl"
+    ],
+    "modes": [
+        "Play",
+        "Menu",
+        "GameSetup",
+        "HowToPlay",
+        "Credits",
+        "GameOver"
+    ],
+    "start_mode": "Menu",
+    "docs": [],
+    "assets": {
+        "font": "quad://fonts/deja-8.font.json",
+        "game_board_map": "game_board.map.json",
+        "hex_sprite": "hex.sprite.json",
+        "arrows_sprite": "arrows.sprite.json",
+        "move_sound": "move.sound.json",
+        "back_sound": "back.sound.json",
+        "select_sound": "select.sound.json",
+        "blip_05_sound": "blip-05.sound.json",
+        "blip_07_sound": "blip-07.sound.json",
+        "blip_12_sound": "blip-12.sound.json",
+        "title_sprite": "title.sprite.json",
+        "bgmusic_menu_sound": "bgmusic-menu.sound.json",
+        "bgmusic_menu_to_game_sound": "bgmusic-menu-to-game.sound.json",
+        "bgmusic_ending_sound": "bgmusic-ending.sound.json",
+        "bgmusic_sound": "bgmusic.sound.json"
+    },
+    "version": 1,
+    "min_players": 1,
+    "max_players": 4,
+    "cooperative": false,
+    "competitive": true,
+    "achievements": false,
+    "highscores": false,
+    "credits": {
+        "main": [
+            "Code:",
+            "Cort Stratton",
+            "\"Art\":",
+            "Cort Stratton",
+            "\"Design\":",
+            "Cort Stratton",
+            "Music:",
+            "Calamity Range",
+            "",
+            "calamityrangemusic.bandcamp.com",
+            "Thanks:",
+            "Morgan McGuire",
+            "",
+            "Lesley Mathieson",
+            "",
+            "Ben Burnes"
+        ],
+        "extra": ""
+    },
+    "links": {
+        "game": {
+            "www": "https://game...",
+            "github": "https://github.com/cdwfs/hexflipper"
+        },
+        "developer": {
+            "twitter": "@postgoodism"
+        }
+    },
+    "description": "A trippy turn-based territory-claiming game for 1-4 players",
+    "constants": {
+        "CPU_MOVE_FRAMES": {
+            "type": "number",
+            "value": 24,
+            "description": "How long does each CPU player take to make its move? (it will move its cursor at 50% and commit the move at 100%)"
+        },
+        "BASE_SUPER_ARROW_CHANCE": {
+            "type": "number",
+            "value": 0.25,
+            "description": "Probability of one arrow of a moving being a super-arrow capable of flipping another player's hex [0..1]"
+        },
+        "SUPER_ARROW_CHANCE_BOOST": {
+            "type": "number",
+            "value": 0.1,
+            "description": "bias applied to the super-arrow chance for each spot below #1 the player is"
+        },
+        "DEBUG_DEV_MODE": {
+            "type": "boolean",
+            "value": false,
+            "description": "If true, enables various developer conveniences"
+        }
+    },
+    "screenshot_tag": "HexFlipper",
+    "y_up": false
+}

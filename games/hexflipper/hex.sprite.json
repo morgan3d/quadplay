@@ -1,0 +1,51 @@
+{
+    "url": "hex-32x32.png",
+    "sprite_size": {
+        "x": 32,
+        "y": 32
+    },
+    "license": "Copyright 2021 Cort Stratton, CC BY 3.0",
+    "default_frames": 10,
+    "names": {
+        "overlay_p1": {
+            "x": 0,
+            "y": 0
+        },
+        "overlay_p2": {
+            "x": 0,
+            "y": 1
+        },
+        "overlay_p3": {
+            "x": 0,
+            "y": 2
+        },
+        "overlay_p4": {
+            "x": 0,
+            "y": 3
+        },
+        "territory_p1": {
+            "x": 1,
+            "y": 0
+        },
+        "territory_p2": {
+            "x": 1,
+            "y": 1
+        },
+        "territory_p3": {
+            "x": 1,
+            "y": 2
+        },
+        "territory_p4": {
+            "x": 1,
+            "y": 3
+        },
+        "territory_neutral": {
+            "x": 2,
+            "y": 0
+        },
+        "overlay_next": {
+            "x": 2,
+            "y": 1
+        }
+    }
+}

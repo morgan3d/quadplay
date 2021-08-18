@@ -136,8 +136,8 @@ def parse_args():
 
     parser.add_argument(
         '--my_quadplay',
-        default='~/my_quadplay',
-        help="Set the path to local games, which defaults to my_quadplay in the current user's home directory."
+        default=os.environ.get('MY_QUADPLAY', '~/my_quadplay'),
+        help="Set the path to local games, which defaults to my_quadplay in the current user's home directory or the MY_QUADPLAY environment variable."
     )
 
     parser.add_argument(

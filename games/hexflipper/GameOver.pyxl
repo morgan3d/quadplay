@@ -1,0 +1,75 @@
+GameOver
+════════════════════════════════════════════════════════════════════════
+const PLAYER_SPRITES = [
+    hex_sprite.territory_p3,
+    hex_sprite.territory_p1,
+    hex_sprite.territory_p2,
+    hex_sprite.territory_p4,
+    ]
+const PLAYER_LABELS = ["P3", "P1", "P2", "P4"]
+const PLAYER_INDICES = [2,0,1,3]
+
+def enter_menu_mode(data):
+    set_mode(Menu) because "Returned to main menu"
+
+let disable_input = false
+let player_types = []
+let player_scores = []
+let player_is_winner = [false,false,false,false]
+
+enter(in_player_types, in_player_scores)
+────────────────────────────────────────────────────────────────────────
+disable_input = false
+player_types = []
+player_scores = []
+player_is_winner = [false,false,false,false]
+
+bgm_stop()
+play_sound({sound:bgmusic_ending_sound, volume:100%})
+player_types = in_player_types
+player_scores = in_player_scores
+
+let high_score = max(player_scores[0], player_scores[1], player_scores[2], player_scores[3])
+for i < 4:
+    if player_scores[i] == high_score:
+        player_is_winner[i] = true
+
+frame
+────────────────────────────────────────────────────────────────────────
+// Handle input
+if not disable_input:
+    if gamepad_array[0].bb != 0:
+        disable_input = true
+        play_sound(CURSOR_BACK_SOUND)
+        add_frame_hook(fade_out, enter_menu_mode, 30, ∅, {})
+        
+draw_text({font:font, text:"Game Over!", pos:xy(50% SCREEN_SIZE.x, 25% SCREEN_SIZE.y),
+    text_size:max(0,mode_frames/3), x_align:"center", color:#f}).y
+    
+// Draw representations of the current players
+for i < 4:
+    let player_index = PLAYER_INDICES[i]
+    let p = xy((2*i+1)*SCREEN_SIZE.x/8, 50% SCREEN_SIZE.y)
+    const label_text_args = {font:font, pos:p, color:#0, x_align:"center", y_align:"center", z:1}
+    if player_types[player_index] == PLAYER_TYPE_NONE:
+        // Skip nonexistent players
+        continue
+    else if player_types[player_index] == PLAYER_TYPE_HUMAN:
+        draw_sprite({sprite:PLAYER_SPRITES[i], pos:p})
+        draw_text({text:PLAYER_LABELS[i], ...label_text_args})
+    else if player_types[player_index] == PLAYER_TYPE_CPU:
+        draw_sprite({sprite:PLAYER_SPRITES[i], pos:p})
+        draw_text({text:"CPU", ...label_text_args})
+    let score_color = if player_is_winner[player_index] then #ff0 else #f
+    draw_text({font:font, pos:p+xy(0,20), text:player_scores[PLAYER_INDICES[i]], color:score_color, x_align:"center", y_align:"top"})
+    if player_is_winner[player_index]:
+        let t = (mode_frames mod 72) / 72
+        draw_text({font:font, pos:p+xy(0,-20), text:"WINNER!", color:hsv(t,1,1), x_align:"center", y_align:"bottom"})
+    
+draw_text({font:font, pos:xy(50% SCREEN_SIZE.x, 90% SCREEN_SIZE.y),
+    text:replace("(b) Return To Menu", gamepad_array[0].prompt), color:#f, x_align:"center"})
+
+leave
+────────────────────────────────────────────────────────────────────────
+reset_post_effects()
+remove_frame_hooks_by_mode(get_mode())

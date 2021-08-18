@@ -60,7 +60,7 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-import json, re, sys, argparse
+import json, re, sys, argparse, functools
 
 if (sys.version_info[0] < 3) or (sys.version_info[0] == 3 and sys.version_info[1] < 1):
    raise Exception("workjson.py requires Python 3.1 or later")
@@ -68,43 +68,44 @@ if (sys.version_info[0] < 3) or (sys.version_info[0] == 3 and sys.version_info[1
 _double_quote_protection = chr(0xE000)
 _protection_block_start = 0xE010
 
+
 """ Returns the new string and a map """
 def _protect_quoted_strings(src):
-   protection_map = []
+    protection_map = []
 
-   # Hide escaped quotes that would confuse the following regexp
-   src = src.replace('\\"', _double_quote_protection)
+    # Hide escaped quotes that would confuse the following regexp
+    src = src.replace('\\"', _double_quote_protection)
 
-   def protect(match):
-      protection_map.append(match[1])
-      return '"' +  chr(len(protection_map) - 1 + _protection_block_start) + '"'
+    def protect(match):
+        protection_map.append(match[1])
+        return '"' +  chr(len(protection_map) - 1 + _protection_block_start) + '"'
    
-   # Protect strings
-   src = re.sub(r'"((?:[^"\\]|\\.)*)"', protect, src)
+    # Protect strings
+    src = re.sub(r'"((?:[^"\\]|\\.)*)"', protect, src)
 
-   return src, protection_map
+    return src, protection_map
 
 
 
 def _unprotect_quoted_strings(s, protection_map):
-   # Unprotect strings
-   for i in range(0, len(protection_map)):
-      s = s.replace(chr(_protection_block_start + i), protection_map[i], 1)
+    # Unprotect strings
+    for i in range(0, len(protection_map)):
+        s = s.replace(chr(_protection_block_start + i), protection_map[i], 1)
 
-   # Unprotect escaped quotes
-   return s.replace(_double_quote_protection, '\\"')
+    # Unprotect escaped quotes
+    return s.replace(_double_quote_protection, '\\"')
 
 
 
 def dumps(obj, skipkeys=False, ensure_ascii=True, allow_nan=True,
           cls=None, indent=None, separators=None, default=None, sort_keys=False):
    
-   return json.dumps(obj, skipkeys=skipkeys, allow_nan=allow_nan, ensure_ascii=ensure_ascii,
-                     separators=separators, default=default, sort_keys=sort_keys,
-                     cls=cls, indent=indent)
+    return json.dumps(obj, skipkeys=skipkeys, allow_nan=allow_nan, ensure_ascii=ensure_ascii,
+                      separators=separators, default=default, sort_keys=sort_keys,
+                      cls=cls, indent=indent)
 
 
-""" s must be a string, unlike json.loads """
+@functools.wraps(json.loads)
 def loads(text, cls=None, object_hook=None, parse_float=None, parse_int=None,
           parse_constant=None, object_pairs_hook=None):
 
@@ -118,7 +119,8 @@ def loads(text, cls=None, object_hook=None, parse_float=None, parse_int=None,
 
    # Convert multiline backquote strings to singleline
    def backquote_replace(match):
-       return '"' + match[1].replace('\n', r'\n').replace(r'\`', '`').replace('"', r'\"') + '"'         
+       return '"' + match[1].replace('\n', r'\n').replace(r'\`', '`').replace('"', r'\"') + '"'
+    
    text = re.sub(r'`((?:\s|\S)*?[^\\])`', backquote_replace, text)
 
    # Convert single-quoted strings to double quoted
@@ -132,7 +134,7 @@ def loads(text, cls=None, object_hook=None, parse_float=None, parse_int=None,
 
    # Remove multiline comments, preserving newlines
    def comment_replace(match):
-      return re.sub(r'[^\n]', '', match[0])
+       return re.sub(r'[^\n]', '', match[0])
    
    text = re.sub(r'\/\*(.|\n)*\*\/', comment_replace, text)
 
@@ -167,18 +169,29 @@ def loads(text, cls=None, object_hook=None, parse_float=None, parse_int=None,
    # TODO: Pass other options
    return json.loads(text)
 
+loads.__doc__ = json.loads.__doc__ + """\n Argument s must be a string, unlike json.loads """
 
+
+
+@functools.wraps(json.load)
+def load(fp, *args, **kw):
+    with open(fp, encoding="utf-8", errors="replace") as fi:
+        return loads(fi.read(), *args, **kw)
+
+
+     
 # Run as "python3 workjson.py --test" from the command line to
 # use as a unit test.
 def _test():
-   t1 = '..."hello" world'
-   t, m = _protect_quoted_strings(t1)
-   assert t1 == _unprotect_quoted_strings(t, m)
+    t1 = '..."hello" world'
+    t, m = _protect_quoted_strings(t1)
+    assert t1 == _unprotect_quoted_strings(t, m)
 
-   print(loads('{foo:"bar"}'))
-   print(loads("{fob:'baz'}"))
+    print(loads('{foo:"bar"}'))
+    print(loads("{fob:'baz'}"))
 
 
+    
 if __name__== '__main__':
    parser = argparse.ArgumentParser(description='More permissive deserialization of JSON')
    parser.add_argument('--test', action='store_true', default=False,

@@ -338,6 +338,19 @@ competive game derived from Snake-like games, including [TRON]("https://en.wikip
 - Collisions
 
 ----------------------------
+
+  <center><img src="../console/games/hexflipper/title.png" width="300px" style="border:0"></center>
+
+<div class="preview pixel" style="background-image:url('../games/hexflipper/preview.png')"></div>
+[Serpitron](../console/quadplay.html?game=quad://games/hexflipper&IDE=1) is a one to four-player
+competive game of area control:
+
+- Computer player AI
+- Hex grids
+- Boardgame style logic
+- Music
+
+----------------------------
   <center><img src="../games/icetime/title.png" width=200px style="border:0"></center>
 
 <div class="preview pixel" style="background-image:url('../games/icetime/preview.png')"></div>
@@ -8009,6 +8022,19 @@ Command-Line Tools
 
   Run as `tools/export.py ...` on Linux and macOS, or `py tools/export.py ...` on Windows
   from the main quadplay directory. This script itself depends on `tools/quaddepend.py`.
+
+[project_linter.py](../tools/project_linter.py)
+: Linter for quadplay projects.  Intended to help when finalling a project, it
+has a number of checks including:
+
+- unused assets
+- unused constants
+- missing licenses
+- missing quadplay metadata (preview.png, etc)
+- report of licenses used in a project (use the --license-audit flag)
+
+For a full list of features, use the --help argument.  Run it in the same
+directory that containst the game.json for your project.
 
 [`sprite_json_generator.py`](../tools/sprite_json_generator.py)
 : Generator for `.sprite.json` files. Requires Python and PIL.

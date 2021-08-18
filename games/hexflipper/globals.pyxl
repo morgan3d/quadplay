@@ -1,0 +1,15 @@
+const CURSOR_MOVE_SOUND = {sound:move_sound, volume: 50%}
+const CURSOR_BACK_SOUND = {sound:back_sound, volume: 50%}
+const CURSOR_ACCEPT_SOUND = {sound:select_sound, volume: 50%}
+
+const PLAYER_TYPE_NONE = 0
+const PLAYER_TYPE_HUMAN = 1
+const PLAYER_TYPE_CPU = 2
+
+// Used to fade the screen to black during a mode transition
+def fade_out(frames_left, total_frames, data):
+    let t = 1-(total_frames - frames_left) / total_frames
+    set_post_effects({
+        color: rgb(t,t,t),
+        blend_mode: "multiply"
+        })

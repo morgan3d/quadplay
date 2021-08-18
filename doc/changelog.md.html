@@ -6,16 +6,21 @@
 Changes for both the specification and implementation in each release
 of [quadplay✜](manual.md.html).
 
-2021 August TBD: Beta update 72
+2021 August 18: Beta update 72
 ===================================
 
+- New HexFlipper built-in game
+- New tools/project_linter.py for testing games before export. Detects unused assets/constants, missing licenses, and more.
 - Added a friendly error message for using `%` instead of `mod`
 - Tools menu now offers Show Private Views for debugging online multiplayer
 - Can now join online play from a direct URL link as well as a host code
+- Added `MY_QUADPLAY` environment variable support for `quadplay` and `quadplay-server.py` scripts
 - Copying and pasting online multiplayer host codes and host URLs now supported in all browsers
 - System controller configuration dialogs now work in online multiplayer with private views
 - Added `device_control()` access for enabling higher resolution multiplayer 
   private views on devices that support them
+- Extended workjson.py with Python-json compatible `load()` as well as `loads()`
+- External IDE plugins are now generated internally from a common keyword and API list
 - Fixed crash on launcher's System tab
 - Fixed rendering of active tabs in the launcher
 

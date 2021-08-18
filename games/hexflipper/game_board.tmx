@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.5" tiledversion="1.7.1" orientation="hexagonal" renderorder="left-down" width="16" height="11" tilewidth="32" tileheight="48" infinite="0" hexsidelength="0" staggeraxis="y" staggerindex="odd" nextlayerid="7" nextobjectid="1">
+ <editorsettings>
+  <export target="game_board..tmx" format="tmx"/>
+ </editorsettings>
+ <properties>
+  <property name="sound" value="loop_escalator_sound"/>
+  <property name="title" value="[B00] Holy Moly"/>
+ </properties>
+ <tileset firstgid="1" name="hex-32x32" tilewidth="32" tileheight="32" tilecount="12" columns="3">
+  <image source="hex-32x32.png" width="96" height="128"/>
+ </tileset>
+ <layer id="5" name="Tile Layer 1" width="16" height="11">
+  <data encoding="csv">
+9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,0,
+0,9,9,9,9,3,3,3,3,3,9,9,9,9,0,0,
+0,9,9,9,9,3,3,3,3,3,3,9,9,9,9,0,
+9,9,9,9,3,3,3,3,3,3,3,9,9,9,9,0,
+9,9,9,9,3,3,3,3,3,3,3,3,9,9,9,9,
+9,9,9,3,3,3,3,3,3,3,3,3,9,9,9,9,
+9,9,9,9,3,3,3,3,3,3,3,3,9,9,9,9,
+9,9,9,9,3,3,3,3,3,3,3,9,9,9,9,0,
+9,9,9,9,9,3,3,3,3,3,3,9,9,9,9,0,
+9,9,9,9,9,3,3,3,3,3,9,9,9,9,9,0,
+0,9,9,9,9,9,9,9,9,9,9,9,9,9,0,0
+</data>
+ </layer>
+</map>

@@ -2,7 +2,7 @@
 
 import argparse
 import os
-import json
+import workjson as json
 
 
 __doc__ = """ A tool for linting quadplay game projects for finaling.  """
@@ -83,8 +83,8 @@ def lint_game(game_name=None, license_audit=False):
     if not os.path.exists(game_json_path):
         raise RuntimeError("No such game.json: {}".format(game_json_path))
 
-    with open(game_json_path) as fi:
-        game_data = json.load(fi)
+    with open(game_json_path, encoding="utf-8", errors="replace") as fi:
+        game_data = json.loads(fi.read())
 
     report = {}
 
@@ -92,15 +92,21 @@ def lint_game(game_name=None, license_audit=False):
     files = game_data["scripts"][:]
     files.extend(("{}.pyxl".format(m) for m in game_data["modes"]))
     files.extend(
-        thing["url"]
+        thing.get("url")
         for thing in game_data["constants"].values()
-        if thing["type"] == "raw"
+        if isinstance(thing, dict)
+        and thing["type"] == "raw"
+        and thing.get("url", None) is not None
+
     )
 
     # cache all the files... who knows
     all_text = ""
     for f in files:
-        with open(f) as fi:
+        if f.startswith("quad://"):
+            continue
+
+        with open(f, encoding='utf-8', errors='replace') as fi:
             all_text += fi.read()
 
     # unused things
@@ -121,12 +127,14 @@ def lint_game(game_name=None, license_audit=False):
             report.setdefault("no_such_file", []).append(asset)
             continue
 
-        with open(asset) as fi:
-            blob = json.load(fi)
+        with open(asset, encoding='utf-8', errors='replace') as fi:
+            blob = json.loads(fi.read())
 
-        if not blob['license'] or blob["license"].lower() == "none":
+        lic = blob.get("license")
+        if not lic or lic.lower() == "none":
             report.setdefault("no_license", []).append(asset)
-        licenses.setdefault(blob['license'], []).append(asset)
+        else:
+            licenses.setdefault(blob['license'], []).append(asset)
 
     if license_audit:
         report['license_audit'] = licenses

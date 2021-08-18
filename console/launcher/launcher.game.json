@@ -1,7 +1,7 @@
 {
     "title":      "Launcher",
     "developer":  "Casual Effects",
-    "copyright":  "©2020 Morgan McGuire",
+    "copyright":  "©2020-2021 Morgan McGuire",
     "license":    "LGPL 3.0",
 
     "packages":   [],
@@ -48,7 +48,10 @@
         "ffpreview":  "ffpreview.sprite.json",
         
         "dllabel":    "dllabel.sprite.json",
-        "dlpreview":  "dlpreview.sprite.json"
+        "dlpreview":  "dlpreview.sprite.json",
+        
+        "hflabel":    "hflabel.sprite.json",
+        "hfpreview":  "hfpreview.sprite.json"
     },
 
     "constants":  {

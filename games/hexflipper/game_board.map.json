@@ -1,0 +1,9 @@
+{
+    "url": "game_board.tmx",
+    "license": "By Cort Stratton 2021. Public Domain/CC0",
+    "sprite_url": "hex.sprite.json",
+    "y_up": true,
+    "sprite_url_table": {
+        "<default>": "hex.sprite.json"
+    }
+}

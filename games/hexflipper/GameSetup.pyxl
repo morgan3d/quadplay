@@ -1,0 +1,110 @@
+GameSetup
+════════════════════════════════════════════════════════════════════════
+// quadplay standard player order is P3, P1, P2, P4
+const PLAYER_SPRITES = [
+    hex_sprite.territory_p3,
+    hex_sprite.territory_p1,
+    hex_sprite.territory_p2,
+    hex_sprite.territory_p4,
+    ]
+const PLAYER_LABELS = ["P3", "P1", "P2", "P4"]
+    
+def enter_menu_mode(data):
+    set_mode(Menu) because "Returned to main menu"
+
+// Need a special fade-out function here, since we don't know exactly how many frames
+// it will take to reach the target point in the music.
+def fade_out_and_enter_game(frames_left, total_frames, data):
+    // Fade out over 120 frames
+    let t = fade_frame_count / 120
+    set_post_effects({
+        color: rgb(t,t,t),
+        blend_mode: "multiply"
+        })
+    fade_frame_count -= 1
+    // Change music to transition measure at the beginning of the measure
+    if bgm_beat_in_measure == 0 and bgm_beat_ff:
+        if not entering_game:
+            entering_game = true
+            bgm_set_volumes([0%,100%])
+        else:
+            let game_info = {player_types:[player_types[1], player_types[2], player_types[0], player_types[3]]}
+            set_mode(Play, game_info) because "Started game"
+
+let disable_input = false
+let current_player = 0
+let player_types = []
+let entering_game = false
+let fade_frame_count = 120
+
+enter
+────────────────────────────────────────────────────────────────────────
+disable_input = false
+current_player = 1
+player_types = [PLAYER_TYPE_NONE, PLAYER_TYPE_HUMAN, PLAYER_TYPE_CPU, PLAYER_TYPE_NONE]
+entering_game = false
+fade_frame_count = 120
+
+frame
+────────────────────────────────────────────────────────────────────────
+bgm_update()
+if not disable_input:
+    // Move cursor left/right to choose a player to edit
+    if gamepad_array[0].xx:
+        play_sound(CURSOR_MOVE_SOUND)
+        const max_player_count = 4
+        current_player = (current_player + max_player_count + gamepad_array[0].xx) mod max_player_count
+    // Move cursor up/down to choose the type of the current player
+    if gamepad_array[0].yy:
+        play_sound(CURSOR_MOVE_SOUND)
+        const player_type_count = 3
+        player_types[current_player] = (player_types[current_player] + player_type_count + gamepad_array[0].yy) mod player_type_count
+    // Push A to start the game
+    if gamepad_array[0].aa:
+        // Must have at least two players
+        let player_count = 0
+        for i < 4:
+            if player_types[i] ≠ PLAYER_TYPE_NONE:
+                player_count += 1
+        if player_count ≥ 2:
+            disable_input = true
+            play_sound(CURSOR_ACCEPT_SOUND)
+            fade_frame_count = 120
+            // we want to fade out until a specific point in the music, which will happen at
+            // a specific time (but not necessarily after a specific number of frames).
+            // So, the add_frame_hook() here runs "forever", and the hook itself decides
+            // when to enter Play mode based on the music playback state
+            add_frame_hook(fade_out_and_enter_game, nil, infinity, GameSetup, {})
+    // Push B to go back to the main menu
+    else if gamepad_array[0].bb:
+        disable_input = true
+        play_sound(CURSOR_BACK_SOUND)
+        add_frame_hook(fade_out, enter_menu_mode, 30, ∅, {})
+// Draw representations of the current players
+for i < 4:
+    let p = xy((2*i+1)*SCREEN_SIZE.x/8, 50% SCREEN_SIZE.y)
+    const label_text_args = {font:font, pos:p, color:#0, x_align:"center", y_align:"center", z:1}
+    if player_types[i] == PLAYER_TYPE_NONE:
+        draw_sprite({sprite:hex_sprite.territory_neutral, pos:xy((2*i+1)*SCREEN_SIZE.x/8, 50% SCREEN_SIZE.y)})
+        draw_text({text:"NONE", ...label_text_args})
+    else if player_types[i] == PLAYER_TYPE_HUMAN:
+        draw_sprite({sprite:PLAYER_SPRITES[i], pos:p})
+        draw_text({text:PLAYER_LABELS[i], ...label_text_args})
+    else if player_types[i] == PLAYER_TYPE_CPU:
+        draw_sprite({sprite:PLAYER_SPRITES[i], pos:xy((2*i+1)*SCREEN_SIZE.x/8, 50% SCREEN_SIZE.y)})
+        draw_text({text:"CPU", ...label_text_args})
+
+// Draw the input prompts
+draw_sprite({sprite:title_sprite, pos:xy(0.5,0.25)*SCREEN_SIZE})
+draw_text({font:font, pos:xy((2*current_player+1)*SCREEN_SIZE.x/8, 50% SCREEN_SIZE.y - 25),
+    x_align:"center", y_align:"center", color:#f, text:replace("[^]", gamepad_array[0].prompt)})
+draw_text({font:font, pos:xy((2*current_player+1)*SCREEN_SIZE.x/8, 50% SCREEN_SIZE.y + 25),
+    x_align:"center", y_align:"center", color:#f, text:replace("[v]", gamepad_array[0].prompt)})
+draw_text({font:font, pos:xy(25% SCREEN_SIZE.x, 90% SCREEN_SIZE.y),
+    text:replace("(b) Return To Menu    (a) Start Game", gamepad_array[0].prompt), color:#f})
+
+leave
+────────────────────────────────────────────────────────────────────────
+reset_post_effects()
+remove_frame_hooks_by_mode(get_mode())
+

@@ -1,0 +1,41 @@
+Credits
+════════════════════════════════════════════════════════════════════════
+def enter_menu_mode(data):
+    set_mode(Menu) because "Returned to main menu"
+
+let disable_input = false
+
+enter
+────────────────────────────────────────────────────────────────────────
+// This event runs when the mode is entered via set_mode() or push_mode().
+disable_input = false
+
+frame
+────────────────────────────────────────────────────────────────────────
+bgm_update()
+if not disable_input:
+    if gamepad_array[0].bb != 0:
+        disable_input = true
+        play_sound(CURSOR_BACK_SOUND)
+        add_frame_hook(fade_out, enter_menu_mode, 30, ∅, {})
+        
+
+const text_args = {font:font, x_align:"left", y_align:"top", color:#f}
+let line_y = 0
+draw_text({text:"A game by Cort Stratton", pos:xy(0, line_y), text_size:max(0,mode_frames/3), ...text_args}).y
+line_y += font.line_height
+draw_text({text:"Soundtrack by Calamity Range", pos:xy(0, line_y), text_size:max(0,mode_frames/3 - 5), ...text_args}).y
+line_y += font.line_height
+draw_text({text:"Written for OST Jam 2021", pos:xy(0, line_y), text_size:max(0,mode_frames/3 - 10), ...text_args}).y
+line_y += font.line_height
+draw_text({text:replace("Full credits in the pause menu (push (p))", gamepad_array[0].prompt),
+    text_size:max(0, mode_frames/3 - 15), pos:xy(0, line_y), ...text_args}).y
+line_y += font.line_height
+draw_text({font:font, pos:xy(50% SCREEN_SIZE.x, 90% SCREEN_SIZE.y),
+    text:replace("(b) Return To Menu", gamepad_array[0].prompt), color:#f, x_align:"center"})
+line_y += font.line_height
+
+leave
+────────────────────────────────────────────────────────────────────────
+reset_post_effects()
+remove_frame_hooks_by_mode(get_mode())

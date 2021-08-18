@@ -86,7 +86,24 @@ const gameArray = [{
    preview: itpreview
 },
 
-                  
+{
+   title: "HexFlipper",
+   developer: "Cort Stratton",
+   url: "quad://games/hexflipper",
+   description: "A trippy turn-based territory-claiming game for 1-4 players",
+   version:      1.0,
+   cooperative:  false,
+   competitive:  true,
+   min_players:  1,
+   max_players:  4,
+   achievements: false,
+   builtin:      true,
+   highscores:   false,
+   label:        hflabel[0][0],
+   preview:      hfpreview
+},
+
+                   
 {
    title: "Beat The Gobblins",
    developer: "Stephan Steinbach",

@@ -1,0 +1,66 @@
+Menu
+════════════════════════════════════════════════════════════════════════
+// Put local state for the mode here.  Declare variables with let, constants with const, and functions with def.
+const MENU_NEW_GAME = 0
+const MENU_HOWTOPLAY = 1
+const MENU_CREDITS = 2
+const MENU_ITEMS = ["New Game", "How To Play", "Credits"]
+
+const MENU_ITEM_TEXT_ARGS = {font:font, color:#f, x_align:"left"}
+const MENU_CURSOR_TEXT_ARGS = {font:font, text:replace("(a)", gamepad_array[0].prompt), x_align:"right", color:#f}
+
+def enter_setup_mode(data):
+    set_mode(GameSetup) because "Enter game setup"
+def enter_howtoplay_mode(data):
+    set_mode(HowToPlay) because "View game rules"
+def enter_credits_mode(data):
+    set_mode(Credits) because "View credits"
+
+let current_menu_item = 0
+let disable_input = false
+
+enter
+────────────────────────────────────────────────────────────────────────
+current_menu_item = MENU_NEW_GAME
+disable_input = false
+if not bgm_is_playing():
+    let loops = [
+        {sound:bgmusic_menu_sound, loop:true, volume:100%},
+        {sound:bgmusic_menu_to_game_sound, loop:true, volume:0%},
+        ]
+    bgm_start(loops)
+
+frame
+────────────────────────────────────────────────────────────────────────
+bgm_update()
+// Handle cursor movement
+if not disable_input and gamepad_array[0].yy ≠ 0:
+    play_sound(CURSOR_MOVE_SOUND)
+    current_menu_item = (current_menu_item + size(MENU_ITEMS) + gamepad_array[0].yy) mod size(MENU_ITEMS)
+
+// Handle menu selection
+if not disable_input and gamepad_array[0].aa ≠ 0:
+    if current_menu_item == MENU_NEW_GAME:
+        disable_input = true
+        play_sound(CURSOR_ACCEPT_SOUND)
+        add_frame_hook(fade_out, enter_setup_mode, 30, ∅, {})
+    else if current_menu_item == MENU_HOWTOPLAY:
+        play_sound(CURSOR_ACCEPT_SOUND)
+        add_frame_hook(fade_out, enter_howtoplay_mode, 30, nil, {})
+    else if current_menu_item == MENU_CREDITS:
+        play_sound(CURSOR_ACCEPT_SOUND)
+        add_frame_hook(fade_out, enter_credits_mode, 30, nil, {})
+
+draw_sprite({sprite:title_sprite, pos:xy(0.5,0.25)*SCREEN_SIZE})
+
+let menu_offset = xy(45% SCREEN_SIZE.x, 75% SCREEN_SIZE.y)
+for menu_item at i in MENU_ITEMS:
+    draw_text({text:menu_item, pos:menu_offset, ...MENU_ITEM_TEXT_ARGS}).y
+    if current_menu_item == i:
+        draw_text({pos:menu_offset - xy(10,0), ...MENU_CURSOR_TEXT_ARGS})
+    menu_offset.y += font.line_height
+
+leave
+────────────────────────────────────────────────────────────────────────
+reset_post_effects()
+remove_frame_hooks_by_mode(get_mode())

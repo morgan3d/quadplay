@@ -1,0 +1,55 @@
+HowToPlay
+════════════════════════════════════════════════════════════════════════
+
+def enter_menu_mode(data):
+    set_mode(Menu) because "Returned to main menu"
+
+let disable_input = false
+
+enter
+────────────────────────────────────────────────────────────────────────
+// This event runs when the mode is entered via set_mode() or push_mode().
+disable_input = false
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+bgm_update()
+if not disable_input:
+    if gamepad_array[0].bb != 0:
+        disable_input = true
+        play_sound(CURSOR_BACK_SOUND)
+        add_frame_hook(fade_out, enter_menu_mode, 30, ∅, {})
+        
+
+const text_args = {font:font, x_align:"left", y_align:"top", wrap_width:SCREEN_SIZE.x, markup:true, color:#c}
+let line_y = 0
+draw_text({text:"The goal of the game is to capture as many hexes as possible.", pos:xy(1, line_y),
+    ...text_args}).y
+line_y += font.line_height
+draw_text({text:"Each turn, players may flip 1 or more tiles adjacent to one of their current tiles.", pos:xy(1, line_y),
+    ...text_args}).y
+line_y += font.line_height
+draw_text({text:"A preview of each player's next move is shown outside the board.", pos:xy(1, line_y),
+    ...text_args}).y
+line_y += font.line_height
+draw_text({text:"Normal moves ({color:#f white arrows}) can only flip grey, neutral tiles.", pos:xy(1, line_y),
+    ...text_args}).y
+line_y += font.line_height
+const rainbow_hue = (mode_frames mod 72)/72
+const rainbow_str = "hsv("+rainbow_hue+",1,1)"
+draw_text({text:"A {color:"+rainbow_str+" rainbow arrow} can flip tiles belonging to other players.", pos:xy(1, line_y),
+    ...text_args}).y
+line_y += font.line_height
+draw_text({text:"Once all neutral tiles are claimed, the player who has claimed the most tiles wins!", pos:xy(1, line_y),
+    ...text_args}).y
+line_y += font.line_height
+draw_text({font:font, pos:xy(50% SCREEN_SIZE.x, 90% SCREEN_SIZE.y),
+    text:replace("(b) Return To Menu", gamepad_array[0].prompt), color:#f, x_align:"center"})
+line_y += font.line_height
+
+leave
+────────────────────────────────────────────────────────────────────────
+reset_post_effects()
+remove_frame_hooks_by_mode(get_mode())
+

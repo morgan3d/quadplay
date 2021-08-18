@@ -1,0 +1,140 @@
+// Shamelessly copied from quadplay's "Beyond Control" sample game
+// -------------------------------------------------------------------
+
+// Routines for working with pointy-top hexagonal grids
+// and maps stored in offset coordinates.
+//
+// See https://www.redblobgames.com/grids/hexagons/
+//
+// This maps pixel map (0, 0) to the center of hex (0, 0).
+// Use set_transform(xy(-HEX_WIDTH / 2, SCREEN_SIZE.y + HEX_WIDTH / 4), xy(1, -1))
+// to maximize the number of full hexes on screen when using y=up coordinates.
+//
+// I use the math intrinsics here to reduce computation overhead
+// for these heavily-employed routines. It reduces readability, but this is
+// "library code" where that doesn't matter as much as for the game
+// code.
+//
+// All "hex" coordinates are axial and use xy() values. X increases to the right
+// and Y increases up and to the right. 
+//
+// Integers are the centers of hexagons and hexagons are 1 apart in hex coordinates.
+
+// Pixel size of the bounding box of a hex
+const HEX_WIDTH = 32
+const HEX_HEIGHT = 32
+
+// Frequently used constants
+const HEX_HEIGHT_75 = ¾ HEX_HEIGHT
+const HEX_HEIGHT_50 = ½ HEX_HEIGHT
+const HEX_WIDTH_DIV_SQRT_3 = HEX_WIDTH / sqrt(3)
+const HEX_INV_HEIGHT_75 = 1 / HEX_HEIGHT_75
+const HEX_INV_WIDTH = 1 / HEX_WIDTH
+const HEX_INV_SIN_60_DEG = 2 / sqrt(3)
+
+
+/** Transform a hex grid angle to a true world-space angle, taking into account
+    the squashing that makes each hex square. Useful for computing the
+    world space (or screen space) velocity or orientation
+    needed to match a hex-space movement. */
+def hex_angle_to_ws_angle(hex_angle):
+    // A true hexagon has size r * xy(sqrt(3), sqrt(4))
+    const c = MUL(cos(hex_angle), HEX_WIDTH_DIV_SQRT_3)
+    const s = MUL(sin(hex_angle), HEX_HEIGHT_50)
+    return atan(s, c)
+
+    
+/** Given a hex angle, returns the direction of motion
+    in hex coordinates. Does not snap--round if you want
+    snapping to a 60 degree angle. */
+def hex_direction_from_hex_angle(hex_angle):
+    // hex angle   (c, s)    hex dir
+    //   0 deg --> ( 1,  0) --> xy( 1,  0)
+    //  60 deg --> ( ½,  k) --> xy( 0,  1)
+    // 120 deg --> (-½,  k) --> xy(-1,  1)
+    // 180 deg --> (-1,  0) --> xy(-1,  0)
+    // 240 deg --> (-½, -k) --> xy( 0, -1)
+    // 300 deg --> ( ½, -k) --> xy( 1, -1)
+    //
+    // k = sqrt(3)/2
+    
+    const y = MUL(HEX_INV_SIN_60_DEG, sin(hex_angle))
+    const x = MAD(-½, y, cos(hex_angle))
+    return {x:x, y:y}
+
+
+/** Return the distance in hexes between two hex coords */
+def hex_distance(hexA, hexB):
+    return MUL(½, 
+            ADD(ADD(ABS(SUB(hexA.x, hexB.x)), 
+                    ABS(SUB(ADD(hexA.x, hexA.y), ADD(hexB.x, hexB.y)))),
+                ABS(SUB(hexA.y, hexB.y))))
+    
+
+/** Returns the hex coordinates of the nearest hex center */
+def nearest_hex(hex_pos):
+    return round(hex_pos + xy(-2 ε, 2 ε))
+
+
+/** Round to the nearest axis, wrapping the angle */
+def nearest_hex_angle(hex_angle):
+    return loop(round(hex_angle, 60°), -180°, +180°)
+
+
+/** Given a hex coordinate, return the world-space coordinate in pixels
+    assuming 32x32 hexes that do not overlap each other. */
+def transform_hex_to_ws(hex):
+    return {x: MUL(MAD(½, hex.y, hex.x), HEX_WIDTH),
+            y: MUL(HEX_HEIGHT_75, hex.y)}
+   
+def transform_ws_to_hex(ws):
+    const y = MUL(ws.y, HEX_INV_HEIGHT_75)
+    return {x: MAD(HEX_INV_WIDTH, ws.x, MUL(-½, y)),
+            y: y}
+    
+/**
+ Converts a hexagonal coordinate to a map coordinate
+ using the offset from TMX maps. (odd-r pointy, in
+ Redblob's notation)
+ */
+def transform_hex_to_map_coord(hex):
+    return xy(hex.x + (hex.y bitshr 1), hex.y)
+
+
+/** Converts an offset map coordinate to a hexagonal axial
+    coordinate. */
+def transform_map_coord_to_hex(map_coord):
+    return xy(map_coord.x - (map_coord.y bitshr 1), map_coord.y)
+
+
+/** Directions to neighbors in hex coordinates, circling CCW from x = 0 deg */
+const hex_direction_array = [
+    xy( 1,  0),
+    xy( 0,  1),
+    xy(-1,  1),
+    xy(-1,  0),
+    xy( 0, -1),
+    xy( 1, -1),
+]
+
+
+def map_get_sprite_by_hex(map, hex_coord):
+    return get_map_sprite(map, transform_hex_to_map_coord(nearest_hex(hex_coord)))
+
+
+def map_set_sprite_by_hex(map, hex_coord, sprite):
+    return set_map_sprite(map, transform_hex_to_map_coord(nearest_hex(hex_coord)), sprite)
+
+/** Draws layer 0 of the map, assuming 32x32 sprites */
+def draw_hex_map(map):
+    // Avoid allocation while iterating over map cells
+    const pos = xy(0, 0)
+    
+    for x < size(map):
+        const array = map[x]        
+        for y < size(array):
+            let sprite = array[y]
+            if sprite:
+                pos.x = MUL(HEX_WIDTH, MAD(½, y bitand 1, x))
+                pos.y = MUL(HEX_HEIGHT_75, y)
+                draw_sprite(sprite, pos)
