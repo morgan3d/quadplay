@@ -12,7 +12,8 @@
         "Play"
     ],
     "assets": {
-        "font": "quad://fonts/ching-9.font.json"
+        //"font": "quad://fonts/robot-9.font.json"
+        "font": "quad://fonts/deja-9.font.json"
     },
     "screenshot_tag": "Font Preview"
 }

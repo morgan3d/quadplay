@@ -1,7 +1,14 @@
 {
-    "url":           "octant-17.png",
-    "license":       "©2019 Morgan McGuire. Licensed as CC-BY 4.0 https://creativecommons.org/licenses/by/4.0/",
-    "char_size":      {"x": 30, "y": 29},
-    "letter_spacing": {"x": 2, "y": 4},
-    "baseline":      22
+    "url": "octant-17.png",
+    "license": "\u00a92019 Morgan McGuire. Licensed as CC-BY 4.0 https://creativecommons.org/licenses/by/4.0/",
+    "char_size": {
+        "x": 30,
+        "y": 29
+    },
+    "letter_spacing": {
+        "x": 2,
+        "y": 4
+    },
+    "baseline": 22,
+    "format": "20211015"
 }

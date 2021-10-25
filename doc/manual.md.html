@@ -339,10 +339,10 @@ competive game derived from Snake-like games, including [TRON]("https://en.wikip
 
 ----------------------------
 
-  <center><img src="../console/games/hexflipper/title.png" width="300px" style="border:0"></center>
+  <center><img src="../games/hexflipper/title.png" width="300px" style="border:0"></center>
 
 <div class="preview pixel" style="background-image:url('../games/hexflipper/preview.png')"></div>
-[Serpitron](../console/quadplay.html?game=quad://games/hexflipper&IDE=1) is a one to four-player
+[HexFlipper](../console/quadplay.html?game=quad://games/hexflipper&IDE=1) is a one to four-player
 competive game of area control:
 
 - Computer player AI
@@ -1432,6 +1432,16 @@ fontpack✜
 taking a font PNG file with regular tiles (such as the one produced by
 fontgen✜) and packing it tightly. It will generate the output PNG
 and the `.font.json` file for you.
+
+fontpack✜ can also show what the generated characters will look like
+when loaded by quadplay✜. If the generated ones look good, _do not put
+them in the .png_.  Instead, store your file with lots of empty space
+so that it will compress better, and let quadplay✜ regenerate them at
+load time. Only for ones where generation produces poor quality do you
+need to explicitly draw them. Usually large fonts will generate
+characters well but for very small fonts you must hand-tweak
+characters with accents or button prompts to get a readable result in 
+a few pixels.
 
 
 scalepix✜
@@ -4684,7 +4694,7 @@ indices. The map's z-axis corresponds to layers.
   
   Respects the wrapping and wraps infinitely.
 
-`find_map_path(map, start_xy, goal_xy, edge_cost, cost_layer = 0, use_sprite_id = true)`
+`find_map_path(map, start_xy, goal_xy, edge_cost, cost_layer default 0, use_sprite_id default true)`
 : Specialized version of `find_path` for maps. The start and end positions
   are rounded down to the nearest integer map coordinates. The `edge_cost`
   is either a function or an array. The function returns an array of
@@ -4766,8 +4776,8 @@ indices. The map's z-axis corresponds to layers.
    - `vertical` same options as `horizontal`
    - `shortcuts: number default 0%`. Amount of additional hall connections beyond a 
      continous labryinth path.
-   - `straightness: number default 0%`. Preference for long straight hals vs. twisty
-     ones.
+   - `straightness: number default 0%`. Preference for long straight halls (100%) vs. short twisty
+     ones (0%).
    - `coverage: number default 100%`. Amount of the map layer
      reachable by halls. The remainder is wall.
    - `dead_end_array: array default []`. If provided, then 
@@ -4776,11 +4786,11 @@ indices. The map's z-axis corresponds to layers.
    - `random: function default random`. Random number generator to use.
 
 `map_resize(map, width default map.size.x, height default map.size.y, layers default size(map.layer))`
-: Resizes the map in place. Newly revealed values will be `nil`.
-  Maps should only be resized using this function instead . There is no guarantee
-  that the individual arrays themselves will be preserved--they may be reallocated
-  and copied, although the values will be preserved. So, do not hold pointers into 
-  the map across `map_resize()` calls.
+: Resizes the map in place. Newly revealed values will be `nil`.  Maps
+  should only be resized using this function. There is no guarantee
+  that the individual arrays themselves will be preserved--they may be
+  reallocated and copied, although the values will be preserved. So,
+  do not hold pointers into the map across `map_resize()` calls.
 
 `set_map_sprite(map, map_coord, sprite, layer default 0)`
 : Sets the corresponding map sprite. Does nothing if `map_coord` is out of bounds.
@@ -5676,6 +5686,20 @@ Sounds
 ![`quad://sounds/music-days.sound.json`](../sounds/music-days.mp3)   ![`quad://sounds/music-viper.sound.json`](../sounds/music-viper.mp3)
 ![`quad://sounds/music-royal.sound.json`](../sounds/music-royal.mp3) ![`quad://sounds/music-sonata.sound.json`](../sounds/music-sonata.mp3)
 
+From the [_Three Red Hearts_](https://abstractionmusic.bandcamp.com/album/three-red-hearts) chiptune album by Abstraction:
+
+![`quad://sounds/music-three_red_hearts.sound.json`](../sounds/music-three_red_hearts.mp3) ![`quad://sounds/music-box_jump.sound.json`](../sounds/music-box_jump.mp3)
+![`quad://sounds/music-candy.sound.json`](../sounds/music-candy.mp3) ![`quad://sounds/music-connected.sound.json`](../sounds/music-connected.mp3)
+![`quad://sounds/music-deep_blue.sound.json`](../sounds/music-deep_blue.mp3) ![`quad://sounds/music-go.sound.json`](../sounds/music-go.mp3)
+![`quad://sounds/music-modern_bits.sound.json`](../sounds/music-modern_bits.mp3) ![`quad://sounds/music-out_of_time.sound.json`](../sounds/music-out_of_time.mp3)
+![`quad://sounds/music-penguin_town.sound.json`](../sounds/music-penguin_town.mp3) ![`quad://sounds/music-penguins_vs_rabbits.sound.json`](../sounds/music-penguins_vs_rabbits.mp3)
+![`quad://sounds/music-penultimate.sound.json`](../sounds/music-penultimate.mp3) ![`quad://sounds/music-pixel_war_1.sound.json`](../sounds/music-pixel_war_1.mp3)
+![`quad://sounds/music-pixel_war_2.sound.json`](../sounds/music-pixel_war_2.mp3) ![`quad://sounds/music-princess_quest.sound.json`](../sounds/music-princess_quest.mp3)
+![`quad://sounds/music-puzzle_pieces.sound.json`](../sounds/music-puzzle_pieces.mp3) ![`quad://sounds/music-rabbit_town.sound.json`](../sounds/music-rabbit_town.mp3)
+![`quad://sounds/music-rumble_at_the_gates.sound.json`](../sounds/music-rumble_at_the_gates.mp3) ![`quad://sounds/music-sanctuary.sound.json`](../sounds/music-sanctuary.mp3)
+![`quad://sounds/music-save_the_city.sound.json`](../sounds/music-save_the_city.mp3)
+
+
 ### Music Loops
 
 ![`quad://sounds/loop-arcade.sound.json`](../sounds/loop-arcade.mp3) ![`quad://sounds/loop-mega.sound.json`](../sounds/loop-mega.mp3)
@@ -6521,14 +6545,17 @@ Fonts have a JSON descriptor file that looks like:
     // Zero-based Y value of the baseline relative to char_size.
     // This is one less than the "height" of the baseline because
     // of the zero based value.
-    "baseline": 11
+    "baseline": 11,
+    
+    // The current format. No other is accepted
+    "format": "20211015"
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can generate a default version of this JSON with the
-[Fontpack✜](../tools/fontpack.html) tool from a PNG image.
+[fontpack✜](../tools/fontpack.html) tool from a PNG image.
 You can generate a PNG template for the glyphs by taking a
-screenshot from the [Fontgen✜](../tools/fontgen.html) tool.
+screenshot from the [fontgen✜](../tools/fontgen.html) tool.
 
 By convention, the image filename contains the maximum size of the
 individual glyphs, which is usually smaller than the char_size due to
@@ -6539,24 +6566,28 @@ black will become transparent. The current implementation does not
 allow shades of gray for antialiasing. The image tiles must follow
 this exact character format:
 
-![Figure [figFont]: The font character layout](../fonts/deja-15.png)
+![Figure [figFont]: The font character layout. To save disk space/download time and font drawing time, characters shown in magenta will automatically be generated at load time if not present in the font sheet.](font-layout.png)
 
-The six dots on the final row are reserved for future characters.
+At load time, many missing characters can be generated. This may not
+look ideal, so use the [fontpack✜](../tools/fontpack.html) tool
+when creating a font to inspect the generated characters, and hand-tune
+any for which the generation is not good enough.
 
-Because only the specified grid of tiles is read, you can include
-non-character information off the bounds of the tiles, for example,
-putting a copyright statement directly on the font itself.
+Also, many characters in the font sheet perform double duty and will
+be used for producing similar-looking unicode characters.
 
-Fonts count 1/2 as much towards the spritesheet pixel limit because they
-are internally compressed to 8 bits per pixel. They still count fully 
-towards the maximum spritesheet dimensions. Because a font is
-32x14 glyphs, this means that the largest `char_size` can be
-is 29x70 pixels when the `shadow_size` is one pixel.
+Empty spaces are reserved for for future extensions.
+
+Fonts count 1/2 as much towards the spritesheet pixel limit because
+they are internally compressed to 8 bits per pixel. They still count
+fully towards the maximum spritesheet dimensions. Because a font is
+32x14 glyphs, this means that the largest `char_size` can be is 29x70
+pixels when the `shadow_size` is one pixel.
 
 Fonts enforce uniform width on all full-size digits 0..9 so that
 numbers print in aligned columns. Avoid drawing fonts with one digit
-that is larger than most of the others (usually the "4")
-because they result in extra padding around all digits.
+that is larger than most of the others (usually the "4") because they
+result in extra padding around all digits.
 
 `font.line_height`
 : When loaded into memory, the font object exposes a
@@ -8705,6 +8736,7 @@ relicensed in the future.  This includes the contents of:
 - [`quadplay-browser.js`](../console/quadplay-browser.js)
 - [`quadplay-network.js`](../console/quadplay-network.js)
 - [`quadplay-ide.js`](../console/quadplay-ide.js)
+- [`quadplay-mode.js`](../console/quadplay-mode.js)
 - [`quadplay-edit-asset.js`](../console/quadplay-edit-asset.js)
 - [`quadplay-edit-code.js`](../console/quadplay-edit-code.js)
 - [`quadplay-edit-game.js`](../console/quadplay-edit-game.js)

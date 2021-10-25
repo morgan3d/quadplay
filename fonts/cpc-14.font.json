@@ -1,7 +1,14 @@
 {
     "url": "cpc-14.png",
     "license": "by Morgan McGuire 2019 CC0/Public Domain",
-    "char_size": {"x":8, "y": 16},
-    "letter_spacing": {"x":1, "y": 2},
-    "baseline": 13
+    "char_size": {
+        "x": 8,
+        "y": 16
+    },
+    "letter_spacing": {
+        "x": 1,
+        "y": 2
+    },
+    "baseline": 13,
+    "format": "20211015"
 }

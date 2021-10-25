@@ -3,7 +3,8 @@
 """ Sorts JSON file.  Useful for maintaining diff consistency. """
 
 import argparse
-import json
+import workjson
+
 
 def parse_args():
     """ parse arguments out of sys.argv """
@@ -19,6 +20,7 @@ def parse_args():
     )
     return parser.parse_args()
 
+
 def main():
     """main function for module"""
     args = parse_args()
@@ -27,17 +29,18 @@ def main():
         with open(fp) as fi:
             contents = fi.read()
 
-        data = json.loads(contents)
+        data = workjson.loads(contents)
 
         with open(fp, 'w') as fo:
             fo.write(
-                json.dumps(
+                workjson.dumps(
                     data,
                     sort_keys=True,
                     indent=4,
-                    separators=(",",": ")
+                    separators=(",", ": ")
                 )
             )
+
 
 if __name__ == '__main__':
     main()

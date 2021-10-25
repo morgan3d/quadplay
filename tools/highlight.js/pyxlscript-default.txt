@@ -1,0 +1,38 @@
+Play
+========================================================
+
+init
+--------------------------------------------------------
+
+const background_color = rgb(28%, 36%, 55%)
+
+const powerup_data = [{name:"spare", color:#C5F},
+                      {name:"wall",  color:#CCC}]
+
+// Seconds left for bonus
+let time_left
+
+/* Start the background music. If we wanted to
+   change music between title, pause, and play modes
+   then we'd have to save the handle this returns. */
+play_audio_clip(music, true)
+
+let title_ball = make_entity({
+         name: "title_ball",
+         pos: xy(200, 210),
+         vel: xy(2, -1.2),
+         sprite: ball_sprite[0][0],
+         z: -2,
+         shape:"disk"
+      })
+
+def create_title_particles():
+   play_audio_clip(unbreakable_clip)
+   const particle_colors = [#ffd700, #ff6948, #82e923, #00c1f5, #fff]
+   for i < 250:
+      const a = random(360deg)
+      create_particle(title_ball.pos, xy(cos a, sin a) * (0.5 + 1.5 rnd()), random_value(particle_colors), 40, random(110) + 60)
+
+
+frame
+--------------------------------------------------------------------------------

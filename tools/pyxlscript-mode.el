@@ -28,7 +28,7 @@
 (define-derived-mode pyxlscript-mode python-mode "pyxlscript"
   "Major mode to edit Pyxlscript files." :syntax-table pyxlscript-mode-syntax-table
 
-  ;; 3-space indenting
+  ;; 4-space indenting
   (setq-local tab-width 4)
 
   (setq indent-tabs-mode nil)

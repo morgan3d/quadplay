@@ -6,6 +6,48 @@
 Changes for both the specification and implementation in each release
 of [quadplay✜](manual.md.html).
 
+
+2021 October 24: Beta update 74
+===================================
+
+- Made `random` not syntax highlighted unless used as a function
+- Fixed create new map in IDE to use correct sprite URLs when not 
+  cloning the sprite PNG
+- Extendfed workjson.py with Python-compatible `dump()` as well as `dumps()`
+- Changed font sheet layout. Use `tools/font-update.py` to upgrade 
+  previous font sheets and then tweak the result manually. All
+  built-in fonts have been upgraded and tweaked.
+- The `tools/fontpack.html` tool now generates missing characters 
+  in font sheets, as does the runtime loader. This simplifies manual
+  creation of new fonts and increases compression on disk/reduces
+  game download time.
+- Added button prompt support for French AZERTY keyboards,
+  including new Q, Z, m, !, ù, è, à prompt characters in font sheets
+- Added font characters
+  `ĄąČčĆćĎďĚěĘęŁłŃńŇňŘřŚśŠšŤťŮůÝýЎўŽžŹźŻżҐґтЄєı` to support more
+  languages.
+- Added more subscripts to font rendering. The
+  full set is now <code>₀₁₂₃₄₅₆₇₈₉₊₋₍₎ₐᵦₑₕᵢⱼₖₘₙₒᵣₛₜᵤₓ</code>.
+  Note that d, y, and z subscripts are absent because
+  they are missing from Unicode itself.
+- Added ◌̀◌́◌̂◌̌◌̃◌̈◌̊ to font sheet for future auto-generation
+  of accented characters
+- Fixed `font.glyph_size.x` NaN value
+- Fixed `blackletter-14.font.json` font PNG size
+
+
+2021 September 4: Beta update 73
+===================================
+- 19 new CC-BY 4 chiptune songs by [Abstraction](https://abstractionmusic.bandcamp.com/)
+- IDE autopause on blur and reload-on-focus no longer take effect if
+  the game is hosting or guesting, in order to service to event queue
+  when testing network multiplayer on a single machine
+- The `quadplay-server.py` script will clean up previous instances
+  if any processes were left in memory from an abrupt shutdown
+- Suppressed server log messages on Safari touch icon requests
+- Added `tools/highlight.js/pyxlscript.js` plugin for highlight.js
+
+
 2021 August 18: Beta update 72
 ===================================
 

@@ -109,7 +109,7 @@
     </div>
     <div id="consoleMenu" class="unselectable dropdown">
       <label for="volumeSlider" style="padding-left: 6px; position: relative; top:-2px"><img src="ui-speaker.png" width=12 height=12></label><input id="volumeSlider" style="width:100px; position: relative; margin-left:0px; left: 2px" type="range" min="0" max="200" oninput="onVolumeChange()" onchange="onVolumeChange()">
-      <br/><label><input id="backgroundPauseCheckbox" type="checkbox" title="Pause the game when not in focus" onclick="onBackgroundPauseClick(event)" autocomplete="off">Auto-pause</label>
+      <br/><label><input id="backgroundPauseCheckbox" type="checkbox" title="Pause the game when not in focus (unless hosting)" onclick="onBackgroundPauseClick(event)" autocomplete="off">Auto-pause</label>
       <hr>
       <label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('pink')" type="radio" id="pinkColorScheme" checked autocomplete="off">Pink</label>
       <br/><label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('orange')" type="radio" id="orangeColorScheme" autocomplete="off">Orange</label>
@@ -156,7 +156,7 @@
       <br/><label title="Reveal all private views on the host during online play"><input id="showPrivateViewsEnabled" type="checkbox" onclick="debugOptionClick(event) || onResize()" autocomplete="off">Show private views</label>
       <br/><label title="Automatically convert text to math symbols in the code editor"><input id="automathEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Auto-math in editor</label>
       <br/><label title="Show a low-overhead profiler on the emulator screen"><input id="onScreenHUDEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">On-screen HUD</label>
-      <br/><label title="When using an external editor, restart the game when the browser gains focus (games always *reload* on focus, if stopped)"><input id="restartOnFocusEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Restart on focus</label>
+      <br/><label title="When using an external editor, restart the game when the browser gains focus if not hosting (games always *reload* on focus, if stopped)"><input id="restartOnFocusEnabled" type="checkbox" onclick="debugOptionClick(event)" autocomplete="off">Restart on focus</label>
       <hr>
       <div><a href="../tools/quantize.html" target="_blank">quantize✜</a></div>
       <div><a href="../tools/fontgen.html" target="_blank">fontgen✜</a></div>
@@ -746,7 +746,7 @@
               <label for="newAssetName">Asset&nbsp;Name</label>
             </td>
             <td>
-              <input id="newAssetName" type="text" style="font-size: 80%; font-family: Monaco, monospace; width: 230px" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '').replace(/(^_+)|(_sprite$)/g, '');document.getElementById('newAssetCreateButton').disabled = (this.value === '')"></input><span style="font-size: 80%; font-family: Monaco, monospace" id="newAssetSuffix">_sprite</span>
+              <input id="newAssetName" autocomplete="off" type="text" style="font-size: 80%; font-family: Monaco, monospace; width: 230px" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '').replace(/(^_+)|(_sprite$)/g, '');document.getElementById('newAssetCreateButton').disabled = (this.value === '')"></input><span style="font-size: 80%; font-family: Monaco, monospace" id="newAssetSuffix">_sprite</span>
             </td>
           </tr>
           <tr>
@@ -934,6 +934,7 @@
   <script defer src="quadplay-font.js?" charset="utf-8"></script>
   <script defer src="quadplay-load.js?" charset="utf-8"></script>
   <script defer src="quadplay-profiler.js?" charset="utf-8"></script>
+  <script defer src="quadplay-mode.js?" charset="utf-8"></script>
   <script defer src="quadplay-edit-code.js?" charset="utf-8"></script>
   <script defer src="quadplay-edit-game.js?" charset="utf-8"></script>
   <script defer src="quadplay-edit-asset.js?" charset="utf-8"></script>

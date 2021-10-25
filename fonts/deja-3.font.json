@@ -1,7 +1,14 @@
 {
     "url": "deja-3.png",
-    "license": "© 2020 Morgan McGuire. Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/",
-    "char_size": {"x": 4, "y": 5},
-    "letter_spacing": {"x": 1, "y": 0},
-    "baseline": 2
+    "license": "\u00a9 2020 Morgan McGuire. Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/",
+    "char_size": {
+        "x": 4,
+        "y": 5
+    },
+    "letter_spacing": {
+        "x": 1,
+        "y": 0
+    },
+    "baseline": 2,
+    "format": "20211015"
 }

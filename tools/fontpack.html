@@ -1,4 +1,4 @@
-<!doctype html><meta charset="UTF-8"><!-- -*- JavaScript -*- -->
+<!doctype html><meta charset="UTF-8"><!-- -*- javascript -*- -->
 <title>fontpack✜</title>
 <link rel="icon" type="image/png" sizes="64x64" href="../console/favicon-64x64.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../console/favicon-32x32.png">
@@ -18,6 +18,7 @@
      color: #e61b9d !important;
      text-decoration: none;
   }
+
   body {
      background: #302b2b;
      color: #eee;
@@ -72,6 +73,10 @@
 <script src="../console/quadplay-load.js"></script>
 <script src="../console/quadplay-font.js"></script>
 <script>
+
+// For creating visualization for the manual
+const VISUALIZE_GENERATEABLE_CHARACTERS = false;
+
     function onDrop(event) {
         // Prevent the browser from opening the file
         event.preventDefault();
@@ -130,13 +135,12 @@
                 let s = (tileHeight > 15) ? 2 : 1;
                 packFont(font, borderSize, shadowSize, baseline,
                          {x:tileWidth, y:tileHeight},
-                         {x:s, y:2 * s}, srcMask);
+                         {x:s, y:2 * s}, srcMask, document.getElementById('generateMissing').checked);
 
                 if (font.$charHeight < 12) {
                     font.spacing.y = 2;
                     font.spacing.x = 1;
                 }
-                console.dir(font);
                 {
                     let info = document.getElementById('data');
                     let s = '';
@@ -223,7 +227,8 @@ span.height${maxHeight} { background: #ff4; padding: 0 1px; color: #000}
                 let packedData = font.$data.data;
 
                 for (let i = 0; i < packedData.length; ++i) {
-                    // Color
+                    // Color. Read only the primary bit, ignoring
+                    // shadow and border bits.
                     if (packedData[i] & 1) {
                         for (let j = i * 4; j < i * 4 + 3; ++j) {
                             destImageData.data[j] = 0xff;
@@ -233,7 +238,30 @@ span.height${maxHeight} { background: #ff4; padding: 0 1px; color: #000}
                     // Alpha is always 100%
                     destImageData.data[i * 4 + 3] = 0xff;
                 }
-                                
+
+                // Visualize
+                if (VISUALIZE_GENERATEABLE_CHARACTERS) {
+                    const w = font.$data.width / FONT_COLS;
+                    const h = font.$data.height / FONT_ROWS;
+                    for (let r = 0; r < FONT_ROWS; ++r) {
+                        const xScale = (r < FONT_ROWS - 2) ? 1 : 4;
+                        for (let c = 0; c < FONT_COLS / xScale; ++c) {
+
+                            const char = fontChars[r * (FONT_COLS + 1) + c];
+
+                            if (fontCharCanBeGenerated[char]) {
+                                for (let j = 0; j < h; ++j) {
+                                    const y = j + r * h;
+                                    for (let i = 0; i < w * xScale; ++i) {
+                                        const x = i + c * w * xScale;
+                                        destImageData.data[(x + y * font.$data.width) * 4 + 1] = 0;
+                                    } // j
+                                } // i
+                            }
+                        } // c
+                    } // r
+                } // if
+
                 // Put the data back to create a data URL
                 ctx.putImageData(destImageData, 0, 0);
                 let destImage = new Image();
@@ -260,7 +288,8 @@ span.height${maxHeight} { background: #ff4; padding: 0 1px; color: #000}
     "license":       "by somebody",
     "char_size":      {"x": ${destImageData.width / FONT_COLS}, "y": ${destImageData.height / FONT_ROWS}},
     "letter_spacing": {"x": ${font.spacing.x}, "y": ${font.spacing.y}},
-    "baseline":      ${baseline}
+    "baseline":      ${baseline},
+    "format":        "20211015"
 }
 `;
                 };
@@ -289,6 +318,7 @@ span.height${maxHeight} { background: #ff4; padding: 0 1px; color: #000}
       <p>
         <label for="padding">Extra Padding:</label>
         <input type="number" id="extraPadding" min="0" max="8" value="0" width="64" style="font-size:14px"> px
+        <input type="checkbox" id="generateMissing" checked style="margin-left: 50px"><label for="generateMissing">Generate Missing Characters</label>
       </p>
     </div>
 

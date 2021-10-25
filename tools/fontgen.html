@@ -44,6 +44,11 @@
      margin-bottom: 30px;
      color: #fff;
   }
+
+  a:visited, a:link {
+     color: #80bfff;
+     text-decoration: none;
+  }
 </style>
 <body>
   <h1>fontgen✜</h1>
@@ -85,6 +90,8 @@ function sbutton(c) {
 }
 
 const substitution = {
+    'Ⓠ':big('🆀'),
+    'Ⓩ':big('🆉'),
     'Ⓦ':big('🆆'),
     'Ⓐ':big('🅰'),
     'Ⓢ':big('🆂'),
@@ -99,10 +106,13 @@ const substitution = {
     '②':big('➋'),
     '③':big('➌'),
     '④':big('➍'),
+    '⑤':big('➎'),
+    '⑥':big('➏'),
     '⑦':big('➐'),
     '⑧':big('➑'),
     '⑨':big('➒'),
     '⓪':'⓿',
+    '⦸':sbutton('\\'),
     '⬙':sbutton('/'),
     '⬗':sbutton("'"),
     '⬖':sbutton('.'),
@@ -118,19 +128,33 @@ const substitution = {
     'ⓑ':button('b'),
     'ⓒ':button('c'),
     'ⓓ':button('d'),
+    'ⓔ':button('e'),
     'ⓕ':button('f'),
     'ⓖ':button('g'),
+    'ⓗ':button('h'),
+    'ⓜ':button('m'),
+    'ⓝ':button('n'),
     'ⓟ':button('p'),
     'ⓠ':button('q'),
     'ⓥ':button('v'),
     'ⓧ':button('x'),
     'ⓨ':button('y'),
+    'ⓩ':button('z'),
     'ⓛ':sbutton('sl'),
     'ⓡ':sbutton('sr'),
+    '⒜':button('à'),
+    '⓵':button('!'),
+    '⓷':button('è'),
+    'ⓤ':button('ù'),
+    '‘': '`',
+    '`':'‘',
+    '\'':'’',
+    '̈':'&nbsp; ̈',
     '⍐':skey('↑'),
     '⍇':skey('←'),
     '⍗':skey('↓'),
-    '⍈':skey('→'),
+'⍈':skey('→'),
+'◉':'<span style="font-size:180%">●</span>',
     '○':'<span style="font-size:130%">○</span>',
     '●':'<span style="font-size:130%">●</span>'
 };    
@@ -157,11 +181,17 @@ for (let y = 0; y < FONT_ROWS - 2; ++y) {
 
 // The final two special rows of 4-wide characters
 document.write('<tr>');
-for (let i = 0; i < fontSpecials.length; ++i) {
-    document.write('<td colspan=4><span style="font-size:70%;padding-left:0.25em;padding-right:0.25em;border-radius:0.5em;font-weight:bold;background:#fff; color:#000">' + fontSpecials[i] + '</span></td>');
-    if (i + 1 === FONT_COLS / 4) {
-        document.write('</tr><tr>');
-    }
+for (let y = 0; y < 2; ++y) {
+   for (let i = 0; i < FONT_COLS / 4; ++i) {
+        let c = fontChars[(FONT_ROWS - 2) * (FONT_COLS + 1) + y * (FONT_COLS / 4) + i];
+        if (c !== ' ') {
+             c = fontSpecials[c];
+             document.write('<td colspan=4><span style="font-size:70%;padding-left:0.25em;padding-right:0.25em;border-radius:0.5em;font-weight:bold;background:#fff; color:#000">' + c + '</span></td>');
+        } else {
+             document.write('<td colspan=4> </td>');
+        }
+   }
+   document.write('</tr><tr>');
 }
 document.write('</tr>');
 document.write('</table>');

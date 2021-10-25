@@ -230,7 +230,7 @@ def export(args):
 
 if __name__== '__main__':
    parser = argparse.ArgumentParser(description='Export a distributable static HTML game from a game.json game file named on the command line.\n\n', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-   parser.add_argument('game', action='store', default='./', help='the path to the game.json file from the current directory, or the path to the directory containing it if the directory and file have the same basename.')
+   parser.add_argument('game', action='store', default='./', nargs='?', help='the path to the game.json file from the current directory, or the path to the directory containing it if the directory and file have the same basename.')
    parser.add_argument('-g', '--gamepath', help='obsolete argument. Specify the game as a positional argument instead')
    parser.add_argument('-o', '--outpath', help='output to this directory instead of a zipfile. Relative to the current directory.')
    parser.add_argument('-z', '--zipfile', help='name of the zipfile, relative to the current directory. Defaults to the game name if unspecified.')

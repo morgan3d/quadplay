@@ -1,7 +1,6 @@
 " Vim syntax file
 " Language:	Quadplay (pyxlscript)
 " Maintainer:	Stephan Steinbach 
-" Last Change:	2019 Jul 04
 " Credits:	Based on python.vim by Neil Schemenauer <nas@pyxlscript.ca> + the
 "           emacs file by Morgan McGuire.
 "
@@ -23,25 +22,28 @@ set cpo&vim
 " Capture the modes and separators
 syn match pyxlscriptModeLine '^init$\n^─\+$\|^enter$\n^─\+$\|^frame$\n^─\+$\|^leave$\n^─\+$' 
 
-syn keyword pyxlscriptStatement let const in return break continue ∊ ∈
-syn keyword pyxlscriptLiteral ½ ⅓ ⅔ ¼ ¾ ⅕ ⅖ ⅗ ⅘ ⅙ ⅐ ⅛ ⅑ ⅒ ° deg ε π nan ∅ SCREEN_SIZE pi epsilon infinity nil
+" BEGIN CONSTANTS GENERATED CODE
+syn keyword pyxlscriptLiteral deg nan IDE_USER VIEW_ARRAY HOST_CODE SCREEN_SIZE pi epsilon infinity nil ∞ ½ ⅓ ⅔ ¼ ¾ ⅕ ⅖ ⅗ ⅘ ⅙ ⅐ ⅛ ⅑ ⅒ ° ε π ∅ ∞ ⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ CREDITS CONSTANTS ASSETS SOURCE_LOCATION gamepad_array touch joy
+" END CONSTANTS
+
 syn keyword pyxlscriptBoolean true false
-syn keyword pyxlscriptBuiltIn add_frame_hook remove_frame_hook draw_sprite draw_text draw_tri text_width get_transform get_clip rotation_sign set_transform unparse format_number lowercase uppercase xy xyz draw_map stop_audio play_sound game_frames mode_frames now game_frames mode_frames gray rgb rgba hsv hsva call abs acos atan get_previous_mode get_mode sign get_map_sprite get_map_pixel_color get_map_sprite_by_draw_coord get_map_pixel_color_by_draw_coord get_sprite_pixel_color sign_nonzero asin cos clamp hash lerp loop min max mid noise oscillate overlap pow random_value random_integer random ξ sgn sqrt sin set_random_seed tan clone copy cross direction dot equivalent magnitude max_component min_component xy xyz fast_remove_key find keys remove_key size substring sort resize push pop remove_values pad joy debug_print draw_disk entity_simulate set_transform reset_transform reset_clip set_clip draw_line draw_previous_mode draw_point make_entity overlaps entity_add_child entity_update_children draw_entity intersect_clip draw_sprite_corner_rect draw_rect set_background get_background assert debug_watch ray_intersect draw_bounds any_button_press get_sound_status set_pitch set_volume set_pan set_loop
+
+" BEGIN FUNCTIONS GENERATED CODE
+syn keyword pyxlscriptBuiltIn set_screen_size ray_intersect ray_intersect_map up_y draw_bounds draw_disk reset_clip reset_transform set_clip draw_line draw_sprite_corner_rect intersect_clip draw_point draw_corner_rect reset_camera set_camera get_camera draw_rect get_background set_background text_width get_sprite_pixel_color draw_sprite draw_text draw_tri draw_poly get_transform get_clip rotation_sign sign_nonzero set_transform xy xz_to_xyz xy_to_angle angle_to_xy xy_to_xyz xz_to_xy xy_to_xz xz xyz any_button_press any_button_release draw_map draw_map_span map_resize map_generate_maze map_resize get_mode get_previous_mode get_map_pixel_color get_map_pixel_color_by_ws_coord get_map_sprite set_map_sprite get_map_sprite_by_ws_coord set_map_sprite_by_ws_coord parse unparse format_number uppercase lowercase resume_audio get_audio_status ray_value play_sound resume_sound stop_audio game_frames mode_frames delay sequence add_frame_hook make_spline remove_frame_hook make_entity entity_mass entity_move entity_inertia entity_area draw_entity overlaps entity_remove_all entity_add_child entity_remove_child entity_update_children entity_simulate split now game_frames mode_frames replace starts_with ends_with find_map_path find_path join entity_apply_force entity_apply_impulse perp gray rgb rgba hsv hsva last_value last_key insert reverse reversed call set_post_effects get_post_effects reset_post_effects push_front local_time device_control physics_add_contact_callback physics_entity_contacts physics_entity_has_contacts physics_add_entity physics_remove_entity physics_remove_all physics_attach physics_detach make_physics make_contact_group draw_physics physics_simulate min max mid abs acos atan asin sign sign_nonzero cos clamp hash smoothstep lerp lerp_angle smootherstep perceptual_lerp_color log log2 log10 noise oscillate pow make_random random_sign random_integer random_within_cube random_within_sphere random_on_sphere random_within_circle random_within_square random_on_square random_on_circle random_direction2D random_direction3D random_value random_gaussian random_gaussian2D random_truncated_gaussian random_truncated_gaussian2D ξ sgn sqrt sin set_random_seed tan conncatenate extend extended deep_clone clone copy draw_previous_mode cross direction dot equivalent magnitude magnitude_squared max_component min_component xy xyz trim_spaces slice set_pause_menu iterate fast_remove_key find keys remove_key substring shuffle shuffled sort resize push pop pop_front push_front fast_remove_value remove_values remove_all round floor ceil todo debug_pause debug_print set_playback_rate set_pitch set_volume set_pan set_loop remove_frame_hooks_by_mode is_string is_function is_NaN is_object is_nil is_boolean is_number is_array type rgb_to_xyz axis_aligned_draw_box load_local save_local transform_map_layer_to_ws_z transform_ws_z_to_map_layer transform_map_space_to_ws transform_ws_to_map_space transform_cs_to_ss transform_cs_z_to_ws_z transform_ws_z_to_cs_z transform_ss_to_cs transform_cs_to_ws transform_ws_to_cs transform_es_to_ws transform_ws_to_ws transform_to_parent transform_to_child push_guest_menu_mode stop_hosting start_hosting disconnect_guest ABS ADD DIV MAD MUL SUB MAX MIN SIGN CLAMP LERP RGB_ADD_RGB RGB_SUB_RGB RGB_MUL_RGB RGB_DIV_RGB RGB_MUL RGB_DIV RGB_DOT_RGB RGB_LERP RGBA_ADD_RGBA RGBA_SUB_RGBA RGBA_MUL_RGBA RGBA_DIV_RGBA RGBA_MUL RGBA_DIV RGBA_DOT_RGBA RGBA_LERP XY_MAD_S_XY XY_MAD_XY_XY XY_ADD_XY XY_SUB_XY XY_MUL_XY XY_DIV_XY XY_MUL XY_DIV XY_DOT_XY XY_CRS_XY XZ_ADD_XZ XZ_SUB_XZ XZ_MUL_XZ XZ_DIV_XZ XZ_MUL XZ_DIV XZ_DOT_XZ XYZ_DIRECTION XYZ_ADD_XYZ XYZ_SUB_XYZ XYZ_MUL_XYZ XYZ_DIV_XYZ XYZ_MUL XYZ_DIV XYZ_DOT_XYZ XYZ_CRS_XYZ XY_DIRECTION MAT2x2_MATMUL_XY MAT2x2_MATMUL_XZ MAT3x3_MATMUL_XYZ MAT3x4_MATMUL_XYZ MAT3x4_MATMUL_XYZW
+" END FUNCTIONS
 
 syn match pyxlscriptColor "#[0-9A-Fa-f]+"
 
+" BEGIN KEYWORDS GENERATED CODE
+syn keyword pyxlscriptStatement assert todo debug_pause debug_print debug_watch with_camera let const mod local preserving_transform with push_mode pop_mode reset_game set_mode return break continue default bitand bitnot bitor bitxor bitshl bitshr because quit_game launch_game
+" END KEYWORDS
+
+
 syn keyword pyxlscriptStatement	def nextgroup=pyxlscriptDef skipwhite
-syn keyword pyxlscriptStatement return local preserving_transform with set_mode reset_game launch_game quit_game push_mode pop_mode because
 syn keyword pyxlscriptConditional if else then
 syn keyword pyxlscriptRepeat	for while until
-syn keyword pyxlscriptOperator	and in is not or
+syn keyword pyxlscriptOperator	and in is not or ∊ ∈ at xor
 
-" Decorators (new in pyxlscript 2.4)
-" The zero-length non-grouping match before the function name is
-" extremely important in pyxlscriptDef.  Without it, everything is
-" interpreted as a function inside the contained environment of
-" doctests.
-" A dot must be allowed because of @MyClass.myfunc decorators.
 syn match   pyxlscriptDef
       \ "\%(\%(def\s\)\s*\)\@<=\h\%(\w\|\.\)*" contained
 

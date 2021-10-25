@@ -283,9 +283,9 @@ function onNewAssetCreate() {
         break;
 
     case 'map':
-        const spritesheetURL = document.getElementById('newAssetMapSpritesheet').value;
+        let spriteURL = document.getElementById('newAssetMapSpritesheet').value;
 
-        function makeMap(pngURL, spriteJSON, spriteImage, spritesheetURL) {
+        function makeMap(pngURL, spriteJSON, spriteImage, spriteURL) {
             console.assert(spriteJSON);
             console.assert(spriteImage);
 
@@ -302,7 +302,7 @@ function onNewAssetCreate() {
             templateJSONParameters.z_offset = zOffset;
             templateJSONParameters.z_scale = zScale;
             templateJSONParameters.y_up = yUp;
-            templateJSONParameters.sprite_url = templateJSONParameters.sprite_url2 = spritesheetURL;
+            templateJSONParameters.sprite_url = templateJSONParameters.sprite_url2 = spriteURL;
             const spriteSize = spriteJSON.sprite_size || {x: spriteImage.width, y: spriteImage.height};
             
             if (document.getElementById('newAssetMapCenter').checked) {
@@ -312,70 +312,76 @@ function onNewAssetCreate() {
                 templateJSONParameters.offset_x = templateJSONParameters.offset_y = 0;
             }
             
-            const tmxContents = generateTMX(spritesheetURL, pngURL, spriteJSON, spriteSize.x, spriteSize.y, width, height, layers, spriteImage.width, spriteImage.height);
+            const tmxContents = generateTMX(spriteURL, pngURL, spriteJSON, spriteSize.x, spriteSize.y, width, height, layers, spriteImage.width, spriteImage.height);
             createNewAssetFromTemplate(assetName, gamePath, fileName, type, 'tmx', templateJSONParameters, tmxContents);
         } // makeMap
 
         const loadOptions = {jsonParser: 'permissive'};
         const cloneSpriteJson = document.getElementById('newAssetMapCloneSpriteJson').checked;
         const cloneSpritePng = document.getElementById('newAssetMapCloneSpritePng').checked && cloneSpriteJson;
-                        
 
         LoadManager.fetchOne(
             loadOptions,
-            makeURLAbsolute(window.gameURL, spritesheetURL),
+            makeURLAbsolute(window.gameURL, spriteURL),
             'json',
             undefined,
-            function (json, raw, url) {
-
-                // The PNG's URL is initially relative to the spritesheet, not the
-                // game. Adjust it to be relative to the game. This will be used
-                // to make a local file path for the TMX.
-                let pngURL = json.url;
-                if (! /^[a-z]+:\/\//.test(pngURL) && (spritesheetURL.indexOf('/') !== -1)) {
-                    pngURL = spritesheetURL.replace(/\/[^/]+$/, '/') + pngURL;
-                }
+            function (spriteJson, raw, spriteHttpURL) {
                 
+                // Resolve the PNG's original URL to be relative to the
+                // sprite if it is not quad:// absolute.
+                let pngURL = spriteJson.url;
+                if (! /^[a-z]+:\/\//.test(pngURL) && (spriteURL.indexOf('/') !== -1)) {
+                    pngURL = spriteURL.replace(/\/[^/]+$/, '/') + pngURL;
+                }
+
                 LoadManager.fetchOne(
                     loadOptions,
-                    makeURLAbsolute(url, json.url),
+                    makeURLAbsolute(spriteHttpURL, spriteJson.url),
                     'image',
-                    undefined,
-                    function (image) {
 
+                    undefined,
+                    
+                    function (image) {
                         // Clone sprite and JSON if required before triggering the map creation
                         if (cloneSpriteJson) {
+                            // Make the sprite URL relative to the current directory
+                            spriteURL = urlFilename(spriteURL);
+                            
                             if (cloneSpritePng) {
-                                const newPngURL = pngURL.replace(/^.*\//, '');
+                                // Put new PNG into the game directory
+                                const newPngURL = urlFilename(pngURL);
                                 
-                                // Copy the PNG
-                                LoadManager.fetchOne(loadOptions, makeURLAbsolute(url, pngURL), 'arraybuffer', null, function (data) {
-                                    serverWriteFile(gamePath + newPngURL, 'binary', data);
+                                // Copy the original PNG bits (even
+                                // though we have already loaded them
+                                // as an image, since the PNG loading
+                                // never gives us the original bits
+                                // and we do not want to re-encode)
+                                LoadManager.fetchOne(loadOptions, makeURLAbsolute(spriteHttpURL, pngURL), 'arraybuffer', null, function (pngRawData) {
+                                    serverWriteFile(gamePath + newPngURL, 'binary', pngRawData);
                                 });
                                 
                                 pngURL = newPngURL;
-                                json.url = pngURL;
-                            } else {
-                                // Fully qualify the pngURL, since we're about
-                                // to move the json file's URL
-                                pngURL = makeURLAbsolute(gameSource.jsonURL, makeURLAbsolute(url, pngURL));
                             }
+                            
+                            // Update the spritesheet with the current pngURL
+                            spriteJson.url = pngURL;
 
                             // Write the modified json
-                            url = url.replace(/^.*\//, '');
-                            serverWriteFile(gamePath + url, 'utf8',
-                                            WorkJSON.stringify(json, undefined, 4),
+                            serverWriteFile(gamePath + spriteURL, 'utf8',
+                                            WorkJSON.stringify(spriteJson, undefined, 4),
                                             function () {
-                                                makeMap(pngURL, json, image, url);
+                                                makeMap(pngURL, spriteJson, image, spriteURL);
                                             }, null);
                         } else {
-                            makeMap(pngURL, json, image, url);
+                            // No cloning, use the original image and sprite
+                            // urls.
+                            makeMap(pngURL, spriteJson, image, spriteURL);
                         }
                     },
-                    function (error) { alert(error + ' while loading spritesheet png for map from ' + pngURL); },
+                    function (error) { alert(error + ' while loading sprite png for map from ' + pngURL); },
                     undefined, true);
             },
-            function (error) { alert(error + ' while loading spritesheet json for map from ' + spritesheetURL); },
+            function (error) { alert(error + ' while loading sprite json for map from ' + spriteURL); },
             undefined, true);
         break;
     }
@@ -384,12 +390,12 @@ function onNewAssetCreate() {
 }
 
 
-/* Returns a string that is the contents of a TMX map file. */
-function generateTMX(spritesheetURL, pngURL, spritesheetJSON, tilewidth, tileheight, layerwidth, layerheight, numlayers, spritesheetwidth, spritesheetheight) {
-    const spritesheetName = spritesheetURL.replace(/^.*\/([^/]+)\.sprite\.json$/, '$1').replace(/.sprite.json$/, '');
+/** Returns a string that is the contents of a TMX map file. */
+function generateTMX(spriteURL, pngURL, spriteJSON, tilewidth, tileheight, layerwidth, layerheight, numlayers, spritesheetwidth, spritesheetheight) {
+    const spriteName = spriteURL.replace(/^.*\/([^/]+)\.sprite\.json$/, '$1').replace(/.sprite.json$/, '');
     
     // Path to the PNG. The input is already an absolute URL
-    // We need to make the spritesheetPath into a file system path
+    // We need to make the spritePath into a file system path
     // that is relative to the current game or the quadplay install.
     let pngPath = pngURL;
 
@@ -410,7 +416,7 @@ function generateTMX(spritesheetURL, pngURL, spritesheetJSON, tilewidth, tilehei
         // quadplay install on this machine. This is machine specific
         // (that's a problem with TMX!), but still likely to be robust
         // than an absolute path. A design alternative would be to
-        // force copying the spritesheet into the game directory. Note
+        // force copying the sprite into the game directory. Note
         // that the relative path in the TMX only matters for editing
         // the TMX; the game can be played and the game edited without
         // touching the TMX file even if this path is wrong on another
@@ -449,7 +455,7 @@ function generateTMX(spritesheetURL, pngURL, spritesheetJSON, tilewidth, tilehei
     
     let data = `<?xml version="1.0" encoding="UTF-8"?>
 <map version="1.4" tiledversion="1.4.3" orientation="orthogonal" renderorder="left-down" width="${layerwidth}" height="${layerheight}" tilewidth="${tilewidth}" tileheight="${tileheight}" infinite="0" nextlayerid="${numlayers + 1}" nextobjectid="1">
- <tileset firstgid="1" name="${spritesheetName}" tilewidth="${tilewidth}" tileheight="${tileheight}" tilecount="${tilecount}" columns="${columns}">
+ <tileset firstgid="1" name="${spriteName}" tilewidth="${tilewidth}" tileheight="${tileheight}" tilecount="${tilecount}" columns="${columns}">
   <image source="${pngPath}" width="${spritesheetwidth}" height="${spritesheetheight}"/>
  </tileset>
 `;

@@ -2,7 +2,7 @@
 
 import argparse
 import os
-import json
+import workjson
 
 
 # @TODO: this is from the sprite_json_generator -- these scripts should be
@@ -14,7 +14,7 @@ def detect_default_game():
 
 
 def _stringify_json(blob_dict):
-    return json.dumps(
+    return workjson.dumps(
         blob_dict,
         sort_keys=False,
         indent=4, separators=(",", ": ")
@@ -110,7 +110,7 @@ def main():
         )
 
     with open(game_json_path, 'r') as fi:
-        game_json = json.loads(fi.read())
+        game_json = workjson.loads(fi.read())
 
     for snd_path in args.filepath:
         sound_asset_name, sound_json_path = _add_sound(

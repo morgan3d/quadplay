@@ -276,6 +276,10 @@ function device_control(cmd) {
             case '640x360,private_views':
                 QRuntime.$feature_640x360 = true;
                 break;
+
+            case 'steinbach':
+                QRuntime.$feature_custom_resolution = true;
+                break;
                 
             default:
                 throw new Error('Unknown feature to device_control("enable_feature", feature): "' + arguments[1] + '"');
@@ -558,7 +562,10 @@ emulatorKeyboardInput.addEventListener('keyup', onEmulatorKeyUp, false);
 /** Returns the ascii code of this character */
 function ascii(x) { return x.charCodeAt(0); }
 
-/** Used by $submitFrame() to map axes and buttons to event key codes when sampling the keyboard controller */
+/** Used by $submitFrame() to map axes and buttons to event key codes
+    when sampling the keyboard controller. See also
+    https://hacks.mozilla.org/2017/03/internationalize-your-keyboard-controls/
+    for why we use codes instead of keyCodes in JavaScript */
 const keyMap = [{'-x':['KeyA', 'ArrowLeft'], '+x':['KeyD', 'ArrowRight'], '-y':['KeyW', 'ArrowUp'], '+y':['KeyS', 'ArrowDown'], a:['KeyB', 'Space'],  b:['KeyH', 'Enter'],  c:['KeyV', 'KeyV'],     d:['KeyG', 'KeyG'],          e:['ShiftLeft', 'ShiftLeft'], f:['KeyC', 'ShiftRight'],  q:['Digit1', 'KeyQ'],   p:['Digit4', 'KeyP', 'Escape']},
                 {'-x':['KeyJ', 'KeyJ'],      '+x':['KeyL', 'KeyL'],       '-y':['KeyI', 'KeyI'],    '+y':['KeyK', 'KeyK'],     a:['Slash', 'Slash'], b:['Quote', 'Quote'], c:['Period', 'Period'], d:['Semicolon', 'Semicolon'], e:['KeyN','KeyN'],            f:['AltRight', 'AltLeft'], q:['Digit7', 'Digit7'], p:['Digit0', 'Digit0']}];
       

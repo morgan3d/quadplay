@@ -652,7 +652,7 @@ function postToServer(payload, callback, errorCallback) {
     xhr.open("POST", serverAddress, true);
 
     // Send the proper header information along with the request
-    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.setRequestHeader("Content-Type", 'application/json;charset=UTF-8');
     
     xhr.onreadystatechange = function() {
         if (this.readyState === XMLHttpRequest.DONE) {

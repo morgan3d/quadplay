@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-import json
+import workjson
 
 
 def parse_args():
@@ -45,11 +45,11 @@ def main():
 
     for fp in args.filepath:
         with open(fp) as fi:
-            game_data = json.load(fi)
+            game_data = workjson.loads(fi.read())
         game_data["license"] = args.license
 
         with open(fp, 'w') as fo:
-            fo.write(json.dumps(game_data))
+            fo.write(workjson.dumps(game_data))
 
 
 if __name__ == '__main__':

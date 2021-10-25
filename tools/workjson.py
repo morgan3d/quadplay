@@ -171,15 +171,16 @@ def loads(text, cls=None, object_hook=None, parse_float=None, parse_int=None,
 
 loads.__doc__ = json.loads.__doc__ + """\n Argument s must be a string, unlike json.loads """
 
-
-
 @functools.wraps(json.load)
 def load(fp, *args, **kw):
     with open(fp, encoding="utf-8", errors="replace") as fi:
         return loads(fi.read(), *args, **kw)
 
-
-     
+@functools.wraps(json.dump)
+def dump(fp, json, *args, **kw):
+    with open(fp, 'w', encoding='utf-8') as f:
+        f.write(dumps(json, *args, **kw))
+    
 # Run as "python3 workjson.py --test" from the command line to
 # use as a unit test.
 def _test():

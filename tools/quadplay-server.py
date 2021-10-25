@@ -44,10 +44,7 @@
 #
 # A "webpath" is a URL subpath, where '/' means the server root = filesystem root_path
 
-import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs, glob, shutil, re, base64, random, getpass, inspect, subprocess, workjson, signal, shlex, tkinter, tkinter.messagebox
-
-#sys.path.append(os.path.join(os.path.dirname(__file__), '../console'))
-#import workjson
+import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs, glob, shutil, re, base64, random, getpass, inspect, subprocess, workjson, signal, shlex, tkinter, tkinter.messagebox, urllib, urllib.request
 
 # Catch a common mistake. This binary file should be large if LFS is present:
 if os.path.exists(os.path.join(os.path.dirname(__file__), '../_dev')) and os.stat(os.path.join(os.path.dirname(__file__), '../console/xbox_controller.png')).st_size < 1000:
@@ -65,6 +62,9 @@ version = str(sys.version_info.major) + '.' + str(sys.version_info.minor)
 
 # Largest common prefix of quad_filepath and game_filepath. Root for web serving
 server_root_filepath = None
+
+# Path to the token.txt file
+token_absfilepath = None
 
 # Magic path that the browser will use to communicate that it wants an asset listing
 # or game listing for import in IDE mode
@@ -230,11 +230,6 @@ except ImportError:
         maybe_print('Initializing Quadplay server using Python ' + version + ' SocketServer.TCPServer')
 
         
-def load_json(filename):
-    with open(filename, 'rt', encoding='utf8') as f:
-        return workjson.loads(f.read())
-
-
 # Returns a string of the line number that calls this function
 def this_line_number(): return str(inspect.currentframe().f_back.f_lineno)
 
@@ -366,7 +361,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             # detect the browser closing, so this is only essential on
             # macOS where the menu option closes the TAB but leaves
             # the browser process still running.
-            print('quadplay has exited')
+            print('quadplay server terminated')
 
             # Hard exit, rather than raising an exception. Needed
             # because of threads
@@ -409,7 +404,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 os.makedirs(dst_path)
 
                 # Parse the starter game
-                game_json = load_json(os.path.join(starter_path + '/starter.game.json'))
+                game_json = workjson.load(os.path.join(starter_path + '/starter.game.json'))
 
                 # Change the title
                 game_json['title'] = game_name
@@ -443,7 +438,8 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         #print(' webpath = ' + webpath)
 
         # Security: Check if path has a prefix in webpath_allowlist
-        if webpath != '/favicon.ico' and not any([webpath.startswith(prefix) for prefix in webpath_allowlist]):
+        if (not any([webpath == ignore for ignore in ['/favicon.ico', '/apple-touch-icon-precomposed.png', '/apple-touch-icon.png']]) and
+            not any([webpath.startswith(prefix) for prefix in webpath_allowlist])):
             self.send_error(404, 'Illegal webpath (' + this_line_number() + '): ' + webpath)
             return
 
@@ -460,7 +456,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 if isWindows or isMacOS:
                     applications = []
                     response_obj['applications'] = applications
-                    potential_applications = load_json(os.path.join(quad_filepath, 'console/external-applications.json'))['Windows' if isWindows else 'macOS']
+                    potential_applications = workjson.load(os.path.join(quad_filepath, 'console/external-applications.json'))['Windows' if isWindows else 'macOS']
                     for app in potential_applications:
                         for path in app['paths']:
                             path = os.path.expandvars(os.path.expanduser(path))
@@ -538,7 +534,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                     # Look in each of the files for the URLs of raw files to exclude
                     for file in response_obj[t]:
                         try:
-                            tmp = load_json(file)
+                            tmp = workjson.load(file)
                             if 'url' in tmp:
                                 exclude_table[remove_leading_slash(aux_webpath) + tmp['url']] = True
                         except:
@@ -647,6 +643,10 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             # directory instead
             return quad_filepath + '/console/favicon.ico'
 
+        elif path == '/apple-touch-icon-precomposed.png' or path == '/apple-touch-icon.png':
+            # Safari asks for this
+            return quad_filepath + '/console/favicon-64x64.png'
+
         elif isWindows and server_root_filepath == '':
             # Need the whole path, since the "cwd" is wrong
             return self.path.split('?')[0]
@@ -687,6 +687,7 @@ def platform_www_abspath(p):
     
 # Process paths at top level so that they can be inherited by ThreadingHTTPServer
 quad_filepath = canonicalize_filepath(os.path.join(os.path.dirname(__file__), '..'))
+token_absfilepath = os.path.join(quad_filepath, 'tools/token.txt')
 
 # Compute the serving paths
 game_filepath = canonicalize_filepath(args.gamepath)
@@ -709,6 +710,9 @@ script_query_webpath = asset_query_webpath + '/console/_scripts.json'
 doc_query_webpath = asset_query_webpath + '/console/_docs.json'
 quad_filepath = remove_leading_slash(webpath_allowlist[0])
 asset_query_webpath += '/console/_assets.json'
+
+maybe_print = ignore if args.quiet else print
+   
 
 if False:
     # Debug paths
@@ -740,32 +744,58 @@ def launchServer(post_token):
     old_path = os.getcwd()
     if not isWindows or server_root_filepath != '':
         os.chdir(server_root_filepath)
-    
-    try:
-        # '' = 0.0.0.0 = all local IP addresses, needed for
-        # supporting devices other than just localhost
-        server_address = ('' if args.serve else 'localhost', args.port)
-        httpd = QuadplayHTTPServer(server_address, QuadplayHTTPRequestHandler)
 
-        if useSSL:
-            httpd.socket = ssl.wrap_socket(httpd.socket, 
-                                           keyfile='console/ssl/local-key.pem', 
-                                           certfile='console/ssl/local-cert.pem',
-                                           do_handshake_on_connect=False,
-                                           server_side=True)
-        httpd.serve_forever()
-    except OSError as e:
-        maybe_print(e)
-        maybe_print('Not starting a local server, since one is already running.');
-        
-    os.chdir(old_path)
+    attempts = 0
+    while attempts < 2:
+        try:
+            attempts += 1
+            # '' = 0.0.0.0 = all local IP addresses, needed for
+            # supporting devices other than just localhost
+            server_address = ('' if args.serve else 'localhost', args.port)
+            httpd = QuadplayHTTPServer(server_address, QuadplayHTTPRequestHandler)
+            
+            if useSSL:
+                # This path is never used in the current implementation
+                httpd.socket = ssl.wrap_socket(httpd.socket, 
+                                               keyfile='console/ssl/local-key.pem', 
+                                               certfile='console/ssl/local-cert.pem',
+                                               do_handshake_on_connect=False,
+                                               server_side=True)
+            httpd.serve_forever()
+            os.chdir(old_path)
+            return
+            
+        except OSError as e:
+            if attempts < 2 and e.errno == 48:
+                print('Cleaning up previous quadplay server instance...')
+                
+                # Read the old token
+                with open(token_absfilepath, 'r') as file: old_token = file.readline()
+
+                # Send a QUIT command via POST
+                try:
+                    urllib.request.urlopen(urllib.request.Request(
+                        'http://localhost:' + str(server_address[1]) + '/',
+                        bytes('{"command":"quit","token":"' + old_token + '"}', 'utf-8'),
+                        {'Content-Type': 'application/json;charset=UTF-8'}))
+                except:
+                    # The server on the other side will terminate immediately
+                    # (or, it might be unresponsive!)
+                    pass
+
+                # Wait for the OS to clean up the listener socket
+                time.sleep(0.1)
+                                       
+                # The loop will now make a second attempt
+            else:
+                maybe_print(e)
+                maybe_print('Not starting a local server, since one is already running.');
+                os.chdir(old_path)
 
         
 def main():
     global webpath_allowlist, server_root_filepath, token
 
-    maybe_print = ignore if args.quiet else print
-    
     token = "%0.7X" % random.randrange(0, 0x10000000)
 
     myip = '127.0.0.1'
@@ -877,7 +907,10 @@ def main():
     if not serverThread.is_alive():
         print('Could not start quadplay server.')
         sys.exit(2)
-
+    else:
+        # Store the token so that other servers can force-quit this one
+        with open(token_absfilepath, 'wt') as file: file.write(token)
+        
     browser_filepath = None
     
     # Try to find Edge, then Chromium if they exist because those
@@ -983,7 +1016,7 @@ def main():
         os.system(browser_command)
         # Wait for key stroke
         maybe_print('\n**Press any key to terminate the server when done**\n')
-        while not kbhit(): time.sleep(0.25)
+        while not kbhit() and serverThread.is_alive(): time.sleep(0.25)
     
     maybe_print('\nShutting down...')
 

@@ -1,7 +1,14 @@
 {
     "url": "ivanhoe-12.png",
     "license": "by Morgan McGuire 2018, in the Public Domain/CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/",
-    "char_size": {"x": 14, "y": 20},
-    "letter_spacing": {"x": 2, "y": 4},
-    "baseline": 14
+    "char_size": {
+        "x": 14,
+        "y": 20
+    },
+    "letter_spacing": {
+        "x": 2,
+        "y": 4
+    },
+    "baseline": 14,
+    "format": "20211015"
 }

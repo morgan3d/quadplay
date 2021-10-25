@@ -22,6 +22,7 @@ var $paste_host_code_callback = undefined;
 
 var $feature_768x448 = false;
 var $feature_640x360 = false;
+var $feature_custom_resolution = false;
 
 var $gameMode = undefined, $prevMode = undefined;
 var $numBootAnimationFrames = 120;
@@ -4438,7 +4439,8 @@ function $get_map_pixel_color(map, map_coord_x, map_coord_y, min_layer, max_laye
 
 
 function get_map_pixel_color_by_ws_coord(map, ws_coord, ws_z, replacement_array, result) {
-    if (! map.spritesheet_table) { $error('The first argument to get_map_pixel_color_by_draw_coord() must be a map'); }
+    if (replacement_array && ! Array.isArray(replacement_array)) { $error('The replacement array for get_map_pixel_color_by_ws_coord() must be nil or an array'); }
+    if (! map.spritesheet_table) { $error('The first argument to get_map_pixel_color_by_ws_coord() must be a map'); }
     const layer = (((ws_z || 0) - $offsetZ) / $scaleZ - map.z_offset) / map.z_scale;
     return get_map_pixel_color(map, transform_ws_to_map_space(map, ws_coord), layer, replacement_array, result);
 }
@@ -9775,7 +9777,8 @@ function set_screen_size(size, private_views) {
                   (w === 320 && h === 180) ||
                   (w === 192 && h === 112) ||
                   (w === 128 && h === 128) ||
-                  (w ===  64 && h ===  64))) {
+                  (w ===  64 && h ===  64) ||
+                  $feature_custom_resolution)) {
         $error('Illegal resolution for set_screen_size(): xy(' + w + ', ' + h + ')');
     }
 

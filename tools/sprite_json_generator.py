@@ -3,7 +3,7 @@
 """ Generate the reference .sprite.json for quadplay sprites. """
 
 import argparse
-import json
+import workjson
 import os
 import sys
 
@@ -154,7 +154,7 @@ def _extract_from_aseprite_json(aseprite_json):
     """Extract aseprite metadata (tags!) from aseprite JSON"""
 
     with open(aseprite_json) as fi:
-        aseprite_data = json.loads(fi.read())
+        aseprite_data = workjson.loads(fi.read())
 
     # sentinel to detect the format of the json
     if "aseprite" not in aseprite_data.get("meta", {}).get("app", ""):
@@ -268,7 +268,7 @@ def make_sprite(
     blob = {}
     if os.path.exists(outpath):
         with open(outpath) as fi:
-            blob = json.loads(fi.read())
+            blob = workjson.loads(fi.read())
 
     blob.update(
         {
@@ -284,7 +284,7 @@ def make_sprite(
 
     with open(outpath, 'w') as fo:
         fo.write(
-            json.dumps(
+            workjson.dumps(
                 blob,
                 sort_keys=True,
                 indent=4, separators=(",", ": ")
@@ -301,7 +301,7 @@ def make_sprite(
 
     try:
         with open(game, 'r') as fi:
-            game_data = json.loads(fi.read())
+            game_data = workjson.loads(fi.read())
     except IOError:
         raise RuntimeError(
             "ERROR: no json file for game '{}' found.  Use the -g flag to "
@@ -314,7 +314,7 @@ def make_sprite(
 
     with open(game, 'w') as fo:
         fo.write(
-            json.dumps(
+            workjson.dumps(
                 game_data,
                 sort_keys=True,
                 indent=4, separators=(",", ": ")
@@ -325,14 +325,14 @@ def make_sprite(
 
 def _extract_sprites(from_game):
     with open("{}.game.json".format(from_game)) as fi:
-        game_data = json.loads(fi.read())
+        game_data = workjson.loads(fi.read())
 
     for asset_url in game_data["assets"].values():
         if not os.path.exists(asset_url):
             continue
 
         with open(asset_url) as fi:
-            asset_data = json.loads(fi.read())
+            asset_data = workjson.loads(fi.read())
 
         aseprite_data = asset_data.get("aseprite_json")
         dirname = os.path.dirname(asset_url)

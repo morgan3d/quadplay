@@ -716,6 +716,9 @@ function computeCredits(gameSource) {
 
 
 function loadFont(name, json, jsonURL) {
+    if (json.format !== '20211015') {
+        throw 'Font ' + jsonURL + ' in obsolete format. Use tools/font-update.py to upgrade';
+    }
     const pngURL = makeURLAbsolute(jsonURL, json.url);
 
     let font = assetCache[jsonURL];
@@ -1947,7 +1950,8 @@ function computeForceReloadFlag(url) {
     return useIDE && ! (fastReload && isBuiltIn(url));
 }
 
-/** Returns the childURL made absolute relative to the parent */
+/** Returns the childURL made absolute relative to the parent. The
+    result will be a valid http:// url, never a quad:// url. */
 function makeURLAbsolute(parentURL, childURL) {
     if (childURL.startsWith('quad://')) {
         // quad URL. Make relative to the quadplay installation

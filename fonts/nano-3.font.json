@@ -1,7 +1,14 @@
 {
     "url": "nano-3.png",
-    "license": "© 2019 Morgan McGuire. Licensed as CC BY 4.0",
-    "char_size": {"x": 4, "y": 5},
-    "letter_spacing": {"x": 1, "y": 0},
-    "baseline": 2
+    "license": "\u00a9 2019 Morgan McGuire. Licensed as CC BY 4.0",
+    "char_size": {
+        "x": 4,
+        "y": 5
+    },
+    "letter_spacing": {
+        "x": 1,
+        "y": 0
+    },
+    "baseline": 2,
+    "format": "20211015"
 }
