@@ -662,7 +662,7 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
         packFontCopy('∈', 'Є', srcMask, bounds);
         
         packFontCopy('⍈', '⍇', srcMask, bounds, -1);
-        packFontCopy('⍗', '⍐', srcMask, bounds, -1);
+        packFontCopy('⍗', '⍐', srcMask, bounds, +1, -1);
         packFontCopy('⬙', '⦸', srcMask, bounds, -1);
         packFontCombine('①', '◉', '¹', srcMask, bounds, '', 'center', 'center', bitXor);
         packFontCombine('②', '◉', '²', srcMask, bounds, '', 'center', 'center', bitXor);
