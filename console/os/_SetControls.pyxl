@@ -17,7 +17,7 @@ const prompt_color            = #4DF
 const selected_color          = #f
 const unselected_color        = #b
 
-const controllerTypeArray = ["Quadplay", "Xbox", "Xbox360", "Keyboard", "Kbd_Alt", "Kbd_P1", "Kbd_P2", "Azerty", "Azerty_P2", "PS5", "PS4", "PS3", "SNES", "SwitchPro", "JoyCon_R", "JoyCon_L", "Zero", "HOTAS", "X_Arcade", "Arcade", "Arcade_X", "Arcade_PS", "Stadia", "GPD_Win", "SN30_Pro", "PiBoy_DMG", "Genesis"];
+const controllerTypeArray = ["Quadplay", "Xbox", "Xbox360", "Keyboard", "Kbd_Alt", "Kbd_P1", "Kbd_P2", "Colemak", "Azerty", "Azerty_P2", "PS5", "PS4", "PS3", "SNES", "SwitchPro", "JoyCon_R", "JoyCon_L", "Zero", "HOTAS", "X_Arcade", "Arcade", "Arcade_X", "Arcade_PS", "Stadia", "GPD_Win", "SN30_Pro", "PiBoy_DMG", "Genesis"];
 
 const playerName = []
 for p < 4: push(playerName, "P" + (p + 1) + ": ")
@@ -170,10 +170,10 @@ for view at view_index in VIEW_ARRAY:
     
                 // Force to continue cycling if an illegal value was chosen for
                 // this player
-                tryAgain = ((p == 0 and type == "Kbd_P2") or
-                            ((find(type, "Kbd_") ≠ ∅ or find(type, "Keyboard") ≠ ∅) and
+                tryAgain = ((p == 0 and find(type, "_P2") ≠ ∅) or
+                            ((find(type, "Kbd_") ≠ ∅ or find(type, "Keyboard") ≠ ∅ or find(type, "Azerty") ≠ ∅ or find(type, "Colemak") ≠ ∅) and
                              ((p > 1) or
-                              (p == 1 and (type ≠ "Kbd_P2")))))
+                              (p == 1 and find(type, "_P2") == ∅))))
              // Switch the device to the selected controller
              device_control("set_pad_type", p, type)
     

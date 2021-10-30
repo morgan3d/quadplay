@@ -2171,7 +2171,7 @@ function $parse(source, i) {
         } // switch on character
     } // while
 
-    throw new Error('hit the end of ' + source);
+    throw new Error('hit the end of "' + source + '"');
 }
 
 

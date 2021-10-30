@@ -129,7 +129,13 @@ function makeConstantEditorControlHTML(constantName, controlName, json, value, i
 
         // Parse and clean up quantum
         let quantum = 0;
-        if (json.quantum !== undefined) { quantum = evalJSONGameConstant(json.quantum); }
+        if (json.quantum !== undefined) {
+            try {
+                quantum = evalJSONGameConstant(json.quantum);
+            } catch (e) {
+                quantum = 0;
+            }
+        }
         if (quantum < 0 || typeof quantum !== 'number' || isNaN(quantum) || quantum === Infinity || quantum > maxVal - minVal) {
             // Not a useful quantum, force to zero
             quantum = 0;

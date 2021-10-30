@@ -1817,7 +1817,7 @@ Array
    other languages.
 
    If `callback` is a string, iterate then calls `array[i][callback](array[i], ...args)`
-   on each element.  If `callback` is a function, it instead calls `callback(array[i])`
+   on each element for which `array[i][callback]` is not nil.  If `callback` is a function, it instead calls `callback(array[i])`
    on each element. It is common to define a local function immediately before the
    `iterate()` call for use as the callback.
    
@@ -1851,14 +1851,16 @@ Array
 : Remove the first element from the array and return it, or `∅` if the array is empty. O(n) expected amortized time.
 
 `push(array, x, ...)`
-: Append `x` and any other arguments to the array and then return the last. O(1) expected
-  amortized time for a single argument and O(n) for n arguments.
+: Append `x` and any other arguments to the array and then return the last argument. O(1) expected
+  amortized time for a single argument and O(_m_) for _m_ arguments. This is
+  the only mutation permitted while iterating over an array via `for value in array`
+  or `iterate(array, callback)`.
 
 `push_front(array, x, ...)`
 : Insert `x` and any other arguments onto the array, preserving the order
-  that they appear in the arguments and then return the first. O(n) expected
-  amortized time for a single argument and O(m) for m arguments and
-  array of length n.
+  that they appear in the arguments and then return the first. O(_n_) expected
+  amortized time for a single argument and O(_m_) for _m_ arguments and
+  array of length _n_.
 
 `remove_key(array, i)`
 : Remove element `i` from the array, preserving order. O(n) expected time.
@@ -2880,6 +2882,9 @@ Note that `preserving_transform` also preserves the clipping rectangle.
   previous transform and clipping region when the block is exited (including abruptly by 
   `return`, `continue`, or `break`). It is useful for making modular
   functions for handling UI scrolling, minimaps, and screenshake. 
+  
+  `preserving_transform` can also be added to the end of a function
+  definition using `def name(args) preserving_transform:`.
 
 `rotation_sign()`
 : Returns -1 if `(t.dir.x * t.dir.y > 0)` for `t = get_transform()`
@@ -3808,22 +3813,35 @@ to start colliding with each other.
 `physics_add_contact_callback(physics, callback, min_depth default 0, max_depth default ∞, contact_mask default 0xffffffff, sensors default "exclude")`
 : Adds a callback that processes collisions (new contacts) at the end of `physics_simulate()`.
   If either entity in the collision has a `entity.contact_category_mask` that intersects the `contact_mask`
-  and the collision has `depth &gt;= min_depth`, then your `callback(args)` will be invoked.
-  The `callback`'s `args` object has the following properties:
- 
-  - `entityA` An entity in the contact
-  - `entityB` The other entity in the contact
-  - `point0` An `xy()` in world coordinates for the contact point
-  - `point1` If two points are touching in the contact, the second `xy()` in world coordinates. Otherwise `nil`
-  - `normal` The `xy()` unit surface normal pointing out of `entityA` for the contact plane
-  - `depth` a coarse measure of how hard the objects hit each other. It has
-     a useful scale from 0-4.
+  and the collision has `depth &gt;= min_depth`, then your `callback(args)` will be invoked. The `callback`'s `args` object has the following 
+  properties:
+  
+  - `entityA`: An entity in the contact
+  - `entityB`: The other entity in the contact
+  - `point0`: An `xy()` in world coordinates for the contact point
+  - `point1`: If two points are touching in the contact, the second
+    `xy()` in world coordinates. Otherwise `nil`
+  - `normal`: The `xy()` unit surface normal pointing out of `entityA`
+    for the contact plane
+  - `depth`: a coarse measure of how hard the objects hit each
+    other. It has a useful scale from 0-4.
 
   This is good for triggering particle effects or sound on collisions,
   or causing damage to objects. When doing so, use the parameters to filter:
   for example, `min_depth` = 1 will only trigger on significant,
-  new contacts. There is no way to remove a contact callback.
+  new contacts. There is no way to remove a contact callback. To make
+  per-entity object-oriented callbacks, install a generic one that defers to
+  the entities. For example,
 
+  ```
+  def on_contact(args): 
+      with entityA, entityB, normal in args:
+          if entityA.on_contact: 
+             entityA.on_contact(entityA, entityB, normal)
+          if entityB.on_contact:
+             entityB.on_contact(entityB, entityA, -normal)
+  ```
+           
 `physics_entity_has_contacts(physics, entity, child_region default ∅, world_normal default ∅, mask default 0xffffffff, sensors default "exclude")`
 : Returns true if `physics_entity_contacts()` would produce any contacts with the same arguments.
   This is more efficient, for the case where the actual contacts are not needed.
@@ -3899,16 +3917,52 @@ to start colliding with each other.
 
   The supported values of `type` and the additional named parameters supported for each are:
 
-   - `"pin"`:    This kind of attachment is referred to in other APIs as a revolute joint.
-   - `"spring"`: `length default ‖pointB - pointA‖`, `stiffness default 0.5%`, `damping default 0.2%`
-   - `"rod"`:    `length default ‖pointB - pointA‖`
-   - `"weld"`:   `angle default entityB.angle - entityA.angle`. Rigid attachment with
-                 the specified relative angle. <!-- It is more stable and efficient to
-                 call `physics_remove_entity(physics, entityB)` and `entity_add_child(entityA, entityB)`
-                 than to weld within the physics system. --> Requires `entityA` to be non-`nil`.
-   - `"gyro"`:   `angle default 0` Free translation, but frozen rotation relative to each other.
-     Useful for keeping characters upright. `entityA` must be `nil`. This kind of
-     attachment is referred to in other APIs as a Cartesian joint or generalized 2D prismatic joint.
+  <table class="nested">
+    <tr><th>`type`</th>
+        <th width=70%>Description</th>
+        <th>Parameters</th>
+    </tr>
+    
+    <tr><td>`"pin"`</td>
+        <td>Prevents translation, allows rotation. A.k.a. revolute joint.</td>
+        <td></td>
+    </tr>
+    
+    <tr><td>`"spring"`</td>
+         <td>Applies force to pull length back to a target distance.</td>
+         <td>`length default ‖pointB - pointA‖`, 
+             `stiffness default 0.5%`, 
+             `damping default 0.2%`</td>
+    </tr>
+
+    <tr><td>`"torsion_spring"`</td>
+        <td>Prevents translation, allows rotation, and applies torque to pull the angle back
+            to a target.</td>
+        <td>`angle default entityB.angle - entityA.angle`, 
+            `stiffness default 0.5%`,
+            `damping default 0.2%`</td>
+    </tr>
+
+    <tr><td>`"rod"`</td>
+         <td>Rigidly maintain a fixed distance</td>
+         <td>`length default ‖pointB - pointA‖`</td>
+    </tr>
+    
+    <tr><td>`"weld"`</td>
+        <td>Rigid attachment with the specified relative angle. <!-- It is more stable and efficient to
+            call `physics_remove_entity(physics, entityB)` and `entity_add_child(entityA, entityB)`
+             than to weld within the physics system. --> Requires `entityA` to be non-`nil`.</td>
+        <td>`angle default entityB.angle - entityA.angle`</td>
+    </tr>
+
+    <tr><td>`"gyro"`</td>
+        <td>Free translation, but frozen rotation relative to each other.
+            Useful for keeping characters upright. `entityA` must be `nil`. This kind of
+            attachment is referred to in other APIs as a Cartesian joint or generalized 2D prismatic joint.</td>
+        <td>`angle default 0deg`</td>
+    </tr>
+  </table>
+
    <!--
    - `"hinge"`:  `minAngle`, `maxAngle`. If the hinge is unconstrained, use a pin.
    - `"rope"`:   `length`. If the rope will always be under tension, use a rod.
@@ -5238,18 +5292,15 @@ Raw Device Access
   All `device_control()` commands may change in future releases and 
   may fail silently on any given platform or when not using the IDE.
 
-  <style>table.nested td:first-child {margin-right: 25px; padding-left: 22px; text-indent: -22px}
-         table.nested td code {white-space: nowrap} 
-         table.nested th {border-bottom: 1px solid} </style>
   <table class="nested">
     <tr><th> Parameters                      </th><th> Effect </th></tr>
-    <tr valign=top><td> `"start_GIF_recording"`         </td><td> Begin GIF recording.</td></tr>
-    <tr valign=top><td> `"stop_GIF_recording"`          </td><td> End GIF recording. When the compression completes, the GIF will appear in a new tab.</td></tr>
-    <tr valign=top><td> `"start_preview_recording"`     </td><td> Begin preview video recording. There is no "stop" command because this terminates automatically after a set time.</td></tr>
-    <tr valign=top><td> `"take_screenshot"`             </td><td> Take a screenshot and download it to the local disk. </td></tr>
-    <tr valign=top><td> `"take_label_image"`            </td><td> Capture the center of the image and save it to disk, overwriting the label128 and label64 images (only works when running in the IDE on an editable project). </td></tr>
-    <tr valign=top><td> `"set_pad_type", index, "type"` </td><td> Set `gamepad_array[index].type` and the corresponding prompts. There is no "get" version because you can read the property directly from the gamepad object.</td></tr>
-    <tr valign=top><td> `"get_analog_axes",`
+    <tr><td> `"start_GIF_recording"`         </td><td> Begin GIF recording.</td></tr>
+    <tr><td> `"stop_GIF_recording"`          </td><td> End GIF recording. When the compression completes, the GIF will appear in a new tab.</td></tr>
+    <tr><td> `"start_preview_recording"`     </td><td> Begin preview video recording. There is no "stop" command because this terminates automatically after a set time.</td></tr>
+    <tr><td> `"take_screenshot"`             </td><td> Take a screenshot and download it to the local disk. </td></tr>
+    <tr><td> `"take_label_image"`            </td><td> Capture the center of the image and save it to disk, overwriting the label128 and label64 images (only works when running in the IDE on an editable project). </td></tr>
+    <tr><td> `"set_pad_type", index, "type"` </td><td> Set `gamepad_array[index].type` and the corresponding prompts. There is no "get" version because you can read the property directly from the gamepad object.</td></tr>
+    <tr><td> `"get_analog_axes",`
     `player_index default 0,`
     `stick_index default 0`</td>
                                                               <td> Return an `xy()` of the analog axis values for `gamepad_array[player_index]`, without D-pad snapping and unlocking reading of the
@@ -5257,30 +5308,30 @@ Raw Device Access
                                                                    Needed for accessing Atari paddles, car pedals, steering wheels, and flight stick throttles in
                                                                    a meaningful way. There is currently no way to read the D-pad directly (it will be overriden by the analog axis if moved)
                                                                    or to read the analog triggers or other axes.</td></tr>
-    <tr valign=top><td> `"get_mouse_state"`             </td><td> Return `{x:number, y:number, ` `dx:number, dy:number, ` `xy:xy(...), dxy:xy(...), ` `button_array:[...],` `cursor:string, lock:boolean}` for the current mouse position and buttons. Each element of
+    <tr><td> `"get_mouse_state"`             </td><td> Return `{x:number, y:number, ` `dx:number, dy:number, ` `xy:xy(...), dxy:xy(...), ` `button_array:[...],` `cursor:string, lock:boolean}` for the current mouse position and buttons. Each element of
                                                        `button_array` is 0 or 1. There are at least two buttons, but may be more. The `dx`, `dy`, and `dxy` values may have higher precision than the absolute numbers because they
                                                        are tracked at subpixel resolution on browsers that support this.</td></tr>
-    <tr valign=top><td> `"set_mouse_lock", bool`       </td><td> Enable or disable mouse lock. Mouse lock hides the OS mouse cursor and prevents the mouse from moving 
+    <tr><td> `"set_mouse_lock", bool`       </td><td> Enable or disable mouse lock. Mouse lock hides the OS mouse cursor and prevents the mouse from moving 
                                                         from the center of the screen, so that it returns only `dxy` values and absolute `xy` values will be fixed. 
                                                         This is useful for first-person mouselook.</td></tr>
-    <tr valign=top><td> `"set_mouse_cursor", name`     </td><td>Change the OS mouse cursor to any [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS/cursor) cursor. The default is `"crosshair"`. Note that the OS 
+    <tr><td> `"set_mouse_cursor", name`     </td><td>Change the OS mouse cursor to any [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS/cursor) cursor. The default is `"crosshair"`. Note that the OS 
                                                         cursor is at a different resolution than quadplay, so you may want to set to `"none"` and draw your own cursor from a sprite. The OS cursor has 1-4 frames less lag
                                                         than a game-drawn cursor, however.</td></tr>
     
-    <tr valign=top><td> `"set_debug_flag", flagname, bool` </td><td> Set the enabled state of an IDE debugging flag. The flagnames are 
+    <tr><td> `"set_debug_flag", flagname, bool` </td><td> Set the enabled state of an IDE debugging flag. The flagnames are 
                                                        `"entity_bounds"`, `"assert"`, `"debug_print"`, 
                                                         `"debug_watch"`, `"physics"`.</td></tr>
-    <tr valign=top><td> `"get_debug_flag", flagname`    </td><td> Return the state of an IDE debugging flag.</td></tr>
-    <tr valign=top><td> `"console.dir", ...`            </td><td> Execute `console.dir(...)` if running in a web browser.</td></tr>
-    <tr valign=top><td> `"save", filename, value, callback` </td><td> Serializes `value` to JSON using WorkJSON extensions and writes to `filename` on disk in the same directory as the game.json file. `filename` cannot contain slashes
+    <tr><td> `"get_debug_flag", flagname`    </td><td> Return the state of an IDE debugging flag.</td></tr>
+    <tr><td> `"console.dir", ...`            </td><td> Execute `console.dir(...)` if running in a web browser.</td></tr>
+    <tr><td> `"save", filename, value, callback` </td><td> Serializes `value` to JSON using WorkJSON extensions and writes to `filename` on disk in the same directory as the game.json file. `filename` cannot contain slashes
                                                          and must end in `.json`. 
                                                          This is intended for creating development
                                                          tools within quadplay itself, for example, level editors, NPC ghost tracks, and demo sequences. 
                                                          The JSON files can be loaded as game constants with the `raw` type. If present, `callback` is invoked with `value, filename` when the asynchronous
                                                          save is complete. This will only work with the IDE enabled and a quadplay server.</td></tr>
-    <tr valign=top><td> `"load", filename, callback`</td><td>Loads `filename` and (asynchronously) runs the callback with the arguments `value, filename` when
+    <tr><td> `"load", filename, callback`</td><td>Loads `filename` and (asynchronously) runs the callback with the arguments `value, filename` when
                                                          the load is complete. This will only work with the IDE enabled and a quadplay server.</td></tr>
-    <tr valign=top><td> `"enable_feature", feature`</td><td>Enables the given feature, which is nonstandard and may fail on some devices. The allowed values of `feature` are `"768x448,private_views"` and `"640x360,private_views"`. These enable those resolutions for `set_screen_size()` with `private_views=true`, which is too slow to make framerate on Raspberry Pi and some phones.</td></tr>
+    <tr><td> `"enable_feature", feature`</td><td>Enables the given feature, which is nonstandard and may fail on some devices. The allowed values of `feature` are `"768x448,private_views"` and `"640x360,private_views"`. These enable those resolutions for `set_screen_size()` with `private_views=true`, which is too slow to make framerate on Raspberry Pi and some phones.</td></tr>
   </table>
 
 
@@ -5398,10 +5449,10 @@ and other operations that naturally compile with maximum efficiency.
 `XY_MUL_XY(srcxy1, srcxy2, dstxy)`
 : Element multiplication.
 
-`XY_MAD_XY(srcxy1, srcxy2, srcxy3, dstxy)`
+`XY_MAD_XY_XY(srcxy1, srcxy2, srcxy3, dstxy)`
 : `dstxy = srcxy1 * srcxy2 + srcxy3`
 
-`XY_MAD_SXY(srcxy1, srcs2, srcxy3, dstxy)`
+`XY_MAD_S_XY(srcxy1, srcs2, srcxy3, dstxy)`
 : `dstxy = srcxy1 * srcs2 + srcxy3`
 
 `XY_DIV_XY(srcxy1, srcxy2, dstxy)`
@@ -8887,6 +8938,10 @@ div.preview {
   margin-bottom: 0px;
 }
 
+table.nested td:first-child {margin-right: 25px; padding-left: 22px; text-indent: -22px}
+table.nested td code {white-space: nowrap} 
+table.nested th {border-bottom: 1px solid}
+table.nested tr {vertical-align: top}
 </style>
 <title>manual✜</title>
 <script>setTimeout(function(){document.title='manual✜';},1000);

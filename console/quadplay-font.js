@@ -35,7 +35,7 @@ abcdefghijklmnopqrstuvwxyz←→<>\`'
 ˚ÅåŘřĎďÝýŮůŇň±⊗↖↗ ○●◻◼△▲▼◀▶вн мт
 ˜ÃãĘęÕõЎўÇç¥€∫❖↙↘…‖♠♥♣♦✜★∞∅«»°∩∪
 ˇĄąĚěŤťĞğČč£✓г≟≠≤≥≈"¿¡¬⊢∙×∈♆ℵı¸ 
-■ⓆⓏⓌⒶⓈⒹⒾⒿⓀⓁ⍐⍇⍗⍈ⓛⓡ①②③④⑤⑥⑦⑧⑨⓪⊖⊕⓵⒜ 
+■ⓆⓏⓌⒶⓈⒹⒾⒿⓀⓁ⍐⍇⍗⍈ⓛⓡ①②③④⑤⑥⑦⑧⑨⓪⊖⊕⓵⒜Ⓡ
 ◉ⓐⓑⓒⓓⓔ⓷ⓕⓖⓗⓜⓝⓟⓠⓤⓥⓧⓨⓩ⦸⬙⬗⬖⬘Ⓞ⍍▣⧉☰⒧⒭ 
 ␣Ɛ⏎ҕﯼડƠ⇥
 ⬁⬀⌥     `;
@@ -299,7 +299,7 @@ function packFontCopy(dst, srcA, srcMask, bounds, xSign = 1, ySign = 1) {
     
     // Nothing to do if the source does not exist or the destination
     // already exists
-    if (! dstBounds.empty || srcABounds.empty) { return; }
+    if (! dstBounds.empty || srcABounds.empty) { return false; }
     
     // Copy the base letter
     if (xSign === 1 && ySign === 1) {
@@ -327,6 +327,7 @@ function packFontCopy(dst, srcA, srcMask, bounds, xSign = 1, ySign = 1) {
     dstBounds.empty = false;
 
     dstBounds = computeFontSingleCharacterBounds(srcMask, {x:dstBounds.srcWidth, y:dstBounds.srcHeight}, bounds, dst);
+    return true;
 }
 
 
@@ -676,6 +677,10 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
         packFontCombine('⓪', '◉', '⁰', srcMask, bounds, '', 'center', 'center', bitXor);
         packFontCombine('⊖', '◉', '⁻', srcMask, bounds, '', 'center', 'center', bitXor);
         packFontCombine('⊕', '◉', '⁺', srcMask, bounds, '', 'center', 'center', bitXor);
+
+        if (packFontCombine('Ⓡ', '■', '⒭', srcMask, bounds, '', '', '', bitXor)) {
+            packFontCombine('Ⓡ', 'Ⓡ', '◉', srcMask, bounds, '', '', '', bitXor)
+        }
 
         packFontCombine('ⓐ', '◉', 'ᵃ', srcMask, bounds, '', 'center', 'center', bitXor);
         packFontCombine('ⓓ', '◉', 'ᵈ', srcMask, bounds, '', 'center', 'center', bitXor);

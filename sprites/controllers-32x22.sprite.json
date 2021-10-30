@@ -10,6 +10,7 @@
         "Zero":        {"x": 3, "y": 0},
         "Quadplay":    {"x": 4, "y": 0},
         "Keyboard":    {"x": 5, "y": 0},
+        "Colemak":     {"x": 5, "y": 0},
         "Azerty":      {"x": 5, "y": 0},
         "Kbd_Alt":     {"x": 6, "y": 0},
         "Kbd_P1":      {"x": 7, "y": 0},

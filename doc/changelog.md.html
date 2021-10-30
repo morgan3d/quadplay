@@ -6,6 +6,34 @@
 Changes for both the specification and implementation in each release
 of [quadplay✜](manual.md.html).
 
+2021 November TBD: Beta update 75
+===================================
+
+- The string callback version of `iterate()` now ignores elements
+  that do not have a property by that name
+- `push(array, value)` is now permitted from within iteration 
+  using `iterate()` or `for value in array` without cloning.
+  Combined with `iterate.REMOVE`, this allows amortized constant
+  time addition and removal of values from an array while iterating
+  over it.
+- Added button prompt support for [Colemak](https://colemak.com/) keyboards which use
+  OS layout instead of remapping
+- Added `Ⓡ` character to font sheet
+- Fixed `overlaps()` for bounding boxes with a `corner` instead of `pos` property
+- Fixed syntax highlighting of `XZ_DIRECTION()` intrinsic 
+- Fixed syntax highlighting of `cbrt()`,
+  `xyz_to_rgb()`, `find_max_value()`, `find_min_value()`, `max_value()`, `min_value()`,
+  `array_value()`, `random_truncated_gaussian3D()`, 
+  `transform_ws_to_es()`, `transform_es_to_ws()`, `transform_ws_to_ws()`,
+  `transform_cs_z_to_ss_z()`, `transform_ss_z_to_cs_z()`, 
+  `transform_ss_to_ws()`, `transform_ws_to_ss()`,
+  `transform_to_parent()`, `transform_to_child()`, and
+  `compose_transform()` functions
+- Fixed IDE error on editing a numeric constant with an
+  unparseable quantum specification
+- Fixed documentation on `XY_MAD_XY_XY()` and `XY_MAD_S_XY()`
+  intrinsics to match their current names
+
 
 2021 October 24: Beta update 74
 ===================================
@@ -13,7 +41,7 @@ of [quadplay✜](manual.md.html).
 - Made `random` not syntax highlighted unless used as a function
 - Fixed create new map in IDE to use correct sprite URLs when not 
   cloning the sprite PNG
-- Extendfed workjson.py with Python-compatible `dump()` as well as `dumps()`
+- Extended workjson.py with Python-compatible `dump()` as well as `dumps()`
 - Changed font sheet layout. Use `tools/font-update.py` to upgrade 
   previous font sheets and then tweak the result manually. All
   built-in fonts have been upgraded and tweaked.
@@ -30,7 +58,7 @@ of [quadplay✜](manual.md.html).
   full set is now <code>₀₁₂₃₄₅₆₇₈₉₊₋₍₎ₐᵦₑₕᵢⱼₖₘₙₒᵣₛₜᵤₓ</code>.
   Note that d, y, and z subscripts are absent because
   they are missing from Unicode itself.
-- Added ◌̀◌́◌̂◌̌◌̃◌̈◌̊ to font sheet for future auto-generation
+- Added ◌̀◌́◌̂◌̌◌̃◌̈◌̊ to font sheet for auto-generation
   of accented characters
 - Fixed `font.glyph_size.x` NaN value
 - Fixed `blackletter-14.font.json` font PNG size

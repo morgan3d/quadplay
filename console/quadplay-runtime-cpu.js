@@ -346,9 +346,15 @@ function insert(array, i, ...args) {
 
 function push(array, ...args) {
     if (! Array.isArray(array)) { $error('push() requires an array argument'); }
+    /*
+      // Push is safe because it only adds to the end of the array and both
+      // the FOR loop and iterate() check the length of the array every 
+      // iteration and work forwards
+
     if ($iteratorCount.get(array)) {
         $error('Cannot push() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
     }
+    */
     array.push(...args);
     return array[array.length - 1];
 }
@@ -578,14 +584,15 @@ function iterate(array, callback, ...args) {
                 ++dst;
             } else {
                 let fcn = callback;
+                
                 if (stringCase) {
                     fcn = value[callback];
-                    if (typeof fcn !== 'function') {
+                    if (fcn !== undefined && typeof fcn !== 'function') {
                         $error("value does not have callback in iterate()");
                     }
                 }
                 
-                r = fcn(value, ...args);
+                r = fcn && fcn(value, ...args);
                 
                 if (r === iterate.REMOVE_AND_BREAK) {
                     done = true;
@@ -7151,8 +7158,8 @@ function $cleanupRegion(A) {
         A = Object.assign({scale: xy(1, 1), size: xy(0, 0), angle: 0, shape: 'rect'}, A);
 
         if (A.corner && ! A.pos) {
-            A.pos.x = A.corner.x + A.size.x * A.scale.x;
-            A.pos.y = A.corner.y + A.size.y * A.scale.y;
+            A.pos = {x: A.corner.x + A.size.x * A.scale.x,
+                     y: A.corner.y + A.size.y * A.scale.y}
             if (A.angle !== 0) {
                 $error('Cannot use angle != 0 with a corner rect in overlaps()');
             }

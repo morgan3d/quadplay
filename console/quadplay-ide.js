@@ -2,7 +2,7 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
 "use strict";
 
-const version  = '2021.10.24.15';
+const version  = '2021.10.30.01';
 
 // Set to false when working on quadplay itself
 const deployed = true;
@@ -1257,6 +1257,21 @@ const controlSchemeTable = {
         '[>]': 'Ⓓ'
     },
 
+    Colemak: {
+        '(a)': '␣',
+        '(b)': isApple ? '⏎' : 'Ɛ',
+        '(c)': 'ⓥ',
+        '(d)': 'ⓓ',
+        '(e)': '⬁',
+        '(f)': '⬀',
+        '(p)': '⬘',
+        '(q)': 'ⓠ',
+        '[^]': 'Ⓦ',
+        '[<]': 'Ⓐ',
+        '[v]': 'Ⓡ',
+        '[>]': 'Ⓢ'
+    },
+    
     Kbd_Alt: {
         '(a)': '␣',
         '(b)': isApple ? '⏎' : 'Ɛ',
