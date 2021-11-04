@@ -2989,7 +2989,37 @@ function physics_simulate(physics, stepFrames) {
     const engine = physics.$engine;
 
     // $console.log('--------------- timestamp: ' + physics.timing.timestamp);
-    
+
+   // Apply custom attachment forces
+    for (let a = 0; a < engine.customAttachments.length; ++a) {
+        const attachment = engine.customAttachments[a];
+        if (attachment.type === 'torsion_spring') {
+            const angle = attachment.angle;
+            const entityA = attachment.entityA;
+            const entityB = attachment.entityB;
+            
+            // Hook's law
+            const delta = loop(angle + (entityA ? entityA.angle : 0) - entityB.angle, -$Math.PI, $Math.PI);
+            let torque = 5000 * delta * attachment.stiffness;
+            
+            // Note that linear damping applies to all velocity in matter.js, not to
+            // spring force itself. However, this is hard to stabilize for
+            // a torque because if we just affect angular velocity it will
+            // not be around the point in question and causes problems.
+            //
+            // https://github.com/liabru/matter-js/blob/master/src/constraint/Constraint.js#L221
+
+            const relativeVel = entityB.spin - (entityA ? entityA.spin : 0);
+            if ($Math.sign(relativeVel) === $Math.sign(torque)) {
+                // Damp when already spinning in the torque direction
+                torque /= 1 + 1000 * $Math.abs(relativeVel) * attachment.damping;
+            }
+            
+            if (entityA) { entityA.torque -= torque; }
+            entityB.torque += torque;
+        } // if torsion_spring
+    } // for a
+     
     physics.$newContactArray = [];
 
     const bodies = $Physics.Composite.allBodies(engine.world);
@@ -2999,14 +3029,18 @@ function physics_simulate(physics, stepFrames) {
         // internally by the physics system.
         if (body.entity) { $bodyUpdateFromEntity(body); }
     }
-      
+        
     $Physics.Engine.update(engine, stepFrames * 1000 / 60);
-
-    // Enforce the quadplay special constraints. This would be better
+    
+    // Enforce custom attachment constraints. This would be better
     // implemented by injecting the new constraint solver directly
     // into $Physics.Constraint.solveAll, so that it happens within
-    // the solver during the main iterations.
+    // the solver during the main iterations. However, that requires
+    // modifying the core of the physics engine and makes it harder
+    // to upgrade. matter.js has promised to add hinge joints circa 2022
+    // and those would allow enforcing these automatically.
     if (engine.customAttachments.length > 0) {
+        // Two iterations
         for (let it = 0; it < 2; ++it) {
             for (let a = 0; a < engine.customAttachments.length; ++a) {
                 const attachment = engine.customAttachments[a];
@@ -3015,8 +3049,8 @@ function physics_simulate(physics, stepFrames) {
                     const angle = attachment.angle;
                     $Physics.Body.setAngularVelocity(body, 0);
                     $Physics.Body.setAngle(body, angle);
-                }
-            }
+                }  // if gyro
+            } // for iteration
             
             // Force one extra iteration of constraint solving to reconcile
             // what we just did above, so that attached parts are not lagged
@@ -3259,14 +3293,18 @@ function physics_detach(physics, attachment) {
     // Remove the composite, which will destroy all of the Matter.js elements
     // that comprise this constraint
     $Physics.Composite.remove(physics.$engine.world, attachment.$composite, true);
+
+    if (attachment.type === 'gyro' || attachment.type === 'torsion_spring') {
+        removeValue(physics.customAttachments, attachment);
+    }
 }
 
 
 function physics_attach(physics, type, param) {
-    if (param.entityA && ! param.entityA.$body) { $error("entityA has not been added to the physics context"); }
-    if (! param.entityB) { $error("entityB must not be nil"); }
-    if (! param.entityB.$body) { $error("entityB has not been added to the physics context"); }
-    if (param.entityB.density === Infinity) { $error("entityB must have finite density"); }
+    if (param.entityA && ! param.entityA.$body) { $error('entityA has not been added to the physics context'); }
+    if (! param.entityB) { $error('entityB must not be nil'); }
+    if (! param.entityB.$body) { $error('entityB has not been added to the physics context'); }
+    if (param.entityB.density === Infinity) { $error('entityB must have finite density'); }
 
     physics = physics.$engine;
 
@@ -3302,9 +3340,10 @@ function physics_attach(physics, type, param) {
     }
     
     /////////////////////////////////////////////////////////////////////
-    // Are collisions allowed between these objects?
+    // Are collisions allowed between these objects? By default,
+    // welds, pins, and torsion springs prevent collisions.
     
-    let collide = find(["rope", "string", "rod"], type) !== undefined;
+    let collide = find(['rope', 'string', 'rod'], type) !== undefined;
     if (param.collide !== undefined) { collide = param.collide; }
     
     // Always enable collisions with the world, since they won't happen
@@ -3366,7 +3405,7 @@ function physics_attach(physics, type, param) {
     switch (type) {
     case 'gyro':
         {
-            attachment.angle = param.angle || 0;
+            attachment.angle = (param.angle === undefined) ? loop(param.entityB.angle, -$Math.PI, $Math.PI) : 0;
             // We *could* make this work against an arbitrary entity, but for now
             // constrain to the world for simplicity
             if (param.entityA) { $error('A "gyro" attachment requires that entityA = nil'); }
@@ -3491,7 +3530,14 @@ function physics_attach(physics, type, param) {
         }
         break;
       
-    case "pin":
+    case 'torsion_spring':
+        attachment.angle = loop((param.angle === undefined) ?
+                                param.entityB.angle - (param.entityA ? param.entityA.angle : 0) : 0, -$Math.PI, $Math.PI);
+        attachment.damping = (options.damping !== undefined ? options.damping : 0.002);
+        attachment.stiffness = (options.stiffness !== undefined ? options.stiffness : 0.005);
+        // intentionally fall through
+        
+    case 'pin':
         {
             if ($Math.abs(len) > 1e-9) {
                 attachment.entityB.pos.x -= delta.x;
@@ -3504,6 +3550,7 @@ function physics_attach(physics, type, param) {
             const constraint = $Physics.Constraint.create(options);
             constraint.attachment = attachment;
             $Physics.Composite.add(attachment.$composite, constraint);
+            push(physics.customAttachments, attachment);
         }
         break;
         
@@ -3607,7 +3654,8 @@ function draw_physics(physics) {
         const z = $Math.max(zA, zB) + zOffset;
 
         const color = attachment ? constraintColor : secretColor;
-        
+
+        // Line part
         if (type === 'spring') {
             // Choose the number of bends based on the rest length,
             // and then stretch
@@ -3628,16 +3676,22 @@ function draw_physics(physics) {
             }
             draw_line(prev, pointB, color, z);
         } else {
-            // rod
+            // Line between the two points for a rod, rope, or other
+            // constraint where the points may be separated
             draw_line(pointA, pointB, color, z);
         }
-
+        
         if (type === 'weld') {
             // Show a triangle to indicate that this attachment is rigid
             draw_poly(weldTri, color, undefined, pointB, constraint.bodyB.angle, undefined, z);
         } else if (type === 'pin') {
             // Show one disk
             draw_disk(pointA, 3, color, undefined, z);
+        } else if (type === 'torsion_spring') {
+            // Show the coils
+            draw_disk(pointA, 1, undefined, color, z);
+            draw_disk(pointA, 3, undefined, color, z);
+            draw_disk(pointA, 4, undefined, color, z);            
         } else {
             // Show the two disks
             draw_disk(pointA, 3, undefined, color, z);

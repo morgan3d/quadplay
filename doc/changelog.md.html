@@ -6,7 +6,7 @@
 Changes for both the specification and implementation in each release
 of [quadplay✜](manual.md.html).
 
-2021 November TBD: Beta update 75
+2021 November 4: Beta update 75
 ===================================
 
 - The string callback version of `iterate()` now ignores elements
@@ -16,6 +16,9 @@ of [quadplay✜](manual.md.html).
   Combined with `iterate.REMOVE`, this allows amortized constant
   time addition and removal of values from an array while iterating
   over it.
+- Improved physics system API documentation
+- `"gyro"` physics attachment now defaults to the current angle instead of 0deg
+- Added new `"torsion_spring"` joint attachment for rotational springs
 - Added button prompt support for [Colemak](https://colemak.com/) keyboards which use
   OS layout instead of remapping
 - Added `Ⓡ` character to font sheet
@@ -33,6 +36,7 @@ of [quadplay✜](manual.md.html).
   unparseable quantum specification
 - Fixed documentation on `XY_MAD_XY_XY()` and `XY_MAD_S_XY()`
   intrinsics to match their current names
+- Fixed a memory leak in `physics_detach()` for `"gyro"` attachments
 
 
 2021 October 24: Beta update 74

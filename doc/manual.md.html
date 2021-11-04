@@ -3931,18 +3931,16 @@ to start colliding with each other.
     <tr><td>`"spring"`</td>
          <td>Applies force to pull length back to a target distance.</td>
          <td>`length default ‖pointB - pointA‖`, 
-             `stiffness default 0.5%`, 
-             `damping default 0.2%`</td>
+             <br>`stiffness default 0.5%`, 
+             <br>`damping default 0.2%`</td>
     </tr>
-
     <tr><td>`"torsion_spring"`</td>
         <td>Prevents translation, allows rotation, and applies torque to pull the angle back
             to a target.</td>
-        <td>`angle default entityB.angle - entityA.angle`, 
-            `stiffness default 0.5%`,
-            `damping default 0.2%`</td>
+        <td>`angle default entityB.angle -` `(if entityA then entityA.angle` `else 0°)`, 
+            <br>`stiffness default 0.5%`,
+            <br>`damping default 0.2%`</td>
     </tr>
-
     <tr><td>`"rod"`</td>
          <td>Rigidly maintain a fixed distance</td>
          <td>`length default ‖pointB - pointA‖`</td>
@@ -3959,7 +3957,7 @@ to start colliding with each other.
         <td>Free translation, but frozen rotation relative to each other.
             Useful for keeping characters upright. `entityA` must be `nil`. This kind of
             attachment is referred to in other APIs as a Cartesian joint or generalized 2D prismatic joint.</td>
-        <td>`angle default 0deg`</td>
+        <td>`angle default entityB.angle`</td>
     </tr>
   </table>
 
@@ -8938,10 +8936,12 @@ div.preview {
   margin-bottom: 0px;
 }
 
+table {font-size: 16px}
 table.nested td:first-child {margin-right: 25px; padding-left: 22px; text-indent: -22px}
 table.nested td code {white-space: nowrap} 
 table.nested th {border-bottom: 1px solid}
 table.nested tr {vertical-align: top}
+table.nested td {margin-bottom: 5px}
 </style>
 <title>manual✜</title>
 <script>setTimeout(function(){document.title='manual✜';},1000);
