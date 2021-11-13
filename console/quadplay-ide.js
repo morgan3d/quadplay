@@ -2,7 +2,7 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
 "use strict";
 
-const version  = '2021.11.04.07';
+const version  = '2021.11.13.06';
 
 // Set to false when working on quadplay itself
 const deployed = true;

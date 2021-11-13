@@ -11,12 +11,13 @@ function make_contact_group() {
 }
 
 
-// Density scale multiplier used to map to the range where
-// matter.js constants are tuned for. Using a power of 2 makes
-// the round trip between matter and quadplay more stable.
-// This is about 0.001, which is the default density in matter.js.
-var $PHYSICS_MASS_SCALE     = $Math.pow(2,-10);
-var $PHYSICS_MASS_INV_SCALE = $Math.pow(2,10);
+/* Density scale multiplier used to map to the range where
+   matter.js constants are tuned for. Using a power of 2 makes
+   the round trip between matter and quadplay more stable.
+   This is about 0.001, which is the default density in matter.js.
+*/
+var $PHYSICS_MASS_SCALE     = Math.pow(2, -10);
+var $PHYSICS_MASS_INV_SCALE = Math.pow(2,  10);
 var $physicsContextIndex = 0;
 
 function $physicsUpdateContact(physics, contact, pair) {
@@ -51,6 +52,12 @@ function make_physics(options) {
         $newContactArray:      [], // for firing callbacks and visualization. wiped every frame
 
         $frame:                0,
+
+        // Lock for when within simulation
+        $inSimulate:           false,
+        
+        // To be removed when physics_simulate ends
+        $removeEntityArray:   [],
         
         // $brokenContactQueue[0] is an array of contacts that broke $brokenContactQueue.length - 1
         // frames ago (but may have been reestablished). Add empty arrays to this queue to maintain
@@ -178,22 +185,27 @@ function make_physics(options) {
                 continue;
             }
             
-            // Find the contact (it may have already been removed)
-            const contact = physics.$entityContactMap.get(pair.bodyA).get(pair.bodyB);
-
-            // If not already removed
-            if (contact) {
-                // A potential improvement to add here later: if
-                // moving with high velocity away from the contact,
-                // then maybe end the contact immediately
-
-                // for debugging collisions
-                //$console.log(physics.$frame + ' (brk)  ' + contact.entityA.name + " & " + contact.entityB.name);
+            // Find the contact (Note that it may have already been
+            // removed, or the object itself may have been removed
+            // from physics in a previous frame)
+            const map = physics.$entityContactMap.get(pair.bodyA);
+            if (map) {
+                const contact = map.get(pair.bodyB);
                 
-                // Schedule the contact for removal. It can gain a reprieve if is updated
-                // before it hits the front of the queue.
-                removeArray.push(contact);
-            }
+                // If not already removed
+                if (contact) {
+                    // A potential improvement to add here later: if
+                    // moving with high velocity away from the contact,
+                    // then maybe end the contact immediately
+                    
+                    // for debugging collisions
+                    //$console.log(physics.$frame + ' (brk)  ' + contact.entityA.name + " & " + contact.entityB.name);
+                    
+                    // Schedule the contact for removal. It can gain a reprieve if is updated
+                    // before it hits the front of the queue.
+                    removeArray.push(contact);
+                }
+            } // if map
         }
     });
         
@@ -251,7 +263,17 @@ function physics_remove_all(physics) {
 
 
 function physics_remove_entity(physics, entity) {
+    if (entity === undefined) {
+        $error('nil entity in physics_remove_entity');
+    }
+    
     if (! entity.$body) { return; }
+
+    if (physics.$inSimulate) {
+        // Simulation lock
+        physics.$removeEntityArray.push(entity);
+        return;
+    }
     
     // Remove all attachments (removing mutates the
     // array, so we have to clone it first!)
@@ -400,14 +422,15 @@ function $bodyUpdateFromEntity(body) {
 
       
 function physics_simulate(physics, stepFrames) {
+    physics.$inSimulate = true;
     const startTime = $performance.now();
-          
+    
     if (stepFrames === undefined) { stepFrames = 1; }
     const engine = physics.$engine;
 
     // $console.log('--------------- timestamp: ' + physics.timing.timestamp);
 
-   // Apply custom attachment forces
+    // Apply custom attachment forces
     for (let a = 0; a < engine.customAttachments.length; ++a) {
         const attachment = engine.customAttachments[a];
         if (attachment.type === 'torsion_spring') {
@@ -490,9 +513,8 @@ function physics_simulate(physics, stepFrames) {
         if (body.entity) { $entityUpdateFromBody(body.entity); }
     }
 
-    // Remove old contacts that were never reestablished
-
-    // advance the queue
+    // Remove old contacts that were never reestablished.
+    // Advance the contact queue
     const maybeBrokenContactList = physics.$brokenContactQueue.shift(1);
     physics.$brokenContactQueue.push([]);
     
@@ -542,7 +564,13 @@ function physics_simulate(physics, stepFrames) {
         } // event
     } // contact
 
+    physics.$inSimulate = false;
     ++physics.$frame;
+
+    for (let i = 0; i < physics.$removeEntityArray.length; ++i) {
+        physics_remove_entity(physics, physics.$removeEntityArray[i]);
+    }
+    physics.$removeEntityArray.length = 0;
 
     const endTime = $performance.now();
     $physicsTimeTotal += endTime - startTime;
@@ -569,6 +597,7 @@ function physics_entity_has_contacts(physics, entity, region, normal, mask, sens
 function physics_entity_contacts(physics, entity, region, normal, mask, sensors) {
     return $physics_entity_contacts(physics, entity, region, normal, mask, sensors, false);
 }
+
 
 function $physics_entity_contacts(physics, entity, region, normal, mask, sensors, earlyOut) {
     if (mask === undefined) { mask = 0xffffffff; }
