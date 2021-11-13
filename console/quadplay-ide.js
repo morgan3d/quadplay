@@ -3030,7 +3030,7 @@ function jsToPSError(error) {
     if ((error.stack &&
         (error.stack.indexOf('<anonymous>') === -1) &&
          (error.stack.indexOf('GeneratorFunction') === -1) &&
-         (error.stack.indexOf('quadplay-runtime.js') !== -1)) ||
+         (error.stack.indexOf('quadplay-runtime-') !== -1)) ||
         ! lineNumber) {
         return {url:'(unknown)', lineNumber: '(unknown)', message: '' + error, stack: resultStack, fcn: resultFcn};
     }
@@ -3393,7 +3393,7 @@ let updateKeyboardPending = false;
 function reloadRuntime(oncomplete) {
     runtime_cursor = 'crosshair';
     QRuntime.document.open();
-    QRuntime.document.write("<!DOCTYPE html><script src='quadplay-runtime-cpu.js' async charset='utf-8'> </script> <script src='quadplay-runtime-gpu.js' async charset='utf-8'> </script>");
+    QRuntime.document.write("<!DOCTYPE html><script src='quadplay-runtime-cpu.js' async charset='utf-8'> </script> <script src='quadplay-runtime-physics.js' async charset='utf-8'> </script> <script src='quadplay-runtime-gpu.js' async charset='utf-8'> </script>");
     QRuntime.onload = function () {
         QRuntime.$SCREEN_WIDTH  = SCREEN_WIDTH;
         QRuntime.$SCREEN_HEIGHT = SCREEN_HEIGHT;

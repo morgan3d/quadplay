@@ -2019,7 +2019,8 @@ function regexIndexOf(text, re, i) {
 }
 
 
-/** Parse the JSON value starting at character i. Also used by the runtime as QRuntime.parse(str) */
+/** Parse the JSON value starting at character i. Also used by the
+   runtime as QRuntime.parse(str) */
 function $parse(source, i) {
     i = i || 0;
     if (typeof source !== 'string') {
@@ -2107,6 +2108,12 @@ function $parse(source, i) {
             // Scan until the next separator
             const end = regexIndexOf(source, /[,:\[{}\] \n\t"]/, i);
             const token = source.substring(i, end).toLowerCase();
+
+            switch (token.substring(0, 2)) {
+            case '0x': return {result: parseInt(token), next: end};
+            case '0b': return {result: parseInt(token.substring(2), 2), next: end};
+            } // switch for hex and binary constants
+            
             switch (token) {
             case 'true': return {result: true, next: end};
             case 'false': return {result: false, next: end};

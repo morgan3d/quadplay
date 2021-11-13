@@ -364,6 +364,7 @@ function onConstantEditorVectorSliderChange(gameLayer, controlName, type, field,
     textBox.onchange();
 }
 
+
 function onConstantEditorSliderChange(gameLayer, controlName, type, value, format) {
     const textBox = document.getElementById(controlName);
     console.assert(textBox, 'Could not find control id = "' + controlName + '"');

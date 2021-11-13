@@ -3974,7 +3974,10 @@ to start colliding with each other.
 
 `physics_remove_entity(physics, entity)`
 : Remove `entity` and all attachments for it from the physics context.
-  See also `physics_add_entity()`.
+  Does nothing if the `entity` was not already in this physics
+  context.  If called from within a collision callback, removal calls
+  are delayed until the end of `physics_simulate()`.  See also
+  `physics_add_entity()`.
 
 `physics_simulate(physics, frames default 1)`
 : Simulate physics for this many frames, treating all forces and torques
@@ -8772,7 +8775,7 @@ Python, [PICO-8](https://www.lexaloffle.com/pico-8.php),
 [codeheart.js](https://casual-effects.com/codeheart/) and
 [the nano JAMMER](https://morgan3d.github.io/nano).
 
-The quadplay✜ IDE and compiler are copyright 2019-2020 Morgan
+The quadplay✜ IDE and compiler are copyright 2019-2022 Morgan
 McGuire. They are licensed under the
 [LGPL 3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html), but may be
 relicensed in the future.  This includes the contents of:
@@ -8781,6 +8784,7 @@ relicensed in the future.  This includes the contents of:
 - [`quadplay.css`](../console/quadplay.css)
 - [`quadplay-runtime-cpu.js`](../console/quadplay-runtime-cpu.js)
 - [`quadplay-runtime-gpu.js`](../console/quadplay-runtime-gpu.js)
+- [`quadplay-runtime-physics.js`](../console/quadplay-runtime-physics.js)
 - [`quadplay-profiler.js`](../console/quadplay-profiler.js)
 - [`quadplay-browser.js`](../console/quadplay-browser.js)
 - [`quadplay-network.js`](../console/quadplay-network.js)
@@ -8794,7 +8798,7 @@ relicensed in the future.  This includes the contents of:
 - [`quadplay-load.js`](../console/quadplay-load.js)
 - [`pyxlscript-compiler.js`](../console/pyxlscript-compiler.js)
 
-and excludes the built-in PyxlScript examples, games, and content described below. 
+and excludes the built-in PyxlScript examples, games, and content described below.
 
 The Vim mode is by [Stephan Steinbach](https://twitter.com/stephan_gfx).
 

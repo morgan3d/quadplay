@@ -1218,6 +1218,10 @@ hr {
     color:#fff;
 }
 
+/* Avoid text shadow in ghost mode */
+.ace_search {
+    text-shadow: none;
+}
 
 .EmulatorUI .emulatorBackground, .MaximalUI .emulatorBackground, .TestUI .emulatorBackground, .GhostUI .emulatorBackground {
     border-radius:    40px;
