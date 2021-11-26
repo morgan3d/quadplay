@@ -13,6 +13,12 @@ of [quadplay✜](manual.md.html).
   that are not in the context
 - Made it safe to call `physics_remove_entity()` while in 
   `physics_simulate()`
+- `physics_attach()` now defaults unspecified attachment points to the same
+  location from the other object
+- Upgraded to matter.js 0.17.1
+- Increased physics velocity iterations slightly from 14 to 16 to
+  reduce missed collisions for very fast objects
+- Fixed welding to objects with infinite mass or density
 - Fixed removing an entity from physics where there had been
   a recent resting contact with that object
 - Fixed `parse()` for hex and binary constants

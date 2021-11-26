@@ -91,7 +91,7 @@ function make_physics(options) {
 
     // Higher improves processing of fast objects and thin walls.
     // Too high causes instability.
-    engine.velocityIterations   = 12; // default 4
+    engine.velocityIterations   = 16; // default 4
     engine.constraintIterations = 4;  // default 2. Higher lets more chained constraints propagate.
 
     // Extra constraints enforced by quadplay
@@ -712,7 +712,7 @@ function physics_detach(physics, attachment) {
     // Decrement and remove reference-counted no-collision elements
     const mapA = attachment.entityA.$body.collisionFilter.excludedBodies;
     if (mapA) {
-        const count = map.get(attachment.entityB.$body);
+        const count = mapA.get(attachment.entityB.$body);
         if (count !== undefined) {
             if (count > 1) {
                 mapA.set(attachment.entityB.$body, count - 1);
@@ -725,7 +725,7 @@ function physics_detach(physics, attachment) {
 
     const mapB = attachment.entityB.$body.collisionFilter.excludedBodies;
     if (mapB) {
-        const count = map.get(attachment.entityA.$body);
+        const count = mapB.get(attachment.entityA.$body);
         if (count !== undefined) {
             if (count > 1) {
                 mapB.set(attachment.entityA.$body, count - 1);
@@ -741,7 +741,7 @@ function physics_detach(physics, attachment) {
     $Physics.Composite.remove(physics.$engine.world, attachment.$composite, true);
 
     if (attachment.type === 'gyro' || attachment.type === 'torsion_spring') {
-        removeValue(physics.customAttachments, attachment);
+        fast_remove_value(physics.customAttachments, attachment);
     }
 }
 
@@ -761,6 +761,8 @@ function physics_attach(physics, type, param) {
         entityB: param.entityB
     };
 
+    const wsB = transform_es_to_ws(param.entityB, param.pointB || xy(0, 0));
+    
     if (type === 'weld') {
         // Satisfy the initial angle constraint. Do this before computing
         // positions
@@ -768,7 +770,7 @@ function physics_attach(physics, type, param) {
         if (param.angle !== undefined) {
             param.entityB.angle = param.angle + (param.entityA ? param.entityA.angle : 0);
             $bodyUpdateFromEntity(attachment.entityB.$body);
-        }        
+        }
     }
     
     // Create options for constructing a matter.js constraint.
@@ -776,7 +778,7 @@ function physics_attach(physics, type, param) {
     // bodies, but not rotated by the bodies
     const options = {
         bodyB:  param.entityB.$body,
-        pointB: $objectSub(transform_es_to_ws(param.entityB, param.pointB || xy(0, 0)), param.entityB.pos)
+        pointB: $objectSub(wsB, param.entityB.pos)
     };
 
     if (type === 'weld') {
@@ -810,7 +812,7 @@ function physics_attach(physics, type, param) {
         // These could not collide with each other because they have no overlap in their masks
         collide = true;
     }
-    
+
     // Update the entity's collision filters. See console/matter-extensions.js
     if (! collide) {
         // Reference counting on the excludedBodies maps
@@ -825,27 +827,28 @@ function physics_attach(physics, type, param) {
 
     /////////////////////////////////////////////////////////////////////
 
-    // World-space point
-    const B = $objectAdd(attachment.entityB.pos, options.pointB);
-    let A;
+    // World-space attachment points
+    let wsA;
     if (param.entityA) {
         options.bodyA = param.entityA.$body;
         if (param.pointA) {
-            A = transform_es_to_ws(param.entityA, param.pointA);
-            options.pointA = $objectSub(A, param.entityA.pos);
+            wsA = transform_es_to_ws(param.entityA, param.pointA);
         } else {
-            A = param.entityA.pos;
+            wsA = wsB;
         }
-    } else if (! param.pointA) {
-        // Default to the same point on the world
-        options.pointA = B;
-        A = B;
+    } else if (param.pointA) {
+        // no entityA but there is a pointA, treat it as
+        // in world space because we're attaching to the world
+        wsA = param.pointA;
     } else {
-        // no entityA but there is a pointA
-        A = options.pointA = param.pointA;
+        // Default to the same point on the world
+        wsA = wsB;
     }
+    options.pointA = param.entityA ? 
+        $objectSub(wsA, param.entityA.pos) :
+        wsA;
 
-    const delta = $objectSub(B, A);
+    const delta = $objectSub(wsB, wsA);
     const len = magnitude(delta);
    
     switch (type) {
@@ -887,7 +890,7 @@ function physics_attach(physics, type, param) {
                 
                 if ($Math.abs(change) > 1e-9) {
                     // Teleport entityB to satisfy the rest length
-                    if (magnitude(delta) <= 1e-9) {
+                    if (len <= 1e-9) {
                         // If A and B are on top of each other and there's
                         // a nonzero rest length, arbitrarily choose to
                         // move along the x-axis
@@ -906,7 +909,7 @@ function physics_attach(physics, type, param) {
             $Physics.Composite.add(attachment.$composite, constraint);
             
             if (attachment.type === 'weld') {
-                if (! param.entityA) { $error('Entities may not be welded to the world.'); }
+                if (! param.entityA) { $error('Entities may not be welded to the world. Use infinite density instead.'); }
 
                 // Connect back with double-constraints to go through
                 // an intermediate "weld body" object.  The weld body
@@ -933,9 +936,20 @@ function physics_attach(physics, type, param) {
                 const numPins = 4;
                 const weldPinRadius = 3;
 
-                // Higher gives more rigidity but also affects mass
-                // and moment of inertia more;
-                const weldDensity = $PHYSICS_MASS_SCALE * (entity_mass(param.entityA) + entity_mass(param.entityB)) / 3500;
+                let mA = entity_mass(param.entityA);
+                let mB = entity_mass(param.entityB);
+                
+                // Handle the case where one object has infinite mass
+                if (mA === Infinity) { mA = mB; }
+                if (mB === Infinity) { mB = mA; }
+                
+                // Handle the case where both were infinite (welds should
+                // not be allowed in this case)
+                if (mA === Infinity) { mA = mB = 5; }
+                    
+                // Higher weld density gives more rigidity but also affects mass
+                // and moment of inertia more.
+                const weldDensity = $PHYSICS_MASS_SCALE * $Math.max(mA + mB, 1) / 3500;
 
                 // In world space
                 const weldPos = $objectAdd(options.pointB, param.entityB.$body.position);

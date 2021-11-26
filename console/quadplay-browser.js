@@ -1463,7 +1463,6 @@ function onTouchStartOrMove(event) {
             QRuntime.touch.screen_x = screen_coord.x;
             QRuntime.touch.screen_y = screen_coord.y;
 
-            
             if (QRuntime.touch.aa && document.getElementById('printTouchEnabled').checked) {
                 $systemPrint('touch.screen_xy: xy(' + QRuntime.touch.screen_x + ', ' + QRuntime.touch.screen_y + ')');
             }

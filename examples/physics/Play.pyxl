@@ -27,7 +27,7 @@ const elevator = physics_add_entity(physics, make_entity({shape: "rect", size: x
 
 // The welded cross
 const weldBox1 = physics_add_entity(physics, make_entity({shape: "rect", size: xy(30, 5), pos: xy(70, 80)}))
-const weldBox2 = physics_add_entity(physics, make_entity({shape: "rect", size: xy(5, 30), pos: xy(80, 90)}))
+const weldBox2 = physics_add_entity(physics, make_entity({shape: "rect", size: xy(5, 30), pos: xy(70, 80)}))
 
 // Newton's cradle 
 const newton1  = physics_add_entity(physics, make_entity({shape: "disk", size: xy(19.5, 19.5), pos: xy(65, 170), density: 10, drag: 0.001, restitution: 110%, friction: 0}))
