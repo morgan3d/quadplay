@@ -102,6 +102,11 @@
             "description": "Using the built-in quadplay physics support for vehicles, characters, switches, springs, and moving platforms."
         },
         {
+            "url": "quad://examples/physics_arrow/",
+            "title": "Physics Arrow",
+            "description": "Demo of dynamic attachments and drag forces."
+        },
+        {
             "url": "quad://examples/piano/",
             "title": "Piano",
             "description": "Example of play_sound() and pitch."

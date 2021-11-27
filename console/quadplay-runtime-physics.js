@@ -87,11 +87,11 @@ function make_physics(options) {
 
     // Higher improves compression under large stacks or
     // small objects.  Too high causes instability.
-    engine.positionIterations   = 10; // default 6
+    engine.positionIterations   = 12; // default 6
 
     // Higher improves processing of fast objects and thin walls.
     // Too high causes instability.
-    engine.velocityIterations   = 16; // default 4
+    engine.velocityIterations   = 12; // default 4
     engine.constraintIterations = 4;  // default 2. Higher lets more chained constraints propagate.
 
     // Extra constraints enforced by quadplay
@@ -542,17 +542,16 @@ function physics_simulate(physics, stepFrames) {
     }
 
     // Fire event handlers for new contacts
-    for (const event of physics.$contactCallbackArray.values()) {
+    for (const callback of physics.$contactCallbackArray.values()) {
         for (const contact of physics.$newContactArray.values()) {
-
-            if ((((contact.entityA.contact_category_mask & event.contact_mask) |
-                  (contact.entityB.contact_category_mask & event.contact_mask)) !== 0) &&
-                (contact.depth >= event.min_depth) && (contact.depth <= event.max_depth) &&
-                ((event.sensors === 'include') ||
-                 ((event.sensors === 'only') && (contact.entityA.is_sensor || contact.entityB.is_sensor)) ||
-                 ((event.sensors === 'exclude') && ! (contact.entityA.is_sensor || contact.entityB.is_sensor)))) {
-
-                event.callback({
+            if (((contact.entityA.contact_category_mask | contact.entityB.contact_category_mask) & callback.contact_mask) &&
+                (contact.depth >= callback.min_depth) &&
+                (contact.depth <= callback.max_depth) &&
+                ((callback.sensors === 'include') ||
+                 ((callback.sensors === 'only') && (contact.entityA.is_sensor || contact.entityB.is_sensor)) ||
+                 ((callback.sensors === 'exclude') && ! (contact.entityA.is_sensor || contact.entityB.is_sensor)))) {
+                
+                callback.callback({
                     entityA: contact.entityA,
                     entityB: contact.entityB,
                     normal:  xy(contact.normal),

@@ -1,0 +1,119 @@
+PhysicsTest
+════════════════════════════════════════════════════════════════════════
+const physics = make_physics()
+
+const wall = physics_add_entity(physics,
+    make_entity({
+        name: "wall",
+        pos: xy(SCREEN_SIZE.x, ½ SCREEN_SIZE.y),
+        size: xy(24, 400),
+        color: WOOD_COLOR,
+        outline: WOOD_OUTLINE,
+        density: ∞}))
+    
+const disk = physics_add_entity(physics,
+    make_entity({
+        name: "disk",
+        pos: ½ SCREEN_SIZE + xy(64, 0),
+        size: xy(24, 24),
+        shape: "disk",
+        radius: 12,
+        color: WOOD_COLOR,
+        outline: WOOD_OUTLINE,
+        density: ∞}))
+
+const arrow_array = []
+    
+    
+def on_contact(args):
+    with entityA, entityB in args:
+        debug_print(entityA.name, entityB.name)        
+        let A = entityA
+        let B = entityB
+        let point = args.point0
+        
+        if args.point1:
+            // Average collision point
+            point = ½ (point + args.point1)
+        
+        if B.density == ∞:
+            B = entityA
+            A = entityB            
+
+        if B.name == "arrow":
+            const pointB = transform_ws_to_es(B, point)
+            if pointB.x < 40% B.size.x: 
+                // Not a hit on the arrowhead
+                return
+                    
+            // Suck energy out to make stable
+            B.drag = 2%
+            B.restitution = 10%
+        
+        
+        // Entity A is the infinite mass one
+        physics_attach(physics, "torsion_spring", {
+            entityA: A,
+            entityB: B,
+            pointB: xy(½ entityB.size.x, 0),
+            damping: 5%,
+            collide: false})
+
+    
+    
+def arrow_compute_forces(arrow):
+    if (|arrow.pos.x - ½ SCREEN_SIZE.x| > ½ SCREEN_SIZE.x + arrow.size.x or
+        arrow.pos.y < -arrow.size.y):
+        // Out of bounds, no need to preserve
+        return iterate.REMOVE
+    
+    // Drag force from arrow flights and shafts, which
+    // makes it point straight. Only apply if not already
+    // tumbling
+    const speed_squared = magnitude_squared(arrow.vel)
+    if speed_squared > 0.8 and |arrow.spin| < 0.02:
+        const Δθ = loop(xy_to_angle(arrow.vel) - arrow.angle, -180°, 180°)
+        arrow.torque += 5 * Δθ * min(speed_squared, 2)
+       
+    
+
+def fire_arrow():
+    const angle = random(0°, 30°)
+    push(arrow_array,
+        physics_add_entity(physics,
+            make_entity({
+                name: "arrow",
+                sprite: arrow_sprite[0][0],
+                pos: xy(4, ½ SCREEN_SIZE.y + random(-20, 50)),
+                vel: ARROW_SPEED * angle_to_xy(angle),
+                angle: angle, 
+                density: 6,
+                drag: 0.5%,
+                restitution: 30%,
+                size: xy(30, 1) })))
+
+
+physics_add_contact_callback(physics, on_contact)
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+set_background(SKY_COLOR)
+fire_arrow()
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+if gamepad_array[0].aa: fire_arrow()
+        
+iterate(arrow_array, arrow_compute_forces)
+physics_simulate(physics)
+
+iterate(arrow_array, draw_entity)
+draw_rect(wall)
+draw_disk(disk)
+draw_text(deja_15_font, 
+    replace("Press (a) to fire", gamepad_array[0].prompt), 
+    xy(½ SCREEN_SIZE.x, 20), 
+    TEXT_COLOR, ∅, TEXT_OUTLINE, "center")
+

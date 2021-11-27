@@ -1,0 +1,11 @@
+{
+    "url": "arrow.png",
+    "sprite_size": {
+        "x": 32,
+        "y": 5
+    },
+    "license": "©2021 Morgan McGuire. Licensed as CC BY 4.0 https://creativecommons.org/licenses/by/4.0/",
+    "gutter": 0,
+    "transpose": false,
+    "default_frames": 1
+}
