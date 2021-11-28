@@ -91,7 +91,7 @@ function make_physics(options) {
 
     // Higher improves processing of fast objects and thin walls.
     // Too high causes instability.
-    engine.velocityIterations   = 12; // default 4
+    engine.velocityIterations   = 14; // default 4
     engine.constraintIterations = 4;  // default 2. Higher lets more chained constraints propagate.
 
     // Extra constraints enforced by quadplay

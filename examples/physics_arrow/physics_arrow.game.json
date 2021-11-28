@@ -12,7 +12,9 @@
     "docs": [],
     "assets": {
         "deja_15_font": "quad://fonts/deja-15.font.json",
-        "arrow_sprite": "arrow.sprite.json"
+        "arrow_sprite": "arrow.sprite.json",
+        "attack_01_sound": "quad://sounds/attack-01.sound.json",
+        "hit_01_sound": "quad://sounds/hit-01.sound.json"
     },
     "version": 0,
     "min_players": 1,
@@ -76,7 +78,7 @@
         },
         "ARROW_SPEED": {
             "type": "number",
-            "value": "30",
+            "value": "15",
             "min": 1,
             "max": 64,
             "format": "",

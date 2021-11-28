@@ -27,7 +27,7 @@ const arrow_array = []
     
 def on_contact(args):
     with entityA, entityB in args:
-        debug_print(entityA.name, entityB.name)        
+        //debug_print(entityA.name, entityB.name)        
         let A = entityA
         let B = entityB
         let point = args.point0
@@ -50,6 +50,10 @@ def on_contact(args):
             B.drag = 2%
             B.restitution = 10%
         
+        play_sound({
+            sound: hit_01_sound, 
+            pan: point,
+            pitch: random(80%, 150%)})
         
         // Entity A is the infinite mass one
         physics_attach(physics, "torsion_spring", {
@@ -62,7 +66,7 @@ def on_contact(args):
     
     
 def arrow_compute_forces(arrow):
-    if (|arrow.pos.x - ½ SCREEN_SIZE.x| > ½ SCREEN_SIZE.x + arrow.size.x or
+    if (|arrow.pos.x - ½ SCREEN_SIZE.x| > ½ SCREEN_SIZE.x + 2 arrow.size.x or
         arrow.pos.y < -arrow.size.y):
         // Out of bounds, no need to preserve
         return iterate.REMOVE
@@ -73,18 +77,19 @@ def arrow_compute_forces(arrow):
     const speed_squared = magnitude_squared(arrow.vel)
     if speed_squared > 0.8 and |arrow.spin| < 0.02:
         const Δθ = loop(xy_to_angle(arrow.vel) - arrow.angle, -180°, 180°)
-        arrow.torque += 5 * Δθ * min(speed_squared, 2)
+        arrow.torque += 5 Δθ * min(speed_squared, 2)
        
     
 
 def fire_arrow():
+    play_sound({sound: attack_01_sound, pan: -100%, pitch: random(90%, 110%), volume: random(80%, 100%)})
     const angle = random(0°, 30°)
     push(arrow_array,
         physics_add_entity(physics,
             make_entity({
                 name: "arrow",
                 sprite: arrow_sprite[0][0],
-                pos: xy(4, ½ SCREEN_SIZE.y + random(-20, 50)),
+                pos: xy(-32, ½ SCREEN_SIZE.y + random(-20, 50)),
                 vel: ARROW_SPEED * angle_to_xy(angle),
                 angle: angle, 
                 density: 6,
@@ -100,6 +105,7 @@ enter
 ────────────────────────────────────────────────────────────────────────
 set_background(SKY_COLOR)
 fire_arrow()
+
 
 frame
 ────────────────────────────────────────────────────────────────────────
