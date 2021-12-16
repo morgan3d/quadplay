@@ -69,12 +69,20 @@ const NaNSymbol = '\uE001', InfinitySymbol = '\uE002', NegInfinitySymbol = '\uE0
 
 
 return {
-    /** Returns the new string and a map. If a map is provided, then it is extended. */
+    /** Returns the new string and a remapping array. If an array is
+        provided, then it is extended. */
     protectQuotedStrings: function protectQuotedStrings(src, protectionMap) {
         protectionMap = protectionMap || [];
 
-        // Hide escaped quotes that would confuse the following regexp
-        src = src.replace(/\\\\"/g, doubleQuoteProtection);
+        const ESCAPED_ESCAPE = String.fromCharCode(0xE009);
+        // Hide escaped escapes momentarily
+        src = src.replace(/\\\\/g, ESCAPED_ESCAPE);
+        
+        // Hide escaped quotes that would confuse the main regexp
+        src = src.replace(/\\"/g, doubleQuoteProtection);
+
+        // Restore escaped escapes
+        src = src.replace(/\uE009/g, '\\\\');
                       
         // Protect strings
         src = src.replace(/"((?:[^"\\]|\\.)*)"/g, function (match, str) {

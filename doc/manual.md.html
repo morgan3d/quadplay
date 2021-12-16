@@ -608,6 +608,10 @@ stick and mouse APIs. Shows how to completely hide the OS mouse cursor with `dev
 </td></tr><tr><td>![](../examples/touch/label128.png)</td><td>
 [Touch Example](../console/quadplay.html?game=quad://examples/touch&IDE=1) uses the mouse/touch API.
 
+</td></tr><tr><td>![](../examples/countdown/label128.png)</td><td>
+[Countdown Example](../console/quadplay.html?game=quad://examples/countdown&IDE=1) shows how to used `local_time()`
+and perform time zone math.
+
 </td></tr><tr><td>![](../examples/tic_tac_toe/label128.png)</td><td>
 [Tic Tac Toe](../console/quadplay.html?game=quad://examples/tic_tac_toe&IDE=1) shows how to take turns,
 and mix `gamepad_array`, `touch`, and `device_control("get_mouse_state")` to support
@@ -1817,7 +1821,8 @@ Array
 
 `iterate(array, callback, ...args)`
 : Iterates through array in order using a callback function, with
-   optional O(1) order-preserving removal. This is an imperative
+  optional O(1) order-preserving removal. Returns `true` if any element
+  was removed, otherwise returns `false`. This is an imperative
    version of map(), filter(), and list comprehension primitives from
    other languages.
 
@@ -3334,9 +3339,10 @@ The basic entity properties and defaults are:
 
 `entity.size`
 : The draw-space `xy()` size of the width and height of the bounding
-  box of the entire object in its own reference frame.  If
-  `entity.shape == "disk"`, then the `x` and `y` fields must have the
-  same value. If not specified, defaults to the sprite's size.
+  box of the entire object in its own reference frame. The rendered/collision
+  size is `entity.size * |entity.scale|`.
+  If `entity.shape == "disk"`, then the `x` and `y` fields must have the
+  same value. If not specified, size defaults to the sprite's size.
 
 `entity.sprite`
 : A sprite from a sprite sheet. Can be `nil`.
@@ -5011,6 +5017,22 @@ unaffected.
   See `format_number()` for the various clock formatting options for numbers in seconds,
   and `now()` for a high-precision timer.
 
+`local_time(args)`
+: Returns an object with the same structure as `localtime()` initialized
+  from a specific [time zone](https://www.timeanddate.com/time/zones/), 
+  which is then converted to local time and returned.
+
+  If `args` is a single string of the form `"hh:mm:ss DD MM YYYY TZ"`
+  such as `"16:30:10 21 Nov 2022 PST"`, it is parsed. All elements
+  are optional and default to the lowest possible value, except for the
+  time zone which defaults to the current time zone.
+  
+  `args` may instead be a structure with `year`, `month`, `day`, `hour`, 
+  `minute`, `second`, `millisecond`, and `timezone` minutes from UTC
+  fields, which will then be converted using the `timezone` field to a
+  local time.
+  
+
 Path Finding
 ----------------------------------------------------------
 
@@ -6050,7 +6072,9 @@ options. Project files should have the double extension `.game.json`.
         {"type": "number", "value": "10"},
         {"type": "number", "value": "infinity"}]},
         
-      "level_table", {"type": "table", "url": "level_table.csv"}
+      "level_table": {"type": "table", "url": "level_table.csv"},
+      
+      "book_text": {"type": "string", "url": "alice.txt"}
    },
 
    // The default Y axis increases down the screen, like old arcade games.
@@ -6137,6 +6161,7 @@ The available constants types are:
   - Number ending in `deg`, `°`, or `%`, all in double quotes
   - `"π"`
 - `string`
+  - inline or from a text file
 - `boolean`
 - `nil` (no `value` needed)
 - vectors
@@ -6354,7 +6379,6 @@ debug_print( matrix[1][2] ) // 21
 debug_print( matrix[3][1] ) // 13
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 ### `raw` Format
 
 The `raw` format allows embedding a JSON-expressible value directly. `raw` format also
@@ -6421,9 +6445,10 @@ The constants override the equivalent constants from the `.game.json`
 file (unless they are not enabled). Extra constants specified only
 in the `.debug.json` file are ignored; they are not mapped at runtime.
 
-Constant types that require external data are not supported in the `debug.json`
-file. These are `raw` constants loaded from a JSON or YAML url,
-and `table` constants loaded from a CSV url.
+Constant types that require external data are not supported in the
+`debug.json` file. These are `raw` constants loaded from a JSON or
+YAML url, `string` constants loaded from a text file url, and `table`
+constants loaded from a CSV url.
 
 
 Sprite JSON
@@ -6782,8 +6807,8 @@ Data JSON
 ---------------------------------------------------------------------------------------------
 
 The special data asset type allows importing a large amount of data in
-an arbitrary format. It supports PNG, JPG, GIF, CSV, JSON, YAML, and
-XML. Unlike a CSV, JSON, or YAML _constant_, an asset can contain
+an arbitrary format. It supports PNG, JPG, GIF, CSV, TXT, JSON, YAML,
+and XML. Unlike a CSV, JSON, or YAML _constant_, an asset can contain
 metadata, a license, and arbitrary extra fields.
 
 Unlike a sprite, a PNG, JPG, or GIF data asset presents the raw 8-bit per
@@ -6794,7 +6819,7 @@ The data JSON descriptor looks like:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ JavaScript
 {
-    // can be .png, .gif, .jpg, .csv., json, or .yml
+    // can be .png, .gif, .jpg, .csv, .txt, .json, or .yml
     "url": "heightfield.png",
     "license": "your license here",
     
@@ -7911,13 +7936,15 @@ A B Γ Δ E Z H Θ I K Λ M N Ξ O Π P Σ T Φ X Ψ Ω
 
 
 ````````````````````````````````````````````````````` none big
-ς ş ğ İ Ş Ğ υ г ¡ м н к в Ñ ñ б Б Œ œ ℵ ϕ
-Æ À Á Â Ã Ä Å Ç È É Ê Ë Ì Í Î Ï Ø Ò Ó Ô Õ Ö
-æ à á â ã ä å ç è é ê ë ì í î ï ø ò ó ô õ ö
-Д Ж З И Й Л П Ц Ч Ш Щ Э Ю Я Ъ Ы Ь ẞ Ù Ú Û Ü
-д ж з и й л п ц ч ш щ э ю я ъ ы ь ß ù ú û ü 
+À à È è Ò ò Ì ì Ù ù Ł ł Ś Š Ş ś š ş Ø ẞ Б Д Ґ
+Á á É é Ó ó Í í Ú ú Ć ć Ž ž Ź ź Ż ż ø ß б д ґ
+Â â Ê ê Ô ô Î î Û û Ñ ñ Ж З И Й Л П Ц Ч Ш Щ Є
+Ä ä Ë ë Ö ö Ï ï Ü ü Ń ń ж з и й л п ц ч ш щ є
+Å å Ř ř Ď ď Ý ý Ů ů Ň ň в н κ м т
+Ã ã Ę ę Õ õ Ў ў Ç ç Æ Œ Э Ю Я Ъ Ы Ь
+Ą ą Ě ě Ť ť Ğ ğ Č č æ œ э ю я ъ ы ь 
 `````````````````````````````````````````````````````
-[Accented and Russian characters]
+[Accented and Cyrillic characters]
 
 
 ````````````````````````````````````````````````````` none big
@@ -7929,8 +7956,8 @@ A B Γ Δ E Z H Θ I K Λ M N Ξ O Π P Σ T Φ X Ψ Ω
 
 
 ````````````````````````````````````````````````````` none big
-ⓐ ⓑ ⓒ ⓓ ⓔ ⓕ ⓟ ⓠ ⓥ ⓧ ⓨ ⓩ
-⍐ ⍇ ⍗ ⍈ Ⓦ Ⓐ Ⓢ Ⓓ Ⓘ Ⓙ Ⓚ Ⓛ 
+ⓐ ⓑ ⓒ ⓓ ⓔ ⓕ ⓖ ⓗ ⓜ ⓝ ⓟ ⓠ ⓤ ⓥ ⓧ ⓨ ⓩ
+⍐ ⍇ ⍗ ⍈ Ⓠ Ⓩ Ⓦ Ⓐ Ⓢ Ⓓ Ⓘ Ⓙ Ⓚ Ⓛ 
 ① ② ③ ④ ⑤ ⑥ ⑦ ⑧ ⑨ ⓪ ⊖⊕
 Ⓞ ⍍ ▣ ⧉ ☰
 `````````````````````````````````````````````````````

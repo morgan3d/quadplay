@@ -22,20 +22,6 @@ function getQuadPath() {
     return location.pathname.replace(/\/console\/quadplay\.html$/, '\/');
 }
 
-
-/* Returns the path to the game's root, relative to location.origin */
-function getGamePath() {
-    let gamePath = gameSource.jsonURL.replace(/\\/g, '/').replace(/\/[^/]+\.game\.json$/g, '/');
-    if (gamePath.startsWith(location.origin)) {
-        gamePath = gamePath.substring(location.origin.length);
-    }
-    if (/^\/[A-Za-z]:\//.test(gamePath)) {
-        // Remove the leading slash on Windows absolute paths
-        gamePath = gamePath.substring(1);
-    }
-    return gamePath;
-}
-
 /* Reference count for outstanding saves to all files. Used to disable reload
    temporarily while a save is pending. */
 let savesPending = 0;
@@ -699,6 +685,7 @@ function serverWriteFile(webpath, encoding, contents, callback, errorCallback) {
     console.assert(encoding === 'utf8' || encoding === 'binary');
     console.assert(contents !== undefined);
     console.assert(! /^http[s]:\/\//.test(webpath), 'serverWriteFile() expects a local webpath, not a URL');
+    console.assert(webpath[1] !== ':', 'serverWriteFile() on Windows must have a / at the front of absolute paths, not a raw drive letter.')
     
     if (typeof contents !== 'string') {
         console.assert(contents.byteLength !== undefined && encoding === 'binary');
@@ -1085,7 +1072,7 @@ function onNewScriptCreate() {
     // Convert to a string
     const gameContents = WorkJSON.stringify(gameSource.json, undefined, 4);
 
-    let scriptFilename = getGamePath() + name;
+    const scriptFilename = getGamePath() + name;
 
     // Write the file and then reload
     serverWriteFiles([{filename: scriptFilename, contents: '// Scripts, variables, and constants here are visible to all modes\n', encoding: 'utf8'},
@@ -1208,6 +1195,8 @@ function showImportDocDialog() {
     LoadManager.fetchOne({forceReload: true}, docListURL, 'json', null, function (json) {
         // Strip the path to the current game off docs in the same dir
         // or subdirectory of it.
+
+        // TODO: This looks wrong
         if (gamePath.length > 0 && gamePath[0] === '/') {
             gamePath = gamePath.substring(1);
         }
@@ -1321,7 +1310,9 @@ function onCodeEditorGoToLineButton() {
     }
 }
 
-/** Generates the todo() list in the debugger from gamesource */
+
+/** Generates the todo() list in the debugger from gameSource.scripts
+    and gameSource.modes */
 function updateTodoList() {
     if (! useIDE) { return; }
     const todoPane = document.getElementById('todoPane');
@@ -1332,25 +1323,35 @@ function updateTodoList() {
     function processFile(type, name, url) {
         const source = fileContents[url];
         if (source === undefined) {
-            console.log("No source code for " + url);
+            console.log('No source code for ' + url);
             return;
         }
         
         // Terminate early if there's no todo() at all
         if (source.indexOf('todo(') === -1) { return; }
 
-        // Header
-        result += '<tr><td colspan=2 style="border-bottom: double 3px; padding-bottom: 1px">';
-        if (type === 'mode') {
-            result += `<code>${name}</code>`;
-        } else {
-            result += name;
-        }
-        result += '</td></tr>\n';
-
         // Individual items
         let line = 1;
         let pos = 0;
+
+        // Track the current top-level section or function
+        // in which the todos occur
+        let currentParseEvent = {url: url, line: undefined, name: undefined};
+        let currentParseFunction = {url: url, line: undefined, name: undefined};
+
+        // Location of the previous newline in source, which
+        // is used when parsing sections
+        let prevNewLinePos = -1;
+
+        // Table mapping all sections (with insertion order mapping
+        // the order in which they appear) to arrays of the todos.
+        // Top-level is the empty string section. Insert top-level
+        // first to ensure that it always appears first.
+        const sectionTable = {'': {url: url, line: 1, todoArray: []}};
+
+        //////////////////////////////////////////////////////////////////////////
+        // Parse
+        
         while (pos < source.length) {
             // Find the first of a "todo" or newline
             let a = source.indexOf('todo(', pos);
@@ -1362,9 +1363,32 @@ function updateTodoList() {
             if (b < a) {
                 // Newline was first
                 ++line;
+
+                const chr = source[b + 1];
+                if (chr !== ' ' && chr !== '\t') {
+                    // Top-level line that may change the current
+                    // parse event/function
+                    let lineEnd = source.indexOf('\n', b + 1);
+                    if (lineEnd === -1) { lineEnd = source.length; }
+                    const defMatch = source.substring(b + 1, lineEnd).match(/def[ \t]+([^ \t \(]+)/);
+                    if (defMatch) {
+                        // Entering a function
+                        currentParseFunction.name = defMatch[1] + '()';
+                        currentParseFunction.line = line;
+                    }
+                }
+                prevNewLinePos = b;
+                
             } else if (a < b) {
-                // "todo(" was first. Find the end
-                a += "todo(".length;
+                // "todo(" appears before the next newline
+                
+                if (a === prevNewLinePos + 1) {
+                    // todo() was at top level
+                    currentParseFunction.name = undefined;
+                }
+                    
+                // Find the end
+                a += 'todo('.length;
 
                 // Find the start quote
                 while (a < source.length && source[a] !== '"' && source[a] !== '\n') { ++a; }
@@ -1388,17 +1412,59 @@ function updateTodoList() {
 
                 // b is now the close quote position
                 const message = escapeHTMLEntities(source.substring(a, b));
-                result += `<tr valign=top style="cursor:pointer" onclick="editorGotoFileLine('${url}', ${line})">` +
-                    `<td style="text-align: right; padding-right:10px">${line}</td><td>${message}</td></tr>\n`;
+                const displaySection =
+                      currentParseFunction.name ?
+                      currentParseFunction :
+                      currentParseEvent.name ? 
+                      currentParseEvent : {name: ''};
+
+                let section = sectionTable[displaySection.name];
+                if (! section) { sectionTable[displaySection.name] = section = {url: displaySection.url, line: displaySection.line, todoArray: []}; }
+
+                section.todoArray.push({url: url, line: line, message: message});
             }
             
             pos = b + 1;
         }
 
-        // Separator
-        result += `<tr><td colspan=2>&nbsp;</td></tr>\n`;
+        //////////////////////////////////////////////////////////////////////
+        // Visualize todos
+
+        // Remove empty top-level sections
+        if (sectionTable[''].todoArray.length === 0) { delete sectionTable['']; }
+
+        // Header
+        result += `<tr style="cursor:pointer" onclick="editorGotoFileLine('${url}', 1)"><td colspan="2" style="border-bottom: double 3px; padding-bottom: 1px"><b>`;
+        if (type === 'mode') {
+            result += `<code>${name}</code>`;
+        } else {
+            result += name;
+        }
+        result += '</b></td></tr>\n';
+
+        let first = true;
+        for (let sectionName in sectionTable) {
+            const section = sectionTable[sectionName];
+            
+            // Put headers between groups of todos
+            if (sectionName !== '') {
+                if (! first) { result += '<tr><td colspan="2" height="6px"></td></tr>'; }
+                result += `<tr onclick="editorGotoFileLine('${section.url}', ${section.line})" style="cursor:pointer"><td colspan="2"><code>${sectionName}:</code></td></tr>`;
+            }
+
+            for (let i = 0; i < section.todoArray.length; ++i) {
+                const todo = section.todoArray[i];
+                result += `<tr valign=top style="cursor:pointer" onclick="editorGotoFileLine('${todo.url}', ${todo.line})">` +
+                    `<td style="text-align: right; padding-right:10px">${todo.line}</td><td>${todo.message}</td></tr>\n`;
+            } // i
+            
+            first = false;
+        } // section
+
+        // Separator between files
+        result += '<tr><td colspan=2>&nbsp;</td></tr>\n';
         hasAnyTodo = true;
-    }
+    } // processFile()
     
     for (let i = 0; i < gameSource.scripts.length; ++i) {
         const url = gameSource.scripts[i];
@@ -1420,7 +1486,7 @@ function updateTodoList() {
     
     // If there are no todo() statements
     if (! hasAnyTodo) {
-        result += 'Put <code>todo()</code> statements in your code to automatically generate this list.';
+        result += 'Put <a href="../doc/manual.md.html#standardlibrary/debugging"><code>todo()</code></a> statements in your code to automatically generate this list.';
     }
 
     todoPane.innerHTML = result;//`<div class="hideScrollBars" style="width: 97%">${result}</div>`;

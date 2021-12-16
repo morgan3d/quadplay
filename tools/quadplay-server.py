@@ -338,6 +338,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             filename = remove_leading_slash(webpath)
             encoding = object['encoding']
             contents = object['contents']
+
             if not re.search(self.mutable_file_regex, filename) or not any([webpath.startswith(prefix) for prefix in webpath_allowlist]):
                 maybe_print('WARNING: Ignored illegal request to write file (' + this_line_number() + ')', filename)
                 if not re.search(self.mutable_file_regex, filename): maybe_print('  Legal file regex is', self.mutable_file_regex)
@@ -670,7 +671,6 @@ def platform_www_abspath(p):
         p = p[len(server_root_filepath):]
         if not p.endswith('.game.json'): p = os.path.join(p, '')
         t = os.path.normcase(p).replace('\\', '/')
-        #if len(t) > 1 and t[1] != ':' and t[0] != '/': t = '/' + t
         if t[0] != '/': t = '/' + t
         return t
     else:
@@ -920,7 +920,6 @@ def main():
         import winreg
         for p in ['MSEdgeHTM', 'ChromeHTML', 'BraveHTML']:
             try:
-                # Chrome
                 command = winreg.QueryValueEx(winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, p + "\\shell\\open\\command", 0, winreg.KEY_READ), "")[0]
                 browser_filepath = re.search("\"(.*?)\"", command).group(1)
                 if os.path.exists(browser_filepath):

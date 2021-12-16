@@ -1,7 +1,7 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
 "use strict";
 
-const version  = '2021.11.28.01';
+const version  = '2021.12.15.22';
 
 // Set to false when working on quadplay itself
 const deployed = true;
@@ -45,16 +45,21 @@ function setIDEEnable(value) {
     location = location.href.replace(/([&?])IDE=./g, '$1') + "&IDE=" + (value ? 1 : 0);
 }
 
-// Ends in a slash
+
+/* Returns the path to the game's root, relative to location.origin. Ends in a slash. */
 function getGamePath() {
-    let gamePath = gameSource.jsonURL.replace(/\\/g, '/');
+    let gamePath = gameSource.jsonURL.replace(/\\/g, '/').replace(/\/[^/]+\.game\.json$/g, '/');
     if (gamePath.startsWith(location.origin)) {
         gamePath = gamePath.substring(location.origin.length);
-    }
-
-    // Remove the .game.json and on Windows remove a leading slash
-    return gamePath.replace(/\/[^/]+\.game\.json$/, '\/').replace(/^\/([a-zA-Z]:\/)/, '$1');
+    } 
+   
+    // On Windows this must still return a leading slash in front of absolute paths
+    // because that is the "webpath" format that the server expects.
+    console.assert(gamePath[1] !== ':', 'Absolute windows webpath without a leading slash')
+   
+    return gamePath;
 }
+
 
 function makeURLRelativeToGame(filename) {
     return getGamePath() + filename;
@@ -2253,8 +2258,19 @@ function visualizeConstant(value, indent) {
         if (Array.isArray(v) || typeof v === 'object') {
             s += `<tr valign=top><td>${indent}${k}:</td><td></td><td><i>${Array.isArray(v) ? 'array' : 'object'}</i></td></tr>\n` + visualizeConstant(v, indent + '&nbsp;&nbsp;&nbsp;&nbsp;');
         } else {
-            v = escapeHTMLEntities(QRuntime.unparse(v));
-            s += `<tr valign=top><td>${indent}${k}:</td><td></td><td><code>${v}</code></td></tr>\n`;
+            v = QRuntime.unparse(v);
+            s += `<tr valign=top><td>${indent}${k}:</td><td></td><td>`;
+
+            if (v.indexOf('\n') !== -1 && v[0] === '"' && v[v.length - 1] === '"') {
+                // Multiline string. Remove the quotes and format multiline
+                v = escapeHTMLEntities(v.substring(1, v.length - 1));
+                s += `<table style="border-collapse:collapse; margin: -2px 0"><tr><td style="vertical-align:top"><code>&quot;</code></td><td><pre style="margin: 0 0">${v}</pre></td><td style="vertical-align:bottom"><code>&quot;</code></td></tr></table>`;
+            } else {
+                v = escapeHTMLEntities(v);
+                s += `<code>${v}</code>`
+            }
+            s += '</td></tr>\n';
+
         }
     }
     

@@ -6,11 +6,38 @@
 Changes for both the specification and implementation in each release
 of [quadplay✜](manual.md.html).
 
+2021 December 15: Beta update 77
+===================================
+
+- Improved display of multiline strings in the constant editor
+- Improved arrow rendering for deja fonts
+- Improved square and circle symbols in scoreboard-5 font
+- Added new constant type of `string` from a text file url
+- Added new asset type of `data` from a text file url
+- Added overloaded versions of `local_time()` that can convert
+  from other time zones and parse dates as strings
+- Added `countdown` example using `local_time()`
+- Added documentation to quantize+ tool for saving images 
+  (including a workaround for Firefox drag-drop limitations on Windows)
+- The IDE todo list now separates by function and hyperlinks 
+  function and file names
+- `iterate()` now returns `true` if any element was removed
+- Better error message when passing a `nil` container to `iterate()`
+- `set_transform()` now produces errors on NaN input
+- Fixed launching `quadplay-server` with a relative
+  path to a game on the command line on Windows
+- Fixed `equivalent()` on `nil` values
+- Fixed Import Asset, Create New Mode, and Create New Script on
+  Windows with multiple drive letters
+- Fixed parse error on single escaped slash string `"\\"`
+- Fixed touch coordinates off by one pixel from hardware cursor
+
+
 2021 November 28: Beta update 76
 ===================================
 
-- Changed `physics_remove_entity()` to allow removal of entities
-  that are not in the context
+- Changed `physics_remove_entity()` to permit "removal" of entities
+  that are not in the context (silently ignored)
 - Made it safe to call `physics_remove_entity()` while in 
   `physics_simulate()`
 - `physics_attach()` now defaults unspecified attachment points to the same

@@ -267,6 +267,15 @@ function onDragOver(event) { event.preventDefault(); }
       quadplay's input requirements and compress better than sRGBA8.
     </p>
     <p>
+      To save the result, right click and select Save as<script>
+        if (navigator.userAgent.indexOf("Firefox") === -1 || 
+          ['Win32', 'Win64', 'Windows', 'WinCE'].indexOf(navigator.platform) === -1) {
+            // Not FireFox on Windows
+            document.write(', or drag from the browser to your desktop');
+        }
+      </script>.
+    </p>
+    <p>
       I recommend the free
       tools <a href="https://imageoptim.com/mac">ImageOptim</a> for
       MacOS, <a href="https://pnggauntlet.com/">PNGGauntlet</a> for

@@ -275,7 +275,6 @@ function makeConstantEditorControlHTML(constantName, controlName, json, value, i
         html += `</select><input type="text" onchange="combobox_textbox_onchange(this); onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.value, this.value)" value="${json.value}" /></div><br>`;
     } else {
         // Object or array (including built-in objects)
-        const L = Object.keys(value).length;
         const s = QRuntime.unparse(value);
         if (s.length > 16) {
             html += '<span class="constantName">' + constantName + '</span> = <table>' + visualizeConstant(value, '') + '</table>';

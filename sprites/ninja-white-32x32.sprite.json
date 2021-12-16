@@ -9,7 +9,7 @@
         "run":      {"start": {"x": 1, "y": 0}, "end": {"y": 3}},
         "jumpUp":   {"start": {"x": 2, "y": 0}},
         "jumpDown": {"start": {"x": 2, "y": 1}},
-        "land":     {"start": {"x": 2, "y": 2}, "frames": 16},
+        "land":     {"start": {"x": 2, "y": 2}, "frames": 16, "extrapolate": "clamp"},
         "attack":   {"start": {"x": 3, "y": 0}, "end": {"y": 3}, "extrapolate": "clamp"},
         "swim":     {"start": {"x": 4, "y": 0}, "end": {"y": 3}},
         "hurt":     {"start": {"x": 5, "y": 0}},

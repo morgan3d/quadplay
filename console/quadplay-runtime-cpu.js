@@ -566,6 +566,10 @@ function iterate(array, callback, ...args) {
     if (! is_string(callback) && !is_function(callback)) {
         $error('The callback to iterate() must be a function or string property name');
     }
+
+    if (array === undefined) {
+        $error('Array argument to iterate() is nil');
+    }
     
     // Place to copy the next element to
     let dst = 0;
@@ -573,6 +577,8 @@ function iterate(array, callback, ...args) {
 
     const stringCase = is_string(callback);
 
+    let removedAny = false;
+    
     $iteratorCount.set(array, ($iteratorCount.get(array) || 0) + 1);
     try {
         for (let src = 0; src < array.length; ++src) {
@@ -595,6 +601,7 @@ function iterate(array, callback, ...args) {
                 r = fcn && fcn(value, ...args);
                 
                 if (r === iterate.REMOVE_AND_BREAK) {
+                    removedAny = true;
                     done = true;
                 } else {
                     if (r === iterate.BREAK) {
@@ -609,6 +616,7 @@ function iterate(array, callback, ...args) {
                     
                     if (r !== iterate.REMOVE) {
                         ++dst;
+                        removedAny = true;
                     }
                 }
             }
@@ -616,9 +624,10 @@ function iterate(array, callback, ...args) {
     } finally {
         $iteratorCount.set(array, $iteratorCount.get(array) - 1);
     }
-                     
+    
     // Remove extra elements
     resize(array, dst);
+    return removedAny;
 }
 
 // Unique objects for ==
@@ -1408,6 +1417,10 @@ function set_transform(pos, dir, addZ, scaleZ, skew) {
     if (scaleZ === undefined) { scaleZ = $scaleZ; }
     if (skewXZ === undefined) { skewXZ = $skewXZ; }
     if (skewYZ === undefined) { skewYZ = $skewYZ; }
+
+    if (isNaN(addX) || isNaN(addY) || isNaN(addZ)) { $error('NaN in transform pos'); }
+    if (isNaN(scaleX) || isNaN(scaleY) || isNaN(scaleZ)) { $error('NaN in transform scale'); }
+    if (isNaN(skewXZ) || isNaN(skewYZ)) { $error('NaN in transform skew'); }
     
     $offsetX = addX;
     $offsetY = addY;
@@ -1879,9 +1892,11 @@ function equivalent(a, b) {
     case 'number':
     case 'string':
     case 'function':
+    case 'undefined':
         return a === b;
         
     default:
+        if (b === undefined) { return false; }
         if (a.length !== b.length) { return false; }
         for (let key in a) if (a[key] !== b[key]) { return false; }
         return true;
@@ -5369,7 +5384,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
         spr = spr[0][0];
     }
 
-    if (! (spr && spr.$spritesheet)) {
+    if (! (spr && spr.$spritesheet && spr.$type === 'sprite')) {
         $error('Called draw_sprite() on an object that was not a sprite asset. (' + unparse(spr) + ')');
     }
     
@@ -8884,8 +8899,21 @@ function now() {
 }
 
 
-function local_time() {
-    const d = new Date();
+function local_time(args) {
+    
+    let d;
+    if (args === undefined) {
+        d = new Date();
+    } else if (typeof args === 'string') {
+        d = new Date(args);
+    } else {
+        d = new Date(args.year, args.month, args.day,
+                     args.hour || 0, args.minute || 0, args.second || 0,
+                     args.millisecond || 0);
+
+        // Modify the date to adjust for the timezone
+        d = new Date(d.getTime() + (new Date().getTimezoneOffset() - args.timezone) * 60000);
+    }
     
     return {
         year:        d.getFullYear(),

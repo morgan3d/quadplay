@@ -32,6 +32,11 @@
             "description": "Example of noise functions and draw_point"
         },
         {
+            "url": "quad://examples/countdown/",
+            "title": "Countdown Example",
+            "description": "Example of local_time() for time zone math"
+        },
+        {
             "url": "quad://examples/dark_drive/",
             "title": "A Dark Drive",
             "description": "A moody drive on a dark rainy night."

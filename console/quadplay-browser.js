@@ -1607,8 +1607,8 @@ function emulatorScreenEventCoordToQuadplayScreenCoord(event) {
         zoom = parseFloat(document.getElementById('screenBorder').style.zoom || '1');
     }
 
-    return {x: clamp(Math.round(emulatorScreen.width  * (event.clientX - rect.left * zoom) / (rect.width  * zoom)), 0, emulatorScreen.width  - 1) + 0.5,
-            y: clamp(Math.round(emulatorScreen.height * (event.clientY - rect.top  * zoom) / (rect.height * zoom)), 0, emulatorScreen.height - 1) + 0.5};
+    return {x: clamp(Math.floor(emulatorScreen.width  * (event.clientX - rect.left * zoom) / (rect.width * zoom)), 0, emulatorScreen.width  - 1) - 0.5,
+            y: clamp(Math.floor(emulatorScreen.height * (event.clientY - rect.top  * zoom) / (rect.height * zoom)), 0, emulatorScreen.height - 1) - 0.5};
 }
 
 const mouse = {screen_x: 0, screen_y: 0, screen_x_prev: 0, screen_y_prev: 0, buttons: 0, movement_movement: false};

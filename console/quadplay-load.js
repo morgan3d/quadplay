@@ -539,6 +539,13 @@ function loadConstants(constantsJson, gameURL, isDebugLayer, result) {
             // Raw value loaded from a URL
             const constantURL = makeURLAbsolute(gameURL, definition.url);
             loadCSV(constantURL, definition, gameSource.constants, c);
+        } else if ((definition.type === 'string') && (definition.url !== undefined)) {
+            if (isDebugLayer) {
+                throw 'string url constants not supported in debug.json (' + c + ')';
+            }
+            // Raw value loaded from a URL
+            const constantURL = makeURLAbsolute(gameURL, definition.url);
+            loadTXT(constantURL, definition, gameSource.constants, c);
         } else if (definition.type === 'reference') {
             // Defer evaluation until binding time.
             result[c] = new GlobalReferenceDefinition(c, definition);
@@ -966,6 +973,13 @@ function loadData(name, json, jsonURL) {
     } else if (dataType === 'csv') {
         // CSV
         loadCSV(dataURL, json, data, 'value', function () {
+            data.value.$name = name;
+            data.value.$type = 'data';
+            deepFreeze(data.value);
+        });
+    } else if (dataType === 'txt') {
+        // CSV
+        loadTXT(dataURL, json, data, 'value', function () {
             data.value.$name = name;
             data.value.$type = 'data';
             deepFreeze(data.value);
@@ -2483,6 +2497,20 @@ function loadCSV(csvURL, definition, outputObject, outputField, callback) {
         }
 
         outputObject[outputField] = data;
+        if (callback) { callback(); }
+    });
+}
+
+
+/** Used by both constants and assets to load and parse a TXT file.
+    Stores the result into outputObject[outputField] and then 
+    invokes callback() if it is specified.
+ */
+function loadTXT(txtURL, definition, outputObject, outputField, callback) {
+    console.assert(outputObject);
+    loadManager.fetch(txtURL, 'text', null, function (text) {
+        // Convert to unix newlines
+        outputObject[outputField] = text.replace(/\r/g, '');
         if (callback) { callback(); }
     });
 }

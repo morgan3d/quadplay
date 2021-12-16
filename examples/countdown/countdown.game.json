@@ -1,0 +1,20 @@
+{
+    "title":      "Countdown Example",
+    "developer":  "@CasualEffects",
+    "copyright":  "©2021 Morgan McGuire",
+    "license":    "CC0/Public Domain",
+    "modes":      ["Play"],
+    "start_mode": "Play",
+    "assets":     {
+        "font": "quad://fonts/broderick-14.font.json"
+    },
+
+    "version":      0.0,
+    "min_players":  1,
+    "max_players":  1,
+    "cooperative":  false,
+    "competitive":  false,
+    "achievements": false,
+    "highscores":   false,
+    "description": "Example of local_time() for time zone math"
+}
