@@ -60,13 +60,11 @@ Online play is powered by [EvenNode](https://www.evennode.com/) and
 [PeerJS](https://peerjs.com/).
 
 
-Join the Beta
+Join the Quadplay Revolution
 ========================================================
 
-This beta version is fully functional and has already been used to
-ship jam games.  You can use an external editor (like VSCode) or
-simply work entirely within the provided the browser-based development
-environment.
+You can use an external editor (like VSCode) or simply work entirely
+within the provided the browser-based development environment.
 
 To get started, you'll need Windows, macOS, Linux, or Raspberry Pi OS
 and the following freely-available software.
@@ -88,7 +86,7 @@ _Optional_:
 - Follow development online at [@CasualEffects](https://twitter.com/CasualEffects)
 
 See the manual for a getting started guide, the change log, road map,
-and beta notes.
+and notes.
 
 
 License
