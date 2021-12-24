@@ -1,5 +1,7 @@
 
-def draw_controls(control_scheme, gamepad, gamepad2) preserving_transform:
+def draw_controls(control_scheme, gamepad, gamepad2)
+& preserving_transform:
+
     set_transform(xy(28, SCREEN_SIZE.y - 25), xy(1, 1), 200)
     const TEXT_COLOR = #DBBC
     

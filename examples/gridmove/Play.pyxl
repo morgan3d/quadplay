@@ -18,7 +18,9 @@ for p < 2:
         }))
         
     
-def draw_game() preserving_transform:
+def draw_game()
+& preserving_transform:
+
     const map_pixels = map.size * map.sprite_size
     set_clip(xy(0, 0), map_pixels)
     draw_map(map)
@@ -51,35 +53,35 @@ def vec_lerp(a, b, t):
     return (b - a) * t + a
     
 
-def player_simulate(player):
-    with next_vel, vel, pos, gamepad, angle, speed in player:
-        // Record desired upcoming turns. Assign a new
-        // value each time so that the cell-center code
-        // doesn't have to clone at every intersection
-        if gamepad.xx: next_vel = xy(gamepad.x * speed, 0)
-        if gamepad.yy: next_vel = xy(0, gamepad.y * speed)
+def player_simulate(player)
+& with next_vel, vel, pos, gamepad, angle, speed in player:
+    // Record desired upcoming turns. Assign a new
+    // value each time so that the cell-center code
+    // doesn't have to clone at every intersection
+    if gamepad.xx: next_vel = xy(gamepad.x * speed, 0)
+    if gamepad.yy: next_vel = xy(0, gamepad.y * speed)
+    
+    const center = at_cell_center(player)
+    
+    // Change velocity when allowed
+    if ((center or (‖vel + next_vel‖ < ε)) and  // intersection or reverse
+        not map_sprite(pos, next_vel) and       // not blocked
+        ‖vel - next_vel‖ > ε):                  // changed
+        vel = next_vel
         
-        const center = at_cell_center(player)
+        // Snap to a pixel on the axis that we're not moving along
+        // to prevent error from accumulating
+        pos = vec_lerp(round(pos), pos, |sign(next_vel)|)
         
-        // Change velocity when allowed
-        if ((center or (‖vel + next_vel‖ < ε)) and  // intersection or reverse
-            not map_sprite(pos, next_vel) and       // not blocked
-            ‖vel - next_vel‖ > ε):                  // changed
-            vel = next_vel
-            
-            // Snap to a pixel on the axis that we're not moving along
-            // to prevent error from accumulating
-            pos = vec_lerp(round(pos), pos, |sign(next_vel)|)
-            
-            if ‖vel‖ > ε: angle = xy_to_angle(vel)
-
-        // See if the move is possible, but only stop on centers
-        if center and map_sprite(pos, vel):
-            // Hit wall. Stop moving
-            vel = xy(0, 0)
-        else:
-            // Clear to move, wrapping around
-            pos = loop(pos + vel, map.size_pixels)
+        if ‖vel‖ > ε: angle = xy_to_angle(vel)
+        
+    // See if the move is possible, but only stop on centers
+    if center and map_sprite(pos, vel):
+        // Hit wall. Stop moving
+        vel = xy(0, 0)
+    else:
+        // Clear to move, wrapping around
+        pos = loop(pos + vel, map.size_pixels)
             
 
 def draw_hud():

@@ -82,42 +82,43 @@ def draw_battle_bg(turn_state):
             }
         )
 
-    if turn_state.bg_image != nil:
-        preserving_transform:
-            reset_transform()
-            draw_sprite(
-                {
-                    pos: SCREEN_SIZE/2, 
-                    sprite: ASSETS[turn_state.bg_image]
-                }
-            )
+    if turn_state.bg_image != nil
+    & preserving_transform:
+        reset_transform()
+        draw_sprite({
+            pos: SCREEN_SIZE/2, 
+            sprite: ASSETS[turn_state.bg_image]})
 
-def draw_battle_board(turn_state) preserving_transform:
+
+        
+def draw_battle_board(turn_state)
+& preserving_transform:
+
     debug_watch(pretty_print_tiles(turn_state.tiles))
     debug_watch(turn_state.map_offset)
     debug_watch(compute_num_rows(turn_state))
 
     const tiles = turn_state.tiles
-    compose_transform({
-        pos: BATTLE_GRID_OFFSET,
-    })
+    compose_transform({pos: BATTLE_GRID_OFFSET})
 
     for -1 <= y < BATTLE_GRID_SIZE.y:
-        for x < BATTLE_GRID_SIZE.x:
-            const cell_coord = xy(x, y)
-            preserving_transform:
-                compose_transform({
-                    pos: cell_coord * GRID_CELL_SIZE + map_draw_offset,
-                    z: cell_coord.y / Z_COORD_DIVIDER,
-                })
-                const tile_spec = get_tile_spec_at(turn_state, cell_coord)
-                if tile_spec:
-                    const sprite_offset = tile_spec.sprite.coord
-                    const sprite_sheet = ASSETS[tile_spec.sprite.sheet]
-                    draw_sprite({
-                        pos: xy(0, 0),
-                        sprite: sprite_sheet[sprite_offset.x][sprite_offset.y],
-                    })
+        for x < BATTLE_GRID_SIZE.x
+        & preserving_transform:
+            
+        const cell_coord = xy(x, y)
+        
+        compose_transform({
+            pos: cell_coord * GRID_CELL_SIZE + map_draw_offset,
+            z:   cell_coord.y / Z_COORD_DIVIDER})
+        
+        const tile_spec = get_tile_spec_at(turn_state, cell_coord)
+
+        if tile_spec:
+            const sprite_offset = tile_spec.sprite.coord
+            const sprite_sheet = ASSETS[tile_spec.sprite.sheet]
+            draw_sprite({
+                pos: xy(0, 0),
+                sprite: sprite_sheet[sprite_offset.x][sprite_offset.y]})
 
     if turn_state.show_ui == false:
         return
@@ -135,9 +136,10 @@ def draw_battle_board(turn_state) preserving_transform:
             let corner = fog_info[0]
             let invert = fog_info[1]
             for i < FOG_GRADATIONS:
-                let alpha = i/FOG_GRADATIONS
-                if invert:
-                    alpha = 1-alpha
+                let alpha = i / FOG_GRADATIONS
+                
+                if invert: alpha = 1 - alpha
+                    
                 draw_corner_rect(
                     {
                         corner: corner,
@@ -158,7 +160,7 @@ def draw_battle_board(turn_state) preserving_transform:
             }
         )
 
-        if (DRAW_REGION_LABELS):
+        if DRAW_REGION_LABELS:
             const num_labels = 2
             const left_edge = xy(9, 9 + 3 + GRID_CELL_SIZE.y *(BATTLE_GRID_SIZE.y - 1))
             const length = GRID_CELL_SIZE.x * BATTLE_GRID_SIZE.x
@@ -198,6 +200,7 @@ def draw_battle_board(turn_state) preserving_transform:
                 )
 
 
+                
 def draw_grid_object(object_element, current_element, current_team):
     const is_current = object_element == current_element
 

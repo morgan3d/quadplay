@@ -236,6 +236,7 @@ function sequence(...seq) {
         }
     }
 
+    // The hook is referenced above and needs to be in this scope
     const hook = add_frame_hook(update, undefined, totalLifetime);
 
     return hook;
@@ -279,11 +280,13 @@ function $processFrameHooks() {
     for (let i = 0; i < array.length; ++i) {
         const hook = array[i];
         if ((hook.$mode === undefined) || (hook.$mode === $gameMode)) {
-            --hook.$frames;
-            const r = hook.$callback ? hook.$callback(hook.$frames, hook.$maxFrames, hook.$data) : 0;
+            const r = hook.$callback ? hook.$callback(hook.$frames, hook.$maxFrames - 1, hook.$data) : 0;
 
-            // Remove the callback *before* it executes so that if
-            // a set_mode happens within the callback it does not re-trigger
+            --hook.$frames;
+            
+            // Remove the hook *before* the callback executes so that if a
+            // set_mode happens within the callback it does not
+            // re-trigger
             if (r || (hook.$frames <= 0)) {
                 fast_remove_value($frameHooks, hook);
             }
@@ -316,23 +319,41 @@ function last_key(s) {
     return size(s) - 1;
 }
 
-function find(a, x, s) {
+
+function find(a, x, s, comparator) {
     s = s || 0;
-    if (Array.isArray(a)) {
+
+    // What are we looking for
+    const t = typeof x;
+    
+    // Run the regular find if using equivalent() on trivial values or
+    // if there is no comparator. Otherwise, do the general case
+    if ((comparator !== undefined) && (! (comparator === equivalent && ((t === 'number' && ! is_nan(x)) || t === 'undefined' || t === 'function' || t === 'string' || t === 'boolean' || (typeof a === 'string'))))){
+        if (Array.isArray(a) || typeof a === 'string') {
+            const L = a.length;
+            for (let i = s; i < L; ++i) {
+                if (comparator(a[i], x)) { return i; }
+            }
+        } else { // Object
+            for (let k in a) {
+                if (comparator(a[k], x)) { return k; }
+            }
+        }
+    } else if (Array.isArray(a)) {
         const L = a.length;
         for (let i = s; i < L; ++i) {
             if (a[i] === x) { return i; }
         }
-        return undefined;
     } else if (typeof a === 'string') {
-        let i = a.indexOf(x, s);
-        return (i === -1) ? undefined : i;
+        const i = a.indexOf(x, s);
+        if (i !== -1) { return i; }
     } else {
         for (let k in a) {
             if (a[k] === x) { return k; }
         }
-        return undefined;
     }
+    
+    return undefined;
 }
 
 
@@ -872,7 +893,7 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
     order = $Math.round(order);
     if (order === 2 || order < 0 || order > 3) { $error('order must be 0, 1, or 3'); }
 
-    // Clone the arrays
+    // Clone the arrays adn elements in them
     const time = [], control = [];
     
     for (let i = 0; i < timeSrc.length; ++i) {
@@ -913,12 +934,12 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
     const duration = time[time.length - 1] - time[0];
 
     /** Returns the requested control point and time sample based on
-        array index.  If the array index is out of bounds, wraps (for
-        a cyclic spline) or linearly extrapolates (for a non-cyclic
-        spline), assuming time intervals follow the first or last
-        sample recorded.
+        array index in outTimeArray and outControlArray.  
 
-        Returns 0 if there are no control points.
+        If the array index is out of bounds, wraps (for a cyclic
+        spline) or linearly extrapolates (for a non-cyclic spline),
+        assuming time intervals follow the first or last sample
+        recorded.
     */
     function getControl(i, outTimeArray, outControlArray, outIndex) {
         let t, c;
@@ -1122,11 +1143,11 @@ function make_spline(timeSrc, controlSrc, order, extrapolate) {
         // Fractional part of the time
         const u = indexResult.u;
 
-        // Array of 4 control points and control times.
-        // p[1] is the one below this time and p[2] is above it.
-        // The others are needed to provide derivatives at the ends
+        // Array of 4 control points and control times.  p[1] is the
+        // one below this time and p[2] is above it.  The others are
+        // needed to provide derivatives at the ends.
         let p = [], t = [];
-        for (let j = 0; j < N; ++j) {
+        for (let j = 0; j < 4; ++j) {
             getControl(i + j - 1, t, p, j);
         }
 
@@ -1890,8 +1911,14 @@ function xyz_to_rgb(v) {
 function equivalent(a, b) {
     switch (typeof a) {
     case 'number':
+        if (is_nan(a) && is_nan(b)) {
+            return true;
+        }
+        // fall through
+        
     case 'string':
     case 'function':
+    case 'boolean':
     case 'undefined':
         return a === b;
         
@@ -2238,12 +2265,12 @@ function make_entity(e, childTable) {
     if (r.size === undefined) {
         if (r.sprite) {
             if (r.shape === 'rect') {
-                r.size = {x: r.sprite.size.x * r.scale.x, y: r.sprite.size.y * r.scale.y};
+                r.size = {x: r.sprite.size.x, y: r.sprite.size.y};
             } else if (r.shape === 'disk') {
-                const x = min_value(r.sprite.size) * r.scale.x;
+                const x = min_value(r.sprite.size);
                 r.size = xy(x, x);
-                if (r.scale.x !== r.scale.y) {
-                    $error('Cannot have different scale factors for x and y on a "disk" shaped entity.');
+                if ($Math.abs(r.scale.x) !== $Math.abs(r.scale.y)) {
+                    $error('Cannot have different magnitude scale factors for x and y on a "disk" shaped entity.');
                 }
             }
         } else {
@@ -5020,15 +5047,18 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
         str = unparse(str);
     }
     
-    let z_order = z, z_pos = pos.z;
-    if (z_order === undefined) { z_order = z_pos || 0; }
+    let z_order = z;
+    if (z_order === undefined) { z_order = pos.z; }
+    if (z_order === undefined) { z_order = 0; }
+    let z_pos = pos.z;
     if (z_pos === undefined) { z_pos = z_order; }
-    z_pos -= $camera.z;
+
     z_order -= $camera.z;
+    z_pos -= $camera.z;
 
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
-        const mag = (typeof $camera.zoom === 'number') ? $camera.zoom : $camera.zoom(z);
+        const mag = $zoom(z_pos);
         const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
         const x = pos.x - $camera.x, y = pos.y - $camera.y;
         pos = {x: x * C + y * S, y: y * C - x * S};
@@ -7733,6 +7763,10 @@ function LERP(a, b, t) {
     return $lerp(a, b, t);
 }
 
+function XY_MAGNITUDE(a) {
+    return $Math.hypot(a.x, a.y);
+}
+
 function XY_DIRECTION(v1, v2) {
     let mag = $Math.hypot(v1.x, v1.y);
     if (mag < 0.0000001) {
@@ -7744,6 +7778,17 @@ function XY_DIRECTION(v1, v2) {
     }
 }
 
+function XY_MAGNITUDE(a) {
+    return $Math.hypot(a.x, a.y);
+}
+
+function XYZ_MAGNITUDE(a) {
+    return $Math.hypot(a.x, a.y, a.z);
+}
+
+function XZ_MAGNITUDE(a) {
+    return $Math.hypot(a.x, a.z);
+}
 
 function XZ_DIRECTION(v1, v2) {
     let mag = $Math.hypot(v1.x, v1.z);
@@ -7865,6 +7910,29 @@ function XY_DOT_XY(v1, v2) {
 
 function XY_CRS_XY(v1, v2) {
     return v1.x * v2.y - v1.y * v2.x;
+}
+
+function XYZ_LERP(c1, c2, A, dst) {
+    const x = (c2.x - c1.x) * A + c1.x;
+    const y = (c2.y - c1.y) * A + c1.y;
+    const z = (c2.z - c1.z) * A + c1.z;
+    dst.x = x;
+    dst.y = y;
+    dst.z = z;
+}
+
+function XY_LERP(c1, c2, A, dst) {
+    const x = (c2.x - c1.x) * A + c1.x;
+    const y = (c2.y - c1.y) * A + c1.y;
+    dst.x = x;
+    dst.y = y;
+}
+
+function XZ_LERP(c1, c2, A, dst) {
+    const x = (c2.x - c1.x) * A + c1.x;
+    const z = (c2.z - c1.z) * A + c1.z;
+    dst.x = x;
+    dst.z = z;
 }
 
 function XZ_MUL(v1, s, r) {

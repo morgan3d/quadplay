@@ -55,7 +55,9 @@ def bgm_set_volumes(volumes):
     for vol at i in volumes:
         set_volume(bgm_loops[i], vol)
     
-def bgm_draw_debug(z default 0) preserving_transform:
+def bgm_draw_debug(z default 0)
+& preserving_transform:
+
     reset_transform()
     let bb = xy(0,0)
     const BGM_DEBUG_TEXT_ARGS = {font:font, color:#f, x_align:"left", y_align:"top", z:z}

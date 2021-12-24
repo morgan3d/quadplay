@@ -324,7 +324,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
     
     # Used for the IDE to write files
     def do_POST(self):
-        #maybe_print('\n\nReceived POST from ', self.client_address[0], '\n\n')
+        # maybe_print('\n\nReceived POST from ', self.client_address[0], '\n\n')
 
         object = self.prepare_mutating_request()
         if not object: return
@@ -337,7 +337,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             webpath = object['url']
             filename = remove_leading_slash(webpath)
             encoding = object['encoding']
-            contents = object['contents']
+            contents = object['contents']            
 
             if not re.search(self.mutable_file_regex, filename) or not any([webpath.startswith(prefix) for prefix in webpath_allowlist]):
                 maybe_print('WARNING: Ignored illegal request to write file (' + this_line_number() + ')', filename)

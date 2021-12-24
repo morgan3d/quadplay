@@ -179,7 +179,8 @@ def at_beat0_enter_gameover(frames_left, total_frames, data):
     if bgm_beat_in_measure == 0 and bgm_beat_ff:
         set_mode(GameOver, player_types, player_scores) because "Game finished"
 
-def draw_gizmos() preserving_transform:
+def draw_gizmos()
+& preserving_transform:
     reset_transform()
     const sq3 = sqrt(3)
     const verts = [xy(0,2), xy(-sq3, 1), xy(-sq3,-1), xy(0,-2), xy(sq3,-1), xy(sq3,1)]

@@ -1,7 +1,9 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-def draw_choice(player) preserving_transform:
+def draw_choice(player)
+& preserving_transform:
+
    set_transform(player.transform)
    set_clip(player.transform, ½ SCREEN_SIZE)
    

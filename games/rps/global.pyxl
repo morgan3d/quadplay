@@ -20,7 +20,9 @@ def draw_round_indicator():
    draw_text({font: font, text: "of " + MAX_ROUNDS, pos: SCREEN_SIZE / 2 + xy(0, 8), color: #a, x_align: "center", y_align: "top", z: z})
 
 
-def draw_hud(player, shake) preserving_transform:
+def draw_hud(player, shake)
+& preserving_transform:
+
    shake = shake or xy(0, 0)
    let highest_score = 0
    for score, health in P in player_array:

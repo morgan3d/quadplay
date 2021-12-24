@@ -953,23 +953,32 @@ special support for drawing whole tile maps as well.  All drawing
 commands support an [*alpha channel*](https://en.wikipedia.org/wiki/Alpha_compositing) for transparency.
 
 What is special about the 2.5D graphics in PyxlScript is that each
-drawing command has an associated *z-order*. If two commands are at the same z-order,
-then whichever comes second will draw on top of the other one. Commands that have explicit,
-different z-order values will render from low to high values.
+drawing command has an associated *z value*. If two commands are at
+the same z value (after camera and transform are applied), then
+whichever comes second will draw on top of the other one. Commands
+that have explicit, different z values will render from low to high
+values. 
+
+The z value for a drawing command can be set using the `z`
+argument. If the `z` argument is not specified, then the `pos.z` argument
+is used. If there is no `pos.z` value, then the pre-transform value
+of 0 is used.
 
 This means that you can issue drawing commands in whatever order is
-convenient and let the rendering system organize them as you wish.
-It also makes it easy to render orthographic games such as [_Double Dragon_]("https://en.wikipedia.org/wiki/Double_Dragon_(video_game)"),
-isometric games such as [_Populous_]("https://en.wikipedia.org/wiki/Populous_(video_game)"), and other games with semi-3D effects. The included
+convenient and let the rendering system organize them as you wish.  It
+also makes it easy to render orthographic games such as
+[_Double Dragon_]("https://en.wikipedia.org/wiki/Double_Dragon_(video_game)"),
+isometric games such as
+[_Populous_]("https://en.wikipedia.org/wiki/Populous_(video_game)"),
+and other games with semi-3D effects. The included
 [_Speed Street_](#playable) game demonstrates this.
 
 Although the screen is cleared to the background color every frame,
-all of the drawing commands are stored for one previous frame.
-This allows dialogue and inventory screens to re-render the previous
-mode's last frame using `draw_previous_mode()` so that they can
-render on top of them. This rendering retains z-order, so you can
-even inject new graphics in between objects from a previous mode's
-frozen image.
+all of the drawing commands are stored for one previous frame.  This
+allows dialogue and inventory screens to re-render the previous mode's
+last frame using `draw_previous_mode()` so that they can render on top
+of them. This rendering retains z-order, so you can even inject new
+graphics in between objects from a previous mode's frozen image.
 
 
 ### Frame Hooks
@@ -1798,6 +1807,7 @@ Array
 `equivalent(a, b)`
 : Returns true if these arrays have the same length and the elements are
   `==` (does not recursively test if the elements are equivalent).
+  Also returns true if both `is_nan(a)` and `is_nan(b)`.
 
 `extend(array1, array2)`
 : Mutate `array1` by pushing all elements of `array2` onto it. Identical to `push(array1, ...array2)`.
@@ -1810,11 +1820,19 @@ Array
 : Delete one element that is `== v`, or do nothing if there is no such element. May reorder the
   array and may choose any such element, not necessarily the first. See also `remove_values()`.
 
-`find(array, x, i default 0)`
-: Find the index of the element whose value is `x`, starting at optional index `i` (default 0).
-  Returns `∅` if not found. Uses `==` to compare `x` to array values. Runs in linear time in the length of the list
-  from `i`. This is called `index_of` or `indexOf` in some other programming languages.
-
+`find(array, x, i default 0, comparator default ==)`
+: Find the index of the element whose value is `x`, starting at
+  optional index `i` (default 0).  Returns `∅` if not found. 
+  
+  Unless a function is for `comparator`, uses `==` to compare `x` to
+  the array values. If a comparator is present, any non-falsy return
+  value from the comparator indicates a match. The array element is 
+  passed as the first argument to the comparator.
+  
+  Runs in linear time in the length of the list from `i`. This is
+  called `index_of` or `indexOf` in some other programming languages.
+  Note that if `is_nan(x)`, then `find()` cannot find any match.
+  
 `insert(array, i, x, ...)`
 : Inserts the values into the array, starting at index `i` (as in, `array[i] = x` on return)
   and returns the first value inserted. Similar to Python insert and JavaScript splice functions.
@@ -2892,9 +2910,6 @@ Note that `preserving_transform` also preserves the clipping rectangle.
   previous transform and clipping region when the block is exited (including abruptly by 
   `return`, `continue`, or `break`). It is useful for making modular
   functions for handling UI scrolling, minimaps, and screenshake. 
-  
-  `preserving_transform` can also be added to the end of a function
-  definition using `def name(args) preserving_transform:`.
 
 `rotation_sign()`
 : Returns -1 if `(t.dir.x * t.dir.y > 0)` for `t = get_transform()`
@@ -2970,7 +2985,7 @@ such as odd-width text,
 1-pixel lines and points at non-integer, non-half locations will round in ways
 that are less intuitive.
 
-`draw_point(pos)` draws a one-pixel rectangle from `pos - ½` to `pos + ½`.
+`draw_point(pos, #FFF)` draws a one-pixel rectangle from `pos - ½` to `pos + ½`.
 So, when passed integer arguments, `pos` = (0, 0) will color the top-left pixel and `SCREEN_SIZE - 1` is the
 lower-right. Any value from 0 to (1 - `ε`) will write to the
 the first pixel. When seeking to draw individual pixels aligned with the grid,
@@ -3097,10 +3112,12 @@ on the lower right.
 All drawing commands take one or more position values, color and other
 parameters, and a `z` value.
 
-The value `z default pos.z default 0` is used for z-order occlusion (or the equivalent specified 
-default for the few drawing functions that have a position named other than `pos`).
+The value `z default pos.z default 0` is used for z-order occlusion
+(or the equivalent specified default for the few drawing functions
+that have a position named other than `pos`).
 
-The value `pos.z default z default 0` is used for clipping, camera zoom, and transform skew. 
+The value `pos.z default z default 0` is used for clipping, camera
+zoom, and transform skew.
 
 Note that because of the defaults, if only one of `pos.z` and `z` is specified, that one value is then used for 
 all z-axis properties. For example, in the common case `pos` is an `xy()` value, so it has no `pos.z`
@@ -3279,10 +3296,10 @@ built-in properties in the future: `density` and `friction`.
   any properties not specified. This is forward compatible to any
   extended properties that might be added in future versions, however,
   those properties might conflict with any that you add on your
-  own. The built-in entity properties are all cloned if specified, preserving
-  types (for example, if `pos` is an `xyz()` instead of an `xy()`, the extra
-  property is retained). All
-  other properties of `obj` are copied over but not cloned.
+  own. The built-in entity properties are all cloned if specified,
+  preserving types (for example, if `pos` is an `xyz()` instead of an
+  `xy()`, the extra property is retained). All other properties of
+  `obj` are copied over but not cloned.
 
   If the `childTable` second argument is provided (note that this is not
   a property of `obj`), then all of the keys become fields of the new
@@ -3297,23 +3314,23 @@ built-in properties in the future: `density` and `friction`.
 
 The basic entity properties and defaults are:
 
-`entity.angle`
+`entity.angle default 0deg`
 : The world space angle from the x-axis to y-axis in radians. See
   `draw_sprite()`. Defaults to 0. See also `entity.angle_in_parent`
   and `entity.orient_with_parent`.
 
-`entity.name`
+`entity.name default "entity"`
 : A string useful for debugging and error messages. Defaults to `"entity"` +
   a unique number.
 
-`entity.offset`
+`entity.offset default xy(0, 0)`
 : A world space value added to `entity.pos` by `draw_entity()` for placing
   the sprite. Useful for causing the drawn position to temporarily drift from the
   simulated position for effects like shake or blowback after a hit.
   Defaults to `xy(0, 0)`. _Does not affect bounds for `overlaps()`, physics, or ray
   intersection._ See also `entity.pivot`.
 
-`entity.opacity`
+`entity.opacity default 100%`
 : Visibility on the interval 0 to 1. Defaults to 1.
 
 `entity.pivot`
@@ -3323,39 +3340,44 @@ The basic entity properties and defaults are:
   to also change the `entity.pivot` at the same time. See also
   `entity.offset` for transient effects.
 
-`entity.pos`
-: The world space `xy()` or `xyz()` position of the center of the entity. Defaults to `xy(0,0)`.
+`entity.pos default xy(0, 0)`
+: The world space `xy()` or `xyz()` position of the center of the entity. Defaults to `xy(0, 0)`.
   See also `entity.pos_in_parent`, `entity.offset`, and `entity_update_children()`.
 
-`entity.scale`
-: The world space `xy()` scaling applied before translation and rotation. See `draw_sprite()`.
-  Defaults to (1, 1). This can be used to grow, stretch, or flip the entity.
-  If `entity.shape == "disk"`, then the scale must have the same magnitude
-  in both x and y. The scale may be zero or negative along either axis.
+`entity.scale default xy(1, 1)`
+: The world space `xy()` scaling applied to `entity.size` before
+  translation and rotation. See `draw_sprite()`.  Defaults to `xy(1, 1)`. 
+  This can be used to grow, stretch, or flip the entity.  If
+  `entity.shape == "disk"`, then the scale must have the same
+  magnitude in both x and y. The scale may be zero or negative along
+  either axis.
 
-`entity.shape`
-: A string that is `disk` or `rect`. Defaults to `rect`. A `disk` entity
-  must have scale that is the same in x and y.
+`entity.shape default "rect"`
+: A string that is `"disk"` or `"rect"`. Defaults to `"rect"`. A
+  `"disk"` entity must have scale that is the same in x and y.
 
 `entity.size`
 : The draw-space `xy()` size of the width and height of the bounding
-  box of the entire object in its own reference frame. The rendered/collision
-  size is `entity.size * |entity.scale|`.
-  If `entity.shape == "disk"`, then the `x` and `y` fields must have the
+  box of the entire object in its own reference frame. The
+  rendered/collision size is `entity.size * |entity.scale|`.  If
+  `entity.shape == "disk"`, then the `x` and `y` fields must have the
   same value. If not specified, size defaults to the sprite's size.
+  The size is in entity space. It does not factor in the scale. Use
+  `entity.size * |entity.scale|` for the rendered and collision size
+  of the entity.
 
-`entity.sprite`
+`entity.sprite default nil`
 : A sprite from a sprite sheet. Can be `nil`.
 
-`entity.override_color`
+`entity.override_color default nil`
 : Blends over the color of the sprite with this color (only works
   if there is a sprite). See `draw_sprite()` for details. Defaults to `nil`.
 
 `entity.z`
-: z-order position (a number). Defaults to zero, unless `entity.pos` is an
-  `xyz()` value, in which case this is left as nil so that the `entity.pos.z`
-  value can override. Setting both `entity.pos.z` and `entity.z` allows separating
-  the z-order for rendering.
+: z-order position (a number). Defaults to zero, unless `entity.pos`
+  is an `xyz()` value, in which case this is left as `nil` so that the
+  `entity.pos.z` value can override. Setting both `entity.pos.z` and
+  `entity.z` allows separating the z-order for rendering.
 
 
 Examples of creating an entity with different shapes:
@@ -4919,16 +4941,26 @@ in the desired order regardless of the order in which drawing executes.
   - `run_in_mode`: Only execute while the game is in this mode. Use `"all"` to
     run in every mode.
 
+  The frame counter is only decremented if the hook returns. If the
+  mode change happens due to `push_mode()`, `pop_mode()`, or
+  `set_mode()` inside of the `callback` then the frame counter remains
+  and the same callback will execute when the mode returns unless it
+  removes itself.
+
   See also `sequence()` and `delay()` for common cases.
 
 `delay(callback, delay_frames default 0, data default nil)`
 : Same as `add_frame_hook(nil, callback, delay_frames, nil, data)`.
   It is often convenient to use a local function defined immediately
   before the `delay()` as the `callback`.
+  The delayed callback only runs in the current mode.
+  Returns the new frame hook.
 
 `remove_frame_hook(hook)`
 : Remove this frame hook immediately, without executing its `end_callback`.
-  If the hook has already ended or is not present, nothing happens.
+  If the hook has already ended or is not present, nothing happens. If the
+  hook is removed while frame hooks are executing, it may still execute
+  this frame.
 
 `remove_frame_hooks_by_mode(mode)`
 : Remove all frame hooks that are locked to the `mode`. Use `nil` to
@@ -4940,6 +4972,7 @@ in the desired order regardless of the order in which drawing executes.
   hook that can be used with `remove_frame_hook()` to cancel the entire sequence.
   Each argument may be either a function, `nil`, a number of frames to skip, or 
   `{callback: function, end_callback: function, frames: number, data: (any value)}`.
+  The callbacks only run the current mode.
   
   If not `nil`, the callback signature is `def callback(frames_left, total_frames, data)`.
   If not `nil`, the end_callback signature is `def end_callback(data)` and it
@@ -4968,6 +5001,7 @@ in the desired order regardless of the order in which drawing executes.
   Note that `sequence(...array)` allows passing an array of the individual
   callbacks instead of as separate parameters.
 
+  Returns a main frame hook that can be removed to cancel the entire sequence.
 
 
 Time
@@ -5440,8 +5474,8 @@ and other operations that naturally compile with maximum efficiency.
 : Returns the scalar result.
 
 `RGB_LERP(srcrgb1, srcrgb2, s1, dstrgb)`
-: Interpolates between the two source values and returns the result in `dstrgb`.
-  The destination may be the same as one of the sources.
+: Interpolates between the two source values and returns the result in
+  `dstrgb`.  The destination may be the same as one of the sources.
 
 `RGBA_ADD_RGBA(srcrgba1, srcrgba2, dstrgba)`
 : Element addition.
@@ -5495,6 +5529,13 @@ and other operations that naturally compile with maximum efficiency.
 `XY_DIRECTION(srcxy, dstxy)`
 : Normalize vector (or zero vector).
 
+`XY_MAGNITUDE(srcxy)`
+: `sqrt(XY_DOT_XY(srcxy, srcxy))`
+
+`XY_LERP(srcxy1, srcxy2, s1, dstxy)`
+: Interpolates between the two source values and returns the result in
+  `dstxy`.  The destination may be the same as one of the sources.
+
 `XY_DOT_XY(srcxy1, srcxy2)`
 : Returns the scalar result.
 
@@ -5522,6 +5563,13 @@ and other operations that naturally compile with maximum efficiency.
 `XZ_DIRECTION(srcxz, dstxz)`
 : Normalize vector (or zero vector).
 
+`XZ_MAGNITUDE(srcxz)`
+: `sqrt(XZ_DOT_XZ(srcxz, srcxz))`
+
+`XZ_LERP(srcxz1, srcxz2, s1, dstxz)`
+: Interpolates between the two source values and returns the result in
+  `dstxz`.  The destination may be the same as one of the sources.
+  
 `XZ_DOT_XZ(srcxz1, srcxz2)`
 : Returns the scalar result.
 
@@ -5545,6 +5593,13 @@ and other operations that naturally compile with maximum efficiency.
 
 `XYZ_DIRECTION(srcxyz, dstxyz)`
 : Normalize vector (or zero vector).
+
+`XYZ_MAGNITUDE(srcxyz)`
+: `sqrt(XYZ_DOT_XYZ(srcxyz, srcxyz))`
+
+`XYZ_LERP(srcxyz1, srcxyz2, s1, dstxyz)`
+: Interpolates between the two source values and returns the result in
+  `dstxyz`. The destination may be the same as one of the sources.
 
 `XYZ_DOT_XYZ(srcxyz1, srcxyz2)`
 : Returns the scalar result.
@@ -7005,22 +7060,6 @@ unresponsive.
 To call a function returned from an expression that ends in
 parentheses, use the `call` function.
 
-To avoid having to indent the entire function body twice for the
-common case of preserving a transform, a joint
-`def-preserving_transform` statement is available:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
-def draw_stuff(a, b, c) preserving_transform:
-    set_transform(...)
-    ...
-
-// is the same as:
-
-def draw_stuff(a, b, c):
-    preserving_transform:
-        set_transform(...)
-        ...
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 
@@ -7531,6 +7570,9 @@ Symbol         | ASCII           | Value
 Loops and Flow Control
 --------------------------------------------------------------------------
 
+Whitespace is significant, as in Python. A block is a line ending with a `:`
+whose body is indented. All blocks create a new scope line (unlike Python).
+
 The flow control statements are:
 
 - Blocks:
@@ -7560,9 +7602,6 @@ The reason allows the IDE to label the transitions on the mode diagram for the g
 
 There is no switch, do loop, goto, or try/catch.
 
-Whitespace is significant, as in Python. Indentation must be exactly a
-single space per nested block.
-
 For flow control purposes, the empty string, 0, and `∅` are false.  All other objects (including empty data structures) are true.
 
 Multi-line `if` statements may be followed by `else:` and `else if ...:` clauses. These must always be
@@ -7590,6 +7629,37 @@ while x != "end":
   x = find_next(x, data)
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+### `&` Elision 
+
+Trivial blocks can increase indentation so much that code is hard to
+read because it extends too far to the right. All blocks except for
+`else` can be elided with an immediately-previous block to avoid
+excess indentation.
+
+To elide blocks, leave the trailing `:` off the outer block and begin
+the inner block with `&` at the same indentation level:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+for x < 3
+& for y < 3:
+& for z < 3:
+    debug_print(x, y, z)
+    
+    
+def player_update(player)
+& preserving_transform
+& with angle, pos, vel, gamepad in player:
+    
+    vel = lerp(vel, gamepad.xy, 10%)
+    if ‖vel‖ > 0: angle = xy_to_angle(vel)
+    pos = loop(pos + vel, xy(0, 0), SCREEN_SIZE)
+    
+    set_transform(pos)
+    draw_sprite(arrow_sprite)
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 ### `for` Loop

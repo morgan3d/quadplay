@@ -76,6 +76,19 @@ function nextInstance(str, c, j, d) {
 }
 
 
+// The identifier pattern is also used in quadplay-runtime.js $removeMarkup() and must be kept in sync
+const identifierPattern = '_?[Δ]?(?:_?[A-Za-z][A-Za-z_0-9]*|[αβγΔδζηθιλμρσϕφχψτωΩ][_0-9]*(?:_[A-Za-z_0-9]*)?)';
+const identifierRegex = RegExp(identifierPattern);
+
+// for WITH statements
+const withIdentifierListRegex = RegExp('^[ \\t]*(' + identifierPattern + '[ \\t]*(?:,[ \\t]*' + identifierPattern + '[ \\t]*)*)∊(.*)$');
+
+
+function legalIdentifier(id) {
+    return id.match(identifierRegex);
+}
+
+
 /** Given a pyxl WITH preamble not surrounded in extra (), returns an
     array of two elements: [0] is the code that goes at the front of
     the block, and [1] is the code that goes at the end.  */
@@ -263,11 +276,9 @@ function processLine(line, inFunction, stringProtectionMap) {
         // Separate the next statement out
         next = line.substring(separatorIndex + 1).trim();
         line = line.substring(0, separatorIndex).rtrim();
-    } else {
-        line = line.rtrim();
     }
 
-    if (line.search(/\S/) < 0) {
+    if (line.search(/\S/) === -1) {
         // Empty line, we're done
         return line;
     }
@@ -437,97 +448,105 @@ function processDefaultArgSyntax(args) {
     return accum + args;
 }
 
-/**
- returns nextLineIndex
 
- Mutate the lines in place
+/* Converts #.... to rgb, rgba, or gray function calls */
+function replaceHexColors(src) {
+    return src.replace(/#([0-9a-fA-F]+)/g, function (match, str) {
+        const color = parseHexColor(str);
+           
+        if (str.length === 3 || str.length === 1 || str.length === 6) {
+            if ((color.r === color.g) && (color.g === color.b)) {
+                return `gray(${color.r})`;
+            } else {
+                return `rgb(${color.r}, ${color.g}, ${color.b})`;
+            }
+        } else {
+            return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+        }
+    });
+}
+
+
+/* Throws an error on illegal syntax */
+function testForIllegalSyntax(src, lineNumber, indent, internalMode) {
+    if (/[^A-Za-zαβγΔδζηθιλμρσϕφχψτωΩ_\.0-9#]0\d/g.test(src)) {
+        throw makeError('Numbers may not begin with a leading zero', lineNumber);
+    }
+
+    const illegal = src.match(/\b(===|!==|&&|&=|\|=|&|toString|try|switch|this|delete|null|arguments|undefined|use|using|yield|prototype|var|new|auto|as|instanceof|typeof|\$|class)\b/) ||
+          src.match(/('|&(?![=&])|!(?!=))/) || // Single quote, single &, single !
+          (! internalMode && src.match(/\b[_\$]\S*?\b/)); // Underscores or dollar signs
+        
+    if (illegal) {
+        const alternative = {'|=':'∪=" or "bitor', '&&':'and', '&=':'∩=" or "bitand', '&':'∩" or "bitand', "'":'"', '!==':'!=', '!':'not', 'var':'let', 'null':'nil', '===':'=='};
+        let msg = 'Illegal symbol "' + illegal[0] + '"';
+        if (illegal[0] in alternative) {
+            msg += ' (maybe you meant "' + alternative[illegal[0]] + '")';
+        }
+        
+        if (illegal[0] === "'") {
+            msg = 'Illegal single-quote (\'). Maybe you meant to use double quote (") for a string.';
+        }
+            
+        throw makeError(msg, lineNumber);
+    }
+
+    if ((lineNumber === 0) && (indent > 0)) {
+        throw makeError('First line must not be indented', lineNumber);
+    }
+}
+
+
+/**
+ Returns nextLineIndex
+
+ Compile the block body that begins at `startLineIndex`, mutating the
+ lines in place.
  
  1. Iteratively process lines in the current block, using processLine on each
  2. Recursively process sub-blocks
 */
 function processBlock(lineArray, startLineIndex, inFunction, internalMode, stringProtectionMap) {
-    // Indentation of the previous block. Only used for indentation error checking
-    let prevBlockIndent = 0;
     
-    // indentation index of the previous line, indentation index of the block start
+    // Indentation of the previous block. Only used for indentation
+    // error checking. The previous line kicked off processing of this
+    // block, so it must have code on it.
+    let prevBlockIndent = startLineIndex < 1 ? 0 :
+        lineArray[startLineIndex - 1].search(/\S/);
+    
+    // Indentation index of the previous line, indentation index of
+    // the block start
     let prevIndent, originalIndent;
 
-    if (startLineIndex > 0) {
-        // There MUST be some valid code on the previous line, since otherwise
-        // processBlock would not have been invoked
-        prevBlockIndent = lineArray[startLineIndex - 1].search(/\S/);
-    }
-    
-    // current line index
+    // Current line index
     let i;
     for (i = startLineIndex; i < lineArray.length; ++i) {
-        // trim right whitespace
+        // Trim right whitespace
         lineArray[i] = lineArray[i].rtrim();
         let indent = lineArray[i].search(/\S/);
+        
         // Ignore empty lines
         if (indent < 0) { continue; }
 
         if (prevIndent === undefined) {
-            // initialize on the first non-empty line
+            // Initialize on the first non-empty line
             prevIndent = indent;
             originalIndent = indent;
         }
 
         // Has the block ended?
         if (indent < originalIndent) {
-            // Indentation must not be more than the previous block
-            // or that would indicate inconsistent indentation
-            if (indent > prevBlockIndent) {
-                throw makeError('Inconsistent indentation', i);
-            }
+            // Indentation must not be more than the previous block, because
+            // otherwise there would be inconsistent indentation
+            if (indent > prevBlockIndent) { throw makeError('Inconsistent indentation', i); }
             return i;
         }
         
-        ///////////////////////////////////////////////////////////////////////
-        // Check for some illegal situations while we're processing
-
         // Colors in hex format
-        lineArray[i] = lineArray[i].replace(/#([0-9a-fA-F]+)/g, function (match, str) {
-            const color = parseHexColor(str);
-           
-            if (str.length === 3 || str.length === 1 || str.length === 6) {
-                if ((color.r === color.g) && (color.g === color.b)) {
-                    return `gray(${color.r})`;
-                } else {
-                    return `rgb(${color.r}, ${color.g}, ${color.b})`;
-                }
-            } else {
-                return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
-            }
-        });
+        lineArray[i] = replaceHexColors(lineArray[i]);
 
-        if (/[^A-Za-zαβγΔδζηθιλμρσϕφχψτωΩ_\.0-9#]0\d/g.test(lineArray[i])) {
-            throw makeError('Numbers may not begin with a leading zero', i);
-        }
-
-        const illegal = lineArray[i].match(/\b(===|!==|&&|&=|\|=|&|toString|try|switch|this|delete|null|arguments|undefined|use|using|yield|prototype|var|new|auto|as|instanceof|typeof|\$|class)\b/) ||
-              lineArray[i].match(/('|&(?![=&])|!(?!=))/) || // Single quote, single &, single !
-              (! internalMode && lineArray[i].match(/\b[_\$]\S*?\b/)); // Underscores or dollar signs
-        
-        if (illegal) {
-            const alternative = {'|=':'∪=" or "bitor', '&&':'and', '&=':'∩=" or "bitand', '&':'∩" or "bitand', "'":'"', '!==':'!=', '!':'not', 'var':'let', 'null':'nil', '===':'=='};
-            let msg = 'Illegal symbol "' + illegal[0] + '"';
-            if (illegal[0] in alternative) {
-                msg += ' (maybe you meant "' + alternative[illegal[0]] + '")';
-            }
-
-            if (illegal[0] === "'") {
-                msg = 'Illegal single-quote (\'). Maybe you meant to use double quote (") for a string.';
-            }
-            
-            throw makeError(msg, i);
-        }
-
-        if ((i === 0) && (indent > 0)) {
-            throw makeError('First line must not be indented', i);
-        }
-
-        ///////////////////////////////////////////////////////////////////////
+        // Check for some illegal situations while we're processing
+        testForIllegalSyntax(lineArray[i], i, indent, internalMode);
 
         // See if the next non-empty line is not indented more than this one
         let singleLine = true;
@@ -648,18 +667,6 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode, strin
     } // for each line
     
     return i;
-}
-
-// The identifier pattern is also used in quadplay-runtime.js $removeMarkup() and must be kept in sync
-const identifierPattern = '_?[Δ]?(?:_?[A-Za-z][A-Za-z_0-9]*|[αβγΔδζηθιλμρσϕφχψτωΩ][_0-9]*(?:_[A-Za-z_0-9]*)?)';
-const identifierRegex = RegExp(identifierPattern);
-
-// for WITH statements
-const withIdentifierListRegex = RegExp('^[ \\t]*(' + identifierPattern + '[ \\t]*(?:,[ \\t]*' + identifierPattern + '[ \\t]*)*)∊(.*)$');
-
-
-function legalIdentifier(id) {
-    return id.match(identifierRegex);
 }
 
 
@@ -874,11 +881,103 @@ function unprotectObjectSpread(src) {
 }
 
 
+function trimEmptyLines(lineArray) {
+    for (let i = 0; i < lineArray.length; ++i) {
+        if (lineArray[i].search(/\S/) === -1) {
+            lineArray[i] = '';
+        }
+    }
+}
+
+/*
+  For each line beginning with spaces and '&':
+  
+  1. Add a ':' to the previous non-empty line (error if it ends in ':')
+  2. Remove the '&'
+  3. Increase indent of all lines in the current block, which includes & lines
+     at the same level until some other line is reached
+
+xxx
+& yyy
+    zzz
+
+->
+
+xxx:
+   yyy
+       zzz
+ */
+function processElision(lineArray) {
+    // Inserted to indent one level
+    const indentString = '    ';
+
+    // Scan bottom up so that recursive nesting works.  Multiply
+    // elided blocks will be processed multiple times, but this simplifies
+    // the logic.
+    for (let i = lineArray.length - 1; i > 0; --i) {
+        const match = lineArray[i].match(/^([\t ]*)\&[ \t]*(.*)/);
+        if (match) {
+            if (match[2].startsWith('else')) {
+                throw makeError('Cannot elide else blocks using &', i);
+            }
+                
+            // Scan upwards for the previous non-empty line
+            let prevNonEmptyLine = i - 1;
+            while (prevNonEmptyLine > 0 && lineArray[prevNonEmptyLine] === '') {
+                --prevNonEmptyLine;
+            }
+            
+            if (prevNonEmptyLine === -1) {
+                throw makeError('Elided block using & with no previous block', i);
+            }
+
+            if (lineArray[prevNonEmptyLine].endsWith(':')) {
+                throw makeError('Elided block using & to a block that already ends in :', prevNonEmptyLine);
+            }
+            
+            lineArray[prevNonEmptyLine] += ':';
+
+            if (lineArray[prevNonEmptyLine].search(/\S/) !== match[1].length) {
+                throw makeError('Elided block must be at same indentation as parent', i);
+            }
+
+            // Remove the & and any leading space, and indent the elided line
+            lineArray[i] = indentString + match[1] + match[2];
+            const currentIndentLength = match[1].length;
+
+            // Scan forward for the next line that is indented more,
+            // indenting as we go. There should be no elision encountered
+            // as we are processing the outer loop upwards
+            
+            for (let j = i + 1; j < lineArray.length; ++j) {
+                const indentLength = lineArray[j].search(/\S/);
+                
+                // Check the indent level of this nonempty line
+                if (indentLength > -1) {
+                    console.assert(indentLength >= 0, 'Nonempty lines must have an indent');
+                    console.assert(lineArray[j][indentLength] !== '&', 'Previous elision not removed');
+
+                    // Indent
+                    if (indentLength > currentIndentLength) {
+                        lineArray[j] = indentString + lineArray[j];
+                    }
+                }
+            } // for j
+            
+        } // match elision
+    } // for each line
+
+}
+
+
 /** Compiles pyxlscript -> JavaScript. Processes the body of a section. Use compile() to compile
     an entire project. There is no standalone mode compiler. */
 function pyxlToJS(src, noYield, internalMode) {
     if (noYield === undefined) { noYield = false; }
 
+    // Replace hard tabs
+    src = src.replace(/\t/g, '    ');
+    
     // Replace confusingly-similar double bars (we use exclusively Double Vertical Line 0x2016)
     src = src.replace(/∥𝄁║Ⅱǁ/g, '‖');
 
@@ -898,20 +997,25 @@ function pyxlToJS(src, noYield, internalMode) {
     // Remove single-line comments
     src = src.replace(/\/\/.*$/gm, '');
 
+    // Right-trim all lines, which also collapses empty lines to the
+    // empty string.
+    src = src.replace(/ +$/gm, '');
+
     // Replace spread operator
     src = src.replace(/…/g, '...');
 
     // Pull 'because' on a new line up to the previous line
-    src = src.replace(/\)[\t ]*((?:\n[\t ]*)+)[ \t]*because[ \t]+("[^\n"]")/g, ') because $2$1');
+    src = src.replace(/\)[ ]*((?:\n[\t ]*)+)[ ]*because[ ]+("[^\n"]")/g, ') because $2$1');
 
     // Switch FOR loops (will be switched back later)
     src = src.replace(/<=/g, '≤');
     src = src.replace(/>=/g, '≥');
     src = src.replace(/\sin\s/g, ' ∊ ');
 
+    // BECAUSE clasuses
     {
         const lineArray = compactMultilineLiterals(src.split('\n'))
-        const becauseRegExp = RegExp('(' + identifierPattern + '\\([^\\n]*\\))[ \\t]+because[ \\t]+("[^"]+")', 'g');
+        const becauseRegExp = RegExp('(' + identifierPattern + '\\([^\\n]*\\))[ ]+because[ ]+("[^"]+")', 'g');
         for (let i = 0; i < lineArray.length; ++i) {
             let line = lineArray[i];
 
@@ -920,7 +1024,7 @@ function pyxlToJS(src, noYield, internalMode) {
             // There must be no space between the comma and the
             // identifier in order for the next regexp to fake a
             // negative lookbehind            
-            if (/\)[ \t]*because[ \t]+"/.test(line)) {
+            if (/\)[ ]*because[ ]+"/.test(line)) {
                 // We can't process this with a regular expression
                 // because we have to parse recursive matching
                 // parentheses to find the complete expression before
@@ -952,7 +1056,7 @@ function pyxlToJS(src, noYield, internalMode) {
             }
 
             // Insert BECAUSE for state changes that do not use them already
-            line = lineArray[i] = line.replace(/(^|[^,])((?:set_mode|push_mode|pop_mode|launch_game|reset_game|quit_game)[ \t]*\()/g, '$1because("");$2');
+            line = lineArray[i] = line.replace(/(^|[^,])((?:set_mode|push_mode|pop_mode|launch_game|reset_game|quit_game)[ ]*\()/g, '$1because("");$2');
 
             // Look for mismatched if/then/else (conservative test, misses some)
             const ifCount = countRegexOccurences(line, /\bif\b/g);
@@ -982,9 +1086,9 @@ function pyxlToJS(src, noYield, internalMode) {
         while (found) {
             found = false;
             src = src.replace(
-                    /^([ \t]*\S[^\n]*?(?:[A-Za-z0-9_αβγΔδζηθιλμρσϕφχψτωΩ][ \t]|[:\^=\-\+\*/><,\[{\(][ \t]*))if\b/gm,
+                    /^([ ]*\S[^\n]*?(?:[A-Za-z0-9_αβγΔδζηθιλμρσϕφχψτωΩ][ ]|[:\^=\-\+\*/><,\[{\(][ ]*))if\b/gm,
                 function (match, prefix) {
-                    if (/else[ \t]*$/.test(prefix)) {
+                    if (/else[ ]*$/.test(prefix)) {
                         // This was an ELSE IF. Leave it alone
                         return match;
                     }
@@ -999,7 +1103,7 @@ function pyxlToJS(src, noYield, internalMode) {
                     // Functional IF has more '{' than '}' in the prefix. When we encounter
                     // a non-functional IF, temporarily replace it so as to not trigger the
                     // same regex again
-                    if (/:[ \t]$/.test(prefix) && (prefix.split('{').length <= prefix.split('}').length)) {
+                    if (/:[ ]$/.test(prefix) && (prefix.split('{').length <= prefix.split('}').length)) {
                         return prefix + STACKED_IF_SYMBOL;
                     } else {
                         found = true;
@@ -1019,11 +1123,14 @@ function pyxlToJS(src, noYield, internalMode) {
     // ELSE (which does not begin a block; note that chained
     // conditional operators require parentheses to make this parse
     // unambiguously)
-    src = src.replace(/\belse[ \t]+(?!:|if)/g, ') : ');
+    src = src.replace(/\belse[ ]+(?!:|if)/g, ') : ');
     
     // Handle scopes and block statement translations
     {
         const lineArray = src.split('\n');
+
+        trimEmptyLines(lineArray);
+        processElision(lineArray);        
         processBlock(lineArray, 0, noYield, internalMode, stringProtectionMap);
         src = lineArray.join('\n');
     }
@@ -1073,14 +1180,14 @@ function pyxlToJS(src, noYield, internalMode) {
         // bracketed expression), followed by a variable name.
 
         // Specials (allow parens on the 2nd expression)
-        src = src.replace(/([επξ∞½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁾])[ \t]*([\$\(_A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞])/g, '$1 * $2');
+        src = src.replace(/([επξ∞½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁾])[ ]*([\$\(_A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞])/g, '$1 * $2');
 
         // Parens (do *not* allow parens on the 2nd expression)
-        src = src.replace(/(\))[ \t]*([\$_A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞])/g, '$1 * $2');
+        src = src.replace(/(\))[ ]*([\$_A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞])/g, '$1 * $2');
 
         // Number case (has to rule out a variable name that ends in a
         // number or has a number inside of it)
-        src = src.replace(/([^\$A-Za-z0-9αβγδζηθιλμρσϕφχτψωΔΩ_]|^)([0-9\.]*?[0-9])(%|°)?[ \t]*([\$\(A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞_])/g, '$1$2$3 * $4');
+        src = src.replace(/([^\$A-Za-z0-9αβγδζηθιλμρσϕφχτψωΔΩ_]|^)([0-9\.]*?[0-9])(%|°)?[ ]*([\$\(A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞_])/g, '$1$2$3 * $4');
 
         // Fix any instances of text operators that got accentially
         // turned into implicit multiplication. If there are other
@@ -1089,7 +1196,7 @@ function pyxlToJS(src, noYield, internalMode) {
         // compiler does not inject {} around a loop body: the
         // for-with statement, where it needs to output a single
         // expression to compile those as if they were FOR statements.
-        src = src.replace(/\*[\t ]*(default|xor|or|and|not|mod|bitxor|bitand|bitor|bitnot|bitnot|bitshr|bitshl|for|with)(\b|\d|$)/g, ' $1$2');
+        src = src.replace(/\*[ ]*(default|xor|or|and|not|mod|bitxor|bitand|bitor|bitnot|bitnot|bitshr|bitshl|for|with)(\b|\d|$)/g, ' $1$2');
 
         // Replace exponents
         src = src.replace(/([⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁽⁾][⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁽⁾ ]*)/g, '^($1)');
@@ -1117,7 +1224,7 @@ function pyxlToJS(src, noYield, internalMode) {
     
     // SIN, COS, TAN with a single argument and no parentheses. Must be processed after implicit
     // multiplication so that, e.g., 2 cos θ parses correctly with regard to the \\b
-    src = src.replace(RegExp('\\b(cos|sin|tan)[ \\t]*([επΔξ]|[ \\t]+' + identifierPattern + ')', 'g'), '$1($2)');
+    src = src.replace(RegExp('\\b(cos|sin|tan)[ ]*([επΔξ]|[ ]+' + identifierPattern + ')', 'g'), '$1($2)');
     
     // Process after FOR-loops so that they are easier to parse
     src = src.replace(/≤/g, ' <= ');
@@ -1137,7 +1244,7 @@ function pyxlToJS(src, noYield, internalMode) {
 
     // Optimize var**(int), which is much less efficient than var*var.
     // Note that we don't allow random (ξ) in here, as it is not constant!
-    src = src.replace(RegExp('(.|..)[ \t]*(' + identifierPattern + ')\\*\\*\\((-?\\d)\\)', 'g'), function (match, br, identifier, exponent) {
+    src = src.replace(RegExp('(.|..)[ ]*(' + identifierPattern + ')\\*\\*\\((-?\\d)\\)', 'g'), function (match, br, identifier, exponent) {
 
         if (br.match(/\+\+|--|\.|\*\*/)) {
             // Order of operations may be a problem; don't substitute
@@ -1188,8 +1295,8 @@ function pyxlToJS(src, noYield, internalMode) {
 
     // Debug statements
     src = src.replace(/\bassert\b/g, '$assertEnabled && assert');
-    src = src.replace(/\btodo[ \t]*\(/g, '$todoEnabled && $todo(');
-    src = src.replace(/\bdebug_print[ \t]*\(/g, '$debugPrintEnabled && debug_print(SOURCE_LOCATION, ');
+    src = src.replace(/\btodo[ ]*\(/g, '$todoEnabled && $todo(');
+    src = src.replace(/\bdebug_print[ ]*\(/g, '$debugPrintEnabled && debug_print(SOURCE_LOCATION, ');
 
     // DEFAULT operators. We replace these with (the unused in pyxlscript) '=='
     // operator, which has similar precedence, and then use vectorify
@@ -1227,10 +1334,10 @@ function pyxlToJS(src, noYield, internalMode) {
     }
 
     // Cleanup formatting
-    src = src.replace(/,[ \t]+/g, ', ');
-    src = src.replace(/[ \t]*,/g, ',');
-    src = src.replace(/;[ \t]*;/g, ';');
-    src = src.replace(/(\S)[ \t]{2,}/g, '$1 ');
+    src = src.replace(/,[ ]+/g, ', ');
+    src = src.replace(/[ ]*,/g, ',');
+    src = src.replace(/;[ ]*;/g, ';');
+    src = src.replace(/(\S)[ ]{2,}/g, '$1 ');
     src = src.replace(/_add\($_yieldCounter, 1\)/g, '$_yieldCounter + 1');
     src = unprotectQuotedStrings(src, stringProtectionMap);
 
@@ -1276,7 +1383,7 @@ function compile(gameSource, fileContents, isOS) {
     }
     
     const doubleLineChars = '=═⚌';
-    const splitRegex = RegExp(String.raw`(?:^|\n)[ \t]*(init|enter|frame|leave|pop_mode|[\$_A-Z]${identifierPattern})[ \t]*(\([^\n\)]*\))?[\t ]*(\bfrom[ \t]+[\$_A-Za-z][\$A-Za-z_0-9]*)?\n((?:-|─|—|━|⎯|=|═|⚌){5,})[ \t]*\n`);
+    const splitRegex = RegExp(String.raw`(?:^|\n)[ ]*(init|enter|frame|leave|pop_mode|[\$_A-Z]${identifierPattern})[ ]*(\([^\n\)]*\))?[ ]*(\bfrom[ ]+[\$_A-Za-z][\$A-Za-z_0-9]*)?\n((?:-|─|—|━|⎯|=|═|⚌){5,})[ ]*\n`);
 
     // Compile each mode
     for (let i = 0; i < gameSource.modes.length; ++i) {
@@ -1328,7 +1435,7 @@ function compile(gameSource, fileContents, isOS) {
 
                 if (name === 'pop_mode') {
                     // Generate the section
-                    const otherMode = from.replace(/^from[\t ]*/,'');
+                    const otherMode = from.replace(/^from[ ]*/,'');
                     if ((otherMode[0] === '_' || otherMode[0] === '$') && ! (internalMode || isOS)) { throw {url:mode.url, lineNumber:line, message:'Illegal mode name in pop_mode() from section: "' + otherMode + '"'}; }
                     name = name + 'From' + otherMode;
                     sectionTable[name] = {pyxlCode: '', args: '()', jsCode: '', offset: 0};

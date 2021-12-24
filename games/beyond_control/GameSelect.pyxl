@@ -83,18 +83,18 @@ if selecting_map:
     draw_rect(xy(½ SCREEN_SIZE.x, 44), xy(SCREEN_SIZE.x, 60), TITLE_SCRIM_COLOR)
     
     // Maps
-    for m < 4:
+    for m < 4
+    & preserving_transform:
         const map = map_array[m + map_scroll]
-        preserving_transform:
-            set_transform(xy(72 + 80 m, SCREEN_SIZE.y - 48), xy(1, -1))
+        set_transform(xy(72 + 80 m, SCREEN_SIZE.y - 48), xy(1, -1))
             
-            // Cursor         
-            if map_choice == m + map_scroll:
-                draw_rect(xy(0, 0), xy(64, 48), #444, cursor_color())
+        // Cursor         
+        if map_choice == m + map_scroll:
+            draw_rect(xy(0, 0), xy(64, 48), #444, cursor_color())
                 
-            // Force the map to be tiny and centered on the origin
-            set_camera(xy(32 * 6.5, 24 * 5), ∅, ⅛)
-            draw_hex_map(map, false)
+        // Force the map to be tiny and centered on the origin
+        set_camera(xy(32 * 6.5, 24 * 5), ∅, ⅛)
+        draw_hex_map(map, false)
     
     // Show indicators of more content
     if map_scroll > 0:

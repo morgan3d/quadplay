@@ -192,6 +192,10 @@ function clearAssetCache() {
 
 let inGameLoad = false;
 
+function isDebugUrl(url) {
+    return /(^|\/)([Dd]ebug|[Tt]est).pyxl$/.test(url);
+}
+
 // Loads the game and then runs the callback() or errorCallback()
 function afterLoadGame(gameURL, callback, errorCallback) {
     console.assert(! inGameLoad, 'Reentrant call to afterLoadGame()!');
@@ -375,7 +379,12 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 
                 loadManager.fetch(scriptURL, 'text', null, function (scriptText) {
                     scriptText = scriptText.replace(/\r/g, '');
-                    addCodeToSourceStats(scriptText, scriptURL);
+
+                    // Ignore debug files
+                    if (! isDebugUrl(scriptURL)) {
+                        addCodeToSourceStats(scriptText, scriptURL);
+                    }
+                    
                     fileContents[scriptURL] = scriptText;
                 }, null, null, computeForceReloadFlag(scriptURL));
             }
@@ -407,7 +416,9 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 const mode = gameSource.modes[i];
                 loadManager.fetch(mode.url, 'text', null, function (modeCode) {
                     modeCode = modeCode.replace(/\r/g, '');
-                    addCodeToSourceStats(modeCode, mode.url);
+                    if (! isDebugUrl(mode.url)) {
+                        addCodeToSourceStats(modeCode, mode.url);
+                    }
                     fileContents[mode.url] = modeCode;
                 }, null, null, true);// Always force reload computeForceReloadFlag(mode.url));
             }
@@ -1916,17 +1927,17 @@ function addCodeToSourceStats(code, scriptURL) {
     code = lineArray.join('\n');
 
     // Remove section headers
-    const sectionRegex = /(?:^|\n)[ \t]*(init|enter|frame|leave)[ \t]*\n(?:-|─|—|━|⎯){5,}[ \t]*\n/;
+    const sectionRegex = /(?:^|\n).*\n[-─—━⎯=═⚌]{5,}[ \t]*\n/gm;
     code = code.replace(sectionRegex, '\n');
 
     // Remove function definition lines
     code = code.replace(/\n *def [^\n]+: *\n/gm, '\n');
 
-    // Remove local and preserving transform lines
-    code = code.replace(/\n *(local|preserving_transform): *\n/gm, '\n');
-    
-    // Remove TODOs and ASSERTs (assume that they are on their own lines to simplify parsing)
-    code = code.replace(/(todo|assert) *\(.*\n/g, '\n');
+    // Remove LOCAL, WITH, and PRESERVING_TRANSFORM lines
+    code = code.replace(/\n *&? *(local:?|preserving_transform:?|with .*) *\n/gm, '\n');
+
+    // Remove DEBUG_WATCH, DEBUG_PRINT, TODO, and ASSERT (assume that they are on their own lines to simplify parsing)
+    code = code.replace(/(debug_watch|debug_print|todo|assert) *\(.*\n/g, '\n');
 
     // Remove blank lines
     code = code.replace(/\n\s*\n/g, '\n');

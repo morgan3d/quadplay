@@ -455,7 +455,10 @@ function createCodeEditorSession(url, bodyText, assetName) {
     };
     
     session.setUseSoftTabs(true);
+    session.setTabSize(4);
+    session.setUseWrapMode(false);
     session.setUseWorker(false);
+    
     if (url.endsWith('.yaml')) {
         session.setMode('ace/mode/yaml');
     } else if (url.endsWith('.md.html') || url.endsWith('.md')) {
@@ -466,9 +469,7 @@ function createCodeEditorSession(url, bodyText, assetName) {
         session.setMode('ace/mode/html');
     } else if (url.endsWith('.pyxl')) {
         session.setMode('ace/mode/pyxlscript');
-        session.setTabSize(4);
     }
-    session.setUseWrapMode(false);
     
     if (! session.aux.readOnly) {
         const delaySeconds = session.aux.fileType === 'json' ? ASSET_EDITOR_SAVE_DELAY_SECONDS : CODE_EDITOR_SAVE_DELAY_SECONDS;

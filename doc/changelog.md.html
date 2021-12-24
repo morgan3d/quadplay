@@ -6,7 +6,30 @@
 Changes for both the specification and implementation in each release
 of [quadplay✜](manual.md.html).
 
-2021 December 15: Beta update 77
+2021 December 24: Update 78
+===================================
+
+- Changed the hooks created by `add_frame_hook()`, `delay()`, and `sequence()` to not
+  decrement their frame counter if the mode changes inside of the hook.
+- Added block elision using `&` to avoid high nesting on trivial blocks
+- Added `XY_LERP()`, `XZ_LERP()` and `XYZ_LERP()` intrinsics
+- Added `XY_MAGNITUDE()`, `XZ_MAGNITUDE()` and `XYZ_MAGNITUDE()`
+  intrinsics for convenience
+- Extended `find()` to take an optional comparator
+- Increased IDE code space by one column by trimming pixels from the gutter
+- Deprecated `preserving_transform` modifier on functions (use elision now)
+- Upgraded to the ace.js 30 Sep 2021 build
+- Changed `equivalent()` to return true if both values are NaN
+- Special filenames `debug.pyxl`, `test.pyxl`, `Debug.pyxl`, and `Test.pyxl`;
+  section/mode headers; and `debug_watch()` and `debug_print()` no longer count
+  against code size limits
+- Fixed `draw_text()` with a camera zoom transformation projecting incorrectly
+- Fixed `nil` values from linear splines created with `make_spline()`
+- Fixed `entity.size` initialized based on `scale` in `make_entity()`
+- Fixed vertical alignment of button prompts in the `cruise-7` font
+
+
+2021 December 15: Update 77
 ===================================
 
 - Improved display of multiline strings in the constant editor
@@ -33,7 +56,7 @@ of [quadplay✜](manual.md.html).
 - Fixed touch coordinates off by one pixel from hardware cursor
 
 
-2021 November 28: Beta update 76
+2021 November 28: Update 76
 ===================================
 
 - Changed `physics_remove_entity()` to permit "removal" of entities
@@ -54,7 +77,7 @@ of [quadplay✜](manual.md.html).
 - Fixed IDE display of hex and binary constants
 - Fixed blurry search dialog when in IDE Ghost Edit mode 
 
-2021 November 4: Beta update 75
+2021 November 4: Update 75
 ===================================
 
 - The string callback version of `iterate()` now ignores elements
@@ -87,7 +110,7 @@ of [quadplay✜](manual.md.html).
 - Fixed a memory leak in `physics_detach()` for `"gyro"` attachments
 
 
-2021 October 24: Beta update 74
+2021 October 24: Update 74
 ===================================
 
 - Made `random` not syntax highlighted unless used as a function
@@ -116,7 +139,7 @@ of [quadplay✜](manual.md.html).
 - Fixed `blackletter-14.font.json` font PNG size
 
 
-2021 September 4: Beta update 73
+2021 September 4: Update 73
 ===================================
 - 19 new CC-BY 4 chiptune songs by [Abstraction](https://abstractionmusic.bandcamp.com/)
 - IDE autopause on blur and reload-on-focus no longer take effect if
@@ -128,7 +151,7 @@ of [quadplay✜](manual.md.html).
 - Added `tools/highlight.js/pyxlscript.js` plugin for highlight.js
 
 
-2021 August 18: Beta update 72
+2021 August 18: Update 72
 ===================================
 
 - New HexFlipper built-in game
@@ -147,7 +170,7 @@ of [quadplay✜](manual.md.html).
 - Fixed rendering of active tabs in the launcher
 
 
-2021 August 7: Beta update 71
+2021 August 7: Update 71
 ===================================
 
 - Added `gamepad.status` read-only property for detecting 
@@ -188,7 +211,7 @@ of [quadplay✜](manual.md.html).
 - Fixed `size` and `loop` being syntax highlighted as functions when used as properties or variables
 
 
-2021 July 22: Beta update 70
+2021 July 22: Update 70
 ===================================
 
 - New "Change Resolution" example program
@@ -207,7 +230,7 @@ of [quadplay✜](manual.md.html).
 - Upgraded to peer.js 1.3.2
 
 
-2021 June 6: Beta update 69
+2021 June 6: Update 69
 ===================================
 
 - New game, "Duality"
@@ -244,7 +267,7 @@ of [quadplay✜](manual.md.html).
   after the prompt appears
   
 
-2021 April 7: Beta update 68
+2021 April 7: Update 68
 ===================================
 
 - New game, [Rescue Roguelike](../console/quadplay.html?game=quad://games/rescue_roguelike)
@@ -269,7 +292,7 @@ of [quadplay✜](manual.md.html).
     the dimensions of the drawn text
 
 
-2021 March 10: Beta update 67
+2021 March 10: Update 67
 ===================================
 
 - *Incompatible changes*:
@@ -305,7 +328,7 @@ of [quadplay✜](manual.md.html).
 
 
 
-2021 February 25: Beta update 66
+2021 February 25: Update 66
 ===================================
 
 - New Spritestack 2.5D car demo in the style of Grand Theft Auto
@@ -341,7 +364,7 @@ of [quadplay✜](manual.md.html).
   is installed on a different drive than the home directory
 
 
-2021 February 15: Beta update 65
+2021 February 15: Update 65
 ===================================
 
 - New easy map asset creation in the IDE
@@ -378,7 +401,7 @@ of [quadplay✜](manual.md.html).
 - Fixed asset import dialog empty when corrupt json files are in the game folder
 
 
-2021 February 6: Beta update 64
+2021 February 6: Update 64
 ===================================
 
 - *Incompatible change*: Changed `entity.sprite_override_color` --> `entity.override_color`
@@ -405,7 +428,7 @@ of [quadplay✜](manual.md.html).
 - Fixed incorrect rotated and scaled sprites in map preview
 
 
-2021 January 31: Beta update 63
+2021 January 31: Update 63
 ===================================
 
 - Optimized loading time of itch.io exported games
@@ -425,7 +448,7 @@ of [quadplay✜](manual.md.html).
 - Fixed being able to start games before loading completes
 
 
-2021 January 25: Beta update 62
+2021 January 25: Update 62
 ===================================
 
 - New "Piano" synth demo of using the audio `pitch` feature
@@ -460,7 +483,7 @@ of [quadplay✜](manual.md.html).
    require parentheses
 
 
-2021 January 16: Beta update 61
+2021 January 16: Update 61
 ===================================
 
 - Made Windows 10 `quadplay` script robust to the Windows `python.exe` shim using `py.exe`
@@ -485,7 +508,7 @@ of [quadplay✜](manual.md.html).
 - Fixed the use of global color constants in `draw_text()` markup
 
 
-2021 January 9: Beta update 60
+2021 January 9: Update 60
 ===================================
 
 - New "A Dark Drive" horror game example
@@ -503,7 +526,7 @@ of [quadplay✜](manual.md.html).
   in certain circumstances
 
 
-2021 January 1: Beta update 59
+2021 January 1: Update 59
 ===================================
 
 - New `kenney-1bit-14x14.sprite.json` spritesheet asset
@@ -520,7 +543,7 @@ of [quadplay✜](manual.md.html).
 - Substantially improved performance on Raspberry Pi in Kiosk mode
   
 
-2020 December 26: Beta update 58
+2020 December 26: Update 58
 ===================================
 
 - Incompatible change: removed implicit multiplication for back-to-back
@@ -549,7 +572,7 @@ of [quadplay✜](manual.md.html).
 - Fixed Folder path in the IDE not properly hyperlinking on Windows
 
 
-2020 December 4: Beta update 57
+2020 December 4: Update 57
 ===================================
 
 - New "gridmove" sample of PAC-MAN style movement and maps
@@ -570,7 +593,7 @@ of [quadplay✜](manual.md.html).
 - Fixed new doc create not working
 - Fixed crash in physics example from `contact.point1` being `{}` instead of `nil`
 
-2020 November 28: Beta update 56
+2020 November 28: Update 56
 ===================================
 
 - Enabled online play beta support. Latency is likely to be
@@ -591,7 +614,7 @@ of [quadplay✜](manual.md.html).
 - Fixed custom controller types being lost after page reload
 - Fixed subsection numbering in the manual under Firefox
 
-2020 November 22: Beta update 55
+2020 November 22: Update 55
 ===================================
 
 - Tuned Friendly Fishing to spawn only small fish at the start of the game
@@ -620,7 +643,7 @@ of [quadplay✜](manual.md.html).
 - Fixed CSV loading for constants (was broken by debug.json layer in the previous release)
 
 
-2020 November 7: Beta update 54
+2020 November 7: Update 54
 ===================================
 
 - New _Friendly Fishing_ built-in game
@@ -639,7 +662,7 @@ of [quadplay✜](manual.md.html).
 - Any player can now select the built-in game in the launcher
 - Fixed stopwatch/oldstopwatch negative time formatting in `format_number()`
 
-2020 October 31: Beta update 53
+2020 October 31: Update 53
 ===================================
 
 - Added `gamepad_array[i].color`
@@ -655,7 +678,7 @@ of [quadplay✜](manual.md.html).
 - Import Existing Asset dialog now supports keyword filtering
 - Improved sound preview in IDE with full pause, volume, and scrub controls
 
-2020 October 18: Beta update 52
+2020 October 18: Update 52
 ===================================
 
 - New `cursor-9x9.sprite.json` spritesheet
@@ -670,7 +693,7 @@ of [quadplay✜](manual.md.html).
 - Fixed mouse and touch movement deltas to work correctly on high framerate displays
 
 
-2020 October 9: Beta update 51
+2020 October 9: Update 51
 ===================================
 
 - New Input example program
@@ -680,7 +703,7 @@ of [quadplay✜](manual.md.html).
 - Improved pixel sharpness on Chrome Windows and macOS at certain pixel ratios.
   All browser and OS combinations are now pixel-perfect at all scales.
 
-2020 October 2: Beta update 50
+2020 October 2: Update 50
 ===================================
 
 - Added `sprite.base` pointer
@@ -692,7 +715,7 @@ of [quadplay✜](manual.md.html).
 - Fixed system pause menu at 64x64 not restoring clip and transform
 
 
-2020 September 27: Beta update 49
+2020 September 27: Update 49
 ===================================
 
 - New _Kart_ example of a perspective ground plane
@@ -724,7 +747,7 @@ of [quadplay✜](manual.md.html).
 - Incompatible change: `ray.origin` --> `ray.pos`, `ray.direction` --> `ray.dir`
 
 
-2020 September 12: Beta update 48
+2020 September 12: Update 48
 ===================================
 
 - New game, _Doubles de Pon_
@@ -753,7 +776,7 @@ of [quadplay✜](manual.md.html).
    - `draw_map()` not visible outside of central 3x3 repetitions for wrapping maps
 
 
-2020 September 4: Beta update 47
+2020 September 4: Update 47
 ===================================
 
 - New built-in game "Beyond Control"
@@ -877,7 +900,7 @@ of [quadplay✜](manual.md.html).
   returns the original object.
 
 
-2020 July 10: Beta update 46
+2020 July 10: Update 46
 ===================================
 
 - New font: `hauer-12`
@@ -899,7 +922,7 @@ of [quadplay✜](manual.md.html).
 - Fixed the mode graph clipping on the bottom
 - Made the mode graph scrollable
 
-2020 July 3: Beta update 45
+2020 July 3: Update 45
 ===================================
 
 - Made function definition lines, `todo()`, and `assert()` 
@@ -939,7 +962,7 @@ of [quadplay✜](manual.md.html).
 - Fixed vehicle demo button prompts
 
 
-2020 June 23: Beta update 44
+2020 June 23: Update 44
 ===================================
 
 - Incompatible change: `draw_text()` multiline `y_align = "center"` and 
@@ -985,7 +1008,7 @@ of [quadplay✜](manual.md.html).
   names to be seen
 - Fixed automath sometimes leaving the cursor off by one character
 
-2020 June 14: Beta update 43
+2020 June 14: Update 43
 ===================================
 
 - Incompatible change: it is now illegal to mutate the container being iterated over
@@ -1049,7 +1072,7 @@ of [quadplay✜](manual.md.html).
 - Renamed `get_map_pixel_color_by_draw_coord()` --> `get_map_pixel_color_by_ws_coord()`
 
 
-2020 May 23: Beta update 42
+2020 May 23: Update 42
 ===================================
 
 - Incompatible change: Removed subscripts as array indices. They are still valid characters for strings.
@@ -1095,7 +1118,7 @@ of [quadplay✜](manual.md.html).
 - Fixed Debug UI layout not allowing full horizontal scrolling of the editor
 - Fixed button prompt alignment in Broderick-7 font
 
-2020 May 8: Beta update 41
+2020 May 8: Update 41
 ===================================
 
 - Added named argument versions of all drawing routines
@@ -1119,7 +1142,7 @@ of [quadplay✜](manual.md.html).
 - New "Z-Car" wireframe 3D example
 
 
-2020 May 1: Beta update 40
+2020 May 1: Update 40
 ===================================
 
 - Added `set_camera()` and `get_camera()` and global camera support
@@ -1151,7 +1174,7 @@ of [quadplay✜](manual.md.html).
 - Fixed `set_clip()` with `pos = nil`
 - Added autocorrect for math symbols option to the Tools menu
 
-2020 Apr 25: Beta update 39
+2020 Apr 25: Update 39
 ===================================
 
 - Added ⓔ and ⓕ buttons, which are mapped to shoulder buttons on physical controllers
@@ -1180,7 +1203,7 @@ of [quadplay✜](manual.md.html).
 - Changed default startup UI layout to `Emulator` for non-IDE mobile, `Maximal` for non-IDE 
   desktop, and `IDE` if running in IDE mode
 
-2020 Apr 17: Beta update 38
+2020 Apr 17: Update 38
 ===================================
 
 - Kiosk mode now completely fills the screen, removing all quadplay UI
@@ -1209,7 +1232,7 @@ of [quadplay✜](manual.md.html).
 - Added a second row of 4x wide glyphs to the font format
 - Redrew all fonts with new glyphs for ⓔ, <big>⦸</big>, ⓝ, ⓗ, alt, left shift, right shift, and tab
 
-2020 Apr 11: Beta update 37
+2020 Apr 11: Update 37
 ===================================
 
 - New wide-screen "Debug" UI layout option with 2x scale emulator
@@ -1239,7 +1262,7 @@ of [quadplay✜](manual.md.html).
 - Created more room for the code editor in Debug view
 
 
-2020 Mar 30: Beta update 36
+2020 Mar 30: Update 36
 ===================================
 
 - Syntax highlighting for intrinsics in Emacs and the IDE
@@ -1264,7 +1287,7 @@ of [quadplay✜](manual.md.html).
 - Fixed spritesheets for maps not showing in the project viewer
 
 
-2020 Mar 25: Beta update 35
+2020 Mar 25: Update 35
 ===================================
 
 - Editing for sprite, font, map, and sound metadata directly in the IDE
@@ -1277,7 +1300,7 @@ of [quadplay✜](manual.md.html).
 - Patches for the sprite editor UI
 
 
-2020 Mar 18: Beta update 34
+2020 Mar 18: Update 34
 ===================================
 
 - New wide editor UI IDE view mode
@@ -1295,7 +1318,7 @@ of [quadplay✜](manual.md.html).
 - Per-tab editor state for undo/redo, selection, and cursor position
 
 
-2020 Mar 7: Beta update 33
+2020 Mar 7: Update 33
 ===================================
 
 - Added `CONSTANTS` and `ASSETS` objects
@@ -1304,7 +1327,7 @@ of [quadplay✜](manual.md.html).
 - Syntax highlighting for `#RGB` colors in emacs
 
 
-2020 Mar 5: Beta update 32
+2020 Mar 5: Update 32
 ===================================
 
 - Added long text button prompts for SPACE, ENTER, RETURN, SELECT, START, 
@@ -1323,7 +1346,7 @@ of [quadplay✜](manual.md.html).
 - Made touching the screen in IDE mode not trigger button presses
 
 
-2020 Feb 24: Beta update 31
+2020 Feb 24: Update 31
 ===================================
 
 - Removed context menu from emulator to make touch screens more responsive
@@ -1341,7 +1364,7 @@ of [quadplay✜](manual.md.html).
 - Improved fontgen button prompt draft characters
 
 
-2020 Feb 17: Beta update 30
+2020 Feb 17: Update 30
 ===================================
 
 - Fixed Beat the Gobblins trying to write to read-only properites
@@ -1354,7 +1377,7 @@ of [quadplay✜](manual.md.html).
 - Optimized manual loading time by removing mathjax
 
 
-2020 Feb 16: Beta update 29
+2020 Feb 16: Update 29
 ===================================
 
 - Changed the gamepads to define the direction of `x`, `y`, `dx`, `dy`, `xx`, and `yy`
@@ -1372,7 +1395,7 @@ of [quadplay✜](manual.md.html).
   in-memory backup copies of immutable assets
 
 
-2020 Feb 15: Beta update 28
+2020 Feb 15: Update 28
 ===================================
 
 - Added optional `gamepad` argument to `any_button_press()`
@@ -1388,7 +1411,7 @@ of [quadplay✜](manual.md.html).
 - Improved the startup play icon for mobile using svg
 
 
-2020 Feb 6: Beta update 27
+2020 Feb 6: Update 27
 ===================================
 
 - Added `xyz_to_rgb()` and `rgb_to_xyz()`
@@ -1405,7 +1428,7 @@ of [quadplay✜](manual.md.html).
   welcome screen
 
 
-2020 Feb 2: Beta update 26
+2020 Feb 2: Update 26
 ===================================
 
 - Added `examples/highscore` example
@@ -1424,7 +1447,7 @@ of [quadplay✜](manual.md.html).
 - Fixed `parse()` for nested objects within arrays
 
 
-2020 Jan 29: Beta update 25
+2020 Jan 29: Update 25
 ===================================
 
 - Converted the entire API from camelCase to snake_case to improve readability
@@ -1444,7 +1467,7 @@ of [quadplay✜](manual.md.html).
 - Added kerning for script fonts
 - Added `examples/fontpreview` example
 
-2020 Jan 25: Beta update 24
+2020 Jan 25: Update 24
 ===================================
 
 - Added `physics_entity_has_contacts()` for optimized contact tests
@@ -1461,7 +1484,7 @@ of [quadplay✜](manual.md.html).
 - Redesigned the internals of the virtual sprite and font hardware memory system
 
 
-2020 Jan 18: Beta update 23
+2020 Jan 18: Update 23
 ===================================
 
 - Redesigned profiler output in the "Stats" IDE tab to show
@@ -1479,7 +1502,7 @@ of [quadplay✜](manual.md.html).
 - Adjusted ninja colors
 
 
-2020 Jan 14: Beta update 22
+2020 Jan 14: Update 22
 ===================================
 
 - Implemented game frame rate throttling to 60 Hz on high refresh rate monitors
@@ -1491,7 +1514,7 @@ of [quadplay✜](manual.md.html).
 - Fixed controls menu for games with y = up
 
 
-2020 Jan 13: Beta update 21
+2020 Jan 13: Update 21
 ===================================
 
 - Added support for Switch Pro, JoyCon, PlayStation 3, Xbox360, and Stadia controllers
@@ -1524,7 +1547,7 @@ of [quadplay✜](manual.md.html).
 - Added `get_background()`
 
 
-2020 Jan 3: Beta update 20
+2020 Jan 3: Update 20
 ===================================
 
 - Renamed `addEntityChild()` to `entity_add_child()`
@@ -1552,7 +1575,7 @@ of [quadplay✜](manual.md.html).
 - [fontpack✜](../tools/fontpack.html) now allows dropping the source PNG anywhere on screen
 
 
-2019 Dec 30: Beta update 19
+2019 Dec 30: Update 19
 =======================================
 
 - Added the Inspiration section
@@ -1573,7 +1596,7 @@ of [quadplay✜](manual.md.html).
 - Added `magnitude_squared()` function
 
 
-2019 Dec 25: Beta update 18
+2019 Dec 25: Update 18
 =======================================
 
 - Added Deploying Games section
@@ -1587,7 +1610,7 @@ of [quadplay✜](manual.md.html).
 - Raised mid-glyph bar for capitals 1px on deja-8 font
 
 
-2019 Dec 14: Beta update 17
+2019 Dec 14: Update 17
 =======================================
 
 - Fixed `get_clip()` off-by-one error
@@ -1613,7 +1636,7 @@ of [quadplay✜](manual.md.html).
 - Increased analog stick dead zone to 40% to avoid accidental cross-axis input
 
 
-2019 Dec 1: Beta update 16
+2019 Dec 1: Update 16
 =======================================
 
 - Added support for `"array"` constant types in `.game.json` files
@@ -1636,7 +1659,7 @@ of [quadplay✜](manual.md.html).
 - Fixed handling newlines in JSON multiline strings across various OS conventions
 
 
-2019 Nov 24: Beta update 15
+2019 Nov 24: Update 15
 =======================================
 
 - JSON files may now contain multiline strings using backquote: <code>`...`</code>
@@ -1653,7 +1676,7 @@ of [quadplay✜](manual.md.html).
 - Added [Text](../console/quadplay.html?game=quad://examples/text&IDE=1) example
 
 
-2019 Nov 17: Beta update 14
+2019 Nov 17: Update 14
 =======================================
 
 - Added `fool-9.font.json`
@@ -1669,13 +1692,13 @@ of [quadplay✜](manual.md.html).
   `random_truncated_gaussian()`, `random_truncated_gaussian2D()`, random_truncated_gaussian3D()`,
   `random_on_cube()`, `random_within_cube()`, `random_intege(rlo, hi, random)`, `random_sign()`, `random_on_square()`
 
-2019 Oct 4: Beta update 13
+2019 Oct 4: Update 13
 =======================================
 
 - Fixed RPG demo broken sprite paths
 - Fixed Boids demo broken sprite paths
 
-2019 Oct 1: Beta update 12
+2019 Oct 1: Update 12
 =======================================
 
 - Added optional `region` to Sprite JSON files
@@ -1690,7 +1713,7 @@ of [quadplay✜](manual.md.html).
 - Implemented pivots for sprites and entities (currently not exposed in the API)
 
 
-2019 August 30: Beta update 11
+2019 August 30: Update 11
 =======================================
 
 - Added `ordinal` and `ordinalabbrev` to `format_number()`
@@ -1701,7 +1724,7 @@ of [quadplay✜](manual.md.html).
 - Fixed `"oscillate"` extrapolate mode crash for `array_value()`
 
 
-2019 August 25: Beta update 10
+2019 August 25: Update 10
 =======================================
 
 - Added support for `docs` in the `game.json` file using Markdeep, Markdown,
@@ -1713,7 +1736,7 @@ of [quadplay✜](manual.md.html).
 - Changed sprite.json name for a single `xy()` to be a sprite instead of an animation
 
 
-2019 August 17: Beta update 9
+2019 August 17: Update 9
 =======================================
 
 - Added `nanob-3.font.json` (like nano-3, but with thinner L and I characters)
@@ -1722,7 +1745,7 @@ of [quadplay✜](manual.md.html).
 - Renamed `index.html` to `quadplay.html` for improved itch.io compatibility
 
 
-2019 August 16: Beta update 8
+2019 August 16: Update 8
 =======================================
 
 - Allowed `for` and `with` variable lists to be split across multiple lines
@@ -1733,7 +1756,7 @@ of [quadplay✜](manual.md.html).
 - Added `device_control()` support for setting the prompt characters for controllers
 
 
-2019 August 12: Beta update 7
+2019 August 12: Update 7
 =======================================
 
 - Added two-argument version of `round()`
@@ -1751,7 +1774,7 @@ of [quadplay✜](manual.md.html).
 - Increased sprite sheet limit from 64 to 128 (no increase in total memory, however)
 
 
-2019 August 8: Beta update 6
+2019 August 8: Update 6
 =======================================
 
 - Added `scoreboard-6.font.json`
@@ -1770,7 +1793,7 @@ of [quadplay✜](manual.md.html).
 - Fixed asset credits leading "by" lacking a trailing space
 
 
-2019 August 2: Beta update 5
+2019 August 2: Update 5
 =======================================
 
 - Required a space for `sin`, `cos`, `tan` automatic parenthesis insertion
@@ -1778,7 +1801,7 @@ of [quadplay✜](manual.md.html).
 - Added label images for all example programs
 
 
-2019 August 1: Beta update 4
+2019 August 1: Update 4
 =======================================
 
 - Fixed self-overdraw in disk and circle rendering
@@ -1790,7 +1813,7 @@ of [quadplay✜](manual.md.html).
 - Made underscore-"subscripted" Greek letters legal identifiers. For example: <code>θ_interior</code>, <code>μ_p</code>
 
 
-2019 July 17: Beta update 3
+2019 July 17: Update 3
 =======================================
 
 - Added syntax highlighting in emacs for `bitand`, `bitor`, and `bitxor`
@@ -1805,7 +1828,7 @@ of [quadplay✜](manual.md.html).
 - Added the Intrinsics section
 
 
-2019 July 13: Beta update 2
+2019 July 13: Update 2
 =======================================
 
 - Added `loop-dark-thriller.mp3` audio clip
@@ -1821,7 +1844,7 @@ of [quadplay✜](manual.md.html).
 - Fixed screen alignment on resolution change when games are run from the launcher
 
 
-2019 July 5: Beta update 1
+2019 July 5: Update 1
 =======================================
 
 - Vim editor plugin (Stephan)
@@ -1831,7 +1854,7 @@ of [quadplay✜](manual.md.html).
 - Corrected definition of `reversed(string)`
 
 
-2019 July 4: Public Beta
+2019 July 4: Public Release
 =======================================
 
 - Removed `extend_transform()`, `get_clip()`, and `get_transform()` from the beta release

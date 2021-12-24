@@ -5,14 +5,14 @@ const mapWidthPixels = cityMap.size.x * cityMap.sprite_size.x
 // Bike shadow as a function of relative x
 const shadowColor = []
 for -5 ≤ dx ≤ 5:
-   push(shadowColor, rgba(0, 0, 0, sqrt(0.65 - |⅛ dx|)))
+    push(shadowColor, rgba(0, 0, 0, sqrt(0.65 - |⅛ dx|)))
 
    
 def getBounds(bikeArray):
    const range = {min: xy(∞, ∞), max: xy(-∞, -∞)}
    for pos ∊ bike ∊ bikeArray:
-      range.min = min(pos, range.min)
-      range.max = max(pos, range.max)
+       range.min = min(pos, range.min)
+       range.max = max(pos, range.max)
    return range
 
 
@@ -48,9 +48,9 @@ const wheelFrame = ⌊½ mode_frames⌋ mod 4
 let spreadThreshold = {min: -∞, max: ∞}
 let bounds = getBounds(bikeArray)
 with min, max ∊ bounds:
-   if max.x - min.x ≥ ½ SCREEN_SIZE.x:
-      spreadThreshold = {min: lerp(min.x, max.x, 25%),
-                         max: lerp(min.x, max.x, 95%)}
+    if max.x - min.x ≥ ½ SCREEN_SIZE.x:
+        spreadThreshold = {min: lerp(min.x, max.x, 25%),
+                           max: lerp(min.x, max.x, 95%)}
 
 let minBikeVel = ∞
 for bike ∊ clone(bikeArray):
@@ -93,11 +93,11 @@ for bike ∊ clone(bikeArray):
    const N = 6 + 2
    const center = bike.pos + 6 xy(-sin(bike.angle), cos(bike.angle))
    for 0 < i < N:
-      const θ = bike.angle + π i / N
-      const testPoint = center + 7 xy(cos(θ), sin(θ))
-      if isSolid(testPoint, bike.z):
-         crashBike(bike)
-         break
+       const θ = bike.angle + π i / N
+       const testPoint = center + 7 xy(cos(θ), sin(θ))
+       if isSolid(testPoint, bike.z):
+           crashBike(bike)
+           break
       
    measureTricks(bike)
       
@@ -187,24 +187,24 @@ for bike ∊ bikeArray:
    
 // HUD UI
 preserving_transform:
-   reset_transform()
-   for bike in bikeArray:
-      const uiDir = 1 - 2 ⌊½ bike.playerIndex⌋
-      const uiPos = xy(44, 10) + xy(bike.playerIndex mod 2, ⌊½ bike.playerIndex⌋) * (SCREEN_SIZE - xy(50, 14))
-      uiPos.y += (draw_text(font, format_number(round(bike.score), "commas"), uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).size.y + 1) * uiDir
-      uiPos.y += (draw_text(hudFont, "+ " + format_number(bike.scoreModifier - 1, "percent"), uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).size.y + 1) * uiDir
+    reset_transform()
+    for bike in bikeArray:
+        const uiDir = 1 - 2 ⌊½ bike.playerIndex⌋
+        const uiPos = xy(44, 10) + xy(bike.playerIndex mod 2, ⌊½ bike.playerIndex⌋) * (SCREEN_SIZE - xy(50, 14))
+        uiPos.y += (draw_text(font, format_number(round(bike.score), "commas"), uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).size.y + 1) * uiDir
+        uiPos.y += (draw_text(hudFont, "+ " + format_number(bike.scoreModifier - 1, "percent"), uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).size.y + 1) * uiDir
 
-      if debugTricks and false:
-         uiPos.y += draw_text(font, "Front: " + bike.recentFrontWheelContact, uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).size.y * uiDir
-         uiPos.y += draw_text(font, "Rear: " + bike.recentRearWheelContact, uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).size.y * uiDir
+        if debugTricks and false:
+            uiPos.y += draw_text(font, "Front: " + bike.recentFrontWheelContact, uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).size.y * uiDir
+            uiPos.y += draw_text(font, "Rear: " + bike.recentRearWheelContact, uiPos, bike.color, ∅, #0008, "right", "baseline", uiZ).size.y * uiDir
 
       
 
 // Depth fog for debugging z-order
-if debugZOrder:
-   preserving_transform:
-      reset_transform()
-      for -4 ≤ z ≤ 4: draw_corner_rect(xy(0,0), SCREEN_SIZE, rgba(1,1,1,8%), ∅, z + ½)
+if debugZOrder
+& preserving_transform:
+    reset_transform()
+    for -4 ≤ z ≤ 4: draw_corner_rect(xy(0,0), SCREEN_SIZE, rgba(1,1,1,8%), ∅, z + ½)
 
 // Alternating layers of the map in the center are the collision data, which
 // should be invisible. Draw only the even layers with graphics on

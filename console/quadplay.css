@@ -625,8 +625,8 @@ div.disabled span.label, div.disabled:active span.label {
 }
 
 /* Shrink ace gutters to leave an extra column of text editing space */
-.ace_gutter > .ace_layer {
-    width: 36px !important;
+.ace_gutter, ace_gutter-layer {
+    margin-right: 0 !important;
 }
 
 .aceErrorMarker {
@@ -636,10 +636,10 @@ div.disabled span.label, div.disabled:active span.label {
 }
 
 .ace_gutter-cell {
-  padding-left: 0 !important;
-  padding-right: 15px !important;
-  padding-top: 0.42em;
-  font-size: 65%;
+    padding-left: 0 !important;
+    padding-top: 0.42em;
+    width: 32px;
+    font-size: 65%;
 }
 
 .ace_gutter-cell span {
