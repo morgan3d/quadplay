@@ -6175,12 +6175,20 @@ function $cleanupRegion(A) {
         A = Object.assign({scale: xy(1, 1), size: xy(0, 0), angle: 0, shape: 'rect'}, A);
 
         if (A.corner && ! A.pos) {
-            A.pos = {x: A.corner.x + A.size.x * A.scale.x,
-                     y: A.corner.y + A.size.y * A.scale.y}
+            A.pos = {x: A.corner.x + 0.5 * A.size.x * $Math.abs(A.scale.x),
+                     y: A.corner.y + 0.5 * A.size.y * $Math.abs(A.scale.y)}
+            
             if (A.angle !== 0) {
                 $error('Cannot use angle != 0 with a corner rect in overlaps()');
             }
+
+            // Remove the corner property
+            delete A.corner;
         }
+    }
+
+    if (A.corner) {
+        $error('Cannot use both corner and pos on the same object in overlaps()');
     }
     
     if (A.pivot && (A.pivot.x !== 0 || A.pivot.y !== 0)) {
