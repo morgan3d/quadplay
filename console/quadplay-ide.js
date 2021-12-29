@@ -1,7 +1,7 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
 "use strict";
 
-const version  = '2021.12.24.17';
+const version  = '2021.12.29.17';
 
 // Set to false when working on quadplay itself
 const deployed = true;
@@ -628,6 +628,14 @@ function onResize() {
         screenBorder.style.borderWidth  = Math.ceil(5 * hostCrop / scale) + 'px';
     }
     screenBorder.style.boxShadow = `${1/scale}px ${2/scale}px ${2/scale}px 0px rgba(255,255,255,0.16), ${-1.5/scale}px {-2/scale}px ${2/scale}px 0px rgba(0,0,0,0.19)`;
+
+    if (emulatorMode === 'stop') {
+        // Work around a Chromium bug where resizing will fill
+        // the canvas with random compositing framebuffer data
+        // on Windows and Linux sometimes.
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    }
 }
 
 
@@ -746,7 +754,8 @@ function onStopButton(inReset, preserveNetwork) {
     stopAllSounds();
     coroutine = null;
     clearTimeout(lastAnimationRequest);
-    ctx.clearRect(0, 0, emulatorScreen.width, emulatorScreen.height);
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, emulatorScreen.width, emulatorScreen.height);
     overlayCTX.clearRect(0, 0, emulatorScreen.width, emulatorScreen.height);
 }
 

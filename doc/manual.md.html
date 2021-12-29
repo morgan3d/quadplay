@@ -1872,6 +1872,23 @@ Array
 `last_value(array)`
 : Returns `array[last_key(array)]`.
 
+`make_array(size, value default nil, value_clone default nil)`
+: Creates a 1D (if `size` is a number), 2D (if `size` is an `xy()`),
+  or 3D (if `size` is an `xyz()`) array of arrays.  Each element is
+  initialized independently to `if value_clone then value else
+  value_clone(value)`.
+  
+  Multidimensional arrays are indexed as `array[x][y][z]`.
+  
+  For 2D arrays, the outer array has an extra `array2D.size` property
+  on the outermost array that is an `xy()`.
+
+  For 3D arrays, the outer array has an extra `array3D.size` property
+  that is an `xyz()`, and the inner 2D arrays each have an extra
+  `array2D.size` property on the that is a `yz()`.
+  
+  Use `size(array)` to determine the length of a 1D array.
+
 `pop(array)`
 : Remove the last element from the array and return it, or `∅` if the array is empty. O(1) expected amortized time.
 
@@ -1968,10 +1985,17 @@ String
 `extended(a, b)`
 : Returns a new string that is `a + b`.
 
-`find(string, x, i default 0)`
-: Find the index of the substring whose value is `x`, starting at
-  optional index `i` (default 0).  Returns `∅` if not found. O(n)
-  time in the length of the string.
+`find(string, x, i default 0, comparator default ==)`
+: Find the index of the substring `x`, starting at
+  optional index `i` (default 0).  Returns `∅` if not found.
+  
+  Unless a function is for `comparator`, uses `==` to compare `x` to
+  the substrings. If a comparator is present, any non-falsy return
+  value from the comparator indicates a match. The array element is 
+  passed as the first argument to the comparator.
+  
+  Runs in linear time in the length of the string from `i`. This is
+  called `index_of` or `indexOf` in some other programming languages.
 
 `format_number(n, format)`
 : Produces a string from number `n` in one of the following formats.
@@ -2098,10 +2122,12 @@ Object
 : Delete one element that is `== v`, or do nothing if there is no such element.
   See also `remove_values()`.
 
-`find(object, x)`
+`find(object, x, ignored default 0, comparator default ==)`
 : Find a key for which the value is `x`.
-  Returns `∅` if not found. Uses `==` to compare `x` to array values.
-  O(n) time in the number of key-value pairs.
+  Returns `∅` if not found. Uses `comparator` to compare `x` to array values.
+  O(n) time in the number of key-value pairs. The `ignored` parameter is
+  present to match the signature of the array and string versions of
+  `find()` but does nothing in the object case.
 
 `keys(object)`
 : An array of the keys in the object. You almost never need this because
@@ -4257,9 +4283,15 @@ endpoints and borders.
 : Named argument version of `draw_line()`.
 
 `draw_line(A, B, color, z default A.z default 0, width default 1)`
-: Draw a 1-pixel line from (`A.x`, `A.y`) to (`B.x`, `B.y`) using z-order `z`.
+: Draw a line from (`A.x`, `A.y`) to (`B.x`, `B.y`) using z-order `z`.
   When using the default transformation, put the endpoints at half-pixel
   positions for the best alignment with the pixel grid.
+  
+  The endpoints of the line are transformed independently by `camera.zoom`,
+  so 3D perspective can be obtained.
+  
+  The `width` will be scaled by the `camera.zoom`. The line is always
+  at least one pixel thick in screen space.
 
 `draw_point(args)`
 : Named argument version of `draw_point()`.
@@ -4971,11 +5003,13 @@ in the desired order regardless of the order in which drawing executes.
 : Add a series of frame hooks that run in the current mode. Returns a master
   hook that can be used with `remove_frame_hook()` to cancel the entire sequence.
   Each argument may be either a function, `nil`, a number of frames to skip, or 
-  `{callback: function, end_callback: function, frames: number, data: (any value)}`.
+  `{callback: function, begin_callback: function, end_callback: function, frames: number, data: (any value)}`.
   The callbacks only run the current mode.
   
-  If not `nil`, the callback signature is `def callback(frames_left, total_frames, data)`.
-  If not `nil`, the end_callback signature is `def end_callback(data)` and it
+  If not `nil`, the `callback` signature is `def callback(frames_left, total_frames, data)`.
+  If not `nil`, the `begin_callback` signature is `def begin_callback(data)` and it runs
+  immediately before the first `callback` for that sequence entry.
+  If not `nil`, the `end_callback` signature is `def end_callback(data)` and it
   runs immediately after the last `callback` for that sequence entry.
 
   The callbacks run for the specified number of `frames`, rounded if fractional. 
@@ -4987,13 +5021,11 @@ in the desired order regardless of the order in which drawing executes.
   and then `cleanup` immediately after the last `draw_smoke` in the same frame.
   
   If a callback returns the special value `sequence.NEXT`, then the
-  sequence runs the `end_callback` for that entry and advances to the next step 
-  regardless of the frame count. If
-  it returns `sequence.BREAK`, then the sequence immediately
-  terminates and does not run the `end_callback`. All other return values are ignored.
-  
-  There is no `begin_callback`. Use an `end_callback` on the previous
-  entry or immediately execute the code before `sequence()` if you need one.
+  sequence runs the `end_callback` for that entry and advances to the
+  next step regardless of the frame count. If any callback returns
+  `sequence.BREAK`, then the sequence immediately terminates and does
+  not run the `end_callback` for the current entry. All other return
+  values are ignored.
 
   A `sequence` entry can itself trigger a new sequence or `delay()`, although
   be careful not to trigger uncontrolled recursive chains.
@@ -5867,7 +5899,7 @@ From the [_Three Red Hearts_](https://abstractionmusic.bandcamp.com/album/three-
 ![`quad://sounds/loop-wind.sound.json`](../sounds/loop-wind.mp3) ![`quad://sounds/loop-footsteps.sound.json`](../sounds/loop-footsteps.mp3)
 ![`quad://sounds/loop-footsteps-indoor.sound.json`](../sounds/loop-footsteps-indoor.mp3) ![`quad://sounds/loop-footsteps-puddle.sound.json`](../sounds/loop-footsteps-puddle.mp3)
 ![`quad://sounds/loop-footsteps-water.sound.json`](../sounds/loop-footsteps-water.mp3) ![`quad://sounds/loop-footsteps-snow.sound.json`](../sounds/loop-footsteps-snow.mp3)
-![`quad://sounds/loop-spin.sound.json`](../sounds/loop-spin.mp3)
+![`quad://sounds/loop-spin.sound.json`](../sounds/loop-spin.mp3) ![`quad://sounds/loop-alarm.sound.json`](../sounds/loop-alarm.mp3)
 
 
 ### Shoot

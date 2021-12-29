@@ -527,7 +527,7 @@ function $line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2, open1, ope
 
             x1 |= 0; x2 |= 0;
 
-            if (color & 0xf000 === 0xf000) {
+            if ((color & 0xf000) === 0xf000) {
                 // No blending
                 for (let x = x1, y = y1; x <= x2; ++x, y += m) {
                     const j = $Math.round(y) >>> 0;
@@ -553,7 +553,7 @@ function $line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2, open1, ope
             y2 = $Math.min(y2, clipY2);
             y1 |= 0; y2 |= 0;
 
-            if (color & 0xf000 === 0xf000) {
+            if ((color & 0xf000) === 0xf000) {
                 // No blending
                 for (let y = y1, base = (y1 * $SCREEN_WIDTH) | 0, x = x1; y <= y2; ++y, base += $SCREEN_WIDTH | 0, x += m) {
                     const i = $Math.round(x) >>> 0;

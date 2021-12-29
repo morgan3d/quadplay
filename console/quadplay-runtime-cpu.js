@@ -184,7 +184,7 @@ function sequence(...seq) {
         const entry = seq[i];
         if (typeof entry === 'function' || entry === undefined) {
             ++totalLifetime;
-            queue.push({callback: entry, frames: 1, end_callback: undefined, data: undefined})
+            queue.push({callback: entry, frames: 1, begin_callback: undefined, end_callback: undefined, data: undefined})
         } else {
             if (typeof entry !== 'number' && typeof entry !== 'object') {
                 $error("Illegal sequence entry. Must be a function, nil, number, or object");
@@ -193,7 +193,14 @@ function sequence(...seq) {
             let frames = (typeof entry === 'number') ? entry : entry.frames;
             frames = (frames <= 0.5) ? 0 : $Math.max(1, $Math.round(frames || 1));
             if (frames > 0) {
-                queue.push({callback: entry.callback, end_callback: entry.end_callback, frames: frames, data: entry.data})
+                
+                queue.push({
+                    callback: entry.callback,
+                    begin_callback: entry.begin_callback,
+                    end_callback: entry.end_callback,
+                    frames: frames,
+                    data: entry.data});
+                
                 totalLifetime += frames;
             }
         }
@@ -209,6 +216,14 @@ function sequence(...seq) {
         const step = queue[0];
         
         if (step.callback) {
+            if (currentFrame === 0 && step.begin_callback) {
+                const result = step.begin_callback(step.data);
+                if (result === sequence.BREAK) {
+                    remove_frame_hook(hook);
+                    return;
+                }
+            }
+            
             const result = step.callback(step.frames - currentFrame - 1, step.frames, step.data);
             if (result === sequence.BREAK) {
                 remove_frame_hook(hook);
@@ -317,6 +332,46 @@ function last_key(s) {
         $error('Argument to last_key() must be a string or array');
     }
     return size(s) - 1;
+}
+
+
+/* The value is cloned for each entry. If size is an xy(), 
+   makes a 2D array, which is an array of arrays with a size 
+   property. */
+function make_array(size, value, value_clone) {
+    if (size.z !== undefined) {
+        if (size.y === undefined || size.x === undefined) {
+            $error('3D array size must also have x and y properties');
+        }
+        
+        const array3D = make_array(size.x);
+        for (let x = 0; x < size.x; ++x) {
+            const array2D = array3D[i] = make_array({x: size.y, y: size.z}, value, value_clone);
+            array2D.size = xz(size);
+        }
+        array2D.size = clone(size);
+        
+        return array2D;
+    } else if (size.y !== undefined) {
+        if (size.x === undefined) {
+            $error('2D array size must also have an x property');
+        }
+        // 2D
+        const array2D = make_array(size.x);
+        for (let x = 0; x < size.x; ++x) {
+            array2D[x] = make_array(size.y, value, value_clone);
+        }
+        array2D.size = clone(size);
+        
+        return array2D;
+    } else {
+        // 1D
+        const array = []
+        for (let i = 0; i < size; ++i) {
+            array[i] = value_clone ? value_clone(value) : value;
+        }
+        return array;
+    }
 }
 
 
@@ -4172,17 +4227,24 @@ function draw_line(A, B, color, z, width) {
     
     if (width === undefined) { width = 1; }
 
-    let z_pos = A.z;
+    let z_pos_A = A.z;
+    let z_pos_B = B.z;
     let z_order = z;
     
-    if (z_order === undefined) { z_order = z_pos; }
+    if (z_order === undefined) { z_order = z_pos_A; }
     if (z_order === undefined) { z_order = 0; }
-    if (z_pos === undefined) { z_pos = z_order; }
+    if (z_pos_A === undefined) { z_pos_A = z_order; }
+    if (z_pos_B === undefined) { z_pos_B = z_order; }
 
-    z_pos -= $camera.z;
+    z_pos_A -= $camera.z;
+    z_pos_B -= $camera.z;
     z_order -= $camera.z;
+
+    const mag_A = $zoom(z_pos_A), mag_B = $zoom(z_pos_B);
+
+    const zoomed_width = width * 0.5 * ($Math.abs(mag_A) + $Math.abs(mag_B));
     
-    if (width * $zoom(z_pos) >= 1.5) {
+    if (zoomed_width >= 1.5) {
         // Draw a polygon instead of a thin line, as this will
         // be more than one pixel wide in screen space.
         let delta_x = B.y - A.y, delta_y = A.x - B.x;
@@ -4201,27 +4263,28 @@ function draw_line(A, B, color, z, width) {
     
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Transform the arguments to account for the camera
-        const mag = $zoom(z_pos);
-        const C = $Math.cos($camera.angle) * mag, S = $Math.sin($camera.angle * rotation_sign()) * mag;
+        const C = $Math.cos($camera.angle), S = $Math.sin($camera.angle * rotation_sign());
         let x = A.x - $camera.x, y = A.y - $camera.y;
-        A = {x: x * C + y * S, y: y * C - x * S};
+        A = {x: (x * C + y * S) * mag_A, y: (y * C - x * S) * mag_A};
+        
         x = B.x - $camera.x, y = B.y - $camera.y;
-        B = {x: x * C + y * S, y: y * C - x * S};
-        width *= mag;
+        B = {x: (x * C + y * S) * mag_B, y: (y * C - x * S) * mag_B};
+        
+        width = zoomed_width;
     }
     
-    const skx = (z_pos * $skewXZ), sky = (z_pos * $skewYZ);
-    let x1 = (A.x + skx) * $scaleX + $offsetX, y1 = (A.y + sky) * $scaleY + $offsetY;
-    let x2 = (B.x + skx) * $scaleX + $offsetX, y2 = (B.y + sky) * $scaleY + $offsetY;
-    z_pos = z_pos * $scaleZ + $offsetZ;
+    const x1 = (A.x + z_pos_A * $skewXZ) * $scaleX + $offsetX, y1 = (A.y + z_pos_A * $skewYZ) * $scaleY + $offsetY;
+    const x2 = (B.x + z_pos_B * $skewXZ) * $scaleX + $offsetX, y2 = (B.y + z_pos_B * $skewYZ) * $scaleY + $offsetY;
     z_order = z_order * $scaleZ + $offsetZ;
+    z_pos_A = z_pos_A * $scaleZ + $offsetZ;
+    z_pos_B = z_pos_B * $scaleZ + $offsetZ;
 
     color = $colorToUint16(color);
 
     // Offscreen culling optimization
     if (! (color & 0xf000) ||
-        ($Math.min(x1, x2) > $clipX2 + 0.5) || ($Math.max(x1, x2) < $clipX1 - 0.5) || (z_pos < $clipZ1 - 0.5) ||
-        ($Math.min(y1, y2) > $clipY2 + 0.5) || ($Math.max(y1, y2) < $clipY1 - 0.5) || (z_pos > $clipZ2 + 0.5)) {
+        ($Math.min(x1, x2) > $clipX2 + 0.5) || ($Math.max(x1, x2) < $clipX1 - 0.5) || ($Math.min(z_pos_A, z_pos_B) < $clipZ1 - 0.5) ||
+        ($Math.min(y1, y2) > $clipY2 + 0.5) || ($Math.max(y1, y2) < $clipY1 - 0.5) || ($Math.max(z_pos_A, z_pos_B) > $clipZ2 + 0.5)) {
         return;
     }
 

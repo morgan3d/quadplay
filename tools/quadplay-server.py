@@ -464,7 +464,10 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                             if os.path.exists(path):
                                 # Found this app
                                 applications.append({'name': app['name'], 'path': path, 'types': app['types']})
+                                #print('FOUND', path)
                                 break
+                            #else:
+                            #    print('Did not find', path)
                             
             elif webpath == script_query_webpath:
                 aux_webpath = query[query.index('=') + 1:]

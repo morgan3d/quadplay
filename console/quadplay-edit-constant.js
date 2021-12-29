@@ -112,7 +112,7 @@ function makeConstantEditorControlHTML(constantName, controlName, json, value, i
     const type = json.type || typeof value;
     const disabled = editableProject ? '' : 'disabled';
     if (type === 'string') {
-        html += `<span class="constantName">${constantName}</span> = "<textarea style="vertical-align:top; margin-left:1px; margin-right:2px;" autocomplete="false" ${disabled} onchange="onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.value, this.value)" rows=4 cols=40>${value}</textarea>"`;
+        html += `<span class="constantName">${constantName}</span> = "<textarea ${json.url ? 'disabled' : ''} style="vertical-align:top; margin-left:1px; margin-right:2px;" autocomplete="false" ${disabled} onchange="onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.value, this.value)" rows=4 cols=40>${value}</textarea>"`;
     } else if (value === undefined || value === null) {
         html += '<span class="constantName">' + constantName + '</span> = <code>∅</code><br>';
     } else if (type === 'number') {

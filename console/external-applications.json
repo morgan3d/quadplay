@@ -3,6 +3,7 @@
         {
             "name": "Photoshop",
             "paths": [
+                "/Applications/Adobe Photoshop 2022/Adobe Photoshop 2022.app",
                 "/Applications/Adobe Photoshop 2020/Adobe Photoshop 2020.app",
                 "/Applications/Adobe Photoshop CC 2019/Adobe Photoshop CC 2019.app",
                 "/Applications/Adobe Photoshop CC 2018/Adobe Photoshop CC 2018.app",
@@ -66,6 +67,7 @@
        {
            "name": "Photoshop",
            "paths": [
+               "C:/Program Files/Adobe/Adobe Photoshop 2022/Photoshop.exe",
                "C:/Program Files/Adobe/Adobe Photoshop 2020/Photoshop.exe",
                "C:/Program Files/Adobe/Adobe Photoshop CC 2019/Photoshop.exe",
                "C:/Program Files/Adobe/Adobe Photoshop CC 2018/Photoshop.exe",
@@ -82,7 +84,7 @@
 
        {
            "name" : "VS Code",
-           "paths" : ["C:/Users/${USER}/AppData/Local/Programs/Microsoft VS Code/Code.exe"],
+           "paths" : ["~/AppData/Local/Programs/Microsoft VS Code/Code.exe"],
            "types": ["pyxl", "json", "html", "md"]
        },
        {
