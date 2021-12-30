@@ -1,7 +1,7 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
 "use strict";
 
-const version  = '2021.12.30.12';
+const version  = '2021.12.30.13';
 
 // Set to false when working on quadplay itself
 const deployed = true;
@@ -1464,7 +1464,7 @@ function onError(e) {
     e = jsToPSError(e);
 
     // Try to compute a short URL
-    setErrorStatus((e.fcn !== '?' ? e.fcn + ' at ' : '') + shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message);
+    setErrorStatus((e.fcn !== '?' && e.fcn !== '' ? e.fcn + ' at ' : '') + shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message);
     if (e.stack && e.stack.length > 0) {
         for (let i = 0; i < e.stack.length; ++i) {
             const entry = e.stack[i];
@@ -2952,9 +2952,19 @@ function debug_watch(location, expression, value) {
     parsing the @ pragmas in the compiledProgram code.
  */
 function jsToPSError(error) {
-    console.log(error);
-    
-    // Firefox
+    function functionName(str) {
+        
+        // Remove @ suffixes from post-2021 Safari
+        if (str.endsWith('@')) { str = str.substring(0, str.length - 1); }
+
+        str = str.trim();
+
+        if (str === 'anonymous' || str === 'eval') { str = '?'; }
+        if (str !== '' && str !== '?') { str += '()'; }
+        
+        return str;
+    }
+
     let lineNumber = error.lineNumber;
     let resultFcn = '?';
     let resultStack = [];
@@ -2980,10 +2990,10 @@ function jsToPSError(error) {
                                stack[i] !== 'anonymous' &&
                                stack[i].indexOf('[native') === -1) {
                             if (first) {
-                                resultFcn = stack[i] + '()';
+                                resultFcn = functionName(stack[i]);
                                 first = false;
                             } else {
-                                resultStack.push({fcn:stack[i] + '()'});
+                                resultStack.push({fcn: functionName(stack[i])});
                             }
                             ++i;
                         }
@@ -3005,9 +3015,7 @@ function jsToPSError(error) {
 
                         // Parse the function name
                         resultFcn = stack[i].match(/^(?:[ \t]*(?:at[ \t]+)?)([^\.\n \n\(\):@\/]+)/);
-                        resultFcn = resultFcn ? resultFcn[1] : '?';
-                        if (resultFcn === 'anonymous' || resultFcn === 'eval') { resultFcn = '?'; }
-                        if (resultFcn !== '?') { resultFcn += '()'; }
+                        resultFcn = resultFcn ? functionName(resultFcn[1]) : '?';
 
                         // Read from here until the top of the user stack
                         ++i;
@@ -3024,7 +3032,7 @@ function jsToPSError(error) {
                                 done = true;
                             }
 
-                            if (fcn !== '?') { fcn += '()'; }
+                            fcn = functionName(fcn);
 
                             // Convert line numbers
                             const stackEntry = jsToPyxlLineNumber(parseInt(match[1]), lineArray);
@@ -3036,10 +3044,10 @@ function jsToPSError(error) {
                         
                         break;
                     }
-                }
-            }
-        }
-    }
+                } // for stack frame
+            } // if Safari
+        } // if the stack trace is non-empty
+    } // if there is a stack trace
 
     if (! lineNumber && error.lineNumber) {
         // Safari
@@ -3059,7 +3067,7 @@ function jsToPSError(error) {
          (error.stack.indexOf('GeneratorFunction') === -1) &&
          (error.stack.indexOf('quadplay-runtime-') !== -1)) ||
         ! lineNumber) {
-        return {url:'(unknown)', lineNumber: '(unknown)', message: '' + error, stack: resultStack, fcn: resultFcn};
+        return {url:'(?)', lineNumber: '(?)', message: '' + error, stack: resultStack, fcn: resultFcn};
     }
 
     const result = jsToPyxlLineNumber(lineNumber, lineArray);
