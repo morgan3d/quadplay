@@ -1,7 +1,7 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
 "use strict";
 
-const version  = '2021.12.29.18';
+const version  = '2021.12.30.12';
 
 // Set to false when working on quadplay itself
 const deployed = true;
@@ -33,6 +33,9 @@ const hasBrowserScaleBug = isSafari;
 // Disabled by the profiler if not making frame rate, reset
 // on game start.
 let allow_bloom = true;
+
+// Output the version to help with debugging
+console.log('quadplay version ' + version + '\nCopyright 2022 Morgan McGuire\nLicensed as GPL 3.0');
 
 function enterKioskMode() {
     inPageReload = true;
