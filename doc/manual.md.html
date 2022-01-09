@@ -2224,6 +2224,18 @@ Random Values
 : Returns a uniformly distributed `xy()` in the disk with center `(0, 0)` with radius 1. Useful for
   random offsets within a circle. See also `random_on_circle()`
 
+`random_within_region(region, recurse default true, random default random)`
+: Random world space 2D point generated within uniformly within the
+  region described. A region may be:
+
+   - an entity from `make_entity()`
+   - any object with `pos` or `corner`, and optional `shape`, `angle`, `pivot`, and `size` properties
+   - any object with `x` and `y` properties (including an `xy()`), which will be treated as a point
+
+  If `recurse` is true (the default), recursively considers the area
+  covered by all children as if they were non-overlapping. That is,
+  the overlapping area is sampled twice.
+
 `random_within_square(random default random)`
 : Returns a uniformly distributed `xy()` in the square from `(-1, -1)` to `(1, 1)`, that is,
   the square that has a "radius" of 1 or sides of length two, and is centered at the origin `(0, 0)`.
@@ -2293,7 +2305,7 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 
 `cross(a, b)`
 : Return the vector cross product of two arrays of length three each or two vectors with
-  `x`, `y`, and `z` fields. For arguments of length two or without a `z` component,
+  `x`, `y`, and `z` properties. For arguments of length two or without a `z` component,
   returns `a.x * b.y - a.y * b.x`, which is the 2D wedge product.
 
 `direction(v)`
@@ -2350,7 +2362,7 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 : Returns `{x:v.x, y:v.z, z:new_z}`.
 
 `xz(x, z)`
-: Create the object with `x` and `z` fields.
+: Create the object with `x` and `z` properties.
 
 `xz(xz)`
 : Returns `{x:xz.x, z:xz.z}`. Useful for removing the `y` property or cloning.
@@ -2365,7 +2377,7 @@ including `xy()` and `rgb()` values, except where specific key names are mention
 : Returns `{x:xz.x, y:xz, z:new_z}`. See also `xz_to_xy()`.
 
 `xyz(x, y, z)`
-: Create the object with `x`, `y`, and `z` fields.
+: Create the object with `x`, `y`, and `z` properties.
 
 `xyz(xy, z default 0)`
 : Creates `{x: xy.x, xy:y, z}`
@@ -2588,7 +2600,7 @@ Math
 Sound
 ---------------------------------------------------------
 
-The sound object has a single field, `sound.duration`, which is the number
+The sound object has a single property, `sound.duration`, which is the number
 of seconds that it will play before ending or looping.
 
 `get_audio_status(audio)`
@@ -3071,7 +3083,7 @@ flip sprites from left to right, which also flips the entity's local
 coordinate system. 
 
 In most cases, you won't have to think about entity space beyond setting
-those fields. Entitys drawn with sprites and interacting with physics
+those properties. Entitys drawn with sprites and interacting with physics
 automatically handle the transformations. Only if you're doing detailed
 manipulation of children or drawing explicitly in entity space do you
 need to apply transformations.
@@ -3208,7 +3220,7 @@ Because it is an array, the i<sup>th</sup> sprite is `animation[i]` and
 you can loop that using `array_value(animation, i)` or choose a random
 one with `random_value(animation)`.
 
-To create an animation, there must be a `start` field in the named 
+To create an animation, there must be a `start` property in the named 
 entry of the .sprite.json file.
 
 
@@ -3217,8 +3229,8 @@ Sprite
 
 Each sprite element `spritesheet[x][y]` of a spritesheet has the following immutable properties.
 Sprites can also be referenced by name `spritesheet["`<i>name</i>`"]` or 
-`spritesheet.`<i>name</i>, if the named sprite has an `x` and `y` field instead of
-a `start` field in the .sprite.json file.
+`spritesheet.`<i>name</i>, if the named sprite has an `x` and `y` property instead of
+a `start` property in the .sprite.json file.
 
 `sprite.animation`
 : If the sprite is in an animation (a multi-frame named array from a `sprite.json` file),
@@ -3302,7 +3314,7 @@ prototyping. There are three categories of entity abstraction: basic,
 physics, and hierarchy. Use whichever level of complexity is useful to
 you, or simply build your own system if you wish. Note that due to "duck
 typing", you can apply entity functions to any object that has the
-right subset of fields for that function.
+right subset of properties for that function.
 
 In addition to the built-in entity properties, you can add whatever
 properties you wish. Beware that the following properties are
@@ -3328,7 +3340,7 @@ built-in properties in the future: `density` and `friction`.
   `obj` are copied over but not cloned.
 
   If the `childTable` second argument is provided (note that this is not
-  a property of `obj`), then all of the keys become fields of the new
+  a property of `obj`), then all of the keys become properties of the new
   entity and the values are added to the entity's `child_array`. This is
   a convenient way to build entity hierarchies.
 
@@ -3386,7 +3398,7 @@ The basic entity properties and defaults are:
 : The draw-space `xy()` size of the width and height of the bounding
   box of the entire object in its own reference frame. The
   rendered/collision size is `entity.size * |entity.scale|`.  If
-  `entity.shape == "disk"`, then the `x` and `y` fields must have the
+  `entity.shape == "disk"`, then the `x` and `y` properties must have the
   same value. If not specified, size defaults to the sprite's size.
   The size is in entity space. It does not factor in the scale. Use
   `entity.size * |entity.scale|` for the rendered and collision size
@@ -3615,10 +3627,11 @@ Hierarchy functions:
   Returns the `child`.
 
 `entity_remove_child(parent, child)`
-: Removes the `child` from `parent.child_array`, if it is a child. Does nothing if
-  `child` is not in `parent`. Causes an error if `child` and `parent.child_array`
-  are inconsistent.  If the child was added by the `make_entity` `childTable` as a
-  field on parent, that field is not modified. You can remove the field explicitly
+: Removes the `child` from `parent.child_array`, if it is a
+  child. Does nothing if `child` is not in `parent`. Causes an error
+  if `child` and `parent.child_array` are inconsistent.  If the child
+  was added by the `make_entity` `childTable` as a property on parent,
+  that property is not modified. You can remove the property explicitly
   using `remove_key(parent, "childName")`.
 
 `entity_remove_all(parent)`
@@ -4726,12 +4739,12 @@ to mutate the asset.
 
 `map.loop_x`
 : If true, the map wraps horizontally. Array access does not automatically
-  wrap, but functions such as `get_map_sprite()`, `find_map_path()`, and `get_map_pixel_color()`
+  wrap, but functions such as `get_map_sprite()`, `map_find_path()`, and `get_map_pixel_color()`
   will implement wrapping. See details on each map function to see how it supports wrapping.
 
 `map.loop_y`
 : If true, the map wraps vertically. Array access does not automatically
-  wrap, but functions such as `get_map_sprite()`, `find_map_path()`, and `get_map_pixel_color()`
+  wrap, but functions such as `get_map_sprite()`, `map_find_path()`, and `get_map_pixel_color()`
   will implement wrapping. See details on each map function to see how it supports wrapping.
   
 `map.z_offset`
@@ -4814,7 +4827,7 @@ indices. The map's z-axis corresponds to layers.
   
   Respects the wrapping and wraps infinitely.
 
-`find_map_path(map, start_xy, goal_xy, edge_cost, cost_layer default 0, use_sprite_id default true)`
+`map_find_path(map, start_xy, goal_xy, edge_cost, cost_layer default 0, use_sprite_id default true)`
 : Specialized version of `find_path` for maps. The start and end positions
   are rounded down to the nearest integer map coordinates. The `edge_cost`
   is either a function or an array. The function returns an array of
@@ -5104,7 +5117,7 @@ Path Finding
 
 `find_path(start_node, goal_node, estimate_path_cost, edge_cost, get_neighbors, node_to_ID, graph_obj default ∅)`
 : `find_path()` is a general-purpose path-finding routine for any kind of
-  world representation. It uses the "A*" (A-star) algorithm. _See also `find_map_path()` for a simpler, map-specific version._
+  world representation. It uses the "A*" (A-star) algorithm. _See also `map_find_path()` for a simpler, map-specific version._
 
   The return value is an array of nodes to traverse to follow the shortest path discovered.
   The first node in the returned path will
@@ -5266,7 +5279,7 @@ debug_graphics and debug_print("Running iteration" + i)
 : Render a debugging view of the bounds of an entity or other object `e`
   with `pos` and optional `angle`, `size`, `scale`, and `shape`
   properties. If `recurse` is true, descend into
-  any `e.child_array` field.
+  any `e.child_array` property.
 
 `draw_physics(physics)`
 : Render a debugging view of the physics system
@@ -5483,6 +5496,14 @@ and other operations that naturally compile with maximum efficiency.
 
 `CLAMP(s, slo, shi)`
 : Clamps `s` to [`slo`, `shi`] where all are scalar and returns the result.
+
+`SUM(array)`
+: Returns the sum of the numbers in the array. The result is zero if
+  the array has zero length.
+
+`PROD(array)`
+: Returns the product of the numbers in the array. The result is one
+  if the array has zero length.
 
 `RGB_ADD_RGB(srcrgb, srcrgb, dstrgb)`
 : Element addition.
@@ -5900,6 +5921,7 @@ From the [_Three Red Hearts_](https://abstractionmusic.bandcamp.com/album/three-
 ![`quad://sounds/loop-footsteps-indoor.sound.json`](../sounds/loop-footsteps-indoor.mp3) ![`quad://sounds/loop-footsteps-puddle.sound.json`](../sounds/loop-footsteps-puddle.mp3)
 ![`quad://sounds/loop-footsteps-water.sound.json`](../sounds/loop-footsteps-water.mp3) ![`quad://sounds/loop-footsteps-snow.sound.json`](../sounds/loop-footsteps-snow.mp3)
 ![`quad://sounds/loop-spin.sound.json`](../sounds/loop-spin.mp3) ![`quad://sounds/loop-alarm.sound.json`](../sounds/loop-alarm.mp3)
+![`quad://sounds/loop-helicopter.sound.json`](../sounds/loop-helicopter.mp3)
 
 
 ### Shoot
@@ -6231,7 +6253,7 @@ are immutable at runtime by the program, but can be changed by the GUI
 editors for debugging and tuning at runtime.
 
 Each constant has the format `"..name..": {"type": "..type..", "value": ..., "description": "..."}`.
-The `description` field is optional and the `raw` type permits a `url` instead of a `value`.
+The `description` property is optional and the `raw` type permits a `url` instead of a `value`.
 Other types may have additional metadata used for the IDE.
 
 Explicit types allow support for the full PyxlScript literal syntax
@@ -6255,10 +6277,10 @@ The available constants types are:
   - `xy`
   - `xz`
   - `xyz`
-  - Each of these may have a `"nudge"` field, which is another vector of the same type
+  - Each of these may have a `"nudge"` property, which is another vector of the same type
     that specifies the amount that the IDE should shift by along each axis when nudging.
     The nudge vector expects strings of numbers or numbers directly, rather than
-    recursive fields with type and value elements.
+    recursive properties with type and value elements.
 - `rgb`
 - `rgba`
 - `hsv`
@@ -6577,10 +6599,10 @@ The sprite sheet JSON descriptor looks like:
     },
 
     // Optional. Applies to pre-transpose coordinates. Each becomes
-    // an array on the spritesheet with the extrapolate field set.
-    // A name cannot be 'sprite_size' or any other spritesheet field.
+    // an array on the spritesheet with the `extrapolate` property set.
+    // A name cannot be `sprite_size` or any other spritesheet property.
     //
-    // If an object with "x" and "y" properties is specified, creates a single sprite.
+    // If an object with `x` and `y` properties is specified, creates a single sprite.
     //
     // If an object is specified, creates an array of sprites.
     //
@@ -6591,7 +6613,7 @@ The sprite sheet JSON descriptor looks like:
     // spritesheet's default_frames, as well as a `frames` array with
     // one element per sprite in the animation.
     //
-    // `end` defaults to `start`, and each field of `end` defaults
+    // `end` defaults to `start`, and each property of `end` defaults
     // to the corresponding part of `start`.
     "names":        {
         "idle":     {"start": {"x": 0, "y": 0}, "end": {"x": 0, "y": 3}, "extrapolate": "oscillate",
@@ -6643,7 +6665,7 @@ Setting `transpose` to true flips the indexing to `S[y][x]`, which
 is more convenient for some sprites.
 
 Animations appear to game code as arrays of sprites that have the
-following additional fields:
+following additional properties:
 
 `extrapolate`
 : Equal to `"clamp"`, `"loop"`, or `"oscillate"` as specified in the spritesheet.
@@ -6896,7 +6918,7 @@ Data JSON
 The special data asset type allows importing a large amount of data in
 an arbitrary format. It supports PNG, JPG, GIF, CSV, TXT, JSON, YAML,
 and XML. Unlike a CSV, JSON, or YAML _constant_, an asset can contain
-metadata, a license, and arbitrary extra fields.
+metadata, a license, and arbitrary extra properties.
 
 Unlike a sprite, a PNG, JPG, or GIF data asset presents the raw 8-bit per
 pixel data as a 2D array to the program instead of quantizing it to
@@ -7526,9 +7548,10 @@ Implicit multiplication can be used within exponents.
 ### Spread Operator
 
 The spread operator (`…` or `...`) allows defining and calling
-functions with a variable number of arguments and creating a merged
-version of objects or arrays. It is the same as `*rest` in Python and
-`...rest` in JavaScript.
+functions with a variable number of arguments and creating an extended
+clone of an object or array. It is the same as `*rest` in Python and
+`...rest` in JavaScript, and similar to varargs in C++ and `...` in
+Java.
 
 In a function declaration it designates the final argument as an array
 of all further arguments.  For example, `def foo(a, b, …rest):` takes
@@ -7594,7 +7617,7 @@ Symbol         | ASCII           | Value
                | `VIEW_ARRAY`    | array of corner rects for host and each guest's view in private view online multiplayer. See `set_screen_size()`
                | `CONSTANTS`     | an object mapping all game-specific constants to their values
                | `ASSETS`        | an object mapping all game-specific assets to their values
-               | `SOURCE_LOCATION` | an object that has fields `{url:, filename:, line_number:}` from its location in the source code
+               | `SOURCE_LOCATION` | an object that has properties `{url:, filename:, line_number:}` from its location in the source code
                
                
 
@@ -8064,7 +8087,7 @@ A B Γ Δ E Z H Θ I K Λ M N Ξ O Π P Σ T Φ X Ψ Ω
 Ⓞ ⍍ ▣ ⧉ ☰
 `````````````````````````````````````````````````````
 [Button prompts. Device-aware and full button prompts
-are available via the `prompt` field of `gamepad_array[]` elements]
+are available via the `prompt` property of `gamepad_array[]` elements]
 
 
 Note that the superscripts `ᵈᵉʰᵐᵒʳˢᵗ` are legal in text strings but

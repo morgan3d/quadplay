@@ -305,7 +305,7 @@ function autocorrectSession(session) {
         src += '\n';
     }
 
-    if ((src.length === 0) || (/[0-9A-Za-z_|=\-^]/.test(src[src.length - 1]) && ! src.endsWith('Delta'))) {
+    if ((src.length === 0) || (/[0-9A-Za-z_|=\-^]/.test(src[src.length - 1]) && ! src.endsWith('Delta') && ! src.endsWith('...'))) {
         // The last character is not a symbol-breaking character, so return immediately
         return;
     }
@@ -359,6 +359,18 @@ function autocorrectSession(session) {
         }
     }
 
+
+    if (! replacement && lastChar === '.' && src.endsWith('...')) {
+        replacement = '…';
+        target = '...';
+        
+        session.replace(new ace.Range(position.row, position.column - target.length + 1, position.row, position.column + 1), replacement);
+        // Advance the cursor to the end over the replacement
+        aceEditor.gotoLine(position.row + 1, position.column - target.length + replacement.length + 1, false)
+        return;
+    }
+
+    
     if (! replacement) {
         // Strip the last character, which will not be part of the autocorrect.
         src = src.substring(0, src.length - 1);

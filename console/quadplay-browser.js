@@ -298,10 +298,10 @@ try {
     audioContext = new AudioContext({
         latencyHint: 'interactive',
 
-        // Sounds significantly above 11 kHz are quite unpleasant
-        // and are generally not even audible to adults.
-        // Halve memory consumption by dropping the audio rate
-        // of the entire audio context. (http://www.noiseaddicts.com/2009/03/can-you-hear-this-hearing-test/)
+        // Sounds significantly above 11 kHz are quite unpleasant and
+        // are generally not even audible to adults.  Halve memory
+        // consumption by dropping the audio rate of the entire audio
+        // context. (http://www.noiseaddicts.com/2009/03/can-you-hear-this-hearing-test/)
         sampleRate: 22050
         /*44100*/
     });

@@ -2741,7 +2741,7 @@ function transform_from(pos, angle, scale, coord) {
     const Yx = -S, Yy = C;
 
     const x = coord.x * scale.x, y = coord.y * scale.y;
-    return xy(x * Xx + y * Xy + pos.x, x * Yx + y * Yy + pos.y);
+    return {x: x * Xx + y * Xy + pos.x, y: x * Yx + y * Yy + pos.y};
 }
 
 
@@ -6162,7 +6162,9 @@ function entity_area(entity) {
 }
 
 
-// Add any default fields needed for an overlaps() test and return the cleaned up object.
+// Add any default fields needed for an overlaps() test and return the
+// cleaned up object. If everything is present, returns the object
+// unmodified, otherwise clones it and adds the properties to the clone.
 function $cleanupRegion(A) {
     if ((A.scale === undefined) || (A.pos === undefined) || (A.shape === undefined) || (A.size === undefined)) {
         if ((A.x !== undefined) && (A.y !== undefined)) {
@@ -6179,27 +6181,93 @@ function $cleanupRegion(A) {
                      y: A.corner.y + 0.5 * A.size.y * $Math.abs(A.scale.y)}
             
             if (A.angle !== 0) {
-                $error('Cannot use angle != 0 with a corner rect in overlaps()');
+                $error('Cannot use angle != 0 with a corner rect');
             }
 
-            // Remove the corner property
+            // Remove the corner property, which was a clone, to
+            // avoid the upcoming check for both clone and pos.
             delete A.corner;
         }
     }
 
     if (A.corner) {
-        $error('Cannot use both corner and pos on the same object in overlaps()');
+        $error('Cannot use both corner and pos on the same object');
     }
     
     if (A.pivot && (A.pivot.x !== 0 || A.pivot.y !== 0)) {
         // Apply the pivot, cloning the entire object for simplicity
         A = Object.assign({}, A);
         A.pos = $maybeApplyPivot(A.pos, A.pivot, A.angle, A.scale);
-        A.pivot = undefined;
+        delete A.pivot;
     }
     
     // All required properties are present
     return A;
+}
+
+// Appends e and all of its descendants to array output
+function $getDescendants(e, output) {
+    if (e) {
+        output.push(e);
+        if (e.child_array) {
+            for (let i = 0; i < e.child_array.length; ++i) {
+                $getDescendants(e.child_array[i], output);
+            }
+        }
+    }
+}
+
+
+function random_within_region(region, recurse, rng) {
+    if (recurse === undefined) { recurse = true; }
+    if (rng === undefined) { rng = random; }
+
+    if (recurse) {
+        // Child case
+        const entity_array = [], area_array = [];
+        $getDescendants(region, entity_array);
+
+        // Compute total area
+        let total_area = 0;
+        for (let e = 0; e < entity_array.length; ++e) {
+            const entity = entity_array[e] = $cleanupRegion(entity_array[e]);
+            total_area += area_array[e] = entity_area(entity);
+        }
+
+        // Choose proportional to area
+        let r = rng(0, total_area);
+        for (let e = 0; e < entity_array.length; ++e) {
+            r -= area_array[e];
+            if (r <= 0 || e === entity_array.length - 1) {
+                return random_within(entity_array[e], false, rng);
+            }
+        }
+        
+    } else {
+        // Single region case
+        region = $cleanupRegion(region);
+
+        let P;
+        switch (region.shape) {
+        case 'disk':
+            P = random_within_circle(rng);
+            break;
+            
+        case 'rect':
+            P = random_within_square(rng);
+            break;
+            
+        case 'point':
+            return xy(region.pos);
+
+        default:
+            $error('Illegal shape: ' + region.shape);
+        }
+
+        P.x *= 0.5 * region.size.x; P.y *= 0.5 * region.size.y;
+        return transform_from_es_to_ws(region, P);
+
+    } // recurse
 }
 
 
@@ -6208,18 +6276,6 @@ function $cleanupRegion(A) {
     +x to +y. Shapes are 'rect' or 'disk'. If 'disk', the size x
     and y must be the same.  */
 var overlaps = (function() {
-
-    // Appends e and all of its descendants to output
-    function getDescendants(e, output) {
-        if (e) {
-            output.push(e);
-            if (e.child_array) {
-                for (let i = 0; i < e.child_array.length; ++i) {
-                    getDescendants(e.child_array[i], output);
-                }
-            }
-        }
-    }
     
     function distanceSquared2D(u, v) { return $square(u.x - v.x) + $square(u.y - v.y); }
 
@@ -6305,8 +6361,8 @@ var overlaps = (function() {
 
             // Handle all combinations of chidren here
             const AArray = [], BArray = [];
-            getDescendants(A, AArray);
-            getDescendants(B, BArray);
+            $getDescendants(A, AArray);
+            $getDescendants(B, BArray);
             for (let i = 0; i < AArray.length; ++i) {
                 for (let j = 0; j < BArray.length; ++j) {
                     if (overlaps(AArray[i], BArray[j], false)) {
@@ -7812,6 +7868,20 @@ function MUL(a, b) {
     return a * b;
 }
 
+function SUM(array) {
+    let s = 0;
+    let i = array.length;
+    while (i--) { s += array[i]; }
+    return s;
+}
+
+function PROD(array) {
+    let s = 1;
+    let i = array.length;
+    while (i--) { s *= array[i]; }
+    return s;
+}
+
 function SIGN(a) {
     return $Math.sign(a);
 }
@@ -8466,7 +8536,7 @@ function pow(a, b) {
 //
 //
 
-function find_map_path(map, start, goal, edgeCost, costLayer, use_sprite_id) {
+function map_find_path(map, start, goal, edgeCost, costLayer, use_sprite_id) {
     if (use_sprite_id === undefined) { use_sprite_id = true; }
     
     if (is_array(edgeCost)) {
@@ -8523,6 +8593,9 @@ function find_map_path(map, start, goal, edgeCost, costLayer, use_sprite_id) {
 
     return find_path(floor(start), floor(goal), estimatePathCost, edgeCost, getNeighbors, function (N) { return N.x + N.y * map.size.x * 2; }, map);
 }
+
+// For backwards compatibility 
+var find_map_path = map_find_path;
 
 
 /** Used by find_path */

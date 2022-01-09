@@ -75,6 +75,10 @@ color: #9df8fa\
 color: #CED2CF;\
 background-color: #DF5F5F\
 }\
+.ace-quadplay .ace_section, .ace-quadplay .ace_functiondecl {\
+font-weight: 900;\
+color:#fff\
+}\
 .ace-quadplay .ace_invalid.ace_deprecated {\
 color: #CED2CF;\
 background-color: #B798BF\

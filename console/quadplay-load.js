@@ -58,7 +58,7 @@ GlobalReferenceDefinition.prototype.resolve = function () {
     let definition = this.definition
     alreadySeen.set(id, true);
     let path = id;
-    while (definition && definition.type === 'reference') {
+    while (definition && (definition.type === 'reference')) {
         id = definition.value;
         path += ' → ' + id;
         if (alreadySeen.has(id)) {
@@ -1935,6 +1935,9 @@ function addCodeToSourceStats(code, scriptURL) {
 
     // Remove LOCAL, WITH, and PRESERVING_TRANSFORM lines
     code = code.replace(/\n *&? *(local:?|preserving_transform:?|with .*) *\n/gm, '\n');
+
+    // Remove ELSE without following IF:
+    code = code.replace(/\n *else: *\n/g, '\n');
 
     // Remove DEBUG_WATCH, DEBUG_PRINT, TODO, and ASSERT (assume that they are on their own lines to simplify parsing)
     code = code.replace(/(debug_watch|debug_print|todo|assert) *\(.*\n/g, '\n');
