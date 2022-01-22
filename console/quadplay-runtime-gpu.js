@@ -52,6 +52,8 @@ function $show() {
 
 /** Updates the z value with an epsilon and stores the current set_clipping region */
 function $addGraphicsCommand(cmd) {
+    if (is_nan(cmd.z)) { $error('NaN z value in graphics command'); }
+    
     cmd.clipX1 = $clipX1;
     cmd.clipY1 = $clipY1;
     cmd.clipX2 = $clipX2;

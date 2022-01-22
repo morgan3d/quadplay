@@ -1,7 +1,7 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
 "use strict";
 
-const version  = '2022.01.15.15';
+const version  = '2022.01.21.23';
 
 // Set to false when working on quadplay itself
 const deployed = true;
@@ -3428,7 +3428,7 @@ let updateKeyboardPending = false;
 function reloadRuntime(oncomplete) {
     runtime_cursor = 'crosshair';
     QRuntime.document.open();
-    QRuntime.document.write("<!DOCTYPE html><script src='quadplay-runtime-cpu.js' async charset='utf-8'> </script> <script src='quadplay-runtime-physics.js' async charset='utf-8'> </script> <script src='quadplay-runtime-gpu.js' async charset='utf-8'> </script>");
+    QRuntime.document.write("<!DOCTYPE html><script src='quadplay-runtime-cpu.js' async charset='utf-8'> </script> <script src='quadplay-runtime-physics.js' async charset='utf-8'> </script> <script src='quadplay-runtime-gpu.js' async charset='utf-8'> </script> <script src='quadplay-runtime-ai.js' async charset='utf-8'> </script>");
     QRuntime.onload = function () {
         QRuntime.$SCREEN_WIDTH  = SCREEN_WIDTH;
         QRuntime.$SCREEN_HEIGHT = SCREEN_HEIGHT;
@@ -3918,7 +3918,7 @@ function makeConstants(environment, constants, CREDITS) {
 */
 function redefineConstantByName(environment, key, alreadySeenMap, referencePass) {
     const value =
-          (gameSource.debug.constants[key] && gameSource.debug.json.constants[key].enabled) ?
+          (key in gameSource.debug.constants && gameSource.debug.json.constants[key].enabled) ?
           gameSource.debug.constants[key] :
           gameSource.constants[key];
     if (value instanceof GlobalReferenceDefinition) {

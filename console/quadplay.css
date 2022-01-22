@@ -415,11 +415,15 @@ input[type=text], input[type=number], textarea {
 
 /*****************************************************/
 
-div.oneConstantEditor label.debugOverrideCheckbox {
+/* Hide the debug override in compact view until hover */
+div.oneConstantEditor .debugOverrideCheckbox {
     visibility:hidden
 }
 
-div.oneConstantEditor:hover label.debugOverrideCheckbox {
+/* Reveal the checkbox on hover or when checked */
+div.oneConstantEditor:hover .debugOverrideCheckbox,
+  div.oneConstantEditor input.debugOverrideCheckbox:checked,
+  div.oneConstantEditor input.debugOverrideCheckbox:checked + label.debugOverrideCheckbox {
     visibility:visible
 }
 

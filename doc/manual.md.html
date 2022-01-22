@@ -4,7 +4,7 @@
     Fantasy Console by [Casual Effects](https://casual-effects.com)
 
 <center>[*Quick Start*](#quickstart) 
-∙ [API](#standardlibrary) ([*Input*](#standardlibrary/input) ∙ [*Physics*](#standardlibrary/physics) ∙ [*Graphics*](#standardlibrary/graphics) ∙ [*Sound*](#standardlibrary/sound) ∙ [*AI*](#standardlibrary/pathfinding) ∙ [*Network*](#network))
+∙ [API](#standardlibrary) ([*Input*](#standardlibrary/input) ∙ [*Physics*](#standardlibrary/physics) ∙ [*Graphics*](#standardlibrary/graphics) ∙ [*Sound*](#standardlibrary/sound) ∙ [*AI*](#standardlibrary/ai) ∙ [*Network*](#network))
 <br>[Assets](#built-inassets) ([*Sprites*](#sprites) ∙ [*Fonts*](#fonts) ∙ [*Sounds*](#sounds))
 <br>[Controls](#controls) 
 ∙ [Symbols](#symbols)
@@ -5110,10 +5110,42 @@ unaffected.
   `minute`, `second`, `millisecond`, and `timezone` minutes from UTC
   fields, which will then be converted using the `timezone` field to a
   local time.
-  
-
-Path Finding
+ 
+ 
+AI
 ----------------------------------------------------------
+### Move
+
+`find_move(player_index, game_state, generate_moves, do_move, static_evaluate, max_depth default 2, unpredictability default 0, debug_move_to_string default nil)`
+: Chooses the best move for the current player in a two player, zero
+  sum game with perfect information and discrete moves by game tree search
+  using the negamax algorithm. This can handle most two player board games.
+
+  - `player_index`: 0 for the maximizing player, 1 for the minimizing player. This must be the current player in `game_state`
+  - `game_state`: state of the game, an arbitrary data structure (which probably also keeps track of the `player_index` itself…)
+  - `generate_moves(game_state)`: function that returns an array of moves, an arbitrary game-specific data structure
+  - `do_move(game_state, move)`: function that returns a new game state after a move has been performed. This must clone the
+    state and not mutate it
+  - `static_evaluate(game_state)`: function that evaluates a game position as a signed number.
+     Higher is better for `player_index` 0, lower is better for `player_index` 1. 
+     `inf` is a win for player 0, `-inf` is a win for player 1. Returns `"draw"` for a draw (tie).
+  - `max_depth`: integer number of turns to look ahead. Minimum 1. Time cost is exponential in max_depth
+  - `unpredictability`: magnitude of random number to add to the `static_evaluate()` values to create variation in play.
+            Use a small value, like `ε` to add variation when choosing between equally good moves and a large
+            number (like the value of a minor piece) to add surprising or suboptimal play.
+  - `debug_move_to_string(move)`: function that maps a move to a string. If specified, this is used for printing the tree as it is searched to the output window.
+
+
+`make_move_finder(player_index, game_state, generate_moves, do_move, static_evaluate, max_depth default 2, unpredictability default 0, debug_move_to_string default nil)`
+: This allows the search to continue over multiple frames when it goes deep into a game tree. The
+  arguments are the same as for `find_move()`. Returns a function
+  `finder(max_time default 0.25 * 1/60)`. That function runs for about
+  `max_time` in seconds and then returns an object `{progress: percentage, move: move}`. If it has found a good move for this
+  player, then `progress = 100%` and `move` is the best move known to
+  the AI. Otherwise, `progress` is less than 100% and `move` is `nil`.
+
+
+### Path Finding
 
 `find_path(start_node, goal_node, estimate_path_cost, edge_cost, get_neighbors, node_to_ID, graph_obj default ∅)`
 : `find_path()` is a general-purpose path-finding routine for any kind of
@@ -5903,6 +5935,11 @@ From the [_Three Red Hearts_](https://abstractionmusic.bandcamp.com/album/three-
 ![`quad://sounds/loop-dark-thriller.sound.json`](../sounds/loop-dark-thriller.mp3) ![`quad://sounds/loop-chilltech.sound.json`](../sounds/loop-chilltech.mp3)
 ![`quad://sounds/loop-prometheus.sound.json`](../sounds/loop-prometheus.mp3) ![`quad://sounds/loop-forest.sound.json`](../sounds/loop-forest.mp3)
 ![`quad://sounds/loop-beat.sound.json`](../sounds/loop-beat.mp3) ![`quad://sounds/loop-departure.sound.json`](../sounds/loop-departure.mp3)
+
+From the Quadplay album by Abstraction:
+
+![`quad://sounds/loop-smooth_drops.sound.json`](../sounds/loop-smooth_drops.mp3) ![`quad://sounds/loop-all_you_can_yeet.sound.json`](../sounds/loop-all_you_can_yeet.mp3)
+![`quad://sounds/loop-get_off_my_planet.sound.json`](../sounds/loop-get_off_my_planet.mp3)
 
 
 ### Coin
@@ -8941,6 +8978,7 @@ relicensed in the future.  This includes the contents of:
 - [`quadplay.css`](../console/quadplay.css)
 - [`quadplay-runtime-cpu.js`](../console/quadplay-runtime-cpu.js)
 - [`quadplay-runtime-gpu.js`](../console/quadplay-runtime-gpu.js)
+- [`quadplay-runtime-ai.js`](../console/quadplay-runtime-ai.js)
 - [`quadplay-runtime-physics.js`](../console/quadplay-runtime-physics.js)
 - [`quadplay-profiler.js`](../console/quadplay-profiler.js)
 - [`quadplay-browser.js`](../console/quadplay-browser.js)

@@ -6,11 +6,13 @@
 Changes for both the specification and implementation in each release
 of [quadplay✜](manual.md.html).
 
-2022 January TBD: Update 79
+2022 January 21: Update 79
 ===================================
 
+- New `find_move()` and `make_move_finder()` functions for discrete move AI players
 - New `loop-alarm` sound
 - New `loop-helicopter` sound
+- New `loop-smooth_drops`, `loop-get_off_my_planet`, and `loop-all_you_can_yeet` music tracks by Abstraction
 - Added `SUM()` and `PROD()` intrinsics for operating on arrays
 - Added `make_array()` helper function for creating multidimensional arrays
 - Added `random_within_region()`
@@ -23,13 +25,18 @@ of [quadplay✜](manual.md.html).
 - Updated error message reporting syntax for Safari 15
 - Renamed `find_map_path()` -> `map_find_path()` [kept deprecated old version for
   backwards compatibility]
+- `NaN` z values in graphics commands are now an error to help with debugging
+- Factored internal runtime into separate AI, physics, CPU, and GPU files
 - Auto-math now replaces `...` with `…` more aggressively
+- Forced Debug Override button to stay visible when checked in compact, all-constants view
 - Changed statement counter to not count `else:` without `else if` as a separate statement
 - Fixed rendering of diagonal lines with alpha
+- Fixed incorrect syntax coloring of "sgn" as if it was a function
 - Fixed `random_gaussian3D` and `random_on_cube` missing from syntax highlighting
 - Fixed emulator screen showing desktop instead of black when stopped on MacOS and Linux
   (workaround for Chromium bug)
 - Fixed `overlaps()` for corner rects
+- Fixed debug override of constants with `0` failing
 - Fixed url-based string constants being directly editable in the IDE
 
 
