@@ -2043,6 +2043,11 @@ String
   simultaneously. For example,
   `replace("Hey, PROPER_NOUN, use the ADJ NOUN!", {ADJ: "big", NOUN: "stick", PROPER_NOUN: "Runi"})`.
 
+`resized(string, size, pad default " ", right_align default false)`
+: Return a new string of the specified `size`, using `pad` to extend as needed.
+  If `right_align` is true, padding and cropping occur at the start of the string
+  instead of the end.
+
 `reversed(string)`
 : Returns a reversed version of the string in O(size) time.
 
@@ -2059,12 +2064,15 @@ String
 `split(string, separator default "")`
 : Returns an array of strings separated by `separator`. If the separator is the empty string, then all characters are separated.
 
+`split(string, count default 0)`
+: Returns an array of strings that are every sequential `count` characters from `string`.
+
 `starts_with(string, target)`
 : Returns true if `string` begins with the substring `target`. See also `ends_with()`.
 
 `trim_spaces(string)`
 : Returns a new string that is the original with whitespace removed
-  from the start and end.
+  from the start and end. See also `resized()`
 
 `unparse(x, level default 1)`
 : Returns code that is equivalent to producing data object `x`, if it
@@ -5343,9 +5351,15 @@ and persistent worlds.
 
 
 `load_local(key)`
-: The key is loaded and deserialized with `parse()` to return an object
-  that was previously saved with `save_local()`. If the `key` is not found,
-  then `∅` is returned.
+: The key is loaded and deserialized with `parse()` to return an
+  object that was previously saved with `save_local()`. If the `key`
+  is not found, then `∅` is returned. The idiom `load_local(key)
+  default def_val` is convenient for specifying a default when
+  no previous value was stored.
+  
+`load_local()`
+: Return an object mapping all stored keys to their values. The empty
+  object `{}` is returned if there are no keys.
 
 `save_local(key, value)`
 : The value will be serialized to a string with `unparse(value, true)` and then
@@ -5354,6 +5368,13 @@ and persistent worlds.
   characters for the unparsed value for each key and a maximum size of
   64 keys per application. There is no way for two different games to
   read each other's values.
+
+`save_local(object)`
+: Replace all previous keys with these key value pairs. The same size
+  restrictions apply as for the individual key-value pair.
+
+`save_local()`
+: Delete all previous key-value pairs
 
 
 Network
@@ -8111,7 +8132,8 @@ A B Γ Δ E Z H Θ I K Λ M N Ξ O Π P Σ T Φ X Ψ Ω
 
 ````````````````````````````````````````````````````` none big
 ¥ € £ § × ⊢ ¬ ≈ ⊗ ⊕ ⊖ ∫ ± 
-« » ¿ ★ … ∙ ○ ● ◻ ◼ △ ▲ ▼ ◀ ▶ ✓ ♠ ♥ ♣ ♦ 
+« » ★ ☆ ○ ● ◻ ◼ △ ▲ ▼ ◀ ▶
+✓ ♠ ♥ ♡ ♣ ♦ ♢ … ∙ ¿ 
 ↑ ↓ ← → ↖ ↗ ↙ ↘ ❖ ✜ ♆ ©
 `````````````````````````````````````````````````````
 [Others]

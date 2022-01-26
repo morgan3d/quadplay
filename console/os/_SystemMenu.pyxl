@@ -15,6 +15,7 @@ let old_clip
 let old_post_effects
 let old_background
 let old_mouse
+let old_camera
 
 let max_choice_width
 let line_height
@@ -55,10 +56,12 @@ $pauseAllSounds()
 choice_index = 0
 
 old_transform = get_transform()
+old_camera = get_camera()
 old_clip = get_clip()
 old_post_effects = get_post_effects()
 old_background = get_background()
 old_mouse = device_control("get_mouse_state")
+reset_camera()
 
 device_control("set_mouse_lock", false)
 device_control("set_mouse_cursor", "default")
@@ -104,6 +107,7 @@ for c in choice_array: max_choice_width = max(max_choice_width, text_width(font,
 leave
 ────────────────────────────────────────────────────────────────────────
 set_transform(old_transform)
+set_camera(old_camera)
 set_clip(old_clip)
 set_post_effects(old_post_effects)
 set_background(old_background)

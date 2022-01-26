@@ -17,7 +17,7 @@ def pretty_print_tiles(tiles):
     let ret = ""
     for ch at i in tiles:
         ret += ch
-        if (((i + 1) % BATTLE_GRID_SIZE.x) == 0 
+        if (((i + 1) mod BATTLE_GRID_SIZE.x) == 0 
                 and (i ≠ size(tiles) - 1)):
             ret += "\n"
         else:

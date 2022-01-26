@@ -24,12 +24,23 @@ function $game_tree_compute_children(sgn, game_state, generate_moves, make_move,
 }    
 
 
+function $ai_score_to_string(score) {
+    if ($Math.abs(score) === Infinity) {
+        return unparse(score);
+    } else if (is_string(score)) {
+        return score;
+    } else {
+        return format_number(score, "0.00");
+    }
+}
+
+
 /* Positive is always good for player sgn and negative is always bad for that player. 
 
-    Negamax w/ alpha-beta pruning:
-    http://www.hamedahmadi.com/gametree/#negamax
+   Negamax w/ alpha-beta pruning:
+   http://www.hamedahmadi.com/gametree/#negamax
 */
-function* $game_tree_value(depth, my_worst, their_best, sgn, static_value, game_state, generate_moves, make_move, unpredictability, static_evaluate, debug_indent, debug_move_to_string, progress, progress_increment) {
+function* $game_tree_value(depth, my_worst, their_best, sgn, static_value, game_state, generate_moves, make_move, unpredictability, static_evaluate, debug_indent, debug_move_to_string, progress_start, progress_increment) {
     // Leaf nodes of the game tree
     if (static_value === "draw") { 
         return {move: undefined, value: 0};
@@ -42,22 +53,36 @@ function* $game_tree_value(depth, my_worst, their_best, sgn, static_value, game_
     // Internal nodes
     const child_array = $game_tree_compute_children(sgn, game_state, generate_moves, make_move, unpredictability, static_evaluate);
 
+    // If any move is a guaranteed win for me, just take it before
+    // exploring the rest of the tree. Otherwise the AI might try to
+    // protect against a loss before it will take an obvious win.
+    for (let c = 0; c < child_array.length; ++c) {
+        const child = child_array[c];
+        if (child.static_value === sgn * Infinity) {
+            if (debug_move_to_string){
+                debug_print(undefined, debug_indent + debug_move_to_string(child.move) + ": static = " + $ai_score_to_string(child.static_value));
+            }
+            return {move: child.move, value: sgn * child.static_value};
+        }
+    }
+
     // Find the highest α achievable for this player
     const best = {value: -Infinity, move: child_array[0].move};
 
     progress_increment /= child_array.length;
     for (let c = 0; c < child_array.length; ++c) {
-        yield progress + c * progress_increment;
+        const progress = progress_start + c * progress_increment;
+        yield progress;
         
         const child = child_array[c];
         
         if (debug_move_to_string){
-            debug_print(debug_indent + debug_move_to_string(child.move) + ": sv = " + child.static_value);
+            debug_print(undefined, debug_indent + debug_move_to_string(child.move) + ': static = ' + $ai_score_to_string(child.static_value));
         }
 
         // How well can we do with this move? The opposite of how well the other player can
         // do on their next move.
-        const value = -(yield* $game_tree_value(depth - 1, -their_best, -my_worst, -sgn, child.static_value, child.game_state, generate_moves, make_move, unpredictability, static_evaluate, debug_indent + "  ", debug_move_to_string, progress, progress_increment)).value;
+        const value = -(yield* $game_tree_value(depth - 1, -their_best, -my_worst, -sgn, child.static_value, child.game_state, generate_moves, make_move, unpredictability, static_evaluate, debug_indent + '. ', debug_move_to_string, progress, progress_increment)).value;
         
         if (value > best.value) {
             best.value = value;
@@ -82,14 +107,27 @@ function* $game_tree_value(depth, my_worst, their_best, sgn, static_value, game_
 
 function* $find_move(player_index, game_state, generate_moves, make_move, static_evaluate, max_depth, unpredictability, debug_move_to_string) {
     if (debug_move_to_string) {
-        debug_print("=================================\nfind_best_move()\n");
+        debug_print(undefined, `=================================\nfind_move(), max_depth = ${max_depth}, unpredictability = ${unpredictability}\n`);
+    }
+
+    const sgn = 1 - 2 * player_index;
+    const best = yield* $game_tree_value(max_depth, -Infinity, Infinity, sgn, NaN, game_state, generate_moves, make_move, unpredictability, static_evaluate, '? ', debug_move_to_string, 0, 1);
+
+    if (best.value === -Infinity && max_depth > 1) {
+        // The best this player can do is lose. If the opponent is
+        // perfect, then it doesn't matter what the player
+        // does. However, if the opponent is imperfect, chosing a move
+        // that improves the static position is better if the opponent
+        // is imperfect. Examine all depth 1 positions again and take the first
+        const child_array = $game_tree_compute_children(sgn, game_state, generate_moves, make_move, unpredictability, static_evaluate);
+        best.move = child_array[0].move;
+        best.value = sgn * child_array[0].static_value;
+        if (debug_move_to_string) { debug_print(undefined, 'All moves lead to loss. Fallback: Go down fighting!'); }
     }
     
-    const best = yield* $game_tree_value(max_depth, -Infinity, Infinity, 1 - 2 * player_index, NaN, game_state, generate_moves, make_move, unpredictability, static_evaluate, "", debug_move_to_string, 0, 1);
-
     // Show total value of this move
     if (debug_move_to_string) {
-        debug_print("  --------------------------------\nbest for me: " + debug_move_to_string(best.move) + " = " + best.value + "\n=================================");
+        debug_print(undefined, '--------------------------------\nbest for me: ' + debug_move_to_string(best.move) + ' = ' + $ai_score_to_string(best.value) + ' after ' + max_depth + ' moves\n=================================');
     }
         
     return best.move;
@@ -112,7 +150,7 @@ function make_move_finder(player_index, game_state, generate_moves, make_move, s
             }
         } while (now() < end);
         
-        return {progress: progress};        
+        return {progress: progress};
     };
 }
 

@@ -6,6 +6,8 @@
 
 "use strict";
 
+const MAX_DEBUG_OUTPUT_LENGTH = 800;
+
 /**
    Global arrays for abstracting hardware memory copies of spritesheet
    and font data. Indices into these are is used as "pointers" when
@@ -339,11 +341,12 @@ function makeFilename(s) {
 function onEmulatorKeyDown(event) {
     event.stopPropagation();
     event.preventDefault();
-    wake();
 
     // On browsers that support it, ignore
     // synthetic repeat events
     if (event.repeat) { return; }
+
+    wake();
 
     const key = event.code;
     if (useIDE && ((key === 'KeyP') && (event.ctrlKey || event.metaKey))) {
@@ -352,8 +355,14 @@ function onEmulatorKeyDown(event) {
         return;
     }
 
+    // This test is needed to work around a bug that appeared on Chromium
+    // 97.0.4692.99 (Edge/Chrome/Brave) on Windows, where the browser
+    // sends extra repeat down events that are not flagged as `repeat` for
+    // keys that are already down at the time that some other key is released.
+    if (! emulatorKeyState[key]) {
+        emulatorKeyJustPressed[key] = true;
+    }
     emulatorKeyState[key] = true;
-    emulatorKeyJustPressed[key] = true;
 
     // Pass event to the main IDE
     onDocumentKeyDown(event);
@@ -974,13 +983,15 @@ function $systemPrint(m, style) {
 // Allows HTML. location may be undefined
 function $outputAppend(m, location) {    
     if (m !== '') {
+        // Uncomment to debug mystery output
+        // console.trace();
+        
         // Remove tags and then restore HTML entities
         console.log(m.replace(/<.+?>/g, '').replace(/&quot;/g,'"').replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
 
-        const MAX_LENGTH = 300;
-        if (outputDisplayPane.childNodes.length > MAX_LENGTH) {
+        if (outputDisplayPane.childNodes.length > MAX_DEBUG_OUTPUT_LENGTH) {
             // Remove a lot, so that we amortize the cost of manipulating the DOM
-            while (outputDisplayPane.childNodes.length > MAX_LENGTH - 10) {
+            while (outputDisplayPane.childNodes.length > MAX_DEBUG_OUTPUT_LENGTH - 20) {
                 outputDisplayPane.removeChild(outputDisplayPane.firstChild);
             }
         }

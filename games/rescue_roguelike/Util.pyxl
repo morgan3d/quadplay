@@ -94,10 +94,10 @@ def get_coords_in_dir(grid_size, coord, dir):
     return ret
     
 def to_coord(grid_size, i):
-    return xy(i % grid_size.x, ⌊i / grid_size.x⌋)
+    return xy(i mod grid_size.x, ⌊i / grid_size.x⌋)
     
 def to_index(grid_size, coord):
-    return coord.y * grid_size.x + coord.x % grid_size.x
+    return coord.y * grid_size.x + coord.x mod grid_size.x
 
 // Removes values from arr if fn(elem, i) is true.
 // Order of the array remain in-tact

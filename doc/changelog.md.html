@@ -6,6 +6,29 @@
 Changes for both the specification and implementation in each release
 of [quadplay✜](manual.md.html).
 
+2022 January TBD: Update 80
+===================================
+
+- `split(string, n)` that accepts a number of characters at which to split the string
+- `resized()` for simultaneous padding and trimming of strings
+- Added `"♢"` `"♡"` `"☆"` glyphs to font sheets
+- Added auto-generaton of `○◻△♢♡☆` glyphs in fonts
+- Tweaked `deja-9` font symbols
+- `load_local()` with no arguments now returns an object specifying all key-value
+  pairs saved
+- `save_local()` with no arguments now deletes all stored keys
+- `save_local(object)` now overwrites all stored keys
+- Modified `find_move()` to always choose a guaranteed single-move win if one is available
+- Modified `find_move()` to still try to win even from a losing position against an optimal player
+- Increased IDE `debug_print()` history display from 300 to 800 calls
+- Workaround for Windows Chromium bug where extra, unflagged, key repeat events are received
+  on key release when multiple keys are held down. This fixes `joy.xx` and other values getting
+  extra nonzero values in these situations when using a keyboard 
+- Fixed `&lt;` character in the cruise-7 font
+- Fixed system/pause menu when a camera transformation is active
+- Fixed `make_move_finder()` `progress` metadata
+
+
 2022 January 21: Update 79
 ===================================
 

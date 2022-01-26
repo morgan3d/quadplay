@@ -8531,30 +8531,84 @@ function pow(a, b) {
 }
 
 
-function split(str, c) {
-    if (c === '') {
-        return Array.from(str);
-    } else {
-        return str.split(c);
+function resized(str, n, pad, right_align) {
+    n = $Math.max(n, 0);
+    if (str.length === n) {
+        return str;
+    } else if (str.length < n) {
+        if (right_align) {
+            return str.padStart(n, pad);
+        } else {
+            return str.padEnd(n, pad);
+        }
+    } else if (right_align) { // shrink start
+        const i = n - str.length;
+        return str.substring(i, i + n + 1);
+    } else { // shrink end
+        return str.substring(0, n);
     }
 }
 
 
+function split(str, c) {
+    if (c === undefined || c === '' || (is_number(c) && c <= 0)) {
+        
+        return Array.from(str);
+        
+    } else if (is_number(c)) {
+        
+        const array = [];
+        c = $Math.min(c, str.length)
+        const N = $Math.max(str.length / c);
+        for (let i = 0; i < N; ++i) {
+            const j = c * i;
+            array.push(str.slice(j, j + c));
+        }
+        return array;
+            
+    } else {
+        
+        return str.split(c);
+        
+    }
+}
+
+// default_value is deprecated...use `default` now
 function load_local(key, default_value) {
     let table = $window.localStorage.getItem('GAME_STATE_' + $gameURL);
     if (! table) { return default_value; }
     
     table = JSON.parse(table);
-    const value = table[key];
-    if (value) {
-        return parse(value);
+
+    if (arguments.length === 0) {
+        // Return everything
+        for (let key in table) {
+            table[key] = parse(table[key]);
+        }
+        return table;
     } else {
-        return default_value;
+        const value = table[key];
+        if (value) {
+            return parse(value);
+        } else {
+            return default_value;
+        }
     }
 }
 
 
 function save_local(key, value) {
+    if (arguments.length === 0) {
+        $setLocalStorage('GAME_STATE_' + $gameURL, '{}');
+        return;
+    }
+
+    if (typeof key === 'object') {
+        for (let k in key) {
+            save_local(k, key[k]);
+        }
+        return;
+    }
     
     let table = $getLocalStorage('GAME_STATE_' + $gameURL);
     

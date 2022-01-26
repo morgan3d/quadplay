@@ -1076,9 +1076,10 @@ function pyxlToJS(src, noYield, internalMode) {
     // ALTERNATE" --> "TEST ? CONSEQUENT : ALTERNATE" before "if"
     // statements are parsed.
 
-    // IF that is not at the start of a line or a block is replaced
+    // An IF that is not at the start of a line or a block is replaced
     // with an open paren. There are no negative lookbehinds in
-    // JavaScript, so we have to structure an explicit test.
+    // JavaScript, so we have to structure an explicit test for the
+    // regexp.
     { 
         const STACKED_IF_SYMBOL = '\uE071';
         let found = true

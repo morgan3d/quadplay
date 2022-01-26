@@ -848,7 +848,7 @@ def player_turn_draw():
             draw_grid_object(object_element, player_current_unit_element, "player")
 
         // draw any ghost objects.  For now, we just have it blink.
-        const ghost_blink = player_is_aiming_move or (⌊mode_frames / 16⌋ % 4) != 1
+        const ghost_blink = player_is_aiming_move or (⌊mode_frames / 16⌋ mod 4) != 1
         if ghost_blink:
             if player_action_result_ghost and player_action_result_ghost.object_elements:
                 // this ends up being more distracting on move so we only do

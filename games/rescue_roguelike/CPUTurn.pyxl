@@ -153,8 +153,8 @@ def do_phase(unit, phase_name, task_id):
                 // this is a "no-op" attack
             else:
                 let attack_coord = move_coord + v
-                attack_coord.x = attack_coord.x % BATTLE_GRID_SIZE.x
-                attack_coord.y = attack_coord.y % BATTLE_GRID_SIZE.y
+                attack_coord.x = attack_coord.x mod BATTLE_GRID_SIZE.x
+                attack_coord.y = attack_coord.y mod BATTLE_GRID_SIZE.y
                 attack_vector = attack_coord - move_coord
                 if not is_candidate_attack_vector(turn_state, 
                                               unit, 

@@ -1,0 +1,21 @@
+Windows Automated Installer
+===================================================
+
+Download and then double click https://morgan3d.github.io/quadplay/doc/windows-install-quadplay.cmd
+to install quadplay to c:\quadplay on Windows.
+
+It will create a shortcut on your desktop when done. Run the installer
+again at any time to upgrade to the latest quadplay version.
+
+
+
+
+macOS, Linux, or Custom Windows Installation
+===================================================
+
+Download https://github.com/morgan3d/quadplay/archive/main.zip. Unzip
+the contents to whatever directory you wish.
+
+On Windows, double click quadplay.vbs or run it from the command line.
+
+On macOS or Linux, double click quadplay or run it from the command line.
