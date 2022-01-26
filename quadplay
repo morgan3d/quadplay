@@ -1,5 +1,7 @@
 #!/bin/bash
-tools/quadplay-server --nativeapp --quiet "$@" &
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
+
+$script_dir/tools/quadplay-server --nativeapp --quiet "$@" &
 if [[ "$@" = *"--help"* ]]
 then
     # Sleep so that when running with --help the printed usage
