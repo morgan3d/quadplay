@@ -1,8 +1,6 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
 "use strict";
 
-const version  = '2022.01.23.01';
-
 // Set to false when working on quadplay itself
 const deployed = true;
 
@@ -2861,31 +2859,35 @@ function onOpenGameOpen() {
     onStopButton();
     saveIDEState();
     const autoplay = document.getElementById('autoplayOnLoad').checked;
+    const newWindow = document.getElementById('newWindowOnLoad').checked;
 
     const game_url = openGameFiles.selected;
     
-    loadGameIntoIDE(game_url, function () {
+    let url = location.href.replace(/(\?(?:.+&)?)game=[^&]+(?=&|$)/, '$1');
+    if (url.indexOf('?') === -1) { url += '?'; }
+    if (url[url.length - 1] !== '&') { url += '&'; }
+    url = url.replace(/autoplay=./g, '');
+    url = url.replace(/&&/g, '&');
+    url += 'game=' + game_url;
+    
+    if (autoplay) { url += '&autoplay=1'; }
+    
+    if (newWindow) {
         hideOpenGameDialog();
-        onProjectSelect(document.getElementsByClassName('projectTitle')[0], 'game');
-        
-        let url = location.href.replace(/(\?(?:.+&)?)game=[^&]+(?=&|$)/, '$1');
-        if (url.indexOf('?') === -1) { url += '?'; }
-        if (url[url.length - 1] !== '&') { url += '&'; }
-        url = url.replace(/autoplay=./g, '');
-        url = url.replace(/&&/g, '&');
-        url += 'game=' + game_url;
-        
-        if (autoplay) {
-            url += '&autoplay=1';
-        }
-
-        // Update the URL so that reload and bookmarking work
-        history.replaceState({}, 'quadplay', url);
-        
-        if (autoplay) {
-            onPlayButton(false, true);
-        }
-    });
+        window.open(url, '_blank');
+    } else {
+        loadGameIntoIDE(game_url, function () {
+            hideOpenGameDialog();
+            onProjectSelect(document.getElementsByClassName('projectTitle')[0], 'game');
+            
+            // Update the URL so that reload and bookmarking work
+            history.replaceState({}, 'quadplay', url);
+            
+            if (autoplay) {
+                onPlayButton(false, true);
+            }
+        });
+    } // if new window
 }
 
 

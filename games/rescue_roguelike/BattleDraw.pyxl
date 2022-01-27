@@ -101,9 +101,9 @@ def draw_battle_board(turn_state)
     const tiles = turn_state.tiles
     compose_transform({pos: BATTLE_GRID_OFFSET})
 
-    for -1 <= y < BATTLE_GRID_SIZE.y:
-        for x < BATTLE_GRID_SIZE.x
-        & preserving_transform:
+    for -1 ≤ y < BATTLE_GRID_SIZE.y
+    & for x < BATTLE_GRID_SIZE.x
+    & preserving_transform:
             
         const cell_coord = xy(x, y)
         

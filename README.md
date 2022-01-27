@@ -73,12 +73,12 @@ and the following freely-available software.
 _Required_:
 
 - [**This SDK**](https://github.com/morgan3d/quadplay/archive/main.zip), which includes the IDE and assets
-- [**Python 3.8**](https://www.python.org/downloads/)
+- [**Python 3.10**](https://www.python.org/downloads/)
 - A **modern web browser** such as Chrome, Edge, Brave, Safari, or Firefox
-- [**The manual**](https://morgan3d.github.io/quadplay/doc/manual.md.html)
 
 _Optional_:
 
+- [**The manual**](https://morgan3d.github.io/quadplay/doc/manual.md.html)
 - A **code editor** such as [VS Code](https://code.visualstudio.com/), Emacs, or VIM. Use Python mode or install our provided PyxlScript editor extensions
 - A TMX map editor such as [Tiled](https://www.mapeditor.org/) or [TileKit](https://rxi.itch.io/tilekit)
 - A sprite and font pixel editor such as [Piskel](https://www.piskelapp.com/) or [GrafX2](http://pulkomandy.tk/projects/GrafX2/downloads?order=version&desc=1)

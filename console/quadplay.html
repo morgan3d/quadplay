@@ -860,7 +860,10 @@
             </div>
           </p>
           <p>
-          <label><input type="checkbox" id="autoplayOnLoad">Autoplay</label>
+            <label><input type="checkbox" id="autoplayOnLoad">Autoplay</label>
+            <script>
+                document.write(`<label style="padding-left: 60px"><input type="checkbox" id="newWindowOnLoad">New ${nativeapp ? 'Window' : 'Tab'}</label>`);
+            </script>
           </p>
           <button type="button" onclick="hideOpenGameDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span>
           <button type="button" id="openGameOpenButton" onclick="onOpenGameOpen()">Open</button>
@@ -930,6 +933,7 @@
   <!-- quadplay✜ implementation -->
   <!-- force reload, as these are changing often during the beta -->
   <script defer src="os/dependencies.py?" charset="utf-8" type="text/javascript"></script>
+  <script defer src="version.js?" charset="utf-8"></script>
   <script defer src="pyxlscript-compiler.js?" charset="utf-8"></script>
   <script defer src="quadplay-browser.js?" charset="utf-8"></script>
   <script defer src="quadplay-font.js?" charset="utf-8"></script>

@@ -475,7 +475,7 @@ function testForIllegalSyntax(src, lineNumber, indent, internalMode) {
 
     const illegal = src.match(/\b(===|!==|&&|&=|\|=|&|toString|try|switch|this|delete|null|arguments|undefined|use|using|yield|prototype|var|new|auto|as|instanceof|typeof|\$|class)\b/) ||
           src.match(/('|&(?![=&])|!(?!=))/) || // Single quote, single &, single !
-          (! internalMode && src.match(/\b[_\$]\S*?\b/)); // Underscores or dollar signs
+          (! internalMode && src.match(/\b[\$]\S*?\b/)); // Dollar signs
         
     if (illegal) {
         const alternative = {'|=':'∪=" or "bitor', '&&':'and', '&=':'∩=" or "bitand', '&':'∩" or "bitand', "'":'"', '!==':'!=', '!':'not', 'var':'let', 'null':'nil', '===':'=='};

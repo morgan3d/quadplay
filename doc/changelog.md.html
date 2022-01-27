@@ -9,6 +9,8 @@ of [quadplay✜](manual.md.html).
 2022 January TBD: Update 80
 ===================================
 
+- New Windows installer for quadplay
+- Open game dialog now allows launching a second window
 - `split(string, n)` that accepts a number of characters at which to split the string
 - `resized()` for simultaneous padding and trimming of strings
 - Added `"♢"` `"♡"` `"☆"` glyphs to font sheets
@@ -26,6 +28,7 @@ of [quadplay✜](manual.md.html).
 - Workaround for Windows Chromium bug where extra, unflagged, key repeat events are received
   on key release when multiple keys are held down. This fixes `joy.xx` and other values getting
   extra nonzero values in these situations when using a keyboard 
+- Fixed "illegal symbol" error on variables beginning with underscores
 - Fixed `&lt;` character in the cruise-7 font
 - Fixed system/pause menu when a camera transformation is active
 - Fixed `make_move_finder()` `progress` metadata
