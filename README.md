@@ -2,7 +2,7 @@
 for creating and playing retro-style video games on any device.
 
 - [Play games online](https://morgan3d.github.io/quadplay/console/quadplay.html?)
-- [Install on Windows](https://morgan3d.github.io/quadplay/doc/windows-install-quadplay.cmd)
+- [Install on Windows](https://morgan3d.github.io/quadplay/tools/windows-install-quadplay.cmd)
 - [Install on macOS or Linux](https://github.com/morgan3d/quadplay/archive/main.zip)
 - [Preview the web IDE](https://morgan3d.github.io/quadplay/console/quadplay.html?IDE=1&game=quad://games/quadpaddle)
 - [Read the manual](https://morgan3d.github.io/quadplay/doc/manual.md.html)
