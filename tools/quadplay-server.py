@@ -46,8 +46,12 @@
 
 import os, time, platform, sys, threading, socket, argparse, multiprocessing, json, ssl, codecs, glob, shutil, re, base64, random, getpass, inspect, subprocess, workjson, signal, shlex, tkinter, tkinter.messagebox, urllib, urllib.request
 
-# Catch a common mistake. This binary file should be large if LFS is present:
-if os.path.exists(os.path.join(os.path.dirname(__file__), '../_dev')) and os.stat(os.path.join(os.path.dirname(__file__), '../console/xbox_controller.png')).st_size < 1000:
+quadplay_origin = 'git clone' if os.path.isdir(os.path.join(os.path.dirname(__file__), '../.git')) else 'downloaded release'
+if quadplay_origin == 'git clone' and os.path.exists(os.path.join(os.path.dirname(__file__), '../_dev')):
+    quadplay_origin = 'development git clone'
+
+# Catch a operator error with git. This binary file should be large if LFS is present:
+if quadplay_origin == 'development git clone' and os.stat(os.path.join(os.path.dirname(__file__), '../console/xbox_controller.png')).st_size < 1000:
     print('You are running the development build of quadplay without git LFS, so the binary files are not present. Enable LFS and pull.')
     sys.exit(2)
 
@@ -56,9 +60,9 @@ if os.path.exists(os.path.join(os.path.dirname(__file__), '../_dev')) and os.sta
 #    print('Sorry, you are using Python ' + sys.version + ' and quadplay requires Python 3.7 or newer. Download and install from https://python.org')
 #    sys.exit(-1)
 
-__doc__ = "Quadplay Fantasy Console launcher script."
+__doc__ = "quadplay console server"
 
-version = str(sys.version_info.major) + '.' + str(sys.version_info.minor)
+python_version = str(sys.version_info.major) + '.' + str(sys.version_info.minor)
 
 # Largest common prefix of quad_filepath and game_filepath. Root for web serving
 server_root_filepath = None
@@ -91,6 +95,31 @@ def ignore(*args): pass
 
 # Assigned in main based on the --quiet flag
 maybe_print = ignore
+
+# Parses a version.js file with an embedded 'version = yyyy.mm.dd.hh
+# string' and returns it as a single integer for version comparisons,
+# as well as the human-readable version string.
+def parse_version_js(file_string):
+    try:
+        version_parser = re.compile("^ *const *version *= *['\"]([.0-9]+)*['\"] *;")
+        
+        version_string = version_parser.search(file_string).group(1)
+
+        year, month, day, hour = [int(x) for x in version_string.split('.')]
+    
+        # Months and years have varying length. That doesn't matter.  We
+        # don't need a linear time number. We need one that monotonically
+        # increases. Think of this as parsing a number with an irregular
+        # base per digit.
+        return {'value': ((year * 12 + month) * 32 + day) * 24 + hour,
+                'text': version_string}
+    except:
+        
+        return {'value': 0, 'text': '????.??.??.??'}
+
+with open(os.path.join(os.path.dirname(__file__), '../console/version.js')) as file:
+    installed_quadplay_version = parse_version_js(file.read())
+
 
 # Ensure that slashes and case are consistent when on Windows, and make absolute
 def canonicalize_filepath(path): return os.path.normcase(os.path.abspath(path)).replace('\\', '/')
@@ -141,12 +170,17 @@ def parse_args():
     )
 
     parser.add_argument(
+        '--noupdatecheck',
+        default=False,
+        help="Do not check for newer versions of quadplay on github. Never checks when in kiosk mode")
+
+    parser.add_argument(
         'gamepath',
         type=str,
         default='',
         nargs='?',
         help=(
-            'Game to load.  If not specified, loads default loader scene.'
+            'Game to load.  If not specified, loads a default game.'
             ' Example: examples/accel_demo'
         )
     )
@@ -214,20 +248,20 @@ try:
     # Python 3.7+
     from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
     QuadplayHTTPServer = ThreadingHTTPServer
-    maybe_print('Initializing Quadplay server using Python ' + version + ' ThreadingHTTPServer')
+    maybe_print('Initializing Quadplay server using Python ' + python_version + ' ThreadingHTTPServer')
     
 except ImportError:
     try:
         # Python 3+
         from http.server import HTTPServer, SimpleHTTPRequestHandler
-        maybe_print('Initializing Quadplay server using Python ' + version + ' HTTPServer')
+        maybe_print('Initializing Quadplay server using Python ' + python_version + ' HTTPServer')
         QuadplayHTTPServer = HTTPServer
     except ImportError:
         # Python 2
         from SimpleHTTPServer import SimpleHTTPRequestHandler
         import SocketServer
         QuadplayHTTPServer = SocketServer.TCPServer
-        maybe_print('Initializing Quadplay server using Python ' + version + ' SocketServer.TCPServer')
+        maybe_print('Initializing Quadplay server using Python ' + python_version + ' SocketServer.TCPServer')
 
         
 # Returns a string of the line number that calls this function
@@ -795,11 +829,53 @@ def launchServer(post_token):
                 maybe_print('Not starting a local server, since one is already running.');
                 os.chdir(old_path)
 
+                
+def check_for_update():
+    # Reading from github.io triggers an error in the Python 3.10 urllib code with
+    # regard to timeouts, so run from the raw github repo instead.
+    latest_version_url = 'https://raw.githubusercontent.com/morgan3d/quadplay/main/console/version.js'
+    
+    # Fetch version.js from github
+    #
+    # We can't directly make an https urllib.request on macOS because the default
+    # Python installation doesn't have certificates for SSL installed (see
+    # https://stackoverflow.com/questions/27835619/urllib-and-ssl-certificate-verify-failed-error)
+    # and a given Windows configuration might be in the same situation,
+    # especially if auto-installed with quadplay.
+    #
+    # So, we run with SSL disabled here for only for version checking.
+    with urllib.request.urlopen(latest_version_url, context = ssl._create_unverified_context()) as response:
+        latest_quadplay_version = parse_version_js(response.read().decode('utf-8'))
+
+    if latest_quadplay_version['value'] > installed_quadplay_version['value']:
+        maybe_print('********************************************************')
+        maybe_print('A newer version of quadplay is available:\n')
+        maybe_print('  installed = ' + installed_quadplay_version['text'])
+        maybe_print('  newest    = ' + installed_quadplay_version['text'] + '\n')
+        if quadplay_origin == 'git clone':
+            maybe_print('To upgrade, run:\n\ngit pull\n')
+        else:
+            maybe_print('To upgrade, visit https://github.com/morgan3d/quadplay\n')
+        maybe_print('********************************************************')
+            
+    else:
+        maybe_print('You have the latest version of quadplay.\n1')
+
+
         
 def main():
     global webpath_allowlist, server_root_filepath, token
 
     token = "%0.7X" % random.randrange(0, 0x10000000)
+
+    maybe_print('_________________________________________________________________________\n')
+    maybe_print('quadplay version ' + installed_quadplay_version['text'] + ' from ' + quadplay_origin + '\n\n')
+
+    if quadplay_origin != 'development git clone' and not args.kiosk and not args.noupdatecheck:
+        try:
+            check_for_update()
+        except:
+            pass
 
     myip = '127.0.0.1'
     if args.serve:
@@ -849,7 +925,6 @@ def main():
     if args.offline:
         url += '&offline=1'
         
-    maybe_print('_________________________________________________________________________\n')
 
     if args.gamepath != '':
         t = args.gamepath
@@ -858,10 +933,10 @@ def main():
             if t and not isWindows and t[0] != '/': t = '/' + t
         url += '&game=' + t
     else:
-        maybe_print('Loading default launcher game. You can supply the URL or local relative path to your game on\nthe command line, for example "tools/quadplay-server foo/mygame", to load it directly.\n')
+        maybe_print('Loading default game. You can supply the URL or local relative path to your game on\nthe command line, for example "tools/quadplay-server foo/mygame", to load it directly.\n')
 
     maybe_print('\nServing from:\n\n   ' + url + '\n')
-                 
+    
     if args.serve:
         # Do not support POST in host mode
         maybe_print('\nYour firewall may need to be configured to load on other devices.\n')
