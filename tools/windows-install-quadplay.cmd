@@ -85,8 +85,8 @@ rem Delete the zipfile
 del quadplay-install.zip
 
 rem Move the files to the installation location
-echo Copying files to c:\quadplay...
-xcopy /q /y /i /e quadplay-main\* c:\quadplay
+echo Copying files to %HOMEDRIVE%\quadplay...
+xcopy /q /y /i /e quadplay-main\* %HOMEDRIVE%\quadplay
 del /y quadplay-main
 echo Copying done.
 echo.
@@ -97,7 +97,9 @@ rem (code from https://superuser.com/questions/392061/how-to-make-a-shortcut-fro
 echo Set oWS = WScript.CreateObject("WScript.Shell") > CreateShortcut.vbs
 echo sLinkFile = "%HOMEDRIVE%%HOMEPATH%\Desktop\quadplay.lnk" >> CreateShortcut.vbs
 echo Set oLink = oWS.CreateShortcut(sLinkFile) >> CreateShortcut.vbs
-echo oLink.TargetPath = "C:\quadplay\quadplay.vbs" >> CreateShortcut.vbs
+echo oLink.IconLocation = "%HOMEDRIVE%\quadplay\console\favicon.ico, 0" >> CreateShortcut.vbs 
+echo oLink.WorkingDirectory = "%HOMEDRIVE%\quadplay" >> CreateShortcut.vbs
+echo oLink.TargetPath = "%HOMEDRIVE%\quadplay\quadplay.vbs" >> CreateShortcut.vbs
 echo oLink.Save >> CreateShortcut.vbs
 cscript CreateShortcut.vbs
 del CreateShortcut.vbs
@@ -105,7 +107,7 @@ echo Shortcut created.
 echo.
 echo.
 echo quadplay installation complete
-echo
+echo.
 echo Click the "quadplay" link on your desktop or c:\quadplay\quadplay.vbs
 echo to launch the development environment.
 echo.
