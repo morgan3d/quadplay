@@ -136,7 +136,7 @@ def export(args):
       tempdir = tempfile.TemporaryDirectory()
       out_path = tempdir.name
    
-   # Will be read  from the JSON file
+   # Will be read from the JSON file
    game_title = ''
    
    # Strip from source
@@ -165,7 +165,7 @@ def export(args):
       else:
          shutil.copytree(os.path.join(args.quadpath, 'console'),
                          os.path.join(out_path, 'console'),
-                         ignore = shutil.ignore_patterns('.DS_Store', '*~', '#*', '*.pyc', '__pycache__', 'launcher', 'templates'))
+                         ignore = shutil.ignore_patterns('.DS_Store', '*~', '#*', '*.psd', '*.kra', 'Makefile', '*.zip', '*.pyc', '__pycache__', 'launcher', 'templates'))
       
       generate_standalone(args, out_path, out_url, game_title)
    else:

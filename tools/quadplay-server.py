@@ -829,6 +829,59 @@ def launchServer(post_token):
                 maybe_print('Not starting a local server, since one is already running.');
                 os.chdir(old_path)
 
+
+# Throws an exception with the output on a non-zero error code        
+def run_shell_command(cmd):
+    with os.popen('git pull') as stream:
+        retval = stream.close()
+        if retval:
+            raise Exception(stream.read())
+
+        
+        
+# Returns true if the server needs to be restarted.
+# Raises an exception if the update fails.
+def update():
+    old_dir = os.getcwd()
+
+    # go to the quadplay root dir
+    os.chdir(os.path.join(os.path.dirname(__file__), '..'))
+    
+    # Track if this script itself changed
+    my_previous_timestamp = os.path.getmtime(__file__)
+    
+    try:
+        if quadplay_origin == 'git clone':
+            # Verify that we have git
+            if not shutil.which('git'):
+                raise Exception('Your quadplay was installed via git clone but the updater cannot find the git program to pull the latest version. Delete the .git directory or manually update.')
+        
+            # Run git
+            run_shell_command('git pull')
+        
+        elif quadplay_origin == 'downloaded release':
+            run_shell_command('curl --location --output temp/quadplay-install.zip https://github.com/morgan3d/quadplay/archive/refs/heads/main.zip')
+            os.chdir('temp')
+            try:
+                run_shell_command('tar -xf quadplay-install.zip')
+                
+                # Copy files
+                shutil.copytree('quadplay-main', '..', dirs_exist_ok = True)
+            except:
+                # Try to clean up
+                os.chdir('..')
+                shutil.rmtree('temp')
+                raise
+        
+
+        # Success
+        return os.path.getmtime(__file__) != my_previous_timestamp
+        
+    except:
+        os.chdir(old_dir)
+        raise
+    
+        
                 
 def check_for_update():
     # Reading from github.io triggers an error in the Python 3.10 urllib code with

@@ -982,7 +982,7 @@ function $systemPrint(m, style) {
 
 // Allows HTML. location may be undefined
 function $outputAppend(m, location) {    
-    if (m !== '') {
+    if (m !== '' && m !== undefined) {
         // Uncomment to debug mystery output
         // console.trace();
         

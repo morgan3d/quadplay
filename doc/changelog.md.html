@@ -6,13 +6,16 @@
 Changes for both the specification and implementation in each release
 of [quadplay✜](manual.md.html).
 
-2022 January TBD: Update 80
+2022 January 30: Update 80
 ===================================
 
 - New Windows installer for quadplay
+- New `cruise-14` font
 - Server now prints the installed quadplay version on launch
 - Unless `--noupdatecheck` or `--kiosk` is specified, quadplay now checks
   for available updates on launch
+- Spritesheets can now have animations specified by a 2D grid instead of being
+  restricted to a row or column, and can ignore padding frames from the end
 - Open game dialog now allows launching a second window
 - `split(string, n)` that accepts a number of characters at which to split the string
 - `resized()` for simultaneous padding and trimming of strings
@@ -20,6 +23,7 @@ of [quadplay✜](manual.md.html).
 - Added auto-generaton of `○◻△♢♡☆` glyphs in fonts
 - Added Windows installer script (linked from the website)
 - Made the Linux/macOS script work from double click
+- Uninitialized variable declarations no longer count against the code statement size
 - Tweaked `deja-9` font symbols
 - `load_local()` with no arguments now returns an object specifying all key-value
   pairs saved
@@ -35,6 +39,7 @@ of [quadplay✜](manual.md.html).
 - Fixed `&lt;` character in the cruise-7 font
 - Fixed system/pause menu when a camera transformation is active
 - Fixed `make_move_finder()` `progress` metadata
+- Fixed quaddepend and export scripts to handle raw text file constants
 
 
 2022 January 21: Update 79

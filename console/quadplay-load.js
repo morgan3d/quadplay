@@ -211,7 +211,6 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         callback: function () {
             computeCredits(gameSource);
             computeResourceStats(gameSource);
-            //console.log('Done game load\n\n');
             inGameLoad = false;
             if (callback) { callback(); }
         },
@@ -1341,6 +1340,9 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 
                 const animDefaultframes = Math.max(0.25, data.default_frames || sheetDefaultframes);
 
+                const ignoreFrames = data.ignore || 0;
+                const rowMajor = data.majorAxis !== 'y';
+
                 const otherProperties = {};
                 for (const key in data) {
                     if (key[0] !== '$' && key[0] !== '_' && builtInProperties.indexOf(key) === -1) {
@@ -1390,10 +1392,10 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 
                     if (data.end.y === undefined) { data.end.y = data.start.y; }
 
-                    if (data.start.x !== data.end.x && data.start.y !== data.end.y) {
-                        throw new Error('Animation frames must be in a horizontal or vertical line for animation "' + anim + '"');
+                    if (data.start.x > data.end.x || data.start.y > data.end.y) {
+                        throw new Error('Animation end bounds must be greater than or equal to the end on each axis for animation "' + anim + '".');
                     }
-
+                    
                     const animation = spritesheet[anim] = [];
                     
                     const extrapolate = data.extrapolate || 'loop';
@@ -1405,30 +1407,44 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                           (data.frames !== undefined) ?
                           [data.frames] : // number
                           [animDefaultframes]; // default
-                    
-                    for (let y = data.start.y, i = 0; y <= data.end.y; ++y) {
-                        for (let x = data.start.x; x <= data.end.x; ++x, ++i) {
-                            const u = json.transpose ? y : x, v = json.transpose ? x : y;
-                            if (u < 0 || u >= spritesheet.length || v < 0 || v >= spritesheet[0].length) {
-                                throw new Error('Index xy(' + u + ', ' + v + ') in animation "' + anim + '" is out of bounds for the ' + spritesheet.length + 'x' + spritesheet[0].length + ' spritesheet.');
-                            }
 
-                            const sprite = spritesheet[u][v];
+                    const W = data.end.x - data.start.x + 1;
+                    const H = data.end.y - data.start.y + 1;
+                    const N = W * H - ignoreFrames;
 
-                            for (let repeat = 0, s = sprite; repeat < 2; ++repeat) {
-                                s.$animationName = anim;
-                                s.$animationIndex = i;
-                                s.$name = spritesheet.$name + '.' + anim + '[' + i + ']';
-                                s.pivot = pivot;
-                                s.frames = Math.max(0.25, frames[Math.min(i, frames.length - 1)]);
-                                s.animation = animation;
-                                // Copy other properties
-                                Object.assign(s, otherProperties);
-                                s = transposedSpritesheet[v][u];
-                            }
-
-                            animation.push(sprite);
+                    for (let i = 0; i < N; ++i) {
+                        let x, y;
+                        if (rowMajor) {
+                            x = i % W;
+                            y = Math.floor(i / W);
+                        } else {
+                            y = i % H;
+                            x = Math.floor(i / H);
                         }
+
+                        x += data.start.x;
+                        y += data.start.y;
+                            
+                        const u = json.transpose ? y : x, v = json.transpose ? x : y;
+                        if (u < 0 || u >= spritesheet.length || v < 0 || v >= spritesheet[0].length) {
+                            throw new Error('Index xy(' + u + ', ' + v + ') in animation "' + anim + '" is out of bounds for the ' + spritesheet.length + 'x' + spritesheet[0].length + ' spritesheet.');
+                        }
+                        
+                        const sprite = spritesheet[u][v];
+                        
+                        for (let repeat = 0, s = sprite; repeat < 2; ++repeat) {
+                            s.$animationName = anim;
+                            s.$animationIndex = i;
+                            s.$name = spritesheet.$name + '.' + anim + '[' + i + ']';
+                            s.pivot = pivot;
+                            s.frames = Math.max(0.25, frames[Math.min(i, frames.length - 1)]);
+                            s.animation = animation;
+                            // Copy other properties
+                            Object.assign(s, otherProperties);
+                            s = transposedSpritesheet[v][u];
+                        }
+                        
+                        animation.push(sprite);
                     }
                     
                     animation.period = 0;
@@ -1932,6 +1948,9 @@ function addCodeToSourceStats(code, scriptURL) {
 
     // Remove function definition lines
     code = code.replace(/\n *def [^\n]+: *\n/gm, '\n');
+
+    // Remove variable declarations with no assignment
+    code = code.replace(/^ *let +[^ \n=]+ *$/gm, '');
 
     // Remove LOCAL, WITH, and PRESERVING_TRANSFORM lines
     code = code.replace(/\n *&? *(local:?|preserving_transform:?|with .*) *\n/gm, '\n');

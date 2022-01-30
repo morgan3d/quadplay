@@ -1,5 +1,12 @@
 {
     "url": "explosion-realistic-128x128.png",
     "license": "by Morgan McGuire 2018, in the Public Domain/CC0 1.0",
-    "sprite_size": {"x":128, "y":128}
+    "sprite_size": {"x":128, "y":128},
+    "names": {
+        "animation": {
+            "start": {"x": 0, "y": 0},
+            "end": {"x": 7, "y": 4},
+            "extrapolate": "clamp"
+        }
+    }
 }

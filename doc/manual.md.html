@@ -5838,6 +5838,8 @@ Fonts
 
 ![`quad://fonts/broderick-14.font.json`](../fonts/broderick-14.png)
 
+![`quad://fonts/cruise-14.font.json`](../fonts/cruise-14.png)
+
 ![`quad://fonts/cpc-14.font.json`](../fonts/cpc-14.png)
 
 ![`quad://fonts/ivanhoe-12.font.json`](../fonts/ivanhoe-12.png)
@@ -6662,8 +6664,14 @@ The sprite sheet JSON descriptor looks like:
     //
     // If an object with `x` and `y` properties is specified, creates a single sprite.
     //
-    // If an object is specified, creates an array of sprites.
+    // If an object with `start` is specified, creates an array of sprites.
     //
+    // The contents between `start` and `end` are treated as a 1D array. By default
+    // they are row major. To switch to column-major set "major_axis": "y".
+    //
+    // To strip frames from the end of the array, set `ignore` to the number of frames to
+    // ignore.
+    // 
     // If `extrapolate` is unspecified, defaults to looping.
     // `extrapolate` options are "loop", "oscillate", and "clamp"
     //
@@ -8305,16 +8313,16 @@ the one element that will probably confuse your syntax highlighter.
 Command-Line Tools
 ------------------------------------------------------------------------------------
 
-[`quadplay`](../quadplay)
+`quadplay`
 : Launches the emulator from the command line on any operating system.
   Requires Python. See the arguments above.
 
-[`quaddepend.py`](../tools/quaddepend.py)
+`quaddepend.py`
 : Prints dependencies of a `.game.json` file, recursively. Run the script  with `--help` to
   see the arguments. Run as `tools/quaddepend.py ...` or `python3 tools/quaddepend.py ...`
   from the main quadplay directory.
 
-[`export.py`](../tools/quaddepend.py)
+`export.py`
 : Export a static HTML site for a single game, either lightweight by referencing
   `https://morgan3d.github.io/quadplay` or standalone by embedding a full copy of
   the emulator. Run the script with `--help` to see the arguments.
@@ -8322,7 +8330,7 @@ Command-Line Tools
   Run as `tools/export.py ...` on Linux and macOS, or `py tools/export.py ...` on Windows
   from the main quadplay directory. This script itself depends on `tools/quaddepend.py`.
 
-[project_linter.py](../tools/project_linter.py)
+`project_linter.py`
 : Linter for quadplay projects.  Intended to help when finalling a project, it
 has a number of checks including:
 
@@ -8335,7 +8343,7 @@ has a number of checks including:
 For a full list of features, use the --help argument.  Run it in the same
 directory that containst the game.json for your project.
 
-[`sprite_json_generator.py`](../tools/sprite_json_generator.py)
+`sprite_json_generator.py`
 : Generator for `.sprite.json` files. Requires Python and PIL.
 
   If you are exporting from aseprite, use the following settings with `sprite_json_generator.py`:
