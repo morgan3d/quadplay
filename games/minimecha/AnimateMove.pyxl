@@ -1,0 +1,292 @@
+AnimateMove
+════════════════════════════════════════════════════════════════════════
+
+/* Common across all simple attacks */
+def end_attack(data):
+    data.attack_audio = stop_audio(data.attack_audio)
+
+
+let move_audio
+
+def begin_move(): 
+    move_audio = play_sound(engine_sound, true, 200%)
+
+
+def animate_move(frames_left, total_frames, data):
+    const α = if data.hold_position then 0% else (100% - frames_left / total_frames)
+    piece_draw(data.piece, data.spline(α))
+
+
+def end_move(): 
+    move_audio = stop_audio(move_audio)
+    
+    
+/* Temporarily remove the moving piece from the board or hand */
+def remove_piece(data)
+& with piece in data:
+    
+    if piece.board_pos:
+        // On board (move)
+        board_set(global_game.board, piece.board_pos, EMPTY_SPACE)
+    else:
+        // In hand (drop)
+        global_game.player_array[piece.player_index].hand_array[piece.hand_index] = EMPTY_SPACE
+      
+
+
+/* If promote_after is ∅ and the move can promote, then player is asked */
+enter(gui, piece, end_board_pos, promote_after)
+────────────────────────────────────────────────────────────────────────
+
+const target_piece = board_get(global_game.board, end_board_pos)
+const winning_move = target_piece.type == "k"
+const base_type = lowercase(piece.type)
+const bombing = base_type == "b" and target_piece ≠ EMPTY_SPACE
+const ramming = piece.move_type == "g" and target_piece ≠ EMPTY_SPACE
+
+let animate_drop_frames = 0
+let offer_promote = (
+    promote_after == ∅ and
+    not winning_move and 
+    move_can_promote(piece, end_board_pos))
+
+// Will be set by the upgrade dialog
+let promote = promote_after default false
+
+// For objects that move before the explosion (grinder, bomber)
+let pre_spline
+
+// Post-explosion animation
+let spline
+
+const z = max((piece.board_pos default xy(0, 0)).y, end_board_pos.y) + 1.5
+const sprite = ASSETS["mechs_" + piece.player_index + "_sprite"][piece.type]
+
+if piece.board_pos:
+    // Scale the movement so that Y movement is slower, faking perspective
+    const frames = ⌈ ‖piece.board_pos - end_board_pos‖ * max_component(SPACE_SIZE) / MOVE_SPEED ⌉
+
+    const start3D = xyz(piece.board_pos * SPACE_SIZE, piece.board_pos.y + 1)
+    const end3D = xyz(end_board_pos * SPACE_SIZE, end_board_pos.y + 1)
+    
+    if ramming:
+        const mid3D = ½ (start3D + end3D)
+        
+        // Back up and then ram quickly
+        pre_spline = make_spline([-20%, 0%, 85%, 100%], [start3D, start3D, 1.5 start3D - ½ mid3D, mid3D], 3)
+        pre_spline.frames = ⌊ 150% frames ⌋
+        
+        // Crawl forward
+        spline = make_spline([0%, 100%], [mid3D, end3D], 1)
+        spline.frames = frames
+
+    else if bombing:
+        const end3D_high = end3D - xyz(0, BOMBING_ELEVATION, 0)
+        
+        pre_spline = make_spline([0%, 100%], [start3D, end3D_high], 1)
+        pre_spline.frames = ⌊ 75% frames ⌋
+        
+        spline = make_spline([0%, 100%], [end3D_high, end3D], 1)
+        spline.frames = ⌊ BOMBING_ELEVATION / MOVE_SPEED ⌋
+    else:
+        spline = make_spline([0%, 100%], [start3D, end3D], 1)
+        spline.frames = frames
+    
+else:
+    animate_drop_frames = (end_board_pos.y + 2) * SPACE_SIZE.y / DROP_SPEED
+    const start_drop_pos = xy(end_board_pos.x, -2)
+    
+    // Drop nonlinearly, slowing right before landing
+    spline = make_spline([0%, 50%, 100%],
+        [start_drop_pos, lerp(start_drop_pos, end_board_pos, 85%), end_board_pos], 1)
+
+todo("Play bomb drop sound for bomber")
+
+
+// Used when the move is done to check for upgrade
+def show_upgrade_dialog():
+    if offer_promote:
+        // Pushing another mode while inside a sequence/frame hook will prevent the sequence from
+        // advancing, so test to prevent getting stuck.
+        offer_promote = false
+        
+        // Return value from the upgrade dialog
+        def upgrade_callback(result):
+            promote = result
+            
+        push_mode(UpgradeDialog, gui, piece, upgrade_callback) because "move_can_promote() and not AI"
+        
+        
+
+def animation_done():
+    // Put the target_piece and piece back in the board where it started to commit
+    // the move properly in the abstract game
+    if target_piece ≠ EMPTY_SPACE:
+        board_set(global_game.board, target_piece.board_pos, target_piece)
+    
+    if piece.board_pos:
+        board_set(global_game.board, piece.board_pos, piece)
+    else:
+        global_game.player_array[piece.player_index].hand_array[piece.hand_index] = piece
+    
+    // Update the game, commiting the move
+    global_game = game_move_clone(global_game, {piece: piece, end_board_pos: end_board_pos, promote_after: promote})
+    
+    // Update the threats
+    const new_gui = gui_array[global_game.current_player_index]
+    new_gui.threat_map = game_compute_threat_map(global_game)
+    new_gui.in_check = false
+    
+    // Find the king and see if it is in check
+    for col in global_game.board:
+        for piece in col:
+            if is_king(piece, new_gui.player_index) and new_gui.threat_map[piece.board_pos.x][piece.board_pos.y]:
+                new_gui.in_check = true
+    
+    if winning_move:
+        set_mode(EndGame, piece.player_index) because "Captured Captain"
+    else:
+        portrait_transition = 0
+        // Return to the game
+        pop_mode() because "Animation complete"
+
+
+///////////////////////////////////////////////////
+// Build the animation   
+const animation_array = []
+
+if target_piece ≠ EMPTY_SPACE:
+    // Attack the target piece  
+    
+    if base_type == "r":
+        // Reaper missile attack
+        push(animation_array, {
+            callback:           animate_missile_attack,
+            frames:             MISSILE_ATTACK_FRAMES,
+            data: {
+                piece:          piece,
+                end_board_pos:  end_board_pos,
+                target_piece:   target_piece,
+                z:              z}})
+                
+    else if piece.type == "k":
+        // Captain's flame thrower
+        push(animation_array, {
+            begin_callback:     begin_flame_attack,
+            callback:           animate_flame_attack,
+            frames:             FLAME_ATTACK_FRAMES,
+            end_callback:       end_attack,
+            data: {
+                sprite:         sprite,
+                piece:          piece,
+                end_board_pos:  end_board_pos}})
+                
+    else if piece.type == "p":
+        // Unpromoted probe attack (promoted probe
+        // uses the Grinder attack)
+        push(animation_array, {
+            begin_callback:     begin_shock_attack,
+            callback:           animate_shock_attack,
+            frames:             SHOCK_ATTACK_FRAMES, 
+            end_callback:       end_attack,
+            data: {
+                piece:          piece,
+                end_board_pos:  end_board_pos}})  
+                
+    else if pre_spline:
+        // Bomber and Grinder/S-Probe/S-Stalker attack
+        push(animation_array, {
+            begin_callback:     remove_piece,
+            callback:           animate_move,
+            frames:             pre_spline.frames,
+            data: {
+                piece:          piece,
+                spline:         pre_spline,
+                hold_position:  false}})
+                
+    else:
+        // Default laser attack
+        push(animation_array, {
+            begin_callback:     begin_laser_attack,
+            callback:           animate_laser_attack,
+            frames:             LASER_ATTACK_FRAMES, 
+            end_callback:       end_attack,
+            data: {
+                piece:          piece,
+                end_board_pos:  end_board_pos}})
+    
+    // Explode the target after the attack completes
+    push(animation_array, {
+        begin_callback:         begin_explosion,
+        callback:           
+            (if pre_spline then
+                combine(animate_explosion, animate_move)
+             else 
+                animate_explosion),
+        frames:                 EXPLOSION_FRAMES,
+        
+        data: {
+            target_piece:       target_piece,
+            piece:              piece,
+            spline:             spline,
+            hold_position:      true}})
+
+
+if animate_drop_frames:
+    // Drop
+    const data = {
+        spline:                 spline,
+        sprite:                 sprite,
+        end_board_pos:          end_board_pos,
+        piece:                  piece,
+        piece_already_down:     false}    
+
+    push(animation_array, {
+        begin_callback:         combine(remove_piece, begin_drop),
+        callback:               animate_drop, 
+        frames:                 animate_drop_frames,
+        data:                   data})
+        
+    if not data.sprite.float:
+        push(animation_array, {
+            callback:           animate_chopper_retreat, 
+            frames:             animate_drop_frames,
+            end_callback:       end_chopper_retreat,
+            data:               data})
+            
+else if spline.frames:
+    // Move after or instead of attack
+    push(animation_array, {
+        begin_callback:         combine(remove_piece, begin_move),
+        callback:               animate_move, 
+        frames:                 spline.frames,
+        end_callback:           end_move,
+        data: {
+            spline:             spline,
+            piece:              piece}})
+
+
+push(animation_array, show_upgrade_dialog, animation_done)
+
+sequence(…animation_array)
+
+set_scene_transform()
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+iterate(gui_array, cursor_update)
+game_draw()
+
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+show_message(global_scenario.dialogue["" + global_game.ply])
+
+remove_frame_hooks_by_mode(AnimateMove)
+reset_camera()
+reset_transform()
+
+

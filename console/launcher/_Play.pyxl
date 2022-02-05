@@ -204,6 +204,23 @@ const gameArray = [{
    builtin:      true,
    label:        allabel[0][0],
    preview:      alpreview
+},
+
+{
+   title: "Morgan's Mini Mech",
+   developer: "@CasualEffects",
+   url: "quad://games/minimecha",
+   version:      1.0,
+   description:  "Turn based strategy game with tiny mechas.",
+   min_players:   1,
+   max_players:   2,
+   cooperative:  false,
+   competitive:  true,
+   achievements: false,
+   highscores:   true,
+   builtin:      true,
+   label:        mmlabel[0][0],
+   preview:      mmpreview
 }]
 
 

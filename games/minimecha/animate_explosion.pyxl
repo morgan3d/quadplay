@@ -1,0 +1,25 @@
+def begin_explosion(data):
+    // Explode pawns more quietly
+    play_sound(explode_sound, ∅, if data.target_piece.type == "p" then 85% else 120%)    
+    
+    
+    
+def animate_explosion(frames_left, total_frames, data)
+& with target_piece in data:
+    
+    if frames_left == ⌊½ total_frames⌋:
+        // Temporarily remove the target piece
+        board_set(global_game.board, target_piece.board_pos, EMPTY_SPACE)
+
+    const floating_target = mechs_0_sprite[target_piece.type].float
+    const animation = if floating_target then explosion_float_sprite.animation else explosion_sprite.animation
+        
+    // Scale all explosions to 100 pixels, except make pawn explosions ½ as large
+    const scale = (if target_piece.type == "p" then 65% else 100%) * (100 / animation[0].size.x)
+    
+    draw_sprite({
+        sprite: animation.frame(⌊(100% - frames_left / total_frames) * size(animation)⌋),
+        scale: scale,
+        pos: target_piece.board_pos * SPACE_SIZE - xy(0, if floating_target then 16 else 42),
+        z: target_piece.board_pos.y + 1.5})
+    

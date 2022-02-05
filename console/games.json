@@ -264,6 +264,11 @@
             "description": "2 vs. 2 ice hockey with teams, player stats., faceoffs, passing\u2026and a Zamboni."
         },
         {
+            "url": "quad://games/minimecha/",
+            "title": "Mini Mecha",
+            "description": "Turn based strategy game with tiny mechas."
+        },
+        {
             "url": "quad://games/quadpaddle/",
             "title": "quadpaddle",
             "description": "Blast bricks as a team from all four sides, grabbing powerups and racking up points."

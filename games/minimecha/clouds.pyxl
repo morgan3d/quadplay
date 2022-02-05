@@ -1,0 +1,90 @@
+// Clouds match the 2.5D perspective of othe objects
+// but are processed entirely in 2D screen space for
+// simplicity
+
+const cloud_array = []
+
+/* Used for clipping */
+const SCREEN_SPACE_BOARD_RECT = {
+    shape: "rect",
+    corner: ½ SCREEN_SIZE - ½ SPACE_SIZE * BOARD_SIZE + xy(0, 2),
+    size: SPACE_SIZE * BOARD_SIZE}
+
+
+/* Camera function used to make distant objects
+   smaller while preserving the scale of everything
+   on and in front of the board */
+def zoom(z):
+    const k = LERP(-1000, -10, PERSPECTIVE) 
+    return if z > 0 then 1 else DIV(k, ADD(z, k))
+    
+
+    
+def atmospheric_perspective(z):
+    const α = CLAMP(ADD(DIV(z, -300), (if z < 0 then 10% else 0%)), 0%, 50%)
+    return rgba(BACKGROUND_COLOR, α)
+    
+
+
+// Initialize clouds
+for i < NUM_CLOUDS:
+    let z = 20 - 200 i / NUM_CLOUDS        
+
+    // Ensure clouds are not near the surface
+    z += 5 sign(z)
+    
+    // Always step at an even divisor of the framerate
+    // to make speed appear constant. Exaggerate the parallax
+    // for more depth
+    const parallax = 5 + if z > 0 then i else 2 i
+    const Δx = -0.5 / max(1, ⌈parallax / CLOUD_BASE_SPEED⌉)
+    
+    push(cloud_array, make_entity({
+        sprite: clouds_sprite[0][0],
+        pos: (½ random_within_square() + ½) * SCREEN_SIZE - xy(100, 0),
+        vel: xy(Δx, 0),
+        scale: zoom(z) * xy(random_sign(), 1),
+        override_color: atmospheric_perspective(z),
+        z: z}))
+
+
+// intro_mode = no shadows or clipping
+def clouds_update_and_draw(intro_mode) preserving_transform:
+    reset_transform()
+    reset_camera()
+    
+    const board_center = SCREEN_SPACE_BOARD_RECT.corner + ½ SCREEN_SPACE_BOARD_RECT.size
+    
+    const pos = xy(0, 0)
+    for cloud in cloud_array:
+        cloud.pos += cloud.vel
+        
+        // Wrap when off screen
+        if cloud.pos.x < -cloud.sprite.size.x:
+            cloud.pos.x = SCREEN_SIZE.x + cloud.sprite.size.x
+            cloud.pos.y = random(20, SCREEN_SIZE.y - 30)
+        
+        // Snap to the nearest pixel to avoid crawling and flickering
+        pos.x = round(cloud.pos.x, 1 / zoom(cloud.z))
+        pos.y = cloud.pos.y
+        
+        // Is the cloud above the board?
+        if cloud.z > 0 and not intro_mode:
+            // Shadow
+            set_clip(SCREEN_SPACE_BOARD_RECT)
+            draw_sprite({
+                sprite: cloud.sprite, 
+                pos: cloud.pos + xy(0, 10 + cloud.z),
+                z: 5.5,//0.1, // 0.1 = under everything, 5.5 = over everything
+                opacity: 25%,
+                override_color: #000})
+            reset_clip()
+            
+        else if (not intro_mode and
+                 |cloud.pos.y - board_center.y| < ½ (SCREEN_SPACE_BOARD_RECT.size.y - cloud.size.y * |cloud.scale.y|) and
+                 |cloud.pos.x - board_center.x| < ½ (SCREEN_SPACE_BOARD_RECT.size.x - cloud.size.x * |cloud.scale.x|)):
+            // Do not draw clouds that are entirely behind the board
+            continue
+
+        // The cloud itself
+        draw_entity({...cloud, pos: pos})

@@ -1,0 +1,74 @@
+Intro
+════════════════════════════════════════════════════════════════════════
+
+
+enter(num_controllers, is_single_player, difficulty, scenario)
+────────────────────────────────────────────────────────────────────────
+setup_scenario(scenario)
+ai_skill = difficulty
+
+// Generate players
+for p < 2:
+    gui_array[p] = make_gui(
+        p, 
+        if is_single_player and p > 0 then 
+            ∅ 
+        else 
+            gamepad_array[min(p, (num_controllers default 1) - 1)])
+
+set_background(sky_sprite)
+update_background_music()
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+preserving_transform:
+    // Center the board
+    set_scene_transform()
+    clouds_update_and_draw(true)
+
+    if mode_frames < INTRO_TERRAIN_DROP_FRAMES:
+        // Drop terain pieces in 
+        for y < BOARD_SIZE.y:
+            for x < BOARD_SIZE.x:
+                const α = clamp(225% + 3 hash(7 x, 2y) - 4 mode_frames / INTRO_TERRAIN_DROP_FRAMES, 0%, 100%)² 
+                // Pull mountains forward to overlap sprites but stay under cursor.
+                // Leave everything else at z = 0.
+                const sprite = board_map[x][y]
+                draw_sprite({
+                    sprite: sprite,
+                    pos: SPACE_SIZE * xy(x, y) - xy(0, α * SCREEN_SIZE.y),
+                    z: if sprite.spritesheet == mountain_sprite then y else 0})
+    
+        // Fade in the ragged part on the bottom while the visuals of dropping terrain
+        // distract from its appearance
+        draw_sprite({
+            sprite: terrain_base_sprite, 
+            pos: SPACE_SIZE * xy(½ (BOARD_SIZE.x - 1), BOARD_SIZE.y - ½),
+            opacity: (mode_frames / INTRO_TERRAIN_DROP_FRAMES - 70%) / 10%}) 
+                    
+    else:
+        board_draw()
+        
+    
+todo("Animate piece drop")
+
+// Map name
+local:
+    let τ = 2 mode_frames / INTRO_FRAMES - 1
+    τ = ½ τ⁵ + ½
+    draw_text({
+        font: big_font,
+        text: global_scenario.name,
+        pos: SCREEN_SIZE * xy(50%, τ),
+        color: #000,
+        outline: TEXT_OUTLINE,
+        shadow: TEXT_SHADOW,
+        z: HUD_Z,
+        x_align: "center",
+        y_align: "center"})
+    
+if any_button_press() or mode_frames > INTRO_FRAMES:
+    set_mode(Play) because "Done"
+

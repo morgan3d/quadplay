@@ -921,6 +921,18 @@ def main():
 
     token = "%0.7X" % random.randrange(0, 0x10000000)
 
+    if not args.quiet:
+        if isWindows: os.system('color')
+        banner = ['',
+            '\033[91m                      ╷       ╷                    ',
+            '\033[95m╭───╮ ╷   ╷  ───╮ ╭── │ ╭───╮ │   ───╮ ╷   ╷   ▒▒  ',
+            '\033[94m│   │ │   │ ╭── │ │   │ │   │ │  ╭── │ │   │ ▒▒  ▒▒',
+            '\033[96m╰── │ ╰───┘ ╰───╯ ╰───╯ │ ──╯ ╰─ ╰───╯ ╰── │   ▒▒  ',
+            '\033[37m    ╵                   ╵                ──╯       ','\033[0m']
+        
+        for line in banner:
+            maybe_print('         ' + line)
+
     maybe_print('_________________________________________________________________________\n')
     maybe_print('quadplay version ' + installed_quadplay_version['text'] + ' from ' + quadplay_origin + '\n\n')
 

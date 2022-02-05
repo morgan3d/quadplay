@@ -1,0 +1,75 @@
+/* True if value `target` appears in `container` and false
+   otherwise */
+def contains(container, target, comparator):
+    return find(container, target, ∅, comparator) ≠ ∅
+    
+
+/* Given a set of functions, returns a new function that
+   runs them all in series on the same arguments. */
+def combine(…func_array):
+    
+    def combined(…args):
+        for func in func_array:
+            func(…args)
+            
+    return combined
+
+
+/* Applies callback to each element of array and returns
+   a new array of the results. */
+def apply_to_array(callback, array):
+    let result = []
+    for i < size(array):
+        result[i] = callback(array[i])
+    return result
+    
+
+def filter_array(callback, array):
+    let result = []
+    for value in array:
+        if callback(value):
+            push(result, value)
+    return result
+    
+    
+def apply_to_nested_array(callback, array):
+    const result = make_array(size(array))
+    
+    // For array2D
+    if array.size: result.size = clone(array.size)
+    
+    for i < size(array):
+        result[i] = make_array(size(array[i]))
+        for j < size(array[i]):
+            result[i][j] = callback(array[i][j])
+    
+    return result
+
+
+    
+def draw_fancy_sprite(args, outline default ∅, shadow default ∅):
+    const antiperspective = 1 / zoom(args.z default args.pos.z default 0)
+        
+    if outline:
+        for -1 ≤ Δx ≤ +1:
+            if shadow:
+                draw_sprite({
+                    …args, 
+                    pos: args.pos + xy(0, 2 antiperspective), 
+                    override_color: shadow})
+                    
+            for -1 ≤ Δy ≤ +1:
+                if Δx or Δy:
+                    draw_sprite({
+                        …args, 
+                        pos: args.pos + xy(Δx, Δy) * antiperspective, 
+                        override_color: outline})
+                        
+    else if shadow:
+        draw_sprite({
+            …args, 
+            pos: args.pos + xy(0, antiperspective), 
+            override_color: shadow})
+
+    // The sprite
+    draw_sprite(args)

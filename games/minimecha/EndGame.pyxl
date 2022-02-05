@@ -1,0 +1,72 @@
+EndGame
+════════════════════════════════════════════════════════════════════════
+
+let winner_index
+let message
+
+
+enter(winner_index_in)
+────────────────────────────────────────────────────────────────────────
+winner_index = winner_index_in
+todo("Play victory sound")
+stop_audio(alarm_audio)
+
+// Update high score table
+const high_score = load_local("high_score") default [{}, {}, {}]
+
+if gui_array[1].gamepad:
+    // Two player
+    message = PLAYER_NAME[winner_index] + " wins!"
+    high_score[2][global_scenario.name] = true
+else if winner_index == 0:
+    message = "You won!"
+    const prev = high_score[global_scenario.start_player_index][global_scenario.name] default 0
+    if ai_skill > prev:
+        todo("Recognize new high score")
+        high_score[global_scenario.start_player_index][global_scenario.name] = ai_skill
+else:
+    message = random_value([
+        "Better luck next time",
+        "Better luck next time",
+        "Better luck next time",
+        "Sorry, you lost",
+        "Try again",
+        "The computer won",
+        "You have been defeated",
+        "You lost. Good game",
+        "You lost!",
+        "Human go boom"])
+
+
+save_local("high_score", high_score)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+game_draw()
+
+reset_transform()
+reset_camera()
+todo("Show victory animation")
+
+draw_rect(½ SCREEN_SIZE, xy(SCREEN_SIZE.x + 2, 30), PLAYER_COLOR[winner_index], #000, ∅, DIALOG_Z)
+
+
+draw_text({
+    font: font, 
+    pos: ½ SCREEN_SIZE, 
+    color: TEXT_OUTLINE, 
+    outline: #000, 
+    x_align: "center", 
+    y_align: "center", 
+    text: message, 
+    z: DIALOG_Z})
+
+
+if mode_frames > 10 and (gamepad_array[0].aa or gamepad_array[1].aa):
+    set_mode(Config) because "Pressed (a)"
+    
+    
+leave
+────────────────────────────────────────────────────────────────────────
+background_audio = stop_audio(background_audio)

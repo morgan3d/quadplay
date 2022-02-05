@@ -1,0 +1,262 @@
+Config
+════════════════════════════════════════════════════════════════════════
+const WIDTH = 150
+
+const text_args = {
+    font: font,
+    pos: xy(0, 0),
+    color: PLAYER_COLOR[0],
+    outline: #FFF,
+    shadow: TEXT_SHADOW,
+    x_align: "center",
+    y_align: "center"}
+    
+const title_args = {
+    font: font,
+    pos: xy(0, -15),
+    color: #fff,
+    shadow: #555,
+    x_align: "center",
+    y_align: "bottom"}
+
+
+def is_tutorial(scenario): return starts_with(scenario.name, "Tutorial")
+def is_random(scenario): return scenario.name == "<RANDOM>"
+def not_tutorial(scenario): return not is_tutorial(scenario)
+
+def difficulty_to_string(d): return if d ≠ ∅ then format_number(round(1 + 5 d), "0") else "" 
+
+const scenario_array_1P = parse_scenario_data(SCENARIO_DATA)
+const scenario_array_2P = filter_array(not_tutorial, scenario_array_1P)
+
+/* Index into scenario_array */    
+let scenario_index
+
+let is_single_player
+let num_controllers
+let difficulty
+let reverse_start
+
+// start_index = 0, 1: number high scores against AI
+// start_index = 2: boolean 
+// scenario_high_score[start_index][scenario.name] = number
+let high_score
+
+
+
+enter(in_is_single_player)
+────────────────────────────────────────────────────────────────────────
+
+// Only change state if not coming from a previous game
+if get_previous_mode() ≠ EndGame:
+    is_single_player = in_is_single_player
+    difficulty = load_local("difficulty") default 40%
+    scenario_index = load_local("scenario_index_" + (if is_single_player then "1P" else "2P"))
+    
+    if scenario_index == ∅:
+        // Set the default for the first play
+        const target = if is_single_player then "Tutorial #1" else "Ultimate"
+        const array = (if is_single_player then scenario_array_1P else scenario_array_2P)
+        for scenario at i in array:
+            if scenario.name == target:
+                scenario_index = i
+                break
+            
+        
+    reverse_start = load_local("reverse_start") default false
+    num_controllers = load_local("num_controllers") default 2
+
+set_background(sky_sprite)
+reset_transform()
+reset_camera()
+
+high_score = load_local("high_score") default [{}, {}, {}]
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+const prompt = gamepad_array[0].prompt
+const scenario_array = if is_single_player then scenario_array_1P else scenario_array_2P
+
+
+// Map selection
+preserving_transform:
+    set_transform(xy(27% SCREEN_SIZE.x, 80))
+    const H = 74
+    dialog_draw(xy(0, ½ H - 8), xy(WIDTH, H + 44))    
+    draw_text({…title_args, text: "Map"})
+
+    draw_text({
+        …text_args,
+        text: prompt["[^]"],
+        pos: xy(-60, ½ H - 12)})
+    
+    for -3 ≤ j ≤ +3:
+        const α = |j| / 4
+        const scenario = array_value(scenario_array, j + scenario_index, "loop")
+        
+        const args = {
+            …text_args,
+            color: lerp(#000, DIALOG_COLOR, α),
+            outline: if j then ∅ else #FFF,
+            shadow: if j then ∅ else TEXT_SHADOW,
+            x_align: "left",
+            text: scenario.name,
+            pos: xy(-47, ½ H + 12 j)}
+            
+        // Map name
+        draw_text(args) 
+        
+        if not is_random(scenario):
+            if is_single_player:
+                // High scores
+                draw_text({
+                    …args,
+                    font: small_font,
+                    text: difficulty_to_string(high_score[0][scenario.name]),
+                    color: lerp(PLAYER_COLOR[0], DIALOG_COLOR, α),
+                    pos: xy(+45, args.pos.y)})
+        
+                if not_tutorial(scenario):
+                    draw_text({
+                        …args,
+                        font: small_font,
+                        text: difficulty_to_string(high_score[1][scenario.name]),
+                        color: lerp(PLAYER_COLOR[1], DIALOG_COLOR, α),
+                        pos: xy(+55, args.pos.y)})
+                        
+            else if high_score[2][scenario.name]:
+                // Was played?
+                draw_text({
+                    …args,
+                    text: "✓",
+                    pos: xy(+50, args.pos.y)})
+
+        
+    draw_text({
+        …text_args,
+        text: prompt["[v]"],
+        pos: xy(-60, ½ H + 12)})
+        
+
+
+// Reverse start player UI
+if not_tutorial(array_value(scenario_array, scenario_index, "loop"))
+& preserving_transform:
+    set_transform(xy(73% SCREEN_SIZE.x, 80))
+    dialog_draw(xy(0, -5), xy(WIDTH, 50))
+    draw_text({…title_args, text: "Start Player"})
+
+    const i = if reverse_start then 1 else 0
+    
+    const bounds = draw_text({
+        …text_args,
+        text: PLAYER_NAME[i],
+        shadow: ∅,
+        outline: ∅,
+        color: PLAYER_COLOR[i],
+        pos: xy(0, 0)})
+
+    draw_text({
+        …text_args,
+        pos: xy(-½ bounds.size.x - 8, 0),
+        text: prompt["(c)"],
+        x_align: "right"})
+        
+        
+// Difficulty level or pass & play
+const offline = gamepad_array[0].status ≠ "host"
+if is_single_player or offline
+& preserving_transform:
+    const W = ½ (WIDTH - 50)
+            
+    set_transform(xy(73% SCREEN_SIZE.x, 148))
+    dialog_draw(xy(0, -5), xy(WIDTH, 50))    
+
+    draw_text({
+        …text_args,
+        text: prompt["[<]"],
+        pos: xy(-W - 8, 1),
+        x_align: "right"})
+        
+    draw_text({
+        …text_args,
+        text: prompt["[>]"],
+        pos: xy(+W + 7, 1),
+        x_align: "left"})
+    
+    if is_single_player:
+        const R = 4.5
+        draw_text({…title_args, text: "Challenge "})
+              
+        // Line        
+        draw_line(xy(-W, 0), xy(+W, 0), TEXT_OUTLINE)
+        draw_line(xy(-W, 1), xy(+W, 1), TEXT_SHADOW)
+        
+        // Thumb
+        const x = lerp(-W, W, difficulty)
+        draw_disk(xy(x, 1), R, ∅, TEXT_SHADOW)
+        draw_disk(xy(x, 0), R, #000, TEXT_OUTLINE)
+        draw_text({
+            pos: xy(x + 1, 1), 
+            color: #fff,
+            text: difficulty_to_string(difficulty),
+            x_align: "center",
+            y_align: "center",
+            font: small_font})
+        
+    else:
+        // Offline 2P
+        draw_text({…title_args, text: "Controllers"})
+        
+        draw_text({
+            …text_args,
+            text: if num_controllers == 1 then "Pass & Play" else "2 Controllers",
+            shadow: ∅,
+            outline: ∅,
+            color: #000,
+            pos: xy(0, 1)})
+                
+    
+draw_text({
+    …text_args,
+    text: replace("(a) Start        (b) Back to Title", prompt),
+    pos: xy(½ SCREEN_SIZE.x, 210)})
+    
+
+if mode_frames > 10:
+    for gamepad in gamepad_array:
+        if gamepad.aa:
+            // Refine the selection
+            let scenario = scenario_array[scenario_index]
+            if scenario.name == "<RANDOM>":
+                while is_tutorial(scenario) or is_random(scenario):
+                    scenario = random_value(scenario_array)
+            
+            // Tutorials can't have reverse starts
+            if reverse_start and not_tutorial(scenario): scenario = scenario_clone_reverse(scenario)
+
+            const c = (if is_single_player or not offline then 1 else num_controllers)
+            set_mode(Intro, c, is_single_player, difficulty, scenario) because "Pressed A"
+        else if gamepad.bb:
+            set_mode(Title) because "Pressed B"
+        else if gamepad.cc:
+            reverse_start = not reverse_start
+        
+        scenario_index = loop(scenario_index + gamepad.yy, size(scenario_array))
+
+        if is_single_player:
+            // Difficulty
+            difficulty = clamp(difficulty + 20% gamepad.xx, 0, 1)
+        else if offline:
+            num_controllers = loop(num_controllers + gamepad.xx, 1, 3)
+            
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+save_local("num_controllers", num_controllers)
+save_local("difficulty", difficulty)
+save_local("reverse_start", reverse_start)
+save_local("scenario_index_" + (if is_single_player then "1P" else "2P"), scenario_index)
+

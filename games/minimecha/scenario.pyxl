@@ -1,0 +1,137 @@
+todo("Track the final attack and make a context appropriate message")
+
+def piece_symbol_reverse(symbol):
+    if symbol[0] == "<":
+        return " " + symbol[1] + ">"
+    else if symbol[2] == ">":
+        return "<" + symbol[1] + " "
+    else:
+        return symbol
+
+
+
+def scenario_clone_reverse(scenario):
+    return {
+        name: scenario.name,
+        start_player_index: 1 - scenario.start_player_index,
+        board: reversed(apply_to_nested_array(piece_symbol_reverse, scenario.board)),
+        terrain: reversed(scenario.terrain),
+        hand_array: reversed(apply_to_nested_array(piece_symbol_reverse, scenario.hand_array))}
+
+
+
+/* Configures board_map and global_game. Called from Play.enter() */
+def setup_scenario(scenario):
+
+    global_game = make_game()
+    global_scenario = scenario
+    
+    const max_tile = xy(size(terrain_sprite) - 1, size(terrain_sprite[0]) - 1)
+    
+    const seed = random_integer(0, 99)
+    const freq = 0.3
+    const ampl = 1.5
+
+    global_game.current_player_index = scenario.start_player_index
+    
+    // Hand
+    for player at p in global_game.player_array:
+        for piece_symbol at h in scenario.hand_array[p]:
+            player.hand_array[h] = make_piece(piece_symbol, h)
+            
+        player.hand_columns = hand_count_columns(player.hand_array)
+
+    // Map value noise to the terrain sprite palette, which is set up 
+    // to vary smoothly along the Y axis in elevation and has variations
+    // of the same biome along the X axis.
+    for x < BOARD_SIZE.x:
+        for y < BOARD_SIZE.y:
+            const is_mountain = (scenario.terrain[x][y] == " M ")
+
+            // Pieces
+            const piece_symbol = scenario.board[x][y]
+            if piece_symbol ≠ " . ":
+                global_game.board[x][y] = make_piece(piece_symbol, xy(x, y))
+
+            // Terrain
+            global_game.terrain[x][y] = not is_mountain
+            
+            // Sprites
+            const biome = clamp(round((ampl * noise(3, freq * x, freq * y, seed) + ½) * max_tile.y), 0, max_tile.y)
+            
+            // Avoid random number clustering by cycling explicitly on variants
+            const variant = (17 (x + 5 y) + seed) mod (max_tile.x + 1)
+            const sprite = if is_mountain then mountain_sprite[variant][0] else terrain_sprite[variant][biome]
+            
+            board_map[x][y] = if ε < 50% then sprite else sprite.x_flipped
+
+
+
+/* Reads a board-sized grid of symbols from line_array, starting at line `i` */
+def read_grid(grid, line_array, i):
+    for y < BOARD_SIZE.y:
+        for symbol at x in split(resized(line_array[i + y], BOARD_SIZE.x * PIECE_SYMBOL_LENGTH), PIECE_SYMBOL_LENGTH):
+            grid[x][y] = symbol
+
+    return i + BOARD_SIZE.y
+
+
+
+/* Parse SCENARIO_DATA. Called at load time from Config */
+def parse_scenario_data(data):
+    const scenario_array = []
+    const line_array = split(data, "\n")
+    
+    let i = 0        
+    while i < size(line_array):
+        if (line_array[i][0] default " ") == " ":
+            // Keep looking for the scenario name
+            ++i
+        else:
+            // This is the name of a scenario
+            const scenario = {
+                name: trim_spaces(line_array[i]),
+                board: make_array(BOARD_SIZE),
+                terrain: make_array(BOARD_SIZE),
+                start_player_index: 0,
+                // Maps events to markup strings. Events are a 0-based ply number 
+                dialogue: {},
+                hand_array: []}
+            ++i
+
+            // Read until the dialogue or piece layout starts
+            while (line_array[i][1] default " ") == " ": ++i
+            
+            // Parse dialog
+            while contains(line_array[i], ":"):
+                // Find the first colon
+                const s = apply_to_array(trim_spaces, split(line_array[i], ":", 1))
+                scenario.dialogue[s[0]] = s[1]
+                ++i
+            
+            // Read until the piece layout starts
+            while (line_array[i][1] default " ") == " ": ++i
+            
+            // Read the piece layout
+            i = read_grid(scenario.board, line_array, i)
+            assert(scenario.board[2][2] ≠ " ? ", "Bad board format in scenarios.txt on line " + (i - BOARD_SIZE.y))
+
+            // Read the hands
+            assert(starts_with(line_array[i], "["), "Bad hand format in scenarios.txt on line " + (i + 1) + ": '" + line_array[i] + "'")
+            for p < 2:
+                scenario.hand_array[p] = split(slice(line_array[i], 1, size(line_array[i]) - 1), PIECE_SYMBOL_LENGTH)
+                ++i
+            
+            // Read the board
+            i = read_grid(scenario.terrain, line_array, i)
+            assert(scenario.terrain[0][0] ≠ ∅, "Bad terrain format in scenarios.txt on line " + (i - BOARD_SIZE.y))
+
+            push(scenario_array, scenario)
+    
+    sort(scenario_array, "name")
+    
+    // Special
+    push(scenario_array, {name: "<RANDOM>"})
+    
+    return scenario_array
+    

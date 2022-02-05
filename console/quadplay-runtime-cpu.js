@@ -8550,7 +8550,7 @@ function resized(str, n, pad, right_align) {
 }
 
 
-function split(str, c) {
+function split(str, c, n) {
     if (c === undefined || c === '' || (is_number(c) && c <= 0)) {
         
         return Array.from(str);
@@ -8566,12 +8566,33 @@ function split(str, c) {
         }
         return array;
             
+    } else if (n !== undefined) {
+
+        if (n <= 0) {
+            return [str];
+        } else {
+            const result = [];
+            let i = str.indexOf(c);
+            while (n > 0 && str.length > 0 && i >= 0) {
+                result.push(str.substring(0, i));
+                str = str.substring(i + c.length);
+                --n;
+            }
+            
+            if (str.length > 0) {
+                result.push(str);
+            }
+            
+            return result;
+        }
+        
     } else {
         
         return str.split(c);
         
     }
 }
+
 
 // default_value is deprecated...use `default` now
 function load_local(key, default_value) {

@@ -17,9 +17,9 @@
 
 > "Imagine the year 1989 in a fantasy timeline. Instead of chasing
 > realistic 3D, game consoles get modern tools and
-> mechanics. quadplay✜ is the fantasy predecessor of Nintendo64 and
+> mechanics. <quadplay/> is the fantasy predecessor of Nintendo64 and
 > PlayStation that puts fun first in game jams and education. Its retro
-> constraints scope art and code for success. quadplay✜'s friendly
+> constraints scope art and code for success. <quadplay/>'s friendly
 > 2021 scripting, physics, local and online multiplayer, and AI empower easy
 > implementation and great gameplay."
 
@@ -28,7 +28,7 @@ is a web-based fantasy game console for sprite-based 2D and 2.5D
 games. It lets you create games with the power and consistency of a
 game console and the flexibility of modern tools and web deployment.
 
-Because it is free, is easy to use, and runs everywhere, quadplay✜ is
+Because it is free, is easy to use, and runs everywhere, <quadplay/> is
 perfect for hobby coding, a game programming course, teaching yourself
 programming and game development, and game jams.
 
@@ -84,21 +84,21 @@ debugger, and profiler.
 Quick Start
 ====================================================================================
 
-Welcome to the quadplay✜ public beta!
+Welcome to <quadplay/>! 
 
-To get started you only need:
+<table style="width:100%"><tr><td>
+<a href="https://morgan3d.github.io/quadplay/tools/windows-install-quadplay.cmd" download style="background-image: linear-gradient(to top, #306fcf 0%, #80bfff 70%, #bbefff 100%); text-shadow: 0px -1px 1px rgb(0 0 0 / 50%); color:#fff !important; text-decoration: none; width:360px; display: block; border: 2px solid #fff; border-radius: 30px; padding: 20px; font-size: 150%; box-shadow: 1px 1px #000; font-weight: bold; text-align: center">Download Windows Installer</a>
+</td><td>
+*macOS and Linux:*
 
-- [The quadplay✜ development kit](https://github.com/morgan3d/quadplay/archive/main.zip)
-- [Python 3.9](https://www.python.org/)
-- A modern web browser ([_Edge_](https://www.microsoft.com/en-us/edge), [_Chrome_](https://www.google.com/chrome/), [_Brave_](https://brave.com/), [_Firefox_](https://www.mozilla.org/en-US/firefox/new/), or _Safari_)
+1. Install [Python 3.7](https://www.python.org/) or newer
+2. Unzip [<quadplay/>](https://github.com/morgan3d/quadplay/archive/main.zip) to wherever you want
+3. Run `quadplay` from the terminal
+<!-- - A modern web browser ([_Edge_](https://www.microsoft.com/en-us/edge), [_Chrome_](https://www.google.com/chrome/), [_Brave_](https://brave.com/), [_Firefox_](https://www.mozilla.org/en-US/firefox/new/), or _Safari_) -->
+</td></tr></table>
 
-For the quadplay✜ development kit, just download, unzip, and then copy
-the files wherever you would like on your computer. There is no
-installer or configuration required.
-
-To make a game, double click `quadplay.cmd` on Windows, or run the `quadplay`
-script at the command line on any operating system. Select the "Tools" menu from
-inside the quadplay development environment and then the "New Game" option. Look at the
+To make a game, select the "Tools" menu from inside the quadplay
+development environment and then the "New Game" option. Look at the
 Built-In Games section for more examples.
 
 If you've worked with other scripting languages, then you may want to
@@ -109,7 +109,7 @@ If you're new to programming, just look at the many sample games and
 examples that are included and try modifying your own copies of them.
 
 !!! Info Pro Developers
-    Experienced programmers can use external editors with quadplay✜ for both
+    Experienced programmers can use external editors with <quadplay/> for both
     programming and directly modifying game and asset `.json` files by:
     <ul>
       <li>Optionally [clone the SDK with git](https://github.com/morgan3d/quadplay) to manage SDK upgrades</li>
@@ -121,10 +121,9 @@ examples that are included and try modifying your own copies of them.
     </ul>
 
 
-Launch your program in the emulator and debugger from the command line
-on Windows CMD, macOS Terminal, or a Linux terminal with the `quadplay`
-command in the root of the SDK. Or, double-click on `quadplay.vbs` on 
-Windows.
+On Windows, click on the shortcut on your desktop to run <quadplay/>. Or launch from the
+command line on Windows CMD, macOS Terminal, or a Linux terminal with
+the `quadplay` command in the root of the SDK.
 
 Here are some examples:
 
@@ -221,7 +220,7 @@ Workflow
 ------------------------------------------------------------------------------------
 
 You should create your programs however works best for you. Here's how
-I like to work in quadplay✜:
+I like to work in <quadplay/>:
 
 1. I start with a project file to load standard assets from `quad://`
    and a single *mode* called `Play.pyxl` that has no sections. I write a
@@ -262,7 +261,7 @@ Built-In Games
 
 Five complete games and many examples are included to show how to use the API.
 If you are accessing this manual from a web site or your local machine running
-the quadplay✜ emulator, use the links here to launch the game in your browser,
+the <quadplay/> emulator, use the links here to launch the game in your browser,
 press the Run button (F5) to start the game.
 
 
@@ -307,6 +306,21 @@ based on skipping stones over a lake in the evening.
 - Procedural content
 - Fake reflections
 - Parallax and pseudo 3D
+
+----------------------------
+
+  <center><img src="../games/minimecha/title.png" width=320px style="border:0"></center>
+
+<div class="preview pixel" style="background-image:url('../games/minimecha/preview.png')"></div>
+[Morgan's Mini Mecha](../console/quadplay.html?game=quad://games/minimecha&IDE=1) is turn-based
+strategy game created in a one week game jam. It is inspired by _Into The Breach_, _Advance Wars_,
+and Shogi.
+
+- Turn based UI
+- Board game artificial intelligence player
+- Complex scripted transitions and animations
+- High scores
+- Procedural map terrain
 
 ----------------------------
 
@@ -653,11 +667,11 @@ Private view example for online multiplayer using `set_screen_size()` and
 
 ### Inspiration
 
-Some games that were not made in quadplay✜, but which fit within the
+Some games that were not made in <quadplay/>, but which fit within the
 restrictions of quadplay and are sources of inspiration for their
 arcade graphics and gameplay follow. We've specifically determined
 that the main technical challenges of each of these can be met on
-quadplay✜.
+<quadplay/>.
 
 <div style="columns:3;-webkit-columns:3;-moz-columns:3;column-gap:3em;-webkit-column-gap:3em;-moz-column-gap:3em">
 
@@ -730,13 +744,13 @@ quadplay✜.
 
 </div>
 
-These are games that would fit the restrictions of quadplay✜ except they use native vector displays in their original implementations:
+These are games that would fit the restrictions of <quadplay/> except they use native vector displays in their original implementations:
 - [Asteroids]("https://en.wikipedia.org/wiki/Asteroids_(video_game)")
 - [Battlezone]("https://en.wikipedia.org/wiki/Battlezone_(1980_video_game)")
 - [Space War](https://en.wikipedia.org/wiki/Spacewar!)
 - [Tempest]("https://en.wikipedia.org/wiki/Tempest_(video_game)")
 
-These are games whose style and gameplay would fit, but that would exceed the resolution limitations of quadplay✜:
+These are games whose style and gameplay would fit, but that would exceed the resolution limitations of <quadplay/>:
 - [Axiom Verge](http://www.axiomverge.com/)
 - [Into the Breach](https://subsetgames.com/itb.html)
 
@@ -999,7 +1013,7 @@ function, although it is much more limited.
 
 ### Network Multiplayer
 
-All quadplay✜ games automatically support *shared-screen* network
+All <quadplay/> games automatically support *shared-screen* network
 multiplayer through the built-in system menu's Online options. The
 programming model is identical for local and network games and the
 runtime handles everything for you. There are no explicit
@@ -1207,12 +1221,12 @@ On macOS, either Control or Command can be used for "Ctrl".
 
 [^safariGIF]: On Safari, you have to explicitly allow popups for the website for this to work.
  Go to Preferences --> Websites --> Pop-up Windows and check "allow" for `localhost` (or whatever
- address you access quadplay✜ from).
+ address you access <quadplay/> from).
 
 
 ### Controls
 
-quadplay✜ presents virtual controllers for four players. You can use
+<quadplay/> presents virtual controllers for four players. You can use
 the on-screen buttons on mobile and touch screens for a single player,
 a keyboard for up to two players, and connect most USB or Bluetooth
 game controllers for up to four players. Physical controllers work on
@@ -1310,7 +1324,7 @@ Input       | Player 1 Key| Player 2 Key| Xbox       | Playstation| SNES   | Swi
 ⓕ           | C or R.shift| alt/option  | RB         | R1         | R      | R
 ⓠ           | 1 or Q      | 7           |<big>⧉</big>| Share      | Select | <big>⊖</big>
 ⓟ           | 4 or P      | 0           | ☰          | Options    | Start  | <big>⊕</big>
-[Sample controller mappings. quadplay✜ supports many more, including JoyCons and flight sticks.]
+[Sample controller mappings. <quadplay/> supports many more, including JoyCons and flight sticks.]
 
 After launching a quadplay game, you must press a button on the
 controller for the web browser to allow access to it. quadplay will
@@ -1407,7 +1421,7 @@ previous work, here are the resolutions of classic and retro machines:
  - 480x272 PlayStation Portable
  - 480x270 Hyperlight Drifter
  - 400x240 Playdate, 2DS, 3DS
- - 384x224 quadplay✜
+ - 384x224 <quadplay/>
  - 320x240 "240p", TowerFall
  - 320x180 Celeste and other Switch pixel art games
  - 320x200 VGA, including Amiga 500 and Commodore 64
@@ -1429,7 +1443,7 @@ quantize✜
 
 [quantize✜](../tools/quantize.html) is a standalone browser tool for
 converting any image format that your browser can load into a sRGB8 PNG
-for quadplay✜. While the console emulator can load any PNG file, if you convert
+for <quadplay/>. While the console emulator can load any PNG file, if you convert
 them using quantize✜ you will have control over the color reduction process
 and be able to produce much smaller files for distribution.
 
@@ -1438,7 +1452,7 @@ fontgen✜
 ---------------------------------------------------------------------------------------------
 
 [fontgen✜](../tools/fontgen.html) is a standalone browser tool for
-producing rough quadplay✜ font images from fonts installed on your local
+producing rough <quadplay/> font images from fonts installed on your local
 computer. You can then screen capture these and edit them in your
 favorite pixel editor to clean them up.
 
@@ -1452,9 +1466,9 @@ fontgen✜) and packing it tightly. It will generate the output PNG
 and the `.font.json` file for you.
 
 fontpack✜ can also show what the generated characters will look like
-when loaded by quadplay✜. If the generated ones look good, _do not put
+when loaded by <quadplay/>. If the generated ones look good, _do not put
 them in the .png_.  Instead, store your file with lots of empty space
-so that it will compress better, and let quadplay✜ regenerate them at
+so that it will compress better, and let <quadplay/> regenerate them at
 load time. Only for ones where generation produces poor quality do you
 need to explicitly draw them. Usually large fonts will generate
 characters well but for very small fonts you must hand-tweak
@@ -1594,7 +1608,7 @@ create strings for showing controls and button prompts to players with
 `"[&lt;]"`, and `"[&gt;]"` to strings of text. It maps `"##"` to the 1-based player number.
 These can be used to describe
 controls to players in a way mapped to the physical controller they
-are currently using instead of the quadplay✜ native controls
+are currently using instead of the <quadplay/> native controls
 
 For example, `replace("Press (a) to jump", gamepad_array[0].prompt)` creates a
 string with the proper physical button label for the first player's
@@ -1612,8 +1626,8 @@ prompts.
 
 ### Touch
 
-quadplay✜ provides single-touch and single-button mouse input via
-virtual touch screen. Not all quadplay✜ devices support touch input
+<quadplay/> provides single-touch and single-button mouse input via
+virtual touch screen. Not all <quadplay/> devices support touch input
 (although most do, through a touch screen, stylus, or
 mouse). If there is no mouse, then `touch.a` is always `false`.
 
@@ -1688,7 +1702,7 @@ Modes
 
 `launch_game(url)`
 : Load a different game. This is primarily used by the built-in
-  quadplay✜ launcher, but is available to all programs. This may be
+  <quadplay/> launcher, but is available to all programs. This may be
   removed in version 1.0.
 
 `pop_mode()`
@@ -1708,7 +1722,7 @@ Modes
 `quit_game()`
 : Quit the game and exit to the IDE or the launcher, or close the tab depending on
   what the `quit` HTML query parameter was set to. Note that games do not
-  form a stack. Quitting a game returns to the built-in quadplay✜ launcher or
+  form a stack. Quitting a game returns to the built-in <quadplay/> launcher or
   IDE, and not the game that launched it.
 
 `reset_game()`
@@ -2061,8 +2075,10 @@ String
 : Return the substring of `string` between `s` (inclusive) and
   optional `e` (exclusive, defaults to length).
 
-`split(string, separator default "")`
-: Returns an array of strings separated by `separator`. If the separator is the empty string, then all characters are separated.
+`split(string, separator default "", max_splits default infinity)`
+: Returns an array of strings separated by `separator`. If 
+  the `separator` is the empty string, then all characters are separated.
+  If a `max_splits` is specified, at most that many splits are made.
 
 `split(string, count default 0)`
 : Returns an array of strings that are every sequential `count` characters from `string`.
@@ -3487,7 +3503,7 @@ set of label properties is:
 
 ### Physics Properties
 
-A key relating textbook symbols and definitions to the quadplay✜ entity property names is:
+A key relating textbook symbols and definitions to the <quadplay/> entity property names is:
 
   Property        | Symbol                           | Definition
   ----------------|----------------------------------|------------------
@@ -4221,7 +4237,7 @@ equivalent to `gray(0.8039)`.
 
      --------------------------------------------------
 
-The quadplay✜ uses 4:4:4:4 RGBA color, for a total of 4096 different colors and
+The <quadplay/> uses 4:4:4:4 RGBA color, for a total of 4096 different colors and
 16 levels of transparency including fully-transparent.
 
 It can draw perfect 16-shade gradients of red, green, blue, yellow,
@@ -5340,7 +5356,7 @@ Persistence
 
 The local persistence API stores values in the browser's local
 storage.  It is tied to a specific web browser and the URL from which
-quadplay✜ is hosted, as well as the URL of the game. Some browsers will
+<quadplay/> is hosted, as well as the URL of the game. Some browsers will
 automatically synchronize local storage across computers, however.
 
 The storage API performs string manipulation and can be slow relative
@@ -5498,7 +5514,7 @@ Raw Device Access
 Intrinsics
 -----------------------------------------------------------
 
-quadplay✜ can execute about 10,000 vector operations per frame even
+<quadplay/> can execute about 10,000 vector operations per frame even
 on embedded platforms. This is sufficient to program most mathematical
 routines in a readable way and intrinsics are usually not required.
 
@@ -5506,7 +5522,7 @@ For some _very_ math intensive routines, such as those with thousands
 of particles, it is necessary to run slightly faster at the expense of
 code that is harder to maintain. In these cases, use the function
 calls below, which produce inline assembly instructions for the
-quadplay✜ platform.
+<quadplay/> platform.
 
 These calls have no argument checking. The vector functions execute
 about twice as fast as regular overloaded operator arithmetic. The scalar
@@ -5745,7 +5761,7 @@ and other operations that naturally compile with maximum efficiency.
 Built-in Assets
 ====================================================================================
 
-The quadplay✜ console provides thousands of built-in assets so that you
+The <quadplay/> console provides thousands of built-in assets so that you
 can start creating games immediately and make games that have a small
 size.
 
@@ -5820,7 +5836,7 @@ Sprites
 ![`quad://sprites/freedoom-tiles-64x64.sprite.json`](../sprites/freedoom-tiles-64x64.png)
 ![`quad://sprites/mc-pixel-perfection-16x16.sprite.json`](../sprites/mc-pixel-perfection-16x16.png)
 ![`quad://sprites/shapes-32x32.sprite.json`](../sprites/shapes-32x32.png)
-![`quad://sprites/cursor-9x9.sprite.json`](../sprites/shapes-9x9.png)
+![`quad://sprites/cursor-9x9.sprite.json`](../sprites/cursor-9x9.png)
 ![`quad://sprites/cards-poker-24x36.sprite.json`](../sprites/cards-poker-24x36.png)
 ![`quad://sprites/cards-solitaire-24x36.sprite.json`](../sprites/cards-solitaire-24x36.png)
 
@@ -6077,7 +6093,7 @@ files, the subdirectories `journal`, `screenshots`, `metadata`,
 `backlot` and `graveyard` are excluded.
 
 !!!
-    quadplay✜ supports the extended [WorkJSON](https://github.com/morgan3d/workjson) format, which permits C++ style comments, hexadecimal numbers,
+    <quadplay/> supports the extended [WorkJSON](https://github.com/morgan3d/workjson) format, which permits C++ style comments, hexadecimal numbers,
     IEEE 754 constants, raw decimals, leading plus signs, trailing commas,
     and multiline backquote JavaScript strings within JSON files for convenience when
     editing and debugging. This is not legal in strict JSON and
@@ -6716,7 +6732,7 @@ which is a 2D array of individual sprites.
 
 !!!
    I recommend a two-step process for compressing sprites to minimize loading time
-   and game size.  First, use the quadplay✜ [Quantize✜](../tools/quantize.html)
+   and game size.  First, use the <quadplay/> [Quantize✜](../tools/quantize.html)
    tool to reduce bit depth. Second, use [ImageOptim](https://imageoptim.com/mac) (macOS),
    [PNGGauntlet](https://pnggauntlet.com/) (Windows), 
    [TriImage](https://trimage.org/) (Linux),
@@ -6766,7 +6782,7 @@ pointers to the same object, which is immutable.
 There is no performance advantage or requirement for making sprites or
 spritesheets even sizes or power of two sizes, although many
 traditional sprites happen have sides of 8, 16, or 32 pixels. The
-quadplay✜ screen resolution is designed to allow an integer number of
+<quadplay/> screen resolution is designed to allow an integer number of
 such tiles.
 
 You can use the Python script `tools/sprite_json_generator.py` to generate
@@ -7809,7 +7825,7 @@ common bugs when using first class functions with loops.
 
 The Java/C++ equivalents of `for`-loop conditions are:
 
-quadplay✜             | Java/C++
+<quadplay/>             | Java/C++
 ----------------------|------------------------
 `for i ≤ k`           | `for (i = 0; i <= k; ++i)`
 `for i &lt; k`        | `for (i = 0; i &lt; k; ++i)`
@@ -7862,7 +7878,7 @@ index and size changes in your own iteration.
 
 The Java/C++ equivalents of `for-in`-loop conditions are:
 
-quadplay✜             | Java/C++
+<quadplay/>             | Java/C++
 ----------------------|------------------------
 `for x ∈ S`           | `for (x : S)`
 
@@ -8070,7 +8086,7 @@ the end of a multiline expression, it may not also contain multiple statements.
 Symbols
 ---------------------------------------------------------------
 
-The quadplay✜ IDE supports autocorrect for typing the optional special
+The <quadplay/> IDE supports autocorrect for typing the optional special
 symbols such as `nil` --> `∅`, `1/2` --> `½`, and `>=` --> `≥`. To generate
 paired symbols, type the name of the corresponding function without arguments.
 For example: `floor()` --> `⌊⌋`, `ceil()` --> `⌈⌉`, `magnitude()` --> `‖‖`,
@@ -8163,7 +8179,7 @@ not as code. These are present specfically to support ordinals such as
 various languages.
 
 The encircled characters and arrows are intended for use as button
-prompts.  The characters `Ⓞ ⍍ ▣ ⧉ ☰` are drawn in quadplay✜ fonts to
+prompts.  The characters `Ⓞ ⍍ ▣ ⧉ ☰` are drawn in <quadplay/> fonts to
 represent the buttons with approximately those symbols on PlayStation
 and Xbox controllers. The `ⓧ` character is drawn to ambiguously
 represent the "X"/cross buttons on PlayStation, Xbox, and Nintendo
@@ -8176,7 +8192,7 @@ Advanced Tools
 ====================================================================================
 
 In addition to the friendlier browser-based tools from the Tools
-section, the distribution includes command-line tools for experienced
+menu, the distribution includes command-line tools for experienced
 programmers. These support external editors, running the server
 locally, and performing some IDE tasks at the command line. Unlike the
 IDE, some of these have additional dependencies and assume that you
@@ -8315,7 +8331,9 @@ Command-Line Tools
 
 `quadplay`
 : Launches the emulator from the command line on any operating system.
-  Requires Python. See the arguments above.
+  Requires Python. See the arguments above. (Depending on operating system,
+  this command may run the `quadplay.cmd`, `quadplay.vbs`, or `quadplay`
+  script.)
 
 `quaddepend.py`
 : Prints dependencies of a `.game.json` file, recursively. Run the script  with `--help` to
@@ -8412,12 +8430,12 @@ Physical Consoles
 
 ### Build
 
-I expect most people will use quadplay✜ on phones, laptops, and desktops
+I expect most people will use <quadplay/> on phones, laptops, and desktops
 as a _virtual_ console. But, if you have some maker experience you can make a
-_real_ quadplay✜ console.
+_real_ <quadplay/> console.
 
 When you're color coding the physical controls for a full four-player setup, the standard
-quadplay✜ arcade player colors and physical layout order is: P3 Yellow, P1 Magenta
+<quadplay/> arcade player colors and physical layout order is: P3 Yellow, P1 Magenta
 ("pink"), P2 Cyan ("blue"), P3 Lime ("green"). Graphically:
 
 <center>
@@ -8437,15 +8455,15 @@ quadplay✜ arcade player colors and physical layout order is: P3 Yellow, P1 Mag
 
 The
 [Rasberry Pi 400](https://www.raspberrypi.org/products/raspberry-pi-400/)
-is a complete computer for only $70 that can run quadplay✜ and plug
+is a complete computer for only $70 that can run <quadplay/> and plug
 directly into a television or monitor.
 
 With a 3D-printed case and some Bluetooth or wired game controllers,
-you can build your own quadplay✜ retro mini console to connect to a TV
+you can build your own <quadplay/> retro mini console to connect to a TV
 or monitor. [Jetson Nano](https://developer.nvidia.com/embedded/jetson-nano-developer-kit)
 and [Raspberry Pi 4](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/) cost less than $100 and can
 power such a box using Linux and Chromium. Both will hit 60 Hz for most games, and can easily run at
-30 Hz for all games (quadplay✜ handles framerate scaling for you seamlessly,
+30 Hz for all games (<quadplay/> handles framerate scaling for you seamlessly,
 so you won't even notice most of the time). 
 
 
@@ -8492,14 +8510,14 @@ embedded processor and will comfortably run all games at 60 Hz.
 
 #### Cabinets
 
-A quadplay✜ arcade cabinet can be built with some carpentry and any
+A <quadplay/> arcade cabinet can be built with some carpentry and any
 low-cost PC and display, or by purchasing some (expensive!) pre-built
 arcade cabinets.
 
 There are a lot of physical
 [arcade controllers](https://shop.xgaming.com/products/x-arcade-dual-joystick-usb-included)
 available at reasonable prices for building out the controls without
-needing any custom electronics. Note that quadplay✜ supports (but does
+needing any custom electronics. Note that <quadplay/> supports (but does
 not require) a touch screen or mouse, which will not be available on a
 normal cabinet setup. One alternative is to use a small trackpad
 mounted on top of the joystick controller.
@@ -8516,9 +8534,9 @@ the in-game pause menu or the Controls tab of the
 IDE's debugger, you can bring up the quadplay dialog to change this order.
 
 When building your own controller, ensure that it maps correctly using the online tool at 
-https://html5gamepad.com/. The specific mapping between HTML buttons and quadplay✜ is:
+https://html5gamepad.com/. The specific mapping between HTML buttons and <quadplay/> is:
 
-quadplay✜            |   HTML Gamepad
+<quadplay/>            |   HTML Gamepad
 :-------------------:|:-------------------------------:
 Analog x-axis        | axis 0 (left is negative)
 Analog y-axis        | axis 1 (forward is negative)
@@ -8535,7 +8553,7 @@ D-pad <big>⍗</big>   | button 13
 D-pad <big>⍇</big>   | button 14
 D-pad <big>⍈</big>   | button 15
 
-quadplay✜ automatically maps the analog stick into D-pad inputs as
+<quadplay/> automatically maps the analog stick into D-pad inputs as
 well as providing analog access under `device_control()`.
 
 The ⓔ button should be placed where it can
@@ -8573,22 +8591,22 @@ Screen     | Integer     | Used      | Efficiency  | Autoscaler | Used      | Ef
 
 ### Buy
 
-quadplay✜ works on all Mac, Windows, and Linux devices, so any
+<quadplay/> works on all Mac, Windows, and Linux devices, so any
 computer you buy can be a dedicated device for playing or making
 games. For a _handheld_ form factor there are a few options.
 
 We've tested on the GPD Win 2, GPD Win Max, and GPD Win 3. All run
-quadplay✜ well:
+<quadplay/> well:
 
- - 1280x800 [GPD Win Max](http://gpd.hk/gpdwinmax), Windows and Linux = full-res quadplay✜ 3x integer or 3.33x scaling, 4x scaling of 320x180 quadplay✜
- - 1280x720 [GPD Win 3](https://www.gpd.hk/gpdwin3) and [GPD Win 2](http://gpd.hk/gdpwin2), Windows and Linux = full-res quadplay✜ 3x/3.33x scaling, 4x scaling of 320x180 quadplay✜
+ - 1280x800 [GPD Win Max](http://gpd.hk/gpdwinmax), Windows and Linux = full-res <quadplay/> 3x integer or 3.33x scaling, 4x scaling of 320x180 <quadplay/>
+ - 1280x720 [GPD Win 3](https://www.gpd.hk/gpdwin3) and [GPD Win 2](http://gpd.hk/gdpwin2), Windows and Linux = full-res <quadplay/> 3x/3.33x scaling, 4x scaling of 320x180 <quadplay/>
 
-Some other physical handhelds that may be capable of running quadplay✜
+Some other physical handhelds that may be capable of running <quadplay/>
 games when (or if) released include:
 
- - 1280x800 [SteamDeck](https://www.steamdeck.com/), SteamOS/Linux = full-res quadplay✜ 3x/3.33x scaling, 4x scaling of 320x180 quadplay✜
- - 1280x720 [DragonBox Pyra](https://pyra-handheld.com/boards/pages/pyra/), Linux = full-res quadplay✜ 3x/3.33x scaling
- - 480x320 [Odroid-Go Advance Black](https://liliputing.com/2020/05/the-new-odroid-go-advance-adds-wifi-and-more-buttons-linux-handheld-game-console.html), Linux = full-res quadplay✜ 1x scaling; poor fit
+ - 1280x800 [SteamDeck](https://www.steamdeck.com/), SteamOS/Linux = full-res <quadplay/> 3x/3.33x scaling, 4x scaling of 320x180 <quadplay/>
+ - 1280x720 [DragonBox Pyra](https://pyra-handheld.com/boards/pages/pyra/), Linux = full-res <quadplay/> 3x/3.33x scaling
+ - 480x320 [Odroid-Go Advance Black](https://liliputing.com/2020/05/the-new-odroid-go-advance-adds-wifi-and-more-buttons-linux-handheld-game-console.html), Linux = full-res <quadplay/> 1x scaling; poor fit
  - 1280x800 Aya Neo
  - 1920x1080 Smach Z
  - 1920x1200 Alienware UFO
@@ -8641,10 +8659,10 @@ for your games and may distribute them as closed source.
 
 It is your responsibility to satisfy copyright law and any licensing
 fees or royalties for content that you use when you distribute your
-game. The content provided with quadplay✜ is all royalty-free Creative Commons
+game. The content provided with <quadplay/> is all royalty-free Creative Commons
 and contains its own licensing data. Content that you find elsewhere
 will have its own rules and restrictions. The code provided with
-quadplay✜ is all Open Source (even though it permits you to use it with your
+<quadplay/> is all Open Source (even though it permits you to use it with your
 own closed-source came). See the Credits section for more information.
 
 
@@ -8673,7 +8691,7 @@ The steps are:
 3. In the Uploads section on the itch.io game page, upload the zipfile generated in step 1.
 4. Check "This file will be played in the browser"
 
-To update your game or upgrade the underlying quadplay✜ distribution,
+To update your game or upgrade the underlying <quadplay/> distribution,
 repeat the process of creating the zipfile and then upload it as a
 replacement for the original file.
 
@@ -8686,7 +8704,7 @@ GitHub
 
 This is the easiest method to deploy your game. It also allows you to
 continuously update the game as well as gain the benefit of
-improvements to quadplay✜ itself continuously.
+improvements to <quadplay/> itself continuously.
 
 Store your game in a git repository on [github.com](https://github.com), or in
 a subdirectory of a GitHub repository.  Do not fork quadplay into the repo
@@ -8741,7 +8759,7 @@ Web Server
 
 You can host your game using only your own files on any web server that supports
 [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), or as a copy
-of all of quadplay✜ on _any_ web server, regardless of whether it supports CORS.
+of all of <quadplay/> on _any_ web server, regardless of whether it supports CORS.
 
 To deploy your game on a web server with CORS named `myserver.com` in the `mygame`
 directory, run just upload your own game files to the server. The URL for your game is:
@@ -8749,7 +8767,7 @@ directory, run just upload your own game files to the server. The URL for your g
 https://morgan3d.github.io/quadplay/console/quadplay.html?game=https://myserver.com/mygame
 
 To deploy a complete package that is independent of the current
-version of quadplay✜, run `tools/export.py -o path/to/output path/to/game` on
+version of <quadplay/>, run `tools/export.py -o path/to/output path/to/game` on
 macOS or Linus and `py -3 tools\export.py -o path\to\output path\to\game` on Windows.
 Then, upload your files from the output directory. 
 
@@ -8759,7 +8777,7 @@ Your URL will be just https://myserver.com/mygame.
 Phones
 ------------------------------------------------------------------------------------
 
-Any quadplay✜ game hosted on a web page using the methods from the previous sections
+Any <quadplay/> game hosted on a web page using the methods from the previous sections
 can be played on a mobile phone. The emulator automatically creates on-screen buttons
 when it detects a phone, and it also supports gamepads connected to a phone.
 
@@ -8786,7 +8804,7 @@ so that it looks like a native app. The process is similar to that of using Cord
 Performance
 ====================================================================================
 
-quadplay✜ is designed to make it easy to write small games that have
+<quadplay/> is designed to make it easy to write small games that have
 very readable source code. I recommend designing your code primarily
 for readability instead of performance. However, at some point you'll
 probably hit the performance limits and want to optimize at least some
@@ -8880,7 +8898,7 @@ external editor. Here's one useful layout:
 ![](external-editor.png width=50% style="image-rendering:auto")
 
 The editor on the left is emacs running in a terminal. On the right is
-the browser reduced to the quadplay✜ debugging output and emulator.
+the browser reduced to the <quadplay/> debugging output and emulator.
 
 Be careful to always end your *filenames* with _two_ extensions:
 `.game.json`, `.sprite.json`, `.map.json`, etc. This is how the IDE
@@ -8985,21 +9003,21 @@ Post 1.0
 Credits
 ====================================================================================
 
-quadplay✜ was created by Morgan McGuire. Stephan Steinbach provided
+<quadplay/> was created by Morgan McGuire. Stephan Steinbach provided
 extensive testing and design feedback, Josh Minor helped with the
 networking design, and Mauricio Vives proofread the manual.
 
 The online multiplayer feature is sponsored by
 [EvenNode](https://www.evennode.com).
 
-The quadplay✜ console's influences include Atari 2600, Commodore VIC-20, APL,
+The <quadplay/> console's influences include Atari 2600, Commodore VIC-20, APL,
 Python, [PICO-8](https://www.lexaloffle.com/pico-8.php),
 [Shadertoy](https://www.shadertoy.com),
 [Arduboy](https://arduboy.com), and its predecessors,
 [codeheart.js](https://casual-effects.com/codeheart/) and
 [the nano JAMMER](https://morgan3d.github.io/nano).
 
-The quadplay✜ IDE and compiler are copyright 2019-2022 Morgan
+The <quadplay/> IDE and compiler are copyright 2019-2022 Morgan
 McGuire. They are licensed under the
 [LGPL 3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html), but may be
 relicensed in the future.  This includes the contents of:
@@ -9044,7 +9062,7 @@ The random number generator is derived from
 of xorshift (c) 2014 Andreas Madsen and Emil Bay used under the
 [MIT license](https://github.com/AndreasMadsen/xorshift/blob/master/LICENSE.md).
 
-The code editor for the quadplay✜ IDE is [ace.js](https://ace.c9.io/) used under the [BSD license](https://github.com/ajaxorg/ace/blob/master/LICENSE).
+The code editor for the <quadplay/> IDE is [ace.js](https://ace.c9.io/) used under the [BSD license](https://github.com/ajaxorg/ace/blob/master/LICENSE).
 
 The physics engine is [matter.js](https://brm.io/matter-js/) and
 [poly-decomp.js](https://github.com/schteppe/poly-decomp.js), both
@@ -9080,7 +9098,7 @@ All built-in assets are Creative Commons licensed have complete license and copy
 Logos
 -------------------------------------------------------------------------------------
 
-The following logos may be used for promoting or linking to quadplay✜:
+The following logos may be used for promoting or linking to <quadplay/>:
 
 ![](logos/quadplay-logo-gradient-round.png) ![](logos/quadplay-logo-gradient.png) ![](logos/quadplay-logo-gray.png)
 
@@ -9163,6 +9181,11 @@ div.preview {
 .md h1, .md h2, .md h3 { font-family: quadplay }
 .md pre.listing.backtick {
   margin-bottom: 0px;
+}
+
+quadplay::before {
+content: "quadplay✜";
+font-family: quadplay;
 }
 
 table {font-size: 16px}

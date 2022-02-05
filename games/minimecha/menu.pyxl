@@ -1,0 +1,22 @@
+/* Ensures the result is a menu */
+def convert_to_menu(entry):
+    return if is_string(entry) then make_menu(entry) else entry
+        
+        
+
+/* Constructs a menu node. Second argument is an array of 
+   children or a callback function. */
+def make_menu(text, arg):
+    return {
+        text: text,
+        callback: if is_function(arg) then arg else ∅,
+        child_array: if not is_function(arg) then apply_to_array(convert_to_menu, arg) else []}
+
+
+
+/* Recursively extracts the current nested menu level */
+def get_menu(menu_tree, selection_stack):
+    let menu = menu_tree
+    for d < size(selection_stack) - 1:
+        menu = menu.child_array[selection_stack[d]]
+    return menu

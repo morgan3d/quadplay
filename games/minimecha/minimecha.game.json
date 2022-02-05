@@ -1,0 +1,606 @@
+{
+    "title": "Mini Mecha",
+    "developer": "@CasualEffects",
+    "copyright": "©2022 Morgan McGuire",
+    "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
+    "packages": [],
+    "scripts": [
+        "util.pyxl",
+        "3D.pyxl",
+        "game.pyxl",
+        "debug.pyxl",
+        "gui.pyxl",
+        "clouds.pyxl",
+        "animate_explosion.pyxl",
+        "animate_reaper.pyxl",
+        "animate_stalker.pyxl",
+        "animate_probe.pyxl",
+        "animate_captain.pyxl",
+        "animate_drop.pyxl",
+        "menu.pyxl",
+        "static_eval.pyxl",
+        "scenario.pyxl"
+    ],
+    "modes": [
+        "Title",
+        "Config",
+        "Intro",
+        "Play",
+        "AnimateMove",
+        "UpgradeDialog",
+        "EndGame"
+    ],
+    "start_mode": "Title",
+    "docs": [
+        "scenarios.txt",
+        "moves.txt"
+    ],
+    "assets": {
+        "font": "quad://fonts/cruise-7.font.json",
+        "shapes": "quad://sprites/shapes-32x32.sprite.json",
+        "mechs_shadow_sprite": "mechs_shadow.sprite.json",
+        "mechs_0_sprite": "mechs_red.sprite.json",
+        "mechs_1_sprite": "mechs_blue.sprite.json",
+        "portrait_1_sprite": "portrait_blue.sprite.json",
+        "portrait_0_sprite": "portrait_red.sprite.json",
+        "clouds_sprite": "clouds.sprite.json",
+        "small_font": "quad://fonts/scoreboard-5.font.json",
+        "cursor_move_sound": "quad://sounds/blip-03.sound.json",
+        "cancel_sound": "quad://sounds/jump-04.sound.json",
+        "select_sound": "select.sound.json",
+        "refuse_sound": "quad://sounds/blip-09.sound.json",
+        "title_sprite": "title.sprite.json",
+        "title_music": "quad://sounds/music-pixel_war_2.sound.json",
+        "engine_sound": "quad://sounds/engine-01.sound.json",
+        "laser_sound": "quad://sounds/shoot-10.sound.json",
+        "explode_sound": "quad://sounds/explode-08.sound.json",
+        "game_0_music": "quad://sounds/music-candy.sound.json",
+        "game_1_music": "quad://sounds/music-penultimate.sound.json",
+        "game_2_music": "quad://sounds/music-modern_bits.sound.json",
+        "game_3_music": "quad://sounds/music-go.sound.json",
+        "alarm_sound": "quad://sounds/loop-alarm.sound.json",
+        "missile_launch_sound": "quad://sounds/explode-12.sound.json",
+        "explosion_sprite": "explosion.sprite.json",
+        "missile_sprite": "missile.sprite.json",
+        "terrain_sprite": "terrain.sprite.json",
+        "terrain_base_sprite": "terrain_base.sprite.json",
+        "helicopter_sound": "quad://sounds/loop-helicopter.sound.json",
+        "explosion_float_sprite": "quad://sprites/explosion-realistic-128x128.sprite.json",
+        "explode_tiny_sound": "quad://sounds/explode-06.sound.json",
+        "sky_sprite": "sky.sprite.json",
+        "shock_sprite": "shock.sprite.json",
+        "shock_sound": "quad://sounds/sparks-03.sound.json",
+        "flame_sprite": "flame.sprite.json",
+        "flame_sound": "quad://sounds/shoot-12.sound.json",
+        "mountain_sprite": "mountain.sprite.json",
+        "big_font": "quad://fonts/cruise-14.font.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 2,
+    "cooperative": false,
+    "competitive": true,
+    "achievements": false,
+    "highscores": true,
+    "description": "Turn based strategy game with tiny mechas.",
+    "constants": {
+        "MOVE_DATA": {
+            "type": "string",
+            "url": "moves.txt"
+        },
+        "SCENARIO_DATA": {
+            "type": "string",
+            "url": "scenarios.txt"
+        },
+        "CHOPPER_BLADE_ARRAY": {
+            "type": "raw",
+            "value": [
+                {
+                    "x": -6,
+                    "y": -16
+                },
+                {
+                    "x": -12,
+                    "y": -20
+                },
+                {
+                    "x": 14,
+                    "y": -20
+                },
+                {
+                    "x": 8,
+                    "y": -24
+                }
+            ]
+        },
+        "PIECE_NAME": {
+            "type": "raw",
+            "value": {
+                "k": "Captain",
+                "g": "Grinder",
+                "s": "Stalker",
+                "r": "Reaper",
+                "b": "Bomber",
+                "p": "Probe",
+                "P": "S∙Probe",
+                "B": "S∙Bomber",
+                "R": "S∙Reaper",
+                "S": "S∙Stalker"
+            }
+        },
+        "BACKGROUND_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "14%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "54%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "64%"
+                }
+            }
+        },
+        "HUD_Z": {
+            "type": "number",
+            "value": "100",
+            "format": "",
+            "quantum": 0
+        },
+        "CLOUD_BASE_SPEED": {
+            "type": "number",
+            "value": "3",
+            "min": 1,
+            "max": 10,
+            "format": "",
+            "quantum": 0
+        },
+        "BOARD_SIZE": {
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "5"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "5"
+                }
+            },
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            }
+        },
+        "SPACE_SIZE": {
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "48"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "36"
+                }
+            },
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            },
+            "description": "In pixels when rendering"
+        },
+        "NUM_CLOUDS": {
+            "type": "number",
+            "value": "28",
+            "min": 0,
+            "max": 200,
+            "format": "",
+            "quantum": 1
+        },
+        "EMPTY_SPACE": {
+            "type": "string",
+            "value": "EMPTY_SPACE",
+            "description": "Return value for board_get(). Out of bounds values are ∅.\n\nNote that EMPTY_SPACE.player_index = ∅, so we never need to explicitly check if a space is empty when we will also check which player owns it."
+        },
+        "HAND_Z": {
+            "type": "number",
+            "value": "-100",
+            "format": "",
+            "quantum": 0
+        },
+        "PLAYER_NAME": {
+            "type": "array",
+            "value": ["Red", "Blue"]
+        },
+        "PLAYER_COLOR": {
+            "type": "array",
+            "value": [
+                {
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": 0.712
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": 0.253
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": 0.202
+                        }
+                    }
+                },
+                {
+                    "type": "rgb",
+                    "value": {
+                        "r": {
+                            "type": "number",
+                            "value": 0.253
+                        },
+                        "g": {
+                            "type": "number",
+                            "value": 0.61
+                        },
+                        "b": {
+                            "type": "number",
+                            "value": 0.814
+                        }
+                    }
+                }
+            ]
+        },
+        "PERSPECTIVE": {
+            "type": "number",
+            "value": "67%",
+            "min": 0,
+            "max": 1,
+            "format": "%",
+            "quantum": 0
+        },
+        "CAPTION_OFFSET": {
+            "type": "number",
+            "value": "-24",
+            "format": "",
+            "quantum": 0
+        },
+        "DIALOG_Z": {
+            "type": "number",
+            "value": "300",
+            "format": "",
+            "quantum": 0
+        },
+        "UPGRADE_DIALOG_SIZE": {
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "230"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "110"
+                }
+            },
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            }
+        },
+        "TEXT_OUTLINE": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "86%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "86%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "86%"
+                }
+            }
+        },
+        "TEXT_SHADOW": {
+            "type": "rgba",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "a": {
+                    "type": "number",
+                    "value": "53%"
+                }
+            }
+        },
+        "PROMOTABLE_TYPES": {
+            "type": "string",
+            "value": "psrb",
+            "description": "Names of the promotable pieces"
+        },
+        "PIECE_TYPES": {
+            "type": "string",
+            "value": "kgsbrpSBRP",
+            "description": "The only piece types allowed in mini shogi"
+        },
+        "MOVE_SPEED": {
+            "type": "number",
+            "value": "2",
+            "min": 0,
+            "max": 10,
+            "format": "",
+            "quantum": 0
+        },
+        "TITLE_START_FRAMES": {
+            "type": "number",
+            "value": "330",
+            "format": "",
+            "quantum": 0
+        },
+        "TITLE_FADEOUT_FRAMES": {
+            "type": "number",
+            "value": "30",
+            "format": "",
+            "quantum": 0
+        },
+        "EXPLOSION_FRAMES": {
+            "type": "number",
+            "value": "50",
+            "format": "",
+            "quantum": 0
+        },
+        "BACKGROUND_MUSIC_VOLUME": {
+            "type": "number",
+            "value": "100%",
+            "min": 0,
+            "max": 1,
+            "format": "%",
+            "quantum": 0
+        },
+        "CHOPPER_BLADE_LENGTH": {
+            "type": "number",
+            "value": "4",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "+infinity"
+            },
+            "format": "",
+            "quantum": 0
+        },
+        "PORTRAIT_TRANSITION_FRAMES": {
+            "type": "number",
+            "value": "30",
+            "format": "",
+            "quantum": 0
+        },
+        "DROP_SPEED": {
+            "type": "number",
+            "value": "2",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "+infinity"
+            },
+            "format": "",
+            "quantum": 0
+        },
+        "NUM_MISSILE_TRAILS": {
+            "type": "number",
+            "value": "20",
+            "format": "",
+            "quantum": 0
+        },
+        "SHADOW_OPACITY": {
+            "type": "number",
+            "value": "40%",
+            "min": 0,
+            "max": 1,
+            "format": "%",
+            "quantum": 0
+        },
+        "BOMBING_ELEVATION": {
+            "type": "number",
+            "value": "25",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "+infinity"
+            },
+            "format": "",
+            "quantum": 0
+        },
+        "FLAME_ATTACK_FRAMES": {
+            "type": "number",
+            "value": "100",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "+infinity"
+            },
+            "format": "",
+            "quantum": 1
+        },
+        "MISSILE_ATTACK_FRAMES": {
+            "type": "number",
+            "value": "150",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "+infinity"
+            },
+            "format": "",
+            "quantum": 1
+        },
+        "SHOCK_ATTACK_FRAMES": {
+            "type": "number",
+            "value": "90",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "+infinity"
+            },
+            "format": "",
+            "quantum": 1
+        },
+        "LASER_ATTACK_FRAMES": {
+            "type": "number",
+            "value": "75",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "+infinity"
+            },
+            "format": "",
+            "quantum": 1
+        },
+        "DEBUG_SINGLE_PLAYER": {
+            "type": "boolean",
+            "value": false,
+            "description": "Select to force the game to start in single player mode immediately, skipping the title screen."
+        },
+        "MOVE_TYPE_VALUE": {
+            "description": "A priori piece value for the static evaluator. Modified by other factors such as base type and board location.",
+            "type": "object",
+            "value": {
+                "k": {
+                    "type": "number",
+                    "description": "Must be finite (because inf makes all material sum infinite) and greater than all other pieces",
+                    "value": "1000"
+                },
+                "R": 17,
+                "B": 16,
+                "r": 15,
+                "b": 12,
+                "g": 10,
+                "s": 9,
+                "p": 3
+            }
+        },
+        "DEBUG_SHOW_STATIC_EVAL": {
+            "type": "boolean",
+            "value": false,
+            "description": "When true, display the static evaluator result on screen."
+        },
+        "AI_SEARCH_DEPTH": {
+            "type": "number",
+            "value": "4",
+            "min": 1,
+            "max": 10,
+            "format": "",
+            "quantum": 1,
+            "description": "In ply, i.e., single-player moves."
+        },
+        "DEBUG_SEARCH_TREE": {
+            "type": "boolean",
+            "value": false,
+            "description": "If true, print the search tree for the AI player"
+        },
+        "AI_UNPREDICTABILITY": {
+            "type": "number",
+            "value": "1",
+            "min": 0,
+            "max": 2,
+            "format": "",
+            "quantum": 0
+        },
+        "AI_PROGRESS_BAR_SIZE": {
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "200"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "9"
+                }
+            },
+            "nudge": {
+                "x": "+1",
+                "y": "1"
+            }
+        },
+        "DIALOG_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "80%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "80%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "80%"
+                }
+            }
+        },
+        "PIECE_SYMBOL_LENGTH": {
+            "type": "number",
+            "value": "3",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "+infinity"
+            },
+            "format": "1",
+            "quantum": 0,
+            "description": "Characters per space when parsing scenarios.txt, and when producing a debug string from a piece."
+        },
+        "INTRO_FRAMES": {
+            "type": "number",
+            "value": "260",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "+infinity"
+            },
+            "format": "",
+            "quantum": 1
+        },
+        "INTRO_TERRAIN_DROP_FRAMES": {
+            "type": "number",
+            "value": "150",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "+infinity"
+            },
+            "format": "",
+            "quantum": 1
+        },
+        "MESSAGE_DISPLAY_FRAMES": {
+            "type": "number",
+            "value": "300",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "+infinity"
+            },
+            "format": "",
+            "quantum": 1
+        }
+    },
+    "screenshot_tag": "Mini Mecha"
+}

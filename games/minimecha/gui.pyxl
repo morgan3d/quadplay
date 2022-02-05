@@ -1,0 +1,519 @@
+// Drawing routines put (0, 0) at the center 
+// of the top-left most board space in world space.
+// z-order is based on board y position (not pixel y)
+
+/* Set by Play.enter() */
+let ai_skill = 50%
+
+/* Set by Play.enter() */
+let global_scenario
+
+const music_array = [game_0_music, game_1_music, game_2_music, game_3_music]
+
+/* Set in Play:enter */
+const gui_array = [∅, ∅]
+
+const alarm_audio = play_sound({sound: alarm_sound, loop: true, stopped: true, playback_rate: 50%})
+
+/* Set by Play */
+let background_audio
+
+/* Set by Play */
+let board_map = make_array(BOARD_SIZE, terrain_sprite[0][0])
+
+/* The game being played in the GUI */
+let global_game
+
+/* Position in the portrait transition */
+let portrait_transition
+
+/* For the current character. Wiped on transition */
+const current_message = {
+    text: "",
+    player_index: 0,
+    end_frame: 0}
+
+
+
+/* Shows the current character saying this message, with markup */
+def show_message(msg):
+    current_message.text = msg
+    current_message.player_index = global_game.current_player_index
+    current_message.end_frame = if msg then mode_frames + MESSAGE_DISPLAY_FRAMES else 0
+    
+
+
+def make_gui(player_index, gamepad):
+    return {
+        player_index: player_index,
+        
+        gamepad: gamepad,
+
+        // There is a selection when this is not ∅        
+        selected_board_pos: ∅,
+                
+        // Legal moves for the piece at selected_board_pos
+        moves: ∅,
+        
+        // Updated at the beginning of the player's turn
+        // and when the selection changes
+        threat_map: make_array(BOARD_SIZE, false),
+        
+        // Updated at the beginning of the player's turn
+        in_check: false,
+        
+        portrait_sprite: ASSETS["portrait_" + player_index + "_sprite"],
+        
+        // When cursor_board_pos or selected_board_pos
+        // is off the board by 1 horizontally, it is in
+        // the hand. This is always non-∅, because the
+        // cursor moves away from the selection
+        cursor_board_pos: xy(4 player_index, 2)}
+    
+        
+
+def cursor_draw(gui)
+// In single-gamepad mode, do not show the cursor for the inactive player.
+// Never show the cursor for the computer player.
+& if gui.gamepad and (gui_array[0].gamepad ≠ gui_array[1].gamepad or global_game.current_player_index == gui.player_index):
+    
+    box_cursor_draw(gui)
+    
+    if gui.selected_board_pos:
+        assert(gui.player_index == global_game.current_player_index, "Should not have a selection if not current")
+        // In target selection
+        target_cursor_draw(gui)
+        
+        // Visualize the legal moves, and the current space
+        for move in gui.moves:
+            draw_rect(move * SPACE_SIZE, SPACE_SIZE + 1, #fff4, #FFF, ∅, 0.05)
+            if gui.threat_map[move.x][move.y]:
+                draw_threatened_space(move)
+        
+        // Show if the current position is not in the hand and is also threatened
+        if gui.selected_board_pos.x ≥ 0 and gui.selected_board_pos.x < BOARD_SIZE.x and gui.threat_map[gui.selected_board_pos.x][gui.selected_board_pos.y]:
+            draw_threatened_space(gui.selected_board_pos)
+                
+                
+                
+def draw_threatened_space(board_pos):
+    draw_sprite({
+        sprite: shapes.diagonal_stripes,
+        pos: board_pos * SPACE_SIZE,
+        scale: SPACE_SIZE / shapes.sprite_size,
+        override_color: #FF09,
+        z: 0.05})    
+       
+       
+       
+/* 3D position of the cursor at this board pos */ 
+def gui_cursor_pos(board_pos):
+    if board_pos.x < 0 or board_pos.x ≥ BOARD_SIZE.x:
+        const hand_player_index = if board_pos.x < 0 then 0 else 1
+        const hand_index = board_pos.y + (if board_pos.x < -1 or board_pos.x > BOARD_SIZE.x then 5 else 0)
+        
+        // In hand
+        return hand_pos(hand_player_index, hand_index) - xyz(0, 5, 0) 
+    else:
+        return xyz(SPACE_SIZE * board_pos, board_pos.y)
+
+
+
+/* Called from cursor_draw to render the target display */ 
+def target_cursor_draw(gui)
+& if gui.selected_board_pos:
+    
+    const pos = gui_cursor_pos(gui.cursor_board_pos)
+    const fade = atmospheric_perspective(pos.z)
+
+    const color = lerp(PLAYER_COLOR[gui.player_index], #FFF, 80% oscillate(mode_frames / 30))
+    
+    draw_sprite({
+        sprite: shapes.rings,
+        scale: xy(100%, 75%),
+        pos: pos,
+        override_color: lerp(color, rgb(fade), fade.a)})
+
+    // Show the label on the cursor_board_pos piece when it is 
+    // different from the selected_board_pos piece
+    if not equivalent(gui.selected_board_pos, gui.cursor_board_pos):
+        const piece = gui_get_piece(gui.cursor_board_pos)
+        
+        if piece ≠ EMPTY_SPACE and get_mode() == Play:
+            gui_draw_piece_label(
+                gui,
+                piece, 
+                pos + xyz(0, CAPTION_OFFSET, 0))
+        
+
+
+/* Called from cursor_draw */        
+def box_cursor_draw(gui)       
+& with selected_board_pos, cursor_board_pos, player_index in gui:
+
+    const current = (player_index == global_game.current_player_index)
+    
+    // Draw the selection cursor
+    const piece_board_pos = selected_board_pos default cursor_board_pos
+    
+    const pos = gui_cursor_pos(piece_board_pos)
+    
+    // Bottom
+    draw_rect(pos, SPACE_SIZE, rgba(PLAYER_COLOR[player_index], 20%))
+    
+    const fade = atmospheric_perspective(pos.z)
+
+    // Sides
+    for i ≤ 7:
+        const color = lerp(PLAYER_COLOR[player_index], #FFF, max(0, 100% - |oscillate(5 player_index + mode_frames / 10, 0, 7) - i|))
+        const α = 75% - 10% i
+        draw_rect(pos - xyz(0, 2i, 0), SPACE_SIZE - i, ∅, rgba(lerp(color, rgb(fade), fade.a), α), ∅, pos.z + 0.1)
+
+    const piece = gui_get_piece(piece_board_pos)
+    
+    if piece ≠ EMPTY_SPACE and current and get_mode() == Play:
+        gui_draw_piece_label(
+            gui,
+            piece, 
+            pos + xyz(0, CAPTION_OFFSET, 0))
+
+
+
+/* Draws the label. Called from cursor_draw */
+def gui_draw_piece_label(gui, piece, pos3D, z default HUD_Z):
+    const args = {
+        font: font, 
+        text: PIECE_NAME[piece.type], 
+        pos: pos3D, 
+        color: PLAYER_COLOR[piece.player_index],
+        outline: TEXT_OUTLINE,
+        shadow: TEXT_SHADOW,
+        x_align: "center",          
+        z: z}
+    
+    // Apply perspective to the position but not
+    // the offsets
+    const antiperspective = 1 / zoom(pos3D.z)
+    const label_bounds = draw_text(args)
+
+    // Movement icon
+    args.font = small_font
+    const forward = 1 - 2 piece.player_index
+    
+    for row at y in PIECE_MOVE_PATTERN[piece.move_type]
+    & for action at x in row
+    & if action ≠ " ":
+        const step = xy((x - 1) * forward, y - 1)
+        
+        if step.x == 0 and step.y == 0:
+            args.text = "◼"
+        else if action == ".":
+            args.text = "∙"
+        else if step.y == 0:
+            args.text = "←→"[max(0, step.x)]
+        else if step.x == 0:
+            args.text = "↑↓"[max(0, step.y)] 
+        else if step.x == step.y:
+            args.text = "↖↘"[max(0, step.x)]
+        else:
+            args.text = "↙↗"[max(0, step.x)]
+        
+        args.pos = xyz(
+            xy(pos3D) + 
+             (6 step + xy(forward * (½ label_bounds.size.x + 13), -1)) * antiperspective, 
+            pos3D.z)
+            
+        draw_text(args)
+                
+
+
+def cursor_update(gui)
+// In single-gamepad mode, do not show the cursor for the inactive player
+& if gui.gamepad and (gui_array[0].gamepad ≠ gui_array[1].gamepad or global_game.current_player_index == gui.player_index)
+& with gamepad, player_index, selected_board_pos, cursor_board_pos in gui:
+
+    const old_pos = cursor_board_pos
+
+    // Hand sizes
+    const H0 = global_game.player_array[0].hand_columns
+    const H1 = global_game.player_array[1].hand_columns
+
+    cursor_board_pos = clamp(cursor_board_pos + xy(gamepad.xx, gamepad.yy), xy(-H0, 0), BOARD_SIZE + xy(H1 - 1, -1))
+    const sound_pos = cursor_board_pos * SPACE_SIZE
+
+    if not equivalent(old_pos, cursor_board_pos):
+        // Moved
+        play_sound({sound: cursor_move_sound, pan: sound_pos})
+    else if gamepad.xx or gamepad.yy:
+        // Tried to move and failed
+        play_sound({sound: refuse_sound, pan: sound_pos})
+
+
+
+/* Returns a piece, using out of bound indices for the hands */
+def gui_get_piece(board_pos):
+    if board_pos.x ≥ 0 and board_pos.x < global_game.board.size.x:
+        // On the board
+        return global_game.board[board_pos.x][board_pos.y]    
+    else:
+        // In the hand
+        const player_index = if board_pos.x < 0 then 0 else 1
+        const hand_index = board_pos.y + (if board_pos.x == -2 or board_pos.x == BOARD_SIZE.x + 1 then 5 else 0)
+        return global_game.player_array[player_index].hand_array[hand_index]
+            
+    
+
+/* Returns the xyz() for the center of a piece at
+   `hand_index` in the hand of `player_index`. Snaps
+   to the nearest vertical pixel. Note that hand
+   shifts in 2D when it contains more than 5 pieces 
+   (which is rare) */
+def hand_pos(player_index, hand_index, y_shift default 0):
+    const dir = sign(player_index - ½)
+    const antiperspective = 1 / zoom(HAND_Z)
+    
+    // Move to the correct side of the board and then
+    // away from the island so that it is visible in perspective
+    const offset = xy(
+        // Center of the screen in world space
+        ½ (BOARD_SIZE.x - 1) * SPACE_SIZE.x
+
+        // Offset to be centered in the horizontal margins
+        + ½ dir * (SCREEN_SIZE.x - SCREEN_SPACE_BOARD_RECT.corner.x) * antiperspective, 
+        
+        -24 antiperspective)
+            
+    const pos = xyz(xy(0, 90% (hand_index mod 5) * SPACE_SIZE.y + y_shift * antiperspective) + offset, HAND_Z)
+
+    if global_game.player_array[player_index].hand_columns > 1:
+        // Shift based on the index for the two-column hand
+        pos.x += 43% sign(hand_index - 4.5) * dir * SPACE_SIZE.x
+    else:
+        // Shift alternating rows to reduce overlap
+        pos.x += ½ (((hand_index mod 5) mod 2) - ½) * dir * SPACE_SIZE.x
+        
+    // Snap to pixels to avoid crawling for floating pieces
+    pos.y = round(pos.y, antiperspective)
+    return pos
+    
+
+
+/* Assumes the scene transform is set */
+def choppers_draw(piece_type, pos3D, player_index, z, atmospheric_color default ∅):
+    const scale = xy(sign(½ - player_index), 1)    
+    pos3D = xyz(pos3D.x, pos3D.y - (if piece_type == "g" then 8 else 18), pos3D.z)
+
+    draw_sprite({
+        pos: pos3D,
+        z: z,
+        scale: scale,
+        override_color: atmospheric_color,
+        sprite: ASSETS["mechs_" + player_index + "_sprite"].choppers})
+    
+    // Helicopter blades
+    const color = if atmospheric_color then rgba(rgb(atmospheric_color) * atmospheric_color.a, 60%) else #0007
+    
+    for offset at i in CHOPPER_BLADE_ARRAY:
+        const pos = pos3D + xyz(offset.x * scale.x, offset.y, 0)
+        const θ = 17° mode_frames + i
+        
+        const tip = CHOPPER_BLADE_LENGTH * xyz(2 cos θ, sin θ, 0)
+        draw_line(pos - tip, pos + tip, color, z)
+    
+
+
+def hand_draw(gui) 
+& preserving_transform:
+    
+    const player_index = gui.player_index
+    const hand_array = global_game.player_array[player_index].hand_array
+
+    const spritesheet = ASSETS["mechs_" + player_index + "_sprite"]
+
+    for piece at j in hand_array:
+        if piece ≠ EMPTY_SPACE:
+            const args = {
+                sprite: spritesheet[piece.type],
+                pos: hand_pos(player_index, j, oscillate(mode_frames / 30, -1, +2)),
+                z: HAND_Z + 0.1 j,
+                scale: xy(sign(½ - player_index), 1),
+                override_color: atmospheric_perspective(HAND_Z)}
+
+            // Sprite itself                
+            draw_sprite(args)
+            
+            if not args.sprite.float:
+                choppers_draw(piece.type, args.pos, player_index, args.z, args.override_color)
+
+        // Visualize empty slots:
+        // draw_rect(hand_pos(player_index, j, 0), SPACE_SIZE, ∅, PLAYER_COLOR[player_index], ∅, HAND_Z)
+        // draw_text(font, j, hand_pos(player_index, j, 0), PLAYER_COLOR[player_index])
+
+
+
+def board_draw():
+    // Ragged bottom
+    draw_sprite(terrain_base_sprite, SPACE_SIZE * xy(½ (BOARD_SIZE.x - 1), BOARD_SIZE.y - ½)) 
+    
+    // Terain pieces
+    for y < BOARD_SIZE.y:
+        for x < BOARD_SIZE.x:
+            // Pull mountains forward to overlap sprites but stay under cursor.
+            // Leave everything else at z = 0.
+            const sprite = board_map[x][y]
+            draw_sprite({
+                sprite: sprite,
+                pos: SPACE_SIZE * xy(x, y),
+                z: if sprite.spritesheet == mountain_sprite then y else 0})
+            
+    // Fake thinning the board for 3D perspective
+    draw_line(-½ SPACE_SIZE + 1, SPACE_SIZE * xy(-½, 2) + 1, rgba(BACKGROUND_COLOR, 70%))
+    draw_line(-½ SPACE_SIZE + xy(BOARD_SIZE.x * SPACE_SIZE.x, 2), -½ SPACE_SIZE + xy(BOARD_SIZE.x * SPACE_SIZE.x, 1.5 SPACE_SIZE.y), rgba(BACKGROUND_COLOR, 40%))
+
+    // Widening board
+    draw_line(-½ SPACE_SIZE + 2, -½ SPACE_SIZE + xy(0, SPACE_SIZE.y * BOARD_SIZE.y), #5549)
+    draw_line(-½ SPACE_SIZE + xy(BOARD_SIZE.x * SPACE_SIZE.x - 1, 2), -½ SPACE_SIZE + xy(1, 0) + BOARD_SIZE * SPACE_SIZE, #5549)
+    
+    
+    
+def board_pieces_draw(board, gui_array):
+    const gui = gui_array[global_game.current_player_index]
+        
+    for col at x in board:
+        for piece at y in col:
+            if piece ≠ EMPTY_SPACE:
+
+                const board_pos = xy(x, y)
+                const gui = gui_array[piece.player_index]
+                const is_selected = equivalent(board_pos, gui.selected_board_pos)
+                const is_threatened_king = (gui.in_check and is_king(piece, global_game.current_player_index))
+                
+                if is_threatened_king:
+                    set_pan(alarm_audio, board_pos * SPACE_SIZE)
+                    
+                piece_draw(piece, board_pos * SPACE_SIZE, is_selected, is_threatened_king)
+    
+    // Update audio
+    if gui.in_check ≠ (get_audio_status(alarm_audio).state == "PLAYING"):
+        if gui.in_check:
+            set_volume(background_audio, 75% BACKGROUND_MUSIC_VOLUME)
+            resume_audio(alarm_audio)
+        else:
+            stop_audio(alarm_audio)
+            set_volume(background_audio, BACKGROUND_MUSIC_VOLUME)
+            
+
+
+/* Draws pieces that are on the board. Does not draw pieces in the hand
+   or being dropped. */
+def piece_draw(piece, pos, is_selected default false, is_threatened default false):
+    // What the z value of the piece should be
+    // if this piece is on the ground.
+    const expected_z = pos.y / SPACE_SIZE.y + 1
+    
+    // z value to use
+    const z = pos.z default expected_z
+            
+    // Adjust shadow Y rendering when the z doesn't align
+    const args = {
+        sprite: mechs_shadow_sprite[piece.type], 
+        pos: if z == expected_z then xy(pos) else xy(pos.x, pos.y + (pos.z - expected_z) * SPACE_SIZE.y),
+        scale: xy(1 - 2 piece.player_index, 1),        
+        z: 0.1}
+    
+    // Shadow at z ~= 0
+    draw_sprite({…args, opacity: SHADOW_OPACITY})    
+
+    if is_threatened:
+        args.override_color = rgba(1, 1, 0, 80% oscillate(mode_frames / 30))
+
+    // Piece
+    args.sprite = ASSETS["mechs_" + piece.player_index + "_sprite"][piece.type]
+
+    // Animation
+    args.pos = xy(pos)
+    args.z = z  
+    if args.sprite.float:
+        // Shift
+        args.pos.y += oscillate(⌊mode_frames / 15⌋, -1, +1)
+    else:
+        // Stretch
+        args.scale.y += 0.04 oscillate(⌊mode_frames / 20⌋, 0, 1)
+            
+    draw_fancy_sprite(args, if is_selected then #fff else ∅)
+
+
+
+def gui_draw(gui):
+    const my_turn = (global_game.current_player_index == gui.player_index)
+
+    cursor_draw(gui)
+    
+    // Portrait transition
+    let α = if get_mode() == EndGame then 100% else (
+        clamp(
+        (2 portrait_transition / PORTRAIT_TRANSITION_FRAMES - 100%) * 
+         (if my_turn then 1 else -1), 
+        0%, 100%))
+        
+    if α > 0%
+    & preserving_transform:
+        const s = ½ - gui.player_index
+        
+        const τ = ⌊mode_frames / 140⌋
+        const portrait = array_value(
+            array_value(
+                gui.portrait_sprite, 
+                2 hash(τ), 
+                "loop"),
+            2 hash(τ, 10), "loop")
+        
+        // Draw portraits under labels and dialogue, but above everything else
+        set_transform(xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - ½ portrait.size.y), ∅, HUD_Z - 1)
+        reset_camera()
+        draw_sprite({
+            sprite: portrait, 
+            pos: xy(s * (α * 1.5 portrait.size.x - SCREEN_SIZE.x - ½ portrait.size.x), 0),
+            scale: xy(sign(s), +1)})
+    
+
+
+/* Set the transform used for drawing the game */    
+def set_scene_transform():
+    set_transform(½ SCREEN_SIZE, ∅, 0)
+    set_camera(½ (BOARD_SIZE - 1) * SPACE_SIZE, ∅, zoom)
+    
+    
+    
+/* Draw the board, pieces, and characters */        
+def game_draw()
+& preserving_transform:
+    // Center the board
+    set_scene_transform()
+    
+    clouds_update_and_draw()
+    
+    iterate(gui_array, hand_draw)
+    //board_background_debug_draw(global_game.board)
+    board_pieces_draw(global_game.board, gui_array)
+    board_draw()
+    iterate(gui_array, gui_draw)
+    ++portrait_transition
+    
+    update_background_music()
+
+
+
+def update_background_music():
+    if not background_audio or get_audio_status(background_audio).state == "ENDED":
+        background_audio = play_sound({
+            sound: random_value(music_array), 
+            volume: BACKGROUND_MUSIC_VOLUME,
+            playback_rate: 75%})    
+
+
+
+def dialog_draw(pos, size):
+    draw_rect(xy(pos.x, pos.y + ½ size.y + 2), xy(size.x - 2, 4), #0008)
+    draw_rect(pos, size, DIALOG_COLOR)
+    draw_rect(pos, size - 4, ∅, #555) 

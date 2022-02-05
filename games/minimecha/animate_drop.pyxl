@@ -1,0 +1,43 @@
+def animate_chopper_retreat(frames_left, total_frames, data):
+    // Run the drop animation backwards
+    data.piece_already_down = true
+    animate_drop(total_frames - frames_left, total_frames, data) 
+    todo("Draw dust")
+    
+    
+    
+def begin_drop(data):
+    if not data.sprite.float:
+        data.chopper_audio = play_sound(helicopter_sound, true, 0%)
+
+
+
+/* The same callback is used for animating the chopper retreat */
+def animate_drop(frames_left, total_frames, data)
+& with piece_already_down, sprite, piece, spline, end_board_pos in data:
+    
+    const dir = xy(1 - 2 piece.player_index, 1)
+    const α = 100% - frames_left / total_frames
+    const β = if piece_already_down then 100% else α
+
+    // Choppers
+    const z = end_board_pos.y + 1
+    if not sprite.float:
+        set_volume(data.chopper_audio, 2 sqrt(α))
+        choppers_draw(piece.type, xyz(spline(α) * SPACE_SIZE, z), piece.player_index, z)
+
+    // Shadow
+    draw_sprite({
+        sprite: mechs_shadow_sprite[piece.type], 
+        pos: end_board_pos * SPACE_SIZE,
+        scale: β * dir,        
+        z: 0.1,
+        opacity: SHADOW_OPACITY})
+        
+    // Piece   
+    draw_sprite(sprite, spline(β) * SPACE_SIZE, ∅, dir, ∅, z)
+
+
+
+def end_chopper_retreat(data):
+    data.chopper_audio = stop_audio(data.chopper_audio)  

@@ -174,6 +174,11 @@ function serverSaveDebugJSON(callback) {
 }
 
 
+function onExportClick() {
+    // TODO
+}
+
+
 function onNewGameClick() {
     if (! isQuadserver) {
         // Can't create a game on this server

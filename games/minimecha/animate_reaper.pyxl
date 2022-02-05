@@ -1,0 +1,75 @@
+const missile_trail_color = make_spline(
+    [0%,  60%,  80%, 90%,  100%],
+    [#eee,#777,#e42, #fc4, #fe5])
+    
+const missile_array = []
+
+
+def spawn_missile(start_pos3D, end_pos3D, color):
+    play_sound({
+        sound: missile_launch_sound, 
+        volume: random(50%, 75%),
+        pan: start_pos3D})
+    
+    push(missile_array, {
+        phase: 360° ξ,
+        
+        t: 0,
+        
+        color: color,
+                
+        
+        spline: make_spline(
+            [0%, random(60%, 75%), 100%],
+            [start_pos3D,
+             lerp(start_pos3D, end_pos3D, 50%) + xyz(random(-50, +50), random(-50, -10), 0),
+             // Offset the end position slightly so that they don't all land in the center
+             end_pos3D + xyz(10 random_within_circle(), 0)],
+            "continue")})
+    
+    
+
+def missile_update_and_draw(missile, end_board_pos, z):
+    missile.t += 1.05%
+    
+    if missile.t ≥ 85%:
+        // Mini explosion for one missile
+        const α = (missile.t - 85%) / 15%
+        draw_sprite(explosion_float_sprite.animation.frame(⌊α * size(explosion_float_sprite.animation)⌋), missile.spline(95%), ∅, 30%, ∅, z, #FFF8)
+        
+        if missile.t > 100%:
+            play_sound({sound: explode_tiny_sound, pos: end_board_pos * SPACE_SIZE, volume: random(175%, 275%), playback_rate: random(75%, 125%)})
+            return iterate.REMOVE
+    
+    let prev = ∅
+    for i ≤ NUM_MISSILE_TRAILS:
+        const τ = max(0, missile.t + 1% i - 15%)
+        const θ = missile.phase + 500° τ
+        const r = 17 smoothstep(0, 25%, τ) * smoothstep(0, 25%, 1 - τ)
+        const pos = missile.spline(τ) + xyz(r * cos θ, r * sin θ, ε i)
+        const α = i / NUM_MISSILE_TRAILS
+        
+        if i == NUM_MISSILE_TRAILS:
+            draw_sprite(missile_sprite, pos, xy_to_angle(pos - prev), ∅, ∅, z)
+        else:
+            draw_disk(pos, 0.7 + 1.5 α, missile_trail_color(α), ∅, z)
+            prev = pos
+            
+            
+
+def animate_missile_attack(frames_left, total_frames, data)
+& with piece, target_piece, end_board_pos, z in data:
+    
+    const fire_chance = if piece.type == "R" then 30% else 14%
+    
+    if frames_left > 63% total_frames and ξ ≤ fire_chance:        
+        const dir = sign(piece.player_index - ½)
+        spawn_missile(xyz(piece.board_pos * SPACE_SIZE + random(-8, 8) * xy(2 dir, 1) + xy(0, random(-18, -24)), piece.board_pos.y + 1.01),
+                      xyz(target_piece.board_pos * SPACE_SIZE + xy(0, -10), target_piece.board_pos.y + 1.01),
+                      PLAYER_COLOR[piece.player_index])
+    
+    iterate(missile_array, missile_update_and_draw, end_board_pos, z)
+    
+    // Ensure they are all gone
+    if frames_left == 0: resize(missile_array, 0)
+    

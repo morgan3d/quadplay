@@ -1,0 +1,12 @@
+{
+    "url": "mountain.png",
+    "pivot": {
+        "x": 23.5,
+        "y": 34.5
+    },
+    "sprite_size": {
+        "x": 48,
+        "y": 54
+    },
+    "license": "Derived from Painted 2D Terrain, (C) 2021 David Baumgart. All rights reserved. https://assetstore.unity.com/packages/2d/environments/tile-basic-set-painted-2d-terrain-45675"
+}

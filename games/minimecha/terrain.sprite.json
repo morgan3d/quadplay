@@ -1,0 +1,13 @@
+{
+    "url": "terrain.png",
+    "pivot": {
+        "x": 23.5,
+        "y": 28.5
+    },
+    "sprite_size": {
+        "x": 48,
+        "y": 48
+    },
+    "note": "mogrify -resize 48x54! -filter Box *.png; mogrify -gravity north -chop 0x6 *.png; montage *.png -tile 4x10 -geometry 48x48 -background none tile.png",
+    "license": "Derived from Painted 2D Terrain, (C) 2021 David Baumgart. All rights reserved. https://assetstore.unity.com/packages/2d/environments/tile-basic-set-painted-2d-terrain-45675"
+}

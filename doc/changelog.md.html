@@ -4,7 +4,16 @@
                             **Change Log**
 
 Changes for both the specification and implementation in each release
-of [quadplay✜](manual.md.html).
+of [<quadplay/>](manual.md.html).
+
+
+2022 February TBD: Update 81
+===================================
+
+- New game: "Morgan's Mini Mecha"
+- `split(string, separator, max_splits)` now accepts an optional number of splits to make
+- Added Walnut Burl wrap
+
 
 2022 January 30: Update 80
 ===================================
@@ -21,7 +30,6 @@ of [quadplay✜](manual.md.html).
 - `resized()` for simultaneous padding and trimming of strings
 - Added `"♢"` `"♡"` `"☆"` glyphs to font sheets
 - Added auto-generaton of `○◻△♢♡☆` glyphs in fonts
-- Added Windows installer script (linked from the website)
 - Made the Linux/macOS script work from double click
 - Uninitialized variable declarations no longer count against the code statement size
 - Tweaked `deja-9` font symbols
@@ -2007,6 +2015,11 @@ img { image-rendering: -moz-crisp-edges; image-rendering: pixelated; border: 1px
 .md div.listingcaption {margin: 5px 0 15px}
 .md .longTOC a, .md .longTOC code, .md a:link, .md a:visited, .md a:link code, .md a:visited code, a code .hljs-keyword, a code .hljs-selector-tag {
 color: #80bfff !important;
+}
+
+quadplay::before {
+content: "quadplay✜";
+font-family: quadplay;
 }
 
 .md h1, .md h2, .md h3 { font-family: quadplay }

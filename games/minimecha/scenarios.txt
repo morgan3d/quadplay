@@ -1,0 +1,319 @@
+Ultimate
+
+ k> p> .  . <r
+ g> .  .  . <b
+ s> .  .  . <s
+ b> .  .  . <g
+ r> .  . <p <k
+[]
+[]
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+
+
+Gyakuten
+
+<k <p  .  .  r>
+<g  .  .  .  b>
+<s  .  .  .  s>
+<b  .  .  .  g>
+<r  .  .  p> k>
+[]
+[]
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+
+
+Dobutsu
+
+ .  .  .  .  .
+ b> .  .  . <r
+ k> p> .  . <k
+ r> .  .  . <b
+ .  .  .  .  .
+[]
+[<p ]
+ M  M  M  M  M
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ M  M  M  M  M
+
+
+Goru Goru
+
+ s> .  .  . <s
+ g> p> . <p <g
+ k> p> . <p <k
+ g> p> . <p <g
+ s> .  .  . <s
+[]
+[]
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+
+
+Tanjun
+
+ .  .  .  .  .
+ .  .  .  .  .
+ k> p> . <p <k
+ .  .  .  .  .
+ .  .  .  .  .
+[ g> s>]
+[<g <s ]
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+
+
+Hashi
+
+ k> .  .  . <r
+ g> .  .  . <b
+ s> .  .  . <s
+ b> .  .  . <g
+ r> .  .  . <k
+[ p>]
+[<p ]
+ ?  ?  M  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  M  ?  ?
+
+
+Kushu
+
+ .  .  .  . <g
+ .  B> . <p <r
+ k> B> .  . <k
+ .  B> . <p <r
+ .  .  .  . <g
+[]
+[]
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+
+
+Sakuru
+
+ .  k> .  .  .
+ g> .  .  . <b
+ r> s> . <s <r
+ b> .  .  . <g
+ .  .  . <k  .
+[]
+[]
+ M  ?  ?  ?  M
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ M  ?  ?  ?  M
+
+
+Sutoka
+
+ .  . <s  .  .
+ s> .  .  . <s
+ .  k> . <k  .
+ s> .  .  . <s
+ .  .  s> .  .
+[ r>]
+[<r ]
+ M  ?  ?  ?  M
+ ?  ?  ?  ?  ?
+ ?  ?  M  ?  ?
+ ?  ?  ?  ?  ?
+ M  ?  ?  ?  M
+ 
+
+Rupu
+
+ g> .  .  . <k
+ r> .  .  . <s
+ r> .  .  . <r
+ s> .  .  . <r
+ k> .  .  . <g
+[]
+[]
+ ?  ?  ?  ?  ?
+ ?  ?  M  ?  ?
+ ?  M  ?  M  ?
+ ?  ?  M  ?  ?
+ ?  ?  ?  ?  ?
+
+
+Shogai
+
+ k> .  . <p <r
+ g> .  .  . <b
+ s> .  .  . <s
+ b> .  .  . <g
+ r> p> .  . <k
+[]
+[]
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  M  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+
+
+
+Tutorial #1
+0: Use our {color:#B43 PROBE} to attack the enemy {color:#49C CAPTAIN} and win!
+ .  .  .  .  .
+ .  .  .  .  .
+ k> p> .  . <k
+ .  .  .  .  .
+ .  .  .  .  .
+[]
+[]
+ M  M  M  M  M
+ M  M  M  M  M
+ ?  ?  ?  ?  ?
+ M  M  M  M  M
+ M  M  M  M  M
+
+
+Tutorial #2
+0: Drop our {color:#B43 PROBE} from the {color:#B43 RESERVES} at the top left of the screen ↖
+ .  .  .  .  .
+ .  .  .  .  .
+ k> .  .  . <k
+ .  .  .  .  .
+ .  .  .  .  .
+[ p>]
+[]
+ M  M  M  M  M
+ M  M  M  M  M
+ ?  ?  ?  ?  ?
+ M  M  M  M  M
+ M  M  M  M  M
+
+
+Tutorial #3
+0: The {color:#B43 GRINDER} can also move straight backward.
+ .  .  .  .  .
+ .  .  .  . <k
+ .  .  g> .  .
+ .  .  .  .  .
+ k> .  .  .  .
+[]
+[]
+ M  ?  ?  ?  M
+ M  ?  M  M  ?
+ M  ?  ?  M  M
+ M  M  ?  M  M
+ ?  ?  ?  M  M
+ 
+ 
+Tutorial #4
+0: The {color:#B43 STALKER} can step diagonally backward.
+ k> .  .  .  .
+ .  .  .  .  .
+ .  .  s> .  .
+ .  .  .  .  .
+ .  .  . <k  .
+[]
+[]
+ ?  ?  ?  M  M
+ M  M  ?  M  M
+ M  ?  ?  M  M
+ M  ?  M  M  ?
+ M  ?  ?  ?  M
+ 
+Tutorial #5
+0: Move the {color:#B43 REAPER} along rows and columns.
+ .  .  . <k  .
+ .  .  .  .  .
+ .  .  .  .  .
+ .  .  .  .  .
+ k> r> .  .  .
+[]
+[]
+ M  M  M  ?  M
+ M  M  M  ?  M
+ M  M  M  ?  M
+ M  M  M  ?  M
+ ?  ?  ?  ?  M
+ 
+Tutorial #6
+0: Fly the {color:#B43 BOMBER} diagonally.
+ .  .  .  . <k
+ .  .  .  .  .
+ .  .  .  .  .
+ k> .  .  .  .
+ .  .  b> .  .
+[]
+[]
+ M  M  M  M  ?
+ M  M  M  ?  M
+ ?  M  ?  M  M
+ ?  ?  M  M  M
+ ?  ?  ?  M  M
+ 
+ 
+Tutorial #7
+0: Upgrade the {color:#B43 REAPER} at the far edge so it can move diagonally.
+2: All units except the {color:#B43 GRINDER} and {color:#B43 CAPTAIN} upgrade at the edge.
+ .  .  .  . <k
+ .  .  .  .  .
+ .  .  .  .  .
+ .  .  .  .  .
+ k> r> .  .  .
+[]
+[]
+ ?  ?  ?  ?  ?
+ ?  M  M  M  M
+ ?  ?  ?  ?  M
+ M  M  M  M  ?
+ ?  ?  ?  ?  ?
+ 
+Tutorial #8
+0: Capture that upgraded {color:#49C S∙BOMBER} immediately!
+1: Notice that captured units lose upgrades.
+2: We now have a regular {color:#B43 BOMBER} in our {color:#B43 RESERVES}.
+ k> p> .  .  .
+ .  .  .  .  .
+ r> . <B  .  .
+ .  .  .  .  .
+ .  .  . <p <k
+[]
+[]
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ 
+Tutorial #9
+
+ k> p> .  . <r
+ g> .  .  .  .
+ s> .  .  . <s
+ b> .  .  .  .
+ r> .  . <p <k
+[]
+[]
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+ ?  ?  ?  ?  ?
+

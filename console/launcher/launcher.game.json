@@ -51,7 +51,10 @@
         "dlpreview":  "dlpreview.sprite.json",
         
         "hflabel":    "hflabel.sprite.json",
-        "hfpreview":  "hfpreview.sprite.json"
+        "hfpreview":  "hfpreview.sprite.json",
+        
+        "mmlabel":    "mmlabel.sprite.json",
+        "mmpreview":  "mmpreview.sprite.json"
     },
 
     "constants":  {

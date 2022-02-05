@@ -1,0 +1,14 @@
+def begin_shock_attack(data):
+    data.attack_audio = play_sound(shock_sound, true, 500%, data.piece.board_pos * SPACE_SIZE)
+    
+    
+    
+def animate_shock_attack(frames_left, total_frames, data)
+& with piece, end_board_pos in data:
+    
+    draw_sprite({
+        sprite: shock_sprite["animation" + piece.player_index].frame(mode_frames),
+        pos: SPACE_SIZE * ½ (piece.board_pos + end_board_pos) + xy(0, -16),
+        z: piece.board_pos.y + 0.5})
+        
+    todo("Draw sparks around target")

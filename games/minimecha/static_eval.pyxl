@@ -1,0 +1,128 @@
+/* Direction this piece faces forward */
+def piece_dir(piece):
+    return MAD(piece.player_index, -2, 1)
+
+
+/* Static value of a piece to the computer player. Negative
+   if player_index = 1, positive otherwise. */
+def piece_value(piece):
+    // Optimize using intrinsics because this is the core
+    // routine affecting the performance of the AI player
+    
+    // Direction pieces move
+    const dir = piece_dir(piece)
+    
+    let value = MOVE_TYPE_VALUE[piece.move_type]
+    
+    if piece.board_pos:
+        // Position relative to the center of the board
+        const rel_pos_x = SUB(MUL(½, SUB(BOARD_SIZE.x, 1)), piece.board_pos.x)
+
+        if piece.type == "p":
+            // Value depends on nearness promotion. Assumes
+            // pawn has base value ≥ 2 so that this is never
+            // of negative value to the player themselves
+            value = MAD(rel_pos_x, dir, value)
+        
+        else:
+            const rel_pos_y = SUB(MUL(½, SUB(BOARD_SIZE.y, 1)), piece.board_pos.y)
+            
+            if rel_pos_x == ADD(dir, dir) and contains("brs", piece.type):
+                // Promotable on move from this final row
+                value = ADD(value, 2)
+                            
+            if piece.type == "k":
+                // Further from center is generally better for the king.
+                // There are only two kings, so no need to optimize.
+                value += 10 (|rel_pos_x| + |rel_pos_y|)
+            else:
+                // Closer to center horizontally is generally good
+                // for all pieces developmentally
+                value = ADD(MAD(-½, ABS(rel_pos_x), 1), value)
+    else:
+        // Slightly less valuable in the hand
+        --value
+        
+    // A piece in hand can drop anywhere (but not capture!)
+    // so it is technically at an advantage. However, the
+    // computer is reluctant to drop if we rate a piece
+    // in the hand higher than one on the board.
+    
+    // Zero sum, so sign based on player index
+    return MUL(value, dir)
+
+
+
+/* Static value of a position. Positive is good for player_index == 0 */
+def game_static_value(game):
+    let value = 0
+
+    // bitmask, with bit P == 1 if player P has a king
+    let king_mask = 0
+
+    // threat_map[p]: threats TO player_index == p. For testing if there is an instant
+    // win for the next player, which saves one ply, and increasing the value of threats overall.
+    /*
+    const threat_map = [
+        game_compute_threat_map(game, ∅, game.current_player_index == 1),
+        game_compute_threat_map(game, ∅, game.current_player_index == 0)]
+        */
+    
+    // Accumulate the piece values
+    for array in [game.player_array[0].hand_array, game.player_array[1].hand_array, …game.board]:
+        for piece in array
+        & if piece ≠ EMPTY_SPACE:
+            value += piece_value(piece)
+            
+            //const threatened = piece.board_pos and threat_map[piece.player_index][piece.board_pos.x][piece.board_pos.y]
+            
+            if piece.type == "k":
+                king_mask ∪= (1 << piece.player_index)
+                
+                // See if there's an instant win for the current player
+                if (piece.player_index ≠ game.current_player_index and 
+                    game_compute_threat_map(game, ∅, true)[piece.board_pos.x][piece.board_pos.y]):
+                    // Has to be finite magnitude, but should be huge
+                    value -= 1000 * piece_dir(piece)
+            /*else if threatened or piece.hand_pos ≠ ∅:
+                // Slightly less valuable if under threat or in the hand
+                value -= 2 piece_dir(piece)*/
+
+    // End game states (no ties in this game)
+    if king_mask == 0b01:
+        return +∞
+    else if king_mask == 0b10:
+        return -∞
+    else:
+        return value
+    
+    
+    
+/* Generates all moves for the current player. The 
+   moves are in the form consumed by game_move_clone()
+   
+   Callback for find_move() when implementing the AI. */
+def game_compute_moves(game):
+    const player_index = game.current_player_index
+    const move_array = []
+
+    // Collect all pieces in a 2D array (including irrelevant ones)
+    // and iterate through them
+    for array in [game.player_array[player_index].hand_array, …game.board]:
+        for piece in array:
+            // Only for the current player's pieces
+            if piece ≠ EMPTY_SPACE and piece.player_index == player_index:
+                
+                // For every move
+                for end_board_pos in piece_compute_moves(piece, game):
+                    const move = {piece: piece, end_board_pos: end_board_pos, promote_after: false}
+
+                    // Unless this is a pawn on the final row, consider the non-promotion move
+                    if not (piece.type == "p" and move_can_promote(piece, end_board_pos)):
+                        push(move_array, move)
+    
+                    // Consider the variation where we promoted as well                    
+                    if move_can_promote(piece, end_board_pos):
+                        push(move_array, {…move, promote_after: true})
+
+    return move_array

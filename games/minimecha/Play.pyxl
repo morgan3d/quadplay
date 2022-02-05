@@ -1,0 +1,257 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+
+/* Draw the controls hints on the bottom of the screen */
+def gui_draw_commands(gui)
+& if gui.gamepad
+& with player_index, gamepad, selected_board_pos in gui:
+
+    // Move to the top when covered by the hosting button bar
+    const y = if (gamepad_array[0].status == "host" and gamepad_array[1].status == "absent") then 14 else (SCREEN_SIZE.y - 4)
+    
+    draw_text({
+        font: small_font,
+        pos: xyz(½ SCREEN_SIZE.x, y, HUD_Z),
+        text: replace(
+            "[^][<][v][>] Move   (a) Select " +
+            (if selected_board_pos then
+                "Target   (b) Cancel"
+            else
+                "Unit   (p) Pause"), 
+            gamepad.prompt), 
+        color: PLAYER_COLOR[player_index],
+        shadow: TEXT_SHADOW,
+        outline: TEXT_OUTLINE,
+        x_align: "center",
+        y_align: "bottom"})
+        
+
+
+def ai_action(gui):
+    // AI player move after the portrait has come in
+    if not gui.move_finder:
+        // Create the move finder immediately
+        let search_depth = AI_SEARCH_DEPTH
+        
+        // Scale the search depth back by the hand size, which
+        // significantly magnifies the branch factor
+        let max_hand = 0
+        for p < 2:
+            let hand = 0
+            for piece in global_game.player_array[p].hand_array:
+                if piece ≠ EMPTY_SPACE:
+                    ++hand
+            max_hand = max(max_hand, hand)
+        
+        // Search shallower when there is a lot in hand, because
+        // the search space gets too large
+        if max_hand == 0:
+            // 25% chance to increase depth
+            if ξ < 25%: ++search_depth
+        else if max_hand == 2:
+            // 50% chance to reduce depth
+            if ξ < 50%: --search_depth
+        else if max_hand == 3:
+            --search_depth
+        else if max_hand > 3:
+            search_depth -= 2
+            
+        search_depth = max(1, round(search_depth - 2 (100% - ai_skill)))
+                
+        gui.move_finder = make_move_finder(
+            global_game.current_player_index, 
+            global_game, 
+            game_compute_moves, 
+            game_move_clone, 
+            game_static_value, 
+            search_depth,
+            AI_UNPREDICTABILITY + 5 (100% - ai_skill),
+            if DEBUG_SEARCH_TREE then move_to_string else ∅)
+
+        gui.ai_status = {progress: 0%}
+            
+    else if not gui.ai_status.move:
+        // Run the move finder for up to 70% of each frame until a move has been found
+        gui.ai_status = gui.move_finder(70% * 1/60)
+
+    // Only move once the portrait is fully revealed and messages are gone, so that the player
+    // can see the animation without distraction
+    if portrait_transition ≥ PORTRAIT_TRANSITION_FRAMES and gui.ai_status.move and not (current_message.player_index == gui.player_index and current_message.end_frame > mode_frames): 
+        const move = gui.ai_status.move
+        gui.move_finder = ∅
+        gui.ai_status = {}
+        push_mode(AnimateMove, gui, move.piece, move.end_board_pos, move.promote_after) because "AI"           
+        
+    else if gui.ai_status.progress < 100%
+    & preserving_transform:
+        reset_camera()
+        set_transform(xy(½ SCREEN_SIZE.x - ½ AI_PROGRESS_BAR_SIZE.x, SCREEN_SIZE.y - AI_PROGRESS_BAR_SIZE.y - 2), ∅, HUD_Z)
+        draw_line(xy(0, AI_PROGRESS_BAR_SIZE.y), AI_PROGRESS_BAR_SIZE - xy(1, 0), TEXT_SHADOW)
+        draw_corner_rect(xy(0, 0), AI_PROGRESS_BAR_SIZE, TEXT_OUTLINE)
+        draw_corner_rect(xy(1, 1), xy(gui.ai_status.progress, 100%) * (AI_PROGRESS_BAR_SIZE - 2), PLAYER_COLOR[1])
+
+    
+    
+    
+/* Execute an action on button press */
+def gui_action(gui)
+& with gamepad, player_index, selected_board_pos, cursor_board_pos in gui:
+
+    if not gamepad:
+        ai_action(gui)
+        return
+
+    const sound_pos = cursor_board_pos * SPACE_SIZE
+
+    if selected_board_pos:
+        const piece = gui_get_piece(selected_board_pos)
+        assert(piece ≠ EMPTY_SPACE)
+        
+        // In target mode
+        if gamepad.bb or (gamepad.aa and equivalent(cursor_board_pos, selected_board_pos)):
+            // Unselect
+            play_sound({sound: cancel_sound, pan: sound_pos})
+            selected_board_pos = ∅
+            gui.moves = ∅
+            gui.threat_map = game_compute_threat_map(global_game)
+            
+        else if gamepad.aa:
+            
+            if contains(gui.moves, cursor_board_pos, equivalent):
+                // Remove the selection
+                selected_board_pos = ∅
+                gui.moves = ∅
+                play_sound({sound: select_sound, pan: sound_pos})
+
+                // Clone the cursor pos since it may change during the animation
+                push_mode(AnimateMove, gui, piece, xy(cursor_board_pos)) because "Choice"           
+                
+            else:
+                // Illegal move
+                play_sound({sound: refuse_sound, pan: sound_pos})
+            
+    else if gamepad.aa:
+        // In selection mode
+        const piece = gui_get_piece(cursor_board_pos)
+        if piece ≠ EMPTY_SPACE and piece.player_index == player_index:
+            play_sound({sound: select_sound, pan: sound_pos})
+            selected_board_pos = xy(cursor_board_pos)
+    
+            // Update the threat map to ignore the piece, if the piece is on the board        
+            if piece.board_pos:
+                gui.threat_map = game_compute_threat_map(global_game, piece)
+                
+            gui.moves = piece_compute_moves(piece, global_game)
+        else:
+            play_sound({sound: refuse_sound, pan: sound_pos})
+
+
+
+def quit_scenario():
+    set_mode(Config, gui_array[1].gamepad == ∅)
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+portrait_transition = ⌊ ½ PORTRAIT_TRANSITION_FRAMES ⌋
+
+current_message.end_frame = 0
+
+for gui at p in gui_array:
+    // Move the cursor to the hand to draw attention to the pieces there
+    if global_game.player_array[p].hand_columns: 
+        gui.cursor_board_pos = xy(p * (BOARD_SIZE.x - 1) + sign(p - ½), 0)
+
+set_pause_menu({
+    text: "Leave Map", 
+    callback: quit_scenario, 
+    confirm: true})
+
+
+show_message(global_scenario.dialogue["" + global_game.ply])
+
+
+frame
+────────────────────────────────────────────────────────────────────────        
+
+iterate(gui_array, cursor_update)
+
+gui_action(gui_array[global_game.current_player_index])
+
+game_draw()
+
+with end_frame, text, player_index in current_message:
+    if end_frame > mode_frames and global_game.current_player_index == player_index and portrait_transition ≥ PORTRAIT_TRANSITION_FRAMES
+    & preserving_transform:
+        // Message
+        set_transform(xy((9% (2 player_index - 1) + 50%) * SCREEN_SIZE.x, 87% SCREEN_SIZE.y), ∅, HUD_Z)
+        
+        // Fade out
+        const α = (end_frame - mode_frames) / 10
+        
+        // Dialogue box
+        const outline = rgba(30%, 30%, 30%, α)
+        draw_rect(xy(0, 0), xy(146, 50), rgba(1, 1, 1, α), outline)        
+        preserving_transform:
+            compose_transform(xy(73 (2 player_index - 1), -15), xy(1 - 2 player_index, 1)) 
+            const A = xy(-20, -8)
+            const B = xy(0, 5)
+            const C = xy(0, -5)
+            draw_tri(A, B, C, rgba(1, 1, 1, α))
+            draw_line(A, B, outline)
+            draw_line(A, C, outline)
+        
+        if α ≥ 100%:
+            draw_text({
+                font: font,
+                pos: xy(0, 0),
+                wrap_width: 130,
+                x_align: "center",
+                y_align: "center",
+                text: text,
+                color: #000,
+                markup: true})
+    else:
+        // GUI commands
+        gui_draw_commands(gui_array[global_game.current_player_index])
+
+        
+
+if DEBUG_SHOW_STATIC_EVAL:
+    const value = game_static_value(global_game)
+    draw_text({
+        font: font,
+        pos: xy(½ SCREEN_SIZE.x, 2),
+        z: 200,
+        x_align: "center",
+        y_align: "top",
+        text: value,
+        color: if value > 0 then PLAYER_COLOR[0] else (if value < 0 then PLAYER_COLOR[1] else #888),
+        outline: #fff,
+        shadow: #000})
+    
+
+if gamepad_array[0].status == "host":
+    if gamepad_array[1].status == "absent":
+        start_hosting(true)
+        draw_text({
+            font: font,
+            pos: ½ SCREEN_SIZE,
+            z: 200,
+            x_align: "center",
+            y_align: "center",
+            text: "Waiting for Blue Player to Join",
+            color: #fff,
+            outline: #000})
+    else:
+        // Hide buttons
+        start_hosting(false)
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+background_audio = stop_audio(background_audio)
+stop_audio(alarm_audio)
+set_pause_menu()
+

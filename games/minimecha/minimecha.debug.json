@@ -1,0 +1,48 @@
+{
+    "constants": {
+        "TITLE_START_FRAMES": {
+            "type": "number",
+            "value": "0",
+            "format": "",
+            "quantum": 0,
+            "enabled": true
+        },
+        "TITLE_FADEOUT_FRAMES": {
+            "type": "number",
+            "value": "60",
+            "format": "",
+            "quantum": 0,
+            "enabled": false
+        },
+        "DEBUG_SINGLE_PLAYER": {
+            "type": "boolean",
+            "value": true,
+            "description": "Select to force the game to start in single player mode immediately, skipping the title screen.",
+            "enabled": true
+        },
+        "DEBUG_SHOW_STATIC_EVAL": {
+            "type": "boolean",
+            "value": true,
+            "description": "When true, display the static evaluator result on screen.",
+            "enabled": false
+        },
+        "DEBUG_SEARCH_TREE": {
+            "type": "boolean",
+            "value": true,
+            "description": "If true, print the search tree for the AI player",
+            "enabled": false
+        },
+        "AI_SEARCH_DEPTH": {
+            "type": "number",
+            "value": "1",
+            "min": 1,
+            "max": 10,
+            "format": "",
+            "quantum": 1,
+            "description": "In ply, i.e., single-player moves.",
+            "enabled": false
+        }
+    },
+    "start_mode": "Play",
+    "start_mode_enabled": false
+}

@@ -1,0 +1,124 @@
+/* Debug visualization of the abstract state */
+
+
+/* Returns a function of no args that runs func(…args) */
+def bind(func, …args):
+    def f(): return func(…args)
+    return f
+   
+
+/* Only used for debugging */
+def board_to_string(board):
+    let result = ""
+    
+    for y < board.size.y:
+        for x < board.size.x:
+            result += piece_to_string(board[x][y])
+            if x < board.size.x - 1: result + " "
+        
+        if y < board.size.y - 1: result += "\n\n"
+    
+    return result
+
+    
+    
+def threat_map_to_string(threat_map):
+    let result = ""
+    
+    for y < threat_map.size.y:
+        for x < threat_map.size.x:
+            result += if threat_map[x][y] then "X" else "-"        
+        if y < threat_map.size.y - 1: result += "\n"
+    
+    return result
+   
+
+
+def board_pos_to_string(board_pos):
+    return "(" + board_pos.x + "," + board_pos.y + ")"
+
+
+
+def move_to_string(move):
+    let str = trim_spaces(move.piece.debug_string) + " @ "
+    
+    if move.piece.board_pos:
+        str += board_pos_to_string(move.piece.board_pos)
+    else:
+        str += "hand"
+        
+    return str + " → " + board_pos_to_string(move.end_board_pos)
+    
+                
+/* For debugging. Returns a six-character string,
+   where the first three characters are the first
+   row and the second three are the second row. */
+def piece_to_string(piece):
+    if piece == EMPTY_SPACE:
+        return " . "
+    else if piece == ∅:
+        return " ∅ "
+    else:
+        return piece.debug_string
+    
+
+/* For debugging */
+def game_to_string(game):
+    let result = "player" + game.current_player_index + "'s turn\n\n"
+    
+    result += board_to_string(game.board) + "\n\n"
+
+    for player at p in game.player_array:
+        result += "hand" + p + " = ["
+        for piece in player.hand_array:
+            result += piece_to_string(piece) + " "
+        result += "]\n"
+        
+    return result
+    
+
+
+def PIECE_MOVE_PATTERN_to_string():
+    let s = ""
+    for pattern at piece_name in PIECE_MOVE_PATTERN:
+        for y < 3:
+            for x < 3:
+                s += pattern[y][x]
+            s += "\n"
+        s += "\n"
+            
+    return s
+     
+// debug_print(PIECE_MOVE_PATTERN_to_string())
+
+
+/* Returns the location of the  that is putting `player_index` in
+   check, or ∅ if `player_index` is not in check. */
+def find_checking_piece_location(player_index, game):
+    const other_player = 1 - player_index
+    
+    for col at x in game.board:
+        for piece at y in col:
+            if piece.player_index == other_player:
+                for move in piece_compute_moves(piece, game.board):
+                    if is_king(board_get(game.board, move), player_index):
+                        return xy(x, y)
+                        
+                        
+
+/* Only used for generating a template to paint over and debugging */
+def board_background_debug_draw(board):
+    const BOARD_COLOR = rgb(68%, 52%, 36%)
+    const LINE_COLOR = #444
+    const WH = board.size * SPACE_SIZE + 2
+    const UL = -½ SPACE_SIZE - 1
+        
+    draw_corner_rect(UL, WH, BOARD_COLOR, LINE_COLOR)
+    draw_corner_rect(xy(UL.x, UL.y + WH.y - 1), xy(WH.x, 8), 70% BOARD_COLOR, 70% LINE_COLOR)
+    draw_corner_rect(xy(UL.x + 1, UL.y + WH.y - 1), xy(WH.x - 2, 8 - 1), nil, 70% LINE_COLOR)
+    
+    for x < board.size.x:
+        for y < board.size.y:
+            draw_rect(SPACE_SIZE * xy(x, y), SPACE_SIZE, ∅, LINE_COLOR)
+          
+

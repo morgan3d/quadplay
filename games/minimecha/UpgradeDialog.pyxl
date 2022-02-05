@@ -1,0 +1,103 @@
+UpgradeDialog
+════════════════════════════════════════════════════════════════════════
+
+let gui
+let piece_before
+let piece_after
+
+/* Invoked with the dialog return value */
+let callback
+const SHADOW = #777
+    
+
+def dialog_draw_piece(piece, x):
+    // Shift so that the label including the movement icon is centered
+    gui_draw_piece_label(gui, piece, xyz(x + 16 (piece.player_index - ½), -18, 0), DIALOG_Z)
+    draw_fancy_sprite(
+        {sprite: ASSETS["mechs_" + piece.player_index + "_sprite"][piece.type], 
+        pos: xy(x, +16)},
+        TEXT_OUTLINE,
+        SHADOW)
+        
+
+
+def dialog_draw_option(text, x):
+    draw_text({
+        font: font,
+        text: text,
+        pos: xy(x, 41),
+        color: #000,
+        x_align: "center",
+        y_align: "center"})
+
+
+
+enter(gui_in, piece, callback_in)
+────────────────────────────────────────────────────────────────────────
+gui = gui_in
+callback = callback_in
+
+assert(piece.type == lowercase(piece.type), "Passed an already promoted piece to UpgradeDialog")
+piece_before = piece
+
+// Construct the end piece
+piece_after = deep_clone(piece)
+piece_promote(piece_after)
+
+reset_camera()
+
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+const forced = (piece_before.type == "p")
+
+game_draw()
+
+set_transform(½ SCREEN_SIZE, ∅, DIALOG_Z)
+
+    
+dialog_draw(xy(0, 0), UPGRADE_DIALOG_SIZE)
+/*
+draw_rect(xy(0, ½ UPGRADE_DIALOG_SIZE.y + 2), xy(UPGRADE_DIALOG_SIZE.x - 2, 4), #0008)
+draw_rect(xy(0, 0), UPGRADE_DIALOG_SIZE, DIALOG_COLOR)
+draw_rect(xy(0, 0), UPGRADE_DIALOG_SIZE - 4, ∅, #555)
+*/
+
+// Title
+draw_text({
+    font: font, 
+    text: "Upgrade" + (if forced then "!" else "?"),
+    pos: xy(0, -½ UPGRADE_DIALOG_SIZE.y + 8),
+    y_align: "top",
+    x_align: "center",
+    color: #000})
+
+// Before and after pieces
+dialog_draw_piece(piece_before, -60)
+draw_fancy_sprite(
+    {sprite: shapes.arrow,
+     pos: xy(0, 8),
+     override_color: PLAYER_COLOR[piece_before.player_index]},
+    TEXT_OUTLINE,
+    SHADOW)
+dialog_draw_piece(piece_after, +60)
+    
+
+// Prompts
+if forced:
+    dialog_draw_option(replace("(a) OK", gui.gamepad.prompt), 0)
+else:
+    dialog_draw_option(replace("(b) No", gui.gamepad.prompt), -60)
+    dialog_draw_option(replace("(a) Yes", gui.gamepad.prompt), +60)
+
+
+// Prevent accidental button double tap
+if mode_frames > 10:
+    if gui.gamepad.aa:
+        callback(true)
+        pop_mode()
+    else if gui.gamepad.bb and not forced:
+        callback(false)
+        pop_mode()

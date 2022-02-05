@@ -1,0 +1,410 @@
+/* 
+   The abstract game state code. Game state is processed in a purely
+   functional manner for simplicity and to support a future computer
+   player if needed.
+   
+   The rules are trivially modified from mini shogi:
+      
+   - https://www.gnu.org/software/gnushogi/manual/The-rules-of-shogi.html
+   - https://en.wikipedia.org/wiki/Minishogi
+   - https://en.wikipedia.org/wiki/Shogi#Movement
+   
+   with changes to simplify the game logic (and make it feel more
+   like a strategic video game instead of board game):
+   
+   - No drop-pawn-check rule
+   - Can move into check
+   - Kings can be captured (ending the game)
+*/
+
+
+/* PIECE_MOVE_TABLE[piece_name][Δy + 1][Δx + 1] is " " if not a legal move, 
+   "." if it is a legal move, and another non-space character if it 
+   is the beginning of a run in direction xy(Δx, Δy).
+   
+   Pieces in the data file are drawn facing to the right to match player 0
+   
+   Data are from:
+   https://en.wikipedia.org/wiki/Shogi#Movement that are stored in moves.txt) */
+const PIECE_MOVE_PATTERN = {}
+
+
+// Compute PIECE_MOVE_PATTERN from raw MOVE_DATA
+local:
+    const array = split(MOVE_DATA, "\n")
+    
+    // Every four lines defines a piece followed by a blank line. The final blank 
+    // and the trailing spaces per line may be absent.
+    for i < ⌈¼ size(array)⌉:
+        const L = 4i
+        
+        // Extract three rows 
+        const entry = slice(array, L, L + 3)
+        
+        // Fix the line lengths to 3 
+        for i < 3: 
+            entry[i] = slice((entry[i] default "") + "   ", 0, 3)
+        
+        // Store using the piece name in the center character
+        PIECE_MOVE_PATTERN[array[L + 1][1]] = entry
+        
+
+
+/* Create an empty game
+   The board is horizontal, with player 0 at the left
+   and player 1 at the right */
+def make_game():
+    const game = {
+        board: make_array(BOARD_SIZE, EMPTY_SPACE),
+        
+        // True if the space is traversable.
+        // There is a single terrain instance for
+        // the game which is never mutated.
+        terrain: make_array(BOARD_SIZE, true),
+
+        player_array: [make_player(0), make_player(1)],
+        current_player_index: 0,
+        ply: 0}
+    
+    return game
+        
+
+
+/* Return a 2D array that is true for every space attacked by
+   the non-current player. If `ignore_piece` is specified, then that
+   piece is removed for the computation. If `invert_attacker` is
+   specified, then computes the threat map with the CURRENT player
+   attacking (needed for AI) instead of the next player (needed for visualization)
+*/
+def game_compute_threat_map(game, ignore_piece default ∅, invert_attacker default false):
+    const threat_map = make_array(BOARD_SIZE, false)
+    const attacker_index = if invert_attacker then game.current_player_index else (1 - game.current_player_index)
+
+    if ignore_piece:
+        // Temporarily remove this piece
+        assert(ignore_piece.board_pos, "ignore_piece must be on the board")
+        board_set(game.board, ignore_piece.board_pos, EMPTY_SPACE)
+    
+    // Loop over all pieces owned by player_index
+    for col at x in game.board:
+        for piece at y in col:
+            // Automatically fails for EMPTY_SQUARE
+            if piece.player_index == attacker_index:
+                // Mark all target move locations
+                for move in piece_compute_moves(piece, game, true):
+                    threat_map[move.x][move.y] = true
+                    
+    if ignore_piece:
+        // Replace the piece
+        board_set(game.board, ignore_piece.board_pos, ignore_piece)
+            
+    return threat_map
+
+
+
+/* Returns a new `game` where `move.piece` was moved to `move.end_board_pos`. The piece
+   could be a drop. Promotes if `move.promote_after`
+   
+   Does not check if the move is legal. Changes the current player. */
+def game_move_clone(game, move):
+
+    assert(game.current_player_index == move.piece.player_index, "Player is not current")
+
+    // Clone
+    game = {
+        board: deep_clone(game.board),
+
+        // Terrain is never changed during the game        
+        terrain: game.terrain,
+
+        player_array: deep_clone(game.player_array),
+        
+        current_player_index: game.current_player_index,
+        
+        ply: game.ply + 1}
+    
+    // The cloned piece
+    let piece = ∅
+    
+    // Remove piece
+    if move.piece.board_pos:
+        // Grab the cloned piece pointer before mutating
+        piece = board_get(game.board, move.piece.board_pos)
+        
+        // Remove from the board
+        board_set(game.board, piece.board_pos, EMPTY_SPACE)
+    else:
+        const hand_array = game.player_array[move.piece.player_index].hand_array
+
+        // Grab the cloned piece pointer before mutating
+        piece = hand_array[move.piece.hand_index]
+        
+        // Remove from the hand
+        hand_array[piece.hand_index] = EMPTY_SPACE
+        game.player_array[piece.player_index].hand_columns = hand_count_columns(hand_array)
+        piece.hand_index = ∅
+    
+    
+    // Capture if something is on the target spot
+    game_maybe_capture(game, move.end_board_pos)        
+    
+    piece.board_pos = clone(move.end_board_pos)
+        
+    if move.promote_after: piece_promote(piece)
+    
+    // Place in new location, overriding the capture if
+    // needed
+    board_set(game.board, piece.board_pos, piece)
+    
+    // Update the current player
+    game.current_player_index = 1 - game.current_player_index
+    return game
+    
+    
+
+/* Returns the number of five-row columns needed for the hand */
+def hand_count_columns(hand_array):
+    const N = size(hand_array) - 1
+    for i ≤ N:
+        if hand_array[N - i] ≠ EMPTY_SPACE:
+            return ⌈ ⅕ (1 + N - i) ⌉
+    return 0
+
+
+
+/* If there is a piece at board_pos, captures it and
+   puts it in the current player's hand */
+def game_maybe_capture(game, board_pos):
+    const capture = board_get(game.board, board_pos)
+    if capture == EMPTY_SPACE: return
+
+    piece_capture(capture)
+
+    board_set(game.board, board_pos, EMPTY_SPACE)
+
+    // King is lost, everything else goes to the hand
+    if capture.type ≠ "k":
+        const player = game.player_array[game.current_player_index]
+        const hand_array = player.hand_array
+    
+        // Find an empty spot in the hand
+        capture.hand_index = find(hand_array, EMPTY_SPACE)
+        
+        // Store the capture
+        hand_array[capture.hand_index] = capture
+        player.hand_columns = max(player.hand_columns, ⌈ ⅕ (capture.hand_index + 1)⌉)
+
+
+
+/* Symbol is a 3-character string parsed in the style of scenario.txt.
+
+player_index 0 is " X>"
+player_index 1 is "<X "
+
+where X is: 
+
+k  King
+p  Pawn
+P  Promoted pawn
+s  Silver general
+S  Promoted silver
+g  Gold general
+b  Bishop
+B  Promoted bishop
+r  Rook
+R  Prompted rook
+
+
+If board_pos is a number it is interpreted as the hand_index
+*/
+def make_piece(symbol, board_pos default ∅):
+    assert(is_string(symbol) and size(symbol) == 3 and contains(PIECE_TYPES, symbol[1]), "Illegal piece: '" + symbol + "'")    
+    
+    const type = symbol[1]
+    
+    return {
+        player_index: if symbol[0] == "<" then 1 else 0, 
+        
+        // Position in the player's hand. ∅ if 
+        // on the board.
+        hand_index: if is_number(board_pos) then board_pos else ∅,
+        
+        type: type,
+
+        // Position in the board. ∅ if in the hand.
+        board_pos: if not is_number(board_pos) then clone(board_pos) else ∅,
+        
+        // Current move
+        move_type: piece_type_to_move_type(type),
+        
+        debug_string: symbol}
+
+
+
+/* True if the piece can be promoted after moving to move_pos. */
+def move_can_promote(piece, end_board_pos):
+    // Column in which promotion occurs
+    const PROMOTE_X = (if piece.player_index == 0 then BOARD_SIZE.x - 1 else 0)
+
+    // Must start on the board if promoting, can't promote by drop
+    return contains(PROMOTABLE_TYPES, piece.type) and piece.board_pos and (piece.board_pos.x == PROMOTE_X or end_board_pos.x == PROMOTE_X)
+
+
+
+def piece_type_to_move_type(type):
+    return if contains("SP", type) then "g" else type
+    
+    
+
+/* Promotes by mutation */ 
+def piece_promote(piece):
+    // Note that pieces can promote when the are NOT in the last column;
+    // they could have just moved from the last column
+    assert(not contains("gk", piece.type), "Gold generals and kings cannot promote")
+    assert(lowercase(piece.type) == piece.type, "Only unpromoted pieces can promote")
+    assert(piece.board_pos, "Must be on the board to promote")
+    
+    piece.debug_string = uppercase(piece.debug_string)
+    piece.type = uppercase(piece.type)
+    piece.move_type = piece_type_to_move_type(piece.type)
+
+
+
+/* Mutates the piece into a capture. Does not update
+   the player's hand or the board. Erases the board_pos. 
+   Allows capturing the king*/
+def piece_capture(piece)
+& with type, move_type, player_index, board_pos, debug_string in piece:
+    assert(PIECE_NAME[type], "Illegal piece")
+    
+    // Revert if promoted
+    type = lowercase(type)
+    move_type = type
+    
+    player_index = 1 - player_index
+    board_pos = ∅
+    
+    const before = if player_index == 0 then " " else "<"
+    const after  = if player_index == 0 then ">" else " "
+    debug_string = before + type + after
+
+
+
+/* Called from compute_piece_moves(). Returns true if the move is
+   to an EMPTY_SPACE that is traversable. `player_index` can be ∅, indicating that 
+   moves can cover own pieces. */
+def push_if_legal_move(moves, pos, offset, game, player_index):
+    const target = pos + offset
+
+    if not board_get(game.terrain, target): return false
+    
+    const test = board_get(game.board, target)
+    if test and (test == EMPTY_SPACE or test.player_index ≠ player_index): 
+        push(moves, target)
+    
+    return test == EMPTY_SPACE
+
+
+
+/* Pushes all runner moves in direction `step` away from `pos` onto `moves`.
+   `player_index` can be ∅, indicating that moves can cover own pieces. */
+def push_runner_moves(moves, pos, step, game, player_index):
+    // Furthest possible move is the entire board
+    for 0 < i ≤ max(BOARD_SIZE.x, BOARD_SIZE.y) - 1:
+        if not push_if_legal_move(moves, pos, step * i, game, player_index):
+            // The space was not empty, so stop
+            break
+        
+
+
+/* Returns an array of all legal moves [ignoring check] for this
+   `piece` as xy() values, given the current `board`.
+   
+   Moves that end on an occupied space are captures.
+   
+   Assumes the piece is already on the board. Does not exclude moves
+   that move into check, or moves that are disallowed by a current check.
+   Does not include promotion, which occurs after moves as a free action.
+   
+   If `include_covering` is true, includes moves that "capture" the player's
+   own pieces because those are needed for computing threat maps,
+*/
+def piece_compute_moves(piece, game, include_covering default false):
+    assert(PIECE_MOVE_PATTERN[piece.move_type], "Unrecognized move_type = \"" + piece.move_type + "\"")
+    const moves = []
+    
+    // Drop moves
+    if piece.hand_index ≠ ∅:
+        
+        const PROMOTE_ROW = (1 - piece.player_index) * (BOARD_SIZE.x - 1)
+        for col at x in game.board:
+            // Pawn may not be dropped into the farthest rank, otherwise
+            // can drop on any empty space
+            if piece.type ≠ "p" or x ≠ PROMOTE_ROW:
+                for other_piece at y in col:
+                    if other_piece == EMPTY_SPACE and game.terrain[x][y]:
+                        push(moves, xy(x, y))
+                
+        return moves
+    
+    // Regular moves
+    const forward = 1 - 2 piece.player_index
+    const test_index = if include_covering then ∅ else piece.player_index    
+    
+    for row at y in PIECE_MOVE_PATTERN[piece.move_type]:
+        for action at x in row:
+            const step = xy((x - 1) * forward, y - 1)
+            
+            // Ignore center
+            if step.x ≠ 0 or step.y ≠ 0:
+                if action == ".":
+                    // Single step
+                    push_if_legal_move(moves, piece.board_pos, step, game, test_index)
+                else if action ≠ " ":
+                    // Runner
+                    push_runner_moves(moves, piece.board_pos, step, game, test_index)
+
+    return moves
+    
+    
+    
+/* Returns true if `piece` is a king. If `player_index` is not `nil`, also
+   checks that it is owned by that player. */
+def is_king(piece, player_index):
+    return (piece.type == "k") and (player_index ≠ 1 - piece.player_index)
+
+
+
+def make_player(index):
+    assert(BOARD_SIZE.y == 5, "hand_array size hardcoded for 5 pieces")
+    return {
+        index: index,
+        
+        // Pieces available to drop. The hand array
+        // for mini shogi is hardcoded to ten pieces
+        // because that is the most that could be captured
+        hand_array: make_array(10, EMPTY_SPACE),
+        
+        // Number of 5-element columns needed to represent the hand.
+        // Used but the GUI.
+        hand_columns: 0}
+    
+
+
+/* 2D array get that returns ∅ for out of BOARD_SIZE */    
+def board_get(board, pos):
+    if in_bounds(pos):
+        return board[pos.x][pos.y]
+    
+
+/* Sets the value of this board position. Helper for 2D indexing.
+   Does not clone anything or update the piece if value is a 
+   piece. Assumes the pos is in bounds */
+def board_set(board, pos, value):
+    assert(in_bounds(pos))
+    board[pos.x][pos.y] = value
+     
+     
+        
+def in_bounds(pos):
+    return pos.x ≥ 0 and pos.y ≥ 0 and pos.x < BOARD_SIZE.x and pos.y < BOARD_SIZE.y

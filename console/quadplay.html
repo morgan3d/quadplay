@@ -120,7 +120,8 @@
       <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('white')" id="whiteColorScheme" autocomplete="off">White</label>
       <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('dots')" id="dotsColorScheme" autocomplete="off">Dots</label>
       <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('stripes')" id="stripesColorScheme" autocomplete="off">Stripes</label>
-      <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('wood')" id="woodColorScheme" autocomplete="off">Wood</label>
+      <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('wood')" id="woodColorScheme" autocomplete="off">Oak</label>
+      <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('walnut_burl')" id="walnut_burlColorScheme" autocomplete="off">Walnut Burl</label>
       <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('carbon')" id="carbonColorScheme" autocomplete="off">Carbon</label>
       <hr>
       <div class="IDEOnly"><a onclick="setIDEEnable(0)">Hide Dev Tools (IDE)</a></div>
@@ -148,6 +149,8 @@
       <div><a onclick="showOpenGameDialog()">Open Game…</a></div>
       <hr>
       <div><a onclick="onNewGameClick()">New Game…</a></div>
+      <hr>
+      <div><a onclick="onExportClick()">Export</a></div>
       <hr>
       <label title="Stop the game at failed assert() statements"><input id="assertEnabled" type="checkbox" onclick="debugOptionClick(event)" checked autocomplete="off"><code>assert()</code> as error</label>
       <br/><label title="Stop the game at all todo() statements"><input id="todoEnabled" type="checkbox" onclick="debugOptionClick(event)" checked autocomplete="off"><code>todo()</code> as error</label>

@@ -2,7 +2,7 @@
 "use strict";
 
 // Set to false when working on quadplay itself
-const deployed = true;
+const deployed = false;
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -273,22 +273,27 @@ function setColorScheme(scheme) {
 
     case 'dots':
         hrefColor = '#e61b9d';
-        emulatorColor = "url('wrap-dots.png') 50% 50% / cover";
+        emulatorColor = "url('wraps/dots.png') 50% 50% / cover";
         break;
         
     case 'stripes':
         hrefColor = '#da0200';
-        emulatorColor = "url('wrap-stripes.png') 50% 50% / cover";
+        emulatorColor = "url('wraps/stripes.png') 50% 50% / cover";
         break;
 
     case 'wood':
         hrefColor = '#cb7f49';
-        emulatorColor = "url('wrap-wood.jpg') 50% 50% / cover";
+        emulatorColor = "url('wraps/oak.jpg') 50% 50% / cover";
         break;
-        
+
+    case 'walnut_burl':
+        hrefColor = '#cb7f49';
+        emulatorColor = "url('wraps/walnut_burl.jpg') 50% 50% / cover";
+        break;
+
     case 'carbon':
         hrefColor = '#0af';
-        emulatorColor = "url('wrap-carbon.png') 50% 50% / cover";
+        emulatorColor = "url('wraps/carbon.png') 50% 50% / cover";
         break;
     }
     

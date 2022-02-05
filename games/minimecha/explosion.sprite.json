@@ -1,0 +1,22 @@
+{
+    "url": "explosion.png",
+    "sprite_size": {
+        "x": 100,
+        "y": 100
+    },
+    "names": {
+        "animation": {
+            "start": {
+                "x": 0,
+                "y": 0
+            },
+            "end": {
+                "x": 9,
+                "y": 4
+            },
+            "ignore": 1,
+            "extrapolate": "clamp"
+        }
+    },
+    "license": "By Ben Hickling 2018 https://opengameart.org/content/explosion-7 Public Domain/CC0"
+}

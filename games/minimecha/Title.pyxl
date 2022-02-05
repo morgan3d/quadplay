@@ -1,0 +1,159 @@
+Title
+═══════════════════════════════════════════════════════════════════════════════
+
+todo("Show name of connected player + host in online mode over characters")
+
+def start_1P(): 
+    set_mode(Config, true) because "1P Menu"    
+
+
+def start_2P(): 
+    set_mode(Config) because "2P Menu"    
+
+
+def start_online(): 
+    start_hosting()
+    start_2P()
+    
+    
+const menu_tree = make_menu("root", [
+    make_menu(
+        "1 Player", start_1P),
+    make_menu(
+        "2 Player", start_2P),
+    make_menu(
+        "Online",
+            [make_menu("Host", start_online),
+             make_menu("Join", push_guest_menu_mode),
+            "Back"]),
+    make_menu(
+        "Quit", quit_game)])
+
+
+let selection_stack = [1]
+
+let portrait_sprite = [portrait_0_sprite[0][0], portrait_1_sprite[0][0]]
+
+/* Background music channel */
+let audio
+
+/* When > 0, fade out counter */
+let fadeout
+
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+selection_stack[0] = load_local("main_menu") default 0
+
+set_transform(½ SCREEN_SIZE)
+set_background(#888)
+set_random_seed()
+stop_hosting()
+
+audio = play_sound(title_music, true)
+fadeout = 0
+
+// Shortcut for debugging
+if DEBUG_SINGLE_PLAYER: start_1P(100%)
+    
+
+frame
+────────────────────────────────────────────────────────────────────────
+const menu = get_menu(menu_tree, selection_stack)
+
+// Don't show animation when returning from another mode
+const start_frames = if get_previous_mode() then 2 else TITLE_START_FRAMES
+
+// Randomly change the portraits
+if (mode_frames mod 30 == 0) and ξ < 60%:
+    const p = random_integer(0, 1)
+    portrait_sprite[p] = random_value(random_value(ASSETS["portrait_" + p + "_sprite"]))
+
+// Title
+draw_sprite({
+    sprite: title_sprite, 
+    pos: xy(1, -25), 
+    scale: if start_frames then max(600% - (mode_frames / 145)², 100%) else 0})
+
+// Portraits
+const offset = ½ (SCREEN_SIZE - portrait_0_sprite.sprite_size) + xy(5 max(start_frames - mode_frames, 0), 0)
+for p < 2:
+    const scale = xy(sign(½ - p), 1)
+    draw_sprite({
+        sprite: portrait_sprite[p], 
+        pos: offset * scale * xy(-1, 1),
+        scale: scale})
+    
+    if mode_frames > start_frames:
+        draw_sprite({sprite: ASSETS["mechs_" + p + "_sprite"].k, pos: xy(-72 scale.x, 60 + 15 last_value(selection_stack) + round(oscillate(mode_frames / 20, -2, +1))), scale: 50% scale})
+        if not fadeout:
+            selection_stack[size(selection_stack) - 1] = loop(last_value(selection_stack) + gamepad_array[p].yy, size(menu.child_array))
+            
+            if gamepad_array[p].aa:
+                const entry = menu.child_array[last_value(selection_stack)]
+                if size(entry.child_array) > 0:
+                    // Enter the child menu
+                    play_sound(select_sound)
+                    push(selection_stack, 0)
+                else if entry.text == "Back":
+                    // Go back one menu
+                    play_sound(cancel_sound)
+                    pop(selection_stack)
+                else:
+                    // Commit, we're at an option                    
+                    if entry.text ≠ "Quit": save_local("main_menu", selection_stack[0])
+                    play_sound(select_sound)
+                    fadeout = 1
+
+
+if mode_frames > start_frames:
+    draw_text({
+        font: small_font,
+        text: "A #quadplay game by @CasualEffects. Music by Abstraction",
+        pos: xy(0, -100),
+        x_align: "center",
+        color: #b})
+        
+    for text in entry at i in menu.child_array:
+        draw_text({
+            font: font,
+            text: text, 
+            pos: xy(0, 55 + 15i), 
+            color: #000,
+            outline: if i == last_value(selection_stack) then TEXT_OUTLINE else ∅,
+            shadow: if i == last_value(selection_stack) then #555 else ∅,
+            x_align: "center"})
+            
+
+// 3D lines in background
+preserving_transform:
+    const line_color = #7
+    const k = 10
+    set_camera({zoom: perspective_zoom, z: k * sqrt(2) + 1})    
+
+    for j < 2:
+        const R = matmul_mat(
+            yaw_matrix(180° noise(1, 200j + mode_frames / 700)),
+            pitch_matrix(180° noise(1, j + 10 + mode_frames / 600)))        
+        
+        for -k ≤ i ≤ k:
+            draw_line(matmul_xyz(R, xyz( i, -k,  0)), matmul_xyz(R, xyz(i, k, 0)), line_color, ∅, 0)
+            draw_line(matmul_xyz(R, xyz(-k,  i,  0)), matmul_xyz(R, xyz(k, i, 0)), line_color, ∅, 0)
+
+
+if fadeout:
+    ++fadeout
+    const α = fadeout / TITLE_FADEOUT_FRAMES
+    set_volume(audio, 100% - α)
+    set_post_effects({color: rgba(BACKGROUND_COLOR, α)})
+    if fadeout > TITLE_FADEOUT_FRAMES:        
+        menu.child_array[last_value(selection_stack)].callback()
+    
+  
+leave
+────────────────────────────────────────────────────────────────────────
+stop_audio(audio)
+audio = ∅
+reset_post_effects()
+

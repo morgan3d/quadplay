@@ -1,0 +1,21 @@
+{
+    "url": "flame.png",
+    "license": "Public Domain/CC0",
+    "sprite_size": {
+        "x": 42,
+        "y": 65
+    },
+    "names": {
+        "animation": {
+            "start": {
+                "x": 0,
+                "y": 0
+            },
+            "end": {
+                "x": 7,
+                "y": 3
+            },
+            "ignore": 1
+        }
+    }
+}
