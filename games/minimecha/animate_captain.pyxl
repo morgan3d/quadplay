@@ -8,7 +8,7 @@ def animate_flame_attack(frames_left, total_frames, data)
 
     draw_sprite({
         sprite: flame_sprite.animation.frame(mode_frames),
-        pos: SPACE_SIZE * lerp(piece.board_pos, end_board_pos, 60%) + xy(0, -16),
+        pos: SPACE_SIZE * lerp(piece.board_pos, end_board_pos, 70%) + xy(0, -16),
         angle: xy_to_angle(SPACE_SIZE * (end_board_pos - piece.board_pos)) - 90°,
         // Draw slightly in front of the attacked piece, so it is covered in flame
         z: end_board_pos.y + 1.1})

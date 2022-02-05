@@ -13,6 +13,7 @@ def piece_symbol_reverse(symbol):
 def scenario_clone_reverse(scenario):
     return {
         name: scenario.name,
+        dialogue: scenario.dialogue,
         start_player_index: 1 - scenario.start_player_index,
         board: reversed(apply_to_nested_array(piece_symbol_reverse, scenario.board)),
         terrain: reversed(scenario.terrain),
