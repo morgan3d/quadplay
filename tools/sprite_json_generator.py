@@ -118,7 +118,13 @@ def _frame(fnum, top_data, size, name):
         print("  {}".format(top_data["frames"][fnum]["filename"]))
         pixel_coordinate = top_data["frames"][fnum]["frame"]
         if name not in top_data["frames"][fnum]["filename"]:
-            raise NotImplementedError
+            raise NotImplementedError(
+                "Error: tag {} not in filename field {}, can happen when tags"
+                "are inside of other tags (not currently supported).".format(
+                    name,
+                    top_data["frames"][fnum]["filename"]
+                )
+            )
     except (IndexError, NotImplementedError):
         __import__("ipdb").set_trace()
 

@@ -7348,7 +7348,11 @@ function format_number(n, fmt) {
     case 'deg':
         return $Math.round(n * 180 / $Math.PI) + '°';
     case 'hex':
-        return '0x' + n.toString(16);
+        if ($Math.abs(n) === Infinity) {
+            return n.toLocaleString('en');
+        } else {
+            return '0x' + n.toString(16);
+        }
     case 'scientific':
         {
             let x = $Math.floor($Math.log10($Math.abs(n)));
@@ -7417,10 +7421,18 @@ function format_number(n, fmt) {
 
     case '':
     case undefined:
-        return '' + n;
+        if ($Math.abs(n) === Infinity) {
+            return n.toLocaleString('en');
+        } else {
+            return '' + n;
+        }
         
     default:
-        {            
+        {
+            if ($Math.abs(n) === Infinity) {
+                return n.toLocaleString('en');
+            }
+            
             const match = fmt.match(/^( *)(0*)(\.0+)?(°|deg|degree|degrees|%)?$/);
             if (match) {
                 let spaceNum = match[1].length;
@@ -7434,7 +7446,7 @@ function format_number(n, fmt) {
                 } else if (suffix === '%') {
                     n *= 100;
                 }
-                
+              
                 let s = $Math.abs(n).toFixed(fracNum);
 
                 let i = (fracNum === 0) ? s.length : s.indexOf('.');

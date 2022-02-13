@@ -15,30 +15,41 @@
 #
 #    "quit":          Shut down the server itself (only in --nativeapp mode)
 #
+#    "update":        Update quadplay via git pull or downloading from github, depending on how it was installed
+#
 #
 #  - GET commands:
 #
 #    - Are limited to the quadplay directory, the directory passed on the
 #      command line, and $HOME/my_game
-# 
-#    - The special quad_filepath + `/console/_assets.json` "file" gives a listing
-#      of all assets in the specified directory and the quadplay built-in directories.
-#      This combines raw and json packaged assets.
 #
-#    - The special quad_filepath + `/console/_scripts.json` "file" gives a listing
-#      of all .pyxl files in the specified directory and the quadplay built-in scripts
-#      directory.
+#    - Special quad_filepath + '/console/' + ... URLs that on a
+#      quadplay server are dynamically generated instead of files:
 #
-#    - The special quad_filepath + `/console/_docs.json` "file" gives a listing
-#      of all .md, .html, and .pdf files in the specified directory.
+#       - `_assets.json` gives a listing of all assets in the
+#         specified query directory and the quadplay built-in
+#         directories.  This combines raw and json packaged assets.
 #
-#    - The special quad_filepath + `/console/games.json` file gives a listing
-#      of all games in subdirectories of examples/, games/, and my_quadplay/
-#      (not recursive). This is backed by an actual file when not using a quadplay
-#      server.
+#       - `_scripts.json` gives a listing of all .pyxl files in
+#         the specified query directory and the quadplay built-in
+#         scripts directory.
 #
-#    - The special quad_filepath + `/console/_quadserver.json` "file" describes
-#      the available external applications, which are a subset of console/external-applications.json
+#       - `_docs.json` gives a listing of all .md, .html, and
+#         .pdf files in the specified query directory.
+#
+#       - `games.json` gives a listing of all games in subdirectories
+#         of examples/, games/, and my_quadplay/ (not recursive). This
+#         is backed by an actual file when not using a quadplay
+#         server.
+#
+#       - `_config.json` describes the available external
+#         applications, which are a subset of
+#         console/external-applications.json. Also includes
+#         information on the git version when running from private
+#         developer git.
+#
+#       - `_update_progress.json` reports on the status of the update
+#         thread once launched.
 #
 # A "path" in this code is a file-system path, where '/' means the filesystem true root
 #
@@ -77,6 +88,7 @@ script_query_webpath = None
 doc_query_webpath = None
 game_query_webpath = None
 config_query_webpath = None
+update_progress_query_webpath = None
 
 # Subdirectories of server_root_filepath that are permitted for http access.
 # These are relative to server_root_filepath and contain a leading slash because
@@ -96,17 +108,19 @@ def ignore(*args): pass
 # Assigned in main based on the --quiet flag
 maybe_print = ignore
 
-# Parses a version.js file with an embedded 'version = yyyy.mm.dd.hh
-# string' and returns it as a single integer for version comparisons,
+##########################################################################
+# Version detection
+
+# Parses a version.js file with an embedded 'version = yyyy.mm.dd.hh'
+# string and returns it as a single integer for version comparisons,
 # as well as the human-readable version string.
 def parse_version_js(file_string):
+    version_parser = re.compile("^ *const *version *= *['\"]([.0-9]+)*['\"] *;")
     try:
-        version_parser = re.compile("^ *const *version *= *['\"]([.0-9]+)*['\"] *;")
-        
         version_string = version_parser.search(file_string).group(1)
-
+        
         year, month, day, hour = [int(x) for x in version_string.split('.')]
-    
+        
         # Months and years have varying length. That doesn't matter.  We
         # don't need a linear time number. We need one that monotonically
         # increases. Think of this as parsing a number with an irregular
@@ -115,10 +129,13 @@ def parse_version_js(file_string):
                 'text': version_string}
     except:
         
-        return {'value': 0, 'text': '????.??.??.??'}
-
+        return {'value': 0, 'text': file_string}
+    
 with open(os.path.join(os.path.dirname(__file__), '../console/version.js')) as file:
     installed_quadplay_version = parse_version_js(file.read())
+
+##########################################################################
+
 
 
 # Ensure that slashes and case are consistent when on Windows, and make absolute
@@ -240,9 +257,9 @@ if not os.path.exists(my_games_filepath):
         fatal_error("The specified my_quadplay directory (" + my_games_filepath + ") could not be found.")
 
 
-
 def remove_leading_slash(path): return path[1:] if len(path) > 0 and path[0] == '/' else path
 def remove_trailing_slash(path): return path[:-1] if len(path) > 0 and path[-1] == '/' else path
+
 
 try:
     # Python 3.7+
@@ -267,8 +284,103 @@ except ImportError:
 # Returns a string of the line number that calls this function
 def this_line_number(): return str(inspect.currentframe().f_back.f_lineno)
 
-# Handles serving from multiple directories. Overrides the default restriction to
-# the CWD with its own security allowlist.
+##############################################################################      
+
+# Throws an exception with the output on a non-zero error code,
+# otherwise returns the command's output.
+def run_shell_command(cmd):
+    maybe_print(cmd)
+    with os.popen(cmd) as stream:
+        output = stream.read()
+        if stream.close():
+            raise Exception(output)
+        else:
+            maybe_print(output)
+            return output
+
+
+class UpdateThread(threading.Thread):
+
+    def __init__(self):
+        super(UpdateThread, self).__init__(name='update_thread', daemon=True)
+        self._status = 'Running'
+        self._status_lock = threading.Lock()
+
+        
+    def set_status(self, value):
+        with self._status_lock:
+            self._status = value
+
+            
+    def get_status(self):
+        with self._status_lock:
+            return self._status
+
+        
+    def run(self):
+        try:
+            if self.update():
+                self.set_status('Done. Restart server.')
+            else:
+                self.set_status('Done. Restart client.')
+        except Exception as e:
+            maybe_print('Update failed: ' + str(e))
+            self.set_status('Failed: ' + str(e))
+            
+
+    # Returns true if the server needs to be restarted.
+    # Raises an exception if the update fails.
+    def update(self):
+        old_dir = os.getcwd()
+
+        # go to the quadplay root dir
+        os.chdir(os.path.join(os.path.dirname(__file__), '..'))
+    
+        # Track if this script itself changed
+        my_previous_timestamp = os.path.getmtime(__file__)
+    
+        try:
+            if quadplay_origin == 'git clone' or quadplay_origin == 'development git clone':
+                # Verify that we have git
+                if not shutil.which('git'):
+                    raise Exception('Your quadplay was installed via git clone but the updater cannot find the git program to pull the latest version. Delete the .git directory or manually update.')
+        
+                # Run git
+                run_shell_command('git pull')
+        
+            elif quadplay_origin == 'downloaded release':
+                os.mkdir('temp')
+                run_shell_command('curl --location --output temp/quadplay-install.zip https://github.com/morgan3d/quadplay/archive/refs/heads/main.zip')
+                os.chdir('temp')
+                try:
+                    run_shell_command('tar -xf quadplay-install.zip')
+                
+                    # Copy files
+                    shutil.copytree('quadplay-main', '..', dirs_exist_ok = True)
+                    shutil.rmtree('temp')
+                except:
+                    # Try to clean up
+                    os.chdir('..')
+                    shutil.rmtree('temp')
+                    raise
+        
+            # Success
+            os.chdir(old_dir)
+            return os.path.getmtime(__file__) != my_previous_timestamp
+        
+        except:
+            os.chdir(old_dir)
+            raise
+
+        
+# The global updating thread. Initialized when the client
+# requests the update.
+update_thread = None
+        
+##############################################################################
+# Handles serving from multiple directories. Overrides the default
+# restriction to the CWD with its own security allowlist. Instantiated
+# per request.
 #
 # See https://github.com/python/cpython/blob/master/Lib/http/server.py for
 # the base class implementation and internal methods
@@ -358,6 +470,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
     
     # Used for the IDE to write files
     def do_POST(self):
+        global update_thread
         # maybe_print('\n\nReceived POST from ', self.client_address[0], '\n\n')
 
         object = self.prepare_mutating_request()
@@ -454,6 +567,17 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 shutil.copyfile(os.path.join(quad_filepath, '.gitignore'), os.path.join(dst_path, '.gitignore'))
 
                 response_obj = {'game': '/' + dst_path + '/'}
+                
+        elif command == 'update':
+            maybe_print('Updating quadplay...')
+            if not update_thread or (update_thread.get_status() != 'Running'):
+                update_thread = UpdateThread()
+                update_thread.start()
+                response_obj = 'OK'
+            else:
+                maybe_print('Update already in progress.')
+                response_obj = 'Update already in progress.'
+            
 
         response = json.dumps(response_obj, separators = (',', ':'));
         self.send_response(code)
@@ -462,8 +586,9 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(response.encode('utf8'))
 
+        
     def do_GET(self):        
-        # Remove the query and collapse any ..
+        # Remove the query and collapse any '..' in the path
         path_parts = self.path.split('?')
         webpath = os.path.normpath(path_parts[0]).replace('\\', '/')
         query = path_parts[1] if len(path_parts) > 1 else ''
@@ -481,9 +606,20 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         filepath = remove_leading_slash(webpath)
         self.path = filepath
 
-        if webpath in [config_query_webpath, asset_query_webpath, game_query_webpath, doc_query_webpath, script_query_webpath]:
+        if webpath in [config_query_webpath, asset_query_webpath, game_query_webpath, doc_query_webpath, script_query_webpath, update_progress_query_webpath]:
             response_obj = {}
-            if webpath == config_query_webpath:
+            if webpath == update_progress_query_webpath:
+                if update_thread:
+                    status = update_thread.get_status()
+                    response_obj['status'] = status
+                    response_obj['done'] = (status != 'Running')
+                    response_obj['restartServer'] = (status == 'Done. Restart server.')
+                else:
+                    response_obj['status'] = 'No update in progress.'
+                    response_obj['restartServer'] = False
+                    response_obj['done'] = True
+                    
+            elif webpath == config_query_webpath:
                 if not args.kiosk: response_obj['IDE_USER'] = os.environ['USERNAME' if isWindows else 'USER']
                 response_obj['rootPath'] = server_root_filepath
                 response_obj['hasFinder'] = isWindows or isMacOS
@@ -721,6 +857,11 @@ def platform_www_abspath(p):
         else:
             return os.path.join('/', p, '')
 
+
+# TODO for dev version
+# git fetch origin
+# git rev-list HEAD..origin/main --count
+
     
 # Process paths at top level so that they can be inherited by ThreadingHTTPServer
 quad_filepath = canonicalize_filepath(os.path.join(os.path.dirname(__file__), '..'))
@@ -744,6 +885,7 @@ if len(asset_query_webpath) > 0 and asset_query_webpath[-1] == '/': asset_query_
 game_query_webpath = asset_query_webpath + '/console/games.json'
 config_query_webpath = asset_query_webpath + '/console/_config.json'
 script_query_webpath = asset_query_webpath + '/console/_scripts.json'
+update_progress_query_webpath = asset_query_webpath + '/console/_update_progress.json'
 doc_query_webpath = asset_query_webpath + '/console/_docs.json'
 quad_filepath = remove_leading_slash(webpath_allowlist[0])
 asset_query_webpath += '/console/_assets.json'
@@ -830,91 +972,7 @@ def launchServer(post_token):
                 os.chdir(old_path)
 
 
-# Throws an exception with the output on a non-zero error code        
-def run_shell_command(cmd):
-    with os.popen('git pull') as stream:
-        retval = stream.close()
-        if retval:
-            raise Exception(stream.read())
-
-        
-        
-# Returns true if the server needs to be restarted.
-# Raises an exception if the update fails.
-def update():
-    old_dir = os.getcwd()
-
-    # go to the quadplay root dir
-    os.chdir(os.path.join(os.path.dirname(__file__), '..'))
-    
-    # Track if this script itself changed
-    my_previous_timestamp = os.path.getmtime(__file__)
-    
-    try:
-        if quadplay_origin == 'git clone':
-            # Verify that we have git
-            if not shutil.which('git'):
-                raise Exception('Your quadplay was installed via git clone but the updater cannot find the git program to pull the latest version. Delete the .git directory or manually update.')
-        
-            # Run git
-            run_shell_command('git pull')
-        
-        elif quadplay_origin == 'downloaded release':
-            run_shell_command('curl --location --output temp/quadplay-install.zip https://github.com/morgan3d/quadplay/archive/refs/heads/main.zip')
-            os.chdir('temp')
-            try:
-                run_shell_command('tar -xf quadplay-install.zip')
-                
-                # Copy files
-                shutil.copytree('quadplay-main', '..', dirs_exist_ok = True)
-            except:
-                # Try to clean up
-                os.chdir('..')
-                shutil.rmtree('temp')
-                raise
-        
-
-        # Success
-        return os.path.getmtime(__file__) != my_previous_timestamp
-        
-    except:
-        os.chdir(old_dir)
-        raise
-    
-        
-                
-def check_for_update():
-    # Reading from github.io triggers an error in the Python 3.10 urllib code with
-    # regard to timeouts, so run from the raw github repo instead.
-    latest_version_url = 'https://raw.githubusercontent.com/morgan3d/quadplay/main/console/version.js'
-    
-    # Fetch version.js from github
-    #
-    # We can't directly make an https urllib.request on macOS because the default
-    # Python installation doesn't have certificates for SSL installed (see
-    # https://stackoverflow.com/questions/27835619/urllib-and-ssl-certificate-verify-failed-error)
-    # and a given Windows configuration might be in the same situation,
-    # especially if auto-installed with quadplay.
-    #
-    # So, we run with SSL disabled here for only for version checking.
-    with urllib.request.urlopen(latest_version_url, context = ssl._create_unverified_context()) as response:
-        latest_quadplay_version = parse_version_js(response.read().decode('utf-8'))
-
-    if latest_quadplay_version['value'] > installed_quadplay_version['value']:
-        maybe_print('********************************************************')
-        maybe_print('A newer version of quadplay is available:\n')
-        maybe_print('  installed = ' + installed_quadplay_version['text'])
-        maybe_print('  newest    = ' + installed_quadplay_version['text'] + '\n')
-        if quadplay_origin == 'git clone':
-            maybe_print('To upgrade, run:\n\ngit pull\n')
-        else:
-            maybe_print('To upgrade, visit https://github.com/morgan3d/quadplay\n')
-        maybe_print('********************************************************')
-            
-    else:
-        maybe_print('You have the latest version of quadplay.\n1')
-
-
+#######################################################################
         
 def main():
     global webpath_allowlist, server_root_filepath, token
@@ -935,12 +993,6 @@ def main():
 
     maybe_print('_________________________________________________________________________\n')
     maybe_print('quadplay version ' + installed_quadplay_version['text'] + ' from ' + quadplay_origin + '\n\n')
-
-    if quadplay_origin != 'development git clone' and not args.kiosk and not args.noupdatecheck:
-        try:
-            check_for_update()
-        except:
-            pass
 
     myip = '127.0.0.1'
     if args.serve:
@@ -970,12 +1022,19 @@ def main():
                 else:
                     maybe_print('WARNING: gethostbyname unexpectedly failed. Server IP address is unknown.')
                     myip = '127.0.0.1'
-
+                    
     url = 'http' + ('s' if useSSL else '')+ '://' + myip + ':' + str(args.port)
     if not quad_filepath or quad_filepath[0] != '/': url += '/'
     url += os.path.join(quad_filepath, 'console/quadplay.html?fastReload=1&token=' + token)
 
     if args.nativeapp: url += '&nativeapp=1'
+    if not args.noupdatecheck and not args.kiosk:
+        if quadplay_origin == 'development git clone':
+            url += '&update=dev'
+        elif quadplay_origin == 'git clone':
+            url += '&update=git'
+        else:
+            url += '&update=1'
 
     # Sanitized username
     url += '&name=' + re.compile('[^A-Za-z0-9_]').sub('', getpass.getuser())

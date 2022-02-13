@@ -1,14 +1,11 @@
 *.cmd text eol=crlf
 *.vbs text eol=crlf
-*.png filter=lfs diff=lfs merge=lfs -text
-*.jpg filter=lfs diff=lfs merge=lfs -text
-*.psd filter=lfs diff=lfs merge=lfs -text
-*.gif filter=lfs diff=lfs merge=lfs -text
-*.otf filter=lfs diff=lfs merge=lfs -text
-*.ttf filter=lfs diff=lfs merge=lfs -text
-*.pptx filter=lfs diff=lfs merge=lfs -text
-*.mp3 filter=lfs diff=lfs merge=lfs -text
---include-ref=refs/heads/master filter=lfs diff=lfs merge=lfs -text
-*.pdf filter=lfs diff=lfs merge=lfs -text
-*.docx filter=lfs diff=lfs merge=lfs -text
-*.vsix filter=lfs diff=lfs merge=lfs -text
+*.gif -text
+*.otf  -text
+*.ttf  -text
+*.pptx  -text
+*.mp3  -text
+--include-ref=refs/heads/main -text
+*.pdf -text
+*.docx -text
+*.vsix -text

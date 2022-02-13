@@ -470,7 +470,7 @@ function createCodeEditorSession(url, bodyText, assetName) {
     session.setTabSize(4);
     session.setUseWrapMode(false);
     session.setUseWorker(false);
-    
+
     if (url.endsWith('.yaml')) {
         session.setMode('ace/mode/yaml');
     } else if (url.endsWith('.md.html') || url.endsWith('.md')) {

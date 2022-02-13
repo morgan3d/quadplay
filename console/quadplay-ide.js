@@ -28,22 +28,46 @@ let serverConfig = {};
 // Chromium!) do not have this bug.
 const hasBrowserScaleBug = isSafari;
 
+// Can the game sleep when idle to save power?
+let autoSleepEnabled = (getQueryString('kiosk') === '1') ||
+    (localStorage.getItem('autoSleepEnabled') !== 'false');
+
+
 // Disabled by the profiler if not making frame rate, reset
 // on game start.
 let allow_bloom = true;
 
 // Output the version to help with debugging
-console.log('quadplay version ' + version + '\nCopyright 2022 Morgan McGuire\nLicensed as GPL 3.0');
+{
+    function clerp(a, b, t) { return a + (b - a) * t; }
+    
+    // Safari doesn't have a monospace font for console output, so only
+    // show the ASCII-art banner on other platforms
+    const banner = isSafari ? [''] : `
+                                  ╷       ╷                                   
+            ╭───╮ ╷   ╷  ───╮ ╭── │ ╭───╮ │   ───╮ ╷   ╷   ▒▒                 
+            │   │ │   │ ╭── │ │   │ │   │ │  ╭── │ │   │ ▒▒  ▒▒               
+            ╰── │ ╰───┘ ╰───╯ ╰───╯ │ ──╯ ╰─ ╰───╯ ╰── │   ▒▒                 
+                ╵                   ╵                ──╯                      `.split('\n');
+    const style = [];
+    for (let i = 0; i < banner.length; ++i) {
+        banner[i] = '%c' + banner[i];
+        const a = Math.min(1, Math.max(0, (i - 1) / (banner.length - 2)));
+        style.push(`color: rgb(${clerp(255, 0, a)}, ${clerp(64, 169, a)}, ${clerp(158, 227, a)}); text-shadow: 0px 2px 3px #000`);
+    }
+    console.log('\n\n\n' + banner.join('\n') + '\n\nquadplay✜ version ' + version + '\n©2022 Morgan McGuire\nLicensed as GPL 3.0\nhttps://www.gnu.org/licenses/gpl-3.0.en.html\n', ...style);
+}
+
 
 function enterKioskMode() {
     inPageReload = true;
-    location = location.origin + location.pathname + "?kiosk=1";
+    location = location.origin + location.pathname + '?kiosk=1';
 }
 
 
 function setIDEEnable(value) {
     inPageReload = true;
-    location = location.href.replace(/([&?])IDE=./g, '$1') + "&IDE=" + (value ? 1 : 0);
+    location = location.href.replace(/([&?])IDE=./g, '$1') + '&IDE=' + (value ? 1 : 0);
 }
 
 
@@ -134,13 +158,17 @@ function makeEuroSmoothValue(minCutoff, speedCoefficient) {  return new EuroFilt
 /* True if a URL is to a path that is a built-in dir for the current server */
 function isBuiltIn(url) {
     if (ALLOW_EDITING_EXAMPLES) { return false; }
+    
     if (url.startsWith('quad://examples/') ||
         url.startsWith('quad://games/') ||
         url.startsWith('quad://sprites/') ||
         url.startsWith('quad://fonts/') ||
         url.startsWith('quad://scripts/') ||
         url.startsWith('quad://console/') ||
-        url.startsWith('quad://doc/')) { return true; }
+        url.startsWith('quad://doc/')) {
+        return true;
+    }
+    
     if (! url.startsWith('http://') || url.startsWith('https://')) {
         url = location.origin + url;
     }
@@ -158,6 +186,7 @@ function isBuiltIn(url) {
          url.startsWith(quadPath + 'doc/'));
 }
 
+
 function debugOptionClick(event) {
     const element = event.target;
     event.stopPropagation();
@@ -169,6 +198,7 @@ function debugOptionClick(event) {
     }
     saveIDEState();
 }
+
 
 let codeEditorFontSize = 14;
 function setCodeEditorFontSize(f) {
@@ -432,6 +462,12 @@ let backgroundPauseEnabled = true;
 function onBackgroundPauseClick(event) {
     event.stopPropagation();
     backgroundPauseEnabled = document.getElementById('backgroundPauseCheckbox').checked;
+    saveIDEState();
+}
+
+function onAutoSleepClick(event) {
+    event.stopPropagation();
+    autosleepEnabled = document.getElementById('autoSleepCheckbox').checked;
     saveIDEState();
 }
 
@@ -773,7 +809,7 @@ function onSlowButton() {
 
 function wake() {
     // Wake if asleep (we might be in pause mode because we're a guest, too)
-    if (! useIDE && (emulatorMode === 'pause') && (document.getElementById('sleep').style.visibility === 'visible')) {
+    if (autoSleepEnabled && (emulatorMode === 'pause') && (document.getElementById('sleep').style.visibility === 'visible')) {
         document.getElementById('sleep').style.visibility = 'hidden';
         onPlayButton();
         
@@ -781,6 +817,13 @@ function wake() {
         setTimeout(function() { emulatorKeyboardInput.focus({preventScroll:true}); });
         
         // sleep.pollHandler will be removed by onPlayButton()
+
+        // Unless told not to, check for update on waking since
+        // sleeping disables update checks. This is for the case of
+        // someone waking up their console specfically to upgrade it
+        if ((getQueryString('update') && getQueryString('update') !== '0') && isQuadserver && getQueryString('kiosk') !== 1) {
+            checkForUpdate();
+        }
     }
 }
 
@@ -812,6 +855,7 @@ function sleepPollCallback() {
 
 /* sleep.pollHandler is the gamepad polling event while sleeping */
 function sleep() {
+    console.log('Sleeping due to inactivity...');
     document.getElementById('sleep').style.visibility = 'visible';
     onPauseButton();
     // Begin gamepad polling
@@ -1838,6 +1882,7 @@ function saveIDEState() {
     const options = {
         'uiMode': uiMode,
         'backgroundPauseEnabled': backgroundPauseEnabled,
+        'autoSleepEnabled': autoSleepEnabled,
         'colorScheme': colorScheme,
         'volumeLevel': '' + volumeLevel,
         'gamepadOrderMap': gamepadOrderMap.join(''),
@@ -1997,7 +2042,7 @@ function onProjectSelect(target, type, object) {
             // doesn't exist
             const url = (type === 'mode') ? object.url : object;
             setCodeEditorSession(url);
-            // Show the code editor, hide the content pane
+            // Show the code editor and hide the content pane
             codePlusFrame.style.visibility = 'visible';
             codePlusFrame.style.gridTemplateRows = 'auto 0px 0px 1fr';
             document.getElementById('codeEditorDivider').style.visibility = 'hidden';
@@ -3160,7 +3205,7 @@ function resetTouchInput() {
 function mainLoopStep() {
     // Keep the callback chain going
     if (emulatorMode === 'play') {
-        if (! useIDE && (Date.now() - lastInteractionTime > IDLE_PAUSE_TIME_MILLISECONDS)) {
+        if (autoSleepEnabled && (Date.now() - lastInteractionTime > IDLE_PAUSE_TIME_MILLISECONDS)) {
             sleep();
             return;
         }
@@ -4424,6 +4469,93 @@ function combobox_textbox_onchange(textbox) {
     dropdown.options[0].value = dropdown.options[0].innerHTML = textbox.value;
 }
 
+
+function onUpdateClick(installedVersionText, latestVersionText) {
+    onStopButton();
+    
+    if (! confirm('Update from quadplay✜ version ' + installedVersionText + ' to version ' + latestVersionText + '?')) { return; }
+    
+    // Display a downloading window
+    document.getElementById('updateDialog').classList.remove('hidden');
+
+    // Tell the server to update (it will choose the right mechanism)
+    postToServer({command: 'update'})
+
+    // Start polling for when the server finishes updating
+    const checker = setInterval(function () {
+        const progressURL = location.origin + getQuadPath() + 'console/_update_progress.json';
+
+        fetch(progressURL).
+            then(response => response.json()).
+            then(json => {
+                if (json.done) {
+                    clearInterval(checker);
+                    if (json.restartServer) {
+                        postToServer({command: 'quit'});
+                        alert('Update complete. quadplay✜ needs to be restarted after this update.');
+                        setTimeout(function () {
+                            window.close();
+                            location = 'about:blank';
+                        }, 250);
+                    } else {
+                        alert('Update complete!');
+                        location = location;
+                    }
+                }
+            });
+    }, 1000);
+}
+
+
+/* Checks for an update. Called on startup and once an hour (if not sleeping) when 
+   update= is set */
+function checkForUpdate() {
+    if (getQueryString('update') === 'dev') {
+        // TODO
+        return;
+    }
+    
+    // Parses a version.js file with an embedded 'version = yyyy.mm.dd.hh'
+    // string and returns it as a single integer for version comparisons,
+    // as well as the human-readable version string.
+    function parseVersionJS(text) {
+        try {
+            text = text.match(/^ *const *version *= *['"]([0-9.]+)['"] *;/)[1];
+            const match = text.split('.').map(x => parseInt(x, 10));
+
+            // Months and years have varying length. That doesn't matter.  We
+            // don't need a linear time number. We need one that monotonically
+            // increases. Think of this as parsing a number with an irregular
+            // base per digit.
+            return {value: ((match[0] * 12 + match[1]) * 32 + match[2]) * 24 + match[3],
+                    text: text};
+        } catch {
+            return {value: 0, text: text};
+        }
+    }
+
+    fetch('https://raw.githubusercontent.com/morgan3d/quadplay/main/console/version.js').then(response => response.text()).then(function (text) {
+        const latestVersion = parseVersionJS(text);
+        const installedVersion = parseVersionJS(`const version = '${version}';\n`);
+
+        if (latestVersion.value > installedVersion.value) {
+            console.log(`There is a newer version of quadplay✜ available online:\n  installed = ${installedVersion.text}\n  newest    = ${latestVersion.text}`);
+            
+            // Replace the recording controls with an update button
+            const menuElement = document.getElementById('recordingControls');
+            menuElement.innerHTML =
+                '&nbsp;&nbsp; &middot; &nbsp;&nbsp;' +
+                `<a style="cursor:pointer; padding-right:4px; padding-left:4px; border-radius: 3px; border: 1px solid" title="Update quadplay✜ to version ${latestVersion.text}" onclick="onUpdateClick('${installedVersion.text}', '${latestVersion.text}')">` +
+                'Update <span style="font-size: 140%; vertical-align: top; position: relative; top: -4px">⚙</span></a>';
+            
+        } else if (latestVersion.value === installedVersion.value) {
+            console.log('You are running the latest version of quadplay✜');
+        } else if (latestVersion.text.indexOf('404') !== -1) {
+            console.log(`You are running a prerelease version of quadplay✜:\n  installed      = ${installedVersion.text}\n  latest release = ${latestVersion.text}`);
+        }
+    });
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Load state
@@ -4543,6 +4675,7 @@ document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanc
 
 
 document.getElementById('backgroundPauseCheckbox').checked = backgroundPauseEnabled || false;
+document.getElementById('autoSleepCheckbox').checked = autoSleepEnabled || false;
 
 if (getQueryString('kiosk') === '1') {
     // Hide the console menu and mode buttons
@@ -4654,3 +4787,19 @@ const quitAction = (function() {
         return 'launcher';
     }
 })();
+
+
+if ((getQueryString('update') && getQueryString('update') !== '0') && isQuadserver && getQueryString('kiosk') !== 1) {
+    // Check for updates a few seconds after start, and then every
+    // hour when not sleeping.
+    const INITIAL_DELAY  = 4000;
+    const REGULAR_PERIOD = 60 * 60 * 1000;
+    setTimeout(function () {
+        checkForUpdate();
+        setInterval(function () {
+            if (document.getElementById('sleep').style.visibility !== 'visible') {
+                checkForUpdate();
+            }
+        }, REGULAR_PERIOD);
+    }, INITIAL_DELAY);
+}

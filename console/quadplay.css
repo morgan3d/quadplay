@@ -360,8 +360,9 @@ b.projectTitle.remote:before {
     right: 0;
     overflow: auto;
     background-color: rgb(0,0,0); /* Fallback color */
-    background-color: rgba(255,255,255,0.4); /* Black w/ opacity */
+    background-color: rgba(128, 128, 128, 0.6); /* White w/ opacity */
 }
+
 
 .modal .dialog {
     font-size:      120%;

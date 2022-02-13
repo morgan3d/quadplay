@@ -25,7 +25,7 @@ def choose():
     if choice_array[choice_index] == "Done":
         pop_mode()
     else if choice_array[choice_index] == "Sleep":
-        $sleep()               
+        $sleep()
     else if ends_with(choice_array[choice_index], "Order"):
         // Change controller order
         push_mode($ControllerOrder)
@@ -154,7 +154,7 @@ if manage_tabs or mode_frames > open_frames:
 if manage_tabs: // This path is for the OS and doesn't occur in private view mode
     // Also show system info on the top
     const gamepads = if $navigator.getGamepads then $navigator.getGamepads() else (if $navigator.webkitGetGamepads then $navigator.webkitGetGamepads else [])
-    let text = "quadplay✜ " + $version + " © 2020 Morgan McGuire\n\n"
+    let text = "quadplay✜ " + $version + " © 2019-2022 Morgan McGuire\n\n"
 
     text += clamp_string($navigator.userAgent, 140)
 
