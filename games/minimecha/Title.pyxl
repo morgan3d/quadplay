@@ -1,6 +1,8 @@
 Title
 ═══════════════════════════════════════════════════════════════════════════════
 
+def perspective_zoom(z): return MUL(60, 1.03ᶻ)
+
 todo("Show name of connected player + host in online mode over characters")
 
 def start_1P(): 

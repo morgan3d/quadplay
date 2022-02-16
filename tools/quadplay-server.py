@@ -1158,7 +1158,8 @@ def main():
     # the chromium script from sharing an existing session, which would cause the
     # call() below to not block: https://askubuntu.com/questions/35392/how-to-launch-a-new-instance-of-google-chrome-from-the-command-line
     # This is also intended to keep processes clear of each other when running multiple instances of quadplay.
-    chromium_nativeapp_args = ' --user-data-dir="' + os.path.join(os.path.expanduser('~'), 'my_quadplay') + '" --no-user-gesture-required '
+    chromium_nativeapp_args = ' --user-data-dir="' + os.path.join(os.path.expanduser('~'), 'quadplay_session') + '" --no-user-gesture-required '
+    os.mkdir(os.path.join(os.path.expanduser('~'), 'quadplay_session'))
 
     if isWindows:
         if browser_filepath and args.nativeapp:

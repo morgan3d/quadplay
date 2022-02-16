@@ -69,7 +69,7 @@ function showConstantEditor(choice) {
             const indent = 0;
             const debugEnabled = debugJSON && debugJSON.enabled;
 
-            if (! compact) { entryHTML += '<br/>'; }
+            entryHTML += '<br/>';
             
             entryHTML += `<input type="checkbox" style="margin-left:${indent + 1}px; position: relative; top: 2px" autocomplete="false" ${debugEnabled ? 'checked' : ''} onchange="onConstantEditorDebugOverrideChange(gameSource, '${constantName}', this)" class="${compact ? 'debugOverrideCheckbox' : ''}"><label style="color:#bbb" class="${compact ? 'debugOverrideCheckbox' : ''}">Debug&nbsp;Override</label>`;
             entryHTML += `<div class="debugOverride ${debugEnabled ? '' : 'disabled'}" id="constantEditor_${controlName}_debug_div" ${debugEnabled ? '' : 'disabled'} style="margin-left:${indent - 3}px">`;

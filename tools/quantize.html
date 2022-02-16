@@ -5,7 +5,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="../console/favicon-32x32.png">
 <link rel="shortcut icon" href="../console/favicon.ico">
 <style>
-  @font-face { font-family: quadplay; src: url(../doc/Audiowide-Regular.ttf) }
+  @font-face { font-family: quadplay; src: url(../console/Audiowide-Regular.ttf) }
 
   body {
      background: #302b2b;
@@ -22,6 +22,8 @@
      margin-bottom: 30px;
      color: #fff;
   }
+
+  label { padding-left: 4px; margin-right: 10px; }
 
   a {
      color: #e61b9d !important;
@@ -50,16 +52,21 @@
 <script>
 // Compression tools
     
-function floydSteinbergDither(sourceImageData, destImageData) {
-    const w = sourceImageData.width, h = sourceImageData.height; 
+function floydSteinbergDither(sourceImageData, channel, bits, destImageData) {
+    const w = sourceImageData.width, h = sourceImageData.height;
     // Need more than 8 bit precision for intermediate results, so copy to int32
     const temp = new Int32Array(w * h * 4);
     temp.set(sourceImageData.data, 0);
-    
+
+    // Pixel
     for (let y = 0; y < h; ++y) {
         for (let x = 0; x < w; ++x) {
+            
             // Color channel
-            for (let c = 0; c < 4; ++c) {
+            //for (let c = 0; c < 4; ++c) {
+            {
+                const c = channel;
+                
                 // current buffer index
                 const i = (y * w + x) * 4 + c;
                 
@@ -67,7 +74,7 @@ function floydSteinbergDither(sourceImageData, destImageData) {
                 const v = temp[i];
                 
                 // quantized value
-                let q = Math.min(255, Math.max(0, Math.round(v * (15 / 255))));
+                let q = (bits === 1) ? (v > 127 ? 0xf : 0) : Math.min(255, Math.max(0, Math.round(v * (15 / 255))));
                 q = q | (q << 4);
                 
                 const err = v - q;
@@ -98,16 +105,19 @@ function floydSteinbergDither(sourceImageData, destImageData) {
 }
 
 
-function nearestNeighborQuantize(sourceImageData, destImageData) {
+function nearestNeighborQuantize(sourceImageData, channel, bits, destImageData) {
     // Quantize all channels
-    for (let i = 0; i < sourceImageData.data.length; ++i) {
+    for (let i = channel; i < sourceImageData.data.length; i += 4) {
         let c = sourceImageData.data[i];
-        // Nearest-neighbor quantization to 4 bits.
-        c = Math.round(c * (15 / 255));
-        
-        // Extend back to 8 bits by duplication
-        c = c | (c << 4);
-        
+        if (bits === 4) {
+            // Nearest-neighbor quantization to 4 bits.
+            c = Math.round(c * (15 / 255));
+            
+            // Extend back to 8 bits by duplication
+            c = c | (c << 4);
+        } else {
+            c = (sourceImageData.data[i] > 127) ? 0xff : 0x00;
+        }
         destImageData.data[i] = c;
     }
 }
@@ -126,13 +136,24 @@ const ctx = canvas.getContext('2d');
 // Convert sourceImageData to destImageData and show the result
 function processImage() {
     if (! sourceImageData) { return; }
+
+    const colorBits = 4;
+    const alphaBits = document.getElementById('alpha1').checked ? 1 : 4;
+    const colorDither = document.getElementById('colorDither').checked;
+    const alphaDither = document.getElementById('alphaDither').checked;
     
-    const dither = document.getElementById('dither').checked;
-            
-    if (dither) {
-        floydSteinbergDither(sourceImageData, destImageData);
+    for (let channel = 0; channel < 3; ++channel) {
+        if (colorDither) {
+            floydSteinbergDither(sourceImageData, channel, colorBits, destImageData);
+        } else {
+            nearestNeighborQuantize(sourceImageData, channel, colorBits, destImageData);
+        }
+    }
+
+    if (alphaDither) {
+        floydSteinbergDither(sourceImageData, 3, alphaBits, destImageData);
     } else {
-        nearestNeighborQuantize(sourceImageData, destImageData);
+        nearestNeighborQuantize(sourceImageData, 3, alphaBits, destImageData);
     }
     
     // Put the data back to create a data URL
@@ -250,16 +271,21 @@ function onDragOver(event) { event.preventDefault(); }
             <span style="color: #fff; position: absolute;  top: 50%;  left: 50%;  transform: translate(-50%, -50%);">Drop image here</span>
           </div>
         </td>
-        <td>
-          <input type="checkbox" id="dither" checked style="z-index:10" onchange="processImage()"><label for="dither" style="z-index:10">Dither</label>
-          <div style="font-size: 100px; z-index:-10; margin-top: 20px; margin-bottom: 45px; pointer-events: none">➡</div>
-        </td>
-        <td>
+    <td style="text-align:left">
+    <div style="font-size: 100px; z-index:-10; margin-top: 20px; margin-bottom: 45px; pointer-events: none">➡</div>
+       </td>
+          <td>
           <div id="dest" class="display">
           </div>
         </td>
       </tr>
     </table>
+    <b>Color:</b> <input type="checkbox" id="colorDither" checked onchange="processImage()"><label for="colorDither">Dither</label>
+    <b style="margin-left:60px">Opacity:</b>
+    <input type="radio" name="opacityBits" id="alpha1" onchange="processImage()"><label for="alpha1">2 level</label>
+    <input type="radio" name="opacityBits" id="alpha4" checked onchange="processImage()"><label for="alpha4">16 level</label>
+    <input type="checkbox" checked onchange="processImage()" id="alphaDither"><label for="alphaDither">Dither</label>
+
   </center>
   <div style="margin: auto; max-width: 600px">
     <p>

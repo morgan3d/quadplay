@@ -4280,9 +4280,11 @@ endpoints and borders.
 : Named argument version of `draw_poly()`.
 
 `draw_poly(vertex_array, color, outline = (nil), pos default xy(0, 0), angle default 0, scale default xy(1, 1), z default pos.z default 0)`
-: Draws the _convex_ polygon defined by the `vertex_array`, first scaling by `scale`, rotating by `angle`,
-  and then translating by `pos`. The polygon may have any winding direction. The outcome of the drawn result
-  is undefined and may change across platforms if the polygon is not convex (but there will never be an error).
+: Draws the _convex_ polygon defined by the `vertex_array`, first
+  scaling by `scale`, rotating by `angle`, and then translating by
+  `pos`. The polygon may have any winding direction. If the polygon is
+  not convex, then the outcome of the drawn result is undefined and
+  may change across platforms (but there will never be an error).
 
 `draw_corner_rect(args)`
 : Named argument version of `draw_corner_rect()`.

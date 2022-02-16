@@ -3979,6 +3979,22 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
 
     angle = (angle || 0) * rotation_sign();
     let Rx = $Math.cos(angle), Ry = $Math.sin(-angle);
+
+    // Compute a per-vertex z value and average z-order
+    const z_array = [];
+    let z_order = 0;
+    for (let i = 0; i < vertexArray.length; ++i) {
+        let temp = vertexArray[i].z;
+        if (temp === undefined) { temp = z || 0; }
+        z_array[i] = temp;
+        z_order += temp;
+    }
+
+    if (z !== undefined) {
+        z_order = z;
+    } else {
+        z_order /= vertexArray.length;
+    }
     
     // Clean up transformation arguments
     let Sx = 1, Sy = 1;
@@ -4000,7 +4016,17 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
     case 1:
         {
             let p = vertexArray[0];
-            if (pos) { p = {x: Tx + p.x, y: Ty + p.y, z: pos.z}; }
+            if (pos) {
+                if (p.z !== undefined) {
+                    p = {x: Tx + p.x, y: Ty + p.y, z: (pos_z || 0) + p.z};
+                } else {
+                    p = {x: Tx + p.x, y: Ty + p.y};
+                    if (pos_z !== undefined) {
+                        p.z = pos_z;
+                    }
+                }
+            }
+            
             if (border) {
                 draw_point(p, border, z);
             } else if (fill) {
@@ -4016,10 +4042,10 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
             if (pos || angle || (scale && scale !== 1)) {
                 p = {x: Tx + p.x * Sx * Rx + p.y * Sy * Ry,
                      y: Ty + p.y * Sy * Rx - p.x * Sx * Ry,
-                     z: pos_z};
+                     z: (pos_z === undefined ? p.z : pos_z + (p.z || 0))};
                 q = {x: Tx + q.x * Sx * Rx + q.y * Sy * Ry,
                      y: Ty + q.y * Sy * Rx - q.x * Sx * Ry,
-                     z: pos_z};
+                     z: (pos_z === undefined ? q.z : pos_z + (q.z || 0))};
             }
 
             if (border) {
@@ -4031,21 +4057,19 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
         return;
     }
 
-    if (z === undefined) { z = pos_z; }
-    if (z === undefined) { z = 0; }
-
-    // For the draw call ordering
-    let z_order = z - $camera.z;
-    // For transformation and scale
-    let z_pos = (pos_z === undefined) ? z : (pos_z - $camera.z);
-
-    if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
+    {
+        const delta = (pos_z !== undefined) ? (pos_z - $camera.z) : $camera.z;
+        z_order += delta;
+        for (let i = 0; i < z_array.length; ++i) {
+            z_array[i] += delta;
+        }
+    }
+    
+    // TODO: 3D
+    if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0)) {
         // Transform the arguments to account for the camera
-        const mag = $zoom(z_pos);
-        const C = $Math.cos($camera.angle) * mag,
-              S = $Math.sin($camera.angle * rotation_sign()) * mag;
-        
-        if (! pos) { pos = {x: 0, y: 0}; }
+        const C = $Math.cos($camera.angle),
+              S = $Math.sin($camera.angle * rotation_sign());
         
         let x = Tx - $camera.x, y = Ty - $camera.y;
         Tx = x * C + y * S; Ty = y * C - x * S;
@@ -4053,11 +4077,7 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
 
         // Update matrix
         Rx = $Math.cos(angle); Ry = $Math.sin(-angle);
-        Sx *= mag; Sy *= mag;
     }
-
-    const skx = z_pos * $skewXZ, sky = z_pos * $skewYZ;
-
     // Preallocate the output array
     const N = vertexArray.length;
     const points = []; points.length = N * 2;
@@ -4066,20 +4086,23 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
     let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
     for (let v = 0, p = 0; v < N; ++v, p += 2) {
         const vertex = vertexArray[v];
-
+        const z = z_array[v];
+        const mag = $zoom(z);        
+        const skx = z * $skewXZ, sky = z * $skewYZ;
+        
         // The object-to-draw and draw-to-screen transformations
         // could be concatenated to slightly reduce the amount of
         // math here, although it is maybe clearer and easier to debug
         // this way.
         
         // Object scale
-        const Ax = vertex.x * Sx,          Ay = vertex.y * Sy;
+        const Ax = vertex.x * Sx * mag,    Ay = vertex.y * Sy * mag;
 
         // Object rotate
         const Bx = Ax * Rx + Ay * Ry,      By = Ay * Rx - Ax * Ry;
 
-        const Px = (Bx + Tx + skx) * $scaleX + $offsetX;
-        const Py = (By + Ty + sky) * $scaleY + $offsetY;
+        const Px = (Bx + Tx * mag + skx) * $scaleX + $offsetX;
+        const Py = (By + Ty * mag + sky) * $scaleY + $offsetY;
 
         // Update bounding box
         minx = (Px < minx) ? Px : minx;    miny = (Py < miny) ? Py : miny;
@@ -4089,15 +4112,14 @@ function draw_poly(vertexArray, fill, border, pos, angle, scale, z) {
     }
 
     // For clipping
-    z_pos = z_pos * $scaleZ + $offsetZ;
     z_order = z_order * $scaleZ + $offsetZ;
     
     fill   = $colorToUint16(fill);
     border = $colorToUint16(border);
 
     // Culling/all transparent optimization
-    if ((minx > $clipX2 + 0.5) || (miny > $clipY2 + 0.5) || (z < $clipZ1 - 0.5) ||
-        (maxx < $clipX1 - 0.5) || (maxy < $clipY1 - 0.5) || (z > $clipZ2 + 0.5) ||
+    if ((minx > $clipX2 + 0.5) || (miny > $clipY2 + 0.5) || (z_order < $clipZ1 - 0.5) ||
+        (maxx < $clipX1 - 0.5) || (maxy < $clipY1 - 0.5) || (z_order > $clipZ2 + 0.5) ||
         !((fill | border) & 0xf000)) {
         return;
     }
@@ -4244,20 +4266,21 @@ function draw_line(A, B, color, z, width) {
 
     const zoomed_width = width * 0.5 * ($Math.abs(mag_A) + $Math.abs(mag_B));
     
-    if (zoomed_width >= 1.5) {
+    if ($Math.max($Math.abs(mag_A), $Math.abs(mag_B)) * width >= 1.5) {
         // Draw a polygon instead of a thin line, as this will
-        // be more than one pixel wide in screen space.
+        // be more than one pixel wide in screen space. Do not
+        // apply zooming as the polygon itself will do that.
         let delta_x = B.y - A.y, delta_y = A.x - B.x;
-        let mag = $Math.hypot(delta_x, delta_y);
-        if (mag < 0.001) { return; }
-        mag = width / (2 * mag);
-        delta_x *= mag; delta_y *= mag;
+        let m = $Math.hypot(delta_x, delta_y);
+        if (m < 0.001) { return; }
+        m = width / (2 * m);
+        delta_x *= m; delta_y *= m;
         draw_poly(
-            [{x:A.x - delta_x, y:A.y - delta_y},
-             {x:A.x + delta_x, y:A.y + delta_y},
-             {x:B.x + delta_x, y:B.y + delta_y},
-             {x:B.x - delta_x, y:B.y - delta_y}],
-            color, undefined, (A.z !== undefined) ? {x: 0, y: 0, z: A.z} : undefined, undefined, undefined, z);
+            [{x:A.x - delta_x * mag_A, y:A.y - delta_y * mag_A, z: A.z},
+             {x:A.x + delta_x * mag_A, y:A.y + delta_y * mag_A, z: A.z},
+             {x:B.x + delta_x * mag_B, y:B.y + delta_y * mag_B, z: B.z},
+             {x:B.x - delta_x * mag_B, y:B.y - delta_y * mag_B, z: B.z}],
+            color, undefined, undefined, undefined, undefined, z);
         return;
     }
     

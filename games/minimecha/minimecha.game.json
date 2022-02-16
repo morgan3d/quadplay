@@ -6,7 +6,7 @@
     "packages": [],
     "scripts": [
         "util.pyxl",
-        "3D.pyxl",
+        "quad://scripts/3D.pyxl",
         "game.pyxl",
         "debug.pyxl",
         "gui.pyxl",
