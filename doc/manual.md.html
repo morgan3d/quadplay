@@ -43,18 +43,20 @@ debugger, and profiler.
 - 60 fps, with autoscaling on low-end machines
 - Native 2.5D graphics with order-independent 16-level transparency
 - 4096 sRGB (4:4:4) colors
+- Bloom, motion blur, and phosphor burn-in post-processing
 - 2D rigid body, joint, and motor physics
 - 2D positional audio with pitch, volume, and rate
 - 10.5 MB of total sprite memory
 - Max 128 sprite and font sheets, max size 1024x1024
 - 262 kB offline save data per game
-- Pathfinding AI
+- Pathfinding and board game AI
 - Local and online multiplayer
 - SNES/PS1/Saturn-style controllers D-pad + 8-button gamepads
   and automatic button prompts on all platforms
 - Touch screen/mouse input
 - Optional 320 x 180, 192 x 112, 128 x 128, and 64 x 64 screen modes, 
   analog sticks, triggers, and dual D-pads
+
 
 **Software Features**
 
@@ -1855,8 +1857,8 @@ Array
 : Iterates through array in order using a callback function, with
   optional O(1) order-preserving removal. Returns `true` if any element
   was removed, otherwise returns `false`. This is an imperative
-   version of map(), filter(), and list comprehension primitives from
-   other languages.
+  version of map(), filter(), and list comprehension primitives from
+  other languages.
 
    If `callback` is a string, iterate then calls `array[i][callback](array[i], ...args)`
    on each element for which `array[i][callback]` is not nil.  If `callback` is a function, it instead calls `callback(array[i])`
@@ -1871,7 +1873,65 @@ Array
    - `iterate.CONTINUE`: continue with iteration. This is not required; as long as the previous
       values are not returned by the callback, the iterator will still continue
 
-   It is illegal for the callback to modify the array itself during iteration.
+   The callback may push values onto the array during iteration, but
+   not otherwise mutate the array.
+
+
+`iterate_pairs(array, callback, ...args)`
+: Iterates over all n * (n - 1) / 2 uniquely indexed pairs of elements
+  in the n-element array. This is useful for testing for collisions, for example.
+  Invokes `callback(A, B, ...args)` for each pair. 
+  
+  Returns `true` if any element was removed and false otherwise.
+
+  The return value from `callback` may be an array of two elements,
+  `[a_action, b_action]`. If a single `iterate` constant is returned,
+  then it is converted to an array of two copies of that value.
+  The return values are processed as follows.
+
+  `a_action`:
+
+  - `iterate.REMOVE`: Remove A immediately from the
+    array and continue iteration, starting from the next value
+    for A.
+
+  - `iterate.REMOVE_AND_BREAK`: Remove A immediately from the
+    array and stop all iteration.
+
+  - `iterate.BREAK`: Stop all iteration.
+
+  - `iterate.CONTINUE` or any other value: Continue iteration.
+
+  
+
+  `b_action`:
+
+   - `iterate.REMOVE`: Remove B immediately from the array and
+     continue iteration. B will not be seen by further values of A
+     (unless it appeared in the array multiple times).
+
+   - `iterate.REMOVE_AND_BREAK`: Remove B immediately from the array
+     and stop iteration for the current A, but continue iterating on
+     more As.  B will not be seen by further values of A (unless it
+     appeared in the array multiple times).
+
+   - `iterate.BREAK`: Stop iteration for the current A, but continue 
+     iterating on more As. 
+
+   - `iterate.CONTINUE` or any other value: Continue iteration.
+
+  Note that `[iterate.REMOVE, iterate.BREAK]` has the same effect as
+  `[iterate.REMOVE, iterate.CONTINUE]`.
+
+  All removals preserve order. Running time with no removal or break
+  is necessarily O(n^2) for an array of length n. Unlike `iterate()`,
+  each removal is O(n) instead of constant time.
+
+  The callback may push values onto the array during iteration, but
+  not otherwise mutate the array.
+
+  See also `iterate()`.
+
 
 `join(array, separator default "", lastSeparator default separator, pairSeparator default lastSeparator, empty default "")`
 : Joins the elements of the array into a string. Each element `x` converted to a string with `unparse(x, 1)` if it is not already a string.
@@ -3353,7 +3413,7 @@ built-in properties in the future: `density` and `friction`.
   also draws all of the elements of `e.child_array` recursively (see
   the Hierarchy section).
 
-`make_entity(obj default {}, childTable default {})`
+`make_entity(obj default {}, child_table default {})`
 : Returns a new entity object that is `obj` with defaults applied for
   any properties not specified. This is forward compatible to any
   extended properties that might be added in future versions, however,
@@ -3363,7 +3423,7 @@ built-in properties in the future: `density` and `friction`.
   `xy()`, the extra property is retained). All other properties of
   `obj` are copied over but not cloned.
 
-  If the `childTable` second argument is provided (note that this is not
+  If the `child_table` second argument is provided (note that this is not
   a property of `obj`), then all of the keys become properties of the new
   entity and the values are added to the entity's `child_array`. This is
   a convenient way to build entity hierarchies.
@@ -3759,12 +3819,18 @@ intersections.
   For example, use this function for implementing moving platforms,
   scripted set-piece animations, and elevators.
 
-`entity_simulate(entity, t default 1)`
+`entity_simulate(entity, t default 1, region default nil, border_behavior default "clamp")`
 : Modifies
   `vel *= 1 - drag; spin *= 1 - drag`.  Then,
   integrates `force/mass` into `vel` into `pos` and `torque/inertia` into `spin` into
-  `angle`. Finally, resets `force` and `torque` to zero and
-  invokes `entityUpdateChilren()`. 
+  `angle`. Then, resets `force` and `torque` to zero and
+  invokes `entityUpdateChilren()`.
+  
+  Finally, if `region` is specified, wraps or clamps the `pos` to that
+  region. The only region shape currently supported is a finite
+  unrotated, unscaled `"rect"`. The `border_behavior` can be
+  `"clamp"` or `"loop"`.
+  
   All changes are by mutation, so the `pos`, `acc`, `vel`, and `force`
   point to the same objects afterward.
   Translation operates in 2D or 3D, depending on the type of
@@ -4619,29 +4685,33 @@ Setting any post effects may slow down rendering slightly.
   default to their previous value.  Invoke `reset_post_effects()`
   first for a clean set.
 
-  - `background` is an `rgba()` to draw in the background behind the
-    new frame. The `a` component controls how opaque the background
-    is. Setting `background.a = 0` allows new frames to be blended on
-    top of old ones for a motion blur effect.
+
   - `color` is an `rgba()` to combine with the the new frame before it
     is composited. Setting the `a` to 0 disables the color.
-  - `blend_mode` is one of the following strings: `"source-over"`,
+  - `color_blend` is one of the following strings: `"source-over"`,
     `"difference"`, `"hue"`, `"multiply"` describing how the `color`
-    affects the frame.
+    affects the frame before compositing.
   - `scale` is an `xy` for how to stretch the new frame.
   - `angle` is a counter-clockwise angle in radians to rotate the
     image about its center by.
   - `pos` is an `xy` translation from the center, with +y = down.
     Not visible in screenshots or GIFs
-  - `opacity` is the amount of opacity to use for the new frame. If
-    `background.a` and `opacity` are both less than 1 then the new and
-    previous frames blend together
+  - `motion_blur` is the amount of the previous frame to 
+    maintain into the new frame. The initial value is `0%`.
+  - `afterglow` simulates CRT phosphor afterglow level using a fade color for both hue 
+     and intensity. The initial value is `rgb(0, 0, 0)`.
   - `bloom` is the amount of overdrive to use on bright areas of the
-    screen. This may affect performance on slower machines, and *bloom
-    is not visible in screenshots or GIFs*. The default of `0%`
+    screen. This may affect performance on slower machines. The default of `0%`
     disables the effect, `50%` is a reasonable value, and `100%` is an
     extreme value.
 
+  The visual impact of non-default `motion_blur` and `afterglow`
+  is accumulative and so is sensitive to graphics frame rate scaling.
+  
+  *`bloom` and `burn_in` effects are not visible in <quadplay/> built-in
+  screenshot or GIF recording capture.* Use separate whole screen
+  capture software to record these effects.
+  
   `scale`, `angle`, and `pos` are applied to the entire screen, so 
   do not interact well with multiplayer private views configured via
   `set_screen_size()`.
@@ -5078,7 +5148,7 @@ in the desired order regardless of the order in which drawing executes.
 Time
 ----------------------------------------------------------
 
-Quadplay always runs your `frame` event code at 60 fps. You can
+<quadplay/> always runs your `frame` event code at 60 fps. You can
 hardcode this assumption into your program. For example, the built-in
 simulation routines all use "frame" as the unit of time (and "pixel"
 as the unit of distance). 
@@ -5344,7 +5414,7 @@ debug_graphics and debug_print("Running iteration" + i)
 
 `IDE_USER`
 : A string constant bound to the `USER` environment variable for the operating
-  system. This is "anonymous" when not running the IDE or a quadplay local
+  system. This is "anonymous" when not running the IDE or a <quadplay/> local
   server.
 
 `todo(message default "")`
@@ -5398,7 +5468,7 @@ and persistent worlds.
 Network
 ------------------------------------------------------------------------------------
 
-All quadplay games with local multiplayer automatically have shared
+All <quadplay/> games with local multiplayer automatically have shared
 screen network multiplayer support. Online games are programmed
 exactly the same as local games. Players can begin hosting or join
 another game as a guest using the system pause menu or the game
@@ -5455,7 +5525,7 @@ players. Only one player is supported per computer. Games with
 complicated animated backgrounds and background music are more likely
 to be laggy (pausing the game can reset the lag). As host, you cannot
 currently kick or ban players, or change the order of players. As a
-guest, you cannot currently leave without restarting quadplay._
+guest, you cannot currently leave without restarting <quadplay/>.
 
 
 Raw Device Access
@@ -5974,22 +6044,14 @@ From the [_Three Red Hearts_](https://abstractionmusic.bandcamp.com/album/three-
 ![`quad://sounds/loop-select.sound.json`](../sounds/loop-select.mp3)  ![`quad://sounds/loop-metal.sound.json`](../sounds/loop-metal.mp3)
 ![`quad://sounds/loop-puzzle.sound.json`](../sounds/loop-puzzle.mp3) ![`quad://sounds/loop-triumphant.sound.json`](../sounds/loop-triumphant.mp3)
 ![`quad://sounds/loop-dark-thriller.sound.json`](../sounds/loop-dark-thriller.mp3) ![`quad://sounds/loop-chilltech.sound.json`](../sounds/loop-chilltech.mp3)
-![`quad://sounds/loop-prometheus.sound.json`](../sounds/loop-prometheus.mp3) ![`quad://sounds/loop-forest.sound.json`](../sounds/loop-forest.mp3)
-![`quad://sounds/loop-beat.sound.json`](../sounds/loop-beat.mp3) ![`quad://sounds/loop-departure.sound.json`](../sounds/loop-departure.mp3)
+![`quad://sounds/loop-prometheus.sound.json`](../sounds/loop-prometheus.mp3)  ![`quad://sounds/loop-departure.sound.json`](../sounds/loop-departure.mp3)
+![`quad://sounds/loop-beat.sound.json`](../sounds/loop-beat.mp3) 
 
 From the Quadplay album by Abstraction:
 
 ![`quad://sounds/loop-smooth_drops.sound.json`](../sounds/loop-smooth_drops.mp3) ![`quad://sounds/loop-all_you_can_yeet.sound.json`](../sounds/loop-all_you_can_yeet.mp3)
-![`quad://sounds/loop-get_off_my_planet.sound.json`](../sounds/loop-get_off_my_planet.mp3)
+![`quad://sounds/loop-get_off_my_planet.sound.json`](../sounds/loop-get_off_my_planet.mp3) ![`quad://sounds/loop-someday_gone.json`](../sounds/loop-someday_gone.mp3)
 
-
-### Coin
-
-![`quad://sounds/coin-00.sound.json`](../sounds/coin-00.mp3) ![`quad://sounds/coin-01.sound.json`](../sounds/coin-01.mp3)
-![`quad://sounds/coin-02.sound.json`](../sounds/coin-02.mp3) ![`quad://sounds/coin-03.sound.json`](../sounds/coin-03.mp3)
-![`quad://sounds/coin-04.sound.json`](../sounds/coin-04.mp3) ![`quad://sounds/coin-05.sound.json`](../sounds/coin-05.mp3)
-![`quad://sounds/coin-06.sound.json`](../sounds/coin-06.mp3) ![`quad://sounds/coin-07.sound.json`](../sounds/coin-07.mp3)
-![`quad://sounds/coin-08.sound.json`](../sounds/coin-08.mp3) ![`quad://sounds/coin-09.sound.json`](../sounds/coin-09.mp3)
 
 ### Effect Loops
 
@@ -5999,7 +6061,15 @@ From the Quadplay album by Abstraction:
 ![`quad://sounds/loop-footsteps-indoor.sound.json`](../sounds/loop-footsteps-indoor.mp3) ![`quad://sounds/loop-footsteps-puddle.sound.json`](../sounds/loop-footsteps-puddle.mp3)
 ![`quad://sounds/loop-footsteps-water.sound.json`](../sounds/loop-footsteps-water.mp3) ![`quad://sounds/loop-footsteps-snow.sound.json`](../sounds/loop-footsteps-snow.mp3)
 ![`quad://sounds/loop-spin.sound.json`](../sounds/loop-spin.mp3) ![`quad://sounds/loop-alarm.sound.json`](../sounds/loop-alarm.mp3)
-![`quad://sounds/loop-helicopter.sound.json`](../sounds/loop-helicopter.mp3)
+![`quad://sounds/loop-helicopter.sound.json`](../sounds/loop-helicopter.mp3) ![`quad://sounds/loop-forest.sound.json`](../sounds/loop-forest.mp3)
+
+### Coin
+
+![`quad://sounds/coin-00.sound.json`](../sounds/coin-00.mp3) ![`quad://sounds/coin-01.sound.json`](../sounds/coin-01.mp3)
+![`quad://sounds/coin-02.sound.json`](../sounds/coin-02.mp3) ![`quad://sounds/coin-03.sound.json`](../sounds/coin-03.mp3)
+![`quad://sounds/coin-04.sound.json`](../sounds/coin-04.mp3) ![`quad://sounds/coin-05.sound.json`](../sounds/coin-05.mp3)
+![`quad://sounds/coin-06.sound.json`](../sounds/coin-06.mp3) ![`quad://sounds/coin-07.sound.json`](../sounds/coin-07.mp3)
+![`quad://sounds/coin-08.sound.json`](../sounds/coin-08.mp3) ![`quad://sounds/coin-09.sound.json`](../sounds/coin-09.mp3)
 
 
 ### Shoot

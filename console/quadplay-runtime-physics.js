@@ -1,7 +1,138 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License */
 
 'use strict';
-// Physics functions
+function entity_inertia(entity, mass) {
+    const scaleX = entity.scale ? entity.scale.x : 1;
+    const scaleY = entity.scale ? entity.scale.y : 1;
+    
+    // Inertia tensor about the center (https://en.wikipedia.org/wiki/List_of_moments_of_inertia)
+    // rect: 1/12 * m * (w^2 + h^2)
+    // disk: m * (w/2)^2
+    if (mass === undefined) { mass = entity_mass(entity); }
+
+    if (mass === 0) { $error('entity.mass == 0 while computing moment of inertia'); }
+    if (scaleX === 0) { $error('entity.scale.x == 0 while computing moment of inertia'); }
+    if (is_nan(scaleX)) { $error('NaN entity.scale.x while computing moment of inertia'); }
+    if (entity.size.x === 0) { $error('entity.size.x == 0 while computing moment of inertia'); }
+    if (is_nan(entity.size.x)) { $error('NaN entity.size.x while computing moment of inertia'); }
+    
+    if (entity.shape === 'rect') {
+        return mass * ($square(entity.size.x * scaleX) + $square(entity.size.y * scaleY)) * (1 / 12);
+    } else {
+        return mass * $square(entity.size.x * scaleX * 0.5);
+    }
+}
+
+
+function entity_mass(entity) {
+    return entity_area(entity) * ((entity.density !== undefined) ? entity.density : 1);
+}
+
+
+function entity_simulate(entity, dt, region, border_behavior) {
+    if (is_nan(entity.spin)) { $error('nan entity.spin'); }
+    if (is_nan(entity.torque)) { $error('nan entity.torque'); }
+
+    // Assume this computation takes 0.01 ms. We have no way to time it
+    // properly, but this at least gives some feedback in the profiler
+    // if it is being called continuously.
+    $physicsTimeTotal += 0.01;
+    
+    if (dt === undefined) { dt = 1; }
+    if (entity.density === Infinity) { return; }
+    
+    const mass = entity_mass(entity);
+    if (mass <= 0) { $error('Mass must be positive in entity_simulate()'); }
+    const imass = 1 / mass;
+    const iinertia = 1 / entity_inertia(entity, mass);
+    const vel = entity.vel, pos = entity.pos, force = entity.force;
+
+    // Drag should fall off with the time step to remain constant
+    // as the time step varies (in the absence of acceleration)
+    const k = $Math.pow(1 - entity.drag, dt);
+    
+    // Integrate
+    const accX = force.x * imass;
+    vel.x = vel.x * k + accX * dt;
+    pos.x += vel.x * dt;
+    force.x = 0;
+
+    const accY = force.y * imass;
+    vel.y = vel.y * k + accY * dt;
+    pos.y += vel.y * dt;
+    force.y = 0;
+
+    if (pos.z !== undefined) {
+        const accZ = (force.z || 0) * imass;
+        vel.z = (vel.z || 0) * k + accZ * dt;
+        pos.z += vel.z * dt;
+        force.z = 0;
+    }
+
+    const twist = entity.torque * iinertia;
+
+    // Integrate
+    entity.spin  *= k;
+    entity.spin  += twist * dt;
+    entity.angle += entity.spin * dt
+
+    // Zero for next step
+    entity.torque = 0;
+
+    if (region) {
+        if (region.shape && region.shape !== 'rect') {
+            $error('The region for entity_simulate() must be a "rect"');
+        }
+
+        const func = (border_behavior === 'loop') ? loop : clamp;
+        entity.pos.x = func(entity.pos.x, (region.pos ? region.pos.x : 0) - 0.5 * region.size.x, (region.pos ? region.pos.x : 0) + 0.5 * region.size.x);
+        entity.pos.y = func(entity.pos.y, (region.pos ? region.pos.y : 0) - 0.5 * region.size.y, (region.pos ? region.pos.y : 0) + 0.5 * region.size.y);
+    }
+
+    entity_update_children(entity);
+}
+
+
+function entity_apply_force(entity, worldForce, worldPos) {
+    worldPos = worldPos || entity.pos;
+    entity.force.x += worldForce.x;
+    entity.force.y += worldForce.y;
+    const offsetX = worldPos.x - entity.pos.x;
+    const offsetY = worldPos.y - entity.pos.y;
+    entity.torque += -rotation_sign() * (offsetX * worldForce.y - offsetY * worldForce.x);
+}
+
+
+function entity_apply_impulse(entity, worldImpulse, worldPos) {
+    worldPos = worldPos || entity.pos;
+    const invMass = 1 / entity_mass(entity);
+    entity.vel.x += worldImpulse.x * invMass;
+    entity.vel.y += worldImpulse.y * invMass;
+
+    const inertia = entity_inertia(entity);
+    const offsetX = worldPos.x - entity.pos.x;
+    const offsetY = worldPos.y - entity.pos.y;
+
+    entity.spin += -rotation_sign() * (offsetX * worldImpulse.y - offsetY * worldImpulse.x) / inertia;
+}
+
+
+function entity_move(entity, pos, angle) {
+    if (pos !== undefined) {
+        entity.vel.x = pos.x - entity.pos.x;
+        entity.vel.y = pos.y - entity.pos.y;
+        entity.pos.x = pos.x;
+        entity.pos.y = pos.y;
+    }
+      
+    if (angle !== undefined) {
+        // Rotate the short way
+        entity.spin = loop(angle - entity.angle, -PI, $Math.PI);
+        entity.angle = angle;
+    }
+}
+
+
 
 function make_contact_group() {
     // Matter.js uses negative numbers for non-colliding

@@ -80,6 +80,7 @@ Profiler.prototype.reset = function() {
     this.smoothPhysicsTime.reset();
     this.smoothGraphicsTime.reset();
     this.smoothFrameTime.reset();
+    this.failuresAtMaxRate            = 0;
 };
 
 
@@ -169,15 +170,18 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime, logicToGraphic
             allow_bloom = false;
         }
 
-        // Sometimes the JIT runs or another scheduling event occurs and the actual time
-        // is way out of sync with the expected time. Do not drop the framerate in this case.
+        // Sometimes the JIT runs or another scheduling event occurs
+        // and the actual time is way out of sync with the expected
+        // time. Do not drop the framerate in this case.
         if (
             // Not making frame rate
             (frameTime > 17.5) &&
                 
-            // and our timing estimates seem valid (i.e., the JIT didn't just run or something weird
-            // that might throw off timing)
-            (frameTime < 2 * expectedTimeAtCurrentFramerate)) {
+            // ...and our timing estimates seem valid (i.e., the JIT
+            // didn't just run or something weird that might throw off
+            // timing)
+            (frameTime < 3 * expectedTimeAtCurrentFramerate)
+	) {
             
             if (
                 // The best we can possibly by graphics scaling 
@@ -191,6 +195,10 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime, logicToGraphic
                 // probably steady state.
                 (QRuntime.mode_frames > 60 / G)) {
 
+		if (G === 1) {
+		    ++this.failuresAtMaxRate;
+		}
+		
                 // It is worth lowering the graphics rate, as it
                 // should help us hit frame rate
                 newG = G + 1;
@@ -209,19 +217,24 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime, logicToGraphic
             // Not at the highest graphics frame rate
             (G > 1) &&
 
-            // We're plausibly performing well (being pretty liberal about it due to odd performance
-            // numbers on low end machines when using infrequent timers)
+            // We're plausibly performing well (being pretty liberal
+            // about it due to odd performance numbers on low end
+            // machines when using infrequent timers)
             (frameTime < 30) &&
             
             // Increasing frame rate should still keep us under the limit
-            (expectedTimeAtHigherFramerate < 16.6) &&
-                
+            (expectedTimeAtHigherFramerate < 16.1) &&
+            
             // Even given the error in our current estimates, the new frame rate
             // should still be pretty close to 60 Hz. Sometimes on RPi the actual
             // frame time reports low, and then when we change rate it is able
             // to catch up, so be very liberal here on timing
-            (expectedTimeAtHigherFramerate * Math.min(1.0, frameTime / expectedTimeAtCurrentFramerate) < 25)) {
-                       
+            (expectedTimeAtHigherFramerate * Math.min(1.0, frameTime / expectedTimeAtCurrentFramerate) < 25) &&
+
+	    // Not thrashing between 30 and 60 Hz
+	    !(this.failuresAtMaxRate > 5 && G === 2)
+
+	) {
             // We have headroom and should increase the graphics rate
             // back towards full framerate.
             newG = G - 1;

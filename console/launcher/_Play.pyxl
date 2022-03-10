@@ -207,7 +207,7 @@ const gameArray = [{
 },
 
 {
-   title: "Morgan's Mini Mech",
+   title: "Morgan's Mini Mecha",
    developer: "@CasualEffects",
    url: "quad://games/minimecha",
    version:      1.0,
@@ -221,6 +221,23 @@ const gameArray = [{
    builtin:      true,
    label:        mmlabel[0][0],
    preview:      mmpreview
+},
+
+{
+   title: "Gravity",
+   developer: "@CasualEffects",
+   url: "quad://games/gravity",
+   version:      1.0,
+   description:  "Tactical space battle with orbital mechanics.",
+   min_players:   2,
+   max_players:   4,
+   cooperative:  false,
+   competitive:  true,
+   achievements: false,
+   highscores:   true,
+   builtin:      true,
+   label:        gvlabel[0][0],
+   preview:      gvpreview
 }]
 
 

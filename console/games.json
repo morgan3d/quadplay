@@ -254,6 +254,11 @@
             "description": "Join your friends for a relaxing afternoon of fishing and you just might top the lake records."
         },
         {
+            "url": "quad://games/gravity/",
+            "title": "Gravity",
+            "description": "Tactical space battle with orbital mechanics."
+        },
+        {
             "url": "quad://games/hexflipper/",
             "title": "HexFlipper",
             "description": "A trippy turn-based territory-claiming game for 1-4 players"

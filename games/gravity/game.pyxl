@@ -1,0 +1,238 @@
+// Changes with number of players
+let ARENA_SCALE = 3
+
+const star_array = []
+
+// Ships appear in both the ship_array and the entity_array
+const ship_array = []
+const entity_array = []
+
+const planet = make_entity({
+    size: xy(32, 32),
+    
+    // Which side of the sun is the planet on when it is eliptical?
+    orbit_side: 1,
+    z: 2,
+    density: PLANET_DENSITY,
+    shape: "disk"})
+
+
+// Initialize stars. Some are outside the viewport for 2 player
+for i < 250:
+    push(star_array, {
+        pos: random_within_square() * (175% SCREEN_SIZE + |sun.pos|),
+        color: random(40%, 75%)² * rgb(75%, 100%, 30%)})
+
+
+
+def gravity_force(A, B):
+    const v = B.pos - A.pos
+    const r = ‖v‖
+    
+    if r < ε:
+        return xy(0, 0)
+    else:
+        return direction(v) * (entity_mass(A) * entity_mass(B) * GRAVITY / max(r, 80% B.size.x)²)
+
+
+
+/* Returns iterate.REMOVE. If the entity is a ship, removes from ship_array. 
+   Never removes from entity_array. */
+def explode_entity(entity):
+    // Particles
+    for i < entity_area(entity):
+        spawn_particle(
+            entity.pos + 40% entity.size.x * random_within_circle(),
+            entity.vel + random(1, 3) * random_on_circle(),
+            entity.override_color default #bbb, 
+            0, 
+            random_integer(4, 12)² * (if entity.gamepad then 250% else 100%))
+        
+    if entity.gamepad:
+        // This is a ship. Break up into wreckage
+        for i < 4:
+            const dir = random_on_circle()
+            push(entity_array, make_entity({
+                pos: entity.pos + 12 dir,
+                vel: entity.vel + ξ * dir,
+                drag: 0,
+                angle: 360° ξ,
+                override_color: entity.override_color,
+                density: TORPEDO_DENSITY,
+                sprite: shapes[random_integer(0, 9)][0],
+                explode_sound: torpedo_explode_sound,
+                scale: 40%}))
+                
+        stop_audio(entity.thrust_audio)
+        stop_audio(entity.shield_audio)
+        remove_values(ship_array, entity)
+    
+    if entity.explode_sound:
+        play_sound({sound: entity.explode_sound, pan: entity.pos, volume: 90%})
+    
+    return iterate.REMOVE
+
+
+
+def is_shield_active(ship):
+    return ship.gamepad and get_audio_status(ship.shield_audio).state == "PLAYING"
+    
+
+
+/* Base iterate callback for all entities */
+def update_entity(entity):
+    if entity.gamepad: 
+        update_ship(entity)
+    
+    entity.force += gravity_force(entity, sun) + gravity_force(entity, planet)
+    
+    // Simulate and wrap around the arena
+    entity_simulate(entity, ∅, {size: SCREEN_SIZE * ARENA_SCALE}, "loop")
+    draw_entity(entity)
+
+    // Dots showing enabled features on ships   
+    if entity.thrust_enabled:
+        draw_point(entity.pos + entity.scale.x * 25 angle_to_xy(entity.angle + 180°), entity.override_color)
+    
+    if entity.torpedo_enabled:
+        draw_point(entity.pos + entity.scale.x * 24 angle_to_xy(entity.angle), entity.override_color)
+
+    if entity.shield_enabled:
+        for i < 2:
+            draw_point(entity.pos + entity.scale.x * 28 angle_to_xy(entity.angle + 120° sign(i - ½)), entity.override_color)
+        
+    const hit_planet = overlaps(entity, planet, false)
+    if overlaps(entity, sun, false) or hit_planet:
+        if is_shield_active(entity):
+            if hit_planet:
+                const U = direction(planet.pos - entity.pos)
+                const V = perp(U)
+                // Bounce off
+                entity.vel = dot(entity.vel, V) * V - max(2, |dot(entity.vel, U)|) * U
+        else:
+            // Destroy on collision with sun or planet
+            return explode_entity(entity)
+
+
+
+
+/* Helper callback for ships */
+def update_ship(ship)
+& with energy, thrust_audio, shield_audio, gamepad, angle, pos, spin, torque, force in ship:
+    const dir = angle_to_xy(angle)
+
+    energy = min(energy + ENERGY_RECHARGE, ENERGY_MAX)
+    
+    // Turn
+    spin *= 100% - ANGULAR_DRAG
+    torque = -SHIP_TURN * gamepad.x
+
+    if get_audio_status(ship.thrust_audio).state == "PLAYING":
+        // Thrusters already on
+        force += SHIP_THRUST * dir
+        energy -= ENERGY_THRUST
+        set_pan(thrust_audio, pos)
+        
+        // Visible jet flame
+        ship.exhaust.opacity = oscillate(⅓ mode_frames)
+        
+        if get_audio_status(thrust_audio).now ≥ THRUST_SECONDS:
+            stop_audio(thrust_audio)
+        
+    else if gamepad.pressed_b:
+        if energy ≥ (ENERGY_THRUST - ENERGY_RECHARGE) * THRUST_SECONDS * 60:
+            // Enable thrusters. Use the sound's built in timer to track how
+            // long the thruster has been on
+            thrust_audio = play_sound({sound: thrust_sound, volume: 200%, pan: pos})
+        else:
+            play_sound({sound: no_energy_sound, volume: 400%, pan: pos})
+            
+    else:
+        // Thruster still off
+        ship.exhaust.opacity = 0    
+    
+    
+    // Fire torpedo
+    if gamepad.pressed_a:
+        if energy ≥ ENERGY_TORPEDO:
+            energy -= ENERGY_TORPEDO
+            
+            play_sound({sound: torpedo_sound, pan: pos})
+            
+            push(entity_array, make_entity({
+                pos: pos + (½ ship.size.x + 10) * dir,
+                vel:
+                    // Launch velocity
+                    TORPEDO_SPEED * dir + 
+                    
+                    // Relative to ship
+                    ship.vel +
+                    
+                    // Relative to ship front spin (barely noticable)
+                    (½ ship.size.x + 10) * spin * angle_to_xy(90° + angle),
+                drag: TORPEDO_DRAG,
+                density: TORPEDO_DENSITY,
+                sprite: shapes.disk,
+                explode_sound: torpedo_explode_sound,
+                scale: 30%}))
+            
+            // Apply momentum transfer from ship
+            ship.vel -= TORPEDO_MOMENTUM_TRANSFER * (TORPEDO_SPEED * dir) * entity_mass(last_value(entity_array)) / entity_mass(ship)
+        else:
+            play_sound({sound: no_energy_sound, volume: 400%, pan: pos})
+        
+        
+    // Shields
+    if is_shield_active(ship):
+        // Shields already on
+        set_pan(shield_audio, pos)
+        energy -= ENERGY_SHIELD
+        ship.shield.override_color = lerp(gamepad.player_color, #FFF, oscillate(0.1 mode_frames))
+        
+        if get_audio_status(shield_audio).now ≥ SHIELD_SECONDS:
+            stop_audio(shield_audio)
+        
+    else if gamepad.pressed_c or gamepad.pressed_d or gamepad.pressed_e or gamepad.pressed_f:
+        // Enable shield. Use the shield's built in timer to track
+        // how long it has been on
+        if energy ≥ (ENERGY_SHIELD - ENERGY_RECHARGE) * SHIELD_SECONDS * 60:
+            shield_audio = play_sound({
+                    sound: shield_sound, 
+                    volume: 500%,
+                    playback_rate: 50%,
+                    loop: true,
+                    pan: pos})
+            ship.shield.opacity = SHIELD_OPACITY
+        else:
+            play_sound({sound: no_energy_sound, volume: 400%, pan: pos})
+    else:
+        // Shield still off
+        ship.shield.opacity = 0
+     
+     
+     
+def collision_callback(A, B):
+    if overlaps(A, B, false):
+        return [
+            if not is_shield_active(A) then explode_entity(A) else iterate.CONTINUE, 
+            if not is_shield_active(B) then explode_entity(B) else iterate.CONTINUE]        
+
+
+
+def update_and_draw_sun(sun):       
+    draw_sprite({pos: sun.pos, angle: 0.01 mode_frames, z: 10, sprite: shapes.star8, scale: 225%, override_color: #FA3})
+    draw_sprite({pos: sun.pos, angle: -0.007 mode_frames, z: 10, sprite: shapes.star8, scale: 200%, override_color: #FDA})
+    draw_disk(sun.pos, ½ sun.size.x + 5 ξ, #FFF, #DC3, 10)
+
+
+
+def update_and_draw_planet(planet):
+    // Instead of Kepler's equations, we just assume constant angular change around an ellipse
+    planet.pos = sun.pos + xy(PLANET_ECCENTRICITY * PLANET_ORBIT * planet.orbit_side, 0) + angle_to_xy(PLANET_SPEED * mode_frames + planet.phase) * PLANET_ORBIT * xy(100%, 100% - PLANET_ECCENTRICITY)
+    draw_disk(planet.pos, 48% planet.size.x, PLANET_COLOR, ∅, 2)
+    draw_sprite({
+        pos: planet.pos,
+        sprite: shapes.crescent,
+        scale: 110%,
+        angle: xy_to_angle(sun.pos - planet.pos),
+        override_color: 50% PLANET_COLOR, z: 2})

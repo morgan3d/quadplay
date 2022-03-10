@@ -1,0 +1,107 @@
+Title
+════════════════════════════════════════════════════════════════════════
+
+// Center the title
+const offset = ½ xy(size(TITLE[0]), -size(TITLE) - 1)
+
+// Array of current high scores
+let score
+
+// Counter for holding down to reset scores
+let reset_count = 0
+
+// Between 2 and 4
+let num_players = load_local("num_players") default 2
+
+
+// Start music on the first frame
+play_sound({sound: background_music, loop: true, playback_rate: 50%})
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+set_transform(½ SCREEN_SIZE)
+score = load_local("score") default [0, 0, 0, 0]
+ARENA_SCALE = 1.5
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_post_effects({bloom: 100%, afterglow: 2 AFTERGLOW})
+
+const show_scores = max(…score) > 0
+
+preserving_transform:
+    draw_text({font: font, text: "A QUADPLAY✜ GAME BY CASUAL EFFECTS", pos: xy(0, 100), color: #392, outline: #030, x_align: "center"})
+    
+    let reset_text = ""
+    if show_scores:
+        for p < num_players:
+            draw_text({
+                font: medium_font,
+                text: score[p],
+                color: 90% gamepad_array[p].player_color,
+                outline: 20% gamepad_array[p].player_color,
+                x_align: "center",
+                pos: xy(22 PLAYER_SCORE_POSITION[p], 81),
+                z: 2})
+        reset_text = "{color:#9 (e)} RESET SCORES      "
+
+    
+    draw_text({font: font, z: 2, text: replace("{color:#9 [<]} " + num_players + " PLAYERS {color:#9 [>]}\n\n" + reset_text + "{color:#9 (a)} LAUNCH", gamepad_array[0].prompt), pos: xy(0, -90), color: #392, outline: #030, x_align: "center", markup: true})
+    num_players = clamp(num_players + gamepad_array[0].xx + gamepad_array[0].yy, 2, 4)
+    
+    set_camera({zoom: 50% / ARENA_SCALE, pos: sun.pos})
+
+    iterate(star_array, draw_point)
+    update_and_draw_sun(sun)
+
+    ///////////////////////////////////////////////
+    // Title letters
+    const β = ½ sin(0.004 mode_frames) + ½
+    
+    set_camera({zoom: lerp(30, 9, β), z: -10, angle: 15° sin(0.005 mode_frames)})
+            
+    def distort(x, y):
+        const pos = xy(x, -y) - offset
+        return direction(pos) * pow(‖pos‖, lerp(0.6, 1.25, β))
+    
+    def line(x,y, array):
+        for i < 3:
+            draw_line(
+                distort(x + lerp(array[0], array[2], ⅓ i), y + lerp(array[1], array[3], ⅓ i)), 
+                distort(x + lerp(array[0], array[2], ⅓ (i + 1)), y + lerp(array[1], array[3], ⅓ (i + 1))), TITLE_COLOR, ∅, 0)
+    
+    // Decode the title, which is in a constant string
+    for row at y in TITLE:
+        for pattern at x in row:
+            if pattern ≠ " ":  line(x, y, LINE_TABLE[pattern])
+            
+            // L pattern has a second part
+            if pattern == "L": line(x,y,  LINE_TABLE["|"])
+
+
+if mode_frames > 30:
+    let any_reset = false
+    for gamepad in gamepad_array:
+        any_reset = any_reset or gamepad.e or gamepad.f
+            
+        if gamepad.aa or gamepad.bb:
+            save_local("num_players", num_players)
+            set_mode(Play, num_players) because "Press (a)"
+    
+    if any_reset and show_scores:
+        ++reset_count
+        draw_corner_rect(xy(-51, 76), xy(102, 11), ∅, #392, 3)
+        draw_corner_rect(xy(-50, 77), xy(100 reset_count / RESET_FRAMES, 9), #392, ∅, 3)
+
+        if reset_count == RESET_FRAMES:
+            // Hit the threshold, do the actual reset now
+            score = [0, 0, 0, 0]
+            save_local("score", score)
+    else:
+        reset_count = 0
+        
+
+

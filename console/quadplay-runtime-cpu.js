@@ -85,12 +85,13 @@ function reset_post_effects() {
     $postFX = {
         background: {r:0, g:0, b:0, a:0},
         color: {r:0, g:0, b:0, a:0},
-        blend_mode: "source-over",
+        color_blend: "source-over",
         bloom: 0,
         scale: {x: 1, y: 1},
         angle: 0,
         pos: {x:0, y:0},
-        opacity: 1
+        motion_blur: 0,
+        afterglow: {r: 0, g: 0, b: 0}
     };
 
     // Not bound during the initial load because it is called
@@ -107,13 +108,6 @@ function get_post_effects() {
 }
 
 function set_post_effects(args) {
-    if (args.background !== undefined) {
-        $postFX.background.r = (args.background.r !== undefined) ? args.background.r : 0;
-        $postFX.background.g = (args.background.g !== undefined) ? args.background.g : 0;
-        $postFX.background.b = (args.background.b !== undefined) ? args.background.b : 0;
-        $postFX.background.a = (args.background.a !== undefined) ? args.background.a : 1;
-    }
-
     if (args.color !== undefined) {
         $postFX.color.r = (args.color.r !== undefined) ? args.color.r : 0;
         $postFX.color.g = (args.color.g !== undefined) ? args.color.g : 0;
@@ -121,15 +115,15 @@ function set_post_effects(args) {
         $postFX.color.a = (args.color.a !== undefined) ? args.color.a : 1;
     }
 
-    switch (args.blend_mode) {
+    switch (args.color_blend) {
     case undefined: break;
     case 'source-over':
     case 'hue':
     case 'multiply':
     case 'difference':
-        $postFX.blend_mode = args.blend_mode;
+        $postFX.color_blend = args.color_blend;
         break;
-    default: $error('Illegal blend_mode for post effects: "' + args.blend_mode + '"');
+    default: $error('Illegal color_blend for post effects: "' + args.color_blend + '"');
     }
 
     if (args.scale !== undefined) {
@@ -150,8 +144,14 @@ function set_post_effects(args) {
         $postFX.pos.y = (args.pos.y !== undefined) ? args.pos.y : SCREEN_HEIGHT / 2;
     }
     
-    if (args.opacity !== undefined) {
-        $postFX.opacity = args.opacity;
+    if (args.motion_blur !== undefined) {
+        $postFX.motion_blur = clamp(args.motion_blur, 0, 1);
+    }
+
+    if (args.afterglow !== undefined) {
+        $postFX.afterglow.r = (args.afterglow.r !== undefined) ? args.afterglow.r : 0;
+        $postFX.afterglow.g = (args.afterglow.g !== undefined) ? args.afterglow.g : 0;
+        $postFX.afterglow.b = (args.afterglow.b !== undefined) ? args.afterglow.b : 0;
     }
 
     if (args.bloom !== undefined) {
@@ -422,15 +422,11 @@ function insert(array, i, ...args) {
 
 function push(array, ...args) {
     if (! Array.isArray(array)) { $error('push() requires an array argument'); }
-    /*
-      // Push is safe because it only adds to the end of the array and both
-      // the FOR loop and iterate() check the length of the array every 
-      // iteration and work forwards
 
-    if ($iteratorCount.get(array)) {
-        $error('Cannot push() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
-    }
-    */
+    // Push is safe during iteration because it only adds to the end
+    // of the array and both the FOR loop and iterate() check the
+    // length of the array every iteration and work forwards.
+    
     array.push(...args);
     return array[array.length - 1];
 }
@@ -679,24 +675,23 @@ function iterate(array, callback, ...args) {
                 if (r === iterate.REMOVE_AND_BREAK) {
                     removedAny = true;
                     done = true;
-                } else {
-                    if (r === iterate.BREAK) {
-                        if (src === dst) {
-                            // Can stop immediately
-                            return
-                        } else {
-                            // Have to continue iteration for removal copies
-                            done = true;
-                        }
-                    }
-                    
-                    if (r !== iterate.REMOVE) {
+                } else if (r === iterate.BREAK) {
+                    if (removedAny) {
+                        // Have to continue iteration for removal copies
+                        done = true;
                         ++dst;
-                        removedAny = true;
+                    } else {
+                        // Can stop immediately
+                        return false;
                     }
+                } else if (r === iterate.REMOVE) {
+                    removedAny = true;
+                } else {
+                    // Move on to the next element
+                    ++dst;
                 }
-            }
-        }
+            } // if not done
+        } // for src
     } finally {
         $iteratorCount.set(array, $iteratorCount.get(array) - 1);
     }
@@ -706,12 +701,77 @@ function iterate(array, callback, ...args) {
     return removedAny;
 }
 
-// Unique objects for ==
-iterate.REMOVE = ["REMOVE"]
-iterate.BREAK  = ["BREAK"]
-iterate.REMOVE_AND_BREAK = ["REMOVE_AND_BREAK"]
-iterate.CONTINUE = ["CONTINUE"]
+
+iterate.REMOVE = "REMOVE";
+iterate.BREAK  = "BREAK";
+iterate.REMOVE_AND_BREAK = "REMOVE_AND_BREAK";
+iterate.CONTINUE = "CONTINUE";
 Object.freeze(iterate);
+
+
+function iterate_pairs(array, callback, ...args) {
+    let any_remove = false;
+    for (let a = 0; a < array.length; ++a) {
+        for (let b = a + 1; b < array.length; ++b) {
+            let result = callback(array[a], array[b], ...args);
+
+            if (result && result !== iterate.CONTINUE &&
+                !(Array.isArray(result) &&
+                  result[0] === iterate.CONTINUE &&
+                  result[1] === iterate.CONTINUE)) {
+                    
+                // Expand single cases
+                if (! Array.isArray(result)) { result = [result, result]; }
+
+                // Process:
+                switch (result[1]) {
+                case iterate.REMOVE:
+                    remove_key(array, b);
+                    any_remove = true;
+                    --b;
+                    break;
+                    
+                case iterate.REMOVE_AND_BREAK:
+                    remove_key(array, b);
+                    any_remove = true;
+                    // Fall through
+                    
+                case iterate.BREAK:
+                    b = array.length;
+                    break;
+                } // switch result_b
+
+                
+                switch (result[0]) {
+                case iterate.REMOVE:
+                    any_remove = true;
+                    remove_key(array, a);
+                    --a;
+
+                    // Stop the inner loop because A is gone, but continue
+                    // iteration.
+                    b = array.length;
+                    break;
+                    
+                case iterate.REMOVE_AND_BREAK:
+                    remove_key(array, a);
+                    any_remove = true;
+
+                    // Indices don't matter because we're breaking out of iteration
+                    
+                    // Fall through
+                    
+                case iterate.BREAK:
+                    // Stop all iteration
+                    return any_remove;
+                } // switch result_a
+            }
+        } // b
+    } // a
+
+    return any_remove;
+}
+
 
 
 function reverse(array) {
@@ -724,11 +784,18 @@ function remove_key(t, i) {
     if ($iteratorCount.get(t)) {
         $error('Cannot remove_key() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
     }
+
+    if (arguments.length !== 2) {
+        $error('remove_key() requires exactly two arguments');
+    }
+    
     if (Array.isArray(t)) {
         if (typeof i !== 'number') { throw 'remove_key(array, i) called with a key (' + i + ') that is not a number'; }
         t.splice(i, 1);
     } else if (typeof t === 'object') {
         delete t[i];
+    } else {
+        $error('remove_key() requires a container as the first argument');
     }
 }
 
@@ -2582,101 +2649,6 @@ function entity_update_children(parent) {
         }
       
         entity_update_children(child);
-    }
-}
-
-
-function entity_simulate(entity, dt) {
-    if (is_nan(entity.spin)) { $error('nan entity.spin'); }
-    if (is_nan(entity.torque)) { $error('nan entity.torque'); }
-
-    // Assume this computation takes 0.01 ms. We have no way to time it
-    // properly, but this at least gives some feedback in the profiler
-    // if it is being called continuously.
-    $physicsTimeTotal += 0.01;
-    
-    if (dt === undefined) { dt = 1; }
-    if (entity.density === Infinity) { return; }
-    
-    const mass = entity_mass(entity);
-    if (mass <= 0) { $error('Mass must be positive in entity_simulate()'); }
-    const imass = 1 / mass;
-    const iinertia = 1 / entity_inertia(entity, mass);
-    const vel = entity.vel, pos = entity.pos, force = entity.force;
-
-    // Drag should fall off with the time step to remain constant
-    // as the time step varies (in the absence of acceleration)
-    const k = $Math.pow(1 - entity.drag, dt);
-    
-    // Integrate
-    const accX = force.x * imass;
-    vel.x = vel.x * k + accX * dt;
-    pos.x += vel.x * dt;
-    force.x = 0;
-
-    const accY = force.y * imass;
-    vel.y = vel.y * k + accY * dt;
-    pos.y += vel.y * dt;
-    force.y = 0;
-
-    if (pos.z !== undefined) {
-        const accZ = (force.z || 0) * imass;
-        vel.z = (vel.z || 0) * k + accZ * dt;
-        pos.z += vel.z * dt;
-        force.z = 0;
-    }
-
-    const twist = entity.torque * iinertia;
-
-    // Integrate
-    entity.spin  *= k;
-    entity.spin  += twist * dt;
-    entity.angle += entity.spin * dt
-
-    // Zero for next step
-    entity.torque = 0;
-
-    entity_update_children(entity);
-}
-
-
-function entity_apply_force(entity, worldForce, worldPos) {
-    worldPos = worldPos || entity.pos;
-    entity.force.x += worldForce.x;
-    entity.force.y += worldForce.y;
-    const offsetX = worldPos.x - entity.pos.x;
-    const offsetY = worldPos.y - entity.pos.y;
-    entity.torque += -rotation_sign() * (offsetX * worldForce.y - offsetY * worldForce.x);
-}
-
-
-function entity_apply_impulse(entity, worldImpulse, worldPos) {
-    worldPos = worldPos || entity.pos;
-    const invMass = 1 / entity_mass(entity);
-    entity.vel.x += worldImpulse.x * invMass;
-    entity.vel.y += worldImpulse.y * invMass;
-
-    const inertia = entity_inertia(entity);
-    const offsetX = worldPos.x - entity.pos.x;
-    const offsetY = worldPos.y - entity.pos.y;
-
-    entity.spin += -rotation_sign() * (offsetX * worldImpulse.y - offsetY * worldImpulse.x) / inertia;
-}
-
-
-         
-function entity_move(entity, pos, angle) {
-    if (pos !== undefined) {
-        entity.vel.x = pos.x - entity.pos.x;
-        entity.vel.y = pos.y - entity.pos.y;
-        entity.pos.x = pos.x;
-        entity.pos.y = pos.y;
-    }
-      
-    if (angle !== undefined) {
-        // Rotate the short way
-        entity.spin = loop(angle - entity.angle, -PI, $Math.PI);
-        entity.angle = angle;
     }
 }
 
@@ -6142,35 +6114,7 @@ function ray_intersect(ray, obj) {
     return hitObj;
 }
 
-
-function entity_inertia(entity, mass) {
-    const scaleX = entity.scale ? entity.scale.x : 1;
-    const scaleY = entity.scale ? entity.scale.y : 1;
-    
-    // Inertia tensor about the center (https://en.wikipedia.org/wiki/List_of_moments_of_inertia)
-    // rect: 1/12 * m * (w^2 + h^2)
-    // disk: m * (w/2)^2
-    if (mass === undefined) { mass = entity_mass(entity); }
-
-    if (mass === 0) { $error('entity.mass == 0 while computing moment of inertia'); }
-    if (scaleX === 0) { $error('entity.scale.x == 0 while computing moment of inertia'); }
-    if (is_nan(scaleX)) { $error('NaN entity.scale.x while computing moment of inertia'); }
-    if (entity.size.x === 0) { $error('entity.size.x == 0 while computing moment of inertia'); }
-    if (is_nan(entity.size.x)) { $error('NaN entity.size.x while computing moment of inertia'); }
-    
-    if (entity.shape === 'rect') {
-        return mass * ($square(entity.size.x * scaleX) + $square(entity.size.y * scaleY)) * (1 / 12);
-    } else {
-        return mass * $square(entity.scale.x * scaleX * 0.5);
-    }
-}
-
-
-function entity_mass(entity) {
-    return entity_area(entity) * ((entity.density !== undefined) ? entity.density : 1);
-}
-
-
+ 
 function entity_area(entity) {
     const scaleX = entity.scale !== undefined ? entity.scale.x : 1;
     const scaleY = entity.scale !== undefined ? entity.scale.y : 1;
@@ -7344,7 +7288,6 @@ function $padZero(n) {
     if (n < 10) return '0' + n;
     else        return '' + n;
 }
-
 
 
 var $ordinal = $Object.freeze(['zeroth', 'first', 'second', 'third', 'fourth', 'fifth',

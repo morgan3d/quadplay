@@ -7,19 +7,39 @@ Changes for both the specification and implementation in each release
 of [<quadplay/>](manual.md.html).
 
 
-2022 February TBD: Update 82
+2022 March TBD: Update 82
 ===================================
 
 - quantize tool now offers 1-bit and 4-bit alpha, and separate
   control over RGB and alpha dithering
+- New music loop by Abstraction: `loop-someday_gone.sound.json`
 - Added `scripts/3D.pyxl` generic 3D transform scripts
-- Fixed Debug Override checkbox placement for string constants
-  in IDE
 - `draw_poly()` now performs 3D projection properly when used with
   a camera perspective zoom function
 - Changed internal browser session root data path from `~/my_quadplay`
   to `~/quadplay_session` when running as a native app to prevent spew
 - Aligned `roman-8` font button prompts vertically
+- *Incompatible changes* to `set_post_effects()` arguments:
+  - Renamed `blend_mode` ==> `color_blend`
+  - Renamed `opacity` ==> `1 - motion_blur`
+  - Replaced `background` with a combination of `burn_in` for phosphor glow
+    and border clamping of the frame for filling exposed background
+    regions
+- Improved error checking for `remove_key()`
+- `entity_simulate()` now supports wrapping and clamping finite
+  rectangular universes
+- `iterate_pairs()` for easy combinatorial iteration with proper
+  handling of element removal
+- Made frame rate scaler more aggressive when just missing 60 Hz and added
+  a limit to stop thrashing per session between 60 Hz and 30 Hz. This helps
+  with game feel on Raspberry Pi
+- Fixed `NaN` moment of inertia for disks
+- Fixed `iterate()` returning `true` when no items were removed
+- Fixed Debug Override checkbox placement for string constants
+  in IDE
+- Fixed parsing of CSV files with strings that begin with digits
+- Fixed CSV files generating an empty final table row
+  
 
 
 2022 February 13: Update 81

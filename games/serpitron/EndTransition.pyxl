@@ -12,6 +12,6 @@ const t = max(mode_frames - delay, 0)
 
 // Spin *in* and fade
 const k = t² / 200
-set_post_effects({scale: 1 / (1 + max(0, k - 2)), angle: -k, background: #a, opacity: 1 - mode_frames / 80})
+set_post_effects({scale: 1 / (1 + max(0, k - 2)), angle: -k, motion_blur: mode_frames / 80})
 
 if mode_frames > 80: set_mode(SingleGameOver) because "Animation end"

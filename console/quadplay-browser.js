@@ -1068,10 +1068,15 @@ function submitFrame() {
     
     // Update the image
     const $postFX = QRuntime.$postFX;
-    const hasPostFX = ($postFX.opacity < 1) || ($postFX.color.a > 0) || ($postFX.angle !== 0) ||
+
+    // Ignore bloom and burn_in, which are handled with overlays
+    const hasPostFX =
+          ($postFX.motion_blur > 0) ||
+          ($postFX.color.a > 0) ||
+          ($postFX.angle !== 0) ||
           ($postFX.pos.x !== 0) || ($postFX.pos.y !== 0) ||
           ($postFX.scale.x !== 1) || ($postFX.scale.y !== 1) ||
-          ($postFX.blend_mode !== 'source-over');
+          ($postFX.color_blend !== 'source-over');
 
     {
         // Convert 16-bit to 32-bit
@@ -1105,37 +1110,48 @@ function submitFrame() {
         // hosting.
         ctx.putImageData(updateImageData, 0, 0);
     } else {
-        // Put on an intermediate image and then stretch. This path is for postFX and supporting Safari
-        // and other platforms where context graphics can perform nearest-neighbor interpolation but CSS scaling cannot.
+        // Put on an intermediate image and then stretch. This path is
+        // for postFX and supporting Safari and other platforms where
+        // context graphics can perform nearest-neighbor interpolation
+        // but CSS scaling cannot.
         const updateCTX = updateImage.getContext('2d', {alpha: false});
         updateCTX.putImageData(updateImageData, 0, 0);
+        
         if ($postFX.color.a > 0) {
             updateCTX.fillStyle = rgbaToCSSFillStyle($postFX.color);
-            updateCTX.globalCompositeOperation = $postFX.blend_mode;
+            updateCTX.globalCompositeOperation = $postFX.color_blend;
             updateCTX.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
         }
 
         ctx.save();
+        /*
+        // TODO: Replace with border
         if ($postFX.background.a > 0) {
-            if (($postFX.background.r === 0) && ($postFX.background.g === 0) && ($postFX.background.b === 0) && ($postFX.background.a === 0)) {
+            if (($postFX.background.r === 0) && ($postFX.background.g === 0) && ($postFX.background.b === 0) && ($postFX.background.a === 1)) {
                 ctx.clearRect(0, 0, emulatorScreen.width, emulatorScreen.height);
             } else {
                 ctx.fillStyle = rgbaToCSSFillStyle($postFX.background);
                 ctx.fillRect(0, 0, emulatorScreen.width, emulatorScreen.height);
             }
         }
-        ctx.globalAlpha = $postFX.opacity;
+        */
+
+        if ($postFX.motion_blur > 0) {
+            ctx.globalAlpha = 1 - $postFX.motion_blur;
+        }
+        
         ctx.translate(($postFX.pos.x / SCREEN_WIDTH + 0.5) * emulatorScreen.width,
                       ($postFX.pos.y / SCREEN_HEIGHT + 0.5) * emulatorScreen.height); 
         ctx.rotate(-$postFX.angle);
         ctx.scale($postFX.scale.x, $postFX.scale.y);
-        ctx.translate(-emulatorScreen.width / 2, -emulatorScreen.height / 2); 
+        ctx.translate(-emulatorScreen.width / 2, -emulatorScreen.height / 2);
         ctx.drawImage(updateImage,
                       0, 0, SCREEN_WIDTH, SCREEN_HEIGHT,
                       0, 0, emulatorScreen.width, emulatorScreen.height);
         ctx.restore();
     }
 
+    applyAfterglow($postFX.afterglow);
     maybeApplyBloom($postFX.bloom, allow_bloom);
 
     /*
@@ -1181,6 +1197,41 @@ function submitFrame() {
 
     refreshPending = true;
 }
+
+/* Used by guesting as well as local rendering */
+function applyAfterglow(burn) {
+    const intensity = Math.max(burn.r, burn.g, burn.b);
+    if (intensity > 0) {
+        afterglowScreen.style.visibility = 'visible';
+        afterglowScreen.style.opacity = '' + (Math.pow(intensity, 0.8) * 0.7);
+        
+        // Falloff
+        afterglowCTX.globalAlpha = 1;
+        afterglowCTX.globalCompositeOperation = 'multiply';
+        const scale = 250 / Math.pow(intensity, 0.99);
+        afterglowCTX.fillStyle = `rgb(${burn.r * scale}, ${burn.g * scale}, ${burn.b * scale})`;
+        afterglowCTX.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+        // Additive blend
+        afterglowCTX.globalCompositeOperation = 'lighten';
+        afterglowCTX.globalAlpha = 1;
+        afterglowCTX.drawImage(emulatorScreen, 0, 0);
+
+        afterglowCTX.globalCompositeOperation = 'source-over';
+        afterglowCTX.fillStyle = '#000';
+    } else {
+        if (applyAfterglow.prev > 0) {
+            // When burn is first turned off, wipe the context so that it
+            // does not remain present when turned on again
+            afterglowCTX.clearRect(0, 0, emulatorScreen.width, emulatorScreen.height);
+        }
+        afterglowScreen.style.visibility = 'hidden';
+    }
+    applyAfterglow.prev = intensity;
+}
+
+// Static local variable
+applyAfterglow.prev = 0;
 
 
 /* Used by guesting as well as local rendering */

@@ -426,12 +426,12 @@ if mode_frames mod growPeriod == 0:
             
 if mode_frames < fadeInFrames:
    // Fade in
-   set_post_effects({opacity: mode_frames / fadeInFrames})
+   set_post_effects({motion_blur: 100% - mode_frames / fadeInFrames})
 else if mode_frames == fadeInFrames:
    reset_post_effects()
 else if weatherType == "Blizzard":
    const a = clamp(noise(0, mode_frames / 60) * 20% + 35%, 20%, 55%)
-   set_post_effects({background: #f, opacity: lerp(1, a, min(1, (mode_frames - fadeInFrames) / fadeInFrames))})
+   set_post_effects({color: rgba(1, 1, 1, lerp(a, 1, min(1, (mode_frames - fadeInFrames) / fadeInFrames)))})
    
 
 singlePlayerTimeLeft -= 1 / 60

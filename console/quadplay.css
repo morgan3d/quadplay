@@ -1310,7 +1310,7 @@ body.EmulatorUI .virtualController {
     background: #000;
 }
 
-canvas#screen, canvas#screenOverlay {
+canvas#screen, canvas#screenOverlay, canvas#afterglowScreen {
     background: #000;
     z-index: 30;
     cursor: crosshair;
@@ -1320,17 +1320,31 @@ canvas#screen, canvas#screenOverlay {
     transform: translate3d(0,0,0);*/
 }
 
-canvas#screenOverlay {
+canvas#screenOverlay, canvas#afterglowScreen {
     position: absolute;
     top: 0px;
     left:0px;
     visibility: hidden;
+    background: transparent;
+}
 
+/* Phosphor burn effect */
+canvas#afterglowScreen {
+    /* MDN CSS docs describe this mode as 'lighter' = additive,
+       but it is actually 'lighten' = additive, as the name implies */
+    mix-blend-mode: lighten;
+
+    /* Slightly blow out so that 1/255 maps to zero, otherwise the repeated
+       blending can never hit black. */
+    filter: brightness(95%) contrast(120%);
+    z-index: 31;
+}
+
+canvas#screenOverlay {
     /* Bloom effect */
     mix-blend-mode: screen;
     filter: brightness(63%) contrast(6) blur(2px);
-    background: transparent;
-    z-index: 31;
+    z-index: 32;
 }
 
 #logo {

@@ -148,7 +148,7 @@
             document.write('<div class="noIDE"><a href="../doc/manual.md.html" title="Use quadplay✜ to make your own games like this">Create Games</a></div>');
         }
       </script>
-      <div><a href="http://quadplay.freeforums.net/" target="_blank" title="The online quadplay✜ community">Forums</a></div>
+      <!-- <div><a href="http://quadplay.freeforums.net/" target="_blank" title="The online quadplay✜ community">Forums</a></div>-->
       <div><a href="https://casual-effects.com" target="_blank" title="Website for the quadplay✜ creator">CasualEffects</a></div>
 
       <script>if (! useIDE) { writeCloseOption(); }</script>
@@ -157,7 +157,6 @@
 
     <div id="toolsMenu" class="unselectable dropdown IDEOnly">
       <div><a onclick="showOpenGameDialog()">Open Game…</a></div>
-      <hr>
       <div><a onclick="onNewGameClick()">New Game…</a></div>
       <hr>
       <!-- <div><a onclick="onExportClick()">Export</a></div>
@@ -175,6 +174,11 @@
       <div><a href="../tools/fontgen.html" target="_blank">fontgen✜</a></div>
       <div><a href="../tools/fontpack.html" target="_blank">fontpack✜</a></div>
       <div><a href="../tools/scalepix.html" target="_blank">scalepix✜</a></div>
+      <script>
+        if (getQueryString('update') === 'dev') {
+           document.write('<hr><div><a onclick="doUpdate()">git pull quadplay-dev</a></div>');
+        }
+      </script>
       <script>writeCloseOption();</script>
       </div>
 
@@ -470,7 +474,8 @@
       <center><input type="button" id="emulatorKeyboardInput" style="z-index:-10;position:fixed;width:10px;margin:auto;top:-30px"></center>
       <div id="screenBorder" class="screenBorder">
         <canvas id="screen" width="384" height="224" class="pixelate" crossOrigin="anonymous"></canvas>
-        <canvas id="screenOverlay" width="384" height="224" class="pixelate" crossOrigin="anonymous"></canvas>
+        <canvas id="afterglowScreen" width="384" height="224" crossOrigin="anonymous"></canvas>
+        <canvas id="screenOverlay" width="384" height="224" crossOrigin="anonymous"></canvas>
         <!-- Shows file loading progress during boot -->
         <div id="bootScreen" class="pixelate"></div>
         
@@ -928,6 +933,7 @@
    // regardless of script load order
    const bootScreen = document.getElementById('bootScreen');
    const emulatorScreen = document.getElementById('screen');
+   const afterglowScreen = document.getElementById('afterglowScreen');
    const overlayScreen = document.getElementById('screenOverlay');
   </script>
   

@@ -31,7 +31,7 @@ const B = rgb(val(4), val(5), val(6))
 const hA = hsv(A)
 const hB = hsv(B)
 
-set_post_effects({background:#0000, opacity: 10%})
+set_post_effects({motion_blur: 90%})
 
 const N = ⌊192 / 3⌋
 const extent = xy((SCREEN_SIZE.x - 20) / N, ⅓ SCREEN_SIZE.y)

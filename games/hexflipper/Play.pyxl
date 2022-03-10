@@ -372,18 +372,16 @@ reset_post_effects()
 if bgm_loop_measure == 0 or bgm_loop_measure == 8 or bgm_loop_measure == 24 or bgm_loop_measure == 32 or bgm_loop_measure == 48:
     const bloom_amount = -((bgm_measure_t-1)^3)
     if bloom_amount > 0.05:
-        let postfx = get_post_effects()
-        postfx.bloom = bloom_amount
-        set_post_effects(postfx)
+        set_post_effects({bloom:  bloom_amount})
 if bgm_loop_measure ≥ 24 and bgm_loop_measure < 32:
-    let postfx = get_post_effects()
     let t = bgm_measure + bgm_measure_t
-    let u = (t-24) / 8
-    postfx.background = #0000
-    postfx.opacity = 25%
-    postfx.angle = 0.05*sin(π/2 * t)
+    let u = (t - 24) / 8
+
+    const postfx = get_post_effects()
+    postfx.motion_blur = 75%
+    postfx.angle = 0.05 sin(π/2 * t)
     if bgm_loop_measure == 31:
-        postfx.scale = 1 + 0.1*bgm_measure_t^5
+        postfx.scale = 1 + 0.1 bgm_measure_t^5
     set_post_effects(postfx)
 
 // Check for victory conditions

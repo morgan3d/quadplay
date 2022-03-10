@@ -1,0 +1,221 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+/* For showing instructions. The order of controls in the display is
+   sorted each frame based on their costs. */
+const CONTROL_ARRAY = [
+    {
+        text: "[<][>] TURN",
+        cost: 0,
+        // Property on a ship that is true when this feature
+        // can be used
+        key:  "turn_enabled"
+    },
+    {
+        text: "(a) FIRE",
+        cost: ENERGY_TORPEDO,
+        key:  "torpedo_enabled"    
+    },
+    {
+        text: "(b) THRUST", 
+        cost: (ENERGY_THRUST - ENERGY_RECHARGE) * THRUST_SECONDS * 60,
+        key:  "thrust_enabled"   
+    },
+    {
+        text: "(e) SHIELD",
+        cost: (ENERGY_SHIELD - ENERGY_RECHARGE) * SHIELD_SECONDS * 60,
+        key: "shield_enabled"
+    }]
+
+
+def color_string(color):
+    return "rgb(" + color.r + "," + color.g + "," + color.b + ")"
+    
+
+// When to go back to title
+let end_frame
+
+
+
+enter(num_players)
+────────────────────────────────────────────────────────────────────────
+assert(num_players ≥ 2)
+
+end_frame = ∞
+
+ARENA_SCALE = 2.5 + 0.5 (num_players - 1)
+
+// Ensure that the planet is at a slightly random location per game,
+// but prevent it from spawning right near the ships
+planet.phase = 45° random(-1, +1)
+planet.orbit_side = random_sign()
+
+resize(particle_array, 0)
+resize(entity_array, 0)
+resize(ship_array, 0)
+
+// Spawn ships. Rotate the pattern to change starting conditions slightly
+// while making it easy to recognize initial positions
+const phase = 30° random(-1, 1)
+for i < num_players:
+    const sprite = [shapes.starfighter, shapes.jetfighter, shapes.space_cruiser, shapes.rocket][i]
+    
+    const gamepad = gamepad_array[i]
+    const θ = 180° + 360° (i / num_players) + 15° ξ + phase
+    
+    push(ship_array,
+        push(entity_array,
+            make_entity({
+                pos: sun.pos + 70 ARENA_SCALE * angle_to_xy(θ),
+                vel: 0.9 angle_to_xy(θ + 90°),
+                angle: θ + 100°,
+                drag: 0,
+                density: SHIP_DENSITY,
+                size: xy(24, 24),
+                
+                // Enlarge with the world scale, but not quite as much
+                scale: sqrt(0.5 ARENA_SCALE - 0.5),
+                shape: "disk",
+                index: i,
+                override_color: gamepad.player_color,
+                sprite: sprite,
+                gamepad: gamepad,
+                
+                energy: ENERGY_MAX,
+                z: 1,
+                
+                // Features enabled
+                shield_enabled: true,
+                thrust_enabled: true,
+                torpedo_enabled: true,
+                
+                explode_sound: ship_explode_sound,
+                
+                thrust_audio: play_sound({
+                    sound: thrust_sound, 
+                    volume: 200%,
+                    stopped: true}),
+                    
+                shield_audio: play_sound({
+                    sound: shield_sound, 
+                    volume: 200%,
+                    loop: true,
+                    stopped: true}),
+                    
+                child_array: [
+                    // White glowing core
+                    make_entity({
+                        sprite: sprite,
+                        density: 0,
+                        pos_in_parent: xy(if i == 1 then -1 else -3, 0),
+                        scale_in_parent: 70% xy(1, 1)})]},
+                
+                // child_table
+                {
+                    exhaust: make_entity({
+                        sprite: shapes.cone,
+                        density: 0,
+                        opacity: 0%,
+                        pos_in_parent: xy(-32, 0),
+                        scale_in_parent: xy(-130%, 30%),
+                        z_in_parent: -0.4,
+                        override_color: #FF0}),
+                    
+                    shield: make_entity({
+                        z_in_parent: -0.7,
+                        density: 0,
+                        pos_in_parent: xy(-2, 0),
+                        scale_in_parent: xy(180%, 150%),
+                        sprite: shapes.hexagon,
+                        opacity: 0%,
+                        override_color: gamepad.player_color})})))
+
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_post_effects({bloom: BLOOM, afterglow: AFTERGLOW})
+
+preserving_transform:
+    // Move the camera so that the sun is not at the center
+    set_camera({
+        zoom: 100% / ARENA_SCALE,
+        pos: (1 - smoothstep(0, 1, clamp(120% - 0.004 min(mode_frames, end_frame - mode_frames), 0%, 100%))) * xy(150 planet.orbit_side, 0)})
+        
+    iterate(star_array, draw_point)
+
+    iterate(entity_array, update_entity)
+    
+    iterate_pairs(entity_array, collision_callback)
+    
+    update_and_draw_sun(sun)    
+    update_and_draw_planet(planet)    
+    update_and_draw_particles()
+
+
+// Instructions
+for energy, gamepad, index in ship in ship_array:
+    const placement = 2 xy(index mod 2, 1 - ⌊½ index⌋) - 1 
+
+    let gauge = resized("", ⌊energy * ENERGY_GAUGE_BOXES / ENERGY_MAX⌋, "◼")
+    if placement.x < 0:
+        gauge += "{<enable> ◼}"
+    else:
+        gauge = "{<enable> ◼}" + gauge 
+
+    
+    // Sort by increasing cost, reversing for player 1 whose instructions
+    // are right aligned
+    sort(CONTROL_ARRAY, "cost", placement.x > 0)
+    
+    let control_text = ""
+    for text, cost, key in control at c in CONTROL_ARRAY:
+        if energy ≥ cost:
+            ship[key] = true
+            control_text += "{<enable> " + text + "}"
+        else:
+            ship[key] = false
+            control_text += text
+            
+        if c < size(CONTROL_ARRAY) - 1:
+            control_text += "  "
+            
+    
+    if placement.y > 0:
+        control_text += "{br}" + gauge
+    else:
+        control_text = gauge + "{br}" + control_text
+
+
+    control_text = replace(control_text, 
+            {…gamepad.prompt, "<enable>": "color:" + color_string(65% gamepad.player_color)})
+
+                
+    draw_text({
+        font: font,
+        pos: ½ placement * (SCREEN_SIZE - xy(5, 14)),
+        x_align: placement.x,
+        y_align: 0,
+        text: control_text,
+        markup: true,
+        color: 25% gamepad.player_color,
+        outline: 15% gamepad.player_color})
+
+
+if size(ship_array) ≤ 1 and end_frame == ∞:
+    // Game over
+    end_frame = mode_frames + GAME_OVER_FRAMES
+
+
+if mode_frames > end_frame:
+    const score = load_local("score") default [0, 0, 0, 0]
+
+    for thrust_audio, shield_audio in ship in ship_array:
+        stop_audio(thrust_audio)
+        stop_audio(shield_audio)
+        ++score[ship.index]
+        
+    save_local("score", score)
+        
+    set_mode(Title) because "Ship destroyed"

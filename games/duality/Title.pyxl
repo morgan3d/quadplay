@@ -47,7 +47,7 @@ if game_frames == 0:
         play_sound(alarm_sound, true, 0%, +100%, ∅, ∅, 60%, true),
         play_sound(alarm_sound, true, 0%, -100%, ∅, ∅, 100%, true)]
     
-set_post_effects({bloom: if bloom then 40% else 0%, background: #0000, opacity: 38%})
+set_post_effects({bloom: if bloom then 40% else 0%, motion_blur: 62%})
 
 animate_choice = choice
 
@@ -97,4 +97,4 @@ else if any_button_press():
 leave
 ────────────────────────────────────────────────────────────────────────
 // Lower opacity
-set_post_effects({…get_post_effects(), opacity: 78%})
+set_post_effects({…get_post_effects(), intensity: 78%})

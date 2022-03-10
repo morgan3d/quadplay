@@ -31,7 +31,7 @@ else:
 set_background(scanlines)
 
 // Ghosting
-set_post_effects({background: #0000, opacity: 70%, bloom: BLOOM})
+set_post_effects({motion_blur: 30%, bloom: BLOOM})
 draw_sprite({sprite: vignette, pos: ½ SCREEN_SIZE, z: 1024})
 
 preserving_transform:

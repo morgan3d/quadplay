@@ -1,0 +1,373 @@
+{
+    "title": "Gravity",
+    "developer": "@CasualEffects",
+    "copyright": "©2022 Morgan McGuire",
+    "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
+    "packages": [],
+    "scripts": [
+        "game.pyxl",
+        "quad://scripts/particle.pyxl"
+    ],
+    "modes": [
+        "Title",
+        "Play"
+    ],
+    "start_mode": "Title",
+    "docs": [],
+    "assets": {
+        "font": "quad://fonts/nano-4.font.json",
+        "shapes": "quad://sprites/shapes-32x32.sprite.json",
+        "torpedo_sound": "quad://sounds/shoot-06.sound.json",
+        "thrust_sound": "quad://sounds/shoot-12.sound.json",
+        "ship_explode_sound": "quad://sounds/explode-12.sound.json",
+        "background_music": "quad://sounds/loop-someday_gone.sound.json",
+        "torpedo_explode_sound": "quad://sounds/explode-02.sound.json",
+        "shield_sound": "quad://sounds/loop-spin.sound.json",
+        "no_energy_sound": "quad://sounds/hit-08.sound.json",
+        "medium_font": "quad://fonts/deja-5.font.json"
+    },
+    "version": 1.0,
+    "min_players": 2,
+    "max_players": 4,
+    "cooperative": false,
+    "competitive": true,
+    "achievements": false,
+    "highscores": true,
+    "description": "Tactical space battle with orbital mechanics.",
+    "constants": {
+        "AFTERGLOW": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "69%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "72%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "42%"
+                }
+            }
+        },
+        "GRAVITY": {
+            "type": "number",
+            "value": "0.05",
+            "min": 0,
+            "max": 2,
+            "format": "0.00",
+            "quantum": 0.01,
+            "description": "Gravitational constant (see also SUN.density)"
+        },
+        "ANGULAR_DRAG": {
+            "type": "number",
+            "value": "4%",
+            "min": 0,
+            "max": 1,
+            "format": "%",
+            "quantum": 0.01
+        },
+        "PLAYER_SCORE_POSITION": {
+            "type": "raw",
+            "value": [
+                -0.5,
+                0.5,
+                -1.5,
+                1.5
+            ]
+        },
+        "SHIP_THRUST": {
+            "type": "number",
+            "value": "4.0",
+            "min": 0,
+            "max": 20,
+            "format": "0.0",
+            "quantum": 0.1
+        },
+        "SHIP_TURN": {
+            "type": "number",
+            "value": "60",
+            "min": 0,
+            "max": 500,
+            "format": "",
+            "quantum": 1
+        },
+        "TORPEDO_SPEED": {
+            "type": "number",
+            "value": "2.0",
+            "min": 0.5,
+            "max": 10,
+            "format": "0.0",
+            "quantum": 0.5
+        },
+        "TORPEDO_DRAG": {
+            "type": "number",
+            "value": "0.003",
+            "min": 0,
+            "max": 0.1,
+            "format": "",
+            "quantum": 0
+        },
+        "TITLE": {
+            "type": "array",
+            "description": "Encoding of the title font",
+            "value": [
+                "   _        __ __   ",
+                "╱╲ |╲ ╱╲ | | |  | | |",
+                "|  | || || | |  | | |",
+                "|_ L╱ L_|| | |  | ╲╱",
+                "| ||╲ | || | |  |  |",
+                "L_|| || |╲╱ _L  |  |"
+            ]
+        },
+        "LINE_TABLE": {
+            "type": "raw",
+            "description": "Used for converting characters in TITLE to offsets for line drawing",
+            "value": {
+                "_": [
+                    0,
+                    1,
+                    1,
+                    1
+                ],
+                "L": [
+                    0,
+                    1,
+                    1,
+                    1
+                ],
+                "|": [
+                    0,
+                    0,
+                    0,
+                    1
+                ],
+                "╱": [
+                    0,
+                    1,
+                    1,
+                    0
+                ],
+                "╲": [
+                    0,
+                    0,
+                    1,
+                    1
+                ]
+            }
+        },
+        "TITLE_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "100%"
+                }
+            }
+        },
+        "BLOOM": {
+            "type": "number",
+            "value": "50%",
+            "min": 0,
+            "max": 1,
+            "format": "%",
+            "quantum": 0
+        },
+        "ENERGY_MAX": {
+            "type": "number",
+            "value": "300",
+            "min": 0,
+            "max": 1000,
+            "format": "",
+            "quantum": 0
+        },
+        "ENERGY_GAUGE_BOXES": {
+            "type": "number",
+            "value": "32",
+            "min": 3,
+            "max": 50,
+            "format": "",
+            "quantum": 1
+        },
+        "ENERGY_THRUST": {
+            "type": "number",
+            "value": "3",
+            "min": 0,
+            "max": 100,
+            "format": "",
+            "quantum": 1
+        },
+        "ENERGY_RECHARGE": {
+            "type": "number",
+            "value": "0.75",
+            "min": 0,
+            "max": 2,
+            "format": "0.0",
+            "quantum": 0.1,
+            "description": "Rate of recharge of energy per frame"
+        },
+        "ENERGY_TORPEDO": {
+            "type": "number",
+            "value": "200",
+            "min": 0,
+            "max": 1000,
+            "format": "",
+            "quantum": 0
+        },
+        "THRUST_SECONDS": {
+            "type": "number",
+            "value": "1",
+            "description": "Number of frames that the rocket fires",
+            "min": 0,
+            "max": 10,
+            "format": "",
+            "quantum": 0.01
+        },
+        "SHIP_DENSITY": {
+            "type": "number",
+            "value": 1,
+            "min": 0.25,
+            "max": 2,
+            "format": "0.00",
+            "quantum": 0.01
+        },
+        "TORPEDO_DENSITY": {
+            "type": "number",
+            "value": "2.0",
+            "min": 0.1,
+            "max": 2,
+            "format": "0.0",
+            "quantum": 0.1
+        },
+        "GAME_OVER_FRAMES": {
+            "type": "number",
+            "value": "300",
+            "min": 0,
+            "max": 360,
+            "format": "",
+            "quantum": 1
+        },
+        "TORPEDO_MOMENTUM_TRANSFER": {
+            "type": "number",
+            "value": "50%",
+            "min": 0,
+            "max": 1,
+            "format": "%",
+            "quantum": 0.01,
+            "description": "Fraction of momentum transferred to a torpedo. 100% would match the torpedo being a slug thrown from the ship. 0% would be a pure energy weapon."
+        },
+        "SHIELD_OPACITY": {
+            "type": "number",
+            "value": "60%",
+            "min": 0.1,
+            "max": 1,
+            "format": "%",
+            "quantum": 0.01
+        },
+        "PLANET_ORBIT": {
+            "type": "number",
+            "value": "395",
+            "min": 20,
+            "max": 500,
+            "format": "",
+            "quantum": 0
+        },
+        "PLANET_SPEED": {
+            "type": "number",
+            "value": "0.1°",
+            "min": "-0.1°",
+            "max": "0.1°",
+            "format": "deg",
+            "quantum": 0
+        },
+        "PLANET_DENSITY": {
+            "type": "number",
+            "value": "2.0",
+            "min": 0.1,
+            "max": 5,
+            "format": "0.0",
+            "quantum": 0.1
+        },
+        "PLANET_COLOR": {
+            "type": "hsv",
+            "value": {
+                "h": {
+                    "type": "number",
+                    "value": "29%"
+                },
+                "s": {
+                    "type": "number",
+                    "value": "43%"
+                },
+                "v": {
+                    "type": "number",
+                    "value": "75%"
+                }
+            }
+        },
+        "PLANET_ECCENTRICITY": {
+            "type": "number",
+            "value": "0.37",
+            "min": 0,
+            "max": 1,
+            "format": "",
+            "quantum": 0
+        },
+        "ENERGY_SHIELD": {
+            "type": "number",
+            "value": "2.3",
+            "min": 0,
+            "max": 15,
+            "format": "0.0",
+            "quantum": 0.1
+        },
+        "SHIELD_SECONDS": {
+            "type": "number",
+            "value": "2.4",
+            "min": 0,
+            "max": 10,
+            "format": "0.0",
+            "quantum": 0.1
+        },
+        "RESET_FRAMES": {
+            "type": "number",
+            "value": "130",
+            "min": 0,
+            "max": 360,
+            "format": "",
+            "quantum": 1
+        },
+        "sun": {
+            "type": "raw",
+            "value": {
+                "pos": {
+                    "x": 0,
+                    "y": 0
+                },
+                "size": {
+                    "x": 45,
+                    "y": 45
+                },
+                "scale": {
+                    "x": 1,
+                    "y": 1
+                },
+                "angle": 0,
+                "density": 2,
+                "shape": "disk"
+            }
+        }
+    },
+    "screenshot_tag": "Gravity",
+    "y_up": true
+}

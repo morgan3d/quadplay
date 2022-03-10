@@ -695,7 +695,8 @@ function startGuesting(hostNetID) {
                 // Full screen
                 ctx.drawImage(videoElement, 0, 0, videoWidth, videoHeight);
             }
-
+            
+            applyAfterglow(QRuntime.$postFX.afterglow);
             maybeApplyBloom(QRuntime.$postFX.bloom, true);
         }
         

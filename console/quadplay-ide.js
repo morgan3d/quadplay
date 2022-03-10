@@ -724,7 +724,7 @@ function onMenuButton(event) {
 
 // Disable context menu popup on touch events for the game screen or virtual
 // controller buttons because they should be processed solely by the emulator
-emulatorScreen.oncontextmenu = overlayScreen.oncontextmenu = function (event) { event.preventDefault(); event.stopPropagation(); };
+emulatorScreen.oncontextmenu = overlayScreen.oncontextmenu = afterglowScreen.oncontextmenu = function (event) { event.preventDefault(); event.stopPropagation(); };
 {
     const classes = ['emulator', 'emulatorBackground', 'emulatorButton', 'virtualController', 'screenBorder'];
     for (let c = 0; c < classes.length; ++c) {
@@ -737,14 +737,14 @@ emulatorScreen.oncontextmenu = overlayScreen.oncontextmenu = function (event) { 
 
 // Do not set desynchronized:true. Doing so makes Chrome run about 12% slower as of version 87.
 const ctxOptions = {alpha: false, desynchronized: false};
-const ctx = emulatorScreen.getContext("2d", ctxOptions);
-
-const overlayCTX = overlayScreen.getContext("2d", ctxOptions);
+const ctx = emulatorScreen.getContext('2d', ctxOptions);
+const afterglowCTX = afterglowScreen.getContext('2d', ctxOptions);
+const overlayCTX = overlayScreen.getContext('2d', ctxOptions);
 
 ctx.msImageSmoothingEnabled = ctx.webkitImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
 
 function download(url, name) {
-    var a = document.createElement("a");
+    var a = document.createElement('a');
     a.href = url;
     a.download = name;
     document.body.appendChild(a);
@@ -797,8 +797,12 @@ function onStopButton(inReset, preserveNetwork) {
     coroutine = null;
     clearTimeout(lastAnimationRequest);
     ctx.fillStyle = '#000000';
+    afterglowCTX.fillStyle = '#000000';
+    overlayCTX.fillStyle = '#000000';
     ctx.fillRect(0, 0, emulatorScreen.width, emulatorScreen.height);
     overlayCTX.clearRect(0, 0, emulatorScreen.width, emulatorScreen.height);
+    afterglowCTX.clearRect(0, 0, emulatorScreen.width, emulatorScreen.height);
+    overlayScreen.style.visibility = afterglowScreen.style.visibility = 'hidden';
 }
 
 
@@ -1701,6 +1705,7 @@ function maybeGrabPointerLock() {
     }
     emulatorScreen.style.cursor = runtime_cursor;
     overlayScreen.style.cursor = runtime_cursor;
+    afterglowScreen.style.cursor = runtime_cursor;
 }
 
 /** Release pointer lock if it is held, without changing usePointerLock */
@@ -1708,6 +1713,7 @@ function releasePointerLock() {
     document.exitPointerLock();
     emulatorScreen.style.cursor = 'crosshair';
     overlayScreen.style.cursor = 'crosshair';
+    afterglowScreen.style.cursor = 'crosshair';
 }
 
 function inModal() { return false; }
@@ -2737,6 +2743,8 @@ function setFramebufferSize(w, h, privateScreen) {
     emulatorScreen.height = h;
     overlayScreen.width = w;
     overlayScreen.height = h;
+    afterglowScreen.width = w;
+    afterglowScreen.height = h;
 
     updateImage.width  = w;
     updateImage.height = h;
@@ -3878,7 +3886,7 @@ function frozenDeepClone(src, alreadySeen) {
             let clone = Object.create(null);
             alreadySeen.set(src, clone);
             for (let key in src) {
-                if (key[0] === '_' || key[0] === '$') {
+                if (key[0] === '$') {
                     throw 'Illegal constant field name: "' + key + '"';
                 }
                 clone[key] = frozenDeepClone(src[key], alreadySeen);
@@ -4472,9 +4480,12 @@ function combobox_textbox_onchange(textbox) {
 
 function onUpdateClick(installedVersionText, latestVersionText) {
     onStopButton();
-    
     if (! confirm('Update from quadplay✜ version ' + installedVersionText + ' to version ' + latestVersionText + '?')) { return; }
-    
+    doUpdate();
+}
+
+function doUpdate() {
+    onStopButton();
     // Display a downloading window
     document.getElementById('updateDialog').classList.remove('hidden');
 
@@ -4791,9 +4802,9 @@ const quitAction = (function() {
 
 if ((getQueryString('update') && getQueryString('update') !== '0') && isQuadserver && getQueryString('kiosk') !== 1) {
     // Check for updates a few seconds after start, and then every
-    // hour when not sleeping.
+    // two hours when not sleeping.
     const INITIAL_DELAY  = 4000;
-    const REGULAR_PERIOD = 60 * 60 * 1000;
+    const REGULAR_PERIOD = 2 * 60 * 60 * 1000;
     setTimeout(function () {
         checkForUpdate();
         setInterval(function () {

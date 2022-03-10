@@ -8,7 +8,7 @@ enter
 ────────────────────────────────────────────────────────────────────────
 
 // Motion blur to reduce aliasing
-set_post_effects({background: rgba(0,0,0,0), opacity:15%})
+set_post_effects({motion_blur: 15%})
 set_background(#0)
 
 

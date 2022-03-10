@@ -1,0 +1,37 @@
+def yaw_matrix(θ):
+    return [[cos θ, 0,  sin θ],
+            [ 0,    1,   0   ],
+            [-sin θ, 0, cos θ]]
+           
+           
+           
+def pitch_matrix(θ):
+    return [[1,     0,    0  ],
+            [0, cos θ, -sin θ],
+            [0, sin θ,  cos θ]]
+
+
+
+def roll_matrix(θ):
+    return [[cos θ, -sin θ,  0],
+            [sin θ,  cos θ,  0],
+            [0,      0,      1]]
+
+
+
+def matmul_xyz(M, v):
+    const result = {x:0, y:0, z:0}
+    MAT3x3_MATMUL_XYZ(M, v, result)
+    return result
+
+
+
+def matmul_mat(A, B):
+    const C = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    for i < 3:
+        for j < 3:
+            for k < 3:
+                C[i][j] += A[i][k] * B[k][j]
+    return C
+    
+

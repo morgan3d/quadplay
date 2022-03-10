@@ -50,65 +50,61 @@
   }
 </style>
 <script>
-// Compression tools
     
-function floydSteinbergDither(sourceImageData, channel, bits, destImageData) {
-    const w = sourceImageData.width, h = sourceImageData.height;
-    // Need more than 8 bit precision for intermediate results, so copy to int32
-    const temp = new Int32Array(w * h * 4);
-    temp.set(sourceImageData.data, 0);
+function floydSteinbergDither(imageData, channel, bits) {
+    const w = imageData.width, h = imageData.height;
+
+    // Need more than 8 bit precision for intermediate results, so
+    // copy to int32. Although all data are copied, only 1/4 will be
+    // modified since this is a single-channel routine.
+    const temp = Int32Array.from(imageData.data);
 
     // Pixel
-    for (let y = 0; y < h; ++y) {
-        for (let x = 0; x < w; ++x) {
+    for (let y = 0, i = channel; y < h; ++y) {
+        for (let x = 0; x < w; ++x, i += 4) {
+            // Old value
+            const v = temp[i];
             
-            // Color channel
-            //for (let c = 0; c < 4; ++c) {
-            {
-                const c = channel;
+            // Quantized value
+            let q = (bits === 1) ? (v > 127 ? 0xf : 0x0) : Math.min(0xf, Math.max(0x0, Math.round(v * (15 / 255))));
+
+            // Expand to a full byte
+            q = q | (q << 4);
+            
+            const err = v - q;
+            
+            // Store the quantized color back
+            temp[i] = q;
+
+            // The error diffusion algorithm. Note that this can cause over/underflow of intermediate values.
+            // https://research.cs.wisc.edu/graphics/Courses/559-s2004/docs/floyd-steinberg.pdf
+            
+            // If not in the last column, spread error horizontally
+            if (x < w - 1) { temp[i + 4] += (err * 7) >> 4; }
+            
+            // If not the last row, spread error to the row below
+            if (y < h - 1) {
+                // bottom left
+                if (x > 0) { temp[i + (w - 1) * 4] += (err * 3) >> 4; }
                 
-                // current buffer index
-                const i = (y * w + x) * 4 + c;
+                // bottom center
+                temp[i + w * 4] += (err * 5) >> 4;
                 
-                // current value
-                const v = temp[i];
-                
-                // quantized value
-                let q = (bits === 1) ? (v > 127 ? 0xf : 0) : Math.min(255, Math.max(0, Math.round(v * (15 / 255))));
-                q = q | (q << 4);
-                
-                const err = v - q;
-                
-                // Store the quantized color back
-                temp[i] = q;
-                
-                // If not in the last column, spread error horizontally
-                if (x < w - 1) { temp[i + 4] += (err * 7) >> 4; }
-                
-                // If not the last row, spread error to the row below
-                if (y < h - 1) {
-                    // bottom left
-                    if (x > 0) { temp[i + (w - 1) * 4] += (err * 3) >> 4; }
-                    
-                    // bottom center
-                    temp[i + w * 4] += (err * 5) >> 4;
-                    
-                    // bottom right
-                    if (x < w - 1) { temp[i + (w + 1) * 4] += (err * 1) >> 4; }
-                }
-            } // c
+                // bottom right
+                if (x < w - 1) { temp[i + (w + 1) * 4] += (err * 1) >> 4; }
+            }
         } // x
     } // y
     
     // Copy back
-    destImageData.data.set(temp);
+    imageData.data.set(temp);
 }
 
 
-function nearestNeighborQuantize(sourceImageData, channel, bits, destImageData) {
-    // Quantize all channels
-    for (let i = channel; i < sourceImageData.data.length; i += 4) {
-        let c = sourceImageData.data[i];
+function nearestNeighborQuantize(imageData, channel, bits) {
+    for (let i = channel; i < imageData.data.length; i += 4) {
+        let c = imageData.data[i];
+        
         if (bits === 4) {
             // Nearest-neighbor quantization to 4 bits.
             c = Math.round(c * (15 / 255));
@@ -116,9 +112,11 @@ function nearestNeighborQuantize(sourceImageData, channel, bits, destImageData) 
             // Extend back to 8 bits by duplication
             c = c | (c << 4);
         } else {
-            c = (sourceImageData.data[i] > 127) ? 0xff : 0x00;
+            // Binary threshold
+            c = (c > 127) ? 0xff : 0x00;
         }
-        destImageData.data[i] = c;
+        
+        imageData.data[i] = c;
     }
 }
 
@@ -132,7 +130,6 @@ let filename = "";
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
-
 // Convert sourceImageData to destImageData and show the result
 function processImage() {
     if (! sourceImageData) { return; }
@@ -141,19 +138,21 @@ function processImage() {
     const alphaBits = document.getElementById('alpha1').checked ? 1 : 4;
     const colorDither = document.getElementById('colorDither').checked;
     const alphaDither = document.getElementById('alphaDither').checked;
+
+    destImageData.data.set(sourceImageData.data);
     
     for (let channel = 0; channel < 3; ++channel) {
         if (colorDither) {
-            floydSteinbergDither(sourceImageData, channel, colorBits, destImageData);
+            floydSteinbergDither(destImageData, channel, colorBits);
         } else {
-            nearestNeighborQuantize(sourceImageData, channel, colorBits, destImageData);
+            nearestNeighborQuantize(destImageData, channel, colorBits);
         }
     }
 
     if (alphaDither) {
-        floydSteinbergDither(sourceImageData, 3, alphaBits, destImageData);
+        floydSteinbergDither(destImageData, 3, alphaBits);
     } else {
-        nearestNeighborQuantize(sourceImageData, 3, alphaBits, destImageData);
+        nearestNeighborQuantize(destImageData, 3, alphaBits);
     }
     
     // Put the data back to create a data URL

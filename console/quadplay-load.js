@@ -2378,6 +2378,11 @@ function transposeGrid(src) {
  via https://gist.github.com/Jezternz/c8e9fafc2c114e079829974e3764db75
 */
 function parseCSV(strData, trim) {
+    // Trim trailing newline
+    if (strData.endsWith('\n')) {
+        strData = strData.slice(0, strData.length - 1);
+    }
+    
     const objPattern = /(,|\r?\n|\r|^)(?:"([^"]*(?:""[^"]*)*)"|([^,\r\n]*))/gi;
     let arrMatches = null, data = [[]];
     while (arrMatches = objPattern.exec(strData)) {
@@ -2400,9 +2405,15 @@ function parseCSV(strData, trim) {
         
         for (let c = 0; c < array.length; ++c) {
             let val = array[c];
-            const v = parseFloat(val);
+            const v = /^ *[-+]?[0-9]*\.?[0-9]*([eE][-+]?\d+)?(%|deg)? *$/.test(val) ? parseFloat(val) : NaN;
             if (! isNaN(v)) {
                 array[c] = v;
+                val = val.trim();
+                if (val.endsWith('%')) {
+                    array[c] /= 100;
+                } else if (val.endsWith('deg')) {
+                    array[c] *= Math.PI / 180;
+                }
             } else if (val && (typeof val === 'string') && (val.length > 0)) {
                 // May be a special string
                 if (trim) {
@@ -2437,10 +2448,6 @@ function parseCSV(strData, trim) {
                 default:
                     if (/^[\$¥€£§][+\-0-9\.e]+$/.test(val)) {
                         array[c] = parseFloat(val.substring(1));
-                    } else if (/^[+\-0-9\.e]+%$/.test(val)) {
-                        array[c] = parseFloat(val.substring(0, val.length - 1)) / 100;
-                    } else if (/^[+\-0-9\.e]+ ?deg$/.test(val)) {
-                        array[c] = parseFloat(val.substring(0, val.length - 3).trim()) * Math.PI / 180;
                     }                       
                 } // switch
             } // nonempty string
@@ -2452,24 +2459,22 @@ function parseCSV(strData, trim) {
             array.fill(old, max, '');
         }
     }
-    
+
     return data;
 }
 
 /** Used by both constants and assets to load and parse a CSV file.
     Stores the result into outputObject[outputField] and then 
-    invokes callback() if it is specified.
- */
+    invokes callback() if it is specified. */
 function loadCSV(csvURL, definition, outputObject, outputField, callback) {
     console.assert(outputObject);
     loadManager.fetch(csvURL, 'text', null, function (csv) {
         // Parse cells
         let grid = parseCSV(csv, definition.trim !== false);
 
-        // By parseCSV returns row-major data and
-        // tables in quadplay default to column major,
-        // so transpose the CSV parse oppositely to
-        // the transpose flag.
+        // By parseCSV returns row-major data and tables in quadplay
+        // default to column major, so transpose the CSV parse
+        // oppositely to the transpose flag.
         if (! definition.transpose) {
             grid = transposeGrid(grid);
         }

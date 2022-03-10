@@ -52,7 +52,7 @@ else:
 if mode_frames ≤ fadeInEnd:
    // Fade in
    const α = (mode_frames - fadeInStart + 1) / fadeInFrames
-   set_post_effects({opacity: α})
+   set_post_effects({motion_blur: 100% - α})
    
 else if mode_frames ≤ flyInEnd:
    reset_post_effects()

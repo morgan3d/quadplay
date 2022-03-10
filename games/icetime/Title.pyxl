@@ -9,7 +9,7 @@ let titleSound
 // Choose random teams
 teamArray = []
 teamArray[0] = clone(random_value(league))
-teamArray[1] = createRandomDifferentTeam(teamArray[0])
+teamArray[1] = create_random_different_team(teamArray[0])
 
 
 enter
@@ -19,7 +19,7 @@ reset_clip()
 set_background(labelSprite)
 titleSound = play_sound(chantAudioClip, true, 150%)
 
-set_post_effects({background:#0000, opacity: 50%})
+set_post_effects({motion_blur: 50%})
 
 const c = find(choiceArray, load_local("choice"))
 if c ≠ ∅: selection = (c + 5) mod size(choiceArray)
@@ -36,21 +36,32 @@ reset_post_effects();
 frame
 ───────────────────────────────────────────────────────────────────────────────
 
-draw_sprite(titleSprite, xy(SCREEN_SIZE.x / 2, 48))
+draw_sprite(titleSprite, xy(½ SCREEN_SIZE.x, 48))
 
 const N = size(choiceArray)
 let choice
 
 for i < size(choiceArray):
-   const angle = 360 deg * (i - selection) / N + 90 deg
-   const z = sin(angle)
-   const a = (z + 3) / 4
-   let color = gray(a)
-   let border = gray(65% - 30% a)
-   if i == round(selection) mod N: color = #ec0; border = #0; choice = choiceArray[i]
-   draw_text({font: scoreFont, text: choiceArray[i],
-             pos: xy(50% SCREEN_SIZE.x, 65% SCREEN_SIZE.y) + xy(75 cos angle, 8 z),
-             color: color, outline: border, z: z, x_align: "center", y_align: "center"})
+   const θ = 360° (i - selection) / N + 90°
+   const z = sin θ
+   const α = ¼ (z + 3)
+   let color = gray(α)
+   let border = gray(65% - 30% α)
+   
+   if i == round(selection) mod N: 
+       color = #ec0
+       border = #0; 
+       choice = choiceArray[i]
+       
+   draw_text({
+       font: scoreFont, 
+       text: choiceArray[i],
+       pos: xy(50%, 65%) * SCREEN_SIZE + xy(75 cos θ, 8 z),
+       color: color, 
+       outline: border, 
+       z: z, 
+       x_align: "center", 
+       y_align: "center"})
 
 
 draw_text({font: tinyFont, text: "by Casual Effects", pos: xy(SCREEN_SIZE.x / 2, SCREEN_SIZE.y - 6), color: #5, x_align: "center"})
@@ -58,7 +69,7 @@ draw_text({font: tinyFont, text: "by Casual Effects", pos: xy(SCREEN_SIZE.x / 2,
 // Spin animation in the intro
 if mode_frames < 72:
    selection += mid(12%, 12% - mode_frames * 0.2%, 2%)
-else if joy.aa or joy.bb:
+else if gamepad_array[0].aa or gamepad_array[0].bb:
    if choice == "Quit": quit_game()
    else if choice == "Rules": set_mode(Rules)
    else if choice == "Credits": set_mode(Credits)
@@ -77,5 +88,5 @@ else if joy.aa or joy.bb:
          save_local("choice", choice)
          set_mode(TeamSelect) because "1-4P"
 
-selection = loop(selection - 4% joy.x, N)
+selection = loop(selection - 4% gamepad_array[0].x, N)
 

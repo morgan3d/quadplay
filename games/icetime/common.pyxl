@@ -10,15 +10,16 @@ const netArray = [
 ]
 
 let period = 0
-// This is game-world time in seconds. It advances
-// at a variable rate versus the real world, but MUCH
-// faster in general.
+
+/** This is game-world time in seconds. It advances
+    at a variable rate versus the real world, but MUCH
+    faster in general. */
 let time = secondsPerPeriod
 
-// Team on the left side is always 0
+/** Team on the left side is 0 */
 let teamArray
 
-// Players. 0 and 1 are always on the left, 2 and 3 are on the right.
+/** Players. 0 and 1 are always on the left, 2 and 3 are on the right. */
 let playerArray
 
 let puck
@@ -92,32 +93,33 @@ const league = [
    }*/]
 
 /** Choose a random team with a different league index */
-def createRandomDifferentTeam(team):
-   let t = random_value(league)
-   while t.leagueIndex == team.leagueIndex:
-      t = random_value(league)
-   return clone(t)
+def create_random_different_team(team):
+    let t = random_value(league)
+    while t.leagueIndex == team.leagueIndex:
+        t = random_value(league)
+        
+    return clone(t)
    
 
 for i < size(league): league[i].leagueIndex = i
 
 
-def drawScoreboard():
-   preserving_transform:
-      set_transform(xy(0, SCREEN_SIZE.y), xy(1, -1))
-      reset_clip()
-
-      // Logos
-      for team in teamArray:
-         const logoX = 28 + 22 team.sideX
-         draw_sprite(team.spriteSheet[4][0], xy(logoX, 106))
-         draw_text({text: team.name + format_number(team.score, "  0"), font: scoreFont, color:#f, pos:xy(logoX + 7, 111), x_align: "left", y_align: "top"})
-
-      draw_text({text: periodName[period] + " " + format_number(floor(time / 60), " 0") + ":" + format_number(time mod 60, "00"), font: scoreFont, color:#2, pos: xy(91,111), x_align: "left", y_align: "top"})
-
-      // Stats data:
-      //draw_text({text: "BUKOWSKI: 12 SAVES", font: tinyFont, color:#a, pos: xy(2, 97), x_align: "left"})
-
+def drawScoreboard()
+& preserving_transform:
+    set_transform(xy(0, SCREEN_SIZE.y), xy(1, -1))
+    reset_clip()
+    
+    // Logos
+    for team in teamArray:
+        const logoX = 28 + 22 team.sideX
+        draw_sprite(team.spriteSheet[4][0], xy(logoX, 106))
+        draw_text({text: team.name + format_number(team.score, "  0"), font: scoreFont, color:#f, pos:xy(logoX + 7, 111), x_align: "left", y_align: "top"})
+    
+    draw_text({text: periodName[period] + " " + format_number(floor(time / 60), " 0") + ":" + format_number(time mod 60, "00"), font: scoreFont, color:#2, pos: xy(91,111), x_align: "left", y_align: "top"})
+    
+    // Stats data:
+    //draw_text({text: "BUKOWSKI: 12 SAVES", font: tinyFont, color:#a, pos: xy(2, 97), x_align: "left"})
+    
 
       
 def drawNets():
@@ -132,7 +134,7 @@ def drawNets():
 // Convert ice coordinates to draw coordinates
 def project(pos, z):
    const s = (500 - pos.y) / 500
-   return {x: pos.x * s, y: 80% * pos.y + (z or 0), z: 200 - pos.y}
+   return {x: pos.x * s, y: 80% pos.y + (z or 0), z: 200 - pos.y}
 
 
 
@@ -140,7 +142,7 @@ def insideCrease(pos):
    const side = sign(pos.x)
    let net = netArray[0]
    if side > 0: net = netArray[1]
-   return ‖(pos - net.pos) * xy(1, 125%)‖ < creaseRadius and pos.x * side < net.pos.x * side
+   return ‖(pos - net.pos) * xy(100%, 125%)‖ < creaseRadius and pos.x * side < net.pos.x * side
    
 
 def createGame():
