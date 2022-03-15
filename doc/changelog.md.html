@@ -10,9 +10,11 @@ of [<quadplay/>](manual.md.html).
 2022 March TBD: Update 82
 ===================================
 
+- New game: Gravity
+- New music loop by Abstraction: `loop-someday_gone.sound.json`
+- New sound `shoot-13.sound.json`
 - quantize tool now offers 1-bit and 4-bit alpha, and separate
   control over RGB and alpha dithering
-- New music loop by Abstraction: `loop-someday_gone.sound.json`
 - Added `scripts/3D.pyxl` generic 3D transform scripts
 - `draw_poly()` now performs 3D projection properly when used with
   a camera perspective zoom function
@@ -25,11 +27,13 @@ of [<quadplay/>](manual.md.html).
   - Replaced `background` with a combination of `burn_in` for phosphor glow
     and border clamping of the frame for filling exposed background
     regions
+- Improved particle system performance 10%
 - Improved error checking for `remove_key()`
 - `entity_simulate()` now supports wrapping and clamping finite
   rectangular universes
 - `iterate_pairs()` for easy combinatorial iteration with proper
   handling of element removal
+- `make_entity()` now converts a number `scale_in_parent` value into an `xy()` value
 - Made frame rate scaler more aggressive when just missing 60 Hz and added
   a limit to stop thrashing per session between 60 Hz and 30 Hz. This helps
   with game feel on Raspberry Pi

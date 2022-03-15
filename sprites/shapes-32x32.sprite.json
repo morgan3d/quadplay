@@ -171,6 +171,7 @@
         "carrot":          {"x": 7, "y": 11},
         "mushroom":        {"x": 8, "y": 11},
         "space_cruiser":   {"x": 9, "y": 11},
+        "space_scout":     {"x": 10, "y": 11},
         "flask":           {"x": 11, "y": 11},
         "dunes":           {"x": 12, "y": 11},
 
@@ -184,8 +185,8 @@
         "bee":             {"x": 7, "y": 12},
         "hawk":            {"x": 8, "y": 12},
         "hawk_attack":     {"x": 9, "y": 12},
-        "lizard":          {"x": 11, "y": 12},
+        "lizard":          {"x": 10, "y": 12},
         "microscope":      {"x": 11, "y": 12}
 },
-    "license": "By Morgan McGuire 2020, released into the Public Domain/CC0"
+    "license": "By Morgan McGuire 2022, released into the Public Domain/CC0"
 }

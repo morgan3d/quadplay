@@ -1746,7 +1746,7 @@ var $screen;
 /** List of graphics commands to be sorted and then executed by $submitFrame(). */
 var $previousGraphicsCommandList = [];
 var $graphicsCommandList = [];
-var $background = Object.seal({r:0, g:0, b:0, a:1});
+var $background = {r:0, g:0, b:0, a:1};
 
 var joy = null; // initialized by reloadRuntime()
 var gamepad_array = null; // initialized by reloadRuntime()
@@ -2426,6 +2426,10 @@ function make_entity(e, childTable) {
     r.angle_in_parent = r.angle_in_parent || 0;
     r.offset_in_parent = r.offset_in_parent ? clone(r.offset_in_parent) : xy(0, 0);
     r.scale_in_parent = r.scale_in_parent ? clone(r.scale_in_parent) : xy(1, 1);
+
+    if (is_number(r.scale_in_parent)) {
+        r.scale_in_parent = xy(r.scale_in_parent, r.scale_in_parent);
+    }
 
     if (is_nan(r.angle)) { $error('nan angle on entity'); }
     if (r.z !== undefined && is_nan(r.z)) { $error('nan z on entity'); }
@@ -3871,9 +3875,12 @@ function draw_disk(pos, radius, color, outline, z) {
 function $colorToUint16(color) {
     if (color === undefined) { return 0; }
     if (color.$color !== undefined) { return color.$color; }
+    
     const color_a = color.a, color_r = color.r;
     const c = (color_a === undefined) ? 0xF000 : (((($clamp(color_a, 0, 1) * 15 + 0.5) & 0xf) << 12) >>> 0);
+    
     if (color_r === undefined) { return $hsvaToUint16(color, c); }
+    
     return (c | (($clamp(color.b, 0, 1) * 15 + 0.5) << 8) | (($clamp(color.g, 0, 1) * 15 + 0.5) << 4) | ($clamp(color_r, 0, 1) * 15 + 0.5)) >>> 0;
 }
 
@@ -7128,7 +7135,7 @@ function clone(a) {
 // The is_map_asset argument refers to whether the 'a' argument is
 // an asset that is a game map, or is a part of a game map, which
 // is a special case for the sealing and finalization rules.
-function $deep_clone(a, map, is_map_asset) {
+function $deep_clone(a, map, is_map_asset, makeImmutable) {
     if (! a || (a.$type !== undefined && a.$type !== 'map')) {
         // Built-in; return directly instead of cloning since it is
         // immutable (this is based on the assumption that quadplay
@@ -7150,7 +7157,7 @@ function $deep_clone(a, map, is_map_asset) {
 
             // Clone array elements
             for (let i = 0; i < x.length; ++i) {
-                x[i] = $deep_clone(x[i], map, is_map_asset);
+                x[i] = $deep_clone(x[i], map, is_map_asset, makeImmutable);
             }
             
             // Clone all non-Array properties that might have been
@@ -7163,10 +7170,12 @@ function $deep_clone(a, map, is_map_asset) {
                     if ((key === '$name') && (a.$name[0] !== '«')) {
                         x[key] = '«cloned ' + a.$name + '»';
                     } else {
-                        x[key] = $deep_clone(a[key], map, is_map_asset);
+                        x[key] = $deep_clone(a[key], map, is_map_asset, makeImmutable);
                     }
                 }
             }
+
+            if (makeImmutable) { Object.freeze(x); }
 
             if (is_map_asset) {
                 if ($Object.isSealed(a)) { $Object.seal(x); }
@@ -7194,9 +7203,20 @@ function $deep_clone(a, map, is_map_asset) {
                         x.$name = a.$name;
                     }
                 } else {
-                    x[key] = $deep_clone(a[key], map, is_map_asset);
+                    x[key] = $deep_clone(a[key], map, is_map_asset, makeImmutable);
                 }
             }
+            
+            if (makeImmutable) {
+                // Precompute for colors to speed particle systems
+                if ((x.r === undefined && x.g === undefined && x.b === undefined) ||
+                    (x.h === undefined && x.s === undefined && x.v === undefined)) {
+                    x.$color = $colorToUint16(x);
+                }
+                
+                Object.freeze(x);
+            }
+
             if (a.$name && $Object.isSealed(a)) { $Object.seal(x); }
             return x;
         }
@@ -7209,6 +7229,11 @@ function $deep_clone(a, map, is_map_asset) {
 
 function deep_clone(a) {
     return $deep_clone(a, new Map());    
+}
+
+
+function deep_immutable_clone(a) {
+    return $deep_clone(a, new Map(), false, true);    
 }
 
 

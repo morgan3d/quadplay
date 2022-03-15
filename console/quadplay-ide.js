@@ -33,6 +33,8 @@ let autoSleepEnabled = (getQueryString('kiosk') === '1') ||
     (localStorage.getItem('autoSleepEnabled') !== 'false');
 
 
+const noop = ()=>{};
+
 // Disabled by the profiler if not making frame rate, reset
 // on game start.
 let allow_bloom = true;
@@ -2741,10 +2743,15 @@ function setFramebufferSize(w, h, privateScreen) {
     PRIVATE_VIEW = privateScreen;
     emulatorScreen.width = w;
     emulatorScreen.height = h;
-    overlayScreen.width = w;
-    overlayScreen.height = h;
-    afterglowScreen.width = w;
-    afterglowScreen.height = h;
+    overlayScreen.width = afterglowScreen.width = w;
+    overlayScreen.height = afterglowScreen.height = h;
+    /*
+    // Performance test:
+    overlayScreen.width = afterglowScreen.width = w / 2;
+    overlayScreen.height = afterglowScreen.height = h / 2;
+    overlayScreen.width = afterglowScreen.style.width = '384px';
+    overlayScreen.height = afterglowScreen.style.height = '224px';
+    */
 
     updateImage.width  = w;
     updateImage.height = h;
@@ -4478,11 +4485,50 @@ function combobox_textbox_onchange(textbox) {
 }
 
 
+function showAlertDialog(title, html, callback = noop, okLabel = 'OK') {
+    showConfirmDialog(title, html, callback, noop, okLabel, '');
+}
+
+
+/* Shows a modal dialog with the provided html as a message. When the
+   user presses the OK button, runs the callback. If cancelLabel is '', show
+   only an alert. */
+function showConfirmDialog(title, html, callback = noop, cancelCallback = noop, okLabel = 'OK', cancelLabel = 'Cancel') {
+    onConfirmButtonClick.okCallback = callback;
+    onConfirmButtonClick.cancelCallback = cancelCallback;
+
+    document.getElementById('confirmTitle').innerHTML = title;
+    document.getElementById('confirmMessage').innerHTML = html;
+    document.getElementById('confirmOKButton').innerHTML = okLabel;
+
+    const cancelButton = document.getElementById('confirmCancelButton');
+    cancelButton.style.display = cancelLabel === '' ? 'none' : 'inline-block';
+    cancelButton.innerHTML = cancelLabel;
+    
+    document.getElementById('confirmDialog').classList.remove('hidden');
+}
+
+
+function onConfirmButtonClick(ok) {
+    document.getElementById('confirmDialog').classList.add('hidden');
+
+    if (ok) {
+        onConfirmButtonClick.okCallback();
+    } else {
+        onConfirmButtonClick.cancelCallback();
+    }
+}
+
+
 function onUpdateClick(installedVersionText, latestVersionText) {
     onStopButton();
-    if (! confirm('Update from quadplay✜ version ' + installedVersionText + ' to version ' + latestVersionText + '?')) { return; }
-    doUpdate();
+
+    showConfirmDialog(
+        'Update',
+        'Update from quadplay✜ version ' + installedVersionText + ' to version ' + latestVersionText + '?',
+        doUpdate);
 }
+
 
 function doUpdate() {
     onStopButton();
@@ -4503,14 +4549,21 @@ function doUpdate() {
                     clearInterval(checker);
                     if (json.restartServer) {
                         postToServer({command: 'quit'});
-                        alert('Update complete. quadplay✜ needs to be restarted after this update.');
-                        setTimeout(function () {
-                            window.close();
-                            location = 'about:blank';
-                        }, 250);
+
+                        showAlertDialog(
+                            'Update',
+                            'Update complete. quadplay✜ needs to be restarted after this update.',
+                            function () {
+                                window.close();
+                                location = 'about:blank';
+                            },
+                            noop,
+                            'Restart');
                     } else {
-                        alert('Update complete!');
-                        location = location;
+                        showAlertDialog('Update', 'Update complete!', function () {
+                            // Refresh, also forcing clean reload on Firefox
+                            location.reload(true);
+                        });
                     }
                 }
             });
@@ -4522,7 +4575,6 @@ function doUpdate() {
    update= is set */
 function checkForUpdate() {
     if (getQueryString('update') === 'dev') {
-        // TODO
         return;
     }
     

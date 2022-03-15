@@ -24,16 +24,20 @@
         "torpedo_explode_sound": "quad://sounds/explode-02.sound.json",
         "shield_sound": "quad://sounds/loop-spin.sound.json",
         "no_energy_sound": "quad://sounds/hit-08.sound.json",
-        "medium_font": "quad://fonts/deja-5.font.json"
+        "medium_font": "quad://fonts/deja-5.font.json",
+        "atmosphere_bounce_sound": "quad://sounds/jump-02.sound.json",
+        "big_sun_background_music": "quad://sounds/loop-dark-thriller.sound.json",
+        "double_sun_background_music": "quad://sounds/loop-smooth_drops.sound.json",
+        "death_blossom_sound": "quad://sounds/shoot-13.sound.json"
     },
-    "version": 1.0,
+    "version": 1.1,
     "min_players": 2,
     "max_players": 4,
     "cooperative": false,
     "competitive": true,
     "achievements": false,
     "highscores": true,
-    "description": "Tactical space battle with orbital mechanics.",
+    "description": "Orbital space dogfight.",
     "constants": {
         "AFTERGLOW": {
             "type": "rgb",
@@ -88,7 +92,7 @@
         },
         "SHIP_TURN": {
             "type": "number",
-            "value": "60",
+            "value": "63",
             "min": 0,
             "max": 500,
             "format": "",
@@ -210,8 +214,8 @@
         "ENERGY_RECHARGE": {
             "type": "number",
             "value": "0.75",
-            "min": 0,
-            "max": 2,
+            "min": 0.1,
+            "max": 4,
             "format": "0.0",
             "quantum": 0.1,
             "description": "Rate of recharge of energy per frame"
@@ -235,7 +239,7 @@
         },
         "SHIP_DENSITY": {
             "type": "number",
-            "value": 1,
+            "value": "0.95",
             "min": 0.25,
             "max": 2,
             "format": "0.00",
@@ -280,7 +284,8 @@
             "min": 20,
             "max": 500,
             "format": "",
-            "quantum": 0
+            "quantum": 0,
+            "description": "Major radius"
         },
         "PLANET_SPEED": {
             "type": "number",
@@ -347,25 +352,72 @@
             "format": "",
             "quantum": 1
         },
-        "sun": {
-            "type": "raw",
-            "value": {
-                "pos": {
-                    "x": 0,
-                    "y": 0
-                },
-                "size": {
-                    "x": 45,
-                    "y": 45
-                },
-                "scale": {
-                    "x": 1,
-                    "y": 1
-                },
-                "angle": 0,
-                "density": 2,
-                "shape": "disk"
-            }
+        "NUM_STARS": {
+            "type": "number",
+            "value": "275",
+            "min": 0,
+            "max": 500,
+            "format": "",
+            "quantum": 1
+        },
+        "DOUBLE_SUN_SEPARATION": {
+            "type": "number",
+            "value": "300",
+            "min": 20,
+            "max": 1000,
+            "format": "",
+            "quantum": 1
+        },
+        "SUN_RADIUS": {
+            "type": "number",
+            "value": "22.5",
+            "min": 1,
+            "max": 100,
+            "format": "",
+            "quantum": 0.1
+        },
+        "SUN_DENSITY": {
+            "type": "number",
+            "value": "2.0",
+            "min": 0.5,
+            "max": 4,
+            "format": "0.0",
+            "quantum": 0.1
+        },
+        "TITLE_LOCKOUT_FRAMES": {
+            "type": "number",
+            "value": "35",
+            "description": "Frames during which input are rejected to force stabilizing graphics and allow scores and the next level to be seen",
+            "min": 0,
+            "max": 360,
+            "format": "",
+            "quantum": 1
+        },
+        "PLANET_BUSTER_MOMENTUM": {
+            "type": "number",
+            "value": "2000",
+            "description": "When hit with more momentum than this, destroy the planet",
+            "min": 0,
+            "max": 10000,
+            "format": "",
+            "quantum": 0
+        },
+        "DEATH_BLOSSOM_TORPEDO_COUNT": {
+            "type": "number",
+            "value": "24",
+            "description": "Number of torpedoes to launch",
+            "min": 1,
+            "max": 36,
+            "format": "",
+            "quantum": 1
+        },
+        "DEATH_BLOSSOM_CHARGE_MAX": {
+            "type": "number",
+            "value": "1300",
+            "min": 100,
+            "max": 3600,
+            "format": "",
+            "quantum": 1
         }
     },
     "screenshot_tag": "Gravity",

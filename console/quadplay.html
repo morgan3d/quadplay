@@ -502,6 +502,16 @@
 
     <div id="waitDialog" class="modal hidden" style="z-index: 100"> </div>
 
+    <!-- Appear over all other dialogs -->
+    <div id="confirmDialog" class="modal hidden" style="z-index: 110">
+      <div class="dialog" style="margin-top: 80px; width: 400px; text-align: center">
+        <span id="confirmTitle" class="title">Title</span>
+        <div id="confirmMessage" style="margin: 30px 0px">Message</div>
+        <button class="button" id="confirmCancelButton" onclick="onConfirmButtonClick(false)" style="min-width:60px; margin-right: 60px">Cancel</button>
+        <button class="button" id="confirmOKButton" onclick="onConfirmButtonClick(true)" style="min-width:60px">OK</button>
+      </div>
+    </div>
+
     <div id="updateDialog" class="modal hidden" style="font-family: quadplay; text-shadow: 0 0 20px #000; font-size: 50px; color: #fff; user-select: none;">
       <div style="text-shadow: 0 0 4px black; position: absolute; left:0; right:0; top: 50%; transform: translateY(-50%); text-align: center;">Updating <div class="spin" style="display:inline-block; position:relative; top:10px"><span style="font-size: 150%; position:relative; top:-3.5px">⚙</span></div></div>
     </div>

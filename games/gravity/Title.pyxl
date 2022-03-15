@@ -13,9 +13,9 @@ let reset_count = 0
 // Between 2 and 4
 let num_players = load_local("num_players") default 2
 
-
 // Start music on the first frame
-play_sound({sound: background_music, loop: true, playback_rate: 50%})
+let background_audio
+set_random_seed(now())
 
 
 enter
@@ -26,36 +26,94 @@ score = load_local("score") default [0, 0, 0, 0]
 ARENA_SCALE = 1.5
 
 
+// Set up the solar system on the title screen as a preview
+// of what will come
+create_solar_system(dot(score, [1, 1, 1, 1]))
+
+local:
+    const sound = if background_audio then get_audio_status(background_audio).sound else ∅
+    let correct_sound = background_music
+    
+    if sun_array[0].scale.x > 1:
+        correct_sound = big_sun_background_music
+        
+    else if size(sun_array) > 1:
+        correct_sound = double_sun_background_music
+        
+    if sound ≠ correct_sound:
+        stop_audio(background_audio)
+        background_audio = play_sound({sound: correct_sound, loop: true, playback_rate: 50%})
+    
+
 frame
 ────────────────────────────────────────────────────────────────────────
 set_post_effects({bloom: 100%, afterglow: 2 AFTERGLOW})
 
 const show_scores = max(…score) > 0
 
-preserving_transform:
-    draw_text({font: font, text: "A QUADPLAY✜ GAME BY CASUAL EFFECTS", pos: xy(0, 100), color: #392, outline: #030, x_align: "center"})
-    
-    let reset_text = ""
-    if show_scores:
-        for p < num_players:
-            draw_text({
-                font: medium_font,
-                text: score[p],
-                color: 90% gamepad_array[p].player_color,
-                outline: 20% gamepad_array[p].player_color,
-                x_align: "center",
-                pos: xy(22 PLAYER_SCORE_POSITION[p], 81),
-                z: 2})
-        reset_text = "{color:#9 (e)} RESET SCORES      "
+draw_text({font: font, text: "A QUADPLAY✜ GAME BY CASUAL EFFECTS / MUSIC BY ABSTRACTION & ZETAURI", pos: xy(0, 100), color: #392, outline: #030, x_align: "center"})
 
+let reset_text = ""
+if show_scores:
+    for p < num_players:
+        draw_text({
+            font: medium_font,
+            text: score[p],
+            color: gamepad_array[p].player_color,
+            outline: 32% gamepad_array[p].player_color,
+            x_align: "center",
+            pos: xy(42 PLAYER_SCORE_POSITION[p], 71),
+            z: 2})
+            
+        draw_sprite({
+            sprite: ship_sprite[p], 
+            pos: xy(42 PLAYER_SCORE_POSITION[p] + 1, 75),
+            override_color: (if p mod 2 then 18% else (if p == 0 and get_background().r > 0 then 0% else 12%)) * gamepad_array[p].player_color,
+            angle: 90°,
+            z: 1.9})
+            
+    reset_text = "{color:#9 (e)} RESET SCORES      "
+
+
+if mode_frames ≥ TITLE_LOCKOUT_FRAMES:
+    draw_text({
+        font: font, 
+        z: 2, 
+        text: replace("{color:#9 [<]} " + num_players + " PLAYERS {color:#9 [>]}\n\n" + reset_text + "{color:#9 (a)} LAUNCH", gamepad_array[0].prompt), 
+        pos: xy(0, -90 - 40 clamp(200% - mode_frames / TITLE_LOCKOUT_FRAMES, 0%, 100%)), 
+        color: #392, 
+        outline: #030, 
+        x_align: "center", 
+        markup: true})
+
+    let any_reset = false
+    for gamepad in gamepad_array:
+        num_players = clamp(num_players + gamepad.xx + gamepad.yy, 2, 4)
+	
+        any_reset = any_reset or gamepad.e or gamepad.f
+            
+        if gamepad.aa or gamepad.bb:
+            save_local("num_players", num_players)
+            set_mode(Play, num_players, score) because "Press (a)"
     
-    draw_text({font: font, z: 2, text: replace("{color:#9 [<]} " + num_players + " PLAYERS {color:#9 [>]}\n\n" + reset_text + "{color:#9 (a)} LAUNCH", gamepad_array[0].prompt), pos: xy(0, -90), color: #392, outline: #030, x_align: "center", markup: true})
-    num_players = clamp(num_players + gamepad_array[0].xx + gamepad_array[0].yy, 2, 4)
-    
-    set_camera({zoom: 50% / ARENA_SCALE, pos: sun.pos})
+    if any_reset and show_scores:
+        ++reset_count
+        draw_corner_rect(xy(-51, 76), xy(102, 11), ∅, #392, 3)
+        draw_corner_rect(xy(-50, 77), xy(100 reset_count / RESET_FRAMES, 9), #392, ∅, 3)
+
+        if reset_count == RESET_FRAMES:
+            // Hit the threshold, do the actual reset now
+            score = [0, 0, 0, 0]
+            save_local("score", score)
+    else:
+        reset_count = 0
+
+
+preserving_transform:    
+    set_camera({zoom: 50% / ARENA_SCALE})
 
     iterate(star_array, draw_point)
-    update_and_draw_sun(sun)
+    iterate(sun_array, update_and_draw_sun)
 
     ///////////////////////////////////////////////
     // Title letters
@@ -82,26 +140,6 @@ preserving_transform:
             if pattern == "L": line(x,y,  LINE_TABLE["|"])
 
 
-if mode_frames > 30:
-    let any_reset = false
-    for gamepad in gamepad_array:
-        any_reset = any_reset or gamepad.e or gamepad.f
-            
-        if gamepad.aa or gamepad.bb:
-            save_local("num_players", num_players)
-            set_mode(Play, num_players) because "Press (a)"
-    
-    if any_reset and show_scores:
-        ++reset_count
-        draw_corner_rect(xy(-51, 76), xy(102, 11), ∅, #392, 3)
-        draw_corner_rect(xy(-50, 77), xy(100 reset_count / RESET_FRAMES, 9), #392, ∅, 3)
-
-        if reset_count == RESET_FRAMES:
-            // Hit the threshold, do the actual reset now
-            score = [0, 0, 0, 0]
-            save_local("score", score)
-    else:
-        reset_count = 0
         
 
 

@@ -1124,27 +1124,54 @@ function submitFrame() {
         }
 
         ctx.save();
-        /*
-        // TODO: Replace with border
-        if ($postFX.background.a > 0) {
-            if (($postFX.background.r === 0) && ($postFX.background.g === 0) && ($postFX.background.b === 0) && ($postFX.background.a === 1)) {
-                ctx.clearRect(0, 0, emulatorScreen.width, emulatorScreen.height);
-            } else {
-                ctx.fillStyle = rgbaToCSSFillStyle($postFX.background);
-                ctx.fillRect(0, 0, emulatorScreen.width, emulatorScreen.height);
+
+        if ($postFX.pos.x !== 0 || $postFX.pos.y !== 0 || $postFX.angle !== 0 || $postFX.scale.x !== 1 || $postFX.scale.y !== 1) {
+            // Transformed
+
+            const backgroundRevealed = $postFX.pos.x !== 0 || $postFX.pos.y !== 0 || $postFX.angle !== 0 || $postFX.scale.x < 1 || $postFX.scale.y < 1;
+
+            if (backgroundRevealed) {
+                // Fill revealed background areas. Unfortunately,
+                // canvas patterns cannot clamp to border, so we
+                // draw a big polygon
+
+                const $background = QRuntime.$background;
+                if ($background.spritesheet) {
+                    ctx.fillStyle = '#000';
+                } else {
+                    const color = QRuntime.$colorToUint16($background);
+                    ctx.fillStyle = '#' + (color & 0xf).toString(16) + ((color >> 4) & 0xf).toString(16) + ((color >> 8) & 0xf).toString(16);
+                }
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(emulatorScreen.width, 0);
+                ctx.lineTo(emulatorScreen.width, emulatorScreen.height);
+                ctx.lineTo(0, emulatorScreen.height);
+                ctx.lineTo(0, 0);
+            }            
+
+            ctx.translate(($postFX.pos.x / SCREEN_WIDTH  + 0.5) * emulatorScreen.width,
+                          ($postFX.pos.y / SCREEN_HEIGHT + 0.5) * emulatorScreen.height); 
+            ctx.rotate(-$postFX.angle);
+            ctx.scale($postFX.scale.x, $postFX.scale.y);
+            ctx.translate(-emulatorScreen.width * 0.5, -emulatorScreen.height * 0.5);
+
+            if (backgroundRevealed) {
+                // Cut out
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, emulatorScreen.height);
+                ctx.lineTo(emulatorScreen.width, emulatorScreen.height);
+                ctx.lineTo(emulatorScreen.width, 0);
+                ctx.lineTo(0, 0);
+                
+                ctx.fill();
             }
         }
-        */
-
+        
         if ($postFX.motion_blur > 0) {
             ctx.globalAlpha = 1 - $postFX.motion_blur;
         }
-        
-        ctx.translate(($postFX.pos.x / SCREEN_WIDTH + 0.5) * emulatorScreen.width,
-                      ($postFX.pos.y / SCREEN_HEIGHT + 0.5) * emulatorScreen.height); 
-        ctx.rotate(-$postFX.angle);
-        ctx.scale($postFX.scale.x, $postFX.scale.y);
-        ctx.translate(-emulatorScreen.width / 2, -emulatorScreen.height / 2);
+            
         ctx.drawImage(updateImage,
                       0, 0, SCREEN_WIDTH, SCREEN_HEIGHT,
                       0, 0, emulatorScreen.width, emulatorScreen.height);
@@ -1241,7 +1268,8 @@ function maybeApplyBloom(bloom, enable) {
         // Apple devices are gamma corrected and the bloom looks dimmer as a
         // result, so we boost it
         const b = Math.pow(bloom, 1.5) * (isApple ? 1.5 : 1.0);
-        overlayScreen.style.filter = `brightness(${0.45 + b * (1 - 0.45)}) contrast(3) blur(2.5px)` + (bloom > 0.5 ? ` brightness(${0.75 * bloom + 0.5})`: '');
+        const filter = `brightness(${0.45 + b * (1 - 0.45)}) contrast(3) blur(2.5px)` + (bloom > 0.5 ? ` brightness(${0.75 * bloom + 0.5})`: '');
+        if (overlayScreen.style.filter !== filter) { overlayScreen.style.filter = filter; }
         overlayCTX.drawImage(emulatorScreen, 0, 0);
     } else {
         overlayScreen.style.visibility = 'hidden';

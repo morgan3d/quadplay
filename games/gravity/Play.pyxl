@@ -37,7 +37,7 @@ let end_frame
 
 
 
-enter(num_players)
+enter(num_players, score_array)
 ────────────────────────────────────────────────────────────────────────
 assert(num_players ≥ 2)
 
@@ -45,40 +45,54 @@ end_frame = ∞
 
 ARENA_SCALE = 2.5 + 0.5 (num_players - 1)
 
-// Ensure that the planet is at a slightly random location per game,
-// but prevent it from spawning right near the ships
-planet.phase = 45° random(-1, +1)
-planet.orbit_side = random_sign()
-
 resize(particle_array, 0)
 resize(entity_array, 0)
 resize(ship_array, 0)
+
+const max_score = max(…score_array)
 
 // Spawn ships. Rotate the pattern to change starting conditions slightly
 // while making it easy to recognize initial positions
 const phase = 30° random(-1, 1)
 for i < num_players:
-    const sprite = [shapes.starfighter, shapes.jetfighter, shapes.space_cruiser, shapes.rocket][i]
-    
     const gamepad = gamepad_array[i]
     const θ = 180° + 360° (i / num_players) + 15° ξ + phase
+
+    // Enlarge with the world scale, but not quite as much
+    const scale = 1.2 sqrt(0.5 ARENA_SCALE - 0.5)
+    
+    // Adjust the orbit for large and double suns
+    const orbit = (15 sun_array[0].scale.x² + (if sun_array[0].scale.x < 1 then 90 else 56)) * ARENA_SCALE
+    
+    const advantage = min(250%, max(4, max_score + 2) / max(4, score_array[i] + 2))
     
     push(ship_array,
         push(entity_array,
             make_entity({
-                pos: sun.pos + 70 ARENA_SCALE * angle_to_xy(θ),
+                pos: orbit * angle_to_xy(θ),
                 vel: 0.9 angle_to_xy(θ + 90°),
                 angle: θ + 100°,
                 drag: 0,
                 density: SHIP_DENSITY,
-                size: xy(24, 24),
                 
-                // Enlarge with the world scale, but not quite as much
-                scale: sqrt(0.5 ARENA_SCALE - 0.5),
+                // Counts up when at full energy
+                death_blossom_charge: 0,
+                
+                // After the first four games, start giving an advantage to losing players on recharge
+                death_blossom_recharge_rate: advantage,
+                
+                // Give an advantage on recharge to losing players
+                energy_recharge_rate: ENERGY_RECHARGE * advantage,
+                
+                // Hit box (before scale)
+                size: xy(30, 30) / scale,
+                
+                // Sprite size
+                scale: scale,
                 shape: "disk",
                 index: i,
                 override_color: gamepad.player_color,
-                sprite: sprite,
+                sprite: ship_sprite[i],
                 gamepad: gamepad,
                 
                 energy: ENERGY_MAX,
@@ -105,7 +119,7 @@ for i < num_players:
                 child_array: [
                     // White glowing core
                     make_entity({
-                        sprite: sprite,
+                        sprite: ship_sprite[i],
                         density: 0,
                         pos_in_parent: xy(if i == 1 then -1 else -3, 0),
                         scale_in_parent: 70% xy(1, 1)})]},
@@ -125,11 +139,10 @@ for i < num_players:
                         z_in_parent: -0.7,
                         density: 0,
                         pos_in_parent: xy(-2, 0),
-                        scale_in_parent: xy(180%, 150%),
+                        scale_in_parent: xy(150%, 130%),
                         sprite: shapes.hexagon,
                         opacity: 0%,
                         override_color: gamepad.player_color})})))
-
 
 
 
@@ -149,13 +162,14 @@ preserving_transform:
     
     iterate_pairs(entity_array, collision_callback)
     
-    update_and_draw_sun(sun)    
+    iterate(sun_array, update_and_draw_sun)    
     update_and_draw_planet(planet)    
     update_and_draw_particles()
 
 
 // Instructions
-for energy, gamepad, index in ship in ship_array:
+for energy, gamepad, index, death_blossom_charge in ship in ship_array:
+    
     const placement = 2 xy(index mod 2, 1 - ⌊½ index⌋) - 1 
 
     let gauge = resized("", ⌊energy * ENERGY_GAUGE_BOXES / ENERGY_MAX⌋, "◼")
@@ -182,23 +196,28 @@ for energy, gamepad, index in ship in ship_array:
             control_text += "  "
             
     
+    let blossom_text = " "
+    if death_blossom_charge == DEATH_BLOSSOM_CHARGE_MAX:
+        blossom_text = (if mode_frames mod 20 < 9 then "{color: #aaa" else "{<enable>") + " (q) DEATH BLOSSOM}"
+    
     if placement.y > 0:
-        control_text += "{br}" + gauge
+        control_text += "{br}" + gauge + "{br}" + blossom_text
     else:
-        control_text = gauge + "{br}" + control_text
-
+        control_text = blossom_text + "{br}" + gauge + "{br}" + control_text
 
     control_text = replace(control_text, 
-            {…gamepad.prompt, "<enable>": "color:" + color_string(65% gamepad.player_color)})
+            {…gamepad.prompt,
+                "<enable>": "color:" + color_string(65% gamepad.player_color)})
 
                 
     draw_text({
         font: font,
-        pos: ½ placement * (SCREEN_SIZE - xy(5, 14)),
+        pos: ½ placement * (SCREEN_SIZE - xy(5, 20)) - xy(0, 1),
         x_align: placement.x,
         y_align: 0,
         text: control_text,
         markup: true,
+        z: -1,
         color: 25% gamepad.player_color,
         outline: 15% gamepad.player_color})
 
@@ -219,3 +238,8 @@ if mode_frames > end_frame:
     save_local("score", score)
         
     set_mode(Title) because "Ship destroyed"
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+remove_frame_hooks_by_mode(Play)
