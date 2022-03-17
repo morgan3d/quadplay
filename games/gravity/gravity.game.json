@@ -5,8 +5,10 @@
     "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
     "packages": [],
     "scripts": [
+        "quad://scripts/particle.pyxl",
         "game.pyxl",
-        "quad://scripts/particle.pyxl"
+        "entity.pyxl",
+        "ai.pyxl"
     ],
     "modes": [
         "Title",
@@ -30,8 +32,8 @@
         "double_sun_background_music": "quad://sounds/loop-smooth_drops.sound.json",
         "death_blossom_sound": "quad://sounds/shoot-13.sound.json"
     },
-    "version": 1.1,
-    "min_players": 2,
+    "version": 1.2,
+    "min_players": 1,
     "max_players": 4,
     "cooperative": false,
     "competitive": true,

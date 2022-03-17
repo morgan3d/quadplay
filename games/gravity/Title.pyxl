@@ -10,8 +10,10 @@ let score
 // Counter for holding down to reset scores
 let reset_count = 0
 
-// Between 2 and 4
+// Between 1 and 4
 let num_players = load_local("num_players") default 2
+
+let num_bots = load_local("num_bots") default 0
 
 // Start music on the first frame
 let background_audio
@@ -56,18 +58,20 @@ draw_text({font: font, text: "A QUADPLAY✜ GAME BY CASUAL EFFECTS / MUSIC BY AB
 let reset_text = ""
 if show_scores:
     for p < num_players:
+        const x = if num_players == 1 then 0 else (42 PLAYER_SCORE_POSITION[p])
+        
         draw_text({
             font: medium_font,
             text: score[p],
             color: gamepad_array[p].player_color,
             outline: 32% gamepad_array[p].player_color,
             x_align: "center",
-            pos: xy(42 PLAYER_SCORE_POSITION[p], 71),
+            pos: xy(x, 71),
             z: 2})
             
         draw_sprite({
             sprite: ship_sprite[p], 
-            pos: xy(42 PLAYER_SCORE_POSITION[p] + 1, 75),
+            pos: xy(x + 1, 75),
             override_color: (if p mod 2 then 18% else (if p == 0 and get_background().r > 0 then 0% else 12%)) * gamepad_array[p].player_color,
             angle: 90°,
             z: 1.9})
@@ -79,8 +83,11 @@ if mode_frames ≥ TITLE_LOCKOUT_FRAMES:
     draw_text({
         font: font, 
         z: 2, 
-        text: replace("{color:#9 [<]} " + num_players + " PLAYERS {color:#9 [>]}\n\n" + reset_text + "{color:#9 (a)} LAUNCH", gamepad_array[0].prompt), 
-        pos: xy(0, -90 - 40 clamp(200% - mode_frames / TITLE_LOCKOUT_FRAMES, 0%, 100%)), 
+        text: replace(
+            "   {color:#9 [<]} " + num_players + " PLAYERS {color:#9 [>]}      " + 
+            "{color:#9 [v]} " + num_bots + " BOTS {color:#9 [^]}\n\n" +
+            reset_text + "{color:#9 (a)} LAUNCH", gamepad_array[0].prompt), 
+        pos: xy(-10, -90 - 40 clamp(200% - mode_frames / TITLE_LOCKOUT_FRAMES, 0%, 100%)), 
         color: #392, 
         outline: #030, 
         x_align: "center", 
@@ -88,13 +95,20 @@ if mode_frames ≥ TITLE_LOCKOUT_FRAMES:
 
     let any_reset = false
     for gamepad in gamepad_array:
-        num_players = clamp(num_players + gamepad.xx + gamepad.yy, 2, 4)
+        num_players = clamp(num_players + gamepad.xx, 1, 4)
+
+        if gamepad.xx == 1 and num_players == 2:
+            // Just went from 1 to 2 players; remove bots
+            num_bots = 0
+            
+        num_bots = clamp(num_bots + gamepad.yy, if num_players == 1 then 1 else 0, 5 - num_players)
 	
         any_reset = any_reset or gamepad.e or gamepad.f
             
         if gamepad.aa or gamepad.bb:
+            save_local("num_bots", num_bots)
             save_local("num_players", num_players)
-            set_mode(Play, num_players, score) because "Press (a)"
+            set_mode(Play, num_players, num_bots, score) because "Press (a)"
     
     if any_reset and show_scores:
         ++reset_count
@@ -138,8 +152,4 @@ preserving_transform:
             
             // L pattern has a second part
             if pattern == "L": line(x,y,  LINE_TABLE["|"])
-
-
-        
-
 

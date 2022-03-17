@@ -3669,7 +3669,22 @@ function reloadRuntime(oncomplete) {
             enumerable: true,
             get: function() { return this.$status; }
         };
-        
+
+
+        function $bind_gamepad_getters(pad) {
+            Object.defineProperty(pad, 'x', padXGetter);
+            Object.defineProperty(pad, 'dx', dxGetter);
+            Object.defineProperty(pad, 'xx', padXXGetter);
+            Object.defineProperty(pad, 'y', padYGetter);
+            Object.defineProperty(pad, 'dy', dyGetter);
+            Object.defineProperty(pad, 'yy', padYYGetter);
+            Object.defineProperty(pad, 'xy', xyGetter);
+            Object.defineProperty(pad, 'dxy', dxyGetter);
+            Object.defineProperty(pad, 'angle', angleGetter);
+            Object.defineProperty(pad, 'dangle', dangleGetter);
+            Object.defineProperty(pad, 'status', statusGetter);
+        }
+
         QRuntime.touch = {
             screen_x: 0,
             screen_y: 0,
@@ -3762,17 +3777,10 @@ function reloadRuntime(oncomplete) {
                 $analog: [0, 0, 0, 0],
                 $name: `gamepad_array[${p}]`
             };
-            Object.defineProperty(pad, 'x', padXGetter);
-            Object.defineProperty(pad, 'dx', dxGetter);
-            Object.defineProperty(pad, 'xx', padXXGetter);
-            Object.defineProperty(pad, 'y', padYGetter);
-            Object.defineProperty(pad, 'dy', dyGetter);
-            Object.defineProperty(pad, 'yy', padYYGetter);
-            Object.defineProperty(pad, 'xy', xyGetter);
-            Object.defineProperty(pad, 'dxy', dxyGetter);
-            Object.defineProperty(pad, 'angle', angleGetter);
-            Object.defineProperty(pad, 'dangle', dangleGetter);
-            Object.defineProperty(pad, 'status', statusGetter);
+
+            $bind_gamepad_getters(pad);
+            QRuntime.$controlSchemeTable = controlSchemeTable;
+
             Object.defineProperty(pad, 'online_name', {
                 enumerable: true,
                 get: function () {
@@ -3786,7 +3794,7 @@ function reloadRuntime(oncomplete) {
             QRuntime.gamepad_array[p] = Object.seal(pad);
         }
         QRuntime.joy = QRuntime.gamepad_array[0];
-        
+        QRuntime.$bind_gamepad_getters = $bind_gamepad_getters;
         QRuntime.debug_print     = debug_print;
         QRuntime.assert          = assert;
         QRuntime.device_control  = device_control;

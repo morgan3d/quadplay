@@ -1,3 +1,72 @@
+
+function make_bot_gamepad(color, name, index) {
+
+    const gamepad = {
+        $x: 0, $y: 0, $dx: 0, $dy: 0,
+        $angle: 0, $dangle: 0,
+        a: 0, b: 0, c: 0, d: 0, e: 0, f: 0, $p: 0, q: 0,
+        aa: 0, bb: 0, cc: 0, dd: 0, ee: 0, ff: 0, $pp: 0, qq: 0,
+        pressed_a: 0, pressed_b: 0, pressed_c: 0, pressed_d: 0, pressed_e: 0, pressed_f: 0, $pressed_p: 0, pressed_q: 0,
+        released_a: 0, released_b: 0, released_c: 0, released_d: 0, released_e: 0, released_f: 0, $released_p: 0, released_q: 0,
+        $status: "bot",
+        index: index,
+        online_name: name || "bot",
+        player_color: Object.freeze(color === undefined ? gray(0.8) : clone(color)),
+        prompt: Object.freeze(Object.assign({'##': 'AI'}, $controlSchemeTable.Quadplay)),
+        type: "Quadplay"
+    };
+    
+    $bind_gamepad_getters(gamepad);
+
+    return Object.seal(gamepad);
+}
+
+
+function update_bot_gamepad(gamepad, controls, absolute) {
+    const buttons = 'abcdefq';
+
+    for (let i = 0; i < buttons.length; ++i) {
+        const b = buttons[i];
+        
+        const new_val = controls[b] === 1 ? 1 : 0;
+        const old_val = gamepad[b] === 1 ? 1 : 0;
+
+        gamepad['released_' + b] = (old_val && ! new_val) ? 1 : 0;
+        gamepad[b + b] = gamepad['pressed_' + b] = (new_val && ! old_val) ? 1 : 0;
+        gamepad[b] = new_val;
+    }
+
+    const axes = 'xy';
+    for (let i = 0; i < axes.length; ++i) {
+        const a = axes[i];
+
+        const new_val = controls[a] === undefined ?
+              0 : 
+              $Math.max($Math.min(controls[a], 1), -1) *
+              (a === 'x' || absolute ? 1 : -up_y());
+        
+        const old_val = gamepad['$' + a];
+
+        gamepad['$d' + a] = new_val - old_val;
+        gamepad['$' + a + a] = (old_val === 0) ? new_val : 0;;
+        gamepad['$' + a] = new_val;
+    }
+
+    // Logic copied from quadplay-browser.js
+    const oldAngle = gamepad.$angle;
+    if ((gamepad.$y !== 0) || (gamepad.$x !== 0)) {
+        gamepad.$angle = $Math.atan2(-gamepad.$y, gamepad.$x);
+    }
+
+    if ((gamepad.$y === gamepad.$dy && gamepad.$x === gamepad.$dx) || (gamepad.$y === 0 && gamepad.$x === 0)) {
+        gamepad.$dangle = 0;
+    } else {
+        // JavaScript operator % is a floating-point operation
+        gamepad.$dangle = ((3 * Math.PI + gamepad.$angle - oldAngle) % (2 * Math.PI)) - Math.PI;
+    }
+}
+
+
 function $game_tree_compute_children(sgn, game_state, generate_moves, make_move, unpredictability, static_evaluate) {
     // Generate and statically rate all moves
     const child_array = generate_moves(game_state);

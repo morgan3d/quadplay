@@ -77,7 +77,7 @@ var $iteratorCount = new WeakMap();
 
 function $checkContainer(container) {
     if (! Array.isArray(container) && (typeof container !== 'string') && (typeof container !== 'object')) {
-        $error('The container used with a for...in loop must be an object, string, or array.');
+        $error('The container used with a for...in loop must be an object, string, or array. (was ' + unparse(container) + ')');
     }
 }
 
@@ -7911,6 +7911,10 @@ function XY_MAGNITUDE(a) {
     return $Math.hypot(a.x, a.y);
 }
 
+function XY_DISTANCE(a, b) {
+    return $Math.hypot(a.x - b.x, a.y - b.y);
+}
+
 function XY_DIRECTION(v1, v2) {
     let mag = $Math.hypot(v1.x, v1.y);
     if (mag < 0.0000001) {
@@ -7930,8 +7934,20 @@ function XYZ_MAGNITUDE(a) {
     return $Math.hypot(a.x, a.y, a.z);
 }
 
+function XYZ_DISTANCE(a, b) {
+    return $Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
+}
+
 function XZ_MAGNITUDE(a) {
     return $Math.hypot(a.x, a.z);
+}
+
+function XY_DISTANCE(a, b) {
+    return $Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function XZ_DISTANCE(a, b) {
+    return $Math.hypot(a.x - b.x, a.z - b.z);
 }
 
 function XZ_DIRECTION(v1, v2) {

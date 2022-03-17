@@ -5223,7 +5223,39 @@ unaffected.
  
 AI
 ----------------------------------------------------------
-### Move
+### AI Gamepads
+
+Virtual gamepads follow the same API as `gamepad_array[]`
+elements. These allow implementing AI players by synthetic control
+inputs instead of direct logic within simulation.
+
+`make_bot_gamepad(color default gray(80%), name default "bot", index default nil)`
+: Just as with the `gamepad_array[]` gamepads, the gamepad's
+  directional properties will be read with respect to the current
+  transform at the time they are read.
+
+  Has the same properties as a `gamepad_array[]` element, including the derived
+  properties `xy`, `angle`, `pressed_a`, etc.
+
+
+`update_bot_gamepad(gamepad, controls, absolute default false)`
+: Updates the state of the bot gamepad by sending it virtual data
+  for polling.
+
+  The `controls` object has the following properties representing the
+  current state of the gamepad controls. Unspecified elements are
+  assumed to have the value `0`. If `absolute` is true, the current
+  transform is ignored when interpreting directional input.
+  `x`, `y`, `a`, `b`, `c`, `d`, `e`, `f`, `q`. The `p` button is reserved
+  for pause and cannot be pressed on an AI gamepad.
+  
+  In absolute (default <quadplay/>) coordinates, `y` = +1 is pulling
+  the gamepad D-pad down and `y` = -1 is pushing it up. In relative
+  coordinates it will follow the current transform at the time this
+  function is called.
+  
+
+### Board Games
 
 `find_move(player_index, game_state, generate_moves, do_move, static_evaluate, max_depth default 2, unpredictability default 0, debug_move_to_string default nil)`
 : Chooses the best move for the current player in a two player, zero
@@ -5737,7 +5769,10 @@ and other operations that naturally compile with maximum efficiency.
 : Normalize vector (or zero vector).
 
 `XY_MAGNITUDE(srcxy)`
-: `sqrt(XY_DOT_XY(srcxy, srcxy))`
+: `magnitude(srcxy)`
+
+`XY_DISTANCE(srcxy1, srcxy2)`
+: `magnitude(srcxy1 - srcxy2)`
 
 `XY_LERP(srcxy1, srcxy2, s1, dstxy)`
 : Interpolates between the two source values and returns the result in
@@ -5771,7 +5806,10 @@ and other operations that naturally compile with maximum efficiency.
 : Normalize vector (or zero vector).
 
 `XZ_MAGNITUDE(srcxz)`
-: `sqrt(XZ_DOT_XZ(srcxz, srcxz))`
+: `magnitude(srcxz)`
+
+`XZ_DISTANCE(srcxz1, srcxz2)`
+: `magnitude(srcxz1 - srcxz2))`
 
 `XZ_LERP(srcxz1, srcxz2, s1, dstxz)`
 : Interpolates between the two source values and returns the result in
@@ -5802,7 +5840,10 @@ and other operations that naturally compile with maximum efficiency.
 : Normalize vector (or zero vector).
 
 `XYZ_MAGNITUDE(srcxyz)`
-: `sqrt(XYZ_DOT_XYZ(srcxyz, srcxyz))`
+: `magnitude(srcxyz)`
+
+`XYZ_DISTANCE(srcxyz1, srcxyz2)`
+: `magnitude(srcxyz1 - srcxyz2)`
 
 `XYZ_LERP(srcxyz1, srcxyz2, s1, dstxyz)`
 : Interpolates between the two source values and returns the result in

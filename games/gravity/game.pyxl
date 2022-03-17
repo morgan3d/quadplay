@@ -11,6 +11,7 @@ const ship_array = []
 const entity_array = []
 
 const planet = make_entity({
+    name: "planet",
     size: xy(32, 32),
     
     // Which side of sun_array[0] is the planet on when it is eliptical?
@@ -22,16 +23,21 @@ const planet = make_entity({
     
 // Local stars that have gravity
 const sun_array = [{
+    name: "sun",
     pos: xy(0, 0),
     size: SUN_RADIUS * xy(2, 2),
     scale: xy(1, 1),
+    vel: xy(0, 0),
     angle: 0°,
     density: SUN_DENSITY,
     shape: "disk"}]
 
 
+
 // Initialize stars. Some are outside the viewport for 2 player
 for i < NUM_STARS:
+    // deep_immutable_clone() is a beta API that makes the object unable
+    // to change. draw_point() runs faster when the color is immutable.
     push(star_array, {
         pos: random_within_square() * (200% SCREEN_SIZE + xy(150, 0)),
         z: -2,
@@ -72,6 +78,7 @@ def explode_entity(entity):
             const sprite = shapes[random_integer(0, 9)][0]
 
             push(entity_array, make_entity({
+                name: "wreckage",
                 pos: entity.pos + 20 dir,
                 vel: entity.vel + ξ * dir,
                 drag: 0,
@@ -115,6 +122,7 @@ def explode_planet(planet, impact_vel):
         const sprite = shapes[random_integer(0, 9)][0]
 
         push(entity_array, make_entity({
+            name: "planet_wreckage",
             pos: planet.pos + offset * 2 planet.size.x,
             vel: 50% impact_vel + 2 ξ * direction(offset),
             drag: 0,
@@ -129,204 +137,6 @@ def explode_planet(planet, impact_vel):
     planet.pos.x = 10000
     
 
-
-def is_shield_active(ship):
-    return ship.gamepad and get_audio_status(ship.shield_audio).state == "PLAYING"
-    
-
-
-/* Base iterate callback for all entities */
-def update_entity(entity):
-    if entity.gamepad: 
-        update_ship(entity)
-    
-    for sun in sun_array:
-        entity.force += gravity_force(entity, sun)
-        
-    entity.force += gravity_force(entity, planet)
-    
-    // Simulate and wrap around the arena
-    entity_simulate(entity, ∅, {size: SCREEN_SIZE * ARENA_SCALE, pos: xy(150 planet.orbit_side, 0)}, "loop")
-    draw_entity(entity)
-
-    // Dots showing enabled features on ships   
-    if entity.thrust_enabled:
-        draw_point(entity.pos + entity.scale.x * 25 angle_to_xy(entity.angle + 180°), entity.override_color)
-    
-    if entity.torpedo_enabled:
-        draw_point(entity.pos + entity.scale.x * 24 angle_to_xy(entity.angle), entity.override_color)
-
-    if entity.shield_enabled:
-        for i < 2:
-            draw_point(entity.pos + entity.scale.x * 28 angle_to_xy(entity.angle + 120° sign(i - ½)), entity.override_color)
-    
-    if not is_shield_active(entity):
-        for sun in sun_array:
-            if overlaps(entity, sun, false):
-                return explode_entity(entity)
-    
-    if overlaps(entity, planet, false):
-        const planet_buster = (magnitude(entity.vel) * entity_mass(entity)) ≥ PLANET_BUSTER_MOMENTUM
-        
-        if planet_buster:
-            // Destroy the planet
-            explode_planet(planet, entity.vel)
-        
-        if is_shield_active(entity):
-            if not planet_buster:
-                play_sound({
-                    sound: atmosphere_bounce_sound,
-                    playback_rate: 25%,
-                    volume: 75%,
-                    pan: entity.pos})
-                    
-                // Bounce off planet when using shields
-                const U = direction(planet.pos - entity.pos)
-                const V = perp(U)
-                entity.vel = dot(entity.vel, V) * V - max(2.25, |dot(entity.vel, U)|) * U
-        else:
-            // Destroy on collision with sun or planet
-            return explode_entity(entity)
-
-
-
-/* Helper callback for ships */
-def update_ship(ship)
-& with energy, thrust_audio, shield_audio, death_blossom_charge, gamepad, angle, pos, spin, torque, force in ship:
-    const dir = angle_to_xy(angle)
-
-    energy = min(energy + ship.energy_recharge_rate, ENERGY_MAX)
-    if energy == ENERGY_MAX:
-        death_blossom_charge = min(death_blossom_charge + ship.death_blossom_recharge_rate, DEATH_BLOSSOM_CHARGE_MAX)
-    else:
-        death_blossom_charge = 0
-    
-    // Turn
-    spin *= 100% - ANGULAR_DRAG
-    torque = -SHIP_TURN * gamepad.x
-
-    if get_audio_status(ship.thrust_audio).state == "PLAYING":
-        // Thrusters already on
-        force += SHIP_THRUST * dir
-        energy -= ENERGY_THRUST
-        set_pan(thrust_audio, pos)
-        
-        // Visible jet flame
-        ship.exhaust.opacity = oscillate(⅓ mode_frames)
-        
-        if get_audio_status(thrust_audio).now ≥ THRUST_SECONDS:
-            stop_audio(thrust_audio)
-        
-    else if gamepad.pressed_b:
-        if energy ≥ (ENERGY_THRUST - ENERGY_RECHARGE) * THRUST_SECONDS * 60:
-            // Enable thrusters. Use the sound's built in timer to track how
-            // long the thruster has been on
-            thrust_audio = play_sound({sound: thrust_sound, volume: 200%, pan: pos})
-        else:
-            play_sound({sound: no_energy_sound, volume: 400%, pan: pos})
-            
-    else:
-        // Thruster still off
-        ship.exhaust.opacity = 0    
-
-
-    // Death blossom    
-    if death_blossom_charge == DEATH_BLOSSOM_CHARGE_MAX and gamepad.pressed_q:
-        energy *= 0.3
-        
-        play_sound({sound: death_blossom_sound, volume: 230%, pitch: 50%, playback_rate: 400%, pan: pos})
-
-        // Set *below* zero to reset timer
-        death_blossom_charge = -DEATH_BLOSSOM_CHARGE_MAX
-        
-        const initial_angle = angle
-        // Brings approximately back to original facing direction
-        spin += 29° random_sign()
-
-        const FRAMES_PER_TORPEDO = 3
-        def fire(framesleft, total_frames):
-            if framesleft mod FRAMES_PER_TORPEDO: return
-        
-            const dir = angle_to_xy(initial_angle - sign(spin) * 360° framesleft / total_frames)
-            // Blossom torpedos are smaller, faster, and
-            // have higher drag than regular torpedoes
-            // to make them more deadly initially and then 
-            // degrade faster
-            push(entity_array, make_entity({
-                pos: pos + (½ ship.size.x + 10) * dir,
-                vel:
-                    // Launch velocity
-                    210% TORPEDO_SPEED * dir + 
-                    
-                    // Relative to ship
-                    ship.vel,
-                drag: 190% TORPEDO_DRAG,
-                density: 160% TORPEDO_DENSITY,
-                sprite: shapes.square,
-                explode_sound: torpedo_explode_sound,
-                scale: 25%}))
-                
-        add_frame_hook(fire, ∅, DEATH_BLOSSOM_TORPEDO_COUNT * FRAMES_PER_TORPEDO)
-            
-    
-    // Fire torpedo
-    if gamepad.pressed_a:
-        if energy ≥ ENERGY_TORPEDO:
-            energy -= ENERGY_TORPEDO
-            
-            play_sound({sound: torpedo_sound, pan: pos})
-            
-            push(entity_array, make_entity({
-                pos: pos + (½ ship.size.x + 10) * dir,
-                vel:
-                    // Launch velocity
-                    TORPEDO_SPEED * dir + 
-                    
-                    // Relative to ship
-                    ship.vel +
-                    
-                    // Relative to ship front spin (barely noticable)
-                    (½ ship.size.x + 10) * spin * angle_to_xy(90° + angle),
-                drag: TORPEDO_DRAG,
-                density: TORPEDO_DENSITY,
-                sprite: shapes.disk,
-                explode_sound: torpedo_explode_sound,
-                scale: 30%}))
-            
-            // Apply momentum transfer from ship
-            ship.vel -= TORPEDO_MOMENTUM_TRANSFER * (TORPEDO_SPEED * dir) * entity_mass(last_value(entity_array)) / entity_mass(ship)
-        else:
-            play_sound({sound: no_energy_sound, volume: 400%, pan: pos})
-        
-        
-    // Shields
-    if is_shield_active(ship):
-        // Shields already on
-        set_pan(shield_audio, pos)
-        energy -= ENERGY_SHIELD
-        ship.shield.override_color = lerp(gamepad.player_color, #FFF, oscillate(0.1 mode_frames))
-        
-        if get_audio_status(shield_audio).now ≥ SHIELD_SECONDS:
-            stop_audio(shield_audio)
-        
-    else if gamepad.pressed_c or gamepad.pressed_d or gamepad.pressed_e or gamepad.pressed_f:
-        // Enable shield. Use the shield's built in timer to track
-        // how long it has been on
-        if energy ≥ (ENERGY_SHIELD - ENERGY_RECHARGE) * SHIELD_SECONDS * 60:
-            shield_audio = play_sound({
-                    sound: shield_sound, 
-                    volume: 500%,
-                    playback_rate: 50%,
-                    loop: true,
-                    pan: pos})
-            ship.shield.opacity = SHIELD_OPACITY
-        else:
-            play_sound({sound: no_energy_sound, volume: 400%, pan: pos})
-    else:
-        // Shield still off
-        ship.shield.opacity = 0
-     
-     
      
 def collision_callback(A, B):
     if overlaps(A, B, false):
@@ -357,34 +167,46 @@ def collision_callback(A, B):
 
 
 
-def update_and_draw_sun(sun):
+def update_and_draw_sun(sun)
+& with pos, vel, scale in sun:
+    
     // Make multiple suns orbit each other
     if size(sun_array) > 1:
         const ϕ = (if sun_array[0] == sun then 0 else 180°)
-        sun.pos = ½ DOUBLE_SUN_SEPARATION * angle_to_xy(ϕ - 0.1° mode_frames)
+        const old_pos = pos
+        pos = ½ DOUBLE_SUN_SEPARATION * angle_to_xy(ϕ - 0.1° mode_frames)
+        vel = pos - old_pos
     else:
-        sun.pos = xy(0, 0)
+        pos = xy(0, 0)
+        vel = xy(0, 0)
     
-    const tint = if sun.scale.x > 1 then rgb(1.1, 1 / sun.scale.x², 1 / sun.scale.x²) else #fff
-    draw_sprite({pos: sun.pos, angle: 0.01 mode_frames, z: 10, sprite: shapes.star8, scale: 225% sun.scale, override_color: #FA3 * tint})
-    draw_sprite({pos: sun.pos, angle: -0.007 mode_frames, z: 10, sprite: shapes.star8, scale: 200% sun.scale, override_color: #FDA * tint})
-    draw_disk(sun.pos, ½ sun.size.x * sun.scale.x + 5 ξ, pow(tint, 0.25), #DC3 * tint, 10)
+    const tint = if scale.x > 1 then rgb(1.1, 1 / scale.x², 1 / scale.x²) else #fff
+    draw_sprite({pos: pos, angle: 0.01 mode_frames, z: 10, sprite: shapes.star8, scale: 225% scale, override_color: #FA3 * tint})
+    draw_sprite({pos: pos, angle: -0.007 mode_frames, z: 10, sprite: shapes.star8, scale: 200% scale, override_color: #FDA * tint})
+    draw_disk(pos, ½ sun.size.x * scale.x + 5 ξ, pow(tint, 0.25), #DC3 * tint, 10)
 
 
 
-def update_and_draw_planet(planet):
-    if |planet.pos.x| < 1000:
-        // The planet is not "at infinity"
-        // Instead of Kepler's equations, we just assume constant angular change around an ellipse
-        planet.pos = sun_array[0].pos + xy(PLANET_ECCENTRICITY * PLANET_ORBIT * planet.orbit_side, 0) + angle_to_xy(PLANET_SPEED * mode_frames + planet.phase) * PLANET_ORBIT * xy(100%, 100% - PLANET_ECCENTRICITY)
+def update_and_draw_planet(planet)
+& with pos, vel, override_color in planet:
+    
+    if |pos.x| < 1000:
+        // The planet is on screen
         
-    draw_disk(planet.pos, 48% planet.size.x, planet.override_color, ∅, 2)
+        // Instead of Kepler's equations, we just assume constant angular change around an ellipse
+        const old_pos = pos
+        pos = sun_array[0].pos + xy(PLANET_ECCENTRICITY * PLANET_ORBIT * planet.orbit_side, 0) + angle_to_xy(PLANET_SPEED * mode_frames + planet.phase) * PLANET_ORBIT * xy(100%, 100% - PLANET_ECCENTRICITY)
+
+        // Used for AIs to estimate collisions, not for physics simulation
+        vel = pos - old_pos
+    
+    draw_disk(pos, 48% planet.size.x, override_color, ∅, 2)
     draw_sprite({
-        pos: planet.pos,
+        pos: pos,
         sprite: shapes.crescent,
         scale: 110%,
-        angle: xy_to_angle(sun_array[0].pos - planet.pos),
-        override_color: 50% planet.override_color, z: 2})
+        angle: xy_to_angle(sun_array[0].pos - pos),
+        override_color: 50% override_color, z: 2})
        
         
 

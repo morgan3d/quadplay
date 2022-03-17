@@ -32,31 +32,10 @@ def color_string(color):
     return "rgb(" + color.r + "," + color.g + "," + color.b + ")"
     
 
-// When to go back to title
-let end_frame
+// advantage = 100% is normal
+def spawn_ship(name, i, sprite, gamepad, total_ships, phase, advantage default 100%):
 
-
-
-enter(num_players, score_array)
-────────────────────────────────────────────────────────────────────────
-assert(num_players ≥ 2)
-
-end_frame = ∞
-
-ARENA_SCALE = 2.5 + 0.5 (num_players - 1)
-
-resize(particle_array, 0)
-resize(entity_array, 0)
-resize(ship_array, 0)
-
-const max_score = max(…score_array)
-
-// Spawn ships. Rotate the pattern to change starting conditions slightly
-// while making it easy to recognize initial positions
-const phase = 30° random(-1, 1)
-for i < num_players:
-    const gamepad = gamepad_array[i]
-    const θ = 180° + 360° (i / num_players) + 15° ξ + phase
+    const θ = 180° + 360° (i / total_ships) + 15° ξ + phase
 
     // Enlarge with the world scale, but not quite as much
     const scale = 1.2 sqrt(0.5 ARENA_SCALE - 0.5)
@@ -64,11 +43,10 @@ for i < num_players:
     // Adjust the orbit for large and double suns
     const orbit = (15 sun_array[0].scale.x² + (if sun_array[0].scale.x < 1 then 90 else 56)) * ARENA_SCALE
     
-    const advantage = min(250%, max(4, max_score + 2) / max(4, score_array[i] + 2))
-    
     push(ship_array,
         push(entity_array,
             make_entity({
+                name: name,
                 pos: orbit * angle_to_xy(θ),
                 vel: 0.9 angle_to_xy(θ + 90°),
                 angle: θ + 100°,
@@ -92,7 +70,8 @@ for i < num_players:
                 shape: "disk",
                 index: i,
                 override_color: gamepad.player_color,
-                sprite: ship_sprite[i],
+                sprite: sprite,
+                
                 gamepad: gamepad,
                 
                 energy: ENERGY_MAX,
@@ -119,9 +98,9 @@ for i < num_players:
                 child_array: [
                     // White glowing core
                     make_entity({
-                        sprite: ship_sprite[i],
+                        sprite: sprite,
                         density: 0,
-                        pos_in_parent: xy(if i == 1 then -1 else -3, 0),
+                        pos_in_parent: xy(if sprite == ship_sprite[1] or sprite == shapes.rocket then -1 else -3, 0),
                         scale_in_parent: 70% xy(1, 1)})]},
                 
                 // child_table
@@ -143,6 +122,39 @@ for i < num_players:
                         sprite: shapes.hexagon,
                         opacity: 0%,
                         override_color: gamepad.player_color})})))
+    
+
+
+// When to go back to title
+let end_frame
+
+
+
+enter(num_players, num_bots, score_array)
+────────────────────────────────────────────────────────────────────────
+assert(num_players ≥ 1)
+
+end_frame = ∞
+
+const num_ships = num_players + num_bots
+ARENA_SCALE = 2.5 + 0.5 (min(4, num_ships) - 1)
+
+resize(particle_array, 0)
+resize(entity_array, 0)
+resize(ship_array, 0)
+
+// No handicaps in single-player mode
+const max_score = if num_players == 1 then score_array[0] else max(…score_array)
+
+// Spawn ships. Rotate the pattern to change starting conditions slightly
+// while making it easy to recognize initial positions
+const phase = 30° random(-1, 1)
+for i < num_players:
+    const advantage = min(250%, max(4, max_score + 2) / max(4, score_array[i] + 2))
+    spawn_ship("P" + (i + 1), i, ship_sprite[i], gamepad_array[i], num_ships, phase, advantage)
+
+for i < num_bots:
+    spawn_ship("bot" + (i + 1), i + num_players, shapes.rocket, make_bot_gamepad(#666), num_ships, phase)
 
 
 
@@ -168,9 +180,12 @@ preserving_transform:
 
 
 // Instructions
+let num_player_ships = 0
 for energy, gamepad, index, death_blossom_charge in ship in ship_array:
+    // Bots have to go through this loop to update their 
+    // status indicator dots, but they do not write to the screen.
     
-    const placement = 2 xy(index mod 2, 1 - ⌊½ index⌋) - 1 
+    const placement = 2 xy(gamepad.index mod 2, 1 - ⌊½ gamepad.index⌋) - 1 
 
     let gauge = resized("", ⌊energy * ENERGY_GAUGE_BOXES / ENERGY_MAX⌋, "◼")
     if placement.x < 0:
@@ -208,21 +223,24 @@ for energy, gamepad, index, death_blossom_charge in ship in ship_array:
     control_text = replace(control_text, 
             {…gamepad.prompt,
                 "<enable>": "color:" + color_string(65% gamepad.player_color)})
+    
+    if gamepad.status ≠ "bot":
+        ++num_player_ships
+        draw_text({
+            font: font,
+            pos: ½ placement * (SCREEN_SIZE - xy(5, 20)) - xy(0, 1),
+            x_align: placement.x,
+            y_align: 0,
+            text: control_text,
+            markup: true,
+            z: -1,
+            color: 25% gamepad.player_color,
+            outline: 15% gamepad.player_color})
 
-                
-    draw_text({
-        font: font,
-        pos: ½ placement * (SCREEN_SIZE - xy(5, 20)) - xy(0, 1),
-        x_align: placement.x,
-        y_align: 0,
-        text: control_text,
-        markup: true,
-        z: -1,
-        color: 25% gamepad.player_color,
-        outline: 15% gamepad.player_color})
 
-
-if size(ship_array) ≤ 1 and end_frame == ∞:
+if ((num_player_ships == 0 or 
+     (num_player_ships == 1 and size(ship_array) == 1)) and
+    end_frame == ∞):
     // Game over
     end_frame = mode_frames + GAME_OVER_FRAMES
 
