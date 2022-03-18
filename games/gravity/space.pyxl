@@ -1,0 +1,162 @@
+// Changes with number of players
+let ARENA_SCALE = 3
+
+    
+// Distant stars, purely visual
+const star_array = []
+
+
+const planet = make_entity({
+    name: "planet",
+    size: xy(32, 32),
+    
+    // Which side of sun_array[0] is the planet on when it is eliptical?
+    orbit_side: 1,
+    override_color: PLANET_COLOR,
+    z: 2,
+    density: PLANET_DENSITY,
+    shape: "disk"})
+    
+// Local stars that have gravity
+const sun_array = [{
+    name: "sun",
+    pos: xy(0, 0),
+    size: SUN_RADIUS * xy(2, 2),
+    scale: xy(1, 1),
+    vel: xy(0, 0),
+    angle: 0°,
+    density: SUN_DENSITY,
+    shape: "disk"}]
+
+
+
+// Initialize stars. Some are outside the viewport for 2 player
+for i < NUM_STARS:
+    // deep_immutable_clone() is a beta API that makes the object unable
+    // to change. draw_point() runs faster when the color is immutable.
+    push(star_array, {
+        pos: random_within_square() * (200% SCREEN_SIZE + xy(150, 0)),
+        z: -2,
+        color: deep_immutable_clone(random(40%, 75%)² * rgb(75%, 100%, 30%))})
+
+
+
+def gravity_force(A, B):
+    const v = B.pos - A.pos
+    let r = ‖v‖
+    
+    if r < ε:
+        return xy(0, 0)
+    else:
+        // Enforce minimum distance so that gravity does not get
+        // too strong near the surface and prevent escape
+        r = max(r, 80% B.size.x * B.scale.x)
+        return direction(v) * (entity_mass(A) * entity_mass(B) * GRAVITY / r²)
+
+
+
+def explode_planet(planet, impact_vel):
+    play_sound({sound: ship_explode_sound, playback_rate: 50%, pos: planet.pos})
+    for i < 2 entity_area(planet):
+        spawn_particle(
+            planet.pos + 75% planet.size.x * random_within_circle(),
+            planet.vel + random(1, 3) * random_on_circle(),
+            planet.override_color, 
+            0, 
+            random_integer(2, 12)²)
+
+    for i < 7:
+        const offset = random_within_circle()
+        const sprite = shapes[random_integer(0, 9)][0]
+
+        push(entity_array, make_entity({
+            name: "planet_wreckage",
+            pos: planet.pos + offset * 2 planet.size.x,
+            vel: 50% impact_vel + 2 ξ * direction(offset),
+            drag: 0,
+            angle: 360° ξ,
+            override_color: planet.override_color,
+            density: planet.density,
+            sprite: sprite,
+            explode_sound: torpedo_explode_sound,
+            scale: 45%}))
+            
+    // Hide the planet by moving it far away
+    planet.pos.x = 10000
+    
+
+
+def update_and_draw_sun(sun)
+& with pos, vel, scale in sun:
+    
+    // Make multiple suns orbit each other
+    if size(sun_array) > 1:
+        const ϕ = (if sun_array[0] == sun then 0 else 180°)
+        const old_pos = pos
+        pos = ½ DOUBLE_SUN_SEPARATION * angle_to_xy(ϕ - 0.1° mode_frames)
+        vel = pos - old_pos
+    else:
+        pos = xy(0, 0)
+        vel = xy(0, 0)
+    
+    const tint = if scale.x > 1 then rgb(1.1, 1 / scale.x², 1 / scale.x²) else #fff
+    draw_sprite({pos: pos, angle: 0.01 mode_frames, z: 10, sprite: shapes.star8, scale: 225% scale, override_color: #FA3 * tint})
+    draw_sprite({pos: pos, angle: -0.007 mode_frames, z: 10, sprite: shapes.star8, scale: 200% scale, override_color: #FDA * tint})
+    draw_disk(pos, ½ sun.size.x * scale.x + 5 ξ, pow(tint, 0.25), #DC3 * tint, 10)
+
+
+
+def update_and_draw_planet(planet)
+& with pos, vel, override_color in planet:
+    
+    if |pos.x| < 1000:
+        // The planet is on screen
+        
+        // Instead of Kepler's equations, we just assume constant angular change around an ellipse
+        const old_pos = pos
+        pos = sun_array[0].pos + xy(PLANET_ECCENTRICITY * PLANET_ORBIT * planet.orbit_side, 0) + angle_to_xy(PLANET_SPEED * mode_frames + planet.phase) * PLANET_ORBIT * xy(100%, 100% - PLANET_ECCENTRICITY)
+
+        // Used for AIs to estimate collisions, not for physics simulation
+        vel = pos - old_pos
+    
+    draw_disk(pos, 48% planet.size.x, override_color, ∅, 2)
+    draw_sprite({
+        pos: pos,
+        sprite: shapes.crescent,
+        scale: 110%,
+        angle: xy_to_angle(sun_array[0].pos - pos),
+        override_color: 50% override_color, z: 2})
+       
+        
+
+/** Called from Title */
+def create_solar_system(num_games_played):
+    // Do interesting things at 5 and 10 games, and randomly
+    // after those.
+    
+    const big_sun = (num_games_played == 5) or (num_games_played > 3 and ξ ≤ 12% and num_games_played ≠ 10)
+    const double_sun = (num_games_played == 10) or (not big_sun and num_games_played > 10 and ξ ≤ 9%)
+    
+    set_background(if big_sun then #210 else #000)
+    sun_array[0].density = SUN_DENSITY
+    planet.pos.x = 0
+    
+    if double_sun:
+        sun_array[0].density = 150% SUN_DENSITY
+        sun_array[0].scale = 75% xy(1, 1)
+        sun_array[1] = deep_clone(sun_array[0])
+        
+        // Put the planet far off screen
+        planet.orbit_side = 0
+        planet.pos = xy(10000, 0)
+        
+    else:
+        resize(sun_array, 1)
+        sun_array[0].pos = xy(0, 0)
+        sun_array[0].scale = xy(1, 1) * (if big_sun then 180% else 100%) 
+        
+        // Ensure that the planet is at a slightly random location per game,
+        // but prevent it from spawning right near the ships
+        planet.orbit_side = random_sign()
+        planet.phase = 45° random(-1, +1) + 90° - 90° planet.orbit_side
+

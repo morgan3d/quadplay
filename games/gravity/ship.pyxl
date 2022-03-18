@@ -1,0 +1,143 @@
+const ship_sprite = [shapes.starfighter, shapes.jetfighter, shapes.space_cruiser, shapes.space_scout]
+// Ships appear in both the ship_array and the entity_array
+const ship_array = []
+
+
+/* Helper callback for ships */
+def update_ship(ship)
+& with energy, thrust_audio, shield_audio, death_blossom_charge, gamepad, angle, pos, spin, torque, force in ship:
+
+    const dir = angle_to_xy(angle)
+
+    energy = min(energy + ship.energy_recharge_rate, ENERGY_MAX)
+    if energy == ENERGY_MAX:
+        death_blossom_charge = min(death_blossom_charge + ship.death_blossom_recharge_rate, DEATH_BLOSSOM_CHARGE_MAX)
+    else:
+        death_blossom_charge = 0
+    
+    // Turn
+    spin *= 100% - ANGULAR_DRAG
+    torque = -SHIP_TURN * gamepad.x
+
+    if get_audio_status(ship.thrust_audio).state == "PLAYING":
+        // Thrusters already on
+        force += SHIP_THRUST * dir
+        energy -= ENERGY_THRUST
+        set_pan(thrust_audio, pos)
+        
+        // Visible jet flame
+        ship.exhaust.opacity = oscillate(⅓ mode_frames)
+        
+        if get_audio_status(thrust_audio).now ≥ THRUST_SECONDS:
+            stop_audio(thrust_audio)
+        
+    else if gamepad.pressed_b:
+        if energy ≥ (ENERGY_THRUST - ENERGY_RECHARGE) * THRUST_SECONDS * 60:
+            // Enable thrusters. Use the sound's built in timer to track how
+            // long the thruster has been on
+            thrust_audio = play_sound({sound: thrust_sound, volume: 200%, pan: pos})
+        else:
+            play_sound({sound: no_energy_sound, volume: 400%, pan: pos})
+            
+    else:
+        // Thruster still off
+        ship.exhaust.opacity = 0    
+
+
+    // Death blossom    
+    if death_blossom_charge == DEATH_BLOSSOM_CHARGE_MAX and gamepad.pressed_q:
+        energy *= 0.3
+        
+        play_sound({sound: death_blossom_sound, volume: 230%, pitch: 50%, playback_rate: 400%, pan: pos})
+
+        // Set *below* zero to reset timer
+        death_blossom_charge = -DEATH_BLOSSOM_CHARGE_MAX
+        
+        const initial_angle = angle
+        // Brings approximately back to original facing direction
+        spin += 29° random_sign()
+
+        const FRAMES_PER_TORPEDO = 3
+        def fire(framesleft, total_frames):
+            if framesleft mod FRAMES_PER_TORPEDO: return
+        
+            const dir = angle_to_xy(initial_angle - sign(spin) * 360° framesleft / total_frames)
+            // Blossom torpedos are smaller, faster, and
+            // have higher drag than regular torpedoes
+            // to make them more deadly initially and then 
+            // degrade faster
+            push(entity_array, make_entity({
+                name: "blossom_torpedo",
+                pos: pos + (½ ship.size.x + 10) * dir,
+                vel:
+                    // Launch velocity
+                    210% TORPEDO_SPEED * dir + 
+                    
+                    // Relative to ship
+                    ship.vel,
+                drag: 190% TORPEDO_DRAG,
+                density: 160% TORPEDO_DENSITY,
+                sprite: shapes.square,
+                explode_sound: torpedo_explode_sound,
+                scale: 25%}))
+                
+        add_frame_hook(fire, ∅, DEATH_BLOSSOM_TORPEDO_COUNT * FRAMES_PER_TORPEDO)
+            
+    
+    // Fire torpedo
+    if gamepad.pressed_a:
+        if energy ≥ ENERGY_TORPEDO:
+            energy -= ENERGY_TORPEDO
+            
+            play_sound({sound: torpedo_sound, pan: pos})
+            
+            push(entity_array, make_entity({
+                name: "torpedo",
+                pos: pos + (½ ship.size.x + 10) * dir,
+                vel:
+                    // Launch velocity
+                    TORPEDO_SPEED * dir + 
+                    
+                    // Relative to ship
+                    ship.vel +
+                    
+                    // Relative to ship front spin (barely noticable)
+                    (½ ship.size.x + 10) * spin * angle_to_xy(90° + angle),
+                drag: TORPEDO_DRAG,
+                density: TORPEDO_DENSITY,
+                sprite: shapes.disk,
+                explode_sound: torpedo_explode_sound,
+                scale: 30%}))
+            
+            // Apply momentum transfer from ship
+            ship.vel -= TORPEDO_MOMENTUM_TRANSFER * (TORPEDO_SPEED * dir) * entity_mass(last_value(entity_array)) / entity_mass(ship)
+        else:
+            play_sound({sound: no_energy_sound, volume: 400%, pan: pos})
+        
+        
+    // Shields
+    if is_shield_active(ship):
+        // Shields already on
+        set_pan(shield_audio, pos)
+        energy -= ENERGY_SHIELD
+        ship.shield.override_color = lerp(gamepad.player_color, #FFF, oscillate(0.1 mode_frames))
+        
+        if get_audio_status(shield_audio).now ≥ SHIELD_SECONDS:
+            stop_audio(shield_audio)
+        
+    else if gamepad.pressed_c or gamepad.pressed_d or gamepad.pressed_e or gamepad.pressed_f:
+        // Enable shield. Use the shield's built in timer to track
+        // how long it has been on
+        if energy ≥ (ENERGY_SHIELD - ENERGY_RECHARGE) * SHIELD_SECONDS * 60:
+            shield_audio = play_sound({
+                    sound: shield_sound, 
+                    volume: 500%,
+                    playback_rate: 50%,
+                    loop: true,
+                    pan: pos})
+            ship.shield.opacity = SHIELD_OPACITY
+        else:
+            play_sound({sound: no_energy_sound, volume: 400%, pan: pos})
+    else:
+        // Shield still off
+        ship.shield.opacity = 0

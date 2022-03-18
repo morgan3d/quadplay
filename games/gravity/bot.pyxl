@@ -1,0 +1,72 @@
+def update_bot(ship)
+& with gamepad, energy in ship:
+    const control = {x: gamepad.x}
+    
+    // Collision objects reused to reduce memory allocation    
+    const ray = {pos: ship.pos, dir: xy(0, 0), length: ∞}
+    const proxy = {shape: "disk", scale: xy(1, 1)}
+    
+    let nearest_ship = ∅
+    let nearest_ship_distance = ∞
+    
+    // Bots intentionally don't know to look at wraparound edges
+    // to keep the logic simple and give players and advantage
+    for object in […sun_array, planet, …entity_array]:
+        // Skip self!
+        if object == ship: continue
+        
+        // Consider collisions by enlarging the target
+        // by the ship's size and then casting a ray.
+        // Prune with faster intrinsics when very far away
+        // or moving in the opposite direction
+        const distance = XY_DISTANCE(ship.pos, object.pos)
+        if distance < 180:
+            XY_SUB_XY(ship.vel, object.vel, ray.dir)
+            const speed = XY_MAGNITUDE(ray.dir) * sign(XY_DOT_XY(ray.dir, object.pos - ship.pos))
+            
+            if speed > ε:
+                ray.length = ∞
+                proxy.pos = object.pos
+                proxy.size = object.size * object.scale + ship.size * 1.5 ship.scale
+
+                if ray_intersect(ray, proxy):
+                    const frames_until_collision = (ray.length - ½ ship.size.x * ship.scale.x) / speed
+                    if frames_until_collision < 60:
+                        // Turn on shields
+                        control.c = 1
+    
+        if object.gamepad and object.gamepad.status ≠ "bot" and distance < nearest_ship_distance:
+            // Track closest target
+            nearest_ship_distance = distance
+            nearest_ship = object
+
+
+    if nearest_ship_distance < 450:
+        // debug_print("" + nearest_ship_distance + " from " + nearest_ship.name)
+        
+        // Turn to lead the nearest ship
+        const lead = 2500 / nearest_ship_distance
+        const Δθ = loop(xy_to_angle(nearest_ship.pos + nearest_ship.vel * lead - ship.pos - ship.vel * lead) - ship.angle, -180°, 180°)
+        if |Δθ| > 5°:
+            control.x = -sign(Δθ)
+        else if nearest_ship_distance < 200 and energy > 130% ENERGY_TORPEDO and ξ < 5%:
+            // Fire if facing and not too far and it won't completely deplete energy
+            control.a
+        
+    else if ξ < 1% or mode_frames == 0:
+        // Change turn
+        control.x = random_integer(-1, +1)
+
+                    
+    // If a collision is coming, save energy for shields.
+    // Otherwise consider different moves.
+    if not control.c:
+        if ξ < 0.3% and mode_frames > 20:
+            // Fire
+            control.a = 1
+        
+        if ξ < 0.2% or (mode_frames < 90 and ξ < 1%):
+            // Thrust
+            control.b = 1
+    
+    update_bot_gamepad(gamepad, control)
