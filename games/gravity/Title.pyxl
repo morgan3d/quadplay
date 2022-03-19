@@ -25,6 +25,7 @@ enter
 
 set_transform(½ SCREEN_SIZE)
 score = load_local("score") default [0, 0, 0, 0]
+resize(score, 4)
 ARENA_SCALE = 1.5
 
 

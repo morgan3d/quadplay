@@ -16,7 +16,8 @@ const planet = make_entity({
     z: 2,
     density: PLANET_DENSITY,
     shape: "disk"})
-    
+
+
 // Local stars that have gravity
 const sun_array = [{
     name: "sun",
@@ -29,9 +30,8 @@ const sun_array = [{
     shape: "disk"}]
 
 
-
 // Initialize stars. Some are outside the viewport for 2 player
-for i < NUM_STARS:
+for i < STAR_COUNT:
     // deep_immutable_clone() is a beta API that makes the object unable
     // to change. draw_point() runs faster when the color is immutable.
     push(star_array, {
@@ -80,10 +80,8 @@ def explode_planet(planet, impact_vel):
             sprite: sprite,
             explode_sound: torpedo_explode_sound,
             scale: 45%}))
-            
-    // Hide the planet by moving it far away
-    planet.pos.x = 10000
     
+    hide_planet()    
 
 
 def update_and_draw_sun(sun)
@@ -103,6 +101,14 @@ def update_and_draw_sun(sun)
     draw_sprite({pos: pos, angle: 0.01 mode_frames, z: 10, sprite: shapes.star8, scale: 225% scale, override_color: #FA3 * tint})
     draw_sprite({pos: pos, angle: -0.007 mode_frames, z: 10, sprite: shapes.star8, scale: 200% scale, override_color: #FDA * tint})
     draw_disk(pos, ½ sun.size.x * scale.x + 5 ξ, pow(tint, 0.25), #DC3 * tint, 10)
+
+
+
+def hide_planet(center_sun):
+    // Put the planet far off screen
+    if center_sun:
+        planet.orbit_side = 0
+    planet.pos = xy(10000, 0)
 
 
 
@@ -131,11 +137,17 @@ def update_and_draw_planet(planet)
 
 /** Called from Title */
 def create_solar_system(num_games_played):
+
+    resize(particle_array, 0)
+    resize(entity_array, 0)
+    resize(ship_array, 0)
+
     // Do interesting things at 5 and 10 games, and randomly
     // after those.
     
-    const big_sun = (num_games_played == 5) or (num_games_played > 3 and ξ ≤ 12% and num_games_played ≠ 10)
-    const double_sun = (num_games_played == 10) or (not big_sun and num_games_played > 10 and ξ ≤ 9%)
+    const big_sun    = (num_games_played == 5) or (num_games_played > 3 and ξ ≤ 10% and num_games_played ≠ 8 and num_games_played ≠ 12)
+    const double_sun = (num_games_played == 8) or (not big_sun and num_games_played > 10 and ξ ≤ 10%)
+    const asteroids  = (num_games_played == 12) or (not big_sun and not double_sun and num_games_played > 12 and ξ ≤ 14%)
     
     set_background(if big_sun then #210 else #000)
     sun_array[0].density = SUN_DENSITY
@@ -145,10 +157,7 @@ def create_solar_system(num_games_played):
         sun_array[0].density = 150% SUN_DENSITY
         sun_array[0].scale = 75% xy(1, 1)
         sun_array[1] = deep_clone(sun_array[0])
-        
-        // Put the planet far off screen
-        planet.orbit_side = 0
-        planet.pos = xy(10000, 0)
+        hide_planet(true)
         
     else:
         resize(sun_array, 1)
@@ -160,3 +169,21 @@ def create_solar_system(num_games_played):
         planet.orbit_side = random_sign()
         planet.phase = 45° random(-1, +1) + 90° - 90° planet.orbit_side
 
+
+    if asteroids:
+        hide_planet(true)
+        for i < ASTEROID_COUNT:
+            push(entity_array, make_entity({
+                name: "asteroid",
+                shape: "disk",
+                pos: xy(random_sign() * random(85%, 100%), lerp(-100%, +100%, i / ASTEROID_COUNT)) * SCREEN_SIZE * ARENA_SCALE,
+                vel: random_on_circle() * random(65%, 110%),
+                spin: random(0.5°, 1.5°) * random_sign(),
+                drag: 0,
+                spawn_frame: mode_frames,
+                angle: 360° ξ,
+                override_color: ASTEROID_COLOR * random(50%, 100%),
+                density: ASTEROID_DENSITY,
+                sprite: shapes.asteroid,
+                explode_sound: asteroid_explode_sound,
+                scale: 100%}))

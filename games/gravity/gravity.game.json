@@ -6,9 +6,10 @@
     "packages": [],
     "scripts": [
         "quad://scripts/particle.pyxl",
-        "game.pyxl",
+        "space.pyxl",
         "entity.pyxl",
-        "ai.pyxl"
+        "ship.pyxl",
+        "bot.pyxl"
     ],
     "modes": [
         "Title",
@@ -30,7 +31,8 @@
         "atmosphere_bounce_sound": "quad://sounds/jump-02.sound.json",
         "big_sun_background_music": "quad://sounds/loop-dark-thriller.sound.json",
         "double_sun_background_music": "quad://sounds/loop-smooth_drops.sound.json",
-        "death_blossom_sound": "quad://sounds/shoot-13.sound.json"
+        "death_blossom_sound": "quad://sounds/shoot-13.sound.json",
+        "asteroid_explode_sound": "quad://sounds/explode-06.sound.json"
     },
     "version": 1.2,
     "min_players": 1,
@@ -86,7 +88,7 @@
         },
         "SHIP_THRUST": {
             "type": "number",
-            "value": "4.0",
+            "value": "4.1",
             "min": 0,
             "max": 20,
             "format": "0.0",
@@ -332,7 +334,7 @@
         },
         "ENERGY_SHIELD": {
             "type": "number",
-            "value": "2.3",
+            "value": "2.5",
             "min": 0,
             "max": 15,
             "format": "0.0",
@@ -351,14 +353,6 @@
             "value": "130",
             "min": 0,
             "max": 360,
-            "format": "",
-            "quantum": 1
-        },
-        "NUM_STARS": {
-            "type": "number",
-            "value": "275",
-            "min": 0,
-            "max": 500,
             "format": "",
             "quantum": 1
         },
@@ -420,6 +414,47 @@
             "max": 3600,
             "format": "",
             "quantum": 1
+        },
+        "ASTEROID_DENSITY": {
+            "type": "number",
+            "value": "1",
+            "min": 0.1,
+            "max": 3,
+            "format": "",
+            "quantum": 0.1
+        },
+        "ASTEROID_COUNT": {
+            "type": "number",
+            "value": "5",
+            "min": 0,
+            "max": 10,
+            "format": "",
+            "quantum": 1
+        },
+        "STAR_COUNT": {
+            "type": "number",
+            "value": "275",
+            "min": 0,
+            "max": 500,
+            "format": "",
+            "quantum": 1
+        },
+        "ASTEROID_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "76%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "51%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "46%"
+                }
+            }
         }
     },
     "screenshot_tag": "Gravity",

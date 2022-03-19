@@ -43,6 +43,8 @@ def spawn_ship(name, i, sprite, gamepad, total_ships, phase, advantage default 1
     // Adjust the orbit for large and double suns
     const orbit = (15 sun_array[0].scale.x² + (if sun_array[0].scale.x < 1 then 90 else 56)) * ARENA_SCALE
     
+    assert(advantage > 0 and advantage < 10)
+    
     push(ship_array,
         push(entity_array,
             make_entity({
@@ -138,10 +140,6 @@ end_frame = ∞
 
 const num_ships = num_players + num_bots
 ARENA_SCALE = 2.5 + 0.5 (min(4, num_ships) - 1)
-
-resize(particle_array, 0)
-resize(entity_array, 0)
-resize(ship_array, 0)
 
 // No handicaps in single-player mode
 const max_score = if num_players == 1 then score_array[0] else max(…score_array)
@@ -247,12 +245,13 @@ if ((num_player_ships == 0 or
 
 if mode_frames > end_frame:
     const score = load_local("score") default [0, 0, 0, 0]
-
+    resize(score, 4)
+    
     for thrust_audio, shield_audio in ship in ship_array:
         stop_audio(thrust_audio)
         stop_audio(shield_audio)
         ++score[ship.index]
-        
+    
     save_local("score", score)
         
     set_mode(Title) because "Ship destroyed"

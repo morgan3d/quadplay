@@ -1,3 +1,110 @@
+const entity_array = []
+
+
+def collision_callback(A, B):
+    if overlaps(A, B, false):
+        const a_shield = is_shield_active(A)
+        const b_shield = is_shield_active(B)
+        
+        if a_shield and b_shield and dot(B.vel - A.vel, B.pos - A.pos) < 0:
+            // Bounce if both shielded and converging
+            play_sound({
+                sound: atmosphere_bounce_sound,
+                playback_rate: 25%,
+                volume: 60%,
+                pan: A.pos})
+                
+            // to B
+            const U = direction(B.pos - A.pos)
+            const V = perp(U)
+            
+            // All ships have the same mass, so swap velocities
+            // during a collision and slightly amplify
+            const temp = A.vel
+            A.vel = 1.1 xy(B.vel)
+            B.vel = 1.1 xy(temp)
+                        
+        return [
+            if not a_shield then explode_entity(A) else iterate.CONTINUE, 
+            if not b_shield then explode_entity(B) else iterate.CONTINUE]        
+
+
+
+/* Returns iterate.REMOVE. 
+
+   If the entity is a ship, removes from ship_array. 
+   If the entity is an asteroid, fractures.
+   
+   Never removes from entity_array. */
+def explode_entity(entity):
+    // Particles
+    const N = entity_area(entity) * (if entity.name == "asteroid" then 25% else 100%)
+    for i < N:
+        spawn_particle(
+            entity.pos + 40% entity.size.x * random_within_circle(),
+            entity.vel + random(1, 3) * random_on_circle(),
+            entity.override_color default #bbb, 
+            0, 
+            random_integer(4, 12)² * (if entity.gamepad then 250% else 100%))
+    
+    if entity.name == "asteroid" and 75% entity.scale.x > 30%:
+        // This is an asteroid. Divide in half until too small
+        const axis = random_on_circle()
+        for i < 2:
+            // Make heavier and add drag as they break up
+            // to encourage falling into the sun. Get brighter
+            // as smaller to make easier to see
+            push(entity_array, make_entity({
+                …entity,
+                spawn_frame: mode_frames,
+                pos: entity.pos + entity.size.x * entity.scale.x * axis * (i - ½),
+                vel: entity.vel + 150% axis * (i - ½),
+                spin: random(0.5°, 1.5°) * random_sign(),
+                drag: entity.drag + 0.004,
+                density: 150% entity.density,
+                override_color: 108% entity.override_color,
+                angle: 360° ξ,
+                scale: 75% entity.scale}))
+    
+    
+    if entity.gamepad:
+        // This is a ship. Break up into wreckage
+        for i < 3:
+            const dir = random_on_circle()
+            const sprite = shapes[random_integer(0, 9)][0]
+
+            push(entity_array, make_entity({
+                name: "wreckage",
+                pos: entity.pos + 20 dir,
+                vel: entity.vel + ξ * dir,
+                drag: 0,
+                angle: 360° ξ,
+                override_color: entity.override_color,
+                density: TORPEDO_DENSITY,
+                sprite: sprite,
+                explode_sound: torpedo_explode_sound,
+                scale: 45%,
+                child_array: [
+                    // White glowing core
+                    make_entity({
+                        density: 0,
+                        sprite: sprite,
+                        scale_in_parent: 50% xy(1, 1)
+                    })]}))
+                
+        stop_audio(entity.thrust_audio)
+        stop_audio(entity.shield_audio)
+        remove_values(ship_array, entity)
+    
+    // Don't play too many simultaneous explosion sounds; if something
+    // just spawned, don't play a sound for it
+    if entity.explode_sound and (not entity.spawn_frame or entity.spawn_frame < mode_frames - 1):
+        play_sound({sound: entity.explode_sound, pan: entity.pos, volume: 90%})
+    
+    return iterate.REMOVE
+
+
+
 def is_shield_active(ship):
     return ship.gamepad and get_audio_status(ship.shield_audio).state == "PLAYING"
     
@@ -59,142 +166,3 @@ def update_entity(entity):
             return explode_entity(entity)
 
 
-
-/* Helper callback for ships */
-def update_ship(ship)
-& with energy, thrust_audio, shield_audio, death_blossom_charge, gamepad, angle, pos, spin, torque, force in ship:
-
-    const dir = angle_to_xy(angle)
-
-    energy = min(energy + ship.energy_recharge_rate, ENERGY_MAX)
-    if energy == ENERGY_MAX:
-        death_blossom_charge = min(death_blossom_charge + ship.death_blossom_recharge_rate, DEATH_BLOSSOM_CHARGE_MAX)
-    else:
-        death_blossom_charge = 0
-    
-    // Turn
-    spin *= 100% - ANGULAR_DRAG
-    torque = -SHIP_TURN * gamepad.x
-
-    if get_audio_status(ship.thrust_audio).state == "PLAYING":
-        // Thrusters already on
-        force += SHIP_THRUST * dir
-        energy -= ENERGY_THRUST
-        set_pan(thrust_audio, pos)
-        
-        // Visible jet flame
-        ship.exhaust.opacity = oscillate(⅓ mode_frames)
-        
-        if get_audio_status(thrust_audio).now ≥ THRUST_SECONDS:
-            stop_audio(thrust_audio)
-        
-    else if gamepad.pressed_b:
-        if energy ≥ (ENERGY_THRUST - ENERGY_RECHARGE) * THRUST_SECONDS * 60:
-            // Enable thrusters. Use the sound's built in timer to track how
-            // long the thruster has been on
-            thrust_audio = play_sound({sound: thrust_sound, volume: 200%, pan: pos})
-        else:
-            play_sound({sound: no_energy_sound, volume: 400%, pan: pos})
-            
-    else:
-        // Thruster still off
-        ship.exhaust.opacity = 0    
-
-
-    // Death blossom    
-    if death_blossom_charge == DEATH_BLOSSOM_CHARGE_MAX and gamepad.pressed_q:
-        energy *= 0.3
-        
-        play_sound({sound: death_blossom_sound, volume: 230%, pitch: 50%, playback_rate: 400%, pan: pos})
-
-        // Set *below* zero to reset timer
-        death_blossom_charge = -DEATH_BLOSSOM_CHARGE_MAX
-        
-        const initial_angle = angle
-        // Brings approximately back to original facing direction
-        spin += 29° random_sign()
-
-        const FRAMES_PER_TORPEDO = 3
-        def fire(framesleft, total_frames):
-            if framesleft mod FRAMES_PER_TORPEDO: return
-        
-            const dir = angle_to_xy(initial_angle - sign(spin) * 360° framesleft / total_frames)
-            // Blossom torpedos are smaller, faster, and
-            // have higher drag than regular torpedoes
-            // to make them more deadly initially and then 
-            // degrade faster
-            push(entity_array, make_entity({
-                name: "blossom_torpedo",
-                pos: pos + (½ ship.size.x + 10) * dir,
-                vel:
-                    // Launch velocity
-                    210% TORPEDO_SPEED * dir + 
-                    
-                    // Relative to ship
-                    ship.vel,
-                drag: 190% TORPEDO_DRAG,
-                density: 160% TORPEDO_DENSITY,
-                sprite: shapes.square,
-                explode_sound: torpedo_explode_sound,
-                scale: 25%}))
-                
-        add_frame_hook(fire, ∅, DEATH_BLOSSOM_TORPEDO_COUNT * FRAMES_PER_TORPEDO)
-            
-    
-    // Fire torpedo
-    if gamepad.pressed_a:
-        if energy ≥ ENERGY_TORPEDO:
-            energy -= ENERGY_TORPEDO
-            
-            play_sound({sound: torpedo_sound, pan: pos})
-            
-            push(entity_array, make_entity({
-                name: "torpedo",
-                pos: pos + (½ ship.size.x + 10) * dir,
-                vel:
-                    // Launch velocity
-                    TORPEDO_SPEED * dir + 
-                    
-                    // Relative to ship
-                    ship.vel +
-                    
-                    // Relative to ship front spin (barely noticable)
-                    (½ ship.size.x + 10) * spin * angle_to_xy(90° + angle),
-                drag: TORPEDO_DRAG,
-                density: TORPEDO_DENSITY,
-                sprite: shapes.disk,
-                explode_sound: torpedo_explode_sound,
-                scale: 30%}))
-            
-            // Apply momentum transfer from ship
-            ship.vel -= TORPEDO_MOMENTUM_TRANSFER * (TORPEDO_SPEED * dir) * entity_mass(last_value(entity_array)) / entity_mass(ship)
-        else:
-            play_sound({sound: no_energy_sound, volume: 400%, pan: pos})
-        
-        
-    // Shields
-    if is_shield_active(ship):
-        // Shields already on
-        set_pan(shield_audio, pos)
-        energy -= ENERGY_SHIELD
-        ship.shield.override_color = lerp(gamepad.player_color, #FFF, oscillate(0.1 mode_frames))
-        
-        if get_audio_status(shield_audio).now ≥ SHIELD_SECONDS:
-            stop_audio(shield_audio)
-        
-    else if gamepad.pressed_c or gamepad.pressed_d or gamepad.pressed_e or gamepad.pressed_f:
-        // Enable shield. Use the shield's built in timer to track
-        // how long it has been on
-        if energy ≥ (ENERGY_SHIELD - ENERGY_RECHARGE) * SHIELD_SECONDS * 60:
-            shield_audio = play_sound({
-                    sound: shield_sound, 
-                    volume: 500%,
-                    playback_rate: 50%,
-                    loop: true,
-                    pan: pos})
-            ship.shield.opacity = SHIELD_OPACITY
-        else:
-            play_sound({sound: no_energy_sound, volume: 400%, pan: pos})
-    else:
-        // Shield still off
-        ship.shield.opacity = 0
