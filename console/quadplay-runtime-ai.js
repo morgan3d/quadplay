@@ -28,11 +28,11 @@ function update_bot_gamepad(gamepad, controls, absolute) {
     for (let i = 0; i < buttons.length; ++i) {
         const b = buttons[i];
         
-        const new_val = controls[b] === 1 ? 1 : 0;
-        const old_val = gamepad[b] === 1 ? 1 : 0;
+        const old_val = gamepad[b] || 0;
+        const new_val = controls[b] ? (old_val + 1) : 0;
 
         gamepad['released_' + b] = (old_val && ! new_val) ? 1 : 0;
-        gamepad[b + b] = gamepad['pressed_' + b] = (new_val && ! old_val) ? 1 : 0;
+        gamepad[b + b] = gamepad['pressed_' + b] = (new_val && ! old_val) ? new_val : 0;
         gamepad[b] = new_val;
     }
 

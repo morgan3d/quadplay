@@ -1534,27 +1534,27 @@ Property           | Values   | Meaning
 `dxy`              | xy       | `xy(dx, dy)` for the gamepad
 `angle`            | -π to +π | `rotation_sign() * atan(y, x)` if both are not zero, otherwise the last angle
 `dangle`           | -π to +π | Change in `angle` this frame
-`a`                | 0 or 1   | 1 if the ⓐ button was held down at the start of the current frame
-`aa` or `pressed_a`| 0 or 1   | 1 if the ⓐ button went from up to down at least once since the previous frame
-`released_a`       | 0 or 1   | 1 if the ⓐ button went from down to up at least once since the previous frame
-`b`                | 0 or 1   | 1 if the ⓑ button was held down at the start of the current frame
-`bb` or `pressed_b`| 0 or 1   | 1 if the ⓑ button went from up to down at least once since the previous frame
-`released_b`       | 0 or 1   | 1 if the ⓑ button went from down to up at least once since the previous frame
-`c`                | 0 or 1   | 1 if the ⓒ button was held down at the start of the current frame
-`cc` or `pressed_c`| 0 or 1   | 1 if the ⓒ button went from up to down at least once since the previous frame
-`released_c`       | 0 or 1   | 1 if the ⓒ button went from down to up at least once since the previous frame
-`d`                | 0 or 1   | 1 if the ⓓ button was held down at the start of the current frame
-`dd` or `pressed_d`| 0 or 1   | 1 if the ⓓ button went from up to down at least once since the previous frame
-`released_d`       | 0 or 1   | 1 if the ⓓ button went from down to up at least once since the previous frame
-`e`                | 0 or 1   | 1 if the ⓔ button was held down at the start of the current frame
-`ee` or `pressed_e`| 0 or 1   | 1 if the ⓔ button went from up to down at least once since the previous frame
-`released_e`       | 0 or 1   | 1 if the ⓔ button went from down to up at least once since the previous frame
-`f`                | 0 or 1   | 1 if the ⓕ button was held down at the start of the current frame
-`ff` or `pressed_e`| 0 or 1   | 1 if the ⓕ button went from up to down at least once since the previous frame
-`released_f`       | 0 or 1   | 1 if the ⓕ button went from down to up at least once since the previous frame
-`q`                | 0 or 1   | 1 if the ⓠ button was held down at the start of the current frame
-`qq` or `pressed_q`| 0 or 1   | 1 if the ⓠ button went from up to down at least once since the previous frame
-`released_q`       | 0 or 1   | 1 if the ⓠ button went from down to up at least once since the previous frame
+`a`                | number   | The number of frames the ⓐ button has been held down, 0 if it was not held down at the start of the current frame
+`aa` or `pressed_a`| number   | Nonzero if the ⓐ button went from up to down at least once since the previous frame
+`released_a`       | number   | Number of frames the ⓐ button was down if it went from down to up at least once since the previous frame, otherwise 0
+`b`                | number   | The number of frames the ⓑ button has been held down, 0 if it was not held down at the start of the current frame
+`bb` or `pressed_b`| number   | Nonzero if the ⓑ button went from up to down at least once since the previous frame
+`released_b`       | number   | Number of frames the ⓑ button was down if it went from down to up at least once since the previous frame, otherwise 0
+`c`                | number   | The number of frames the ⓒ button has been held down, 0 if it was not held down at the start of the current frame
+`cc` or `pressed_c`| number   | Nonzero if the ⓒ button went from up to down at least once since the previous frame
+`released_c`       | number   | Number of frames the ⓒ button was down if it went from down to up at least once since the previous frame, otherwise 0
+`d`                | number   | The number of frames the ⓓ button has been held down, 0 if it was not held down at the start of the current frame
+`dd` or `pressed_d`| number   | Nonzero if the ⓓ button went from up to down at least once since the previous frame
+`released_d`       | number   | Number of frames the ⓓ button was down if it went from down to up at least once since the previous frame, otherwise 0
+`e`                | number   | The number of frames the ⓔ button has been held down, 0 if it was not held down at the start of the current frame
+`ee` or `pressed_e`| number   | Nonzero if the ⓔ button went from up to down at least once since the previous frame
+`released_e`       | number   | Number of frames the ⓔ button was down if it went from down to up at least once since the previous frame, otherwise 0
+`f`                | number   | The number of frames the ⓕ button has been held down, 0 if it was not held down at the start of the current frame
+`ff` or `pressed_e`| number   | Nonzero if the ⓕ button went from up to down at least once since the previous frame
+`released_f`       | number   | Number of frames the ⓕ button was down if it went from down to up at least once since the previous frame, otherwise 0
+`q`                | number   | The number of frames the ⓠ button has been held down, 0 if it was not held down at the start of the current frame
+`qq` or `pressed_q`| number   | Nonzero if the ⓠ button went from up to down at least once since the previous frame
+`released_q`       | number   | Number of frames the ⓠ button was down if it went from down to up at least once since the previous frame, otherwise 0
 `type`             | string   | The type of gamepad, as autodetected based on serial number or overriden by the player
 `prompt`           | `{...}`  | An object mapping button names to text prompts (see below)
 `status`           | string   | `"absent"` before any interaction this game on this gamepad. `"present"` if local interaction has occurred and not playing an online game. `"host"` if the host in an online game. `"guest"` if a guest in an online game. Starting or stopping online hosting/guesting resets to `"absent"`.
@@ -1566,9 +1566,15 @@ Property           | Values   | Meaning
     double-letter properties (`xx`, `aa`) for discrete inputs such as
     firing or choosing a menu option.
 
+!!! 
+    Use `sign(gamepad.a)` etc. if you want to force the value to 1
+    or 0.  There is never a need to convert to a boolean because 0 =
+    false and nonzero = true for statements such as `if gamepad.a:`
+
+
 If a button is pressed and released very quickly, then `a` could be 0
 for two frames in a row, because at the time that the frame runs it
-will be in the released state. However, `aa` will be 1 for a frame in
+will be in the released state. However, `aa` will be nonzero for a frame in
 that case, so that the button press will not be missed. (Due to
 technical limitations of web browsers, there is a very small chance
 that `aa` will not capture a button press that is less than 1/60s on a

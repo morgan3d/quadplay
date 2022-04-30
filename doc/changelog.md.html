@@ -7,6 +7,23 @@ Changes for both the specification and implementation in each release
 of [<quadplay/>](manual.md.html).
 
 
+2022 April TBD: Update 83
+===================================
+
+- Fixed `random_within_region()` for simple rectangles
+  with no `pos` or `shape` property.
+- `gamepad.a` and all other button current values are now the number of frames for which
+  the button has been held down to simplify implementing long-press input
+  schemes (previously was 1 if held and 0 if not held)
+- `gamepad.released_a` and all other buttons releases are now the number of frames for which
+  the button was held down before release to simplify implementing long-press input
+  schemes (previously was 1 if released and 0 if not released that frame)
+- Fixed bots not being able to press buttons
+- The `child_table` argument to `make_entity()` now allows overriding
+  existing properties of the entity.
+- Added Nearest and premultiplied-alpha Average 50% scaling to the scalepix tool
+
+
 2022 March 19: Update 82
 ===================================
 

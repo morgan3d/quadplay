@@ -14,10 +14,6 @@ def collision_callback(A, B):
                 volume: 60%,
                 pan: A.pos})
                 
-            // to B
-            const U = direction(B.pos - A.pos)
-            const V = perp(U)
-            
             // All ships have the same mass, so swap velocities
             // during a collision and slightly amplify
             const temp = A.vel

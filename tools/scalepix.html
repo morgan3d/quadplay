@@ -756,10 +756,37 @@ function runXBR2X(srcBuffer, srcWidth, srcHeight, dstBuffer) {
     // Copy to the output
     dstBuffer.set(out);
 }
-    
-// Returns the average of two uint32 colors in the format 0xAABBGGRR,
-// using premultiplied alpha blending to avoid darkening colors when
-// interpolating to transparent.
+
+///////////////////////////////////////////////////////////////////////////////////////
+
+function runNearestHalfX(srcBuffer, srcWidth, srcHeight, dstBuffer) {
+    const dstWidth = srcWidth >> 1, dstHeight = srcHeight >> 1;
+    for (let dstY = 0, dstIndex = 0; dstY < dstHeight; ++dstY) {
+        for (let dstX = 0; dstX < dstWidth; ++dstX, ++dstIndex) {
+            const srcX = dstX << 1, srcY = dstY << 1;
+            dstBuffer[dstIndex] = srcBuffer[srcX + srcY * srcWidth];
+        } // X
+    } // Y
+}
+
+
+function runAverageHalfX(srcBuffer, srcWidth, srcHeight, dstBuffer) {
+    const dstWidth = srcWidth >> 1, dstHeight = srcHeight >> 1;
+    for (let dstY = 0, dstIndex = 0; dstY < dstHeight; ++dstY) {
+        for (let dstX = 0; dstX < dstWidth; ++dstX, ++dstIndex) {
+            const srcX = dstX << 1, srcY = dstY << 1;
+            const srcIndex = srcX + srcY * srcWidth;
+            dstBuffer[dstIndex] = average4(srcBuffer[srcIndex], srcBuffer[srcIndex + 1],
+                                           srcBuffer[srcIndex + srcWidth], srcBuffer[srcIndex + 1 + srcWidth]);
+        } // X
+    } // Y
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+
+/* Returns the average of two uint32 colors in the format 0xAABBGGRR,
+   using premultiplied alpha blending to avoid darkening colors when
+   interpolating to transparent. */
 function average2(C,  D) {
     // Early out on common case
     if ((C | D) === 0) { return 0; }
@@ -789,6 +816,7 @@ function average2(C,  D) {
 
     return (Ea << 24) | (Eb << 16) | (Eg << 8) | Er;
 }
+
 
 function average4(A, B, C, D) {
     // This would be slightly higher precision if
@@ -853,101 +881,135 @@ function processDrop(file) {
 }
 
 
+function createImageDisplay(canvas, elementName) {
+    const dstImage = new Image();
+    dstImage.src = canvas.toDataURL();
+    dstImage.onload = function () {
+        const dstDisplay = document.getElementById(elementName);
+        dstDisplay.innerHTML = '';
+        dstDisplay.style.width = dstImage.width + 'px';
+        dstDisplay.style.height = dstImage.height + 'px';
+        dstDisplay.appendChild(dstImage);
+    };
+}
+
+
+function processAll2X(canvas, ctx, srcBuffer) {
+    const srcWidth = srcBuffer.width, srcHeight = srcBuffer.height;
+    const dstWidth = srcWidth * 2, dstHeight = srcHeight * 2;
+    
+    canvas.width = dstWidth; canvas.height = dstHeight;
+    const dstImageData = ctx.createImageData(canvas.width, canvas.height);
+    // Make a uint32 aliased version
+    const dstBuffer = new Uint32Array(dstImageData.data.buffer);
+    
+    // Process hq2X, which has a different format than the other functions
+    // because it expects an ImageData directly.
+    if (runSlowAlgorithms) {
+        const srcImageData = {
+            width: srcWidth,
+            height: srcHeight,
+            data: { buffer: srcBuffer }
+        };
+        
+        
+        let dstImageData;
+        for (let i = 0; i < warmupIterations; ++i) {
+            dstImageData = hq2x(srcImageData);
+        }
+        const before = performance.now();
+        for (let i = 0; i < timingIterations; ++i) {
+            dstImageData = hq2x(srcImageData);
+        }
+        performanceTable.hq2X = performance.now() - before;
+        
+        // Put the data back to create a data URL
+        ctx.putImageData(dstImageData, 0, 0);
+        const dstImage = new Image();
+        dstImage.src = canvas.toDataURL();
+        dstImage.onload = function () {
+            const dstDisplay = document.getElementById('hq2XDisplay');
+            dstDisplay.innerHTML = '';
+            dstDisplay.style.width = dstImage.width + 'px';
+            dstDisplay.style.height = dstImage.height + 'px';
+            dstDisplay.appendChild(dstImage);
+        };
+    }                
+    
+    classification = classifyBuffer(srcBuffer);
+    if (classification === 'font') {
+        console.log('Detected a font and inverted luminance for processing.');
+        invertBufferInPlace(srcBuffer);
+    }
+    
+    // Run one function
+    function process2X(scaler, elementName) {
+        for (let i = 0; i < warmupIterations; ++i) {
+            scaler(srcBuffer, srcWidth, srcHeight, dstBuffer);
+        }
+        const before = performance.now();
+        for (let i = 0; i < timingIterations; ++i) {
+            scaler(srcBuffer, srcWidth, srcHeight, dstBuffer);
+        }
+        performanceTable[elementName.replace(/Display$/, '')] = performance.now() - before;
+        
+        // Restore if inverted as a font
+        if (srcBuffer.inverted) { invertBufferInPlace(dstBuffer); }
+        
+        // Put the data back to create a data URL
+        ctx.putImageData(dstImageData, 0, 0);
+
+        createImageDisplay(canvas, elementName);
+    }
+    
+    // Warmup the input
+    if (timingIterations > 1) { process2X(runNearest2X,  'nearest2XDisplay'); }
+    
+    process2X(runNearest2X,  'nearest2XDisplay');
+    process2X(runEPX,        'epx2XDisplay');
+    process2X(document.getElementById('bilinear_unbiased').checked ? runUnbiasedBilinear2X : runBilinear2X, 'bilinear2XDisplay');
+    process2X(runMMPX2X,   'mmpx2XDisplay');
+    if (runSlowAlgorithms) {
+        process2X(runXBR2X,  'xbr2XDisplay');
+    }
+}
+
+
+function processAllHalfX(canvas, ctx, srcBuffer) {
+    const srcWidth = srcBuffer.width, srcHeight = srcBuffer.height;
+    const dstWidth = srcWidth >> 1, dstHeight = srcHeight >> 1;
+    
+    canvas.width = dstWidth; canvas.height = dstHeight;
+    const dstImageData = ctx.createImageData(canvas.width, canvas.height);
+    // Make a uint32 aliased version
+    const dstBuffer = new Uint32Array(dstImageData.data.buffer);
+    
+    // Run one function
+    function processHalfX(scaler, elementName) {
+        scaler(srcBuffer, srcWidth, srcHeight, dstBuffer);
+        
+        // Put the data back to create a data URL
+        ctx.putImageData(dstImageData, 0, 0);
+        createImageDisplay(canvas, elementName);
+    }
+    
+    processHalfX(runNearestHalfX,  'nearestHalfXDisplay');
+    processHalfX(runAverageHalfX,  'averageHalfXDisplay');
+}
+
+
 function processSourceImage(url, name) {
     let sourceImage = new Image();
     sourceImage.crossOrigin = 'anonymous';
     sourceImage.onload = function () {
         console.log("loaded " + (name || url));
-        const srcWidth = sourceImage.width, srcHeight = sourceImage.height;
-        const dstWidth = srcWidth * 2, dstHeight = srcHeight * 2;
-        
+
         const srcBuffer = getImageDataUint32(sourceImage);
-
         const canvas = document.createElement('canvas');
-        canvas.width = sourceImage.width * 2;
-        canvas.height = sourceImage.height * 2;
-        
         const ctx = canvas.getContext('2d');
-        const dstImageData = ctx.createImageData(canvas.width, canvas.height);
-        // Make a uint32 aliased version
-        const dstBuffer = new Uint32Array(dstImageData.data.buffer);
-        
-        // Process hq2X, which has a different format than the other functions
-        // because it expects an ImageData directly.
-        if (runSlowAlgorithms) {
-            const srcImageData = {
-                width: sourceImage.width,
-                height: sourceImage.height,
-                data: { buffer: srcBuffer }
-            };
-            
 
-            let dstImageData;
-            for (let i = 0; i < warmupIterations; ++i) {
-                dstImageData = hq2x(srcImageData);
-            }
-            const before = performance.now();
-            for (let i = 0; i < timingIterations; ++i) {
-                dstImageData = hq2x(srcImageData);
-            }
-            performanceTable.hq2X = performance.now() - before;
-
-            // Put the data back to create a data URL
-            ctx.putImageData(dstImageData, 0, 0);
-            const dstImage = new Image();
-            dstImage.src = canvas.toDataURL();
-            dstImage.onload = function () {
-                const dstDisplay = document.getElementById('hq2XDisplay');
-                dstDisplay.innerHTML = '';
-                dstDisplay.style.width = dstImage.width + 'px';
-                dstDisplay.style.height = dstImage.height + 'px';
-                dstDisplay.appendChild(dstImage);
-            };
-        }                
-
-        classification = classifyBuffer(srcBuffer);
-        if (classification === 'font') {
-            console.log('Detected a font and inverted luminance for processing.');
-            invertBufferInPlace(srcBuffer);
-        }
-
-        // Run one function
-        function process2X(scaler, elementName) {
-            for (let i = 0; i < warmupIterations; ++i) {
-                scaler(srcBuffer, srcWidth, srcHeight, dstBuffer);
-            }
-            const before = performance.now();
-            for (let i = 0; i < timingIterations; ++i) {
-                scaler(srcBuffer, srcWidth, srcHeight, dstBuffer);
-            }
-            performanceTable[elementName.replace(/Display$/, '')] = performance.now() - before;
-
-            // Restore if inverted as a font
-            if (srcBuffer.inverted) { invertBufferInPlace(dstBuffer); }
-            
-            // Put the data back to create a data URL
-            ctx.putImageData(dstImageData, 0, 0);
-            const dstImage = new Image();
-            dstImage.src = canvas.toDataURL();
-            dstImage.onload = function () {
-                const dstDisplay = document.getElementById(elementName);
-                dstDisplay.innerHTML = '';
-                dstDisplay.style.width = dstImage.width + 'px';
-                dstDisplay.style.height = dstImage.height + 'px';
-                dstDisplay.appendChild(dstImage);
-            };
-        }
-        
-        // Warmup the input
-        if (timingIterations > 1) { process2X(runNearest2X,  'nearest2XDisplay'); }
-        
-        process2X(runNearest2X,  'nearest2XDisplay');
-        process2X(runEPX,        'epx2XDisplay');
-        process2X(document.getElementById('bilinear_unbiased').checked ? runUnbiasedBilinear2X : runBilinear2X, 'bilinear2XDisplay');
-        process2X(runMMPX2X,   'mmpx2XDisplay');
-        if (runSlowAlgorithms) {
-            process2X(runXBR2X,  'xbr2XDisplay');
-        }
+        processAll2X(canvas, ctx, srcBuffer);
+        processAllHalfX(canvas, ctx, srcBuffer);
     };
 
     
@@ -965,14 +1027,16 @@ function onDragOver(event) { event.preventDefault(); }
     <center style="font-family: quadplay, Arial; margin-top: -20px; margin-bottom: 25px">a <a href="https://github.com/morgan3d/quadplay">quadplay✜</a> tool</center>
     <div style="margin: auto; max-width: 600px">
     <p>
-    Drag a quadplay✜ font or sprite PNG file onto this page to rescale it 2X using
-    multiple methods. Then, drag images the processed images out to save them and improve small details
+    Drag a quadplay✜ font or sprite PNG file onto this page to rescale it using
+    multiple methods. Then, drag the processed image you like best out to save
+    it and improve small details
     by hand. For fonts, ensure that characters are separated by at least three pixels.
-    For sprite sheets, ensure that sprites are three pixels from the edge and each other.
+    For sprite sheets, ensure that sprites are at least three pixels from the edge and each other.
     </p>
     </div>
     <hr>
     <center>
+    <h2>2X</h2>
     <table>
     <tr>
     <td>
@@ -1000,6 +1064,22 @@ function onDragOver(event) { event.preventDefault(); }
     <td>
     <b>Bilinear</b> <label for="bilinear_unbiased"><input id="bilinear_unbiased" type="checkbox"></input>Unbiased</label>
     <div id="bilinear2XDisplay" class="image"></div>
+    </td>
+    </tr>
+    </table>
+    </center>
+    <hr>
+    <center>
+    <h2>½X</h2>
+    <table>
+    <tr>
+    <td>
+    <b>Nearest</b>
+    <div id="nearestHalfXDisplay" class="image"></div>
+    </td>
+    <td>
+    <b>Average</b>
+    <div id="averageHalfXDisplay" class="image"></div>
     </td>
     </tr>
     </table>

@@ -2442,10 +2442,6 @@ function make_entity(e, childTable) {
                 $error('The child named "' + name + '" in the childTable passed to make_entity is not itself an entity');
             }
             
-            if (r[name] !== undefined) {
-                $error('make_entity() cannot add a child named "' + name +
-                       '" because that is already a property of the entity {' + keys(r) + '}');
-            }
             r[name] = child;
             if (child.name === 'Anonymous') {
                 child.name = name;
@@ -6167,6 +6163,10 @@ function $cleanupRegion(A) {
     if (A.corner) {
         $error('Cannot use both corner and pos on the same object');
     }
+
+    if (! A.pos) {
+        A.pos = {x: 0, y: 0};
+    }
     
     if (A.pivot && (A.pivot.x !== 0 || A.pivot.y !== 0)) {
         // Apply the pivot, cloning the entire object for simplicity
@@ -6213,7 +6213,7 @@ function random_within_region(region, recurse, rng) {
         for (let e = 0; e < entity_array.length; ++e) {
             r -= area_array[e];
             if (r <= 0 || e === entity_array.length - 1) {
-                return random_within(entity_array[e], false, rng);
+                return random_within_region(entity_array[e], false, rng);
             }
         }
         
@@ -6239,7 +6239,7 @@ function random_within_region(region, recurse, rng) {
         }
 
         P.x *= 0.5 * region.size.x; P.y *= 0.5 * region.size.y;
-        return transform_from_es_to_ws(region, P);
+        return transform_es_to_ws(region, P);
 
     } // recurse
 }

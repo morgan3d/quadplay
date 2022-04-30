@@ -1332,12 +1332,13 @@ function updateInput() {
                 const button = buttons[b];
                 const prefix = button === 'p' ? '$' : '';
                 const BUT = prefix + button;
+                
                 const oldv = pad[prefix + button];
                 const newv = latest[prefix + button];
 
                 pad[prefix + button + button] = pad[prefix + 'pressed_' + button] = (newv >= 0.5) && (oldv < 0.5) ? 1 : 0;
-                pad[prefix + 'released_' + button] = (newv < 0.5) && (oldv >= 0.5) ? 1 : 0;
-                pad[prefix + button] = newv;
+                pad[prefix + 'released_' + button] = (newv < 0.5) && (oldv >= 0.5) ? oldv : 0;
+                pad[prefix + button] = newv ? oldv + 1 : 0;
             }
 
             pad.$id = latest.$id;
@@ -1427,12 +1428,14 @@ function updateInput() {
             const button = buttons[b];
             const prefix = button === 'p' ? '$' : '';
             
+            const oldv = pad[prefix + button];
+            
             if (map) {
                 // Keyboard (only P1's P button has three codes)
                 const b0 = map[button][0], b1 = map[button][1], b2 = map[button][2];
-                pad[prefix + button] = (emulatorKeyState[b0] || emulatorKeyState[b1] || emulatorKeyState[b2]) ? 1 : 0;
+                pad[prefix + button] = (emulatorKeyState[b0] || emulatorKeyState[b1] || emulatorKeyState[b2]) ? oldv + 1 : 0;
                 pad[prefix + button + button] = pad[prefix + 'pressed_' + button] = (emulatorKeyJustPressed[b0] || emulatorKeyJustPressed[b1] || emulatorKeyJustPressed[b2]) ? 1 : 0;
-                pad[prefix + 'released_' + button] = (emulatorKeyJustReleased[b0] || emulatorKeyJustReleased[b1] || emulatorKeyJustReleased[b2]) ? 1 : 0;
+                pad[prefix + 'released_' + button] = (emulatorKeyJustReleased[b0] || emulatorKeyJustReleased[b1] || emulatorKeyJustReleased[b2]) ? oldv : 0;
             } else {
                 pad[prefix + button] = pad[prefix + button + button] = pad[prefix + 'released_' + button] = pad[prefix + 'pressed_' + button] = 0;
             }
@@ -1442,7 +1445,7 @@ function updateInput() {
 	    
             const wasPressed = prevRealGamepad && (prevRealGamepad.buttons[i] || prevRealGamepad.buttons[j]);
 	    
-            if (isPressed) { pad[prefix + button] = 1; }
+            if (isPressed) { pad[prefix + button] = oldv + 1; }
 	    
             if (isPressed && ! wasPressed) {
                 pad[prefix + button + button] = 1;
@@ -1450,7 +1453,7 @@ function updateInput() {
             }
 
             if (! isPressed && wasPressed) {
-                pad[prefix + 'released_' + button] = 1;
+                pad[prefix + 'released_' + button] = oldv;
             }
 
             const buttonChange = (pad[prefix + button] !== 0);
