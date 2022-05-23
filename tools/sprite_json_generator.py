@@ -230,8 +230,12 @@ def make_sprite(
     size,
     license,
     game,
+    # path to the aseprite .json (_not_ the quadplay .sprite.json)
     aseprite_json=None,
-    force=False
+    # force overwrite an existing sprite.json
+    force=False,
+    # add the sprite to the game.json
+    add_to_game_json=False,
 ):
     """take a file and build a quadplay sprite JSON"""
 
@@ -299,7 +303,7 @@ def make_sprite(
 
     print("wrote: '{}' for sprite '{}'".format(outpath, filepath))
 
-    if not game:
+    if not game or not add_to_game_json:
         return
 
     if not game.endswith(".json"):
@@ -333,6 +337,8 @@ def _extract_sprites(from_game):
     with open("{}.game.json".format(from_game)) as fi:
         game_data = workjson.loads(fi.read())
 
+    seen = set()
+    
     for asset_url in game_data["assets"].values():
         if not os.path.exists(asset_url):
             continue
@@ -346,11 +352,12 @@ def _extract_sprites(from_game):
         if asset_data.get("locked_size"):
             size = asset_data.get("sprite_size")
         if asset_data["url"].endswith(".png"):
-            yield (
-                os.path.join(dirname, asset_data["url"]),
-                aseprite_data,
-                size
-            )
+            pngpath = os.path.join(dirname, asset_data["url"])
+            if pngpath in seen:
+                continue
+            seen.add(pngpath)
+
+            yield (pngpath, aseprite_data, size)
 
 
 def main():
@@ -377,7 +384,8 @@ def main():
             args.license,
             args.game,
             asp_path,
-            args.force
+            args.force,
+            args.update is False,
         )
 
 

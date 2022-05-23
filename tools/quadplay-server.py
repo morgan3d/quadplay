@@ -1025,7 +1025,7 @@ def main():
                     
     url = 'http' + ('s' if useSSL else '')+ '://' + myip + ':' + str(args.port)
     if not quad_filepath or quad_filepath[0] != '/': url += '/'
-    url += os.path.join(quad_filepath, 'console/quadplay.html?fastReload=1&token=' + token)
+    url += os.path.join(quad_filepath, 'console/app.html?fastReload=1&token=' + token)
 
     if args.nativeapp: url += '&nativeapp=1'
     if not args.noupdatecheck and not args.kiosk:

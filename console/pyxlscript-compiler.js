@@ -64,7 +64,6 @@ function nextInstance(str, c, j, d) {
         } else if (x in match) {
             --stack;
             if (--count[match[x]] < 0) {
-                console.log(str);
                 throw "Unbalanced parens while looking for '" + c + "'";
             }
         } else if ((x === c) && (stack === 0)) {
@@ -987,6 +986,18 @@ function pyxlToJS(src, noYield, internalMode) {
     let pack = protectQuotedStrings(src);
     src = pack[0];
     let stringProtectionMap = pack[1];
+
+    // Check for newlines in strings
+    for (let i = 0; i < stringProtectionMap.length; ++i) {
+        const value = stringProtectionMap[i];
+        if (value.indexOf('\n') !== -1) {
+            src = unprotectQuotedStrings(src, stringProtectionMap);
+            const j = src.indexOf(value);
+            console.assert(j !== -1);
+            const line = src.substring(0, j).split('\n').length - 1;
+            throw makeError('Illegal multiline quoted string (use \\n for a newline)', line); 
+        }
+    }
 
     // Remove multi-line comments, which cause problems with the indentation and end-of-line metrics
     src = src.replace(/\/\*([\s\S]*?)\*\//g, function(match, contents) {

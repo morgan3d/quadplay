@@ -196,6 +196,9 @@ function isDebugUrl(url) {
     return /(^|\/)([Dd]ebug|[Tt]est).pyxl$/.test(url);
 }
 
+// Used to prevent recursive load while embedded in an iframe
+let firstLoadComplete = false;
+
 // Loads the game and then runs the callback() or errorCallback()
 function afterLoadGame(gameURL, callback, errorCallback) {
     console.assert(! inGameLoad, 'Reentrant call to afterLoadGame()!');
@@ -213,6 +216,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             computeResourceStats(gameSource);
             inGameLoad = false;
             if (callback) { callback(); }
+            firstLoadComplete = true;
         },
         errorCallback: function (...args) {
             inGameLoad = false;
@@ -1042,7 +1046,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         // Make sure the index is updated when pulling from the cache.
         // For built-in sprites it could have been wiped.
         if (spritesheetArray.indexOf(spritesheet) === -1) {
-            // Change the index            
+            // Change the index
             spritesheet.$index[0] = spritesheetArray.length;
             spritesheetArray.push(spritesheet);
 
@@ -1112,6 +1116,10 @@ function loadSpritesheet(name, json, jsonURL, callback) {
     assetCache[jsonURL] = spritesheet;   
     spritesheetArray.push(spritesheet);
     console.assert(spritesheetArray.indexOf(spritesheet) === spritesheet.$index[0]);
+
+    if (json.gutter && typeof json.gutter !== 'number') {
+        throw new Error('gutter must be a single number');
+    }
     
     const transposedSpritesheet = Object.assign([], {
         $name: 'transposed_' + name,
@@ -1357,7 +1365,11 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 const pivot = (data.pivot === undefined) ?
                       sspivot :
                       Object.freeze({x: data.pivot.x - json.sprite_size.x / 2, y: data.pivot.y - json.sprite_size.y / 2});
-                
+
+                const tpivot = (data.pivot === undefined) ?
+                      transposedPivot :
+                      Object.freeze({x: pivot.y, y: pivot.x})
+
                 // Apply defaults
                 if (data.x !== undefined) {
                     // Named sprite, no animation
@@ -1375,7 +1387,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                         s.frames = animDefaultframes;
                         s.$animationName = anim;
                         s.$animationIndex = undefined;
-                        s.pivot = pivot;
+                        s.pivot = repeat ? tpivot : pivot;
 
                         // Rename
                         s.$name = spritesheet.$name + '.' + anim;
@@ -1436,7 +1448,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                             s.$animationName = anim;
                             s.$animationIndex = i;
                             s.$name = spritesheet.$name + '.' + anim + '[' + i + ']';
-                            s.pivot = pivot;
+                            s.pivot = repeat ? tpivot : pivot;
                             s.frames = Math.max(0.25, frames[Math.min(i, frames.length - 1)]);
                             s.animation = animation;
                             // Copy other properties
@@ -1490,31 +1502,37 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 sprite.x_flipped.scale = NP;
                 sprite.x_flipped.orientation_id += 1;
                 sprite.x_flipped.$name += '.x_flipped';
+                sprite.x_flipped.pivot = Object.freeze({x: -sprite.pivot.x, y: sprite.pivot.y});
 
                 sprite.y_flipped = Object.assign({y_flipped:sprite}, sprite);
                 sprite.y_flipped.orientation_id += 2;
                 sprite.y_flipped.scale = PN;
                 sprite.y_flipped.$name += '.y_flipped';
+                sprite.y_flipped.pivot = Object.freeze({x: sprite.pivot.x, y: -sprite.pivot.y});
                 
                 sprite.x_flipped.y_flipped = sprite.y_flipped.x_flipped = Object.assign({}, sprite);
                 sprite.y_flipped.x_flipped.scale = NN;
                 sprite.y_flipped.x_flipped.orientation_id += 3;
                 sprite.x_flipped.y_flipped.$name += '.x_flipped.y_flipped';
+                sprite.x_flipped.y_flipped.pivot = Object.freeze({x: -sprite.pivot.x, y: -sprite.pivot.y});
                 
                 transposedSprite.x_flipped = Object.assign({x_flipped: transposedSprite}, transposedSprite);
                 transposedSprite.x_flipped.scale = NP;
                 transposedSprite.x_flipped.orientation_id += 1;
                 transposedSprite.x_flipped.$name = transposedSprite.$name.replace(/\.x_flipped$/, '');
-
+                transposedSprite.x_flipped.pivot = Object.freeze({x: -transposedSprite.pivot.x, y: transposedSprite.pivot.y});
+                
                 transposedSprite.y_flipped = Object.assign({y_flipped: transposedSprite}, transposedSprite);
                 transposedSprite.y_flipped.orientation_id += 2;
                 transposedSprite.y_flipped.scale = PN;
                 transposedSprite.y_flipped.$name += '.y_flipped';
+                transposedSprite.y_flipped.pivot = Object.freeze({x: transposedSprite.pivot.x, y: -transposedSprite.pivot.y});
                 
                 transposedSprite.x_flipped.y_flipped = transposedSprite.y_flipped.x_flipped = Object.assign({}, transposedSprite);
                 transposedSprite.y_flipped.x_flipped.scale = NN;
                 transposedSprite.y_flipped.x_flipped.orientation_id += 3;
                 transposedSprite.x_flipped.y_flipped.$name += transposedSprite.$name.replace(/\.x_flipped$/, '.y_flipped');
+                transposedSprite.x_flipped.y_flipped.pivot = Object.freeze({x: -transposedSprite.pivot.x, y: -transposedSprite.pivot.y});
 
                 sprite.rotated_270 = transposedSprite.x_flipped;
                 sprite.x_flipped.rotated_270 = transposedSprite.x_flipped.y_flipped;

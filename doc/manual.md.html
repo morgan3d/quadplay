@@ -8498,14 +8498,22 @@ directory that containst the game.json for your project.
 
   If you are exporting from aseprite, use the following settings with `sprite_json_generator.py`:
 
-  - "horizontal strip" (quadplay doesn't support animations wrapping around image rows
-  - "padding", "trim", and "extrude" should all be off
-  - "Layers" should be visible layers (quadplay doesn't support layers")
-  - "frames" should be "all frames" (unless you only want some frames)
-  - "export json": yes and under "meta" for this:
-    - "layers" should be off
-    - "frame tags" should be checked
-    - "slices" should be off
+  - Sheet type: "by row" (quadplay doesn't support animations wrapping around image rows
+  - Constraints: "None"
+  - Sprite:
+      - Layers: "visible layers" (quadplay doesn't support layers")
+      - Frames: "all frames" (unless you only want some frames)
+      - "split layers" should be unchecked (OFF)
+      - "split tags" should be checked (ON)
+  - Borders: 
+      - "spacing", "trim", and "extrude" should all be off (set to 0)
+  - Output:
+      - "export json": yes and under "meta" for this:
+      - "layers" should be off
+      - "frame tags" should be checked
+      - "slices" should be off
+      - "Array" (_not_ "Hash") mode
+      - Output file and JSON Data should be checked (these are what you feed into sprite_json_generator)
   - "open generated sprite sheet" is up to you, if you want it to show you the sprite sheet when its done.
 
   If you export with these settings, you can pass the generated json file to the  sprite_json_generator program and it will convert the tags and sprite size

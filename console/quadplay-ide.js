@@ -119,7 +119,8 @@ if (! profiler.debuggingProfiler) {  document.getElementById('debugIntervalTimeR
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// 'WideIDE', 'IDE', 'Test', 'Emulator', 'Editor', 'Windowed', 'Maximal', 'Ghost'. See also setUIMode().
+// 'WideIDE', 'IDE', 'Test', 'Emulator', 'Editor', 'Windowed',
+// 'Maximal', 'Ghost'. See also setUIMode().
 let uiMode = 'IDE';
 const BOOT_ANIMATION = Object.freeze({
     NONE:      0,
@@ -2928,7 +2929,7 @@ function onOpenGameOpen() {
 
     const game_url = openGameFiles.selected;
     
-    let url = location.href.replace(/(\?(?:.+&)?)game=[^&]+(?=&|$)/, '$1');
+    let url = window.top.location.href.replace(/(\?(?:.+&)?)game=[^&]+(?=&|$)/, '$1');
     if (url.indexOf('?') === -1) { url += '?'; }
     if (url[url.length - 1] !== '&') { url += '&'; }
     url = url.replace(/autoplay=./g, '');
@@ -2941,13 +2942,17 @@ function onOpenGameOpen() {
         hideOpenGameDialog();
         window.open(url, '_blank');
     } else {
+        // Update the URL so that reload and bookmarking work
+        window.top.history.replaceState({}, 'quadplay', url);
+        if (window !== window.top) {
+            // Also replace the internal window URL so that updating reloads correctly
+            history.replaceState({}, 'quadplay', url.replace('app.html', 'quadplay.html'));
+        }
+            
         loadGameIntoIDE(game_url, function () {
             hideOpenGameDialog();
             onProjectSelect(document.getElementsByClassName('projectTitle')[0], 'game');
-            
-            // Update the URL so that reload and bookmarking work
-            history.replaceState({}, 'quadplay', url);
-            
+
             if (autoplay) {
                 onPlayButton(false, true);
             }
@@ -4219,7 +4224,7 @@ function loadGameIntoIDE(url, callback, loadFast) {
             onLoadFileComplete(url);
             hideBootScreen();
             updateTodoList();
-            document.title = gameSource.extendedJSON.title;
+            window.top.document.title = gameSource.extendedJSON.title;
             console.log(`Loading complete (${Math.round(performance.now() - startTime)} ms)`);
 
             setFramebufferSize(gameSource.extendedJSON.screen_size.x, gameSource.extendedJSON.screen_size.y, false);
@@ -4448,9 +4453,11 @@ window.addEventListener('focus', function() {
     // while defocused due to browser throttling.
     allow_bloom = true;
     
-    // Quadplay development; avoid autoreloading because
-    // it makes debugging the compiler and IDE difficult
-    if (! AUTO_RELOAD_ON_FOCUS || isHosting || isGuesting) { return; }
+    // Quadplay development; avoid autoreloading because it makes
+    // debugging the compiler and IDE difficult.  Also if loaded in an
+    // iframe there is an immediate focus event while still loading
+    // the game.
+    if (! AUTO_RELOAD_ON_FOCUS || isHosting || isGuesting || ! firstLoadComplete) { return; }
 
     if (inGameLoad) {
         console.log('Suppressed re-entrant game load triggered by focus event');
@@ -4760,11 +4767,6 @@ if (getQueryString('kiosk') === '1') {
     if (! newMode) {
         if (useIDE) {
             newMode = localStorage.getItem('uiMode') || 'IDE';
-            if (newMode === 'Maximal' || newMode === 'Windowed' || 'newMode' === 'Emulator') {
-                // Nobody starting in IDE mode wants to be in the emulator,
-                // so override this default
-                newMode = 'IDE';
-            }
         } else {
             newMode = isMobile ? 'Emulator' : 'Maximal';
         }
