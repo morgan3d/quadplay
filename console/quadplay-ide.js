@@ -977,6 +977,10 @@ function onPlayButton(slow, isLaunchGame, args, callback) {
     
 
     if (emulatorMode === 'stop') {
+        // Erase the table
+        debugWatchTable = {};
+        updateDebugWatchDisplay();
+
         // Reload the program
         if (loadManager && loadManager.status !== 'complete' && loadManager.status !== 'failure') {
             console.log('Load already in progress...');
@@ -1510,8 +1514,8 @@ function onError(e) {
     }
 
     if (useIDE && QRuntime.$debugWatchEnabled) {
-        // Flush the debug data so that errors can be debugged
-        // from it
+        // Flush the debug data to display so that errors can be
+        // debugged from it
         updateDebugWatchDisplay();
     }
     
@@ -3004,20 +3008,6 @@ const debugGameFramesDisplay = document.getElementById('debugGameFramesDisplay')
 const outputPane = document.getElementById('outputPane');
 const outputDisplayPane = document.getElementById('outputDisplayPane');
 
-// Maps expression strings to values
-let debugWatchTable = {changed: false};
-
-function debug_watch(location, expression, value) {
-    // The value must be unparsed here, since it can be mutated after
-    // this function returns.
-    debugWatchTable[location.url + ':' + location.line_number] = {
-        location: location,
-        expression: expression,
-        value: QRuntime.unparse(value)
-    };
-    debugWatchTable.changed = true;
-}
-
 
 /** 
     Given a JavaScript runtime error, compute the corresponding PyxlScript error by
@@ -3245,9 +3235,6 @@ function mainLoopStep() {
         lastAnimationRequest = setTimeout(mainLoopStep, Math.floor(1000 / targetFramerate - 1));
     }
 
-    // Erase the table every frame
-    debugWatchTable = {};
-
     // Physics time may be spread over multiple QRuntime.physics_simulate() calls,
     // but graphics is always a single QRuntime.$show() call. Graphics time may
     // be zero on any individual call.
@@ -3457,29 +3444,6 @@ function updateDebugger(showHTML) {
     debugGameFramesDisplay.innerHTML = '' + QRuntime.game_frames;
 }
 
-
-function updateDebugWatchDisplay() {
-    let s = '';
-    
-    for (const id in debugWatchTable) {
-        if (id === 'changed') { continue; }
-        const watch = debugWatchTable[id];
-        let tooltip = watch.location.url.replace(/^.*\//, '');
-        if (/[A-Z]/.test(tooltip[0])) {
-            // For modes, remove the extension
-            tooltip = tooltip.replace(/\.pyxl$/, '');
-        }
-        tooltip += ':' + watch.location.line_number;
-        s += `<tr valign=top><td width=50% title="${tooltip}" style="cursor:pointer" onclick="editorGotoFileLine('${watch.location.url}', ${watch.location.line_number}, undefined, false)">${watch.expression}</td><td>${watch.value}</td></tr>`;
-    }
-    
-    const pane = document.getElementById('debugWatchDisplayPane');
-    if (pane.innerHTML !== s) {
-        pane.innerHTML = '<table width=100% style="border-collapse: collapse">' + s + '</table>';
-    }
-    
-    debugWatchTable.changed = false;
-}
 
 /* Print only the filename base when it is the same as the game base */
 function shortURL(url) {
@@ -4236,7 +4200,7 @@ function loadGameIntoIDE(url, callback, loadFast) {
 <hr>
 <br/>
 <table style="margin-left: -2px; width: 100%">
-<tr><td width=180>Code Statements</td><td class="right">${resourceStats.sourceStatements}</td><td>/</td><td class="right">8192</td><td class="right">(${Math.round(resourceStats.sourceStatements*100/8192)}%)</td></tr>
+<tr><td width=180>Code Statements</td><td class="right">${resourceStats.sourceStatements}</td><td>/</td><td class="right">2048</td><td class="right">(${Math.round(resourceStats.sourceStatements*100/2048)}%)</td></tr>
 <tr><td>Sounds</td><td class="right">${resourceStats.sounds}</td><td>/</td><td class="right">128</td><td class="right">(${Math.round(resourceStats.sounds*100/128)}%)</td></tr>
 <!--<tr><td>Sound Bytes</td><td class="right">${resourceStats.soundKilobytes}</td><td>/</td><td class="right">256 MB</td><td class="right">(${Math.round(resourceStats.soundKilobytes*100/(1024*256))}%)</td></tr>-->
 <tr><td>Sprite Pixels</td><td class="right">${Math.round(resourceStats.spritePixels / 1000)}k</td><td>/</td><td class="right" width=40>5505k</td><td class="right" width=45>(${Math.round(resourceStats.spritePixels*100/5505024)}%)</td></tr>
@@ -4447,6 +4411,7 @@ window.addEventListener('blur', function () {
         onPauseButton();
     }
 }, false);
+
 
 window.addEventListener('focus', function() {
     // Reset the bloom state; it might have disabled

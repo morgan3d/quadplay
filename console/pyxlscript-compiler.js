@@ -1182,8 +1182,8 @@ function pyxlToJS(src, noYield, internalMode) {
      
     // #deg -> #°, so that it will not be detected as implicit multiplication
     // by a variable beginning with "deg"
-    src = src.replace(/(\d+|\d\.\d*|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒])([ ]*deg\b)/g, '$1°');
-    
+    src = src.replace(/(\d[\.]?\d*|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒])([ ]*deg\b)/g, '$1°');
+
     // Process implicit multiplication twice, so that it can happen within exponents
     for (let i = 0; i < 2; ++i) {
         // Implicit multiplication. Must be before operations that may
@@ -1194,7 +1194,7 @@ function pyxlToJS(src, noYield, internalMode) {
         // Specials (allow parens on the 2nd expression)
         src = src.replace(/([επξ∞½⅓⅔¼¾⅕⅖⅗⅘⅙⅐⅛⅑⅒⁰¹²³⁴⁵⁶⁷⁸⁹ᵃᵝⁱʲˣʸᶻᵏᵘⁿ⁾])[ ]*([\$\(_A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞])/g, '$1 * $2');
 
-        // Parens (do *not* allow parens on the 2nd expression)
+        // Parens (do *not* allow parens on the 2nd expression, as that could be a first class function call)
         src = src.replace(/(\))[ ]*([\$_A-Za-zαβγδζηιθλμρσϕχψωΔΩτεπξ∞])/g, '$1 * $2');
 
         // Number case (has to rule out a variable name that ends in a

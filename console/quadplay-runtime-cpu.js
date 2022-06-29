@@ -415,6 +415,9 @@ function find(a, x, s, comparator) {
 function insert(array, i, ...args) {
     if (! Array.isArray(array)) { $error('insert(array, index, value) requires an array argument'); }
     if (typeof i !== 'number') { $error('insert(array, index, value) requires a numeric index'); }
+    if ($iteratorCount.get(array)) {
+        $error('Cannot insert() while using a container in a for loop. Use push(), or clone() the container in the for loop declaration.');
+    }
     array.splice(i, 0, ...args)
     return array[i];
 }
@@ -587,6 +590,8 @@ function remove_all(t) {
 
 
 function remove_values(t, value) {
+    let any = false;
+    
     if ($iteratorCount.get(t)) {
         $error('Cannot remove_values() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
     }
@@ -600,14 +605,18 @@ function remove_values(t, value) {
         }
         if (dst !== t.length) {
             t.length = dst;
+            any = true;
         }
     } else if (typeof t === 'object') {
         for (let k in t) {
             if (t[k] === value) {
                 delete t[k];
+                any = true;
             }
         }
     }
+
+    return any;
 }
 
 
@@ -7338,6 +7347,34 @@ function format_number(n, fmt) {
     case '°':
     case 'deg':
         return $Math.round(n * 180 / $Math.PI) + '°';
+        
+    case '0.#°':
+    case '0.#deg':
+        // Special case of optional decimal
+        return $unparseFixedDecimal(n * 180 / $Math.PI, 1) + '°';
+
+    case 'fraction':
+        {
+            const s = n < 0 ? '-' : '';
+            const eps = 1e-10;
+            n = $Math.abs(n);
+            const frac = [1/4, '¼', 1/2, '½', 3/4, '¾', 1/3, '⅓', 2/3, '⅔', 1/5, '⅕'];
+            for (let i = 0; i < frac.length; i += 2) {
+                if ($Math.abs(frac[i] - n) < eps) {
+                    return s + frac[i + 1];
+                }
+            }
+            for (let denom = 2; denom <= 10; ++denom) {
+                for (let numer = 1; numer < denom; ++numer) {
+                    if ($Math.abs(numer / denom - n) < eps) {
+                        return s + numer + '/' + denom;
+                    }
+                }
+            }
+            return s + n;
+        }
+        break;
+        
     case 'hex':
         if ($Math.abs(n) === Infinity) {
             return n.toLocaleString('en');
@@ -7547,12 +7584,26 @@ function unparse(x, level) {
     const closingBraceOnNewLine = level >= 3;
     const inlineShortContainers = level < 4;
 
-    return $unparse(x, new Map(), colon, closingBraceOnNewLine, inlineShortContainers, level === 0, '');
+    return $unparse(x, new Map(), colon, closingBraceOnNewLine, inlineShortContainers, level === 0, '', '', false);
 }
 
 
+/* Returns a string that has at most d decimal places. */
+function $unparseFixedDecimal(n, d) {
+    const k = 10**d;
+    n = $Math.round((n + Number.EPSILON) * k) / k
+    return n.toFixed(d).replace(/\.?0*$/, '')
+}
+
+/*
+  `hint` is for styling. It is usually the name of the variable being
+  unparsed
+
+  `specialStructs` = true causes xy() and other common values to
+  pretty print instead of showing as generic objects.
+*/
 function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
-                  inlineShortContainers, terse, indent) {
+                  inlineShortContainers, terse, indent, hint, specialStructs) {
     
     const INCREASE_INDENT = '    ';
 
@@ -7595,7 +7646,8 @@ function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
             } else {
                 s += ',\n' + childIndent;
             }
-            s += $unparse(x[i], alreadySeen, colon, closingBraceOnNewLine, inlineShortContainers, terse, childIndent);
+            // For arrays, pass the array's hint as the hint
+            s += $unparse(x[i], alreadySeen, colon, closingBraceOnNewLine, inlineShortContainers, terse, childIndent, hint, specialStructs);
         }
 
         if (x.length > 0 && closingBraceOnNewLine && ! inline) {
@@ -7617,6 +7669,47 @@ function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
             return '{…}';
         } else {
             alreadySeen.set(x, true);
+
+            if (specialStructs && $isSimplePyxlScriptStruct(x)) {
+                // Position types
+                for (let j = 0; j < $unparse.pos_struct_array.length; ++j) {
+                    const type = $unparse.pos_struct_array[j];
+                    if ($isSimplePyxlScriptStruct(x, type)) {
+                        let s = type + '(';
+                        for (let i = 0; i < type.length; ++i) {
+                            s += $unparseFixedDecimal(x[type[i]], 4) +
+                                ((i < type.length - 1) ? ', ' : ')');
+                        }
+                        return s;
+                    }
+                }
+                
+                // Color types
+                for (let j = 0; j < $unparse.color_struct_array.length; ++j) {
+                    const type = $unparse.color_struct_array[j];
+                    if ($isSimplePyxlScriptStruct(x, type)) {
+                        let s = type + '(';
+
+                        // Show percentages
+                        for (let i = 0; i < type.length; ++i) {
+                            s += format_number(x[type[i]], '0%') +
+                                ((i < type.length - 1) ? ', ' : ')');
+                        }
+
+                        let color = s;
+                        if (type[0] === 'h') {
+                            // HSV -> RGB
+                            const c = rgb(x);
+                            c.a = (type[3] === 'a') ? x.a : 1;
+                            color = `rgba(${100 * c.r}%, ${100 * c.g}%, ${100 * c.b}%, ${100 * c.a}%)`;
+                        }
+
+                        
+                        s += ` <div style="display:inline-block; width: 32px; height: 12px; overflow: hidden; position: relative; top: 2px" class="checkerboard8"><div style="background: ${color}; width: 32px; height: 12px"></div></div>`;
+                        return s;
+                    }
+                }
+            }
             
             let s = '';
             const keys = $Object.keys(x);
@@ -7660,7 +7753,7 @@ function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
                         s += ',\n' + childIndent;
                     }
                     
-                    s += key + colon + $unparse(x[k], alreadySeen, colon, closingBraceOnNewLine, inlineShortContainers, terse, childIndent);
+                    s += key + colon + $unparse(x[k], alreadySeen, colon, closingBraceOnNewLine, inlineShortContainers, terse, childIndent, k, specialStructs);
                 }
             }
 
@@ -7675,10 +7768,15 @@ function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
         return x ? 'true' : 'false';
         
     case 'number':
+        let match;
         if (x === Infinity) {
             return '∞';
         } else if (x === -Infinity) {
             return '-∞';
+        } else if (is_nan(x)) {
+            return 'nan';
+        } else if (specialStructs && (/(^|_|\.)Δ?(angle|heading|theta|phi|yaw|pitch|roll|θ|ϕ|Φ|Θ|)(_array)?$/i.test(hint))) {
+            return format_number(x, '0.0deg');
         } else if (x === $Math.PI) {
             return 'π';
         } else if (x === $Math.PI / 2) {
@@ -7695,8 +7793,6 @@ function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
             return '-¼π';
         } else if (x === -$Math.PI * 3 / 4) {
             return '-¾π';
-        } else if (x === NaN) {
-            return 'nan';
         } else {
             return '' + x;
         }
@@ -7718,6 +7814,29 @@ function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
         return '{builtin}';
     }
 }
+
+/* True if object contains only the fields whose single-letter names
+   are in fields, or begin with $. Used for debug_watch() pretty
+   printer detecting xy(), rgb(), etc.
+
+   If fields is not supplied, only checks for the existence of
+   single-letter numeric fields, but not which ones.
+
+*/
+function $isSimplePyxlScriptStruct(object, fields) {
+    if (typeof object !== 'object') { return; }
+    
+    for (const key in object) {
+        if (key[0] !== '$' &&
+            (key.length > 1 ||
+             (fields && (fields.indexOf(key) === -1)) ||
+             typeof object[key] !== 'number')) { return false; }
+    }
+    return true;
+}
+
+$unparse.pos_struct_array = ['xy', 'xyz', 'xz'];
+$unparse.color_struct_array = ['rgb', 'rgba', 'hsv', 'hsva'];
 
 
 function magnitude(a) {

@@ -103,7 +103,7 @@ def spawn_particles_from_entity(
     
     const z = entity.z + z_offset
     const center = ½ (sprite.size - 1)
-    const U = xy(cos(entity.angle), -sin(entity.angle) * rotation_sign())
+    const U = angle_to_xy(entity.angle)
     const V = perp(U)
    
     for y < sprite.size.y:

@@ -1,0 +1,31 @@
+{
+    "title": "Text Spheres",
+    "developer": "@CasualEffects",
+    "copyright": "©2022 Morgan McGuire",
+    "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Title"
+    ],
+    "start_mode": "Title",
+    "docs": [],
+    "assets": {
+        "title_sprite": "title.sprite.json",
+        "title_center_sprite": "title_center.sprite.json",
+        "title_bloom_sprite": "title_bloom.sprite.json",
+        "font": "quad://fonts/nano-5.font.json",
+        "background": "background.sprite.json"
+    },
+    "version": 1,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": true,
+    "description": "Wiggling text title screen animation",
+    "constants": {},
+    "screenshot_tag": "textspheres",
+    "y_up": true
+}

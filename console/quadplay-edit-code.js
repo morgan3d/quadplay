@@ -160,7 +160,10 @@ function setCodeEditorSessionMode(session, mode) {
 }
 
 
-// assetName may be undefined
+/* Loads url into the code editor, creating a new editor if needed and
+   reusing a cached one if available. 
+
+   assetName may be undefined */
 function setCodeEditorSession(url, assetName) {
     console.assert(url);
     setEditorTitle(url);
@@ -427,7 +430,7 @@ function autocorrectSession(session) {
 }
 
 
-// One session per edited file is created
+/* One session per edited file is created */
 function createCodeEditorSession(url, bodyText, assetName) {
     console.assert(url);
     console.assert(! codeEditorSessionMap.has(url));

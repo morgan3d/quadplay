@@ -229,7 +229,7 @@ function makeConstantEditorControlHTML(constantName, controlName, json, value, i
             // Color editor
 
             // Display color
-            editor = `<div style="border-radius: 4px; border: 1px solid #000; width: 64px; height: 64px; overflow: hidden" class="checkerboard"><div id="constantEditor_${controlName}_preview" style="background: ${htmlColor4Bit(value)}; width: 64px; height: 64px"> </div></div>`;
+            editor = `<div style="border-radius: 4px; border: 1px solid #000; width: 64px; height: 64px; overflow: hidden" class="checkerboard"><div id="constantEditor_${controlName}_preview" style="background: ${htmlColor4Bit(value)}; width: 64px; height: 64px"></div></div>`;
             
             // Sliders for color channels
             if (editableProject) {

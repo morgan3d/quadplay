@@ -1,0 +1,67 @@
+Title
+════════════════════════════════════════════════════════════════════════
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+set_transform(½ SCREEN_SIZE)
+set_background(background)
+set_post_effects({afterglow: #FDF})
+
+draw_text({
+    font: font,
+    text: "CΔTHODE INTERΔCTIVE PRESENTS", 
+    pos: xy(0, 100), 
+    color: #FFF, 
+    outline: #02D,
+    x_align: "center"})
+
+draw_text({
+    font: font, 
+    text: "PRESS ΔNY BUTTON", 
+    pos: xy(0, -95), 
+    color: #FFF, 
+    outline: #02D,
+    x_align: "center"})
+
+const U = angle_to_xy(30° cos(0.01 mode_frames))
+const V = perp(U)
+const rotate = [[U.x, U.y], [V.x, V.y]]
+
+const displace = 300 (1 - (mode_frames / 260)^.1)
+
+let pos = xy(0, 0)
+let sprite = title_bloom_sprite
+for j < 2:
+    for x < title_sprite.size.x:
+        const X = 4 x - 2 (title_sprite.size.x - 1)
+        
+        const wiggle = xy(1, 1.4) * (180 + 6 |X|) / (7 + min(mode_frames^0.74, 350))
+        const y_offset = 2 (title_sprite.size.y - 1)
+
+        const θ = 1.5° mode_frames + 0.05 x
+        
+        for y < title_sprite.size.y:
+            if get_sprite_pixel_color(title_sprite[0][0], xy(x, y)).a:
+                pos.x = X
+                pos.y = MAD(-4, y, y_offset)
+                
+                const offset = angle_to_xy(MAD(0.15, y, θ))
+                
+                XY_MAD_XY_XY(offset, wiggle, pos, pos)
+                
+                if mode_frames < 260:
+                    pos.x = MAD(displace, noise(1, x, y), pos.x)
+                    pos.y = MAD(displace, noise(1, x, y, 10), pos.y)
+                    
+                MAT2x2_MATMUL_XY(rotate, pos, pos)
+                draw_sprite(sprite, pos)
+                
+    // Draw the center sprite on the second iteration
+    sprite = title_center_sprite
+    
+
+if mode_frames > 20 and any_button_press():
+    todo("Advance to play mode")
+

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!-- By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="favicon-64x64.png">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>quadplay✜</title>
+  </head>
+  <body style="padding: 0; margin: 0">
+    <iframe style="position: fixed; width: 100%; height: 100%"></iframe>
+    <script>
+       // Load the embedded quadplay. This allows it to refresh itself while still full screen
+       document.getElementsByTagName('iframe')[0].src = location.href.replace('app.html', 'quadplay.html');
+    </script>
+  </body>
+</html>

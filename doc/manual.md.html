@@ -5,7 +5,7 @@
 
 <center>[*Quick Start*](#quickstart) 
 ∙ [API](#standardlibrary) ([*Input*](#standardlibrary/input) ∙ [*Physics*](#standardlibrary/physics) ∙ [*Graphics*](#standardlibrary/graphics) ∙ [*Sound*](#standardlibrary/sound) ∙ [*AI*](#standardlibrary/ai) ∙ [*Network*](#network))
-<br>[Assets](#built-inassets) ([*Sprites*](#sprites) ∙ [*Fonts*](#fonts) ∙ [*Sounds*](#sounds))
+<br>[Assets](#built-inassets) ([*Sprites*](#sprites) ∙ [*Fonts*](#_fonts) ∙ [*Sounds*](#sounds))
 <br>[Controls](#controls) 
 ∙ [Symbols](#symbols)
 ∙ [JSON Formats](#projectfiles) 
@@ -677,6 +677,12 @@ Simplified example of 3D perspective zoom using `set_camera()`. See also the Veh
 Private view example for online multiplayer using `set_screen_size()` and
 `VIEW_ARRAY`. Also shows how to streamline online game configuration using
 `start_guesting()`, `start_hosting()`, and `HOST_CODE`.
+
+
+</td></tr><tr><td>![](../examples/textspheres/label128.png)</td><td>
+[Text Spheres](../console/quadplay.html?game=quad://examples/textspheres&IDE=1) 
+Sample title screen animation converting text (from a pre-drawn PNG) into
+3D shapes for animation.
 
 </td></tr></table>
 
@@ -2004,8 +2010,10 @@ Array
 : Remove element `i` from the array, preserving order. O(n) expected time.
 
 `remove_values(array, x)`
-: Remove every instance of `x` in the array, maintaining order. O(n) time in the original
-  length of the array.  Does nothing if `x` is not in the array. See also `fast_remove_value()`
+: Remove every instance of `x` in the array, maintaining order. O(n)
+  time in the original length of the array. Returns true if any value
+  was removed.vDoes nothing if `x` is not in the array. See also
+  `fast_remove_value()`
 
 `remove_all(array)`
 : Remove everything from the array. Same as `resize(array, 0)`.
@@ -2094,11 +2102,13 @@ String
 : Produces a string from number `n` in one of the following formats.
   Each is followed by an example output. When `n` is a time, it is in seconds.
 
-   - `"percent"`: 30%
+   - `"percent"`, `"%"`: 30%
    - `"commas"` (comma thousand separators): 1,000,000
    - `"spaces"` (space thousand separators): 1 000 000
    - `"binary"`: 0b10100001
-   - `"degrees"`: 57°
+   - `"degrees"`, `"deg"`, `"°"`: 57°
+   - `"0.#deg"`, `"0.#°"`: 57.3°
+   - `"0.0deg"`, `"0.0°"`: 180.0°
    - `"hex"`: 0xa1
    - `"scientific"`: 6.022×10²³
    - `"clock12"`: 5:35pm
@@ -2107,6 +2117,7 @@ String
    - `"oldstopwatch"`: 1"38'71
    - `"ordinal"`: second
    - `"ordinalabbrev"`: 2ⁿᵈ
+   - `"fraction"`: ¼
    - `".00"` (or any other trailing zero sequence): 4.91
    - `"00"` (or any other leading zero sequence): 07
    - `" 0"` (or any other leading space sequence followed by a zero sequence): " 7"
@@ -2241,7 +2252,8 @@ Object
   Use `object[k] ≠ ∅` to test for containment explicitly.
 
 `remove_values(object, v)`
-: Remove every instance of `v` from the object. See also `fast_remove_value()`.
+: Remove every instance of `v` from the object. Returns true if any
+  value was removed. See also `fast_remove_value()`.
 
 `remove_all(object)`
 : Remove everything from the object. It is faster to assign to a new, empty object than to
@@ -2274,7 +2286,7 @@ Random Values
 `random_gaussian()`
 : Same as `random_gaussian(0, 1, random)`
 
-`random_gaussian(mean, stddev, random default random)`
+`random_gaussian(mean, stddev, rng default random)`
 : Returns a Gaussian distributed random number on the distribution
   with the given mean and standard deviation. See also `random_truncated_gaussian()`.
 
@@ -2282,16 +2294,16 @@ Random Values
 : Uniformly distributed random integer between 0 and hi, inclusive.
   This version is deprecated. Use `random_integer(0, hi)` instead.
 
-`random_integer(lo, hi, random default random)`
+`random_integer(lo, hi, rng default random)`
 : Random integer between `lo` and `hi`, including both ends.
   The `random` argument defaults to common random number generator `random()`, but
   an alternative function previously created by `make_random()` can be
   passed instead.
 
-`random_sign(random default random)`
+`random_sign(rng default random)`
 : Returns +1 or -1 with equal probability.
 
-`random_truncated_gaussian(mean, stddev, radius default (2 * stddev), random default random)`
+`random_truncated_gaussian(mean, stddev, radius default (2 * stddev), rng default random)`
 : Returns a Gaussian distributed random number within `radius` of
   the mean. The default radius corresponds to about 96% of the total probability
   of the distribution and avoids very long tails. See also `random_gaussian()`.
@@ -2304,30 +2316,30 @@ Random Values
 
 ### 2D
 
-`random_direction2D(random default random)`
+`random_direction2D(rng default random)`
 : Same as `random_on_circle()`
 
 `random_gaussian2D()`
 : Same as `random_gaussian2D(xy(0, 0), xy(1, 1), random)`.
 
-`random_gaussian2D(mean, stddev, random default random)`
+`random_gaussian2D(mean, stddev, rng default random)`
 : Returns a Gaussian distributed random point on the distribution
   with the given mean and standard deviation. The mean and standard
   deviation may each be scalar or `xy()` values.
   See also `random_gaussian()`, `random_truncated_gaussian2D()`.
 
-`random_on_circle(random default random)`
+`random_on_circle(rng default random)`
 : Returns a uniformly distributed `xy()` on the perimeter of the circle with center `(0, 0)` with radius 1.
   Useful for random directions.
 
-`random_on_square(random default random)`
+`random_on_square(rng default random)`
 : Uniformly distributed `xy()` on the _perimeter_ of a square from `(-1, -1)` to `(1, 1)`.
 
-`random_within_circle(random default random)`
+`random_within_circle(rng default random)`
 : Returns a uniformly distributed `xy()` in the disk with center `(0, 0)` with radius 1. Useful for
   random offsets within a circle. See also `random_on_circle()`
 
-`random_within_region(region, recurse default true, random default random)`
+`random_within_region(region, recurse default true, rng default random)`
 : Random world space 2D point generated within uniformly within the
   region described. A region may be:
 
@@ -2339,12 +2351,12 @@ Random Values
   covered by all children as if they were non-overlapping. That is,
   the overlapping area is sampled twice.
 
-`random_within_square(random default random)`
+`random_within_square(rng default random)`
 : Returns a uniformly distributed `xy()` in the square from `(-1, -1)` to `(1, 1)`, that is,
   the square that has a "radius" of 1 or sides of length two, and is centered at the origin `(0, 0)`.
   Analogous to `randomDisk()`.
 
-`random_truncated_gaussian2D(mean, stddev, radius, random default random)`
+`random_truncated_gaussian2D(mean, stddev, radius, rng default random)`
 : Returns a Gaussian distributed random point within `radius`
   of `mean`. The `mean` and `stddev` may be scalars or `xy()`s.
   If `radius` is a number, the truncation region is a disk. If
@@ -2354,33 +2366,33 @@ Random Values
 
 
 ### 3D
-`random_direction3D(random default random)`
+`random_direction3D(rng default random)`
 : Same as `random_on_sphere()`.
 
 `random_gaussian3D()`
 : Same as `random_gaussian3D(xy(0, 0), xy(1, 1), random)`.
 
-`random_gaussian3D(mean, stddev, random default random)`
+`random_gaussian3D(mean, stddev, rng default random)`
 : Returns a Gaussian distributed random point on the distribution
   with the given mean and standard deviation. The mean and standard
   deviation may each be scalar or `xyz()` values.
   See also `random_gaussian()`, `random_truncated_gaussian3D()`.
 
-`random_on_cube(random default random)`
+`random_on_cube(rng default random)`
 : A random point on the _surface_ of the cube from `(-1, -1, -1)` to `(1, 1, 1)`.
 
-`random_on_sphere(random default random)`
+`random_on_sphere(rng default random)`
 : Returns a uniformly distributed `xyz()` on the [hollow] sphere with center `(0, 0, 0)` with radius 1. Useful for
   random directions in 3D. See also `random_within_sphere()` and `random_on_circle()`.
 
-`random_within_cube(random default random)`
+`random_within_cube(rng default random)`
 : A random point inside the cube from `(-1, -1, -1)` to `(1, 1, 1)`.
 
-`random_within_sphere(random default random)`
+`random_within_sphere(rng default random)`
 : Returns a uniformly distributed `xyz()` within the unit sphere, that is, the ball with center `(0, 0, 0)` and radius 1.
   Useful for random offsets within a sphere. See also `random_on_sphere()`.
 
-`random_truncated_gaussian3D(mean, stddev, radius, random default random)`
+`random_truncated_gaussian3D(mean, stddev, radius, rng default random)`
 : Returns a Gaussian distributed random point within `radius`
   of `mean`. The `mean` and `stddev` may be scalars or `xyz()`s.
   If `radius` is a number, the truncation region is a disk. If
@@ -2555,9 +2567,10 @@ Math
 `floor(x, u)`
 : Floor to the nearest multiple of `u` using `floor(x / u) * u`.
 
-`hash(x, y)`
+`hash(x, y default nil)`
 : A hash value of string or number `x`, returning a value on [0, 1].
-  If `y` is specified, the hash considers the union of the values.
+  If `y` is specified, the hash considers the union of the values. Useful 
+  for stable procedural generation.
 
 `lerp(a, b, t)`
 : Returns `a + (b - a) * t`. See also `smoothstep()` and `smootherstep()`.
@@ -5501,7 +5514,7 @@ and persistent worlds.
   object `{}` is returned if there are no keys.
 
 `save_local(key, value)`
-: The value will be serialized to a string with `unparse(value, true)` and then
+: The value will be serialized to a string with `unparse(value, 0)` and then
   stored associated with `key` and the URL of the game. Save a value
   of `∅` to delete the key. There is a maximum size of 4096
   characters for the unparsed value for each key and a maximum size of
@@ -5975,94 +5988,60 @@ Sprites
 
 Fonts
 ------------------------------------------------------------------------------------
+<a name="_fonts"/>
 
-![`quad://fonts/robot-18.font.json`](../fonts/robot-18.png)
+<script>
+for (const font of [
 
-![`quad://fonts/octant-17.font.json`](../fonts/octant-17.png)
+'robot-18',
+'octant-17',
+'deja-15',
+'blackletter-14',
+'broderick-14',
+'cruise-14',
+'cpc-14',
+'ivanhoe-12',
+'suchet-12',
+'hauer-12',
+'federation-11',
+'weaver-10',
+'good-neighbors-9',
+'stencil-9',
+'robot-9',
+'ching-9',
+'deja-9',
+'fool-9',
+'bogart-9',
+'runes-9',
+'suchet-9',
+'thompson-8',
+'roman-8',
+'wright-8',
+'deja-8',
+'weaver-7',
+'broderick-7',
+'cga-7',
+'cruise-7',
+'connelly-7',
+'deja-7',
+'scoreboard-7',
+'hauer-6',
+'deja-6',
+'scoreboard-6',
+'scoreboard-5',
+'deja-5',
+'nano-5',
+'nano-4',
+'nano-3',
+'deja-3',
+'nanob-3'])
 
-![`quad://fonts/deja-15.font.json`](../fonts/deja-15.png)
-
-![`quad://fonts/blackletter-14.font.json`](../fonts/blackletter-14.png)
-
-![`quad://fonts/broderick-14.font.json`](../fonts/broderick-14.png)
-
-![`quad://fonts/cruise-14.font.json`](../fonts/cruise-14.png)
-
-![`quad://fonts/cpc-14.font.json`](../fonts/cpc-14.png)
-
-![`quad://fonts/ivanhoe-12.font.json`](../fonts/ivanhoe-12.png)
-
-![`quad://fonts/suchet-12.font.json`](../fonts/suchet-12.png)
-
-![`quad://fonts/hauer-12.font.json`](../fonts/hauer-12.png)
-
-![`quad://fonts/federation-11.font.json`](../fonts/federation-11.png)
-
-![`quad://fonts/weaver-10.font.json`](../fonts/weaver-10.png)
-
-![`quad://fonts/good-neighbors-9.font.json`](../fonts/good-neighbors-9.png)
-
-![`quad://fonts/stencil-9.font.json`](../fonts/stencil-9.png)
-
-![`quad://fonts/robot-9.font.json`](../fonts/robot-9.png)
-
-![`quad://fonts/ching-9.font.json`](../fonts/ching-9.png)
-
-![`quad://fonts/deja-9.font.json`](../fonts/deja-9.png)
-
-![`quad://fonts/fool-9.font.json`](../fonts/fool-9.png)
-
-![`quad://fonts/bogart-9.font.json`](../fonts/bogart-9.png)
-
-![`quad://fonts/runes-9.font.json`](../fonts/runes-9.png)
-
-![`quad://fonts/suchet-9.font.json`](../fonts/suchet-9.png)
-
-![`quad://fonts/thompson-8.font.json`](../fonts/thompson-8.png)
-
-![`quad://fonts/roman-8.font.json`](../fonts/roman-8.png)
-
-![`quad://fonts/wright-8.font.json`](../fonts/wright-8.png)
-
-![`quad://fonts/deja-8.font.json`](../fonts/deja-8.png)
-
-![`quad://fonts/weaver-7.font.json`](../fonts/weaver-7.png)
-
-![`quad://fonts/pryce-7.font.json`](../fonts/pryce-7.png)
-
-![`quad://fonts/broderick-7.font.json`](../fonts/broderick-7.png)
-
-![`quad://fonts/cga-7.font.json`](../fonts/cga-7.png)
-
-![`quad://fonts/cruise-7.font.json`](../fonts/cruise-7.png)
-
-![`quad://fonts/connelly-7.font.json`](../fonts/connelly-7.png)
-
-![`quad://fonts/deja-7.font.json`](../fonts/deja-7.png)
-
-![`quad://fonts/scoreboard-7.font.json`](../fonts/scoreboard-7.png)
-
-![`quad://fonts/hauer-6.font.json`](../fonts/hauer-6.png)
-
-![`quad://fonts/deja-6.font.json`](../fonts/deja-6.png)
-
-![`quad://fonts/scoreboard-6.font.json`](../fonts/scoreboard-6.png)
-
-![`quad://fonts/scoreboard-5.font.json`](../fonts/scoreboard-5.png)
-
-![`quad://fonts/deja-5.font.json`](../fonts/deja-5.png)
-
-![`quad://fonts/nano-5.font.json`](../fonts/nano-5.png)
-
-![`quad://fonts/deja-4.font.json`](../fonts/deja-4.png)
-
-![`quad://fonts/nano-4.font.json`](../fonts/nano-4.png)
-
-![`quad://fonts/nano-3.font.json`](../fonts/nano-3.png)
-
-![`quad://fonts/deja-3.font.json`](../fonts/deja-3.png)
-
-![`quad://fonts/nanob-3.font.json`](../fonts/nanob-3.png)
+   document.write(`
+<div style="display: inline-block; margin-right: 20px; margin-bottom: 10px">
+  <div class="font" style="background-image:url('../fonts/${font}.png')"></div>
+\`quad://fonts/${font}.font.json\`
+</div>`);
+</script>
 
 
 Sounds
@@ -7046,7 +7025,7 @@ asset..." option in the project. Select asset type Map and set the map
 options as you wish. Once the map is added to the project, right-click
 on the map in the project to open it in Tiled for editing.
 
-![Map creation dialog in the quadplay IDE](new-map-dialog width=50% style="image-rendering:auto")
+![Map creation dialog in the quadplay IDE](new-map-dialog.png width=50% style="image-rendering:auto")
 
 Multiple maps loaded from the same map.json file will produce
 different map objects in memory because maps are mutable. The
@@ -9188,6 +9167,7 @@ relicensed in the future.  This includes the contents of:
 - [`quadplay-edit-constant.js`](../console/quadplay-edit-constant.js)
 - [`quadplay-font.js`](../console/quadplay-font.js)
 - [`quadplay-load.js`](../console/quadplay-load.js)
+- [`quadplay-debug.js`](../console/quadplay-debug.js)
 - [`pyxlscript-compiler.js`](../console/pyxlscript-compiler.js)
 
 and excludes the built-in PyxlScript examples, games, and content described below.
@@ -9318,15 +9298,23 @@ table.aligned tr {
   vertical-align: top;
 }
 
-div.preview {
-  width: 256px;
-  height: 149px;
-  background-size: 600% 1000%;
+div.preview, div.font {
+  width:  335px;
+  height: 100px;
+  background-size: auto 550px;
   image-rendering: -moz-crisp-edges;
   image-rendering: pixelated;
   border: 1px solid #666;
+}
+
+
+div.preview {
+  background-size: 600% 1000%;
+  width: 256px;
+  height: 149px;
   float:right;
 }
+
 .md h1, .md h2, .md h3 { font-family: quadplay }
 .md pre.listing.backtick {
   margin-bottom: 0px;

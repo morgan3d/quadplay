@@ -172,6 +172,11 @@
             "description": ""
         },
         {
+            "url": "quad://examples/textspheres/",
+            "title": "Text Spheres",
+            "description": "Wiggling text title screen animation"
+        },
+        {
             "url": "quad://examples/tic_tac_toe/",
             "title": "Tic Tac Toe",
             "description": "Example of supporting gamepad, touch, and mouse (hover) input on a grid and turn-based play."
