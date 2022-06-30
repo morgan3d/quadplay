@@ -56,7 +56,7 @@ frame
 ────────────────────────────────────────────────────────────────────────
 
 player.angle -= 0.6° joy.x * rotation_sign() * ‖player.vel‖ * sign(dot(player.vel, angle_to_xy(player.angle)))
-const move = 0.35 joy.a - 0.15 joy.b
+const move = 0.35 (min(joy.a, 1) + max(0, joy.y)) - 0.15 (min(joy.b, 1) + max(0, -joy.y))
 if move:
     player.force += xy(angle_to_xy(player.angle) * move)
 
