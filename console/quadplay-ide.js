@@ -949,7 +949,7 @@ function onPlayButton(slow, isLaunchGame, args, callback) {
                     console.log(e);
                     return;
                 }
-                setErrorStatus(shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message);
+                setErrorStatus(shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message, {line_number: e.lineNumber, url: e.url});
                 editorGotoFileLine(e.url, e.lineNumber, undefined, true);
             }
             
@@ -1121,6 +1121,21 @@ const controlSchemeTable = {
     },
 
     Xbox360: {
+        '(a)': 'ⓐ',
+        '(b)': 'ⓑ',
+        '(c)': 'ⓧ',
+        '(d)': 'ⓨ',
+        '(e)': '⒧',
+        '(f)': '⒭',
+        '(q)': '⊲',
+        '(p)': '⊳',
+        '[^]': '⍐',
+        '[<]': '⍇',
+        '[v]': '⍗',
+        '[>]': '⍈'
+    },
+
+    SteamDeck: {
         '(a)': 'ⓐ',
         '(b)': 'ⓑ',
         '(c)': 'ⓧ',
@@ -1522,7 +1537,8 @@ function onError(e) {
     e = jsToPSError(e);
 
     // Try to compute a short URL
-    setErrorStatus((e.fcn !== '?' && e.fcn !== '' ? e.fcn + ' at ' : '') + shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message);
+    setErrorStatus((e.fcn !== '?' && e.fcn !== '' ? e.fcn + ' at ' : '') + shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message,
+                   {url: e.url, line_number: e.lineNumber});
     if (e.stack && e.stack.length > 0) {
         for (let i = 0; i < e.stack.length; ++i) {
             const entry = e.stack[i];
@@ -1907,6 +1923,7 @@ function saveIDEState() {
         'automathEnabled': document.getElementById('automathEnabled').checked,
         'debugWatchEnabled': document.getElementById('debugWatchEnabled').checked,
         'debugPrintEnabled': document.getElementById('debugPrintEnabled').checked,
+        'prettyPrintEnabled': document.getElementById('prettyPrintEnabled').checked,
         'printTouchEnabled': document.getElementById('printTouchEnabled').checked,
         'restartOnFocusEnabled': document.getElementById('restartOnFocusEnabled').checked,
         'codeEditorFontSize': '' + codeEditorFontSize,
@@ -1953,6 +1970,13 @@ let soundEditorCurrentSound = null;
 /** Called when a project tree control element is clicked.
 
     For the overview Mode and Constants page, the object is undefined.
+
+    - `target` is the project hierarchy element that links. 
+      It can often be obtained from the name, for example: 
+      document.getElementById('projectAsset_${assetName}')
+      defined by the caller, it will be discovered
+    - `type` is one of: 'asset', 'constant', 'mode', 'script', 'doc'
+    - `object` is the underlying gameSource child to modify
  */
 function onProjectSelect(target, type, object) {
     // Hide all editors
@@ -2984,11 +3008,12 @@ function hideOpenGameDialog() {
 
 /**********************************************************************************/
 
-function setErrorStatus(e) {
+/* Optional location = { line_number, url } used for creating hyperlinks */
+function setErrorStatus(e, location) {
     e = escapeHTMLEntities(e);
     error.innerHTML = e;
     if (e !== '') {
-        $outputAppend('\n<span style="color:#f55">' + e + '<span>\n');
+        $outputAppend('\n<span style="color:#f55">' + e + '<span>\n', location, location !== undefined);
     }
 }
 
@@ -3487,6 +3512,8 @@ function reloadRuntime(oncomplete) {
         QRuntime.$showPhysicsEnabled = document.getElementById('showPhysicsEnabled').checked && useIDE;
         QRuntime.$onScreenHUDEnabled = document.getElementById('onScreenHUDEnabled').checked && useIDE;
         QRuntime.$debug_watch        = debug_watch;
+        QRuntime.$debug_print        = debug_print;
+        QRuntime.assert              = assert;
         QRuntime.$fontMap            = fontMap;
         QRuntime.$parse              = $parse;
         QRuntime.$submitFrame        = submitFrame;
@@ -3506,6 +3533,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.$version            = version;
         QRuntime.$prompt             = prompt;
         QRuntime.$setFramebufferSize = setFramebufferSize;
+        QRuntime.$escapeHTMLEntities = escapeHTMLEntities;
         QRuntime.$sleep              = useIDE ? null : sleep;
         QRuntime.disconnect_guest    = disconnectGuest;
         QRuntime.$notifyGuestsOfPostEffects = notifyGuestsOfPostEffects;
@@ -3764,8 +3792,6 @@ function reloadRuntime(oncomplete) {
         }
         QRuntime.joy = QRuntime.gamepad_array[0];
         QRuntime.$bind_gamepad_getters = $bind_gamepad_getters;
-        QRuntime.debug_print     = debug_print;
-        QRuntime.assert          = assert;
         QRuntime.device_control  = device_control;
         QRuntime.$play_sound     = play_sound;
         QRuntime.stop_audio      = stop_audio;
@@ -3773,6 +3799,9 @@ function reloadRuntime(oncomplete) {
         QRuntime.set_volume      = set_volume;
         QRuntime.set_playback_rate = set_playback_rate;
         QRuntime.set_pitch       = set_pitch;
+        
+        // set_pan is different because it has a standard library stub that processes the
+        // transformation before calling the browser version
         QRuntime.$set_pan        = set_pan;
         QRuntime.get_audio_status= get_audio_status;
         QRuntime.debug_pause     = onPauseButton;
@@ -3790,7 +3819,8 @@ function capitalize(s) {
 }
 
 
-// Used to clone constants. Assets do not need to be cloned.
+/* Used to clone constants. Assets do not need to be cloned.
+   Freezes if the src was frozen. */
 function deep_clone(src, alreadySeen) {
     alreadySeen = alreadySeen || new Map();
     if ((src === null) || (src === undefined)) {
@@ -3821,7 +3851,7 @@ function deep_clone(src, alreadySeen) {
         } else if (Object.isSealed(src)) {
             Object.seal(v);
         }
-            
+        
         return v;
     } else if (typeof src === 'object' && (! src.constructor || (src.constructor === Object.prototype.constructor))) {
         // Some generic object that is safe to clone
@@ -3952,19 +3982,57 @@ function makeConstants(environment, constants, CREDITS) {
     Object.preventExtensions(CONSTANTS);
 }
 
+/* Types that can be overriden in the debug layer */
+const ALLOWED_TO_DEBUG_OVERRIDE = {
+    'number': true,
+    'string': true,
+    'reference': true,
+    'boolean': true,
+    'rgb': true,
+    'rgba': true,
+    'hsv': true,
+    'hsva': true,
+    'xy': true,
+    'xz': true,
+    'xyz': true
+};
+
 
 /** Used by editors as well as when building the runtime. 
 
     alreadySeenMap is used for cloning. It can be undefined. 
 
-    referencePass can be true (only process references), false (only process nonreferences),
-    or undefined (process all)    
+    referencePass can be true (only process references), false (only
+    process nonreferences), or undefined (process all).
+
+    Initally,
+      constants = gameSource.constants 
+      debugConstants = gameSource.debug.constants
+      debugConstantsJSON = gameSource.debug.json.constants
+
+    For an object or array, these are then recursively descended by
+    further calls.
 */
-function redefineConstantByName(environment, key, alreadySeenMap, referencePass) {
+function redefineConstantByName
+(environment,
+ key,
+ alreadySeenMap,
+ referencePass = undefined,
+ constants = gameSource.constants,
+ debugConstants = gameSource.debug.constants,
+ debugConstantsJSON = gameSource.debug.json.constants) {
+    
+    // TODO: when the constant is an object or array, need to reapply
+    // this logic recursively
     const value =
-          (key in gameSource.debug.constants && gameSource.debug.json.constants[key].enabled) ?
-          gameSource.debug.constants[key] :
-          gameSource.constants[key];
+          ((key in debugConstants &&
+           debugConstantsJSON[key].enabled &&
+           ALLOWED_TO_DEBUG_OVERRIDE[debugConstantsJSON[key].type]) ?
+           debugConstants :
+           constants)[key];
+
+    // referencePass is not strictly boolean, so we have to test against
+    // true and false explicitly
     if (value instanceof GlobalReferenceDefinition) {
         if (referencePass !== false) {
             redefineReference(environment, key, value.resolve());
@@ -4103,7 +4171,7 @@ const qrcode = new QRCode('serverQRCode',
                           });
 
 const BOOT_INFO = `<span style="color:#ec5588">quadplay✜ ${version}</span>
-<span style="color:#937ab7">© 2019-2021 Morgan McGuire</span>
+<span style="color:#937ab7">© 2019-2022 Morgan McGuire</span>
 <span style="color:#5ea9d8">Licensed under LGPL 3.0</span>
 <span style="color:#859ca6">https://casual-effects.com</span>
 
@@ -4611,6 +4679,11 @@ if (! localStorage.getItem('debugPrintEnabled')) {
     localStorage.setItem('debugPrintEnabled', 'true')
 }
 
+if (! localStorage.getItem('prettyPrintEnabled')) {
+    // Default to true
+    localStorage.setItem('prettyPrintEnabled', 'true')
+}
+
 if (! localStorage.getItem('assertEnabled')) {
     // Default to true
     localStorage.setItem('assertEnabled', 'true')
@@ -4649,7 +4722,7 @@ if (! localStorage.getItem('autoplayOnLoad')) {
 document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanceTab').checked = true;
 
 {
-    const optionNames = ['showPhysicsEnabled', 'showPrivateViewsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'todoEnabled', 'automathEnabled', 'debugPrintEnabled', 'debugWatchEnabled', 'restartOnFocusEnabled', 'autoplayOnLoad', 'onScreenHUDEnabled', 'printTouchEnabled'];
+    const optionNames = ['showPhysicsEnabled', 'showPrivateViewsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'todoEnabled', 'automathEnabled', 'prettyPrintEnabled', 'debugPrintEnabled', 'debugWatchEnabled', 'restartOnFocusEnabled', 'autoplayOnLoad', 'onScreenHUDEnabled', 'printTouchEnabled'];
     for (let i = 0; i < optionNames.length; ++i) {
         const name = optionNames[i];
         const value = JSON.parse(localStorage.getItem(name) || 'false');

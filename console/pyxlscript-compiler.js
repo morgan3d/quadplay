@@ -375,8 +375,9 @@ function processLine(line, inFunction, stringProtectionMap) {
             return before + type + ' ' + rest + ((next !== '') ? '; ' + processLine(next, inFunction, stringProtectionMap) : ';');
         }
 
-    } else if (match = line.match(/^(\s*)(debug_watch)\s*(\(.+)/)) {
+    } else if (match = line.match(/^(\s*)(debug_watch|debug_print)\s*(\(.+)/)) {
         let before = match[1];
+        let call = match[2];
         let rest = match[3];
         let closeIndex = findMatchingParen(rest, 0, +1);
 
@@ -386,7 +387,7 @@ function processLine(line, inFunction, stringProtectionMap) {
         // to unprotect, escape quotes, and then reprotect them to make it safe.
         let message = unprotectQuotedStrings(watchExpr, stringProtectionMap).replace(/"/g, '\\"');
         message = protectQuotedStrings('"' + message + '"', stringProtectionMap)[0];
-        return before + '($debugWatchEnabled && $debug_watch(SOURCE_LOCATION, ' + message + ', ' + watchExpr + ')); ' + processLine(rest.substring(closeIndex + 1), inFunction, stringProtectionMap);
+        return before + '($' + (call === 'debug_watch' ? 'debugWatch' : 'debugPrint') + 'Enabled && $' + call + '(SOURCE_LOCATION, ' + message + ', ' + watchExpr + ')); ' + processLine(rest.substring(closeIndex + 1), inFunction, stringProtectionMap);
         
     } else {
         // Recursively process the next expression. 
@@ -1308,7 +1309,6 @@ function pyxlToJS(src, noYield, internalMode) {
     // Debug statements
     src = src.replace(/\bassert\b/g, '$assertEnabled && assert');
     src = src.replace(/\btodo[ ]*\(/g, '$todoEnabled && $todo(');
-    src = src.replace(/\bdebug_print[ ]*\(/g, '$debugPrintEnabled && debug_print(SOURCE_LOCATION, ');
 
     // DEFAULT operators. We replace these with (the unused in pyxlscript) '=='
     // operator, which has similar precedence, and then use vectorify

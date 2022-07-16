@@ -17,7 +17,7 @@ const prompt_color            = #4DF
 const selected_color          = #f
 const unselected_color        = #b
 
-const controllerTypeArray = ["Quadplay", "Xbox", "Xbox360", "Keyboard", "Kbd_Alt", "Kbd_P1", "Kbd_P2", "Colemak", "Azerty", "Azerty_P2", "PS5", "PS4", "PS3", "SNES", "SwitchPro", "JoyCon_R", "JoyCon_L", "Zero", "HOTAS", "X_Arcade", "Arcade", "Arcade_X", "Arcade_PS", "Stadia", "GPD_Win", "SN30_Pro", "PiBoy_DMG", "Genesis"];
+const controllerTypeArray = ["Quadplay", "Xbox", "Xbox360", "Keyboard", "Kbd_Alt", "Kbd_P1", "Kbd_P2", "Colemak", "Azerty", "Azerty_P2", "PS5", "PS4", "PS3", "SteamDeck", "SNES", "SwitchPro", "JoyCon_R", "JoyCon_L", "Zero", "HOTAS", "X_Arcade", "Arcade", "Arcade_X", "Arcade_PS", "Stadia", "GPD_Win", "SN30_Pro", "PiBoy_DMG", "Genesis"];
 
 const playerName = []
 for p < 4: push(playerName, "P" + (p + 1) + ": ")

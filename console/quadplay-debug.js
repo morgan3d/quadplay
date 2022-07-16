@@ -1,3 +1,4 @@
+/* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License */
 'use strict';
 
 // Maps expression strings to values
@@ -48,3 +49,51 @@ function updateDebugWatchDisplay() {
     
     debugWatchTable.changed = false;
 }
+
+
+// Injected as debug_print in QRuntime
+// Escapes HTML
+function debug_print(location, expression, ...args) {
+    const prettyPrint = document.getElementById('prettyPrintEnabled').checked;
+    let s = '';
+    for (let i = 0; i < args.length; ++i) {
+        let m = args[i]
+
+        if (typeof m !== 'string') {
+            m = QRuntime.$unparse(m, new Map(), ': ', false, true, false, '', expression, prettyPrint);
+            
+            if (! prettyPrint) {
+                // Pretty printing automatically escapes HTML entities
+                // in strings. When not pretty printing we need to do
+                // so explicitly.
+                m = escapeHTMLEntities(m);
+            }
+        } else {
+            m = escapeHTMLEntities(m);
+        }
+        
+        s += m;
+        
+        if (i < args.length - 1) {
+            s += ' ';
+        }
+    }
+    
+    $outputAppend(s + '\n', location);
+}
+
+
+// Injected as assert in QRuntime
+function assert(x, m) {
+    if (! x) {
+        throw new Error(m || "Assertion failed");
+    }
+}
+
+
+/* Callback for the nested pretty printer when the tree control is expanded */
+function onExpanderClick(event) {
+    event.stopPropagation();
+    event.target.parentElement.classList.toggle('closed');
+}
+

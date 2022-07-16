@@ -4,7 +4,7 @@
 // contains all of the routines that are browser specific for the runtime and
 // could be replaced with a node.js or native version.
 
-"use strict";
+'use strict';
 
 const MAX_DEBUG_OUTPUT_LENGTH = 800;
 
@@ -54,7 +54,7 @@ function detectControllerType(id) {
     let type = controllerTypeTable[id];
     
     if (type === undefined) {
-        // Not previously on this machine observed. Apply heuristics
+        // Not previously observed on this machine. Apply heuristics
         if (/ps3|playstation(r)3/i.test(id)) {
             type = 'PlayStation3';
         } else if (/ps4|playstation/i.test(id)) {
@@ -69,6 +69,8 @@ function detectControllerType(id) {
             type = 'Stadia';
         } else if (/xbox 360/i.test(id)) {
             type = 'Xbox360';
+        } else if (/x-box 360 pad/i.test(id)) {
+            type = 'SteamDeck';
         } else if (/xbox|xinput/i.test(id)) {
             type = 'Xbox';
         } else if (/snes/i.test(id)) {
@@ -92,8 +94,8 @@ function detectControllerType(id) {
 
 function setPadType(p, type) {
     const prompt = controlSchemeTable[type];
-    if (p === undefined || p < 0 || p > 3) { throw new Error('"setPadType" must be used with an index from 0 to 3'); }
-    if (! prompt) { throw new Error('"setPadType" must be used with one of the legal types, such as "Quadplay" or "PS4" (received "' + type + '")'); }
+    if (p === undefined || p < 0 || p > 3) { throw new Error('"set_pad_type" must be used with an index from 0 to 3'); }
+    if (! prompt) { throw new Error('"set_pad_type" must be used with one of the legal types, such as "Quadplay" or "PS4" (received "' + type + '")'); }
 
     const gamepad = QRuntime.gamepad_array[p]
     gamepad.type = type;
@@ -586,10 +588,13 @@ let prevRealGamepadState = [];
 //
 // Standard mapping https://www.w3.org/TR/gamepad/standard_gamepad.svg
 const gamepadButtonRemap = {
-    'identity':                                    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+    'identity':                                     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+
+    // Steam Deck
+    '28de-11ff-Microsoft X-Box 360 pad 0':          [0, 1, 2, 3, 4, 5, 8, 11, 6, 7, 9, 10, 12, 13, 14, 15, 16],
     
     // Windows SNES30
-    'SNES30 Joy     (Vendor: 2dc8 Product: ab20)': [1, 0, 4, 3, 6, 7, 5, 2,10,11, 8, 9,   12, 13, 14, 15, 16],
+    'SNES30 Joy     (Vendor: 2dc8 Product: ab20)':  [1, 0, 4, 3, 6, 7, 5, 2,10,11, 8, 9,   12, 13, 14, 15, 16],
 
     // Linux SNES30
     '8Bitdo SNES30 GamePad (Vendor: 2dc8 Product: 2840)': [1, 0, 4, 3, 6, 7, 5, 2,10,11, 8, 9,   12, 13, 14, 15, 16],
@@ -597,7 +602,7 @@ const gamepadButtonRemap = {
     'T.Flight Hotas X (Vendor: 044f Product: b108)':[0, 1, 3, 2, 4, 5, 6, 7, 10, 11, 8, 9, 12, 13, 14, 15, 16],
 
     // Nintendo Switch SNES official controller under safari
-    '57e-2017-SNES Controller': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 12, 13, 14, 15],
+    '57e-2017-SNES Controller':                     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 12, 13, 14, 15],
     'SNES Controller (Vendor: 057e Product: 2017)': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 12, 13, 14, 15],
 
     // Raphnet adapter with the retro bit SEGA Genesis and Mega Drive controllers
@@ -605,8 +610,9 @@ const gamepadButtonRemap = {
 };
 
 const gamepadAxisRemap = {
-    'identity':                                      [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
-    'T.Flight Hotas X (Vendor: 044f Product: b108)': [0, 1, 6, 2, 4, 5, 3, 7, 8, 9]
+    'identity':                                     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+    '28de-11ff-Microsoft X-Box 360 pad 0':          [0, 1, 3, 4, 2, 5, 6, 7],
+    'T.Flight Hotas X (Vendor: 044f Product: b108)':[0, 1, 6, 2, 4, 5, 3, 7, 8, 9]
 };
 
 
@@ -950,29 +956,6 @@ function resumeAllSounds() {
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-// Injected as debug_print in QRuntime
-// Escapes HTML
-function debug_print(location, ...args) {
-    let s = '';
-    for (let i = 0; i < args.length; ++i) {
-        let m = args[i]
-        if (typeof m !== 'string') { m = QRuntime.unparse(m, 3); }
-        s += m;
-        if (i < args.length - 1) {
-            s += ' ';
-        }
-    }
-    
-    $outputAppend(escapeHTMLEntities(s) + '\n', location);
-}
-
-
-// Injected as assert in QRuntime
-function assert(x, m) {
-    if (! x) {
-        throw new Error(m || "Assertion failed");
-    }
-}
 
 // Allows HTML, forces the system style
 function $systemPrint(m, style) {
@@ -981,7 +964,7 @@ function $systemPrint(m, style) {
 
 
 // Allows HTML. location may be undefined
-function $outputAppend(m, location) {    
+function $outputAppend(m, location, linkAll) {
     if (m !== '' && m !== undefined) {
         // Uncomment to debug mystery output
         // console.trace();
@@ -1004,7 +987,11 @@ function $outputAppend(m, location) {
             }
             tooltip += ':' + location.line_number;
             
-            m = `<span style="cursor:pointer" title="${tooltip}" onclick="editorGotoFileLine('${location.url}', ${location.line_number}, undefined, false)">${m}</span>`;
+            if (linkAll) {
+                m = `<span style="cursor:pointer" title="${tooltip}" onclick="editorGotoFileLine('${location.url}', ${location.line_number}, undefined, false)">${m}</span>`;
+            } else {
+                m = `<a class="outputLink" onclick="editorGotoFileLine('${location.url}', ${location.line_number}, undefined, false)">${tooltip}</a>` + m;
+            }
         }
         
         outputDisplayPane.insertAdjacentHTML('beforeend', m);

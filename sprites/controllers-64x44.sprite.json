@@ -30,6 +30,7 @@
         "Arcade_PS":   {"x": 2, "y": 2},
         "X_Arcade":    {"x": 3, "y": 2},
         "PiBoy_DMG":   {"x": 4, "y": 2},
-        "Genesis":     {"x": 5, "y": 2}
+        "Genesis":     {"x": 5, "y": 2},
+        "SteamDeck":   {"x": 6, "y": 2}
     }
 }

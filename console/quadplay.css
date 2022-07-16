@@ -154,6 +154,8 @@ body.fullscreenEmulator {
 
 input[type="radio"], input[type="checkbox"] {
     margin-right: 7px;
+    top: 2px;
+    position: relative;
 }
 
 div#header {
@@ -189,6 +191,76 @@ div#header {
 a, #header a, .menu a {
     color: #e61b9d !important;
     text-decoration: none;
+}
+
+/* Used in the Output window for formatting links into code */
+a.outputLink {
+    position:absolute;
+    right:0;
+    display:block;
+    margin-right:30px;
+    cursor:pointer;
+    font-family:Arial;
+    text-align:right;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.structPane ul {
+    list-style-type: none;
+    margin-block-start: 0em;
+    margin-block-end: 0em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 30px;
+}
+
+
+.expanderButton::before {
+    content: "\25BE";
+    font-family: Arial;
+    position: relative;
+    margin-right: -10px;
+    left: -13px;
+    width: 10px;
+    display: inline-block;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+li.closed .expanderButton::before {
+    content: "\25B8";
+}
+
+.expanderEllipses {
+    display: none;
+}
+
+li.closed .expanderEllipses {
+    display: inline-block;
+    cursor: pointer;
+    position: relative;
+    top: 1.5px;
+}
+
+.expanderEllipses::after {
+    content: "⭤";
+}
+
+/* Hide the children of closed expanders */
+li.closed ul {
+    display: none;
+}
+
+/* Used to hide whitespace from presentation which we wish to preserve
+   for copying */
+.structPane .hidden {
+    display: none
 }
 
 #adblockWarning {

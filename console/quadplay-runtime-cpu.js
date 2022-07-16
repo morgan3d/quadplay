@@ -2373,18 +2373,8 @@ function make_entity(e, childTable) {
     r.is_sensor = (r.is_sensor === undefined) ? false : r.is_sensor;
 
     if (r.density === undefined) { r.density = 1; }
-
-    // Clone colors if present
-    r.labelXAlign = r.labelXAlign || 0;
-    r.labelYAlign = r.labelYAlign || 0;
-    r.labelOffset = r.labelOffset || xy(0, 0);
-    r.labelShadow = clone(r.labelShadow);
-    r.labelColor = clone(r.labelColor);
-    r.labelColor = clone(r.labelColor);
     
-    if (r.opacity === undefined) {
-        r.opacity = 1;
-    }
+    if (r.opacity === undefined) { r.opacity = 1; }
     
     if (typeof r.scale === 'number') {
         r.scale = {x: r.scale, y: r.scale};
@@ -7595,66 +7585,149 @@ function $unparseFixedDecimal(n, d) {
     return n.toFixed(d).replace(/\.?0*$/, '')
 }
 
+
+/* Helper for $unparse */
+function $unparseContainer(x, alreadySeen, colon, closingBraceOnNewLine,
+                           inlineShortContainers, terse, indent, hint, specialStructs, meta = {}) {
+
+    const INCREASE_INDENT = '    ';
+    const MAX_INLINE_CONTAINER_LENGTH = 4;
+
+    const isArray = Array.isArray(x);
+
+    alreadySeen.set(x, true);
+    
+    let s = '';
+    
+    let first = true;
+    
+    let numPublicKeys = 0;
+    let inline = inlineShortContainers;
+    
+    const keys = isArray ? undefined : $Object.keys(x);
+    const N = isArray ? x.length : keys.length;
+    
+    for (let i = 0; i < N; ++i) {
+        const k = isArray ? i : keys[i];
+        if (isArray || k !== '$') {
+            ++numPublicKeys;
+            const v = x[k];
+            if (numPublicKeys > MAX_INLINE_CONTAINER_LENGTH ||
+                Array.isArray(v) ||
+                typeof v === 'object') {
+                // Too large or recursive value
+                inline = false;
+            }
+        }
+    }
+
+    meta.expandable = N > 0 && ! inline && specialStructs;
+
+    // Are child nodes expanded by default?
+    const childExpansionClass = (N > 5 || indent.length >= INCREASE_INDENT.length) ? 'class="closed"' : '';
+    
+    let childMeta = {};
+    const childIndent = INCREASE_INDENT + indent;
+    for (let i = 0; i < N; ++i) {
+        const k = isArray ? i : keys[i];
+        // Hide quadplay-internal members
+        if (isArray || k[0] !== '$') {
+            let key;
+            
+            // Quote illegal identifiers used as keys
+            if (! isArray) {
+                const legalIdentifier = /^[Δ]?(?:[A-Za-z][A-Za-z_0-9]*|[αβγδζηθιλμρσϕφχψτωΩ][_0-9]*)$/.test(k);
+                key = legalIdentifier ? k : ('"' + k + '"');
+            }
+            
+            // Close out previous
+            if (first) {
+                if (! inline) {
+                    if (specialStructs) {
+                        s += '<span class="hidden">\n' + childIndent + '</span>';
+                    } else {
+                        s += '\n' + childIndent;
+                    }
+                }
+                first = false;
+            } else if (inline) {
+                // Separator
+                s += (terse ? ',' : ', ');
+            } else if (specialStructs) {
+                s += ',</li><span class="hidden">\n' + childIndent + '</span>';
+            } else {
+                s += ',\n' + childIndent;
+            }
+
+            // For arrays, pass the array's hint as the hint
+            childMeta.expandable = false;
+            const child = $unparse(x[k], alreadySeen, colon, closingBraceOnNewLine, inlineShortContainers, terse, childIndent, isArray ? hint : k, specialStructs, childMeta);
+
+            if (specialStructs && ! inline) {
+                s += `<li ${childExpansionClass}><span onclick="onExpanderClick(event)" class="expanderButton" style="visibility: ${childMeta.expandable ? 'visible' : 'hidden'}"></span>`;
+            }
+            
+            if (! isArray) {
+                s += key + colon;
+            }
+
+            s += child;
+        }
+    }
+    
+    if (numPublicKeys > 0 && specialStructs && ! inline) { s += '</li>'; }
+    
+    if (numPublicKeys > 0 && closingBraceOnNewLine && ! inline) {
+        if (specialStructs) {
+            s += '<span class="hidden">\n' + indent + '</span>';
+        } else {
+            s += '\n' + indent;
+        }
+    }
+
+    if (specialStructs && ! inline) {
+        s = '<ul>' + s + '</ul><span onclick="onExpanderClick(event)" class="expanderEllipses"></span>';
+    }
+
+    if (isArray) {
+        s = '[' + s + ']';
+    } else {
+        s = '{' + s + '}';
+    }
+    
+    return s;
+}
+
+
+
 /*
   `hint` is for styling. It is usually the name of the variable being
   unparsed
 
   `specialStructs` = true causes xy() and other common values to
-  pretty print instead of showing as generic objects.
+  pretty print instead of showing as generic objects, and escapes HTML
+  in strings.
 */
 function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
-                  inlineShortContainers, terse, indent, hint, specialStructs) {
-    
-    const INCREASE_INDENT = '    ';
+                  inlineShortContainers, terse, indent, hint, specialStructs, meta = {}) {
 
-    // Support rgba() as a single line
-    const MAX_INLINE_CONTAINER_LENGTH = 4;
+    if (x.$name !== undefined) {
+        // Internal object
+        const editable = ['font', 'spritesheet', 'sound', 'data', 'map'];
+        if (specialStructs && editable.indexOf(x.$type) !== -1) {
+            return `<a style="cursor:pointer; font-family: Arial" onclick="onProjectSelect(document.getElementById('projectAsset_${x.$name}'), 'asset', gameSource.assets['${x.$name}'])">${x.$name}</a>`;
+        } else {
+            return x.$name;
+        }
+    }
     
     if (Array.isArray(x)) {
-        if (x.$name !== undefined) {
-            // Internal object
-            return x.$name;
-        } else if (alreadySeen.has(x)) {
+        if (alreadySeen.has(x)) {
             return '[…]';
+        } else {        
+            return $unparseContainer(x, alreadySeen, colon, closingBraceOnNewLine,
+                                     inlineShortContainers, terse, indent, hint, specialStructs, meta);
         }
-        alreadySeen.set(x, true);
- 
-        let s = '';
-        let first = true;
-
-        // Test for nested containers
-        let inline = x.length <= MAX_INLINE_CONTAINER_LENGTH && inlineShortContainers;
-        if (inline) {
-            for (let i = 0; i < x.length; ++i) {
-                if (Array.isArray(x[i]) || typeof x[i] === 'object') {
-                    // Do not inline because there are nested containers
-                    inline = false;
-                    break;
-                }
-            }
-        }
-
-        const childIndent = INCREASE_INDENT + indent;
-        for (let i = 0; i < x.length; ++i) {
-            if (first) {
-                if (! inline) {
-                    s += '\n' + childIndent;
-                }
-                first = false;
-            } else if (inline) {
-                s += terse ? ',' : ', ';
-            } else {
-                s += ',\n' + childIndent;
-            }
-            // For arrays, pass the array's hint as the hint
-            s += $unparse(x[i], alreadySeen, colon, closingBraceOnNewLine, inlineShortContainers, terse, childIndent, hint, specialStructs);
-        }
-
-        if (x.length > 0 && closingBraceOnNewLine && ! inline) {
-            s += '\n' + indent;
-        }
-        
-        return '[' + s + ']';
     }
 
     
@@ -7662,14 +7735,9 @@ function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
     case 'object':
         if (x === null) {
             return '∅';
-        } else if (x.$name !== undefined) {
-            // Internal object
-            return x.$name;
         } else if (alreadySeen.has(x)) {
             return '{…}';
         } else {
-            alreadySeen.set(x, true);
-
             if (specialStructs && $isSimplePyxlScriptStruct(x)) {
                 // Position types
                 for (let j = 0; j < $unparse.pos_struct_array.length; ++j) {
@@ -7711,57 +7779,8 @@ function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
                 }
             }
             
-            let s = '';
-            const keys = $Object.keys(x);
-            let first = true;
-
-            let numPublicKeys = 0;
-            let inline = inlineShortContainers;
-            
-            for (let i = 0; i < keys.length; ++i) {
-                const k = keys[i];
-                if (k !== '$') {
-                    ++numPublicKeys;
-                    const v = x[k];
-                    if (numPublicKeys > MAX_INLINE_CONTAINER_LENGTH ||
-                        Array.isArray(v) ||
-                        typeof v === 'object') {
-                        // Too large or recursive value
-                        inline = false;
-                    }
-                }
-            }
-
-            const childIndent = INCREASE_INDENT + indent;
-            for (let i = 0; i < keys.length; ++i) {
-                const k = keys[i];
-                // Hide quadplay-internal members
-                if (k[0] !== '$') {
-                    // Quote illegal identifiers used as keys
-                    const legalIdentifier = /^[Δ]?(?:[A-Za-z][A-Za-z_0-9]*|[αβγδζηθιλμρσϕφχψτωΩ][_0-9]*)$/.test(k);
-                    const key = legalIdentifier ? k : ('"' + k + '"');
-
-                    if (first) {
-                        if (! inline) {
-                            s += '\n' + childIndent;
-                        }
-                        first = false;
-                    } else if (inline) {
-                        // Separator
-                        s += (terse ? ',' : ', ');
-                    } else {
-                        s += ',\n' + childIndent;
-                    }
-                    
-                    s += key + colon + $unparse(x[k], alreadySeen, colon, closingBraceOnNewLine, inlineShortContainers, terse, childIndent, k, specialStructs);
-                }
-            }
-
-            if (numPublicKeys > 0 && closingBraceOnNewLine && ! inline) {
-                s += '\n' + indent;
-            }
-            
-            return '{' + s + '}';
+            return $unparseContainer(x, alreadySeen, colon, closingBraceOnNewLine,
+                                     inlineShortContainers, terse, indent, hint, specialStructs, meta);
         }
 
     case 'boolean':
@@ -7775,8 +7794,18 @@ function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
             return '-∞';
         } else if (is_nan(x)) {
             return 'nan';
-        } else if (specialStructs && (/(^|_|\.)Δ?(angle|heading|theta|phi|yaw|pitch|roll|θ|ϕ|Φ|Θ|)(_array)?$/i.test(hint))) {
-            return format_number(x, '0.0deg');
+        } else if (specialStructs && (/(^|_|\.)Δ?(angle|heading|theta|phi|yaw|pitch|roll|θ|ϕ|Φ|Θ)(_array)?$/i.test(hint))) {
+            if ($Math.abs(x) < 25 * $Math.PI / 180) {
+                return format_number(x, '0.0deg');
+            } else {
+                return format_number(x, 'deg');
+            }
+        } else if (specialStructs && (/(^|_|\.)Δ?(percent|percentage|opacity|fraction|alpha|beta|α|β)(_array)?$/i.test(hint))) {
+            if ($Math.abs(x) < 0.05) {
+                return format_number(x, '0.0%');
+            } else {
+                return format_number(x, '%');
+            }
         } else if (x === $Math.PI) {
             return 'π';
         } else if (x === $Math.PI / 2) {
@@ -7801,6 +7830,7 @@ function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
         return '∅';
         
     case 'string':
+        if (specialStructs) { x = $escapeHTMLEntities(x); }
         return '"' + x + '"';
 
     case 'function':
@@ -7825,14 +7855,17 @@ function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
 */
 function $isSimplePyxlScriptStruct(object, fields) {
     if (typeof object !== 'object') { return; }
-    
+
+    let count = 0;
     for (const key in object) {
         if (key[0] !== '$' &&
             (key.length > 1 ||
              (fields && (fields.indexOf(key) === -1)) ||
              typeof object[key] !== 'number')) { return false; }
+        ++count;
     }
-    return true;
+
+    return ! fields || count === fields.length;
 }
 
 $unparse.pos_struct_array = ['xy', 'xyz', 'xz'];
