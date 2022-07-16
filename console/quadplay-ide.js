@@ -2451,7 +2451,7 @@ function visualizeGame(gameEditor, url, game) {
         }
         s += '</select></td></tr>\n';
 
-        const overrideInitialMode = gameSource.debug.json && gameSource.debug.json.start_mode_enabled && gameSource.debug.json.start_mode;
+        const overrideInitialMode = gameSource.debug && gameSource.debug.json && gameSource.debug.json.start_mode_enabled && gameSource.debug.json.start_mode;
         s += `<tr valign="top"><td></td><td><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${overrideInitialMode ? 'checked' : ''} onchange="onDebugInitialModeOverrideChange(this)">Debug&nbsp;Override</label></td><td colspan=2"><select id="debugOverrideInitialMode" style="width:205px; top:-2px" ${overrideInitialMode ? '' : 'disabled'} onchange="onProjectDebugInitialModeChange(this.value)">\n`;
         for (let i = 0; i < gameSource.modes.length; ++i) {
             const mode = gameSource.modes[i];
@@ -4019,8 +4019,8 @@ function redefineConstantByName
  alreadySeenMap,
  referencePass = undefined,
  constants = gameSource.constants,
- debugConstants = gameSource.debug ? gameSource.debug.constants : {},
- debugConstantsJSON = gameSource.debug ? gameSource.debug.json.constants : {}) {
+ debugConstants = gameSource.debug && gameSource.debug.constants ? gameSource.debug.constants : {},
+ debugConstantsJSON = gameSource.debug && gameSource.debug.json ? gameSource.debug.json.constants : {}) {
     
     // TODO: when the constant is an object or array, need to reapply
     // this logic recursively
