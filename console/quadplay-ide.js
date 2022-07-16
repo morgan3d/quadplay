@@ -4020,7 +4020,7 @@ function redefineConstantByName
  referencePass = undefined,
  constants = gameSource.constants,
  debugConstants = gameSource.debug ? gameSource.debug.constants : {},
- debugConstantsJSON = gameSoure.debug ? gameSource.debug.json.constants : {}) {
+ debugConstantsJSON = gameSource.debug ? gameSource.debug.json.constants : {}) {
     
     // TODO: when the constant is an object or array, need to reapply
     // this logic recursively
