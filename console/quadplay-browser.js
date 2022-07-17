@@ -645,24 +645,42 @@ function getIdealGamepads() {
                 mypad.buttons[b] = (typeof button === 'object') ? button.pressed : (button >= 0.5);
             }
 
-            // On Steam Deck, the D-pad maps to axes 6 and 7 instead of buttons
+            // On Steam Deck, the D-pad maps to axes 6 and 7 instead of buttons.
+            // But do not override the left stick!
             if (pad.id === '28de-11ff-Microsoft X-Box 360 pad 0') {
-                mypad.axes[0] = pad.axes[6];
-                mypad.axes[1] = pad.axes[7];
-            }            
+                if (pad.axes[6] !== 0) {
+                    mypad.axes[0] = pad.axes[6];
+                    if (pad.axes[6] > 0) {
+                        mypad.buttons[15] = true;
+                    } else {
+                        mypad.buttons[14] = true;
+                    }
+                }
 
-            // D-pad is buttons U = 12, D = 13, L = 14, R = 15.
-            // Use it to override the axes right here.
-            if (mypad.buttons[15]) {
-                mypad.axes[0] = +1;
-            } else if (mypad.buttons[14]) {
-                mypad.axes[0] = -1;
-            }
+                if (pad.axes[7] !== 0) {
+                    mypad.axes[1] = pad.axes[7];
+                    if (pad.axes[7] > 0) {
+                        mypad.buttons[13] = true;
+                    } else {
+                        mypad.buttons[12] = true;
+                    }
+                }
+                
+            } else { // Not steam deck
 
-            if (mypad.buttons[12]) {
-                mypad.axes[1] = -1;
-            } else if (mypad.buttons[13]) {
-                mypad.axes[1] = +1;
+                // D-pad is buttons U = 12, D = 13, L = 14, R = 15.
+                // Use it to override the axes right here.
+                if (mypad.buttons[15]) {
+                    mypad.axes[0] = +1;
+                } else if (mypad.buttons[14]) {
+                    mypad.axes[0] = -1;
+                }
+                
+                if (mypad.buttons[12]) {
+                    mypad.axes[1] = -1;
+                } else if (mypad.buttons[13]) {
+                    mypad.axes[1] = +1;
+                }
             }
 
             gamepadArray.push(mypad);
