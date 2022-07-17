@@ -637,13 +637,19 @@ function getIdealGamepads() {
                 mypad.analogAxes[a] = axis;
             }
             
-            // Process all 17 buttons/axes as digital buttons first
+            // Process all 17 buttons as digital buttons first, even if they are analog
 	    const buttonRemap = gamepadButtonRemap[pad.id] || gamepadButtonRemap.identity;
             for (let b = 0; b < 17; ++b) {
                 const button = pad.buttons[buttonRemap[b]];
                 // Different browsers follow different APIs for the value of buttons
                 mypad.buttons[b] = (typeof button === 'object') ? button.pressed : (button >= 0.5);
             }
+
+            // On Steam Deck, the D-pad maps to axes 6 and 7 instead of buttons
+            if (pad.id === '28de-11ff-Microsoft X-Box 360 pad 0') {
+                mypad.axes[0] = pad.axes[6];
+                mypad.axes[1] = pad.axes[7];
+            }            
 
             // D-pad is buttons U = 12, D = 13, L = 14, R = 15.
             // Use it to override the axes right here.
