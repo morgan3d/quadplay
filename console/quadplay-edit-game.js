@@ -154,13 +154,28 @@ function serverScheduleSaveGameJSON(delaySeconds) {
 
 
 /* Save the current .game.json file, which has
-   presumably been modified by the caller */
+   presumably been modified by the caller.
+
+   Updates the fileContents[gameSource.jsonURL].
+
+   Not called when the JSON editor is used to directly
+   modify the code of fileContents[gameSource.jsonURL].
+*/
 function serverSaveGameJSON(callback) {
     console.assert(gameSource.jsonURL);
     const webpath = urlToLocalWebPath(gameSource.jsonURL);
     console.assert(webpath.endsWith('.game.json'));
  
     const gameContents = WorkJSON.stringify(gameSource.json, undefined, 4);
+
+    // Update the text version used for the IDE
+    fileContents[gameSource.jsonURL] = gameContents;
+
+    // Update the editor if open
+    if (codeEditorSessionMap.get(gameSource.jsonURL)) {
+        updateCodeEditorSession(gameSource.jsonURL, gameContents);
+    }
+    
     serverWriteFile(webpath, 'utf8', gameContents, callback);
 }
 

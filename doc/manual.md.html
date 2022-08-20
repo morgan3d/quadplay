@@ -6005,6 +6005,8 @@ for (const font of [
 'hauer-12',
 'federation-11',
 'weaver-10',
+'novarese-bold-10',
+'novarese-10',
 'good-neighbors-9',
 'stencil-9',
 'robot-9',
@@ -6917,6 +6919,12 @@ Fonts have a JSON descriptor file that looks like:
     // or horizontal alignment is irrelevant at runtime (but affects
     // distribution size and loading time).
     "char_size": {"x": 8, "y": 14},
+    
+    // Optional, default is 0. The minimum width of a glyph for 
+    // layout purposes. This can be used to create fixed-width 
+    // (monospace) fonts, or to enforce minimum spacing around very
+    // thin characters such as |.
+    "min_char_width": 8,
 
     // Spacing between letters and lines during rendering. If the
     // x spacing is zero (for script fonts), there will be no space between

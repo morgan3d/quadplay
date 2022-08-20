@@ -498,7 +498,7 @@ function packFontCombine(dst, srcA, srcB, srcMask, bounds, yAlignA, yAlignB, xAl
 
     Used by loadFont() in quadplay-load.js and by fontpack.html.
 */
-function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, srcMask, generateMissingCharacters = true) {
+function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, srcMask, generateMissingCharacters = true, char_min_width = 0) {
     font.spacing = spacing;
     font.$borderSize = borderSize;
     font.$shadowSize = shadowSize;
@@ -739,7 +739,6 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
         packFontCombine('ⓨ', '◉', 'ʸ', srcMask, bounds, '', 'center', 'center', bitXor);
         packFontCombine('ⓩ', '◉', 'ᶻ', srcMask, bounds, '', 'center', 'center', bitXor);
         
-        
         // See if the bounds must be recomputed
         for (let c in bounds) {
             if (bounds[c].generated) {
@@ -757,6 +756,7 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
     }
     digitWidth += borderSize * 2;
 
+    
     // Compute line spacing
     {
         // Use ascenders and descenders from these letters
@@ -899,15 +899,17 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
                 // Compute the bounds of this character as an absolute position on the final image
                 const tileX = _charWidth * charX * charScale, tileY = font.$charHeight * charY, srcTileY = char_size.y * charY;
 
+                // Enforce padding for fixed width characters
+                const min_width = Math.max(char_min_width, isDigit(chr) ? digitWidth : 0);
+                
                 let pre = 0, post = 0;
-                if (isDigit(chr)) {
+                if (min_width > 0) {
                     // If this is a digit, shift the pixels and x
                     // bounds based on the mandatory fixed digit width
                     // so that it is centered
                     const w = srcBounds.x2 - srcBounds.x1 + 2 * borderSize + 1;
-                    post = ((digitWidth - w) / 2) | 0;
-                    pre = digitWidth - w - post;
-                    //console.log(chr, pre, post);
+                    post = Math.max(Math.ceil((min_width - w) / 2) | 0, 0) | 0;
+                    pre = Math.max(min_width - w - post, 0) | 0;
                 }
 
                 font.$bounds[chr] = {
@@ -936,7 +938,7 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
     // Make bounds for the space and tab characters based on whichever
     // is larger of several thin characters.
     {
-        const candidates = 'il¹;[';
+        const candidates = 'il¹;[|';
         let thickestBounds = null, thickestWidth = 0;
         for (let i = 0; i < candidates.length; ++i) {
             const c = candidates[i];

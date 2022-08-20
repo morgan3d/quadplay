@@ -118,7 +118,11 @@ function updateAllCodeEditorSessions() {
 }
 
 
-/* bodyText can also be json, which will be immediately serialized. */
+/* bodyText can also be json, which will be immediately serialized. 
+   Does not update fileContents[url].
+   
+   Assumes that the code editor is open for url already.
+ */
 function updateCodeEditorSession(url, bodyText) {
     console.assert(bodyText !== undefined, 'bodyText required');
 
@@ -161,7 +165,7 @@ function setCodeEditorSessionMode(session, mode) {
 
 
 /* Loads url into the code editor, creating a new editor if needed and
-   reusing a cached one if available. 
+   reusing a cached one if available.
 
    assetName may be undefined */
 function setCodeEditorSession(url, assetName) {
@@ -538,15 +542,22 @@ function createCodeEditorSession(url, bodyText, assetName) {
                     // Epoch has not changed since timeout was created, so begin the POST
                     setCodeEditorSessionMode(session, 'Saving<span class="blink">...</span>');
 
-                    // Update the file contents and cache immediately
+                    // Update the file contents immediately
                     let contents = session.getValue();
-                    let value = null;
+                    fileContents[url] = contents;
 
-                    try {
-                        value = url.endsWith('.json') ? WorkJSON.parse(contents) : contents;
-                        fileContents[url] = value;
-                    } catch (e) {
-                        console.log('Saved but did not reload ' + url + ' because it cannot parse correctly in the current state.');
+                    // Test whether the JSON file can successfully
+                    // parse before trying to reload. This will not
+                    // stop the save either way.
+                    let parseOK = true;
+                    if (url.endsWith('.json')) {
+                        try {
+                            parseOK = false;
+                            WorkJSON.parse(contents);
+                            parseOK = true;
+                        } catch (e) {
+                            console.log('Saved but did not reload ' + url + ' because it cannot parse correctly in the current state.');
+                        }
                     }
 
                     // If this is present in a cache, delete it
@@ -557,7 +568,7 @@ function createCodeEditorSession(url, bodyText, assetName) {
 
                         // If JSON, see if the current contents can
                         // parse before trying to reload anything
-                        if (session.aux.fileType !== 'json' || value !== null) {
+                        if (session.aux.fileType !== 'json' || parseOK) {
                             if (session.aux.fileType !== 'json' && session.aux.fileType !== 'pyxl') {
                                 // This must be a doc; update the preview pane, preserving
                                 // the scroll position if possible.
@@ -589,7 +600,10 @@ function createCodeEditorSession(url, bodyText, assetName) {
                                 
                             } else if (url.endsWith('.game.json')) {
                                 // Reload the game
-                                loadGameIntoIDE(window.gameURL, null, true);
+                                loadGameIntoIDE(window.gameURL, function () {
+                                    // Update the IDE view
+                                    visualizeGame(document.getElementById('gameEditor'), url, gameSource.json)
+                                }, true);
                             }
                         }
                         
@@ -676,7 +690,7 @@ function postToServer(payload, callback, errorCallback) {
 
 /* Convert a URL to a local webpath suitable for use with serverWriteFile() */
 function urlToLocalWebPath(url) {
-    console.assert(url !== undefined);
+    console.assert(url !== undefined, 'Tried to convert undefined webPath');
     url = url.replace(/\\/g, '/');
     
     if (url.startsWith(location.origin + '/')) {

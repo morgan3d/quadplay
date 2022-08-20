@@ -289,7 +289,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         );
     }
 
-    loadManager.fetch(gameURL, 'json', null, function (gameJSON) {
+    loadManager.fetch(gameURL, 'text', jsonParser, function (gameJSON) {
         if (! Array.isArray(gameJSON.modes)) { throw new Error('The modes parameter is not an array'); }
         if (gameJSON.assets === undefined) { gameJSON.assets = {}; }
         if (typeof gameJSON.assets !== 'object') { throw 'The assets parameter is not an object in ' + gameURL; }
@@ -298,9 +298,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             if (assetName[0] === '$') { throw 'Illegal asset name: "' + assetName + '"'; }
         }
 
-        // Store the original value, unmodified, so that it
-        // can be accessed by the IDE for editing
-        fileContents[gameURL] = gameSource.json = gameJSON;
+        gameSource.json = gameJSON;
 
         //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -445,10 +443,10 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 // Always re-fetch and parse the json, even though
                 // this asset may be in the cache if it is a built-in
                 // or duplicate asset.
-                loadManager.fetch(assetURL, 'json', null, function (json) {
+
+                loadManager.fetch(assetURL, 'text', jsonParser, function (json) {
                     // assetURL is the asset json file
                     // json.url is the png, mp3, etc. referenced by the file
-                    fileContents[assetURL] = json;
                     switch (type) {
                     case 'font':
                         gameSource.assets[assetName] = loadFont(assetName, json, assetURL);
@@ -778,7 +776,7 @@ function loadFont(name, json, jsonURL) {
         const borderSize = 1;
         const shadowSize = parseInt(json.shadowSize || 1);
 
-        packFont(font, borderSize, shadowSize, json.baseline, json.char_size, Object.freeze({x: json.letter_spacing.x, y: json.letter_spacing.y}), srcMask);
+        packFont(font, borderSize, shadowSize, json.baseline, json.char_size, Object.freeze({x: json.letter_spacing.x, y: json.letter_spacing.y}), srcMask, true, json.char_min_width);
         Object.freeze(font);
     }, loadFailureCallback, loadWarningCallback, forceReload);
 
@@ -1734,7 +1732,6 @@ function loadMap(name, json, mapJSONUrl) {
 
     const loadSpritesheetJSONCallback = function (spritesheetJson) {
         onLoadFileComplete(spritesheetUrl);
-        fileContents[spritesheetUrl] = spritesheetJson;
         loadSpritesheet(name + '.spritesheet', spritesheetJson, spritesheetUrl, loadSpritesheetCallback);
     };
 
@@ -1895,16 +1892,36 @@ function loadMap(name, json, mapJSONUrl) {
     // the JSON for the spritesheet itself, which loadSpritesheet() expects to be
     // already processed
     onLoadFileStart(spritesheetUrl);
-    loadManager.fetch(spritesheetUrl, 'json', null, loadSpritesheetJSONCallback,
+    
+    loadManager.fetch(spritesheetUrl, 'text', jsonParser, loadSpritesheetJSONCallback,
                       loadFailureCallback, loadWarningCallback);
     
     return map;
 }
 
 
-/** Maps URLs to their raw contents for use in editing and displaying
-    them in the IDE. Not for caching purposes during loading. */
+/** 
+
+ Maps URLs to their contents for display and editing in the IDE.
+ *Not* for caching purposes during loading. 
+    
+ pngUrl  -> Image
+ pyxlUrl -> text string of file contents
+ jsonUrl -> text string of the .json file, not the parsed JSON object 
+
+
+ When the gameSource.json is changed, fileContents for it is
+ immediately regenerated to keep it from getting out of sync.
+*/
 let fileContents = {};
+
+/* Store the original value, unmodified, in fileContents so that it
+   can be accessed by the IDE for editing. */
+function jsonParser(source, url) {
+    fileContents[url] = source;
+    return WorkJSON.parse(source);
+}
+
 
 /** Resource tracking for reporting limits in the IDE */
 let resourceStats = {};

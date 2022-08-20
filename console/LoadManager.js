@@ -1,4 +1,3 @@
-
 /**
   \file LoadManager.js
 
@@ -207,7 +206,6 @@ LoadManager.prototype.fetch = function (url, type, postProcess, callback, errorC
                 rawEntry.failureMessage = '' + e;
                 onLoadFailure();
             }
-            
         }
 
         function onLoadFailure() {

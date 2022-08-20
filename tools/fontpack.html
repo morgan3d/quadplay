@@ -135,7 +135,8 @@ const VISUALIZE_GENERATEABLE_CHARACTERS = false;
                 let s = (tileHeight > 15) ? 2 : 1;
                 packFont(font, borderSize, shadowSize, baseline,
                          {x:tileWidth, y:tileHeight},
-                         {x:s, y:2 * s}, srcMask, document.getElementById('generateMissing').checked);
+                         {x:s, y:2 * s}, srcMask,
+                         document.getElementById('generateMissing').checked, 0);
 
                 if (font.$charHeight < 12) {
                     font.spacing.y = 2;
@@ -287,6 +288,7 @@ span.height${maxHeight} { background: #ff4; padding: 0 1px; color: #000}
     "url":           "somefile.png",
     "license":       "by somebody",
     "char_size":      {"x": ${destImageData.width / FONT_COLS}, "y": ${destImageData.height / FONT_ROWS}},
+    "char_min_width": 0,
     "letter_spacing": {"x": ${font.spacing.x}, "y": ${font.spacing.y}},
     "baseline":      ${baseline},
     "format":        "20211015"

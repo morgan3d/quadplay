@@ -376,16 +376,17 @@ function processLine(line, inFunction, stringProtectionMap) {
         }
 
     } else if (match = line.match(/^(\s*)(debug_watch|debug_print)\s*(\(.+)/)) {
-        let before = match[1];
-        let call = match[2];
-        let rest = match[3];
-        let closeIndex = findMatchingParen(rest, 0, +1);
+        const before = match[1];
+        const call = match[2];
+        const rest = match[3];
+        const closeIndex = findMatchingParen(rest, 0, +1);
 
         let watchExpr = rest.substring(1, closeIndex - 1);
+        watchExpr = unprotectQuotedStrings(watchExpr, stringProtectionMap);
         
         // The strings inside of watchExpr are protected, so we have
         // to unprotect, escape quotes, and then reprotect them to make it safe.
-        let message = unprotectQuotedStrings(watchExpr, stringProtectionMap).replace(/"/g, '\\"');
+        let message = watchExpr.replace(/"/g, '\\"');
         message = protectQuotedStrings('"' + message + '"', stringProtectionMap)[0];
         return before + '($' + (call === 'debug_watch' ? 'debugWatch' : 'debugPrint') + 'Enabled && $' + call + '(SOURCE_LOCATION, ' + message + ', ' + watchExpr + ')); ' + processLine(rest.substring(closeIndex + 1), inFunction, stringProtectionMap);
         
@@ -827,6 +828,7 @@ function countOccurrences(string, subString, allowOverlapping) {
 function countRegexOccurences(string, regex) {
     return (string.match(regex) || []).length;
 }
+
 
 // Not needed for a patched esprima parser
 function protectObjectSpread(src) {

@@ -246,6 +246,7 @@ li.closed .expanderEllipses {
     cursor: pointer;
     position: relative;
     top: 1.5px;
+    margin-top: -1.5px;
 }
 
 .expanderEllipses::after {

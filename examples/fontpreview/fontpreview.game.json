@@ -12,8 +12,8 @@
         "Play"
     ],
     "assets": {
-        //"font": "quad://fonts/robot-9.font.json"
-        "font": "quad://fonts/deja-9.font.json"
+        "font": "quad://fonts/novarese-bold-10.font.json"
+        //"font": "quad://fonts/deja-9.font.json"
     },
     "screenshot_tag": "Font Preview"
 }

@@ -1,28 +1,36 @@
 {
-    "title":      "Text Example",
-    "developer":  "Casual Effects",
-    "copyright":  "©2019 Morgan McGuire",
-    "license":    "CC0/Public Domain",
-
-    "packages":   [],
-    "scripts":    [],
-    "modes":      ["Play"],
+    "title": "Text Example",
+    "developer": "Casual Effects",
+    "copyright": "©2019 Morgan McGuire",
+    "license": "CC0/Public Domain",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play"
+    ],
     "start_mode": "Play",
-    "assets":     {
+    "assets": {
         "font": "quad://fonts/roman-8.font.json",
         "runeFont": "quad://fonts/runes-9.font.json",
         "buttonFont": "quad://fonts/fool-9.font.json",
-        "uiSpritesheet": "quad://sprites/dawnlike-ui-16x16.sprite.json"
+        "uiSpritesheet": "quad://sprites/dawnlike-ui-16x16.sprite.json",
+        "map_font": "quad://fonts/deja-mono-8.font.json"
     },
-
-    "constants":  {
-        "quest": {"type": "string", "value":
-`At the top of the hill, seek the {color:rgb(80%, 0, 50%) giant tree} 
-with \`\`{color:#094 {font:runeFont FATE}}'' carved in its bark.
-
-Walk five paces due {color:rgb(80%, 0, 50%) East} from the tree.
-Dig until you find the treasure.`}
-                  
-    }
-
+    "constants": {
+        "MAP": {
+            "type": "string",
+            "value": `
+× × ×  ♣     
+♣♣   ♣♣♣  ② ♣ 
+≈≈≈≈≈~~ ♣ ♣  ♣
+♣♣♣ ☆   ♣♣     
+♣♣♣ ♣ @ ♣♣  ♣  
+ ♣♣  ①    ♡×  
+       ♣   × ③`},
+        "quest": {
+            "type": "string",
+            "value": "At the top of the hill, seek the {color:rgb(80%, 0, 50%) giant tree} \nwith ``{color:#094 {font:runeFont FATE}}'' carved in its bark.\n\nWalk five paces due {color:rgb(80%, 0, 50%) East} from the tree.\nDig until you find the treasure."
+        }
+    },
+    "screenshot_tag": "Text Example"
 }

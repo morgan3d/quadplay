@@ -16,7 +16,7 @@ const sampleArray = [
 
    {
       // Game prompts and info
-      text: replace("Press (a) to fire. [^] ACCELERATE. (e)(c) Combo Block  ©2020 quadplay✜ ¥100 $37 | ammo: ∞ [HEALTH] D&D. Consoleᵗᵐ  4♥ A♠ 7♣ K♦ | ♢♦☆★♡♥○●◻◼ « Ready! » 24%. ", joy.prompt) + "Hello ⓐⓑⓒⓓⓔⓕⓖⓗⓝⓄⓟⓠⓥⓧⓨⓩ World: ⦸⬙⬗⬖⬘ⓧⓄ⍍▣⧉☰⒧⒭ⓛⓡ⊖⊕\nNumbers: ①②③④⑤⑥⑦⑧⑨⓪.\nDirections: ⓌⒶⓈⒹⒾⒿⓀⓁ⍐⍇⍗⍈",
+      text: replace("Press (a) to fire. [^] ACCELERATE. (e)(c) Combo Block  ©2020 quadplay✜ ¥100 $37 | ammo: ∞ [HEALTH] D&D. Consoleᵗᵐ  4♥ A♠ 7♣ K♦ | ♢♦☆★♡♥○●◻◼ « Ready! » 24%. ", joy.prompt) + "Hello ⓐⓑⓒⓓⓔⓕⓖⓗⓝⓄⓟⓠⓥⓧⓨⓩ World: ⦸⬙⬗⬖⬘ⓧⓄ⍍▣⧉☰␣Ɛ⏎ҕﯼડƠ⇥⬁⬀⌥⒧⒭ⓛⓡ⊖⊕\nNumbers: ①②③④⑤⑥⑦⑧⑨⓪.\nDirections: ⓌⒶⓈⒹⒾⒿⓀⓁ⍐⍇⍗⍈",
       color: #fe4,
       outline: #3,
       background: #33b

@@ -46,6 +46,7 @@ old_background = get_background()
 old_transform = get_transform()
 old_clip = get_clip()
 old_post_effects = get_post_effects()
+reset_clip()
 reset_post_effects()
 manage_tabs = manage_tabs_callback
 

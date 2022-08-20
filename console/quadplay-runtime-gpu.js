@@ -262,11 +262,13 @@ function $executeCIR(cmd) {
         radius -= 0.25;
     }
 
-    const j_min = $Math.max($Math.round(y - radius), clipY1) | 0;
+    const j_unclipped_first = $Math.round(y - radius) | 0;
+    const j_min = $Math.max(j_unclipped_first, clipY1 | 0) | 0;
 
     // The small epsilon keeps the y value from slightly overhanging by one pixel
-    // due to roundoff when jittering     
-    let j_max = $Math.min($Math.round(y + radius - 0.00001), clipY2) | 0;
+    // due to roundoff when jittering
+    const j_unclipped_last = $Math.round(y + radius - 0.00001) | 0; 
+    const j_max = $Math.min(j_unclipped_last, clipY2 | 0) | 0;
 
     // Intersect this scanline
     //
@@ -292,11 +294,9 @@ function $executeCIR(cmd) {
         next_lo = $Math.round(x - next_spread) >>> 0;
         next_hi = $Math.round(x + next_spread) >>> 0;
 
-        // TODO: Tiny circles suck
-
         // Draw the outline first, moving lo and hi as needed to prevent overdraw
         if ((outline & 0xf000) && (outline !== color)) {
-            if (j === j_min || j === j_max) {
+            if (j === j_unclipped_first || j === j_unclipped_last) {
                 // Connect the first and last rows completely
 
                 // Top

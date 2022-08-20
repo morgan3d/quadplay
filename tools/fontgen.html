@@ -64,6 +64,8 @@
   <table style="width: 500px; border-collapse: collapse">
     <tr><td>Font Name:</td><td align=right><input type="text" id="fontname" onchange="onChange()" onclick="onChange()" onkeyup="onChange()" value="Arial"></td><td></td></tr>
     <tr><td>Font Size:</td><td align=right><input type="number" id="fontsize" onchange="onChange()" onclick="onChange()" onkeyup="onChange()" value="10"></td><td>px</td></tr>
+    <tr><td>Font Weight:</td><td align=right><input type="number" id="fontweight" onchange="onChange()" onclick="onChange()" onkeyup="onChange()" value="400"></td><td></td></tr>
+    <tr><td>Vertical Scale:</td><td align=right><input type="number" id="fontscale" onchange="onChange()" onclick="onChange()" onkeyup="onChange()" value="100"></td><td>%</td></tr>
     <tr><td>Tile Width:</td><td align=right><input type="number" id="charwidth" onchange="onChange()" onclick="onChange()" onkeyup="onChange()" value="9"></td><td>px</td></tr>
     <tr><td>Tile Height:</td><td align=right><input type="number" id="charheight" onchange="onChange()" onclick="onChange()" onkeyup="onChange()" value="12"></td><td>px</td></tr>
   </table>
@@ -202,7 +204,18 @@ function onChange() {
     const w = parseInt(document.getElementById("charwidth").value || 0);
     const h = parseInt(document.getElementById("charheight").value || 0);
     const table = document.getElementById("font");
+    let weight = parseInt(document.getElementById('fontweight').value || 400);
+    if (isNaN(weight)) { weight = 400; }
+    weight = Math.min(900, Math.max(100, weight));
+
+    let scale = parseFloat(document.getElementById('fontscale').value || 100);
+    if (isNaN(scale)) { scale = 100; }
+    scale = Math.min(400, Math.max(0, scale));
+    scale /= 100;
+
+    table.style.transform = `scale(1, ${scale})`;
     table.style.fontFamily = n;
+    table.style.fontWeight = weight;          
     table.style.fontSize = f + 'px';
     table.style.width =  (w * FONT_COLS) + 'px';
     table.style.height = (h * FONT_ROWS) + 'px';

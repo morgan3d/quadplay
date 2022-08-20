@@ -60,6 +60,12 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+// Polyfill for IE
+if (! String.prototype.replaceAll) {
+    String.prototype.replaceAll = function(pattern, str) {
+	return this.replace(typeof pattern === 'object' ? pattern : new RegExp(pattern, 'g'), str);
+    };
+}
 
 const WorkJSON = (function () {
 const doubleQuoteProtection = String.fromCharCode(0xE000);
@@ -100,7 +106,7 @@ return {
         }
 
         // Unprotect escaped quotes
-        return s.replace(doubleQuoteProtection, '\\"');
+        return s.replaceAll(doubleQuoteProtection, '\\"');
     },
 
     stringify: function stringify(value, replacer, space) {

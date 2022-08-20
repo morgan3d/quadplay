@@ -2,7 +2,7 @@
 "use strict";
 
 // Set to false when working on quadplay itself
-const deployed = true;
+const deployed = false;
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -2380,8 +2380,9 @@ function onOpenFolder(filename) {
 
 
 function visualizeGame(gameEditor, url, game) {
+    console.assert(url, 'undefined url');
+
     const disabled = editableProject ? '' : 'disabled';
-    
     let s = '';
 
     if (! editableProject) {
@@ -2398,7 +2399,6 @@ function visualizeGame(gameEditor, url, game) {
             reasons.push('was launched without the IDE');
         }
 
-        console.log(gameURL);
         // Is built-in
         if (isBuiltIn(gameURL)) {
             reasons.push('is a built-in example');
@@ -3919,10 +3919,13 @@ function redefineScreenConstants(environment, alreadySeen) {
     alreadySeen = alreadySeen || new Map();
 
     const VIEW_ARRAY = [];
+    VIEW_ARRAY.$name = 'VIEW_ARRAY';
+    
     if (PRIVATE_VIEW) {
         const VIEW_SIZE = {x: SCREEN_WIDTH >> 1, y: SCREEN_HEIGHT >> 1};
         for (let view_index = 0; view_index < 4; ++view_index) {
             VIEW_ARRAY.push({
+                $name: 'VIEW_ARRAY[' + view_index + ']',
                 corner: {
                     x: (view_index & 1)  ? VIEW_SIZE.x : 0,
                     y: (view_index >> 1) ? VIEW_SIZE.y : 0
@@ -3935,6 +3938,7 @@ function redefineScreenConstants(environment, alreadySeen) {
         }
     } else {
         VIEW_ARRAY.push({
+            $name: 'VIEW_ARRAY[0]',
             corner: {x: 0, y: 0},
             size: {x: SCREEN_WIDTH, y: SCREEN_HEIGHT},
             shape: 'rect',
@@ -3957,6 +3961,7 @@ function makeConstants(environment, constants, CREDITS) {
 
     // Create the CONSTANTS object on the environment
     const CONSTANTS = Object.create({});
+    CONSTANTS.$name = 'CONSTANTS';
     defineImmutableProperty(environment, 'CONSTANTS', CONSTANTS);
 
     // Now redefine all constants appropriately
@@ -4394,7 +4399,7 @@ document.addEventListener('contextmenu', function (event) {
  Shows and hides popup dialogs over the quadplay screen
 
  string dialog: element name without 'RuntimeDialog'
- bool v
+ bool v: true if visible
 */
 function setRuntimeDialogVisible(dialog, v) {
     const element = document.getElementById(dialog + 'RuntimeDialog');
