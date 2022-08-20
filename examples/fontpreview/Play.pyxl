@@ -31,7 +31,6 @@ const sampleArray = [
       background:#168
    },
 
-
    {
       // Cien años de soledad
       text: "Muchos años después, frente al pelotón de fusilamiento, el coronel Aureliano Buendía había de recordar aquella tarde remota en que su padre lo llevó a conocer el hielo.",
@@ -92,6 +91,14 @@ const sampleArray = [
    },
 
    {
+      // Neuromancer
+      text: uppercase("The sky above the port was the color of television, tuned to a dead channel."),
+      color: #f,
+      shadow: #c,
+      background: #8
+   },
+
+   {
       // The Body in the Library
       text: "Mrs. Bantry was dreaming. Her sweet peas had just taken a First at the flower show. The vicar, dressed in cassock and surplice, was giving out the prizes in church.",
       color: #000,
@@ -129,6 +136,6 @@ offset -= joy.y
 let y = offset
 for sample in sampleArray:
    const h = draw_text(concatenate({font:font, pos:xy(12, y + 5), wrap_width:360, y_align:"top", z:1}, sample)).height
-   draw_corner_rect(xy(0, y), xy(SCREEN_SIZE.x, h + 10), sample.background)
-   y += h + 10
+   draw_corner_rect(xy(0, y), xy(SCREEN_SIZE.x, h), sample.background)
+   y += h
 

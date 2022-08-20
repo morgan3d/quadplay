@@ -3900,6 +3900,7 @@ function frozenDeepClone(src, alreadySeen) {
             let clone = Object.create(null);
             alreadySeen.set(src, clone);
             for (let key in src) {
+                if (key === '$name') { clone.$name = src.$name; continue; }
                 if (key[0] === '$') {
                     throw 'Illegal constant field name: "' + key + '"';
                 }
@@ -3961,7 +3962,6 @@ function makeConstants(environment, constants, CREDITS) {
 
     // Create the CONSTANTS object on the environment
     const CONSTANTS = Object.create({});
-    CONSTANTS.$name = 'CONSTANTS';
     defineImmutableProperty(environment, 'CONSTANTS', CONSTANTS);
 
     // Now redefine all constants appropriately
@@ -3975,6 +3975,7 @@ function makeConstants(environment, constants, CREDITS) {
         if (key[0] === '$') { throw 'Illegal constant field name: "' + key + '"'; }
         redefineConstantByName(environment, key, alreadySeen, false);
     }
+    CONSTANTS.$name = 'CONSTANTS';
 
     // Process references second so that they can point to named sprites
     // after the spritesheets have been resolved
