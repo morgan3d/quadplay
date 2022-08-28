@@ -1,0 +1,36 @@
+GameOver
+════════════════════════════════════════════════════════════════════════
+def enter_menu_mode(data):
+    set_mode(Menu) because "Returned to main menu"
+
+let disable_input = false
+
+enter
+────────────────────────────────────────────────────────────────────────
+disable_input = false
+
+frame
+────────────────────────────────────────────────────────────────────────
+bgm_update()
+const crossfade = clamp(mode_frames/BGM_FRAMES_PER_MEASURE, 0, 1)
+set_volume(bgm_loops[0], sqrt(1-crossfade))
+set_volume(bgm_loops[2], sqrt(crossfade))
+// Handle input
+if not disable_input:
+    for pad in gamepad_array: // any connected control can operate the menus
+        if pad.bb != 0:
+            disable_input = true
+            play_sound(SND_CURSOR_BACK)
+            add_frame_hook(fade_out, enter_menu_mode, 30, ∅, {})
+        
+draw_text({font:font, text:"Game Over!", pos:xy(50% SCREEN_SIZE.x, 25% SCREEN_SIZE.y),
+    text_size:max(0,mode_frames/3), x_align:"center", color:#f}).y
+    
+draw_text({font:font, pos:xy(50% SCREEN_SIZE.x, 90% SCREEN_SIZE.y),
+    text:replace("(b) Return To Menu", gamepad_array[0].prompt), color:#f, x_align:"center"})
+
+leave
+────────────────────────────────────────────────────────────────────────
+bgm_stop()
+reset_post_effects()
+remove_frame_hooks_by_mode(get_mode())

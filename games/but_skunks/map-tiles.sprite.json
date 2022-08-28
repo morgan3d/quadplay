@@ -1,0 +1,119 @@
+{
+    "url": "map-tiles.png",
+    "sprite_size": {
+        "x": 16,
+        "y": 16
+    },
+    "license": "© 2021 Bitterly Indifferent Studios. Licensed as CC-BY 4.0 https://creativecommons.org/licenses/by/4.0/",
+    "names": {
+        "enemy": {
+            "x": 4,
+            "y": 3
+        },
+        "basement_floor": {
+            "x": 5,
+            "y": 2,
+            "can_walk": true
+        },
+        "attic_floor": {
+            "x": 5,
+            "y": 1,
+            "can_walk": true
+        },
+        "condo_floor": {
+            "x": 5,
+            "y": 0,
+            "can_walk": true
+        },
+        "start_p1": {
+            "x": 0,
+            "y": 3,
+            "can_walk": true
+        },
+        "start_p2": {
+            "x": 1,
+            "y": 3,
+            "can_walk": true
+        },
+        "start_p3": {
+            "x": 2,
+            "y": 3,
+            "can_walk": true
+        },
+        "start_p4": {
+            "x": 3,
+            "y": 3,
+            "can_walk": true
+        },
+        "bed_red_t": {
+            "x": 0,
+            "y": 4,
+            "destroyable": true
+        },
+        "bed_red_b": {
+            "x": 0,
+            "y": 5,
+            "destroyable": true
+        },
+        "bed_green_t": {
+            "x": 2,
+            "y": 4,
+            "destroyable": true
+        },
+        "bed_green_b": {
+            "x": 2,
+            "y": 5,
+            "destroyable": true
+        },
+        "bed_blue_t": {
+            "x": 4,
+            "y": 4,
+            "destroyable": true
+        },
+        "bed_blue_b": {
+            "x": 4,
+            "y": 5,
+            "destroyable": true
+        },
+        "moving_box": {
+            "x": 6,
+            "y": 4,
+            "destroyable": true
+        },
+        "bookshelf": {
+            "x": 6,
+            "y": 5,
+            "destroyable": true
+        },
+        "toolbox": {
+            "x": 0,
+            "y": 6,
+            "destroyable": true
+        },
+        "pizza": {
+            "x": 2,
+            "y": 6,
+            "destroyable": true
+        },
+        "chair": {
+            "x": 4,
+            "y": 6,
+            "destroyable": true
+        },
+        "washer": {
+            "x": 0,
+            "y": 7,
+            "destroyable": true
+        },
+        "dryer": {
+            "x": 2,
+            "y": 7,
+            "destroyable": true
+        },
+        "tub": {
+            "x": 4,
+            "y": 7,
+            "destroyable": true
+        }
+    }
+}

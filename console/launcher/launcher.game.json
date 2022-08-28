@@ -22,7 +22,10 @@
 
         "rrlabel":    "rrlabel.sprite.json",
         "rrpreview":  "rrpreview.sprite.json",
-        
+
+        "bslabel":    "bslabel.sprite.json",
+        "bspreview":  "bspreview.sprite.json",
+
         "itlabel":    "itlabel.sprite.json",
         "itpreview":  "itpreview.sprite.json",
 

@@ -1,0 +1,78 @@
+const PLAYER_COLORS = [#f5a, #0af, #fd3, #4e4]
+const SND_CURSOR_MOVE = {sound:blip_sound, volume: 100%}
+const SND_CURSOR_ACCEPT = {sound:blip_sound, pitch:133%, volume: 100%}
+const SND_CURSOR_BACK = {sound:bloop_sound, volume: 100%}
+
+// Used to fade the screen to black during a mode transition
+def fade_out(frames_left, total_frames, data):
+    let t = 1-(total_frames - frames_left) / total_frames
+    set_post_effects({
+        color: rgb(t,t,t),
+        blend_mode: "multiply"
+        })
+        
+// one entry per player:
+// - gamepad
+// - idle_anim
+// - walk_anim
+// - latency_offset
+let player_infos = []
+
+// Global prefernces
+// Latency measurement. Every player has their own private copy of this value which
+// is adjusted during gameplay based on their actual timing.
+let AUDIO_LATENCY_FRAMES = 0
+let INPUT_AUDIO_FRAME_TOLERANCE = 3
+let DEBUG_CHEATS = false
+def save_user_preferences():
+    save_local("AUDIO_LATENCY_FRAMES", AUDIO_LATENCY_FRAMES)
+    save_local("INPUT_AUDIO_FRAME_TOLERANCE", INPUT_AUDIO_FRAME_TOLERANCE)
+    save_local("DEBUG_CHEATS", DEBUG_CHEATS)
+    debug_print("saved user preferences:")
+    debug_print("- AUDIO_LATENCY_FRAMES: " + AUDIO_LATENCY_FRAMES)
+    debug_print("- INPUT_AUDIO_FRAME_TOLERANCE: " + INPUT_AUDIO_FRAME_TOLERANCE)
+    debug_print("- DEBUG_CHEATS: " + DEBUG_CHEATS)
+def load_user_preferences():
+    AUDIO_LATENCY_FRAMES = load_local("AUDIO_LATENCY_FRAMES")
+    if AUDIO_LATENCY_FRAMES == ∅:
+        AUDIO_LATENCY_FRAMES = 0
+    INPUT_AUDIO_FRAME_TOLERANCE = load_local("INPUT_AUDIO_FRAME_TOLERANCE")
+    if INPUT_AUDIO_FRAME_TOLERANCE == ∅:
+        INPUT_AUDIO_FRAME_TOLERANCE = 3
+    DEBUG_CHEATS = load_local("DEBUG_CHEATS")
+    if DEBUG_CHEATS == ∅:
+        DEBUG_CHEATS = false
+    debug_print("loaded user preferences:")
+    debug_print("- AUDIO_LATENCY_FRAMES: " + AUDIO_LATENCY_FRAMES)
+    debug_print("- INPUT_AUDIO_FRAME_TOLERANCE: " + INPUT_AUDIO_FRAME_TOLERANCE)
+    debug_print("- DEBUG_CHEATS: " + DEBUG_CHEATS)
+
+// Draw the timing aid bar
+def draw_timing_aid(pos, len default 4*BGM_FRAMES_PER_MEASURE, z default 2038):
+    // Draw visual aid for explosion timing
+    const line_len = len
+    const line_dx = 48
+    const line_end   = pos
+    const line_start = line_end + xy(line_len, 0)
+    const dot_scale_start = xy(3,3)
+    const dot_scale_end = xy(9,9)
+    const dot_scale_end2 = xy(11,11)
+    const angle_start = 0
+    const angle_end = 180°
+    // main timeline
+    draw_line({A:line_start, B:line_end, color:#f, z:z})
+    // vertical tick at halfway point
+    draw_rect({pos:lerp(line_start, line_end, 0.5), color:#f, size:xy(1,7), z:z+1})
+    // dot before the halfway point
+    const offset_measure_t = (bgm_measure_t + 0.5) mod 1.0
+    draw_rect({pos:lerp(line_start, line_end, 0.5*offset_measure_t), color:#0f0,
+        size:dot_scale_start, angle:lerp(angle_start, angle_end, offset_measure_t), z:z+1})
+    // dot after the halfway point, scaling up as it reaches the end
+    draw_rect({pos:lerp(line_start, line_end, 0.5+0.5*offset_measure_t), color:#0f0,
+        size:lerp(dot_scale_start, dot_scale_end, offset_measure_t),
+        angle:lerp(angle_start, angle_end, offset_measure_t), z:z+1})
+    // fading large dot at the end of the timeline
+    const col = lerp(#ffff, #0f00, offset_measure_t)
+    //const a = (1-offset_measure_t)*(1-offset_measure_t)
+    draw_rect({pos:line_end, color:col, size:lerp(dot_scale_end, dot_scale_end2, offset_measure_t),
+        angle:lerp(angle_start, angle_end, offset_measure_t), z:z+2})

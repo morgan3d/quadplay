@@ -1,0 +1,30 @@
+Credits
+════════════════════════════════════════════════════════════════════════
+def enter_menu_mode(data):
+    set_mode(Menu) because "Return to main menu"
+
+let disable_input = false
+
+enter
+────────────────────────────────────────────────────────────────────────
+disable_input = false
+
+frame
+────────────────────────────────────────────────────────────────────────
+bgm_update()
+if not disable_input:
+    for pad in gamepad_array: // any connected control can operate the menus
+        if pad.bb != 0:
+            disable_input = true
+            play_sound(SND_CURSOR_BACK)
+            add_frame_hook(fade_out, enter_menu_mode, 30, ∅, {})
+
+draw_sprite({pos:50% SCREEN_SIZE, sprite:credits_sprite.scene.frame(bgm_now_f)})
+draw_text({font:font, pos:xy(50% SCREEN_SIZE.x, SCREEN_SIZE.y),
+    text:replace("(b) Back   (p) Full Credits", gamepad_array[0].prompt),
+        shadow:#0, color:#f, x_align:"center", y_align:"bottom"})
+
+leave
+────────────────────────────────────────────────────────────────────────
+reset_post_effects()
+remove_frame_hooks_by_mode(get_mode())

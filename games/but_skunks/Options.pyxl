@@ -1,0 +1,130 @@
+Options
+════════════════════════════════════════════════════════════════════════
+const MENU_DIFFICULTY = 0
+const MENU_CALIBRATE = 1
+const MENU_DEV_CHEATS = 2
+const MENU_ITEMS = ["Difficulty: ", "Calibrate Latency: ", "Dev Cheats: "]
+
+const MENU_LABEL_TEXT_ARGS = {font:font, color:#f, x_align:"right", z:20}
+const MENU_VALUE_TEXT_ARGS = {font:font, color:#f, x_align:"center", z:20}
+const MENU_HELP_TEXT_ARGS = {font:font, color:#f, x_align:"center", z:20}
+
+const DIFFICULTIES = [
+    {name:"Normal",tolerance:4},
+    {name:"Hard",tolerance:3},
+    {name:"Harder",tolerance:2},
+    ]
+const CHEATS = [
+    {name:"OFF", value:false},
+    {name:"ON", value:true},
+    ]
+
+def enter_menu_mode(data):
+    set_mode(Menu) because "Return to main menu"
+
+let current_menu_item = MENU_DIFFICULTY
+let disable_input = false
+let beat_frame_offsets = []
+let next_beat_index = 0
+let difficulty_index = 0
+let cheat_index = 0
+
+enter
+────────────────────────────────────────────────────────────────────────
+current_menu_item = MENU_DIFFICULTY
+disable_input = false
+beat_frame_offsets = [0,0,0,0,0,0,0,0]
+next_beat_index = 0
+difficulty_index = 0
+cheat_index = 0
+
+debug_print(INPUT_AUDIO_FRAME_TOLERANCE)
+debug_print(DIFFICULTIES)
+for dif at i in DIFFICULTIES:
+    if INPUT_AUDIO_FRAME_TOLERANCE == dif.tolerance:
+        difficulty_index = i
+cheat_index = if DEBUG_CHEATS then 1 else 0
+
+frame
+────────────────────────────────────────────────────────────────────────
+bgm_update()
+if not disable_input:
+    for pad in gamepad_array: // any connected control can operate the menus
+        // Handle cursor movement
+        if pad.yy ≠ 0:
+            play_sound(SND_CURSOR_MOVE)
+            current_menu_item = loop(current_menu_item + pad.yy, 0, size(MENU_ITEMS))
+            // fade in the calibration loop
+            set_volume(bgm_loops[2], if current_menu_item == MENU_CALIBRATE then 100% else 0%)
+        // Handle "back to main menu"
+        if pad.bb ≠ 0:
+            disable_input = true
+            play_sound(SND_CURSOR_BACK)
+            add_frame_hook(fade_out, enter_menu_mode, 30, ∅, {})
+        if pad.xx ≠ 0:
+            if current_menu_item == MENU_DIFFICULTY:
+                difficulty_index = loop(difficulty_index+pad.xx, 0, size(DIFFICULTIES))
+                INPUT_AUDIO_FRAME_TOLERANCE = DIFFICULTIES[difficulty_index].tolerance
+            else if current_menu_item == MENU_DEV_CHEATS:
+                cheat_index = loop(cheat_index+pad.xx, 0, size(CHEATS))
+                DEBUG_CHEATS = CHEATS[cheat_index].value
+        if current_menu_item == MENU_CALIBRATE and pad.aa ≠ 0:
+            const target_f = BGM_FRAMES_PER_MEASURE/2 // target frame is halfway through the measure, at the snare hit
+            const release_measure_f = (bgm_measure_f + BGM_FRAMES_PER_MEASURE - target_f) mod BGM_FRAMES_PER_MEASURE
+            const press_f = (bgm_measure_f + BGM_FRAMES_PER_MEASURE - target_f) mod BGM_FRAMES_PER_MEASURE
+            const half_fpm = BGM_FRAMES_PER_MEASURE/2
+            const delta_f = if press_f > half_fpm then (press_f-BGM_FRAMES_PER_MEASURE) else press_f
+            debug_print("frame: " + press_f + " delta: " + delta_f)
+            pop_front(beat_frame_offsets)
+            push(beat_frame_offsets, delta_f)
+            AUDIO_LATENCY_FRAMES = 0
+            let x_count = 0
+            for x in beat_frame_offsets:
+                if x ≠ ∅:
+                    x_count += 1
+                    AUDIO_LATENCY_FRAMES += x
+            if x_count > 0:
+                AUDIO_LATENCY_FRAMES = (round(AUDIO_LATENCY_FRAMES / x_count) + BGM_FRAMES_PER_MEASURE) mod BGM_FRAMES_PER_MEASURE
+
+
+let menu_offset = xy(200, 100)
+let value_offset = xy(240, 100)
+let help_offset = xy(0.5*SCREEN_SIZE.x, 150)
+for menu_item at i in MENU_ITEMS:
+    draw_text({text:menu_item, pos:menu_offset, ...MENU_LABEL_TEXT_ARGS})
+    if i == MENU_DIFFICULTY:
+        if current_menu_item == i:
+            draw_text({pos:value_offset, text:replace("[<] " + DIFFICULTIES[difficulty_index].name + " [>]", joy.prompt), ...MENU_VALUE_TEXT_ARGS})
+            draw_text({pos:help_offset, text:"How much of a challenge do you want?", ...MENU_HELP_TEXT_ARGS})
+        else:
+            draw_text({pos:value_offset, text:DIFFICULTIES[difficulty_index].name, ...MENU_VALUE_TEXT_ARGS})
+    else if i == MENU_CALIBRATE:
+        if current_menu_item == i:
+            const target_f = BGM_FRAMES_PER_MEASURE / 2 // beats are halfway through each measure
+            const delta_f = (bgm_now_f mod BGM_FRAMES_PER_MEASURE) - target_f
+            const fade_t = 1 - sqrt(clamp(abs(delta_f/7), 0, 1))
+            let c = lerp(#000, #ad4, fade_t)
+            draw_text({pos:value_offset, text:AUDIO_LATENCY_FRAMES, x_align:"center", font:font, color:#f, outline:c, z:20})
+            draw_text({pos:help_offset, text:replace("Press (a) when you hear a clap", joy.prompt), ...MENU_HELP_TEXT_ARGS})
+            draw_text({pos:help_offset+xy(0,font.line_height), text:"Repeat 8-9 times until the value stabilizes", ...MENU_HELP_TEXT_ARGS})
+            draw_text({pos:help_offset+xy(0,2*font.line_height), text:"["+join(beat_frame_offsets, " ")+"]", ...MENU_HELP_TEXT_ARGS})
+        else:
+            draw_text({pos:value_offset, text:AUDIO_LATENCY_FRAMES, x_align:"center", font:font, color:#f, z:20})
+    else if i == MENU_DEV_CHEATS:
+        if current_menu_item == i:
+            draw_text({pos:value_offset, text:replace("[<] " + CHEATS[cheat_index].name + " [>]", joy.prompt), ...MENU_VALUE_TEXT_ARGS})
+            draw_text({pos:help_offset, text:"Enable undocumented developer cheats.\nProbably not as interesting as you hope they are.", ...MENU_HELP_TEXT_ARGS})
+        else:
+            draw_text({pos:value_offset, text:CHEATS[cheat_index].name, ...MENU_VALUE_TEXT_ARGS})
+    menu_offset.y += font.line_height
+    value_offset.y += font.line_height
+draw_text({font:font, pos:xy(50% SCREEN_SIZE.x, 90% SCREEN_SIZE.y),
+    text:replace("(b) Return To Menu", gamepad_array[0].prompt), color:#f, x_align:"center"})
+
+leave
+────────────────────────────────────────────────────────────────────────
+save_user_preferences()
+// mute the calibration loop
+set_volume(bgm_loops[2], 0%)
+reset_post_effects()
+remove_frame_hooks_by_mode(get_mode())

@@ -1,0 +1,82 @@
+const BGM_BEATS_PER_MEASURE = 4
+const BGM_FRAMES_PER_BEAT = 14
+const BGM_SECONDS_PER_BEAT = BGM_FRAMES_PER_BEAT / 60
+const BGM_BEATS_PER_MINUTE = 60 / (2*BGM_SECONDS_PER_BEAT)
+const BGM_SECONDS_PER_MEASURE = BGM_SECONDS_PER_BEAT * BGM_BEATS_PER_MEASURE
+const BGM_FRAMES_PER_MEASURE = round(BGM_BEATS_PER_MEASURE * BGM_FRAMES_PER_BEAT)
+
+const SND_MUSIC_INGAME = {sound:bgm_in_game_sound, volume:70%, loop:true}
+
+let bgm_now = -1 // elapsed time the music has been playing, in seconds.
+let bgm_now_f = -1 // elapsed time the music has been playing, in frames.
+let bgm_beat = -1 // whole-number beat
+let bgm_measure = -1 // whole-number measure
+let bgm_beat_in_measure = -1 // whole-number beat index within each measure [0..BGM_BEATS_PER_MEASURE-1] 
+let bgm_beat_t = 0 // progress within the current beat [0..1]
+let bgm_measure_t = 0 // progress within the current measure [0..1]
+let bgm_beat_f = 0 // frame within the current beat [0..BGM_FRAMES_PER_BEAT-1]
+let bgm_measure_f = 0 // frame within the current measure [0..BGM_FRAMES_PER_MEASURE-1]
+// is this the first frame these variables have their current values?
+let bgm_beat_ff = false
+let bgm_measure_ff = false
+
+// Internal state
+let bgm_loops = []
+
+def bgm_is_playing():
+    return size(bgm_loops) > 0
+
+// loops is an array of objects; each will be passed to play_sound()
+def bgm_start(loops):
+    bgm_stop() // stop existing loops
+    for l in loops:
+        push(bgm_loops, play_sound(l))
+
+def bgm_stop():
+    for l in bgm_loops:
+        stop_audio(l)
+    bgm_loops = []
+
+def bgm_update():
+    if size(bgm_loops) == 0:
+        return
+    let prev_beat = bgm_beat
+    let prev_measure = bgm_measure
+    let prev_beat_in_measure = bgm_beat_in_measure
+    let status = get_audio_status(bgm_loops[0])
+    bgm_now = status.now
+    bgm_now_f = status.now * 60
+    const f = bgm_now_f
+    bgm_beat = floor(f / BGM_FRAMES_PER_BEAT);
+    bgm_measure = floor(f / BGM_FRAMES_PER_MEASURE)
+    bgm_beat_in_measure = bgm_beat mod BGM_BEATS_PER_MEASURE
+    bgm_beat_f = floor(f mod BGM_FRAMES_PER_BEAT)
+    bgm_measure_f = floor(f mod BGM_FRAMES_PER_MEASURE)
+    bgm_beat_t = bgm_beat_f / BGM_FRAMES_PER_BEAT
+    bgm_measure_t = bgm_measure_f / BGM_FRAMES_PER_MEASURE
+    bgm_beat_ff = (bgm_beat != prev_beat)
+    bgm_measure_ff = (bgm_measure != prev_measure)
+    
+def bgm_set_volumes(volumes):
+    assert(size(volumes) == size(bgm_loops), "Must provide one volume per running loop")
+    for vol at i in volumes:
+        set_volume(bgm_loops[i], vol)
+    
+def bgm_draw_debug(z default 0) preserving_transform:
+    reset_transform()
+    let tp = xy(0,0)
+    const BGM_DEBUG_TEXT_ARGS = {font:font, color:#f, x_align:"left", y_align:"top", z:z}
+    const MAX_BAR_WIDTH = 40
+    const BAR_HEIGHT = 5
+    draw_text({text:"Beat: " + bgm_beat, pos:tp, ...BGM_DEBUG_TEXT_ARGS})
+    tp.y += font.line_height
+    draw_text({text:"Meas: " + bgm_measure, pos:tp, ...BGM_DEBUG_TEXT_ARGS})
+    tp.y += font.line_height
+    draw_text({text:"BIM: " + bgm_beat_in_measure, pos:tp, ...BGM_DEBUG_TEXT_ARGS})
+    tp.y += font.line_height
+    draw_text({text:"BMF: " + bgm_measure_f, pos:tp, ...BGM_DEBUG_TEXT_ARGS})
+    tp.y += font.line_height
+    draw_corner_rect({corner:tp, size:xy(MAX_BAR_WIDTH, BAR_HEIGHT), outline:#0ff, color:rgba(0,0,0,0), z:z})
+    draw_corner_rect({corner:tp, size:xy(bgm_beat_t * MAX_BAR_WIDTH, BAR_HEIGHT), color:#0ff, z:z})
+    draw_corner_rect({corner:tp + xy(0,2*BAR_HEIGHT), size:xy(MAX_BAR_WIDTH, BAR_HEIGHT), outline:#0ff, color:rgba(0,0,0,0), z:z})
+    draw_corner_rect({corner:tp + xy(0,2*BAR_HEIGHT), size:xy(bgm_measure_t * MAX_BAR_WIDTH, BAR_HEIGHT), color:#0ff, z:z})

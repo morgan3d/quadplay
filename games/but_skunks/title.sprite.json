@@ -1,0 +1,24 @@
+{
+    "url": "title.png",
+    "sprite_size": {
+        "x": 384,
+        "y": 224
+    },
+    "names": {
+        "scene": {
+            "start": {
+                "x": 0,
+                "y": 0
+            },
+            "end": {
+                "x": 0,
+                "y": 0
+            },
+            "extrapolate": "loop",
+            "frames": [
+                14
+            ]
+        }
+    },
+    "license": "© 2021 Bitterly Indifferent Studios. Licensed as CC-BY 4.0 https://creativecommons.org/licenses/by/4.0/"
+}

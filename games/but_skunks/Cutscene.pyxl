@@ -1,0 +1,349 @@
+Cutscene
+════════════════════════════════════════════════════════════════════════
+
+const CMD_IMAGE = 1
+const CMD_TEXT = 2
+const CMD_FADE_OUT = 3
+const CMD_FADE_IN = 4
+const CMD_SOUND = 5
+const CMD_WAIT_FOR_INPUT = 6
+const CMD_MOVE_TUTORIAL = 7
+const CMD_BLAST_TUTORIAL = 8
+const CMD_SET_MODE = 9
+
+const MAX_FADE_FRAMES = 6*BGM_FRAMES_PER_MEASURE
+// Need a special fade-out function here, since we don't know exactly how many frames
+// it will take to reach the target point in the music.
+def fade_out_and_enter_game(frames_left, total_frames, data):
+    let t = fade_frame_count / MAX_FADE_FRAMES
+    let s = smoothstep(1,0,t)
+    post_effects.scale = xy(1,1) + s*xy(6,6)
+    fade_frame_count = clamp(fade_frame_count-1, 0, MAX_FADE_FRAMES)
+    // Change music to transition measure at the beginning of the measure
+    if (bgm_measure mod 4) ≤ 2 and not ready_to_enter_game:
+        set_volume(bgm_loops[1], 70%)
+        ready_to_enter_game = true
+    else if ((bgm_measure mod 4) == 0) and bgm_measure_ff and ready_to_enter_game:
+        set_mode(Play, data.level_index) because "Started game"
+
+let advance = false
+let next_cmd_index = 0
+let cmd_start_frame = 0
+let image = ∅
+let text_args = {}
+let post_effects = {}
+let intro_timeline = []
+let level_index = 0
+let fade_frame_count = -1
+let ready_to_enter_game = false
+let skunks = []
+let boxes = []
+let stinkbombs = []
+let explosions = []
+
+enter(in_level_index)
+────────────────────────────────────────────────────────────────────────
+advance = false
+next_cmd_index = 0
+cmd_start_frame = 0
+image = ∅
+text_args = {font:font, text:"", color:#f, pos:xy(0,0), wrap_width:0, text_size:0, markup:true, z:1, shadow:#0}
+post_effects = {}
+intro_timeline = []
+level_index = in_level_index
+fade_frame_count = -1
+ready_to_enter_game = false
+skunks = []
+boxes = []
+stinkbombs = []
+explosions = []
+
+
+reset_post_effects()
+post_effects = get_post_effects()
+
+// TODO: select timeline based on level_index
+intro_timeline = [
+    {cmd:CMD_FADE_OUT, color:#0, duration:0},
+    {cmd:CMD_IMAGE, image:cutscene1_sprite},
+    {cmd:CMD_FADE_IN, color:#0, duration:60},
+    {cmd:CMD_TEXT, pos:xy(75,160), color:#f, wrap_width:250, text:"You thought it was nothing.{br}Until they seized your neighborhood.{br}It's time to take it back.", speed:1},
+    {cmd:CMD_WAIT_FOR_INPUT, pos:xy(0.5,1.0)*SCREEN_SIZE},
+    {cmd:CMD_IMAGE, image:cutscene2_sprite},
+    {cmd:CMD_MOVE_TUTORIAL},
+    {cmd:CMD_WAIT_FOR_INPUT, pos:xy(0.5,1.0)*SCREEN_SIZE},
+    {cmd:CMD_BLAST_TUTORIAL},
+    {cmd:CMD_TEXT, pos:xy(75,160), color:#f, wrap_width:250, text:"Break all their stuff to advance.{br}If time runs out, you lose.{br}Now go forth and stink!", speed:1},
+    {cmd:CMD_WAIT_FOR_INPUT, pos:xy(0.5,1.0)*SCREEN_SIZE},
+    //{cmd:CMD_FADE_OUT, color:#f00, duration:60},
+    {cmd:CMD_SET_MODE, mode:1},    
+    ]
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+bgm_update()
+const cmds = intro_timeline
+assert(last_value(cmds).cmd == CMD_SET_MODE) // last command must exit this mode
+
+if advance:
+    next_cmd_index += 1
+    cmd_start_frame = mode_frames
+    advance = false
+// skip cutscenes with B
+if joy.bb:
+    play_sound(SND_CURSOR_ACCEPT)
+    next_cmd_index = size(cmds)-1
+
+assert(next_cmd_index < size(cmds))
+const next_cmd = cmds[next_cmd_index]
+// process next command
+if next_cmd.cmd == CMD_IMAGE:
+    image = next_cmd.image
+    advance = true
+else if next_cmd.cmd == CMD_FADE_OUT:
+    if next_cmd.duration == 0:
+        post_effects.color = next_cmd.color
+        post_effects.color.a = 1.0
+        advance = true
+    else:
+        const fade_t = (mode_frames - cmd_start_frame) / next_cmd.duration
+        post_effects.color = next_cmd.color
+        post_effects.color.a = fade_t
+        if fade_t ≥ 1.0:
+            advance = true
+else if next_cmd.cmd == CMD_FADE_IN:
+    if next_cmd.duration == 0:
+        post_effects.color = next_cmd.color
+        post_effects.color.a = 0.0
+        advance = true
+    else:
+        const fade_t = (mode_frames - cmd_start_frame) / next_cmd.duration
+        post_effects.color = next_cmd.color
+        post_effects.color.a = 1.0 - fade_t
+        if fade_t ≥ 1.0:
+            advance = true
+else if next_cmd.cmd == CMD_TEXT:
+    const text_len = size(next_cmd.text)
+    if mode_frames == cmd_start_frame:
+        text_args.text = next_cmd.text
+        text_args.pos = next_cmd.pos
+        text_args.color = next_cmd.color
+        text_args.wrap_width = next_cmd.wrap_width
+        text_args.text_size = 0
+    else:
+        text_args.text_size += next_cmd.speed
+    if any_button_press():
+        text_args.text_size = text_len
+    if text_args.text_size ≥ text_len:
+        advance = true
+else if next_cmd.cmd == CMD_WAIT_FOR_INPUT:
+    if (floor((mode_frames-cmd_start_frame) / 30) mod 2) == 0:
+        draw_text({font:font, pos:next_cmd.pos, text:replace("Press (a)", joy.prompt),
+            x_align:"right", y_align:"bottom", color:#f, shadow:#0, z:10})
+    if any_button_press():
+        advance = true
+else if next_cmd.cmd == CMD_MOVE_TUTORIAL:
+    let text = replace("Move your skunk around the maze.{br}Player 1: {color:#f5a [^],[<],[v],[>]}{br}",
+        player_infos[0].gamepad.prompt)
+    if size(player_infos) == 2:
+        text += replace("Player 2: {color:#0af [^],[<],[v],[>]}{br}", player_infos[1].gamepad.prompt)
+    const text_len = size(text)
+    if mode_frames == cmd_start_frame:
+        text_args.text = text
+        text_args.pos = xy(75,160)
+        text_args.color = #f
+        text_args.wrap_width = 250
+        text_args.text_size = 0
+    else:
+        text_args.text_size += 1
+    if any_button_press():
+        text_args.text_size = text_len
+    if text_args.text_size ≥ text_len:
+        advance = true
+else if next_cmd.cmd == CMD_BLAST_TUTORIAL:
+    if mode_frames == cmd_start_frame:
+        set_volume(bgm_loops[2], 100%) // fade in claps track
+        let button_text = replace("{color:#f5a (a)}", player_infos[0].gamepad.prompt)
+        if size(player_infos) == 2:
+            button_text += replace("/{color:#0af (a)}", player_infos[1].gamepad.prompt)
+        text_args.text = "Hold "+button_text+" to charge. Release on the beat to blast. Blasts break stuff. Try it!"
+        text_args.pos = xy(75,160)
+        text_args.color = #f
+        text_args.wrap_width = 250
+        text_args.text_size = ∅
+        for i < size(player_infos):
+            const skunk_pos = xy(76+24*i, 200)
+            let box = make_entity({
+                pos:skunk_pos+xy(0,16),
+                z:2030,
+                sprite:map_tiles_sprite.moving_box})
+            push(boxes, box)
+            push(skunks, make_entity({
+                pos:skunk_pos,
+                angle:0°,
+                z:2040,
+                player_info:player_infos[i],
+                player_color:PLAYER_COLORS[i],
+                has_charged:false, // flips to true the first time this player starts a charge
+                charging:false,
+                successful_blasts:0,
+                box:box,
+                sprite:nil}))
+    // draw timing aid
+    draw_timing_aid(xy(120,180), 3*BGM_FRAMES_PER_MEASURE)
+    // draw button text moving along with the indicator
+    for i < size(player_infos):
+        let pad = player_infos[i].gamepad
+        draw_text({pos:lerp(xy(201,194+10*i), xy(121,194+10*i), (bgm_measure_t+0.5) mod 1.0), font:font,
+            color:if pad.a then PLAYER_COLORS[i] else #f, text:replace("(a)", pad.prompt),
+            x_align:"center", z:2040})
+        // Draw skunk
+        let skunk = skunks[i]
+        skunk.sprite = player_infos[i].walk_anim.frame(bgm_now_f)
+        draw_entity(skunk)
+        // Hack to ignore lingering A presses when you first enter the mode.
+        if pad.aa:
+            skunk.has_charged = true
+        // spawn stinkbombs
+        if not skunk.charging and skunk.has_charged and pad.a:
+            skunk.charging = true
+            const stinkbomb = make_entity({
+                pos: skunk.pos+xy(0,8),
+                scale: xy(0,0),
+                opacity: 0,
+                sprite: stinkbomb_sprite.charge.frame(0),
+                source_skunk: skunk,
+                gamepad: pad,
+                start_frame: bgm_now_f,
+                z:2039,
+                })
+            push(stinkbombs, stinkbomb)
+    def itor_stinkbomb_grow(stinkbomb):
+        with start_frame, scale, opacity, gamepad, sprite in stinkbomb:
+            const max_grow_frames = BGM_FRAMES_PER_MEASURE/2
+            const size_t = clamp(bgm_now_f - start_frame, 0, max_grow_frames) / max_grow_frames
+            sprite = stinkbomb_sprite.charge.frame(mode_frames)
+            opacity = size_t
+            scale = size_t * size_t * size_t * xy(1,1)
+            let skunk = stinkbomb.source_skunk
+            let player_info = skunk.player_info
+            if not gamepad.a:
+                // stop growing. See whether the bomb succeeded. If so, spawn an explosion of the appropriate
+                // size. Either way, destroy the bomb.
+                const latency_f = round(AUDIO_LATENCY_FRAMES + player_info.latency_offset)
+                const target_f = BGM_FRAMES_PER_MEASURE/2 // target frame is halfway through the measure, at the snare hit
+                const adjusted_release_measure_f = (bgm_measure_f + BGM_FRAMES_PER_MEASURE - latency_f - target_f) mod BGM_FRAMES_PER_MEASURE
+                const half_fpm = BGM_FRAMES_PER_MEASURE/2
+                const delta_f = if adjusted_release_measure_f > half_fpm then (adjusted_release_measure_f-BGM_FRAMES_PER_MEASURE) else adjusted_release_measure_f
+                let bomb_explodes = false
+                let explosion = make_entity({
+                    pos: stinkbomb.pos,
+                    sprite: stinkbomb_sprite.stink.frame(0),
+                    start_frame: mode_frames,
+                    duration_frames: stinkbomb_sprite.stink.frames,
+                    source_skunk:skunk,
+                    start_scale:scale,
+                    end_scale:0.75*scale,
+                    scale:scale,
+                    font:font,
+                    text_x_align:"center",
+                    text_y_align:"bottom",
+                    text_offset:xy(0,0),
+                    text_color:#4f4f,
+                    text_shadow:#0,
+                    z:2041,
+                    })
+                if abs(delta_f) ≤ INPUT_AUDIO_FRAME_TOLERANCE:
+                    // bomb succeeds! spawn an explosion entity
+                    bomb_explodes = true
+                    explosion.text = random_value(["NICE","GREAT","GOOD"])
+                    if delta_f == 0:
+                        explosion.text = "PERFECT!"
+                    // Credit this skunk for a successful blast.
+                    skunk.successful_blasts += 1
+                    skunk.text = if skunk.successful_blasts ≥ 3 then "READY" else skunk.successful_blasts
+                    skunk.font = font
+                    skunk.text_color = skunk.player_color
+                    skunk.text_x_align = "center"
+                    skunk.text_y_align = "bottom"
+                    skunk.text_offset = xy(0,-10)
+                    skunk.text_shadow = #0
+                    // disable the skunk's box sprite, as a quick hack to destroy it
+                    skunk.box.sprite = ∅
+                else:
+                    // bomb fizzles, but create a dummy explosion entity anyway so we can hang a label on it
+                    explosion.sprite = ∅
+                    explosion.start_scale = xy(0,0)
+                    explosion.end_scale = xy(0,0)
+                    explosion.scale = xy(0,0)
+                    explosion.text = if delta_f < 0 then "EARLY" else "LATE"
+                    explosion.text_color = #f44f
+                push(explosions, explosion)
+                debug_print("raw=" + bgm_measure_f + " adjusted=" + adjusted_release_measure_f + " delta=" + delta_f + (if bomb_explodes then " BOOM" else ""))
+                // Help the player by adjusting the latency towards their actual input time.
+                if abs(delta_f) < INPUT_AUDIO_FRAME_TOLERANCE*3:
+                    const old_latency = player_info.latency_offset
+                    player_info.latency_offset = (player_info.latency_offset + INPUT_LATENCY_CORRECTION_FACTOR * delta_f) mod BGM_FRAMES_PER_MEASURE
+                    debug_print("delta=" + delta_f + ": latency adjusted from " + old_latency + " to " + player_info.latency_offset)
+                // Either way, despawn the stinkbomb and let the source skunk drop another one
+                skunk.charging = false
+                return iterate.REMOVE
+    iterate(stinkbombs, itor_stinkbomb_grow)
+    iterate(stinkbombs, draw_entity)
+    // draw explosions
+    def itor_explosion_fade(explosion):
+        const age_f = mode_frames - explosion.start_frame
+        if age_f ≥ explosion.duration_frames:
+            return iterate.REMOVE
+        const age_t = clamp(age_f / explosion.duration_frames, 0, 1)
+        if explosion.scale.x > 0:
+            explosion.sprite = stinkbomb_sprite.stink.frame(age_f)
+            explosion.opacity = lerp(1, 0.25, smoothstep(0.25, 0.75, age_t))
+            explosion.scale = lerp(explosion.start_scale, explosion.end_scale, smoothstep(0.0, 1.0, age_t))
+            explosion.text_color.a = 1 - smoothstep(0.75,1,age_t)
+    iterate(explosions, itor_explosion_fade)
+    iterate(explosions, draw_entity)
+    // Draw boxes
+    def itor_box_flash(box):
+        const target_f = BGM_FRAMES_PER_MEASURE / 2 // beats are halfway through each measure
+        const delta_f = (bgm_now_f mod BGM_FRAMES_PER_MEASURE) - target_f
+        const fade_t = 1 - sqrt(clamp(abs(delta_f/7), 0, 1))
+        box.override_color = rgba(#ad4,fade_t)
+    iterate(boxes, itor_box_flash)
+    iterate(boxes, draw_entity)
+    // Print instructions to continue
+    draw_text({font:font, pos:xy(SCREEN_SIZE.x/2, SCREEN_SIZE.y), text:"Complete 3 blasts",
+        x_align:"center", y_align:"bottom", color:#f, shadow:#0, z:10})
+    
+    // If all players have finished the tutorial, advance
+    let all_players_ready = true
+    for skunk in skunks:
+        if skunk.successful_blasts < 3:
+            all_players_ready = false
+            break
+    if all_players_ready:
+        set_volume(bgm_loops[2], 0%) // fade out claps track
+        advance = true
+else if next_cmd.cmd == CMD_SET_MODE:
+    //set_mode(Play, level_index) because "End of cutscene"
+        // we want to fade out until a specific point in the music, which will happen at
+    // a specific time (but not necessarily after a specific number of frames).
+    // So, the add_frame_hook() here runs "forever", and the hook itself decides
+    // when to enter Play mode based on the music playback state
+    if fade_frame_count == -1:
+        fade_frame_count = MAX_FADE_FRAMES
+        add_frame_hook(fade_out_and_enter_game, nil, infinity, get_mode(), {level_index:level_index})
+
+// draw stuff
+set_post_effects(post_effects)
+if image ≠ ∅:
+    draw_sprite({sprite:image.scene.frame(bgm_now_f), pos:50% SCREEN_SIZE})
+draw_text(text_args)
+draw_text({font:font, pos:SCREEN_SIZE-xy(8,0), text:replace("(b) Skip", joy.prompt),
+    x_align:"right", y_align:"bottom", color:#f, shadow:#0, z:10})
+    
+leave
+────────────────────────────────────────────────────────────────────────
+reset_post_effects()
+remove_frame_hooks_by_mode(get_mode())

@@ -1,0 +1,118 @@
+{
+    "url": "skunk.png",
+    "sprite_size": {
+        "x": 16,
+        "y": 24
+    },
+    "pivot": {
+        "x": 8,
+        "y": 8
+    },
+    "names": {
+        "p1_idle": {
+            "start": {
+                "x": 1,
+                "y": 0
+            },
+            "end": {
+                "x": 1,
+                "y": 0
+            }
+        },
+        "p1_walk": {
+            "start": {
+                "x": 0,
+                "y": 0
+            },
+            "end": {
+                "x": 2,
+                "y": 0
+            },
+            "extrapolate": "oscillate",
+            "frames": [
+                4,
+                4,
+                4
+            ]
+        },
+        "p2_idle": {
+            "start": {
+                "x": 4,
+                "y": 0
+            },
+            "end": {
+                "x": 4,
+                "y": 0
+            }
+        },
+        "p2_walk": {
+            "start": {
+                "x": 3,
+                "y": 0
+            },
+            "end": {
+                "x": 5,
+                "y": 0
+            },
+            "extrapolate": "oscillate",
+            "frames": [
+                4,
+                4,
+                4
+            ]
+        },
+        "p3_idle": {
+            "start": {
+                "x": 1,
+                "y": 1
+            },
+            "end": {
+                "x": 1,
+                "y": 1
+            }
+        },
+        "p3_walk": {
+            "start": {
+                "x": 0,
+                "y": 1
+            },
+            "end": {
+                "x": 2,
+                "y": 1
+            },
+            "extrapolate": "oscillate",
+            "frames": [
+                4,
+                4,
+                4
+            ]
+        },
+        "p4_idle": {
+            "start": {
+                "x": 4,
+                "y": 1
+            },
+            "end": {
+                "x": 4,
+                "y": 1
+            }
+        },
+        "p4_walk": {
+            "start": {
+                "x": 3,
+                "y": 1
+            },
+            "end": {
+                "x": 5,
+                "y": 1
+            },
+            "extrapolate": "oscillate",
+            "frames": [
+                4,
+                4,
+                4
+            ]
+        }
+    },
+    "license": "© 2021 Bitterly Indifferent Studios. Licensed as CC-BY 4.0 https://creativecommons.org/licenses/by/4.0/"
+}

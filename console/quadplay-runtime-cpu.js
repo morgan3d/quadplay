@@ -7711,7 +7711,7 @@ function $unparseContainer(x, alreadySeen, colon, closingBraceOnNewLine,
 function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
                   inlineShortContainers, terse, indent, hint, specialStructs, meta = {}) {
 
-    if (x.$name !== undefined) {
+    if (x && x.$name !== undefined) {
         // Internal object
         const editable = ['font', 'spritesheet', 'sound', 'data', 'map'];
         if (specialStructs && editable.indexOf(x.$type) !== -1) {

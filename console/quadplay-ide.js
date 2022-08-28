@@ -1537,16 +1537,18 @@ function onError(e) {
     e = jsToPSError(e);
 
     // Try to compute a short URL
-    setErrorStatus((e.fcn !== '?' && e.fcn !== '' ? e.fcn + ' at ' : '') + shortURL(e.url) + ' line ' + e.lineNumber + ': ' + e.message,
-                   {url: e.url, line_number: e.lineNumber});
+    setErrorStatus(e.message, {url: e.url, line_number: e.lineNumber, fcn: e.fcn});
     if (e.stack && e.stack.length > 0) {
         for (let i = 0; i < e.stack.length; ++i) {
             const entry = e.stack[i];
+
+            let fcn = entry.fcn;
+            
             if (entry.url) {
-                $outputAppend(`<span style="color:#f55">  from ${entry.fcn} at ${shortURL(entry.url)} line ${entry.lineNumber}<span>\n`);
+                $outputAppend(`<span style="color:#f55">  called from ${fcn} at <a style="font-family:Arial; cursor: pointer" onclick="editorGotoFileLine('${entry.url}', ${entry.lineNumber})">${shortURL(entry.url)}:${entry.lineNumber}</a><span>\n`);
             } else {
                 // Safari case, no line numbers
-                $outputAppend(`<span style="color:#f55">  from ${entry.fcn}<span>\n`);
+                $outputAppend(`<span style="color:#f55">  called from ${fcn}<span>\n`);
             }
         }
     }
@@ -3008,12 +3010,23 @@ function hideOpenGameDialog() {
 
 /**********************************************************************************/
 
-/* Optional location = { line_number, url } used for creating hyperlinks */
+/* Optional location = { line_number, url, fcn } used for creating hyperlinks and displaying output */
 function setErrorStatus(e, location) {
     e = escapeHTMLEntities(e);
+
+    if (location) {
+        if (location.line_number !== undefined) {
+            e = `${location.fcn ? location.fcn + ' at ' : ''}<a style="font-family: Arial; cursor:pointer">${shortURL(location.url)}:${location.line_number}</a>: ${e}`;
+        } else if (location.url) {
+            e = `${location.fcn ? location.fcn + ' at ' : ''}${shortURL(location.url)}: ${e}`;
+        } else if (location.fcn) {
+            e = location.fcn + ': ' + e;
+        }
+    }
+    
     error.innerHTML = e;
     if (e !== '') {
-        $outputAppend('\n<span style="color:#f55">' + e + '<span>\n', location, location !== undefined);
+        $outputAppend(`\n<span style="color:#f55">${e}<span>\n`, location, location !== undefined);
     }
 }
 
@@ -3158,6 +3171,12 @@ function jsToPSError(error) {
     }
 
     const result = jsToPyxlLineNumber(lineNumber, lineArray);
+
+    
+    // Modify event names to include the mode
+    if (resultFcn[0] === '$') {
+        resultFcn = shortURL(result.url).replace(/\..*/, '.') + resultFcn.substring(1);
+    }
 
     return {
         url: result.url,

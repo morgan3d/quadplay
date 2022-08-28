@@ -1,0 +1,148 @@
+Interstitial
+════════════════════════════════════════════════════════════════════════
+def enter_menu_mode(data):
+    if bgm_is_playing():
+        bgm_stop()
+    set_mode(Menu) because "Return to main menu"
+
+const MAX_FADE_FRAMES = 6*BGM_FRAMES_PER_MEASURE
+// Need a special fade-out function here, since we don't know exactly how many frames
+// it will take to reach the target point in the music.
+def fade_out_and_enter_game(frames_left, total_frames, data):
+    let t = fade_frame_count / MAX_FADE_FRAMES
+    let s = smoothstep(1,0,t)
+    set_post_effects({
+        //color: rgb(t,t,t),
+        //blend_mode: "multiply"
+        scale:xy(1,1) + s*xy(8,8),
+        angle:s,
+        })
+    fade_frame_count = clamp(fade_frame_count-1, 0, MAX_FADE_FRAMES)
+    if ((bgm_measure mod 4) == 0) and bgm_measure_ff:
+        set_mode(Play, data.level_index) because "Started game"
+
+const LEVEL_NAMES = [
+    "Attic",
+    "Condo",
+    "Basement",
+]
+
+let disable_input = false
+let prev_level_index = 0
+let next_level_index = 0
+let fade_frame_count = -1
+let prev_players = ∅
+let prev_elapsed_sec = 0
+
+enter(in_prev_level_index, in_players, in_elapsed_sec)
+────────────────────────────────────────────────────────────────────────
+disable_input = false
+prev_level_index = 0
+next_level_index = 0
+fade_frame_count = -1
+prev_players = in_players
+prev_elapsed_sec = in_elapsed_sec
+
+prev_level_index = in_prev_level_index;
+if      prev_level_index == 0:
+    next_level_index = 1
+else if prev_level_index == 1:
+    next_level_index = 2
+else if prev_level_index == 2:
+    next_level_index = -1
+
+frame
+────────────────────────────────────────────────────────────────────────
+bgm_update()
+const crossfade = clamp(mode_frames/BGM_FRAMES_PER_MEASURE, 0, 1)
+set_volume(bgm_loops[0], sqrt(1-crossfade))
+set_volume(bgm_loops[2], sqrt(crossfade))
+// Handle input
+if not disable_input:
+    for pad in gamepad_array: // any connected control can operate the menus
+        if pad.aa ≠ 0:
+            disable_input = true
+            play_sound(SND_CURSOR_ACCEPT)
+            if next_level_index == -1:
+                // Victory! back to the main menu, for now.
+                add_frame_hook(fade_out, enter_menu_mode, 30, ∅, {})
+            else:
+                fade_frame_count = MAX_FADE_FRAMES
+                add_frame_hook(fade_out_and_enter_game, nil, infinity, get_mode(), {level_index:next_level_index})
+
+let tp = xy(10, 10)
+draw_text({text:"You cleared the " + LEVEL_NAMES[prev_level_index] + " in " + format_number(prev_elapsed_sec, "0.00") + " seconds!",
+    font:font, pos:tp, x_align:"left", color:#f})
+tp.y += font.line_height
+// Gather & display per-player stats
+let destroyed_counts = []
+let attempted_blasts = []
+let successful_blasts = []
+let explode_rates = []
+let perfect_explode_counts = []
+let stunned_enemy_counts = []
+let stunned_by_enemy_counts = []
+for stats in player in prev_players:
+    push(destroyed_counts, format_number(stats.destroy_count, "   0"))
+    push(attempted_blasts, format_number(stats.charge_count, "   0"))
+    push(successful_blasts, format_number(stats.explode_count, "   0"))
+    if stats.charge_count > 0:
+        push(explode_rates, format_number(stats.explode_count/stats.charge_count, "  0%"))
+    else:
+        push(explode_rates, format_number(0, "  0%"))
+    push(perfect_explode_counts, format_number(stats.perfect_explode_count, "   0"))
+    push(stunned_enemy_counts, format_number(stats.stunned_enemy_count, "   0"))
+    push(stunned_by_enemy_counts, format_number(stats.stunned_by_enemy_count, "   0"))
+let columns = [32, 64]
+tp = xy(128,64)
+for i < size(prev_players):
+    draw_sprite({pos:tp+xy(columns[i],0), sprite:prev_players[i].anims.walk.frame(mode_frames), angle:90°})
+tp.y += 20
+draw_text({text:"Destroyed Objects:", font:font, pos:tp, x_align:"right", color:#f})
+for i < size(prev_players):
+    draw_text({text:destroyed_counts[i], font:font, pos:tp + xy(columns[i],0),
+        color:PLAYER_COLORS[i], x_align:"center"})
+tp.y += font.line_height
+draw_text({text:"Attempted Blasts:", font:font, pos:tp, x_align:"right", color:#f})
+for i < size(prev_players):
+    draw_text({text:attempted_blasts[i], font:font, pos:tp + xy(columns[i],0),
+        color:PLAYER_COLORS[i], x_align:"center"})
+tp.y += font.line_height
+draw_text({text:"Successful Blasts:", font:font, pos:tp, x_align:"right", color:#f})
+for i < size(prev_players):
+    draw_text({text:successful_blasts[i], font:font, pos:tp + xy(columns[i],0),
+        color:PLAYER_COLORS[i], x_align:"center"})
+tp.y += font.line_height
+draw_text({text:"Successful Rate:", font:font, pos:tp, x_align:"right", color:#f})
+for i < size(prev_players):
+    draw_text({text:explode_rates[i], font:font, pos:tp + xy(columns[i],0),
+        color:PLAYER_COLORS[i], x_align:"center"})
+tp.y += font.line_height
+draw_text({text:"Perfect Explosions:", font:font, pos:tp, x_align:"right", color:#f})
+for i < size(prev_players):
+    draw_text({text:perfect_explode_counts[i], font:font, pos:tp + xy(columns[i],0),
+        color:PLAYER_COLORS[i], x_align:"center"})
+tp.y += font.line_height
+// Display custom message per-level
+tp.y += font.line_height
+tp.x = 0.5*SCREEN_SIZE.x
+if next_level_index == 1:
+    draw_text({text:"Next level: The "+LEVEL_NAMES[next_level_index]+". \nWatch out for the humans!",
+        font:font, pos:tp, color:#f, x_align:"center"})
+else if next_level_index == 2:
+    draw_text({text:"Next level: The "+LEVEL_NAMES[next_level_index]+".\nIt's pretty dark down there!",
+        font:font, pos:tp, color:#f, x_align:"center"})
+else if next_level_index == -1:
+    draw_text({text:"You've cleared the building!",
+        font:font, pos:tp, color:#f, x_align:"center"})
+    tp.y += font.line_height
+    draw_text({text:"CONGRATULATIONS!", font:font, pos:tp, color:hsv(bgm_measure_t,1,1), x_align:"center"})
+tp.y += font.line_height
+// Display prompt to continue
+draw_text({font:font, pos:xy(50% SCREEN_SIZE.x, 90% SCREEN_SIZE.y),
+    text:replace("(a) Continue", gamepad_array[0].prompt), color:#f, x_align:"center"})
+
+leave
+────────────────────────────────────────────────────────────────────────
+reset_post_effects()
+remove_frame_hooks_by_mode(get_mode())

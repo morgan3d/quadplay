@@ -1,0 +1,43 @@
+{
+    "url": "stinkbomb.png",
+    "sprite_size": {
+        "x": 48,
+        "y": 48
+    },
+    "names": {
+        "stink": {
+            "start": {
+                "x": 0,
+                "y": 1
+            },
+            "end": {
+                "x": 3,
+                "y": 1
+            },
+            "extrapolate": "clamp",
+            "frames": [
+                7,
+                7,
+                7,
+                7
+            ]
+        },
+        "charge": {
+            "start": {
+                "x": 0,
+                "y": 0
+            },
+            "end": {
+                "x": 2,
+                "y": 0
+            },
+            "extrapolate": "loop",
+            "frames": [
+                2,
+                3,
+                2
+            ]
+        }
+    },
+    "license": "© 2021 Bitterly Indifferent Studios. Licensed as CC-BY 4.0 https://creativecommons.org/licenses/by/4.0/"
+}

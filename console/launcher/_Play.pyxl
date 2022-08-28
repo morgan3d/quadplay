@@ -139,6 +139,23 @@ const gameArray = [{
 },
 
 {
+   title: "But…Skunks!?",
+   developer: "Bitterly Indifferent Studios",
+   url: "quad://games/but_skunks",
+    "version": 1,
+    "min_players": 1,
+    "max_players": 2,
+    "cooperative": true,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "Skunks. Why did it have to be skunks?",
+   builtin:      true,
+   label: bslabel[0][0],
+   preview: bspreview
+},
+
+{
    title: "R. P. S.",
    developer: "Casual Effects",
    url: "quad://games/rps",

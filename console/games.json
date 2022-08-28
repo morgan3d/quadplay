@@ -244,6 +244,11 @@
             "description": "Program your broken robots to race through the ruins."
         },
         {
+            "url": "quad://games/but_skunks/",
+            "title": "But\u2026Skunks!?",
+            "description": "Skunks. Why did it have to be skunks?"
+        },
+        {
             "url": "quad://games/doublesdepon/",
             "title": "Doubles de Pon",
             "description": "Swapping puzzle game"

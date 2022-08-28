@@ -1,0 +1,120 @@
+{
+    "title": "But…Skunks!?",
+    "developer": "Bitterly Indifferent Studios",
+    "copyright": "©2021 Bitterly Indifferent Studios",
+    "license": "Licensed as CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/",
+    "packages": [],
+    "scripts": [
+        "globals.pyxl",
+        "music.pyxl"
+    ],
+    "modes": [
+        "Menu",
+        "Options",
+        "Credits",
+        "Cutscene",
+        "Play",
+        "GameOver",
+        "Interstitial"
+    ],
+    "start_mode": "Menu",
+    "docs": [],
+    "assets": {
+        "map_tiles_sprite": "map-tiles.sprite.json",
+        "basement_map": "basement.map.json",
+        "font": "quad://fonts/weaver-7.font.json",
+        "bgm_in_game_sound": "bgm_in_game.sound.json",
+        "skunk_sprite": "skunk.sprite.json",
+        "cutscene1_sprite": "cutscene1.sprite.json",
+        "cutscene2_sprite": "cutscene2.sprite.json",
+        "stinkbomb_sprite": "stinkbomb.sprite.json",
+        "attic_map": "attic.map.json",
+        "condo_map": "condo.map.json",
+        "bgm_menu_sound": "bgm_menu.sound.json",
+        "blip_sound": "blip.sound.json",
+        "bloop_sound": "bloop.sound.json",
+        "bgm_claps_sound": "bgm_claps.sound.json",
+        "human_sprite": "human.sprite.json",
+        "bgm_in_game_muted_sound": "bgm_in_game_muted.sound.json",
+        "bgm_in_game_intro_sound": "bgm_in_game_intro.sound.json",
+        "charge_sound": "charge.sound.json",
+        "destroy_sound": "destroy.sound.json",
+        "explode_sound": "explode.sound.json",
+        "stun_enemy_sound": "stun_enemy.sound.json",
+        "stun_player_sound": "stun_player.sound.json",
+        "title_sprite": "title.sprite.json",
+        "credits_sprite": "credits.sprite.json",
+        "lighting_map": "lighting.map.json"
+    },
+    "version": 1,
+    "min_players": 1,
+    "max_players": 2,
+    "cooperative": true,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "Skunks. Why did it have to be skunks?",
+    "credits": {
+        "main": [
+            "Art:",
+            "Donald Conrad",
+            "Design:",
+            "Peter Gross",
+            "Code:",
+            "Cort Stratton",
+            "Music:",
+            "@inkedsplat",
+            "",
+            "\"Actual Warfare\"",
+            "Additional Sound:",
+            "Cort Stratton",
+            "Quadplay Support:",
+            "Morgan McGuire",
+            "",
+            "Stephan Steinbach",
+            "",
+            "Nick Porcino",
+            "Special Thanks:",
+            "Lesley Mathieson",
+            "",
+            "RSVS",
+            "",
+            "Ben Burnes"
+        ],
+        "extra": ""
+    },
+    "links": {
+        "game": {
+            "www": "https://bitterlyindifferent.itch.io/but-skunks",
+            "github": "https://github.com/cdwfs/ButSkunks"
+        },
+        "developer": {
+            "www": "https://bitterlyindifferent.itch.io/"
+        }
+    },
+    "constants": {
+        "DEBUG_BGM_OVERLAY": {
+            "type": "boolean",
+            "value": false,
+            "description": "If true, draw a debug overlay with background music status"
+        },
+        "DEBUG_BOMB_TIMING": {
+            "type": "boolean",
+            "value": false,
+            "description": "If true, draw how far off the most recent button release was from the target frame (color coded by success/failure)"
+        },
+        "INPUT_LATENCY_CORRECTION_FACTOR": {
+            "type": "number",
+            "value": "0.33333",
+            "description": "How much to adjust the expected input latency by, when the player mis-times a bomb explosion. Higher values = correct more aggressively.",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "1"
+            },
+            "format": "",
+            "quantum": 0
+        }
+    },
+    "screenshot_tag": "but_skunks"
+}

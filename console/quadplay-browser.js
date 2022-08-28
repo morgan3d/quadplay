@@ -1543,15 +1543,15 @@ function inElement(event, element) {
 function onTouchStartOrMove(event) {
     wake();
     updateLastInteractionTime();
-
     for (let i = 0; i < event.changedTouches.length; ++i) {
         const touch = event.changedTouches[i];
         let tracker = activeTouchTracker[touch.identifier];
 
-        if (event.target === emulatorScreen || event.target === overlayScreen) {
+        if (event.target === emulatorScreen || event.target === overlayScreen || event.target === afterglowScreen) {
             const screen_coord = emulatorScreenEventCoordToQuadplayScreenCoord(touch);
 
-            if (! tracker || tracker.lastTarget !== emulatorScreen || tracker.lastTarget !== overlayScreen) {
+            if (! tracker ||
+                !(tracker.lastTarget === emulatorScreen || tracker.lastTarget === overlayScreen || tracker.lastTarget === afterglowScreen)) {
                 // New touch
                 QRuntime.touch.aa = ! QRuntime.touch.a;
                 QRuntime.touch.pressed_a = QRuntime.touch.aa;
@@ -1568,11 +1568,19 @@ function onTouchStartOrMove(event) {
             QRuntime.touch.screen_y = screen_coord.y;
 
             if (QRuntime.touch.aa && document.getElementById('printTouchEnabled').checked) {
-                $systemPrint('touch.screen_xy: xy(' + QRuntime.touch.screen_x + ', ' + QRuntime.touch.screen_y + ')');
+                $systemPrint(`\ntouch.screen_xy = xy(${QRuntime.touch.screen_x}, ${QRuntime.touch.screen_y})`);
+
+                // Read the 16-bit color from the screen
+                const C = QRuntime.$screen[Math.floor(QRuntime.touch.screen_y) * SCREEN_WIDTH + Math.floor(QRuntime.touch.screen_x)];
+                const r = C & 0xf, g = (C >> 4) & 0xf, b = (C >> 8) & 0xf;
+                const hex_color = `#${r.toString(16)}${g.toString(16)}${b.toString(16)}`.toUpperCase();
+                $outputAppend(`<i>rgb(${Math.round(100 * r / 15)}%, ${Math.round(100 * g / 15)}%, ${Math.round(100 * b / 15)}%) <div style="width: 32px; height: 12px; display: inline-block; position: relative; top: 2px; background: ${hex_color}"></div> ${hex_color}</i><br>`);
             }
         }
 
-        if (tracker && (tracker.lastTarget === emulatorScreen || tracker.lastTarget === overlayScreen) && (event.target !== emulatorScreen && event.target !== overlayScreen)) {
+        if (tracker &&
+            (tracker.lastTarget === emulatorScreen || tracker.lastTarget === overlayScreen || tracker.lastTarget === afterglowScreen) &&
+            (event.target !== emulatorScreen && event.target !== overlayScreen && event.target !== afterglowScreen)) {
             // Lost contact with screen
             QRuntime.touch.a = false;
             QRuntime.touch.released_a = true;
@@ -1609,7 +1617,7 @@ function onTouchEndOrCancel(event) {
         // The tracker *should* be found, but check defensively
         // against weird event delivery
         if (tracker) {
-            if (tracker.lastTarget === emulatorScreen || tracker.lastTarget === overlayScreen) {
+            if (tracker.lastTarget === emulatorScreen || tracker.lastTarget === overlayScreen || tracker.lastTarget === afterglowScreen) {
                 // Lost contact with screen
                 QRuntime.touch.a = false;
                 QRuntime.touch.released_a = true;

@@ -1,0 +1,7 @@
+{
+    "url": "lighting.tmx",
+    "license": "© 2021 Bitterly Indifferent Studios. Licensed as CC-BY 4.0 https://creativecommons.org/licenses/by/4.0/",
+    "sprite_url_table": {
+        "<default>": "lighting_tiles.sprite.json"
+    }
+}

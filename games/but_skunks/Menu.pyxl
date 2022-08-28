@@ -1,0 +1,108 @@
+Menu
+════════════════════════════════════════════════════════════════════════
+const MENU_NEW_GAME_1P = 0
+const MENU_NEW_GAME_2P = 1
+const MENU_OPTIONS = 2
+const MENU_CREDITS = 3
+const MENU_ITEMS = ["New Game (1P)", "New Game (2P)", "Options", "Credits"]
+
+const MENU_ITEM_TEXT_ARGS = {font:font, color:#f, x_align:"left", z:20,outline:#0}
+const MENU_CURSOR_TEXT_ARGS = {font:font, text:replace("(a)", gamepad_array[0].prompt), x_align:"right", z:20, color:#f, outline:#0}
+
+const WINDOWS = [
+    xy(7,130), xy(26,130), xy(45,130), xy(65,115), xy(64,79), xy(78,46), xy(78,23), xy(92,106), xy(105,59),
+    xy(119,86), xy(119,116), xy(118,148), xy(142,78), xy(142,99), xy(142,134), xy(185,99), xy(195,146),
+    xy(228,99), xy(228,142), xy(291,34), xy(309,34), xy(328,34), xy(291,63), xy(310,63), xy(291,93),
+    xy(328,92), xy(291,123), xy(328,134), xy(374,82), xy(383,112), xy(374,150),
+]
+
+def enter_cutscene_mode(data):
+    set_mode(Cutscene, data.level_index) because "Choose New Game from menu"
+def enter_options_mode(data):
+    set_mode(Options) because "Choose Options from menu"
+def enter_credits_mode(data):
+    set_mode(Credits) because "Choose Credits from menu"
+
+let current_menu_item = MENU_NEW_GAME_1P
+let disable_input = false
+let explosions = []
+
+enter
+────────────────────────────────────────────────────────────────────────
+current_menu_item = MENU_NEW_GAME_1P
+disable_input = false
+
+load_user_preferences()
+if not bgm_is_playing():
+    let loops = [
+        {sound:bgm_menu_sound, loop:true, volume:100%},
+        {sound:bgm_in_game_intro_sound, loop:true, volume:0%},
+        {sound:bgm_claps_sound, loop:true, volume:0%},
+        ]
+    bgm_start(loops)
+
+frame
+────────────────────────────────────────────────────────────────────────
+bgm_update()
+if not disable_input:
+    for pad in gamepad_array: // any connected control can operate the menus
+        // Handle cursor movement
+        if pad.yy ≠ 0:
+            play_sound(SND_CURSOR_MOVE)
+            current_menu_item = (current_menu_item + size(MENU_ITEMS) + pad.yy) mod size(MENU_ITEMS)
+        
+        // Handle menu selection
+        const sheet = skunk_sprite
+        if pad.aa ≠ 0:
+            if current_menu_item == MENU_NEW_GAME_1P:
+                disable_input = true
+                play_sound(SND_CURSOR_ACCEPT)
+                player_infos = [
+                    {gamepad: gamepad_array[0], latency_offset:0, idle_anim: sheet.p1_idle, walk_anim:sheet.p1_walk},
+                ]
+                add_frame_hook(fade_out, enter_cutscene_mode, 30, ∅, {level_index:0})
+            if current_menu_item == MENU_NEW_GAME_2P:
+                disable_input = true
+                play_sound(SND_CURSOR_ACCEPT)
+                player_infos = [
+                    {gamepad: gamepad_array[0], latency_offset:0, idle_anim: sheet.p1_idle, walk_anim:sheet.p1_walk},
+                    {gamepad: gamepad_array[1], latency_offset:0, idle_anim: sheet.p2_idle, walk_anim:sheet.p2_walk},
+                ]
+                add_frame_hook(fade_out, enter_cutscene_mode, 30, ∅, {level_index:0})
+            else if current_menu_item == MENU_OPTIONS:
+                disable_input = true
+                play_sound(SND_CURSOR_ACCEPT)
+                add_frame_hook(fade_out, enter_options_mode, 30, ∅, {})
+            else if current_menu_item == MENU_CREDITS:
+                play_sound(SND_CURSOR_ACCEPT)
+                add_frame_hook(fade_out, enter_credits_mode, 30, nil, {})
+
+// Draw splash screen
+draw_sprite({sprite:title_sprite.scene.frame(bgm_now_f), pos:50% SCREEN_SIZE, z:-1})
+let menu_offset = xy(48, 180)
+for menu_item at i in MENU_ITEMS:
+    draw_text({text:menu_item, pos:menu_offset, ...MENU_ITEM_TEXT_ARGS})
+    if current_menu_item == i:
+        draw_text({pos:menu_offset - xy(10,0), ...MENU_CURSOR_TEXT_ARGS})
+    menu_offset.y += font.line_height
+if random(0,1) < 0.02:
+    let explosion = make_entity({
+        pos:random_value(WINDOWS),
+        spawn_frame:mode_frames,
+        scale:0.25,
+        z:1,
+        anim:stinkbomb_sprite.stink
+        })
+    push(explosions, explosion)
+def itor_explosion_update_and_render(explosion):
+    const age_f = mode_frames - explosion.spawn_frame
+    if age_f > explosion.anim.frames:
+        return iterate.REMOVE
+    explosion.sprite = explosion.anim.frame(age_f)
+    draw_entity(explosion)
+iterate(explosions, itor_explosion_update_and_render)
+
+leave
+────────────────────────────────────────────────────────────────────────
+reset_post_effects()
+remove_frame_hooks_by_mode(get_mode())

@@ -1,0 +1,773 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+const BLOCK_SIZE = xy(16,16)
+const PLAYER_SPAWN_SPRITES = [
+    map_tiles_sprite.start_p1,
+    map_tiles_sprite.start_p2,
+    map_tiles_sprite.start_p3,
+    map_tiles_sprite.start_p4,
+]
+const LEVEL_INFOS = [
+    {map: attic_map, floor_sprite:map_tiles_sprite.attic_floor},
+    {map: condo_map, floor_sprite:map_tiles_sprite.condo_floor},
+    {map: basement_map, floor_sprite:map_tiles_sprite.basement_floor, limit_visibility:true},
+]
+
+const SND_STINKBOMB_CHARGE = {sound:charge_sound, playback_rate:200%, volume: 70%}
+const SND_STINKBOMB_EXPLODE = {sound:explode_sound, volume: 80%}
+const SND_DESTROY = {sound:destroy_sound, volume: 90%}
+const SND_STUN_PLAYER = {sound:stun_player_sound, volume: 60%}
+const SND_STUN_ENEMY = {sound:stun_enemy_sound, volume: 60%}
+
+
+const DIR_S = 0
+const DIR_W = 1
+const DIR_E = 2
+const DIR_N = 3
+const OFFSET_FOR_DIR = [xy(0,1), xy(-1,0), xy(1,0), xy(0,-1)]
+const ANGLE_FOR_DIR = [-π/2, π, 0, π/2]
+const NAME_FOR_DIR = ["S","W","E","N"]
+
+def enter_interstitial_mode(data):
+    set_mode(Interstitial, level_index, players, bgm_now) because "Completed level"
+def enter_gameover_mode(data):
+    set_mode(GameOver, players) because "Failed to complete level"
+
+const MAX_LEVEL_SECONDS = 90
+
+def map_offset(m):
+    const screen_size_in_blocks = SCREEN_SIZE / BLOCK_SIZE
+    const map_size_in_blocks = map.size
+    return xy(0, 1) * BLOCK_SIZE
+
+def map_pos_to_cell(pos):
+    return round(pos / BLOCK_SIZE)
+
+def map_cell_to_pos(cell):
+    return BLOCK_SIZE * cell
+
+def at_cell_center(entity):
+    // Is this as close as we'll get to the center?
+    const distance = |entity.pos - xy(round(entity.pos.x, BLOCK_SIZE.x),round(entity.pos.y, BLOCK_SIZE.y))|
+    return max(distance.x, distance.y) < entity.speed
+
+// gets the value of the map cell from a world-space coordinate.
+// Only the sign of vel is used, to check the correct direction; its magnitude is ignored.
+def map_sprite(pos, vel default xy(0, 0)):
+    return get_map_sprite(map, map_pos_to_cell(pos) + sign(vel), 0)
+    
+def is_cell_empty(pos, vel default xy(0,0)):
+    // Check map sprite
+    if not map_sprite(pos, vel).can_walk:
+        return false
+    // TODO: Check for entity in cell
+    return true
+    
+def is_zero(v2):
+    return v2.x == 0 and v2.y == 0
+def vec_str(v2):
+    return "["+v2.x+","+v2.y+"]"
+
+// Version of lerp() where t can be a vector
+def vec_lerp(a, b, t):
+    return (b - a) * t + a
+
+// Construct an empty array iterable by array[x][y]
+def make_array2d(w,h,val default nil):
+    let arr = []
+    resize(arr, w)
+    for x < w:
+        let column = []
+        for y < h:
+            push(column, val)
+        arr[x] = column
+    return arr
+    
+def is_dpad_pressed(gamepad):
+    // checking just gamepad.x or gamepad.y isn't sufficient; when the opposite direction
+    // is pressed, there is one frame where e.g. gamepad.xx is non-zero but gamepad.x is zero
+    return (gamepad.xx or gamepad.yy) or (gamepad.x or gamepad.y)
+
+def make_skunk_entity(player):
+    return make_entity({
+        anims: player.anims,
+        sprite: player.anims.idle.frame(0),
+        pos: BLOCK_SIZE * player.spawn_icell,
+        gamepad: player.gamepad,
+        player: player,
+        vel: xy(0,0),
+        next_vel: xy(0,0),
+        dir: DIR_S,
+        speed: 1,
+        stun_angle: 0°,    
+        active_stinkbombs: 0,
+        z:30,
+        })
+def make_enemy_entity(icell):
+    return make_entity({
+        anims: {idle:human_sprite.idle, walk:human_sprite.walk},
+        sprite: human_sprite.idle.frame(0),
+        pos: BLOCK_SIZE * icell,
+        gamepad: make_dummy_gamepad(),
+        vel: xy(0,0),
+        next_vel: xy(0,0),
+        dir: DIR_S,
+        speed: 1,
+        stun_angle: 0°,    
+        z:10,
+        })
+
+// Construct a dummy gamepad object for use by AI players.
+def make_dummy_gamepad():
+    return {
+        x:0,
+        y:0,
+        xx:0,
+        yy:0,
+        a:0,
+        b:0,
+        aa:0,
+        bb:0,
+        index:"enemy", // invalid; enemy gamepads have no index
+        }
+
+// ACTIVE SKUNKS
+
+// Record which cells have active skunks in them
+// target: active_skunks
+// RO: map, skunk.pos
+// RW: skunk_grid
+def itor_active_skunk_populate_grid(skunk):
+    const icell = map_pos_to_cell(skunk.pos)
+    active_skunk_grid[icell.x][icell.y] = skunk
+
+// Determine skunk velocity and facing direction for this frame.
+// target: active_skunks
+// RO: map, skunk.pos, skunk.gamepad, skunk.speed
+// RW: skunk.next_vel, skunk.vel, skunk.dir, skunk.sprite
+def itor_active_skunk_update_velocity(skunk):
+    // stunned entities don't process input
+    if skunk.stun_angle > 0°:
+        return
+    // desired behavior:
+    // - If we're already moving
+    //   - ...and the same direction is already held, keep moving.
+    //   - ...and the opposite direction is now held, then change direction instantly.
+    //   - ...and an orthogonal direction is now held, then register next_vel and change
+    //     direction at the center of the next cell.
+    //   - ...and the dpad is released, stop at the center of the next empty cell
+    // - If we're not moving, start moving in the desired direction immediately (or just
+    //   turn if the path is blocked.
+    // - never possible to move in both X and Y simultaneously
+    with next_vel, vel, gamepad, speed, dir, sprite in skunk:
+        // Record desired upcoming turns based on gamepad state
+        let sv = sign(vel)
+        let sg = sign(xy(gamepad.x, gamepad.y))
+        if |sg.x| > ε:
+            next_vel = xy(sg.x * speed, 0)
+        else if |sg.y| > ε:
+            next_vel = xy(0, sg.y * speed)
+        
+        const at_center = at_cell_center(skunk)
+        const vel_dir = direction(vel)
+        const next_vel_dir = direction(next_vel)
+        const next_vel_is_opposite = ‖vel_dir + next_vel_dir‖ < ε
+        const next_vel_is_different = ‖vel_dir - next_vel_dir‖ > ε
+        if (at_center or next_vel_is_opposite) and next_vel_is_different:
+            vel = next_vel
+            sv = sign(vel)
+        // Determine facing direction
+        if      sv.x == -1 and sv.y ==  0: dir = DIR_W
+        else if sv.x ==  1 and sv.y ==  0: dir = DIR_E
+        else if sv.x ==  0 and sv.y == -1: dir = DIR_N
+        else if sv.x ==  0 and sv.y ==  1: dir = DIR_S
+        // otherwise, keep current direction
+        
+        // Stop moving at cell centers if no dpad input
+        if at_center and not is_zero(sv) and not is_dpad_pressed(gamepad):
+            vel = xy(0,0)
+            sv = xy(0,0)
+            next_vel = xy(0,0)
+
+// Apply stuns to active skunks if they're touching humans.
+// target: active_skunks
+// RO: skunk.pos, enemy_grid
+// RW: skunk.stun_angle
+def itor_active_skunk_apply_stun(skunk):
+    // stunned skunks can not be re-stunned
+    if skunk.stun_angle > 0°:
+        return
+    const icell = map_pos_to_cell(skunk.pos)
+    if enemy_grid[icell.x][icell.y]:
+        play_sound(SND_STUN_PLAYER)
+        skunk.player.stats.stunned_by_enemy_count += 1
+        skunk.stun_angle = 720°
+    
+// Update stun angle. stun_angle=0 -> unstunned. Otherwise, you spin in place.
+// target: active_skunks
+// RW: skunk.stun_angle
+def itor_active_skunk_update_stun(skunk):
+    skunk.stun_angle = max(0°, skunk.stun_angle - π/14)
+    
+// Update the animation for skunk sprites
+// target: active_skunks
+// RO: skunk.dir, skunk.vel, skunk.anims
+// RW: skunk.sprite, skunk.angle
+def itor_active_skunk_animate(skunk):
+    // stunned entities just spin in place
+    if skunk.stun_angle > 0°:
+        skunk.sprite = skunk.anims.idle.frame(0)
+        skunk.angle = skunk.stun_angle
+        return
+    with vel, dir, sprite, anims in skunk:
+        // Record desired upcoming turns based on gamepad state
+        let sv = sign(vel)
+        // Choose appropriate animation frame
+        const anim = if is_zero(sv) then anims.idle else anims.walk
+        skunk.sprite = anim.frame(mode_frames)
+        // Rotate sprite based on direction
+        if      dir == DIR_N: skunk.angle = 0°
+        else if dir == DIR_W: skunk.angle = 90°
+        else if dir == DIR_S: skunk.angle = 180°
+        else if dir == DIR_E: skunk.angle = 270°
+
+// Apply current velocity to skunk position, taking into account obstacles that block movement.
+// target: active_skunks
+// RO: box_grid
+// RW: skunk.pos, skunk.vel
+def itor_active_skunk_move(skunk):
+    // stunned entities can't move
+    if skunk.stun_angle > 0°:
+        return
+    const at_center = at_cell_center(skunk)
+    with vel, pos in skunk:
+        let sv = sign(vel)
+        const icell = map_pos_to_cell(pos)
+        const fcell = xy((pos.x/BLOCK_SIZE.x) mod 1.0, (pos.y/BLOCK_SIZE.y) mod 1.0)
+        // See if the move is possible, but only stop on centers
+        if at_center and (not is_cell_empty(pos, vel) or box_grid[icell.x+sv.x][icell.y+sv.y]):
+            // Hit wall. Stop moving
+            vel = xy(0,0)
+            sv = xy(0,0)
+        else:
+            // Clear to move
+            pos = pos + vel
+            // Snap to a pixel on the axis that we're not moving along
+            // to prevent error from accumulating
+            pos = vec_lerp(round(pos), pos, |sign(vel)|)
+        assert(sv.x == 0 || sv.y == 0, "velocity " + vec_str(vel) + " must be all X or all Y")
+    entity_update_children(skunk)
+
+// Handle skunks placing stinkbombs.
+// target: active_skunks
+// RO: skunk.gamepad, mode_frames
+// RW: bomb_grid, skunk.active_bomb_count
+def itor_active_skunk_place_stinkbomb(skunk):
+    // stunned entities can't place stinkbombs
+    if skunk.stun_angle > 0°:
+        return
+    with gamepad, active_stinkbombs in skunk:
+        if skunk.active_stinkbombs > 0:
+            return
+        if gamepad.a:
+            active_stinkbombs += 1
+            skunk.player.stats.charge_count += 1
+            const stinkbomb = make_entity({
+                pos_in_parent: xy(0, BLOCK_SIZE.y),
+                scale: xy(0,0),
+                opacity: 0,
+                sprite: stinkbomb_sprite.charge.frame(0),
+                source_skunk: skunk,
+                gamepad: skunk.gamepad,
+                start_frame: bgm_now_f,
+                z_in_parent:-1,
+                })
+            entity_add_child(skunk, stinkbomb)
+            skunk.charging_sound = play_sound({time:random(0,0.05), pitch:random(0.9, 1.1), ...SND_STINKBOMB_CHARGE})
+            push(stinkbombs, stinkbomb)
+
+// ENEMIES
+
+// Record which cells have enemies in them
+// target: enemies
+// RO: map, enemy.pos
+// RW: enemy_grid
+def itor_enemy_populate_grid(enemy):
+    const icell = map_pos_to_cell(enemy.pos)
+    enemy_grid[icell.x][icell.y] = enemy
+
+// Apply stuns to active skunks if they're touching humans.
+// target: enemies
+// RO: enemy.pos, explosion_grid
+// RW: enemy.stun_angle
+def itor_enemy_apply_stun(enemy):
+    // stunned entities can not be re-stunned
+    if enemy.stun_angle > 0°:
+        return
+    const icell = map_pos_to_cell(enemy.pos)
+    const explosion = explosion_grid[icell.x][icell.y]
+    if explosion ≠ ∅:
+        explosion.source_skunk.player.stats.stunned_enemy_count += 1
+        play_sound(SND_STUN_ENEMY)
+        enemy.stun_angle = 720°
+    
+// target: enemies
+// RO: enemy.pos, enemy.dir, map, active_skunk_grid
+// RW: enemy.gamepad
+def itor_enemy_ai(enemy):
+    enemy.gamepad = make_dummy_gamepad() // reset dummy gamepad state
+    if not at_cell_center(enemy):
+        return // AI only makes decisions at cell centers
+    const icell = map_pos_to_cell(enemy.pos)
+    // look in each direction and see what we see
+    const look_distance = max(map.size.x, map.size.y) // edge walls will stop us from searching out of bounds
+    let possible_move = ∅
+    // If we see a skunk in any direction, move towards it. (unless it's stunned; in which case, move away.
+    let skunk_in_dir = [false,false,false,false]
+    for dir in [0,1,2,3]:
+        let offset = OFFSET_FOR_DIR[dir]
+        for 1 ≤ d ≤ look_distance:
+            const c = icell + d*offset
+            if box_grid[c.x][c.y]or not get_map_sprite(map, c, 0).can_walk:
+                break // stop searching at walls/boxes, but look in other directions
+            else if active_skunk_grid[c.x][c.y]:
+                // spotted a skunk
+                skunk_in_dir[dir] = true
+                break
+    // Just walk in a random direction, with a preference towards maintaining
+    // the current direction, but never move towards a visible skunk.
+    let turn_choice = ξ
+    if      turn_choice < 0.3:
+        enemy.dir = (enemy.dir + 1) mod 4
+    else if turn_choice < 0.6:
+        enemy.dir = (enemy.dir + 3) mod 4
+    // Turn if we're walking into an obstacle, or towards a skunk
+    let checked_dir_count = 0
+    let current_dir_offset = OFFSET_FOR_DIR[enemy.dir]
+    let c = icell + current_dir_offset
+    while box_grid[c.x][c.y] or skunk_in_dir[enemy.dir] or not get_map_sprite(map, c, 0).can_walk:
+        enemy.dir = (enemy.dir + 1) mod 4
+        current_dir_offset = OFFSET_FOR_DIR[enemy.dir]
+        c = icell + current_dir_offset
+        checked_dir_count += 1
+        if checked_dir_count ≥ 4:
+            break
+    enemy.gamepad.x = current_dir_offset.x
+    enemy.gamepad.xx = current_dir_offset.x
+    enemy.gamepad.y = current_dir_offset.y
+    enemy.gamepad.yy = current_dir_offset.y
+
+// STINKBOMBS
+
+// Grow stinkbombs until they explode
+// target: stinkbombs
+// RO:
+// RW:
+def itor_stinkbomb_grow(stinkbomb):
+    // stinkbombs placed by stunned entities immediately fizzle
+    if stinkbomb.source_skunk.stun_angle > 0°:
+        stop_audio(stinkbomb.source_skunk.charging_sound)
+        stinkbomb.source_skunk.charging_sound = nil
+        stinkbomb.source_skunk.active_stinkbombs -= 1
+        entity_remove_child(stinkbomb.source_skunk, stinkbomb)
+        return iterate.REMOVE
+    with start_frame, scale, opacity, gamepad, sprite in stinkbomb:
+        const max_grow_frames = BGM_FRAMES_PER_MEASURE/2
+        const size_t = clamp(bgm_now_f - start_frame, 0, max_grow_frames) / max_grow_frames
+        sprite = stinkbomb_sprite.charge.frame(mode_frames)
+        opacity = size_t
+        scale = size_t * size_t * size_t * xy(1,1)
+        if not gamepad.a:
+            stop_audio(stinkbomb.source_skunk.charging_sound)
+            stinkbomb.source_skunk.charging_sound = nil
+            // stop growing. See whether the bomb succeeded. If so, spawn an explosion of the appropriate
+            // size. Either way, destroy the bomb.
+            const latency_f = round(stinkbomb.source_skunk.player.audio_latency_frames)
+            const target_f = BGM_FRAMES_PER_MEASURE/2 // target frame is halfway through the measure, at the snare hit
+            const adjusted_release_measure_f = (bgm_measure_f + BGM_FRAMES_PER_MEASURE - latency_f - target_f) mod BGM_FRAMES_PER_MEASURE
+            const half_fpm = BGM_FRAMES_PER_MEASURE/2
+            const delta_f = if adjusted_release_measure_f > half_fpm then (adjusted_release_measure_f-BGM_FRAMES_PER_MEASURE) else adjusted_release_measure_f
+            let bomb_explodes = false
+            debug_last_bomb_release_f = adjusted_release_measure_f
+            let explosion = make_entity({
+                pos: stinkbomb.pos,
+                sprite: stinkbomb_sprite.stink.frame(0),
+                start_frame: mode_frames,
+                duration_frames: stinkbomb_sprite.stink.frames,
+                source_skunk:stinkbomb.source_skunk,
+                start_scale:scale,
+                end_scale:0.75*scale,
+                scale:scale,
+                font:font,
+                text_x_align:"center",
+                text_y_align:"bottom",
+                text_offset:xy(0,0),
+                text_color:#4f4f,
+                text_shadow:#0,
+                z:stinkbomb.source_skunk.z+1,
+                })
+            if abs(delta_f) ≤ INPUT_AUDIO_FRAME_TOLERANCE:
+                // bomb succeeds! spawn an explosion entity
+                play_sound({time:random(0,0.05), pitch:random(0.9, 1.1), ...SND_STINKBOMB_EXPLODE})
+                bomb_explodes = true
+                stinkbomb.source_skunk.player.stats.explode_count += 1
+                explosion.text = random_value(["NICE","GREAT","GOOD"])
+                if delta_f == 0:
+                    explosion.text = "PERFECT!"
+                    stinkbomb.source_skunk.player.stats.perfect_explode_count += 1
+            else:
+                // bomb fizzles, but create a dummy explosion entity anyway so we can hang a label on it
+                explosion.sprite = ∅
+                explosion.start_scale = xy(0,0)
+                explosion.end_scale = xy(0,0)
+                explosion.scale = xy(0,0)
+                explosion.text = if delta_f < 0 then "EARLY" else "LATE"
+                explosion.text_color = #f44f
+            push(explosions, explosion)
+            debug_print("raw=" + bgm_measure_f + " adjusted=" + adjusted_release_measure_f + " delta=" + delta_f + (if bomb_explodes then " BOOM" else ""))
+            // Help the player by adjusting the latency towards their actual input time.
+            if abs(delta_f) < INPUT_AUDIO_FRAME_TOLERANCE*3:
+                const old_latency = stinkbomb.source_skunk.player.audio_latency_frames
+                stinkbomb.source_skunk.player.audio_latency_frames = (stinkbomb.source_skunk.player.audio_latency_frames + INPUT_LATENCY_CORRECTION_FACTOR * delta_f) mod BGM_FRAMES_PER_MEASURE
+                debug_print("delta=" + delta_f + ": latency adjusted from " + old_latency + " to " + stinkbomb.source_skunk.player.audio_latency_frames)            
+            // Either way, despawn the stinkbomb and let the source skunk drop another one
+            stinkbomb.source_skunk.active_stinkbombs -= 1
+            entity_remove_child(stinkbomb.source_skunk, stinkbomb)
+            return iterate.REMOVE
+
+// EXPLOSIONS
+
+// Record which cells have explosions in them
+// target: explosions
+// RO: map, explosion.pos, explosion.scale
+// RW: explosion_grid
+def itor_explosion_populate_grid(explosion):
+    const icell = map_pos_to_cell(explosion.pos)
+    // explosions above a certain scale affect their neighbor cells
+    if explosion.scale ≤ 0:
+        return
+    else if explosion.scale.x < 0.5:
+        explosion_grid[icell.x][icell.y] = explosion
+    else:
+        for dy in [-1,0,1]:
+            for dx in [-1,0,1]:
+                const x = clamp(icell.x+dx, 0, map.size.x-1)
+                const y = clamp(icell.y+dy, 0, map.size.y-1)
+                explosion_grid[x][y] = explosion
+
+// Destroy explosions after a while
+// target: explosions
+// RO:
+// RW:
+def itor_explosion_fade(explosion):
+    const age_f = mode_frames - explosion.start_frame
+    if age_f ≥ explosion.duration_frames:
+        return iterate.REMOVE
+    const age_t = clamp(age_f / explosion.duration_frames, 0, 1)
+    if explosion.scale.x > 0:
+        explosion.sprite = stinkbomb_sprite.stink.frame(age_f)
+        explosion.opacity = lerp(1, 0.25, smoothstep(0.25, 0.75, age_t))
+        explosion.scale = lerp(explosion.start_scale, explosion.end_scale, smoothstep(0.0, 1.0, age_t))
+        explosion.text_color.a = 1 - smoothstep(0.75,1,age_t)
+
+// BOXES
+
+// Flash boxes in time with the music, both as an extra visual hint and to make them stand out against the
+// background.
+// target: boxes
+// RO: bgm_now_f
+// RW: box.override_color
+def itor_box_flash(box):
+    const target_f = BGM_FRAMES_PER_MEASURE / 2 // beats are halfway through each measure
+    const delta_f = (bgm_now_f mod BGM_FRAMES_PER_MEASURE) - target_f
+    const fade_t = 1 - sqrt(clamp(abs(delta_f/7), 0, 1))
+    box.override_color = rgba(#ad4,fade_t)
+
+// Destroy boxes that have been hit by explosions.
+// target: boxes
+// RO: explosion_grid, box.pos
+// RW: boxes, box_grid
+def itor_box_break(box):
+    const icell = map_pos_to_cell(box.pos)
+    const explosion = explosion_grid[icell.x][icell.y]
+    if explosion ≠ nil:
+        explosion.source_skunk.player.stats.destroy_count += 1
+        play_sound({time:random(0,0.05), pitch:random(0.9, 1.1), ...SND_DESTROY})
+        box_grid[icell.x][icell.y] = ∅ // broken objects are immediately walkable
+        // "broken" version of each destroyable object is one tile to the right in the same sheet, by convention.
+        let tile = box.sprite.tile_index
+        let broken_sprite = box.sprite.spritesheet[tile.x+1][tile.y]
+        const bbox = make_entity({
+            sprite: broken_sprite,
+            pos: box.pos,
+            spawn_frame:mode_frames,
+            fade_frames: BGM_FRAMES_PER_MEASURE,
+            opacity:1.0,
+            z: box.z,
+            })
+        push(breaking_boxes, bbox)
+        return iterate.REMOVE
+
+// Fade broken boxes out of existence, and destroy them when they're gone.
+// target: breaking_boxes
+// RO: bbox.spawn_frame, bbox.fade_frames, mode_frames
+// RW: bbox.opacity
+def itor_breaking_box_fade(bbox):
+    const t = (mode_frames - bbox.spawn_frame) / bbox.fade_frames
+    bbox.opacity = lerp(1.0, 0.0, smootherstep(0.5, 1.0, t))
+    if t ≥ 1.0:
+        return iterate.REMOVE
+
+// UI
+def draw_remaining_time():
+    // Draw countdown timer
+    const elapsed_sec = clamp(bgm_now, 0, MAX_LEVEL_SECONDS)
+    const remain_sec = MAX_LEVEL_SECONDS - elapsed_sec
+    let c = lerp(#f, #f00, smoothstep(0.8, 0.9, elapsed_sec/MAX_LEVEL_SECONDS))
+    const z = 2038 // UI should be very very on top
+    draw_text({font:font, text:format_number(remain_sec, "  0.00"),
+        pos:xy(4,0), y_align:"top", x_align:"left", color:c, scale:1.5, z:z})
+
+// GLOBALS
+// The *_grid arrays are 2D arrays. Unless otherwise mentioned, grid[x][y]
+// stores a reference to the entity of that type in map cell x,y, or ∅ if
+// the cell does not contain an entity of that type.
+let map = nil
+let map_xform = xy(0,0)
+let players = []
+let active_skunks = []
+let active_skunk_grid = []
+let enemies = []
+let enemy_grid = []
+let stinkbombs = []
+let explosions = []
+let explosion_grid = []
+let boxes = []
+let box_grid = []
+let breaking_boxes = []
+let debug_last_bomb_release_f = 0
+let level_index = 0
+
+enter(in_level_index)
+────────────────────────────────────────────────────────────────────────
+
+// Initialize mode variables
+map = nil
+map_xform = xy(0,0)
+players = []
+active_skunks = []
+active_skunk_grid = []
+enemies = []
+enemy_grid = []
+stinkbombs = []
+explosions = []
+explosion_grid = []
+boxes = []
+box_grid = []
+breaking_boxes = []
+debug_last_bomb_release_f = 0
+level_index = in_level_index
+
+// In debug mode, we bypass the main menu and jump straight to play mode.
+// Set reasonable defaults.
+if size(player_infos) == 0:
+    debug_print("Debug mode!")
+    player_infos = [{
+        gamepad: gamepad_array[0], // includes player index in gamepad.index
+        latency_offset: 0,
+        idle_anim: skunk_sprite.p1_idle,
+        walk_anim: skunk_sprite.p1_walk,
+    }]
+    level_index = 0
+
+let level = LEVEL_INFOS[level_index]
+map = deep_clone(level.map)
+map_xform = map_offset(map)
+    
+// Search map for starting cells, so we can look them up by player index
+let player_start_icells = []
+resize(player_start_icells, size(PLAYER_SPAWN_SPRITES))
+for mx < map.size.x:
+    for my < map.size.y:
+        const icell = xy(mx,my)
+        const ms = map[mx][my]
+        for p < size(PLAYER_SPAWN_SPRITES):
+            if ms == PLAYER_SPAWN_SPRITES[p]:
+                player_start_icells[p] = icell
+                // overwrite the map cell with a normal floor sprite.
+                set_map_sprite(map, icell, level.floor_sprite)
+
+// Search map for tiles marked as destructible, replace them with the appropriate floor type in the map,
+// and spawn entities on top with the original sprite.
+// TODO: objects should just be a separate map layer.
+box_grid = make_array2d(map.size.x, map.size.y, ∅)
+for mx < map.size.x:
+    for my < map.size.y:
+        const icell = xy(mx,my)
+        const ms = map[mx][my]
+        if ms.destroyable:
+            const cell_pos = map_cell_to_pos(icell)
+            // all destroyable entities are called boxes, for historical reasons
+            const box = make_entity({
+                sprite:ms,
+                pos: cell_pos,
+                z: 5,
+                })
+            push(boxes, box)
+            box_grid[icell.x][icell.y] = box
+            set_map_sprite(map, icell, level.floor_sprite)
+
+// Search map for enemy cells, replace them with floors, and spawn enemy entities
+for mx < map.size.x:
+    for my < map.size.y:
+        const icell = xy(mx,my)
+        const ms = map[mx][my]
+        if ms == map_tiles_sprite.enemy:
+            const cell_pos = map_cell_to_pos(icell)
+            const enemy = make_enemy_entity(icell)
+            push(enemies, enemy)
+            set_map_sprite(map, icell, level.floor_sprite)
+
+// Create players and skunks
+for info in player_infos:
+    if info == ∅:
+        continue
+    const player_index = info.gamepad.index
+    // store a separate player object, for state that persists across lives
+    push(players, {
+        spawn_icell: player_start_icells[player_index],
+        gamepad: info.gamepad,
+        stats: {
+            destroy_count:0, // how many objects destroyed by this player's stinkbombs
+            charge_count:0, // how many times did this player start charging a stinkbomb
+            explode_count:0, // how many of this player's stinkbombs successfully exploded
+            perfect_explode_count:0, // how many times did this player explode a stinkbomb on the perfect frame?
+            stunned_enemy_count:0, // how many times did this player stun an enemy?
+            stunned_by_enemy_count:0, // how many times did this player get stunned by an enemy?
+            },
+        audio_latency_frames: AUDIO_LATENCY_FRAMES + info.latency_offset,
+        anims: {idle:info.idle_anim, walk:info.walk_anim},
+        skunk: nil,
+        })
+for player in players:
+    // spawn skunks
+    let skunk = make_skunk_entity(player)
+    push(active_skunks, skunk)
+    player.skunk = skunk
+
+if bgm_is_playing():
+    bgm_stop()
+let loops = [
+    SND_MUSIC_INGAME,
+    {sound:bgm_in_game_intro_sound, loop:true, volume:0%},
+    {sound:bgm_in_game_muted_sound, loop:true, volume:0%,},
+]
+bgm_start(loops)
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+bgm_update()
+
+// SIMULATE
+// Place active skunks in grid
+active_skunk_grid = make_array2d(map.size.x, map.size.y, ∅)
+iterate(active_skunks, itor_active_skunk_populate_grid)
+// Place enemies in grid
+enemy_grid = make_array2d(map.size.x, map.size.y, ∅)
+iterate(enemies, itor_enemy_populate_grid)
+// Process enemies
+iterate(enemies, itor_enemy_ai)
+iterate(enemies, itor_active_skunk_update_velocity) // not a copy/paste error
+iterate(enemies, itor_active_skunk_move) // not a copy/paste error
+iterate(enemies, itor_active_skunk_animate) // not a copy/paste error
+// Process active skunks
+iterate(active_skunks, itor_active_skunk_update_velocity)
+iterate(active_skunks, itor_active_skunk_move)
+iterate(active_skunks, itor_active_skunk_animate)
+// Process stinkbombs and explosions
+iterate(explosions, itor_explosion_fade)
+explosion_grid = make_array2d(map.size.x, map.size.y, ∅)
+iterate(explosions, itor_explosion_populate_grid)
+iterate(boxes, itor_box_break)
+iterate(boxes, itor_box_flash)
+iterate(breaking_boxes, itor_breaking_box_fade)
+iterate(stinkbombs, itor_stinkbomb_grow)
+iterate(active_skunks, itor_active_skunk_place_stinkbomb)
+// Handle stuns
+iterate(active_skunks, itor_active_skunk_apply_stun)
+iterate(active_skunks, itor_active_skunk_update_stun)
+iterate(enemies, itor_enemy_apply_stun)
+iterate(enemies, itor_active_skunk_update_stun) // not a copy/paste error
+// Check for level-ending conditions
+if size(boxes) == 0 or (DEBUG_CHEATS and joy.ee):
+    // all boxes destroyed; move to next level
+    add_frame_hook(fade_out, enter_interstitial_mode, 30, ∅, {})
+if bgm_now ≥ MAX_LEVEL_SECONDS or (DEBUG_CHEATS and joy.ff):
+    add_frame_hook(fade_out, enter_gameover_mode, 30, ∅, {})
+    
+// lighting
+let limit_visibility = LEVEL_INFOS[level_index].limit_visibility
+if DEBUG_CHEATS and joy.q:
+    limit_visibility = not limit_visibility
+let final_light_map = ∅
+if limit_visibility:
+    let d2_to_lights = make_array2d(lighting_map.size.x, lighting_map.size.y, ∞)
+    const LIGHT_RADIUS_CELLS = 8 // in half-width cells
+    final_light_map = deep_clone(lighting_map)
+    const light_sprites = final_light_map.spritesheet[0]
+    for skunk in active_skunks:
+        let sc = map_pos_to_cell(2*skunk.pos) // offset to half-size cells
+        let minx = max(0,sc.x-LIGHT_RADIUS_CELLS)
+        let miny = max(0,sc.y-LIGHT_RADIUS_CELLS)
+        let maxx = min(lighting_map.size.x-1, sc.x+LIGHT_RADIUS_CELLS)
+        let maxy = min(lighting_map.size.y-1, sc.y+LIGHT_RADIUS_CELLS)
+        for minx ≤ mx ≤ maxx:
+            for miny ≤ my ≤ maxy:
+                const mc = xy(mx,my)
+                const mp = xy(8,8)*mc
+                d2_to_lights[mx][my] = min(d2_to_lights[mx][my], magnitude_squared(skunk.pos - mp))
+                let darkness = smoothstep(0, (3*16)*(3*16), d2_to_lights[mx][my])
+                set_map_sprite(final_light_map, mc, light_sprites[round(15*darkness)])
+// DRAW
+preserving_transform:
+    set_transform(map_xform)
+    draw_map({map:map})
+    if limit_visibility:
+        draw_map({map:final_light_map, z:400})
+    // Offset by ½ a grid square so that we can use integer coordinates for the centers of grid tiles
+    compose_transform(0.5 BLOCK_SIZE)
+    iterate(active_skunks, draw_entity)
+    iterate(stinkbombs, draw_entity)
+    iterate(explosions, draw_entity)
+    iterate(boxes, draw_entity)
+    iterate(breaking_boxes, draw_entity)
+    iterate(enemies, draw_entity)
+draw_remaining_time()
+draw_timing_aid(xy(52,6))
+        
+if DEBUG_BGM_OVERLAY:
+    bgm_draw_debug()
+if DEBUG_BOMB_TIMING:
+    preserving_transform:
+        reset_transform()
+        let tp = xy(SCREEN_SIZE.x-2, 0)
+        const half_fpm = BGM_FRAMES_PER_MEASURE/2
+        const delta_f = if debug_last_bomb_release_f > half_fpm then (debug_last_bomb_release_f-BGM_FRAMES_PER_MEASURE) else debug_last_bomb_release_f
+        const tc = if abs(delta_f) ≤ INPUT_AUDIO_FRAME_TOLERANCE then #8f8 else #f88
+        draw_text({text:format_number(delta_f, " 0"), font:font,
+            pos:tp, x_align:"right", y_align:"top", color:tc})
+        tp.y += font.line_height
+        for i < size(players):
+            draw_text({text:format_number(players[i].audio_latency_frames, " 0"), font:font,
+                pos:tp, x_align:"right", y_align:"top", color:PLAYER_COLORS[i]})
+            tp.y += font.line_height
+        draw_text({text:format_number(INPUT_AUDIO_FRAME_TOLERANCE, " 0"), font:font,
+            pos:tp, x_align:"right", y_align:"top", color:#f})
+        tp.y += font.line_height
+
+leave
+────────────────────────────────────────────────────────────────────────
+reset_post_effects()
+remove_frame_hooks_by_mode(get_mode())
