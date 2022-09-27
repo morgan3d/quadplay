@@ -1,0 +1,273 @@
+/* For rendering the selected ship */
+const selection_vertex_array = []
+for i < 4:
+    const θ = 90° i - 45°
+    push(selection_vertex_array, 180% angle_to_xy(θ) * xy(100%, if i ≥ 2 then 100% else 76%))
+
+
+def ship_is_selected(ship):
+    return ship.player ≠ ∅
+    
+
+
+/* Called from ship_compute_forces() */
+def ship_compute_primary(ship, gamepad):
+    const primary = ship.primary
+    
+    // Torpedo
+    primary.available = (ship.energy ≥ primary.cost) and (ship.last_primary_frame + PRIMARY_COOLDOWN_FRAMES / TIME_SCALE ≤ mode_frames)
+    
+    // Do not allow to activate immediately on spawn; important
+    // because primary action button is the same button as launch
+    // on the carrier!
+    if ship.spawn_frame == mode_frames: return
+    
+    // Give the CPU the full powers of a selected ship
+    const is_selected = ship_is_selected(ship) or ship.team.name == "CPU"
+    
+    // Fire torpedo or EMP
+    if primary_pressed(gamepad)
+    & with pos, angle, energy, vel, spin, tractor in ship:
+        
+        if primary.available:
+            ship.last_primary_frame = mode_frames
+            energy -= primary.cost
+            if ship.is_drone:
+                push(emp_array, make_emp(ship.pos))
+            
+                // Destroy the drone, which prevents ramming.
+                // Do this at the end of the frame, so that we
+                // don't immediately trigger the next ship's primary.
+                def remove(): 
+                    explode_entity(ship)
+                    remove_values(entity_array, ship)
+                    
+                delay(remove)
+                
+                            
+            else:
+                play_sound({sound: torpedo_sound, pan: pos, volume: (if is_selected then 100% else BOT_VOLUME_FRACTION)})
+                const dir = angle_to_xy(ship.angle)
+                
+                const torpedo = spawn_torpedo(
+                    pos + (½ ship.size.x * ship.scale.x + 10 + 5 primary.scale) * dir, 
+        
+                    // Launch velocity
+                    TORPEDO_SPEED * (if is_selected then 100% else BOT_TORPEDO_SPEED_FRACTION) * dir + 
+                    
+                    // Relative to ship
+                    vel +
+                    
+                    // Relative to ship front spin (barely noticable)
+                    (½ ship.size.x + 10) * spin * angle_to_xy(90° + angle),
+    
+                    ship.team,
+                    
+                    primary)
+                
+                // Apply momentum transfer from ship
+                vel -= TORPEDO_MOMENTUM_TRANSFER * TORPEDO_SPEED * dir * entity_mass(torpedo) / entity_mass(ship)
+        else if is_selected:
+            play_sound({sound: no_energy_sound, volume: 400%, pan: pos})
+        
+
+
+/* Called from ship_compute_forces() */
+def ship_compute_secondary(ship, gamepad):
+    const secondary = ship.secondary
+    
+    secondary.available = not secondary.active and ship.energy ≥ secondary.cost
+
+    if secondary.active:
+        // Secondary already on
+        ship.energy -= secondary.cost * TIME_SCALE / (60 secondary.seconds)
+
+        set_pan(secondary.audio, ship.pos)
+        secondary.override_color = lerp(ship.color, #FFF, oscillate(0.1 mode_frames))
+
+        if get_audio_status(secondary.audio).now * TIME_SCALE ≥ secondary.seconds or ship.energy ≤ 0:
+            // Turn off
+            secondary.active = false
+            secondary.opacity = 0
+            stop_audio(secondary.audio)
+            
+    else if secondary_pressed(gamepad) or (ship.spawn_frame == mode_frames and not ship.is_drone):
+
+        // Activate
+        const is_selected = ship_is_selected(ship)
+        if secondary.available:
+            secondary.active = true
+            
+            if ship.tractor:
+                secondary.audio = play_sound({
+                    sound: tractor_sound, 
+                    loop: true, 
+                    pan: ship.pos})
+            else:
+                secondary.opacity = SHIELD_OPACITY
+                secondary.audio = play_sound({
+                    sound: shield_sound, 
+                    volume: 500% (if is_selected then 100% else BOT_VOLUME_FRACTION),
+                    playback_rate: 50%,
+                    loop: true,
+                    pan: ship.pos})
+                    
+        else if is_selected:
+            play_sound({sound: no_energy_sound, volume: 400%, pan: ship.pos})
+            
+    
+    
+/* Called from ship_compute_forces() */
+def ship_compute_thrust(ship, gamepad):
+    
+    const is_selected = ship_is_selected(ship)
+    const thrust = ship.thrust
+    thrust.available = not thrust.active and (ship.energy ≥ thrust.cost)
+        
+    if thrust.active
+    & with pos, angle, force, energy in ship:
+        // Thrust cost is paid the entire time the engine is on
+        energy -= thrust.cost * TIME_SCALE / (60 thrust.seconds)
+
+        force += thrust.force * angle_to_xy(angle) * (if is_selected then 100% else BOT_THRUST_FRACTION)
+        set_pan(thrust.audio, pos)
+        
+        // Visible jet flame
+        thrust.opacity = oscillate(⅓ mode_frames)
+        
+        // Use the audio timer to keep track of duration            
+        if get_audio_status(thrust.audio).now * TIME_SCALE ≥ thrust.seconds or energy ≤ 0:
+            thrust.active = false
+            thrust.opacity = 0
+            stop_audio(thrust.audio)
+            
+    else if thrust_pressed(gamepad) or ship.spawn_frame == mode_frames:
+        if thrust.available:
+            // Enable thrusters. Use the sound's built in timer to track how
+            // long the thruster has been on.
+            thrust.audio = play_sound({sound: thrust_sound, loop: true, volume: (if is_selected then 100% else BOT_VOLUME_FRACTION) * 200%, pan: ship.pos})
+            thrust.active = true
+        else if is_selected:
+            play_sound({sound: no_energy_sound, volume: 400%, pan: ship.pos})
+    
+
+
+def ship_compute_forces(ship):
+    let gamepad = null_controller
+    
+    const selected = ship_is_selected(ship)
+
+    if selected:
+        gamepad = ship.player.gamepad
+    else if UNPILOTED_SHIPS_ARE_BOTS and get_mode() == Play:
+        gamepad = ship.bot_gamepad
+
+        // Only run bot logic periodically to reduce computation
+        if (mode_frames mod BOT_AI_PERIOD == ship.bot_ai_phase and
+            // Don't let the bot do anything immediately after spawn    
+            ship.spawn_frame + BOT_SPAWN_COOLDOWN_FRAMES ≤ mode_frames):
+            update_bot(ship)
+
+    if gamepad.x:
+        ship.torque -= ship.turn_torque * gamepad.x * (if selected then 100% else BOT_TURN_FRACTION)
+    
+    ship_compute_primary(ship, gamepad)
+    ship_compute_secondary(ship, gamepad)
+    ship_compute_thrust(ship, gamepad)
+
+                
+
+/* Called for regular ships that are not carriers */
+def ship_simulate(ship, …args):
+    ship_update_sprite(ship)
+    if not (ship.thrust.active or ship.secondary.active) and ship.energy < 100%:
+        // Note that energy can be ABOVE 100%, but not recharged above 100%
+        ship.energy = min(100%, ship.energy + ship.recharge * TIME_SCALE * (if ship_is_selected(ship) then 100% else BOT_RECHARGE_FRACTION))
+    
+    if tractor_is_active(ship):
+        ship_compute_tractor_force(ship)
+    
+    ship.spin = MUL(ship.spin, pow(SUB(100%, ship.angular_drag), TIME_SCALE))
+    entity_simulate(ship, …args)
+    
+
+        
+
+def draw_available_indicator(entity, property, angle):
+    if entity[property].available:
+        // Optimized version of this logic below using intrinsics
+        // "const pos = entity.pos + (13 + ½ dot(|angle_to_xy(angle)|, entity.size * entity.scale)) * angle_to_xy(entity.angle + angle)"
+    
+        const pos = draw_available_indicator.temp
+        
+        XY_MUL_XY(entity.size, entity.scale, pos)
+        
+        XY_MAD_S_XY(
+            angle_to_xy(ADD(entity.angle, angle)),
+            MAD(XY_DOT_XY(|angle_to_xy(angle)|, pos), ½, 13),
+            entity.pos, 
+            pos)
+         
+        draw_rect(pos, AVAILABLE_INDICATOR_SIZE, 50% entity.color)
+        if ship_is_selected(entity):
+            draw_point(pos, SELECTED_INDICATOR_COLOR)
+
+
+// Avoid allocation by retaining this static temporary vector
+draw_available_indicator.temp = xy(0, 0)
+
+
+/* True if the tractor beam is on */
+def tractor_is_active(entity):
+    return entity.tractor and entity.tractor.active
+
+
+
+def ship_draw(entity):
+    draw_available_indicator(entity, "primary", 0°)
+    if entity.shield:
+        draw_available_indicator(entity, "shield", +125°)
+        draw_available_indicator(entity, "shield", -125°)
+    draw_available_indicator(entity, "thrust", 180°)
+    
+    draw_entity(entity)
+    
+    if DEBUG_SHOW_ENERGY:
+        draw_text({font: font, pos: entity.pos, color: #FF0, outline: #000, z: 100,
+            text: format_number(entity.energy, "0%")})
+    
+    // Drone tractor beam
+    if tractor_is_active(entity):
+        ship_draw_tractor(entity)
+        
+    if entity.health ≠ ∅:
+        const α = entity.health / entity.max_health
+        draw_rect(entity.pos, CARRIER_HEALTH_BAR_SIZE, 50% entity.color, ∅, entity.angle)
+        draw_rect(entity.pos - ½ angle_to_xy(entity.angle) * (100% - α) * CARRIER_HEALTH_BAR_SIZE.x, xy(α * CARRIER_HEALTH_BAR_SIZE.x, CARRIER_HEALTH_BAR_SIZE.y), 
+            entity.color, ∅, entity.angle)
+    
+    if ship_is_selected(entity):
+        draw_poly({
+            vertex_array: selection_vertex_array, 
+            pos: entity.pos, 
+            scale: entity.size * entity.scale * (if entity.simulate == carrier_simulate then xy(50%, 65%) else 100%), 
+            outline: 50% entity.color, 
+            angle: entity.angle, 
+            z: -1})
+
+
+/* Sets ship.sprite and ship.color based on current selection. Called every frame by every ship and by turrets. */
+def ship_update_sprite(ship):
+    
+    if ship_is_selected(ship):
+        assert(ship.player.is_human, "CPU cannot select ships")
+        assert(ship.team == ship.player.team)
+        ship.sprite = ship.spritesheet.selected[ship.player.selected_sprite_index]
+    else:
+        ship.sprite = ship.spritesheet.normal[ship.team.deselected_sprite_index]
+    
+    ship.color = (ship.player default ship.team).color
+    
+    if not ship.sprite:
+        debug_print(ship_is_selected(ship))
+    assert(ship.sprite)

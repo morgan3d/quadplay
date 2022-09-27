@@ -1,0 +1,32 @@
+{
+    "url": "ships.png",
+    "license": "Copyright 2022 Morgan McGuire. Licensed as CC BY 4.0",
+    "sprite_size": {
+        "x": 7,
+        "y": 7
+    },
+    "region": {
+        "corner": {
+            "x": 39,
+            "y": 123
+        },
+        "size": {
+            "x": 7,
+            "y": 21
+        }
+    },
+    "names": {
+        "fighter": {
+            "x": 0,
+            "y": 0
+        },
+        "bomber": {
+            "x": 0,
+            "y": 1
+        },
+        "tug": {
+            "x": 0,
+            "y": 2
+        }
+    }
+}

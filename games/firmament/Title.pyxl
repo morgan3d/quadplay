@@ -1,0 +1,110 @@
+Title
+════════════════════════════════════════════════════════════════════════
+// .teams = gamepad indices for each team
+const TITLE_OPTION_ARRAY = [
+    {name: "SOLO",   description: "1P vs. CPU",  gamepad_indices_by_team: [[0],    [∅]], time_scale: TIME_SCALE_COOP_SOLO, civilization_names: ["Federation", "Aurean Empire"]},
+    {name: "VERSUS", description: "1P vs. 1P",   gamepad_indices_by_team: [[0],    [1]], time_scale: TIME_SCALE_VERSUS,    civilization_names: ["Federation", "Cyan Hegemony"]},
+    {name: "CO∙OP",  description: "2P vs. CPU",  gamepad_indices_by_team: [[0, 1], [∅]], time_scale: TIME_SCALE_COOP_SOLO, civilization_names: ["Perse Collective", "Aurean Empire"]},
+    {name: "QUIT",   description: "Exit the game"}]
+
+let selected_index = load_local("title_selected_index") default 0
+
+const ship_array = []
+
+local:
+    // Use a fixed rng to produce the same sequence each time
+    const rng = make_random(20)
+    
+    for i < 40:
+       const d = (1 / (1 + 10 rng()))
+       const pos = xy(rng(), ½ + rng(-0.4, 0.4)) * SCREEN_SIZE
+       pos.x -= 1200 d⁴
+       
+       // Push foreground ships away from the title line
+       if d > 40% and |pos.y - ½ SCREEN_SIZE.y| < 25:
+           pos.y = ½ SCREEN_SIZE.y + random_sign(rng) * rng(30, 80)
+           
+       push(ship_array, {
+           pos:     pos, 
+           speed:   65% d² + 30% rng(), 
+           scale:   2 pow(d, 1.5),
+           sprite:  random_value(ship_silhouettes_sprite[0], rng), 
+           opacity: min(1.5 d, 100%)})
+       
+   
+enter
+────────────────────────────────────────────────────────────────────────
+set_transform(xy(0, SCREEN_SIZE.y), xy(1, -1), 0, 1)
+stop_audio(background_audio)
+background_audio = play_sound(theme_sound, true, 200%)
+reset_post_effects()
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_background(title_sprite)
+
+// Spawn and draw particles to warm up the JIT for the first
+// explosions in game
+spawn_particle(xy(0, ξ SCREEN_SIZE.y), xy(0.01, 0), #0001, -5, 100 SCREEN_SIZE.x)
+update_and_draw_particles()
+
+
+// Ships
+for pos, speed, scale, sprite, opacity in ship in ship_array:
+    pos.x += speed^1.8
+    
+    if pos.x > SCREEN_SIZE.x + 64 scale: 
+        pos = xy(-64 * (scale + 1 + 2 ξ), 224 ξ)
+       
+    draw_sprite(sprite, pos, 0, scale, opacity)
+    
+    
+// CasualEffects Presents
+for i < 2:
+    draw_text({
+        font: font, 
+        text: "CASUALEFFECTS PRESENTS", 
+        pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 8), 
+        color: if i == 0 then #0 else ∅,
+        x_align: "center", 
+        y_align: "top",
+        shadow: if i == 1 then #d else ∅,
+        outline: if i == 0 then #A8CA else ∅})
+
+// Menu text
+for name, description in option at j in TITLE_OPTION_ARRAY:
+    for i < 2:
+        // Draw white "shadow" upward
+        const args = {font: heading_font, color: #fff * i, y_align: "center", z: 5 - i, text_size: ⅓ mode_frames, outline: if selected_index == j then #FFF else (if i == 1 then #F6B8 else ∅)}
+        const pos = xy(½ SCREEN_SIZE.x, 8 + i + 60 - 14j)
+        draw_text({…args, text: name, pos: pos - xy(10, 0), x_align: "right", })
+        if selected_index == j:
+            draw_text({…args, text: "✜", pos: pos, x_align: "center", })
+            draw_text({…args, font: font, text: description, pos: pos + xy(10, -1), x_align: "left"})
+                
+// Cursor movement
+const old = selected_index
+for gamepad in gamepad_array:
+    selected_index = clamp(selected_index - gamepad.yy, 0, size(TITLE_OPTION_ARRAY) - 1)
+
+    // Movement sound
+    if gamepad.yy:
+        play_sound({sound: selection_sound, volume: 200%, playback_rate: 60%})
+    
+    // Accept
+    if mode_frames > 20 and gamepad.aa:
+        if selected_index == size(TITLE_OPTION_ARRAY) - 1:
+            quit_game() because "Selected quit"
+        else:
+            play_sound(launch_sound)
+            save_local("title_selected_index", selected_index)
+            set_mode(Instructions, TITLE_OPTION_ARRAY[selected_index])
+
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+remove_all(particle_array)
+
+   

@@ -1,0 +1,349 @@
+/* See also carrier_launch_ship()
+
+   template must supply a team and player
+*/
+def make_ship(template):
+    assert(template.team ≠ ∅, "A team is required")
+    assert(not template.player, "Do not set player at creation time")
+
+    const sprite = template.spritesheet.normal[template.team.deselected_sprite_index]
+    assert(sprite ≠ ∅)
+    
+    const ship = make_entity(
+        {
+            is_ship: true,
+            
+            // Let template override these properties
+            energy: 100%,
+            spawn_frame: mode_frames,
+            last_primary_frame: mode_frames,
+            
+            // Aliases
+            tractor: ∅,
+            shield: ∅,
+            
+            …template,
+            
+            // AI runs when mode_frames mod BOT_AI_PERIOD == ship.bot_ai_phase
+            bot_ai_phase: random_integer(0, BOT_AI_PERIOD - 1),
+
+            spritesheet: template.spritesheet,
+            
+            // Sprite and color may change every frame based on selection
+            player: ∅,
+            sprite: sprite,
+            color: template.team.color,
+            
+            // For debugging
+            text_color: template.team.dim_color,
+            
+            bot_gamepad: make_bot_gamepad(template.team.color),
+            
+            name: "P" + (template.team.name) + "_" + template.description,
+            primary: {…template.primary}
+        },
+        
+        // child_table
+        {
+            secondary: make_entity({
+                opacity: 0%,
+                …template.secondary,
+                
+                z_in_parent: -0.7,
+                density: 0,
+                pos_in_parent: xy(-1, 0),
+                scale_in_parent: sprite.size.x / 15,
+                sprite: if template.is_carrier or template.is_drone then ∅ else shield_sprite[0][0],
+                override_color: template.team.color}),
+            
+            thrust: make_entity({
+                …template.thrust,
+                
+                audio: play_sound({
+                    sound: thrust_sound, 
+                    volume: 200%,
+                    stopped: true}),
+                
+                density: 0,
+                opacity: 0%,
+                pos_in_parent: xy(-16, 0),
+                scale_in_parent: xy(-75%, 15%),
+                z_in_parent: -0.4,
+                override_color: #FF0})
+        })
+    
+    if ship.force_field:
+        // Clone to avoid aliasing
+        ship.force_field = {…ship.force_field}
+    
+    // Alias
+    if ship.secondary.name == "SHIELD":
+        ship.shield = ship.secondary
+
+    if ship.secondary.name == "TRACTOR":
+        ship.tractor = ship.secondary
+        
+    return ship
+        
+
+// All time constants are pre-scaling
+        
+const ship_template = {
+    // For debugging text
+    font: font,
+    text_offset: xy(0, 15),
+    
+    spritesheet: fighter_sprite,
+    
+    // Spawn with extra energy
+    energy: 160%,
+    
+    launch_speed: 1.5,
+    
+    thrust: {
+        name: "JET",
+        active: false,
+        available: true,
+        force: 7,
+        cost: 60%,
+        seconds: 1.2,
+        sprite: shapes.cone
+    },
+    
+    primary: {
+        name: "TORPEDO",
+        active: false,
+        available: true,
+        density: TORPEDO_DENSITY,
+        cost: 78%,
+        scale: 100%,
+        seconds: 0
+    },
+    
+    secondary: {
+        name: "SHIELD",
+        active: false,
+        available: true,
+        cost: 82%,
+        seconds: 2.1
+    },
+    
+    drag: 0.002,
+    turn_torque: 70,
+    angular_drag: 6%,
+    recharge: 1.9%,
+    
+    scale: 200%,
+    
+    shape: "rect",
+    size: xy(12, 8),
+
+    explode_sound: ship_explode_sound,
+    compute_forces: ship_compute_forces,
+    simulate: ship_simulate,
+    draw: ship_draw}
+    
+    
+
+const fighter_template = {
+    …ship_template,
+    
+    description: "FIGHTER",
+    
+    is_fighter: true,
+    
+    icon: icon_sprite.fighter,
+    small_icon: small_icon_sprite.fighter,
+    
+    density: 0.7,
+    turn_torque: 80,
+    
+    thrust: {
+        …ship_template.thrust,
+        
+        force: 12.5,
+        cost: 45%,
+        seconds: 0.55},
+    
+    secondary: {
+        …ship_template.secondary,
+        
+        cost: 45%,
+        seconds: 0.65}}
+
+    
+const bomber_template = {
+    …ship_template,
+    
+    is_bomber: true,
+    description: "BOMBER",
+    spritesheet: bomber_sprite,
+    size: xy(16, 13),
+
+    // Spawn with low energy to prevent spam
+    // of bombs
+    energy: 70%,
+    
+    launch_speed: 1.1,
+
+    icon: icon_sprite.bomber,
+    small_icon: small_icon_sprite.bomber,
+    
+    density: 1,
+    turn_torque: 115,
+    angular_drag: 1.0%,
+    
+    // Cheaper shield and thrust, slower
+    // recharge to make bomb firing relatively
+    // expensive
+    recharge: 24% ship_template.recharge,
+
+    primary: {
+        …ship_template.primary,
+        name: "BOMB",
+        override_color: BOMB_COLOR,
+        density: 150% TORPEDO_DENSITY,
+        scale: 225%,
+        cost: 87%,
+        seconds: 0
+    },
+    
+    // Shield
+    secondary: {
+        …ship_template.secondary,
+        seconds: 1.5,
+        cost: 16% ship_template.secondary.cost
+    },
+
+    thrust: {
+        …ship_template.thrust,
+        force: 22,
+        cost: 12% ship_template.thrust.cost,
+        seconds: 0.8}}
+    
+
+const drone_template = {
+    …ship_template,
+    
+    is_drone: true,
+    
+    energy: 120%,
+    
+    primary: {
+        name: "EMP",
+        active: false,
+        available: true,
+        cost: 100%,
+        seconds: 0
+    },
+        
+    thrust: {
+        …ship_template.thrust,
+        force: 180% ship_template.thrust.force,
+        seconds: 0.6,
+        cost: 37% ship_template.thrust.cost},
+    
+    secondary: {
+        name: "TRACTOR",
+        active: false,
+        available: true,
+        // Total cost, not cost per second
+        cost: 42%,
+        seconds: 1.5
+    },
+    
+    recharge: 1.2%,
+        
+    turn_torque: 73,
+    spritesheet: tug_sprite,
+    icon: icon_sprite.tug,
+    small_icon: small_icon_sprite.tug,
+    description: "DRONE"}
+    
+    
+const carrier_template = {
+    …ship_template,
+    
+    is_carrier: true,
+    last_primary_frame: -CARRIER_LAUNCH_COOLDOWN_FRAMES,
+    
+    thrust: {
+        name: "N/A",
+        active: false,
+        available: false,
+        force: 0,
+        cost: ∞,
+        seconds: 0
+    },
+    
+    primary: {
+        name: "LAUNCH",
+        active: false,
+        available: true,
+        cost: 40%,
+        seconds: 0
+    },
+
+    secondary: {
+        name: "SHIELD",
+        active: false,
+        available: false,
+        opacity: 0,
+        cost: ∞,
+        seconds: 0
+    },
+    
+    // Carrier has a force field instead of a shield
+    // because the mechanics work differently
+    force_field: {
+        // When active, appears and functions. 
+        // Degrades until strength hits 0% and then doesn't
+        // become active until strength hits 100% again
+        active: true,
+        
+        // Recharges when inactive
+        strength: 100%
+    },
+    
+    // Selection within the carrier's hangar
+    hangar_index: 0,
+    
+    energy: 100%,
+    recharge: 0.1%,
+    indestructible: true,
+    shield_bounces: true,
+    
+    spritesheet: carrier_sprite,
+    icon: carrier_icon_sprite.carrier,
+    small_icon: ∅,
+    shape: "rect",
+    size: xy(78, 26),
+    scale: 250%,
+    
+    health: CARRIER_MAX_HEALTH,
+    max_health: CARRIER_MAX_HEALTH,
+    
+    turn_torque: 0,
+    recharge_rate: 1%,
+    description: "CARRIER",
+    compute_forces: carrier_compute_forces,
+    simulate: carrier_simulate,
+    draw: carrier_draw}
+    
+
+/* Selection menu for carrier */    
+const hangar = [fighter_template, bomber_template, drone_template]
+
+
+/* Initial spawn squadron */
+const entourage_template = [{
+        template: fighter_template,
+        relative_pos: xy(80%, -195%)
+    },{
+        template: fighter_template,
+        relative_pos: xy(80%, 145%)
+    },{
+        template: bomber_template,
+        relative_pos: xy(-150%, 50%)
+    }]
+

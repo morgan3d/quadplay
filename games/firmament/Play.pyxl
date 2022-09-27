@@ -1,0 +1,115 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+let PROLOGUE
+
+// Default is for when launching directly when debugging
+// teams is the array of arrays of gamepad indices for team
+// 0 and team 1, where ∅ is the CPU player
+enter(options)
+────────────────────────────────────────────────────────────────────────
+options = options default {gamepad_indices_by_team: [[0], [1]], time_scale: TIME_SCALE_VERSUS, civilization_names: ["Roseate Federation", "Cyan Hegemony"]}
+
+set_transform(½ SCREEN_SIZE)
+set_post_effects({afterglow: #ccc})
+
+CARRIER_ORBIT_INITIAL_PHASE = random(25°, 55°) + 90°
+TIME_SCALE = options.time_scale     
+
+// Create universe
+sun = push(entity_array, make_sun())
+
+assert(size(options.gamepad_indices_by_team) == 2, "Must have two teams")
+
+for gamepad_index_array in options.gamepad_indices_by_team:
+    // Create team
+    const team = push(team_array, make_team(size(team_array), gamepad_index_array, options.civilization_names))
+    
+    // Create players on team
+    for gamepad_index in gamepad_index_array:
+        push(team.player_array, 
+            push(player_array, make_player(gamepad_index, team)))
+
+    // Create carrier for team
+    const carrier = spawn_carrier(team)
+    team.carrier = carrier
+            
+    // Needed to produce a good velocity on the first frame        
+    carrier.simulate(carrier, 1, ARENA_REGION, "loop")
+    
+    if team.player_array[0].is_human:
+        player_select_ship(team.player_array[0], carrier)
+    
+    // Spawn entourage of initial ships for carrier
+    const U = angle_to_xy(carrier.angle)
+    const V = perp(U)
+    
+    for support at i in entourage_template:
+        const pos = (carrier.pos + 
+                    support.relative_pos.x * carrier.size.x * carrier.scale.x * U +
+                    support.relative_pos.y * carrier.size.y * carrier.scale.y * V)
+        
+        const ship = push(entity_array, make_ship({
+            …support.template,
+            team: team,
+            
+            spawn_frame: mode_frames - 2,
+            angle: xy_to_angle(pos - carrier.pos),
+            vel: 40% carrier.vel * sign(dot(pos - carrier.pos, carrier.vel)),
+            pos: pos}))
+        
+        if size(team.player_array) > 1 and i == 0:
+            // Select the first entourage ship spawned for P2
+            player_select_ship(team.player_array[1], ship)
+
+        
+const civilization_table = {}
+for team at t in team_array:
+    civilization_table["T" + t] = team.civilization_markup
+PROLOGUE = replace(random_value(PROLOGUE_ARRAY), civilization_table)
+
+    
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+iterate(player_array, player_process_input)
+
+if mode_frames < 380:
+    const α = clamp(380% - mode_frames / 100, 0%, 100%)
+    draw_rect(xy(0, 0), SCREEN_SIZE, rgba(0, 0, 0, 65% α), ∅, ∅, 99)
+    draw_text(heading_font, PROLOGUE, xy(-45% SCREEN_SIZE.x, 0), rgba(1, 1, 1, α), #000, #000, "left", "center", 100, 90% SCREEN_SIZE.x, 75% mode_frames, true)
+else if DEBUG_GAME_OVER or DEBUG_EPILOGUE:
+    // Only run this after the intro, so that all state has been
+    // updated
+    team_array[1].carrier.health = 0
+
+
+preserving_transform:
+    // For ad hoc debug drawing inside logic, 
+    // set the default transform. Not needed
+    // for regular game
+    set_camera({zoom: SCREEN_SIZE.x / ARENA_REGION.size.x})
+    set_transform(½ SCREEN_SIZE, ∅, 0)
+
+    // Includes bot AI and triggering abilities
+    if mode_frames > 280:
+        iterate(entity_array, "compute_forces")
+    iterate(entity_array, "simulate", TIME_SCALE, ARENA_REGION, "loop")
+    iterate_pairs(entity_array, collision_callback)
+    iterate(emp_array, emp_simulate)
+
+entity_reorder_recent_spawns()
+iterate(player_array, draw_hud)
+draw_arena()
+
+// Detect end of game
+for team at t in team_array:
+    if team.carrier.health ≤ 0:
+        set_mode(CrashCarrier, team_array[1 - t], team)
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+remove_frame_hooks_by_mode(Play)
+            

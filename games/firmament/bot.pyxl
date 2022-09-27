@@ -1,0 +1,162 @@
+/* Like ray_intersect(ray, entity_array) with wrapping and ignoring */
+def trace_ray(ray, ignore_entity default ∅):
+    const origin = ray.pos
+    ray.pos = xy(0, 0)
+    ray.length = min(ray.length default ∞, 2 ‖ARENA_REGION.size‖)
+    
+    let hit = ∅
+    for -1 ≤ Δx ≤ +1:
+        for -1 ≤ Δy ≤ +1:
+            // Shift the ray
+            XY_MAD_XY_XY(xy(Δx, Δy), ARENA_REGION.size, origin, ray.pos)
+            for entity in entity_array:
+                if entity ≠ ignore_entity:
+                    hit = ray_intersect(ray, entity) default hit
+
+    // Restore original pos
+    ray.pos = origin
+    return hit
+    
+
+    
+def update_bot(ship):
+    const team = ship.team
+    const energy = ship.energy
+    const gamepad = ship.bot_gamepad
+    
+    // Persist turns
+    const control = {x: gamepad.x}
+
+    // Collision objects reused to reduce memory allocation    
+    const ray = {pos: ship.pos, dir: xy(0, 0), length: ∞}
+    const proxy = {shape: "disk", scale: xy(1, 1)}
+    
+    // Enemy ships
+    let nearest_ship = ∅
+    let nearest_ship_distance = ∞
+    let nearest_ship_wrap_pos = xy(0, 0)
+
+    if DEBUG_BOMBER_BOT:
+        if not ship.is_bomber or ship.team.index > 0: return 
+    
+    // Preallocate
+    const wrap_pos = xy(0, 0)
+        
+    for object in entity_array:
+        // Skip self
+        if object == ship: continue
+         
+        for -1 ≤ Δy ≤ +1:
+            for -1 ≤ Δx ≤ +1:
+                // Support looking at wraparound combinations
+                wrap_pos.x = Δx; wrap_pos.y = Δy
+                
+                XY_MAD_XY_XY(wrap_pos, ARENA_REGION.size, object.pos, wrap_pos)
+                const distance = XY_DISTANCE(ship.pos, wrap_pos)
+                
+                if (distance < 180 and
+                    // Use shields when close to collision
+                    ((ship.shield and not ship.shield.active) or 
+                     (ship.tractor and not ship.tractor.active and not object.is_carrier))):
+                    
+                    XY_SUB_XY(ship.vel, object.vel, ray.dir)
+                    const speed = XY_MAGNITUDE(ray.dir) * sign(XY_DOT_XY(ray.dir, object.pos - ship.pos))
+                    
+                    if speed > ε:
+                        ray.length = ∞
+                        proxy.pos = wrap_pos
+                        proxy.size = object.size * object.scale + ship.size * 1.5 ship.scale
+        
+                        if ray_intersect(ray, proxy):
+                            const frames_until_collision = (ray.length - ½ ship.size.x * ship.scale.x) / speed
+                            if frames_until_collision < 60:
+                                // Turn on shields or tractor
+                                control.c = 1
+                                
+                // Otherwise ignore everything that isn't a carrier for a drone
+                if ship.is_drone and not object.is_carrier: continue
+            
+                // Track closest enemy target
+                if (object.is_ship and
+                
+                    // Not my team
+                    object.team ≠ team and 
+                    
+                    // Not too far
+                    distance < nearest_ship_distance and 
+                    
+                    // Bombers and drones only track capital ships
+                    (not (ship.is_bomber or ship.is_drone) or object.is_carrier)):
+                    
+                    nearest_ship_wrap_pos.x = wrap_pos.x
+                    nearest_ship_wrap_pos.y = wrap_pos.y
+                    nearest_ship_distance = distance
+                    nearest_ship = object
+                    
+    // Do not use the tractor when close to the enemy carrier; save
+    // energy for the EMP
+    if ship.is_drone and nearest_ship and nearest_ship_distance < 500:
+        control.c = 0
+        
+        
+    if (ship.is_drone and nearest_ship and 
+        nearest_ship_distance < MUL(80%, EMP_MAX_RADIUS) and 
+        nearest_ship.force_field.active):
+
+        // EMP the capital ship
+        control.a = 1
+   
+    else if nearest_ship_distance < 700 or ((ship.is_bomber or ship.is_drone) and nearest_ship):
+        // Turn to lead the nearest ship
+        const lead = DIV(2000, nearest_ship_distance)
+        const Δθ = loop(xy_to_angle(nearest_ship_wrap_pos + nearest_ship.vel * lead - ship.pos - ship.vel * lead) - ship.angle, -180°, 180°)
+        
+        control.x = 0
+        if ABS(Δθ) > (if nearest_ship.is_carrier then 7° else 6°):
+            // Turn
+            control.x = -SIGN(Δθ)
+        
+        else if (not ship.is_drone and 
+            // Bombers prefer to wait for force fields to be down
+            (ship.is_bomber and 
+              (not nearest_ship.force_field.active or 
+              ξ < 1% BOT_AI_PERIOD * 500 / max(10, nearest_ship_distance)) or 
+
+             not ship.is_bomber and 
+              energy > min(120% ship.primary.cost, 89%) and 
+              (ξ < 0.7% BOT_AI_PERIOD or nearest_ship_distance < 100)) and 
+            
+            (nearest_ship_distance < 200 or
+             no_friendly_in_los(ship, nearest_ship_distance))):
+                
+            // Fire if facing and not too far and it won't completely deplete energy
+            control.a = 1
+        
+    else if ξ < 0.5% BOT_AI_PERIOD:
+        // Change turn randomly
+        control.x = random_integer(-1, +1)
+
+    // If not trying to use/saving for shields, consider random moves
+    if not control.c and nearest_ship_distance > 250:
+        // Fire
+        if not (ship.is_bomber or ship.is_drone) and ξ < 0.05% BOT_AI_PERIOD and no_friendly_in_los(ship):
+            control.a = 1
+        
+        // Thrust
+        if not control.a and ξ < 0.4% BOT_AI_PERIOD:
+            control.b = 1
+    
+    // Avoid the sun
+    if XY_DISTANCE(sun.pos, ship.pos) < 250 and ship.energy > 40%:
+        control.b = 1
+    
+    update_bot_gamepad(gamepad, control)
+    
+    
+
+/* True if there is no friendly ship that would be hit by firing */    
+def no_friendly_in_los(ship, range default 500):
+    const los_target = trace_ray({pos: ship.pos, dir: angle_to_xy(ship.angle), length: range}, ship)
+    return los_target == ∅ or los_target.team ≠ ship.team
+    
+

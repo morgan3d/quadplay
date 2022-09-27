@@ -1,0 +1,59 @@
+CrashCarrier
+════════════════════════════════════════════════════════════════════════
+
+let winning_team
+let losing_team
+
+enter(w, L)
+────────────────────────────────────────────────────────────────────────
+winning_team = w
+losing_team = L
+
+// Deselect all ships, since there is no control now
+for selection in player in player_array:
+    selection = ∅
+
+play_sound({sound: minor_explode_sound, playback_rate: 30%, volume: 200%})
+play_sound({sound: ship_explode_sound, playback_rate: 60%, volume: 400%})
+play_sound({sound: ship_explode_sound, playback_rate: 40%, volume: 150%})
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+// Keep ships flying during the animation, but do not allow
+// input, EMPs, spawns, etc.
+
+if mode_frames < CARRIER_CRASH_FRAMES + SUN_EXPLODE_FRAMES:
+    iterate(entity_array, "compute_forces")
+    iterate(entity_array, "simulate", TIME_SCALE, ARENA_REGION, "loop")
+draw_arena()
+
+// Explode carrier at sun
+if mode_frames > CARRIER_CRASH_FRAMES - 10
+& preserving_transform:
+    set_transform(½ SCREEN_SIZE, ∅, 10)
+    let m = mode_frames - (CARRIER_CRASH_FRAMES - 10)
+    
+    if m < SUN_EXPLODE_FRAMES:
+        // Fade in white
+        const τ = 65 m / SUN_EXPLODE_FRAMES
+        const α = τ / 65
+        
+        set_camera({zoom: SCREEN_SIZE.x / ARENA_REGION.size.x})
+        
+        draw_disk(sun.pos, 12 pow(τ, 1.3) + 60, #FFF)
+        set_post_effects({…get_post_effects(), color: rgba(1, 1, α, α)})
+    else:
+        m -= SUN_EXPLODE_FRAMES
+        
+        if m > 20:
+            set_mode(Epilogue, winning_team, losing_team)
+
+// Debugging            
+if DEBUG_EPILOGUE and mode_frames > 1:
+    set_mode(Epilogue, winning_team, losing_team)
+                
+leave
+────────────────────────────────────────────────────────────────────────
+set_post_effects({…get_post_effects(), color: #0000})
+

@@ -1,0 +1,34 @@
+const team_array = []
+
+def make_team(t, gamepad_index_array, civilization_names):
+    let color
+
+    let gamepad_index = gamepad_index_array[0]
+    let name = "P" + (gamepad_index + 1)
+    let deselected_sprite_index = gamepad_index
+        
+    if size(gamepad_index_array) == 2:
+        // Coop human team
+        color = COOP_PLAYER_COLOR
+        name = "COOP"
+        deselected_sprite_index = COOP_SPRITE_INDEX
+    else if gamepad_index == ∅:
+        // CPU team
+        color = CPU_PLAYER_COLOR
+        name = "CPU"
+        deselected_sprite_index = CPU_SPRITE_INDEX
+    else:
+        // Single human team
+        color = gamepad_array[gamepad_index].player_color * (if gamepad_index == 1 then 125% else 100%)    
+    
+    return {
+        index: t,
+        name: name,
+        // Used for prologue and epilogue
+        civilization_markup: "{color:" + unparse_hex_color(color, 0) + " " + civilization_names[t] + "}",
+        carrier: ∅,
+        color: color,
+        dim_color: 50% color,
+        deselected_sprite_index: deselected_sprite_index,
+        player_array: []}
+    

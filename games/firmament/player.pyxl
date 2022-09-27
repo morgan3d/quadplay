@@ -1,0 +1,230 @@
+const player_array = []
+
+/* Used for ships that are not under active control */
+const null_controller = make_bot_gamepad()
+
+/* Has the control for the primary action been pressed? */
+def primary_pressed(gamepad):
+    return gamepad.pressed_a
+
+
+
+/* Has the control for the secondary action been pressed? */
+def secondary_pressed(gamepad):
+    return gamepad.pressed_c or gamepad.pressed_e
+    
+    
+    
+/* Has the control for the thrust action been pressed? */
+def thrust_pressed(gamepad):
+    return gamepad.pressed_b
+    
+    
+    
+def color_string(color):
+    return "rgb(" + color.r + "," + color.g + "," + color.b + ")"
+
+
+
+const CONTROL_ARRAY = [
+    {
+        property: "primary",
+        button: "a"
+    },    
+    {
+        property: "thrust",
+        button: "b"
+    },    
+    {
+        property: "secondary",
+        button: "e"
+    }]
+
+
+
+def make_player(gamepad_index, team):
+    const is_human = gamepad_index ≠ ∅
+    assert((team.name == "CPU") ≠ is_human)
+    const gamepad = if is_human then gamepad_array[gamepad_index] else make_bot_gamepad(CPU_PLAYER_COLOR, "CPU")
+    
+    const color = gamepad.player_color * (if gamepad_index == 1 then 125% else 100%)
+    return {
+        gamepad: gamepad,
+        
+        team: team,
+        
+        // index in player_array
+        color: color,
+        dim_color: 50% color,
+        
+        is_human: is_human,
+        selected_sprite_index: if is_human then gamepad_index else 0,
+        selection: ∅}
+        
+        
+        
+def maybe_disable_text(text, disable):
+    if disable:
+        return "{<disable>" + text + "}"
+    else:
+        return text
+
+
+
+def draw_hud(player)
+& preserving_transform:
+    if not player.is_human: return
+
+    // Parts of this function have been optimized to reduce memory allocation
+    // and math operations, and so read more convoluted than the original version
+    
+    const gamepad = player.gamepad
+    const selection = player.selection
+    
+    const pos = -½ SCREEN_SIZE * xy(1, MAD(2, gamepad.index, -1)) + xy(32, 0)
+    const s = -sign(pos.y)
+    const color = 40% player.color
+    const dim_color = 30% player.dim_color
+
+    set_transform(½ SCREEN_SIZE + pos * xy(1, -1), xy(1, -1), HUD_Z)
+    
+    if selection:
+        assert(selection.icon, selection)
+            
+        // Name and icon
+        draw_sprite({
+            sprite: selection.icon,
+            pos: xy(16, MUL(8, s)),
+            override_color: color,
+            override_blend: "multiply"})
+            
+        draw_text({
+            font: font,
+            pos: xy(32, MUL(13, s)),
+            text: selection.description,
+            color: color,
+            outline: dim_color,
+            y_align: "center"})
+        
+        // Energy bar 
+        draw_corner_rect(xy(67, 13 s - 3), xy(ENERGY_BAR_WIDTH, 6), dim_color)
+        draw_corner_rect(xy(68, 13 s - 2), xy(ENERGY_BAR_WIDTH - 2, 4), ∅, color)
+        draw_corner_rect(xy(69, 13 s - 1), xy((ENERGY_BAR_WIDTH - 4) * clamp(selection.energy, 0%, 100%), 2), color)
+           
+    
+    const text_args = {
+        font: font,
+        color: color,
+        outline: dim_color,
+        y_align: "center",
+        markup: true}
+        
+    const prompts = {
+        …gamepad.prompt, 
+        "<disable>": "color:" + color_string(60% color)}
+    
+    let instructions = "(f)(d) SHIP  "
+    if gamepad.f:
+        instructions += "[^][<][v][>] SELECT"
+    else if selection:
+        
+        if not selection.is_carrier:
+            // Regular ships
+            instructions += "[<][>] TURN  "
+            
+            for button, property in control in CONTROL_ARRAY:
+                const action = selection[property]
+                instructions += maybe_disable_text("(" + button + ") " + action.name + "  ", not action.available)
+        else:
+            // Carrier UI
+            instructions += maybe_disable_text(" (a) LAUNCH:", selection.energy < 100%)
+            
+            // Selection arrows
+            text_args.pos = xy(145, MUL(5, s))
+            text_args.text = prompts["[<]"]
+            draw_text(text_args)
+            
+            text_args.pos.x = 298
+            text_args.text = prompts["[>]"]
+            draw_text(text_args)
+            
+            for index < size(hangar):
+                const option = hangar[index]
+                
+                text_args.pos.x = MAD(48, index, 160)
+                text_args.pos.y = MAD(5, s, 1)
+                
+                if index == selection.hangar_index:
+                    draw_rect(text_args.pos + xy(16, 0), xy(44, 9), dim_color, color)
+                
+                draw_sprite(option.small_icon, text_args.pos, ∅, ∅, ∅, ∅, color)
+
+                text_args.pos.x = ADD(text_args.pos.x, 8)
+                text_args.pos.y = SUB(text_args.pos.y, 1)
+                text_args.text = option.description
+                draw_text(text_args)
+            
+    // Generic instructions
+    text_args.pos = xy(32, MUL(5, s))
+    text_args.text = replace(instructions, prompts)
+    draw_text(text_args)
+            
+
+
+/* Called from player_process_input() */
+def player_select_next_ship(player):
+    // Start after the current selection
+    const index = (find(entity_array, player.selection) default -1) + 1
+    
+    for j < size(entity_array):
+        const ship = array_value(entity_array, j + index, "loop")
+        if ship.is_ship and ship.team == player.team and not ship_is_selected(ship):
+            player_select_ship(player, ship)
+            break
+
+
+
+/* Called from player_process_input() */
+def player_select_ship_in_direction(player, selection_pos, selection_dir):
+    let closest_distance = ∞
+    
+    // Go to the next ship in direction
+    for entity in entity_array:
+        if entity.is_ship and entity.team == player.team and not ship_is_selected(entity):
+            for -1 ≤ Δy ≤ +1:
+                for -1 ≤ Δx ≤ +1:
+                    const offset = entity.pos - selection_pos + xy(Δx, Δy) * ARENA_REGION.size
+                    const rate = dot(direction(offset), selection_dir)
+                    if rate > 0:
+                        const distance = magnitude(offset) / sqrt(rate)                           //entity.text = round(distance)
+                        if distance < closest_distance:
+                            closest_distance = distance
+                            player_select_ship(player, entity)
+
+
+
+def player_process_input(player)
+& with gamepad, selection in player:
+    if gamepad.dd or gamepad.qq:
+        play_sound({sound: selection_sound, playback_rate: 50%})
+        player_select_next_ship(player)
+                    
+    if gamepad.f and (gamepad.xx or gamepad.yy):
+        play_sound({sound: selection_sound, playback_rate: 50%})
+        const selection_pos = if selection then selection.pos else xy(0, 0)
+        player_select_ship_in_direction(player, selection_pos, direction(gamepad.xy))
+
+
+
+/* ship may be ∅ */
+def player_select_ship(player, ship):
+    assert(player.is_human, "CPU cannot select ships")
+    assert(not ship or (player.team == ship.team))
+    
+    // Deselect old
+    if player.selection: player.selection.player = ∅
+        
+    player.selection = ship
+    if ship: ship.player = player
+    
+    

@@ -1,0 +1,14 @@
+{
+    "url": "carrier_icon.png",
+    "license": "Copyright 2022 Morgan McGuire. Licensed as CC BY 4.0",
+    "sprite_size": {
+        "x": 30,
+        "y": 14
+    },
+    "names": {
+        "carrier": {
+            "x": 0,
+            "y": 0
+        }
+    }
+}

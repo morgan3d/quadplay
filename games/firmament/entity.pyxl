@@ -1,0 +1,226 @@
+/* All bodies that receive simulation and can collide. */
+const entity_array = []
+
+const entity_recent_spawn_array = []
+
+const scaled_indestructible_frames = SPAWN_INDESTRUCTIBLE_FRAMES / TIME_SCALE
+
+
+def collision_callback(A, B):
+    // Don't collide with parent or siblings
+    if A.parent == B or B.parent == A or (A.parent and A.parent == B.parent): return
+
+    if overlaps(A, B, false) and not DEBUG_NO_COLLISIONS:
+        const a_has_force_field = (
+            (A.force_field and A.force_field.active) or 
+            (A.parent and A.parent.force_field and A.parent.force_field.active))
+        
+        const b_has_force_field = (
+            (B.force_field and B.force_field.active) or 
+            (B.parent and B.parent.force_field and B.parent.force_field.active))
+
+        // If A or its parent has a force field, it may later
+        const a_indestructible = A.indestructible or ((A.spawn_frame default 0) > mode_frames - scaled_indestructible_frames)
+        const b_indestructible = B.indestructible or ((B.spawn_frame default 0) > mode_frames - scaled_indestructible_frames)
+
+        // Cases where there is no interaction, so we can short circuit the logic
+        if a_indestructible and b_indestructible and (A.is_sun or B.is_sun or A.is_wreckage or B.is_wreckage): return
+
+        const a_shield = (A.shield and A.shield.active) or a_has_force_field
+        const b_shield = (B.shield and B.shield.active) or b_has_force_field
+        
+        const a_bounce = a_shield or (a_indestructible and A.shield_bounces)
+        const b_bounce = b_shield or (b_indestructible and B.shield_bounces)
+        
+        const a_mass = entity_mass(A)
+        const b_mass = entity_mass(B)
+        
+        if a_bounce and b_bounce and XY_DOT_XY(B.vel - A.vel, B.pos - A.pos) < 0:
+            // Bounce if both shielded or indestructible and converging
+            play_sound({
+                sound: shield_bounce_sound,
+                playback_rate: 25%,
+                volume: 60%,
+                pan: ½ (A.pos + B.pos)})
+                
+            // Perfectly elastic collision, preserving momentum:
+            // https://www.khanacademy.org/science/physics/linear-momentum/elastic-and-inelastic-collisions/a/what-are-elastic-and-inelastic-collisions#:~:text=What%20is%20an%20inelastic%20collision,been%20transferred%20to%20something%20else.
+            
+            // Slightly decrease momentum to conserve energy
+            const inv_mass = 99% / (a_mass + b_mass)
+            const a_norm_vel = A.vel * inv_mass
+            const b_norm_vel = B.vel * inv_mass
+            
+            A.vel = (a_mass - b_mass) * a_norm_vel + 2 b_mass * b_norm_vel
+            B.vel = (b_mass - a_mass) * b_norm_vel + 2 a_mass * a_norm_vel
+
+        // Carrier with force field up, or child object of it
+        if a_has_force_field:
+            const force_field = A.force_field default A.parent.force_field        
+            // Take damage. Shield alone has total health equal to the maximum hull strength
+            force_field.strength = MAX(0, force_field.strength - (if B.team and B.team.name == "CPU" then CPU_DAMAGE_MULTIPLIER else 1) * b_mass / CARRIER_MAX_HEALTH)
+        else if b_has_force_field:
+            const force_field = B.force_field default B.parent.force_field        
+            // Take damage. Shield alone has total health equal to the maximum hull strength
+            force_field.strength = MAX(0, force_field.strength - (if A.team and A.team.name == "CPU" then CPU_DAMAGE_MULTIPLIER else 1) * a_mass / CARRIER_MAX_HEALTH)
+    
+        // Carriers or other objects with health instead of 1-hit kills
+        else if A.health ≠ ∅:
+            A.health = MAX(0, A.health - (if B.team and B.team.name == "CPU" then CPU_DAMAGE_MULTIPLIER else 1) * b_mass * (B.damage_multiplier default 1))
+
+        else if B.health ≠ ∅:
+            B.health = MAX(0, B.health - (if A.team and A.team.name == "CPU" then CPU_DAMAGE_MULTIPLIER else 1) * a_mass * (A.damage_multiplier default 1))
+        
+        return [
+            if not (a_shield or a_indestructible) then explode_entity(A) else iterate.CONTINUE, 
+            if not (b_shield or b_indestructible) then explode_entity(B) else iterate.CONTINUE]        
+
+
+
+/* Returns `iterate.REMOVE` 
+
+   Does not remove from entity_array. 
+   Fixes selection as needed. */
+def explode_entity(entity):
+    // Particles
+    const N = entity_area(entity) * (if entity.name == "asteroid" then 40% else (if entity.player then 75% else 120%))
+    
+    def spawn(color):
+        for i < N:
+            spawn_particle(
+                entity.pos + 35% entity.scale * entity.size * random_within_circle(),
+                entity.vel * TIME_SCALE + random(0.3, 1.4) * random_on_circle(),
+                color, 
+                PARTICLE_Z, 
+                random_integer(3, 13)² * (if entity.player then 200% else 80%))
+
+    const base_color = entity.override_color default #bbb
+    spawn(base_color)
+            
+    // Accent color particles for ships
+    if entity.player:
+        spawn(hsv(base_color) + hsv(10% (if base_color.r > 50% then -1 else +1), 15%, -15%))
+    
+    if ship_is_selected(entity):
+        // Find the carrier and select it
+        for ship in entity_array:
+            if ship.team == entity.team and ship.simulate == carrier_simulate:
+                if not ship.player:
+                    player_select_ship(entity.player, ship)
+                else:
+                    // Rare case of in COOP and the carrier is already selected by the other
+                    // player. Allow there to be no selection in this case
+                    player_select_ship(entity.player, ∅)
+                break
+    
+    if entity.is_ship or entity.is_bomb:
+        // This is a ship. Break up into wreckage
+        const num_wreckage_pieces = if entity.is_bomb then 6 else 3
+        for i < num_wreckage_pieces:
+            const dir = random_on_circle()
+
+            const color = if entity.is_bomb then #ddd else entity.color
+
+            spawn_wreckage(
+                entity.pos + ½ entity.scale * (entity.size + 5 num_wreckage_pieces) * dir,
+                entity.vel + random(0.5, 1.0) * WRECKAGE_SPEED * dir,
+                color,
+                70% sqrt(3 / num_wreckage_pieces))
+            
+                    
+        // Bombs also spawn mini torpedo heads
+        if entity.is_bomb:
+            const num_bomb_torpedoes = 5
+            const phase = 360° ξ 
+            for i < num_bomb_torpedoes:
+                const vel = 50% angle_to_xy(phase + 360° i / num_bomb_torpedoes)
+                spawn_torpedo(
+                    entity.pos + 4 direction(vel), 
+                    vel + 25% entity.vel,
+                    ∅,
+                    {scale: 100%, density: ½ TORPEDO_DENSITY}) 
+        else:       
+            stop_audio(entity.thrust.audio)
+            stop_audio(entity.secondary.audio)
+        
+    
+    // Don't play too many simultaneous explosion sounds; if something
+    // just spawned, don't play a sound for it. In practice, we make many
+    // indestructible on spawn so this won't matter
+    if entity.explode_sound and (not entity.spawn_frame or entity.spawn_frame < mode_frames - 2):
+        play_sound({sound: entity.explode_sound, pan: entity.pos, volume: 90%})
+    
+    if entity.parent:
+        // Remove guns from parent on destruction
+        entity_remove_child(entity.parent, entity)
+
+    return iterate.REMOVE
+
+
+
+def spawn_wreckage(pos, vel, color, scale):
+    // Intentionally no damage multiplier
+    push(entity_array, make_entity({
+        name: "wreckage",
+        is_wreckage: true,
+        pos: pos,
+        vel: vel,
+        drag: WRECKAGE_DRAG,
+        // Prevent these from immediately exploding again
+        spawn_frame: mode_frames - 10,
+        shape: "disk",
+        angle: 360° ξ,
+        spin: random_sign() * random(1°, 3°),
+        override_color: color,
+        density: TORPEDO_DENSITY,
+        sprite: shapes.fin,
+        draw: draw_entity,
+        simulate: entity_simulate,
+        explode_sound: torpedo_explode_sound,
+        scale: scale,
+        child_array: [
+            // White glowing core
+            make_entity({
+                density: 0,
+                override_color: lerp(color, #fff, 60%),
+                sprite: shapes.fin,
+                scale_in_parent: 50% xy(1, 1)
+            })]}))
+            
+            
+
+/* Creates a cluster of random sparks on this entity */
+def spawn_particle_cluster(entity, main_color default #0F0, accent_color default #FF0):
+    const pos = random_within_region(entity)
+    for particle < 12:
+        spawn_particle(pos, random_within_circle() * random(0.5, 0.8),
+            if ξ < 70% then main_color else accent_color, 
+            PARTICLE_Z, 
+            random_integer(4, 8)²)
+
+       
+            
+def spawn_spark_cluster(entity):
+    play_sound({sound: if ξ < 80% then sparks_sound1 else sparks_sound0, volume: random(150%, 250%), pitch: random(100%, 150%), pan: entity.pos})
+    spawn_particle_cluster(entity, #0F0, #FF0)
+
+
+
+/* Reorder just-spawned ships to be immediately behind their own carriers,
+   so that they can be immediately selected */
+def entity_reorder_recent_spawns():
+    if size(entity_recent_spawn_array) == 0: return
+
+    // Spawns are rare, so this loop seldom runs
+    for entity in entity_recent_spawn_array:
+        // Remove from current position, if still around
+        if remove_values(entity_array, entity):
+            
+            const carrier_index = find(entity_array, entity.team.carrier)
+            
+            // Insert the ship immediately after or before its carrier, so that it will be selected next when cycling    
+            insert(entity_array, carrier_index + (if AUTO_SELECT_LAUNCHED_SHIP then 0 else 1), entity)
+
+    remove_all(entity_recent_spawn_array)
+
+    

@@ -1,0 +1,58 @@
+const emp_array = []
+const EMP_BASE_RADIUS = 5
+const EMP_GROW_RATE = 4
+
+const EMP_TRIGGER_RADIUS = round(50% EMP_MAX_RADIUS - EMP_BASE_RADIUS, EMP_BASE_RADIUS) + EMP_BASE_RADIUS
+
+def make_emp(pos):
+    play_sound({sound: emp_sound, volume: 900%, pan: pos})
+    return {pos: xy(pos), radius: EMP_BASE_RADIUS}
+
+    
+    
+/* Simulate the EMP, including hitting ships */
+def emp_simulate(emp)
+& with pos, radius in emp:
+    
+    radius += EMP_GROW_RATE
+    
+    // Trigger
+    if radius == EMP_TRIGGER_RADIUS:
+        iterate(entity_array, emp_trigger, emp)
+
+    if radius > EMP_MAX_RADIUS:
+        return iterate.REMOVE
+
+
+/* Actually perform the EMP action against all other entities */
+def emp_trigger(entity, emp):
+    if not entity.is_ship: return
+
+    for -1 ≤ Δy ≤ +1:
+        for -1 ≤ Δx ≤ +1:
+            
+            const wrap_pos = entity.pos + ARENA_REGION.size * xy(Δx, Δy)
+            const distance = XY_DISTANCE(emp.pos, wrap_pos)
+            if distance < EMP_MAX_RADIUS:
+                
+                if entity.energy:
+                    // Will also kill shields and thrusters
+                    entity.energy = 0%
+                    
+                if entity.force_field:
+                    entity.force_field.active = false
+                    entity.force_field.strength = 0%
+    
+                // Spawn spark clusters, more on larger ships
+                const num_clusters = clamp(round(entity.size.y * entity.scale.y / 1.5), 8, 35)
+                for c < num_clusters:
+                    delay(spawn_spark_cluster, (c + ξ) * 440 / num_clusters, entity)
+
+                return
+
+
+
+def emp_draw(emp):
+    // Dither to avoid aliasing patterns
+    for i < 5:
+        draw_disk(emp.pos + 3 random_within_square(), emp.radius + random(-1, +1) - 2i, ∅, #0f0, 2)

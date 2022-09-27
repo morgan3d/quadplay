@@ -1,0 +1,94 @@
+const ARENA_REGION = {size: 400% SCREEN_SIZE}
+
+// Set by Play.enter
+let TIME_SCALE = TIME_SCALE_VERSUS
+
+// Set by Play.enter
+let sun
+
+let background_audio
+const BACKGROUND_MUSIC_ARRAY = [
+    {sound: theme_sound,        loop: true, volume: 200%},
+    {sound: background_music0,  loop: true, volume: 240%,   playback_rate: 50%},
+    {sound: background_music1,  loop: true, volume: 400%,   playback_rate: 50%}]
+
+
+def select_random_background_audio():
+    stop_audio(background_audio)
+    background_audio = play_sound(random_value(BACKGROUND_MUSIC_ARRAY))
+
+
+let starfield
+def select_random_starfield():
+    starfield = random_value([starfield_sprite0, starfield_sprite1, starfield_sprite2])
+    set_background(starfield)
+
+
+// Different random seed per game
+if not DEBUG_DETEMINISTIC:
+    set_random_seed()
+
+// If started from Play, force a random background
+select_random_starfield()
+
+
+def draw_arena()
+& preserving_transform:
+    
+    set_camera({zoom: SCREEN_SIZE.x / ARENA_REGION.size.x})
+
+    update_and_draw_particles()
+        
+    // Draw 9x for wraparound
+    preserving_transform:
+        for -1 ≤ Δy ≤ +1:
+            for -1 ≤ Δx ≤ +1:
+                set_transform(½ SCREEN_SIZE + SCREEN_SIZE * xy(Δx, Δy), ∅, 0)
+                iterate(emp_array, emp_draw)
+                iterate(entity_array, "draw")
+                                
+                
+def make_sun():
+    return make_entity({
+        name: "sun",
+        is_sun: true,
+        pos: xy(-240, 0),
+        indestructible: true,
+        shape: "disk",
+        sprite: shapes.disk,
+        scale: 200%,
+        density: SUN_DENSITY,
+        
+        compute_forces: sun_compute_forces,
+        draw: sun_draw,
+        simulate: ∅})
+    
+    
+
+def sun_draw(sun):
+    draw_sprite({pos: sun.pos, angle: MUL(0.01, mode_frames), z: 8, sprite: shapes.star8, scale: 225% sun.scale, override_color: SUN_FLARE_COLOR0})
+    draw_sprite({pos: sun.pos, angle: MUL(-0.007, mode_frames), z: 8, sprite: shapes.star8, scale: 200% sun.scale, override_color: SUN_FLARE_COLOR1})
+    draw_disk(sun.pos, MUL(75%, sun.size.x) * sun.scale.x + 5 ξ + 3 oscillate(0.03 mode_frames), SUN_CENTER_COLOR, SUN_CORONA_COLOR, 8)
+
+
+
+def sun_compute_forces(sun):
+    // Apply gravity to everything else
+    for entity in entity_array:
+        if entity ≠ sun:
+            entity.force += gravity_force(entity, sun)
+
+
+
+/* Computes the force on A from B */
+def gravity_force(A, B):
+    const v = B.pos - A.pos
+    let r = ‖v‖
+    
+    if r < ε:
+        return xy(0, 0)
+    else:
+        // Enforce minimum distance so that gravity does not get
+        // too strong near the surface and prevent escape
+        r = max(r, 90% A.size.x * A.scale.x, 90% B.size.x * B.scale.x)
+        return direction(v) * (entity_mass(A) * entity_mass(B) * GRAVITY / r²)

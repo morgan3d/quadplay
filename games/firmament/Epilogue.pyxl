@@ -1,0 +1,69 @@
+Epilogue
+════════════════════════════════════════════════════════════════════════
+let winning_team
+let losing_team
+
+let EPILOGUE
+
+
+enter(w, L)
+────────────────────────────────────────────────────────────────────────
+winning_team = w
+losing_team = L
+
+assert(winning_team and losing_team)
+
+EPILOGUE = replace(random_value(EPILOGUE_ARRAY), {
+    WINNER: winning_team.civilization_markup,
+    LOSER: losing_team.civilization_markup})
+
+// Remove everything except victor ships
+def remove_debris(entity):
+    if not (entity.team == winning_team or entity.is_sun): return iterate.REMOVE
+iterate(entity_array, remove_debris)
+remove_all(particle_array)
+
+set_transform(½ SCREEN_SIZE, ∅, 15)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+preserving_transform:
+    set_transform(∅, ∅, 0)
+    draw_arena()
+
+// Fade out to winner's team color
+const β = max(100% - mode_frames / SUN_EXPLODE_FRAMES, 0%)
+const α = max(β, 70%)
+draw_rect(xy(0, 0), SCREEN_SIZE, rgba(lerp(50% winning_team.dim_color, #FFF, β), α))
+
+const args = {
+    pos: xy(0, 50),
+    opacity: min(mode_frames / SUN_EXPLODE_FRAMES, 100%),
+    override_blend: "multiply"}
+
+local:
+    let team = winning_team
+    let sprite_name = "victory"
+    
+    if winning_team.name == "CPU":
+        team = losing_team
+        sprite_name = "defeat"
+        
+    draw_sprite({sprite: ASSETS[sprite_name + "_halo_sprite"], override_color: team.color, …args})
+    draw_sprite({sprite: ASSETS[sprite_name + "_sprite"], override_color: lerp(team.color, #FFF, 60%), …args})
+
+draw_text(heading_font, EPILOGUE, xy(-43% SCREEN_SIZE.x, 0), #FFF, #000, #000, "left", "top", 100, 87% SCREEN_SIZE.x, 75% mode_frames, true)
+
+
+if mode_frames > EPILOGUE_FRAMES or (mode_frames > 30 and any_button_press()):
+    set_mode(Title)
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+// Reset state for next game
+remove_all(entity_array)
+remove_all(player_array)
+remove_all(team_array)
+

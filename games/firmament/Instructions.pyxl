@@ -1,0 +1,34 @@
+Instructions
+════════════════════════════════════════════════════════════════════════
+
+// Passed through from Title to Play
+let options
+
+enter(_options)
+────────────────────────────────────────────────────────────────────────
+options = _options
+select_random_background_audio()
+select_random_starfield()
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+preserving_transform:
+    reset_transform()
+    
+    draw_text({
+        font: font,
+        text: replace(INSTRUCTIONS, gamepad_array[0].prompt),
+        markup: true,
+        color: #FFF,
+        shadow: #0006,
+        y_align: "top",
+        pos: xy(110, 10),
+        wrap_width: SCREEN_SIZE.x - 160})
+
+if any_button_press() and mode_frames > 20:
+    set_mode(Play, options)
+
+
+leave
+────────────────────────────────────────────────────────────────────────

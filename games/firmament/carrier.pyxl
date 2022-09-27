@@ -1,0 +1,343 @@
+/* Positions of the carrier shield grid sprites */            
+const carrier_force_field_array = []
+for -4 ≤ x ≤ 4:
+    for -2 ≤ y ≤ 2 - x mod 2:
+        const pos = 14 xy(80% (x - ¼), y + ½ (x mod 2))
+        if ‖pos / xy(100%, 60%)‖ < 55:
+            push(carrier_force_field_array, pos)
+
+
+// Set in Play.enter
+let CARRIER_ORBIT_INITIAL_PHASE
+
+def spawn_carrier(team):
+    const carrier = push(entity_array, make_ship({
+            …carrier_template,
+            team: team}))
+        
+    for turret_pos at i in TURRET_POS_ARRAY:
+        entity_add_child(carrier, push(entity_array, make_entity({
+            name: carrier.name + "_TURRET" + i,
+            player: ∅,
+            team: team,
+            is_turret: true,
+            spritesheet: turret_sprite,
+            sprite: turret_sprite.normal[team.deselected_sprite_index].rotated_270,
+            angle_in_parent: xy_to_angle(turret_pos),
+            last_fired_frame: -∞,
+
+            // AI runs when mode_frames mod BOT_AI_PERIOD == turret.bot_ai_phase
+            // The strange math here is to make it easier to debug turrets: team 2's 
+            // turret 0 runs on the first frame of the cycle.
+            bot_ai_phase: ((1 - team.index) * size(TURRET_POS_ARRAY) + i) mod BOT_AI_PERIOD,
+            
+            size: xy(18, 10),
+            pos_in_parent: turret_pos,
+    
+            // Will be drawn by the carrier, so no rendering callback
+            compute_forces: turret_compute_forces
+        })))
+    
+    return carrier
+
+
+
+def carrier_compute_forces(ship):
+    ship_update_sprite(ship)
+    const gamepad = if ship_is_selected(ship) then ship.player.gamepad else null_controller
+
+    const is_CPU = ship.team.name == "CPU"
+    let force_launch = false
+    
+    // Count the ships once every few seconds and launch if too low
+    if is_CPU and (mode_frames mod 180 == 0):
+        let my_ships = 0
+        for e < size(entity_array):
+            if entity_array[e].team == ship.team and entity_array[e].is_ship:
+                ++my_ships
+        force_launch = my_ships < 4 
+
+    ship.thrust.available = false
+    ship.secondary.available = false    
+    ship.primary.available = (ship.energy ≥ ship.primary.cost) and (mode_frames > CARRIER_LAUNCH_COOLDOWN_FRAMES + ship.last_primary_frame)
+    
+    if gamepad.pressed_a or force_launch or (is_CPU and ξ < CPU_SHIP_LAUNCH_PROBABILITY and mode_frames > 300):
+        if ship.primary.available:
+            if is_CPU:
+                if ξ < 30%:
+                    // Double the number of bombers
+                    ship.hangar_index = 1
+                else:
+                    ship.hangar_index = random_integer(0, size(hangar) - 1)
+            
+            ship.energy -= ship.primary.cost
+            ship.last_primary_frame = mode_frames
+            carrier_launch_ship(ship, hangar[ship.hangar_index])
+    
+        else if not is_CPU:
+            play_sound({sound: no_energy_sound, volume: 400%, pan: ship.pos})
+
+    
+    else if gamepad.xx:
+        play_sound(selection_sound)
+        ship.hangar_index = loop(ship.hangar_index + gamepad.xx, 0, size(hangar))
+    
+    if ship.health ≤ 0 and get_mode() == CrashCarrier and mode_frames == CARRIER_CRASH_FRAMES:
+        play_sound({sound: ship_explode_sound, volume: 200%, playback_rate: 50%})
+        return iterate.REMOVE
+
+
+
+def carrier_draw(ship):
+    ship_draw(ship)
+
+    // Draw the force field, minimizing allocation per node
+    if ship.force_field.active:
+        const args = {
+                sprite: shield_sprite[0][0],
+                angle: ship.angle,
+                scale: 168%,
+                override_color: ship.color,
+                z: -0.7}
+        const phase = ⌊0.08 mode_frames⌋ mod size(carrier_force_field_array)
+        
+        for pos at i in carrier_force_field_array:
+            args.pos = transform_es_to_ws(ship, pos)
+            args.opacity = SHIELD_OPACITY * if hash(i + phase) > ship.force_field.strength then 40% else 100%
+            draw_sprite(args)
+
+
+
+def turret_compute_forces(turret):
+    // Match parent selection and then set appearance
+    turret.player = turret.parent.player
+    ship_update_sprite(turret)
+    turret.sprite = turret.sprite.rotated_270
+
+    // To reduce computation, only run turret logic on alternating frames
+    if mode_frames mod BOT_AI_PERIOD ≠ turret.bot_ai_phase:
+        return
+    
+    // World-space axis
+    const axis = perp(angle_to_xy(turret.parent.angle)) * SIGN(turret.pos_in_parent.y)
+    
+    // Identify nearest enemy or approaching projectile on this side
+    let nearest_target_distance = CARRIER_MAX_TARGET_DISTANCE
+    let nearest_target_relative_pos
+    
+    // Preallocate outside of the loop
+    const offset = xy(0, 0)
+    const Δpos = xy(0, 0)
+    const neg_turret_pos = -turret.pos
+    
+    // Visualize target?
+    const debug = DEBUG_TURRET and turret.team.index == 1 and turret.bot_ai_phase == 0
+    if debug:
+        draw_line(turret.pos, turret.pos + 200 axis, turret.color)
+    
+    
+    for -1 ≤ Δx ≤ +1:
+        for -1 ≤ Δy ≤ +1:
+            // Optimization of: offset = xy(Δx, Δy) * ARENA_REGION.size - turret.pos
+            offset.x = Δx; offset.y = Δy
+            XY_MAD_XY_XY(offset, ARENA_REGION.size, neg_turret_pos, offset)
+            
+            for e < size(entity_array):
+                const entity = entity_array[e]
+                
+                // Don't target the carrier
+                if entity.is_carrier or entity.is_sun: continue
+            
+                XY_ADD_XY(entity.pos, offset, Δpos)
+                
+                const distance = XY_MAGNITUDE(Δpos)
+        
+                if debug:
+                    if (// On the correct side
+                    XY_DOT_XY(axis, Δpos) > 0 and
+                    
+                    // Is enemy
+                    ((entity.is_ship and entity.team ≠ turret.team) or
+                    
+                     // Is incoming projectile
+                     (not entity.is_ship and distance < 300 and XY_DOT_XY(entity.vel, Δpos) < 0))):
+                        draw_disk(Δpos + turret.pos, 30, ∅, #f00)
+                        // draw_line(turret.pos, Δpos + turret.pos, #ccc)
+                
+                if (// Nearer than other targets
+                    distance < nearest_target_distance and
+
+                    // On the correct side
+                    XY_DOT_XY(axis, Δpos) > 0 and
+                    
+                    // Is enemy
+                    ((entity.is_ship and entity.team ≠ turret.team) or
+                    
+                     // Is incoming projectile
+                     (not entity.is_ship and distance < 300 and XY_DOT_XY(entity.vel, Δpos) < 0))):
+
+                    nearest_target_distance = distance
+                    // Lead the target
+                    nearest_target_relative_pos = Δpos + entity.vel * DIV(distance, TORPEDO_SPEED)
+    
+    // Turn towards nearest target
+    turret.spin = 0°
+    if nearest_target_relative_pos:
+        if debug:
+            draw_line(turret.pos, turret.pos + nearest_target_relative_pos, #f00)
+        
+        const Δpos = nearest_target_relative_pos
+        const Δθ = loop(SUB(xy_to_angle(Δpos), turret.angle), -180°, 180°)
+        if ABS(Δθ) ≥ 0.5°:
+            turret.spin = SIGN(Δθ) * MIN(TURRET_MAX_SPIN, ABS(Δθ)) * TIME_SCALE
+        
+            // Clamp turret to 90° arc around center
+            const center = xy_to_angle(0, SIGN(turret.pos_in_parent.y))
+            turret.angle_in_parent = CLAMP(turret.angle_in_parent + turret.spin, center - ½ TURRET_ARC, center + ½ TURRET_ARC)
+
+        // If the enemy is in the firing cone
+        if ((MUL(SUB(mode_frames, turret.last_fired_frame), TIME_SCALE) > TURRET_COOLDOWN_FRAMES) and 
+            ABS(Δθ) < 9° and 
+            XY_MAGNITUDE(Δpos) < MUL(80%, CARRIER_MAX_TARGET_DISTANCE) and 
+            get_mode() == Play):
+                
+            const dir = angle_to_xy(turret.angle)
+            turret.last_fired_frame = mode_frames
+            // Have to clear the force field and the turret + pivot
+            spawn_torpedo(turret.pos + dir * 2.2 turret.size.x, 70% TORPEDO_SPEED * dir, turret.team, {…fighter_template.primary, override_color: #8A8 /* turret.team.color */})
+            
+
+
+/* Launch another ship from a carrier */
+def carrier_launch_ship(carrier, template)
+& with player, angle, team in carrier:
+    
+    const axis = if template.is_fighter then "y" else "x"
+    
+    def do_launch():
+        play_sound({sound: launch_sound, pan: carrier.pos})
+        
+        // Fighters launch two ships
+        const num_ships = if template.is_fighter then 2 else 1
+        for i < num_ships:
+            let dir = angle_to_xy(angle + (if template.is_fighter then (180° i - 90°) else 0))
+            
+            const ship = push(entity_array, push(entity_recent_spawn_array, make_ship({
+                …template,
+                team: team,
+                angle: angle,
+                vel: (2 carrier.vel + ⅔ dir) * template.launch_speed,
+                pos: carrier.pos + 60% carrier.size[axis] * carrier.scale[axis] * dir})))
+            
+            if AUTO_SELECT_LAUNCHED_SHIP and player and player.is_human:
+                player_select_ship(player, ship)
+
+    carrier.force_field.strength = min(carrier.force_field.strength, 65%)
+
+    // Drop force_field to launch
+    if carrier.force_field.active:
+        play_sound({sound: force_field_down_sound, pan: carrier.pos, playback_rate: 50%, volume: 200%})
+        carrier.force_field.active = false
+        // Delay the launch a few frames to separate from the force field drop sound
+        delay(do_launch, 15)
+    else:
+        do_launch()
+    
+    
+
+def carrier_simulate(entity, …args):
+    const is_crashing = entity.health ≤ 0
+    
+    const old_pos = entity.pos
+
+    // Explosions when damaged
+    if ξ⁶ > 20% + 1.2 entity.health / entity.max_health:
+        spawn_particle_cluster(entity, #CCC, #000)
+    
+    // Debris when crashing. Increase in density over time
+    if is_crashing:
+        // Explosions as crashing
+        if ξ < 4%:
+            const mag = random(40%, 90%)
+            const pos = random_within_region(entity)
+
+            play_sound({sound: minor_explode_sound, pan: pos, pitch: random(25%, 150%), volume: 2.5 mag² + 0.75})
+            if mag > 80%:
+                spawn_wreckage(pos, ½ random_on_circle() - ½ entity.vel, entity.color, mag²)
+            
+            for i < 100:
+                const k = ξ
+                spawn_particle(pos, random(0.5, 1.2) * random_on_circle() * mag, hsv(random(-0.1, 0.1) ξ + 0.2, 1 - k, 1), PARTICLE_Z, random(100, 200) * mag)
+    
+        // Disintegration particles
+        if ξ < (mode_frames / CARRIER_CRASH_FRAMES)²:
+            for i < 4:
+                spawn_particle(random_within_region(entity), -random(0.05, 0.2) * entity.vel + 0.1 random_on_circle(), lerp(#fff, entity.color, ξ), -1, random(120, 500))
+    
+    if entity.force_field.active:
+        if entity.force_field.strength ≤ 0% or entity.health ≤ 0:
+            // Shut off force_field
+            play_sound({sound: force_field_down_sound, pan: entity.pos, playback_rate: 60%, volume: 250%})
+            entity.force_field.active = false   
+    else:
+        if entity.health ≤ 0:
+            // Ship that is destroyed has no force field
+            entity.force_field.strength = 0
+        else:
+            // Recharge when not active
+            entity.force_field.strength = min(100%, entity.force_field.strength + CARRIER_FORCE_FIELD_RECHARGE_RATE * TIME_SCALE)
+            
+        // Turn on force field when recharged            
+        if entity.force_field.strength == 100%:
+            play_sound({sound: force_field_up_sound, pan: entity.pos, volume: 200%})
+            entity.force_field.active = true
+            // Shield max strength weakens with hull
+            entity.force_field.strength = max(entity.health / CARRIER_MAX_HEALTH, 25%)
+            
+    
+    entity.energy = min(entity.energy + entity.recharge, 100%)
+    entity.thrust.available = false
+    
+    // Need to use game_frames instead of mode_frames because the carrier animates
+    // during CarrierCrash and Epilogue as well
+    let θ = loop(CARRIER_ORBIT_INITIAL_PHASE + 180° entity.team.index + CARRIER_ORBIT_SPEED * game_frames * TIME_SCALE, -180°, 180°)
+
+    // Angle should change faster close to +/- 180° and slower close to 0° by
+    // Kepler's law. Hack an approximation with a remapping.
+    θ = 180° sign(θ) * pow(|θ| / 180°, 1.3)  
+
+    // Stretch the ellipse to match the screen aspect
+    entity.pos = angle_to_xy(θ) * 140% SCREEN_SIZE
+    
+    
+    if is_crashing:
+        // Lerp into the sun
+        entity.pos = lerp(entity.pos, sun.pos, 90% (mode_frames / CARRIER_CRASH_FRAMES)²)
+
+        // Major explosion on destruction
+        if mode_frames == 0:
+            for i < 10:
+                const dir = random_on_circle()
+                spawn_wreckage(transform_es_to_ws(entity, 20% dir * entity.scale * entity.size), dir * random(1.5, 3) + direction(entity.pos - sun.pos), entity.color, random(50%, 100%)²)
+                
+            for i < 1000:
+                const pos = random_within_region(entity)
+                const k = ξ
+                spawn_particle(pos, direction(pos - entity.pos) * (3 k⁶ + 0.2), hsv(random(-0.1, 0.1) ξ + 0.2, 1 - k, 1), PARTICLE_Z, random(60, 200))
+    
+    entity.vel = ((if mode_frames == 0 then
+        ½ angle_to_xy(θ + 90°) else 
+        entity.pos - old_pos)) / TIME_SCALE
+    
+    // Point along the actual velocity vector
+    if not is_crashing:   
+        entity.angle = xy_to_angle(entity.vel)
+    else:
+        // Slowly turn towards the sun
+        entity.angle += 0.05°        
+
+        
+    entity.torque = 0
+    entity.force = xy(0, 0)
+    entity_update_children(entity)
+    

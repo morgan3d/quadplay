@@ -1,0 +1,745 @@
+{
+    "title": "Black Firmament",
+    "developer": "@CasualEffects",
+    "copyright": "©2022 Morgan McGuire",
+    "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
+    "packages": [],
+    "scripts": [
+        "quad://scripts/particle.pyxl",
+        "space.pyxl",
+        "player.pyxl",
+        "entity.pyxl",
+        "torpedo.pyxl",
+        "ship.pyxl",
+        "carrier.pyxl",
+        "bot.pyxl",
+        "make_ship.pyxl",
+        "emp.pyxl",
+        "tractor.pyxl",
+        "team.pyxl"
+    ],
+    "modes": [
+        "Title",
+        "Instructions",
+        "Play",
+        "CrashCarrier",
+        "Epilogue"
+    ],
+    "start_mode": "Title",
+    "docs": [],
+    "assets": {
+        "shield_bounce_sound": "quad://sounds/jump-02.sound.json",
+        "torpedo_explode_sound": "quad://sounds/explode-02.sound.json",
+        "shield_sound": "quad://sounds/loop-spin.sound.json",
+        "ship_explode_sound": "quad://sounds/explode-12.sound.json",
+        "torpedo_sound": "quad://sounds/shoot-06.sound.json",
+        "shapes": "quad://sprites/shapes-32x32.sprite.json",
+        "font": "quad://fonts/nano-5.font.json",
+        "thrust_sound": "quad://sounds/shoot-12.sound.json",
+        "no_energy_sound": "quad://sounds/hit-08.sound.json",
+        "fighter_sprite": "fighter.sprite.json",
+        "bomber_sprite": "bomber.sprite.json",
+        "tug_sprite": "tug.sprite.json",
+        "icon_sprite": "icon.sprite.json",
+        "theme_sound": "quad://sounds/loop-dark-thriller.sound.json",
+        "background_music0": "quad://sounds/loop-someday_gone.sound.json",
+        "background_music1": "quad://sounds/loop-smooth_drops.sound.json",
+        "small_icon_sprite": "small_icon.sprite.json",
+        "carrier_sprite": "carrier.sprite.json",
+        "carrier_icon_sprite": "carrier_icon.sprite.json",
+        "turret_sprite": "turret.sprite.json",
+        "tractor_sound": "quad://sounds/engine-01.sound.json",
+        "title_sprite": "title.sprite.json",
+        "ship_silhouettes_sprite": "ship_silhouettes.sprite.json",
+        "launch_sound": "quad://sounds/explode-09.sound.json",
+        "heading_font": "quad://fonts/robot-9.font.json",
+        "shield_sprite": "shield.sprite.json",
+        "starfield_sprite0": "background0.sprite.json",
+        "starfield_sprite1": "background1.sprite.json",
+        "starfield_sprite2": "background2.sprite.json",
+        "force_field_down_sound": "quad://sounds/powerup-11.sound.json",
+        "force_field_up_sound": "quad://sounds/powerup-10.sound.json",
+        "emp_sound": "quad://sounds/wild-05.sound.json",
+        "sparks_sound0": "quad://sounds/sparks-03.sound.json",
+        "sparks_sound1": "quad://sounds/sparks-01.sound.json",
+        "selection_sound": "quad://sounds/blip-04.sound.json",
+        "minor_explode_sound": "quad://sounds/explode-08.sound.json",
+        "victory_sprite": "victory.sprite.json",
+        "victory_halo_sprite": "victory_halo.sprite.json",
+        "defeat_sprite": "defeat.sprite.json",
+        "defeat_halo_sprite": "defeat_halo.sprite.json"
+    },
+    "version": 1.0,
+    "min_players": 1,
+    "max_players": 2,
+    "cooperative": true,
+    "competitive": true,
+    "achievements": false,
+    "highscores": false,
+    "description": "Tiny epic orbital fleet battles. Sequel to Gravity.",
+    "constants": {
+        "TORPEDO_MOMENTUM_TRANSFER": {
+            "type": "number",
+            "value": "5%",
+            "min": 0,
+            "max": 1,
+            "format": "%",
+            "quantum": 0.01,
+            "description": "Fraction of momentum transferred to a torpedo. 100% would match the torpedo being a slug thrown from the ship. 0% would be a pure energy weapon."
+        },
+        "TORPEDO_DENSITY": {
+            "type": "number",
+            "value": "6.0",
+            "min": 0.1,
+            "max": 6,
+            "format": "0.0",
+            "quantum": 0.1
+        },
+        "TORPEDO_SPEED": {
+            "type": "number",
+            "value": "3.0",
+            "min": 0.1,
+            "max": 4,
+            "format": "0.0",
+            "quantum": 0.1
+        },
+        "TORPEDO_DRAG": {
+            "type": "number",
+            "value": "0.001",
+            "min": 0,
+            "max": 0.001,
+            "format": "",
+            "quantum": 0
+        },
+        "SHIELD_OPACITY": {
+            "type": "number",
+            "value": "60%",
+            "min": 0.1,
+            "max": 1,
+            "format": "%",
+            "quantum": 0.01
+        },
+        "HUD_Z": {
+            "type": "number",
+            "value": "-20",
+            "min": -1024,
+            "max": 1024,
+            "format": "",
+            "quantum": 1
+        },
+        "PROLOGUE_ARRAY": {
+            "type": "raw",
+            "value": [
+                "The final showdown with the T0 on the edge of T1 territory…",
+                "The T0 admiral on the bridgedeck unflinchingly stares down the fearsome T1 fleet…",
+                "The T1 fleet has trapped the T0 carrier between stargates, forcing direct conflict…",
+                "The T0 engages the T1 fleet around a dying star…",
+                "Starlight glints on the gundeck as the T0 carrier emerges from hyperspace and surprises the T1 fleet…",
+                "With their homeworld in the balance, the T0 makes their last stand in space against the T1…",
+                "The orbiting T0 carrier scrambles fighters as the T1 fleet dives into the system…",
+                "Are the T0 freedom fighters any match for the power of the T1?",
+                "The T0 drones jam T1 ansibles as they warp in and engage…",
+                "The T0 desperate plan requires all out assault on the T1 carrier before it can retaliate…"
+            ]
+        },
+        "EPILOGUE_ARRAY": {
+            "type": "raw",
+            "value": [
+                "Victorious WINNER officers solemnly salute their fallen enemy as the LOSER carrier crashes into the sun.",
+                "The LOSER suffers a crushing defeat to WINNER forces.",
+                "The WINNER triumphs over the LOSER in a decisive battle.",
+                "The WINNER celebrates a hard won victory as the straggling LOSER fighters retreat.",
+                "With the loss of their carrier to overwhelming WINNER forces, the tide of war turns against the LOSER.",
+                "A hard defeat for the LOSER as WINNER ships dominate the system."
+            ]
+        },
+        "SUN_DENSITY": {
+            "type": "number",
+            "value": "4.5",
+            "min": 0,
+            "max": 5,
+            "format": "",
+            "quantum": 0
+        },
+        "CARRIER_ORBIT_SPEED": {
+            "value": "0.0004",
+            "type": "number"
+        },
+        "GRAVITY": {
+            "type": "number",
+            "value": "0.019",
+            "min": 0,
+            "max": 0.02,
+            "format": "0.000",
+            "quantum": 0.001
+        },
+        "WRECKAGE_SPEED": {
+            "type": "number",
+            "value": "0.5",
+            "min": 0,
+            "max": 2,
+            "format": "",
+            "quantum": 0.1
+        },
+        "WRECKAGE_DRAG": {
+            "type": "number",
+            "value": "0.0005",
+            "min": 0,
+            "max": 0.01,
+            "format": "",
+            "quantum": 0.0001
+        },
+        "PARTICLE_Z": {
+            "type": "number",
+            "value": "1",
+            "min": -1024,
+            "max": 1024,
+            "format": "",
+            "quantum": 0
+        },
+        "SPAWN_INDESTRUCTIBLE_FRAMES": {
+            "type": "number",
+            "value": "6",
+            "min": 0,
+            "max": 10,
+            "format": "",
+            "quantum": 1
+        },
+        "ENERGY_BAR_WIDTH": {
+            "type": "number",
+            "value": "237",
+            "format": "",
+            "quantum": 1,
+            "min": 10,
+            "max": 300
+        },
+        "BOMB_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "93%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "40%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "15%"
+                }
+            }
+        },
+        "UNPILOTED_SHIPS_ARE_BOTS": {
+            "type": "boolean",
+            "value": true,
+            "description": "If true, a ship that is not under active control will use a bot gamepad and AI."
+        },
+        "EMP_MAX_RADIUS": {
+            "type": "number",
+            "value": "250",
+            "min": 0,
+            "max": 1000,
+            "format": "",
+            "quantum": 1
+        },
+        "BOT_TURN_FRACTION": {
+            "type": "number",
+            "value": "50%",
+            "description": "Bots can only turn at this fraction of a player's turn rate.",
+            "min": 0,
+            "max": 1,
+            "format": "%",
+            "quantum": 0.01
+        },
+        "BOT_THRUST_FRACTION": {
+            "type": "number",
+            "value": "35%",
+            "description": "Bots can only thrust at this fraction of a player's rate.",
+            "min": 0,
+            "max": 1,
+            "format": "%",
+            "quantum": 0.01
+        },
+        "TURRET_POS_ARRAY": {
+            "type": "array",
+            "value": [
+                {
+                    "type": "xy",
+                    "value": {
+                        "x": 18,
+                        "y": 10
+                    }
+                },
+                {
+                    "type": "xy",
+                    "value": {
+                        "x": 18,
+                        "y": -10
+                    }
+                },
+                {
+                    "type": "xy",
+                    "value": {
+                        "x": -30,
+                        "y": 14
+                    }
+                },
+                {
+                    "type": "xy",
+                    "value": {
+                        "x": -30,
+                        "y": -14
+                    }
+                }
+            ]
+        },
+        "CARRIER_MAX_TARGET_DISTANCE": {
+            "type": "number",
+            "value": "420",
+            "min": 10,
+            "max": 2000,
+            "format": "",
+            "quantum": 1
+        },
+        "DEBUG_NO_COLLISIONS": {
+            "type": "boolean",
+            "value": false,
+            "description": "Set to true to prevent destruction "
+        },
+        "TURRET_COOLDOWN_FRAMES": {
+            "type": "number",
+            "value": "90",
+            "min": 0,
+            "max": 600,
+            "format": "",
+            "quantum": 1
+        },
+        "BOT_RECHARGE_FRACTION": {
+            "type": "number",
+            "value": "72%",
+            "min": 0.1,
+            "max": 1,
+            "format": "%",
+            "quantum": 0.01
+        },
+        "BOT_TORPEDO_SPEED_FRACTION": {
+            "type": "number",
+            "value": "20%",
+            "min": 0.1,
+            "max": 1,
+            "format": "%",
+            "quantum": 0.01
+        },
+        "TRACTOR_STRENGTH": {
+            "type": "number",
+            "value": "70000",
+            "min": 0,
+            "max": 100000,
+            "format": "",
+            "quantum": 1
+        },
+        "TRACTOR_MIN_DISTANCE": {
+            "type": "number",
+            "value": "110",
+            "description": "Distance at which tractor beam shuts off",
+            "min": 0,
+            "max": 400,
+            "format": "",
+            "quantum": 1
+        },
+        "TRACTOR_MAX_DISTANCE": {
+            "type": "number",
+            "value": "400",
+            "min": 0,
+            "max": 2000,
+            "format": "",
+            "quantum": 1
+        },
+        "CARRIER_MAX_HEALTH": {
+            "type": "number",
+            "value": "120000",
+            "description": "Impacts cause damage proportional to their mass. Ship mass is 250-800",
+            "min": 1,
+            "max": 400000,
+            "format": "",
+            "quantum": 1
+        },
+        "DEBUG_SHOW_ENERGY": {
+            "type": "boolean",
+            "value": false
+        },
+        "DEBUG_BOMBER_BOT": {
+            "type": "boolean",
+            "value": false,
+            "description": "Set to true to run only the P1 bomber logic for bots"
+        },
+        "INSTRUCTIONS": {
+            "type": "string",
+            "value": "                   {color:#8df {font:heading_font THE MISSION}}\n\n{br}\n    {font:heading_font Destroy the Enemy Carrier!}\n{br}\n{br}\n\n\n                   {color:#8df {font:heading_font THE FLEET}}\n\n{color:#f5a {font:heading_font Carrier:}}\n{br}  (a) {color:#fac LAUNCH} ships (+ drop and recharge force field).\n{br}\n\n{color:#f5a {font:heading_font Fighter:}}\n{br}  (a) {color:#fac TORPEDO} enemy ships and carrier guns.\n{br}  (e) {color:#fac SHIELD} from damage.\n{br}\n\n{color:#f5a {font:heading_font Bomber:}}\n{br}  (a) {color:#fac BOMB} carriers for heavy hull damage.\n{br}  (e) {color:#fac SHIELD} from damage.\n{br}\n\n{color:#f5a {font:heading_font Drone:}}\n{br}  (a) {color:#fac EMP} to self-destruct and disable enemy ships.\n{br}  (e) {color:#fac TRACTOR} hazards away and into the enemy.\n{br}\n\n(b) {color:#fac JET} and [<][>] {color:#fac STEERING} thrusters. (d) or (f)+[<][>] {color:#fac CHANGE} ships. Controls for each player shown on HUD.\n\n"
+        },
+        "TURRET_ARC": {
+            "type": "number",
+            "value": "140°",
+            "description": "Total edge-to-edge arc angle that carrier turrets can span about the side of the ship",
+            "min": {
+                "type": "number",
+                "value": "0deg"
+            },
+            "max": {
+                "type": "number",
+                "value": "180deg"
+            },
+            "format": "deg",
+            "quantum": {
+                "type": "number",
+                "value": "1deg"
+            }
+        },
+        "BOT_VOLUME_FRACTION": {
+            "type": "number",
+            "value": "45%",
+            "description": "Relative volume of bot actions to player actions",
+            "min": 0,
+            "max": 2,
+            "format": "0%",
+            "quantum": {
+                "type": "number",
+                "value": "1%"
+            }
+        },
+        "CARRIER_FORCE_FIELD_RECHARGE_RATE": {
+            "type": "number",
+            "value": "0.15%",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "100%"
+            },
+            "format": "0.00%",
+            "quantum": {
+                "type": "number",
+                "value": "0.01%"
+            }
+        },
+        "AUTO_SELECT_LAUNCHED_SHIP": {
+            "type": "boolean",
+            "value": true
+        },
+        "BOT_SPAWN_COOLDOWN_FRAMES": {
+            "type": "number",
+            "value": "30",
+            "min": 0,
+            "max": 360,
+            "format": "",
+            "quantum": 1
+        },
+        "DEBUG_GAME_OVER": {
+            "type": "boolean",
+            "value": false,
+            "description": "Force Play mode to immediately go into CrashCarrier mode"
+        },
+        "CARRIER_CRASH_FRAMES": {
+            "type": "number",
+            "value": "1400",
+            "description": "How many frames it takes the carrier to crash (not affected by time scale)",
+            "min": 0,
+            "max": 6000,
+            "format": "0",
+            "quantum": 1
+        },
+        "SUN_EXPLODE_FRAMES": {
+            "type": "number",
+            "value": "80",
+            "description": "After CARRIER_CRASH_FRAMES",
+            "min": 0,
+            "max": 200,
+            "format": "0",
+            "quantum": 1
+        },
+        "EPILOGUE_FRAMES": {
+            "type": "number",
+            "value": "1100",
+            "min": 0,
+            "max": 2000,
+            "format": "0",
+            "quantum": 1
+        },
+        "DEBUG_EPILOGUE": {
+            "type": "boolean",
+            "value": false,
+            "description": "Force the game to immediately go into Epilogue mode"
+        },
+        "CARRIER_HEALTH_BAR_SIZE": {
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "110"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "16"
+                }
+            },
+            "nudge": {
+                "x": "+1",
+                "y": "+1"
+            }
+        },
+        "AVAILABLE_INDICATOR_SIZE": {
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "8"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "8"
+                }
+            },
+            "description": "The rectangle showing that powers are available",
+            "nudge": {
+                "x": "+1",
+                "y": "+1"
+            }
+        },
+        "SELECTED_INDICATOR_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "93%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "93%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "93%"
+                }
+            }
+        },
+        "SUN_CENTER_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "100%"
+                }
+            }
+        },
+        "SUN_CORONA_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "86%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "80%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "20%"
+                }
+            }
+        },
+        "SUN_FLARE_COLOR0": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "67%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "20%"
+                }
+            }
+        },
+        "SUN_FLARE_COLOR1": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "87%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "67%"
+                }
+            }
+        },
+        "CARRIER_LAUNCH_COOLDOWN_FRAMES": {
+            "type": "number",
+            "value": "60",
+            "description": "Not affected by time scaling",
+            "min": 0,
+            "max": 360,
+            "format": "0",
+            "quantum": 1
+        },
+        "DEBUG_DETEMINISTIC": {
+            "type": "boolean",
+            "value": false,
+            "description": "If true, do not select a unique random seed per game"
+        },
+        "PRIMARY_COOLDOWN_FRAMES": {
+            "type": "number",
+            "value": "10",
+            "description": "Applies to bots as well. Scaled by time. Carrier has its own CARRIER_LAUNCH_COOLDOWN_FRAMES/",
+            "min": 0,
+            "max": 60,
+            "format": "0",
+            "quantum": 1
+        },
+        "BOT_AI_PERIOD": {
+            "type": "number",
+            "value": "6",
+            "description": "Frames on which bot computation runs (not scaled with time)",
+            "min": 1,
+            "max": 10,
+            "format": "0",
+            "quantum": 1
+        },
+        "DEBUG_TURRET": {
+            "type": "boolean",
+            "value": false,
+            "description": "Debug turrets on player 2's carrier"
+        },
+        "TURRET_MAX_SPIN": {
+            "type": "number",
+            "value": "1.2°",
+            "min": 0,
+            "max": 0.1,
+            "format": "0.0deg",
+            "quantum": {
+                "type": "number",
+                "value": "0.1deg"
+            }
+        },
+        "TRACTOR_REPULSIVE_FORCE": {
+            "type": "number",
+            "value": "110",
+            "min": 0,
+            "max": 200,
+            "format": "0",
+            "quantum": 1
+        },
+        "CPU_PLAYER_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "93%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "72%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "38%"
+                }
+            }
+        },
+        "CPU_SPRITE_INDEX": {
+            "type": "number",
+            "value": "3",
+            "description": "Index in spritesheets of the CPU player's ships",
+            "format": "0",
+            "quantum": 1
+        },
+        "COOP_SPRITE_INDEX": {
+            "type": "number",
+            "value": "2",
+            "description": "Index in spritesheets of the human coop team's ships",
+            "format": "0",
+            "quantum": 1
+        },
+        "COOP_PLAYER_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "80%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "66%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "100%"
+                }
+            },
+            "description": "Color used for unselected ships in COOP mode"
+        },
+        "CPU_SHIP_LAUNCH_PROBABILITY": {
+            "type": "number",
+            "value": "0.10%",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "1%"
+            },
+            "format": "0.00%",
+            "quantum": 0.0001
+        },
+        "TIME_SCALE_VERSUS": {
+            "type": "number",
+            "value": "0.29",
+            "description": "Global multiplier on time",
+            "min": 0.1,
+            "max": 2,
+            "format": "#.##",
+            "quantum": 0.01
+        },
+        "TIME_SCALE_COOP_SOLO": {
+            "type": "number",
+            "value": "39%",
+            "description": "Used for COOP and SOLO modes",
+            "min": {
+                "type": "number",
+                "value": "1%"
+            },
+            "max": {
+                "type": "number",
+                "value": "100%"
+            },
+            "format": "%",
+            "quantum": 0.01
+        },
+        "CPU_DAMAGE_MULTIPLIER": {
+            "type": "number",
+            "value": "2.8",
+            "description": "Cheat extra damage multiplier that is applied to the CPU to help it",
+            "min": 0.5,
+            "max": 3,
+            "format": "0.0",
+            "quantum": 0.1
+        }
+    },
+    "screenshot_tag": "firmament",
+    "y_up": true
+}

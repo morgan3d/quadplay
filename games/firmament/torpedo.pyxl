@@ -1,0 +1,33 @@
+/* Bombs are also torpedoes */
+def spawn_torpedo(pos, vel, team, template):
+    
+    // Intentionally no spawn_frame; don't want invincible torpedoes on spawn
+    const is_bomb = template.scale > 100%
+    return push(entity_array, make_entity({
+        name: "weapon",
+        pos: pos,
+        
+        // Track the team for bombs so that fighter bots know
+        // to only shoot down the enemy's bombs
+        team: if is_bomb then team else ∅,
+        
+        is_bomb: is_bomb,
+        vel: vel,
+        drag: TORPEDO_DRAG,
+        spin: if is_bomb then 4° else 0°,
+        density: template.density,
+        // Torpedoes cause more damage than just their mass. 
+        damage_multiplier: 3,
+        sprite: if is_bomb then shapes.clover else shapes.disk,
+        override_color: template.override_color,
+        explode_sound: torpedo_explode_sound,
+        scale: 30% template.scale,
+        simulate: if is_bomb then bomb_simulate else entity_simulate,
+        draw: draw_entity}))
+
+
+
+def bomb_simulate(bomb, …args):
+    bomb.override_color = lerp(BOMB_COLOR, #FFF, oscillate(3% mode_frames))
+    entity_simulate(bomb, …args)
+    

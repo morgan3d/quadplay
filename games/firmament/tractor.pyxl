@@ -1,0 +1,128 @@
+
+/* Where the tractor beam draws towards */
+def tractor_attractor_pos(ship):
+    return ship.pos - angle_to_xy(ship.angle) * (60 + ship.scale.x * ship.size.x)
+
+
+def ship_compute_tractor_force(ship)
+& preserving_transform:
+    
+    // Render while generating forces
+    set_camera({zoom: SCREEN_SIZE.x / ARENA_REGION.size.x})
+    set_transform(½ SCREEN_SIZE)
+    
+    const color = rgba(10%, 80%, 0%, 100%)
+        
+    const pos = xy(0, 0)
+    
+    // Temp vector to the target from the attractor
+    const delta = xy(0, 0)
+    
+    // Normalized min delta
+    const min_dir = xy(0, 0)
+    const wrap_target_pos = xy(0, 0)
+    const A = xy(0, 0)
+    const B = xy(0, 0)
+
+    // Attract to a point behind the ship, not the ship itself    
+    const attractor_pos = tractor_attractor_pos(ship)
+    
+    // Local coordinate system
+    const U = angle_to_xy(ship.angle)
+    const V = perp(U)
+
+    // Visualize the attractor location:    
+    // draw_disk(attractor_pos, 10, #F00)
+    
+    for entity in entity_array:
+        // Exclude this ship and things that don't feel forces
+        if entity == ship or entity.parent or entity.is_carrier or entity.is_sun: continue
+    
+        let min_dist = ∞
+        for -1 ≤ Δy ≤ +1:
+            pos.y = MAD(ARENA_REGION.size.y, Δy, entity.pos.y)
+            for -1 ≤ Δx ≤ +1:
+                pos.x = MAD(ARENA_REGION.size.x, Δx, entity.pos.x)
+                
+                // Find the shortest wrap direction to apply force in
+                XY_SUB_XY(pos, attractor_pos, delta)
+                const dist = XY_MAGNITUDE(delta)
+                if dist < min_dist:
+                    min_dist = dist
+                    wrap_target_pos.x = pos.x; wrap_target_pos.y = pos.y
+                    XY_DIV(delta, dist, min_dir)
+    
+
+        // Don't affect or draw
+        if min_dist > TRACTOR_MAX_DISTANCE: continue
+            
+        // If the target is in front of the ship and close, force it off to the side
+        const rel_pos = wrap_target_pos - ship.pos
+        const in_front = XY_DOT_XY(U, rel_pos)
+        if in_front > 0 and XY_MAGNITUDE(rel_pos) ≤ TRACTOR_MIN_DISTANCE:
+            // Push off to whichever side it is on
+            entity.force += TRACTOR_REPULSIVE_FORCE * sign(XY_DOT_XY(V, rel_pos)) * DIV(in_front, MAX(20, XY_MAGNITUDE(rel_pos))) * V 
+            
+            // Visualization
+            // draw_line(entity.pos, entity.pos + 100 sign(XY_DOT_XY(V, rel_pos)) * V, #F00)
+            // draw_disk(entity.pos, 20, ∅, #f00)
+        
+        const k = DIV(TRACTOR_STRENGTH, min_dist²)
+        
+        
+        // Stop attracting after this distance so that the acceleration
+        // is reasonable
+        if min_dist ≥ TRACTOR_MIN_DISTANCE:
+            entity.force -= MUL(40, k) * min_dir
+
+    
+        color.a = MUL(40%, k)
+    
+        // Draw the lines to the ship, not the attractor point
+        XY_MAD_S_XY(random_on_circle(), ½ entity.size.x * entity.scale.x, wrap_target_pos, wrap_target_pos)
+
+        // Only need to draw 2x, not 9x--we know the direction and can draw
+        // from the ship and from the entity
+        draw_line(ship.pos, wrap_target_pos, color)
+        
+        // Optimization of: wrap_target_pos = entity.pos + ship.pos - wrap_target_pos
+        XY_MAD_S_XY(wrap_target_pos, -1, ship.pos, wrap_target_pos)
+        XY_ADD_XY(wrap_target_pos, entity.pos, wrap_target_pos)
+        draw_line(entity.pos, wrap_target_pos, color)
+        
+    
+         
+def ship_draw_tractor(ship):
+    const τ = get_audio_status(ship.tractor.audio).now
+    
+    const NUM_POINTS = 100
+    const SPEED = -35%
+    const k = 360° / NUM_POINTS
+    
+    // Brightness fades in
+    const β = min(100%, 4 τ)
+
+    // Preallocate    
+    const pos = xy(ship.pos)
+    const color = #0B0F
+    
+    const offset = xy(0, 0)
+    
+    const attractor_pos = tractor_attractor_pos(ship)
+
+    // Draw points being sucked in to the ship
+    for i < NUM_POINTS:
+        // Phase of this point
+        const ϕ = hash(i)
+        // Relative distance of this point from center
+        const α = loop(MAD(τ, SPEED, ϕ))
+
+        // Angle of this point around the ship
+        const θ = MUL(i, k)
+        offset.x = cos θ
+        offset.y = sin θ
+        
+        XY_MAD_S_XY(offset, MUL(200, α), attractor_pos, pos)
+        color.a = MUL(SUB(100%, α), β)
+        draw_point(pos, color)
+    
