@@ -405,6 +405,22 @@ inspired by SPACEWAR!
 - Emergent behavior
 
 ----------------------------
+  <center><img src="../games/firmament/title.png" width=200px style="border:0"></center>
+
+<div class="preview pixel" style="background-image:url('../games/firmament/preview.png')"></div>
+[Black Firmament](../console/quadplay.html?game=quad://games/firmament&IDE=1) is a 1-2 player game
+extending Gravity with full fleets.
+
+- AI players
+- Multiple modes
+- Title menu
+- Complex control schemes
+- Unit selection
+- Post-Effects afterglow
+- Significant physics simulation
+- Emergent behavior
+
+----------------------------
   <center><img src="../games/beat_the_gobblins/label128.png" width=128px style="border:0"></center>
 
 <div class="preview pixel" style="background-image:url('../games/beat_the_gobblins/preview.png')"></div>
@@ -4327,6 +4343,9 @@ def hsv_to_hsl(src):
 `rgba(sprite)`
 : Returns the rgb value of the center pixel of the sprite.
 
+`unparse_hex_color(c)`
+: Returns a color string of the form `#rrggbb` or `#rrggbbaa` from any color input.
+
 
 Colors can also be constructed using the syntax of HTML hexadecimal colors (which are also
 shown in Photoshop and other drawing programs) using the syntax:
@@ -5850,6 +5869,9 @@ and other operations that naturally compile with maximum efficiency.
 
 `XYZ_SUB_XYZ(srcxyz1, srcxyz2, dstxyz)`
 : Element subtraction.
+
+`XYZ_MAD_S_XYZ(srcxyz1, s2, srcxyz3, dstxyz)`
+: Fused multiply-add with a scalar.
 
 `XYZ_MUL_XYZ(srcxyz1, srcxyz2, dstxyz)`
 : Element multiplication.

@@ -85,7 +85,8 @@ function removeAllCodeEditorSessions() {
 
 
 /* Update all sessions from fileContents after load, and destroy any
-   that no longer are needed. */
+   that no longer are needed. 
+*/
 function updateAllCodeEditorSessions() {
     codeEditorSessionMap.forEach(function (session, url) {
         const newText = fileContents[url];
@@ -599,11 +600,15 @@ function createCodeEditorSession(url, bodyText, assetName) {
                                 }, true);
                                 
                             } else if (url.endsWith('.game.json')) {
+                                const RELOAD_FAST = true;
+                                // Avoid cursor jumps
+                                const NO_UPDATE_EDITORS = true;
+                                
                                 // Reload the game
                                 loadGameIntoIDE(window.gameURL, function () {
                                     // Update the IDE view
                                     visualizeGame(document.getElementById('gameEditor'), url, gameSource.json)
-                                }, true);
+                                }, RELOAD_FAST, NO_UPDATE_EDITORS);
                             }
                         }
                         

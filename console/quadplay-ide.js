@@ -2,7 +2,7 @@
 "use strict";
 
 // Set to false when working on quadplay itself
-const deployed = false;
+const deployed = true;
 
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
@@ -2483,9 +2483,9 @@ function visualizeGame(gameEditor, url, game) {
     }
     s += `<tr valign="top"><td></td><td colspan=3><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.y_up ? 'checked' : ''} onchange="onProjectYUpChange(this)">Y-Axis = Up</label></td></tr>\n`;
 
-    s+= '<tr><td>&nbsp;</td></tr>\n';
+    s += '<tr><td>&nbsp;</td></tr>\n';
     s += `<tr valign="top"><td>Controls</td><td colspan=4><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.dual_dpad ? 'checked' : ''} onchange="onProjectDualDPadChange(this)">Dual D-Pad</label></td></tr>\n`;
-    s+= '<tr><td>&nbsp;</td></tr>\n';
+    s += '<tr><td>&nbsp;</td></tr>\n';
     
     s += `<tr valign="top"><td>Description<br><span id="projectDescriptionLength">(${(game.description || '').length}/100 chars)</span> </td><td colspan=3><textarea ${disabled} style="width:384px; padding: 3px; margin-bottom:-3px; font-family: Helvetica, Arial; font-size:12px" rows=2 id="projectDescription" onchange="onProjectMetadataChanged(this)" oninput="document.getElementById('projectDescriptionLength').innerHTML = '(' + this.value.length + '/100 chars)'">${game.description || ''}</textarea>`;
     s += '<tr valign="top"><td>Features</td><td colspan=3>';
@@ -2497,7 +2497,6 @@ function visualizeGame(gameEditor, url, game) {
     }
     s += '</td></tr>\n';
     s += `<tr><td></td><td><input type="number" min="1" max="8" ${disabled} onchange="onProjectMetadataChanged(this)" id="projectMinPlayers" value="${game.min_players || 1}"></input> - <input type="number" min="1" max="8" ${disabled} onchange="onProjectMetadataChanged(this)" id="projectMaxPlayers" value=${game.max_players || 1}></input> Players</td></tr>\n`;
-
     s += '<tr><td>&nbsp;</td></tr>\n';
 
     s += `<tr valign="top"><td>Screenshot&nbsp;Tag</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="screenshotTag" value="${game.screenshot_tag.replace(/"/g, '\\"')}"></td></tr>\n`;
@@ -4222,8 +4221,13 @@ function appendToBootScreen(msg) {
     bootScreen.scrollTop = bootScreen.scrollHeight;
 }
 
-/** If loadFast is true, do not make any cosmetic delays. */
-function loadGameIntoIDE(url, callback, loadFast) {
+/** If loadFast is true, do not make any cosmetic delays. 
+
+    If noUpdateCode is true, do not update code editors. This is used to
+    prevent cursor jump when that file is itself being further updated
+    by typing in the editor.
+*/
+function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
     if (url !== gameURL) {
         // A new game is being loaded. Throw away the editor sessions.
         removeAllCodeEditorSessions();
@@ -4340,7 +4344,9 @@ function loadGameIntoIDE(url, callback, loadFast) {
                 visualizeModes(modeEditor);
             }
             
-            updateAllCodeEditorSessions();
+            if (! noUpdateCode) {
+                updateAllCodeEditorSessions();
+            }
             hideWaitDialog();
 
             if (callback) { callback(); }

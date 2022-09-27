@@ -255,6 +255,23 @@ const gameArray = [{
    builtin:      true,
    label:        gvlabel[0][0],
    preview:      gvpreview
+},
+
+{
+   title: "Black Firmament",
+   developer: "@CasualEffects",
+   url: "quad://games/firmament",
+    "version": 1.0,
+    "min_players": 1,
+    "max_players": 2,
+    "cooperative": true,
+    "competitive": true,
+    "achievements": false,
+    "highscores": false,
+    "description": "Tiny epic orbital fleet battles. Sequel to Gravity.",
+   builtin:      true,
+   label:        bflabel[0][0],
+   preview:      bfpreview
 }]
 
 

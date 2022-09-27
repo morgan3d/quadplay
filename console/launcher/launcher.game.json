@@ -60,7 +60,11 @@
         "mmpreview":  "mmpreview.sprite.json",
 
         "gvlabel":    "gvlabel.sprite.json",
-        "gvpreview":  "gvpreview.sprite.json"
+        "gvpreview":  "gvpreview.sprite.json",
+
+        "bflabel":    "bflabel.sprite.json",
+        "bfpreview":  "bfpreview.sprite.json"
+
     },
 
     "constants":  {

@@ -1,6 +1,8 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License */
 "use strict";
 
+const SHOW_COMPILED_CODE = false;
+
 /* Set to false if using aun unpatched esprima parser that does not
    support the spread operator in objects. */
 const PARSER_SUPPORTS_OBJECT_SPREAD = true;
@@ -1026,7 +1028,7 @@ function pyxlToJS(src, noYield, internalMode) {
     src = src.replace(/>=/g, '≥');
     src = src.replace(/\sin\s/g, ' ∊ ');
 
-    // BECAUSE clasuses
+    // BECAUSE clauses
     {
         const lineArray = compactMultilineLiterals(src.split('\n'))
         const becauseRegExp = RegExp('(' + identifierPattern + '\\([^\\n]*\\))[ ]+because[ ]+("[^"]+")', 'g');
@@ -1069,7 +1071,7 @@ function pyxlToJS(src, noYield, internalMode) {
                     line.substring(callBeginPos, callEndPos + 1) + ')' + line.substring(reasonEndPos + 1);
             }
 
-            // Insert BECAUSE for state changes that do not use them already
+            // Insert BECAUSE for state changes or ASSERTs that do not use them already
             line = lineArray[i] = line.replace(/(^|[^,])((?:set_mode|push_mode|pop_mode|launch_game|reset_game|quit_game)[ ]*\()/g, '$1because("");$2');
 
             // Look for mismatched if/then/else (conservative test, misses some)
@@ -1356,7 +1358,7 @@ function pyxlToJS(src, noYield, internalMode) {
     src = unprotectQuotedStrings(src, stringProtectionMap);
 
     // Print output code for debugging the compiler
-    //if (! internalMode) { console.log(src); }
+    if (SHOW_COMPILED_CODE && ! internalMode) { console.log(src); }
     return src;
 }
 
@@ -1531,7 +1533,7 @@ function $pop_modeFrom$SystemMenu(callback) {
 
 // frame
 ${sectionSeparator}
-const $frame = (function*() { 
+const $frame = (function* $quadplay_main_loop() { 
 let $_yieldCounter = 0; while (true) { try {
 if (($gameMode.$name[0] !== '$') && (gamepad_array[0].$pp || gamepad_array[1].$pp || gamepad_array[2].$pp || gamepad_array[3].$pp)) { push_mode($SystemMenu); }
 $processFrameHooks();

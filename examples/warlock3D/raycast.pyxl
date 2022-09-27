@@ -371,8 +371,8 @@ def draw_billboard(view, sprite, pos_ws3D, cs_z_bias, sprite_scale default 100%)
         
 /* Moves the entity.pos along entity.vel, sliding it along
    the nonempty sprites in map[layer]. */
-def entity_slide_move_map(entity, map, layer, view)&
-preserving_transform:
+def entity_slide_move_map(entity, map, layer, view)
+& preserving_transform:
 
     const debug_slide_move = false 
     

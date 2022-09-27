@@ -259,6 +259,11 @@
             "description": "Dual-space duel, where each player is in the negative space of the other."
         },
         {
+            "url": "quad://games/firmament/",
+            "title": "Black Firmament",
+            "description": "Tiny epic orbital fleet battles. Sequel to Gravity."
+        },
+        {
             "url": "quad://games/friendly_fishing/",
             "title": "Friendly Fishing",
             "description": "Join your friends for a relaxing afternoon of fishing and you just might top the lake records."

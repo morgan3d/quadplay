@@ -3257,8 +3257,9 @@ function get_map_pixel_color(map, map_coord, min_layer, max_layer_exclusive, rep
     // so we have to have an explicit undefined option for
     // the return value.
     const had_result = result;
-    result = result || {r:0, g:0, b:0, a:0};
-
+    if (result === undefined) {
+        result = {r:0, g:0, b:0, a:0};
+    }
     
     const pixel = $get_map_pixel_color(map, map_coord.x, map_coord.y, min_layer, max_layer_exclusive, replacement_array, result, invert_sprite_y);
     if (pixel === -1) {
@@ -7586,6 +7587,24 @@ function $unparseFixedDecimal(n, d) {
 }
 
 
+function unparse_hex_color(c) {
+    function hex(v) {
+        v = $clamp($Math.floor(v * 256), 0, 255) | 0;
+        return (v < 16 ? '0' : '') + v.toString(16);
+    }
+    
+    if (c.h !== undefined) {
+        if (c.a !== undefined) {
+            return unparse_hex_color(rgba(c));
+        } else {
+            return unparse_hex_color(rgb(c));
+        }
+    }
+
+    return '#' + hex(c.r) + hex(c.g) + hex(c.b) + (c.a !== undefined ? hex(c.a) : '');
+}
+
+
 /* Helper for $unparse */
 function $unparseContainer(x, alreadySeen, colon, closingBraceOnNewLine,
                            inlineShortContainers, terse, indent, hint, specialStructs, meta = {}) {
@@ -7771,7 +7790,6 @@ function $unparse(x, alreadySeen, colon, closingBraceOnNewLine,
                             c.a = (type[3] === 'a') ? x.a : 1;
                             color = `rgba(${100 * c.r}%, ${100 * c.g}%, ${100 * c.b}%, ${100 * c.a}%)`;
                         }
-
                         
                         s += ` <div style="display:inline-block; width: 32px; height: 12px; overflow: hidden; position: relative; top: 2px" class="checkerboard8"><div style="background: ${color}; width: 32px; height: 12px"></div></div>`;
                         return s;
@@ -8223,6 +8241,13 @@ function XY_DOT_XY(v1, v2) {
 function XY_CRS_XY(v1, v2) {
     return v1.x * v2.y - v1.y * v2.x;
 }
+
+function XYZ_MAD_S_XYZ(v1, s, v2, r) {
+    r.x = v1.x * s + v2.x;
+    r.y = v1.y * s + v2.y;
+    r.z = v1.z * s + v2.z;
+}
+
 
 function XYZ_LERP(c1, c2, A, dst) {
     const x = (c2.x - c1.x) * A + c1.x;

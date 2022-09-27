@@ -616,8 +616,41 @@ const gamepadAxisRemap = {
 };
 
 
+/* Calling navigator.getGamepads is surprisingly slow (consistently
+   0.6% of 60Hz frame time on Chromium), so we abstract and amortize over
+   frames when no gamepad is present. When a gamepad IS present, 
+   we poll every frame because Chromium only updates gamepad values
+   on the call:
+
+   "Chrome does things differently here. Instead of constantly
+   storing the gamepad's latest state in a variable it only stores
+   a snapshot, so to do the same thing in Chrome you have to keep
+   polling it." https://udn.realityripple.com/docs/Web/API/Gamepad_API/Using_the_Gamepad_API
+   (Verified by Morgan 2022-09-27)
+ */
+function getGamepads() {
+    
+    if (getGamepads.counter === 0 || (! getGamepads.gamepads) || getGamepads.gamepads.length === 0) {
+        // Update
+        getGamepads.gamepads = getGamepads.navigator.getGamepads();//getGamepads.poll();
+    }
+
+    // Amortize the cost over four frames
+    if (getGamepads.gamepads.length > 0 || ++getGamepads.counter >= 4) {
+        getGamepads.counter = 0;
+    }
+
+    return getGamepads.gamepads;
+}
+getGamepads.navigator = navigator;
+getGamepads.counter = 0;
+getGamepads.gamepads = [];
+Object.seal(getGamepads);
+        
+        
+
 function getIdealGamepads() {
-    const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
+    const gamepads = getGamepads();
     const gamepadArray = [];
     // Center of gamepad
     const deadZone = 0.35;
