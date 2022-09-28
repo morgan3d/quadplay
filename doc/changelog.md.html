@@ -13,7 +13,9 @@ of [<quadplay/>](manual.md.html).
 - Further improvements to prevent cursor jump when directly editing the
   `game.json` file
 - New vector intrinsic, `XYZ_MAD_S_XYZ(srcxyz1, s2, srcxyz3, dstxyz)`
-- Minor performance boost for platforms without physical controllers
+- Reduced the cost of `ray_intersect_map()` by 20%
+- 2% performance boost for platforms without physical controllers
+- 5% performance boost from changing the underlying API calls for frame rate management
 - Added `unparse_hex_color()` for unparsing color constants
 
 

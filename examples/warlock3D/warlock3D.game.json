@@ -41,7 +41,7 @@
         },
         "VIEW_TILE_DISTANCE": {
             "type": "number",
-            "value": "4.5",
+            "value": "8.0",
             "description": "How far the player can see, measured in map tiles",
             "min": {
                 "type": "number",

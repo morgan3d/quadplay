@@ -5792,22 +5792,25 @@ function axis_aligned_draw_box(e) {
 }
 
 
-/** All arguments except the ray are xy(). Clones only the ray. Assumes that (0, 0) is the grid origin*/
+/** All arguments except the ray are xy(). Clones only the
+    ray. Assumes that (0, 0) is the grid origin */
 function $makeRayGridIterator(ray, numCells, cellSize) {
 
     const it = {
         numCells:          numCells,
         enterDistance:     0,
         enterAxis:         'x',
-        ray:               deep_clone(ray),
+        ray:               {pos: {x: ray.pos.x, y: ray.pos.y},
+                            dir: {x: ray.dir.x, y: ray.dir.y},
+                            length: ray.length},
         cellSize:          cellSize,
         insideGrid:        true,
         containsRayOrigin: true,
-        index:             xy(0, 0),
-        tDelta:            xy(0, 0),
-        step:              xy(0, 0),
-        exitDistance:      xy(0, 0),
-        boundaryIndex:     xy(0, 0)
+        index:             {x:0, y:0},
+        tDelta:            {x:0, y:0},
+        step:              {x:0, y:0},
+        exitDistance:      {x:0, y:0},
+        boundaryIndex:     {x:0, y:0}
     };
 
     /*
@@ -5823,7 +5826,7 @@ function $makeRayGridIterator(ray, numCells, cellSize) {
 
     let startsOutside = false;
     let inside = false;
-    let startLocation = xy(ray.pos);
+    let startLocation = {x: ray.pos.x, y: ray.pos.y};
     
     ///////////////////////////////
 
@@ -5832,18 +5835,23 @@ function $makeRayGridIterator(ray, numCells, cellSize) {
         // intersects the grid.
         
         // From Listing 1 of "A Ray-Box Intersection Algorithm and Efficient Dynamic Voxel Rendering", jcgt 2018
-        const t0 = xy(-ray.pos.x / ray.dir.x, -ray.pos.y / ray.dir.y);
-        const t1 = xy((numCells.x * cellSize.x - ray.pos.x) / ray.dir.x,
-                      (numCells.y * cellSize.y - ray.pos.y) / ray.dir.y);
-        const tmin = min(t0, t1), tmax = max(t0, t1);
+        const t0 = {x: -ray.pos.x / ray.dir.x,
+                    y: -ray.pos.y / ray.dir.y};
+        const t1 = {x: (numCells.x * cellSize.x - ray.pos.x) / ray.dir.x,
+                    y: (numCells.y * cellSize.y - ray.pos.y) / ray.dir.y};
+        const tmin = {x: $Math.min(t0.x, t1.x),
+                      y: $Math.min(t0.y, t1.y),
+                     },
+              tmax = {x: $Math.max(t0.x, t1.x),
+                      y: $Math.max(t0.y, t1.y)};
         const passesThroughGrid = $Math.max(tmin.x, tmin.y) <= $Math.min(tmax.x, tmax.y);
         
         if (passesThroughGrid) {
             // Back up slightly so that we immediately hit the start location.
             it.enterDistance = $Math.hypot(it.ray.pos.x - startLocation.x,
-                                          it.ray.pos.y - startLocation.y) - 0.0001;
-            startLocation = xy(it.ray.pos.x + it.ray.dir.x * it.enterDistance,
-                               it.ray.pos.y + it.ray.dir.y * it.enterDistance);
+                                           it.ray.pos.y - startLocation.y) - 0.0001;
+            startLocation = {x: it.ray.pos.x + it.ray.dir.x * it.enterDistance,
+                             y: it.ray.pos.y + it.ray.dir.y * it.enterDistance};
             startsOutside = true;
         } else {
             // The ray never hits the grid

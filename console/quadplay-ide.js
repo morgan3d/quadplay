@@ -779,6 +779,7 @@ function onRestartButton() {
 
 
 let lastAnimationRequest = 0;
+let lastAnimationInterval = undefined;
 function onStopButton(inReset, preserveNetwork) {
     hideAllRuntimeDialogs();
     
@@ -799,6 +800,8 @@ function onStopButton(inReset, preserveNetwork) {
     stopAllSounds();
     coroutine = null;
     clearTimeout(lastAnimationRequest);
+    clearInterval(lastAnimationRequest);
+    lastAnimationInterval = undefined;
     ctx.fillStyle = '#000000';
     afterglowCTX.fillStyle = '#000000';
     overlayCTX.fillStyle = '#000000';
@@ -966,7 +969,7 @@ function onPlayButton(slow, isLaunchGame, args, callback) {
             
         } else {
             // The game was already compiled, so just resume the loop
-            lastAnimationRequest = requestAnimationFrame(mainLoopStep);
+            lastAnimationRequest = setTimeout(mainLoopStep, 0);
             emulatorKeyboardInput.focus({preventScroll:true});
         }
         
@@ -1508,7 +1511,7 @@ function restartProgram(numBootAnimationFrames) {
         try {
             coroutine = QRuntime.$makeCoroutine(compiledProgram);
             QRuntime.$numBootAnimationFrames = numBootAnimationFrames; 
-            lastAnimationRequest = requestAnimationFrame(mainLoopStep);
+            lastAnimationRequest = setTimeout(mainLoopStep, 0);
             emulatorKeyboardInput.focus({preventScroll:true});
             updateDebugger(true);
             
@@ -1717,6 +1720,8 @@ function onPauseButton() {
         emulatorMode = 'pause';
         releasePointerLock();
         pauseAllSounds();
+        clearInterval(lastAnimationRequest);
+        lastAnimationInterval = undefined;
     }
 }
 
@@ -3275,7 +3280,19 @@ function mainLoopStep() {
         // try to run at 60 Hz for input processing and game
         // execution, and drop graphics processing in QRuntime.$show()
         // some of the time.
-        lastAnimationRequest = setTimeout(mainLoopStep, Math.floor(1000 / targetFramerate - 1));
+        //
+        // setInterval seems to be slightly faster than setTimeout on
+        // Chromium, which costs >5% of the total frame time in call
+        // according to the browser profiler.
+        
+        //lastAnimationRequest = setTimeout(mainLoopStep, Math.floor(1000 / targetFramerate - 1));
+        const interval = Math.floor(1000 / targetFramerate - 1);
+        if (interval !== lastAnimationInterval) {
+            // New interval
+            clearInterval(lastAnimationRequest);
+            lastAnimationRequest = setInterval(mainLoopStep, interval);
+            lastAnimationInterval = interval;
+        }
     }
 
     // Physics time may be spread over multiple QRuntime.physics_simulate() calls,
