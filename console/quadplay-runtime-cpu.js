@@ -4425,11 +4425,20 @@ function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_
         }
     }
 
-    // Preallocate the point array for the graphics command. Using a
-    // typed array seems to reduce garbage collection substantially,
-    // even though it doesn't actually affect the average cost of the
-    // writes or reads.
-    // Allocate the worst case, which is a series of runs of length 1.
+    // Preallocate the encoded span array for the graphics
+    // command. Using a typed array seems to reduce garbage collection
+    // substantially, even though it doesn't actually affect the
+    // average cost of the writes or reads.
+    //
+    // Allocate the worst case, which is a series of blocks of length 1.
+    //
+    // Alternates header blocks and value blocks. For each block, the header
+    // element specifies:
+    //
+    // - header & 0x1 is 1 if the entire block has alpha = 0xf and can be memcpy'd
+    // - header & 0x2 is 1 if the block has alpha = 0x0 (in which case, there is
+    //              no actual data in the block)
+    // - header >> 2 is the length of the span.
     const color_data = new Uint16Array(2 * width);
     
     // Actually used elements (we always use the first element)
@@ -4504,7 +4513,7 @@ function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_
             --i; map_point_x -= step_x; map_point_y -= step_y;
 
             // We're now at the end of this map cell
-            run_length += i - before;            
+            run_length += i - before;
             
         } else {
             // Not in a skip. End the previous run if it was a skip

@@ -948,24 +948,33 @@
    const overlayScreen = document.getElementById('screenOverlay');
   </script>
   
-  <!-- Third-party code. Those not maintained as part of this project are 
-       named ".ejs" to make searching only quadplay✜ internal files easier -->
+  <!-- Third-party code. The scripts not needed at load or launch time are 
+       marked as async to speed loading.
+   -->
   <script async src="lib/gif.js"></script>
+  <!-- ide -->
   <script defer src="lib/qrcode.min.js"></script>
+  <!-- editor -->
   <script defer src="ace/ace.js"></script>
   <script defer src="lib/js-yaml.min.js"></script>
+  <!-- compiler -->
   <script defer src="lib/vectorify.js" charset="utf-8"></script>
-  <script defer src="lib/dagre.min.js"></script>
+  <!-- mode graph -->
+  <script async src="lib/dagre.min.js"></script>
+  <!-- physics -->
   <script defer src="lib/decomp.min.js"></script>
   <script defer src="lib/matter.min.js"></script>
   <script defer src="matter-extensions.js"></script>
+  <!-- network -->
   <script async src="lib/peerjs.min.js"></script>
+  <!-- parsing -->
   <script defer src="WorkJSON.js"></script>
   <script defer src="LoadManager.js"></script>
   <script defer src="filters.js"></script>
 
+  
   <!-- quadplay✜ implementation -->
-  <!-- force reload, as these are changing often during the beta -->
+  <!-- force reload, as these change often -->
   <script defer src="os/dependencies.py?" charset="utf-8" type="text/javascript"></script>
   <script defer src="version.js?" charset="utf-8"></script>
   <script defer src="pyxlscript-compiler.js?" charset="utf-8"></script>

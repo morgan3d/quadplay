@@ -4,6 +4,25 @@
 // Set to false when working on quadplay itself
 const deployed = true;
 
+/* The containing web page that quadplay is embedded within, or quadplay's iframe
+   if running cross-origin */
+const page = (function () {
+    try {
+        // These will fail with a cross-origin exception when quadplay is embedded
+        // in a page that is loaded from a different server, for example, when
+        // deployed to itch.io where the game is loaded from a CDN.
+        window.top.document.title;
+        window.top.document.body.innerHTML;
+        
+        // Same origin
+        return window.top;
+    } catch (err) {
+        
+        // Cross origin
+        return window;
+    }
+})();
+
 // Set to true to allow editing of quad://example/ files when developing quadplay
 const ALLOW_EDITING_EXAMPLES = ! deployed;
 
@@ -2963,7 +2982,7 @@ function onOpenGameOpen() {
 
     const game_url = openGameFiles.selected;
     
-    let url = window.top.location.href.replace(/(\?(?:.+&)?)game=[^&]+(?=&|$)/, '$1');
+    let url = page.location.href.replace(/(\?(?:.+&)?)game=[^&]+(?=&|$)/, '$1');
     if (url.indexOf('?') === -1) { url += '?'; }
     if (url[url.length - 1] !== '&') { url += '&'; }
     url = url.replace(/autoplay=./g, '');
@@ -2977,8 +2996,8 @@ function onOpenGameOpen() {
         window.open(url, '_blank');
     } else {
         // Update the URL so that reload and bookmarking work
-        window.top.history.replaceState({}, 'quadplay', url);
-        if (window !== window.top) {
+        page.history.replaceState({}, 'quadplay', url);
+        if (window !== page) {
             // Also replace the internal window URL so that updating reloads correctly
             history.replaceState({}, 'quadplay', url.replace('app.html', 'quadplay.html'));
         }
@@ -3360,7 +3379,7 @@ function mainLoopStep() {
                     // JavaScript can't close a tab unless JavaScript opened it
                     // to begin with, so this is the best that we can do outside
                     // of a standalone binary.
-                    try { window.top.close(); } catch (ignore) {}
+                    try { page.close(); } catch (ignore) {}
                     try { window.close(); } catch (ignore) {}
                     try { document.exitFullscreen(); } catch (ignore) {}
                     window.location = 'about:blank';
@@ -4302,7 +4321,7 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
             onLoadFileComplete(url);
             hideBootScreen();
             updateTodoList();
-            window.top.document.title = gameSource.extendedJSON.title;
+            page.document.title = gameSource.extendedJSON.title;
             console.log(`Loading complete (${Math.round(performance.now() - startTime)} ms)`);
 
             setFramebufferSize(gameSource.extendedJSON.screen_size.x, gameSource.extendedJSON.screen_size.y, false);

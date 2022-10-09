@@ -82,7 +82,7 @@ for name, description in option at j in TITLE_OPTION_ARRAY:
         if selected_index == j:
             draw_text({…args, text: "✜", pos: pos, x_align: "center", })
             draw_text({…args, font: font, text: description, pos: pos + xy(10, -1), x_align: "left"})
-                
+            
 // Cursor movement
 const old = selected_index
 for gamepad in gamepad_array:
