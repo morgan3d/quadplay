@@ -1,6 +1,9 @@
 const ARENA_REGION = {size: 400% SCREEN_SIZE}
 
 // Set by Play.enter
+let STORY
+
+// Set by Play.enter
 let TIME_SCALE = TIME_SCALE_VERSUS
 
 // Set by Play.enter

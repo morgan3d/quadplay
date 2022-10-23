@@ -3,19 +3,12 @@ Epilogue
 let winning_team
 let losing_team
 
-let EPILOGUE
 
 
 enter(w, L)
 ────────────────────────────────────────────────────────────────────────
 winning_team = w
 losing_team = L
-
-assert(winning_team and losing_team)
-
-EPILOGUE = replace(random_value(EPILOGUE_ARRAY), {
-    WINNER: winning_team.civilization_markup,
-    LOSER: losing_team.civilization_markup})
 
 // Remove everything except victor ships
 def remove_debris(entity):
@@ -53,7 +46,7 @@ local:
     draw_sprite({sprite: ASSETS[sprite_name + "_halo_sprite"], override_color: team.color, …args})
     draw_sprite({sprite: ASSETS[sprite_name + "_sprite"], override_color: lerp(team.color, #FFF, 60%), …args})
 
-draw_text(heading_font, EPILOGUE, xy(-43% SCREEN_SIZE.x, 0), #FFF, #000, #000, "left", "top", 100, 87% SCREEN_SIZE.x, 75% mode_frames, true)
+draw_text(heading_font, STORY["epilogue" + winning_team.index], xy(-43% SCREEN_SIZE.x, 0), #FFF, #000, #000, "left", "top", 100, 87% SCREEN_SIZE.x, 75% mode_frames, true)
 
 
 if mode_frames > EPILOGUE_FRAMES or (mode_frames > 30 and any_button_press()):

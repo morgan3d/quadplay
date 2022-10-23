@@ -1,14 +1,12 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
-let PROLOGUE
-
 // Default is for when launching directly when debugging
 // teams is the array of arrays of gamepad indices for team
 // 0 and team 1, where ∅ is the CPU player
 enter(options)
 ────────────────────────────────────────────────────────────────────────
-options = options default {gamepad_indices_by_team: [[0], [1]], time_scale: TIME_SCALE_VERSUS, civilization_names: ["Roseate Federation", "Cyan Hegemony"]}
+options = options default {gamepad_indices_by_team: [[0], [1]], time_scale: TIME_SCALE_VERSUS, civilization_names: ["Federation", "Cyan Hegemony"]}
 
 set_transform(½ SCREEN_SIZE)
 set_post_effects({afterglow: #ccc})
@@ -63,10 +61,15 @@ for gamepad_index_array in options.gamepad_indices_by_team:
             player_select_ship(team.player_array[1], ship)
 
         
-const civilization_table = {}
-for team at t in team_array:
-    civilization_table["T" + t] = team.civilization_markup
-PROLOGUE = replace(random_value(PROLOGUE_ARRAY), civilization_table)
+// Select a random story and substitute the appropriate names
+local:
+    const civilization_table = {}
+    for team at t in team_array:
+        civilization_table["T" + t] = team.civilization_markup
+    
+    STORY = deep_clone(random_value(STORY_ARRAY))
+    for value at key in STORY:
+        STORY[key] = replace(value, civilization_table)
 
     
 
@@ -75,10 +78,10 @@ frame
 ────────────────────────────────────────────────────────────────────────
 iterate(player_array, player_process_input)
 
-if mode_frames < 380:
-    const α = clamp(380% - mode_frames / 100, 0%, 100%)
+if mode_frames < PROLOGUE_FRAMES:
+    const α = clamp((PROLOGUE_FRAMES - mode_frames) / 100, 0%, 100%)
     draw_rect(xy(0, 0), SCREEN_SIZE, rgba(0, 0, 0, 65% α), ∅, ∅, 99)
-    draw_text(heading_font, PROLOGUE, xy(-45% SCREEN_SIZE.x, 0), rgba(1, 1, 1, α), #000, #000, "left", "center", 100, 90% SCREEN_SIZE.x, 75% mode_frames, true)
+    draw_text(heading_font, STORY.prologue, xy(-45% SCREEN_SIZE.x, 0), rgba(1, 1, 1, α), #000, #000, "left", "center", 100, 90% SCREEN_SIZE.x, 65% mode_frames, true)
 else if DEBUG_GAME_OVER or DEBUG_EPILOGUE:
     // Only run this after the intro, so that all state has been
     // updated

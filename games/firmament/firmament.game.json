@@ -69,7 +69,7 @@
         "defeat_sprite": "defeat.sprite.json",
         "defeat_halo_sprite": "defeat_halo.sprite.json"
     },
-    "version": 1.0,
+    "version": 1,
     "min_players": 1,
     "max_players": 2,
     "cooperative": true,
@@ -78,6 +78,12 @@
     "highscores": false,
     "description": "Tiny epic orbital fleet battles. Sequel to Gravity.",
     "constants": {
+        "STORY_ARRAY": {
+            "type": "table",
+            "url": "story.csv",
+            "transpose": true,
+            "column_type": "array"
+        },
         "TORPEDO_MOMENTUM_TRANSFER": {
             "type": "number",
             "value": "5%",
@@ -126,32 +132,6 @@
             "max": 1024,
             "format": "",
             "quantum": 1
-        },
-        "PROLOGUE_ARRAY": {
-            "type": "raw",
-            "value": [
-                "The final showdown with the T0 on the edge of T1 territory…",
-                "The T0 admiral on the bridgedeck unflinchingly stares down the fearsome T1 fleet…",
-                "The T1 fleet has trapped the T0 carrier between stargates, forcing direct conflict…",
-                "The T0 engages the T1 fleet around a dying star…",
-                "Starlight glints on the gundeck as the T0 carrier emerges from hyperspace and surprises the T1 fleet…",
-                "With their homeworld in the balance, the T0 makes their last stand in space against the T1…",
-                "The orbiting T0 carrier scrambles fighters as the T1 fleet dives into the system…",
-                "Are the T0 freedom fighters any match for the power of the T1?",
-                "The T0 drones jam T1 ansibles as they warp in and engage…",
-                "The T0 desperate plan requires all out assault on the T1 carrier before it can retaliate…"
-            ]
-        },
-        "EPILOGUE_ARRAY": {
-            "type": "raw",
-            "value": [
-                "Victorious WINNER officers solemnly salute their fallen enemy as the LOSER carrier crashes into the sun.",
-                "The LOSER suffers a crushing defeat to WINNER forces.",
-                "The WINNER triumphs over the LOSER in a decisive battle.",
-                "The WINNER celebrates a hard won victory as the straggling LOSER fighters retreat.",
-                "With the loss of their carrier to overwhelming WINNER forces, the tide of war turns against the LOSER.",
-                "A hard defeat for the LOSER as WINNER ships dominate the system."
-            ]
         },
         "SUN_DENSITY": {
             "type": "number",
@@ -738,6 +718,17 @@
             "max": 3,
             "format": "0.0",
             "quantum": 0.1
+        },
+        "PROLOGUE_FRAMES": {
+            "type": "number",
+            "value": "440",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "+infinity"
+            },
+            "format": "0",
+            "quantum": 1
         }
     },
     "screenshot_tag": "firmament",
