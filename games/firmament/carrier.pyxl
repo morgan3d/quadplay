@@ -267,12 +267,12 @@ def carrier_simulate(entity, …args):
             
             for i < 100:
                 const k = ξ
-                spawn_particle(pos, random(0.5, 1.2) * random_on_circle() * mag, hsv(random(-0.1, 0.1) ξ + 0.2, 1 - k, 1), PARTICLE_Z, random(100, 200) * mag)
+                particles_spawn(particle_array, pos, random(0.5, 1.2) * random_on_circle() * mag, hsv(random(-0.1, 0.1) ξ + 0.2, 1 - k, 1), PARTICLE_Z, random(100, 200) * mag)
     
         // Disintegration particles
         if ξ < (mode_frames / CARRIER_CRASH_FRAMES)²:
             for i < 4:
-                spawn_particle(random_within_region(entity), -random(0.05, 0.2) * entity.vel + 0.1 random_on_circle(), lerp(#fff, entity.color, ξ), -1, random(120, 500))
+                particles_spawn(particle_array, random_within_region(entity), -random(0.05, 0.2) * entity.vel + 0.1 random_on_circle(), lerp(#fff, entity.color, ξ), -1, random(120, 500))
     
     if entity.force_field.active:
         if entity.force_field.strength ≤ 0% or entity.health ≤ 0:
@@ -323,7 +323,7 @@ def carrier_simulate(entity, …args):
             for i < 1000:
                 const pos = random_within_region(entity)
                 const k = ξ
-                spawn_particle(pos, direction(pos - entity.pos) * (3 k⁶ + 0.2), hsv(random(-0.1, 0.1) ξ + 0.2, 1 - k, 1), PARTICLE_Z, random(60, 200))
+                particles_spawn(particle_array, pos, direction(pos - entity.pos) * (3 k⁶ + 0.2), hsv(random(-0.1, 0.1) ξ + 0.2, 1 - k, 1), PARTICLE_Z, random(60, 200))
     
     entity.vel = ((if mode_frames == 0 then
         ½ angle_to_xy(θ + 90°) else 

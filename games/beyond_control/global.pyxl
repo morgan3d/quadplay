@@ -3,6 +3,8 @@ const map_table = {
     battle: [battle_00_map,battle_01_map, battle_02_map, battle_03_map, battle_04_map, battle_05_map]
 }
 
+const particle_array = make_particles()
+
 /** Active map for the game, preserved so that it can be cloned again
     for a rematch */
 let map_source

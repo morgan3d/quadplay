@@ -13,7 +13,7 @@ def fade_out_and_enter_game(frames_left, total_frames, data):
     let s = smoothstep(1,0,t)
     set_post_effects({
         //color: rgb(t,t,t),
-        //blend_mode: "multiply"
+        //color_blend: "multiply"
         scale:xy(1,1) + s*xy(8,8),
         angle:s,
         })

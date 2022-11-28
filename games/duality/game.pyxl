@@ -2,6 +2,8 @@
    into the other side to win */
 let win_threshold = 0
 
+const particle_array = make_particles()
+
 /* Set in the Title */
 let computer_skill = computer_skill_normal
 
@@ -241,7 +243,7 @@ def explode_brick(brick):
         for -4 ≤ x ≤ +4:
             for -4 ≤ y ≤ +4:
                 const dir = direction(xy(x, y) + 2 random_direction2D())
-                spawn_particle(brick.pos + xy(x, y) + ½ random_within_square(), dir * particle_max_speed * max(0.1, ξ³), if ξ > particle_color_chance then (if brick.light then #000 else #fff) else color, particle_z, random_integer(¼ particle_frames, particle_frames))
+                particles_spawn(particle_array, brick.pos + xy(x, y) + ½ random_within_square(), dir * particle_max_speed * max(0.1, ξ³), if ξ > particle_color_chance then (if brick.light then #000 else #fff) else color, particle_z, random_integer(¼ particle_frames, particle_frames))
 
     
 const world_array = []

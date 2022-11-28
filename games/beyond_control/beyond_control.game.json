@@ -5,12 +5,12 @@
     "license": "Open source under the BSD 3-Clause license https://opensource.org/licenses/BSD-3-Clause",
     "packages": [],
     "scripts": [
+        "quad://scripts/particle.pyxl",
         "hex_grid.pyxl",
         "global.pyxl",
         "player.pyxl",
         "action.pyxl",
-        "vapor.pyxl",
-        "quad://scripts/particle.pyxl"
+        "vapor.pyxl"
     ],
     "modes": [
         "Title",

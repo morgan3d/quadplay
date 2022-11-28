@@ -1,7 +1,9 @@
 // Changes with number of players
 let ARENA_SCALE = 3
 
-    
+
+const particle_array = make_particles()
+
 // Distant stars, purely visual
 const star_array = []
 
@@ -58,7 +60,8 @@ def gravity_force(A, B):
 def explode_planet(planet, impact_vel):
     play_sound({sound: ship_explode_sound, playback_rate: 50%, pos: planet.pos})
     for i < 2 entity_area(planet):
-        spawn_particle(
+        particles_spawn(
+            particle_array,
             planet.pos + 75% planet.size.x * random_within_circle(),
             planet.vel + random(1, 3) * random_on_circle(),
             planet.override_color, 

@@ -226,8 +226,10 @@ let codeEditorFontSize = 14;
 function setCodeEditorFontSize(f) {
     codeEditorFontSize = Math.max(6, Math.min(32, f));
     localStorage.setItem('codeEditorFontSize', '' + codeEditorFontSize)
-    //document.getElementById('ace').style.fontSize = codeEditorFontSize + 'px';
-    aceEditor.setOption('fontSize', codeEditorFontSize + 'px');
+
+    if (useIDE) {
+        aceEditor.setOption('fontSize', codeEditorFontSize + 'px');
+    }
 }
 
 
@@ -389,7 +391,7 @@ function onWelcomeTouch(hasTouchScreen) {
         // Setting the UI mode forces fullscreen as well.
         setUIMode('Emulator');
     } else if ((! useIDE && uiMode !== 'Windowed') || hasTouchScreen) {
-        requestFullScreen();
+        if (deployed) { requestFullScreen(); }
     }
 
     let url = getQueryString('game');
@@ -546,7 +548,7 @@ function setUIMode(d, noFullscreen) {
     // Ace doesn't notice CSS changes. This explicit resize is needed
     // to ensure that the editor can fully scroll horizontally
     // in 'wide' mode
-    setTimeout(function() { aceEditor.resize(); });
+    if (useIDE) { setTimeout(function() { aceEditor.resize(); }); }
 
     // Force a debugger update so that the stats are correct
     // when switching back to it
@@ -1913,20 +1915,31 @@ function onDocumentKeyDown(event) {
 }
 
 
-ace.config.set('basePath', 'ace/');
-const jsCode = document.getElementById('jsCode') && ace.edit(document.getElementById('jsCode'));
+if (useIDE) { ace.config.set('basePath', 'ace/'); }
+const jsCode = document.getElementById('jsCode') && useIDE && ace.edit(document.getElementById('jsCode'));
 const editorStatusBar = document.getElementById('editorStatusBar');
-const aceEditor = ace.edit('ace');
-
-aceEditor.setTheme('ace/theme/quadplay');
-
-// Stop auto-completion of parentheses
-aceEditor.setBehavioursEnabled(false);
-aceEditor.setOptions({showPrintMargin:false});
+const aceEditor = useIDE ? ace.edit('ace') : null;
 
 if (useIDE) {
+
+    aceEditor.setTheme('ace/theme/quadplay');
+    
+    // Stop auto-completion of parentheses
+    aceEditor.setBehavioursEnabled(false);
+    aceEditor.setOptions({showPrintMargin:false});
+
     // Save when losing focus
     aceEditor.on('blur', runPendingSaveCallbacksImmediately);
+
+    // Ace's default "go to line" dialog is confusing, so
+    // we replace it with our friendlier one.
+    aceEditor.commands.addCommand({
+        name: "go to line",
+        bindKey: {win: "Ctrl-G", linux: "Ctrl-G", mac: "Command-G"},
+        exec: function(editor) {
+        onCodeEditorGoToLineButton();
+        }
+    });
 }
 
 
@@ -4222,13 +4235,13 @@ function updateControllerIcons() {
 
 setTimeout(updateControllerIcons, 100);
 
-const qrcode = new QRCode('serverQRCode',
-                          {width:  256,
-                           height: 256,
-                           colorDark: "rgba(0,0,0,0)",
-                           colorLight: "#eee",
-                           correctLevel: QRCode.CorrectLevel.H
-                          });
+const qrcode = useIDE && new QRCode('serverQRCode',
+                                    {width:  256,
+                                     height: 256,
+                                     colorDark: "rgba(0,0,0,0)",
+                                     colorLight: "#eee",
+                                     correctLevel: QRCode.CorrectLevel.H
+                                    });
 
 const BOOT_INFO = `<span style="color:#ec5588">quadplay✜ ${version}</span>
 <span style="color:#937ab7">© 2019-2022 Morgan McGuire</span>
@@ -4307,7 +4320,7 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
                 document.getElementById('serverQRCode').style.visibility = 'hidden';
                 document.getElementById('serverQRMessage').style.visibility = 'hidden';
             } else {
-                qrcode.makeCode(serverURL);
+                if (useIDE) { qrcode.makeCode(serverURL); }
                 document.getElementById('serverURL').innerHTML =
                     `<a href="${serverURL}" target="_blank">${serverURL}</a>`;
                 document.getElementById('serverQRCode').style.visibility = 'visible';
@@ -4435,15 +4448,6 @@ window.addEventListener('resize', onResize, false);
 
 document.getElementById('maximalUIButton').addEventListener('click', requestFullScreen);
 
-// Ace's default "go to line" dialog is confusing, so
-// we replace it with our friendlier one.
-aceEditor.commands.addCommand({
-    name: "go to line",
-    bindKey: {win: "Ctrl-G", linux: "Ctrl-G", mac: "Command-G"},
-    exec: function(editor) {
-        onCodeEditorGoToLineButton();
-    }
-});
 document.addEventListener('keydown', onDocumentKeyDown);
 document.addEventListener('keyup', onDocumentKeyUp);
 

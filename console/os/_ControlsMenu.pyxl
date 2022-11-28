@@ -10,6 +10,7 @@ let choice_array
 let choice_index
 
 let old_transform
+let old_camera
 let old_clip
 let old_post_effects
 let old_background
@@ -44,8 +45,11 @@ enter(manage_tabs_callback)
 choice_index = 0
 old_background = get_background()
 old_transform = get_transform()
+old_camera = get_camera()
 old_clip = get_clip()
 old_post_effects = get_post_effects()
+reset_transform()
+reset_camera()
 reset_clip()
 reset_post_effects()
 manage_tabs = manage_tabs_callback
@@ -68,6 +72,7 @@ leave
 ────────────────────────────────────────────────────────────────────────
 
 set_transform(old_transform)
+set_camera(old_camera)
 set_clip(old_clip)
 set_post_effects(old_post_effects)
 set_background(old_background)
@@ -117,6 +122,7 @@ if manage_tabs or mode_frames > open_frames:
 
 
     for view at view_index in VIEW_ARRAY:
+        $clipZ2 = 2049
         set_transform(view.corner, xy(1, 1), 2048.6, 1)
         // Show the options
         let y = floor(0.5 (view.size.y - (size(choice_array) - 0.5) * font.line_height)) - 1

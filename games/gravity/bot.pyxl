@@ -51,7 +51,7 @@ def update_bot(ship)
             control.x = -sign(Δθ)
         else if nearest_ship_distance < 200 and energy > 130% ENERGY_TORPEDO and ξ < 5%:
             // Fire if facing and not too far and it won't completely deplete energy
-            control.a
+            control.a = 1
         
     else if ξ < 1% or mode_frames == 0:
         // Change turn

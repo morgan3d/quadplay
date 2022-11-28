@@ -159,13 +159,15 @@ def export(args):
       # Do this before copying individual dependencies because
       # shutil.copytree can't take the dirs_exist_ok=True parameter
       # until Python 3.8 and the dependencies create the console dir
+      ignore_files = ['launcher', 'templates', 'ace', 'lib/qrcode.min.js', 'lib/dagre.min.js']
       if args.dry_run:
          print('cp -r ' + os.path.join(args.quadpath, 'console') + ' ' + os.path.join(out_path, ''))
-         print('rm -rf ' + os.path.join(out_path, 'console/launcher') + ' ' + os.path.join(out_path, 'console/templates'))
+         for f in ignore_files:
+             print('rm -rf ' + os.path.join(out_path, 'console/' + f))
       else:
          shutil.copytree(os.path.join(args.quadpath, 'console'),
                          os.path.join(out_path, 'console'),
-                         ignore = shutil.ignore_patterns('.DS_Store', '*~', '#*', '*.psd', '*.kra', 'Makefile', '*.zip', '*.pyc', '__pycache__', 'launcher', 'templates'))
+                         ignore = shutil.ignore_patterns('.DS_Store', '*~', '#*', '*.psd', '*.kra', 'Makefile', '*.zip', '*.pyc', '__pycache__', *ignore_files))
       
       generate_standalone(args, out_path, out_url, game_title)
    else:

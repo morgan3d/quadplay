@@ -5,7 +5,7 @@
 
 <center>[*Quick Start*](#quickstart) 
 ∙ [API](#standardlibrary) ([*Input*](#standardlibrary/input) ∙ [*Physics*](#standardlibrary/physics) ∙ [*Graphics*](#standardlibrary/graphics) ∙ [*Sound*](#standardlibrary/sound) ∙ [*AI*](#standardlibrary/ai) ∙ [*Network*](#network))
-<br>[Assets](#built-inassets) ([*Sprites*](#sprites) ∙ [*Fonts*](#_fonts) ∙ [*Sounds*](#sounds))
+<br>[Assets](#built-inassets) ([*Sprites*](#sprites) ∙ [*Fonts*](#fonts) ∙ [*Sounds*](#sounds))
 <br>[Controls](#controls) 
 ∙ [Symbols](#symbols)
 ∙ [JSON Formats](#projectfiles) 
@@ -2589,9 +2589,10 @@ Math
 : Return the nearest integer value of `x` towards negative infinity.
 
 `floor(x, u)`
-: Floor to the nearest multiple of `u` using `floor(x / u) * u`.
+: Floor to the nearest multiple of `u` using `floor(x / u) * u`. Can also 
+  be applied with the operator syntax `⌊x, u⌋`.
 
-`hash(x, y default nil)`
+`hash(x, y default ∅)`
 : A hash value of string or number `x`, returning a value on [0, 1].
   If `y` is specified, the hash considers the union of the values. Useful 
   for stable procedural generation.
@@ -5714,14 +5715,23 @@ and other operations that naturally compile with maximum efficiency.
 `ABS(s1)`
 : Returns the absolute value of a scalar.
 
+`LERP(s1, s2, s3)`
+: Returns `lerp(s1, s2, s3)`.
+
 `MAX(s1, s2)`
 : Returns the larger scalar.
 
+`MEAN(s1, s2)`
+: Returns the average scalar.
+
+`MEAN3(s1, s2, s3)`
+: Returns the average scalar.
+
+`MEAN4(s1, s2, s3, s4)`
+: Returns the average scalar.
+
 `MIN(s1, s2)`
 : Returns the smaller scalar.
-
-`LERP(s1, s2, s3)`
-: Returns `lerp(s1, s2, s3)`.
 
 `SIGN(s1)`
 : Returns +1, -1, or 0 as the sign of the scalar.
@@ -5983,42 +5993,35 @@ Sprites
 
 ### Space
 ![`quad://sprites/space-atmosphere.sprite.json`](../sprites/space-atmosphere.png)
+
 ![`quad://sprites/space-planet.sprite.json`](../sprites/space-planet.png)
-![`quad://sprites/space-moon.sprite.json`](../sprites/space-moon.png)
-![`quad://sprites/space-ring.sprite.json`](../sprites/space-ring.png)
+
+![`quad://sprites/space-moon.sprite.json`](../sprites/space-moon.png) ![`quad://sprites/space-ring.sprite.json`](../sprites/space-ring.png)
 
 
 ### Action Hero
 
-![`quad://sprites/sportscar-32x64.sprite.json`](../sprites/sportscar-32x64.png)
-![`quad://sprites/road_tiles_64.sprite.json`](../sprites/road_tiles_64.png)
+![`quad://sprites/sportscar-32x64.sprite.json`](../sprites/sportscar-32x64.png) ![`quad://sprites/tank-body-46x85.sprite.json`](../sprites/tank-46x85.png)
 ![`quad://sprites/chopper-body-44x99.sprite.json`](../sprites/chopper-44x99.png)
-![`quad://sprites/tank-body-46x85.sprite.json`](../sprites/tank-46x85.png)
-![`quad://sprites/top-runner-16x25.sprite.json`](../sprites/top-runner-16x25.png)
-![`quad://sprites/top-runner-32x50.sprite.json`](../sprites/top-runner-32x50.png)
+ 
+![`quad://sprites/top-runner-16x25.sprite.json`](../sprites/top-runner-16x25.png) ![`quad://sprites/top-runner-32x50.sprite.json`](../sprites/top-runner-32x50.png)
 
+![`quad://sprites/road_tiles_64.sprite.json`](../sprites/road_tiles_64.png)
 
 
 ### Other
 
-![`quad://sprites/miniroguelike-8x8.sprite.json`](../sprites/miniroguelike-8x8.png)
-![`quad://sprites/ortho-city-32x16.sprite.json`](../sprites/ortho-city-32x16.png)
-![`quad://sprites/controllers-64x44.sprite.json`](../sprites/controllers-64x44.png)
-![`quad://sprites/controllers-32x22.sprite.json`](../sprites/controllers-32x22.png)
-![`quad://sprites/explosion-realistic-128x128.sprite.json`](../sprites/explosion-realistic-128x128.png)
-![`quad://sprites/beast-soldier-32x32.sprite.json`](../sprites/beast-soldier-32x32.png)
-![`quad://sprites/blasphemer-tiles-64x64.sprite.json`](../sprites/blasphemer-tiles-64x64.png)
-![`quad://sprites/freedoom-tiles-64x64.sprite.json`](../sprites/freedoom-tiles-64x64.png)
-![`quad://sprites/mc-pixel-perfection-16x16.sprite.json`](../sprites/mc-pixel-perfection-16x16.png)
-![`quad://sprites/shapes-32x32.sprite.json`](../sprites/shapes-32x32.png)
-![`quad://sprites/cursor-9x9.sprite.json`](../sprites/cursor-9x9.png)
-![`quad://sprites/cards-poker-24x36.sprite.json`](../sprites/cards-poker-24x36.png)
-![`quad://sprites/cards-solitaire-24x36.sprite.json`](../sprites/cards-solitaire-24x36.png)
+![`quad://sprites/ortho-city-32x16.sprite.json`](../sprites/ortho-city-32x16.png) ![`quad://sprites/beast-soldier-32x32.sprite.json`](../sprites/beast-soldier-32x32.png)
+![`quad://sprites/miniroguelike-8x8.sprite.json`](../sprites/miniroguelike-8x8.png)  ![`quad://sprites/controllers-64x44.sprite.json`](../sprites/controllers-64x44.png)
+![`quad://sprites/controllers-32x22.sprite.json`](../sprites/controllers-32x22.png) ![`quad://sprites/explosion-realistic-128x128.sprite.json`](../sprites/explosion-realistic-128x128.png)
+![`quad://sprites/blasphemer-tiles-64x64.sprite.json`](../sprites/blasphemer-tiles-64x64.png) ![`quad://sprites/freedoom-tiles-64x64.sprite.json`](../sprites/freedoom-tiles-64x64.png)
+![`quad://sprites/mc-pixel-perfection-16x16.sprite.json`](../sprites/mc-pixel-perfection-16x16.png) ![`quad://sprites/cursor-9x9.sprite.json`](../sprites/cursor-9x9.png)
+![`quad://sprites/cards-poker-24x36.sprite.json`](../sprites/cards-poker-24x36.png) ![`quad://sprites/cards-solitaire-24x36.sprite.json`](../sprites/cards-solitaire-24x36.png)
+![`quad://sprites/shapes-32x32.sprite.json`](../sprites/shapes-32x32.png) 
 
 
 Fonts
 ------------------------------------------------------------------------------------
-<a name="_fonts"/>
 
 <script>
 for (const font of [
@@ -7594,7 +7597,7 @@ ASCII    | Unicode | Meaning
 `<<=`    |`◀=`     | mutating arithmetic bit shift left
 `>>` or `bitshr`   |`▶`      | arithmetic bit shift right
 `>>=`    |`▶=`     | mutating arithmetic bit shift right
-`if`...`then`...`else`| | conditional
+`if`...`then`...`else`| | conditional (C/Java `?:` a.k.a. "ternary" operator)
 `default`|         | default value operator
 
 Assignment and mutating operators all return `nil`; they cannot be
@@ -7893,8 +7896,9 @@ For flow control purposes, the empty string, 0, and `∅` are false.  All other 
 Multi-line `if` statements may be followed by `else:` and `else if ...:` clauses. These must always be
 multi-line.
 
-Single-line `for`, `if`, `while`, and `until` are permitted. There can be multiple
-single-line expressions on the same line. No `else` is permitted with single-line `if`.
+Single-line `for`, `if`, `while`, and `until` statements are
+permitted. There can be multiple single-line expressions on the same
+line. No `else` is permitted with single-line `if` statement.
 
 In any loop, `break` immediately terminates the tightest enclosing loop
 and `continue` immediately begins the next iteration of the tightest

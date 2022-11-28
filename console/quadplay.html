@@ -952,15 +952,27 @@
        marked as async to speed loading.
    -->
   <script async src="lib/gif.js"></script>
-  <!-- ide -->
-  <script defer src="lib/qrcode.min.js"></script>
-  <!-- editor -->
-  <script defer src="ace/ace.js"></script>
+  <script>
+    {
+    function loadScript(url) {
+        document.write('<script defer src="' + url + '"><' + '/script>');
+    }
+    // Save bandwidth (~600 kB) and do not load the editor if not in IDE mode
+    if (useIDE) {
+        // Editor
+        loadScript('ace/ace.js');
+
+        // Mode graph
+        loadScript('lib/dagre.min.js');
+
+        // QR code generator
+        loadScript('lib/qrcode.min.js');
+    }
+  }
+  </script>
   <script defer src="lib/js-yaml.min.js"></script>
   <!-- compiler -->
   <script defer src="lib/vectorify.js" charset="utf-8"></script>
-  <!-- mode graph -->
-  <script async src="lib/dagre.min.js"></script>
   <!-- physics -->
   <script defer src="lib/decomp.min.js"></script>
   <script defer src="lib/matter.min.js"></script>

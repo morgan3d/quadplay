@@ -87,7 +87,8 @@ def explode_entity(entity):
     
     def spawn(color):
         for i < N:
-            spawn_particle(
+            particles_spawn(
+                particle_array,
                 entity.pos + 35% entity.scale * entity.size * random_within_circle(),
                 entity.vel * TIME_SCALE + random(0.3, 1.4) * random_on_circle(),
                 color, 
@@ -193,7 +194,7 @@ def spawn_wreckage(pos, vel, color, scale):
 def spawn_particle_cluster(entity, main_color default #0F0, accent_color default #FF0):
     const pos = random_within_region(entity)
     for particle < 12:
-        spawn_particle(pos, random_within_circle() * random(0.5, 0.8),
+        particles_spawn(particle_array, pos, random_within_circle() * random(0.5, 0.8),
             if ξ < 70% then main_color else accent_color, 
             PARTICLE_Z, 
             random_integer(4, 8)²)

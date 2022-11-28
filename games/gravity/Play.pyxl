@@ -174,7 +174,7 @@ preserving_transform:
     
     iterate(sun_array, update_and_draw_sun)    
     update_and_draw_planet(planet)    
-    update_and_draw_particles()
+    particles_update_and_draw(particle_array)
 
 
 // Instructions

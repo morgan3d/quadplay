@@ -3,7 +3,7 @@
 
 const SHOW_COMPILED_CODE = false;
 
-/* Set to false if using aun unpatched esprima parser that does not
+/* Set to false if using an unpatched esprima parser that does not
    support the spread operator in objects. */
 const PARSER_SUPPORTS_OBJECT_SPREAD = true;
 

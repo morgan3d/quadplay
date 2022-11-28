@@ -5004,6 +5004,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
     x = $Math.round(x - width * (1 + x_align) * 0.5);
 
     // Move back to account for the border and shadow padding
+    if (typeof x_align === 'string') { throw 'bad x'; }
     if (x_align !== +1) { --x; }
 
     switch (y_align) {
@@ -5154,16 +5155,16 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
     }
 
     switch (x_align) {
-    case undefined: case 'left': x_align = -1; break;
     case 'middle': case 'center': x_align = 0; break;
     case 'right':  x_align = +1; break;
+    case 'left': default: x_align = -1; break;
     }
 
     switch (y_align) {
     case 'top': y_align = -1; break;
     case 'center': case 'middle': y_align = 0; break;
-    case undefined: case 'baseline': y_align = +1; break;
     case 'bottom': y_align = +2; break;
+    case 'baseline': default: y_align = +1; break;
     }
     
     // Debug visualize the markup:
@@ -8048,6 +8049,18 @@ function MIN(a, b) {
 
 function ADD(a, b) {
     return a + b;
+}
+
+function MEAN(a, b) {
+    return 0.5 * (a + b);
+}
+
+function MEAN3(a, b) {
+    return (1/3) * (a + b);
+}
+
+function MEAN4(a, b, c, d) {
+    return 0.25 * (a + b + c + d);
 }
 
 function SUB(a, b) {

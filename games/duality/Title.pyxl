@@ -40,7 +40,7 @@ set_background(color_array[1])
 
 // Full game load
 if game_frames == 0:
-    add_frame_hook(update_and_draw_particles, ∅, ∅, "all")
+    add_frame_hook(particles_update_and_draw, ∅, ∅, "all", particle_array)
     music_audio = play_sound(music_sound, true, 130%)
     set_random_seed()
     alarm_audio_array = [

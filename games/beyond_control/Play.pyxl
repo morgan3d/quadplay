@@ -87,7 +87,7 @@ iterate(vapor_array, vapor_update)
 if mode_frames mod INSTRUCTION_FRAMES == 0:
     process_turn()
 
-update_and_draw_particles()
+particles_update_and_draw(particle_array)
 
 // Pragma for IDE:
 // set_mode(CompetitiveWin, entity) because "Reach finish in RACE"

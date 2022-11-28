@@ -43,7 +43,7 @@ def find_furthest_brick(brick, world):
     if α > 20% and ξ < α²:
         const color = color_array[if brick.light then 0 else 1]
         for i < 3 + 4 α:
-            spawn_particle(brick.pos + 6 random_on_square(), xy(-1.5 (1 + α) world.gravity, 0) + ½ random_direction2D(), color, particle_z, random_integer(¼ particle_frames, ½ particle_frames))
+            particles_spawn(particle_array, brick.pos + 6 random_on_square(), xy(-1.5 (1 + α) world.gravity, 0) + ½ random_direction2D(), color, particle_z, random_integer(¼ particle_frames, ½ particle_frames))
     
 
 

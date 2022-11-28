@@ -152,7 +152,7 @@ def quaddepend(args):
 if __name__== '__main__':
    parser = argparse.ArgumentParser(description='Print dependencies of a quadplay game.json game file.')
    parser.add_argument('filename', nargs=1, help='The path to the game.json file from the current directory, or the path to the directory containing it if the directory and file have the same basename.')
-   parser.add_argument('--nogame', action='store_true', default=False, help='Do not print the game.json filename itself')   
+   parser.add_argument('--nogame', action='store_true', default=False, help='Do not print the game.json filename itself')
    parser.add_argument('--noquad', action='store_true', default=False, help='Exclude quad:// built-in assets. quad:// URLs can only be resolved if the current working directory is the root of a quadplay tree. They will be converted to filenames relative to the current working directory')
    parser.add_argument('--nohttp', action='store_true', default=False, help='Exclude http:// and https:// cloud assets')
    parser.add_argument('--nolocal', action='store_true', default=False, help='Exclude assets with filenames relative to the game')

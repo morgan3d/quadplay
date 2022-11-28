@@ -404,12 +404,13 @@ def manage_games_tab():
     const x = 99
     const pos = xy(x + 384/4, 224/4 + 66)
     draw_sprite({sprite: game.preview[t mod 6][floor(t / 6)], pos: pos})
-    draw_line(pos + xy(1-384/4, 224/4), pos + xy(384/4-2, 224/4), $system_prompt_shadow)
-    draw_line(pos + xy(2-384/4, 224/4 + 1), pos + xy(384/4-3, 224/4 + 1), $system_prompt_shadow / 2)
+    draw_line(pos + xy(1 - 384/4, 224/4), pos + xy(384/4-2, 224/4), $system_prompt_shadow)
+    draw_line(pos + xy(2 - 384/4, 224/4 + 1), pos + xy(384/4-3, 224/4 + 1), $system_prompt_shadow / 2)
+
     draw_text({font:largeFont, text:game.title, pos:xy(x, 40), color:selectedColor, shadow:$system_prompt_shadow, x_align:"left"})
     draw_text({font:mediumFont, text:"by " + game.developer, pos:xy(x, 56), color:selectedColor, shadow:$system_prompt_shadow, x_align:"left"})
-    draw_text({font:smallFont, text:game.url, pos:xy(x, 220), color:$system_unselected_color, x_align:"left"})
     draw_text({font:smallFont, text:game.description, pos:xy(x, 193), color:selectedColor, x_align:"left", wrap_width: 280})
+    draw_text({font:smallFont, text:game.url, pos:xy(x, 220), color:$system_unselected_color, x_align:"left"})
 
     const sideX = 295
     const wordX = sideX + 27
@@ -512,7 +513,8 @@ if game_frames < intro_frames:
    
 else if game_frames == intro_frames:
     reset_post_effects()
-   
+
+// Draw the games tab
 set_background($system_window_background)
 manage_tabs()
 manage_games_tab()

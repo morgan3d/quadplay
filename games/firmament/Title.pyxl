@@ -46,8 +46,8 @@ set_background(title_sprite)
 
 // Spawn and draw particles to warm up the JIT for the first
 // explosions in game
-spawn_particle(xy(0, ξ SCREEN_SIZE.y), xy(0.01, 0), #0001, -5, 100 SCREEN_SIZE.x)
-update_and_draw_particles()
+particles_spawn(particle_array, xy(0, ξ SCREEN_SIZE.y), xy(0.01, 0), #0001, -5, 100 SCREEN_SIZE.x)
+particles_update_and_draw(particle_array)
 
 
 // Ships

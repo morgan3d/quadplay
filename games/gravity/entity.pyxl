@@ -36,7 +36,8 @@ def explode_entity(entity):
     // Particles
     const N = entity_area(entity) * (if entity.name == "asteroid" then 25% else 100%)
     for i < N:
-        spawn_particle(
+        particles_spawn(
+            particle_array,
             entity.pos + 40% entity.size.x * random_within_circle(),
             entity.vel + random(1, 3) * random_on_circle(),
             entity.override_color default #bbb, 

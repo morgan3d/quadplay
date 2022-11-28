@@ -472,6 +472,6 @@ def entity_make_spark(player):
     play_sound(sparks_00_sound, false, random(15%, 45%), pos, random(75%, 180%))
         
     for i < 50:
-        spawn_particle(pos, random(0.1, 0.75) * random_on_circle(), lerp(#FFF, #FE0, ξ²) * random(50%, 100%), VAPOR_Z, random(25, 75))
+        particles_spawn(particle_array, pos, random(0.1, 0.75) * random_on_circle(), lerp(#FFF, #FE0, ξ²) * random(50%, 100%), VAPOR_Z, random(25, 75))
 
    

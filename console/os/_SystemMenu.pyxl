@@ -62,6 +62,7 @@ old_post_effects = get_post_effects()
 old_background = get_background()
 old_mouse = device_control("get_mouse_state")
 reset_camera()
+reset_transform()
 
 device_control("set_mouse_lock", false)
 device_control("set_mouse_cursor", "default")

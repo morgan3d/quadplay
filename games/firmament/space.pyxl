@@ -9,6 +9,8 @@ let TIME_SCALE = TIME_SCALE_VERSUS
 // Set by Play.enter
 let sun
 
+const particle_array = make_particles()
+
 let background_audio
 const BACKGROUND_MUSIC_ARRAY = [
     {sound: theme_sound,        loop: true, volume: 200%},
@@ -40,7 +42,7 @@ def draw_arena()
     
     set_camera({zoom: SCREEN_SIZE.x / ARENA_REGION.size.x})
 
-    update_and_draw_particles()
+    particles_update_and_draw(particle_array)
         
     // Draw 9x for wraparound
     preserving_transform:

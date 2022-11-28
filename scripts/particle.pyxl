@@ -4,21 +4,28 @@
  @meta {license: "Copyright 2020 Morgan McGuire, Open source under the MIT License, https://opensource.org/licenses/MIT"}
  */
 
-const particle_array = []
+def make_particles(time_rate default 100%):
+    const particle_array = []
+    // Change this to make particles move faster or slower globally
+    particle_array.time_rate = 100%
+    return particle_array
 
-// Change this to make particles move faster or slower globally
-particle_array.time_rate = 100%
+    
+def particles_spawn(particle_array, pos, vel, color, z, frames):
+    assert(is_number(z) and not is_NaN(z))
+    // Create a single moving particle and add it to the global array
+    const p = push(particle_array, {pos: xy(pos), vel: xy(vel), color: rgba(color), z: z, frames: frames})
 
-// Create a single moving particle and add it to the global array
-def spawn_particle(pos, vel, color, z, frames):
-    // deep_immutable_clone() is an unsupported API that makes the cloned value unchangeable,
-    // which speeds draw_point() rendering.
-    const p = push(particle_array, {pos: clone(pos), vel:vel, color: clone(color), z: z, frames: frames})
     // Internal hack
+    // deep_immutable_clone() is an unsupported API that makes the cloned value unchangeable,
+    // which for colors embeds a secret field that renders faster. We want this
+    // secret field, so extract it.
     p.color["$color"] = deep_immutable_clone(color)["$color"]
+    return p
 
    
-def spawn_particles_from_map_ws_coord(
+def particles_spawn_from_map_ws_coord(
+        particle_array,
         map,
         pos,
         z,
@@ -61,7 +68,8 @@ def spawn_particles_from_map_ws_coord(
 
     if not entity.sprite: return
         
-    spawn_particles_from_entity(entity, max_frames, z_offset, spread_center,
+    particles_spawn_from_entity(particle_array,
+        entity, max_frames, z_offset, spread_center,
         min_spread_speed, max_spread_speed, common_dir,
         min_common_speed, max_common_speed, common_vel, density)
 
@@ -69,7 +77,8 @@ def spawn_particles_from_map_ws_coord(
 
 // Convert an entity's sprite into a particle system.
 // Can also be called as spawn_particles_from_entity(args)
-def spawn_particles_from_entity(
+def particles_spawn_from_entity(
+        particle_array,
         entity,
         max_frames          default 40,
         z_offset            default ½,
@@ -121,12 +130,14 @@ def spawn_particles_from_entity(
                 let vel = entity.vel * random(¼, ¾) + common_vel            
                 vel += direction(pos - spread_center) * random(min_spread_speed, max_spread_speed)
                 vel += common_dir * random(min_common_speed, max_common_speed)
-                spawn_particle(pos, vel, color, z, lerp(30%, 100%, ξ²) * max_frames)
+                particles_spawn(particle_array, pos, vel, color, z, lerp(30%, 100%, ξ²) * max_frames)
+    
 
+// You can register this as a frame hook, or explicitly run it once per frame.
+// All arguments except the last are ignored. The last is the particle_array.
+def particles_update_and_draw(...arg):
 
-         
-// You can register this as a frame hook or explicitly run it once per frame
-def update_and_draw_particles():
+    const particle_array = last_value(arg)
     
     // There are a LOT of particles, so avoid the cost of a WITH statement
     // here.
@@ -136,7 +147,7 @@ def update_and_draw_particles():
     // by always copying elements during iteration to close gaps, amortizing
     // the cost of in-order removal.
 
-    const rate = particle_array.time_rate
+    const rate = particle_array.time_rate default 100%
     
     const N = size(particle_array)
     
@@ -156,7 +167,6 @@ def update_and_draw_particles():
                 const c = particle.color["$color"]
                 if c > 0x1000:
                     particle.color["$color"] = SUB(c, 0x1000) bitor 0
-                    //particle.color.a = MUL(particle.color.a, 95%)
     
             // Integrate
             const pos = particle.pos

@@ -15,7 +15,7 @@ def shred(β, world, sprite, sprite_pos):
             const particle_pos = pos + xy(random(-3, 3), i)
             get_sprite_pixel_color(sprite, ½ sprite.size - particle_pos + sprite_pos, test)
             if test.a:
-                spawn_particle(particle_pos, 80% xy(-gravity, random(-1, 1)), color, 3, random_integer(18, 38))
+                particles_spawn(particle_array, particle_pos, 80% xy(-gravity, random(-1, 1)), color, 3, random_integer(18, 38))
 
 
 frame
