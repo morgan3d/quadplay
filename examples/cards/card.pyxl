@@ -34,7 +34,7 @@ const CARD_VALUE_NAME = [
 ]
 
 const CARD_VALUE_SHORT_NAME = [
-    "",
+    "★",
     "A",
     "2",
     "3",
@@ -50,21 +50,21 @@ const CARD_VALUE_SHORT_NAME = [
     "K"
 ]
 
-def flip_card_callback(framesleft, total_frames, card):
-    const α = |2 framesleft / total_frames - 1|^0.25
+def flip_card_callback(frames_left, total_frames, card):
+    const α = |2 frames_left / total_frames - 1|^0.25
     
-    if framesleft == ⌊½ total_frames⌋:
+    if frames_left == ⌊½ total_frames⌋:
         card.front = not card.front
         card.sprite = if card.front then card.front_sprite else card.back_sprite
     
     card.scale.x = α
     
-    if framesleft == 0:
+    if frames_left == 0:
         card.frame_hook = ∅
 
 
 def animate_flip_card(card):
-    const FLIP_FRAMES = 24
+    const FLIP_FRAMES = 32
     card.scale.x = 100%
     play_sound(flip_sound, false, random(10%, 30%), card.pos, 150%, ∅, random(50%, 90%))
     card.frame_hook = add_frame_hook(flip_card_callback, ∅, FLIP_FRAMES, ∅, card)

@@ -4,9 +4,9 @@
   <head>
     <meta charset="utf-8">
     <link rel="stylesheet" href="quadplay.css?">
-    <link rel="icon" href="favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="64x64" href="favicon-64x64.png">
+    <link rel="icon" href="icons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon-64x64.png">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>quadplay✜</title>
@@ -109,7 +109,7 @@
       </div>
     </div>
     <div id="consoleMenu" class="unselectable dropdown">
-      <label for="volumeSlider" style="padding-left: 6px; position: relative; top:-2px"><img src="ui-speaker.png" width=12 height=12></label><input id="volumeSlider" style="width:100px; position: relative; margin-left:0px; left: 2px" type="range" min="0" max="200" oninput="onVolumeChange()" onchange="onVolumeChange()">
+      <label for="volumeSlider" style="padding-left: 6px; position: relative; top:-2px"><img src="icons/ui-speaker.png" width=12 height=12></label><input id="volumeSlider" style="width:100px; position: relative; margin-left:0px; left: 2px" type="range" min="0" max="200" oninput="onVolumeChange()" onchange="onVolumeChange()">
       <br/><label><input id="autoSleepCheckbox" type="checkbox" title="Pause the game when not in focus (unless hosting)" onclick="onAutoSleepClick(event)" autocomplete="off">Sleep when inactive</label>
       <br/><label><input id="backgroundPauseCheckbox" type="checkbox" title="Pause the game when not in focus (unless hosting)" onclick="onBackgroundPauseClick(event)" autocomplete="off">Pause in background</label>
       <hr>
@@ -224,7 +224,7 @@
             <button onclick="startHosting()">TEST</button>
             -->
             <script>
-              makeButton('<div class="buttonIcon" style="background-image: url(\'button-reload.png\')"></div>', `Reload and Play (^R)`, 'onRestartButton', 'restartButton');
+              makeButton('<div class="buttonIcon" style="background-image: url(\'icons/button-reload.png\')"></div>', `Reload and Play (^R)`, 'onRestartButton', 'restartButton');
               makeRadio('<div class="buttonIcon"></div>', 'stopButton', true, `title="Stop (${shift}F5)"`, 'controls');
               makeRadio('<div class="buttonIcon"></div>', 'pauseButton', false, `title="Pause (${cmd}P)"`, 'controls');
               makeRadio('<div class="buttonIcon"></div>', 'stepButton', false, 'title="Step (F10)"', 'controls');
@@ -238,11 +238,11 @@
         <script>
           if (! isMobile) {
               // Can't exit fullscreen on mobile!
-              makeRadio('<img src="ui-windowed.png" width=26 style="position:relative; top:-2px">', 'windowedUIButton', false, 'title="Windowed"',  'ui');
+              makeRadio('<img src="icons/ui-windowed.png" width=26 style="position:relative; top:-2px">', 'windowedUIButton', false, 'title="Windowed"',  'ui');
           }
-          makeRadio('<img src="ui-fullscreen.png" width=26 style="position:relative; top:-2px">', 'maximalUIButton', false, 'title="Full Screen"',  'ui');
+          makeRadio('<img src="icons/ui-fullscreen.png" width=26 style="position:relative; top:-2px">', 'maximalUIButton', false, 'title="Full Screen"',  'ui');
           if (isMobile) { document.write(`<div style="display: inline-block; width: 8px"></div>`); }
-          makeRadio(`<img src="${getQueryString('IDE') === '1' ? 'ui-touchscreen.png' : 'ui-touchscreen-fullscreen.png'}" width=26 style="position:relative; top:-2px">`, 'emulatorUIButton', false, 'title="Touch Screen"', 'ui');
+          makeRadio(`<img src="${getQueryString('IDE') === '1' ? 'icons/ui-touchscreen.png' : 'icons/ui-touchscreen-fullscreen.png'}" width=26 style="position:relative; top:-2px">`, 'emulatorUIButton', false, 'title="Touch Screen"', 'ui');
           if (isMobile) {
               // Move the buttons away from the corner, which may be curved on mobile
               document.write(`<div style="display: inline-block; width: 40px"></div>`);
@@ -250,11 +250,11 @@
         </script>
         <span class="IDEOnly" style="margin-left:-3px">
         <script>
-          makeRadio('<img src="ui-test.png"     width=26 style="position:relative; top:-2px">', 'testUIButton',     false, 'title="Test"',    'ui');
-          makeRadio('<img src="ui-debug.png"    width=26 style="position:relative; top:-2px">', 'wideIDEUIButton',  false, 'title="Debug"',   'ui');
-          makeRadio('<img src="ui-develop.png"  width=26 style="position:relative; top:-2px">', 'IDEUIButton',      true,  'title="Develop"', 'ui');
-          makeRadio('<img src="ui-edit.png"     width=26 style="position:relative; top:-2px">', 'editorUIButton',   false, 'title="Edit"',  'ui');
-          makeRadio('<img src="ui-ghost.png"    width=26 style="position:relative; top:-2px">', 'ghostUIButton',    false, 'title="Ghost Edit"', 'ui');
+          makeRadio('<img src="icons/ui-test.png"     width=26 style="position:relative; top:-2px">', 'testUIButton',     false, 'title="Test"',    'ui');
+          makeRadio('<img src="icons/ui-debug.png"    width=26 style="position:relative; top:-2px">', 'wideIDEUIButton',  false, 'title="Debug"',   'ui');
+          makeRadio('<img src="icons/ui-develop.png"  width=26 style="position:relative; top:-2px">', 'IDEUIButton',      true,  'title="Develop"', 'ui');
+          makeRadio('<img src="icons/ui-edit.png"     width=26 style="position:relative; top:-2px">', 'editorUIButton',   false, 'title="Edit"',  'ui');
+          makeRadio('<img src="icons/ui-ghost.png"    width=26 style="position:relative; top:-2px">', 'ghostUIButton',    false, 'title="Ghost Edit"', 'ui');
         </script>
         </span>
       </div>
@@ -270,12 +270,12 @@
       <div id="codePlusFrame" onmouseup="onCodeEditorDividerDragEnd()" onmousemove="onCodeEditorDividerDrag(event)">
         <div class="toolbar">
           <script>
-            makeButton('<img src="ui-undo.png" width=26 style="position:relative; top:-2px;">', `Undo (${cmd}Z)`, 'onCodeEditorUndoButton', 'codeEditorUndo');
-            makeButton('<img src="ui-redo.png" width=26 style="position:relative; top:-2px;">', `Redo (${cmd}Y)`, 'onCodeEditorRedoButton', 'codeEditorRedo');
-            makeButton('<img src="ui-smallfont.png" width=26 style="position:relative; top:-2px;">', `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton');
-            makeButton('<img src="ui-bigfont.png" width=26 style="position:relative; top:-2px;">', `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton');
-            makeButton('<img src="ui-find.png" width=26 style="position:relative; top:-2px;">', `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton');
-            makeButton('<img src="ui-goto.png" width=26 style="position:relative; top:-2px;">', `Go to line (${cmd}G)`, 'onCodeEditorGoToLineButton');
+            makeButton('<img src="icons/ui-undo.png" width=26 style="position:relative; top:-2px;">', `Undo (${cmd}Z)`, 'onCodeEditorUndoButton', 'codeEditorUndo');
+            makeButton('<img src="icons/ui-redo.png" width=26 style="position:relative; top:-2px;">', `Redo (${cmd}Y)`, 'onCodeEditorRedoButton', 'codeEditorRedo');
+            makeButton('<img src="icons/ui-smallfont.png" width=26 style="position:relative; top:-2px;">', `Smaller text (${cmd}-)`, 'onDecreaseFontSizeButton');
+            makeButton('<img src="icons/ui-bigfont.png" width=26 style="position:relative; top:-2px;">', `Larger text (${cmd}+)`, 'onIncreaseFontSizeButton');
+            makeButton('<img src="icons/ui-find.png" width=26 style="position:relative; top:-2px;">', `Find/Replace (${cmd}F)`, 'onCodeEditorSearchButton');
+            makeButton('<img src="icons/ui-goto.png" width=26 style="position:relative; top:-2px;">', `Go to line (${cmd}G)`, 'onCodeEditorGoToLineButton');
           </script>
           <div style="position: absolute; left: 244px; top: 4px; font-weight: bold" id="editorTitle"></div>
           <div style="position: absolute; right:5px; top:4px; color:#888" id="codeEditorSessionModeDisplay">All changes saved.</div>

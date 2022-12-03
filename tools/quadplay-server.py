@@ -497,9 +497,22 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                     # Contents is base64 encoded for the JSON transmission.
                     # Convert back to bytes
                     contents = base64.standard_b64decode(contents)
-                    with open(filename, 'wb') as f: f.write(contents)
+                    with open(filename, 'wb') as f: 
+                        f.write(contents)
+                        # See comment below about flushing
+                        f.flush()
+                        f.close()
                 else:
-                    with codecs.open(filename, 'w', encoding) as f: f.write(contents)
+                    with codecs.open(filename, 'w', encoding) as f: 
+                        f.write(contents)
+                        # Documentation says that closing the file flushes it, however
+                        # on Windows we get race conditions where new files do not exist
+                        # sometimes for a subsequent read even though they have been
+                        # closed. So, we flush explicitly here, which either affects
+                        # the timing just enough to make it succeed, or hopefully actually
+                        # blocks until the file is written.
+                        f.flush()
+                        f.close()
                 maybe_print('Wrote', encoding, 'file', filename)
                 response_obj = 'OK'
 

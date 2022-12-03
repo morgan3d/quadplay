@@ -295,10 +295,10 @@ function $processFrameHooks() {
     for (let i = 0; i < array.length; ++i) {
         const hook = array[i];
         if ((hook.$mode === undefined) || (hook.$mode === $gameMode)) {
-            const r = hook.$callback ? hook.$callback(hook.$frames, hook.$maxFrames - 1, hook.$data) : 0;
-
             --hook.$frames;
             
+            const r = hook.$callback ? hook.$callback(hook.$frames, hook.$maxFrames - 1, hook.$data) : 0;
+
             // Remove the hook *before* the callback executes so that if a
             // set_mode happens within the callback it does not
             // re-trigger

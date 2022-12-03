@@ -670,17 +670,19 @@ function postToServer(payload, callback, errorCallback) {
     const serverAddress = location.href.replace(/(^http.?:\/\/[^/]+\/).*/, '$1');
                           
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", serverAddress, true);
+    xhr.open('POST', serverAddress, true);
 
     // Send the proper header information along with the request
-    xhr.setRequestHeader("Content-Type", 'application/json;charset=UTF-8');
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
         if (this.readyState === XMLHttpRequest.DONE) {
             // Request finished. Do callback processing here.
             const fcn = ((this.status >= 200) && (this.status <= 299)) ?
                   callback :
                   errorCallback;
+
+            //console.log(this.status);
 
             // Run the callback if there is one
             if (fcn) {

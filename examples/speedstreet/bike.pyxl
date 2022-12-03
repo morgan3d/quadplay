@@ -127,7 +127,7 @@ def crashBike(bike):
    const explosionCenter = clone(bike.pos)
    const explosionZ = bike.z + 0.25
    
-   def drawExplosion():
+   def draw_explosion():
       draw_disk(explosionCenter, 30, #f, nil, explosionZ)
       
    def respawn():
@@ -150,7 +150,7 @@ def crashBike(bike):
       entity_update_children(bike)
       push(bikeArray, bike)
 
-   add_frame_hook(drawExplosion, respawn, respawnFrames)
+   add_frame_hook(draw_explosion, respawn, respawnFrames)
 
 
 let bikeArray
@@ -257,11 +257,11 @@ def landCombo(bike, doNotScoreLast):
    
    // Animate
    const rate = 10
-   def incScore():
+   def inc_score():
       bike.points += min(total, rate)
       total -= rate
 
-   add_frame_hook(incScore, nil, ceil(total / rate))
+   add_frame_hook(inc_score, nil, ceil(total / rate))
    
    // TODO: Display the final combo for a while
    bike.combo = []

@@ -129,7 +129,7 @@ def execute_instruction(entity, instruction):
     if instruction.op == "ROT":
         // Rotate
         const spin = 60° * instruction.sign / INSTRUCTION_FRAMES
-        def rotate(τ): 
+        def rotate(): 
             if entity.epoch ≠ epoch: return sequence.BREAK
             entity.hex_angle += spin
         add_frame_hook(rotate, snap, INSTRUCTION_FRAMES)     
@@ -150,7 +150,7 @@ def execute_instruction(entity, instruction):
             if other ≠ entity and hex_distance(other.hex_pos, target_coord) < ½:
                 movement_blocked = true
         
-        def translate_forward(τ): 
+        def translate_forward(): 
             if entity.epoch ≠ epoch: return sequence.BREAK
             entity.hex_pos += vel
             

@@ -58,10 +58,10 @@ def update_ship(ship)
         spin += 29° random_sign()
 
         const FRAMES_PER_TORPEDO = 3
-        def fire(framesleft, total_frames):
-            if framesleft mod FRAMES_PER_TORPEDO: return
+        def fire(frames_left, total_frames):
+            if frames_left mod FRAMES_PER_TORPEDO: return
         
-            const dir = angle_to_xy(initial_angle - sign(spin) * 360° framesleft / total_frames)
+            const dir = angle_to_xy(initial_angle - sign(spin) * 360° frames_left / total_frames)
             // Blossom torpedos are smaller, faster, and
             // have higher drag than regular torpedoes
             // to make them more deadly initially and then 

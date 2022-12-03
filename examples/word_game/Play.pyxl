@@ -106,17 +106,14 @@ def make_throws(target):
                     and ent.being_thrown != true
             ):
                 let start_pos = clone(ent.pos)
-                def move_throw(framesleft, total_frames):
-                    // @TODO: juicier movement please
-                    // @TODO: dust kick when you touch it and start the throw
-                    // @TODO: "shadow" word under as the throw animates
+                def move_throw(frames_left, total_frames):
                     ent.pos = lerp(
                         start_pos,
                         rule.target.pos + xy(0, 60),
                         smootherstep(
                             0,
                             1,
-                            1-framesleft/total_frames
+                            1 - frames_left / total_frames
                         )
                     )
 
@@ -136,11 +133,11 @@ def level_advance():
 
     def you_flourish(frames_left, total_frames):
         // wiggle
-        let amount = frames_left/total_frames
+        let amount = frames_left / total_frames
         const k = 0.1
         const k2 = 0.8
-        let off = 3* amount * xy(
-            0.5* cos(mode_frames * k),
+        let off = 3 * amount * xy(
+            0.5 * cos(mode_frames * k),
             cos(mode_frames * k2)
         )
         entities["YOU"].offset = off

@@ -5133,7 +5133,7 @@ in the desired order regardless of the order in which drawing executes.
   `frames`. The return value of `add_frame_hook()` is a hook that can be
   passed to `remove_frame_hook()`.
 
-  - `callback`: `def callback(framesleft, total_frames, data)`, runs every frame. `framesleft`
+  - `callback`: `def callback(frames_left, total_frames, data)`, runs every frame. `frames_left`
     will be `total_frames - 1` on the first frame and `0` on the last one.
     This argument may be `nil`. If the callback returns `true`, the hook
     is removed without running the `end_callback`, otherwise it keeps running.

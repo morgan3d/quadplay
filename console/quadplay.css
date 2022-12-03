@@ -303,7 +303,7 @@ b.projectTitle.builtin:before {
     height: 10px;
     margin-right: 5px;
     display: inline-block;
-    background-image: url('project-icon-lock.png');
+    background-image: url('icons/project-icon-lock.png');
 }
 
 b.projectTitle.remote:before {
@@ -313,7 +313,7 @@ b.projectTitle.remote:before {
     height: 10px;
     display: inline-block;
     margin-right: 5px;
-    background-image: url('project-icon-cloud.png');
+    background-image: url('icons/project-icon-cloud.png');
 }
 
 .emulatorButton {
@@ -601,23 +601,23 @@ div.debugOverride.disabled {
 }
 
 #stopButtonContainer .buttonIcon {
-    background-image: url('button-stop.png');
+    background-image: url('icons/button-stop.png');
 }
 
 #pauseButtonContainer .buttonIcon {
-    background-image: url('button-pause.png');
+    background-image: url('icons/button-pause.png');
 }
 
 #stepButtonContainer .buttonIcon {
-    background-image: url('button-step.png');
+    background-image: url('icons/button-step.png');
 }
 
 #slowButtonContainer .buttonIcon {
-    background-image: url('button-slow.png');
+    background-image: url('icons/button-slow.png');
 }
 
 #playButtonContainer .buttonIcon {
-    background-image: url('button-play.png');
+    background-image: url('icons/button-play.png');
 }
 
 /* Invert the icon color from black to white when selected on a button */
@@ -943,188 +943,188 @@ code, .code {
 }
 
 .project .scripts li:before {
-    background-image: none, url('project-icon-code.png');
+    background-image: none, url('icons/project-icon-code.png');
 }
 .project .scripts li.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-code.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-code.png');
 }
 .project .scripts li.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-code.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-code.png');
 }
 
 
 .project .modes li:before {
-    background-image: none, url('project-icon-mode.png');
+    background-image: none, url('icons/project-icon-mode.png');
 }
 .project .modes li.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-mode.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-mode.png');
 }
 .project .modes li.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-mode.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-mode.png');
 }
 
 .project .docs li:before {
-    background-image: none, url('project-icon-doc.png');
+    background-image: none, url('icons/project-icon-doc.png');
 }
 .project .docs li.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-doc.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-doc.png');
 }
 .project .docs li.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-doc.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-doc.png');
 }
 
 .project li.sprite:before {
-    background-image: none, url('project-icon-sprite.png');
+    background-image: none, url('icons/project-icon-sprite.png');
 }
 .project li.sprite.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-sprite.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-sprite.png');
 }
 .project li.sprite.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-sprite.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-sprite.png');
 }
 
 .project li.map:before {
-    background-image: none, url('project-icon-map.png');
+    background-image: none, url('icons/project-icon-map.png');
 }
 .project li.map.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-map.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-map.png');
 }
 .project li.map.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-map.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-map.png');
 }
 
 .project li.data:before {
-    background-image: none, url('project-icon-data.png');
+    background-image: none, url('icons/project-icon-data.png');
 }
 .project li.data.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-data.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-data.png');
 }
 .project li.data.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-data.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-data.png');
 }
 
 .project li.font:before {
-    background-image: none, url('project-icon-font.png');
+    background-image: none, url('icons/project-icon-font.png');
 }
 .project li.font.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-font.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-font.png');
 }
 .project li.font.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-font.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-font.png');
 }
 
 .project li.sound:before {
-    background-image: none, url('project-icon-sound.png');
+    background-image: none, url('icons/project-icon-sound.png');
 }
 .project li.sound.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-sound.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-sound.png');
 }
 .project li.sound.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-sound.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-sound.png');
 }
 
 
 
 .project .constants li:before {
-    background-image: none, url('project-icon-number.png');
+    background-image: none, url('icons/project-icon-number.png');
 }
 .project .constants li.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-number.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-number.png');
 }
 .project .constants li.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-number.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-number.png');
 }
 
 
 
 .project .constants li.string:before {
-    background-image: none, url('project-icon-string.png');
+    background-image: none, url('icons/project-icon-string.png');
 }
 .project .constants li.string.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-string.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-string.png');
 }
 .project .constants li.string.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-string.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-string.png');
 }
 
 .project .constants li.boolean:before {
-    background-image: none, url('project-icon-boolean.png');
+    background-image: none, url('icons/project-icon-boolean.png');
 }
 .project .constants li.boolean.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-boolean.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-boolean.png');
 }
 .project .constants li.boolean.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-boolean.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-boolean.png');
 }
 
 .project .constants li.array:before {
-    background-image: none, url('project-icon-array.png');
+    background-image: none, url('icons/project-icon-array.png');
 }
 .project .constants li.array.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-array.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-array.png');
 }
 .project .constants li.array.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-array.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-array.png');
 }
 
 .project .constants li.nil:before {
-    background-image: none, url('project-icon-nil.png');
+    background-image: none, url('icons/project-icon-nil.png');
 }
 .project .constants li.nil.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-nil.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-nil.png');
 }
 .project .constants li.nil.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-nil.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-nil.png');
 }
 
 .project .constants li.color:before {
-    background-image: none, url('project-icon-color.png');
+    background-image: none, url('icons/project-icon-color.png');
 }
 .project .constants li.color.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-color.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-color.png');
 }
 .project .constants li.color.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-color.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-color.png');
 }
 
 .project .constants li.vec2D:before {
-    background-image: none, url('project-icon-2D.png');
+    background-image: none, url('icons/project-icon-2D.png');
 }
 .project .constants li.vec2D.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-2D.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-2D.png');
 }
 .project .constants li.vec2D.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-2D.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-2D.png');
 }
 
 .project .constants li.vec3D:before {
-    background-image: none, url('project-icon-3D.png');
+    background-image: none, url('icons/project-icon-3D.png');
 }
 .project .constants li.vec3D.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-3D.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-3D.png');
 }
 .project .constants li.vec3D.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-3D.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-3D.png');
 }
 
 .project .constants li.object:before {
-    background-image: none, url('project-icon-object.png');
+    background-image: none, url('icons/project-icon-object.png');
 }
 .project .constants li.object.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-object.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-object.png');
 }
 .project .constants li.object.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-object.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-object.png');
 }
 
 .project .constants li.reference:before {
-    background-image: none, url('project-icon-reference.png');
+    background-image: none, url('icons/project-icon-reference.png');
 }
 .project .constants li.reference.remote:before {
-    background-image: url('project-badge-cloud.png'), url('project-icon-reference.png');
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-reference.png');
 }
 .project .constants li.reference.builtin:before {
-    background-image: url('project-badge-lock.png'), url('project-icon-reference.png');
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-reference.png');
 }
 
 /* New menu */
@@ -1563,11 +1563,11 @@ canvas#screenOverlay {
 }
 
 .controllerAbsent {
-    background-image: url('icon-controller-absent.png');
+    background-image: url('icons/icon-controller-absent.png');
 }
 
 .controllerPresent {
-    background-image: url('icon-controller-present.png');
+    background-image: url('icons/icon-controller-present.png');
 }
 
 /*******************************************************************/

@@ -11,10 +11,12 @@
     <title>quadplay✜</title>
   </head>
   <body style="padding: 0; margin: 0">
-    <iframe style="position: fixed; width: 100%; height: 100%"></iframe>
+    <iframe id="quadplayFrame" style="position: fixed; width: 100%; height: 100%"></iframe>
     <script>
-       // Load the embedded quadplay. This allows it to refresh itself while still full screen
-       document.getElementsByTagName('iframe')[0].src = location.href.replace('app.html', 'quadplay.html');
+       // Load the embedded quadplay. This allows it to refresh itself while still full screen.
+       // Have to generate the src string using code because it must copy over all of the query
+       // parameters.
+       document.getElementById('quadplayFrame').src = location.href.replace('app.html', 'quadplay.html');
     </script>
   </body>
 </html>
