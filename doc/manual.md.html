@@ -516,6 +516,10 @@ or right side of the keyboard to control the turret.
 - Entity parenting
 - 320x180 resolution
 
+</td></tr><tr><td>![](../examples/maze/label128.png)</td><td>
+[Maze](../console/quadplay.html?game=quad://examples/maze&IDE=1) is a demonstration
+of `map_generate_maze()`.
+
 
 </td></tr><tr><td>![](../examples/robot/label128.png)</td><td>
 [Robot Example](../console/quadplay.html?game=quad://examples/robot&IDE=1) shows how to create and animate a deep
@@ -625,6 +629,10 @@ choreograph series of frame hooks one after the other.
 [Grid Movement](../console/quadplay.html?game=quad://examples/gridmove&IDE=1)
 Atari style grid movement with smooth interpolation and wrapping,
 similar to PAC-MAN, Centipede, etc.
+
+</td></tr><tr><td>![](../examples/islands/label128.png)</td><td>
+[Islands](../console/quadplay.html?game=quad://examples/islands&IDE=1) contains optimized implementations
+of per-pixel rendering and plausible water and sailboat simulation.
 
 </td></tr><tr><td>![](../examples/cards/label128.png)</td><td>
 [Cards](../console/quadplay.html?game=quad://examples/cards&IDE=1) is an example of creating and manipulating a deck of cards, including `add_frame_hook()` for flipping animations.
@@ -5048,9 +5056,9 @@ indices. The map's z-axis corresponds to layers.
   infinitely.
 
 `map_generate_maze(args)`
-: Replace a layer of the map with a maze, resizing the maze slightly
-  if needed to fit the proper number of cells for the options
-  specified.
+: Replace a layer of the map with a maze. The map is approximately the
+  same as its original size, but may be slightly larger or smaller if
+  that is needed to satisfy the options.
   
    - `map: map`
    - `layer: number default 0`

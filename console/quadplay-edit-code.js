@@ -684,9 +684,14 @@ function postToServer(payload, callback, errorCallback) {
 
             //console.log(this.status);
 
-            // Run the callback if there is one
+            // Run the callback if there is one. On Windows, there can
+            // be race conditions for filesystem writes, so we delay
+            // the callback 25ms everywhere (maybe that will
+            // occur on other platforms)
             if (fcn) {
-                fcn(WorkJSON.parse(xhr.response), this.status);
+                const json = WorkJSON.parse(xhr.response);
+                const status = this.status;
+                setTimeout(fcn, 25, json, status);
             }
         }
     }

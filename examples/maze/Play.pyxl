@@ -1,0 +1,54 @@
+// *******************************************************
+//
+// Copy the example, click on "Constants" in the IDE,
+// and adjust the options to change the map in real time.
+//
+// *******************************************************
+
+
+
+// Make the map slightly smaller than the screen because
+// we may need extra area for borders or wrapping
+map_resize(map, 
+    ⌊SCREEN_SIZE.x / map.spritesheet.sprite_size.x⌋ - 1, 
+    ⌊SCREEN_SIZE.y / map.spritesheet.sprite_size.y⌋ - 1)
+
+// Note that these parameters all have defaults
+map_generate_maze({
+    map: map,
+    straightness: straightness,
+    shortcuts: shortcuts,   
+    coverage: coverage,
+    horizontal: {
+        loop: horizontal_loop,
+        border: horizontal_border,
+        symmetric: horizontal_symmetric},
+    vertical: {
+        loop: vertical_loop,
+        border: vertical_border,
+        symmetric: vertical_symmetric},
+    wall: {
+        thickness: wall_thickness,
+        sprite: map.spritesheet[11][14]},
+    hall: {
+        thickness: hall_thickness,
+        sprite: ∅},
+    random: make_random(2210)})
+
+
+preserving_transform:
+    const WALL_OFFSET = xy(0, 4)
+    
+    // Center, accounting for map size changes
+    set_camera({pos: ½ (map.size_pixels - SCREEN_SIZE)})
+    
+    draw_corner_rect(WALL_OFFSET, map.size_pixels, #131)
+    
+    // Make the walls look 3D by drawing them extruded
+    draw_map(map, ∅, ∅, 
+        [map.spritesheet[11][14],
+         map.spritesheet[15][21]],
+         WALL_OFFSET)
+    
+    // Draw the tops of the walls
+    draw_map(map)

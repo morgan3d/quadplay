@@ -1,0 +1,48 @@
+const GRAVITY = 0.04
+
+
+def make_ball(boat, offset_angle):
+    const dir = angle_to_xy(boat.angle + offset_angle)
+    
+    return make_entity({
+        name: "CannonBall",
+        pos: xyz(boat.pos + 40% boat.size.y * boat.scale.y * dir, 1),
+        vel: xyz(0.7 dir, 1) + xyz(boat.vel, 0),
+        sprite: shapes.disk,
+        scale: 10%,
+        override_color: #000})
+
+
+
+def ball_simulate(ball, world):
+    ball.vel.z -= GRAVITY
+    ball.pos += ball.vel
+    if ball.pos.z ≤ 0:
+        water_disturb(world.water, ball.pos, -1, 2, 16, #000)
+        return iterate.REMOVE
+        
+        
+        
+def ball_draw(ball)
+& with pos, sprite, scale, override_color in ball:
+    
+    // Shadow
+    draw_sprite({
+        pos: xy(pos.x + 35% pos.z, pos.y - 35% pos.z),
+        sprite: sprite,
+        scale: scale,
+        z: 1,
+        override_color: #000,
+        opacity: 28%})
+    
+    draw_sprite({
+        sprite: sprite,
+        override_color: override_color,
+        pos: pos,
+        z: max(pos.z, 1),
+        scale: scale * (30 + ball.pos.z) / 30})        
+    
+    // Highlight
+    draw_point(xy(pos) + xy(-1, 1), #B, pos.z)
+    draw_point(xy(pos), #7, pos.z)
+        

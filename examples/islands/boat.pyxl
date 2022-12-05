@@ -1,0 +1,128 @@
+
+def make_boat(pos, gamepad):
+    return make_entity({
+        pos: pos,
+        
+        // Speed over ground
+        vel: xy(0, 0),
+        
+        // Used for computing the wake
+        speed_in_water: 0, 
+        sprite: shapes.hull,
+        angle: -47°,
+        gamepad: gamepad,
+        scale: xy(35%, 25%),
+        override_color: if gamepad.index == 1 then #F70 else gamepad.player_color, 
+        z: 1})
+    
+
+todo("Don't store speed_in_water persistently")
+
+// Dot product vs. speed. This is much higher performance
+// than a real cutter could achieve.
+const _boat_polar = make_spline(
+    [0°,     15°,  30°,   90°,  135°, 180°], 
+    [-10%,   0%,   30%,  100%,  80%,  50%], 1)
+
+def boat_simulate(boat, world, ball_array)
+& with vel, speed_in_water, gamepad, scale, size, angle, pos in boat:
+
+    local:
+        // Vector in direction of apparent wind
+        const apparent_wind = world.wind - boat.vel
+        const dir = angle_to_xy(angle)
+        
+        // Angle TO the apparent wind (what sailors talk about)
+        const θ = acos(dot(direction(apparent_wind), -dir))
+        assert(θ ≥ 0°)
+        
+        const speed_from_heading = 0.2 ‖world.wind‖ * _boat_polar(θ)
+        
+        // Accelerate
+        speed_in_water = lerp(speed_in_water, speed_from_heading, 2%)
+
+    todo("Blow back out of irons")
+
+    // Process user input
+    angle += -1° gamepad.x * max(speed_in_water, 0.03) / 0.15
+    
+    if gamepad.ee: push(ball_array, make_ball(boat, +90°))
+    if gamepad.ff: push(ball_array, make_ball(boat, -90°))
+
+    vel = angle_to_xy(angle) * speed_in_water + world.water.current
+
+    const new_pos = clamp(pos + vel, xy(0, 0), SCREEN_SIZE)
+    
+    let aground = false
+    for 1 ≤ i ≤ 2:
+       aground = aground or water_is_land(world.water, lerp(pos, new_pos + 3 angle_to_xy(angle), i / 2))
+    
+    if aground:
+        // Ran aground
+        speed_in_water = 0
+    else:
+        // OK to move
+        pos = new_pos
+        
+    
+    const wake_magnitude = speed_in_water / 0.15
+    
+    // Boat wake
+    const axis = angle_to_xy(angle) * size.x * scale.x
+    // Bow
+    water_disturb(world.water, pos + 35% axis,  0.02 wake_magnitude, 1, 0)
+    
+    // Stern
+    water_disturb(world.water, pos - 50% axis, -0.01 wake_magnitude, 2, 30%, #FFF)
+    
+    
+
+def boat_draw(boat, world)
+& with sprite, scale, angle, pos in boat:
+    
+    def draw_sail(A, len, thick default true, tightness default 50%):
+        const SAIL_Z = 10
+        
+        const apparent_wind = world.wind - boat.vel 
+        const dir = angle_to_xy(boat.angle)
+
+        // 0-100%
+        const luffing = max(-5 dot(direction(apparent_wind), dir) - 4, 0)
+        
+        // Roll back the tightness when reaching
+        tightness = lerp(tightness, 50%, max(0, dot(direction(apparent_wind), dir)))
+        
+        const C = A + len * direction(lerp(direction(apparent_wind), -dir, tightness))
+        const offset = direction(perp(C - A)) * (1 + luffing * cos(45° mode_frames * ‖world.wind‖))
+        const B = lerp(A, C, 40%) + 15% len * offset * sign(dot(apparent_wind, offset))
+        
+        const sun = xy(2, -3)
+        draw_line(A + sun, B + sun, #0005, SAIL_Z, 2)
+        draw_line(B + sun, C + sun, #0005, SAIL_Z, 2)
+        if thick:
+            draw_line(A, B, #FFF8, SAIL_Z, 2)
+            draw_line(B, C, #FFF8, SAIL_Z, 2)
+        draw_line(A, B, #FFF, SAIL_Z, 1)
+        draw_line(B, C, #FFF, SAIL_Z, 1)
+        
+        
+        
+    // Hull shadow
+    draw_sprite({sprite: sprite, scale: scale, override_color: #000, opacity: 35%, angle: angle, pos: pos + xy(2, -4), z: 0.9})
+    // Outline
+    draw_sprite({sprite: sprite, scale: scale * 130%, override_color: #000, opacity: 50%, angle: angle, pos: pos, z: 0.95})
+    draw_entity(boat)
+    
+    const boat_len = boat.size.x * boat.scale.x
+    const dir = angle_to_xy(boat.angle)
+    
+    const jib_len  = 40% boat_len
+    const fore_len = 55% boat_len
+    const main_len = 65% boat_len
+    
+    draw_sail(pos + 55% boat_len * dir, jib_len, false, 40%)
+    draw_sail(pos + 30% boat_len * dir, fore_len, true, 45%)
+    draw_sail(pos -  5% boat_len * dir, main_len, true, 55%)
+    
+    
+    

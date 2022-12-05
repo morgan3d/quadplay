@@ -1,0 +1,122 @@
+{
+    "title": "Maze",
+    "developer": "@CasualEffects",
+    "copyright": "©2022 Morgan McGuire",
+    "license": "CC0/Public Domain (Replace with your own license)",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "font": "quad://fonts/deja-8.font.json",
+        "map": "map.map.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "Interactive demonstration of the maze generation parameters",
+    "constants": {
+        "straightness": {
+            "type": "number",
+            "value": "28%",
+            "description": "Preference for long straight halls (100%) vs. short twisty ones (0%)",
+            "min": {
+                "type": "number",
+                "value": "0%"
+            },
+            "max": {
+                "type": "number",
+                "value": "100%"
+            },
+            "format": "%",
+            "quantum": 0.01
+        },
+        "horizontal_loop": {
+            "type": "boolean",
+            "value": false,
+            "description": "Does the map wrap horizontally?"
+        },
+        "vertical_loop": {
+            "type": "boolean",
+            "value": false,
+            "description": "Does the map wrap around vertically?"
+        },
+        "horizontal_border": {
+            "type": "number",
+            "value": "2",
+            "min": 0,
+            "max": 2,
+            "format": "0",
+            "quantum": 1
+        },
+        "vertical_border": {
+            "type": "number",
+            "value": "0",
+            "min": 0,
+            "max": 2,
+            "format": "0",
+            "quantum": 1
+        },
+        "horizontal_symmetric": {
+            "type": "boolean",
+            "value": false,
+            "description": "Mirror left-to-right?"
+        },
+        "hall_thickness": {
+            "type": "number",
+            "value": "1",
+            "min": 1,
+            "max": 5,
+            "format": "0",
+            "quantum": 0
+        },
+        "wall_thickness": {
+            "type": "number",
+            "value": "1",
+            "min": 1,
+            "max": 5,
+            "format": "0",
+            "quantum": 0
+        },
+        "shortcuts": {
+            "type": "number",
+            "value": "0%",
+            "description": "Amount of additional hall connections beyond a continous labryinth path.",
+            "min": 0,
+            "max": {
+                "type": "number",
+                "value": "100%"
+            },
+            "format": "%",
+            "quantum": 0.01
+        },
+        "coverage": {
+            "type": "number",
+            "value": "100%",
+            "description": "Amount of the map layer reachable by halls. The remainder is wall.",
+            "min": {
+                "type": "number",
+                "value": "0%"
+            },
+            "max": {
+                "type": "number",
+                "value": "100%"
+            },
+            "format": "%",
+            "quantum": 0.01
+        },
+        "vertical_symmetric": {
+            "type": "boolean",
+            "value": false,
+            "description": "Mirror top-to-bottom"
+        }
+    },
+    "screenshot_tag": "Maze"
+}

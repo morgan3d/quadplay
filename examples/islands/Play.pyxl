@@ -1,0 +1,74 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+const SHADOW = rgb(0.0, 0.4, 0.7)
+
+const world = {
+    // Velocity in pixels/frame
+    wind: xy(0, 0),
+    current: xy(0, 0),
+    water: make_water(SCREEN_SIZE)
+}
+
+const ball_array = []
+
+const boat_array = [
+    make_boat(xy(260, 180), gamepad_array[0]),
+    make_boat(xy(60, 180), gamepad_array[1])]
+
+todo("Show wind with particles")
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+set_background(map_color_sprite)
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+set_post_effects({color: rgba(1, 1, 1, max(0, 1.5 - mode_frames / 30))})
+
+// Update from debug constants
+if mode_frames mod WATER_SIM_PERIOD_FRAMES == 0:
+    world.wind = angle_to_xy(WIND_ANGLE) * WIND_SPEED
+    world.water.current = angle_to_xy(CURRENT_ANGLE) * CURRENT_SPEED
+
+
+// Manual touch water
+if touch.a:
+    water_disturb(world.water, touch, 0.15, 1)
+
+/*
+    const s = water_sample(world.water, touch.xy)
+    if s:
+        draw_sprite({pos: touch.xy, sprite:shapes.arrow, z:100, scale: 50%, angle: xy_to_angle(s.surface_flow + 70% s.current)})
+        //draw_text({pos: touch.xy + xy(0, 10), font: font, text: s.flow, color: #FFF, shadow:#000, x_align:"center", z:100})
+      */
+
+draw_sprite({pos: xy(40, SCREEN_SIZE.y - 15), sprite:shapes.arrow, z:100, scale: 75%, override_color: #FFF, opacity: 70%, angle: xy_to_angle(world.wind)})
+draw_sprite({pos: xy(15, SCREEN_SIZE.y - 25), sprite:shapes.arrow, z:100, scale: 75%, override_color: #2DF, opacity: 70%, angle: xy_to_angle(world.water.current)})
+
+    
+iterate(boat_array, boat_simulate, world, ball_array)
+iterate(ball_array, ball_simulate, world)
+water_simulate(world.water, world)
+
+iterate(ball_array, ball_draw)
+iterate(boat_array, boat_draw, world)
+water_draw(world.water)
+
+for boat in boat_array:
+    draw_text({
+        font: font, 
+        pos: if boat.gamepad.index == 0 then xy(5, 6) else SCREEN_SIZE - 5, 
+        text: replace("[<] TURN [>]    (e) FIRE (f)", boat.gamepad.prompt), 
+        color: lerp(boat.override_color, TEXT_COLOR, 40%), 
+        outline: rgba(0, 0, 0, 50%),
+        shadow: rgba(0, 0, 0, 80%),
+        x_align: if boat.gamepad.index == 0 then "left" else "right",
+        y_align: "center",
+        z: 10})
+    
+

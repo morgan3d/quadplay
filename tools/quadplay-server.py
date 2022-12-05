@@ -67,9 +67,9 @@ if quadplay_origin == 'development git clone' and os.stat(os.path.join(os.path.d
     sys.exit(2)
 
 # If needed, this is how we'd restrict the version. The current implementation does not need to restrict the version:
-#if sys.version_info[0] < 3 or sys.version_info[1] < 7:
-#    print('Sorry, you are using Python ' + sys.version + ' and quadplay requires Python 3.7 or newer. Download and install from https://python.org')
-#    sys.exit(-1)
+# if sys.version_info[0] < 3 or sys.version_info[1] < 7:
+#     print('Sorry, you are using Python ' + sys.version + ' and quadplay requires Python 3.7 or newer. Download and install from https://python.org')
+#     sys.exit(-1)
 
 __doc__ = "quadplay console server"
 
@@ -514,6 +514,17 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                         f.flush()
                         f.close()
                 maybe_print('Wrote', encoding, 'file', filename)
+
+                if isWindows:
+                    # Because of the windows failure to flush files,
+                    # there can be a race condition in the case of
+                    # file renaming, where the client assumes the write
+                    # has finished and then tries to read the same file.
+                    # So, check here:
+                    max_iterations = 10
+                    while not os.path.exists(filename) and max_iterations > 0:
+                        time.sleep(0.02)
+                        --max_iterations
                 response_obj = 'OK'
 
         elif command == 'quit':
@@ -871,11 +882,6 @@ def platform_www_abspath(p):
             return os.path.join('/', p, '')
 
 
-# TODO for dev version
-# git fetch origin
-# git rev-list HEAD..origin/main --count
-
-    
 # Process paths at top level so that they can be inherited by ThreadingHTTPServer
 quad_filepath = canonicalize_filepath(os.path.join(os.path.dirname(__file__), '..'))
 token_absfilepath = os.path.join(quad_filepath, 'tools/token.txt')

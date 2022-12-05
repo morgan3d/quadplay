@@ -1,0 +1,450 @@
+const WATER_ENERGY_CONSERVATION = 98.5%
+
+/* Computation is amortized over this many frames. 
+   Higher = lower cost, lower framerate, narrower wake */
+const WATER_SIM_PERIOD_FRAMES = 8
+const WATER_MAX_SURFACE_PARTICLES = 600
+const WATER_Z = 0
+
+const WATER_DEBUG_STRIPS = false
+
+
+/* Higher makes waves curve into shore more strongly
+   but also begins to show aliasing in the underlying
+   heightfield */
+const WATER_WAVE_REFRACT = 4
+
+/*
+
+Real waves:
+
+// Beaufort scale, NOAA https://www.weather.gov/media/akq/marine/Wind_Wave_Relationship_Reference.pdf
+wave_height ∝ wind_speed²
+
+// Wikipedia
+if depth > 2 wave_length:
+    // Deep
+    wave_speed ∝ sqrt(wave_length)
+else:
+    // Shallow
+    wave_speed ∝ sqrt(depth)
+
+// https://widecanvas.weebly.com/nature/waves-height-period-and-length
+wave_period ∝ sqrt(wave_height)
+
+// wave_length / wave_speed ∝ sqrt(wave_height)
+wave_length ∝ wave_height
+
+*/
+
+todo("Compute water surface normal and velocity impact on boats and particles")
+
+def make_water(size):
+    const water = {
+        size:  xy(size),
+        
+        min:   xy(1, 1),
+        max:   size - 2,
+        
+        // Baseline water movement due to rivers or tides in deep water
+        current: xy(0, 0),
+        
+        // Particles used to visualize the current
+        particle_array: make_particles(),
+
+        // [-10, 0]
+        land_height: make_array(size, 0),
+        
+        // State being displayed; stable
+        curr: {},
+        
+        // Next state being incrementally computed.
+        // Do not read from, except for next.displace
+        next: {}}
+    
+    // Each `state` element has the following fields:
+    //
+    // `displace`: Displacement coming from rigid bodies.
+    //             The `curr` state is latched, the `next`
+    //             state is being accumulated.
+    //
+    // `sim`:      Simulated from `displace` input 
+    //             using Navier-Stokes approximations.
+    //
+    // `height`:   Net total water height of waves explicitly 
+    //             computed plus the `sim` value.
+    //
+    //             This could be evaluated on demand, but because 
+    //             the shade computation reads from multiple pixels
+    //             this reduces the cost.
+    //
+    // `shade`:    Shading colors for rendering based on
+    //             `curr.height`. ∅ for empty (land) elements
+    
+    for state in ["curr", "next"]:
+        for field in ["displace", "sim", "height", "shade"]:
+            water[state][field] = make_array(size, if field == "shade" then ∅ else 0)
+
+    // Initialize the land_height
+    for x < size.x:
+        for y < size.y:
+            water.land_height[x][y] = 10 (map_height.r[x][size.y - y - 1] / 255 - 1)
+
+    return water
+
+
+
+/* Create a vertical displacement by δ of the water in a disk of the given radius. */
+def water_disturb(water, pos, δ, radius default 0, num_particles default 0.3, particle_color default #CFF):
+    assert(is_number(pos.x) and not is_NaN(pos.x))
+    const x = round(pos.x)
+    const y = round(pos.y)
+    
+    const displace = water.next.displace
+    
+    for i < ⌈num_particles⌉:
+        if ξ < num_particles:
+            const dir = random_on_circle()
+            _water_spawn_surface_particle(water, xy(pos) + (1.5 + radius) * dir, 0.25 dir, particle_color, random_integer(100, 300))
+    
+    for max(x - radius, water.min.x) ≤ i ≤ min(x + radius, water.max.x):
+        for max(y - radius, water.min.y) ≤ j ≤ min(y + radius, water.max.y):
+            if (i - x)² + (j - y)² ≤ radius + 0.3:
+                displace[i][j] += δ
+
+
+
+def _water_spawn_surface_particle(water, pos, vel, color, frames default 600):
+    particles_spawn(water.particle_array, pos, vel, color, WATER_Z, frames)
+
+
+
+/* Helper for `water_simulate()` for computing one column
+   of the top-down map (not a z-vertical column of water)
+
+
+   The simulation intentionally deviates from realism. Research notes:
+   
+   Real wave_height ∝ wind_speed²
+     See Beaufort scale, NOAA https://www.weather.gov/media/akq/marine/Wind_Wave_Relationship_Reference.pdf
+  
+   wave_period ∝ sqrt(wave_height) ∝ wind_speed
+     https://widecanvas.weebly.com/nature/waves-height-period-and-length
+
+   wave_length ∝ wave_period²
+   wave_speed ∝ wave_length / sqrt(wave_height)
+     https://widecanvas.weebly.com/nature/waves-height-period-and-length
+ 
+   Navier-Stokes equations
+     https://www.simscale.com/docs/simwiki/numerics-background/what-are-the-navier-stokes-equations/   
+   
+   Verlet shallow water integrator
+     https://web.archive.org/web/20160505235423/http://freespace.virgin.net/hugo.elias/graphics/x_water.htm
+*/
+def _water_simulate_column(water, x, world, t):
+    const wind_speed = ‖world.wind‖
+    
+    // The non-physical model of water waves here
+    // looks best when based on a curved wind speed
+    const k = pow(wind_speed, 0.7)    
+    const wave_amplitude = 0.3 k    
+    const wave_period = 200 k;    
+    const wave_length = 20 k
+    const ϕ = -360° t / max(wave_period, 1)
+    const wave_inv_length_vector = 360° direction(world.wind) / max(wave_length, 0.1);
+    
+    // Preload the column arrays to reduce dereferences
+    const next_sim = water.next.sim[x]
+    
+    const sim_w = water.curr.sim[SUB(x, 1)]
+    const sim_c = water.curr.sim[x]
+    const sim_e = water.curr.sim[ADD(x, 1)]
+
+    const height_w = water.curr.height[SUB(x, 1)]
+    const height_c = water.curr.height[x]
+    const height_e = water.curr.height[ADD(x, 1)]
+
+    const next_height = water.next.height[x]
+    
+    const shade = water.next.shade[x]
+    const displace = water.curr.displace[x]
+    
+    // Wave phase offset, constant over column
+    const phase = MAD(wave_inv_length_vector.x, x, ϕ)
+
+    const land_column = water.land_height[x]
+
+    for water.min.y ≤ y ≤ water.max.y:
+        const land = land_column[y]
+        
+        if land ≥ -ε: continue
+
+        // Compute the shade value from the curr, since
+        // that gradient is stable and not being computed like next.
+        // Only compute alternating pixels for a dithered look and speed.
+        if ADD(x, y) ∩ 1: 
+            const n = height_c[ADD(y, 1)]
+            const s = height_c[SUB(y, 1)]
+            const w = height_w[y]
+            const e = height_e[y]
+            const c = height_c[y]
+            
+            // Convert to a normal vector and dot with the sun vector 
+            // (hardcoded at 135°), then add an offset from height so 
+            // that waves don't disappear at 90° to the sun
+            const q = MAD(½, c, SUB(ADD(s, e), ADD(n, w)))
+            shade[y] = if q > 20% or q < -30% then water_palette[CLAMP(round(MAD(24, q, 16)), 0, 31)][0] else ∅
+        
+        ////////////////////////////////////////////////////////////////////////
+        // Analytic wave simulation
+                
+        const θ = MAD(WATER_WAVE_REFRACT, land, MAD(wave_inv_length_vector.y, y, phase))
+        const next_wave_height = MUL(wave_amplitude, sin θ)
+        
+        ////////////////////////////////////////////////////////////////////////
+        // Verlet velocity displacement propagation
+        let next_sim_height
+        local:
+            // Compute the neighborhood in the current array
+            const n = sim_c[ADD(y, 1)]
+            const s = sim_c[SUB(y, 1)]
+            const w = sim_w[y]
+            const e = sim_e[y]
+            const curr_sim = ADD(MEAN4(n, s, e, w), displace[y])
+    
+            // Center of the 2nd order current array, for velocity computation.
+            // This is safe to read because only the value about to be written
+            // is examined, not neighbors.
+            const prev_sim = next_sim[y]
+                
+            // Zero the displacement after it is read to prepare
+            // for the buffer flip.
+            displace[y] = 0
+            
+            next_sim_height = MUL(SUB(MUL(2, curr_sim), prev_sim), WATER_ENERGY_CONSERVATION)
+            next_sim[y] = next_sim_height
+        
+        ////////////////////////////////////////////////////////////////////////
+        // Total
+        next_height[y] = ADD(next_wave_height, next_sim_height)
+        
+
+
+def _water_damp_sim_border(water):
+    // Damp the border values to prevent bouncing at boundary
+    const next_sim = water.next.sim
+    for water.min.x ≤ x ≤ water.max.x:
+        const col = next_sim[x]
+        for i < 5:
+            const k = MAD(⅙, i, ⅙)
+            
+            // North edge
+            const ni = SUB(water.max.y, i)
+            col[ni] = MUL(col[ni], k)
+            
+            // South edge
+            const si = ADD(water.min.y, i)
+            col[si] = MUL(col[si], k)
+    
+    // Bounds are different because the above case already handled them
+    for water.min.y < y < water.max.y:
+        for i < 5:
+            const k = MAD(⅙, i, ⅙)
+            
+            // West edge
+            const wi = SUB(water.max.x, i)
+            next_sim[wi][y] = MUL(next_sim[wi][y], k)
+            
+            // East edge
+            const ei = ADD(water.min.x, i)
+            next_sim[ei][y] = MUL(next_sim[ei][y], k)
+
+
+
+/* Ensures there are always enough particles in the water
+   to see the current */
+def _water_maintain_particle_count(water):
+    const particle_array = water.particle_array
+    if size(particle_array) < WATER_MAX_SURFACE_PARTICLES:
+        let pos
+        if ξ > 10% or ‖water.current‖ < ε:
+            // Spawn at position on water
+            pos = _water_random_pos(water)
+        else if ξ < |direction(water.current).x|:
+            // Spawn along the horizontal edge, hoping it isn't on land
+            pos = xy(if water.current.x > 0 then water.min.x else water.max.x, random_integer(water.min.y, water.max.y))
+        else:
+            // Spawn along the vertical edge, hoping it isn't on land
+            pos = xy(random_integer(water.min.x, water.max.x), if water.current.y > 0 then water.min.y else water.max.y)
+            
+        _water_spawn_surface_particle(water, pos, xy(0, 0), #4CF)
+
+
+// Returns true if pos is on land
+def water_is_land(water, pos):
+    const x = round(pos.x)
+    const y = round(pos.y)
+    
+    if x < water.min.x or x > water.max.x or y < water.min.y or y > water.max.y:
+        return true
+    else:
+        return water.land_height[x][y] > -ε
+        
+
+
+def water_sample(water, pos, out default ∅):
+    if not out: out = {height: 0, land: 0, surface_flow: xy(0, 0), current: xy(0, 0)}
+    
+    const x = round(pos.x)
+    const y = round(pos.y)
+    
+    if x < water.min.x or x > water.max.x or y < water.min.y or y > water.max.y: return ∅
+    
+    out.land = water.land_height[x][y]
+    if out.land > -ε: return ∅
+    
+    const height = water.curr.height
+    // Gradient
+    out.surface_flow.x = MUL(0.3, SUB(height[SUB(x, 1)][y], height[ADD(x, 1)][y]))
+    out.surface_flow.y = MUL(0.3, SUB(height[x][SUB(y, 1)], height[x][ADD(y, 1)]))
+    
+    // Current has less impact in shallow water
+    const current_influence = CLAMP(MAD(-0.5, out.land, -50%), 0%, 100%)
+
+    todo("compute normal")
+    
+    out.height = height[x][y]
+    out.current.x = MUL(current_influence, water.current.x)
+    out.current.y = MUL(current_influence, water.current.y)
+        
+    return out
+        
+        
+    
+def _water_compute_particle_velocity(water, world, frame):
+    const particle_array = water.particle_array
+    
+    // Surface particles do not feel the full deep water current's
+    // impact
+    const DEEP_CURRENT_IMPACT = 70%
+    
+    // Place to copy the next element to. This is used to remove particles
+    // that are out of bounds during iteration, so that it is always safe
+    // to read a particle's position.
+    let dst = 0
+    
+    // Avoid per-particle allocation
+    let sample
+    
+    // Iterate over all particles. src == dst and no actual copy happens
+    // until they start being removed and these separate
+    for src < size(particle_array):
+        const particle = particle_array[src]
+        if src > dst: particle_array[dst] = particle
+        
+        // Process ¼ of the velocities each frame
+        // to amortize the cost. This avoids having to
+        // optimize the inner loop computation.
+        if ADD(frame, src) ∩ 3:
+            ++dst
+            continue
+        
+        sample = water_sample(water, particle.pos, sample)
+        // Remove any particle that is outside of the water region or hits land
+        if sample:
+            XY_MAD_S_XY(sample.current, DEEP_CURRENT_IMPACT, sample.surface_flow, particle.vel)
+            
+            // Velocity is applied to pos during the water_draw() loop
+            // by the built-in particle system
+    
+            // Preserve this element
+            ++dst
+         
+    // Remove extra elements
+    if dst < size(particle_array): resize(particle_array, dst)
+
+
+
+/* Returns a random integer position within the water region that 
+   is actually on water (not land) */
+def _water_random_pos(water):
+    const pos = xy(0, 0)
+    
+    // Prevent lock up on really unlucky sampling by giving up
+    // after a large number of tries
+    for i < 30:
+        pos.x = random_integer(water.min.x, water.max.x)
+        pos.y = random_integer(water.min.y, water.max.y)
+        // Pos is guaranteed to be an integer
+        if water.land_height[pos.x][pos.y] < 0:
+            return pos
+            
+    debug_print("Warning: could not find a position not on land")
+    return pos
+    
+    
+
+/*
+ Incrementally simulate water in strips and then flip over.
+ 
+ This takes about 1.5ms on a laptop at 348x224 with
+ WATER_SIM_PERIOD_FRAMES = 8.
+*/
+def water_simulate(water, world, frame default mode_frames):
+
+    // Spawn tiny ripples to keep the water lively
+    for i < 10:
+        water_disturb(world.water, _water_random_pos(water), random(-0.15, 0.10), 0, 0)
+
+    // Spawn particles to visualize the current
+    _water_maintain_particle_count(water)
+
+    // Quantize and scale time based on the number of frames it takes to
+    // amortize the computation
+    const t = ⌊frame, WATER_SIM_PERIOD_FRAMES⌋
+            
+    const strip = frame mod WATER_SIM_PERIOD_FRAMES
+    
+    // Compute this vertical strip. Do not process the first or last column
+    const x_lo = ⌊lerp(water.min.x, water.max.x + 1, strip       / WATER_SIM_PERIOD_FRAMES)⌋
+    const x_hi = ⌊lerp(water.min.x, water.max.x + 1, (strip + 1) / WATER_SIM_PERIOD_FRAMES)⌋ - 1
+
+    for x_lo ≤ x ≤ x_hi:
+        _water_simulate_column(water, x, world, t)
+
+    // Completed the last strip, swap
+    if (frame + 1) mod WATER_SIM_PERIOD_FRAMES == 0:
+        _water_damp_sim_border(water)
+
+        // Swap ping-pong buffers
+        const temp = water.next
+        water.next = water.curr
+        water.curr = temp
+
+    _water_compute_particle_velocity(water, world, frame)
+
+        
+        
+def water_draw(water):
+    const P = xy(0, 0)
+    
+    if WATER_DEBUG_STRIPS:
+        for 0 < i < WATER_SIM_PERIOD_FRAMES:
+            const x = i * SCREEN_SIZE.x / WATER_SIM_PERIOD_FRAMES
+            draw_line(xy(x, 0), xy(x, SCREEN_SIZE.x), #FF0)
+        
+    // Uses open interval instead of closed to avoid drawing the border,
+    // which has incorrect gradients
+    const shade = water.curr.shade
+    for water.min.x < x < water.max.x:
+        // Preload the column arrays to reduce dereferences
+        const shade_col = shade[x]
+        P.x = x
+        for water.min.y < y < water.max.y:
+            const c = shade_col[y]
+            if c: 
+                P.y = y
+                draw_point(P, c, WATER_Z)
+    
+    particles_update_and_draw(water.particle_array)
+        
