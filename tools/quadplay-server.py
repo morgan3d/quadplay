@@ -391,9 +391,9 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
     # Files that can be written or deleted by the IDE
     mutable_file_regex = re.compile(r'\.(json|xml|pyxl|png|pdf|yml|yaml|html|txt|md|tmx|mp3)$')
 
-    # Files that should not print error messages to the script's terminal if not
-    # found (there is no way to stop these from printing errors to the browser's
-    # console).
+    # Files that should not print error messages to the script's
+    # terminal if not found (there is no way to stop these from
+    # printing errors to the *browser's* console).
     silent_404_file_regex = re.compile(r'(\.debug\.json|(^|/)label(64|128)\.png|favicon\.png)$')
 
     # Add custom headers
@@ -837,13 +837,13 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         
     def translate_path(self, path):
         if path == '/favicon.ico':
-            # Browsers sometimes ask for this. Send them to the quadplay
-            # directory instead
-            return quad_filepath + '/console/favicon.ico'
+            # Browsers sometimes ask for the icon from this
+            # location. Send them to the quadplay directory instead
+            return quad_filepath + '/console/icons/favicon.ico'
 
         elif path == '/apple-touch-icon-precomposed.png' or path == '/apple-touch-icon.png':
-            # Safari asks for this
-            return quad_filepath + '/console/favicon-64x64.png'
+            # Safari asks for the icon via this path
+            return quad_filepath + '/console/icons/favicon-64x64.png'
 
         elif isWindows and server_root_filepath == '':
             # Need the whole path, since the "cwd" is wrong
