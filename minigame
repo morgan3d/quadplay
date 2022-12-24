@@ -1,0 +1,47 @@
+import quadplay as qp
+import random
+
+# Initialize the Quadplay display
+qp.init()
+
+# Set the display size to 8x8 pixels
+qp.set_display_size(8, 8)
+
+# Set the background color to black
+qp.set_bg_color(0, 0, 0)
+
+# Create a list of colors to use for the game
+colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (0, 255, 255), (255, 0, 255)]
+
+# Set the initial color of each pixel to a random color
+for x in range(8):
+    for y in range(8):
+        qp.set_pixel(x, y, random.choice(colors))
+
+# Update the display to show the initial colors
+qp.show()
+
+# Run the game loop
+while True:
+    # Wait for a button press
+    button = qp.wait_for_button()
+    
+    # If the button pressed was the middle button, end the game
+    if button == qp.Button.MIDDLE:
+        break
+    
+    # Get the coordinates of the button press
+    x, y = qp.get_button_coords(button)
+    
+    # Set the color of the pressed button to the next color in the list
+    current_color = qp.get_pixel(x, y)
+    current_index = colors.index(current_color)
+    next_index = (current_index + 1) % len(colors)
+    next_color = colors[next_index]
+    qp.set_pixel(x, y, next_color)
+    
+    # Update the display to show the new color
+    qp.show()
+
+# Clean up and close the Quadplay display
+qp.close()
