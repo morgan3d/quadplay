@@ -8283,9 +8283,13 @@ HTML query arguments:
 : URL of a game to load, which can be relative to the `quadplay` script.
 
 `mode`
-: Initial mode to display: `Maximal`, `Emulator`, `IDE`, `Test`, `WideIDE`, `Editor`, or `Ghost`.
+: Initial mode to display: `Maximal`, `Emulator`,`IDE`, `Test`, `WideIDE`, `Editor`, `Ghost`, or `DefaultWindow`.
   The default is `IDE` when running the IDE and otherwise `Maximal` for non-touch screens
-  and `Emulator` for touch screens.
+  and `Emulator` for touch screens. `DefaultWindow` reverts to the default but suppresses
+  automatic full-screen on launch when not on a touch screen.
+
+`nofs`
+: If `1`, do not try to 
 
 `kiosk`
 : If `1`, hide the entire menu bar. Cannot be set with `IDE`
@@ -8836,68 +8840,29 @@ The overarching design principles of the quadplay IDE and language are:
    - Primarily in external tools
    - Or any combination!
 
-1.0
--------------------------------------------------------------
-
 There's a long feature list and a short bug list that I'm working
-through for 1.0. The highlights of this are, in priority order:
+on. The highlights of this are, in priority order:
 
-[x] Development on macOS, Windows, Ubuntu Linux, and Raspberry Pi OS
-[x] Playing on phone, tablet, desktop, laptop, netbook,
-    homebrew arcades, Win GPD X, Raspberry Pi, Jetson Nano, and Steam Deck
-[x] Gamepads
-  [x] 8BitDo
-  [x] Switch JoyCons
-  [x] X-Arcade
-  [x] Xbox and PlayStation
-  [x] Touch screen
-[x] APIs
-  [x] Graphics
-  [x] Physics
-  [x] AI
-[x] Nine full sample games
-[x] Export to:
-  [x] web page
-  [x] github pages
-  [x] itch.io (browser)
+[ ] Private screens in multiplayer
 [ ] Built-in IDE
-  [x] Code editor
-  [x] Project editor
-  [x] Constant editor
-  [ ] JSON editor
   [ ] Map editor
+  [ ] Extended constant editor
   [ ] Sprite editor
-[x] Vim, Emacs, and Visual Studio code external editor support
-[x] Aseprite, Photoshop, Krita, and Tiled external editor support
-[x] 50% virtual GPU graphics speedup over the alpha
-[x] Load tables of data from CSV files
-[x] Shared-screen local multiplayer
-[x] Shared-screen online multiplayer
-[x] Private-screen online multiplayer
-
-
-Post 1.0
---------------------------------------------------------------
-
+  [ ] Font editor
+[ ] Shadowing/line of sight
 [ ] PiBoy DMG support
 [ ] Standalone IDE program (Python and browser not required)
   [ ] macOS
   [ ] Windows
-[ ] Export to:
-  [ ] macOS binary executable
-  [ ] Windows binary executable
-[ ] Extended constant editor
-[ ] More AI routines
-   [ ] Shadowing/line of sight
-   [ ] Board game logic (negascout)
-   [x] Maze generation
-[ ] Font editor
 [ ] Perfect outlined-disk and outlined-triangle blending
 [ ] Polyline rendering without double-blending endpoints
 [ ] Watertight rasterization of triangle meshes
 [ ] Watertight rasterization of polylines
 [ ] Watertight rotated sprite and map rasterization
-[ ] Save to Google Drive for online IDE
+[ ] Export to:
+  [ ] macOS binary executable
+  [ ] Windows binary executable
+<!-- [ ] Save to Google Drive for online IDE -->
 
 
 Credits
@@ -8907,8 +8872,8 @@ Credits
 extensive testing and design feedback, Josh Minor helped with the
 networking design, and Mauricio Vives proofread the manual.
 
-The online multiplayer feature is sponsored by
-[EvenNode](https://www.evennode.com).
+<!-- The online multiplayer feature was previously sponsored by
+[EvenNode](https://www.evennode.com). -->
 
 The <quadplay/> console's influences include Atari 2600, Commodore VIC-20, APL,
 Python, [PICO-8](https://www.lexaloffle.com/pico-8.php),

@@ -57,9 +57,6 @@ Features
 - Optional 384 x 224, 320 x 180, 192 x 112, 128 x 128, and [64 x 64](https://itch.io/jam/lowrezjam-2019) screen modes
 - Free and open source
 
-Online play is powered by [EvenNode](https://www.evennode.com/) and
-[PeerJS](https://peerjs.com/).
-
 
 Join the Quadplay Revolution
 ========================================================

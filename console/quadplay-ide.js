@@ -76,7 +76,7 @@ let allow_bloom = true;
         const a = Math.min(1, Math.max(0, (i - 1) / (banner.length - 2)));
         style.push(`color: rgb(${clerp(255, 0, a)}, ${clerp(64, 169, a)}, ${clerp(158, 227, a)}); text-shadow: 0px 2px 3px #000`);
     }
-    console.log('\n\n\n' + banner.join('\n') + '\n\nquadplay✜ version ' + version + '\n©2022 Morgan McGuire\nLicensed as GPL 3.0\nhttps://www.gnu.org/licenses/gpl-3.0.en.html\n', ...style);
+    console.log('\n\n\n' + banner.join('\n') + '\n\nquadplay✜ version ' + version + '\n©2019-2023 Morgan McGuire\nLicensed as GPL 3.0\nhttps://www.gnu.org/licenses/gpl-3.0.en.html\n', ...style);
 }
 
 
@@ -391,7 +391,7 @@ function onWelcomeTouch(hasTouchScreen) {
         // Setting the UI mode forces fullscreen as well.
         setUIMode('Emulator');
     } else if ((! useIDE && uiMode !== 'Windowed') || hasTouchScreen) {
-        if (deployed) { requestFullScreen(); }
+        if (deployed && (isMobile || getQueryString('mode') !== 'DefaultWindow')) { requestFullScreen(); }
     }
 
     let url = getQueryString('game');
@@ -4873,17 +4873,21 @@ if (getQueryString('kiosk') === '1') {
     document.getElementById('body').classList.remove('kiosk');
     document.getElementById('body').classList.add('noKiosk');
     let newMode = getQueryString('mode');
-    if (! newMode) {
+    if (! newMode || newMode === 'DefaultWindow') {
         if (useIDE) {
             newMode = localStorage.getItem('uiMode') || 'IDE';
         } else {
-            newMode = isMobile ? 'Emulator' : 'Maximal';
+            newMode = isMobile ? 'Emulator' : 'Windowed';
         }
     }
 
+
     // Embedded games that reload on quit start without fullscreen
     // so that the first touch launches them.
-    setUIMode(newMode, getQueryString('quit') === 'reload');
+    const noFullscreen = ((getQueryString('quit') === 'reload') ||
+                          (newMode === 'Windowed'));
+    
+    setUIMode(newMode, noFullscreen);
 }
 
 initializeBrowserEmulator();

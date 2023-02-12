@@ -29,7 +29,10 @@ const ONLINE_INPUT_PERIOD = Math.floor(1000 / 120);
 // the quadplay server when on http (which does not support wss yet)
 // and the default PeerJS server when on https.
 
-const PEER_CONFIG = (location.protocol === 'https:') ?
+const PEER_CONFIG = true ? {} :
+      {host: 'peer.pixelverse.org', port: 9001};
+/*
+      (location.protocol === 'https:') ?
       // Use {} for the default PeerJS server, which supports wss.
       // This server can get overloaded but we have not succeeded
       // in running the web page quadplay server against evennode
@@ -44,7 +47,7 @@ const PEER_CONFIG = (location.protocol === 'https:') ?
           path: '/quadplay',
           key: 'peerjs'
       };
-
+*/
 /*
  There is no consistent way to detect a closed WebRTC connection
  across browsers, so we have to send keepalive messages. PeerJS has
@@ -59,7 +62,7 @@ const KEEP_ALIVE_MESSAGE = {type: 'KEEP_ALIVE'};
  has to be long enough that during game load the connection isn't
  dropped. 
 */
-const KEEP_ALIVE_MISSABLE_INTERVALS = Math.ceil(6 * 1000 / KEEP_ALIVE_INTERVAL_MS);
+const KEEP_ALIVE_MISSABLE_INTERVALS = Math.ceil(4 * 1000 / KEEP_ALIVE_INTERVAL_MS);
 
 
 /* 
@@ -97,7 +100,7 @@ function keepAlive(dataConnection, setWarning, dropCallback) {
 
     function ping() {
         if (! dataConnection.open) {
-            console.log('Stopping KEEP_ALIVE callbacks');
+            console.log('dataConnection closed in keepAlive.ping(). Stopping KEEP_ALIVE callbacks');
             return;
         }
         
@@ -127,7 +130,7 @@ function keepAlive(dataConnection, setWarning, dropCallback) {
     };
 
     // Start the endless keepAlive process
-    ping(dataConnection);
+    ping();
 }
 
 
@@ -406,7 +409,6 @@ function startHosting() {
         // The guest calls us on the data channel
         myPeer.on('connection', function (dataConnection) {
             console.log('data connection to guest established');
-
             console.log('calling the guest back with the stream');
             const videoConnection = myPeer.call(dataConnection.peer, hostVideoStream);
             const audioConnection = myPeer.call(dataConnection.peer, hostAudioDestination.stream);
@@ -462,29 +464,45 @@ function startHosting() {
                     videoConnection.close();
                     audioConnection.close();                
                 }
-            };
+            }; // guest
             connectedGuestArray.push(guest);
-            
-            // Register keepAlive
-            keepAlive(dataConnection, undefined, function (dataConnection) {
-                guest.disconnect();
-                showPopupMessage(dataConnection.metadata.name.toUpperCase() + ' left');
-            });
 
-            dataConnection.messageHandlerTable.INPUT = function (message) {
-                // Overwrite the local controller for this connection
-                // (ignore if the game is still loading, so there is
-                // no gamepad_array)
-                
-                const array = QRuntime.gamepad_array;
-                if (array) {
-                    // updateInput() will update properties from this absolute state
-                    // once per frame
-                    array[player_index].$guest_latest_state = message.gamepad_array[0];
+            let keepAliveSetupTries = 0;
+            function setupKeepAlive() {
+                ++keepAliveSetupTries;
+                if (dataConnection.open) {
+                    keepAlive(dataConnection, undefined, function (dataConnection) {
+                        guest.disconnect();
+                        showPopupMessage(dataConnection.metadata.name.toUpperCase() + ' left');
+                    });
+                } else if (setupKeepAliveTries < 10) {
+                    setTimeout(setupKeepAlive, 250);
                 } else {
-                    console.log('ignored INPUT network message because runtime is reloading');
+                    console.log('Failed after 10 tries to set up keepAlive() on the host');
                 }
             };
+            
+            // Register keepAlive. As of peer.js 1.4.6, the dataConnection is
+            // not open when this handler first runs, so we have to wait for it
+            // to open later.
+            setupKeepAlive();
+
+            dataConnection.messageHandlerTable = {
+                INPUT: function (message) {
+                    // Overwrite the local controller for this connection
+                    // (ignore if the game is still loading, so there is
+                    // no gamepad_array)
+                    
+                    const array = QRuntime.gamepad_array;
+                    if (array) {
+                        // updateInput() will update properties from this absolute state
+                        // once per frame
+                        array[player_index].$guest_latest_state = message.gamepad_array[0];
+                    } else {
+                        console.log('ignored INPUT network message because runtime is reloading');
+                    }                
+                } // function
+            }; // messageHandlerTable
 
             function sendConnectMessage() {
                 dataConnection.send({
@@ -534,6 +552,13 @@ function onCopyHostURLButton() {
 
     // The host argument
     url += 'host=' + QRuntime.HOST_CODE.replace(/, /g, ',').replace(/ /g, '_');
+
+    if (useIDE) {
+        // Do not force the guest browser to go fullscreen, since the
+        // developer is probably opening a window on the same machine
+        // to debug.
+        url += '&mode=DefaultWindow';
+    }
     
     copyToClipboard(url);
     if (location.href.startsWith('http://127.0.0.1:')) {
@@ -781,9 +806,21 @@ function startGuesting(hostNetID) {
 
                     if (isVideo) {
                         if (! alreadyAddedVideo) {
+                            {
+                                // Configure video quality
+                                const sender = mediaConnection.peerConnection.getSenders()[0];
+                                const parameters = sender.getParameters();
+                                if (parameters.encodings.length > 0) {
+                                    parameters.encodings[0].maxBitrate = 2e6
+                                    sender.setParameters(parameters);
+                                } else {
+                                    console.log("no encodings");
+                                }
+                            }
+                            
                             alreadyAddedVideo = true;
                             console.log('...with video');
-                            // The 'addtrack' callback does not reliably get invoked, so don't use it.
+                            // The 'addTrack' callback does not reliably get invoked, so don't use it.
                             // Instead test the video resolution every frame above by polling
                             
                             videoElement.srcObject = hostStream;
@@ -815,7 +852,7 @@ function startGuesting(hostNetID) {
                 function (err) {
                     console.log('host stream failed with', err);
                 }
-            ); //mediaConnection.on('stream')
+            ); // mediaConnection.on('stream')
         }); // myPeer.on('call')
 
         
@@ -864,7 +901,7 @@ function startGuesting(hostNetID) {
             
         dataConnection.on('open', function () {
             console.log('data connection to host established');
-            
+            console.log('in dataConnection.on(open), dataConnection.open = ', dataConnection.open);
             keepAlive(dataConnection, undefined, function () {
                 showPopupMessage('You lost connection to the host.');
                 setTimeout(stopGuesting);
