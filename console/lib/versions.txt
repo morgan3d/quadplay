@@ -1,0 +1,8 @@
+peer.js          1.4.7         https://peerjs.com/
+matter.js        0.17.1        http://brm.io/matter-js/
+gif.js           0.2.0         https://github.com/jnordberg/gif.js
+qrcode.js     Nov 25, 2015     https://github.com/davidshimjs/qrcodejs
+js-yaml.min.js   4.1.0         https://github.com/nodeca/js-yaml
+dagre.min.js
+decomp.min.js
+../ace/ace.js    1.15.0         https://github.com/ajaxorg/ace
