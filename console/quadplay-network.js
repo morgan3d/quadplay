@@ -30,7 +30,11 @@ const ONLINE_INPUT_PERIOD = Math.floor(1000 / 120);
 // and the default PeerJS server when on https.
 
 const PEER_CONFIG = true ? {} :
-      {host: 'peer.pixelverse.org', port: 9001};
+      {host: 'peer.pixelverse.org',
+       port: 9001,
+       key: 'remoteplay',
+       path: '/remoteplay'
+      };
 /*
       (location.protocol === 'https:') ?
       // Use {} for the default PeerJS server, which supports wss.

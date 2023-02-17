@@ -1,0 +1,189 @@
+{
+    "url": "spritesheet.png",
+    "license": "By Morgan McGuire 2023, released into the public domain",
+    "sprite_size": {
+        "x": 8,
+        "y": 8
+    },
+    "names": {
+        "flag": {
+            "start": {
+                "x": 6,
+                "y": 5
+            },
+            "end": {
+                "x": 8
+            },
+            "frames": 10
+        },
+        "hdoor": {"x": 15, "y": 0, door: true},
+        "vdoor": {"x": 15, "y": 1, door: true},
+        "vspikes": {"x": 14, "y": 3, "hazard": true, "hsolid": true},
+        "hspikes": {"x": 15, "y": 3, "hazard": true, "vsolid": true},
+        "brick": {
+            "start": {"x": 1, "y": 0},
+            "end": {"x": 4},
+            "hsolid": true,
+            "vsolid": true
+        },
+        "dirt": {
+            "start": {"x": 6, "y": 0},
+            "end": {"x": 10},
+            "hsolid": true,
+            "vsolid": true
+        },
+        "rock":{
+            "start": {"x": 5, "y": 2},
+            "end": {"x": 6},
+            "hsolid": true,
+            "vsolid": true
+        },
+        "icy_rock":{
+            "start": {"x": 7, "y": 2},
+            "end": {"x": 15},
+            "slippery": true,
+            "hsolid": true,
+            "vsolid": true
+        },
+        "key": {
+            "x": 14,
+            "y": 5,
+            "key": true
+        },
+        "ace": {
+            "start": {
+                "x": 0,
+                "y": 6
+            },
+            "end": {
+                "y": 7
+            }
+        },
+        "brin": {
+            "start": {
+                "x": 1,
+                "y": 6
+            },
+            "end": {
+                "y": 7
+            }
+        },
+        "cris": {
+            "start": {
+                "x": 2,
+                "y": 6
+            },
+            "end": {
+                "y": 7
+            }
+        },
+        "diru": {
+            "start": {
+                "x": 3,
+                "y": 6
+            },
+            "end": {
+                "y": 7
+            }
+        },
+        "eve": {
+            "start": {
+                "x": 4,
+                "y": 6
+            },
+            "end": {
+                "y": 7
+            }
+        },
+        "fran": {
+            "start": {
+                "x": 5,
+                "y": 6
+            },
+            "end": {
+                "y": 7
+            }
+        },
+        "gord": {
+            "start": {
+                "x": 6,
+                "y": 6
+            },
+            "end": {
+                "y": 7
+            }
+        },
+        "hyra": {
+            "start": {
+                "x": 7,
+                "y": 6
+            },
+            "end": {
+                "y": 7
+            }
+        },
+        "iago": {
+            "start": {
+                "x": 8,
+                "y": 6
+            },
+            "end": {
+                "y": 7
+            }
+        },
+        "jin": {
+            "start": {
+                "x": 9,
+                "y": 6
+            },
+            "end": {
+                "y": 7
+            }
+        },
+        "mouse": {
+            "start": {
+                "x": 11,
+                "y": 6
+            },
+            "end": {
+                "y": 7
+            }
+        },
+        "drake": {
+            "start": {
+                "x": 12,
+                "y": 6
+            },
+            "end": {
+                "y": 7
+            }
+        },
+        "beholder": {
+            "start": {
+                "x": 13,
+                "y": 6
+            },
+            "end": {
+                "y": 7
+            }
+        },
+        "turtle": {
+            "start": {
+                "x": 14,
+                "y": 6
+            },
+            "end": {
+                "y": 7
+            }
+        },
+        "crab": {
+            "start": {
+                "x": 15,
+                "y": 6
+            },
+            "end": {
+                "y": 7
+            }
+        }
+    }
+}

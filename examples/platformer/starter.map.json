@@ -1,0 +1,39 @@
+{
+    "url": "starter.tmx",
+
+    // Optional. Shift the map by this amount in pixels for all coordinate
+    // transformations and rendering. Default = (0,0), which puts integer
+    // map coordinates at the corners of tiles.
+    "offset": {"x": 0, "y": 0},
+
+    // z value of the first layer. Optional, default = 0
+    "z_offset": 0,
+
+    // Optional. Default = false. If true, flip the map
+    // vertically during load so that (0,0) is the bottom
+    // of the TMX map instead of the top.
+    "y_up": false,
+
+    // Optional. Default = false.
+    "loop_x": false,
+
+    // Optional. Default = false.
+    "loop_y": false,
+
+    // Optional. Default is 1.0. This is the z difference
+    // between layers when rendering. Can be negative to
+    // reverse layering direction.
+    "z_scale": 1,
+
+    // Optional license and copyright
+    "license": "By CasualEffects 2023. In the Public Domain/Licensed as CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/",
+
+    // Optional if the map only uses one spritesheet
+    "sprite_url": "spritesheet.sprite.json",
+
+    // If no sprite_url is specified, then an entire table
+    // mapping each spritesheet referenced in the map to a sprite file
+    "sprite_url_table": {
+      "tiles":   "spritesheet.sprite.json"
+    }
+}

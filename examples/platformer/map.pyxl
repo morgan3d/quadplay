@@ -1,0 +1,45 @@
+// Returns true if flag 0 is set at the either of the map
+// squares corresponding to pix (x1, y1) or (x2, y2)
+def hsolid(map, x, y1, y2):
+    return ((_solidbits(map, x, y1) ∪ _solidbits(map, x, y2)) ∩ 0b01) != 0
+
+
+def vsolid(map, x1, y, x2):
+    return ((_solidbits(map, x1, y) ∪ _solidbits(map, x2, y)) ∩ 0b10) != 0
+
+
+// Returns 0bVH, where H = 1 if hsolid and V = 1 if vsolid
+def _solidbits(map, x, y):
+    // Solid when out of bounds
+    if min(x, y) < 0 or x >= map.size_pixels.x or y ≥ map.size_pixels.y: return 0b11
+    const sprite = get_map_sprite_by_ws_coord(map, xy(x, y))
+    
+    let B = 0b00
+
+    // Empty space
+    if not sprite: return B
+    
+    if sprite.hsolid: B ∪= 0b01
+    if sprite.vsolid: B ∪= 0b10
+    
+    return B
+
+
+/* Returns the friction of the block at pixel (x, y). defaults
+   to normal friction, even for empty space. Flag 6 marks a block as
+   low friction. */
+def friction(map, x, y):
+    return if is_ice(map, x, y) then 0.0009 else 0.09
+
+
+def is_ice(map, x, y):
+    const sprite = get_map_sprite_by_ws_coord(map, xy(x, y))
+    return sprite and sprite.slippery
+
+
+// Returns the lowest friction
+// observed on the corners 
+def wall_friction(map, x, y1, y2):
+    return if (is_ice(map, x, y1) or is_ice(map, x, y2)) then 0.125 else 1
+
+

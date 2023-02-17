@@ -1,0 +1,62 @@
+{
+    "title": "Platformer",
+    "developer": "CasualEffects",
+    "copyright": "©2023 Morgan McGuire",
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+    "packages": [],
+    "scripts": [
+        "quad://scripts/particle.pyxl",
+        "map.pyxl",
+        "player.pyxl"
+    ],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "font": "quad://fonts/deja-8.font.json",
+        "spritesheet": "spritesheet.sprite.json",
+        "starter_map": "starter.map.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "Class 8-bit platformer physics with collisions, jump, wall jump, short jump, wall slide, and grace periods.",
+    "constants": {
+        "background_color": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "41%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "74%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "100%"
+                }
+            }
+        },
+        "particle_z": {
+            "type": "number",
+            "value": "20",
+            "min": -200,
+            "max": 200,
+            "format": "0",
+            "quantum": 1
+        }
+    },
+    "screenshot_tag": "Platformer",
+    "screen_size": {
+        "x": 192,
+        "y": 112
+    }
+}

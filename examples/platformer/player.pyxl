@@ -1,0 +1,265 @@
+// Assumes that Y = down and that both character sprites and map cells are 8x8
+const player_array = []
+
+todo("Optional double jump")
+
+def make_player(i, animation, …args):
+    return make_entity({
+        /////////////////////////////////////////
+        // Common entity state
+        
+        pos: xy(32 + 24 i, 44),
+        vel: xy(0, 0),
+        scale:  xy(random_sign(), 1),
+        size: xy(6, 8),
+        
+        gamepad: gamepad_array[i],
+        
+        animation: animation,
+        sprite: animation[0],
+
+        /////////////////////////////////////////
+        // Constants
+        
+        run_speed: 0.5,
+        // Set just low enough to mostly prevent repeated wall-jump
+        // from making vertical progress
+        air_control: 1.5625%,
+        jump_impulse: -1.03125, 
+        wall_jump_x_impulse: 0.5,
+
+
+        /////////////////////////////////////////
+        // Internal state
+        
+        /* mode values:
+
+        "not_active" = deactivated
+        "live"  = playing 
+        "done"  = finished level in game mode or done editing in select mode
+        "dead"  = dead in game mode */
+        mode: "live",
+
+        
+        /* Number of 120 Hz simulation steps since this player touched the ground?
+           used for ledge forgiveness */
+        since_ground: 0,
+        
+        /* Number of 120 Hz simulation steps since jump pressed forced high immediately after jump executed */
+        since_jump_request: 1000,
+    
+        touching_wall: false,
+        
+        /* Since the button was pressed */
+        since_jump_button: 1000,
+        
+        /* Number of 120hz simulation steps since a jump executed (different than
+           since_jump_button because pressing in the air does not trigger
+           since_jump)...used for variable-height jump */
+        since_jump:  1000,
+        
+        
+        …args})
+
+
+def player_update(player, map, particle_array)
+& if player.mode == "live" // Ignore non-active players
+& for i < 2: // Run 2x for 120 Hz sampling
+    
+    // ½ width and height, used for moving samples
+    const radius = ½ player.sprite.size * |player.scale|
+    
+    const ground_friction   = friction(map, player.pos.x, player.pos.y + radius.y + 1)
+    const run_acceleration  = 1.5625 lerp(ground_friction, 0.09, 3%)
+    
+    const terminal_velocity = 1.5
+    const gravity           = 0.03125
+
+    // # of 120 hz frames that a player can have run off a
+    // ledge and still be allowed to jump, or can jump before
+    // hitting a valid surface.
+    const jump_late_grace  = 8
+    const jump_early_grace = 8
+
+    //////////////////////////////////////////////////////////////////
+    // Running logic
+  
+    const on_ground = player.since_ground == 0
+
+    const x_acceleration = (if on_ground then run_acceleration else player.air_control) * player.scale.x
+
+    if player.gamepad.x:
+        // Accelerate horizontally
+        player.scale.x = player.gamepad.x
+        if player.vel.x * player.scale.x < player.run_speed:
+            player.vel.x += x_acceleration
+ 
+    else if on_ground:
+
+        // No buttons and on ground: apply friction to slow down
+        player.vel.x = ((player.vel.x > 0) and
+                     max(0, player.vel.x - ground_friction) or
+                     min(0, player.vel.x + ground_friction))
+
+    let y_accel = gravity
+    if player.since_jump < 20 and not on_ground and not player.gamepad.a and player.vel.y < 0:
+        // Short jump; artificially increase gravity
+        y_accel *= 8
+
+    // Accelerate down (+y)
+    player.vel.y = min(terminal_velocity, player.vel.y + y_accel)
+
+    //////////////////////////////
+    // Jumping
+
+    const can_ground_jump = player.since_ground < jump_late_grace
+    const can_wall_jump = (player.vel.y ≥ 0) and player.touching_wall
+
+    if player.gamepad.aa:
+        player.since_jump_button = 0
+    else:
+        player.since_jump_button = min(1000, player.since_jump_button + 1)
+
+
+    // Locations to test on the map. the insets on x and y must match what
+    // the other axis tests.
+ 
+    const face_x = player.pos.x + radius.x * player.scale.x
+     
+    // Increase time since jump
+    player.since_jump = min(player.since_jump + 1, 1000)
+    if (can_ground_jump or can_wall_jump) and (player.since_jump_button < jump_early_grace):
+        todo("Play jump sound")
+        
+        // Immediately erase ledge forgivenss
+        player.since_ground = 1000
+        player.vel.y = player.jump_impulse
+        
+        if not can_ground_jump:
+            // Wall jump: apply horizontal impulse based on prev facing direction
+            player.vel.x = if player.scale.x < 0 then player.wall_jump_x_impulse else -player.wall_jump_x_impulse
+         
+            // Spawn particles
+            const wall_x = player.pos.x + 75% radius.x * player.scale.x
+
+            const particle_pos = xy(wall_x, player.pos.y + radius.y)
+            particles_spawn(particle_array, particle_pos, xy(0.4 player.vel.x, -0.25), #eee, particle_z, 20)
+            particles_spawn(particle_array, particle_pos, xy(0.2 player.vel.x, -0.40), #fff, particle_z, 18)
+            
+            // Change facing direction after wall jump
+            player.scale.x *= -1
+    
+            // Reduce up velocity on low-friction walls
+            player.vel.y *= wall_friction(map, face_x, player.pos.y - 50% radius.y, player.pos.y + radius.y)
+    
+
+    /***************************************************************
+     Physics integrator. step in each axis independently. assume
+     max(abs(dx), abs(dy)) <= 1.5 near max velocity, players will hit 1px
+     *above* the ground and: fall to it the next frame.
+    
+     Assume characters are only 5 pix high (even though the graphics are
+     8 pix) so that they bump their heads less when jumping into 1-sprite
+     high passages. */
+ 
+    player.touching_wall = false
+    player.since_ground = min(player.since_ground + 1, 100) 
+
+    // for wall jump/slide purposes, at least the hand must be touching
+    player.touching_wall = hsolid(map, face_x, player.pos.y - 50% radius.y, player.pos.y + 85% radius.y)
+
+    if player.touching_wall and player.vel.x != 0 and player.vel.y > 0.1:
+        const wall_pos = xy(face_x, player.pos.y)
+        // wall-slide; apply friction
+        player.vel.y = max(0, player.vel.y - 0.35% friction(map, wall_pos.x, wall_pos.y))
+
+        // Find the wall sprite and read its pixels to make particles
+        if ξ < 15%:
+            // Sometimes there is no sprite due to roundoff
+            const wall_sprite = get_map_sprite_by_ws_coord(map, wall_pos)
+            if wall_sprite:
+                const color = get_sprite_pixel_color(wall_sprite, xy(ξ, ξ) * wall_sprite.size)
+    
+                particles_spawn(particle_array, wall_pos, 
+                    xy(-sign(player.vel.x) * random(0.3, 0.5), -0.3),
+                    color, particle_z, 9)
+    
+    const hit_x  = player.pos.x + 50% radius.x * sign(player.vel.x) + player.vel.x
+    const hit_y  = player.pos.y + radius.y * sign(player.vel.y) + player.vel.y
+        
+    // Wall (horizontal) collision
+    if hsolid(map, hit_x, player.pos.y - 50% radius.y, player.pos.y + 85% radius.y):
+        // Any part of body below hair hit a wall    
+        player.vel.x = 0
+ 
+    player.pos.x += player.vel.x
+    
+    // Floor/ceiling (vertical) collision
+    if vsolid(map, player.pos.x - 46% radius.x, hit_y, player.pos.x + 46% radius.x):
+        if player.vel.y > 0:
+            player.since_ground = 0
+            if player.vel.y > 60% terminal_velocity:
+                todo("Play landing sound")
+                // Landed from a long jump: spawn particles
+                for -½ ≤ j ≤ ½:
+                    particles_spawn(particle_array, player.pos + xy(80% radius.x * sign(j), radius.y), xy(-0.5, -0.4), #333, particle_z, 10)
+        player.vel.y = 0
+ 
+    player.pos.y += player.vel.y
+    
+    //////////////////////////////////////////////////////////
+    // Process "done" and "dead" cases
+
+    const map_sprite = get_map_sprite_by_ws_coord(map, player.pos)
+    if map_sprite:
+        if map_sprite.hazard:
+            // Hit hazard: explode
+            particles_spawn_from_entity(particle_array, {entity: player, max_frames: 60, max_spread_speed: 0.5, min_spread_speed: 0.2}) 
+            player.mode = "dead"
+/*     
+        else if map_sprite.door and count(lock_array) == 0:
+            // Hit door
+            player.mode = "done"
+      
+            // Detect the new spawn location for the next room
+            let x = floor(player.pos.x / 8)
+            let y = floor(player.pos.y / 8)
+            
+            spawn_x = x * 8 + 4
+            spawn_y = y * 8 + 4
+            
+            if x < 0:
+                map_dx, map_dy, spawn_x = -0.25, 0, 116
+            else if x > 14:
+                map_dx, map_dy, spawn_x = 0.25, 0, 4
+            else if y > 14:
+                map_dx, map_dy, spawn_y = 0, 0.25, 4
+            else if y < 1:
+                // when moving *up*, we need to put the characters slightly
+                // over so that they don't fall down again immediately
+                map_dx, map_dy, spawn_y = 0, -0.25, 116
+                spawn_x += 12
+    */
+
+
+
+/* Draw a character sprite.*/
+def player_draw(player, particle_array):
+    if player.mode != "live" and player.mode != "done": return
+
+    let index = 0
+
+    if player.mode == "done":
+        // Slow, alternating frame animation when done. Keep slightly out of sync between players
+        if ((mode_frames + ½ player.gamepad.index) / 60 mod 2 < 1.25): 
+            index = 1
+     
+    else if ((player.since_ground == 0 and player.vel.x != 0 and player.gamepad.x and (floor(mode_frames / 10) mod 2)) or 
+             (player.since_ground > 0)):
+        // Hold jump frame if in air, or alternate rapidly for running. otherwise, keep the base sprite
+        index = 1
+        
+
+    player.sprite = player.animation[index]
+    draw_entity(player)
+

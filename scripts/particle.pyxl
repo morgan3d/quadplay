@@ -75,12 +75,12 @@ def particles_spawn_from_map_ws_coord(
 
 
 
-// Convert an entity's sprite into a particle system.
-// Can also be called as spawn_particles_from_entity(args)
+/* Convert an entity's sprite into a particle system.
+   Can also be called as spawn_particles_from_entity(particle_array, args) */
 def particles_spawn_from_entity(
         particle_array,
         entity,
-        max_frames          default 40,
+        max_frames,
         z_offset            default ½,
         spread_center       default entity.pos,
         min_spread_speed    default 0,
@@ -95,7 +95,7 @@ def particles_spawn_from_entity(
         // Overloaded named argument version
         max_frames = entity.max_frames default 40
         z_offset = entity.z_offset default ½
-        spread_center = entity.spread_center default entity.pos.pos
+        spread_center = entity.spread_center default entity.entity.pos
         min_spread_speed = entity.min_spread_speed default 0
         max_spread_speed = entity.max_spread_speed default 0
         common_dir = entity.common_dir default xy(0, 0)
@@ -104,7 +104,10 @@ def particles_spawn_from_entity(
         common_vel = entity.common_vel default xy(0, 0)
         density = entity.density default 3
         entity = entity.entity
-                
+    else:
+        if max_frames == nil:
+            max_frames = 40
+        
     assert(entity, "entity must not be nil")
 
     const sprite = entity.sprite

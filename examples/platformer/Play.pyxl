@@ -1,0 +1,28 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+const map = starter_map
+const particle_array = make_particles()
+
+enter
+────────────────────────────────────────────────────────────────────────
+push(player_array, make_player(0, spritesheet.ace))
+push(player_array, make_player(1, spritesheet.eve))
+set_background(background_color)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+todo("Respawn")
+
+iterate(player_array, player_update, map, particle_array)
+
+const replacement_array = [map.spritesheet.flag[0], map.spritesheet.flag.frame(mode_frames)]
+draw_map(map, ∅, ∅, replacement_array)
+
+todo("Draw shadows")
+
+iterate(player_array, player_draw, particle_array)
+
+particles_update_and_draw(particle_array)

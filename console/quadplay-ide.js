@@ -4244,7 +4244,7 @@ const qrcode = useIDE && new QRCode('serverQRCode',
                                     });
 
 const BOOT_INFO = `<span style="color:#ec5588">quadplay✜ ${version}</span>
-<span style="color:#937ab7">© 2019-2022 Morgan McGuire</span>
+<span style="color:#937ab7">© 2019-2023 Morgan McGuire</span>
 <span style="color:#5ea9d8">Licensed under LGPL 3.0</span>
 <span style="color:#859ca6">https://casual-effects.com</span>
 

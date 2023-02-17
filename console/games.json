@@ -132,6 +132,11 @@
             "description": "Random planet generator with moons, atmosphere, and rings"
         },
         {
+            "url": "quad://examples/platformer/",
+            "title": "Platformer",
+            "description": "Class 8-bit platformer physics with collisions, jump, wall jump, short jump, wall slide, and grace periods."
+        },
+        {
             "url": "quad://examples/private_view/",
             "title": "Private Views",
             "description": "Example of using private views for online multiplayer"
