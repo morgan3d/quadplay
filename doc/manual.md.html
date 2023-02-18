@@ -8,7 +8,7 @@
 
 <center>[*Quick Start*](#quickstart) 
 ∙ [API](#standardlibrary) ([*Input*](#standardlibrary/input) ∙ [*Physics*](#standardlibrary/physics) ∙ [*Graphics*](#standardlibrary/graphics) ∙ [*Sound*](#standardlibrary/sound) ∙ [*AI*](#standardlibrary/ai) ∙ [*Network*](#network))
-<br>[Assets](assets.md.html) ([*Sprites*](assets.md.html#sprites) ∙ [*Fonts*](assets.md.html#fonts) ∙ [*Sounds*](assets.md.html#sounds))
+<br>[Assets](assets.md.html target=_blank) ([*Sprites*](assets.md.html#sprites target=_blank) ∙ [*Fonts*](assets.md.html#fonts target=_blank) ∙ [*Sounds*](assets.md.html#sounds target=_blank))
 <br>[Controls](#controls) 
 ∙ [Symbols](#symbols)
 ∙ [JSON Formats](#projectfiles) 
@@ -4939,7 +4939,7 @@ indices. The map's z-axis corresponds to layers.
 `draw_map(args)`
 : Draw the map using the named argument object.
 
-`draw_map(map, min_layer default 0, max_layer default length(map.layer), replacement_array default ∅, pos default xy(0, 0), angle default 0, scale default xy(1, 1), z default pos.z default 0)`
+`draw_map(map, min_layer default 0, max_layer default length(map.layer), replacement_array default ∅, pos default xy(0, 0), angle default 0, scale default xy(1, 1), z default pos.z default 0, override_color default rgba(0,0,0,0), override_blend default "lerp")`
 : Draws the map with the current transform.  If there is no transform,
   the map is drawn with the first tile's center at (0, 0), which means
   that the tile will be half off the screen.  If specified, `min_layer`

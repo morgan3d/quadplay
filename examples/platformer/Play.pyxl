@@ -20,10 +20,12 @@ todo("Respawn")
 iterate(player_array, player_update, map, particle_array)
 
 const replacement_array = [map.spritesheet.flag[0], map.spritesheet.flag.frame(mode_frames)]
+
+// Map shadow (this could be slow for a higher res game)
+draw_map(map, ∅, ∅, replacement_array, xy(0, 2), ∅, ∅, -1, #0007)
+// Map
 draw_map(map, ∅, ∅, replacement_array)
 
-todo("Draw shadows")
-
-iterate(player_array, player_draw, particle_array)
+iterate(player_array, player_draw)
 
 particles_update_and_draw(particle_array)

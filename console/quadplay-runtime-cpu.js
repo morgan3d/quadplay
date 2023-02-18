@@ -3491,7 +3491,7 @@ function set_map_sprite_by_ws_coord(map, ws_coord, sprite, z) {
 }
 
 
-function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_shift) {
+function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_shift, override_color, override_blend) {
     if ($skipGraphics) { return; }
     
     if (! map.layer && map.map && (arguments.length === 1)) {
@@ -3502,8 +3502,16 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
         pos = map.pos;
         angle = map.angle;
         scale = map.scale;
+        override_color = map.override_color;
+        override_blend = map.override_blend;
         z_shift = map.z;
         map = map.map; 
+    }
+
+    const multiply = override_blend === 'multiply';
+    if (override_color) {
+        // have to clone and convert to RGB space
+        override_color = rgba(override_color);
     }
 
     if (min_layer === undefined) { min_layer = 0; }
@@ -3514,7 +3522,7 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
         // Must draw layers separately when there is a zoom function.
         // Draw in order from back to front to preserve z-order.
         for (let L = min_layer; L <= max_layer; ++L) {
-            draw_map(map, L, L, replacements, pos, angle, scale, z_shift);
+            draw_map(map, L, L, replacements, pos, angle, scale, z_shift, override_color, override_blend);
         }
         return;
     }
@@ -3704,7 +3712,8 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                             scaleY:   scale.y * sprite.scale.y,
                             hasAlpha: sprite.$hasAlpha,
                             opacity:  1,
-                            override_color: undefined,
+                            override_color: override_color,
+                            multiply: multiply,
                             x:        screenX,
                             y:        screenY
                         };
