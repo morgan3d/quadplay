@@ -10,6 +10,7 @@ push(player_array, make_player(0, spritesheet.ace))
 push(player_array, make_player(1, spritesheet.eve))
 set_background(background_color)
 
+play_sound(music, true, 80%)
 
 frame
 ────────────────────────────────────────────────────────────────────────

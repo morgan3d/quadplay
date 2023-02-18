@@ -129,7 +129,7 @@ def player_update(player, map, particle_array)
     // Increase time since jump
     player.since_jump = min(player.since_jump + 1, 1000)
     if (can_ground_jump or can_wall_jump) and (player.since_jump_button < jump_early_grace):
-        todo("Play jump sound")
+        play_sound({sound: jump_09_sound, pan: player.pos})
         
         // Immediately erase ledge forgivenss
         player.since_ground = 1000
@@ -151,6 +151,7 @@ def player_update(player, map, particle_array)
     
             // Reduce up velocity on low-friction walls
             player.vel.y *= wall_friction(map, face_x, player.pos.y - 50% radius.y, player.pos.y + radius.y)
+            play_sound({sound: wall_jump_sound, pan: player.pos})
     
 
     /***************************************************************
@@ -199,10 +200,13 @@ def player_update(player, map, particle_array)
         if player.vel.y > 0:
             player.since_ground = 0
             if player.vel.y > 60% terminal_velocity:
-                todo("Play landing sound")
+                play_sound({sound: hit_08_sound, pan: player.pos, volume: 700%})
                 // Landed from a long jump: spawn particles
                 for -½ ≤ j ≤ ½:
                     particles_spawn(particle_array, player.pos + xy(80% radius.x * sign(j), radius.y), xy(-0.5, -0.4), #333, particle_z, 10)
+            else if player.vel.y > 8% terminal_velocity:
+                play_sound({sound: hit_08_sound, pan: player.pos, volume: 350%})
+
         player.vel.y = 0
  
     player.pos.y += player.vel.y
@@ -214,6 +218,7 @@ def player_update(player, map, particle_array)
     if map_sprite:
         if map_sprite.hazard:
             // Hit hazard: explode
+            play_sound({sound: die_sound, pan: player.pos})
             particles_spawn_from_entity(particle_array, {entity: player, max_frames: 60, max_spread_speed: 0.5, min_spread_speed: 0.2}) 
             player.mode = "dead"
 /*     

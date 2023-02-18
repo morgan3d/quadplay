@@ -17,7 +17,12 @@
     "assets": {
         "font": "quad://fonts/deja-8.font.json",
         "spritesheet": "spritesheet.sprite.json",
-        "starter_map": "starter.map.json"
+        "starter_map": "starter.map.json",
+        "jump_09_sound": "quad://sounds/jump-09.sound.json",
+        "hit_08_sound": "quad://sounds/hit-08.sound.json",
+        "music": "quad://sounds/music-princess_quest.sound.json",
+        "die_sound": "quad://sounds/shoot-03.sound.json",
+        "wall_jump_sound": "quad://sounds/jump-04.sound.json"
     },
     "version": 0,
     "min_players": 1,
