@@ -6,8 +6,7 @@
     "packages": [],
     "scripts": [
         "quad://scripts/particle.pyxl",
-        "map.pyxl",
-        "player.pyxl"
+        "quad://scripts/platformer.pyxl"
     ],
     "modes": [
         "Play"
@@ -49,14 +48,6 @@
                     "value": "100%"
                 }
             }
-        },
-        "particle_z": {
-            "type": "number",
-            "value": "20",
-            "min": -200,
-            "max": 200,
-            "format": "0",
-            "quantum": 1
         }
     },
     "screenshot_tag": "Platformer",

@@ -6,8 +6,17 @@ const particle_array = make_particles()
 
 enter
 ────────────────────────────────────────────────────────────────────────
-push(player_array, make_player(0, spritesheet.ace))
-push(player_array, make_player(1, spritesheet.eve))
+
+const sounds = {
+    wall_jump_sound: wall_jump_sound,
+    air_jump_sound: wall_jump_sound,
+    ground_jump_sound: jump_09_sound,
+    land_sound: hit_08_sound,
+    die_sound: die_sound
+}
+    
+push(player_array, make_player(0, spritesheet.ace, sounds))
+push(player_array, make_player(1, spritesheet.eve, sounds))
 set_background(background_color)
 
 play_sound(music, true, 80%)
