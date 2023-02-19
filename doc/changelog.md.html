@@ -10,8 +10,10 @@ of [<quadplay/>](manual.md.html).
 ===================================
 - New platformer physics example
 - Added `override_color` and `override_blend` arguments to `draw_map()`
+- Added `ray_intersect_map()` per-pixel callback and ray shortening
 - No longer force full-screen on the multiplayer network guest window
   when opening from the IDE "Copy URL" button while debugging
+- Fixed `ray_intersect_map()` using incorrect pixel coords for transformed maps
 - Fixed object args version of `particles_spawn_from_entity()` in `particles.pyxl`
 
 

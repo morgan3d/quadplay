@@ -268,7 +268,7 @@ def player_update(player, map, particle_array)
 
 
 /* Draw a character sprite.*/
-def player_draw(player):
+def player_draw(player, map):
     if player.mode != "live" and player.mode != "done": return
 
     let index = 0
@@ -283,7 +283,17 @@ def player_draw(player):
         // Hold jump frame if in air, or alternate rapidly for running. otherwise, keep the base sprite
         index = 1
         
-    todo("Draw player shadows")
+    
+    // Cast rays to draw player shadows. This could be slow for large sprites or with many sprites
+    const shadow_width = max(⌊50% player.sprite.size.x⌋, 1)
+    const ray = {pos: player.pos + xy(-½ shadow_width, ½ player.sprite.size.y * |player.scale.y|), dir: xy(0, 1), length: ∞}
+    const max_shadow_distance = 3 map.spritesheet.sprite_size.y
+    for x < shadow_width:
+        ++ray.pos.x
+        ray.length = max_shadow_distance
+        
+        if ray_intersect_map(ray, map) and ray.length < max_shadow_distance:
+            draw_point(ray.pos + ray.dir * ray.length, rgba(0%, 0%, 25%, 40% (1 - ray.length / max_shadow_distance)))
 
     player.sprite = player.animation[index]
     draw_entity(player)

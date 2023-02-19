@@ -31,7 +31,7 @@
     "competitive": false,
     "achievements": false,
     "highscores": false,
-    "description": "Class 8-bit platformer physics with collisions, jump, wall jump, short jump, wall slide, and grace periods.",
+    "description": "Class 8-bit platformer physics with collisions, jump, double jump, wall jump, short jump, wall slide, grace periods, and per-pixel ray casts.",
     "constants": {
         "background_color": {
             "type": "rgb",

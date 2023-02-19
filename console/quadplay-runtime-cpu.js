@@ -3283,6 +3283,32 @@ function get_map_pixel_color(map, map_coord, min_layer, max_layer_exclusive, rep
 }
 
 
+function $ws_coord_to_map_sprite_coord(map, ws_coord, layer, sprite_coord) {
+    // = transform_ws_to_map_space(map, ws_coord);
+    const map_coord_x = (ws_coord.x - map.$offset.x) / map.sprite_size.x,
+          map_coord_y = (ws_coord.y - map.$offset.y) / map.sprite_size.y;
+
+    const map_size_x = map.size.x, map_size_y = map.size.y;
+    
+    if (map.loop_x && (map_coord_x < 0 || map_coord_x >= map_size_x)) {
+        map_coord_x -= $Math.floor(map_coord_x / map_size_x) * map_size_x;
+    }
+    
+    if (map.loop_y && (map_coord_y < 0 || map_coord_y >= map_size_y)) {
+        map_coord_y -= $Math.floor(map_coord_y / map_size_y) * map_size_y;
+    }
+
+    // Integer version of the map coordinate
+    const mx = $Math.floor(map_coord_x) | 0, my = $Math.floor(map_coord_y) | 0;
+
+    // Map coord (0, 0) is the *corner* of the corner sprite
+    const ssX = (map.sprite_size.x >>> 0) - 1, ssY = (map.sprite_size.y >>> 0) - 1;
+
+    sprite_coord.x = $clamp(((map_coord_x - mx) * (ssX + 1)) | 0, 0, ssX);
+    sprite_coord.y = $clamp(((map_coord_y - my) * (ssY + 1)) | 0, 0, ssY);
+}
+
+
 // Return value:
 //  -1:        out of bounds or no sprite
 //  -2:        value in result
@@ -5967,8 +5993,9 @@ function ray_intersect_map(ray, map, layer, sprite_callback, pixel_callback, rep
     if (sprite_callback === undefined && pixel_callback === undefined) {
         pixel_callback = $default_ray_map_pixel_callback;
     }
-    
-    if (layer === undefined || layer < 0 || layer >= map.layer.length) {
+
+    layer = layer || 0;
+    if (layer < 0 || layer >= map.layer.length) {
         $error('ray_intersect_map() requires the layer to be specified and in bounds for the map');
     }
     
@@ -5983,13 +6010,24 @@ function ray_intersect_map(ray, map, layer, sprite_callback, pixel_callback, rep
         ray.dir.x *= inv; ray.dir.y *= inv;
     }
 
+    // Will be mutated below
+    const pixel_ray = {
+        pos: xy(0, 0),
+        dir: ray.dir,
+        length: 0
+    };
+
+    // Will be mutated below
     const ws_normal = xy(0, 0);
     const ws_coord = xy(0, 0);
     const map_coord = xy(0, 0);
-    const pixel_coord = xy(0, 0);
+    const ps_coord = xy(0, 0);
 
     const inv_sprite_size_x = 1 / map.sprite_size.x;
     const inv_sprite_size_y = 1 / map.sprite_size.y;
+
+    const one = xy(1, 1);
+    const inf = xy(Infinity, Infinity);
 
     for (const it = $makeRayGridIterator(ray, map.size, map.sprite_size);
          it.insideGrid && (it.enterDistance < it.ray.length);
@@ -6011,26 +6049,45 @@ function ray_intersect_map(ray, map, layer, sprite_callback, pixel_callback, rep
         const sprite = get_map_sprite(map, map_coord, layer, replacement_array);
         
         if (sprite || run_callback_on_empty_sprites) {
-            pixel_coord.x = $loop(ws_coord.x, 0, map.sprite_size.x);
-            pixel_coord.y = $loop(ws_coord.y, 0, map.sprite_size.y);
+            $ws_coord_to_map_sprite_coord(map, ws_coord, layer, ps_coord);
             
             if (sprite_callback) {
-                const result = sprite_callback(sprite, pixel_coord, ws_normal, it.ray, map, it.enterDistance, ws_coord, map_coord);
+                const result = sprite_callback(sprite, ps_coord, ws_normal, it.ray, map, it.enterDistance, ws_coord, map_coord);
                 if (result !== undefined) {
+                    // Shorten ray
+                    ray.length = distanceSquared2D(ws_coord, ray.pos);
                     return result;
                 }
             }
 
             if (sprite && pixel_callback) {
-                // TODO: march
-                /*
-                const result = pixel_callback(sprite, pixel_coord, ws_normal, it.ray, map, it.enterDistance, ws_coord, map_coord);
-                if (result !== undefined) {
-                    return result;
-                }
-                */
+
+                pixel_ray.pos.x = ws_coord.x; pixel_ray.pos.y = ws_coord.y;
+                pixel_ray.length = $Math.min(it.exitDistance.x, it.exitDistance.y) - it.enterDistance;
+
+                for (const pit = $makeRayGridIterator(pixel_ray, inf, one);
+                     pit.insideGrid && (pit.enterDistance < pit.ray.length);
+                     $advanceRayGridIterator(pit)) {
+
+                    // World-space normal along which we entered this pixel
+                    ws_normal.x = ws_normal.y = 0;
+                    ws_normal[it.enterAxis] = -pit.step[it.enterAxis];
+
+                    // World-space point at which we entered the pixel
+                    ws_coord.x = pit.ray.pos.x + pit.enterDistance * pit.ray.dir.x;
+                    ws_coord.y = pit.ray.pos.y + pit.enterDistance * pit.ray.dir.y;
+
+                    $ws_coord_to_map_sprite_coord(map, ws_coord, layer, ps_coord);
+
+                    const result = pixel_callback(sprite, ps_coord, ws_normal, it.ray, map, it.enterDistance, ws_coord, map_coord);
+                    if (result !== undefined) {
+                        // Shorten ray
+                        ray.length = pit.enterDistance + it.enterDistance;
+                        return result;
+                    }
+                } // For each pixel
             }
-        }
+        } // if sprite
         
     }  // while
 
@@ -6271,14 +6328,15 @@ function random_within_region(region, recurse, rng) {
     } // recurse
 }
 
+function $distanceSquared2D(u, v) { return $square(u.x - v.x) + $square(u.y - v.y); }
+
 
 /** True if the objects overlap. Positions are centers. Sizes are
     width, height vectors.  Angles are counter-clockwise radians from
     +x to +y. Shapes are 'rect' or 'disk'. If 'disk', the size x
     and y must be the same.  */
 var overlaps = (function() {
-    
-    function distanceSquared2D(u, v) { return $square(u.x - v.x) + $square(u.y - v.y); }
+  
 
     // Scratch space vector to avoid memory allocation
     const temp = {x:0, y:0};
@@ -6397,7 +6455,7 @@ var overlaps = (function() {
             
             // Disk-Disk. Multiply the right-hand side by 4 because
             // we're computing diameter^2 instead of radius^2
-            return distanceSquared2D(A.pos, temp2) * 4 <= $square(A.size.x * $Math.abs(A.scale.x) + B.size.x * $Math.abs(B.scale.x));
+            return $distanceSquared2D(A.pos, temp2) * 4 <= $square(A.size.x * $Math.abs(A.scale.x) + B.size.x * $Math.abs(B.scale.x));
 
         } else if ((B.size.x === 0) && (B.size.y === 0) && (A.angle === 0)) {
 
@@ -6447,7 +6505,7 @@ var overlaps = (function() {
                 temp2.x = ADiameterX;
                 temp2.y = ADiameterY;
                 //console.log('Box-Disk: Corner case');
-                return distanceSquared2D(P, temp2) <= $square(BDiameterX);
+                return $distanceSquared2D(P, temp2) <= $square(BDiameterX);
             }       
             
         } else if ((A.angle === 0) && (B.angle === 0)) {

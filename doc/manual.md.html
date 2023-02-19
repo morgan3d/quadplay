@@ -3967,13 +3967,13 @@ using the full physics engine.
 : Returns the first object intersected when calling `ray_intersect(ray, array[i])`
   on each element of the array.
   
-`ray_intersect_map(ray, map, layer, sprite_callback default nil, pixel_callback default nil, replacement_array default [], run_callback_on_nil_sprites default false)`
+`ray_intersect_map(ray, map, layer default 0, sprite_callback default nil, pixel_callback default nil, replacement_array default [], run_callback_on_nil_sprites default false)`
 : The `ray` object must have `xy()` fields for `pos`, `dir`,
   and an optional number field for `length default infinity`.
   The `ray.direction` will automatically be normalized.
   The ray is in _world coordinates_.
   
-  The return value is the first non-nil return value of
+  The return value is the first non-`nil` return value of
   `sprite_callback` or `pixel_callback`, or `nil` if the end of the
   ray is reached.
 
@@ -3992,8 +3992,13 @@ using the full physics engine.
   non-`nil` value and the `ray.length` is shortened to the hit
   distance.
 
-  At least one callback must be specified. There is no default sprite
-  callback. The default pixel callback is equivalent to:
+  Invokes the sprite callback first for each sprite entered, and then
+  the pixel callback repeatedly for each pixel along the ray in the
+  sprite until the next sprite is reached.
+  
+  Both the sprite callback and pixel callback are optional.
+  If neither the sprite callback nor the pixel callback
+  is specified, then the default pixel callback is equivalent to:
   
   `def default_pixel_callback(s, p): return if get_sprite_pixel_color(s, p).a >= 50% then s else nil`
 

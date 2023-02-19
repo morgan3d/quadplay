@@ -12,10 +12,9 @@ set_background(background_color)
 
 play_sound(music, true, 80%)
 
+
 frame
 ────────────────────────────────────────────────────────────────────────
-
-todo("Respawn")
 
 iterate(player_array, player_update, map, particle_array)
 
@@ -26,6 +25,6 @@ draw_map(map, ∅, ∅, replacement_array, xy(0, 2), ∅, ∅, -1, #0007)
 // Map
 draw_map(map, ∅, ∅, replacement_array)
 
-iterate(player_array, player_draw)
+iterate(player_array, player_draw, map)
 
 particles_update_and_draw(particle_array)
