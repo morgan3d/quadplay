@@ -2,7 +2,7 @@
 "use strict";
 
 // Set to false when working on quadplay itself
-const deployed = true;
+const deployed = false;
 
 /* The containing web page that quadplay is embedded within, or quadplay's iframe
    if running cross-origin */

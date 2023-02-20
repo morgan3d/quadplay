@@ -6,6 +6,11 @@
         "y": 8
     },
     "names": {
+        "ladder": {
+            "x": 11,
+            "y": 4,
+            "climbable": true
+        },
         "flag": {
             "start": {
                 "x": 6,
