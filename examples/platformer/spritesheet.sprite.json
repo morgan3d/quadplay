@@ -9,7 +9,8 @@
         "ladder": {
             "x": 11,
             "y": 4,
-            "climbable": true
+            "climbable": true,
+            "pass": true
         },
         "flag": {
             "start": {
@@ -19,29 +20,24 @@
             "end": {
                 "x": 8
             },
-            "frames": 10
+            "frames": 10,
+            "pass": true
         },
-        "hdoor": {"x": 15, "y": 0, door: true},
-        "vdoor": {"x": 15, "y": 1, door: true},
-        "vspikes": {"x": 14, "y": 3, "hazard": true, "hsolid": true},
-        "hspikes": {"x": 15, "y": 3, "hazard": true, "vsolid": true},
+        "hdoor": {"x": 15, "y": 0, "door": true, "pass": true},
+        "vdoor": {"x": 15, "y": 1, "door": true, "pass": true},
+        "vspikes": {"x": 14, "y": 3, "hazard": true, "vpass": true},
+        "hspikes": {"x": 15, "y": 3, "hazard": true, "hpass": true},
         "brick": {
             "start": {"x": 1, "y": 0},
-            "end": {"x": 4},
-            "hsolid": true,
-            "vsolid": true
+            "end": {"x": 4}
         },
         "dirt": {
             "start": {"x": 6, "y": 0},
-            "end": {"x": 10},
-            "hsolid": true,
-            "vsolid": true
+            "end": {"x": 10}
         },
         "rock":{
             "start": {"x": 5, "y": 2},
-            "end": {"x": 6},
-            "hsolid": true,
-            "vsolid": true
+            "end": {"x": 6}
         },
         "icy_rock":{
             "start": {"x": 7, "y": 2},
@@ -53,7 +49,8 @@
         "key": {
             "x": 14,
             "y": 5,
-            "key": true
+            "key": true,
+            "pass": true
         },
         "ace": {
             "start": {

@@ -3901,7 +3901,8 @@ function draw_disk(pos, radius, color, outline, z) {
     form 0xABGR.
     
     Performance of this routine is critical, so it is kept
-    very short to encourage inlining with the less-common case in a helper to encourage inlining of this 
+    very short to encourage inlining with the less-common
+     case in a helper to encourage inlining of this 
  */
 function $colorToUint16(color) {
     if (color === undefined) { return 0; }

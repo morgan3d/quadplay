@@ -1240,22 +1240,41 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                 // Check each sprite for alpha channel
                 let hasAlpha = false;
                 let hasFractionalAlpha = false;
+                const mean_color = {r: 0, g: 0, b: 0, a: 0};
                 outerloop:
                 for (let j = 0; j < spritesheet.sprite_size.y; ++j) {
                     let index = (v * (spritesheet.sprite_size.y + spritesheet.$gutter) + j) * data.width + u * (spritesheet.sprite_size.x + spritesheet.$gutter);
                     for (let i = 0; i < spritesheet.sprite_size.x; ++i, ++index) {
                         const alpha15 = (data[index] >>> 12) & 0xf;
+
+                        const alpha = alpha15 / 15;
+                        mean_color.r += alpha * (data[index] >>> 8) & 0xf;
+                        mean_color.g += alpha * (data[index] >>> 4) & 0xf;
+                        mean_color.b += alpha * data[index] & 0xf;
+                        mean_color.a += alpha;
+                        
                         if (alpha15 < 0xf) {
                             hasAlpha = true;
 
                             if (alpha15 > 0) {
                                 hasFractionalAlpha = true;
-                                break outerloop;
+                                // Can't break out when computing
+                                // the mean color
+                                //break outerloop;
                             }
                         }
                     }
                 }
 
+                if (mean_color.a > 0) {
+                    mean_color.r /= 15 * mean_color.a;
+                    mean_color.g /= 15 * mean_color.a;
+                    mean_color.b /= 15 * mean_color.a;
+                    mean_color.a /= spritesheet.sprite_size.x * spritesheet.sprite_size.y;
+                }
+                mean_color.$color = QRuntime.$colorToUint16(mean_color);
+                Object.freeze(mean_color);
+                
                 let centerColor;
                 {
                     const x = u * (spritesheet.sprite_size.x + spritesheet.$gutter) + Math.floor(spritesheet.sprite_size.x / 2);
@@ -1285,7 +1304,8 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     size:              spritesheet.sprite_size,
                     scale:             PP,
                     pivot:             sspivot,
-                    frames:            sheetDefaultframes
+                    frames:            sheetDefaultframes,
+                    mean_color:        mean_color
                 };
                 sprite.base = sprite;
 
@@ -1316,7 +1336,8 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     scale:             PP,
                     pivot:             transposedPivot,
                     frames:            sheetDefaultframes,
-                    base:              sprite
+                    base:              sprite,
+                    mean_color:        sprite.mean_color
                 };
 
                 transposedSpritesheet[y][x] = transposedSprite;

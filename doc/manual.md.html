@@ -3457,6 +3457,11 @@ a `start` property in the .sprite.json file.
   Flipped sprites are created on spritesheet load but can only be accessed
   through the non-flipped sprites. Note that `s.y_flipped.y_flipped == s`.
 
+`sprite.mean_color`
+: The average color of the entire sprite (not rounded to 4-bit precision).
+  The color is computed using premultiplied alpha weighting, so low-alpha
+  pixels contribute less to the final average.
+
 Any properties attached to a named sprite or animation in the `sprite.json` file also
 appear as properties of the sprite (and its flipped variations).
 
