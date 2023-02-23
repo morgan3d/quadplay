@@ -43,6 +43,8 @@ def make_player(i, animation, args):
         // 1 for normal jumping
         // 2 double jump, etc.
         jumps_allowed: 2,
+        
+        ray_cast_shadow: true,
 
 
         /////////////////////////////////////////
@@ -134,9 +136,10 @@ def player_update(player, map, layer, particle_array)
     //////////////////////////////
     // Jumping
 
+    const can_jump = player.jumps_taken < player.jumps_allowed
     const can_ground_jump = player.since_ground < jump_late_grace
     const can_wall_jump = (player.vel.y ≥ 0) and player.touching_wall
-    const can_air_jump = player.jumps_taken < player.jumps_allowed and player.since_jump_button > 20
+    const can_air_jump = player.since_jump_button > 20
     const just_jumped = player.since_jump_button < 8
 
     if player.gamepad.aa:
@@ -153,7 +156,8 @@ def player_update(player, map, layer, particle_array)
     
     // Increase time since jump
     player.since_jump = min(player.since_jump + 1, 1000)
-    if ((can_ground_jump or can_wall_jump or can_air_jump) and 
+    if (can_jump and
+        (can_ground_jump or can_wall_jump or can_air_jump) and 
         (player.since_jump_button < jump_early_grace)):
         
         // Immediately erase ledge forgivenss
@@ -324,18 +328,26 @@ def player_draw(player, map, layer):
         // Hold jump frame if in air, or alternate rapidly for running. otherwise, keep the base sprite
         index = 1
         
-    
-    // Cast rays to draw player shadows. This could be slow for large sprites or with many sprites
-    const shadow_width = max(⌊50% player.sprite.size.x⌋, 1)
-    const ray = {pos: player.pos + xy(-½ shadow_width, ½ player.sprite.size.y * |player.scale.y|), dir: xy(0, 1), length: ∞}
-    const max_shadow_distance = 3 map.spritesheet.sprite_size.y
-    for x < shadow_width:
-        ++ray.pos.x
-        ray.length = max_shadow_distance
         
-        if ray_intersect_map(ray, map, layer) and ray.length < max_shadow_distance:
-            draw_point(ray.pos + ray.dir * ray.length, rgba(0%, 0%, 25%, 40% (1 - ray.length / max_shadow_distance)))
-
+    if player.ray_cast_shadow:
+        // Cast rays to draw player shadows. This could be slow for large sprites or with many sprites, or
+        // when there is a high camera zoom factor
+        const shadow_z = transform_map_layer_to_ws_z(map, layer) + ε
+        const camera = get_camera()
+        const zoom = if is_function(camera.zoom) then camera.zoom(shadow_z) else (camera.zoom default 100%)
+        const x_step = 1 / zoom
+        
+        const shadow_width = max(⌊50% player.sprite.size.x⌋, 1)
+        const max_shadow_distance = 3 map.spritesheet.sprite_size.y
+        const ray = {pos: round(player.pos + xy(-½ shadow_width - 1, ½ player.sprite.size.y * |player.scale.y|)), dir: xy(0, 1), length: max_shadow_distance}
+        for x < shadow_width / x_step:
+            // Update the ray for the next pixel
+            ray.pos.x += x_step
+            ray.length = max_shadow_distance
+            
+            if ray_intersect_map(ray, map, layer) and ray.length < max_shadow_distance:
+                draw_point(ray.pos + ray.dir * ray.length, rgba(0%, 0%, 25%, 40% (1 - ray.length / max_shadow_distance)), shadow_z)
+           
     player.sprite = player.animation[index]
     draw_entity(player)
 

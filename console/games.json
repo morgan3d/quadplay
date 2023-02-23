@@ -134,7 +134,7 @@
         {
             "url": "quad://examples/platformer/",
             "title": "Platformer",
-            "description": "Class 8-bit platformer physics with collisions, jump, double jump, wall jump, short jump, wall slide, grace periods, ladders, and per-pixel ray casts."
+            "description": "Classic 8-bit platformer physics with collisions, jump, double jump, wall jump, short jump, wall slide, grace periods, ladders, and per-pixel ray casts."
         },
         {
             "url": "quad://examples/private_view/",

@@ -4918,6 +4918,10 @@ to mutate the asset.
 `map.sprite_size`
 : The `xy()` size of source sprites in pixels.
 
+`map.offset`
+: `xy()` offset of the map when reading:
+  `ws_coord = map_coord * map.sprite_size + map.offset`
+
 `map.loop_x`
 : If true, the map wraps horizontally. Array access does not automatically
   wrap, but functions such as `get_map_sprite()`, `map_find_path()`, and `get_map_pixel_color()`

@@ -17,8 +17,7 @@ const sounds = {
 }
     
 push(player_array, make_player(0, spritesheet.ace, sounds))
-todo("Restore")
-//push(player_array, make_player(1, spritesheet.eve, sounds))
+push(player_array, make_player(1, spritesheet.eve, sounds))
 set_background(background_color)
 
 play_sound(music, true, 80%)

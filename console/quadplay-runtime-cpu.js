@@ -2678,14 +2678,14 @@ function transform_ws_z_to_map_layer(map, z) {
 
 
 function transform_map_space_to_ws(map, map_coord) {
-    return xy(map_coord.x * map.sprite_size.x + map.$offset.x,
-              map_coord.y * map.sprite_size.y + map.$offset.y);
+    return xy(map_coord.x * map.sprite_size.x + map.offset.x,
+              map_coord.y * map.sprite_size.y + map.offset.y);
 }
 
 
 function transform_ws_to_map_space(map, ws_coord) {
-    return xy((ws_coord.x - map.$offset.x) / map.sprite_size.x,
-              (ws_coord.y - map.$offset.y) / map.sprite_size.y);
+    return xy((ws_coord.x - map.offset.x) / map.sprite_size.x,
+              (ws_coord.y - map.offset.y) / map.sprite_size.y);
 }
 
 
@@ -2726,7 +2726,7 @@ function map_resize(map, w, h, layers) {
     // horizontal, vertical, and layer blocks could be reordered.
 
     // Vertical
-    if (h != map.size.y) {
+    if (h !== map.size.y) {
         // Shrink or grow
         for (let L = 0; L < map.layer.length; ++L) {
             for (let x = 0; x < map.size.x; ++x) {
@@ -3285,8 +3285,8 @@ function get_map_pixel_color(map, map_coord, min_layer, max_layer_exclusive, rep
 
 function $ws_coord_to_map_sprite_coord(map, ws_coord, layer, sprite_coord) {
     // = transform_ws_to_map_space(map, ws_coord);
-    const map_coord_x = (ws_coord.x - map.$offset.x) / map.sprite_size.x,
-          map_coord_y = (ws_coord.y - map.$offset.y) / map.sprite_size.y;
+    const map_coord_x = (ws_coord.x - map.offset.x) / map.sprite_size.x,
+          map_coord_y = (ws_coord.y - map.offset.y) / map.sprite_size.y;
 
     const map_size_x = map.size.x, map_size_y = map.size.y;
     
@@ -3687,8 +3687,8 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
                     // Compute the screen coordinates. Sprites are
                     // rendered from centers, so offset each by 1/2
                     // the tile size.
-                    const x = (mapX + 0.5) * map.sprite_size.x + map.$offset.x;
-                    const y = (mapY + 0.5) * map.sprite_size.y + map.$offset.y;
+                    const x = (mapX + 0.5) * map.sprite_size.x + map.offset.x;
+                    const y = (mapY + 0.5) * map.sprite_size.y + map.offset.y;
                     
                     const screenX = (drawU.x * x + drawV.x * y + pos.x) * $scaleX + $offsetX;
                     const screenY = (drawU.y * x + drawV.y * y + pos.y) * $scaleY + $offsetY;
@@ -5840,17 +5840,26 @@ function axis_aligned_draw_box(e) {
 
 /** All arguments except the ray are xy(). Clones only the
     ray. Assumes that (0, 0) is the grid origin */
-function $makeRayGridIterator(ray, numCells, cellSize) {
+function $makeRayGridIterator(rayPos, rayDir, rayLength, numCells, cellSize) {
 
     const it = {
         numCells:          numCells,
         enterDistance:     0,
-        enterAxis:         'x',
-        ray:               {pos: {x: ray.pos.x, y: ray.pos.y},
-                            dir: {x: ray.dir.x, y: ray.dir.y},
-                            length: ray.length},
+
+        // Will be set to 'x' or 'y' by advancing the iterator
+        enterAxis:         '',
+        
+        ray:               {pos: {x: rayPos.x, y: rayPos.y},
+                            dir: {x: rayDir.x, y: rayDir.y},
+                            length: rayLength},
+        
         cellSize:          cellSize,
+
+        // Is the iterator's current point still inside the grid
         insideGrid:        true,
+
+        // Does the current cell contain the ray origin (if not
+        // then it is on an edge)
         containsRayOrigin: true,
         index:             {x:0, y:0},
         tDelta:            {x:0, y:0},
@@ -5859,20 +5868,13 @@ function $makeRayGridIterator(ray, numCells, cellSize) {
         boundaryIndex:     {x:0, y:0}
     };
 
-    /*
-    if (gridOriginIndex.x !== 0 || gridOriginIndex.y !== 0) {
-        // Change to the grid's reference frame
-        ray.pos.x -= gridOrigin.x;
-        ray.pos.y -= gridOrigin.y;
-    }
-    */
-
     //////////////////////////////////////////////////////////////////////
-    // See if the ray begins inside the box
+    // See if the ray begins inside the grid
 
     let startsOutside = false;
-    let inside = false;
-    let startLocation = {x: ray.pos.x, y: ray.pos.y};
+    let startLocation = {x: it.ray.pos.x, y: it.ray.pos.y};
+    let inside = startLocation.x >= 0 && startLocation.x < numCells.y * cellSize.x &&
+        startLocation.y >= 0 && startLocation.y < numCells.y * cellSize.y;
     
     ///////////////////////////////
 
@@ -5881,21 +5883,21 @@ function $makeRayGridIterator(ray, numCells, cellSize) {
         // intersects the grid.
         
         // From Listing 1 of "A Ray-Box Intersection Algorithm and Efficient Dynamic Voxel Rendering", jcgt 2018
-        const t0 = {x: -ray.pos.x / ray.dir.x,
-                    y: -ray.pos.y / ray.dir.y};
-        const t1 = {x: (numCells.x * cellSize.x - ray.pos.x) / ray.dir.x,
-                    y: (numCells.y * cellSize.y - ray.pos.y) / ray.dir.y};
+        const t0 = {x: -it.ray.pos.x / it.ray.dir.x,
+                    y: -it.ray.pos.y / it.ray.dir.y};
+        const t1 = {x: (numCells.x * cellSize.x - it.ray.pos.x) / it.ray.dir.x,
+                    y: (numCells.y * cellSize.y - it.ray.pos.y) / it.ray.dir.y};
         const tmin = {x: $Math.min(t0.x, t1.x),
-                      y: $Math.min(t0.y, t1.y),
-                     },
-              tmax = {x: $Math.max(t0.x, t1.x),
+                      y: $Math.min(t0.y, t1.y)};
+        const tmax = {x: $Math.max(t0.x, t1.x),
                       y: $Math.max(t0.y, t1.y)};
+        
         const passesThroughGrid = $Math.max(tmin.x, tmin.y) <= $Math.min(tmax.x, tmax.y);
         
         if (passesThroughGrid) {
-            // Back up slightly so that we immediately hit the start location.
+            // Back up slightly so that we immediately hit the start location
             it.enterDistance = $Math.hypot(it.ray.pos.x - startLocation.x,
-                                           it.ray.pos.y - startLocation.y) - 0.0001;
+                                           it.ray.pos.y - startLocation.y) - 0.00001;
             startLocation = {x: it.ray.pos.x + it.ray.dir.x * it.enterDistance,
                              y: it.ray.pos.y + it.ray.dir.y * it.enterDistance};
             startsOutside = true;
@@ -5916,7 +5918,7 @@ function $makeRayGridIterator(ray, numCells, cellSize) {
         it.tDelta[a] = $Math.abs(cellSize[a] / it.ray.dir[a]);
         it.step[a]   = $Math.sign(it.ray.dir[a]);
 
-        // Distance to the edge fo the cell along the ray direction
+        // Distance to the edge of the cell along the ray direction
         let d = startLocation[a] - it.index[a] * cellSize[a];
         if (it.step[a] > 0) {
             // Measure from the other edge
@@ -5939,16 +5941,6 @@ function $makeRayGridIterator(ray, numCells, cellSize) {
         }
     }
 
-    /*
-    if (gridOriginIndex.x !== 0 || gridOriginIndex.y !== 0) {
-        // Offset the grid coordinates
-        it.boundaryIndex.x += gridOriginIndex.x;
-        it.boundaryIndex.y += gridOriginIndex.y;
-        it.index.x         += gridOriginIndex.x;
-        it.index.y         += gridOriginIndex.y;
-        }
-    */
-
     if (startsOutside) {
         // Let the increment operator bring us into the first cell
         // so that the starting axis is initialized correctly.
@@ -5962,8 +5954,10 @@ function $makeRayGridIterator(ray, numCells, cellSize) {
 function $advanceRayGridIterator(it) {
     // Find the axis of the closest partition along the ray
     it.enterAxis = (it.exitDistance.x < it.exitDistance.y) ? 'x' : 'y';
+
+    $console.assert(it.exitDistance[it.enterAxis] < Infinity);
     
-    it.enterDistance              = it.exitDistance[it.enterAxis];
+    it.enterDistance               = it.exitDistance[it.enterAxis];
     it.index[it.enterAxis]        += it.step[it.enterAxis];
     it.exitDistance[it.enterAxis] += it.tDelta[it.enterAxis];
     
@@ -6015,14 +6009,13 @@ function ray_intersect_map(ray, map, layer, sprite_callback, pixel_callback, rep
     const pixel_ray = {
         pos: xy(0, 0),
         dir: ray.dir,
-        length: 0
-    };
+        length: 0};
 
     // Will be mutated below
     const ws_normal = xy(0, 0);
-    const ws_coord = xy(0, 0);
     const map_coord = xy(0, 0);
     const ps_coord = xy(0, 0);
+    const ws_coord = xy(0, 0);
 
     const inv_sprite_size_x = 1 / map.sprite_size.x;
     const inv_sprite_size_y = 1 / map.sprite_size.y;
@@ -6030,7 +6023,11 @@ function ray_intersect_map(ray, map, layer, sprite_callback, pixel_callback, rep
     const one = xy(1, 1);
     const inf = xy(Infinity, Infinity);
 
-    for (const it = $makeRayGridIterator(ray, map.size, map.sprite_size);
+    // Take the ray into map pixel space by offsetting the origin
+    const map_pixel_start = xy(ray.pos.x - map.offset.x, ray.pos.y - map.offset.y);
+
+    // The iterator copies the position and direction
+    for (const it = $makeRayGridIterator(map_pixel_start, ray.dir, ray.length, map.size, map.sprite_size);
          it.insideGrid && (it.enterDistance < it.ray.length);
          $advanceRayGridIterator(it)) {
         
@@ -6038,13 +6035,16 @@ function ray_intersect_map(ray, map, layer, sprite_callback, pixel_callback, rep
         ws_normal.x = ws_normal.y = 0;
         ws_normal[it.enterAxis] = -it.step[it.enterAxis];
 
-        // World-space point at which we entered the cell
-        ws_coord.x = it.ray.pos.x + it.enterDistance * it.ray.dir.x;
-        ws_coord.y = it.ray.pos.y + it.enterDistance * it.ray.dir.y;
+        // World-space point at which we entered the cell. Note that
+        // this is based on the original world-space ray, not the iterator's
+        // map-pixel space ray.
+        ws_coord.x = ray.pos.x + it.enterDistance * it.ray.dir.x;
+        ws_coord.y = ray.pos.y + it.enterDistance * it.ray.dir.y;
 
-        // Bump into the cell and then round
-        map_coord.x = $Math.floor((ws_coord.x - ws_normal.x) * inv_sprite_size_x);
-        map_coord.y = $Math.floor((ws_coord.y - ws_normal.y) * inv_sprite_size_y);
+        // Bump into the cell and then round down to get a map cell
+        // coordinate.
+        map_coord.x = $Math.floor((ws_coord.x - ws_normal.x * 0.5 - map.offset.x) * inv_sprite_size_x);
+        map_coord.y = $Math.floor((ws_coord.y - ws_normal.y * 0.5 - map.offset.y) * inv_sprite_size_y);
 
         // Get the sprite
         const sprite = get_map_sprite(map, map_coord, layer, replacement_array);
@@ -6066,7 +6066,7 @@ function ray_intersect_map(ray, map, layer, sprite_callback, pixel_callback, rep
                 pixel_ray.pos.x = ws_coord.x; pixel_ray.pos.y = ws_coord.y;
                 pixel_ray.length = $Math.min(it.exitDistance.x, it.exitDistance.y) - it.enterDistance;
 
-                for (const pit = $makeRayGridIterator(pixel_ray, inf, one);
+                for (const pit = $makeRayGridIterator(pixel_ray.pos, pixel_ray.dir, pixel_ray.length, inf, one);
                      pit.insideGrid && (pit.enterDistance < pit.ray.length);
                      $advanceRayGridIterator(pit)) {
 
@@ -6236,7 +6236,7 @@ function $cleanupRegion(A) {
                      y: A.corner.y + 0.5 * A.size.y * $Math.abs(A.scale.y)}
             
             if (A.angle !== 0) {
-                $error('Cannot use angle != 0 with a corner rect');
+                $error('Cannot use non-zero angle with a corner rect');
             }
 
             // Remove the corner property, which was a clone, to

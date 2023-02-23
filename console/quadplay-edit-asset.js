@@ -306,8 +306,8 @@ function onNewAssetCreate() {
             const spriteSize = spriteJSON.sprite_size || {x: spriteImage.width, y: spriteImage.height};
             
             if (document.getElementById('newAssetMapCenter').checked) {
-                templateJSONParameters.offset_x = spriteSize.x * width / 2;
-                templateJSONParameters.offset_y = spriteSize.y * height / 2;
+                templateJSONParameters.offset_x = -spriteSize.x * width / 2;
+                templateJSONParameters.offset_y = -spriteSize.y * height / 2;
             } else {
                 templateJSONParameters.offset_x = templateJSONParameters.offset_y = 0;
             }
