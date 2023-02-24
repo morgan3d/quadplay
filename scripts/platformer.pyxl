@@ -108,10 +108,8 @@ def player_update(player, map, layer, particle_array)
 
     // Don't test for climbable unless player is trying to climb
     const climbing = (player.gamepad.y and
-        (is_climbable(map, map_z, player.pos.x + 12% radius.x, player.pos.y) or
-         is_climbable(map, map_z, player.pos.x + 12% radius.x, player.pos.y + radius.y - 1) or
-         is_climbable(map, map_z, player.pos.x - 12% radius.x, player.pos.y) or
-         is_climbable(map, map_z, player.pos.x - 12% radius.x, player.pos.y + radius.y - 1)))
+        (is_climbable(map, map_z, player.pos.x, player.pos.y) or
+         is_climbable(map, map_z, player.pos.x, player.pos.y + radius.y - 1)))
 
     //////////////////////////////////////////////////////////////////
     // Running logic
@@ -126,23 +124,23 @@ def player_update(player, map, layer, particle_array)
         if player.vel.x * player.scale.x < player.run_speed:
             player.vel.x += x_acceleration
  
-    else if on_ground:
-        // No x input and on ground: apply friction to slow down
-        player.vel.x = ((player.vel.x > 0) and
-                     max(0, player.vel.x - ground_friction) or
-                     min(0, player.vel.x + ground_friction))
+    else:
+        if on_ground:
+            // No x input and on ground: apply friction to slow down
+            player.vel.x = ((player.vel.x > 0) and
+                         max(0, player.vel.x - ground_friction) or
+                         min(0, player.vel.x + ground_friction))
                      
-    if climbing:
-        // No x input, y input, and on ladder: center
-        // to make vertical traversal easier
+        if climbing:
+            // No x input, y input, and on ladder: center
+            // to make vertical traversal easier
+            
+            // Find offset from tile center
+            const tile_radius = ½ map.spritesheet.sprite_size.x
+            const Δx = loop(map.offset.x + tile_radius - player.pos.x, -tile_radius, tile_radius) 
+            if |Δx| > 0.5:
+                player.vel.x = 0.1 sign(Δx)
         
-        // Find offset from tile center
-        const tile_radius = ½ map.spritesheet.sprite_size.x
-        const Δx = loop(map.offset.x + tile_radius - player.pos.x, -tile_radius, tile_radius) 
-        if |Δx| > 0.5:
-            player.vel.x = 0.1 sign(Δx)
-        
-
 
     let y_accel = gravity
     if player.since_jump < 20 and not on_ground and not player.gamepad.a and player.vel.y < 0:
@@ -228,7 +226,7 @@ def player_update(player, map, layer, particle_array)
     // For wall jump/slide purposes, at least the hand must be touching
     player.touching_wall = hsolid(map, map_z, face_x, player.pos.y - 50% radius.y, player.pos.y + 85% radius.y)
 
-    if player.touching_wall and player.vel.x != 0 and player.vel.y > 0.1:
+    if player.touching_wall and player.vel.x ≠ 0 and player.vel.y > 0.1:
         const wall_pos = xy(face_x, player.pos.y)
         // wall-slide; apply friction
         player.vel.y = max(0, player.vel.y - 0.35% friction(map, map_z, wall_pos.x, wall_pos.y))
