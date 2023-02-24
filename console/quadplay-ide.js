@@ -44,7 +44,8 @@ let serverConfig = {};
 // Chrome and Safari both have a bug that drops nearest neighbor
 // interpolation when transform: scale() is used, but preserve it
 // for the nonstandard zoom(). Firefox and Edge (even though it uses
-// Chromium!) do not have this bug.
+// Chromium!) do not have this bug. Safari fixed this bug after 16.3
+// but it may still be present in older versions.
 const hasBrowserScaleBug = isSafari;
 
 // Can the game sleep when idle to save power?

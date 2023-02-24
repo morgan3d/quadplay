@@ -105,6 +105,14 @@ def player_update(player, map, layer, particle_array)
     const jump_late_grace  = 8
     const jump_early_grace = 8
 
+
+    // Don't test for climbable unless player is trying to climb
+    const climbing = (player.gamepad.y and
+        (is_climbable(map, map_z, player.pos.x + 12% radius.x, player.pos.y) or
+         is_climbable(map, map_z, player.pos.x + 12% radius.x, player.pos.y + radius.y - 1) or
+         is_climbable(map, map_z, player.pos.x - 12% radius.x, player.pos.y) or
+         is_climbable(map, map_z, player.pos.x - 12% radius.x, player.pos.y + radius.y - 1)))
+
     //////////////////////////////////////////////////////////////////
     // Running logic
   
@@ -119,11 +127,22 @@ def player_update(player, map, layer, particle_array)
             player.vel.x += x_acceleration
  
     else if on_ground:
-
-        // No buttons and on ground: apply friction to slow down
+        // No x input and on ground: apply friction to slow down
         player.vel.x = ((player.vel.x > 0) and
                      max(0, player.vel.x - ground_friction) or
                      min(0, player.vel.x + ground_friction))
+                     
+    if climbing:
+        // No x input, y input, and on ladder: center
+        // to make vertical traversal easier
+        
+        // Find offset from tile center
+        const tile_radius = ½ map.spritesheet.sprite_size.x
+        const Δx = loop(map.offset.x + tile_radius - player.pos.x, -tile_radius, tile_radius) 
+        if |Δx| > 0.5:
+            player.vel.x = 0.1 sign(Δx)
+        
+
 
     let y_accel = gravity
     if player.since_jump < 20 and not on_ground and not player.gamepad.a and player.vel.y < 0:
@@ -226,11 +245,7 @@ def player_update(player, map, layer, particle_array)
                     color, player.z + 1, 9)
 
     // Climbing
-    if (player.gamepad.y < 0 and (
-        is_climbable(map, map_z, player.pos.x + 20% radius.x, player.pos.y) or
-        is_climbable(map, map_z, player.pos.x + 20% radius.x, player.pos.y + radius.y - 1) or
-        is_climbable(map, map_z, player.pos.x - 20% radius.x, player.pos.y) or
-        is_climbable(map, map_z, player.pos.x - 20% radius.x, player.pos.y + radius.y - 1))):
+    if player.gamepad.y < 0 and climbing:
         player.since_ground = 0
         if -player.vel.y < player.climb_speed:
             player.vel.y = max(player.vel.y - 0.1, -player.climb_speed)
