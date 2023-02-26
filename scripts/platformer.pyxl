@@ -234,7 +234,8 @@ def player_update(player, map, layer, particle_array)
         // Find the wall sprite and read its pixels to make particles
         if ξ < 15%:
             // Sometimes there is no sprite due to roundoff
-            const wall_sprite = get_map_sprite_by_ws_coord(map, wall_pos)
+            todo("Need Z")
+            const wall_sprite = get_map_sprite_by_ws_coord(map, wall_pos, map_z)
             if wall_sprite:
                 const color = get_sprite_pixel_color(wall_sprite, xy(ξ, ξ) * wall_sprite.size)
     

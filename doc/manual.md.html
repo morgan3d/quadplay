@@ -3466,6 +3466,14 @@ Any properties attached to a named sprite or animation in the `sprite.json` file
 appear as properties of the sprite (and its flipped variations).
 
 
+`sprite_transfer_orientation(orient_sprite, content_sprite)`
+: Returns `content_sprite` flipped and rotated in the same way that
+  `orient_sprite` was relative to `orient_sprite.base`. Note that
+  if `content_sprite` is _already_ transformed, the new transformations
+  will apply on top of those. Use `content_sprite.base` to instead
+  transform relative to the canonical version in the spritesheet.
+
+
 Entity
 ------------------------------------------------------------
 
