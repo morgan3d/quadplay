@@ -6080,7 +6080,7 @@ function ray_intersect_map(ray, map, layer, sprite_callback, pixel_callback, rep
                 const result = sprite_callback(sprite, ps_coord, ws_normal, it.ray, map, it.enterDistance, ws_coord, map_coord);
                 if (result !== undefined) {
                     // Shorten ray
-                    ray.length = distanceSquared2D(ws_coord, ray.pos);
+                    ray.length = $distanceSquared2D(ws_coord, ray.pos);
                     return result;
                 }
             }

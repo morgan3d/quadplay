@@ -26,7 +26,7 @@ function $show() {
         
         // Sort
         $graphicsCommandList.sort($zSort);
-        
+
         // Eval draw list
         for (let i = 0; i < $graphicsCommandList.length; ++i) {
             const cmd = $graphicsCommandList[i];
