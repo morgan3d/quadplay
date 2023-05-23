@@ -69,6 +69,7 @@ and the following freely-available software.
 
 _Required_:
 
+- On some Distributions you might need to install `tkinter`, e.g. on Fedora `sudo dnf install -y python3-tkinter`
 - [**This SDK**](https://github.com/morgan3d/quadplay/archive/main.zip), which includes the IDE and assets
 - [**Python 3.10**](https://www.python.org/downloads/)
 - A **modern web browser** such as Chrome, Edge, Brave, Safari, or Firefox
