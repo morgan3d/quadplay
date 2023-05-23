@@ -303,7 +303,7 @@ function processLine(line, inFunction, stringProtectionMap) {
             // Wrapping the function definition in parens can trigger heuristics in Chromium
             // at top level that improve compilation (likely not useful for dynamically generated code, but potentially
             // helpful when exporting to static HTML)
-            line = before + 'const ' + name + ' = (function(' + args + ') { ' + maybeYieldFunction + body + ' })';
+            line = before + 'const ' + name + ' = (function(' + args + ') { ' + body + ' })';
             return line;
 
         } else {
@@ -352,7 +352,7 @@ function processLine(line, inFunction, stringProtectionMap) {
                 prefix = type + ' (' + test.trim() + ') {';
                 break;
             }
-            return before + prefix + ((type === 'while' || type === 'for') ? (inFunction ? maybeYieldFunction : maybeYieldGlobal) : '') +
+            return before + prefix + 
                 processLine(rest.substring(end + 1), inFunction, stringProtectionMap) + '; ' + suffix;
             
         } // if control flow block
@@ -578,7 +578,7 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode, strin
             // Rewrite args for default values
             args = processDefaultArgSyntax(args);
             
-            lineArray[i] = prefix + 'const ' + name + ' = (function(' + args + ') { ' + maybeYieldFunction;
+            lineArray[i] = prefix + 'const ' + name + ' = (function(' + args + ') { ';
             if (modifier === 'preserving_transform') {
                 lineArray[i] += 'try { $pushGraphicsState();';
             } else if (modifier !== '') {
@@ -631,7 +631,7 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode, strin
             } catch (e) {
                 throw makeError(e, i);
             }
-            lineArray[i] = prefix + forPart[0] + (inFunction ? maybeYieldFunction : maybeYieldGlobal);
+            lineArray[i] = prefix + forPart[0];
             i = processBlock(lineArray, i + 1, inFunction, internalMode, stringProtectionMap) - 1;
             lineArray[i] += forPart[1];
             
@@ -658,7 +658,7 @@ function processBlock(lineArray, startLineIndex, inFunction, internalMode, strin
                 test = '! (' + test + ')';
             }
 
-            lineArray[i] = match[1] + 'while (' + test + ') { ' + (inFunction ? maybeYieldFunction : maybeYieldGlobal);
+            lineArray[i] = match[1] + 'while (' + test + ') { ';
             i = processBlock(lineArray, i + 1, inFunction, internalMode, stringProtectionMap) - 1;
             lineArray[i] += '}';
 
@@ -694,14 +694,6 @@ let gensymNum = 0;
 function gensym(base) {
     return '$_' + (base || '') + (++gensymNum) + '$_';
 }
-
-/** Expression for selective yields to avoid slowing down tight loops. This weird syntax
-    of incrementing and then assigning back to what was incremented is to avoid the operator
-    overloading triggering a slow increment */
-var maybeYieldGlobal = '';//' {if (!($_yieldCounter = ((++$_yieldCounter) & 8191)) { yield; }} ';
-
-/** Expression for 'yield' inside a function, where regular yield is not allowed */
-var maybeYieldFunction = '';
 
 const unprotectQuotedStrings = WorkJSON.unprotectQuotedStrings;
 const protectQuotedStrings = WorkJSON.protectQuotedStrings;
@@ -974,8 +966,9 @@ function processElision(lineArray) {
 }
 
 
-/** Compiles pyxlscript -> JavaScript. Processes the body of a section. Use compile() to compile
-    an entire project. There is no standalone mode compiler. */
+/** Compiles pyxlscript -> JavaScript. Processes the body of a
+    section. Use compile() to compile an entire project. There is no
+    standalone mode compiler. */
 function pyxlToJS(src, noYield, internalMode) {
     if (noYield === undefined) { noYield = false; }
 
@@ -1354,7 +1347,6 @@ function pyxlToJS(src, noYield, internalMode) {
     src = src.replace(/[ ]*,/g, ',');
     src = src.replace(/;[ ]*;/g, ';');
     src = src.replace(/(\S)[ ]{2,}/g, '$1 ');
-    src = src.replace(/_add\($_yieldCounter, 1\)/g, '$_yieldCounter + 1');
     src = unprotectQuotedStrings(src, stringProtectionMap);
 
     // Print output code for debugging the compiler
@@ -1363,7 +1355,9 @@ function pyxlToJS(src, noYield, internalMode) {
 }
 
 
-/** Constructs JavaScript source code for the body of a generator function 
+/**
+Constructs JavaScript source code for the body
+of a generator function 
 
 gameSource.modes[i].url is a list of URLs of source code.
 fileContents[url] maps URLs to their text source.
@@ -1533,15 +1527,15 @@ function $pop_modeFrom$SystemMenu(callback) {
 
 // frame
 ${sectionSeparator}
-const $frame = (function* $quadplay_main_loop() { 
-let $_yieldCounter = 0; while (true) { try {
+const $frame = (function quadplay_main_loop() {
+try {
 if (($gameMode.$name[0] !== '$') && (gamepad_array[0].$pp || gamepad_array[1].$pp || gamepad_array[2].$pp || gamepad_array[3].$pp)) { push_mode($SystemMenu); }
 $processFrameHooks();
 ${sectionTable.frame.jsCode}
-$show(); } catch (ex) { if (! ex.nextMode) throw ex; else { $resetTouchInput(); $updateInput(); }} yield; }
-})();
+$show(); } catch (ex) { if (! ex.nextMode) throw ex; else { $resetTouchInput(); $updateInput(); }}
+});
 
-return $Object.freeze({$enter:$enter, $frame:$frame, $pop_modeFrom$SystemMenu:$pop_modeFrom$SystemMenu ${pop_modeBindings}, $leave:$leave, $name:'${mode.name}'});
+return $Object.freeze({$type:'mode', $enter:$enter, $frame:$frame, $pop_modeFrom$SystemMenu:$pop_modeFrom$SystemMenu ${pop_modeBindings}, $leave:$leave, $name:'${mode.name}'});
 })();
 
 `;
@@ -1556,7 +1550,17 @@ return $Object.freeze({$enter:$enter, $frame:$frame, $pop_modeFrom$SystemMenu:$p
     compiledProgram += 'try { set_mode(' + start_mode + '); } catch (e) { if (! e.nextMode) { throw e; } }\n\n';
 
     // Main loop
-    compiledProgram += '// Main loop\nwhile (true) { $gameMode.$frame.next(); yield; };\n\n'
+    compiledProgram += `// Main loop
+return function () {
+    if ($play_reset_animation.active) {
+        $play_reset_animation();
+        $show();
+    } else {
+        $gameMode.$frame();
+    }
+};
+
+`;
 
     compiledProgram = "'use strict';/*ට\"resetAnimation\"*/ \n" + resetAnimationSource + separator + compiledProgram;
 
@@ -1600,7 +1604,8 @@ return $Object.freeze({$enter:$enter, $frame:$frame, $pop_modeFrom$SystemMenu:$p
             // unusual characters in the source file that turn into \n
             // under unicode rules. Detect these cases and don't
             // insert line numbers for them.
-            if (! /^\s*(else|\]|\)|\}|\/\/|$)/.test(lines[i]) &&
+            if (isSafari &&
+                ! /^\s*(else|\]|\)|\}|\/\/|$)/.test(lines[i]) &&
                 ! /[\(,\[]$/.test(lines[i - 1])) {
                 lines[i] = '$currentLineNumber=' + (i+1) + ';' + lines[i];
             }
@@ -1645,39 +1650,57 @@ function countLines(s) {
 
 const resetAnimationSource = `
 ///////////////////////////////////////////////////////////////////////////////////
+// Warm the jit by hitting all of the key sprite cases and randomizing parameters so that
+// the jit doesn't over specialize (needed on Safari to prevent compilation stutters)
+
+for (let i = 0; i < 150; ++i) {
+   // Alpha cases (the regular nontransformed alpha case is handled automatically by drawing the visible logo)
+   draw_sprite({sprite: $quadplayLogoSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
+       opacity: random(), z: random() - 100, angle: random(), scale: {x: random(), y: random()}, override_color: rgba(random(), random(), random(), random())});
+   draw_sprite({sprite: $quadplayLogoSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
+       opacity: random(), z: random() - 100});
+
+   // No-alpha cases (the regular nontransformed alpha case is handled automatically by drawing the visible logo)
+   draw_sprite({sprite: $opaqueSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
+       opacity: random(), z: random() - 100, angle: random(), scale: {x: random(), y: random()}, override_color: rgba(random(), random(), random(), random())});
+   draw_sprite({sprite: $opaqueSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
+       opacity: random(), z: random() - 100});
+   draw_sprite({sprite: $opaqueSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()), z: random() - 100});
+}
+
+// Hide the warmup sprites
+draw_rect({x: SCREEN_SIZE.x * 0.5, y: SCREEN_SIZE.y * 0.5}, SCREEN_SIZE, rgb(0,0,0), undefined, -1);
+
+///////////////////////////////////////////////////////////////////////////////////
 // Reset animation
+function $play_reset_animation() {
+   if ($numBootAnimationFrames <= 0) {
+       $play_reset_animation.active = false;
+       mode_frames = game_frames = 0;
+       return; 
+   }
 
-if ($numBootAnimationFrames > 0) {
+   // Fade in at the start
+   const fadeLen = 13;
+
+   // Hold black at the end
+   const holdLen = $numBootAnimationFrames > 100 ? 47 : 8;
+
+   // Middle section of dots animation
+   const midLen = $numBootAnimationFrames - fadeLen - holdLen;
+
+   let frame = mode_frames;
+
    // flash at start
-   for (let i = 0; i < 13; ++i) {
-     set_background(gray(max(0, 0.75 - i / 12))); 
-     $show(); yield;
+   if (frame < fadeLen) {
+      set_background(gray(max(0, 0.75 - frame / (fadeLen - 1))));
+      return;
    }
+   frame -= fadeLen;
 
-   // Warm the jit by hitting all of the key sprite cases and randomizing parameters so that
-   // the jit doesn't over specialize (needed on Safari to prevent compilation stutters)
-
-   for (let i = 0; i < 150; ++i) {
-     // Alpha cases (the regular nontransformed alpha case is handled automatically by drawing the visible logo)
-     draw_sprite({sprite: $quadplayLogoSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
-        opacity: random(), z: random() - 100, angle: random(), scale: {x: random(), y: random()}, override_color: rgba(random(), random(), random(), random())});
-     draw_sprite({sprite: $quadplayLogoSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
-        opacity: random(), z: random() - 100});
-
-     // No-alpha cases (the regular nontransformed alpha case is handled automatically by drawing the visible logo)
-     draw_sprite({sprite: $opaqueSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
-        opacity: random(), z: random() - 100, angle: random(), scale: {x: random(), y: random()}, override_color: rgba(random(), random(), random(), random())});
-     draw_sprite({sprite: $opaqueSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()),
-        opacity: random(), z: random() - 100});
-     draw_sprite({sprite: $opaqueSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + random(), SCREEN_SIZE.y * 0.5 + random()), z: random() - 100});
-   }
-
-   // Hide the warmup sprites
-   draw_rect({x: SCREEN_SIZE.x * 0.5, y: SCREEN_SIZE.y * 0.5}, {x: 100, y: 100}, rgb(0,0,0), undefined, -1);
-
-
-   const fade = min(96, $numBootAnimationFrames / 2);
-   for (let k = 0; k < $numBootAnimationFrames; ++k) {
+   if (frame < midLen) {
+      const k = frame;
+      const fade = min(96, midLen / 2);
       set_background(gray(0));
       const gradient = [rgb(1, 0.7333333333333333, 0.8666666666666667), rgb(1, 0.6666666666666666, 0.8), rgb(1, 0.26666666666666666, 0.5333333333333333), rgb(1, 0.26666666666666666, 0.5333333333333333), rgb(1, 0.26666666666666666, 0.5333333333333333), rgb(0.9333333333333333, 0.3333333333333333, 0.6), rgb(0.8666666666666667, 0.3333333333333333, 0.6), rgb(0.8, 0.4, 0.6666666666666666), rgb(0.6666666666666666, 0.4666666666666667, 0.7333333333333333), rgb(0.6, 0.4666666666666667, 0.7333333333333333), rgb(0.4666666666666667, 0.5333333333333333, 0.7333333333333333), rgb(0.4, 0.6, 0.8), rgb(0.3333333333333333, 0.6, 0.8), rgb(0.26666666666666666, 0.6666666666666666, 0.8666666666666667), rgb(0.6, 0.7333333333333333, 0.8666666666666667), rgb(0.8, 0.8666666666666667, 0.9333333333333333)];
       const N = size(gradient);
@@ -1686,10 +1709,10 @@ if ($numBootAnimationFrames > 0) {
       let v = 0;
       if (k < fade) { 
          v = k / fade;
-      } else if (k < $numBootAnimationFrames - fade) {
+      } else if (k < midLen - fade) {
          v = 1;
       } else {
-         v = ($numBootAnimationFrames - k) / fade;
+         v = (midLen - k) / fade;
       }
 
       const vDot = $Math.max(0, v - 0.2) / (1.0 - 0.2);
@@ -1705,16 +1728,21 @@ if ($numBootAnimationFrames > 0) {
       }
 
       draw_sprite({sprite: $quadplayLogoSprite[0][0], pos: xy(SCREEN_SIZE.x * 0.5 + 0.5, SCREEN_SIZE.y * 0.5 + 0.5), opacity: $Math.min(1, 2 * v)})
-
-      $show(); yield;
+      return;
    }
+   frame -= midLen;
 
-   // Black frames
-   for (let i = 0; i < fade / 2; ++i) {
-      $show(); yield;
+   // Hold black frames before going into the game
+   if (frame < holdLen) {
+      return;
    }
+   frame -= holdLen;
+
+   // Done! 
+   $play_reset_animation.active = false;
    mode_frames = game_frames = 0;
 }
+$play_reset_animation.active = true;
 `;
 
 

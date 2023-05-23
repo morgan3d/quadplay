@@ -1,8 +1,12 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License*/
 "use strict";
 
-// Set to false when working on quadplay itself
+// Set to false when working on quadplay itself.
 const deployed = true;
+
+// If true, use a WebWorker thread for the virtual GPU. This variable
+// appears in the CPU runtime as well.
+const $THREADED_GPU = false;
 
 /* The containing web page that quadplay is embedded within, or quadplay's iframe
    if running cross-origin */
@@ -144,8 +148,8 @@ if (! profiler.debuggingProfiler) {  document.getElementById('debugIntervalTimeR
 let uiMode = 'IDE';
 const BOOT_ANIMATION = Object.freeze({
     NONE:      0,
-    SHORT:    32,
-    REGULAR: 220
+    SHORT:    32 + 13 + 8, // = 32 frames animation + 13 frames fade in + 8 frames hold black
+    REGULAR: 220 + 13 + 47
 });
 
 /* Date.now() for the last time user input was seen. This is used to
@@ -817,6 +821,8 @@ function onStopButton(inReset, preserveNetwork) {
         saveIDEState();
     }
 
+    // Destroy the virtual GPU
+    if (QRuntime.$GPU) { QRuntime.$GPU.terminate(); }
     usePointerLock = false;
     releasePointerLock();
     stopAllSounds();
@@ -2825,6 +2831,8 @@ function setFramebufferSize(w, h, privateScreen) {
     updateImage.height = h;
     updateImageData = ctx.createImageData(w, h);
     updateImageData32 = new Uint32Array(updateImageData.data.buffer);
+    QRuntime.$updateImageData = updateImageData;
+    QRuntime.$updateImageData32 = updateImageData32;
 
     bootScreen.style.fontSize = '' + Math.max(10 * SCREEN_WIDTH / 384, 4) + 'px';
     
@@ -2834,8 +2842,7 @@ function setFramebufferSize(w, h, privateScreen) {
     setTimeout(onResize, 1250);
 
     if (QRuntime && gameSource && gameSource.constants && (emulatorMode !== 'stop')) {
-        QRuntime.$screen = new Uint16Array(SCREEN_WIDTH * SCREEN_HEIGHT);
-        QRuntime.$screen32 = new Uint32Array(QRuntime.$screen.buffer);
+        QRuntime.$resize_framebuffer(SCREEN_WIDTH, SCREEN_HEIGHT);
     
         // Rebind the constants
         redefineScreenConstants();
@@ -3126,7 +3133,11 @@ function jsToPSError(error) {
                                stack[i] !== '' &&
                                stack[i] !== 'anonymous' &&
                                stack[i].indexOf('[native') === -1) {
-                            if (first) {
+
+                            if (stack[i].indexOf('quadplay_main_loop') !== -1) {
+                                resultStack.push({fcn: 'frame event'});
+                                break; // while
+                            } else if (first) {
                                 resultFcn = functionName(stack[i]);
                                 first = false;
                             } else {
@@ -3137,14 +3148,15 @@ function jsToPSError(error) {
                         break;
                     }
                 }
-            } else {
+            } else { // not Safari
+
                 // Entry 0 in the "stack" is actually the error message on Chromium
-                // browsers
+                // browsers, so remove it
                 if (isEdge || isChrome) { stack.shift(); }
 
                 // Search for the first user-space error
                 for (let i = 0; i < stack.length; ++i) {
-                    const match = stack[i].match(/(?:GeneratorFunction|<anonymous>):(\d+):/);
+                    const match = stack[i].match(/(?:Function|<anonymous>):(\d+):/);
 
                     if (match) {
                         // Found a user-space error
@@ -3154,22 +3166,28 @@ function jsToPSError(error) {
                         resultFcn = stack[i].match(/^(?:[ \t]*(?:at[ \t]+)?)([^\.\n \n\(\):@\/]+)/);
                         resultFcn = resultFcn ? functionName(resultFcn[1]) : '?';
 
-                        // Read from here until the top of the user stack
+                        // Read from here until the bottom of the user stack
                         ++i;
                         while (i < stack.length) {
-                            const match = stack[i].match(/(?:GeneratorFunction|<anonymous>):(\d+):/);
+                            const match = stack[i].match(/(?:Function|<anonymous>):(\d+):/);
                             if (! match) { break; }
 
                             // Parse the function name
                             let fcn = stack[i].match(/^(?:[ \t]*(?:at[ \t]+)?)([^\.\n \n\(\):@\/]+)/);
                             fcn = fcn ? fcn[1] : '?';
                             let done = false;
-                            if (fcn === 'anonymous' || fcn === 'eval') {
+
+                            if (fcn === 'anonymous') {
                                 fcn = '?';
                                 done = true;
+                            } else if (stack[i].indexOf('quadplay_main_loop') !== -1) {
+                                fcn = 'frame event';
+                                done = true;
+                            } else if (fcn === 'eval') {
+                                break;
+                            } else {
+                                fcn = functionName(fcn);
                             }
-
-                            fcn = functionName(fcn);
 
                             // Convert line numbers
                             const stackEntry = jsToPyxlLineNumber(parseInt(match[1]), lineArray);
@@ -3193,7 +3211,7 @@ function jsToPSError(error) {
     
     if (! lineNumber && error.stack) {
         // Chrome
-        const match = error.stack.match(/<anonymous>:(\d+)/);
+        const match = error.stack.match(/Function|<anonymous>:(\d+)/);
         if (match) {
             lineNumber = clamp(1, parseInt(match[1]), programNumLines);
         }
@@ -3201,7 +3219,7 @@ function jsToPSError(error) {
 
     if ((error.stack &&
         (error.stack.indexOf('<anonymous>') === -1) &&
-         (error.stack.indexOf('GeneratorFunction') === -1) &&
+         (error.stack.indexOf('Function') === -1) &&
          (error.stack.indexOf('quadplay-runtime-') !== -1)) ||
         ! lineNumber) {
         return {url:'(?)', lineNumber: '(?)', message: '' + error, stack: resultStack, fcn: resultFcn};
@@ -3364,7 +3382,7 @@ function mainLoopStep() {
             const gamepadSampleTime = performance.now() + 1000 / 60;
             updateInput();
             while (! updateKeyboardPending && ! refreshPending && (performance.now() < gamepadSampleTime) && (emulatorMode === 'play' || emulatorMode === 'step') && coroutine) {
-                coroutine.next();
+                coroutine();
             }
         }
 
@@ -3557,17 +3575,22 @@ let updateKeyboardPending = false;
 function reloadRuntime(oncomplete) {
     runtime_cursor = 'crosshair';
     QRuntime.document.open();
-    QRuntime.document.write("<!DOCTYPE html><script src='quadplay-runtime-cpu.js' async charset='utf-8'> </script> <script src='quadplay-runtime-physics.js' async charset='utf-8'> </script> <script src='quadplay-runtime-gpu.js' async charset='utf-8'> </script> <script src='quadplay-runtime-ai.js' async charset='utf-8'> </script>");
+    
+    let src = `<!DOCTYPE html><script>var $THREADED_GPU = ${$THREADED_GPU};</script>\n`;
+    for (const script of ['cpu', $THREADED_GPU ? false : 'gpu', 'physics', 'ai', 'common']) {
+        if (script) {
+            src += `<script src='quadplay-runtime-${script}.js'></script>\n`;
+        }
+    }
+    QRuntime.document.write(src);
+    
     QRuntime.onload = function () {
-        QRuntime.$SCREEN_WIDTH  = SCREEN_WIDTH;
-        QRuntime.$SCREEN_HEIGHT = SCREEN_HEIGHT;
+        QRuntime.$resize_framebuffer(SCREEN_WIDTH, SCREEN_HEIGHT);
         QRuntime.reset_clip();
 
+        // Initialize the virtual GPU memory
+        QRuntime.$set_texture(spritesheetArray, fontArray);
         QRuntime.$quit_action = quitAction;
-
-        // Aliased views in ABGR4 format
-        QRuntime.$screen = new Uint16Array(SCREEN_WIDTH * SCREEN_HEIGHT);
-        QRuntime.$screen32 = new Uint32Array(QRuntime.$screen.buffer);
 
         // Remove any base URL that appears to include the quadplay URL
         QRuntime.$window = window;
@@ -3582,7 +3605,6 @@ function reloadRuntime(oncomplete) {
         QRuntime.$debug_watch        = debug_watch;
         QRuntime.$debug_print        = debug_print;
         QRuntime.assert              = assert;
-        QRuntime.$fontMap            = fontMap;
         QRuntime.$parse              = $parse;
         QRuntime.$submitFrame        = submitFrame;
         QRuntime.$requestInput       = requestInput;
@@ -3592,8 +3614,8 @@ function reloadRuntime(oncomplete) {
         QRuntime.$parseHexColor      = parseHexColor;
         QRuntime.$Physics            = Matter;
         QRuntime.$updateHostCodeCopyRuntimeDialogVisiblity = updateHostCodeCopyRuntimeDialogVisiblity;
-        QRuntime.$spritesheetArray   = spritesheetArray;
-        QRuntime.$fontArray          = fontArray;
+        QRuntime.$fontMap            = fontMap;
+
         QRuntime.$pauseAllSounds     = pauseAllSounds;
         QRuntime.$resumeAllSounds    = resumeAllSounds;
         QRuntime.makeEuroSmoothValue = makeEuroSmoothValue;
@@ -3612,7 +3634,7 @@ function reloadRuntime(oncomplete) {
 
         if (isQuadserver) {
             // Persist to disk
-            // TODO
+            // TODO: implement persistence
             QRuntime.$getLocalStorage    = function (key) { return localStorage.getItem(key); };
             QRuntime.$setLocalStorage    = function (key, value) { return localStorage.setItem(key, value); };
         } else {
@@ -4018,8 +4040,6 @@ function redefineScreenConstants(environment, alreadySeen) {
 
     redefineConstant(environment, 'SCREEN_SIZE', {x:SCREEN_WIDTH, y:SCREEN_HEIGHT}, alreadySeen);
     redefineConstant(environment, 'VIEW_ARRAY', VIEW_ARRAY, alreadySeen);
-    QRuntime.$SCREEN_WIDTH  = SCREEN_WIDTH;
-    QRuntime.$SCREEN_HEIGHT = SCREEN_HEIGHT;
 }
 
 
@@ -4891,6 +4911,44 @@ if (getQueryString('kiosk') === '1') {
     setUIMode(newMode, noFullscreen);
 }
 
+
+// Assign the action for QRuntime.quit_game() used by the in-game
+// pause menu quit option
+const quitAction = (function() {
+    if (useIDE) {
+        // When the IDE is on, always quit to the IDE
+        return 'launcher';
+    }
+    
+    const q = getQueryString('quit');
+    
+    // Explicit value
+    if (q) {
+        if (/^(close|none|reload|launcher)$/.test(q)) {
+            return q;
+        } else {
+            alert('Illegal setting for HTML query parameter: quit=' + q);
+            // Fall through to a default
+        }
+    }
+
+    const kiosk = getQueryString('kiosk') || '0';
+    
+    if (getQueryString('game')) {
+        if (kiosk === '0') {
+            // Running a single game in the browser
+            return 'close';
+        } else {
+            // Running a single game as a kiosk
+            return 'none';
+        }
+    } else {
+        // Running the launcher in a browser
+        return 'launcher';
+    }
+})();
+
+
 initializeBrowserEmulator();
 setErrorStatus('');
 setCodeEditorFontSize(parseFloat(localStorage.getItem('codeEditorFontSize') || '14'));
@@ -4939,41 +4997,6 @@ if (nativeapp && isQuadserver) {
     })
 }
 
-// Assign the action for QRuntime.quit_game() used by the in-game
-// pause menu quit option
-const quitAction = (function() {
-    if (useIDE) {
-        // When the IDE is on, always quit to the IDE
-        return 'launcher';
-    }
-    
-    const q = getQueryString('quit');
-    
-    // Explicit value
-    if (q) {
-        if (/^(close|none|reload|launcher)$/.test(q)) {
-            return q;
-        } else {
-            alert('Illegal setting for HTML query parameter: quit=' + q);
-            // Fall through to a default
-        }
-    }
-
-    const kiosk = getQueryString('kiosk') || '0';
-    
-    if (getQueryString('game')) {
-        if (kiosk === '0') {
-            // Running a single game in the browser
-            return 'close';
-        } else {
-            // Running a single game as a kiosk
-            return 'none';
-        }
-    } else {
-        // Running the launcher in a browser
-        return 'launcher';
-    }
-})();
 
 
 if ((getQueryString('update') && getQueryString('update') !== '0') && isQuadserver && getQueryString('kiosk') !== 1) {

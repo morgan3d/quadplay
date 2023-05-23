@@ -8,6 +8,22 @@
 
 'use strict';
 
+// If undefined, the virtual GPU runs on the same thread as the CPU.
+var $GPU;
+if ($THREADED_GPU) {
+    $GPU = new Worker('quadplay-runtime-gpu.js');
+    $GPU.onmessage = function (event) {
+        if (event.type !== 'submitFrame') {
+            $console.log('Unknown message received from GPU: ', event);
+        }
+
+        // Paste the updateImageData32 back
+        $updateImageData = event.data.updateImage;
+        $updateImageData32 = event.data.updateImage32;
+        $submitFrame($updateImageData, $updateImageData32);
+    };
+}
+
 var $Object = Object;
 var $console = console;
 var $Math = Math;
@@ -30,10 +46,88 @@ var $numBootAnimationFrames = 120;
 // Modes from pop_mode. Does not contain $gameMode
 var $modeStack = [], $prevModeStack = [];
 
-// Overriden by setFramebufferSize()
+// Overriden by setFramebufferSize() and $resize_framebuffer()
 var $SCREEN_WIDTH = 384, $SCREEN_HEIGHT = 224;
 
 var $previousModeGraphicsCommandList = [];
+
+/* Like deep_clone(), but used for JavaScript level cloning instead of
+   Quadplay level, and strips Functions. */
+function $cloneForPostMessage(a, map = new Map()) {
+    switch (typeof a) {
+    case 'string', 'number', 'undefined', 'boolean':
+        return a;
+
+    case 'function':
+        return undefined;
+    }
+
+    if (a === undefined || a === null) { return a; }
+
+    // Do not clone typed arrays, which have the base data
+    // to be used by postMessage. This tests for all typed
+    // arrays, not just Uint8Array (https://stackoverflow.com/questions/15251879/how-to-check-if-a-variable-is-a-typed-array-in-javascript)
+    if ((a instanceof Object.getPrototypeOf(Uint8Array)) ||
+        (a.buffer instanceof ArrayBuffer) ||
+        (typeof a.buffer === 'object' && a.buffer.byteLength !== undefined && a.buffer.resizable !== undefined)) {
+        return a;
+    }
+
+    // Do not duplicate already cloned objects
+    let x = map.get(a);
+    if (x !== undefined) { return x; }
+
+    if (Array.isArray(a)) {        
+        map.set(a, x = a.slice(0));
+        // Clone array elements
+        for (let i = 0; i < x.length; ++i) {
+            x[i] = $cloneForPostMessage(x[i], map);
+        }
+        for (const key of $Object.keys(a)) {
+            if (key[0] > '9' || key[0] < '0') {
+                x[key] = $cloneForPostMessage(a[key], map);
+            }
+        }
+    } else if (typeof a === 'object') {
+        map.set(a, x = a.constructor ? a.constructor() : $Object.create(null));
+        for (const key of $Object.keys(a)) {
+            x[key] = $cloneForPostMessage(a[key], map);
+        }
+    }
+
+    return x;
+}
+
+
+function $set_texture(spritesheetArray, fontArray) {
+    // console.log('set_texture()');
+    // In web worker mode, send a message
+    if ($GPU) {
+        console.log('sending set_texture');
+        $GPU.postMessage({
+            type: 'set_texture',
+            spritesheetArray: $cloneForPostMessage(spritesheetArray),
+            fontArray: fontArray});
+    } else {
+        // Call directly
+        $gpu_set_texture(spritesheetArray, fontArray);
+    }
+}
+
+
+function $resize_framebuffer(w, h) {
+    // console.log('resize_framebuffer()');
+    $SCREEN_WIDTH = w;
+    $SCREEN_HEIGHT = h;
+
+    // In web worker mode, send a message
+    if ($GPU) {
+        $GPU.postMessage({type: 'resize_framebuffer', SCREEN_WIDTH: w, SCREEN_HEIGHT: h})
+    } else {
+        // Call directly
+        $gpu_resize_framebuffer(w, h);
+    }
+}
 
 // Does not contain $previousModeGraphicsCommandList
 var $previousModeGraphicsCommandListStack = [];
@@ -3592,6 +3686,8 @@ function draw_map(map, min_layer, max_layer, replacements, pos, angle, scale, z_
     let z_pos = (pos.z === undefined) ? z_shift : pos.z;
     let z_order = z_shift;
 
+    override_color = override_color ? $colorToUint16(override_color) : 0;
+
     if (($camera.x !== 0) || ($camera.y !== 0) || ($camera.angle !== 0) || ($camera.zoom !== 1)) {
         // Use the z-value from the lowest layer for perspective. If the zoom is a
         // function, then draw_map() guarantees that there is only one
@@ -4728,7 +4824,7 @@ function text_width(font, str, markup) {
     for (let c = 0; c < str.length; ++c) {
         const chr = $fontMap[str[c]] || ' ';
         const bounds = font.$bounds[chr];
-        width += (bounds.x2 - bounds.x1 + 1) + $postGlyphSpace(str, c, format.font) - font.$borderSize * 2 + bounds.pre + bounds.post;
+        width += (bounds.x2 - bounds.x1 + 1) + $postGlyphSpace(chr + ($fontMap[str[c]] || ''), format.font) - font.$borderSize * 2 + bounds.pre + bounds.post;
         
         if (offsetIndex === formatArray[formatIndex].endIndex) {
             // Advance to the next format
@@ -4907,20 +5003,6 @@ function $parseMarkup(str, stateChanges) {
 }
 
 
-// Used for font rendering. Returns the font spacing, unless it is zero. In the zero case, the function
-// tests for symbols (which include superscripts and subscripts, as well as the space character) that
-// require spacing around them even if the font specifies font.spacing.x === 0.
-function $postGlyphSpace(str, i, font) {
-    if (font.spacing.x !== 0 || i >= str.length) {
-        return font.spacing.x;
-    } else {
-        const symbolRegex = /[^A-Za-z0-9_αβγδεζηθικλμνξ§πρστυϕχψωςşğÆÀÁÂÃÄÅÇÈÉÊËÌÍÎÏØÒÓÔÕÖŒÑẞÙÚÛÜБДæàáâãäåçèéêëìíîïøòóôõöœñßùúûüбгдЖЗИЙЛПЦЧШЩЭЮЯЪЫЬжзийлпцчшщэюяъыьΓΔмнкΘΛΞΠİΣℵΦΨΩŞĞ]/;
-        // test() will not fail on undefined or NaN, so ok to not safeguard the string conversions
-        return symbolRegex.test($fontMap[str[i]] + $fontMap[str[i + 1]]) ? 1 : 0;
-    }
-}
-
-
 /** Helper for draw_text() that operates after markup formatting has been processed. 
     offsetIndex is the amount to add to the indices in formatArray to account for
     the str having been shortened already. 
@@ -4986,7 +5068,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
         const chr = $fontMap[str[c]] || ' ';
         const bounds = format.font.$bounds[chr];
 
-        const delta = (bounds.x2 - bounds.x1 + 1) + $postGlyphSpace(str, c, format.font) - format.font.$borderSize * 2 + bounds.pre + bounds.post;
+        const delta = (bounds.x2 - bounds.x1 + 1) + $postGlyphSpace(chr + ($fontMap[str[c + 1]] || ''), format.font) - format.font.$borderSize * 2 + bounds.pre + bounds.post;
         currentWidth += delta;
         width += delta;
 
@@ -5093,7 +5175,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
         // adjust the vertical position, so culling cannot happen during draw call
         // generation.
     } else {
-        // Break by formatting and then retraverse the formatting array.
+        // Break by formatting and then re-traverse the formatting array.
         // Reset to the original formatIndex, since it was previously
         // incremented while traversing the string to compute width.
         offsetIndex = startingOffsetIndex;
@@ -5110,9 +5192,15 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
             const dy = format.font.$baseline - referenceFont.$baseline;
 
             const endIndex = format.endIndex - offsetIndex;
+
+            let mappedStr = '';
+            for (let i = 0; i <= endIndex; ++i) {
+                mappedStr += $fontMap[str[i]] || ' ';
+            }
+            
             $addGraphicsCommand({
                 opcode:  'TXT',
-                str:     str.substring(0, endIndex + 1),
+                str:     mappedStr,
                 fontIndex: format.font.$index[0],
                 x:       x,
                 y:       y - dy,
@@ -5622,7 +5710,7 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
         scaleY:        scaleY,
         hasAlpha:      spr.$hasAlpha,
         opacity:       opacity,
-        override_color: override_color,
+        override_color: override_color ? $colorToUint16(override_color) : 0,
         multiply:      multiply,
         x:             x,
         y:             y
@@ -7245,6 +7333,9 @@ function clone(a) {
 // The is_map_asset argument refers to whether the 'a' argument is
 // an asset that is a game map, or is a part of a game map, which
 // is a special case for the sealing and finalization rules.
+//
+// Does not clone quadplay assets that have a $type field, except
+// for game maps.
 function $deep_clone(a, map, is_map_asset, makeImmutable) {
     if (! a || (a.$type !== undefined && a.$type !== 'map')) {
         // Built-in; return directly instead of cloning since it is
@@ -9135,13 +9226,13 @@ function find_path(start, goal, costEstimator, edgeCost, getNeighbors, nodeToID,
 
 ///////////////////////////////////////////////////////////////////////////////
 
+var $Function = $Object.getPrototypeOf(function(){}).constructor;
 
-var $GeneratorFunction = $Object.getPrototypeOf(function*(){}).constructor;
-
-/** Creates a new coroutine from code in this environment.  Invoke next() repeatedly on the
-    returned object to execute it. */
+/** Creates a new function from code *in this environment*, so that
+    it has this scope and cannot escape. Invoke next() repeatedly on
+    the returned object to execute it. */
 function $makeCoroutine(code) {
-    return (new $GeneratorFunction(code))();
+    return new $Function(code)();
 }
 
 
@@ -9347,7 +9438,8 @@ function $verifyLegalMode(mode) {
 
         // The name is 'GeneratorFunction' here without a prefix because it is
         // referencing JavaScript's own GeneratorFunction, not ours.
-        if (mode.$frame.constructor.constructor.name !== 'GeneratorFunction') {
+
+        if (mode.$type !== 'mode') {
             throw 1;
         }
     } catch (e) {
@@ -9390,4 +9482,68 @@ function local_time(args) {
         timezone:    d.getTimezoneOffset(),
         absolute_milliseconds: d.getTime()
     };
+}
+
+
+/** Called on virtual CPU to intiate virtual GPU work */
+function $show() {
+
+    // Check whether this frame will be shown or not, if running below
+    // frame rate and pruning graphics.  Use mode_frames instead of
+    // game_frames to ensure that frame 0 is always rendered for a mode.
+    if (mode_frames % $graphicsPeriod === 0) {
+        const startTime = performance.now();
+
+        // TODO: if previous execute has not returned
+        // in web worker mode, then do not submit more work
+        // and lower the graphics period.
+        const backgroundSpritesheetIndex = $background.spritesheet ? $background.spritesheet.$index[0] : undefined;
+        const backgroundColor16 = $background.spritesheet ? 0 : (($colorToUint16($background) >>> 0) | 0xf000);
+
+        const args = [$graphicsCommandList, backgroundSpritesheetIndex, backgroundColor16]
+                             
+        if ($GPU) {
+            // Transfer the updateImageData
+            /* TODO
+            console.log('Transferring updateImageData to GPU thread');
+            console.assert($updateImageData32);
+            $GPU.postMessage({type: 'gpu_execute', args: args, updateImageData: $updateImageData, updateImageData32: $updateImageData32}, [$updateImageData32.buffer]);
+            $updateImageData32 = null;
+            */
+        } else {
+            $gpu_execute(...args);
+        }
+        
+        $graphicsTime = performance.now() - startTime;
+    }
+    
+    $requestInput();
+    
+    // Save for replays
+    $previousGraphicsCommandList = $graphicsCommandList;
+    
+    // Clear draw list (regardless of whether it is actually drawn)
+    $graphicsCommandList = [];
+
+    ++game_frames;
+    ++mode_frames;
+}
+
+
+/** Updates the z value with an epsilon and stores the current set_clipping region */
+function $addGraphicsCommand(cmd) {
+    if (is_nan(cmd.z)) { $error('NaN z value in graphics command'); }
+    
+    cmd.clipX1 = $clipX1;
+    cmd.clipY1 = $clipY1;
+    cmd.clipX2 = $clipX2;
+    cmd.clipY2 = $clipY2;
+
+    // Offset subsequent commands to get a unique z value for each,
+    // and stable sort ordering. The offset value must be orders of
+    // magnitude less than the quadplay epsilon value to avoid
+    // confusion for programmers with z ordering.
+    cmd.z     += $graphicsCommandList.length * $Math.sign($scaleZ) * 1e-10;
+    
+    $graphicsCommandList.push(cmd);
 }

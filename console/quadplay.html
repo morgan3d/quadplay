@@ -12,6 +12,8 @@
     <title>quadplay✜</title>
 
     <script>
+      performance.mark('Loading quadplay.html');
+      
       /* Returns null if the query is not specified */
       function getQueryString(field) {
          const reg = new RegExp('[?&]' + field + '=([^&#]*)', 'i');

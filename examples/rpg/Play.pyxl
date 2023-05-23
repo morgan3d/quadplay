@@ -96,16 +96,16 @@ if loop(mode_frames, 30) < 15: extend(animate, ANIMATE_LIGHTS)
 draw_sprite(npcSprite[16][10 + loop(floor(mode_frames / 20), 2)], shopKeeperPos, nil, nil, nil, 0.5)
 if magnitude(shopKeeperPos - player.pos) < 32:
    // Show dialogue
-   draw_sprite_corner_rect(dialogueSprite[4][1], shopKeeperPos - xy(27, 19), xy(31, 7), 8)
-   draw_text(smallFont, "Press " + joy.prompt["(c)"], shopKeeperPos - xy(12, 16), #000, nil, nil, 0, 0, 8)
-   if joy.cc: push_mode(Shop) because "Press ⓒ"
+   draw_sprite_corner_rect(dialogueSprite[4][1], shopKeeperPos - xy(70, 26), xy(70, 12), 8)
+   draw_text(smallFont, "Press " + gamepad_array[0].prompt["(c)"], shopKeeperPos - xy(50, 17), #000, ∅, ∅, 0, 0, 8)
+   if gamepad_array[0].cc: push_mode(Shop) because "Press ⓒ"
 
 draw_map(castleMap, ∅, ∅, animate)
 updatePlayer(player, gamepad_array[0])
 draw_entity(player)
 
 // Mode transitions
-if joy.qq: push_mode(Inventory) because "Press Q"
+if gamepad_array[0].qq: push_mode(Inventory) because "Press Q"
 
 if find(WATER_SPRITES, get_map_sprite_by_ws_coord(castleMap, player.pos, BASE)) != ∅: 
     set_mode(GameOver) because "Drown"

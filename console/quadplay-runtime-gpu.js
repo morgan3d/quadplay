@@ -1,73 +1,135 @@
 /* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License */
-
 'use strict';
+
+var $Object = Object;
+var $console = console;
+var $Math = Math;
+var $performance = performance;
+
+// Is the GPU loaded as a Worker? Used so that the script could still
+// be used as a library in frameworks that do not support Workers.
+var $is_web_worker = (self.WorkerGlobalScope && typeof importScripts === 'function');
+
+////////////////////////////////////////////////////////////
+//
+// Virtual GPU State
+//
+// These are also declared elsewhere, but when loading as a webworker
+// they are needed here so that the GPU runtime can be standalone. The
+// 'var' declaration lets them be multiply declared without error.
+
+// Integer dimensions
+var $SCREEN_WIDTH, $SCREEN_HEIGHT;
+
+// Writeable framebuffer memory, 16bpp. Uint16Array. Allocated by $resize_framebuffer()
+var $screen;
+
+// Aliased version of $screen as Uint32Array; still 16bpp, two pixels
+// per element. Allocated by $resize_framebuffer()
+var $screen32;
+
+// 32 bpp output double buffer. Sent back to the main thread.
+var $updateImageData32;
+
+// Draw list buffer. Array of command objects.
+var $graphicsCommandList;
+
+// Readable texture memory. Array of sprites/fonts
+var $spritesheetArray;
+var $fontArray;
+
+////////////////////////////////////////////////////////////
+
+if ($is_web_worker) {
+
+    importScripts('quadplay-runtime-common.js');
+
+    // onmessage is a specific global name for web workers
+    self.onmessage = function (event) {
+        console.log('Event received');
+        switch (event.data.type) {
+        case 'set_texture':
+            $gpu_set_texture(event.data.spritesheetArray, event.data.fontArray);
+            break;
+
+        case 'resize_framebuffer':
+            $gpu_resize_framebuffer(event.data.SCREEN_WIDTH, event.data.SCREEN_HEIGHT);
+            break;
+
+        case 'gpu_execute':
+            $updateImageData32 = event.data.updateImageData32;
+            $updateImageData = event.data.updateImageData;
+            $gpu_execute(...event.data.args);
+            break;
+        } // switch
+    };
+} // if webworker
+
+
+function $gpu_set_texture(spritesheetArray, fontArray) {
+    $spritesheetArray   = spritesheetArray;
+    $fontArray          = fontArray;
+}
+
+function $gpu_resize_framebuffer(w, h) {
+    $SCREEN_WIDTH = w;
+    $SCREEN_HEIGHT = h;
+    $screen = new Uint16Array(w * h);
+    $screen32 = new Uint32Array($screen.buffer);
+}
 
 function $square(x) { return x * x; }
 
-/** Used by show() */
+/** Used by gpu_execute() */
 function $zSort(a, b) { return a.z - b.z; }
 
-function $show() {
-
-    // Check whether this frame will be shown or not, if running below
-    // frame rate and pruning graphics.  Use mode_frames instead of
-    // game_frames to ensure that frame 0 is always rendered for a mode.
-    if (mode_frames % $graphicsPeriod === 0) {
-        const startTime = performance.now();
-        // clear the screen
-        if ($background.spritesheet) {
-            // Image background
-            $screen.set($background.spritesheet.$uint16Data);
-        } else {
-            // Color background (force alpha = 1)
-            let c = ($colorToUint16($background) >>> 0) | 0xf000;
-            $screen.fill(c, 0, $screen.length);
-        }
-        
-        // Sort
-        $graphicsCommandList.sort($zSort);
-
-        // Eval draw list
-        for (let i = 0; i < $graphicsCommandList.length; ++i) {
-            const cmd = $graphicsCommandList[i];
-            $executeTable[cmd.opcode](cmd);
-        }
-
-        $submitFrame();
-        $graphicsTime = $performance.now() - startTime;
+function $gpu_execute(commandList, backgroundSpritesheetIndex, backgroundColor16) {
+    // clear the screen
+    if (backgroundSpritesheetIndex !== undefined) {
+        // Image background
+        $screen.set($spritesheetArray[backgroundSpritesheetIndex].$uint16Data);
+    } else {
+        // Color background (force alpha = 1)
+        $screen.fill(backgroundColor16, 0, $screen.length);
     }
     
-    $requestInput();
+    // Sort
+    commandList.sort($zSort);
     
-    // Save for replays
-    $previousGraphicsCommandList = $graphicsCommandList;
-    
-    // Clear draw list (regardless of whether it is actually drawn)
-    $graphicsCommandList = [];
+    // Eval draw list
+    for (let i = 0; i < commandList.length; ++i) {
+        const cmd = commandList[i];
+        $executeTable[cmd.opcode](cmd);
+    }
 
-    ++game_frames;
-    ++mode_frames;
+    {
+        // Convert 16-bit to 32-bit
+        const dst32 = $updateImageData32;
+        const src32 = $screen32;
+        const N = src32.length;
+        for (let s = 0, d = 0; s < N; ++s) {
+            // Read two 16-bit pixels at once
+            let src = src32[s];
+            
+            // Turn into two 32-bit pixels as ABGR -> FFBBGGRR. Only
+            // read color channels, as the alpha channel is overwritten with fully
+            // opaque.
+            let C = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
+            dst32[d] = 0xff000000 | C | (C << 4); ++d; src = src >> 16;
+            
+            C = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
+            dst32[d] = 0xff000000 | C | (C << 4); ++d;
+        }
+    }
+    
+    if ($is_web_worker) {
+        console.log('Transferring updateImageData back to CPU thread');
+        postMessage({type: 'submitFrame', updateImageData: $updateImageData, updateImageData32: $updateImageData32}, [$updateImageData32.buffer]);
+        $updateImageData32 = null;
+    } else {
+        $submitFrame($updateImageData, $updateImageData32);
+    }
 }
-
-
-/** Updates the z value with an epsilon and stores the current set_clipping region */
-function $addGraphicsCommand(cmd) {
-    if (is_nan(cmd.z)) { $error('NaN z value in graphics command'); }
-    
-    cmd.clipX1 = $clipX1;
-    cmd.clipY1 = $clipY1;
-    cmd.clipX2 = $clipX2;
-    cmd.clipY2 = $clipY2;
-
-    // Offset subsequent commands to get a unique z value for each,
-    // and stable sort ordering. The offset value must be orders of
-    // magnitude less than the quadplay epsilon value to avoid
-    // confusion for programmers with z ordering.
-    cmd.z     += $graphicsCommandList.length * $Math.sign($scaleZ) * 1e-10;
-    
-    $graphicsCommandList.push(cmd);
-}
-
 
 
 /** Color is 16-bit ABGR4. This implementation assumes a little-endian
@@ -699,7 +761,6 @@ function $executeSPR(metaCmd) {
         const cmd = data[i];
         
         let opacity = cmd.opacity;
-        const spr = cmd.sprite;
         const override_color = cmd.override_color;
         
         // Compute the net transformation matrix
@@ -922,7 +983,7 @@ function $executeSPR(metaCmd) {
         } else {
             // General case.
             // Extract the common terms of blending into the override color
-            const override = override_color ? $colorToUint16(override_color) : 0;
+            const override = override_color;
             const override_a = 1 - (override >>> 12) * (1 / 15);
             const override_mode = (override_color && cmd.multiply) ? 3 : ((override_a === 1) ? 0 : (override_a === 0) ? 2 : 1);
             const override_b = (override & 0x0F00) * (1 - override_a) + 0.5;
@@ -1045,7 +1106,7 @@ function $executeTXT(cmd) {
     
     for (let c = 0; c < str.length; ++c) {
         // Remap the character to those in the font sheet
-        const chr = $fontMap[str[c]] || ' ';
+        const chr = str[c];
         const bounds = font.$bounds[chr];
 
         x += bounds.pre;
@@ -1093,7 +1154,7 @@ function $executeTXT(cmd) {
             
         } // character in font
 
-        x += (bounds.x2 - bounds.x1 + 1) + $postGlyphSpace(str, c, font) - font.$borderSize * 2 + bounds.post;
+        x += (bounds.x2 - bounds.x1 + 1) + $postGlyphSpace(chr + (str[c] || ''), font) - font.$borderSize * 2 + bounds.post;
         
     } // for each character
 }

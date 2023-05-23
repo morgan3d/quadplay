@@ -2,7 +2,7 @@ draw_previous_mode()
 drawInventory()
 
 draw_sprite_corner_rect(uiSprite[10][15], xy(64, 22), xy(256, 78), 10)
-draw_text(smallFont, "Shop", xy(½ SCREEN_SIZE.x, 13), #626e77, ∅, ∅, 0, 0, 10)
-draw_text(font, "Yer money is no good here! This isn't a real game where you can buy stuff.", xy(68, 24), #626e77, ∅, ∅, -1, -1, 10, 256)
+draw_text(smallFont, "Shop", xy(½ SCREEN_SIZE.x, 16), #626e77, ∅, ∅, "center", 0, 10)
+draw_text(font, "Yer money is no good here! This is no a REAL game where ye can buy stuff.", xy(67, 42), #626e77, ∅, ∅, -1, -1, 10, 256)
 
-if joy.cc or joy.bb or joy.pp: pop_mode("Press ⓑ, ⓒ, or ⓟ")
+if joy.cc or joy.bb: pop_mode("Press ⓑ or ⓒ")

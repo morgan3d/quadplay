@@ -538,7 +538,7 @@ function loadConstants(constantsJson, gameURL, isDebugLayer, result) {
                 }, undefined, undefined, true);
             } else if (/\.yml$/.test(constantURL)) {
                 loadManager.fetch(constantURL, 'text', null, function (yaml) {
-                    const json = jsyaml.safeLoad(yaml);
+                    const json = jsyaml.load(yaml);
                     result[c] = nullToUndefined(json);
                 }, undefined, undefined, true);
             } else {
@@ -1006,7 +1006,7 @@ function loadData(name, json, jsonURL) {
         }, undefined, undefined, true);
     } else if (dataType === 'yml') {
         loadManager.fetch(dataURL, 'text', null, function (yaml) {
-            const json = jsyaml.safeLoad(yaml);
+            const json = jsyaml.load(yaml);
             data.value = nullToUndefined(json);
             data.value.$name = name;
             data.value.$type = 'data';

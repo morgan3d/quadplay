@@ -439,17 +439,17 @@ function processPreviewRecording() {
 
                 for (let dy = 0; dy <= 1; ++dy) {
                     for (let dx = 0; dx <= 1; ++dx) {
-                        const src = QRuntime.$screen[(x*2 + dx) + (y*2 + dy) * 384];
-                        r += (src >>> 8) & 0xf;
-                        g += (src >>> 4) & 0xf;
-                        b += src & 0xf;
+                        const src = updateImageData32[(x*2 + dx) + (y*2 + dy) * 384];
+                        r += (src >>> 16) & 0xff;
+                        g += (src >>> 8) & 0xff;
+                        b += src & 0xff;
                     } // dx
                 } // dy
 
-                // 16->32
-                r |= r << 4;
-                g |= g << 4;
-                b |= b << 4;
+                // Divide each by 4
+                r |= r << 2;
+                g |= g << 2;
+                b |= b << 2;
                 previewRecording[dstOffset] = (((r >> 2) & 0xff) << 16) + (((g >> 2) & 0xff) << 8) + ((b >> 2) & 0xff);
             } // x
         } // y
@@ -1096,7 +1096,11 @@ function onScreenDrawBarGraph(title, value, color, i) {
 
 // Invoked as QRuntime.$submitFrame(). May not actually be invoked every
 // frame if running below framerate.
-function submitFrame() {
+function submitFrame(_updateImageData, _updateImageData32) {
+    // Force the data back, which may be returned from a web worker
+    updateImageData = _updateImageData;
+    updateImageData32 = _updateImageData32;
+    
     // Hack the FPS overlay directly onto the screen
     if (QRuntime.$onScreenHUDEnabled) {
         onScreenDrawBarGraph('Frame:', onScreenHUDDisplay.time.frame, 0xFA5F, 0);
@@ -1121,26 +1125,6 @@ function submitFrame() {
           ($postFX.pos.x !== 0) || ($postFX.pos.y !== 0) ||
           ($postFX.scale.x !== 1) || ($postFX.scale.y !== 1) ||
           ($postFX.color_blend !== 'source-over');
-
-    {
-        // Convert 16-bit to 32-bit
-        const dst32 = updateImageData32;
-        const src32 = QRuntime.$screen32;
-        const N = src32.length;
-        for (let s = 0, d = 0; s < N; ++s) {
-            // Read two 16-bit pixels at once
-            let src = src32[s];
-            
-            // Turn into two 32-bit pixels as ABGR -> FFBBGGRR. Only
-            // read color channels, as the alpha channel is overwritten with fully
-            // opaque.
-            let C = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
-            dst32[d] = 0xff000000 | C | (C << 4); ++d; src = src >> 16;
-            
-            C = ((src & 0x0f00) << 8) | ((src & 0x00f0) << 4) | (src & 0x000f);
-            dst32[d] = 0xff000000 | C | (C << 4); ++d;
-        }
-    }
     
     if (previewRecording) {
         processPreviewRecording();
@@ -1603,9 +1587,9 @@ function onTouchStartOrMove(event) {
             if (QRuntime.touch.aa && document.getElementById('printTouchEnabled').checked) {
                 $systemPrint(`\ntouch.screen_xy = xy(${QRuntime.touch.screen_x}, ${QRuntime.touch.screen_y})`);
 
-                // Read the 16-bit color from the screen
-                const C = QRuntime.$screen[Math.floor(QRuntime.touch.screen_y) * SCREEN_WIDTH + Math.floor(QRuntime.touch.screen_x)];
-                const r = C & 0xf, g = (C >> 4) & 0xf, b = (C >> 8) & 0xf;
+                // Read the 32-bit color from the screen
+                const C = updateImageData32[Math.floor(QRuntime.touch.screen_y) * SCREEN_WIDTH + Math.floor(QRuntime.touch.screen_x)];
+                const r = (C >> 4) & 0xf, g = (C >> 12) & 0xf, b = (C >> 20) & 0xf;
                 const hex_color = `#${r.toString(16)}${g.toString(16)}${b.toString(16)}`.toUpperCase();
                 $outputAppend(`<i>rgb(${Math.round(100 * r / 15)}%, ${Math.round(100 * g / 15)}%, ${Math.round(100 * b / 15)}%) <div style="width: 32px; height: 12px; display: inline-block; position: relative; top: 2px; background: ${hex_color}"></div> ${hex_color}</i><br>`);
             }
