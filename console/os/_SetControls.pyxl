@@ -100,7 +100,7 @@ else if VIEW_SIZE.x == 320:
    shiftY = -2
    titleY = -10
    shiftSpriteY = -24
-else: // 384
+else: // 384, 640
    arrowX = 62
    arrowY = -7
    shiftX = -18
@@ -178,10 +178,12 @@ for view at view_index in VIEW_ARRAY:
              device_control("set_pad_type", p, type)
     
           if VIEW_SIZE.x == 64:
-             set_transform(xy(32, shiftY) + view.corner, xy(1, 1))
+              set_transform(xy(32, shiftY) + view.corner, xy(1, 1))
           else:
-             set_transform(xy((0.5 + (p bitand 1)) * 0.5 * view.size.x,
-                             (p bitshr 1) * 54% view.size.y + (26 + shiftY) * scale) + view.corner, xy(1, 1))
+              
+              set_transform(xy((0.5 + (p bitand 1)) * 0.5 * view.size.x,
+                               (p bitshr 1) * 54% view.size.y + (26 + shiftY) * scale + max(0.25 (view.size.y - 224), 0)) + view.corner,
+                            xy(1, 1))
     
           draw_text({font: choiceFont, text: playerName[p] + control.type, shadow: text_shadow_color,
                     pos: xy(0, titleY) * scale, color: text_color, x_align: "center"})

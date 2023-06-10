@@ -7,7 +7,7 @@ def animate_shock_attack(frames_left, total_frames, data)
 & with piece, end_board_pos in data:
     
     draw_sprite({
-        sprite: shock_sprite["animation" + piece.player_index].frame(mode_frames),
+        sprite: animation_frame(shock_sprite["animation" + piece.player_index], mode_frames),
         pos: SPACE_SIZE * ½ (piece.board_pos + end_board_pos) + xy(0, -16),
         z: piece.board_pos.y + 0.5})
         

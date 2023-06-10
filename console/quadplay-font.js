@@ -908,7 +908,7 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
                     // If this is a digit, shift the pixels and x
                     // bounds based on the mandatory fixed digit width
                     // so that it is centered
-                    const w = srcBounds.x2 - srcBounds.x1 + 2 * borderSize + 1;
+                    const w = srcBounds.x2 - srcBounds.x1 + 1;
                     post = Math.max(Math.ceil((min_width - w) / 2) | 0, 0) | 0;
                     pre = Math.max(min_width - w - post, 0) | 0;
                 }
@@ -922,6 +922,7 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
                     post: post,
                     yOffset: 0
                 };
+
 
                 /* debugging
                 if (chr === 'ⓥ') {

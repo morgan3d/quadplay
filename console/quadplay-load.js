@@ -22,6 +22,14 @@
 */
 "use strict";
 
+const allowedScreenSizes = Object.freeze([
+    {x: 640, y: 360},
+    {x: 384, y: 224},
+    {x: 320, y: 180},
+    {x: 192, y: 112},
+    {x: 128, y: 128},
+    {x:  64, y:  64}]);
+
 // Allocated by afterLoadGame
 let loadManager = null;
 
@@ -348,7 +356,6 @@ function afterLoadGame(gameURL, callback, errorCallback) {
             gameJSON.screen_size = {x: 384, y:224};
         }
 
-        const allowedScreenSizes = [{x: 384, y: 224}, {x: 320, y: 180}, {x: 192, y: 112}, {x: 128, y: 128}, {x: 64, y: 64}];
         {
             let ok = false;
             for (let i = 0; i < allowedScreenSizes.length; ++i) {
@@ -566,56 +573,6 @@ function loadConstants(constantsJson, gameURL, isDebugLayer, result) {
             result[c] = evalJSONGameConstant(definition);
         }
     }
-}
-
-
-// Becomes the `frame(f)` method on sprite animation arrays.
-// Runs in linear time in the length of the array (*not* linear in the value of f).
-function animationFrame(f) {
-    f = Math.floor(f);
-    const animation = this;
-    if (! animation) {
-        throw new Error('The frame() function can only be called directly from a sprite animation array.');
-    }
-    const N = animation.length;
-
-    if (animation.extrapolate === 'clamp') {
-        // Handle out of bounds cases by clamping
-        if (f < 0) { return animation[0]; }
-        if (f >= animation.frames) { return animation[N - 1]; }
-    } else {
-        // Handle out of bounds cases by looping. To handle negatives, we need
-        // to add and then mod again. Mod preserves fractions.
-        f = ((f % animation.period) + animation.period) % animation.period;
-    }
-
-    if (animation.extrapolate === 'oscillate') {
-        // Oscillation will give us twice the actual number of frames from the
-        // looping, so we need to figure out which part of the period we're in.
-        const reverseTime = (animation.period + animation[0].frames + animation[N - 1].frames) / 2;
-        if (f >= reverseTime) {
-            // Count backwards from the end
-            f -= reverseTime;
-            let i = N - 2;
-            while ((i > 0) && (f >= animation[i].frames)) {
-                f -= animation[i].frames;
-                --i;
-            }
-               
-            return animation[i];
-        }
-    }
-    
-    // Find the value by searching linearly within the array (since we do not
-    // store cumulative values to binary search by).
-    let i = 0;
-    while ((i < N) && (f >= animation[i].frames)) {
-        f -= animation[i].frames;
-        ++i;
-    }
-    
-    return animation[Math.min(i, N - 1)];
-
 }
 
 
@@ -920,7 +877,7 @@ function getImageData4Bit(image, region, full32bitoutput) {
 
 // Handles fonts as well
 function recordSpriteStats(spritesheet) {
-    if (spritesheet.$name[0] === '_') { return; }
+    if (spritesheet.$name[0] === '$') { return; }
     const data = (spritesheet.$uint16Data || spritesheet.$data);
     let count = data.width * data.height;
     
@@ -1096,7 +1053,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         $name: name,
         $type: 'spritesheet',
         $uint16Data: null,
-        $uint16DataFlippedX : null,
+        $uint16DataFlippedX: null,
         $url: pngURL,
         $sourceURL: (json.source_url && json.source_url !== '') ? makeURLAbsolute(jsonURL, json.source_url) : null,
         // Before the region is applied. Used by the IDE
@@ -1431,7 +1388,6 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                     
                     const extrapolate = data.extrapolate || 'loop';
                     animation.extrapolate = extrapolate;
-                    animation.frame = animationFrame;
 
                     const frames = Array.isArray(data.frames) ?
                           data.frames : // array

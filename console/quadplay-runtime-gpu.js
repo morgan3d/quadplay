@@ -30,6 +30,7 @@ var $screen32;
 
 // 32 bpp output double buffer. Sent back to the main thread.
 var $updateImageData32;
+var $updateImageData;
 
 // Draw list buffer. Array of command objects.
 var $graphicsCommandList;
@@ -46,10 +47,22 @@ if ($is_web_worker) {
 
     // onmessage is a specific global name for web workers
     self.onmessage = function (event) {
-        console.log('Event received');
+        // console.log('Event received:', event.data.type);
+        
         switch (event.data.type) {
         case 'set_texture':
             $gpu_set_texture(event.data.spritesheetArray, event.data.fontArray);
+            // TODO: Remove
+            const sheet = event.data.spritesheetArray[3];
+            if (sheet) {
+                const srcData = sheet.$uint16Data;
+                let any = false;
+                for (let i = 0; i < srcData.length; ++i) {
+                    any = any || ((srcData[i] & 0x0fff) !== 0);
+                }
+                console.assert(any);
+                console.log("pass");
+            }
             break;
 
         case 'resize_framebuffer':
@@ -66,10 +79,12 @@ if ($is_web_worker) {
 } // if webworker
 
 
+// Called for both the webworker and the main thread
 function $gpu_set_texture(spritesheetArray, fontArray) {
     $spritesheetArray   = spritesheetArray;
     $fontArray          = fontArray;
 }
+
 
 function $gpu_resize_framebuffer(w, h) {
     $SCREEN_WIDTH = w;
@@ -92,7 +107,7 @@ function $gpu_execute(commandList, backgroundSpritesheetIndex, backgroundColor16
         // Color background (force alpha = 1)
         $screen.fill(backgroundColor16, 0, $screen.length);
     }
-    
+
     // Sort
     commandList.sort($zSort);
     
@@ -123,8 +138,9 @@ function $gpu_execute(commandList, backgroundSpritesheetIndex, backgroundColor16
     }
     
     if ($is_web_worker) {
-        console.log('Transferring updateImageData back to CPU thread');
+        // console.log('Transferring updateImageData back to CPU thread');
         postMessage({type: 'submitFrame', updateImageData: $updateImageData, updateImageData32: $updateImageData32}, [$updateImageData32.buffer]);
+        $updateImageData = null;
         $updateImageData32 = null;
     } else {
         $submitFrame($updateImageData, $updateImageData32);
@@ -759,7 +775,7 @@ function $executeSPR(metaCmd) {
     const data = metaCmd.data;
     for (let i = 0; i < data.length; ++i) {
         const cmd = data[i];
-        
+
         let opacity = cmd.opacity;
         const override_color = cmd.override_color;
         
@@ -866,6 +882,7 @@ function $executeSPR(metaCmd) {
                         'spritesheetIndex out of bounds:', cmd.spritesheetIndex);
         // May be reassigned below when using flipped X values
         let srcData = $spritesheetArray[cmd.spritesheetIndex].$uint16Data;
+
         const srcDataWidth = srcData.width >>> 0;
         if (($Math.abs($Math.abs(A) - 1) < 1e-10) && ($Math.abs(B) < 1e-10) &&
             ($Math.abs(C) < 1e-10) && ($Math.abs($Math.abs(D) - 1) < 1e-10) &&
@@ -891,7 +908,6 @@ function $executeSPR(metaCmd) {
                     srcOffset = (srcOffset + srcDataWidth - 2 * SX) | 0;
                     srcData = $spritesheetArray[cmd.spritesheetIndex].$uint16DataFlippedX;
                 }
-                
                 if ((! cmd.hasAlpha) && ($Math.abs(opacity - 1) < 1e-10)) {
                     // Memcpy case
                     for (let dstY = dstY1; dstY <= dstY2; ++dstY) {
@@ -943,7 +959,7 @@ function $executeSPR(metaCmd) {
                                     result |= ((back & 0x0F00) * (1 - a) + (color & 0x0F00) * a + 0.5 * 0x100) & 0x0F00;
                                     result |= ((back & 0x00F0) * (1 - a) + (color & 0x00F0) * a + 0.5 * 0x010) & 0x00F0;
                                     result |= ((back & 0x000F) * (1 - a) + (color & 0x000F) * a + 0.5) & 0x000F;
-                                
+
                                     $screen[dstOffset + i] = result;
                                 }
                             } // alpha > 0

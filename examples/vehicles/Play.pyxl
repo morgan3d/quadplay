@@ -136,8 +136,8 @@ def simulate_hero(player):
       // Transform into the player's reference frame
       vel = transform_from(xy(0, 0), player.angle, xy(1, 1), vel)
       
-   player.sprite = HERO_SPRITESHEET.yellow_run_arms.frame(player.frame)
-   legs.sprite = HERO_SPRITESHEET.run_legs.frame(player.frame)
+   player.sprite = animation_frame(HERO_SPRITESHEET.yellow_run_arms, player.frame)
+   legs.sprite = animation_frame(HERO_SPRITESHEET.run_legs, player.frame)
 
 
 

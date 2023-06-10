@@ -35,7 +35,7 @@ def missile_update_and_draw(missile, end_board_pos, z):
     if missile.t ≥ 85%:
         // Mini explosion for one missile
         const α = (missile.t - 85%) / 15%
-        draw_sprite(explosion_float_sprite.animation.frame(⌊α * size(explosion_float_sprite.animation)⌋), missile.spline(95%), ∅, 30%, ∅, z, #FFF8)
+        draw_sprite(animation_frame(explosion_float_sprite.animation, ⌊α * size(explosion_float_sprite.animation)⌋), missile.spline(95%), ∅, 30%, ∅, z, #FFF8)
         
         if missile.t > 100%:
             play_sound({sound: explode_tiny_sound, pos: end_board_pos * SPACE_SIZE, volume: random(175%, 275%), playback_rate: random(75%, 125%)})

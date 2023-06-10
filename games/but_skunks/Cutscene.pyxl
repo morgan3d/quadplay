@@ -200,7 +200,7 @@ else if next_cmd.cmd == CMD_BLAST_TUTORIAL:
             x_align:"center", z:2040})
         // Draw skunk
         let skunk = skunks[i]
-        skunk.sprite = player_infos[i].walk_anim.frame(bgm_now_f)
+        skunk.sprite = animation_frame(player_infos[i].walk_anim, bgm_now_f)
         draw_entity(skunk)
         // Hack to ignore lingering A presses when you first enter the mode.
         if pad.aa:
@@ -212,7 +212,7 @@ else if next_cmd.cmd == CMD_BLAST_TUTORIAL:
                 pos: skunk.pos+xy(0,8),
                 scale: xy(0,0),
                 opacity: 0,
-                sprite: stinkbomb_sprite.charge.frame(0),
+                sprite: animation_frame(stinkbomb_sprite.charge, 0),
                 source_skunk: skunk,
                 gamepad: pad,
                 start_frame: bgm_now_f,
@@ -221,9 +221,9 @@ else if next_cmd.cmd == CMD_BLAST_TUTORIAL:
             push(stinkbombs, stinkbomb)
     def itor_stinkbomb_grow(stinkbomb):
         with start_frame, scale, opacity, gamepad, sprite in stinkbomb:
-            const max_grow_frames = BGM_FRAMES_PER_MEASURE/2
+            const max_grow_frames = BGM_FRAMES_PER_MEASURE / 2
             const size_t = clamp(bgm_now_f - start_frame, 0, max_grow_frames) / max_grow_frames
-            sprite = stinkbomb_sprite.charge.frame(mode_frames)
+            sprite = animation_frame(stinkbomb_sprite.charge, mode_frames)
             opacity = size_t
             scale = size_t * size_t * size_t * xy(1,1)
             let skunk = stinkbomb.source_skunk
@@ -239,7 +239,7 @@ else if next_cmd.cmd == CMD_BLAST_TUTORIAL:
                 let bomb_explodes = false
                 let explosion = make_entity({
                     pos: stinkbomb.pos,
-                    sprite: stinkbomb_sprite.stink.frame(0),
+                    sprite: animation_frame(stinkbomb_sprite.stink, 0),
                     start_frame: mode_frames,
                     duration_frames: stinkbomb_sprite.stink.frames,
                     source_skunk:skunk,
@@ -298,7 +298,7 @@ else if next_cmd.cmd == CMD_BLAST_TUTORIAL:
             return iterate.REMOVE
         const age_t = clamp(age_f / explosion.duration_frames, 0, 1)
         if explosion.scale.x > 0:
-            explosion.sprite = stinkbomb_sprite.stink.frame(age_f)
+            explosion.sprite = animation_frame(stinkbomb_sprite.stink, age_f)
             explosion.opacity = lerp(1, 0.25, smoothstep(0.25, 0.75, age_t))
             explosion.scale = lerp(explosion.start_scale, explosion.end_scale, smoothstep(0.0, 1.0, age_t))
             explosion.text_color.a = 1 - smoothstep(0.75,1,age_t)
@@ -338,7 +338,7 @@ else if next_cmd.cmd == CMD_SET_MODE:
 // draw stuff
 set_post_effects(post_effects)
 if image ≠ ∅:
-    draw_sprite({sprite:image.scene.frame(bgm_now_f), pos:50% SCREEN_SIZE})
+    draw_sprite({sprite:animation_frame(image.scene, bgm_now_f), pos:50% SCREEN_SIZE})
 draw_text(text_args)
 draw_text({font:font, pos:SCREEN_SIZE-xy(8,0), text:replace("(b) Skip", joy.prompt),
     x_align:"right", y_align:"bottom", color:#f, shadow:#0, z:10})

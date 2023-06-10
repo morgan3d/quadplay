@@ -28,7 +28,7 @@ frame
 
 iterate(player_array, player_update, map, 0, particle_array)
 
-const replacement_array = [map.spritesheet.flag[0], map.spritesheet.flag.frame(mode_frames)]
+const replacement_array = [map.spritesheet.flag[0], animation_frame(map.spritesheet.flag, mode_frames)]
 
 // Map shadow (this could be slow for a higher res game)
 draw_map(map, ∅, ∅, replacement_array, xy(0, 2), ∅, ∅, -1, #0007)

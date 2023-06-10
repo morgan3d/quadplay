@@ -472,7 +472,7 @@ for i < PLAYER_COUNT:
             let arrow_hex = preview_hc + HEX_COORD_NEIGHBOR_OFFSETS[neighbor]
             let override_color = if arrow_can_capture then hsv((mode_frames mod 72)/72,1,1) else rgba(0,0,0,0)
             let override_blend = if arrow_can_capture then "multiply" else "lerp"
-            draw_sprite_on_hex_map(arrow_sprite.animation.frame(mode_frames),
+            draw_sprite_on_hex_map(animation_frame(arrow_sprite.animation, mode_frames),
                 transform_hex_to_map_coord(arrow_hex), 0, ARROW_SPRITE_SCALES[neighbor], override_color, override_blend)
 // Draw current player's move around their hex on the map itself
 for neighbor < 6:
@@ -492,7 +492,7 @@ for neighbor < 6:
         const target_is_other_player_without_capture = neighbor_hex_owner ≠ PLAYER_NEUTRAL and neighbor_hex_owner ≠ current_player and not arrow_can_capture
         if not_on_own_cell or target_is_outside_map or target_is_own_cell or target_is_other_player_without_capture:
             arrow_sprite = ARROW_OUTLINE_SPRITES[neighbor]
-        draw_sprite_on_hex_map(arrow_sprite.animation.frame(mode_frames),
+        draw_sprite_on_hex_map(animation_frame(arrow_sprite.animation, mode_frames),
             transform_hex_to_map_coord(arrow_hex), 0, ARROW_SPRITE_SCALES[neighbor], override_color, override_blend)
 
 leave

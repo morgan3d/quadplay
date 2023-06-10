@@ -1,3 +1,4 @@
+/* By Morgan McGuire @CasualEffects https://casual-effects.com LGPL 3.0 License */
 
 function onProjectLicensePreset(license) {
     const projectLicense = document.getElementById('projectLicense');

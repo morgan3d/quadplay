@@ -177,6 +177,11 @@
             "description": "Asymmetric sprite scaling for animation of single sprites"
         },
         {
+            "url": "quad://examples/starrypad/",
+            "title": "starrypad",
+            "description": "Visualization of Donner Starrypad MIDI input. Requires the physical controller."
+        },
+        {
             "url": "quad://examples/starter/",
             "title": "Starter Example",
             "description": "Description of your game in about 100 characters."

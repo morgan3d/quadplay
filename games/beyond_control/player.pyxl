@@ -501,7 +501,7 @@ def player_draw_ui(player) preserving_transform:
             player.forward_arrow_angle = round(player.forward_arrow_angle, 45°)
 
     for action at a in player.action_array:
-        let sprite = if action.animation then action.animation.frame(mode_frames) else action
+        let sprite = if action.animation then animation_frame(action.animation, mode_frames) else action
         
         const status = player.status_array[a]
         const unused = status ≠ "used"

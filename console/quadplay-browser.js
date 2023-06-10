@@ -277,10 +277,6 @@ function device_control(cmd) {
                 QRuntime.$feature_768x448 = true;
                 break;
                 
-            case '640x360,private_views':
-                QRuntime.$feature_640x360 = true;
-                break;
-
             case 'steinbach':
                 QRuntime.$feature_custom_resolution = true;
                 break;
@@ -1098,9 +1094,10 @@ function onScreenDrawBarGraph(title, value, color, i) {
 // frame if running below framerate.
 function submitFrame(_updateImageData, _updateImageData32) {
     // Force the data back, which may be returned from a web worker
+    console.assert(_updateImageData, _updateImageData32);
     updateImageData = _updateImageData;
     updateImageData32 = _updateImageData32;
-    
+
     // Hack the FPS overlay directly onto the screen
     if (QRuntime.$onScreenHUDEnabled) {
         onScreenDrawBarGraph('Frame:', onScreenHUDDisplay.time.frame, 0xFA5F, 0);

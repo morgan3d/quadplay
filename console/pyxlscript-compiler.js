@@ -1547,7 +1547,16 @@ return $Object.freeze({$type:'mode', $enter:$enter, $frame:$frame, $pop_modeFrom
     const start_mode = (gameSource.debug && gameSource.debug.json && gameSource.debug.json.start_mode_enabled && gameSource.debug.json.start_mode) || gameSource.json.start_mode
     // Expose to the runtime
     compiledProgram += 'push_guest_menu_mode.$OnlineMenu = $OnlineMenu; ';
-    compiledProgram += 'try { set_mode(' + start_mode + '); } catch (e) { if (! e.nextMode) { throw e; } }\n\n';
+    compiledProgram += `
+function $start_program() {
+    $play_reset_animation.active = false;
+    mode_frames = game_frames = 0;
+    try {
+        set_mode(${start_mode});
+    } catch (e) {
+        if (! e.nextMode) { throw e; }
+    }
+}\n\n`;
 
     // Main loop
     compiledProgram += `// Main loop
@@ -1562,7 +1571,7 @@ return function () {
 
 `;
 
-    compiledProgram = "'use strict';/*ට\"resetAnimation\"*/ \n" + resetAnimationSource + separator + compiledProgram;
+    compiledProgram = "'use strict';/*ට\"reset_animation\"*/ \n" + resetAnimationSource + separator + compiledProgram;
 
     // Process SOURCE_LOCATION and inject line numbers on Safari
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
@@ -1652,6 +1661,8 @@ const resetAnimationSource = `
 ///////////////////////////////////////////////////////////////////////////////////
 // Warm the jit by hitting all of the key sprite cases and randomizing parameters so that
 // the jit doesn't over specialize (needed on Safari to prevent compilation stutters)
+reset_transform()
+reset_camera()
 
 for (let i = 0; i < 150; ++i) {
    // Alpha cases (the regular nontransformed alpha case is handled automatically by drawing the visible logo)
@@ -1674,9 +1685,8 @@ draw_rect({x: SCREEN_SIZE.x * 0.5, y: SCREEN_SIZE.y * 0.5}, SCREEN_SIZE, rgb(0,0
 ///////////////////////////////////////////////////////////////////////////////////
 // Reset animation
 function $play_reset_animation() {
-   if ($numBootAnimationFrames <= 0) {
-       $play_reset_animation.active = false;
-       mode_frames = game_frames = 0;
+   if ($numBootAnimationFrames <= 0) {       
+       $start_program();
        return; 
    }
 
@@ -1739,8 +1749,7 @@ function $play_reset_animation() {
    frame -= holdLen;
 
    // Done! 
-   $play_reset_animation.active = false;
-   mode_frames = game_frames = 0;
+   $start_program();
 }
 $play_reset_animation.active = true;
 `;

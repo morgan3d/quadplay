@@ -9,7 +9,7 @@ def random_vel(): return ½ random_on_circle()
 // Callback for updating an entity and drawing it
 def process(entity):
     if entity.animation:
-        entity.sprite = entity.animation.frame(mode_frames)
+        entity.sprite = animation_frame(entity.animation, mode_frames)
 
     entity_simulate(entity)
 

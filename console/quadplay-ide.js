@@ -81,7 +81,12 @@ let allow_bloom = true;
         const a = Math.min(1, Math.max(0, (i - 1) / (banner.length - 2)));
         style.push(`color: rgb(${clerp(255, 0, a)}, ${clerp(64, 169, a)}, ${clerp(158, 227, a)}); text-shadow: 0px 2px 3px #000`);
     }
-    console.log('\n\n\n' + banner.join('\n') + '\n\nquadplay✜ version ' + version + '\n©2019-2023 Morgan McGuire\nLicensed as GPL 3.0\nhttps://www.gnu.org/licenses/gpl-3.0.en.html\n', ...style);
+    console.log('\n\n\n' + banner.join('\n') + '\n\nquadplay✜ version ' + version + '\n©2019-2023 Morgan McGuire\nLicensed as GPL 3.0\nhttps://www.gnu.org/licenses/gpl-3.0.en.html\n' +
+                '\nSecure Context: ' + window.isSecureContext +
+                '\nBrowser: ' + browserName +
+                '\nNative App: ' + nativeapp +
+                '\nIDE: ' + useIDE,
+                ...style);
 }
 
 
@@ -2508,10 +2513,9 @@ function visualizeGame(gameEditor, url, game) {
         s += '</select></td></tr>\n';
         
         s += `<tr valign="top"><td>Screen&nbsp;Size</td><td colspan=3><select style="width:390px" onchange="onProjectScreenSizeChange(this)">`;
-        const res = [[384, 224], [320, 180], [192,112], [128,128], [64,64]];
-        for (let i = 0; i < res.length; ++i) {
-            const W = res[i][0], H = res[i][1];
-            s += `<option value='{"x":${W},"y":${H}}' ${W === gameSource.extendedJSON.screen_size.x && H === gameSource.extendedJSON.screen_size.y ? "selected" : ""}>${W} × ${H}</option>`;
+        for (let i = 0; i < allowedScreenSizes.length; ++i) {
+            const W = allowedScreenSizes[i].x, H = allowedScreenSizes[i].y;
+            s += `<option value='{"x":${W},"y":${H}}' ${W === gameSource.extendedJSON.screen_size.x && H === gameSource.extendedJSON.screen_size.y ? "selected" : ""}>${W} × ${H}${W === 384 && H === 224 ? ' ✜' : ''}</option>`;
         }
         s += `</select></td></tr>\n`;
     } else {
@@ -3336,7 +3340,6 @@ function mainLoopStep() {
         // Chromium, which costs >5% of the total frame time in call
         // according to the browser profiler.
         
-        //lastAnimationRequest = setTimeout(mainLoopStep, Math.floor(1000 / targetFramerate - 1));
         const interval = Math.floor(1000 / targetFramerate - 1);
         if (interval !== lastAnimationInterval) {
             // New interval
@@ -3359,6 +3362,7 @@ function mainLoopStep() {
     // no harm to set it back to false in that case.
     refreshPending = false;
     updateKeyboardPending = false;
+    midiBeforeFrame();
 
     profiler.startFrame();
     // Run until the end of the game's natural main loop excution, the
@@ -3442,7 +3446,8 @@ function mainLoopStep() {
 
     // The frame has ended
     profiler.endFrame(QRuntime.$physicsTimeTotal, QRuntime.$graphicsTime, QRuntime.$logicToGraphicsTimeShift);
-
+    midiAfterFrame();
+    
     // Only update the profiler display periodically, because doing so
     // takes about 2ms of frame time on a midrange modern computer.
     if (useIDE && (((QRuntime.mode_frames - 1) % (8 * QRuntime.$graphicsPeriod) === 0) ||
@@ -3656,6 +3661,9 @@ function reloadRuntime(oncomplete) {
         QRuntime.$NET_ID_WORD_TABLE  = NET_ID_WORD_TABLE;
         QRuntime.$showPopupMessage   = showPopupMessage;
         QRuntime.$setRuntimeDialogVisible   = setRuntimeDialogVisible;
+
+        // Map the global midi object as read-only
+        Object.defineProperty(QRuntime, 'midi', {value: midi, writable: false});
 
         // For use by the controller remapping
         QRuntime.$localStorage       = localStorage;
@@ -4972,6 +4980,9 @@ LoadManager.fetchOne({}, location.origin + getQuadPath() + 'console/_config.json
 
 // Make the browser aware that we want gamepads as early as possible
 navigator.getGamepads();
+
+// Initialize MIDI
+navigator.requestMIDIAccess().then(onMIDIInitSuccess, onMIDIInitFailure);
 
 /* Called from the quit menu item. Forces closing the server for a nativeapp,
    which macOS can't detect because the Chromium browser doesn't close on that

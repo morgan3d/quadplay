@@ -1,19 +1,30 @@
 Play
 ════════════════════════════════════════════════════════════════════════
 
+// This example supports game controllers as well as 
+// real MIDI devices for selected notes. It is a simple demo
+// of the audio and MIDI APIs and not intended to show
+// the full capabilities of either, with only eight notes
+// and a few knobs mapped.
+
+
 // The notes C4...C5 on an equal tempered scale
 const key_array = [
-    {label: "[<]", input: "x", on: -1, freq: 261.63, audio: ∅},
-    {label: "[^]", input: "y", on: -1, freq: 293.66, audio: ∅},
-    {label: "[v]", input: "y", on: +1, freq: 329.63, audio: ∅},
-    {label: "[>]", input: "x", on: +1, freq: 349.23, audio: ∅},
-    {label: "(c)", input: "c", on:  1, freq: 392.00, audio: ∅},
-    {label: "(d)", input: "d", on:  1, freq: 440.00, audio: ∅},
-    {label: "(a)", input: "a", on:  1, freq: 493.88, audio: ∅},
-    {label: "(b)", input: "b", on:  1, freq: 523.25, audio: ∅}]
+    // `on` is the value of `input` that indicates the key is
+    // pressed. This is how we map the D-pad to four separate
+    // piano keys
+    {label: "[<]", input: "x", on: -1, midi_note: 60, freq: 261.63, audio: ∅},
+    {label: "[^]", input: "y", on: -1, midi_note: 62, freq: 293.66, audio: ∅},
+    {label: "[v]", input: "y", on: +1, midi_note: 64, freq: 329.63, audio: ∅},
+    {label: "[>]", input: "x", on: +1, midi_note: 65, freq: 349.23, audio: ∅},
+    {label: "(c)", input: "c", on:  1, midi_note: 67, freq: 392.00, audio: ∅},
+    {label: "(d)", input: "d", on:  1, midi_note: 69, freq: 440.00, audio: ∅},
+    {label: "(a)", input: "a", on:  1, midi_note: 71, freq: 493.88, audio: ∅},
+    {label: "(b)", input: "b", on:  1, midi_note: 72, freq: 523.25, audio: ∅}]
 
 const button_poly =[xy(-14, -8), xy(-14, 12), xy(14, 12), xy(14, -12), xy(-10, -12)]
 
+const knob_angle = [42°, 72°, 102°]
 
 def draw_knob(pos, angle):
     // Shadow
@@ -50,14 +61,26 @@ let bossa_nova
 enter
 ────────────────────────────────────────────────────────────────────────
 set_transform(½ SCREEN_SIZE + xy(0, 40))
-set_background(BODY_COLOR)
 bossa_nova = play_sound({sound: bossa_nova_sound, loop: true, stopped: true})
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
-
+set_background(BODY_COLOR)
 const gamepad = gamepad_array[0]
+
+// Check for actual MIDI devices
+const midi_port = midi.input_port_array[0]
+
+if size(midi.message_queue) > 0:
+    // Visualize the incoming MIDI messages to
+    // help with setting up devices
+    debug_print(midi.message_queue)
+    for msg in midi.message_queue:
+        if msg.type == "CONTROL_CHANGE":
+            // Allow faders and knobs to turn the virtual knobs
+            knob_angle[msg.controller mod 3] = 225° - msg.data * 360° / 127 
+
 for j < NUM_WHITE_KEYS:
     const i = j - 4
     const x = KEY_WIDTH * (j - ½ NUM_WHITE_KEYS)
@@ -91,12 +114,20 @@ for j < NUM_WHITE_KEYS:
             color: (if gamepad[key.input] == key.on then ON_COLOR else OFF_COLOR),
             y_align: "bottom", 
             x_align: "center"})
-            
-        if gamepad[key.input + key.input] == key.on:
+        
+        const just_started = (
+            (gamepad[key.input + key.input] == key.on) or 
+             midi_port and midi_port.note[key.midi_note].pressed)
+        
+        const still_active = (
+             gamepad[key.input] or
+             midi_port and midi_port.note[key.midi_note].on)
+        
+        if just_started:
             // Start playing
             if key.audio: stop_audio(key.audio)
             key.audio = play_sound({sound: synth_sound, pitch: key.freq / key_array[0].freq})
-        else if not gamepad[key.input] and key.audio:
+        else if key.audio and not still_active:
             // Stop playing
             stop_audio(key.audio)
             key.audio = ∅
@@ -134,12 +165,12 @@ preserving_transform:
 
     // Knobs
     for i < 3:
-        draw_knob(xy(LABEL_POS.x + 12 + 47i, 62), 42° + 30° * i)
+        draw_knob(xy(LABEL_POS.x + 12 + 47i, 62), knob_angle[i])
         
     // Buttons
     for i < 2:
         for j < 2:
-            draw_button(xy(200 + 40i, 30 + 32j), #EE0)
+            draw_button(xy(200 + 40i, 30 + 32j), if i == 0 and j == 1 and get_audio_status(bossa_nova).state == "PLAYING" then #2F2 else #EE0)
 
     draw_text({
         font: font, 

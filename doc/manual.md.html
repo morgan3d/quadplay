@@ -27,7 +27,7 @@
 > empower easy implementation and great gameplay."
 
 [**<span style="font-size: 95%; font-family: quadplay">quadplay✜</span>**](../console/quadplay.html?IDE=1)
-is a web-based fantasy game console for sprite-based 2D and 2.5D
+is a web-based fantasy game console for sprite-based 2.5D
 games. It lets you create games with the power and consistency of a
 game console and the flexibility of modern tools and web deployment.
 
@@ -41,11 +41,15 @@ debugger, and profiler.
 
 **Virtual Hardware Features**
 
-- 4-player shared screen with built-in remote play
-- 384 x 224 pixel screen = 12:7 aspect ≈ 16:9.3
+- Support for 1-4 players, including automatic remote play
+- Standardized controller with D-pad + 8-button gamepads
+  (SNES/PS1/Saturn-style) and automatic device-specific 
+  button prompts on all platforms
+- Touch screen/mouse input
 - 60 fps, with autoscaling on low-end machines
-- Native 2.5D graphics with order-independent 16-level transparency
+- 384 x 224 pixel screen = 12:7 aspect ≈ 16:9.3
 - 4096 sRGB (4:4:4) colors
+- Native 2.5D graphics with order-independent 16-level transparency
 - Bloom, motion blur, and phosphor burn-in post-processing
 - 2D rigid body, joint, and motor physics
 - 2D positional audio with pitch, volume, and rate
@@ -54,11 +58,9 @@ debugger, and profiler.
 - 262 kB offline save data per game
 - Pathfinding and board game AI
 - Local and online multiplayer
-- SNES/PS1/Saturn-style controllers D-pad + 8-button gamepads
-  and automatic button prompts on all platforms
-- Touch screen/mouse input
-- Optional 320 x 180, 192 x 112, 128 x 128, and 64 x 64 screen modes, 
-  analog sticks, triggers, and dual D-pads
+- Optional I/O extension modes for
+  640 x 360, 320 x 180, 192 x 112, 128 x 128, and 64 x 64 screen modes; 
+  analog sticks and triggers; dual D-pads
 
 
 **Software Features**
@@ -84,6 +86,11 @@ debugger, and profiler.
 - Nestable state-machine "modes"
 - Per-mode callback "hooks"
 
+<quadplay/> is ideal for game jams, and it has been used for many 
+including [Ludum Dare](https://ludumdare.com/) and the 
+[Global Game Jam](https://globalgamejam.org/). It has special
+support of MIDI I/O for [Alt.Ctrl.GDC](https://gdconf.com/alt-ctrl-gdc)
+and a 64x64 screen mode for [Lowrezjam](https://itch.io/jam/lowrezjam-2022).
 
 
 Quick Start
@@ -723,6 +730,12 @@ Private view example for online multiplayer using `set_screen_size()` and
 Sample title screen animation converting text (from a pre-drawn PNG) into
 3D shapes for animation.
 
+
+</td></tr><tr><td>![](../examples/starrypad/label128.png)</td><td>
+[Starrypad](../console/quadplay.html?game=quad://examples/starrypad&IDE=1) 
+Example of using the Donner Starrypad physical MIDI controller with <quadplay/>,
+with all buttons, knobs, pads, and faders mapped.
+
 </td></tr></table>
 
 ### Inspiration
@@ -833,7 +846,6 @@ and Java.
 There are three special parts of the PyxlScript programming model that
 are designed to simplify programming arcade games. These special
 features are [*modes*](#modes), [*2.5D graphics*](#2.5dgraphics), and [*frame hooks*](#framehooks).
-
 
 ### Modes
 
@@ -1466,7 +1478,9 @@ As a result, the emulator is pixel-perfect on small displays and fills
 the screen on large ones. Quadplay supports the following resolutions,
 all with 4:4:4:4 RGBA color and 60 Hz refresh:
 
-- 384x224 (default and recommended)
+- 384x224x4 = 768x448, for network multiplayer private views
+- 320x180x4 = 640x360 (½ 720p), for network multiplayer private views
+- *384x224* (default and recommended)
 - 320x180 (¼ 720p, ⅙ 1080p, ⅛ 1440p)
 - 192x112
 - 128x128
@@ -1475,6 +1489,7 @@ all with 4:4:4:4 RGBA color and 60 Hz refresh:
 For reference when importing assets or designing games inspired by
 previous work, here are the resolutions of classic and retro machines:
 
+ - 960x544 PlayStation Vita
  - 800x480 Raspberry Pi official 7" touchscreen
  - 640x480 PiBoy DMG
  - 480x320 Odroid Go Advance
@@ -1482,7 +1497,7 @@ previous work, here are the resolutions of classic and retro machines:
  - 480x270 Hyperlight Drifter
  - 400x240 Playdate, 2DS, 3DS
  - 384x224 <quadplay/>
- - 320x240 "240p", TowerFall
+ - 320x240 "240p", QVGA, TowerFall Ascension
  - 320x180 Celeste and other Switch pixel art games
  - 320x200 VGA, including Amiga 500 and Commodore 64
  - 280x192 Apple II
@@ -1751,6 +1766,156 @@ at any point.
     appears when this option is selected. If a non-empty string, displays that
     string as an additional message on the confirmation dialog.
 
+
+### MIDI
+
+<quadplay/> supports MIDI on all platforms except for macOS
+Safari. Other browsers on macOS support MIDI. The global `midi` object
+has the following properties:
+  
+`midi.input_port_array`
+: Array of all input ports. Updated whenever devices are added or
+  removed at runtime, preserving ordering. The input ports have state
+  that can be polled similarly to a game pad (see below for `note` and
+  `controller`).
+  
+`midi.output_port_table`
+: Array of all output ports. Updated whenever devices are added or
+  removed at runtime, preserving ordering. The output ports may be
+  used with `midi_send_raw()`.
+  
+`midi.message_queue`
+: The message queue array contains all incoming MIDI messages received
+  since the previous frame, in the order that they were
+  received. Messages are not tracked until the first time that the
+  `midi` object is accessed, so the queue will initially be
+  empty even if the MIDI input device was in use before the program
+  checked it.
+
+In the `midi.message_queue`, each message has the form `{type: string,
+port: port, raw: [...], ...}`, where the `type` determines the other
+properties. The most common messages are `"NOTE_ON"`, which has
+`channel`, `note` and `velocity` properties; and `"NOTE_OFF"`, which
+has `channel` and `note` properties. The `raw` property is the
+underlying 1-3 byte MIDI message.
+
+The input ports contain `note[]` and `controller[]`
+128-element arrays that are aggregated across all channels, and a
+`channel[]` 16-element array for which each element has its own
+`note[]` and `controller[]`. This provides convenient
+access for simpler devices that do not take advantage of channels
+(such as an 88-key piano keyboard or 16-pad drum pad), as well as the
+full state of all 4096 input elements possible for each port if
+needed.
+
+Each `note[]` element has the following fields:
+
+`note.on`
+: The number of frames the note has been held down, 0 if
+  it was not held down at the start of the current frame
+  
+`note.pressed`
+: Nonzero if the note went from off to on at least once
+  since the previous frame
+    
+`note.released`
+: Number of frames the note was on if it went from on
+  to off at least once since the previous frame, otherwise 0
+
+`note.velocity`
+: Velocity with which the note was last turned on.
+    
+`note.pressure`
+: Last recorded pressure. This generally counts up
+  continuously from 0 while a note is held at constant pressure, and
+  then down when the pressure is reduced.
+
+Controllers are generally mapped to knobs and faders and notes are
+mapped to (pressure sensitive) pads or keys. Each `controller[]`
+element has the following properties:
+
+`controller.value`
+: Current value
+
+`controller.delta`
+: Change since last frame of value
+
+
+The MIDI send command is:
+
+`midi_send_raw(port, raw_message_array)`
+: The `port` must be one of the output ports from the `midi` object.
+  The message must be an array of one to three integers according 
+  to the [MIDI message format](https://www.songstuff.com/recording/article/midi_message_format/).
+  The return value is either `"ok"` or an error message string.
+
+  The common messages are:
+
+  Message          | Array
+  -----------------|--------------------------------
+  `NOTE_ON`        | `[0x90 + channel, note, velocity]`
+  `NOTE_OFF`       | `[0x80 + channel, note]`
+  `CONTROL_CHANGE` | `[0xB0 + channel, controller, data]`
+
+  Where `channel` is an integer 0-15, and `note`, `velocity`, and
+  `controller` are integers 0-127.
+
+        --------------------------------
+
+<quadplay> supports MIDI input and output of connected devices. Unlike
+the gamepads and display I/O, no MIDI devices are guaranteed to be
+present. MIDI input can route footswitches, drum pads, piano keyboard,
+MIDI guitars, faders, and other devices as controllers for a
+game. MIDI output can drive synthesizers, audio FX units, and
+MIDI-controlled amplifiers, and when paired with a MIDI-DMX bridge can
+control party lights, fans, smoke machines, and other physical
+objects. 
+
+Together these are a great way to use <quadplay> for music projects,
+as well as providing creative input and output devices for everything
+from rhythm games to escape rooms.
+
+Some relatively inexpensive, highly rated MIDI input (and in some
+cases, RGB button output) devices are:
+
+- [Donner Starrypad](https://www.amazon.ca/Donner-Maker-Assignable-Controller-STARRYPAD/dp/B01GYK2CKK) about US$50, has key velocity
+- [AKAI APC Mini mk2](https://amzn.to/3Ne2UQK) about US$90, [RGB lights protocol](https://cdn.inmusicbrands.com/akai/attachments/APC%20mini%20mk2%20-%20Communication%20Protocol%20-%20v1.0.pdf)
+- [Behringer X-Touch Mini](https://amzn.to/3Ne2Lga) about US$100
+- [AKAI MPKmini](https://amzn.to/42owKpK) about US$100
+- [Launchpad Mini mk3](https://amzn.to/3CgZbeQ) about US$100, [RGB light protocol](https://www.djshop.gr/Attachment/DownloadFile?downloadId=10737), has square buttons
+- [Launchpad X](https://amzn.to/43sZlLY) about US$160, [RGB light protocol](https://www.djshop.gr/Attachment/DownloadFile?downloadId=10737), has key velocity, has square buttons
+- [Behringer FCB1010 Foot Controller](https://amzn.to/42xEJ3P) about US$160; requires MIDI-to-USB adapter
+
+The native USB MIDI devices generally don't need drivers on macOS or Windows.
+
+Many MIDI devices directly support USB and Bluetooth for connecting to
+a computer. Others use MIDI 5-pin or either 1/8" phono (headphone)
+cables and require a USB adapter, such as:
+
+- [FORE MIDI-to-USB adapter](https://amzn.to/3C96dlI) about US$20
+- [M-Audio MIDI-to-USB adapter](https://amzn.to/42vT9BS) about US$35
+
+DMX devices and converters are more expensive. Here are a few examples
+chosen without considering reviews:
+
+- [DOREMiDi USB MIDI-to-DMX MTD-1024](https://www.doremidi.cn/h-pd-80.html) about US$90
+- [DecaBox MIDI-to-DMX](https://www.amazon.ca/DecaBox-MIDI-to-DMX-Converter/dp/B00N36JQG2) about US$300
+- [Colored light bar](https://amzn.to/3qssbxD) about US$70
+- [Fog and light machine](https://amzn.to/42vSWP6) about US$130
+- [Effects fan](https://amzn.to/3WRwsa3) about US$450
+- [Flamethrower](https://amzn.to/3WYJdPZ) about US$450
+
+For playing music, the frequency of MIDI note $n$ is $f =
+440~\operatorname{Hz} \cdot 2^{(n - 69) / 12}$. 
+
+$n=0$ is at 8.18 Hz, below the range of human
+hearing. It corresponds to the C two octaves below C1.
+$n=24$ is C1 at 32.70 Hz, the lowest pitched note on a full
+piano. $n=60$ corresponds to middle C4 at 261.63 Hz.
+$n=108$ is C8 at 4,186.01 Hz, the highest pitched note on a
+full piano. $n=127$ is G9 at 12,543.85 Hz, the highest note in MIDI
+and about half of the highest frequency (i.e., one octave) below the
+highest note in the range of human hearing.
 
 Modes
 ------------------------------------------------------------------------
@@ -3368,9 +3533,10 @@ that has the following immutable properties:
 : Number of frames before the animation ends, which is
   `infinity` for `loop` or `oscillate` animations.
 
-`animation.frame(t)`
-: Return the sprite to show for the animation at time `t` measured in frames, obeying the individual
-  `sprite.frames` durations and wrapping or clamping appropriately.
+`animation_frame(animation, t)`
+: Return the sprite to show for the animation at time `t` measured in
+  frames, obeying the individual `sprite.frames` durations and
+  wrapping or clamping appropriately.
 
 Because it is an array, the i<sup>th</sup> sprite is `animation[i]` and
 you can loop that using `array_value(animation, i)` or choose a random
@@ -3378,6 +3544,7 @@ one with `random_value(animation)`.
 
 To create an animation, there must be a `start` property in the named 
 entry of the .sprite.json file.
+
 
 
 Sprite
@@ -5708,7 +5875,7 @@ Raw Device Access
                                                          save is complete. This will only work with the IDE enabled and a quadplay server.</td></tr>
     <tr><td> `"load", filename, callback`</td><td>Loads `filename` and (asynchronously) runs the callback with the arguments `value, filename` when
                                                          the load is complete. This will only work with the IDE enabled and a quadplay server.</td></tr>
-    <tr><td> `"enable_feature", feature`</td><td>Enables the given feature, which is nonstandard and may fail on some devices. The allowed values of `feature` are `"768x448,private_views"` and `"640x360,private_views"`. These enable those resolutions for `set_screen_size()` with `private_views=true`, which is too slow to make framerate on Raspberry Pi and some phones.</td></tr>
+    <tr><td> `"enable_feature", feature`</td><td>Enables the given feature, which is nonstandard and may fail on some devices. The only allowed value of `feature` is `"768x448,private_views"`. That enables this resolutions for `set_screen_size()` with `private_views=true`, which is too slow to make framerate on Raspberry Pi and some phones.</td></tr>
   </table>
 
 
@@ -6616,7 +6783,7 @@ The sprite sheet JSON descriptor looks like:
     "pivot":        {"x": 4, "y": 7},
 
     // Optional license and copyright information.
-    "license":      "GPL 3.0 (c) 2020 Morgan McGuire"
+    "license":      "GPL 3.0 (c) 2023 Morgan McGuire"
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -6703,8 +6870,8 @@ Fonts have a JSON descriptor file that looks like:
     // Optional, default is 0. The minimum width of a glyph for 
     // layout purposes. This can be used to create fixed-width 
     // (monospace) fonts, or to enforce minimum spacing around very
-    // thin characters such as |.
-    "min_char_width": 8,
+    // thin characters such as |. This is the width without an outline.
+    "char_min_width": 8,
 
     // Spacing between letters and lines during rendering. If the
     // x spacing is zero (for script fonts), there will be no space between
@@ -8849,7 +9016,7 @@ The soul of quadplay as a console is described by:
 
 - Up to four players with a shared screen
 - Minimal time from launch to main play
-- 1985 output limitations, 2020 development power
+- 1985 output limitations, 2023 development power
 
 The overarching design principles of the quadplay IDE and language are:
 
@@ -8908,7 +9075,7 @@ Python, [PICO-8](https://www.lexaloffle.com/pico-8.php),
 [codeheart.js](https://casual-effects.com/codeheart/) and
 [the nano JAMMER](https://morgan3d.github.io/nano).
 
-The <quadplay/> IDE and compiler are copyright 2019-2022 Morgan
+The <quadplay/> IDE and compiler are copyright 2019-2023 Morgan
 McGuire. They are licensed under the
 [LGPL 3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html), but may be
 relicensed in the future.  This includes the contents of:

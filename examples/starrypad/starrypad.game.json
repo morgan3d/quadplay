@@ -1,0 +1,28 @@
+{
+    "title": "starrypad",
+    "developer": "CasualEffects",
+    "copyright": "©2023 Morgan McGuire",
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "scroller_font": "quad://fonts/robot-mono-9.font.json",
+        "logo_sprite": "logo.sprite.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "Visualization of Donner Starrypad MIDI input. Requires the physical controller.",
+    "constants": {},
+    "screenshot_tag": "starrypad",
+    "y_up": true
+}

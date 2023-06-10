@@ -96,7 +96,7 @@ for stats in player in prev_players:
 let columns = [32, 64]
 tp = xy(128,64)
 for i < size(prev_players):
-    draw_sprite({pos:tp+xy(columns[i],0), sprite:prev_players[i].anims.walk.frame(mode_frames), angle:90°})
+    draw_sprite({pos:tp+xy(columns[i],0), sprite:animation_frame(prev_players[i].anims.walk, mode_frames), angle:90°})
 tp.y += 20
 draw_text({text:"Destroyed Objects:", font:font, pos:tp, x_align:"right", color:#f})
 for i < size(prev_players):

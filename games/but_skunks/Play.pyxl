@@ -92,7 +92,7 @@ def is_dpad_pressed(gamepad):
 def make_skunk_entity(player):
     return make_entity({
         anims: player.anims,
-        sprite: player.anims.idle.frame(0),
+        sprite: animation_frame(player.anims.idle, 0),
         pos: BLOCK_SIZE * player.spawn_icell,
         gamepad: player.gamepad,
         player: player,
@@ -107,7 +107,7 @@ def make_skunk_entity(player):
 def make_enemy_entity(icell):
     return make_entity({
         anims: {idle:human_sprite.idle, walk:human_sprite.walk},
-        sprite: human_sprite.idle.frame(0),
+        sprite: animation_frame(human_sprite.idle, 0),
         pos: BLOCK_SIZE * icell,
         gamepad: make_dummy_gamepad(),
         vel: xy(0,0),
@@ -217,7 +217,7 @@ def itor_active_skunk_update_stun(skunk):
 def itor_active_skunk_animate(skunk):
     // stunned entities just spin in place
     if skunk.stun_angle > 0°:
-        skunk.sprite = skunk.anims.idle.frame(0)
+        skunk.sprite = animation_frame(skunk.anims.idle, 0)
         skunk.angle = skunk.stun_angle
         return
     with vel, dir, sprite, anims in skunk:
@@ -225,7 +225,7 @@ def itor_active_skunk_animate(skunk):
         let sv = sign(vel)
         // Choose appropriate animation frame
         const anim = if is_zero(sv) then anims.idle else anims.walk
-        skunk.sprite = anim.frame(mode_frames)
+        skunk.sprite = animation_frame(anim, mode_frames)
         // Rotate sprite based on direction
         if      dir == DIR_N: skunk.angle = 0°
         else if dir == DIR_W: skunk.angle = 90°
@@ -277,7 +277,7 @@ def itor_active_skunk_place_stinkbomb(skunk):
                 pos_in_parent: xy(0, BLOCK_SIZE.y),
                 scale: xy(0,0),
                 opacity: 0,
-                sprite: stinkbomb_sprite.charge.frame(0),
+                sprite: animation_frame(stinkbomb_sprite.charge, 0),
                 source_skunk: skunk,
                 gamepad: skunk.gamepad,
                 start_frame: bgm_now_f,
@@ -375,9 +375,9 @@ def itor_stinkbomb_grow(stinkbomb):
     with start_frame, scale, opacity, gamepad, sprite in stinkbomb:
         const max_grow_frames = BGM_FRAMES_PER_MEASURE/2
         const size_t = clamp(bgm_now_f - start_frame, 0, max_grow_frames) / max_grow_frames
-        sprite = stinkbomb_sprite.charge.frame(mode_frames)
+        sprite = animation_frame(stinkbomb_sprite.charge, mode_frames)
         opacity = size_t
-        scale = size_t * size_t * size_t * xy(1,1)
+        scale = size_t * size_t * size_t * xy(1, 1)
         if not gamepad.a:
             stop_audio(stinkbomb.source_skunk.charging_sound)
             stinkbomb.source_skunk.charging_sound = nil
@@ -392,7 +392,7 @@ def itor_stinkbomb_grow(stinkbomb):
             debug_last_bomb_release_f = adjusted_release_measure_f
             let explosion = make_entity({
                 pos: stinkbomb.pos,
-                sprite: stinkbomb_sprite.stink.frame(0),
+                sprite: animation_frame(stinkbomb_sprite.stink, 0),
                 start_frame: mode_frames,
                 duration_frames: stinkbomb_sprite.stink.frames,
                 source_skunk:stinkbomb.source_skunk,
@@ -466,7 +466,7 @@ def itor_explosion_fade(explosion):
         return iterate.REMOVE
     const age_t = clamp(age_f / explosion.duration_frames, 0, 1)
     if explosion.scale.x > 0:
-        explosion.sprite = stinkbomb_sprite.stink.frame(age_f)
+        explosion.sprite = animation_frame(stinkbomb_sprite.stink, age_f)
         explosion.opacity = lerp(1, 0.25, smoothstep(0.25, 0.75, age_t))
         explosion.scale = lerp(explosion.start_scale, explosion.end_scale, smoothstep(0.0, 1.0, age_t))
         explosion.text_color.a = 1 - smoothstep(0.75,1,age_t)

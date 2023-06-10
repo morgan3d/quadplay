@@ -18,7 +18,7 @@ def animate_explosion(frames_left, total_frames, data)
     const scale = (if target_piece.type == "p" then 65% else 100%) * (100 / animation[0].size.x)
     
     draw_sprite({
-        sprite: animation.frame(⌊(100% - frames_left / total_frames) * size(animation)⌋),
+        sprite: animation_frame(animation, ⌊(100% - frames_left / total_frames) * size(animation)⌋),
         scale: scale,
         pos: target_piece.board_pos * SPACE_SIZE - xy(0, if floating_target then 16 else 42),
         z: target_piece.board_pos.y + 1.5})

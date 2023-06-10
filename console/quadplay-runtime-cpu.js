@@ -13,13 +13,23 @@ var $GPU;
 if ($THREADED_GPU) {
     $GPU = new Worker('quadplay-runtime-gpu.js');
     $GPU.onmessage = function (event) {
-        if (event.type !== 'submitFrame') {
+        if (event.data.type !== 'submitFrame') {
             $console.log('Unknown message received from GPU: ', event);
+            return;
         }
 
+        console.assert(event.data.updateImageData);
+        console.assert(event.data.updateImageData32);
+        
         // Paste the updateImageData32 back
-        $updateImageData = event.data.updateImage;
-        $updateImageData32 = event.data.updateImage32;
+        $updateImageData = event.data.updateImageData;
+        $updateImageData32 = event.data.updateImageData32;
+
+        // TODO: undo this slow copy
+        $updateImageData = new ImageData(new Uint8ClampedArray($updateImageData32.buffer),
+                                         $updateImageData.width,
+                                         $updateImageData.height);
+
         $submitFrame($updateImageData, $updateImageData32);
     };
 }
@@ -37,7 +47,6 @@ var $showCopyButtonsMode = undefined;
 var $paste_host_code_callback = undefined;
 
 var $feature_768x448 = false;
-var $feature_640x360 = false;
 var $feature_custom_resolution = false;
 
 var $gameMode = undefined, $prevMode = undefined;
@@ -51,53 +60,28 @@ var $SCREEN_WIDTH = 384, $SCREEN_HEIGHT = 224;
 
 var $previousModeGraphicsCommandList = [];
 
-/* Like deep_clone(), but used for JavaScript level cloning instead of
-   Quadplay level, and strips Functions. */
-function $cloneForPostMessage(a, map = new Map()) {
-    switch (typeof a) {
-    case 'string', 'number', 'undefined', 'boolean':
-        return a;
+var $screen;
 
-    case 'function':
-        return undefined;
-    }
+/** List of graphics commands to be sorted and then executed by $submitFrame(). */
+var $previousGraphicsCommandList = [];
+var $graphicsCommandList = [];
+var $background = {r:0, g:0, b:0, a:1};
 
-    if (a === undefined || a === null) { return a; }
+var joy = null; // initialized by reloadRuntime()
+var gamepad_array = null; // initialized by reloadRuntime()
 
-    // Do not clone typed arrays, which have the base data
-    // to be used by postMessage. This tests for all typed
-    // arrays, not just Uint8Array (https://stackoverflow.com/questions/15251879/how-to-check-if-a-variable-is-a-typed-array-in-javascript)
-    if ((a instanceof Object.getPrototypeOf(Uint8Array)) ||
-        (a.buffer instanceof ArrayBuffer) ||
-        (typeof a.buffer === 'object' && a.buffer.byteLength !== undefined && a.buffer.resizable !== undefined)) {
-        return a;
-    }
+var $hashview = new DataView(new ArrayBuffer(8));
 
-    // Do not duplicate already cloned objects
-    let x = map.get(a);
-    if (x !== undefined) { return x; }
+var $customPauseMenuOptions = [];
 
-    if (Array.isArray(a)) {        
-        map.set(a, x = a.slice(0));
-        // Clone array elements
-        for (let i = 0; i < x.length; ++i) {
-            x[i] = $cloneForPostMessage(x[i], map);
-        }
-        for (const key of $Object.keys(a)) {
-            if (key[0] > '9' || key[0] < '0') {
-                x[key] = $cloneForPostMessage(a[key], map);
-            }
-        }
-    } else if (typeof a === 'object') {
-        map.set(a, x = a.constructor ? a.constructor() : $Object.create(null));
-        for (const key of $Object.keys(a)) {
-            x[key] = $cloneForPostMessage(a[key], map);
-        }
-    }
-
-    return x;
+// This tests for all typed
+// arrays, not just Uint8Array (https://stackoverflow.com/questions/15251879/how-to-check-if-a-variable-is-a-typed-array-in-javascript)
+function $isTypedArray(a) {
+    return ((a instanceof Object.getPrototypeOf(Uint8Array)) ||
+            (a.buffer instanceof ArrayBuffer) ||
+            (typeof a.buffer === 'object' && a.buffer.byteLength !== undefined && a.buffer.resizable !== undefined));
 }
-
+     
 
 function $set_texture(spritesheetArray, fontArray) {
     // console.log('set_texture()');
@@ -106,7 +90,7 @@ function $set_texture(spritesheetArray, fontArray) {
         console.log('sending set_texture');
         $GPU.postMessage({
             type: 'set_texture',
-            spritesheetArray: $cloneForPostMessage(spritesheetArray),
+            spritesheetArray: spritesheetArray,
             fontArray: fontArray});
     } else {
         // Call directly
@@ -928,6 +912,50 @@ function extend(a, b) {
         }
     }
 }
+
+
+function animation_frame(animation, f) {
+    f = $Math.floor(f);
+    const N = animation.length;
+
+    if (animation.extrapolate === 'clamp') {
+        // Handle out of bounds cases by clamping
+        if (f < 0) { return animation[0]; }
+        if (f >= animation.frames) { return animation[N - 1]; }
+    } else {
+        // Handle out of bounds cases by looping. To handle negatives, we need
+        // to add and then mod again. Mod preserves fractions.
+        f = ((f % animation.period) + animation.period) % animation.period;
+    }
+
+    if (animation.extrapolate === 'oscillate') {
+        // Oscillation will give us twice the actual number of frames from the
+        // looping, so we need to figure out which part of the period we're in.
+        const reverseTime = (animation.period + animation[0].frames + animation[N - 1].frames) / 2;
+        if (f >= reverseTime) {
+            // Count backwards from the end
+            f -= reverseTime;
+            let i = N - 2;
+            while ((i > 0) && (f >= animation[i].frames)) {
+                f -= animation[i].frames;
+                --i;
+            }
+               
+            return animation[i];
+        }
+    }
+    
+    // Find the value by searching linearly within the array (since we do not
+    // store cumulative values to binary search by).
+    let i = 0;
+    while ((i < N) && (f >= animation[i].frames)) {
+        f -= animation[i].frames;
+        ++i;
+    }
+    
+    return animation[$Math.min(i, N - 1)];
+}
+
 
 
 function array_value(animation, frame, extrapolate) {
@@ -1843,20 +1871,37 @@ function xy_to_angle(v) {
     }
 }
 
-var $screen;
 
+// Directly exposed to quadplay
+function midi_send_raw(port, message) {
+    if (! port && port.$port) {
+        $error('Not a MIDI output port');
+    }
 
-/** List of graphics commands to be sorted and then executed by $submitFrame(). */
-var $previousGraphicsCommandList = [];
-var $graphicsCommandList = [];
-var $background = {r:0, g:0, b:0, a:1};
+    if (port.$port.state !== 'connected') {
+        return 'MIDI port no longer connected';
+    }
 
-var joy = null; // initialized by reloadRuntime()
-var gamepad_array = null; // initialized by reloadRuntime()
+    if (!Array.isArray(message)) {
+        $error('The message must be an array of integers');
+    }
 
-var $hashview = new DataView(new ArrayBuffer(8));
+    if (message.length === 0 || message.length > 3) {
+        $error('The message must be 1-3 bytes');
+    }
 
-var $customPauseMenuOptions = [];
+    if (port.$port.connection !== 'open') {
+        // Open the port
+        port.$port.open().then(function () {
+            midi_send_raw(port, message);
+        });
+    } else {
+        port.$port.send(message);
+    }
+    
+    return 'ok';
+}
+
 
 function $hash(d) {
     // 32-bit FNV-1a
@@ -5717,7 +5762,6 @@ function draw_sprite(spr, pos, angle, scale, opacity, z, override_color, overrid
     };
 
     $console.assert(sprElt.spritesheetIndex >= 0 &&
-                    sprElt.spritesheetIndex < $spritesheetArray.length,                    
                     spr.$name + ' has a bad index: ' + sprElt.spritesheetIndex);
     // Aggregate multiple sprite calls
     const prevCommand = $graphicsCommandList[$graphicsCommandList.length - 1];
@@ -9254,10 +9298,11 @@ function set_screen_size(size, private_views) {
 
     // Check for legal resolutions
     if (private_views) {
-        if (! ((w === 768 && h === 448 && $feature_768x448) || (w === 640 && h === 360 && $feature_640x360) || (w === 384 && h === 224) || (w === 128 && h === 128))) {
-            $error('set_screen_size() with private screens must be at 384x224 or 128x128 resolution');
+        if (! ((w === 768 && h === 448 && $feature_768x448) || (w === 640 && h === 360) || (w === 384 && h === 224) || (w === 128 && h === 128))) {
+            $error('set_screen_size() with private views must be at 640x360, 384x224, or 128x128 resolution');
         }
-    } else if (! ((w === 384 && h === 224) ||
+    } else if (! ((w === 640 && h === 360) ||
+                  (w === 384 && h === 224) ||
                   (w === 320 && h === 180) ||
                   (w === 192 && h === 112) ||
                   (w === 128 && h === 128) ||
@@ -9487,7 +9532,6 @@ function local_time(args) {
 
 /** Called on virtual CPU to intiate virtual GPU work */
 function $show() {
-
     // Check whether this frame will be shown or not, if running below
     // frame rate and pruning graphics.  Use mode_frames instead of
     // game_frames to ensure that frame 0 is always rendered for a mode.
@@ -9496,20 +9540,33 @@ function $show() {
 
         // TODO: if previous execute has not returned
         // in web worker mode, then do not submit more work
-        // and lower the graphics period.
+        // *and lower the graphics period*.
         const backgroundSpritesheetIndex = $background.spritesheet ? $background.spritesheet.$index[0] : undefined;
         const backgroundColor16 = $background.spritesheet ? 0 : (($colorToUint16($background) >>> 0) | 0xf000);
 
-        const args = [$graphicsCommandList, backgroundSpritesheetIndex, backgroundColor16]
+        const args = [$graphicsCommandList, backgroundSpritesheetIndex, backgroundColor16];
                              
         if ($GPU) {
-            // Transfer the updateImageData
-            /* TODO
-            console.log('Transferring updateImageData to GPU thread');
-            console.assert($updateImageData32);
-            $GPU.postMessage({type: 'gpu_execute', args: args, updateImageData: $updateImageData, updateImageData32: $updateImageData32}, [$updateImageData32.buffer]);
-            $updateImageData32 = null;
-            */
+            if (! $updateImageData32) {
+                console.log('Virtual GPU busy, skipping. mode_frames =', mode_frames);
+            } else {
+                
+                // Transfer the updateImageData
+                // console.log('Transferring updateImageData to GPU thread');
+                console.assert($updateImageData32);
+                
+                $GPU.postMessage(
+                    {
+                        type: 'gpu_execute',
+                        args: args,
+                        updateImageData: $updateImageData,
+                        updateImageData32: $updateImageData32
+                    },
+                    [$updateImageData32.buffer]);
+                
+                $updateImageData = null;
+                $updateImageData32 = null;
+            }
         } else {
             $gpu_execute(...args);
         }

@@ -1,0 +1,131 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+let scroller_text = ""
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_background(#222)
+
+draw_sprite(logo_sprite, SCREEN_SIZE - xy(70, 10), ∅, ∅, ∅, 10)
+
+for msg in midi.message_queue:
+    let txt = ""
+    if msg.type == "NOTE_ON":
+        txt = " +c" + msg.channel + "n" + msg.note
+    else if msg.type == "NOTE_OFF":
+        txt = " -c" + msg.channel + "n" + msg.note
+    else if msg.type == "CONTROL_CHANGE":
+        txt = " c" + msg.channel + "c" + msg.controller + "=" + msg.data
+    scroller_text += txt
+
+preserving_transform:
+    const SCROLLER_COLOR = #B1C
+    const SCROLLER_WIDTH = SCREEN_SIZE.x - 145
+    draw_corner_rect(xy(7, SCREEN_SIZE.y - 20), xy(SCROLLER_WIDTH, 19), 15% SCROLLER_COLOR, #000)
+    set_clip(xy(7, 1) + 1, xy(SCROLLER_WIDTH, 19) - 2)
+    const SCROLLER_LENGTH = ⌈SCROLLER_WIDTH / 9⌉
+    
+    // Advance the scroller
+    if mode_frames mod 2 == 0:
+        scroller_text = slice(scroller_text, 1) 
+    
+    if size(scroller_text) > SCROLLER_LENGTH:
+        scroller_text = slice(scroller_text, size(scroller_text) - SCROLLER_LENGTH)
+    while size(scroller_text) < SCROLLER_LENGTH:
+        scroller_text += " "
+    
+    draw_text({
+        font: scroller_font, 
+        text: scroller_text, 
+        pos: xy(0, SCREEN_SIZE.y - 14),
+        color: SCROLLER_COLOR})
+
+const BANK_COLOR = [#F72, #4E4, #1BF]
+
+const port = midi.input_port_array[0]
+for grid < 3:
+    const base_color = BANK_COLOR[grid]
+    
+    const pad_color  = 15% base_color
+    const on_color   = #FFF
+    const glow_color = lerp(base_color, on_color, 50%)
+    const glow2_color = base_color
+    const glow3_color = 30% base_color
+    const off_color  = #BBB
+    
+    for y < 4:
+        for x < 4:
+            const pos = 31 (xy(x + 4 grid, y) + 0.65)
+            const n = x + 4y + grid * 16 + 36
+            const active = port and port.note[n].on
+            const color = if active then on_color else off_color
+            const glow  = if active then glow2_color else ∅
+            draw_rect(pos, xy(26, 26), pad_color, color)
+            if active: 
+                draw_rect(pos, xy(28, 28), ∅, glow_color)
+                draw_rect(pos, xy(30, 30), ∅, glow2_color)
+                draw_rect(pos, xy(32, 32), ∅, glow3_color)
+            else:
+                draw_rect(pos, xy(28, 28), ∅, color)
+                
+            draw_text({font: scroller_font, text: n, pos: pos, color: color, outline: glow, x_align: "center", y_align: "center"})
+
+const FIRST_FADER = 20
+const LAST_FADER = 25
+for FIRST_FADER ≤ fader ≤ LAST_FADER:
+    const i = fader - FIRST_FADER
+    const x = 31 i + 20
+    const f = if port then port.controller[fader].value / 127 else 0
+    draw_rect(xy(x, SCREEN_SIZE.y - 55), xy(2, 50), #7)
+    draw_rect(xy(x, SCREEN_SIZE.y - 80 + 50 f), xy(10, 4), #FFF, BANK_COLOR[⌊½i⌋])
+    
+const KNOB_INDEX = [28, 9, 12, 13, 14, 15]
+for knob at i in KNOB_INDEX:
+    const x = 31 i + 205
+    const center = xy(x, SCREEN_SIZE.y - 70)
+    const k = if port then port.controller[knob].value / 127 else 0
+    draw_disk(center, 13, #7, #000)
+    draw_line(center, center + 11 angle_to_xy(250° - 320° k), BANK_COLOR[⌊½i⌋], ∅, 4)
+    draw_line(center, center + 11 angle_to_xy(250° - 320° k), #FFF, 0, 2)
+
+const BUTTON = [
+    {label: "A", controller: 26},
+    {label: "B", controller: 27},
+    {label: "▶‖", controller: 60},
+    {label: "●", controller: 62}]
+    
+for button at i in BUTTON:
+    const base_color = BANK_COLOR[0]
+
+    const on_color   = #FFF
+    const glow_color = lerp(base_color, on_color, 50%)
+    const glow2_color = base_color
+    const glow3_color = 30% base_color
+    const off_color  = #BBB    
+
+    const pad_color  = 15% base_color
+    const active = port and port.controller[button.controller].value
+    const color = if active then on_color else off_color
+    const glow  = if active then glow2_color else ∅
+    
+    const x = 50 i + 207
+    const pos = xy(x, SCREEN_SIZE.y - 40)
+    const button_size = xy(30, 20)
+    draw_rect(pos, button_size, pad_color, color)
+    if active: 
+        draw_rect(pos, button_size + 2, ∅, glow_color)
+        draw_rect(pos, button_size + 4, ∅, glow2_color)
+        draw_rect(pos, button_size + 6, ∅, glow3_color)
+    else:
+        draw_rect(pos, button_size + 2, ∅, color)
+    
+    draw_text({
+        font: scroller_font, 
+        text: button.label,
+        pos: pos, 
+        color: color,
+        outline: glow,
+        x_align: "center",
+        y_align: "center"})

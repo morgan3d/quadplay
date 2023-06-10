@@ -134,7 +134,7 @@ def draw_hex_map(map, animate default true):
             let sprite = array[y]
             if sprite:
                 // Animated sprites
-                if animate and sprite.animation: sprite = sprite.animation.frame(mode_frames)
+                if animate and sprite.animation: sprite = animation_frame(sprite.animation, mode_frames)
                     
                 pos.x = MUL(HEX_WIDTH, MAD(½, y bitand 1, x))
                 pos.y = MUL(HEX_HEIGHT_75, y)
