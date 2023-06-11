@@ -3,6 +3,9 @@ Play
 
 let scroller_text = ""
 
+enter
+────────────────────────────────────────────────────────────────────────
+debug_print("Input ports:", midi.input_port_array)
 
 frame
 ────────────────────────────────────────────────────────────────────────
@@ -13,13 +16,14 @@ draw_sprite(logo_sprite, SCREEN_SIZE - xy(70, 10), ∅, ∅, ∅, 10)
 for msg in midi.message_queue:
     let txt = ""
     if msg.type == "NOTE_ON":
-        txt = " +c" + msg.channel + "n" + msg.note
+        txt = " +c" + msg.channel + "n" + msg.note + "v" + msg.velocity
     else if msg.type == "NOTE_OFF":
         txt = " -c" + msg.channel + "n" + msg.note
     else if msg.type == "CONTROL_CHANGE":
         txt = " c" + msg.channel + "c" + msg.controller + "=" + msg.data
     scroller_text += txt
 
+// Scroller display of raw messages
 preserving_transform:
     const SCROLLER_COLOR = #B1C
     const SCROLLER_WIDTH = SCREEN_SIZE.x - 145

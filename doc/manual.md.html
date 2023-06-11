@@ -736,6 +736,12 @@ Sample title screen animation converting text (from a pre-drawn PNG) into
 Example of using the Donner Starrypad physical MIDI controller with <quadplay/>,
 with all buttons, knobs, pads, and faders mapped.
 
+
+</td></tr><tr><td>![](../examples/launchpad/label128.png)</td><td>
+[Starrypad](../console/quadplay.html?game=quad://examples/launchpad&IDE=1) 
+Example of using the Novation Launchpad physical MIDI controller with <quadplay/>
+and Sysex messages so that it acts as both an input and output display device.
+
 </td></tr></table>
 
 ### Inspiration
@@ -1799,14 +1805,14 @@ properties. The most common messages are `"NOTE_ON"`, which has
 has `channel` and `note` properties. The `raw` property is the
 underlying 1-3 byte MIDI message.
 
-The input ports contain `note[]` and `controller[]`
-128-element arrays that are aggregated across all channels, and a
-`channel[]` 16-element array for which each element has its own
-`note[]` and `controller[]`. This provides convenient
+The input ports contain `note[]`
+and `controller[]` 128-element arrays that are aggregated across all
+channels, and a `channel[]` 16-element array for which each element
+has its own `note[]` and `controller[]`. This provides convenient
 access for simpler devices that do not take advantage of channels
 (such as an 88-key piano keyboard or 16-pad drum pad), as well as the
 full state of all 4096 input elements possible for each port if
-needed.
+needed. 
 
 Each `note[]` element has the following fields:
 
@@ -1845,7 +1851,7 @@ The MIDI send command is:
 
 `midi_send_raw(port, raw_message_array)`
 : The `port` must be one of the output ports from the `midi` object.
-  The message must be an array of one to three integers according 
+  The message must be an array of integers according 
   to the [MIDI message format](https://www.songstuff.com/recording/article/midi_message_format/).
   The return value is either `"ok"` or an error message string.
 
@@ -1860,7 +1866,7 @@ The MIDI send command is:
   Where `channel` is an integer 0-15, and `note`, `velocity`, and
   `controller` are integers 0-127.
 
-        --------------------------------
+         --------------------------------
 
 <quadplay> supports MIDI input and output of connected devices. Unlike
 the gamepads and display I/O, no MIDI devices are guaranteed to be
@@ -1879,11 +1885,11 @@ Some relatively inexpensive, highly rated MIDI input (and in some
 cases, RGB button output) devices are:
 
 - [Donner Starrypad](https://www.amazon.ca/Donner-Maker-Assignable-Controller-STARRYPAD/dp/B01GYK2CKK) about US$50, has key velocity
-- [AKAI APC Mini mk2](https://amzn.to/3Ne2UQK) about US$90, [RGB lights protocol](https://cdn.inmusicbrands.com/akai/attachments/APC%20mini%20mk2%20-%20Communication%20Protocol%20-%20v1.0.pdf)
+- [AKAI APC Mini Mk2](https://amzn.to/3Ne2UQK) about US$90, [RGB lights protocol](https://cdn.inmusicbrands.com/akai/attachments/APC%20mini%20mk2%20-%20Communication%20Protocol%20-%20v1.0.pdf)
 - [Behringer X-Touch Mini](https://amzn.to/3Ne2Lga) about US$100
 - [AKAI MPKmini](https://amzn.to/42owKpK) about US$100
-- [Launchpad Mini mk3](https://amzn.to/3CgZbeQ) about US$100, [RGB light protocol](https://www.djshop.gr/Attachment/DownloadFile?downloadId=10737), has square buttons
-- [Launchpad X](https://amzn.to/43sZlLY) about US$160, [RGB light protocol](https://www.djshop.gr/Attachment/DownloadFile?downloadId=10737), has key velocity, has square buttons
+- [Novation Launchpad Mini Mk3](https://amzn.to/3CgZbeQ) about US$100, [RGB light protocol](https://www.djshop.gr/Attachment/DownloadFile?downloadId=10737), has square buttons
+- [Novation Launchpad X](https://amzn.to/43sZlLY) about US$160, [RGB light protocol](https://www.djshop.gr/Attachment/DownloadFile?downloadId=10737), has key velocity, has square buttons
 - [Behringer FCB1010 Foot Controller](https://amzn.to/42xEJ3P) about US$160; requires MIDI-to-USB adapter
 
 The native USB MIDI devices generally don't need drivers on macOS or Windows.
@@ -1916,6 +1922,37 @@ $n=108$ is C8 at 4,186.01 Hz, the highest pitched note on a
 full piano. $n=127$ is G9 at 12,543.85 Hz, the highest note in MIDI
 and about half of the highest frequency (i.e., one octave) below the
 highest note in the range of human hearing.
+
+Protocol specifications for some common MIDI controllers are:
+ - [Launchpad Mini Mk3](https://www.djshop.gr/Attachment/DownloadFile?downloadId=10737)
+ - [Launchpad X](https://fael-downloads-prod.focusrite.com/customer/prod/s3fs-public/downloads/Launchpad%20X%20-%20Programmers%20Reference%20Manual.pdf)
+ - [Ableton Push](https://github.com/Ableton/push-interface)
+ - [AKAI APC Mini Mk2](https://cdn.inmusicbrands.com/akai/attachments/APC%20mini%20mk2%20-%20Communication%20Protocol%20-%20v1.0.pdf)
+   
+For example, setting the color of
+each LED to match a sprite on a Novation Launchpad device is:
+  
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Pyxlscript
+def launchpad_show_sprite(sprite):
+    // Apply gamma and map floating point to 7-bit unsigned normalized fixed point [0, 127] interval
+    def map(v): return MIN(0x7F, FLOOR(MUL(0x80, MUL(v, v))))
+
+    const msg = [0xF0, 0x00, 0x20, 0x29, 0x02, 0x0D, 0x03]
+    const c = #0000
+    const pos = xy(0, 0)
+    
+    // To access the 9th row and column of control buttons,
+    // extend these loops one further. The indexing is consistent
+    for x < 8:
+        for y < 8:
+            pos.x = x; pos.y = 7 - y
+            get_sprite_pixel_color(sprite, pos, c)
+            msg.push(0x03, (x + 1) + 10 (y + 1), map(c.r), map(c.g), map(c.b))
+    push(msg, 0xF7)
+
+    midi_send_raw(port, msg)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 Modes
 ------------------------------------------------------------------------
@@ -4821,7 +4858,8 @@ endpoints and borders.
 
 `get_sprite_pixel_color(sprite, pos, result default ∅)`
 : Returns the color of pixel `pos` in the sprite as an `rgba`
-  value. When `result` is not `nil`, it is used to store the result
+  value. Sprite pixel indexing puts (0, 0) in the top left corner.
+  When `result` is not `nil`, it is used to store the result
   to avoid memory allocation. If the pixel is out of bounds for that sprite,
   returns `nil` if there is no `result` specified and `rgba(0,0,0,0)`
   in `result` otherwise.
@@ -5937,6 +5975,15 @@ and other operations that naturally compile with maximum efficiency.
 `MIN(s1, s2)`
 : Returns the smaller scalar.
 
+`FLOOR(s1)`
+: Returns the floor of the scalar.
+
+`CEIL(s1)`
+: Returns the ceil of the scalar.
+
+`ROUND(s1)`
+: Returns the round of the scalar.
+
 `SIGN(s1)`
 : Returns +1, -1, or 0 as the sign of the scalar.
 
@@ -6279,6 +6326,11 @@ options. Project files should have the double extension `.game.json`.
   // controller. You can also make controller-only dual analog stick
   // games using device_control("get_analog_axes", ...)
   "dual_dpad":    false,
+  
+  // False by default. If true, this game will send MIDI sysex messages
+  // and requires elevated permissions from the web browser that will
+  // be prompted for at start.
+  "midi_sysex":   false,
 
   // Other global constants. You could define these in a global source code file
   // as well. The constants specified here have immutable *values*, not just immutable

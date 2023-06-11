@@ -1886,10 +1886,6 @@ function midi_send_raw(port, message) {
         $error('The message must be an array of integers');
     }
 
-    if (message.length === 0 || message.length > 3) {
-        $error('The message must be 1-3 bytes');
-    }
-
     if (port.$port.connection !== 'open') {
         // Open the port
         port.$port.open().then(function () {
@@ -8273,6 +8269,10 @@ function MAX(a, b) {
 function MIN(a, b) {
     return (a < b) ? a : b;
 }
+
+var FLOOR = $Math.floor;
+var CEIL = $Math.ceil;
+var ROUND = $Math.round;
 
 function ADD(a, b) {
     return a + b;

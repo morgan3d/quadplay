@@ -994,6 +994,12 @@ function onPlayButton(slow, isLaunchGame, args, callback) {
                 // runtime and compile and launch this code within it.
                 programNumLines = compiledProgram.split('\n').length;
 
+                if (gameSource.json.midi_sysex && midi && ! midi.$options.sysex) {
+                    // Reinitialize MIDI using sysex requests, and wipe out MIDI devices while waiting
+                    midiReset();
+                    navigator.requestMIDIAccess({sysex: true, software: true}).then(onMIDIInitSuccess, onMIDIInitFailure);
+                }
+                
                 restartProgram(isLaunchGame ? BOOT_ANIMATION.NONE : useIDE ? BOOT_ANIMATION.SHORT : BOOT_ANIMATION.REGULAR);
             } else {
                 programNumLines = 0;
@@ -2532,7 +2538,7 @@ function visualizeGame(gameEditor, url, game) {
     s += `<tr valign="top"><td></td><td colspan=3><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.y_up ? 'checked' : ''} onchange="onProjectYUpChange(this)">Y-Axis = Up</label></td></tr>\n`;
 
     s += '<tr><td>&nbsp;</td></tr>\n';
-    s += `<tr valign="top"><td>Controls</td><td colspan=4><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.dual_dpad ? 'checked' : ''} onchange="onProjectDualDPadChange(this)">Dual D-Pad</label></td></tr>\n`;
+    s += `<tr valign="top"><td>I/O</td><td colspan=4><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.dual_dpad ? 'checked' : ''} onchange="onProjectDualDPadChange(this)">Dual D-Pad</label>  <label><input type="checkbox" autocomplete=false ${disabled} ${game.midi_sysex ? 'checked' : ''} onchange="onProjectMIDISysexChange(this)" style="margin-left: 50px" tooltip="Does this game send MIDI sysex messages?">MIDI Sysex Output</label></td></tr>\n`;
     s += '<tr><td>&nbsp;</td></tr>\n';
     
     s += `<tr valign="top"><td>Description<br><span id="projectDescriptionLength">(${(game.description || '').length}/100 chars)</span> </td><td colspan=3><textarea ${disabled} style="width:384px; padding: 3px; margin-bottom:-3px; font-family: Helvetica, Arial; font-size:12px" rows=2 id="projectDescription" onchange="onProjectMetadataChanged(this)" oninput="document.getElementById('projectDescriptionLength').innerHTML = '(' + this.value.length + '/100 chars)'">${game.description || ''}</textarea>`;
@@ -2858,7 +2864,6 @@ function setFramebufferSize(w, h, privateScreen) {
 
     onResize();
 }
-
 
 
 // Set by compilation
@@ -4981,8 +4986,9 @@ LoadManager.fetchOne({}, location.origin + getQuadPath() + 'console/_config.json
 // Make the browser aware that we want gamepads as early as possible
 navigator.getGamepads();
 
-// Initialize MIDI
-navigator.requestMIDIAccess().then(onMIDIInitSuccess, onMIDIInitFailure);
+// Initialize MIDI without requiring sysex, which can prompt.
+// If the game needs sysex then onPlay will re-initialize.
+navigator.requestMIDIAccess({sysex: false, software: true}).then(onMIDIInitSuccess, onMIDIInitFailure);
 
 /* Called from the quit menu item. Forces closing the server for a nativeapp,
    which macOS can't detect because the Chromium browser doesn't close on that

@@ -56,6 +56,12 @@ function onProjectDualDPadChange(target) {
 }
 
 
+function onProjectMIDISysexChange(target) {
+    gameSource.json.midi_sysex = (target.checked === true);
+    serverSaveGameJSON();
+}
+
+
 function onProjectScreenSizeChange(target) {
     const res = JSON.parse(target.value);
     gameSource.json.screen_size = res;

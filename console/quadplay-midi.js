@@ -3,6 +3,8 @@
 
 // Mapped to QRuntime.midi
 const midi = Object.freeze({
+    $options: {sysex: false, software: true, access: undefined},
+    
     input_port_table: {},
     input_port_array: [],
 
@@ -14,10 +16,27 @@ const midi = Object.freeze({
 });
 
 
+/** Reset state, so that MIDI cannot be used again until the request succeeds */
+function midiReset() {
+    if (midi.$options.midiAccess) { midi.$options.midiAccess.onstatechange = undefined; }
+
+    // Remove event handlers
+    for (const port of midi.input_port_array) {
+        port.$port.onmidimessage = undefined;
+    }
+    
+    midi.message_queue.length = 0;
+    midi.input_port_array.length = 0;
+    midi.output_port_array.length = 0;
+    Object.keys(midi.input_port_table).forEach(key => delete midi.input_port_table[key]);
+    Object.keys(midi.output_port_table).forEach(key => delete midi.output_port_table[key]);
+}
+
 /*
  See also https://www.songstuff.com/recording/article/midi_message_format/
  */
 function onMIDIMessage(message) {
+    message.stopPropagation();
     const port = midi.input_port_table[message.target.name + message.target.id];
     
     const status = message.data[0];
@@ -151,6 +170,8 @@ function onMIDIMessage(message) {
 
 
 function onMIDIInitSuccess(midiAccess) {
+    console.log('MIDI: Initialize success');
+    
     function makeChannel() {
         const channel = {
             $note_active: false,
@@ -180,54 +201,52 @@ function onMIDIInitSuccess(midiAccess) {
             type: port.type,
             ...(port.type === 'input' ? makeChannel() : {})
         };
-
         
         if (port.type === 'input') {
             if (midi.input_port_table[port.name + port.id]) {
                 // Already present
+                console.log('MIDI Warning: ignored repeated add of MIDI ' + port.type + ' port ' + port.name);
                 return;
             }
-            
-            port.onmidimessage = onMIDIMessage;
+
             visible_port.channel = new Array(16);
             for (let i = 0; i < 16; ++i) {
                 visible_port.channel[i] = makeChannel();
             }
-            Object.freeze(visible_port.channel);
+            //Object.seal(visible_port.channel);
+            //Object.seal(visible_port);
             midi.input_port_table[port.name + port.id] = visible_port;
             midi.input_port_array.push(visible_port);
+
+            // This triggers a statechange event on MIDIAccess
+            console.log('Adding midimessage handler');
+            console.assert(! port.onmidimessage);
+            port.onmidimessage = onMIDIMessage;
+
         } else {
             if (midi.output_port_table[port.name + port.id]) {
                 // Already present
+                console.log('Warning: ignored repeated add of MIDI ' + port.type + ' port ' + port.name);
                 return;
             }
             
             midi.output_port_table[port.name + port.id] = visible_port;
             midi.output_port_array.push(visible_port);
         }
+
+        console.log('MIDI: Add ' + port.type + ' port ' + port.name);
     }
 
     // Reset the MIDI object
-    midi.message_queue.length = 0;
-    midi.input_port_array.length = 0;
-    midi.output_port_array.length = 0;
-    Object.keys(midi.input_port_table).forEach(key => delete midi.input_port_table[key]);
-    Object.keys(midi.output_port_table).forEach(key => delete midi.output_port_table[key]);
+    midiReset();
     
-    midiAccess.onstatechange = function (event) {
-        const port = event.port;
-        if (port.state === 'connected') {
-            addPort(port);
-        } else if (port.type ==='input') {
-            delete midi.input_port_table[port.name + port.id];
-            midi.input_port_array.splice(midi.input_port_array.indexOf(port), 1);
-        } else {
-            delete midi.output_port_table[port.name + port.id];
-            midi.output_port_array.splice(midi.output_port_array.indexOf(port), 1);
-        }
-    };
-
+    midi.$options.midiAccess = midiAccess;
+    midi.$options.sysex = midiAccess.sysexEnabled;
+   
     for (const port of midiAccess.inputs.values()) {
+        // Adding this message triggers a statechange event that
+        // causes the input port connection event, so we do not
+        // explicitly call addPort() here for inputs.
         addPort(port);
     }
 
@@ -235,6 +254,44 @@ function onMIDIInitSuccess(midiAccess) {
         addPort(port);
     }
 
+    midiAccess.onstatechange = function (event) {
+        const port = event.port;
+        if (port.state === 'connected') {
+            // Connect
+            addPort(port);
+        } else {
+            // Disconnect
+            console.log('MIDI: Disconnected ' + port.type + ' port ' + port.name);
+
+            if (port.type === 'input') {
+                delete midi.input_port_table[port.name + port.id];
+                midi.input_port_array.splice(midi.input_port_array.indexOf(port), 1);
+            } else if (port.type === 'output') {
+                delete midi.output_port_table[port.name + port.id];
+                midi.output_port_array.splice(midi.output_port_array.indexOf(port), 1);
+            }
+        }
+    };
+
+    // After the event handlers run, sort input ports so that on
+    // Novation Launchpad, the MIDI version of the input port comes
+    // before the DAW one, since the MIDI one is probably what the
+    // programmer wants.
+    setTimeout(function () {
+        midi.input_port_array.sort(function (a, b) {
+            const am = (a.name.indexOf('MIDI') !== -1) && (a.name.indexOf('DAW') === -1) ? 1 : 0;
+            const bm = (b.name.indexOf('MIDI') !== -1) && (b.name.indexOf('DAW') === -1) ? 1 : 0;
+            return bm - am;
+        });
+    }, 150);
+
+    if (emulatorMode !== 'stop') {
+        // The game was already running when midi access came
+        // through. This probably means that it was blocked on a user
+        // dialog, and that the game started with the midi object in a
+        // bad state. Restart the game.
+        onRestartButton();
+    }
 }
 
 
@@ -274,8 +331,10 @@ function midiProcessInputMessage(channel, message) {
             channel.$note_active = true;
             
             const note = channel.note[message.note];
-            if (message.velocity === 0) {
-                // Treat as a note off
+            if (message.velocity === 0 && note.on > 0) {
+                // Treat as a note off, because we just received a
+                // second note on with zero velocity for a note that
+                // was *already* on.
                 note.released = true;
                 note.on = 0;
             } else {

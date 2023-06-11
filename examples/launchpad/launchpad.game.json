@@ -1,0 +1,30 @@
+{
+    "title": "Launchpad MIDI",
+    "developer": "CasualEffects",
+    "copyright": "©2023 Morgan McGuire",
+    "license": "CC0/Public Domain",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "font": "quad://fonts/deja-8.font.json",
+        "shapes": "quad://sprites/shapes-32x32.sprite.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "Demonstration of the MIDI output API for Novation Launchpad controllers",
+    "constants": {
+    },
+    "screenshot_tag": "Launchpad",
+    "y_up": true,
+    "midi_sysex": true
+}

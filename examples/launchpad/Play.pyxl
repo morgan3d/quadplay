@@ -1,0 +1,124 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+/*
+This example uses a Novation Launchpad MIDI device (X, Pro, or Mini)
+as both input and output. It does not need the quadplay screen or
+gamepads at all!
+
+Hold down pads to cast "shadows" down the screen interactively.
+
+The device is capable of updating at full 60 Hz. The animation 
+intentionally runs at a lower rate to make it easier to see.
+*/
+
+// Initial array of white
+const display = make_array(xy(8, 8), #FFFF, clone)
+
+let input
+let output
+
+def draw_display(display):
+    const PAD_SIZE = xy(24, 24)
+    const PAD_SPACING = 28
+    const PAD_OFFSET = round(½ (SCREEN_SIZE - 8 PAD_SPACING)) + xy(2, 1)
+    for x < 8:
+        for y < 8:
+            const pos = xy(x, y) * PAD_SPACING + PAD_OFFSET
+            // Try to match the real-world colors on the device
+            const c = display[x][y]
+            draw_corner_rect(pos, PAD_SIZE, clamp(rgb(sqrt(c.r), sqrt(c.g), sqrt(c.b)) + #101, #333, #FFF))
+    
+    // Central cutout
+    draw_sprite(shapes.diamond, ½ SCREEN_SIZE + xy(0, -1), ∅, 45%, ∅, ∅, #000)
+
+
+
+def launchpad_show(port, display):
+    // Map floating point to 7-bit unsigned normalized fixed point [0, 127] interval
+    def unorm7(v): return MIN(0x7F, FLOOR(MUL(0x80, v)))
+
+    const msg = [0xF0, 0x00, 0x20, 0x29, 0x02, 0x0D, 0x03]
+    const c = #0000
+    const pos = xy(0, 0)
+
+    // The 9th row and column can also be accessed in the same way,
+    // but are not used in this demo.
+    for x < 8:
+        for y < 8:
+            pos.x = x; pos.y = 7 - y
+            const c = display[x][y]        
+            msg.push(0x03, (x + 1) + 10 (y + 1), unorm7(c.r), unorm7(c.g), unorm7(c.b))
+    push(msg, 0xF7)
+
+    midi_send_raw(port, msg)
+    
+    
+enter
+────────────────────────────────────────────────────────────────────────
+
+// Find the launchpad device
+for port in midi.output_port_array:
+    if find(port.name, "Launchpad") ≠ ∅ and find(port.name, "MIDI") ≠ ∅:
+        output = port
+    
+        // Enter programmer mode    
+        midi_send_raw(output, [0xF0, 0x00, 0x20, 0x29, 0x02, 0x0D, 0x0E, 0x01, 0xF7])
+        debug_print("Found Launchpad device output at", port)
+        break
+
+
+for port in midi.input_port_array:
+    if find(port.name, "Launchpad") ≠ ∅ and find(port.name, "MIDI") ≠ ∅:
+        input = port
+        debug_print("Found Launchpad device input at", port)
+        break
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+// Example of listening for specific buttons to be pressed
+for msg in midi.message_queue:
+    if msg.port == input and msg.type == "NOTE_ON" and msg.velocity > 0:
+        const n = msg.note - 11
+        const x = n mod 10
+        const y = ⌊n / 10⌋
+        // (x, y) was just pressed
+        //debug_print(n, msg.velocity)
+        
+
+// Animation
+for x < 8:
+    let shadow = false
+    for i < 8:
+        // Process counting down from the top of the screen
+        // so that the trail/shadows on touch work
+        const y = 7 - i
+        
+        const note = if input then input.note[(x + 1) + 10 (y + 1)] else {}
+        
+        let color = #000
+        
+        if note.on:
+            color = #FFF
+            shadow = true
+        
+        else if not shadow:
+            color = rgb(hsv(½ noise(3, ¼ x, ¼ ⌊y + mode_frames / 8⌋) + ½, 100%, 100%))
+
+        display[x][y] = color
+        
+
+// Visualize on screen
+draw_display(display)
+
+// Visualize on device
+if output: 
+    launchpad_show(output, display)
+else:
+    draw_text({
+        font: font, pos: ½ SCREEN_SIZE, color: #FFF, shadow: #000, outline: #000,
+        x_align: "center", y_align: "center", text: "This example requires a Novation Launchpad MIDI Controller"})
+    
+    
