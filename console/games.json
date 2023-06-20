@@ -97,11 +97,6 @@
             "description": "Perspective textured ground plane example"
         },
         {
-            "url": "quad://examples/launchpad/",
-            "title": "Launchpad MIDI",
-            "description": "Demonstration of the MIDI output API for Novation Launchpad controllers"
-        },
-        {
             "url": "quad://examples/lift_team/",
             "title": "Lift Team Example",
             "description": "Physics example of a player helicoper that can lift another player's mech."
@@ -110,6 +105,16 @@
             "url": "quad://examples/maze/",
             "title": "Maze",
             "description": "Interactive demonstration of the maze generation parameters"
+        },
+        {
+            "url": "quad://examples/midi_launchpad/",
+            "title": "MIDI Launchpad",
+            "description": "Demonstration of the MIDI output API for Novation Launchpad controllers"
+        },
+        {
+            "url": "quad://examples/midi_starrypad/",
+            "title": "MIDI Starrypad",
+            "description": "Visualization of Donner Starrypad MIDI input. Requires the physical controller."
         },
         {
             "url": "quad://examples/perceptual_color/",
@@ -180,11 +185,6 @@
             "url": "quad://examples/sproing/",
             "title": "Squash and Stretch Example",
             "description": "Asymmetric sprite scaling for animation of single sprites"
-        },
-        {
-            "url": "quad://examples/starrypad/",
-            "title": "Starrypad MIDI",
-            "description": "Visualization of Donner Starrypad MIDI input. Requires the physical controller."
         },
         {
             "url": "quad://examples/starter/",
