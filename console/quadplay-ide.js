@@ -2006,19 +2006,37 @@ function saveIDEState() {
 
 
 function showGamepads() {
-    let s = 'Gamepads = [';
+    let s = 'Gamepads = [\n';
     const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
     for (let i = 0; i < gamepads.length; ++i) {
         let pad = gamepads[i];
         if (pad && pad.connected) {
-            s += '"' + pad.id + '", ';
+            s += '  "' + pad.id + '",\n';
         }
     }
 
     s += ']';
-    s = s.replace('", ]', '"]');
+    s = s.replace('",\n]', '"\n]');
+
+    s += '\n\n';
+    s += 'MIDI = {\n  input_port_array: [\n';
+    for (let i = 0; i < midi.input_port_array.length; ++i) {
+        s += '     "' + midi.input_port_array[i].name + '",\n';
+    }
+    s += '  ]';
+    s = s.replace(',\n  ]', '\n  ]');
+
+    s += ',\n  output_port_array: [\n';
+    for (let i = 0; i < midi.output_port_array.length; ++i) {
+        s += '     "' + midi.output_port_array[i].name + '",\n';
+    }
+    s += '  ]';
+    s = s.replace(',\n  ]', '\n  ]');
+    s += '\n}';
+    
     console.log(s);
-    window.open('controls.html', '', 'width=400,height=500');
+
+    window.open('controls.html?devices=' + encodeURIComponent(s), '', 'width=400,height=500');
 }
 
 
@@ -4247,6 +4265,7 @@ function makeAssets(environment, assets) {
 }
 
 
+// See also updateMidiControllerIcons
 function updateControllerIcons() {
     const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
     let num = 0;
@@ -4254,14 +4273,18 @@ function updateControllerIcons() {
         const pad = gamepads[i];
         if (pad && pad.connected) {
             // Enable this icon
-            document.getElementById('controllerIcon' + num).className = 'controllerPresent';
+            const element = document.getElementById('controllerIcon' + num);
+            element.className = 'controllerPresent';
+            element.title = pad.id + '\n\nClick for details';
             ++num;
         }
     }
 
     // Disable the remaining icons
     while (num < 4) {
-        document.getElementById('controllerIcon' + num).className = 'controllerAbsent';
+        const element = document.getElementById('controllerIcon' + num);
+        element.className = 'controllerAbsent';
+        element.title = 'Connect a game controller and press a button on it';
         ++num;
     }
 }
@@ -4331,6 +4354,9 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
     document.getElementById('slowButton').enabled =
         document.getElementById('stepButton').enabled =
         document.getElementById('playButton').enabled = false;
+
+    const copyMenu = document.getElementById('copyMenu');
+    copyMenu.style.display = (isQuadserver && locallyHosted(gameURL)) ? 'block' : 'none';
     
     // Let the boot screen show before appending in the following code
     const loadFunction = function() {

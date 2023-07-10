@@ -48,7 +48,7 @@ def launchpad_show(port, display):
         for y < 8:
             pos.x = x; pos.y = 7 - y
             const c = display[x][y]        
-            msg.push(0x03, (x + 1) + 10 (y + 1), unorm7(c.r), unorm7(c.g), unorm7(c.b))
+            push(msg, 0x03, (x + 1) + 10 (y + 1), unorm7(c.r), unorm7(c.g), unorm7(c.b))
     push(msg, 0xF7)
 
     midi_send_raw(port, msg)

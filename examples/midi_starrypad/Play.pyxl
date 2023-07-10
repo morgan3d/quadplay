@@ -1,5 +1,16 @@
 Play
 ════════════════════════════════════════════════════════════════════════
+// This is a demo of a mapping of the Donner Starrypad
+// MIDI controller to quadplay as an input device, using the
+// default factory configuration of the Starrypad. It assumes
+// that the Starrypad is the first MIDI device.
+//
+// The quadplay screen will mirror the state of the 
+// Starrypad. Because Starrypad has three banks of buttons, 
+// faders, and knobs, more controls are shown than on the 
+// physical device. Cycle through banks to access them all.
+// Other examples show the equivalent for the Launchpad Mini
+// and FCB1010 MIDI controllers.
 
 let scroller_text = ""
 
@@ -7,12 +18,22 @@ enter
 ────────────────────────────────────────────────────────────────────────
 debug_print("Input ports:", midi.input_port_array)
 
+
 frame
 ────────────────────────────────────────────────────────────────────────
+// Look for an actually STARRYPAD, but use the first device
+// if none is found
+let input_port = midi.input_port_array[0]
+for port in midi.input_port_array:
+    if find(port.name, "STARRYPAD") ≠ ∅:
+        input_port = port
+        break
+
 set_background(#222)
 
 draw_sprite(logo_sprite, SCREEN_SIZE - xy(70, 10), ∅, ∅, ∅, 10)
 
+// Show all input messages to help with debugging connections
 for msg in midi.message_queue:
     let txt = ""
     if msg.type == "NOTE_ON":
@@ -21,7 +42,10 @@ for msg in midi.message_queue:
         txt = " -c" + msg.channel + "n" + msg.note
     else if msg.type == "CONTROL_CHANGE":
         txt = " c" + msg.channel + "c" + msg.controller + "=" + msg.data
+    else:
+        txt = msg.type
     scroller_text += txt
+    
 
 // Scroller display of raw messages
 preserving_transform:
@@ -48,7 +72,6 @@ preserving_transform:
 
 const BANK_COLOR = [#F72, #4E4, #1BF]
 
-const port = midi.input_port_array[0]
 for grid < 3:
     const base_color = BANK_COLOR[grid]
     
@@ -63,7 +86,7 @@ for grid < 3:
         for x < 4:
             const pos = 31 (xy(x + 4 grid, y) + 0.65)
             const n = x + 4y + grid * 16 + 36
-            const active = port and port.note[n].on
+            const active = input_port and input_port.note[n].on
             const color = if active then on_color else off_color
             const glow  = if active then glow2_color else ∅
             draw_rect(pos, xy(26, 26), pad_color, color)
@@ -81,7 +104,7 @@ const LAST_FADER = 25
 for FIRST_FADER ≤ fader ≤ LAST_FADER:
     const i = fader - FIRST_FADER
     const x = 31 i + 20
-    const f = if port then port.controller[fader].value / 127 else 0
+    const f = if input_port then input_port.controller[fader].value / 127 else 0
     draw_rect(xy(x, SCREEN_SIZE.y - 55), xy(2, 50), #7)
     draw_rect(xy(x, SCREEN_SIZE.y - 80 + 50 f), xy(10, 4), #FFF, BANK_COLOR[⌊½i⌋])
     
@@ -89,7 +112,7 @@ const KNOB_INDEX = [28, 9, 12, 13, 14, 15]
 for knob at i in KNOB_INDEX:
     const x = 31 i + 205
     const center = xy(x, SCREEN_SIZE.y - 70)
-    const k = if port then port.controller[knob].value / 127 else 0
+    const k = if input_port then input_port.controller[knob].value / 127 else 0
     draw_disk(center, 13, #7, #000)
     draw_line(center, center + 11 angle_to_xy(250° - 320° k), BANK_COLOR[⌊½i⌋], ∅, 4)
     draw_line(center, center + 11 angle_to_xy(250° - 320° k), #FFF, 0, 2)
@@ -110,7 +133,7 @@ for button at i in BUTTON:
     const off_color  = #BBB    
 
     const pad_color  = 15% base_color
-    const active = port and port.controller[button.controller].value
+    const active = input_port and input_port.controller[button.controller].value
     const color = if active then on_color else off_color
     const glow  = if active then glow2_color else ∅
     

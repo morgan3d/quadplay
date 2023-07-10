@@ -453,10 +453,15 @@ function make_array(size, value, value_clone) {
 }
 
 
+function contains(a, x, comparator) {
+    return find(a, x, undefined, comparator) != undefined;
+}
+
+
 function find(a, x, s, comparator) {
     s = s || 0;
 
-    // What are we looking for
+    // Type of what we are looking for
     const t = typeof x;
     
     // Run the regular find if using equivalent() on trivial values or
@@ -1878,12 +1883,12 @@ function midi_send_raw(port, message) {
         $error('Not a MIDI output port');
     }
 
-    if (port.$port.state !== 'connected') {
-        return 'MIDI port no longer connected';
+    if (!Array.isArray(message)) {
+        $error('The message must be an array of 8-bit integers');
     }
 
-    if (!Array.isArray(message)) {
-        $error('The message must be an array of integers');
+    if (port.$port.state !== 'connected') {
+        return 'MIDI port no longer connected';
     }
 
     if (port.$port.connection !== 'open') {
@@ -1892,7 +1897,11 @@ function midi_send_raw(port, message) {
             midi_send_raw(port, message);
         });
     } else {
-        port.$port.send(message);
+        try {
+            port.$port.send(message);
+        } catch (e) {
+            return e.message;
+        }
     }
     
     return 'ok';
@@ -8672,6 +8681,9 @@ function RGB_DOT_RGB(c1, c2) {
     return c1.r * c2.r + c1.g * c2.g + c1.b * c2.b;
 }
 
+function RGB_DISTANCE(a, b) {
+    return $Math.hypot(a.r - b.r, a.g - b.g, a.b - b.b);
+}
 
 function MAT3x4_MATMUL_XYZW(A, v, c) {
     const x = v.x, y = v.y, z = v.z, w = v.w;

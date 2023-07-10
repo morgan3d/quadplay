@@ -200,8 +200,7 @@ function onExportClick() {
     // TODO
 }
 
-
-function onNewGameClick() {
+function makeGame(srcURL) {
     if (! isQuadserver) {
         // Can't create a game on this server
         if (window.confirm('This game is hosted on the web. You must launch quadplay✜ from a script on your computer to create a new game. Go to the quadplay✜ installer website now?')) {
@@ -221,7 +220,8 @@ function onNewGameClick() {
             {
                 command: 'new_game',
                 dir_name: gameDir,
-                game_name: gameName
+                game_name: gameName,
+                src_url: srcURL
             },
             function (response, code) {
                 // Success. Load the new game and reselect the main page.
@@ -235,4 +235,12 @@ function onNewGameClick() {
                 alert(`Could not create the game "${gameName}" because a similar directory name "${gameDir}" already exists in your my_quadplay folder in your home folder.`);
             });
     }
+}
+
+function onCopyGameClick() {
+    makeGame(gameURL);
+}
+
+function onNewGameClick() {
+    makeGame('quad://examples/starter');
 }

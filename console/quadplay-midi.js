@@ -159,6 +159,8 @@ function onMIDIMessage(message) {
     Object.freeze(outmessage);
     midi.message_queue.push(outmessage);
 
+    // console.log(outmessage);
+
     // If the game is not running, immediately process the queue so
     // that port note state is up to date when the game resumes/starts,
     // but the message queue is not backing up.
@@ -197,6 +199,7 @@ function onMIDIInitSuccess(midiAccess) {
             $port: port,
             name: port.name,
             id: port.id,
+            state: port.state,
             manufacturer: port.manufacturer,
             type: port.type,
             ...(port.type === 'input' ? makeChannel() : {})
@@ -218,9 +221,11 @@ function onMIDIInitSuccess(midiAccess) {
             midi.input_port_table[port.name + port.id] = visible_port;
             midi.input_port_array.push(visible_port);
 
-            // This triggers a statechange event on MIDIAccess
+            // This triggers a statechange event on MIDIAccess.
+            // Sometimes the message handler is already present
+            // on a reconnection
             console.log('Adding midimessage handler');
-            console.assert(! port.onmidimessage);
+            //console.assert(! port.onmidimessage);
             port.onmidimessage = onMIDIMessage;
 
         } else {
@@ -256,6 +261,11 @@ function onMIDIInitSuccess(midiAccess) {
 
     midiAccess.onstatechange = function (event) {
         const port = event.port;
+
+        // Need to delay, otherwise we might miss all of the disconnections that
+        // happen this frame.
+        setTimeout(updateMidiControllerIcons);
+        
         if (port.state === 'connected') {
             // Connect
             addPort(port);
@@ -264,9 +274,11 @@ function onMIDIInitSuccess(midiAccess) {
             console.log('MIDI: Disconnected ' + port.type + ' port ' + port.name);
 
             if (port.type === 'input') {
+                midi.input_port_table[port.name + port.id].state = port.state;
                 delete midi.input_port_table[port.name + port.id];
                 midi.input_port_array.splice(midi.input_port_array.indexOf(port), 1);
             } else if (port.type === 'output') {
+                midi.output_port_table[port.name + port.id].state = port.state;
                 delete midi.output_port_table[port.name + port.id];
                 midi.output_port_array.splice(midi.output_port_array.indexOf(port), 1);
             }
@@ -278,11 +290,13 @@ function onMIDIInitSuccess(midiAccess) {
     // before the DAW one, since the MIDI one is probably what the
     // programmer wants.
     setTimeout(function () {
-        midi.input_port_array.sort(function (a, b) {
-            const am = (a.name.indexOf('MIDI') !== -1) && (a.name.indexOf('DAW') === -1) ? 1 : 0;
-            const bm = (b.name.indexOf('MIDI') !== -1) && (b.name.indexOf('DAW') === -1) ? 1 : 0;
+        function midiSort(a, b) {
+            const am = (a.name.indexOf('MIDI') !== -1) && (a.name.indexOf('DAW') === -1) && (a.name.indexOf('Live') === -1) ? 1 : 0;
+            const bm = (b.name.indexOf('MIDI') !== -1) && (b.name.indexOf('DAW') === -1) && (a.name.indexOf('Live') === -1) ? 1 : 0;
             return bm - am;
-        });
+        }
+        midi.input_port_array.sort(midiSort);
+        midi.output_port_array.sort(midiSort);
     }, 150);
 
     if (emulatorMode !== 'stop') {
@@ -331,10 +345,8 @@ function midiProcessInputMessage(channel, message) {
             channel.$note_active = true;
             
             const note = channel.note[message.note];
-            if (message.velocity === 0 && note.on > 0) {
-                // Treat as a note off, because we just received a
-                // second note on with zero velocity for a note that
-                // was *already* on.
+            if (message.velocity === 0) {
+                // Treat as a note off
                 note.released = true;
                 note.on = 0;
             } else {
@@ -372,6 +384,7 @@ function midiProcessInputMessage(channel, message) {
     } // switch on type
 }
 
+
 /** Called per frame to update the input ports from the
     message_queue. Must also zero the message_queue after providing to
     the game. */
@@ -398,4 +411,35 @@ function midiBeforeFrame() {
             midiProcessInputMessage(port.channel[message.channel], message);
         }
     } // for each message
+}
+
+
+// See also updateControllerIcons
+function updateMidiControllerIcons() {
+    {
+        const element = document.getElementById('midiIcon0');
+        const N = midi.input_port_array.length;
+        if (N > 0) {
+            element.className = 'midiPresent';
+            element.title = midi.input_port_array[0].name +
+                (N > 1 ? '\nand ' + (N - 1) + ' other MIDI input devices' : '') +
+                '\n\nClick for details';
+        } else {
+            element.className = 'midiAbsent';
+            element.title = 'Connect a USB MIDI input device';
+        }
+    }
+    {
+        const element = document.getElementById('midiIcon1');
+        const N = midi.output_port_array.length;
+        if (N > 0) {
+            element.className = 'midiPresent';
+            element.title = midi.output_port_array[0].name +
+                (N > 1 ? '\nand ' + (N - 1) + ' other MIDI output devices' : '') +
+                '\n\nClick for details';
+        } else {
+            element.className = 'midiAbsent';
+            element.title = 'Connect a USB MIDI output device';
+        }
+    }
 }

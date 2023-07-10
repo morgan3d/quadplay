@@ -742,6 +742,11 @@ with all buttons, knobs, pads, and faders mapped.
 Example of using the Novation Launchpad physical MIDI controller with <quadplay/>
 and Sysex messages so that it acts as both an input and output display device.
 
+</td></tr><tr><td>![](../examples/midi_fcb1010/label128.png)</td><td>
+[MIDI FCB1010](../console/quadplay.html?game=quad://examples/midi_fcb1010&IDE=1) 
+Example of using the Behringer FCB1010 physical MIDI controller with <quadplay/>
+with all default controls mapped.
+
 </td></tr></table>
 
 ### Inspiration
@@ -1803,7 +1808,29 @@ port: port, raw: [...], ...}`, where the `type` determines the other
 properties. The most common messages are `"NOTE_ON"`, which has
 `channel`, `note` and `velocity` properties; and `"NOTE_OFF"`, which
 has `channel` and `note` properties. The `raw` property is the
-underlying 1-3 byte MIDI message.
+underlying 1-3 byte MIDI message. Most devices send `"NOTE_ON"` with
+velocity zero instead of `"NOTE_OFF"` to enable the
+[running status compression hack](https://www.euclideanspace.com/art/music/midi/codes/index.htm).
+
+All ports have:
+
+`port.id`
+: Device's integer ID (which may be negative), which will be the ID of the adapter if the device
+  is not natively using USB
+
+`port.name`
+: Device's name, which will be the name of the adapter if the device
+  is not natively using USB
+  
+`port.manufacturer`
+: Device's manufacturer, which will be the manufacturer of the adapter if the device
+  is not natively using USB
+ 
+`port.state`
+: `"connected"` or `"disconnected"`
+
+`port.type`
+: `"input"` or `"output"`
 
 The input ports contain `note[]`
 and `controller[]` 128-element arrays that are aggregated across all
@@ -1812,7 +1839,8 @@ has its own `note[]` and `controller[]`. This provides convenient
 access for simpler devices that do not take advantage of channels
 (such as an 88-key piano keyboard or 16-pad drum pad), as well as the
 full state of all 4096 input elements possible for each port if
-needed. 
+needed. For the purpose of these, `"NOTE_ON"` with zero velocity
+is treated as equivalent to `"NOTE_OFF"`.
 
 Each `note[]` element has the following fields:
 
@@ -1890,19 +1918,19 @@ cases, RGB button output) devices are:
 - [AKAI MPKmini](https://amzn.to/42owKpK) about US$100
 - [Novation Launchpad Mini Mk3](https://amzn.to/3CgZbeQ) about US$100, [RGB light protocol](https://www.djshop.gr/Attachment/DownloadFile?downloadId=10737), has square buttons
 - [Novation Launchpad X](https://amzn.to/43sZlLY) about US$160, [RGB light protocol](https://www.djshop.gr/Attachment/DownloadFile?downloadId=10737), has key velocity, has square buttons
-- [Behringer FCB1010 Foot Controller](https://amzn.to/42xEJ3P) about US$160; requires MIDI-to-USB adapter
-
-The native USB MIDI devices generally don't need drivers on macOS or Windows.
+- [Behringer FCB1010 Foot Controller](https://amzn.to/42xEJ3P) about US$160; see [Morgan's notes](https://morgan3d.github.io/articles/2023-06-22-fcb1010/index.html) to use this device
 
 Many MIDI devices directly support USB and Bluetooth for connecting to
 a computer. Others use MIDI 5-pin or either 1/8" phono (headphone)
 cables and require a USB adapter, such as:
 
-- [FORE MIDI-to-USB adapter](https://amzn.to/3C96dlI) about US$20
+- [FORE MIDI-to-USB adapter](https://amzn.to/3C96dlI) about US$20 (Note that its MIDI connectors are labelled backwards)
 - [M-Audio MIDI-to-USB adapter](https://amzn.to/42vT9BS) about US$35
 
-DMX devices and converters are more expensive. Here are a few examples
-chosen without considering reviews:
+MIDI devices generally don't need drivers on macOS or Windows.
+
+DMX devices and converters are more expensive than straight MIDI
+ones. Here are a few interesting examples chosen without considering reviews:
 
 - [DOREMiDi USB MIDI-to-DMX MTD-1024](https://www.doremidi.cn/h-pd-80.html) about US$90
 - [DecaBox MIDI-to-DMX](https://www.amazon.ca/DecaBox-MIDI-to-DMX-Converter/dp/B00N36JQG2) about US$300
@@ -2076,6 +2104,9 @@ Array
 `clone(array)`
 : Return a shallow clone of `array`. Pointer structures are preserved and loops
   are OK. Immutable objects such as spritesheets and functions are not cloned.
+
+`contains(array, value, comparator default ==)`
+: Return `true` if `value` appears at least once in `array` and `false` otherwise.
 
 `deep_clone(array)`
 : Return a deep clone of `array`. Pointer structures are preserved and loops
@@ -2321,20 +2352,19 @@ String
   - `"loop"`
   - `"clamp"` (default, other unsupported values are silentely treated as clamp instead of failing)
 
+`contains(string, substring)`
+: Returns `true` if `substring` appears at least once in `string`
+  and `false` otherwise.
+
 `ends_with(string, target)`
 : Returns true if `string` ends with the substring `target`.
   
 `extended(a, b)`
 : Returns a new string that is `a + b`.
 
-`find(string, x, i default 0, comparator default ==)`
+`find(string, x, i default 0)`
 : Find the index of the substring `x`, starting at
   optional index `i` (default 0).  Returns `∅` if not found.
-  
-  Unless a function is for `comparator`, uses `==` to compare `x` to
-  the substrings. If a comparator is present, any non-falsy return
-  value from the comparator indicates a match. The array element is 
-  passed as the first argument to the comparator.
   
   Runs in linear time in the length of the string from `i`. This is
   called `index_of` or `indexOf` in some other programming languages.
@@ -2454,6 +2484,10 @@ Object
 `clone(object)`
 : Return a shallow clone of `object`. Pointer structures are preserved and loops
   are OK. Built-in objects such as spritesheets and functions are not cloned.
+
+`contains(object, value, comparator default ==)`
+: Returns `true` if there is some key that maps to `value` in `object`
+  and `false` otherwise.
 
 `deep_clone(object)`
 : Return a deep clone of `object`. Pointer structures are preserved and loops
@@ -6022,6 +6056,9 @@ and other operations that naturally compile with maximum efficiency.
 `RGB_LERP(srcrgb1, srcrgb2, s1, dstrgb)`
 : Interpolates between the two source values and returns the result in
   `dstrgb`.  The destination may be the same as one of the sources.
+  
+`RGB_DISTANCE(srcrgb1, srcrgb2)`
+: `magnitude(srcrgb1, srcrgb2)`
 
 `RGBA_ADD_RGBA(srcrgba1, srcrgba2, dstrgba)`
 : Element addition.

@@ -144,7 +144,7 @@
       </script>
       <div><a onclick="enterKioskMode()">Enter Kiosk</a></div>
       <hr>
-      <div class="IDEOnly"><a onclick="window.open('../doc/controls.html', '', 'width=400,height=500')" title="Show keyboard and gamepad controls in a popup window">Controls</a></div>
+      <div class="IDEOnly"><a onclick="window.open('controls.html', '', 'width=400,height=500')" title="Show keyboard and gamepad controls in a popup window">Controls</a></div>
       <script>
         if (! isQuadserver) {
             document.write('<div class="noIDE"><a href="../doc/manual.md.html" title="Use quadplay✜ to make your own games like this">Create Games</a></div>');
@@ -160,6 +160,8 @@
     <div id="toolsMenu" class="unselectable dropdown IDEOnly">
       <div><a onclick="showOpenGameDialog()">Open Game…</a></div>
       <div><a onclick="onNewGameClick()">New Game…</a></div>
+      <!-- Copy menu is only visible when the game is local to discourage cloning others' games -->
+      <div id="copyMenu" style="display: none"><a onclick="onCopyGameClick()">Copy Game…</a></div>
       <hr>
       <!-- <div><a onclick="onExportClick()">Export</a></div>
       <hr> -->
@@ -209,14 +211,18 @@
       </div>
 
       <div style="background: #000; border-top: 3px solid #000; top: 0px; display: inline-block; position: absolute; right: 8px; font-size: 10px">
-        <div style="display:inline-block; padding-left: 10px;" onclick="showGamepads()">
+        <div style="width:24px; margin-top: -4px; display: inline-block; padding-left: 10px" onclick="showGamepads()">
+          <div class="midiAbsent" id="midiIcon0" title="Connect a USB MIDI input device" style="display:block"></div>
+          <div class="midiAbsent" id="midiIcon1" title="Connect a USB MIDI output device"></div>
+        </div>
+        <div style="display:inline-block; padding-left: 1px;" onclick="showGamepads()">
           <div style="width:48px; margin-top: -4px">
-            <div class="controllerAbsent" id="controllerIcon0" title="Connect a controller and press a button"></div>
-            <div class="controllerAbsent" id="controllerIcon1" title="Connect a controller and press a button"></div>
+            <div class="controllerAbsent" id="controllerIcon0" title="Connect a game controller and press a button on it"></div>
+            <div class="controllerAbsent" id="controllerIcon1" title="Connect a game controller and press a button on it"></div>
           </div>
           <div style="width:48px; margin-top: -3px">
-            <div class="controllerAbsent" id="controllerIcon2" title="Connect a controller and press a button"></div>
-            <div class="controllerAbsent" id="controllerIcon3" title="Connect a controller and press a button"></div>
+            <div class="controllerAbsent" id="controllerIcon2" title="Connect a game controller and press a button on it"></div>
+            <div class="controllerAbsent" id="controllerIcon3" title="Connect a game controller and press a button on it"></div>
           </div>
         </div>
         &nbsp;&nbsp;&nbsp;

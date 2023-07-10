@@ -107,6 +107,11 @@
             "description": "Interactive demonstration of the maze generation parameters"
         },
         {
+            "url": "quad://examples/midi_fcb1010/",
+            "title": "MIDI FCB1010",
+            "description": "Description of your game in about 100 characters."
+        },
+        {
             "url": "quad://examples/midi_launchpad/",
             "title": "MIDI Launchpad",
             "description": "Demonstration of the MIDI output API for Novation Launchpad controllers"

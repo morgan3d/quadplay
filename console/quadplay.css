@@ -1553,7 +1553,7 @@ canvas#screenOverlay {
 
 /*******************************************************************/
 
-.controllerPresent, .controllerAbsent {
+.controllerPresent, .controllerAbsent, .midiPresent, .midiAbsent {
     width: 24px;
     height: 12px;
     background-position: center;
@@ -1568,6 +1568,14 @@ canvas#screenOverlay {
 
 .controllerPresent {
     background-image: url('icons/icon-controller-present.png');
+}
+
+.midiAbsent {
+    background-image: url('icons/icon-midi-absent.png');
+}
+
+.midiPresent {
+    background-image: url('icons/icon-midi-present.png');
 }
 
 /*******************************************************************/

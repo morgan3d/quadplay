@@ -384,11 +384,11 @@ function processLine(line, inFunction, stringProtectionMap) {
         const closeIndex = findMatchingParen(rest, 0, +1);
 
         let watchExpr = rest.substring(1, closeIndex - 1);
-        watchExpr = unprotectQuotedStrings(watchExpr, stringProtectionMap);
+        let message = unprotectQuotedStrings(watchExpr, stringProtectionMap);
         
         // The strings inside of watchExpr are protected, so we have
         // to unprotect, escape quotes, and then reprotect them to make it safe.
-        let message = watchExpr.replace(/"/g, '\\"');
+        message = message.replace(/"/g, '\\"');        
         message = protectQuotedStrings('"' + message + '"', stringProtectionMap)[0];
         return before + '($' + (call === 'debug_watch' ? 'debugWatch' : 'debugPrint') + 'Enabled && $' + call + '(SOURCE_LOCATION, ' + message + ', ' + watchExpr + ')); ' + processLine(rest.substring(closeIndex + 1), inFunction, stringProtectionMap);
         
@@ -1680,7 +1680,7 @@ for (let i = 0; i < 150; ++i) {
 }
 
 // Hide the warmup sprites
-draw_rect({x: SCREEN_SIZE.x * 0.5, y: SCREEN_SIZE.y * 0.5}, SCREEN_SIZE, rgb(0,0,0), undefined, -1);
+draw_corner_rect({x: 0, y: 0}, SCREEN_SIZE, rgb(0,0,0), undefined, -1);
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Reset animation

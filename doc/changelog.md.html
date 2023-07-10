@@ -6,6 +6,20 @@
 Changes for both the specification and implementation in each release
 of [<quadplay/>](manual.md.html).
 
+2023 July TBD: Update 94
+===================================
+- Added "Copy Game" menu option for locally hosted games to simplify 
+  game creation from examples and user templates
+- Gamepad indicator icons in IDE now show the ID of the controller on mouse hover
+- Added MIDI controller IDE indicator icons
+- Clicking on MIDI/gamepad indicator now brings up enumeration of connected devices
+- Added `contains()` function
+- Added `MIDI FCB1010` example program for the Behringer FCB1010 physical MIDI controller
+- Added `port.state` for MIDI ports to poll when they have been disconnected
+- Added `RGB_DISTANCE` intrinsic
+- Fixed formatting of `debug_print` with a grid size in the output string literal, such as `"32x16"`
+
+
 2023 June 20: Update 93
 ===================================
 - Added optional 640x360 resolution
@@ -14,8 +28,8 @@ of [<quadplay/>](manual.md.html).
 - Removed `animation.frame()`, because having a function inside
   an array was creating problems for multithreading efficiently (*incompatible change*)
 - Added `animation_frame(a, t)`
-- Added `starrypad` example program for the Donner Starrypad physical MIDI controller
-- Added `launchpad` example program for the Novation Launchpad physical MIDI controller
+- Added `MIDI Starrypad` example program for the Donner Starrypad physical MIDI controller
+- Added `MIDI Launchpad` example program for the Novation Launchpad physical MIDI controller
 - Added `robot-9-mono` monospaced font
 - Added `FLOOR`, `CEIL`, `ROUND` intrinsics
 - Fixed `enter()` event of starting mode running before boot animation

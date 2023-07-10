@@ -6,7 +6,7 @@
 #    "write_file":    Write the specified contents to disk at the specified location.
 #                     Used by the IDE to save files.
 #
-#    "new_game":      Create a new game by copying and renaming the starter template
+#    "new_game":      Create a new game by copying and renaming the specified template
 #                     and return the URL of the new game, or return an error if the
 #                     directory already existed.
 #
@@ -562,9 +562,25 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         elif command == 'new_game':
             dir_name = object['dir_name']
             game_name = object['game_name']
-
+            src_url = object['src_url']
+            
             dst_path = my_games_filepath + '/' + dir_name
-            starter_path = os.path.join(quad_filepath, 'examples/starter')
+
+            # Convert src_url to src_path + src_filename
+            src_path = re.sub(r'^https?://[^/]*/', '', src_url)
+            src_path = re.sub(r'^quad://', quad_filepath, src_path)
+            src_path = remove_leading_slash(os.path.normpath(src_path).replace('\\', '/'))
+            if src_path.endswith('.game.json'):
+                src_path = src_path.split('/')
+                src_filename = src_path[-1]
+                src_path = '/'.join(src_path[:-1])
+            else:
+                # Remove trailing slash
+                if src_path[-1] == '/': src_path[:-1]
+                src_filename = src_path.split('/')[-1] + '.game.json'
+
+            #src_path = os.path.join(quad_filepath, 'examples/starter')
+            #src_filename = 'starter.game.json'
             
             maybe_print('Created game', dir_name, 'at', dst_path)
             
@@ -573,10 +589,14 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 code = 406
                 response_obj = {'message': dst_path + ' already exists'}
             else:
-                os.makedirs(dst_path)
+                # Recursively copy directory
+                shutil.copytree(src_path, dst_path, ignore = shutil.ignore_patterns('.DS_Store', '*~', '#*'))
+                #for filename in ['label64.png', 'label128.png', 'Play.pyxl']:
+                #    shutil.copyfile(os.path.join(starter_path, filename), os.path.join(dst_path, filename))
+                shutil.copyfile(os.path.join(quad_filepath, '.gitignore'), os.path.join(dst_path, '.gitignore'))
 
                 # Parse the starter game
-                game_json = workjson.load(os.path.join(starter_path + '/starter.game.json'))
+                game_json = workjson.load(os.path.join(src_path, src_filename))
 
                 # Change the title
                 game_json['title'] = game_name
@@ -585,10 +605,6 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 # Save the new game
                 with open(os.path.join(dst_path, dir_name + '.game.json'), 'wt', encoding='utf8') as f:
                     f.write(workjson.dumps(game_json, indent=4))
-                
-                for filename in ['label64.png', 'label128.png', 'Play.pyxl']:
-                    shutil.copyfile(os.path.join(starter_path, filename), os.path.join(dst_path, filename))
-                shutil.copyfile(os.path.join(quad_filepath, '.gitignore'), os.path.join(dst_path, '.gitignore'))
 
                 response_obj = {'game': '/' + dst_path + '/'}
                 
@@ -805,6 +821,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             self.send_header('Content-length', len(response))
             self.end_headers()
             self.wfile.write(response.encode('utf8'))
+            
         elif re.search(self.silent_404_file_regex, webpath) and not os.path.exists(filepath):
             # Check to see if this file does not exist. If it does
             # not, return the 404 error but do not print to the terminal
