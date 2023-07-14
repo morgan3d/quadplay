@@ -638,7 +638,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         #print(' webpath = ' + webpath)
 
         # Security: Check if path has a prefix in webpath_allowlist
-        if (not any([webpath == ignore for ignore in ['/favicon.ico', '/apple-touch-icon-precomposed.png', '/apple-touch-icon.png']]) and
+        if (not any([webpath == ignore for ignore in ['/favicon.ico', '/apple-touch-icon-precomposed.png', '/apple-touch-icon.png', '/apple-touch-icon-120x120-precomposed.png', '/apple-touch-icon-120x120.png']]) and
             not any([webpath.startswith(prefix) for prefix in webpath_allowlist])):
             self.send_error(404, 'Illegal webpath (' + this_line_number() + '): ' + webpath)
             return
@@ -861,6 +861,10 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         elif path == '/apple-touch-icon-precomposed.png' or path == '/apple-touch-icon.png':
             # Safari asks for the icon via this path
             return quad_filepath + '/console/icons/favicon-64x64.png'
+
+        elif path == '/apple-touch-icon-120x120-precomposed.png' or path == '/apple-touch-icon-120x120.png':
+            # Safari asks for the icon via this path
+            return quad_filepath + '/console/icons/favicon-120x120.png'
 
         elif isWindows and server_root_filepath == '':
             # Need the whole path, since the "cwd" is wrong
