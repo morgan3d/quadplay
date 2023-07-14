@@ -1,0 +1,20 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_background(#44A)
+
+for x < 13:
+    for y < 8:
+        draw_sprite(shapes.shingles, 32 xy(x, y), ∅, ∅, ∅, ∅, #66C + rgb(y / 16, 0, 0))
+
+draw_text({font: font, text: "Multitouch Extension Demo\n(not available on all devices)", pos: xy(½ SCREEN_SIZE.x, 10), color:#FFF, outline: #444, x_align: "center", z:1})
+
+const multitouch = device_control("multitouch")
+
+for t in multitouch:
+    const color = hsv(⅛ loop(t.id, 0, 8), 75%, 100%)
+    draw_disk(t.xy + xy(0, 1), 10, ∅, #444)
+    draw_disk(t.xy, 10, #FFF, color)
+    draw_text({font: font, text: t.id, pos: t.xy - xy(0, 17), color: #FFF, outline: color, shadow: #444, x_align:"center", y_align:"center"}) 

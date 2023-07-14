@@ -885,10 +885,8 @@
           <p>
             <label for="openGameType">Type&nbsp;&nbsp;</label>
             <select id="openGameType" style="width:320px" onchange="onOpenGameTypeChange()">
-              <script>
-                // Only emit these options if they are going to be populated
-                if (isQuadserver) { document.write('<option value="alpha" id="openAlphaOption">Alpha</option><option value="mine">Mine</option>'); }
-              </script>
+              <option value="alpha" id="openAlphaOption">Alpha</option>
+              <option value="mine" id="openMineOption">Mine</option>');
               <option value="builtins">Built In</option>
               <option value="examples">Examples</option>
               <script>

@@ -122,6 +122,11 @@
             "description": "Visualization of Donner Starrypad MIDI input. Requires the physical controller."
         },
         {
+            "url": "quad://examples/multitouch/",
+            "title": "Multitouch",
+            "description": "Example of the device_control() multitouch extension"
+        },
+        {
             "url": "quad://examples/perceptual_color/",
             "title": "Perceptual Color",
             "description": "Shows the difference between perceptual_lerp_color() and lerp()."

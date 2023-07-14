@@ -232,6 +232,50 @@ function device_control(cmd) {
             break;
         }
 
+    case "multitouch":
+        {
+            const xGetter = {
+                enumerable: true,
+                get: function () {
+                    return (this.screen_x - QRuntime.$offsetX) / QRuntime.$scaleX;
+                }
+            };
+            
+            const yGetter = {
+                enumerable: true,
+                get: function () {
+                    return (this.screen_y - QRuntime.$offsetY) / QRuntime.$scaleY;
+                }
+            };
+        
+            const xyGetter = {
+                enumerable: true,
+                get: function () {
+                    return {x: this.x, y: this.y}
+                }
+            };
+            
+
+            const array = [];
+            for (const k in activeTouchTracker) {
+                const tracker = activeTouchTracker[k];
+                if (tracker.screen_x == undefined) { continue; }
+            
+                const touch = {id: tracker.identifier,
+                               screen_x: tracker.screen_x, screen_y: tracker.screen_y,
+                               screen_xy: Object.freeze({x: tracker.screen_x, y: tracker.screen_y})};
+
+                Object.defineProperty(touch, 'x', xGetter);
+                Object.defineProperty(touch, 'y', yGetter);
+                Object.defineProperty(touch, 'xy', xyGetter);
+
+                array.push(Object.freeze(touch));
+            }
+            
+            return array;
+            break;
+        }
+        
     case "console.dir":
         console.dir(...Array.prototype.slice.call(arguments, 1));
         break;
@@ -1561,8 +1605,8 @@ function onTouchStartOrMove(event) {
         const touch = event.changedTouches[i];
         let tracker = activeTouchTracker[touch.identifier];
 
+        const screen_coord = emulatorScreenEventCoordToQuadplayScreenCoord(touch);
         if (event.target === emulatorScreen || event.target === overlayScreen || event.target === afterglowScreen) {
-            const screen_coord = emulatorScreenEventCoordToQuadplayScreenCoord(touch);
 
             if (! tracker ||
                 !(tracker.lastTarget === emulatorScreen || tracker.lastTarget === overlayScreen || tracker.lastTarget === afterglowScreen)) {
@@ -1580,7 +1624,7 @@ function onTouchStartOrMove(event) {
             
             QRuntime.touch.screen_x = screen_coord.x;
             QRuntime.touch.screen_y = screen_coord.y;
-
+            
             if (QRuntime.touch.aa && document.getElementById('printTouchEnabled').checked) {
                 $systemPrint(`\ntouch.screen_xy = xy(${QRuntime.touch.screen_x}, ${QRuntime.touch.screen_y})`);
 
@@ -1601,9 +1645,14 @@ function onTouchStartOrMove(event) {
         }
 
         if (! tracker) {
-            tracker = activeTouchTracker[touch.identifier] = {identifier: touch.identifier};
+            tracker = activeTouchTracker[touch.identifier] = {identifier: touch.identifier, screen_coord: {x:0, y:0}};
         }
-        
+
+        if (event.target === emulatorScreen || event.target === overlayScreen || event.target === afterglowScreen) {
+            tracker.screen_x = screen_coord.x;
+            tracker.screen_y = screen_coord.y;
+        }
+
         tracker.clientX = touch.clientX;
         tracker.clientY = touch.clientY;
         tracker.lastTarget = event.target;

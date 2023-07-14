@@ -790,7 +790,7 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                 if os.path.exists(quad_filepath + '_alpha'):
                     set['alpha'] = quad_filepath + '_alpha'
                     set['tests'] = quad_filepath + '_tests'
-                    
+
                 for key, path in set.items():
                     # Do not change case on Windows (because this will be part of the json file that is read
                     # on multiple platforms) but *do* fix slashes
@@ -1028,7 +1028,7 @@ def main():
             maybe_print('         ' + line)
 
     maybe_print('_________________________________________________________________________\n')
-    maybe_print('quadplay version ' + installed_quadplay_version['text'] + ' from ' + quadplay_origin + '\n\n')
+    maybe_print('quadplay version ' + installed_quadplay_version['text'] + ' from ' + quadplay_origin + '\n')
 
     myip = '127.0.0.1'
     if args.serve:
@@ -1092,21 +1092,20 @@ def main():
             t = platform_www_abspath(os.path.abspath(t))
             if t and not isWindows and t[0] != '/': t = '/' + t
         url += '&game=' + t
-    else:
-        maybe_print('Loading default game. You can supply the URL or local relative path to your game on\nthe command line, for example "tools/quadplay-server foo/mygame", to load it directly.\n')
 
     maybe_print('\nServing from:\n\n   ' + url + '\n')
     
     if args.serve:
         # Do not support POST in host mode
-        maybe_print('\nYour firewall may need to be configured to load on other devices.\n')
+        maybe_print('Your firewall may need to be configured to load on other devices.\n')
     else:
         url += '&quadserver=1'
     
     # Run from the quadplay path
     maybe_print('   quad://  = ' + os.path.join(server_root_filepath, quad_filepath))
     maybe_print('   My games = ' + os.path.join(server_root_filepath, my_games_filepath) + '/')
-    maybe_print('   cwd      = ' + remove_trailing_slash(server_root_filepath) + '/\n')
+    maybe_print('   cwd      = ' + remove_trailing_slash(server_root_filepath))
+    maybe_print('   args     = ' + str(args), '\n')
 
     if not args.nativeapp:
         try:
@@ -1197,6 +1196,9 @@ def main():
     chromium_nativeapp_args = ' --user-data-dir="' + os.path.join(os.path.expanduser('~'), 'quadplay_session') + '" --no-user-gesture-required '
     quadplay_session = os.path.join(os.path.expanduser('~'), 'quadplay_session')
     if not os.path.exists(quadplay_session): os.mkdir(quadplay_session)
+
+    if args.gamepath == '':
+        maybe_print('\nLoading default game. You can supply the URL or local relative path to your game on\nthe command line, for example "tools/quadplay-server foo/mygame", to load it directly.\n')
 
     if isWindows:
         if browser_filepath and args.nativeapp:

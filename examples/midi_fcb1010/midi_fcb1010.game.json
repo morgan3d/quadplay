@@ -1,0 +1,135 @@
+{
+    "title": "MIDI FCB1010",
+    "developer": "Casual Effects",
+    "copyright": "©2023 Morgan McGuire",
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "font": "quad://fonts/deja-8.font.json",
+        "blip_sound": "quad://sounds/blip-04.sound.json",
+        "button_font": "quad://fonts/novarese-bold-10.font.json",
+        "device_sprite": "device.sprite.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "dual_dpad": false,
+    "midi_sysex": false,
+    "description": "Description of your game in about 100 characters.",
+    "constants": {
+        "BUTTON_SIZE": {
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "19.5"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "44"
+                }
+            },
+            "nudge": {
+                "x": "+1",
+                "y": "-1"
+            }
+        },
+        "NUMBER_POS": {
+            "type": "xy",
+            "value": {
+                "x": {
+                    "type": "number",
+                    "value": "250"
+                },
+                "y": {
+                    "type": "number",
+                    "value": "59"
+                }
+            }
+        },
+        "EXPRESSION_POS": {
+            "type": "array",
+            "value": [
+                {
+                    "type": "xy",
+                    "value": {
+                        "x": {
+                            "type": "number",
+                            "value": "292"
+                        },
+                        "y": {
+                            "type": "number",
+                            "value": "53"
+                        }
+                    },
+                    "nudge": {
+                        "x": "+1",
+                        "y": "-1"
+                    }
+                },
+                {
+                    "type": "xy",
+                    "value": {
+                        "x": {
+                            "type": "number",
+                            "value": "350"
+                        },
+                        "y": {
+                            "type": "number",
+                            "value": "53"
+                        }
+                    },
+                    "nudge": {
+                        "x": "+1",
+                        "y": "-1"
+                    }
+                }
+            ]
+        },
+        "BRIGHT": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "92%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "87%"
+                }
+            }
+        },
+        "LED_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "0%"
+                }
+            }
+        }
+    },
+    "screenshot_tag": "MIDI FCB1010"
+}

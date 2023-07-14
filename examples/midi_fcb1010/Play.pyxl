@@ -1,0 +1,60 @@
+Play
+════════════════════════════════════════════════════════════════════════
+// This example requires a Behringer FCB1010
+// MIDI controller in the default configuration
+// with firmware 2.4 or later.
+//
+// Tapping a button or moving an expression pedal
+// will update the display of the device on screen
+// to match.
+
+
+// Last PROGRAM_CHANGE message program index
+let last_pc = 0
+
+// Values of the expression pedals
+let expression = [0, 0]
+
+def draw_light(pos):
+    draw_disk(pos, 3, BRIGHT, LED_COLOR)
+    
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+set_background(#BBC)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+for msg in midi.message_queue:
+    if msg.type == "PROGRAM_CHANGE":
+        last_pc = msg.program
+    else if msg.type == "CONTROL_CHANGE":
+        const index = if msg.controller == 27 then 0 else 1
+        expression[index] = msg.data / 127
+
+// Background
+draw_sprite(device_sprite, ½ SCREEN_SIZE)
+
+// Button LED
+const button_index = last_pc mod 10
+const bank_index = ⌊last_pc / 10⌋
+const shift = if button_index < 5 then 1 else 0
+const button_pos = BUTTON_SIZE * xy(2 (button_index mod 5) - shift, 1.15 shift) + xy(46, 90)
+draw_light(button_pos - xy(5, 17))
+
+// Expression pedal
+for pos at i in EXPRESSION_POS:
+    draw_light(pos)
+    draw_rect(pos + xy(0, 100 (100% - expression[i]) + 9), xy(46, 3), BRIGHT, LED_COLOR)
+
+// Bank display
+draw_text({
+    font: font,
+    pos: NUMBER_POS,
+    text: "0" + bank_index,
+    color: BRIGHT,
+    outline: LED_COLOR,
+    x_align: "right"})

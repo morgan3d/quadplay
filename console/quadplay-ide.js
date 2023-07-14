@@ -83,6 +83,7 @@ let allow_bloom = true;
     }
     console.log('\n\n\n' + banner.join('\n') + '\n\nquadplay✜ version ' + version + '\n©2019-2023 Morgan McGuire\nLicensed as GPL 3.0\nhttps://www.gnu.org/licenses/gpl-3.0.en.html\n' +
                 '\nSecure Context: ' + window.isSecureContext +
+                '\nQuadplay Server: ' + isQuadserver +
                 '\nBrowser: ' + browserName +
                 '\nNative App: ' + nativeapp +
                 '\nIDE: ' + useIDE,
@@ -2984,13 +2985,16 @@ function showOpenGameDialog() {
                 document.getElementById('openGameType').value = 'builtins';
             }
         }
+        // Show/hide the mine option depending on whether it is populated
+        document.getElementById('openMineOption').style.display = (json.mine && json.mine.length > 0) ? '' : 'none';
         onOpenGameTypeChange();
     });
 }
 
 
 /* Called to regenerate the openGameList display for the add asset dialog
-   when the type of asset to be added is changed by the user. */
+   when the type of game to be loaded is changed by the user. Also called
+   for generating the initial list.*/
 function onOpenGameTypeChange() {
     const t = document.getElementById('openGameType').value;
     let s = '<ol id="openGameListOL" class="select-list" style="font-family: Helvetica, Arial; font-size: 120%; white-space: normal">\n';
@@ -5014,7 +5018,11 @@ navigator.getGamepads();
 
 // Initialize MIDI without requiring sysex, which can prompt.
 // If the game needs sysex then onPlay will re-initialize.
-navigator.requestMIDIAccess({sysex: false, software: true}).then(onMIDIInitSuccess, onMIDIInitFailure);
+try {
+    navigator.requestMIDIAccess({sysex: false, software: true}).then(onMIDIInitSuccess, onMIDIInitFailure);
+} catch (e) {
+    console.log(e);
+}
 
 /* Called from the quit menu item. Forces closing the server for a nativeapp,
    which macOS can't detect because the Chromium browser doesn't close on that
