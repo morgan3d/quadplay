@@ -107,6 +107,11 @@
             "description": "Interactive demonstration of the maze generation parameters"
         },
         {
+            "url": "quad://examples/midi_8x8/",
+            "title": "MIDI 8x8 Touch Jam Demo",
+            "description": "Demonstration of the 8x8 MIDI controller abstraction API used for the 8x8 Touch Jam"
+        },
+        {
             "url": "quad://examples/midi_fcb1010/",
             "title": "MIDI FCB1010",
             "description": "Description of your game in about 100 characters."

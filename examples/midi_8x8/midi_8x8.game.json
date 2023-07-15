@@ -1,0 +1,44 @@
+{
+    "title": "MIDI 8x8 Touch Jam Demo",
+    "developer": "CasualEffects",
+    "copyright": "©2023 Morgan McGuire",
+    "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
+    "packages": [],
+    "scripts": [
+        "quad://scripts/midi_8x8.pyxl"
+    ],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "font": "quad://fonts/deja-8.font.json",
+        "bounce_sound": "quad://sounds/blip-04.sound.json",
+        "kick_drum_sound": "quad://sounds/drum-00.sound.json",
+        "closed_hihat_sound": "quad://sounds/drum-01.sound.json",
+        "snare_drum_sound": "quad://sounds/drum-03.sound.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "Demonstration of the 8x8 MIDI controller abstraction API used for the 8x8 Touch Jam",
+    "constants": {
+        "tempo": {
+            "type": "number",
+            "value": "200",
+            "description": "In beats per minute",
+            "min": 30,
+            "max": 240,
+            "format": "",
+            "quantum": 1
+        }
+    },
+    "screenshot_tag": "midi8x8",
+    "y_up": true,
+    "midi_sysex": true
+}

@@ -1,0 +1,557 @@
+/* 
+midi_8x8.pyxl
+Copyright 2023 Morgan McGuire 
+Available as open source under the MIT License 
+https://opensource.org/license/mit/
+
+quadplay✜ supports ALL MIDI I/O devices through the `midi` and
+`midi_send_raw()` APIs. This script simplifies and standardizes
+MIDI 8x8 grid controller pads with RGB LEDs. A 9th row and 
+column are supported for output only but are not guaranteed to
+be present on a physical device, so should not be used for
+essential gameplay information.
+
+Supported devices:
+
+  - Novation Launchpad Pro MK3
+  - Novation Launchpad X 
+  - Novation Launchpad Mini MK3
+  - Ableton Push 1 (untested)
+  - Ableton Push 2
+  - Ableton Push 3
+  - LinnStrument 128
+  - Akai APC Mini mk2 (untested)
+
+API:
+
+  - Basic:
+      - `make_device()`
+      - `device.input[x][y] == {on, pressure, velocity, pressed, released}`
+      - `device.output[x][y] = color`
+      - `device_send_output(device)`
+  - Emulator:
+      - `make_device(type default "Launchpad Mini MK3")`
+      - `device_emulate_input(device)`
+      - `device_visualize(device)`
+*/
+
+
+/* If no physical device is found, the visualizer will emulate
+   the specified device. `type` options are:
+
+   "Launchpad Pro MK3", "Launchpad X", "Launchpad Mini MK3", 
+   "Ableton Push 1", "Ableton Push 2", "Ableton Push 3", 
+   "LinnStrument128", "APC Mini mk2" */
+def make_device(type default "Launchpad Mini MK3"):
+    const device = {
+        
+        type: type,
+        
+        // Aspect ratio the physical device button pad elements
+        // 1:1 for Novation and LinnStrument,
+        // 50:36 for Push
+        pad_aspect: xy(1, 1),
+        
+        // If false, only a central disk lights up
+        uniform_light: true,
+                
+        // Gutter size relative to button size
+        gutter_scale: 0.15,
+        
+        // Is there a diagonal center marker
+        center_cutout: true,
+        
+        // Is the upper-right corner an rgb LED (if it exists)?
+        // false means it is grayscale
+        corner_is_rgb: false,
+        
+        // (0, 0) is the lower left
+        // The 9th row and column are labelled
+        // buttons and so do not display as a solid square.
+        // They may not be present on all devices.
+        output: make_array(xy(9, 9), #000, clone),
+        
+        // This is equivalent to input_port.note[]
+        // The 9th row and column are *always* empty,
+        // (even for devices that could support them!)
+        // to make all devices consistent. They are present
+        // to make iteration easier.
+        input: _make_input_array(),
+        
+        // Underlying MIDI ports. Games do not need these
+        // unless breaking the device abstraction to use
+        // capabilities of a specific device
+        input_port: ∅,
+        output_port: ∅,        
+    }
+    
+    _device_configure_visualizer(device, type)
+    
+    return device
+
+
+def _make_input_array():
+    return make_array(xy(9, 9), {on: 0, pressed: 0, released: 0, velocity: 0, pressure: 0}, clone)    
+
+
+def _device_configure_visualizer(device, type):
+    device.corner_is_rgb = true
+    device.pad_aspect = xy(1, 1)
+    device.gutter_scale = 0.15
+    device.center_cutout = true
+    device.has_row_9 = true
+    device.uniform_light = true
+    
+    if type == "LinnStrument128":
+        device.corner_is_rgb = false
+        device.gutter_scale = 0.01
+        device.center_cutout = false
+        device.has_row_9 = false
+        device.uniform_light = false
+        
+    else if type == "Ableton Push 3":
+        device.corner_is_rgb = false
+        device.pad_aspect = xy(50, 36)
+        device.gutter_scale = 0.01
+        device.center_cutout = false
+        
+    else if type == "Ableton Push 1" or type == "Ableton Push 2":
+        device.corner_is_rgb = false
+        device.pad_aspect = xy(50, 36)
+        
+    else if type == "APC Mini mk2":
+        // Mini mk2
+        device.corner_is_rgb = false
+        device.pad_aspect = xy(2, 1)
+        device.has_row_9 = false
+        
+    else if type == "Launchpad Mini MK3":
+        // nothing to do
+    else if type == "Launchpad X":
+        // nothing to do
+    else if type == "Launchpad Pro MK3":
+        // nothing to do
+    else:
+        assert(false, "Unrecognized device type: " + type)
+
+
+/* Optionally call at the start of the frame to emulate
+   input. Pair with device_visualize at the end of the frame.*/
+def device_emulate_input(device):  
+    if device.input_port ≠ ∅: return
+
+    const GRID_POS = ½ SCREEN_SIZE + xy(0, -8)
+    
+    const PAD_SIZE    = floor(xy(20, 20) * device.pad_aspect / max_component(device.pad_aspect))
+    const GUTTER_SIZE = max(device.gutter_scale * max_component(PAD_SIZE), if device.gutter_scale > 0 then 1 else 0) 
+    const PAD_SPACING = floor(PAD_SIZE + GUTTER_SIZE)
+    const PAD_OFFSET  = round(GRID_POS - 4 PAD_SPACING) + xy(2, 2)
+
+    // Compute the touch locations in grid space. Each
+    // is the integer x + 8 y
+    const touch_index_array = []
+    
+    // Get all touches, so that on a phone or tablet 
+    // this is nearly as functional as a physical MIDI
+    // 8x8 pad
+    
+    for t in device_control("multitouch"):
+        const touch_index = ⌊(t.xy - PAD_OFFSET) / PAD_SPACING⌋
+        if max_component(touch_index) < 8 and min_component(touch_index) ≥ 0:
+            push(touch_index_array, touch_index.x + 8 touch_index.y)
+                
+    const input = device.input
+    
+    const off = {on: 0, pressed: 0, released: 0, velocity: 0, pressure: 0}
+    for x < 8:
+        for y < 8:
+            const cell = input[x][y]
+            const touch_on = contains(touch_index_array, x + 8 y)
+            
+            if touch_on:
+                if not cell.on:
+                    // Press
+                    cell.pressed = 1
+                    cell.velocity = 127
+                else:
+                    // Hold
+                    cell.pressed = 0
+                cell.on += 1
+                cell.released = 0
+            else if cell.on:
+                // Release
+                cell.on = 0
+                cell.released = 1
+                cell.presssed = 0
+                cell.velocity = 0
+            else:
+                // Normal (which might be one frame
+                // after release)
+                cell.released = 0
+                
+
+
+/* Optionally call to visualize the device on screen.
+   Assumes the background is black. Set the camera
+   or transform to move. See also `device_emulate_input()`*/
+def device_visualize(device):
+    const GRID_POS = ½ SCREEN_SIZE + xy(0, -8)
+    
+    const PAD_SIZE    = floor(xy(20, 20) * device.pad_aspect / max_component(device.pad_aspect))
+    const GUTTER_SIZE = max(device.gutter_scale * max_component(PAD_SIZE), if device.gutter_scale > 0 then 1 else 0) 
+    const PAD_SPACING = floor(PAD_SIZE + GUTTER_SIZE)
+    const PAD_OFFSET  = round(GRID_POS - 4 PAD_SPACING) + xy(2, 2)
+
+    const OFF_COLOR = #333
+    const diameter = min_component(PAD_SIZE)
+    
+    const output = device.output
+    
+    for x < 9:
+        for y < 9:
+            const pos = xy(x, y) * PAD_SPACING + PAD_OFFSET
+            let c = output[x][y]
+            
+            if max_component(c) < 1/16: c = OFF_COLOR
+            
+            if max(x, y) ≠ 8:
+                // Regular buttons
+                if device.uniform_light:
+                    draw_corner_rect(pos, PAD_SIZE, c)
+                else:
+                    draw_corner_rect(pos, PAD_SIZE, lerp(OFF_COLOR, c, 15%))
+                    draw_disk(pos + ½ PAD_SIZE, 40% diameter, c)
+                    if max_component(c) > OFF_COLOR.b:
+                        draw_disk(pos + ½ PAD_SIZE, 22% diameter, lerp(c, #FFF, 60%))
+                    
+                    
+            else if not (y == 8 and not device.has_row_9):
+                // 9th row/col buttons
+                if x == 8 and y == 8 and not device.corner_is_rgb:
+                    c = gray(dot(#8F2, c) * (0xFF / (0x88 + 0xFF + 0x02)))
+                draw_corner_rect(pos, PAD_SIZE * xy(if x == 8 then ½ else 1, if y == 8 then ½ else 1), ∅, c)
+    
+    if device.center_cutout:
+        draw_rect(GRID_POS, xy(9, 9), #000, ∅, 45°)
+        draw_rect(GRID_POS + xy(0, 1), xy(9, 9), #000, ∅, 45°)
+
+
+
+// Call once per frame to discover new devices. Automatically
+// called from device_send_output 
+def _device_discover(device):
+
+    // Handle disconnection gracefully    
+    if device.input_port and device.input_port.state == "disconnected":
+        debug_print(device.input_port.name, "disconnected")
+        device.input_port = ∅
+    
+    if device.output_port and device.output_port.state == "disconnected":
+        debug_print(device.output_port.name, "disconnected")
+        device.output_port = ∅
+        device._send_output = ∅
+    
+    if device.input_port and device.output_port:
+        // Already discovered
+        return
+
+    // Find the MIDI device. Ableton and Novation devices have multiple ports
+    for port in midi.output_port_array:
+        if ((contains(port.name, "Launchpad") and contains(port.name, "MIDI")) or
+             contains(port.name, "LinnStrument") or
+             contains(port.name, "APC Mini") or
+            (contains(port.name, "Ableton") and contains(port.name, "User"))):
+            debug_print("Found compatible 8×8 output device: ", port)
+            _device_init_output(device, port)
+            break
+    
+    
+    for port in midi.input_port_array:
+        if ((contains(port.name, "Launchpad") and contains(port.name, "MIDI")) or
+             contains(port.name, "LinnStrument") or
+             contains(port.name, "APC Mini") or
+            (contains(port.name, "Ableton") and contains(port.name, "User"))):
+                
+            debug_print("Found compatible 8×8 input device: ", port)
+            _device_init_input(device, port)
+            break    
+    
+    
+
+// Called once per device connection by the API
+def _device_init_input(device, port):
+    device.input_port = port
+    
+    // Map input notes
+    if contains(device.input_port.name, "Launchpad"):
+        for x < 8:
+            for y < 8:
+                device.input[x][y] = device.input_port.note[(x + 1) + 10 (y + 1)]
+
+    else if contains(device.input_port.name, "LinnStrument"):
+
+        for x < 8:
+            for y < 8:
+                // Control buttons are column 0, 1-25 are the note columns
+                // To center, we use 5-13
+                device.input[x][y] = device.input_port.channel[y + 1].note[x + 5]
+
+    else if contains(device.input_port.name, "Ableton"):
+
+        for x < 8:
+            for y < 8:
+                // Lower left is nn36, goes up linearly left to right bottom to top
+                device.input[x][y] = device.input_port.note[x + 8 y + 36]
+
+    else if contains(device.input_port.name, "APC"):
+        // https://6be54c364949b623a3c0-4409a68c214f3a9eeca8d0265e9266c0.ssl.cf2.rackcdn.com/989/documents/APC40Mk2_Communications_Protocol_v1.2.pdf
+        
+        // The original mini has a different API and only has red/yellow/green
+        // buttons. See: https://github.com/TomasHubelbauer/akai-apc-mini
+        
+        for x < 8:
+            for y < 8:
+                // Lower left is nn00, goes up linearly left to right bottom to top
+                // Port 1, channel 0 in note mode
+                device.input[x][y] = device.input_port.note[x + 8 y]
+
+
+
+// Called once per device connection by the API
+def _device_init_output(device, port):
+    device.output_port = port
+    
+    if contains(device.output_port.name, "Launchpad"):
+        device._send_output = _novation_send_output        
+        _device_configure_visualizer(device, "Launchpad Mini MK3")
+        
+        // Enter programmer mode
+        _midi_send_raw_with_check(device, [0xF0, 0x00, 0x20, 0x29, 0x02, 0x0D, 0x0E, 0x01, 0xF7])
+        
+    else if contains(device.output_port.name, "LinnStrument"):
+        // https://github.com/rogerlinndesign/linnstrument-firmware/blob/master/user_firmware_mode.txt
+
+        device._send_output = _linnstrument_send_output        
+        _device_configure_visualizer(device, "LinnStrument128")
+        
+        // Enter User Firmware Mode: "value 1 for MIDI NRPN 245 on any MIDI channel"
+        _midi_send_raw_with_check(device, [
+            0xB0, 0x62, 117,// = 245 mod 128
+            0xB0, 0x63, 1,// = ⌊245 / 128⌋
+            0xB0, 0x26, 1,
+            0xB0, 0x06, 0])
+        
+    else if contains(device.output_port.name, "Ableton"):
+        // Ableton Push
+        // https://github.com/Ableton/push-interface/blob/master/doc/AbletonPush2MIDIDisplayInterface.asc
+        
+        device._send_output = _ableton_send_output
+        _device_configure_visualizer(device, if contains(device.output_port.name, "Push 3") then "Ableton Push 3" else "Ableton Push 2")
+        
+        // Enter User mode
+        _midi_send_raw_with_check(device, [0xF0, 0x00, 0x21, 0x1D, 0x01, 0x01, 0x0A, 0x01, 0xF7])
+        
+        // Sysex for send palette
+        for i < 64:
+            todo("Reduce to a single send call if possible")
+            const palette_cmd = [0xF0, 0x00, 0x21, 0x1D, 0x01, 0x01, 0x03]
+            // Index as R2G2B2 color, and then convert to 8-bit unorm
+            const R = min(⌊256 * ⅓ ((i bitshr 4) ∩ 0b11)⌋, 255) 
+            const G = min(⌊256 * ⅓ ((i bitshr 2) ∩ 0b11)⌋, 255) 
+            const B = min(⌊256 * ⅓ (i ∩ 0b11)⌋, 255) 
+
+            // For grayscale LEDs
+            const brightness = min(⌊256 i / 63⌋, 255)
+            
+            push(palette_cmd, i, 
+                R bitand 0b01111111, // R LSB
+                R bitshr 7,          // R MSB
+                G bitand 0b01111111, // G LSB
+                G bitshr 7,          // G MSB
+                B bitand 0b01111111, // B LSB
+                B bitshr 7,          // B MSB
+                brightness     bitand 0b01111111, // White LSB
+                brightness     bitshr 7)          // White MSB
+  
+            // End sysex
+            push(palette_cmd, 0xF7)
+            
+            _midi_send_raw_with_check(device, palette_cmd)
+            
+    else if contains(device.output_port.name, "APC"):
+        // APC mini mk2
+        // https://cdn.inmusicbrands.com/akai/attachments/APC%20mini%20mk2%20-%20Communication%20Protocol%20-%20v1.0.pdf
+        device._send_output = _apc_send_output
+        _device_configure_visualizer(device, "APC Mini mk2")
+
+        // Initialize
+        _midi_send_raw_with_check(device, [0xF0, 0x47, 0x7F, 0x4F, 0x60, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0xF7])
+
+
+/* Call once per frame at the end to write the output to the device. */
+def device_send_output(device):
+    if device.output_port and device._send_output:
+        device._send_output(device)
+    else:
+        _device_discover(device)
+    
+
+    
+def _apc_send_output(device):
+    // https://cdn.inmusicbrands.com/akai/attachments/APC%20mini%20mk2%20-%20Communication%20Protocol%20-%20v1.0.pdf
+    // Number of bytes of data
+    const N = 64 * 8
+    const msg = [0xF0, 0x47, 0x7F, 0x4F, 0x24, N bitshr 7, N ∩ 0b01111111]
+    
+    // RGB grid
+    for x < 8:
+        const column = device.output[x]
+        for y < 8:
+            // Pad identifier
+            const c = column[y]
+            const R = MIN(FLOOR(MUL(256, c.r)), 255)
+            const G = MIN(FLOOR(MUL(256, c.g)), 255)
+            const B = MIN(FLOOR(MUL(256, c.b)), 255)
+            push(msg, x + 8 y, x + 8 y, R bitshr 7, R ∩ 0b01111111, G bitshr 7, G ∩ 0b01111111, B bitshr 7, B ∩ 0b01111111)
+            
+    push(msg, 0xF7)
+    
+    // Single-color LEDs for 9th column
+    const column = device.output[8]
+    for y < 8:
+        push(msg, 0x90, 0x70 + y, MIN(FLOOR(128 * column[y]), 127))
+    
+    _midi_send_raw_with_check(device, msg)
+
+
+
+def _ableton_send_output(device):
+    // https://github.com/Ableton/push-interface/blob/master/doc/AbletonPush2MIDIDisplayInterface.asc#setting-led-colors
+    def unorm2(x):
+        return MIN(FLOOR(MUL(x, 4)), 3)
+    
+    def rgb_to_index(color):
+        // 6-bit RGB color palette
+        return (unorm2(color.r) bitshl 4) ∪ (unorm2(color.g) bitshl 2) ∪ unorm2(color.b)
+        
+    // Center grid
+    for x < 8:
+        const column = device.output[x]
+        for y < 8:
+            midi_send_raw(device.output_port, [0x90, 36 + 8 y + x, rgb_to_index(column[y])])
+            todo("Can Ableton use a single message for the whole display?")
+            todo("Can Ableton use running status to reduce the message count?")
+
+    // Border LEDs on control buttons
+    for i < 8:
+        // Last column
+        midi_send_raw(device.output_port, [0xB0, 36 + i, rgb_to_index(device.output[8][i])])
+        // Last row
+        midi_send_raw(device.output_port, [0xB0, 20 + i, rgb_to_index(device.output[i][8])])
+    
+    // Grayscale
+    const brightness = min(⌊128 dot(#FFF, device.output[8][8]) / 3⌋, 127)
+    _midi_send_raw_with_check(device, [0xB0, 28, brightness])
+
+
+
+def _linnstrument_send_output(device):
+    // https://github.com/rogerlinndesign/linnstrument-firmware/blob/master/midi.txt
+    
+    const color_lookup = _linnstrument_send_output.color_lookup
+        
+    // Use running status to avoid sending 0xB0 (control change) for every
+    // single element
+    const msg = [0xB0]
+    
+    // Show 9 cols; there are not 9 rows on LinnStrument.
+    for x < 9:
+        // Set the column
+        push(msg, /* 0xB0, */ 20, x + 5)
+        
+        for y < 8:
+            
+            // Find the closest color index
+            const color = device.output[x][y]
+            
+            // Search for the best color match
+            let diff = ∞
+            let c = 1
+            for 1 ≤ i < size(color_lookup):
+                const table_color = color_lookup[i]
+                const d = ‖color_lookup[i] - color‖
+                if d < diff:
+                    c = i
+                    diff = d
+            
+            push(msg, /*0xB0,*/ 21, y,
+                      /* 0xB0,*/ 22, c)
+            
+    // Send whole screen as one message
+    _midi_send_raw_with_check(device, msg)
+
+
+// Maps R1G1B1_table[r1g1b1] = LinnStrument
+// color index. Cannot produce Orange, Lime,
+// or Pink special colors.
+_linnstrument_send_output.R1G1B1_table = [
+    7, // 0b000 = Black
+    5, // 0b001 = Blue
+    3, // 0b010 = Green
+    4, // 0b011 = Cyan
+    1, // 0b100 = Red
+    6, // 0b101 = Magenta
+    2, // 0b110 = Yellow
+    8  // 0b111 = White
+]
+
+_linnstrument_send_output.color_lookup = [
+    ∅,
+    rgb(1, 0, 0), // Red = 1
+    rgb(1, 1, 0), // Yellow = 2
+    rgb(0, 1, 0), // Green = 3
+    rgb(0, 1, 1), // Cyan = 4        
+    rgb(0, 0, 1), // Blue = 5
+    rgb(1, 0, 1), // Magenta = 6
+    rgb(0, 0, 0), // Black = 7
+    rgb(1, 1, 1), // White = 8
+    rgb(1, ½, 0), // Orange = 9
+    rgb(½, 1, 0), // Lime = 10
+    rgb(1, ½, ¾)  // Pink = 11
+]  
+                
+
+
+def _novation_send_output(device):
+    // Map γ-encoded floating point to 7-bit unsigned normalized fixed point [0, 127] interval
+    def unorm7(v):
+        // Increase contrast, since there is no black
+        // possible on the display with unlit white buttons
+        v = MUL(SUB(v, 0.1), 1.0 / 0.9)
+        return MIN(0x7F, FLOOR(MUL(0x80, MUL(v, v))))    
+
+    const msg = [0xF0, 0x00, 0x20, 0x29, 0x02, 0x0D, 0x03]
+    const pos = xy(0, 0)
+
+    for 1 ≤ x ≤ 9:
+        const col = device.output[x - 1]
+        for 1 ≤ y ≤ 9:
+            const c = col[SUB(y, 1)]    
+            push(msg, 0x03, MAD(10, y, x), unorm7(c.r), unorm7(c.g), unorm7(c.b))
+    push(msg, 0xF7)
+
+    _midi_send_raw_with_check(device, msg)
+        
+        
+
+// Sends the message and resets the device if the
+// status check fails. Returns the status failure as well.
+def _midi_send_raw_with_check(device, msg):  
+    const status = midi_send_raw(device.output_port, msg)
+    if status ≠ "ok":
+        debug_print("MIDI Device Error: ", status)
+        device.output_port = ∅
+        device.input_port = ∅
+        device.input = _make_input_array()
+    return status
+        
