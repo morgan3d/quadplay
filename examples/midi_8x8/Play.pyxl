@@ -1,170 +1,26 @@
 Play
 ════════════════════════════════════════════════════════════════════════
-/*
-
-8x8 Touch Jam requirements:
-
-- Must run in a web browser 
-- Must use 8x8 RGB LED touch grid I/O
-- Must support the Ableton, Novation, Akai, and LinnStrument 
-  devices to the same level provided by midi_8x8.pyxl
-  
-
-Encouraged:
-
-- Make gameplay primarily use the device touch input and output
-  plus audio, with the computer screen used mainly for instructions
-  instead of gameplay
-- Support emulation on screen, for people without physical MIDI devices.
-  device_visualize() and device_send_output() simplify emulation.
-- Provide a single player mode
-- Explore directions other than direct music synthesis
-
-Discouraged:
-
-- While you may use other APIs and tools than quadplay and device.pyxl.
-  quadplay is the easy way to satisfy the requirements, and the goal 
-  of this jam is supporting quadplay
-- You may use additional I/O devices (gamepads, mouse, keyboard, other MIDI)
-  so long as the game *also* requires an 8x8 RGB LED MIDI controller.
-  Embracing the limitations and possibilities of the 8x8 grid is the
-  best way to embrace the theme of the jam
-
-
-
-The following is a sample program showing how to set up the 
-device, set device pad colors, read physical device input, 
-use the multitouch screen emulator, play audio, and
-convert from frame time to music beat time.
-*/
-
-const device = make_device()
-
-
-const ball = {pos: xy(3, 0), vel: xy(0.1, 0.08)}
-
-
-def get_pixel(pos):
-    const x = round(pos.x)
-    const y = round(pos.y)
-    if x ≥ 0 and y ≥ 0 and x < 8 and y < 8: 
-        return rgb(device.output[x][y])
-    else:
-        return #000
-
-
-def set_pixel(pos, color):
-    const x = round(pos.x)
-    const y = round(pos.y)
-    if x ≥ 0 and y ≥ 0 and x < 8 and y < 8: device.output[x][y] = color
-
-
-def draw_example_graphics(device):
-    // Border (not guaranteed to be visible on all devices):
-    for i < 8:
-        device.output[i][8] = #000
-        device.output[8][i] = #000
-    device.output[8][8] = #000
-    
-    const BACKGROUND_RATE = 10
-    
-    const f = ⌊mode_frames * BACKGROUND_RATE / 60⌋
-    
-    // Animation
-    for x < 8:
-        let shadow = false
-        for i < 8:
-            const y = 7 - i
-            
-            let color = #000
-            
-            if device.input[x][y].on:
-                // Light up the row and column borders when
-                // a pad is pressed
-                device.output[8][y] = #FFF
-                device.output[x][8] = #FFF
-                color = #FFF
-                shadow = true
-            
-            else if not shadow:
-                const h = ½ noise(3, ¼ x, ¼ (y + f)) + ½
-                color = rgb(hsv(h, 100%, 100%))
-    
-            device.output[x][y] = color  
-    
-    ////////////////////////////////////////
-    // Animated ball
-    ball.pos += ball.vel
-    for axis in "xy":
-        if ball.pos[axis] < 0.25 and ball.vel[axis] < 0: 
-            ball.vel[axis] =  |ball.vel[axis]|
-            play_sound({sound: bounce_sound, pitch: random(52%, 55%), pos: ball.pos * ⅐ SCREEN_SIZE})
-            
-        if ball.pos[axis] > 6.75 and ball.vel[axis] > 0:
-            ball.vel[axis] = -|ball.vel[axis]|
-            play_sound({sound: bounce_sound, pitch: random(52%, 55%), pos: ball.pos * ⅐ SCREEN_SIZE})
-
-    set_pixel(ball.pos, #FFF)
-    
-    // Dark halo to make the ball more visible
-    for sgn in [-1, +1]:
-        for axis in "xy":
-            let P = xy(ball.pos)
-            P[axis] += sgn
-            set_pixel(P, lerp(#000, get_pixel(P), 40%))
-        
-        for flip in [-1, +1]:
-            let P = ball.pos + xy(sgn, sgn * flip)
-            set_pixel(P, lerp(#000, get_pixel(P), 66%))
-    
-    
-    // ♪ count this measure
-    
-    // frame * (b/m / (60 s/m * 60 frame/s))
-    const half_beats = ⌊mode_frames * tempo / (60 * 60)⌋
-    if ⌊(mode_frames - 1) * tempo / (60 * 60)⌋ ≠ half_beats:
-        // Enter this note
-        const measure = ⌊⅛ half_beats⌋ + 1
-        // Switch to music notation
-        const count = ½ (half_beats mod 8) + 1
-
-        play_sound(closed_hihat_sound)        
-        if count == 1 or count == 2.5:
-            play_sound(kick_drum_sound)
-        if count == 2 or count == 3.5:
-            play_sound(snare_drum_sound)
+// See jam_notes.md.html and midi_8x8.pyxl for more info
             
 enter
 ────────────────────────────────────────────────────────────────────────
+device = make_device()
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
 
+// Emulator input (optional)
 device_emulate_input(device)
 
-draw_example_graphics(device)
-        
+// Run the demo code
+demo()
 
-// Visualize on screen
+// Visualize on screen (optional)
 device_visualize(device)
 
 // Visualize on device
 device_send_output(device)
 
-const text_args = {font: font, color: #FFF, shadow: #000, outline: #000, 
-    x_align: "center", y_align: "bottom"}
-    
-draw_text({
-    …text_args,
-    pos: xy(½ SCREEN_SIZE.x, 0), 
-    text: device.type + (if device.output_port then " Connected" else " Emulator")})
 
-if not device.output_port: 
-    draw_text({
-        …text_args,
-        pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 1), 
-        y_align: "top", 
-        text: "Touch the screen or connect a Launchpad, Push, or LinnStrument MIDI Controller"})
-    
     

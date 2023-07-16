@@ -5,19 +5,26 @@
     "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
     "packages": [],
     "scripts": [
-        "quad://scripts/midi_8x8.pyxl"
+        "quad://scripts/midi_8x8.pyxl",
+        "demo.pyxl"
     ],
     "modes": [
         "Play"
     ],
     "start_mode": "Play",
-    "docs": [],
+    "docs": [
+        {
+            "name": "jam_notes",
+            "url": "jam_notes.md.html"
+        }
+    ],
     "assets": {
         "font": "quad://fonts/deja-8.font.json",
-        "bounce_sound": "quad://sounds/blip-04.sound.json",
+        "bounce_sound": "quad://sounds/blip-03.sound.json",
         "kick_drum_sound": "quad://sounds/drum-00.sound.json",
         "closed_hihat_sound": "quad://sounds/drum-01.sound.json",
-        "snare_drum_sound": "quad://sounds/drum-03.sound.json"
+        "snare_drum_sound": "quad://sounds/drum-03.sound.json",
+        "paddle_sound": "quad://sounds/hit-05.sound.json"
     },
     "version": 0,
     "min_players": 1,
@@ -36,6 +43,23 @@
             "max": 240,
             "format": "",
             "quantum": 1
+        },
+        "wall_color": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "82%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "29%"
+                }
+            }
         }
     },
     "screenshot_tag": "midi8x8",
