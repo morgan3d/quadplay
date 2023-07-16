@@ -1,0 +1,171 @@
+/* Psychedelic multitouch PONG-like demo */
+
+
+// Initialized in Play.enter(), could be const
+// and initialized right here
+let device
+
+
+const ball = {
+    color: #FFF,
+    pos: xy(3, 0), 
+    vel: xy(0.10, 0.07)
+}
+
+
+def get_pixel(pos):
+    const x = round(pos.x)
+    const y = round(pos.y)
+    if x ≥ 0 and y ≥ 0 and x < 8 and y < 8: 
+        return rgb(device.output[x][y])
+    else:
+        return #000
+
+
+def set_pixel(pos, color):
+    const x = round(pos.x)
+    const y = round(pos.y)
+    if x ≥ 0 and y ≥ 0 and x < 8 and y < 8: device.output[x][y] = color
+
+
+def clear_border():
+    // Border (not guaranteed to be visible on all devices):
+    for i < 8:
+        device.output[i][8] = #000
+        device.output[8][i] = #000
+    device.output[8][8] = #000
+
+
+
+def draw_background():
+    const BACKGROUND_RATE = 10
+    
+    const f = ⌊mode_frames * BACKGROUND_RATE / 60⌋
+    
+    for x < 8:
+        for y < 8:
+            // Noise function
+            const n = ½ noise(3, ¼ x, ¼ (y + f)) + ½
+            
+            // Hue: shift away from greens 
+            // 0 = red
+            // ⅓ = green
+            // ⅔ = blue
+            let h = loop(55% n + 45%)
+            device.output[x][y] = rgb(hsv(h, 60%, 35%))  
+
+
+            
+def ball_simulate(ball):
+    const wall_args   = {sound: bounce_sound, volume: 300%, pitch: random(98%, 100%), pos: ball.pos * ⅐ SCREEN_SIZE}
+    const paddle_args = {sound: paddle_sound, volume: 200%, pitch: random(98%, 100%), pos: ball.pos * ⅐ SCREEN_SIZE}
+    
+    // Move along each axis, looking
+    // for collisions
+    with pos, vel in ball:
+        for axis in "xy":
+            pos[axis] += vel[axis]
+       
+            // Back up and reverse direction on box collision, which
+            // must be due to ball movement.
+            const index = clamp(round(pos), xy(0, 0), xy(7, 7))
+            
+            // Hit paddle
+            if device.input[index.x][index.y].on:
+                // Undo the movement and reflect the velocity
+                pos[axis] -= vel[axis]
+                vel[axis] = |vel[axis]| * sign_nonzero(pos[axis] - index[axis])
+                play_sound(paddle_args)
+            
+            // Hit walls
+            if ball.pos[axis] < 0.25 and ball.vel[axis] < 0: 
+                ball.vel[axis] =  |ball.vel[axis]|
+                play_sound(wall_args)
+                
+            if ball.pos[axis] > 6.75 and ball.vel[axis] > 0:
+                ball.vel[axis] = -|ball.vel[axis]|
+                play_sound(wall_args)
+
+
+
+def ball_draw(ball):
+    set_pixel(ball.pos, ball.color)
+    
+    // Dark halo to make the ball more visible
+    for sgn in [-1, +1]:
+        for axis in "xy":
+            const P = xy(ball.pos)
+            P[axis] += sgn
+            set_pixel(P, lerp(#000, get_pixel(P), 50%))
+        
+        for flip in [-1, +1]:
+            const P = ball.pos + xy(sgn, sgn * flip)
+            set_pixel(P, lerp(#000, get_pixel(P), 78%))
+
+
+
+// Convert frame number to ♪-count
+def frame_to_beat(f):
+    // frame * (b/m / (60 s/m * 60 frame/s))
+    return ⌊f * tempo / (60 * 60)⌋
+
+
+
+def play_music():
+    const half_beats = frame_to_beat(mode_frames)
+    // Skip frames that are not the first in a quaver
+    if half_beats == frame_to_beat(mode_frames - 1): return
+
+    const measure = ⌊⅛ half_beats⌋ + 1
+    // Switch to music notation
+    const count = ½ (half_beats mod 8) + 1
+
+    play_sound(closed_hihat_sound)        
+    if count == 1 or count == 2.5:
+        play_sound(kick_drum_sound)
+    if count == 2 or count == 3.5:
+        play_sound(snare_drum_sound)
+
+
+def walls_draw():
+    for x < 8:
+        for y < 8:
+            if device.input[x][y].on:
+                // Light up the row and column borders when
+                // a pad is pressed
+                device.output[8][y] = wall_color
+                device.output[x][8] = wall_color
+                set_pixel(xy(x, y), wall_color)
+
+   
+def draw_example_graphics():
+    clear_border()
+    draw_background()
+    ball_draw(ball)
+    walls_draw()
+
+
+def demo():            
+    ball_simulate(ball)
+    
+    draw_example_graphics()
+    
+    play_music()
+    
+    const text_args = {
+        font: font, 
+        color: #FFF, shadow: #000, outline: #000, 
+        x_align: "center", y_align: "bottom", z:2 }
+        
+    draw_text({
+        …text_args,
+        pos: xy(½ SCREEN_SIZE.x, 0), 
+        text: device.type + (if device.output_port then " Connected" else " Emulator")})
+    
+    if not device.output_port: 
+        draw_text({
+            …text_args,
+            pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 1), 
+            y_align: "top", 
+            text: "Touch the screen or connect a Launchpad, Push, or LinnStrument MIDI Controller"})
+    

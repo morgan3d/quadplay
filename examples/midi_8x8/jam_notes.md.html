@@ -1,0 +1,41 @@
+                     <meta charset="utf-8">
+                      **8x8 Touch Jam**
+
+8x8 Touch Jam requirements:
+
+- Must run in a web browser 
+- Must use 8x8 RGB LED touch grid I/O
+- Must support the Ableton, Novation, Akai, and LinnStrument 
+  devices to the same level provided by midi_8x8.pyxl
+ 
+See midi_8x8.pyxl for the API
+
+Encouraged:
+
+- Make gameplay primarily use the device touch input and output
+  plus audio, with the computer screen used mainly for instructions
+  instead of gameplay
+- Support emulation on screen, for people without physical MIDI devices.
+  device_visualize() and device_send_output() simplify emulation.
+- Provide a single player mode
+- Explore directions other than direct music synthesis
+
+Discouraged:
+
+- While you may use other APIs and tools than quadplay and device.pyxl.
+  quadplay is the easy way to satisfy the requirements, and the goal 
+  of this jam is supporting quadplay
+- You may use additional I/O devices (gamepads, mouse, keyboard, other MIDI)
+  so long as the game *also* requires an 8x8 RGB LED MIDI controller.
+  Embracing the limitations and possibilities of the 8x8 grid is the
+  best way to embrace the theme of the jam
+
+
+This game demo is a sample showing how to set up the 
+device, set device pad colors, read physical device input, 
+use the multitouch screen emulator, play audio, and
+convert from frame time to music beat time.
+
+
+<!-- Markdeep: --><script src="../../doc/markdeep.min.js"></script><script src="https://casual-effects.com/markdeep/latest/markdeep.min.js?"></script>
+
