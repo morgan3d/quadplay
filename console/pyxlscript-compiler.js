@@ -1550,7 +1550,7 @@ return $Object.freeze({$type:'mode', $enter:$enter, $frame:$frame, $pop_modeFrom
     compiledProgram += `
 function $start_program() {
     $play_reset_animation.active = false;
-    mode_frames = game_frames = 0;
+    mode_frames = game_frames = -1;
     try {
         set_mode(${start_mode});
     } catch (e) {

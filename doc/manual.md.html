@@ -1727,7 +1727,7 @@ prompts.
 <quadplay/> provides single-touch and single-button mouse input via
 virtual touch screen. Not all <quadplay/> devices support touch input
 (although most do, through a touch screen, stylus, or
-mouse). If there is no mouse, then `touch.a` is always `false`.
+mouse).
 
 `touch`
 : There is a single `touch` global object with the following properties:
@@ -1740,10 +1740,10 @@ Property                 | Type     | Meaning
 `touch.dy`               | number   | Change in `y` since the previous frame
 `touch.xy`               | xy       | `xy(touch.x, touch.y)`
 `touch.dxy`              | xy       | `xy(touch.dx, touch.dy)`
-`touch.a`                | boolean  | True if the touch is currently active
-`touch.pressed_a`        | boolean  | Was the touch started this frame?
-`touch.aa`               | boolean  | Same as `pressed_a`
-`touch.released_a`       | boolean  | Was the touch ended this frame?
+`touch.a`                | number   | Number of frames that the touch has been held down, or 0 if not currently down
+`touch.pressed_a`        | number   | Nonzero if the touch started this frame
+`touch.aa`               | number   | Same as `pressed_a`
+`touch.released_a`       | number   | Nonzero if the touch ended this frame
 `touch.screen_x`         | number   | Screen-space x position
 `touch.screen_y`         | number   | Screen-space y position
 `touch.screen_dx`        | number   | Change in `screen_x` since the previous frame

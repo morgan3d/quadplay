@@ -117,8 +117,8 @@ function $resize_framebuffer(w, h) {
 var $previousModeGraphicsCommandListStack = [];
 var $frameHooks = [];
 
-var game_frames = 0;
-var mode_frames = 0;
+var game_frames = -1;
+var mode_frames = -1;
 
 // Graphics execute once out of this many frames.  Must be an integer
 // between 1 (60 Hz), and 6 (10 Hz). This is managed by
@@ -9362,7 +9362,7 @@ function push_mode(mode, ...args) {
     $modeStack.push($gameMode);
     $prevModeStack.push($prevMode);
 
-    mode_frames = 0;
+    mode_frames = -1;
     $skipGraphics = false;
     $prevMode = $gameMode;
     $gameMode = mode;
@@ -9466,7 +9466,7 @@ function set_mode(mode, ...args) {
     // Run the leave callback on the current mode
     if ($prevMode) { $prevMode.$leave(); }
     
-    mode_frames = 0;
+    mode_frames = -1;
     $skipGraphics = false;
 
     // Save the previous graphics list for draw_previous_mode()
@@ -9542,7 +9542,7 @@ function local_time(args) {
 }
 
 
-/** Called on virtual CPU to intiate virtual GPU work */
+/** Called on virtual CPU to initiate virtual GPU work */
 function $show() {
     // Check whether this frame will be shown or not, if running below
     // frame rate and pruning graphics.  Use mode_frames instead of

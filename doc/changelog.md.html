@@ -8,7 +8,7 @@ of [<quadplay/>](manual.md.html).
 
 2023 July TBD: Update 94
 ===================================
-- Added "Copy Game" menu option for locally hosted games to simplify 
+- Added "Copy Game" menu option for locally hosted games, to simplify 
   game creation from examples and user templates
 - Gamepad indicator icons in IDE now show the ID of the controller on mouse hover
 - Added MIDI controller IDE indicator icons
@@ -20,10 +20,15 @@ of [<quadplay/>](manual.md.html).
 - Added `port.state` for MIDI ports to poll when they have been disconnected
 - Added `RGB_DISTANCE` intrinsic
 - Added support for iOS 120x120 icons
-- Added drum-00, drum-01, drum-02 sounds
+- Added `drum-00`, `drum-01`, `drum-02`, `drum-03`, `drum-04` sounds
 - Added `scripts/midi_8x8.pyxl` helper library
+- Changed `touch.pressed_a`, `touch.released_a`, `touch.aa`, and `touch.a` to
+  be numbers, consistent with the gamepad API
+- Made explicit errors on trying to access some common API typos to improve
+  debugging
 - Fixed `--serve` mobile mode not able to load local games
 - Fixed formatting of `debug_print` with a grid size in the output string literal, such as `"32x16"`
+- Fixed `mode_frames` and `game_frames` to start counting from zero (regression in update 93)
 
 
 2023 June 20: Update 93

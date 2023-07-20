@@ -1355,6 +1355,11 @@ function requestInput() {
 function updateInput() {
     mouse.screen_x_prev = mouse.screen_x;
     mouse.screen_y_prev = mouse.screen_y;
+
+    // Update touch frame count (after the first frame)
+    if (QRuntime.touch.a && ! QRuntime.touch.aa) {
+        ++QRuntime.touch.a;
+    }
     
     const axes = 'xy', AXES = 'XY', buttons = 'abcdefpq';
 
@@ -1611,9 +1616,9 @@ function onTouchStartOrMove(event) {
             if (! tracker ||
                 !(tracker.lastTarget === emulatorScreen || tracker.lastTarget === overlayScreen || tracker.lastTarget === afterglowScreen)) {
                 // New touch
-                QRuntime.touch.aa = ! QRuntime.touch.a;
+                QRuntime.touch.aa = (! QRuntime.touch.a) ? 1 : 0;
                 QRuntime.touch.pressed_a = QRuntime.touch.aa;
-                QRuntime.touch.a = true;
+                QRuntime.touch.a = 1;
                 QRuntime.touch.screen_dx = 0;
                 QRuntime.touch.screen_dy = 0;
             } else {
@@ -1640,8 +1645,8 @@ function onTouchStartOrMove(event) {
             (tracker.lastTarget === emulatorScreen || tracker.lastTarget === overlayScreen || tracker.lastTarget === afterglowScreen) &&
             (event.target !== emulatorScreen && event.target !== overlayScreen && event.target !== afterglowScreen)) {
             // Lost contact with screen
-            QRuntime.touch.a = false;
-            QRuntime.touch.released_a = true;
+            QRuntime.touch.a = 0;
+            QRuntime.touch.released_a = 1;
         }
 
         if (! tracker) {
@@ -1682,8 +1687,8 @@ function onTouchEndOrCancel(event) {
         if (tracker) {
             if (tracker.lastTarget === emulatorScreen || tracker.lastTarget === overlayScreen || tracker.lastTarget === afterglowScreen) {
                 // Lost contact with screen
-                QRuntime.touch.a = false;
-                QRuntime.touch.released_a = true;
+                QRuntime.touch.a = 0;
+                QRuntime.touch.released_a = 1;
             }
             
             // Delete is relatively slow (https://jsperf.com/delete-vs-undefined-vs-null/16),

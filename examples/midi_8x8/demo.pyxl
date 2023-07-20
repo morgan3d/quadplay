@@ -1,40 +1,10 @@
 /* Psychedelic multitouch PONG-like demo */
 
-
-// Initialized in Play.enter(), could be const
-// and initialized right here
-let device
-
-
 const ball = {
     color: #FFF,
     pos: xy(3, 0), 
     vel: xy(0.10, 0.07)
 }
-
-
-def get_pixel(pos):
-    const x = round(pos.x)
-    const y = round(pos.y)
-    if x ≥ 0 and y ≥ 0 and x < 8 and y < 8: 
-        return rgb(device.output[x][y])
-    else:
-        return #000
-
-
-def set_pixel(pos, color):
-    const x = round(pos.x)
-    const y = round(pos.y)
-    if x ≥ 0 and y ≥ 0 and x < 8 and y < 8: device.output[x][y] = color
-
-
-def clear_border():
-    // Border (not guaranteed to be visible on all devices):
-    for i < 8:
-        device.output[i][8] = #000
-        device.output[8][i] = #000
-    device.output[8][8] = #000
-
 
 
 def draw_background():
@@ -89,18 +59,18 @@ def ball_simulate(ball):
 
 
 def ball_draw(ball):
-    set_pixel(ball.pos, ball.color)
+    device_set_pixel(ball.pos, rgb(ball.color))
     
     // Dark halo to make the ball more visible
     for sgn in [-1, +1]:
         for axis in "xy":
             const P = xy(ball.pos)
             P[axis] += sgn
-            set_pixel(P, lerp(#000, get_pixel(P), 50%))
+            device_set_pixel(P, lerp(#000, device_get_pixel(P), 50%))
         
         for flip in [-1, +1]:
             const P = ball.pos + xy(sgn, sgn * flip)
-            set_pixel(P, lerp(#000, get_pixel(P), 78%))
+            device_set_pixel(P, lerp(#000, device_get_pixel(P), 78%))
 
 
 
@@ -133,13 +103,13 @@ def walls_draw():
             if device.input[x][y].on:
                 // Light up the row and column borders when
                 // a pad is pressed
-                device.output[8][y] = wall_color
-                device.output[x][8] = wall_color
-                set_pixel(xy(x, y), wall_color)
+                device.output[8][y] = rgb(wall_color)
+                device.output[x][8] = rgb(wall_color)
+                device_set_pixel(xy(x, y), rgb(wall_color))
 
    
 def draw_example_graphics():
-    clear_border()
+    device_set_border()
     draw_background()
     ball_draw(ball)
     walls_draw()

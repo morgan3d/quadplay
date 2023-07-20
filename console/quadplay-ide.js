@@ -3337,7 +3337,7 @@ function resetTouchInput() {
     if (mouse.movement_x !== undefined) {
         mouse.movement_x = mouse.movement_y = 0;
     }
-    QRuntime.touch.pressed_a = QRuntime.touch.released_a = QRuntime.touch.aa = false;
+    QRuntime.touch.pressed_a = QRuntime.touch.released_a = QRuntime.touch.aa = 0;
 }
 
 
@@ -3812,12 +3812,15 @@ function reloadRuntime(oncomplete) {
             screen_y: 0,
             screen_dx: 0,
             screen_dy: 0,
-            a: false,
-            pressed_a: false,
-            aa: false,
-            released_a: false
+            a: 0,
+            pressed_a: 0,
+            aa: 0,
+            released_a: 0
         };
 
+        // Intentional error property to avoid typos
+        Object.defineProperty(QRuntime.touch, 'a_pressed', {get: function () { throw 'No touch.a_pressed property exists. Use touch.pressed_a'; }});
+        Object.defineProperty(QRuntime.touch, 'a_released', {get: function () { throw 'No touch.a_released property exists. Use touch.released_a'; }});
         Object.defineProperty(QRuntime.touch, 'xy', xyGetter);
         Object.defineProperty(QRuntime.touch, 'dxy', dxyGetter);
         Object.defineProperty(QRuntime.touch, 'x', {
@@ -3902,6 +3905,11 @@ function reloadRuntime(oncomplete) {
 
             $bind_gamepad_getters(pad);
             QRuntime.$controlSchemeTable = controlSchemeTable;
+
+            for (let b of "abcdefq") {
+                Object.defineProperty(pad, b + '_pressed', {get: function () { throw 'No gamepad.' + b + '_pressed property exists. Use gamepad.pressed_' + b; }});
+                Object.defineProperty(pad, b + '_released', {get: function () { throw 'No gamepad.' + b + '_released property exists. Use gamepad.released_' + b; }});
+            }
 
             Object.defineProperty(pad, 'online_name', {
                 enumerable: true,

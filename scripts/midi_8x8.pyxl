@@ -25,26 +25,37 @@ Supported devices:
 API:
 
   - Basic:
-      - `make_device()`
+      - `device`
       - `device.input[x][y] == {on, pressure, velocity, pressed, released}`
       - `device.output[x][y] = color`
-      - `device_send_output(device)`
+      - `device_send_output()`
   - Emulator:
-      - `make_device(type default "Launchpad Mini MK3")`
-      - `device_emulate_input(device)`
-      - `device_visualize(device)`
+      - `device_set_emulator_type()`
+      - `device_emulate_input()`
+      - `device_visualize()`
+  - Utility:
+      - `device_set_pixel(pos, color)`
+      - `device_get_pixel(pos)`
+      - `device_set_all(color)`
+      - `device_set_border(color)`
 */
 
 
-/* If no physical device is found, the visualizer will emulate
-   the specified device. `type` options are:
+/*
+`type` options for the emulator:
 
    "Launchpad Pro MK3", "Launchpad X", "Launchpad Mini MK3", 
    "Ableton Push 1", "Ableton Push 2", "Ableton Push 3", 
    "LinnStrument128", "APC Mini mk2" */
-def make_device(type default "Launchpad Mini MK3"):
+def device_set_emulator_type(type):
+    if device.output_port == ∅:
+        _device_configure_visualizer(device, type)
+    
+
+/* If no physical device is found, the visualizer will emulate
+   the specified device.  */
+def _make_device(type default "Launchpad Mini MK3"):
     const device = {
-        
         type: type,
         
         // Aspect ratio the physical device button pad elements
@@ -82,7 +93,10 @@ def make_device(type default "Launchpad Mini MK3"):
         // unless breaking the device abstraction to use
         // capabilities of a specific device
         input_port: ∅,
-        output_port: ∅,        
+        output_port: ∅,
+        
+        _show_cursor: false,
+        _cursor_index: xy(0, 0)
     }
     
     _device_configure_visualizer(device, type)
@@ -136,10 +150,19 @@ def _device_configure_visualizer(device, type):
 
 
 /* Optionally call at the start of the frame to emulate
-   input. Pair with device_visualize at the end of the frame.*/
-def device_emulate_input(device):  
-    if device.input_port ≠ ∅: return
+   input. Pair with device_visualize at the end of the frame.
+   If `cursor` is true, a gamepad cursor is used to allow gamepad
+   input. */
+def device_emulate_input(cursor default false)
+& preserving_transform:
+    
+    if device.input_port ≠ ∅: 
+        device._show_cursor = false
+        return
 
+    const input = device.input
+    
+    set_transform(∅, xy(1, -1))
     const GRID_POS = ½ SCREEN_SIZE + xy(0, -8)
     
     const PAD_SIZE    = floor(xy(20, 20) * device.pad_aspect / max_component(device.pad_aspect))
@@ -160,9 +183,6 @@ def device_emulate_input(device):
         if max_component(touch_index) < 8 and min_component(touch_index) ≥ 0:
             push(touch_index_array, touch_index.x + 8 touch_index.y)
                 
-    const input = device.input
-    
-    const off = {on: 0, pressed: 0, released: 0, velocity: 0, pressure: 0}
     for x < 8:
         for y < 8:
             const cell = input[x][y]
@@ -178,23 +198,56 @@ def device_emulate_input(device):
                     cell.pressed = 0
                 cell.on += 1
                 cell.released = 0
-            else if cell.on:
+            else if cell.on and not (cursor and x == device._cursor_index.x and y == device._cursor_index.y and (gamepad_array[0].a or gamepad_array[1].a or gamepad_array[2].a or gamepad_array[3].a)):
                 // Release
                 cell.on = 0
                 cell.released = 1
-                cell.presssed = 0
+                cell.pressed = 0
                 cell.velocity = 0
             else:
                 // Normal (which might be one frame
-                // after release)
+                // after release, due to either touch
+                // or gamepad)
                 cell.released = 0
                 
 
+    device._show_cursor = cursor
+    if device._show_cursor:
+        const index = device._cursor_index
+        for gamepad in gamepad_array:
+            
+            todo("Gamepad arrow repeat")
+            const next_x = clamp(index.x + gamepad.xx, 0, 7)
+            const next_y = clamp(index.y + gamepad.yy, 0, 7)
+
+            // Release
+            local:
+                const cell = input[index.x][index.y]
+                
+                if gamepad.released_a or next_x ≠ index.x or next_y ≠ index.y:
+                    cell.on = 0; cell.velocity = 0
+                    cell.released = 1; cell.pressed = 0                
+            
+            // Move
+            index.x = next_x; index.y = next_y
+            
+            // Press
+            if gamepad.a:
+                const cell = input[index.x][index.y]
+                cell.released = 0; 
+                if cell.on:
+                    cell.pressed = 0
+                else:
+                    cell.pressed = 1
+                cell.on += 1; cell.velocity = 127
+                
 
 /* Optionally call to visualize the device on screen.
    Assumes the background is black. Set the camera
    or transform to move. See also `device_emulate_input()`*/
-def device_visualize(device):
+def device_visualize()
+& preserving_transform:
+    set_transform(∅, xy(1, -1))
     const GRID_POS = ½ SCREEN_SIZE + xy(0, -8)
     
     const PAD_SIZE    = floor(xy(20, 20) * device.pad_aspect / max_component(device.pad_aspect))
@@ -235,6 +288,11 @@ def device_visualize(device):
         draw_rect(GRID_POS, xy(9, 9), #000, ∅, 45°)
         draw_rect(GRID_POS + xy(0, 1), xy(9, 9), #000, ∅, 45°)
 
+    if device._show_cursor:
+        const pos = device._cursor_index * PAD_SPACING + PAD_OFFSET
+        draw_corner_rect(pos, PAD_SIZE, ∅, #FFF)
+        draw_corner_rect(pos + 1, PAD_SIZE - 2, ∅, #000)
+        draw_corner_rect(pos + 2, PAD_SIZE - 4, ∅, #FFF)
 
 
 // Call once per frame to discover new devices. Automatically
@@ -389,7 +447,7 @@ def _device_init_output(device, port):
 
 
 /* Call once per frame at the end to write the output to the device. */
-def device_send_output(device):
+def device_send_output():
     if device.output_port and device._send_output:
         device._send_output(device)
     else:
@@ -555,3 +613,39 @@ def _midi_send_raw_with_check(device, msg):
         device.input = _make_input_array()
     return status
         
+
+
+def device_get_pixel(pos):
+    const x = round(pos.x)
+    const y = round(pos.y)
+    if x ≥ 0 and y ≥ 0 and x < 8 and y < 8: 
+        return rgb(device.output[x][y])
+    else:
+        return #000
+
+
+
+def device_set_pixel(pos, color):
+    const x = round(pos.x)
+    const y = round(pos.y)
+    if x ≥ 0 and y ≥ 0 and x < 8 and y < 8: device.output[x][y] = color
+
+
+
+def device_set_border(color = #000):
+    // Border (not guaranteed to be visible on all devices):
+    for i < 8:
+        device.output[i][8] = rgb(color)
+        device.output[8][i] = rgb(color)
+    device.output[8][8] = rgb(color)
+
+
+
+def device_set_all(color = #000):
+    // Border (not guaranteed to be visible on all devices):
+    for x < 8:
+        for y < 8:
+            device.output[x][y] = rgb(color)
+            
+const device = _make_device()
+            

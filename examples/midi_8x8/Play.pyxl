@@ -2,25 +2,22 @@ Play
 ════════════════════════════════════════════════════════════════════════
 // See jam_notes.md.html and midi_8x8.pyxl for more info
             
-enter
-────────────────────────────────────────────────────────────────────────
-device = make_device()
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
 
 // Emulator input (optional)
-device_emulate_input(device)
+device_emulate_input()
 
 // Run the demo code
 demo()
 
 // Visualize on screen (optional)
-device_visualize(device)
+device_visualize()
 
 // Visualize on device
-device_send_output(device)
+device_send_output()
 
 
     
