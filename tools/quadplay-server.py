@@ -1097,13 +1097,13 @@ def main():
             if t and not isWindows and t[0] != '/': t = '/' + t
         url += '&game=' + t
 
-    maybe_print('\nServing from:\n\n   ' + url + '\n')
-    
     if args.serve:
         # Do not support POST in host mode
         maybe_print('Your firewall may need to be configured to load on other devices.\n')
     else:
         url += '&quadserver=1'
+
+    maybe_print('\nServing from:\n\n   ' + url + '\n')
     
     # Run from the quadplay path
     maybe_print('   quad://  = ' + os.path.join(server_root_filepath, quad_filepath))

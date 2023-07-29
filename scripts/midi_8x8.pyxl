@@ -20,7 +20,7 @@ Supported devices:
   - Ableton Push 2
   - Ableton Push 3
   - LinnStrument 128
-  - Akai APC Mini mk2 (untested)
+  - Akai APC Mini mk2
 
 API:
 
@@ -104,8 +104,10 @@ def _make_device(type default "Launchpad Mini MK3"):
     return device
 
 
+
 def _make_input_array():
     return make_array(xy(9, 9), {on: 0, pressed: 0, released: 0, velocity: 0, pressure: 0}, clone)    
+
 
 
 def _device_configure_visualizer(device, type):
@@ -255,7 +257,7 @@ def device_visualize()
     const PAD_SPACING = floor(PAD_SIZE + GUTTER_SIZE)
     const PAD_OFFSET  = round(GRID_POS - 4 PAD_SPACING) + xy(2, 2)
 
-    const OFF_COLOR = #333
+    const OFF_COLOR = #222
     const diameter = min_component(PAD_SIZE)
     
     const output = device.output
@@ -265,7 +267,7 @@ def device_visualize()
             const pos = xy(x, y) * PAD_SPACING + PAD_OFFSET
             let c = output[x][y]
             
-            if max_component(c) < 1/16: c = OFF_COLOR
+            if max_component(c) < 1 / 16: c = OFF_COLOR
             
             if max(x, y) ≠ 8:
                 // Regular buttons
@@ -317,7 +319,7 @@ def _device_discover(device):
     for port in midi.output_port_array:
         if ((contains(port.name, "Launchpad") and contains(port.name, "MIDI")) or
              contains(port.name, "LinnStrument") or
-             contains(port.name, "APC Mini") or
+             contains(port.name, "APC mini mk2 Control") or
             (contains(port.name, "Ableton") and contains(port.name, "User"))):
             debug_print("Found compatible 8×8 output device: ", port)
             _device_init_output(device, port)
@@ -327,7 +329,7 @@ def _device_discover(device):
     for port in midi.input_port_array:
         if ((contains(port.name, "Launchpad") and contains(port.name, "MIDI")) or
              contains(port.name, "LinnStrument") or
-             contains(port.name, "APC Mini") or
+             contains(port.name, "APC mini mk2 Control") or
             (contains(port.name, "Ableton") and contains(port.name, "User"))):
                 
             debug_print("Found compatible 8×8 input device: ", port)
@@ -347,7 +349,6 @@ def _device_init_input(device, port):
                 device.input[x][y] = device.input_port.note[(x + 1) + 10 (y + 1)]
 
     else if contains(device.input_port.name, "LinnStrument"):
-
         for x < 8:
             for y < 8:
                 // Control buttons are column 0, 1-25 are the note columns
@@ -361,12 +362,11 @@ def _device_init_input(device, port):
                 // Lower left is nn36, goes up linearly left to right bottom to top
                 device.input[x][y] = device.input_port.note[x + 8 y + 36]
 
-    else if contains(device.input_port.name, "APC"):
+    else if contains(device.input_port.name, "APC mini mk2 Control"):
         // https://6be54c364949b623a3c0-4409a68c214f3a9eeca8d0265e9266c0.ssl.cf2.rackcdn.com/989/documents/APC40Mk2_Communications_Protocol_v1.2.pdf
         
         // The original mini has a different API and only has red/yellow/green
         // buttons. See: https://github.com/TomasHubelbauer/akai-apc-mini
-        
         for x < 8:
             for y < 8:
                 // Lower left is nn00, goes up linearly left to right bottom to top
@@ -409,15 +409,20 @@ def _device_init_output(device, port):
         // Enter User mode
         _midi_send_raw_with_check(device, [0xF0, 0x00, 0x21, 0x1D, 0x01, 0x01, 0x0A, 0x01, 0xF7])
         
+        const γ = 2
+        
         // Sysex for send palette
         for i < 64:
-            todo("Reduce to a single send call if possible")
             const palette_cmd = [0xF0, 0x00, 0x21, 0x1D, 0x01, 0x01, 0x03]
             // Index as R2G2B2 color, and then convert to 8-bit unorm
-            const R = min(⌊256 * ⅓ ((i bitshr 4) ∩ 0b11)⌋, 255) 
-            const G = min(⌊256 * ⅓ ((i bitshr 2) ∩ 0b11)⌋, 255) 
-            const B = min(⌊256 * ⅓ (i ∩ 0b11)⌋, 255) 
-
+            let r = (⅓ ((i bitshr 4) ∩ 0b11))^γ
+            let g = (⅓ ((i bitshr 2) ∩ 0b11))^γ
+            let b = (⅓ (i ∩ 0b11))^γ
+                        
+            const R = clamp(⌊256 r⌋, 0, 255) 
+            const G = clamp(⌊256 g⌋, 0, 255) 
+            const B = clamp(⌊256 b⌋, 0, 255) 
+        
             // For grayscale LEDs
             const brightness = min(⌊256 i / 63⌋, 255)
             
@@ -436,7 +441,7 @@ def _device_init_output(device, port):
             
             _midi_send_raw_with_check(device, palette_cmd)
             
-    else if contains(device.output_port.name, "APC"):
+    else if contains(device.output_port.name, "APC mini mk2 Control"):
         // APC mini mk2
         // https://cdn.inmusicbrands.com/akai/attachments/APC%20mini%20mk2%20-%20Communication%20Protocol%20-%20v1.0.pdf
         device._send_output = _apc_send_output
@@ -444,6 +449,7 @@ def _device_init_output(device, port):
 
         // Initialize
         _midi_send_raw_with_check(device, [0xF0, 0x47, 0x7F, 0x4F, 0x60, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0xF7])
+
 
 
 /* Call once per frame at the end to write the output to the device. */
@@ -456,28 +462,36 @@ def device_send_output():
 
     
 def _apc_send_output(device):
-    // https://cdn.inmusicbrands.com/akai/attachments/APC%20mini%20mk2%20-%20Communication%20Protocol%20-%20v1.0.pdf
-    // Number of bytes of data
-    const N = 64 * 8
-    const msg = [0xF0, 0x47, 0x7F, 0x4F, 0x24, N bitshr 7, N ∩ 0b01111111]
+    // See page 9 of https://cdn.inmusicbrands.com/akai/attachments/APC%20mini%20mk2%20-%20Communication%20Protocol%20-%20v1.0.pdf
     
-    // RGB grid
-    for x < 8:
-        const column = device.output[x]
-        for y < 8:
-            // Pad identifier
-            const c = column[y]
-            const R = MIN(FLOOR(MUL(256, c.r)), 255)
-            const G = MIN(FLOOR(MUL(256, c.g)), 255)
-            const B = MIN(FLOOR(MUL(256, c.b)), 255)
-            push(msg, x + 8 y, x + 8 y, R bitshr 7, R ∩ 0b01111111, G bitshr 7, G ∩ 0b01111111, B bitshr 7, B ∩ 0b01111111)
-            
-    push(msg, 0xF7)
+    const msg = []
+    
+    for half < 2:
+        // Number of bytes of data. Sent in two halves; the device
+        // rejects when the entire screen is in one message
+        
+        const N = 32 * 8 //  8 = start, end, RR, GG, BB
+        push(msg, 0xF0, 0x47, 0x7F, 0x4F, 0x24, N bitshr 7, N ∩ 0b01111111)
+        
+        const shift = 4 half
+        // RGB grid
+        for x < 4:
+            const column = device.output[x + shift]
+            for y < 8:
+                // Pad identifier
+                const c = column[y]
+                const R = MIN(FLOOR(MUL(256, c.r)), 255)
+                const G = MIN(FLOOR(MUL(256, c.g)), 255)
+                const B = MIN(FLOOR(MUL(256, c.b)), 255)
+                const i = x + 8 y + shift
+                push(msg, i, i, R bitshr 7, R ∩ 0b01111111, G bitshr 7, G ∩ 0b01111111, B bitshr 7, B ∩ 0b01111111)
+                
+        push(msg, 0xF7)
     
     // Single-color LEDs for 9th column
     const column = device.output[8]
     for y < 8:
-        push(msg, 0x90, 0x70 + y, MIN(FLOOR(128 * column[y]), 127))
+        push(msg, 0x90, ADD(0x70, y), MIN(FLOOR(MUL(128, max_component(column[SUB(7, y)]))), 127))
     
     _midi_send_raw_with_check(device, msg)
 
@@ -491,25 +505,29 @@ def _ableton_send_output(device):
     def rgb_to_index(color):
         // 6-bit RGB color palette
         return (unorm2(color.r) bitshl 4) ∪ (unorm2(color.g) bitshl 2) ∪ unorm2(color.b)
-        
+
+    // Ableton does not support running status
+    const msg = []
+            
     // Center grid
     for x < 8:
         const column = device.output[x]
         for y < 8:
-            midi_send_raw(device.output_port, [0x90, 36 + 8 y + x, rgb_to_index(column[y])])
-            todo("Can Ableton use a single message for the whole display?")
-            todo("Can Ableton use running status to reduce the message count?")
+            push(msg, 0x90, 36 + 8 y + x, rgb_to_index(column[y]))
 
     // Border LEDs on control buttons
     for i < 8:
         // Last column
-        midi_send_raw(device.output_port, [0xB0, 36 + i, rgb_to_index(device.output[8][i])])
+        push(msg, 0xB0, 36 + i, rgb_to_index(device.output[8][i]))
         // Last row
-        midi_send_raw(device.output_port, [0xB0, 20 + i, rgb_to_index(device.output[i][8])])
+        push(msg, 0xB0, 20 + i, rgb_to_index(device.output[i][8]))
+
     
     // Grayscale
     const brightness = min(⌊128 dot(#FFF, device.output[8][8]) / 3⌋, 127)
-    _midi_send_raw_with_check(device, [0xB0, 28, brightness])
+    push(msg, 0xB0, 28, brightness)
+
+    _midi_send_raw_with_check(device, msg)
 
 
 

@@ -1507,6 +1507,7 @@ For reference when importing assets or designing games inspired by
 previous work, here are the resolutions of classic and retro machines:
 
  - 960x544 PlayStation Vita
+ - 960x160 Ableton Push 2 and 3
  - 800x480 Raspberry Pi official 7" touchscreen
  - 640x480 PiBoy DMG
  - 480x320 Odroid Go Advance
@@ -1796,7 +1797,7 @@ has the following properties:
   that can be polled similarly to a game pad (see below for `note` and
   `controller`).
   
-`midi.output_port_table`
+`midi.output_port_array`
 : Array of all output ports. Updated whenever devices are added or
   removed at runtime, preserving ordering. The output ports may be
   used with `midi_send_raw()`.
@@ -5953,7 +5954,7 @@ Raw Device Access
                                                          save is complete. This will only work with the IDE enabled and a quadplay server.</td></tr>
     <tr><td> `"load", filename, callback`</td><td>Loads `filename` and (asynchronously) runs the callback with the arguments `value, filename` when
                                                          the load is complete. This will only work with the IDE enabled and a quadplay server.</td></tr>
-    <tr><td> `"enable_feature", feature`</td><td>Enables the given feature, which is nonstandard and may fail on some devices. The only allowed value of `feature` is `"768x448,private_views"`. That enables this resolutions for `set_screen_size()` with `private_views=true`, which is too slow to make framerate on Raspberry Pi and some phones.</td></tr>
+    <tr><td> `"enable_feature", feature`</td><td>Enables the given feature, which is nonstandard and may fail on some devices. The only allowed value of `feature` are: `"768x448,private_views"`, which enables this resolutions for `set_screen_size()` with `private_views=true`, which is too slow to make framerate on Raspberry Pi and some phones.</td></tr>
     <tr><td> `"multitouch"`</td><td>Returns an array of touch objects for every currently-active touch, which have the form `{id:string, x:number, y:number, xy:xy, screen_x:number, screen_y:number, screen_xy:xy}`. The touch with id == -1 is the mouse.</td></tr>
   </table>
 
