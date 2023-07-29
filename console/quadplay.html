@@ -883,8 +883,11 @@
         <center>
           <span class="title">Open Game</span>
           <p>
-            <label for="openGameType">Type&nbsp;&nbsp;</label>
-            <select id="openGameType" style="width:320px" onchange="onOpenGameTypeChange()">
+           <table style="width: 100%; margin-top: 10px">
+            <tr><td width="60px">
+            <label for="openGameType">Type</label>
+            </td><td>
+            <select id="openGameType" style="width:100%" onchange="onOpenGameTypeChange()">
               <option value="alpha" id="openAlphaOption">Alpha</option>
               <option value="mine" id="openMineOption">Mine</option>');
               <option value="builtins">Built In</option>
@@ -893,6 +896,13 @@
                 if (isQuadserver) { document.write('<option value="tests" id="openTestsOption">Tests</option>'); }
               </script>
             </select>
+            </td></tr>
+            <tr><td>
+              <label for="openGameFilter">Filter</label>
+              </td><td>
+              <input id="openGameFilter" type="text" style="width: 100%" oninput="onOpenGameFilterChange()"></input>
+              </td><td>
+            </td></tr></table>
           </p>
           <p>
             <div id="openGameList" style="width:380px; height: 300px; background: #fff; border-radius: 2px; overflow: scroll scroll; color: #888; text-align: left; font-size: 80%; font-family: Monaco, monospace">

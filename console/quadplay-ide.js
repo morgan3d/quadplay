@@ -2,7 +2,7 @@
 "use strict";
 
 // Set to false when working on quadplay itself.
-const deployed = false;
+const deployed = true;
 
 // If true, use a WebWorker thread for the virtual GPU. This variable
 // appears in the CPU runtime as well.
@@ -2992,6 +2992,17 @@ function showOpenGameDialog() {
 }
 
 
+function onOpenGameFilterChange() {
+    const filter = document.getElementById('openGameFilter').value.trim().toLowerCase();
+    const list = document.querySelectorAll('#openGameListOL li');
+    for (let i = 0; i < list.length; ++i) {
+        const element = list[i];
+        element.style.display = (filter === '') || (element.innerText.toLowerCase().indexOf(filter) !== -1) ? '' : 'none';
+    }
+
+    openGameFiles.selected = null;
+}
+
 /* Called to regenerate the openGameList display for the add asset dialog
    when the type of game to be loaded is changed by the user. Also called
    for generating the initial list.*/
@@ -3020,6 +3031,9 @@ function onOpenGameTypeChange() {
     list.innerHTML = s;
 
     openGameFiles.selected = null;
+
+    onOpenGameFilterChange();
+    
     // Recreating the list destroys any selection
     document.getElementById('openGameOpenButton').disabled = true;
 }
