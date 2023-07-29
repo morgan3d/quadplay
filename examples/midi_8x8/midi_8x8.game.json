@@ -1,5 +1,5 @@
 {
-    "title": "MIDI 8x8 Touch Jam Demo",
+    "title": "MIDI: TacTile 64 Jam Demo",
     "developer": "CasualEffects",
     "copyright": "©2023 Morgan McGuire",
     "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
@@ -33,7 +33,7 @@
     "competitive": false,
     "achievements": false,
     "highscores": false,
-    "description": "Demonstration of the 8x8 MIDI controller abstraction API used for the 8x8 Touch Jam",
+    "description": "Demonstration of the 8x8 MIDI controller abstraction API used for the TacTile 64 Jam",
     "constants": {
         "tempo": {
             "type": "number",

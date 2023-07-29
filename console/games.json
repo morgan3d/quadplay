@@ -108,8 +108,8 @@
         },
         {
             "url": "quad://examples/midi_8x8/",
-            "title": "MIDI 8x8 Touch Jam Demo",
-            "description": "Demonstration of the 8x8 MIDI controller abstraction API used for the 8x8 Touch Jam"
+            "title": "MIDI: TacTile 64 Jam Demo",
+            "description": "Demonstration of the 8x8 MIDI controller abstraction API used for the TacTile 64 Jam"
         },
         {
             "url": "quad://examples/midi_fcb1010/",
