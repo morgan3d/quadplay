@@ -38,6 +38,7 @@ API:
       - `device_get_pixel(pos)`
       - `device_set_all(color)`
       - `device_set_border(color)`
+      - `device_blit(sprite, lower_left_corner default xy(0, 0), write_to_border default false)`
 */
 
 
@@ -644,11 +645,59 @@ def device_get_pixel(pos):
 
 
 def device_set_pixel(pos, color):
-    const x = round(pos.x)
-    const y = round(pos.y)
+    const x = ROUND(pos.x)
+    const y = ROUND(pos.y)
     if x ≥ 0 and y ≥ 0 and x < 8 and y < 8: device.output[x][y] = color
 
 
+
+def device_blit(sprite, corner default xy(0, 0), write_to_border default false):
+    const screenSize = if write_to_border then 9 else 8
+        
+    // Allow passing a sprite sheet as a sprite
+    if is_array(sprite): sprite = sprite[0][0]
+     
+    // Source
+    let sx0 = 0
+    let sy0 = 0
+    let sx1 = sprite.size.x
+    let sy1 = sprite.size.y    
+    
+    // Destination
+    let dx0 = ROUND(corner.x)
+    let dy0 = ROUND(corner.y)
+    let dx1 = ADD(dx0, sx1)
+    let dy1 = ADD(dy0, sy1)
+
+    // Off screen entirely
+    if (MAX(dx0, dy0) ≥ screenSize or
+        MIN(dx0 + sx1, dy0 + sy1) ≤ 0): return
+    
+    // Clip to screen
+    if dx0 < 0: sx0 += -dx0; dx0 = 0
+    if dy0 < 0: sy0 += -dy0; dy0 = 0
+    if dx1 ≥ screenSize: sx1 -= screenSize - dx1 + 1; dx1 = screenSize
+    if dy1 ≥ screenSize: sy1 -= screenSize - dy1 + 1; dy1 = screenSize
+            
+    const s = xy(0, 0)    
+    for dx0 ≤ dx < dx1:
+        s.x = sx0 + dx - dx0
+        
+        // Flip the sprite y axis
+        s.y = sy1
+        const output_column = device.output[dx]
+        for dy0 ≤ dy < dy1:
+            --s.y
+            const src = get_sprite_pixel_color(sprite, s)
+            const dst = output_column[dy]
+            if src.a == 1:
+                // Copy
+                dst.r = src.r; dst.g = src.g; dst.b = src.b
+            else if src.a > 0:
+                // Blend
+                RGB_LERP(dst, src, src.a, dst)
+
+        
 
 def device_set_border(color = #000):
     // Border (not guaranteed to be visible on all devices):

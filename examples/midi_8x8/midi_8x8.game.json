@@ -24,7 +24,8 @@
         "kick_drum_sound": "quad://sounds/drum-00.sound.json",
         "closed_hihat_sound": "quad://sounds/drum-01.sound.json",
         "snare_drum_sound": "quad://sounds/drum-03.sound.json",
-        "paddle_sound": "quad://sounds/hit-05.sound.json"
+        "paddle_sound": "quad://sounds/hit-05.sound.json",
+        "get_ready_sprite": "get_ready.sprite.json"
     },
     "version": 0,
     "min_players": 1,
@@ -60,6 +61,14 @@
                     "value": "29%"
                 }
             }
+        },
+        "INTRO_FRAMES": {
+            "type": "number",
+            "value": "404",
+            "min": 0,
+            "max": 1000,
+            "format": "0",
+            "quantum": 1
         }
     },
     "screenshot_tag": "midi8x8",

@@ -115,10 +115,14 @@ def draw_example_graphics():
     walls_draw()
 
 
-def demo():            
-    ball_simulate(ball)
+def demo():
     
-    draw_example_graphics()
+    if mode_frames < INTRO_FRAMES:
+        device_set_all(#000)
+        device_blit(get_ready_sprite, xy(10 - ⅛ mode_frames, 2), true)
+    else:
+        ball_simulate(ball)
+        draw_example_graphics()
     
     play_music()
     
