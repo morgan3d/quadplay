@@ -115,6 +115,10 @@
       <br/><label><input id="autoSleepCheckbox" type="checkbox" title="Pause the game when not in focus (unless hosting)" onclick="onAutoSleepClick(event)" autocomplete="off">Sleep when inactive</label>
       <br/><label><input id="backgroundPauseCheckbox" type="checkbox" title="Pause the game when not in focus (unless hosting)" onclick="onBackgroundPauseClick(event)" autocomplete="off">Pause in background</label>
       <hr>
+      <label><input name="keyboardType" id="NormalKeyboardRadio" type="radio" title="Normal quadplay keyboard mapping for P1 and P2" onclick="event.stopPropagation() || setKeyboardMappingMode('Normal')" autocomplete="off" checked="1">Normal Keyboard</label>
+      <br/><label><input name="keyboardType" id="MiniPACKeyboardRadio" type="radio" title="Use the Ultimarc Mini PAC mapping for an arcade installation that sends keyboard commands. Only P1 has a Pause button." onclick="event.stopPropagation() || setKeyboardMappingMode('MiniPAC')" autocomplete="off">Ultimarc Mini PAC</label>
+      <br/><label><input name="keyboardType" id="MAMEKeyboardRadio" type="radio" title="Use the MAME mapping for controllers that send keyboard commands. P3 and P4 only have partial support in MAME." onclick="event.stopPropagation() || setKeyboardMappingMode('MAME')" autocomplete="off">MAME Default</label>
+      <hr>
       <table style="margin: 0; padding: 0; border-collapse:collapse">
         <tr valign="top">
           <td>
@@ -124,10 +128,10 @@
             <br/><label><input name="colorScheme" onclick="event.stopPropagation() || setColorScheme('green')" type="radio" id="greenColorScheme" autocomplete="off">Green</label>
             <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('blue')" id="blueColorScheme" autocomplete="off">Blue</label>
             <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('black')" id="blackColorScheme" autocomplete="off">Black</label>
-            <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('white')" id="whiteColorScheme" autocomplete="off">White</label>
           </td>
           <td>
-            <label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('dots')" id="dotsColorScheme" autocomplete="off">Dots</label>
+            <label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('white')" id="whiteColorScheme" autocomplete="off">White</label>
+            <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('dots')" id="dotsColorScheme" autocomplete="off">Dots</label>
             <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('stripes')" id="stripesColorScheme" autocomplete="off">Stripes</label>
             <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('wood')" id="woodColorScheme" autocomplete="off">Oak</label>
             <br/><label><input name="colorScheme" type="radio" onclick="event.stopPropagation() || setColorScheme('walnut_burl')" id="walnut_burlColorScheme" autocomplete="off">Walnut</label>
@@ -151,7 +155,9 @@
         }
       </script>
       <!-- <div><a href="http://quadplay.freeforums.net/" target="_blank" title="The online quadplay✜ community">Forums</a></div>-->
-      <div><a href="https://casual-effects.com" target="_blank" title="Website for the quadplay✜ creator">CasualEffects</a></div>
+      <div>
+        <a href="https://casual-effects.com" target="_blank" title="Website for the quadplay✜ creator">CasualEffects</a>
+      </div>
 
       <script>if (! useIDE) { writeCloseOption(); }</script>
 

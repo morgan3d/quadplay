@@ -114,7 +114,7 @@
         {
             "url": "quad://examples/midi_fcb1010/",
             "title": "MIDI FCB1010",
-            "description": "Description of your game in about 100 characters."
+            "description": "Example of using the MIDI API with the FCB1010 controller in default configuration. Requires the controller."
         },
         {
             "url": "quad://examples/midi_launchpad/",

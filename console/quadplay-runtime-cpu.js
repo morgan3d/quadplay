@@ -117,8 +117,8 @@ function $resize_framebuffer(w, h) {
 var $previousModeGraphicsCommandListStack = [];
 var $frameHooks = [];
 
-var game_frames = -1;
-var mode_frames = -1;
+var game_frames = 0;
+var mode_frames = 0;
 
 // Graphics execute once out of this many frames.  Must be an integer
 // between 1 (60 Hz), and 6 (10 Hz). This is managed by
@@ -9466,7 +9466,7 @@ function set_mode(mode, ...args) {
     // Run the leave callback on the current mode
     if ($prevMode) { $prevMode.$leave(); }
     
-    mode_frames = -1;
+    mode_frames = 0;
     $skipGraphics = false;
 
     // Save the previous graphics list for draw_previous_mode()

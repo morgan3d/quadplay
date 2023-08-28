@@ -36,9 +36,10 @@ def draw_small_button(i, gamepad, jp, b, pos):
 
 
 def draw_shoulder_button(i, gamepad, jp, b, pos, side):
-    const color = if gamepad[b] then PRESSED_COLOR else OFF_COLOR[i]
+    const pressed = if gamepad[b] then 1 else 0
+    const color = if pressed then PRESSED_COLOR else OFF_COLOR[i]
     const outline = #0
-    draw_disk(pos + xy(-gamepad[b] * side, gamepad[b] + 11), 24, color, outline, -3)
+    draw_disk(pos + xy(-pressed * side, pressed + 11), 24, color, outline, -3)
     draw_text({text: b, font: small_font, pos: pos + xy(8 side, 3), x_align: "center", y_align: "center", color: #0}) 
 
 

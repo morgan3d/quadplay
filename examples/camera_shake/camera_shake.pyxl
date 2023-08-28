@@ -54,7 +54,7 @@ def cam_update_frame(goal_pos, clamp_bounds_min, clamp_bounds_max):
 def cam_add_shake(intensity):
     CAMERA.shake_mag += intensity
     CAMERA.shake_mag = min(CAM_SHAKE_MAX, CAMERA.shake_mag)
-    DEBUG_CAM_SHAKE and debug_print(
+    if DEBUG_CAM_SHAKE: debug_print(
         "Adding camera shake: " + intensity 
         + ", cam shake is: " + CAMERA.shake_mag
     )

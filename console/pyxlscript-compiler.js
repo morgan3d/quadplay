@@ -1550,7 +1550,7 @@ return $Object.freeze({$type:'mode', $enter:$enter, $frame:$frame, $pop_modeFrom
     compiledProgram += `
 function $start_program() {
     $play_reset_animation.active = false;
-    mode_frames = game_frames = -1;
+    mode_frames = game_frames = 0;
     try {
         set_mode(${start_mode});
     } catch (e) {
@@ -1563,7 +1563,12 @@ function $start_program() {
 return function () {
     if ($play_reset_animation.active) {
         $play_reset_animation();
-        $show();
+
+        // Don't show on the last frame of the animation
+        // because that would increment game_frames
+        if ($play_reset_animation.active) {
+           $show();
+        }
     } else {
         $gameMode.$frame();
     }

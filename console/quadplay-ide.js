@@ -59,6 +59,8 @@ let autoSleepEnabled = (getQueryString('kiosk') === '1') ||
 
 const noop = ()=>{};
 
+let keyboardMappingMode = 'Normal';
+
 // Disabled by the profiler if not making frame rate, reset
 // on game start.
 let allow_bloom = true;
@@ -503,6 +505,12 @@ function onBackgroundPauseClick(event) {
 function onAutoSleepClick(event) {
     event.stopPropagation();
     autosleepEnabled = document.getElementById('autoSleepCheckbox').checked;
+    saveIDEState();
+}
+
+function setKeyboardMappingMode(type) {
+    keyboardMappingMode = type;
+    document.getElementById(type + 'KeyboardRadio').checked = '1';
     saveIDEState();
 }
 
@@ -1986,7 +1994,8 @@ function saveIDEState() {
         'restartOnFocusEnabled': document.getElementById('restartOnFocusEnabled').checked,
         'codeEditorFontSize': '' + codeEditorFontSize,
         'autoplayOnLoad': document.getElementById('autoplayOnLoad').checked,
-        'onScreenHUDEnabled': document.getElementById('onScreenHUDEnabled').checked
+        'onScreenHUDEnabled': document.getElementById('onScreenHUDEnabled').checked,
+        'keyboardMappingMode': keyboardMappingMode
     };
 
     // Find the selected debugger tab
@@ -3398,8 +3407,8 @@ function mainLoopStep() {
     QRuntime.$logicToGraphicsTimeShift = 0;
 
     // Run the "infinite" loop for a while, maxing out at just under 1/60 of a second or when
-    // the program explicitly requests a refresh or keyboard update via _show(). Note that
-    // refreshPending may already be false if running with _graphicsPeriod > 1, but it does
+    // the program explicitly requests a refresh or keyboard update via $show(). Note that
+    // refreshPending may already be false if running with $graphicsPeriod > 1, but it does
     // no harm to set it back to false in that case.
     refreshPending = false;
     updateKeyboardPending = false;
@@ -4877,6 +4886,8 @@ if (! localStorage.getItem('autoplayOnLoad')) {
 }
 
 document.getElementById(localStorage.getItem('activeDebuggerTab') || 'performanceTab').checked = true;
+
+setKeyboardMappingMode(localStorage.getItem('keyboardMappingMode') || 'Normal');
 
 {
     const optionNames = ['showPhysicsEnabled', 'showPrivateViewsEnabled', 'showEntityBoundsEnabled', 'assertEnabled', 'todoEnabled', 'automathEnabled', 'prettyPrintEnabled', 'debugPrintEnabled', 'debugWatchEnabled', 'restartOnFocusEnabled', 'autoplayOnLoad', 'onScreenHUDEnabled', 'printTouchEnabled'];

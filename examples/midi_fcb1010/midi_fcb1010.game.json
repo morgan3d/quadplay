@@ -25,7 +25,7 @@
     "highscores": false,
     "dual_dpad": false,
     "midi_sysex": false,
-    "description": "Description of your game in about 100 characters.",
+    "description": "Example of using the MIDI API with the FCB1010 controller in default configuration. Requires the controller.",
     "constants": {
         "BUTTON_SIZE": {
             "type": "xy",

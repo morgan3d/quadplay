@@ -14,7 +14,7 @@ device_emulate_input(allow_gamepad)
 demo()
 
 // Visualize on screen (optional)
-device_visualize()
+device_visualize(font)
 
 // Visualize on device
 device_send_output()

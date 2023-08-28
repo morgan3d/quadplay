@@ -617,9 +617,153 @@ function ascii(x) { return x.charCodeAt(0); }
     when sampling the keyboard controller. See also
     https://hacks.mozilla.org/2017/03/internationalize-your-keyboard-controls/
     for why we use codes instead of keyCodes in JavaScript */
-const keyMap = [{'-x':['KeyA', 'ArrowLeft'], '+x':['KeyD', 'ArrowRight'], '-y':['KeyW', 'ArrowUp'], '+y':['KeyS', 'ArrowDown'], a:['KeyB', 'Space'],  b:['KeyH', 'Enter'],  c:['KeyV', 'KeyV'],     d:['KeyG', 'KeyG'],          e:['ShiftLeft', 'ShiftLeft'], f:['KeyC', 'ShiftRight'],  q:['Digit1', 'KeyQ'],   p:['Digit4', 'KeyP', 'Escape']},
-                {'-x':['KeyJ', 'KeyJ'],      '+x':['KeyL', 'KeyL'],       '-y':['KeyI', 'KeyI'],    '+y':['KeyK', 'KeyK'],     a:['Slash', 'Slash'], b:['Quote', 'Quote'], c:['Period', 'Period'], d:['Semicolon', 'Semicolon'], e:['KeyN','KeyN'],            f:['AltRight', 'AltLeft'], q:['Digit7', 'Digit7'], p:['Digit0', 'Digit0']}];
-      
+const keyMapTable = {
+    Normal: [
+        // Keyboard P1
+        {'-x':['KeyA', 'ArrowLeft'],
+         '+x':['KeyD', 'ArrowRight'],
+         '-y':['KeyW', 'ArrowUp'],
+         '+y':['KeyS', 'ArrowDown'],
+         a:['KeyB', 'Space'],
+         b:['KeyH', 'Enter'],
+         c:['KeyV', 'KeyV'],
+         d:['KeyG', 'KeyG'],
+         e:['ShiftLeft', 'ShiftLeft'],
+         f:['KeyC', 'ShiftRight'],
+         q:['Digit1', 'KeyQ'],
+         p:['Digit4', 'KeyP', 'Escape']},
+
+        // Keyboard P2
+        {'-x':['KeyJ', 'KeyJ'],
+         '+x':['KeyL', 'KeyL'],
+         '-y':['KeyI', 'KeyI'],
+         '+y':['KeyK', 'KeyK'],
+         a:['Slash', 'Slash'],
+         b:['Quote', 'Quote'],
+         c:['Period', 'Period'],
+         d:['Semicolon', 'Semicolon'],
+         e:['KeyN', 'KeyN'],
+         f:['AltRight', 'AltLeft'],
+         q:['Digit7', 'Digit7'],
+         p:['Digit0', 'Digit0']}],
+
+    // https://www.ultimarc.com/Mini-PAC%20Manual1.pdf
+    MiniPAC: [
+        // MiniPAC P1
+        {'-x':['ArrowLeft'],
+         '+x':['ArrowRight'],
+         '-y':['ArrowUp'],
+         '+y':['ArrowDown'],
+         a:['ShiftLeft'],
+         b:['KeyZ'],
+         c:['ControlLeft'],
+         d:['AltLeft'],
+         e:['Space'],
+         f:['KeyX'],
+         p:['Digit1'],  // P1 start
+         q:['Digit5']}, // P1 coin
+        
+        // MiniPAC P2
+        {'-x':['KeyD'],
+         '+x':['KeyG'],
+         '-y':['KeyR'],
+         '+y':['KeyF'],
+         a:['KeyW'],
+         b:['KeyI'],
+         c:['KeyA'],
+         d:['KeyS'],
+         e:['KeyQ'],
+         f:['KeyK'],
+         p:['Digit2'],  // P2 start
+         q:['Digit6']}, // P2 coin
+ 
+        // MiniPAC P3
+        {'-x':['KeyJ'],
+         '+x':['KeyL'],
+         '-y':['Numpad9'],
+         '+y':['Numpad0'],
+         a:['KeyT'],
+         b:['Backslash'],
+         c:['KeyO'],
+         d:['KeyC'],
+         e:['Digit3'],
+         f:['Enter'],
+         p:[],
+         q:['Digit7']}, // P3 coin
+
+        // MiniPAC P4
+        {'-x':['KeyV'],
+         '+x':['KeyU'],
+         '-y':['KeyY'],
+         '+y':['KeyN'],
+         a:['KeyH'],
+         b:['KeyM'],
+         c:['KeyB'],
+         d:['KeyE'],
+         e:['KeyP'],
+         f:['Digit4'],
+         p:[],
+         q:['Digit8']} // P4 coin
+    ],
+
+    // https://docs.mamedev.org/usingmame/defaultkeys.html#player-1-controls
+    MAME: [
+        // MAME P1
+        {'-x':['ArrowLeft'],
+         '+x':['ArrowRight'],
+         '-y':['ArrowUp'],
+         '+y':['ArrowDown'],
+         a:['ControlLeft'],
+         b:['AltLeft'],
+         c:['Space'],
+         d:['ShiftLeft'],
+         e:['KeyZ'], // 5
+         f:['KeyX'], // 6
+         p:['Digit1'], // P1 Start
+         q:['Digit5']}, // P1 Coin
+        
+        // MAME P2
+        {'-x':['KeyD'],
+         '+x':['KeyG'],
+         '-y':['KeyR'],
+         '+y':['KeyF'],
+         a:['KeyA'],
+         b:['KeyS'],
+         c:['KeyQ'],
+         d:['KeyW'],
+         e:['KeyE'],
+         f:[],
+         p:['Digit2'], // P2 Start
+         q:['Digit6']}, // P2 Coin
+        
+        // MAME P3
+        {'-x':['KeyJ'],
+         '+x':['KeyL'],
+         '-y':['KeyI'],
+         '+y':['KeyK'],
+         a:['ControlRight'],
+         b:['ShiftRight'],
+         c:['Enter'],
+         e:[],
+         f:[],
+         p:['Digit3'],
+         q:['Digit7']},
+        
+        // MAME P4
+        {'-x':['Numpad4'],
+         '+x':['Numpad6'],
+         '-y':['Numpad8'],
+         '+y':['Numpad2'],
+         a:['Numpad0'],
+         b:['NumpadDecimal'],
+         c:['NumpadEnter'],
+         e:[],
+         f:[],
+         p:['Digit4'],
+         q:['Digit8']}]
+};
+
+
 let prevRealGamepadState = [];
 
 // Maps names of gamepads to arrays for mapping standard buttons
@@ -1373,6 +1517,8 @@ function updateInput() {
     // Also processes input
     const gamepadArray = getIdealGamepads();
 
+    const keyMap = keyMapTable[keyboardMappingMode];
+    
     // Sample the keys
     let anyInteraction = false;
     for (let player = 0; player < 4; ++player) {

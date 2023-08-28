@@ -31,8 +31,8 @@ API:
       - `device_send_output()`
   - Emulator:
       - `device_set_emulator_type()`
-      - `device_emulate_input()`
-      - `device_visualize()`
+      - `device_emulate_input(cursor default false)`
+      - `device_visualize(font default nil)`
   - Utility:
       - `device_set_pixel(pos, color)`
       - `device_get_pixel(pos)`
@@ -155,7 +155,7 @@ def _device_configure_visualizer(device, type):
 /* Optionally call at the start of the frame to emulate
    input. Pair with device_visualize at the end of the frame.
    If `cursor` is true, a gamepad cursor is used to allow gamepad
-   input. */
+   input _when there is no physical device present._ */
 def device_emulate_input(cursor default false)
 & preserving_transform:
     
@@ -219,7 +219,7 @@ def device_emulate_input(cursor default false)
         const index = device._cursor_index
         for gamepad in gamepad_array:
             
-            todo("Gamepad arrow repeat")
+            // todo("Gamepad arrow repeat")
             const next_x = clamp(index.x + gamepad.xx, 0, 7)
             const next_y = clamp(index.y + gamepad.yy, 0, 7)
 
@@ -247,8 +247,11 @@ def device_emulate_input(cursor default false)
 
 /* Optionally call to visualize the device on screen.
    Assumes the background is black. Set the camera
-   or transform to move. See also `device_emulate_input()`*/
-def device_visualize()
+   or transform to move. See also `device_emulate_input()`
+
+   Pass a font to display the default instructions.
+   */
+def device_visualize(font default nil)
 & preserving_transform:
     set_transform(∅, xy(1, -1))
     const GRID_POS = ½ SCREEN_SIZE + xy(0, -8)
@@ -262,6 +265,24 @@ def device_visualize()
     const diameter = min_component(PAD_SIZE)
     
     const output = device.output
+
+    if font:
+        const text_args = {
+            font: font, 
+            color: #FFF, shadow: #000, outline: #000, 
+            x_align: "center", y_align: "bottom", z:2 }
+    
+        draw_text({
+            …text_args,
+            pos: xy(½ SCREEN_SIZE.x, 0), 
+            text: device.type + (if device.output_port then " Connected" else " Emulator")})
+
+        if not device.output_port: 
+            draw_text({
+                …text_args,
+                pos: xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y - 1), 
+                y_align: "top", 
+                text: "Touch the screen or connect a Launchpad, Push, or LinnStrument MIDI Controller"})
     
     for x < 9:
         for y < 9:
