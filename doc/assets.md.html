@@ -140,7 +140,7 @@ for (const font of [
 
    document.write(`
 <div style="display: inline-block; margin-right: 20px; margin-bottom: 10px">
-  <div class="font" style="background-image:url('../fonts/${font}.png')"></div>
+  <div class="font" style="background-image:url('../fonts/${font.replace(/-mono/, '')}.png')"></div>
 \`quad://fonts/${font}.font.json\`
 </div>`);
 </script>

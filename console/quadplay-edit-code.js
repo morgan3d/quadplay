@@ -830,22 +830,26 @@ function onNewModeCreate() {
     // Name is OK, create the mode
     const modeContents = `${name}
 ════════════════════════════════════════════════════════════════════════
-// Put local state for the mode here.  Declare variables with let, constants with const, and functions with def.
+// Put local state for the mode here.  Declare variables with let,
+// constants with const, and functions with def.
 
 
 enter
 ────────────────────────────────────────────────────────────────────────
-// This event runs when the mode is entered via set_mode() or push_mode().
+// This event runs when the mode is entered via set_mode() or
+//  push_mode().
 
 
 frame
 ────────────────────────────────────────────────────────────────────────
-// This event runs 60 times per second. Game logic, simulation, user input, and drawing all go here.
+// This event runs 60 times per second. Game logic, simulation,
+// user input, and drawing all go here.
 
 
 leave
 ────────────────────────────────────────────────────────────────────────
-// This event runs just before leaving for another mode by set_mode() or pop_mode().
+// This event runs just before leaving for another mode by
+// set_mode() or pop_mode().
 
 `;
     // Tell the server

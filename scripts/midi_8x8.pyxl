@@ -38,6 +38,8 @@ API:
       - `device_get_pixel(pos)`
       - `device_set_all(color)`
       - `device_set_border(color)`
+      - `device_any_pressed()`
+      - `transform_ds_to_ws(pos)`
       - `device_blit(sprite, lower_left_corner default xy(0, 0), write_to_border default false)`
 */
 
@@ -269,7 +271,7 @@ def device_visualize(font default nil)
     if font:
         const text_args = {
             font: font, 
-            color: #FFF, shadow: #000, outline: #000, 
+            color: #888, shadow: #000, outline: #000, 
             x_align: "center", y_align: "bottom", z:2 }
     
         draw_text({
@@ -317,6 +319,7 @@ def device_visualize(font default nil)
         draw_corner_rect(pos, PAD_SIZE, ∅, #FFF)
         draw_corner_rect(pos + 1, PAD_SIZE - 2, ∅, #000)
         draw_corner_rect(pos + 2, PAD_SIZE - 4, ∅, #FFF)
+
 
 
 // Call once per frame to discover new devices. Automatically
@@ -677,7 +680,10 @@ def device_blit(sprite, corner default xy(0, 0), write_to_border default false):
         
     // Allow passing a sprite sheet as a sprite
     if is_array(sprite): sprite = sprite[0][0]
-     
+
+    // Flip the sprite y axis
+    sprite = sprite.y_flipped
+    
     // Source
     let sx0 = 0
     let sy0 = 0
@@ -690,6 +696,8 @@ def device_blit(sprite, corner default xy(0, 0), write_to_border default false):
     let dx1 = ADD(dx0, sx1)
     let dy1 = ADD(dy0, sy1)
 
+    //debug_print(sy0, sy1, dy0, dy1)
+
     // Off screen entirely
     if (MAX(dx0, dy0) ≥ screenSize or
         MIN(dx0 + sx1, dy0 + sy1) ≤ 0): return
@@ -699,16 +707,13 @@ def device_blit(sprite, corner default xy(0, 0), write_to_border default false):
     if dy0 < 0: sy0 += -dy0; dy0 = 0
     if dx1 ≥ screenSize: sx1 -= screenSize - dx1 + 1; dx1 = screenSize
     if dy1 ≥ screenSize: sy1 -= screenSize - dy1 + 1; dy1 = screenSize
-            
+    
     const s = xy(0, 0)    
     for dx0 ≤ dx < dx1:
         s.x = sx0 + dx - dx0
-        
-        // Flip the sprite y axis
-        s.y = sy1
+        s.y = sy0
         const output_column = device.output[dx]
         for dy0 ≤ dy < dy1:
-            --s.y
             const src = get_sprite_pixel_color(sprite, s)
             const dst = output_column[dy]
             if src.a == 1:
@@ -717,6 +722,7 @@ def device_blit(sprite, corner default xy(0, 0), write_to_border default false):
             else if src.a > 0:
                 // Blend
                 RGB_LERP(dst, src, src.a, dst)
+            ++s.y
 
         
 
@@ -734,6 +740,31 @@ def device_set_all(color = #000):
     for x < 8:
         for y < 8:
             device.output[x][y] = rgb(color)
-            
+
+
+
+def device_any_pressed():
+    for x < 8:
+        for y < 8:
+            if device.input[x][y].pressed:
+                return true
+    return false
+
+
+/* Convert a device pixel center to the world space position
+   in the emulator visualization. Useful for aligning text
+   labels with visualizer buttons. */
+def transform_ds_to_ws(pos):
+    // set_transform(∅, xy(1, -1))
+    const GRID_POS = ½ SCREEN_SIZE + xy(0, -8)
+    
+    const PAD_SIZE    = floor(xy(20, 20) * device.pad_aspect / max_component(device.pad_aspect))
+    const GUTTER_SIZE = max(device.gutter_scale * max_component(PAD_SIZE), if device.gutter_scale > 0 then 1 else 0) 
+    const PAD_SPACING = floor(PAD_SIZE + GUTTER_SIZE)
+    const PAD_OFFSET  = round(GRID_POS - 4 PAD_SPACING) + xy(2, 2)
+
+    return (round(pos) + 0.5) * PAD_SPACING + PAD_OFFSET
+
+
 const device = _make_device()
             

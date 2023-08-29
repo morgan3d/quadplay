@@ -505,13 +505,13 @@ function onBackgroundPauseClick(event) {
 function onAutoSleepClick(event) {
     event.stopPropagation();
     autosleepEnabled = document.getElementById('autoSleepCheckbox').checked;
-    saveIDEState();
+    localStorage.setItem('autoSleepEnabled', autoSleepEnabled);
 }
 
 function setKeyboardMappingMode(type) {
     keyboardMappingMode = type;
     document.getElementById(type + 'KeyboardRadio').checked = '1';
-    saveIDEState();
+    localStorage.setItem('keyboardMappingMode', type);
 }
 
 
@@ -1973,7 +1973,7 @@ if (useIDE) {
 function saveIDEState() {
     // Never save in kiosk mode
     if (getQueryString('kiosk') === '1') { return; }
-    
+
     const options = {
         'uiMode': uiMode,
         'backgroundPauseEnabled': backgroundPauseEnabled,
@@ -2527,7 +2527,7 @@ function visualizeGame(gameEditor, url, game) {
 
     s+= '<tr><td>&nbsp;</td></tr>\n';
     if (editableProject) {
-        s += '<tr valign="top"><td>Start&nbsp;Mode</td><td colspan=3><select style="width:390px" onchange="onProjectInitialModeChange(this.value)">\n';
+        s += '<tr valign="top"><td>Start&nbsp;Mode</td><td colspan=3><select id="projectstartmodedropdown" style="width:390px" onchange="onProjectInitialModeChange(this.value)">\n';
         for (let i = 0; i < gameSource.modes.length; ++i) {
             const mode = gameSource.modes[i];
             if (! mode.name.startsWith('quad://console/os/_') && ! mode.name.startsWith('$')) {
@@ -2537,7 +2537,7 @@ function visualizeGame(gameEditor, url, game) {
         s += '</select></td></tr>\n';
 
         const overrideInitialMode = gameSource.debug && gameSource.debug.json && gameSource.debug.json.start_mode_enabled && gameSource.debug.json.start_mode;
-        s += `<tr valign="top"><td></td><td><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${overrideInitialMode ? 'checked' : ''} onchange="onDebugInitialModeOverrideChange(this)">Debug&nbsp;Override</label></td><td colspan=2"><select id="debugOverrideInitialMode" style="width:205px; top:-2px" ${overrideInitialMode ? '' : 'disabled'} onchange="onProjectDebugInitialModeChange(this.value)">\n`;
+        s += `<tr valign="top"><td></td><td><label><input id="projectdebugstartmodeoverridecheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${overrideInitialMode ? 'checked' : ''} onchange="onDebugInitialModeOverrideChange(this)">Debug&nbsp;Override</label></td><td colspan=2"><select id="debugOverrideInitialMode" style="width:205px; top:-2px" ${overrideInitialMode ? '' : 'disabled'} onchange="onProjectDebugInitialModeChange(this.value)">\n`;
         for (let i = 0; i < gameSource.modes.length; ++i) {
             const mode = gameSource.modes[i];
             if (! mode.name.startsWith('quad://console/os/_') && ! mode.name.startsWith('$')) {
@@ -2546,7 +2546,7 @@ function visualizeGame(gameEditor, url, game) {
         }
         s += '</select></td></tr>\n';
         
-        s += `<tr valign="top"><td>Screen&nbsp;Size</td><td colspan=3><select style="width:390px" onchange="onProjectScreenSizeChange(this)">`;
+        s += `<tr valign="top"><td>Screen&nbsp;Size</td><td colspan=3><select id="projectscreensizedropdown" style="width:390px" onchange="onProjectScreenSizeChange(this)">`;
         for (let i = 0; i < allowedScreenSizes.length; ++i) {
             const W = allowedScreenSizes[i].x, H = allowedScreenSizes[i].y;
             s += `<option value='{"x":${W},"y":${H}}' ${W === gameSource.extendedJSON.screen_size.x && H === gameSource.extendedJSON.screen_size.y ? "selected" : ""}>${W} × ${H}${W === 384 && H === 224 ? ' ✜' : ''}</option>`;
@@ -2561,12 +2561,12 @@ function visualizeGame(gameEditor, url, game) {
                 break;
             }
         }
-        s += `<tr valign="top"><td>Screen&nbsp;Size</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} value="${gameSource.extendedJSON.screen_size.x} × ${gameSource.extendedJSON.screen_size.y}"></td></tr>\n`;
+        s += `<tr valign="top"><td>Screen&nbsp;Size</td><td colspan=3><input id="projectscreensizetextbox" type="text" autocomplete="false" style="width:384px" ${disabled} value="${gameSource.extendedJSON.screen_size.x} × ${gameSource.extendedJSON.screen_size.y}"></td></tr>\n`;
     }
-    s += `<tr valign="top"><td></td><td colspan=3><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.y_up ? 'checked' : ''} onchange="onProjectYUpChange(this)">Y-Axis = Up</label></td></tr>\n`;
+    s += `<tr valign="top"><td></td><td colspan=3><label><input id="projectyupcheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.y_up ? 'checked' : ''} onchange="onProjectYUpChange(this)">Y-Axis = Up</label></td></tr>\n`;
 
     s += '<tr><td>&nbsp;</td></tr>\n';
-    s += `<tr valign="top"><td>I/O</td><td colspan=4><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.dual_dpad ? 'checked' : ''} onchange="onProjectDualDPadChange(this)">Dual D-Pad</label>  <label><input type="checkbox" autocomplete=false ${disabled} ${game.midi_sysex ? 'checked' : ''} onchange="onProjectMIDISysexChange(this)" style="margin-left: 50px" tooltip="Does this game send MIDI sysex messages?">MIDI Sysex Output</label></td></tr>\n`;
+    s += `<tr valign="top"><td>I/O</td><td colspan=4><label><input id="projectdualdpadcheckbox" type="checkbox" autocomplete="false" style="margin-left:0" ${disabled} ${game.dual_dpad ? 'checked' : ''} onchange="onProjectDualDPadChange(this)">Dual D-Pad</label>  <label><input id="projectmidicheckbox" type="checkbox" autocomplete=false ${disabled} ${game.midi_sysex ? 'checked' : ''} onchange="onProjectMIDISysexChange(this)" style="margin-left: 50px" tooltip="Does this game send MIDI sysex messages?">MIDI Sysex Output</label></td></tr>\n`;
     s += '<tr><td>&nbsp;</td></tr>\n';
     
     s += `<tr valign="top"><td>Description<br><span id="projectDescriptionLength">(${(game.description || '').length}/100 chars)</span> </td><td colspan=3><textarea ${disabled} style="width:384px; padding: 3px; margin-bottom:-3px; font-family: Helvetica, Arial; font-size:12px" rows=2 id="projectDescription" onchange="onProjectMetadataChanged(this)" oninput="document.getElementById('projectDescriptionLength').innerHTML = '(' + this.value.length + '/100 chars)'">${game.description || ''}</textarea>`;
@@ -2584,7 +2584,7 @@ function visualizeGame(gameEditor, url, game) {
     s += `<tr valign="top"><td>Screenshot&nbsp;Tag</td><td colspan=3><input type="text" autocomplete="false" style="width:384px" ${disabled} onchange="onProjectMetadataChanged()" id="screenshotTag" value="${game.screenshot_tag.replace(/"/g, '\\"')}"></td></tr>\n`;
     if (editableProject) {
         const overrideTag = gameSource.debug.json && gameSource.debug.json.screenshot_tag_enabled;
-        s += `<tr><td></td><td><label><input type="checkbox" autocomplete="false" style="margin-left:0" ${overrideTag ? 'checked' : ''} onchange="onDebugScreenshotTagOverrideChange(this)">Debug&nbsp;Override</label></td><td colspan=2><input type="text" autocomplete="false" style="width:198px" ${overrideTag ? '' : 'disabled'} ${disabled} onchange="onProjectMetadataChanged()" id="debugScreenshotTag" value="${(game.debug && game.debug.json && game.debug.json.screenshot_tag !== undefined) ? game.debug.json.screenshot_tag.replace(/"/g, '\\"') : ''}"></td></tr>`;
+        s += `<tr><td></td><td><label><input id="projectscreenshottag" type="checkbox" autocomplete="false" style="margin-left:0" ${overrideTag ? 'checked' : ''} onchange="onDebugScreenshotTagOverrideChange(this)">Debug&nbsp;Override</label></td><td colspan=2><input type="text" autocomplete="false" style="width:198px" ${overrideTag ? '' : 'disabled'} ${disabled} onchange="onProjectMetadataChanged()" id="debugScreenshotTag" value="${(game.debug && game.debug.json && game.debug.json.screenshot_tag !== undefined) ? game.debug.json.screenshot_tag.replace(/"/g, '\\"') : ''}"></td></tr>`;
     }
     s += '<tr><td>&nbsp;</td></tr>\n';
         
@@ -5046,7 +5046,7 @@ LoadManager.fetchOne({}, location.origin + getQuadPath() + 'console/_config.json
     serverConfig = json;
 });
 
-// Make the browser aware that we want gamepads as early as possible
+// As early as possible, make the browser aware that we want gamepads
 navigator.getGamepads();
 
 // Initialize MIDI without requiring sysex, which can prompt.

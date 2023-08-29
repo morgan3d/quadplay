@@ -24,7 +24,7 @@
       const isQuadserver = getQueryString('quadserver') === '1';
 
       function makeButton(label, title, onclick, id) {
-         document.write('<div ' + (id ? 'id="' + id + 'Container" ' : '') + ' onmousedown="event.stopPropagation()" class="button" onclick="if (event.target.parentElement.parentElement.enabled !== false) ' + (onclick || '') + '(event)" title="' + (title || label) + '"><label><span class="label" ' + (id ? 'id="' + id + 'Label"' : '') + '>' + label + '</span></label></div>');
+         document.write('<div ' + (id ? 'id="' + id + 'Container" ' : '') + ' onmousedown="event.stopPropagation()" class="button" onclick="if (event.target.parentElement.parentElement.enabled !== false) ' + (onclick || '') + '(event)" title="' + (title || label) + '"><span class="label" ' + (id ? 'id="' + id + 'Label"' : '') + '>' + label + '</span></div>');
       }
     
       function makeRadio(labelHTML, id, selected, attribs, groupID, disabled) {

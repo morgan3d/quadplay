@@ -560,7 +560,7 @@ div.debugOverride.disabled {
     -webkit-touch-callout: none;
 }
 
-.button label span.label {
+.button label span.label, .button span.label {
     margin:           0px;
     background-color: #FFF;
     background:       linear-gradient(to bottom, rgba(255,255,255,1) 0%,rgba(242,242,242,1) 36%,rgba(242,242,242,1) 90%,rgba(224,224,224,1) 100%);
