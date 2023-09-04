@@ -504,7 +504,7 @@ function onBackgroundPauseClick(event) {
 
 function onAutoSleepClick(event) {
     event.stopPropagation();
-    autosleepEnabled = document.getElementById('autoSleepCheckbox').checked;
+    autoSleepEnabled = document.getElementById('autoSleepCheckbox').checked;
     localStorage.setItem('autoSleepEnabled', autoSleepEnabled);
 }
 

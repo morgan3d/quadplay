@@ -111,6 +111,8 @@ function onMIDIMessage(message) {
 
     default:
         {
+            // Allow MIDI to keep quadplay awake
+            updateLastInteractionTime();
             const type = status >> 4;
             outmessage.channel = status & 0x0f;
             

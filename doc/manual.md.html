@@ -2253,8 +2253,8 @@ Array
 `make_array(size, value default nil, value_clone default nil)`
 : Creates a 1D (if `size` is a number), 2D (if `size` is an `xy()`),
   or 3D (if `size` is an `xyz()`) array of arrays.  Each element is
-  initialized independently to `if value_clone then value else
-  value_clone(value)`.
+  initialized independently to `if value_clone then value_clone(value) else value`.
+  `clone()` and `deep_clone()` are common choices for `value_clone`.
   
   Multidimensional arrays are indexed as `array[x][y][z]`.
   
@@ -5587,7 +5587,7 @@ inputs instead of direct logic within simulation.
 
 ### Board Games
 
-`find_move(player_index, game_state, generate_moves, do_move, static_evaluate, max_depth default 2, unpredictability default 0, debug_move_to_string default nil)`
+`find_move(player_index, game_state, generate_moves, apply_move, static_evaluate, max_depth default 2, unpredictability default 0, debug_move_to_string default nil)`
 : Chooses the best move for the current player in a two player, zero
   sum game with perfect information and discrete moves by game tree search
   using the negamax algorithm. This can handle most two player board games.
@@ -5595,7 +5595,7 @@ inputs instead of direct logic within simulation.
   - `player_index`: 0 for the maximizing player, 1 for the minimizing player. This must be the current player in `game_state`
   - `game_state`: state of the game, an arbitrary data structure (which probably also keeps track of the `player_index` itself…)
   - `generate_moves(game_state)`: function that returns an array of moves, an arbitrary game-specific data structure
-  - `do_move(game_state, move)`: function that returns a new game state after a move has been performed. This must clone the
+  - `apply_move(game_state, move)`: function that returns a new game state after a move has been performed. This must clone the
     state and not mutate it
   - `static_evaluate(game_state)`: function that evaluates a game position as a signed number.
      Higher is better for `player_index` 0, lower is better for `player_index` 1. 

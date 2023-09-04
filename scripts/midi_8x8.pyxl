@@ -221,7 +221,6 @@ def device_emulate_input(cursor default false)
         const index = device._cursor_index
         for gamepad in gamepad_array:
             
-            // todo("Gamepad arrow repeat")
             const next_x = clamp(index.x + gamepad.xx, 0, 7)
             const next_y = clamp(index.y + gamepad.yy, 0, 7)
 
@@ -742,12 +741,12 @@ def device_set_all(color = #000):
             device.output[x][y] = rgb(color)
 
 
-
+/* Returns the element pressed or false */
 def device_any_pressed():
     for x < 8:
         for y < 8:
             if device.input[x][y].pressed:
-                return true
+                return xy(x, y)
     return false
 
 
