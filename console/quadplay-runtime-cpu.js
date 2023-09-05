@@ -5355,14 +5355,24 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
     switch (x_align) {
     case 'middle': case 'center': x_align = 0; break;
     case 'right':  x_align = +1; break;
-    case 'left': default: x_align = -1; break;
+    case 'left': x_align = -1; break;
+    default:
+        if (x_align !== 0 && x_align !== 1 && x_align !== -1) {
+            x_align = -1;
+        }
+        break;
     }
 
     switch (y_align) {
     case 'top': y_align = -1; break;
     case 'center': case 'middle': y_align = 0; break;
     case 'bottom': y_align = +2; break;
-    case 'baseline': default: y_align = +1; break;
+    case 'baseline': y_align = +1; break;
+    default:
+        if (y_align !== 0 && y_align !== 1 && y_align !== -1 && y_align !== 2) {
+            y_align = +1;
+        }
+        
     }
     
     // Debug visualize the markup:

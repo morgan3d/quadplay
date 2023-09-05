@@ -484,15 +484,13 @@ adventure game inspired by Into the Breach and Rogue:
 - Aseprite sprites
 - Extensive data-driven design with external YAML files
 
-  <center><img src="../games/hexflipper/title.png" width="300px" style="border:0"></center>
-
 ----------------------------
+
+  <center><img src="../games/but_skunks/title.png" width="300px" style="border:0"></center>
 
 <div class="preview pixel" style="background-image:url('../games/but_skunks/preview.png')"></div>
 [But...Skunks?!](../console/quadplay.html?game=quad://games/but_skunks&IDE=1) is a one or two player
 rythmn game.
-
-
 
 
 ### Examples
@@ -7442,10 +7440,10 @@ These are reserved tokens that cannot be used as variable names. Some
 of them are keywords or built-in syntax, and some of them do nothing
 now but are reserved for future use.
 
-`ADD`, `and`, `arguments`, `args`, `as`, `async`, `at`, `auto`, `await`, `assert`,
+`and`, `arguments`, `args`, `as`, `async`, `at`, `auto`, `await`, `assert`,
 `because`, `begin`, `bitand`, `bitnot`, `bitor`, `bitashl`, `bitshl`, `bitshr`, `break`,
 `catch`, `class`, `const`, `cont`, `coroutine`, `continue`, `constructor`,
-`deg`, `do`, `delete`, `def`, `default`, `DIV`, `debug_watch`, `debug_print`,
+`deg`, `do`, `delete`, `def`, `default`, `debug_watch`, `debug_print`,
 `elif`, `end`, `extern`, `enum`,
 `final`, `finally`, `for`, `from`, `freeze`, `function`,
 `get`, `global`, `go`, `goto`,
@@ -7453,7 +7451,7 @@ now but are reserved for future use.
 `if`, `in`, `implements`, `inherits`, `include`, `import`, `interface`,
 `launch_game`, `let`, `local`,
 `nan`, `NaN`, `new`, `nil`, `nonlocal`, `not`, `null`,
-`main`, `MAD`, `mod`, `module`, `mode`, `MUL`,
+`main`, `mod`, `module`, `mode`,
 `or`, `otherwise`,
 `public`, `private`, `protected`, `prototype`, `package`, `preserve`, `preserving_transform`,
 `quit_game`,
@@ -7467,12 +7465,12 @@ now but are reserved for future use.
 `yield`.
 
 
-Built-in functions such as `draw_tri` that are legal identifiers can be
+Built-in functions such as `draw_rect` that are legal identifiers can be
 rebound. They are not reserved. `cos`, `sin`, and `tan` by themselves
 are bound to first-class functions, but the special syntax that allows
 them to be invoked without parentheses on single variables is tied to
 their exact names. If you rebind them, then the new functions that you
-have bound will be invoked.
+have bound will be invoked instead.
 
 
 
@@ -7509,7 +7507,7 @@ single-line flow control:
 
 ~~~~~~~~~~~~~~~~~~~~~~ PyxlScript
 G = {x:1, y:2, z:0}
-with x,y ∈ G: x = 100; y = 0; z = 4
+with x, y in G: x = 100; y = 0; z = 4
 ~~~~~~~~~~~~~~~~~~~~~~
 
 `with` statements can make code clean but are expensive relative to
@@ -7542,10 +7540,11 @@ Comments follow C/C++/Java/JavaScript syntax of `//` for single line comments an
 for multi-line comments.
 
 `because "reason"`
-: The special `because` statement allows a compile-time string comment to follow
-  a mode or game change control flow statement such as `set_mode()`. It acts as
-  a machine-readable comment that the IDE will use to automatically annotate the program
-  in the debug output and the mode diagram.
+: The special `because` statement allows a compile-time string comment
+  to follow specific statements such as `set_mode()`. It acts as a
+  machine-readable comment that the IDE will use to automatically
+  annotate the program in the debug output at runtime and the mode
+  diagram.
 
 
 

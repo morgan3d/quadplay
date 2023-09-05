@@ -120,6 +120,7 @@ def _device_configure_visualizer(device, type):
     device.center_cutout = true
     device.has_row_9 = true
     device.uniform_light = true
+    device.type = type
     
     if type == "LinnStrument128":
         device.corner_is_rgb = false
@@ -152,6 +153,7 @@ def _device_configure_visualizer(device, type):
         // nothing to do
     else:
         assert(false, "Unrecognized device type: " + type)
+
 
 
 /* Optionally call at the start of the frame to emulate
@@ -252,7 +254,7 @@ def device_emulate_input(cursor default false)
 
    Pass a font to display the default instructions.
    */
-def device_visualize(font default nil)
+def device_visualize(font default ∅)
 & preserving_transform:
     set_transform(∅, xy(1, -1))
     const GRID_POS = ½ SCREEN_SIZE + xy(0, -8)
@@ -427,43 +429,8 @@ def _device_init_output(device, port):
         // Ableton Push
         // https://github.com/Ableton/push-interface/blob/master/doc/AbletonPush2MIDIDisplayInterface.asc
         
-        device._send_output = _ableton_send_output
-        _device_configure_visualizer(device, if contains(device.output_port.name, "Push 3") then "Ableton Push 3" else "Ableton Push 2")
+        _ableton_init_precise(device)
         
-        // Enter User mode
-        _midi_send_raw_with_check(device, [0xF0, 0x00, 0x21, 0x1D, 0x01, 0x01, 0x0A, 0x01, 0xF7])
-        
-        const γ = 2
-        
-        // Sysex for send palette
-        for i < 64:
-            const palette_cmd = [0xF0, 0x00, 0x21, 0x1D, 0x01, 0x01, 0x03]
-            // Index as R2G2B2 color, and then convert to 8-bit unorm
-            let r = (⅓ ((i bitshr 4) ∩ 0b11))^γ
-            let g = (⅓ ((i bitshr 2) ∩ 0b11))^γ
-            let b = (⅓ (i ∩ 0b11))^γ
-                        
-            const R = clamp(⌊256 r⌋, 0, 255) 
-            const G = clamp(⌊256 g⌋, 0, 255) 
-            const B = clamp(⌊256 b⌋, 0, 255) 
-        
-            // For grayscale LEDs
-            const brightness = min(⌊256 i / 63⌋, 255)
-            
-            push(palette_cmd, i, 
-                R bitand 0b01111111, // R LSB
-                R bitshr 7,          // R MSB
-                G bitand 0b01111111, // G LSB
-                G bitshr 7,          // G MSB
-                B bitand 0b01111111, // B LSB
-                B bitshr 7,          // B MSB
-                brightness     bitand 0b01111111, // White LSB
-                brightness     bitshr 7)          // White MSB
-  
-            // End sysex
-            push(palette_cmd, 0xF7)
-            
-            _midi_send_raw_with_check(device, palette_cmd)
             
     else if contains(device.output_port.name, "APC mini mk2 Control"):
         // APC mini mk2
@@ -474,7 +441,7 @@ def _device_init_output(device, port):
         // Initialize
         _midi_send_raw_with_check(device, [0xF0, 0x47, 0x7F, 0x4F, 0x60, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0xF7])
 
-
+        
 
 /* Call once per frame at the end to write the output to the device. */
 def device_send_output():
@@ -521,6 +488,49 @@ def _apc_send_output(device):
 
 
 
+//////////////////////////////////////////////////////////////////////////////////
+
+def _ableton_init(device):
+    device._send_output = _ableton_send_output
+    _device_configure_visualizer(device, if contains(device.output_port.name, "Push 3") then "Ableton Push 3" else "Ableton Push 2")
+    
+    // Enter User mode
+    _midi_send_raw_with_check(device, [0xF0, 0x00, 0x21, 0x1D, 0x01, 0x01, 0x0A, 0x01, 0xF7])
+    
+    const γ = 2
+    
+    // Sysex for send palette
+    for i < 64:
+        const palette_cmd = [0xF0, 0x00, 0x21, 0x1D, 0x01, 0x01, 0x03]
+        // Index as R2G2B2 color, and then convert to 8-bit unorm
+        let r = (⅓ ((i bitshr 4) ∩ 0b11))^γ
+        let g = (⅓ ((i bitshr 2) ∩ 0b11))^γ
+        let b = (⅓ (i ∩ 0b11))^γ
+                    
+        const R = clamp(⌊256 r⌋, 0, 255) 
+        const G = clamp(⌊256 g⌋, 0, 255) 
+        const B = clamp(⌊256 b⌋, 0, 255) 
+    
+        // For grayscale LEDs
+        const brightness = min(⌊256 i / 63⌋, 255)
+        
+        push(palette_cmd, i, 
+            R bitand 0b01111111, // R LSB
+            R bitshr 7,          // R MSB
+            G bitand 0b01111111, // G LSB
+            G bitshr 7,          // G MSB
+            B bitand 0b01111111, // B LSB
+            B bitshr 7,          // B MSB
+            brightness     bitand 0b01111111, // White LSB
+            brightness     bitshr 7)          // White MSB
+
+        // End sysex
+        push(palette_cmd, 0xF7)
+        
+        _midi_send_raw_with_check(device, palette_cmd)
+    
+    
+    
 def _ableton_send_output(device):
     // https://github.com/Ableton/push-interface/blob/master/doc/AbletonPush2MIDIDisplayInterface.asc#setting-led-colors
     def unorm2(x):
@@ -554,6 +564,96 @@ def _ableton_send_output(device):
     _midi_send_raw_with_check(device, msg)
 
 
+///////////////////////////////////////////////////////////////////////////////
+
+// Uses a fixed set of screen values and variable palette to improve output
+// precision. May be slower.
+
+def _ableton_init_precise(device):
+    device._send_output = _ableton_send_output_precise
+    _device_configure_visualizer(device, if contains(device.output_port.name, "Push 3") then "Ableton Push 3" else "Ableton Push 2")
+    
+    // Enter User mode
+    _midi_send_raw_with_check(device, [0xF0, 0x00, 0x21, 0x1D, 0x01, 0x01, 0x0A, 0x01, 0xF7])
+
+    // Leave palette index 0 as black, which shuts off all unused buttons
+
+    // Set the fixed mapping from pads to palette indices used
+    // by quadplay on Ableton Push. Ableton does not support running
+    // status, so has to be many messages.
+    const msg = []
+            
+    // Center grid
+    for x < 8:
+        const column = device.output[x]
+        for y < 8:
+            push(msg, 0x90, 36 + 8 y + x, 9 y + x + 1)
+
+    // Border LEDs on control buttons
+    for i < 8:
+        // Last column
+        push(msg, 0xB0, 36 + i, 9 i + 8 + 1)
+        // Last row
+        push(msg, 0xB0, 20 + i, 9 * 8 + i + 1)
+
+    // element 8, 8 is grayscale and set per frame
+        
+    _midi_send_raw_with_check(device, msg)
+
+
+
+def _ableton_send_output_precise(device):
+    // https://github.com/Ableton/push-interface/blob/master/doc/AbletonPush2MIDIDisplayInterface.asc#setting-led-colors
+
+    // Set the PALETTE
+    const msg = []
+            
+    const γ = 2
+    
+    // Sysex for send palette
+    for x < 9:
+    
+        const column = device.output[x]        
+        // Skip element (8, 8), which is set explicitly
+        const y_max = (if x < 8 then 9 else 8)
+        
+        for y < y_max:
+            push(msg, 0xF0, 0x00, 0x21, 0x1D, 0x01, 0x01, 0x03)
+            
+            // Palette index.
+            const i = ADD(MAD(9, y, x), 1)
+            
+            const color = column[y]            
+            const r = color.r
+            const g = color.g
+            const b = color.b
+                        
+            const R = CLAMP(FLOOR(MUL(256, MUL(r, r))), 0, 255) 
+            const G = CLAMP(FLOOR(MUL(256, MUL(g, g))), 0, 255) 
+            const B = CLAMP(FLOOR(MUL(256, MUL(b, b))), 0, 255) 
+        
+            push(msg, i, 
+                R bitand 0b01111111, // R LSB
+                R bitshr 7,          // R MSB
+                G bitand 0b01111111, // G LSB
+                G bitshr 7,          // G MSB
+                B bitand 0b01111111, // B LSB
+                B bitshr 7,          // B MSB
+                0b01111111,          // White LSB
+                1)                   // White MSB
+    
+            // End sysex
+            push(msg, 0xF7)
+
+    
+    // Grayscale corner
+    const brightness = min(⌊128 dot(#FFF, device.output[8][8]) / 3⌋, 127)
+    push(msg, 0xB0, 28, brightness)
+
+    _midi_send_raw_with_check(device, msg)
+
+
+///////////////////////////////////////////////////////////////////////////////
 
 def _linnstrument_send_output(device):
     // https://github.com/rogerlinndesign/linnstrument-firmware/blob/master/midi.txt
