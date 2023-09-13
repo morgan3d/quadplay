@@ -1287,7 +1287,7 @@ function submitFrame(_updateImageData, _updateImageData32) {
     updateImageData32 = _updateImageData32;
 
     // Hack the FPS overlay directly onto the screen
-    if (QRuntime.$onScreenHUDEnabled) {
+    if (QRuntime.$onScreenHUDEnabled && ! $THREADED_GPU) {
         onScreenDrawBarGraph('Frame:', onScreenHUDDisplay.time.frame, 0xFA5F, 0);
         onScreenDrawBarGraph('  60fps Logic:', onScreenHUDDisplay.time.logic, 0xFFA0, 1);
         onScreenDrawBarGraph('  ' + onScreenHUDDisplay.time.refresh + 'fps Graphics:', onScreenHUDDisplay.time.graphics, 0xF0D0, 2);

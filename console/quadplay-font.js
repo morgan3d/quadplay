@@ -794,6 +794,9 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
     const borderMask       = array2DUint8(_charWidth * 4, font.$charHeight);
     const shadowMask       = array2DUint8(_charWidth * 4, font.$charHeight);
     const shadowBorderMask = array2DUint8(_charWidth * 4, font.$charHeight);
+    // Have to save the font size for postMessage, which cannot preserve
+    // extended properties on typed arrays.
+    font.$size = {x: _charWidth * FONT_COLS, y: font.$charHeight * FONT_ROWS};
     font.$data = array2DUint8(_charWidth * FONT_COLS, font.$charHeight * FONT_ROWS);
     font.$bounds = {};
 

@@ -25,7 +25,6 @@ if ($THREADED_GPU) {
         $updateImageData = event.data.updateImageData;
         $updateImageData32 = event.data.updateImageData32;
 
-        // TODO: undo this slow copy
         $updateImageData = new ImageData(new Uint8ClampedArray($updateImageData32.buffer),
                                          $updateImageData.width,
                                          $updateImageData.height);
@@ -84,7 +83,11 @@ function $isTypedArray(a) {
      
 
 function $set_texture(spritesheetArray, fontArray) {
-    // console.log('set_texture()');
+    if (spritesheetArray.length) {
+        // Test for data transfer correctness
+        console.assert(spritesheetArray[0].$uint16Data.width !== undefined);
+    }
+   
     // In web worker mode, send a message
     if ($GPU) {
         console.log('sending set_texture');

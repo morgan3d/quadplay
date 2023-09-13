@@ -51,18 +51,18 @@ if ($is_web_worker) {
         
         switch (event.data.type) {
         case 'set_texture':
-            $gpu_set_texture(event.data.spritesheetArray, event.data.fontArray);
-            // TODO: Remove
-            const sheet = event.data.spritesheetArray[3];
-            if (sheet) {
-                const srcData = sheet.$uint16Data;
-                let any = false;
-                for (let i = 0; i < srcData.length; ++i) {
-                    any = any || ((srcData[i] & 0x0fff) !== 0);
-                }
-                console.assert(any);
-                console.log("pass");
+            // Fix the extended properties, which are not copied by
+            // the built-in JavaScript copying/buffer transfer.
+            for (let sheet of event.data.spritesheetArray) {
+                sheet.$uint16DataFlippedX.width = sheet.$uint16Data.width = sheet.size.x;
+                sheet.$uint16DataFlippedX.height = sheet.$uint16Data.height = sheet.size.y;
             }
+            for (let font of event.data.fontArray) {
+                font.$data.width = font.$size.x;
+                font.$data.height = font.$size.y;
+            }
+            
+            $gpu_set_texture(event.data.spritesheetArray, event.data.fontArray);
             break;
 
         case 'resize_framebuffer':
@@ -579,7 +579,7 @@ function $line(x1, y1, x2, y2, color, clipX1, clipY1, clipX2, clipY2, open1, ope
 
         // Slope:
         const dx = x2 - x1, dy = y2 - y1;
-        const moreHorizontal = abs(dx) > abs(dy);
+        const moreHorizontal = Math.abs(dx) > Math.abs(dy);
 
         if ((moreHorizontal && (x2 < x1)) ||
             (! moreHorizontal && (y2 < y1))) {
@@ -874,7 +874,7 @@ function $executeSPR(metaCmd) {
         // pixels later and stepping in integer increments anyway).
 
         if (cmd.spritesheetIndex >= $spritesheetArray.length) {
-            $console.log('GPU', cmd);
+            $console.log('GPU spritesheetIndex out of bounds at:', cmd);
         }
         $console.assert(cmd.spritesheetIndex !== undefined &&
                         cmd.spritesheetIndex >= 0 &&
@@ -882,11 +882,15 @@ function $executeSPR(metaCmd) {
                         'spritesheetIndex out of bounds:', cmd.spritesheetIndex);
         // May be reassigned below when using flipped X values
         let srcData = $spritesheetArray[cmd.spritesheetIndex].$uint16Data;
+        console.assert(srcData.width !== undefined);
 
         const srcDataWidth = srcData.width >>> 0;
+        
         if (($Math.abs($Math.abs(A) - 1) < 1e-10) && ($Math.abs(B) < 1e-10) &&
             ($Math.abs(C) < 1e-10) && ($Math.abs($Math.abs(D) - 1) < 1e-10) &&
             (! override_color)) {
+
+            // console.log('simple', srcData[0].toString(16), srcData[1].toString(16), srcData[2].toString(16));
 
             // Simple case; x and y-axis uniform scale, no rotation, and no alpha
             // test. Use a memcpy.  The x and y-axes may be inverted, and there
@@ -911,11 +915,13 @@ function $executeSPR(metaCmd) {
                 if ((! cmd.hasAlpha) && ($Math.abs(opacity - 1) < 1e-10)) {
                     // Memcpy case
                     for (let dstY = dstY1; dstY <= dstY2; ++dstY) {
-                        // This TypedArray.set call saves about 3.5 ms/frame
-                        // compared to an explicit horizontal loop for map
-                        // rendering on Firefox. Chrome and Safari are fast
-                        // even for the general case, so this isn't as
-                        // necessary on those browsers...but it doesn't hurt.
+                        //console.log(srcData.subarray(srcOffset, srcOffset + width));
+                        // This TypedArray.set call saves about 3.5
+                        // ms/frame compared to an explicit horizontal
+                        // loop for map rendering on Firefox. Chrome
+                        // and Safari are fast even for the general
+                        // case. So, this isn't necessary on those
+                        // browsers, but it doesn't hurt.
                         
                         // console.assert(dstOffset + width <= $screen.length, `dstX1=${dstX1}, dstX2 = ${dstX2}, $screen.length = ${$screen.length}, width = ${width}, dstOffset = ${dstOffset}, dstOffset % $SCREEN_WIDTH = ${dstOffset % $SCREEN_WIDTH}, dstY = ${dstY}, dstY2 = ${dstY2}`);
                         // console.assert(srcOffset + width <= srcData.length);

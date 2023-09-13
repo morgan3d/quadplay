@@ -376,7 +376,11 @@ class UpdateThread(threading.Thread):
 # The global updating thread. Initialized when the client
 # requests the update.
 update_thread = None
-        
+
+
+# Workaround on Windows/Chrome for WebWorker error "refused to execute script from '...js' because its MIME type ('text/plain') is not executable."
+SimpleHTTPRequestHandler.extensions_map['.js'] = 'application/javascript'
+
 ##############################################################################
 # Handles serving from multiple directories. Overrides the default
 # restriction to the CWD with its own security allowlist. Instantiated
@@ -415,7 +419,14 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
         self.send_error(404, 'No permission to list directory (' + this_line_number() + ')')
         return None
 
-    
+    """
+    # For debugging MIME types
+    def guess_type(self, path):
+        t = SimpleHTTPRequestHandler.guess_type(self, path)
+        if path[-3:] == '.js': print("Guessed type", path, t)
+        return t
+        """
+
     # Returns False on security error
     def prepare_mutating_request(self):
         if args.serve:
@@ -874,7 +885,24 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
             # backward compatibility
             result = SimpleHTTPRequestHandler.translate_path(self, path)
             return result
-     
+
+
+"""QuadplayHTTPRequestHandler.extensions_map.update({
+    '.manifest': 'text/cache-manifest',
+	'.html': 'text/html',
+    '.png': 'image/png',
+	'.jpg': 'image/jpg',
+	'.svg':	'image/svg+xml',
+    '.csv': 'text/csv',
+    '.txt': 'text/plain',
+    '.pyxl': 'text/plain',
+	'.css':	'text/css',
+    '.mp3': 'audio/mpeg',
+    '.wasm': 'application/wasm',
+	'.js':'application/javascript'
+})"""
+
+
 
 if isWindows and args.gamepath:
     # Make drive letters canonical

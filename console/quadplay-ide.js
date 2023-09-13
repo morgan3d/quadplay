@@ -2907,7 +2907,9 @@ let targetFramerate = PLAY_FRAMERATE;
 
 /** Returns non-false if the button whose name starts with ctrl is currently down. */
 function pressed(ctrl) {
-    return document.getElementById(ctrl + 'Button').checked;
+    const element = document.getElementById(ctrl + 'Button');
+    console.assert(element, ctrl + 'Button element does not exist');
+    return element.checked;
 }
 
 /** Sets the visible enabled state of the button whose name starts with ctrl to e */
@@ -2959,7 +2961,7 @@ function onRadio() {
         setUIMode('WideIDE');
     } else if (pressed('maximalUI') && (uiMode !== 'Maximal')) {
         setUIMode('Maximal');
-    } else if (pressed('windowedUI') && (uiMode !== 'Windowed')) {
+    } else if (! isMobile && pressed('windowedUI') && (uiMode !== 'Windowed')) {
         setUIMode('Windowed');
     } else if (pressed('editorUI') && (uiMode !== 'Editor')) {
         setUIMode('Editor');
