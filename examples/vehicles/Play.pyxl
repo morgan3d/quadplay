@@ -4,84 +4,84 @@ Play
 // which is up.
 
 const player = make_entity({
-   name: "player",
-   type: "car",
-   speed: 0,
-   pos: (½ WORLD_DATA.size + xy(-3, 0)) * WORLD_DATA.sprite_size,
-   angle: 0°,
-   z: Z_MIN,
-   scale: xy(50%, 50%),
-   sprite: CAR_SPRITESHEET[0][0],
-   gamepad: joy,
-   vel: xy(0,0),
-   frame: 0,
-   last_switch: -∞,
-   controls: {}})
+    name: "player",
+    type: "car",
+    speed: 0,
+    pos: (½ WORLD_DATA.size + xy(-3, 0)) * WORLD_DATA.sprite_size,
+    angle: 0°,
+    z: Z_MIN,
+    scale: xy(50%, 50%),
+    sprite: CAR_SPRITESHEET[0][0],
+    gamepad: joy,
+    vel: xy(0,0),
+    frame: 0,
+    last_switch: -∞,
+    controls: {}})
 
 def perspective_zoom(z):
-   // Traditional linear perspective (hyperbolic function):
-   // const clip_z = 6.5
-   // return clip_z / (clip_z - z)
-   
-   // Exponential perspective function:
-   // Avoids the need for z clipping. Won't preserve
-   // straight vertical lines over large z distances
-   return camera.base_zoom * 1.111ᶻ 
+    // Traditional linear perspective (hyperbolic function):
+    // const clip_z = 6.5
+    // return clip_z / (clip_z - z)
+    
+    // Exponential perspective function:
+    // Avoids the need for z clipping. Won't preserve
+    // straight vertical lines over large z distances
+    return camera.base_zoom * 1.111ᶻ 
 
 const camera = {
-   pos: player.pos, 
-   angle: player.angle, 
-   z: player.z,
-   base_zoom: 100%,
-   zoom: perspective_zoom
+    pos: player.pos, 
+    angle: player.angle, 
+    z: player.z,
+    base_zoom: 100%,
+    zoom: perspective_zoom
 }
 
 
 def simulate_car(player):
-   player.z = Z_MIN
-   with angle, speed, gamepad, vel in player:
-      angle += -2° gamepad.x * sign(speed) * min(1, 140% |speed| / CAR_MAX_FORWARD_SPEED)
-      if gamepad.y * up_y() > 0:
-         speed = min(CAR_MAX_FORWARD_SPEED, speed + CAR_FORWARD_ACCELERATION)
-      else if gamepad.y * up_y() < 0:
-         if speed > 0:
-            // Brake
-            speed = max(0, 93% speed - 0.025)
-         else:
-            // Reverse
-            speed = max(-CAR_MAX_REVERSE_SPEED, speed - CAR_REVERSE_ACCELERATION)
-      else:
-         // Slow down gently
-         speed = sign(speed) * max(0, 99% |speed| - 0.01)
-   
-      vel = xy(sin(-player.angle * rotation_sign()), cos(player.angle)) * player.speed
+    player.z = Z_MIN
+    with angle, speed, gamepad, vel in player:
+        angle += -2° gamepad.x * sign(speed) * min(1, 140% |speed| / CAR_MAX_FORWARD_SPEED)
+        if gamepad.y * up_y() > 0:
+            speed = min(CAR_MAX_FORWARD_SPEED, speed + CAR_FORWARD_ACCELERATION)
+        else if gamepad.y * up_y() < 0:
+            if speed > 0:
+                // Brake
+                speed = max(0, 93% speed - 0.025)
+            else:
+                // Reverse
+                speed = max(-CAR_MAX_REVERSE_SPEED, speed - CAR_REVERSE_ACCELERATION)
+        else:
+            // Slow down gently
+            speed = sign(speed) * max(0, 99% |speed| - 0.01)
+        
+        vel = xy(sin(-player.angle * rotation_sign()), cos(player.angle)) * player.speed
 
 
 
 def simulate_chopper(player):
-   player.child_array[0].angle_in_parent += 10°
-   with last_switch, z, angle, speed, gamepad, vel in player:
-      // Up and down
-      let change = gamepad.d - gamepad.c
-      
-      // Lift off if just became a helicopter
-      if mode_frames - last_switch < 80: change = +1
-      z = clamp(z + 4% change, Z_MIN, Z_MAX)
-      
-      // Turn
-      angle += -2° gamepad.x
-
-      const axis = xy(sin(-player.angle * rotation_sign()), cos(angle))
-      
-      // Front-back      
-      vel += CHOPPER_ACCELERATION * up_y() * gamepad.y * axis
-      
-      // Strafe
-      vel += CHOPPER_ACCELERATION * (gamepad.e - gamepad.f) * perp(axis)
-      
-      // Drag
-      speed = clamp(‖vel‖ - 0.0075, 0, CHOPPER_MAX_SPEED)
-      vel = direction(vel) * speed
+    player.child_array[0].angle_in_parent += 10°
+    with last_switch, z, angle, speed, gamepad, vel in player:
+        // Up and down
+        let change = gamepad.d - gamepad.c
+        
+        // Lift off if just became a helicopter
+        if mode_frames - last_switch < 80: change = +1
+        z = clamp(z + 4% change, Z_MIN, Z_MAX)
+        
+        // Turn
+        angle += -2° gamepad.x
+        
+        const axis = xy(sin(-player.angle * rotation_sign()), cos(angle))
+        
+        // Front-back      
+        vel += CHOPPER_ACCELERATION * up_y() * gamepad.y * axis
+        
+        // Strafe
+        vel += CHOPPER_ACCELERATION * (sign(gamepad.e) - sign(gamepad.f)) * perp(axis)
+        
+        // Drag
+        speed = clamp(‖vel‖ - 0.0075, 0, CHOPPER_MAX_SPEED)
+        vel = direction(vel) * speed
 
 
 
@@ -105,7 +105,7 @@ def simulate_tank(player):
       vel = xy(sin(-player.angle * rotation_sign()), cos(player.angle)) * player.speed
       
    const turret = player.child_array[0]
-   turret.angle_in_parent = clamp(turret.angle_in_parent + 2° (player.gamepad.e - player.gamepad.f), -85°, 85°)
+   turret.angle_in_parent = clamp(turret.angle_in_parent + 2° (sign(player.gamepad.e) - sign(player.gamepad.f)), -85°, 85°)
 
 
 
@@ -125,7 +125,7 @@ def simulate_hero(player):
       else:
          vel.y = 0
          
-      vel.x = (gamepad.f - gamepad.e) * ½ (HERO_MAX_FORWARD_SPEED + HERO_MAX_REVERSE_SPEED)
+      vel.x = (sign(gamepad.f) - sign(gamepad.e)) * ½ (HERO_MAX_FORWARD_SPEED + HERO_MAX_REVERSE_SPEED)
          
       speed = ‖vel‖
       if vel.y < 0: frame -= 1

@@ -71,9 +71,10 @@ debugger, and profiler.
 - Friendly and powerful PyxlScript Python-like scripting language
 - Run locally and offline using Python + web browser
 - Hundreds of built-in Creative Commons assets
-- Full command line, external editor, and external art tool support for power users
+- Full command line, external editor, and external art tool support
+  for power users with automatic file sync
 - Open source: use online, fork, or run locally
-- Runtime PNG, MP3, TMX, JSON, YAML, and CSV data formats
+- Runtime PNG, MP3, TMX, JSON, YAML, TXT, and CSV data formats
 
 **API**
 
@@ -4813,8 +4814,9 @@ endpoints and borders.
   `draw_text({text: "Fire!", pos: xy(100, 100), x_align:"left", z: 2})`.
   Values default according to the positional argument version.
 
-`draw_text(font, text, pos, color default ∅, shadow default ∅, outline default ∅, x_align default "left", y_align default "baseline", z default pos.z default 0, wrap_width default ∅, text_size default size(text), markup default false)`
-: Print string `text` relative to `pos`. 
+`draw_text(font default ∅, text, pos, color default ∅, shadow default ∅, outline default ∅, x_align default "left", y_align default "baseline", z default pos.z default 0, wrap_width default ∅, text_size default size(text), markup default false)`
+: Print string `text` relative to `pos`. If the font is unspecified,
+  it defaults to the <quadplay/> system 8-pixel font.
 
   Returns a camera-space bounding box that is clipped to the current
   clipping region. It has fields `{pos: xy(), size: xy(), height:h,
@@ -6258,10 +6260,10 @@ program. The project file and all of its dependencies are reloaded
 every time that you press play or reload in the IDE.
 
 All of the `.game.json` properties can be modified through the user
-interface in the IDE, except for the game constants. The only way
-to modify constants in the current release is through an external
-editor directly changing the `.game.json` file. Future releases
-will provide a user interface for simple constants.
+interface in the IDE using buttons, textboxes, and sliders. 
+Certain advanced changes require directly editing the JSON files
+with the built-in editor. External editors can also be used to edit
+any data and <quadplay/> will automatically sync.
 
 An example project is below, annotated with comments explaining the
 options. Project files should have the double extension `.game.json`.
@@ -6483,6 +6485,12 @@ file appear in the IDE in the project list and have GUI editors. They
 are immutable at runtime by the program, but can be changed by the GUI
 editors for debugging and tuning at runtime.
 
+For some formats (e.g., tables, text), there are similarities between
+*constants* and *assets*. The distinction is that constants are
+treated as part of the game code for intellectual property purposes,
+and assets are treated as separate units that may have their own
+licenses, credits, and copyrights.
+
 Each constant has the format `"..name..": {"type": "..type..", "value": ..., "description": "..."}`.
 The `description` property is optional and the `raw` type permits a `url` instead of a `value`.
 Other types may have additional metadata used for the IDE.
@@ -6538,11 +6546,6 @@ for controlling the IDE:
 - `quantum`: Values are rounded to `round(value, quantum)`
 - `scale`: Must be `"linear"` if specified
 - `format`: Values are shown in the IDE using `format_number(value, format)`
-
-In the current build, these additional properties can only be specified
-by manually editing the JSON file. Future versions of quadplay will contain
-a metadata property editor in the IDE.
-
 
 ### `table` Constants
 

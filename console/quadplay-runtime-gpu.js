@@ -99,6 +99,8 @@ function $square(x) { return x * x; }
 function $zSort(a, b) { return a.z - b.z; }
 
 function $gpu_execute(commandList, backgroundSpritesheetIndex, backgroundColor16) {
+    const startTime = performance.now();
+    
     // clear the screen
     if (backgroundSpritesheetIndex !== undefined) {
         // Image background
@@ -139,7 +141,7 @@ function $gpu_execute(commandList, backgroundSpritesheetIndex, backgroundColor16
     
     if ($is_web_worker) {
         // console.log('Transferring updateImageData back to CPU thread');
-        postMessage({type: 'submitFrame', updateImageData: $updateImageData, updateImageData32: $updateImageData32}, [$updateImageData32.buffer]);
+        postMessage({type: 'submitFrame', gpuTime: performance.now() - startTime, updateImageData: $updateImageData, updateImageData32: $updateImageData32}, [$updateImageData32.buffer]);
         $updateImageData = null;
         $updateImageData32 = null;
     } else {

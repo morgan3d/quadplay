@@ -26,16 +26,34 @@ function Profiler() {
     // overall frame timing, but it does have better accuracy than
     // measuring a single frame.
     this.physicsAccumTime          = 0;
+
+    // Time spent purely on the virtual CPU for graphics. This can be
+    // severely reduced by altering frame rate.
     this.graphicsAccumTime         = 0;
+
+    // Time spent on the virtual CPU on logic tasks (not draw call submission or physics)
     this.logicAccumTime            = 0;
+
+    // Time spent on the virtual GPU
+    this.gpuAccumTime              = 0;
+
+    // Number of frames that would have actually been rendered
+    // (taking graphicsPeriod into account) that were in fact
+    // missed due to backlog. Only tracked in threaded mode
+    this.missedFrames              = 0;
 
     const cutoff = 2e-3;
     const speed = 0.09;
     
-    // Estimates of time spent on each part of the computation
+    // Estimates of time spent on each part of the computation on the
+    // virtual CPU
     this.smoothLogicTime           = new EuroFilter(cutoff, speed);
     this.smoothPhysicsTime         = new EuroFilter(cutoff, speed);
     this.smoothGraphicsTime        = new EuroFilter(cutoff, speed);
+
+    // Graphics time on the virtual GPU, per frame *actually processed* by the
+    // GPU. This is updated by submitFrame() from quadplay-browser.js.
+    this.smoothGPUTime             = new EuroFilter(cutoff, speed);
 
     // Interval between frames, not time spent in computation
     this.smoothFrameTime           = new EuroFilter(cutoff, speed);
@@ -74,22 +92,34 @@ Profiler.prototype.reset = function() {
     this.physicsAccumTime             = 0;
     this.logicAccumTime               = 0;
     this.graphicsAccumTime            = 0;
+    this.gpuAccumTime                 = 0;
     this.currentFrameStartTime        = this.now();
+    this.missedFrames                 = 0;
     this.graphicsPeriod               = 1;
     this.smoothLogicTime.reset();
     this.smoothPhysicsTime.reset();
     this.smoothGraphicsTime.reset();
+    this.smoothGPUTime.reset();
     this.smoothFrameTime.reset();
     this.failuresAtMaxRate            = 0;
 };
 
 
-Profiler.prototype.endFrame = function(physicsTime, graphicsTime, logicToGraphicsTimeShift) {
+Profiler.prototype.endFrame = function(newPhysicsTime, newGraphicsTime, newLogicToGraphicsTimeShift, newMissedFrames) {
     ++this.framesSinceIntervalStart;
     const grossComputeTime = this.now() - this.currentFrameStartTime;
-    this.physicsAccumTime += physicsTime;
-    this.graphicsAccumTime += graphicsTime + logicToGraphicsTimeShift;
-    this.logicAccumTime += grossComputeTime - physicsTime - graphicsTime - logicToGraphicsTimeShift;
+    this.physicsAccumTime += newPhysicsTime;
+
+    let newLogicTime = grossComputeTime - newPhysicsTime;
+
+    // Estimate 8% plus measured time is spent on graphics draw call
+    // submission
+    newLogicToGraphicsTimeShift += newLogicTime * 0.08 / this.graphicsPeriod;
+    
+    this.graphicsAccumTime += newGraphicsTime + newLogicToGraphicsTimeShift;
+    this.logicAccumTime += Math.max(0, newLogicTime - newLogicToGraphicsTimeShift);
+
+    this.missedFrames += newMissedFrames;
 
     if (this.framesSinceIntervalStart < this.framesThisInterval) {
         // Not at the end of the interval
@@ -98,32 +128,32 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime, logicToGraphic
 
     const intervalEndTime = this.now();
     // Update the counters
+    let cpuGraphicsTime;
     {
         const N = this.framesThisInterval;
         const frameTime = (intervalEndTime - this.intervalStartTime) / N;
         
         // Compute the best estimate of real time spent on each operation.
         // The graphics time is the actual time spent there, which takes
-        // the reduced refresh rate into account.
+        // the reduced refresh rate into account because the accumulator
+        // will receive zero new time above in certain frames.
         let graphicsTime = this.graphicsAccumTime / N;
-        let physicsTime = this.physicsAccumTime / N;
-        let logicTime = Math.max(this.logicAccumTime / N, 0);
-        
-        // Assume that at least 10% of the logic time is actually
-        // graphics draw call setup, so that the profiler can estimate
-        // the impact of reducing the refresh rate and avoiding that
-        // overhead. We have no way to measure this precisely in
-        // JavaScript.
-        graphicsTime += logicTime * 0.10;
-        logicTime *= 0.90;
+        let physicsTime  = this.physicsAccumTime / N;
+        let logicTime    = this.logicAccumTime / N;
         
         this.smoothLogicTime.update(logicTime, N);
         this.smoothPhysicsTime.update(physicsTime, N);
         this.smoothGraphicsTime.update(graphicsTime, N);
         this.smoothFrameTime.update(frameTime, N);
     }
-    
-    // Reset for new frame
+
+    // How much more graphics on the GPU would have cost if we hadn't
+    // missed frames
+    const missedFrameCompensation = this.framesThisInterval / Math.max(this.framesThisInterval - this.missedFrames * this.graphicsPeriod, 1);
+    console.assert(this.framesThisInterval > this.missedFrames * this.graphicsPeriod);
+
+    // Reset for new interval
+    this.missedFrames = 0;
     this.physicsAccumTime = 0;
     this.graphicsAccumTime = 0;
     this.logicAccumTime = 0;
@@ -151,17 +181,32 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime, logicToGraphic
         //   5 -> 12 Hz
         //   6 -> 10 Hz
         
+        const G            = this.graphicsPeriod;
+
+        // These times already account for frame rate scaling
         const logicTime    = this.smoothLogicTime.get();
         const physicsTime  = this.smoothPhysicsTime.get();
         const graphicsTime = this.smoothGraphicsTime.get();
-        const frameTime    = this.smoothFrameTime.get();
-        const G            = this.graphicsPeriod;
+        const fixedCPUTime = logicTime + physicsTime;
 
-        // Estimates of the best frame time we might hit if graphicsPeriod changes 
-        const minAchievableTime              = logicTime + physicsTime + graphicsTime * G / maxG;
-        const expectedTimeAtLowerFramerate   = logicTime + physicsTime + graphicsTime * G / (G + 1);
-        const expectedTimeAtCurrentFramerate = logicTime + physicsTime + graphicsTime;
-        const expectedTimeAtHigherFramerate  = logicTime + physicsTime + graphicsTime * G / Math.max(G - 1, 0.5);
+        // Values that can be affected by changing the graphics rate
+        const variableCPUTime = graphicsTime;
+
+        // Be a little conservative on variableGPUTime to minimize thrash based
+        // on small integer numbers of missed frames
+        const variableGPUTime = $THREADED_GPU ? 1.05 * this.smoothGPUTime.get() * missedFrameCompensation / G : 0;
+        
+        const frameTime    = Math.max(this.smoothFrameTime.get(), variableGPUTime);
+
+        console.assert(! isNaN(frameTime));
+        // Estimates of the best frame time we might hit if graphicsPeriod changes
+        let minAchievableTime, expectedTimeAtLowerFramerate, expectedTimeAtCurrentFramerate, expectedTimeAtHigherFramerate;
+
+        minAchievableTime              = Math.max(fixedCPUTime + variableCPUTime * G / maxG, variableGPUTime * G / maxG);
+        expectedTimeAtLowerFramerate   = Math.max(fixedCPUTime + variableCPUTime * G / (G + 1), variableGPUTime * G / (G + 1));
+        expectedTimeAtCurrentFramerate = Math.max(fixedCPUTime + variableCPUTime, variableGPUTime);
+        expectedTimeAtHigherFramerate  = Math.max(fixedCPUTime + variableCPUTime * G / Math.max(G - 1, 0.5), variableGPUTime * G / Math.max(G - 1, 0.5));
+
         let newG = G;
 
         if (frameTime > 19 && QRuntime.game_frames > 200) {
@@ -169,6 +214,7 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime, logicToGraphic
             // bloom.
             allow_bloom = false;
         }
+
 
         // Sometimes the JIT runs or another scheduling event occurs
         // and the actual time is way out of sync with the expected
@@ -182,7 +228,6 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime, logicToGraphic
             // timing)
             (frameTime < 3 * expectedTimeAtCurrentFramerate)
 	) {
-            
             if (
                 // The best we can possibly by graphics scaling 
                 //((minAchievableTime <= 16.5) || (minAchievableTime < frameTime * 0.6))  &&
@@ -222,13 +267,15 @@ Profiler.prototype.endFrame = function(physicsTime, graphicsTime, logicToGraphic
             // machines when using infrequent timers)
             (frameTime < 30) &&
             
-            // Increasing frame rate should still keep us under the limit
+            // Increasing frame rate should still keep us under the
+            // limit
             (expectedTimeAtHigherFramerate < 16.1) &&
             
-            // Even given the error in our current estimates, the new frame rate
-            // should still be pretty close to 60 Hz. Sometimes on RPi the actual
-            // frame time reports low, and then when we change rate it is able
-            // to catch up, so be very liberal here on timing
+            // Even given the error in our current estimates, the new
+            // frame rate should still be pretty close to 60
+            // Hz. Sometimes on RPi the actual frame time reports low,
+            // and then when we change rate it is able to catch up, so
+            // be very liberal here on timing
             (expectedTimeAtHigherFramerate * Math.min(1.0, frameTime / expectedTimeAtCurrentFramerate) < 25) &&
 
 	    // Not thrashing between 30 and 60 Hz

@@ -755,8 +755,6 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
     for (let i = 0; i <= 9; ++i) {
         digitWidth = Math.max(digitWidth, bounds['' + i].x2 - bounds['' + i].x1 + 1);
     }
-    digitWidth += borderSize * 2;
-
     
     // Compute line spacing
     {

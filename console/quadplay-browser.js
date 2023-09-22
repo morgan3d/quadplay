@@ -1247,57 +1247,23 @@ function rgbaToCSSFillStyle(color) {
     return `rgba(${color.r*255}, ${color.g*255}, ${color.b*255}, ${color.a})`;
 }
 
+/* Invoked as QRuntime.$submitFrame(). May not actually be invoked
+   every frame if running below framerate due to missed frames or
+   graphics framerate scaling.
 
-function onScreenDrawBarGraph(title, value, color, i) {
-    const y1 = i * 14 + 1;
-    QRuntime.$executeREC({
-        opcode: 'REC',
-        data: [{x1: 0, y1: y1, x2: Math.min(Math.floor(SCREEN_WIDTH * value / 12), SCREEN_WIDTH - 1), y2: y1 + 12, fill: color, outline:0xF000}],
-        clipX1:  0,
-        clipY1:  0,
-        clipX2:  SCREEN_WIDTH - 1,
-        clipY2:  SCREEN_HEIGHT - 1
-    });
+   `gpuThreadTime` will only be defined if $THREADED_GPU is true. It
+   is the elapsed time measured on the GPU thread for the draw calls
+   executed this frame.
+*/
+function submitFrame(_updateImageData, _updateImageData32, gpuThreadTime) {
+    if (gpuThreadTime !== undefined) {
+        profiler.smoothGPUTime.update(gpuThreadTime);
+    }
     
-    QRuntime.$executeTXT({
-        opcode:  'TXT',
-        str:     title + ' ' + QRuntime.format_number(value, ' 0.0') + 'ms',
-        fontIndex: QRuntime.$font8.$index[0],
-        x:       1,
-        y:       y1,
-        z:       4000,
-        color:   0xF000,
-        outline: color,
-        shadow:  0,
-        height:  10,
-        width:   100,
-        clipX1:  0,
-        clipY1:  0,
-        clipX2:  SCREEN_WIDTH - 1,
-        clipY2:  SCREEN_HEIGHT - 1
-    });
-}
-
-// Invoked as QRuntime.$submitFrame(). May not actually be invoked every
-// frame if running below framerate.
-function submitFrame(_updateImageData, _updateImageData32) {
     // Force the data back, which may be returned from a web worker
     console.assert(_updateImageData, _updateImageData32);
     updateImageData = _updateImageData;
     updateImageData32 = _updateImageData32;
-
-    // Hack the FPS overlay directly onto the screen
-    if (QRuntime.$onScreenHUDEnabled && ! $THREADED_GPU) {
-        onScreenDrawBarGraph('Frame:', onScreenHUDDisplay.time.frame, 0xFA5F, 0);
-        onScreenDrawBarGraph('  60fps Logic:', onScreenHUDDisplay.time.logic, 0xFFA0, 1);
-        onScreenDrawBarGraph('  ' + onScreenHUDDisplay.time.refresh + 'fps Graphics:', onScreenHUDDisplay.time.graphics, 0xF0D0, 2);
-        if (onScreenHUDDisplay.time.physics > 0) {
-            onScreenDrawBarGraph('  60fps Physics:', onScreenHUDDisplay.time.physics, 0xF0AF, 3);
-        }
-        if (onScreenHUDDisplay.time.browser > 0) {
-            onScreenDrawBarGraph('  Browser:', onScreenHUDDisplay.time.browser, 0xFAAA, 4);
-        }
-    }
     
     // Update the image
     const $postFX = QRuntime.$postFX;

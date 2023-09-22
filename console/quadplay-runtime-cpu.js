@@ -25,11 +25,23 @@ if ($THREADED_GPU) {
         $updateImageData = event.data.updateImageData;
         $updateImageData32 = event.data.updateImageData32;
 
-        $updateImageData = new ImageData(new Uint8ClampedArray($updateImageData32.buffer),
-                                         $updateImageData.width,
-                                         $updateImageData.height);
+        {
+            const startTime = performance.now();
 
-        $submitFrame($updateImageData, $updateImageData32);
+            // Unfortunately, JavaScript APIs force us to make a copy here via
+            // the ImageData constructor. There does not appear to be a way
+            // to make it share a view of the buffer.
+            $updateImageData = new ImageData(new Uint8ClampedArray($updateImageData32.buffer),
+                                             $updateImageData.width,
+                                             $updateImageData.height);
+            
+            $submitFrame($updateImageData, $updateImageData32, event.data.gpuTime);
+            
+            // This will typically measure a cost about 1/20 ms on a
+            // desktop...that is, 0ms 19 times and then 1ms the 20th
+            // time on average.
+            $logicToGraphicsTimeShift += performance.now() - startTime;
+        }
     };
 }
 
@@ -134,8 +146,13 @@ var $graphicsPeriod = 1;
 // to zero, so that new modes will always draw their first frame.
 var $skipGraphics = false;
 
-// Time spent in graphics this frame, for use by quadplay-profiler.js
+// Time spent in graphics this frame, for use by quadplay-profiler.js.
+// Set by $show().
 var $graphicsTime = 0;
+
+// Number of missed frames when using a virtual GPU due to backlog,
+// for use by quadplay-profiler.js. Set by $show().
+var $missedFrames = 0;
 
 // Time to move from the logic accounting to the graphics accounting
 var $logicToGraphicsTimeShift = 0;
@@ -4747,8 +4764,8 @@ function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_
                 }
                 
                 // The following surprisingly seem to cost almost
-                // nothing, so we do not optimize them to do
-                // everything in fixed point.
+                // nothing, so we do not optimize them by performing
+                // operations in fixed point.
                 if (override_blend === "lerp") {
                     RGB_LERP(color, override_color, override_color.a, color);
                 } else { // Multiply
@@ -4761,7 +4778,7 @@ function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_
 
             run_mask &= pixel_value;
             color_data[color_data_length++] = pixel_value;
-            ++run_length;    
+            ++run_length;
         } // if sprite present
     } // for i
 
@@ -5291,7 +5308,7 @@ function $draw_text(offsetIndex, formatIndex, str, formatArray, pos, z_pos, x_al
 function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, wrap_width, text_size, markup) {
     // Cannot skip in off frames because it has a return value
     
-    if (font && font.font) {
+    if (font && (font.text !== undefined || font.font !== undefined || font.pos !== undefined)) {
         // Keyword version
         text_size = font.text_size;
         wrap_width = font.wrap_width;
@@ -5307,8 +5324,13 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
         font = font.font;
     }
 
-    if (font === undefined || font.$url === undefined) {
-        $error('draw_text() requires a font as the first argument');
+    if (font === undefined) {
+        // Default font
+        font = $font8;
+    }
+    
+    if (font.$url === undefined) {
+        $error('draw_text() font argument must be a font or nil');
     }
     
     if (pos === undefined) {
@@ -5455,6 +5477,39 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
     bounds.pos.y = (bounds.pos.y - $offsetY) / $scaleY - bounds.z * $skewYZ;
     
     return bounds;
+}
+
+/* Used by the on-screen profiler HUD */
+function $onScreenDrawBarGraph(title, value, color, i) {
+    const y1 = i * 14 + 1;
+    $addGraphicsCommand({
+        opcode: 'REC',
+        z: 3099,
+        baseZ: 3099,
+        data: [{x1: 0, y1: y1, x2: $Math.min($Math.floor(SCREEN_SIZE.x * value / 18), SCREEN_SIZE.x - 1), y2: y1 + 12, fill: color, outline:0xF000}],
+        clipX1:  0,
+        clipY1:  0,
+        clipX2:  SCREEN_SIZE.x - 1,
+        clipY2:  SCREEN_SIZE.y - 1
+    });
+    
+    $addGraphicsCommand({
+        opcode:  'TXT',
+        str:     title + ' ' + format_number(value, ' 0.0') + 'ms',
+        fontIndex: $font8.$index[0],
+        x:       1,
+        y:       y1,
+        z:       4000,
+        color:   0xF000,
+        outline: color,
+        shadow:  0,
+        height:  10,
+        width:   100,
+        clipX1:  0,
+        clipY1:  0,
+        clipX2:  SCREEN_SIZE.x - 1,
+        clipY2:  SCREEN_SIZE.y - 1
+    });
 }
 
 
@@ -9555,24 +9610,42 @@ function local_time(args) {
 }
 
 
-/** Called on virtual CPU to initiate virtual GPU work */
+/**
+   Called on virtual CPU to initiate virtual GPU work from the emitted
+   PyxlScript code. The compiler directly produces the calls to this
+   within a Mode::frame()
+*/
 function $show() {
+    const startTime = performance.now();
+    
     // Check whether this frame will be shown or not, if running below
     // frame rate and pruning graphics.  Use mode_frames instead of
     // game_frames to ensure that frame 0 is always rendered for a mode.
     if (mode_frames % $graphicsPeriod === 0) {
-        const startTime = performance.now();
-
-        // TODO: if previous execute has not returned
-        // in web worker mode, then do not submit more work
-        // *and lower the graphics period*.
+        if ($onScreenHUDEnabled) {
+            // Submit diagnostics HUD as additional graphics calls
+            $onScreenDrawBarGraph('Frame:', $onScreenHUDDisplay.time.frame, 0xFA5F, 0);
+            $onScreenDrawBarGraph('  60fps Logic:', $onScreenHUDDisplay.time.logic, 0xFFA0, 1);
+            $onScreenDrawBarGraph('  ' + $onScreenHUDDisplay.time.refresh + 'fps Graphics:', $onScreenHUDDisplay.time.graphics, $THREADED_GPU ? 0xF0DE : 0xF0D0, 2);
+            if ($onScreenHUDDisplay.time.physics > 0) {
+                $onScreenDrawBarGraph('  60fps Physics:', $onScreenHUDDisplay.time.physics, 0xF0AF, 3);
+            }
+            if ($THREADED_GPU) {
+                $onScreenDrawBarGraph('  ' + $onScreenHUDDisplay.time.refresh + 'fps GPU:', $onScreenHUDDisplay.time.gpu, 0xF0D0, 4);
+            }
+            if ($onScreenHUDDisplay.time.browser > 0) {
+                $onScreenDrawBarGraph('  Browser:', $onScreenHUDDisplay.time.browser, 0xFAAA, 5);
+            }
+        }
+        
         const backgroundSpritesheetIndex = $background.spritesheet ? $background.spritesheet.$index[0] : undefined;
         const backgroundColor16 = $background.spritesheet ? 0 : (($colorToUint16($background) >>> 0) | 0xf000);
 
         const args = [$graphicsCommandList, backgroundSpritesheetIndex, backgroundColor16];
-                             
+                
         if ($GPU) {
             if (! $updateImageData32) {
+                ++$missedFrames;
                 console.log('Virtual GPU busy, skipping. mode_frames =', mode_frames);
             } else {
                 
@@ -9595,17 +9668,17 @@ function $show() {
         } else {
             $gpu_execute(...args);
         }
-        
-        $graphicsTime = performance.now() - startTime;
     }
     
-    $requestInput();
-    
-    // Save for replays
+    // Save for draw_previous_frame()
     $previousGraphicsCommandList = $graphicsCommandList;
     
     // Clear draw list (regardless of whether it is actually drawn)
     $graphicsCommandList = [];
+
+    $graphicsTime = performance.now() - startTime;
+    
+    $requestInput();
 
     ++game_frames;
     ++mode_frames;

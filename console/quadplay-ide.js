@@ -6,7 +6,7 @@ const deployed = true;
 
 // If true, use a WebWorker thread for the virtual GPU. This variable
 // appears in the CPU runtime as well.
-const $THREADED_GPU = false;
+const $THREADED_GPU = true;
 
 /* The containing web page that quadplay is embedded within, or quadplay's iframe
    if running cross-origin */
@@ -147,8 +147,10 @@ const isOffline = (getQueryString('offline') === '1') || false;
 let editableProject = false;
 
 // Hide quadplay framerate debugging info
-if (! profiler.debuggingProfiler) {  document.getElementById('debugIntervalTimeRow').style.display = 'none'; }
+if (! profiler.debuggingProfiler) { document.getElementById('debugIntervalTimeRow').style.display = 'none'; }
 
+// If not multithreaded, hide the virtual GPU info
+if (! $THREADED_GPU) { document.getElementById('debugGPUTimeRow').style.display = 'none'; }
 ////////////////////////////////////////////////////////////////////////////////
 
 // 'WideIDE', 'IDE', 'Test', 'Emulator', 'Editor', 'Windowed',
@@ -3406,6 +3408,7 @@ function mainLoopStep() {
     // be zero on any individual call.
     QRuntime.$physicsTimeTotal = 0;
     QRuntime.$graphicsTime = 0;
+    QRuntime.$missedFrames = 0;
     QRuntime.$logicToGraphicsTimeShift = 0;
 
     // Run the "infinite" loop for a while, maxing out at just under 1/60 of a second or when
@@ -3422,12 +3425,10 @@ function mainLoopStep() {
     // program. The game may suppress its own graphics computation
     // inside QRuntime.$show() if it is running too slowly.
     try {
-        // Worst-case timeout in milliseconds (to yield 10 fps)
-        // to keep the browser responsive if the game is in a long
-        // top-level loop (which will yield). This is legacy
-        // to nanojammer, as quadplay games tend to have code in
-        // functions where it can't yield.
         const frameStart = profiler.now();
+        
+        // 10 fps failsafe for code that is returning but not invoking
+        // $submitFrame() somehow.
         const endTime = frameStart + 100;
 
         while (! updateKeyboardPending && ! refreshPending && (performance.now() < endTime) && (emulatorMode === 'play' || emulatorMode === 'step') && coroutine) {
@@ -3497,7 +3498,7 @@ function mainLoopStep() {
     }
 
     // The frame has ended
-    profiler.endFrame(QRuntime.$physicsTimeTotal, QRuntime.$graphicsTime, QRuntime.$logicToGraphicsTimeShift);
+    profiler.endFrame(QRuntime.$physicsTimeTotal, QRuntime.$graphicsTime, QRuntime.$logicToGraphicsTimeShift, QRuntime.$missedFrames);
     midiAfterFrame();
     
     // Only update the profiler display periodically, because doing so
@@ -3527,14 +3528,18 @@ function mainLoopStep() {
 
 
 // Used when the on-screen profiler is enabled
-let onScreenHUDDisplay = {time: {frame:0, logic:0, physics:0, graphics:0, browser:0, refresh:0}};
+const onScreenHUDDisplay = {time: {frame:0, logic:0, physics:0, graphics:0, gpu: 0, browser:0, refresh:0}};
 
 function updateDebugger(showHTML) {
     const frame = profiler.smoothFrameTime.get();
     const logic = profiler.smoothLogicTime.get();
     const physics = profiler.smoothPhysicsTime.get();
+
+    // Show the time that GPU graphics is actually taking
+    // per frame it processes, with no scaling.
+    const gpu = profiler.smoothGPUTime.get();
     
-    // Show the time that graphics *would* be taking if
+    // Show the time that CPU graphics *would* be taking if
     // it wasn't for the frame rate scaler
     const graphics = profiler.smoothGraphicsTime.get() * QRuntime.$graphicsPeriod;
     const compute = logic + physics + graphics;
@@ -3549,6 +3554,7 @@ function updateDebugger(showHTML) {
     onScreenHUDDisplay.time.logic = logic;
     onScreenHUDDisplay.time.physics = physics;
     onScreenHUDDisplay.time.graphics = graphics;
+    onScreenHUDDisplay.time.gpu = gpu;
     onScreenHUDDisplay.time.refresh = Math.round(60 / QRuntime.$graphicsPeriod);
 
     if (! showHTML) {
@@ -3558,9 +3564,11 @@ function updateDebugger(showHTML) {
     
     updateTimeDisplay(onScreenHUDDisplay.time.frame, 'Frame');
     updateTimeDisplay(onScreenHUDDisplay.time.browser, 'Browser');
-    updateTimeDisplay(logic, 'CPU');
-    updateTimeDisplay(physics, 'PPU');
-    updateTimeDisplay(graphics, 'GPU');
+    updateTimeDisplay(logic, 'Logic');
+    updateTimeDisplay(physics, 'Physics');
+    updateTimeDisplay(graphics, 'Gfx');
+
+    if ($THREADED_GPU) { updateTimeDisplay(gpu, 'GPU'); }
 
     if (profiler.debuggingProfiler) { updateTimeDisplay(frame, 'Interval'); }
 
@@ -3672,6 +3680,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.$Physics            = Matter;
         QRuntime.$updateHostCodeCopyRuntimeDialogVisiblity = updateHostCodeCopyRuntimeDialogVisiblity;
         QRuntime.$fontMap            = fontMap;
+        QRuntime.$onScreenHUDDisplay = onScreenHUDDisplay;
 
         QRuntime.$pauseAllSounds     = pauseAllSounds;
         QRuntime.$resumeAllSounds    = resumeAllSounds;
@@ -4448,8 +4457,8 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
 <!--<tr><td>Sound Bytes</td><td class="right">${resourceStats.soundKilobytes}</td><td>/</td><td class="right">256 MB</td><td class="right">(${Math.round(resourceStats.soundKilobytes*100/(1024*256))}%)</td></tr>-->
 <tr><td>Sprite Pixels</td><td class="right">${Math.round(resourceStats.spritePixels / 1000)}k</td><td>/</td><td class="right" width=40>5505k</td><td class="right" width=45>(${Math.round(resourceStats.spritePixels*100/5505024)}%)</td></tr>
 <tr><td>Spritesheets</td><td class="right">${resourceStats.spritesheets}</td><td>/</td><td class="right">128</td><td class="right">(${Math.round(resourceStats.spritesheets*100/128)}%)</td></tr>
-<tr><td>Spritesheet Width</td><td class="right">${resourceStats.maxSpritesheetWidth}</td><td>/</td><td class="right">1024</td><td class="right">(${Math.round(resourceStats.maxSpritesheetWidth*100/1024)}%)</td></tr>
-<tr><td>Spritesheet Height</td><td class="right">${resourceStats.maxSpritesheetHeight}</td><td>/</td><td class="right">1024</td><td class="right">(${Math.round(resourceStats.maxSpritesheetHeight*100/1024)}%)</td></tr>
+<tr><td>Spritesheet Width</td><td class="right">${resourceStats.maxSpritesheetWidth}</td><td>/</td><td class="right">1024</td><td class="right">(${resourceStats.maxSpritesheetWidth <= 1024 ? 'OK' : Math.round(resourceStats.maxSpritesheetWidth*100/1024) + '%'})</td></tr>
+<tr><td>Spritesheet Height</td><td class="right">${resourceStats.maxSpritesheetHeight}</td><td>/</td><td class="right">1024</td><td class="right">(${resourceStats.maxSpritesheetHeight <= 1024 ? 'OK' : Math.round(resourceStats.maxSpritesheetHeight*100/1024) + '%'})</td></tr>
 </table>`;
 
             {
