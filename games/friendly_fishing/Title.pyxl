@@ -60,14 +60,14 @@ def draw_records():
     
     const τ = mode_frames mod RECORD_DISPLAY_FRAMES
     
-    draw_text({font: large_font, text: "Recent Records", pos: xy(½ SCREEN_SIZE.x, 150), color: #FFF, outline: OUTLINE_COLOR, x_align: "center"})
+    draw_text({font: large_font, text: "Recent Records", pos: xy(½ SCREEN_SIZE.x, 150), color: #FFF, outline: OUTLINE_COLOR, x_align: "center", y_align: "baseline"})
     for i < min(size(record_array), MAX_DISPLAYED_SCORES, τ / 20):
         const y = 120 - 16i
         const record = record_array[i]
         const result = date_to_day(record.date)
-        draw_text({font: font, pos: xy(54, y), text: record.name, color:result.color, outline:OUTLINE_COLOR, x_align:"left"})
-        draw_text({font: font, pos: xy(245, y), text: format(record.value), color:result.color, outline:OUTLINE_COLOR, x_align:"right"})
-        draw_text({font: font, pos: xy(328, y), text: result.day, color:result.color, outline:OUTLINE_COLOR, x_align:"right"})
+        draw_text({font: font, pos: xy(54, y), text: record.name, color:result.color, outline:OUTLINE_COLOR, x_align:"left", y_align:"baseline"})
+        draw_text({font: font, pos: xy(245, y), text: format(record.value), color:result.color, outline:OUTLINE_COLOR, x_align:"right", y_align:"baseline"})
+        draw_text({font: font, pos: xy(328, y), text: result.day, color:result.color, outline:OUTLINE_COLOR, x_align:"right", y_align:"baseline"})
     
 
 enter

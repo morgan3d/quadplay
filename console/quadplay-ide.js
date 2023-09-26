@@ -2998,6 +2998,17 @@ function showOpenGameDialog() {
                 document.getElementById('openGameType').value = 'builtins';
             }
         }
+
+        // Sort by title
+        for (const key in openGameFiles) {
+            const array = openGameFiles[key];
+            array.sort(function (A, B) {
+                const a = A.title.toLowerCase().replace(/^(a|the) /, '');
+                const b = B.title.toLowerCase().replace(/^(a|the) /, '');
+                return a.localeCompare(b);
+            });
+        }
+        
         // Show/hide the mine option depending on whether it is populated
         document.getElementById('openMineOption').style.display = (json.mine && json.mine.length > 0) ? '' : 'none';
         onOpenGameTypeChange();

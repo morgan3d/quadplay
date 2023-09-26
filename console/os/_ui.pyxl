@@ -29,11 +29,15 @@ def $draw_system_menu_text(args, selected):
     draw_text(extended(args, {
         font: args.font default font,
         pos: args.pos + (if selected then xy(0, 2) else xy(0, 1)),
-        color: (if selected then 50% $system_prompt_shadow else $system_prompt_shadow)
+        color: (if selected then 50% $system_prompt_shadow else $system_prompt_shadow),
+        x_align: args.x_align default "left",
+        y_align: args.y_align default "baseline"
     }))
     
     return draw_text(extended(args, {
         font: args.font default font,
         color: (if selected then lerp($system_selected_color, #fff, 50% bright) else $system_unselected_color),
-        outline: (if selected then rgba(1, 1, 1, 25% bright) else nil)
+        outline: (if selected then rgba(1, 1, 1, 25% bright) else nil),
+        x_align: args.x_align default "left",
+        y_align: args.y_align default "baseline"
     }))

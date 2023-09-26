@@ -1,0 +1,46 @@
+Options
+═══════════════════════════════════════════════════════════════════════════════
+    
+enter
+────────────────────────────────────────────────────────────────────────
+device_set_border()
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+device_emulate_input(true)
+
+device_set_all()
+
+// Transition out the title sequence
+device_blit(title_sprite, xy(0, -⌊6 mode_frames / BLINK_RATE⌋))
+
+if mode_frames == 60: play_sound(options_sound)
+
+// Transition in the options
+device_blit(options_sprite, xy(0, max(0, 7 - ⌊6 (mode_frames - 60) / BLINK_RATE⌋)))
+    
+if mode_frames > 30:
+    // Border flash
+    for y < 8:
+        const flash = (⌊¼ y⌋ + ⌊mode_frames / BLINK_RATE⌋) mod 2
+        device.output[8][y] = flash * #FFF
+    
+    const pressed = device_any_pressed()
+    if pressed:
+        make_burst(pressed, #F0F)
+
+        if pressed.y < 4:
+            play_sound(two_player_sound)
+            set_mode(Instructions, 2) because "2P"
+        else:
+            play_sound(one_player_sound)
+            set_mode(Instructions, 1) because "1P"
+                    
+
+update_bursts()
+device_visualize(font)
+device_send_output()
+
+

@@ -1,0 +1,163 @@
+def make_player(i):
+    return {index: i, ai: false, color: gamepad_array[i].player_color}
+
+
+def generate_moves(game):
+    const move_array = []
+    
+    for x < 8:
+        // Can drop in any column that is not full
+        if game.board[x][7] == ∅:
+            push(move_array, {type: "DROP_CYCLE", x: x, y: 7})
+
+    return move_array
+
+
+
+def apply_move(game, move):
+
+    game = deep_clone(game)
+    
+    const x = move.x
+    const board = game.board
+
+    if move.type == "DROP_CYCLE":
+        // Search for bottom
+        let y = 8
+        while y > 0 and board[x][y - 1] == ∅: --y
+        board[x][y] = game.current_index
+
+        // Save
+        const old = board[x][0]
+        
+        // Shift down
+        board[x][board.size.y - 1] = ∅
+        for y < board.size.y - 1:
+            board[x][y] = board[x][y + 1]
+        
+        // Drop the old value on top
+        y = 7
+        while y > 0 and board[x][y - 1] == ∅: --y
+        
+        board[x][y] = old
+        game.current_index = (game.current_index + 1) mod 2
+        
+    return game
+    
+
+
+/* The aux value is a return value used for the end game animation */
+def static_evaluate(game, aux default {}):
+    const longest_run = make_array(2, {
+            len: 0, 
+            pos_array: []}, 
+            deep_clone)
+            
+    aux.longest_run = longest_run;
+    
+    const board = game.board
+    
+    // Horizontal runs
+    for y < board.size.y:
+        // Index of current run player
+        let p = ∅
+        let len = 0
+        const pos_array = []
+
+        for x ≤ board.size.x + WIN_LEN:
+            const b = game.board[x mod board.size.x][y]
+            
+            // Start new run
+            if p ≠ b:
+                if p ≠ ∅:
+                    // Update the longest
+                    if len > longest_run[p].len:
+                        longest_run[p].len = len
+                        longest_run[p].pos_array = clone(pos_array)
+                        
+                // Reset
+                p = b; len = 0
+                resize(pos_array, 0)            
+            
+            if p ≠ ∅:
+                len = min(len + 1, board.size.x)
+                push(pos_array, xy(x mod board.size.x, y))
+
+        // Update the longest after iteration
+        if p ≠ ∅ and len > longest_run[p].len:
+            longest_run[p].len = len
+            longest_run[p].pos_array = pos_array
+
+
+    // Vertical runs    
+    for x < board.size.x:
+        // Index of current run player
+        let p = ∅
+        
+        // Length of the current run
+        let len = 0
+        const pos_array = []
+        
+        for y ≤ board.size.y + WIN_LEN:
+            const b = game.board[x][y mod board.size.y]
+            if p ≠ b:
+                if p ≠ ∅:
+                    // Save old run
+                    if len > longest_run[p].len:
+                        longest_run[p].len = len
+                        longest_run[p].pos_array = clone(pos_array)
+                    
+                // Start new run
+                p = b; len = 0
+                resize(pos_array, 0)
+                
+            if p ≠ ∅:
+                len = min(len + 1, board.size.y)
+                push(pos_array, xy(x, y mod board.size.y))
+                
+        // Update the longest after iteration
+        if p ≠ ∅ and len > longest_run[p].len:
+            longest_run[p].len = len
+            longest_run[p].pos_array = pos_array
+
+
+    let empty_tiles = 0
+    for x < 8:
+        for y < 8:
+            if board[x][y] == ∅:
+                ++empty_tiles
+
+    if longest_run[0].len ≥ WIN_LEN:
+        if longest_run[1] ≥ WIN_LEN:
+            aux.full = false
+            return "draw"
+        else:
+            return ∞
+    else if longest_run[1].len ≥ WIN_LEN:
+        return -∞
+    else if empty_tiles == 0:
+        aux.full = true
+        return "draw"
+    else:
+        return longest_run[0].len - longest_run[1].len
+
+  
+
+
+def update_display():
+    const board = game.board
+    for x < 8
+    & for y < 8:
+        const b = board[x][y]
+        device.output[x][y] = if b == ∅ then #000 else player_array[b].color
+
+
+
+let game = {
+    // Player number in each element
+    board: make_array(xy(8, 8), ∅),
+    current_index: 0}
+
+const player_array = [make_player(0), make_player(1)]
+
+let music

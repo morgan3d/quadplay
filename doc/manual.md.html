@@ -748,6 +748,11 @@ with all default controls mapped.
 Sample program for a MIDI controller jam, demonstrating the `midi_8x8.pyxl` helper
 script.
 
+</td></tr><tr><td>![](../examples/drop_bloq/label128.png)</td><td>
+[MIDI 8x8 Touch Jam](../console/quadplay.html?game=quad://examples/drop_bloq&IDE=1) 
+5-in-a-row game at 8x8 resolution that plays on any device, including an Ableton MIDI
+controller. Also demonstrates built-in AI routines.
+
 </td></tr><tr><td>![](../examples/multitouch/label128.png)</td><td>
 [Multitouch](../console/quadplay.html?game=quad://examples/multitouch&IDE=1) 
 Example of `device_control()` for reading multitouch input on touch screens.
@@ -1491,7 +1496,7 @@ running on a very high resolution screen (greater than 2.5x), it
 relaxes this constraint to use the full screen effectively.
 
 As a result, the emulator is pixel-perfect on small displays and fills
-the screen on large ones. Quadplay supports the following resolutions,
+the screen on large ones. <quadplay/> supports the following resolutions,
 all with 4:4:4:4 RGBA color and 60 Hz refresh:
 
 - 384x224x4 = 768x448, for network multiplayer private views
@@ -4814,7 +4819,7 @@ endpoints and borders.
   `draw_text({text: "Fire!", pos: xy(100, 100), x_align:"left", z: 2})`.
   Values default according to the positional argument version.
 
-`draw_text(font default ∅, text, pos, color default ∅, shadow default ∅, outline default ∅, x_align default "left", y_align default "baseline", z default pos.z default 0, wrap_width default ∅, text_size default size(text), markup default false)`
+`draw_text(font default ∅, text, pos, color default ∅, shadow default ∅, outline default ∅, x_align default "center", y_align default "center", z default pos.z default 0, wrap_width default ∅, text_size default size(text), markup default false)`
 : Print string `text` relative to `pos`. If the font is unspecified,
   it defaults to the <quadplay/> system 8-pixel font.
 
@@ -4842,10 +4847,16 @@ endpoints and borders.
   without flipping, rotation, or scaling, no matter what the transform
   or camera are.
 
-  x-alignment of `-1` or `"left"` = left, `0` or `"center"` = center,
-  `+1` or `"right"` = right, y-alignment of `-1` or `"top"` = top, `0`
-  or `"center"` = center, `1` or `"baseline"` = baseline of the first
-  line of text, `2` or `"bottom"` = bottom of the block of text.
+  `x_align` options:
+    - `-1` or `"left"` = left
+    - `0` or `"center"` = center
+    - `+1` or `"right"` = right
+
+  `y_align` options:
+    - `-1` or `"top"` = top
+    - `0` or `"center"` = center vertically based on the font (not actual characters, so that alignment won't change with different characters in the text)
+    - `+1` or `"baseline"` = baseline of the first line of text
+    - `+2` or `"bottom"` = bottom of the block of text
 
   `font` must be loaded from the assets.  Color, shadow, and outline
   default to transparent. Any non-transparent outline causes the

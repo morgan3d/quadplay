@@ -85,10 +85,10 @@ for i < 4:
         draw_corner_rect(xy(64, 81), xy(65, 6), ACCENT_COLOR, ∅, -2)
         draw_corner_rect(xy(45, 29), xy(31, 52), CONTROLLER_COLOR, ∅, -2)
         
-        draw_text({text: "gamepad_array[" + i + "]", font: code_font, pos: xy(60, 14), color: #f})
-        draw_text({text: "status: " + gamepad.status, font: code_font, pos: xy(60, 100), color: #f})
-        draw_text({text: "type: " + gamepad.type, font: code_font, pos: xy(60, 110), color: #f})
-        draw_text({text: "quadplay✜", font: font, pos: xy(95, 37), color: ACCENT_COLOR, x_align: "center"})
+        draw_text({text: "gamepad_array[" + i + "]", font: code_font, pos: xy(60, 14), color: #f, x_align: "left", y_align: "baseline"})
+        draw_text({text: "status: " + gamepad.status, font: code_font, pos: xy(60, 100), color: #f, x_align: "left", y_align: "baseline"})
+        draw_text({text: "type: " + gamepad.type, font: code_font, pos: xy(60, 110), color: #f, x_align: "left", y_align: "baseline"})
+        draw_text({text: "quadplay✜", font: font, pos: xy(95, 37), color: ACCENT_COLOR, x_align: "center", y_align: "baseline"})
         
         draw_button(i, p, jp, "d", xy(152, 42))
         draw_button(i, p, jp, "c", xy(134, 60))	

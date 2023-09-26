@@ -68,6 +68,8 @@ draw_text({
     color: #f92,
     outline: #000,
     shadow: #000,
+    x_align: "left",
+    y_align: "baseline",
     z: 100})
 
 // Set the transform before physics simulation so that

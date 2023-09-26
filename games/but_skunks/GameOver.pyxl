@@ -24,10 +24,10 @@ if not disable_input:
             add_frame_hook(fade_out, enter_menu_mode, 30, ∅, {})
         
 draw_text({font:font, text:"Game Over!", pos:xy(50% SCREEN_SIZE.x, 25% SCREEN_SIZE.y),
-    text_size:max(0,mode_frames/3), x_align:"center", color:#f}).y
+    text_size:max(0,mode_frames/3), x_align:"center", y_align:"baseline", color:#f}).y
     
 draw_text({font:font, pos:xy(50% SCREEN_SIZE.x, 90% SCREEN_SIZE.y),
-    text:replace("(b) Return To Menu", gamepad_array[0].prompt), color:#f, x_align:"center"})
+    text:replace("(b) Return To Menu", gamepad_array[0].prompt), color:#f, x_align:"center", y_align:"baseline"})
 
 leave
 ────────────────────────────────────────────────────────────────────────

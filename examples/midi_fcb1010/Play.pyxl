@@ -57,4 +57,5 @@ draw_text({
     text: "0" + bank_index,
     color: BRIGHT,
     outline: LED_COLOR,
-    x_align: "right"})
+    x_align: "right",
+    y_align: "baseline"})

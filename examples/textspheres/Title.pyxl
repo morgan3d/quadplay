@@ -15,7 +15,8 @@ draw_text({
     pos: xy(0, 100), 
     color: #FFF, 
     outline: #02D,
-    x_align: "center"})
+    x_align: "center",
+    y_align: "baseline"})
 
 draw_text({
     font: font, 
@@ -23,7 +24,8 @@ draw_text({
     pos: xy(0, -95), 
     color: #FFF, 
     outline: #02D,
-    x_align: "center"})
+    x_align: "center",
+    y_align: "baseline"})
 
 const U = angle_to_xy(30° cos(0.01 mode_frames))
 const V = perp(U)

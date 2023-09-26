@@ -189,8 +189,8 @@ else if object == "person":
         person.vel.y += 6
 
 // Instructions
-draw_text({font: font, text: "Move " + object + ": " + replace(scheme, joy.prompt), pos: xy(10, 200), color: #f96, shadow: #0008, z: 100})
-draw_text({font: font, text: replace("Next object: ⓑ", joy.prompt), pos: xy(10, 190), color: #f96, shadow: #0008, z: 100})
+draw_text({font: font, text: "Move " + object + ": " + replace(scheme, joy.prompt), pos: xy(10, 200), color: #f96, shadow: #0008, z: 100, x_align: "left", y_align: "baseline"})
+draw_text({font: font, text: replace("Next object: ⓑ", joy.prompt), pos: xy(10, 190), color: #f96, shadow: #0008, z: 100, x_align: "left", y_align: "baseline"})
 
 // Move the animated platforms
 entity_move(platform, xy(40 sin(0.05 mode_frames) + 200, 120))

@@ -104,6 +104,7 @@ def draw_hud(player)
             text: selection.description,
             color: color,
             outline: dim_color,
+            x_align: "left",
             y_align: "center"})
         
         // Energy bar 
@@ -116,6 +117,7 @@ def draw_hud(player)
         font: font,
         color: color,
         outline: dim_color,
+        x_align: "left",
         y_align: "center",
         markup: true}
         

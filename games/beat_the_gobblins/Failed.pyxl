@@ -75,7 +75,8 @@ draw_text(
         pos:SCREEN_SIZE/2 + xy(0, TEXT_LOCATIONS[0]),
         color:pulse_text(PULSE_TIMES[0]),
         outline: #4c0000,
-        x_align: "center"
+        x_align: "center",
+        y_align: "baseline"
     }
 )
 
@@ -86,7 +87,8 @@ draw_text(
         pos:SCREEN_SIZE/2 + xy(0, TEXT_LOCATIONS[1]),
         color:pulse_text(PULSE_TIMES[1]),
         outline: #4c0000,
-        x_align: "center"
+        x_align: "center",
+        y_align: "baseline"        
     }
 )
 
@@ -97,7 +99,8 @@ draw_text(
         pos:SCREEN_SIZE/2 + xy(0, TEXT_LOCATIONS[2]),
         color:pulse_text(PULSE_TIMES[2]),
         outline: #4c0000,
-        x_align: "center"
+        x_align: "center",
+        y_align: "baseline"
     }
 )
 
@@ -117,6 +120,7 @@ if mode_frames > FADE_IN_LEN + START_FADE:
                 color:pulse_text(PULSE_TIMES[4]),
                 outline: #4c0000,
                 x_align: "center",
+                y_align: "baseline"
             }
         )
     else:
@@ -128,6 +132,7 @@ if mode_frames > FADE_IN_LEN + START_FADE:
                 color:pulse_text(PULSE_TIMES[3]),
                 outline: #4c0000,
                 x_align: "center",
+                y_align: "baseline"
             }
         )
 

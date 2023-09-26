@@ -1,0 +1,117 @@
+{
+    "title": "Drop Bloq",
+    "developer": "CasualEffects",
+    "copyright": "©2023 Morgan McGuire",
+    "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
+    "packages": [],
+    "scripts": [
+        "quad://scripts/midi_8x8.pyxl",
+        "game.pyxl",
+        "burst.pyxl"
+    ],
+    "modes": [
+        "Title",
+        "Options",
+        "Instructions",
+        "Play",
+        "AnimateMove",
+        "GameOver"
+    ],
+    "start_mode": "Title",
+    "docs": [],
+    "assets": {
+        "font": "quad://fonts/deja-8.font.json",
+        "closed_hihat_sound": "quad://sounds/drum-01.sound.json",
+        "title_sprite": "title.sprite.json",
+        "big_font": "quad://fonts/novarese-bold-10.font.json",
+        "options_sprite": "options.sprite.json",
+        "title_sound": "title.sound.json",
+        "options_sound": "options.sound.json",
+        "one_player_sound": "one_player.sound.json",
+        "two_player_sound": "two_player.sound.json",
+        "p1_win_sound": "p1_win.sound.json",
+        "p2_win_sound": "p2_win.sound.json",
+        "win_sound": "win.sound.json",
+        "lose_sound": "lose.sound.json",
+        "title_music": "quad://sounds/loop-all_you_can_yeet.sound.json",
+        "go_sound": "go.sound.json",
+        "p1_go_sound": "p1_go.sound.json",
+        "p2_go_sound": "p2_go.sound.json",
+        "cycle_sound": "quad://sounds/powerup-00.sound.json",
+        "instructions_sprite": "instructions.sprite.json",
+        "tie_sound": "tie.sound.json",
+        "instructions_sound": "instructions.sound.json",
+        "drop_sound": "quad://sounds/powerup-03.sound.json",
+        "land_sound": "quad://sounds/drum-00.sound.json",
+        "fall_sound": "fall.sound.json",
+        "blink_sound": "quad://sounds/wild-01.sound.json",
+        "fast_fall_sound": "fast_fall.sound.json",
+        "bad_sound": "quad://sounds/hit-08.sound.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 2,
+    "cooperative": false,
+    "competitive": true,
+    "achievements": false,
+    "highscores": false,
+    "description": "Drop tiles and shift columns, 5 in a row to win. Plays best with an 8x8 MIDI device!",
+    "constants": {
+        "AI_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "0%"
+                }
+            }
+        },
+        "BLINK_RATE": {
+            "type": "number",
+            "value": "48",
+            "description": "In frames. Set to match the music temp",
+            "min": 1,
+            "max": 120,
+            "format": "0",
+            "quantum": 1
+        },
+        "WIN_LEN": {
+            "type": "number",
+            "value": "5",
+            "description": "Number of bloqs in a row to win",
+            "min": 2,
+            "max": 8,
+            "format": "0",
+            "quantum": 1
+        },
+        "AI_DELAY_FRAMES": {
+            "type": "number",
+            "value": "60",
+            "description": "Frames to wait while making it look like the AI is thinking",
+            "min": 0,
+            "max": 240,
+            "format": "0",
+            "quantum": 1
+        },
+        "LOCKOUT_FRAMES": {
+            "type": "number",
+            "value": "20",
+            "description": "Frames to lock out between players",
+            "min": 0,
+            "max": 120,
+            "format": "0",
+            "quantum": 1
+        }
+    },
+    "screenshot_tag": "Drop Bloq",
+    "y_up": true,
+    "midi_sysex": true
+}

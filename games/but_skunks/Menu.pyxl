@@ -6,8 +6,8 @@ const MENU_OPTIONS = 2
 const MENU_CREDITS = 3
 const MENU_ITEMS = ["New Game (1P)", "New Game (2P)", "Options", "Credits"]
 
-const MENU_ITEM_TEXT_ARGS = {font:font, color:#f, x_align:"left", z:20,outline:#0}
-const MENU_CURSOR_TEXT_ARGS = {font:font, text:replace("(a)", gamepad_array[0].prompt), x_align:"right", z:20, color:#f, outline:#0}
+const MENU_ITEM_TEXT_ARGS = {font:font, color:#f, x_align: "left", y_align:"baseline", z:20, outline:#0}
+const MENU_CURSOR_TEXT_ARGS = {font:font, text:replace("(a)", gamepad_array[0].prompt), x_align:"right", y_align:"baseline", z:20, color:#f, outline:#0}
 
 const WINDOWS = [
     xy(7,130), xy(26,130), xy(45,130), xy(65,115), xy(64,79), xy(78,46), xy(78,23), xy(92,106), xy(105,59),
@@ -81,9 +81,9 @@ if not disable_input:
 draw_sprite({sprite:animation_frame(title_sprite.scene, bgm_now_f), pos:50% SCREEN_SIZE, z:-1})
 let menu_offset = xy(48, 180)
 for menu_item at i in MENU_ITEMS:
-    draw_text({text:menu_item, pos:menu_offset, ...MENU_ITEM_TEXT_ARGS})
+    draw_text({text:menu_item, pos:menu_offset, …MENU_ITEM_TEXT_ARGS})
     if current_menu_item == i:
-        draw_text({pos:menu_offset - xy(10,0), ...MENU_CURSOR_TEXT_ARGS})
+        draw_text({pos:menu_offset - xy(10,0), …MENU_CURSOR_TEXT_ARGS})
     menu_offset.y += font.line_height
 if random(0,1) < 0.02:
     let explosion = make_entity({

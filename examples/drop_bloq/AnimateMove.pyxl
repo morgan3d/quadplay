@@ -1,0 +1,110 @@
+AnimateMove
+════════════════════════════════════════════════════════════════════════
+
+const STAGE_DROP1   = 0
+const STAGE_BLINK   = 1
+const STAGE_COMPACT = 2
+const STAGE_DROP2   = 3
+
+let x
+let drop_index
+let drop_y
+
+let stage
+let old_bloq
+let stop_frame
+
+// Saved so that the falling sound can be cut off
+let fall_audio
+
+
+enter(move)
+────────────────────────────────────────────────────────────────────────
+
+assert(move.type == "DROP_CYCLE")
+
+x = move.x
+drop_y = move.y
+
+drop_index = game.current_index
+stage = STAGE_DROP1
+old_bloq = game.board[x][0]
+
+device_set_border()
+
+fall_audio = play_sound({sound: fall_sound, volume: 50%})
+
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+device_emulate_input(true)
+device_set_border()
+update_display()
+
+if stage == STAGE_DROP1 or stage == STAGE_DROP2:
+    // Drop the new piece
+    device.output[x][drop_y] = player_array[drop_index].color
+    
+    if mode_frames > ⅛ BLINK_RATE and (mode_frames + 1) mod ⌊¼ BLINK_RATE⌋ == 0:    
+        if drop_y > 0 and game.board[x][drop_y - 1] == ∅:
+            // Keep falling
+            --drop_y
+            if drop_y ==0 or game.board[x][drop_y - 1] ≠ ∅:
+                // Will land on the next frame
+                stop_audio(fall_audio)
+                play_sound({sound: land_sound, volume: 150%})      
+
+        else:
+            // Land bloq
+            game.board[x][drop_y] = drop_index
+            
+            // Don't bother cycling columns that are homogeneous
+            let all_same = true
+            for y < 8: all_same = all_same and (game.board[x][y] == ∅ or game.board[x][y] == drop_index)
+                
+            if stage == STAGE_DROP1 and drop_y > 0 and not all_same:
+                // Continue animation
+                stage = STAGE_BLINK
+                play_sound({sound: blink_sound, volume: 30%, pitch: 75%})
+                stop_frame = mode_frames + BLINK_RATE
+            else:
+                // Exit animation
+                pop_mode()
+
+else if stage == STAGE_BLINK:
+    
+    if ⌊4 mode_frames / BLINK_RATE⌋ mod 2:
+        device.output[x][8] = device.output[x][0]
+        device.output[x][0] = #000
+        
+    if mode_frames ≥ stop_frame:
+        stage = STAGE_COMPACT
+        game.board[x][0] = ∅
+        stop_frame = mode_frames + ⌊½ BLINK_RATE⌋
+        
+else if stage == STAGE_COMPACT:
+    device.output[x][8] = player_array[old_bloq].color
+    if mode_frames ≥ stop_frame:
+        // Shift everything
+        for y < 7:
+            game.board[x][y] = game.board[x][y + 1]
+    
+        // Remove the top piece
+        game.board[x][7] = ∅
+        play_sound({sound: land_sound, volume: 170%, pitch: 75%})      
+
+        
+        // Drop the new piece
+        drop_y = 7
+        drop_index = old_bloq
+        stage = STAGE_DROP2
+        fall_audio = play_sound({sound: fast_fall_sound, volume: 50%})
+
+        
+update_bursts()
+device_visualize()
+device_send_output()
+
+
+

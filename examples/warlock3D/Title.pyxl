@@ -22,7 +22,8 @@ draw_text({
     color: if mode_frames mod 40 < 20 then #FE0 else #C90,
     outline: #000,
     shadow: #000,
-    x_align: "center"
+    x_align: "center",
+    y_align: "baseline"
     })
     
 if any_button_press() or DEBUG:

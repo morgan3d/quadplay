@@ -100,9 +100,9 @@ if selecting_map:
     if map_scroll > 0:
         draw_text(giant_font, "<", xy(10, 42), #CCC)
     if map_scroll < size(map_array) - 4:
-        draw_text(giant_font, ">", xy(SCREEN_SIZE.x - 20, 42), #CCC)
+        draw_text(giant_font, ">", xy(SCREEN_SIZE.x - 20, 42), #CCC, ∅, ∅, "left", "baseline")
         
-    draw_text(font, map_array[map_choice].title, xy(½ SCREEN_SIZE.x, 7), #FFF, #000, ∅, "center")
+    draw_text(font, map_array[map_choice].title, xy(½ SCREEN_SIZE.x, 7), #FFF, #000, ∅, "center", "baseline")
             
 
 // Input

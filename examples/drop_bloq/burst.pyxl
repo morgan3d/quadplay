@@ -1,0 +1,40 @@
+const burst_array = []
+
+// In tiles
+const BURST_TRAIL = 5
+// In tiles per frame
+const BURST_RATE = ¼
+
+const BURST_FRAMES = ⌈8 * sqrt(2) + BURST_TRAIL⌉ / BURST_RATE
+
+def make_burst(pos, color, α default 1):
+    push(burst_array, {color: color, pos: xy(pos), frame: 0, α:α})
+
+
+/* Animate and draw to device output */
+def update_bursts():
+    if size(burst_array) == 0: return
+    
+    for x < 8:
+        for y < 8:
+            const tile_pos = xy(x, y)
+            let tile_color = device.output[x][y]
+            for pos, color, frame in burst in burst_array:
+                const radius = frame * BURST_RATE
+                
+                const distance = magnitude(pos - tile_pos)
+                if distance ≤ radius:
+                    const α = max(0%, 100% - (radius - distance) / BURST_TRAIL)
+                    tile_color = lerp(tile_color, lerp(color, #FFF, α²), α * burst.α)
+                    
+            device.output[x][y] = tile_color
+    
+    
+    iterate(burst_array, _update_one_burst)
+    
+
+
+def _update_one_burst(burst):
+    ++burst.frame
+    if burst.frame > BURST_FRAMES:
+        return iterate.REMOVE

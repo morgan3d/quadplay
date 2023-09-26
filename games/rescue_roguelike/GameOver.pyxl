@@ -17,6 +17,7 @@ def draw_game_over():
         markup: true,
         color: COLORS.text,
         y_align: "top",
+        x_align: "left",
         z: z + 0.1
     })
 

@@ -5,7 +5,7 @@
             "value": "0",
             "format": "",
             "quantum": 0,
-            "enabled": true
+            "enabled": false
         },
         "TITLE_FADEOUT_FRAMES": {
             "type": "number",
@@ -18,7 +18,7 @@
             "type": "boolean",
             "value": true,
             "description": "Select to force the game to start in single player mode immediately, skipping the title screen.",
-            "enabled": true
+            "enabled": false
         },
         "DEBUG_SHOW_STATIC_EVAL": {
             "type": "boolean",

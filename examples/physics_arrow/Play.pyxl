@@ -121,5 +121,5 @@ draw_disk(disk)
 draw_text(deja_15_font, 
     replace("Press (a) to fire", gamepad_array[0].prompt), 
     xy(½ SCREEN_SIZE.x, 20), 
-    TEXT_COLOR, ∅, TEXT_OUTLINE, "center")
+    TEXT_COLOR, ∅, TEXT_OUTLINE, "center", "baseline")
 

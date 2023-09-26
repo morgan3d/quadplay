@@ -22,6 +22,7 @@ preserving_transform:
         markup: true,
         color: #FFF,
         shadow: #0006,
+        x_align: "left",
         y_align: "top",
         pos: xy(110, 10),
         wrap_width: SCREEN_SIZE.x - 160})

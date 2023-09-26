@@ -223,12 +223,12 @@ def draw_controls(player)
 
    set_transform(xy(0, 0), xy(1, 1))
    const pos = xy(5, 10)
-   draw_text(font, uppercase(player.type), pos, #fffd, nil, #0004)
+   draw_text(font, uppercase(player.type), pos, #fffd, ∅, #0004, "left", "baseline")
    
    for control at prompt in player.controls:
       pos.y += font.line_height
-      draw_text(font, replace(prompt, player.gamepad.prompt), pos, #fffd, ∅, #0004)
-      draw_text(font, control, pos + xy(35, 0), #fffd, ∅, #0004)
+      draw_text(font, replace(prompt, player.gamepad.prompt), pos, #fffd, ∅, #0004, "left", "baseline")
+      draw_text(font, control, pos + xy(35, 0), #fffd, ∅, #0004, "left", "baseline")
 
 
 

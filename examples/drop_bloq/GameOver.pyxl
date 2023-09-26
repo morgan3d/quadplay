@@ -1,0 +1,73 @@
+GameOver
+════════════════════════════════════════════════════════════════════════
+
+let winner
+const result = {}
+
+enter(score)
+────────────────────────────────────────────────────────────────────────
+winner = if score > 0 then 0 else 1
+if score == "draw": winner = "draw"
+
+if winner == "draw":
+    play_sound(tie_sound)
+else if player_array[1].ai:
+    if winner == 0: play_sound(win_sound)
+    else: play_sound(lose_sound)
+else if winner == 0:
+    play_sound(p1_win_sound)
+else:
+    play_sound(p2_win_sound)
+
+device_set_border()
+
+static_evaluate(game, result)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+device_emulate_input(true)
+update_display()
+
+// Dim everything
+for x < 8:
+    for y < 8:
+        device.output[x][y] = 50% device.output[x][y]
+
+const blink = ⌊mode_frames / BLINK_RATE⌋ mod 2
+
+let text = "P" + (winner + 1) + " Wins"
+if winner == "draw":
+    text = "Tie Game!"
+    if not result.full:
+        // Flash the longest runs on both sides in a tie
+        for run at p in result.longest_run:
+            const color = lerp(#FFF, player_array[p].color, blink)
+            for x,y in pos in pos_array:
+                device.output[x][y] = color
+else:
+    // Flash the longest run of the winner
+    const color = lerp(#FFF, player_array[winner].color, blink)
+    for x,y in pos in result.longest_run[winner].pos_array:
+        device.output[x][y] = color
+
+    if player_array[1].ai:
+        if winner == 0:
+            text = "You Win!"
+        else:
+            text = "You Lose!"
+        
+        
+draw_text({font: big_font, text: text, pos: ½ SCREEN_SIZE, color: (if winner == "draw" then #FFF else player_array[winner].color), outline: #000, x_align: "center", y_align: "center", z: 100})
+
+update_bursts()
+device_visualize()
+device_send_output()
+
+// Wait at least 2 seconds
+const pressed = device_any_pressed()
+if mode_frames > 60 * 2 and pressed:
+    make_burst(pressed, #F0F)
+    set_mode(Title) because "Button"
+else if mode_frames > 60 * 20:
+    set_mode(Title) because "Timeout"

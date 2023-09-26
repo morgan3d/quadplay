@@ -12,12 +12,12 @@ set_background(rgb(0.4, 0.25, 0.3))
 // Quest: Markup example. See the text.game.json setting for the "quest" constant
 // to see how to add colors and fonts within text strings.
 draw_sprite_corner_rect(uiSpritesheet[10][15], xy(8, 18), xy(SCREEN_SIZE.x - 120, 68))
-draw_text({font: font, text: "Active Quest", pos: xy(½ SCREEN_SIZE.x - 60, 12), x_align: "center", color: #000})
-draw_text({font: font, text: quest, pos: xy(8, 18), y_align: "top", wrap_width: SCREEN_SIZE.x - 120, color: #000, shadow: #1102, markup: true})
+draw_text({font: font, text: "Active Quest", pos: xy(½ SCREEN_SIZE.x - 60, 12), x_align: "center", y_align: "baseline", color: #000})
+draw_text({font: font, text: quest, pos: xy(8, 18), x_align: "left", y_align: "top", wrap_width: SCREEN_SIZE.x - 120, color: #000, shadow: #1102, markup: true})
 
 // "Map"
 draw_sprite_corner_rect(uiSpritesheet[10][9], xy(SCREEN_SIZE.x - 96, 9), xy(86, 77))
-draw_text({font: map_font, text: MAP, pos: xy(SCREEN_SIZE.x - 95, -2), color: #000, shadow: #1102, y_align: "top"})
+draw_text({font: map_font, text: MAP, pos: xy(SCREEN_SIZE.x - 95, -2), color: #000, shadow: #1102, x_align: "left", y_align: "top"})
 
 // Description: This example uses replace() to show how to conveniently
 // insert variables into a string.
@@ -32,11 +32,11 @@ description += replace("\n\nIt is TIME. The sky is SKY and the temperature is TE
 description += " You have " + join(inventory, ", ", ", and ", " and ", "nothing") + ".";
 
 draw_sprite_corner_rect(uiSpritesheet[7][9], xy(8, 102), xy(SCREEN_SIZE.x - 18, 82))
-draw_text({font: font, text: description, pos: xy(8, 100), y_align: "top", wrap_width: SCREEN_SIZE.x - 18, color: #ddd, shadow: #1025})
+draw_text({font: font, text: description, pos: xy(8, 100), x_align: "left", y_align: "top", wrap_width: SCREEN_SIZE.x - 18, color: #ddd, shadow: #1025})
 
 for c < size(choiceArray):
    const args = {font: buttonFont, text: choiceArray[c], color: #FFF, outline: #0003, shadow: #400,
-                 x_align: "center", pos: xy((c + ½) * SCREEN_SIZE.x / size(choiceArray), 210)}
+                 x_align: "center", y_align: "baseline", pos: xy((c + ½) * SCREEN_SIZE.x / size(choiceArray), 210)}
    if c == choiceIndex:
       // Highlight the active choice
       args.color = #ff0

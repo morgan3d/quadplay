@@ -7,7 +7,7 @@ frame
 ────────────────────────────────────────────────────────────────────────
 set_background(#000)
 draw_text(font, "Drag with the mouse or touch to move the alien",
-   xy(½ SCREEN_SIZE.x, 20), #fff, #666, ∅, "center")
+   xy(½ SCREEN_SIZE.x, 20), #fff, #666, ∅, "center", "baseline")
 
 if touch.aa or (touch.a and (touch.dx or touch.dy)):
    push(trail, touch.xy)

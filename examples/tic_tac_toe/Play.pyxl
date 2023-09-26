@@ -46,6 +46,7 @@ with commit_sound, cursor, color, gamepad in player:
         font: font,
         text: replace("[^]\n[<]  [>]\n[v]\n(a)", gamepad.prompt),
         x_align: "center",
+        y_align: "baseline",
         pos: xy((½ SCREEN_SIZE.x - 40) * (2 turn - 1), -20),
         color: color,
         outline: BOX_OUTLINE

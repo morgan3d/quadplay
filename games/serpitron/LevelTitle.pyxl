@@ -17,13 +17,13 @@ const flyOutEnd   = flyOutStart + levelTitle.flyOutFrames - 1
 def drawDescription(α):
    draw_text({font: largeFont,
              text: "Level " + (level + 1) + "{font:font /" + numLevels + "}",
-             pos: xy(lerp(-50, ½ SCREEN_SIZE.x, α), 90), x_align: "center",
+             pos: xy(lerp(-50, ½ SCREEN_SIZE.x, α), 90), x_align: "center", y_align: "baseline",
              color: #f, outline: #0002, shadow: #0004, markup: true})
    
    draw_text({font: largeFont,
              text: levelDescription,
              pos: xy(lerp(SCREEN_SIZE.x + 50, ½ SCREEN_SIZE.x, α), 130),
-             x_align: "center",
+             x_align: "center", y_align: "baseline",
              color: #f, outline:#0002, shadow: #0})
 
    

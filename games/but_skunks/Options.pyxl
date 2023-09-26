@@ -5,9 +5,9 @@ const MENU_CALIBRATE = 1
 const MENU_DEV_CHEATS = 2
 const MENU_ITEMS = ["Difficulty: ", "Calibrate Latency: ", "Dev Cheats: "]
 
-const MENU_LABEL_TEXT_ARGS = {font:font, color:#f, x_align:"right", z:20}
-const MENU_VALUE_TEXT_ARGS = {font:font, color:#f, x_align:"center", z:20}
-const MENU_HELP_TEXT_ARGS = {font:font, color:#f, x_align:"center", z:20}
+const MENU_LABEL_TEXT_ARGS = {font:font, color:#f, x_align:"right", y_align:"baseline", z:20}
+const MENU_VALUE_TEXT_ARGS = {font:font, color:#f, x_align:"center", y_align:"baseline", z:20}
+const MENU_HELP_TEXT_ARGS = {font:font, color:#f, x_align:"center", y_align:"baseline", z:20}
 
 const DIFFICULTIES = [
     {name:"Normal",tolerance:4},

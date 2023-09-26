@@ -54,7 +54,7 @@
             "value": {
                 "b": {
                     "type": "number",
-                    "value": 0.2 
+                    "value": 0.2
                 },
                 "g": {
                     "type": "number",
@@ -68,13 +68,12 @@
         }
     },
     "cooperative": false,
-    "copyright": "\u00a92020 Stephan Steinbach",
+    "copyright": "©2020 Stephan Steinbach",
     "description": "A game about words",
     "developer": "Stephan Steinbach",
-    "docs": [
-    ],
+    "docs": [],
     "highscores": false,
-    "license": "MIT",
+    "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
     "max_players": 1,
     "min_players": 1,
     "modes": [
@@ -88,6 +87,7 @@
         "constants.pyxl"
     ],
     "start_mode": "Intro",
-    "title": "word_game",
-    "version": 1.0
+    "title": "Word Game",
+    "version": 1,
+    "screenshot_tag": "word_game"
 }

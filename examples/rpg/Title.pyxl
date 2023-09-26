@@ -28,6 +28,6 @@ draw_text(font, CREDITS.title, ½ SCREEN_SIZE, #f049ad, #9c1d69, #222, "center",
 draw_text(smallFont, "by " + CREDITS.developer, ½ SCREEN_SIZE + xy(0, 30), #ddd, ∅, #222, "center", "bottom")
 
 if ⌊⅕ mode_frames⌋ mod 10 < 6: draw_text(smallFont, "Press Any Button", ½ SCREEN_SIZE + xy(0, 60), #ff8, #444, ∅, "center", "middle")
-draw_text(smallFont, creditsString, xy(SCREEN_SIZE.x - loop(2 mode_frames, creditsWidth), 216), #ddd, ∅, #222)
+draw_text(smallFont, creditsString, xy(SCREEN_SIZE.x - loop(2 mode_frames, creditsWidth), 216), #ddd, ∅, #222, "left", "baseline")
 
 if any_button_press(): set_mode(Play, "any_button_press()")

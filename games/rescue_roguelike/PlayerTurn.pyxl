@@ -288,6 +288,7 @@ def update_ui_buttons():
             color: COLORS.text,
             outline: COLORS.menu_highlight,
             y_align: "bottom",
+            x_align: "left"
         })
 
         for action in get_actions_for_player(player_current_unit_element.state):
@@ -361,6 +362,7 @@ def update_ui_buttons():
             pos: text_pos,
             text: replace("(e)", gamepad.prompt),
             x_align: "center",
+            y_align: "baseline",
             color: COLORS.text,
             outline: COLORS.menu_border,
         })
@@ -951,6 +953,7 @@ def draw_inspector():
         text: inspector_hover_text,
         color: COLORS.text,
         y_align: "top",
+        x_align: "left",
         wrap_width: text_size.x,
         markup: true,
     })

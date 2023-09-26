@@ -17,7 +17,8 @@ draw_text({
     text: "victory in " + turn_state.turn_num,
     pos: xy(50, 50),
     color: #fff,
-})
+    x_align: "left",
+    y_align: "baseline"})
   
 
 leave

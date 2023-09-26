@@ -52,6 +52,7 @@ if game_frames > TITLE_ANIM_STOP:
                 pos:xy(SCREEN_SIZE.x/2, 217),
                 color:#991515,
                 outline: #4c0000,
+                y_align: "baseline",
                 x_align: "center"
             }
         )
@@ -62,10 +63,11 @@ if game_frames > TITLE_ANIM_STOP:
            "MOVE: [^][<][v][>]   ATTACK: (a)   PAUSE/CONTROLS: (p)",
            joy.prompt
        ),
-        pos:xy(SCREEN_SIZE.x/2, 201),
+       pos:xy(SCREEN_SIZE.x/2, 201),
        color:#991515,
        outline: #4c0000,
-       x_align: "center"
+       x_align: "center",
+       y_align: "baseline", 
     })
 
     if any_button_press() or DEBUG_LEVEL_INIT:

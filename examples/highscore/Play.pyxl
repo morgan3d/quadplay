@@ -39,12 +39,12 @@ new_score = 0
 frame
 ────────────────────────────────────────────────────────────────────────
 
-draw_text(bigfont, "HIGH SCORES", xy(SCREEN_SIZE.x / 2, 30), #F, #0, #0, "center")
+draw_text(bigfont, "HIGH SCORES", xy(SCREEN_SIZE.x / 2, 30), #F, #0, #0, "center", "baseline")
 
 let pos = xy(SCREEN_SIZE.x / 2 + 26, 75)
 for s in score_array:
-   draw_text(bigfont, format_number(s.score, "commas"), pos - xy(20, 0), #FF0, #0, nil, "right")
-   draw_text(bigfont, s.name, pos + xy(20, 0), #FF0, #0, nil,  "left")
+   draw_text(bigfont, format_number(s.score, "commas"), pos - xy(20, 0), #FF0, #0, nil, "right", "baseline")
+   draw_text(bigfont, s.name, pos + xy(20, 0), #FF0, #0, nil, "left", "baseline")
    pos.y += 25
 
 if mode_frames == 1 and new_score:

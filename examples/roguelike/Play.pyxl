@@ -62,20 +62,21 @@ const stats = {
    SIZ: 2
 }
 
-draw_text(stat_font, "Lothar", xy(VIEWPORT_WIDTH + ½ (SCREEN_SIZE.x - VIEWPORT_WIDTH), 10), STAT_TEXT_COLOR, nil, STAT_TEXT_SHADOW, "center")
+draw_text(stat_font, "Lothar", xy(VIEWPORT_WIDTH + ½ (SCREEN_SIZE.x - VIEWPORT_WIDTH), 10), STAT_TEXT_COLOR, ∅, STAT_TEXT_SHADOW, "center", "baseline")
 let y = 30
 for value at stat in stats:
-   draw_text(stat_font, value, xy(VIEWPORT_WIDTH + 20 + 50, y), STAT_TEXT_COLOR, STAT_TEXT_SHADOW, nil, "right")
-   y += draw_text(stat_font, stat, xy(VIEWPORT_WIDTH + 20, y), STAT_TEXT_COLOR, STAT_TEXT_SHADOW).size.y
+   draw_text(stat_font, value, xy(VIEWPORT_WIDTH + 20 + 50, y), STAT_TEXT_COLOR, STAT_TEXT_SHADOW, ∅, "right", "baseline")
+   y += draw_text(stat_font, stat, xy(VIEWPORT_WIDTH + 20, y), STAT_TEXT_COLOR, STAT_TEXT_SHADOW, ∅, "left", "baseline").size.y
 
 const action_array = ["Move", "Fight", "Cast", "Use", "Look", "Wait"]
 y += 50
 const blink = mode_frames mod 40 < 10
 draw_text(stat_font, "♥", xy(VIEWPORT_WIDTH + 8, y + stat_font.line_height * choice_index), 
-   (if blink then STAT_TEXT_COLOR else STAT_TEXT_SHADOW), nil, 
-   (if blink then nil else STAT_TEXT_COLOR))
+   (if blink then STAT_TEXT_COLOR else STAT_TEXT_SHADOW), ∅, 
+   (if blink then ∅ else STAT_TEXT_COLOR),
+   "left", "baseline")
 
-y += draw_text(stat_font, join(action_array, "\n"), xy(VIEWPORT_WIDTH + 20, y), STAT_TEXT_COLOR, STAT_TEXT_SHADOW).size.y
+y += draw_text(stat_font, join(action_array, "\n"), xy(VIEWPORT_WIDTH + 20, y), STAT_TEXT_COLOR, STAT_TEXT_SHADOW, ∅, "left", "baseline").size.y
 
 choice_index = clamp(choice_index + joy.yy, 0, size(action_array) - 1)
 

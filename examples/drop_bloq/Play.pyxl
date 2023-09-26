@@ -1,0 +1,123 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+let lockout_frames
+
+// Number of player-moves (2 ply = 1 turn)
+let ply = 0
+
+def user_move():
+    const board = game.board
+
+    // Process user input
+    for x < 8
+    & for y < 8:
+        const b = board[x][y]
+        
+        if device.input[x][y].pressed:
+            
+            // Ensure that it is empty
+            if board[x][y] == ∅:
+                return {type: "DROP_CYCLE", x: x, y: y}
+            else:
+                play_sound(bad_sound)
+                
+
+
+enter(ai)
+────────────────────────────────────────────────────────────────────────
+
+play_sound(if ai[1] then go_sound else p1_go_sound)
+ply = 0
+    
+// Reset the game state
+game.current_index = 0
+for y < 8:
+    for x < 8:
+        game.board[x][y] = ∅
+
+// Put a random column in, but ensure 
+// that P2 has the bottom bloq
+let bad = true
+const x = random_integer(1, 6)
+while bad:
+    for y < 8: game.board[x][y] = y mod 2
+    // Shuffle the column
+    shuffle(game.board[x])
+    bad = game.board[x][0] ≠ 1
+        
+
+// Configure the players
+for player at i in player_array:
+    player.ai = ai[i]
+    player.color = if player.ai then AI_COLOR else gamepad_array[i].player_color
+
+lockout_frames = LOCKOUT_FRAMES
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+device_emulate_input(true)
+
+local:
+    const player = player_array[game.current_index]
+    const color  = player.color
+    const dim    = ½ player.color
+    
+    // Top left
+    device.output[8][8] = color
+    
+    for i < 8:
+        device.output[i][8] = dim
+        device.output[8][i] = if ⌊mode_frames / BLINK_RATE⌋ mod 2 then color else dim
+    
+    // Roving eye
+    device.output[oscillate(⌊6 mode_frames / BLINK_RATE⌋, 7)][8] = color 
+
+
+if lockout_frames ≤ 0:
+    let move
+    
+    if player_array[game.current_index].ai:
+        move = find_move(game.current_index, game, generate_moves, apply_move, static_evaluate, 4)
+    else: // human
+        move = user_move()
+
+    if move:
+        make_burst(move, player_array[game.current_index].color, 40%)
+        play_sound({sound: drop_sound, pitch: 80% + 80% game.current_index})
+        push_mode(AnimateMove, move)
+                
+else:
+    --lockout_frames
+
+
+update_display()
+update_bursts()
+device_visualize()
+device_send_output()
+
+// See if anyone won
+const score = static_evaluate(game)
+if |score| == ∞ or score == "draw":
+    set_mode(GameOver, score) because "Shape completed"
+    
+
+
+pop_mode from AnimateMove
+────────────────────────────────────────────────────────────────────────        
+lockout_frames = LOCKOUT_FRAMES
+
+game.current_index = (game.current_index + 1) mod 2
+
+if player_array[game.current_index].ai:
+    lockout_frames += AI_DELAY_FRAMES
+
+++ply
+if ply == 1 and not player_array[1].ai:
+    delay(play_sound, 15, p2_go_sound)
+
+
+
+
+    

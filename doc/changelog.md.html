@@ -6,13 +6,16 @@
 Changes for both the specification and implementation in each release
 of [<quadplay/>](manual.md.html).
 
-2023 September TBD: Update 96
+2023 September 25: Update 96
 ===================================
 - Enabled multithreaded GPU emulator for significant graphics performance increases
 - Added more helper functions to `midi_8x8.pyxl`
 - MIDI messages can now keep the console from sleeping
+- New Drop Bloq example game
 - Implemented higher color precision on Ableton Push RGB pads
 - `draw_text()` now has a default `font` argument
+- Changed `draw_text()` `x_align` and `y_align` defaults to `"center"` from `"left"` and `"baseline"`
+- Games are now sorted by title instead of directory in the Open Game dialog
 - Fixed `draw_text()` support for `x_align` and `y_align` numeric values
 - Fixed recent Firefox being incorrectly detected as mobile
 - Fixed excess number character padding in non-monospace fonts

@@ -1,0 +1,31 @@
+Title
+═══════════════════════════════════════════════════════════════════════════════
+
+enter
+────────────────────────────────────────────────────────────────────────
+device_set_border()
+set_random_seed()
+
+stop_audio(music)
+music = play_sound(title_music, true, 55%)
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+device_emulate_input(true)
+
+device_set_all()
+device_blit(title_sprite, xy(0, max(0, 7 - ⌊6 mode_frames / BLINK_RATE⌋)))
+
+if mode_frames == 30: play_sound(title_sound)
+
+const pressed = device_any_pressed()
+if mode_frames > 30 and pressed:
+    play_sound(drop_sound)
+    make_burst(pressed, #F0F)
+    set_mode(Options) because "Button"
+
+update_bursts()
+device_visualize(font)
+device_send_output()
+

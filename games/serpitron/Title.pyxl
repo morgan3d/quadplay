@@ -47,7 +47,7 @@ if not backgroundSound or backgroundSound.audioClip ≠ titleMusic:
 frame
 ────────────────────────────────────────────────────────────────────────
 
-draw_text(font, "Casual Effects presents", xy(SCREEN_SIZE.x / 2, 10), #d, #8, nil, "center")
+draw_text(font, "Casual Effects presents", xy(SCREEN_SIZE.x / 2, 10), #d, #8, nil, "center", "baseline")
 
 draw_sprite(titleSprite, SCREEN_SIZE / 2)
 
@@ -157,4 +157,5 @@ if countdownTimer ≠ ∅:
       if size(snakeArray) == 1: singlePlayerTimeLeft = singlePlayerGameTime
       set_mode(NewLevel) because "All ready"
    else:
-      draw_text(instructionsFont, "Starting in " + ceil(countdownTimer / 45) + "…", xy(SCREEN_SIZE.x / 2 + 5, 180), #ee4, ∅, #8, "center")
+      draw_text(instructionsFont, "Starting in " + ceil(countdownTimer / 45) + "…", xy(SCREEN_SIZE.x / 2 + 5, 180), #ee4, ∅, #8, "center", "baseline")
+

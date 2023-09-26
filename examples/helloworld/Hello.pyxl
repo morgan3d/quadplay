@@ -1,6 +1,4 @@
 draw_text({
-    font: font, 
     text: "Hello, World!",
     pos: ½ SCREEN_SIZE,
-    color: #fff,
-    x_align: "center"})
+    color: #fff})

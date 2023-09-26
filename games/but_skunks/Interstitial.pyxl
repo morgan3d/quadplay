@@ -5,7 +5,7 @@ def enter_menu_mode(data):
         bgm_stop()
     set_mode(Menu) because "Return to main menu"
 
-const MAX_FADE_FRAMES = 6*BGM_FRAMES_PER_MEASURE
+const MAX_FADE_FRAMES = 6 BGM_FRAMES_PER_MEASURE
 // Need a special fade-out function here, since we don't know exactly how many frames
 // it will take to reach the target point in the music.
 def fade_out_and_enter_game(frames_left, total_frames, data):
@@ -98,29 +98,29 @@ tp = xy(128,64)
 for i < size(prev_players):
     draw_sprite({pos:tp+xy(columns[i],0), sprite:animation_frame(prev_players[i].anims.walk, mode_frames), angle:90°})
 tp.y += 20
-draw_text({text:"Destroyed Objects:", font:font, pos:tp, x_align:"right", color:#f})
+draw_text({text:"Destroyed Objects:", font:font, pos:tp, x_align:"right", y_align:"baseline", color:#f})
 for i < size(prev_players):
-    draw_text({text:destroyed_counts[i], font:font, pos:tp + xy(columns[i],0),
+    draw_text({text:destroyed_counts[i], font:font, pos:tp + xy(columns[i],0),y_align:"baseline", 
         color:PLAYER_COLORS[i], x_align:"center"})
 tp.y += font.line_height
-draw_text({text:"Attempted Blasts:", font:font, pos:tp, x_align:"right", color:#f})
+draw_text({text:"Attempted Blasts:", font:font, pos:tp, x_align:"right", y_align:"baseline", color:#f})
 for i < size(prev_players):
-    draw_text({text:attempted_blasts[i], font:font, pos:tp + xy(columns[i],0),
+    draw_text({text:attempted_blasts[i], font:font, pos:tp + xy(columns[i],0),y_align:"baseline", 
         color:PLAYER_COLORS[i], x_align:"center"})
 tp.y += font.line_height
-draw_text({text:"Successful Blasts:", font:font, pos:tp, x_align:"right", color:#f})
+draw_text({text:"Successful Blasts:", font:font, pos:tp, x_align:"right", y_align:"baseline", color:#f})
 for i < size(prev_players):
-    draw_text({text:successful_blasts[i], font:font, pos:tp + xy(columns[i],0),
+    draw_text({text:successful_blasts[i], font:font, pos:tp + xy(columns[i],0),y_align:"baseline", 
         color:PLAYER_COLORS[i], x_align:"center"})
 tp.y += font.line_height
-draw_text({text:"Successful Rate:", font:font, pos:tp, x_align:"right", color:#f})
+draw_text({text:"Successful Rate:", font:font, pos:tp, x_align:"right", y_align:"baseline", color:#f})
 for i < size(prev_players):
-    draw_text({text:explode_rates[i], font:font, pos:tp + xy(columns[i],0),
+    draw_text({text:explode_rates[i], font:font, pos:tp + xy(columns[i],0), y_align:"baseline", 
         color:PLAYER_COLORS[i], x_align:"center"})
 tp.y += font.line_height
-draw_text({text:"Perfect Explosions:", font:font, pos:tp, x_align:"right", color:#f})
+draw_text({text:"Perfect Explosions:", font:font, pos:tp, x_align:"right", y_align:"baseline", color:#f})
 for i < size(prev_players):
-    draw_text({text:perfect_explode_counts[i], font:font, pos:tp + xy(columns[i],0),
+    draw_text({text:perfect_explode_counts[i], font:font, pos:tp + xy(columns[i],0), y_align:"baseline", 
         color:PLAYER_COLORS[i], x_align:"center"})
 tp.y += font.line_height
 // Display custom message per-level
@@ -128,19 +128,19 @@ tp.y += font.line_height
 tp.x = 0.5*SCREEN_SIZE.x
 if next_level_index == 1:
     draw_text({text:"Next level: The "+LEVEL_NAMES[next_level_index]+". \nWatch out for the humans!",
-        font:font, pos:tp, color:#f, x_align:"center"})
+        font:font, pos:tp, color:#f, y_align:"baseline", x_align:"center"})
 else if next_level_index == 2:
     draw_text({text:"Next level: The "+LEVEL_NAMES[next_level_index]+".\nIt's pretty dark down there!",
-        font:font, pos:tp, color:#f, x_align:"center"})
+        font:font, pos:tp, color:#f, y_align:"baseline", x_align:"center"})
 else if next_level_index == -1:
     draw_text({text:"You've cleared the building!",
-        font:font, pos:tp, color:#f, x_align:"center"})
+        font:font, pos:tp, color:#f, y_align:"baseline", x_align:"center"})
     tp.y += font.line_height
-    draw_text({text:"CONGRATULATIONS!", font:font, pos:tp, color:hsv(bgm_measure_t,1,1), x_align:"center"})
+    draw_text({text:"CONGRATULATIONS!", font:font, pos:tp, color:hsv(bgm_measure_t,1,1), y_align:"baseline", x_align:"center"})
 tp.y += font.line_height
 // Display prompt to continue
 draw_text({font:font, pos:xy(50% SCREEN_SIZE.x, 90% SCREEN_SIZE.y),
-    text:replace("(a) Continue", gamepad_array[0].prompt), color:#f, x_align:"center"})
+    text:replace("(a) Continue", gamepad_array[0].prompt), color:#f, y_align:"baseline", x_align:"center"})
 
 leave
 ────────────────────────────────────────────────────────────────────────

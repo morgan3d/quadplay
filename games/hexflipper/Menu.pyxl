@@ -6,8 +6,8 @@ const MENU_HOWTOPLAY = 1
 const MENU_CREDITS = 2
 const MENU_ITEMS = ["New Game", "How To Play", "Credits"]
 
-const MENU_ITEM_TEXT_ARGS = {font:font, color:#f, x_align:"left"}
-const MENU_CURSOR_TEXT_ARGS = {font:font, text:replace("(a)", gamepad_array[0].prompt), x_align:"right", color:#f}
+const MENU_ITEM_TEXT_ARGS = {font:font, color:#f, x_align:"left", y_align: "baseline"}
+const MENU_CURSOR_TEXT_ARGS = {font:font, text:replace("(a)", gamepad_array[0].prompt), x_align:"right", color:#f, y_align: "baseline"}
 
 def enter_setup_mode(data):
     set_mode(GameSetup) because "Enter game setup"

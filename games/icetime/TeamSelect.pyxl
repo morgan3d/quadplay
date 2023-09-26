@@ -9,12 +9,12 @@ def drawSide(teamIndex):
    const team = teamArray[teamIndex]
    const width = ½ SCREEN_SIZE.x
    const x = teamIndex * width
-   draw_text({font: scoreFont, text:team.name, pos:xy(x + ½ width + 5, 8), color:team.labelColor, outline:#fff5, x_align:"center"})
+   draw_text({font: scoreFont, text:team.name, pos:xy(x + ½ width + 5, 8), color:team.labelColor, outline:#fff5, x_align:"center", y_align: "baseline"})
    // Team logo
    draw_sprite(team.spriteSheet[4][0], xy(x + ½ width - 10, 6))
 
    const stats = teamStats[team.name]
-   draw_text({font: tinyFont, text:"" + stats.win + "∙" + stats.lose + "∙" + stats.draw, pos:xy(x + ½ width, 15), color:infoColor, x_align:"center"})
+   draw_text({font: tinyFont, text:"" + stats.win + "∙" + stats.lose + "∙" + stats.draw, pos:xy(x + ½ width, 15), color:infoColor, x_align:"center", y_align: "baseline"})
 
    let allAI = true
    for i < 2:
@@ -22,11 +22,11 @@ def drawSide(teamIndex):
       let y = 26 + 43i
       let label = "AI"
       if not controlPadArray[p].isAI: label = "P" + (1 + controlPadArray[p].index); allAI = false
-      draw_text({font: tinyFont, text: label, pos: xy(x + 1, y), color:infoColor, y_align: "baseline"})
+      draw_text({font: tinyFont, text: label, pos: xy(x + 1, y), color:infoColor, x_align: "left", y_align: "baseline"})
 
       // Player portrait
       const player = team.roster[i]
-      draw_text({font: scoreFont, text: player.name, pos: xy(x + 15, y), color:infoColor, y_align: "baseline"})
+      draw_text({font: scoreFont, text: player.name, pos: xy(x + 15, y), color: infoColor, x_align: "left", y_align: "baseline"})
       draw_corner_rect(xy(x + 15, y + 3), xy(30, 28), #cde, infoColor)
       set_clip(xy(x + 16, y + 4), xy(28, 26))
       for h < 2:
@@ -36,8 +36,8 @@ def drawSide(teamIndex):
 
       // Player stats
       y += 7
-      y += draw_text({font: tinyFont, text: player.mass + " kg  " + format_number(player.acceleration * 1.7 / 0.06, "0.0") + " m", color: infoColor, pos:xy(x + 47, y)}).size.y
-      y += draw_text({font: tinyFont, text: format_number(29.5 player.maxSpeed + player.acceleration / 0.06, " 0") + " kph", color: infoColor, pos:xy(x + 47, y)}).size.y
+      y += draw_text({font: tinyFont, text: player.mass + " kg  " + format_number(player.acceleration * 1.7 / 0.06, "0.0") + " m", color: infoColor, pos:xy(x + 47, y), x_align: "left", y_align: "baseline"}).size.y
+      y += draw_text({font: tinyFont, text: format_number(29.5 player.maxSpeed + player.acceleration / 0.06, " 0") + " kph", color: infoColor, pos:xy(x + 47, y), x_align: "left", y_align: "baseline"}).size.y
 
    if allAI:
       team.ready = true
@@ -45,17 +45,17 @@ def drawSide(teamIndex):
       // Show the controls
       const y = 109
       if team.ready:
-         draw_text({font:scoreFont, text:"ⓑChange", pos:xy(x + 2, y), color:#0, shadow:#0242})
-         draw_text({font:scoreFont, text:"Ready!", pos:xy(x + 66, y), color:infoColor})
+         draw_text({font:scoreFont, text:"ⓑChange", pos:xy(x + 2, y), color:#0, shadow:#0242, x_align: "left", y_align: "baseline"})
+         draw_text({font:scoreFont, text:"Ready!", pos:xy(x + 66, y), color:infoColor, x_align: "left", y_align: "baseline"})
          for p < 2: if controlPadArray[2 teamIndex + p].bb: team.ready = false
             
       else:
-         draw_text({font: scoreFont, text:"←", pos:xy(x + ½ width - 25, 12), color:#0, x_align:"center", shadow:#0242})
-         draw_text({font: scoreFont, text:"→", pos:xy(x + ½ width + 25, 12), color:#0, x_align:"center", shadow:#0242})
+         draw_text({font: scoreFont, text:"←", pos:xy(x + ½ width - 25, 12), color:#0, x_align:"center", shadow:#0242, x_align: "left", y_align: "baseline"})
+         draw_text({font: scoreFont, text:"→", pos:xy(x + ½ width + 25, 12), color:#0, x_align:"center", shadow:#0242, x_align: "left", y_align: "baseline"})
       
-         draw_text({font:scoreFont, text:"ⓑQuit", pos:xy(x +  2, y), color:#0, shadow:#0242})
-         draw_text({font:scoreFont, text:"↑Swap", pos:xy(x + 33, y), color:#0, shadow:#0242})
-         draw_text({font:scoreFont, text:"ⓐPlay", pos:xy(x + 68, y), color:#0, shadow:#0242})
+         draw_text({font:scoreFont, text:"ⓑQuit", pos:xy(x +  2, y), color:#0, shadow:#0242, x_align: "left", y_align: "baseline"})
+         draw_text({font:scoreFont, text:"↑Swap", pos:xy(x + 33, y), color:#0, shadow:#0242, x_align: "left", y_align: "baseline"})
+         draw_text({font:scoreFont, text:"ⓐPlay", pos:xy(x + 68, y), color:#0, shadow:#0242, x_align: "left", y_align: "baseline"})
 
          for p < 2:
             const control = controlPadArray[2 teamIndex + p]

@@ -2,6 +2,7 @@ Play
 ════════════════════════════════════════════════════════════════════════
 
 const resolution_array = [
+    xy(640, 360),
     xy(384, 224),
     xy(320, 180),
     xy(192, 112),
@@ -9,7 +10,7 @@ const resolution_array = [
     xy(64, 64)
 ]
 
-let index = 0
+let index = 1
 
 def set_index(i):
     play_sound(blip_sound)
@@ -24,7 +25,7 @@ set_background(BACKGROUND_COLOR)
 
 draw_map({map: background_map, pos: ½ (SCREEN_SIZE - background_map.size_pixels), z: -2})
 
-const spacing = ⌊160% font.line_height⌋
+const spacing = ⌊135% font.line_height⌋
 let pos = xy(½ SCREEN_SIZE.x, ½ (SCREEN_SIZE.y - spacing * (size(resolution_array) - 1)))
 
 // Shadow behind UI

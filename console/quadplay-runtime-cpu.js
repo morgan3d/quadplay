@@ -5383,7 +5383,7 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
     case 'left': x_align = -1; break;
     default:
         if (x_align !== 0 && x_align !== 1 && x_align !== -1) {
-            x_align = -1;
+            x_align = 0;
         }
         break;
     }
@@ -5395,7 +5395,7 @@ function draw_text(font, str, pos, color, shadow, outline, x_align, y_align, z, 
     case 'baseline': y_align = +1; break;
     default:
         if (y_align !== 0 && y_align !== 1 && y_align !== -1 && y_align !== 2) {
-            y_align = +1;
+            y_align = 0;
         }
         
     }
@@ -9676,6 +9676,7 @@ function $show() {
     // Clear draw list (regardless of whether it is actually drawn)
     $graphicsCommandList = [];
 
+    // Includes submitFrame() time for non-threaded GPU
     $graphicsTime = performance.now() - startTime;
     
     $requestInput();

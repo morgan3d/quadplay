@@ -17,6 +17,7 @@ let player_types = []
 let player_scores = []
 let player_is_winner = [false,false,false,false]
 
+
 enter(in_player_types, in_player_scores)
 ────────────────────────────────────────────────────────────────────────
 disable_input = false
@@ -34,6 +35,7 @@ for i < 4:
     if player_scores[i] == high_score:
         player_is_winner[i] = true
 
+
 frame
 ────────────────────────────────────────────────────────────────────────
 // Handle input
@@ -44,7 +46,7 @@ if not disable_input:
         add_frame_hook(fade_out, enter_menu_mode, 30, ∅, {})
         
 draw_text({font:font, text:"Game Over!", pos:xy(50% SCREEN_SIZE.x, 25% SCREEN_SIZE.y),
-    text_size:max(0,mode_frames/3), x_align:"center", color:#f}).y
+    text_size:max(0,mode_frames/3), x_align:"center", y_align: "baseline", color:#f}).y
     
 // Draw representations of the current players
 for i < 4:
@@ -67,7 +69,7 @@ for i < 4:
         draw_text({font:font, pos:p+xy(0,-20), text:"WINNER!", color:hsv(t,1,1), x_align:"center", y_align:"bottom"})
     
 draw_text({font:font, pos:xy(50% SCREEN_SIZE.x, 90% SCREEN_SIZE.y),
-    text:replace("(b) Return To Menu", gamepad_array[0].prompt), color:#f, x_align:"center"})
+    text:replace("(b) Return To Menu", gamepad_array[0].prompt), color:#f, x_align:"center", y_align: "baseline"})
 
 leave
 ────────────────────────────────────────────────────────────────────────

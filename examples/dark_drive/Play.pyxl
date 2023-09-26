@@ -64,5 +64,7 @@ if 1:
                 text: replace(instructions[2i], gamepad_array[0].prompt) + instructions[2i+1],
                 pos: text_pos,
                 color: instr_color,
+                x_align: "center",
+                y_align: "baseline",
                 z: 200})
         text_pos.y += 12

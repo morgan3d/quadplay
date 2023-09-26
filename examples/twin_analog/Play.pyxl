@@ -9,8 +9,8 @@ const bindings = {
 def draw_instructions():
    let y = 2
    for action at control in bindings:
-      draw_text(font, control, xy(1, y), #abf, ∅, #00d)
-      draw_text(font, action, xy(70, y), #abf, ∅, #00d)
+      draw_text(font, control, xy(1, y), #abf, ∅, #00d, "left", "baseline")
+      draw_text(font, action, xy(70, y), #abf, ∅, #00d, "left", "baseline")
       y += 12
    draw_text(font, "TWIN ANALOG STICK EXAMPLE\n(nonstandard controls)", xy(½ SCREEN_SIZE.x, SCREEN_SIZE.y), 
       #fff, ∅, #800, "center", "top") 

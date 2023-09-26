@@ -43,6 +43,7 @@ let args = {
     pos: ½ VIEW_ARRAY[0].size - xy(20, 0), 
     color: #d, 
     shadow: #3,
+    x_align: "left",
     y_align: "center"
 }
 

@@ -16,6 +16,7 @@ def draw_title_screen():
         pos: xy(0.5 SCREEN_SIZE.x - 0.5 GAMEOVER_TEXT_BOX_SIZE.x, GAMEOVER_TEXT_BOX_SIZE.y),
         markup: true,
         color: COLORS.text,
+        x_align: "left",
         y_align: "top",
         z: z + 0.1
     })

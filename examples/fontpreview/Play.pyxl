@@ -123,7 +123,7 @@ let offset = 0
 enter
 ────────────────────────────────────────────────────────────────────────
 
-offset = 0
+offset = -30
 debug_print(font.glyph_size)
 
 
@@ -135,7 +135,7 @@ offset -= joy.y
 
 let y = offset
 for sample in sampleArray:
-   const h = draw_text(concatenate({font:font, pos:xy(12, y + 5), wrap_width:360, y_align:"top", z:1}, sample)).height
+   const h = draw_text(concatenate({font:font, pos:xy(12, y + 5), wrap_width:360, y_align:"top", x_align:"left", z:1}, sample)).height
    draw_corner_rect(xy(0, y), xy(SCREEN_SIZE.x, h), sample.background)
    y += h
 

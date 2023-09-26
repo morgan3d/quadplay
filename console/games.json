@@ -42,6 +42,11 @@
             "description": "A moody drive on a dark rainy night."
         },
         {
+            "url": "quad://examples/drop_bloq/",
+            "title": "Drop Bloq",
+            "description": "Drop tiles and shift columns, 5 in a row to win. Plays best with an 8x8 MIDI device!"
+        },
+        {
             "url": "quad://examples/dual-stick/",
             "title": "Dual D-Pad Example",
             "description": ""
@@ -248,7 +253,7 @@
         },
         {
             "url": "quad://examples/word_game/",
-            "title": "word_game",
+            "title": "Word Game",
             "description": "A game about words"
         },
         {
@@ -336,7 +341,7 @@
         {
             "url": "quad://games/rescue_roguelike/",
             "title": "Rescue Roguelike",
-            "description": "Turn-based tactical adventure"
+            "description": "Turn-based tactical adventure. Requires touch or mouse."
         },
         {
             "url": "quad://games/rps/",

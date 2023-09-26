@@ -188,7 +188,8 @@ def gui_draw_piece_label(gui, piece, pos3D, z default HUD_Z):
         color: PLAYER_COLOR[piece.player_index],
         outline: TEXT_OUTLINE,
         shadow: TEXT_SHADOW,
-        x_align: "center",          
+        x_align: "center",
+        y_align: "baseline",
         z: z}
     
     // Apply perspective to the position but not

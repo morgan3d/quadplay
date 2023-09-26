@@ -1,5 +1,5 @@
 // The deadline expressed in an absolute time zone
-const DEADLINE = "13:00 7 Jan 2022 EST"
+const DEADLINE = "13:00 7 Jan 2024 EST"
 
 // Milliseconds until the deadline in the player's time zone
 const ms = local_time(DEADLINE).absolute_milliseconds - local_time().absolute_milliseconds
@@ -26,12 +26,13 @@ draw_line(½ SCREEN_SIZE, ½ SCREEN_SIZE + 140 angle_to_xy(360° countdown.S / 6
 
 // Text
 draw_text({
-    font: broderick_14_font, 
+    font: font, 
     text: replace("{color:#F66 D} days {color:#FF6 H} hours {color:#6F8 M} min {color:#69F S} sec", countdown), 
     pos: ½ SCREEN_SIZE - xy(0, 15), 
     color: #FFF,
     shadow: #000,
     x_align: "center",
+    y_align: "baseline",
     markup: true})
     
-draw_text(broderick_14_font, (if ms > 0 then "until " else "since ") + "the event", ½ SCREEN_SIZE + xy(0, 15), #FFF, ∅, ∅, "center")
+draw_text(font, (if ms > 0 then "until " else "since ") + "the event", ½ SCREEN_SIZE + xy(0, 15), #FFF, ∅, ∅, "center", "baseline")

@@ -9,7 +9,7 @@ for x < 13:
     for y < 8:
         draw_sprite(shapes.shingles, 32 xy(x, y), ∅, ∅, ∅, ∅, #66C + rgb(y / 16, 0, 0))
 
-draw_text({font: font, text: "Multitouch Extension Demo\n(not available on all devices)", pos: xy(½ SCREEN_SIZE.x, 10), color:#FFF, outline: #444, x_align: "center", z:1})
+draw_text({font: font, text: "Multitouch Extension Demo\n(not available on all devices)", pos: xy(½ SCREEN_SIZE.x, 10), color:#FFF, outline: #444, x_align: "center", y_align: "baseline", z:1})
 
 const multitouch = device_control("multitouch")
 

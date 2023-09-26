@@ -54,7 +54,7 @@ def draw_choice(text, y, isActive):
              xy(½ SCREEN_SIZE.x, y - (if isActive then 1 else 0)),
              (if isActive then #FD0 else #F),
              (if isActive then #000A else ∅),
-             #000A, "center")
+             #000A, "center", "baseline")
 
    
 enter
@@ -85,7 +85,7 @@ for sprite, pos, vel, angle, spin in shadow in shadow_array:
 const center = SCREEN_SIZE / xy(2, 2.5)
 draw_sprite(sprite, center)
 draw_text(large_font, "R. P. S.", center, #FFF, #000A, #000A, "center", "center")
-draw_text(font, "Casual Effects presents", xy(½ SCREEN_SIZE.x, 13), #fff, ∅, ∅, "center")
+draw_text(font, "Casual Effects presents", xy(½ SCREEN_SIZE.x, 13), #fff, ∅, ∅, "center", "baseline")
 
 draw_num(num_humans, "Human", 170, choice == CHOICE.HUMAN)
 draw_num(num_AIs, "AI", 192, choice == CHOICE.AI)

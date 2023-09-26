@@ -68,7 +68,9 @@ preserving_transform:
         font: scroller_font, 
         text: scroller_text, 
         pos: xy(0, SCREEN_SIZE.y - 14),
-        color: SCROLLER_COLOR})
+        color: SCROLLER_COLOR,
+        x_align: "left",
+        y_align: "baseline"})
 
 const BANK_COLOR = [#F72, #4E4, #1BF]
 

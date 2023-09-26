@@ -66,7 +66,7 @@ def drawPlayer(player):
       // Flash arrow on ice if not behind goal
       if | player.pos.x | < netArray[1].pos.x:
          const dir = [">>", "<<"][player.team.index]
-         draw_text({text: dir, font: tinyFont, pos: proj + xyz(-10 player.team.sideX, -2, 0), z: proj.z - 100, x_align: "center", color:#9})
+         draw_text({text: dir, font: tinyFont, pos: proj + xyz(-10 player.team.sideX, -2, 0), z: proj.z - 100, x_align: "center", y_align: "baseline", color:#9})
       
    if not player.pad.isAI or (puck and puck.owner == player):
-      draw_text({text: "¹²³⁴°"[player.pad.index], font: tinyFont, pos: proj + xyz(0.5 player.faceX, 11, 0), z: proj.z, color: color, outline: #fff9, x_align: "center"})
+      draw_text({text: "¹²³⁴°"[player.pad.index], font: tinyFont, pos: proj + xyz(0.5 player.faceX, 11, 0), z: proj.z, color: color, outline: #fff9, x_align: "center", y_align: "baseline"})

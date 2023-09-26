@@ -44,7 +44,7 @@ def draw_view(view):
             pos: xy(0.5 view.size.x, 80),
             color: #f,
             shadow: $system_prompt_shadow,
-            x_align: "center"
+            x_align: "center", y_align: "baseline"
         })
         return
     else if view.size.x != 384 and view.size.x != 192:
@@ -81,7 +81,7 @@ def draw_view(view):
             color: #f,
             shadow: $system_prompt_shadow,
             markup: true,
-            x_align: "center"
+            x_align: "center", y_align: "baseline"
         })
         draw_text({
             text: "\"" + HOST_CODE + "\"",
@@ -90,7 +90,7 @@ def draw_view(view):
             color: #f,
             shadow: $system_prompt_shadow,
             markup: true,
-            x_align: "center"
+            x_align: "center", y_align: "baseline"
         })
     else:
         $setRuntimeDialogVisible("hostCodeCopy", false)

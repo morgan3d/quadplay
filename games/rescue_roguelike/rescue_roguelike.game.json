@@ -1043,8 +1043,8 @@
         }
     },
     "cooperative": false,
-    "copyright": "\u00a92021 Stephan Steinbach, Ed Luong, and Ian Patrick",
-    "description": "Turn-based tactical adventure",
+    "copyright": "©2021 Stephan Steinbach, Ed Luong, and Ian Patrick",
+    "description": "Turn-based tactical adventure. Requires touch or mouse.",
     "developer": "Stephan Steinbach, Ed Luong, and Ian Patrick",
     "docs": [
         "todo.edluong.md",

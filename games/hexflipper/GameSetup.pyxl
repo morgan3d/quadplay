@@ -101,7 +101,7 @@ draw_text({font:font, pos:xy((2*current_player+1)*SCREEN_SIZE.x/8, 50% SCREEN_SI
 draw_text({font:font, pos:xy((2*current_player+1)*SCREEN_SIZE.x/8, 50% SCREEN_SIZE.y + 25),
     x_align:"center", y_align:"center", color:#f, text:replace("[v]", gamepad_array[0].prompt)})
 draw_text({font:font, pos:xy(25% SCREEN_SIZE.x, 90% SCREEN_SIZE.y),
-    text:replace("(b) Return To Menu    (a) Start Game", gamepad_array[0].prompt), color:#f})
+    text:replace("(b) Return To Menu    (a) Start Game", gamepad_array[0].prompt), color:#f, x_align: "left", y_align: "baseline"})
 
 leave
 ────────────────────────────────────────────────────────────────────────

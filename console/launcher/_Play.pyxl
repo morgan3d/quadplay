@@ -382,8 +382,8 @@ def manage_games_tab():
     const active_outline     = rgba(1,1,1, 25% bright)
     const active_shadow      = 50% $system_prompt_shadow
 
-    draw_text({font: mediumFont, text:joy.prompt["⍐"], pos: xy(1, 28), color: $system_prompt_color, shadow: $system_prompt_shadow})
-    draw_text({font: mediumFont, text:joy.prompt["⍗"], pos: xy(1, 220), color: $system_prompt_color, shadow: $system_prompt_shadow})
+    draw_text({font: mediumFont, text:joy.prompt["⍐"], pos: xy(1, 28), color: $system_prompt_color, shadow: $system_prompt_shadow, x_align: "left", y_align: "baseline"})
+    draw_text({font: mediumFont, text:joy.prompt["⍗"], pos: xy(1, 220), color: $system_prompt_color, shadow: $system_prompt_shadow, x_align: "left", y_align: "baseline"})
 
     const boxVerticalSpacing = 75
 
@@ -407,21 +407,21 @@ def manage_games_tab():
     draw_line(pos + xy(1 - 384/4, 224/4), pos + xy(384/4-2, 224/4), $system_prompt_shadow)
     draw_line(pos + xy(2 - 384/4, 224/4 + 1), pos + xy(384/4-3, 224/4 + 1), $system_prompt_shadow / 2)
 
-    draw_text({font:largeFont, text:game.title, pos:xy(x, 40), color:selectedColor, shadow:$system_prompt_shadow, x_align:"left"})
-    draw_text({font:mediumFont, text:"by " + game.developer, pos:xy(x, 56), color:selectedColor, shadow:$system_prompt_shadow, x_align:"left"})
-    draw_text({font:smallFont, text:game.description, pos:xy(x, 193), color:selectedColor, x_align:"left", wrap_width: 280})
-    draw_text({font:smallFont, text:game.url, pos:xy(x, 220), color:$system_unselected_color, x_align:"left"})
+    draw_text({font:largeFont, text:game.title, pos:xy(x, 40), color:selectedColor, shadow:$system_prompt_shadow, x_align:"left", y_align: "baseline"})
+    draw_text({font:mediumFont, text:"by " + game.developer, pos:xy(x, 56), color:selectedColor, shadow:$system_prompt_shadow, x_align: "left", y_align: "baseline"})
+    draw_text({font:smallFont, text:game.description, pos:xy(x, 193), color:selectedColor, x_align:"left", y_align: "baseline", wrap_width: 280})
+    draw_text({font:smallFont, text:game.url, pos:xy(x, 220), color:$system_unselected_color, x_align:"left", y_align: "baseline"})
 
     const sideX = 295
     const wordX = sideX + 27
     draw_text({font:promptFont, text:joy.prompt["(a)"] + "  PLAY", pos:xy(sideX + 7, 74),
-               color:active_color, shadow: active_shadow, outline: active_outline, x_align:"left"})
-    if not game.builtin: draw_text({font:promptFont, text:joy.prompt["ⓓ"] + "  FORGET", pos:xy(sideX + 7, 88), color:$system_prompt_color, shadow:$system_prompt_shadow, x_align:"left"})
+               color:active_color, shadow: active_shadow, outline: active_outline, x_align:"left", y_align: "baseline"})
+    if not game.builtin: draw_text({font:promptFont, text:joy.prompt["ⓓ"] + "  FORGET", pos:xy(sideX + 7, 88), color:$system_prompt_color, shadow:$system_prompt_shadow, x_align:"left", y_align: "baseline"})
 
     // Icons
     let y = 112
     if game.max_players == 0 or game.min_players == 0 and game.max_players == nil:
-        draw_text({font:mediumFont, text:"Animation", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).y
+        draw_text({font:mediumFont, text:"Animation", pos:xy(wordX, y), color:selectedColor, x_align:"left", y_align: "baseline"}).y
         draw_icon(icons.players[0], xy(sideX, y)).y
         y += 15
     else if game.min_players != nil and game.max_players != nil:
@@ -433,30 +433,30 @@ def manage_games_tab():
             draw_icon(icons.players[hi], xy(sideX + 29, y)).y
         else:
             draw_icon(icons.players[lo], xy(sideX, y))
-            draw_text({font:mediumFont, text:"" + lo + "-Player", pos:xy(wordX, y), color:selectedColor, x_align:"left"})
+            draw_text({font:mediumFont, text:"" + lo + "-Player", pos:xy(wordX, y), color:selectedColor, x_align:"left", y_align: "baseline"})
         y += 15
     else if game.min_players != nil or game.max_players != nil:
         // Only one specified
         const lo = if game.min_players != nil then game.min_players else game.max_players
         draw_icon(icons.players[clamp(lo, 1, 5)], xy(sideX, y))
-        draw_text({font:mediumFont, text:"" + lo + "-Player", pos:xy(wordX, y), color:selectedColor, x_align:"left"})
+        draw_text({font:mediumFont, text:"" + lo + "-Player", pos:xy(wordX, y), color:selectedColor, x_align:"left", y_align: "baseline"})
         y += 15
 
     if game.cooperative:
         draw_icon(icons.cooperative, xy(sideX, y)).y
-        y += draw_text({font:mediumFont, text:"Cooperate", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).size.y
+        y += draw_text({font:mediumFont, text:"Cooperate", pos:xy(wordX, y), color:selectedColor, x_align:"left", y_align: "baseline"}).size.y
 
     if game.competitive:
         draw_icon(icons.competitive, xy(sideX, y)).y
-        y += draw_text({font:mediumFont, text:"Compete", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).size.y
+        y += draw_text({font:mediumFont, text:"Compete", pos:xy(wordX, y), color:selectedColor, x_align:"left", y_align: "baseline"}).size.y
       
     if game.achievements:
         draw_icon(icons.achievements, xy(sideX, y)).y
-        y += draw_text({font:mediumFont, text:"Achieve", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).size.y
+        y += draw_text({font:mediumFont, text:"Achieve", pos:xy(wordX, y), color:selectedColor, x_align:"left", y_align: "baseline"}).size.y
 
     if game.highscores:
         draw_icon(icons.highscores, xy(sideX, y)).y
-        y += draw_text({font:mediumFont, text:"Highscore", pos:xy(wordX, y), color:selectedColor, x_align:"left"}).size.y
+        y += draw_text({font:mediumFont, text:"Highscore", pos:xy(wordX, y), color:selectedColor, x_align:"left", y_align: "baseline"}).size.y
 
     for pad in gamepad_array:
         if pad.aa or pad.qq:
@@ -489,7 +489,6 @@ def manage_games_tab():
 
     gameIndex = loop(gameIndex, gameArray.length)
   
-            
 
     
 enter

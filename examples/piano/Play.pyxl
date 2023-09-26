@@ -150,7 +150,7 @@ preserving_transform:
     draw_corner_rect(xy(0, 207), xy(SCREEN_SIZE.x, 3), 85% BODY_COLOR, ∅, -1)
 
     // Label
-    draw_text({font: title_font, text: "quadplay✜ SK-1", pos: LABEL_POS, color: #FFF})
+    draw_text({font: title_font, text: "quadplay✜ SK-1", pos: LABEL_POS, color: #FFF, x_align: "left", y_align: "baseline"})
     draw_corner_rect(LABEL_POS + xy(0, 9), xy(121, 4), #FFF)
 
     // 3D shading

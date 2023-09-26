@@ -64,4 +64,4 @@ for i < 19:
         format_number(V.y, "0.000") + " " +
         format_number(V.z, "0.000"),
         xy(0, 2 + 12 i), TEXT_COLOR,
-        ∅, ∅, ∅, ∅, -100)
+        ∅, ∅, "left", "baseline", -100)

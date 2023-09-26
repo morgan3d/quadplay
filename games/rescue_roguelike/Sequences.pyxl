@@ -59,6 +59,8 @@ def seq_display_msg(text, timeout):
             text: data.text,
             pos: win_corner + xy(10, 17),
             color: COLORS.text,
+            x_align: "left",
+            y_align: "baseline",
             shadow: COLORS.menu_highlight,
             z: 2.1,
         })
@@ -115,6 +117,8 @@ def seq_modal_display(text, gamepad):
             text: data.text,
             pos: win_corner + xy(10, 17),
             color: #fff,
+            x_align: "left",
+            y_align: "baseline",
             z: 2.1,
         })
         if waiting_for_user:
@@ -123,6 +127,8 @@ def seq_modal_display(text, gamepad):
                 text: replace("(b)", gamepad.prompt),
                 pos: br - xy(12, 7) + xy(0, sin(mode_frames / 6)),
                 color: #fff,
+                x_align: "left",
+                y_align: "baseline",
                 z: 2.1,
             })
         reset_clip()
@@ -313,7 +319,7 @@ def seq_for_obj_dialog_bubble(obj, text, timeout):
             shadow: #b7dae7,
             z: Z_DIALOG + 0.1,
             x_align: "left",
-            y_align: "center",
+            y_align: "baseline"
         })
 
         if text_draw_size.size:
@@ -370,7 +376,9 @@ def seq_for_received_damage(object_elements, received_damage_log):
             color: #fff,
             outline: #f00,
             pos: pos,
-            z: Z_PICKUP + 0.1,
+            x_align: "left",
+            y_align: "baseline",
+            z: Z_PICKUP + 0.1
         })
 
     const start_pos = obj.coord * GRID_CELL_SIZE + BATTLE_GRID_OFFSET + map_draw_offset
@@ -447,6 +455,8 @@ def seq_for_moved_map(object_elements, moved_map_log):
                 outline: COLORS.green_bright,
                 pos: rescue_indicator.screen_pos,
                 z: Z_FLOATING_RESCUE_POINTS,
+                x_align: "left",
+                y_align: "baseline"
             })
             rescue_indicator.screen_pos += 0.15*(rescue_indicator_end - rescue_indicator.screen_pos)
 
@@ -526,7 +536,8 @@ def seq_for_received_health(object_elements, received_health_log):
             outline: #004d72,
             pos: pos,
             z: Z_PICKUP + 0.1,
-        })
+            x_align: "left",
+            y_align: "baseline"})
 
     def received_health_done(data):
         return

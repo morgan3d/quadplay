@@ -3,8 +3,6 @@ Title
 
 def perspective_zoom(z): return MUL(60, 1.03ᶻ)
 
-todo("Show name of connected player + host in online mode over characters")
-
 def start_1P(): 
     set_mode(Config, true) because "1P Menu"    
 
@@ -115,6 +113,7 @@ if mode_frames > start_frames:
         text: "A #quadplay game by @CasualEffects. Music by Abstraction",
         pos: xy(0, -100),
         x_align: "center",
+        y_align: "baseline",
         color: #b})
         
     for text in entry at i in menu.child_array:
@@ -125,7 +124,7 @@ if mode_frames > start_frames:
             color: #000,
             outline: if i == last_value(selection_stack) then TEXT_OUTLINE else ∅,
             shadow: if i == last_value(selection_stack) then #555 else ∅,
-            x_align: "center"})
+            x_align: "center", y_align: "baseline"})
             
 
 // 3D lines in background

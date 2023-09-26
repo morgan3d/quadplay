@@ -75,6 +75,7 @@ def draw_controls():
         text: replace("(q) Cancel", joy.prompt),
         pos: xy((50% - 40% window_scale) * VIEW_ARRAY[0].size.x, y),
         x_align: "left",
+        y_align: "baseline",
         color: $system_prompt_color,
         shadow: $system_prompt_shadow
     })
@@ -83,7 +84,7 @@ def draw_controls():
         font: font,
         text: replace("(p) Visit Host", joy.prompt),
         pos: xy((50% + 40% window_scale) * VIEW_ARRAY[0].size.x, y),
-        x_align: "right",
+        x_align: "right", y_align: "baseline",
         color: $system_prompt_color,
         shadow: $system_prompt_shadow
     })

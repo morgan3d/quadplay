@@ -94,9 +94,9 @@ def draw_battle_bg(turn_state):
 def draw_battle_board(turn_state)
 & preserving_transform:
 
-    debug_watch(pretty_print_tiles(turn_state.tiles))
+    /*debug_watch(pretty_print_tiles(turn_state.tiles))
     debug_watch(turn_state.map_offset)
-    debug_watch(compute_num_rows(turn_state))
+    debug_watch(compute_num_rows(turn_state))*/
 
     const tiles = turn_state.tiles
     compose_transform({pos: BATTLE_GRID_OFFSET})
@@ -464,7 +464,7 @@ def draw_game_info(turn_state):
         outline: COLORS.menu_highlight,
         pos: GAME_INFO_BOX_OFFSET,
         x_align: "left",
-        y_align: "top",
+        y_align: "top"
     })
 
     draw_text(
@@ -476,7 +476,7 @@ def draw_game_info(turn_state):
             // pos: xy(12,1),
             pos: GAME_INFO_BOX_OFFSET - xy(68, 3),
             x_align: "left",
-            y_align: "bottom",
+            y_align: "bottom"
         }
     )
 

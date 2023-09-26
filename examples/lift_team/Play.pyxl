@@ -254,7 +254,8 @@ for index in player in player_array:
         color: #000,
         outline: #ccc,
         shadow: #000,
-        z: 1024
-        }) 
+        z: 1024,
+        x_align: "left",
+        y_align: "baseline"}) 
   
 

@@ -5,7 +5,7 @@
     "constants": {
         "IDEAL_DISTANCE": {
             "type": "number",
-            "value": "76.735",
+            "value": "84.655",
             "min": {
                 "type": "number",
                 "value": "1"

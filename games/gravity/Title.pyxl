@@ -54,7 +54,7 @@ set_post_effects({bloom: 100%, afterglow: 2 AFTERGLOW})
 
 const show_scores = max(…score) > 0
 
-draw_text({font: font, text: "A QUADPLAY✜ GAME BY CASUAL EFFECTS / MUSIC BY ABSTRACTION & ZETAURI", pos: xy(0, 100), color: #392, outline: #030, x_align: "center"})
+draw_text({font: font, text: "A QUADPLAY✜ GAME BY CASUAL EFFECTS / MUSIC BY ABSTRACTION & ZETAURI", pos: xy(0, 100), color: #392, outline: #030, x_align: "center", y_align: "baseline"})
 
 let reset_text = ""
 if show_scores:
@@ -67,6 +67,7 @@ if show_scores:
             color: gamepad_array[p].player_color,
             outline: 32% gamepad_array[p].player_color,
             x_align: "center",
+            y_align: "baseline",
             pos: xy(x, 71),
             z: 2})
             
@@ -92,6 +93,7 @@ if mode_frames ≥ TITLE_LOCKOUT_FRAMES:
         color: #392, 
         outline: #030, 
         x_align: "center", 
+        y_align: "baseline",
         markup: true})
 
     let any_reset = false

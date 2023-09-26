@@ -1251,6 +1251,8 @@ function rgbaToCSSFillStyle(color) {
    every frame if running below framerate due to missed frames or
    graphics framerate scaling.
 
+   Will be called from the onMessage handler for a threaded GPU.
+
    `gpuThreadTime` will only be defined if $THREADED_GPU is true. It
    is the elapsed time measured on the GPU thread for the draw calls
    executed this frame.

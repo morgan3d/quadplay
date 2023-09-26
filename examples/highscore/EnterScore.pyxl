@@ -22,14 +22,14 @@ frame
 draw_previous_mode()
 draw_corner_rect(xy(80, 60), xy(SCREEN_SIZE.x - 80 * 2, 122), #000E, #F)
 
-draw_text(font, "New High Score!", xy(SCREEN_SIZE.x / 2, 80), #F, nil, #500, "center")
-draw_text(font, format_number(new_score, "commas"), xy(SCREEN_SIZE.x / 2, 95), #FF0, nil, nil, "center")
+draw_text(font, "New High Score!", xy(½ SCREEN_SIZE.x, 80), #F, ∅, #500, "center", "baseline")
+draw_text(font, format_number(new_score, "commas"), xy(½ SCREEN_SIZE.x, 95), #FF0, ∅, ∅, "center", "baseline")
 
 for c < 3:
    const color = if char_index == c then #ff0 else #c
-   const pos = xy(SCREEN_SIZE.x / 2 + 34 (c - 1), 124)
-   draw_text(bigfont, char_array[c], pos, color, nil, nil, "center", "center")
-   draw_rect(pos, xy(26, 38), nil, color)
+   const pos = xy(½ SCREEN_SIZE.x + 34 (c - 1), 124)
+   draw_text(bigfont, char_array[c], pos, color, ∅, ∅, "center", "center")
+   draw_rect(pos, xy(26, 38), ∅, color)
 
 if joy.aa:
    if char_array[char_index] != "?":
@@ -45,6 +45,6 @@ else if joy.yy or joy.xx:
    const d = if joy.yy then joy.yy else joy.xx
    char_array[char_index] = array_value(allowed_chars, find(allowed_chars, char_array[char_index]) + d, "loop")
 
-draw_text(font, replace("Enter your name\n[^][v]:Change  (a):Next/Done", joy.prompt), xy(SCREEN_SIZE.x / 2, 160), #F, nil, #500, "center")
+draw_text(font, replace("Enter your name\n[^][v]:Change  (a):Next/Done", joy.prompt), xy(SCREEN_SIZE.x / 2, 160), #F, nil, #500, "center", "baseline")
 
 

@@ -1,0 +1,71 @@
+Instructions
+════════════════════════════════════════════════════════════════════════
+
+const TRANSITION_FRAMES = 140
+const INSTRUCTIONS_FRAME = TRANSITION_FRAMES + 20
+
+let num_players
+let audio
+
+enter(_num_players)
+────────────────────────────────────────────────────────────────────────
+num_players = _num_players
+
+device_set_border()
+device_set_all()
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+device_emulate_input(true)
+device_set_all()
+
+
+if mode_frames < TRANSITION_FRAMES:
+    // Transition out the options
+    device_blit(options_sprite, xy(0, -⌊6 mode_frames / BLINK_RATE⌋))
+    
+else if mode_frames ≥ INSTRUCTIONS_FRAME:
+    // Delay the audio so that the previous audio
+    // selecting a mode can complete
+    if mode_frames == INSTRUCTIONS_FRAME: audio = play_sound({sound: instructions_sound, volume: 200%})
+    
+    draw_text({
+        font: big_font,
+        text: "Touch to DROP a BLOQ &\ncycle that column\n\n" +
+              WIN_LEN + " in a row to win.\n\n" +
+              "All edges wrap around!",
+        color: #fff,
+        x_align: "left",
+        y_align: "top",
+        pos: xy(70, SCREEN_SIZE.y - 40),
+        outline: #000,
+        z: 4})
+    
+    for x < 8:
+        for y < 8:
+            const blink = ((⌊mode_frames / BLINK_RATE⌋ + x + y) mod 2) * 0.3 + 0.25
+            device.output[x][y] = blink * gamepad_array[0].player_color
+            
+    
+    device_blit(instructions_sprite, xy(0, 0))
+
+const pressed = device_any_pressed()
+if mode_frames > 30 and pressed:
+    make_burst(pressed, #FFF)
+    set_mode(Play, [false, num_players == 1]) because "Animation done"
+
+update_bursts()
+
+// Do not visualize on this screen (do show on device)
+if mode_frames < TRANSITION_FRAMES: device_visualize(font)
+    
+device_send_output()
+
+
+leave
+────────────────────────────────────────────────────────────────────────
+stop_audio(audio)
+audio = ∅
+
+
