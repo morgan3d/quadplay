@@ -7,6 +7,9 @@ const SHOW_COMPILED_CODE = false;
    support the spread operator in objects. */
 const PARSER_SUPPORTS_OBJECT_SPREAD = true;
 
+const unprotectQuotedStrings = WorkJSON.unprotectQuotedStrings;
+const protectQuotedStrings = WorkJSON.protectQuotedStrings;
+
 function makeError(msg, srcLine) {
     return {lineNumber: (srcLine + 1), message: msg};
 }
@@ -695,9 +698,6 @@ function gensym(base) {
     return '$_' + (base || '') + (++gensymNum) + '$_';
 }
 
-const unprotectQuotedStrings = WorkJSON.unprotectQuotedStrings;
-const protectQuotedStrings = WorkJSON.protectQuotedStrings;
-
 /** Pull up multi-line expressions enclosed in (), [], {} onto their
     start line and leave the intervening lines empty. This undesirably
     gives incorrect line numbers for errors within those expressions,
@@ -981,9 +981,9 @@ function pyxlToJS(src, noYield, internalMode) {
     // Switch to small element-of everywhere before blocks or strings can be processed
     src = src.replace(/∈/g, '∊');
 
-    let pack = protectQuotedStrings(src);
+    const pack = protectQuotedStrings(src);
     src = pack[0];
-    let stringProtectionMap = pack[1];
+    const stringProtectionMap = pack[1];
 
     // Check for newlines in strings
     for (let i = 0; i < stringProtectionMap.length; ++i) {
@@ -1089,8 +1089,10 @@ function pyxlToJS(src, noYield, internalMode) {
     // with an open paren. There are no negative lookbehinds in
     // JavaScript, so we have to structure an explicit test for the
     // regexp.
-    { 
-        const STACKED_IF_SYMBOL = '\uE071';
+    {
+        // Avoid the protectQuotedStrings value range. Must match the constant below as well
+        const STACKED_IF_SYMBOL = '\uF8FF';
+        
         let found = true
         // Allow multiple IF...THEN on a single line by processing repeatedly
         while (found) {
@@ -1124,7 +1126,7 @@ function pyxlToJS(src, noYield, internalMode) {
         } // while
 
         // Restore the temporarily hidden stacked IFs
-        src = src.replace(/\uE071/g, 'if');
+        src = src.replace(/\uF8FF/g, 'if');
     } // IF
 
     // THEN
@@ -1609,7 +1611,7 @@ return function () {
 
             // Replace SOURCE_LOCATION if not inside a string
             if (lines[i].indexOf('SOURCE_LOCATION') !== -1) {
-                let tmp = protectQuotedStrings(lines[i]);
+                const tmp = protectQuotedStrings(lines[i]);
                 lines[i] = unprotectQuotedStrings(tmp[0].replace(/\bSOURCE_LOCATION\b/g, `($Object.freeze({url: "${currentURL}", filename: "${currentFilename}", line_number: ${currentLineNumber}}))`), tmp[1]);
             }
 

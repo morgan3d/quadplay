@@ -49,7 +49,7 @@
     "competitive":           true,
     "achievements":          false,
     "highscores":            false,
-    "description":           "Grow your hungry serpent without crashing into obstacles or yourself. With rats, shotguns, blizzards, cities, pyramids...",
+    "description":           "Feed your serpent while avoiding obstacles...and itself. Rats, shotguns, blizzards, cities, pyramids, and more!",
 
     "constants":  {
         "cellSide":          6,

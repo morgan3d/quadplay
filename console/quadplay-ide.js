@@ -983,6 +983,7 @@ function onPlayButton(slow, isLaunchGame, args, callback) {
             // Game has not been compiled yet
             outputDisplayPane.innerHTML = '';
             compiledProgram = '';
+
             try {
                 compiledProgram = compile(gameSource, fileContents, false);
                 setErrorStatus('');
@@ -1544,6 +1545,7 @@ for (const name in controlSchemeTable) {
     reset all game state and load the game.  */
 function restartProgram(numBootAnimationFrames) {
     resetEmulatorKeyState();
+
     reloadRuntime(function () {
         try {
             // Inject the constants into the runtime space. Define
@@ -2595,7 +2597,7 @@ function visualizeGame(gameEditor, url, game) {
     s += '<tr valign="top">';
     s += '<td>Label&nbsp;Icons</td><td style="text-align:left">128px&nbsp;&times;&nbsp;128px<br><img alt="label128.png" src="' + baseURL + '/label128.png?" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:128px; height:128px"></td>';
     s += '<td></td><td style="text-align:left">64px&nbsp;&times;&nbsp;64px<br><img alt="label64.png" src="' + baseURL + '/label64.png?" style="border:1px solid #fff; image-rendering: crisp-edges; image-rendering: pixelated; width:64px; height:64px"></td>';
-    s += '</tr>\n<tr><td></td><td colspan=3><i>Press Shift+F6 in game to create <code>label64.png</code> and <code>label128.png</code> templates.</i></td></tr><tr><td><br/><br/></td></tr>\n';
+    s += '</tr>\n<tr><td></td><td colspan=3><i>Press Shift+F6 in game to capture <code>label64.png</code> and <code>label128.png</code> templates. Press shift+f8 to capture the <code>preview.png</code> animation.</i></td></tr><tr><td><br/><br/></td></tr>\n';
     s += '</table>';
     gameEditor.innerHTML = s;
 }
@@ -3002,17 +3004,21 @@ function showOpenGameDialog() {
         // Sort by title
         for (const key in openGameFiles) {
             const array = openGameFiles[key];
-            array.sort(function (A, B) {
-                const a = A.title.toLowerCase().replace(/^(a|the) /, '');
-                const b = B.title.toLowerCase().replace(/^(a|the) /, '');
-                return a.localeCompare(b);
-            });
+            array.sort(titleComparator);
         }
         
         // Show/hide the mine option depending on whether it is populated
         document.getElementById('openMineOption').style.display = (json.mine && json.mine.length > 0) ? '' : 'none';
         onOpenGameTypeChange();
     });
+}
+
+
+/* Sort comparator appropriate for game titles */
+function titleComparator(A, B) {
+    const a = A.title.toLowerCase().replace(/^(a|the) /, '');
+    const b = B.title.toLowerCase().replace(/^(a|the) /, '');
+    return a.localeCompare(b);
 }
 
 
@@ -3509,9 +3515,12 @@ function mainLoopStep() {
     }
 
     // The frame has ended
-    profiler.endFrame(QRuntime.$physicsTimeTotal, QRuntime.$graphicsTime, QRuntime.$logicToGraphicsTimeShift, QRuntime.$missedFrames);
+    if (! previewRecording) {
+        // Only adjust framerate if not preview recording
+        profiler.endFrame(QRuntime.$physicsTimeTotal, QRuntime.$graphicsTime, QRuntime.$logicToGraphicsTimeShift, QRuntime.$missedFrames);
+    }
     midiAfterFrame();
-    
+   
     // Only update the profiler display periodically, because doing so
     // takes about 2ms of frame time on a midrange modern computer.
     if (useIDE && (((QRuntime.mode_frames - 1) % (8 * QRuntime.$graphicsPeriod) === 0) ||
@@ -4967,7 +4976,7 @@ setKeyboardMappingMode(localStorage.getItem('keyboardMappingMode') || 'Normal');
             // Remove the loading screen permanently now that page loading has completed
             pageLoadingScreen.remove();
         }
-        
+
         if (useIDE) {
             onProjectSelect(null, 'game', gameSource.jsonURL);
             

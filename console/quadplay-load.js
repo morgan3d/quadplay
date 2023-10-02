@@ -207,8 +207,20 @@ function isDebugUrl(url) {
 // Used to prevent recursive load while embedded in an iframe
 let firstLoadComplete = false;
 
-// Loads the game and then runs the callback() or errorCallback()
+/* Makes absolute and adds missing game .json name */
+function makeGameURLAbsolute(gameURL) {
+    if (! /\.game\.json$/i.test(gameURL)) {
+        // Remove trailing slash
+        if (gameURL[gameURL.length - 1] === '/') { gameURL = gameURL.substring(0, gameURL.length - 1); }
+        gameURL = gameURL.replace(/(\/|^)([^\/]+)$/, '$1$2/$2.game.json');
+    }
+    gameURL = makeURLAbsolute(location.href, gameURL);
+    return gameURL;
+}
+
+/* Loads the game and then runs the callback() or errorCallback() */
 function afterLoadGame(gameURL, callback, errorCallback) {
+    const isLauncher = gameURL.endsWith('/console/launcher/launcher.game.json') || gameURL.endsWith('/console/launcher/') || gameURL.endsWith('/console/launcher');
     console.assert(! inGameLoad, 'Reentrant call to afterLoadGame()!');
     //console.log('Starting game load');
     inGameLoad = true;
@@ -235,12 +247,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         forceReload: false});
 
     // If given a directory, assume that the file has the same name
-    if (! /\.game\.json$/i.test(gameURL)) {
-        // Remove trailing slash
-        if (gameURL[gameURL.length - 1] === '/') { gameURL = gameURL.substring(0, gameURL.length - 1); }
-        gameURL = gameURL.replace(/(\/|^)([^\/]+)$/, '$1$2/$2.game.json');
-    }
-    gameURL = makeURLAbsolute(location.href, gameURL);
+    gameURL = makeGameURLAbsolute(gameURL);
     window.gameURL = gameURL;
     console.log('Loading ' + gameURL);
 
@@ -274,6 +281,7 @@ function afterLoadGame(gameURL, callback, errorCallback) {
 
     const debugURL = gameURL.replace(/\.game\.json$/, '.debug.json');
 
+    // Look for debugJSON
     if (locallyHosted(gameURL) && useIDE && isQuadserver && ! isBuiltIn(gameURL)) {
         loadManager.fetch(
             debugURL, 'json', null,
@@ -297,7 +305,10 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         );
     }
 
-    loadManager.fetch(gameURL, 'text', jsonParser, function (gameJSON) {
+    // Loaded below in the `if (isLauncher)` section
+    let launcherGameArray;
+
+    function processGameJSON(gameJSON) {
         if (! Array.isArray(gameJSON.modes)) { throw new Error('The modes parameter is not an array'); }
         if (gameJSON.assets === undefined) { gameJSON.assets = {}; }
         if (typeof gameJSON.assets !== 'object') { throw 'The assets parameter is not an object in ' + gameURL; }
@@ -324,10 +335,28 @@ function afterLoadGame(gameURL, callback, errorCallback) {
         if (gameJSON.screenshot_tag === undefined) {
             gameJSON.screenshot_tag = gameJSON.title;
         }
-
+       
         // Clone for the extended version actually loaded
         gameJSON = deep_clone(gameJSON);
         gameSource.extendedJSON = gameJSON;
+
+        // Inject launcherGameArray constant and assets if this is the launcher
+        if (isLauncher) {
+            gameJSON.constants.game_array = {type: 'raw', value: launcherGameArray};
+            
+            for (let i = 0; i < launcherGameArray.length; ++i) {
+                const asset_prefix = 'a' + i;
+                const g = launcherGameArray[i];
+                g.asset_prefix = asset_prefix;
+
+                // Add assets
+                gameJSON.assets[asset_prefix + '_preview'] = g.url + 'preview.png';
+                gameJSON.assets[asset_prefix + '_label'] = g.url + 'label64.png';
+            }
+        } // if isLauncher
+
+        // TODO: Make sure that reloading the kiosk doesn't add
+        // this twice if the JSON was cached
 
         if (! gameJSON.scripts) { gameJSON.scripts = []; }
         if (! gameJSON.modes) { gameJSON.modess = []; }
@@ -443,54 +472,74 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 const a = keys[i];
                 
                 // Capture values for the function below
-                const assetURL = makeURLAbsolute(gameURL, gameJSON.assets[a]), assetName = a;
-                let type = assetURL.match(/\.([^.]+)\.json$/i);
-                if (type) { type = type[1].toLowerCase(); }
+                const assetURL = makeURLAbsolute(gameURL, gameJSON.assets[a]);
+                const assetName = a;
 
-                // Always re-fetch and parse the json, even though
-                // this asset may be in the cache if it is a built-in
-                // or duplicate asset.
+                if (assetURL.endsWith('preview.png') ||
+                    assetURL.endsWith('label64.png') ||
+                    assetURL.endsWith('label128.png')) {
+                    
+                    // Special spritesheet assets used for the
+                    // launcher that do not have supporting JSON
+                    // files. Synthesize a JSON file for them dynamically
 
-                loadManager.fetch(assetURL, 'text', jsonParser, function (json) {
-                    // assetURL is the asset json file
-                    // json.url is the png, mp3, etc. referenced by the file
-                    switch (type) {
-                    case 'font':
-                        gameSource.assets[assetName] = loadFont(assetName, json, assetURL);
-                        break;
+                    const json = {
+                        url: assetURL,
+                        sprite_size: assetURL.endsWith('preview.png') ? {x: 192, y: 112} : assetURL.endsWith('label128.png') ? {x: 128, y: 128} : {x: 64, y: 64}
+                    };
+                    
+                    gameSource.assets[assetName] = loadSpritesheet(assetName, json, assetURL, null);
+                    
+                } else {
+                
+                    let type = assetURL.match(/\.([^.]+)\.json$/i);
+                    if (type) { type = type[1].toLowerCase(); }
+                    
+                    // Always re-fetch and parse the json, even though
+                    // this asset may be in the cache if it is a built-in
+                    // or duplicate asset.
+                    
+                    loadManager.fetch(assetURL, 'text', jsonParser, function (json) {
+                        // assetURL is the asset json file
+                        // json.url is the png, mp3, etc. referenced by the file
+                        switch (type) {
+                        case 'font':
+                            gameSource.assets[assetName] = loadFont(assetName, json, assetURL);
+                            break;
+                            
+                        case 'sprite':
+                            gameSource.assets[assetName] = loadSpritesheet(assetName, json, assetURL, null);
+                            break;
+                            
+                        case 'sound':
+                            gameSource.assets[assetName] = loadSound(assetName, json, assetURL);
+                            break;
+                            
+                        case 'map':
+                            gameSource.assets[assetName] = loadMap(assetName, json, assetURL);
+                            break;
+                            
+                        case 'data':
+                            gameSource.assets[assetName] = loadData(assetName, json, assetURL);
+                            break;
+                            
+                        default:
+                            console.log('Unrecognized asset type: "' + type + '"');
+                        }
                         
-                    case 'sprite':
-                        gameSource.assets[assetName] = loadSpritesheet(assetName, json, assetURL, null);
-                        break;
-                        
-                    case 'sound':
-                        gameSource.assets[assetName] = loadSound(assetName, json, assetURL);
-                        break;
-                        
-                    case 'map':
-                        gameSource.assets[assetName] = loadMap(assetName, json, assetURL);
-                        break;
-
-                    case 'data':
-                        gameSource.assets[assetName] = loadData(assetName, json, assetURL);
-                        break;
-                        
-                    default:
-                        console.log('Unrecognized asset type: "' + type + '"');
-                    }
-
-                }, // callback
-                                  null, // error callback
-                                  null, // warning callback
-                                  computeForceReloadFlag(assetURL)
-                                 );
+                    }, // end of callback
+                                      null, // error callback
+                                      null, // warning callback
+                                      computeForceReloadFlag(assetURL)
+                                     );
+                } // if preview.png
             } // for each asset
         } // Assets
 
         // Constants:
         gameSource.constants = {};
         loadConstants(gameJSON.constants, gameURL, false, gameSource.constants);
-
+        
         // Docs: Load the names, but do not load the documents themselves.
         gameSource.docs = [];
         if (gameJSON.docs) {
@@ -505,16 +554,32 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                     gameSource.docs[d] = makeURLAbsolute(gameURL, doc.url);
                 }
             }
-        } // if docs
-        
-    },
-      loadFailureCallback,
-      loadWarningCallback,
-      true);
+        } // if docs        
+    } // processGameJSON
+
+    function goLoadGame() {
+        loadManager.fetch(gameURL, 'text', jsonParser, processGameJSON, loadFailureCallback, loadWarningCallback, true);
+    }
+
+    if (isLauncher) {
+        // The launcher needs access to the list of games before it can load.
+        const gamesListURL = location.origin + getQuadPath() + 'console/games.json';
+        loadManager.fetch(gamesListURL, 'json', null, function (gamesListJSON) {
+            launcherGameArray = gamesListJSON.builtins;
+
+            // Sort by title
+            launcherGameArray.sort(titleComparator);
+
+            // Continue the loading process
+            goLoadGame();
+        });
+    } else {
+        goLoadGame();
+    }
 
     loadManager.end();
 }
-
+                         
 
 /* Constants json is the table of constants as loaded directly from
    game.json or debug.json.

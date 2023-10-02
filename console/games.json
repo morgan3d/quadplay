@@ -4,354 +4,865 @@
         {
             "url": "quad://examples/animation/",
             "title": "Animation Example",
-            "description": ""
+            "description": "",
+            "version": 0,
+            "developer": "Casual Effects"
         },
         {
             "url": "quad://examples/boids/",
             "title": "Boids Example",
-            "description": "Implementation of Craig Reynolds's flocking algorithm"
+            "description": "Implementation of Craig Reynolds's flocking algorithm",
+            "version": 0,
+            "developer": "Stephan Steinbach",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/camera_shake/",
             "title": "Camera Shake",
-            "description": "Example of tunable full-screen camera shake"
+            "description": "Example of tunable full-screen camera shake",
+            "version": 0,
+            "developer": "Stephan Steinbach",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/cards/",
             "title": "Cards",
-            "description": "Example of using a standard playing card deck"
+            "description": "Example of using a standard playing card deck",
+            "version": 0,
+            "developer": "@CasualEffects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/change_res/",
             "title": "Change Resolution",
-            "description": "Changing screen resolution at runtime"
+            "description": "Changing screen resolution at runtime",
+            "version": 0,
+            "developer": "@CasualEffects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/clouds/",
             "title": "Clouds",
-            "description": "Example of noise functions and draw_point"
+            "description": "Example of noise functions and draw_point",
+            "version": 0,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/countdown/",
             "title": "Countdown Example",
-            "description": "Example of local_time() for time zone math"
+            "description": "Example of local_time() for time zone math",
+            "version": 0.0,
+            "developer": "@CasualEffects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/dark_drive/",
             "title": "A Dark Drive",
-            "description": "A moody drive on a dark rainy night."
-        },
-        {
-            "url": "quad://examples/drop_bloq/",
-            "title": "Drop Bloq",
-            "description": "Drop tiles and shift columns, 5 in a row to win. Plays best with an 8x8 MIDI device!"
+            "description": "A moody drive on a dark rainy night.",
+            "version": 1.0,
+            "developer": "Ed Luong, Nick Porcino, Stephan Steinbach",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/dual-stick/",
             "title": "Dual D-Pad Example",
-            "description": ""
+            "description": "",
+            "version": 0,
+            "developer": "CasualEffects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/dynamic_accel/accel_demo.game.json",
             "title": "Dynamic Acceleration Library Demo",
-            "description": ""
+            "description": "",
+            "version": 0,
+            "developer": "Stephan Steinbach",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/entity/",
             "title": "Entity Example",
-            "description": "Examples of different ways of drawing and simulating entities."
+            "description": "Examples of different ways of drawing and simulating entities.",
+            "version": 0,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/fluid/",
             "title": "Fluid Example",
-            "description": "Cellular automata fluid simulation."
+            "description": "Cellular automata fluid simulation.",
+            "version": 0.0,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/fontpreview/",
             "title": "Font Preview",
-            "description": ""
+            "description": "",
+            "version": 0,
+            "developer": "Casual Effects"
         },
         {
             "url": "quad://examples/gridmove/",
             "title": "Grid Movement",
-            "description": "PAC-MAN style movement with smooth interpolation and anticipatory turns"
+            "description": "PAC-MAN style movement with smooth interpolation and anticipatory turns",
+            "version": 0,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/helloworld/",
             "title": "Hello World",
-            "description": ""
+            "description": "",
+            "version": 0
         },
         {
             "url": "quad://examples/highscore/",
             "title": "High Score Example",
-            "description": ""
+            "description": "",
+            "version": 0.0,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": true
         },
         {
             "url": "quad://examples/input/",
             "title": "Input",
-            "description": ""
+            "description": "",
+            "version": 0,
+            "developer": "Casual Effects"
         },
         {
             "url": "quad://examples/islands/",
             "title": "Islands",
-            "description": "Simulation of a boat"
+            "description": "Simulation of a boat",
+            "version": 0,
+            "developer": "CasualEffects",
+            "min_players": 2,
+            "max_players": 2,
+            "cooperative": false,
+            "competitive": true,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/kart/",
             "title": "Kart",
-            "description": "Perspective textured ground plane example"
+            "description": "Perspective textured ground plane example",
+            "version": 0,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/lift_team/",
             "title": "Lift Team Example",
-            "description": "Physics example of a player helicoper that can lift another player's mech."
+            "description": "Physics example of a player helicoper that can lift another player's mech.",
+            "version": 0,
+            "developer": "Casual Effects",
+            "min_players": 2,
+            "max_players": 2,
+            "cooperative": true,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/maze/",
             "title": "Maze",
-            "description": "Interactive demonstration of the maze generation parameters"
+            "description": "Interactive demonstration of the maze generation parameters",
+            "version": 0,
+            "developer": "@CasualEffects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/midi_8x8/",
             "title": "MIDI: TacTile 64 Jam Demo",
-            "description": "Demonstration of the 8x8 MIDI controller abstraction API used for the TacTile 64 Jam"
+            "description": "Demonstration of the 8x8 MIDI controller abstraction API used for the TacTile 64 Jam",
+            "version": 0,
+            "developer": "CasualEffects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/midi_fcb1010/",
             "title": "MIDI FCB1010",
-            "description": "Example of using the MIDI API with the FCB1010 controller in default configuration. Requires the controller."
+            "description": "Example of using the MIDI API with the FCB1010 controller in default configuration. Requires the controller.",
+            "version": 0,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/midi_launchpad/",
             "title": "MIDI Launchpad",
-            "description": "Demonstration of the MIDI output API for Novation Launchpad controllers"
+            "description": "Demonstration of the MIDI output API for Novation Launchpad controllers",
+            "version": 0,
+            "developer": "CasualEffects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/midi_starrypad/",
             "title": "MIDI Starrypad",
-            "description": "Visualization of Donner Starrypad MIDI input. Requires the physical controller."
+            "description": "Visualization of Donner Starrypad MIDI input. Requires the physical controller.",
+            "version": 0,
+            "developer": "CasualEffects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/multitouch/",
             "title": "Multitouch",
-            "description": "Example of the device_control() multitouch extension"
+            "description": "Example of the device_control() multitouch extension",
+            "version": 1,
+            "developer": "@CasualEffects",
+            "min_players": 1,
+            "max_players": 3,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/perceptual_color/",
             "title": "Perceptual Color",
-            "description": "Shows the difference between perceptual_lerp_color() and lerp()."
+            "description": "Shows the difference between perceptual_lerp_color() and lerp().",
+            "version": 0,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/physics/",
             "title": "Physics Example",
-            "description": "Using the built-in quadplay physics support for vehicles, characters, switches, springs, and moving platforms."
+            "description": "Using the built-in quadplay physics support for vehicles, characters, switches, springs, and moving platforms.",
+            "version": 0,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/physics_arrow/",
             "title": "Physics Arrow",
-            "description": "Demo of dynamic attachments and drag forces."
+            "description": "Demo of dynamic attachments and drag forces.",
+            "version": 0,
+            "developer": "@CasualEffects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/piano/",
             "title": "Piano",
-            "description": "Example of play_sound() and pitch."
+            "description": "Example of play_sound() and pitch.",
+            "version": 1,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/planetgen/",
             "title": "Planet Generator",
-            "description": "Random planet generator with moons, atmosphere, and rings"
+            "description": "Random planet generator with moons, atmosphere, and rings",
+            "version": 0,
+            "developer": "CasualEffects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": true,
+            "highscores": false
         },
         {
             "url": "quad://examples/platformer/",
             "title": "Platformer",
-            "description": "Classic 8-bit platformer physics with collisions, jump, double jump, wall jump, short jump, wall slide, grace periods, ladders, and per-pixel ray casts."
+            "description": "Classic 8-bit platformer physics with collisions, jump, double jump, wall jump, short jump, wall slide, grace periods, ladders, and per-pixel ray casts.",
+            "version": 0,
+            "developer": "CasualEffects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/private_view/",
             "title": "Private Views",
-            "description": "Example of using private views for online multiplayer"
+            "description": "Example of using private views for online multiplayer",
+            "version": 0,
+            "developer": "@CasualEffects",
+            "min_players": 2,
+            "max_players": 2,
+            "cooperative": false,
+            "competitive": true,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/robot/",
             "title": "Robot Example",
-            "description": ""
+            "description": "",
+            "version": 0,
+            "developer": "CasualEffects"
         },
         {
             "url": "quad://examples/roguelike/",
             "title": "Roguelike Example",
-            "description": "Sample roguelike game setup"
+            "description": "Sample roguelike game setup",
+            "version": 0,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/rpg/",
             "title": "RPG Demo",
-            "description": ""
+            "description": "",
+            "version": 0,
+            "developer": "CasualEffects"
         },
         {
             "url": "quad://examples/sequence_demo/",
             "title": "Sequence Demo",
-            "description": "Demo of using sequence()"
+            "description": "Demo of using sequence()",
+            "version": 0,
+            "developer": "Stephan Steinbach",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/speedstreet/",
             "title": "Speed Street",
-            "description": "How fast can you go? Tear through the road course pulling tricks off jumps and fighting to be the leader of the pack."
+            "description": "How fast can you go? Tear through the road course pulling tricks off jumps and fighting to be the leader of the pack.",
+            "version": 0.5,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 4,
+            "cooperative": false,
+            "competitive": true,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/spritestack/",
             "title": "Spritestack",
-            "description": "Little engine for Grand Theft Auto 2.5D rendering and physics of a 2D game using sprite stacking and camera perspective."
+            "description": "Little engine for Grand Theft Auto 2.5D rendering and physics of a 2D game using sprite stacking and camera perspective.",
+            "version": 0,
+            "developer": "@CasualEffects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/sproing/",
             "title": "Squash and Stretch Example",
-            "description": "Asymmetric sprite scaling for animation of single sprites"
+            "description": "Asymmetric sprite scaling for animation of single sprites",
+            "version": 0,
+            "developer": "Stephan Steinbach",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/starter/",
             "title": "Starter Example",
-            "description": "Description of your game in about 100 characters."
+            "description": "Description of your game in about 100 characters.",
+            "version": 0,
+            "developer": "Your Name Here",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/text/",
             "title": "Text Example",
-            "description": ""
+            "description": "",
+            "version": 0,
+            "developer": "Casual Effects"
         },
         {
             "url": "quad://examples/textspheres/",
             "title": "Text Spheres",
-            "description": "Wiggling text title screen animation"
+            "description": "Wiggling text title screen animation",
+            "version": 1,
+            "developer": "@CasualEffects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": true
         },
         {
             "url": "quad://examples/tic_tac_toe/",
             "title": "Tic Tac Toe",
-            "description": "Example of supporting gamepad, touch, and mouse (hover) input on a grid and turn-based play."
+            "description": "Example of supporting gamepad, touch, and mouse (hover) input on a grid and turn-based play.",
+            "version": 1,
+            "developer": "@CasualEffects",
+            "min_players": 2,
+            "max_players": 2,
+            "cooperative": false,
+            "competitive": true,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/touch/",
             "title": "Touch Example",
-            "description": "Shows how to use the touch input"
+            "description": "Shows how to use the touch input",
+            "version": 0.0,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/twin_analog/",
             "title": "Twin Analog",
-            "description": "Example of using device_control() to access raw analog sticks"
+            "description": "Example of using device_control() to access raw analog sticks",
+            "version": 0,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/vaporwave/",
             "title": "Vaporwave Demo",
-            "description": "Example of pseudo-3D effects and pre-rendered 3D sprites."
+            "description": "Example of pseudo-3D effects and pre-rendered 3D sprites.",
+            "version": 0,
+            "developer": "Casual Effects"
         },
         {
             "url": "quad://examples/vehicles/",
             "title": "Vehicles",
-            "description": "Example of vehicle controls"
+            "description": "Example of vehicle controls",
+            "version": 0,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/warlock3D/",
             "title": "Warlock 3D",
-            "description": "DOOM/Heretic/Wizardry style first person view with d-pad, dual d-pad, dual analog, and mouselook controls"
+            "description": "DOOM/Heretic/Wizardry style first person view with d-pad, dual d-pad, dual analog, and mouselook controls",
+            "version": 0,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/word_game/",
             "title": "Word Game",
-            "description": "A game about words"
+            "description": "A game about words",
+            "version": 1,
+            "developer": "Stephan Steinbach",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/zcar/",
             "title": "Z-Car",
-            "description": "Example of simple 3D wireframe effect."
+            "description": "Example of simple 3D wireframe effect.",
+            "version": 1,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/zoom/",
             "title": "Zoom 3D",
-            "description": "Using 3D perspective projection to move the camera in and out."
+            "description": "Using 3D perspective projection to move the camera in and out.",
+            "version": 0,
+            "developer": "Stephan Steinbach",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/zoom2D/",
             "title": "Zoom 2D",
-            "description": "Using 2D zoom to move the camera in and out."
+            "description": "Using 2D zoom to move the camera in and out.",
+            "version": 0,
+            "developer": "Stephan Steinbach",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         }
     ],
     "builtins": [
         {
             "url": "quad://games/across_the_lake/",
             "title": "Across the Lake",
-            "description": "You are a stone skipping across a lake. One-button endless skipper."
+            "description": "You are a stone skipping across a lake. One-button endless skipper.",
+            "version": 1,
+            "developer": "The Steinbachers",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://games/beat_the_gobblins/",
             "title": "Beat The Gobblins",
-            "description": "The evil Wizzard has trapped you on top of their tower and summoned hordes of angry Bombgobblins. Intense score chasing action. Good luck!"
+            "description": "The evil Wizzard trapped you atop their tower and summoned hordes of Bombgobblins. Intense score chase action.",
+            "version": 1,
+            "developer": "Stephan Steinbach",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": true
         },
         {
             "url": "quad://games/beyond_control/",
             "title": "Beyond Control",
-            "description": "Program your broken robots to race through the ruins."
+            "description": "Program your broken robots to race through the ruins.",
+            "version": 0,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 4,
+            "cooperative": true,
+            "competitive": true,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://games/but_skunks/",
             "title": "But\u2026Skunks!?",
-            "description": "Skunks. Why did it have to be skunks?"
+            "description": "Skunks. Why did it have to be skunks?",
+            "version": 1,
+            "developer": "Bitterly Indifferent Studios",
+            "min_players": 1,
+            "max_players": 2,
+            "cooperative": true,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://games/doublesdepon/",
             "title": "Doubles de Pon",
-            "description": "Swapping puzzle game"
+            "description": "Swapping puzzle game",
+            "version": 0,
+            "developer": "Steve LaVietes",
+            "min_players": 1,
+            "max_players": 4,
+            "cooperative": true,
+            "competitive": true,
+            "achievements": false,
+            "highscores": false
+        },
+        {
+            "url": "quad://games/drop_bloq/",
+            "title": "Drop Bloq",
+            "description": "Drop tiles and shift columns, 5 in a row to win. Plays best with an 8x8 MIDI device!",
+            "version": 0,
+            "developer": "CasualEffects",
+            "min_players": 1,
+            "max_players": 2,
+            "cooperative": false,
+            "competitive": true,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://games/duality/",
             "title": "Duality",
-            "description": "Dual-space duel, where each player is in the negative space of the other."
+            "description": "Dual-space duel, where each player is in the negative space of the other.",
+            "version": 0,
+            "developer": "CasualEffects",
+            "min_players": 1,
+            "max_players": 2,
+            "cooperative": false,
+            "competitive": true,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://games/firmament/",
             "title": "Black Firmament",
-            "description": "Tiny epic orbital fleet battles. Sequel to Gravity."
+            "description": "Tiny epic orbital fleet battles. Sequel to Gravity.",
+            "version": 1,
+            "developer": "@CasualEffects",
+            "min_players": 1,
+            "max_players": 2,
+            "cooperative": true,
+            "competitive": true,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://games/friendly_fishing/",
             "title": "Friendly Fishing",
-            "description": "Join your friends for a relaxing afternoon of fishing and you just might top the lake records."
+            "description": "Join your friends for a relaxing afternoon of fishing and you just might top the lake records.",
+            "version": 0.1,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 4,
+            "cooperative": true,
+            "competitive": false,
+            "achievements": false,
+            "highscores": true
         },
         {
             "url": "quad://games/gravity/",
             "title": "Gravity",
-            "description": "Orbital space dogfight."
+            "description": "Orbital space dogfight.",
+            "version": 1.2,
+            "developer": "@CasualEffects",
+            "min_players": 1,
+            "max_players": 4,
+            "cooperative": false,
+            "competitive": true,
+            "achievements": false,
+            "highscores": true
         },
         {
             "url": "quad://games/hexflipper/",
             "title": "HexFlipper",
-            "description": "A trippy turn-based territory-claiming game for 1-4 players"
+            "description": "A trippy turn-based territory-claiming game for 1-4 players",
+            "version": 1,
+            "developer": "Cort Stratton",
+            "min_players": 1,
+            "max_players": 4,
+            "cooperative": false,
+            "competitive": true,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://games/icetime/",
             "title": "Ice Time",
-            "description": "2 vs. 2 ice hockey with teams, player stats., faceoffs, passing\u2026and a Zamboni."
+            "description": "2 vs. 2 ice hockey with teams, player stats., faceoffs, passing\u2026and a Zamboni.",
+            "version": 0.5,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 4,
+            "cooperative": true,
+            "competitive": true,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://games/minimecha/",
             "title": "Mini Mecha",
-            "description": "Turn based strategy game with tiny mechas."
+            "description": "Turn based strategy game with tiny mechas.",
+            "version": 0,
+            "developer": "@CasualEffects",
+            "min_players": 1,
+            "max_players": 2,
+            "cooperative": false,
+            "competitive": true,
+            "achievements": false,
+            "highscores": true
         },
         {
             "url": "quad://games/quadpaddle/",
             "title": "quadpaddle",
-            "description": "Blast bricks as a team from all four sides, grabbing powerups and racking up points."
+            "description": "Blast bricks as a team from all four sides, grabbing powerups and racking up points.",
+            "version": 0.5,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 4,
+            "cooperative": true,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://games/rescue_roguelike/",
             "title": "Rescue Roguelike",
-            "description": "Turn-based tactical adventure. Requires touch or mouse."
+            "description": "Turn-based tactical adventure. Requires touch or mouse.",
+            "version": 1,
+            "developer": "Stephan Steinbach, Ed Luong, and Ian Patrick",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://games/rps/",
             "title": "R.P.S.",
-            "description": "Rock-paper-scissors battle royale."
+            "description": "Rock-paper-scissors battle royale.",
+            "version": 0.0,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 4,
+            "cooperative": false,
+            "competitive": true,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://games/serpitron/",
             "title": "Serpitron",
-            "description": "Grow your hungry serpent without crashing into obstacles or yourself. With rats, shotguns, blizzards, cities, pyramids..."
+            "description": "Feed your serpent while avoiding obstacles...and itself. Rats, shotguns, blizzards, cities, pyramids, and more!",
+            "version": 0.1,
+            "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 4,
+            "cooperative": false,
+            "competitive": true,
+            "achievements": false,
+            "highscores": false
         }
     ]
 }

@@ -1,76 +1,50 @@
 {
-    "title":      "Launcher",
-    "developer":  "Casual Effects",
-    "copyright":  "©2020-2022 Morgan McGuire",
-    "license":    "LGPL 3.0",
-
-    "packages":   [],
-    "scripts":    [],
+    "title": "Launcher",
+    "developer": "Casual Effects",
+    "copyright": "©2020-2023 Morgan McGuire",
+    "license": "LGPL 3.0",
+    "packages": [],
+    "scripts": [],
     "start_mode": "$Play",
-    "modes":      ["_Play", "_SlideOut", "_Message"],
-    "assets":     {
-        "largeFont":  "quad://fonts/deja-15.font.json",
+    "modes": [
+        "_Play",
+        "_SlideOut",
+        "_Message"
+    ],
+    "assets": {
+        "largeFont": "quad://fonts/deja-15.font.json",
         "mediumFont": "quad://fonts/deja-9.font.json",
-        "smallFont":  "quad://fonts/deja-7.font.json",
+        "smallFont": "quad://fonts/deja-7.font.json",
         "quadplayFont": "quad://fonts/weaver-10.font.json",
-        "icons":      "icons.sprite.json",
-        "boop":       "boop.sound.json",
-        "pauseMessageSprite": "quad://console/os/pause-message.sprite.json",
-        
-        "rplabel":    "rplabel.sprite.json",
-        "rppreview":  "rppreview.sprite.json",
-
-        "rrlabel":    "rrlabel.sprite.json",
-        "rrpreview":  "rrpreview.sprite.json",
-
-        "bslabel":    "bslabel.sprite.json",
-        "bspreview":  "bspreview.sprite.json",
-
-        "itlabel":    "itlabel.sprite.json",
-        "itpreview":  "itpreview.sprite.json",
-
-        "qplabel":    "qplabel.sprite.json",
-        "qppreview":  "qppreview.sprite.json",
-
-        "dplabel":    "dplabel.sprite.json",
-        "dppreview":  "dppreview.sprite.json",
-
-        "splabel":    "splabel.sprite.json",
-        "sppreview":  "sppreview.sprite.json",
-        
-        "bglabel":    "bglabel.sprite.json",
-        "bgpreview":  "bgpreview.sprite.json",
-
-        "allabel":    "allabel.sprite.json",
-        "alpreview":  "alpreview.sprite.json",
-
-        "bclabel":    "bclabel.sprite.json",
-        "bcpreview":  "bcpreview.sprite.json",
-        
-        "fflabel":    "fflabel.sprite.json",
-        "ffpreview":  "ffpreview.sprite.json",
-        
-        "dllabel":    "dllabel.sprite.json",
-        "dlpreview":  "dlpreview.sprite.json",
-        
-        "hflabel":    "hflabel.sprite.json",
-        "hfpreview":  "hfpreview.sprite.json",
-        
-        "mmlabel":    "mmlabel.sprite.json",
-        "mmpreview":  "mmpreview.sprite.json",
-
-        "gvlabel":    "gvlabel.sprite.json",
-        "gvpreview":  "gvpreview.sprite.json",
-
-        "bflabel":    "bflabel.sprite.json",
-        "bfpreview":  "bfpreview.sprite.json"
-
+        "icons": "icons.sprite.json",
+        "boop": "boop.sound.json",
+        "pauseMessageSprite": "quad://console/os/pause-message.sprite.json"
     },
-
-    "constants":  {
-        "textColor":   {"type": "rgb", "value": {
-            "r": {"type": "number", "value":  1},
-            "g": {"type": "number", "value":  1},
-            "b": {"type": "number", "value":  1}}}
-    }
+    "constants": {
+        "textColor": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": 1
+                },
+                "g": {
+                    "type": "number",
+                    "value": 1
+                },
+                "b": {
+                    "type": "number",
+                    "value": 1
+                }
+            }
+        }
+    },
+    "screenshot_tag": "Launcher",
+    "description": "",
+    "cooperative": false,
+    "competitive": false,
+    "highscores": false,
+    "achievements": false,
+    "min_players": 1,
+    "max_players": 1
 }

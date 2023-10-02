@@ -802,6 +802,8 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                     set['alpha'] = quad_filepath + '_alpha'
                     set['tests'] = quad_filepath + '_tests'
 
+                copied_properties = ['developer', 'version', 'min_players', 'max_players', 'cooperative', 'competitive', 'achievements', 'highscores']
+
                 for key, path in set.items():
                     # Do not change case on Windows (because this will be part of the json file that is read
                     # on multiple platforms) but *do* fix slashes
@@ -823,7 +825,9 @@ class QuadplayHTTPRequestHandler(SimpleHTTPRequestHandler):
                             game = workjson.loads(f.read())
                             entry['description'] = game['description'] if 'description' in game else ''
                             entry['title'] = game['title']
-
+                            for prop in copied_properties:
+                                if prop in game: entry[prop] = game[prop]
+                                    
                     response_obj[key] = list
 
             response = json.dumps(response_obj, separators = (',', ':'));

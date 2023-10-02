@@ -102,7 +102,7 @@ function $set_texture(spritesheetArray, fontArray) {
    
     // In web worker mode, send a message
     if ($GPU) {
-        console.log('sending set_texture');
+        // console.log('sending set_texture');
         $GPU.postMessage({
             type: 'set_texture',
             spritesheetArray: spritesheetArray,

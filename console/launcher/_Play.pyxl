@@ -1,291 +1,12 @@
 $Play
 ════════════════════════════════════════════════════════════════════════
 
-const gameArray = [{
-   title: "Quadpaddle",
-   developer: "CasualEffects",
-   url: "quad://games/quadpaddle",
-   description: "Blast bricks as a team from all four sides, grabbing powerups and racking up points.",
-   version:      1.0,
-   cooperative:  true,
-   competitive:  false,
-   min_players:  1,
-   max_players:  4,
-   achievements: false,
-   builtin:      true,
-   highscores:   false,
-   label: qplabel[0][0],
-   preview: qppreview
-},
-
-{
-   title: "Doubles de Pon",
-   developer: "Steve LaVietes",
-   url: "quad://games/doublesdepon",
-   description: "Action puzzle game for one to four players.",
-   version:      1.0,
-   cooperative:  true,
-   competitive:  true,
-   min_players:  1,
-   max_players:  4,
-   achievements: false,
-   builtin:      true,
-   highscores:   true,
-   label: dplabel[0][0],
-   preview: dppreview
-},
-
-{
-   title:        "Duality",
-   developer:    "CasualEffects",
-   url:          "quad://games/duality",
-   description:  "Pong where each player is the negative space of the other.",
-   version:      1.0,
-   cooperative:  false,
-   competitive:  true,
-   min_players:  1,
-   max_players:  2,
-   achievements: false,
-   builtin:      true,
-   highscores:   false,
-   label:        dllabel[0][0],
-   preview:      dlpreview
-},
-
-{
-   title: "Serpitron",
-   developer: "CasualEffects",
-   url: "quad://games/serpitron",
-   description: "Grow your serpent without crashing into obstacles or yourself. With rats, shotguns, blizzards, cities, & pyramids.",
-   version:      1.5,
-   cooperative:  false,
-   competitive:  true,
-   min_players:  1,
-   max_players:  4,
-   achievements: false,
-   builtin:      true,
-   highscores:   false,
-   label: splabel[0][0],
-   preview: sppreview
-},
-
-{
-   title: "Ice Time",
-   developer: "CasualEffects",
-   url: "quad://games/icetime",
-   description: "2 vs. 2 ice hockey with teams, player stats., faceoffs, passing…and a Zamboni.",
-   version:      1.0,
-   cooperative:  true,
-   competitive:  true,
-   min_players:  1,
-   max_players:  4,
-   achievements: false,
-   highscores:   false,
-   builtin:      true,
-   label: itlabel[0][0],
-   preview: itpreview
-},
-
-{
-   title: "HexFlipper",
-   developer: "Cort Stratton",
-   url: "quad://games/hexflipper",
-   description: "A trippy turn-based territory-claiming game for 1-4 players",
-   version:      1.0,
-   cooperative:  false,
-   competitive:  true,
-   min_players:  1,
-   max_players:  4,
-   achievements: false,
-   builtin:      true,
-   highscores:   false,
-   label:        hflabel[0][0],
-   preview:      hfpreview
-},
-
-                   
-{
-   title: "Beat The Gobblins",
-   developer: "Stephan Steinbach",
-   url: "quad://games/beat_the_gobblins",
-   version:      1.1,
-   description:  "An evil wizzard has trapped you on top of their tower and summoned hordes of angry bombgobblins. Good luck!",
-   min_players:   1,
-   max_players:   1,
-   cooperative:  false,
-   competitive:  false,
-   achievements: false,
-   highscores:   true,
-   builtin:      true,
-   label: bglabel[0][0],
-   preview: bgpreview
-},
-
-{
-   title: "Rescue Roguelike",
-   developer: "Steinbach, Luong, and Patrick",
-   url: "quad://games/rescue_roguelike",
-   description: "Turn-based tactical adventure.",
-   version:      0.9,
-   cooperative:  false,
-   competitive:  false,
-   min_players:  1,
-   max_players:  1,
-   achievements: false,
-   highscores:   false,
-   builtin:      true,
-   label: rrlabel[0][0],
-   preview: rrpreview
-},
-
-{
-   title: "But…Skunks!?",
-   developer: "Bitterly Indifferent Studios",
-   url: "quad://games/but_skunks",
-    "version": 1,
-    "min_players": 1,
-    "max_players": 2,
-    "cooperative": true,
-    "competitive": false,
-    "achievements": false,
-    "highscores": false,
-    "description": "Skunks. Why did it have to be skunks?",
-   builtin:      true,
-   label: bslabel[0][0],
-   preview: bspreview
-},
-
-{
-   title: "R. P. S.",
-   developer: "Casual Effects",
-   url: "quad://games/rps",
-   version:      1.0,
-   description:  "Rock-paper-scissors battle royale.",
-   min_players:   1,
-   max_players:   4,
-   cooperative:  false,
-   competitive:  true,
-   achievements: false,
-   highscores:   false,
-   builtin:      true,
-   label:        rplabel[0][0],
-   preview:      rppreview
-},
-
-{
-   title: "Beyond Control",
-   developer: "Casual Effects",
-   url: "quad://games/beyond_control",
-   version:      1.0,
-   description:  "Program your broken robots to race through the ruins.",
-   min_players:   1,
-   max_players:   4,
-   cooperative:  false,
-   competitive:  true,
-   achievements: false,
-   highscores:   false,
-   builtin:      true,
-   label:        bclabel[0][0],
-   preview:      bcpreview
-},
-
-{
-   title: "Friendly Fishing",
-   developer: "Casual Effects",
-   url: "quad://games/friendly_fishing",
-   version:      1.0,
-   description:  "Join your friends for a relaxing afternoon of fishing and you just might top the lake records.",
-   min_players:   1,
-   max_players:   4,
-   cooperative:  true,
-   competitive:  false,
-   achievements: false,
-   highscores:   true,
-   builtin:      true,
-   label:        fflabel[0][0],
-   preview:      ffpreview
-},
-                   
-{
-   title: "Across the Lake",
-   developer: "The Steinbachers",
-   url: "quad://games/across_the_lake",
-   version:      1.0,
-   description:  "You are a stone, skipping across the lake in this endless skipper.",
-   min_players:   1,
-   max_players:   1,
-   cooperative:  false,
-   competitive:  false,
-   achievements: false,
-   highscores:   false,
-   builtin:      true,
-   label:        allabel[0][0],
-   preview:      alpreview
-},
-
-{
-   title: "Morgan's Mini Mecha",
-   developer: "@CasualEffects",
-   url: "quad://games/minimecha",
-   version:      1.0,
-   description:  "Turn based strategy game with tiny mechas.",
-   min_players:   1,
-   max_players:   2,
-   cooperative:  false,
-   competitive:  true,
-   achievements: false,
-   highscores:   true,
-   builtin:      true,
-   label:        mmlabel[0][0],
-   preview:      mmpreview
-},
-
-{
-   title: "Gravity",
-   developer: "@CasualEffects",
-   url: "quad://games/gravity",
-   version:      1.2,
-   description:  "Orbital space dogfight.",
-   min_players:   1,
-   max_players:   4,
-   cooperative:  false,
-   competitive:  true,
-   achievements: false,
-   highscores:   true,
-   builtin:      true,
-   label:        gvlabel[0][0],
-   preview:      gvpreview
-},
-
-{
-   title: "Black Firmament",
-   developer: "@CasualEffects",
-   url: "quad://games/firmament",
-    "version": 1.0,
-    "min_players": 1,
-    "max_players": 2,
-    "cooperative": true,
-    "competitive": true,
-    "achievements": false,
-    "highscores": false,
-    "description": "Tiny epic orbital fleet battles. Sequel to Gravity.",
-   builtin:      true,
-   label:        bflabel[0][0],
-   preview:      bfpreview
-}]
-
-
 const promptFont = mediumFont
 const selectedColor = #f
 
 const TAB_WIDTH = 90
 
-
-const tab_array = [
-    {title: "Games"},
-    {title: "Online"},
-    {title: "System"}
-]
+const tab_array = [{title: "Games"}, {title: "Online"}, {title: "System"}]
 
 let tab_index
 
@@ -325,6 +46,7 @@ def set_tab_index(t):
         // the manage_tabs callback as a helper for drawing
         // the top tab bar
         push_mode($ControlsMenu, manage_tabs)
+
 
         
 /* Draw the tab labels on top and handle horizontal input. This is common code
@@ -377,9 +99,9 @@ def manage_tabs():
 
 def manage_games_tab():
     // Blinking active choice
-    const bright             = (1 + cos(mode_frames / 9)) / 2
+    const bright             = 50% (1 + cos(mode_frames / 9))
     const active_color       = lerp($system_prompt_color, #fff, 50% bright)
-    const active_outline     = rgba(1,1,1, 25% bright)
+    const active_outline     = rgba(100%, 100%, 100%, 25% bright)
     const active_shadow      = 50% $system_prompt_shadow
 
     draw_text({font: mediumFont, text:joy.prompt["⍐"], pos: xy(1, 28), color: $system_prompt_color, shadow: $system_prompt_shadow, x_align: "left", y_align: "baseline"})
@@ -390,33 +112,39 @@ def manage_games_tab():
     preserving_transform:
         set_clip(xy(12, 20), xy(64, 201))
         for gameIndex - 2 <= g <= gameIndex + 2:
-            const game = array_value(gameArray, g, "loop")
+            const game = array_value(game_array, g, "loop")
             const pos = xy(44, boxVerticalSpacing * g + 64/2 + 19 - gameShift - (gameIndex - 1) * boxVerticalSpacing)
-            draw_sprite({sprite: game.label, pos: pos})
+            draw_sprite({sprite: ASSETS[game.asset_prefix + "_label"], pos: pos})
             draw_line(pos + xy(1-64/2, 64/2), pos + xy(64/2-2, 64/2), $system_prompt_shadow)
 
     // Highlight selected game
     draw_corner_rect(xy(11, 93), xy(66, 66), nil, #f)
     draw_corner_rect(xy(10, 92), xy(68, 68), nil, #d)
    
-    const game = gameArray[gameIndex]
-    const t = floor((mode_frames - modeFrameShift) / 3) mod 60
-    const x = 99
-    const pos = xy(x + 384/4, 224/4 + 66)
-    draw_sprite({sprite: game.preview[t mod 6][floor(t / 6)], pos: pos})
-    draw_line(pos + xy(1 - 384/4, 224/4), pos + xy(384/4-2, 224/4), $system_prompt_shadow)
-    draw_line(pos + xy(2 - 384/4, 224/4 + 1), pos + xy(384/4-3, 224/4 + 1), $system_prompt_shadow / 2)
+    const game = game_array[gameIndex]
 
-    draw_text({font:largeFont, text:game.title, pos:xy(x, 40), color:selectedColor, shadow:$system_prompt_shadow, x_align:"left", y_align: "baseline"})
-    draw_text({font:mediumFont, text:"by " + game.developer, pos:xy(x, 56), color:selectedColor, shadow:$system_prompt_shadow, x_align: "left", y_align: "baseline"})
-    draw_text({font:smallFont, text:game.description, pos:xy(x, 193), color:selectedColor, x_align:"left", y_align: "baseline", wrap_width: 280})
-    draw_text({font:smallFont, text:game.url, pos:xy(x, 220), color:$system_unselected_color, x_align:"left", y_align: "baseline"})
+    // Render at 15 fps (60 / 4) for 60 frames = 4 seconds
+    const t = floor((mode_frames - modeFrameShift) / 4) mod 60
+    const x = 99
+    const pos = xy(x + SCREEN_SIZE.x / 4, SCREEN_SIZE.y / 4 + 66)
+    const preview = ASSETS[game.asset_prefix + "_preview"]
+    draw_sprite({sprite: preview[t mod 6][floor(t / 6)], pos: pos})
+    draw_line(pos + xy(1 - SCREEN_SIZE.x / 4, SCREEN_SIZE.y / 4), pos + xy(SCREEN_SIZE.x/4-2, SCREEN_SIZE.y/4), $system_prompt_shadow)
+    draw_line(pos + xy(2 - SCREEN_SIZE.x / 4, SCREEN_SIZE.y / 4 + 1), pos + xy(SCREEN_SIZE.x/4-3, SCREEN_SIZE.y/4 + 1), $system_prompt_shadow / 2)
+
+    draw_text({font: largeFont,  text: game.title,             pos: xy(x, 40),  color: selectedColor, shadow: $system_prompt_shadow, x_align: "left", y_align: "baseline"})
+    draw_text({font: mediumFont, text: "by " + game.developer, pos: xy(x, 56),  color: selectedColor, shadow: $system_prompt_shadow, x_align: "left", y_align: "baseline"})
+    draw_text({font: smallFont,  text: game.description,       pos: xy(x, 193), color: selectedColor,                                x_align: "left", y_align: "baseline", wrap_width: 280})
+    draw_text({font: smallFont,  text: game.url,               pos: xy(x, 220), color: $system_unselected_color,                     x_align: "left", y_align: "baseline"})
 
     const sideX = 295
     const wordX = sideX + 27
-    draw_text({font:promptFont, text:joy.prompt["(a)"] + "  PLAY", pos:xy(sideX + 7, 74),
-               color:active_color, shadow: active_shadow, outline: active_outline, x_align:"left", y_align: "baseline"})
-    if not game.builtin: draw_text({font:promptFont, text:joy.prompt["ⓓ"] + "  FORGET", pos:xy(sideX + 7, 88), color:$system_prompt_color, shadow:$system_prompt_shadow, x_align:"left", y_align: "baseline"})
+    draw_text({font: promptFont, text: joy.prompt["(a)"] + "  PLAY", pos: xy(sideX + 7, 74), color: active_color, shadow: active_shadow, outline: active_outline, x_align:"left", y_align: "baseline"})
+    
+    /*if not game.builtin:
+        // Never used in current implementation
+        draw_text({font: promptFont, text: joy.prompt["ⓓ"] + "  FORGET", pos: xy(sideX + 7, 88), color:$system_prompt_color, shadow: $system_prompt_shadow, x_align: "left", y_align: "baseline"})
+    */
 
     // Icons
     let y = 112
@@ -460,7 +188,7 @@ def manage_games_tab():
 
     for pad in gamepad_array:
         if pad.aa or pad.qq:
-            const game = gameArray[gameIndex]
+            const game = game_array[gameIndex]
             if (game.title == "") and $getIsHosting():
                 // Resolution restriction for games that are not full or half resolution
                 $showPopupMessage(game.title + " cannot run while hosting in this release")
@@ -487,7 +215,7 @@ def manage_games_tab():
         --gameIndex
         modeFrameShift = mode_frames - 1
 
-    gameIndex = loop(gameIndex, gameArray.length)
+    gameIndex = loop(gameIndex, game_array.length)
   
 
     

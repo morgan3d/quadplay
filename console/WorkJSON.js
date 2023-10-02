@@ -68,19 +68,28 @@ if (! String.prototype.replaceAll) {
 }
 
 const WorkJSON = (function () {
-const doubleQuoteProtection = String.fromCharCode(0xE000);
+
+// Use the Multilinguial plane Unicode private use area,
+// which has room for over 6000 strings that should not be
+// in use by the source text.
+//    
+// https://en.wikipedia.org/wiki/Private_Use_Areas
+//
+// Must also match hardcoded values below in regexps
+const doubleQuoteProtection = '\uE000';
+const NaNSymbol = '\uE001';
+const InfinitySymbol = '\uE002';
+const NegInfinitySymbol = '\uE003';
+const UndefinedSymbol = '\uE004';
+const ESCAPED_ESCAPE = '\uE009';
 const protectionBlockStart = 0xE010;
-
-const NaNSymbol = '\uE001', InfinitySymbol = '\uE002', NegInfinitySymbol = '\uE003', UndefinedSymbol = '\uE004';
-
-
+    
 return {
     /** Returns the new string and a remapping array. If an array is
         provided, then it is extended. */
     protectQuotedStrings: function protectQuotedStrings(src, protectionMap) {
         protectionMap = protectionMap || [];
 
-        const ESCAPED_ESCAPE = String.fromCharCode(0xE009);
         // Hide escaped escapes momentarily
         src = src.replace(/\\\\/g, ESCAPED_ESCAPE);
         
@@ -89,11 +98,14 @@ return {
 
         // Restore escaped escapes
         src = src.replace(/\uE009/g, '\\\\');
-                      
-        // Protect strings
+
+        // TODO: i = 97 string is being replaced with "if"
+        
+        // Protect all strings
         src = src.replace(/"((?:[^"\\]|\\.)*)"/g, function (match, str) {
+            const i = protectionMap.length;
             protectionMap.push(str);
-            return '"' +  String.fromCharCode(protectionMap.length - 1 + protectionBlockStart) + '"';
+            return '"' + String.fromCharCode(i + protectionBlockStart) + '"';
         });
 
         return [src, protectionMap];
@@ -102,7 +114,7 @@ return {
     unprotectQuotedStrings : function unprotectQuotedStrings(s, protectionMap) {
         // Unprotect strings
         for (let i = 0; i < protectionMap.length; ++i) {
-            s = s.replace(String.fromCharCode(protectionBlockStart + i), protectionMap[i]);
+            s = s.replace(String.fromCharCode(i + protectionBlockStart), protectionMap[i]);
         }
 
         // Unprotect escaped quotes
@@ -110,7 +122,7 @@ return {
     },
 
     stringify: function stringify(value, replacer, space) {
-        // Allow IEEE numeric constants by temporarily hiding them
+        // Allow IEEE numeric constants by temporarily hiding them in strings
         function betterReplacer(key, value) {
             if (replacer) { value = replacer(key, value); }
 

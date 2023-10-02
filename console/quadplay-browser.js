@@ -431,7 +431,7 @@ function downloadScreenshot() {
 function takeLabelImage() {
     // Don't capture labels at tiny resolutions
     if (SCREEN_WIDTH < 128) {
-        console.log('Cannot take label images below 128 width');
+        console.log('Cannot capture label images below 128 width');
         return;
     }
 
@@ -450,14 +450,14 @@ function takeLabelImage() {
     download(label.toDataURL(), 'label64.png');
 }
 
-
+const PREVIEW_FPS      = 15;
 const PREVIEW_FRAMES_X = 6;
 const PREVIEW_FRAMES_Y = 10;
 
 function startPreviewRecording() {
     if (! previewRecording) {
-        // Force 20 fps
-        QRuntime.$graphicsPeriod = 3;
+        // Force low framerate fps
+        QRuntime.$graphicsPeriod = 60 / PREVIEW_FPS;
         previewRecording = new Uint32Array(192 * 112 * PREVIEW_FRAMES_X * PREVIEW_FRAMES_Y);
         previewRecordingFrame = 0;
     }
@@ -470,26 +470,23 @@ function processPreviewRecording() {
 
     // Process differently depending on the screen resolution
     if (SCREEN_WIDTH === 384 && SCREEN_HEIGHT === 224) {
-        // Full resolution. Average pixels down.
+        // Full resolution. Average pixels down to half resolution
         for (let y = 0; y < 112; ++y) {
             let dstOffset = (y + targetY) * 192 * PREVIEW_FRAMES_X + targetX;
             for (let x = 0; x < 192; ++dstOffset, ++x) {
-                // Average four pixels
+                // Average four pixels.
                 let r = 0, g = 0, b = 0;
 
                 for (let dy = 0; dy <= 1; ++dy) {
                     for (let dx = 0; dx <= 1; ++dx) {
-                        const src = updateImageData32[(x*2 + dx) + (y*2 + dy) * 384];
+                        const src = updateImageData32[(x * 2 + dx) + (y * 2 + dy) * 384];
                         r += (src >>> 16) & 0xff;
                         g += (src >>> 8) & 0xff;
                         b += src & 0xff;
                     } // dx
                 } // dy
 
-                // Divide each by 4
-                r |= r << 2;
-                g |= g << 2;
-                b |= b << 2;
+                // Divide each by 4 and store
                 previewRecording[dstOffset] = (((r >> 2) & 0xff) << 16) + (((g >> 2) & 0xff) << 8) + ((b >> 2) & 0xff);
             } // x
         } // y
@@ -1279,7 +1276,7 @@ function submitFrame(_updateImageData, _updateImageData32, gpuThreadTime) {
           ($postFX.scale.x !== 1) || ($postFX.scale.y !== 1) ||
           ($postFX.color_blend !== 'source-over');
     
-    if (previewRecording) {
+    if (previewRecording && (QRuntime.game_frames % (60 / PREVIEW_FPS) === 0)) {
         processPreviewRecording();
     }
 

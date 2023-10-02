@@ -51,6 +51,7 @@ function showConstantEditor(choice) {
         
         const value = gameSource.constants[index];
         const json = gameSource.json.constants[index];
+        console.assert(json);
         const debugJSON = (gameSource.debug.json && gameSource.debug.json.constants ? gameSource.debug.json.constants[index] : undefined)
         
         const constantName = index;

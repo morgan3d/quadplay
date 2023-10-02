@@ -161,7 +161,8 @@ if manage_tabs or mode_frames > open_frames:
 if manage_tabs: // This path is for the OS and doesn't occur in private view mode
     // Also show system info on the top
     const gamepads = if $navigator.getGamepads then $navigator.getGamepads() else (if $navigator.webkitGetGamepads then $navigator.webkitGetGamepads else [])
-    let text = "quadplay✜ " + $version + " © 2019-2022 Morgan McGuire\n\n"
+    const year = $version.slice(0, 4);
+    let text = "quadplay✜ " + $version + " © 2019-" + year + " Morgan McGuire\n\n"
 
     text += clamp_string($navigator.userAgent, 140)
 
@@ -230,7 +231,7 @@ if VIEW_ARRAY[0].size.y > 64 and (mode_frames > open_frames or manage_tabs):
                     draw_text({
                         font: $font6,
                         text: "&",
-                        pos: xy(x, view.size.y - 20),
+                        pos: xy(x, view.size.y - 19),
                         color: #f,
                         x_align: "center",
                         y_align: "center"
