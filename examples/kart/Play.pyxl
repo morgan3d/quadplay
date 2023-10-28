@@ -87,6 +87,8 @@ def draw_perspective_ground(view, map):
     
     const offset = 128 xyz(sin(view.yaw), 0, cos(view.yaw))
     view.pos -= offset
+    const quality = 100%
+    
     for (½ - ½ SCREEN_SIZE.y) ≤ y ≤ 0:
         left.y = y
         right.y = y
@@ -107,9 +109,9 @@ def draw_perspective_ground(view, map):
     
         // Compute the camera space z of this scanline on the ground
         // plane
-        const cs_z = lt_ray.d_cs_z * edge_t * 0.1
+        const cs_z = 0.1 lt_ray.d_cs_z * edge_t
         
-        draw_map_span(left, span_size, map, min_point, max_point, ∅, ∅, ∅, cs_z, ∅, ∅, true)
+        draw_map_span(left, span_size, map, min_point, max_point, ∅, ∅, ∅, cs_z, ∅, ∅, true, quality)
     view.pos += offset
 
 

@@ -356,7 +356,7 @@ function autocorrectSession(session) {
     // Replace Delta immediately on typing the 'a'
     if (! replacement && lastChar === 'a') {
         // Look for a breaking character before the target sequence
-        if (src.endsWith('Delta') && ((src.length === 'Delta'.length) || /[ +\-\.\t\n,:()\[\]]/.test(src[src.length - 'Delta'.length - 1]))) {
+        if (src.endsWith('Delta') && ((src.length === 'Delta'.length) || /[ +\-\.\t\n,\|:()\[\]⌊⌋⌈⌉]/.test(src[src.length - 'Delta'.length - 1]))) {
             replacement = 'Δ';
             target = 'Delta';
             
@@ -391,7 +391,7 @@ function autocorrectSession(session) {
             if (((src.length === target.length) ||
                  ((src.length > target.length) &&
                   ((target[0] === '^') || // exponents don't need to be broken
-                   /[ +\-\.\t\n,:()\[\]∅ΓΨΩΦΣΠΞΛΘΔαβγδεζηθικλμνξπρστυϕχψω]/.test(src[src.length - target.length - 1])))) &&
+                   /[ +\-\.\t\n,\|:()\[\]∅ΓΨΩΦΣΠΞΛΘΔαβγδεζηθικλμνξπρστυϕχψω]/.test(src[src.length - target.length - 1])))) &&
                 src.endsWith(target)) {
                 replacement = autocorrectTable[i + 1];                
                 break;

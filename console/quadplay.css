@@ -489,6 +489,26 @@ input[type=text], input[type=number], textarea {
 
 /*****************************************************/
 
+div.oneConstantEditor, div.containerConstantEditor {
+    padding-top: 2px; padding-bottom: 2px;
+}
+
+#constantEditor input[type=range] {
+    height: 12px;
+}
+
+#constantEditor textarea, #constantEditor input[type=text], #constantEditor input[type=number] {
+    font-size: inherit;
+}
+
+div.oneConstantEditor .nudge {
+    visibility:hidden
+}
+
+div.oneConstantEditor:hover .nudge {
+    visibility:inherit
+}
+
 /* Hide the debug override in compact view until hover */
 div.oneConstantEditor .debugOverrideCheckbox {
     visibility:hidden
@@ -498,7 +518,7 @@ div.oneConstantEditor .debugOverrideCheckbox {
 div.oneConstantEditor:hover .debugOverrideCheckbox,
   div.oneConstantEditor input.debugOverrideCheckbox:checked,
   div.oneConstantEditor input.debugOverrideCheckbox:checked + label.debugOverrideCheckbox {
-    visibility:visible
+    visibility:inherit
 }
 
 span.constantName {
@@ -521,6 +541,17 @@ div.debugOverride {
 /* CSS :disabled doesn't work on DIVs as a pseudoselector, so we have a "disabled" class as well*/
 div.debugOverride.disabled {
     display: none;
+}
+
+.newNestedConstant {
+    font-size: 14px;
+    color:#888;
+    visibility: hidden;
+}
+
+.containerConstantEditor:hover > div > span.newNestedConstant,
+.oneConstantEditor:hover > span.newNestedConstant {
+    visibility: inherit
 }
 
 /*****************************************************/
@@ -1003,6 +1034,29 @@ code, .code {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-data.png');
 }
 
+
+.project li.distribution:before {
+    background-image: none, url('icons/project-icon-distribution.png');
+}
+.project li.distribution.remote:before {
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-distribution.png');
+}
+.project li.distribution.builtin:before {
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-distribution.png');
+}
+
+
+.project li.table:before {
+    background-image: none, url('icons/project-icon-table.png');
+}
+.project li.table.remote:before {
+    background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-table.png');
+}
+.project li.table.builtin:before {
+    background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-table.png');
+}
+
+
 .project li.font:before {
     background-image: none, url('icons/project-icon-font.png');
 }
@@ -1025,13 +1079,13 @@ code, .code {
 
 
 
-.project .constants li:before {
+.project .constants li.number:before {
     background-image: none, url('icons/project-icon-number.png');
 }
-.project .constants li.remote:before {
+.project .constants li.number.remote:before {
     background-image: url('icons/project-badge-cloud.png'), url('icons/project-icon-number.png');
 }
-.project .constants li.builtin:before {
+.project .constants li.number.builtin:before {
     background-image: url('icons/project-badge-lock.png'), url('icons/project-icon-number.png');
 }
 

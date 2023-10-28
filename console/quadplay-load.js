@@ -475,9 +475,12 @@ function afterLoadGame(gameURL, callback, errorCallback) {
                 const assetURL = makeURLAbsolute(gameURL, gameJSON.assets[a]);
                 const assetName = a;
 
-                if (assetURL.endsWith('preview.png') ||
+                const isIndexingSprite =
+                    assetURL.endsWith('preview.png') ||
                     assetURL.endsWith('label64.png') ||
-                    assetURL.endsWith('label128.png')) {
+                    assetURL.endsWith('label128.png');
+                
+                if (isIndexingSprite) {
                     
                     // Special spritesheet assets used for the
                     // launcher that do not have supporting JSON
@@ -1195,10 +1198,7 @@ function loadSpritesheet(name, json, jsonURL, callback) {
         return getImageData4BitAndFlip(image, region, json);
     };
 
-    // The underlying PNG may be read from cache, but the value from
-    // the preprocessor will not be read from cache because there is a
-    // different preprocessing function for each call.
-    loadManager.fetch(pngURL, 'image', preprocessor, function (dataPair, image, url) {
+    function spritesheetLoadCallback(dataPair, ignore_image, url) {
         onLoadFileComplete(pngURL);
         const data = dataPair[0];
 
@@ -1625,7 +1625,38 @@ function loadSpritesheet(name, json, jsonURL, callback) {
                        'bad spritesheet index during loading');
         
         if (callback) { callback(spritesheet); }
-    }, loadFailureCallback, loadWarningCallback, forceReload);
+    }
+
+    // Used for preview.png and label*.png images when they are not
+    // found on disk.
+    
+    function loadPlaceholderCallback(reason, url) {
+        const size = url.endsWith('label64.png') ? {x: 64, y: 64} :
+              url.endsWith('label128.png') ? {x: 128, y: 128} :
+              {x: 1152, y: 1120}; // preview.png
+
+        // Create empty image and flipped image 
+        const data = new UInt16Array(size.x * size.y);
+        data.width = size.x;
+        data.height = size.y;
+        
+        spritesheetLoadCallback([data, data], null, url);
+        
+        return true;
+    }
+    
+    // Change failure callback for preview.png and label*.png
+    const isIndexingSprite =
+          pngURL.endsWith('preview.png') ||
+          pngURL.endsWith('label64.png') ||
+          pngURL.endsWith('label128.png');
+    
+    const onFailure = isIndexingSprite ? loadPlaceholderCallback : loadFailureCallback;
+          
+    // The underlying PNG may be read from cache, but the value from
+    // the preprocessor will not be read from cache because there is a
+    // different preprocessing function for each call.
+    loadManager.fetch(pngURL, 'image', preprocessor, spritesheetLoadCallback, onFailure, loadWarningCallback, forceReload);
 
     return spritesheet;
 }
@@ -2390,9 +2421,22 @@ function evalJSONGameConstant(json) {
             throw 'Illegal rgba value: ' + json.value;
         }
 
-    case 'grid':
-        console.error('Not implemented');
-        break;
+    case 'distribution':
+        {
+            if (typeof json.value !== 'object') {
+                throw 'Distribution constant must have an object {} value field';
+            }
+            const keys = Object.keys(json.value);
+            const result = {};
+            for (let i = 0; i < keys.length; ++i) {
+                const key = keys[i];
+                result[key] = evalJSONGameConstant(json.value[key]);
+                if (typeof result[key] !== 'number') {
+                    throw 'Value for ' + key + ' of distribution constant must be a number';
+                }
+            }
+            return result;
+        }
 
     case 'object':
         {

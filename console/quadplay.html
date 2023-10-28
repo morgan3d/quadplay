@@ -591,7 +591,7 @@
                   <label for="newConstantName">Name</label>
                 </td>
                 <td>
-                  <input id="newConstantName" type="text" style="margin-bottom: 2px; width: 270px; font-size: 80%; font-family: Monaco, monospace" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '');document.getElementById('newConstantCreateButton').disabled = (this.value === '')">
+                  <code id="newConstantNameParent"></code><input id="newConstantName" type="text" style="margin-bottom: 2px; width: 270px; font-size: 80%; font-family: Monaco, monospace" oninput="this.value = this.value.replace(/[^A-Za-z0-9_]/g, '');document.getElementById('newConstantCreateButton').disabled = (this.value === '') && (this.style.visibility === 'visible')">
                 </td>
               </tr>
               <tr valign="top">
@@ -604,19 +604,21 @@
               </tr>
             </table>
             <div style="text-align:left; margin-left: -10px; column-width: 140px; margin-top:20px">
-              <input title="Unicode text" type="radio" name="newConstantType" value="string" id="newConstantTypeString" selected="selected"><label for="newConstantTypeString" title="Unicode text">String</label>
-              <br/><input title="True or false" type="radio" name="newConstantType" value="boolean" id="newConstantTypeBoolean"><label title="True or false" for="newConstantTypeBoolean">Boolean</label>
-              <br/><input title="The empty value" type="radio" name="newConstantType" value="nil" id="newConstantTypeNil"><label title="The empty value" for="newConstantTypeNil">Nil</label>
-              <br/><input title="Opaque red-green-blue color" type="radio" name="newConstantType" value="rgb" id="newConstantTypeRGB"><label title="Opaque red-green-blue color" for="newConstantTypeRGB"><code>rgb()</code></label>
-              <br/><input title="Transparent red-green-blue color" type="radio" name="newConstantType" value="rgba" id="newConstantTypeRGBA"><label title="Transparent red-green-blue color" for="newConstantTypeRGBA"><code>rgba()</code></label>
+              <input title="Unicode text" type="radio" name="newConstantType" value="string" id="newConstantTypeString" selected="selected"><label for="newConstantTypeString" title="Unicode text">String <code>""</code></label>
+              <br/><input type="radio" title="True or false" name="newConstantType" value="boolean" id="newConstantTypeBoolean"><label title="True or false" for="newConstantTypeBoolean"><code>true/false</code></label>
+              <br/><input type="radio" title="The empty value" name="newConstantType" value="nil" id="newConstantTypeNil"><label title="The empty value" for="newConstantTypeNil"><code>nil</code></label>
+              <br/><input type="radio" title="Opaque red-green-blue color" name="newConstantType" value="rgb" id="newConstantTypeRGB"><label title="Opaque red-green-blue color" for="newConstantTypeRGB"><code>rgb()</code></label>
+              <br/><input type="radio" title="Transparent red-green-blue color" name="newConstantType" value="rgba" id="newConstantTypeRGBA"><label title="Transparent red-green-blue color" for="newConstantTypeRGBA"><code>rgba()</code></label>
               <br/><input type="radio" name="newConstantType" value="hsv" id="newConstantTypeHSV"><label for="newConstantTypeHSV"><code>hsv()</code></label>
               <br/><input type="radio" name="newConstantType" value="hsva" id="newConstantTypeHSVA"><label for="newConstantTypeHSVA"><code>hsva()</code></label>
               <br/><input type="radio" name="newConstantType" value="xy" id="newConstantTypeXY"><label for="newConstantTypeXY"><code>xy()</code></label>
               <br/><input type="radio" name="newConstantType" value="xz" id="newConstantTypeXZ"><label for="newConstantTypeXZ"><code>xz()</code></label>
               <br/><input type="radio" name="newConstantType" value="xyz" id="newConstantTypeXYZ"><label for="newConstantTypeXYZ"><code>xyz()</code></label>
-              <br/><input title="A reference to another constant or asset" type="radio" name="newConstantType" value="reference" id="newConstantTypeReference"><label title="A reference to another constant or asset" style="color:#aaa" for="newConstantTypeReference">Reference</label>
-              <br/><input type="radio" name="newConstantType" value="object" id="newConstantTypeObject" disabled><label style="color:#aaa" for="newConstantTypeObject">Object</label>
-              <br/><input type="radio" name="newConstantType" value="array" id="newConstantTypeArray" disabled><label style="color:#aaa" for="newConstantTypeArray">Array</label>
+              <br/><input type="radio" title="A reference to another constant or asset" name="newConstantType" value="reference" id="newConstantTypeReference"><label title="A reference to another constant or asset" for="newConstantTypeReference">Reference</label>
+              <br/><input type="radio" name="newConstantType" value="object" id="newConstantTypeObject"><label for="newConstantTypeObject">Object <code>{}</code></label>
+              <br/><input type="radio" name="newConstantType" value="array" id="newConstantTypeArray"><label for="newConstantTypeArray">Array <code>[]</code></label>
+              <br/><input type="radio" name="newConstantType" value="distribution" id="newConstantTypeDistribution"><label for="newConstantTypeDistribution">Distribution</label>
+              <!-- <br/><input style = "margin-left: 25px" type="checkbox" checked=true id="newConstantDistribution"><label for="newConstantDistribution">object</label></input> -->
               <br/><input type="radio" name="newConstantType" value="raw" id="newConstantTypeRaw" disabled><label style="color:#aaa" for="newConstantTypeRaw">Raw&nbsp;JSON/YAML</label>
               <br/><input type="radio" name="newConstantType" value="table" id="newConstantTypeTable" disabled><label style="color:#aaa" for="newConstantTypeTable">CSV Table</label>
               <br/><input type="radio" name="newConstantType" value="textfile" id="newConstantTypeTextFile" disabled><label style="color:#aaa" for="newConstantTypeTextFile">Text File</label>
@@ -629,7 +631,7 @@
               </table>
             </div>
           </p>
-          <button type="button" onclick="hideNewConstantDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span><button type="button" id="newConstantCreateButton" onclick="onNewConstantCreate()">Create</button>
+          <button type="button" onclick="hideNewConstantDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span><button type="button" id="newConstantCreateButton">Create</button>
           <p>
             <i style="font-size:80%">In this version of quadplay✜, the disabled constant types can only be created by modifying the <code>.game.json</code> file on the main
               project page or in an external editor.</i>

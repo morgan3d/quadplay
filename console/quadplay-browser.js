@@ -1205,7 +1205,7 @@ function $systemPrint(m, style) {
 function $outputAppend(m, location, linkAll) {
     if (m !== '' && m !== undefined) {
         // Uncomment to debug mystery output
-        // console.trace();
+        //console.trace();
         
         // Remove tags and then restore HTML entities
         console.log(m.replace(/<.+?>/g, '').replace(/&quot;/g,'"').replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<'));

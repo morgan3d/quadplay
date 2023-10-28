@@ -1,0 +1,65 @@
+Play
+═══════════════════════════════════════════════════════════════════════════════
+
+const TILE_PIX = shapes.pointy_hexagon.size.x
+const TILE_OFFSET = xy(32, 16)
+
+let selected
+
+const grid = make_array(xy(15, 9))
+
+def screen_to_grid(s):
+    const g = (s - TILE_OFFSET) / TILE_PIX
+    g.y = round(g.y / ¾)
+    g.x = round(g.x + ½ g.y)
+    return g
+    
+    
+def grid_to_screen(g):
+    return TILE_PIX * xy(g.x - ½ g.y, ¾ g.y) + TILE_OFFSET
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+grid[3][2] = shapes.chess_bishop
+grid[8][4] = shapes.chess_knight
+grid[9][4] = shapes.chess_queen
+grid[7][6] = shapes.chess_pawn
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+for 0 ≤ y < grid.size.y:
+    for ⌊½ y⌋ ≤ x < grid.size.x - ⌊½ (grid.size.y - y)⌋:
+        
+        const g = xy(x, y)        
+        const s = grid_to_screen(g)
+
+        // Draw the grid cell
+        draw_sprite({
+            sprite: shapes.pointy_hexagon, 
+            pos: s,
+            override_color: if equivalent(g, selected) then #FFF else hsv(loop((x - 2 y) / 3) / 2 + 50%, 50%, 100%)})
+        
+        const sprite = grid[x][y]
+        
+        if sprite:
+            // Draw a sprite if present
+            // Outline
+            for -1 ≤ Δx ≤ 1:
+                for -1 ≤ Δy ≤ 1:
+                    draw_sprite(sprite, s - xy(Δx, 12 + Δy), ∅, ∅, ∅, 3, #777)
+            // Shadow
+            draw_sprite(sprite, s + xy(0, 13), ∅, xy(1, -50%), 20%, 4, #000)
+            // Sprite
+            draw_sprite(sprite, s - xy(0, 12), ∅, ∅, ∅, 5)
+
+        else:
+            // Label the grid cell        
+            draw_text(∅, "" + x + "," + y, s, #0006, ∅, ∅, ∅, ∅, 10)
+
+draw_point(touch.xy, #000)
+
+if touch.aa:
+    play_sound(blip_sound)
+    selected = screen_to_grid(touch.xy)

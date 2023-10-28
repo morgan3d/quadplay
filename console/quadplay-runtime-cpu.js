@@ -658,6 +658,48 @@ function size(x) {
 }
 
 
+function random_from_distribution(distribution, rng) {
+    let sum = 0;
+    
+    if (Array.isArray(distribution)) {
+        for (let i = 0; i < distribution.length; ++i) {
+            sum += $Math.abs(distribution[i]);
+        }
+    } else {
+        // Object case
+        for (let k in distribution) {
+            if (k[0] !== '$') {
+                sum += $Math.abs(distribution[k]);
+            }
+        }
+    }
+
+    if (sum === 0) { $error('random_from_distribution requires a non-empty object or array'); }
+
+    // Choose a value
+    let r = random(0, sum, rng);
+
+    if (Array.isArray(distribution)) {
+        for (let i = 0; i < distribution.length; ++i) {
+            r -= $Math.abs(distribution[i]);
+            if (r <= 0) { return i; }
+        }
+        return distribution.length - 1;
+    } else {
+        // Object case, check for hidden fields
+        let lastKey;
+        for (let k in distribution) {
+            if (k[0] !== '$') {
+                r -= $Math.abs(distribution[k]);
+                lastKey = k;
+                if (r <= 0) { return k; }
+            }
+        }
+        return lastKey;
+    }    
+}
+
+
 function random_value(t, rng) {
     const T = typeof t;
     if (Array.isArray(t) || (T === 'string')) {
@@ -1128,11 +1170,7 @@ function replace(s, src, dst) {
         if (typeof src !== 'string') { src = unparse(src); }
         if (typeof dst !== 'string') { dst = unparse(dst); }
 
-        // Escape any special characters, build a global replacement regexp, and then
-        // run it on dst.
-        src = src.replace(ESCAPABLES, '\\$&');
-        dst = dst.replace(/\$/g, '$');
-        return s.replace(new RegExp(src, 'g'), dst);
+        return s.replaceAll(src, dst);
     }
 }
 
@@ -4527,7 +4565,7 @@ function draw_line(A, B, color, z, width) {
 
 
 function draw_map_span(start, size, map, map_coord0, map_coord1, min_layer, max_layer_exclusive, replacement_array, z, override_color, override_blend, invert_sprite_y, quality) {
-    if (arguments.length === 1 && 'x' in start && 'y' in start) {
+    if (size === undefined && 'x' in start && 'y' in start) {
         return draw_map_span(start.start, start.size, start.map,
                              start.map_coord0, start.map_coord1, start.min_layer, start.max_layer_exclusive,
                              start.replacement_array, start.z, start.override_color, start.override_blend,

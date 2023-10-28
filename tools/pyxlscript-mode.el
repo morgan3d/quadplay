@@ -1,10 +1,10 @@
 ;; pyxlscript-mode.el --- Major mode for editing Quadplay PyxLScript. -*- coding: utf-8 -*-
 
-;; Copyright © 2020, by Morgan McGuire
+;; Copyright © 2024, by Morgan McGuire
 
 ;; Author: Morgan McGuire, https://casual-effects.com
-;; URL: TBD
-;; Version: 0.0.1
+;; URL: https://github.com/morgan3d/quadplay/blob/main/tools/pyxlscript-mode.el
+;; Version: 0.0.2
 ;; Keywords: languages, pyxlscript
 
 ;; To use this mode, put the file in your elisp directory. Mine is "~/.emacs.d/lisp"
@@ -56,7 +56,7 @@
                                    "gray" "rgb" "rgba" "hsv" "hsva" "last_value" "last_key" "insert" "reverse" "reversed"
                                    "call" "set_post_effects" "get_post_effects" "reset_post_effects" "push_front" "local_time" "device_control" "physics_add_contact_callback" "physics_entity_contacts" "physics_entity_has_contacts" "physics_add_entity" "physics_remove_entity" "physics_remove_all" "physics_attach" "physics_detach" "make_physics" "make_contact_group" "draw_physics" "physics_simulate"
                                    "angle_to_xy" "xy_to_angle" 
-                                   "abs" "acos" "atan" "asin" "sign" "sign_nonzero" "cos" "clamp" "hash" "lerp" "log" "log2" "log10" "loop" "noise" "oscillate" "overlap" "pow" "make_random" "random_sign" "random_integer" "random_within_sphere" "random_on_sphere" "random_within_circle" "random_within_square" "random_on_square" "random_on_cube" "random_on_circle" "random_direction2D" "random_direction3D" "random_value" "random_gaussian" "random_gaussian2D" "random_truncated_gaussian" "random_truncated_gaussian2D" "random" "ξ" "sgn" "sqrt" "sin" "set_random_seed" "tan"
+                                   "abs" "acos" "atan" "asin" "sign" "sign_nonzero" "cos" "clamp" "hash" "lerp" "log" "log2" "log10" "loop" "noise" "oscillate" "overlap" "pow" "make_random" "random_from_distribution" "random_sign" "random_integer" "random_within_sphere" "random_on_sphere" "random_within_circle" "random_within_square" "random_on_square" "random_on_cube" "random_on_circle" "random_direction2D" "random_direction3D" "random_value" "random_gaussian" "random_gaussian2D" "random_truncated_gaussian" "random_truncated_gaussian2D" "random" "ξ" "sgn" "sqrt" "sin" "set_random_seed" "tan"
                                    "concatenate" "extend" "extended" "clone" "copy" "draw_previous_mode" "cross" "direction" "dot" "equivalent" "magnitude" "magnitude_squared" "max_component" "min_component" "xy" "xyz"
                                    "fast_remove_key" "find" "keys" "remove_key" "substring" "sort" "resize" "push" "pop" "pop_front" "push_front" "fast_remove_value" "remove_values" "remove_all" "gamepad_array" "joy" "round" "floor" "ceil"
                                    "debug_print" "get_sound_status" "set_pitch" "set_volume" "set_pan" "set_loop"

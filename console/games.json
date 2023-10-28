@@ -178,6 +178,19 @@
             "version": 0
         },
         {
+            "url": "quad://examples/hex/",
+            "title": "Hex",
+            "description": "Description of your game in about 100 characters.",
+            "version": 0,
+            "developer": "@CasualEffects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
+        },
+        {
             "url": "quad://examples/highscore/",
             "title": "High Score Example",
             "description": "",

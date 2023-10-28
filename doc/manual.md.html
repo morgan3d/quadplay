@@ -693,6 +693,10 @@ stick and mouse APIs. Shows how to completely hide the OS mouse cursor with `dev
 [Countdown Example](../console/quadplay.html?game=quad://examples/countdown&IDE=1) shows how to used `local_time()`
 and perform time zone math.
 
+</td></tr><tr><td>![](../examples/hex/label128.png)</td><td>
+[RPG Demo](../console/quadplay.html?game=quad://examples/hex&IDE=1) is an example of hex grids with coordinate
+system conversion, rendering, and click support.
+
 </td></tr><tr><td>![](../examples/tic_tac_toe/label128.png)</td><td>
 [Tic Tac Toe](../console/quadplay.html?game=quad://examples/tic_tac_toe&IDE=1) shows how to take turns,
 and mix `gamepad_array`, `touch`, and `device_control("get_mouse_state")` to support
@@ -2295,6 +2299,12 @@ Array
   amortized time for a single argument and O(_m_) for _m_ arguments and
   array of length _n_.
 
+`random_from_distribution(array, random default random)`
+: Return a random index of the array, chosen proportional to the values.
+
+`random_value(array, random default random)`
+: Return a random element of the array.
+
 `remove_key(array, i)`
 : Remove element `i` from the array, preserving order. O(n) expected time.
 
@@ -2317,9 +2327,6 @@ Array
 `reversed(array)`
 : Returns a shallow, reversed clone of the array, O(size(array))
   See also `reversed(string)`.
-
-`random_value(array, random default random)`
-: Return a random element of the array.
 
 `shuffle(array, random default random)`
 : Randomizes the array in place using using Knuth-Fisher-Yates in O(n) time. Returns nothing to avoid confusion with `shuffled()`.
@@ -2538,6 +2545,9 @@ Object
 `keys(object)`
 : An array of the keys in the object. You almost never need this because
   `for k in object` iterates over the keys directly.
+
+`random_from_distribution(object, random default random)`
+: Return a random key from the object, chosen proportional to the values.
 
 `remove_key(object, k)`
 : Remove a key-value pair by key. Does nothing if `k` is not in the object.
@@ -6544,6 +6554,8 @@ The available constants types are:
 - `raw`
   - Loaded from a json or yml file or inline as a json value. When in 
     an external file, must be at top level and not nested inside an array or object.
+- `distribution`
+  - Like an `object`, but may contain only `number` valued properties
 - `object`
 - `array`
 - `table`

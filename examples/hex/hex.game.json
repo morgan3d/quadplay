@@ -1,0 +1,47 @@
+{
+    "title": "Hex",
+    "developer": "@CasualEffects",
+    "copyright": "©2023 Morgan McGuire",
+    "license": "Released into the public domain; CC0 licensed https://creativecommons.org/share-your-work/public-domain/cc0/",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "shapes": "quad://sprites/shapes-32x32.sprite.json",
+        "blip_sound": "quad://sounds/blip-04.sound.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "dual_dpad": false,
+    "midi_sysex": false,
+    "description": "Description of your game in about 100 characters.",
+    "constants": {
+        "TEXT_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": 1
+                },
+                "g": {
+                    "type": "number",
+                    "value": 1
+                },
+                "b": {
+                    "type": "number",
+                    "value": 1
+                }
+            }
+        }
+    },
+    "screenshot_tag": "Starter Example"
+}

@@ -34,13 +34,16 @@ function htmlColor4Bit(value) {
 }
 
 
-/* Called from onProjectSelect(). Set choice = undefined for ALL constants */
+/* Called from onProjectSelect(). Set choice = undefined for ALL constants.
+   Can only be used with top-level constants */
 function showConstantEditor(choice) {
+    console.assert(choice === undefined || choice.indexOf('.') === -1, 'showConstantEditor() does not work with nested constants');
+    
     const constantEditor = document.getElementById('constantEditor');
     const array = choice ? [choice] : Object.keys(gameSource.constants);
     array.sort();
     
-    // Do not show extra data if many wil be visible
+    // Do not show extra data if many will be visible
     const compact = choice === undefined;
     
     let html = '';
@@ -64,9 +67,12 @@ function showConstantEditor(choice) {
             entryHTML += `<div class="ace-quadplay" style="padding-bottom: ${compact ? 2 : 12}px"><i class="ace_comment">${json.description}</i></div>`;
         }
 
-        entryHTML += makeConstantEditorControlHTML(constantName, controlName, json, value, false, compact);
+        entryHTML += '<span class="constantName">' + constantName + '</span> = ' + makeConstantEditorControlHTML(constantName, json, value, false, compact);
+
+        const isContainer = json.type === 'array' || json.type === 'object';
+        const editableConstant = editableProject && ! isContainer;
         
-        if (editableProject) {
+        if (editableConstant) {
             const indent = 0;
             const debugEnabled = debugJSON && debugJSON.enabled;
 
@@ -74,27 +80,27 @@ function showConstantEditor(choice) {
             
             entryHTML += `<input type="checkbox" style="margin-left:${indent + 1}px; position: relative; top: 2px" autocomplete="false" ${debugEnabled ? 'checked' : ''} onchange="onConstantEditorDebugOverrideChange(gameSource, '${constantName}', this)" class="${compact ? 'debugOverrideCheckbox' : ''}"><label style="color:#bbb" class="${compact ? 'debugOverrideCheckbox' : ''}">Debug&nbsp;Override</label>`;
             entryHTML += `<div class="debugOverride ${debugEnabled ? '' : 'disabled'}" id="constantEditor_${controlName}_debug_div" ${debugEnabled ? '' : 'disabled'} style="margin-left:${indent - 3}px">`;
-            
-            if (gameSource.debug.constants && gameSource.debug.constants[constantName] !== undefined) {
-                // Debug editor for a value already defined in the .debug.json. If the value does
-                // not exist or the debug.json does not, then they will be created an inserted
-                // on the first enabling of debugging for this constant.
-                let debugValue = gameSource.debug.constants[constantName];
-                if (debugValue.type !== undefined) {
-                    // Not a raw value
-                    debugValue = debugValue.value;
+
+            if (gameSource.debug.constants) {
+                const debugValue = nestedGet(gameSource.debug.constants, constantName, true);
+
+                if (debugValue !== undefined) {
+                    // Debug editor for a value already defined in the .debug.json. If the value does
+                    // not exist or the debug.json does not, then they will be created an inserted
+                    // on the first enabling of debugging for this constant.
+                    if (debugValue.type !== undefined) {
+                        // Not a raw value
+                        debugValue = debugValue.value;
+                    }
+                    entryHTML += '<span class="constantName">' + constantName + '</span> = ' + makeConstantEditorControlHTML(constantName, nestedGet(gameSource.debug.json.constants, constantName), debugValue, true, compact);
                 }
-                entryHTML += makeConstantEditorControlHTML(constantName, debugControlName, gameSource.debug.json.constants[constantName], debugValue, true, compact);
             }
 
             // End of debug div
             entryHTML += '</div>';
         }
 
-        if (array.length > 0) {
-            // In the all-constant list, wrap each one with its own div
-            entryHTML = '<div class="oneConstantEditor">' + entryHTML + '</div>';
-        }
+        entryHTML = `<div class="${isContainer ? 'containerConstantEditor' : 'oneConstantEditor'}">${entryHTML}</div>`;
             
         html += entryHTML;
         
@@ -107,16 +113,43 @@ function showConstantEditor(choice) {
     constantEditor.style.visibility = 'visible';
 }
 
+/*
+  `constantName`
+  :  The variable name of the gameSource.json.constants property. To support nested
+  :  properties, this may include '.', for example: 'foo.bar.baz' or 'foo.3.health'
 
-function makeConstantEditorControlHTML(constantName, controlName, json, value, isDebugLayer, compact) {
+  `json`
+  :  The JSON source, with `value`, `type`, `description` and other metadata
+
+  `value`
+  :  The parsed runtime value. This is not necessarily json.value, for example,
+  :  if this is a number, then the json may have a string representation such as "infinity"
+  :  or "0xFF" and the value can be a live number.
+
+  `isDebugLayer`
+  :  Use gameSource.debug.json.constants or gameSource.json.constants?
+
+  `compact`
+  :  If false (default), show extra help information
+  
+ */
+function makeConstantEditorControlHTML(constantName, json, value, isDebugLayer, compact) {
     let html = '';
     const type = json.type || typeof value;
     const disabled = editableProject ? '' : 'disabled';
-    if (type === 'string') {
-        html += `<span class="constantName">${constantName}</span> = "<textarea ${json.url ? 'disabled' : ''} style="vertical-align:top; margin-left:1px; margin-right:2px;" autocomplete="false" ${disabled} onchange="onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.value, this.value)" rows=4 cols=40>${value}</textarea>"`;
+    const controlName = (isDebugLayer ? 'debug_' : '') + constantName;
+
+    if (type === 'string') {        
+
+        const isLarge = value.length > 20 || value.indexOf('\n') !== -1;
+        html += `"<textarea ${json.url ? 'disabled' : ''} style="${isLarge ? '' : 'display: inline-block;'} vertical-align:top; margin-left:1px; margin-right:2px;" autocomplete="false" ${disabled} onchange="onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.value, this.value)" rows=${isLarge ? 4 : 1} cols=${isLarge ? 40 : 20}>${value}</textarea>"`;
+
     } else if (value === undefined || value === null) {
-        html += '<span class="constantName">' + constantName + '</span> = <code>∅</code><br>';
+
+        html += '<code>∅</code><br>';
+        
     } else if (type === 'number') {
+
         const numValue = (typeof json === 'number') ? value : json.value;
 
         // Parse and clean up min and max bounds
@@ -155,7 +188,7 @@ function makeConstantEditorControlHTML(constantName, controlName, json, value, i
 
               // The maxVal - minVal will be NaN if one is infinity, but then this code will never execute, either!
               `if (slider) { slider.value = 1000 * (v - ${minVal}) / (${maxVal - minVal}); }}`;
-        html += `<span class="constantName">${constantName}</span> = <input id="constantEditor_${controlName}_textbox" style="width:100px; text-align: right" type="text" onchange="${onchange}" autocomplete="false" ${disabled} value="${numValue}">`;
+        html += `<input id="constantEditor_${controlName}_textbox" style="width:100px; text-align: right" type="text" onchange="${onchange}" autocomplete="false" ${disabled} value="${numValue}">`;
 
         // Show a slider
         if (editableProject &&
@@ -164,10 +197,10 @@ function makeConstantEditorControlHTML(constantName, controlName, json, value, i
             isFinite(maxVal)) {
 
             // Create the slider
-            const editor = `<input id="constantEditor_${controlName}_slider" type="range" oninput="onConstantEditorSliderChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, 'constantEditor_${controlName}_textbox', '${type}', QRuntime.round(this.value * ${(maxVal - minVal) / 1000} + ${minVal}, ${quantum}), '${format}')" style="height: 1em" min="0" max="1000" value="${1000 * (value - minVal) / (maxVal - minVal)}"></input>`;
+            const editor = `<input ${compact ? 'class="nudge"' : ''} id="constantEditor_${controlName}_slider" type="range" oninput="onConstantEditorSliderChange('constantEditor_${controlName}_textbox', QRuntime.round(this.value * ${(maxVal - minVal) / 1000} + ${minVal}, ${quantum}), '${format}')" min="0" max="1000" value="${1000 * (value - minVal) / (maxVal - minVal)}"></input>`;
             
             // Insert into the html
-            html = `<table style="border-collapse: collapse"><tr align="top"><td>${html}</td><td>${editor}</td></tr></table>\n`;
+            html = `<table style="display: inline-block; vertical-align: middle; border-collapse: collapse"><tr align="top"><td>${html}</td><td>${editor}</td></tr></table>\n`;
         } else {
             html += '<br>';
         }
@@ -176,15 +209,18 @@ function makeConstantEditorControlHTML(constantName, controlName, json, value, i
             // Show extra information
             html += '<br><i>All PyxlScript number formats supported. For example, <code>10, -3, 1.5, 2pi, 90deg, 90°, -∞, π, ½</code></i>';
         }
+        
     } else if (type === 'boolean') {
-        html += `<span class="constantName">${constantName}</span> = <label><div id="constantEditor_${controlName}_display" class="code" style="display: inline-block; width: 45px; font-size: 100%">${value}</div><input type="checkbox" style="position: relative; top: 2px; left: -3px; margin-right:0.5px" autocomplete="false" onchange="onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.checked, this.checked)" ${disabled} ${value ? 'checked' : ''}></label><br>`;
+
+        html += `<label><div id="constantEditor_${controlName}_display" class="code" style="display: inline-block; width: 45px; font-size: 100%">${value}</div><input type="checkbox" style="position: relative; top: 2px; left: -3px; margin-right:0.5px" autocomplete="false" onchange="onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.checked, this.checked)" ${disabled} ${value ? 'checked' : ''}></label><br>`;
+
     } else if (type === 'xy' || type === 'xz' || type === 'xyz' ||
                type === 'rgb' || type === 'rgba' ||
-               type === 'hsv' || type === 'hsva') {
+               type === 'hsv' || type === 'hsva' ||
+               type === 'distribution') {
 
-        const fields = type;
-        
-        const onchange = `onConstantEditorVectorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', '${fields}', event)`;
+        const fields = (type === 'distribution') ? safeObjectKeys(json.value) : type;
+        const onchange = `onConstantEditorVectorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', ${JSON.stringify(fields).replaceAll('"', "'")}, event)`;
 
         html += `<table style="margin-left:10px">`;
 
@@ -192,11 +228,10 @@ function makeConstantEditorControlHTML(constantName, controlName, json, value, i
             const element = fields[i];
             const elementValue = json.value[element].type ? json.value[element].value : value[element];
             html += `<tr><td>${element}:</td><td style="white-space: nowrap"><input id="constantEditor_${controlName}_${element}" onchange="${onchange}" style="width:80px; text-align: right; margin-left: 1px; margin-right: 1px" type="text" autocomplete="false" ${disabled} value="${elementValue}">`;
-            html +=  (i < fields.length - 1) ? ', ' : '';
             html += '</td></tr>';
         }
 
-        html += '</table>}';
+        html += '</table>';
 
         // editor is the sliders. metaEditor is a preview (for the color)
         let editor = '', metaEditor = '';
@@ -206,12 +241,22 @@ function makeConstantEditorControlHTML(constantName, controlName, json, value, i
             // Position editor
             
             // The arrow characters here must be kept in sync with onConstantEditorVectorNudge
-            const buttonParams = ` style="width:24px; height:24px; font-weight: bold; font-family: sans-serif" onclick="onConstantEditorVectorNudge(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, 'constantEditor_${controlName}', '${type}', this.innerText)"`;
-            editor = `<table style="border-collapse:collapse"><tr><td></td><td><button ${buttonParams} title="+${type[1]}">↑</button></td><td>` + (type.length === 3 ? `<button ${buttonParams} title="-z">↗</button>` : '') + `</td></tr>` +
-                `<tr><td><button ${buttonParams} title="-x">←</button></td><td></td><td><button ${buttonParams} title="+x">→</button></td></tr>` +
-                `<tr><td>` + (type.length === 3 ? `<button ${buttonParams} title="+z">↙</button>` : '') + `</td><td><button ${buttonParams} title="-${type[1]}">↓</button></td><td></td></tr></table>`;
+            const buttonParams = ` style="width:18px; height:18px; padding: 0; font-size:10px; font-weight: bold; font-family: sans-serif" onclick="onConstantEditorVectorNudge('constantEditor_${controlName}', '${type}', this.innerText)"`;
+
+            editor += '<table style="border-collapse:collapse" ' + (compact ? 'class="nudge"' : '') + '>';
             
-            metaEditor = '<br><table style="margin-left:10px">';
+            if (type.length === 3) {
+                editor += `<tr valign=top><td></td><td><button ${buttonParams} title="+${type[1]}">↑</button></td><td><button ${buttonParams} title="-z">↗</button></td></tr>` +
+                    `<tr><td><button ${buttonParams} title="-x">←</button></td><td></td><td><button ${buttonParams} title="+x">→</button></td></tr>` +
+                    `<tr><td><button ${buttonParams} title="+z">↙</button></td><td><button ${buttonParams} title="-${type[1]}">↓</button></td><td></td></tr>`;
+            } else {
+                editor += `<tr><td rowspan=2><button ${buttonParams} title="-x">←</button></td><td><button ${buttonParams} title="+${type[1]}">↑</button></td><td rowspan=2><button ${buttonParams} title="+x">→</button></td></tr>` +
+                    `<tr><td><button ${buttonParams} title="-${type[1]}">↓</button></td></tr>`;
+            }
+
+            editor += '</table>';
+            
+            metaEditor = '<table style="margin-left:10px" ' + (compact ? 'class="nudge"' : '') + '>';
             if (! json.nudge) {
                 // Add nudge values if they aren't present.
                 json.nudge = {};
@@ -226,11 +271,13 @@ function makeConstantEditorControlHTML(constantName, controlName, json, value, i
                 metaEditor += `<tr><td>Δ${element}</td><td><input id="constantEditor_${controlName}_nudge_${element}" type="text" value="${json.nudge[element]}" onchange="${onchange}" style="width:32px; text-align:right"></input></td></tr>`;
             }
             metaEditor += '</table>';
-        } else if (type === 'rgb' || type === 'rgba' || type === 'hsv' || type === 'hsva') {
-            // Color editor
+        } else if (type === 'rgb' || type === 'rgba' || type === 'hsv' || type === 'hsva' || type === 'distribution') {
+            // Editor with sliders
 
-            // Display color
-            editor = `<div style="border-radius: 4px; border: 1px solid #000; width: 64px; height: 64px; overflow: hidden" class="checkerboard"><div id="constantEditor_${controlName}_preview" style="background: ${htmlColor4Bit(value)}; width: 64px; height: 64px"></div></div>`;
+            if (type !== 'distribution') {
+                // Display color
+                editor = `<div style="border-radius: 4px; border: 1px solid #000; width: 64px; height: 64px; overflow: hidden" class="checkerboard"><div id="constantEditor_${controlName}_preview" style="background: ${htmlColor4Bit(value)}; width: 64px; height: 64px"></div></div>`;
+            }
             
             // Sliders for color channels
             if (editableProject) {
@@ -240,20 +287,28 @@ function makeConstantEditorControlHTML(constantName, controlName, json, value, i
                 editor = '<table>';
                 for (let i = 0; i < fields.length; ++i) {
                     const element = fields[i];
-                    editor += `<tr><td><input id="constantEditor_${controlName}_slider_${element}" type="range" oninput="onConstantEditorVectorSliderChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, 'constantEditor_${controlName}', '${type}', '${element}', this.value / 255)" style="height: 1em" min="0" max="255" value="${255 * value[element]}"></input></td></tr>`;
+                    editor += `<tr><td><input id="constantEditor_${controlName}_slider_${element}" type="range" oninput="onConstantEditorSliderChange('constantEditor_${controlName}_${element}', this.value / 1000, '${type === 'distribution' ? '0.000' : '0%'}')" min="0" max="1000" value="${1000 * value[element]}"></input></td></tr>`;
                 }
                 editor += '</table>';
             }
 
-            editor += `// <code style="font-size: 120%" id="constantEditor_${controlName}_hex">${colorToHexString(value)}</code>`;
         } // End special case editors
 
         if (editor !== '') {
-            html = '<table style="border-collapse: collapse"><tr valign="top"><td>' + html + '</td><td style="padding-left: 10px">' + editor + '</td><td>' + metaEditor + '</td></tr></table>';
+            html = '<table style="border-collapse: collapse"><tr valign="middle"><td>' + html + '</td><td style="padding-left: 10px">' + editor + '</td><td>' + metaEditor + '</td></tr></table>';
+            if (editableProject && type === 'distribution') {
+                html += `<span class="newNestedConstant clickable" style="padding-left:14px" onclick="showNewDistributionKeyDialog('${constantName}')">✜&nbsp;<i>New&nbsp;measure…</i></span><br>`;
+            }
         }
-        html = `<span class="constantName">${constantName}</span> = {<br>` + html;
+        html = '{<br>' + html + '}';
+
+        if (type === 'rgb' || type === 'rgba' || type === 'hsv' || type === 'hsva') {
+            html += ` // <code style="font-size: 120%" id="constantEditor_${controlName}_hex">${colorToHexString(value)}</code>`;
+        }
+        
     } else if (type === 'reference') {
-        html += `<span class="constantName">${constantName}</span> → <div class="select-editable"><select onchange="this.nextElementSibling.value=this.value; onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.value, this.value)"><option value=""></option>`;
+        
+        html += `<div class="select-editable"><select onchange="this.nextElementSibling.value=this.value; onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.value, this.value)"><option value=""></option>`;
 
         // Make sorted lists of all constants followed by all assets
         let sources = gameSource.json.constants;
@@ -276,17 +331,61 @@ function makeConstantEditorControlHTML(constantName, controlName, json, value, i
         }
 
         html += `</select><input type="text" onchange="combobox_textbox_onchange(this); onConstantEditorValueChange(${isDebugLayer ? 'gameSource.debug' : 'gameSource'}, QRuntime, '${controlName}', '${constantName}', this.value, this.value)" value="${json.value}" /></div><br>`;
-    } else {
+        
+    } else if (json.type === 'table') {
+        
         // Object or array (including built-in objects)
         const s = QRuntime.unparse(value);
         if (s.length > 16) {
-            html += '<span class="constantName">' + constantName + '</span> = <table>' + visualizeConstant(value, '') + '</table>';
+            html += '<table>' + visualizeConstant(value, '') + '</table>';
         } else {
-            html += '<span class="constantName">' + constantName + '</span> = ' + escapeHTMLEntities(s);
+            html += escapeHTMLEntities(s);
         }
+        
+    } else {
+        
+        // Object or array (including built-in objects)
+        const isArray = type === 'array' || Array.isArray(value);
+        html += '<code>' + (isArray ? '[' : '{') + '</code>';
+        html += '<div style="margin-left:15px">';
+
+        const keyArray = Object.keys(value);        
+        for (let k = 0; k < keyArray.length; ++k) {
+            const key = keyArray[k];
+            
+            // Recursively generate the child editor
+            const childIsContainer = json.value[key].type === 'array' || json.value[key].type === 'object';
+            html += `<div class="${childIsContainer ? 'containerConstantEditor' : 'oneConstantEditor'}"><span class="constantName">${key}</span>:` +
+                makeConstantEditorControlHTML(
+                    constantName + '.' + key,
+                    json.value[key],
+                    value[key],
+                    isDebugLayer,
+                    true) + '</div>';
+        }
+
+        if (editableProject) {
+            html += `<span class="newNestedConstant clickable" onclick="showNewConstantDialog('${constantName}')">✜&nbsp;<i>New&nbsp;${isArray ? 'value' : 'key'}…</i></span>`;
+        }
+        html += '</div><code>' + (isArray ? ']' : '}') + '</code>';
     }
-    
+
     return html;
+}
+
+
+function safeObjectKeys(object) {
+    if (Array.isArray(object)) {
+        return Object.keys(object);
+    } else {
+        const keys = [];
+        for (let k in object) {
+            if (k[0] !== '$') {
+                keys.push(k);
+            }
+        }
+        return keys;
+    }
 }
 
 
@@ -333,25 +432,27 @@ function onConstantEditorDebugOverrideChange(gameSource, name, checkbox) {
         gameSource.debug.json.constants = {};
         created = true;
     }
+
+    const debugJSON = nestedGetObject(gameSource.debug.json.constants, name);
+    const gameJSON = nestedGetObject(gameSource.json.constants, name);
     
-    if (! gameSource.debug.json.constants[name]) {
+    if (! debugJSON.object) {
         // Copy from the non-debug version
-        gameSource.debug.json.constants[name] = deep_clone(gameSource.json.constants[name]);
-        if (gameSource.debug.json.constants[name].type === 'reference') {
-            gameSource.debug.constants[name] = new GlobalReferenceDefinition(name, gameSource.debug.json.constants[name]);
-        } else {
-            gameSource.debug.constants[name] = evalJSONGameConstant(gameSource.debug.json.constants[name]);
-        }
+        debugJSON.parent[name] = debugJSON.object = deep_clone(gameJSON.object);
+        nestedSet(gameSource.debug.constants, name,
+                  (debugJSON.object.type === 'reference')  ?
+                  new GlobalReferenceDefinition(name, debugJSON.object) :
+                  evalJSONGameConstant(debugJSON.object));
         created = true;
     }
 
-    if (typeof gameSource.debug.json.constants[name] !== 'object') {
+    if (typeof debugJSON.object !== 'object') {
         // Wrap raw constants
-        const value = gameSource.debug.json.constants[name];
+        const value = debugJSON.object;
         if (value === undefined || value === null) {
-            gameSource.debug.json.constants[name] = {type: 'nil'};
+            debugJSON.parent[debugJSON.key] = debugJSON.object = {type: 'nil'};
         } else {
-            gameSource.debug.json.constants[name] = {type: typeof value, value: value};
+            debugJSON.parent[debugJSON.key] = debugJSON.object = {type: typeof value, value: value};
         }
         created = true;
     }
@@ -367,15 +468,15 @@ function onConstantEditorDebugOverrideChange(gameSource, name, checkbox) {
         }
     }
 
-    gameSource.debug.json.constants[name].enabled = checkbox.checked;
+    debugJSON.object.enabled = checkbox.checked;
     
     if (created) {
         // Create the controls dynamically (force it to compact mode, since we
         // don't know whether we are compact or not at this point)
         debugPane.innerHTML =
-            makeConstantEditorControlHTML(name, 'debug_' + name,
-                                          gameSource.debug.json.constants[name],
-                                          gameSource.debug.constants[name], true, true);
+            `<span class="constantName">${name}</span> =` +
+            makeConstantEditorControlHTML(name, debugJSON.object,
+                                          nestedGet(gameSource.debug.constants, name), true, true);
     }
     
     serverSaveDebugJSON();
@@ -387,14 +488,7 @@ function onConstantEditorDebugOverrideChange(gameSource, name, checkbox) {
 }
 
 
-function onConstantEditorVectorSliderChange(gameLayer, controlName, type, field, value) {
-    const textBox = document.getElementById(controlName + '_' + field);
-    textBox.value = Math.round(100 * value) + '%';
-    textBox.onchange();
-}
-
-
-function onConstantEditorSliderChange(gameLayer, controlName, type, value, format) {
+function onConstantEditorSliderChange(controlName, value, format) {
     const textBox = document.getElementById(controlName);
     console.assert(textBox, 'Could not find control id = "' + controlName + '"');
     textBox.value = QRuntime.format_number(value, format);
@@ -403,7 +497,7 @@ function onConstantEditorSliderChange(gameLayer, controlName, type, value, forma
 
 
 /** Called when a direction button is pressed on a vector editor */
-function onConstantEditorVectorNudge(gameLayer, controlName, type, direction) {
+function onConstantEditorVectorNudge(controlName, type, direction) {
     let field = '';
     let sign = 1;
     
@@ -426,13 +520,21 @@ function onConstantEditorVectorNudge(gameLayer, controlName, type, direction) {
     textBox.onchange();
 }
 
-/** Allows editing an object with a set of numeric fields. fields can be a string of
-    single-letter fields or an array of multi-letter ones.
 
-    If the event is undefined, then this was programmatically invoked. */
+/**
+   key is the name of the constant *object*. Which field has been changed is not known to this
+   function, which instead serializes all of the fields.
+   
+   Allows editing an object with a set of numeric fields. fields can be a string of
+   single-letter fields or an array of multi-letter ones.
+
+   If the event is undefined, then this was programmatically invoked. */
 function onConstantEditorVectorValueChange(gameLayer, environment, controlName, key, fields, event) {
-    const json = gameLayer.json.constants[key];
+    const json = nestedGet(gameLayer.json.constants, key, false, true);
     console.assert(json !== undefined);
+
+    let sum = 0; // TODO: Remove
+    
     for (let f = 0; f < fields.length; ++f) {
         const element = fields[f];
 
@@ -441,8 +543,13 @@ function onConstantEditorVectorValueChange(gameLayer, environment, controlName, 
         // Force metadata if not already present
         if (! json.value[element].type) { json.value[element] = {type: 'number', value: undefined}; }
 
-        // Update value
-        json.value[element].value = document.getElementById('constantEditor_' + controlName + '_' + element).value;
+        const value = document.getElementById('constantEditor_' + controlName + '_' + element).value;
+        
+        // Update stored value
+        json.value[element].value = value;
+
+        // TODO: Remove
+        // sum = Math.max(sum, evalJSONGameConstant(json.value[element]));
 
         if (json.nudge) {
             json.nudge[element] = document.getElementById('constantEditor_' + controlName + '_nudge_' + element).value;
@@ -451,26 +558,53 @@ function onConstantEditorVectorValueChange(gameLayer, environment, controlName, 
 
     const value = evalJSONGameConstant(json);
 
-    // Update the color preview
     const type = json.type;
-    if (type === 'rgb' || type === 'rgba' ||
-        type === 'hsv' || type === 'hsva') {
+    const isColor =
+          type === 'rgb' || type === 'rgba' ||
+          type === 'hsv' || type === 'hsva';
+    
+    if (isColor) {
+
+        // Update the color preview
         const preview = document.getElementById('constantEditor_' + controlName + '_preview');
         preview.style.background = htmlColor4Bit(value);
 
         const hex = document.getElementById('constantEditor_' + controlName + '_hex');
         hex.innerHTML = colorToHexString(value);
-            
+    }
+
+    if (isColor || type === 'distribution') {
         // Update sliders if editable
-        for (let i = 0; i < type.length; ++i) {
-            const field = type[i];
+        for (let i = 0; i < fields.length; ++i) {
+            const field = fields[i];
             const slider = document.getElementById('constantEditor_' + controlName + '_slider_' + field);
             if (slider) {
-                slider.value = value[field] * 255;
+                slider.value = value[field] * 1000;
             }
         }
-    }
-    
+    } /* TODO: remove
+
+        else if (type === 'distribution') {
+        // Renormalize the distribution and adjust other values
+        if (sum <= 0 || isNaN(sum) || Math.abs(sum) === Infinity) {
+            sum = 1;
+        }
+        sum = sum * 1.1;
+
+        for (let i = 0; i < fields.length; ++i) {
+            const field = fields[i];
+            
+            json.value[field].value = json.value[field].value / sum;
+
+            // Update textbox
+            const value = json.value[field].value;
+            document.getElementById('constantEditor_' + controlName + '_' + field).value = QRuntime.format_number(value, '0.000');
+            
+            // Update slider
+            document.getElementById('constantEditor_' + controlName + '_slider_' + field).value = value * 1000;
+        }
+    } */
+
     // Pass down to the generic value change handler
     onConstantEditorValueChange(gameLayer, environment, controlName, key, value, json.value, null);
 }
@@ -479,31 +613,35 @@ function onConstantEditorVectorValueChange(gameLayer, environment, controlName, 
 /** Value is the numeric value to assign. jsonValue is what to store in the .value
     field of the game.json file. */
 function onConstantEditorValueChange(gameLayer, environment, controlName, key, value, jsonValue) {
+
+    console.assert(gameLayer.json);
+    const k = nestedGetObject(gameLayer.json.constants, key, false, true);
+    
     // Update gameLayer.json.constants
-    if (typeof gameLayer.json.constants[key] === 'object') {
+    if (typeof k.object === 'object') {
         // The target already has metadata, just write to the value field
-        const obj = gameLayer.json.constants[key];
-        console.assert(obj.type !== 'raw');
-        obj.value = jsonValue;
+        console.assert(k.object.type !== 'raw');
+        k.object.value = jsonValue;
     } else {
         // The target was a raw value. Create metadata.
         switch (typeof value) {
         case 'number':
         case 'string':
         case 'boolean':
-            gameLayer.json.constants[key] = {type: typeof value, value: jsonValue};
+            k.parent[k.key] = k.object = {type: typeof value, value: jsonValue};
             break;
             
         case 'object':
             console.assert(value === null);
             // Fall through
         case 'undefined':
-            gameLayer.json.constants[key] = {type: 'nil'};
+            k.parent[k.key] = k.object = {type: 'nil'};
             break;
 
         default:
+            console.assert(false, 'Should not get here');
             // A more complex object
-            gameLayer.json.constants[key].value = jsonValue;
+            //obj.value = jsonValue;
             break;
         }
     }
@@ -513,12 +651,11 @@ function onConstantEditorValueChange(gameLayer, environment, controlName, key, v
     }
     
     // Update pre-evaluated objects
-    if (gameLayer.json.constants[key].type === 'reference') {
-        gameLayer.constants[key] = new GlobalReferenceDefinition(key, gameLayer.json.constants[key]);
+    if (k.object.type === 'reference') {
+        nestedSet(gameLayer.constants, key, new GlobalReferenceDefinition(key, k.object));
     } else {
-        gameLayer.constants[key] = value;
+        nestedSet(gameLayer.constants, key, value);
     }
-    
     
     // Set a timer to save the game.json
     if (gameLayer === gameSource) {
@@ -535,18 +672,73 @@ function onConstantEditorValueChange(gameLayer, environment, controlName, key, v
 }
 
 ////////////////////////////////////////////////////////////////////////
+function showNewDistributionKeyDialog(parentKey) {
 
-function showNewConstantDialog() {
+    let key;
+    while (true) {
+        key = window.prompt("Key for new measure in '" + parentKey + "'", '');
+        
+        // Cancel
+        if (! key || key === '') { return; }
+        
+        // Mangle
+        key = key.replace(/(^_|[^_0-9A-Za-z])/g, '');
+
+        // Check for conflict
+        if (nestedGet(gameSource.json.constants, parentKey + '.' + key, true, true) !== undefined) {
+            window.alert("There is already a measure named '" + parentKey + '.' + key + "'. Choose a different name.");
+        } else {
+            // Add
+            const value = 0.5;
+            nestedGet(gameSource.constants, parentKey)[key] = value;
+            nestedGet(gameSource.json.constants, parentKey, false, true).value[key] = {type: 'number', value: value};
+
+            // Reload
+            serverSaveGameJSON(function () {
+                loadGameIntoIDE(window.gameURL, function () {
+                    // Select the same parent
+                    onProjectSelect(document.getElementById('projectConstant_' + parentKey), 'constant', parentKey);
+                }, true);
+            });
+            return;
+        }
+    }
+
+}
+
+
+/* `parentKey` If defined, this is the name of the parent array/object constant
+   that the new element goes within */
+function showNewConstantDialog(parentKey) {
     document.getElementById('newConstantDialog').classList.remove('hidden');
     document.getElementById('newConstantCreateButton').disabled = true;
     const text = document.getElementById('newConstantName');
     text.value = "";
     text.focus();
+    text.style.visibility = 'inherit';
 
+    if (parentKey) {
+        const parent = nestedGet(gameSource.json.constants, parentKey, false, true);
+
+        let parentName = parentKey.replaceAll(/\.[0-9]+(?=\.)/g, function (match) { return '[' + match.substring(1) + ']';});
+        
+        if (parent.type === 'array') {
+            text.style.visibility = 'hidden';
+            parentName += '[' + parent.value.length + ']';
+        } else {
+            parentName += '.';
+        }
+        document.getElementById('newConstantNameParent').innerHTML = parentName;
+    } else {
+        document.getElementById('newConstantNameParent').innerHTML = '';
+    }
+
+    document.getElementById('newConstantCreateButton').onclick = function () { onNewConstantCreate(parentKey); };
+    
     document.getElementById('newConstantNumberMin').value = '-infinity';
     document.getElementById('newConstantNumberMax').value = '+infinity';
-    document.getElementById('newConstantNumberQuantum').value = '0';
-    document.getElementById('newConstantNumberFormat').value = '';
+    document.getElementById('newConstantNumberQuantum').value = '0.01';
+    document.getElementById('newConstantNumberFormat').value = '0.00';
     
     // Only make reference types valid if there is already some other
     // asset or constant to refer to.
@@ -563,13 +755,24 @@ function hideNewConstantDialog() {
 }
 
 
-function onNewConstantCreate() {
+/* Callback from the New Constant dialog in the IDE.  Creates as a
+   child of `parentKey` if it is defined, otherwise as a global
+   constant. */
+function onNewConstantCreate(parentKey) {
     hideNewConstantDialog();
 
-    const key = document.getElementById('newConstantName').value;
+    let key = document.getElementById('newConstantName').value;
 
-    if ((gameSource.constants[key] !== undefined) &&
-        ! window.confirm('There is already a constant named ' + key + '. Replace it?')) {
+    // May be empty if appending to an array
+    if (key === '') {
+        console.assert(parentKey);
+        key = nestedGet(gameSource.constants, parentKey).length;
+    }
+    
+    if ((nestedGet(gameSource.constants, (parentKey ? parentKey + '.' : '') + key, true) !== undefined) &&
+        ! window.confirm('There is already a constant named ' +
+                         key.replaceAll(/\.[0-9]+(?=\.)/g, function (match) { return '[' + match.substring(1) + ']';}) +
+                         '. Replace it?')) {
         return;
     }
     
@@ -601,6 +804,7 @@ function onNewConstantCreate() {
                   s: {type: 'number', value: '100%'},
                   v: {type: 'number', value: '100%'},
                   a: {type: 'number', value: '100%'}},
+        distribution: {},
         object:  {},
         array:   []
     }[type];
@@ -674,20 +878,26 @@ function onNewConstantCreate() {
         obj.format = formatText;
 
     } // if number
-    
-    gameSource.json.constants[key] = obj;
-    
-    gameSource.constants[key] = value;
+
     if (! gameSource.json.constants) {
         gameSource.json.constants = {};
     }
-
+    
+    if (parentKey) {
+        nestedGet(gameSource.constants, parentKey)[key] = value;
+        nestedGet(gameSource.json.constants, parentKey, false, true).value[key] = obj;
+    } else {
+        gameSource.constants[key] = value;
+        gameSource.json.constants[key] = obj;
+    }
 
     // Reload
     serverSaveGameJSON(function () {
         loadGameIntoIDE(window.gameURL, function () {
-            // Select
-            onProjectSelect(document.getElementById('projectConstant_' + key), 'constant', key);
+            const k = parentKey ? parentKey.replace(/\..+/, '') : key;
+                
+            // Select the new constant
+            onProjectSelect(document.getElementById('projectConstant_' + k), 'constant', k);
         }, true);
     });
 }

@@ -608,7 +608,7 @@ function onResize() {
             // Half-resolution games run with pixel doubling
             scale *= 2;
         } else if (SCREEN_WIDTH > 384) {
-            // Half scale
+            // Greater than normal resolution runs at half scale
             scale *= 0.5;
         }
 
@@ -2754,17 +2754,22 @@ function createProjectWindow(gameSource) {
             const json = gameSource.extendedJSON.constants[c];
             let tooltip = (json.description || '').replace(/"/g, '\\"');
             if (tooltip.length > 0) { tooltip = ': ' + tooltip; }
-            const type = (v === undefined || v === null) ?
-                  'nil' :
+            
+            const cssclass =
+                  (v === undefined || v === null) ? 'nil' :
+                  (json.type === 'table') ? 'table' :
+                  (json.type === 'xy' || json.type === 'xz') ? 'vec2D' :
+                  (json.type === 'xyz') ? 'vec3D' :
+                  (json.type === 'rgba' || json.type === 'rgb' || json.type === 'hsva' || json.type === 'hsv') ? 'color' :
+                  (json.type === 'reference') ? 'reference' :
+                  (json.type === 'distribution') ? 'distribution' :
                   Array.isArray(v) ? 'array' :
-                  (json.type && (json.type === 'xy' || json.type === 'xz')) ? 'vec2D' :
-                  (json.type && json.type === 'xyz') ? 'vec3D' :
-                  (json.type && (json.type === 'rgba' || json.type === 'rgb' || json.type === 'hsva' || json.type === 'hsv')) ? 'color' :
-                  (json.type && json.type === 'reference') ? 'reference' :
                   (typeof v);
+
             const contextMenu = editableProject ? `oncontextmenu="showConstantContextMenu('${c}')"` : '';
-            // Pad with enough space to extend into the hidden scrollbar area
-            s += `<li ${contextMenu} class="clickable ${badge} ${type}" title="${c}${tooltip}" id="projectConstant_${c}" onclick="onProjectSelect(event.target, 'constant', '${c}')"><code>${c}</code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>\n`;
+
+            // Add and then pad with enough space to extend into the hidden scrollbar area
+            s += `<li ${contextMenu} class="clickable ${badge} ${cssclass}" title="${c}${tooltip}" id="projectConstant_${c}" onclick="onProjectSelect(event.target, 'constant', '${c}')"><code>${c}</code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>\n`;
         }
     }
     if (editableProject) {
@@ -4134,8 +4139,7 @@ function redefineScreenConstants(environment, alreadySeen) {
             scale: {x: 1, y: 1}
         });
     }
-
-    redefineConstant(environment, 'SCREEN_SIZE', {x:SCREEN_WIDTH, y:SCREEN_HEIGHT}, alreadySeen);
+    redefineConstant(environment, 'SCREEN_SIZE', {x: SCREEN_WIDTH, y: SCREEN_HEIGHT}, alreadySeen);
     redefineConstant(environment, 'VIEW_ARRAY', VIEW_ARRAY, alreadySeen);
 }
 
@@ -4152,20 +4156,21 @@ function makeConstants(environment, constants, CREDITS) {
     // Now redefine all constants appropriately
     redefineScreenConstants(environment, alreadySeen);
     redefineConstant(environment, 'CREDITS', CREDITS, alreadySeen);
-
     const IDE_USER = (isQuadserver && useIDE && serverConfig && serverConfig.IDE_USER) || 'anonymous';
     redefineConstant(environment, 'IDE_USER', IDE_USER, alreadySeen);
 
+    const REFERENCE_PASS = true;
+
     for (const key in constants) {
         if (key[0] === '$') { throw 'Illegal constant field name: "' + key + '"'; }
-        redefineConstantByName(environment, key, alreadySeen, false);
+        redefineConstantByName(environment, key, alreadySeen, ! REFERENCE_PASS);
     }
     CONSTANTS.$name = 'CONSTANTS';
 
     // Process references second so that they can point to named sprites
     // after the spritesheets have been resolved
     for (const key in constants) {
-        redefineConstantByName(environment, key, alreadySeen, true);
+        redefineConstantByName(environment, key, alreadySeen, REFERENCE_PASS);
     }
 
     // Cannot seal CONSTANTS because that would make the properties non-configurable,
@@ -4189,7 +4194,8 @@ const ALLOWED_TO_DEBUG_OVERRIDE = {
 };
 
 
-/** Used by editors as well as when building the runtime. 
+/** Used by editors as well as when building the runtime to redefine
+    constants whose value is not known to the caller.
 
     alreadySeenMap is used for cloning. It can be undefined. 
 
@@ -4212,15 +4218,18 @@ function redefineConstantByName
  constants = gameSource.constants,
  debugConstants = gameSource.debug && gameSource.debug.constants ? gameSource.debug.constants : {},
  debugConstantsJSON = gameSource.debug && gameSource.debug.json ? gameSource.debug.json.constants : {}) {
+
+    const gameValue   = nestedGet(constants, key);
+    const debugLookup = nestedGetObject(debugConstants, key, true);
+    const debugJSON   = debugConstantsJSON ? nestedGet(debugConstantsJSON, key, true) : undefined;
     
-    // TODO: when the constant is an object or array, need to reapply
-    // this logic recursively
     const value =
-          ((key in debugConstants &&
-           debugConstantsJSON[key].enabled &&
-           ALLOWED_TO_DEBUG_OVERRIDE[debugConstantsJSON[key].type]) ?
-           debugConstants :
-           constants)[key];
+          (debugLookup && debugJSON && 
+           debugLookup.key in debugLookup.parent &&
+           debugJSON.enabled &&
+           ALLOWED_TO_DEBUG_OVERRIDE[debugJSON.type]) ?
+          debugLookup.object :
+          gameValue;
 
     // referencePass is not strictly boolean, so we have to test against
     // true and false explicitly
@@ -4234,27 +4243,143 @@ function redefineConstantByName
 }
 
 
-/** Redefines an existing constant on the give environment and its CONSTANTS object. 
-    The map is used for cloning and can be undefined. */
+/** Redefines an existing constant on the give environment and its CONSTANTS object
+    when the value is known to the caller.
+    
+    The map is used for cloning and can be undefined.
+
+    See also redefineConstantByName()
+*/
 function redefineConstant(environment, key, value, alreadySeenMap) {
     console.assert(! (value instanceof GlobalReference));
-    value = frozenDeepClone(value, alreadySeenMap || new Map());
+
+    // When looking for the gameJSON, some constants such as
+    // SCREEN_SIZE will not be present, so allow this to fail to
+    // undefined.
+    const gameJSON = nestedGet(gameSource.json.constants, key, true);
+    
+    if (gameJSON && (gameJSON.type === 'object' || gameJSON.type === 'array')) {
+        // Recursive case. Define the leaves as immutable properties,
+        // and everything else as a frozen clone
+        value = recursiveDefineConstantChain(gameJSON, value, alreadySeenMap);
+    } else {
+        value = frozenDeepClone(value, alreadySeenMap || new Map());
+    }
+    
     defineImmutableProperty(environment, key, value);
     defineImmutableProperty(environment.CONSTANTS, key, value);
 }
 
 
+/** Define leaves within `value` (non-Array/Object) as immutable
+    properties and everything else as a frozen deep clone. */
+function recursiveDefineConstantChain(json, value, alreadySeenMap) {
+    console.assert(json.type === 'array' || json.type === 'object');
+    
+    const newObj = json.type === 'array' ? [] : {};
+    for (let k in value) {
+        const v = value[k];
+        const j = json.value[k];
+
+        const newValue = (j.type === 'array' || j.type === 'object') ?
+              recursiveDefineConstantChain(j, v, alreadySeenMap) :
+              frozenDeepClone(v, alreadySeenMap);
+        
+        defineImmutableProperty(newObj, k, newValue);
+    }
+
+    return Object.preventExtensions(newObj);
+}
+
+
+/* Takes a key such as 'foo', 'foo.bar', 'foo.3.bar', etc. and evaluates nested
+   indexing. Returns {parent, child, childKey}
+
+   If `undefinedOnMissing` is true, return undefined instead of failing if
+   the path does not exist.
+
+   If `valueProperty` is true, recursion is through parent.value[k]
+   instead of parent[k] after the first iteration.  This is used for
+   constants JSON parsing.
+*/
+function nestedGetObject(root, key, undefinedOnMissing, valueProperty) {
+    console.assert(root);
+
+    // Recursively finds the object to be modified and the child
+    let parent = root;
+    let i = key.indexOf('.');
+    
+    while (i !== -1) {
+        parent = parent[key.substring(0, i)];
+        if (parent === undefined && undefinedOnMissing) { return undefined; }
+        if (valueProperty) { parent = parent.value; }
+        key = key.substring(i + 1);
+        i = key.indexOf('.');
+    }
+
+    if (undefinedOnMissing && (parent === undefined || parent[key] === undefined)) { return undefined; }
+    
+    return {parent: parent, object: parent[key], key: key};
+}
+
+
+/* Returns nested key evaluation `root[key]` */
+function nestedGet(root, key, undefinedOnMissing, valueProperty) {
+    console.assert(root);
+    const k = nestedGetObject(root, key, undefinedOnMissing, valueProperty);
+    if (undefinedOnMissing && k === undefined) { return undefined; }
+    return k.object;
+}
+
+
+/* Performs a array or table assignment of `root[key] = value` */
+function nestedSet(root, key, value) {
+    const k = nestedGetObject(root, key);
+    k.parent[k.key] = value;
+}
+
+
 /** Called by constants and assets to extend the QRuntime environment or redefine
-    values within it*/
+    values within it. Supports keys with '.' in the name for nested setting */
 function defineImmutableProperty(object, key, value) {
-    // Set configurable to true so that we can later redefine
-    Object.defineProperty(object, key, {configurable: true, enumerable: true, writable: false, value: value});
+    const i = key.indexOf('.');
+
+    if (i === -1) {
+        // Non-recursive case
+        // Set `configurable` to true so that we can later redefine
+        Object.defineProperty(object, key, {configurable: true, enumerable: true, writable: false, value: value});
+    } else {
+        const rest = key.substring(i + 1);
+        let first = key.substring(0, i);
+        {
+            const n = parseInt(first);
+            if (! isNaN(n)) { first = n; }
+        }
+        let parent = object[first];
+        
+        if (parent === undefined) {
+            if (typeof first === 'string') {
+                // Object
+                parent = {};
+            } else {
+                // Array
+                parent = [];
+            }
+            // Define parent object
+            defineImmutableProperty(object, first, parent);
+        }
+
+        // Recurse to approach the actual leaf object
+        defineImmutableProperty(parent, rest, value);
+    }
 }
 
 
 /** Called by makeConstant to extend the QRuntime environment or redefine values
     within it that are pointers. */
 function redefineReference(environment, key, globalReference) {
+    console.assert(key.indexOf('.') === -1);
+
     const descriptor = {
         enumerable: true,
         configurable: true,
