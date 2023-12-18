@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 # -*- python -*-
+#
+# Helper functions that compute dependencies of a .game.json file and
+# run an arbitrary callback on them in the visitor pattern.
+#
+# Can also be run as a command line script that prints
+# the dependences to stdout and "WARNING: " entries to stderr.
 
 import workjson, argparse, sys, urllib, os
 
@@ -27,6 +33,9 @@ def _error(msg):
    print('ERROR: ' + msg, file=sys.stderr)
    sys.exit(-1)
 
+def _warning(msg):
+   print('WARNING: ' + msg, file=sys.stderr)
+
 
 # Computes recursive dependencies
 def depend_asset(filename, args, basepath):
@@ -35,27 +44,23 @@ def depend_asset(filename, args, basepath):
    
    if asset_data != None:
       asset_data = workjson.loads(asset_data)
-      if filename.endswith('.sprite.json') or filename.endswith('.font.json') or filename.endswith('.sound.json'):
+      if filename.endswith('.sprite.json') or filename.endswith('.font.json') or filename.endswith('.sound.json') or filename.endswith('.data.json'):
          if not 'url' in asset_data:
-            print('WARNING: ' + filename + ' is missing the "url" field', file=sys.stderr)
+            _warning(filename + ' is missing the "url" field')
             return
-         
-         _depend(asset_data['url'], args, resolved_dirname)
-         
-      elif filename.endswith('.map.json'):
-         if not 'url' in asset_data:
-            print('WARNING: ' + filename + ' is missing the "url" field', file=sys.stderr)
-            return
-         
-         _depend(asset_data['url'], args, resolved_dirname)
 
+      # Handle anything that has a url field
+      if 'url' in asset_data:
+         _depend(asset_data['url'], args, resolved_dirname)
+         
+      if filename.endswith('.map.json'):
          if 'sprite_url' in asset_data:
             depend_asset(asset_data['sprite_url'], args, resolved_dirname)
          elif 'sprite_url_table' in asset_data:
             for s in asset_data['sprite_url_table'].values():
                depend_asset(s, args, resolved_dirname)
          else:
-            print('WARNING: ' + filename + ' is missing a "sprite_url_table" or "sprite_url" field', file=sys.stderr)
+            _warning(filename + ' is missing a "sprite_url_table" or "sprite_url" field')
 
 
 def _depend(filename, args, basepath, return_contents = False):
@@ -77,7 +82,7 @@ def _depend(filename, args, basepath, return_contents = False):
          filename = os.path.join(basepath, filename)
          
       if not os.path.isfile(filename):
-         print('WARNING: ' + filename + ' not found', file=sys.stderr)
+         _warning(filename + ' not found')
       else:
          args.callback(filename)
          if return_contents: return _read_filename(filename), filename
@@ -145,7 +150,7 @@ def quaddepend(args):
 
    for c in game_data.get('constants', {}).values():
       if isinstance(c, dict):
-         if (c.get('type', '') in ['raw', 'string', 'table']) and ('url' in c):
+         if (c.get('type', '') in ['data', 'raw', 'string', 'table']) and ('url' in c):
             _depend(c['url'], args, basepath)
    
 
@@ -160,5 +165,6 @@ if __name__== '__main__':
    args = parser.parse_args()
    args.callback = print
    args.title_callback = None
+   args.quadpath = '.'
    quaddepend(args)
 

@@ -192,6 +192,11 @@ def parse_args():
         help="Do not check for newer versions of quadplay on github. Never checks when in kiosk mode")
 
     parser.add_argument(
+        '--nosleep',
+        default=False,
+        help="Do not allow sleeping (for attract mode displays)")
+
+    parser.add_argument(
         'gamepath',
         type=str,
         default='',
@@ -1108,6 +1113,9 @@ def main():
         else:
             url += '&update=1'
 
+    if args.nosleep:
+        url += '&nosleep=1'
+            
     # Sanitized username
     url += '&name=' + re.compile('[^A-Za-z0-9_]').sub('', getpass.getuser())
     

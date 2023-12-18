@@ -2156,7 +2156,7 @@ Array
 
 `find(array, x, i default 0, comparator default ==)`
 : Find the index of the element whose value is `x`, starting at
-  optional index `i` (default 0).  Returns `∅` if not found. 
+  optional index `i`.  Returns `∅` if not found. 
   
   Unless a function is for `comparator`, uses `==` to compare `x` to
   the array values. If a comparator is present, any non-falsy return
@@ -2376,6 +2376,10 @@ String
   - `"loop"`
   - `"clamp"` (default, other unsupported values are silentely treated as clamp instead of failing)
 
+`capitalized(string)`
+: Returns a new string with the first letter of each word capitalized. Existing capital
+  letters are unchanged.
+
 `contains(string, substring)`
 : Returns `true` if `substring` appears at least once in `string`
   and `false` otherwise.
@@ -2420,6 +2424,9 @@ String
   The suffixes `°`, `degrees`, `deg`, and `%` can be added to the `0` forms to
   force the rounding to occur after to conversion to degree measure or percentage.
   For example, `format_number(0.8123, "0.0%")` produces `"81.2%"`.
+
+  The prefix `+` can be added to all forms to force a leading + sign when
+  the number is positive.
 
 `last_key(string)`
 : Returns `size(string) - 1`.
@@ -2535,9 +2542,9 @@ Object
 : Delete one element that is `== v`, or do nothing if there is no such element.
   See also `remove_values()`.
 
-`find(object, x, ignored default 0, comparator default ==)`
+`find(object, x, start_key default ∅, not_found_value default ∅, comparator default ==)`
 : Find a key for which the value is `x`.
-  Returns `∅` if not found. Uses `comparator` to compare `x` to array values.
+  Returns `not_found_value` if not found. Uses `comparator` to compare `x` to array values.
   O(n) time in the number of key-value pairs. The `ignored` parameter is
   present to match the signature of the array and string versions of
   `find()` but does nothing in the object case.
@@ -6558,7 +6565,10 @@ The available constants types are:
   - Like an `object`, but may contain only `number` valued properties
 - `object`
 - `array`
+  - inline in the `value` field or from a CSV file `url`
 - `table`
+  - from a CSV file, interpreted as an object of arrays, array of objects, object of objects, or object of arrays
+    depending on options specified
 - `reference`
   - The value of a reference is the name of another constant, asset, or named
     sprite of the form `sprite_asset_name.sprite_name`. These
@@ -8615,6 +8625,10 @@ HTML query arguments:
 `kiosk`
 : If `1`, hide the entire menu bar. Cannot be set with `IDE`
 
+`nosleep`
+: If `1`, prevent sleeping in kiosk and normal mode, no matter
+  what the autosleep setting is.
+
 `quit`
 : What the "quit to system" menu option in the pause menu and the `quit_game()` function do:
   - `launcher`: Return to the launcher or IDE. This is forced
@@ -9136,11 +9150,10 @@ quality produced by Photoshop for color reduction.
 Road Map
 ====================================================================================
 
-Quadplay is about 90% of the way to version 1.0. The API is stable,
-and many people are using it to make hobby games, participate in game
-jams, and to learn/teach programming.
+The <quadplay/> API is stable, and many people are using it to make
+hobby games, participate in game jams, and to learn/teach programming.
 
-The soul of quadplay as a console is described by:
+The soul of <quadplay/> as a console is described by:
 
 - Up to four players with a shared screen
 - Minimal time from launch to main play
@@ -9164,14 +9177,12 @@ The overarching design principles of the quadplay IDE and language are:
 There's a long feature list and a short bug list that I'm working
 on. The highlights of this are, in priority order:
 
-[ ] Private screens in multiplayer
 [ ] Built-in IDE
   [ ] Map editor
   [ ] Extended constant editor
   [ ] Sprite editor
   [ ] Font editor
 [ ] Shadowing/line of sight
-[ ] PiBoy DMG support
 [ ] Standalone IDE program (Python and browser not required)
   [ ] macOS
   [ ] Windows
@@ -9183,7 +9194,6 @@ on. The highlights of this are, in priority order:
 [ ] Export to:
   [ ] macOS binary executable
   [ ] Windows binary executable
-<!-- [ ] Save to Google Drive for online IDE -->
 
 
 Credits

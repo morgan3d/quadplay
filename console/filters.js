@@ -84,11 +84,13 @@ EuroFilter.prototype.update = function (x, dt) {
 
     if ((param.smoothValue === undefined) || isNaN(param.smoothValue) || (dt <= 0) || (dt === Infinity)) {
         // First value
+        console.assert(! isNaN(x));
         param.smoothValue = x;
         param.smoothDerivative = 0;
         return;
     }
     
+    console.assert(dt !== 0);
     // Filter the derivative
     const dx = (x - param.smoothValue) / dt;
     param.smoothDerivative = smoothLerp(dx, param.smoothDerivative, dt, param.derivativeCutoff);

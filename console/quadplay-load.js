@@ -619,9 +619,9 @@ function loadConstants(constantsJson, gameURL, isDebugLayer, result) {
             } else {
                 throw 'Unsupported file format for ' + definition.url;
             }
-        } else if ((definition.type === 'table') && (definition.url !== undefined)) {
+        } else if ((definition.type === 'table' || definition.type === 'array') && (definition.url !== undefined)) {
             if (isDebugLayer) {
-                throw 'table url constants not supported in debug.json (' + c + ')';
+                throw definition.type + ' url constants not supported in debug.json (' + c + ')';
             }
             // Raw value loaded from a URL
             const constantURL = makeURLAbsolute(gameURL, definition.url);
@@ -968,7 +968,6 @@ function loadData(name, json, jsonURL) {
     const forceReload = computeForceReloadFlag(dataURL);
 
     // No caching for data.
-
     const dataType = dataURL.split('.').pop().toLowerCase();
 
     // We construct a holder for the value, so that something can be
@@ -2586,9 +2585,15 @@ function parseCSV(strData, trim) {
 
 /** Used by both constants and assets to load and parse a CSV file.
     Stores the result into outputObject[outputField] and then 
-    invokes callback() if it is specified. */
+    invokes callback() if it is specified.
+
+*/
 function loadCSV(csvURL, definition, outputObject, outputField, callback) {
+    const arrayOutput = definition.type === 'array';
+    
+    console.assert(definition.type === 'csv' || arrayOutput);
     console.assert(outputObject);
+    
     loadManager.fetch(csvURL, 'text', null, function (csv) {
         // Parse cells
         let grid = parseCSV(csv, definition.trim !== false);
@@ -2600,17 +2605,17 @@ function loadCSV(csvURL, definition, outputObject, outputField, callback) {
             grid = transposeGrid(grid);
         }
 
-        const row_type = (definition.transpose ? definition.column_type : definition.row_type) || 'object';
-        const col_type = (definition.transpose ? definition.row_type : definition.column_type) || 'object';
+        const row_type = arrayOutput ? 'array' : (definition.transpose ? definition.column_type : definition.row_type) || 'object';
+        const col_type = arrayOutput ? 'array' : (definition.transpose ? definition.row_type : definition.column_type) || 'object';
 
-        if (definition.ignore_first_row || (definition.ignore_first_column && definition.transpose)) {
+        if (! arrayOutput && (definition.ignore_first_row || (definition.ignore_first_column && definition.transpose))) {
             // Remove the first row of each column
             for (let x = 0; x < grid.length; ++x) {
                 grid[x].shift();
             }
         }
         
-        if (definition.ignore_first_column || (definition.ignore_first_row && definition.transpose)) {
+        if (! arrayOutput && (definition.ignore_first_column || (definition.ignore_first_row && definition.transpose))) {
             // Remove the first column
             grid.shift();
         }
@@ -2653,6 +2658,17 @@ function loadCSV(csvURL, definition, outputObject, outputField, callback) {
                     } // for row
                 } // for col
             } // array of objects
+        }
+
+        if (definition.type === 'array') {
+            // Convert to a single flat array
+            const old = data;
+            data = new Array();
+            for (const a of old) {
+                for (const v of a) {
+                    data.push(v);
+                }
+            }
         }
 
         outputObject[outputField] = data;

@@ -1,9 +1,3 @@
-/* True if value `target` appears in `container` and false
-   otherwise */
-def contains(container, target, comparator):
-    return find(container, target, ∅, comparator) ≠ ∅
-    
-
 /* Given a set of functions, returns a new function that
    runs them all in series on the same arguments. */
 def combine(…func_array):

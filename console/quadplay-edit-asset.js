@@ -488,7 +488,6 @@ function readNumberFromControl(controlName, defaultValue) {
 }
 
 
-
 function readIntFromControl(controlName, defaultValue) {
     const a = parseInt(document.getElementById(controlName).value)
     if (! isFinite(a)) {
@@ -497,6 +496,7 @@ function readIntFromControl(controlName, defaultValue) {
         return Math.round(a);
     }
 }
+
 
 /* 
    templateParameters is a table. Each key triggers a SINGLE
@@ -558,6 +558,126 @@ function createNewAssetFromTemplate(assetName, gamePath, fileName, type, dataTyp
 
 function hideNewAssetDialog() {
     document.getElementById('newAssetDialog').classList.add('hidden');
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function onCloneAsset(assetName) {
+    document.getElementById('cloneAssetDialog').classList.remove('hidden');
+
+    document.getElementById('cloneAssetSrcName').innerHTML = assetName;
+
+    // Remove any leading slash, which is part of the URL but will
+    // confuse a user by looking like an absolute filesystem path
+    const gamePath = getGamePath().replace(/^\//, '');
+    const srcUrl = gameSource.json.assets[assetName];
+    const srcAbsoluteUrl = ((srcUrl.indexOf(':') === -1) ?
+                            gamePath : '') + srcUrl;
+    
+    document.getElementById('cloneAssetSrcUrl').innerHTML = srcAbsoluteUrl;
+    
+    document.getElementById('cloneAssetDstUrl').innerHTML = gamePath +
+        gameSource.json.assets[assetName].replace(/^.*\//, '');
+    
+    document.getElementById('cloneAssetKeepOriginal').checked = false;
+    document.getElementById('cloneAssetNewName').disabled = true;
+    document.getElementById('cloneAssetNewName').value = '';
+}
+
+
+function hideCloneAssetDialog() {
+    document.getElementById('cloneAssetDialog').classList.add('hidden');
+}
+
+
+function onCloneAssetCreate() {
+    // The order of operations in this function is convoluted because
+    // it must asynchronously read the asset JSON, and then may need
+    // to read the asset data, before it can write.
+    
+    hideCloneAssetDialog();
+    
+    const add = document.getElementById('cloneAssetKeepOriginal').checked;
+
+    const srcAssetName = document.getElementById('cloneAssetSrcName').innerHTML;
+    const dstAssetName = add ? document.getElementById('cloneAssetNewName').value.replace(/(^_|[^_0-9A-Za-z])/g, '') : srcAssetName;
+
+    const cloneData = document.getElementById('cloneAssetCloneData').checked;
+
+    // Absolute
+    const srcAbsoluteUrl = document.getElementById('cloneAssetSrcUrl').innerHTML;
+
+    // Relative to the game
+    const dstUrl = document.getElementById('cloneAssetDstUrl').innerHTML.replace(/^.*\//, '');
+
+    // Accumulated after the LoadManager is created
+    const filesToWrite = [];
+
+    const cloneLoadManager = new LoadManager({
+        callback: function () {
+            serverWriteFiles(
+                filesToWrite,
+                
+                function () {
+                    // Modify game JSON to reference the new file
+                    gameSource.json.assets[dstAssetName] = dstUrl;
+                    
+                    // Save and reload game JSON
+                    serverSaveGameJSON(function () {
+                        loadGameIntoIDE(window.gameURL, function () {
+                            // Select the renamed asset
+                            onProjectSelect(document.getElementById('projectAsset_' + dstAssetName), 'asset', gameSource.assets[dstAssetName]);
+                        }, true);
+                    });
+                }); // write files
+        } // load manager callback
+    }); // load manager
+
+    // Clone the asset JSON
+    cloneLoadManager.fetch(
+        srcAbsoluteUrl,
+        'text',
+        null,
+        function (assetJson) {
+            const dstAssetUrl = assetJson.url.replace(/^.*\//, '');
+            
+            // Change the url in the file to be the new relative url for the json
+            assetJson.url = dstAssetUrl;
+
+            const dstAbsoluteUrl = getGamePath() + dstUrl;
+            
+            filesToWrite.push({
+                filename: dstAbsoluteUrl,
+                contents: assetJson,
+                encoding: 'utf8'});
+
+            if (cloneData) {
+                let srcAssetAbsoluteUrl = assetJson.url;
+                if (srcAssetAbsoluteUrl.indexOf(':') === -1) {
+                    // This src asset was specified is relative to the
+                    // asset json, so copy over its path prefix
+                    srcAssetAbsoluteUrl = srcAbsoluteUrl.replace(/\/[^\/]*$/, '/') + srcAssetAbsoluteUrl;
+                }
+                
+                const dstAssetAbsoluteUrl = getGamePath() + dstAssetUrl;
+
+                // Copy the underlying asset
+                cloneLoadManager.fetch(
+                    srcAssetAbsoluteUrl,
+                    'arraybuffer',
+                    null,
+                    function (assetData) {
+                        filesToWrite.push({
+                            filename: dstAssetAbsoluteUrl,
+                            contents: assetData,
+                            encoding: (typeof assetData === 'string' ? 'utf8' : 'binary')
+                        });
+                    });
+            } // if clone data
+        }); // fetch first
+
+    // Start the loading, which will trigger the saving
+    cloneLoadManager.end();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -643,10 +763,11 @@ function showAssetContextMenu(assetName) {
             }
         }    
     }
-          
+
     customContextMenu.innerHTML =
         `<div onmousedown="onProjectSelect(${getElement}, 'asset', gameSource.assets['${assetName}'])">Inspect</div>
-        <div onmousedown="onRenameAsset('${assetName}')">Rename&hellip;</div>` +
+        <div onmousedown="onRenameAsset('${assetName}')">Rename&hellip;</div>
+        <div onmousedown="onCloneAsset('${assetName}')">Clone&hellip;</div>` +
         externalCmds + 
         `<hr><div onmousedown="onRemoveAsset('${assetName}')"><span style="margin-left:-18px; width:18px; display:inline-block; text-align:center">&times;</span>Remove '${assetName}'</div>`;
     showContextMenu('project');

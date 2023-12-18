@@ -150,7 +150,7 @@ Profiler.prototype.endFrame = function(newPhysicsTime, newGraphicsTime, newLogic
     // How much more graphics on the GPU would have cost if we hadn't
     // missed frames
     const missedFrameCompensation = this.framesThisInterval / Math.max(this.framesThisInterval - this.missedFrames * this.graphicsPeriod, 1);
-    console.assert(this.framesThisInterval > this.missedFrames * this.graphicsPeriod);
+    console.assert(this.framesThisInterval >= this.missedFrames * this.graphicsPeriod);
 
     // Reset for new interval
     this.missedFrames = 0;
@@ -188,6 +188,8 @@ Profiler.prototype.endFrame = function(newPhysicsTime, newGraphicsTime, newLogic
         const physicsTime  = this.smoothPhysicsTime.get();
         const graphicsTime = this.smoothGraphicsTime.get();
         const fixedCPUTime = logicTime + physicsTime;
+
+        console.assert(! isNaN(this.smoothGPUTime.get()));
 
         // Values that can be affected by changing the graphics rate
         const variableCPUTime = graphicsTime;

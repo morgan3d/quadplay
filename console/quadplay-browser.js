@@ -1204,7 +1204,8 @@ function $systemPrint(m, style) {
 // Allows HTML. location may be undefined
 function $outputAppend(m, location, linkAll) {
     if (m !== '' && m !== undefined) {
-        // Uncomment to debug mystery output
+        // Uncomment to debug mystery output. Also
+        // use your browser debugger to 'pause on caught exceptions'
         //console.trace();
         
         // Remove tags and then restore HTML entities

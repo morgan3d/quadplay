@@ -511,8 +511,15 @@ div.oneConstantEditor:hover .nudge {
 
 /* Hide the debug override in compact view until hover */
 div.oneConstantEditor .debugOverrideCheckbox {
-    visibility:hidden
+    visibility:hidden;
+    margin-bottom: 10px;
+    margin-top: -2px;
 }
+
+div.oneConstantEditor .debugOverrideCheckbox:checked {
+    margin-bottom: 0px;
+}
+
 
 /* Reveal the checkbox on hover or when checked */
 div.oneConstantEditor:hover .debugOverrideCheckbox,
@@ -882,6 +889,7 @@ code, .code {
     z-index:  10;
 }
 
+
 #debugger > label {
     font-family: quadplay;
     font-size: 13px;
@@ -906,6 +914,31 @@ code, .code {
     width: unset;
     border-left: none;
 }
+
+/* When in the TestUI *and* the screen is wide, adjust the debugger
+   layout to also show the constant editor.
+*/
+@media screen and (min-width: 640px) {
+
+    .TestUI #debugger {
+        left: 50%;
+        text-wrap: nowrap;
+    }
+
+    /* Hide the project view */
+    .TestUI #project {
+        display: none;
+    }
+
+    .TestUI #editorFrame {
+        display: unset;
+        visibility: visible;
+        left: 0px;
+        right: 50%;
+        z-index: 12;
+    }
+}
+
 
 /**************************************************/
 

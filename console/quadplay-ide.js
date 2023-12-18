@@ -53,8 +53,10 @@ let serverConfig = {};
 const hasBrowserScaleBug = isSafari;
 
 // Can the game sleep when idle to save power?
-let autoSleepEnabled = (getQueryString('kiosk') === '1') ||
-    (localStorage.getItem('autoSleepEnabled') !== 'false');
+let autoSleepEnabled =
+    ((getQueryString('kiosk') === '1') ||
+     (localStorage.getItem('autoSleepEnabled') !== 'false')) &&
+    (getQueryString('nosleep') !== '1');
 
 
 const noop = ()=>{};
@@ -492,7 +494,7 @@ function requestFullScreen() {
 
     try {
         // Capture the escape key (https://web.dev/keyboard-lock/)
-        navigator.keyboard.lock();
+        window.top.navigator.keyboard.lock();
     } catch (e) {}
 }
 
@@ -588,6 +590,12 @@ function onResize() {
     let windowWidth = window.innerWidth, windowHeight = window.innerHeight;
 
     let scale = 1;
+
+    const editorFrame = document.getElementById('editorFrame');
+    if (uiMode !== 'Test') {
+        // Undo the setting from Test mode
+        editorFrame.style.top = '0px';
+    }
     
     switch (uiMode) {
     case 'Editor':
@@ -607,6 +615,14 @@ function onResize() {
         if (SCREEN_WIDTH <= (384>>1) && SCREEN_HEIGHT <= (224 >> 1)) {
             // Half-resolution games run with pixel doubling
             scale *= 2;
+        } else if (SCREEN_WIDTH === 640 && SCREEN_HEIGHT === 360) {
+            if (scale === 1.0 || scale === 2.0) {
+                scale *= 0.5;
+            } else {
+                // This fits at a slightly larger size, although it
+                // loses any semblance of integer scaling
+                scale *= 0.50 * 0.90 / 0.75;
+            }
         } else if (SCREEN_WIDTH > 384) {
             // Greater than normal resolution runs at half scale
             scale *= 0.5;
@@ -676,6 +692,8 @@ function onResize() {
     case 'Windowed':
     case 'Test':
         {
+            // Switch to constants view
+            
             // What is the largest multiple SCREEN_HEIGHT that is less than windowHeightDevicePixels?
             const isKiosk = getQueryString('kiosk') === '1';
             const headerBar = isKiosk ? 0 : 24;
@@ -691,11 +709,19 @@ function onResize() {
             
             screenBorder.style.left = Math.round((windowWidth - screenBorder.offsetWidth * zoom - 4) / (2 * zoom)) + 'px';
             if (uiMode === 'Test') {
+                // Show the constants
+                onProjectSelect(undefined, 'constant', undefined);
                 screenBorder.style.top = '0px';
                 const S = (PRIVATE_VIEW && ! isGuesting && ! showPrivateViewsEnabled) ? 2 : 1;
-                document.getElementById('debugger').style.top = Math.round(S * scale * screenBorder.offsetHeight + 25) + 'px';
+
+                // Put the top of the debugger at the bottom of the emulator
+                const top = Math.round(S * scale * screenBorder.offsetHeight) + 'px';
+                document.getElementById('debugger').style.top = top;
+                editorFrame.style.top = top;
+                
                 screenBorder.style.transformOrigin = 'center top';
             } else {
+                // Fall through from non-Test UIs                
                 screenBorder.style.transformOrigin = 'center';
                 screenBorder.style.top = Math.round((windowHeight - screenBorder.offsetHeight * zoom - headerBar - 2) / (2 * zoom)) + 'px';
             }
@@ -1009,7 +1035,7 @@ function onPlayButton(slow, isLaunchGame, args, callback) {
                 if (gameSource.json.midi_sysex && midi && ! midi.$options.sysex) {
                     // Reinitialize MIDI using sysex requests, and wipe out MIDI devices while waiting
                     midiReset();
-                    navigator.requestMIDIAccess({sysex: true, software: true}).then(onMIDIInitSuccess, onMIDIInitFailure);
+                    window.top.navigator.requestMIDIAccess({sysex: true, software: true}).then(onMIDIInitSuccess, onMIDIInitFailure);
                 }
                 
                 restartProgram(isLaunchGame ? BOOT_ANIMATION.NONE : useIDE ? BOOT_ANIMATION.SHORT : BOOT_ANIMATION.REGULAR);
@@ -2068,6 +2094,11 @@ let soundEditorCurrentSound = null;
     - `object` is the underlying gameSource child to modify
  */
 function onProjectSelect(target, type, object) {
+    // Don't do anything if the game hasn't loaded yet. Any
+    // editor is likely to crash at this point with undefined
+    // children.
+    if (! gameSource || ! gameSource.json) { return; }
+    
     // Hide all editors
     const editorFrame = document.getElementById('editorFrame');
     for (let i = 0; i < editorFrame.children.length; ++i) {
@@ -4221,8 +4252,8 @@ function redefineConstantByName
 
     const gameValue   = nestedGet(constants, key);
     const debugLookup = nestedGetObject(debugConstants, key, true);
-    const debugJSON   = debugConstantsJSON ? nestedGet(debugConstantsJSON, key, true) : undefined;
-    
+    const debugJSON   = debugConstantsJSON ? nestedGet(debugConstantsJSON, key, true, true) : undefined;
+
     const value =
           (debugLookup && debugJSON && 
            debugLookup.key in debugLookup.parent &&
@@ -4244,7 +4275,8 @@ function redefineConstantByName
 
 
 /** Redefines an existing constant on the give environment and its CONSTANTS object
-    when the value is known to the caller.
+    when the value is known to the caller. This is used for the initial setting
+    of constants.
     
     The map is used for cloning and can be undefined.
 
@@ -4256,12 +4288,16 @@ function redefineConstant(environment, key, value, alreadySeenMap) {
     // When looking for the gameJSON, some constants such as
     // SCREEN_SIZE will not be present, so allow this to fail to
     // undefined.
-    const gameJSON = nestedGet(gameSource.json.constants, key, true);
+    const gameJSON = nestedGet(gameSource.json.constants, key, true, true);
     
-    if (gameJSON && (gameJSON.type === 'object' || gameJSON.type === 'array')) {
-        // Recursive case. Define the leaves as immutable properties,
-        // and everything else as a frozen clone
-        value = recursiveDefineConstantChain(gameJSON, value, alreadySeenMap);
+    if (gameJSON && (gameJSON.type === 'object' || (gameJSON.type === 'array' && gameJSON.url === undefined))) {
+        // Recursive case (note that arrays loaded from urls are
+        // excluded). Define the leaves as immutable properties, and
+        // everything else as a frozen clone. This path is only used
+        // for the initial definition.
+        const debugJSON  = gameSource.debug && gameSource.debug.json && nestedGet(gameSource.debug.json.constants, key, true, true);
+        const debugValue = gameSource.debug && gameSource.debug.constants && nestedGet(gameSource.debug.constants, key, true, false);
+        value = recursiveDefineConstantChain(gameJSON, value, debugJSON, debugValue, alreadySeenMap);
     } else {
         value = frozenDeepClone(value, alreadySeenMap || new Map());
     }
@@ -4273,17 +4309,24 @@ function redefineConstant(environment, key, value, alreadySeenMap) {
 
 /** Define leaves within `value` (non-Array/Object) as immutable
     properties and everything else as a frozen deep clone. */
-function recursiveDefineConstantChain(json, value, alreadySeenMap) {
+function recursiveDefineConstantChain(json, value, debugJson, debugValue, alreadySeenMap) {
     console.assert(json.type === 'array' || json.type === 'object');
     
     const newObj = json.type === 'array' ? [] : {};
     for (let k in value) {
-        const v = value[k];
         const j = json.value[k];
+        const v = value[k];
 
-        const newValue = (j.type === 'array' || j.type === 'object') ?
-              recursiveDefineConstantChain(j, v, alreadySeenMap) :
-              frozenDeepClone(v, alreadySeenMap);
+        const dj = debugJson && debugJson.value[k];
+        const dv = debugValue && debugValue[k];
+
+        let newValue;
+
+        if (j.type === 'array' || j.type === 'object') {
+            newValue = recursiveDefineConstantChain(j, v, dj, dv, alreadySeenMap);
+        } else {
+            newValue = frozenDeepClone(dj && dj.enabled ? dv : v, alreadySeenMap);
+        }
         
         defineImmutableProperty(newObj, k, newValue);
     }
@@ -4302,13 +4345,13 @@ function recursiveDefineConstantChain(json, value, alreadySeenMap) {
    instead of parent[k] after the first iteration.  This is used for
    constants JSON parsing.
 */
-function nestedGetObject(root, key, undefinedOnMissing, valueProperty) {
+function nestedGetObject(root, key, undefinedOnMissing = false, valueProperty = false) {
     console.assert(root);
 
     // Recursively finds the object to be modified and the child
     let parent = root;
     let i = key.indexOf('.');
-    
+
     while (i !== -1) {
         parent = parent[key.substring(0, i)];
         if (parent === undefined && undefinedOnMissing) { return undefined; }
@@ -4333,8 +4376,8 @@ function nestedGet(root, key, undefinedOnMissing, valueProperty) {
 
 
 /* Performs a array or table assignment of `root[key] = value` */
-function nestedSet(root, key, value) {
-    const k = nestedGetObject(root, key);
+function nestedSet(root, key, value, valueProperty) {
+    const k = nestedGetObject(root, key, false, valueProperty);
     k.parent[k.key] = value;
 }
 
@@ -4345,7 +4388,7 @@ function defineImmutableProperty(object, key, value) {
     const i = key.indexOf('.');
 
     if (i === -1) {
-        // Non-recursive case
+        // Base case.
         // Set `configurable` to true so that we can later redefine
         Object.defineProperty(object, key, {configurable: true, enumerable: true, writable: false, value: value});
     } else {
@@ -4608,7 +4651,7 @@ function loadGameIntoIDE(url, callback, loadFast, noUpdateCode) {
 
             {
                 const summary = `${resourceStats.sourceStatements} statements, ${resourceStats.sounds} sounds, ${Math.round(resourceStats.spritePixels / 1000)}k pixels`;
-                s += `<button style="margin-top: 5px; font-size: 80%" onclick="navigator.clipboard.writeText('${summary}')">Copy Summary</button>`;
+                s += `<button style="margin-top: 5px; font-size: 80%" onclick="window.top.navigator.clipboard.writeText('${summary}')">Copy Summary</button>`;
             }
 
             const resourceArray = [
@@ -5192,7 +5235,7 @@ setColorScheme(localStorage.getItem('colorScheme') || 'dots');
     }
     setGamepadOrderMap(tmp);
 }
-onResize();
+
 // Set the initial size
 setFramebufferSize(SCREEN_WIDTH, SCREEN_HEIGHT, false);
 reloadRuntime();

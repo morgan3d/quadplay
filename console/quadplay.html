@@ -277,7 +277,9 @@
 
     <div id="realBody" style="position: absolute; top: 23px; left: 0px; right: 0px; bottom: 16px">
     <div class="project ide unselectable idePart" id="project"> </div>
-    
+
+    <div id="emulatorFrame" class="ide idePart"> </div>
+
     <div id="editorFrame" class="ide idePart">
       <div id="modeEditor" style="position:absolute; top:0px; left:0; visibility:hidden"> </div>
       <div id="constantEditor" style="position:absolute; top:0; left:0; right: 0; bottom: 0; overflow: scroll; padding: 10px; visibility:hidden"></div>
@@ -317,9 +319,6 @@
         <div id="ace"> </div>
       </div>  <!-- codePlusFrame -->
     </div>
-    
-    <div id="emulatorFrame" class="ide idePart"> </div>
-    
 
     <tabbox id="debugger">
       <input id="performanceTab" type="radio" name="tabs" checked>
@@ -772,6 +771,28 @@
       </div>
     </div>
 
+    <div id="cloneAssetDialog" class="modal hidden">
+      <div class="dialog" style="top:10px; width: 485px; border-collapse: separate; border-spacing: 0px 10px">
+        <center>
+          <span class="title">Clone Asset</span>
+        </center>
+        <div style="margin-top:20px">
+          Cloning <code id="cloneAssetSrcName">blip_sound</code><br>from <code id="cloneAssetSrcUrl">quad://sounds/blip_04.sound.json</code><br>to <code id="cloneAssetDstUrl">~/my_quadplay/space_game/blip_04.sound.json</code>
+        </div>
+        <div style="margin-left: 50px; margin-top: 20px">
+          <label style="margin-left:-4px"><input type="checkbox" checked disabled>Clone metadata (required)</label>
+          <br><label style="margin-left:-4px"><input id="cloneAssetCloneData" type="checkbox" checked>Clone Asset Data</label>
+          <br><label style="margin-left:-4px"><input id="cloneAssetKeepOriginal" type="checkbox" checked onchange="document.getElementById('cloneAssetNewName').disabled = ! this.checked;">Keep Original in Game</label>
+          <br><label style="margin-left: 20px; margin-right: 10px">New Asset Name</label><input type="text" disabled id="cloneAssetNewName" autocomplete="off"></input>
+        </div>
+
+        <center style="margin-top:20px">
+          <button type="button" onclick="hideCloneAssetDialog()">Cancel</button><span style="display: inline-block; width:40px"> </span>
+          <button type="button" id="cloneAssetCreateButton" onclick="onCloneAssetCreate()">Create</button>
+        </center>
+      </div>
+    </div>
+
     <div id="newAssetDialog" class="modal hidden">
       <div class="dialog" style="top:10px; width: 485px; border-collapse: separate; border-spacing: 0px 10px">
         <center>
@@ -832,7 +853,7 @@
               <label style="margin-left:-3px"><input id="newAssetMapCloneSpritePng" type="checkbox">Clone <code>png</code></label>
             </td>
           </tr>
-          <tr><td></td></tr>                 
+          <tr><td></td></tr>
           <tr valign="top">
             <td>Orientation</td>
             <td colspan=3 style="padding-top: 3px">

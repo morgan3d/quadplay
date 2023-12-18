@@ -175,7 +175,7 @@ function onMIDIMessage(message) {
 
 function onMIDIInitSuccess(midiAccess) {
     console.log('MIDI: Initialize success');
-    
+
     function makeChannel() {
         const channel = {
             $note_active: false,
@@ -306,7 +306,13 @@ function onMIDIInitSuccess(midiAccess) {
         // through. This probably means that it was blocked on a user
         // dialog, and that the game started with the midi object in a
         // bad state. Restart the game.
-        onRestartButton();
+
+        // In kiosk mode, this causes the virtual GPU to fail
+        // to render, so as a temporary workaround we are not
+        // running it in that mode.
+        if (getQueryString('kiosk') !== '1') {
+            onRestartButton();
+        }
     }
 }
 

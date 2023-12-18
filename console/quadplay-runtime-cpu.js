@@ -474,13 +474,11 @@ function make_array(size, value, value_clone) {
 
 
 function contains(a, x, comparator) {
-    return find(a, x, undefined, comparator) != undefined;
+    return find(a, x, undefined, comparator) !== undefined;
 }
 
 
-function find(a, x, s, comparator) {
-    s = s || 0;
-
+function find(a, x, start, comparator) {
     // Type of what we are looking for
     const t = typeof x;
     
@@ -489,25 +487,52 @@ function find(a, x, s, comparator) {
     if ((comparator !== undefined) && (! (comparator === equivalent && ((t === 'number' && ! is_nan(x)) || t === 'undefined' || t === 'function' || t === 'string' || t === 'boolean' || (typeof a === 'string'))))){
         if (Array.isArray(a) || typeof a === 'string') {
             const L = a.length;
-            for (let i = s; i < L; ++i) {
+            start = start || 0;
+            for (let i = start; i < L; ++i) {
                 if (comparator(a[i], x)) { return i; }
             }
         } else { // Object
-            for (let k in a) {
-                if (comparator(a[k], x)) { return k; }
-            }
+            if (start === undefined) {
+                for (let k in a) {
+                    if (comparator(a[k], x)) { return k; }
+                }
+            } else {
+                // Do not compare until the start key is observed
+                for (let k in a) {
+                    if ((start !== undefined) && comparator(a[k], start)) {
+                        start = undefined;
+                    }
+                    
+                    if ((start === undefined) && comparator(a[k], x)) {
+                        return k;
+                    }
+                }
+            } // if start
         }
     } else if (Array.isArray(a)) {
         const L = a.length;
-        for (let i = s; i < L; ++i) {
+        for (let i = start || 0; i < L; ++i) {
             if (a[i] === x) { return i; }
         }
     } else if (typeof a === 'string') {
-        const i = a.indexOf(x, s);
+        const i = a.indexOf(x, start || 0);
         if (i !== -1) { return i; }
     } else {
-        for (let k in a) {
-            if (a[k] === x) { return k; }
+        if (start === undefined) {
+            for (let k in a) {
+                if (a[k] === x) { return k; }
+            }
+        } else {
+            // Start key specified
+            // Do not compare until the start key is observed
+            for (let k in a) {
+                if ((start !== undefined) && (a[k] === start)) {
+                    start = undefined;
+                }
+                if ((start == undefined) && (a[k] === start)) {
+                    return k;
+                }
+            }
         }
     }
     
@@ -7652,12 +7677,19 @@ function dot(a, b) {
     return s;
 }
 
+
 function lowercase(s) {
     return s.toLowerCase();
 }
 
+
 function uppercase(s) {
     return s.toUpperCase();
+}
+
+
+function capitalized(s) {
+    return s.replaceAll(/(^|[ 0-9.,#$%\^&*!\?@;:`~+=\-'"<>\]\[()/\\|_\n])./g, function (x) { return x.toUpperCase(); })
 }
 
 
@@ -7679,30 +7711,44 @@ var $ordinal = $Object.freeze(['zeroth', 'first', 'second', 'third', 'fourth', '
 function format_number(n, fmt) {
     if (fmt !== undefined && ! is_string(fmt)) { $error('The format argument to format_number must be a string'); }
     if (! is_number(n)) { $error('The number argument to format_number must be a number'); }
+
+    let addPlus = /^ *\+/.test(fmt);
+    if (addPlus) {
+        fmt = fmt.replace('+', '');
+        if (n < 0) { addPlus = false; }
+    }
+
+    let s;
     switch (fmt) {
     case 'percent':
     case '%':
-        return $Math.round(n * 100) + '%';
+        s = $Math.round(n * 100) + '%';
+        break;
     case 'commas':
     case ',':
-        return n.toLocaleString('en');
+        s = n.toLocaleString('en');
+        break;
     case 'spaces':
-        return n.toLocaleString('fr');
+        s = n.toLocaleString('fr');
+        break;
     case 'binary':
-        return '0b' + n.toString(2);
+        s ='0b' + n.toString(2);
+        break;
     case 'degrees':
     case '°':
     case 'deg':
-        return $Math.round(n * 180 / $Math.PI) + '°';
+        s = $Math.round(n * 180 / $Math.PI) + '°';
+        break;
         
     case '0.#°':
     case '0.#deg':
         // Special case of optional decimal
-        return $unparseFixedDecimal(n * 180 / $Math.PI, 1) + '°';
+        s = $unparseFixedDecimal(n * 180 / $Math.PI, 1) + '°';
+        break;
 
     case 'fraction':
         {
-            const s = n < 0 ? '-' : '';
+            s = n < 0 ? '-' : '';
             const eps = 1e-10;
             n = $Math.abs(n);
             const frac = [1/4, '¼', 1/2, '½', 3/4, '¾', 1/3, '⅓', 2/3, '⅔', 1/5, '⅕'];
@@ -7718,22 +7764,24 @@ function format_number(n, fmt) {
                     }
                 }
             }
-            return s + n;
+            s += n;
         }
         break;
         
     case 'hex':
         if ($Math.abs(n) === Infinity) {
-            return n.toLocaleString('en');
+            s = n.toLocaleString('en');
         } else {
-            return '0x' + n.toString(16);
+            s = '0x' + n.toString(16);
         }
+        break;
+        
     case 'scientific':
         {
             let x = $Math.floor($Math.log10($Math.abs(n)));
             if ($Math.abs(x) === Infinity) { x = 0; }
             // round to 3 decimal places in scientific notation
-            let s = '' + ($Math.round(n * $Math.pow(10, 3 - x)) * 1e-3);
+            s = '' + ($Math.round(n * $Math.pow(10, 3 - x)) * 1e-3);
             // If rounding failed due to precision, truncate the
             // string itself
             s = s.substring(0, $Math.min((n < 0) ? 6 : 5), s.length);
@@ -7742,7 +7790,7 @@ function format_number(n, fmt) {
             for (let i = 0; i < e.length; ++i) {
                 s += $superscriptTable[e.charAt(i)];
             }
-            return s;
+            break;
         }
 
     case 'clock12':
@@ -7753,93 +7801,111 @@ function format_number(n, fmt) {
             const suffix = ((h % 24) < 12) ? 'am' : 'pm';
             h = h % 12;
             if (h === 0) { h = 12; }
-            return h + ':' + $padZero(m) + suffix;
+            h + ':' + $padZero(m) + suffix;
+            break;
         }
+        
     case 'clock24':
         {
             const m = $Math.floor(n / 60) % 60;
             const h = $Math.floor(n / 3600) % 24;
-            return h + ':' + $padZero(m);
+            s = h + ':' + $padZero(m);
+            break;
         }
     case 'stopwatch':
         {
             const m = $Math.floor($Math.abs(n) / 60) * $Math.sign(n);
-            const s = $padZero(n % 60);
+            const S = $padZero(n % 60);
             const f = $padZero((n - $Math.floor(n)) * 100);
-            return m + ':' + s + '.' + f;
+            s = m + ':' + S + '.' + f;
+            break;
         }
         
     case 'oldstopwatch':
         {
             const m = $Math.floor($Math.abs(n) / 60) * $Math.sign(n);
-            const s = $padZero(n % 60);
+            const S = $padZero(n % 60);
             const f = $padZero((n - $Math.floor(n)) * 100);
-            return m + '"' + s + "'" + f;
+            s = m + '"' + S + "'" + f;
+            break;
         }
 
     case 'ordinalabbrev':
         n = $Math.round(n);
         switch (n) {
-        case 1: return '1ˢᵗ';
-        case 2: return '2ⁿᵈ';
-        case 3: return '3ʳᵈ';
-        default: return '' + n + 'ᵗʰ';
+        case 1: s = '1ˢᵗ';
+        case 2: s = '2ⁿᵈ';
+        case 3: s = '3ʳᵈ';
+        default: s = '' + n + 'ᵗʰ';
         }
+        break;
 
     case 'ordinal':
         n = $Math.round(n);
         if (n >= 0 && n < $ordinal.length) {
-            return $ordinal[n];
+            s = $ordinal[n];
         } else {
-            return '' + n + 'ᵗʰ';
+            s = '' + n + 'ᵗʰ';
         }
+        break;
 
     case '':
     case undefined:
         if ($Math.abs(n) === Infinity) {
-            return n.toLocaleString('en');
+            s = n.toLocaleString('en');
         } else {
-            return '' + n;
+            s = '' + n;
         }
+        break;
         
     default:
         {
             if ($Math.abs(n) === Infinity) {
-                return n.toLocaleString('en');
-            }
-            
-            const match = fmt.match(/^( *)(0*)(\.0+)?(°|deg|degree|degrees|%)?$/);
-            if (match) {
-                let spaceNum = match[1].length;
-                const intNum = match[2].length;
-                const fracNum = match[3] ? $Math.max(match[3].length - 1, 0) : 0;
-                let suffix = match[4];
-
-                if (suffix === 'deg' || suffix === 'degrees' || suffix === 'degree' || suffix === '') {
-                    suffix = '°';
-                    n *= 180 / $Math.PI;
-                } else if (suffix === '%') {
-                    n *= 100;
-                }
-              
-                let s = $Math.abs(n).toFixed(fracNum);
-
-                let i = (fracNum === 0) ? s.length : s.indexOf('.');
-                while (i < intNum) { s = '0' + s; ++i; }
-
-                // Inject sign
-                if (n < 0) { s = '-' + s; --spaceNum; }
-                
-                while (i < intNum + spaceNum) { s = ' ' + s; ++i; }
-
-                if (suffix) { s += suffix; }
-                
-                return s;
+                s = n.toLocaleString('en');
             } else {
-                return '' + n;
+                const match = fmt.match(/^( *)(0*)(\.0+)?(°|deg|degree|degrees|%)?$/);
+                if (match) {
+                    let spaceNum = match[1].length;
+                    const intNum = match[2].length;
+                    const fracNum = match[3] ? $Math.max(match[3].length - 1, 0) : 0;
+                    let suffix = match[4];
+                    
+                    if (suffix === 'deg' || suffix === 'degrees' || suffix === 'degree' || suffix === '') {
+                        suffix = '°';
+                        n *= 180 / $Math.PI;
+                    } else if (suffix === '%') {
+                        n *= 100;
+                    }
+                    
+                    s = $Math.abs(n).toFixed(fracNum);
+                    
+                    let i = (fracNum === 0) ? s.length : s.indexOf('.');
+                    while (i < intNum) { s = '0' + s; ++i; }
+                    
+                    // Inject sign
+                    if (n < 0) { s = '-' + s; --spaceNum; }
+                    
+                    while (i < intNum + spaceNum) { s = ' ' + s; ++i; }
+                    
+                    if (suffix) { s += suffix; }
+                
+                } else {
+                    s = '' + n;
+                }
             }
         }
+    } // switch
+
+    if (addPlus) {
+        if (s[0] === ' ') {
+            // Leading spaces case
+            s = s.replace(/ (?=[^ ])/, '+');
+        } else {
+            s = '+' + s;
+        }
     }
+
+    return s;
 }
 
 
