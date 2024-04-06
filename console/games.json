@@ -2,11 +2,37 @@
     "mine": [],
     "examples": [
         {
+            "url": "quad://examples/anim_entity_example/",
+            "title": "anim_entity_example",
+            "description": "Example of a library that reads sprite timing out of a sprite json file.",
+            "version": 0,
+            "developer": "Stephan Steinbach",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
+        },
+        {
             "url": "quad://examples/animation/",
             "title": "Animation Example",
             "description": "",
             "version": 0,
             "developer": "Casual Effects"
+        },
+        {
+            "url": "quad://examples/bezier_eye_creature/",
+            "title": "Bezier Eye Creature",
+            "description": "Demo for the bezier rope library, including a spooky creature",
+            "version": 1,
+            "developer": "Stephan Steinbach",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
         },
         {
             "url": "quad://examples/boids/",
@@ -66,6 +92,19 @@
             "description": "Example of noise functions and draw_point",
             "version": 0,
             "developer": "Casual Effects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
+        },
+        {
+            "url": "quad://examples/color_wheel/",
+            "title": "color_wheel",
+            "description": "hsv() vs. artist_hsv_to_rgb() color wheels",
+            "version": 0,
+            "developer": "CasualEffects",
             "min_players": 1,
             "max_players": 1,
             "cooperative": false,

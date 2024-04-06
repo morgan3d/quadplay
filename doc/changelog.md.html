@@ -6,6 +6,26 @@
 Changes for both the specification and implementation in each release
 of [<quadplay/>](manual.md.html).
 
+2024 April 6: Update 99
+===================================
+
+- New example: Bezier Eye Creature
+- New example: Animated Entity
+- New example: Color Wheel
+- Changed kerning for monospace digit 1 to favor padding on the left
+  instead of right to make a leading 1 digit kern better
+- Improved documentation for `find_path()`, `hsv()`, `draw_text()`
+- Added `artist_hsv_to_rgb()`
+- Added more transformations to `3D.pyxl`
+- Added `random_key()`
+- Added `random_value(object)`
+- Added `MAT3x3_ORTHONORMALIZE()`
+- Changed the API for `3D.pyxl` to follow quadplay naming conventions
+- Changed physics simulation to force velocity and angular velocity (spin) to
+  exactly zero when an object sleeps with negligible velocity
+- Fixed missing Z term in `XYZ_DOT_XYZ()` intrinsic
+
+
 2023 December 17: Update 98
 ===================================
 

@@ -639,6 +639,14 @@ and CRT orange-screen retro phosophor effects.
 [Lift Team](../console/quadplay.html?game=quad://examples/lift_team&IDE=1) combines physics and dynamic constraints for an asymmetric platformer setup, where one
 player flies a helicopter that can lift the other player's mech.
 
+</td></tr><tr><td>![](../examples/anim_entity_example/label128.png)</td><td>
+[Animated Entity Example](../console/quadplay.html?game=quad://examples/anim_entity_example&IDE=1) Entity
+animation example simplified from _Beat The Gobblins_.
+
+</td></tr><tr><td>![](../examples/bezier_eye_creature/label128.png)</td><td>
+[Bezier Eye Creature](../console/quadplay.html?game=quad://examples/bezier_eye_creature&IDE=1) uses splines
+to create natural curves for a soft bodied creature.
+
 </td></tr><tr><td>![](../examples/sequence_demo/label128.png)</td><td>
 [Sequence Demo (transition effect)](../console/quadplay.html?game=quad://examples/sequence_demo&IDE=1)
 Shows how to use the sequence function to create a transition effect, which is
@@ -766,6 +774,21 @@ script.
 </td></tr><tr><td>![](../examples/multitouch/label128.png)</td><td>
 [Multitouch](../console/quadplay.html?game=quad://examples/multitouch&IDE=1) 
 Example of `device_control()` for reading multitouch input on touch screens.
+
+</td></tr><tr><td>![](../examples/bezier_eye_creature/label128.png)</td><td>
+[Bezier Eye Creature](../console/quadplay.html?game=quad://examples/bezier_eye_creature&IDE=1) 
+Example of a library that uses a simple quadratic bezier + spring system to
+simulate bouncy cable/rope/arms.
+
+</td></tr><tr><td>![](../examples/anim_entity_example/label128.png)</td><td>
+[Animation Entity Example](../console/quadplay.html?game=quad://examples/anim_entity_example&IDE=1) 
+By way of an anim entity library, demonstrates how to read sprite frame timing
+from a sprite sheet authored in aseprite.
+
+</td></tr><tr><td>![](../examples/color_wheel/label128.png)</td><td>
+[Color Wheel](../console/quadplay.html?game=quad://examples/color_wheel&IDE=1) 
+shows the difference between `hsv()` and `artist_hsv_to_rgb()` hues 
+and brightnesses.
 
 </td></tr></table>
 
@@ -1509,6 +1532,7 @@ As a result, the emulator is pixel-perfect on small displays and fills
 the screen on large ones. <quadplay/> supports the following resolutions,
 all with 4:4:4:4 RGBA color and 60 Hz refresh:
 
+- 640x360 (½ 720p, ⅓ 1080p, ¼ 1440p)
 - 384x224x4 = 768x448, for network multiplayer private views
 - 320x180x4 = 640x360 (½ 720p), for network multiplayer private views
 - *384x224* (default and recommended)
@@ -2302,6 +2326,9 @@ Array
 `random_from_distribution(array, random default random)`
 : Return a random index of the array, chosen proportional to the values.
 
+`random_key(array, random default random)`
+: Return a random index into the array.
+
 `random_value(array, random default random)`
 : Return a random element of the array.
 
@@ -2553,6 +2580,12 @@ Object
 : An array of the keys in the object. You almost never need this because
   `for k in object` iterates over the keys directly.
 
+`random_key(object, random default random)`
+: Return a random key of the object
+
+`random_value(object, random default random)`
+: Return a random key's value in the object
+
 `random_from_distribution(object, random default random)`
 : Return a random key from the object, chosen proportional to the values.
 
@@ -2713,12 +2746,9 @@ Random Values
 Vector
 ---------------------------------------------------------
 
-Most of the math functions and operators defined for numbers also
+Most of the math functions and operators defined for numbers _also_
 operate component-wise on vectors represented as structures or arrays.
-For example, `clamp()`, `min()`, `+`, `/`, etc.
-
-The following vector operations can be applied to any array or object,
-including `xy()` and `rgb()` values, except where specific key names are mentioned:
+For example, `clamp()`, `min()`, `+`, `/`, etc. 
 
 `angle_to_xy(angle)`
 : Returns `xy(cos angle, rotation_sign() * sin angle)`,
@@ -4555,6 +4585,15 @@ def hsv_to_hsl(src):
     return {h:src.h, s:S, l:L}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+`artist_hsv_to_rgb(hsv)`
+: Object version.
+
+`artist_hsv_to_rgb(h, s, v)`
+: Returns an `rgb` that uses a perceptual and RYB-primary system to
+  interpret the hue and value. In this system, `h=0/6` is red,
+  `h=2/6` is yellow, `h=3/6` is green, and `h=4/6` is blue.
+  The blue primary is tilted a little towards cyan in sRGB space
+  and the values of the blue hues are boosted. See also `perceptual_lerp_color()`.
 
 `gray(n)`
 : Returns `rgb(n, n, n)`, with `n` clamped to the range 0 to 1.
@@ -4587,13 +4626,17 @@ def hsv_to_hsl(src):
 `hsv(hsv)`
 : Clone the `hsv` object, stripping other properties (such as an `a` channel).
 
+`hsv(rgb)`
+: Convert the `rgb` to hsv.
+
 `hsv(array)`
 : Reinterpret the array elements as an `hsv`
 
 `hsv(h, s, v)`
 : Returns an object with field `h` _wrapped_ to [0, 1], and fields `s` and `v` clamped to [0, 1].
   `h=0` and `h=1` are red, `h=1/3` is green, and `h=2/3` is blue, with values inbetween
-  interpolated.
+  interpolated. These are the standard hues in a computer RGB-primary system.
+  See also `artist_hsv_to_rgb()` for RYB-primary hues.
 
 `hsv(sprite)`
 : Returns the hsv value of the center pixel of the sprite.
@@ -4602,7 +4645,8 @@ def hsv_to_hsl(src):
 : Both `c1` and `c2` must have the same type: `hsv()`, `hsva()`, `rgb()`, or `rgba()`.
   Performs a linear interpolation in CIELAB perceptual space and returns a value
   in the original color space. See also `lerp()`, `smoothstep()`, and `smootherstep()`,
-  which can be applied to colors.
+  which can be applied to colors, and `artist_hsv_to_rgb()` for initializing
+  from RYB-primary hues.
 
 `rgb(hsv)`
 : Convert the `hsv` result to rgb, stripping other properties.
@@ -4707,16 +4751,6 @@ endpoints and borders.
 
 ### Drawing
 
-`draw_poly(args)`
-: Named argument version of `draw_poly()`.
-
-`draw_poly(vertex_array, color, outline = (nil), pos default xy(0, 0), angle default 0, scale default xy(1, 1), z default pos.z default 0)`
-: Draws the _convex_ polygon defined by the `vertex_array`, first
-  scaling by `scale`, rotating by `angle`, and then translating by
-  `pos`. The polygon may have any winding direction. If the polygon is
-  not convex, then the outcome of the drawn result is undefined and
-  may change across platforms (but there will never be an error).
-
 `draw_corner_rect(args)`
 : Named argument version of `draw_corner_rect()`.
 
@@ -4772,6 +4806,16 @@ endpoints and borders.
   fast as ones with mixed `z` values or intermixed with other draw calls.
   For the best alignment under the default transformation, put the endpoints
   at half-pixel positions.
+
+`draw_poly(args)`
+: Named argument version of `draw_poly()`.
+
+`draw_poly(vertex_array, color, outline = (nil), pos default xy(0, 0), angle default 0, scale default xy(1, 1), z default pos.z default 0)`
+: Draws the _convex_ polygon defined by the `vertex_array`, first
+  scaling by `scale`, rotating by `angle`, and then translating by
+  `pos`. The polygon may have any winding direction. If the polygon is
+  not convex, then the outcome of the drawn result is undefined and
+  may change across platforms (but there will never be an error).
 
 `draw_previous_mode()`
 : Re-issue all of the drawing commands from the previous mode's frame
@@ -4883,8 +4927,8 @@ endpoints and borders.
 
   `font` must be loaded from the assets.  Color, shadow, and outline
   default to transparent. Any non-transparent outline causes the
-  shadow to move below both the outline and main color.  Returns the
-  line height (including spacing) for the next line.
+  shadow to move below both the outline and main color. If `nil`, the system's
+  default 8-pixel high font is used.
   
   If `wrap_width` is specified, breaks the text at the maximum width
   and renders multiple lines. Each line is offset by the font's
@@ -5677,19 +5721,27 @@ better understanding of how they are typically computed.
 `goal_node`
 : The ending location, in your chosen node representation.
 
-`estimate_path_cost(nodeA, nodeB, graph_obj)`
-: Returns a numerical estimate of the cost for the path between
-  `nodeA` and `nodeB`. For example, the straight line distance.
-  The more accurate this estimate is, the faster that the algorithm
-  will run. If it returns 0 for all inputs, then the algorithm
+`estimate_path_cost(node_from, node_to, graph_obj default nil)`
+: Heuristic function used to significantly accelerate approximate path finding.
+  Returns a numerical estimate of the cost for the path between
+  `node_from` and `node_to`. *For example, a good 
+  common implementation is to return the straight line distance between the nodes*.
+  
+  The more accurate this estimate is, the faster and better that the algorithm
+  will run. If this function returns 0 for all inputs, then the algorithm
   will run in the worst case quadratic time but is guaranteed to find
   the exact shortest path instead of an approximation.
 
-`edge_cost(nodeA, nodeB, graph_obj)`
-: The actual cost of going from A to B, which are guaranteed to be
-  neighbors.
+  Note that the function must work for _any_ two nodes in the graph.
+  `node_from` and `node_to` are not generally not the `start_node` and `end_node`,
+  and are not generally neighbors or even connected by a viable path to each other.
 
-`get_neighbors(node, graph_obj)`
+`edge_cost(node_from, node_to, graph_obj default nil)`
+: The actual cost of going from `node_from` to `node_to`, which are guaranteed to be
+  neighbors that were previously discovered by `get_neighbors()`.
+  Together, `edge_cost()` and `get_neighbors()` define the graph structure.
+
+`get_neighbors(node, graph_obj default nil)`
 : Returns an array of all neighbor nodes reachable from node. It is not required that
   neighbors are bidirectional. For example, a ledge may create an edge traversable
   in only one direction
@@ -6258,6 +6310,10 @@ and other operations that naturally compile with maximum efficiency.
 : Multiply matrix `src3x3` represented as an array of length three row arrays, each of length
   three by vector `(srcxyz.x, srcxyz.y, srcxyz.z)` and put the result in `dstxyz`,
   which can be the same object as `srcxyz`.
+  
+`MAT3x3_ORTHONORMALIZE(m3x3)`
+: Snap to the nearest 3x3 rotation matrix in place, where all rows and
+  columns have unit length and are orthogonal to each other.
 
 `MAT3x4_MATMUL_XYZ(src3x4, srcxyz, dstxyz)`
 : Multiply matrix `src3x4` represented as an array of length three row arrays of length

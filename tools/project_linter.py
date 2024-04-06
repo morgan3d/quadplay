@@ -3,6 +3,7 @@
 import argparse
 import os
 import workjson as json
+import filecmp
 
 
 __doc__ = """ A tool for linting quadplay game projects for finaling.  """
@@ -27,6 +28,20 @@ REPORT_MAP = {
     "no_label_128": (
         "no label128 image.  Press Shift+F6 while the game is running in the "
         "IDE.",
+        "bool"
+    ),
+    "default_label_64": (
+        "Default label64.  For a default image, press Shift+F6 while the game"
+        "is running in the IDE, copy the image to the project directory."
+        "Otherwise look in the manual for instructions on how to make your"
+        "own.",
+        "bool"
+    ),
+    "default_label_128": (
+        "Default label128.  For a default image, press Shift+F6 while the game"
+        "is running in the IDE, copy the image to the project directory."
+        "Otherwise look in the manual for instructions on how to make your"
+        "own.",
         "bool"
     ),
 }
@@ -66,14 +81,32 @@ def parse_args():
         default=False,
         help='Print out an audit of all the licenses used in the project.'
     )
+    parser.add_argument(
+        '-m',
+        '--mode',
+        choices=["report", "manifest", "subdirs"],
+        default="report",
+        help=(
+            'Which mode of operation.  Report: print a report and quit.'
+            'Manifest: print the manifest of relevant files for this project.'
+        ),
+    )
 
     return parser.parse_args()
 
 
-def lint_game(game_name=None, license_audit=False):
+def _fetch_asset_path(blob, asset):
+    # fetch the target file out
+    asset_url = blob.get("url")
+    blob_dir = os.path.dirname(asset)
+    return os.path.join(blob_dir, asset_url)
+
+
+def lint_game(game_name=None, license_audit=False, verbose=False):
     if not game_name:
         game_name = os.path.basename(os.getcwd())
-        print("detected game: {}".format(game_name))
+        if verbose:
+            print("detected game: {}".format(game_name))
 
     if game_name.endswith(".game.json"):
         game_json_path = game_name
@@ -97,7 +130,6 @@ def lint_game(game_name=None, license_audit=False):
         if isinstance(thing, dict)
         and thing["type"] == "raw"
         and thing.get("url", None) is not None
-
     )
 
     # cache all the files... who knows
@@ -127,6 +159,8 @@ def lint_game(game_name=None, license_audit=False):
             report.setdefault("no_such_file", []).append(asset)
             continue
 
+        files.append(asset)
+
         with open(asset, encoding='utf-8', errors='replace') as fi:
             blob = json.loads(fi.read())
 
@@ -135,6 +169,15 @@ def lint_game(game_name=None, license_audit=False):
             report.setdefault("no_license", []).append(asset)
         else:
             licenses.setdefault(blob['license'], []).append(asset)
+
+        asset_path = _fetch_asset_path(blob, asset)
+        if not os.path.exists(asset_path):
+            report.setdefault("no_such_file", []).append(asset_path)
+        else:
+            files.append(asset_path)
+
+    files.append(game_json_path)
+    report["files"] = files
 
     if license_audit:
         report['license_audit'] = licenses
@@ -145,8 +188,24 @@ def lint_game(game_name=None, license_audit=False):
     if not os.path.exists('label64.png'):
         report["no_label_64"] = True
 
-    if not os.path.exists('label128.png'):
-        report["no_label_128"] = True
+    for lblres in [64, 128]:
+        lbl = f"label{lblres}"
+        lblpath = f'{lbl}.png'
+        if not os.path.exists(lblpath):
+            report[f"no_label_{lblres}"] = True
+        elif filecmp.cmp(
+            lblpath,
+            os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "..",
+                    "console",
+                    "launcher",
+                    lblpath,
+                )
+            )
+        ):
+            report[f"default_label_{lblres}"] = True
 
     return report
 
@@ -158,9 +217,13 @@ def print_report(report, fields, license_audit):
             for fname in report["license_audit"][license]:
                 print("  {}".format(fname))
 
+    found_errors = False
+
     for report_field in REPORT_MAP:
         if report_field not in fields or not report.get(report_field):
             continue
+
+        found_errors = True
 
         (label, kind) = REPORT_MAP[report_field]
         if kind == "list":
@@ -176,13 +239,30 @@ def print_report(report, fields, license_audit):
             if report[report_field]:
                 print(label)
 
+    if not found_errors:
+        print("Project Linter didn't detect any problems.")
+
 
 def main():
     args = parse_args()
 
-    report = lint_game(args.game, args.license_audit)
+    report = lint_game(args.game, args.license_audit, args.mode == "report")
 
-    print_report(report, args.field, args.license_audit)
+    if args.mode == "manifest":
+        # print all the local files this project uses (ie not quad:// stuff)
+        print(" ".join(report["files"]))
+    elif args.mode == "subdirs":
+        # print out local subdirectories
+        # filter out empty stuff
+        dirs = (
+            d for d in set(
+                os.path.dirname(fp) for fp in report["files"]
+            ) if d
+        )
+
+        print(" ".join(dirs))
+    else:
+        print_report(report, args.field, args.license_audit)
 
 
 if __name__ == '__main__':

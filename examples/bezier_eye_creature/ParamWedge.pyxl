@@ -1,0 +1,82 @@
+ParamWedge
+════════════════════════════════════════════════════════════════════════
+
+const physics  = make_physics()
+
+let PLATE_POSITION = xy(0, 0)
+const PLATE_COL = rgb(0.3, 0.3, 0.3) 
+const PLATE_SIZE = xy(160, 160)
+
+const ANCHOR_LOCATIONS = [
+    [xy(-150,   0), xy(-50,   0)],
+    [xy(-150, -50), xy(-50, -50)],
+    [xy(-150,  50), xy(-50,  50)],
+    [xy(150,    0), xy(50,    0)],
+    [xy(150,  -50), xy(50,  -50)],
+    [xy(150,   50), xy(50,   50)],
+]
+const ANCHORS = []
+const ROPES = []
+for pair in ANCHOR_LOCATIONS:
+    const outer = make_entity(
+        {
+            pos: pair[0],
+            scale: xy(50%, 50%),
+            override_color: rgb(0.2, 0.2, 0.5),
+            sprite: shapes.circle,
+            z: 1,
+
+        }
+    )
+    const inner = make_entity(
+        {
+            pos: pair[1],
+            scale: xy(50%, 50%),
+            override_color: rgb(0.2, 0.2, 0.5),
+            sprite: shapes.circle,
+            z: 1,
+
+        }
+    )
+    push(ANCHORS, outer)
+    push(ANCHORS, inner)
+    push(
+        ROPES,
+        make_rope(
+            physics,
+            outer,
+            inner,
+            50
+        )
+    )
+
+set_camera(-SCREEN_SIZE/2)
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+const v = 2*joy.xy
+PLATE_POSITION += v
+for a in ANCHORS:
+    a.pos += v
+
+// plate
+draw_rect(
+    PLATE_POSITION,
+    PLATE_SIZE,
+    PLATE_COL,
+)
+
+for r in ROPES:
+    update_rope(r)
+
+physics_simulate(physics)
+
+// anchors
+for a_e in ANCHORS:
+    draw_entity(a_e)
+
+for r in ROPES:
+    draw_rope(r)
+
+set_background(rgb(0.1, 0.1, 0.1))

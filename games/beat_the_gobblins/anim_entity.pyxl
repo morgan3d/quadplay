@@ -1,9 +1,8 @@
 
 // Anim Entity code
 // Entities that have durations baked into their sprites
-// useful for animations that are done in a program like aseprite that
-// are meant to play out over game time
-// dust, FX, etc.
+// useful for animations that are done in a program like aseprite that are
+// meant to play out over game time - dust, FX, etc.
 
 let ANIM_MODE = nil
 

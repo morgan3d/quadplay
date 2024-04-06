@@ -468,6 +468,12 @@ function $entityUpdateFromBody(entity) {
     if (entity.physics_sleep_state === 'vigilant') {
         if (body.isSleeping) { $Physics.Sleeping.set(body, false); }
     } else {
+        if (entity.physics_sleep_state === 'awake' && body.isSleeping) {
+            // On falling asleep, zero velocity
+            entity.vel.x = 0; entity.vel.y = 0; entity.spin = 0;
+            $Physics.Body.setVelocity(body, entity.vel);
+            $Physics.Body.setAngularVelocity(body, entity.spin);
+        }
         entity.physics_sleep_state = body.isSleeping ? 'sleeping' : 'awake';
     }
     /*
@@ -723,6 +729,7 @@ function physics_add_contact_callback(physics, callback, min_depth, max_depth, c
 function physics_entity_has_contacts(physics, entity, region, normal, mask, sensors) {
     return $physics_entity_contacts(physics, entity, region, normal, mask, sensors, true);
 }
+
 
 function physics_entity_contacts(physics, entity, region, normal, mask, sensors) {
     return $physics_entity_contacts(physics, entity, region, normal, mask, sensors, false);

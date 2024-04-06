@@ -743,6 +743,24 @@ function random_value(t, rng) {
 }
 
 
+function random_key(t, rng) {
+    const T = typeof t;
+    if (Array.isArray(t) || (T === 'string')) {
+        return random_integer(0, t.length - 1, rng);
+    } else if (T === 'object') {
+        const k = keys(t);
+
+        if (k.length === 0) {
+            return undefined;
+        } else {
+            return k[random_integer(0, k.length - 1, rng)];
+        }
+    } else {
+        return undefined;
+    }
+}
+
+
 function remove_all(t) {
     if ($iteratorCount.get(t)) {
         $error('Cannot remove_all() while using a container in a for loop. Call clone() on the container in the for loop declaration.');
@@ -5943,7 +5961,7 @@ function oscillate(x, lo, hi) {
 
 
 function clamp(x, lo, hi) {
-    // Test for all three being Numbes, which have a toFixed method
+    // Test for all three being Numbers, which have a toFixed method
     if (x.toFixed && lo.toFixed && hi.toFixed) {
         return x < lo ? lo : x > hi ? hi : x;
     } else {
@@ -8628,7 +8646,7 @@ function XYZ_CRS_XYZ(v1, v2, r) {
 }
 
 function XYZ_DOT_XYZ(v1, v2) {
-    return v1.x * v2.x + v1.y * v2.y;
+    return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
 function XY_MUL(v1, s, r) {
@@ -8874,12 +8892,70 @@ function MAT3x4_MATMUL_XYZ(A, v, c) {
 }
 
 
+function MAT3x3_ORTHONORMALIZE(M) {
+    // Algorithm uses Gram-Schmidt orthogonalization.  If 'this' matrix is
+    // M = [m0|m1|m2], then orthonormal output matrix is Q = [q0|q1|q2],
+    //
+    //   q0 = m0/|m0|
+    //   q1 = (m1-(q0*m1)q0)/|m1-(q0*m1)q0|
+    //   q2 = (m2-(q0*m2)q0-(q1*m2)q1)/|m2-(q0*m2)q0-(q1*m2)q1|
+    //
+    // where |V| indicates length of vector V and A*B indicates dot
+    // product of vectors A and B.
+    
+    // compute q0
+    let fInvLength = 1 / $Math.hypot(M[0][0], M[1][0], M[2][0]);
+
+    M[0][0] *= fInvLength;
+    M[1][0] *= fInvLength;
+    M[2][0] *= fInvLength;
+
+    // compute q1
+    let fDot0 =
+        M[0][0] * M[0][1] +
+        M[1][0] * M[1][1] +
+        M[2][0] * M[2][1];
+
+    M[0][1] -= fDot0 * M[0][0];
+    M[1][1] -= fDot0 * M[1][0];
+    M[2][1] -= fDot0 * M[2][0];
+
+    fInvLength = 1 / $Math.hypot(M[0][1], M[1][1], M[2][1]);
+
+    M[0][1] *= fInvLength;
+    M[1][1] *= fInvLength;
+    M[2][1] *= fInvLength;
+
+    // compute q2
+    const fDot1 =
+        M[0][1] * M[0][2] +
+        M[1][1] * M[1][2] +
+        M[2][1] * M[2][2];
+
+    fDot0 =
+        M[0][0] * M[0][2] +
+        M[1][0] * M[1][2] +
+        M[2][0] * M[2][2];
+
+    M[0][2] -= fDot0 * M[0][0] + fDot1 * M[0][1];
+    M[1][2] -= fDot0 * M[1][0] + fDot1 * M[1][1];
+    M[2][2] -= fDot0 * M[2][0] + fDot1 * M[2][1];
+
+    fInvLength = 1 / $Math.hypot(M[0][2], M[1][2], M[2][2]);
+
+    M[0][2] *= fInvLength;
+    M[1][2] *= fInvLength;
+    M[2][2] *= fInvLength;
+}
+
+
 function MAT3x3_MATMUL_XYZ(A, v, c) {
     const x = v.x, y = v.y, z = v.z;
     c.x = A[0][0] * x + A[0][1] * y + A[0][2] * z;
     c.y = A[1][0] * x + A[1][1] * y + A[1][2] * z;
     c.z = A[2][0] * x + A[2][1] * y + A[2][2] * z;
 }
+
 
 function MAT2x2_MATMUL_XY(A, v, c) {
     const x = v.x, y = v.y;
@@ -9034,6 +9110,40 @@ function $LAsBs_to_XYZ(color) {
 
     return result;
 }
+
+
+
+function artist_hsv_to_rgb(h, s, v) {
+    // Args version
+    if (h.h !== undefined && s === undefined) {
+        v = h.v;
+        s = h.s;
+        h = h.h;
+    }
+
+    s = CLAMP(s, 0, 1);
+    
+    h = loop(h, 0, 1);
+    h = artist_hsv_to_rgb.$artist_hue(h);
+    
+    // Boost deep blue brightness
+    const k = $Math.min($Math.abs(h - 0.68) * 10, 1);
+    v *= 1 + s * 0.65 * (1 - k * k)
+        
+    return rgb({h: h, s: s, v: CLAMP(v, 0, 1)});
+}
+
+// Use RYB primaries and cheat the blue into cyan a little
+// and spread the yellows
+artist_hsv_to_rgb.$artist_hue = make_spline(
+    // RYB hue:
+    [0, 2/6, 3/6 - 0.02, 3/6 + 0.08, 4/6, 1],
+    // RGB hue:
+    [0, 1/6, 2/6 - 0.09, 2/6 + 0.15, 4/6 - 0.05, 1], 
+    1, "clamp");
+
+
+
 
 function perceptual_lerp_color(a, b, t) {
     let was_rgb = false;

@@ -1,0 +1,66 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+// Use RYB primaries and cheat the blue into cyan a little
+// and spread the yellows
+const artist_hue = make_spline(
+    // RYB hue:
+    [0, 2/6, 3/6 - 0.02, 3/6 + 0.08, 4/6, 1],
+    // RGB hue:
+    [0, 1/6, 2/6 - 0.09, 2/6 + 0.15, 4/6 - 0.05, 1], 
+    1, "clamp")
+
+// Use RYB primaries instead of RGB ones for the
+// HSV hue space.
+def artist_hsv_to_rgb(h, s, v):
+    if h.h ≠ ∅ and s == ∅:
+        v = h.v
+        s = h.s
+        h = h.h
+        
+    
+    h = loop(h, 0, 100%)
+    h = artist_hue(h)
+    
+    // Boost deep blue brightness
+    v *= 100% + s * 65% (100% - min(|h - 68%| / 10%, 1)²)
+        
+    return rgb(hsv(h, s, clamp(v, 0%, 100%)))
+    
+
+def draw_color_wheel(pos, type, radius default 100, label default ∅):
+    set_transform(pos, xy(1, -1))
+    
+    const N = 3 mult
+    for i < N:
+        const θ = 360° (i - ½) / N
+        const ϕ = 360° (i + ½) / N
+        
+        const hue = i / N
+        const color = type(hue, 100%, 80%)
+    
+        // HSV color wheel
+        draw_poly([
+            xy(radius * cos θ, radius * sin θ),
+            xy(radius * cos ϕ, radius * sin ϕ),
+            xy(0, 0)], color)
+        
+        /*    
+        draw_text({
+            text: "" + round(hue * 6) + "/6", //format_number(hue, "%"),
+            pos: 75% radius * xy(cos(½(ϕ+θ)), sin(½(ϕ+θ))),
+            z: 1,
+            color: #FFF})*/
+    
+    for -radius <= x <= radius:
+        const v = ½ (x / radius) + ½
+        draw_line(xy(x, -110% radius), xy(x, -130% radius), type(0, 0, v))
+            
+    if label:
+        draw_text({text: label, pos: xy(0, 110% radius + 2), color: #FFF})
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+draw_color_wheel(xy(¼ SCREEN_SIZE.x, ½ SCREEN_SIZE.y), hsv, 75, "hsv()")
+draw_color_wheel(xy(¾ SCREEN_SIZE.x, ½ SCREEN_SIZE.y), artist_hsv_to_rgb, 75, "artist_hsv_to_rgb()")

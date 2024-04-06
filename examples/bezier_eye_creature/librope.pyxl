@@ -1,0 +1,145 @@
+// FAKE ROPE LIBRARY
+///////////////////////////////////////////////////////////////////////////////
+// This library implements a very simple rope-effect based on this twitter
+// thread:
+// https://twitter.com/t3ssel8r/status/1470039981502922752
+// 
+// The effect is created by suspending a spring between the two endpoints, and
+// then drawing a quadratic bezier curve from one end point, to the end of the
+// spring, to the other end point.  It is surprisingly cheap because of
+// quadplay's excellent physics engine, which does all the heavy lifting.
+// 
+// ## REQUIREMENTS
+// * your game needs to have a physics simulator:
+// ```pyxl
+// init
+// ════════════════════════════════════════════════════════════════════════
+// const physics  = make_physics()
+//
+// // call to make_rope(...) can happen in init
+//
+// frame
+// ════════════════════════════════════════════════════════════════════════
+// // ...or you can make_rope in frame, doesn't matter
+//
+// ...
+// // call[s] to update_rope(r)
+// physics_simulate(physics)
+// ...
+// // call[s] to draw_rope(r)
+// ```
+// * assumes that start_e and end_e are entities (hence _e). Nothing about the
+//   math requires it, so this could be factored out eventually, but it is
+//   convienent for having their positions update while other things move them
+//   around.
+// * note that you probably want to update your rope (which adjusts parameters
+//   for the spring and moves the spring ends around) _before_ you run your
+//   physics sim.
+//
+// ## Example
+// 
+// For an example of how to use this library see the Play.pyxl, which also
+// includes a test mode for playing around with parameters as well as using it
+// to make a creature.
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+// returns a rope object for tracking the state of the rope.  Builds the
+// (internal) spring entities for the rope.
+def make_rope(physics, start_e, end_e, max_length):
+    const start_to_end_v = end_e.pos - start_e.pos
+    const mag_start_to_end = XY_MAGNITUDE(start_to_end_v)
+    const drop_amount = max_length - mag_start_to_end
+    const spring_top_pos = start_to_end_v/2 + start_e.pos + xy(0, drop_amount/2)
+    const spring_bottom_pos = spring_top_pos + xy(0, drop_amount/2)
+
+    const spring_top_e = physics_add_entity(
+        physics,
+        make_entity(
+            {
+                shape: "disk",
+                size: xy(5,5),
+                pos: spring_top_pos,
+                density:infinity,
+            }
+        )
+    )
+    const spring_bottom_e = physics_add_entity(
+        physics,
+        make_entity(
+            {
+                shape: "disk",
+                size: xy(5,5),
+                pos: spring_bottom_pos
+            }
+        )
+    )
+
+    const spring_data = {
+        entityA: spring_top_e,
+        entityB: spring_bottom_e,
+        length: drop_amount/2,
+        damping: 0.1%,
+        stiffness: 0.05%
+    }
+    physics_attach(physics, "spring", spring_data)
+
+    return {
+        "spring": spring_data,
+        start_e: start_e,
+        end_e: end_e,
+        spring_top_e: spring_top_e,
+        spring_bottom_e: spring_bottom_e,
+        max_length: max_length,
+    }
+
+
+def update_rope(rope)
+&with start_e, end_e, spring_top_e, spring_bottom_e, max_length in rope:
+    const start_to_end_v = end_e.pos - start_e.pos
+    const mag_start_to_end = XY_MAGNITUDE(start_to_end_v)
+    const drop_amount = max_length - mag_start_to_end
+
+    spring_top_e.pos = start_to_end_v/2 + start_e.pos + xy(0, drop_amount/2)
+
+def draw_rope(
+    rope, 
+    // interpolated values
+    start_thickness default 2,
+    end_thickness default 6,
+    start_color default rgb(0.2, 0.0, 0.0),
+    end_color default rgb(0.9, 0.0, 0.0),
+    start_z default -1,
+    end_z default 1
+)
+&with start_e, end_e, spring_top_e, spring_bottom_e in rope:
+    let t = 0
+
+    let last_point = clone(start_e.pos)
+
+    const inc = 0.01
+    while (t < 1):
+        t += inc
+        t = min(t, 1)
+        const p_t = quadratic_bezier(
+            t,
+            start_e.pos,    // p0
+            spring_bottom_e.pos, // p1
+            end_e.pos       // p2
+        )
+        draw_line(
+            last_point,
+            p_t,
+            lerp(start_color, end_color, t),
+            lerp(start_z, end_z, t),
+            lerp(start_thickness, end_thickness, t)
+        )
+        last_point = clone(p_t)
+
+def quadratic_bezier(t, p0, p1, p2):
+    const one_minus_t = (1-t)
+    return (
+        ((one_minus_t*one_minus_t) * p0)
+        + ((2 * one_minus_t * t) * p1)
+        + ((t*t)*p2)
+    )

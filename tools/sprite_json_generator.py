@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 """ Generate the reference .sprite.json for quadplay sprites. """
 
@@ -7,13 +7,9 @@ import workjson
 import os
 import sys
 
+import quad_utils
+
 # @TODO: Add a requirements.txt or such to make setting up the virtualenv easy.
-
-
-def detect_default_game():
-    """try and detect based on the current directory"""
-
-    return os.path.basename(os.getcwd())
 
 
 def parse_args():
@@ -49,7 +45,7 @@ def parse_args():
     parser.add_argument(
         '-g',
         '--game',
-        default=detect_default_game(),
+        default=quad_utils.detect_default_game(),
         type=str,
         help='Name of the game to add the sprite to.  It not provided, will'
         ' not add to game json.'
@@ -306,30 +302,13 @@ def make_sprite(
     if not game or not add_to_game_json:
         return
 
-    if not game.endswith(".json"):
-        game += ".game.json"
-
-    try:
-        with open(game, 'r') as fi:
-            game_data = workjson.loads(fi.read())
-    except IOError:
-        raise RuntimeError(
-            "ERROR: no json file for game '{}' found.  Use the -g flag to "
-            "pass the the game in.\n".format(game)
-        )
+    game_data = quad_utils.load_game_json(game)
 
     sprite_asset_name = basename + "_sprite"
 
     game_data.setdefault('assets', {})[sprite_asset_name] = outpath
 
-    with open(game, 'w') as fo:
-        fo.write(
-            workjson.dumps(
-                game_data,
-                sort_keys=True,
-                indent=4, separators=(",", ": ")
-            )
-        )
+    quad_utils.write_game_json(game, game_data)
     print("Added '{}' to '{}'".format(sprite_asset_name, game))
 
 

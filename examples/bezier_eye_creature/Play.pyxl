@@ -1,0 +1,16 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+// const CURRENT_MODE = "ParamWedge"
+const CURRENT_MODE = "Creature"
+
+const MODES = {
+    "ParamWedge": ParamWedge,
+    "Creature": Creature,
+}
+debug_print("Current mode: " + CURRENT_MODE)
+
+enter
+────────────────────────────────────────────────────────────────────────
+
+push_mode(MODES[CURRENT_MODE])

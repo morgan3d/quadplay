@@ -38,7 +38,7 @@ preserving_transform:
     set_transform(½ SCREEN_SIZE + xy(0, 25), xy(1, -1))
    
     // Transform all vertices
-    const rot = matmul_3x3(pitch_matrix(θ.y), yaw_matrix(θ.x))
+    const rot = mat3x3_mul(mat3x3_pitch(θ.y), mat3x3_yaw(θ.x))
     for v < size(mesh.vertex_array):
         transform_3D(rot, mesh.vertex_array[v], transformed_array[v])
    

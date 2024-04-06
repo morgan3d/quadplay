@@ -1,0 +1,77 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+def draw_sprite_demo(sprite, loc, label, text_on_right):
+    text_on_right = text_on_right default false
+
+    const mul = if text_on_right then 1 else -1
+    const alignx = if text_on_right then "left" else "right"
+
+    draw_rect(loc + xy(-2,2), sprite.size + xy(4,4), nil, rgb(1,1,1))
+    draw_sprite(sprite, loc)
+    draw_text(
+        font,
+        label,
+        loc + mul*xy(sprite.size.x/2 + 8, 0),
+        TEXT_COLOR,
+        nil,
+        nil,
+        alignx,
+        "center"
+    )
+
+const driz_ent = make_entity({})
+const loop_anim_entity = anim_entity_make(
+    driz_ent,
+    driz.Idle,
+    anim_entity_PLAY_MODES.LOOP,
+) 
+let once_anim_entity = anim_entity_make(
+    driz_ent,
+    driz.atk_2,
+    anim_entity_PLAY_MODES.ONCE,
+) 
+
+frame
+────────────────────────────────────────────────────────────────────────
+set_background(rgb(18%, 18%, 18%))
+
+const driz_size = driz.Idle[0].size
+
+let driz_loc = SCREEN_SIZE/2 - xy(40, driz_size.y)
+draw_sprite_demo(
+    driz.Idle[loop(mode_frames, 0, size(driz.Idle))],
+    driz_loc,
+    "60 fps"
+)
+
+driz_loc += xy(0, 6) + xy(0, driz_size.y)
+draw_sprite_demo(
+    driz.Idle[loop(floor(mode_frames/6), 0, size(driz.Idle))],
+    driz_loc, 
+    "10 fps"
+)
+
+driz_loc += xy(0, 6) + xy(0, driz_size.y)
+draw_sprite_demo(
+    loop_anim_entity.sprite,
+    driz_loc, 
+    "timing from aseprite"
+)
+debug_watch(loop_anim_entity)
+
+if joy.aa:
+    once_anim_entity = anim_entity_make(
+        driz_ent,
+        driz.atk_2,
+        anim_entity_PLAY_MODES.ONCE,
+    )
+
+driz_loc += xy(80, 0)
+draw_sprite_demo(
+    once_anim_entity.sprite,
+    driz_loc, 
+    replace("one shot (press (a))", gamepad_array[0].prompt),
+    true
+)
+debug_watch(loop_anim_entity)

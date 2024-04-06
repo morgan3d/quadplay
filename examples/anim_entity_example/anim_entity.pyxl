@@ -1,0 +1,111 @@
+// Anim Entity Library
+///////////////////////////////////////////////////////////////////////////////
+// Aseprite lets you tag durations (in milliseconds) on frames.  This library
+// handles playing frames in an animation for the correct (rounded at 60hz)
+// duration.
+//
+// You can use it for character animation (playing an idle loop, or action
+// animation) or for effects (dust, fire, etc).
+// 
+// all the functions are prefixed with `anim_entity_`
+//
+// for basic usage, call anim_entity_make({}, ...), which will return a map you
+// can pass directly to `draw_entity()`
+//
+///////////////////////////////////////////////////////////////////////////////
+
+// TODO
+// * separate the entity from the player?
+
+// enum thing with the ways the animation can be played
+const anim_entity_PLAY_MODES = {
+    "ONCE": 0,
+    "LOOP": 1,
+}
+
+// function that advances each frame when the duration is met.  If you want to
+// do extra things each frame you can call this function from your per frame
+// callback
+def anim_entity_on_duration(frames_elapsed, new_ent):
+    if not new_ent.duration_tracker:
+        new_ent.duration_tracker = 0
+        
+    ++new_ent.duration_tracker
+    
+    if new_ent.duration_tracker > new_ent.sprite.frames:
+        new_ent.duration_tracker = 0
+        return true
+
+    return false
+
+def anim_entity_loop_callback(anim_ent):
+    anim_ent.anim_current_frame = 0
+
+def anim_entity_make(
+        // make an entity with position and scale and stuff
+        entity,
+        // sprite
+        animation,
+        // Loop, once, etc. default: once
+        play_kind,
+        // callback when it dies. default: nil (nothing will happen on end)
+        death_callback,
+        // frames to run before calling the death_callback and stopping
+        // note: if play_kind is ONCE the default is animation.frames
+        //       if play_kind is LOOP the default is "nil" (so that it loops)
+        lifetime,
+        // function to call to compute what frame to play. 
+        // default: anim_entity_on_duration
+        frame_func,
+        // which mode to play in, default: run in all modes. to only use the
+        // current mode, call `get_mode()`
+        mode_to_play_in,
+    ):
+            
+    entity.sprite = array_value(animation, 0)
+
+    const new_ent = make_entity(entity)
+    new_ent.anim_current_frame = 0
+
+    play_kind = play_kind default anim_entity_PLAY_MODES.ONCE
+
+    if play_kind == anim_entity_PLAY_MODES.ONCE:
+        lifetime = lifetime default animation.frames
+    else if play_kind == anim_entity_PLAY_MODES.LOOP:
+        lifetime = nil
+    else:
+        assert(false, "invalid play mode")
+
+    frame_func = frame_func default anim_entity_on_duration
+    mode_to_play_in = mode_to_play_in default "all"
+
+    // assert that the animation has a valid duration
+    assert(not is_NaN(lifetime))
+
+    def frame_advance(framesLeft, lifetime):
+        new_ent.sprite = array_value(
+            animation,
+            new_ent.anim_current_frame,
+            "loop"
+        )
+        if frame_func(lifetime - framesLeft, new_ent):
+            ++new_ent.anim_current_frame
+
+    def last_frame():
+        if death_callback:
+            death_callback(new_ent)
+            
+    new_ent.anim_frame_hook = add_frame_hook(
+        frame_advance,
+        last_frame,
+        lifetime,
+        mode_to_play_in,
+    )
+    new_ent.anim_frame_hook_data = {
+        frame_advance : frame_advance,
+        last_frame : last_frame,
+        lifetime : lifetime,
+        mode_to_play_in : mode_to_play_in,
+    }
+
+    return new_ent

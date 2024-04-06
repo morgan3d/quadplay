@@ -165,6 +165,13 @@ def export(args):
          for f in ignore_files:
              print('rm -rf ' + os.path.join(out_path, 'console/' + f))
       else:
+         if os.path.exists(out_path):
+             if args.force:
+                 shutil.rmtree(out_path)
+             else:
+                 raise RuntimeError(
+                     f"Path '{out_path}' exists.  To overwrite use the "
+                     "--force option.")
          shutil.copytree(os.path.join(args.quadpath, 'console'),
                          os.path.join(out_path, 'console'),
                          ignore = shutil.ignore_patterns('.DS_Store', '*~', '#*', '*.psd', '*.kra', 'Makefile', '*.zip', '*.pyc', '__pycache__', *ignore_files))
@@ -238,6 +245,7 @@ if __name__== '__main__':
    parser.add_argument('-z', '--zipfile', help='name of the zipfile, relative to the current directory. Defaults to the game name if unspecified.')
    parser.add_argument('--noquad', action='store_true', default=False, help='reduce the export size by making referencing the public quadplay distribution instead of embedding it.')
    parser.add_argument('--dry-run', '-n', action='store_true', default=False, help='print the files that would be created but do not touch the filesystem.')
+   parser.add_argument('--force', '-f', action='store_true', default=False, help='Overwrite the destination if it already exists.')
 
    args = parser.parse_args()
 

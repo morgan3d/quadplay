@@ -1,0 +1,215 @@
+Play
+════════════════════════════════════════════════════════════════════════
+
+const pupil_rad = 5
+const EYES = 1
+
+const POSITIONS = []
+const STIFFNESS = []
+for i < 40:
+    push(POSITIONS,SCREEN_SIZE/2 + SCREEN_SIZE/2*random_within_square())
+    push(STIFFNESS, random(0.65, 0.9))
+
+const ANCHORS = []
+for p in POSITIONS:
+    push(
+        ANCHORS,
+        make_entity(
+            {
+                pos: p,
+                scale: xy(25%, 25%),
+                override_color: rgb(0.2, 0.0, 0.5),
+                sprite: shapes.circle,
+                acc: xy(0, 0.1),
+                vel: xy(0, -5),
+                z: -1,
+            }
+        )
+    )
+
+const controlled_ball = make_entity(
+    {
+        pos: xy(180, 100),
+        override_color: rgb(0.85, 0.85, 0.85),
+        outline: rgb(0.2, 0.2, 0.2),
+        z: 3,
+        sprite: shapes.circle,
+    }
+)
+const max_offset = controlled_ball.size.x/2 - pupil_rad
+
+const physics  = make_physics()
+
+const CABLES = []
+for a at index in ANCHORS:
+    push(
+        CABLES,
+        make_rope(
+            physics,
+            a,
+            controlled_ball,
+            magnitude(controlled_ball.pos - a.pos)*STIFFNESS[index],
+        ),
+    )
+
+let target_position = SCREEN_SIZE/2
+let last_touch_position = nil
+
+// ui
+const INACTIVECOLOR = rgb(#f6369b)
+const ACTIVECOLOR = rgb(1,1,1)
+const BGCOLOR = rgba(0.2, 0.2, 0.2, 1)
+
+def up(y):
+    return y.y < 0
+def down(y):
+    return y.y > 0
+def left(y):
+    return y.x < 0
+def right(y):
+    return y.x > 0
+
+const CONTROLS = [
+    {key: "[^]", pos: xy(40, SCREEN_SIZE.y/2-32), fn: up},
+    {key: "[<]", pos: xy(30, SCREEN_SIZE.y/2-20), fn: left},
+    {key: "[v]", pos: xy(40, SCREEN_SIZE.y/2-20), fn: down},
+    {key: "[>]", pos: xy(50, SCREEN_SIZE.y/2-20), fn: right},
+]
+
+frame
+────────────────────────────────────────────────────────────────────────
+
+// get input
+const touch = device_control("get_mouse_state")
+const touch_pos = xy(touch.x,touch.y) - SCREEN_SIZE/2
+debug_watch(last_touch_position)
+debug_watch(touch_pos)
+if (not (equivalent(touch_pos, last_touch_position))):
+    target_position = touch_pos
+    last_touch_position = clone(touch_pos)
+else:
+    target_position += 2*joy.xy
+
+if joy.aa:
+    todo("here")
+
+debug_watch(controlled_ball.pos)
+
+debug_watch(target_position)
+const eye_to_mouse_v = target_position - controlled_ball.pos
+
+const eye_to_mouse_d = magnitude(eye_to_mouse_v)
+
+debug_watch(1.1*controlled_ball.size.x/2)
+const eye_target = (
+    (
+        min(max(eye_to_mouse_d, 1.1*controlled_ball.size.x/2), 40) 
+        * direction(eye_to_mouse_v)
+    )
+    + controlled_ball.pos
+)
+debug_watch(eye_target)
+
+// draw_disk(eye_target, 6, rgb(1,1,0), nil, 55)
+
+controlled_ball.pos = lerp(controlled_ball.pos, target_position, 0.05)
+
+// cludgy way of walking the anchors around
+for a at index in ANCHORS
+& with pos in a:
+    const a_d_v = controlled_ball.pos - pos
+    if a.target_pos == nil and magnitude(a_d_v) > 2*CABLES[index].max_length:
+        a.target_pos = 3*CABLES[index].max_length * direction(a_d_v) + pos
+    if a.target_pos:
+        a.pos = lerp(a.pos, a.target_pos, 0.07)
+        if magnitude(a.target_pos - a.pos) < 10:
+            a.target_pos = nil
+
+
+debug_watch(eye_to_mouse_d)
+debug_watch(eye_to_mouse_v)
+debug_watch(max_offset)
+const pupil_pos = (
+    (
+        max_offset 
+        * max(0, min(eye_to_mouse_d/max_offset, 1)) 
+        * direction(eye_to_mouse_v) 
+    )
+    + controlled_ball.pos
+)
+
+debug_watch(pupil_pos)
+
+        
+for c in CABLES:
+    update_rope(c)
+
+physics_simulate(physics)
+
+for e in ANCHORS:
+    draw_entity(e)
+
+for c in CABLES:
+    draw_rope(c)
+
+draw_entity(controlled_ball)
+const RIGHT_EYE_OFFSET = xy(30, 0)
+let right_eye = clone(controlled_ball)
+
+right_eye.pos = clone(right_eye.pos)
+right_eye.pos += RIGHT_EYE_OFFSET
+if EYES > 1:
+    draw_entity(right_eye)
+
+const ol = rgb(0,0,0)
+const c = if mode_frames mod 90 < 10 then rgb(0,0,0) else nil
+// const c = nil
+draw_disk(
+    controlled_ball.pos,
+    controlled_ball.size.x/2,
+    c,
+    ol,
+    11
+)
+
+if EYES > 1:
+    draw_disk(
+        controlled_ball.pos+ RIGHT_EYE_OFFSET,
+        controlled_ball.size.x/2,
+        c,
+        ol,
+        11
+    )
+
+draw_disk(
+    pupil_pos,
+    pupil_rad,
+    rgb(0,0,0),
+    nil,
+    10
+)
+if EYES > 1:
+    draw_disk(
+        pupil_pos + RIGHT_EYE_OFFSET,
+        pupil_rad,
+        rgb(0,0,0),
+        nil,
+        10
+    )
+
+// ui
+for keymap in CONTROLS:
+    let color = INACTIVECOLOR
+    if keymap.fn(joy.xy):
+        color = ACTIVECOLOR
+    draw_text(
+        {
+            font:font,
+            text:replace(keymap.key, joy.prompt),
+            pos:keymap.pos,
+            color: BGCOLOR,
+            // outline: lerp(BGCOLOR, color, interp),
+            outline: color,
+        }
+    )
+

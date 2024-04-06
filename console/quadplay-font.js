@@ -777,7 +777,7 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
     font.$charWidth = _charWidth;
     font.$charHeight = (tightY2 - tightY1 + 1) + 2 * borderSize + shadowSize;
     font.glyph_size = Object.freeze({
-        x: font.$charWidth - 2 * borderSize,
+        x: font.$charWidth  - 2 * borderSize,
         y: font.$charHeight - 2 * borderSize - shadowSize});
     
     // Baseline is the distance from the top of each box to the text
@@ -912,6 +912,13 @@ function packFont(font, borderSize, shadowSize, baseline, char_size, spacing, sr
                     const w = srcBounds.x2 - srcBounds.x1 + 1;
                     post = Math.max(Math.ceil((min_width - w) / 2) | 0, 0) | 0;
                     pre = Math.max(min_width - w - post, 0) | 0;
+
+                    if ((chr === '1') && (post === pre + 1)) {
+                        // For the digit 1, if we have to round do so
+                        // to put the padding on the left. This makes
+                        // a leading digit of 1 print more nicely.
+                        --post; ++pre;
+                    }
                 }
 
                 font.$bounds[chr] = {

@@ -1,0 +1,38 @@
+{
+    "title": "color_wheel",
+    "developer": "CasualEffects",
+    "copyright": "©2024 Morgan McGuire",
+    "license": "CC0/Public Domain",
+    "packages": [],
+    "scripts": [],
+    "modes": [
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "font": "quad://fonts/deja-8.font.json",
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "dual_dpad": false,
+    "midi_sysex": false,
+    "description": "hsv() vs. artist_hsv_to_rgb() color wheels",
+    "constants": {
+        "mult": {
+            "type": "number",
+            "description": "Multiplier on the number of slices shown",
+            "value": "7",
+            "min": 1,
+            "max": 20,
+            "format": "0",
+            "quantum": 1
+        }
+    },
+    "screenshot_tag": "color_wheel"
+}

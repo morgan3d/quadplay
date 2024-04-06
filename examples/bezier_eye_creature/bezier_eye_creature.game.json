@@ -1,0 +1,36 @@
+{
+    "title": "Bezier Eye Creature",
+    "developer": "Stephan Steinbach",
+    "copyright": "©2022 Stephan Steinbach",
+    "license": "CC0/Public Domain",
+    "packages": [],
+    "scripts": [
+        "librope.pyxl"
+    ],
+    "modes": [
+        "Creature",
+        "ParamWedge",
+        "Play"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "font": "quad://fonts/deja-8.font.json",
+        "shapes": "quad://sprites/shapes-32x32.sprite.json"
+    },
+    "version": 1,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "description": "Demo for the bezier rope library, including a spooky creature",
+    "constants": {
+        "CURRENT_MODE": {
+            "type": "string",
+            "value": "Creature"
+        }
+    },
+    "screenshot_tag": "bezier_eye_creature"
+}
