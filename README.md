@@ -111,4 +111,4 @@ All sounds, sprites, and games distributed with quadplay✜ are Creative
 Commons licensed. The copyright and license on each of those is in 
 a JSON file next to the asset.
 
-© 2020-2023 Morgan McGuire
+© 2020-2024 Morgan McGuire
