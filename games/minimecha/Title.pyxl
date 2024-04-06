@@ -134,13 +134,13 @@ preserving_transform:
     set_camera({zoom: perspective_zoom, z: k * sqrt(2) + 1})    
 
     for j < 2:
-        const R = matmul_mat(
-            yaw_matrix(180° noise(1, 200j + mode_frames / 700)),
-            pitch_matrix(180° noise(1, j + 10 + mode_frames / 600)))        
+        const R = mat3x3_mul(
+            mat3x3_yaw(180° noise(1, 200j + mode_frames / 700)),
+            mat3x3_pitch(180° noise(1, j + 10 + mode_frames / 600)))        
         
         for -k ≤ i ≤ k:
-            draw_line(matmul_xyz(R, xyz( i, -k,  0)), matmul_xyz(R, xyz(i, k, 0)), line_color, ∅, 0)
-            draw_line(matmul_xyz(R, xyz(-k,  i,  0)), matmul_xyz(R, xyz(k, i, 0)), line_color, ∅, 0)
+            draw_line(mat3x3_mul(R, xyz( i, -k,  0)), mat3x3_mul(R, xyz(i, k, 0)), line_color, ∅, 0)
+            draw_line(mat3x3_mul(R, xyz(-k,  i,  0)), mat3x3_mul(R, xyz(k, i, 0)), line_color, ∅, 0)
 
 
 if fadeout:
