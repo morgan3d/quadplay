@@ -1,0 +1,124 @@
+{
+    "title": "Dice",
+    "developer": "CasualEffects",
+    "copyright": "©2024 Morgan McGuire",
+    "license": "Open source under the MIT license https://opensource.org/licenses/MIT",
+    "packages": [],
+    "scripts": [
+        "quad://scripts/mat3x3.pyxl",
+        "quad://scripts/dice.pyxl"
+    ],
+    "modes": [
+        "Play",
+        "Spin"
+    ],
+    "start_mode": "Play",
+    "docs": [],
+    "assets": {
+        "blip_sound": "quad://sounds/blip-04.sound.json",
+        "icon_sprite": "icon.sprite.json",
+        "font5": "quad://fonts/scoreboard-5.font.json",
+        "font7": "quad://fonts/scoreboard-7.font.json",
+        "runes9_font": "quad://fonts/runes-9.font.json",
+        "pip_sprite": "pip.sprite.json",
+        "font4": "quad://fonts/nano-4.font.json",
+        "dice_dice_sound": "quad://sounds/hit-10.sound.json",
+        "dice_wall_sound": "quad://sounds/hit-06.sound.json",
+        "dice_table_sound": "quad://sounds/hit-11.sound.json",
+        "suchet_9_font": "quad://fonts/suchet-9.font.json",
+        "suchet_12_font": "quad://fonts/suchet-12.font.json"
+    },
+    "version": 0,
+    "min_players": 1,
+    "max_players": 1,
+    "cooperative": false,
+    "competitive": false,
+    "achievements": false,
+    "highscores": false,
+    "dual_dpad": false,
+    "midi_sysex": false,
+    "description": "Polyhedral die visualizer",
+    "constants": {
+        "BACKGROUND_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "39%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "24%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "18%"
+                }
+            }
+        },
+        "DIE_BRIGHT": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "100%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "47%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "69%"
+                }
+            }
+        },
+        "DIE_DIM": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "33%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "0%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "88%"
+                }
+            }
+        },
+        "TRAY_BACKGROUND_COLOR": {
+            "type": "rgb",
+            "value": {
+                "r": {
+                    "type": "number",
+                    "value": "29%"
+                },
+                "g": {
+                    "type": "number",
+                    "value": "35%"
+                },
+                "b": {
+                    "type": "number",
+                    "value": "38%"
+                }
+            }
+        },
+        "TRAY_WIDTH": {
+            "type": "number",
+            "value": "64",
+            "min": 10,
+            "max": 100,
+            "format": "0",
+            "quantum": 1
+        }
+    },
+    "screenshot_tag": "Dice",
+    "screen_size": {
+        "x": 384,
+        "y": 224
+    }
+}

@@ -1,0 +1,169 @@
+Play
+════════════════════════════════════════════════════════════════════════
+set_random_seed()
+
+const tray = make_dice(xy(½ (SCREEN_SIZE.x - TRAY_WIDTH), 0), xy(TRAY_WIDTH, SCREEN_SIZE.y), 80% TRAY_BACKGROUND_COLOR)
+const dice = make_dice(xy(-½ TRAY_WIDTH, 0), xy(SCREEN_SIZE.x - TRAY_WIDTH, SCREEN_SIZE.y), 80% BACKGROUND_COLOR, dice_dice_sound, dice_table_sound, dice_wall_sound)
+
+let selected_die = ∅
+
+/* Used for tracking what was most recently selected for 
+   gamepad selection purposes when the mouse movement
+   has deselected everything */
+let last_selected_die = ∅
+
+/* Find closest die to `pos` in the set of dice specified. 
+   If dir is ∅, consider all directions */
+def find_closest_die(pos, dir, …dice_array):
+    let closest_die = ∅
+    let closest_distance = ∞
+    
+    for dice in dice_array:
+        for die in dice.die_array:
+            const v = die.pos - pos
+            let d = ‖v‖
+            
+            // Favor those closest to the direction
+            if dir: d /= dot(direction(v), dir) 
+                            
+            if d > 0 and d < closest_distance:
+                closest_distance = d
+                closest_die = die
+    
+    return closest_die
+    
+    
+
+def process_ui():
+    draw_text({
+        font: font7, 
+        text: replace("Press (a) to roll\n\n(b) or click to exchange dice", joy.prompt),
+        pos: xy(0, 0),
+        color: #fff,
+        outline: #000,
+        shadow: #000,
+        z: 100})
+        
+    // Change selected die on mouseover
+    if touch.hover:
+        last_selected_die = selected_die default last_selected_die
+        selected_die = ∅
+        // Find the die under the hover
+        for die in dice.die_array:
+            if overlaps(die, touch.hover):
+                selected_die = die
+        for die in tray.die_array:
+            if overlaps(die, touch.hover):
+                selected_die = die
+        if selected_die: last_selected_die = selected_die
+        assert(last_selected_die)
+        
+        
+    if joy.xx or joy.yy:
+        // Find the next die in this direction
+        selected_die = find_closest_die(last_selected_die.pos + 10 joy.xy, joy.xy, dice, tray) default last_selected_die
+        last_selected_die = selected_die
+        
+        
+    // Swap dice
+    if (touch.aa or joy.bb) and selected_die:
+        if contains(dice.die_array, selected_die):
+            dice_insert(tray, selected_die)
+            last_selected_die = find_closest_die(selected_die.pos, ∅, dice)
+        else:
+            dice_insert(dice, selected_die)
+            last_selected_die = find_closest_die(selected_die.pos, ∅, tray)
+        
+        // Change selection to next die in area, if there
+        // is any die left in that area
+        if last_selected_die:
+            selected_die = last_selected_die
+        else:
+            // Give up and maintain current selection,
+            // following it to the new area
+            last_selected_die = selected_die
+        
+        if touch.aa:
+            // Hide the selection visualization
+            selected_die = ∅
+            
+
+    if joy.aa:
+        // Choose results and set up for the roll animation
+        dice_prepare_roll(dice, true)
+        
+
+enter
+────────────────────────────────────────────────────────────────────────
+// Pip d6
+for i < 4:
+    dice_add_die(tray, 6, xy(0, 0), 9, ∅, pip_sprite[0], #EEE, #BBC, #000)
+
+// Icon d12
+dice_add_die(dice, 12, xy(0, 0), 18, ∅, icon_sprite.all, 47%)
+
+// Black d12
+dice_add_die(dice, 12, xy(0, 0), 14, font5, ∅, #000, #200)
+
+// Blue percentile d10
+dice_add_die(tray, 10, xy(0, 0), 14, font7, "1234567890", #14F, #740)
+dice_add_die(tray, 10, xy(0, 0), 14, font7, ["10", "20", "30", "40", "50", "60", "70", "80", "90", "00"], #14F, #740)
+
+// Blue Greek d12
+dice_add_die(dice, 12, xy(0, 0), 14, font7, "αβγδεζηθικλμ", #14F, #740)
+
+// Blue d20
+dice_add_die(dice, 20, xy(0, 0), 14, font4, ∅, #14F, #740)
+
+// White duplicated d8 as d4
+dice_add_die(dice, 8, xy(0, 0), 10, font5, "12341234", #EEE, #BBC, #D22)
+
+// Yellow direction d6
+dice_add_die(tray, 6, xy(0, 0), 10, font5, ["N", "S", "E", "W", "up", "dn"], #FE0, #A50, #000)
+
+// Gold runes d10
+dice_add_die(dice, 10, xy(0, 0), 18, runes9_font, "ABCDEFGHIJ", 20%, ∅, #444)
+
+// Gold d20
+dice_add_die(dice, 20, xy(0, 0), 16, font5, ∅, 20%, ∅, #444)
+
+// Green letter d8
+dice_add_die(tray, 8, xy(0, 0), 14, font7, "ABCDEFGH", #F90, #0C2, #484)
+
+// Big red d20
+dice_add_die(dice, 20, xy(0, 0), 24, font7, ∅, 0%)
+
+// Matching purple set
+for s in [4, 6, 8, 10, 12, 20]:
+    dice_add_die(dice, s, xy(0, 0), 14, font5, ∅, DIE_BRIGHT, DIE_DIM)
+
+dice_set_initial_positions(dice)
+dice_set_initial_positions(tray)
+
+selected_die = dice.die_array[0]
+last_selected_die = selected_die
+
+frame
+────────────────────────────────────────────────────────────────────────
+preserving_transform:
+    set_transform(½ SCREEN_SIZE, xy(1, -1))
+    set_background(BACKGROUND_COLOR)
+
+    // Draw the tray
+    draw_rect(tray.pos, tray.size, TRAY_BACKGROUND_COLOR)
+    draw_rect(tray.pos - xy(½ tray.size.x - 6, 0), xy(5, tray.size.y), #0003, ∅, ∅, 100)
+    draw_rect(tray.pos - xy(½ tray.size.x, 0), xy(4, tray.size.y), #EEE, ∅, ∅, 101)
+    
+    // Manage push to roll
+    if dice_roll_time(dice) ≤ 0:
+        process_ui()
+    
+    // Draw and simulate
+    dice_update(dice)
+    dice_update(tray)
+    
+    // Highlight selected die
+    if selected_die:
+        draw_disk(selected_die.pos, 58% selected_die.size.x, ∅, #FF0)
+    
+    

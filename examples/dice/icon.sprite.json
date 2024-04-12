@@ -1,0 +1,14 @@
+{
+    "url": "icon.png",
+    "license": "(C) 2024 Paul Lombard and Morgan McGuire. https://opengameart.org/content/8x8-1-bit-pixel-set CC-BY-SA 4.0",
+    "sprite_size": {
+        "x": 8,
+        "y": 8
+    },
+    "names": {
+        "all": {
+            start: {"x": 0, "y": 0},
+            end: {"x": 11}
+        }
+    }
+}

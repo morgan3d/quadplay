@@ -1,0 +1,25 @@
+Spin
+════════════════════════════════════════════════════════════════════════
+// Example of drawing a die that can be spun dynamically
+
+const dice = make_dice(∅, ∅, 80% BACKGROUND_COLOR, dice_dice_sound, dice_table_sound, dice_wall_sound)
+const die = dice_add_die(dice, 20, xy(0, 0), 30, suchet_9_font)
+
+
+enter
+────────────────────────────────────────────────────────────────────────
+set_screen_size(xy(192, 112))
+
+
+frame
+────────────────────────────────────────────────────────────────────────
+preserving_transform:
+    set_transform(½ SCREEN_SIZE, xy(1, -1))
+    set_background(BACKGROUND_COLOR)
+    dice_update(dice)
+    
+    if joy.x:
+        die.rotation = mat3x3_mul(mat3x3_yaw(3° joy.x), die.rotation, true)
+        
+    if joy.y:
+        die.rotation = mat3x3_mul(mat3x3_pitch(-3° joy.y), die.rotation, true)
