@@ -157,9 +157,7 @@ dice_add_die.count = 0
 
 /* Move from old to new set */
 def dice_insert(dice, die):
-    // Remove
-    remove_values(die.dice.die_array, die)
-    physics_remove_entity(die.dice.physics, die)
+    dice_remove(die.dice, die)
     
     // Add
     die.dice = dice
@@ -169,8 +167,15 @@ def dice_insert(dice, die):
     // Reposition
     die.pos = random_within_region(dice)
     dice_correct_overlaps(dice)
+
     
+
+def dice_remove(dice, die):
+    assert(contains(dice.die_array, die))
+    remove_values(die.dice.die_array, die)
+    physics_remove_entity(die.dice.physics, die)
     
+
     
 /* Fix any out of bounds or overlapping dice */
 def dice_correct_overlaps(dice):
