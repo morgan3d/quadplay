@@ -145,14 +145,19 @@ last_selected_die = selected_die
 
 frame
 ────────────────────────────────────────────────────────────────────────
+// Shadow of walls
+draw_corner_rect(xy(0, 0), xy(SCREEN_SIZE.x, 8), #0003, ∅, 1)
+draw_corner_rect(xy(0, 8), xy(6, SCREEN_SIZE.y), #0003, ∅, 1)
+
 preserving_transform:
     set_transform(½ SCREEN_SIZE, xy(1, -1))
     set_background(BACKGROUND_COLOR)
 
     // Draw the tray
     draw_rect(tray.pos, tray.size, TRAY_BACKGROUND_COLOR)
-    draw_rect(tray.pos - xy(½ tray.size.x - 6, 0), xy(5, tray.size.y), #0003, ∅, ∅, 100)
+    draw_rect(tray.pos - xy(½ tray.size.x - 5, 8), xy(6, tray.size.y), #0003, ∅, ∅, 1)
     draw_rect(tray.pos - xy(½ tray.size.x, 0), xy(4, tray.size.y), #EEE, ∅, ∅, 101)
+
     
     // Manage push to roll
     if dice_roll_time(dice) ≤ 0:
