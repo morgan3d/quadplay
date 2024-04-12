@@ -139,6 +139,19 @@
             "highscores": false
         },
         {
+            "url": "quad://examples/dice/",
+            "title": "Dice",
+            "description": "Polyhedral die visualizer",
+            "version": 0,
+            "developer": "CasualEffects",
+            "min_players": 1,
+            "max_players": 1,
+            "cooperative": false,
+            "competitive": false,
+            "achievements": false,
+            "highscores": false
+        },
+        {
             "url": "quad://examples/dual-stick/",
             "title": "Dual D-Pad Example",
             "description": "",

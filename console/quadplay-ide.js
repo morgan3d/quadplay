@@ -3496,8 +3496,8 @@ function mainLoopStep() {
             }
         }
 
-        // Based on events, so has to happen outside of the loop
-        if (refreshPending) {
+        // Based on events, so has to happen outside of the loop. 
+        if (refreshPending || updateKeyboardPending) {
             resetTouchInput();
         }
 
@@ -3847,7 +3847,7 @@ function reloadRuntime(oncomplete) {
                         y: (mouse.screen_y - QRuntime.$offsetY) / QRuntime.$scaleY
                     };
                 } else {
-                    return {x: NaN, y: NaN};
+                    return undefined;
                 }
             }
         };

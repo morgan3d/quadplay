@@ -150,7 +150,7 @@ def mat3x3_to_axis_angle(M):
     // it does not matter which sign you choose on the square roots.
 
     const trace = M[0][0] + M[1][1] + M[2][2]
-    const angle = acos(0.5 (trace - 1))  // in [0,PI]
+    const angle = acos(CLAMP(0.5 (trace - 1), -1, 1))  // on [0, PI]
     const rkAxis = xyz(0, 0, 0)
     
     if angle > 0:
