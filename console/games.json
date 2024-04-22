@@ -141,8 +141,8 @@
         {
             "url": "quad://examples/dice/",
             "title": "Dice",
-            "description": "Polyhedral die visualizer",
-            "version": 0,
+            "description": "Dice rolling example",
+            "version": 1,
             "developer": "CasualEffects",
             "min_players": 1,
             "max_players": 1,

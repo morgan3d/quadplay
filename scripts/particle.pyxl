@@ -141,6 +141,9 @@ def particles_spawn_from_entity(
 def particles_update_and_draw(...arg):
 
     const particle_array = last_value(arg)
+
+    // ensure that the particle array was passed in correctly
+    assert(particle_array)
     
     // There are a LOT of particles, so avoid the cost of a WITH statement
     // here.

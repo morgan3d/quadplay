@@ -26,9 +26,10 @@
         "dice_wall_sound": "quad://sounds/hit-06.sound.json",
         "dice_table_sound": "quad://sounds/hit-11.sound.json",
         "suchet_9_font": "quad://fonts/suchet-9.font.json",
-        "suchet_12_font": "quad://fonts/suchet-12.font.json"
+        "suchet_12_font": "quad://fonts/suchet-12.font.json",
+        "font8": "quad://fonts/deja-8.font.json"
     },
-    "version": 0,
+    "version": 1,
     "min_players": 1,
     "max_players": 1,
     "cooperative": false,
@@ -37,7 +38,7 @@
     "highscores": false,
     "dual_dpad": false,
     "midi_sysex": false,
-    "description": "Polyhedral die visualizer",
+    "description": "Dice rolling example",
     "constants": {
         "BACKGROUND_COLOR": {
             "type": "rgb",
@@ -55,6 +56,11 @@
                     "value": "18%"
                 }
             }
+        },
+        "SINGLE_SET": {
+            "description": "If true, show a single set of dice",
+            "type": "boolean",
+            "value": false
         },
         "DIE_BRIGHT": {
             "type": "rgb",
@@ -109,7 +115,7 @@
         },
         "TRAY_WIDTH": {
             "type": "number",
-            "value": "64",
+            "value": "80",
             "min": 10,
             "max": 100,
             "format": "0",

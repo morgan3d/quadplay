@@ -92,7 +92,7 @@ def generate_remote(args, out_path, game_path, game_title):
   <body style="margin: 0; background: #000; position: absolute; top: 0; bottom: 0; left: 0; right: 0">
     <script>
       document.write('<iframe src="https://morgan3d.github.io/quadplay/console/quadplay.html#fastReload=1&game=' + 
-          (location + '').replace(/\/[^/]*$/, '/') + 
+          (location + '').replace(/\\/[^/]*$/, '/') + 
           '{game_path}&quit=reload" style="width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; border: none" allow="gamepad; fullscreen *; autoplay" msallowfullscreen="true" allowfullscreen="true" webkitallowfullscreen="true"></iframe>');
     </script>
   </body>
@@ -149,12 +149,21 @@ def export(args):
    
    (game_dependency_list, game_title) = get_game_dependency_list(args, game_path)
 
+   if os.path.exists(out_path):
+       if args.force:
+           shutil.rmtree(out_path)
+       elif not tempdir:
+           raise RuntimeError(
+               f"Path '{out_path}' exists.  To overwrite use the "
+               "--force option.")
+
    # Create out_path if it does not exist
    if not os.path.isdir(out_path):
-      if args.dry_run: print('mkdir -p ' + out_path)
-      else: os.makedirs(out_path, exist_ok = True)
-
+       if args.dry_run: print('mkdir -p ' + out_path)
+       else: os.makedirs(out_path, exist_ok = True)
+   
    if not args.noquad:
+       
       # Recursively copy everything from 'console/' to out_path
       # Do this before copying individual dependencies because
       # shutil.copytree can't take the dirs_exist_ok=True parameter
@@ -164,17 +173,10 @@ def export(args):
          print('cp -r ' + os.path.join(args.quadpath, 'console') + ' ' + os.path.join(out_path, ''))
          for f in ignore_files:
              print('rm -rf ' + os.path.join(out_path, 'console/' + f))
-      else:
-         if os.path.exists(out_path):
-             if args.force:
-                 shutil.rmtree(out_path)
-             else:
-                 raise RuntimeError(
-                     f"Path '{out_path}' exists.  To overwrite use the "
-                     "--force option.")
-         shutil.copytree(os.path.join(args.quadpath, 'console'),
-                         os.path.join(out_path, 'console'),
-                         ignore = shutil.ignore_patterns('.DS_Store', '*~', '#*', '*.psd', '*.kra', 'Makefile', '*.zip', '*.pyc', '__pycache__', *ignore_files))
+      else:             
+          shutil.copytree(os.path.join(args.quadpath, 'console'),
+                          os.path.join(out_path, 'console'),
+                          ignore = shutil.ignore_patterns('.DS_Store', '*~', '#*', '*.psd', '*.kra', 'Makefile', '*.zip', '*.pyc', '__pycache__', *ignore_files))
       
       generate_standalone(args, out_path, out_url, game_title)
    else:

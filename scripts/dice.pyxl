@@ -102,7 +102,7 @@ def dice_add_die(dice, sides, pos default xy(0, 0), radius default 12, font defa
     ++dice_add_die.count
     
     // Dice with more sides roll better
-    const base_drag = 0.0008 * (20 / sides)²
+    const base_drag = 0.0008 * pow(20 / min(12, sides), 2.2)
     
     const die = make_entity({
         // Entity base properties
@@ -179,19 +179,19 @@ def dice_remove(dice, die):
     
 /* Fix any out of bounds or overlapping dice */
 def dice_correct_overlaps(dice):
-    // Relaxation to avoid overlap in initial positions
-    for k < 2 size(dice.die_array):
+    // Simulated annealing
+    for k < max(20, 4 size(dice.die_array)):
         for A at i in dice.die_array:
             for i < j < size(dice.die_array):
                 const B = dice.die_array[j]
                 const offset = A.pos - B.pos
                 if ‖offset‖ < ½ (A.size.x + B.size.x):
-                    const shift = xy(dice.size.x / dice.size.y, 1) * 400 direction(offset) / max(10, magnitude(offset))²
+                    const shift = xy(dice.size.x / dice.size.y, 1) * 300 direction(offset) / max(10, magnitude(offset))²
                     A.pos += shift
                     B.pos -= shift
                 
-            // Keep in the dice tray and well away from sides
-            const side = max(½ dice.size - A.size, xy(0, 0))
+            // Keep in the dice tray
+            const side = max(½ dice.size - ½ A.size, xy(0, 0))
             A.pos = clamp(A.pos, dice.pos - side, dice.pos + side)
     
 
@@ -453,13 +453,37 @@ def _dice_die_model_draw(
         draw_rect(xy(0, 0), xy(2, 2) * radius, ∅, #FFF)
 
 
+/*
+ `method` options are "random", "grid"
+*/
+def dice_set_initial_positions(dice, method default "random"):
+    if method == "grid":
+        const aspect = dice.size.y / dice.size.x
+        const N = size(dice.die_array)
 
-def dice_set_initial_positions(dice):
-    // Distribute the dice randomly
-    for die at i in dice.die_array:
-        die.pos = random_within_region(dice)
+        // Constraints:  
+        //   x_count * y_count ≥ N
+        //   y_count = aspect * x_count
+        //
+        //   x_count² * aspect ≤ N
+        //   x_count ≤ sqrt(N / aspect)
+        
+        const x_count = ⌊sqrt(N / aspect)⌋
+        const y_count = ⌈N / x_count⌉
+        for die at i in dice.die_array:
+            const x = i mod x_count
+            const y = floor(i / x_count)
+            
+            const α = (xy(x, y) + xy(if y mod 2 then ⅓ else ⅔, ½)) / xy(x_count, y_count)
+            die.pos = dice.pos + dice.size * (α - ½)
+        
+    else: // Random
+        // Distribute the dice randomly
+        for die at i in dice.die_array:
+            die.pos = random_within_region(dice)
     
     dice_correct_overlaps(dice)
+    
     
     
 /* Run simulation until termination */

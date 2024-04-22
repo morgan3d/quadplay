@@ -1792,7 +1792,7 @@ Property                 | Type     | Meaning
 `touch.screen_dy`        | number   | Change in `screen_y` since the previous frame
 `touch.screen_xy`        | xy       | `xy(touch.screen_x, touch.screen_y)` for the touch
 `touch.screen_dxy`       | xy       | `xy(touch.screen_dx, touch.screen_dy)` for the touch
-`touch.hover`            | xy       | If the device supports hovering _and_ the hover moved this frame, the camera-space position of the hover. Otherwise `xy(nan, nan)`.
+`touch.hover`            | xy       | If the device supports hovering _and_ the hover moved this frame, the camera-space position of the hover. Otherwise `nil`.
 
 The `x` and `y` values are in camera-space coordinates using the current transform.
 Change or reset the transform to read them in a different coordinate system, or use

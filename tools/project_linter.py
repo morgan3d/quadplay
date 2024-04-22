@@ -122,7 +122,7 @@ def lint_game(game_name=None, license_audit=False, verbose=False):
     report = {}
 
     # find files
-    files = game_data["scripts"][:]
+    files = [f for f in game_data["scripts"] if not f.startswith("quad://")]
     files.extend(("{}.pyxl".format(m) for m in game_data["modes"]))
     files.extend(
         thing.get("url")
