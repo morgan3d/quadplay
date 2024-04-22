@@ -153,7 +153,7 @@ def draw_view(view):
 
         if active: $draw_system_menu_text({text: "✜", pos: pos + xy(-8, 0), x_align: "right"}, true)
         const bounds = $draw_system_menu_text({text: choice, pos: pos}, active)
-        if overlaps(touch.hover, bounds) and online_choice_index != i:
+        if touch.hover and overlaps(touch.hover, bounds) and online_choice_index != i:
             online_choice_index = i
             play_sound($moveUISound)
 

@@ -143,7 +143,7 @@ if manage_tabs or mode_frames > open_frames:
             const bounds = draw_text(font, text, xy(x, y + yOffset), color, nil, outline, "left", "center")
 
             // Make active on mouse hover
-            if overlaps(touch.hover, bounds) and choice_index != i:
+            if touch.hover and overlaps(touch.hover, bounds) and choice_index != i:
                 choice_index = i
                 play_sound($moveUISound)
                

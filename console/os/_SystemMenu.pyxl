@@ -190,7 +190,7 @@ for view in VIEW_ARRAY:
         const bounds = $draw_system_menu_text({text: text, pos: xy(x, y + yOffset), y_align: "center"}, active)
 
         // Make active on mouse hover
-        if overlaps(touch.hover, bounds) and choice_index != i:
+        if touch.hover and overlaps(touch.hover, bounds) and choice_index != i:
             choice_index = i
             play_sound($moveUISound)
        

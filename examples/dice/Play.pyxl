@@ -50,7 +50,7 @@ def process_ui():
         z: 100})
         
     // Change selected die on mouseover
-    if touch.hover:
+    if touch.hover.x:
         last_selected_die = selected_die default last_selected_die
         selected_die = ∅
         // Find the die under the hover

@@ -91,7 +91,7 @@ for view in VIEW_ARRAY:
             const bounds = draw_text({font: font, text: choice_array[i], pos: pos + offset, color: color, outline: outline, x_align: "center", y_align:"center"})
       
             // Make active on mouse hover
-            if overlaps(touch.hover, bounds) and choice_index != i:
+            if touch.hover and overlaps(touch.hover, bounds) and choice_index != i:
                 choice_index = i
                 play_sound($moveUISound)
                 
