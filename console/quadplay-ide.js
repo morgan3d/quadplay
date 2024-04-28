@@ -4524,6 +4524,7 @@ function updateControllerIcons() {
     }
 }
 
+
 /* Returns an array of array of booleans that are the pixels. The size varies
    with the length of the URL */
 function computeQRCode(url) {
@@ -4535,8 +4536,6 @@ function computeQRCode(url) {
 }
 computeQRCode.cache = {};
 computeQRCode.qrcode = new QRCode('hiddenQRCode', {correctLevel: QRCode.CorrectLevel.H, width:128, height:128});
-
-// TODO: Remove
 // computeQRCode('http://192.168.1.69:8000/Projects/quadplay-dev/console/quadplay.html?game=/Projects/quadplay-dev/examples/private_view/');
 
 setTimeout(updateControllerIcons, 100);

@@ -7,6 +7,8 @@ let myOnlineName;
 const NET_ID_PREFIX = 'qp000';
 const MAX_ONLINE_NAME_LENGTH = 7;
 
+const onlineQRCode = new QRCode('onlineQRCode', {correctLevel: QRCode.CorrectLevel.H, width:128, height:128});
+
 // Expose as read-only to the runtime
 Object.defineProperty(QRuntime, 'HOST_CODE', {
     get: function () {
@@ -304,9 +306,9 @@ function disconnectGuest(index) {
 
 // Called from $start_hosting and mode changes
 function updateHostCodeCopyRuntimeDialogVisiblity() {
-    let curr = document.getElementById('hostCodeCopyRuntimeDialog').classList.contains('show');
-    let next = ((QRuntime.$gameMode === QRuntime.$showCopyButtonsMode) ||
-                (QRuntime.$gameMode.name === '$OnlineMenu')) && isHosting;
+    const curr = document.getElementById('hostCodeCopyRuntimeDialog').classList.contains('show');
+    const next = ((QRuntime.$gameMode === QRuntime.$showCopyButtonsMode) ||
+                  (QRuntime.$gameMode.name === '$OnlineMenu')) && isHosting;
 
     if (curr !== next) {
         setRuntimeDialogVisible('hostCodeCopy', next);
@@ -330,6 +332,8 @@ function $start_hosting(show_buttons) {
 
 // Actually start hosting
 function startHosting() {
+    onlineQRCode.makeCode(computeHostingURL());
+    
     if (isHosting || isOffline) { return; }
     console.log('startHosting()');
     
@@ -535,6 +539,12 @@ function startHosting() {
 }
 
 
+function onToggleQRCodeVisibility() {
+    const qr = document.getElementById('onlineQRCode');
+    qr.style.visibility = qr.style.visibility === 'hidden' ? 'visible' : 'hidden';
+}
+
+
 function onCopyHostCodeButton() {
     copyToClipboard(QRuntime.HOST_CODE);
     showPopupMessage("Copied host code to clipboard.");
@@ -542,9 +552,15 @@ function onCopyHostCodeButton() {
 }
 
 
-function onCopyHostURLButton() {
-    // Remove arguments that are 
-    let url = location.href.replace(/(name|IDE|game|autoplay)=[^&]+/g, '').replace(/&&+/g, '&');
+function computeHostingURL() {
+    // Remove arguments that would trigger a specific game
+    let url = location.href;
+
+    if (url.startsWith('http://127.0.0.1:')) {
+        // TODO: use public quadplay
+    }
+    
+    url = url.replace(/(name|IDE|game|autoplay)=[^&]+/g, '').replace(/&&+/g, '&');
     if (url.indexOf('?') === -1) {
         url += '?';
     }
@@ -562,6 +578,12 @@ function onCopyHostURLButton() {
         // to debug.
         url += '&mode=DefaultWindow';
     }
+
+    return url;
+}
+
+function onCopyHostURLButton() {
+    const url = computeHostingURL();
     
     copyToClipboard(url);
     if (location.href.startsWith('http://127.0.0.1:')) {
@@ -593,6 +615,8 @@ function stopHosting() {
     if (isHosting) {
         showPopupMessage('Stopped hosting online');
     }
+
+    document.getElementById('onlineQRCode').style.visibility = 'hidden';
 
     // Make self absent; guests will be dropped below
     QRuntime.gamepad_array[0].$status = 'absent';
@@ -719,11 +743,9 @@ function startGuesting(hostNetID) {
                 const x = w * (myGuestPlayerIndex & 1);
                 const y = h * (myGuestPlayerIndex >> 1);
                 ctx.drawImage(videoElement, x, y, w, h, 0, 0, w, h);
-                //console.log('Drawing private screen', x, y, w, h);
             } else {
                 // Full screen
                 ctx.drawImage(videoElement, 0, 0, videoWidth, videoHeight);
-                //                console.log('Drawing full screen');
             }
             
             applyAfterglow(QRuntime.$postFX.afterglow);
