@@ -1515,10 +1515,8 @@ canvas#screenOverlay {
 
 #logo {
     position: absolute;
-    top: 2px;
-    left: 0;
-    right: 0;
-    width: 100%;
+    bottom: 10px;
+    left: 10px;
     text-align: center;
 }
 
@@ -1544,8 +1542,8 @@ canvas#screenOverlay {
        and Safari to ignore pixelated image rendering */
     border-radius: 6px;
     border: 5px solid #111;
-    box-shadow: -0.5px -0.8px 1px 0.15px rgba(0,0,0,0.5),
-                0.2px 0.8px 0.8px 0.5px rgba(255,255,255,0.3);
+    box-shadow: -0.5px -0.3px 0.2px 0.0px rgba(0,0,0,0.4),
+                0.3px 0.5px 0.2px 0.0px rgba(255,255,255,0.1);
 }
 
 .TestUI #screenBorder, .MaximalUI #screenBorder, .GhostUI #screenBorder {

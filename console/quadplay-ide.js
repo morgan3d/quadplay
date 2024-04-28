@@ -645,11 +645,15 @@ function onResize() {
         
     case 'Emulator':
         {
+            // If 1, add a thick border of the case around the screen
+            // as pre-version 100 quadplay did
+            const useScreenBorder = 0;
+            
             // What is the largest multiple SCREEN_HEIGHT that is less than windowHeightDevicePixels?
             if (gbMode) {
-                scale = Math.max(0, Math.min((window.innerHeight - 70) / SCREEN_HEIGHT, (windowWidth - 36) / SCREEN_WIDTH));
+                scale = Math.max(0, Math.min((window.innerHeight - 70) / SCREEN_HEIGHT, (windowWidth - useScreenBorder * 36) / SCREEN_WIDTH));
             } else {
-                scale = Math.max(0, Math.min((window.innerHeight - 70) / SCREEN_HEIGHT, (windowWidth - 254) / SCREEN_WIDTH));
+                scale = Math.max(0, Math.min((window.innerHeight - useScreenBorder * 70) / SCREEN_HEIGHT, (windowWidth - 254) / SCREEN_WIDTH));
             }
             
             if ((scale * window.devicePixelRatio <= 2.5) && (scale * window.devicePixelRatio > 1)) {
@@ -658,28 +662,30 @@ function onResize() {
                 scale = Math.floor(scale * window.devicePixelRatio) / window.devicePixelRatio;
             }
 
-            const minHeight = Math.min(windowHeight, 288);
-            const delta = (windowHeight - Math.max(minHeight + 30, 90 + SCREEN_HEIGHT * scale)) / 2;
+            // Amount to shift vertically to center the screen
+            //const delta = (windowHeight - Math.max(windowHeight + 30, 90 + SCREEN_HEIGHT * scale)) / 2;
+            let delta = 0;
             if (! gbMode) {
                 // Resize the background to bound the screen more tightly.
                 // Only resize vertically because the controls need to
                 // stay near the edges of the screen horizontally to make
                 // them reachable on mobile. In gbMode, the emulator fills
                 // the screen and this is not needed.
-                background.style.top = Math.round(Math.max(0, delta)) + 'px';
-                const height = Math.round(Math.max(minHeight, SCREEN_HEIGHT * scale + 53));
+                const height = Math.min(windowHeight - 27, Math.round(SCREEN_HEIGHT * scale + 19));
+                delta = Math.ceil(height / 2);
+                background.style.top = Math.round((windowHeight - height) / 2 - 17) + 'px';
                 background.style.height = height + 'px';
             }
 
-            let zoom = setScreenBorderScale(screenBorder, scale);
+            const zoom = setScreenBorderScale(screenBorder, scale);
             
             screenBorder.style.left = Math.round((windowWidth / zoom - screenBorder.offsetWidth - 1 / zoom) / 2) + 'px';
             if (gbMode) {
                 screenBorder.style.transformOrigin = 'center top';
-                screenBorder.style.top  = (15 / zoom) + 'px';
+                screenBorder.style.top = (15 / zoom) + 'px';
             } else {
                 screenBorder.style.transformOrigin = 'center';
-                screenBorder.style.top  = (Math.round(Math.max(0, -delta / zoom) + (windowHeight / zoom - screenBorder.offsetHeight - 34 / zoom) / 2)) + 'px';
+                screenBorder.style.top = (Math.round(Math.max(0, -delta / zoom) + (windowHeight / zoom - screenBorder.offsetHeight - 34 / zoom) / 2)) + 'px';
             }
 
             // Show the controls
