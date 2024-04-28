@@ -964,6 +964,9 @@
       }, 500);
     </script>
     -->
+
+    <div id="hiddenQRCode" style="z-index: -100; display: none; visibility: hidden; opacity: 50%; position: fixed; top: 0px; left: 0px; border: 1px solid #FFF;  z-index: 100; image-rendering: crisp-edges; image-rendering: pixelated !important; border: 4px solid #fff;"></div>
+
   </body>
   
   <iframe name="QRuntime" style="visibility:hidden"> </iframe>
@@ -1010,10 +1013,9 @@
 
         // Mode graph
         loadScript('lib/dagre.min.js');
-
-        // QR code generator
-        loadScript('lib/qrcode.min.js');
     }
+    // QR code generator
+    loadScript('lib/qrcode.min.js');
   }
   </script>
   <script defer src="lib/js-yaml.min.js"></script>

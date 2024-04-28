@@ -120,8 +120,3 @@ iterate(player_array, process_input)
 for view at gamepad_index in VIEW_ARRAY:
     draw_view(view, gamepad_array[gamepad_index])
 
-
-leave
-────────────────────────────────────────────────────────────────────────
-// This event runs just before leaving for another mode by set_mode() or pop_mode().
-

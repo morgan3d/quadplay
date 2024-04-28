@@ -3750,6 +3750,7 @@ function reloadRuntime(oncomplete) {
         QRuntime.disconnect_guest    = disconnectGuest;
         QRuntime.$notifyGuestsOfPostEffects = notifyGuestsOfPostEffects;
         QRuntime.$resetEmulatorKeyState = resetEmulatorKeyState;
+        QRuntime.$computeQRCode = computeQRCode;
         QRuntime.$Object.prototype.toString = function () {
             return (this && this.$name) || QRuntime.unparse(this);
         };
@@ -4523,6 +4524,20 @@ function updateControllerIcons() {
     }
 }
 
+/* Returns an array of array of booleans that are the pixels. The size varies
+   with the length of the URL */
+function computeQRCode(url) {
+    if (! computeQRCode.cache[url]) {
+        computeQRCode.qrcode.makeCode(url);
+        computeQRCode.cache[url] = Object.freeze(computeQRCode.qrcode._oQRCode.modules);
+    }
+    return computeQRCode.cache[url];
+}
+computeQRCode.cache = {};
+computeQRCode.qrcode = new QRCode('hiddenQRCode', {correctLevel: QRCode.CorrectLevel.H, width:128, height:128});
+
+// TODO: Remove
+// computeQRCode('http://192.168.1.69:8000/Projects/quadplay-dev/console/quadplay.html?game=/Projects/quadplay-dev/examples/private_view/');
 
 setTimeout(updateControllerIcons, 100);
 

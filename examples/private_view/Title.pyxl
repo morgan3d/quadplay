@@ -1,6 +1,13 @@
 Title
 ════════════════════════════════════════════════════════════════════════
 
+/*
+All quadplay games can be forced into network multiplayer mode
+by the player using the system menu. This game shows how to 
+explicitly enable network multiplayer to streamline the UI
+by the player, bypassing the need for the system menu.
+*/
+
 def create_game():
     set_mode(Lobby) because "Chose create game"
 
@@ -16,28 +23,35 @@ const choice_array = [
 enter
 ────────────────────────────────────────────────────────────────────────
 
-if game_frames == 0:    
-    set_screen_size(xy(384, 224), true)
+// If it is the beginning of the entire program, enter private views
+// mode. This is the "true" argument. That forces the full resolution
+// to be divided up into four subscreens of ½ x ½ resolution each.
+if game_frames == 0:
+    set_screen_size(SCREEN_SIZE, true)
 
 resize(player_array, 0)
 reset_transform()
 reset_clip()
 
+
 frame
 ────────────────────────────────────────────────────────────────────────
 
 if gamepad_array[0].status == "host":
-    // Player entered host mode via system menu
+    // The player entered host mode via the quadplay system menu,
+    // so directly go into Lobby mode.
     set_mode(Lobby) because "Hosting via system"
 
 
-// Only need to draw player 0. We cannot be on this menu
-// if hosting.
-
-// Set the other 3 views to yello to show where they are when debugging
+// Set the other 3 views to bright yellow to show where
+// it is when debugging via private_views = false.
 set_background(#ff0)
+
+// Set the title's visible background to gray
 draw_corner_rect(VIEW_ARRAY[0].corner, VIEW_ARRAY[0].size, #777)
 
+
+// Draw the main menu
 let args = {
     font: font,
     pos: ½ VIEW_ARRAY[0].size - xy(20, 0), 
@@ -75,4 +89,5 @@ for choice at i in choice_array:
 choice_index = clamp(choice_index + gamepad_array[0].yy, 0, size(choice_array) - 1)
 
 if gamepad_array[0].aa:
+    // Make this menu choice
     choice_array[choice_index].callback()

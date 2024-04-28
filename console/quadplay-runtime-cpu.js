@@ -2601,6 +2601,12 @@ function make_entity(e, childTable) {
     r.name = r.name || ('entity' + ($entityID++));
     r.shape = r.shape || 'rect';
     r.sprite = r.sprite || undefined;
+
+    if (r.sprite && ! r.sprite.$spritesheet && r.sprite.$uint16Data) {
+        // Replace the whole spritesheet with element 0
+        r.sprite = r.sprite[0][0];
+    }
+        
     if (r.pos.z === undefined) {
         // Only set r.z if r.pos.z is undefined or
         // r.z is explicitly set.

@@ -165,7 +165,8 @@ def draw_view(view):
         
     return {choice_array: choice_array, touch_current_choice: touch_current_choice}
 
-        
+
+
 def manage_online_input(choice_array, touch_current_choice):
     for gamepad in gamepad_array:
         online_choice_index = clamp(online_choice_index + gamepad.yy, 0, size(choice_array) - 1)

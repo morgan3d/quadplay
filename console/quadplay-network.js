@@ -259,7 +259,6 @@ function peerErrorHandler(err) {
 
 
 function notifyGuestsOfFramebufferSize() {
-    // Tell the guests about the current private screen flag
     sendToAllGuests({
         type: 'FRAMEBUFFER_SIZE',
         SCREEN_WIDTH: SCREEN_WIDTH,
@@ -471,9 +470,9 @@ function startHosting() {
             }; // guest
             connectedGuestArray.push(guest);
 
-            let keepAliveSetupTries = 0;
+            let setupKeepAliveTries = 0;
             function setupKeepAlive() {
-                ++keepAliveSetupTries;
+                ++setupKeepAliveTries;
                 if (dataConnection.open) {
                     keepAlive(dataConnection, undefined, function (dataConnection) {
                         guest.disconnect();
@@ -720,9 +719,11 @@ function startGuesting(hostNetID) {
                 const x = w * (myGuestPlayerIndex & 1);
                 const y = h * (myGuestPlayerIndex >> 1);
                 ctx.drawImage(videoElement, x, y, w, h, 0, 0, w, h);
+                //console.log('Drawing private screen', x, y, w, h);
             } else {
                 // Full screen
                 ctx.drawImage(videoElement, 0, 0, videoWidth, videoHeight);
+                //                console.log('Drawing full screen');
             }
             
             applyAfterglow(QRuntime.$postFX.afterglow);
