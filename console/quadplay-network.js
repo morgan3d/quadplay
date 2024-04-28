@@ -557,7 +557,8 @@ function computeHostingURL() {
     let url = location.href;
 
     if (url.startsWith('http://127.0.0.1:')) {
-        // TODO: use public quadplay
+        // Use public quadplay
+        url = 'https://morgan3d.github.io/quadplay/console/quadplay.html?'
     }
     
     url = url.replace(/(name|IDE|game|autoplay)=[^&]+/g, '').replace(/&&+/g, '&');
@@ -572,6 +573,12 @@ function computeHostingURL() {
     // The host argument
     url += 'host=' + QRuntime.HOST_CODE.replace(/, /g, ',').replace(/ /g, '_');
 
+    return url;
+}
+
+function onCopyHostURLButton() {
+    let url = computeHostingURL(location.href);
+
     if (useIDE) {
         // Do not force the guest browser to go fullscreen, since the
         // developer is probably opening a window on the same machine
@@ -579,12 +586,6 @@ function computeHostingURL() {
         url += '&mode=DefaultWindow';
     }
 
-    return url;
-}
-
-function onCopyHostURLButton() {
-    const url = computeHostingURL();
-    
     copyToClipboard(url);
     if (location.href.startsWith('http://127.0.0.1:')) {
         showPopupMessage("Note: URL only usable on this computer.");

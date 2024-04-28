@@ -3,6 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="stylesheet" href="quadplay.css?">
     <link rel="icon" href="icons/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
@@ -500,18 +501,18 @@
 
         <!-- Runtime popup dialogs that require user interaction for permissions (can't run off gamepad polling) -->
         <div id="hostCodeCopyRuntimeDialog" class="runtimeDialog" style="overflow: visible">
-          <div id="onlineQRCode" style="z-index: 100; opacity: 40%; visibility: hidden; position: absolute; left: -33px; top: -105px; border: 1px solid #FFF; image-rendering: crisp-edges; image-rendering: pixelated !important; border: 4px solid #fff; scale: 50%; width: 128px; height: 128px; backdrop-filter: blur(10px);"></div>
+          <div id="onlineQRCode" style="z-index: 100; opacity: 50%; visibility: hidden; position: absolute; left: -33px; top: -105px; border: 1px solid #FFF; image-rendering: crisp-edges; image-rendering: pixelated !important; border: 4px solid #fff; scale: 50%; width: 128px; height: 128px; backdrop-filter: blur(10px);"></div>
           <script>
             // Only show the QR toggle if it is likely to be usable on a separate
             // device
-            if (false || ! location.href.startsWith('http://127.0.0.1:')) {
+            if (true || ! location.href.startsWith('http://127.0.0.1:')) {
                 document.write('<div onclick="onToggleQRCodeVisibility()" style="margin-right: 60px">Toggle QR</div>');
             }
           </script>
           Copy <div onclick="onCopyHostCodeButton()">Host&nbsp;Code</div>
           <script>
             // Only show the copy URL button if it is likely to be useful
-            if (false || ! location.href.startsWith('http://127.0.0.1:') || useIDE) {
+            if (true || ! location.href.startsWith('http://127.0.0.1:') || useIDE) {
                 document.write('<div onclick="onCopyHostURLButton()">URL</div>');
             }
           </script>
