@@ -1,5 +1,4 @@
 /* By Morgan McGuire @CasualEffects http://casual-effects.com GPL 3.0 License*/
-
 /* Remove mobile pinch-to-zoom and input delays (should be redundant with
    the viewport device-width meta property).
    https://developers.google.com/web/updates/2013/12/300ms-tap-delay-gone-away */
@@ -1423,9 +1422,9 @@ hr {
     height: 120px
 }
 
-#leftControls { left: 2px; }
-#rightControls { right: 2px; }
-
+/* Push controls a little to avoid the notch on iOS Safari */
+#leftControls { left: max(2px, env(safe-area-inset-left) / 4)}
+#rightControls { right: max(2px, env(safe-area-inset-right) / 4)}
 
 body.EmulatorUI .virtualController {
     visibility: visible;
@@ -1781,9 +1780,9 @@ button.license {
 
 /* Portrait (GameBoy) layout  */
 @media (orientation: portrait) {
-    #leftControls, #rightControls { top:unset; bottom:-30px }
-    #leftControls {left: 30px}
-    #rightControls {right: 30px}
+    #leftControls, #rightControls { left: unset; right: unset; top:unset; bottom:-30px }
+    #leftControls {left: 20px}
+    #rightControls {right: 20px}
 
     #KeyShiftbutton, #KeyFbutton {
         top: -105px  !important;

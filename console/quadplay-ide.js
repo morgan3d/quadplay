@@ -590,6 +590,14 @@ function onResize() {
     const screenBorder = document.getElementById('screenBorder');
     const showPrivateViewsEnabled = document.getElementById('showPrivateViewsEnabled').checked;
 
+    body.classList.remove('landscape-primary');
+    body.classList.remove('landscape-secondary');
+    body.classList.remove('portrait-primary');
+    body.classList.remove('portrait-secondary');
+    if (screen.orientation && screen.orientation.type) {
+        body.classList.add(screen.orientation.type);
+    }
+    
     const gbMode = window.matchMedia('(orientation: portrait)').matches;
 
     let windowWidth = window.innerWidth, windowHeight = window.innerHeight;

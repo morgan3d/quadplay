@@ -558,8 +558,11 @@ function computeHostingURL() {
 
     if (url.startsWith('http://127.0.0.1:')) {
         // Use public quadplay
-        url = 'https://morgan3d.github.io/quadplay/console/quadplay.html?'
+        url = 'https://morgan3d.github.io/quadplay/console/app.html?'
     }
+
+    // Ensure we're using the app framing
+    url = url.replace('quadplay.html', 'app.html');
     
     url = url.replace(/(name|IDE|game|autoplay)=[^&]+/g, '').replace(/&&+/g, '&');
     if (url.indexOf('?') === -1) {
