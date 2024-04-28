@@ -428,8 +428,7 @@ function onWelcomeTouch(hasTouchScreen) {
                       function () {
                           const otherNetID = wordsToNetID(other_host_code.split(/[_,]/));
                           startGuesting(otherNetID);
-                      } : undefined);
-        
+                      } : undefined);      
     
     if (showPause) {
         // Show the pause message before loading when running a
@@ -449,6 +448,12 @@ function onWelcomeTouch(hasTouchScreen) {
     } else {
         onPlayButton(undefined, undefined, undefined, callback);
     }
+
+    /* Make sure the keyboard focus sticks */
+    emulatorKeyboardInput.focus({preventScroll:true});
+    setTimeout(function () {
+        emulatorKeyboardInput.focus({preventScroll:true});
+    });
 }
 
 
