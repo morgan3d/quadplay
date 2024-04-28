@@ -1821,7 +1821,7 @@ let usePointerLock = false;
 
 /** Use pointer lock if indicated */
 function maybeGrabPointerLock() {
-    if (usePointerLock) {
+    if (usePointerLock && emulatorScreen.requestPointerLock) {
         emulatorScreen.requestPointerLock();
     }
     emulatorScreen.style.cursor = runtime_cursor;
@@ -1831,7 +1831,7 @@ function maybeGrabPointerLock() {
 
 /** Release pointer lock if it is held, without changing usePointerLock */
 function releasePointerLock() {
-    document.exitPointerLock();
+    if (document.exitPointerLock) { document.exitPointerLock(); }
     emulatorScreen.style.cursor = 'crosshair';
     overlayScreen.style.cursor = 'crosshair';
     afterglowScreen.style.cursor = 'crosshair';
