@@ -1046,7 +1046,9 @@ function onPlayButton(slow, isLaunchGame, args, callback) {
                 if (gameSource.json.midi_sysex && midi && ! midi.$options.sysex) {
                     // Reinitialize MIDI using sysex requests, and wipe out MIDI devices while waiting
                     midiReset();
-                    window.top.navigator.requestMIDIAccess({sysex: true, software: true}).then(onMIDIInitSuccess, onMIDIInitFailure);
+                    if (window.top.navigator.requestMIDIAccess) {
+                        window.top.navigator.requestMIDIAccess({sysex: true, software: true}).then(onMIDIInitSuccess, onMIDIInitFailure);
+                    }
                 }
                 
                 restartProgram(isLaunchGame ? BOOT_ANIMATION.NONE : useIDE ? BOOT_ANIMATION.SHORT : BOOT_ANIMATION.REGULAR);
@@ -5276,9 +5278,13 @@ navigator.getGamepads();
 // Initialize MIDI without requiring sysex, which can prompt.
 // If the game needs sysex then onPlay will re-initialize.
 try {
-    navigator.requestMIDIAccess({sysex: false, software: true}).then(onMIDIInitSuccess, onMIDIInitFailure);
+    if (window.top.navigator.requestMIDIAccess) {
+        window.top.navigator.requestMIDIAccess({sysex: false, software: true}).then(onMIDIInitSuccess, onMIDIInitFailure);
+    } else {
+        console.log('MIDI not supported on this device');
+    }
 } catch (e) {
-    console.log(e);
+    console.log('Ingnoring error', e);
 }
 
 /* Called from the quit menu item. Forces closing the server for a nativeapp,
