@@ -1485,6 +1485,8 @@ version 19.4 or later. On macOS, also install the open source
 driver. The Chromium-based browsers (Chrome, Edge, and Brave) provide the most reliable
 mapping. Safari and Firefox have inconsistent results.
 
+#### Arcade Controller Mappings
+
 The X-arcade default mapping is below. For other operating systems, browsers, or
 older controllers, just use keyboard mode and program the buttons to match
 the quadplay keyboard controls.
@@ -8723,24 +8725,15 @@ I expect most people will use <quadplay/> on phones, laptops, and desktops
 as a _virtual_ console. But, if you have some maker experience you can make a
 _real_ <quadplay/> console.
 
-When you're color coding the physical controls for a full four-player setup, the standard
-<quadplay/> arcade player colors and physical layout order is: P3 Yellow, P1 Magenta
-("pink"), P2 Cyan ("blue"), P3 Lime ("green"). Graphically:
+If you want an arcade form factor, then a <quadplay/> arcade cabinet
+can be built with some carpentry and any low-cost PC and display, or
+by purchasing some (expensive!) pre-built arcade cabinets.
 
-<center>
-<table style="font-size:200%; font-weight:bold; width:300px; text-align:center; margin: 15px; border-collapse: separate; border: 2px solid #000; padding: 8px; background: #333">
-<tr valign="center"><td colspan=4 style="border: 2px solid; border-radius:8px; background: #000; height: 200px">SCREEN</td></tr>
-<tr>
-<td style="color:#fd3">*P3*<span style="font-size:50%"><br>#fd3</span></td>
-<td style="color:#f5a">*P1*<span style="font-size:50%"><br>#f5a</span></td>
-<td style="color:#0af">*P2*<span style="font-size:50%"><br>#0af</span></td>
-<td style="color:#4e4">*P4*<span style="font-size:50%"><br>#4e4</span></td>
-</tr>
-<tr><td colspan=4 style="border-top: 2px solid #000"><br><br></td></tr>
-</table>
-</center>
+#### Processor
 
-#### Nano or Raspberry Pi
+Any Mac, Windows, or Linux computer can be used to power a <quadplay/>
+physical build. An old laptop often works well. Alternatively, an embedded
+processor can be used.
 
 The
 [Rasberry Pi 400](https://www.raspberrypi.org/products/raspberry-pi-400/)
@@ -8797,11 +8790,25 @@ A Jetson Xavier, Intel NUC, or old PC/Mac is a more expensive device
 for powering a mini console, but has a lot more graphics power than an
 embedded processor and will comfortably run all games at 60 Hz.
 
-#### Cabinets
 
-A <quadplay/> arcade cabinet can be built with some carpentry and any
-low-cost PC and display, or by purchasing some (expensive!) pre-built
-arcade cabinets.
+#### Arcade Controller
+
+When you're color coding the physical controls for a full four-player setup, the standard
+<quadplay/> arcade player colors and physical layout order is: P3 Yellow, P1 Magenta
+("pink"), P2 Cyan ("blue"), P3 Lime ("green"). Graphically:
+
+<center>
+<table style="font-size:200%; font-weight:bold; width:300px; text-align:center; margin: 15px; border-collapse: separate; border: 2px solid #000; padding: 8px; background: #333">
+<tr valign="center"><td colspan=4 style="border: 2px solid; border-radius:8px; background: #000; height: 200px">SCREEN</td></tr>
+<tr>
+<td style="color:#fd3">*P3*<span style="font-size:50%"><br>#fd3</span></td>
+<td style="color:#f5a">*P1*<span style="font-size:50%"><br>#f5a</span></td>
+<td style="color:#0af">*P2*<span style="font-size:50%"><br>#0af</span></td>
+<td style="color:#4e4">*P4*<span style="font-size:50%"><br>#4e4</span></td>
+</tr>
+<tr><td colspan=4 style="border-top: 2px solid #000"><br><br></td></tr>
+</table>
+</center>
 
 There are a lot of physical
 [arcade controllers](https://shop.xgaming.com/products/x-arcade-dual-joystick-usb-included)
@@ -8845,21 +8852,65 @@ D-pad <big>⍈</big>   | button 15
 <quadplay/> automatically maps the analog stick into D-pad inputs as
 well as providing analog access under `device_control()`.
 
-The ⓔ button should be placed where it can
-be easily held while using the main buttons and stick, for example, 
+See the Arcade Controller Mappings Section for more detail on some common
+arcade/fighting game controller mappings.
+
+********************************************************
+*                          |
+*       ⓠ   ⓟ              |       ⓠ   ⓟ     
+*   ⍐            ⓓ   ⓕ     |   ⍐           ⓔ  ⓒ  ⓓ  ⓕ 
+* ⍇   ⍈        ⓒ   ⓑ       | ⍇   ⍈               
+*   ⍗        ⓔ   ⓐ         |   ⍗           ⓔ  ⓐ  ⓑ  ⓕ
+*                          |
+********************************************************
+[Sample layouts for physical controller buttons on arcade sticks]
+
+If you have the option to choose your button layout and mapping, then
+try to match one of the versions shown above.
+Specifically, games are designed for the ⓔ button to be placed where it can
+be easily held while using the main buttons and stick. For example, 
 as a hat button on the stick or under the right thumb or pinkie. The
 ⓕ button should be placed where it can be used similarly, but ⓔ should
-be the more convenient of the two. Note the positioning of the
+be the more convenient of the two and favor the left side. Note the positioning of the
 player 1 and 2 ⓔ and ⓕ on the keyboard compared to on a NES-style gamepad...the
 keyboard controls place these buttons _lower_ than on a gamepad, so that they
-are in reach of the pinkies for eas of holding down. They are not "shoulder"
+are in reach of the pinkies for ease holding down. They are not "shoulder"
 buttons, even though that is the best location for them on a physical controller.
 
-If building a physical cabinet or handheld, I recommend using a
-1280x720, 1600x900, or 1920x1200 display to efficiently fill the
-screen with integer pixel scaling.
+#### Display
 
-Some ratios when using quadplay's maximum 384x224 resolution are:
+For a physical cabinet, a 24" screen will match a
+traditional arcade size. For a handheld or mini installation, the screen
+size is constrained by your form factor. Anything larger than 5" will
+be easily readable even for the smallest 4-pixel text (and most quadplay
+game text is 8 pixels high).
+
+<quadplay/> has a default 16:9 screen resolution. However, aspect
+ratio is not as important to image quality as display that can be
+filled with integer multiple of 384x224 resolution.
+
+I recommend using a 1280x720 ("720p"), 1600x900, 
+1920x1200 ("16:10 WUXGA"), or 
+2560x1440 ("WQHD 2K") resolution display. 
+A 2560x1440 display can be run at the OS level in 1280x720
+resolution to reduce GPU load for a low end or embedded GPU. 
+Any display will scale down to 60 Hz refresh,
+so refresh rate is not a consideration.
+
+Those resolutions can efficiently fill the screen with integer pixel
+scaling. For 24" monitors, these cost around $200 new as of 2024 but
+can often be found used for less (or free) as most people have
+upgraded their computers to higher resolutions.
+
+If you are not a purist, you can find a more inexpensive 1920x1080 display.
+This will use non-integer scaling where some of the <quadplay/> pixels are 4 
+display pixels wide and most are 5 pixels wide, or leave a black border
+around the screen when using perfectly uniform 5x scaling.
+
+The autoscaler will adjust to fill the screen unless the display resolution 
+is very low or only slightly above an integer ratio, in which case it will favor
+the integer ratio. Efficiency and scaling ratios when using <quadplay/>'s default 384x224
+resolution are:
 
 Screen     | Integer     | Used      | Efficiency  | Autoscaler | Used      | Efficiency
 ----------:|------------:|----------:|------------:|-----------:|----------:|---------:
@@ -8876,6 +8927,7 @@ Screen     | Integer     | Used      | Efficiency  | Autoscaler | Used      | Ef
 1680x1050  |  4x         | 1536x896  | 78%         | 4.38x      | 1680x980  | 93%
 1920x1080  |  4x         | 1536x896  | 66%         | 4.82x      | 1852x1080 | 96%
 *1920x1200*|  *5x*       |*1920x1120*| *93%*       | 5.00x      | 1920x1120 | 93%
+*2560x1440*|  *6x*       |*2304x1344*| *84%*       | 6.42x      | 2468x1440 | 96%
 
 
 ### Buy
