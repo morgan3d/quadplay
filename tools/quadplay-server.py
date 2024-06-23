@@ -1298,7 +1298,11 @@ def main():
         # Kill the client if it didn't already terminate
         client.terminate()
     else:
-        os.system(browser_command)
+        # On Raspberry Pi OS, the launch call will block if run directly
+        # through os.system.
+        browser_thread = multiprocessing.Process(target=os.system, args=(browser_command,))
+        browser_thread.start()
+        
         # Wait for key stroke
         maybe_print('\n**Press any key to terminate the server when done**\n')
         while not kbhit() and serverThread.is_alive(): time.sleep(0.25)
